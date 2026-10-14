@@ -98,6 +98,7 @@ internal static class IdentityRegistration
         services.AddScoped<ISignInService, SignInService>();
         services.AddScoped<IUserLookup, UserLookup>();
         services.AddScoped<IUserDisplayNameReader, UserDisplayNameReader>();
+        services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Persistence.IActiveMemberPhoneReader, ActiveMemberPhoneReader>();
         services.AddScoped<IUserStatusReader, UserStatusReader>();
         return services;
     }

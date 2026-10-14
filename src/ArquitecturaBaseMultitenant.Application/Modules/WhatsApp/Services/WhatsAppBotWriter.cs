@@ -18,7 +18,9 @@ internal sealed class WhatsAppBotWriter(IWhatsAppChannelSettings settings, ILogi
 {
     public async Task ConsumeAsync(WhatsAppInboundContext context, CancellationToken ct)
     {
-        if (!settings.IsEnabled || settings.PhoneNumberId is not { } numberId || context.Contact is not { } contact
+        // Los números de las organizaciones los atiende su propio escritor.
+        if (context.Channel?.OrganizationId is not null) return;
+        if (!settings.IsAttending || settings.PhoneNumberId is not { } numberId || context.Contact is not { } contact
             || context.Message.Kind is not (WhatsAppMessageKind.Text or WhatsAppMessageKind.Interactive)
             || context.Message.Direction != WhatsAppMessageDirection.Inbound) return;
         var expiresAtUtc = contact.LastInboundAtUtc?.AddHours(24);

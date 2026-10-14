@@ -3114,6 +3114,409 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.ToTable("TenantDomains", "platform");
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.PlatformWhatsAppChat", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AssigneeUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AwaitingReply")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ChannelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("LastInboundAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("LastMessageAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastMessagePreview")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<DateTime>("StartedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("TakenAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("WaId")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTime?>("WaitingSinceUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChannelId", "WaId")
+                        .IsUnique();
+
+                    b.HasIndex("LastMessageAtUtc", "Id");
+
+                    b.HasIndex("TeamId", "WaitingSinceUtc");
+
+                    b.ToTable("PlatformWhatsAppChats", "platform");
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.PlatformWhatsAppChatMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AuthorName")
+                        .HasMaxLength(201)
+                        .HasColumnType("character varying(201)");
+
+                    b.Property<Guid?>("AuthorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChatId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Direction")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("MediaKind")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<Guid?>("OutboxMessageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<Guid?>("TemplateId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Text")
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
+                    b.Property<string>("Wamid")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OutboxMessageId");
+
+                    b.HasIndex("Wamid")
+                        .IsUnique()
+                        .HasFilter("\"Wamid\" IS NOT NULL");
+
+                    b.HasIndex("ChatId", "CreatedAtUtc", "Id");
+
+                    b.ToTable("PlatformWhatsAppChatMessages", "platform");
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppChannel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Coexistence")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid?>("CompanyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("ConnectedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("ConsultationsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DisconnectedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DisplayNumber")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<byte[]>("EncryptedPin")
+                        .HasColumnType("bytea");
+
+                    b.Property<byte[]>("EncryptedToken")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<DateTime?>("ModifiedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PhoneNumberId")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("UsageTimeZoneId")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("VerifiedName")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("WabaId")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PhoneNumberId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_WhatsAppChannels_PhoneNumberId_Active")
+                        .HasFilter("\"Status\" <> 'Disconnected'");
+
+                    b.HasIndex("WabaId");
+
+                    b.HasIndex("OrganizationId", "DisplayNumber", "Id");
+
+                    b.ToTable("WhatsAppChannels", "identity");
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppChannelUsage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChannelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("Month")
+                        .HasColumnType("date");
+
+                    b.Property<int>("OtherDelivered")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ServiceCharged")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ServiceDelivered")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChannelId", "Month")
+                        .IsUnique()
+                        .HasDatabaseName("IX_WhatsAppChannelUsages_ChannelId_Month");
+
+                    b.ToTable("WhatsAppChannelUsages", "identity");
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppChat", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AssigneeUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AwaitingReply")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("ChannelId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CustomerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Inbox")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<DateTime?>("LastInboundAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("LastMessageAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastMessagePreview")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<Guid?>("MemberUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("StartedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("TakenAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("WaId")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTime?>("WaitingSinceUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("TenantId", "Id");
+
+                    b.HasIndex("ChannelId");
+
+                    b.HasIndex("TenantId", "CustomerId");
+
+                    b.HasIndex("TenantId", "ChannelId", "WaId", "Inbox")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "Inbox", "LastMessageAtUtc", "Id");
+
+                    b.HasIndex("TenantId", "Inbox", "TeamId", "WaitingSinceUtc");
+
+                    b.ToTable("WhatsAppChats", "tenant");
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppChatMessage", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AuthorName")
+                        .HasMaxLength(201)
+                        .HasColumnType("character varying(201)");
+
+                    b.Property<Guid?>("AuthorUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChatId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Direction")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("MediaKind")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<Guid?>("OutboxMessageId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<Guid?>("TemplateId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Text")
+                        .HasMaxLength(4096)
+                        .HasColumnType("character varying(4096)");
+
+                    b.Property<string>("Wamid")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("TenantId", "Id");
+
+                    b.HasIndex("TenantId", "OutboxMessageId");
+
+                    b.HasIndex("TenantId", "Wamid")
+                        .IsUnique()
+                        .HasFilter("\"Wamid\" IS NOT NULL");
+
+                    b.HasIndex("TenantId", "ChatId", "CreatedAtUtc", "Id");
+
+                    b.ToTable("WhatsAppChatMessages", "tenant");
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppCodeQuota", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3212,6 +3615,67 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.ToTable("WhatsAppContacts", "identity");
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppCustomer", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Consent")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<DateTime?>("ConsentChangedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ConsentSource")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("LastConversationAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(201)
+                        .HasColumnType("character varying(201)");
+
+                    b.PrimitiveCollection<string[]>("Tags")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("WaId")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.HasKey("TenantId", "Id");
+
+                    b.HasIndex("Tags");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Tags"), "gin");
+
+                    b.HasIndex("TenantId", "WaId")
+                        .IsUnique();
+
+                    b.HasIndex("TenantId", "Consent", "Id");
+
+                    b.HasIndex("TenantId", "Name", "Id");
+
+                    b.ToTable("WhatsAppCustomers", "tenant");
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppMessage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3221,8 +3685,15 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<int>("Attempts")
                         .HasColumnType("integer");
 
+                    b.Property<Guid?>("ChannelId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("ContactId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.Property<string>("Direction")
                         .IsRequired()
@@ -3295,6 +3766,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(500)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ChannelId");
 
                     b.HasIndex("ContactId");
 
@@ -6662,6 +7135,76 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.PlatformWhatsAppChat", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppChannel", null)
+                        .WithMany()
+                        .HasForeignKey("ChannelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.PlatformWhatsAppChatMessage", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.WhatsApp.PlatformWhatsAppChat", null)
+                        .WithMany()
+                        .HasForeignKey("ChatId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppChannel", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppChannelUsage", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppChannel", null)
+                        .WithMany()
+                        .HasForeignKey("ChannelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppChat", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppChannel", null)
+                        .WithMany()
+                        .HasForeignKey("ChannelId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppCustomer", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppChatMessage", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppChat", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "ChatId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppCodeQuotaIp", b =>
                 {
                     b.HasOne("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppCodeQuota", null)
@@ -6684,8 +7227,22 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppCustomer", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppMessage", b =>
                 {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppChannel", null)
+                        .WithMany()
+                        .HasForeignKey("ChannelId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppContact", null)
                         .WithMany()
                         .HasForeignKey("ContactId")

@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using WhatsAppUniqueKeys = ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.UniqueKeys;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 internal sealed class WhatsAppWebhookService(IWhatsAppSignatureValidator signatures, IWhatsAppWebhookReader reader,
-    WhatsAppWebhookWriter writer, IWhatsAppInboundSignal signal, IWhatsAppWebhookReplay replay, IUnitOfWork unitOfWork,
+    WhatsAppWebhookWriter writer, IWhatsAppInboundSignal signal, IWhatsAppWebhookReplay replay, IWhatsAppChannelCache channels, IUnitOfWork unitOfWork,
     TimeProvider clock, ILogger<WhatsAppWebhookService> logger) : IWhatsAppWebhookService
 {
     public Task<Result<string>> VerifyAsync(string? mode, string? verifyToken, string? challenge, CancellationToken ct) =>
@@ -26,11 +26,16 @@ internal sealed class WhatsAppWebhookService(IWhatsAppSignatureValidator signatu
             if (!signatures.IsValidSignature(request.OriginalBody.Span, request.Signature)) return WhatsAppErrors.InvalidSignature;
             var batch = reader.Read(request.OriginalBody);
             if (batch.IsFailure) return batch.Error;
+            // El número de Plataforma de la configuración tiene que existir antes de ubicar la entrada por su número.
+            await channels.LoadAsync(ct);
             Result result;
             try { result = await unitOfWork.ExecuteInTransactionAsync(c => writer.WriteAsync(batch.Value, c), CommitPolicy.OnSuccess, ct); }
             catch (UniqueConstraintViolationException exception) when (exception.ConstraintName is WhatsAppUniqueKeys.MessageEvent or WhatsAppUniqueKeys.ContactNumber)
             { return await replay.ReplayAsync(request, ct); }
             if (result.IsSuccess && batch.Value.Messages.Count > 0) signal.Notify();
+            // Meta informó que un número quedó sin medio de pago: ingreso y avisos de Plataforma lo ven enseguida.
+            if (result.IsSuccess && batch.Value.Statuses.Any(value => value.ErrorCode == WhatsAppChannelUsageWriter.PaymentRequiredError))
+                await channels.RefreshAsync(ct);
             return result;
         });
 }

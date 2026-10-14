@@ -18,6 +18,8 @@ public sealed partial class IdentityStorageAccessTests
         Infrastructure + "Identity.UserLookup",
         Infrastructure + "Identity.UserDisplayNameReader", // Batch names for an authorized page; omits accounts whose deletion began.
         Infrastructure + "Identity.UserStatusReader",
+        // E11: si un teléfono es un método Phone verificado de un miembro activo de la organización actual (Internos).
+        Infrastructure + "Identity.ActiveMemberPhoneReader",
         Infrastructure + "Persistence.Readers.LoginMethodReader",
         Infrastructure + "Persistence.Readers.LegalReader",
         Infrastructure + "Persistence.Readers.AccountDeletionTenantReader",

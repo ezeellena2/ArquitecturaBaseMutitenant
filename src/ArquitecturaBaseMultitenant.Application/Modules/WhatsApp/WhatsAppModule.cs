@@ -16,6 +16,8 @@ public static class WhatsAppModule
         services.AddScoped<IWhatsAppMessageRetentionService, WhatsAppMessageRetentionService>();
         services.AddScoped<WhatsAppContactRemover>();
         services.AddScoped<Interfaces.Integrations.IWhatsAppInboundConsumer, WhatsAppBotWriter>();
+        services.AddScoped<Interfaces.Integrations.IWhatsAppInboundConsumer, WhatsAppOrganizationInboundWriter>();
+        services.AddScoped<WhatsAppModulePolicy>();
         services.AddScoped<WhatsAppBotReplyBuilder>();
         services.AddScoped<WhatsAppWebhookWriter>();
         services.AddScoped<IWhatsAppInboundService, WhatsAppInboundService>();
@@ -30,6 +32,12 @@ public static class WhatsAppModule
         services.AddSingleton<IErrorTextSource, WhatsAppErrorTextSource>();
         services.AddSingleton<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features.IFeatureDefinitionContributor, WhatsAppFeatureDefinitionContributor>();
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features.IFeatureAvailabilityPolicy, WhatsAppAvailabilityPolicy>();
+        services.AddScoped<IWhatsAppChannelBootstrapService, WhatsAppChannelBootstrapService>();
+        services.AddScoped<WhatsAppChannelAuditWriter>();
+        services.AddScoped<WhatsAppChannelCreator>();
+        services.AddScoped<WhatsAppChannelUsageWriter>();
+        services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Services.IPendingItemSource, WhatsAppNumberPendingItems>();
+        services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features.IModuleHomeCardSource, WhatsAppModuleHomeCardSource>();
         services.AddScoped<IWhatsAppNumberService, WhatsAppNumberService>();
         services.AddScoped<IPlatformWhatsAppNumberService, PlatformWhatsAppNumberService>();
         services.AddScoped<IWhatsAppTeamService, WhatsAppTeamService>();

@@ -2,6 +2,9 @@ namespace ArquitecturaBaseMultitenant.Domain.WhatsApp;
 
 public enum WhatsAppNumberStatus { Connected, PaymentMissing, Disconnected }
 
+/// <summary>De dónde salió el número: el arranque desde la configuración (solo Plataforma) o el alta embebida.</summary>
+public enum WhatsAppChannelSource { Configuration, Signup }
+
 public enum WhatsAppInbox { Customers, Internal }
 
 public enum WhatsAppChatMessageKind { Text, Template, Note, Event, Media }

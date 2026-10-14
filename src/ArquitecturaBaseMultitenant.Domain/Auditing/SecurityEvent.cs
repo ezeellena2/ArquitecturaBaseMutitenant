@@ -184,6 +184,28 @@ public sealed class SecurityEvent : Entity
         return ev;
     }
 
+    /// <summary>
+    /// Un miembro de la organización cambió un dato global de un módulo de su organización (ADR 0050), por ejemplo un
+    /// número conectado. Sin operador ni entrada a la organización: el destino es la propia.
+    /// </summary>
+    public static SecurityEvent ForOrganizationModule(Guid actorId, Guid tenantId, string reason, DateTime occurredAtUtc)
+    {
+        if (actorId == Guid.Empty) throw new ArgumentException("The actor id cannot be empty.", nameof(actorId));
+        if (tenantId == Guid.Empty) throw new ArgumentException("A target organization is required.", nameof(tenantId));
+        if (string.IsNullOrWhiteSpace(reason) || reason.Length > TextLimits.Description)
+            throw new ArgumentException("A reason is required within the description limit.", nameof(reason));
+        if (occurredAtUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("The occurrence instant must be UTC.", nameof(occurredAtUtc));
+        return new SecurityEvent
+        {
+            Type = SecurityEventType.TenantFeaturesChanged,
+            ActorKind = AuditActorKind.User,
+            ActorId = actorId,
+            TargetTenantId = tenantId,
+            Reason = reason.Trim(),
+            OccurredAtUtc = occurredAtUtc,
+        };
+    }
+
     private static SecurityEvent ForPlatformAction(SecurityEventType type, AuditActorKind actorKind,
         Guid actorId, string reason, DateTime occurredAtUtc)
     {

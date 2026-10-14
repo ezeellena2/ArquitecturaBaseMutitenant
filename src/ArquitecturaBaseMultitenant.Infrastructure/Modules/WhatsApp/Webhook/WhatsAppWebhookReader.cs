@@ -6,10 +6,9 @@ using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
-using Microsoft.Extensions.Options;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Webhook;
-/// <summary>Solo el destino configurado; un ítem desconocido no invalida los demás.</summary>
-internal sealed class WhatsAppWebhookReader(IOptions<WhatsAppOptions> options, IPhoneNumberParser phones) : IWhatsAppWebhookReader
+/// <summary>Lee cada número de destino tal como vino; el escritor descarta los que no son un número vigente. Un ítem desconocido no invalida los demás.</summary>
+internal sealed class WhatsAppWebhookReader(IPhoneNumberParser phones) : IWhatsAppWebhookReader
 {
     public Result<WhatsAppWebhookBatch> Read(ReadOnlyMemory<byte> body)
     {
@@ -26,7 +25,7 @@ internal sealed class WhatsAppWebhookReader(IOptions<WhatsAppOptions> options, I
                 {
                     if (Text(change, "field") != "messages" || !Property(change, "value", out var value)
                         || !Property(value, "metadata", out var metadata)
-                        || Text(metadata, "phone_number_id") is not { } number || number != options.Value.PhoneNumberId) continue;
+                        || Text(metadata, "phone_number_id") is not { Length: > 0 and <= TextLimits.ShortName } number) continue;
                     if (Array(value, "messages", out var inbound))
                         foreach (var message in inbound.EnumerateArray())
                         {
@@ -42,14 +41,21 @@ internal sealed class WhatsAppWebhookReader(IOptions<WhatsAppOptions> options, I
                                 && Property(interactive, "button_reply", out var buttonReply)) reply = Text(buttonReply, "id");
                             // Solo identificadores de acciones públicas del bot; nunca un token recibido.
                             reply = reply is BotButtons.SignIn or BotButtons.Recover ? reply : null;
-                            messages.Add(new(number, id, sender.Value.Value, kind, text, reply, time));
+                            // Lo que no es texto ni respuesta se informa por su tipo, sin el archivo (D7 de la E11).
+                            var contentType = kind == WhatsAppMessageKind.Unsupported ? Short(type) : null;
+                            messages.Add(new(number, id, sender.Value.Value, kind, text, reply, time, contentType));
                         }
                     if (Array(value, "statuses", out var delivery))
                         foreach (var status in delivery.EnumerateArray())
                         {
                             WhatsAppMessageStatus? state = Text(status, "status") switch
                             { "sent" => WhatsAppMessageStatus.Sent, "delivered" => WhatsAppMessageStatus.Delivered, "read" => WhatsAppMessageStatus.Read, "failed" => WhatsAppMessageStatus.Failed, _ => null };
-                            if (state is not null && Id(status) is { } id && Timestamp(status, out var time)) statuses.Add(new(number, id, state.Value, time));
+                            if (state is null || Id(status) is not { } id || !Timestamp(status, out var time)) continue;
+                            string? category = null, pricingType = null; int? error = null;
+                            if (Property(status, "pricing", out var pricing)) { category = Short(Text(pricing, "category")); pricingType = Short(Text(pricing, "type")); }
+                            if (Array(status, "errors", out var errors) && errors.GetArrayLength() > 0 && Property(errors[0], "code", out var code)
+                                && code.ValueKind == JsonValueKind.Number && code.TryGetInt32(out var errorCode)) error = errorCode;
+                            statuses.Add(new(number, id, state.Value, time, category, pricingType, error));
                         }
                 }
             }
@@ -57,6 +63,8 @@ internal sealed class WhatsAppWebhookReader(IOptions<WhatsAppOptions> options, I
         }
         catch (JsonException) { return WhatsAppErrors.InvalidPayload; }
     }
+    /// <summary>Solo claves técnicas cortas de Meta (por ejemplo «service», «regular»), nunca texto libre.</summary>
+    private static string? Short(string? value) => value is { Length: > 0 and <= 40 } && value.All(c => char.IsAsciiLetterOrDigit(c) || c == '_') ? value : null;
     private static string? Id(JsonElement element)
     {
         var id = Text(element, "id");

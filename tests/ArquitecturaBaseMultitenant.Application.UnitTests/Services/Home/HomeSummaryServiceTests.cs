@@ -57,7 +57,7 @@ public sealed class HomeSummaryServiceTests
         var permissions = new PermissionsProbe(revoked);
         var source = new GroupSource();
         IHomeService service = new HomeService(new(null!, null!, null!, null!, null!, null!, fixture.TimeProvider),
-            new(null!), [source], permissions, new CurrentUser(), fixture.TimeProvider, fixture.Logger);
+            new(null!), [source], [], permissions, new CurrentUser(), fixture.TimeProvider, fixture.Logger);
 
         var result = await service.GetSummaryAsync(Ct);
 

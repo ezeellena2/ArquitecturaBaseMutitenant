@@ -118,7 +118,19 @@ public sealed class WhatsAppTemplateTests
         var formatter = new DisplayFormatter(catalog, catalog, catalog, catalog, catalog, new LibPhoneNumberDisplayFormatter(),
             new TimeZoneService(TimeProvider.System), TimeProvider.System);
         var options = Options.Create(new WhatsAppOptions { PhoneNumberId = "template-number" });
-        return new WhatsAppTemplateRenderer(options, new WhatsAppTemplateCatalog(options), formatter, new Origin());
+        return new WhatsAppTemplateRenderer(new PlatformNumber(), new WhatsAppTemplateCatalog(options), formatter, new Origin());
     }
     private sealed class Origin : IPublicOrigin { public Uri? Value => new("https://example.test/"); }
+    /// <summary>El número de Plataforma conectado con el que salen las plantillas.</summary>
+    private sealed class PlatformNumber : ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations.IWhatsAppChannelSettings
+    {
+        public bool IsEnabled => true;
+        public string AppName => "Plataforma";
+        public string? PhoneNumberId => "template-number";
+        public string? ContactPhone => null;
+        public IReadOnlyList<string> Countries => ["AR"];
+        public int DailyAuthCodeLimit => 100;
+        public ArquitecturaBaseMultitenant.Domain.Results.Result ValidateNewDestination(ArquitecturaBaseMultitenant.Domain.Authentication.LoginCodeDestination destination) =>
+            ArquitecturaBaseMultitenant.Domain.Results.Result.Success();
+    }
 }

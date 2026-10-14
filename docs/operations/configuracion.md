@@ -72,14 +72,17 @@ Mismos valores que `../ArquitecturaBase/src/ArquitecturaBase.Api/appsettings.Dev
 | `Email:Smtp:UserName` / `FromAddress` | tu cuenta de Gmail, la misma de ArquitecturaBase |
 | `Email:Smtp:FromName` | el nombre del producto |
 | `Email:AppName` | nombre de plataforma usado también por los replies del bot; no altera la frase neutra del operador |
-| `WhatsApp:PhoneNumberId` | el mismo de ArquitecturaBase. **Es el interruptor**: sin él, WhatsApp queda apagado y la app arranca igual |
+| `WhatsApp:PhoneNumberId` | el mismo de ArquitecturaBase. Desde la E11 **solo sirve para el arranque**: si no hay número de Plataforma, se crea uno con este valor y `WhatsApp:AccessToken`; mientras nadie lo reemplace desde Plataforma › WhatsApp › Número, sigue a la configuración. Sin número conectado, WhatsApp queda apagado y la app arranca igual |
 | `WhatsApp:BusinessAccountId`, `DisplayPhoneNumber`, `SendArgentineMobilesWithoutNine` | los mismos de ArquitecturaBase (el último, solo con el número de prueba) |
-| `WhatsApp:GraphApiVersion`, `Templates:LoginCode`, `AllowedCountries`, `DailyAuthCodeLimit` | los mismos de `appsettings.json` de ArquitecturaBase (`v25.0`, `codigo_ingreso`, `["AR"]`, `100`) |
+| `WhatsApp:GraphApiVersion`, `Templates:LoginCode`, `AllowedCountries`, `DailyAuthCodeLimit` | `v26.0` desde la E11 (Embedded Signup v4); los demás, los de `appsettings.json` de ArquitecturaBase (`codigo_ingreso`, `["AR"]`, `100`) |
+| `WhatsApp:AppId`, `WhatsApp:EmbeddedSignupConfigId` | la app de Meta del alta embebida y la configuración de Facebook Login for Business (E11). Sin las dos, las pantallas de números no ofrecen conectar. `AppSecret` canjea el código del alta en el servidor |
 | `WhatsApp:Templates:Invitation` y las demás `WhatsApp:Templates:<Nombre>` | **no se copian** de ArquitecturaBase: Invitation es invitacion_organizacion. El módulo configura **16 nombres es/en** (Authentication + 15 Utility), incluidas recuperación/baja por Plataforma y organización. Configurar una clave no acredita aprobación en Meta. Dos «en uso» quedan derogadas, y no hay OTP de confirmación de cambios en Mi cuenta. Claves/paquete según [plantillas](whatsapp-plantillas.md) y ADR 0049. |
 
 `WhatsApp:AllowedCountries` reemplaza la lista predeterminada; no se suma a ella. Configurar solo `US` no conserva `AR`. La política se aplica al registro y a los métodos nuevos o pendientes, también al reenviar y verificar; un Phone ya verificado conserva ingreso y avisos aunque su país deje de admitirse. El país real se obtiene del E.164, no del campo `country` recibido.
 
 `Authentication:LoginLink` usa por defecto `ResendCooldownSeconds = 60`, `RequestWindowMinutes = 15` y `MaxRequestsPerWindow = 5`. La vida del enlace es fija de diez minutos. El bot lleva el token en el fragmento; preview no inicia sesión y Continuar canjea exclusivamente para Persona. Un reply libre pendiente vence al cerrar la ventana de 24 horas, comprobada también antes de enviar a Cloud API.
+
+Desde la E11 el webhook depende solo de `WhatsApp:AppSecret` y `WhatsApp:VerifyToken` (lo usan también los números de las organizaciones). El token de cada número conectado se guarda cifrado en `identity.WhatsAppChannels`; el de la configuración se copia ahí al arrancar.
 
 La retención de texto es fija de **90 días desde `ReceivedAtUtc`** del servidor; no tiene clave para ampliarla. El worker corre al arrancar y una vez por día, con scopes/lotes propios, incluso sin `PhoneNumberId` ni secretos de Meta. Apagar el canal no desactiva esa limpieza. La exportación OpenAPI no inicia mantenimiento ni necesita base; retirar las fuentes del módulo sigue la receta de [quitar WhatsApp](../guides/quitar-whatsapp.md).
 

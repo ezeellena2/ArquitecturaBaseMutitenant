@@ -29,6 +29,9 @@ public sealed partial class LoginLinkTests(ApiFactory factory) : IClassFixture<A
         builder.ConfigureTestServices(services =>
         {
             if (enabled) services.AddSingleton<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging.ILoginCodeChannel, LoginLinkPhoneChannel>();
+            // Desde la E11 un canal de teléfono instalado puede estar disponible por datos de otra prueba de esta base:
+            // el host «sin canal» lo apaga de forma explícita, sin depender del módulo.
+            else PhoneChannelsOff(services);
             services.RemoveAll<TimeProvider>(); services.AddSingleton<TimeProvider>(_clock);
             // No external transport/background processing in these database and HTTP security tests.
             services.RemoveAll<IHostedService>();
@@ -345,6 +348,31 @@ public sealed partial class LoginLinkTests(ApiFactory factory) : IClassFixture<A
         using var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login-link/" + action) { Content = JsonContent.Create(body) };
         if (action == "redeem") request.Headers.Add("Idempotency-Key", (key ?? Guid.NewGuid()).ToString());
         return await client.SendAsync(request, Ct);
+    }
+    private static void PhoneChannelsOff(IServiceCollection services)
+    {
+        var channels = services.Where(descriptor => descriptor.ServiceType == typeof(ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging.ILoginCodeChannel)).ToArray();
+        foreach (var descriptor in channels)
+        {
+            services.Remove(descriptor);
+            services.Add(ServiceDescriptor.Describe(descriptor.ServiceType, provider => new PhoneOffChannel((ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging.ILoginCodeChannel)(
+                descriptor.ImplementationInstance ?? descriptor.ImplementationFactory?.Invoke(provider)
+                ?? ActivatorUtilities.CreateInstance(provider, descriptor.ImplementationType!))), descriptor.Lifetime));
+        }
+    }
+    private sealed class PhoneOffChannel(ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging.ILoginCodeChannel inner)
+        : ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging.ILoginCodeChannel
+    {
+        public string Key => inner.Key;
+        public ArquitecturaBaseMultitenant.Domain.Authentication.LoginMethodType SupportedMethodType => inner.SupportedMethodType;
+        public bool IsAvailable => inner.SupportedMethodType != ArquitecturaBaseMultitenant.Domain.Authentication.LoginMethodType.Phone && inner.IsAvailable;
+        public IReadOnlyList<string> Countries => inner.Countries;
+        public string? ContactPhone => inner.ContactPhone;
+        public ArquitecturaBaseMultitenant.Domain.Results.Result ValidateNewDestination(ArquitecturaBaseMultitenant.Domain.Authentication.LoginCodeDestination destination, string? country) => inner.ValidateNewDestination(destination, country);
+        public string RenderLoginCode(string destination, string code, int lifetimeMinutes, ArquitecturaBaseMultitenant.Application.Common.Formatting.CultureProfile culture) => inner.RenderLoginCode(destination, code, lifetimeMinutes, culture);
+        public void EnqueueRenderedLoginCode(string payload, Guid? userId = null) => inner.EnqueueRenderedLoginCode(payload, userId);
+        public void EnqueueSignup(string destination, string code, int lifetimeMinutes, ArquitecturaBaseMultitenant.Application.Common.Formatting.CultureProfile culture) => inner.EnqueueSignup(destination, code, lifetimeMinutes, culture);
+        public void EnqueueVerification(Guid? userId, string destination, string code, int lifetimeMinutes, ArquitecturaBaseMultitenant.Application.Common.Formatting.CultureProfile culture) => inner.EnqueueVerification(userId, destination, code, lifetimeMinutes, culture);
     }
     private static async Task InvalidAsync(HttpResponseMessage response)
     {

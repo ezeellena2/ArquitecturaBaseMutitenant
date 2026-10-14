@@ -5,12 +5,14 @@ using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using ArquitecturaBaseMultitenant.Domain.Results;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Inbound;
-internal sealed class WhatsAppInboundProcessor(WhatsAppInboundSignal signal, IServiceScopeFactory scopes,
+internal sealed class WhatsAppInboundProcessor(WhatsAppInboundSignal signal, IServiceScopeFactory scopes, TenantJobRunner tenants,
     IOptions<WhatsAppOptions> options, TimeProvider clock, ILogger<WhatsAppInboundProcessor> logger)
     : PeriodicWorker(TimeSpan.FromSeconds(options.Value.InboundPollSeconds), clock, logger)
 {
-    protected override bool Enabled => options.Value.ProcessInboundInBackground && !string.IsNullOrWhiteSpace(options.Value.PhoneNumberId);
+    // Un número puede conectarse desde la pantalla después del arranque: la cola se revisa siempre que el proceso la atienda.
+    protected override bool Enabled => options.Value.ProcessInboundInBackground;
     internal async Task<int> ProcessPendingAsync(CancellationToken ct)
     {
         var processed = 0;
@@ -23,8 +25,7 @@ internal sealed class WhatsAppInboundProcessor(WhatsAppInboundSignal signal, ISe
             if (claim is null) break;
             try
             {
-                await using var scope = scopes.CreateAsyncScope();
-                var result = await scope.ServiceProvider.GetRequiredService<IWhatsAppInboundService>().ProcessAsync(claim, ct);
+                var result = await ProcessAsync(claim, ct);
                 if (result.IsSuccess) processed++;
                 else
                 {
@@ -41,6 +42,19 @@ internal sealed class WhatsAppInboundProcessor(WhatsAppInboundSignal signal, ISe
             }
         }
         return processed;
+    }
+    /// <summary>La entrada de un número de organización se procesa dentro de su alcance; la de Plataforma, en un scope común.</summary>
+    private async Task<Result> ProcessAsync(WhatsAppInboundClaim claim, CancellationToken ct)
+    {
+        if (claim.OrganizationId is not { } organizationId)
+        {
+            await using var scope = scopes.CreateAsyncScope();
+            return await scope.ServiceProvider.GetRequiredService<IWhatsAppInboundService>().ProcessAsync(claim, ct);
+        }
+        var result = Result.Success();
+        await tenants.RunAsync([organizationId], async (provider, token) =>
+            result = await provider.GetRequiredService<IWhatsAppInboundService>().ProcessAsync(claim, token), ct);
+        return result;
     }
     protected override Task RunIterationAsync(CancellationToken ct) => ProcessPendingAsync(ct);
     protected override async ValueTask<bool> WaitForNextIterationAsync(PeriodicTimer timer, CancellationToken ct)

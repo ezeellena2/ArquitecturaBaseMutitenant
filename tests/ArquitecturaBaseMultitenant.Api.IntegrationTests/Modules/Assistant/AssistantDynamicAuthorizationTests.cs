@@ -1,9 +1,7 @@
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
-using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Help;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
@@ -82,7 +80,7 @@ public sealed class AssistantDynamicAuthorizationTests(ApiFactory factory)
                 new Dictionary<string, string?> { ["FeatureManagement:whatsapp"] = "true" }));
             builder.ConfigureTestServices(services =>
             {
-                services.AddSingleton<IFeatureDefinitionContributor, HelpModuleFeature>();
+                // Desde la E11 la llave whatsapp la declara el módulo instalado; esta prueba la apaga por configuración.
                 RegisterHelpChannel(services, true, probe);
                 services.Replace(ServiceDescriptor.Singleton<ICurrentUser>(new Actor(account.UserId, Access.Consumer)));
                 services.Replace(ServiceDescriptor.Singleton<IChatClientFactory>(counter));
@@ -117,7 +115,7 @@ public sealed class AssistantDynamicAuthorizationTests(ApiFactory factory)
     [InlineData(true, "es-AR")]
     [InlineData(false, "en-US")]
     [InlineData(true, "en-US")]
-    public async Task Help_tracks_registered_channel_availability_before_and_after_search(bool enabled, string culture)
+    public async Task Help_follows_the_whatsapp_module_and_never_uses_its_channel(bool enabled, string culture)
     {
         using var client = AssistantTestData.Client(factory);
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
@@ -150,29 +148,26 @@ public sealed class AssistantDynamicAuthorizationTests(ApiFactory factory)
         var provider = scope.ServiceProvider;
         provider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(tenant, TenantKind.Personal);
         await AssistantExecutionActorTests.AcceptNoticeAsync(provider);
-        Assert.False(await provider.GetRequiredService<IFeatureService>().IsEnabledAsync("whatsapp", Ct));
+        // Desde la E11 la llave whatsapp es un módulo (para las personas, «Mensajes»): la ayuda sigue al módulo, que manda
+        // sobre el canal que comparte su llave; el canal solo se lee y nunca envía.
+        Assert.True(await provider.GetRequiredService<IFeatureService>().IsEnabledAsync("whatsapp", Ct));
         var channel = provider.GetRequiredService<IEnumerable<ILoginCodeChannel>>().Single(row => row.Key == "whatsapp");
         Assert.Equal(enabled, channel.IsAvailable);
-        Assert.DoesNotContain(provider.GetRequiredService<IEnumerable<IChannelSender>>(), row => row.Key == "whatsapp");
         var tool = Tool(provider, "help_article");
         var before = await tool.ExecuteAsync(Args(new { topicKey = "whatsapp.signin" }), Ct);
         Assert.True(before.IsSuccess);
         var articles = Assert.IsType<AssistantHelpToolData>(before.Value).Articles;
-        if (enabled)
-        {
-            Assert.Equal(culture == "en-US" ? "WhatsApp sign-in" : "Ingreso por WhatsApp", Assert.Single(articles).Title);
-            pause.Arm();
-            var execution = tool.ExecuteAsync(Args(new { topicKey = "whatsapp.signin" }), Ct);
-            await pause.WaitAsync(Ct);
-            try { probe.Disabled = true; }
-            finally { pause.Resume(); }
-            var result = await execution;
-            Assert.False(channel.IsAvailable);
-            Assert.True(await provider.GetRequiredService<IFeatureService>().IsEnabledAsync("assistant", Ct));
-            Assert.True(result.IsSuccess);
-            Assert.Empty(Assert.IsType<AssistantHelpToolData>(result.Value).Articles);
-        }
-        else Assert.Empty(articles);
+        Assert.Equal(culture == "en-US" ? "WhatsApp sign-in" : "Ingreso por WhatsApp", Assert.Single(articles).Title);
+        pause.Arm();
+        var execution = tool.ExecuteAsync(Args(new { topicKey = "whatsapp.signin" }), Ct);
+        await pause.WaitAsync(Ct);
+        try { probe.Disabled = true; }
+        finally { pause.Resume(); }
+        var result = await execution;
+        Assert.False(channel.IsAvailable);
+        Assert.True(await provider.GetRequiredService<IFeatureService>().IsEnabledAsync("assistant", Ct));
+        Assert.True(result.IsSuccess);
+        Assert.Single(Assert.IsType<AssistantHelpToolData>(result.Value).Articles);
         Assert.Equal(0, counter.Calls);
         Assert.Equal(0, probe.SendCalls);
     }

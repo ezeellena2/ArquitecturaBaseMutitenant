@@ -13,6 +13,10 @@ public sealed class WhatsAppMessage : Entity, IVersioned
     public Guid? OriginalUserId { get; private set; }
     public Guid? OriginalMethodId { get; private set; }
     public string? ReplyId { get; private set; }
+    /// <summary>El número que lo recibió o lo mandó (E11); null en las filas anteriores, que son del número de Plataforma.</summary>
+    public Guid? ChannelId { get; private set; }
+    /// <summary>El tipo de contenido que no es texto (foto, audio, documento…), sin el archivo.</summary>
+    public string? ContentType { get; private set; }
     public WhatsAppMessageDirection Direction { get; private set; }
     public WhatsAppMessageKind Kind { get; private set; }
     public WhatsAppMessageStatus Status { get; private set; }
@@ -30,7 +34,7 @@ public sealed class WhatsAppMessage : Entity, IVersioned
         WhatsAppMessageDirection direction, WhatsAppMessageKind kind, WhatsAppMessageStatus status,
         DateTime occurredAtUtc, DateTime receivedAtUtc, Guid? contactId = null,
         string? encryptedText = null, Guid? outboxMessageId = null, Guid? originalUserId = null,
-        Guid? originalMethodId = null, string? replyId = null)
+        Guid? originalMethodId = null, string? replyId = null, Guid? channelId = null, string? contentType = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(phoneNumberId);
         ArgumentException.ThrowIfNullOrWhiteSpace(wamid);
@@ -42,7 +46,8 @@ public sealed class WhatsAppMessage : Entity, IVersioned
         return new WhatsAppMessage { PhoneNumberId = phoneNumberId, Wamid = wamid, EventType = eventType,
             Direction = direction, Kind = kind, Status = status, OccurredAtUtc = occurredAtUtc,
             ReceivedAtUtc = receivedAtUtc, ContactId = contactId, EncryptedText = encryptedText, OutboxMessageId = outboxMessageId,
-            OriginalUserId = originalUserId, OriginalMethodId = originalMethodId, ReplyId = replyId,
+            OriginalUserId = originalUserId, OriginalMethodId = originalMethodId, ReplyId = replyId, ChannelId = channelId,
+            ContentType = contentType is { Length: > 0 and <= TextLimits.ShortName } ? contentType : null,
             NextAttemptAtUtc = direction == WhatsAppMessageDirection.Inbound ? receivedAtUtc : null };
     }
     public bool TryLease(Guid leaseId, DateTime nowUtc, TimeSpan lifetime, int maxAttempts = 8)
@@ -59,6 +64,15 @@ public sealed class WhatsAppMessage : Entity, IVersioned
         if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC required.", nameof(nowUtc));
         if (LeaseId != leaseId || LeaseUntilUtc <= nowUtc) return false;
         ProcessedAtUtc = nowUtc; LeaseId = null; LeaseUntilUtc = null; NextAttemptAtUtc = null; Status = WhatsAppMessageStatus.Processed;
+        return true;
+    }
+    /// <summary>No se procesa ahora (por ejemplo, el módulo de la organización está apagado): se conserva sin gastar un intento.</summary>
+    public bool Postpone(Guid leaseId, DateTime nowUtc, TimeSpan delay)
+    {
+        if (nowUtc.Kind != DateTimeKind.Utc || delay <= TimeSpan.Zero) throw new ArgumentException("Invalid postponement.");
+        if (LeaseId != leaseId || ProcessedAtUtc is not null) return false;
+        Attempts = Math.Max(0, Attempts - 1); Status = WhatsAppMessageStatus.Pending; LeaseId = null; LeaseUntilUtc = null;
+        NextAttemptAtUtc = nowUtc + delay;
         return true;
     }
     public bool Fail(Guid leaseId, DateTime nowUtc, TimeSpan retryDelay, int maxAttempts)

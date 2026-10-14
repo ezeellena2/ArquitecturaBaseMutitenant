@@ -8,19 +8,24 @@ using Microsoft.Extensions.Options;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 public sealed class WhatsAppStartupTests
 {
+    /// <summary>
+    /// Desde la E11 el webhook es de la instalación (también lo usan los números de las organizaciones) y depende solo de
+    /// sus dos secretos; si el número de Plataforma atiende lo decide el número conectado, no la configuración.
+    /// </summary>
     [Theory]
     [InlineData(false, false, false, false)]
     [InlineData(false, false, true, false)]
+    [InlineData(false, false, true, true)]
     [InlineData(true, true, false, false)]
     [InlineData(true, true, true, true)]
-    public void Availability_requires_number_and_both_webhook_secrets(bool number, bool token, bool app, bool verify)
+    public void Webhook_availability_requires_both_secrets_with_or_without_a_configured_number(bool number, bool token, bool app, bool verify)
     {
         using var provider = Provider(number, token, app, verify);
         provider.GetService<IStartupValidator>()?.Validate();
         var availability = provider.GetRequiredService<IWhatsAppAvailability>();
-        Assert.Equal(number, availability.IsEnabled);
-        Assert.Equal(number && app && verify, availability.IsWebhookEnabled);
-        Assert.Equal(availability.IsWebhookEnabled, Assert.Single(provider.GetServices<IInstalledModuleRouteAvailability>()).IsAvailable);
+        Assert.Equal(app && verify, availability.IsWebhookEnabled);
+        Assert.Equal(availability.IsWebhookEnabled, Assert.Single(provider.GetServices<IInstalledModuleRouteAvailability>(),
+            value => value.Key == WhatsAppApiModule.WebhookRoute).IsAvailable);
     }
     [Theory]
     [InlineData(true, false, false, false, "WhatsApp:AccessToken")]
@@ -43,7 +48,7 @@ public sealed class WhatsAppStartupTests
     public void Defaults_follow_operations()
     {
         var options = new WhatsAppOptions();
-        Assert.Equal("v25.0", options.GraphApiVersion); Assert.Equal(["AR"], options.AllowedCountries);
+        Assert.Equal("v26.0", options.GraphApiVersion); Assert.Equal(["AR"], options.AllowedCountries);
         Assert.Equal(100, options.DailyAuthCodeLimit);
         Assert.Equal("invitacion_organizacion", options.Templates.Invitation);
     }

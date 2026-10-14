@@ -8,16 +8,21 @@ using Microsoft.Extensions.Options;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
 
 /// <summary>Un único POST por intento durable; conserva sólo códigos estáticos y el identificador aceptado.</summary>
-internal sealed class WhatsAppCloudClient(HttpClient client, IOptions<WhatsAppOptions> options, TimeProvider clock)
+internal sealed class WhatsAppCloudClient(HttpClient client, IOptions<WhatsAppOptions> options, TimeProvider clock,
+    WhatsAppChannelCredentials? credentials = null)
 {
     public async Task<OutboxDeliveryReceipt> SendAsync(WhatsAppOutboundMessage message, CancellationToken ct)
     {
         message.Validate();
         if (message.Body is not null && message.ReplyExpiresAtUtc <= clock.GetUtcNow().UtcDateTime)
             return OutboxDeliveryReceipt.Rejected("WhatsApp.Send.WindowExpired", retryable: false);
+        // Desde la E11 el número y el token salen del canal; sin credenciales (pruebas del cliente) vale la configuración.
+        var channel = credentials is null ? new WhatsAppChannelCredential(message.PhoneNumberId, options.Value.AccessToken)
+            : await credentials.FindAsync(message.ChannelId, message.PhoneNumberId, ct);
+        if (channel is null) return OutboxDeliveryReceipt.Rejected("WhatsApp.Send.ChannelUnavailable", retryable: false);
         using var request = new HttpRequestMessage(HttpMethod.Post,
-            options.Value.GraphApiVersion + "/" + Uri.EscapeDataString(message.PhoneNumberId) + "/messages");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", options.Value.AccessToken);
+            options.Value.GraphApiVersion + "/" + Uri.EscapeDataString(channel.PhoneNumberId) + "/messages");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", channel.Token);
         request.Content = JsonContent.Create(BuildPayload(message, options.Value.SendArgentineMobilesWithoutNine));
         try
         {
@@ -27,7 +32,7 @@ internal sealed class WhatsAppCloudClient(HttpClient client, IOptions<WhatsAppOp
             catch (JsonException)
             {
                 return response.IsSuccessStatusCode
-                    ? OutboxDeliveryReceipt.Accepted(providerScope: message.PhoneNumberId, category: message.Kind.ToString())
+                    ? OutboxDeliveryReceipt.Accepted(providerScope: channel.PhoneNumberId, category: message.Kind.ToString())
                     : OutboxDeliveryReceipt.Rejected("WhatsApp.Send.InvalidResponse", response.StatusCode is HttpStatusCode.TooManyRequests || (int)response.StatusCode >= 500);
             }
             using var document = parsed;
@@ -38,7 +43,7 @@ internal sealed class WhatsAppCloudClient(HttpClient client, IOptions<WhatsAppOp
                     && messages.GetArrayLength() > 0 && messages[0].ValueKind == JsonValueKind.Object && messages[0].TryGetProperty("id", out var id) && id.ValueKind == JsonValueKind.String)
                     wamid = id.GetString();
                 if (wamid?.Length > ArquitecturaBaseMultitenant.Domain.Common.TextLimits.Description) wamid = null;
-                return OutboxDeliveryReceipt.Accepted(wamid, message.PhoneNumberId, message.Kind.ToString());
+                return OutboxDeliveryReceipt.Accepted(wamid, channel.PhoneNumberId, message.Kind.ToString());
             }
             var code = 0;
             if (document.RootElement.ValueKind == JsonValueKind.Object && document.RootElement.TryGetProperty("error", out var error)
@@ -47,6 +52,7 @@ internal sealed class WhatsAppCloudClient(HttpClient client, IOptions<WhatsAppOp
             var safeCode = code switch
             {
                 131030 => "WhatsApp.Send.RecipientNotAllowed", 131047 => "WhatsApp.Send.WindowExpired",
+                131042 => "WhatsApp.Send.PaymentRequired",
                 131026 => "WhatsApp.Send.Undeliverable", 131056 or 130429 => "WhatsApp.Send.RateLimited",
                 190 => "WhatsApp.Send.Credentials", 3 or 10 or >= 200 and <= 299 => "WhatsApp.Send.Permissions",
                 _ => "WhatsApp.Send.Rejected",

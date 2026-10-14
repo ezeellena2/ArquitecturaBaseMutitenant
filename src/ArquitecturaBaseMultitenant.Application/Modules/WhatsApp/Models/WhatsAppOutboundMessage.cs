@@ -7,7 +7,7 @@ public sealed record WhatsAppOutboundMessage(string PhoneNumberId, string To, st
     string Language, IReadOnlyList<string> BodyParameters, string? ButtonParameter = null,
     bool IsAuthentication = false, string? Body = null, string? Footer = null,
     string? LinkLabel = null, string? LinkUrl = null, IReadOnlyList<WhatsAppReplyButton>? ReplyButtons = null,
-    DateTime? ReplyExpiresAtUtc = null)
+    DateTime? ReplyExpiresAtUtc = null, Guid? ChannelId = null)
 {
     public WhatsAppMessageKind Kind => Body is not null
         ? LinkUrl is not null || ReplyButtons?.Count > 0 ? WhatsAppMessageKind.Interactive : WhatsAppMessageKind.Text

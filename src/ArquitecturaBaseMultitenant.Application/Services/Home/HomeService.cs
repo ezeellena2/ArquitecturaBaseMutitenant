@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Home;
@@ -14,8 +15,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Home;
 /// área aporta por <see cref="IPendingItemSource"/>.
 /// </summary>
 internal sealed class HomeService(OrganizationHomeAreasBuilder areas, MemberHomeCompaniesBuilder companies,
-    IEnumerable<IPendingItemSource> sources, IPermissionService permissions, ICurrentUser currentUser,
-    TimeProvider timeProvider, ILogger<HomeService> logger) : IHomeService
+    IEnumerable<IPendingItemSource> sources, IEnumerable<IModuleHomeCardSource> moduleCards, IPermissionService permissions,
+    ICurrentUser currentUser, TimeProvider timeProvider, ILogger<HomeService> logger) : IHomeService
 {
     public Task<Result<HomeResponse>> GetSummaryAsync(CancellationToken cancellationToken) =>
         OperationLog.RunAsync<HomeResponse>(logger, timeProvider, "GetHomeSummary", async () =>
@@ -63,8 +64,13 @@ internal sealed class HomeService(OrganizationHomeAreasBuilder areas, MemberHome
                 .ThenBy(group => group.Area, StringComparer.Ordinal)
                 .ThenBy(group => group.Kind, StringComparer.Ordinal)
                 .ThenBy(group => group.CompanyId).ToArray();
+            var modules = new List<HomeModuleCard>();
+            if (organization is not null)
+                foreach (var source in moduleCards)
+                    if (await source.GetAsync(fresh, cancellationToken) is { } card) modules.Add(card);
             return new HomeResponse(organization, cards,
-                PendingItemOrder.Sort(ordered.SelectMany(group => group.Items)), ordered);
+                PendingItemOrder.Sort(ordered.SelectMany(group => group.Items)), ordered,
+                modules.Count == 0 ? null : [.. modules.OrderBy(card => card.Key, StringComparer.Ordinal).Take(HomeResponse.ModuleCardLimit)]);
         });
 
     private static IReadOnlyList<PendingGroup> Group(IReadOnlyList<PendingItem> items, bool preview = true) =>

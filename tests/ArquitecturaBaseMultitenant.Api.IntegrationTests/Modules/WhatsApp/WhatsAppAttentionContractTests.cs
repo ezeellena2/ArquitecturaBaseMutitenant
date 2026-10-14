@@ -51,7 +51,7 @@ public sealed class WhatsAppAttentionContractTests(ApiFactory factory)
         using (var off = await client.GetAsync("/api/organization/whatsapp/numbers", Ct))
             Assert.Equal(HttpStatusCode.NotFound, off.StatusCode);
         await EnableAsync(tenant);
-        foreach (var path in new[] { "/api/organization/whatsapp/numbers", "/api/organization/whatsapp/customers/conversations", "/api/organization/whatsapp/broadcasts" })
+        foreach (var path in new[] { "/api/organization/whatsapp/teams", "/api/organization/whatsapp/customers/conversations", "/api/organization/whatsapp/broadcasts" })
         {
             using var response = await client.GetAsync(path, Ct);
             Assert.Equal(HttpStatusCode.NotImplemented, response.StatusCode);

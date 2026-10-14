@@ -37,7 +37,8 @@ Rige `AGENTS.md` («Velocidad y cierre liviano») y la guía [etapa en paralelo]
 10. **Importar contactos:** `.xlsx` y `.csv` con ClosedXML (MIT; versión exacta al agregarla, con al menos dos semanas de publicada). La E15 la reutiliza.
 11. **Invitación por teléfono:** hoy la identidad de una invitación es siempre un correo. «Cargar teléfonos» necesita invitaciones cuya identidad y prueba sean un Phone: el núcleo suma `InvitationIdentity` Email|Phone y la aceptación exige ese Phone verificado en la cuenta que ingresa (ADR 0047). Va con tests de seguridad de identidad.
 12. **Tiempo real:** sondeo con TanStack Query (10 s en bandejas, 5 s en la conversación abierta). Sin SignalR en esta etapa.
-13. **Ayuda del asistente:** artículos es/en de las áreas nuevas, con requisito del módulo `whatsapp`, y la guarda que exige artículo por cada área con pantallas (D25 de la ADR 0048).
+13. **Notas de B1 y B2 (decididas al programar):** un número de Plataforma que salió de la configuración la sigue (si cambia el identificador, se reemplaza) hasta que alguien lo conecta por la pantalla; el mes del cupo se corta en la zona de la organización (en Plataforma, UTC), porque Meta devuelve `timezone_id` numérico sin un catálogo por API; `account_update` no informa el medio de pago (referencia de Meta de mayo de 2026), así que `PaymentMissing` sale del error 131042 y de «Revisar»; el cambio de un número hecho por el Dueño deja `TenantFeaturesChanged` con actor persona (`SecurityEvent.ForOrganizationModule`); la cola revisa el módulo con la habilitación de la organización (`ITenantFeatureCache`), porque `IFeatureService` responde por el acceso de una sesión y el worker no tiene.
+14. **Ayuda del asistente:** artículos es/en de las áreas nuevas, con requisito del módulo `whatsapp`, y la guarda que exige artículo por cada área con pantallas (D25 de la ADR 0048).
 
 ## Parte 1 · Contrato (K1)
 

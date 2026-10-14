@@ -23,6 +23,10 @@ public sealed class WhatsAppCloudClientTests
         services.AddWhatsAppModule(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         { ["WhatsApp:PhoneNumberId"] = "fixture-number", ["WhatsApp:AccessToken"] = "fixture-token" }).Build());
         services.AddSingleton(TimeProvider.System);
+        // Desde la E11 el token sale del canal: el número conectado lo trae cifrado.
+        var protector = new WhatsAppTokenProtector(Microsoft.AspNetCore.DataProtection.DataProtectionProvider.Create("whatsapp-cloud-client-tests"));
+        services.AddSingleton<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations.IWhatsAppTokenProtector>(protector);
+        services.AddSingleton<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.IWhatsAppChannelReader>(new SendingReader(protector));
         services.AddHttpClient<WhatsAppCloudClient>().ConfigurePrimaryHttpMessageHandler(() => handler);
         await using var provider = services.BuildServiceProvider();
         var receipt = await provider.GetRequiredService<WhatsAppCloudClient>().SendAsync(new WhatsAppOutboundMessage("number", "+5491134567890", "codigo_ingreso", "es", ["123456"], "123456", true), Ct);
@@ -50,7 +54,7 @@ public sealed class WhatsAppCloudClientTests
         var message = new WhatsAppOutboundMessage("explicit-number", "+5491134567890", "codigo_ingreso", "es", ["483920"], "483920", true);
         var receipt = await client.SendAsync(message, Ct);
         Assert.Equal(1, handler.Calls);
-        Assert.Equal("/v25.0/explicit-number/messages", handler.Path);
+        Assert.Equal("/v26.0/explicit-number/messages", handler.Path);
         Assert.Equal("Bearer fixture-token", handler.Authorization);
         Assert.Equal(accepted, receipt.IsAccepted);
         Assert.Equal(retryable, receipt.IsRetryable);
@@ -93,6 +97,22 @@ public sealed class WhatsAppCloudClientTests
             Calls++; Path = request.RequestUri!.AbsolutePath; Authorization = request.Headers.Authorization!.ToString();
             return Task.FromResult(new HttpResponseMessage((HttpStatusCode)status) { Content = new StringContent(response) });
         }
+    }
+    /// <summary>El número conectado con su token cifrado; las demás lecturas no se usan acá.</summary>
+    private sealed class SendingReader(WhatsAppTokenProtector protector) : ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.IWhatsAppChannelReader
+    {
+        private readonly Guid id = Guid.NewGuid();
+        public Task<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.WhatsAppSendingChannelRow?> FindSendingAsync(Guid? channelId, string phoneNumberId, CancellationToken ct) =>
+            Task.FromResult<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.WhatsAppSendingChannelRow?>(new(id, phoneNumberId, "waba", null,
+                ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppNumberStatus.Connected, protector.Protect(id, "fixture-token")));
+        public Task<ArquitecturaBaseMultitenant.Application.Common.Pagination.PagedResult<WhatsAppNumberResponse>> ListOrganizationAsync(WhatsAppNumberListRequest request, DateTime nowUtc, CancellationToken ct) => throw new NotSupportedException();
+        public Task<WhatsAppNumberResponse?> FindOrganizationAsync(Guid id, DateTime nowUtc, CancellationToken ct) => throw new NotSupportedException();
+        public Task<int> CountOrganizationAsync(ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppNumberStatus? status, CancellationToken ct) => throw new NotSupportedException();
+        public Task<IReadOnlyList<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.WhatsAppNumberPendingRow>> ListPaymentMissingAsync(int limit, CancellationToken ct) => throw new NotSupportedException();
+        public Task<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.WhatsAppPlatformNumberRow?> FindPlatformAsync(DateTime nowUtc, CancellationToken ct) => throw new NotSupportedException();
+        public Task<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.WhatsAppPlatformChannelRow?> FindPlatformStateAsync(CancellationToken ct) => throw new NotSupportedException();
+        public Task<bool> IsActiveAsync(string phoneNumberId, CancellationToken ct) => throw new NotSupportedException();
+        public Task<WhatsAppInboundChannel?> FindInboundAsync(Guid? channelId, string phoneNumberId, CancellationToken ct) => throw new NotSupportedException();
     }
     private sealed class Logs : ILoggerProvider
     {

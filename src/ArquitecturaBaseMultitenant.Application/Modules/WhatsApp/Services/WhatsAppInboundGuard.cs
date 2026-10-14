@@ -6,7 +6,8 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 internal sealed class WhatsAppInboundGuard(IWhatsAppMessageRepository messages, IExternalLoginLock identities,
-    ILoginMethodRepository methods, IWhatsAppContactRepository contacts, IUserRepository users, LoginMethodAvailabilityPolicy availability, TimeProvider clock)
+    ILoginMethodRepository methods, IWhatsAppContactRepository contacts, IUserRepository users, LoginMethodAvailabilityPolicy availability,
+    IWhatsAppChannelReader channels, TimeProvider clock)
 {
     internal async Task<WhatsAppInboundContext?> LockAsync(WhatsAppInboundClaim claim, CancellationToken ct)
     {
@@ -24,6 +25,7 @@ internal sealed class WhatsAppInboundGuard(IWhatsAppMessageRepository messages, 
         var method = message.OriginalMethodId is { } methodId ? await methods.GetByIdAsync(methodId, ct) : null;
         var valid = method is { Type: LoginMethodType.Phone, VerifiedAtUtc: not null } && method.UserId == message.OriginalUserId
             && method.Value == contact?.WaId && (await availability.AvailableAsync([method], ct)).Count != 0;
-        return new(message, contact, account, valid ? method : null, valid);
+        var channel = await channels.FindInboundAsync(message.ChannelId, message.PhoneNumberId, ct);
+        return new(message, contact, account, valid ? method : null, valid, channel);
     }
 }

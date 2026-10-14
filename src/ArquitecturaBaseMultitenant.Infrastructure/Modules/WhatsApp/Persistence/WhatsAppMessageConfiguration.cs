@@ -19,6 +19,9 @@ internal sealed class WhatsAppMessageConfiguration : IEntityTypeConfiguration<Wh
         builder.Property(value => value.Kind).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(value => value.Status).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(value => value.ReplyId).HasMaxLength(TextLimits.ShortName);
+        builder.Property(value => value.ContentType).HasMaxLength(TextLimits.ShortName);
+        builder.HasOne<WhatsAppChannel>().WithMany().HasForeignKey(value => value.ChannelId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(value => value.ChannelId);
         builder.Property(value => value.OriginalUserId).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Throw);
         builder.Property(value => value.OriginalMethodId).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Throw);
         builder.HasIndex(value => value.OriginalUserId);
