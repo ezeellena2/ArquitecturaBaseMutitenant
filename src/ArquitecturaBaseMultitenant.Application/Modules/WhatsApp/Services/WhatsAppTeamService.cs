@@ -21,6 +21,9 @@ internal sealed class WhatsAppTeamService(TimeProvider clock, ILogger<WhatsAppTe
     public Task<Result<WhatsAppTeamResponse>> UpdateAsync(Guid id, UpdateWhatsAppTeamRequest request, CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, clock, "WhatsAppTeamUpdate", () => Task.FromResult(Result.Failure<WhatsAppTeamResponse>(ContractErrors.NotImplemented)));
 
+    public Task<Result<PagedResult<WhatsAppReferenceResponse>>> ListMemberOptionsAsync(WhatsAppTeamMemberOptionListRequest request, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync(logger, clock, "WhatsAppTeamMemberOptions", () => Task.FromResult(Result.Failure<PagedResult<WhatsAppReferenceResponse>>(ContractErrors.NotImplemented)));
+
     public Task<Result> DeleteAsync(Guid id, DeleteWhatsAppTeamRequest request, CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, clock, "WhatsAppTeamDelete", () => Task.FromResult(Result.Failure(ContractErrors.NotImplemented)));
 }

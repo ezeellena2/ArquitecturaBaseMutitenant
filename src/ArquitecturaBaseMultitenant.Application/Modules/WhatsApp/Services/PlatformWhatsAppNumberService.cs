@@ -31,9 +31,9 @@ internal sealed class PlatformWhatsAppNumberService(IWhatsAppChannelReader reade
         OperationLog.RunAsync<PlatformWhatsAppNumberResponse>(logger, clock, "PlatformWhatsAppNumberConnect", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            var input = new WhatsAppSignupInput(request.Code!, request.PhoneNumberId!.Trim(), request.WabaId!.Trim(), request.Coexistence ?? false);
-            if (await reader.IsActiveAsync(input.PhoneNumberId, cancellationToken)
-                && (await reader.FindPlatformStateAsync(cancellationToken))?.PhoneNumberId != input.PhoneNumberId)
+            var input = new WhatsAppSignupInput(request.Code!, WhatsAppNumberService.NullIfEmpty(request.PhoneNumberId), request.WabaId!.Trim(), request.Coexistence ?? false);
+            if (input.PhoneNumberId is { } known && await reader.IsActiveAsync(known, cancellationToken)
+                && (await reader.FindPlatformStateAsync(cancellationToken))?.PhoneNumberId != known)
                 return WhatsAppErrors.NumberAlreadyConnected;
             var signup = await graph.CompleteSignupAsync(input, cancellationToken);
             if (signup.IsFailure) return signup.Error;

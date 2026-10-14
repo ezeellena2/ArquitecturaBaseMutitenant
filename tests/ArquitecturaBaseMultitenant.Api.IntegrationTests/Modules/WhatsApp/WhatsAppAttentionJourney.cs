@@ -130,9 +130,10 @@ internal sealed class FakeGraph : IWhatsAppGraphClient
     {
         Interlocked.Increment(ref Signups);
         if (Failure is { } failure) return Task.FromResult(Result.Failure<WhatsAppSignupResult>(failure));
-        var digits = string.Concat(input.PhoneNumberId.Where(char.IsAsciiDigit));
+        var phoneNumberId = input.PhoneNumberId ?? "pn" + string.Concat(input.WabaId.Where(char.IsAsciiDigit));
+        var digits = string.Concat(phoneNumberId.Where(char.IsAsciiDigit));
         var display = PhoneNumber.Create("+54911" + digits[^8..]).Value;
-        return Task.FromResult(Result.Success(new WhatsAppSignupResult(WhatsAppAttentionJourney.Token, input.Coexistence ? null : "123456",
+        return Task.FromResult(Result.Success(new WhatsAppSignupResult(phoneNumberId, WhatsAppAttentionJourney.Token, input.Coexistence ? null : "123456",
             display, "Negocio verificado", HasPayment)));
     }
 

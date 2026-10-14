@@ -42,6 +42,41 @@ public sealed class WhatsAppAttentionContractTests(ApiFactory factory)
     }
 
     [Fact]
+    public void Contract_changes_of_the_stage_publish_their_shapes_limits_and_permissions()
+    {
+        var document = JsonNode.Parse(File.ReadAllText(Path.Combine(FindRepositoryRoot(), "docs", "contracts", "openapi.json")))!;
+        var schemas = document["components"]!["schemas"]!;
+        // CC10: Money como lo escribe MoneyJsonConverter.
+        var money = schemas["Money"]!;
+        Assert.Equal(["amount", "currency"], money["required"]!.AsArray().Select(value => value!.GetValue<string>()).Order(StringComparer.Ordinal));
+        Assert.Equal("decimal", money["properties"]!["amount"]!["format"]!.GetValue<string>());
+        Assert.Equal("^[A-Z]{3}$", money["properties"]!["currency"]!["pattern"]!.GetValue<string>());
+        // CC12 y CC19: topes de las listas nuevas.
+        Assert.Equal(WhatsAppFeature.MaxTeamMembers, schemas["UpdateWhatsAppTeamHttpRequest"]!["properties"]!["memberIds"]!["maxItems"]!.GetValue<int>());
+        Assert.Equal(WhatsAppFeature.MaxTeamMembers, schemas["WhatsAppTeamDetailResponse"]!["properties"]!["members"]!["maxItems"]!.GetValue<int>());
+        Assert.Equal(WhatsAppFeature.MaxMemberPreview, schemas["WhatsAppTeamResponse"]!["properties"]!["memberPreview"]!["maxItems"]!.GetValue<int>());
+        Assert.Equal(WhatsAppFeature.MaxTemplateLanguages, schemas["WhatsAppTemplateResponse"]!["properties"]!["languages"]!["maxItems"]!.GetValue<int>());
+        // CC22: cada etiqueta, en el contacto, la importación y las consultas, tiene el largo de WhatsAppTextLimits.Tag.
+        Assert.Equal(WhatsAppTextLimits.Tag, schemas["UpdateWhatsAppContactHttpRequest"]!["properties"]!["tags"]!["items"]!["maxLength"]!.GetValue<int>());
+        Assert.Equal(WhatsAppTextLimits.Tag, schemas["WhatsAppAudienceInput"]!["properties"]!["tag"]!["maxLength"]!.GetValue<int>());
+        foreach (var path in new[] { "/api/organization/whatsapp/contacts/import", "/api/organization/whatsapp/contacts/import/preview" })
+            Assert.Equal(WhatsAppTextLimits.Tag, document["paths"]![path]!["post"]!["requestBody"]!["content"]!["multipart/form-data"]!["schema"]!["properties"]!["Tag"]!["maxLength"]!.GetValue<int>());
+        foreach (var path in new[] { "/api/organization/whatsapp/contacts", "/api/organization/whatsapp/broadcasts/estimate" })
+            Assert.Equal(WhatsAppTextLimits.Tag, document["paths"]![path]!["get"]!["parameters"]!.AsArray()
+                .Single(parameter => parameter!["name"]!.GetValue<string>() == "Tag")!["schema"]!["maxLength"]!.GetValue<int>());
+        // CC17: duplicar pasa al front.
+        Assert.DoesNotContain(document["paths"]!.AsObject(), path => path.Key.EndsWith("/duplicate", StringComparison.Ordinal));
+        // CC11, CC14 y CC21: cada opción nueva con el permiso de su pantalla.
+        foreach (var (path, permission) in new[]
+        {
+            ("/api/organization/whatsapp/teams/member-options", "whatsapp.manage"), ("/api/platform/whatsapp/teams/member-options", "platform.whatsapp.manage"),
+            ("/api/organization/whatsapp/customers/inbox-teams", "whatsapp.customers"), ("/api/organization/whatsapp/internal/inbox-teams", "whatsapp.internal"),
+            ("/api/platform/whatsapp/inbox-teams", "platform.whatsapp.attend"), ("/api/organization/whatsapp/numbers/company-options", "whatsapp.manage"),
+        })
+            Assert.Equal([permission], document["paths"]![path]!["get"]!["x-permissions"]!.AsArray().Select(value => value!.GetValue<string>()));
+    }
+
+    [Fact]
     public async Task Routes_answer_not_implemented_behind_the_module_and_404_without_it()
     {
         using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });

@@ -154,6 +154,28 @@ public sealed class WhatsAppNumbersTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Coexistence_resolves_the_number_from_the_account_and_company_options_list_active_companies()
+    {
+        var graph = new FakeGraph();
+        await using var host = WhatsAppAttentionJourney.Host(factory, graph);
+        using var client = WhatsAppAttentionJourney.Client(host);
+        await WhatsAppAttentionJourney.OrganizationAsync(factory, host, client, Ct);
+        var waba = "waba" + WhatsAppAttentionJourney.NewNumberId();
+        using var created = await WhatsAppAttentionJourney.PostAsync(client, "/api/organization/whatsapp/numbers",
+            new { code = "signup-code", wabaId = waba, coexistence = true }, Ct);
+        Assert.True(created.StatusCode == HttpStatusCode.Created, await created.Content.ReadAsStringAsync(Ct));
+        Assert.True((await WhatsAppAttentionJourney.JsonAsync(created, Ct)).GetProperty("coexistence").GetBoolean());
+        using var missing = await WhatsAppAttentionJourney.PostAsync(client, "/api/organization/whatsapp/numbers",
+            new { code = "signup-code", wabaId = waba, coexistence = false }, Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, missing.StatusCode);
+
+        var company = await OrganizationJourney.CreateCompanyAsync(client, "Sucursal Centro", Ct);
+        using var options = await client.GetAsync("/api/organization/whatsapp/numbers/company-options?search=Centro", Ct);
+        var item = Assert.Single((await WhatsAppAttentionJourney.JsonAsync(options, Ct)).GetProperty("items").EnumerateArray());
+        Assert.Equal((company, "Sucursal Centro"), (item.GetProperty("id").GetGuid(), item.GetProperty("name").GetString()));
+    }
+
+    [Fact]
     public async Task A_member_without_the_permission_gets_403_and_a_company_of_another_organization_is_not_found()
     {
         var graph = new FakeGraph();

@@ -22,6 +22,9 @@ internal static class WhatsAppRequestRules
     internal static bool AreValidIds(IReadOnlyList<Guid>? ids) =>
         ids is not null && ids.All(id => id != Guid.Empty) && ids.Distinct().Count() == ids.Count;
 
+    /// <summary>Los integrantes de un equipo: el PUT reemplaza la lista entera, con un tope.</summary>
+    internal static bool AreValidMembers(IReadOnlyList<Guid>? ids) => AreValidIds(ids) && ids!.Count <= WhatsAppFeature.MaxTeamMembers;
+
     internal static bool IsValidNotice(int? minutes) => minutes is null || WhatsAppFeature.NotifyAfterMinutesOptions.Contains(minutes.Value);
 
     internal static bool AreValidVariables(IReadOnlyList<string>? values) =>

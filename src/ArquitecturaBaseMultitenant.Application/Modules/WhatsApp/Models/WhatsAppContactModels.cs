@@ -5,9 +5,13 @@ using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 
-/// <summary>Un contacto de la organización con su consentimiento de promociones y el origen de ese dato.</summary>
+/// <summary>
+/// Un contacto de la organización con su consentimiento de promociones y el origen de ese dato. displayNumber va en E.164 (el
+/// front lo formatea); latestConversationId es la conversación más reciente, para «Ver chat».
+/// </summary>
 public sealed record WhatsAppContactResponse(Guid Id, string? Name, string DisplayNumber, IReadOnlyList<string> Tags, WhatsAppConsent Consent,
-    WhatsAppConsentSource? ConsentSource, DateTime? ConsentChangedAtUtc, bool LinkedToAccount, DateTime? LastConversationAtUtc, uint Version);
+    WhatsAppConsentSource? ConsentSource, DateTime? ConsentChangedAtUtc, bool LinkedToAccount, DateTime? LastConversationAtUtc, uint Version,
+    Guid? LatestConversationId);
 
 public sealed record WhatsAppContactListResponse(PagedResult<WhatsAppContactResponse> Contacts, int Total, int Accepting);
 
@@ -18,7 +22,7 @@ public sealed record WhatsAppContactListRequest : PagedRequest
 }
 
 public sealed record WhatsAppContactConversationResponse(Guid ConversationId, DateTime StartedAtUtc, WhatsAppReferenceResponse? Team,
-    WhatsAppReferenceResponse? Assignee, int MessageCount);
+    WhatsAppReferenceResponse? Assignee, int MessageCount, string? LastMessagePreview);
 
 public sealed record WhatsAppContactBroadcastResponse(Guid BroadcastId, string Name, DateTime SentAtUtc, WhatsAppRecipientStatus Status);
 
@@ -44,12 +48,18 @@ public sealed record WhatsAppImportResponse(int Imported, int Updated, PagedResu
 /// <summary>Lo que haría la importación, sin guardar: filas nuevas, actualizadas y rechazadas.</summary>
 public sealed record WhatsAppImportPreviewResponse(int Rows, int New, int Updated, PagedResult<WhatsAppImportRejectionResponse> Rejected);
 
-public sealed record WhatsAppTemplateResponse(Guid Id, string Name, WhatsAppTemplateCategory Category, string Language, string Body,
-    IReadOnlyList<string> Variables, WhatsAppTemplateStatus Status, string? RejectionReason, bool IsSystem, DateTime UpdatedAtUtc, uint Version);
+/// <summary>
+/// Una plantilla de Meta. languages son sus idiomas (hasta 10; las del sistema traen es y en); title es el nombre visible de las
+/// del sistema y null en las demás.
+/// </summary>
+public sealed record WhatsAppTemplateResponse(Guid Id, string Name, WhatsAppTemplateCategory Category, IReadOnlyList<string> Languages, string Body,
+    IReadOnlyList<string> Variables, WhatsAppTemplateStatus Status, string? RejectionReason, bool IsSystem, DateTime UpdatedAtUtc, uint Version,
+    string? Title);
 
 public enum WhatsAppTemplateGroup { Consultations, System }
 
-public sealed record WhatsAppTemplateListResponse(PagedResult<WhatsAppTemplateResponse> Templates, int Approved);
+/// <summary>La lista con las aprobadas y, en Plataforma, cuántas hay por grupo (consultations y system); en la organización van en null.</summary>
+public sealed record WhatsAppTemplateListResponse(PagedResult<WhatsAppTemplateResponse> Templates, int Approved, int? Consultations, int? System);
 
 public sealed record WhatsAppTemplateListRequest : PagedRequest
 {
@@ -59,6 +69,7 @@ public sealed record WhatsAppTemplateListRequest : PagedRequest
 
 public sealed record WhatsAppTemplateVariableInput(string? Label, string? Example);
 
+/// <summary>language es un código de cultura del catálogo (es-AR); el back lo traduce al de Meta (es_AR).</summary>
 public sealed record CreateWhatsAppTemplateRequest(string? Name, WhatsAppTemplateCategory? Category, string? Language, string? Body,
     IReadOnlyList<WhatsAppTemplateVariableInput>? Variables);
 
@@ -72,7 +83,10 @@ public sealed record WhatsAppBroadcastResponse(Guid Id, string Name, WhatsAppRef
     int Recipients, WhatsAppBroadcastStatus Status, DateTime? ScheduledAtUtc, DateTime? SentAtUtc, int Delivered, int Read, int Replied,
     int Unsubscribed, int Failed, Money EstimatedCost, uint Version);
 
-public sealed record WhatsAppBroadcastListRequest : PagedRequest;
+public sealed record WhatsAppBroadcastListRequest : PagedRequest
+{
+    public WhatsAppBroadcastStatus? Status { get; init; }
+}
 
 public sealed record WhatsAppBroadcastListResponse(PagedResult<WhatsAppBroadcastResponse> Broadcasts, int Scheduled);
 
@@ -88,7 +102,8 @@ public sealed record WhatsAppBroadcastDetailRequest : PagedRequest
 
 public sealed record WhatsAppBroadcastEstimateRequest(Guid? TemplateId, WhatsAppAudienceKind? Kind, string? Tag);
 
-public sealed record WhatsAppBroadcastEstimateResponse(int Recipients, Money EstimatedCost);
+/// <summary>Cuántos reciben y cuánto cuesta, con el país (ISO 3166) de las tarifas usadas.</summary>
+public sealed record WhatsAppBroadcastEstimateResponse(int Recipients, Money EstimatedCost, string Country);
 
 public sealed record CreateWhatsAppBroadcastRequest(string? Name, Guid? TemplateId, IReadOnlyList<string>? Variables, WhatsAppAudienceInput? Audience,
     DateTime? ScheduledAtUtc);

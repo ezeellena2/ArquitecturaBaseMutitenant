@@ -14,5 +14,4 @@ public interface IWhatsAppBroadcastService
     Task<Result<WhatsAppBroadcastEstimateResponse>> EstimateAsync(WhatsAppBroadcastEstimateRequest request, CancellationToken cancellationToken);
     Task<Result<WhatsAppBroadcastResponse>> CreateAsync(CreateWhatsAppBroadcastRequest request, CancellationToken cancellationToken);
     Task<Result<WhatsAppBroadcastResponse>> CancelAsync(Guid id, CancelWhatsAppBroadcastRequest request, CancellationToken cancellationToken);
-    Task<Result<WhatsAppBroadcastResponse>> DuplicateAsync(Guid id, CancellationToken cancellationToken);
 }

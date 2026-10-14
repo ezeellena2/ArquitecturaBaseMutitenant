@@ -11,7 +11,7 @@ internal sealed class UpdateWhatsAppTeamRequestValidator : AbstractValidator<Upd
     {
         RuleFor(request => request.Name).NotEmpty().WithMessage(_ => WhatsAppTexts.Get("WhatsApp.Validation.Required"));
         RuleFor(request => request.Name).MaximumLength(TextLimits.ShortName).WithMessage(_ => WhatsAppTexts.Get("WhatsApp.Validation.TooLong"));
-        RuleFor(request => request.MemberIds).Must(WhatsAppRequestRules.AreValidIds).WithMessage(_ => WhatsAppTexts.Get("WhatsApp.Validation.SelectionInvalid"));
+        RuleFor(request => request.MemberIds).Must(WhatsAppRequestRules.AreValidMembers).WithMessage(_ => WhatsAppTexts.Get("WhatsApp.Validation.SelectionInvalid"));
         RuleFor(request => request.NotifyAfterMinutes).Must(WhatsAppRequestRules.IsValidNotice).WithMessage(_ => WhatsAppTexts.Get("WhatsApp.Validation.NotifyInvalid"));
         RuleFor(request => request.Version).NotNull().WithMessage(_ => WhatsAppTexts.Get("WhatsApp.Validation.VersionRequired"));
     }

@@ -31,12 +31,13 @@ public sealed class OrganizationWhatsAppBroadcastsController(IWhatsAppBroadcastS
     [ProducesProblem(403)]
     [ProducesProblem(404)]
     [ProducesProblem(500)]
-    public async Task<IActionResult> List([FromQuery] WhatsAppPagedHttpQuery query, CancellationToken cancellationToken) =>
+    public async Task<IActionResult> List([FromQuery] WhatsAppBroadcastListHttpQuery query, CancellationToken cancellationToken) =>
         (await service.ListAsync(new WhatsAppBroadcastListRequest
         {
             Page = query.Page ?? PagedRequest.DefaultPage,
             PageSize = query.PageSize ?? PagedRequest.DefaultPageSize,
             Search = query.Search,
+            Status = query.Status,
         }, cancellationToken)).ToActionResult(this);
 
     [HttpGet("template-options")]
@@ -81,6 +82,7 @@ public sealed class OrganizationWhatsAppBroadcastsController(IWhatsAppBroadcastS
         {
             Page = query.Page ?? PagedRequest.DefaultPage,
             PageSize = query.PageSize ?? PagedRequest.DefaultPageSize,
+            Search = query.Search,
             Status = query.Status,
         }, cancellationToken)).ToActionResult(this);
 
@@ -119,16 +121,4 @@ public sealed class OrganizationWhatsAppBroadcastsController(IWhatsAppBroadcastS
     [ProducesProblem(500)]
     public async Task<IActionResult> Cancel([FromRoute] Guid id, [FromBody] CancelWhatsAppBroadcastHttpRequest request, CancellationToken cancellationToken) =>
         (await service.CancelAsync(id, new CancelWhatsAppBroadcastRequest(request.Version), cancellationToken)).ToActionResult(this);
-
-    [HttpPost("{id:guid}/duplicate")]
-    [Idempotent]
-    [ProducesResponseType<WhatsAppBroadcastResponse>(201)]
-    [ProducesProblem(401)]
-    [ProducesProblem(403)]
-    [ProducesProblem(404)]
-    [ProducesProblem(409)]
-    [ProducesProblem(422)]
-    [ProducesProblem(500)]
-    public async Task<IActionResult> Duplicate([FromRoute] Guid id, CancellationToken cancellationToken) =>
-        (await service.DuplicateAsync(id, cancellationToken)).ToCreatedResult(this, nameof(Get), broadcast => new { id = broadcast.Id });
 }

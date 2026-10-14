@@ -17,8 +17,6 @@ internal sealed class WhatsAppTemplateService(TimeProvider clock, ILogger<WhatsA
     public Task<Result<WhatsAppTemplateResponse>> CreateAsync(CreateWhatsAppTemplateRequest request, CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, clock, "WhatsAppTemplateCreate", () => Task.FromResult(Result.Failure<WhatsAppTemplateResponse>(ContractErrors.NotImplemented)));
 
-    public Task<Result<WhatsAppTemplateResponse>> DuplicateAsync(Guid id, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "WhatsAppTemplateDuplicate", () => Task.FromResult(Result.Failure<WhatsAppTemplateResponse>(ContractErrors.NotImplemented)));
 
     public Task<Result> DeleteAsync(Guid id, DeleteWhatsAppTemplateRequest request, CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, clock, "WhatsAppTemplateDelete", () => Task.FromResult(Result.Failure(ContractErrors.NotImplemented)));

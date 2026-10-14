@@ -9,20 +9,23 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.In
 /// </summary>
 public interface IWhatsAppGraphClient
 {
-    /// <summary>Canjea el código del alta (vive 30 segundos), suscribe la app, registra el número salvo en coexistencia y lee sus datos.</summary>
+    /// <summary>
+    /// Canjea el código del alta (vive 30 segundos), suscribe la app, registra el número salvo en coexistencia y lee sus datos.
+    /// En coexistencia el alta puede traer solo la cuenta: el número se resuelve desde ella.
+    /// </summary>
     Task<Result<WhatsAppSignupResult>> CompleteSignupAsync(WhatsAppSignupInput input, CancellationToken ct);
 
     /// <summary>Si la cuenta de Meta tiene medio de pago (<c>primary_funding_id</c>).</summary>
     Task<Result<bool>> HasPaymentAsync(string wabaId, string token, CancellationToken ct);
 }
 
-public sealed record WhatsAppSignupInput(string Code, string PhoneNumberId, string WabaId, bool Coexistence)
+public sealed record WhatsAppSignupInput(string Code, string? PhoneNumberId, string WabaId, bool Coexistence)
 {
     public override string ToString() => nameof(WhatsAppSignupInput);
 }
 
 /// <summary>El token del número, el PIN de registro (null en coexistencia) y lo que Meta dice del número.</summary>
-public sealed record WhatsAppSignupResult(string Token, string? Pin, PhoneNumber DisplayNumber, string? VerifiedName, bool HasPayment)
+public sealed record WhatsAppSignupResult(string PhoneNumberId, string Token, string? Pin, PhoneNumber DisplayNumber, string? VerifiedName, bool HasPayment)
 {
     public override string ToString() => nameof(WhatsAppSignupResult);
 }

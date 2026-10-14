@@ -9,7 +9,10 @@ public sealed record WhatsAppPagedHttpQuery(int? Page, int? PageSize, string? Se
 
 public sealed record WhatsAppVersionHttpQuery(uint? Version);
 
-/// <summary>Lo que devuelve el alta embebida de Meta: el código vive 30 segundos y nunca se registra.</summary>
+/// <summary>
+/// Lo que devuelve el alta embebida de Meta: el código vive 30 segundos y nunca se registra. En coexistencia phoneNumberId
+/// es opcional: el FINISH de Meta trae solo wabaId y el back resuelve el número desde la cuenta.
+/// </summary>
 public sealed record ConnectWhatsAppNumberHttpRequest([property: RawText] string? Code, [property: RawText] string? PhoneNumberId,
     [property: RawText] string? WabaId, Guid? CompanyId, bool? Coexistence)
 {
@@ -34,9 +37,10 @@ public sealed record UpdateWhatsAppBotHttpRequest(string? Welcome, string? OutOf
 public sealed record UpdatePlatformWhatsAppBotHttpRequest(string? Welcome, string? OutOfHours, WhatsAppBotScheduleInput? Schedule,
     IReadOnlyList<WhatsAppBotMenuOptionInput>? Menu, uint? Version);
 
-/// <summary>Plataforma no elige bandeja: sus equipos son de operadores.</summary>
+/// <summary>Plataforma no elige bandeja: sus equipos son de operadores (accountId); en la organización memberIds son miembros (memberId).</summary>
 public sealed record CreateWhatsAppTeamHttpRequest(string? Name, WhatsAppInbox? Inbox, IReadOnlyList<Guid>? MemberIds, int? NotifyAfterMinutes);
 
+/// <summary>memberIds reemplaza la lista entera (hasta 200): miembros (memberId) en la organización, operadores (accountId) en Plataforma.</summary>
 public sealed record UpdateWhatsAppTeamHttpRequest(string? Name, IReadOnlyList<Guid>? MemberIds, int? NotifyAfterMinutes, uint? Version);
 
 public sealed record WhatsAppConversationListHttpQuery(int? Page, int? PageSize, string? Search, Guid? TeamId, WhatsAppConversationFilter? State);
@@ -80,7 +84,10 @@ public sealed record PlatformWhatsAppTemplateListHttpQuery(int? Page, int? PageS
 public sealed record CreateWhatsAppTemplateHttpRequest(string? Name, WhatsAppTemplateCategory? Category, string? Language, string? Body,
     IReadOnlyList<WhatsAppTemplateVariableInput>? Variables);
 
-public sealed record WhatsAppBroadcastDetailHttpQuery(int? Page, int? PageSize, WhatsAppRecipientStatus? Status);
+public sealed record WhatsAppBroadcastListHttpQuery(int? Page, int? PageSize, string? Search, WhatsAppBroadcastStatus? Status);
+
+/// <summary>search busca en los destinatarios de la difusión.</summary>
+public sealed record WhatsAppBroadcastDetailHttpQuery(int? Page, int? PageSize, string? Search, WhatsAppRecipientStatus? Status);
 
 public sealed record WhatsAppBroadcastEstimateHttpQuery(Guid? TemplateId, WhatsAppAudienceKind? Kind, string? Tag);
 

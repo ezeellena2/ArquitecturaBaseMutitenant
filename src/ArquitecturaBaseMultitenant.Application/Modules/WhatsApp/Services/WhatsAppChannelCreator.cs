@@ -20,18 +20,18 @@ internal sealed class WhatsAppChannelCreator(IWhatsAppChannelRepository channels
         WhatsAppSignupResult signup, CancellationToken ct)
     {
         var organizationId = tenant.RequiredTenantId;
-        await channels.LockNumberAsync(input.PhoneNumberId, ct);
-        if (await channels.GetActiveAsync(input.PhoneNumberId, ct) is not null) return WhatsAppErrors.NumberAlreadyConnected;
+        await channels.LockNumberAsync(signup.PhoneNumberId, ct);
+        if (await channels.GetActiveAsync(signup.PhoneNumberId, ct) is not null) return WhatsAppErrors.NumberAlreadyConnected;
         var zone = (await settings.FindCurrentAsync(ct))?.DefaultTimeZoneId ?? WhatsAppChannelBootstrapService.PlatformUsageTimeZoneId;
-        return Add(WhatsAppChannel.Connect(organizationId, companyId, input.PhoneNumberId, input.WabaId, signup.DisplayNumber,
+        return Add(WhatsAppChannel.Connect(organizationId, companyId, signup.PhoneNumberId, input.WabaId, signup.DisplayNumber,
             signup.VerifiedName, input.Coexistence, signup.HasPayment, WhatsAppChannelSource.Signup, zone, clock.GetUtcNow().UtcDateTime), signup);
     }
 
     internal async Task<Result<WhatsAppChannel>> ConnectPlatformAsync(WhatsAppSignupInput input, WhatsAppSignupResult signup, CancellationToken ct)
     {
-        await channels.LockNumberAsync(input.PhoneNumberId, ct);
+        await channels.LockNumberAsync(signup.PhoneNumberId, ct);
         var current = await channels.GetPlatformAsync(null, ct);
-        var active = await channels.GetActiveAsync(input.PhoneNumberId, ct);
+        var active = await channels.GetActiveAsync(signup.PhoneNumberId, ct);
         if (active is not null && active.Id != current?.Id) return WhatsAppErrors.NumberAlreadyConnected;
         var nowUtc = clock.GetUtcNow().UtcDateTime;
         if (current is not null)
@@ -41,7 +41,7 @@ internal sealed class WhatsAppChannelCreator(IWhatsAppChannelRepository channels
             channels.MarkUpdated(current);
             audit.Record(current, Reason, WhatsAppChannelAuditWriter.Status(before, current.Status));
         }
-        return Add(WhatsAppChannel.Connect(null, null, input.PhoneNumberId, input.WabaId, signup.DisplayNumber, signup.VerifiedName,
+        return Add(WhatsAppChannel.Connect(null, null, signup.PhoneNumberId, input.WabaId, signup.DisplayNumber, signup.VerifiedName,
             input.Coexistence, signup.HasPayment, WhatsAppChannelSource.Signup, WhatsAppChannelBootstrapService.PlatformUsageTimeZoneId, nowUtc), signup);
     }
 

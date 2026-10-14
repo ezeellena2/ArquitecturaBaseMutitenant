@@ -40,6 +40,9 @@ internal sealed class WhatsAppConversationService(TimeProvider clock, ILogger<Wh
     public Task<Result<PagedResult<WhatsAppTransferPersonResponse>>> ListTransferPeopleAsync(WhatsAppInbox? inbox, Guid id, WhatsAppTransferOptionListRequest request, CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, clock, "WhatsAppConversationListTransferPeople", () => Task.FromResult(Result.Failure<PagedResult<WhatsAppTransferPersonResponse>>(ContractErrors.NotImplemented)));
 
+    public Task<Result<PagedResult<WhatsAppReferenceResponse>>> ListInboxTeamsAsync(WhatsAppInbox? inbox, WhatsAppInboxTeamListRequest request, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync(logger, clock, "WhatsAppConversationInboxTeams", () => Task.FromResult(Result.Failure<PagedResult<WhatsAppReferenceResponse>>(ContractErrors.NotImplemented)));
+
     public Task<Result<WhatsAppUntakenResponse>> GetUntakenAsync(CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, clock, "WhatsAppConversationGetUntaken", () => Task.FromResult(Result.Failure<WhatsAppUntakenResponse>(ContractErrors.NotImplemented)));
 }

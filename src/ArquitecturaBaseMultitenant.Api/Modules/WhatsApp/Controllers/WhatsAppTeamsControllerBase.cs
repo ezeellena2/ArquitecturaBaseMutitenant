@@ -35,6 +35,21 @@ public abstract class WhatsAppTeamsControllerBase(IWhatsAppTeamService service) 
             Search = query.Search,
         }, cancellationToken)).ToActionResult(this);
 
+    [HttpGet("member-options")]
+    [ProducesResponseType<PagedResult<WhatsAppReferenceResponse>>(200)]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> ListMemberOptions([FromQuery] WhatsAppPagedHttpQuery query, CancellationToken cancellationToken) =>
+        (await service.ListMemberOptionsAsync(new WhatsAppTeamMemberOptionListRequest
+        {
+            Page = query.Page ?? PagedRequest.DefaultPage,
+            PageSize = query.PageSize ?? PagedRequest.DefaultPageSize,
+            Search = query.Search,
+        }, cancellationToken)).ToActionResult(this);
+
     [HttpGet("{id:guid}")]
     [ProducesResponseType<WhatsAppTeamDetailResponse>(200)]
     [ProducesProblem(401)]

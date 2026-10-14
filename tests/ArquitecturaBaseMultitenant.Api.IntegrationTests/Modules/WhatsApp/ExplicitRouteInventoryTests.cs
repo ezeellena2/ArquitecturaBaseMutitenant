@@ -11,6 +11,7 @@ public sealed partial class ExplicitRouteInventoryTests
             "GET /api/organization/whatsapp/numbers",
             "POST /api/organization/whatsapp/numbers",
             "GET /api/organization/whatsapp/numbers/{id:guid}",
+            "GET /api/organization/whatsapp/numbers/company-options",
             "PUT /api/organization/whatsapp/numbers/{id:guid}",
             "DELETE /api/organization/whatsapp/numbers/{id:guid}",
             "POST /api/organization/whatsapp/numbers/{id:guid}/check",
@@ -29,7 +30,6 @@ public sealed partial class ExplicitRouteInventoryTests
             "POST /api/organization/whatsapp/templates",
             "GET /api/organization/whatsapp/templates/{id:guid}",
             "DELETE /api/organization/whatsapp/templates/{id:guid}",
-            "POST /api/organization/whatsapp/templates/{id:guid}/duplicate",
             "GET /api/organization/whatsapp/broadcasts",
             "POST /api/organization/whatsapp/broadcasts",
             "GET /api/organization/whatsapp/broadcasts/estimate",
@@ -37,7 +37,6 @@ public sealed partial class ExplicitRouteInventoryTests
             "GET /api/organization/whatsapp/broadcasts/tags",
             "GET /api/organization/whatsapp/broadcasts/{id:guid}",
             "POST /api/organization/whatsapp/broadcasts/{id:guid}/cancel",
-            "POST /api/organization/whatsapp/broadcasts/{id:guid}/duplicate",
             "POST /api/organization/whatsapp/phone-imports/preview",
             "POST /api/organization/whatsapp/phone-imports",
             "GET /api/platform/whatsapp/number",
@@ -50,7 +49,6 @@ public sealed partial class ExplicitRouteInventoryTests
             "POST /api/platform/whatsapp/templates",
             "GET /api/platform/whatsapp/templates/{id:guid}",
             "DELETE /api/platform/whatsapp/templates/{id:guid}",
-            "POST /api/platform/whatsapp/templates/{id:guid}/duplicate",
             "GET /api/me/whatsapp/conversations",
             "GET /api/me/whatsapp/conversations/{id:guid}",
             "DELETE /api/me/whatsapp/conversations/{id:guid}/link",
@@ -61,6 +59,7 @@ public sealed partial class ExplicitRouteInventoryTests
             [
                 $"GET {prefix}",
                 $"POST {prefix}",
+                $"GET {prefix}/member-options",
                 $"GET {prefix}/{{id:guid}}",
                 $"PUT {prefix}/{{id:guid}}",
                 $"DELETE {prefix}/{{id:guid}}",
@@ -68,6 +67,7 @@ public sealed partial class ExplicitRouteInventoryTests
         foreach (var prefix in new[] { "/api/organization/whatsapp/customers", "/api/organization/whatsapp/internal", "/api/platform/whatsapp" })
             routes.AddRange(
             [
+                $"GET {prefix}/inbox-teams",
                 $"GET {prefix}/conversations",
                 $"GET {prefix}/conversations/{{id:guid}}",
                 $"POST {prefix}/conversations/{{id:guid}}/take",

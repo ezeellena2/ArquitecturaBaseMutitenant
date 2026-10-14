@@ -38,6 +38,21 @@ public sealed class OrganizationWhatsAppNumbersController(IWhatsAppNumberService
             Search = query.Search,
         }, cancellationToken)).ToActionResult(this);
 
+    [HttpGet("company-options")]
+    [ProducesResponseType<PagedResult<WhatsAppReferenceResponse>>(200)]
+    [ProducesProblem(400)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(500)]
+    public async Task<IActionResult> ListCompanyOptions([FromQuery] WhatsAppPagedHttpQuery query, CancellationToken cancellationToken) =>
+        (await service.ListCompanyOptionsAsync(new WhatsAppCompanyOptionListRequest
+        {
+            Page = query.Page ?? PagedRequest.DefaultPage,
+            PageSize = query.PageSize ?? PagedRequest.DefaultPageSize,
+            Search = query.Search,
+        }, cancellationToken)).ToActionResult(this);
+
     [HttpGet("{id:guid}")]
     [ProducesResponseType<WhatsAppNumberResponse>(200)]
     [ProducesProblem(401)]

@@ -12,4 +12,6 @@ public interface IWhatsAppTeamService
     Task<Result<WhatsAppTeamResponse>> CreateAsync(CreateWhatsAppTeamRequest request, CancellationToken cancellationToken);
     Task<Result<WhatsAppTeamResponse>> UpdateAsync(Guid id, UpdateWhatsAppTeamRequest request, CancellationToken cancellationToken);
     Task<Result> DeleteAsync(Guid id, DeleteWhatsAppTeamRequest request, CancellationToken cancellationToken);
+    /// <summary>Organización: miembros activos (memberId). Plataforma: operadores (accountId).</summary>
+    Task<Result<PagedResult<WhatsAppReferenceResponse>>> ListMemberOptionsAsync(WhatsAppTeamMemberOptionListRequest request, CancellationToken cancellationToken);
 }

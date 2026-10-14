@@ -1,7 +1,9 @@
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
+using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Models.Companies;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Services;
@@ -35,14 +37,27 @@ internal sealed class WhatsAppNumberService(IWhatsAppChannelReader reader, IWhat
             await reader.FindOrganizationAsync(id, clock.GetUtcNow().UtcDateTime, cancellationToken) is { } number
                 ? number : WhatsAppErrors.NumberNotFound);
 
+    public Task<Result<PagedResult<WhatsAppReferenceResponse>>> ListCompanyOptionsAsync(WhatsAppCompanyOptionListRequest request,
+        CancellationToken cancellationToken) =>
+        OperationLog.RunAsync<PagedResult<WhatsAppReferenceResponse>>(logger, clock, "WhatsAppNumberCompanyOptions", async () =>
+        {
+            if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+            var page = await companies.ListAsync(new ListCompaniesRequest
+            {
+                Page = request.Page, PageSize = request.PageSize, Search = request.Search, Status = CompanyStatus.Active,
+            }, cancellationToken);
+            return new PagedResult<WhatsAppReferenceResponse>([.. page.Items.Select(company => new WhatsAppReferenceResponse(company.Id, company.Name))],
+                page.Page, page.PageSize, page.TotalCount);
+        });
+
     public Task<Result<WhatsAppNumberResponse>> ConnectAsync(ConnectWhatsAppNumberRequest request, CancellationToken cancellationToken) =>
         OperationLog.RunAsync<WhatsAppNumberResponse>(logger, clock, "WhatsAppNumberConnect", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             if (request.CompanyId is { } companyId && !await IsActiveCompanyAsync(companyId, cancellationToken)) return CompanyErrors.NotFound;
-            var input = new WhatsAppSignupInput(request.Code!, request.PhoneNumberId!.Trim(), request.WabaId!.Trim(), request.Coexistence ?? false);
+            var input = new WhatsAppSignupInput(request.Code!, NullIfEmpty(request.PhoneNumberId), request.WabaId!.Trim(), request.Coexistence ?? false);
             // El código vive 30 segundos y Meta lo canjea una sola vez: un número ya vigente no lo gasta.
-            if (await reader.IsActiveAsync(input.PhoneNumberId, cancellationToken)) return WhatsAppErrors.NumberAlreadyConnected;
+            if (input.PhoneNumberId is { } known && await reader.IsActiveAsync(known, cancellationToken)) return WhatsAppErrors.NumberAlreadyConnected;
             var signup = await graph.CompleteSignupAsync(input, cancellationToken);
             if (signup.IsFailure) return signup.Error;
             Result<WhatsAppChannel> saved;
@@ -121,6 +136,8 @@ internal sealed class WhatsAppNumberService(IWhatsAppChannelReader reader, IWhat
 
     private async Task<Result<WhatsAppNumberResponse>> FindAsync(Guid id, CancellationToken ct) =>
         await reader.FindOrganizationAsync(id, clock.GetUtcNow().UtcDateTime, ct) is { } number ? number : WhatsAppErrors.NumberNotFound;
+
+    internal static string? NullIfEmpty(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private async Task<bool> IsActiveCompanyAsync(Guid companyId, CancellationToken ct) =>
         await companies.FindByIdAsync(companyId, ct) is { Status: CompanyStatus.Active };

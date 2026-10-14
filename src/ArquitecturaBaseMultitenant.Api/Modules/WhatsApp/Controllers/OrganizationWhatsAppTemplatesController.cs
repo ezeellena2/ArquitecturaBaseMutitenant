@@ -65,19 +65,6 @@ public sealed class OrganizationWhatsAppTemplatesController(IWhatsAppTemplateSer
         (await service.CreateAsync(new CreateWhatsAppTemplateRequest(request.Name, request.Category, request.Language, request.Body, request.Variables), cancellationToken))
         .ToCreatedResult(this, nameof(Get), template => new { id = template.Id });
 
-    [HttpPost("{id:guid}/duplicate")]
-    [Idempotent]
-    [ProducesResponseType<WhatsAppTemplateResponse>(201)]
-    [ProducesProblem(401)]
-    [ProducesProblem(403)]
-    [ProducesProblem(404)]
-    [ProducesProblem(409)]
-    [ProducesProblem(422)]
-    [ProducesProblem(500)]
-    [ProducesProblem(503)]
-    public async Task<IActionResult> Duplicate([FromRoute] Guid id, CancellationToken cancellationToken) =>
-        (await service.DuplicateAsync(id, cancellationToken)).ToCreatedResult(this, nameof(Get), template => new { id = template.Id });
-
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(204)]
     [ProducesProblem(400)]
@@ -139,19 +126,6 @@ public sealed class PlatformWhatsAppTemplatesController(IWhatsAppTemplateService
     public async Task<IActionResult> Create([FromBody] CreateWhatsAppTemplateHttpRequest request, CancellationToken cancellationToken) =>
         (await service.CreateAsync(new CreateWhatsAppTemplateRequest(request.Name, request.Category, request.Language, request.Body, request.Variables), cancellationToken))
         .ToCreatedResult(this, nameof(Get), template => new { id = template.Id });
-
-    [HttpPost("{id:guid}/duplicate")]
-    [Idempotent]
-    [ProducesResponseType<WhatsAppTemplateResponse>(201)]
-    [ProducesProblem(401)]
-    [ProducesProblem(403)]
-    [ProducesProblem(404)]
-    [ProducesProblem(409)]
-    [ProducesProblem(422)]
-    [ProducesProblem(500)]
-    [ProducesProblem(503)]
-    public async Task<IActionResult> Duplicate([FromRoute] Guid id, CancellationToken cancellationToken) =>
-        (await service.DuplicateAsync(id, cancellationToken)).ToCreatedResult(this, nameof(Get), template => new { id = template.Id });
 
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(204)]

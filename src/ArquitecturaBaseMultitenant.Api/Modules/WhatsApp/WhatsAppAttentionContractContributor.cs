@@ -27,6 +27,9 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
         ("SendWhatsAppTemplateHttpRequest", "variables", WhatsAppFeature.MaxTemplateVariables), ("CreateWhatsAppTemplateHttpRequest", "variables", WhatsAppFeature.MaxTemplateVariables),
         ("CreateWhatsAppBroadcastHttpRequest", "variables", WhatsAppFeature.MaxTemplateVariables),
         ("WhatsAppPhoneImportHttpRequest", "phones", WhatsAppFeature.MaxPhoneImport), ("WhatsAppPhoneImportPreviewResponse", "rows", WhatsAppFeature.MaxPhoneImport),
+        ("CreateWhatsAppTeamHttpRequest", "memberIds", WhatsAppFeature.MaxTeamMembers), ("UpdateWhatsAppTeamHttpRequest", "memberIds", WhatsAppFeature.MaxTeamMembers),
+        ("WhatsAppTeamDetailResponse", "members", WhatsAppFeature.MaxTeamMembers), ("WhatsAppTeamResponse", "memberPreview", WhatsAppFeature.MaxMemberPreview),
+        ("WhatsAppTemplateResponse", "languages", WhatsAppFeature.MaxTemplateLanguages),
     ];
 
     private static readonly (string Schema, string Property, int MaxLength)[] Lengths =
@@ -48,6 +51,7 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
                 if (Property(schemas, schema, property)?.Items is OpenApiSchema item) item.MaxLength = WhatsAppTextLimits.Tag;
             foreach (var schema in new[] { "SendWhatsAppTemplateHttpRequest", "CreateWhatsAppBroadcastHttpRequest" })
                 if (Property(schemas, schema, "variables")?.Items is OpenApiSchema item) item.MaxLength = WhatsAppTextLimits.TemplateVariable;
+            DescribeMoney(schemas);
         }
 
         foreach (var (path, item) in document.Paths.Where(pair => IsOwnPath(pair.Key)))
@@ -62,6 +66,7 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
                 operation.Extensions["x-permissions"] = new JsonNodeExtension(new JsonArray(Permission(path) is { } permission ? [JsonValue.Create(permission)] : []));
                 operation.Extensions["x-module-gate"] = new JsonNodeExtension(JsonValue.Create(path.StartsWith("/api/platform/", StringComparison.Ordinal)
                     ? "installed-management" : "feature:" + WhatsAppFeature.Key)!);
+                LimitTags(operation);
             }
     }
 
@@ -76,7 +81,8 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
         _ when path.StartsWith("/api/me/", StringComparison.Ordinal) => null,
         // El contador del menú cuenta solo las bandejas que la persona puede ver; no declara un permiso único.
         "/api/organization/whatsapp/untaken" => null,
-        _ when path.StartsWith("/api/platform/whatsapp/conversations", StringComparison.Ordinal) => PlatformPermissions.WhatsApp.Attend,
+        _ when path.StartsWith("/api/platform/whatsapp/conversations", StringComparison.Ordinal)
+            || path == "/api/platform/whatsapp/inbox-teams" => PlatformPermissions.WhatsApp.Attend,
         _ when path.StartsWith("/api/platform/", StringComparison.Ordinal) => PlatformPermissions.WhatsApp.Manage,
         _ when path.StartsWith("/api/organization/whatsapp/customers", StringComparison.Ordinal) => Permissions.WhatsApp.Customers,
         _ when path.StartsWith("/api/organization/whatsapp/internal", StringComparison.Ordinal) => Permissions.WhatsApp.Internal,
@@ -156,6 +162,35 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
         if (path.EndsWith("/phone-imports", StringComparison.Ordinal) && method == HttpMethod.Post)
             errors.Add(HttpContractDocumentation.CoreError(503, InvitationErrors.ChannelUnavailableCode));
         return errors;
+    }
+
+    /// <summary>
+    /// Money se serializa como importe decimal y código ISO (MoneyJsonConverter); se publica esa forma, como AssistantMoney, para
+    /// que el front no lo reciba como unknown.
+    /// </summary>
+    private static void DescribeMoney(IDictionary<string, IOpenApiSchema> schemas)
+    {
+        if (!schemas.TryGetValue("Money", out var value) || value is not OpenApiSchema money) return;
+        money.Type = JsonSchemaType.Object;
+        money.AdditionalPropertiesAllowed = false;
+        money.Required = new HashSet<string>(StringComparer.Ordinal) { "amount", "currency" };
+        money.Properties = new Dictionary<string, IOpenApiSchema>
+        {
+            ["amount"] = new OpenApiSchema { Type = JsonSchemaType.Number, Format = "decimal" },
+            ["currency"] = new OpenApiSchema { Type = JsonSchemaType.String, Pattern = "^[A-Z]{3}$", MinLength = 3, MaxLength = 3 },
+        };
+    }
+
+    /// <summary>Una etiqueta como consulta o campo del archivo a importar tiene el mismo largo que las de un contacto.</summary>
+    private static void LimitTags(OpenApiOperation operation)
+    {
+        foreach (var parameter in operation.Parameters ?? [])
+            if (string.Equals(parameter.Name, "tag", StringComparison.OrdinalIgnoreCase) && parameter.Schema is OpenApiSchema schema)
+                schema.MaxLength = WhatsAppTextLimits.Tag;
+        foreach (var content in operation.RequestBody?.Content?.Values ?? [])
+            if (content.Schema is OpenApiSchema form && form.Properties is { } properties)
+                foreach (var (name, property) in properties)
+                    if (string.Equals(name, "tag", StringComparison.OrdinalIgnoreCase) && property is OpenApiSchema tag) tag.MaxLength = WhatsAppTextLimits.Tag;
     }
 
     private static OpenApiSchema? Property(IDictionary<string, IOpenApiSchema> schemas, string schema, string property) =>

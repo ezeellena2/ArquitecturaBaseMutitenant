@@ -18,7 +18,13 @@ public sealed record WhatsAppNumberListResponse(PagedResult<WhatsAppNumberRespon
 
 public sealed record WhatsAppNumberListRequest : PagedRequest;
 
-/// <summary>Resultado del alta embebida. El código de Meta vive 30 segundos y nunca se registra.</summary>
+/// <summary>Las empresas activas que puede atender un número («Atiende a»), con el permiso de administrar WhatsApp.</summary>
+public sealed record WhatsAppCompanyOptionListRequest : PagedRequest;
+
+/// <summary>
+/// Resultado del alta embebida. El código de Meta vive 30 segundos y nunca se registra. En coexistencia el FINISH de Meta trae
+/// solo la cuenta (wabaId): phoneNumberId es opcional y el back resuelve el número desde la cuenta.
+/// </summary>
 public sealed record ConnectWhatsAppNumberRequest(string? Code, string? PhoneNumberId, string? WabaId, Guid? CompanyId, bool? Coexistence)
 {
     public override string ToString() => nameof(ConnectWhatsAppNumberRequest);

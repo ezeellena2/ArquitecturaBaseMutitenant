@@ -30,6 +30,4 @@ internal sealed class WhatsAppBroadcastService(TimeProvider clock, ILogger<Whats
     public Task<Result<WhatsAppBroadcastResponse>> CancelAsync(Guid id, CancelWhatsAppBroadcastRequest request, CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, clock, "WhatsAppBroadcastCancel", () => Task.FromResult(Result.Failure<WhatsAppBroadcastResponse>(ContractErrors.NotImplemented)));
 
-    public Task<Result<WhatsAppBroadcastResponse>> DuplicateAsync(Guid id, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "WhatsAppBroadcastDuplicate", () => Task.FromResult(Result.Failure<WhatsAppBroadcastResponse>(ContractErrors.NotImplemented)));
 }

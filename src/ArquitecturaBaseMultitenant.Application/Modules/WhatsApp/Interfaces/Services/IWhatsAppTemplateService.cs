@@ -9,6 +9,5 @@ public interface IWhatsAppTemplateService
     Task<Result<WhatsAppTemplateListResponse>> ListAsync(WhatsAppTemplateListRequest request, CancellationToken cancellationToken);
     Task<Result<WhatsAppTemplateResponse>> GetAsync(Guid id, CancellationToken cancellationToken);
     Task<Result<WhatsAppTemplateResponse>> CreateAsync(CreateWhatsAppTemplateRequest request, CancellationToken cancellationToken);
-    Task<Result<WhatsAppTemplateResponse>> DuplicateAsync(Guid id, CancellationToken cancellationToken);
     Task<Result> DeleteAsync(Guid id, DeleteWhatsAppTemplateRequest request, CancellationToken cancellationToken);
 }

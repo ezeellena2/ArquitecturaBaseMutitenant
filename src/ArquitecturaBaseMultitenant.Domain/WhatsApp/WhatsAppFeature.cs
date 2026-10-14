@@ -10,6 +10,10 @@ public static class WhatsAppFeature
     public const int MaxImportRows = 5000;
     public const int MaxTemplateVariables = 10;
     public const int MaxContactTags = 10;
+    /// <summary>Integrantes de un equipo: el detalle los trae todos y el PUT reemplaza la lista.</summary>
+    public const int MaxTeamMembers = 200;
+    public const int MaxTemplateLanguages = 10;
+    public const int MaxMemberPreview = 3;
     public static IReadOnlyList<int> NotifyAfterMinutesOptions { get; } = [10, 15, 30];
 }
 

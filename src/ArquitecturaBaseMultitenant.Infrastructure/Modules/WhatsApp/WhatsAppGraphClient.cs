@@ -35,23 +35,35 @@ internal sealed class WhatsAppGraphClient(HttpClient client, IOptions<WhatsAppOp
         var subscribed = await SendAsync(HttpMethod.Post, Uri.EscapeDataString(input.WabaId) + "/subscribed_apps", token, null, ct);
         if (subscribed.IsFailure) return subscribed.Error;
         subscribed.Value.Dispose();
+        // En coexistencia el FINISH de Meta puede traer solo la cuenta: el número es el que la cuenta tiene registrado.
+        var phoneNumberId = input.PhoneNumberId;
+        if (phoneNumberId is null)
+        {
+            var numbers = await SendAsync(HttpMethod.Get, Uri.EscapeDataString(input.WabaId) + "/phone_numbers?fields=id", token, null, ct);
+            if (numbers.IsFailure) return numbers.Error;
+            using var list = numbers.Value;
+            phoneNumberId = list.RootElement.ValueKind == JsonValueKind.Object && list.RootElement.TryGetProperty("data", out var data)
+                && data.ValueKind == JsonValueKind.Array && data.GetArrayLength() > 0 ? Text(data[0], "id") : null;
+            if (phoneNumberId is not { Length: > 0 and <= ArquitecturaBaseMultitenant.Domain.Common.TextLimits.ShortName })
+                return WhatsAppErrors.NumberMetaRejected("phone_numbers");
+        }
         string? pin = null;
         if (!input.Coexistence)
         {
             pin = string.Create(6, 0, static (digits, _) => { for (var index = 0; index < digits.Length; index++) digits[index] = (char)('0' + RandomNumberGenerator.GetInt32(10)); });
-            var registered = await SendAsync(HttpMethod.Post, Uri.EscapeDataString(input.PhoneNumberId) + "/register", token,
+            var registered = await SendAsync(HttpMethod.Post, Uri.EscapeDataString(phoneNumberId) + "/register", token,
                 new { messaging_product = "whatsapp", pin }, ct);
             if (registered.IsFailure) return registered.Error;
             registered.Value.Dispose();
         }
-        var phone = await SendAsync(HttpMethod.Get, Uri.EscapeDataString(input.PhoneNumberId) + "?fields=display_phone_number,verified_name", token, null, ct);
+        var phone = await SendAsync(HttpMethod.Get, Uri.EscapeDataString(phoneNumberId) + "?fields=display_phone_number,verified_name", token, null, ct);
         if (phone.IsFailure) return phone.Error;
         using var phoneData = phone.Value;
         var display = PhoneNumber.Create("+" + string.Concat((Text(phoneData.RootElement, "display_phone_number") ?? string.Empty).Where(char.IsAsciiDigit)));
         if (display.IsFailure) return WhatsAppErrors.NumberMetaRejected("display_phone_number");
         var payment = await HasPaymentAsync(input.WabaId, token, ct);
         if (payment.IsFailure) return payment.Error;
-        return new WhatsAppSignupResult(token, pin, display.Value, Text(phoneData.RootElement, "verified_name"), payment.Value);
+        return new WhatsAppSignupResult(phoneNumberId, token, pin, display.Value, Text(phoneData.RootElement, "verified_name"), payment.Value);
     }
 
     public async Task<Result<bool>> HasPaymentAsync(string wabaId, string token, CancellationToken ct)
