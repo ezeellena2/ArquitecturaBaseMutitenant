@@ -56,6 +56,15 @@ public sealed class WhatsAppAttentionContractTests(ApiFactory factory)
         Assert.Equal(WhatsAppFeature.MaxTeamMembers, schemas["WhatsAppTeamDetailResponse"]!["properties"]!["members"]!["maxItems"]!.GetValue<int>());
         Assert.Equal(WhatsAppFeature.MaxMemberPreview, schemas["WhatsAppTeamResponse"]!["properties"]!["memberPreview"]!["maxItems"]!.GetValue<int>());
         Assert.Equal(WhatsAppFeature.MaxTemplateLanguages, schemas["WhatsAppTemplateResponse"]!["properties"]!["languages"]!["maxItems"]!.GetValue<int>());
+        // CC23: duplicar con los valores de la difusión y el par nombre y ejemplo de cada variable.
+        var broadcastVariables = schemas["WhatsAppBroadcastResponse"]!["properties"]!["variables"]!;
+        Assert.Equal(WhatsAppFeature.MaxTemplateVariables, broadcastVariables["maxItems"]!.GetValue<int>());
+        Assert.Equal(WhatsAppTextLimits.TemplateVariable, broadcastVariables["items"]!["maxLength"]!.GetValue<int>());
+        Assert.EndsWith("/WhatsAppTemplateVariableResponse", schemas["WhatsAppTemplateResponse"]!["properties"]!["variables"]!["items"]!["$ref"]!.GetValue<string>(), StringComparison.Ordinal);
+        Assert.Equal(WhatsAppTextLimits.TemplateVariable, schemas["WhatsAppTemplateVariableResponse"]!["properties"]!["example"]!["maxLength"]!.GetValue<int>());
+        // CC24: cada idioma con su cultura del catálogo y su categoría.
+        Assert.EndsWith("/WhatsAppTemplateLanguageResponse", schemas["WhatsAppTemplateResponse"]!["properties"]!["languages"]!["items"]!["$ref"]!.GetValue<string>(), StringComparison.Ordinal);
+        Assert.Equal(["category", "culture"], schemas["WhatsAppTemplateLanguageResponse"]!["required"]!.AsArray().Select(value => value!.GetValue<string>()).Order(StringComparer.Ordinal));
         // CC22: cada etiqueta, en el contacto, la importación y las consultas, tiene el largo de WhatsAppTextLimits.Tag.
         Assert.Equal(WhatsAppTextLimits.Tag, schemas["UpdateWhatsAppContactHttpRequest"]!["properties"]!["tags"]!["items"]!["maxLength"]!.GetValue<int>());
         Assert.Equal(WhatsAppTextLimits.Tag, schemas["WhatsAppAudienceInput"]!["properties"]!["tag"]!["maxLength"]!.GetValue<int>());

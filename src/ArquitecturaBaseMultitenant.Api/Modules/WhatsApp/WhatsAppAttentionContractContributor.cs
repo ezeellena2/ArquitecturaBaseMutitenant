@@ -25,7 +25,7 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
         ("WhatsAppConversationRowResponse", "tags", WhatsAppFeature.MaxContactTags),
         ("WhatsAppTemplateResponse", "variables", WhatsAppFeature.MaxTemplateVariables), ("WhatsAppTemplateOptionResponse", "variables", WhatsAppFeature.MaxTemplateVariables),
         ("SendWhatsAppTemplateHttpRequest", "variables", WhatsAppFeature.MaxTemplateVariables), ("CreateWhatsAppTemplateHttpRequest", "variables", WhatsAppFeature.MaxTemplateVariables),
-        ("CreateWhatsAppBroadcastHttpRequest", "variables", WhatsAppFeature.MaxTemplateVariables),
+        ("CreateWhatsAppBroadcastHttpRequest", "variables", WhatsAppFeature.MaxTemplateVariables), ("WhatsAppBroadcastResponse", "variables", WhatsAppFeature.MaxTemplateVariables),
         ("WhatsAppPhoneImportHttpRequest", "phones", WhatsAppFeature.MaxPhoneImport), ("WhatsAppPhoneImportPreviewResponse", "rows", WhatsAppFeature.MaxPhoneImport),
         ("CreateWhatsAppTeamHttpRequest", "memberIds", WhatsAppFeature.MaxTeamMembers), ("UpdateWhatsAppTeamHttpRequest", "memberIds", WhatsAppFeature.MaxTeamMembers),
         ("WhatsAppTeamDetailResponse", "members", WhatsAppFeature.MaxTeamMembers), ("WhatsAppTeamResponse", "memberPreview", WhatsAppFeature.MaxMemberPreview),
@@ -36,6 +36,7 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
     [
         ("WhatsAppBotMenuOptionInput", "label", WhatsAppTextLimits.MenuLabel), ("WhatsAppBotMenuOptionInput", "reply", WhatsAppTextLimits.BotText),
         ("WhatsAppTemplateVariableInput", "label", TextLimits.ShortName), ("WhatsAppTemplateVariableInput", "example", WhatsAppTextLimits.TemplateVariable),
+        ("WhatsAppTemplateVariableResponse", "label", TextLimits.ShortName), ("WhatsAppTemplateVariableResponse", "example", WhatsAppTextLimits.TemplateVariable),
         ("WhatsAppAudienceInput", "tag", WhatsAppTextLimits.Tag),
     ];
 
@@ -49,7 +50,7 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
                 if (Property(schemas, schema, property) is { } value) value.MaxLength = maxLength;
             foreach (var (schema, property) in new[] { ("UpdateWhatsAppContactHttpRequest", "tags"), ("WhatsAppContactResponse", "tags"), ("WhatsAppConversationRowResponse", "tags") })
                 if (Property(schemas, schema, property)?.Items is OpenApiSchema item) item.MaxLength = WhatsAppTextLimits.Tag;
-            foreach (var schema in new[] { "SendWhatsAppTemplateHttpRequest", "CreateWhatsAppBroadcastHttpRequest" })
+            foreach (var schema in new[] { "SendWhatsAppTemplateHttpRequest", "CreateWhatsAppBroadcastHttpRequest", "WhatsAppBroadcastResponse" })
                 if (Property(schemas, schema, "variables")?.Items is OpenApiSchema item) item.MaxLength = WhatsAppTextLimits.TemplateVariable;
             DescribeMoney(schemas);
         }

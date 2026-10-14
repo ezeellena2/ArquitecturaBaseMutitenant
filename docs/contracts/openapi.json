@@ -78183,6 +78183,7 @@
           "id",
           "name",
           "template",
+          "variables",
           "audience",
           "recipients",
           "status",
@@ -78205,6 +78206,14 @@
           },
           "template": {
             "$ref": "#/components/schemas/WhatsAppReferenceResponse"
+          },
+          "variables": {
+            "maxItems": 10,
+            "type": "array",
+            "items": {
+              "maxLength": 200,
+              "type": "string"
+            }
           },
           "audience": {
             "$ref": "#/components/schemas/WhatsAppAudienceResponse"
@@ -78257,7 +78266,8 @@
             "type": "integer",
             "format": "uint32"
           }
-        }
+        },
+        "description": "variables son los valores con que se creó la difusión, para duplicarla."
       },
       "WhatsAppBroadcastStatus": {
         "enum": [
@@ -79256,6 +79266,22 @@
           "string"
         ]
       },
+      "WhatsAppTemplateLanguageResponse": {
+        "required": [
+          "culture",
+          "category"
+        ],
+        "type": "object",
+        "properties": {
+          "culture": {
+            "type": "string"
+          },
+          "category": {
+            "$ref": "#/components/schemas/WhatsAppTemplateCategory"
+          }
+        },
+        "description": "Un idioma de la plantilla: culture es un código del catálogo de culturas (es-AR), nunca el de Meta (es_AR)."
+      },
       "WhatsAppTemplateListResponse": {
         "required": [
           "templates",
@@ -79352,7 +79378,7 @@
             "maxItems": 10,
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/WhatsAppTemplateLanguageResponse"
             }
           },
           "body": {
@@ -79362,7 +79388,7 @@
             "maxItems": 10,
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/WhatsAppTemplateVariableResponse"
             }
           },
           "status": {
@@ -79392,7 +79418,7 @@
             ]
           }
         },
-        "description": "Una plantilla de Meta. languages son sus idiomas (hasta 10; las del sistema traen es y en); title es el nombre visible de las\r\ndel sistema y null en las demás."
+        "description": "Una plantilla de Meta. languages son sus idiomas, el principal primero (hasta 10; las del sistema traen es y en), cada uno con\r\nsu categoría; category es la del primero. variables trae el nombre y el ejemplo de cada una, el mismo par del alta. title es\r\nel nombre visible de las del sistema y null en las demás."
       },
       "WhatsAppTemplateStatus": {
         "enum": [
@@ -79419,6 +79445,23 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "WhatsAppTemplateVariableResponse": {
+        "required": [
+          "label",
+          "example"
+        ],
+        "type": "object",
+        "properties": {
+          "label": {
+            "maxLength": 60,
+            "type": "string"
+          },
+          "example": {
+            "maxLength": 200,
+            "type": "string"
           }
         }
       },

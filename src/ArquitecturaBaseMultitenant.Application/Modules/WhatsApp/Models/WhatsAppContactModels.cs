@@ -49,12 +49,18 @@ public sealed record WhatsAppImportResponse(int Imported, int Updated, PagedResu
 public sealed record WhatsAppImportPreviewResponse(int Rows, int New, int Updated, PagedResult<WhatsAppImportRejectionResponse> Rejected);
 
 /// <summary>
-/// Una plantilla de Meta. languages son sus idiomas (hasta 10; las del sistema traen es y en); title es el nombre visible de las
-/// del sistema y null en las demás.
+/// Una plantilla de Meta. languages son sus idiomas, el principal primero (hasta 10; las del sistema traen es y en), cada uno con
+/// su categoría; category es la del primero. variables trae el nombre y el ejemplo de cada una, el mismo par del alta. title es
+/// el nombre visible de las del sistema y null en las demás.
 /// </summary>
-public sealed record WhatsAppTemplateResponse(Guid Id, string Name, WhatsAppTemplateCategory Category, IReadOnlyList<string> Languages, string Body,
-    IReadOnlyList<string> Variables, WhatsAppTemplateStatus Status, string? RejectionReason, bool IsSystem, DateTime UpdatedAtUtc, uint Version,
-    string? Title);
+public sealed record WhatsAppTemplateResponse(Guid Id, string Name, WhatsAppTemplateCategory Category, IReadOnlyList<WhatsAppTemplateLanguageResponse> Languages,
+    string Body, IReadOnlyList<WhatsAppTemplateVariableResponse> Variables, WhatsAppTemplateStatus Status, string? RejectionReason, bool IsSystem,
+    DateTime UpdatedAtUtc, uint Version, string? Title);
+
+/// <summary>Un idioma de la plantilla: culture es un código del catálogo de culturas (es-AR), nunca el de Meta (es_AR).</summary>
+public sealed record WhatsAppTemplateLanguageResponse(string Culture, WhatsAppTemplateCategory Category);
+
+public sealed record WhatsAppTemplateVariableResponse(string Label, string Example);
 
 public enum WhatsAppTemplateGroup { Consultations, System }
 
@@ -79,7 +85,8 @@ public sealed record WhatsAppAudienceInput(WhatsAppAudienceKind? Kind, string? T
 
 public sealed record WhatsAppAudienceResponse(WhatsAppAudienceKind Kind, string? Tag);
 
-public sealed record WhatsAppBroadcastResponse(Guid Id, string Name, WhatsAppReferenceResponse Template, WhatsAppAudienceResponse Audience,
+/// <summary>variables son los valores con que se creó la difusión, para duplicarla.</summary>
+public sealed record WhatsAppBroadcastResponse(Guid Id, string Name, WhatsAppReferenceResponse Template, IReadOnlyList<string> Variables, WhatsAppAudienceResponse Audience,
     int Recipients, WhatsAppBroadcastStatus Status, DateTime? ScheduledAtUtc, DateTime? SentAtUtc, int Delivered, int Read, int Replied,
     int Unsubscribed, int Failed, Money EstimatedCost, uint Version);
 
