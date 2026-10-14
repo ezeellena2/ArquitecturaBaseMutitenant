@@ -260,14 +260,15 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         {
             var row = projected[state.MemberId];
             var invitation = invitationByMember.GetValueOrDefault(row.MemberId);
-            var emailText = row.Email ?? invitation?.Destination.DisplayValue;
-            var email = emailText is null ? null : Email.Create(emailText).Value;
+            // El correo verificado o el de la invitación; una invitación por teléfono trae el teléfono y no un correo (CC25).
+            var email = row.Email is { } text && text.Contains('@', StringComparison.Ordinal) ? Email.Create(text).Value : invitation?.Destination.Email;
+            var phone = email is null ? invitation?.Destination.Phone : null;
             return new OrganizationUserRow(row.MemberId, row.UserId, row.DisplayName, email,
                 row.UserId is { } userId && managedUserIds.Contains(userId), state.State,
                 invitation?.Id, invitation?.IssuedAtUtc, invitation?.ExpiresAtUtc,
                 rolesByMember.GetValueOrDefault(row.MemberId, []),
                 companiesByMember.GetValueOrDefault(row.MemberId, []), row.Version, row.CreatedAtUtc,
-                row.DeletionScheduledForUtc, row.DeletionRequestedAtUtc);
+                row.DeletionScheduledForUtc, row.DeletionRequestedAtUtc, phone);
         })];
     }
 

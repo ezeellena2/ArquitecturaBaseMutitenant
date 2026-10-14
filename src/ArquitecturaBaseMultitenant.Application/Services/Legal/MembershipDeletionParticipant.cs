@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Legal;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
@@ -34,11 +35,13 @@ internal sealed class MembershipDeletionParticipant(IAccountDeletionCleanupRepos
         if (tenantContext.RequiredTenantId != tenantId) throw new InvalidOperationException("The deletion step needs its tenant scope.");
         if (context.TenantKind == TenantKind.Business)
         {
-            var destinations = (await loginMethods.ListByUserIdAsync(context.UserId, ct))
-                .Select(VerifiedEmail)
-                .OfType<Email>()
-                .DistinctBy(email => email.Value)
-                .OrderBy(email => email.Value, StringComparer.Ordinal)
+            var own = await loginMethods.ListByUserIdAsync(context.UserId, ct);
+            var destinations = own.Select(VerifiedEmail).OfType<Email>().Select(InvitationIdentity.ForEmail)
+                .Concat(own.Where(method => method.Type == LoginMethodType.Phone && method.VerifiedAtUtc is not null)
+                    .Select(method => PhoneNumber.Create(method.Value)).Where(phone => phone.IsSuccess)
+                    .Select(phone => InvitationIdentity.ForPhone(phone.Value)))
+                .DistinctBy(destination => destination.Value)
+                .OrderBy(destination => destination.Value, StringComparer.Ordinal)
                 .ToArray();
             foreach (var destination in destinations) await invitations.LockDestinationAsync(destination, ct);
             foreach (var invitation in await invitations.ListPendingByDestinationsAsync(destinations, ct))

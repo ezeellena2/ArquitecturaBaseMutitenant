@@ -49,7 +49,7 @@ En el mismo cursor van las acciones de Plataforma sobre la organización que dib
 
 ## Acceso, datos y verificación
 
-Las invitaciones de Usuarios y las del Dueño creado por Plataforma también se aceptan al ingresar con el código del correo, sin tocar el enlace: todas las pendientes vigentes quedan aceptadas juntas (ADR 0047). Vencidas y revocadas no cuentan; la puerta Persona conserva su acceso Personal y Empresa elige la última organización usada o la membresía más antigua. El consentimiento legal pendiente sigue siendo explícito. El límite transaccional y RLS de este camino se documentan en [Identidad e ingreso](identidad.md#invitaciones).
+Las invitaciones de Usuarios y las del Dueño creado por Plataforma también se aceptan al ingresar con el código del correo (o del teléfono, si se invitó desde «Cargar teléfonos»), sin tocar el enlace: todas las pendientes vigentes quedan aceptadas juntas (ADR 0047). Vencidas y revocadas no cuentan; la puerta Persona conserva su acceso Personal y Empresa elige la última organización usada o la membresía más antigua. El consentimiento legal pendiente sigue siendo explícito. El límite transaccional y RLS de este camino se documentan en [Identidad e ingreso](identidad.md#invitaciones).
 
 Las rutas privadas declaran acceso Business y el permiso de organización o empresa que corresponde. Un tenant ajeno responde 404; las entidades privadas aplican RLS y el tenant siempre proviene del claim validado. Los cambios que editan recursos con versión devuelven 409 si otra operación guardó primero.
 

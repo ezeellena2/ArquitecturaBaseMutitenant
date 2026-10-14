@@ -23,13 +23,16 @@ internal sealed class InvitationDeliveryIssuer(IEnumerable<IInvitationChannel> c
     internal bool IsAvailable(string channel) => channels.Any(value => value.Key == channel && value.IsAvailable);
 
     /// <summary>Se decide después del lock de identidad y antes de agregar miembro, invitación u outbox.</summary>
-    internal async Task<Result<InvitationDeliveryDestination>> ResolveAsync(string key, Email destination,
+    internal async Task<Result<InvitationDeliveryDestination>> ResolveAsync(string key, InvitationIdentity destination,
         Guid? recipientId, CancellationToken ct)
     {
         var channel = channels.SingleOrDefault(value => value.Key == key && value.IsAvailable);
         if (channel is null) return InvitationErrors.ChannelUnavailable;
         if (channel.SupportedMethodType == LoginMethodType.Email)
-            return InvitationDeliveryDestination.ForEmail(destination);
+            return destination.Email is { } email ? InvitationDeliveryDestination.ForEmail(email) : InvitationErrors.ChannelUnavailable;
+        // Una invitación por teléfono (decisión 11 de la E11) va a ese mismo teléfono: es lo que hay que probar.
+        if (channel.SupportedMethodType == LoginMethodType.Phone && destination.Phone is { } invitedPhone)
+            return InvitationDeliveryDestination.ForPhone(invitedPhone);
         if (channel.SupportedMethodType != LoginMethodType.Phone || recipientId is not { } id)
             return InvitationErrors.ChannelUnavailable;
         await methodLocks.LockUserAsync(id, ct);

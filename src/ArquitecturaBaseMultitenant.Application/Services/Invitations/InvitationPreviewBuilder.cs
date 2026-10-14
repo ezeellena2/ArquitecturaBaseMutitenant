@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -17,7 +18,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 /// <summary>Lee exclusivamente dentro del alcance probado y no consume ni modifica la invitación.</summary>
 internal sealed class InvitationPreviewBuilder(IInvitationReader invitations, IUserLookup lookup,
     ILoginMethodReader methods, LoginMethodAvailabilityPolicy availability, IInvitationFlowContext flow,
-    TimeProvider timeProvider, IInvitationTokenProtector tokens)
+    TimeProvider timeProvider, IInvitationTokenProtector tokens, IEnumerable<ILoginCodeChannel> codeChannels)
 {
     internal async Task<InvitationPreviewResponse> BuildAsync(InvitationTokenData proof, string tokenHash, CancellationToken ct)
     {
@@ -44,7 +45,7 @@ internal sealed class InvitationPreviewBuilder(IInvitationReader invitations, IU
         if (row.TenantStatus == TenantStatus.Suspended) return await PresentAsync(row, InvitationPreviewState.OrganizationSuspended, ct);
         if (row.TenantStatus != TenantStatus.Active || row.MemberStatus != MemberStatus.Invited)
             return new(InvitationPreviewState.Invalid);
-        var owners = await lookup.FindVerifiedUsersByEmailAsync(row.Destination, ct);
+        var owners = await lookup.FindOwnersAsync(row.Destination, ct);
         if (owners.Count > 1 || row.MemberUserId is { } bound && (owners.Count != 1 || owners[0] != bound))
             return new(InvitationPreviewState.Invalid);
         var owner = owners.Count == 0 ? (Guid?)null : owners[0];
@@ -53,13 +54,20 @@ internal sealed class InvitationPreviewBuilder(IInvitationReader invitations, IU
             : userId is null ? InvitationPreviewState.SignInRequired : InvitationPreviewState.Ready;
         var emailCode = false;
         var google = false;
+        // Una invitación por teléfono se acepta con el código por WhatsApp; sin canal (o sin medio de pago) no se puede.
+        var phoneCode = row.Destination.IsPhone && codeChannels.Any(channel => channel.SupportedMethodType == LoginMethodType.Phone && channel.IsAvailable);
         if (owner is { } existing)
+        {
+            var ownerPhone = false;
             foreach (var method in await methods.ListByUserIdAsync(existing, ct))
             {
                 if (!await availability.IsAvailableAsync(existing, method, ct)) continue;
                 emailCode |= method.Type == LoginMethodType.Email && method.Value == row.Destination.Value;
-                google |= method.Type == LoginMethodType.Google && method.ContactEmail == row.Destination;
+                google |= method.Type == LoginMethodType.Google && method.ContactEmail is { } contact && row.Destination.Email == contact;
+                ownerPhone |= method.Type == LoginMethodType.Phone && method.Value == row.Destination.Value;
             }
+            phoneCode &= ownerPhone;
+        }
         Email? currentEmail = null;
         string? currentName = null;
         if (state == InvitationPreviewState.WrongSession && userId is { } current)
@@ -72,18 +80,18 @@ internal sealed class InvitationPreviewBuilder(IInvitationReader invitations, IU
                 ? Email.Create(primary.Value).Value : primary?.ContactEmail;
         }
         return await PresentAsync(row, state, ct) with { CanUseEmailCode = emailCode, CanUseGoogle = google, CurrentAccountEmail = currentEmail,
-            CurrentAccountName = currentName };
+            CurrentAccountName = currentName, CanUsePhoneCode = phoneCode };
     }
 
     private async Task<InvitationPreviewResponse> PresentAsync(InvitationRow row, InvitationPreviewState state,
         CancellationToken ct)
     {
         var grant = await invitations.FindGrantAsync(row.MemberId, row.InviterUserId, ct);
-        return new(state, row.TenantId, row.OrganizationName, row.Destination,
+        return new(state, row.TenantId, row.OrganizationName, row.Destination.Email,
             row.InviterDeleted ? FormattingTexts.DeletedAccount : row.InviterName ?? row.OrganizationName,
             row.IssuedAtUtc, row.ExpiresAtUtc,
             InviterRoles: row.InviterDeleted ? [] : RoleNames(grant.InviterRoles), Companies: grant.Companies,
-            Roles: RoleNames(grant.Roles));
+            Roles: RoleNames(grant.Roles), Phone: row.Destination.Phone?.Value);
     }
 
     private static string[] RoleNames(IReadOnlyList<string> names) =>

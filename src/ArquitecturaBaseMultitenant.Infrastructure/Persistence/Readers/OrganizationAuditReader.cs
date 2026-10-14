@@ -198,7 +198,7 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
                 .Select(invitation => new { invitation.MemberId, invitation.Destination })
                 .ToArrayAsync(cancellationToken);
             foreach (var invited in destinations.GroupBy(invitation => invitation.MemberId))
-                memberNames[invited.Key] = PersonalDataMask.Email(invited.First().Destination.DisplayValue);
+                memberNames[invited.Key] = Masked(invited.First().Destination);
         }
 
         // Sin nombre ni invitación, por su correo verificado (primero el principal), enmascarado, como lo muestra
@@ -278,7 +278,7 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
                 affectedName = role?.Name;
             if (string.IsNullOrWhiteSpace(affectedName) && entry.EntityType == nameof(Invitation) &&
                 invitations.TryGetValue(entry.EntityId, out var invitation))
-                affectedName = PersonalDataMask.Email(invitation.Destination.DisplayValue);
+                affectedName = Masked(invitation.Destination);
 
             // Una invitación a empresas va en esas empresas, por nombre y en orden.
             var companyName = companyId is { } companyGuid
@@ -375,6 +375,10 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
 
         return entries;
     }
+
+    private static string Masked(InvitationIdentity destination) => destination.Email is { } email
+        ? PersonalDataMask.Email(email.DisplayValue)
+        : PersonalDataMask.Phone(destination.Value);
 
     private static string EscapeLike(string value) => value
         .Replace("\\", "\\\\", StringComparison.Ordinal)

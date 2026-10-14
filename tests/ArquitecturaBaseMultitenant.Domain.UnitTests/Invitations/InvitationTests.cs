@@ -131,10 +131,10 @@ public sealed class InvitationTests
         Assert.Equal(InvitationErrors.WrongAccount, invitation.AcceptVerifiedEmail(userId,
             Email.Create("other@example.test").Value, IssuedAtUtc).Error);
         Assert.Equal(InvitationStatus.Pending, invitation.Status);
-        Assert.True(invitation.AcceptVerifiedEmail(userId, invitation.Destination, IssuedAtUtc).IsSuccess);
+        Assert.True(invitation.AcceptVerifiedEmail(userId, invitation.Destination.Email!, IssuedAtUtc).IsSuccess);
         Assert.Equal(userId, invitation.AcceptedByUserId);
         Assert.Null(invitation.BootstrapNonceHash);
-        Assert.Equal(InvitationErrors.AlreadyUsed, invitation.AcceptVerifiedEmail(userId, invitation.Destination, IssuedAtUtc).Error);
+        Assert.Equal(InvitationErrors.AlreadyUsed, invitation.AcceptVerifiedEmail(userId, invitation.Destination.Email!, IssuedAtUtc).Error);
     }
 
     [Fact]
@@ -142,9 +142,9 @@ public sealed class InvitationTests
     {
         var expired = Issue();
         Assert.Equal(InvitationErrors.Expired, expired.AcceptVerifiedEmail(Guid.CreateVersion7(),
-            expired.Destination, expired.ExpiresAtUtc).Error);
+            expired.Destination.Email!, expired.ExpiresAtUtc).Error);
         var revoked = Issue();
         Assert.True(revoked.Revoke(IssuedAtUtc).IsSuccess);
-        Assert.Equal(InvitationErrors.Invalid, revoked.AcceptVerifiedEmail(Guid.CreateVersion7(), revoked.Destination, IssuedAtUtc).Error);
+        Assert.Equal(InvitationErrors.Invalid, revoked.AcceptVerifiedEmail(Guid.CreateVersion7(), revoked.Destination.Email!, IssuedAtUtc).Error);
     }
 }

@@ -29,6 +29,21 @@ internal sealed class InvitationAccountRegistrar(AccountRegistrar accounts, ILog
         return user.Id;
     }
 
+    /// <summary>El código por WhatsApp prueba el teléfono (decisión 11 de la E11); como con el correo, el consentimiento queda para el gate.</summary>
+    internal async Task<Guid> RegisterVerifiedPhoneAsync(Guid organizationId, PhoneNumber phone, DateTime nowUtc, CancellationToken ct)
+    {
+        _ = organizationId;
+        var defaults = await preferences.ReadAsync(ct);
+        var found = await lookup.FindMethodAsync(LoginMethodType.Phone, phone.Value, ct);
+        if (found is { VerifiedAtUtc: null } && await methods.GetByIdAsync(found.MethodId, ct) is { } pending) methods.Remove(pending);
+        var user = await accounts.CreateAsync(defaults.Culture, defaults.TimeZoneId, ct);
+        var method = LoginMethod.CreatePhone(user.Id, phone);
+        var linked = await linker.VerifyAsync(method, nowUtc, ct);
+        if (linked.IsFailure) throw new InvalidOperationException("Invitation ownership changed under the identity lock.");
+        methods.Add(method);
+        return user.Id;
+    }
+
     internal async Task EnsureEmailAsync(Guid userId, Guid organizationId, Email email, DateTime nowUtc, CancellationToken ct)
     {
         var found = await lookup.FindMethodAsync(LoginMethodType.Email, email.Value, ct);

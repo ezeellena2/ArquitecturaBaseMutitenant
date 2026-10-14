@@ -1,8 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
-using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
-using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,8 +13,8 @@ internal sealed class InvitationRepository(ApplicationDbContext context, ITenant
         context.AcquireAdvisoryLocksAsync(
             [AdvisoryLockKeys.For(tenantContext.RequiredTenantId, "invitation", invitationId)], cancellationToken);
 
-    public Task LockDestinationAsync(Email destination, CancellationToken cancellationToken) =>
-        context.AcquireAdvisoryLocksAsync([AdvisoryLockKeys.LoginCode(LoginCodeDestination.ForEmail(destination))], cancellationToken);
+    public Task LockDestinationAsync(InvitationIdentity destination, CancellationToken cancellationToken) =>
+        context.AcquireAdvisoryLocksAsync([AdvisoryLockKeys.LoginCode(destination)], cancellationToken);
 
     public Task<Invitation?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -25,7 +23,7 @@ internal sealed class InvitationRepository(ApplicationDbContext context, ITenant
         return context.Invitations.SingleOrDefaultAsync(invitation => invitation.Id == id, cancellationToken);
     }
 
-    public Task<Invitation?> GetPendingByDestinationAsync(Email destination, CancellationToken cancellationToken)
+    public Task<Invitation?> GetPendingByDestinationAsync(InvitationIdentity destination, CancellationToken cancellationToken)
     {
         context.RequireTransaction();
         _ = tenantContext.RequiredTenantId;
@@ -34,7 +32,7 @@ internal sealed class InvitationRepository(ApplicationDbContext context, ITenant
     }
 
     public async Task<IReadOnlyList<Invitation>> ListPendingByDestinationsAsync(
-        IReadOnlyCollection<Email> destinations, CancellationToken cancellationToken)
+        IReadOnlyCollection<InvitationIdentity> destinations, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(destinations);
         context.RequireTransaction();

@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Application.Services.Invitations;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
@@ -34,6 +35,31 @@ internal sealed class OrganizationUserInvitationWriter(
         return assigned.IsFailure ? assigned.Error
             : Result<OrganizationInvitationIssuedResponse>.Success(
                 new OrganizationInvitationIssuedResponse(issued.Value.InvitationId, issued.Value.ExpiresAtUtc));
+    }
+
+    /// <summary>
+    /// Invita por teléfono desde «Cargar teléfonos» (decisión 11 de la E11), por el canal que nombra el módulo. Si el número
+    /// ya tiene una invitación pendiente en la organización, la reemplaza, como Reenviar, con la empresa y los roles de ahora.
+    /// </summary>
+    internal async Task<Result<Guid>> InviteByPhoneAsync(PhoneNumber phone, string channel,
+        DesiredOrganizationUserAssignments desired, Guid inviterId, CancellationToken ct)
+    {
+        var destination = InvitationIdentity.ForPhone(phone);
+        await externalLoginLock.LockIdentityAsync(destination, ct);
+        await invitations.LockDestinationAsync(destination, ct);
+        var pending = await invitations.GetPendingByDestinationAsync(destination, ct);
+        if (pending is not null)
+        {
+            await invitations.LockAsync(pending.Id, ct);
+            var revoked = pending.Revoke(timeProvider.GetUtcNow().UtcDateTime);
+            if (revoked.IsFailure) return revoked.Error;
+        }
+        var issued = await issuer.IssueWithMemberAsync(new IssueInvitationRequest(destination, inviterId, channel,
+            pending?.MemberId, pending?.Id), ct, grant: Grant(desired));
+        if (issued.IsFailure) return issued.Error;
+        var assigned = await assignmentManager.SetAsync(issued.Value.MemberId, desired, ct,
+            memberInUnitOfWork: issued.Value.Member);
+        return assigned.IsFailure ? assigned.Error : issued.Value.InvitationId;
     }
 
     // Lo que el correo muestra como Empresa y Roles, en el mismo orden que la vista previa.
@@ -75,7 +101,7 @@ internal sealed class OrganizationUserInvitationWriter(
         var missing = company is null ? InvitationErrors.Invalid : InvitationErrors.NotFound;
         var firstRead = await invitations.GetByIdAsync(invitationId, ct);
         if (firstRead is null) return missing;
-        await externalLoginLock.LockEmailAsync(firstRead.Destination, ct);
+        await externalLoginLock.LockIdentityAsync(firstRead.Destination, ct);
         await invitations.LockDestinationAsync(firstRead.Destination, ct);
         await invitations.LockAsync(invitationId, ct);
         var invitation = await invitations.GetByIdAsync(invitationId, ct);

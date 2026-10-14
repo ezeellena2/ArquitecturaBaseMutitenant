@@ -51,6 +51,13 @@ internal static class AdvisoryLockKeys
         return "login-code:" + destination.Value;
     }
 
+    /// <summary>El mismo lock para el correo o el teléfono de una invitación: el ingreso y la invitación no se cruzan.</summary>
+    public static string LoginCode(ArquitecturaBaseMultitenant.Domain.Invitations.InvitationIdentity destination)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        return "login-code:" + destination.Value;
+    }
+
     public static string For(Guid tenantId, string resource, Guid id)
     {
         if (id == Guid.Empty)

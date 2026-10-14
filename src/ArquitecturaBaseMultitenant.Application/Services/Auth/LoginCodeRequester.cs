@@ -26,7 +26,7 @@ internal sealed class LoginCodeRequester(
         RequestLoginCodeRequest request, LoginCodeDestination destination, CancellationToken cancellationToken)
     {
         await linker.LockDestinationAsync(destination, cancellationToken);
-        var pending = request.Email is null ? [] : await invitations.ListPendingAsync(request.Email, clock.GetUtcNow().UtcDateTime, cancellationToken);
+        var pending = await invitations.ListPendingAsync(LoginDestinationResolver.Identity(destination), clock.GetUtcNow().UtcDateTime, cancellationToken);
         var userId = await FindOwnerAsync(destination, request.Email, pending.Count > 0, cancellationToken);
         if (userId is null && pending.Count == 0)
             return FieldErrors.On(request.Email is null ? LoginCodeErrors.PhoneAccountNotFound : LoginCodeErrors.AccountNotFound, LoginDestinationResolver.Field(destination));

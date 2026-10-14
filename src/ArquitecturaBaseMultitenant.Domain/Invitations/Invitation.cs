@@ -19,8 +19,9 @@ public sealed class Invitation : Entity, ITenantOwned, IAuditable
     public Guid TenantId { get; private set; }
     public Guid MemberId { get; private set; }
     public Guid InviterUserId { get; private set; }
+    /// <summary>El correo o el teléfono invitado: lo que hay que probar para aceptarla.</summary>
     [NotAudited]
-    public Email Destination { get; private set; }
+    public InvitationIdentity Destination { get; private set; }
     public string Channel { get; private set; }
     [NotAudited]
     public string TokenHash { get; private set; }
@@ -40,7 +41,7 @@ public sealed class Invitation : Entity, ITenantOwned, IAuditable
     public DateTime? ModifiedAtUtc { get; private set; }
     public Guid? ModifiedBy { get; private set; }
 
-    public static Invitation Issue(Guid memberId, Guid inviterUserId, Email destination, string channel,
+    public static Invitation Issue(Guid memberId, Guid inviterUserId, InvitationIdentity destination, string channel,
         string tokenHash, DateTime nowUtc, TimeSpan lifetime)
     {
         if (memberId == Guid.Empty) throw new ArgumentException("A member ID is required.", nameof(memberId));
@@ -94,10 +95,17 @@ public sealed class Invitation : Entity, ITenantOwned, IAuditable
     }
 
     /// <summary>El caso de uso llama sólo después de consumir el código del mismo correo.</summary>
-    public Result AcceptVerifiedEmail(Guid userId, Email verifiedEmail, DateTime nowUtc)
+    public Result AcceptVerifiedEmail(Guid userId, Email verifiedEmail, DateTime nowUtc) =>
+        AcceptVerified(userId, InvitationIdentity.ForEmail(verifiedEmail), nowUtc);
+
+    /// <summary>El caso de uso llama sólo después de consumir el código del mismo teléfono (decisión 11 de la E11).</summary>
+    public Result AcceptVerifiedPhone(Guid userId, PhoneNumber verifiedPhone, DateTime nowUtc) =>
+        AcceptVerified(userId, InvitationIdentity.ForPhone(verifiedPhone), nowUtc);
+
+    private Result AcceptVerified(Guid userId, InvitationIdentity verified, DateTime nowUtc)
     {
         if (userId == Guid.Empty) throw new ArgumentException("A user ID is required.", nameof(userId));
-        if (Destination != verifiedEmail) return InvitationErrors.WrongAccount;
+        if (Destination != verified) return InvitationErrors.WrongAccount;
         var pending = CheckPending(nowUtc);
         if (pending.IsFailure) return pending;
         Status = InvitationStatus.Accepted;

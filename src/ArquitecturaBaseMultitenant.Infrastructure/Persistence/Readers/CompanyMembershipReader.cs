@@ -93,7 +93,7 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
                 Includes: item.Invitation is not null && item.Member.MembershipStatus == CompanyMembershipStatus.Active))
             .Select(item => new CompanyMemberRow(item.Member.MemberId, item.Member.UserId,
                 item.Member.DisplayName.Length == 0 ? item.Invitation?.Destination.DisplayValue ?? "" : item.Member.DisplayName,
-                ToEmail(item.Member.Email ?? item.Invitation?.Destination.DisplayValue), item.State,
+                item.Member.Email is { } verified ? ToEmail(verified) : item.Invitation?.Destination.Email, item.State,
                 item.Member.MembershipStatus, rolesByMember.GetValueOrDefault(item.Member.MemberId, []),
                 item.Member.Version, item.Member.CreatedAtUtc,
                 item.Includes ? item.Invitation!.Id : null,
@@ -328,7 +328,7 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
         public string? Email { get; init; }
     }
 
-    private sealed record PendingInvitation(Guid Id, Guid MemberId, Email Destination, DateTime ExpiresAtUtc);
+    private sealed record PendingInvitation(Guid Id, Guid MemberId, Domain.Invitations.InvitationIdentity Destination, DateTime ExpiresAtUtc);
 
     private sealed record MemberProjection(Guid MemberId, Guid? UserId, string DisplayName, string? Email,
         CompanyMembershipStatus MembershipStatus, uint Version, DateTime CreatedAtUtc);

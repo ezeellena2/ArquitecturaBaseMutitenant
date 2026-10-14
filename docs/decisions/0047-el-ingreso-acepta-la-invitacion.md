@@ -21,6 +21,7 @@ Una organización creada desde Plataforma invita a su Dueño por correo, sin cre
 - **Lo que no cambia:**
   - el enlace de la invitación sigue andando como antes;
   - una invitación de operador sigue el camino de Plataforma ([0042](0042-operadores-de-plataforma.md)), no este.
+- **Precisión 2026-10-14 (decisión 11 de la Etapa 11):** vale igual para un teléfono. Una invitación por teléfono («Cargar teléfonos» de WhatsApp) se acepta con el código por WhatsApp a ese teléfono: crea la cuenta con ese teléfono verificado si no existía y acepta las invitaciones vigentes de ese teléfono. Probar un teléfono nunca acepta una invitación dirigida a un correo, ni al revés.
 
 ## Consecuencias
 

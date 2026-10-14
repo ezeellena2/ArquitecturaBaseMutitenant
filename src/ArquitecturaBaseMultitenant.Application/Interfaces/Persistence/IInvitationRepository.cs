@@ -1,5 +1,4 @@
 using ArquitecturaBaseMultitenant.Domain.Invitations;
-using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 
@@ -7,10 +6,10 @@ namespace ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 public interface IInvitationRepository
 {
     Task LockAsync(Guid invitationId, CancellationToken cancellationToken);
-    Task LockDestinationAsync(Email destination, CancellationToken cancellationToken);
+    Task LockDestinationAsync(InvitationIdentity destination, CancellationToken cancellationToken);
     Task<Invitation?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
-    Task<Invitation?> GetPendingByDestinationAsync(Email destination, CancellationToken cancellationToken);
-    Task<IReadOnlyList<Invitation>> ListPendingByDestinationsAsync(IReadOnlyCollection<Email> destinations,
+    Task<Invitation?> GetPendingByDestinationAsync(InvitationIdentity destination, CancellationToken cancellationToken);
+    Task<IReadOnlyList<Invitation>> ListPendingByDestinationsAsync(IReadOnlyCollection<InvitationIdentity> destinations,
         CancellationToken cancellationToken);
     Task<IReadOnlyList<Invitation>> ListPendingForMemberAsync(Guid memberId,
         CancellationToken cancellationToken);
