@@ -8,7 +8,7 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 
 /// <summary>
 /// Manda una plantilla a Meta, una variante por cada cuenta de WhatsApp de los números vigentes (de la organización o de
-/// Plataforma), y la borra de ellas. Fuera de la transacción. Sin un número vigente no hay a qué cuenta mandarla. Una
+/// Plataforma), y la borra de ellas. Fuera de la transacción. Sin un número vigente no hay a qué cuenta mandarla (NumberRequired). Una
 /// Marketing lleva el botón «No recibir más», en su idioma, para que el contacto se dé de baja.
 /// </summary>
 internal sealed class WhatsAppTemplateIssuer(IWhatsAppChannelReader channels, IWhatsAppTemplateClient client, IWhatsAppTokenProtector protector)
@@ -16,7 +16,7 @@ internal sealed class WhatsAppTemplateIssuer(IWhatsAppChannelReader channels, IW
     internal async Task<Result<IReadOnlyList<WhatsAppIssuedTemplate>>> SubmitAsync(bool platform, WhatsAppTemplateBase template, CancellationToken ct)
     {
         var accounts = await channels.ListTemplateAccountsAsync(platform, ct);
-        if (accounts.Count == 0) return WhatsAppErrors.NumberMetaRejected("no_number");
+        if (accounts.Count == 0) return WhatsAppErrors.TemplateNumberRequired;
         var submission = new WhatsAppTemplateSubmission(template.MetaName, template.MetaLanguage, template.Category, template.Body,
             [.. template.Variables.Select(variable => variable.Example)],
             template.Category == WhatsAppTemplateCategory.Marketing ? WhatsAppTexts.Get("Template.Unsubscribe.Button", template.Language) : null);

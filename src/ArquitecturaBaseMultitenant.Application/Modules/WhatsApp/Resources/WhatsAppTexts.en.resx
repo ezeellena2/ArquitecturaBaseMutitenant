@@ -474,4 +474,7 @@
   <data name="Bot.Unsubscribed" xml:space="preserve">
     <value>Done, we will not send you any more promotions. If you want them again, let us know here.</value>
   </data>
+  <data name="WhatsApp.Template.NumberRequired" xml:space="preserve">
+    <value>Connect a number to create templates.</value>
+  </data>
 </root>

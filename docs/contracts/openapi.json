@@ -10781,7 +10781,7 @@
             }
           },
           "409": {
-            "description": "Conflict; WhatsApp.Template.NameTaken",
+            "description": "Conflict; WhatsApp.Template.NameTaken; WhatsApp.Template.NumberRequired",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10816,6 +10816,26 @@
                           "There is already a template with that name."
                         ]
                       }
+                    }
+                  },
+                  "WhatsApp.Template.NumberRequired.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "Conectá un número para crear plantillas.",
+                      "code": "WhatsApp.Template.NumberRequired",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "WhatsApp.Template.NumberRequired.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "Connect a number to create templates.",
+                      "code": "WhatsApp.Template.NumberRequired",
+                      "traceId": "example-trace-id"
                     }
                   }
                 }
@@ -10887,6 +10907,13 @@
             "field": "name",
             "es": "Ya hay una plantilla con ese nombre.",
             "en": "There is already a template with that name."
+          },
+          {
+            "status": 409,
+            "code": "WhatsApp.Template.NumberRequired",
+            "field": null,
+            "es": "Conectá un número para crear plantillas.",
+            "en": "Connect a number to create templates."
           },
           {
             "status": 503,
@@ -11390,7 +11417,7 @@
             }
           },
           "409": {
-            "description": "Conflict; WhatsApp.Template.NameTaken",
+            "description": "Conflict; WhatsApp.Template.NameTaken; WhatsApp.Template.NumberRequired",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11425,6 +11452,26 @@
                           "There is already a template with that name."
                         ]
                       }
+                    }
+                  },
+                  "WhatsApp.Template.NumberRequired.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "Conectá un número para crear plantillas.",
+                      "code": "WhatsApp.Template.NumberRequired",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "WhatsApp.Template.NumberRequired.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "Connect a number to create templates.",
+                      "code": "WhatsApp.Template.NumberRequired",
+                      "traceId": "example-trace-id"
                     }
                   }
                 }
@@ -11496,6 +11543,13 @@
             "field": "name",
             "es": "Ya hay una plantilla con ese nombre.",
             "en": "There is already a template with that name."
+          },
+          {
+            "status": 409,
+            "code": "WhatsApp.Template.NumberRequired",
+            "field": null,
+            "es": "Conectá un número para crear plantillas.",
+            "en": "Connect a number to create templates."
           },
           {
             "status": 503,
@@ -71322,6 +71376,16 @@
               "null",
               "string"
             ]
+          },
+          "phone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "canUsePhoneCode": {
+            "type": "boolean",
+            "default": false
           }
         },
         "description": "Solo datos presentables de la invitación autorizada; jamás hashes ni secretos."
@@ -72327,8 +72391,15 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "phone": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
-        }
+        },
+        "description": "Phone es el teléfono en E.164 de una invitación por teléfono (CC25); en esa fila Email viene null."
       },
       "OrganizationUserRoleRow": {
         "required": [

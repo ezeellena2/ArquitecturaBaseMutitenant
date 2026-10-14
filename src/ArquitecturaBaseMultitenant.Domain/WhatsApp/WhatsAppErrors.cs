@@ -27,6 +27,7 @@ public static class WhatsAppErrors
     public const string TemplateNotFoundCode = "WhatsApp.Template.NotFound";
     public const string TemplateNameTakenCode = "WhatsApp.Template.NameTaken";
     public const string TemplateNotApprovedCode = "WhatsApp.Template.NotApproved";
+    public const string TemplateNumberRequiredCode = "WhatsApp.Template.NumberRequired";
     public const string BroadcastNotFoundCode = "WhatsApp.Broadcast.NotFound";
     public const string BroadcastNoRecipientsCode = "WhatsApp.Broadcast.NoRecipients";
     public const string BroadcastNotCancellableCode = "WhatsApp.Broadcast.NotCancellable";
@@ -51,6 +52,8 @@ public static class WhatsAppErrors
     public static readonly Error ContactNotFound = Error.NotFound(ContactNotFoundCode, "Contact not found.");
     public static readonly Error TemplateNotFound = Error.NotFound(TemplateNotFoundCode, "Template not found.");
     public static readonly Error TemplateNameTaken = Field(TemplateNameTakenCode, "There is already a template with that name.", "name", ErrorType.Conflict);
+    /// <summary>Sin un número conectado no hay cuenta de Meta donde mandar la plantilla: es un estado, no un rechazo de Meta (CC27).</summary>
+    public static readonly Error TemplateNumberRequired = Error.Conflict(TemplateNumberRequiredCode, "Connect a number to create templates.");
     public static readonly Error TemplateNotApproved = Field(TemplateNotApprovedCode, "Meta has not approved that template.", "templateId", ErrorType.Conflict);
     public static readonly Error BroadcastNotFound = Error.NotFound(BroadcastNotFoundCode, "Broadcast not found.");
     public static readonly Error BroadcastNoRecipients = Field(BroadcastNoRecipientsCode, "No contact in that audience accepts promotions.", "audience", ErrorType.Validation);

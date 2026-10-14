@@ -57,6 +57,17 @@ public sealed class WhatsAppAttentionContractTests(ApiFactory factory)
         Assert.Equal(WhatsAppFeature.MaxTeamMembers, schemas["WhatsAppTeamDetailResponse"]!["properties"]!["members"]!["maxItems"]!.GetValue<int>());
         Assert.Equal(WhatsAppFeature.MaxMemberPreview, schemas["WhatsAppTeamResponse"]!["properties"]!["memberPreview"]!["maxItems"]!.GetValue<int>());
         Assert.Equal(WhatsAppFeature.MaxTemplateLanguages, schemas["WhatsAppTemplateResponse"]!["properties"]!["languages"]!["maxItems"]!.GetValue<int>());
+        // CC25 y CC26: el teléfono de una invitación por teléfono y el código por WhatsApp en la invitación.
+        Assert.NotNull(schemas["OrganizationUserHttpResponse"]!["properties"]!["phone"]);
+        Assert.NotNull(schemas["InvitationPreviewResponse"]!["properties"]!["phone"]);
+        Assert.Equal("boolean", schemas["InvitationPreviewResponse"]!["properties"]!["canUsePhoneCode"]!["type"]!.GetValue<string>());
+        // CC27: sin número conectado, una plantilla responde 409 NumberRequired (en organización y en Plataforma).
+        foreach (var path in new[] { "/api/organization/whatsapp/templates", "/api/platform/whatsapp/templates" })
+        {
+            var error = Assert.Single(document["paths"]![path]!["post"]!["x-error-codes"]!.AsArray(),
+                value => value!["code"]!.GetValue<string>() == WhatsAppErrors.TemplateNumberRequiredCode);
+            Assert.Equal(409, error!["status"]!.GetValue<int>());
+        }
         // CC23: duplicar con los valores de la difusión y el par nombre y ejemplo de cada variable.
         var broadcastVariables = schemas["WhatsAppBroadcastResponse"]!["properties"]!["variables"]!;
         Assert.Equal(WhatsAppFeature.MaxTemplateVariables, broadcastVariables["maxItems"]!.GetValue<int>());

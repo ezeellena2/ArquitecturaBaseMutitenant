@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persis
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -31,8 +32,8 @@ public sealed class WhatsAppTemplateManagementTests(ApiFactory factory)
 
         using (var withoutNumber = await WhatsAppAttentionJourney.PostAsync(owner, "/api/organization/whatsapp/templates", Template("Sin número"), Ct))
         {
-            Assert.Equal(HttpStatusCode.ServiceUnavailable, withoutNumber.StatusCode);
-            Assert.Equal(WhatsAppErrors.NumberMetaRejectedCode, (await WhatsAppAttentionJourney.JsonAsync(withoutNumber, Ct)).GetProperty("code").GetString());
+            Assert.Equal(HttpStatusCode.Conflict, withoutNumber.StatusCode);
+            Assert.Equal(WhatsAppErrors.TemplateNumberRequiredCode, (await WhatsAppAttentionJourney.JsonAsync(withoutNumber, Ct)).GetProperty("code").GetString());
         }
         var phoneNumberId = WhatsAppAttentionJourney.NewNumberId();
         using (var connected = await WhatsAppAttentionJourney.ConnectAsync(owner, phoneNumberId, Ct))
@@ -98,6 +99,8 @@ public sealed class WhatsAppTemplateManagementTests(ApiFactory factory)
     [Fact]
     public async Task The_rate_table_has_the_official_rates_in_force_since_october_2026()
     {
+        // En Testing el seed no corre al arrancar: se pide, como al iniciar la API.
+        await factory.Services.SeedDatabaseAsync(Ct);
         await using var scope = factory.Services.CreateAsyncScope();
         var rates = scope.ServiceProvider.GetRequiredService<IWhatsAppRateReader>();
         var marketing = await rates.FindAsync("AR", WhatsAppPricingCategory.Marketing, new DateOnly(2026, 10, 14), Ct);

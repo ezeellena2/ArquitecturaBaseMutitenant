@@ -39,13 +39,14 @@ public sealed record OrganizationUserRow(Guid MemberId, Guid? UserId, string Dis
     bool HasManagedEmail, OrganizationUserState State, Guid? InvitationId, DateTime? InvitationIssuedAtUtc,
     DateTime? InvitationExpiresAtUtc, IReadOnlyList<OrganizationUserRoleRow> Roles,
     IReadOnlyList<OrganizationUserCompanyRow> Companies, uint Version, DateTime CreatedAtUtc,
-    DateTime? DeletionScheduledForUtc, DateTime? DeletionRequestedAtUtc = null);
+    DateTime? DeletionScheduledForUtc, DateTime? DeletionRequestedAtUtc = null, PhoneNumber? Phone = null);
 
+/// <summary>Email es el correo verificado o el de la invitación; Phone, el teléfono de una invitación por teléfono (con Email null).</summary>
 public sealed record OrganizationUserResponse(Guid MemberId, Guid? UserId, string DisplayName, Email? Email,
     OrganizationUserState State, bool HasManagedEmail, IReadOnlyList<OrganizationUserRoleRow> Roles,
     IReadOnlyList<OrganizationUserCompanyRow> Companies, Guid? InvitationId,
     DateTime? InvitationIssuedAtUtc, DateTime? InvitationExpiresAtUtc, uint Version, DateTime CreatedAtUtc,
-    DateTime? DeletionScheduledForUtc);
+    DateTime? DeletionScheduledForUtc, PhoneNumber? Phone = null);
 
 public sealed record OrganizationUserFilterCountsResponse(int All, int Active, int PendingDeletion,
     int Invited, int Expired, int Inactive, int? CompanyAll = null, int? WithoutCompany = null,

@@ -146,6 +146,7 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
             if (method == HttpMethod.Post)
             {
                 Add(409, WhatsAppErrors.TemplateNameTakenCode, "name");
+                Add(409, WhatsAppErrors.TemplateNumberRequiredCode);
                 Add(503, WhatsAppErrors.NumberMetaRejectedCode);
             }
         }
