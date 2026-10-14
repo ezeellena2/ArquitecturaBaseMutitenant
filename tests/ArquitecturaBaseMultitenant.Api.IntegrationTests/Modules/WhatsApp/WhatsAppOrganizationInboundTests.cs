@@ -173,7 +173,7 @@ public sealed class WhatsAppOrganizationInboundTests(ApiFactory factory)
         { await work(scope.ServiceProvider, ct); return Result.Success(); }, CommitPolicy.OnSuccess, Ct);
     }
 
-    private static string NewPhone() => "+54911" + System.Security.Cryptography.RandomNumberGenerator.GetInt32(10_000_000, 99_999_999)
+    private static string NewPhone() => "+54911" + System.Security.Cryptography.RandomNumberGenerator.GetInt32(30_000_000, 59_999_999)
         .ToString(System.Globalization.CultureInfo.InvariantCulture);
 
     private static string Inbound(params (string PhoneNumberId, string From, string Wamid, string Text)[] messages) => JsonSerializer.Serialize(new

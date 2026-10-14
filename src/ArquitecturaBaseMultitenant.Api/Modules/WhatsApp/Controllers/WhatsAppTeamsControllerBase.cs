@@ -110,4 +110,4 @@ public sealed class OrganizationWhatsAppTeamsController(IWhatsAppTeamService ser
 [Access(Access.Platform)]
 [InstalledModuleRoute(WhatsAppApiModule.ManagementRoute, InstalledModuleRouteCategory.PlatformManagement)]
 [HasPlatformPermission(PlatformPermissions.WhatsApp.Manage)]
-public sealed class PlatformWhatsAppTeamsController(IWhatsAppTeamService service) : WhatsAppTeamsControllerBase(service);
+public sealed class PlatformWhatsAppTeamsController(IPlatformWhatsAppTeamService service) : WhatsAppTeamsControllerBase(service);

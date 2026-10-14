@@ -7,5 +7,8 @@ public interface IWhatsAppTeamRepository
 {
     /// <summary>Los equipos con esos identificadores; los ajenos o inexistentes no vuelven.</summary>
     Task<IReadOnlyList<WhatsAppTeam>> ListAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct);
+    /// <summary>El equipo de la organización; con versión, la exige.</summary>
+    Task<WhatsAppTeam?> GetAsync(Guid id, uint? expectedVersion, CancellationToken ct);
     void Add(WhatsAppTeam team);
+    void Remove(WhatsAppTeam team);
 }

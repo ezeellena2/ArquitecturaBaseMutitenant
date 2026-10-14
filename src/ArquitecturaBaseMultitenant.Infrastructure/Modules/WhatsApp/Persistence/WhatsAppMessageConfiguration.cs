@@ -25,6 +25,8 @@ internal sealed class WhatsAppMessageConfiguration : IEntityTypeConfiguration<Wh
         builder.Property(value => value.OriginalUserId).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Throw);
         builder.Property(value => value.OriginalMethodId).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Throw);
         builder.HasIndex(value => value.OriginalUserId);
+        // El estado de lo que salió por una conversación se lee por su mensaje del outbox (fila «accepted»).
+        builder.HasIndex(value => value.OutboxMessageId).HasFilter("\"OutboxMessageId\" IS NOT NULL");
         builder.HasIndex(value => new { value.Direction, value.NextAttemptAtUtc, value.LeaseUntilUtc, value.ReceivedAtUtc });
         builder.HasIndex(value => new { value.PhoneNumberId, value.Wamid, value.EventType }).IsUnique().HasDatabaseName(WhatsAppUniqueKeys.MessageEvent);
         builder.HasIndex(value => new { value.ProcessedAtUtc, value.LeaseUntilUtc, value.ReceivedAtUtc });

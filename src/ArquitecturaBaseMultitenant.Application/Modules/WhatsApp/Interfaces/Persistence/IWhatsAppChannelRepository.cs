@@ -15,6 +15,8 @@ public interface IWhatsAppChannelRepository
     Task<WhatsAppChannel?> GetActiveAsync(string phoneNumberId, CancellationToken ct);
     /// <summary>Los números vigentes de una cuenta de Meta.</summary>
     Task<IReadOnlyList<WhatsAppChannel>> ListActiveByWabaAsync(string wabaId, CancellationToken ct);
+    /// <summary>El número de una conversación, en cualquier estado: uno desconectado deja sus chats para leer (D7).</summary>
+    Task<WhatsAppChannel?> GetAsync(Guid id, CancellationToken ct);
     Task<WhatsAppChannelUsage?> GetUsageAsync(Guid channelId, DateOnly month, CancellationToken ct);
     void Add(WhatsAppChannel channel);
     void Add(WhatsAppChannelUsage usage);

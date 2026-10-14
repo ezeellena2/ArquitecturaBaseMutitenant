@@ -24,5 +24,12 @@ internal sealed class WhatsAppBotRepository(ApplicationDbContext context, ITenan
         return row;
     }
 
+    public async Task<IReadOnlyList<WhatsAppBot>> ListAsync(CancellationToken ct)
+    {
+        context.RequireTransaction();
+        var tenantId = tenant.RequiredTenantId;
+        return await context.Set<WhatsAppBot>().Where(value => value.TenantId == tenantId).OrderBy(value => value.Id).ToArrayAsync(ct);
+    }
+
     public void Add(WhatsAppBot bot) { context.RequireTransaction(); _ = tenant.RequiredTenantId; context.Set<WhatsAppBot>().Add(bot); }
 }

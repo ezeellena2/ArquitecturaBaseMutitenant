@@ -3961,6 +3961,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("OriginalUserId");
 
+                    b.HasIndex("OutboxMessageId")
+                        .HasFilter("\"OutboxMessageId\" IS NOT NULL");
+
                     b.HasIndex("ReceivedAtUtc");
 
                     b.HasIndex("PhoneNumberId", "Wamid", "EventType")

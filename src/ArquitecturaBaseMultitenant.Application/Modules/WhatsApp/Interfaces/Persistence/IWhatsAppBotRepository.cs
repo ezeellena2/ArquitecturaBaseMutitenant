@@ -9,5 +9,7 @@ public interface IWhatsAppBotRepository
     Task LockAsync(Guid channelId, CancellationToken ct);
     /// <summary>El bot del número; con versión, la exige. Sin fila, el número responde con los valores iniciales.</summary>
     Task<WhatsAppBot?> GetAsync(Guid channelId, uint? expectedVersion, CancellationToken ct);
+    /// <summary>Los bots de todos los números de la organización (uno por número): borrar un equipo los revisa.</summary>
+    Task<IReadOnlyList<WhatsAppBot>> ListAsync(CancellationToken ct);
     void Add(WhatsAppBot bot);
 }

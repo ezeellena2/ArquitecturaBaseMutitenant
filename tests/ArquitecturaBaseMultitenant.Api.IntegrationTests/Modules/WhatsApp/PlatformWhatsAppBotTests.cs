@@ -60,7 +60,7 @@ public sealed class PlatformWhatsAppBotTests(ApiFactory factory) : IClassFixture
         Assert.Equal(HttpStatusCode.OK, consultations.StatusCode);
 
         using var anonymous = WhatsAppAttentionJourney.Client(host);
-        var person = "+54911" + System.Security.Cryptography.RandomNumberGenerator.GetInt32(10_000_000, 99_999_999)
+        var person = "+54911" + System.Security.Cryptography.RandomNumberGenerator.GetInt32(30_000_000, 59_999_999)
             .ToString(System.Globalization.CultureInfo.InvariantCulture);
         await InboundAsync(host, anonymous, phoneNumberId, person, new { type = "text", text = new { body = "Hola" } });
         var welcome = Assert.Single(await OutboxAsync(host, person));
@@ -83,6 +83,64 @@ public sealed class PlatformWhatsAppBotTests(ApiFactory factory) : IClassFixture
             .OrderBy(value => value.CreatedAtUtc).ThenBy(value => value.Id).Select(value => new { value.Direction, value.Text }).ToArrayAsync(Ct);
         Assert.Equal(["Hola", "Entrar a mi cuenta"], messages.Where(message => message.Direction == WhatsAppMessageDirection.Inbound).Select(message => message.Text));
         Assert.Equal(["Bienvenidos"], messages.Where(message => message.Direction == WhatsAppMessageDirection.Outbound).Select(message => message.Text));
+    }
+
+    [Fact]
+    public async Task Operators_answer_consultations_and_only_those_who_read_accounts_see_the_account()
+    {
+        var phoneNumberId = WhatsAppAttentionJourney.NewNumberId();
+        await using var host = WhatsAppAttentionJourney.Host(factory, new FakeGraph(), settings: new Dictionary<string, string>
+        {
+            ["WhatsApp:PhoneNumberId"] = phoneNumberId, ["WhatsApp:AccessToken"] = "configured-token",
+        });
+        using var manager = await OperatorAsync(host, PlatformPermissions.WhatsApp.Manage, PlatformPermissions.WhatsApp.Attend, PlatformPermissions.Accounts.Read);
+        using var attendant = await OperatorAsync(host, PlatformPermissions.WhatsApp.Attend);
+        var number = (await WhatsAppAttentionJourney.JsonAsync(await manager.GetAsync("/api/platform/whatsapp/number", Ct), Ct)).GetProperty("number");
+        Assert.False((await WhatsAppAttentionJourney.JsonAsync(await manager.GetAsync("/api/platform/whatsapp/number", Ct), Ct))
+            .GetProperty("consultationsEnabled").GetBoolean());
+        using (var on = await manager.PutAsJsonAsync("/api/platform/whatsapp/number",
+            new { consultationsEnabled = true, version = number.GetProperty("version").GetUInt32() }, Ct))
+            Assert.Equal(HttpStatusCode.OK, on.StatusCode);
+
+        var person = WhatsAppAttentionJourney.NewPhone();
+        var account = await VerifiedPhoneAccountAsync(host, person);
+        using var anonymous = WhatsAppAttentionJourney.Client(host);
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, person, "Necesito ayuda", Ct);
+
+        var seen = Consultation(await WhatsAppAttentionJourney.JsonAsync(await manager.GetAsync("/api/platform/whatsapp/conversations", Ct), Ct), person);
+        Assert.Equal(account, seen.GetProperty("accountId").GetGuid());
+        var list = await WhatsAppAttentionJourney.JsonAsync(await attendant.GetAsync("/api/platform/whatsapp/conversations", Ct), Ct);
+        var row = Consultation(list, person);
+        Assert.Equal(JsonValueKind.Null, row.GetProperty("accountId").ValueKind);
+        Assert.Equal(0, list.GetProperty("counts").GetProperty("internal").GetInt32());
+        var id = row.GetProperty("id").GetGuid();
+
+        using (var taken = await attendant.PostAsync($"/api/platform/whatsapp/conversations/{id}/take", null, Ct))
+            Assert.Equal(HttpStatusCode.OK, taken.StatusCode);
+        using (var blocked = await WhatsAppAttentionJourney.PostAsync(manager, $"/api/platform/whatsapp/conversations/{id}/messages", new { text = "Hola" }, Ct))
+            Assert.Equal(HttpStatusCode.Conflict, blocked.StatusCode);
+        using (var sent = await WhatsAppAttentionJourney.PostAsync(attendant, $"/api/platform/whatsapp/conversations/{id}/messages", new { text = "Te ayudo" }, Ct))
+            Assert.Equal(HttpStatusCode.Created, sent.StatusCode);
+        Assert.Contains(await OutboxAsync(host, person), message => message.Body == "Te ayudo");
+    }
+
+    private static JsonElement Consultation(JsonElement list, string waId) =>
+        list.GetProperty("conversations").GetProperty("items").EnumerateArray().Single(row => row.GetProperty("displayNumber").GetString() == waId);
+
+    private static async Task<Guid> VerifiedPhoneAccountAsync(WebApplicationFactory<Program> host, string phone)
+    {
+        await using var scope = host.Services.CreateAsyncScope();
+        var user = Guid.Empty;
+        await scope.ServiceProvider.GetRequiredService<Application.Interfaces.Persistence.IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+        {
+            user = (await scope.ServiceProvider.GetRequiredService<Application.Interfaces.Persistence.IUserRepository>()
+                .CreateAsync("Persona", "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
+            var method = Domain.Authentication.LoginMethod.CreatePhone(user, Domain.ValueObjects.PhoneNumber.Create(phone).Value);
+            method.Verify(scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
+            scope.ServiceProvider.GetRequiredService<Application.Interfaces.Persistence.ILoginMethodRepository>().Add(method);
+            return Domain.Results.Result.Success();
+        }, Application.Interfaces.Persistence.CommitPolicy.OnSuccess, Ct);
+        return user;
     }
 
     private static object Bot(object[] menu, uint version) => new
@@ -135,11 +193,11 @@ public sealed class PlatformWhatsAppBotTests(ApiFactory factory) : IClassFixture
         catch (System.Security.Cryptography.CryptographicException) { return null; }
     }
 
-    private static async Task<HttpClient> OperatorAsync(WebApplicationFactory<Program> host)
+    private static async Task<HttpClient> OperatorAsync(WebApplicationFactory<Program> host, params string[] permissions)
     {
         var client = WhatsAppAttentionJourney.Client(host);
         var account = await AccountJourney.RegisterAsync(host, client, Ct);
-        await PlatformOperators.GrantAsync(host.Services, account.UserId, [PlatformPermissions.WhatsApp.Manage], Ct);
+        await PlatformOperators.GrantAsync(host.Services, account.UserId, permissions.Length == 0 ? [PlatformPermissions.WhatsApp.Manage] : permissions, Ct);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         return client;
     }

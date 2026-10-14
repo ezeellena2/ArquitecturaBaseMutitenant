@@ -48,7 +48,14 @@ public static class WhatsAppModule
         services.AddScoped<IWhatsAppBotService, WhatsAppBotService>();
         services.AddScoped<IPlatformWhatsAppBotService, PlatformWhatsAppBotService>();
         services.AddScoped<IWhatsAppTeamService, WhatsAppTeamService>();
+        services.AddScoped<IPlatformWhatsAppTeamService, PlatformWhatsAppTeamService>();
         services.AddScoped<IWhatsAppConversationService, WhatsAppConversationService>();
+        services.AddScoped<IPlatformWhatsAppConversationService, PlatformWhatsAppConversationService>();
+        services.AddScoped<WhatsAppTeamResponseBuilder>();
+        services.AddScoped<WhatsAppConversationResponseBuilder>();
+        services.AddScoped<WhatsAppReplyIssuer>();
+        services.AddScoped<PlatformWhatsAppOperatorResolver>();
+        services.AddScoped<PlatformWhatsAppAuditWriter>();
         services.AddScoped<IWhatsAppContactService, WhatsAppContactService>();
         services.AddScoped<IWhatsAppTemplateService, WhatsAppTemplateService>();
         services.AddScoped<IWhatsAppBroadcastService, WhatsAppBroadcastService>();

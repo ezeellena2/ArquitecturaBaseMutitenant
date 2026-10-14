@@ -116,6 +116,34 @@ internal static class WhatsAppAttentionJourney
         errors = error is null ? null : new[] { new { code = error } },
     };
 
+    /// <summary>Un cliente le escribe un texto al número (con la hora de Meta que se pida) y el procesador lo atiende.</summary>
+    internal static async Task ReceiveAsync(WebApplicationFactory<Program> host, HttpClient client, string phoneNumberId, string from, string text,
+        CancellationToken ct, DateTimeOffset? at = null)
+    {
+        var body = JsonSerializer.Serialize(new
+        {
+            @object = "whatsapp_business_account",
+            entry = new[] { new { id = "waba-" + phoneNumberId, changes = new[] { new { field = "messages", value = new
+            {
+                messaging_product = "whatsapp",
+                metadata = new { display_phone_number = "5491100000000", phone_number_id = phoneNumberId },
+                messages = new[] { new
+                {
+                    from = from.TrimStart('+'), id = "wamid.journey." + Guid.NewGuid().ToString("N"), type = "text", text = new { body = text },
+                    timestamp = (at ?? TimeProvider.System.GetUtcNow()).ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
+                } },
+            } } } } },
+        });
+        using var received = await WebhookAsync(client, body, ct);
+        Assert.Equal(System.Net.HttpStatusCode.OK, received.StatusCode);
+        await host.Services.GetServices<Microsoft.Extensions.Hosting.IHostedService>()
+            .OfType<ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Inbound.WhatsAppInboundProcessor>().Single().ProcessPendingAsync(ct);
+    }
+
+    /// <summary>Un móvil de AMBA que el webhook acepta: un abonado que empieza con 0 o con 1 no es válido y se descartaría.</summary>
+    internal static string NewPhone() => "+54911" + RandomNumberGenerator.GetInt32(30_000_000, 59_999_999)
+        .ToString(System.Globalization.CultureInfo.InvariantCulture);
+
     internal static string NewNumberId() => "pn" + RandomNumberGenerator.GetInt32(100_000_000, int.MaxValue).ToString(System.Globalization.CultureInfo.InvariantCulture);
 }
 

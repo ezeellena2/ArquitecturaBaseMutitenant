@@ -50,6 +50,12 @@ internal sealed class WhatsAppChannelRepository(ApplicationDbContext context, IT
             .OrderBy(value => value.Id).ToArrayAsync(ct);
     }
 
+    public Task<WhatsAppChannel?> GetAsync(Guid id, CancellationToken ct)
+    {
+        context.RequireTransaction();
+        return context.Set<WhatsAppChannel>().SingleOrDefaultAsync(value => value.Id == id, ct);
+    }
+
     public async Task<WhatsAppChannelUsage?> GetUsageAsync(Guid channelId, DateOnly month, CancellationToken ct)
     {
         context.RequireTransaction();

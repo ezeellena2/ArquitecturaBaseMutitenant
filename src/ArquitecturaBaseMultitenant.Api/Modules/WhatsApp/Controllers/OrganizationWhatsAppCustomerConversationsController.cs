@@ -34,7 +34,7 @@ public sealed class OrganizationWhatsAppInternalConversationsController(IWhatsAp
 [Access(Access.Platform)]
 [ArquitecturaBaseMultitenant.Api.Features.InstalledModuleRoute(WhatsAppApiModule.ManagementRoute, ArquitecturaBaseMultitenant.Api.Features.InstalledModuleRouteCategory.PlatformManagement)]
 [HasPlatformPermission(PlatformPermissions.WhatsApp.Attend)]
-public sealed class PlatformWhatsAppConversationsController(IWhatsAppConversationService service) : WhatsAppConversationsControllerBase(service)
+public sealed class PlatformWhatsAppConversationsController(IPlatformWhatsAppConversationService service) : WhatsAppConversationsControllerBase(service)
 {
     protected override WhatsAppInbox? Inbox => null;
 }

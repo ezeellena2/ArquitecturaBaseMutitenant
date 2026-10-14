@@ -6,5 +6,7 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Pe
 public interface IPlatformWhatsAppTeamRepository
 {
     Task<IReadOnlyList<PlatformWhatsAppTeam>> ListAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct);
+    Task<PlatformWhatsAppTeam?> GetAsync(Guid id, uint? expectedVersion, CancellationToken ct);
     void Add(PlatformWhatsAppTeam team);
+    void Remove(PlatformWhatsAppTeam team);
 }
