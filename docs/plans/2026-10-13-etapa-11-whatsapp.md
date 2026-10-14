@@ -166,6 +166,7 @@ Leé AGENTS.md del front y ../ArquitecturaBaseMutitenant/docs/plans/2026-10-13-e
 | D8 | Se desarrolla con una app nueva de Meta en modo desarrollo, en el mismo portfolio; «Servicios Ya» no se toca. |
 | D9 | El bot no se apaga: con un número conectado siempre responde. Diseño saca «Activo» de los tableros del bot. |
 | D10 | Al editar un contacto se puede crear una etiqueta nueva («Crear «VIP»»). Si ya hay una igual sin distinguir mayúsculas, se elige esa. Vale también para «Etiqueta para todos» al importar. Es solo del front; el contrato ya la acepta. |
+| D11 | Una conversación termina cuando se cierra su ventana de 24 h; no hay botón para cerrarla. Si el cliente vuelve a escribir, pasa otra vez por el bot y queda sin tomar en el equipo que elija. En la ficha aparece como una conversación nueva. |
 
 ## Para Diseño
 
@@ -210,3 +211,6 @@ Del cruce con el front ya programado (F1–F8), decididos por el coordinador por
 | CC22 | `maxLength` de cada etiqueta: `items.maxLength` en `tags` del contacto y `maxLength` en `tag` de la importación, de la lista de contactos y de la estimación | Etiquetas (B5) |
 | CC23 | La difusión suma `variables` (los valores usados); la plantilla pasa `variables` a `[{name, example}]`. «Duplicar» copia todo; el nombre de una plantilla duplicada lo propone el front con `_2` (o el número siguiente), y si está tomado responde `NameTaken` | Duplicar (B6) |
 | CC24 | `languages` pasa a `[{culture, category}]`, con la cultura del catálogo (es-AR, nunca el código de Meta) y el idioma principal primero; `category` queda como la del primer idioma | Plantillas del sistema, Marketing en español y Utility en inglés (B6) |
+| CC25 | `phone` (E.164) en la fila de Usuarios; en una invitación por teléfono, `email` llega null | Invitaciones por teléfono en Usuarios (B5c) |
+| CC26 | `phone` y `canUsePhoneCode` en el preview de la invitación; en una invitación por teléfono, `email` llega null | Entrar con código por WhatsApp desde la invitación (B5c, ADR 0047) |
+| CC27 | Crear una plantilla sin un número conectado responde 409 `WhatsApp.Template.NumberRequired`, no 503 | Plantillas (B6) |
