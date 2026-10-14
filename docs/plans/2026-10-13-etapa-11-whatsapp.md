@@ -2,11 +2,11 @@
 
 | Parte | Tareas | Estado |
 |---|---|---|
-| 0 · Decisiones de producto | D1–D8 | Hechas por el usuario el 2026-10-13 |
-| 1 · Contrato | K1 | Hecha: OpenAPI, permisos, migración de datos, textos y tipos del front |
-| 2a · Back | B1–B7 | Pendiente |
-| 2b · Front | F1–F8 | Pendiente |
-| 3 · Integración y puerta | I1–I3 | Pendiente |
+| 0 · Decisiones de producto | D1–D12 | Hechas por el usuario (2026-10-13 y 2026-10-14) |
+| 1 · Contrato | K1, CC01–CC27 | Hecha: OpenAPI, permisos, migración de datos, textos y tipos del front |
+| 2a · Back | B1–B7 | Hecha |
+| 2b · Front | F1–F8 | Hecha |
+| 3 · Integración y puerta | I1–I3 | En curso: I1 la hace el usuario en Meta; I2 e I3, en la puerta |
 
 ## Forma de trabajo
 
