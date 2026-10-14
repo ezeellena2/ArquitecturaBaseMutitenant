@@ -32,7 +32,7 @@ Rige `AGENTS.md` («Velocidad y cierre liviano») y la guía [etapa en paralelo]
 5. **Empleado o cliente:** un puerto neutral del núcleo `IActiveMemberPhoneReader` responde si un E.164 es un método Phone verificado de un miembro activo de la organización actual. Nada se publica sobre cuentas ajenas.
 6. **Datos de atención:** las tablas de organización son `ITenantOwned` con RLS: contactos, etiquetas, conversaciones, mensajes, notas, equipos y miembros, bot, plantillas y sus variantes por WABA, difusiones y destinatarios. Plataforma tiene gemelas en `platform` para consultas, equipos, bot y plantillas «Para consultas», con la base común de entidades que usa el asistente. El vínculo contacto↔cuenta es `IConsumerBusinessShared` (`engagement`).
 7. **Salida:** el outbox de la E8, con `ChannelId` en el payload cifrado; el dispatcher toma token y `PhoneNumberId` del canal. Llamadas a Meta fuera de la UoW. Graph v26.0 para el servidor y el SDK.
-8. **Contador del mes:** los webhooks de estado traen `pricing.category` y `pricing.type`. Se cuentan los `service` entregados por canal y mes, en la zona de la cuenta de Meta. `type=regular` marca que ya se cobran.
+8. **Contador del mes:** los webhooks de estado traen `pricing.category` y `pricing.type`. Se cuentan los `service` entregados por canal y mes, con el mes de la nota 13. Lo cobrado se cuenta con `type=regular`, nunca restando 1.000.
 9. **Costos estimados:** tabla de datos de referencia `WhatsAppRates` (país, categoría, moneda, precio, vigencia), cargada del CSV oficial vigente desde el 01/10/2026 y actualizada por seed versionado cuando Meta publique otra (solo lo hace al empezar un trimestre). El costo es `Money` y lo calcula el back.
 10. **Importar contactos:** `.xlsx` y `.csv` con ClosedXML (MIT; versión exacta al agregarla, con al menos dos semanas de publicada). La E15 la reutiliza.
 11. **Invitación por teléfono:** hoy la identidad de una invitación es siempre un correo. «Cargar teléfonos» necesita invitaciones cuya identidad y prueba sean un Phone: el núcleo suma `InvitationIdentity` Email|Phone y la aceptación exige ese Phone verificado en la cuenta que ingresa (ADR 0047). Va con tests de seguridad de identidad.
@@ -66,7 +66,7 @@ Leé AGENTS.md de los dos repos y la parte 1 de docs/plans/2026-10-13-etapa-11-w
 | DELETE `numbers/{id}?version=` | manage | 204 (D7) |
 | GET/PUT `numbers/{id}/bot` | manage | `{welcome, outOfHours, schedule: {timeZoneId, days[{day, from, to}]}, menu[≤10 {id, label, action: Team|Reply, teamId?, reply?}], askPromotions, offerAccountLink, employeesTeamId?, version}` |
 | GET/POST `teams`, PUT/DELETE `teams/{id}` | manage | `{name, inbox: Customers|Internal, memberIds[], notifyAfterMinutes: 10|15|30|null, version}` |
-| GET `customers/conversations` o `internal/conversations` | customers o internal, según la ruta | `?teamId&state=Untaken|Mine|All&search&page` → `{conversations: PagedResult<ConversationRow>, counts: {total, untaken}}`. Las acciones siguientes van bajo el mismo prefijo de bandeja. |
+| GET `customers/conversations` o `internal/conversations` | customers o internal, según la ruta | `?teamId&state=Untaken|Mine|All&search&page` → `{conversations: PagedResult<ConversationRow>, counts: {customers, internal, untaken}}` (CC15). Las acciones siguientes van bajo el mismo prefijo de bandeja. |
 | GET `conversations/{id}` | ídem | `?page` → `{conversation, messages: PagedResult<Message>}`; `Message = {id, kind: Text|Template|Note|Event|Media, direction, author?, text?, mediaKind?, status, failureReason?, createdAtUtc}` |
 | POST `conversations/{id}/take` | ídem | sin cuerpo → `ConversationRow` |
 | POST `conversations/{id}/messages` | ídem | `{text}` → 201 `Message` (toma el chat si estaba sin tomar) |
@@ -158,6 +158,7 @@ Leé AGENTS.md del front y ../ArquitecturaBaseMutitenant/docs/plans/2026-10-13-e
 | D7 | Fotos, audios y documentos se ven como «Mandó una foto/audio/documento», sin descarga (llega con la E14). Desconectar un número deja sus chats para leer, sin responder. |
 | D8 | Se desarrolla con una app nueva de Meta en modo desarrollo, en el mismo portfolio; «Servicios Ya» no se toca. |
 | D9 | El bot no se apaga: con un número conectado siempre responde. Diseño saca «Activo» de los tableros del bot. |
+| D10 | Al editar un contacto se puede crear una etiqueta nueva («Crear «VIP»»). Si ya hay una igual sin distinguir mayúsculas, se elige esa. Es solo del front; el contrato ya la acepta. |
 
 ## Para Diseño
 
@@ -182,3 +183,21 @@ Aprobados por el usuario el 2026-10-13, después de cruzar el contrato con los t
 | CC07 | Conteos en las listas: `paymentMissing` en números, `scheduled` en difusiones y `approved` en plantillas | Resúmenes de los tableros |
 | CC08 | `moduleCards` en el Inicio (`HomeModuleCard(key, total)`, hasta 10); B1 suma el puerto del núcleo y el agregado de `HomeService` | Tarjeta «WhatsApp · 2 números» (B1) |
 | CC09 | GET `/api/organization/whatsapp/untaken`: sin tomar por bandeja, null en la que la persona no puede ver | Contador del menú (B4) |
+
+Del cruce con el front ya programado (F1–F8), decididos por el coordinador por ser técnicos. Son aditivos, salvo CC17, y el Back los publica en un commit de contrato.
+
+| # | Cambio | Para |
+|---|---|---|
+| CC10 | `Money` con su forma en el OpenAPI: `{amount: number decimal, currency: ISO de 3 letras}`, como `AssistantMoney` | Costos (B6) |
+| CC11 | GET `teams/member-options`, en organización y Plataforma, paginado con `search`, con el permiso de administrar. `memberIds` son miembros activos en organización y `accountId` de operadores en Plataforma | Integrantes del equipo (B4) |
+| CC12 | El detalle del equipo trae todos los integrantes sin paginar, hasta 200, y el validador limita `memberIds` a 200. La fila suma `memberPreview` (hasta 3 nombres) | Equipos (B4) |
+| CC13 | La fila de la conversación suma `channel {id, displayNumber, status}` y `assignedToMe` | «Mío» y número sin medio de pago (B4) |
+| CC14 | GET `{bandeja}/inbox-teams` con el permiso de la bandeja (Plataforma: `/api/platform/whatsapp/inbox-teams`, con `attend`) | Filtro «Equipo» (B4) |
+| CC15 | Convenciones: la página 1 de mensajes trae los más recientes, en orden descendente; un saliente sin `author` es el bot. Los `counts` cuentan la bandeja entera, sin `search`, `state` ni `teamId`. En organización van `customers` e `internal` por bandeja, con 0 en la que la persona no ve, y `untaken` de la bandeja de la ruta. En Plataforma, `customers` son todas las consultas e `internal` es 0. `totalCount` solo pagina | Chat, banda y menú (B4) |
+| CC16 | `status` en GET `broadcasts`; `search` sobre los destinatarios en GET `broadcasts/{id}`; `country` (ISO 3166) en la estimación | Difusiones (B6) |
+| CC17 | Se retiran POST `broadcasts/{id}/duplicate` y `templates/{id}/duplicate`, en organización y Plataforma. «Duplicar» abre el formulario nuevo con los datos de la original | Difusiones y plantillas (B6) |
+| CC18 | `lastMessagePreview` en las conversaciones de la ficha; `latestConversationId` en el contacto; `displayNumber` siempre en E.164 | Ficha del contacto (B5) |
+| CC19 | Conteos por grupo en Plataforma (`consultations`, `system`; null en organización); `title` de las del sistema; `languages` (hasta 10) en lugar de `language`; el alta recibe la cultura del catálogo (es-AR) y el back la traduce a la de Meta | Plantillas (B6) |
+| CC20 | `phoneNumberId` opcional con `coexistence`: el back resuelve el número desde la WABA | Alta (B1) |
+| CC21 | GET `numbers/company-options` con «Administrar WhatsApp», paginado con `search` | «Atiende a» (B1) |
+| CC22 | `maxLength` de cada etiqueta: `items.maxLength` en `tags` del contacto y `maxLength` en `tag` de la importación, de la lista de contactos y de la estimación | Etiquetas (B5) |
