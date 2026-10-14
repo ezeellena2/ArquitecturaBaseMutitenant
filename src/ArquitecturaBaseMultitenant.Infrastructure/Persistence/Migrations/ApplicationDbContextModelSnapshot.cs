@@ -3353,6 +3353,26 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.ToTable("PlatformWhatsAppTeams", "platform");
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.PlatformWhatsAppTeamNotice", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("SentAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TeamId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeamId")
+                        .IsUnique();
+
+                    b.ToTable("PlatformWhatsAppTeamNotices", "platform");
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppBot", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -4038,6 +4058,28 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "Name", "Id");
 
                     b.ToTable("WhatsAppTeams", "tenant");
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppTeamNotice", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("SentAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("TeamId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("TenantId", "Id");
+
+                    b.HasIndex("TenantId", "TeamId")
+                        .IsUnique();
+
+                    b.ToTable("WhatsAppTeamNotices", "tenant");
                 });
 
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Infrastructure.Idempotency.IdempotencyKey", b =>
@@ -7407,6 +7449,15 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.PlatformWhatsAppTeamNotice", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.WhatsApp.PlatformWhatsAppTeam", null)
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppBot", b =>
                 {
                     b.HasOne("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppChannel", null)
@@ -7529,6 +7580,21 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppTeamNotice", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppTeam", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId", "TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

@@ -28,6 +28,7 @@ public static class WhatsAppInfrastructureModule
         services.AddSingleton<IWhatsAppInboundSettings, Inbound.WhatsAppInboundSettings>();
         services.AddHostedService<Inbound.WhatsAppInboundProcessor>();
         services.AddHostedService<Retention.WhatsAppMessageRetentionWorker>();
+        services.AddHostedService<WhatsAppWaitingNoticeWorker>();
         services.AddScoped<IWhatsAppContactRepository, WhatsAppContactRepository>();
         services.AddScoped<IWhatsAppMessageRepository, WhatsAppMessageRepository>();
         services.AddScoped<IWhatsAppCodeQuotaRepository, WhatsAppCodeQuotaRepository>();
@@ -47,6 +48,8 @@ public static class WhatsAppInfrastructureModule
         services.AddScoped<IPlatformWhatsAppTeamRepository, PlatformWhatsAppTeamRepository>();
         services.AddScoped<IWhatsAppTeamReader, WhatsAppTeamReader>();
         services.AddScoped<IWhatsAppConversationReader, WhatsAppConversationReader>();
+        services.AddScoped<IWhatsAppTeamNoticeRepository, WhatsAppTeamNoticeRepository>();
+        services.AddScoped<Application.Modules.WhatsApp.Interfaces.Integrations.IWhatsAppWaitingEmailRenderer, Email.WhatsAppWaitingEmailRenderer>();
         services.AddSingleton<IWhatsAppTokenProtector, WhatsAppTokenProtector>();
         services.AddScoped<WhatsAppChannelCredentials>();
         services.AddSingleton<WhatsAppPlatformChannelState>();

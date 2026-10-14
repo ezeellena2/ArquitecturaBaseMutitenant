@@ -53,6 +53,10 @@ internal sealed class WhatsAppChannelReader(ApplicationDbContext context, ITenan
             .Select(value => new WhatsAppPlatformChannelRow(value.Id, value.PhoneNumberId, value.DisplayNumber, value.Status, value.ConsultationsEnabled))
             .SingleOrDefaultAsync(ct);
 
+    public async Task<IReadOnlyList<Guid>> ListOrganizationIdsAsync(CancellationToken ct) =>
+        await Active().Where(value => value.OrganizationId != null).Select(value => value.OrganizationId!.Value).Distinct().OrderBy(value => value)
+            .ToArrayAsync(ct);
+
     public Task<bool> IsActiveAsync(string phoneNumberId, CancellationToken ct) =>
         Active().AnyAsync(value => value.PhoneNumberId == phoneNumberId, ct);
 

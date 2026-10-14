@@ -112,6 +112,7 @@ public sealed class WhatsAppCloudClientTests
         public Task<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.WhatsAppPlatformNumberRow?> FindPlatformAsync(DateTime nowUtc, CancellationToken ct) => throw new NotSupportedException();
         public Task<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.WhatsAppPlatformChannelRow?> FindPlatformStateAsync(CancellationToken ct) => throw new NotSupportedException();
         public Task<bool> IsActiveAsync(string phoneNumberId, CancellationToken ct) => throw new NotSupportedException();
+        public Task<IReadOnlyList<Guid>> ListOrganizationIdsAsync(CancellationToken ct) => throw new NotSupportedException();
         public Task<WhatsAppInboundChannel?> FindInboundAsync(Guid? channelId, string phoneNumberId, CancellationToken ct) => throw new NotSupportedException();
     }
     private sealed class Logs : ILoggerProvider

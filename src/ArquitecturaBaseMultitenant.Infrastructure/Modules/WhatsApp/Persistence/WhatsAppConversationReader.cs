@@ -71,6 +71,20 @@ internal sealed class WhatsAppConversationReader(ApplicationDbContext context, I
             .ToDictionaryAsync(group => group.Key, group => group.Count, ct);
     }
 
+    public async Task<IReadOnlyList<WhatsAppWaitingRow>> ListWaitingAsync(bool platform, CancellationToken ct)
+    {
+        if (platform)
+            return await context.Set<PlatformWhatsAppChat>().AsNoTracking()
+                .Where(chat => chat.TeamId != null && chat.AssigneeUserId == null && chat.WaitingSinceUtc != null)
+                .GroupBy(chat => chat.TeamId!.Value)
+                .Select(group => new WhatsAppWaitingRow(group.Key, group.Count(), group.Min(chat => chat.WaitingSinceUtc!.Value))).ToArrayAsync(ct);
+        var tenantId = tenant.RequiredTenantId;
+        return await context.Set<WhatsAppChat>().AsNoTracking()
+            .Where(chat => chat.TenantId == tenantId && chat.TeamId != null && chat.AssigneeUserId == null && chat.WaitingSinceUtc != null)
+            .GroupBy(chat => chat.TeamId!.Value)
+            .Select(group => new WhatsAppWaitingRow(group.Key, group.Count(), group.Min(chat => chat.WaitingSinceUtc!.Value))).ToArrayAsync(ct);
+    }
+
     private IQueryable<ConversationProjection> Rows(WhatsAppInbox? inbox)
     {
         var channels = context.Set<WhatsAppChannel>().AsNoTracking();

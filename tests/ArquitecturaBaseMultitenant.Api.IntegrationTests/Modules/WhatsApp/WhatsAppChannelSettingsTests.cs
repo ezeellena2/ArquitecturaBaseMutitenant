@@ -86,6 +86,7 @@ public sealed class WhatsAppChannelSettingsTests
         public Task<IReadOnlyList<WhatsAppNumberPendingRow>> ListPaymentMissingAsync(int limit, CancellationToken ct) => throw new NotSupportedException();
         public Task<WhatsAppPlatformNumberRow?> FindPlatformAsync(DateTime nowUtc, CancellationToken ct) => throw new NotSupportedException();
         public Task<bool> IsActiveAsync(string phoneNumberId, CancellationToken ct) => throw new NotSupportedException();
+        public Task<IReadOnlyList<Guid>> ListOrganizationIdsAsync(CancellationToken ct) => throw new NotSupportedException();
         public Task<WhatsAppInboundChannel?> FindInboundAsync(Guid? channelId, string phoneNumberId, CancellationToken ct) => throw new NotSupportedException();
         public Task<WhatsAppSendingChannelRow?> FindSendingAsync(Guid? channelId, string phoneNumberId, CancellationToken ct) => throw new NotSupportedException();
     }

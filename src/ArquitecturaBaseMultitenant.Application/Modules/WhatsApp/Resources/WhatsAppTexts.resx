@@ -168,6 +168,24 @@
   <data name="Bot.PromotionsDeclined" xml:space="preserve">
     <value>Listo, no te vamos a mandar promociones.</value>
   </data>
+  <data name="Notice.ChatsWaiting.Subject" xml:space="preserve">
+    <value>Chats esperando en {0}</value>
+  </data>
+  <data name="Notice.ChatsWaiting.Body" xml:space="preserve">
+    <value>Chats sin tomar en {0}: {1}.</value>
+  </data>
+  <data name="Notice.ChatsWaiting.Action" xml:space="preserve">
+    <value>Ver los chats</value>
+  </data>
+  <data name="Notice.ConsultationsWaiting.Subject" xml:space="preserve">
+    <value>Consultas esperando en {0}</value>
+  </data>
+  <data name="Notice.ConsultationsWaiting.Body" xml:space="preserve">
+    <value>Consultas sin tomar en {0}: {1}.</value>
+  </data>
+  <data name="Notice.ConsultationsWaiting.Action" xml:space="preserve">
+    <value>Ver las consultas</value>
+  </data>
   <data name="WhatsApp.Number.NotFound" xml:space="preserve">
     <value>No encontramos ese número.</value>
   </data>

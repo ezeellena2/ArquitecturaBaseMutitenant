@@ -18,6 +18,8 @@ public interface IWhatsAppChannelReader
     /// <summary>El número vigente de Plataforma, sin credenciales, para el estado en memoria del canal.</summary>
     Task<WhatsAppPlatformChannelRow?> FindPlatformStateAsync(CancellationToken ct);
     Task<bool> IsActiveAsync(string phoneNumberId, CancellationToken ct);
+    /// <summary>Las organizaciones con algún número vigente: las que pueden tener chats esperando.</summary>
+    Task<IReadOnlyList<Guid>> ListOrganizationIdsAsync(CancellationToken ct);
     /// <summary>El número que recibió una entrada (por canal o, en filas anteriores, por el identificador de Meta), en cualquier estado.</summary>
     Task<WhatsAppInboundChannel?> FindInboundAsync(Guid? channelId, string phoneNumberId, CancellationToken ct);
     /// <summary>Credenciales cifradas para enviar: por canal o, en pedidos viejos, por el identificador de Meta.</summary>

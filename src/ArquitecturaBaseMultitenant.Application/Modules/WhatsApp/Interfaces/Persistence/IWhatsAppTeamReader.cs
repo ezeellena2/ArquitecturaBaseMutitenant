@@ -14,6 +14,8 @@ public interface IWhatsAppTeamReader
     Task<WhatsAppTeamRow?> FindOrganizationAsync(Guid id, CancellationToken ct);
     Task<PagedResult<WhatsAppTeamRow>> ListPlatformAsync(PagedRequest request, CancellationToken ct);
     Task<WhatsAppTeamRow?> FindPlatformAsync(Guid id, CancellationToken ct);
+    /// <summary>Los equipos que avisan por correo (D6): de la organización del claim o de Plataforma.</summary>
+    Task<IReadOnlyList<WhatsAppTeamRow>> ListNotifyingAsync(bool platform, CancellationToken ct);
     /// <summary>Los miembros activos de la organización con esos identificadores, con su cuenta.</summary>
     Task<IReadOnlyList<WhatsAppTeamMemberRow>> ListActiveMembersAsync(IReadOnlyCollection<Guid> memberIds, CancellationToken ct);
     /// <summary>El miembro activo de cada cuenta en la organización del claim.</summary>

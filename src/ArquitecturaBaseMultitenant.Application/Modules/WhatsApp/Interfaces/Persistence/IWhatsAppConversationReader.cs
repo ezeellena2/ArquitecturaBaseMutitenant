@@ -20,7 +20,11 @@ public interface IWhatsAppConversationReader
     Task<PagedResult<WhatsAppChatMessageResponse>> ListMessagesAsync(WhatsAppInbox? inbox, Guid chatId, PagedRequest request, CancellationToken ct);
     /// <summary>Cuántas conversaciones de la bandeja tiene tomadas cada cuenta.</summary>
     Task<IReadOnlyDictionary<Guid, int>> CountTakenAsync(WhatsAppInbox? inbox, IReadOnlyCollection<Guid> userIds, CancellationToken ct);
+    /// <summary>Por equipo, las conversaciones que esperan que alguien las tome y desde cuándo espera la más vieja.</summary>
+    Task<IReadOnlyList<WhatsAppWaitingRow>> ListWaitingAsync(bool platform, CancellationToken ct);
 }
+
+public sealed record WhatsAppWaitingRow(Guid TeamId, int Count, DateTime OldestWaitingSinceUtc);
 
 /// <summary>
 /// Una conversación con lo que la bandeja muestra: el contacto (Clientes), el miembro (Internos), el equipo, quien la tomó

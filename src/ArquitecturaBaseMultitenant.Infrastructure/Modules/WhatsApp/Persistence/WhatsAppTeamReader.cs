@@ -40,6 +40,19 @@ internal sealed class WhatsAppTeamReader(ApplicationDbContext context, ITenantCo
             .Select(team => new WhatsAppTeamRow(team.Id, team.Name, WhatsAppInbox.Customers, team.MemberIds, team.NotifyAfterMinutes, team.Version))
             .SingleOrDefaultAsync(ct);
 
+    public async Task<IReadOnlyList<WhatsAppTeamRow>> ListNotifyingAsync(bool platform, CancellationToken ct)
+    {
+        if (platform)
+            return await context.Set<PlatformWhatsAppTeam>().AsNoTracking().Where(team => team.NotifyAfterMinutes != null).OrderBy(team => team.Id)
+                .Select(team => new WhatsAppTeamRow(team.Id, team.Name, WhatsAppInbox.Customers, team.MemberIds, team.NotifyAfterMinutes, team.Version))
+                .ToArrayAsync(ct);
+        var tenantId = tenant.RequiredTenantId;
+        return await context.Set<WhatsAppTeam>().AsNoTracking().Where(team => team.TenantId == tenantId && team.NotifyAfterMinutes != null)
+            .OrderBy(team => team.Id)
+            .Select(team => new WhatsAppTeamRow(team.Id, team.Name, team.Inbox, team.MemberIds, team.NotifyAfterMinutes, team.Version))
+            .ToArrayAsync(ct);
+    }
+
     public async Task<IReadOnlyList<WhatsAppTeamMemberRow>> ListActiveMembersAsync(IReadOnlyCollection<Guid> memberIds, CancellationToken ct)
     {
         if (memberIds.Count == 0) return [];
