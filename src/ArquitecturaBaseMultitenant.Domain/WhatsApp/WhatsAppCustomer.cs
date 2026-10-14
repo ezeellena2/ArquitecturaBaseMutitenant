@@ -58,6 +58,20 @@ public sealed class WhatsAppCustomer : Entity, ITenantOwned, IVersioned
         return true;
     }
 
+    /// <summary>
+    /// Una fila de la importación: completa el nombre y suma las etiquetas (hasta el tope); con «Sí» acepta promociones, salvo
+    /// que se haya dado de baja; sin «Sí», un contacto sin dato queda «Sin respuesta» con origen Import.
+    /// </summary>
+    public void Import(string? name, IEnumerable<string> tags, bool acceptsPromotions, DateTime nowUtc)
+    {
+        ArgumentNullException.ThrowIfNull(tags);
+        if (!string.IsNullOrWhiteSpace(name)) Rename(name);
+        ReplaceTags([.. this.tags.Concat(tags.Select(value => value.Trim())).Where(value => value.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase).Take(WhatsAppFeature.MaxContactTags)]);
+        if (acceptsPromotions) { if (Consent != WhatsAppConsent.Unsubscribed) ChangeConsent(WhatsAppConsent.Accepted, WhatsAppConsentSource.Import, nowUtc); }
+        else if (ConsentSource is null) ChangeConsent(WhatsAppConsent.NoAnswer, WhatsAppConsentSource.Import, nowUtc);
+    }
+
     public void MarkPromotionsAsked(DateTime nowUtc)
     {
         if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC required.", nameof(nowUtc));

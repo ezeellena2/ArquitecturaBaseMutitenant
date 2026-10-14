@@ -50,7 +50,7 @@ internal sealed class WhatsAppOrganizationInboundWriter(IWhatsAppChatRepository 
 
     private async Task<WhatsAppCustomer> CustomerAsync(PhoneNumber waId, DateTime nowUtc, CancellationToken ct)
     {
-        await customers.LockAsync(waId.Value, ct);
+        await customers.LockAsync(ct);
         if (await customers.GetByWaIdAsync(waId.Value, ct) is { } existing) return existing;
         var created = WhatsAppCustomer.Create(waId, nowUtc);
         customers.Add(created);

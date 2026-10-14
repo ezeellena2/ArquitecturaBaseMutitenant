@@ -13,6 +13,7 @@
     <PackageReference Include="Microsoft.Extensions.AI" />
     <PackageReference Include="Anthropic" />
     <PackageReference Include="PDFsharp-MigraDoc" />
+    <PackageReference Include="ClosedXML" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" />
     <PackageReference Include="MailKit" />

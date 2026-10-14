@@ -57,6 +57,7 @@ public static class WhatsAppModule
         services.AddScoped<PlatformWhatsAppOperatorResolver>();
         services.AddScoped<PlatformWhatsAppAuditWriter>();
         services.AddScoped<WhatsAppWaitingNotifier>();
+        services.AddScoped<WhatsAppContactImportResolver>();
         services.AddScoped<IWhatsAppWaitingNoticeService, WhatsAppWaitingNoticeService>();
         services.AddScoped<IWhatsAppContactService, WhatsAppContactService>();
         services.AddScoped<IWhatsAppTemplateService, WhatsAppTemplateService>();

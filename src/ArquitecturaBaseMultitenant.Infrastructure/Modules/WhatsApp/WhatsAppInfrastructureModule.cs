@@ -49,6 +49,8 @@ public static class WhatsAppInfrastructureModule
         services.AddScoped<IWhatsAppTeamReader, WhatsAppTeamReader>();
         services.AddScoped<IWhatsAppConversationReader, WhatsAppConversationReader>();
         services.AddScoped<IWhatsAppTeamNoticeRepository, WhatsAppTeamNoticeRepository>();
+        services.AddScoped<IWhatsAppContactReader, WhatsAppContactReader>();
+        services.AddSingleton<Application.Modules.WhatsApp.Interfaces.Integrations.IWhatsAppContactSpreadsheet, WhatsAppContactSpreadsheet>();
         services.AddScoped<Application.Modules.WhatsApp.Interfaces.Integrations.IWhatsAppWaitingEmailRenderer, Email.WhatsAppWaitingEmailRenderer>();
         services.AddSingleton<IWhatsAppTokenProtector, WhatsAppTokenProtector>();
         services.AddScoped<WhatsAppChannelCredentials>();

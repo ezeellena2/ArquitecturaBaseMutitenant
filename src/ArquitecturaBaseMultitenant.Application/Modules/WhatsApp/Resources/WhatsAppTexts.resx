@@ -186,6 +186,45 @@
   <data name="Notice.ConsultationsWaiting.Action" xml:space="preserve">
     <value>Ver las consultas</value>
   </data>
+  <data name="Import.Header.Name" xml:space="preserve">
+    <value>Nombre</value>
+  </data>
+  <data name="Import.Header.Phone" xml:space="preserve">
+    <value>Teléfono</value>
+  </data>
+  <data name="Import.Header.Tag" xml:space="preserve">
+    <value>Etiqueta</value>
+  </data>
+  <data name="Import.Header.Accepts" xml:space="preserve">
+    <value>Acepta promociones</value>
+  </data>
+  <data name="Import.Yes" xml:space="preserve">
+    <value>Sí</value>
+  </data>
+  <data name="Import.Example.Name" xml:space="preserve">
+    <value>Ana Pérez</value>
+  </data>
+  <data name="Import.Example.Phone" xml:space="preserve">
+    <value>+54 9 11 2345-6789</value>
+  </data>
+  <data name="Import.Example.Tag" xml:space="preserve">
+    <value>Clientes</value>
+  </data>
+  <data name="Import.SampleFileName" xml:space="preserve">
+    <value>contactos-ejemplo.xlsx</value>
+  </data>
+  <data name="WhatsApp.Import.Reason.InvalidPhone" xml:space="preserve">
+    <value>El teléfono no es un celular válido.</value>
+  </data>
+  <data name="WhatsApp.Import.Reason.Duplicate" xml:space="preserve">
+    <value>El teléfono está repetido en el archivo.</value>
+  </data>
+  <data name="WhatsApp.Import.Reason.TooLong" xml:space="preserve">
+    <value>Un dato es demasiado largo.</value>
+  </data>
+  <data name="Import.SheetName" xml:space="preserve">
+    <value>Contactos</value>
+  </data>
   <data name="WhatsApp.Number.NotFound" xml:space="preserve">
     <value>No encontramos ese número.</value>
   </data>

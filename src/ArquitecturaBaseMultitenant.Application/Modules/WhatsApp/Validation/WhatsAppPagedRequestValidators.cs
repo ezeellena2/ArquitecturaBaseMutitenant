@@ -21,6 +21,20 @@ internal sealed class WhatsAppTransferOptionListRequestValidator() : PagedReques
 
 internal sealed class WhatsAppInboxTeamListRequestValidator() : PagedRequestValidator<WhatsAppInboxTeamListRequest>([]);
 
+internal sealed class WhatsAppContactChildListRequestValidator() : PagedRequestValidator<WhatsAppContactChildListRequest>([]);
+
+internal sealed class WhatsAppTagListRequestValidator() : PagedRequestValidator<WhatsAppTagListRequest>([]);
+
+internal sealed class WhatsAppContactListRequestValidator : PagedRequestValidator<WhatsAppContactListRequest>
+{
+    public WhatsAppContactListRequestValidator() : base([])
+    {
+        RuleFor(request => request.Tag).MaximumLength(Domain.WhatsApp.WhatsAppTextLimits.Tag).WithMessage(_ => WhatsAppTexts.Get("WhatsApp.Validation.TooLong"));
+        RuleFor(request => request.Consent).Must(value => value is null || Enum.IsDefined(value.Value))
+            .WithMessage(_ => WhatsAppTexts.Get("WhatsApp.Validation.SelectionInvalid"));
+    }
+}
+
 internal sealed class WhatsAppConversationListRequestValidator : PagedRequestValidator<WhatsAppConversationListRequest>
 {
     public WhatsAppConversationListRequestValidator() : base([])

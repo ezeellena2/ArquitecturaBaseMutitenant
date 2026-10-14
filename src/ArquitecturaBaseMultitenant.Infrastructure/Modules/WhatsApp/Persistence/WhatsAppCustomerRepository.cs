@@ -10,8 +10,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Persistenc
 
 internal sealed class WhatsAppCustomerRepository(ApplicationDbContext context, ITenantContext tenant) : IWhatsAppCustomerRepository
 {
-    public Task LockAsync(string waId, CancellationToken ct) =>
-        context.AcquireAdvisoryLocksAsync([AdvisoryLockKeys.For(tenant.RequiredTenantId, "whatsapp-customer", waId)], ct);
+    public Task LockAsync(CancellationToken ct) =>
+        context.AcquireAdvisoryLocksAsync([AdvisoryLockKeys.For(tenant.RequiredTenantId, "whatsapp-customers", "all")], ct);
 
     public async Task<WhatsAppCustomer?> GetByWaIdAsync(string waId, CancellationToken ct)
     {
@@ -20,6 +20,14 @@ internal sealed class WhatsAppCustomerRepository(ApplicationDbContext context, I
         // Una importación puede agregar el mismo número dos veces antes de guardar.
         return context.Set<WhatsAppCustomer>().Local.SingleOrDefault(value => value.WaId == waId)
             ?? await context.Set<WhatsAppCustomer>().SingleOrDefaultAsync(value => value.TenantId == tenantId && value.WaId == waId, ct);
+    }
+
+    public async Task<IReadOnlyList<WhatsAppCustomer>> ListByWaIdsAsync(IReadOnlyCollection<string> waIds, CancellationToken ct)
+    {
+        context.RequireTransaction();
+        if (waIds.Count == 0) return [];
+        var tenantId = tenant.RequiredTenantId;
+        return await context.Set<WhatsAppCustomer>().Where(value => value.TenantId == tenantId && waIds.Contains(value.WaId)).ToArrayAsync(ct);
     }
 
     public async Task<WhatsAppCustomer?> GetAsync(Guid id, uint? expectedVersion, CancellationToken ct)
