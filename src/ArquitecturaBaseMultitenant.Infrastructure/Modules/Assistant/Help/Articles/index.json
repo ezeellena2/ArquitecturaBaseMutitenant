@@ -355,5 +355,124 @@
       "es": "assistant/platform.es.md",
       "en": "assistant/platform.en.md"
     }
+  },
+  {
+    "topicKey": "whatsapp.chats",
+    "routeKey": "business.whatsapp.chats",
+    "accesses": [
+      "Business"
+    ],
+    "permission": null,
+    "module": "whatsapp",
+    "titles": {
+      "es": "Chats de WhatsApp",
+      "en": "WhatsApp chats"
+    },
+    "files": {
+      "es": "whatsapp/chats.es.md",
+      "en": "whatsapp/chats.en.md"
+    }
+  },
+  {
+    "topicKey": "whatsapp.contacts",
+    "routeKey": "business.whatsapp.contacts",
+    "accesses": [
+      "Business"
+    ],
+    "permission": "whatsapp.customers",
+    "module": "whatsapp",
+    "titles": {
+      "es": "Contactos de WhatsApp",
+      "en": "WhatsApp contacts"
+    },
+    "files": {
+      "es": "whatsapp/contacts.es.md",
+      "en": "whatsapp/contacts.en.md"
+    }
+  },
+  {
+    "topicKey": "whatsapp.broadcasts",
+    "routeKey": "business.whatsapp.broadcasts",
+    "accesses": [
+      "Business"
+    ],
+    "permission": "whatsapp.broadcasts",
+    "module": "whatsapp",
+    "titles": {
+      "es": "Difusiones",
+      "en": "Broadcasts"
+    },
+    "files": {
+      "es": "whatsapp/broadcasts.es.md",
+      "en": "whatsapp/broadcasts.en.md"
+    }
+  },
+  {
+    "topicKey": "whatsapp.admin",
+    "routeKey": "business.whatsapp.admin",
+    "accesses": [
+      "Business"
+    ],
+    "permission": "whatsapp.manage",
+    "module": "whatsapp",
+    "titles": {
+      "es": "Administrar WhatsApp",
+      "en": "Manage WhatsApp"
+    },
+    "files": {
+      "es": "whatsapp/admin.es.md",
+      "en": "whatsapp/admin.en.md"
+    }
+  },
+  {
+    "topicKey": "whatsapp.platform.consultations",
+    "routeKey": "platform.whatsapp.consultations",
+    "accesses": [
+      "Platform"
+    ],
+    "permission": "platform.whatsapp.attend",
+    "module": null,
+    "titles": {
+      "es": "Consultas por WhatsApp",
+      "en": "WhatsApp inquiries"
+    },
+    "files": {
+      "es": "whatsapp/platform-consultations.es.md",
+      "en": "whatsapp/platform-consultations.en.md"
+    }
+  },
+  {
+    "topicKey": "whatsapp.platform.admin",
+    "routeKey": "platform.whatsapp.admin",
+    "accesses": [
+      "Platform"
+    ],
+    "permission": "platform.whatsapp.manage",
+    "module": null,
+    "titles": {
+      "es": "WhatsApp de la plataforma",
+      "en": "Platform WhatsApp"
+    },
+    "files": {
+      "es": "whatsapp/platform-admin.es.md",
+      "en": "whatsapp/platform-admin.en.md"
+    }
+  },
+  {
+    "topicKey": "whatsapp.messages",
+    "routeKey": "personal.whatsapp.messages",
+    "accesses": [
+      "Consumer"
+    ],
+    "permission": null,
+    "module": "whatsapp",
+    "titles": {
+      "es": "Mensajes",
+      "en": "Messages"
+    },
+    "files": {
+      "es": "whatsapp/messages.es.md",
+      "en": "whatsapp/messages.en.md"
+    }
   }
 ]
