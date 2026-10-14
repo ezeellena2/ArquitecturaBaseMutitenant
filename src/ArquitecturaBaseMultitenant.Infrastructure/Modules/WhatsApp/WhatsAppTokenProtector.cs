@@ -26,6 +26,12 @@ internal sealed class WhatsAppTokenProtector(IDataProtectionProvider provider) :
         finally { CryptographicOperations.ZeroMemory(bytes); }
     }
 
+    public string? TryUnprotect(Guid channelId, byte[] ciphertext)
+    {
+        try { return Unprotect(channelId, ciphertext); }
+        catch (CryptographicException) { return null; }
+    }
+
     private IDataProtector Protector(Guid channelId)
     {
         if (channelId == Guid.Empty) throw new ArgumentException("A channel is required.", nameof(channelId));

@@ -27,7 +27,7 @@ internal static class WhatsAppAttentionJourney
     internal const string Token = "graph-secret-token-0001";
 
     internal static WebApplicationFactory<Program> Host(ApiFactory factory, FakeGraph graph, CapturedLogs? logs = null,
-        IReadOnlyDictionary<string, string>? settings = null) => factory.WithWebHostBuilder(builder =>
+        IReadOnlyDictionary<string, string>? settings = null, FakeTemplates? templates = null) => factory.WithWebHostBuilder(builder =>
     {
         builder.UseSetting("WhatsApp:AppId", "app-fixture");
         builder.UseSetting("WhatsApp:EmbeddedSignupConfigId", "config-fixture");
@@ -39,6 +39,9 @@ internal static class WhatsAppAttentionJourney
         {
             services.RemoveAll<IWhatsAppGraphClient>();
             services.AddSingleton<IWhatsAppGraphClient>(graph);
+            // Las plantillas nunca van a Meta en las pruebas.
+            services.RemoveAll<IWhatsAppTemplateClient>();
+            services.AddSingleton<IWhatsAppTemplateClient>(templates ?? new FakeTemplates());
             if (logs is not null) services.AddSingleton<ILoggerProvider>(logs);
         });
     });
@@ -170,6 +173,34 @@ internal sealed class FakeGraph : IWhatsAppGraphClient
         Assert.Equal(WhatsAppAttentionJourney.Token, token);
         return Task.FromResult(Result.Success(HasPayment));
     }
+}
+
+/// <summary>Las plantillas de Meta simuladas: guarda lo que se mandó y se borró, y lista lo que cada cuenta tiene.</summary>
+internal sealed class FakeTemplates : IWhatsAppTemplateClient
+{
+    private long next = 7_000_000;
+    public ConcurrentQueue<(string WabaId, WhatsAppTemplateSubmission Submission)> Created { get; } = new();
+    public ConcurrentQueue<(string WabaId, string MetaName)> Deleted { get; } = new();
+    public ConcurrentDictionary<string, IReadOnlyList<WhatsAppMetaTemplate>> Accounts { get; } = new(StringComparer.Ordinal);
+    public Error? Failure { get; set; }
+
+    public Task<Result<WhatsAppMetaTemplate>> CreateAsync(string wabaId, string token, WhatsAppTemplateSubmission submission, CancellationToken ct)
+    {
+        Assert.False(string.IsNullOrEmpty(token));
+        if (Failure is { } failure) return Task.FromResult(Result.Failure<WhatsAppMetaTemplate>(failure));
+        Created.Enqueue((wabaId, submission));
+        return Task.FromResult(Result.Success(new WhatsAppMetaTemplate(Interlocked.Increment(ref next).ToString(System.Globalization.CultureInfo.InvariantCulture),
+            submission.MetaName, submission.MetaLanguage, WhatsAppTemplateStatus.Pending, submission.Category, null)));
+    }
+
+    public Task<Result> DeleteAsync(string wabaId, string token, string metaName, CancellationToken ct)
+    {
+        Deleted.Enqueue((wabaId, metaName));
+        return Task.FromResult(Result.Success());
+    }
+
+    public Task<Result<IReadOnlyList<WhatsAppMetaTemplate>>> ListAsync(string wabaId, string token, CancellationToken ct) =>
+        Task.FromResult(Result.Success(Accounts.TryGetValue(wabaId, out var templates) ? templates : (IReadOnlyList<WhatsAppMetaTemplate>)[]));
 }
 
 internal sealed class CapturedLogs : ILoggerProvider

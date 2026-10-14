@@ -245,8 +245,11 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   │   └── Retention/
 │   │   │   └── WhatsApp/  módulo opcional: se enciende con WhatsApp:PhoneNumberId
 │   │   │       ├── Disabled/
+│   │   │       ├── Email/  el correo «Chats esperando» (D6)
+│   │   │       │   └── Templates/
 │   │   │       ├── Inbound/
 │   │   │       ├── Persistence/
+│   │   │       ├── ReferenceData/  tarifas oficiales de Meta por vigencia
 │   │   │       ├── Retention/
 │   │   │       └── Webhook/
 │   │   ├── Persistence/

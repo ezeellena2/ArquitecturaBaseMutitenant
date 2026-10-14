@@ -1,9 +1,14 @@
+using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
-public sealed record WhatsAppWebhookBatch(IReadOnlyList<WhatsAppWebhookMessage> Messages, IReadOnlyList<WhatsAppWebhookStatus> Statuses)
+public sealed record WhatsAppWebhookBatch(IReadOnlyList<WhatsAppWebhookMessage> Messages, IReadOnlyList<WhatsAppWebhookStatus> Statuses,
+    IReadOnlyList<WhatsAppWebhookTemplate>? Templates = null)
 {
+    public IReadOnlyList<WhatsAppWebhookTemplate> TemplateUpdates => Templates ?? [];
     public override string ToString() => nameof(WhatsAppWebhookBatch);
 }
+/// <summary>Un cambio de estado o de categoría de una plantilla en una cuenta de WhatsApp (el id de la entrada).</summary>
+public sealed record WhatsAppWebhookTemplate(string WabaId, WhatsAppMetaTemplate Update);
 public sealed record WhatsAppWebhookMessage(string PhoneNumberId, string Wamid, string Sender, WhatsAppMessageKind Kind,
     string? Text, string? ReplyId, DateTime OccurredAtUtc, string? ContentType = null)
 {

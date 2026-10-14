@@ -24,6 +24,18 @@ public interface IWhatsAppChannelReader
     Task<WhatsAppInboundChannel?> FindInboundAsync(Guid? channelId, string phoneNumberId, CancellationToken ct);
     /// <summary>Credenciales cifradas para enviar: por canal o, en pedidos viejos, por el identificador de Meta.</summary>
     Task<WhatsAppSendingChannelRow?> FindSendingAsync(Guid? channelId, string phoneNumberId, CancellationToken ct);
+    /// <summary>Las cuentas de WhatsApp de los números vigentes de la organización del claim o de Plataforma, una vez cada una.</summary>
+    Task<IReadOnlyList<WhatsAppTemplateAccountRow>> ListTemplateAccountsAsync(bool platform, CancellationToken ct);
+    /// <summary>Las cuentas de WhatsApp de todos los números vigentes, para sincronizar sus plantillas.</summary>
+    Task<IReadOnlyList<WhatsAppTemplateAccountRow>> ListAllTemplateAccountsAsync(CancellationToken ct);
+    /// <summary>Si la cuenta de WhatsApp es la de algún número vigente.</summary>
+    Task<bool> HasActiveAccountAsync(string wabaId, CancellationToken ct);
+}
+
+/// <summary>Una cuenta de WhatsApp con el token de uno de sus números, para administrar sus plantillas.</summary>
+public sealed record WhatsAppTemplateAccountRow(Guid ChannelId, string WabaId, byte[] EncryptedToken)
+{
+    public override string ToString() => nameof(WhatsAppTemplateAccountRow);
 }
 
 public sealed record WhatsAppNumberPendingRow(Guid Id, string DisplayNumber, DateTime SinceUtc);

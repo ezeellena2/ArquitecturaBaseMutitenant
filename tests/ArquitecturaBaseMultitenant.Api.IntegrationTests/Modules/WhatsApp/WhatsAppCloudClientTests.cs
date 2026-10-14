@@ -105,6 +105,9 @@ public sealed class WhatsAppCloudClientTests
         public Task<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.WhatsAppSendingChannelRow?> FindSendingAsync(Guid? channelId, string phoneNumberId, CancellationToken ct) =>
             Task.FromResult<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.WhatsAppSendingChannelRow?>(new(id, phoneNumberId, "waba", null,
                 ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppNumberStatus.Connected, protector.Protect(id, "fixture-token")));
+        public Task<IReadOnlyList<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.WhatsAppTemplateAccountRow>> ListTemplateAccountsAsync(bool platform, CancellationToken ct) => throw new NotSupportedException();
+        public Task<IReadOnlyList<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.WhatsAppTemplateAccountRow>> ListAllTemplateAccountsAsync(CancellationToken ct) => throw new NotSupportedException();
+        public Task<bool> HasActiveAccountAsync(string wabaId, CancellationToken ct) => throw new NotSupportedException();
         public Task<ArquitecturaBaseMultitenant.Application.Common.Pagination.PagedResult<WhatsAppNumberResponse>> ListOrganizationAsync(WhatsAppNumberListRequest request, DateTime nowUtc, CancellationToken ct) => throw new NotSupportedException();
         public Task<WhatsAppNumberResponse?> FindOrganizationAsync(Guid id, DateTime nowUtc, CancellationToken ct) => throw new NotSupportedException();
         public Task<int> CountOrganizationAsync(ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppNumberStatus? status, CancellationToken ct) => throw new NotSupportedException();

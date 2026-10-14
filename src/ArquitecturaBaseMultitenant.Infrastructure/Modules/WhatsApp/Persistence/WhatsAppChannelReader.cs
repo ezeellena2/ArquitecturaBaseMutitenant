@@ -74,6 +74,19 @@ internal sealed class WhatsAppChannelReader(ApplicationDbContext context, ITenan
         .Select(value => new WhatsAppSendingChannelRow(value.Id, value.PhoneNumberId, value.WabaId, value.OrganizationId, value.Status, value.EncryptedToken))
         .SingleOrDefaultAsync(ct);
 
+    public async Task<IReadOnlyList<WhatsAppTemplateAccountRow>> ListTemplateAccountsAsync(bool platform, CancellationToken ct) =>
+        Accounts(await (platform ? Active().Where(value => value.OrganizationId == null) : Organization()).OrderBy(value => value.ConnectedAtUtc)
+            .ThenBy(value => value.Id).Select(value => new WhatsAppTemplateAccountRow(value.Id, value.WabaId, value.EncryptedToken)).ToArrayAsync(ct));
+
+    public async Task<IReadOnlyList<WhatsAppTemplateAccountRow>> ListAllTemplateAccountsAsync(CancellationToken ct) =>
+        Accounts(await Active().OrderBy(value => value.ConnectedAtUtc).ThenBy(value => value.Id)
+            .Select(value => new WhatsAppTemplateAccountRow(value.Id, value.WabaId, value.EncryptedToken)).ToArrayAsync(ct));
+
+    public Task<bool> HasActiveAccountAsync(string wabaId, CancellationToken ct) => Active().AnyAsync(value => value.WabaId == wabaId, ct);
+
+    private static WhatsAppTemplateAccountRow[] Accounts(WhatsAppTemplateAccountRow[] rows) =>
+        [.. rows.DistinctBy(row => row.WabaId, StringComparer.Ordinal)];
+
     private IQueryable<WhatsAppChannel> Active() =>
         context.Set<WhatsAppChannel>().AsNoTracking().Where(value => value.Status != WhatsAppNumberStatus.Disconnected);
 

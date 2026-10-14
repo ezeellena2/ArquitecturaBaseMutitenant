@@ -84,7 +84,7 @@ public sealed class OrganizationWhatsAppTemplatesController(IWhatsAppTemplateSer
 [Access(Access.Platform)]
 [InstalledModuleRoute(WhatsAppApiModule.ManagementRoute, InstalledModuleRouteCategory.PlatformManagement)]
 [HasPlatformPermission(PlatformPermissions.WhatsApp.Manage)]
-public sealed class PlatformWhatsAppTemplatesController(IWhatsAppTemplateService service) : ControllerBase
+public sealed class PlatformWhatsAppTemplatesController(IPlatformWhatsAppTemplateService service) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType<WhatsAppTemplateListResponse>(200)]

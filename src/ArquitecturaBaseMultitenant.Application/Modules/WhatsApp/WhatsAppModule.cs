@@ -63,6 +63,11 @@ public static class WhatsAppModule
         services.AddScoped<IWhatsAppWaitingNoticeService, WhatsAppWaitingNoticeService>();
         services.AddScoped<IWhatsAppContactService, WhatsAppContactService>();
         services.AddScoped<IWhatsAppTemplateService, WhatsAppTemplateService>();
+        services.AddScoped<IPlatformWhatsAppTemplateService, PlatformWhatsAppTemplateService>();
+        services.AddScoped<IWhatsAppTemplateSyncService, WhatsAppTemplateSyncService>();
+        services.AddScoped<WhatsAppTemplateIssuer>();
+        services.AddScoped<WhatsAppTemplateStateWriter>();
+        services.AddScoped<WhatsAppTemplateResponseBuilder>();
         services.AddScoped<IWhatsAppBroadcastService, WhatsAppBroadcastService>();
         services.AddScoped<IWhatsAppPhoneImportService, WhatsAppPhoneImportService>();
         services.AddScoped<IPersonalWhatsAppService, PersonalWhatsAppService>();

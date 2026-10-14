@@ -3373,6 +3373,78 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.ToTable("PlatformWhatsAppTeamNotices", "platform");
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.PlatformWhatsAppTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("MetaLanguage")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("MetaName")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<DateTime?>("ModifiedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("_variables")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("Variables");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Language");
+
+                    b.HasIndex("MetaName")
+                        .IsUnique()
+                        .HasDatabaseName("IX_PlatformWhatsAppTemplates_MetaName");
+
+                    b.HasIndex("Name", "Id");
+
+                    b.ToTable("PlatformWhatsAppTemplates", "platform");
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppBot", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -4106,6 +4178,42 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.ToTable("WhatsAppMessages", "identity");
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppRate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("CountryCode")
+                        .IsRequired()
+                        .HasColumnType("character(2)");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasColumnType("character(3)");
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CurrencyCode");
+
+                    b.HasIndex("CountryCode", "Category", "EffectiveFrom")
+                        .IsUnique();
+
+                    b.ToTable("WhatsAppRates", "platform");
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppTeam", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -4189,6 +4297,131 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("WhatsAppTeamNotices", "tenant");
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppTemplate", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("MetaLanguage")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("MetaName")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<DateTime?>("ModifiedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<string>("_variables")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("Variables");
+
+                    b.HasKey("TenantId", "Id");
+
+                    b.HasIndex("Language");
+
+                    b.HasIndex("TenantId", "MetaName")
+                        .IsUnique()
+                        .HasDatabaseName("IX_WhatsAppTemplates_TenantId_MetaName");
+
+                    b.HasIndex("TenantId", "Name", "Id");
+
+                    b.ToTable("WhatsAppTemplates", "tenant");
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppTemplateState", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("MetaLanguage")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("MetaName")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("MetaTemplateId")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("WabaId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WabaId", "MetaName", "MetaLanguage")
+                        .IsUnique()
+                        .HasDatabaseName("IX_WhatsAppTemplateStates_WabaId_MetaName_MetaLanguage");
+
+                    b.ToTable("WhatsAppTemplateStates", "identity");
                 });
 
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Infrastructure.Idempotency.IdempotencyKey", b =>
@@ -7567,6 +7800,15 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.PlatformWhatsAppTemplate", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.ReferenceData.Culture", null)
+                        .WithMany()
+                        .HasForeignKey("Language")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppBot", b =>
                 {
                     b.HasOne("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppChannel", null)
@@ -7713,6 +7955,21 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppRate", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.ReferenceData.Country", null)
+                        .WithMany()
+                        .HasForeignKey("CountryCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.ReferenceData.Currency", null)
+                        .WithMany()
+                        .HasForeignKey("CurrencyCode")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppTeam", b =>
                 {
                     b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", null)
@@ -7734,6 +7991,21 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("TenantId", "TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppTemplate", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.ReferenceData.Culture", null)
+                        .WithMany()
+                        .HasForeignKey("Language")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

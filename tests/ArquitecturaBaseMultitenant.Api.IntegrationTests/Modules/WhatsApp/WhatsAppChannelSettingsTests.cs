@@ -89,5 +89,8 @@ public sealed class WhatsAppChannelSettingsTests
         public Task<IReadOnlyList<Guid>> ListOrganizationIdsAsync(CancellationToken ct) => throw new NotSupportedException();
         public Task<WhatsAppInboundChannel?> FindInboundAsync(Guid? channelId, string phoneNumberId, CancellationToken ct) => throw new NotSupportedException();
         public Task<WhatsAppSendingChannelRow?> FindSendingAsync(Guid? channelId, string phoneNumberId, CancellationToken ct) => throw new NotSupportedException();
+        public Task<IReadOnlyList<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.WhatsAppTemplateAccountRow>> ListTemplateAccountsAsync(bool platform, CancellationToken ct) => throw new NotSupportedException();
+        public Task<IReadOnlyList<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.WhatsAppTemplateAccountRow>> ListAllTemplateAccountsAsync(CancellationToken ct) => throw new NotSupportedException();
+        public Task<bool> HasActiveAccountAsync(string wabaId, CancellationToken ct) => throw new NotSupportedException();
     }
 }

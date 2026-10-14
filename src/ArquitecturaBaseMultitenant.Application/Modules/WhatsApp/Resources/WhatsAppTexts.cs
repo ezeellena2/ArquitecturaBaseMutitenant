@@ -11,6 +11,11 @@ public static class WhatsAppTexts
     /// <summary>Texto en la cultura de la petición: mensajes de validación y errores.</summary>
     public static string Get(string key) => ResourceManager.GetString(key, CultureInfo.CurrentUICulture)
         ?? throw new InvalidOperationException($"WhatsApp resource {key} is missing.");
+    /// <summary>Texto en una cultura del catálogo (es-AR), con la caída de .NET al idioma y al texto neutro.</summary>
+    public static string Get(string key, string culture) => ResourceManager.GetString(key, CultureInfo.GetCultureInfo(culture))
+        ?? throw new InvalidOperationException($"WhatsApp resource {key} is missing.");
+    /// <summary>Texto en la cultura de la petición, o null si no hay uno para esa clave (por ejemplo, un código de Meta nuevo).</summary>
+    public static string? Find(string key) => ResourceManager.GetString(key, CultureInfo.CurrentUICulture);
     public static string Get(string key, CultureProfile profile)
     {
         foreach (var language in profile.ResourceLanguages)

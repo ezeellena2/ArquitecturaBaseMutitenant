@@ -17,12 +17,17 @@ internal sealed class WhatsAppWebhookReader(IPhoneNumberParser phones) : IWhatsA
             using var json = JsonDocument.Parse(body);
             var root = json.RootElement;
             if (Text(root, "object") != "whatsapp_business_account" || !Array(root, "entry", out var entries)) return WhatsAppErrors.InvalidPayload;
-            var messages = new List<WhatsAppWebhookMessage>(); var statuses = new List<WhatsAppWebhookStatus>();
+            var messages = new List<WhatsAppWebhookMessage>(); var statuses = new List<WhatsAppWebhookStatus>(); var templates = new List<WhatsAppWebhookTemplate>();
             foreach (var entry in entries.EnumerateArray())
             {
                 if (!Array(entry, "changes", out var changes)) continue;
                 foreach (var change in changes.EnumerateArray())
                 {
+                    if (Text(change, "field") is "message_template_status_update" or "template_category_update")
+                    {
+                        if (Template(Text(entry, "id"), change) is { } template) templates.Add(template);
+                        continue;
+                    }
                     if (Text(change, "field") != "messages" || !Property(change, "value", out var value)
                         || !Property(value, "metadata", out var metadata)
                         || Text(metadata, "phone_number_id") is not { Length: > 0 and <= TextLimits.ShortName } number) continue;
@@ -64,9 +69,31 @@ internal sealed class WhatsAppWebhookReader(IPhoneNumberParser phones) : IWhatsA
                         }
                 }
             }
-            return new WhatsAppWebhookBatch(messages, statuses);
+            return new WhatsAppWebhookBatch(messages, statuses, templates);
         }
         catch (JsonException) { return WhatsAppErrors.InvalidPayload; }
+    }
+    /// <summary>
+    /// El estado (message_template_status_update) o la categoría (template_category_update) de una plantilla de la cuenta
+    /// de la entrada. El id de Meta llega como número; el motivo, solo como código.
+    /// </summary>
+    private static WhatsAppWebhookTemplate? Template(string? wabaId, JsonElement change)
+    {
+        if (wabaId is not { Length: > 0 and <= WhatsAppTextLimits.MetaIdentifier } || !Property(change, "value", out var value)
+            || Text(value, "message_template_name") is not { Length: > 0 and <= TextLimits.ShortName } name
+            || !name.All(character => char.IsAsciiLetterLower(character) || char.IsAsciiDigit(character) || character == '_')
+            || Text(value, "message_template_language") is not { Length: > 0 and <= TextLimits.ShortCode } language
+            || !language.All(character => char.IsAsciiLetter(character) || character is '_' or '-')) return null;
+        string? id = null;
+        if (Property(value, "message_template_id", out var raw))
+            id = raw.ValueKind == JsonValueKind.Number ? raw.GetRawText() : raw.ValueKind == JsonValueKind.String ? raw.GetString() : null;
+        if (id is not null && (id.Length > WhatsAppTextLimits.MetaIdentifier || !id.All(char.IsAsciiDigit))) id = null;
+        if (Text(change, "field") == "template_category_update")
+            return new(wabaId, new WhatsAppMetaTemplate(id, name, language, null, WhatsAppMetaTemplateValues.Category(Text(value, "new_category")), null));
+        var status = Text(value, "event");
+        return new(wabaId, new WhatsAppMetaTemplate(id, name, language, WhatsAppMetaTemplateValues.Status(status),
+            WhatsAppMetaTemplateValues.Category(Text(value, "message_template_category")), WhatsAppMetaTemplateValues.Reason(Text(value, "reason")),
+            WhatsAppMetaTemplateValues.IsDeleted(status)));
     }
     /// <summary>Solo claves técnicas cortas de Meta (por ejemplo «service», «regular»), nunca texto libre.</summary>
     private static string? Short(string? value) => value is { Length: > 0 and <= 40 } && value.All(c => char.IsAsciiLetterOrDigit(c) || c == '_') ? value : null;

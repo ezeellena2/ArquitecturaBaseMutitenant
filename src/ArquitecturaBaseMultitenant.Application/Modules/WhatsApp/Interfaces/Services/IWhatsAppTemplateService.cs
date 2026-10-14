@@ -3,7 +3,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Services;
 
-/// <summary>Plantillas de Meta de la organización o de Plataforma («Para consultas» y «Del sistema»), según el acceso.</summary>
+/// <summary>Las plantillas de Meta de la organización del claim.</summary>
 public interface IWhatsAppTemplateService
 {
     Task<Result<WhatsAppTemplateListResponse>> ListAsync(WhatsAppTemplateListRequest request, CancellationToken cancellationToken);

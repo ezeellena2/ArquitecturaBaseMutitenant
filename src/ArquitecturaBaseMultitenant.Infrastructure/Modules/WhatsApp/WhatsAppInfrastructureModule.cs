@@ -29,6 +29,14 @@ public static class WhatsAppInfrastructureModule
         services.AddHostedService<Inbound.WhatsAppInboundProcessor>();
         services.AddHostedService<Retention.WhatsAppMessageRetentionWorker>();
         services.AddHostedService<WhatsAppWaitingNoticeWorker>();
+        services.AddHostedService<WhatsAppTemplateSyncWorker>();
+        services.AddSingleton<IWhatsAppSystemTemplates>(provider => provider.GetRequiredService<WhatsAppTemplateCatalog>());
+        services.AddScoped<IWhatsAppTemplateRepository, WhatsAppTemplateRepository>();
+        services.AddScoped<IPlatformWhatsAppTemplateRepository, PlatformWhatsAppTemplateRepository>();
+        services.AddScoped<IWhatsAppTemplateStateRepository, WhatsAppTemplateStateRepository>();
+        services.AddScoped<IWhatsAppTemplateReader, WhatsAppTemplateReader>();
+        services.AddScoped<IWhatsAppRateReader, WhatsAppRateReader>();
+        services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Persistence.IModuleDataSeedContributor, WhatsAppRateSeed>();
         services.AddScoped<IWhatsAppContactRepository, WhatsAppContactRepository>();
         services.AddScoped<IWhatsAppMessageRepository, WhatsAppMessageRepository>();
         services.AddScoped<IWhatsAppCodeQuotaRepository, WhatsAppCodeQuotaRepository>();
@@ -70,6 +78,11 @@ public static class WhatsAppInfrastructureModule
         services.AddHttpClient<IWhatsAppGraphClient, WhatsAppGraphClient>(client => { client.BaseAddress = new Uri("https://graph.facebook.com/"); client.Timeout = TimeSpan.FromSeconds(30); })
             .RemoveAllLoggers()
             .RemoveAllResilienceHandlers();
+        // Las plantillas: crear y borrar no se reintentan; la lista, sí, como cualquier GET.
+        services.AddHttpClient<IWhatsAppTemplateClient, WhatsAppTemplateClient>(client => { client.BaseAddress = new Uri("https://graph.facebook.com/"); client.Timeout = TimeSpan.FromSeconds(30); })
+            .RemoveAllLoggers()
+            .RemoveAllResilienceHandlers()
+            .AddStandardResilienceHandler(resilience => resilience.Retry.DisableForUnsafeHttpMethods());
 #pragma warning restore EXTEXP0001
         services.AddScoped<IChannelSender, WhatsAppChannelSender>();
         var section = configuration.GetSection(WhatsAppOptions.SectionName);

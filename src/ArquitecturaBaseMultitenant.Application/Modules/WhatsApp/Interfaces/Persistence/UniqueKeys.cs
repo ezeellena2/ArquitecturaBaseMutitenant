@@ -11,4 +11,8 @@ public static class UniqueKeys
     /// <summary>Un nombre de equipo por organización, sin distinguir mayúsculas; y uno por nombre en Plataforma.</summary>
     public const string TeamName = "IX_WhatsAppTeams_TenantId_NormalizedName";
     public const string PlatformTeamName = "IX_PlatformWhatsAppTeams_NormalizedName";
+    /// <summary>Un nombre de Meta por organización y uno por Plataforma; y un estado por nombre e idioma en cada cuenta.</summary>
+    public const string TemplateName = "IX_WhatsAppTemplates_TenantId_MetaName";
+    public const string PlatformTemplateName = "IX_PlatformWhatsAppTemplates_MetaName";
+    public const string TemplateState = "IX_WhatsAppTemplateStates_WabaId_MetaName_MetaLanguage";
 }
