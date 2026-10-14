@@ -1,4 +1,5 @@
 using System.Reflection;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
@@ -64,6 +65,53 @@ public sealed partial class TenantScopeUsageTests
         Assert.Contains(control, IsEnterCall);
         Assert.NotEmpty(UnauthorizedCallers(control));
     }
+
+    private const string TenantResolutionMiddleware = "ArquitecturaBaseMultitenant.Api.Tenancy.TenantResolutionMiddleware";
+    private const string RolePermissionCache = "ArquitecturaBaseMultitenant.Infrastructure.Caching.RolePermissionCache";
+
+    // Fijan la organización y su clase (Business o Personal) en un scope propio: la petición autenticada y los workers
+    // que escriben datos compartidos (engagement), porque el guardado sella la parte y Enter deja la clase en null
+    // (multitenancy.md). Los demás workers entran con Enter. Un módulo aporta los suyos en su parcial.
+    private static readonly HashSet<string> AccessInitializers = CreateAccessInitializers();
+    private static HashSet<string> CreateAccessInitializers()
+    {
+        var declared = new HashSet<string>(StringComparer.Ordinal) { TenantResolutionMiddleware, RolePermissionCache };
+        ContributeAccessInitializerCallers(declared);
+        return declared;
+    }
+    static partial void ContributeAccessInitializerCallers(HashSet<string> declared);
+
+    [Fact]
+    public void Only_declared_callers_set_the_tenant_from_an_access()
+    {
+        var calls = new[]
+        {
+            Assembly.Load("ArquitecturaBaseMultitenant.Application"),
+            Assembly.Load("ArquitecturaBaseMultitenant.Infrastructure"),
+            Assembly.Load("ArquitecturaBaseMultitenant.Api"),
+        }.SelectMany(ArchitectureIl.Calls).Where(IsSetFromAccessCall).Where(call => call.Owner != TenantContext).ToArray();
+
+        Assert.Equal(AccessInitializers.Order(StringComparer.Ordinal),
+            calls.Select(call => call.Owner).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void Detector_rejects_an_undeclared_access_initializer()
+    {
+        var control = ArchitectureIl.Calls(typeof(TenantScopeUsageTests).Assembly)
+            .Where(call => call.Owner == typeof(TenantScopeUsageTests).FullName && call.OwnerMethod == nameof(IllegalAccess))
+            .ToArray();
+
+        Assert.Contains(control, IsSetFromAccessCall);
+        Assert.DoesNotContain(control.Select(call => call.Owner), AccessInitializers.Contains);
+    }
+
+    private static bool IsSetFromAccessCall(ArchitectureIl.Call call) =>
+        call.Method == nameof(ITenantAccessInitializer.SetFromAccess) && call.DeclaringType is not null
+        && (call.DeclaringType == typeof(ITenantAccessInitializer).FullName || call.DeclaringType == TenantContext);
+
+    private static void IllegalAccess(ITenantAccessInitializer initializer) =>
+        initializer.SetFromAccess(Guid.Empty, ArquitecturaBaseMultitenant.Domain.Tenancy.TenantKind.Business);
 
     private static bool IsEnterCall(ArchitectureIl.Call call) =>
         call.Method == nameof(ITenantScope.Enter)

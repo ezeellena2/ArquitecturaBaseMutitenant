@@ -18,6 +18,7 @@
   - La copia personal lleva `[NotAudited]` y `ReplaceConsumerCopy()`; la política legal de Application y su purga están en [Personal](../features/personal.md).
 - **Trigger de columnas tenant:** `prevent_tenant_change` recibe los nombres como literales sin comillas dobles dentro (`'TenantId'`, no `'"TenantId"'`). Al corregir un helper de RLS, agregá una migración que recree los triggers ya instalados; cambiar solo el helper no actualiza bases migradas.
 - **Plataforma, workers y altas:** `using (tenantScope.Enter(tenantId)) { … }` después de autorizar, y antes de abrir el límite. En plataforma, además, con motivo obligatorio y el `SecurityEvent` registrado antes de `Enter` (`PlatformActionGuard`).
+- **Un worker que escribe datos compartidos** (`engagement`) no usa `Enter`, que deja la clase en null y el guardado no sabe qué parte sellar: abre un scope nuevo y llama a `ITenantAccessInitializer.SetFromAccess(tenantId, TenantKind.Business)`, como `RolePermissionCache`. Solo lo hacen `TenantResolutionMiddleware`, `RolePermissionCache` y `WhatsAppInboundProcessor`; uno nuevo se suma a la lista de la guarda.
 - **Seed de Development:** siembra los mismos datos globales que Production. No crea membresías, espacios personales ni organizaciones. El E2E prepara sus datos de prueba en una base separada de la base de Development.
 - **Una persona (B2C) nunca crea una organización:** el alta es "Registrá tu empresa" (`BusinessSignupService`).
 - **Caché y locks:** `CacheKeys.Tenant(…)`, `CacheKeys.PublicSite(…)`, `CacheKeys.User(…)` y `CacheKeys.Platform(…)` producen claves `t:`, `s:`, `u:` y `p:`; los identificadores son GUID en formato `N`. `AdvisoryLockKeys.For(tenantId, recurso, id)` produce `t:{tenantId:N}:lock:{recurso}:{id}` y se toma dentro del límite del caso de uso. En un recurso compartido, lock de fila.
@@ -40,7 +41,7 @@
 - Resolución pública: `Api/Tenancy/PublicSiteResolutionMiddleware.cs`, `PublicSiteAttribute.cs` y `PublicSiteFilter.cs`; la consulta es `Infrastructure/Persistence/Readers/PublicSiteReader.cs`.
 
 ## Lo verifica
-- `DataClassificationTests` (E2), `TenantScopeUsageTests` (E2), `QueryFilterBypassTests` (E0), `IdentityAccessTests` (E0), `AccessDeclarationTests` (E0)
+- `DataClassificationTests` (E2), `TenantScopeUsageTests` (E2; desde la E11 también limita `SetFromAccess`), `QueryFilterBypassTests` (E0), `IdentityAccessTests` (E0), `AccessDeclarationTests` (E0)
 
 ## Detalle
 [multitenancy.md](../architecture/multitenancy.md)
