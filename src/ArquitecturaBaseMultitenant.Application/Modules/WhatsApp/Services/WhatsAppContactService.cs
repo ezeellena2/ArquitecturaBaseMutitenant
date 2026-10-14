@@ -19,7 +19,8 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// importar. La importación se revisa antes sin guardar; sin «Sí» queda «Sin respuesta» y una baja no se deshace importando.
 /// </summary>
 internal sealed class WhatsAppContactService(IWhatsAppContactReader reader, IWhatsAppCustomerRepository customers,
-    WhatsAppContactImportResolver imports, IWhatsAppContactSpreadsheet spreadsheet, IUserDisplayNameReader names, IUnitOfWork unitOfWork,
+    WhatsAppContactImportResolver imports, IWhatsAppContactSpreadsheet spreadsheet, IUserDisplayNameReader names, IWhatsAppBroadcastReader broadcasts,
+    IUnitOfWork unitOfWork,
     IRequestValidator validator, TimeProvider clock, ILogger<WhatsAppContactService> logger) : IWhatsAppContactService
 {
     private const string SpreadsheetMediaType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -51,14 +52,14 @@ internal sealed class WhatsAppContactService(IWhatsAppContactReader reader, IWha
                 row.MessageCount, row.LastMessagePreview))], page.Page, page.PageSize, page.TotalCount);
         });
 
-    /// <summary>Las difusiones que recibió el contacto llegan con B6; hasta entonces no hay ninguna.</summary>
+    /// <summary>Las difusiones que le salieron al contacto, la más nueva primero, con cómo le fue en cada una.</summary>
     public Task<Result<PagedResult<WhatsAppContactBroadcastResponse>>> ListBroadcastsAsync(Guid id, WhatsAppContactChildListRequest request,
         CancellationToken cancellationToken) =>
         OperationLog.RunAsync<PagedResult<WhatsAppContactBroadcastResponse>>(logger, clock, "WhatsAppContactBroadcasts", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             if (await reader.FindAsync(id, cancellationToken) is null) return WhatsAppErrors.ContactNotFound;
-            return new PagedResult<WhatsAppContactBroadcastResponse>([], request.Page, request.PageSize, 0);
+            return await broadcasts.ListForContactAsync(id, request, cancellationToken);
         });
 
     public Task<Result<WhatsAppContactResponse>> UpdateAsync(Guid id, UpdateWhatsAppContactRequest request, CancellationToken cancellationToken) =>

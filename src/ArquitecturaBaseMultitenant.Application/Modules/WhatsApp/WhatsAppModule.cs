@@ -68,6 +68,10 @@ public static class WhatsAppModule
         services.AddScoped<WhatsAppTemplateIssuer>();
         services.AddScoped<WhatsAppTemplateStateWriter>();
         services.AddScoped<WhatsAppTemplateResponseBuilder>();
+        services.AddScoped<WhatsAppCostResolver>();
+        services.AddScoped<WhatsAppBroadcastChannelResolver>();
+        services.AddScoped<WhatsAppBroadcastRecipientWriter>();
+        services.AddScoped<IWhatsAppBroadcastDispatchService, WhatsAppBroadcastDispatchService>();
         services.AddScoped<IWhatsAppBroadcastService, WhatsAppBroadcastService>();
         services.AddScoped<IWhatsAppPhoneImportService, WhatsAppPhoneImportService>();
         services.AddScoped<IPersonalWhatsAppService, PersonalWhatsAppService>();

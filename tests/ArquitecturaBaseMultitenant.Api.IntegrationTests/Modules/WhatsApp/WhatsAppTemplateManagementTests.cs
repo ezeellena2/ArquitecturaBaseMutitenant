@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
@@ -149,7 +150,7 @@ public sealed class PlatformWhatsAppTemplateManagementTests(ApiFactory factory) 
         }, templates: templates);
         using var client = WhatsAppAttentionJourney.Client(host);
         var account = await AccountJourney.RegisterAsync(host, client, Ct);
-        await PlatformOperators.GrantAsync(host.Services, account.UserId, [PlatformPermissions.WhatsApp.Manage], Ct);
+        await PlatformOperators.GrantAsync(host.Services, account.UserId, [PlatformPermissions.WhatsApp.Manage, PlatformPermissions.WhatsApp.Attend], Ct);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         using (var number = await client.GetAsync("/api/platform/whatsapp/number", Ct)) Assert.Equal(HttpStatusCode.OK, number.StatusCode);
 
@@ -196,6 +197,24 @@ public sealed class PlatformWhatsAppTemplateManagementTests(ApiFactory factory) 
         var followUp = Assert.Single((await JsonAsync(await client.GetAsync("/api/platform/whatsapp/templates?group=Consultations", Ct)))
             .GetProperty("templates").GetProperty("items").EnumerateArray());
         Assert.Equal("Approved", followUp.GetProperty("status").GetString());
+
+        // En una consulta sale la plantilla «Para consultas» aprobada, con sus valores.
+        var platformNumber = (await JsonAsync(await client.GetAsync("/api/platform/whatsapp/number", Ct))).GetProperty("number");
+        using (var on = await client.PutAsJsonAsync("/api/platform/whatsapp/number",
+            new { consultationsEnabled = true, version = platformNumber.GetProperty("version").GetUInt32() }, Ct))
+            Assert.Equal(HttpStatusCode.OK, on.StatusCode);
+        using var anonymous = WhatsAppAttentionJourney.Client(host);
+        var person = WhatsAppAttentionJourney.NewPhone();
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, person, "Hola, tengo una consulta", Ct);
+        var chat = Assert.Single((await JsonAsync(await client.GetAsync($"/api/platform/whatsapp/conversations?search={Uri.EscapeDataString(person)}", Ct)))
+            .GetProperty("conversations").GetProperty("items").EnumerateArray()).GetProperty("id").GetGuid();
+        var option = Assert.Single((await JsonAsync(await client.GetAsync($"/api/platform/whatsapp/conversations/{chat}/template-options", Ct)))
+            .GetProperty("items").EnumerateArray());
+        Assert.Equal(followUp.GetProperty("id").GetGuid(), option.GetProperty("templateId").GetGuid());
+        using var sent = await WhatsAppAttentionJourney.PostAsync(client, $"/api/platform/whatsapp/conversations/{chat}/templates",
+            new { templateId = option.GetProperty("templateId").GetGuid(), variables = new[] { "Ana" } }, Ct);
+        Assert.Equal(HttpStatusCode.Created, sent.StatusCode);
+        Assert.Equal("Hola Ana, seguimos tu consulta.", (await WhatsAppAttentionJourney.JsonAsync(sent, Ct)).GetProperty("text").GetString());
     }
 
     private static async Task<JsonElement> JsonAsync(HttpResponseMessage response)

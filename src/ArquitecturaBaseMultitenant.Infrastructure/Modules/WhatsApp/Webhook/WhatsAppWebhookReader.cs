@@ -41,7 +41,7 @@ internal sealed class WhatsAppWebhookReader(IPhoneNumberParser phones) : IWhatsA
                             var kind = type switch { "text" => WhatsAppMessageKind.Text, "interactive" or "button" => WhatsAppMessageKind.Interactive, _ => WhatsAppMessageKind.Unsupported };
                             string? text = null; string? reply = null;
                             if (type == "text" && Property(message, "text", out var content)) text = Text(content, "body");
-                            if (type == "button" && Property(message, "button", out var button)) reply = Text(button, "payload");
+                            if (type == "button" && Property(message, "button", out var button)) { reply = Text(button, "payload"); text = Text(button, "text"); }
                             if (type == "interactive" && Property(message, "interactive", out var interactive)
                                 && (Property(interactive, "button_reply", out var choice) || Property(interactive, "list_reply", out choice)))
                             {

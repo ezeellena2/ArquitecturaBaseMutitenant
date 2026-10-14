@@ -17,7 +17,8 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// quien puede ver cuentas.
 /// </summary>
 internal sealed class WhatsAppConversationResponseBuilder(IWhatsAppConversationReader reader, IUserDisplayNameReader names, ICurrentUser user,
-    IPermissionService permissions, IPlatformPermissionService platformPermissions, IUserLookup accounts, TimeProvider clock)
+    IPermissionService permissions, IPlatformPermissionService platformPermissions, IUserLookup accounts, IWhatsAppTemplateReader templates,
+    WhatsAppCostResolver costs, TimeProvider clock)
 {
     internal async Task<WhatsAppConversationListResponse> ListAsync(WhatsAppInbox? inbox, WhatsAppConversationListRequest request, CancellationToken ct)
     {
@@ -59,6 +60,24 @@ internal sealed class WhatsAppConversationResponseBuilder(IWhatsAppConversationR
     internal async Task<string?> NameAsync(Guid userId, CancellationToken ct) => (await names.FindAsync([userId], ct)).GetValueOrDefault(userId);
 
     private Guid Me => user.UserId ?? throw new InvalidOperationException("An authenticated user is required.");
+
+    /// <summary>
+    /// Las plantillas que se pueden mandar en la conversación: aprobadas en la cuenta del número; Marketing solo a un contacto
+    /// que acepta promociones (en Internos y en Plataforma, solo Utility). Con el costo de un mensaje al país del número.
+    /// </summary>
+    internal async Task<PagedResult<WhatsAppTemplateOptionResponse>?> TemplateOptionsAsync(WhatsAppInbox? inbox, Guid id,
+        WhatsAppTemplateOptionListRequest request, CancellationToken ct)
+    {
+        if (await reader.FindAsync(inbox, id, ct) is not { } row) return null;
+        WhatsAppTemplateCategory[] categories = row.ContactConsent == WhatsAppConsent.Accepted
+            ? [WhatsAppTemplateCategory.Utility, WhatsAppTemplateCategory.Marketing] : [WhatsAppTemplateCategory.Utility];
+        var page = await templates.ListApprovedAsync(inbox is null, row.ChannelWabaId ?? string.Empty, categories, request, ct);
+        var units = new Dictionary<WhatsAppTemplateCategory, ArquitecturaBaseMultitenant.Domain.ValueObjects.Money>();
+        foreach (var category in page.Items.Select(template => template.Category).Distinct())
+            units[category] = await costs.UnitAsync(row.WaId, category, ct);
+        return new PagedResult<WhatsAppTemplateOptionResponse>([.. page.Items.Select(template => WhatsAppTemplateResponseBuilder.Option(template, units[template.Category]))],
+            page.Page, page.PageSize, page.TotalCount);
+    }
 
     private async Task<WhatsAppConversationCountsResponse> CountsAsync(WhatsAppInbox? inbox, CancellationToken ct)
     {

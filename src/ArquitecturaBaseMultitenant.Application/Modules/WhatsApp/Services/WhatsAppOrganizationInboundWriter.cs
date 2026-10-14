@@ -16,7 +16,7 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// </summary>
 internal sealed class WhatsAppOrganizationInboundWriter(IWhatsAppChatRepository chats, IWhatsAppCustomerRepository customers,
     IActiveMemberPhoneReader members, IPayloadProtector protector, WhatsAppAttentionBotWriter bot, WhatsAppConversationLinkWriter links,
-    TimeProvider clock) : IWhatsAppInboundConsumer
+    WhatsAppBroadcastRecipientWriter recipients, TimeProvider clock) : IWhatsAppInboundConsumer
 {
     public async Task ConsumeAsync(WhatsAppInboundContext context, CancellationToken ct)
     {
@@ -46,6 +46,8 @@ internal sealed class WhatsAppOrganizationInboundWriter(IWhatsAppChatRepository 
         chats.Add(WhatsAppChatMessage.Inbound(chat.Id, message.Wamid, text, media, occurredAtUtc));
         chat.RecordInbound(occurredAtUtc, text);
         await links.CopyAsync(chat.Id, WhatsAppMessageDirection.Inbound, text, media, occurredAtUtc, message.OriginalUserId, ct);
+        // Una difusión: la baja por su botón o la respuesta del contacto (B6).
+        if (customer is not null) await recipients.RecordInboundAsync(customer, message.ReplyId == BotButtons.Unsubscribe, occurredAtUtc, ct);
         await bot.RespondAsync(context, chat, customer, newConversation, ct);
         message.ClearPersonalData();
     }

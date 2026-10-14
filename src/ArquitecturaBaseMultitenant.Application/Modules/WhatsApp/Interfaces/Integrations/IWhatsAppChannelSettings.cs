@@ -15,6 +15,8 @@ public interface IWhatsAppChannelSettings
     string? PhoneNumberId { get; }
     string? ContactPhone { get; }
     IReadOnlyList<string> Countries { get; }
+    /// <summary>El país (ISO 3166) de un número E.164, o null si no se reconoce.</summary>
+    string? CountryOf(string e164) => null;
     int DailyAuthCodeLimit { get; }
     decimal ProtectedAuthCodeFraction => 0.2m;
     int DailyNewAuthCodeIpLimit => 20;

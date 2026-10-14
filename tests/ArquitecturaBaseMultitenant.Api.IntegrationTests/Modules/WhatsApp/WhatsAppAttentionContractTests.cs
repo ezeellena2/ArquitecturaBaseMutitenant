@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
@@ -95,9 +96,10 @@ public sealed class WhatsAppAttentionContractTests(ApiFactory factory)
         using (var off = await client.GetAsync("/api/organization/whatsapp/numbers", Ct))
             Assert.Equal(HttpStatusCode.NotFound, off.StatusCode);
         await EnableAsync(tenant);
-        foreach (var path in new[] { "/api/organization/whatsapp/broadcasts" })
+        // Lo que todavía no está programado (B5c, «Cargar teléfonos»).
+        foreach (var path in new[] { "/api/organization/whatsapp/phone-imports/preview" })
         {
-            using var response = await client.GetAsync(path, Ct);
+            using var response = await client.PostAsJsonAsync(path, new { phones = Array.Empty<object>(), roleIds = Array.Empty<Guid>() }, Ct);
             Assert.Equal(HttpStatusCode.NotImplemented, response.StatusCode);
             using var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
             Assert.Equal(ContractErrors.NotImplementedCode, problem.RootElement.GetProperty("code").GetString());

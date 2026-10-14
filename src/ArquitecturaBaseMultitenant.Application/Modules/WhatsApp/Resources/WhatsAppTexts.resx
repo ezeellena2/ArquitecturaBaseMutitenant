@@ -471,4 +471,7 @@
   <data name="Template.Rejection.Other" xml:space="preserve">
     <value>Meta la rechazó por un motivo que no conocemos.</value>
   </data>
+  <data name="Bot.Unsubscribed" xml:space="preserve">
+    <value>Listo, no te vamos a mandar más promociones. Si querés volver a recibirlas, avisanos por acá.</value>
+  </data>
 </root>

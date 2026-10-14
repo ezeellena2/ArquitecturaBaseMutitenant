@@ -14,6 +14,10 @@ public interface IWhatsAppTemplateReader
     Task<PagedResult<WhatsAppTemplateRow>> ListAsync(bool platform, WhatsAppTemplateListRequest request, CancellationToken ct);
     Task<int> CountAsync(bool platform, WhatsAppTemplateStatus? status, CancellationToken ct);
     Task<WhatsAppTemplateRow?> FindAsync(bool platform, Guid id, CancellationToken ct);
+    /// <summary>Las aprobadas de esas categorías: en esa cuenta de WhatsApp o, sin cuenta, aprobadas en todas las del dueño.</summary>
+    Task<PagedResult<WhatsAppTemplateRow>> ListApprovedAsync(bool platform, string? wabaId, IReadOnlyCollection<WhatsAppTemplateCategory> categories,
+        PagedRequest request, CancellationToken ct);
+    Task<bool> IsApprovedInAsync(string wabaId, string metaName, string metaLanguage, CancellationToken ct);
     /// <summary>Si ya hay una plantilla con ese nombre para Meta.</summary>
     Task<bool> NameTakenAsync(bool platform, string metaName, CancellationToken ct);
     /// <summary>Lo que Meta dice de esos nombres en la cuenta del número vigente de Plataforma (las plantillas del sistema).</summary>

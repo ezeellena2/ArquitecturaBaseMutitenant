@@ -13,6 +13,11 @@ public interface IWhatsAppTemplateClient
     /// <summary>Borra el nombre en la cuenta, en todos sus idiomas.</summary>
     Task<Result> DeleteAsync(string wabaId, string token, string metaName, CancellationToken ct);
     Task<Result<IReadOnlyList<WhatsAppMetaTemplate>>> ListAsync(string wabaId, string token, CancellationToken ct);
+    /// <summary>
+    /// A cuántas personas distintas se puede escribir por plantilla en 24 horas (<c>whatsapp_business_manager_messaging_limit</c>,
+    /// de toda la cartera de Meta); null si no tiene tope.
+    /// </summary>
+    Task<Result<int?>> GetMessagingLimitAsync(string phoneNumberId, string token, CancellationToken ct);
 }
 
 /// <summary>Lo que se manda a Meta: datos posicionales con un ejemplo cada uno y, en Marketing, el botón «No recibir más».</summary>

@@ -49,6 +49,17 @@ internal sealed class WhatsAppContactReader(ApplicationDbContext context, ITenan
         Customers().SelectMany(customer => customer.Tags).Distinct().ApplySearch(request.Search, tag => tag).OrderBy(tag => tag)
             .ToPagedResultAsync(request, ct);
 
+    public async Task<IReadOnlyList<WhatsAppAudienceMember>> ListAudienceAsync(string? tag, CancellationToken ct)
+    {
+        var customers = Customers().Where(customer => customer.Consent == WhatsAppConsent.Accepted);
+        if (!string.IsNullOrWhiteSpace(tag)) { var value = tag.Trim(); customers = customers.Where(customer => customer.Tags.Contains(value)); }
+        return await customers.OrderBy(customer => customer.Id).Select(customer => new WhatsAppAudienceMember(customer.Id, customer.WaId)).ToArrayAsync(ct);
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, WhatsAppConsent>> ListConsentsAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct) =>
+        ids.Count == 0 ? new Dictionary<Guid, WhatsAppConsent>()
+            : await Customers().Where(customer => ids.Contains(customer.Id)).ToDictionaryAsync(customer => customer.Id, customer => customer.Consent, ct);
+
     public async Task<IReadOnlySet<string>> FindExistingAsync(IReadOnlyCollection<string> waIds, CancellationToken ct)
     {
         if (waIds.Count == 0) return new HashSet<string>(StringComparer.Ordinal);

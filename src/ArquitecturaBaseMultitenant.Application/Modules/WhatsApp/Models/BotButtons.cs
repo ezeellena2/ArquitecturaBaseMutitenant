@@ -10,6 +10,8 @@ public static class BotButtons
     public const string PromotionsYes = "bot.promotions.yes";
     public const string PromotionsNo = "bot.promotions.no";
     public const string LinkAccount = "bot.link";
+    /// <summary>El botón «No recibir más» de las plantillas Marketing: da de baja las promociones (B6).</summary>
+    public const string Unsubscribe = "bot.unsubscribe";
     private const string OptionPrefix = "bot.option.";
 
     public static string Option(Guid id) => OptionPrefix + id.ToString("N");
@@ -19,5 +21,5 @@ public static class BotButtons
         reply is { Length: 43 } && reply.StartsWith(OptionPrefix, StringComparison.Ordinal)
         && Guid.TryParseExact(reply.AsSpan(OptionPrefix.Length), "N", out var id) ? id : null;
 
-    public static bool IsKnown(string? reply) => reply is SignIn or Recover or PromotionsYes or PromotionsNo or LinkAccount || ParseOption(reply) is not null;
+    public static bool IsKnown(string? reply) => reply is SignIn or Recover or PromotionsYes or PromotionsNo or LinkAccount or Unsubscribe || ParseOption(reply) is not null;
 }

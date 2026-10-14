@@ -30,6 +30,9 @@ public static class WhatsAppInfrastructureModule
         services.AddHostedService<Retention.WhatsAppMessageRetentionWorker>();
         services.AddHostedService<WhatsAppWaitingNoticeWorker>();
         services.AddHostedService<WhatsAppTemplateSyncWorker>();
+        services.AddHostedService<WhatsAppBroadcastWorker>();
+        services.AddScoped<IWhatsAppBroadcastRepository, WhatsAppBroadcastRepository>();
+        services.AddScoped<IWhatsAppBroadcastReader, WhatsAppBroadcastReader>();
         services.AddSingleton<IWhatsAppSystemTemplates>(provider => provider.GetRequiredService<WhatsAppTemplateCatalog>());
         services.AddScoped<IWhatsAppTemplateRepository, WhatsAppTemplateRepository>();
         services.AddScoped<IPlatformWhatsAppTemplateRepository, PlatformWhatsAppTemplateRepository>();

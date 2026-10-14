@@ -75,6 +75,23 @@ internal sealed class WhatsAppTemplateClient(HttpClient client, IOptions<WhatsAp
         return templates;
     }
 
+    public async Task<Result<int?>> GetMessagingLimitAsync(string phoneNumberId, string token, CancellationToken ct)
+    {
+        var read = await SendAsync(HttpMethod.Get, Uri.EscapeDataString(phoneNumberId) + "?fields=whatsapp_business_manager_messaging_limit", token, null, ct);
+        if (read.IsFailure) return read.Error;
+        using var document = read.Value;
+        return Text(document.RootElement, "whatsapp_business_manager_messaging_limit") switch
+        {
+            "TIER_UNLIMITED" => (int?)null,
+            "TIER_100K" => 100_000,
+            "TIER_10K" => 10_000,
+            "TIER_2K" => 2_000,
+            "TIER_1K" => 1_000,
+            // TIER_250 o lo que Meta agregue: el tope más bajo, para no pasarse.
+            _ => 250,
+        };
+    }
+
     private async Task<Result<JsonDocument>> SendAsync(HttpMethod method, string path, string token, JsonObject? body, CancellationToken ct)
     {
         using var request = new HttpRequestMessage(method, options.Value.GraphApiVersion + "/" + path);

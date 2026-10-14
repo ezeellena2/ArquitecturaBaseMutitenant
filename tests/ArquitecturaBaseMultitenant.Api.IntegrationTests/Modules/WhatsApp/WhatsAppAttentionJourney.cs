@@ -183,6 +183,10 @@ internal sealed class FakeTemplates : IWhatsAppTemplateClient
     public ConcurrentQueue<(string WabaId, string MetaName)> Deleted { get; } = new();
     public ConcurrentDictionary<string, IReadOnlyList<WhatsAppMetaTemplate>> Accounts { get; } = new(StringComparer.Ordinal);
     public Error? Failure { get; set; }
+    /// <summary>El tope de Meta por 24 horas; null, sin tope.</summary>
+    public int? MessagingLimit { get; set; }
+
+    public Task<Result<int?>> GetMessagingLimitAsync(string phoneNumberId, string token, CancellationToken ct) => Task.FromResult(Result.Success(MessagingLimit));
 
     public Task<Result<WhatsAppMetaTemplate>> CreateAsync(string wabaId, string token, WhatsAppTemplateSubmission submission, CancellationToken ct)
     {

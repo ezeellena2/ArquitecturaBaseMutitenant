@@ -48,6 +48,10 @@ internal sealed class WhatsAppTemplateResponseBuilder(IWhatsAppSystemTemplates s
         })];
     }
 
+    /// <summary>Una plantilla para elegir al mandar: sus datos por nombre y lo que cuesta un mensaje.</summary>
+    internal static WhatsAppTemplateOptionResponse Option(WhatsAppTemplateRow template, ArquitecturaBaseMultitenant.Domain.ValueObjects.Money cost) =>
+        new(template.Id, template.Name, template.Category, template.Body, [.. template.Variables.Select(variable => variable.Label)], cost);
+
     /// <summary>El identificador fijo de una plantilla del sistema: sale de su clave, no de una fila.</summary>
     internal static Guid SystemId(string key) => new(SHA256.HashData(Encoding.UTF8.GetBytes("whatsapp-system-template:" + key)).AsSpan(0, 16));
 

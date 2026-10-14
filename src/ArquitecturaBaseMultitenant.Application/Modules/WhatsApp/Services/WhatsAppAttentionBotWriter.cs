@@ -43,6 +43,12 @@ internal sealed class WhatsAppAttentionBotWriter(IWhatsAppBotRepository bots, Wh
                 await SendAsync(turn, WhatsAppTexts.Get(accepted ? "Bot.PromotionsAccepted" : "Bot.PromotionsDeclined", turn.Profile), ct);
             return;
         }
+        // La baja ya la registró la entrada; el bot la confirma.
+        if (replyId == BotButtons.Unsubscribe)
+        {
+            await SendAsync(turn, WhatsAppTexts.Get("Bot.Unsubscribed", turn.Profile), ct);
+            return;
+        }
         if (replyId == BotButtons.LinkAccount)
         {
             if (await links.LinkAsync(chat, context, nowUtc, ct)) await SendAsync(turn, WhatsAppTexts.Get("Bot.LinkDone", turn.Profile), ct);

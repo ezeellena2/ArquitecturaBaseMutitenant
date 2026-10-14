@@ -29,6 +29,25 @@ internal sealed class WhatsAppTemplateReader(ApplicationDbContext context, ITena
     public async Task<WhatsAppTemplateRow?> FindAsync(bool platform, Guid id, CancellationToken ct) =>
         await Project(platform).SingleOrDefaultAsync(row => row.Id == id, ct) is { } row ? Row(row) : null;
 
+    public async Task<PagedResult<WhatsAppTemplateRow>> ListApprovedAsync(bool platform, string? wabaId,
+        IReadOnlyCollection<WhatsAppTemplateCategory> categories, PagedRequest request, CancellationToken ct)
+    {
+        var rows = Project(platform).Where(row => categories.Contains(row.Category));
+        if (wabaId is null) rows = rows.Where(row => row.Status == WhatsAppTemplateStatus.Approved);
+        else
+        {
+            var approved = context.Set<WhatsAppTemplateState>().AsNoTracking()
+                .Where(state => state.WabaId == wabaId && state.Status == WhatsAppTemplateStatus.Approved);
+            rows = rows.Where(row => approved.Any(state => state.MetaName == row.MetaName && state.MetaLanguage == row.MetaLanguage));
+        }
+        var page = await rows.ApplySearch(request.Search, row => row.Name).OrderBy(row => row.Name).ThenBy(row => row.Id).ToPagedResultAsync(request, ct);
+        return new PagedResult<WhatsAppTemplateRow>([.. page.Items.Select(Row)], page.Page, page.PageSize, page.TotalCount);
+    }
+
+    public Task<bool> IsApprovedInAsync(string wabaId, string metaName, string metaLanguage, CancellationToken ct) =>
+        context.Set<WhatsAppTemplateState>().AsNoTracking().AnyAsync(state => state.WabaId == wabaId && state.MetaName == metaName
+            && state.MetaLanguage == metaLanguage && state.Status == WhatsAppTemplateStatus.Approved, ct);
+
     public Task<bool> NameTakenAsync(bool platform, string metaName, CancellationToken ct) => platform
         ? context.Set<PlatformWhatsAppTemplate>().AsNoTracking().AnyAsync(value => value.MetaName == metaName, ct)
         : Organization().AnyAsync(value => value.MetaName == metaName, ct);

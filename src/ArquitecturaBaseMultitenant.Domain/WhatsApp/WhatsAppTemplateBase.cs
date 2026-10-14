@@ -54,6 +54,10 @@ public abstract partial class WhatsAppTemplateBase : Entity, IVersioned, IAudita
         return distinct.Count == 0 ? 0 : distinct[0] == 1 && distinct[^1] == distinct.Count ? distinct.Count : -1;
     }
 
+    /// <summary>El texto con los valores en lugar de {{1}}, {{2}}…: lo que queda en la conversación.</summary>
+    public static string Render(string body, IReadOnlyList<string> values) => PlaceholderPattern().Replace(body, match =>
+        int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture) is var number && number >= 1 && number <= values.Count ? values[number - 1] : match.Value);
+
     /// <summary>El nombre para Meta (^[a-z0-9_]+$): null si no queda ninguna letra ni número.</summary>
     public static string? ToMetaName(string name)
     {

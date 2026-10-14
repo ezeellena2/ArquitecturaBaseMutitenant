@@ -96,6 +96,9 @@ internal sealed class WhatsAppCloudClient(HttpClient client, IOptions<WhatsAppOp
             components.Add(new { type = "body", parameters = message.BodyParameters.Select(value => new { type = "text", text = value }).ToArray() });
         if (message.ButtonParameter is not null)
             components.Add(new { type = "button", sub_type = "url", index = "0", parameters = new[] { new { type = "text", text = message.ButtonParameter } } });
+        // «No recibir más» de una Marketing: la respuesta trae este identificador y no el texto del botón.
+        if (message.QuickReplyPayload is not null)
+            components.Add(new { type = "button", sub_type = "quick_reply", index = "0", parameters = new[] { new { type = "payload", payload = message.QuickReplyPayload } } });
         return new { messaging_product = "whatsapp", recipient_type = "individual", to, type = "template",
             template = new { name = message.TemplateName, language = new { code = message.Language }, components } };
     }

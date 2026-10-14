@@ -7,7 +7,8 @@ public sealed record WhatsAppOutboundMessage(string PhoneNumberId, string To, st
     string Language, IReadOnlyList<string> BodyParameters, string? ButtonParameter = null,
     bool IsAuthentication = false, string? Body = null, string? Footer = null,
     string? LinkLabel = null, string? LinkUrl = null, IReadOnlyList<WhatsAppReplyButton>? ReplyButtons = null,
-    DateTime? ReplyExpiresAtUtc = null, Guid? ChannelId = null, string? ListButton = null, IReadOnlyList<WhatsAppReplyButton>? ListRows = null)
+    DateTime? ReplyExpiresAtUtc = null, Guid? ChannelId = null, string? ListButton = null, IReadOnlyList<WhatsAppReplyButton>? ListRows = null,
+    string? QuickReplyPayload = null)
 {
     /// <summary>Topes de Meta para la lista interactiva: el botón que la abre y cada fila.</summary>
     public const int MaxListButton = 20;
@@ -36,7 +37,11 @@ public sealed record WhatsAppOutboundMessage(string PhoneNumberId, string To, st
             return;
         }
         ArgumentException.ThrowIfNullOrWhiteSpace(TemplateName);
-        if (Language is not ("es" or "en")) throw new ArgumentException("Unsupported template language.");
+        // Las del sistema van en es o en; las de una organización, en el código de Meta de su cultura (es_AR).
+        if (Language is not { Length: >= 2 and <= 8 } || !Language.All(character => char.IsAsciiLetter(character) || character == '_'))
+            throw new ArgumentException("Unsupported template language.");
+        if (QuickReplyPayload is not null && (!BotButtons.IsKnown(QuickReplyPayload) || IsAuthentication || ButtonParameter is not null))
+            throw new ArgumentException("Invalid quick reply.");
         if (IsAuthentication && (BodyParameters.Count != 1 || ButtonParameter != BodyParameters[0]))
             throw new ArgumentException("Authentication body and copy button must contain the same code.");
     }

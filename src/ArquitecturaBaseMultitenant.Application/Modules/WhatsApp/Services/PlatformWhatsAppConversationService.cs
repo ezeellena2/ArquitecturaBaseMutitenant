@@ -105,13 +105,34 @@ internal sealed class PlatformWhatsAppConversationService(IPlatformWhatsAppChatR
 
     public Task<Result<PagedResult<WhatsAppTemplateOptionResponse>>> ListTemplateOptionsAsync(WhatsAppInbox? inbox, Guid id,
         WhatsAppTemplateOptionListRequest request, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "PlatformWhatsAppConversationListTemplateOptions",
-            () => Task.FromResult(Result.Failure<PagedResult<WhatsAppTemplateOptionResponse>>(ContractErrors.NotImplemented)));
+        OperationLog.RunAsync<PagedResult<WhatsAppTemplateOptionResponse>>(logger, clock, "PlatformWhatsAppConversationListTemplateOptions", async () =>
+        {
+            if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+            return await responses.TemplateOptionsAsync(null, id, request, cancellationToken) is { } page ? page : WhatsAppErrors.ConversationNotFound;
+        });
 
+    /// <summary>Una plantilla «Para consultas» aprobada en la cuenta del número de Plataforma, en cualquier momento.</summary>
     public Task<Result<WhatsAppChatMessageResponse>> SendTemplateAsync(WhatsAppInbox? inbox, Guid id, SendWhatsAppTemplateRequest request,
         CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "PlatformWhatsAppConversationSendTemplate",
-            () => Task.FromResult(Result.Failure<WhatsAppChatMessageResponse>(ContractErrors.NotImplemented)));
+        OperationLog.RunAsync<WhatsAppChatMessageResponse>(logger, clock, "PlatformWhatsAppConversationSendTemplate", async () =>
+        {
+            if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+            var variables = request.Variables?.Select(value => value.Trim()).ToList() ?? [];
+            return await unitOfWork.ExecuteInTransactionAsync<Result<WhatsAppChatMessageResponse>>(async ct =>
+            {
+                if (await chats.GetForUpdateAsync(id, null, ct) is not { } chat) return WhatsAppErrors.ConversationNotFound;
+                var taken = await TakeAsync(chat, ct);
+                if (taken.IsFailure) return taken.Error;
+                var issued = await replies.IssueTemplateAsync(chat, platform: true, request.TemplateId!.Value, variables, ct);
+                if (issued.IsFailure) return issued.Error;
+                var nowUtc = clock.GetUtcNow().UtcDateTime;
+                var message = PlatformWhatsAppChatMessage.Outbound(chat.Id, WhatsAppChatMessageKind.Template, Me, await MyNameAsync(ct), issued.Value.Text,
+                    issued.Value.OutboxMessageId, issued.Value.TemplateId, nowUtc);
+                chats.Add(message);
+                chat.RecordOutbound(nowUtc, issued.Value.Text);
+                return WhatsAppConversationService.Response(message);
+            }, CommitPolicy.OnSuccess, cancellationToken);
+        });
 
     public Task<Result<PagedResult<WhatsAppTransferTeamResponse>>> ListTransferTeamsAsync(WhatsAppInbox? inbox, Guid id,
         WhatsAppTransferOptionListRequest request, CancellationToken cancellationToken) =>
