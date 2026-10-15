@@ -38,7 +38,7 @@ Después del scaffolding, quitá sólo en la copia:
 
 - `Domain/WhatsApp` y `Modules/WhatsApp` de Application, Infrastructure y Api, incluidas opciones, resources propios, la tabla de tarifas (`Infrastructure/Modules/WhatsApp/ReferenceData`) y sus workers (cola de entrada, retención, «Chats esperando», sincronización de plantillas y difusiones).
 - Los artículos de ayuda del módulo, que viven en el árbol del asistente: `Infrastructure/Modules/Assistant/Help/Articles/whatsapp/` y sus entradas `whatsapp.*` de `index.json`.
-- La excepción de `meta-rates-*.json` en `ReferenceDataHardcodeTests`, que nombra solo esa carpeta: el comentario y sus dos condiciones; `IsGeneratedCatalog` vuelve a terminar en la lista de los cinco catálogos.
+- La excepción de `meta-rates-*.json` en la lista de catálogos generados de `ReferenceDataHardcodeTests`, que nombra solo esa carpeta: el comentario y sus dos condiciones. La lista vuelve a terminar en los cinco catálogos de referencia.
 - Las dos líneas `EmbeddedResource` de `Modules/WhatsApp` en el `.csproj` de Infrastructure (plantillas de correo y tarifas).
 - `Domain.UnitTests/WhatsApp` y `Modules/WhatsApp` de Application.UnitTests, ArchitectureTests y Api.IntegrationTests. Estos árboles contienen bindings partial de DI, rutas/acceso anónimo, probes de error/cuota, casos Phone de avisos/recuperación y el caso de cambio de países de enlaces. Las otras partes de las clases conservan las pruebas neutrales.
 - `Api.IntegrationTests/TestFeatures/WhatsAppBrowser` y sus pruebas exclusivas `WhatsAppBrowserFixtureTests`/`WhatsAppBrowserControlTests`; exclusivamente la rama `--whatsapp-browser` y sus referencias CLR en `tools/ArquitecturaBaseMultitenant.RealE2ESetup/Program.cs`.
