@@ -23,8 +23,9 @@ public sealed class PlatformOperatorAssistantUpgradeTests
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
     private static readonly string[] Added =
         [PlatformPermissions.Assistant.Use, PlatformPermissions.Assistant.Configure, PlatformPermissions.Assistant.Read];
-    // Upgrades posteriores de gestores (E11, WhatsApp); llegan al migrar hasta la última migración.
-    private static readonly string[] LaterUpgrades = [PlatformPermissions.WhatsApp.Manage, PlatformPermissions.WhatsApp.Attend];
+    // Lo que sumaron a los gestores los upgrades posteriores de otros módulos instalados (en la E11, WhatsApp); llega al
+    // migrar hasta la última migración. Sin esos módulos no queda nada: su retiro también lo saca.
+    private static readonly string[] LaterUpgrades = [.. PlatformPermissions.All.Except(PlatformPermissions.LegacyBootstrap).Except(Added)];
 
     [Fact]
     public async Task Upgrade_appends_only_missing_permissions_preserves_accounts_and_audits_once_per_changed_assignment()
