@@ -154,22 +154,27 @@ Se define en el código, en `Application/Modules/Forms/Catalogs/MembersCatalogSo
 
 ## 6. Contrato borrador
 
-Las rutas de Business llevan `[Access(Access.Business)]` y `[FeatureGate("forms")]`. Los listados llevan `PagedRequest`, y las altas, `[Idempotent]`.
+Las rutas de Business llevan `[Access(Access.Business)]` y `[FeatureGate("forms")]`. Los listados, relaciones y opciones de selectores llevan `PagedRequest` y `PagedResult`, con los tamaños comunes (10 por defecto, 20, 50 o 100), búsqueda y orden estable; usan las lecturas comunes de paginado y búsqueda. Las altas llevan `[Idempotent]`.
 
 | Método y ruta | Permiso | Pide | Devuelve |
 | --- | --- | --- | --- |
 | GET `/api/organization/forms/catalogs` | `formcatalogs.read` | `page`, `pageSize`, `sort` (`name`, `updatedAtUtc`), `search`, `source` (`all`, `manual`, `members`), `usable?` | 200 `PagedResult<{id, name, source, optionsCount?, usedByCount, usable, unusableReason?}>` |
 | GET `/api/organization/forms/catalogs/filter-counts` | `formcatalogs.read` | `search` | 200 `{all, manual, members}` |
 | POST `/api/organization/forms/catalogs` | `formcatalogs.manage` | `{name{es,en?}, description?, source, filters?}` | 201 detalle + Location |
-| GET `/api/organization/forms/catalogs/{id}` | `formcatalogs.read` | — | 200 `{id, name, description, source, filters?, usable, unusableReason?, usedBy[{formId, name}], canManage, version}` |
+| GET `/api/organization/forms/catalogs/{id}` | `formcatalogs.read` | — | 200 `{id, name, description, source, filters?, usable, unusableReason?, usedByCount, canManage, version}` |
+| GET `/api/organization/forms/catalogs/{id}/used-by` | `formcatalogs.read` | `page`, `pageSize`, `search`, `sort` (`name`) | 200 `PagedResult<{formId, name}>` |
 | PUT `/api/organization/forms/catalogs/{id}` | `formcatalogs.manage` | `{name, description, filters?, version}` | 200 `VersionResponse` |
 | GET `/api/organization/forms/catalogs/{id}/items` | `formcatalogs.read` | `page`, `pageSize`, `search`, `status` (`active`, `inactive`, `all`) | 200 `PagedResult<{id, code, text{es,en}, detail{es,en}, position, isActive, version}>`, ordenado por posición |
 | POST `/api/organization/forms/catalogs/{id}/items` | `formcatalogs.manage` | `{code, text{es,en?}, detail?}` | 201; queda última |
 | PUT `/api/organization/forms/catalogs/{id}/items/{itemId}` | `formcatalogs.manage` | `{code, text, detail, isActive, version}` | 200 `VersionResponse` |
 | POST `/api/organization/forms/catalogs/{id}/items/{itemId}/move` | `formcatalogs.manage` | `{direction: up\|down, version}` | 200 `VersionResponse` |
-| GET `/api/organization/forms/catalogs/sources/members` | `formcatalogs.manage` | — | 200 `{version, columns[{key, type, operators, canDetail, canSort}], roles[{id, name}], companies[{id, name}]}` |
+| GET `/api/organization/forms/catalogs/sources/members` | `formcatalogs.manage` | — | 200 `{version, columns[{key, type, operators, canDetail, canSort}]}`; catálogo cerrado de columnas y operadores de la §4 |
+| GET `/api/organization/forms/catalogs/sources/members/roles` | `formcatalogs.manage` | `page`, `pageSize`, `search`, `sort` (`name`) | 200 `PagedResult<{id, name}>` de roles de la organización |
+| GET `/api/organization/forms/catalogs/sources/members/companies` | `formcatalogs.manage` | `page`, `pageSize`, `search`, `sort` (`name`) | 200 `PagedResult<{id, name}>` de empresas de la organización |
 | GET `/api/organization/forms/catalogs/sample-members` | `formcatalogs.manage` | `page`, `search` | 200 `PagedResult<{memberId, name}>`, sin correo |
 | POST `/api/organization/forms/catalogs/previews` | `formcatalogs.manage` | `{filters, sampleMemberId}` | 200 `{options[{text, detail?}], total, exceedsLimit}`; no escribe |
+
+Las pruebas de integración recorren una segunda página de `used-by`, roles y empresas, con búsqueda y desempate; `GrowingCollectionContractTests` verifica sus contratos sin agregar excepciones por módulo. La vista previa y la oferta conservan su límite explícito de 200 opciones (§4 y §7).
 
 **Lo que cambia en las rutas de la E12:**
 - **`FormDetail` y `PUT …/draft`:** una pregunta `CatalogChoice` lleva `catalogId`.

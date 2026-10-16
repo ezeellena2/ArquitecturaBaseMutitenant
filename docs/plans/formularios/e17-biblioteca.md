@@ -131,12 +131,13 @@ Una categoría se borra solo si ninguna plantilla la usa (`Forms.TemplateCategor
 | GET `/api/platform/forms/templates` | `page`, `pageSize`, `sort`, `search`, `state` (`all`, `draft`, `published`, `retired`), `categoryId?` | 200 `PagedResult<{id, name, category, state, versionNumber?, hasUnpublishedChanges, usedByCount}>` |
 | GET `/api/platform/forms/templates/filter-counts` | `search`, `categoryId?` | 200 `{all, draft, published, retired}` |
 | POST `/api/platform/forms/templates` | `{name{es}, categoryId}` | 201 detalle |
-| GET `/api/platform/forms/templates/{id}` | — | 200 `{id, state, category, draft, publishedVersion?{number, publishedAtUtc}, versions[{number, publishedAtUtc, publishedBy, reason}], usedByCount, version}` |
+| GET `/api/platform/forms/templates/{id}` | — | 200 `{id, state, category, draft, publishedVersion?{number, publishedAtUtc}, usedByCount, version}` |
+| GET `/api/platform/forms/templates/{id}/versions` | `after?`, `limit?` (`CursorRequest`) | 200 `CursorResult<{number, publishedAtUtc, publishedBy, reason}>`, por fecha e Id descendentes, sin total |
 | PUT `/api/platform/forms/templates/{id}/draft` | `{draft, categoryId, version}` | 200 `VersionResponse` |
 | POST `/api/platform/forms/templates/{id}/publication-checks` | `{version}` | 200 `{canPublish, issues[], nextVersionNumber}`; no escribe |
 | POST `/api/platform/forms/templates/{id}/publish` | `{version, reason}` | 200 `{versionNumber, version}`. Sirve también para volver a publicar. |
 | POST `/api/platform/forms/templates/{id}/retire` | `{version, reason}` | 200 `VersionResponse` |
-| GET `/api/platform/forms/template-categories` | — | 200 `[{id, name{es,en}, position, templateCount, version}]` |
+| GET `/api/platform/forms/template-categories` | `page`, `pageSize`, `search` | 200 `PagedResult<{id, name{es,en}, position, templateCount, version}>`, por posición e Id |
 | POST `/api/platform/forms/template-categories` | `{name{es,en}, reason}` | 201 |
 | PUT `/api/platform/forms/template-categories/{id}` | `{name, version, reason}` | 200 `VersionResponse` |
 | POST `/api/platform/forms/template-categories/{id}/move` | `{direction, version, reason}` | 200 `VersionResponse` |
@@ -147,9 +148,11 @@ Una categoría se borra solo si ninguna plantilla la usa (`Forms.TemplateCategor
 | Método y ruta | Pide | Devuelve |
 | --- | --- | --- |
 | GET `/api/organization/forms/templates` | `page`, `pageSize`, `search`, `categoryId?` | 200 `PagedResult<{id, name, description, category, questionCount, catalogCount}>`, solo las publicadas |
-| GET `/api/organization/forms/template-categories` | — | 200 las categorías con al menos una plantilla publicada |
+| GET `/api/organization/forms/template-categories` | `page`, `pageSize`, `search` | 200 `PagedResult<{id, name, position}>`, solo categorías con al menos una plantilla publicada, por posición e Id |
 | GET `/api/organization/forms/templates/{id}` | — | 200 la versión publicada, para ver: preguntas, catálogos con sus opciones y reglas **[E16]** |
 | POST `/api/organization/forms/templates/{id}/use` | `{name?}` y `[Idempotent]` | 201 `FormDetail` de la E12 + Location al formulario nuevo |
+
+Las categorías son editables y pueden crecer: tanto su administración como los selectores de categoría consumen páginas, con las lecturas comunes de paginado y búsqueda (10 por defecto, 20, 50 o 100). El historial de versiones usa el cursor común, sin anidarlo completo en el detalle ni contar sus filas. Se verifica en integración que una segunda página/tanda no omita ni repita elementos, y que el contrato no exponga arrays crecientes sin límite (`GrowingCollectionContractTests`).
 
 **Permiso de plataforma:** `platform.formtemplates.manage` va en `PlatformPermissions`, con sus textos y la migración de operadores. El modelo es `20261010214712_PlatformOperatorAssistantPermissions.cs`: agrega la clave a las asignaciones que tienen `platform.operators.manage`.
 
