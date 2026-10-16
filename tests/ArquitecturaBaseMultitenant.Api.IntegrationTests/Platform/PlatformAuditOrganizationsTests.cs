@@ -29,7 +29,8 @@ public sealed class PlatformAuditOrganizationsTests(ApiFactory factory)
         var (platform, actorId) = await OperatorAsync([PlatformPermissions.Audit.Read]);
         using var client = platform;
         var tag = "paged-" + Guid.NewGuid().ToString("N");
-        var tenants = Enumerable.Range(1, 25).Select(index => Business($"{tag} {index:000}")).ToArray();
+        // La «n» no es un dígito hexadecimal: el término buscado nunca aparece en la parte aleatoria de la etiqueta.
+        var tenants = Enumerable.Range(1, 25).Select(index => Business($"{tag} n{index:000}")).ToArray();
         var nowUtc = factory.Services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
         await SaveAsync(tenants, tenants.Select(tenant => SecurityEvent.ForTenantAdministration(
             SecurityEventType.OrganizationSuspended, actorId, tenant.Id, tag, nowUtc)));
@@ -42,7 +43,7 @@ public sealed class PlatformAuditOrganizationsTests(ApiFactory factory)
         Assert.Equal(10, second.GetProperty("items").GetArrayLength());
         Assert.Empty(first.GetProperty("items").EnumerateArray().Select(item => item.GetProperty("id").GetGuid())
             .Intersect(second.GetProperty("items").EnumerateArray().Select(item => item.GetProperty("id").GetGuid())));
-        var searched = await GetAsync(client, path + "&search=025");
+        var searched = await GetAsync(client, path + "&search=n025");
         Assert.Equal(tenants[^1].Id, Assert.Single(searched.GetProperty("items").EnumerateArray()).GetProperty("id").GetGuid());
         Assert.Equal(1, searched.GetProperty("totalCount").GetInt32());
         var legacy = await GetAsync(client, Path + "?period=all&search=" + tag);
