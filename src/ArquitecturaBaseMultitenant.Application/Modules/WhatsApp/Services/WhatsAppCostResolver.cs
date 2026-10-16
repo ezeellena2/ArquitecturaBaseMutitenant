@@ -9,7 +9,8 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// <summary>
 /// El costo estimado de mandar una plantilla (decisión 9 de la E11): la tarifa vigente de Meta del país de cada número y de
 /// la categoría, sumada y redondeada a los decimales de la moneda. El país que se informa es el de la mayoría; sin números
-/// (o si no se reconoce), el primero que habilita WhatsApp.
+/// (o si no se reconoce), el primero que habilita WhatsApp. Un número cuyo país no tiene tarifa, o la tiene en otra moneda,
+/// se estima con la del país habilitado: cuenta igual que en la cantidad de destinatarios y en la difusión.
 /// </summary>
 internal sealed class WhatsAppCostResolver(IWhatsAppRateReader rates, ICurrencyCatalog currencies, IWhatsAppChannelSettings settings, TimeProvider clock)
 {
@@ -24,8 +25,10 @@ internal sealed class WhatsAppCostResolver(IWhatsAppRateReader rates, ICurrencyC
             ?? throw new InvalidOperationException("The WhatsApp rate table does not cover the allowed country.");
         var total = 0m;
         foreach (var (country, count) in countries)
-            if ((country == fallback ? unit : await rates.FindAsync(country, pricing, today, ct)) is { } price && price.Currency == unit.Currency)
-                total += price.Amount * count;
+        {
+            var price = country == fallback ? unit : await rates.FindAsync(country, pricing, today, ct);
+            total += (price is not null && price.Currency == unit.Currency ? price : unit).Amount * count;
+        }
         var shown = countries.Count == 0 ? fallback
             : countries.OrderByDescending(pair => pair.Value).ThenBy(pair => pair.Key, StringComparer.Ordinal).First().Key;
         return new WhatsAppCostEstimate(await RoundAsync(new Money(total, unit.Currency), ct), shown);
