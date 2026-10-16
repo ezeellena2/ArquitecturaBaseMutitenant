@@ -103,7 +103,7 @@ Rutas abreviadas bajo `src/ArquitecturaBaseMultitenant.<Capa>/`; tests bajo `tes
 
 | Tarea / estado | Archivo y arreglo | Regla que rompe | Test o guarda |
 |---|---|---|---|
-| R06 · Pendiente | `Application/Services/Home/HomeService.cs`: `GetSummaryAsync` devuelve `Pending=[]`, como publica `HomeModels.LegacyPendingLimit=0`; el `GetAsync` interno sigue completo | `docs/rules/paginado-y-busqueda.md`: `Pending` es el adaptador vacío y las filas van en grupos acotados | Integración: con un grupo no vacío, el JSON real de `GET /api/home` trae `pending: []` y cumple el `maxItems` del contrato |
+| R06 · Hecha | `Application/Services/Home/HomeService.cs`: `GetSummaryAsync` devuelve `Pending=[]`, como publica `HomeModels.LegacyPendingLimit=0`; el `GetAsync` interno sigue completo | `docs/rules/paginado-y-busqueda.md`: `Pending` es el adaptador vacío y las filas van en grupos acotados | Integración: con un grupo no vacío, el JSON real de `GET /api/home` trae `pending: []` y cumple el `maxItems` del contrato |
 | R09 · Con B2 | `Application/Services/Roles/PermissionService.cs`: cada método público, envuelto en `OperationLog.RunAsync` con ILogger y TimeProvider, como `RoleService` | AGENTS, regla 10; `docs/rules/logs.md` | Guarda nueva en ArchitectureTests: todo método público de un `I*Service` de Application pasa por `OperationLog.RunAsync` (se lee el IL, como en `IdempotentActionsTests`), con su caso negativo |
 
 | Tarea / estado | Archivos y trabajo | Copiá de (existente) | Tests dirigidos |

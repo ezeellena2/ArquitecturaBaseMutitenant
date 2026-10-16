@@ -166,7 +166,7 @@ public sealed partial class HomeTests(ApiFactory factory)
         Assert.Equal(JsonValueKind.Null, home.GetProperty("organization").ValueKind);
         Assert.Equal(northId, Assert.Single(home.GetProperty("companies").EnumerateArray()).GetProperty("companyId").GetGuid());
         Assert.Equal([("users", "invitationExpired", northInvitee)], Pending(home));
-        var row = Assert.Single(home.GetProperty("pending").EnumerateArray());
+        var row = Assert.Single(PendingRows(home));
         Assert.Equal(northId, row.GetProperty("companyId").GetGuid());
         Assert.Equal("Delta Norte S.A.", row.GetProperty("companyName").GetString());
 
@@ -186,7 +186,7 @@ public sealed partial class HomeTests(ApiFactory factory)
 
         // Quien puede reenviar desde Usuarios (users.invite) ve las cinco como filas de la organización, sin empresa.
         var ownerHome = await OrganizationJourney.HomeAsync(ownerClient, Ct);
-        var ownerRows = ownerHome.GetProperty("pending").EnumerateArray()
+        var ownerRows = PendingRows(ownerHome)
             .Where(item => item.GetProperty("kind").GetString() == "invitationExpired").ToArray();
         Assert.Equal(new[] { northInvitee, organizationInvitee, southInvitee, withOwnerInvitee, withSouthInvitee }
                 .Order(StringComparer.Ordinal),
@@ -260,12 +260,19 @@ public sealed partial class HomeTests(ApiFactory factory)
             value => value.GetProperty("memberId").GetGuid() == memberId).GetProperty("email").GetString());
     }
 
+    /// <summary>Las filas de «Para resolver» en el orden de sus grupos; la lista plana anterior viaja vacía (R06).</summary>
     internal static (string? Area, string? Kind, string? Subject)[] Pending(JsonElement home) =>
     [
-        .. home.GetProperty("pending").EnumerateArray().Select(item => (item.GetProperty("area").GetString(),
+        .. PendingRows(home).Select(item => (item.GetProperty("area").GetString(),
             item.GetProperty("kind").GetString(),
             item.GetProperty("subject").ValueKind == JsonValueKind.Null ? null : item.GetProperty("subject").GetString())),
     ];
+
+    internal static JsonElement[] PendingRows(JsonElement home)
+    {
+        Assert.Equal(0, home.GetProperty("pending").GetArrayLength());
+        return [.. home.GetProperty("pendingGroups").EnumerateArray().SelectMany(group => group.GetProperty("items").EnumerateArray())];
+    }
 
     private HttpClient NewClient() =>
         factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });

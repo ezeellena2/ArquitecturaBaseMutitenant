@@ -68,8 +68,9 @@ internal sealed class HomeService(OrganizationHomeAreasBuilder areas, MemberHome
             if (organization is not null)
                 foreach (var source in moduleCards)
                     if (await source.GetAsync(fresh, cancellationToken) is { } card) modules.Add(card);
-            return new HomeResponse(organization, cards,
-                PendingItemOrder.Sort(ordered.SelectMany(group => group.Items)), ordered,
+            // La lista plana anterior es el adaptador vacío que publica el contrato (LegacyPendingLimit = 0):
+            // las filas viajan sólo en los grupos acotados.
+            return new HomeResponse(organization, cards, [], ordered,
                 modules.Count == 0 ? null : [.. modules.OrderBy(card => card.Key, StringComparer.Ordinal).Take(HomeResponse.ModuleCardLimit)]);
         });
 

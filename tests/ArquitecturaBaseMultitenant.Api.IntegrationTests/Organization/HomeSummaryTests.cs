@@ -1,4 +1,6 @@
 using System.Data.Common;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -81,6 +83,37 @@ public sealed class HomeSummaryTests(ApiFactory factory)
             Assert.True(result.IsSuccess);
             return (result.Value, sql.Count);
         }
+    }
+
+    [Fact]
+    public async Task With_a_pending_group_the_home_json_keeps_the_legacy_list_empty_within_its_contract()
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
+        var tenantId = await OrganizationJourney.StageAsync(factory, owner, "Inicio plano vacío", Ct);
+        await SeedAsync(tenantId, owner.UserId, 3);
+        await AccountJourney.AuthorizeAsync(client, "business", Ct, tenantId);
+
+        var home = await OrganizationJourney.HomeAsync(client, Ct);
+
+        var group = Assert.Single(home.GetProperty("pendingGroups").EnumerateArray(),
+            value => value.GetProperty("kind").GetString() == "invitationExpired");
+        Assert.Equal(3, group.GetProperty("items").GetArrayLength());
+        var pending = home.GetProperty("pending");
+        Assert.Equal(JsonValueKind.Array, pending.ValueKind);
+        Assert.Equal(0, pending.GetArrayLength());
+        // El contrato publicado acota la lista plana anterior: la respuesta real no puede pasarse.
+        var contract = Contract()["components"]!["schemas"]!["HomeResponse"]!["properties"]!["pending"]!;
+        Assert.Equal(HomeResponse.LegacyPendingLimit, contract["maxItems"]!.GetValue<int>());
+    }
+
+    private static JsonNode Contract()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "ArquitecturaBaseMultitenant.slnx")))
+            directory = directory.Parent;
+        var root = directory?.FullName ?? throw new DirectoryNotFoundException("Repository root was not found.");
+        return JsonNode.Parse(File.ReadAllText(Path.Combine(root, "docs", "contracts", "openapi.json")))!;
     }
 
     private async Task SeedAsync(Guid tenantId, Guid inviterId, int count)

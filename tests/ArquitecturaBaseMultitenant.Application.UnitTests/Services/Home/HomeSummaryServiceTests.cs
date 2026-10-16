@@ -77,7 +77,8 @@ public sealed class HomeSummaryServiceTests
             var group = Assert.Single(result.Value.PendingGroups!);
             Assert.Equal(1_000, group.TotalCount);
             Assert.Equal(10, group.Items.Count);
-            Assert.Equal(group.Items, result.Value.Pending);
+            // La lista plana anterior es el adaptador vacío del contrato (LegacyPendingLimit = 0).
+            Assert.Empty(result.Value.Pending);
         }
     }
 
