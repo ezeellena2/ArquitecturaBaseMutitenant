@@ -64,6 +64,8 @@ if (!isOpenApiExporter)
 
 app.UseForwardedHeaders();
 app.UseSecurityHeaders();
+// E9: Secure, HttpOnly, SameSite Lax como mínimo y sin Domain para toda cookie de la Api.
+app.UseCookiePolicy();
 
 SupportedCultures cultures;
 await using (var cultureScope = app.Services.CreateAsyncScope())
@@ -79,6 +81,7 @@ app.UseMiddleware<InstalledModuleRouteMiddleware>();
 
 app.UseAuthentication();
 app.UseMiddleware<TenantResolutionMiddleware>();
+app.UseMiddleware<TenantTelemetryMiddleware>();
 app.UseMiddleware<PublicSiteResolutionMiddleware>();
 // E9: las cuotas compartidas cuentan con la identidad firmada y la organización del claim ya resueltas.
 app.UseMiddleware<RateLimitMiddleware>();

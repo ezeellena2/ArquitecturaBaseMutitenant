@@ -21,6 +21,7 @@ public sealed class SecurityHeadersTests(ApiFactory factory)
 {
     [Theory]
     [InlineData("/alive", HttpStatusCode.OK)]
+    [InlineData("/api/me", HttpStatusCode.Unauthorized)]
     [InlineData("/api/no-existe", HttpStatusCode.NotFound)]
     [InlineData("/test/throw", HttpStatusCode.InternalServerError)]
     public async Task Success_and_error_responses_include_security_headers(string path, HttpStatusCode status)
@@ -37,6 +38,48 @@ public sealed class SecurityHeadersTests(ApiFactory factory)
         Assert.Contains("connect-src 'self'", policy, StringComparison.Ordinal);
         Assert.Contains("frame-ancestors 'self'", policy, StringComparison.Ordinal);
         Assert.Contains("form-action 'self' https://accounts.google.com", policy, StringComparison.Ordinal);
+        // E9: ni scripts en línea ni eval, tampoco con los módulos instalados; los estilos en línea, sólo en style-src.
+        Assert.DoesNotContain("'unsafe-eval'", policy, StringComparison.Ordinal);
+        Assert.DoesNotContain(Directive(policy, "script-src"), source =>
+            source.StartsWith("'unsafe-", StringComparison.Ordinal) || source is "*" or "data:" or "https:" or "http:");
+        Assert.Equal(["style-src"], Names(policy).Where(name => Directive(policy, name).Contains("'unsafe-inline'")));
+        Assert.Equal(["'none'"], Directive(policy, "object-src"));
+    }
+
+    [Fact]
+    public async Task A_module_adds_its_https_origins_without_opening_scripts()
+    {
+        await using var api = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+            services.AddSingleton<IContentSecurityPolicySource>(new ModuleSource("script-src", "https://cdn.example.test"))));
+        using var client = api.CreateClient();
+
+        using var response = await client.GetAsync("/alive", TestContext.Current.CancellationToken);
+
+        var policy = Assert.Single(response.Headers.GetValues("Content-Security-Policy"));
+        Assert.Contains("https://cdn.example.test", Directive(policy, "script-src"));
+        Assert.DoesNotContain(Directive(policy, "script-src"), source => source.StartsWith("'unsafe-", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData("script-src", "'unsafe-inline'")]
+    [InlineData("script-src", "'unsafe-eval'")]
+    [InlineData("script-src", "*")]
+    [InlineData("script-src", "data:")]
+    [InlineData("script-src", "http://cdn.example.test")]
+    [InlineData("connect-src", "https:")]
+    [InlineData("style-src", "https://cdn.example.test")]
+    [InlineData("frame-ancestors", "https://cdn.example.test")]
+    public void A_module_cannot_widen_the_policy_beyond_https_origins(string directive, string source)
+    {
+        using var api = factory.WithWebHostBuilder(builder => builder.ConfigureServices(services =>
+            services.AddSingleton<IContentSecurityPolicySource>(new ModuleSource(directive, source))));
+
+        var exception = Assert.ThrowsAny<Exception>(() => api.CreateClient());
+
+        for (; exception.InnerException is not null && exception is not InvalidOperationException;)
+            exception = exception.InnerException;
+        Assert.IsType<InvalidOperationException>(exception);
+        Assert.Contains("CSP", exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -48,7 +91,7 @@ public sealed class SecurityHeadersTests(ApiFactory factory)
         using var response = await client.GetAsync("/connect/authorize", TestContext.Current.CancellationToken);
         var policy = Assert.Single(response.Headers.GetValues("Content-Security-Policy"));
         Assert.Contains("frame-ancestors 'self' https://*.example.test:8443;", policy, StringComparison.Ordinal);
-        Assert.Contains("frame-src 'self';", policy, StringComparison.Ordinal);
+        Assert.DoesNotContain(Directive(policy, "frame-src"), source => source.Contains("example.test", StringComparison.Ordinal));
         Assert.DoesNotContain("other.test", policy, StringComparison.Ordinal);
         Assert.DoesNotContain("http://", policy, StringComparison.Ordinal);
     }
@@ -69,10 +112,9 @@ public sealed class SecurityHeadersTests(ApiFactory factory)
         using var client = CreateClient(api, origin);
         using var response = await client.GetAsync("/", TestContext.Current.CancellationToken);
         var policy = Assert.Single(response.Headers.GetValues("Content-Security-Policy"));
-        Assert.Equal(allowed, policy.Contains("frame-src 'self' https://localhost:5174;", StringComparison.Ordinal));
-        Assert.Contains("frame-ancestors 'self';", policy, StringComparison.Ordinal);
-        Assert.Contains("connect-src 'self';", policy, StringComparison.Ordinal);
-        Assert.DoesNotContain("https://*.", policy, StringComparison.Ordinal);
+        Assert.Equal(allowed, Directive(policy, "frame-src").Contains("https://localhost:5174"));
+        Assert.Equal(["'self'"], Directive(policy, "frame-ancestors"));
+        Assert.DoesNotContain("https://localhost:5174", Directive(policy, "connect-src"));
     }
 
     [Theory]
@@ -87,8 +129,8 @@ public sealed class SecurityHeadersTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("text/html", response.Content.Headers.ContentType?.MediaType);
         var policy = Assert.Single(response.Headers.GetValues("Content-Security-Policy"));
-        Assert.Contains("frame-src 'self' https://localhost:5174;", policy, StringComparison.Ordinal);
-        Assert.Contains("frame-ancestors 'self';", policy, StringComparison.Ordinal);
+        Assert.Contains("https://localhost:5174", Directive(policy, "frame-src"));
+        Assert.Equal(["'self'"], Directive(policy, "frame-ancestors"));
     }
 
     [Theory]
@@ -106,10 +148,8 @@ public sealed class SecurityHeadersTests(ApiFactory factory)
         using var client = CreateClient(api, "https://empresa.localhost:5174");
         using var response = await client.GetAsync(path, TestContext.Current.CancellationToken);
         var policy = Assert.Single(response.Headers.GetValues("Content-Security-Policy"));
-        Assert.Contains("frame-src 'self';", policy, StringComparison.Ordinal);
-        Assert.Contains("frame-ancestors 'self';", policy, StringComparison.Ordinal);
+        Assert.Equal(["'self'"], Directive(policy, "frame-ancestors"));
         Assert.DoesNotContain("https://localhost:5174", policy, StringComparison.Ordinal);
-        Assert.DoesNotContain("https://*.", policy, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -123,8 +163,8 @@ public sealed class SecurityHeadersTests(ApiFactory factory)
         });
         using var client = CreateClient(api, "https://empresa.example.test");
         using var document = await client.GetAsync("/", TestContext.Current.CancellationToken);
-        Assert.Contains("frame-src 'self' https://example.test;",
-            Assert.Single(document.Headers.GetValues("Content-Security-Policy")), StringComparison.Ordinal);
+        Assert.Contains("https://example.test",
+            Directive(Assert.Single(document.Headers.GetValues("Content-Security-Policy")), "frame-src"));
         using var authorize = await client.GetAsync("https://example.test/connect/authorize", TestContext.Current.CancellationToken);
         var policy = Assert.Single(authorize.Headers.GetValues("Content-Security-Policy"));
         Assert.Contains("frame-ancestors 'self' https://*.example.test;", policy, StringComparison.Ordinal);
@@ -221,6 +261,21 @@ public sealed class SecurityHeadersTests(ApiFactory factory)
             builder.ConfigureServices(services =>
                 services.AddSingleton<IStartupFilter>(new RemoteIpStartupFilter(IPAddress.Parse(remoteIpAddress))));
         });
+
+    private static string[] Names(string policy) =>
+        [.. policy.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .Select(part => part.Split(' ')[0])];
+
+    private static string[] Directive(string policy, string name) =>
+        policy.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+            .Select(part => part.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            .Single(part => part[0] == name)[1..];
+
+    private sealed class ModuleSource(string directive, string source) : IContentSecurityPolicySource
+    {
+        public IReadOnlyDictionary<string, IReadOnlyList<string>> Sources { get; } =
+            new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal) { [directive] = [source] };
+    }
 
     private static HttpClient CreateClient(WebApplicationFactory<Program> api, string baseAddress) =>
         api.CreateClient(new WebApplicationFactoryClientOptions

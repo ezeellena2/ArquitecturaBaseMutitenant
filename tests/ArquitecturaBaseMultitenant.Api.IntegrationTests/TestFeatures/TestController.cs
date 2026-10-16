@@ -50,6 +50,17 @@ public sealed class TestController : ControllerBase
     public IActionResult Validation() => Result.Failure(new ValidationError(
         new Dictionary<string, string[]> { ["email"] = ["Ingresá un correo válido."] })).ToActionResult(this);
 
+    /// <summary>Una cookie escrita con los atributos más laxos: la política única de la Api la corrige (E9).</summary>
+    [HttpGet("cookie")]
+    public IActionResult Cookie()
+    {
+        Response.Cookies.Append("MtTestCookie", "1", new CookieOptions
+        {
+            Domain = "localhost", SameSite = SameSiteMode.None, Secure = false, HttpOnly = false,
+        });
+        return NoContent();
+    }
+
     [HttpGet("login-code-rate-limit")]
     [RateLimit(RateLimitProfile.LoginCode)]
     public IActionResult LoginCodeRateLimit() => NoContent();

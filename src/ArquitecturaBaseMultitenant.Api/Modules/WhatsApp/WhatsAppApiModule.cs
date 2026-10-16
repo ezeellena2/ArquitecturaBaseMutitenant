@@ -17,6 +17,8 @@ public static class WhatsAppApiModule
         services.AddSingleton<ArquitecturaBaseMultitenant.Api.OpenApi.IHttpContractContributor, WhatsAppContractContributor>();
         services.AddSingleton<ArquitecturaBaseMultitenant.Api.OpenApi.IHttpContractContributor, WhatsAppAttentionContractContributor>();
         services.AddSingleton<IInstalledModuleRouteAvailability>(new RouteAvailability(ManagementRoute, true));
+        // E9: el SDK y los marcos de Meta para el alta embebida entran a la CSP sólo con el módulo.
+        services.AddSingleton<ArquitecturaBaseMultitenant.Api.Hosting.IContentSecurityPolicySource, Hosting.MetaContentSecurityPolicySource>();
         return services;
     }
 

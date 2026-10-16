@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.Features;
+using ArquitecturaBaseMultitenant.Api.Hosting;
 using Microsoft.FeatureManagement.Mvc;
 using ArquitecturaBaseMultitenant.Api.Authorization;
 using ArquitecturaBaseMultitenant.Api.Authentication;
@@ -25,6 +26,7 @@ public static class DependencyInjection
         ArgumentNullException.ThrowIfNull(services);
 
         services.AddHttpContextAccessor();
+        services.AddHostOnlyCookiePolicy();
         services.AddAuthorization();
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
