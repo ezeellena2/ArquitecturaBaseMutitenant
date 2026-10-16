@@ -84,7 +84,8 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   ├── Configuration/
 │   │   │   ├── Auth/
 │   │   │   ├── Invitations/
-│   │   │   └── Messaging/
+│   │   │   ├── Messaging/
+│   │   │   └── Security/  cuotas de arranque, vidas de sesión, idempotencia y bajas (E9)
 │   │   ├── Interfaces/
 │   │   │   ├── Integrations/
 │   │   │   │   ├── Caching/
