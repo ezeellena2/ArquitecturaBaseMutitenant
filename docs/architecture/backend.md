@@ -11,7 +11,7 @@ Panorama de la plantilla B2B + B2C. Una persona tiene una cuenta y elige Persona
 | Datos | PostgreSQL 18 + EF Core 10 (Npgsql). Una base, esquemas `platform`, `identity`, `tenant`, `public_site` y `engagement` |
 | Identidad | ASP.NET Core Identity (solo usuarios, sin roles de Identity) + OpenIddict 7 (servidor y validación en la misma Api) |
 | Validación | FluentValidation 12 |
-| Caché | `HybridCache`: en memoria hasta la Etapa 9; desde ahí, Redis como caché compartida entre instancias |
+| Caché | Redis como única caché compartida entre instancias, detrás de `HybridCache` sin copia local y con generaciones durables (Etapa 9, [ADR 0052](../decisions/0052-cache-compartida-redis.md)) |
 | Orquestación local | Aspire 13.5 (AppHost + ServiceDefaults) |
 | Observabilidad | `Microsoft.Extensions.Logging` + OpenTelemetry (sin Serilog) |
 | Tests | xUnit v3, Testcontainers (`postgres:18.x`), NetArchTest + Mono.Cecil, `FakeTimeProvider`, dobles a mano (sin Moq ni FluentAssertions) |
@@ -124,7 +124,7 @@ AppHost orquesta el entorno; ServiceDefaults reúne observabilidad y health.
 | Capa | Punto de entrada | Qué registra |
 |---|---|---|
 | Application | `AddApplication()` | Un `<Área>Registration.cs` por área en `Services/<Área>/`, con sus options (`BindConfiguration + ValidateDataAnnotations + ValidateOnStart`) y cada servicio y helper con `AddScoped`, uno por uno y una sola vez; validadores (`AddValidatorsFromAssembly(includeInternalTypes: true)`), `IRequestValidator` y `ReferenceDataService` (los puertos viven aquí, los implementa Infrastructure) |
-| Infrastructure | `AddInfrastructure(cfg, env)` | `JsonReferenceDataCatalog` para los cinco puertos y `TryAddSingleton(TimeProvider.System)`, sin base. `ReferenceDataReader`/HybridCache y `ReferenceDataSeeder` reemplazan el adaptador JSON; se agregan `TenantContext` (scoped, un registro para `ITenantContext` y otro para `ITenantScope`), interceptores (en orden: TenantStamp → SoftDelete → Auditable → AuditTrail; más TenantConnection), `AddDbContext`, `IUnitOfWork`, repositorios, readers y los subregistros `AddIdentityServices`, `AddOpenIddictServer`, `AddMessaging`, `AddCaching`. Los módulos se registran aparte, con su `AddWhatsAppModule()` en cada capa, llamado desde `Program.cs` |
+| Infrastructure | `AddInfrastructure(cfg, env)` | `JsonReferenceDataCatalog` para los cinco puertos y `TryAddSingleton(TimeProvider.System)`, sin base. `ReferenceDataReader`/HybridCache y `ReferenceDataSeeder` reemplazan el adaptador JSON; se agregan `TenantContext` (scoped, un registro para `ITenantContext` y otro para `ITenantScope`), interceptores (en orden: TenantStamp → SoftDelete → Auditable → AuditTrail → CacheTagCollector; más TenantConnection y, en la transacción, CacheGenerationInterceptor), `AddDbContext`, `IUnitOfWork`, repositorios, readers y los subregistros `AddIdentityServices`, `AddOpenIddictServer`, `AddMessaging`, `AddCaching` (Redis desde `ConnectionStrings:cache`, salvo en el exportador OpenAPI). Los módulos se registran aparte, con su `AddWhatsAppModule()` en cada capa, llamado desde `Program.cs` |
 | Api | `AddPresentation()` | ProblemDetails, `GlobalExceptionHandler`, autorización (policy provider y handlers), localización, rate limiting, OpenAPI, `AddControllers` con un solo `ConfigureJson` |
 
 - Sin Scrutor y sin registrar por reflexión.
@@ -217,7 +217,7 @@ Antes del pipeline, `Program.cs` prepara la base: en Development, el bootstrap (
   - por IP: `login-code`, `login-verify`, `invitation-accept` y `whatsapp-webhook`;
   - por organización: `tenant-api`, una ventana deslizante sobre `/api`.
   - Un 429 sale como ProblemDetails con `retryAfter` en segundos; `shared/api/httpClient` del front lo convierte en `ApiError.retryAfterSeconds` para la cuenta regresiva del botón.
-- **Caché:** HybridCache con claves de `CacheKeys`, siempre con prefijo: `t:{tenantId}:` (privado), `s:{businessTenantId}:` (página pública; se invalida al publicar), `u:{userId}:` (identidad y accesos) o `p:` (plataforma). Un test verifica que ninguna clave se arme sin prefijo.
+- **Caché:** Redis es la única caché ([ficha](../rules/cache.md), [ADR 0052](../decisions/0052-cache-compartida-redis.md)). Toda lectura pasa por `SharedCache` desde una caché del inventario cerrado; la clave lógica sale de `CacheKeys` con su alcance (`t:{tenantId}:` privado, `s:{businessTenantId}:` página pública, `u:{userId}:` identidad y accesos, `p:` plataforma) y la física lleva la aplicación, el ambiente, la versión del esquema y las generaciones de sus etiquetas. El commit que cambia los datos avanza esas generaciones (`CacheGenerationInterceptor`) y después las invalida; nadie invalida a mano. Sin Redis, la lectura va a PostgreSQL y `/health` falla; `/alive`, no.
 
 ## 18. Representación y formato de datos (unificado)
 

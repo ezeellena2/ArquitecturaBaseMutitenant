@@ -44,7 +44,7 @@ Las asignaciones individuales de Plataforma también deben conservar al menos un
 
 Aplicá esa normalización también en la base vacía: la historia pudo agregar tokens antes del Drop. Comprobá approve/retry real y provisión núcleo en la base propia, además de IDs/asignaciones/custom intactos. El rollback estructural no reconstruye permisos previos arbitrarios; una compensación debe estar definida y revisada para el corte, sin editar una histórica.
 
-La caché role-permissions:v2 y su prueba neutral permanecen. Migrá antes de aceptar tráfico, reiniciá instancias e invalidá/vaciá las entradas activas del catálogo anterior; SQL no invalida L1. No resucites el namespace legacy.
+La caché de permisos por persona y su prueba neutral (`RolePermissionCacheIsolationTests`) permanecen. Migrá antes de aceptar tráfico; como la migración es SQL, avanza la generación `t:<organización>:roles` de cada organización que toca, y así ninguna instancia sirve el catálogo anterior ([cache](../rules/cache.md)).
 
 ## Núcleo y verificación
 

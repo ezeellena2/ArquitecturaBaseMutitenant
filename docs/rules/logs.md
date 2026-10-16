@@ -1,9 +1,9 @@
 # Logs
 
-**Regla:** se loguea solo con `[LoggerMessage]`. Cada método público de un servicio va envuelto en `OperationLog.RunAsync`. Nunca se registra un secreto ni un dato personal completo.
+**Regla:** se loguea solo con `[LoggerMessage]`. Cada método público de un servicio va envuelto en `OperationLog.RunAsync` (o `RunValueAsync`, si su contrato devuelve un valor sin `Result`). Nunca se registra un secreto ni un dato personal completo.
 
 ## Cómo se hace
-- **En un servicio:** `OperationLog.RunAsync(logger, timeProvider, "UpdateRole", async () => { … })`. Registra el inicio, la duración al terminar y el código de error si falla. La cancelación se propaga sin registrar el evento de error 103. Es una línea por método; `TimeProvider` se inyecta.
+- **En un servicio:** `OperationLog.RunAsync(logger, timeProvider, "UpdateRole", async () => { … })`. Registra el inicio, la duración al terminar y el código de error si falla. La cancelación se propaga sin registrar el evento de error 103. Es una línea por método; `TimeProvider` se inyecta. Un contrato que devuelve un valor sin `Result`, como `IPermissionService`, usa `OperationLog.RunValueAsync`: registra lo mismo sin volcar el valor. Un método público que delega en uno privado del mismo servicio cuenta si el privado corre en `OperationLog`.
 - **Un log propio:** `[LoggerMessage(Level = …, Message = "…")] private static partial void LogX(ILogger logger, …);` en una clase `partial`.
 - Mensajes en inglés, con parámetros estructurados (`{RoleId}`), no concatenados.
 - Correos y teléfonos, siempre con `PersonalDataMask` (`Application/Common/Text`): el correo con dos letras y el dominio (`lu•••@gmail.com`), y el teléfono con sus últimos cuatro dígitos (`•••• 6789`). Es el mismo formato de las pantallas, los avisos y la auditoría.
@@ -21,7 +21,7 @@
 - `Application/Common/Logging/OperationLog.cs` (E1)
 
 ## Lo verifica
-- `CA1848` (E0), `SensitiveToStringLoggingTests` (E1), `ControllerInputContractTests` (E1), `PeriodicWorkerArchitectureTests` (C7: todo worker concreto usa el bucle de `PeriodicWorker`)
+- `CA1848` (E0), `SensitiveToStringLoggingTests` (E1), `ControllerInputContractTests` (E1), `PeriodicWorkerArchitectureTests` (C7: todo worker concreto usa el bucle de `PeriodicWorker`), `OperationLogTests` (E9: todo método de un `I*Service` de Application corre en `OperationLog`; lee el IL)
 
 ## Detalle
 [backend.md §17](../architecture/backend.md#17-logging-openapi-health-rate-limiting-caché)

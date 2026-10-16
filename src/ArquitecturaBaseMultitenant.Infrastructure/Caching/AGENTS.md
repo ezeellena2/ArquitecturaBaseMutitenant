@@ -1,3 +1,3 @@
 Adaptadores técnicos de caché.
-Leé [docs/rules/multitenancy.md](../../../docs/rules/multitenancy.md).
-Copiá de [HybridCacheExtensions.cs](HybridCacheExtensions.cs).
+Leé [docs/rules/cache.md](../../../docs/rules/cache.md).
+Copiá de [TenantStatusCache.cs](TenantStatusCache.cs).

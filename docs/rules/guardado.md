@@ -6,7 +6,7 @@
 1. **Afuera y antes:** `await validator.ValidateAsync(request, ct)`. Si falla, se devuelve el `ValidationError` sin abrir el límite.
 2. **Un límite:** `unitOfWork.ExecuteInTransactionAsync(ct => UpdateCoreAsync(request, ct), CommitPolicy.OnSuccess, ct)`.
 3. **Adentro**, en este orden: locks → lecturas → reglas (que devuelven `Error`) → escrituras.
-4. **Afuera y después del commit:** invalidar el caché. Todo el método va dentro de `OperationLog.RunAsync`.
+4. **El caché no se toca:** el mismo commit avanza las generaciones de lo que cambió y después las invalida en Redis ([cache](cache.md)). Todo el método va dentro de `OperationLog.RunAsync`.
 - `CommitPolicy.OnAnyResult` solo cuando también hay que guardar si falla: intentos, códigos consumidos, auditoría de seguridad.
 - Los locks usan `AdvisoryLockKeys.For(tenantId, recurso, id)` o `FOR NO KEY UPDATE`, y exigen la transacción del caso de uso.
 - Si hace falta una lectura para localizar el lock, se obtiene una proyección o un hint sin tracking y se relee la entidad después de adquirirlo. Repetir una consulta tracked no refresca la instancia que EF ya conserva: las reglas y escrituras no pueden usar ese estado previo al lock.
@@ -18,9 +18,7 @@ public Task<Result> UpdateAsync(UpdateRoleRequest request, CancellationToken ct)
     OperationLog.RunAsync(logger, "UpdateRole", async () =>
     {
         if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
-        var result = await unitOfWork.ExecuteInTransactionAsync(c => UpdateCoreAsync(request, c), CommitPolicy.OnSuccess, ct);
-        if (result.IsSuccess) await permissions.InvalidateRoleAsync(request.Id, ct);
-        return result;
+        return await unitOfWork.ExecuteInTransactionAsync(c => UpdateCoreAsync(request, c), CommitPolicy.OnSuccess, ct);
     });
 ```
 

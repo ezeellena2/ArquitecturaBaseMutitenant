@@ -46,6 +46,14 @@ Los permisos efectivos se obtienen con lecturas agrupadas. `HasPermissionAsync` 
 
 Los contadores de límites de pedidos usan el mismo Redis, con prefijo y expiración propios; son admisiones atómicas, no entradas HybridCache ni una fuente de autorización. Su contrato y comportamiento de degradación están en el [plan de E9](../plans/2026-10-16-etapa-9-endurecimiento.md).
 
+### Ajustes al implementarla (E9, B2, 2026-10-16)
+
+Los aprobó el Coordinador de la E9 como decisiones técnicas; la ficha [cache](../rules/cache.md) tiene el inventario vigente.
+
+- **Una sola entrada de permisos por persona.** Los «permisos por rol» ya no son una entrada aparte: la proyección por persona lee en consultas agrupadas sus roles y los permisos de esos roles, en dos entradas, `t:…:permissions:<persona>:organization` y `t:…:permissions:<persona>:companies`. La clase conserva el nombre `RolePermissionCache` porque las guardas y las guías la citan.
+- **La identidad de la base en cada clave.** La migración de `platform."CacheTagVersions"` fija una etiqueta `p:database` con un número al azar que nada avanza, y sus generaciones encabezan las de toda clave. Así una base nueva o recreada nunca lee entradas que otra dejó en el mismo Redis, aunque sus etiquetas estén en la generación 0.
+- **El avance lo hace un interceptor**, no cada escritor: `CacheTagCollector` junta las etiquetas en cada guardado y `CacheGenerationInterceptor` las avanza antes del commit de esa misma transacción e invalida después. Un cambio por SQL, como una migración de datos, avanza a mano las generaciones de lo que toca.
+
 ## Alternativas descartadas
 
 - L1 corta o pub/sub: dejan una ventana de permisos revocados y pierden mensajes durante desconexiones.
