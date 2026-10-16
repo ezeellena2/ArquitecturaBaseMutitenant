@@ -75,6 +75,7 @@ public sealed class WhatsAppTemplateManagementTests(ApiFactory factory)
         var list = await JsonAsync(await owner.GetAsync("/api/organization/whatsapp/templates?status=Approved", Ct));
         Assert.Equal(1, list.GetProperty("approved").GetInt32());
         Assert.Equal(id, Assert.Single(list.GetProperty("templates").GetProperty("items").EnumerateArray()).GetProperty("id").GetGuid());
+        await AssertCatalogCulturesAsync(owner, list);
 
         await TemplateWebhookAsync(owner, wabaId, "message_template_status_update", new { @event = "REJECTED", message_template_id = 7_000_001L,
             message_template_name = "promo_de_otono", message_template_language = "es_AR", reason = "INVALID_FORMAT" });
@@ -114,6 +115,18 @@ public sealed class WhatsAppTemplateManagementTests(ApiFactory factory)
         name, category = "Marketing", language = "es-AR", body = "Hola {{1}}, esta semana tenés {{2}} de descuento.",
         variables = new[] { new { label = "nombre", example = "Ana" }, new { label = "oferta", example = "20%" } },
     };
+
+    /// <summary>CC24: toda cultura de una plantilla, del sistema o propia, es una del catálogo que lee el front.</summary>
+    internal static async Task AssertCatalogCulturesAsync(HttpClient client, JsonElement list)
+    {
+        var catalog = (await JsonAsync(await client.GetAsync("/api/reference-data/cultures", Ct))).EnumerateArray()
+            .Select(culture => culture.GetProperty("code").GetString()).ToHashSet(StringComparer.Ordinal);
+        var used = list.GetProperty("templates").GetProperty("items").EnumerateArray()
+            .SelectMany(template => template.GetProperty("languages").EnumerateArray())
+            .Select(language => language.GetProperty("culture").GetString()).ToArray();
+        Assert.NotEmpty(used);
+        Assert.All(used, culture => Assert.Contains(culture, catalog));
+    }
 
     internal static IEnumerable<(string?, string?)> Languages(JsonElement template) => template.GetProperty("languages").EnumerateArray()
         .Select(value => (value.GetProperty("culture").GetString(), value.GetProperty("category").GetString()));
@@ -189,7 +202,10 @@ public sealed class PlatformWhatsAppTemplateManagementTests(ApiFactory factory) 
         Assert.Equal("Approved", code.GetProperty("status").GetString());
         Assert.Equal("Código de ingreso", code.GetProperty("title").GetString());
         var invitation = items.Single(item => item.GetProperty("name").GetString() == "invitacion_organizacion");
-        Assert.Equal([("es", "Marketing"), ("en", "Utility")], WhatsAppTemplateManagementTests.Languages(invitation));
+        // A Meta le van es y en; la respuesta trae la cultura del catálogo de cada idioma (CC24).
+        Assert.Equal([("es-AR", "Marketing"), ("en-US", "Utility")], WhatsAppTemplateManagementTests.Languages(invitation));
+        await WhatsAppTemplateManagementTests.AssertCatalogCulturesAsync(client, system);
+        await WhatsAppTemplateManagementTests.AssertCatalogCulturesAsync(client, consultations);
         Assert.Equal(("Pending", "Marketing"), (invitation.GetProperty("status").GetString(), invitation.GetProperty("category").GetString()));
         Assert.Equal(3, invitation.GetProperty("variables").GetArrayLength());
         Assert.Equal(1, system.GetProperty("approved").GetInt32());
