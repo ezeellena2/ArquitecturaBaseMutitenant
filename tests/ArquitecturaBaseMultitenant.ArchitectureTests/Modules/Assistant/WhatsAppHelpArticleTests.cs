@@ -1,10 +1,11 @@
 using System.Text.Json;
 
-namespace ArquitecturaBaseMultitenant.ArchitectureTests.Modules.WhatsApp;
+namespace ArquitecturaBaseMultitenant.ArchitectureTests.Modules.Assistant;
 
 /// <summary>
 /// D25 de la ADR 0048 para WhatsApp (decisión 14 de la E11): cada área del front con pantallas del módulo tiene su artículo
-/// de ayuda en español y en inglés. Una pantalla nueva de WhatsApp sin su artículo rompe esta prueba.
+/// de ayuda en español y en inglés. Una pantalla nueva de WhatsApp sin su artículo rompe esta prueba. Vive con la ayuda del
+/// asistente porque necesita los dos módulos: sale al quitar el asistente, y la guía de WhatsApp la retira con sus artículos.
 /// </summary>
 public sealed class WhatsAppHelpArticleTests
 {
