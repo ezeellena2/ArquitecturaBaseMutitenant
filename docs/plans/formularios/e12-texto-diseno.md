@@ -76,7 +76,7 @@ Te paso los tableros de una etapa nueva para el lienzo del multitenant. No hay q
 8. **`FRM-Ficha` › Publicación (`FRM-Publicacion`):**
    - la versión activa y la vista previa oficial de Meta;
    - estados: Publicando, Sin confirmar, Publicado · v3 y No se pudo publicar (con el motivo por pregunta).
-9. **`WA-Chats-Formulario`:** en un chat de Internos, el botón «Formulario» al lado de donde se escribe abre el diálogo para elegir el formulario, el texto del mensaje (hasta 1024 caracteres) y cómo le va a llegar. El botón aparece apagado, con su motivo en ⓘ, cuando:
+9. **`WA-Chats-Formulario` y `M-WA-Chats-Formulario`:** en Internos, el escritorio tiene el botón «Formulario» al lado de donde se escribe; el teléfono, «Mandar formulario» en el ⋮ del chat. Abren el diálogo para elegir el formulario, el texto del mensaje (hasta 1024 caracteres) y cómo le va a llegar. Si no aplica al acceso, bandeja o permiso, la acción no va. Si hay un impedimento resoluble, queda apagada: en escritorio se explica con el ⓘ; en el menú del teléfono, con el motivo debajo de la opción, en gris (regla del 2026-10-13). Ejemplos:
    - la ventana de 24 horas está cerrada;
    - la persona no es empleada;
    - no hay formularios para esa persona;

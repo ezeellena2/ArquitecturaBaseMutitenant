@@ -296,14 +296,15 @@ Todas las rutas Business llevan `[Access(Access.Business)]` y `[FeatureGate("for
    - **Si se cae a mitad:** la reserva vuelve a tomar el trabajo, y el canal, al ver un `InFlight`, verifica en vez de repetir.
 5. **Vista previa:** `IStructuredFormChannel.GetPreviewAsync(versionId, culture)` devuelve la URL de Meta con su vencimiento, sin guardar nada.
 6. **Mandar desde el chat** (módulo WhatsApp).
-   - **Cuándo aparece el botón:**
+   - **Ubicación:** en escritorio, el botón «Formulario» junto al compositor; en el teléfono, la opción «Mandar formulario» en el ⋮ del chat. Ambos abren el mismo diálogo. Si la acción no aplica al acceso, bandeja o permiso, no se muestra.
+   - **Cuándo se puede usar:**
      - el chat es de la bandeja Internos y quien escribe es miembro activo **[E11]**;
      - el operador tiene «Atender internos»;
      - la ventana de 24 horas está abierta;
      - el número está disponible;
      - no hay otro envío pendiente;
      - `IStructuredFormSource.ListSendableAsync(recipientUserId, culture)` devuelve al menos un formulario. Forms filtra los publicados que quien recibe puede responder (`formrecords.create`).
-   - **Si el botón no se puede usar:** se ve apagado, con el motivo en un ⓘ.
+   - **Si no se puede usar por un impedimento resoluble:** queda apagado. En escritorio, el motivo se abre desde el ⓘ junto al botón; en el ⋮ del teléfono, va debajo de «Mandar formulario», en gris, según la decisión del 2026-10-13 de `docs/rules/pantallas-y-ui.md` del front.
    - **Mandar:**
      - afuera de la UoW se valida el texto (≤1024) y se lee el formulario elegido con `FindSendableAsync`;
      - en la UoW: bloqueo de la conversación, se revalidan ventana, empleado y envío pendiente, se toma el chat si no estaba tomado (regla de la E11), se crea la sesión (token aleatorio de 32 bytes; se guarda solo el hash) y se encola el mensaje interactivo de tipo Flow por el outbox (`WhatsAppOutboundMessage` con su variante nueva).
@@ -439,7 +440,7 @@ Los tableros nuevos llevan el prefijo `FRM-`, como `WA-` en WhatsApp, para no co
 | `FRM-Prefijo` | el prefijo en la ficha | propuesto, editado, tomado, bloqueado |
 | `FRM-Publicar` | diálogo de comprobación: problemas por pregunta, versión nueva y cambios | sin problemas, con problemas, borrador sin guardar, otra publicación en curso, WhatsApp no disponible |
 | `FRM-Publicacion` | el estado en la pestaña Publicación | Publicando, Sin confirmar, Publicada vN, No se pudo publicar (con el motivo por pregunta) |
-| `WA-Chats-Formulario` y `M-WA-Chats-Formulario` | en un chat de Internos, «Mandar formulario»: elegir, texto (≤1024) y vista del mensaje | botón apagado con su motivo (ventana cerrada, no es empleado, sin formularios, envío pendiente), mandando, encolado, falló |
+| `WA-Chats-Formulario` y `M-WA-Chats-Formulario` | en Internos: botón «Formulario» junto al compositor en escritorio y «Mandar formulario» en el ⋮ del teléfono; diálogo para elegir, texto (≤1024) y vista del mensaje | apagado por un impedimento resoluble (ventana cerrada, no es empleado, sin formularios, envío pendiente): motivo en ⓘ en escritorio y debajo de la opción, en gris, en teléfono; mandando, encolado, falló |
 | `WA-Chats-Respuesta` y `M-WA-Conversacion-Respuesta` | la tarjeta de respuesta en el chat | esperando, recibida con número y valores, recibida solo con número (sin permiso), rechazada, vencida; los seis tipos sin perder «No», «0», «Sin respuesta» ni los decimales |
 | `Rol` | el área «Formularios» con sus cinco permisos | ya existe: solo suma filas |
 
