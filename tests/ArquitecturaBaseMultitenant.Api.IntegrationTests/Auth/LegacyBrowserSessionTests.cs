@@ -39,6 +39,8 @@ public sealed class LegacyBrowserSessionTests(ApiFactory factory) : IDisposable
         using var browser = Client();
         using (var signedIn = await LoginAsync(browser, operatorAccount.Email.Value, "platform"))
             Assert.Equal(HttpStatusCode.OK, signedIn.StatusCode);
+        // E9: la sesión de Plataforma nace al completar el segundo factor.
+        await PlatformFactorJourney.CompleteAsync(host.Services, browser, operatorAccount.UserId, Ct);
         var legacyCookie = await OldPublicCookieAsync(operatorAccount.UserId);
         using var request = new HttpRequestMessage(HttpMethod.Get, AuthorizePath(access));
         request.Headers.Add("Cookie", legacyCookie);
