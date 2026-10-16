@@ -74,7 +74,6 @@ El [panorama vigente](architecture/backend.md) describe la arquitectura; los pen
 - **47.** La única forma permitida de llenar HybridCache pierde el tenant
 - **48.** Una carrera con ReleaseAsync convierte un reintento legítimo en 500
 - **49.** Búsqueda y cursor van como constantes SQL: un plan y una compilación de EF por cada término o cursor
-- **50.** El seed invalida un HybridCache propio, no el de la aplicación; el test de invalidación es un falso verde
 - **51.** Enter borra TenantKind: dentro de un alcance técnico no se pueden crear datos públicos ni compartidos
 - **52.** Enter no detecta una conexión ya abierta, y la GUC de sesión queda desfasada
 - **53.** Ningún test asegura que cada zona habilitada del catálogo (IANA 2026d) exista en el runtime
