@@ -18,7 +18,7 @@
 | Tests del front | da12ec90; después solo lo tocado | 3204 más 2 que se pasaron de tiempo y pasan solos; arreglos: 192/192 y módulo WhatsApp 281/281 |
 | E2E real | front a0fa9fa3 y back 85e0a2c2 | 36/38; el caso 6 era el script (1056c3e2): 4/4 |
 | Documentación | front c1d54f9f y back 013900ec | 0/0/0 en los dos repos |
-| Galería | c1d54f9f | 150 pantallas al lado de su tablero; 33 pendientes con su motivo (`docs/design/capturas/etapa-11/` del front) |
+| Galería | 5a656e0b | 156 pantallas al lado de su tablero de la v124; 27 pendientes con su motivo (`docs/design/capturas/etapa-11/` del front) |
 | Recorrido de usuario | f1e66026 | 182/182 |
 | Quitar el módulo | back affe0a2a y front f1e66026 | en verde, con base vacía y migrada; guía corregida (3bf879db, d9c94b89); Google, a mano |
 | Meta real (I3), número de prueba como número de Plataforma | main | Recibir, bot y menú, tomar, responder, nota que no sale, y plantilla creada y aprobada por Meta con su aviso: en verde. Falta mandar la plantilla con la ventana cerrada |
