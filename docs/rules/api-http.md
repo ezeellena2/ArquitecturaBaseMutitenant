@@ -27,6 +27,7 @@
 - **Después de cambiar un contrato:** regenerar `docs/contracts/openapi.json` (lo hace el build) y avisar al front (`npm run contracts`).
 - El esquema de `application/problem+json` declara `code` y `traceId` obligatorios, y `errors` (campo → mensajes) y `retryAfter` (segundos) opcionales; es la misma forma que devuelve el mapper HTTP.
 - Un rechazo de una cuota responde 429 con ProblemDetails (`Security.RateLimit.Exceeded`, `traceId`, `retryAfter`) y el header `Retry-After` con los mismos segundos enteros ([cuotas](cuotas.md)). `Http.TooManyRequests` queda sólo para un 429 que arme el framework.
+- **Encabezados y cookies (E9):** toda respuesta lleva `X-Content-Type-Options`, `Referrer-Policy` y la CSP, también en 4xx y 5xx. `script-src` nunca tiene `'unsafe-inline'` ni `'unsafe-eval'`, ni siquiera con módulos. Toda cookie sale Secure, HttpOnly, SameSite Lax como mínimo y sin `Domain` ([backend.md §19](../architecture/backend.md#19-front-y-hosting)).
 - **Datos de referencia:** `GET /api/reference-data` y sus rutas por catálogo son `[AllowAnonymous]`, devuelven todas las filas traducidas a `Accept-Language` con `isEnabled` y llevan `ETag` para caché del navegador ([datos-de-referencia](datos-de-referencia.md)). Los selectores filtran las habilitadas; las filas deshabilitadas siguen disponibles para mostrar valores guardados. Sustituyen `GET /api/time-zones`.
 
 ## Prohibido
@@ -42,7 +43,7 @@
 - `Api/Controllers/Organization/RolesController.cs` y `Api/Contracts/Organization/*Role*` (E4)
 
 ## Lo verifica
-- `ControllerInputContractTests` (E1), `ControllerServiceRepositoryTests` (E0), `MinimalApiRoutesTests` (E0), `ControllerOutputContractTests` (E7), `AccessDeclarationTests` (E3)
+- `ControllerInputContractTests` (E1), `ControllerServiceRepositoryTests` (E0), `MinimalApiRoutesTests` (E0), `ControllerOutputContractTests` (E7), `AccessDeclarationTests` (E3), `SecurityHeadersTests` (E9), `BrowserSecurityTests` (E9)
 
 ## Detalle
 [backend.md §5 y §17](../architecture/backend.md#controller) · ADR 0002

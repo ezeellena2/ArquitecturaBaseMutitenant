@@ -177,7 +177,7 @@ Un ApplicationDbContext compone el núcleo y los contribuidores instalados. Los 
 - **Recuperación silenciosa en un subdominio:** `ConnectController` usa `GetActiveUserAsync` para `consumer` con `prompt=none`; una cuenta sin espacio personal recibe `login_required` sin crearlo. El ingreso interactivo conserva el alta, y Business mantiene `SelectAccessAsync` para recordar la organización al cambiar de perfil en silencio. La CSP amplía sólo `frame-ancestors` de `/connect/authorize` y `frame-src` del HTML de un subdominio con el esquema y puerto del issuer; las demás directivas y respuestas no cambian. `SubdomainTests` recorre PKCE, issuer y claims, token/userinfo/refresh/revocación del propio origen, salida con y sin cliente/hint y límites de publicación; `SecurityHeadersTests` fija la apertura limitada.
 - Duraciones: código 5 min, access token 15 min, refresh 30 días con rotación. `EnableTokenEntryValidation` permite la revocación inmediata.
 - **Claims** (`OpenIdPrincipalFactory`): `sub`, `name`, `email`, `access` (`consumer` | `business` | `platform`) y el tenant del acceso activo: `tenant_id` y `tenant_kind` (`personal` | `business`). `access`, `tenant_id` y `tenant_kind` viajan tanto en el access token como en el id token firmado: el SPA lee este último para elegir la ruta del acceso activo. **Ni los permisos ni los roles viajan en el token**: se consultan en vivo, con caché.
-- Cookies de Identity solo para `/account` y `/connect` (HttpOnly, Secure, SameSite Lax). La Api usa bearer.
+- Cookies de Identity solo para `/account` y `/connect` (HttpOnly, Secure, SameSite Lax). La Api usa bearer. Desde la E9 una política única (`UseCookiePolicy`) deja toda cookie de la Api Secure, HttpOnly, SameSite Lax como mínimo y sin `Domain`: ninguna se amplía a los subdominios. La de correlación de Google es Lax, porque Google vuelve con un GET de navegación a `/signin-google`.
 - La cookie de cada ingreso lleva un identificador aleatorio de sesión de navegador. Cada autorización OpenIddict conserva ese identificador; al salir se revocan todas las autorizaciones y refresh tokens de esa sesión, incluidos los accesos anteriores, sin cerrar las sesiones de otros dispositivos. La renovación conserva el identificador de autorización.
 - La autorización conserva también `access` y, si corresponde, `tenant_id`, para que `TokenRevoker` pueda revocar un acceso o una organización. `RevokeTenantAsync` aún recorre todas las autorizaciones; antes de conectarlo a la suspensión en la E9 se debe reemplazar ese recorrido por una búsqueda indexada.
 - Si la renovación del token falla, el SPA inicia una autorización con `prompt=login`: `ConnectController` presenta el formulario aunque la cookie de Identity siga viva y quita ese prompt del `returnUrl` interno. Tras verificar el código, el authorize reanudado usa la cookie nueva sin volver al formulario.
@@ -196,9 +196,10 @@ Los recorridos de ingreso, Google, métodos, invitaciones, enlaces y recuperaci�
 ## 16. Pipeline HTTP (`Program.cs`)
 
 ```
-UseForwardedHeaders → UseSecurityHeaders → UseRequestLocalization → UseExceptionHandler → UseStatusCodePages
-→ UseRateLimiter → UseAuthentication → TenantResolutionMiddleware → PublicSiteResolutionMiddleware
-→ LegalAcceptanceMiddleware → FeatureGateMiddleware → UseAuthorization
+UseForwardedHeaders → UseSecurityHeaders → UseCookiePolicy → UseRequestLocalization → UseExceptionHandler
+→ UseStatusCodePages → InstalledModuleRouteMiddleware → UseAuthentication → TenantResolutionMiddleware
+→ TenantTelemetryMiddleware → PublicSiteResolutionMiddleware → RateLimitMiddleware → LegalAcceptanceMiddleware
+→ FeatureGateMiddleware → UseAuthorization
 → (Development: OpenAPI y Swagger UI | resto: UseHsts) → UseHttpsRedirection
 → UseStaticFiles (si hay wwwroot) → MapDefaultEndpoints → MapControllers → UseSpaFallback
 ```
@@ -234,6 +235,7 @@ DisplayFormatter recibe cultura y zona explícitas. El [catálogo común de form
 - El SPA vive en `../ArquitecturaBaseMutitenantFront`. El SPA y la Api se sirven desde el **mismo origen en cada host**, el dominio principal y cada `<slug>.plataforma.com`: en producción desde wwwroot, con DNS y certificado comodín; en desarrollo, con el proxy de Vite por host (`*.localtest.me`). **No hay CORS**, tampoco en los subdominios.
 - `BackendPrefixes` es una lista a mano, y se atiende igual en todos los hosts: `/api`, `/account`, `/connect`, `/signin-google`, `/.well-known`, `/webhooks`, `/health` y `/alive`. También reserva `/swagger` y `/openapi` para que fuera de Development devuelvan 404 en vez del SPA; sus endpoints y el proxy de Vite solo existen en Development. Un prefijo nuevo se suma ahí, al `SpaHostingTests` y al `server.proxy` de `vite.config.ts`.
 - En desarrollo, el issuer es `https://localtest.me:5174/`: AppHost pasa el mismo valor a Api, Vite y RealE2ESetup. Los callbacks fijos son del dominio principal; los dinámicos conservan origen y puerto del subdominio publicado. Google registra `https://localtest.me:5174/signin-google`. No se siembran sitios de ejemplo en Development.
+- **Encabezados (E9):** toda respuesta, también los 4xx y 5xx, lleva `X-Content-Type-Options`, `Referrer-Policy` y la CSP. La CSP se arma por directivas, sin scripts en línea ni eval y con `object-src 'none'`; los estilos en línea de los componentes son la única excepción y viven solo en `style-src`. Un módulo suma orígenes https a `script-src`, `frame-src` o `connect-src` con `IContentSecurityPolicySource`, y el núcleo los valida al arrancar: WhatsApp aporta el SDK y los marcos de Meta.
 - La arquitectura del front está en `../ArquitecturaBaseMutitenantFront/docs/architecture/frontend.md`.
 
 ## 20. Reglas de datos que se aplican solas

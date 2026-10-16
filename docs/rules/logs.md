@@ -7,7 +7,7 @@
 - **Un log propio:** `[LoggerMessage(Level = …, Message = "…")] private static partial void LogX(ILogger logger, …);` en una clase `partial`.
 - Mensajes en inglés, con parámetros estructurados (`{RoleId}`), no concatenados.
 - Correos y teléfonos, siempre con `PersonalDataMask` (`Application/Common/Text`): el correo con dos letras y el dominio (`lu•••@gmail.com`), y el teléfono con sus últimos cuatro dígitos (`•••• 6789`). Es el mismo formato de las pantallas, los avisos y la auditoría.
-- El `TenantId` va en el scope del request (lo pone el middleware) y en la traza (`tenant.id`).
+- El `TenantId` va en el scope del request (lo pone el middleware). El span del pedido lleva `tenant.id` y `tenant.kind` del acceso ya validado (`TenantTelemetryMiddleware`, E9), nunca del Host; Plataforma, un pedido anónimo y el sitio público quedan sin organización. El id nunca es una dimensión de una métrica.
 - **Excepciones inesperadas:** HTTP, `OperationLog` y mantenimiento usan `ExceptionLog.Write`: tipo y stack de cada excepción interna, nunca `Message`, `Data`, `ToString()` ni el objeto Exception. Los identificadores técnicos van en un scope. Los workers periódicos heredan de `PeriodicWorker`: la cancelación termina el servicio, cualquier otro fallo se registra y permite la siguiente vuelta; las señales de entrada conservan su espera propia.
 - OpenIddict emite parámetros OIDC y claims personales en sus trazas internas. Su categoría se limita a `Warning` mediante `LoggerFilterOptions` después de cargar la configuración; una captura de pruebas en `Trace` sigue observando los logs de la aplicación sin exponer esos valores.
 
@@ -21,7 +21,7 @@
 - `Application/Common/Logging/OperationLog.cs` (E1)
 
 ## Lo verifica
-- `CA1848` (E0), `SensitiveToStringLoggingTests` (E1), `ControllerInputContractTests` (E1), `PeriodicWorkerArchitectureTests` (C7: todo worker concreto usa el bucle de `PeriodicWorker`), `OperationLogTests` (E9: todo método de un `I*Service` de Application corre en `OperationLog`; lee el IL)
+- `CA1848` (E0), `SensitiveToStringLoggingTests` (E1), `ControllerInputContractTests` (E1), `PeriodicWorkerArchitectureTests` (C7: todo worker concreto usa el bucle de `PeriodicWorker`), `OperationLogTests` (E9: todo método de un `I*Service` de Application corre en `OperationLog`; lee el IL), `TenantTelemetryTests` (E9)
 
 ## Detalle
 [backend.md §17](../architecture/backend.md#17-logging-openapi-health-rate-limiting-caché)
