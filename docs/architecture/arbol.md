@@ -65,6 +65,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │       ├── Contracts/  request/query T01
 │   │   │       ├── Controllers/
 │   │   │       ├── Filters/
+│   │   │       ├── Hosting/  orígenes de Meta en la CSP (E9)
 │   │   │       └── RateLimiting/
 │   │   ├── OpenApi/
 │   │   ├── Properties/
