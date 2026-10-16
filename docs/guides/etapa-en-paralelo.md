@@ -10,7 +10,7 @@ Los dos repos son separados, así que los dos agentes no se pisan. Lo único que
 |---|---|---|---|
 | **1. Contrato** | Un solo agente, en el back | Escribe las rutas nuevas de la etapa en `docs/contracts/openapi.json`: ruta, permiso, lo que recibe, lo que devuelve y cada código de error con su texto. Pueden ir sin implementación o devolviendo `501`. Las guardas de rutas tienen que seguir en verde. En el front, `npm run contracts`. | El contrato está commiteado en los dos repos y el plan de la etapa lo nombra. |
 | **2a. Back** | Agente del back | Programa las rutas del contrato: dominio, servicios, persistencia, aislamiento y permisos, con sus tests. **No cambia el contrato.** | El build y los tests del área en verde, y `openapi.json` igual al de la parte 1. La suite completa corre una sola vez, en la puerta. |
-| **2b. Front** | Agente del front | Programa las pantallas contra el contrato, copiando su tablero, con las respuestas de la API simuladas en los tests, como hoy. **No cambia el contrato.** | `npm run build`, `lint`, `test` y `contracts:check` en verde. |
+| **2b. Front** | Agente del front | Programa las pantallas contra el contrato, copiando su tablero, con las respuestas de la API simuladas en los tests, como hoy. **No cambia el contrato.** | Build del alcance afectado, lint de los archivos cambiados, tests focales del área (Vitest con paths o filtro) y `contracts:check` en verde. `npm run test` ejecuta la suite completa: se reserva para la puerta. |
 | **3. Integración y puerta** | Un solo agente, con los dos repos | Conecta el front a la API real y corrige lo que no encaja. | Pasa la puerta (abajo). |
 
 Las partes 2a y 2b corren al mismo tiempo.
@@ -32,7 +32,7 @@ Las partes 2a y 2b corren al mismo tiempo.
 5. La galería de capturas lado a lado de las pantallas nuevas.
 6. El recorrido de usuario, con la skill [`/recorrido`](../../.agents/skills/recorrido/SKILL.md) y los recorridos de la etapa.
 
-Cada paso necesita una corrida completa en verde con el código de la etapa. Lo que falla vuelve a su dueño, y con el arreglo se corre solo lo que ese arreglo toca. No se repite todo al final ni se arma un corte nuevo por cada arreglo. El resultado es una tabla corta, con una fila por paso, y no un registro de cada corrida (`AGENTS.md`, «Velocidad y cierre liviano»).
+Cada paso necesita una corrida completa en verde con el código de la etapa. Si una verificación completa ya pasó durante el desarrollo con ese código, se reutiliza como la única de cierre, sin repetirla al integrar. Lo que falla vuelve a su dueño, y con el arreglo se corre solo lo que ese arreglo toca; la suite completa de un repo se repite solo si cambió autenticación, persistencia base o composición de la app. No se repite todo al final ni se arma un corte nuevo por cada arreglo. El resultado es una tabla corta, con una fila por paso, y no un registro de cada corrida (`AGENTS.md`, «Velocidad y cierre liviano»).
 
 ## Cómo se arma el plan de una etapa
 
