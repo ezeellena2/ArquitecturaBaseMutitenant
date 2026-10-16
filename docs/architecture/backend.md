@@ -213,10 +213,10 @@ Antes del pipeline, `Program.cs` prepara la base: en Development, el bootstrap (
 - **Logging:** `[LoggerMessage]` obligatorio (`CA1848` como warning, que rompe el build). Nunca se registran códigos, tokens, enlaces, emails completos ni teléfonos. Cada log de negocio lleva un scope con `TenantId`.
 - **OpenAPI:** `/openapi/v1.json` y Swagger UI solo en Development. El build exporta `docs/contracts/openapi.json` con `Microsoft.Extensions.ApiDescription.Server`, como en ArquitecturaBase; el front lo usa para generar sus tipos. El CI falla si el archivo commiteado no coincide con el generado.
 - **Health:** `/health` (readiness: base de datos, rol de runtime y WhatsApp) y `/alive`.
-- **Rate limiting:**
-  - por IP: `login-code`, `login-verify`, `invitation-accept` y `whatsapp-webhook`;
-  - por organización: `tenant-api`, una ventana deslizante sobre `/api`.
-  - Un 429 sale como ProblemDetails con `retryAfter` en segundos; `shared/api/httpClient` del front lo convierte en `ApiError.retryAfterSeconds` para la cuenta regresiva del botón.
+- **Rate limiting (cuotas, E9):** [ficha](../rules/cuotas.md).
+  - `RateLimitMiddleware` corre después de autenticar y de resolver la organización. Toda petición a `/api` cuenta a la vez en `ip` (`publicIp` en el sitio público), `identity` y `tenant`; cada ruta suma su perfil (`loginCode`, `loginVerify`, `invitationPreview`, `invitationAccept` y los de los módulos). Quedan afuera los assets, los probes y `/connect`.
+  - Las doce cuotas las guarda la configuración de Plataforma. Redis admite cada pedido con un script, en ventanas fijas UTC; sin Redis cuenta PostgreSQL, con continuidad en los dos sentidos.
+  - Un 429 sale como ProblemDetails `Security.RateLimit.Exceeded` con `retryAfter` en segundos y `Retry-After`; el webhook conserva su código. `shared/api/httpClient` del front lo convierte en `ApiError.retryAfterSeconds` para la cuenta regresiva del botón.
 - **Caché:** Redis es la única caché ([ficha](../rules/cache.md), [ADR 0052](../decisions/0052-cache-compartida-redis.md)). Toda lectura pasa por `SharedCache` desde una caché del inventario cerrado; la clave lógica sale de `CacheKeys` con su alcance (`t:{tenantId}:` privado, `s:{businessTenantId}:` página pública, `u:{userId}:` identidad y accesos, `p:` plataforma) y la física lleva la aplicación, el ambiente, la versión del esquema y las generaciones de sus etiquetas. El commit que cambia los datos avanza esas generaciones (`CacheGenerationInterceptor`) y después las invalida; nadie invalida a mano. Sin Redis, la lectura va a PostgreSQL y `/health` falla; `/alive`, no.
 
 ## 18. Representación y formato de datos (unificado)

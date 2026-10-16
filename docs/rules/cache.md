@@ -12,6 +12,7 @@
 - Si las generaciones cambian mientras se carga, el valor se descarta y se vuelve a leer; con cambios continuos se entrega una lectura directa, sin llenar la caché.
 - Una caída de Redis nunca rompe un pedido: la lectura va a PostgreSQL y la escritura o la invalidación se pierden (`ResilientDistributedCache`), sin quitar corrección. `/health` falla mientras Redis no responde; `/alive`, no.
 - Varias réplicas comparten Redis y también las claves de Data Protection, que viven en PostgreSQL: la cookie que emite una vale en la otra.
+- El mismo Redis guarda los contadores de cuotas (`RedisRateLimitCounter`), con la etiqueta `{rl}` y sin pasar por `SharedCache`: son admisiones atómicas, no entradas de caché ([cuotas](cuotas.md)).
 - En desarrollo, el AppHost levanta el recurso `cache` con el parámetro `redis-password` (se genera una vez y queda en los user-secrets del AppHost) y un volumen propio. El recorrido aislado usa un Redis efímero, y los tests, uno compartido por la corrida (`SharedRedis`).
 
 | Dato | Clave lógica | TTL | Etiquetas |

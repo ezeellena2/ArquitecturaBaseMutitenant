@@ -54,6 +54,11 @@ Los aprobó el Coordinador de la E9 como decisiones técnicas; la ficha [cache](
 - **La identidad de la base en cada clave.** La migración de `platform."CacheTagVersions"` fija una etiqueta `p:database` con un número al azar que nada avanza, y sus generaciones encabezan las de toda clave. Así una base nueva o recreada nunca lee entradas que otra dejó en el mismo Redis, aunque sus etiquetas estén en la generación 0.
 - **El avance lo hace un interceptor**, no cada escritor: `CacheTagCollector` junta las etiquetas en cada guardado y `CacheGenerationInterceptor` las avanza antes del commit de esa misma transacción e invalida después. Un cambio por SQL, como una migración de datos, avanza a mano las generaciones de lo que toca.
 
+### Contadores de cuotas (E9, B3, 2026-10-16)
+
+- Un solo script admite cada pedido en todas sus cuotas y suma solo si todas tienen lugar. Sus claves llevan la etiqueta `{rl}`, así un Redis con cluster las ubica en el mismo nodo.
+- Sin Redis, el respaldo es `platform."RateLimitCounters"`: se siembra con lo último que vio la instancia y, al volver Redis, Redis sube cada cuota a lo que contó PostgreSQL. El detalle está en la ficha [cuotas](../rules/cuotas.md).
+
 ## Alternativas descartadas
 
 - L1 corta o pub/sub: dejan una ventana de permisos revocados y pierden mensajes durante desconexiones.

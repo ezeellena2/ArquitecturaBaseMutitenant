@@ -31,6 +31,7 @@ Las decisiones están en [`docs/decisions/README.md`](docs/decisions/README.md) 
 | mostrar un texto al usuario | [textos-y-traducciones](docs/rules/textos-y-traducciones.md) |
 | crear una entidad o una tabla | [persistencia-ef](docs/rules/persistencia-ef.md), [multitenancy](docs/rules/multitenancy.md), [auditoria](docs/rules/auditoria.md) |
 | cachear un dato o cambiar uno cacheado | [cache](docs/rules/cache.md) (Redis con generaciones; nunca invalidar a mano) |
+| limitar pedidos o declarar la cuota de una ruta | [cuotas](docs/rules/cuotas.md) (doce perfiles cerrados; nunca un limitador por proceso) |
 | exponer una ruta | [api-http](docs/rules/api-http.md), [permisos](docs/rules/permisos.md) |
 | loguear | [logs](docs/rules/logs.md) |
 | tocar WhatsApp u otro módulo | [modulos](docs/rules/modulos.md); un mensaje nuevo por WhatsApp: [plantillas](docs/operations/whatsapp-plantillas.md) |

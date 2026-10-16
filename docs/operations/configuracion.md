@@ -80,7 +80,15 @@ Mismos valores que `../ArquitecturaBase/src/ArquitecturaBase.Api/appsettings.Dev
 
 `WhatsApp:AllowedCountries` reemplaza la lista predeterminada; no se suma a ella. Configurar solo `US` no conserva `AR`. La política se aplica al registro y a los métodos nuevos o pendientes, también al reenviar y verificar; un Phone ya verificado conserva ingreso y avisos aunque su país deje de admitirse. El país real se obtiene del E.164, no del campo `country` recibido.
 
-`Authentication:LoginLink` usa por defecto `ResendCooldownSeconds = 60`, `RequestWindowMinutes = 15` y `MaxRequestsPerWindow = 5`. La vida del enlace es fija de diez minutos. El bot lleva el token en el fragmento; preview no inicia sesión y Continuar canjea exclusivamente para Persona. Un reply libre pendiente vence al cerrar la ventana de 24 horas, comprobada también antes de enviar a Cloud API.
+`Authentication:LoginLink` usa por defecto `ResendCooldownSeconds = 60`, `RequestWindowMinutes = 15`, `MaxRequestsPerWindow = 5` y `LifetimeMinutes = 10`, la vida del enlace. Los textos del bot dicen «10 minutos»: cambiarla exige revisarlos. El bot lleva el token en el fragmento; preview no inicia sesión y Continuar canjea exclusivamente para Persona. Un reply libre pendiente vence al cerrar la ventana de 24 horas, comprobada también antes de enviar a Cloud API.
+
+Las opciones de seguridad (E9) están en `appsettings.json` con los valores de siempre y se validan al arrancar:
+- `RateLimiting:<Perfil>:PermitLimit` y `WindowSeconds` son las cuotas de arranque de los doce perfiles ([cuotas](../rules/cuotas.md)). El seed las guarda solo al crear la configuración de Plataforma; después se editan desde Plataforma.
+- `Authentication:Lifetimes`: código de autorización 5 minutos, access token 15 minutos, refresh token y cookie 30 días.
+- `Idempotency`: vigencia de 24 horas y limpieza cada 60 minutos.
+- `AccountDeletion`: lote de 100 y un ciclo cada 60 minutos.
+
+La IP de las cuotas se guarda como HMAC con `Authentication:LoginCode:HashKey` y un dominio propio: compartí esa clave entre réplicas.
 
 Desde la E11 el webhook depende solo de `WhatsApp:AppSecret` y `WhatsApp:VerifyToken` (lo usan también los números de las organizaciones). El token de cada número conectado se guarda cifrado en `identity.WhatsAppChannels`; el de la configuración se copia ahí al arrancar.
 

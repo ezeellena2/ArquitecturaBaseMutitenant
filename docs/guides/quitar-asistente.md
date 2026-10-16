@@ -50,6 +50,8 @@ La caché de permisos por persona y su prueba neutral (`RolePermissionCacheIsola
 
 Conservá Phone, LoginLink, outbox, Data Protection, `platform.IdempotencyKeys` con `ReferenceKind`, `ReferenceId`, `ResponseLocation` y los puertos neutrales de replay/proyección. No retires documentos legales v2 publicados ni sus aceptaciones: esa historia es núcleo. Retirar el seed futuro del módulo no borra una versión publicada.
 
+Los perfiles de cuota `assistantQuickQuery`, `assistantConversation` y `assistantNewKey` permanecen sin uso en `PlatformRateLimits`, en las opciones `RateLimiting` y en el contrato de la configuración de Plataforma: los doce perfiles son cerrados (E9). Con el módulo salen sus atributos `[RateLimit]`, `AssistantNewKeyRateLimitFilter` y `AssistantRateLimitTests`.
+
 Paridad y baja exigen el inventario real del núcleo más los módulos que siguen instalados, sin conteos fijos. Legal conserva documentos vigentes reales, versión, cultura, texto y privacidad. El inventario HTTP mantiene igualdad exacta; el partial Assistant aporta sólo las operaciones exclusivas declaradas por el módulo. Regenerá OpenAPI sólo en la copia y ajustá allí referencias documentales exclusivas, conservando guardas y assets cruzados del Front. RealE2ESetup y su ProjectReference a Api.IntegrationTests siguen sosteniendo Email/Google.
 
 El factory DesignTime usa un placeholder: todo database update requiere `--connection <CONEXION_POSTGRES_DESCARTABLE>` explícita. Corré build, suites núcleo, has-pending-model-changes, migraciones de la base propia, ausencia de rutas/capacidades, Email/Google, legales, recuperación, métodos y aprovisionamiento. Si WhatsApp permanece, sus tablas y pruebas siguen vigentes.

@@ -26,7 +26,7 @@
 - Los controllers de protocolo siguen inyectando un servicio de Application. La excepción técnica cerrada del constructor permite además `OpenIdPrincipalFactory` e `IOptions<WebClientOptions>` solo en `ConnectController`, e `IAuthenticationSchemeProvider` solo en `ExternalLoginController`; `ControllerServiceRepositoryTests` rechaza cualquier otra dependencia directa. El inicio Google se valida con `ExternalLoginStartRequest` y su validador a través de `IExternalLoginService`; antiforgery sigue en el adaptador HTTP.
 - **Después de cambiar un contrato:** regenerar `docs/contracts/openapi.json` (lo hace el build) y avisar al front (`npm run contracts`).
 - El esquema de `application/problem+json` declara `code` y `traceId` obligatorios, y `errors` (campo → mensajes) y `retryAfter` (segundos) opcionales; es la misma forma que devuelve el mapper HTTP.
-- Un rechazo del rate limiter responde 429 con ProblemDetails (`Http.TooManyRequests`, `traceId`, `retryAfter`) y el header `Retry-After` con los mismos segundos enteros.
+- Un rechazo de una cuota responde 429 con ProblemDetails (`Security.RateLimit.Exceeded`, `traceId`, `retryAfter`) y el header `Retry-After` con los mismos segundos enteros ([cuotas](cuotas.md)). `Http.TooManyRequests` queda sólo para un 429 que arme el framework.
 - **Datos de referencia:** `GET /api/reference-data` y sus rutas por catálogo son `[AllowAnonymous]`, devuelven todas las filas traducidas a `Accept-Language` con `isEnabled` y llevan `ETag` para caché del navegador ([datos-de-referencia](datos-de-referencia.md)). Los selectores filtran las habilitadas; las filas deshabilitadas siguen disponibles para mostrar valores guardados. Sustituyen `GET /api/time-zones`.
 
 ## Prohibido
