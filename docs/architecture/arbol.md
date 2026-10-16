@@ -243,7 +243,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   │   │   └── Repositories/
 │   │   │   │   ├── ReferenceData/
 │   │   │   │   └── Retention/
-│   │   │   └── WhatsApp/  módulo opcional: se enciende con WhatsApp:PhoneNumberId
+│   │   │   └── WhatsApp/  módulo opcional instalado por composición; canal de Plataforma con número conectado, webhook con sus dos secretos
 │   │   │       ├── Disabled/
 │   │   │       ├── Email/  el correo «Chats esperando» (D6)
 │   │   │       │   └── Templates/

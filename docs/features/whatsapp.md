@@ -1,6 +1,6 @@
 # WhatsApp
 
-Módulo quitable para el número de WhatsApp de la plataforma. Aporta webhook, recepción durable, bot, mensajes y transporte de códigos, invitaciones y avisos. El núcleo conserva la identidad y los accesos; el módulo no crea sesiones por recibir un mensaje.
+Módulo quitable para los números de WhatsApp de Plataforma y de las organizaciones. Se instala con la composición `AddWhatsAppModule` de cada capa; la disponibilidad del canal de Plataforma depende de su número conectado, y la del webhook, de sus dos secretos. Aporta webhook, recepción durable, bot, mensajes y transporte de códigos, invitaciones y avisos. El núcleo conserva la identidad y los accesos; el módulo no crea sesiones por recibir un mensaje.
 
 ## Contrato HTTP y disponibilidad
 
@@ -36,7 +36,7 @@ El [plan de la E11](../plans/2026-10-13-etapa-11-whatsapp.md) publica las rutas 
 
 ## Entrada durable y entrega
 
-`WhatsAppWebhookFilter` limita bytes reales a 5 MiB y verifica HMAC antes del binder, incluso si Content-Length miente. Firma inválida produce 401; JSON firmado inválido, 400; cuerpo excesivo, 413. No persiste ni registra el cuerpo original. El reader procesa lotes del PhoneNumberId configurado y omite otros destinos; no resuelve organizaciones del remitente, host o payload.
+`WhatsAppWebhookFilter` limita bytes reales a 5 MiB y verifica HMAC antes del binder, incluso si Content-Length miente. Firma inválida produce 401; JSON firmado inválido, 400; cuerpo excesivo, 413. No persiste ni registra el cuerpo original. `WhatsAppWebhookReader` lee todos los destinos del lote, sin filtrar por `WhatsApp:PhoneNumberId`; `WhatsAppWebhookWriter` conserva solo la entrada de canales vigentes, de Plataforma o de una organización, y filtra los estados bajo su lock. La organización sale del canal persistido del número de destino, nunca del remitente ni del host ni de un tenant declarado en el payload.
 
 El ACK 200 sale después del commit. El índice único `(PhoneNumberId, Wamid, EventType)` y los locks de stream evitan duplicados; una colisión de índice revierte y repite en un scope fresco antes de responder. Los callbacks no abren contactos, ventanas de conversación ni tareas de bot. Delivered/read no retroceden por eventos desordenados; una aceptación tardía se reconcilia con callbacks tempranos.
 
