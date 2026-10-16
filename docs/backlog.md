@@ -71,7 +71,7 @@ El [panorama vigente](architecture/backend.md) describe la arquitectura; los pen
 - **44.** Culture.Create rechaza separadores de miles que son espacios (NBSP/NNBSP): sumar fr-FR, pt-PT, ru-RU o pl-PL rompe el arranque
 - **45.** PhoneNumber rechaza números E.164 válidos de 7 dígitos
 - **46.** Una organización con error detiene el trabajo de todas las siguientes
-- **47.** La única forma permitida de llenar HybridCache pierde el tenant
+- **47.** (Resto tras B2 de la E9) Ninguna guarda verifica que toda clave de caché salga de `CacheKeys`: `CacheArchitectureTests` vigila quién llena la caché, no cómo se arma la clave
 - **48.** Una carrera con ReleaseAsync convierte un reintento legítimo en 500
 - **49.** Búsqueda y cursor van como constantes SQL: un plan y una compilación de EF por cada término o cursor
 - **51.** Enter borra TenantKind: dentro de un alcance técnico no se pueden crear datos públicos ni compartidos
