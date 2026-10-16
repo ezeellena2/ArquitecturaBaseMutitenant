@@ -39,8 +39,7 @@ internal sealed class AssistantPolicyService(IAssistantSettingsReader reader, IA
                 if (current is not { Kind: TenantKind.Business }) return TenantErrors.NotFound;
                 var row = await repository.GetPolicyAsync(tenantId, request.Version!.Value, ct);
                 var created = row is null;
-                var platform = await reader.FindPlatformAsync(ct);
-                row ??= AssistantOrganizationPolicy.Create(tenantId, platform.MonthlyOrganizationBudget);
+                row ??= AssistantOrganizationPolicy.Create(tenantId);
                 var changes = new SecurityEventChanges();
                 changes.AddBoolean("assistant.allowOwnKey", row.AllowOwnKey, request.AllowOwnKey);
                 row.SetAllowOwnKey(request.AllowOwnKey!.Value);

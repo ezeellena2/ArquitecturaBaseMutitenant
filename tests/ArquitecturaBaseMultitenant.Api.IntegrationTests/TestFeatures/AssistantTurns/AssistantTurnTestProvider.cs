@@ -67,7 +67,7 @@ internal sealed class AssistantTurnTestProvider
             {
                 var binding = services.GetRequiredService<IAssistantChatContext>().Binding;
                 Assert.NotNull(binding);
-                return Task.FromResult(Result.Success<IChatClient>(new Client(probe, services, AnthropicChatClientFactory.Build("isolated-roundtrip-key",
+                return Task.FromResult(Result.Success<IChatClient>(new Client(probe, services, AnthropicChatClientBuilder.Build("isolated-roundtrip-key",
                     binding.ProviderModelId, binding.Effort, 2048, new HttpClient(handler)))));
             }
             return Task.FromResult(Result.Success<IChatClient>(new Client(probe, services)));

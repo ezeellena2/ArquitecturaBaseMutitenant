@@ -19,7 +19,7 @@ public sealed class AssistantProviderAdapterTests
     public async Task Chat_call_does_not_expose_provider_exception_or_body()
     {
         var handler = new RecordingHandler(503);
-        using var client = AnthropicChatClientFactory.Build("isolated-adapter-secret", "claude-sonnet-5-5", AssistantEffort.Low, 2048, new HttpClient(handler));
+        using var client = AnthropicChatClientBuilder.Build("isolated-adapter-secret", "claude-sonnet-5-5", AssistantEffort.Low, 2048, new HttpClient(handler));
         var error = await Assert.ThrowsAsync<HttpRequestException>(() => client.GetResponseAsync([new ChatMessage(ChatRole.User, "Test")], cancellationToken: TestContext.Current.CancellationToken));
         Assert.Equal(HttpStatusCode.ServiceUnavailable, error.StatusCode);
         Assert.Null(error.InnerException);
@@ -49,7 +49,7 @@ public sealed class AssistantProviderAdapterTests
     public async Task Draft_validation_is_minimal_sanitized_without_retries_and_disposes_owned_transport(int status, string? errorCode)
     {
         var handler = new RecordingHandler(status);
-        var result = await AnthropicChatClientFactory.ValidateDraftAsync("isolated-adapter-secret", "isolated-editable-model", new HttpClient(handler), TestContext.Current.CancellationToken);
+        var result = await AnthropicChatClientBuilder.ValidateDraftAsync("isolated-adapter-secret", "isolated-editable-model", new HttpClient(handler), TestContext.Current.CancellationToken);
         Assert.Equal(1, handler.Requests);
         Assert.True(handler.Disposed);
         using var request = JsonDocument.Parse(handler.Body!);

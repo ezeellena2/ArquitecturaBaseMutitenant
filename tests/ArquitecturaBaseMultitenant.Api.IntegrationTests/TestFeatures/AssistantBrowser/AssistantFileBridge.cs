@@ -126,7 +126,7 @@ public sealed class AssistantFileBridge
                     else feature.Update(true, TenantFeatureSource.Manual, null);
                     services.GetRequiredService<ISecurityEventRepository>().Add(SecurityEvent.ForTenantFeatures(AuditActorKind.System, Guid.Empty, tenantId!.Value, "Isolated assistant scenario", nowUtc));
                     var policy = await db.Set<AssistantOrganizationPolicy>().SingleOrDefaultAsync(row => row.OrganizationId == tenantId, token);
-                    if (policy is null) { policy = AssistantOrganizationPolicy.Create(tenantId.Value, Usd(1000m)); db.Add(policy); }
+                    if (policy is null) { policy = AssistantOrganizationPolicy.Create(tenantId.Value); db.Add(policy); }
                     policy.SetAllowOwnKey(false);
                     var own = await db.Set<AssistantOrganizationSettings>().SingleOrDefaultAsync(token);
                     if (own is null) { own = AssistantOrganizationSettings.Create(); db.Add(own); }

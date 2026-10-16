@@ -273,7 +273,7 @@ public sealed class AssistantStateBudgetTests
             if (mode == AssistantMode.OwnKey)
             {
                 var policy = await db.Set<AssistantOrganizationPolicy>().SingleOrDefaultAsync(row => row.OrganizationId == tenant, Ct);
-                if (policy is null) { policy = AssistantOrganizationPolicy.Create(tenant, Usd(100)); db.Add(policy); }
+                if (policy is null) { policy = AssistantOrganizationPolicy.Create(tenant); db.Add(policy); }
                 policy.SetAllowOwnKey(true);
                 services.GetRequiredService<ISecurityEventRepository>().Add(SecurityEvent.ForTenantFeatures(
                     AuditActorKind.System, Guid.Empty, tenant, "State own funding fixture", services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime));

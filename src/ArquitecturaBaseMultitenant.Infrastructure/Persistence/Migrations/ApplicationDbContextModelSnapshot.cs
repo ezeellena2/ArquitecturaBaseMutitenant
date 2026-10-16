@@ -604,9 +604,6 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<int>("DailyMessageLimit")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime?>("ModifiedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -615,9 +612,6 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uuid");
-
-                    b.Property<int>("RetentionDays")
-                        .HasColumnType("integer");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
@@ -7508,33 +7502,6 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.OwnsOne("ArquitecturaBaseMultitenant.Domain.ValueObjects.Money", "MonthlyBudget", b1 =>
-                        {
-                            b1.Property<Guid>("AssistantOrganizationPolicyId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<decimal>("Amount")
-                                .HasPrecision(18, 6)
-                                .HasColumnType("numeric(18,6)")
-                                .HasColumnName("MonthlyBudgetAmount");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .HasMaxLength(3)
-                                .HasColumnType("character varying(3)")
-                                .HasColumnName("MonthlyBudgetCurrency");
-
-                            b1.HasKey("AssistantOrganizationPolicyId");
-
-                            b1.ToTable("AssistantOrganizationPolicies", "platform");
-
-                            b1.WithOwner()
-                                .HasForeignKey("AssistantOrganizationPolicyId");
-                        });
-
-                    b.Navigation("MonthlyBudget")
                         .IsRequired();
                 });
 

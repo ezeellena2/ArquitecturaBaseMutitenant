@@ -41,6 +41,12 @@ public static class AssistantModule
         services.AddScoped<IAssistantUsageReader, AssistantUsageReader>();
         services.AddSingleton<IAssistantProviderCatalog, AssistantProviderCatalog>();
         services.AddScoped<IAssistantKeyProtector, AssistantKeyProtector>();
+        // E9: transporte nombrado de los clientes de Anthropic, sin los reintentos de ServiceDefaults ni loggers HTTP que vean la clave.
+        // La API de reemplazo sigue experimental en Extensions 10; limita la supresión a esta composición.
+#pragma warning disable EXTEXP0001
+        services.AddHttpClient(AnthropicChatClientBuilder.TransportName).RemoveAllLoggers().RemoveAllResilienceHandlers();
+#pragma warning restore EXTEXP0001
+        services.AddScoped<AnthropicChatClientBuilder>();
         services.AddScoped<IChatClientFactory, AnthropicChatClientFactory>();
         services.AddScoped<IAssistantAttachmentRepository, AssistantAttachmentRepository>();
         services.AddScoped<IAssistantAttachmentContentReader, AssistantAttachmentContentReader>();
