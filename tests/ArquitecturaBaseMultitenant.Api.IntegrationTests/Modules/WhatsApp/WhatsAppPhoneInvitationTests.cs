@@ -58,7 +58,7 @@ public sealed class WhatsAppPhoneInvitationTests(ApiFactory factory) : IClassFix
         Assert.Equal(JsonValueKind.Null, rows[3].GetProperty("phone").ValueKind);
         Assert.Equal((1, 2, 3), (preview.GetProperty("alreadyMembers").GetInt32(), preview.GetProperty("invites").GetInt32(),
             preview.GetProperty("invalid").GetInt32()));
-        Assert.Empty(await InvitationMessagesAsync(host.Services));
+        Assert.Empty(await InvitationMessagesAsync(host.Services, [employee, withAccount, fresh]));
 
         using var imported = await WhatsAppAttentionJourney.PostAsync(client, Imports, body, Ct);
         Assert.Equal(HttpStatusCode.OK, imported.StatusCode);
@@ -66,7 +66,7 @@ public sealed class WhatsAppPhoneInvitationTests(ApiFactory factory) : IClassFix
         Assert.Equal((1, 2, 3), (result.GetProperty("linked").GetInt32(), result.GetProperty("invited").GetInt32(),
             result.GetProperty("invalid").GetInt32()));
         Assert.Equal(new[] { withAccount, fresh }.Order(StringComparer.Ordinal),
-            (await InvitationMessagesAsync(host.Services)).Select(message => message.To).Order(StringComparer.Ordinal));
+            (await InvitationMessagesAsync(host.Services, [employee, withAccount, fresh])).Select(message => message.To).Order(StringComparer.Ordinal));
 
         // CC25: en Usuarios, la invitación por teléfono trae el teléfono y no un correo.
         var users = await WhatsAppAttentionJourney.JsonAsync(await client.GetAsync("/api/users/paged?pageSize=50", Ct), Ct);
@@ -127,16 +127,17 @@ public sealed class WhatsAppPhoneInvitationTests(ApiFactory factory) : IClassFix
         using (var imported = await WhatsAppAttentionJourney.PostAsync(client, Imports, Body(Input(fresh)), Ct))
             Assert.Equal(HttpStatusCode.OK, imported.StatusCode);
         var token = await TokenAsync(host.Services, fresh);
-        var sent = (await InvitationMessagesAsync(host.Services)).Count;
+        var later = WhatsAppAttentionJourney.NewPhone();
+        var sent = (await InvitationMessagesAsync(host.Services, [fresh, later])).Count;
         await SetPlatformStatusAsync(host.Services, "Connected", "PaymentMissing");
         try
         {
             var preview = await PreviewAsync(host.Services, token, null);
             Assert.Equal((InvitationPreviewState.NoAccount, false), (preview.State, preview.CanUsePhoneCode));
-            using var blocked = await WhatsAppAttentionJourney.PostAsync(client, Imports, Body(Input(WhatsAppAttentionJourney.NewPhone())), Ct);
+            using var blocked = await WhatsAppAttentionJourney.PostAsync(client, Imports, Body(Input(later)), Ct);
             Assert.Equal(HttpStatusCode.ServiceUnavailable, blocked.StatusCode);
             Assert.Equal(InvitationErrors.ChannelUnavailableCode, (await WhatsAppAttentionJourney.JsonAsync(blocked, Ct)).GetProperty("code").GetString());
-            Assert.Equal(sent, (await InvitationMessagesAsync(host.Services)).Count);
+            Assert.Equal(sent, (await InvitationMessagesAsync(host.Services, [fresh, later])).Count);
         }
         finally { await SetPlatformStatusAsync(host.Services, "PaymentMissing", "Connected"); }
     }
@@ -172,7 +173,8 @@ public sealed class WhatsAppPhoneInvitationTests(ApiFactory factory) : IClassFix
         return created.Value;
     }
 
-    private static async Task<IReadOnlyList<(string To, string Button)>> InvitationMessagesAsync(IServiceProvider services)
+    /// <summary>Las invitaciones por WhatsApp a los teléfonos del caso: la base es de toda la clase y otros casos también invitan.</summary>
+    private static async Task<IReadOnlyList<(string To, string Button)>> InvitationMessagesAsync(IServiceProvider services, IReadOnlyCollection<string> phones)
     {
         await using var scope = services.CreateAsyncScope();
         var protector = scope.ServiceProvider.GetRequiredService<IPayloadProtector>();
@@ -182,7 +184,7 @@ public sealed class WhatsAppPhoneInvitationTests(ApiFactory factory) : IClassFix
         {
             using var payload = JsonDocument.Parse(protector.Unprotect(row.EncryptedPayload));
             var root = payload.RootElement;
-            if (root.GetProperty("TemplateName").GetString() == "invitacion_organizacion")
+            if (root.GetProperty("TemplateName").GetString() == "invitacion_organizacion" && phones.Contains(root.GetProperty("To").GetString()!))
                 messages.Add((root.GetProperty("To").GetString()!, root.GetProperty("ButtonParameter").GetString()!));
         }
         return messages;
@@ -190,7 +192,7 @@ public sealed class WhatsAppPhoneInvitationTests(ApiFactory factory) : IClassFix
 
     private static async Task<string> TokenAsync(IServiceProvider services, string phone)
     {
-        var button = Assert.Single(await InvitationMessagesAsync(services), message => message.To == phone).Button;
+        var button = Assert.Single(await InvitationMessagesAsync(services, [phone])).Button;
         return button[(button.IndexOf('#', StringComparison.Ordinal) + 1)..];
     }
 
