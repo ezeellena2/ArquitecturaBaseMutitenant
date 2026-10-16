@@ -19,21 +19,29 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 /// <summary>Compone el DbContext, el límite de guardado y los adaptadores de lectura y escritura. Separa el proveedor técnico del seed con mt_owner de la conexión operativa con mt_app.</summary>
 internal static class PersistenceRegistration
 {
-    /// <summary>Scope técnico del bootstrap: siembra con mt_owner, nunca con mt_app.</summary>
-    internal static ServiceProvider CreateReferenceSeedProvider(string adminConnectionString)
+    /// <summary>
+    /// Scope técnico del bootstrap: siembra con mt_owner, nunca con mt_app. Sus cambios a las referencias avanzan las
+    /// generaciones de la caché en el mismo commit (ADR 0052), salvo sobre un esquema anterior a la caché compartida, que
+    /// sólo arman las pruebas de upgrade.
+    /// </summary>
+    internal static ServiceProvider CreateReferenceSeedProvider(string adminConnectionString, bool cacheGenerations = true)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(adminConnectionString);
 
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddCaching();
+        services.AddCacheGenerations();
         services.AddScoped<TenantContext>(_ => new TenantContext());
         services.AddScoped<ITenantContext>(provider => provider.GetRequiredService<TenantContext>());
         foreach (var contributor in PersistenceModelContributors.Discover())
             services.AddSingleton<IPersistenceModelContributor>(contributor);
-        services.AddDbContext<ApplicationDbContext>((_, options) => options
-            .UseNpgsql(adminConnectionString)
-            .UseOpenIddict<Guid>());
+        services.AddDbContext<ApplicationDbContext>((provider, options) =>
+        {
+            options.UseNpgsql(adminConnectionString).UseOpenIddict<Guid>();
+            if (cacheGenerations)
+                options.AddInterceptors(provider.GetRequiredService<CacheTagCollector>(),
+                    provider.GetRequiredService<CacheGenerationInterceptor>());
+        });
         services.AddSingleton(TimeProvider.System);
         services.AddScoped<IRecentPlatformProofContext, RecentPlatformProofContext>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -66,6 +74,8 @@ internal static class PersistenceRegistration
         services.AddScoped<SoftDeleteInterceptor>();
         services.AddScoped<AuditableEntityInterceptor>();
         services.AddScoped<AuditTrailInterceptor>();
+        // Los dos interceptores de la caché compartida van en el DbContext (ADR 0052).
+        services.AddCacheGenerations();
         services.AddScoped<LoginInvitationScope>();
         services.AddScoped<IAuditLog, AuditLog>();
 
@@ -79,7 +89,10 @@ internal static class PersistenceRegistration
                     provider.GetRequiredService<TenantStampInterceptor>(),
                     provider.GetRequiredService<SoftDeleteInterceptor>(),
                     provider.GetRequiredService<AuditableEntityInterceptor>(),
-                    provider.GetRequiredService<AuditTrailInterceptor>()));
+                    provider.GetRequiredService<AuditTrailInterceptor>(),
+                    // Últimos: ven las filas ya selladas y avanzan sus generaciones en la transacción (ADR 0052).
+                    provider.GetRequiredService<CacheTagCollector>(),
+                    provider.GetRequiredService<CacheGenerationInterceptor>()));
         services.AddScoped<RecentPlatformProofContext>();
         services.AddScoped<IRecentPlatformProofContext>(provider => provider.GetRequiredService<RecentPlatformProofContext>());
         services.AddScoped<IUnitOfWork, UnitOfWork>();

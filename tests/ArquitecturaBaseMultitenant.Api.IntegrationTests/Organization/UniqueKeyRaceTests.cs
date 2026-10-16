@@ -162,11 +162,15 @@ public sealed class UniqueKeyRaceTests(ApiFactory factory)
         public Task<int> CountUsersAsync(Guid roleId, CancellationToken cancellationToken) =>
             inner.CountUsersAsync(roleId, cancellationToken);
 
-        public Task<IReadOnlyList<Guid>> ListRoleIdsForUserAsync(Guid userId, Guid? companyId,
-            CancellationToken cancellationToken) => inner.ListRoleIdsForUserAsync(userId, companyId, cancellationToken);
+        public Task<IReadOnlyList<Guid>> ListOrganizationRoleIdsAsync(Guid userId,
+            CancellationToken cancellationToken) => inner.ListOrganizationRoleIdsAsync(userId, cancellationToken);
 
-        public Task<IReadOnlyList<string>> ListPermissionsForRoleAsync(Guid roleId,
-            CancellationToken cancellationToken) => inner.ListPermissionsForRoleAsync(roleId, cancellationToken);
+        public Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> ListCompanyRoleIdsAsync(Guid userId,
+            CancellationToken cancellationToken) => inner.ListCompanyRoleIdsAsync(userId, cancellationToken);
+
+        public Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> ListPermissionsByRoleAsync(
+            IReadOnlyCollection<Guid> roleIds, CancellationToken cancellationToken) =>
+            inner.ListPermissionsByRoleAsync(roleIds, cancellationToken);
     }
 
     private sealed class GatedPublicPageRepository(IPublicPageRepository inner, BothArrived gate)

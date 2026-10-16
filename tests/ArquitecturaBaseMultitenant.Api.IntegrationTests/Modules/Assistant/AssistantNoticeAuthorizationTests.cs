@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
@@ -118,7 +117,6 @@ public sealed class AssistantNoticeAuthorizationTests(ApiFactory factory)
                     Assert.True((await services.GetRequiredService<IUserRepository>().SuspendAsync(account.UserId, ct)).IsSuccess);
                     return Result.Success();
                 }, CommitPolicy.OnSuccess, Ct);
-                await services.GetRequiredService<IAccessStatusCache>().InvalidateUserAsync(account.UserId, Ct);
             }
         }
         finally { pause.Resume.TrySetResult(); }

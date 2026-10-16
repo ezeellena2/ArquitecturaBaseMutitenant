@@ -1,6 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Common;
@@ -14,7 +13,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 /// <summary>Consulta y modifica las reglas globales con evento en el mismo commit y caché posterior.</summary>
 internal sealed class PlatformSettingsService(IPlatformSettingsReader reader, IPlatformSettingsRepository repository,
-    IUnitOfWork unitOfWork, IRequestValidator validator, PlatformSettingsAuditWriter audit, IPlatformSettingsCache cache,
+    IUnitOfWork unitOfWork, IRequestValidator validator, PlatformSettingsAuditWriter audit,
     TimeProvider timeProvider, ILogger<PlatformSettingsService> logger) : IPlatformSettingsService
 {
     public Task<Result<PlatformSettingsResponse>> GetAsync(CancellationToken cancellationToken) =>
@@ -59,7 +58,6 @@ internal sealed class PlatformSettingsService(IPlatformSettingsReader reader, IP
                 audit.Record(request.Reason!, changes);
                 return settings;
             }, CommitPolicy.OnSuccess, cancellationToken);
-            if (result.IsSuccess) await cache.InvalidateAsync(cancellationToken);
             return VersionResponse.Of(result);
         });
     }

@@ -109,6 +109,9 @@ public sealed class AssistantSnapshotRetentionMigrationTests
             var byId = await durable.GetByIdAsync(account.UserId, Access.Consumer, privateId, ct);
             Assert.Equal(privateVersion, byKey!.Version); Assert.Equal(privateVersion, byId!.Version);
         }
+        // La aplicación de hoy corre sobre el esquema completo: la caché lee sus generaciones de
+        // platform."CacheTagVersions" (ADR 0052). Se termina de migrar antes de volver a pedir por HTTP.
+        await migrator.MigrateAsync(cancellationToken: ct);
         using var replay = await AssistantDurableConversationTests.PostAsync(client, "/api/me/assistant/quick/my_signin", "{}", key);
         Assert.Equal(HttpStatusCode.OK, replay.StatusCode); Assert.Equal(originalHttp, await replay.Content.ReadAsStringAsync(ct));
         using var mismatch = await AssistantDurableConversationTests.PostAsync(client, "/api/me/assistant/quick/my_organizations", "{}", key);

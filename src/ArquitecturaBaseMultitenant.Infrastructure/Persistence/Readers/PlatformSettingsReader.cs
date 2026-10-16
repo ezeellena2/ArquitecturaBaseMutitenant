@@ -1,52 +1,54 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Settings;
 using ArquitecturaBaseMultitenant.Domain.Settings;
-using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Caching;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 
-/// <summary>Lee la configuración global en una proyección cacheada. Llena el caché desde un scope propio para no compartir el DbContext de otra operación.</summary>
-internal sealed class PlatformSettingsReader(
-    IServiceScopeFactory scopes,
-    HybridCache cache) : IPlatformSettingsReader
+/// <summary>
+/// Lee la configuración global con la parte no sensible desde la caché compartida (ADR 0052, 5 min). Los correos de
+/// contacto nunca entran al sobre: se leen de PostgreSQL y se unen por versión; si la fila cambió entre las dos lecturas,
+/// todo sale de una lectura directa.
+/// </summary>
+internal sealed class PlatformSettingsReader(SharedCache cache, ApplicationDbContext context) : IPlatformSettingsReader
 {
-    private static readonly HybridCacheEntryOptions CacheOptions = new()
-    {
-        Expiration = TimeSpan.FromMinutes(5),
-        LocalCacheExpiration = TimeSpan.FromMinutes(5),
-    };
+    private static readonly CacheEntry Entry =
+        new(CacheKeys.Platform("settings"), [CacheTags.PlatformConfiguration], TimeSpan.FromMinutes(5));
 
-    public async Task<PlatformSettingsRow?> FindAsync(CancellationToken cancellationToken) =>
-        (await cache.GetOrCreateInOwnScopeAsync<ApplicationDbContext, CachedSettings?>(
-            CacheKeys.Platform("settings"), scopes, LoadAsync, CacheOptions, cancellationToken))?.ToRow();
-
-    private static async Task<CachedSettings?> LoadAsync(
-        ApplicationDbContext context, CancellationToken cancellationToken)
+    public async Task<PlatformSettingsRow?> FindAsync(CancellationToken cancellationToken)
     {
-        var settings = await context.PlatformSettings.AsNoTracking()
-            .Where(settings => settings.Id == PlatformSettings.SingletonId)
-            .Select(settings => new
-            {
-                settings.ConsumerSignup, settings.BusinessSignup, settings.MaxOwnedOrganizations,
-                settings.AccountDeletionGraceDays, settings.Version, settings.SalesEmail, settings.SupportEmail,
-            })
+        var cached = await cache.GetOrLoadAsync(Entry, 0,
+            static (services, _, ct) => LoadAsync(services.GetRequiredService<ApplicationDbContext>(), ct),
+            cancellationToken);
+        if (cached is null) return null;
+        var contacts = await Singleton(context)
+            .Select(settings => new { settings.Version, settings.SalesEmail, settings.SupportEmail })
             .SingleOrDefaultAsync(cancellationToken);
-        return settings is null ? null : new CachedSettings(settings.ConsumerSignup, settings.BusinessSignup,
-            settings.MaxOwnedOrganizations, settings.AccountDeletionGraceDays, settings.Version,
-            settings.SalesEmail?.Value, settings.SupportEmail?.Value);
+        if (contacts?.Version == cached.Version)
+            return cached.ToRow(contacts.SalesEmail, contacts.SupportEmail);
+
+        return await Singleton(context).Select(settings => new PlatformSettingsRow(settings.ConsumerSignup,
+                settings.BusinessSignup, settings.MaxOwnedOrganizations, settings.AccountDeletionGraceDays,
+                settings.Version, settings.SalesEmail, settings.SupportEmail))
+            .SingleOrDefaultAsync(cancellationToken);
     }
 
-    /// <summary>Lo que guarda la caché: los correos como texto, porque su serializador no conoce el value object.</summary>
-    private sealed record CachedSettings(ConsumerSignupMode ConsumerSignup, BusinessSignupMode BusinessSignup,
-        int MaxOwnedOrganizations, int AccountDeletionGraceDays, uint Version, string? SalesAddress, string? SupportAddress)
-    {
-        public PlatformSettingsRow ToRow() => new(ConsumerSignup, BusinessSignup, MaxOwnedOrganizations,
-            AccountDeletionGraceDays, Version, ToEmail(SalesAddress), ToEmail(SupportAddress));
+    private static IQueryable<PlatformSettings> Singleton(ApplicationDbContext context) =>
+        context.PlatformSettings.AsNoTracking().Where(settings => settings.Id == PlatformSettings.SingletonId);
 
-        private static Email? ToEmail(string? address) => address is null ? null : Email.Create(address).Value;
+    private static Task<CachedSettings?> LoadAsync(ApplicationDbContext context, CancellationToken cancellationToken) =>
+        Singleton(context).Select(settings => new CachedSettings(settings.ConsumerSignup, settings.BusinessSignup,
+                settings.MaxOwnedOrganizations, settings.AccountDeletionGraceDays, settings.Version))
+            .SingleOrDefaultAsync(cancellationToken);
+
+    /// <summary>Lo que guarda la caché: la configuración sin los correos de contacto.</summary>
+    private sealed record CachedSettings(ConsumerSignupMode ConsumerSignup, BusinessSignupMode BusinessSignup,
+        int MaxOwnedOrganizations, int AccountDeletionGraceDays, uint Version)
+    {
+        public PlatformSettingsRow ToRow(Domain.ValueObjects.Email? salesEmail, Domain.ValueObjects.Email? supportEmail) =>
+            new(ConsumerSignup, BusinessSignup, MaxOwnedOrganizations, AccountDeletionGraceDays, Version,
+                salesEmail, supportEmail);
     }
 }

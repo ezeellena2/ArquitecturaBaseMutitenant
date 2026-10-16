@@ -1,25 +1,23 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Features;
-using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Caching;
 
-/// <summary>Guarda filas globales; el filtro evalúa su vencimiento en cada consulta.</summary>
-internal sealed class TenantFeatureCache(HybridCache cache, IServiceScopeFactory scopes) : ITenantFeatureCache
+/// <summary>
+/// Las habilitaciones globales de cada espacio en la caché compartida (ADR 0052), 5 min; el filtro evalúa su
+/// vencimiento en cada consulta con TimeProvider.
+/// </summary>
+internal sealed class TenantFeatureCache(SharedCache cache) : ITenantFeatureCache
 {
-    private static readonly HybridCacheEntryOptions CacheOptions = new()
-    {
-        Expiration = TimeSpan.FromMinutes(5),
-        LocalCacheExpiration = TimeSpan.FromMinutes(5),
-    };
+    private static readonly TimeSpan Expiration = TimeSpan.FromMinutes(5);
 
     public async Task<IReadOnlyList<TenantFeatureRow>> ListAsync(Guid tenantId, CancellationToken cancellationToken) =>
-        await cache.GetOrCreateInOwnScopeAsync<ITenantFeatureReader, Guid, TenantFeatureRow[]>(
-            CacheKeys.Tenant(tenantId, "features"), scopes, tenantId,
-            static async (reader, id, ct) => (await reader.ListAsync(id, ct)).ToArray(), CacheOptions, cancellationToken);
-
-    public ValueTask InvalidateAsync(Guid tenantId, CancellationToken cancellationToken) =>
-        cache.RemoveAsync(CacheKeys.Tenant(tenantId, "features"), cancellationToken);
+        await cache.GetOrLoadAsync(
+            new CacheEntry(CacheKeys.Tenant(tenantId, "features"), [CacheTags.Features(tenantId)], Expiration),
+            tenantId,
+            static async (services, id, ct) =>
+                (await services.GetRequiredService<ITenantFeatureReader>().ListAsync(id, ct)).ToArray(),
+            cancellationToken);
 }

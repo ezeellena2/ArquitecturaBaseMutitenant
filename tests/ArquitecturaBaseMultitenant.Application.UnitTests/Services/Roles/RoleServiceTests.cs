@@ -1,6 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Roles;
 using ArquitecturaBaseMultitenant.Application.Services.Roles;
 using ArquitecturaBaseMultitenant.Application.UnitTests.Services.Companies;
@@ -65,7 +64,7 @@ public sealed class RoleServiceTests
     }
 
     private static RoleService Create(FakeRoleReader reader, ServiceFixture<RoleService> fixture) =>
-        new(reader, new FakeRoleRepository(), new FakePermissionService(), new CompanyServiceTests.FakeCompanyReader(),
+        new(reader, new FakeRoleRepository(), new CompanyServiceTests.FakeCompanyReader(),
             fixture.Validator, new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
 
     internal sealed class FakeRoleReader : IRoleReader
@@ -90,10 +89,14 @@ public sealed class RoleServiceTests
             CancellationToken cancellationToken) =>
             Task.FromResult(NameExists);
         public Task<int> CountUsersAsync(Guid roleId, CancellationToken cancellationToken) => Task.FromResult(UserCount);
-        public Task<IReadOnlyList<Guid>> ListRoleIdsForUserAsync(Guid userId, Guid? companyId, CancellationToken cancellationToken) =>
+        public Task<IReadOnlyList<Guid>> ListOrganizationRoleIdsAsync(Guid userId, CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<Guid>>([]);
-        public Task<IReadOnlyList<string>> ListPermissionsForRoleAsync(Guid roleId, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<string>>([]);
+        public Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> ListCompanyRoleIdsAsync(Guid userId,
+            CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>>(new Dictionary<Guid, IReadOnlyList<Guid>>());
+        public Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> ListPermissionsByRoleAsync(
+            IReadOnlyCollection<Guid> roleIds, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, IReadOnlyList<string>>>(new Dictionary<Guid, IReadOnlyList<string>>());
     }
 
     internal sealed class FakeRoleRepository : IRoleRepository
@@ -103,23 +106,5 @@ public sealed class RoleServiceTests
         public void Add(Role role) { }
         public void MarkUpdated(Role role) { }
         public void Remove(Role role) { }
-    }
-
-    internal sealed class FakePermissionService : IPermissionService
-    {
-        public Task<IReadOnlyList<string>> GetAssignedOrganizationPermissionsAsync(Guid userId, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<string>>([]);
-
-        public Task<IReadOnlyList<string>> GetOrganizationPermissionsAsync(Guid userId, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<string>>([]);
-        public Task<IReadOnlyList<string>> GetCompanyPermissionsAsync(Guid userId, Guid companyId, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<string>>([]);
-        public Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> GetPermissionsByCompanyAsync(Guid userId,
-            CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyDictionary<Guid, IReadOnlyList<string>>>(new Dictionary<Guid, IReadOnlyList<string>>());
-        public Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken cancellationToken) => Task.FromResult(false);
-        public Task<bool> HasCompanyPermissionAsync(Guid userId, Guid companyId, string permission, CancellationToken cancellationToken) =>
-            Task.FromResult(false);
-        public Task InvalidateRoleAsync(Guid roleId, CancellationToken cancellationToken) => Task.CompletedTask;
     }
 }

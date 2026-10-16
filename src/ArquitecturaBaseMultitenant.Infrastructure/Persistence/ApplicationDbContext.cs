@@ -10,6 +10,7 @@ using ArquitecturaBaseMultitenant.Domain.PublicSite;
 using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Infrastructure.Caching;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Conventions;
@@ -90,6 +91,7 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     public DbSet<LegalDocument> LegalDocuments => Set<LegalDocument>();
     public DbSet<LegalDocumentContent> LegalDocumentContents => Set<LegalDocumentContent>();
     public DbSet<LegalAcceptance> LegalAcceptances => Set<LegalAcceptance>();
+    internal DbSet<CacheTagVersion> CacheTagVersions => Set<CacheTagVersion>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {

@@ -80,7 +80,6 @@ public sealed class TenantJobRunnerIdentityTests(ApiFactory factory)
             Assert.True(tracked.Suspend().IsSuccess);
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
-        await cache.InvalidateAsync(tenant.Id, Ct);
 
         Assert.Equal(TenantStatus.Suspended, await cache.GetStatusAsync(tenant.Id, Ct));
     }

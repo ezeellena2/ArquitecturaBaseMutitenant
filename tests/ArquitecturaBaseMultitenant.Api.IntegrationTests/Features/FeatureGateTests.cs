@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Features;
@@ -97,7 +96,6 @@ public sealed class FeatureGateTests
                 AuditActorKind.System, Guid.Empty, tenantId, "Habilitación del test aislado", services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime));
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
-        await services.GetRequiredService<ITenantFeatureCache>().InvalidateAsync(tenantId, Ct);
     }
 }
 

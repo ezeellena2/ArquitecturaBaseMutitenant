@@ -23,7 +23,6 @@ internal sealed class AccountDeletionService(ICurrentUser currentUser, AccountDe
             if (currentUser.UserId is not { } userId) return UserErrors.NotFound;
             var result = await unitOfWork.ExecuteInTransactionAsync(
                 innerCt => requester.RequestAsync(userId, request, innerCt), CommitPolicy.OnSuccess, ct);
-            if (result.IsSuccess) await sessions.InvalidateAsync(userId, ct);
             return result;
         });
 

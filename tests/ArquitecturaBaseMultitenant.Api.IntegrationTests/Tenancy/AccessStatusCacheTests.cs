@@ -1,27 +1,49 @@
+using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
-using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Infrastructure.Caching;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
 /// <summary>
-/// Comprueba la caché de estado de cuenta y membresía y su invalidación explícita. Exige consultar el
-/// índice global autorizado al resolver pertenencia.
+/// La caché compartida de estado de cuenta y membresía (ADR 0052): la lectura se repite desde Redis hasta que avanza la
+/// generación de su etiqueta, como lo hace el commit que cambia el estado. Exige consultar el índice global autorizado al
+/// resolver pertenencia, y Personal y Business nunca comparten una entrada.
 /// </summary>
-public sealed class AccessStatusCacheTests
+[Collection(ApiTestGroup.Name)]
+public sealed class AccessStatusCacheTests : IDisposable
 {
+    private readonly FakeState state = new();
+    private readonly WebApplicationFactory<Program> host;
+
+    public AccessStatusCacheTests(ApiFactory factory)
+    {
+        ArgumentNullException.ThrowIfNull(factory);
+        host = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        {
+            services.AddSingleton(state);
+            services.Replace(ServiceDescriptor.Scoped<IUserStatusReader, FakeUserStatusReader>());
+            services.Replace(ServiceDescriptor.Scoped<IUserTenantAccessReader, FakeAccessReader>());
+        }));
+    }
+
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    public void Dispose() => host.Dispose();
+
     [Fact]
-    public async Task User_status_is_cached_until_explicit_invalidation()
+    public async Task User_status_is_cached_until_its_generation_advances()
     {
-        var (cache, state) = NewCache();
+        var cache = host.Services.GetRequiredService<IAccessStatusCache>();
         var userId = Guid.NewGuid();
 
         Assert.Equal(UserStatus.Active, await cache.GetUserStatusAsync(userId, Ct));
@@ -29,16 +51,16 @@ public sealed class AccessStatusCacheTests
         Assert.Equal(UserStatus.Active, await cache.GetUserStatusAsync(userId, Ct));
         Assert.Equal(1, state.UserReads);
 
-        await cache.InvalidateUserAsync(userId, Ct);
+        await CacheGenerations.AdvanceAsync(host.Services, Ct, CacheTags.Account(userId));
 
         Assert.Equal(UserStatus.Suspended, await cache.GetUserStatusAsync(userId, Ct));
         Assert.Equal(2, state.UserReads);
     }
 
     [Fact]
-    public async Task Membership_cache_reads_global_access_index_and_invalidates_one_member()
+    public async Task Membership_cache_reads_global_access_index_until_the_members_generation_advances()
     {
-        var (cache, state) = NewCache();
+        var cache = host.Services.GetRequiredService<IAccessStatusCache>();
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         state.Accesses = [new UserTenantAccessRow(tenantId, TenantKind.Business, "Empresa A", null,
@@ -52,7 +74,7 @@ public sealed class AccessStatusCacheTests
         Assert.Equal(1, state.MemberReads);
         Assert.Equal(userId, state.LastUserId);
 
-        await cache.InvalidateMemberAsync(userId, tenantId, Ct);
+        await CacheGenerations.AdvanceAsync(host.Services, Ct, CacheTags.Members(tenantId));
 
         Assert.Equal(MemberStatus.Inactive,
             await cache.GetMemberStatusAsync(userId, tenantId, TenantKind.Business, Ct));
@@ -62,27 +84,17 @@ public sealed class AccessStatusCacheTests
     [Fact]
     public async Task Membership_cache_rejects_a_tenant_or_kind_absent_from_the_global_index()
     {
-        var (cache, state) = NewCache();
+        var cache = host.Services.GetRequiredService<IAccessStatusCache>();
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         state.Accesses = [new UserTenantAccessRow(tenantId, TenantKind.Business, "Empresa A", null,
             TenantStatus.Active, MemberStatus.Active, null)];
 
         Assert.Null(await cache.GetMemberStatusAsync(userId, Guid.NewGuid(), TenantKind.Business, Ct));
+        // La clase va en la clave: la entrada Business recién leída no responde por Personal.
+        Assert.Equal(MemberStatus.Active,
+            await cache.GetMemberStatusAsync(userId, tenantId, TenantKind.Business, Ct));
         Assert.Null(await cache.GetMemberStatusAsync(userId, tenantId, TenantKind.Personal, Ct));
-    }
-
-    private static (IAccessStatusCache Cache, FakeState State) NewCache()
-    {
-        var services = new ServiceCollection();
-        services.AddLogging();
-        services.AddHybridCache();
-        services.AddSingleton<FakeState>();
-        services.AddScoped<IUserStatusReader, FakeUserStatusReader>();
-        services.AddScoped<IUserTenantAccessReader, FakeAccessReader>();
-        services.AddSingleton<IAccessStatusCache, AccessStatusCache>();
-        var provider = services.BuildServiceProvider();
-        return (provider.GetRequiredService<IAccessStatusCache>(), provider.GetRequiredService<FakeState>());
     }
 
     private sealed class FakeState
@@ -122,6 +134,5 @@ public sealed class AccessStatusCacheTests
             state.LastUserId = userId;
             return Task.FromResult(state.Accesses);
         }
-
     }
 }

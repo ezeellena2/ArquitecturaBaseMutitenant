@@ -7,7 +7,6 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.ReferenceData;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
-using ArquitecturaBaseMultitenant.Infrastructure.Caching;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -46,7 +45,6 @@ public sealed class AssistantModelCatalogTests
                 foreach (var contributor in services.GetServices<IModuleDataSeedContributor>()) await contributor.StageAsync(ct);
                 return Domain.Results.Result.Success();
             }, CommitPolicy.OnSuccess, AssistantTestData.Ct);
-            await services.GetRequiredService<ReferenceDataCache>().InvalidateAsync(AssistantTestData.Ct);
         }
         using var after = await client.GetFromJsonAsync<JsonDocument>("/api/platform/assistant/models?page=1&pageSize=20", AssistantTestData.Ct);
         var saved = after!.RootElement.GetProperty("items").EnumerateArray().Single(row => row.GetProperty("id").GetGuid() == id);

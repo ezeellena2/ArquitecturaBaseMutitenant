@@ -12,4 +12,7 @@ public interface ICompanyReader
         CancellationToken cancellationToken);
     Task<bool> ExistsTaxIdAsync(string country, string type, string number, Guid? excludedCompanyId,
         CancellationToken cancellationToken);
+
+    /// <summary>Si la empresa existe en la organización activa y está activa.</summary>
+    Task<bool> IsActiveAsync(Guid companyId, CancellationToken cancellationToken);
 }

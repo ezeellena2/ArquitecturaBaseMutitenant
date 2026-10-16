@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -138,8 +137,6 @@ public sealed class ConnectTests(ApiFactory factory)
                     return member.Deactivate();
                 }, CommitPolicy.OnSuccess, Ct);
             Assert.True(deactivated.IsSuccess);
-            await services.GetRequiredService<IAccessStatusCache>()
-                .InvalidateMemberAsync(method.UserId, tenantId, Ct);
         }
 
         using var denied = await client.GetAsync(AuthorizePath("business"), Ct);

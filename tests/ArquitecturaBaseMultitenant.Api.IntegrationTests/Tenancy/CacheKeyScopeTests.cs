@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Infrastructure.Caching;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
@@ -41,14 +42,31 @@ public sealed class CacheKeyScopeTests
     }
 
     [Fact]
-    public void Caching_registration_provides_HybridCache()
+    public void Caching_registration_provides_HybridCache_without_local_copies()
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddCaching();
+        services.AddCacheGenerations();
 
         using var provider = services.BuildServiceProvider();
 
         Assert.NotNull(provider.GetRequiredService<HybridCache>());
+        // ADR 0052: Redis es la única caché; ninguna instancia guarda una copia que otra no pueda invalidar.
+        Assert.Equal(HybridCacheEntryFlags.DisableLocalCache,
+            provider.GetRequiredService<IOptions<HybridCacheOptions>>().Value.DefaultEntryOptions?.Flags);
+    }
+
+    [Fact]
+    public void A_physical_key_carries_the_application_environment_schema_and_generations()
+    {
+        var entry = new CacheEntry(CacheKeys.Tenant(TenantA, "status"), [CacheTags.Organization(TenantA)],
+            TimeSpan.FromSeconds(60));
+
+        Assert.Equal("v1:t:0123456789abcdef0123456789abcdef:status:g7-0", SharedCache.Key(entry, "7-0"));
+        Assert.Equal("arquitecturabasemt:Testing:", new CacheOptions { Environment = "Testing" }.KeyPrefix);
+        Assert.Equal("t:0123456789abcdef0123456789abcdef:org", CacheTags.Organization(TenantA));
+        Assert.Equal("u:0123456789abcdef0123456789abcdef:account", CacheTags.Account(TenantA));
+        Assert.Equal("p:settings", CacheTags.PlatformConfiguration);
+        Assert.Equal("p:ref", CacheTags.References);
     }
 }

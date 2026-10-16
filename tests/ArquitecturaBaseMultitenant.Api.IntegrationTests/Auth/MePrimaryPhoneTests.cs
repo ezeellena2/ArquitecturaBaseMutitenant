@@ -6,7 +6,6 @@ using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Common.Text;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
@@ -189,7 +188,6 @@ public sealed partial class MePrimaryPhoneTests(ApiFactory factory)
             await services.GetRequiredService<ISignInService>().RevokeSessionsAsync(account.UserId, ct);
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
-        await services.GetRequiredService<IAccessStatusCache>().InvalidateUserAsync(account.UserId, Ct);
 
         using var response = await client.GetAsync("/api/me", Ct);
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);

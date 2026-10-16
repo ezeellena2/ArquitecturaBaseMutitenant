@@ -1,54 +1,50 @@
+using System.Globalization;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
-using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Caching;
 
-/// <summary>Cachea estado de identidad y membresía desde el índice global de accesos.</summary>
-internal sealed class AccessStatusCache(HybridCache cache, IServiceScopeFactory scopes) : IAccessStatusCache
+/// <summary>
+/// Estado de identidad y de membresía en la caché compartida (ADR 0052), 60 s. La membresía se lee del índice global
+/// de accesos y lleva su clase en la clave: Personal y Business nunca comparten una entrada.
+/// </summary>
+internal sealed class AccessStatusCache(SharedCache cache) : IAccessStatusCache
 {
-    private static readonly HybridCacheEntryOptions CacheOptions = new()
-    {
-        Expiration = TimeSpan.FromSeconds(60),
-        LocalCacheExpiration = TimeSpan.FromSeconds(60),
-    };
+    private static readonly TimeSpan Expiration = TimeSpan.FromSeconds(60);
 
-    public async Task<UserStatus?> GetUserStatusAsync(Guid userId, CancellationToken cancellationToken) =>
-        await cache.GetOrCreateInOwnScopeAsync<IUserStatusReader, Guid, UserStatus?>(
-            UserKey(userId), scopes, userId,
-            static (reader, id, ct) => reader.GetStatusAsync(id, ct), CacheOptions, cancellationToken);
+    public Task<UserStatus?> GetUserStatusAsync(Guid userId, CancellationToken cancellationToken) =>
+        cache.GetOrLoadAsync(
+            new CacheEntry(CacheKeys.User(userId, "status"), [CacheTags.Account(userId)], Expiration),
+            userId,
+            static (services, id, ct) => services.GetRequiredService<IUserStatusReader>().GetStatusAsync(id, ct),
+            cancellationToken);
 
-    public async Task<MemberStatus?> GetMemberStatusAsync(Guid userId, Guid tenantId, TenantKind kind,
+    public Task<MemberStatus?> GetMemberStatusAsync(Guid userId, Guid tenantId, TenantKind kind,
         CancellationToken cancellationToken)
     {
-        if (kind != TenantKind.Personal && kind != TenantKind.Business)
+        var scope = kind switch
         {
-            throw new ArgumentOutOfRangeException(nameof(kind), kind, "An access member requires a tenant kind.");
-        }
-
-        return await cache.GetOrCreateInOwnScopeAsync(MemberKey(userId, tenantId),
-            scopes, (userId, tenantId, kind),
+            TenantKind.Personal => "personal",
+            TenantKind.Business => "business",
+            _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, "An access member requires a tenant kind."),
+        };
+        var key = CacheKeys.Tenant(tenantId,
+            "member:" + userId.ToString("N", CultureInfo.InvariantCulture) + ":" + scope + ":status");
+        return cache.GetOrLoadAsync(
+            new CacheEntry(key,
+                [CacheTags.Organization(tenantId), CacheTags.Account(userId), CacheTags.Members(tenantId)], Expiration),
+            (UserId: userId, TenantId: tenantId, Kind: kind),
             static async (services, state, ct) =>
             {
                 var accesses = await services.GetRequiredService<IUserTenantAccessReader>()
-                    .ListForUserAsync(state.userId, ct);
-                return accesses.FirstOrDefault(access => access.TenantId == state.tenantId
-                    && access.Kind == state.kind)?.MemberStatus;
-            }, CacheOptions, cancellationToken: cancellationToken);
+                    .ListForUserAsync(state.UserId, ct);
+                return accesses.FirstOrDefault(access => access.TenantId == state.TenantId
+                    && access.Kind == state.Kind)?.MemberStatus;
+            },
+            cancellationToken);
     }
-
-    public ValueTask InvalidateUserAsync(Guid userId, CancellationToken cancellationToken) =>
-        cache.RemoveAsync(UserKey(userId), cancellationToken);
-
-    public ValueTask InvalidateMemberAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken) =>
-        cache.RemoveAsync(MemberKey(userId, tenantId), cancellationToken);
-
-    private static string UserKey(Guid userId) => CacheKeys.User(userId, "status");
-
-    private static string MemberKey(Guid userId, Guid tenantId) =>
-        CacheKeys.Tenant(tenantId, "member:" + userId.ToString("N", System.Globalization.CultureInfo.InvariantCulture) + ":status");
 }

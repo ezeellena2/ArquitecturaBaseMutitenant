@@ -19,7 +19,7 @@ public sealed class RoleServiceWriteTests
         using var fixture = new ServiceFixture<RoleService>(new CreateRoleRequestValidator());
         var unitOfWork = new FakeUnitOfWork();
         var service = new RoleService(new RoleServiceTests.FakeRoleReader(),
-            new RoleServiceTests.FakeRoleRepository(), new RoleServiceTests.FakePermissionService(),
+            new RoleServiceTests.FakeRoleRepository(),
             new CompanyServiceTests.FakeCompanyReader(),
             fixture.Validator, unitOfWork, fixture.TimeProvider, fixture.Logger);
 
@@ -37,7 +37,7 @@ public sealed class RoleServiceWriteTests
         var unitOfWork = new FakeUnitOfWork();
         using var fixture = new ServiceFixture<RoleService>(new DeleteRoleRequestValidator());
         var service = new RoleService(new RoleServiceTests.FakeRoleReader(), repository,
-            new RoleServiceTests.FakePermissionService(), new CompanyServiceTests.FakeCompanyReader(), fixture.Validator,
+            new CompanyServiceTests.FakeCompanyReader(), fixture.Validator,
             unitOfWork, fixture.TimeProvider, fixture.Logger);
 
         var result = await service.DeleteAsync(new DeleteRoleRequest(role.Id, 0), Ct);
@@ -56,7 +56,7 @@ public sealed class RoleServiceWriteTests
         var repository = new RecordingRoleRepository(role);
         using var fixture = new ServiceFixture<RoleService>(new UpdateRoleRequestValidator());
         var service = new RoleService(new RoleServiceTests.FakeRoleReader { UserCount = 2 }, repository,
-            new RoleServiceTests.FakePermissionService(), new CompanyServiceTests.FakeCompanyReader(), fixture.Validator,
+            new CompanyServiceTests.FakeCompanyReader(), fixture.Validator,
             new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
 
         var moved = await service.UpdateAsync(new UpdateRoleRequest(role.Id, "Lectores", null,
@@ -81,7 +81,7 @@ public sealed class RoleServiceWriteTests
             [Permissions.Company.Members.Read]).Value;
         using var fixture = new ServiceFixture<RoleService>(new UpdateRoleRequestValidator());
         var service = new RoleService(new RoleServiceTests.FakeRoleReader(), new RecordingRoleRepository(role),
-            new RoleServiceTests.FakePermissionService(), new CompanyServiceTests.FakeCompanyReader(), fixture.Validator,
+            new CompanyServiceTests.FakeCompanyReader(), fixture.Validator,
             new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
 
         var result = await service.UpdateAsync(new UpdateRoleRequest(role.Id, "Lectores", null,

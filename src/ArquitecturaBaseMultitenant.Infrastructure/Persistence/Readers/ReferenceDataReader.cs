@@ -2,63 +2,61 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Domain.ReferenceData;
 using ArquitecturaBaseMultitenant.Infrastructure.Caching;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 
-/// <summary>Proyecta los catálogos globales de platform, incluidas las filas deshabilitadas que siguen en uso histórico. Usa caché por catálogo para las lecturas repetidas.</summary>
-internal sealed class ReferenceDataReader(
-    IServiceScopeFactory scopes,
-    HybridCache cache) :
+/// <summary>
+/// Proyecta los catálogos globales de platform, incluidas las filas deshabilitadas que siguen en uso histórico. Cada
+/// catálogo va en la caché compartida (ADR 0052, 1 h) con la etiqueta de referencias, que avanza el seed al cambiarlas.
+/// </summary>
+internal sealed class ReferenceDataReader(SharedCache cache) :
     ICurrencyCatalog, ICountryCatalog, ITimeZoneCatalog, ICultureCatalog, ITaxIdTypeCatalog
 {
-    private static readonly HybridCacheEntryOptions CacheOptions = new()
-    {
-        Expiration = TimeSpan.FromHours(1),
-        LocalCacheExpiration = TimeSpan.FromHours(1),
-    };
+    private static readonly TimeSpan Expiration = TimeSpan.FromHours(1);
 
     Task<IReadOnlyList<CurrencyCatalogEntry>> ICurrencyCatalog.ListAsync(CancellationToken cancellationToken) =>
-        ReadAsync(ReferenceDataCache.CurrenciesKey, LoadCurrenciesAsync, cancellationToken);
+        ReadAsync("currencies", LoadCurrenciesAsync, cancellationToken);
 
     async Task<CurrencyCatalogEntry?> ICurrencyCatalog.FindAsync(string code, CancellationToken cancellationToken) =>
         (await ((ICurrencyCatalog)this).ListAsync(cancellationToken)).FirstOrDefault(
             item => string.Equals(item.Code, code, StringComparison.Ordinal));
 
     Task<IReadOnlyList<CountryCatalogEntry>> ICountryCatalog.ListAsync(CancellationToken cancellationToken) =>
-        ReadAsync(ReferenceDataCache.CountriesKey, LoadCountriesAsync, cancellationToken);
+        ReadAsync("countries", LoadCountriesAsync, cancellationToken);
 
     async Task<CountryCatalogEntry?> ICountryCatalog.FindAsync(string code, CancellationToken cancellationToken) =>
         (await ((ICountryCatalog)this).ListAsync(cancellationToken)).FirstOrDefault(
             item => string.Equals(item.Code, code, StringComparison.Ordinal));
 
     Task<IReadOnlyList<TimeZoneCatalogEntry>> ITimeZoneCatalog.ListAsync(CancellationToken cancellationToken) =>
-        ReadAsync(ReferenceDataCache.TimeZonesKey, LoadTimeZonesAsync, cancellationToken);
+        ReadAsync("time-zones", LoadTimeZonesAsync, cancellationToken);
 
     async Task<TimeZoneCatalogEntry?> ITimeZoneCatalog.FindAsync(string id, CancellationToken cancellationToken) =>
         (await ((ITimeZoneCatalog)this).ListAsync(cancellationToken)).FirstOrDefault(
             item => string.Equals(item.Id, id, StringComparison.Ordinal));
 
     Task<IReadOnlyList<CultureCatalogEntry>> ICultureCatalog.ListAsync(CancellationToken cancellationToken) =>
-        ReadAsync(ReferenceDataCache.CulturesKey, LoadCulturesAsync, cancellationToken);
+        ReadAsync("cultures", LoadCulturesAsync, cancellationToken);
 
     async Task<CultureCatalogEntry?> ICultureCatalog.FindAsync(string code, CancellationToken cancellationToken) =>
         (await ((ICultureCatalog)this).ListAsync(cancellationToken)).FirstOrDefault(
             item => string.Equals(item.Code, code, StringComparison.Ordinal));
 
     Task<IReadOnlyList<TaxIdTypeCatalogEntry>> ITaxIdTypeCatalog.ListAsync(CancellationToken cancellationToken) =>
-        ReadAsync(ReferenceDataCache.TaxIdTypesKey, LoadTaxIdTypesAsync, cancellationToken);
+        ReadAsync("tax-id-types", LoadTaxIdTypesAsync, cancellationToken);
 
     async Task<TaxIdTypeCatalogEntry?> ITaxIdTypeCatalog.FindAsync(string code, CancellationToken cancellationToken) =>
         (await ((ITaxIdTypeCatalog)this).ListAsync(cancellationToken)).FirstOrDefault(
             item => string.Equals(item.Code, code, StringComparison.Ordinal));
 
-    private async Task<IReadOnlyList<TEntry>> ReadAsync<TEntry>(string key,
+    private async Task<IReadOnlyList<TEntry>> ReadAsync<TEntry>(string catalog,
         Func<ApplicationDbContext, CancellationToken, Task<TEntry[]>> load,
         CancellationToken cancellationToken) =>
-        await cache.GetOrCreateInOwnScopeAsync<ApplicationDbContext, TEntry[]>(
-            key, scopes, load, CacheOptions, cancellationToken);
+        await cache.GetOrLoadAsync(
+            new CacheEntry(CacheKeys.Platform("ref:" + catalog), [CacheTags.References], Expiration),
+            load, static (services, read, ct) => read(services.GetRequiredService<ApplicationDbContext>(), ct),
+            cancellationToken);
 
     private static async Task<CurrencyCatalogEntry[]> LoadCurrenciesAsync(
         ApplicationDbContext context, CancellationToken cancellationToken)

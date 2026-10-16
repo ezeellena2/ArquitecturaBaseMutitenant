@@ -3,29 +3,27 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Caching;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 
-/// <summary>Lee las preferencias del tenant activo desde caché o una proyección sin seguimiento. La carga en otro scope evita cachear datos de una transacción todavía reversible.</summary>
-internal sealed class TenantSettingsReader(
-    ITenantContext tenantContext,
-    IServiceScopeFactory scopes,
-    HybridCache cache) : ITenantSettingsReader
+/// <summary>
+/// Lee las preferencias del tenant activo desde la caché compartida (ADR 0052, 5 min) o una proyección sin seguimiento.
+/// La clave sale del contexto del pedido y la carga corre en otro scope, así nunca se cachean datos de una transacción
+/// todavía reversible.
+/// </summary>
+internal sealed class TenantSettingsReader(ITenantContext tenantContext, SharedCache cache) : ITenantSettingsReader
 {
-    private static readonly HybridCacheEntryOptions CacheOptions = new()
-    {
-        Expiration = TimeSpan.FromMinutes(5),
-        LocalCacheExpiration = TimeSpan.FromMinutes(5),
-    };
+    private static readonly TimeSpan Expiration = TimeSpan.FromMinutes(5);
 
-    public async Task<TenantSettingsRow?> FindCurrentAsync(CancellationToken cancellationToken)
+    public Task<TenantSettingsRow?> FindCurrentAsync(CancellationToken cancellationToken)
     {
         var tenantId = tenantContext.RequiredTenantId;
-        return await cache.GetOrCreateInOwnScopeAsync<TenantSettingsLoader, Guid, TenantSettingsRow?>(
-            CacheKeys.Tenant(tenantId, "settings"), scopes, tenantId,
-            static (loader, id, ct) => loader.FindAsync(id, ct), CacheOptions, cancellationToken);
+        return cache.GetOrLoadAsync(
+            new CacheEntry(CacheKeys.Tenant(tenantId, "settings"), [CacheTags.Settings(tenantId)], Expiration),
+            tenantId,
+            static (services, id, ct) => services.GetRequiredService<TenantSettingsLoader>().FindAsync(id, ct),
+            cancellationToken);
     }
 }
 

@@ -4,7 +4,6 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Features;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -126,7 +125,6 @@ public sealed class WhatsAppAttentionContractTests(ApiFactory factory)
                 tenantId, "WhatsApp contract fixture", services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime));
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
-        await services.GetRequiredService<ITenantFeatureCache>().InvalidateAsync(tenantId, Ct);
     }
 
     private static string FindRepositoryRoot()

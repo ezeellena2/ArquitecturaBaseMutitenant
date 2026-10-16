@@ -36,6 +36,7 @@ public static class RecorridoApiHost
                     ["ConnectionStrings:postgres-bootstrap"] = factory.BootstrapConnectionString,
                     ["ConnectionStrings:appdb-admin"] = factory.AdminConnectionString,
                     ["ConnectionStrings:appdb"] = factory.RuntimeConnectionString,
+                    ["ConnectionStrings:cache"] = factory.CacheConnectionString,
                     ["Authentication:Issuer"] = issuer,
                     ["Authentication:Clients:Web:RedirectUris:0"] = issuer + "auth/callback",
                     ["Authentication:Clients:Web:RedirectUris:1"] = issuer + "silent-renew.html",

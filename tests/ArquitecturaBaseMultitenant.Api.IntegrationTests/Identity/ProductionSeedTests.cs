@@ -73,6 +73,7 @@ public sealed partial class ProductionSeedTests
         }.ConnectionString;
         var admin = Connection("mt_owner", ownerPassword);
         var runtime = Connection("mt_app", runtimePassword);
+        var cache = await SharedRedis.ConnectionStringAsync();
         await DatabaseBootstrapExtensions.BootstrapAsync(bootstrap, admin, runtime,
             TestContext.Current.CancellationToken);
 
@@ -220,6 +221,7 @@ public sealed partial class ProductionSeedTests
         {
             builder.UseEnvironment("Production");
             builder.UseSetting("ConnectionStrings:appdb", runtime);
+            builder.UseSetting("ConnectionStrings:cache", cache);
             builder.UseSetting("Authentication:Issuer", "https://example.test/");
             builder.UseSetting("Authentication:Clients:Web:RedirectUris:0", "https://example.test/auth/callback");
             builder.UseSetting("Authentication:Clients:Web:PostLogoutRedirectUris:0", "https://example.test/");

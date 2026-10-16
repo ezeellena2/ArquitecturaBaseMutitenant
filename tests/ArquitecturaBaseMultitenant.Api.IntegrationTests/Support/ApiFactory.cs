@@ -12,7 +12,7 @@ using Testcontainers.PostgreSql;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 
 /// <summary>
-/// Hospeda la API de integración sobre un PostgreSQL aislado de Testcontainers.
+/// Hospeda la API de integración sobre un PostgreSQL aislado de Testcontainers y el Redis compartido de la corrida.
 /// Prepara roles, esquema de aislamiento y correo pickup para probar HTTP, persistencia y RLS sin usar Development.
 /// </summary>
 public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
@@ -50,6 +50,15 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public string RuntimeConnectionString => _external?.Runtime ?? RoleConnectionString("mt_app", _runtimePassword);
 
     public string ConnectionString => RuntimeConnectionString;
+
+    /// <summary>
+    /// La caché compartida (ADR 0052): el recorrido aislado usa el Redis efímero de su AppHost; las pruebas, el de la
+    /// corrida, donde la identidad de cada base separa sus entradas de las de otro fixture.
+    /// </summary>
+    public string CacheConnectionString =>
+        _external is not null && Environment.GetEnvironmentVariable("ConnectionStrings__cache") is { Length: > 0 } isolated
+            ? isolated
+            : SharedRedis.ConnectionStringAsync().GetAwaiter().GetResult();
 
     public ValueTask InitializeAsync() => InitializeDatabaseAsync(TestContext.Current.CancellationToken);
 
@@ -110,6 +119,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("ConnectionStrings:postgres-bootstrap", BootstrapConnectionString);
         builder.UseSetting("ConnectionStrings:appdb-admin", AdminConnectionString);
         builder.UseSetting("ConnectionStrings:appdb", RuntimeConnectionString);
+        builder.UseSetting("ConnectionStrings:cache", CacheConnectionString);
         builder.UseSetting("Authentication:Issuer", "https://localhost:5174/");
         builder.UseSetting("Authentication:LoginCode:HashKey",
             Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)));

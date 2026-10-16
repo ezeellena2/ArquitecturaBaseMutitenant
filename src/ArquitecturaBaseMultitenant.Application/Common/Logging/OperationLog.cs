@@ -12,6 +12,23 @@ public static partial class OperationLog
     public static Task<Result> RunAsync(ILogger logger, TimeProvider timeProvider,
         string operation, Func<Task<Result>> work) => RunCoreAsync(logger, timeProvider, operation, work);
 
+    /// <summary>
+    /// Lo mismo para un contrato que devuelve un valor sin <see cref="Result"/>, como un chequeo de permisos: registra
+    /// inicio, duración y el tipo de excepción, sin volcar el valor.
+    /// </summary>
+    public static async Task<T> RunValueAsync<T>(ILogger logger, TimeProvider timeProvider,
+        string operation, Func<Task<T>> work)
+    {
+        ArgumentNullException.ThrowIfNull(work);
+        T? value = default;
+        await RunCoreAsync(logger, timeProvider, operation, async () =>
+        {
+            value = await work();
+            return Result.Success();
+        });
+        return value!;
+    }
+
     private static async Task<TResult> RunCoreAsync<TResult>(ILogger logger, TimeProvider timeProvider,
         string operation, Func<Task<TResult>> work) where TResult : Result
     {

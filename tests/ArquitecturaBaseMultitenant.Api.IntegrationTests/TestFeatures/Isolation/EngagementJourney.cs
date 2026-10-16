@@ -1,7 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
@@ -116,7 +115,6 @@ internal sealed class EngagementJourney(EngagementFactory factory, HttpClient cl
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
         Assert.True(result.IsSuccess);
-        await services.GetRequiredService<ITenantFeatureCache>().InvalidateAsync(tenantId, Ct);
     }
 
     internal async Task<IReadOnlyList<AuditEntry>> AuditAsync(Guid tenantId, Guid dealId)

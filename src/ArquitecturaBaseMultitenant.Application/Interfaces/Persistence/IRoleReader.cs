@@ -19,8 +19,20 @@ public interface IRoleReader
 
     Task<int> CountUsersAsync(Guid roleId, CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<Guid>> ListRoleIdsForUserAsync(Guid userId, Guid? companyId,
+    /// <summary>
+    /// Los roles de organización asignados a la persona con su miembro activo (E9, ADR 0052). Valen en la organización y
+    /// en cada empresa activa.
+    /// </summary>
+    Task<IReadOnlyList<Guid>> ListOrganizationRoleIdsAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Por cada empresa activa donde la persona tiene la membresía activa, los roles de empresa que valen ahí (E9): dos
+    /// consultas, sin importar cuántas empresas. Una empresa sin roles propios queda con la lista vacía.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> ListCompanyRoleIdsAsync(Guid userId,
         CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<string>> ListPermissionsForRoleAsync(Guid roleId, CancellationToken cancellationToken);
+    /// <summary>Los permisos de cada rol pedido, en una consulta.</summary>
+    Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> ListPermissionsByRoleAsync(IReadOnlyCollection<Guid> roleIds,
+        CancellationToken cancellationToken);
 }

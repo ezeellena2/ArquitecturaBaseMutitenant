@@ -60,6 +60,13 @@ internal sealed class CompanyReader(ApplicationDbContext context, ITenantContext
             && (excludedCompanyId == null || company.Id != excludedCompanyId), cancellationToken);
     }
 
+    public Task<bool> IsActiveAsync(Guid companyId, CancellationToken cancellationToken)
+    {
+        var tenantId = tenantContext.RequiredTenantId;
+        return context.Companies.AsNoTracking().AnyAsync(company => company.TenantId == tenantId
+            && company.Id == companyId && company.Status == CompanyStatus.Active, cancellationToken);
+    }
+
     private IQueryable<Company> Companies(Guid tenantId, ListCompaniesRequest request)
     {
         var companies = context.Companies.AsNoTracking().Where(company => company.TenantId == tenantId)

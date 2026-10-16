@@ -281,6 +281,8 @@ public sealed class CompanyServiceTests
         }
         public Task<bool> ExistsTaxIdAsync(string country, string type, string number, Guid? excludedCompanyId,
             CancellationToken cancellationToken) => Task.FromResult(TaxIdExists);
+        public Task<bool> IsActiveAsync(Guid companyId, CancellationToken cancellationToken) =>
+            Task.FromResult(Row is { Status: CompanyStatus.Active } row && row.Id == companyId);
     }
 
     internal sealed class FakeCompanyRepository : ICompanyRepository

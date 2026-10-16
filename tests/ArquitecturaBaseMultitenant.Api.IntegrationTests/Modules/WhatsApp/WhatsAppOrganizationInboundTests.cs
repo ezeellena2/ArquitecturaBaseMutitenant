@@ -163,7 +163,6 @@ public sealed class WhatsAppOrganizationInboundTests(ApiFactory factory)
                 Domain.Auditing.AuditActorKind.System, Guid.Empty, tenantId, "WhatsApp attention fixture", services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime));
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
-        await services.GetRequiredService<Application.Interfaces.Integrations.Caching.ITenantFeatureCache>().InvalidateAsync(tenantId, Ct);
     }
 
     private async Task TransactionAsync(Func<IServiceProvider, CancellationToken, Task> work)

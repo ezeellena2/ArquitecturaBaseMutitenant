@@ -33,6 +33,7 @@ public sealed class ConcurrentDevelopmentSeedTests
         var runtimePassword = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32));
         var admin = RoleConnection("mt_owner", ownerPassword);
         var runtime = RoleConnection("mt_app", runtimePassword);
+        var cache = await SharedRedis.ConnectionStringAsync();
         await DatabaseBootstrapExtensions.BootstrapAsync(bootstrap, admin, runtime, Ct);
 
         var gate = new SeedStartGate();
@@ -66,6 +67,7 @@ public sealed class ConcurrentDevelopmentSeedTests
                 builder.UseSetting("ConnectionStrings:postgres-bootstrap", bootstrap);
                 builder.UseSetting("ConnectionStrings:appdb-admin", admin);
                 builder.UseSetting("ConnectionStrings:appdb", runtime);
+                builder.UseSetting("ConnectionStrings:cache", cache);
                 builder.UseSetting("Authentication:Issuer", "https://example.test/");
                 builder.UseSetting("Authentication:Clients:Web:RedirectUris:0", "https://example.test/auth/callback");
                 builder.UseSetting("Authentication:Clients:Web:PostLogoutRedirectUris:0", "https://example.test/");

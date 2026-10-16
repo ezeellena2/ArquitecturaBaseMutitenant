@@ -623,7 +623,6 @@ public sealed class ProfileServiceTests
             Task.FromResult(false);
         public Task<bool> HasCompanyPermissionAsync(Guid userId, Guid companyId, string permission,
             CancellationToken cancellationToken) => Task.FromResult(false);
-        public Task InvalidateRoleAsync(Guid roleId, CancellationToken cancellationToken) => Task.CompletedTask;
     }
 
     private sealed class StubPlatformAssignments(string[]? permissions) : IPlatformPermissionAssignmentReader

@@ -252,7 +252,13 @@ public sealed class AssistantDurableAuthorizationTests(ApiFactory factory)
             }, CommitPolicy.OnSuccess, Ct);
         }
         using var replay = await AssistantDurableConversationTests.PostAsync(client, "/api/me/assistant/conversations", "{}", key);
-        Assert.Equal(revoke == "gate" ? HttpStatusCode.NotFound : HttpStatusCode.Forbidden, replay.StatusCode);
+        // Con la caché coherente (ADR 0052), la cuenta suspendida ya no pasa el middleware: 401, como cualquier pedido suyo.
+        Assert.Equal(revoke switch
+        {
+            "gate" => HttpStatusCode.NotFound,
+            "account" => HttpStatusCode.Unauthorized,
+            _ => HttpStatusCode.Forbidden,
+        }, replay.StatusCode);
         await AssistantTestData.PersonalAsync(isolated, true);
     }
 

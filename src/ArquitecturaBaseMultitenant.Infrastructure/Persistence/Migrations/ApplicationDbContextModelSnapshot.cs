@@ -4784,6 +4784,20 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.ToTable("WhatsAppTemplateStates", "identity");
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Infrastructure.Caching.CacheTagVersion", b =>
+                {
+                    b.Property<string>("Tag")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<long>("Generation")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Tag");
+
+                    b.ToTable("CacheTagVersions", "platform");
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Infrastructure.Idempotency.IdempotencyKey", b =>
                 {
                     b.Property<Guid>("Id")

@@ -15,12 +15,24 @@ var ownerPassword = isolatedE2e
 var runtimePassword = isolatedE2e
     ? builder.AddParameter("e2e-app-password", Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)), secret: true)
     : builder.AddParameter("mt-app-password", secret: true);
+// ADR 0052: Redis es la caché compartida. En desarrollo la clave se genera una vez y queda en los user-secrets del AppHost.
+var redisPassword = isolatedE2e
+    ? builder.AddParameter("e2e-redis-password", Convert.ToHexString(RandomNumberGenerator.GetBytes(32)), secret: true)
+    : builder.AddParameter("redis-password", new GenerateParameterDefault { MinLength = 32, Special = false },
+        secret: true, persist: true);
 var issuer = "https://localtest.me:5174/";
 
 var postgres = builder.AddPostgres("postgres", password: postgresPassword, port: isolatedE2e ? 5435 : 5434);
 if (!isolatedE2e)
 {
     postgres.WithDataVolume("arquitecturabase-multitenant-pgdata")
+        .WithLifetime(ContainerLifetime.Persistent);
+}
+
+var cache = builder.AddRedis("cache", password: redisPassword);
+if (!isolatedE2e)
+{
+    cache.WithDataVolume("arquitecturabase-multitenant-redisdata")
         .WithLifetime(ContainerLifetime.Persistent);
 }
 
@@ -56,7 +68,7 @@ if (isolatedE2e)
     // La misma herramienta hospeda la API real Testing y prepara E7 en ese mismo IServiceProvider/base.
     var api = builder.AddExecutable("api", "dotnet", builder.AppHostDirectory,
             "run", "--project", setupProject, "--no-build", "--no-launch-profile", "--", "--recorrido-host")
-        .WithReference(appDb).WithReference(appDbAdmin).WithReference(postgresBootstrap)
+        .WithReference(appDb).WithReference(appDbAdmin).WithReference(postgresBootstrap).WithReference(cache)
         .WithEnvironment("ASPNETCORE_ENVIRONMENT", "Testing")
         .WithEnvironment("DOTNET_ENVIRONMENT", "Testing")
         .WithEnvironment("MT_E2E_ISOLATED", "1")
@@ -64,15 +76,15 @@ if (isolatedE2e)
         .WithEnvironment("MT_E2E_PICKUP_DIR", pickupDirectory)
         .WithEnvironment("MT_E2E_READY_FILE", readyFile)
         .WithHttpsEndpoint(port: 7280, env: "MT_E2E_API_PORT", isProxied: false)
-        .WaitFor(postgres);
+        .WaitFor(postgres).WaitFor(cache);
     front.WithReference(api.GetEndpoint("https")).WaitFor(api);
 }
 else
 {
     var api = builder.AddProject<Projects.ArquitecturaBaseMultitenant_Api>("api")
         .WithEnvironment("Authentication__Issuer", issuer)
-        .WithReference(appDb).WithReference(appDbAdmin).WithReference(postgresBootstrap)
-        .WaitFor(postgres);
+        .WithReference(appDb).WithReference(appDbAdmin).WithReference(postgresBootstrap).WithReference(cache)
+        .WaitFor(postgres).WaitFor(cache);
     front.WithReference(api).WaitFor(api);
     // Copiado de ArquitecturaBase: el túnel local expone sólo HTTPS de la API para Meta.
     if (bool.TryParse(builder.Configuration["DevTunnel:Enabled"], out var enabled) && enabled)

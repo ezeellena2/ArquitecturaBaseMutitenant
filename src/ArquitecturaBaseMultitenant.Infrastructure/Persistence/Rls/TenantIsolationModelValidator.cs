@@ -100,5 +100,6 @@ internal static class TenantIsolationModelValidator
         type == typeof(OpenIddictEntityFrameworkCoreScope<Guid>) ||
         type == typeof(OpenIddictEntityFrameworkCoreToken<Guid>) ||
         type.Namespace == typeof(Currency).Namespace ||
-        type.FullName == "ArquitecturaBaseMultitenant.Infrastructure.Idempotency.IdempotencyKey";
+        type.FullName == "ArquitecturaBaseMultitenant.Infrastructure.Idempotency.IdempotencyKey" ||
+        type.FullName == "ArquitecturaBaseMultitenant.Infrastructure.Caching.CacheTagVersion";
 }

@@ -4,7 +4,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
@@ -71,7 +70,6 @@ internal static class WhatsAppAttentionJourney
                 tenantId, "WhatsApp attention fixture", services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime));
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, ct);
-        await services.GetRequiredService<ITenantFeatureCache>().InvalidateAsync(tenantId, ct);
     }
 
     internal static Task<HttpResponseMessage> PostAsync(HttpClient client, string path, object body, CancellationToken ct, string? key = null)

@@ -1,6 +1,9 @@
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 
-/// <summary>Resuelve permisos efectivos desde las asignaciones de la organización activa.</summary>
+/// <summary>
+/// Resuelve permisos efectivos desde las asignaciones de la organización activa. Un cambio de roles, asignaciones,
+/// membresías o empresas avanza las generaciones de su caché en la misma transacción (ADR 0052): nadie invalida a mano.
+/// </summary>
 public interface IPermissionService
 {
     /// <summary>Permisos de roles asignados en la organización, sin proyecciones desde empresas.</summary>
@@ -22,6 +25,4 @@ public interface IPermissionService
 
     Task<bool> HasCompanyPermissionAsync(Guid userId, Guid companyId, string permission,
         CancellationToken cancellationToken);
-
-    Task InvalidateRoleAsync(Guid roleId, CancellationToken cancellationToken);
 }

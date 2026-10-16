@@ -58,7 +58,7 @@ public static class DependencyInjection
         services.AddSingleton<IPayloadProtector, PayloadProtector>();
         services.AddSingleton<IInvitationTokenProtector, InvitationTokenProtector>();
         services.AddSingleton<IPlatformFactorSecrets, PlatformFactorSecrets>();
-        services.AddCaching();
+        services.AddCaching(configuration);
 
         services.AddPersistence(configuration);
         services.AddFeatures(configuration);

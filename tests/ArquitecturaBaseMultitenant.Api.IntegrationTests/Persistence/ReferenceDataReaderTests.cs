@@ -2,7 +2,6 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Domain.ReferenceData;
-using ArquitecturaBaseMultitenant.Infrastructure.Caching;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
@@ -120,7 +119,6 @@ public sealed class ReferenceDataReaderTests(ApiFactory factory)
         await using var provider = PersistenceRegistration.CreateReferenceSeedProvider(factory.AdminConnectionString);
         await using var scope = provider.CreateAsyncScope();
         var reader = scope.ServiceProvider.GetRequiredService<ITimeZoneCatalog>();
-        var cache = scope.ServiceProvider.GetRequiredService<ReferenceDataCache>();
         var seeder = scope.ServiceProvider.GetRequiredService<ReferenceDataSeeder>();
         var source = scope.ServiceProvider.GetRequiredService<JsonReferenceDataCatalog>();
         var original = (await ((ITimeZoneCatalog)source).ListAsync(Ct))
@@ -140,7 +138,6 @@ public sealed class ReferenceDataReaderTests(ApiFactory factory)
                 Assert.Equal(1, await command.ExecuteNonQueryAsync(Ct));
             }
 
-            await cache.InvalidateAsync(Ct);
             var actual = await reader.FindAsync(original.Id, Ct);
             Assert.NotNull(actual);
             Assert.Equal(original.IsEnabled, actual.IsEnabled);

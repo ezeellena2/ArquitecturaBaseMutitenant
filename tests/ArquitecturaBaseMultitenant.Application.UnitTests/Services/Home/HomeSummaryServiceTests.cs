@@ -160,6 +160,5 @@ public sealed class HomeSummaryServiceTests
             PerItemChecks++;
             return Task.FromResult(true);
         }
-        public Task InvalidateRoleAsync(Guid roleId, CancellationToken ct) => Task.CompletedTask;
     }
 }

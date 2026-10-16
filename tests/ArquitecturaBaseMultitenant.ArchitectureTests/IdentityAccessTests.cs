@@ -82,6 +82,8 @@ public sealed partial class IdentityAccessTests
             || relative == "Persistence/Seed/PlatformSeeder.cs"
             || relative.StartsWith("Persistence/Migrations/", StringComparison.Ordinal)
             || relative == "Persistence/Rls/TenantIsolationModelValidator.cs"
+            // Un cambio de estado de la cuenta avanza la generación de su etiqueta de caché (ADR 0052).
+            || relative == "Caching/CacheTags.cs"
             || IsContributedIdentityConfiguration(relative);
     }
 

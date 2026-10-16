@@ -1,6 +1,5 @@
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Recorrido;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services;
@@ -135,7 +134,6 @@ public sealed class AssistantFileBridge
                     own.ReplaceKey(null, null);
                 }
             }, ct);
-            if (tenantId is { } cacheId) await services.GetRequiredService<ITenantFeatureCache>().InvalidateAsync(cacheId, ct);
             // Cada ancho empieza con cuota disponible; se elimina sólo el consumo sintético anterior de este bridge.
             var reset = await AssistantQuotaFixture.StageAsync(services, binding,
                 JsonSerializer.SerializeToElement(new { remainingMessages = 50, monthlyFraction = 0m }),

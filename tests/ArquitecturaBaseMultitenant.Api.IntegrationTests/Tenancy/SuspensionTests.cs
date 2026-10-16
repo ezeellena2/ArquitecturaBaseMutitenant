@@ -283,8 +283,6 @@ public sealed class SuspensionTests
     {
         public Task<TenantStatus?> GetStatusAsync(Guid tenantId, CancellationToken cancellationToken) =>
             Task.FromResult(status);
-
-        public ValueTask InvalidateAsync(Guid tenantId, CancellationToken cancellationToken) => ValueTask.CompletedTask;
     }
 
     private sealed class StubTenantReader : ITenantReader
@@ -305,10 +303,5 @@ public sealed class SuspensionTests
 
         public Task<MemberStatus?> GetMemberStatusAsync(Guid userId, Guid tenantId, TenantKind kind,
             CancellationToken cancellationToken) => Task.FromResult<MemberStatus?>(memberStatus);
-
-        public ValueTask InvalidateUserAsync(Guid userId, CancellationToken cancellationToken) => ValueTask.CompletedTask;
-
-        public ValueTask InvalidateMemberAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken) =>
-            ValueTask.CompletedTask;
     }
 }

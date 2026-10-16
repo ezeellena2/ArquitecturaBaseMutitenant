@@ -1,7 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Common;
@@ -12,7 +11,7 @@ using Microsoft.Extensions.Logging;
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 internal sealed class PlatformFeatureService(PlatformFeatureListBuilder listing, PlatformFeatureWriter writer, PlatformActionGuard guard,
-    IUnitOfWork unitOfWork, IRequestValidator validator, ITenantFeatureCache cache,
+    IUnitOfWork unitOfWork, IRequestValidator validator,
     TimeProvider clock, ILogger<PlatformFeatureService> logger) : IPlatformFeatureService
 {
     public Task<Result<IReadOnlyList<PlatformFeatureResponse>>> ListAsync(Guid tenantId, CancellationToken cancellationToken) =>
@@ -31,7 +30,6 @@ internal sealed class PlatformFeatureService(PlatformFeatureListBuilder listing,
             {
                 var result = await unitOfWork.ExecuteInTransactionAsync(ct => writer.UpdateAsync(tenantId, key, request, ct),
                     CommitPolicy.OnSuccess, cancellationToken);
-                if (result.IsSuccess) await cache.InvalidateAsync(tenantId, cancellationToken);
                 return VersionResponse.Of(result);
             }
             catch (UniqueConstraintViolationException exception) when (exception.ConstraintName == UniqueKeys.TenantFeature)

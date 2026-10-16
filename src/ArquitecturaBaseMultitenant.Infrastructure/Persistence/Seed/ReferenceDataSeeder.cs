@@ -2,28 +2,25 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.ReferenceData;
 using ArquitecturaBaseMultitenant.Domain.Results;
-using ArquitecturaBaseMultitenant.Infrastructure.Caching;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
 using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 
-/// <summary>Sincroniza las tablas globales con los JSON generados de referencia. Deshabilita claves retiradas sin borrar datos históricos e invalida la caché después del commit de su ruta independiente.</summary>
+/// <summary>Sincroniza las tablas globales con los JSON generados de referencia. Deshabilita claves retiradas sin borrar datos históricos; el commit avanza la generación de su caché (ADR 0052).</summary>
 internal sealed class ReferenceDataSeeder
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly IUnitOfWork _unitOfWork;
     private readonly JsonReferenceDataCatalog _source;
-    private readonly ReferenceDataCache _referenceCache;
 
     public ReferenceDataSeeder(ApplicationDbContext dbContext, IUnitOfWork unitOfWork,
-        JsonReferenceDataCatalog source, ReferenceDataCache referenceCache)
+        JsonReferenceDataCatalog source)
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _source = source ?? throw new ArgumentNullException(nameof(source));
-        _referenceCache = referenceCache ?? throw new ArgumentNullException(nameof(referenceCache));
     }
 
     public async Task<bool> SeedAsync(CancellationToken cancellationToken)
@@ -34,11 +31,6 @@ internal sealed class ReferenceDataSeeder
             await _dbContext.AcquireAdvisoryLocksAsync([AdvisoryLockKeys.ReferenceDataSeed], ct);
             return Result.Success(await StageAsync(snapshot, ct));
         }, CommitPolicy.OnSuccess, cancellationToken);
-        if (result.Value)
-        {
-            await _referenceCache.InvalidateAsync(cancellationToken);
-        }
-
         return result.Value;
     }
 

@@ -1,6 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
@@ -26,7 +25,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// </summary>
 internal sealed class PlatformAccountDeletionService(IUserRepository users, ILoginMethodRepository accounts,
     PlatformOperatorGuard operators, AccountDeletionScheduler scheduler,
-    PlatformAuditWriter audit, IAccessStatusCache statuses, ICurrentUser currentUser, IUnitOfWork unitOfWork,
+    PlatformAuditWriter audit, ICurrentUser currentUser, IUnitOfWork unitOfWork,
     IRequestValidator validator, TimeProvider clock, ILogger<PlatformAccountDeletionService> logger)
     : IPlatformAccountDeletionService
 {
@@ -39,7 +38,6 @@ internal sealed class PlatformAccountDeletionService(IUserRepository users, ILog
             if (operatorId == accountId) return UserErrors.CannotModifySelf;
             var result = await unitOfWork.ExecuteInTransactionAsync(tx => RequestCoreAsync(accountId, operatorId, request, tx),
                 CommitPolicy.OnSuccess, ct);
-            if (result.IsSuccess) await statuses.InvalidateUserAsync(accountId, ct);
             return result;
         });
 

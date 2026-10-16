@@ -174,17 +174,14 @@ public sealed class RolePersistenceTests(ApiFactory factory)
 
         var reader = services.GetRequiredService<IRoleReader>();
         var owner = await context.Roles.SingleAsync(role => role.Name == SystemRoles.TenantAdmin, Ct);
-        async Task<Guid[]> EffectiveAsync(Guid? companyId) =>
-            [.. (await reader.ListRoleIdsForUserAsync(userId, companyId, Ct)).Order()];
+        var byCompany = await reader.ListCompanyRoleIdsAsync(userId, Ct);
 
-        // La organización: solo los roles sin empresa.
-        Assert.Equal([owner.Id], await EffectiveAsync(null));
-        // A: los de la organización, el de cada empresa y el propio de A; los que cambiaron de alcance, no.
-        Assert.Equal(new[] { owner.Id, anyCompany.Id, onlyA.Id }.Order(), await EffectiveAsync(companyA.Id));
-        // B: la membresía está inactiva, y «Pasa a B» está asignado en A.
-        Assert.Equal([owner.Id], await EffectiveAsync(companyB.Id));
-        // Una empresa inactiva no da permisos.
-        Assert.Empty(await EffectiveAsync(inactiveCompany.Id));
+        // La organización: solo los roles sin empresa, que además valen en cada empresa activa.
+        Assert.Equal([owner.Id], await reader.ListOrganizationRoleIdsAsync(userId, Ct));
+        // A: el de cada empresa y el propio de A; los que cambiaron de alcance, no.
+        Assert.Equal(new[] { anyCompany.Id, onlyA.Id }.Order(), byCompany[companyA.Id].Order());
+        // B: la membresía está inactiva, y «Pasa a B» está asignado en A. Una empresa inactiva no da permisos.
+        Assert.Equal([companyA.Id], byCompany.Keys);
     }
 
     private async Task<Tenant> CreateBusinessTenantAsync(string name)

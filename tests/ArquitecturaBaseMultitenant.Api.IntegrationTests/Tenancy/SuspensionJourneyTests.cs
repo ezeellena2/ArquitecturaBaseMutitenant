@@ -5,12 +5,11 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
+using ArquitecturaBaseMultitenant.Infrastructure.Caching;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
@@ -92,8 +91,7 @@ public sealed class SuspensionJourneyTests
             suspend.Parameters.AddWithValue("tenant_id", tenantId);
             Assert.Equal(1, await suspend.ExecuteNonQueryAsync(Ct));
         }
-        await using (var scope = host.Services.CreateAsyncScope())
-            await scope.ServiceProvider.GetRequiredService<ITenantStatusCache>().InvalidateAsync(tenantId, Ct);
+        await CacheGenerations.AdvanceAsync(host.Services, Ct, CacheTags.Organization(tenantId));
 
         using var protectedRequest = new HttpRequestMessage(HttpMethod.Post, "/test/access/business-signup");
         protectedRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -128,12 +126,7 @@ public sealed class SuspensionJourneyTests
             deactivate.Parameters.AddWithValue("user_id", userId);
             Assert.Equal(1, await deactivate.ExecuteNonQueryAsync(Ct));
         }
-        await using (var scope = host.Services.CreateAsyncScope())
-        {
-            await scope.ServiceProvider.GetRequiredService<ITenantStatusCache>().InvalidateAsync(tenantId, Ct);
-            await scope.ServiceProvider.GetRequiredService<IAccessStatusCache>()
-                .InvalidateMemberAsync(userId, tenantId, Ct);
-        }
+        await CacheGenerations.AdvanceAsync(host.Services, Ct, CacheTags.Organization(tenantId), CacheTags.Members(tenantId));
         using var inactiveMemberRequest = new HttpRequestMessage(
             HttpMethod.Post, "/test/access/business-signup");
         inactiveMemberRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -149,9 +142,7 @@ public sealed class SuspensionJourneyTests
             suspendUser.Parameters.AddWithValue("user_id", userId);
             Assert.Equal(1, await suspendUser.ExecuteNonQueryAsync(Ct));
         }
-        await using (var scope = host.Services.CreateAsyncScope())
-            await scope.ServiceProvider.GetRequiredService<IAccessStatusCache>()
-                .InvalidateUserAsync(userId, Ct);
+        await CacheGenerations.AdvanceAsync(host.Services, Ct, CacheTags.Account(userId));
         using var suspendedUserRequest = new HttpRequestMessage(
             HttpMethod.Post, "/test/access/business-signup");
         suspendedUserRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
@@ -183,13 +174,8 @@ public sealed class SuspensionJourneyTests
             suspendTenant.Parameters.AddWithValue("tenant_id", tenantId);
             Assert.Equal(1, await suspendTenant.ExecuteNonQueryAsync(Ct));
         }
-        await using (var scope = host.Services.CreateAsyncScope())
-        {
-            var cache = scope.ServiceProvider.GetRequiredService<IAccessStatusCache>();
-            await cache.InvalidateUserAsync(userId, Ct);
-            await cache.InvalidateMemberAsync(userId, tenantId, Ct);
-            await scope.ServiceProvider.GetRequiredService<ITenantStatusCache>().InvalidateAsync(tenantId, Ct);
-        }
+        await CacheGenerations.AdvanceAsync(host.Services, Ct, CacheTags.Account(userId), CacheTags.Members(tenantId),
+            CacheTags.Organization(tenantId));
         using var refresh = await client.PostAsync("/connect/token", new FormUrlEncodedContent(
             new Dictionary<string, string>
             {

@@ -3,7 +3,6 @@ using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Common.Text;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Common;
@@ -19,7 +18,7 @@ using Microsoft.Extensions.Logging;
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 internal sealed class TenantAdministrationService(IPlatformReader reader, PlatformTenantStateWriter writer,
-    ITenantStatusCache cache, PlatformActionGuard guard, PlatformTenantCreator creator,
+    PlatformActionGuard guard, PlatformTenantCreator creator,
     PlatformTenantActivator activator, IPersonalSpaceProvisioner defaults, IRequestValidator validator,
     ISecurityEventReader history, IUnitOfWork unitOfWork, TimeProvider clock, ILogger<TenantAdministrationService> logger)
     : ITenantAdministrationService
@@ -39,7 +38,6 @@ internal sealed class TenantAdministrationService(IPlatformReader reader, Platfo
             {
                 var result = await unitOfWork.ExecuteInTransactionAsync(tx =>
                     creator.CreateAsync(operationId, lease.OperatorId, request, settings, reason, tx), CommitPolicy.OnSuccess, ct);
-                if (result.IsSuccess) await cache.InvalidateAsync(operationId, ct);
                 return result;
             }
             catch (UniqueConstraintViolationException exception) when (exception.ConstraintName == UniqueKeys.TenantSlug)
@@ -60,7 +58,6 @@ internal sealed class TenantAdministrationService(IPlatformReader reader, Platfo
             using var lease = authorized.Value;
             var result = await unitOfWork.ExecuteInTransactionAsync(tx =>
                 activator.ActivateAsync(tenantId, retry, request, settings, clock.GetUtcNow().UtcDateTime, tx), CommitPolicy.OnSuccess, ct);
-            if (result.IsSuccess) await cache.InvalidateAsync(tenantId, ct);
             return VersionResponse.Of(result);
         });
 
@@ -128,7 +125,6 @@ internal sealed class TenantAdministrationService(IPlatformReader reader, Platfo
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
             var result = await unitOfWork.ExecuteInTransactionAsync(tx => writer.ChangeAsync(id, action, request, tx), CommitPolicy.OnSuccess, ct);
-            if (result.IsSuccess) await cache.InvalidateAsync(id, ct);
             return VersionResponse.Of(result);
         });
 }

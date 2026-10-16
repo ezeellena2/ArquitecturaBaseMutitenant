@@ -15,8 +15,8 @@ using Microsoft.Extensions.Logging;
 namespace ArquitecturaBaseMultitenant.Application.Services.Roles;
 
 /// <summary>Administra roles tenant-scoped; cada escritura valida antes y usa una única transacción.</summary>
-internal sealed class RoleService(IRoleReader roles, IRoleRepository repository, IPermissionService permissions,
-    ICompanyReader companies, IRequestValidator validator, IUnitOfWork unitOfWork, TimeProvider timeProvider,
+internal sealed class RoleService(IRoleReader roles, IRoleRepository repository, ICompanyReader companies,
+    IRequestValidator validator, IUnitOfWork unitOfWork, TimeProvider timeProvider,
     ILogger<RoleService> logger) : IRoleService
 {
     public Task<Result<RoleFilterCountsResponse>> GetFilterCountsAsync(string? search, CancellationToken cancellationToken) =>
@@ -116,11 +116,6 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
                 return RoleErrors.AlreadyExists;
             }
 
-            if (result.IsSuccess)
-            {
-                await permissions.InvalidateRoleAsync(request.RoleId, cancellationToken);
-            }
-
             return VersionResponse.Of(result);
         });
     }
@@ -142,11 +137,6 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
             {
                 // Otro pedido asignó el rol después de contar sus personas y antes del commit.
                 return RoleErrors.HasUsers(Math.Max(1, await roles.CountUsersAsync(request.RoleId, cancellationToken)));
-            }
-
-            if (result.IsSuccess)
-            {
-                await permissions.InvalidateRoleAsync(request.RoleId, cancellationToken);
             }
 
             return result;

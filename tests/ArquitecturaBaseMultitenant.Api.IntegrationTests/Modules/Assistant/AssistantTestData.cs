@@ -2,7 +2,6 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Features;
@@ -37,7 +36,6 @@ internal static class AssistantTestData
                 tenantId, "Assistant fixture grant", services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime));
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
-        await services.GetRequiredService<ITenantFeatureCache>().InvalidateAsync(tenantId, Ct);
     }
     internal static async Task PersonalAsync(ApiFactory factory, bool enabled)
     {

@@ -51,7 +51,9 @@ public static class Extensions
             {
                 metrics.AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddRuntimeInstrumentation();
+                    .AddRuntimeInstrumentation()
+                    // Aciertos, misses, lecturas directas y caídas de la caché compartida (ADR 0052).
+                    .AddMeter("ArquitecturaBaseMultitenant.Cache");
             })
             .WithTracing(tracing =>
             {

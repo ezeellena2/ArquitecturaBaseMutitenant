@@ -2,7 +2,6 @@ using System.Net;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.TestHost;
@@ -43,7 +42,6 @@ public sealed class AssistantFeatureTests(ApiFactory factory)
         await AccountJourney.AuthorizeAsync(client, "business", AssistantTestData.Ct, organization);
         Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/api/organization/assistant/conversations", AssistantTestData.Ct)).StatusCode);
         await AssistantTestData.EnableAsync(factory, organization, clock.GetUtcNow().UtcDateTime.AddMinutes(1));
-        await host.Services.GetRequiredService<ITenantFeatureCache>().InvalidateAsync(organization, AssistantTestData.Ct);
         await AssistantExecutionActorTests.AcceptNoticeAsync(client, "/api/organization/assistant/notice");
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/organization/assistant/conversations", AssistantTestData.Ct)).StatusCode);
         clock.Advance(TimeSpan.FromMinutes(1));

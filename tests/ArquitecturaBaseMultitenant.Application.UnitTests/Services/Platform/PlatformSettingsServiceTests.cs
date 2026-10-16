@@ -1,5 +1,4 @@
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Settings;
@@ -24,14 +23,14 @@ public sealed class PlatformSettingsServiceTests
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
-    public async Task Update_commits_settings_and_operator_event_before_invalidating_the_cache()
+    public async Task Update_commits_settings_and_operator_event_in_one_transaction()
     {
         using var fixture = new ServiceFixture<PlatformSettingsService>(new UpdatePlatformSettingsRequestValidator());
         var events = new List<string>();
         var repository = new StubRepository();
         var audit = new StubEvents();
         var unitOfWork = new FakeUnitOfWork(events);
-        var service = Create(fixture, repository, audit, unitOfWork, new StubCache(events));
+        var service = Create(fixture, repository, audit, unitOfWork);
 
         var result = await service.UpdateAsync(new(ConsumerSignupMode.Closed, BusinessSignupMode.RequiresApproval, 3, Sales, Support, 7, "Control del alta"), Ct);
 
@@ -39,7 +38,7 @@ public sealed class PlatformSettingsServiceTests
         Assert.Equal(7u, repository.ExpectedVersion);
         Assert.Equal(ConsumerSignupMode.Closed, repository.Settings!.ConsumerSignup);
         Assert.True(repository.Marked);
-        Assert.Equal(new[] { "commit", "cache" }, events);
+        Assert.Equal(new[] { "commit" }, events);
         Assert.Equal(1, unitOfWork.Transactions);
         var securityEvent = Assert.Single(audit.Items);
         Assert.Equal(SecurityEventType.PlatformSettingsChanged, securityEvent.Type);
@@ -69,7 +68,7 @@ public sealed class PlatformSettingsServiceTests
         using var fixture = new ServiceFixture<PlatformSettingsService>(new UpdatePlatformSettingsRequestValidator());
         var unitOfWork = new FakeUnitOfWork();
         var audit = new StubEvents();
-        var service = Create(fixture, new StubRepository(), audit, unitOfWork, new StubCache([]));
+        var service = Create(fixture, new StubRepository(), audit, unitOfWork);
 
         Assert.True((await service.UpdateAsync(new(ConsumerSignupMode.Open, BusinessSignupMode.Open, limit, Sales, Support, 1, reason), Ct)).IsFailure);
         Assert.Equal(0, unitOfWork.Transactions);
@@ -93,7 +92,7 @@ public sealed class PlatformSettingsServiceTests
             var repository = new StubRepository();
             var audit = new StubEvents();
             var unitOfWork = new FakeUnitOfWork(events);
-            var service = Create(fixture, repository, audit, unitOfWork, new StubCache(events));
+            var service = Create(fixture, repository, audit, unitOfWork);
 
             var result = await service.UpdateAsync(new(ConsumerSignupMode.Closed, BusinessSignupMode.Closed,
                 limit, Sales, Support, 7, "Cambio del límite"), Ct);
@@ -122,14 +121,14 @@ public sealed class PlatformSettingsServiceTests
     [Theory]
     [InlineData(1)]
     [InlineData(50)]
-    public async Task Inclusive_owned_organization_bounds_commit_before_invalidating_the_cache(int limit)
+    public async Task Inclusive_owned_organization_bounds_commit(int limit)
     {
         using var fixture = new ServiceFixture<PlatformSettingsService>(new UpdatePlatformSettingsRequestValidator());
         var events = new List<string>();
         var repository = new StubRepository();
         var audit = new StubEvents();
         var unitOfWork = new FakeUnitOfWork(events);
-        var service = Create(fixture, repository, audit, unitOfWork, new StubCache(events));
+        var service = Create(fixture, repository, audit, unitOfWork);
 
         var result = await service.UpdateAsync(new(ConsumerSignupMode.Open, BusinessSignupMode.Open,
             limit, Sales, Support, 7, "Cambio del límite"), Ct);
@@ -141,25 +140,23 @@ public sealed class PlatformSettingsServiceTests
         Assert.Equal(1, unitOfWork.Transactions);
         Assert.Equal(1, unitOfWork.Commits);
         Assert.Single(audit.Items);
-        Assert.Equal(new[] { "commit", "cache" }, events);
+        Assert.Equal(new[] { "commit" }, events);
     }
 
     [Fact]
-    public async Task A_commit_conflict_does_not_invalidate_the_cache()
+    public async Task A_commit_conflict_is_not_hidden()
     {
         using var fixture = new ServiceFixture<PlatformSettingsService>(new UpdatePlatformSettingsRequestValidator());
-        var events = new List<string>();
         var unitOfWork = new FakeUnitOfWork { CommitFailure = new ConcurrencyConflictException() };
-        var service = Create(fixture, new StubRepository(), new StubEvents(), unitOfWork, new StubCache(events));
+        var service = Create(fixture, new StubRepository(), new StubEvents(), unitOfWork);
 
         await Assert.ThrowsAsync<ConcurrencyConflictException>(() => service.UpdateAsync(new(ConsumerSignupMode.Open, BusinessSignupMode.Closed, 2, Sales, Support, 1, "Cambio"), Ct));
-        Assert.Empty(events);
     }
 
     private static PlatformSettingsService Create(ServiceFixture<PlatformSettingsService> fixture, StubRepository repository,
-        StubEvents events, FakeUnitOfWork unitOfWork, StubCache cache) =>
+        StubEvents events, FakeUnitOfWork unitOfWork) =>
         new(new StubReader(), repository, unitOfWork, fixture.Validator,
-            new PlatformSettingsAuditWriter(new StubUser(), events, fixture.TimeProvider, new StubRequest()), cache, fixture.TimeProvider, fixture.Logger);
+            new PlatformSettingsAuditWriter(new StubUser(), events, fixture.TimeProvider, new StubRequest()), fixture.TimeProvider, fixture.Logger);
 
     private sealed class StubReader : IPlatformSettingsReader
     {
@@ -193,10 +190,5 @@ public sealed class PlatformSettingsServiceTests
     {
         public List<SecurityEvent> Items { get; } = [];
         public void Add(SecurityEvent item) => Items.Add(item);
-    }
-
-    private sealed class StubCache(List<string> events) : IPlatformSettingsCache
-    {
-        public ValueTask InvalidateAsync(CancellationToken ct) { events.Add("cache"); return ValueTask.CompletedTask; }
     }
 }

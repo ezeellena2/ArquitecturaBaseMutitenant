@@ -12,7 +12,6 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ReferenceData;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
-using ArquitecturaBaseMultitenant.Infrastructure.Caching;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -235,7 +234,6 @@ public sealed class AssistantSettingsTests(ApiFactory factory)
             db.Entry(currency).Property(value => value.IsEnabled).CurrentValue = enabled;
             return Result.Success();
         }, CommitPolicy.OnSuccess, AssistantTestData.Ct);
-        await services.GetRequiredService<ReferenceDataCache>().InvalidateAsync(AssistantTestData.Ct);
     }
 
     [Fact]

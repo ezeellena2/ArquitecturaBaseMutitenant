@@ -1,4 +1,3 @@
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Legal;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Legal;
@@ -7,10 +6,12 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
-/// <summary>Ejecuta la limpieza de cada organización y luego purga credenciales y cierra la cuenta; invalida cachés después del commit.</summary>
+/// <summary>
+/// Ejecuta la limpieza de cada organización y luego purga credenciales y cierra la cuenta. Los estados cacheados cambian
+/// con las generaciones que avanza cada commit (ADR 0052).
+/// </summary>
 internal sealed class AccountDeletionProcessor(IAccountDeletionRepository repository, IUserRepository users,
-    ILoginMethodRepository methods, IEnumerable<IAccountDeletionParticipant> participants, AccountDeletionNotifier notifier,
-    IAccessStatusCache statuses, ITenantStatusCache tenantStatuses)
+    ILoginMethodRepository methods, IEnumerable<IAccountDeletionParticipant> participants, AccountDeletionNotifier notifier)
 {
     internal async Task<Result> ProcessTenantAsync(AccountDeletionWork work, AccountDeletionTenant tenant, DateTime nowUtc, CancellationToken ct)
     {
@@ -32,15 +33,5 @@ internal sealed class AccountDeletionProcessor(IAccountDeletionRepository reposi
         await notifier.DeletedAsync(account, await methods.ListByUserIdAsync(work.UserId, ct), nowUtc, ct);
         await repository.PurgeCredentialsAsync(work.UserId, ct);
         return await users.CompleteDeletionAsync(work.UserId, nowUtc, ct);
-    }
-
-    internal async Task InvalidateAsync(AccountDeletionWork work, AccountDeletionTenant? tenant, CancellationToken ct)
-    {
-        await statuses.InvalidateUserAsync(work.UserId, ct);
-        if (tenant is not null)
-        {
-            await statuses.InvalidateMemberAsync(work.UserId, tenant.TenantId, ct);
-            await tenantStatuses.InvalidateAsync(tenant.TenantId, ct);
-        }
     }
 }

@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
@@ -15,7 +16,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Platform;
 
-/// <summary>La caché versionada conserva invalidación y aislamiento real bajo RLS.</summary>
+/// <summary>
+/// La caché compartida de permisos (ADR 0052) ignora entradas viejas, cambia con la generación de los roles y no cruza
+/// organizaciones: cada clave privada se lee sólo desde un pedido de su organización, bajo RLS.
+/// </summary>
 public sealed class RolePermissionCacheIsolationTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -25,7 +29,7 @@ public sealed class RolePermissionCacheIsolationTests
     });
 
     [Fact]
-    public async Task Legacy_cache_is_ignored_current_cache_is_invalidated_and_other_tenants_are_isolated()
+    public async Task Legacy_entries_are_ignored_role_changes_advance_the_cache_and_other_tenants_are_isolated()
     {
         await using var factory = new ApiFactory();
         await factory.InitializeAsync();
@@ -36,22 +40,44 @@ public sealed class RolePermissionCacheIsolationTests
         var roles = await RolesAsync(factory, first.Id);
         var roleId = roles.Single(r => r.Name == SystemRoles.TenantAdmin).Id;
         var cache = factory.Services.GetRequiredService<HybridCache>();
-        var permissionCache = factory.Services.GetRequiredService<IRolePermissionCache>();
-        var legacyKey = CacheKeys.Tenant(first.Id, "role-permissions:" + roleId.ToString("N"));
-        await cache.SetAsync(legacyKey, new[] { Permissions.Roles.Read }, cancellationToken: Ct);
-        Assert.Equal(Permissions.All.Order(StringComparer.Ordinal),
-            await permissionCache.GetRolePermissionsAsync(first.Id, roleId, Ct));
-        Assert.Empty(await permissionCache.GetRolePermissionsAsync(other.Id, roleId, Ct));
+        // Entradas de antes de E9: sin versión de esquema ni generaciones en la clave, nunca se leen.
+        var legacyKeys = new[]
+        {
+            CacheKeys.Tenant(first.Id, "role-permissions:" + roleId.ToString("N")),
+            CacheKeys.Tenant(first.Id, "role-permissions:v2:" + roleId.ToString("N")),
+            CacheKeys.Tenant(first.Id, "permissions:" + owner.UserId.ToString("N") + ":organization"),
+        };
+        foreach (var key in legacyKeys)
+            await cache.SetAsync(key, new[] { Permissions.Roles.Read }, cancellationToken: Ct);
+
+        Assert.Equal(Permissions.All.Order(StringComparer.Ordinal), await OrganizationAsync(factory, first.Id, owner.UserId));
+        Assert.Equal(Permissions.All.Order(StringComparer.Ordinal), await OrganizationAsync(factory, other.Id, owner.UserId));
         await SqlAsync(factory, first.Id, """
             UPDATE tenant."Roles" SET "Permissions" = array_remove("Permissions", 'roles.manage')
             WHERE "Name" = 'TenantAdmin';
             """);
-        Assert.Contains(Permissions.Roles.Manage, await permissionCache.GetRolePermissionsAsync(first.Id, roleId, Ct));
-        await permissionCache.InvalidateRoleAsync(first.Id, roleId, Ct);
-        Assert.DoesNotContain(Permissions.Roles.Manage, await permissionCache.GetRolePermissionsAsync(first.Id, roleId, Ct));
-        Assert.Equal(new[] { Permissions.Roles.Read }, await cache.GetOrCreateAsync(legacyKey,
-            _ => ValueTask.FromResult(Array.Empty<string>()), cancellationToken: Ct));
-        Assert.Empty(await permissionCache.GetRolePermissionsAsync(other.Id, roleId, Ct));
+        // El SQL no pasó por el guardado: la entrada sigue vigente hasta que avanza la generación de los roles.
+        Assert.Contains(Permissions.Roles.Manage, await OrganizationAsync(factory, first.Id, owner.UserId));
+        await CacheGenerations.AdvanceAsync(factory.Services, Ct, CacheTags.Roles(first.Id));
+        Assert.DoesNotContain(Permissions.Roles.Manage, await OrganizationAsync(factory, first.Id, owner.UserId));
+        Assert.Contains(Permissions.Roles.Manage, await OrganizationAsync(factory, other.Id, owner.UserId));
+        foreach (var key in legacyKeys)
+            Assert.Equal(new[] { Permissions.Roles.Read }, await cache.GetOrCreateAsync(key,
+                _ => ValueTask.FromResult(Array.Empty<string>()), cancellationToken: Ct));
+
+        // Una clave privada de otra organización no se usa desde este pedido.
+        await using var scope = factory.Services.CreateAsyncScope();
+        scope.ServiceProvider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(first.Id, TenantKind.Business);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => scope.ServiceProvider
+            .GetRequiredService<IRolePermissionCache>().GetOrganizationPermissionsAsync(other.Id, owner.UserId, Ct));
+    }
+
+    private static async Task<IReadOnlyList<string>> OrganizationAsync(ApiFactory factory, Guid tenantId, Guid userId)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        scope.ServiceProvider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(tenantId, TenantKind.Business);
+        return await scope.ServiceProvider.GetRequiredService<IRolePermissionCache>()
+            .GetOrganizationPermissionsAsync(tenantId, userId, Ct);
     }
 
     private static async Task<Tenant> CreateSpaceAsync(ApiFactory factory, Guid ownerId, bool pending)

@@ -222,19 +222,12 @@ public sealed class AuthPipelineTests(ApiFactory factory)
 
         public Task<MemberStatus?> GetMemberStatusAsync(Guid userId, Guid tenantId, TenantKind kind,
             CancellationToken cancellationToken) => Task.FromResult<MemberStatus?>(MemberStatus.Active);
-
-        public ValueTask InvalidateUserAsync(Guid userId, CancellationToken cancellationToken) => ValueTask.CompletedTask;
-
-        public ValueTask InvalidateMemberAsync(Guid userId, Guid tenantId, CancellationToken cancellationToken) =>
-            ValueTask.CompletedTask;
     }
 
     private sealed class ActiveTenantStatusCache : ITenantStatusCache
     {
         public Task<TenantStatus?> GetStatusAsync(Guid tenantId, CancellationToken cancellationToken) =>
             Task.FromResult<TenantStatus?>(TenantStatus.Active);
-
-        public ValueTask InvalidateAsync(Guid tenantId, CancellationToken cancellationToken) => ValueTask.CompletedTask;
     }
 }
 

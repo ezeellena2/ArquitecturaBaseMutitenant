@@ -80,10 +80,21 @@ public static class DatabaseBootstrapExtensions
     internal static async Task<bool> SeedReferenceDataAsync(
         string adminConnectionString, CancellationToken cancellationToken)
     {
-        await using var provider = PersistenceRegistration.CreateReferenceSeedProvider(adminConnectionString);
+        await using var provider = PersistenceRegistration.CreateReferenceSeedProvider(adminConnectionString,
+            await HasCacheGenerationsAsync(adminConnectionString, cancellationToken));
         await using var scope = provider.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<ReferenceDataSeeder>()
             .SeedAsync(cancellationToken);
+    }
+
+    // El arranque siempre migra antes y la tabla existe; sólo una prueba de upgrade siembra un esquema anterior a la caché.
+    private static async Task<bool> HasCacheGenerationsAsync(string connectionString, CancellationToken cancellationToken)
+    {
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var command = new NpgsqlCommand(
+            "SELECT to_regclass('platform.\"CacheTagVersions\"') IS NOT NULL", connection);
+        return await command.ExecuteScalarAsync(cancellationToken) is true;
     }
 
     private static async Task EnsureRoleAsync(

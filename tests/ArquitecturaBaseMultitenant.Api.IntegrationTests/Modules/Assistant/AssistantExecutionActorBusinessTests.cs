@@ -138,7 +138,6 @@ public sealed class AssistantExecutionActorBusinessTests(ApiFactory factory)
                             AuditActorKind.System, Guid.Empty, tenantId, "Actor fixture revocation", mutation.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime));
                         return Result.Success();
                     }, CommitPolicy.OnSuccess, Ct);
-                    await mutation.ServiceProvider.GetRequiredService<Application.Interfaces.Integrations.Caching.ITenantFeatureCache>().InvalidateAsync(tenantId, Ct);
                 }
                 else
                 {

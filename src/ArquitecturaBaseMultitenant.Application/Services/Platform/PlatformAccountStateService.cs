@@ -1,6 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -25,7 +24,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// </summary>
 internal sealed class PlatformAccountStateService(IUserRepository users, ISignInService sessions,
     ILoginMethodRepository accounts, PlatformOperatorGuard operators, PlatformAuditWriter audit,
-    IAccessStatusCache statuses, ICurrentUser currentUser, IUnitOfWork unitOfWork, IRequestValidator validator,
+    ICurrentUser currentUser, IUnitOfWork unitOfWork, IRequestValidator validator,
     TimeProvider clock, ILogger<PlatformAccountStateService> logger) : IPlatformAccountStateService
 {
     private enum Change { Suspend, Reactivate, RevokeSessions }
@@ -51,7 +50,6 @@ internal sealed class PlatformAccountStateService(IUserRepository users, ISignIn
         if (currentUser.UserId == accountId) return UserErrors.CannotModifySelf;
         var result = await unitOfWork.ExecuteInTransactionAsync(tx => ChangeCoreAsync(accountId, request, change, tx),
             CommitPolicy.OnSuccess, ct);
-        if (result.IsSuccess) await statuses.InvalidateUserAsync(accountId, ct);
         return result;
     }
 

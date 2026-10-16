@@ -32,7 +32,6 @@ internal sealed class AccountDeletionProcessingService(IAccountDeletionRepositor
             using var scope = tenantScope.Enter(tenant.TenantId);
             var result = await unitOfWork.ExecuteInTransactionAsync(
                 innerCt => processor.ProcessTenantAsync(work, tenant, timeProvider.GetUtcNow().UtcDateTime, innerCt), CommitPolicy.OnSuccess, ct);
-            if (result.IsSuccess) await processor.InvalidateAsync(work, tenant, ct);
             return result;
         });
 
@@ -61,7 +60,6 @@ internal sealed class AccountDeletionProcessingService(IAccountDeletionRepositor
         {
             var result = await unitOfWork.ExecuteInTransactionAsync(
                 innerCt => processor.CompleteAsync(work, timeProvider.GetUtcNow().UtcDateTime, innerCt), CommitPolicy.OnSuccess, ct);
-            if (result.IsSuccess) await processor.InvalidateAsync(work, null, ct);
             return result;
         });
 }

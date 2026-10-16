@@ -1,6 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
@@ -22,7 +21,6 @@ internal sealed class OrganizationSettingsService(
     ITenantSettingsRepository settingsRepository,
     ITenantRepository tenantRepository,
     ITenantContext tenantContext,
-    ITenantSettingsCache cache,
     IRequestValidator validator,
     IUnitOfWork unitOfWork,
     TimeProvider timeProvider,
@@ -46,7 +44,6 @@ internal sealed class OrganizationSettingsService(
             var tenantId = tenantContext.RequiredTenantId;
             var result = await unitOfWork.ExecuteInTransactionAsync(ct => UpdateCoreAsync(request, tenantId, ct),
                 CommitPolicy.OnSuccess, cancellationToken);
-            if (result.IsSuccess) await cache.InvalidateAsync(tenantId, cancellationToken);
             return VersionResponse.Of(result);
         });
     }

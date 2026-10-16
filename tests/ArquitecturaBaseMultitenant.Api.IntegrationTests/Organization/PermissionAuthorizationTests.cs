@@ -113,7 +113,6 @@ public sealed class PermissionAuthorizationTests
             Task.FromResult<IReadOnlyDictionary<Guid, IReadOnlyList<string>>>(new Dictionary<Guid, IReadOnlyList<string>>());
         public Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken ct) => Task.FromResult(organizationGrant);
         public Task<bool> HasCompanyPermissionAsync(Guid userId, Guid companyId, string permission, CancellationToken ct) => Task.FromResult(companyGrant);
-        public Task InvalidateRoleAsync(Guid roleId, CancellationToken ct) => Task.CompletedTask;
     }
 
     private sealed class TestPlatformPermissions(bool grant) : IPlatformPermissionService
