@@ -37,7 +37,8 @@ internal sealed class PersonalWhatsAppService(IWhatsAppConversationLinkReader re
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             if (await reader.FindAsync(id, cancellationToken) is not { } conversation) return WhatsAppErrors.LinkNotFound;
-            return new PersonalWhatsAppConversationDetailResponse(conversation.Response(), await reader.ListMessagesAsync(id, request, cancellationToken));
+            return new PersonalWhatsAppConversationDetailResponse(conversation.Response(),
+                WhatsAppConversationResponseBuilder.WithFailureTexts(await reader.ListMessagesAsync(id, request, cancellationToken)));
         });
 
     public Task<Result> UnlinkAsync(Guid id, CancellationToken cancellationToken) =>

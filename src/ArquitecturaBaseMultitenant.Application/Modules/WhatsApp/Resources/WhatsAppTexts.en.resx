@@ -477,4 +477,43 @@
   <data name="WhatsApp.Template.NumberRequired" xml:space="preserve">
     <value>Connect a number to create templates.</value>
   </data>
+  <data name="Send.Failure.RecipientNotAllowed" xml:space="preserve">
+    <value>That number can't receive messages from this account.</value>
+  </data>
+  <data name="Send.Failure.WindowExpired" xml:space="preserve">
+    <value>24 hours have passed since their last message.</value>
+  </data>
+  <data name="Send.Failure.PaymentRequired" xml:space="preserve">
+    <value>The WhatsApp account has no payment method.</value>
+  </data>
+  <data name="Send.Failure.Undeliverable" xml:space="preserve">
+    <value>WhatsApp couldn't deliver it to that number.</value>
+  </data>
+  <data name="Send.Failure.RateLimited" xml:space="preserve">
+    <value>Too many messages were sent. Try again later.</value>
+  </data>
+  <data name="Send.Failure.Credentials" xml:space="preserve">
+    <value>The number needs to be connected again.</value>
+  </data>
+  <data name="Send.Failure.Permissions" xml:space="preserve">
+    <value>The app isn't allowed to send from this number.</value>
+  </data>
+  <data name="Send.Failure.Rejected" xml:space="preserve">
+    <value>Meta didn't accept the message.</value>
+  </data>
+  <data name="Send.Failure.Network" xml:space="preserve">
+    <value>We couldn't reach WhatsApp.</value>
+  </data>
+  <data name="Send.Failure.Timeout" xml:space="preserve">
+    <value>WhatsApp took too long to answer.</value>
+  </data>
+  <data name="Send.Failure.InvalidResponse" xml:space="preserve">
+    <value>WhatsApp answered something we couldn't read.</value>
+  </data>
+  <data name="Send.Failure.ChannelUnavailable" xml:space="preserve">
+    <value>The number isn't available to send.</value>
+  </data>
+  <data name="Send.Failure.Other" xml:space="preserve">
+    <value>It couldn't be sent for a reason we don't know.</value>
+  </data>
 </root>

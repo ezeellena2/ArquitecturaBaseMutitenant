@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
+using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Resources;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
@@ -32,7 +33,17 @@ internal sealed class WhatsAppConversationResponseBuilder(IWhatsAppConversationR
 
     /// <summary>La conversación y sus mensajes: la página 1 trae los más recientes (CC15).</summary>
     internal async Task<WhatsAppConversationResponse?> ConversationAsync(WhatsAppInbox? inbox, Guid id, PagedRequest request, CancellationToken ct) =>
-        await RowAsync(inbox, id, ct) is { } row ? new(row, await reader.ListMessagesAsync(inbox, id, request, ct)) : null;
+        await RowAsync(inbox, id, ct) is { } row ? new(row, WithFailureTexts(await reader.ListMessagesAsync(inbox, id, request, ct))) : null;
+
+    /// <summary>
+    /// El motivo de lo que no salió, con su texto para quien lo lee: el envío guarda el código (`WhatsApp.Send.*`), como el
+    /// motivo de rechazo de una plantilla. Un código que no tiene texto dice que no se sabe por qué.
+    /// </summary>
+    internal static string? FailureText(string? code) => code is null ? null
+        : WhatsAppTexts.Find("Send.Failure." + code.Replace("WhatsApp.Send.", "", StringComparison.Ordinal)) ?? WhatsAppTexts.Get("Send.Failure.Other");
+
+    internal static PagedResult<WhatsAppChatMessageResponse> WithFailureTexts(PagedResult<WhatsAppChatMessageResponse> page) =>
+        page with { Items = [.. page.Items.Select(message => message with { FailureReason = FailureText(message.FailureReason) })] };
 
     /// <summary>
     /// Las personas a las que se puede pasar el chat, con los que ya tienen tomados en la bandeja. Son pocas (las de los

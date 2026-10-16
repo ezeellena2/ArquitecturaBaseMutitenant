@@ -201,5 +201,5 @@ internal sealed class WhatsAppConversationService(IWhatsAppChatRepository chats,
         await responses.RowAsync(Box(inbox), id, ct) is { } row ? row : WhatsAppErrors.ConversationNotFound;
 
     internal static WhatsAppChatMessageResponse Response(WhatsAppChatMessageBase message) => new(message.Id, message.Kind, message.Direction,
-        message.AuthorName, message.Text, message.MediaKind, message.Status, message.FailureReason, message.CreatedAtUtc);
+        message.AuthorName, message.Text, message.MediaKind, message.Status, WhatsAppConversationResponseBuilder.FailureText(message.FailureReason), message.CreatedAtUtc);
 }
