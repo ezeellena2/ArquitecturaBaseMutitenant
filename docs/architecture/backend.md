@@ -6,7 +6,7 @@ Panorama de la plantilla B2B + B2C. Una persona tiene una cuenta y elige Persona
 
 | Tema | Elección |
 |---|---|
-| Runtime | .NET 10 (`global.json` SDK 10.0.400, `rollForward: latestFeature`, runner Microsoft.Testing.Platform) |
+| Runtime | .NET 10 (`global.json` SDK 10.0.400, `rollForward: latestPatch`, runner Microsoft.Testing.Platform) |
 | Web | ASP.NET Core MVC (controllers). Sin Minimal APIs de negocio |
 | Datos | PostgreSQL 18 + EF Core 10 (Npgsql). Una base, esquemas `platform`, `identity`, `tenant`, `public_site` y `engagement` |
 | Identidad | ASP.NET Core Identity (solo usuarios, sin roles de Identity) + OpenIddict 7 (servidor y validación en la misma Api) |
@@ -15,7 +15,7 @@ Panorama de la plantilla B2B + B2C. Una persona tiene una cuenta y elige Persona
 | Orquestación local | Aspire 13.5 (AppHost + ServiceDefaults) |
 | Observabilidad | `Microsoft.Extensions.Logging` + OpenTelemetry (sin Serilog) |
 | Tests | xUnit v3, Testcontainers (`postgres:18.x`), NetArchTest + Mono.Cecil, `FakeTimeProvider`, dobles a mano (sin Moq ni FluentAssertions) |
-| Build | `TreatWarningsAsErrors`, `AnalysisLevel=latest-recommended`, `EnforceCodeStyleInBuild`, BannedApiAnalyzers, Central Package Management |
+| Build | `TreatWarningsAsErrors`, `AnalysisLevel=10.0-recommended`, `EnforceCodeStyleInBuild`, BannedApiAnalyzers, Central Package Management |
 
 Las versiones son las mismas de `Directory.Packages.props`. `NodaTime` no se usa: alcanza con `TimeZoneInfo` e IDs IANA.
 
