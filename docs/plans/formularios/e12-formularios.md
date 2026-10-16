@@ -44,7 +44,7 @@ Las de producto están en la hoja de ruta (§5) y no se vuelven a preguntar. Las
 | T1 | `Forms` y `WhatsApp` se hablan solo por cuatro puertos neutrales del núcleo (§7). | `ModuleIsolationTests` prohíbe que un módulo use tipos de otro. |
 | T2 | **«Mandar formulario» es de WhatsApp.** La pantalla del chat, la ruta, la sesión y el mensaje van en el módulo WhatsApp, que lista los formularios con `IStructuredFormSource`. No hace falta el registro de acciones internas de la E11. | El que manda es el operador desde el chat, no el empleado con un comando. |
 | T3 | El borrador usa `IVersioned` y 409 `General.ConcurrencyConflict`, sin recibos de cambios. | La edición es interna; ArquitecturaBase gastó días en recibos de 30 días que su ADR 0018 retiró. |
-| T4 | **Hay un solo worker de publicación, el de Forms.** Sus pasos: <ul><li>encuentra el trabajo en un registro técnico global, `platform.FormPublicationWorks`, como `AssistantTurnWorks`;</li><li>entra con `ExecutionActor` y llama al canal;</li><li>el canal hace sus pasos con Meta adentro de esa llamada, cada uno con su propia transacción.</li></ul> | Un worker menos que en ArquitecturaBase. Es el patrón que el repo ya usa para el asistente. |
+| T4 | **Hay un solo worker de publicación, el de Forms.** Descubre trabajos en `platform.FormPublicationWorks`, entra con `ExecutionActor` y llama a las fases de `IFormPublicationService`. Fuera de toda UoW llama al canal, que coordina Meta con las fases de `IWhatsAppFlowPublicationService`; cada fase que escribe abre una sola UoW. | Un worker menos que en ArquitecturaBase. Copia la separación entre `AssistantTurnWorker` e `IAssistantTurnService`; ni el worker ni el adaptador neutral reciben `IUnitOfWork`. |
 | T5 | Los workers entran con `IExecutionActorFactory` e `IExecutionActorScope`, no con `ITenantScope.Enter` solo. | Con `Enter` solo, `IFeatureService` da `false`, porque `Enter` deja `TenantKind` en null (backlog #51). |
 | T6 | El Flow se ata a la versión, al idioma y a la WABA. | Un Flow vive en una WABA; una organización puede tener números en WABAs distintas **[E11]**. |
 | T7 | **Numeración:** `LastRecordNumber` en la definición, sumado bajo bloqueo de fila al capturar, con índice único (definición, número). El prefijo es único **dentro de la organización**. | Sin bloqueos globales: cada organización numera aparte. |
@@ -256,7 +256,7 @@ Todas las rutas Business llevan `[Access(Access.Business)]` y `[FeatureGate("for
 
 ## 6. Flujos, con sus transacciones
 
-«UoW» es una `ExecuteInTransactionAsync(…, CommitPolicy.OnSuccess, ct)`. Cada método público va en `OperationLog.RunAsync`.
+«UoW» es una `ExecuteInTransactionAsync(…, CommitPolicy.OnSuccess, ct)`. Cada método público de servicio va en `OperationLog.RunAsync`. Las escrituras de definición pertenecen a `IFormDefinitionService`; las de publicación, a `IFormPublicationService`. Los workers coordinan las fases, y los adaptadores neutrales delegan en los servicios del módulo; ninguno abre una UoW ni recibe `IUnitOfWork`.
 
 1. **Crear.**
    - Afuera de la UoW se valida el nombre.
@@ -283,12 +283,12 @@ Todas las rutas Business llevan `[Access(Access.Business)]` y `[FeatureGate("for
      - se bloquea el prefijo.
    - Responde 202.
    - **El worker** (`Infrastructure/Modules/Forms/FormPublicationWorker.cs`, modelo `AssistantTurnWorker`) hace tres pasos:
-     1. busca trabajos listos y entra con `ExecutionActor` (el operador que publicó, revalidado: si perdió `forms.publish` antes de tocar Meta, la publicación termina `Failed`). Reserva con una UoW y pasa a `Preparing`;
+     1. busca trabajos listos y entra con `ExecutionActor` (el operador que publicó, revalidado: si perdió `forms.publish` antes de tocar Meta, la publicación termina `Failed`). Llama a `IFormPublicationService.ClaimAsync`, que reserva en su única UoW y pasa a `Preparing`;
      2. fuera de toda UoW llama a `IStructuredFormChannel.PublishAsync`:
         - el canal arma el Flow de cada idioma para cada WABA con números conectados **[E11]**;
         - por cada uno sigue los pasos Create → Upload → Validate → Publish → Verify;
-        - antes de cada llamada a Meta guarda `InFlight` (en su UoW), y después guarda el resultado (en otra UoW);
-     3. con lo que devolvió el canal, en una UoW:
+        - el adaptador `WhatsAppStructuredFormChannel` llama a `IWhatsAppFlowPublicationService.BeginStepAsync` para reservar el binding/paso y guardar `InFlight` en su única UoW; hace la llamada a Meta después del commit y entrega el resultado a `CompleteStepAsync`, que abre otra UoW. El adaptador no abre transacciones;
+     3. entrega lo que devolvió el canal a `IFormPublicationService.CompleteAsync`, que en su única UoW aplica:
         - `Published` → `ActivationPending`, y se activa la versión en la misma UoW → `Published`;
         - `Uncertain` → `Unconfirmed`, con `NextCheckAtUtc`;
         - rechazo definitivo → `Failed`, con sus `issues`.
@@ -314,14 +314,14 @@ Todas las rutas Business llevan `[Access(Access.Business)]` y `[FeatureGate("for
      1. saca el hash del `flow_token` y busca la sesión;
      2. compara la hora firmada de Meta con `ExpiresAtUtc`: si se pasó, `Expired`;
      3. decodifica con el `FieldMap` del binding (§14);
-     4. entra con `ExecutionActor` (quien respondió) y, fuera de su UoW, llama a `IStructuredRecordSink.CaptureAsync`.
-   - **La captura en Forms,** en una sola UoW:
+     4. revalida y entra con `ExecutionActor` (quien respondió) y, sin transacción abierta, llama a `IStructuredRecordSink.CaptureAsync`. Las escrituras previas de reserva o vencimiento son fases de `IWhatsAppFlowReplyService.ClaimAsync`, con una única UoW; el worker no las abre.
+   - **La captura en Forms:** `FormRecordSink` delega en `IFormRecordService.CaptureAsync`, que abre su única UoW:
      - busca el `SourceKey`: si ya existe con el mismo contenido, devuelve el mismo número; si el contenido es otro, `ReplayConflict`;
      - revalida la membresía y `formrecords.create`;
      - valida estricto contra la versión sellada;
      - bloquea la definición y suma `LastRecordNumber`;
      - guarda la respuesta y sus valores.
-   - **Después, en otra UoW de WhatsApp:** se marca la sesión `Completed` (con número) o `Rejected` (con código).
+   - **Después:** `IWhatsAppFlowReplyService.CompleteAsync` abre su única UoW en WhatsApp y marca la sesión `Completed` (con número) o `Rejected` (con código).
    - **Si se cae entre las dos UoW:** se repite y devuelve el mismo número.
 8. **Tarjeta en el chat.**
    - Al listar los mensajes, WhatsApp llama a `IStructuredRecordSource.ReadAsync(recordIds, culture)`.
@@ -329,7 +329,7 @@ Todas las rutas Business llevan `[Access(Access.Business)]` y `[FeatureGate("for
    - En la lista de chats, la vista previa es el texto fijo «Respuesta del formulario».
 9. **Retención y baja.**
    - La retención de WhatsApp borra `ProtectedFlowResponse` cuando el mensaje ya se procesó; la respuesta y su número quedan.
-   - `FormsAccountDeletionParticipant` corre dentro de la UoW de la baja; qué se conserva lo decide el plan de la etapa ([datos-personales](../../rules/datos-personales.md)). El modelo es `Infrastructure/Modules/Assistant/AssistantAccountDeletionParticipant.cs`.
+   - `Application/Modules/Forms/Services/FormsAccountDeletionParticipant` decide las reglas dentro del alcance y la UoW de la baja, sin abrir otra; qué se conserva lo decide el plan de la etapa ([datos-personales](../../rules/datos-personales.md)). Copia `Application/Modules/Assistant/Services/AssistantAccountDeletionParticipant.cs`: usa un puerto `IFormsAccountDeletionCleanupRepository`, cuya implementación en Infrastructure hace solo el cleanup EF y exige la transacción del llamador. Lo protege `AssistantMaintenanceLayerTests`, que se extiende para Forms.
 
 ## 7. Puertos neutrales del núcleo
 
@@ -392,18 +392,20 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 | `D/Authorization/Permissions.cs`: clase `Forms` (`forms.read`, `forms.manage`, `forms.publish`, `formrecords.create`, `formrecords.read`) en `OrganizationScoped` | la clase `Assistant` del mismo archivo |
 | `A/Modules/Forms/FormsModule.cs` | `A/Modules/Assistant/AssistantModule.cs` |
 | `A/Modules/Forms/Services/FormsFeatureDefinitionContributor.cs` (`new("forms", FeatureScope.Business, false)`) | `AssistantFeatureDefinitionContributor.cs` |
-| `A/Modules/Forms/Interfaces/Services/IFormDefinitionService.cs`, `IFormPublicationService.cs` | `IAssistantConversationService.cs` |
-| `A/Modules/Forms/Services/FormDefinitionService.cs`, `FormPublicationService.cs` y los helpers `FormPrefixResolver`, `FormDraftEditor`, `FormVersionCreator`, `FormRecordNumberIssuer`, `FormRecordWriter` | `AssistantConversationService.cs` y sus helpers |
+| `A/Modules/Forms/Interfaces/Services/IFormDefinitionService.cs`, `IFormPublicationService.cs`, `IFormRecordService.cs` | `IAssistantConversationService.cs`; `IAssistantTurnService.cs` para las fases |
+| `A/Modules/Forms/Services/FormDefinitionService.cs`, `FormPublicationService.cs`, `FormRecordService.cs` y los helpers `FormPrefixResolver`, `FormDraftEditor`, `FormVersionCreator`, `FormRecordNumberIssuer`, `FormRecordWriter` | `AssistantConversationService.cs`, `AssistantTurnService.cs` y sus helpers |
 | `A/Modules/Forms/Services/FormStructuredSource.cs`, `FormRecordSink.cs`, `FormRecordSource.cs` (implementan los puertos) | `A/Modules/WhatsApp/Services/WhatsAppLoginCodeChannel.cs` (un módulo implementa un puerto del núcleo) |
 | `A/Modules/Forms/Interfaces/Persistence/IFormDefinitionRepository.cs`, `IFormReader.cs`, `UniqueKeys.cs` | `A/Modules/Assistant/Interfaces/Persistence/` |
 | `A/Modules/Forms/Models/`, `Validation/`, `Resources/FormsTexts{,.en}.resx`, `FormsErrorTextSource.cs` | las mismas carpetas del Asistente |
 | `A/Interfaces/Integrations/StructuredData/*.cs`, `A/Models/StructuredData/*.cs` | `A/Interfaces/Integrations/Messaging/ILoginCodeChannel.cs` |
 | `I/StructuredData/Disabled*.cs` | `I/Messaging/Email/EmailLoginCodeChannel.cs` (implementación del núcleo) |
 | `I/Modules/Forms/FormsModule.cs`, `Persistence/FormsModelContributor.cs`, `Persistence/Configurations/*.cs`, `Persistence/Repositories/*.cs`, `Persistence/Readers/*.cs` | `I/Modules/Assistant/...` (`AssistantModelContributor.cs`) |
-| `I/Modules/Forms/FormPublicationWorker.cs`, `FormsAccountDeletionParticipant.cs` | `I/Modules/Assistant/AssistantTurnWorker.cs`, `AssistantAccountDeletionParticipant.cs` |
+| `A/Modules/Forms/Services/FormsAccountDeletionParticipant.cs`, `A/Modules/Forms/Interfaces/Persistence/IFormsAccountDeletionCleanupRepository.cs`; `I/Modules/Forms/Persistence/Repositories/FormsAccountDeletionCleanupRepository.cs` | `A/Modules/Assistant/Services/AssistantAccountDeletionParticipant.cs`, su puerto de cleanup y `I/Modules/Assistant/Persistence/Repositories/AssistantAccountDeletionCleanupRepository.cs`; `AssistantMaintenanceLayerTests` |
+| `I/Modules/Forms/FormPublicationWorker.cs` | `I/Modules/Assistant/AssistantTurnWorker.cs` (descubre, entra con actor y llama fases del servicio) |
 | `I/Persistence/Migrations/<fecha>_FormsModule.cs` y `<fecha>_SystemRoleFormsPermissions.cs` | `20261010011328_AssistantModule.cs`, `20261010203618_SystemRoleAssistantPermissions.cs` |
 | `P/Modules/Forms/FormsApiModule.cs`, `FormsContractContributor.cs`, `Controllers/BusinessFormsController.cs`, `Contracts/*HttpRequest.cs` | `P/Modules/Assistant/...` |
 | WhatsApp: `A/Modules/WhatsApp/Services/WhatsAppFlowBuilder.cs`, `WhatsAppFlowReplyVerifier.cs`, `WhatsAppFormSendService.cs`, `WhatsAppStructuredFormChannel.cs`; `I/Modules/WhatsApp/WhatsAppFlowClient.cs`, el worker de respuestas y las configuraciones de `WhatsAppFlowBindings` y `WhatsAppFlowSessions` | `I/Modules/WhatsApp/WhatsAppCloudClient.cs`, `WhatsAppInboundProcessor.cs` y lo que deje la E11 **[E11]** |
+| WhatsApp: `A/Modules/WhatsApp/Interfaces/Services/IWhatsAppFlowPublicationService.cs`, `IWhatsAppFlowReplyService.cs` y sus implementaciones en `Services/` | `IAssistantTurnService.cs` y `AssistantTurnService.cs` (fases con una UoW cada una) |
 | `Program.cs`: `AddFormsModule` en las tres capas | la línea del Asistente |
 
 **Front** (`F/` = `ArquitecturaBaseMutitenantFront/`):
@@ -464,7 +466,7 @@ Los tableros nuevos llevan el prefijo `FRM-`, como `WA-` en WhatsApp, para no co
 | `tests/…Api.IntegrationTests/Modules/Forms/` | cada ruta: 401, 403, feature apagada = 404, validación, 409, idempotencia y paginado; publicar con un canal de prueba (Published, Uncertain → verifica, Failed); captura idempotente y número sin saltos con dos capturas a la vez; tarjeta con y sin `formrecords.read`; baja de cuenta |
 | `tests/…Api.IntegrationTests/Modules/Forms/*IsolationTests.cs` | otra organización recibe 404 en cada ruta; RLS de cada tabla; la captura no cruza organizaciones (modelo: `Modules/Assistant/AssistantConversationIsolationTests.cs`) |
 | `tests/…Api.IntegrationTests/Modules/WhatsApp/` **[E11]** | botón y motivos; sesión vencida por la hora de Meta; un mensaje con error no frena a los demás; respuesta de más de 16 KiB rechazada y visible |
-| Guardas (partials del módulo) | `ExplicitRouteInventoryTests`, `ModuleControllersTests`, `ApplicationServicesTests`, `TenantScopeUsageTests`, `ResourceParityTests` (sumar los resx de Forms), `PermissionTextsTests` y `ModuleIsolationTests` en verde |
+| Guardas (partials del módulo) | `ExplicitRouteInventoryTests`, `ModuleControllersTests`, `ApplicationServicesTests`, `TenantScopeUsageTests`, `ResourceParityTests` (sumar los resx de Forms), `PermissionTextsTests` y `ModuleIsolationTests` en verde; `TransactionBoundaryTests` sin ampliar excepciones, y la guarda de capas de baja como `AssistantMaintenanceLayerTests` |
 | Front | Vitest con MSW y axe en las páginas y el diálogo; `registration`, `navigation` y `composition` del módulo; paridad de `forms.json` |
 | E2E real y recorrido | crear, completar el inglés, publicar contra el canal real o el de prueba, mandar desde un chat de Internos, responder y ver el número tras recargar |
 | Prueba con Meta | con el número de una organización de prueba: publicar, mandar, completar en el teléfono y ver el número |
