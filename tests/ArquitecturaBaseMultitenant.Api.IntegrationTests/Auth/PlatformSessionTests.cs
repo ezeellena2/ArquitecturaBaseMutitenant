@@ -33,8 +33,10 @@ public sealed class PlatformSessionTests(ApiFactory factory) : IDisposable
         using var browser = Client();
         using var signedIn = await LoginAsync(browser, account.Email.Value, "platform");
         Assert.Equal(HttpStatusCode.OK, signedIn.StatusCode);
-        Assert.Contains(signedIn.Headers.GetValues("Set-Cookie"), value => value.StartsWith(".AspNetCore.Identity.Platform=", StringComparison.Ordinal));
+        // E9: el código sólo deja el desafío del segundo factor; la cookie de Plataforma nace al completarlo.
+        Assert.Contains(signedIn.Headers.GetValues("Set-Cookie"), value => value.StartsWith("__Host-MtPlatformFactor=", StringComparison.Ordinal));
         Assert.DoesNotContain(signedIn.Headers.GetValues("Set-Cookie"), value => value.StartsWith(".AspNetCore.Identity.Application=", StringComparison.Ordinal));
+        await PlatformFactorJourney.CompleteAsync(host.Services, browser, account.UserId, Ct);
 
         using var response = await browser.GetAsync(AuthorizePath(access), Ct);
 
@@ -54,8 +56,7 @@ public sealed class PlatformSessionTests(ApiFactory factory) : IDisposable
             await OrganizationJourney.StageAsync(factory, person, "Convivencia " + Guid.NewGuid().ToString("N"), Ct);
         using (var noPlatform = await browser.GetAsync(AuthorizePath("platform"), Ct))
             Assert.StartsWith("/login?returnUrl=", noPlatform.Headers.Location!.OriginalString, StringComparison.Ordinal);
-        using (var signedIn = await LoginAsync(browser, operatorAccount.Email.Value, "platform"))
-            Assert.Equal(HttpStatusCode.OK, signedIn.StatusCode);
+        await PlatformLoginAsync(browser, operatorAccount);
 
         var platform = await AuthorizeAsync(browser, "platform");
         var consumer = await AuthorizeAsync(browser, publicAccess);
@@ -74,8 +75,7 @@ public sealed class PlatformSessionTests(ApiFactory factory) : IDisposable
         var operatorAccount = await OperatorAsync();
         using var browser = Client();
         var person = await AccountJourney.RegisterAsync(host, browser, Ct);
-        using (var signedIn = await LoginAsync(browser, operatorAccount.Email.Value, "platform"))
-            Assert.Equal(HttpStatusCode.OK, signedIn.StatusCode);
+        await PlatformLoginAsync(browser, operatorAccount);
         var publicTokens = await AuthorizeAsync(browser, "consumer");
         var platformTokens = await AuthorizeAsync(browser, "platform");
         var tokens = exiting == "platform" ? platformTokens : publicTokens;
@@ -101,8 +101,7 @@ public sealed class PlatformSessionTests(ApiFactory factory) : IDisposable
         var account = await OperatorAsync();
         using var browser = Client();
         var person = await AccountJourney.RegisterAsync(host, browser, Ct);
-        using (var signedIn = await LoginAsync(browser, account.Email.Value, "platform"))
-            Assert.Equal(HttpStatusCode.OK, signedIn.StatusCode);
+        await PlatformLoginAsync(browser, account);
 
         using var verified = await LoginAsync(browser, account.Email.Value, access);
 
@@ -121,8 +120,7 @@ public sealed class PlatformSessionTests(ApiFactory factory) : IDisposable
         var account = await OperatorAsync();
         using var browser = Client();
         var person = await AccountJourney.RegisterAsync(host, browser, Ct);
-        using (var signedIn = await LoginAsync(browser, account.Email.Value, "platform"))
-            Assert.Equal(HttpStatusCode.OK, signedIn.StatusCode);
+        await PlatformLoginAsync(browser, account);
         var platform = await AuthorizeAsync(browser, "platform");
         await RevokeAsync(account.UserId);
 
@@ -140,15 +138,13 @@ public sealed class PlatformSessionTests(ApiFactory factory) : IDisposable
     {
         var managerAccount = await OperatorAsync();
         using var manager = Client();
-        using (var signedIn = await LoginAsync(manager, managerAccount.Email.Value, "platform"))
-            Assert.Equal(HttpStatusCode.OK, signedIn.StatusCode);
+        await PlatformLoginAsync(manager, managerAccount);
         await AccountJourney.AuthorizeAsync(manager, "platform", Ct);
         using var browser = Client();
         var account = await AccountJourney.RegisterAsync(host, browser, Ct);
         var consumerTokens = await AuthorizeAsync(browser, "consumer");
         await PlatformOperators.GrantAsync(host.Services, account.UserId, PlatformOperators.All, Ct);
-        using (var signedIn = await LoginAsync(browser, account.Email.Value, "platform"))
-            Assert.Equal(HttpStatusCode.OK, signedIn.StatusCode);
+        await PlatformLoginAsync(browser, account);
         var platformTokens = await AuthorizeAsync(browser, "platform");
         using var closed = await PlatformJourney.PostAsync(manager, $"/api/platform/accounts/{account.UserId:D}/{action}",
             new { reason = "Cierre solicitado por la cuenta." }, Ct);
@@ -185,6 +181,14 @@ public sealed class PlatformSessionTests(ApiFactory factory) : IDisposable
         Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
         var code = await PickupCodeReader.ReadAsync(host.Services, email, Ct);
         return await AccountJourney.PostAsync(browser, "/api/auth/login-code/verify", new { email, code, returnUrl = AuthorizePath(access) }, Ct);
+    }
+
+    // E9: la sesión de Plataforma nace al completar el segundo factor después del código.
+    private async Task PlatformLoginAsync(HttpClient browser, AccountJourney account)
+    {
+        using (var signedIn = await LoginAsync(browser, account.Email.Value, "platform"))
+            Assert.Equal(HttpStatusCode.OK, signedIn.StatusCode);
+        await PlatformFactorJourney.CompleteAsync(host.Services, browser, account.UserId, Ct);
     }
 
     private async Task RevokeAsync(Guid userId)
