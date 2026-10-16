@@ -58,6 +58,7 @@ public sealed class AssistantNoticeSeedRaceTests
         using (var verified = await AccountJourney.PostAsync(client, "/api/auth/login-code/verify",
                    new { email, code, returnUrl = "/connect/authorize?access=platform" }, Ct))
             Assert.Equal(HttpStatusCode.OK, verified.StatusCode);
+        await PlatformFactorJourney.CompleteAsync(host.Services, client, operatorId, Ct);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         using (var accepted = await AccountJourney.PostAsync(client, "/api/legal/accept", new { documents }, Ct))
             Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);

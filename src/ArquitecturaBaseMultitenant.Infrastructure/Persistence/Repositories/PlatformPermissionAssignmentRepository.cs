@@ -30,6 +30,13 @@ internal sealed class PlatformPermissionAssignmentRepository(ApplicationDbContex
         context.PlatformPermissionAssignments.Remove(assignment);
     }
 
+    public void MarkUpdated(PlatformPermissionAssignment assignment)
+    {
+        ArgumentNullException.ThrowIfNull(assignment);
+        context.RequireTransaction();
+        context.Entry(assignment).State = EntityState.Modified;
+    }
+
     public Task LockOperatorsAsync(CancellationToken cancellationToken) =>
         context.AcquireAdvisoryLocksAsync([AdvisoryLockKeys.PlatformOperators], cancellationToken);
 

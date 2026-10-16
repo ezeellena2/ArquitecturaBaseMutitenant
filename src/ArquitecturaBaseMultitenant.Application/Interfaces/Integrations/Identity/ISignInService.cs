@@ -16,6 +16,17 @@ public interface ISignInService
 
     Task SignInAsync(Guid userId, Access access, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// La cookie de Plataforma con el identificador de sesión que el segundo factor ya guardó (E9), después del commit.
+    /// </summary>
+    Task SignInPlatformAsync(Guid userId, string sessionId, DateTime startedAtUtc, CancellationToken cancellationToken);
+
+    /// <summary>El sello de seguridad actual: cambia al cerrar sesiones, quitar el operador o restablecer su factor.</summary>
+    Task<string> GetSecurityStampAsync(Guid userId, CancellationToken cancellationToken);
+
+    /// <summary>Hasta cuándo dura el bloqueo de la cuenta, o null si no está bloqueada.</summary>
+    Task<DateTime?> GetLockoutEndUtcAsync(Guid userId, CancellationToken cancellationToken);
+
     Task<ExternalLogin?> GetExternalLoginAsync(CancellationToken cancellationToken);
 
     Task SignOutExternalAsync(CancellationToken cancellationToken);

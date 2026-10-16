@@ -160,7 +160,7 @@ public sealed class UnitOfWorkTests(ApiFactory factory)
     }
 
     private static UnitOfWork CreateUnitOfWork(IsolationApplicationDbContext context, TenantContext tenant) =>
-        new(context, tenant, NullLogger<UnitOfWork>.Instance);
+        new(context, tenant, new RecentPlatformProofContext(), TimeProvider.System, NullLogger<UnitOfWork>.Instance);
 
     private static async Task<string?> CurrentTenantAsync(
         IsolationApplicationDbContext context, CancellationToken cancellationToken)

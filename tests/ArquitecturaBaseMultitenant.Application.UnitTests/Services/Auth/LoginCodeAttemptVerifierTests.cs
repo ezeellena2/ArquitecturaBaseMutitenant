@@ -46,6 +46,9 @@ public sealed class LoginCodeAttemptVerifierTests
         public Task ResetFailedAttemptsAsync(Guid userId, CancellationToken ct) => throw new NotSupportedException();
         public Task RevokeSessionsAsync(Guid userId, CancellationToken ct) => throw new NotSupportedException();
         public Task SignInAsync(Guid userId, Access access, CancellationToken ct) => throw new NotSupportedException();
+        public Task SignInPlatformAsync(Guid userId, string sessionId, DateTime startedAtUtc, CancellationToken ct) => throw new NotSupportedException();
+        public Task<string> GetSecurityStampAsync(Guid userId, CancellationToken ct) => throw new NotSupportedException();
+        public Task<DateTime?> GetLockoutEndUtcAsync(Guid userId, CancellationToken ct) => throw new NotSupportedException();
         public Task<ExternalLogin?> GetExternalLoginAsync(CancellationToken ct) => throw new NotSupportedException();
         public Task SignOutExternalAsync(CancellationToken ct) => throw new NotSupportedException();
     }

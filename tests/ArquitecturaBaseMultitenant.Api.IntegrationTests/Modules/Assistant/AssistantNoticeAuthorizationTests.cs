@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Idempotency;
 using ArquitecturaBaseMultitenant.Application.Models.Legal;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services;
@@ -161,6 +162,7 @@ public sealed class AssistantNoticeAuthorizationTests(ApiFactory factory)
             return result;
         }
         public Task CompleteAsync(Guid id, int statusCode, string responseBody, CancellationToken cancellationToken) => Inner.CompleteAsync(id, statusCode, responseBody, cancellationToken);
+        public Task CompleteReferenceAsync(Guid id, IdempotentReference reference, CancellationToken cancellationToken) => Inner.CompleteReferenceAsync(id, reference, cancellationToken);
         public Task ReleaseAsync(Guid id, CancellationToken cancellationToken) => Inner.ReleaseAsync(id, cancellationToken);
         public Task<int> CleanupExpiredAsync(CancellationToken cancellationToken) => Inner.CleanupExpiredAsync(cancellationToken);
     }

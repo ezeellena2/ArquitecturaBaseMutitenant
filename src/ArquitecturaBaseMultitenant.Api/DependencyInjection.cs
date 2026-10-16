@@ -10,7 +10,10 @@ using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Api.RateLimiting;
 using ArquitecturaBaseMultitenant.Api.RequestContext;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Idempotency;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.AspNetCore.Authorization;
@@ -59,6 +62,15 @@ public static class DependencyInjection
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Idempotency.IIdempotentRequestContext>(
             provider => provider.GetRequiredService<IdempotentRequestContext>());
         services.AddScoped<LoginLinkReplayVerifier>();
+        services.AddScoped<IPlatformFactorBrowser, PlatformFactorCookie>();
+        services.AddScoped<RecentPlatformProofFilter>();
+        services.AddScoped<PlatformFactorDurableAdapter>();
+        services.AddScoped<PlatformReauthenticationDurableAdapter>();
+        foreach (var kind in PlatformFactorReferences.Kinds)
+        {
+            services.AddScoped<IIdempotentReplayResolver>(provider =>
+                new PlatformFactorReplayAdapter(provider.GetRequiredService<IPlatformFactorDurableService>(), kind));
+        }
         services.AddOpenApiDocumentation();
         services.AddRateLimiter(options =>
         {
@@ -87,7 +99,12 @@ public static class DependencyInjection
         });
         services.AddLoginRateLimitingPolicies();
         services.ConfigureHttpJsonOptions(options => JsonConfiguration.ConfigureJson(options.SerializerOptions));
-        services.AddControllers(options => options.Filters.Add(new EmptyJsonBodyContentTypeFilter()))
+        services.AddControllers(options =>
+            {
+                options.Filters.Add(new EmptyJsonBodyContentTypeFilter());
+                // E9: la prueba reciente, después del acceso de cada controller y antes de la idempotencia.
+                options.Filters.AddService<RecentPlatformProofFilter>(RecentPlatformProofFilter.Order);
+            })
             .AddJsonOptions(options => JsonConfiguration.ConfigureJson(options.JsonSerializerOptions));
         services.Configure<ApiBehaviorOptions>(options =>
             options.InvalidModelStateResponseFactory = MvcInvalidModelStateResponseFactory.Create);

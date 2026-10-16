@@ -43,7 +43,7 @@ internal sealed record AccountJourney(Guid UserId, Email Email)
         using var profile = await me.Content.ReadFromJsonAsync<JsonDocument>(ct);
         var account = new AccountJourney(profile!.RootElement.GetProperty("id").GetGuid(), email);
         Registrations.Remove(client);
-        Registrations.Add(client, new RegisteredAccount(factory, email));
+        Registrations.Add(client, new RegisteredAccount(factory, email, account.UserId));
         return account;
     }
 
@@ -97,9 +97,15 @@ internal sealed record AccountJourney(Guid UserId, Email Email)
         using var requested = await PostAsync(client, "/api/auth/login-code", new { email = registered.Email.Value }, ct);
         Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
         var value = await PickupCodeReader.ReadAsync(registered.Factory.Services, registered.Email.Value, ct);
-        using var verified = await PostAsync(client, "/api/auth/login-code/verify",
-            new { email = registered.Email.Value, code = value, returnUrl = path }, ct);
-        Assert.Equal(HttpStatusCode.OK, verified.StatusCode);
+        using (var verified = await PostAsync(client, "/api/auth/login-code/verify",
+            new { email = registered.Email.Value, code = value, returnUrl = path }, ct))
+        {
+            Assert.Equal(HttpStatusCode.OK, verified.StatusCode);
+            using var next = await verified.Content.ReadFromJsonAsync<JsonDocument>(ct);
+            Assert.Equal("platformFactor", next!.RootElement.GetProperty("next").GetString());
+        }
+        // E9: un operador completa el segundo factor antes de que el authorize entregue tokens.
+        await PlatformFactorJourney.CompleteAsync(registered.Factory.Services, client, registered.UserId, ct);
         return await client.GetAsync(path, ct);
     }
 
@@ -116,5 +122,5 @@ internal sealed record AccountJourney(Guid UserId, Email Email)
     }
 
     public override string ToString() => nameof(AccountJourney);
-    private sealed record RegisteredAccount(WebApplicationFactory<Program> Factory, Email Email);
+    private sealed record RegisteredAccount(WebApplicationFactory<Program> Factory, Email Email, Guid UserId);
 }

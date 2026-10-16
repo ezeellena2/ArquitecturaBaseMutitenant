@@ -16,6 +16,15 @@ internal static class AuthRegistration
         services.AddScoped<ITenantSlugAvailabilityService, TenantSlugAvailabilityService>();
         services.AddScoped<ILoginCodeService, LoginCodeService>();
         services.AddScoped<IPlatformFactorService, PlatformFactorService>();
+        services.AddScoped<IPlatformFactorDurableService, PlatformFactorDurableService>();
+        services.AddScoped<IPlatformSessionService, PlatformSessionService>();
+        services.AddScoped<PlatformFactorChallengeIssuer>();
+        services.AddScoped<PlatformFactorChallengeGuard>();
+        services.AddScoped<PlatformFactorChallengeResolver>();
+        services.AddScoped<TwoFactorCodeVerifier>();
+        services.AddScoped<PlatformAuthenticatorSetupWriter>();
+        services.AddScoped<PlatformSignInWriter>();
+        services.AddScoped<PlatformFactorEventWriter>();
         services.AddScoped<ILoginLinkService, LoginLinkService>();
         services.AddScoped<ILoginLinkReplayService, LoginLinkReplayService>();
         services.AddScoped<LoginLinkGuard>();

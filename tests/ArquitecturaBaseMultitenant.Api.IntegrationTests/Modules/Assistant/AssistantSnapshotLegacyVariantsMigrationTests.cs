@@ -116,6 +116,7 @@ public sealed class AssistantSnapshotLegacyVariantsMigrationTests
         using (var verified = await AccountJourney.PostAsync(operatorClient, "/api/auth/login-code/verify",
             new { email = operatorEmail.Value, code, returnUrl = "/connect/authorize?access=platform" }, ct))
             Assert.Equal(HttpStatusCode.OK, verified.StatusCode);
+        await PlatformFactorJourney.CompleteAsync(factory.Services, operatorClient, platformOwner.UserId, ct);
         await AccountJourney.AuthorizeAsync(operatorClient, "platform", ct);
         using (var me = await operatorClient.GetFromJsonAsync<JsonDocument>("/api/me", ct))
         {

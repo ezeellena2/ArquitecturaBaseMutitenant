@@ -1,5 +1,5 @@
 using ArquitecturaBaseMultitenant.Api.Contracts.Platform;
-using ArquitecturaBaseMultitenant.Api.ErrorHandling;
+using ArquitecturaBaseMultitenant.Api.Hosting;
 using ArquitecturaBaseMultitenant.Api.Idempotency;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
@@ -12,16 +12,18 @@ namespace ArquitecturaBaseMultitenant.Api.Controllers.Platform;
 
 /// <summary>
 /// «Confirmá que sos vos» (E9): el operador activo prueba su segundo factor y deja una prueba reciente de 10 minutos
-/// para las acciones sensibles de esta sesión. No pide otro permiso.
+/// para las acciones sensibles de esta sesión. No pide otro permiso. Es durable: un replay conserva el vencimiento.
 /// </summary>
 [ApiController]
+[NoStore]
 [Route("api/platform/reauthentication")]
 [Tags("Seguridad de Plataforma")]
 [Access(Access.Platform)]
 public sealed class PlatformReauthenticationController(IPlatformReauthenticationService service) : ControllerBase
 {
     [HttpPost]
-    [Idempotent]
+    [IdempotencyDurable(typeof(PlatformReauthenticationDurableAdapter))]
+    [Idempotent(Mode = IdempotencyMode.DurableReference)]
     [ProducesResponseType<PlatformReauthenticationResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
@@ -29,5 +31,5 @@ public sealed class PlatformReauthenticationController(IPlatformReauthentication
     [ProducesProblem(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Reauthenticate([FromBody] PlatformReauthenticationHttpRequest request,
         CancellationToken cancellationToken) =>
-        (await service.ReauthenticateAsync(request.ToModel(), cancellationToken)).ToActionResult(this);
+        (await service.ReauthenticateAsync(request.ToModel(), cancellationToken)).ToReferencedResult(this);
 }

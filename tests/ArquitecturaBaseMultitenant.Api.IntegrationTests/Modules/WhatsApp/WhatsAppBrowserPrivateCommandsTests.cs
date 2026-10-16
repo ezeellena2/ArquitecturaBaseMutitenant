@@ -245,6 +245,7 @@ public sealed class WhatsAppBrowserPrivateCommandsTests(ApiFactory factory) : IC
         var code = JsonSerializer.SerializeToElement(await control.ExecuteAsync(begin with { Kind = "operatorCode" }, client, Ct)).GetProperty("proof").GetString();
         using var verified = await AccountJourney.PostAsync(client, "/api/auth/login-code/verify", new { email = WhatsAppBrowserControl.OperatorEmail, code, returnUrl = "/connect/authorize?access=platform" }, Ct);
         Assert.Equal(HttpStatusCode.OK, verified.StatusCode);
+        await PlatformFactorJourney.CompleteAsync(app.Services, client, userId: null, Ct);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         using var me = await client.GetAsync("/api/me", Ct);
         Assert.Equal(HttpStatusCode.OK, me.StatusCode);

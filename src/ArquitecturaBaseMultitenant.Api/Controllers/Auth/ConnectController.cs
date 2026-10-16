@@ -79,9 +79,10 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
             {
                 var sessionStartedAtUtc = session.Properties?.Items.TryGetValue(BrowserSessionKeys.StartedAtUtc,
                     out var startedAtUtc) == true ? BrowserSessionKeys.ReadStartedAtUtc(startedAtUtc) : null;
+                // E9: con Plataforma, sin la sesión del segundo factor de este navegador no hay tokens y vuelve al ingreso.
                 var principal = await principalFactory.CreateAsync(userId, access, selected.Value.TenantId,
                     request.GetScopes(), cancellationToken,
-                    sessionStartedAtUtc);
+                    sessionStartedAtUtc, browserSessionId);
                 if (principal is not null)
                 {
                     var authorization = await authorizationService.CreateAsync(userId, access,

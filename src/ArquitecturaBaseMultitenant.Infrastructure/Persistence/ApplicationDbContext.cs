@@ -60,6 +60,11 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     public DbSet<AccountDeletionCancelTicket> AccountDeletionCancelTickets => Set<AccountDeletionCancelTicket>();
     public DbSet<ConsumerDataRetention> ConsumerDataRetentions => Set<ConsumerDataRetention>();
     public DbSet<LoginAudit> LoginAudits => Set<LoginAudit>();
+    public DbSet<PlatformAuthenticator> PlatformAuthenticators => Set<PlatformAuthenticator>();
+    public DbSet<PlatformRecoveryCode> PlatformRecoveryCodes => Set<PlatformRecoveryCode>();
+    public DbSet<PlatformFactorChallenge> PlatformFactorChallenges => Set<PlatformFactorChallenge>();
+    public DbSet<PlatformSession> PlatformSessions => Set<PlatformSession>();
+    public DbSet<PlatformFactorOperation> PlatformFactorOperations => Set<PlatformFactorOperation>();
     internal DbSet<UserTenantAccess> UserTenantAccesses => Set<UserTenantAccess>();
     internal DbSet<LoginInvitation> LoginInvitations => Set<LoginInvitation>();
     public DbSet<Tenant> Tenants => Set<Tenant>();

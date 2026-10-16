@@ -28,7 +28,7 @@ internal sealed class LoginVerifier(
     internal Result<LoginCodeDestination> Resolve(Email? email,
         PhoneInputRequest? phone, string? channel) => accounts.Resolve(email, phone, channel);
 
-    internal async Task<Result<Guid>> VerifyAsync(
+    internal async Task<Result<LoginVerification>> VerifyAsync(
         VerifyLoginCodeRequest request, LoginCodeDestination destination, AccessSelectionRequest? selection,
         LoginInvitationsContext? invitation, CancellationToken cancellationToken)
     {
@@ -48,7 +48,7 @@ internal sealed class LoginVerifier(
             if (accepted.IsFailure) return Fail(destination, userId, accepted.Error);
             await attempts.ResetFailedAttemptsAsync(accepted.Value, cancellationToken);
             attempts.RecordSuccess(destination, accepted.Value);
-            return accepted.Value;
+            return new LoginVerification(accepted.Value, NeedsPlatformFactor: false);
         }
         if (userId is null) return Fail(destination, null, LoginCodeErrors.Invalid(attemptsLeft: null));
         if (await attempts.IsLockedOutAsync(userId.Value, cancellationToken))
@@ -74,12 +74,21 @@ internal sealed class LoginVerifier(
             if (selected.IsFailure) return Fail(destination, userId, selected.Error);
         }
 
+        if (account.IsPlatformOperator && selection?.Access == Access.Platform)
+        {
+            // E9 (ADR 0043): recién ahora la cuenta probó el primer factor. La sesión, la invitación, el borrado de los
+            // fallos y el ingreso exitoso esperan al segundo factor.
+            var pending = accounts.CheckOperatorInvitation(account);
+            if (pending.IsFailure) return Fail(destination, userId, pending.Error);
+            return new LoginVerification(userId.Value, NeedsPlatformFactor: true);
+        }
+
         var operatorInvitation = await accounts.AcceptOperatorInvitationAsync(account, request.ReturnUrl!, cancellationToken);
         if (operatorInvitation.IsFailure) return Fail(destination, userId, operatorInvitation.Error);
 
         await attempts.ResetFailedAttemptsAsync(userId.Value, cancellationToken);
         attempts.RecordSuccess(destination, userId.Value);
-        return userId.Value;
+        return new LoginVerification(userId.Value, NeedsPlatformFactor: false);
     }
 
     private Error Fail(LoginCodeDestination destination, Guid? userId, Error error)
@@ -87,3 +96,9 @@ internal sealed class LoginVerifier(
         return attempts.RecordFailure(destination, userId, error);
     }
 }
+
+/// <summary>
+/// La cuenta que probó el código y si es un operador que entra a Plataforma: entonces el ingreso espera el segundo
+/// factor (E9), sin sesión todavía.
+/// </summary>
+internal sealed record LoginVerification(Guid UserId, bool NeedsPlatformFactor);

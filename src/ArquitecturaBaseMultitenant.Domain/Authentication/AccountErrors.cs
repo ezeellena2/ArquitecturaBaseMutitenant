@@ -13,6 +13,15 @@ public static class AccountErrors
     public const string PendingDeletionCode = "Identity.Account.PendingDeletion";
 
     public static readonly Error LockedOut = Error.TooManyRequests(LockedOutCode, "The account is temporarily locked.");
+
+    /// <summary>
+    /// El mismo bloqueo, con los segundos que faltan (E9): el segundo factor sí informa el plazo y la API lo repite en
+    /// Retry-After.
+    /// </summary>
+    public static Error LockedOutFor(int retryAfterSeconds) => LockedOut with
+    {
+        Metadata = new Dictionary<string, object?> { [LoginCodeErrors.RetryAfterKey] = Math.Max(1, retryAfterSeconds) },
+    };
     public static readonly Error Suspended = Error.Forbidden(SuspendedCode, "The account is suspended.");
     public static readonly Error PendingDeletion = Error.Forbidden(PendingDeletionCode, "The account is pending deletion.");
 }

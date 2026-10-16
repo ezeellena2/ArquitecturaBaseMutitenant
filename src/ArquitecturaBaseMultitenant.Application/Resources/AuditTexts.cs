@@ -63,6 +63,9 @@ public static class AuditTexts
     public static string OperatorInvitationResendReason() => Get("Platform.OperatorInvitationResendReason");
     public static string OperatorInvitationRevokeReason() => Get("Platform.OperatorInvitationRevokeReason");
     public static string LegalPublicationReason() => Get("Platform.LegalPublicationReason");
+    public static string PlatformAuthenticatorConfiguredReason() => Get("Platform.AuthenticatorConfiguredReason");
+    public static string PlatformRecoveryCodeUsedReason() => Get("Platform.RecoveryCodeUsedReason");
+    public static string PlatformReauthenticatedReason() => Get("Platform.ReauthenticatedReason");
     public static string SecurityEvent(SecurityEventType type) => Get("SecurityEvent." + type);
     public static string SignIn(ArquitecturaBaseMultitenant.Domain.Authentication.LoginAuditMethod method) => Get("SignIn." + method);
     public static string SignInFailed(string reason) => Get("SignIn.Failed").Replace("{0}", reason, StringComparison.Ordinal);

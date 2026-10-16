@@ -137,6 +137,9 @@ public sealed class ExternalLoginController(
                 !signup && Value(state, ReturnUrlKey) == ReturnUrls.InvitationPath ? ReturnUrls.InvitationPath : null);
         }
 
+        // E9: un operador vuelve al ingreso para el segundo factor; la URL no lleva identidad ni prueba, sólo el aviso
+        // de consultar el desafío pendiente.
+        if (result.Value.PlatformFactorPending) return LocalRedirect(ReturnUrls.LoginPath + "?factor=pending");
         if (!signup) return LocalRedirect(result.Value.ReturnUrl);
         var returnTo = Value(state, ReturnToKey);
         if (Value(state, AccessKey) == "business")

@@ -166,6 +166,8 @@ public sealed class PlatformOperatorAssistantUpgradeTests
             // El upgrade histórico se verifica con su esquema; el runtime exige luego el esquema actual completo.
             await db.GetService<IMigrator>().MigrateAsync(null, Ct);
         }
+        // Volver a aplicar el segundo factor (E9) revoca las sesiones de Plataforma anteriores: el operador reingresa.
+        await PlatformFactorJourney.SignInAsync(factory.Services, manager, account.Email.Value, account.UserId, Ct);
         using (var models = await manager.GetAsync("/api/platform/assistant/models", Ct))
             Assert.Equal(HttpStatusCode.OK, models.StatusCode);
         using (var history = await manager.GetAsync("/api/platform/assistant/conversations", Ct))

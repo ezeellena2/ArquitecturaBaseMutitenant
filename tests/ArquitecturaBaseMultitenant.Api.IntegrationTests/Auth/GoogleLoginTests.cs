@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
@@ -48,6 +49,58 @@ public sealed class GoogleLoginTests(ApiFactory factory)
         Assert.Equal(AccessErrors.PlatformOnlyCode, result.Error.Code);
         Assert.Null(google.SignedInUserId);
         Assert.Equal(0, await CountMethodsAsync(subject));
+    }
+
+    [Fact]
+    public async Task An_operator_entering_platform_with_Google_gets_the_pending_challenge_and_no_session()
+    {
+        var subject = Guid.NewGuid().ToString("N");
+        var email = Email.Create("google-operator-" + subject + "@example.test").Value;
+        var userId = Guid.Empty;
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var services = seedScope.ServiceProvider;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var users = services.GetRequiredService<IUserRepository>();
+                var user = await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct);
+                userId = user.Id;
+                var method = LoginMethod.CreateGoogle(user.Id, subject, email);
+                method.Verify(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
+                method.MakePrimary();
+                services.GetRequiredService<ILoginMethodRepository>().Add(method);
+                await users.SetPrimaryEmailAsync(user.Id, email, ct);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        await PlatformOperators.GrantAsync(factory.Services, userId, PlatformOperators.All, Ct);
+        var google = new GoogleSignInDouble(new ExternalLogin("Google", subject, email, true, null));
+        var browser = new FactorBrowserDouble();
+        await using var host = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        {
+            services.RemoveAll<ISignInService>();
+            services.AddSingleton<ISignInService>(google);
+            services.RemoveAll<IPlatformFactorBrowser>();
+            services.AddSingleton<IPlatformFactorBrowser>(browser);
+        }));
+        await using var scope = host.Services.CreateAsyncScope();
+        const string returnUrl = "/connect/authorize?client_id=web&access=platform";
+
+        var result = await scope.ServiceProvider.GetRequiredService<IExternalLoginService>()
+            .SignInAsync(new ExternalSignInRequest(returnUrl, false, false), Ct);
+
+        // E9: Google probó el primer factor; sin sesión, sólo el desafío del navegador.
+        Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Code : null);
+        Assert.True(result.Value.PlatformFactorPending);
+        Assert.Null(google.SignedInUserId);
+        Assert.NotNull(browser.Written);
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var challenge = await db.PlatformFactorChallenges.AsNoTracking().SingleAsync(item => item.Id == browser.Written!.ChallengeId, Ct);
+        Assert.Equal(userId, challenge.UserId);
+        Assert.Equal(PlatformFactorStep.Setup, challenge.Step);
+        Assert.Equal(returnUrl, challenge.ReturnUrl);
+        Assert.False(await db.PlatformSessions.AnyAsync(session => session.UserId == userId, Ct));
+        Assert.False(await db.LoginAudits.AnyAsync(audit => audit.UserId == userId && audit.Succeeded, Ct));
     }
 
     [Fact]
@@ -411,6 +464,14 @@ public sealed class GoogleLoginTests(ApiFactory factory)
         return (long)(await command.ExecuteScalarAsync(Ct) ?? 0L);
     }
 
+    private sealed class FactorBrowserDouble : IPlatformFactorBrowser
+    {
+        public PlatformFactorBinding? Written { get; private set; }
+        public PlatformFactorBinding? Read() => null;
+        public void Write(PlatformFactorBinding binding) => Written = binding;
+        public void Clear() => Written = null;
+    }
+
     private sealed class GoogleSignInDouble(ExternalLogin login) : ISignInService
     {
         public Guid? SignedInUserId { get; private set; }
@@ -433,5 +494,14 @@ public sealed class GoogleLoginTests(ApiFactory factory)
             SignedInUserId = userId;
             return Task.CompletedTask;
         }
+
+        public Task SignInPlatformAsync(Guid userId, string sessionId, DateTime startedAtUtc,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<string> GetSecurityStampAsync(Guid userId, CancellationToken cancellationToken) =>
+            Task.FromResult("google-double-stamp");
+
+        public Task<DateTime?> GetLockoutEndUtcAsync(Guid userId, CancellationToken cancellationToken) =>
+            Task.FromResult<DateTime?>(null);
     }
 }

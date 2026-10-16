@@ -39,6 +39,11 @@ public sealed class DataClassificationTests
         typeof(LoginLink).FullName!, // Prueba global de posesión de un método de identidad.
         typeof(ConsumerDataRetention).FullName!, // Sólo claves de fila/partes, motivo técnico, vencimiento y finalización; sin copia personal.
         typeof(LoginAudit).FullName!,
+        typeof(PlatformAuthenticator).FullName!, // Segundo factor del operador (E9): clave protegida, global como su cuenta.
+        typeof(PlatformRecoveryCode).FullName!, // Sólo hashes con clave de los códigos de recuperación del operador.
+        typeof(PlatformFactorChallenge).FullName!, // Desafío pendiente ligado al navegador, anterior a cualquier sesión.
+        typeof(PlatformSession).FullName!, // Evidencia del segundo factor de una sesión de Plataforma.
+        typeof(PlatformFactorOperation).FullName!, // Vínculo durable de idempotencia de las operaciones del factor.
         typeof(Tenant).FullName!,
         "ArquitecturaBaseMultitenant.Infrastructure.Persistence.TenantCounters", // Agregados globales técnicos mantenidos por triggers; no contiene filas privadas.
         "ArquitecturaBaseMultitenant.Infrastructure.Persistence.PendingTenantOwner", // Contacto global del Dueño invitado por Plataforma; un trigger lo borra cuando la invitación deja de estar pendiente.
@@ -145,6 +150,8 @@ public sealed class DataClassificationTests
         || type.FullName == "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.LoginInvitation"
         || type.FullName == "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.MemberAccessRole"
         || type == typeof(LoginMethod) || type == typeof(LoginCode) || type == typeof(LoginLink) || type == typeof(LoginAudit) || type == typeof(AccountDeletionCancelTicket)
+        || type == typeof(PlatformAuthenticator) || type == typeof(PlatformRecoveryCode) || type == typeof(PlatformFactorChallenge)
+        || type == typeof(PlatformSession) || type == typeof(PlatformFactorOperation)
         || type == typeof(ConsumerDataRetention)
         || type == typeof(IdentityUserClaim<Guid>) || type == typeof(IdentityUserLogin<Guid>)
         || type == typeof(IdentityUserToken<Guid>) || type == typeof(LegalAcceptance);

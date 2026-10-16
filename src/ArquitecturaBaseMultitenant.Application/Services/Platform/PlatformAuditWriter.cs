@@ -39,6 +39,11 @@ internal sealed class PlatformAuditWriter(ICurrentUser currentUser, ISecurityEve
         events.Add(SecurityEvent.ForPlatformOperatorAdministration(type, CurrentOperatorId(), accountId, reason,
             clock.GetUtcNow().UtcDateTime).WithEvidence(changes, requestInfo.IpAddress));
 
+    /// <summary>«Restablecer autenticador» (E9): autor, destino y el motivo que escribió el operador.</summary>
+    internal void RecordAuthenticatorReset(Guid accountId, string reason) =>
+        events.Add(SecurityEvent.ForPlatformSecondFactor(SecurityEventType.PlatformAuthenticatorReset, CurrentOperatorId(),
+            accountId, reason, clock.GetUtcNow().UtcDateTime).WithRequestIp(requestInfo.IpAddress));
+
     internal void RecordRecovery(Guid? accountId, SecurityEventType type, string reason, SecurityEventChanges changes) =>
         events.Add(SecurityEvent.ForAccountRecovery(type, CurrentOperatorId(), accountId, reason,
             clock.GetUtcNow().UtcDateTime).WithEvidence(changes, requestInfo.IpAddress));

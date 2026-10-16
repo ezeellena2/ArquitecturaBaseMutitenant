@@ -5,7 +5,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.Json;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -24,7 +23,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.AspNetCore.TestHost;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 
@@ -46,7 +44,7 @@ public sealed class WhatsAppWebhookTests(ApiFactory factory) : IClassFixture<Api
             {
                 services.RemoveAll<IUnitOfWork>();
                 services.AddScoped<IUnitOfWork>(provider => new ObservedUnitOfWork(
-                    new UnitOfWork(provider.GetRequiredService<ApplicationDbContext>(), provider.GetRequiredService<ITenantContext>(), provider.GetRequiredService<ILogger<UnitOfWork>>()),
+                    ActivatorUtilities.CreateInstance<UnitOfWork>(provider),
                     provider.GetRequiredService<ApplicationDbContext>(), probe));
             }
         });

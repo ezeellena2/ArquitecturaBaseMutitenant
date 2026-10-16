@@ -58,6 +58,34 @@ internal sealed class SignInService(
         await signInManager.SignInAsync(await RequireUserAsync(userId, cancellationToken), properties);
     }
 
+    public async Task SignInPlatformAsync(Guid userId, string sessionId, DateTime startedAtUtc,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sessionId);
+        context.RequireNoTransaction();
+        var properties = new AuthenticationProperties { IsPersistent = true };
+        properties.Items[BrowserSessionKeys.CookieSessionId] = sessionId;
+        properties.Items[BrowserSessionKeys.StartedAtUtc] = BrowserSessionKeys.FormatStartedAtUtc(startedAtUtc);
+        signInManager.AuthenticationScheme = BrowserSessionKeys.PlatformScheme;
+        await signInManager.SignInAsync(await RequireUserAsync(userId, cancellationToken), properties);
+    }
+
+    // Sin tracking: la guarda de prueba reciente lo lee antes de la transacción, y una cuenta seguida desde ahí haría que
+    // el caso de uso la releyera vieja después de sus locks.
+    public async Task<string> GetSecurityStampAsync(Guid userId, CancellationToken cancellationToken) =>
+        await context.Users.AsNoTracking()
+            .Where(user => user.Id == userId && user.Status != UserStatus.Deleted)
+            .Select(user => user.SecurityStamp)
+            .SingleOrDefaultAsync(cancellationToken)
+        ?? throw new InvalidOperationException("The user has no security stamp.");
+
+    public async Task<DateTime?> GetLockoutEndUtcAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var user = await RequireUserAsync(userId, cancellationToken);
+        if (!await userManager.IsLockedOutAsync(user)) return null;
+        return (await userManager.GetLockoutEndDateAsync(user))?.UtcDateTime;
+    }
+
     public async Task<ExternalLogin?> GetExternalLoginAsync(CancellationToken cancellationToken)
     {
         var info = await signInManager.GetExternalLoginInfoAsync();

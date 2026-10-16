@@ -24,6 +24,9 @@
   <data name="ReturnUrlInvalid" xml:space="preserve"><value>La dirección de retorno no es válida.</value></data>
   <data name="LoginCodeFormat" xml:space="preserve"><value>Ingresá el código que te enviamos por email.</value></data>
   <data name="LoginCodeFormatWhatsApp" xml:space="preserve"><value>Ingresá el código que te enviamos por WhatsApp.</value></data>
+  <data name="TwoFactorCodeFormat" xml:space="preserve"><value>Ingresá los 6 números que muestra tu app.</value></data>
+  <data name="RecoveryCodeFormat" xml:space="preserve"><value>Ingresá el código con el formato XXXX-XXXX.</value></data>
+  <data name="RecoveryCodesSaved" xml:space="preserve"><value>Confirmá que guardaste los códigos.</value></data>
   <data name="EmailOrPhone" xml:space="preserve"><value>Mandá el correo o el número, no los dos.</value></data>
   <data name="CountryInvalid" xml:space="preserve"><value>Elegí un país de la lista.</value></data>
   <data name="CurrencyInvalid" xml:space="preserve"><value>Elegí una moneda disponible.</value></data>

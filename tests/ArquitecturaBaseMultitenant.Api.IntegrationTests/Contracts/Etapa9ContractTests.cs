@@ -139,10 +139,10 @@ public sealed class Etapa9ContractTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Second_factor_stubs_answer_501_without_cookies()
+    public async Task Second_factor_without_a_pending_challenge_answers_401_without_cookies()
     {
         using var client = factory.CreateClient(new() { AllowAutoRedirect = false });
-        using (var read = await client.GetAsync("/api/auth/platform-factor", Ct)) await AssertStubAsync(read);
+        using (var read = await client.GetAsync("/api/auth/platform-factor", Ct)) await AssertChallengeExpiredAsync(read);
         foreach (var (path, body) in new (string, object)[]
             {
                 ("/api/auth/platform-factor/verify", new { method = "authenticator", code = "123456" }),
@@ -150,12 +150,12 @@ public sealed class Etapa9ContractTests(ApiFactory factory)
             })
         {
             using var response = await SendAsync(client, path, body);
-            await AssertStubAsync(response);
+            await AssertChallengeExpiredAsync(response);
         }
     }
 
     [Fact]
-    public async Task Reauthentication_and_reset_keep_access_and_permission_ahead_of_their_stubs()
+    public async Task Reauthentication_and_reset_keep_access_and_permission_ahead_of_their_rules()
     {
         using var anonymous = factory.CreateClient(new() { AllowAutoRedirect = false });
         using (var denied = await SendAsync(anonymous, "/api/platform/reauthentication", new { method = "authenticator", code = "123456" }))
@@ -163,14 +163,20 @@ public sealed class Etapa9ContractTests(ApiFactory factory)
 
         using var reduced = await OperatorAsync(PlatformOperators.Reduced);
         using (var proof = await SendAsync(reduced, "/api/platform/reauthentication", new { method = "recoveryCode", code = "ABCD-1234" }))
-            await AssertStubAsync(proof);
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, proof.StatusCode);
+            Assert.Equal("Auth.TwoFactor.RecoveryInvalid", (await proof.Content.ReadFromJsonAsync<JsonObject>(Ct))?["code"]?.GetValue<string>());
+        }
         var target = Guid.CreateVersion7();
         using (var forbidden = await SendAsync(reduced, $"/api/platform/accounts/{target:D}/authenticator/reset", new { version = 1, reason = "Perdió el celular" }))
             Assert.Equal(HttpStatusCode.Forbidden, forbidden.StatusCode);
 
         using var manager = await OperatorAsync(PlatformOperators.All);
         using (var reset = await SendAsync(manager, $"/api/platform/accounts/{target:D}/authenticator/reset", new { version = 1, reason = "Perdió el celular" }))
-            await AssertStubAsync(reset);
+        {
+            Assert.Equal(HttpStatusCode.NotFound, reset.StatusCode);
+            Assert.Equal("Users.User.NotFound", (await reset.Content.ReadFromJsonAsync<JsonObject>(Ct))?["code"]?.GetValue<string>());
+        }
         using var settings = await manager.GetAsync("/api/platform/settings", Ct);
         Assert.Equal(HttpStatusCode.OK, settings.StatusCode);
         var limits = (await settings.Content.ReadFromJsonAsync<JsonObject>(Ct))!["rateLimits"]!;
@@ -195,12 +201,13 @@ public sealed class Etapa9ContractTests(ApiFactory factory)
         return await client.SendAsync(request, Ct);
     }
 
-    private static async Task AssertStubAsync(HttpResponseMessage response)
+    private static async Task AssertChallengeExpiredAsync(HttpResponseMessage response)
     {
-        Assert.Equal(HttpStatusCode.NotImplemented, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         Assert.False(response.Headers.Contains("Set-Cookie"));
+        Assert.True(response.Headers.CacheControl?.NoStore);
         var problem = await response.Content.ReadFromJsonAsync<JsonObject>(Ct);
-        Assert.Equal("General.Contract.NotImplemented", problem?["code"]?.GetValue<string>());
+        Assert.Equal("Auth.TwoFactor.ChallengeExpired", problem?["code"]?.GetValue<string>());
         Assert.NotNull(problem?["traceId"]);
     }
 

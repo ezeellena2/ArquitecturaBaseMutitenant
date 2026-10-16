@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
@@ -24,12 +25,13 @@ public sealed class PrincipalFactoryTests
     private static readonly Guid UserId = Guid.Parse("11111111-1111-1111-1111-111111111111");
     private static readonly Guid PersonalId = Guid.Parse("22222222-2222-2222-2222-222222222222");
     private static readonly Guid BusinessId = Guid.Parse("33333333-3333-3333-3333-333333333333");
+    private static readonly Guid PlatformSessionId = Guid.Parse("44444444-4444-4444-4444-444444444444");
 
     [Fact]
     public async Task Session_start_round_trips_as_utc_when_it_has_no_fractional_seconds()
     {
         var startedAtUtc = new DateTime(2026, 9, 30, 12, 0, 0, DateTimeKind.Utc);
-        var (factory, _) = CreateFactory(new ConnectUser(Account(), Access.Consumer, PersonalId, TenantKind.Personal));
+        var (factory, _, _) = CreateFactory(new ConnectUser(Account(), Access.Consumer, PersonalId, TenantKind.Personal));
 
         var principal = await factory.CreateAsync(UserId, Access.Consumer, PersonalId,
             [Scopes.OpenId], TestContext.Current.CancellationToken, startedAtUtc);
@@ -45,7 +47,7 @@ public sealed class PrincipalFactoryTests
     public async Task Access_token_contains_only_identity_and_the_selected_access(Access access, TenantKind kind)
     {
         var tenantId = access == Access.Consumer ? PersonalId : BusinessId;
-        var (factory, _) = CreateFactory(new ConnectUser(Account(), access, tenantId, kind));
+        var (factory, _, _) = CreateFactory(new ConnectUser(Account(), access, tenantId, kind));
 
         var principal = await factory.CreateAsync(UserId, access, tenantId,
             [Scopes.OpenId, Scopes.Profile, Scopes.Email, "api"], TestContext.Current.CancellationToken);
@@ -76,12 +78,14 @@ public sealed class PrincipalFactoryTests
     [Fact]
     public async Task Platform_access_has_no_tenant_and_refresh_revalidates_the_access()
     {
-        var (factory, connect) = CreateFactory(new ConnectUser(Account(), Access.Platform, null, null));
+        var (factory, connect, _) = CreateFactory(new ConnectUser(Account(), Access.Platform, null, null));
         var principal = await factory.CreateAsync(UserId, Access.Platform, null,
-            [Scopes.OpenId], TestContext.Current.CancellationToken);
+            [Scopes.OpenId], TestContext.Current.CancellationToken, browserSessionId: "browser-session");
 
         Assert.NotNull(principal);
         Assert.Equal("platform", principal.GetClaim(TenantClaimTypes.Access));
+        Assert.Equal(PlatformSessionId.ToString("D"), principal.GetClaim(BrowserSessionKeys.PlatformSessionId));
+        Assert.Equal([Destinations.AccessToken], principal.FindFirst(BrowserSessionKeys.PlatformSessionId)!.GetDestinations());
         Assert.Null(principal.GetClaim(TenantClaimTypes.TenantId));
         Assert.Null(principal.GetClaim(TenantClaimTypes.TenantKind));
         Assert.Equal([Destinations.AccessToken], principal.FindFirst(Claims.Name)!.GetDestinations());
@@ -96,9 +100,29 @@ public sealed class PrincipalFactoryTests
     }
 
     [Fact]
+    public async Task Platform_tokens_need_a_current_second_factor_session()
+    {
+        var (factory, _, sessions) = CreateFactory(new ConnectUser(Account(), Access.Platform, null, null));
+        var ct = TestContext.Current.CancellationToken;
+
+        // Sin la cookie de una sesión de Plataforma, o con una sin segundo factor vigente, no hay tokens (E9).
+        Assert.Null(await factory.CreateAsync(UserId, Access.Platform, null, [Scopes.OpenId], ct));
+        sessions.Current = false;
+        Assert.Null(await factory.CreateAsync(UserId, Access.Platform, null, [Scopes.OpenId], ct, browserSessionId: "browser-session"));
+
+        sessions.Current = true;
+        var principal = await factory.CreateAsync(UserId, Access.Platform, null, [Scopes.OpenId], ct, browserSessionId: "browser-session");
+        Assert.NotNull(principal);
+        Assert.NotNull(await factory.RefreshAsync(principal, ct));
+        // Se cerraron las sesiones, se quitó el operador o se restableció su factor: el refresh ya no entrega tokens.
+        sessions.Current = false;
+        Assert.Null(await factory.RefreshAsync(principal, ct));
+    }
+
+    [Fact]
     public async Task Refresh_drops_stale_email_and_preserves_the_selected_business_tenant()
     {
-        var (factory, connect) = CreateFactory(new ConnectUser(Account(), Access.Business, BusinessId, TenantKind.Business));
+        var (factory, connect, _) = CreateFactory(new ConnectUser(Account(), Access.Business, BusinessId, TenantKind.Business));
         var principal = await factory.CreateAsync(UserId, Access.Business, BusinessId,
             [Scopes.OpenId, Scopes.Email], TestContext.Current.CancellationToken);
         Assert.NotNull(principal);
@@ -127,13 +151,28 @@ public sealed class PrincipalFactoryTests
         new(UserId, name, "es-AR", "America/Argentina/Buenos_Aires", UserStatus.Active, false,
             email is null ? null : Email.Create(email).Value, null);
 
-    private static (OpenIdPrincipalFactory Factory, ConnectProxy Connect) CreateFactory(ConnectUser user)
+    private static (OpenIdPrincipalFactory Factory, ConnectProxy Connect, PlatformSessionProxy Sessions) CreateFactory(ConnectUser user)
     {
         var service = DispatchProxy.Create<IConnectService, ConnectProxy>();
         var proxy = (ConnectProxy)(object)service;
         proxy.Response = Result.Success(user);
+        var sessions = DispatchProxy.Create<IPlatformSessionService, PlatformSessionProxy>();
         var scopes = DispatchProxy.Create<IOpenIddictScopeManager, ScopeProxy>();
-        return (new OpenIdPrincipalFactory(service, scopes), proxy);
+        return (new OpenIdPrincipalFactory(service, sessions, scopes), proxy, (PlatformSessionProxy)(object)sessions);
+    }
+
+    public class PlatformSessionProxy : DispatchProxy
+    {
+        public bool Current { get; set; } = true;
+
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args) => targetMethod?.Name switch
+        {
+            "FindValidSessionAsync" => Task.FromResult(Current ? Result.Success(PlatformSessionId)
+                : Result.Failure<Guid>(PlatformReauthenticationErrors.SessionEnded)),
+            "CheckSessionAsync" => Task.FromResult(Current && (Guid)args![1]! == PlatformSessionId ? Result.Success()
+                : Result.Failure(PlatformReauthenticationErrors.SessionEnded)),
+            _ => throw new NotSupportedException(targetMethod?.Name),
+        };
     }
 
     public class ConnectProxy : DispatchProxy

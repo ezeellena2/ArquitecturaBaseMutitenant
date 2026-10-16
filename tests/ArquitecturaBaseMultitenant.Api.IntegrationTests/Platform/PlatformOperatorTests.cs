@@ -121,10 +121,12 @@ public sealed class PlatformOperatorTests(ApiFactory factory)
         }
         Assert.Equal("Invited", (await DetailAsync(manager, id)).GetProperty("state").GetString());
 
-        // El primer ingreso con código a Plataforma acepta la invitación: Plataforma sí; como persona o empresa,
-        // nunca, y no se le crea un espacio personal.
+        // El primer ingreso a Plataforma acepta la invitación recién con el segundo factor (E9): Plataforma sí; como
+        // persona o empresa, nunca, y no se le crea un espacio personal.
         using (var accepted = await SignInAsync(invitedClient, email, PlatformReturn))
             Assert.Equal(HttpStatusCode.OK, accepted.StatusCode);
+        Assert.Equal("Invited", (await DetailAsync(manager, id)).GetProperty("state").GetString());
+        await PlatformFactorJourney.CompleteAsync(factory.Services, invitedClient, id, Ct);
         await AccountJourney.AuthorizeAsync(invitedClient, "platform", Ct);
         var active = await DetailAsync(manager, id);
         Assert.Equal("Active", active.GetProperty("state").GetString());
@@ -190,6 +192,7 @@ public sealed class PlatformOperatorTests(ApiFactory factory)
 
         using (var accepted = await SignInAsync(invitedClient, email, PlatformReturn))
             Assert.Equal(HttpStatusCode.OK, accepted.StatusCode);
+        await PlatformFactorJourney.CompleteAsync(factory.Services, invitedClient, id, Ct);
         Assert.Equal("Active", (await DetailAsync(manager, id)).GetProperty("state").GetString());
 
         // Una invitación aceptada ya no se reenvía ni se revoca.
@@ -343,8 +346,11 @@ public sealed class PlatformOperatorTests(ApiFactory factory)
         var (manager, managerId) = await OperatorAsync(PlatformOperators.All);
         var (id, email) = await InviteAsync(manager, [PlatformPermissions.Tenants.Read]);
         using (var invitedClient = Client())
-        using (var accepted = await SignInAsync(invitedClient, email, PlatformReturn))
-            Assert.Equal(HttpStatusCode.OK, accepted.StatusCode);
+        {
+            using (var accepted = await SignInAsync(invitedClient, email, PlatformReturn))
+                Assert.Equal(HttpStatusCode.OK, accepted.StatusCode);
+            await PlatformFactorJourney.CompleteAsync(factory.Services, invitedClient, id, Ct);
+        }
         var path = $"/api/platform/accounts/{id:D}/operator";
         var version = (await DetailAsync(manager, id)).GetProperty("operatorVersion").GetUInt32();
 
@@ -395,6 +401,89 @@ public sealed class PlatformOperatorTests(ApiFactory factory)
         Assert.False(diff.RootElement.TryGetProperty(PlatformPermissions.Tenants.Read, out _));
         Assert.True(await db.SecurityEvents.AnyAsync(item => item.Type == SecurityEventType.PlatformOperatorRemoved
             && item.TargetAccountId == id && item.Reason == "Dejó el equipo", Ct));
+    }
+
+    [Fact]
+    public async Task Resetting_another_operators_authenticator_ends_its_sessions_and_codes_and_asks_for_setup_again()
+    {
+        var (manager, managerId) = await OperatorAsync(PlatformOperators.All);
+        var permissions = new[] { PlatformPermissions.Tenants.Read, PlatformPermissions.Accounts.Read };
+        var (target, targetId) = await OperatorAsync(permissions);
+        var detail = await DetailAsync(manager, targetId);
+        var version = detail.GetProperty("operatorVersion").GetUInt32();
+        string targetEmail;
+        await using (var scope = factory.Services.CreateAsyncScope())
+            targetEmail = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().LoginMethods
+                .Where(method => method.UserId == targetId && method.IsPrimary).Select(method => method.Value).SingleAsync(Ct);
+
+        using var reset = await SendAsync(manager, HttpMethod.Post, $"/api/platform/accounts/{targetId:D}/authenticator/reset",
+            new { version, reason = "Perdió el celular" }, Guid.NewGuid().ToString("D"));
+        var renewed = await SavedVersion.ReadAsync(reset, Ct);
+        Assert.NotEqual(version, renewed);
+        var after = await DetailAsync(manager, targetId);
+        Assert.Equal(renewed, after.GetProperty("operatorVersion").GetUInt32());
+        Assert.Equal(permissions, after.GetProperty("operatorPermissions").EnumerateArray().Select(item => item.GetString()).ToArray());
+
+        // Sus tokens, su sesión y su prueba reciente terminaron.
+        using (var me = await target.GetAsync("/api/me", Ct)) Assert.Equal(HttpStatusCode.Unauthorized, me.StatusCode);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            Assert.False(await db.PlatformAuthenticators.AnyAsync(item => item.UserId == targetId, Ct));
+            Assert.False(await db.PlatformRecoveryCodes.AnyAsync(item => item.UserId == targetId, Ct));
+            Assert.False(await db.PlatformSessions.AnyAsync(item => item.UserId == targetId && item.RevokedAtUtc == null, Ct));
+            var ev = await db.SecurityEvents.AsNoTracking().SingleAsync(item => item.Type == SecurityEventType.PlatformAuthenticatorReset
+                && item.TargetAccountId == targetId, Ct);
+            Assert.Equal(managerId, ev.ActorId);
+            Assert.Equal(AuditActorKind.PlatformOperator, ev.ActorKind);
+            Assert.Equal("Perdió el celular", ev.Reason);
+        }
+
+        // Su próximo ingreso pide el alta de nuevo.
+        using var again = Client();
+        using (var verified = await SignInAsync(again, targetEmail, PlatformReturn)) Assert.Equal(HttpStatusCode.OK, verified.StatusCode);
+        using var challenge = await again.GetAsync(PlatformFactorJourney.Path, Ct);
+        Assert.Equal("setup", (await JsonAsync(challenge)).GetProperty("state").GetString());
+    }
+
+    [Fact]
+    public async Task Resetting_an_authenticator_keeps_the_operator_rules_and_needs_a_recent_proof()
+    {
+        var (manager, managerId) = await OperatorAsync(PlatformOperators.All);
+        var (reduced, _) = await OperatorAsync([PlatformPermissions.Accounts.Read]);
+        var (_, targetId) = await OperatorAsync([PlatformPermissions.Accounts.Read]);
+        var version = (await DetailAsync(manager, targetId)).GetProperty("operatorVersion").GetUInt32();
+        var (invitedId, _) = await InviteAsync(manager, [PlatformPermissions.Tenants.Read]);
+        using var personClient = Client();
+        var person = await AccountJourney.RegisterAsync(factory, personClient, Ct);
+
+        async Task<(HttpStatusCode Status, string? Code)> ResetAsync(HttpClient client, Guid id, uint value, string? key = null)
+        {
+            using var response = await SendAsync(client, HttpMethod.Post, $"/api/platform/accounts/{id:D}/authenticator/reset",
+                new { version = value, reason = "Restablecer" }, key ?? Guid.NewGuid().ToString("D"));
+            return (response.StatusCode, (await JsonAsync(response)).TryGetProperty("code", out var code) ? code.GetString() : null);
+        }
+
+        Assert.Equal((HttpStatusCode.Forbidden, "Http.Forbidden"), await ResetAsync(reduced, targetId, version));
+        Assert.Equal((HttpStatusCode.Forbidden, "Users.User.CannotModifySelf"), await ResetAsync(manager, managerId, version));
+        Assert.Equal((HttpStatusCode.NotFound, "Users.User.NotFound"), await ResetAsync(manager, Guid.CreateVersion7(), version));
+        Assert.Equal((HttpStatusCode.NotFound, "Platform.Operator.NotOperator"), await ResetAsync(manager, person.UserId, version));
+        Assert.Equal((HttpStatusCode.Conflict, "Platform.Operator.InvitationPending"), await ResetAsync(manager, invitedId, version));
+        Assert.Equal((HttpStatusCode.Conflict, "General.ConcurrencyConflict"), await ResetAsync(manager, targetId, version + 1));
+
+        // Sin prueba reciente pide confirmar, sin gastar la clave: la misma operación corre después de confirmar.
+        await using (var scope = factory.Services.CreateAsyncScope())
+            await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().PlatformSessions
+                .Where(session => session.UserId == managerId)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(session => session.RecentProofUntilUtc, Now().AddMinutes(-1)), Ct);
+        var key = Guid.NewGuid().ToString("D");
+        Assert.Equal((HttpStatusCode.Forbidden, "Auth.Platform.ReauthenticationRequired"), await ResetAsync(manager, targetId, version, key));
+        using (var proof = await SendAsync(manager, HttpMethod.Post, "/api/platform/reauthentication", new
+               {
+                   method = "authenticator", code = await PlatformFactorJourney.CurrentCodeAsync(factory.Services, managerId, Ct),
+               }, Guid.NewGuid().ToString("D")))
+            Assert.Equal(HttpStatusCode.OK, proof.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await ResetAsync(manager, targetId, version, key)).Status);
     }
 
     private HttpClient Client() =>

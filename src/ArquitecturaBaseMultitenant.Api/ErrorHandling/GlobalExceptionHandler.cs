@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +29,12 @@ internal sealed class GlobalExceptionHandler(
         {
             problem = ProblemDetailsMapper.Create(
                 ErrorType.Validation, ApiErrorCodes.InvalidRequest, ErrorTexts.Get(ApiErrorCodes.InvalidRequest), badRequest.StatusCode);
+        }
+        else if (exception is PlatformReauthenticationRequiredException)
+        {
+            // E9: la prueba reciente venció entre la guarda y la escritura; el filtro de idempotencia ya liberó la clave.
+            problem = ProblemDetailsMapper.Create(ErrorType.Forbidden, PlatformReauthenticationErrors.RequiredCode,
+                ErrorTexts.Get(PlatformReauthenticationErrors.RequiredCode));
         }
         else if (exception is ConcurrencyConflictException)
         {

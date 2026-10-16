@@ -33,6 +33,12 @@ public static class ValidationTexts
 
     public static string LoginCodeFormatWhatsApp => Get(nameof(LoginCodeFormatWhatsApp));
 
+    public static string TwoFactorCodeFormat => Get(nameof(TwoFactorCodeFormat));
+
+    public static string RecoveryCodeFormat => Get(nameof(RecoveryCodeFormat));
+
+    public static string RecoveryCodesSaved => Get(nameof(RecoveryCodesSaved));
+
     public static string EmailOrPhone => Get(nameof(EmailOrPhone));
 
     public static string CountryInvalid => Get(nameof(CountryInvalid));

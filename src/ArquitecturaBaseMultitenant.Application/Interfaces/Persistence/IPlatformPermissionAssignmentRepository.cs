@@ -9,6 +9,9 @@ public interface IPlatformPermissionAssignmentRepository
     void Add(PlatformPermissionAssignment assignment);
     void Remove(PlatformPermissionAssignment assignment);
 
+    /// <summary>Sube la versión de operador sin cambiar permisos: restablecer el autenticador la renueva (E9).</summary>
+    void MarkUpdated(PlatformPermissionAssignment assignment);
+
     /// <summary>Lock global: quitar, suspender o dar de baja a un operador se serializa con este lock.</summary>
     Task LockOperatorsAsync(CancellationToken cancellationToken);
 

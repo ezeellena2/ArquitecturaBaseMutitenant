@@ -318,7 +318,17 @@ public sealed class WhatsAppIdentityTests(ApiFactory factory) : IClassFixture<Ap
         else
         {
             Assert.Equal(HttpStatusCode.OK, verified.StatusCode);
-            Assert.Contains(verified.Headers.GetValues("Set-Cookie"), value => value.Contains(access == "platform" ? "Identity.Platform=" : "Identity.Application=", StringComparison.Ordinal));
+            var cookies = verified.Headers.GetValues("Set-Cookie").ToArray();
+            if (access == "platform")
+            {
+                // E9: el operador probó el primer factor; la sesión de Plataforma espera al segundo.
+                Assert.Contains(cookies, value => value.StartsWith("__Host-MtPlatformFactor=", StringComparison.Ordinal));
+                Assert.DoesNotContain(cookies, value => value.Contains("Identity.Platform=", StringComparison.Ordinal));
+            }
+            else
+            {
+                Assert.Contains(cookies, value => value.Contains("Identity.Application=", StringComparison.Ordinal));
+            }
         }
         await using var scope = application.Services.CreateAsyncScope();
         Assert.Equal(id, await scope.ServiceProvider.GetRequiredService<IUserLookup>().FindVerifiedUserIdAsync(LoginMethodType.Phone, phone, Ct));

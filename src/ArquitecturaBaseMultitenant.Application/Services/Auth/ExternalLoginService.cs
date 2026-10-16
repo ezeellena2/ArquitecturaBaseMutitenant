@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
@@ -12,12 +13,18 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
-/// <summary>Confirma el callback Google y emite la cookie solo después del commit.</summary>
+/// <summary>
+/// Confirma el callback Google y emite la cookie solo después del commit. Un operador que entra a Plataforma recibe en
+/// cambio la cookie del desafío pendiente (E9): la sesión nace recién con el segundo factor.
+/// </summary>
 internal sealed class ExternalLoginService(
     ISignInService signIn,
     GoogleAccountResolver accounts,
     ITenantScope tenantScope,
     ILoginAuditRepository audits,
+    IUserRepository users,
+    PlatformFactorChallengeIssuer factors,
+    IPlatformFactorBrowser browser,
     IRequestValidator validator,
     IUnitOfWork unitOfWork,
     TimeProvider timeProvider,
@@ -50,18 +57,23 @@ internal sealed class ExternalLoginService(
                 : null;
             using var scope = draft is null || request.RequestedAccess == Access.Business
                 ? null : tenantScope.Enter(draft.Tenant.Id);
-            var result = await unitOfWork.ExecuteInTransactionAsync(
-                ct => SignInCoreAsync(request, login, draft, ct), CommitPolicy.OnAnyResult, cancellationToken);
-            if (result.IsFailure) return result.Error;
-
             var access = ReturnUrls.TryReadAccessSelection(request.ReturnUrl, out var selection)
                 ? selection.Access : Access.Business;
-            await signIn.SignInAsync(result.Value, access, cancellationToken);
+            var result = await unitOfWork.ExecuteInTransactionAsync(
+                ct => SignInCoreAsync(request, login, draft, access, ct), CommitPolicy.OnAnyResult, cancellationToken);
+            if (result.IsFailure) return result.Error;
+
+            if (result.Value.Factor is { } factor)
+            {
+                browser.Write(factor);
+                return new ExternalSignInResponse(request.ReturnUrl!, PlatformFactorPending: true);
+            }
+            await signIn.SignInAsync(result.Value.UserId, access, cancellationToken);
             return new ExternalSignInResponse(request.ReturnUrl!);
         });
 
-    private async Task<Result<Guid>> SignInCoreAsync(ExternalSignInRequest request, ExternalLogin? login,
-        PersonalSpaceDraft? draft, CancellationToken cancellationToken)
+    private async Task<Result<GoogleSignIn>> SignInCoreAsync(ExternalSignInRequest request, ExternalLogin? login,
+        PersonalSpaceDraft? draft, Access access, CancellationToken cancellationToken)
     {
         var resolved = await accounts.ResolveAsync(request, login, draft, cancellationToken);
         if (resolved.IsFailure) return Fail(null, resolved.Error);
@@ -70,10 +82,19 @@ internal sealed class ExternalLoginService(
         if (await signIn.IsLockedOutAsync(userId, cancellationToken))
             return Fail(userId, AccountErrors.LockedOut);
 
+        if (access == Access.Platform && await users.GetByIdAsync(userId, cancellationToken) is { IsPlatformOperator: true })
+        {
+            // E9 (ADR 0043): Google probó el primer factor. La sesión, el borrado de los fallos y el ingreso exitoso
+            // esperan al segundo; el desafío nace en esta misma transacción.
+            return new GoogleSignIn(userId, await factors.IssueAsync(userId, request.ReturnUrl!, cancellationToken));
+        }
+
         await signIn.ResetFailedAttemptsAsync(userId, cancellationToken);
         audits.Add(LoginAudit.Success(userId, LoginAuditMethod.Google, timeProvider.GetUtcNow().UtcDateTime));
-        return userId;
+        return new GoogleSignIn(userId, null);
     }
+
+    private sealed record GoogleSignIn(Guid UserId, PlatformFactorBinding? Factor);
 
     private Error Fail(Guid? userId, Error error)
     {

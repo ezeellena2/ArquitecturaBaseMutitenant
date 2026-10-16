@@ -134,6 +134,9 @@
   <data name="SecurityEvent.PlatformReauthenticated" xml:space="preserve"><value>Confirmed their identity</value></data>
   <data name="SecurityEvent.LegalDocumentPublished" xml:space="preserve"><value>Published a legal document version</value></data>
   <data name="Platform.LegalPublicationReason" xml:space="preserve"><value>Legal document version published.</value></data>
+  <data name="Platform.AuthenticatorConfiguredReason" xml:space="preserve"><value>Authenticator set up while signing in.</value></data>
+  <data name="Platform.RecoveryCodeUsedReason" xml:space="preserve"><value>Recovery code used as the second factor.</value></data>
+  <data name="Platform.ReauthenticatedReason" xml:space="preserve"><value>Second factor confirmed for a sensitive action.</value></data>
   <data name="SignIn.Code" xml:space="preserve"><value>Signed in with an email code</value></data>
   <data name="SignIn.Google" xml:space="preserve"><value>Signed in with Google</value></data>
   <data name="SignIn.WhatsAppCode" xml:space="preserve"><value>Signed in with a WhatsApp code</value></data>

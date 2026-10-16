@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Api.Contracts.Auth;
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
+using ArquitecturaBaseMultitenant.Api.Hosting;
 using ArquitecturaBaseMultitenant.Api.Idempotency;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
@@ -11,10 +12,12 @@ namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 
 /// <summary>
 /// Segundo factor del ingreso de un operador (E9). No usa la sesión: cada acción exige la cookie protegida del desafío
-/// pendiente, que nace al probar el primer factor y no autentica otras rutas.
+/// pendiente, que nace al probar el primer factor y no autentica otras rutas. Verificar y completar son durables: un
+/// replay revalida la prueba y vuelve a emitir la misma sesión.
 /// </summary>
 [ApiController]
 [AllowAnonymous]
+[NoStore]
 [Route("api/auth/platform-factor")]
 [Tags("Auth")]
 public sealed class PlatformFactorController(IPlatformFactorService service) : ControllerBase
@@ -26,7 +29,8 @@ public sealed class PlatformFactorController(IPlatformFactorService service) : C
         (await service.GetAsync(cancellationToken)).ToActionResult(this);
 
     [HttpPost("verify")]
-    [Idempotent]
+    [IdempotencyDurable(typeof(PlatformFactorDurableAdapter))]
+    [Idempotent(Mode = IdempotencyMode.DurableReference)]
     [ProducesResponseType<VerifyPlatformFactorResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
@@ -34,15 +38,16 @@ public sealed class PlatformFactorController(IPlatformFactorService service) : C
     [ProducesProblem(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Verify([FromBody] VerifyPlatformFactorHttpRequest request,
         CancellationToken cancellationToken) =>
-        (await service.VerifyAsync(request.ToModel(), cancellationToken)).ToActionResult(this);
+        (await service.VerifyAsync(request.ToModel(), cancellationToken)).ToReferencedResult(this);
 
     [HttpPost("complete")]
-    [Idempotent]
+    [IdempotencyDurable(typeof(PlatformFactorDurableAdapter))]
+    [Idempotent(Mode = IdempotencyMode.DurableReference)]
     [ProducesResponseType<CompletePlatformFactorResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Complete([FromBody] CompletePlatformFactorHttpRequest request,
         CancellationToken cancellationToken) =>
-        (await service.CompleteAsync(request.ToModel(), cancellationToken)).ToActionResult(this);
+        (await service.CompleteAsync(request.ToModel(), cancellationToken)).ToReferencedResult(this);
 }

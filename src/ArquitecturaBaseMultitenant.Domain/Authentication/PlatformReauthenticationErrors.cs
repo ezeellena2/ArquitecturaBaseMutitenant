@@ -12,4 +12,10 @@ public static class PlatformReauthenticationErrors
 
     public static readonly Error Required = Error.Forbidden(RequiredCode,
         "A recent second-factor confirmation is required for this action.");
+
+    /// <summary>
+    /// La sesión de Plataforma del token terminó entre la autenticación y la confirmación (se cerraron las sesiones, se
+    /// quitó el operador o se restableció su factor): falta sesión, como cualquier 401 de la API.
+    /// </summary>
+    public static readonly Error SessionEnded = Error.Unauthorized("Http.Unauthorized", "The platform session ended.");
 }

@@ -31,6 +31,15 @@ internal sealed class LoginAccountGuard(IUserLookup lookup, IUserRepository user
     internal Task<UserAccountRow?> ReadAsync(Guid id, CancellationToken ct) => users.GetByIdAsync(id, ct);
 
     /// <summary>
+    /// E9: el primer factor a Plataforma no acepta la invitación de un operador, la acepta el segundo. Una invitación
+    /// vencida sigue fallando como un código que no sirve.
+    /// </summary>
+    internal Result CheckOperatorInvitation(UserAccountRow account) =>
+        account.HasPendingOperatorInvitation && account.OperatorInvitationExpiresAtUtc <= clock.GetUtcNow().UtcDateTime
+            ? LoginCodeErrors.Invalid(attemptsLeft: null)
+            : Result.Success();
+
+    /// <summary>
     /// ADR 0042: la invitación de un operador queda pendiente hasta el primer ingreso con código a Plataforma, que la
     /// acepta bajo el lock de la cuenta. Por otro acceso responde <c>PlatformOnly</c> sin sesión; vencida, el código
     /// falla como uno que no sirve.

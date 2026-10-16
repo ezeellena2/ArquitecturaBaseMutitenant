@@ -104,7 +104,7 @@ public sealed class ConcurrencyTests(ApiFactory factory)
     {
         var unitOfWork = new UnitOfWork(
             context, Tenant(context.ActiveTenantId ?? throw new InvalidOperationException("No active tenant.")),
-            NullLogger<UnitOfWork>.Instance);
+            new RecentPlatformProofContext(), TimeProvider.System, NullLogger<UnitOfWork>.Instance);
         return await unitOfWork.ExecuteInTransactionAsync(
             work, CommitPolicy.OnSuccess, TestContext.Current.CancellationToken);
     }

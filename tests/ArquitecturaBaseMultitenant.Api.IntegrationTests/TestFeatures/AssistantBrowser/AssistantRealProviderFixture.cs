@@ -268,6 +268,7 @@ public static class AssistantRealProviderFixture
             using (var verified = await AccountJourney.PostAsync(client, "/api/auth/login-code/verify",
                 new { email = OperatorEmail, code, returnUrl = "/connect/authorize?access=platform" }, ct))
                 Require(verified.StatusCode == HttpStatusCode.OK, "OperatorLogin");
+            await PlatformFactorJourney.CompleteAsync(host.Services, client, userId: null, ct);
             await AccountJourney.AuthorizeAsync(client, "platform", ct);
             await AcceptCurrentLegalAsync(client, ct);
             using var management = await ReadAsync(client, "/api/platform/assistant/settings", ct);

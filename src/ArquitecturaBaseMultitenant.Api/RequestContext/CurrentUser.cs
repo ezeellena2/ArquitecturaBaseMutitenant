@@ -13,6 +13,10 @@ internal sealed class CurrentUser(IHttpContextAccessor httpContextAccessor, IExe
         ? BrowserSessionKeys.ReadStartedAtUtc(context.User.FindFirstValue(BrowserSessionKeys.StartedAtUtc))
         : executionActors?.Actor?.SessionStartedAtUtc;
 
+    public Guid? PlatformSessionId => httpContextAccessor.HttpContext is { } context
+        && Guid.TryParse(context.User.FindFirstValue(BrowserSessionKeys.PlatformSessionId), CultureInfo.InvariantCulture, out var sessionId)
+        ? sessionId : null;
+
     public Guid? UserId
     {
         get

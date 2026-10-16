@@ -14,6 +14,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 internal sealed partial class UnitOfWork(
     ApplicationDbContext dbContext,
     ITenantContext tenantContext,
+    IRecentPlatformProofContext recentProofs,
+    TimeProvider clock,
     ILogger<UnitOfWork> logger) : IUnitOfWork
 {
     private IDbContextTransaction? _transaction;
@@ -46,6 +48,10 @@ internal sealed partial class UnitOfWork(
             var tenantId = tenantContext.TenantId?.ToString("D") ?? string.Empty;
             await dbContext.Database.ExecuteSqlInterpolatedAsync(
                 $"SELECT set_config('app.tenant_id', {tenantId}, true)", cancellationToken);
+            if (recentProofs.RequiredSessionId is { } platformSessionId)
+            {
+                await RequireRecentProofAsync(platformSessionId, cancellationToken);
+            }
 
             var result = await work(cancellationToken);
             if (!policy.Commits(result))
@@ -78,6 +84,27 @@ internal sealed partial class UnitOfWork(
         {
             _transaction = null;
             await transaction.DisposeAsync();
+        }
+    }
+
+    /// <summary>
+    /// E9: una acción sensible de Plataforma vuelve a exigir, dentro de la transacción que escribe, la sesión vigente con
+    /// el mismo sello y la prueba reciente. La sesión y la cuenta quedan bloqueadas para compartir hasta el commit: una
+    /// revocación concurrente espera o ya ganó, y entonces la acción no se ejecuta.
+    /// </summary>
+    private async Task RequireRecentProofAsync(Guid platformSessionId, CancellationToken cancellationToken)
+    {
+        var nowUtc = clock.GetUtcNow().UtcDateTime;
+        var proven = await dbContext.Database.SqlQuery<int>($"""
+            SELECT 1 AS "Value" FROM identity."PlatformSessions" s
+            JOIN identity."AspNetUsers" u ON u."Id" = s."UserId"
+            WHERE s."Id" = {platformSessionId} AND s."RevokedAtUtc" IS NULL
+              AND s."RecentProofUntilUtc" > {nowUtc} AND s."SecurityStamp" = u."SecurityStamp"
+            FOR SHARE OF s, u
+            """).ToListAsync(cancellationToken);
+        if (proven.Count == 0)
+        {
+            throw new PlatformReauthenticationRequiredException();
         }
     }
 

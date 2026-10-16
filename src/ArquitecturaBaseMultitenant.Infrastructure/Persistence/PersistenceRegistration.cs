@@ -34,6 +34,8 @@ internal static class PersistenceRegistration
         services.AddDbContext<ApplicationDbContext>((_, options) => options
             .UseNpgsql(adminConnectionString)
             .UseOpenIddict<Guid>());
+        services.AddSingleton(TimeProvider.System);
+        services.AddScoped<IRecentPlatformProofContext, RecentPlatformProofContext>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<ReferenceDataSeeder>();
         services.AddSingleton<JsonReferenceDataCatalog>();
@@ -78,6 +80,8 @@ internal static class PersistenceRegistration
                     provider.GetRequiredService<SoftDeleteInterceptor>(),
                     provider.GetRequiredService<AuditableEntityInterceptor>(),
                     provider.GetRequiredService<AuditTrailInterceptor>()));
+        services.AddScoped<RecentPlatformProofContext>();
+        services.AddScoped<IRecentPlatformProofContext>(provider => provider.GetRequiredService<RecentPlatformProofContext>());
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IPlatformTenantRepository, PlatformTenantRepository>();
@@ -125,6 +129,8 @@ internal static class PersistenceRegistration
         services.AddScoped<ITenantFeatureRepository, TenantFeatureRepository>();
         services.AddScoped<ITenantFeatureReader, TenantFeatureReader>();
         services.AddScoped<IPlatformPermissionAssignmentRepository, PlatformPermissionAssignmentRepository>();
+        services.AddScoped<IPlatformFactorRepository, PlatformFactorRepository>();
+        services.AddScoped<IPlatformFactorReader, PlatformFactorReader>();
         services.AddScoped<IPlatformPermissionAssignmentReader, PlatformPermissionAssignmentReader>();
         services.AddScoped<IPlatformSettingsReader, PlatformSettingsReader>();
         services.AddScoped<ISecurityEventRepository, SecurityEventRepository>();

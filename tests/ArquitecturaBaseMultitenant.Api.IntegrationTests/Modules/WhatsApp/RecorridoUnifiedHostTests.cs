@@ -246,6 +246,7 @@ public sealed class RecorridoUnifiedHostTests(ApiFactory postgres) : IClassFixtu
             var code = await PickupAsync(app.Services, directory, operatorEmail);
             using (var verified = await AccountJourney.PostAsync(platform, "/api/auth/login-code/verify", new { email = operatorEmail, code, returnUrl = "/connect/authorize?access=platform" }, Ct))
                 Assert.Equal(HttpStatusCode.OK, verified.StatusCode);
+            await PlatformFactorJourney.CompleteAsync(app.Services, platform, userId: null, Ct);
             await AccountJourney.AuthorizeAsync(platform, "platform", Ct, redirectUri: Redirect);
             using (var me = await platform.GetAsync("/api/me", Ct))
             {

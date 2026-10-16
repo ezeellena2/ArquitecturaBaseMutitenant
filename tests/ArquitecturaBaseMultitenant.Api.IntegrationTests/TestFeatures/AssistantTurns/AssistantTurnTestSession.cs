@@ -214,6 +214,7 @@ internal sealed class AssistantTurnTestSession : IAsyncDisposable
         using var verified = await AccountJourney.PostAsync(client, "/api/auth/login-code/verify",
             new { email = email.Value, code, returnUrl = "/connect/authorize?access=platform" }, Ct);
         Assert.Equal(HttpStatusCode.OK, verified.StatusCode);
+        await PlatformFactorJourney.CompleteAsync(host.Services, client, created.Value, Ct);
         return new(created.Value, email);
     }
 

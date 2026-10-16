@@ -59,6 +59,7 @@ public sealed class AssistantExecutionActorSecurityTests(ApiFactory factory)
         using (var verified = await AccountJourney.PostAsync(client, "/api/auth/login-code/verify",
             new { email = email.Value, code, returnUrl = "/connect/authorize?access=platform" }, Ct))
             Assert.Equal(HttpStatusCode.OK, verified.StatusCode);
+        await PlatformFactorJourney.CompleteAsync(factory.Services, client, owner, Ct);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         using var snapshot = await client.GetFromJsonAsync<JsonDocument>("/api/me", Ct);
         var documents = snapshot!.RootElement.GetProperty("pendingLegalDocuments").EnumerateArray()

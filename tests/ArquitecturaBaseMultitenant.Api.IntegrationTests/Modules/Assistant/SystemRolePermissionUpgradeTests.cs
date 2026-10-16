@@ -93,6 +93,8 @@ public sealed class SystemRolePermissionUpgradeTests
         await AssertUpgradedAsync(factory, active.Id, beforeActive);
         await migrator.MigrateAsync(cancellationToken: Ct);
         Assert.False(db.Database.HasPendingModelChanges());
+        // Volver a aplicar el segundo factor (E9) revoca las sesiones de Plataforma anteriores: el operador reingresa.
+        await AccountJourney.AuthorizeAsync(operatorClient, "platform", Ct);
 
         foreach (var (space, action) in new[] { (pending, "approve"), (active, "retry-provisioning") })
         {

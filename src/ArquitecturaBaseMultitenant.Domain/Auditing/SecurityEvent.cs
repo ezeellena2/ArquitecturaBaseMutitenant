@@ -154,6 +154,22 @@ public sealed class SecurityEvent : Entity
         return ev;
     }
 
+    /// <summary>
+    /// Segundo factor de un operador (E9): configuró su autenticador, usó un código de recuperación o confirmó su
+    /// identidad, con el motivo de sistema traducido; o restableció el autenticador de otro operador, con su motivo.
+    /// </summary>
+    public static SecurityEvent ForPlatformSecondFactor(SecurityEventType type, Guid operatorId, Guid accountId,
+        string reason, DateTime occurredAtUtc)
+    {
+        if (type is not (SecurityEventType.PlatformAuthenticatorConfigured or SecurityEventType.PlatformAuthenticatorReset
+            or SecurityEventType.PlatformRecoveryCodeUsed or SecurityEventType.PlatformReauthenticated))
+            throw new ArgumentOutOfRangeException(nameof(type));
+        if (accountId == Guid.Empty) throw new ArgumentException("A target account is required.", nameof(accountId));
+        var ev = ForPlatformAction(type, AuditActorKind.PlatformOperator, operatorId, reason, occurredAtUtc);
+        ev.TargetAccountId = accountId;
+        return ev;
+    }
+
     /// <summary>Un operador resolvió un pedido de «Recuperar mi cuenta»; sin cuenta encontrada, el destino queda vacío.</summary>
     public static SecurityEvent ForAccountRecovery(SecurityEventType type, Guid operatorId, Guid? accountId,
         string reason, DateTime occurredAtUtc)
