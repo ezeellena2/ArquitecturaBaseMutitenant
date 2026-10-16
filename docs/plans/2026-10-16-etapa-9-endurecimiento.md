@@ -4,7 +4,7 @@ Estado: plan (E9), sin implementar. Alcance completo y exclusivo de [Etapa 9 de 
 
 ## Forma de trabajo
 
-**Se empieza a programar cuando el coordinador de la 11 termine su galería.** Las decisiones de producto P1–P3 las tomó el usuario el 2026-10-16 (al final del plan). **Primero van los correctivos de código de la revisión general** (`docs/plans/2026-10-16-correctivos-generales.md`), como primera tarea de Back y Front: F3 copia de `OperatorPermissionsDialog.tsx`, que hoy lista solo los nueve permisos del núcleo y no los de los módulos (R03); F4 copia de `RoleEditorPage.tsx`, que corrige y reenvía sin `sameOperation` (R05); y B2 toca `PermissionService.cs`, igual que R09. Mientras el AppHost de la 11 esté levantado desde main para las pruebas con Meta, el back de la 9 no compila: los dos coordinadores acuerdan esa ventana. Las tareas y el protocolo de este plan quedan definidos, sin variantes de implementación.
+**Se empieza a programar cuando el coordinador de la 11 termine su galería.** Las decisiones de producto P1–P3 las tomó el usuario el 2026-10-16 (al final del plan). **Primero van los correctivos de código de la revisión general** (tablas «Correctivos de la revisión (primero)» de Back y Front), como primera tarea de cada uno: F3 copia de `OperatorPermissionsDialog.tsx`, que hoy lista solo los nueve permisos del núcleo y no los de los módulos (R03); F4 copia de `RoleEditorPage.tsx`, que corrige y reenvía sin `sameOperation` (R05); y B2 toca `PermissionService.cs`, igual que R09. Mientras el AppHost de la 11 esté levantado desde main para las pruebas con Meta, el back de la 9 no compila: los dos coordinadores acuerdan esa ventana. Las tareas y el protocolo de este plan quedan definidos, sin variantes de implementación.
 
 Modo rápido: contrato primero; Back y Front en paralelo, cada chat dueño de su repo; commits chicos en español, con pathspec y sin push. Tests dirigidos y build del proyecto afectado; integración/seguridad del área al terminarla. Una sola puerta final, sin revisiones por tarea, actas ni evidencia versionada. Las suites completas pasan una vez; después sólo lo afectado, con las excepciones de autenticación, persistencia base o composición que fija AGENTS. Worktrees sólo en `/puerta`. Diseño es el único que toca el lienzo.
 
@@ -13,13 +13,11 @@ Modo rápido: contrato primero; Back y Front en paralelo, cada chat dueño de su
 El **Coordinador** publica `docs/contracts/openapi.json`, los contratos HTTP y sus stubs 501, textos es/en y tests de contrato; Front regenera con `npm run contracts`. Ambos commits preceden B/F. Los cuerpos existentes mantienen sus campos; las adiciones siguientes se describen con esquemas cerrados, enums y todos los status. Los stubs no emiten cookies ni consumen códigos.
 
 **K1 · Hecho (16/10).** Decisiones técnicas del Coordinador:
-- El desafío y la verificación publican uniones cerradas por `state` y `next` (`PlatformFactor*Challenge`, `VerifyPlatformFactor*Response`). `code` es texto de 6 a 9 caracteres y sus cotas las fija `SecurityContractContributor` aunque un validador publique otras.
-- `LoginAuditMethod` suma `Authenticator` y `RecoveryCode`. `SecurityEventType` suma `PlatformAuthenticatorConfigured`, `PlatformAuthenticatorReset`, `PlatformRecoveryCodeUsed` y `PlatformReauthenticated`, en la categoría Operadores, con sus textos.
-- Prueba reciente: toda escritura con acceso Plataforma que exige un permiso de `PlatformPermissions.RequiringRecentProof` (`Api/Authorization/RecentPlatformProof.cs`, marca `x-recent-authentication`). Son 39 rutas; entran también cerrar organización y la política del Asistente por organización. El filtro de B1 usa la misma regla.
-- El 429 `Security.RateLimit.Exceeded` se publica en toda ruta `/api` y reemplaza a `Http.TooManyRequests`.
-- Hasta B3, GET de configuración informa `PlatformRateLimits.Initial` y PUT ignora `rateLimits`.
-- Los POST nuevos llevan `[Idempotent]` y B1 pasa los del factor a `DurableReference`. El restablecimiento reutiliza `{version, reason}` de `PlatformAccountActionHttpRequest`.
-- Aparte: `MessagePack` 2.5.303 fijado por GHSA-qhrr-8q5h-9q3h, que rompía el build del AppHost.
+- Uniones cerradas por `state` y `next` para el desafío y la verificación, y `code` de 6 a 9 caracteres; las formas las fija `SecurityContractContributor`.
+- `LoginAuditMethod` suma `Authenticator` y `RecoveryCode`; `SecurityEventType` suma cuatro eventos, en la categoría Operadores.
+- Prueba reciente: toda escritura con acceso Plataforma que exige un permiso de `PlatformPermissions.RequiringRecentProof` (`RecentPlatformProof`, marca `x-recent-authentication`): 39 rutas, también cerrar organización. B1 usa la misma regla, antes de la idempotencia.
+- El 429 `Security.RateLimit.Exceeded` de toda ruta `/api` reemplaza a `Http.TooManyRequests`.
+- Hasta B3, GET de configuración informa `PlatformRateLimits.Initial` y PUT ignora `rateLimits`. B1 pasa los POST del factor a `DurableReference`.
 
 ### Ingreso y segundo factor
 
@@ -101,6 +99,13 @@ Decisiones técnicas: [ADR 0052](../decisions/0052-cache-compartida-redis.md), R
 
 Rutas abreviadas bajo `src/ArquitecturaBaseMultitenant.<Capa>/`; tests bajo `tests/ArquitecturaBaseMultitenant.<Proyecto>/`. Los archivos/guardas nuevos de las tareas son **E9**, no código ya existente.
 
+**Correctivos de la revisión (primero).** Son los hallazgos de código que siguen abiertos en `.local/revision-general/hallazgos.md`. R07 y R20 ya se cerraron en la 11. La documentación atrasada (R08, R12–R19 y R22) la corrige aparte un chat de Codex.
+
+| Tarea / estado | Archivo y arreglo | Regla que rompe | Test o guarda |
+|---|---|---|---|
+| R06 · Pendiente | `Application/Services/Home/HomeService.cs`: `GetSummaryAsync` devuelve `Pending=[]`, como publica `HomeModels.LegacyPendingLimit=0`; el `GetAsync` interno sigue completo | `docs/rules/paginado-y-busqueda.md`: `Pending` es el adaptador vacío y las filas van en grupos acotados | Integración: con un grupo no vacío, el JSON real de `GET /api/home` trae `pending: []` y cumple el `maxItems` del contrato |
+| R09 · Con B2 | `Application/Services/Roles/PermissionService.cs`: cada método público, envuelto en `OperationLog.RunAsync` con ILogger y TimeProvider, como `RoleService` | AGENTS, regla 10; `docs/rules/logs.md` | Guarda nueva en ArchitectureTests: todo método público de un `I*Service` de Application pasa por `OperationLog.RunAsync` (se lee el IL, como en `IdempotentActionsTests`), con su caso negativo |
+
 | Tarea / estado | Archivos y trabajo | Copiá de (existente) | Tests dirigidos |
 |---|---|---|---|
 | B1 · Pendiente | Domain/Authentication; Application/Services/Auth, Services/Platform, modelos/validadores/puertos; Infrastructure/Identity y EF; Api/Controllers/Auth, Platform y filtros. Factor, desafío/binding, sesiones, prueba reciente, reset y eventos. Una UoW pública, locks→lecturas→reglas→escrituras, efectos después del commit; fallos de códigos con CommitPolicy.OnAnyResult. | `Application/Services/Roles/RoleService.cs` para flujo; `Application/Services/Auth/LoginCodeService.cs` y `Infrastructure/Identity/SignInService.cs` para sesión tras commit; `Application/Services/Platform/PlatformOperatorService.cs` para versión/guard; `Api/Modules/Assistant/AssistantDurableAdapter.cs` para protocolo durable, sin importar el módulo | Nuevos PlatformTwoFactorTests y PlatformRecentAuthenticationTests; ampliar PlatformOperatorTests. Carreras, recovery de un uso, replay/revocación, no aceptar invitación antes del factor, seed/legacy sin bypass, separación de cookies y permisos; guardas de rutas/acceso/idempotencia/resources |
@@ -113,11 +118,23 @@ Rutas abreviadas bajo `src/ArquitecturaBaseMultitenant.<Capa>/`; tests bajo `tes
 
 **Texto para «Multitenant · 9 · Back» (Claude):**
 
-> Leé AGENTS.md, fichas, ADR vigentes y docs/plans/2026-10-16-etapa-9-endurecimiento.md. Esperá K1 publicado. Primero hacé las tareas de back de docs/plans/2026-10-16-correctivos-generales.md; después B1–B7, sólo en el back, con tests de lógica, integración y seguridad del área. Copiá los archivos citados por responsabilidad, respetando las sustituciones indicadas. Contrato cerrado; un cambio técnico pasa por el Coordinador y Cambios al contrato. No implementes nada fuera del alcance. Commits chicos en español, pathspec, sin push; formatter en commit propio. No corras suites completas ni puerta por tu cuenta. Actualizá sólo estados de tareas y documentación que cambie reglas o conducta.
+> Leé AGENTS.md, fichas, ADR vigentes y docs/plans/2026-10-16-etapa-9-endurecimiento.md. Esperá K1 publicado. Primero hacé los correctivos de tu tabla «Correctivos de la revisión (primero)», con R09 junto con B2; después B1–B7, sólo en el back, con tests de lógica, integración y seguridad del área. Copiá los archivos citados por responsabilidad, respetando las sustituciones indicadas. Contrato cerrado; un cambio técnico pasa por el Coordinador y Cambios al contrato. No implementes nada fuera del alcance. Commits chicos en español, pathspec, sin push; formatter en commit propio. No corras suites completas ni puerta por tu cuenta. Actualizá sólo estados de tareas y documentación que cambie reglas o conducta.
 
 ## Front
 
 Rutas bajo `../ArquitecturaBaseMutitenantFront/`. Tableros vigentes Ingreso/M-Ingreso, Cuenta-Plat/M-Cuenta-Plat, Auditoria-Plat y sus móviles; decisiones E9 de Criterio-Decisiones desde v117. Tokens sólo en memoria; tipos generados, TanStack Query/httpClient, es/en, formatos centrales, DetailGrid, opciones apagadas con motivo y nunca diálogo sobre diálogo.
+
+**Correctivos de la revisión (primero).** R03 va antes de F3 y R05 antes de F4, porque esas tareas copian de esos archivos. R02 ya se cerró en la 11 (7a6452a2). R01 y R05 tocan `src/modules/whatsapp`: avisale antes al Coordinador, que lo acuerda con la 11.
+
+| Tarea / estado | Archivos y arreglo | Regla que rompe | Test o guarda |
+|---|---|---|---|
+| R01 · Pendiente | `src/areas/business/companies/pages/CompanyDetailPage.tsx`, `src/areas/business/users/pages/UserDetailPage.tsx` y el «Pasar» de `src/modules/whatsapp/chats/components/ConversationView.tsx`: la identidad, la intención y la versión se toman al abrir la confirmación o el selector, nunca de una relectura | `docs/rules/formularios.md` y la ficha de concurrencia del back | Por pantalla: una relectura con la confirmación abierta manda la versión de apertura y recibe el 409 |
+| R03 · Pendiente, antes de F3 | `src/areas/platform/accounts/components/InviteOperatorDialog.tsx`, `OperatorPermissionsDialog.tsx` y `tabs/AccountPermissionsTab.tsx`: el catálogo compuesto (núcleo más módulos instalados, con sus textos) en lugar de los nueve de `auth/usePermissions.ts` | ADR 0048; en el back, `docs/rules/permisos.md` (permisos individuales de los módulos) | Consultar, invitar y modificar con los catorce permisos; sin un módulo, sus permisos no aparecen |
+| R04 · Pendiente | `src/areas/business/users/pages/UsersPage.tsx` y `src/areas/business/companies/tabs/CompanyMembersTab.tsx`: un adaptador estable por invitación con `useResourceAction`, como `AccountsPage` | `docs/rules/datos-y-api.md`: clave y callbacks de la operación original | Reenviar A y B, y reintentar A después de B: cada uno con su clave y sin 422 |
+| R05 · Pendiente, antes de F4 | `RoleEditorPage.tsx`, `CompanyDialog`, `InviteUserDialog`, `AddMemberDialog` y, en WhatsApp, `ConversationView` y `chats/TemplateDialog`: `sameOperation` compara el cuerpo completo y conserva los callbacks del intento original | `docs/rules/datos-y-api.md`: corregir crea otra operación; repetir lo mismo conserva la clave | Respuesta perdida, corrección y reintento idéntico: otra clave al corregir, la misma al repetir |
+| R10 · Pendiente | `src/shared/ui/RowActions.tsx` admite una opción apagada con motivo, en compu y en móvil; `src/areas/business/roles/pages/RolesPage.tsx` apaga «Inactivar» si el rol tiene usuarios | `docs/rules/pantallas-y-ui.md`: opción apagada con el motivo en gris debajo (13/10) | `RolesPage.test.tsx` y `RowActions.test.tsx`: apagada con motivo en compu y en móvil |
+| R11 · Pendiente | `src/shared/ui/SearchSelect.tsx`: `var(--sombra-menu)` en lugar del `oklch` literal | `docs/rules/pantallas-y-ui.md` y `docs/architecture/tema.md`: tokens centrales | `src/theme-tokens.test.ts` detecta un literal precedido por `_` en una clase Tailwind |
+| R21 · Pendiente | `RolesPage.tsx`, `roles/columns`, `companies/columns`, `home/components/HomeCards.tsx` y `src/shared/ui/tabs.tsx`: el número del plural va aparte y la cifra se muestra con `formatInteger` o `NumberText` | `docs/rules/formatos.md`: todo número pasa por `shared/ui/format` | Focal es/en con 1000: «1.000» y «1,000» en el resumen, la fila móvil y la pestaña |
 
 | Tarea / estado | Archivos y trabajo | Copiá de (existente) | Tests dirigidos |
 |---|---|---|---|
@@ -129,7 +146,7 @@ Rutas bajo `../ArquitecturaBaseMutitenantFront/`. Tableros vigentes Ingreso/M-In
 
 **Texto para «Multitenant · 9 · Front» (Claude):**
 
-> Leé AGENTS.md de ambos repos, fichas del front y el plan docs/plans/2026-10-16-etapa-9-endurecimiento.md del back. Tras K1, regenerá tipos; primero hacé las tareas de front de docs/plans/2026-10-16-correctivos-generales.md y después F1–F5, sólo en el front. Copiá los tableros E9 y las piezas citadas, sin dibujar ni agregar funciones. Los estados faltantes los resuelve Multitenant · Diseño con Para Diseño. Conservá cuerpo, versión y clave de la acción durante la reautenticación; no guardes secretos ni repitas efectos al vencer un límite. Tests focales, commits chicos con pathspec, sin push; suites completas una sola vez en puerta. Avisá al Coordinador cualquier cambio de contrato antes de publicarlo.
+> Leé AGENTS.md de ambos repos, fichas del front y el plan docs/plans/2026-10-16-etapa-9-endurecimiento.md del back. Tras K1, regenerá tipos; primero hacé los correctivos de tu tabla «Correctivos de la revisión (primero)», con R03 antes de F3 y R05 antes de F4, y después F1–F5, sólo en el front. Copiá los tableros E9 y las piezas citadas, sin dibujar ni agregar funciones. Los estados faltantes los resuelve Multitenant · Diseño con Para Diseño. Conservá cuerpo, versión y clave de la acción durante la reautenticación; no guardes secretos ni repitas efectos al vencer un límite. Tests focales, commits chicos con pathspec, sin push; suites completas una sola vez en puerta. Avisá al Coordinador cualquier cambio de contrato antes de publicarlo.
 
 ## Integración y puerta
 
