@@ -7,7 +7,7 @@
    - la IP real (`ip`, o `publicIp` en una ruta `[PublicSite]`);
    - la identidad firmada (`identity`), si hay sesión;
    - la organización del claim (`tenant`), nunca la del subdominio.
-2. **Perfil de una ruta.** Va en la acción, con `[RateLimit(RateLimitProfile.LoginCode)]`. Las rutas de ingreso, invitaciones y webhook cuentan por IP; las del Asistente, por persona. Un módulo declara los perfiles en sus rutas y se van con ellas:
+2. **Perfil de una ruta.** Va en la acción, con `[RateLimit(RateLimitProfile.LoginCode)]`. Las rutas de ingreso, invitaciones y webhook cuentan por IP; las del Asistente, por persona. Un pedido sin sesión no cuenta en una cuota de persona: lo cuenta la IP y el acceso lo rechaza con 401. Un módulo declara los perfiles en sus rutas y se van con ellas:
    - `assistantQuickQuery` en `quick`;
    - `assistantConversation` al crear una conversación y en cada turno;
    - `assistantNewKey`, con un filtro del módulo, solo cuando llega una clave nueva;

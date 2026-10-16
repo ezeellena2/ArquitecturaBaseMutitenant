@@ -15,7 +15,8 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Assistant;
 
 /// <summary>
 /// Las cuotas del Asistente (E9): una clave nueva cuenta en assistantNewKey antes de probarla con el proveedor, y un rechazo
-/// nunca llega al proveedor ni reinicia la cuota. Conservar la clave no cuenta. Las rutas del módulo declaran sus perfiles.
+/// nunca llega al proveedor ni reinicia la cuota. Conservar la clave no cuenta. Las rutas del módulo declaran sus perfiles,
+/// y un pedido sin sesión no cuenta en una cuota de persona: lo rechaza el acceso.
 /// </summary>
 public sealed class AssistantRateLimitTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
@@ -71,6 +72,19 @@ public sealed class AssistantRateLimitTests(ApiFactory factory) : IClassFixture<
                 && candidate.Metadata.GetMetadata<Microsoft.AspNetCore.Routing.HttpMethodMetadata>()?.HttpMethods.Contains("POST") == true);
 
         Assert.Equal(profile, endpoint.Metadata.GetMetadata<RateLimitAttribute>()?.Profile);
+    }
+
+    [Theory]
+    [InlineData("/api/me/assistant/quick/my_signin")]
+    [InlineData("/api/organization/assistant/conversations")]
+    [InlineData("/api/platform/assistant/conversations")]
+    public async Task A_request_without_a_session_reaches_the_access_check_without_a_person_quota(string path)
+    {
+        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+
+        using var response = await AccountJourney.PostAsync(client, path, new { }, Ct);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     private static async Task<uint> PutKeyAsync(HttpClient client, uint version, string keyAction, string? apiKey)

@@ -53,7 +53,15 @@ public sealed class RateLimitMiddleware(RequestDelegate next)
             if (userId is not null) profiles.Add(RateLimitProfile.Identity);
         }
 
-        if (route is not null) profiles.Add(route.Profile);
+        // La cuota de persona u organización de una ruta no aplica a quien todavía no la tiene: la IP ya cuenta el pedido y
+        // el acceso lo rechaza después con 401.
+        if (route is not null && RateLimitProfiles.PartitionOf(route.Profile) switch
+            {
+                RateLimitPartitionKind.Identity => userId is not null,
+                RateLimitPartitionKind.Tenant => tenantId is not null,
+                _ => true,
+            })
+            profiles.Add(route.Profile);
         var admitted = await rateLimits.AdmitAsync(new RateLimitRequest(profiles,
             context.Connection.RemoteIpAddress?.ToString(), userId, tenantId), context.RequestAborted);
         if (admitted.IsSuccess)
