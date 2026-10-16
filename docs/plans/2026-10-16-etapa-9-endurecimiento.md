@@ -4,7 +4,7 @@ Estado: plan (E9), sin implementar. Alcance completo y exclusivo de [Etapa 9 de 
 
 ## Forma de trabajo
 
-**Se empieza a programar cuando el coordinador de la 11 termine su galería.** El coordinador de la 9 registra las respuestas P1–P3 antes de publicar K1; son las únicas decisiones de producto abiertas. Las tareas y el protocolo de este plan quedan definidos, sin variantes de implementación.
+**Se empieza a programar cuando el coordinador de la 11 termine su galería.** Las decisiones de producto P1–P3 las tomó el usuario el 2026-10-16 (al final del plan). **Primero van los correctivos de código de la revisión general** (`docs/plans/2026-10-16-correctivos-generales.md`), como primera tarea de Back y Front: F3 copia de `OperatorPermissionsDialog.tsx`, que hoy lista solo los nueve permisos del núcleo y no los de los módulos (R03); F4 copia de `RoleEditorPage.tsx`, que corrige y reenvía sin `sameOperation` (R05); y B2 toca `PermissionService.cs`, igual que R09. Mientras el AppHost de la 11 esté levantado desde main para las pruebas con Meta, el back de la 9 no compila: los dos coordinadores acuerdan esa ventana. Las tareas y el protocolo de este plan quedan definidos, sin variantes de implementación.
 
 Modo rápido: contrato primero; Back y Front en paralelo, cada chat dueño de su repo; commits chicos en español, con pathspec y sin push. Tests dirigidos y build del proyecto afectado; integración/seguridad del área al terminarla. Una sola puerta final, sin revisiones por tarea, actas ni evidencia versionada. Las suites completas pasan una vez; después sólo lo afectado, con las excepciones de autenticación, persistencia base o composición que fija AGENTS. Worktrees sólo en `/puerta`. Diseño es el único que toca el lienzo.
 
@@ -38,7 +38,7 @@ Todos los POST nuevos llevan `[Idempotent]`. Los del factor usan `DurableReferen
 
 ### Acciones sensibles y errores
 
-La prueba reciente dura P1; el ingreso completo cuenta como prueba. Se persiste ligada a la sesión concreta de Plataforma y al sello de seguridad, sin convertirla en permiso ni aceptar fechas del cliente. Nueva pestaña de la misma sesión la comparte; otra sesión no. Cerrar/revocar sesiones, quitar operador o restablecer el factor la invalida.
+La prueba reciente dura 10 minutos (P1); el ingreso completo cuenta como prueba. Se persiste ligada a la sesión concreta de Plataforma y al sello de seguridad, sin convertirla en permiso ni aceptar fechas del cliente. Nueva pestaña de la misma sesión la comparte; otra sesión no. Cerrar/revocar sesiones, quitar operador o restablecer el factor la invalida.
 
 Exigen prueba reciente **todas las escrituras** de estos controllers existentes, con los mismos cuerpos, status y permisos actuales:
 
@@ -78,11 +78,11 @@ GET A declara 200/401; verify, 200/400/401/409/429; complete, 200/400/401/409; r
 
 GET/PUT `/api/platform/settings` agregan **`rateLimits`** al DTO existente; en PUT omitirlo conserva cuotas, enviarlo exige los doce perfiles completos. Mantiene compatibilidad (ADR 0005), `version` y `reason` actuales, respuesta `{version}` y `platform.settings.manage` más prueba reciente. Cada perfil es `{permitLimit:int,windowSeconds:int}`; límites 1–1.000.000 y 1–86.400, sin cero para desactivar. Perfiles cerrados: `ip`, `publicIp`, `identity`, `tenant`, `loginCode`, `loginVerify`, `invitationPreview`, `invitationAccept`, `assistantQuickQuery`, `assistantConversation`, `assistantNewKey`, `whatsAppWebhook`. No se publica otro endpoint ni cuotas personales visibles.
 
-P3 fija los valores iniciales. Se conservan loginCode 20/900 s, loginVerify 30/900, invitationPreview 60/900, invitationAccept 10/900 y webhook 120/60. Los defaults de arranque son opciones con ValidateOnStart; el seed los usa sólo al crear configuración. Cambiar las opciones no pisa cuotas ya guardadas.
+Valores iniciales (P3, moderados): ip 300/60 s, publicIp 60/60 s, identity 120/60 s, tenant 600/60 s, assistantQuickQuery 20/60 s, assistantConversation 10/60 s y assistantNewKey 3/900 s. Se conservan loginCode 20/900 s, loginVerify 30/900, invitationPreview 60/900, invitationAccept 10/900 y webhook 120/60. Los defaults de arranque son opciones con ValidateOnStart; el seed los usa sólo al crear configuración. Cambiar las opciones no pisa cuotas ya guardadas.
 
 Ventanas fijas UTC compartidas, sin cola. Se aplican las cuotas concurrentemente: IP real sólo de proxies confiables, particionada con HMAC sin guardar IP completa; identidad firmada; tenant sólo del claim. Público usa publicIp, más estricto, sin inventar una identidad/tenant por subdominio; una ruta pública autenticada suma su identidad. Límite por petición de API, excluyendo assets y probes. Asistente: perfiles específicos en POST quick, POST conversations de los tres accesos, y PUT settings cuando trae una clave nueva, antes de contactar Anthropic; preserva presupuesto/cuotas de ADR 0048/0049/0051. WhatsApp: cuotas generales en rutas E11 y perfil propio del webhook antes del procesamiento. Los módulos aportan metadata y se retiran con ella.
 
-Redis ejecuta la admisión atómica por partición/ventana; caída: contadores PostgreSQL compartidos como respaldo, sin fallback por proceso ni reiniciar una cuota para habilitar llamadas externas. B3 prueba continuidad de consumo al cambiar de backend; los contadores durables se actualizan mediante un servicio de Application y su UoW antes de admitir la operación, sin anidar la transacción del negocio. El cache de datos conserva el fallback 200 de ADR 0052. Una cuota rechazada responde 429 `Security.RateLimit.Exceeded`, `retryAfter` entero y Retry-After; el webhook conserva `WhatsApp.Webhook.TooManyRequests`. P2 fija la presentación; el front no repite automáticamente una escritura por vencer el tiempo.
+Redis ejecuta la admisión atómica por partición/ventana; caída: contadores PostgreSQL compartidos como respaldo, sin fallback por proceso ni reiniciar una cuota para habilitar llamadas externas. B3 prueba continuidad de consumo al cambiar de backend; los contadores durables se actualizan mediante un servicio de Application y su UoW antes de admitir la operación, sin anidar la transacción del negocio. El cache de datos conserva el fallback 200 de ADR 0052. Una cuota rechazada responde 429 `Security.RateLimit.Exceeded`, `retryAfter` entero y Retry-After; el webhook conserva `WhatsApp.Webhook.TooManyRequests`. Presentación (P2): aviso en el lugar de la acción, con cuenta regresiva y reintento manual, conservando el formulario; en lecturas, el estado de error de la página; el front no repite automáticamente una escritura por vencer el tiempo.
 
 Auditoría conserva GET `/api/platform/audit` y `/{id}`, permiso `platform.audit.read`, cursor y filtros actuales. Agrega tipos de evento de alta/reset de autenticador, uso de recuperación y reautenticación; sin códigos, secretos o direcciones completas. El ingreso exitoso se registra al completar los factores, con método que identifica TOTP o recuperación. Restablecer conserva motivo; los eventos automáticos tienen motivo de sistema traducido.
 
@@ -104,7 +104,7 @@ Rutas abreviadas bajo `src/ArquitecturaBaseMultitenant.<Capa>/`; tests bajo `tes
 
 **Texto para «Multitenant · 9 · Back» (Claude):**
 
-> Leé AGENTS.md, fichas, ADR vigentes y docs/plans/2026-10-16-etapa-9-endurecimiento.md. Esperá K1 publicado y la galería de E11 terminada. Hacé B1–B7 sólo en el back, con tests de lógica, integración y seguridad del área. Copiá los archivos citados por responsabilidad, respetando las sustituciones indicadas. Contrato cerrado; un cambio técnico pasa por el Coordinador y Cambios al contrato. No implementes nada fuera del alcance. Commits chicos en español, pathspec, sin push; formatter en commit propio. No corras suites completas ni puerta por tu cuenta. Actualizá sólo estados de tareas y documentación que cambie reglas o conducta.
+> Leé AGENTS.md, fichas, ADR vigentes y docs/plans/2026-10-16-etapa-9-endurecimiento.md. Esperá K1 publicado. Primero hacé las tareas de back de docs/plans/2026-10-16-correctivos-generales.md; después B1–B7, sólo en el back, con tests de lógica, integración y seguridad del área. Copiá los archivos citados por responsabilidad, respetando las sustituciones indicadas. Contrato cerrado; un cambio técnico pasa por el Coordinador y Cambios al contrato. No implementes nada fuera del alcance. Commits chicos en español, pathspec, sin push; formatter en commit propio. No corras suites completas ni puerta por tu cuenta. Actualizá sólo estados de tareas y documentación que cambie reglas o conducta.
 
 ## Front
 
@@ -120,7 +120,7 @@ Rutas bajo `../ArquitecturaBaseMutitenantFront/`. Tableros vigentes Ingreso/M-In
 
 **Texto para «Multitenant · 9 · Front» (Claude):**
 
-> Leé AGENTS.md de ambos repos, fichas del front y el plan docs/plans/2026-10-16-etapa-9-endurecimiento.md del back. Tras K1 y la galería de E11 terminada, regenerá tipos y hacé F1–F5 sólo en el front. Copiá los tableros E9 y las piezas citadas, sin dibujar ni agregar funciones. Los estados faltantes los resuelve Multitenant · Diseño con Para Diseño. Conservá cuerpo, versión y clave de la acción durante la reautenticación; no guardes secretos ni repitas efectos al vencer un límite. Tests focales, commits chicos con pathspec, sin push; suites completas una sola vez en puerta. Avisá al Coordinador cualquier cambio de contrato antes de publicarlo.
+> Leé AGENTS.md de ambos repos, fichas del front y el plan docs/plans/2026-10-16-etapa-9-endurecimiento.md del back. Tras K1, regenerá tipos; primero hacé las tareas de front de docs/plans/2026-10-16-correctivos-generales.md y después F1–F5, sólo en el front. Copiá los tableros E9 y las piezas citadas, sin dibujar ni agregar funciones. Los estados faltantes los resuelve Multitenant · Diseño con Para Diseño. Conservá cuerpo, versión y clave de la acción durante la reautenticación; no guardes secretos ni repitas efectos al vencer un límite. Tests focales, commits chicos con pathspec, sin push; suites completas una sola vez en puerta. Avisá al Coordinador cualquier cambio de contrato antes de publicarlo.
 
 ## Integración y puerta
 
@@ -129,7 +129,7 @@ Rutas bajo `../ArquitecturaBaseMutitenantFront/`. Tableros vigentes Ingreso/M-In
 
 **Texto para «Multitenant · 9 · Coordinador» (Claude):**
 
-> Leé AGENTS.md de ambos repos, /plan-etapa, etapa-en-paralelo y este plan. Empezá al terminar el coordinador de E11 su galería; registrá P1–P3 del usuario y pasá Para Diseño al chat correspondiente. Publicá K1 completo y tipos en ambos repos antes de habilitar Back/Front en paralelo con los textos de este plan. Aplicá ADR 0042–0045 y 0052, sin ampliar alcance. Coordiná cambios técnicos del contrato y avisá al otro dueño. Integrá I1 y corré I2 con /puerta y /recorrido, una revisión /security-review al cierre. Cada fallo vuelve a su dueño y se verifica sólo lo afectado. Dejá tabla final, sin actas, sin push ni cambios al lienzo.
+> Leé AGENTS.md de ambos repos, /plan-etapa, etapa-en-paralelo y este plan. Empezá al terminar el coordinador de E11 su galería; P1–P3 ya están decididas y «Para Diseño» ya lo tiene Multitenant · Diseño (16/10). Antes de B1–B7 y F1–F5 van los correctivos generales. Publicá K1 completo y tipos en ambos repos antes de habilitar Back/Front en paralelo con los textos de este plan. Aplicá ADR 0042–0045 y 0052, sin ampliar alcance. Coordiná cambios técnicos del contrato y avisá al otro dueño. Integrá I1 y corré I2 con /puerta y /recorrido, una revisión /security-review al cierre. Cada fallo vuelve a su dueño y se verifica sólo lo afectado. Dejá tabla final, sin actas, sin push ni cambios al lienzo.
 
 ## Relación con otras etapas
 
@@ -141,14 +141,14 @@ Rutas bajo `../ArquitecturaBaseMutitenantFront/`. Tableros vigentes Ingreso/M-In
 
 Texto para **«Multitenant · Diseño»**:
 
-> Etapa 9: conservar Ingreso/M-Ingreso, Cuenta-Plat/M-Cuenta-Plat y Auditoría de v117 en adelante. Faltan el estado de reautenticación con código de recuperación y su error, bloqueo/expiración y cancelar conservando el formulario; Config-Plat/M-Config-Plat con el editor de los doce perfiles rateLimits del contrato, versión/motivo, y la presentación del límite P2; completar Confirmá que sos vos aplicado a las demás acciones sensibles sin diálogo sobre diálogo. Agregar alta/reset, recuperación y reautenticación a los ejemplos de Auditoría y su móvil. El ingreso conserva ocho códigos y checkbox, sin nueva pantalla. Copiar Criterio-Decisiones, DetailGrid y las reglas de opciones apagadas con motivo; no sumar acciones. P1–P3 están en Para decidir y las responde el usuario antes de programar lo afectado.
+> Etapa 9: conservar Ingreso/M-Ingreso, Cuenta-Plat/M-Cuenta-Plat y Auditoría de v117 en adelante. Faltan el estado de reautenticación con código de recuperación y su error, bloqueo/expiración y cancelar conservando el formulario; Config-Plat/M-Config-Plat con el editor de los doce perfiles rateLimits del contrato, versión/motivo, y la presentación del límite P2; completar Confirmá que sos vos aplicado a las demás acciones sensibles sin diálogo sobre diálogo. Agregar alta/reset, recuperación y reautenticación a los ejemplos de Auditoría y su móvil. El ingreso conserva ocho códigos y checkbox, sin nueva pantalla. Copiar Criterio-Decisiones, DetailGrid y las reglas de opciones apagadas con motivo; no sumar acciones. Decisiones del usuario: la confirmación vale 10 minutos; el límite se muestra en el lugar de la acción con cuenta regresiva y reintento manual; las cuotas arrancan moderadas. Estos tableros van antes que los de la 13 y la 17.
 
 ## Cambios al contrato
 
-## Para decidir
+## Decisiones del usuario (2026-10-16)
 
-| # | Decisión de producto | Opciones (recomendada primero) |
-|---|---|---|
-| P1 | ¿Durante cuánto tiempo sirve haber confirmado el autenticador para acciones sensibles? | **10 minutos, recomendada:** varias acciones de una sesión sin pedir código cada vez; **5 minutos:** pide confirmación más seguido; **cada acción:** pide un código nuevo siempre. El ingreso completo inicia la ventana. |
-| P2 | ¿Qué ve quien llega a un límite de pedidos? | **Aviso en el lugar de la acción con cuenta regresiva y reintento manual, recomendada:** conserva formulario; en lecturas, estado de error de la página. **Aviso rojo general con tiempo de espera:** conserva formulario y deja el botón disponible, el servidor sigue rechazando hasta vencer. No se repite una escritura automáticamente. |
-| P3 | ¿Con qué cuotas iniciales salen los perfiles nuevos? | **Moderadas, recomendada:** IP 300/min, pública 60/min, identidad 120/min, organización 600/min, consulta fija 20/min, conversación 10/min y clave nueva 3/15 min. **Más amplias:** 600, 120, 240, 1.200, 40 y 20 por minuto, clave nueva 6/15 min. Los cinco perfiles existentes conservan sus valores y Plataforma puede editar todos con motivo. |
+| # | Decisión |
+|---|---|
+| P1 | La confirmación del autenticador para acciones sensibles vale **10 minutos**; el ingreso completo inicia la ventana. |
+| P2 | Al llegar a un límite: **aviso en el lugar de la acción, con cuenta regresiva y reintento manual**, sin perder el formulario; en lecturas, el estado de error de la página. Nunca se repite una escritura sola. |
+| P3 | Cuotas iniciales **moderadas**: IP 300/min, pública 60/min, identidad 120/min, organización 600/min, consulta fija 20/min, conversación 10/min y clave nueva 3 cada 15 min. Los cinco perfiles existentes conservan sus valores; Plataforma edita todos con motivo. |
