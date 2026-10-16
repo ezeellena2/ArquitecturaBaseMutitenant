@@ -196,7 +196,7 @@ Las pruebas de integración recorren una segunda página de `used-by`, roles y e
 5. **Pregunta de catálogo:**
    - `PUT …/draft` valida que el catálogo exista y se pueda usar;
    - cambiar el catálogo de una pregunta ya publicada emite un `FieldId` nuevo;
-   - `CheckAsync` del canal valida el perfil con datos.
+   - `IStructuredFormChannel.Check(StructuredFormVersion)`, síncrono y puro, valida el perfil con datos.
 6. **Mandar** (cambia la §6.6 de la E12):
    - `FindSendableAsync` de Forms resuelve, para quien recibe y en su idioma, la oferta de cada pregunta de catálogo. Lee los catálogos a mano activos o la fuente con los filtros; es solo lectura.
    - Si una pregunta tiene un problema, no se puede mandar.
@@ -237,7 +237,7 @@ Los modelos están en este repo; no se copia código de ArquitecturaBase. Las ab
 | WhatsApp: `WhatsAppFlowBuilder` (perfil con datos), `WhatsAppFlowReplyVerifier` (oferta), `WhatsAppFormSendService` (`ProtectedOffer`) | los de la E12 |
 | `tests/ArchitectureTests/Modules/Forms/IdentityAccessTests.Forms.cs` | `Modules/Assistant/IdentityAccessTests.Assistant.cs` |
 | `F/src/modules/forms/`: páginas de catálogos, el editor de filtros, la vista previa, el selector de catálogo en la pregunta y las rutas `/org/formularios/catalogos` y `/org/formularios/catalogos/:id` | las páginas de la E12 |
-| `F/src/locales/{es,en}/forms.json`: suma las claves | — |
+| `F/src/modules/forms/locales/{es,en}/forms.json` y `enums.json`: suman las claves, con paridad; los aporta `forms/registration.ts` | los recursos del módulo de la E12 |
 | Front de WhatsApp: los avisos de oferta en el diálogo y el rechazo con «Mandar de nuevo» en la tarjeta | lo de la E12 |
 
 **Punteros:** las carpetas nuevas de la E13 (`Catalogs/`) llevan su `AGENTS.md` y su `CLAUDE.md` al crearse. La ficha `docs/features/formularios.md` suma la sección de catálogos al cerrar.

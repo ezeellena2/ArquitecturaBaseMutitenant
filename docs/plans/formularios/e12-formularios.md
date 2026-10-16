@@ -184,7 +184,7 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 **Tipos de pregunta y límites:**
 - **Tipos** (`FormQuestionType`): `ShortText`, `LongText`, `Number`, `Date`, `YesNo` y `Choice`.
 - **Límites de Forms:** nombre ≤80, prefijo ≤12, hasta 40 preguntas y hasta 50 opciones por lista.
-- **Límites de WhatsApp:** los fija el perfil del canal, con `CheckAsync` (§14).
+- **Límites de WhatsApp:** los fija el perfil del canal, con `Check(StructuredFormVersion)` (§7 y §14), síncrono y puro.
 
 **Reglas:**
 - **Identidades:**
@@ -270,7 +270,7 @@ Todas las rutas Business llevan `[Access(Access.Business)]` y `[FeatureGate("for
    - Responde 200 `{version, questions}`.
 3. **Comprobar.** Es solo lectura:
    - reglas de Forms y los dos idiomas;
-   - `IStructuredFormChannel.CheckAsync`, que es puro: sin escrituras, sin bloqueos y sin Meta;
+   - `IStructuredFormChannel.Check(StructuredFormVersion)`, síncrono y puro: sin escrituras, sin bloqueos y sin Meta;
    - la diferencia con la versión activa.
 4. **Publicar.**
    - **En la UoW del pedido:**
@@ -412,9 +412,9 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 
 | Archivo nuevo | Modelo |
 | --- | --- |
-| `F/src/modules/forms/registration.ts`: rutas `/org/formularios` y `/org/formularios/:id`; guarda con `features.includes("forms")` y `forms.read`; `navigation` en el teléfono y en la administración | `F/src/modules/assistant/registration.ts` |
+| `F/src/modules/forms/registration.ts`: rutas `/org/formularios` y `/org/formularios/:id`; guarda con `features.includes("forms")` y `forms.read`; `navigation` en el teléfono y en la administración; aporta `resources` es/en de `forms` y sus entradas de `enums` | `F/src/modules/assistant/registration.ts` |
 | `F/src/modules/forms/{api,components,hooks,pages}/`, `errors.ts` | `F/src/modules/assistant/` |
-| `F/src/locales/{es,en}/forms.json` | `assistant.json` |
+| `F/src/modules/forms/locales/{es,en}/forms.json` y `enums.json` | `F/src/modules/assistant/locales/{es,en}/assistant.json` y `enums.json`; importados por la registration del módulo |
 | `F/src/app/moduleComposition.ts`: suma `formsRegistration` | la línea del Asistente |
 | WhatsApp **[E11]**: el diálogo «Mandar formulario» y la tarjeta de respuesta, en el módulo de WhatsApp del front que deje la E11 | — |
 
@@ -467,7 +467,7 @@ Los tableros nuevos llevan el prefijo `FRM-`, como `WA-` en WhatsApp, para no co
 | `tests/…Api.IntegrationTests/Modules/Forms/*IsolationTests.cs` | otra organización recibe 404 en cada ruta; RLS de cada tabla; la captura no cruza organizaciones (modelo: `Modules/Assistant/AssistantConversationIsolationTests.cs`) |
 | `tests/…Api.IntegrationTests/Modules/WhatsApp/` **[E11]** | botón y motivos; sesión vencida por la hora de Meta; un mensaje con error no frena a los demás; respuesta de más de 16 KiB rechazada y visible |
 | Guardas (partials del módulo) | `ExplicitRouteInventoryTests`, `ModuleControllersTests`, `ApplicationServicesTests`, `TenantScopeUsageTests`, `ResourceParityTests` (sumar los resx de Forms), `PermissionTextsTests` y `ModuleIsolationTests` en verde; `TransactionBoundaryTests` sin ampliar excepciones, y la guarda de capas de baja como `AssistantMaintenanceLayerTests` |
-| Front | Vitest con MSW y axe en las páginas y el diálogo; `registration`, `navigation` y `composition` del módulo; paridad de `forms.json` |
+| Front | Vitest con MSW y axe en las páginas y el diálogo; `registration`, `navigation` y `composition` del módulo; paridad de sus recursos `forms` y `enums` compuestos desde `registration.ts`, también al retirar Forms |
 | E2E real y recorrido | crear, completar el inglés, publicar contra el canal real o el de prueba, mandar desde un chat de Internos, responder y ver el número tras recargar |
 | Prueba con Meta | con el número de una organización de prueba: publicar, mandar, completar en el teléfono y ver el número |
 | Retiro | una vez, con la base vacía: quitar `Forms` (guía nueva, `docs/guides/quitar-formularios.md`, copiando `quitar-asistente.md`) y que el núcleo y WhatsApp sigan en verde |
