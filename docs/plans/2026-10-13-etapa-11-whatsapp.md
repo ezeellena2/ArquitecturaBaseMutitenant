@@ -6,7 +6,27 @@
 | 1 · Contrato | K1, CC01–CC27 | Hecha: OpenAPI, permisos, migración de datos, textos y tipos del front |
 | 2a · Back | B1–B7 | Hecha |
 | 2b · Front | F1–F8 | Hecha |
-| 3 · Integración y puerta | I1–I3 | En curso: I1 la hace el usuario en Meta; I2 e I3, en la puerta |
+| 3 · Integración y puerta | I1–I3 | I1 hecha (app publicada, webhook y 8 campos). I2 e I3 en verde, salvo la prueba con Meta real que falta (abajo) |
+
+## Resultado de la puerta
+
+| Paso | Corte | Resultado |
+|---|---|---|
+| Build del back | 88cdea17 | 0 advertencias |
+| Tests del back | 3b80c742 completa; después solo lo tocado | 3200/3205; las 5 dependían del orden (cc61c640: 37/37). Lo tocado después, en verde: WhatsAppBrowser 24/24, plantillas 3/3, costo 3/3 y difusiones, ayuda y arnés 33/33 |
+| Build, lint y contrato del front | da12ec90 | en verde |
+| Tests del front | da12ec90; después solo lo tocado | 3204 más 2 que se pasaron de tiempo y pasan solos; arreglos: 192/192 y módulo WhatsApp 281/281 |
+| E2E real | front a0fa9fa3 y back 85e0a2c2 | 36/38; el caso 6 era el script (1056c3e2): 4/4 |
+| Documentación | front c1d54f9f y back 013900ec | 0/0/0 en los dos repos |
+| Galería | c1d54f9f | 150 pantallas al lado de su tablero; 33 pendientes con su motivo (`docs/design/capturas/etapa-11/` del front) |
+| Recorrido de usuario | f1e66026 | 182/182 |
+| Quitar el módulo | back affe0a2a y front f1e66026 | en verde, con base vacía y migrada; guía corregida (3bf879db, d9c94b89); Google, a mano |
+| Meta real (I3), número de prueba como número de Plataforma | main | Recibir, bot y menú, tomar, responder, nota que no sale, y plantilla creada y aprobada por Meta con su aviso: en verde. Falta mandar la plantilla con la ventana cerrada |
+| Meta real (I3), alta de una organización | — | Falta: con el número real del usuario, en un portfolio distinto de Servicios Ya |
+
+Arreglos que salieron de la puerta:
+- Front: nombre opcional en el contacto (485db5d8); el hilo en orden y el borrador que no se pierde (7a6452a2); la galería (477f020a, 6ae82d6c).
+- Back: el NuGetAudit de Pkcs y Xml (3b80c742); «Del sistema» con culturas del catálogo (7a193e41); el costo de destinos sin tarifa (1995df06); la guarda de ayuda (88cdea17).
 
 ## Forma de trabajo
 
