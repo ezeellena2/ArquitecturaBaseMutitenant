@@ -29,6 +29,8 @@ internal static class PlatformRegistration
         services.AddScoped<PlatformRecoveryNotifier>();
         services.AddScoped<IPlatformOperatorInvitationService, PlatformOperatorInvitationService>();
         services.AddScoped<IPlatformOperatorService, PlatformOperatorService>();
+        services.AddScoped<IPlatformReauthenticationService, PlatformReauthenticationService>();
+        services.AddScoped<IPlatformAuthenticatorService, PlatformAuthenticatorService>();
         services.AddScoped<PlatformOperatorProvisioner>();
         services.AddScoped<PlatformOperatorInvitationNotifier>();
         services.AddScoped<IPlatformAuditService, PlatformAuditService>();

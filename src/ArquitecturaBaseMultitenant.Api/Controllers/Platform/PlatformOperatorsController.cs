@@ -23,7 +23,7 @@ namespace ArquitecturaBaseMultitenant.Api.Controllers.Platform;
 [Access(Access.Platform)]
 [HasPlatformPermission(PlatformPermissions.Operators.Manage)]
 public sealed class PlatformOperatorsController(IPlatformOperatorInvitationService invitations,
-    IPlatformOperatorService operators) : ControllerBase
+    IPlatformOperatorService operators, IPlatformAuthenticatorService authenticators) : ControllerBase
 {
     [HttpPost("api/platform/operators/invitations")]
     [Idempotent]
@@ -86,4 +86,21 @@ public sealed class PlatformOperatorsController(IPlatformOperatorInvitationServi
     public async Task<IActionResult> Remove(Guid id, [FromBody] PlatformAccountActionHttpRequest request,
         CancellationToken ct) =>
         (await operators.RemoveAsync(id, request.ToModel(), ct)).ToActionResult(this);
+
+    /// <summary>
+    /// «Restablecer autenticador» (E9): con la versión de operador de la ficha y un motivo, revoca las sesiones, el
+    /// desafío, la clave y los códigos de otro operador; conserva sus permisos y su próximo ingreso exige el alta.
+    /// </summary>
+    [HttpPost("api/platform/accounts/{id:guid}/authenticator/reset")]
+    [Idempotent]
+    [ProducesResponseType<VersionResponse>(StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status401Unauthorized)]
+    [ProducesProblem(StatusCodes.Status403Forbidden)]
+    [ProducesProblem(StatusCodes.Status404NotFound)]
+    [ProducesProblem(StatusCodes.Status409Conflict)]
+    [ProducesProblem(StatusCodes.Status429TooManyRequests)]
+    public async Task<IActionResult> ResetAuthenticator(Guid id, [FromBody] PlatformAccountActionHttpRequest request,
+        CancellationToken ct) =>
+        (await authenticators.ResetAsync(id, request.ToModel(), ct)).ToActionResult(this);
 }

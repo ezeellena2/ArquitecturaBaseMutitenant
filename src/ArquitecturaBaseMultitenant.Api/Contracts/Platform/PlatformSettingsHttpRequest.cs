@@ -6,8 +6,10 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Api.Contracts.Platform;
 
+/// <summary>Sin <c>rateLimits</c> se conservan las cuotas guardadas; con ellas, van los doce perfiles completos (E9).</summary>
 public sealed record UpdatePlatformSettingsHttpRequest(ConsumerSignupMode? ConsumerSignup, BusinessSignupMode? BusinessSignup,
-    int? MaxOwnedOrganizations, string? SalesEmail, string? SupportEmail, uint? Version, string? Reason)
+    int? MaxOwnedOrganizations, string? SalesEmail, string? SupportEmail, uint? Version, string? Reason,
+    PlatformRateLimitsInput? RateLimits = null)
 {
     public override string ToString() => nameof(UpdatePlatformSettingsHttpRequest);
 
@@ -21,6 +23,6 @@ public sealed record UpdatePlatformSettingsHttpRequest(ConsumerSignupMode? Consu
         if (support.IsFailure) errors["supportEmail"] = [ValidationTexts.EmailInvalid];
         if (errors.Count > 0) return new ValidationError(errors);
         return new UpdatePlatformSettingsRequest(ConsumerSignup, BusinessSignup, MaxOwnedOrganizations, sales.Value,
-            support.Value, Version, Reason);
+            support.Value, Version, Reason, RateLimits);
     }
 }

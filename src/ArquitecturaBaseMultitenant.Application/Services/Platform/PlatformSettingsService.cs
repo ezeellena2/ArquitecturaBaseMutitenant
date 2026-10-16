@@ -21,9 +21,10 @@ internal sealed class PlatformSettingsService(IPlatformSettingsReader reader, IP
         OperationLog.RunAsync<PlatformSettingsResponse>(logger, timeProvider, "GetPlatformSettings", async () =>
         {
             var settings = await reader.FindAsync(cancellationToken);
+            // Contrato E9 (K1): hasta que B3 guarde las cuotas, se informan las de arranque.
             return settings is null ? SettingsErrors.NotFound :
                 new PlatformSettingsResponse(settings.ConsumerSignup, settings.BusinessSignup, settings.MaxOwnedOrganizations,
-                    settings.SalesEmail, settings.SupportEmail, settings.Version);
+                    settings.SalesEmail, settings.SupportEmail, settings.Version, PlatformRateLimitsResponse.From(PlatformRateLimits.Initial));
         });
 
     public Task<Result<PlatformContactResponse>> GetContactAsync(CancellationToken cancellationToken) =>

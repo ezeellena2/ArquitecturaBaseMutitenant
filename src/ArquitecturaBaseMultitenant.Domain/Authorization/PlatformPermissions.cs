@@ -53,6 +53,13 @@ public static class PlatformPermissions
         public const string Manage = "platform.settings.manage";
     }
 
+    /// <summary>
+    /// Permisos de gestión: una escritura de Plataforma que exige alguno pide además una prueba reciente del segundo
+    /// factor (E9). Atender chats, usar el Asistente y consultar no la piden.
+    /// </summary>
+    public static IReadOnlyCollection<string> RequiringRecentProof { get; } =
+    [Tenants.Manage, Accounts.Manage, Recoveries.Manage, Legal.Manage, Operators.Manage, Settings.Manage, Assistant.Configure, WhatsApp.Manage];
+
     /// <summary>Permisos iniciales anteriores a módulos opcionales; solo para reparar indicadores de operador legados.</summary>
     public static IReadOnlyCollection<string> LegacyBootstrap { get; } =
     [Tenants.Read, Tenants.Manage, Accounts.Read, Accounts.Manage, Recoveries.Manage, Legal.Manage, Operators.Manage, Audit.Read, Settings.Manage];

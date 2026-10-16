@@ -37,4 +37,8 @@ public enum SecurityEventType
     LegalDocumentPublished,
     PlatformOperatorInvitationResent,
     PlatformOperatorInvitationRevoked,
+    PlatformAuthenticatorConfigured,
+    PlatformAuthenticatorReset,
+    PlatformRecoveryCodeUsed,
+    PlatformReauthenticated,
 }

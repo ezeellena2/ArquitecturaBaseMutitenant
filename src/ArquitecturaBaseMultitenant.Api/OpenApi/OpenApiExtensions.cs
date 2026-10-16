@@ -18,6 +18,9 @@ internal static class OpenApiExtensions
     {
         services.AddSingleton<IHttpContractContributor, IdentityContractContributor>();
         services.AddSingleton<IHttpContractContributor, ValidationContractContributor>();
+        // Después del validador: fija las formas cerradas del contrato E9 aunque un validador publique otras cotas.
+        services.AddSingleton<IHttpContractContributor, SecurityContractContributor>();
+        services.AddSingleton<SharedContractRules>();
         services.AddOpenApi(options =>
         {
             options.AddSchemaTransformer((schema, context, _) =>
@@ -123,6 +126,8 @@ internal static class OpenApiExtensions
 
                 foreach (var contributor in context.ApplicationServices.GetServices<IHttpContractContributor>())
                     contributor.Describe(document);
+                // Al final, para que ningún contribuidor quite la cuota ni la prueba reciente de sus rutas.
+                context.ApplicationServices.GetRequiredService<SharedContractRules>().Apply(document);
 
                 return Task.CompletedTask;
             });

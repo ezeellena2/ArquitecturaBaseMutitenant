@@ -128,12 +128,18 @@
   <data name="SecurityEvent.PlatformOperatorRemoved" xml:space="preserve"><value>Quitó al operador</value></data>
   <data name="SecurityEvent.PlatformOperatorInvitationResent" xml:space="preserve"><value>Reenvió la invitación de un operador</value></data>
   <data name="SecurityEvent.PlatformOperatorInvitationRevoked" xml:space="preserve"><value>Revocó la invitación de un operador</value></data>
+  <data name="SecurityEvent.PlatformAuthenticatorConfigured" xml:space="preserve"><value>Configuró su autenticador</value></data>
+  <data name="SecurityEvent.PlatformAuthenticatorReset" xml:space="preserve"><value>Restableció el autenticador de un operador</value></data>
+  <data name="SecurityEvent.PlatformRecoveryCodeUsed" xml:space="preserve"><value>Usó un código de recuperación</value></data>
+  <data name="SecurityEvent.PlatformReauthenticated" xml:space="preserve"><value>Confirmó su identidad</value></data>
   <data name="SecurityEvent.LegalDocumentPublished" xml:space="preserve"><value>Publicó una versión de un documento legal</value></data>
   <data name="Platform.LegalPublicationReason" xml:space="preserve"><value>Publicación de una versión de un documento legal.</value></data>
   <data name="SignIn.Code" xml:space="preserve"><value>Ingresó con un código por correo</value></data>
   <data name="SignIn.Google" xml:space="preserve"><value>Ingresó con Google</value></data>
   <data name="SignIn.WhatsAppCode" xml:space="preserve"><value>Ingresó con un código por WhatsApp</value></data>
   <data name="SignIn.WhatsAppLink" xml:space="preserve"><value>Ingresó con un enlace de WhatsApp</value></data>
+  <data name="SignIn.Authenticator" xml:space="preserve"><value>Ingresó con el autenticador</value></data>
+  <data name="SignIn.RecoveryCode" xml:space="preserve"><value>Ingresó con un código de recuperación</value></data>
   <data name="SignIn.Failed" xml:space="preserve"><value>No pudo ingresar: {0}</value></data>
   <data name="ActorRole.User" xml:space="preserve"><value>Persona</value></data>
   <data name="ActorRole.PlatformOperator" xml:space="preserve"><value>Operador</value></data>

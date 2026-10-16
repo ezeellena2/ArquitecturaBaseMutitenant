@@ -12,6 +12,15 @@ Modo rápido: contrato primero; Back y Front en paralelo, cada chat dueño de su
 
 El **Coordinador** publica `docs/contracts/openapi.json`, los contratos HTTP y sus stubs 501, textos es/en y tests de contrato; Front regenera con `npm run contracts`. Ambos commits preceden B/F. Los cuerpos existentes mantienen sus campos; las adiciones siguientes se describen con esquemas cerrados, enums y todos los status. Los stubs no emiten cookies ni consumen códigos.
 
+**K1 · Hecho (16/10).** Decisiones técnicas del Coordinador:
+- El desafío y la verificación publican uniones cerradas por `state` y `next` (`PlatformFactor*Challenge`, `VerifyPlatformFactor*Response`). `code` es texto de 6 a 9 caracteres y sus cotas las fija `SecurityContractContributor` aunque un validador publique otras.
+- `LoginAuditMethod` suma `Authenticator` y `RecoveryCode`. `SecurityEventType` suma `PlatformAuthenticatorConfigured`, `PlatformAuthenticatorReset`, `PlatformRecoveryCodeUsed` y `PlatformReauthenticated`, en la categoría Operadores, con sus textos.
+- Prueba reciente: toda escritura con acceso Plataforma que exige un permiso de `PlatformPermissions.RequiringRecentProof` (`Api/Authorization/RecentPlatformProof.cs`, marca `x-recent-authentication`). Son 39 rutas; entran también cerrar organización y la política del Asistente por organización. El filtro de B1 usa la misma regla.
+- El 429 `Security.RateLimit.Exceeded` se publica en toda ruta `/api` y reemplaza a `Http.TooManyRequests`.
+- Hasta B3, GET de configuración informa `PlatformRateLimits.Initial` y PUT ignora `rateLimits`.
+- Los POST nuevos llevan `[Idempotent]` y B1 pasa los del factor a `DurableReference`. El restablecimiento reutiliza `{version, reason}` de `PlatformAccountActionHttpRequest`.
+- Aparte: `MessagePack` 2.5.303 fijado por GHSA-qhrr-8q5h-9q3h, que rompía el build del AppHost.
+
 ### Ingreso y segundo factor
 
 ADR 0042: operador exclusivo, permisos individuales, sin roles ni perfiles personales. ADR 0043: nada lo identifica como operador antes de probar el primer factor. ADR 0044: cookie de Plataforma independiente de la pública. ADR 0045: Mi cuenta personal sigue sin reautenticación.

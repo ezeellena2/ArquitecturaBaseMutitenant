@@ -204,6 +204,12 @@
   <data name="Tenancy.Party.NotAllowed" xml:space="preserve"><value>No podés realizar esta acción desde el acceso elegido.</value></data>
   <data name="Title.NotImplemented" xml:space="preserve"><value>Contrato pendiente</value></data>
   <data name="General.Contract.NotImplemented" xml:space="preserve"><value>Esta función todavía está en preparación.</value></data>
+  <data name="Auth.TwoFactor.Invalid" xml:space="preserve"><value>El código no es válido. Revisá que la hora de tu celular esté bien.</value></data>
+  <data name="Auth.TwoFactor.RecoveryInvalid" xml:space="preserve"><value>Ese código no es válido o ya lo usaste.</value></data>
+  <data name="Auth.TwoFactor.ChallengeExpired" xml:space="preserve"><value>Volvé a ingresar para continuar.</value></data>
+  <data name="Auth.TwoFactor.InvalidState" xml:space="preserve"><value>Volvé al paso actual para continuar.</value></data>
+  <data name="Auth.Platform.ReauthenticationRequired" xml:space="preserve"><value>Confirmá que sos vos para continuar.</value></data>
+  <data name="Security.RateLimit.Exceeded" xml:space="preserve"><value>Hiciste muchos pedidos seguidos. Esperá un momento y volvé a intentar.</value></data>
   <data name="Auth.Contact.ExactlyOne" xml:space="preserve"><value>Ingresá un correo o un número, solo uno.</value></data>
   <data name="Auth.LoginMethod.ChannelUnavailable" xml:space="preserve"><value>Ese método de ingreso no está disponible.</value></data>
   <data name="Auth.LoginCode.PhoneAccountNotFound" xml:space="preserve"><value>No hay una cuenta con ese número.</value></data>

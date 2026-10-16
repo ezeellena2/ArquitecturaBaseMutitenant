@@ -52,6 +52,6 @@ internal sealed class LoginCodeService(
 
             var access = selection?.Access ?? Access.Business;
             await signIn.SignInAsync(verified.Value, access, cancellationToken);
-            return new VerifyLoginCodeResponse(request.ReturnUrl!);
+            return new VerifyLoginCodeResponse(request.ReturnUrl!, LoginCodeNextStep.Authorize);
         });
 }

@@ -147,7 +147,8 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
     private static void Describe(OpenApiDocument document, string path, HttpMethod verb, string text, IReadOnlyList<HttpContractError> errors,
         bool idempotent = false, bool authenticated = false, IReadOnlyDictionary<string, JsonNode>? examples = null)
     {
-        var common = new List<HttpContractError> { E(429, "Http.TooManyRequests"), E(500, "General.Unexpected") };
+        // La cuota compartida (Security.RateLimit.Exceeded, E9) la suma SecurityContractContributor a toda ruta de la API.
+        var common = new List<HttpContractError> { E(500, "General.Unexpected") };
         if (authenticated) common.AddRange([E(401, "Http.Unauthorized"), E(403, "Http.Forbidden")]);
         if (idempotent) common.AddRange([E(400, "Request.IdempotencyKeyRequired"), E(422, "Request.IdempotencyKeyReused"), E(409, "Request.InProgress")]);
         HttpContractDocumentation.Describe(document, path, verb, text, errors.Concat(common).DistinctBy(error => error.Code).ToArray(), idempotent, authenticated, examples);

@@ -15,6 +15,7 @@ internal static class AuthRegistration
             .ValidateOnStart();
         services.AddScoped<ITenantSlugAvailabilityService, TenantSlugAvailabilityService>();
         services.AddScoped<ILoginCodeService, LoginCodeService>();
+        services.AddScoped<IPlatformFactorService, PlatformFactorService>();
         services.AddScoped<ILoginLinkService, LoginLinkService>();
         services.AddScoped<ILoginLinkReplayService, LoginLinkReplayService>();
         services.AddScoped<LoginLinkGuard>();

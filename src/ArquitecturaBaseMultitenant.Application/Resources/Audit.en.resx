@@ -128,12 +128,18 @@
   <data name="SecurityEvent.PlatformOperatorRemoved" xml:space="preserve"><value>Removed the operator</value></data>
   <data name="SecurityEvent.PlatformOperatorInvitationResent" xml:space="preserve"><value>Resent an operator invitation</value></data>
   <data name="SecurityEvent.PlatformOperatorInvitationRevoked" xml:space="preserve"><value>Revoked an operator invitation</value></data>
+  <data name="SecurityEvent.PlatformAuthenticatorConfigured" xml:space="preserve"><value>Set up their authenticator</value></data>
+  <data name="SecurityEvent.PlatformAuthenticatorReset" xml:space="preserve"><value>Reset an operator's authenticator</value></data>
+  <data name="SecurityEvent.PlatformRecoveryCodeUsed" xml:space="preserve"><value>Used a recovery code</value></data>
+  <data name="SecurityEvent.PlatformReauthenticated" xml:space="preserve"><value>Confirmed their identity</value></data>
   <data name="SecurityEvent.LegalDocumentPublished" xml:space="preserve"><value>Published a legal document version</value></data>
   <data name="Platform.LegalPublicationReason" xml:space="preserve"><value>Legal document version published.</value></data>
   <data name="SignIn.Code" xml:space="preserve"><value>Signed in with an email code</value></data>
   <data name="SignIn.Google" xml:space="preserve"><value>Signed in with Google</value></data>
   <data name="SignIn.WhatsAppCode" xml:space="preserve"><value>Signed in with a WhatsApp code</value></data>
   <data name="SignIn.WhatsAppLink" xml:space="preserve"><value>Signed in with a WhatsApp link</value></data>
+  <data name="SignIn.Authenticator" xml:space="preserve"><value>Signed in with the authenticator</value></data>
+  <data name="SignIn.RecoveryCode" xml:space="preserve"><value>Signed in with a recovery code</value></data>
   <data name="SignIn.Failed" xml:space="preserve"><value>Could not sign in: {0}</value></data>
   <data name="ActorRole.User" xml:space="preserve"><value>Person</value></data>
   <data name="ActorRole.PlatformOperator" xml:space="preserve"><value>Operator</value></data>

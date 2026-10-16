@@ -14,18 +14,8 @@ public static class HttpContractDocumentation
         IReadOnlyList<HttpContractError> errors, bool idempotent = false, bool authenticated = false,
         IReadOnlyDictionary<string, JsonNode>? examples = null)
     {
-        if (!document.Paths.TryGetValue(path, out var item) || item.Operations is null
-            || !item.Operations.TryGetValue(method, out var operation)) return;
+        if (Find(document, path, method) is not { } operation) return;
         operation.Description = string.IsNullOrEmpty(operation.Description) ? description : operation.Description + " " + description;
-        operation.Extensions ??= new Dictionary<string, IOpenApiExtension>();
-        var catalog = operation.Extensions.TryGetValue("x-error-codes", out var previous) && previous is JsonNodeExtension { Node: JsonArray existing }
-            ? (JsonArray)existing.DeepClone() : new JsonArray();
-        foreach (var error in errors) catalog.Add(new JsonObject
-        {
-            ["status"] = error.Status, ["code"] = error.Code, ["field"] = error.Field,
-            ["es"] = error.Spanish, ["en"] = error.English,
-        });
-        operation.Extensions["x-error-codes"] = new JsonNodeExtension(catalog);
         if (authenticated)
             operation.Security = [new OpenApiSecurityRequirement
             {
@@ -43,6 +33,42 @@ public static class HttpContractDocumentation
                     Schema = new OpenApiSchema { Type = JsonSchemaType.String, Format = "uuid" },
                 });
         }
+        AddErrors(document, operation, errors);
+        if (examples is not null && operation.RequestBody?.Content?.TryGetValue("application/json", out var media) == true)
+            media.Examples = examples.ToDictionary(pair => pair.Key, pair => (IOpenApiExample)new OpenApiExample { Value = pair.Value });
+    }
+
+    /// <summary>
+    /// Suma al catálogo y a las respuestas de una operación los errores que todavía no declara, sin tocar su
+    /// descripción: así una regla transversal (cuotas, prueba reciente) se aplica a rutas de cualquier contribuidor.
+    /// </summary>
+    public static void AddErrors(OpenApiDocument document, string path, HttpMethod method, IReadOnlyList<HttpContractError> errors)
+    {
+        if (Find(document, path, method) is not { } operation) return;
+        var declared = Catalog(operation)
+            .Select(value => (value?["status"]?.GetValue<int>() ?? 0, value?["code"]?.GetValue<string>() ?? string.Empty))
+            .ToHashSet();
+        AddErrors(document, operation, errors.Where(error => !declared.Contains((error.Status, error.Code))).ToArray());
+    }
+
+    public static OpenApiOperation? Find(OpenApiDocument document, string path, HttpMethod method) =>
+        document.Paths.TryGetValue(path, out var item) && item.Operations is not null
+            && item.Operations.TryGetValue(method, out var operation) ? operation : null;
+
+    private static JsonArray Catalog(OpenApiOperation operation) =>
+        operation.Extensions?.TryGetValue("x-error-codes", out var previous) == true && previous is JsonNodeExtension { Node: JsonArray existing }
+            ? existing : [];
+
+    private static void AddErrors(OpenApiDocument document, OpenApiOperation operation, IReadOnlyList<HttpContractError> errors)
+    {
+        operation.Extensions ??= new Dictionary<string, IOpenApiExtension>();
+        var catalog = (JsonArray)Catalog(operation).DeepClone();
+        foreach (var error in errors) catalog.Add(new JsonObject
+        {
+            ["status"] = error.Status, ["code"] = error.Code, ["field"] = error.Field,
+            ["es"] = error.Spanish, ["en"] = error.English,
+        });
+        operation.Extensions["x-error-codes"] = new JsonNodeExtension(catalog);
         operation.Responses ??= new OpenApiResponses();
         foreach (var group in errors.GroupBy(error => error.Status))
         {
@@ -84,8 +110,6 @@ public static class HttpContractDocumentation
             };
             operation.Responses[StatusName(group.Key)] = response;
         }
-        if (examples is not null && operation.RequestBody?.Content?.TryGetValue("application/json", out var media) == true)
-            media.Examples = examples.ToDictionary(pair => pair.Key, pair => (IOpenApiExample)new OpenApiExample { Value = pair.Value });
     }
 
     private static string StatusName(int status) => status switch
