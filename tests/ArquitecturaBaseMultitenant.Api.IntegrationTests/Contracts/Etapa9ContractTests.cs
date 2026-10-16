@@ -3,6 +3,9 @@ using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Contracts;
 
@@ -181,8 +184,12 @@ public sealed class Etapa9ContractTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, settings.StatusCode);
         var limits = (await settings.Content.ReadFromJsonAsync<JsonObject>(Ct))!["rateLimits"]!;
         Assert.Equal(RateLimitProfiles.Order(StringComparer.Ordinal), Keys(limits));
-        Assert.Equal(300, limits["ip"]!["permitLimit"]!.GetValue<int>());
-        Assert.Equal(900, limits["assistantNewKey"]!["windowSeconds"]!.GetValue<int>());
+        // B3: informa las cuotas guardadas, que la suite siembra con el tope máximo.
+        await using var scope = factory.Services.CreateAsyncScope();
+        var stored = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().PlatformSettings.AsNoTracking()
+            .Select(row => row.RateLimits).SingleAsync(Ct);
+        Assert.Equal(stored.Ip.PermitLimit, limits["ip"]!["permitLimit"]!.GetValue<int>());
+        Assert.Equal(stored.AssistantNewKey.WindowSeconds, limits["assistantNewKey"]!["windowSeconds"]!.GetValue<int>());
     }
 
     private async Task<HttpClient> OperatorAsync(IReadOnlyCollection<string> permissions)

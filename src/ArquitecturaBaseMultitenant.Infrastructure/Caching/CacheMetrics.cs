@@ -4,7 +4,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Caching;
 
 /// <summary>
 /// Métricas de la caché compartida (ADR 0052): aciertos, misses, lecturas directas, caídas de Redis e invalidaciones
-/// fallidas. Sin claves ni identificadores en sus dimensiones.
+/// fallidas; también las admisiones de cuotas que contaron en PostgreSQL (E9). Sin claves ni identificadores en sus dimensiones.
 /// </summary>
 internal sealed class CacheMetrics
 {
@@ -18,6 +18,7 @@ internal sealed class CacheMetrics
     private readonly Counter<long> _directReads;
     private readonly Counter<long> _fallbacks;
     private readonly Counter<long> _invalidationFailures;
+    private readonly Counter<long> _rateLimitFallbacks;
 
     public CacheMetrics(IMeterFactory meters)
     {
@@ -28,6 +29,7 @@ internal sealed class CacheMetrics
         _directReads = meter.CreateCounter<long>("arquitecturabasemt.cache.direct_reads");
         _fallbacks = meter.CreateCounter<long>("arquitecturabasemt.cache.fallbacks");
         _invalidationFailures = meter.CreateCounter<long>("arquitecturabasemt.cache.invalidation_failures");
+        _rateLimitFallbacks = meter.CreateCounter<long>("arquitecturabasemt.rate_limit.fallbacks");
     }
 
     internal static bool Invalidating => Invalidation.Value;
@@ -39,6 +41,8 @@ internal sealed class CacheMetrics
     internal void Fallback() => _fallbacks.Add(1);
 
     internal void InvalidationFailed() => _invalidationFailures.Add(1);
+
+    internal void RateLimitFallback() => _rateLimitFallbacks.Add(1);
 
     /// <summary>Marca lo que corre adentro como invalidación, hasta que se descarta.</summary>
     internal static IDisposable BeginInvalidation()

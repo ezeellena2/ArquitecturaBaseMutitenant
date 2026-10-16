@@ -1,12 +1,14 @@
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.Features;
 using ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.Contracts;
+using ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.RateLimiting;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
+using ArquitecturaBaseMultitenant.Api.RateLimiting;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 
 namespace ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.Controllers;
 
@@ -29,7 +31,8 @@ public sealed class WhatsAppWebhookController(IWhatsAppWebhookService service) :
 
     [HttpPost]
     [RequestSizeLimit(5 * 1024 * 1024)]
-    [EnableRateLimiting(WhatsAppApiModule.WebhookRateLimit)]
+    [RateLimit(RateLimitProfile.WhatsAppWebhook)]
+    [WhatsAppWebhookRateLimitRejection]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]

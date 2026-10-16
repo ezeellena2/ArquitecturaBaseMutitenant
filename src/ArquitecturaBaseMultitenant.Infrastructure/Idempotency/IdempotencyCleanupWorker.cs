@@ -1,6 +1,8 @@
+using ArquitecturaBaseMultitenant.Application.Configuration.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Idempotency;
 
@@ -8,7 +10,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Idempotency;
 public sealed class IdempotencyCleanupWorker(
     IIdempotencyStore store,
     TimeProvider timeProvider,
-    ILogger<IdempotencyCleanupWorker> logger) : PeriodicWorker(TimeSpan.FromHours(1), timeProvider, logger)
+    ILogger<IdempotencyCleanupWorker> logger,
+    IOptions<IdempotencyOptions>? options = null)
+    : PeriodicWorker(TimeSpan.FromMinutes((options?.Value ?? new IdempotencyOptions()).CleanupIntervalMinutes), timeProvider, logger)
 {
     protected override Task RunIterationAsync(CancellationToken ct) => CleanupOnceAsync(ct);
 

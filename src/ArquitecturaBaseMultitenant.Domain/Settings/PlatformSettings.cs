@@ -6,8 +6,8 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 namespace ArquitecturaBaseMultitenant.Domain.Settings;
 
 /// <summary>
-/// Configuración global única para los modos de registro, el límite de organizaciones, la gracia de baja y los correos
-/// de contacto. Los correos quedan vacíos hasta que un operador los carga.
+/// Configuración global única para los modos de registro, el límite de organizaciones, la gracia de baja, los correos
+/// de contacto y las cuotas compartidas (E9). Los correos quedan vacíos hasta que un operador los carga.
 /// </summary>
 public sealed class PlatformSettings : Entity, IAuditable, IVersioned
 {
@@ -23,14 +23,16 @@ public sealed class PlatformSettings : Entity, IAuditable, IVersioned
     public int AccountDeletionGraceDays { get; private set; }
     public Email? SalesEmail { get; private set; }
     public Email? SupportEmail { get; private set; }
+    public PlatformRateLimits RateLimits { get; private set; } = PlatformRateLimits.Initial;
     public DateTime CreatedAtUtc { get; private set; }
     public Guid? CreatedBy { get; private set; }
     public DateTime? ModifiedAtUtc { get; private set; }
     public Guid? ModifiedBy { get; private set; }
     public uint Version { get; private set; }
 
+    /// <summary>Sin <paramref name="rateLimits"/> arranca con <see cref="PlatformRateLimits.Initial"/>.</summary>
     public static PlatformSettings Create(ConsumerSignupMode consumerSignup, BusinessSignupMode businessSignup,
-        int maxOwnedOrganizations)
+        int maxOwnedOrganizations, PlatformRateLimits? rateLimits = null)
     {
         if (!Enum.IsDefined(consumerSignup))
         {
@@ -43,6 +45,10 @@ public sealed class PlatformSettings : Entity, IAuditable, IVersioned
         }
 
         ArgumentOutOfRangeException.ThrowIfLessThan(maxOwnedOrganizations, 1);
+        if (rateLimits is not null && !rateLimits.IsValid())
+        {
+            throw new ArgumentOutOfRangeException(nameof(rateLimits));
+        }
 
         return new PlatformSettings
         {
@@ -50,20 +56,23 @@ public sealed class PlatformSettings : Entity, IAuditable, IVersioned
             BusinessSignup = businessSignup,
             MaxOwnedOrganizations = maxOwnedOrganizations,
             AccountDeletionGraceDays = DeletionGraceDays,
+            RateLimits = rateLimits ?? PlatformRateLimits.Initial,
         };
     }
 
+    /// <summary>Sin <paramref name="rateLimits"/> se conservan las cuotas guardadas; con ellas, se reemplazan las doce.</summary>
     public Result Update(ConsumerSignupMode consumerSignup, BusinessSignupMode businessSignup, int maxOwnedOrganizations,
-        Email salesEmail, Email supportEmail)
+        Email salesEmail, Email supportEmail, PlatformRateLimits? rateLimits = null)
     {
         if (!Enum.IsDefined(consumerSignup) || !Enum.IsDefined(businessSignup) || maxOwnedOrganizations < 1
-            || salesEmail is null || supportEmail is null)
+            || salesEmail is null || supportEmail is null || rateLimits?.IsValid() == false)
             return SettingsErrors.InvalidPlatformConfiguration;
         ConsumerSignup = consumerSignup;
         BusinessSignup = businessSignup;
         MaxOwnedOrganizations = maxOwnedOrganizations;
         SalesEmail = salesEmail;
         SupportEmail = supportEmail;
+        RateLimits = rateLimits ?? RateLimits;
         return Result.Success();
     }
 

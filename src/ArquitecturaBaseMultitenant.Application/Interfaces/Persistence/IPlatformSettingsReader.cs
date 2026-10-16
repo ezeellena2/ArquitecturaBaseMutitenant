@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Models.Settings;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 
@@ -6,4 +7,7 @@ namespace ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 public interface IPlatformSettingsReader
 {
     Task<PlatformSettingsRow?> FindAsync(CancellationToken cancellationToken);
+
+    /// <summary>Sólo las cuotas guardadas, desde la caché compartida y sin leer los correos de contacto; null sin configuración.</summary>
+    Task<PlatformRateLimits?> FindRateLimitsAsync(CancellationToken cancellationToken);
 }

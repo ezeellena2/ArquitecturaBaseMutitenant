@@ -9,7 +9,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 
@@ -22,7 +22,7 @@ public sealed class SignupController(IAccountService service) : ControllerBase
 {
     [HttpPost]
     [Idempotent]
-    [EnableRateLimiting(RateLimitPolicies.LoginCode)]
+    [RateLimit(RateLimitProfile.LoginCode)]
     [ProducesResponseType<RequestLoginCodeResponse>(StatusCodes.Status202Accepted)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
@@ -37,7 +37,7 @@ public sealed class SignupController(IAccountService service) : ControllerBase
 
     [HttpPost("verify")]
     [Idempotent]
-    [EnableRateLimiting(RateLimitPolicies.LoginVerify)]
+    [RateLimit(RateLimitProfile.LoginVerify)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]

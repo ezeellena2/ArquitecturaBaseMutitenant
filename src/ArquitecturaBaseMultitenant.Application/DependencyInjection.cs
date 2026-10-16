@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
+using ArquitecturaBaseMultitenant.Application.Configuration.Security;
 using ArquitecturaBaseMultitenant.Application.Services.Auditing;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Application.Services.Companies;
@@ -51,7 +52,19 @@ public static class DependencyInjection
         services.AddScoped<DisplayFormatter>();
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
         services.AddScoped<IRequestValidator, RequestValidator>();
+        services.AddSecurityOptions();
 
         return services;
+    }
+
+    /// <summary>Las opciones de seguridad de E9, validadas al arrancar con los mismos valores de antes.</summary>
+    private static void AddSecurityOptions(this IServiceCollection services)
+    {
+        services.AddOptions<SessionLifetimeOptions>().BindConfiguration(SessionLifetimeOptions.SectionName)
+            .ValidateDataAnnotations().ValidateOnStart();
+        services.AddOptions<IdempotencyOptions>().BindConfiguration(IdempotencyOptions.SectionName)
+            .ValidateDataAnnotations().ValidateOnStart();
+        services.AddOptions<AccountDeletionOptions>().BindConfiguration(AccountDeletionOptions.SectionName)
+            .ValidateDataAnnotations().ValidateOnStart();
     }
 }

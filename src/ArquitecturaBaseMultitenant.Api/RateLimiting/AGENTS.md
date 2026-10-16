@@ -1,3 +1,3 @@
-Adaptadores HTTP de Rate Limiting.
-Leé [docs/rules/api-http.md](../../../docs/rules/api-http.md).
-Copiá de [RateLimitPolicies.cs](RateLimitPolicies.cs).
+Adaptadores HTTP de las cuotas compartidas: perfil por ruta, rechazo propio y middleware.
+Leé [docs/rules/cuotas.md](../../../docs/rules/cuotas.md).
+Copiá de [RateLimitAttribute.cs](RateLimitAttribute.cs).

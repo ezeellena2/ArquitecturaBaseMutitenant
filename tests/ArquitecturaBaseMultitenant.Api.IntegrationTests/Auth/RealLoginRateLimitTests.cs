@@ -2,17 +2,15 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Api.RateLimiting;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Auth;
@@ -27,12 +25,12 @@ public sealed class RealLoginRateLimitTests(ApiFactory factory)
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Theory]
-    [InlineData("api/auth/login-code", "login-code")]
-    [InlineData("api/auth/login-code/verify", "login-verify")]
-    [InlineData("api/auth/signup", "login-code")]
-    [InlineData("api/auth/signup/verify", "login-verify")]
-    [InlineData("api/account-recovery/preview", "login-code")]
-    public void Real_login_routes_declare_rate_limit_policies(string path, string policy)
+    [InlineData("api/auth/login-code", RateLimitProfile.LoginCode)]
+    [InlineData("api/auth/login-code/verify", RateLimitProfile.LoginVerify)]
+    [InlineData("api/auth/signup", RateLimitProfile.LoginCode)]
+    [InlineData("api/auth/signup/verify", RateLimitProfile.LoginVerify)]
+    [InlineData("api/account-recovery/preview", RateLimitProfile.LoginCode)]
+    public void Real_login_routes_declare_their_rate_limit_profile(string path, RateLimitProfile profile)
     {
         using var client = factory.CreateClient();
         var endpoint = Assert.Single(factory.Services.GetRequiredService<EndpointDataSource>().Endpoints
@@ -40,36 +38,7 @@ public sealed class RealLoginRateLimitTests(ApiFactory factory)
             candidate => candidate.RoutePattern.RawText == path &&
                 candidate.Metadata.GetMetadata<HttpMethodMetadata>()?.HttpMethods.Contains("POST") == true);
 
-        Assert.Equal(policy, endpoint.Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName);
-    }
-
-    [Theory]
-    [InlineData("/api/auth/login-code", false)]
-    [InlineData("/api/account-recovery/preview", true)]
-    public async Task Real_login_route_limits_each_ip_separately(string path, bool preview)
-    {
-        await using var limited = factory.WithWebHostBuilder(builder =>
-        {
-            builder.UseSetting("RateLimiting:LoginCodePermitLimit", "1");
-            builder.ConfigureTestServices(services => services.AddSingleton<IStartupFilter, TestIpStartupFilter>());
-        });
-        using var client = limited.CreateClient();
-
-        using var first = await PostCodeAsync(client, path, "127.0.0.1", preview);
-        using var second = await PostCodeAsync(client, path, "127.0.0.2", preview);
-        using var rejected = await PostCodeAsync(client, path, "127.0.0.1", preview);
-
-        Assert.Equal(HttpStatusCode.BadRequest, first.StatusCode);
-        Assert.Equal(HttpStatusCode.BadRequest, second.StatusCode);
-        foreach (var response in new[] { first, second })
-        {
-            var problem = await response.Content.ReadFromJsonAsync<JsonElement>(Ct);
-            Assert.Equal(preview ? "Platform.AccountRecovery.AccountNotFound" : LoginCodeErrors.AccountNotFoundCode, problem.GetProperty("code").GetString());
-            Assert.True(problem.GetProperty("errors").TryGetProperty(preview ? "previousEmail" : "email", out _));
-        }
-        Assert.Equal(HttpStatusCode.TooManyRequests, rejected.StatusCode);
-        using var body = JsonDocument.Parse(await rejected.Content.ReadAsStringAsync(Ct));
-        Assert.Equal("Http.TooManyRequests", body.RootElement.GetProperty("code").GetString());
+        Assert.Equal(profile, endpoint.Metadata.GetMetadata<RateLimitAttribute>()?.Profile);
     }
 
     [Theory]
@@ -112,18 +81,6 @@ public sealed class RealLoginRateLimitTests(ApiFactory factory)
             Assert.Equal(attempt == 9 ? HttpStatusCode.TooManyRequests : HttpStatusCode.BadRequest,
                 rejected.StatusCode);
         }
-    }
-
-    private static async Task<HttpResponseMessage> PostCodeAsync(HttpClient client, string path, string ip, bool preview)
-    {
-        var email = $"rate-{Guid.NewGuid():N}@example.test";
-        using var request = new HttpRequestMessage(HttpMethod.Post, path)
-        {
-            Content = JsonContent.Create(preview ? (object)new { previousEmail = email } : new { email }),
-        };
-        request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("D"));
-        request.Headers.Add("X-Test-Remote-IP", ip);
-        return await client.SendAsync(request, Ct);
     }
 
     private static async Task<HttpResponseMessage> PostAsync(HttpClient client, string path, string email, bool signup)
@@ -186,22 +143,5 @@ public sealed class RealLoginRateLimitTests(ApiFactory factory)
                 TimeSpan.FromMinutes(10), maxAttempts: 10));
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
-    }
-
-    private sealed class TestIpStartupFilter : IStartupFilter
-    {
-        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) => app =>
-        {
-            app.Use((context, following) =>
-            {
-                if (context.Request.Headers.TryGetValue("X-Test-Remote-IP", out var value) &&
-                    IPAddress.TryParse(value.ToString(), out var ip))
-                {
-                    context.Connection.RemoteIpAddress = ip;
-                }
-                return following(context);
-            });
-            next(app);
-        };
     }
 }

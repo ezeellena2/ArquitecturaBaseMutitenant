@@ -30,5 +30,6 @@ Una ficha por tema, todas con el mismo formato: **Regla · Cómo se hace · Proh
 | [datos-personales](datos-personales.md) | términos y privacidad versionados, exportar y dar de baja |
 | [modulos-habilitados](modulos-habilitados.md) | feature flags por organización; módulo ≠ permiso |
 | [cache](cache.md) | Redis compartido, generaciones, inventario cerrado y nada de invalidar a mano |
+| [cuotas](cuotas.md) | Doce perfiles cerrados, admisión atómica en Redis con respaldo en PostgreSQL y 429 con Retry-After |
 
 **Archivos y tests que todavía no existen:** un "Copiá de" o un test de "Lo verifica" que nace en una etapa posterior lleva la marca `(E#)` (por ejemplo `RoleService.cs`, Etapa 4). `HarnessTests` lo exige cuando esa etapa cierra ([arnes.md §2 y §5](../architecture/arnes.md#5-el-arnés-se-verifica-a-sí-mismo)).

@@ -23,6 +23,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure;
 
@@ -54,6 +55,7 @@ public static class DependencyInjection
             .ValidateDataAnnotations();
         services.AddSingleton<ILoginCodeGenerator, LoginCodeGenerator>();
         services.AddSingleton<ILoginCodeHasher, LoginCodeHasher>();
+        services.AddSingleton<IRateLimitIpHasher, RateLimitIpHasher>();
         services.AddSingleton<ISecureTokenGenerator, SecureTokenGenerator>();
         services.AddSingleton<IPayloadProtector, PayloadProtector>();
         services.AddSingleton<IInvitationTokenProtector, InvitationTokenProtector>();
@@ -92,10 +94,12 @@ public static class DependencyInjection
         if (configuration.GetConnectionString("appdb") is { } runtimeConnection)
         {
             services.AddSingleton<IIdempotencyStore>(provider => new IdempotencyStore(
-                runtimeConnection, provider.GetRequiredService<TimeProvider>()));
+                runtimeConnection, provider.GetRequiredService<TimeProvider>(), TimeSpan.FromHours(
+                    provider.GetRequiredService<IOptions<Application.Configuration.Security.IdempotencyOptions>>().Value.ValidityHours)));
             services.AddHostedService<IdempotencyCleanupWorker>();
             if (!environment.IsEnvironment("Testing"))
             {
+                services.AddHostedService<RateLimitCounterCleanupWorker>();
                 services.AddHostedService<AccountDeletionWorker>();
                 services.AddHostedService<AccountRecoveryNoticeWorker>();
                 services.AddHostedService<InvitationExpiryWorker>();

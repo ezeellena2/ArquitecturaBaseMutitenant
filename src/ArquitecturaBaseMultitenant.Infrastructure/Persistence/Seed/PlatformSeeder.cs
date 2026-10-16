@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Phones;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Common.Text;
+using ArquitecturaBaseMultitenant.Application.Configuration.Security;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
@@ -15,6 +16,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 
@@ -28,7 +30,8 @@ internal sealed class PlatformSeeder(
     IHostEnvironment environment,
     TimeProvider timeProvider,
     IPhoneNumberParser? phoneParser = null,
-    IEnumerable<IPhoneLinkObserver>? phoneObservers = null)
+    IEnumerable<IPhoneLinkObserver>? phoneObservers = null,
+    IOptions<RateLimitOptions>? rateLimits = null)
 {
     internal PlatformOwnerSeed? ReadOwner()
     {
@@ -79,8 +82,9 @@ internal sealed class PlatformSeeder(
         context.RequireTransaction();
         if (await settings.GetAsync(cancellationToken) is null)
         {
-            settings.Add(PlatformSettings.Create(
-                ConsumerSignupMode.Open, BusinessSignupMode.Open, maxOwnedOrganizations: 1));
+            // Las cuotas de arranque (E9) sólo se guardan al crear la configuración; después las edita Plataforma.
+            settings.Add(PlatformSettings.Create(ConsumerSignupMode.Open, BusinessSignupMode.Open,
+                maxOwnedOrganizations: 1, (rateLimits?.Value ?? new RateLimitOptions()).ToLimits()));
             securityEvents.Add(SecurityEvent.ForPlatformSettings(
                 AuditActorKind.System, Guid.Empty, "Initial platform settings seed",
                 timeProvider.GetUtcNow().UtcDateTime));

@@ -2948,6 +2948,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("ModifiedBy")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("RateLimits")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
                     b.Property<string>("SalesEmail")
                         .HasMaxLength(254)
                         .HasColumnType("character varying(254)");
@@ -5086,6 +5090,25 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId");
 
                     b.ToTable("PendingTenantOwners", "platform");
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Infrastructure.Persistence.RateLimitCounter", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Count")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("ExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Key");
+
+                    b.HasIndex("ExpiresAtUtc");
+
+                    b.ToTable("RateLimitCounters", "platform");
                 });
 
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Infrastructure.Persistence.TenantCounters", b =>

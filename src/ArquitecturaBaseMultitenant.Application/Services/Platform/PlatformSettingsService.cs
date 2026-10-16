@@ -20,10 +20,10 @@ internal sealed class PlatformSettingsService(IPlatformSettingsReader reader, IP
         OperationLog.RunAsync<PlatformSettingsResponse>(logger, timeProvider, "GetPlatformSettings", async () =>
         {
             var settings = await reader.FindAsync(cancellationToken);
-            // Contrato E9 (K1): hasta que B3 guarde las cuotas, se informan las de arranque.
             return settings is null ? SettingsErrors.NotFound :
                 new PlatformSettingsResponse(settings.ConsumerSignup, settings.BusinessSignup, settings.MaxOwnedOrganizations,
-                    settings.SalesEmail, settings.SupportEmail, settings.Version, PlatformRateLimitsResponse.From(PlatformRateLimits.Initial));
+                    settings.SalesEmail, settings.SupportEmail, settings.Version,
+                    PlatformRateLimitsResponse.From(settings.RateLimits ?? PlatformRateLimits.Initial));
         });
 
     public Task<Result<PlatformContactResponse>> GetContactAsync(CancellationToken cancellationToken) =>
@@ -51,8 +51,11 @@ internal sealed class PlatformSettingsService(IPlatformSettingsReader reader, IP
                 // Los correos son datos de contacto: el diff solo dice que cambiaron.
                 if (settings.SalesEmail != request.SalesEmail) changes.AddBoolean("salesEmailChanged", false, true);
                 if (settings.SupportEmail != request.SupportEmail) changes.AddBoolean("supportEmailChanged", false, true);
+                // Sin rateLimits se conservan las cuotas; con ellas, el diff nombra cada valor que cambió.
+                var rateLimits = request.RateLimits?.ToLimits();
+                if (rateLimits is not null) AddRateLimitChanges(changes, settings.RateLimits, rateLimits);
                 var changed = settings.Update(request.ConsumerSignup!.Value, request.BusinessSignup!.Value,
-                    request.MaxOwnedOrganizations!.Value, request.SalesEmail!, request.SupportEmail!);
+                    request.MaxOwnedOrganizations!.Value, request.SalesEmail!, request.SupportEmail!, rateLimits);
                 if (changed.IsFailure) return changed.Error;
                 repository.MarkUpdated(settings);
                 audit.Record(request.Reason!, changes);
@@ -60,5 +63,15 @@ internal sealed class PlatformSettingsService(IPlatformSettingsReader reader, IP
             }, CommitPolicy.OnSuccess, cancellationToken);
             return VersionResponse.Of(result);
         });
+    }
+
+    private static void AddRateLimitChanges(SecurityEventChanges changes, PlatformRateLimits before, PlatformRateLimits after)
+    {
+        foreach (var profile in Enum.GetValues<RateLimitProfile>())
+        {
+            var key = "rateLimits." + RateLimitProfiles.Name(profile);
+            changes.AddCount(key + ".permitLimit", before.For(profile).PermitLimit, after.For(profile).PermitLimit);
+            changes.AddCount(key + ".windowSeconds", before.For(profile).WindowSeconds, after.For(profile).WindowSeconds);
+        }
     }
 }

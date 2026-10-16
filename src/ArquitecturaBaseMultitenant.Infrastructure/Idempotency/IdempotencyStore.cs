@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Idempotency;
+using ArquitecturaBaseMultitenant.Application.Configuration.Security;
 using Npgsql;
 using NpgsqlTypes;
 
@@ -8,16 +9,24 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Idempotency;
 /// <summary>Reserva y completa claves idempotentes en transacciones PostgreSQL propias, fuera de la transacción del caso de uso. Permite reproducir la respuesta después de un corte del cliente y liberar la reserva ante un fallo del servidor.</summary>
 public sealed class IdempotencyStore : IIdempotencyStore
 {
-    private static readonly TimeSpan Validity = TimeSpan.FromHours(24);
+    private readonly TimeSpan _validity;
     private readonly string _connectionString;
     private readonly TimeProvider _timeProvider;
 
     public IdempotencyStore(string connectionString, TimeProvider timeProvider)
+        : this(connectionString, timeProvider, TimeSpan.FromHours(new IdempotencyOptions().ValidityHours))
+    {
+    }
+
+    /// <summary>Con la vigencia de Idempotency:ValidityHours (E9).</summary>
+    public IdempotencyStore(string connectionString, TimeProvider timeProvider, TimeSpan validity)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
         ArgumentNullException.ThrowIfNull(timeProvider);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(validity, TimeSpan.Zero);
         _connectionString = connectionString;
         _timeProvider = timeProvider;
+        _validity = validity;
     }
 
     /// <summary>Inserta la reserva antes de ejecutar la acción, en una transacción ajena al UoW.</summary>
@@ -70,7 +79,7 @@ public sealed class IdempotencyStore : IIdempotencyStore
             insert.Parameters.AddWithValue("bodyHash", bodyHash);
             insert.Parameters.AddWithValue("route", route);
             insert.Parameters.AddWithValue("now", nowUtc);
-            insert.Parameters.AddWithValue("expires", nowUtc.Add(Validity));
+            insert.Parameters.AddWithValue("expires", nowUtc.Add(_validity));
             if (await insert.ExecuteScalarAsync(cancellationToken) is Guid insertedId)
             {
                 await transaction.CommitAsync(cancellationToken);

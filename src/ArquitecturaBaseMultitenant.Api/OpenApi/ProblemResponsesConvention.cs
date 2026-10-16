@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Microsoft.AspNetCore.RateLimiting;
+using ArquitecturaBaseMultitenant.Api.RateLimiting;
 
 namespace ArquitecturaBaseMultitenant.Api.OpenApi;
 
@@ -58,8 +58,7 @@ internal sealed class ProblemResponsesConvention : IApplicationModelConvention
             yield return StatusCodes.Status404NotFound;
         }
 
-        if (attributes.LastOrDefault(attribute => attribute is EnableRateLimitingAttribute or DisableRateLimitingAttribute)
-            is EnableRateLimitingAttribute)
+        if (attributes.Any(attribute => attribute is RateLimitAttribute))
         {
             yield return StatusCodes.Status429TooManyRequests;
         }

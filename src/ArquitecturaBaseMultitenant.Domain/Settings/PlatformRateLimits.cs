@@ -7,6 +7,9 @@ public sealed record RateLimitQuota(int PermitLimit, int WindowSeconds)
     public const int MaxPermitLimit = 1_000_000;
     public const int MinWindowSeconds = 1;
     public const int MaxWindowSeconds = 86_400;
+
+    public bool IsValid() => PermitLimit is >= MinPermitLimit and <= MaxPermitLimit
+        && WindowSeconds is >= MinWindowSeconds and <= MaxWindowSeconds;
 }
 
 /// <summary>
@@ -24,4 +27,24 @@ public sealed record PlatformRateLimits(RateLimitQuota Ip, RateLimitQuota Public
         LoginCode: new(20, 900), LoginVerify: new(30, 900), InvitationPreview: new(60, 900),
         InvitationAccept: new(10, 900), AssistantQuickQuery: new(20, 60), AssistantConversation: new(10, 60),
         AssistantNewKey: new(3, 900), WhatsAppWebhook: new(120, 60));
+
+    public RateLimitQuota For(RateLimitProfile profile) => profile switch
+    {
+        RateLimitProfile.Ip => Ip,
+        RateLimitProfile.PublicIp => PublicIp,
+        RateLimitProfile.Identity => Identity,
+        RateLimitProfile.Tenant => Tenant,
+        RateLimitProfile.LoginCode => LoginCode,
+        RateLimitProfile.LoginVerify => LoginVerify,
+        RateLimitProfile.InvitationPreview => InvitationPreview,
+        RateLimitProfile.InvitationAccept => InvitationAccept,
+        RateLimitProfile.AssistantQuickQuery => AssistantQuickQuery,
+        RateLimitProfile.AssistantConversation => AssistantConversation,
+        RateLimitProfile.AssistantNewKey => AssistantNewKey,
+        RateLimitProfile.WhatsAppWebhook => WhatsAppWebhook,
+        _ => throw new ArgumentOutOfRangeException(nameof(profile)),
+    };
+
+    /// <summary>Los doce perfiles presentes y dentro de sus cotas.</summary>
+    public bool IsValid() => Enum.GetValues<RateLimitProfile>().All(profile => For(profile) is { } quota && quota.IsValid());
 }

@@ -53,8 +53,14 @@ public sealed class InvitationsHttpTests(ApiFactory factory)
     [Fact]
     public async Task Accept_requires_antiforgery_and_an_idempotency_key()
     {
-        await using var limitedFactory = new ApiFactory();
-        await limitedFactory.InitializeAsync();
+        await using var isolated = new ApiFactory();
+        await isolated.InitializeAsync();
+        // Su base no tiene configuración de Plataforma: cuenta con la cuota de arranque, en un ambiente de Redis propio.
+        await using var limitedFactory = isolated.WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("RateLimiting:InvitationAccept:PermitLimit", "4");
+            builder.UseSetting("Cache:Environment", "inv-" + Guid.NewGuid().ToString("N")[..20]);
+        });
         using var client = limitedFactory.CreateClient(new()
         {
             BaseAddress = new Uri("https://localhost"),
@@ -74,7 +80,7 @@ public sealed class InvitationsHttpTests(ApiFactory factory)
         Assert.Equal("Request.IdempotencyKeyRequired", await ProblemCodeAsync(keyRejected));
 
         var permitLimit = limitedFactory.Services.GetRequiredService<IConfiguration>()
-            .GetValue<int>("RateLimiting:InvitationAcceptPermitLimit");
+            .GetValue<int>("RateLimiting:InvitationAccept:PermitLimit");
         Assert.True(permitLimit >= 2);
         for (var index = 0; index < permitLimit - 2; index++)
         {
@@ -89,7 +95,7 @@ public sealed class InvitationsHttpTests(ApiFactory factory)
         using var limitedDocument = await ProblemDocumentAsync(limited);
 
         Assert.Equal((HttpStatusCode)429, limited.StatusCode);
-        Assert.Equal("Http.TooManyRequests", limitedDocument.RootElement.GetProperty("code").GetString());
+        Assert.Equal("Security.RateLimit.Exceeded", limitedDocument.RootElement.GetProperty("code").GetString());
         var retryAfter = limitedDocument.RootElement.GetProperty("retryAfter").GetInt32();
         Assert.True(retryAfter > 0);
         Assert.Equal(retryAfter, int.Parse(limited.Headers.GetValues("Retry-After").Single(), CultureInfo.InvariantCulture));

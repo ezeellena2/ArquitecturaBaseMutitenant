@@ -1,11 +1,13 @@
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.Idempotency;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
+using ArquitecturaBaseMultitenant.Api.RateLimiting;
 using ArquitecturaBaseMultitenant.Api.Modules.Assistant.Contracts;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.Modules.Assistant.Controllers;
@@ -48,6 +50,7 @@ public abstract class AssistantControllerBase(IAssistantConversationService serv
         (await service.ListAsync(new AssistantConversationListRequest(request.Cursor, request.Limit, request.Saved), cancellationToken)).ToActionResult(this);
 
     [HttpPost("conversations")]
+    [RateLimit(RateLimitProfile.AssistantConversation)]
     [IdempotencyDurable(typeof(AssistantDurableAdapter))]
     [Idempotent(Mode = IdempotencyMode.DurableReference)]
     [ProducesResponseType<AssistantConversationSummaryResponse>(201)]
@@ -94,6 +97,7 @@ public abstract class AssistantControllerBase(IAssistantConversationService serv
         (await service.DeleteAsync(id, request.Version, cancellationToken)).ToActionResult(this);
 
     [HttpPost("conversations/{id:guid}/messages")]
+    [RateLimit(RateLimitProfile.AssistantConversation)]
     [IdempotencyDurable(typeof(AssistantDurableAdapter))]
     [Idempotent(Mode = IdempotencyMode.DurableStream)]
     [ProducesResponseType<AssistantTurnResultResponse>(200)]
@@ -125,6 +129,7 @@ public abstract class AssistantControllerBase(IAssistantConversationService serv
         (await service.StopAsync(id, turnId, new StopAssistantTurnRequest(), cancellationToken)).ToActionResult(this);
 
     [HttpPost("quick/{key}")]
+    [RateLimit(RateLimitProfile.AssistantQuickQuery)]
     [IdempotencyDurable(typeof(AssistantDurableAdapter))]
     [Idempotent(Mode = IdempotencyMode.DurableReference)]
     [ResponseVersion("Conversation.Version")]

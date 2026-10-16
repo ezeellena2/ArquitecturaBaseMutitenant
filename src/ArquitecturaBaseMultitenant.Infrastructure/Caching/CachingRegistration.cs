@@ -1,9 +1,11 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -50,6 +52,8 @@ internal static class CachingRegistration
         services.AddSingleton<ITenantFeatureCache, TenantFeatureCache>();
         services.AddSingleton<IAccessStatusCache, AccessStatusCache>();
         services.AddScoped<IRolePermissionCache, RolePermissionCache>();
+        // Sin Redis, cada admisión de cuotas cuenta en PostgreSQL (E9).
+        services.TryAddSingleton<IRateLimitCounter, DurableOnlyRateLimitCounter>();
         return services;
     }
 
@@ -66,6 +70,7 @@ internal static class CachingRegistration
             .ValidateDataAnnotations()
             .ValidateOnStart();
         services.AddSingleton<RedisConnection>();
+        services.AddSingleton<IRateLimitCounter, RedisRateLimitCounter>();
         services.AddSingleton(provider => new RedisCache(Options.Create(new RedisCacheOptions
         {
             InstanceName = provider.GetRequiredService<IOptions<CacheOptions>>().Value.KeyPrefix,

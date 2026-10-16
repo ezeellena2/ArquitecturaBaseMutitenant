@@ -32,6 +32,7 @@ public sealed class PlatformAssistantSettingsController(IAssistantSettingsServic
         (await service.GetPlatformAsync(cancellationToken)).ToActionResult(this);
 
     [HttpPut]
+    [AssistantNewKeyRateLimit]
     [ProducesResponseType<VersionResponse>(200)]
     [ProducesProblem(400)]
     [ProducesProblem(401)]

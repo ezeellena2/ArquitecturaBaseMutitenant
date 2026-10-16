@@ -32,6 +32,7 @@ public sealed class OrganizationAssistantSettingsController(IAssistantSettingsSe
         (await service.GetOrganizationAsync(cancellationToken)).ToActionResult(this);
 
     [HttpPut]
+    [AssistantNewKeyRateLimit]
     [ProducesResponseType<VersionResponse>(200)]
     [ProducesProblem(400)]
     [ProducesProblem(401)]

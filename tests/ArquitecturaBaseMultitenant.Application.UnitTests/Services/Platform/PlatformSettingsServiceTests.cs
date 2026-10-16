@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Application.Models.Settings;
 using ArquitecturaBaseMultitenant.Application.Services.Platform;
 using ArquitecturaBaseMultitenant.Application.UnitTests.TestDoubles;
@@ -153,6 +154,84 @@ public sealed class PlatformSettingsServiceTests
         await Assert.ThrowsAsync<ConcurrencyConflictException>(() => service.UpdateAsync(new(ConsumerSignupMode.Open, BusinessSignupMode.Closed, 2, Sales, Support, 1, "Cambio"), Ct));
     }
 
+    [Fact]
+    public async Task Rate_limits_are_kept_when_omitted_and_replaced_whole_when_sent()
+    {
+        using var fixture = new ServiceFixture<PlatformSettingsService>(new UpdatePlatformSettingsRequestValidator());
+        var repository = new StubRepository();
+        var audit = new StubEvents();
+        var service = Create(fixture, repository, audit, new FakeUnitOfWork());
+
+        Assert.True((await service.UpdateAsync(new(ConsumerSignupMode.Open, BusinessSignupMode.Open, 1, Sales, Support, 1,
+            "Sin cuotas"), Ct)).IsSuccess);
+        Assert.Equal(PlatformRateLimits.Initial, repository.Settings!.RateLimits);
+        Assert.DoesNotContain("rateLimits", audit.Items[^1].Changes, StringComparison.Ordinal);
+
+        var edited = PlatformRateLimits.Initial with { Ip = new(450, 30) };
+        Assert.True((await service.UpdateAsync(new(ConsumerSignupMode.Open, BusinessSignupMode.Open, 1, Sales, Support, 2,
+            "Más pedidos por IP", Input(edited)), Ct)).IsSuccess);
+
+        Assert.Equal(edited, repository.Settings.RateLimits);
+        using var changes = JsonDocument.Parse(audit.Items[^1].Changes);
+        Assert.Equal(["rateLimits.ip.permitLimit", "rateLimits.ip.windowSeconds"], changes.RootElement.EnumerateObject()
+            .Select(change => change.Name).Where(name => name.StartsWith("rateLimits.", StringComparison.Ordinal)));
+        Assert.Equal(300, changes.RootElement.GetProperty("rateLimits.ip.permitLimit").GetProperty("before").GetInt32());
+        Assert.Equal(450, changes.RootElement.GetProperty("rateLimits.ip.permitLimit").GetProperty("after").GetInt32());
+        Assert.Equal(30, changes.RootElement.GetProperty("rateLimits.ip.windowSeconds").GetProperty("after").GetInt32());
+    }
+
+    [Theory]
+    [InlineData(0, 60, "permitLimit", "Usá un número de 1 a 1.000.000.")]
+    [InlineData(1_000_001, 60, "permitLimit", "Usá un número de 1 a 1.000.000.")]
+    [InlineData(10, 0, "windowSeconds", "Usá de 1 a 86.400 segundos.")]
+    [InlineData(10, 86_401, "windowSeconds", "Usá de 1 a 86.400 segundos.")]
+    public async Task Rate_limits_outside_their_bounds_fail_by_field_without_a_transaction(int permitLimit,
+        int windowSeconds, string field, string message)
+    {
+        var originalCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("es-AR");
+            using var fixture = new ServiceFixture<PlatformSettingsService>(new UpdatePlatformSettingsRequestValidator());
+            var unitOfWork = new FakeUnitOfWork();
+            var service = Create(fixture, new StubRepository(), new StubEvents(), unitOfWork);
+
+            var result = await service.UpdateAsync(new(ConsumerSignupMode.Open, BusinessSignupMode.Open, 1, Sales, Support, 1,
+                "Cuotas", Input(PlatformRateLimits.Initial with { WhatsAppWebhook = new(permitLimit, windowSeconds) })), Ct);
+
+            var error = Assert.IsType<ValidationError>(result.Error);
+            Assert.Equal(message, Assert.Single(error.Errors["rateLimits.whatsAppWebhook." + field]));
+            Assert.Single(error.Errors);
+            Assert.Equal(0, unitOfWork.Transactions);
+        }
+        finally
+        {
+            CultureInfo.CurrentUICulture = originalCulture;
+        }
+    }
+
+    [Fact]
+    public async Task Sent_rate_limits_need_the_twelve_profiles()
+    {
+        using var fixture = new ServiceFixture<PlatformSettingsService>(new UpdatePlatformSettingsRequestValidator());
+        var unitOfWork = new FakeUnitOfWork();
+        var service = Create(fixture, new StubRepository(), new StubEvents(), unitOfWork);
+
+        var result = await service.UpdateAsync(new(ConsumerSignupMode.Open, BusinessSignupMode.Open, 1, Sales, Support, 1,
+            "Cuotas", Input(PlatformRateLimits.Initial) with { PublicIp = null, AssistantNewKey = new(3, null) }), Ct);
+
+        var error = Assert.IsType<ValidationError>(result.Error);
+        Assert.Equal(["rateLimits.assistantNewKey.windowSeconds", "rateLimits.publicIp"], error.Errors.Keys.Order(StringComparer.Ordinal));
+        Assert.Equal(0, unitOfWork.Transactions);
+    }
+
+    private static PlatformRateLimitsInput Input(PlatformRateLimits limits) => new(Quota(limits.Ip), Quota(limits.PublicIp),
+        Quota(limits.Identity), Quota(limits.Tenant), Quota(limits.LoginCode), Quota(limits.LoginVerify),
+        Quota(limits.InvitationPreview), Quota(limits.InvitationAccept), Quota(limits.AssistantQuickQuery),
+        Quota(limits.AssistantConversation), Quota(limits.AssistantNewKey), Quota(limits.WhatsAppWebhook));
+
+    private static RateLimitQuotaInput Quota(RateLimitQuota quota) => new(quota.PermitLimit, quota.WindowSeconds);
+
     private static PlatformSettingsService Create(ServiceFixture<PlatformSettingsService> fixture, StubRepository repository,
         StubEvents events, FakeUnitOfWork unitOfWork) =>
         new(new StubReader(), repository, unitOfWork, fixture.Validator,
@@ -161,6 +240,8 @@ public sealed class PlatformSettingsServiceTests
     private sealed class StubReader : IPlatformSettingsReader
     {
         public Task<PlatformSettingsRow?> FindAsync(CancellationToken ct) => Task.FromResult<PlatformSettingsRow?>(null);
+
+        public Task<PlatformRateLimits?> FindRateLimitsAsync(CancellationToken ct) => Task.FromResult<PlatformRateLimits?>(null);
     }
 
     private sealed class StubRepository : IPlatformSettingsRepository

@@ -40,7 +40,8 @@ internal sealed class LoginLinkIssuer(IUserRepository users, ILoginMethodReposit
         }
         foreach (var previous in await links.ListPendingAsync(userId, ct)) previous.Invalidate(nowUtc);
         var token = tokens.Generate();
-        var link = LoginLink.Issue(userId, methodId, tokens.Hash(token), nowUtc);
+        var link = LoginLink.Issue(userId, methodId, tokens.Hash(token), nowUtc,
+            TimeSpan.FromMinutes(options.Value.LifetimeMinutes));
         links.Add(link);
         return new IssuedLoginLink(token, link.ExpiresAtUtc);
     }

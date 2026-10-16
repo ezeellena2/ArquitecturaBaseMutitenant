@@ -1,17 +1,22 @@
+using ArquitecturaBaseMultitenant.Application.Configuration.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using Microsoft.Extensions.DependencyInjection;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 
 /// <summary>Un scope por reclamo, organización y cierre. El lease vence si se interrumpe el proceso.</summary>
 internal sealed partial class AccountDeletionWorker(IServiceScopeFactory scopes, TimeProvider timeProvider,
-    ILogger<AccountDeletionWorker> logger) : PeriodicWorker(TimeSpan.FromHours(1), timeProvider, logger)
+    ILogger<AccountDeletionWorker> logger, IOptions<AccountDeletionOptions> options)
+    : PeriodicWorker(TimeSpan.FromMinutes(options.Value.IntervalMinutes), timeProvider, logger)
 {
+    private readonly int _batchSize = options.Value.BatchSize;
+
     internal async Task RunOnceAsync(CancellationToken ct)
     {
-        for (var count = 0; count < 100 && !ct.IsCancellationRequested; count++)
+        for (var count = 0; count < _batchSize && !ct.IsCancellationRequested; count++)
         {
             await using var claimScope = scopes.CreateAsyncScope();
             var claimed = await claimScope.ServiceProvider.GetRequiredService<IAccountDeletionProcessingService>().ClaimNextAsync(ct);

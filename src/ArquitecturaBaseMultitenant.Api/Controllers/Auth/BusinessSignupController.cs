@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 using System.Security.Claims;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
@@ -28,7 +28,7 @@ public sealed class BusinessSignupController(IBusinessSignupService service, IAn
 {
     [HttpPost("code")]
     [Idempotent]
-    [EnableRateLimiting(RateLimitPolicies.LoginCode)]
+    [RateLimit(RateLimitProfile.LoginCode)]
     [ProducesResponseType<RequestLoginCodeResponse>(StatusCodes.Status202Accepted)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
@@ -43,7 +43,7 @@ public sealed class BusinessSignupController(IBusinessSignupService service, IAn
 
     [HttpPost("verify")]
     [Idempotent]
-    [EnableRateLimiting(RateLimitPolicies.LoginVerify)]
+    [RateLimit(RateLimitProfile.LoginVerify)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]

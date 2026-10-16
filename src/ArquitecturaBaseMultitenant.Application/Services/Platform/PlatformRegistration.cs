@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Configuration.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,6 +11,9 @@ internal static class PlatformRegistration
     {
         services.AddScoped<IPlatformSettingsService, PlatformSettingsService>();
         services.AddScoped<PlatformSettingsAuditWriter>();
+        services.AddScoped<IRateLimitService, RateLimitService>();
+        services.AddOptions<RateLimitOptions>().BindConfiguration(RateLimitOptions.SectionName)
+            .ValidateDataAnnotations().ValidateOnStart();
         services.AddScoped<IPlatformFeatureService, PlatformFeatureService>();
         services.AddScoped<PlatformFeatureListBuilder>();
         services.AddScoped<PlatformFeatureWriter>();

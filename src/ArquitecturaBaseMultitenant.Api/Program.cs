@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Api.Features;
 using ArquitecturaBaseMultitenant.Api.Localization;
 using ArquitecturaBaseMultitenant.Api.Legal;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
+using ArquitecturaBaseMultitenant.Api.RateLimiting;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
 using ArquitecturaBaseMultitenant.Application;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
@@ -75,11 +76,12 @@ app.UseRequestLocalization(cultures.CreateRequestLocalizationOptions());
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.UseMiddleware<InstalledModuleRouteMiddleware>();
-app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseMiddleware<TenantResolutionMiddleware>();
 app.UseMiddleware<PublicSiteResolutionMiddleware>();
+// E9: las cuotas compartidas cuentan con la identidad firmada y la organización del claim ya resueltas.
+app.UseMiddleware<RateLimitMiddleware>();
 app.UseMiddleware<LegalAcceptanceMiddleware>();
 app.UseMiddleware<FeatureGateMiddleware>();
 app.UseAuthorization();

@@ -56,6 +56,10 @@ public static class ValidationTexts
     public static string RecoveryPhoneRepeated => Get(nameof(RecoveryPhoneRepeated));
     public static string OwnedOrganizationsRange => Get(nameof(OwnedOrganizationsRange));
 
+    public static string RateLimitPermitRange => Get(nameof(RateLimitPermitRange));
+
+    public static string RateLimitWindowRange => Get(nameof(RateLimitWindowRange));
+
     public static string PermissionUnknown => Get(nameof(PermissionUnknown));
 
     public static string CultureInvalid => Get(nameof(CultureInvalid));

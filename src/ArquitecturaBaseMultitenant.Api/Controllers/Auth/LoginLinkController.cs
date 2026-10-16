@@ -7,14 +7,14 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 
 [ApiController, AllowAnonymous, Route("api/auth/login-link"), Tags("Auth")]
 public sealed class LoginLinkController(ILoginLinkService service) : ControllerBase
 {
-    [HttpPost("preview"), EnableRateLimiting(RateLimitPolicies.LoginVerify)]
+    [HttpPost("preview"), RateLimit(RateLimitProfile.LoginVerify)]
     [ProducesResponseType<LoginLinkPreviewResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
@@ -22,7 +22,7 @@ public sealed class LoginLinkController(ILoginLinkService service) : ControllerB
     public async Task<IActionResult> Preview([FromBody] PreviewLoginLinkHttpRequest request, CancellationToken ct) =>
         (await service.PreviewAsync(new PreviewLoginLinkRequest(request.Token), ct)).ToActionResult(this);
 
-    [HttpPost("redeem"), Idempotent, EnableRateLimiting(RateLimitPolicies.LoginVerify)]
+    [HttpPost("redeem"), Idempotent, RateLimit(RateLimitProfile.LoginVerify)]
     [IdempotencyReplay(typeof(LoginLinkReplayVerifier))]
     [ProducesResponseType<LoginLinkRedeemResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]

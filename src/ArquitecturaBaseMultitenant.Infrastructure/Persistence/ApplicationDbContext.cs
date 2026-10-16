@@ -92,12 +92,14 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     public DbSet<LegalDocumentContent> LegalDocumentContents => Set<LegalDocumentContent>();
     public DbSet<LegalAcceptance> LegalAcceptances => Set<LegalAcceptance>();
     internal DbSet<CacheTagVersion> CacheTagVersions => Set<CacheTagVersion>();
+    internal DbSet<RateLimitCounter> RateLimitCounters => Set<RateLimitCounter>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         base.ConfigureConventions(configurationBuilder);
         EmailConvention.Configure(configurationBuilder);
         PhoneNumberConvention.Configure(configurationBuilder);
+        PlatformRateLimitsConvention.Configure(configurationBuilder);
         InvitationIdentityConvention.Configure(configurationBuilder);
     }
 

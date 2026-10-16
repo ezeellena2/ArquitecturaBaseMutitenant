@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
+using ArquitecturaBaseMultitenant.Application.Configuration.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
@@ -61,6 +62,12 @@ internal static class IdentityRegistration
         AddGoogle(services, authentication, configuration);
 
         services.ConfigureApplicationCookie(ConfigureBrowserCookie);
+        // E9: la vida de las dos cookies del navegador sale de Authentication:Lifetimes, validada al arrancar.
+        foreach (var scheme in new[] { IdentityConstants.ApplicationScheme, BrowserSessionKeys.PlatformScheme })
+        {
+            services.AddOptions<CookieAuthenticationOptions>(scheme).Configure<IOptions<SessionLifetimeOptions>>(
+                (cookie, lifetimes) => cookie.ExpireTimeSpan = TimeSpan.FromDays(lifetimes.Value.BrowserCookieDays));
+        }
 
         services.AddIdentityCore<ApplicationUser>(options =>
             {
@@ -108,7 +115,6 @@ internal static class IdentityRegistration
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.SameSite = SameSiteMode.Lax;
-        options.ExpireTimeSpan = TimeSpan.FromDays(30);
         options.SlidingExpiration = true;
         options.Events.OnRedirectToLogin = context =>
         {

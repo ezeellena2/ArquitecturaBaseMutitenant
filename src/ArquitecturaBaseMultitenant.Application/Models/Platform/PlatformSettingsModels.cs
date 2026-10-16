@@ -54,4 +54,13 @@ public sealed record PlatformRateLimitsInput(RateLimitQuotaInput? Ip, RateLimitQ
     RateLimitQuotaInput? Identity, RateLimitQuotaInput? Tenant, RateLimitQuotaInput? LoginCode,
     RateLimitQuotaInput? LoginVerify, RateLimitQuotaInput? InvitationPreview, RateLimitQuotaInput? InvitationAccept,
     RateLimitQuotaInput? AssistantQuickQuery, RateLimitQuotaInput? AssistantConversation,
-    RateLimitQuotaInput? AssistantNewKey, RateLimitQuotaInput? WhatsAppWebhook);
+    RateLimitQuotaInput? AssistantNewKey, RateLimitQuotaInput? WhatsAppWebhook)
+{
+    /// <summary>Las cuotas pedidas, ya validadas: los doce perfiles con sus dos valores.</summary>
+    public PlatformRateLimits ToLimits() => new(Quota(Ip), Quota(PublicIp), Quota(Identity), Quota(Tenant),
+        Quota(LoginCode), Quota(LoginVerify), Quota(InvitationPreview), Quota(InvitationAccept),
+        Quota(AssistantQuickQuery), Quota(AssistantConversation), Quota(AssistantNewKey), Quota(WhatsAppWebhook));
+
+    private static RateLimitQuota Quota(RateLimitQuotaInput? input) =>
+        new(input?.PermitLimit ?? 0, input?.WindowSeconds ?? 0);
+}

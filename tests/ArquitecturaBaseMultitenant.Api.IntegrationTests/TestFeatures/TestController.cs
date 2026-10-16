@@ -1,6 +1,8 @@
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.Json;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
+using ArquitecturaBaseMultitenant.Api.RateLimiting;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
@@ -12,7 +14,6 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures;
@@ -49,16 +50,12 @@ public sealed class TestController : ControllerBase
     public IActionResult Validation() => Result.Failure(new ValidationError(
         new Dictionary<string, string[]> { ["email"] = ["Ingresá un correo válido."] })).ToActionResult(this);
 
-    [HttpGet("rate-limit")]
-    [EnableRateLimiting("test-rejection")]
-    public IActionResult RateLimit() => NoContent();
-
     [HttpGet("login-code-rate-limit")]
-    [EnableRateLimiting("login-code")]
+    [RateLimit(RateLimitProfile.LoginCode)]
     public IActionResult LoginCodeRateLimit() => NoContent();
 
     [HttpGet("login-verify-rate-limit")]
-    [EnableRateLimiting("login-verify")]
+    [RateLimit(RateLimitProfile.LoginVerify)]
     public IActionResult LoginVerifyRateLimit() => NoContent();
 
     [HttpGet("status/{status:int}")]

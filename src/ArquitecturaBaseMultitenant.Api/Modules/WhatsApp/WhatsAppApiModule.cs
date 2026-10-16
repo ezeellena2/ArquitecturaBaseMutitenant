@@ -1,6 +1,5 @@
 using ArquitecturaBaseMultitenant.Api.Features;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
-using Microsoft.AspNetCore.RateLimiting;
 
 namespace ArquitecturaBaseMultitenant.Api.Modules.WhatsApp;
 
@@ -8,7 +7,6 @@ namespace ArquitecturaBaseMultitenant.Api.Modules.WhatsApp;
 public static class WhatsAppApiModule
 {
     public const string WebhookRoute = "WhatsApp.Webhook";
-    public const string WebhookRateLimit = "WhatsAppWebhook";
     public const string ManagementRoute = "WhatsApp.Management";
 
     public static IServiceCollection AddWhatsAppModule(this IServiceCollection services)
@@ -19,7 +17,6 @@ public static class WhatsAppApiModule
         services.AddSingleton<ArquitecturaBaseMultitenant.Api.OpenApi.IHttpContractContributor, WhatsAppContractContributor>();
         services.AddSingleton<ArquitecturaBaseMultitenant.Api.OpenApi.IHttpContractContributor, WhatsAppAttentionContractContributor>();
         services.AddSingleton<IInstalledModuleRouteAvailability>(new RouteAvailability(ManagementRoute, true));
-        services.Configure<RateLimiterOptions>(options => options.AddPolicy(WebhookRateLimit, new RateLimiting.WhatsAppWebhookRateLimitPolicy()));
         return services;
     }
 

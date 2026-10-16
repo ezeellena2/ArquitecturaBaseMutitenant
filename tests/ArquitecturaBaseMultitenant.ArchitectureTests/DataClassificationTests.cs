@@ -68,6 +68,7 @@ public sealed class DataClassificationTests
         typeof(OpenIddictEntityFrameworkCoreToken<Guid>).FullName!,
         "ArquitecturaBaseMultitenant.Infrastructure.Idempotency.IdempotencyKey",
         "ArquitecturaBaseMultitenant.Infrastructure.Caching.CacheTagVersion", // Generación de cada etiqueta de caché (ADR 0052): alcance y versión, sin datos de negocio.
+        "ArquitecturaBaseMultitenant.Infrastructure.Persistence.RateLimitCounter", // Contador durable de una cuota (E9): clave técnica y número, sin IP completa.
         typeof(Currency).FullName!,
         typeof(CurrencyTranslation).FullName!,
         typeof(Country).FullName!,

@@ -23,6 +23,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.AspNetCore.TestHost;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.Hosting;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 
@@ -30,8 +31,10 @@ public sealed class WhatsAppWebhookTests(ApiFactory factory) : IClassFixture<Api
 {
     private const string Secret = "webhook-fixture-secret";
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
-    private WebApplicationFactory<Program> Host(CommitProbe? probe = null) => factory.WithWebHostBuilder(builder =>
+    private WebApplicationFactory<Program> Host(CommitProbe? probe = null, Action<IWebHostBuilder>? configure = null) =>
+        factory.WithWebHostBuilder(builder =>
     {
+        configure?.Invoke(builder);
         builder.UseSetting("WhatsApp:PhoneNumberId", "fixture-number");
         builder.UseSetting("WhatsApp:AccessToken", "fixture-access");
         builder.UseSetting("WhatsApp:AppSecret", Secret);
@@ -89,9 +92,15 @@ public sealed class WhatsAppWebhookTests(ApiFactory factory) : IClassFixture<Api
     [Fact]
     public async Task Webhook_rate_limit_uses_module_code_localized_detail_and_retry_metadata()
     {
-        await using var app = Host(); using var client = app.CreateClient();
+        // E9: el webhook cuenta en su cuota compartida, de arranque en esta base, y conserva su código al llegar al tope.
+        await using var app = Host(configure: builder =>
+        {
+            builder.UseSetting("RateLimiting:WhatsAppWebhook:PermitLimit", "2");
+            builder.UseSetting("Cache:Environment", "wh-" + Guid.NewGuid().ToString("N")[..20]);
+        });
+        using var client = app.CreateClient();
         client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en");
-        for (var index = 0; index < 120; index++)
+        for (var index = 0; index < 2; index++)
         { using var response = await SendAsync(client, Envelope([]), true); Assert.Equal(HttpStatusCode.OK, response.StatusCode); }
         using var rejected = await SendAsync(client, Envelope([]), true);
         Assert.Equal(HttpStatusCode.TooManyRequests, rejected.StatusCode);

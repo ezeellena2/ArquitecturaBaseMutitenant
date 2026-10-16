@@ -10,7 +10,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 /// <summary>
 /// Lee la configuración global con la parte no sensible desde la caché compartida (ADR 0052, 5 min). Los correos de
 /// contacto nunca entran al sobre: se leen de PostgreSQL y se unen por versión; si la fila cambió entre las dos lecturas,
-/// todo sale de una lectura directa.
+/// todo sale de una lectura directa. Las cuotas compartidas (E9) van en el sobre: el limitador las lee en cada pedido.
 /// </summary>
 internal sealed class PlatformSettingsReader(SharedCache cache, ApplicationDbContext context) : IPlatformSettingsReader
 {
@@ -31,24 +31,29 @@ internal sealed class PlatformSettingsReader(SharedCache cache, ApplicationDbCon
 
         return await Singleton(context).Select(settings => new PlatformSettingsRow(settings.ConsumerSignup,
                 settings.BusinessSignup, settings.MaxOwnedOrganizations, settings.AccountDeletionGraceDays,
-                settings.Version, settings.SalesEmail, settings.SupportEmail))
+                settings.Version, settings.SalesEmail, settings.SupportEmail, settings.RateLimits))
             .SingleOrDefaultAsync(cancellationToken);
     }
+
+    public async Task<PlatformRateLimits?> FindRateLimitsAsync(CancellationToken cancellationToken) =>
+        (await cache.GetOrLoadAsync(Entry, 0,
+            static (services, _, ct) => LoadAsync(services.GetRequiredService<ApplicationDbContext>(), ct),
+            cancellationToken))?.RateLimits;
 
     private static IQueryable<PlatformSettings> Singleton(ApplicationDbContext context) =>
         context.PlatformSettings.AsNoTracking().Where(settings => settings.Id == PlatformSettings.SingletonId);
 
     private static Task<CachedSettings?> LoadAsync(ApplicationDbContext context, CancellationToken cancellationToken) =>
         Singleton(context).Select(settings => new CachedSettings(settings.ConsumerSignup, settings.BusinessSignup,
-                settings.MaxOwnedOrganizations, settings.AccountDeletionGraceDays, settings.Version))
+                settings.MaxOwnedOrganizations, settings.AccountDeletionGraceDays, settings.Version, settings.RateLimits))
             .SingleOrDefaultAsync(cancellationToken);
 
     /// <summary>Lo que guarda la caché: la configuración sin los correos de contacto.</summary>
     private sealed record CachedSettings(ConsumerSignupMode ConsumerSignup, BusinessSignupMode BusinessSignup,
-        int MaxOwnedOrganizations, int AccountDeletionGraceDays, uint Version)
+        int MaxOwnedOrganizations, int AccountDeletionGraceDays, uint Version, PlatformRateLimits RateLimits)
     {
         public PlatformSettingsRow ToRow(Domain.ValueObjects.Email? salesEmail, Domain.ValueObjects.Email? supportEmail) =>
             new(ConsumerSignup, BusinessSignup, MaxOwnedOrganizations, AccountDeletionGraceDays, Version,
-                salesEmail, supportEmail);
+                salesEmail, supportEmail, RateLimits);
     }
 }

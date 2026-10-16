@@ -66,8 +66,9 @@ public sealed class PlatformAndLegalRepositoryTests(ApiFactory factory)
         {
             if (existingSettings is null)
             {
+                // La base es la de toda la colección: sus cuotas no frenan al resto de la suite (E9).
                 settingsRepository.Add(PlatformSettings.Create(
-                    ConsumerSignupMode.Open, BusinessSignupMode.Open, 1));
+                    ConsumerSignupMode.Open, BusinessSignupMode.Open, 1, TestRateLimits.Unlimited));
             }
             securityEventRepository.Add(SecurityEvent.ForPlatformSettings(AuditActorKind.System,
                 Guid.Empty, "Initial platform settings", nowUtc));

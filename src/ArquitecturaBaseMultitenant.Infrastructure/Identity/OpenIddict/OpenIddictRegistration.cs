@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
+using ArquitecturaBaseMultitenant.Application.Configuration.Security;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -6,6 +7,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using OpenIddict.Server;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Identity.OpenIddict;
@@ -65,11 +68,8 @@ internal static class OpenIddictRegistration
 
                 // Los defaults de OpenIddict contradicen el spec: access token de 1 h, refresh token de 14 días y 30 s
                 // en los que un refresh token ya usado se acepta de nuevo. Sin ese margen, reusarlo revoca toda la cadena.
-                options
-                    .SetAuthorizationCodeLifetime(TimeSpan.FromMinutes(5))
-                    .SetAccessTokenLifetime(TimeSpan.FromMinutes(15))
-                    .SetRefreshTokenLifetime(TimeSpan.FromDays(30))
-                    .SetRefreshTokenReuseLeeway(null);
+                // Las vidas salen de Authentication:Lifetimes (E9), abajo.
+                options.SetRefreshTokenReuseLeeway(null);
 
                 // El issuer es el origen que ve el navegador (sección 5.1). En desarrollo, el de Vite; si no se
                 // configura, OpenIddict lo deduce del request, que a través de un proxy no es el correcto.
@@ -99,6 +99,13 @@ internal static class OpenIddictRegistration
                 options.UseAspNetCore();
             });
 
+        // E9: código 5 min, access token 15 min y refresh token 30 días, validados al arrancar con las opciones.
+        services.AddOptions<OpenIddictServerOptions>().Configure<IOptions<SessionLifetimeOptions>>((server, lifetimes) =>
+        {
+            server.AuthorizationCodeLifetime = TimeSpan.FromMinutes(lifetimes.Value.AuthorizationCodeMinutes);
+            server.AccessTokenLifetime = TimeSpan.FromMinutes(lifetimes.Value.AccessTokenMinutes);
+            server.RefreshTokenLifetime = TimeSpan.FromDays(lifetimes.Value.RefreshTokenDays);
+        });
         services.AddScoped<ITokenRevoker, TokenRevoker>();
         services.AddScoped<IConnectAuthorizationStore, ConnectAuthorizationStore>();
 

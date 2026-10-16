@@ -47,8 +47,6 @@ public static class RecorridoApiHost
                     ["Authentication:LoginCode:MaxRequestsPerWindow"] = "100",
                     ["Authentication:Google:ClientId"] = "e2e-synthetic-client.apps.googleusercontent.com",
                     ["Authentication:Google:ClientSecret"] = "e2e-synthetic-google-secret",
-                    ["RateLimiting:LoginCodePermitLimit"] = "1000",
-                    ["RateLimiting:LoginVerifyPermitLimit"] = "1000",
                     ["Email:Delivery"] = "PickupDirectory",
                     ["Email:PickupDirectory"] = pickup,
                     ["Seed:PlatformOwner:Email"] = "e2e-operator@example.test",
@@ -57,6 +55,8 @@ public static class RecorridoApiHost
                     ["Seed:PlatformOwner:Phone"] = "",
                     ["WhatsApp:PhoneNumberId"] = "",
                 });
+                // El recorrido navega más rápido que una persona: las cuotas no lo frenan (E9).
+                configuration.AddInMemoryCollection(TestRateLimits.Settings);
             });
         configureModules?.Invoke(builder);
     });

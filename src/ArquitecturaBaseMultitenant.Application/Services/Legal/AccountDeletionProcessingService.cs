@@ -1,18 +1,21 @@
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
+using ArquitecturaBaseMultitenant.Application.Configuration.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Legal;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Legal;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Legal;
 
 /// <summary>Reclama bajas vencidas y procesa cada tenant en una transacción con alcance propio antes del cierre global.</summary>
 internal sealed class AccountDeletionProcessingService(IAccountDeletionRepository repository, IAccountDeletionTenantReader tenants,
     AccountDeletionProcessor processor, ITenantScope tenantScope, IConsumerDataRetentionReader retentions,
-    IConsumerDataRetentionRepository retentionRepository, IConsumerCopyDeletion consumerCopies, IUnitOfWork unitOfWork,
-    TimeProvider timeProvider, ILogger<AccountDeletionProcessingService> logger) : IAccountDeletionProcessingService
+    IConsumerDataRetentionRepository retentionRepository, IConsumerCopyDeletion consumerCopies,
+    IOptions<AccountDeletionOptions> options, IUnitOfWork unitOfWork, TimeProvider timeProvider,
+    ILogger<AccountDeletionProcessingService> logger) : IAccountDeletionProcessingService
 {
     public Task<Result<AccountDeletionWork?>> ClaimNextAsync(CancellationToken ct) =>
         OperationLog.RunAsync<AccountDeletionWork?>(logger, timeProvider, "ClaimAccountDeletion", () =>
@@ -37,7 +40,7 @@ internal sealed class AccountDeletionProcessingService(IAccountDeletionRepositor
 
     public Task<Result<IReadOnlyList<ConsumerDataRetentionWork>>> ListExpiredRetentionsAsync(CancellationToken ct) =>
         OperationLog.RunAsync<IReadOnlyList<ConsumerDataRetentionWork>>(logger, timeProvider, "ListExpiredConsumerRetentions", async () =>
-            Result.Success(await retentions.ListExpiredAsync(timeProvider.GetUtcNow().UtcDateTime, 100, ct)));
+            Result.Success(await retentions.ListExpiredAsync(timeProvider.GetUtcNow().UtcDateTime, options.Value.BatchSize, ct)));
 
     public Task<Result> ProcessRetentionAsync(ConsumerDataRetentionWork work, CancellationToken ct) =>
         OperationLog.RunAsync(logger, timeProvider, "ProcessConsumerRetention", async () =>

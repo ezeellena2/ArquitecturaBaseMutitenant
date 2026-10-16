@@ -14,6 +14,7 @@ public static class AssistantApiModule
         services.AddSingleton<IHttpContractContributor, AssistantContractContributor>();
         services.AddScoped<AssistantNoticeReplayVerifier>();
         services.AddScoped<AssistantDurableAdapter>();
+        services.AddScoped<AssistantNewKeyRateLimitFilter>();
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Idempotency.IIdempotentReplayResolver>(provider =>
             new AssistantReplayAdapter(provider.GetRequiredService<ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services.IAssistantDurableService>(), "assistant.conversation"));
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Idempotency.IIdempotentReplayResolver>(provider =>

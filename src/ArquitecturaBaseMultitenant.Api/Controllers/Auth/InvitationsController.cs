@@ -10,7 +10,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 
@@ -23,7 +23,7 @@ public sealed class InvitationsController(IInvitationService service, IAntiforge
 {
     [HttpPost("preview")]
     [Consumes("application/json")]
-    [EnableRateLimiting(RateLimitPolicies.InvitationPreview)]
+    [RateLimit(RateLimitProfile.InvitationPreview)]
     [ProducesResponseType<InvitationPreviewResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status429TooManyRequests)]
@@ -39,7 +39,7 @@ public sealed class InvitationsController(IInvitationService service, IAntiforge
     [HttpPost("accept")]
     [Consumes("application/json")]
     [Idempotent]
-    [EnableRateLimiting(RateLimitPolicies.InvitationAccept)]
+    [RateLimit(RateLimitProfile.InvitationAccept)]
     [ProducesResponseType<AcceptInvitationResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]

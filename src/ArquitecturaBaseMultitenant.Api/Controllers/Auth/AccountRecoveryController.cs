@@ -9,7 +9,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 
 namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 
@@ -24,7 +24,7 @@ namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 public sealed class AccountRecoveryController(IAccountRecoveryService service) : ControllerBase
 {
     [HttpPost("preview")]
-    [EnableRateLimiting(RateLimitPolicies.LoginCode)]
+    [RateLimit(RateLimitProfile.LoginCode)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status429TooManyRequests)]
@@ -40,7 +40,7 @@ public sealed class AccountRecoveryController(IAccountRecoveryService service) :
 
     [HttpPost("code")]
     [Idempotent]
-    [EnableRateLimiting(RateLimitPolicies.LoginCode)]
+    [RateLimit(RateLimitProfile.LoginCode)]
     [ProducesResponseType<RequestLoginCodeResponse>(StatusCodes.Status202Accepted)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status429TooManyRequests)]
@@ -56,7 +56,7 @@ public sealed class AccountRecoveryController(IAccountRecoveryService service) :
 
     [HttpPost("verify")]
     [Idempotent]
-    [EnableRateLimiting(RateLimitPolicies.LoginVerify)]
+    [RateLimit(RateLimitProfile.LoginVerify)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> VerifyCode([FromBody] VerifyRecoveryCodeHttpRequest request,
@@ -71,7 +71,7 @@ public sealed class AccountRecoveryController(IAccountRecoveryService service) :
 
     [HttpPost]
     [Idempotent]
-    [EnableRateLimiting(RateLimitPolicies.LoginVerify)]
+    [RateLimit(RateLimitProfile.LoginVerify)]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Submit([FromBody] SubmitAccountRecoveryHttpRequest request,
