@@ -46,7 +46,7 @@ Valen las de la E12. Estas son las nuevas, técnicas. Las de producto están en 
 | C3 | **Los ids que viajan a Meta son locales a la oferta** (`o1` … `o200`). La sesión guarda a qué ítem corresponde cada uno. | No se mandan a Meta ids internos ni de personas, y «estar en la oferta» se comprueba solo. |
 | C4 | **La oferta la arma Forms y la guarda WhatsApp,** cifrada en la sesión (`ProtectedOffer`). Se borra con la retención, una vez procesada. | Forms conoce los catálogos y WhatsApp conoce la sesión. Como contiene nombres de personas, va cifrada. |
 | C5 | Para un catálogo a mano, la captura comprueba que la opción siga activa; si no, `Forms.Record.OptionWithdrawn`. Para uno con filtros alcanza con que esté en la oferta. | Es la regla de la hoja de ruta. Con filtros, lo que vio la persona es lo que vale. |
-| C6 | **Las opciones se editan de a una,** con su propia versión: crear, editar, subir o bajar, y dar de baja o reactivar. | Sigue «lo corto en diálogo» y el `IVersioned` de siempre. Es más simple que el guardado en lote con ids locales de ArquitecturaBase. |
+| C6 | **Todo se guarda junto** (tableros de la v129). Un solo `PUT` del catálogo, con su versión (`IVersioned`, 409), lleva lo siguiente: <ul><li>nombre, descripción e `isActive`;</li><li>las opciones cambiadas: las existentes con su `itemId` y las nuevas con un id local;</li><li>los movimientos `{itemId, direction}`.</li></ul>Responde la versión y el mapa de ids locales a ids del servidor. Crear (`POST`) lleva lo mismo. Las opciones no tienen versión propia. | Es la disposición elegida: una sola pantalla con «Guardar cambios». Sigue siendo configuración interna: una UoW, versión y 409, sin recibos (ADR 0018 de ArquitecturaBase y nuestra ficha de concurrencia). |
 | C7 | La posición la maneja el servidor y es única por catálogo, con una restricción `DEFERRABLE INITIALLY DEFERRED` hecha con SQL en la migración. Subir y bajar intercambian la posición con la vecina, bajo un bloqueo del catálogo. | La lección de ArquitecturaBase: las posiciones que manda el cliente se rompían. |
 | C8 | Una pregunta de catálogo guarda solo `catalogId`. Cambiar el catálogo de una pregunta publicada crea una pregunta nueva, como cambiar el tipo. | Cambiar opciones no obliga a republicar, y las respuestas viejas no cambian de sentido. |
 | C9 | La gramática de condiciones es general: `{column, operator, values[]}`, unidas con «y». La E15 la reusa para los filtros de la planilla. | Una sola gramática. |
@@ -79,7 +79,7 @@ Todas las tablas son `ITenantOwned` en `tenant`, con RLS, FK compuestas y `TextL
   "sort": { "column": "name", "descending": false } }
 ```
 
-**FormCatalogItems** (`IAuditable`, `IVersioned`; solo los catálogos a mano)
+**FormCatalogItems** (`IAuditable`; solo los catálogos a mano; la versión es la del catálogo, C6)
 
 | Columna | Tipo | Regla |
 | --- | --- | --- |
@@ -92,7 +92,7 @@ Todas las tablas son `ITenantOwned` en `tenant`, con RLS, FK compuestas y `TextL
 
 Un catálogo a mano tiene hasta **500 opciones**, entre activas y dadas de baja. La E12 queda así:
 - **`FormDraft` y `FormVersions`:** el tipo `CatalogChoice` suma `catalogId` a la pregunta.
-- **`FormRecordValues`:** suma `CatalogId uuid?` y `ChoiceTexts jsonb`. `ChoiceId` es el id del ítem (opción a mano o miembro), y `ChoiceTexts` guarda **todas** las variantes de idioma del texto y el detalle tal como estaban al responder (`{es?: {text, detail?}, en?: {…}}`). La copia fija de un PDF en otro idioma no mezcla idiomas: es una lección de ArquitecturaBase (R1017 #3).
+- **`FormRecordValues`:** suma `CatalogId uuid?`, `ChoiceCode` (texto, el código histórico de una opción a mano, que se ve en la tarjeta de la respuesta) y `ChoiceTexts jsonb`. `ChoiceId` es el id del ítem (opción a mano o miembro), y `ChoiceTexts` guarda **todas** las variantes de idioma del texto y el detalle tal como estaban al responder (`{es?: {text, detail?}, en?: {…}}`). La copia fija de un PDF en otro idioma no mezcla idiomas: es una lección de ArquitecturaBase (R1017 #3).
 - **`WhatsAppFlowSessions`:** suma `ProtectedOffer` (bytea, cifrado con `IPayloadProtector`) y `OfferHash`. La oferta es `[{fieldId, options: [{localId, catalogId, itemId, texts{…}, detail?}]}]`, con todas las variantes de idioma.
 
 ## 4. La fuente «Miembros»
@@ -145,6 +145,8 @@ Se define en el código, en `Application/Modules/Forms/Catalogs/MembersCatalogSo
 | `Forms.Catalog.MoveOutOfRange` | Conflict | subir la primera o bajar la última |
 | `Forms.Catalog.Inactive` | Conflict | cambiar opciones de un catálogo dado de baja, o elegirlo en una pregunta nueva |
 | `Forms.Catalog.WrongSource` | Conflict | opciones en un catálogo con filtros, o filtros en uno a mano |
+| `Forms.Catalog.TooManyOptions` | Conflict | un catálogo con filtros da más de 200 opciones para la persona de ejemplo: no se guarda |
+| `Forms.Catalog.SampleMemberRequired` | Validation (campo `sampleMemberId`) | crear o guardar un catálogo con filtros sin persona de ejemplo |
 | `Forms.Catalog.FiltersInvalid` | Validation (campo `conditions[i]`) | columna, operador o valor fuera de la fuente |
 | `Forms.Catalog.SampleMemberNotFound` | Validation | la persona de ejemplo no es de la organización |
 | `Forms.Catalog.ItemText…` | Validation | textos fuera de límite (`text.es`, `detail.en`…) |
@@ -164,14 +166,11 @@ Las rutas de Business llevan `[Access(Access.Business)]` y `[FeatureGate("forms"
 | --- | --- | --- | --- |
 | GET `/api/organization/forms/catalogs` | `formcatalogs.read` | `page`, `pageSize`, `sort` (`name`, `updatedAtUtc`), `search`, `source` (`all`, `manual`, `members`), `usable?` | 200 `PagedResult<{id, name, source, optionsCount?, usedByCount, usable, unusableReason?}>` |
 | GET `/api/organization/forms/catalogs/filter-counts` | `formcatalogs.read` | `search` | 200 `{all, manual, members}` |
-| POST `/api/organization/forms/catalogs` | `formcatalogs.manage` | `{name{…}, description?, source, originalCulture?, filters?}` (sin cultura, la de quien crea; `Members` no lleva) | 201 detalle + Location |
+| POST `/api/organization/forms/catalogs` | `formcatalogs.manage` | `{name{…}, description?, source, originalCulture?, items?[], filters?, sampleMemberId?}`. Sin cultura, la de quien crea; `Members` no lleva cultura y exige `sampleMemberId` | 201 detalle + Location, con el mapa de ids |
 | GET `/api/organization/forms/catalogs/{id}` | `formcatalogs.read` | — | 200 `{id, name, description, source, filters?, usable, unusableReason?, usedByCount, canManage, version}` |
 | GET `/api/organization/forms/catalogs/{id}/used-by` | `formcatalogs.read` | `page`, `pageSize`, `search`, `sort` (`name`) | 200 `PagedResult<{formId, name}>` |
-| PUT `/api/organization/forms/catalogs/{id}` | `formcatalogs.manage` | `{name, description, filters?, isActive, version}` (`isActive` es obligatorio: omitirlo no apaga nada) | 200 `VersionResponse` |
-| GET `/api/organization/forms/catalogs/{id}/items` | `formcatalogs.read` | `page`, `pageSize`, `search`, `status` (`active`, `inactive`, `all`) | 200 `PagedResult<{id, code, text{…}, detail{…}, position, isActive, version}>`, ordenado por posición |
-| POST `/api/organization/forms/catalogs/{id}/items` | `formcatalogs.manage` | `{code, text{…}, detail?{…}}` (el original obligatorio) | 201; queda última |
-| PUT `/api/organization/forms/catalogs/{id}/items/{itemId}` | `formcatalogs.manage` | `{code, text, detail, isActive, version}` | 200 `VersionResponse` |
-| POST `/api/organization/forms/catalogs/{id}/items/{itemId}/move` | `formcatalogs.manage` | `{direction: up\|down, version}` | 200 `VersionResponse` |
+| PUT `/api/organization/forms/catalogs/{id}` | `formcatalogs.manage` | `{name, description, isActive, version, items?: [{itemId? \| localId, code, text{…}, detail{…}, isActive}], moves?: [{itemId, direction}], filters?, sampleMemberId?}`. `isActive` es obligatorio: omitirlo no apaga nada | 200 `{version, itemIdentityMap}` |
+| GET `/api/organization/forms/catalogs/{id}/items` | `formcatalogs.read` | `page`, `pageSize`, `search`, `status` (`active`, `inactive`, `all`) | 200 `PagedResult<{id, code, text{…}, detail{…}, position, isActive}>`, ordenado por posición |
 | GET `/api/organization/forms/catalogs/sources/members` | `formcatalogs.manage` | — | 200 `{version, columns[{key, type, operators, canDetail, canSort}]}`; catálogo cerrado de columnas y operadores de la §4 |
 | GET `/api/organization/forms/catalogs/sources/members/roles` | `formcatalogs.manage` | `page`, `pageSize`, `search`, `sort` (`name`) | 200 `PagedResult<{id, name}>` de roles de la organización |
 | GET `/api/organization/forms/catalogs/sources/members/companies` | `formcatalogs.manage` | `page`, `pageSize`, `search`, `sort` (`name`) | 200 `PagedResult<{id, name}>` de empresas de la organización |
@@ -189,13 +188,16 @@ Las pruebas de integración recorren una segunda página de `used-by`, roles y e
 ## 7. Flujos
 
 1. **Crear un catálogo:** se valida afuera y se crea en una UoW. Si es `Members`, sus filtros se validan contra la fuente.
-2. **Opciones** (C6), cada operación en una UoW con la versión del ítem:
-   - **crear:** bloqueo del catálogo, tope de 500, código libre y posición = última + 1;
-   - **editar:** cambia texto, detalle, código o el estado activo;
-   - **subir o bajar:** bloqueo del catálogo, se busca la vecina activa o dada de baja en el orden de posición, y se intercambian las dos posiciones. La restricción diferida admite el intercambio.
+2. **Guardar un catálogo a mano** (C6): una UoW con la versión del catálogo.
+   - Bloqueo del catálogo.
+   - Las opciones cambiadas: las nuevas van al final, se respeta el tope de 500 y el código tiene que estar libre.
+   - Los movimientos, en orden, sobre el orden global por posición e id; después se renumera. La restricción diferida admite los intercambios.
+   - Un movimiento fuera de rango revierte todo el guardado.
+   - Responde la versión y el mapa de ids.
 3. **Filtros:**
-   - `PUT` del catálogo con su versión; los filtros se validan contra la fuente;
-   - guardar con más de 200 resultados para la persona de ejemplo está permitido: la vista previa avisa, y el bloqueo es al mandar ([§13](#13-decisiones-de-producto-de-la-etapa)).
+   - `POST` o `PUT` del catálogo con su versión y la persona de ejemplo: sin ella no se crea;
+   - los filtros se validan contra la fuente y se vuelve a correr la vista previa con esa persona;
+   - **con más de 200 resultados no se guarda** (`Forms.Catalog.TooManyOptions`): lo cambió el usuario al aprobar los tableros de la v129 ([§13](#13-decisiones-de-producto-de-la-etapa)). Al mandar, el tope se vuelve a comprobar para cada destinatario.
 4. **Vista previa:** corre el lector con los filtros sin guardar, con la persona de ejemplo como destinatario. No toma su identidad ni sus permisos, y no escribe nada.
 5. **Pregunta de catálogo:**
    - `PUT …/draft` valida que el catálogo exista y se pueda usar;
@@ -223,7 +225,7 @@ No hay puertos nuevos; cambian los modelos de la E12:
 - **`StructuredFormVersion.Questions[]`:** suma el tipo `CatalogChoice`.
 - **`FindSendableAsync`:** devuelve `StructuredSendableForm(Version, Offers[FieldId → Options[ItemRef(CatalogId, ItemId), Text, Detail?]], Problems[FieldId, Code])`.
 - **`ListSendableAsync`:** suma `HasProblems` por formulario.
-- **`StructuredRecordCapture.Values[]`:** suma `CatalogId?` y `ChoiceTexts` (todas las variantes de idioma), con `ChoiceId`.
+- **`StructuredRecordCapture.Values[]`:** suma `CatalogId?`, `ChoiceCode?` y `ChoiceTexts` (todas las variantes de idioma), con `ChoiceId`.
 
 ## 9. Archivos
 
@@ -248,56 +250,41 @@ Los modelos están en este repo; no se copia código de ArquitecturaBase. Las ab
 
 **Punteros:** las carpetas nuevas de la E13 (`Catalogs/`) llevan su `AGENTS.md` y su `CLAUDE.md` al crearse. La ficha `docs/features/formularios.md` suma la sección de catálogos al cerrar.
 
-## 10. Pantallas (tableros para Diseño)
+## 10. Pantallas (tableros)
 
-Valen los criterios y los datos de ejemplo de la E12 ([texto para Diseño](e12-texto-diseno.md)). El texto para Diseño de esta etapa está en [e13-texto-diseno.md](e13-texto-diseno.md). Ejemplos para esta etapa:
-- **«Motivos de visita»:** a mano, con Seguimiento, Venta nueva, Reclamo y Cobranza (dada de baja).
-- **«Supervisores»:** con filtros, «rol tiene Supervisor» y «Sin incluir a quien lo recibe».
-- **«Clientes mayoristas»:** a mano, que no se puede usar porque no tiene opciones activas.
+**Aprobados y publicados en el lienzo v129** (2026-10-17, front `e1a7b50a`), página «Organización · Formularios». Siguen la disposición de ArquitecturaBase, K1 a K7 (decisión 18); la consulta con SQL (K5) no entra. Las decisiones están en «Criterio · Decisiones por pantalla», grupo «E13 · Catálogos con la disposición de ArquitecturaBase». Los tableros del 13 y el 14/10, incluido `FRM-Catalogo-Opcion`, pasan a la página «Archivo».
 
-| Tablero | Qué muestra | Estados |
-| --- | --- | --- |
-| `FRM-Catalogos` y `M-FRM-Catalogos` | listado: nombre, origen (A mano o Con filtros), opciones, «Lo usan» y estado; «Nuevo catálogo»; filtro «Origen ▾» | vacío, sin resultados, «No se puede usar» con ⓘ del motivo |
-| `FRM-Catalogo-Nuevo` | diálogo: nombre y origen con el control segmentado «Escribirlas a mano | Tomarlas de los miembros, con filtros», la pieza de Plantilla nueva, Difusión nueva, el bot y el asistente (decisión del usuario del 2026-10-13); el ⓘ dice «No se puede cambiar después.» | — |
-| `FRM-Catalogo` y `M-FRM-Catalogo` (a mano) | ficha con pestañas: **Opciones** (tabla con posición, texto, detalle y código, ⋮ con Editar, Subir, Bajar y Dar de baja o Reactivar; filtro Activas, Dadas de baja y Todas; «Agregar opción») y **Datos** (nombre y descripción es/en; «Lo usan») | sin opciones, 500 alcanzadas, conflicto |
-| `FRM-Catalogo-Opcion` y `M-FRM-Catalogo-Opcion` | diálogo u hoja: texto en el original y su traducción (≤30 cada uno, con contador), detalle (≤300) y código | código repetido, texto largo |
-| `FRM-Catalogo-Filtros` y `M-FRM-Catalogo-Filtros` | ficha con filtros: filas de condición («Si», «y») con columna, operador y valor; «Sin incluir a quien lo recibe»; detalle (ninguno, roles, empresas) y orden. Al costado, «Como si lo recibiera» con una persona elegida, «Probar» y el resultado | N opciones, ninguna, más de 200 (aviso), rol o empresa que ya no existe |
-| `FRM-Pregunta` (variante) | tipo «Elegir de un catálogo», con un selector de catálogo; los que no se pueden usar aparecen apagados con su motivo | catálogo elegido, sin catálogos |
-| `WA-Chats-Formulario` (variante) | avisos por pregunta: más de 200 opciones, ninguna en una obligatoria, catálogo que no se puede usar; «Mandar» apagado | — |
-| `WA-Chats-Respuesta` (variante) | la tarjeta con un valor de catálogo; rechazada porque «una opción se dio de baja», nombrando la pregunta, con «Mandar de nuevo» | — |
-| `Rol` (ajuste) | el área Formularios suma «Ver catálogos» y «Administrar catálogos» | — |
+| Tablero | Qué muestra |
+| --- | --- |
+| `FRM-Catalogos` y `M-FRM-Catalogos` | tabla con Catálogo (y su descripción), De dónde salen («Escritas a mano» o «De los miembros, con filtros»), Opciones, Lo usan y Estado (Activo; No se puede usar, con el motivo debajo; Dado de baja). El nombre abre el editor, sin columna de acciones. Filtros «Origen ▾» y «Estado ▾». En el teléfono, «Filtros» y «+» |
+| `FRM-Catalogo-Nuevo` | el diálogo pregunta solo de dónde salen las opciones, en dos tarjetas. «Continuar» abre el editor, donde se escribe el nombre |
+| `FRM-Catalogo` y `M-FRM-Catalogo` (a mano) | una sola pantalla, como el editor de formularios: <ul><li>«Textos en», con el inglés opcional;</li><li>el catálogo: nombre, de dónde salen (fijo) y descripción;</li><li>las opciones con buscador y «Estado ▾». Cada una se abre en el lugar (texto hasta 30, código, detalle y «Activa») y tiene ⋮ con Editar, Subir, Bajar y Dar de baja o Reactivar;</li><li>al costado, «Lo usan» y «Así lo ve el empleado».</li></ul>«Guardar cambios» guarda todo junto, y al crear, «Crear catálogo». «Dar de baja» va en el ⋮ de la banda. En el teléfono, las opciones van en hojas |
+| `FRM-Catalogo-Filtros` y `M-FRM-Catalogo-Filtros` | una sola pantalla: el catálogo y «De dónde salen: los miembros, con filtros», con la vista Miembros (Nombre, Rol, Empresa y Activo), el texto, el detalle, las condiciones, «sin incluir a quien lo recibe» y el orden. Al costado, «Vista previa» con «Como si lo recibiera» y «Probar». En el teléfono, las condiciones van en hojas y la vista previa abajo |
+| `FRM-Editor` y `M-FRM-Editor` (K6) | la pregunta «Elegir de un catálogo» se abre en el lugar, con el desplegable de catálogos, «Ver el catálogo» y el estado sin catálogos. Los que no se pueden usar aparecen apagados, con su motivo |
+| `WA-Chats-Formulario`, `M-WA-Chats-Formulario` y `WA-Chats-Respuesta` (K7) | al mandar, las opciones de cada pregunta y «Preparando las opciones para esta persona…». La respuesta muestra el catálogo y el código debajo del valor |
 
-**Dónde viven los catálogos** (decisión del usuario del 2026-10-13): en el segundo panel de Formularios, que abre «Formularios» y «Catálogos»; en el teléfono, en el grupo de «Más». Sigue la regla de secciones, pestañas y filtros de `docs/rules/pantallas-y-ui.md` del front, y los filtros de los listados van como desplegables, no como pestañas.
-
-**Dibujados y aprobados en el lienzo v124**, con las decisiones del usuario del 13 y el 14/10 en «Criterio · Decisiones por pantalla» (grupo E13). Los tableros son:
-- `FRM-Catalogos`, `FRM-Catalogo-Nuevo`, `FRM-Catalogo`, `FRM-Catalogo-Opcion` y `FRM-Catalogo-Filtros`;
-- los teléfonos `M-FRM-Catalogos`, `M-FRM-Catalogo`, `M-FRM-Catalogo-Opcion` y `M-FRM-Catalogo-Filtros`;
-- el tipo catálogo en `FRM-Pregunta`;
-- las variantes de `WA-Chats-Formulario` y `WA-Chats-Respuesta`;
-- los dos permisos en `Rol`.
+**Estados que dibujan:**
+- **Listado:** filtro abierto, sin coincidencias, cargando, vacío y error.
+- **Catálogo a mano:**
+  - opción sin completar, código repetido y texto de más de 30;
+  - guardado, no se guardó y la revisión si otra persona guardó;
+  - sin opciones, 500 opciones, nuevo, falta el nombre, cargando y no existe.
+- **Catálogo con filtros:**
+  - con más de 200 opciones, no se guarda;
+  - sin persona de ejemplo, no se crea;
+  - un rol que ya no existe deja el catálogo en «No se puede usar».
+- **Al mandar:**
+  - el mensaje «Motivo: 3 opciones» por pregunta;
+  - en rojo, con el envío apagado y sin enlace: más de 200 opciones, ninguna en una pregunta obligatoria, o un catálogo que no se puede usar («Avisale a quien lo administra»).
+- **Respuesta:** una opción dada de baja no se guarda («Motivo: una opción se dio de baja. No se guardó la respuesta.») y ofrece «Mandar de nuevo».
 
 **Mandan sobre esta spec en:**
-- **Regla general (Criterio · Menús):**
-  - las secciones de un área van en un segundo panel y las pestañas, solo en los grupos de datos de una ficha;
-  - los filtros de un listado son desplegables (en el teléfono, «Filtros» con un punto);
-  - dos vistas de una misma lista usan un control segmentado;
-  - lo que no aplica no aparece, y lo que no se puede usar por algo que se resuelve va en gris, con su motivo debajo.
-- **Listado:** «Catálogos» es un ítem del panel «Formularios», al lado de Formularios, con nombre, origen, opciones, «Lo usan» y estado con ⓘ. El filtro es el desplegable «Origen ▾», no pestañas Todos, A mano y Con filtros.
-- **Nuevo catálogo:** el origen se elige con el control segmentado «Escribirlas a mano | Tomarlas de los miembros, con filtros». El ⓘ dice «No se puede cambiar después.».
-- **Catálogo a mano:**
-  - pestañas «Opciones | Datos»;
-  - la tabla tiene número, texto, detalle, código y estado, con ⋮ (Editar, Subir, Bajar y Dar de baja o Reactivar), y el tope de 500;
-  - en Datos, el nombre y la descripción en es/en y «Lo usan», en grilla.
-- **Opción:** cada texto lleva su inglés a la derecha. El texto tiene hasta 30 caracteres, con contador, y el código es único en el catálogo.
-- **Catálogo con filtros:**
-  - pestañas «Filtros | Datos»;
-  - cada condición es una fila con tres desplegables, más «Otras opciones»;
-  - «Como si lo recibiera» va al costado, con «Probar»;
-  - con más de 200 opciones avisa y se puede guardar, y un rol borrado deja el catálogo sin poder usarse.
-- **Pregunta:** el campo «Catálogo». Los que no se pueden usar aparecen apagados, con su motivo.
-- **Mandar desde el chat:** un aviso por pregunta (más de 200 opciones, ninguna, o un catálogo que no se puede usar) con «Ver el catálogo», y «Mandar» apagado. En el teléfono, lo mismo en la hoja.
-- **Respuesta:** se guarda el texto que vio la persona. Si la opción a mano se dio de baja, la tarjeta roja nombra la pregunta y ofrece «Mandar de nuevo».
-- **Teléfono:** el listado con «Filtros» y «+», y las fichas con pestañas y hojas. **El editor de filtros va completo,** como la ficha de un formulario. Esto era la elección que quedaba abierta.
+- **Guardado (C6):** todo se guarda junto en un `PUT` del catálogo, con su versión; ya no hay rutas por opción.
+- **Nuevo catálogo:** primero se elige el origen, y el nombre se escribe en el editor; el `POST` sale de «Crear catálogo».
+- **Más de 200 con filtros:** **no se guarda** (`Forms.Catalog.TooManyOptions`), y sin persona de ejemplo no se crea (`Forms.Catalog.SampleMemberRequired`). El usuario lo cambió al aprobar estos tableros: reemplaza a la 12 y a la 22 de la hoja de ruta ([§13](#13-decisiones-de-producto-de-la-etapa)).
+- **El código de la opción se ve en la tarjeta de la respuesta,** debajo del valor (nunca en WhatsApp). Por eso la captura guarda también el código histórico (`ChoiceCode`), junto con `ChoiceTexts`.
+- **Catálogos en otro idioma:** siguen sin aparecer en el selector (C11, decisión 20). Los que no se pueden usar por algo que se resuelve, sí aparecen apagados.
+- **Textos del listado:** «De dónde salen» dice «Escritas a mano» o «De los miembros, con filtros».
 
 ## 11. Tests
 
@@ -327,7 +314,7 @@ Valen los criterios y los datos de ejemplo de la E12 ([texto para Diseño](e12-t
 Las tomó el usuario el 2026-10-13. No se vuelven a preguntar.
 
 1. **Un nombre de miembro de más de 30 caracteres** (el título de una opción en WhatsApp) se corta en 29 y se le agrega «…», y el nombre completo va primero en el detalle de la opción. Siempre se puede mandar. Las opciones a mano no lo necesitan, porque su texto ya tiene un tope de 30 al guardarse.
-2. **Un catálogo con filtros que da más de 200 opciones se puede guardar.** La vista previa avisa «Más de 200: no se va a poder mandar» y el bloqueo es al mandar, porque la cantidad cambia igual cuando la organización crece.
+2. **Un catálogo con filtros que da más de 200 opciones no se guarda.** Así lo eligió el usuario al aprobar los tableros de la v129 (2026-10-17), como en ArquitecturaBase. Reemplaza la decisión del 13/10 y la 22 de la hoja de ruta. Al mandar, el tope se vuelve a comprobar, porque la cantidad cambia cuando la organización crece.
 
 ## 14. Referencia tomada de ArquitecturaBase
 
@@ -356,7 +343,7 @@ La puerta de la etapa, más una **prueba real con Meta** con el número de una o
 Vienen del anexo C §2 (etapa 2, cerrada el 2026-10-15) y del [06 de lecciones](../2026-10-17-formularios-traspaso/06-lecciones.md) del traspaso:
 - **Los límites del canal se validan al guardar** (30 y 300 por idioma), no al mandar; la vista previa marca lo que no entra.
   - En ArquitecturaBase, nunca se trunca. Acá, la decisión 11 corta los nombres largos con «…», y la decisión 21 (2026-10-17) la mantiene.
-- **Más de 200 resultados:** en ArquitecturaBase, un catálogo con filtros que da más de 200 no se guarda. Acá, la decisión 12 lo deja guardar con aviso, y la decisión 22 la mantiene.
+- **Más de 200 resultados:** como en ArquitecturaBase, un catálogo con filtros que da más de 200 no se guarda. Lo eligió el usuario con los tableros de la v129 (decisión 22, actualizada).
 - **Referencias por id,** nunca por nombre: un rol renombrado no vacía el catálogo, y dar de baja un rol tampoco lo invalida.
 - **Opciones vacías:** no viajan, y el texto de una opción sale de un campo que siempre tiene valor (en Miembros, el nombre).
 - **Al operador** le llegan solo la cantidad y los problemas, nunca los nombres de las personas ofrecidas.

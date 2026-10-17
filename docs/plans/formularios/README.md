@@ -13,7 +13,7 @@ Esta carpeta está fuera del detector (`docs/plans/**`).
 | Etapa | Spec | Estado |
 | --- | --- | --- |
 | 12 · Formularios: crear, publicar, mandar y recibir | [e12-formularios.md](e12-formularios.md) | Spec escrita; tableros aprobados en el lienzo v128, con la disposición de ArquitecturaBase |
-| 13 · Catálogos | [e13-catalogos.md](e13-catalogos.md) | Spec escrita; tableros de la v124, que Diseño rehace con la disposición de ArquitecturaBase (decisión 18) |
+| 13 · Catálogos | [e13-catalogos.md](e13-catalogos.md) | Spec escrita; tableros aprobados en el lienzo v129, con la disposición de ArquitecturaBase |
 | 14 · Fotos y documentos | [e14-fotos-y-documentos.md](e14-fotos-y-documentos.md) | Resumen de una página (2026-10-17), desde el traspaso |
 | 15 · Planilla y Excel | [e15-planilla.md](e15-planilla.md) | Resumen de una página (2026-10-17), con el detalle D2 |
 | 16 · Reglas, aprobación y PDF | [e16-reglas-y-aprobacion.md](e16-reglas-y-aprobacion.md) | Resumen de una página (2026-10-17) |

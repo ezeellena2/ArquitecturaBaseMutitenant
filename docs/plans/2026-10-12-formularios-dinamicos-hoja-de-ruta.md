@@ -331,7 +331,7 @@ Decididas por el usuario entre el 2026-10-12 y el 2026-10-17. No se vuelven a pr
 9. **Varias empresas:** si quien responde es miembro de varias empresas, la respuesta guarda todas sus empresas activas, y el filtro por empresa la encuentra por cualquiera.
 10. **Quién manda un formulario desde el chat:** cualquiera con «Atender internos», sin permiso aparte. Lo que limita es que quien recibe tenga `formrecords.create`.
 11. **Nombres largos en un catálogo de miembros:** si pasan los 30 caracteres del título de una opción en WhatsApp, se cortan con «…» y el nombre completo va en el detalle.
-12. **Catálogo con filtros de más de 200 opciones:** se puede guardar con aviso; el bloqueo es al mandar.
+12. **Catálogo con filtros de más de 200 opciones:** se puede guardar con aviso; el bloqueo es al mandar. *La reemplazó la 22 el 2026-10-17: no se guarda.*
 13. **Biblioteca, edición:** borrador y publicar, con versiones; publicar y retirar piden motivo.
 14. **Biblioteca, catálogos:** una plantilla trae solo catálogos a mano.
 15. **Biblioteca, categorías:** las arma la plataforma (nombre es/en y orden), sin listas fijas en el código.
@@ -353,7 +353,9 @@ Elegidas por el usuario el 2026-10-17, entre las que quedaron al alinear el bloq
 
 20. **Catálogo a mano en otro idioma que el formulario:** solo sirven los catálogos con el mismo idioma original que el formulario; los demás no aparecen en el selector (C11 de la E13).
 21. **Nombres de miembros de más de 30 caracteres:** se mantiene la decisión 11, que los corta con «…» y pone el nombre completo en el detalle. ArquitecturaBase no trunca, pero acá el nombre es el de la cuenta de cada persona y bloquear dejaría sin uso el catálogo.
-22. **Catálogo con filtros de más de 200 opciones:** se mantiene la decisión 12. Se guarda con aviso, y el bloqueo es al mandar.
+22. **Catálogo con filtros de más de 200 opciones:** **no se guarda**, como en ArquitecturaBase. Al mandar, el tope se vuelve a comprobar para cada destinatario.
+    - El 17/10 se había mantenido la 12 (guardar con aviso).
+    - El mismo día, al aprobar los tableros de la E13 en el lienzo v129, el usuario eligió que no se guarde («Criterio · Decisiones por pantalla», grupo E13). Esta decisión reemplaza a la 12.
 23. **Cuánto se guardan las respuestas, sus archivos y sus PDF:** sin plazo mientras exista la organización. Se borran con la baja de la organización, y lo personal de quien da de baja su cuenta, con el participante de la baja. Se revisa con el primer cliente.
 24. **La empresa en la planilla:** un filtro «Empresa ▾» y una columna «Empresas» que se puede ocultar desde «Columnas».
 25. **Quién aprueba:** cualquiera de la organización con el rol de la regla y `formapprovals.decide`, salvo quien cargó la respuesta.
