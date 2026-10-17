@@ -30,6 +30,7 @@ public static class DependencyInjection
         services.AddAuthorization();
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+        services.AddSingleton<IAuthorizationMiddlewareResultHandler, CompanyNotFoundResultHandler>();
         services.AddScoped<IDisabledFeaturesHandler, DisabledFeatureHandler>();
         services.AddAntiforgery(options =>
         {

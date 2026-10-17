@@ -7,9 +7,12 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace ArquitecturaBaseMultitenant.Api.Authorization;
 
-/// <summary>Comprueba permisos actuales del acceso, sin incluirlos en un token de vida larga.</summary>
+/// <summary>
+/// Comprueba permisos actuales del acceso, sin incluirlos en un token de vida larga. Una empresa de la ruta que no es de
+/// la organización activa falla con <see cref="CompanyNotFoundReason"/>: responde 404, como la que no existe (E9, CC2).
+/// </summary>
 internal sealed class PermissionAuthorizationHandler(ICurrentUser currentUser, ITenantContext tenantContext,
-    IPermissionService permissions, IPlatformPermissionService platformPermissions)
+    IPermissionService permissions, IPlatformPermissionService platformPermissions, ICompanyService companies)
     : AuthorizationHandler<PermissionRequirement>
 {
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context,
@@ -41,6 +44,11 @@ internal sealed class PermissionAuthorizationHandler(ICurrentUser currentUser, I
         };
 
         if (granted) context.Succeed(requirement);
+        else if (requirement.Kind == PermissionKind.Company && currentUser.Access == Access.Business
+            && tenantContext.TenantKind == TenantKind.Business && tenantContext.TenantId is not null
+            && context.Resource is HttpContext request && TryCompanyId(request, out var company)
+            && await companies.GetAsync(company, cancellationToken) is { IsFailure: true, Error.Code: CompanyErrors.NotFoundCode })
+            context.Fail(new CompanyNotFoundReason(this));
     }
 
     private static bool TryCompanyId(HttpContext context, out Guid companyId)

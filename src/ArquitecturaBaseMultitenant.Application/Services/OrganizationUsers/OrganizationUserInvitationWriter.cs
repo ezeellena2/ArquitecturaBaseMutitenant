@@ -93,12 +93,12 @@ internal sealed class OrganizationUserInvitationWriter(
         return await accessCleaner.RemoveUnacceptedMemberIfOrphanedAsync(invitationId, locked.Value.MemberId, ct);
     }
 
-    // Toma los locks del destino y de la invitación, y la relee. Desde una empresa, la que no se puede resolver desde
-    // ella responde como la que no existe; desde Usuarios, las dos siguen siendo Invalid.
+    // Toma los locks del destino y de la invitación, y la relee. La que no existe, o es de otra organización, responde
+    // NotFound (E9, CC1); desde una empresa, también la que no se puede resolver desde ella.
     private async Task<Result<Invitation>> LockInvitationAsync(Guid invitationId, CompanyInvitationScope? company,
         CancellationToken ct)
     {
-        var missing = company is null ? InvitationErrors.Invalid : InvitationErrors.NotFound;
+        var missing = InvitationErrors.NotFound;
         var firstRead = await invitations.GetByIdAsync(invitationId, ct);
         if (firstRead is null) return missing;
         await externalLoginLock.LockIdentityAsync(firstRead.Destination, ct);

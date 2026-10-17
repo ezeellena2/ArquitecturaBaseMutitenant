@@ -1,7 +1,11 @@
 using System.Security.Claims;
 using ArquitecturaBaseMultitenant.Api.Authorization;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
+using ArquitecturaBaseMultitenant.Application.Models.Companies;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +14,10 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Organization;
 
-/// <summary>Comprueba que los tres atributos exijan su clase de acceso y que la empresa venga de la ruta.</summary>
+/// <summary>
+/// Comprueba que los tres atributos exijan su clase de acceso y que la empresa venga de la ruta. Una empresa que no es de
+/// la organización activa falla como la que no existe (E9, CC2).
+/// </summary>
 public sealed class PermissionAuthorizationTests
 {
     [Fact]
@@ -68,9 +75,32 @@ public sealed class PermissionAuthorizationTests
             Access.Platform, tenant, tenantKind: null));
     }
 
+    // E9 (CC2): la empresa de otra organización responde 404 como la que no existe; la propia sin permiso, 403.
+    [Fact]
+    public async Task A_company_outside_the_organization_fails_as_not_found_and_an_own_one_as_forbidden()
+    {
+        var tenant = Guid.CreateVersion7();
+        var company = Guid.CreateVersion7();
+        var policy = PermissionPolicyProvider.CompanyPrefix + "company.members.read";
+
+        var foreign = await HandleAsync(policy, Access.Business, tenant, TenantKind.Business, companyId: company,
+            companyInOrganization: false);
+        var own = await HandleAsync(policy, Access.Business, tenant, TenantKind.Business, companyId: company);
+
+        Assert.Contains(foreign.FailureReasons, reason => reason is CompanyNotFoundReason);
+        Assert.False(own.HasSucceeded);
+        Assert.Empty(own.FailureReasons);
+    }
+
     private static async Task<bool> AuthorizeAsync(string policyName, Access access, Guid? tenantId,
         TenantKind? tenantKind, bool organizationGrant = false, bool companyGrant = false,
-        bool platformGrant = false, Guid? companyId = null)
+        bool platformGrant = false, Guid? companyId = null) =>
+        (await HandleAsync(policyName, access, tenantId, tenantKind, organizationGrant, companyGrant, platformGrant,
+            companyId)).HasSucceeded;
+
+    private static async Task<AuthorizationHandlerContext> HandleAsync(string policyName, Access access, Guid? tenantId,
+        TenantKind? tenantKind, bool organizationGrant = false, bool companyGrant = false,
+        bool platformGrant = false, Guid? companyId = null, bool companyInOrganization = true)
     {
         var provider = new PermissionPolicyProvider(Options.Create(new AuthorizationOptions()));
         var policy = await provider.GetPolicyAsync(policyName);
@@ -79,7 +109,8 @@ public sealed class PermissionAuthorizationTests
         var tenant = new TestTenantContext(tenantId, tenantKind);
         var permissions = new TestPermissions(organizationGrant, companyGrant);
         var platformPermissions = new TestPlatformPermissions(platformGrant);
-        var handler = new PermissionAuthorizationHandler(current, tenant, permissions, platformPermissions);
+        var handler = new PermissionAuthorizationHandler(current, tenant, permissions, platformPermissions,
+            new TestCompanies(companyInOrganization));
         var request = new DefaultHttpContext();
         if (companyId is { } id) request.Request.RouteValues["companyId"] = id.ToString("D");
         var principal = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier,
@@ -87,7 +118,7 @@ public sealed class PermissionAuthorizationTests
         var context = new AuthorizationHandlerContext(policy!.Requirements
             .Where(requirement => requirement is PermissionRequirement), principal, request);
         await handler.HandleAsync(context);
-        return context.HasSucceeded;
+        return context;
     }
 
     private sealed class TestCurrentUser(Access access) : ICurrentUser
@@ -113,6 +144,24 @@ public sealed class PermissionAuthorizationTests
             Task.FromResult<IReadOnlyDictionary<Guid, IReadOnlyList<string>>>(new Dictionary<Guid, IReadOnlyList<string>>());
         public Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken ct) => Task.FromResult(organizationGrant);
         public Task<bool> HasCompanyPermissionAsync(Guid userId, Guid companyId, string permission, CancellationToken ct) => Task.FromResult(companyGrant);
+    }
+
+    private sealed class TestCompanies(bool inOrganization) : ICompanyService
+    {
+        public Task<Result<CompanyResponse>> GetAsync(Guid companyId, CancellationToken cancellationToken) =>
+            Task.FromResult(inOrganization
+                ? Result.Success(new CompanyResponse(companyId, "Propia", null, "UTC", CompanyStatus.Active, 1, 1, DateTime.UnixEpoch))
+                : Result.Failure<CompanyResponse>(CompanyErrors.NotFound));
+        public Task<Result<PagedResult<CompanyResponse>>> ListAsync(ListCompaniesRequest request, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<Result<CompanyFilterCountsResponse>> GetFilterCountsAsync(ListCompaniesRequest request, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<Result<Guid>> CreateAsync(CreateCompanyRequest request, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<Result<VersionResponse>> UpdateAsync(UpdateCompanyRequest request, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<Result<VersionResponse>> ChangeStatusAsync(ChangeCompanyStatusRequest request, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     private sealed class TestPlatformPermissions(bool grant) : IPlatformPermissionService
