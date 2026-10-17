@@ -46,6 +46,17 @@ public sealed partial class BuildConfigurationTests
     }
 
     [Fact]
+    public void Backend_ci_fails_on_unformatted_code_before_building()
+    {
+        var workflow = File.ReadAllText(Path.Combine(SolutionRoot.FullPath, ".github", "workflows", "ci.yml"));
+        var format = workflow.IndexOf("dotnet format ArquitecturaBaseMultitenant.slnx --verify-no-changes", StringComparison.Ordinal);
+
+        Assert.True(format >= 0, "El CI del back no verifica el formato.");
+        Assert.True(format < workflow.IndexOf("dotnet build ArquitecturaBaseMultitenant.slnx", StringComparison.Ordinal),
+            "El formato se verifica antes de compilar.");
+    }
+
+    [Fact]
     public void Front_ci_pins_the_same_official_actions_when_the_sibling_checkout_is_present()
     {
         var front = Path.GetFullPath(Path.Combine(SolutionRoot.FullPath, "..", "ArquitecturaBaseMutitenantFront"));

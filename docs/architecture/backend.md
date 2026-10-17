@@ -15,7 +15,7 @@ Panorama de la plantilla B2B + B2C. Una persona tiene una cuenta y elige Persona
 | Orquestación local | Aspire 13.5 (AppHost + ServiceDefaults) |
 | Observabilidad | `Microsoft.Extensions.Logging` + OpenTelemetry (sin Serilog) |
 | Tests | xUnit v3, Testcontainers (`postgres:18.x`), NetArchTest + Mono.Cecil, `FakeTimeProvider`, dobles a mano (sin Moq ni FluentAssertions) |
-| Build | `TreatWarningsAsErrors`, `AnalysisLevel=10.0-recommended`, `EnforceCodeStyleInBuild`, BannedApiAnalyzers, Central Package Management |
+| Build | `TreatWarningsAsErrors`, `AnalysisLevel=10.0-recommended`, `EnforceCodeStyleInBuild`, BannedApiAnalyzers, Central Package Management; el CI verifica el formato con `dotnet format --verify-no-changes` antes de compilar (E9) |
 
 Las versiones son las mismas de `Directory.Packages.props`. `NodaTime` no se usa: alcanza con `TimeZoneInfo` e IDs IANA.
 

@@ -43,6 +43,10 @@ jobs:
       - name: Restaurar
         run: dotnet restore ArquitecturaBaseMultitenant.slnx
 
+      # E9: el formato es parte del build; un archivo sin formatear rompe el CI.
+      - name: Verificar formato
+        run: dotnet format ArquitecturaBaseMultitenant.slnx --verify-no-changes --no-restore
+
       - name: Compilar
         run: dotnet build ArquitecturaBaseMultitenant.slnx --configuration Release --no-restore
 
