@@ -205,17 +205,41 @@ Valen los criterios de la E12. El texto para Diseño está en [e17-texto-diseno.
 | `Plat-FRM-Plantilla-Nueva` | diálogo con el nombre y la categoría | — |
 | `Plat-FRM-Plantilla` | ficha con pestañas: **Preguntas** e **Inglés** (las piezas de la E12), **Catálogos** (los catálogos a mano de la plantilla, con sus opciones) y **Publicación** (estado, versiones con fecha, operador y motivo, «Publicar», «Retirar» y «Volver a publicar») | cambios sin publicar, conflicto |
 | `Plat-FRM-Publicar` y `Plat-FRM-Retirar` | diálogos con el motivo. Publicar muestra además la comprobación (problemas por pregunta o catálogo) | sin problemas, con problemas |
-| `Plat-FRM-Categorias` | lista con orden (⋮ con Editar, Subir, Bajar y Borrar), diálogo de alta y edición con motivo | borrar una en uso = aviso |
+| `Plat-FRM-Categorias` | lista con orden (⋮ con Editar, Subir, Bajar y Borrar), diálogo de alta y edición con motivo | una en uso: «Borrar» apagado con su motivo |
 | `FRM-Biblioteca` y `M-FRM-Biblioteca` | para la organización: tarjetas por categoría, con un buscador | sin plantillas |
 | `FRM-Plantilla` y `M-FRM-Plantilla` | la vista de una plantilla: descripción, preguntas, catálogos que trae y la vista del teléfono; «Usar esta plantilla» | sin permiso de catálogos = botón apagado con su motivo |
 | `FRM-Plantilla-Usar` | diálogo con el nombre y el prefijo propuesto; al confirmar, abre la ficha del formulario nuevo | prefijo tomado: se propone otro |
 | `Cuenta-Plat` (ajuste) | los permisos del operador suman «Administrar la biblioteca de formularios» | — |
 
-**Elecciones para mostrar con opciones:**
-- **Dónde ve la organización la biblioteca:**
-  - recomendado: en «Nuevo formulario», con dos caminos, «Desde cero» y «Desde una plantilla»;
-  - alternativa: «Biblioteca» como otra sección del panel de Formularios (con la regla del 2026-10-13, ya no puede ser una pestaña).
-- **El menú de Plataforma:** «Formularios» como ítem propio, o dentro de una sección de módulos.
+**Dibujados y aprobados en el lienzo v126** (front `8863e87e`), con las decisiones del usuario del 14 al 17/10 en «Criterio · Decisiones por pantalla» (grupo E17). Los tableros son:
+- `Plat-FRM-Biblioteca`, `Plat-FRM-Plantilla-Nueva`, `Plat-FRM-Plantilla`, `Plat-FRM-Publicar`, `Plat-FRM-Retirar` y `Plat-FRM-Categorias`;
+- `FRM-Biblioteca`, `FRM-Plantilla` y `FRM-Plantilla-Usar`;
+- los teléfonos `M-Plat-FRM-Biblioteca`, `M-FRM-Biblioteca` y `M-FRM-Plantilla`;
+- el ajuste de `Cuenta-Plat`.
+
+**Decisiones del usuario.** Eligió todas las recomendadas, y ya no hay elecciones abiertas:
+- **Plataforma:** «Formularios» es un grupo de Administración, con Biblioteca y Categorías.
+- **Pestaña Catálogos de la plantilla:** una fila por catálogo, con sus opciones y la pregunta que lo usa. Cada catálogo se abre aparte.
+- **Retirar:** va en el ⋮ de la banda, en rojo. El diálogo pide motivo y dice que las copias ya hechas no cambian.
+- **Categorías:**
+  - la lista con orden y ⋮ (Editar, Subir, Bajar y Borrar);
+  - crear, editar, mover y borrar piden motivo;
+  - una categoría en uso deja «Borrar» apagado, con su motivo.
+- **Organización:**
+  - la biblioteca se abre desde «Nuevo formulario ▾», con «Desde cero» y «Desde una plantilla»;
+  - en el teléfono, el «+» pregunta lo mismo.
+
+**Mandan sobre esta spec en:**
+- **Biblioteca de Plataforma:** filtros Estado y Categoría, y los estados vacía, sin resultados, cargando y error. En el teléfono es solo para ver.
+- **Publicación de una plantilla:**
+  - el estado va en grilla, con las versiones (número, fecha, operador y motivo);
+  - en borrador dice «Todavía no se publicó.»;
+  - una retirada muestra quién la retiró, el motivo y «Volver a publicar».
+- **Publicar:** el motivo y la comprobación. Muestra qué cambia, o los problemas por pregunta o por catálogo con «Publicar» apagado. La primera publicación es la versión 1, y volver a publicar sin cambios repite la misma.
+- **Usar una plantilla:**
+  - se pide el nombre y se propone el prefijo; si VIS está tomado, se propone VIS2, con ⓘ;
+  - si la plantilla se retiró en el medio, avisa y vuelve a la biblioteca;
+  - sin permiso de catálogos, «Usar esta plantilla» aparece apagado con ⓘ (en el teléfono, con el motivo debajo).
 
 ## 9. Tests
 

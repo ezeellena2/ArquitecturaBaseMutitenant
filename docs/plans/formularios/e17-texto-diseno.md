@@ -15,7 +15,7 @@ Las plantillas se ordenan en categorías, se publican y se retiran. Una organiza
 
 **Leé primero,** en el repo del back `ArquitecturaBaseMutitenant`:
 1. **La spec:** `docs/plans/formularios/e17-biblioteca.md`. Sobre todo:
-   - la §8, con los tableros, sus estados y las elecciones;
+   - la §8, con los tableros, sus estados y las decisiones;
    - la §1, con el alcance;
    - la §2, con las decisiones ya tomadas;
    - la §6, con los flujos de publicar, retirar y usar.
@@ -57,7 +57,7 @@ Las plantillas se ordenan en categorías, se publican y se retiran. Una organiza
    Estados: cambios sin publicar y conflicto.
 4. **`Plat-FRM-Publicar`:** un diálogo con el motivo y la comprobación: problemas por pregunta o por catálogo, o sin problemas.
 5. **`Plat-FRM-Retirar`:** un diálogo con el motivo. Las copias ya hechas no cambian.
-6. **`Plat-FRM-Categorias`:** la lista con su orden y ⋮ con Editar, Subir, Bajar y Borrar. El alta y la edición piden motivo. Borrar una categoría en uso muestra un aviso.
+6. **`Plat-FRM-Categorias`:** la lista con su orden y ⋮ con Editar, Subir, Bajar y Borrar. Crear, editar, mover y borrar piden motivo. Una categoría en uso deja «Borrar» apagado, con su motivo.
 7. **Ajuste en `Cuenta-Plat`:** los permisos del operador suman «Administrar la biblioteca de formularios».
 
 **Tableros de la organización:**
@@ -66,13 +66,14 @@ Las plantillas se ordenan en categorías, se publican y se retiran. Una organiza
 9. **`FRM-Plantilla`:** la vista de una plantilla, con la descripción, las preguntas, los catálogos que trae, la vista del teléfono y «Usar esta plantilla». Sin permiso para administrar catálogos, el botón aparece apagado con su motivo en ⓘ.
 10. **`FRM-Plantilla-Usar`:** un diálogo con el nombre y el prefijo propuesto (si el sugerido está tomado, se propone otro). Al confirmar, abre la ficha del formulario nuevo, en borrador.
 
-Después vienen los teléfonos: `M-Plat-FRM-Biblioteca`, `M-FRM-Biblioteca` y `M-FRM-Plantilla`. En el teléfono de Plataforma, la ficha de una plantilla es solo para ver, salvo que el usuario elija otra cosa.
+Después vienen los teléfonos: `M-Plat-FRM-Biblioteca`, `M-FRM-Biblioteca` y `M-FRM-Plantilla`. En el teléfono de Plataforma, la biblioteca es solo para ver.
 
-**Elecciones que hay que mostrar con opciones:**
-- **Dónde ve la organización la biblioteca:**
-  - recomiendo «Nuevo formulario» con dos caminos, «Desde cero» y «Desde una plantilla»;
-  - la alternativa es «Biblioteca» como otra sección del panel de Formularios (con la regla del 2026-10-13, ya no puede ser una pestaña).
-- **Dónde va «Formularios» en el menú de Plataforma:** como ítem propio, o dentro de una sección de módulos.
+**Ya decidido** (tableros en el lienzo v126, front `8863e87e`; el detalle está en «Criterio · Decisiones por pantalla», grupo E17):
+- en Plataforma, «Formularios» es un grupo de Administración, con Biblioteca y Categorías;
+- la pestaña Catálogos de la plantilla va en filas, y cada catálogo se abre aparte;
+- «Retirar» va en el ⋮ de la banda;
+- una categoría en uso deja «Borrar» apagado, con su motivo;
+- la biblioteca de la organización se abre desde «Nuevo formulario ▾», con «Desde cero» y «Desde una plantilla».
 
 **Textos que ya fija la spec:**
 - «Publicada · vN», «Borrador», «Retirada», «Cambios sin publicar» y «La usaron N»;
