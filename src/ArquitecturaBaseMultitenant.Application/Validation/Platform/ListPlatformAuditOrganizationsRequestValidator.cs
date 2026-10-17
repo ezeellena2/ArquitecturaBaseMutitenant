@@ -1,0 +1,7 @@
+using ArquitecturaBaseMultitenant.Application.Common.Validation;
+using ArquitecturaBaseMultitenant.Application.Models.Platform;
+
+namespace ArquitecturaBaseMultitenant.Application.Validation.Platform;
+
+internal sealed class ListPlatformAuditOrganizationsRequestValidator()
+    : PagedRequestValidator<ListPlatformAuditOrganizationsRequest>(ListPlatformAuditOrganizationsRequest.SortableFields);

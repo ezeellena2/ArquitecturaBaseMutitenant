@@ -32,7 +32,7 @@ internal sealed class AssistantConversationReader(ApplicationDbContext context, 
                 .Select(value => new { value.Id, value.Title, value.IsSaved, value.Version, value.CreatedAtUtc, value.LastActivityAtUtc })
             : context.Set<AssistantConversation>().AsNoTracking().Where(value => value.TenantId == tenantId && value.OwnerUserId == ownerUserId && value.Access == access && (request.Saved == null || value.IsSaved == request.Saved))
                 .Select(value => new { value.Id, value.Title, value.IsSaved, value.Version, value.CreatedAtUtc, value.LastActivityAtUtc });
-        var page = await AssistantCursorPagination.ToCursorResultAsync(query, request.Limit ?? 20, request.Cursor,
+        var page = await AssistantCursorPagination.ToCursorResultAsync(query, request.Limit ?? AssistantTechnicalLimits.QuickRows, request.Cursor,
             $"conversations:{tenantId:N}:{ownerUserId:N}:{access}:{request.Saved?.ToString() ?? "all"}", false,
             value => value.LastActivityAtUtc, value => value.Id, ct);
         return new CursorResult<AssistantConversationSummaryResponse>([.. page.Items.Select(value =>
@@ -62,7 +62,7 @@ internal sealed class AssistantConversationReader(ApplicationDbContext context, 
         var attachments = attachmentRows.GroupBy(row => row.MessageId).ToDictionary(group => group.Key,
             group => group.Select(row => new AssistantAttachmentSummaryResponse(row.Id, row.FileName, row.ContentType, row.Size, row.Version)).ToArray());
         return new CursorResult<AssistantMessageResponse>([.. page.Items.Select(value => new AssistantMessageResponse(value.Id,
-            Enum.Parse<AssistantMessageRole>(value.Role), value.Text ?? "", Enum.Parse<AssistantMessageStatus>(value.Status), value.CreatedAtUtc, value.Version,
+            Enum.Parse<AssistantMessageRole>(value.Role), value.Text ?? "", Enum.Parse<AssistantMessageStatus>(value.Status.ToString()), value.CreatedAtUtc, value.Version,
             attachments.GetValueOrDefault(value.Id) ?? [], value.LinksJson is null ? [] : JsonSerializer.Deserialize<AssistantLinkResponse[]>(value.LinksJson)!,
             value.PositiveFeedback == null ? null : value.PositiveFeedback.Value ? AssistantRating.Up : AssistantRating.Down))], page.NextCursor, page.HasMore);
     }

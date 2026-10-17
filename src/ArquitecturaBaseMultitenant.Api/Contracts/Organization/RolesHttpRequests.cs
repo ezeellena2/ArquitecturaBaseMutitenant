@@ -3,11 +3,13 @@ using ArquitecturaBaseMultitenant.Application.Models.Roles;
 
 namespace ArquitecturaBaseMultitenant.Api.Contracts.Organization;
 
+public sealed record RoleFilterCountsHttpQuery(string? Search);
+
 public sealed record RoleListHttpQuery(int? Page, int? PageSize, string? Sort, string? Search, RoleScopeFilter? Scope,
-    Guid? CompanyId);
+    Guid? CompanyId, bool? OnlyOwn = null);
 
 /// <summary>Los roles que se pueden asignar en una empresa: sin filtros de alcance, que fija la ruta.</summary>
-public sealed record CompanyRoleListHttpQuery(int? Page, int? PageSize, string? Sort, string? Search);
+public sealed record CompanyRoleListHttpQuery(int? Page, int? PageSize, string? Sort, string? Search, bool? OnlyOwn = null);
 
 public sealed record CreateRoleHttpRequest(string? Name, string? Description, RoleScope? Scope, Guid? CompanyId,
     IReadOnlyCollection<string>? Permissions);

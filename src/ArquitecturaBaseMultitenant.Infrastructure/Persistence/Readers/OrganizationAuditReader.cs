@@ -10,6 +10,8 @@ using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,14 +20,6 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITenantContext tenantContext)
     : IOrganizationAuditReader
 {
-    private static readonly Dictionary<string, string[]> Categories = new(StringComparer.Ordinal)
-    {
-        ["users"] = ["Member", "Invitation"],
-        ["roles"] = ["Role", "RoleAssignment"],
-        ["companies"] = ["Company", "CompanyMembership"],
-        ["settings"] = ["TenantSettings", "TenantDomain"],
-        ["organization"] = ["PublicPage", nameof(Tenant)],
-    };
 
     /// <summary>
     /// Las acciones de Plataforma sobre la organización que muestra su auditoría, como el tablero Auditoria-Org, con el
@@ -34,10 +28,6 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
     /// </summary>
     private static readonly Dictionary<SecurityEventType, (TenantStatus Before, TenantStatus After)> PlatformActions =
         new() { [SecurityEventType.OrganizationApproved] = (TenantStatus.PendingApproval, TenantStatus.Active) };
-
-    /// <summary>El orden de la lista «Quién» del tablero Auditoria-Org: las personas, «Sistema» y «Plataforma».</summary>
-    private static readonly AuditActorKind[] ActorOrder =
-        [AuditActorKind.User, AuditActorKind.System, AuditActorKind.PlatformOperator];
 
     public async Task<CursorResult<OrganizationAuditRow>> ListAsync(ListOrganizationAuditRequest request,
         DateTime? startUtc, DateTime? endUtc, CancellationToken cancellationToken)
@@ -99,8 +89,9 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
         var actors = actorIds.Length == 0
             ? new Dictionary<Guid, string?>()
             : await context.Users.AsNoTracking().Where(user => actorIds.Contains(user.Id))
-                .Select(user => new { user.Id, user.DisplayName })
-                .ToDictionaryAsync(user => user.Id, user => user.DisplayName, cancellationToken);
+                .Select(user => new { user.Id, user.DisplayName, user.Status })
+                .ToDictionaryAsync(user => user.Id, user => user.Status == UserStatus.Deleted
+                    ? FormattingTexts.DeletedAccount : user.DisplayName, cancellationToken);
         // «Quién» del detalle: nombre · correo (el verificado, primero el principal). Quien ya no es miembro de la
         // organización se muestra solo con su nombre (D7).
         var tenantId = tenantContext.RequiredTenantId;
@@ -132,7 +123,7 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
     private static bool ShowsPlatformActions(ListOrganizationAuditRequest request) =>
         string.IsNullOrWhiteSpace(request.Search) && request.ActorId is null
         && (request.ActorKind is null or nameof(AuditActorKind.PlatformOperator))
-        && (request.Category is null || Categories[request.Category].Contains(nameof(Tenant)));
+        && (request.Category is null || OrganizationAuditCategories.EntityTypes[request.Category].Contains(nameof(Tenant)));
 
     private IQueryable<SecurityEvent> PlatformActionsOf(Guid tenantId, DateTime? startUtc, DateTime? endUtc)
     {
@@ -191,8 +182,9 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
         var userNames = userIds.Length == 0
             ? new Dictionary<Guid, string?>()
             : await context.Users.AsNoTracking().Where(user => userIds.Contains(user.Id))
-                .Select(user => new { user.Id, user.DisplayName })
-                .ToDictionaryAsync(user => user.Id, user => user.DisplayName, cancellationToken);
+                .Select(user => new { user.Id, user.DisplayName, user.Status })
+                .ToDictionaryAsync(user => user.Id, user => user.Status == UserStatus.Deleted
+                    ? FormattingTexts.DeletedAccount : user.DisplayName, cancellationToken);
         var memberNames = members.ToDictionary(member => member.Id,
             member => member.UserId is { } userId ? userNames.GetValueOrDefault(userId) : null);
         // Quien todavía no tiene cuenta ni nombre se nombra por el correo de su última invitación, enmascarado.
@@ -206,7 +198,7 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
                 .Select(invitation => new { invitation.MemberId, invitation.Destination })
                 .ToArrayAsync(cancellationToken);
             foreach (var invited in destinations.GroupBy(invitation => invitation.MemberId))
-                memberNames[invited.Key] = PersonalDataMask.Email(invited.First().Destination.DisplayValue);
+                memberNames[invited.Key] = Masked(invited.First().Destination);
         }
 
         // Sin nombre ni invitación, por su correo verificado (primero el principal), enmascarado, como lo muestra
@@ -286,7 +278,7 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
                 affectedName = role?.Name;
             if (string.IsNullOrWhiteSpace(affectedName) && entry.EntityType == nameof(Invitation) &&
                 invitations.TryGetValue(entry.EntityId, out var invitation))
-                affectedName = PersonalDataMask.Email(invitation.Destination.DisplayValue);
+                affectedName = Masked(invitation.Destination);
 
             // Una invitación a empresas va en esas empresas, por nombre y en orden.
             var companyName = companyId is { } companyGuid
@@ -302,30 +294,49 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
     }
 
     public async Task<IReadOnlyList<OrganizationAuditActorRow>> ListActorsAsync(ListOrganizationAuditRequest request,
-        DateTime? startUtc, DateTime? endUtc, CancellationToken cancellationToken)
+        DateTime? startUtc, DateTime? endUtc, CancellationToken cancellationToken) =>
+        (await ListActorsPagedAsync(request, new ListOrganizationAuditActorsRequest(), startUtc, endUtc, cancellationToken)).Items;
+
+    public async Task<PagedResult<OrganizationAuditActorRow>> ListActorsPagedAsync(ListOrganizationAuditRequest filters,
+        ListOrganizationAuditActorsRequest page, DateTime? startUtc, DateTime? endUtc, CancellationToken cancellationToken)
     {
-        var unfiltered = request with { ActorId = null, ActorKind = null };
-        var stored = await (await FilteredAsync(unfiltered, startUtc, endUtc, cancellationToken))
-            .Select(entry => new { entry.ActorId, entry.ActorKind })
-            .Distinct().ToArrayAsync(cancellationToken);
-        // Solo una persona va con su identificador: qué operador de Plataforma actuó es un dato interno de Plataforma.
-        var actors = stored.Select(actor => (ActorId: actor.ActorKind == AuditActorKind.User ? actor.ActorId : null,
-            actor.ActorKind)).ToHashSet();
-        if (ShowsPlatformActions(unfiltered) && !actors.Contains((null, AuditActorKind.PlatformOperator))
-            && await PlatformActionsOf(tenantContext.RequiredTenantId, startUtc, endUtc).AnyAsync(cancellationToken))
-            actors.Add((null, AuditActorKind.PlatformOperator));
-        var actorIds = actors.Where(actor => actor.ActorKind == AuditActorKind.User && actor.ActorId != null)
-            .Select(actor => actor.ActorId!.Value).Distinct().ToArray();
-        var names = actorIds.Length == 0
-            ? new Dictionary<Guid, string?>()
-            : await context.Users.AsNoTracking().Where(user => actorIds.Contains(user.Id))
-                .Select(user => new { user.Id, user.DisplayName })
-                .ToDictionaryAsync(user => user.Id, user => user.DisplayName, cancellationToken);
-        return actors.Select(actor => new OrganizationAuditActorRow(actor.ActorId, actor.ActorKind,
-                actor.ActorId is { } id ? names.GetValueOrDefault(id) : null))
-            .OrderBy(actor => Array.IndexOf(ActorOrder, actor.ActorKind))
-            .ThenBy(actor => actor.DisplayName, StringComparer.CurrentCulture)
-            .ToArray();
+        var unfiltered = filters with { ActorId = null, ActorKind = null };
+        var keys = (await FilteredAsync(unfiltered, startUtc, endUtc, cancellationToken))
+            .Select(entry => new { ActorId = entry.ActorKind == AuditActorKind.User ? entry.ActorId : null,
+                Order = entry.ActorKind == AuditActorKind.User ? 0 : entry.ActorKind == AuditActorKind.System ? 1 : 2 });
+        if (ShowsPlatformActions(unfiltered))
+            keys = keys.Concat(PlatformActionsOf(tenantContext.RequiredTenantId, startUtc, endUtc)
+                .Select(action => new { ActorId = (Guid?)null, Order = 2 }));
+        keys = keys.Distinct();
+        var deletedAccount = FormattingTexts.DeletedAccount;
+        var system = AuditTexts.Actor(AuditActorKind.System);
+        var platform = AuditTexts.Actor(AuditActorKind.PlatformOperator);
+        var options = from actor in keys
+                      join user in context.Users.AsNoTracking() on actor.ActorId equals (Guid?)user.Id into identities
+                      from user in identities.DefaultIfEmpty()
+                      select new ActorOption
+                      {
+                          ActorId = actor.ActorId, Order = actor.Order,
+                          DisplayName = actor.Order != 0 ? actor.Order == 1 ? system : platform
+                              : user == null ? null : user.Status == UserStatus.Deleted ? deletedAccount : user.DisplayName,
+                      };
+        options = options.ApplySearch(page.Search, actor => actor.DisplayName);
+        // El orden de grupos es fijo (personas, Sistema, Plataforma); el orden pedido cambia sólo sus nombres.
+        var grouped = options.OrderBy(actor => actor.Order);
+        var ordered = SortDescriptor.Parse(page.Sort)?.Descending == true
+            ? grouped.ThenByDescending(actor => actor.DisplayName) : grouped.ThenBy(actor => actor.DisplayName);
+        var result = await ordered.ThenBy(actor => actor.ActorId).ToPagedResultAsync(page, cancellationToken);
+        return new PagedResult<OrganizationAuditActorRow>([.. result.Items.Select(actor => new OrganizationAuditActorRow(
+            actor.ActorId, actor.Order == 0 ? AuditActorKind.User : actor.Order == 1 ? AuditActorKind.System : AuditActorKind.PlatformOperator,
+            actor.Order == 0 ? actor.DisplayName : null))],
+            result.Page, result.PageSize, result.TotalCount);
+    }
+
+    private sealed class ActorOption
+    {
+        public Guid? ActorId { get; init; }
+        public int Order { get; init; }
+        public string? DisplayName { get; init; }
     }
 
     private async Task<IQueryable<AuditEntry>> FilteredAsync(ListOrganizationAuditRequest request,
@@ -358,12 +369,16 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
         if (endUtc is { } end) entries = entries.Where(entry => entry.OccurredAtUtc < end);
         if (request.Category is { } category)
         {
-            var entityTypes = Categories[category];
+            var entityTypes = OrganizationAuditCategories.EntityTypes[category];
             entries = entries.Where(entry => entityTypes.Contains(entry.EntityType));
         }
 
         return entries;
     }
+
+    private static string Masked(InvitationIdentity destination) => destination.Email is { } email
+        ? PersonalDataMask.Email(email.DisplayValue)
+        : PersonalDataMask.Phone(destination.Value);
 
     private static string EscapeLike(string value) => value
         .Replace("\\", "\\\\", StringComparison.Ordinal)

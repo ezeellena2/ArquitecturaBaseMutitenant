@@ -28,7 +28,6 @@ public sealed class OrganizationAssistantSettingsController(IAssistantSettingsSe
     [ProducesProblem(403)]
     [ProducesProblem(404)]
     [ProducesProblem(500)]
-    [ProducesProblem(501)]
     public async Task<IActionResult> GetOrganization(CancellationToken cancellationToken) =>
         (await service.GetOrganizationAsync(cancellationToken)).ToActionResult(this);
 
@@ -40,7 +39,6 @@ public sealed class OrganizationAssistantSettingsController(IAssistantSettingsSe
     [ProducesProblem(404)]
     [ProducesProblem(409)]
     [ProducesProblem(500)]
-    [ProducesProblem(501)]
     public async Task<IActionResult> UpdateOrganization([FromBody] UpdateOrganizationAssistantSettingsHttpRequest request, CancellationToken cancellationToken) =>
         (await service.UpdateOrganizationAsync(new UpdateOrganizationAssistantSettingsRequest(request.Mode, request.ModelId, request.Effort, request.DailyMessageLimit, request.MonthlyBudget, request.KeyAction, request.ApiKey, request.Version), cancellationToken)).ToActionResult(this);
 }

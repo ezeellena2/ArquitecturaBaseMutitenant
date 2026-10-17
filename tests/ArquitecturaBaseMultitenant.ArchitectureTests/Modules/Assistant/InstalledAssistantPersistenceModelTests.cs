@@ -6,6 +6,40 @@ namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 public sealed class InstalledAssistantPersistenceModelTests
 {
     [Fact]
+    public void Shared_assistant_bases_are_unmapped_and_preserve_independent_private_and_platform_tables()
+    {
+        var entities = ArchitectureModel.EntityTypes().ToArray();
+        Assert.DoesNotContain(entities, value => value.ClrType.IsAbstract && value.ClrType.Namespace == typeof(AssistantErrors).Namespace);
+        foreach (var type in new[] { typeof(AssistantConversation), typeof(PlatformAssistantConversation),
+            typeof(AssistantMessage), typeof(PlatformAssistantMessage), typeof(AssistantTurn), typeof(PlatformAssistantTurn),
+            typeof(AssistantDurableOperation), typeof(PlatformAssistantDurableOperation) })
+        {
+            var entity = Assert.Single(entities, value => value.ClrType == type);
+            Assert.Null(entity.BaseType);
+            Assert.Equal(type.Name + "s", entity.GetTableName());
+            Assert.Equal(type.Name.StartsWith("Platform", StringComparison.Ordinal) ? "platform" : "tenant", entity.GetSchema());
+            Assert.Equal(type.Name.StartsWith("Platform", StringComparison.Ordinal) ? new[] { "Id" } : new[] { "TenantId", "Id" },
+                entity.FindPrimaryKey()!.Properties.Select(value => value.Name));
+        }
+    }
+
+    [Theory]
+    [InlineData(typeof(AssistantMessage), typeof(AssistantPersistedMessageStatus))]
+    [InlineData(typeof(PlatformAssistantMessage), typeof(AssistantPersistedMessageStatus))]
+    [InlineData(typeof(AssistantTurn), typeof(AssistantTurnStatus))]
+    [InlineData(typeof(PlatformAssistantTurn), typeof(AssistantTurnStatus))]
+    [InlineData(typeof(AssistantTurnWork), typeof(AssistantTurnStatus))]
+    public void Assistant_statuses_are_enums_persisted_as_the_existing_text_names(Type entityType, Type statusType)
+    {
+        var entity = ArchitectureModel.EntityTypes().Single(value => value.ClrType == entityType);
+        var status = entity.FindProperty("Status")!;
+        Assert.Equal(statusType, status.ClrType);
+        var converter = status.GetTypeMapping().Converter!;
+        Assert.Equal(typeof(string), converter.ProviderClrType);
+        foreach (var value in Enum.GetValues(statusType)) Assert.Equal(value.ToString(), converter.ConvertToProvider(value));
+    }
+
+    [Fact]
     public void Installed_assistant_maps_private_conversations_and_global_operator_conversations()
     {
         var entities = ArchitectureModel.EntityTypes().Where(value => value.ClrType.Namespace == typeof(AssistantErrors).Namespace).ToArray();

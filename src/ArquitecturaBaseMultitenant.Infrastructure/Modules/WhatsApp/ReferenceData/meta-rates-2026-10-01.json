@@ -1,0 +1,8 @@
+{
+  "source": "Página oficial de precios de WhatsApp Business Platform (Meta), tarifas por mensaje vigentes desde el 01/10/2026; verificada el 2026-10-13 (plan de la E11).",
+  "effectiveFrom": "2026-10-01",
+  "currency": "USD",
+  "rates": [
+    { "country": "AR", "marketing": 0.0618, "utility": 0.0260, "authentication": 0.0260, "service": 0.0260 }
+  ]
+}

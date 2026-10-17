@@ -18,7 +18,7 @@ using Microsoft.Extensions.Hosting;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.WhatsAppBrowser;
 
 /// <summary>Control por stdin/stdout privado del runner, siempre sobre ApiFactory Testing y su base propia.</summary>
-public sealed class WhatsAppBrowserControl
+public sealed partial class WhatsAppBrowserControl
 {
     public const string OperatorEmail = "e8-operator@example.test";
     public const string OperatorPhone = "+5491134567899";
@@ -57,6 +57,8 @@ public sealed class WhatsAppBrowserControl
         }
         if (!_scenarios.TryGetValue(request.Scenario, out var scenario) || scenario.Phone != request.Phone)
             throw new InvalidOperationException("Fixture scenario does not own this destination.");
+        if (request.Kind.StartsWith("org", StringComparison.Ordinal))
+            return await OrganizationAsync(request, scenario, client, nowUtc, ct);
         if (request.Kind == "inbound")
         {
             var payload = JsonSerializer.Serialize(new

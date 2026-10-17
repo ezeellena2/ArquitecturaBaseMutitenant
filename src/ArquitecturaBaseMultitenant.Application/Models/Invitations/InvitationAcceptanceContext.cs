@@ -1,9 +1,9 @@
-using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Domain.Invitations;
 
 namespace ArquitecturaBaseMultitenant.Application.Models.Invitations;
 
 internal sealed record InvitationAcceptanceContext(InvitationTokenData Proof, string Token, string TokenHash,
-    string Nonce, Email Destination, Guid? ExpectedOwnerId, Guid? CurrentUserId)
+    string Nonce, InvitationIdentity Destination, Guid? ExpectedOwnerId, Guid? CurrentUserId)
 {
     public override string ToString() => "InvitationAcceptanceContext [redacted]";
 }

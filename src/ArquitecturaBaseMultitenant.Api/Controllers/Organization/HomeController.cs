@@ -23,5 +23,5 @@ public sealed class HomeController(IHomeService service) : ControllerBase
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Get(CancellationToken cancellationToken) =>
-        (await service.GetAsync(cancellationToken)).ToActionResult(this);
+        (await service.GetSummaryAsync(cancellationToken)).ToActionResult(this);
 }

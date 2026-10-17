@@ -12,5 +12,7 @@ internal sealed class ListRolesRequestValidator : PagedRequestValidator<ListRole
     {
         RuleFor(request => request.SystemRoleKey).Must(key => key is null || SystemRoles.All.Contains(key, StringComparer.Ordinal))
             .WithMessage(_ => ValidationTexts.Required);
+        RuleFor(request => request.CompanyId).NotNull().When(request => request.OnlyOwn)
+            .WithMessage(_ => ValidationTexts.Required);
     }
 }

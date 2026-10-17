@@ -1,4 +1,4 @@
-using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Domain.Invitations;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex;
 
@@ -9,7 +9,7 @@ internal sealed class LoginInvitation
     public Guid InvitationId { get; private set; }
     public Guid MemberId { get; private set; }
     public Guid TenantId { get; private set; }
-    public Email Destination { get; private set; }
+    public InvitationIdentity Destination { get; private set; }
     public DateTime IssuedAtUtc { get; private set; }
     public DateTime ExpiresAtUtc { get; private set; }
 }

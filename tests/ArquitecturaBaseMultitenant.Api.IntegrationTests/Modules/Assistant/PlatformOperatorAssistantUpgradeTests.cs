@@ -23,6 +23,9 @@ public sealed class PlatformOperatorAssistantUpgradeTests
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
     private static readonly string[] Added =
         [PlatformPermissions.Assistant.Use, PlatformPermissions.Assistant.Configure, PlatformPermissions.Assistant.Read];
+    // Lo que sumaron a los gestores los upgrades posteriores de otros módulos instalados (en la E11, WhatsApp); llega al
+    // migrar hasta la última migración. Sin esos módulos no queda nada: su retiro también lo saca.
+    private static readonly string[] LaterUpgrades = [.. PlatformPermissions.All.Except(PlatformPermissions.LegacyBootstrap).Except(Added)];
 
     [Fact]
     public async Task Upgrade_appends_only_missing_permissions_preserves_accounts_and_audits_once_per_changed_assignment()
@@ -32,7 +35,7 @@ public sealed class PlatformOperatorAssistantUpgradeTests
             "platform.tenants.read", "platform.tenants.manage", "platform.accounts.read", "platform.accounts.manage",
             "platform.recoveries.manage", "platform.legal.manage", "platform.operators.manage", "platform.audit.read", "platform.settings.manage",
         }, PlatformPermissions.LegacyBootstrap);
-        Assert.Equal(PlatformPermissions.LegacyBootstrap.Concat(Added), PlatformPermissions.All);
+        Assert.Equal(PlatformPermissions.LegacyBootstrap.Concat(Added).Concat(LaterUpgrades), PlatformPermissions.All);
         await using var factory = new ApiFactory();
         await factory.InitializeAsync();
         var ids = new List<Guid>();
@@ -146,7 +149,7 @@ public sealed class PlatformOperatorAssistantUpgradeTests
         await using var factory = new ApiFactory();
         await factory.InitializeAsync();
         using var manager = AssistantTestData.Client(factory);
-        var account = await AccountJourney.RegisterAsync(factory, manager, Ct);
+        var account = await ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantTurns.AssistantTurnTestSession.PlatformAccountAsync(factory, manager);
         await PlatformOperators.GrantAsync(factory.Services, account.UserId, PlatformPermissions.LegacyBootstrap, Ct);
         await AccountJourney.AuthorizeAsync(manager, "platform", Ct);
         foreach (var path in new[] { "/api/platform/assistant/models", "/api/platform/assistant/settings", "/api/platform/assistant/conversations", "/api/platform/assistant/usage?month=2026-10" })
@@ -158,6 +161,10 @@ public sealed class PlatformOperatorAssistantUpgradeTests
         {
             await db.GetService<IMigrator>().MigrateAsync(Previous(db), Ct);
             await db.GetService<IMigrator>().MigrateAsync(Upgrade, Ct);
+            var upgraded = await db.PlatformPermissionAssignments.AsNoTracking().SingleAsync(value => value.UserId == account.UserId, Ct);
+            Assert.Equal(PlatformPermissions.LegacyBootstrap.Concat(Added).Order(), upgraded.Permissions.Order());
+            // El upgrade histórico se verifica con su esquema; el runtime exige luego el esquema actual completo.
+            await db.GetService<IMigrator>().MigrateAsync(null, Ct);
         }
         using (var models = await manager.GetAsync("/api/platform/assistant/models", Ct))
             Assert.Equal(HttpStatusCode.OK, models.StatusCode);
@@ -172,7 +179,7 @@ public sealed class PlatformOperatorAssistantUpgradeTests
         using (var history = await manager.GetAsync("/api/platform/assistant/conversations", Ct))
             Assert.Equal(HttpStatusCode.OK, history.StatusCode);
         using (var usage = await manager.GetAsync("/api/platform/assistant/usage?month=2026-10", Ct))
-            Assert.Equal(HttpStatusCode.NotImplemented, usage.StatusCode);
+            Assert.Equal(HttpStatusCode.OK, usage.StatusCode);
         using var settings = await ReadAsync(manager, "/api/platform/assistant/settings");
         Assert.False(settings.RootElement.GetProperty("hasKey").GetBoolean());
         using (var saved = await manager.PutAsJsonAsync("/api/platform/assistant/settings", new
@@ -214,7 +221,7 @@ public sealed class PlatformOperatorAssistantUpgradeTests
         using var scope = restart.Services.CreateScope();
         var row = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().PlatformPermissionAssignments
             .AsNoTracking().SingleAsync(value => value.UserId == account.UserId, Ct);
-        Assert.Equal(PlatformPermissions.LegacyBootstrap, row.Permissions);
+        Assert.Equal(PlatformPermissions.LegacyBootstrap.Concat(LaterUpgrades), row.Permissions);
     }
 
     private static async Task<HttpResponseMessage> ChangeAsync(HttpClient client, Guid id, JsonDocument detail, IEnumerable<string> permissions)

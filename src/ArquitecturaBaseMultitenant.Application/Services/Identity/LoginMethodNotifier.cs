@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Common.Text;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -17,7 +18,7 @@ internal sealed class LoginMethodNotifier(AccountNoticeIssuer notices, ISecurity
     {
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         events.Add(SecurityEvent.ForAccount(SecurityEventType.LoginMethodChanged, account.Id, nowUtc));
-        var url = origin.Value is { } value ? new Uri(value, "/cuenta").AbsoluteUri : "/cuenta";
+        var url = origin.Absolute(ReturnUrls.AccountPath);
         var notice = new AccountNotice.LoginMethodChanged(change, changed.Type,
             PersonalDataMask.LoginMethod(changed.Type, changed.Value, changed.ContactEmail?.Value), nowUtc,
             account.TimeZoneId, url) { RecipientName = account.DisplayName };

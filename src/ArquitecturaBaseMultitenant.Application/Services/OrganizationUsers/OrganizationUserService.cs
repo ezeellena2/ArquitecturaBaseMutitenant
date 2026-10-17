@@ -181,12 +181,12 @@ internal sealed class OrganizationUserService(
         });
 
     private static OrganizationUserResponse ToResponse(OrganizationUserRow row) => new(row.MemberId, row.UserId,
-        row.DisplayName.Length == 0 ? row.Email?.DisplayValue ?? string.Empty : row.DisplayName, row.Email,
+        row.DisplayName.Length == 0 ? row.Email?.DisplayValue ?? row.Phone?.Value ?? string.Empty : row.DisplayName, row.Email,
         row.State, row.HasManagedEmail,
         [.. row.Roles.Select(Translate)],
         [.. row.Companies.Select(company => company with { Roles = [.. company.Roles.Select(Translate)] })],
         row.InvitationId, row.InvitationIssuedAtUtc, row.InvitationExpiresAtUtc, row.Version, row.CreatedAtUtc,
-        row.DeletionScheduledForUtc);
+        row.DeletionScheduledForUtc, row.Phone);
 
     private static OrganizationUserRoleRow Translate(OrganizationUserRoleRow role) => role with
     {

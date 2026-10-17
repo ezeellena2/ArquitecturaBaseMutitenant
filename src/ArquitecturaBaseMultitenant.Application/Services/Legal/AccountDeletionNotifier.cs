@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
@@ -22,7 +23,7 @@ internal sealed class AccountDeletionNotifier(AccountNoticeIssuer notices, ISecu
     internal Task CancelledAsync(UserAccountRow account, IReadOnlyList<LoginMethod> methods, DateTime nowUtc, CancellationToken ct)
     {
         events.Add(SecurityEvent.ForAccount(SecurityEventType.AccountDeletionCancelled, account.Id, nowUtc));
-        var url = origin.Value is { } value ? new Uri(value, "/cuenta").AbsoluteUri : "/cuenta";
+        var url = origin.Absolute(ReturnUrls.AccountPath);
         return notices.EnqueueAsync(account.Id, methods, new AccountNotice.DeletionCancelled(nowUtc, account.TimeZoneId, url)
             { RecipientName = account.DisplayName }, account.Culture, false, ct);
     }
@@ -31,7 +32,7 @@ internal sealed class AccountDeletionNotifier(AccountNoticeIssuer notices, ISecu
     internal Task PlatformRequestedAsync(UserAccountRow account, IReadOnlyList<LoginMethod> methods,
         DateTime nowUtc, DateTime scheduledForUtc, bool canCancel, Email? supportEmail, CancellationToken ct)
     {
-        var url = origin.Value is { } value ? new Uri(value, "/login").AbsoluteUri : "/login";
+        var url = origin.Absolute(ReturnUrls.LoginPath);
         return notices.EnqueueAsync(account.Id, methods,
             new AccountNotice.DeletionRequested(nowUtc, scheduledForUtc, account.TimeZoneId, url)
             {
@@ -46,7 +47,7 @@ internal sealed class AccountDeletionNotifier(AccountNoticeIssuer notices, ISecu
         DateTime nowUtc, DateTime scheduledForUtc, CancellationToken ct)
     {
         events.Add(SecurityEvent.ForAccount(SecurityEventType.AccountDeletionRequested, account.Id, nowUtc));
-        var url = origin.Value is { } value ? new Uri(value, "/login").AbsoluteUri : "/login";
+        var url = origin.Absolute(ReturnUrls.LoginPath);
         return notices.EnqueueAsync(account.Id, methods,
             new AccountNotice.DeletionRequested(nowUtc, scheduledForUtc, account.TimeZoneId, url)
                 { RecipientName = account.DisplayName }, account.Culture, false, ct);

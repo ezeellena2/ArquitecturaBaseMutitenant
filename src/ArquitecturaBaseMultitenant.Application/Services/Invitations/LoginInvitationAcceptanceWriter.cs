@@ -8,13 +8,16 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 
-/// <summary>Acepta todas las reservas del correo demostrado; valida todo antes de crear o activar.</summary>
+/// <summary>
+/// Acepta todas las reservas del correo o del teléfono demostrado con el código (ADR 0047; el teléfono, decisión 11 de la
+/// E11); valida todo antes de crear o activar.
+/// </summary>
 internal sealed class LoginInvitationAcceptanceWriter(ILoginInvitationRepository invitations,
     InvitationAcceptanceGuard guard, InvitationAccountRegistrar registrar, ITenantReader tenants,
     ILoginMethodReader methods, LoginMethodAvailabilityPolicy availability, TimeProvider clock)
 {
-    internal Task LockEmailAsync(LoginInvitationsContext context, CancellationToken ct) =>
-        guard.LockEmailAsync(context.Destination, context.ExpectedOwnerId, ct);
+    internal Task LockAsync(LoginInvitationsContext context, CancellationToken ct) =>
+        guard.LockDestinationAsync(context.Destination, context.ExpectedOwnerId, ct);
 
     internal async Task<Result<Guid>> AcceptAsync(LoginInvitationsContext context, CancellationToken ct)
     {
@@ -41,22 +44,27 @@ internal sealed class LoginInvitationAcceptanceWriter(ILoginInvitationRepository
         if (owner.Value is { } existing)
         {
             var ownMethods = await methods.ListByUserIdAsync(existing, ct);
-            var method = ownMethods.SingleOrDefault(value => value.Type == LoginMethodType.Email && value.Value == context.Destination.Value)
+            var type = context.Destination.IsPhone ? LoginMethodType.Phone : LoginMethodType.Email;
+            var method = ownMethods.SingleOrDefault(value => value.Type == type && value.Value == context.Destination.Value)
                 ?? ownMethods.FirstOrDefault(value => value.Type == LoginMethodType.Google && value.VerifiedAtUtc is not null
-                    && value.ContactEmail == context.Destination);
+                    && value.ContactEmail is { } contact && context.Destination.Email == contact);
             if (method is null || !await availability.CanReceiveCodeAsync(existing, method,
                 valid.Select(row => row.Invitation.TenantId).ToArray(), ct))
                 return LoginCodeErrors.Invalid(attemptsLeft: null);
         }
-        var userId = owner.Value ?? await registrar.RegisterVerifiedEmailAsync(context.DefaultsTenantId,
-            context.Destination, nowUtc, ct);
-        if (owner.Value is not null) await registrar.EnsureEmailAsync(userId, context.DefaultsTenantId, context.Destination, nowUtc, ct);
+        var userId = owner.Value ?? (context.Destination.Email is { } email
+            ? await registrar.RegisterVerifiedEmailAsync(context.DefaultsTenantId, email, nowUtc, ct)
+            : await registrar.RegisterVerifiedPhoneAsync(context.DefaultsTenantId, context.Destination.Phone!, nowUtc, ct));
+        if (owner.Value is not null && context.Destination.Email is { } ensured)
+            await registrar.EnsureEmailAsync(userId, context.DefaultsTenantId, ensured, nowUtc, ct);
         await invitations.BindVerifiedUserAsync(userId, ct);
         foreach (var row in valid)
         {
             if (row.Member.UserId is null && row.Member.AssignUser(userId).IsFailure)
                 throw new InvalidOperationException("A checked invitation member could not be bound.");
-            if (row.Member.Activate(nowUtc).IsFailure || row.Invitation.AcceptVerifiedEmail(userId, context.Destination, nowUtc).IsFailure)
+            var accepted = context.Destination.Email is { } proven ? row.Invitation.AcceptVerifiedEmail(userId, proven, nowUtc)
+                : row.Invitation.AcceptVerifiedPhone(userId, context.Destination.Phone!, nowUtc);
+            if (row.Member.Activate(nowUtc).IsFailure || accepted.IsFailure)
                 throw new InvalidOperationException("A checked invitation could not be accepted.");
         }
         return userId;

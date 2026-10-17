@@ -28,7 +28,6 @@ public sealed class PlatformAssistantSettingsController(IAssistantSettingsServic
     [ProducesProblem(403)]
     [ProducesProblem(404)]
     [ProducesProblem(500)]
-    [ProducesProblem(501)]
     public async Task<IActionResult> GetPlatform(CancellationToken cancellationToken) =>
         (await service.GetPlatformAsync(cancellationToken)).ToActionResult(this);
 
@@ -40,7 +39,6 @@ public sealed class PlatformAssistantSettingsController(IAssistantSettingsServic
     [ProducesProblem(404)]
     [ProducesProblem(409)]
     [ProducesProblem(500)]
-    [ProducesProblem(501)]
     public async Task<IActionResult> UpdatePlatform([FromBody] UpdatePlatformAssistantSettingsHttpRequest request, CancellationToken cancellationToken) =>
         (await service.UpdatePlatformAsync(new UpdatePlatformAssistantSettingsRequest(request.DefaultModelId, request.AllowedModelIds, request.Effort, request.DailyMessageLimit, request.MonthlyOrganizationBudget, request.PersonalEnabled, request.RetentionDays, request.KeyAction, request.ApiKey, request.Version), cancellationToken)).ToActionResult(this);
 }

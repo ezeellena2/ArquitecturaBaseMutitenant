@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -22,13 +23,16 @@ internal sealed class InvitationDeliveryIssuer(IEnumerable<IInvitationChannel> c
     internal bool IsAvailable(string channel) => channels.Any(value => value.Key == channel && value.IsAvailable);
 
     /// <summary>Se decide después del lock de identidad y antes de agregar miembro, invitación u outbox.</summary>
-    internal async Task<Result<InvitationDeliveryDestination>> ResolveAsync(string key, Email destination,
+    internal async Task<Result<InvitationDeliveryDestination>> ResolveAsync(string key, InvitationIdentity destination,
         Guid? recipientId, CancellationToken ct)
     {
         var channel = channels.SingleOrDefault(value => value.Key == key && value.IsAvailable);
         if (channel is null) return InvitationErrors.ChannelUnavailable;
         if (channel.SupportedMethodType == LoginMethodType.Email)
-            return InvitationDeliveryDestination.ForEmail(destination);
+            return destination.Email is { } email ? InvitationDeliveryDestination.ForEmail(email) : InvitationErrors.ChannelUnavailable;
+        // Una invitación por teléfono (decisión 11 de la E11) va a ese mismo teléfono: es lo que hay que probar.
+        if (channel.SupportedMethodType == LoginMethodType.Phone && destination.Phone is { } invitedPhone)
+            return InvitationDeliveryDestination.ForPhone(invitedPhone);
         if (channel.SupportedMethodType != LoginMethodType.Phone || recipientId is not { } id)
             return InvitationErrors.ChannelUnavailable;
         await methodLocks.LockUserAsync(id, ct);
@@ -60,10 +64,10 @@ internal sealed class InvitationDeliveryIssuer(IEnumerable<IInvitationChannel> c
         var tenantSettings = preparedSettings is null ? await settings.FindCurrentAsync(ct) : null;
         var profile = await cultures.ResolveAsync(null, preparedSettings?.DefaultCulture ?? tenantSettings?.DefaultCulture ?? inviter.Culture, ct);
         var timeZoneId = preparedSettings?.DefaultTimeZoneId ?? tenantSettings?.DefaultTimeZoneId ?? inviter.TimeZoneId;
-        var publicOrigin = origin.Value ?? throw new InvalidOperationException("The public origin is required for invitation links.");
-        var url = new Uri(publicOrigin, "/invitacion").AbsoluteUri + "#" + token;
+        _ = origin.Value ?? throw new InvalidOperationException("The public origin is required for invitation links.");
+        var url = origin.Absolute(ReturnUrls.InvitationPath) + "#" + token;
         var inviterName = inviter.Status == UserStatus.Deleted
-            ? ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName") : inviter.DisplayName ?? organization.Name;
+            ? FormattingTexts.DeletedAccount : inviter.DisplayName ?? organization.Name;
         var usesEmailCode = recipientId is { } userId && (await methods.ListByUserIdAsync(userId, ct))
             .Any(method => method.Type == LoginMethodType.Email && method.VerifiedAtUtc is not null
                 && method.Value == invitation.Destination.Value);

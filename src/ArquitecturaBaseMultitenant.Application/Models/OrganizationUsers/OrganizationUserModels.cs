@@ -22,34 +22,43 @@ public sealed record ListOrganizationUsersRequest : PagedRequest
     /// <summary>Internal typed assignment filter; not exposed by the HTTP adapter.</summary>
     public Guid? RoleId { get; init; }
     public bool WithoutCompany { get; init; }
+    /// <summary>Vista previa interna de Inicio, ordenada por el instante del pendiente.</summary>
+    public bool PendingPreview { get; init; }
+    /// <summary>Solo invitaciones resolubles exclusivamente desde la empresa indicada; no se expone por HTTP.</summary>
+    public bool OnlyCompanyInvitations { get; init; }
 }
 
 public sealed record OrganizationUserRoleRow(Guid Id, string Name, bool IsSystemRole, RoleScope Scope,
     Guid? CompanyId);
 
 public sealed record OrganizationUserCompanyRow(Guid CompanyId, string CompanyName,
-    CompanyMembershipStatus Status, IReadOnlyList<OrganizationUserRoleRow> Roles);
+    CompanyMembershipStatus Status, IReadOnlyList<OrganizationUserRoleRow> Roles, CompanyStatus? CompanyStatus = null);
 
 /// <summary>Una persona de la organización; <c>State</c> lo calcula el reader en SQL (OrganizationUserStatePolicy).</summary>
 public sealed record OrganizationUserRow(Guid MemberId, Guid? UserId, string DisplayName, Email? Email,
     bool HasManagedEmail, OrganizationUserState State, Guid? InvitationId, DateTime? InvitationIssuedAtUtc,
     DateTime? InvitationExpiresAtUtc, IReadOnlyList<OrganizationUserRoleRow> Roles,
     IReadOnlyList<OrganizationUserCompanyRow> Companies, uint Version, DateTime CreatedAtUtc,
-    DateTime? DeletionScheduledForUtc, DateTime? DeletionRequestedAtUtc = null);
+    DateTime? DeletionScheduledForUtc, DateTime? DeletionRequestedAtUtc = null, PhoneNumber? Phone = null);
 
+/// <summary>Email es el correo verificado o el de la invitación; Phone, el teléfono de una invitación por teléfono (con Email null).</summary>
 public sealed record OrganizationUserResponse(Guid MemberId, Guid? UserId, string DisplayName, Email? Email,
     OrganizationUserState State, bool HasManagedEmail, IReadOnlyList<OrganizationUserRoleRow> Roles,
     IReadOnlyList<OrganizationUserCompanyRow> Companies, Guid? InvitationId,
     DateTime? InvitationIssuedAtUtc, DateTime? InvitationExpiresAtUtc, uint Version, DateTime CreatedAtUtc,
-    DateTime? DeletionScheduledForUtc);
+    DateTime? DeletionScheduledForUtc, PhoneNumber? Phone = null);
 
 public sealed record OrganizationUserFilterCountsResponse(int All, int Active, int PendingDeletion,
-    int Invited, int Expired, int Inactive);
+    int Invited, int Expired, int Inactive, int? CompanyAll = null, int? WithoutCompany = null,
+    IReadOnlyDictionary<Guid, int>? Companies = null);
 
 public sealed record InviteOrganizationUserRequest(Email? Email, IReadOnlyCollection<Guid>? RoleIds,
     IReadOnlyCollection<InviteCompanyRolesRequest>? Companies);
 
 public sealed record InviteCompanyRolesRequest(Guid CompanyId, IReadOnlyCollection<Guid>? RoleIds);
+
+/// <summary>El teléfono verificado (E.164) de un miembro; activo si el miembro y su cuenta lo están.</summary>
+public sealed record MemberPhoneRow(string Phone, string? DisplayName, bool IsActive);
 
 /// <summary>La invitación emitida y cuándo vence, para el aviso «Invitamos a … La invitación vence el …».</summary>
 public sealed record OrganizationInvitationIssuedResponse(Guid InvitationId, DateTime ExpiresAtUtc);

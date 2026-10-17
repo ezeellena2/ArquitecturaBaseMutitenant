@@ -2,7 +2,6 @@ using ArquitecturaBaseMultitenant.Application.Configuration.Invitations;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
-using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Platform;
@@ -75,8 +74,7 @@ internal sealed class PlatformOperatorProvisioner(IUserRepository users, Account
         var (_, assignment) = pending.Value;
         foreach (var method in await methods.ListByUserIdAsync(accountId, ct)) methods.Remove(method);
         assignments.Remove(assignment);
-        var discarded = await users.DiscardOperatorInvitationAsync(accountId, nowUtc,
-            ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName"), ct);
+        var discarded = await users.DiscardOperatorInvitationAsync(accountId, nowUtc, ct);
         if (discarded.IsFailure) return discarded.Error;
         return Result.Success<IReadOnlyList<string>>([.. assignment.Permissions]);
     }

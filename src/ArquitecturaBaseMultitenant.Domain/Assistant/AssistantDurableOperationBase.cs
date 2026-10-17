@@ -1,0 +1,48 @@
+using ArquitecturaBaseMultitenant.Domain.Common;
+
+namespace ArquitecturaBaseMultitenant.Domain.Assistant;
+
+/// <summary>Private committed binding. Content is removed on conversation deletion; the technical key survives.</summary>
+public abstract class AssistantDurableOperationBase : Entity, IVersioned
+{
+    public uint Version { get; private set; }
+    public uint? OriginalSnapshotVersion { get; private set; }
+    public Guid[] SubjectUserIds { get; private set; } = [];
+    public Guid OwnerUserId { get; private set; }
+    public Guid Key { get; private set; }
+    public string BodyHash { get; private set; } = string.Empty;
+    public string Route { get; private set; } = string.Empty;
+    public Guid ConversationId { get; private set; }
+    public string Kind { get; private set; } = string.Empty;
+    public int StatusCode { get; private set; }
+    public string? Location { get; private set; }
+    public string? SnapshotJson { get; private set; }
+    public string? QuickKey { get; private set; }
+    public DateTime CreatedAtUtc { get; private set; }
+
+    public void AddSubjects(IReadOnlyList<Guid> subjects)
+    {
+        PreserveSnapshotVersion();
+        SubjectUserIds = SubjectUserIds.Concat(subjects).Where(id => id != Guid.Empty).Distinct().Order().ToArray();
+    }
+    public void SetTurnSnapshot(string snapshot) { SnapshotJson = snapshot; OriginalSnapshotVersion = null; }
+    public void PreserveSnapshotVersion()
+    {
+        if (SnapshotJson is not null) OriginalSnapshotVersion ??= Version;
+    }
+
+    public void RemoveContent() { SnapshotJson = null; QuickKey = null; SubjectUserIds = []; }
+    protected void Initialize(Guid owner, Guid key, string hash, string route, Guid conversationId, string kind,
+        int statusCode, string? location, string snapshot, string? quickKey, DateTime nowUtc, Guid[]? subjectUserIds)
+    {
+        if (owner == Guid.Empty || key == Guid.Empty || conversationId == Guid.Empty) throw new ArgumentException("Non-empty binding IDs are required.");
+        ArgumentException.ThrowIfNullOrWhiteSpace(hash);
+        ArgumentException.ThrowIfNullOrWhiteSpace(route);
+        ArgumentException.ThrowIfNullOrWhiteSpace(kind);
+        ArgumentException.ThrowIfNullOrWhiteSpace(snapshot);
+        if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC is required.", nameof(nowUtc));
+        OwnerUserId = owner; Key = key; BodyHash = hash; Route = route; ConversationId = conversationId; Kind = kind;
+        StatusCode = statusCode; Location = location; SnapshotJson = snapshot; QuickKey = quickKey; CreatedAtUtc = nowUtc;
+        SubjectUserIds = subjectUserIds?.Where(id => id != Guid.Empty).Distinct().Order().ToArray() ?? [];
+    }
+}

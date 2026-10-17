@@ -24,6 +24,32 @@ public sealed class PlatformAuditOrganizationsTests(ApiFactory factory)
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
+    public async Task Growing_options_are_paged_searchable_and_the_legacy_array_is_bounded()
+    {
+        var (platform, actorId) = await OperatorAsync([PlatformPermissions.Audit.Read]);
+        using var client = platform;
+        var tag = "paged-" + Guid.NewGuid().ToString("N");
+        var tenants = Enumerable.Range(1, 25).Select(index => Business($"{tag} {index:000}")).ToArray();
+        var nowUtc = factory.Services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        await SaveAsync(tenants, tenants.Select(tenant => SecurityEvent.ForTenantAdministration(
+            SecurityEventType.OrganizationSuspended, actorId, tenant.Id, tag, nowUtc)));
+        var path = Path + "/paged?period=all&auditSearch=" + tag;
+        var first = await GetAsync(client, path);
+        Assert.Equal(10, first.GetProperty("items").GetArrayLength());
+        Assert.Equal(25, first.GetProperty("totalCount").GetInt32());
+        Assert.True(first.GetProperty("hasNext").GetBoolean());
+        var second = await GetAsync(client, path + "&page=2");
+        Assert.Equal(10, second.GetProperty("items").GetArrayLength());
+        Assert.Empty(first.GetProperty("items").EnumerateArray().Select(item => item.GetProperty("id").GetGuid())
+            .Intersect(second.GetProperty("items").EnumerateArray().Select(item => item.GetProperty("id").GetGuid())));
+        var searched = await GetAsync(client, path + "&search=025");
+        Assert.Equal(tenants[^1].Id, Assert.Single(searched.GetProperty("items").EnumerateArray()).GetProperty("id").GetGuid());
+        Assert.Equal(1, searched.GetProperty("totalCount").GetInt32());
+        var legacy = await GetAsync(client, Path + "?period=all&search=" + tag);
+        Assert.Equal(10, legacy.GetArrayLength());
+    }
+
+    [Fact]
     public async Task Options_are_distinct_current_names_beyond_the_page_and_ignore_their_own_filter()
     {
         var (platform, actorId) = await OperatorAsync([PlatformPermissions.Audit.Read]);

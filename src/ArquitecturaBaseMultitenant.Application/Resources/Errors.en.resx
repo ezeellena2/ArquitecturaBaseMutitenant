@@ -140,7 +140,6 @@
   <data name="Legal.Document.VersionChanged" xml:space="preserve"><value>The terms changed. Read them again and accept the current version.</value></data>
   <data name="Legal.AccountDeletion.AlreadyPending" xml:space="preserve"><value>You already requested account deletion.</value></data>
   <data name="Legal.AccountDeletion.Blocked" xml:space="preserve"><value>Pending items prevent account deletion.</value></data>
-  <data name="Legal.AccountDeletion.DeletedDisplayName" xml:space="preserve"><value>Deleted account</value></data>
   <data name="Legal.AccountDeletion.GraceExpired" xml:space="preserve"><value>The period to cancel deletion has expired.</value></data>
   <data name="Legal.AccountDeletion.InvalidReason" xml:space="preserve"><value>Enter a reason up to 500 characters.</value></data>
   <data name="Legal.AccountDeletion.LastAdmin" xml:space="preserve"><value>Before requesting deletion, each active organization must have another person with the Owner role.</value></data>

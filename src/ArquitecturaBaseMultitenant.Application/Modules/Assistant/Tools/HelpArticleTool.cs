@@ -1,5 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Help;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
+using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Models.Help;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
@@ -9,7 +11,7 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Tools;
 
 internal sealed class HelpArticleTool(AssistantAccessPolicy policy, IHelpArticleReader help, IProfileService profiles,
-    AssistantHelpAvailabilityPolicy availability) : AssistantTool(policy)
+    AssistantHelpAvailabilityPolicy availability, ICultureCatalog cultures) : AssistantTool(policy)
 {
     public override string Key => "help_article";
     public override Access? Access => null;
@@ -28,7 +30,7 @@ internal sealed class HelpArticleTool(AssistantAccessPolicy policy, IHelpArticle
             && (article.Permission is null || granted.Contains(article.Permission, StringComparer.Ordinal))
             && (article.Module is null || modules.Contains(article.Module, StringComparer.Ordinal)))
             .Select(article => article.RouteKey).Distinct(StringComparer.Ordinal).ToArray();
-        var language = System.Globalization.CultureInfo.GetCultureInfo(me.Culture).TwoLetterISOLanguageName;
+        var language = (await new CultureProfiles(cultures).LoadAsync(me.Culture, ct)).Entry.LanguageCode;
         var articles = await help.SearchAsync(new HelpArticleRequest(args.Text("topicKey"), args.Text("search")),
             new HelpArticleContext(me.Access, language, routes, granted, modules), ct);
         var authorized = new List<AssistantHelpArticleResponse>();

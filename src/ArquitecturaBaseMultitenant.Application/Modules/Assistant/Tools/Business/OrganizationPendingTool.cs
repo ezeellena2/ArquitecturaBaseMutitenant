@@ -21,7 +21,7 @@ internal sealed class OrganizationPendingTool(AssistantAccessPolicy policy, IHom
     {
         var result = await home.GetAsync(ct);
         if (result.IsFailure) return result.Error;
-        var pending = result.Value.Pending.Take(20).ToArray();
+        var pending = result.Value.Pending.Take(AssistantTechnicalLimits.QuickRows).ToArray();
         var subjects = new HashSet<Guid>();
         foreach (var item in pending.Where(item => item.Subject is not null))
         {

@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
@@ -39,7 +40,7 @@ internal sealed class OrganizationMembershipEndNoticeBuilder(
         var tenant = await tenants.FindByIdAsync(tenantId, cancellationToken);
         if (tenant is null) return MemberErrors.NotFound;
 
-        var accountUrl = publicOrigin.Value is { } origin ? new Uri(origin, "/cuenta").AbsoluteUri : "/cuenta";
+        var accountUrl = publicOrigin.Absolute(ReturnUrls.AccountPath);
         return new OrganizationMembershipEndNoticeContext(userId, account, tenant, accountUrl);
     }
 }

@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
@@ -28,6 +29,9 @@ public sealed partial class LoginLinkTests(ApiFactory factory) : IClassFixture<A
         builder.ConfigureTestServices(services =>
         {
             if (enabled) services.AddSingleton<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging.ILoginCodeChannel, LoginLinkPhoneChannel>();
+            // Desde la E11 un canal de teléfono instalado puede estar disponible por datos de otra prueba de esta base:
+            // el host «sin canal» lo apaga de forma explícita, sin depender del módulo.
+            else PhoneChannelsOff(services);
             services.RemoveAll<TimeProvider>(); services.AddSingleton<TimeProvider>(_clock);
             // No external transport/background processing in these database and HTTP security tests.
             services.RemoveAll<IHostedService>();
@@ -141,10 +145,29 @@ public sealed partial class LoginLinkTests(ApiFactory factory) : IClassFixture<A
     public async Task Redeem_cookie_allows_current_terms_acceptance_before_protected_API()
     {
         await using var app = Host(); using var client = app.CreateClient(new() { AllowAutoRedirect = false, BaseAddress = new Uri("https://localhost") });
+        await app.Services.SeedDatabaseAsync(Ct);
+        await using (var read = app.Services.CreateAsyncScope())
+        {
+            // El seed compartido pudo publicar documentos después del instante inicial de esta fixture.
+            var latestUtc = await read.ServiceProvider.GetRequiredService<ApplicationDbContext>().LegalDocuments
+                .MaxAsync(document => document.EffectiveAtUtc, Ct);
+            if (latestUtc > _clock.GetUtcNow().UtcDateTime) _clock.SetUtcNow(new DateTimeOffset(latestUtc));
+        }
         var (_, _, token) = await PrepareAsync(app, client);
         using var redeem = await PostAsync(client, "redeem", new { token, access = "consumer" });
         Assert.Equal(HttpStatusCode.OK, redeem.StatusCode);
         await AccountJourney.AuthorizeAsync(client, "consumer", Ct);
+        await TransactionAsync(app.Services, async (provider, ct) =>
+        {
+            var db = provider.GetRequiredService<ApplicationDbContext>();
+            var currentVersion = await db.LegalDocuments.Where(document => document.Kind == LegalDocumentKind.Terms)
+                .MaxAsync(document => document.Version, ct);
+            var document = LegalDocument.Create(LegalDocumentKind.Terms, checked(currentVersion + 1), _clock.GetUtcNow().UtcDateTime);
+            var repository = provider.GetRequiredService<ILegalRepository>();
+            repository.AddDocument(document);
+            repository.AddContent(LegalDocumentContent.Create(document.Id, "es-AR", "Términos nuevos de prueba."));
+            repository.AddContent(LegalDocumentContent.Create(document.Id, "en-US", "New test terms."));
+        });
         using var blocked = await client.GetAsync("/api/me/login-methods", Ct);
         Assert.Equal(HttpStatusCode.Forbidden, blocked.StatusCode);
         Assert.Equal("Legal.AcceptanceRequired", (await blocked.Content.ReadFromJsonAsync<JsonObject>(Ct))!["code"]!.GetValue<string>());
@@ -325,6 +348,31 @@ public sealed partial class LoginLinkTests(ApiFactory factory) : IClassFixture<A
         using var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login-link/" + action) { Content = JsonContent.Create(body) };
         if (action == "redeem") request.Headers.Add("Idempotency-Key", (key ?? Guid.NewGuid()).ToString());
         return await client.SendAsync(request, Ct);
+    }
+    private static void PhoneChannelsOff(IServiceCollection services)
+    {
+        var channels = services.Where(descriptor => descriptor.ServiceType == typeof(ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging.ILoginCodeChannel)).ToArray();
+        foreach (var descriptor in channels)
+        {
+            services.Remove(descriptor);
+            services.Add(ServiceDescriptor.Describe(descriptor.ServiceType, provider => new PhoneOffChannel((ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging.ILoginCodeChannel)(
+                descriptor.ImplementationInstance ?? descriptor.ImplementationFactory?.Invoke(provider)
+                ?? ActivatorUtilities.CreateInstance(provider, descriptor.ImplementationType!))), descriptor.Lifetime));
+        }
+    }
+    private sealed class PhoneOffChannel(ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging.ILoginCodeChannel inner)
+        : ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging.ILoginCodeChannel
+    {
+        public string Key => inner.Key;
+        public ArquitecturaBaseMultitenant.Domain.Authentication.LoginMethodType SupportedMethodType => inner.SupportedMethodType;
+        public bool IsAvailable => inner.SupportedMethodType != ArquitecturaBaseMultitenant.Domain.Authentication.LoginMethodType.Phone && inner.IsAvailable;
+        public IReadOnlyList<string> Countries => inner.Countries;
+        public string? ContactPhone => inner.ContactPhone;
+        public ArquitecturaBaseMultitenant.Domain.Results.Result ValidateNewDestination(ArquitecturaBaseMultitenant.Domain.Authentication.LoginCodeDestination destination, string? country) => inner.ValidateNewDestination(destination, country);
+        public string RenderLoginCode(string destination, string code, int lifetimeMinutes, ArquitecturaBaseMultitenant.Application.Common.Formatting.CultureProfile culture) => inner.RenderLoginCode(destination, code, lifetimeMinutes, culture);
+        public void EnqueueRenderedLoginCode(string payload, Guid? userId = null) => inner.EnqueueRenderedLoginCode(payload, userId);
+        public void EnqueueSignup(string destination, string code, int lifetimeMinutes, ArquitecturaBaseMultitenant.Application.Common.Formatting.CultureProfile culture) => inner.EnqueueSignup(destination, code, lifetimeMinutes, culture);
+        public void EnqueueVerification(Guid? userId, string destination, string code, int lifetimeMinutes, ArquitecturaBaseMultitenant.Application.Common.Formatting.CultureProfile culture) => inner.EnqueueVerification(userId, destination, code, lifetimeMinutes, culture);
     }
     private static async Task InvalidAsync(HttpResponseMessage response)
     {

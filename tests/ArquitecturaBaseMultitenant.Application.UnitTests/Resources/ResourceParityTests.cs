@@ -60,6 +60,8 @@ public sealed class ResourceParityTests
     public void Placeholder_extraction_ignores_escaped_braces_and_preserves_arguments()
     {
         Assert.Equal(["0", "1"], Placeholders("{1} y {0:N2}, pero {{2}} es literal"));
+        Assert.Equal(["limit", "time"], Placeholders("Llegaste a las {limit} consultas. Se renuevan a las {time}."));
+        Assert.Empty(Placeholders("{\"clave\": 1}"));
     }
 
     private static void AssertSameKeysAndPlaceholders(ResourceManager resourceManager)
@@ -86,7 +88,7 @@ public sealed class ResourceParityTests
     }
 
     private static string[] Placeholders(string text) =>
-        Regex.Matches(text, @"(?<!\{)\{(?<index>\d+)(?:,[^}]*)?(?::[^}]*)?\}(?!\})")
+        Regex.Matches(text, @"(?<!\{)\{(?<index>\d+|[A-Za-z_][A-Za-z0-9_]*)(?:,[^}]*)?(?::[^}]*)?\}(?!\})")
             .Select(match => match.Groups["index"].Value)
             .Distinct(StringComparer.Ordinal)
             .Order(StringComparer.Ordinal)

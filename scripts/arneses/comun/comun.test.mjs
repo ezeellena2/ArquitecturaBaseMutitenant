@@ -6,6 +6,8 @@ import { indexarArchivos } from './archivos.mjs';
 import { filtrarIgnorados, crearHallazgo, ordenar, contar } from './hallazgos.mjs';
 import { anclas, enlaces, estaCerrada, marcasEtapa, rutasEnBackticks, slug } from './markdown.mjs';
 import { leerEtapasCerradas } from './repos.mjs';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 
 const fixtures = join(dirname(fileURLToPath(import.meta.url)), '..', 'realinear-docs', 'fixtures');
 
@@ -22,6 +24,20 @@ test('archivos: indexa el árbol e ignora bin, obj y node_modules', async () => 
   assert.ok(indice.esDirectorio('docs/features'));
   assert.deepEqual(indice.porNombre('RoleService.cs'), ['src/Demo.Application/Services/Roles/RoleService.cs']);
   assert.ok(!indice.existe('docs/features/inexistente.md'));
+});
+
+test('archivos: las salidas locales de build, correo y navegador no son código documentable', async () => {
+  const raiz = await mkdtemp(join(tmpdir(), 'arnes-salidas-'));
+  try {
+    for (const carpeta of ['.artifacts', '.playwright-mcp', 'src/Api/.emails', 'src/App/.artifacts', 'src/App/Services']) {
+      await mkdir(join(raiz, carpeta), { recursive: true });
+      await writeFile(join(raiz, carpeta, 'archivo.md'), '# Archivo');
+    }
+    const indice = await indexarArchivos(raiz);
+    assert.deepEqual(indice.archivos, ['src/App/Services/archivo.md']);
+    assert.ok(!indice.esDirectorio('.artifacts'));
+    assert.ok(!indice.esDirectorio('src/Api/.emails'));
+  } finally { await rm(raiz, { recursive: true, force: true }); }
 });
 
 test('markdown: enlaces con ancla, sin código ni URLs', () => {

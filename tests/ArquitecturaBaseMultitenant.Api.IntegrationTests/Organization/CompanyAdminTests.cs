@@ -21,6 +21,34 @@ public sealed class CompanyAdminTests(ApiFactory factory)
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
+    public async Task Expired_filter_lists_only_invitations_the_company_admin_can_resolve_and_preserves_invited_state()
+    {
+        using var ownerClient = NewClient();
+        using var adminClient = NewClient();
+        var staged = await StageAsync(ownerClient, adminClient, "Filtro de vencidas");
+        var north = new { companyId = staged.NorthId, roleIds = new[] { staged.CompanyAdminRoleId } };
+        var south = new { companyId = staged.SouthId, roleIds = new[] { staged.CompanyAdminRoleId } };
+        var onlyNorthEmail = $"solo-norte-{Guid.NewGuid():N}@example.test";
+        await OrganizationJourney.InviteExpiredAsync(factory, ownerClient, staged.TenantId, onlyNorthEmail, Ct, [north]);
+        await OrganizationJourney.InviteExpiredAsync(factory, ownerClient, staged.TenantId,
+            $"con-sur-{Guid.NewGuid():N}@example.test", Ct, [north, south]);
+        await OrganizationJourney.InviteExpiredAsync(factory, ownerClient, staged.TenantId,
+            $"con-rol-{Guid.NewGuid():N}@example.test", Ct, [north], [await OwnerRoleIdAsync(ownerClient)]);
+        await InviteAsync(ownerClient, $"vigente-{Guid.NewGuid():N}@example.test", [north]);
+
+        var path = $"/api/companies/{staged.NorthId:D}/members/paged?state=Expired";
+        var page = await JsonAsync(adminClient, path);
+        Assert.Equal(1, page.GetProperty("totalCount").GetInt32());
+        var item = Assert.Single(page.GetProperty("items").EnumerateArray());
+        Assert.Equal(onlyNorthEmail, item.GetProperty("email").GetString());
+        Assert.Equal("Invited", item.GetProperty("state").GetString());
+        Assert.Single(InvitationIds(page));
+        Assert.Equal(3, (await JsonAsync(ownerClient, path)).GetProperty("totalCount").GetInt32());
+        Assert.Equal(4, (await JsonAsync(adminClient,
+            $"/api/companies/{staged.NorthId:D}/members/paged?state=Invited")).GetProperty("totalCount").GetInt32());
+    }
+
+    [Fact]
     public async Task A_company_admin_lists_who_can_join_its_company_by_name_with_a_masked_email()
     {
         using var ownerClient = NewClient();

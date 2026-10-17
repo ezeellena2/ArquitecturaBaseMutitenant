@@ -86,7 +86,14 @@ internal sealed class WhatsAppMessageRepository(ApplicationDbContext context) : 
             var message = rows.SingleOrDefault();
             if (message is null) return null;
             await context.Entry(message).ReloadAsync(ct);
-            if (message.TryLease(Guid.CreateVersion7(), nowUtc, leaseLifetime, maxAttempts)) return new(message.Id, message.LeaseId!.Value);
+            if (message.TryLease(Guid.CreateVersion7(), nowUtc, leaseLifetime, maxAttempts))
+            {
+                // La entrada de un número de organización se procesa dentro de su alcance (decisión 4 de la E11).
+                var organizationId = message.ChannelId is { } channelId
+                    ? await context.Set<WhatsAppChannel>().AsNoTracking().Where(value => value.Id == channelId).Select(value => value.OrganizationId).SingleOrDefaultAsync(ct)
+                    : null;
+                return new(message.Id, message.LeaseId!.Value, organizationId);
+            }
             exhausted.Add(message.Id);
         }
         return null;

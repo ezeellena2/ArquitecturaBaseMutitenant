@@ -30,7 +30,6 @@ public sealed class PlatformAssistantModelsController(IAssistantModelService ser
     [ProducesProblem(403)]
     [ProducesProblem(404)]
     [ProducesProblem(500)]
-    [ProducesProblem(501)]
     public async Task<IActionResult> List([FromQuery] AssistantModelListHttpQuery request, CancellationToken cancellationToken) =>
         (await service.ListAsync(new AssistantModelListRequest(request.Page, request.PageSize, request.Search, request.Active), cancellationToken)).ToActionResult(this);
 
@@ -44,7 +43,6 @@ public sealed class PlatformAssistantModelsController(IAssistantModelService ser
     [ProducesProblem(409)]
     [ProducesProblem(422)]
     [ProducesProblem(500)]
-    [ProducesProblem(501)]
     public async Task<IActionResult> Create([FromBody] CreateAssistantModelHttpRequest request, CancellationToken cancellationToken)
     {
         var result = await service.CreateAsync(new CreateAssistantModelRequest(request.Name, request.Provider, request.ProviderModelId, request.InputPricePerMillion, request.OutputPricePerMillion, request.IsActive, request.Technical?.ToModel()), cancellationToken);
@@ -59,7 +57,6 @@ public sealed class PlatformAssistantModelsController(IAssistantModelService ser
     [ProducesProblem(404)]
     [ProducesProblem(409)]
     [ProducesProblem(500)]
-    [ProducesProblem(501)]
     public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateAssistantModelHttpRequest request, CancellationToken cancellationToken) =>
         (await service.UpdateAsync(id, new UpdateAssistantModelRequest(request.Name, request.Provider, request.ProviderModelId, request.InputPricePerMillion, request.OutputPricePerMillion, request.IsActive, request.Version, request.Technical?.ToModel()), cancellationToken)).ToActionResult(this);
 }

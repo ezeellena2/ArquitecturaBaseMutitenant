@@ -5,6 +5,7 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Files;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Retention;
@@ -89,6 +90,28 @@ public sealed class AssistantAttachmentsTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.Created, accepted.StatusCode);
         using var large = await UploadAsync(client, conversation.Id, conversation.Version, Guid.NewGuid(), [.. exact, 0], "image/png");
         Assert.Equal(HttpStatusCode.RequestEntityTooLarge, large.StatusCode);
+    }
+
+    [Fact]
+    public async Task More_than_five_attachments_return_the_published_code_on_the_field()
+    {
+        using var client = AssistantTestData.Client(factory);
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        await AssistantTestData.PersonalAsync(factory, true);
+        await AssistantExecutionActorTests.AcceptNoticeAsync(client);
+        var tenant = await AssistantTestData.ActiveTenantAsync(client);
+        var conversation = await AssistantTestData.ConversationAsync(factory, tenant, account.UserId, Access.Consumer);
+        var body = JsonSerializer.Serialize(new
+        {
+            text = "Revisá estos archivos.",
+            attachmentIds = Enumerable.Range(0, AssistantTechnicalLimits.MaxAttachments + 1).Select(_ => Guid.NewGuid()),
+            conversationVersion = conversation.Version,
+        });
+        using var response = await AssistantDurableConversationTests.PostAsync(client, $"/api/me/assistant/conversations/{conversation.Id}/messages", body, Guid.NewGuid());
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        using var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(AssistantErrors.AttachmentTooManyCode, problem.RootElement.GetProperty("code").GetString());
+        Assert.True(problem.RootElement.GetProperty("errors").TryGetProperty("attachmentIds", out _));
     }
 
     internal static async Task<HttpResponseMessage> UploadAsync(HttpClient client, Guid conversation, uint version, Guid key, byte[] bytes, string mediaType, string boundary = "assistant-fixture-boundary")

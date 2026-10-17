@@ -5,7 +5,6 @@ using ArquitecturaBaseMultitenant.Application.Models.Home;
 using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Application.Models.Roles;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
-using ArquitecturaBaseMultitenant.Domain.Tenancy;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Home;
 
@@ -49,12 +48,8 @@ internal sealed class OrganizationHomeAreasBuilder(IOrganizationUserReader users
     }
 
     // El verificado primero; si todavía no hay, el que espera verificación.
-    private async Task<HomeSettings> SettingsAsync(CancellationToken cancellationToken)
-    {
-        var current = await domains.ListCurrentAsync(cancellationToken);
-        return new HomeSettings(current.OrderBy(domain => domain.Status != TenantDomainStatus.Verified)
-            .Select(domain => domain.Domain).FirstOrDefault());
-    }
+    private async Task<HomeSettings> SettingsAsync(CancellationToken cancellationToken) =>
+        new(await domains.FindHomeDomainAsync(cancellationToken));
 
     private async Task<HomeAudit> AuditAsync(CancellationToken cancellationToken)
     {

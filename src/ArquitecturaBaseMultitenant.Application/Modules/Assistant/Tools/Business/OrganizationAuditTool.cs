@@ -17,7 +17,7 @@ internal sealed class OrganizationAuditTool(AssistantAccessPolicy policy, IOrgan
     {
         var result = await audit.ListAsync(new ListOrganizationAuditRequest { After = args.Text("cursor"), Limit = 20, Period = "all", FromUtc = args.Instant("fromUtc"), ToUtc = args.Instant("toUtc") }, ct);
         if (result.IsFailure) return result.Error;
-        var rows = result.Value.Items.Take(20).ToArray();
+        var rows = result.Value.Items.Take(AssistantTechnicalLimits.QuickRows).ToArray();
         return new AssistantQuickToolData(new AssistantAuditQuickDataResponse([.. rows.Select(row =>
             new AssistantAuditRowResponse(row.Id, row.Action, row.ActorDisplayName, row.OccurredAtUtc))], result.Value.NextCursor, result.Value.HasMore))
         {

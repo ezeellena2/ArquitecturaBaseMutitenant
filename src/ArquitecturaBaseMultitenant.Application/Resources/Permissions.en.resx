@@ -70,4 +70,18 @@
   <data name="PermissionDescription.platform.assistant.configure" xml:space="preserve"><value>Configure assistant keys, models and limits.</value></data>
   <data name="Permission.platform.assistant.read" xml:space="preserve"><value>View assistant usage</value></data>
   <data name="PermissionDescription.platform.assistant.read" xml:space="preserve"><value>View aggregated costs and queries without reading conversations.</value></data>
+  <data name="Area.whatsapp" xml:space="preserve"><value>WhatsApp</value></data>
+  <data name="Area.platformWhatsApp" xml:space="preserve"><value>Platform WhatsApp</value></data>
+  <data name="Permission.whatsapp.customers" xml:space="preserve"><value>Serve customers</value></data>
+  <data name="PermissionDescription.whatsapp.customers" xml:space="preserve"><value>View and reply to the Customers inbox, and view, edit and import contacts.</value></data>
+  <data name="Permission.whatsapp.internal" xml:space="preserve"><value>Serve employees</value></data>
+  <data name="PermissionDescription.whatsapp.internal" xml:space="preserve"><value>View and reply to the Internal inbox.</value></data>
+  <data name="Permission.whatsapp.broadcasts" xml:space="preserve"><value>Send broadcasts</value></data>
+  <data name="PermissionDescription.whatsapp.broadcasts" xml:space="preserve"><value>Create, schedule and cancel broadcasts to contacts who accept promotions.</value></data>
+  <data name="Permission.whatsapp.manage" xml:space="preserve"><value>Manage WhatsApp</value></data>
+  <data name="PermissionDescription.whatsapp.manage" xml:space="preserve"><value>Connect numbers and configure the bot, teams and templates.</value></data>
+  <data name="Permission.platform.whatsapp.manage" xml:space="preserve"><value>Manage Platform WhatsApp</value></data>
+  <data name="PermissionDescription.platform.whatsapp.manage" xml:space="preserve"><value>Connect the number and configure the bot, teams and inquiry templates.</value></data>
+  <data name="Permission.platform.whatsapp.attend" xml:space="preserve"><value>Answer inquiries</value></data>
+  <data name="PermissionDescription.platform.whatsapp.attend" xml:space="preserve"><value>View and reply to the inquiries that reach the Platform number.</value></data>
 </root>

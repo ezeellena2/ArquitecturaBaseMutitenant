@@ -5,36 +5,17 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 ## Raíz
 
 ```text
-├── .artifacts/
-│   ├── comments-validation/
-│   ├── etapa-3c/
-│   ├── etapa-5/
-│   ├── etapa-5-r04/
-│   ├── etapa-5-role-check/
-│   ├── publish-api/
-│   │   └── en/
-│   └── tanda-4f/
 ├── .github/
 │   └── workflows/
-├── .playwright-mcp/
 ├── docs/
 │   ├── architecture/
-│   ├── ayuda/
-│   │   ├── assistant/
-│   │   ├── business/
-│   │   ├── identity/
-│   │   ├── personal/
-│   │   ├── platform/
-│   │   └── whatsapp/
 │   ├── contracts/
 │   ├── decisions/
 │   ├── features/  reglas funcionales por área
 │   ├── guides/  recetas: agregar un área, permiso nuevo, migración, prefijo de backend, arneses
 │   ├── operations/
 │   ├── plans/
-│   ├── reviews/  revisión activa de la 8b hasta el aviso del coordinador
 │   ├── rules/  fichas del arnés: README + una ficha por tema (guardado, fechas, números…); índice en rules/README.md
-│   └── specs/
 ├── scripts/
 │   ├── arneses/  arneses ejecutables: detectan (0 tokens), arreglan lo mecánico y llaman a un modelo barato (ADR 0037)
 │   │   ├── _plantilla/  se copia para crear un arnés nuevo; el CLI ignora las carpetas con _
@@ -50,9 +31,6 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   └── secretos/
 ├── src/  ver abajo
 │   ├── ArquitecturaBaseMultitenant.Api/
-│   │   ├── .artifacts/
-│   │   │   └── etapa-5/
-│   │   ├── .emails/
 │   │   ├── Authentication/
 │   │   ├── Authorization/
 │   │   ├── Contracts/  entrada HTTP: records sealed, props nullable, ToString() sin PII
@@ -96,8 +74,6 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   ├── ArquitecturaBaseMultitenant.AppHost/
 │   │   └── Properties/
 │   ├── ArquitecturaBaseMultitenant.Application/
-│   │   ├── .artifacts/
-│   │   │   └── etapa-5/
 │   │   ├── Common/
 │   │   │   ├── Exceptions/
 │   │   │   ├── Formatting/  presentación unificada del lado del back (backend.md §18)
@@ -114,7 +90,6 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   │   ├── Caching/
 │   │   │   │   ├── Dns/
 │   │   │   │   ├── Engagement/
-│   │   │   │   ├── Execution/
 │   │   │   │   ├── Features/
 │   │   │   │   ├── Files/
 │   │   │   │   ├── Help/
@@ -157,8 +132,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   ├── Roles/
 │   │   │   ├── Settings/
 │   │   │   ├── Tenancy/
-│   │   │   ├── Time/
-│   │   │   └── WhatsApp/
+│   │   │   └── Time/
 │   │   ├── Modules/  módulos quitables: el núcleo no los referencia (test)
 │   │   │   ├── Assistant/
 │   │   │   │   ├── Configuration/
@@ -181,7 +155,8 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │       │   └── Services/
 │   │   │       ├── Models/
 │   │   │       ├── Resources/
-│   │   │       └── Services/
+│   │   │       ├── Services/
+│   │   │       └── Validation/  validadores de los pedidos de atención (E11)
 │   │   ├── Resources/  es (neutral) + en; claves en paridad
 │   │   ├── Services/  servicios internal sealed partial; helpers sin IUnitOfWork
 │   │   │   ├── Auditing/
@@ -215,8 +190,6 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │       ├── PublicSite/
 │   │       └── Roles/
 │   ├── ArquitecturaBaseMultitenant.Domain/
-│   │   ├── .artifacts/
-│   │   │   └── etapa-5/
 │   │   ├── Assistant/
 │   │   ├── Auditing/
 │   │   ├── Authentication/
@@ -239,12 +212,10 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   └── TaxIdValidators/
 │   │   └── WhatsApp/
 │   ├── ArquitecturaBaseMultitenant.Infrastructure/
-│   │   ├── .artifacts/
-│   │   │   └── etapa-5/
 │   │   ├── BackgroundJobs/
 │   │   ├── Caching/
 │   │   ├── Features/
-│   │   ├── Help/
+│   │   ├── Files/  almacenamiento privado local y journal de compensación
 │   │   ├── Idempotency/
 │   │   ├── Identity/
 │   │   │   ├── Deletion/
@@ -254,6 +225,18 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │       └── Templates/
 │   │   ├── Modules/
 │   │   │   ├── Assistant/
+│   │   │   │   ├── Email/  renderizado de alertas desde plantillas del módulo
+│   │   │   │   │   └── Templates/
+│   │   │   │   ├── Export/  exportación Markdown/PDF del chat
+│   │   │   │   │   └── Fonts/  fuente y licencia del PDF
+│   │   │   │   ├── Help/  lector y artículos bilingües aportados por el módulo
+│   │   │   │   │   └── Articles/
+│   │   │   │   │       ├── assistant/
+│   │   │   │   │       ├── business/
+│   │   │   │   │       ├── identity/
+│   │   │   │   │       ├── personal/
+│   │   │   │   │       ├── platform/
+│   │   │   │   │       └── whatsapp/
 │   │   │   │   ├── Persistence/
 │   │   │   │   │   ├── Configurations/
 │   │   │   │   │   ├── Readers/
@@ -262,8 +245,11 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   │   └── Retention/
 │   │   │   └── WhatsApp/  módulo opcional: se enciende con WhatsApp:PhoneNumberId
 │   │   │       ├── Disabled/
+│   │   │       ├── Email/  el correo «Chats esperando» (D6)
+│   │   │       │   └── Templates/
 │   │   │       ├── Inbound/
 │   │   │       ├── Persistence/
+│   │   │       ├── ReferenceData/  tarifas oficiales de Meta por vigencia
 │   │   │       ├── Retention/
 │   │   │       └── Webhook/
 │   │   ├── Persistence/
@@ -278,29 +264,18 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   ├── Extensions/
 │   │   │   ├── Interceptors/
 │   │   │   ├── Migrations/  una sola carpeta; RLS y grants dentro de cada migración
-│   │   │   ├── Platform/
-│   │   │   │   ├── Configurations/
-│   │   │   │   └── Migrations/
 │   │   │   ├── Readers/  AsNoTracking + proyección a *Row/*Response
 │   │   │   ├── Repositories/  internal sealed; escrituras de agregados
 │   │   │   │   └── RoleRepository.cs  repositorio de referencia
 │   │   │   ├── Rls/
 │   │   │   ├── Seed/
 │   │   │   │   └── ReferenceData/  cinco JSON de salida versionados; no se editan a mano
-│   │   │   ├── Tenant/
-│   │   │   │   ├── Configurations/
-│   │   │   │   ├── Interceptors/
-│   │   │   │   └── Migrations/
-│   │   │   └── WhatsApp/
 │   │   ├── Phones/
 │   │   ├── ReferenceData/
 │   │   ├── RequestContext/
 │   │   ├── Security/
-│   │   ├── Time/
-│   │   └── WhatsApp/
+│   │   └── Time/
 │   └── ArquitecturaBaseMultitenant.ServiceDefaults/
-│       └── .artifacts/
-│           └── etapa-5/
 ├── tests/  ver abajo
 │   ├── ArquitecturaBaseMultitenant.Api.IntegrationTests/
 │   │   ├── Api/
@@ -308,6 +283,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   ├── Contracts/
 │   │   ├── ErrorHandling/
 │   │   ├── Features/
+│   │   ├── Files/  pruebas del almacenamiento privado y compensaciones
 │   │   ├── Hosting/
 │   │   ├── Identity/
 │   │   ├── Json/
@@ -331,6 +307,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   ├── TestFeatures/  solo para tests, nunca en src/
 │   │   │   ├── Access/  probe de ruta exclusiva Business, sólo para tests
 │   │   │   ├── AssistantTurns/
+│   │   │   ├── AssistantBrowser/  controles privados del recorrido real aislado
 │   │   │   ├── Auditing/
 │   │   │   ├── Features/
 │   │   │   ├── Idempotency/
@@ -362,8 +339,6 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   └── Roles/
 │   │   └── TestDoubles/  cada fake nace con la interfaz que implementa
 │   ├── ArquitecturaBaseMultitenant.ArchitectureTests/
-│   │   ├── .artifacts/
-│   │   │   └── etapa-5/
 │   │   ├── Modules/
 │   │   │   ├── Assistant/
 │   │   │   └── WhatsApp/
@@ -467,7 +442,6 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `src/ArquitecturaBaseMultitenant.Application/Models/Settings/` | Modelos de entrada y salida de Settings. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Application/Models/Settings/OrganizationSettingsModels.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Models/Settings/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Models/Tenancy/` | Modelos de entrada y salida de Tenancy. | [docs/features/organizaciones.md](../features/organizaciones.md) | `src/ArquitecturaBaseMultitenant.Application/Models/Tenancy/ActiveTenantAdminEmail.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Models/Tenancy/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Models/Time/` | Modelos de entrada y salida de tiempo. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Application/Models/Time/DayRangeUtc.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Models/Time/AGENTS.md) |
-| `src/ArquitecturaBaseMultitenant.Application/Models/WhatsApp/` | Modelos de entrada y salida de WhatsApp. | [docs/features/whatsapp.md](../features/whatsapp.md) | `src/ArquitecturaBaseMultitenant.Application/Modules/WhatsApp/Models/WhatsAppOutboundMessage.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Models/WhatsApp/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Modules/Assistant/` | Casos de uso del Asistente. | [Asistente](../features/asistente.md) | `src/ArquitecturaBaseMultitenant.Application/Modules/Assistant/Services/AssistantConversationService.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Modules/Assistant/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Modules/WhatsApp/` | Composición del módulo de WhatsApp en la capa. | [docs/features/whatsapp.md](../features/whatsapp.md) | `src/ArquitecturaBaseMultitenant.Application/Modules/WhatsApp/Interfaces/Integrations/IWhatsAppAvailability.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Modules/WhatsApp/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Resources/` | Resources de textos visibles en español e inglés. | [docs/rules/textos-y-traducciones.md](../rules/textos-y-traducciones.md) | `src/ArquitecturaBaseMultitenant.Application/Resources/Errors.resx` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Resources/AGENTS.md) |
@@ -526,10 +500,9 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `src/ArquitecturaBaseMultitenant.Infrastructure/BackgroundJobs/` | Adaptadores técnicos de Background Jobs. | [docs/rules/multitenancy.md](../rules/multitenancy.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/BackgroundJobs/TenantJobRunner.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/BackgroundJobs/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Caching/` | Adaptadores técnicos de caché. | [docs/rules/multitenancy.md](../rules/multitenancy.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Caching/HybridCacheExtensions.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Caching/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Features/` | Adaptadores técnicos de Features. | [docs/rules/modulos-habilitados.md](../rules/modulos-habilitados.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Features/TenantFeatureFilter.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Features/AGENTS.md) |
-| `src/ArquitecturaBaseMultitenant.Infrastructure/Help/` | Adaptadores técnicos de Help. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Help/RepositoryHelpArticleReader.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Help/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Idempotency/` | Adaptadores técnicos de idempotencia. | [docs/rules/idempotencia.md](../rules/idempotencia.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Idempotency/IdempotencyStore.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Idempotency/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Identity/` | Adaptadores técnicos de identidad. | [docs/features/identidad.md](../features/identidad.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Identity/ApplicationUser.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Identity/AGENTS.md) |
-| `src/ArquitecturaBaseMultitenant.Infrastructure/Identity/Deletion/` | Adaptadores técnicos de identidad / Deletion. | [docs/rules/datos-personales.md](../rules/datos-personales.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Identity/Deletion/MembershipDeletionParticipant.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Identity/Deletion/AGENTS.md) |
+| `src/ArquitecturaBaseMultitenant.Infrastructure/Identity/Deletion/` | Adaptadores técnicos de identidad / Deletion. | [docs/rules/datos-personales.md](../rules/datos-personales.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Identity/Deletion/LegalAcceptanceDeletionParticipant.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Identity/Deletion/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Messaging/` | Adaptadores técnicos de Messaging. | [docs/rules/guardado.md](../rules/guardado.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Messaging/Outbox.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Messaging/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Messaging/Email/Templates/` | Adaptadores técnicos de Messaging / correo / Templates. | [docs/rules/textos-y-traducciones.md](../rules/textos-y-traducciones.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Messaging/Email/Templates/LoginCode.html` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Messaging/Email/Templates/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/` | Módulos opcionales y su composición en la capa. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/AnthropicChatClientFactory.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Modules/AGENTS.md) |
@@ -550,7 +523,6 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `src/ArquitecturaBaseMultitenant.Infrastructure/RequestContext/` | Adaptadores técnicos de Request Context. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/RequestContext/ExecutionActorContext.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/RequestContext/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Security/` | Adaptadores técnicos de seguridad. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Security/InvitationTokenProtector.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Security/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Time/` | Adaptadores técnicos de tiempo. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Time/TimeZoneService.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Time/AGENTS.md) |
-| `src/ArquitecturaBaseMultitenant.Infrastructure/WhatsApp/` | Adaptadores técnicos de WhatsApp. | [docs/features/whatsapp.md](../features/whatsapp.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/WhatsApp/WhatsAppCloudClient.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/WhatsApp/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.ServiceDefaults/` | Configuración común de observabilidad, resiliencia y salud. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.ServiceDefaults/Extensions.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.ServiceDefaults/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/` | Proyecto de pruebas de integración. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Organization/RolesTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Modules/Assistant/` | Pruebas de integración: módulos / asistente. | [docs/features/asistente.md](../features/asistente.md) | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Modules/Assistant/AssistantTestData.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Modules/Assistant/AGENTS.md) |
@@ -615,3 +587,9 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Users/` | Pruebas de unidad: Users. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Users/AccountLifecycleTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Users/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/ValueObjects/` | Pruebas de unidad: Value Objects. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/ValueObjects/CultureCodeTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Domain.UnitTests/ValueObjects/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/WhatsApp/` | Pruebas de unidad: WhatsApp. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/WhatsApp/WhatsAppMessageTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Domain.UnitTests/WhatsApp/AGENTS.md) |
+| `src/ArquitecturaBaseMultitenant.Infrastructure/Files/` | Almacenamiento privado local y journal de compensación. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Files/LocalFileStore.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Files/AGENTS.md) |
+| `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Export/` | Exportación Markdown/PDF de chats del asistente. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Export/AssistantExportRenderer.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Export/AGENTS.md) |
+| `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Email/` | Plantillas y renderizado de alertas del asistente. | [docs/rules/textos-y-traducciones.md](../rules/textos-y-traducciones.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Email/AssistantBudgetEmailRenderer.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Email/AGENTS.md) |
+| `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Help/` | Lector y artículos bilingües de ayuda del asistente. | [docs/features/asistente.md](../features/asistente.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Help/RepositoryHelpArticleReader.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Help/AGENTS.md) |
+| `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Files/` | Pruebas del almacenamiento privado y sus compensaciones. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Files/LocalFileStoreTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Files/AGENTS.md) |
+| `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/AssistantBrowser/` | Fixture privada del recorrido del asistente en Testing aislado. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/AssistantBrowser/AssistantFileBridge.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/AssistantBrowser/AGENTS.md) |

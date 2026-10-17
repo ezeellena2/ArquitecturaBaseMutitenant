@@ -235,7 +235,10 @@ internal static partial class ReferenceDataHardcodeScanner
 
     private static bool IsGeneratedCatalog(string relativePath) =>
         relativePath.StartsWith("ArquitecturaBaseMultitenant.Infrastructure/Persistence/Seed/ReferenceData/", StringComparison.Ordinal)
-        && Path.GetFileName(relativePath) is "currencies.json" or "countries.json" or "time-zones.json" or "cultures.json" or "tax-id-types.json";
+        && Path.GetFileName(relativePath) is "currencies.json" or "countries.json" or "time-zones.json" or "cultures.json" or "tax-id-types.json"
+        // Las tarifas oficiales de Meta (decisión 9 de la E11): un catálogo por vigencia, cargado a platform.WhatsAppRates con FK.
+        || relativePath.StartsWith("ArquitecturaBaseMultitenant.Infrastructure/Modules/WhatsApp/ReferenceData/meta-rates-", StringComparison.Ordinal)
+        && relativePath.EndsWith(".json", StringComparison.Ordinal);
 
     public static IEnumerable<string> FindViolations(string source)
     {

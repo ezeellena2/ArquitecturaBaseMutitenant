@@ -6,6 +6,8 @@ namespace ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 /// <summary>Completa el callback de Google según la puerta que inició el flujo.</summary>
 public interface IExternalLoginService
 {
+    Task<Result> ValidateStartAsync(ExternalLoginStartRequest request, CancellationToken cancellationToken);
+
     Task<Result<ExternalSignInResponse>> SignInAsync(
         ExternalSignInRequest request, CancellationToken cancellationToken);
 }

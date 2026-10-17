@@ -20,6 +20,15 @@ namespace ArquitecturaBaseMultitenant.Api.Controllers.Organization;
 [Access(Access.Business)]
 public sealed class RolesController(IRoleService service) : ControllerBase
 {
+    [HttpGet("filter-counts")]
+    [HasPermission(Permissions.Roles.Read)]
+    [ProducesResponseType<RoleFilterCountsResponse>(StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status401Unauthorized)]
+    [ProducesProblem(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetFilterCounts([FromQuery] RoleFilterCountsHttpQuery query, CancellationToken cancellationToken) =>
+        (await service.GetFilterCountsAsync(query.Search, cancellationToken)).ToActionResult(this);
+
     [HttpGet("paged")]
     [HasPermission(Permissions.Roles.Read)]
     [ProducesResponseType<PagedResult<RoleResponse>>(StatusCodes.Status200OK)]
@@ -35,6 +44,7 @@ public sealed class RolesController(IRoleService service) : ControllerBase
             Search = query.Search,
             Scope = query.Scope,
             CompanyId = query.CompanyId,
+            OnlyOwn = query.OnlyOwn ?? false,
         }, cancellationToken)).ToActionResult(this);
 
     [HttpGet("{id:guid}")]

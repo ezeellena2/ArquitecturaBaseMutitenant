@@ -36,7 +36,7 @@ internal sealed class OrganizationDomainVerifier(ITenantDomainRepository domains
         domains.MarkUpdated(domain);
         var associated = await loginMethods.ListVerifiedByEmailDomainAsync(organizationDomain.Value, cancellationToken);
         foreach (var method in associated) method.AssignManagedByOrganization(domain.OrganizationId);
-        auditLog.Record(AuditAction.Updated, "TenantDomain", domain.Id,
+        auditLog.Record(AuditAction.Updated, nameof(TenantDomain), domain.Id,
             new Dictionary<string, object?> { ["domain"] = domain.Domain, ["status"] = domain.Status.ToString() });
         return domain;
     }

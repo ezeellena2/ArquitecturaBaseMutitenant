@@ -96,7 +96,7 @@ public sealed class PlatformTenantDetailTests(ApiFactory factory)
         await work.ExecuteInTransactionAsync(_ =>
         {
             Assert.True(unnamed.RequestDeletion("Solicitud", nowUtc.AddDays(-2), 1, account.UserId).IsSuccess);
-            Assert.True(unnamed.CompleteDeletion(nowUtc, "Cuenta eliminada").IsSuccess);
+            Assert.True(unnamed.CompleteDeletion(nowUtc).IsSuccess);
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
         using var deletedResponse = await client.GetAsync($"/api/platform/tenants/{tenant.Id:D}", Ct);

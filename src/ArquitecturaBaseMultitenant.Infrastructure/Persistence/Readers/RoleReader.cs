@@ -20,6 +20,29 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
 
     private static readonly SortDescriptor DefaultSort = new("name", Descending: false);
 
+    public async Task<RoleFilterCountsResponse> GetFilterCountsAsync(string? search, CancellationToken cancellationToken)
+    {
+        var tenantId = tenantContext.RequiredTenantId;
+        var all = ApplyRoleFilters(tenantId, new ListRolesRequest());
+        var total = await CountScopesAsync(all, cancellationToken);
+        var filtered = ApplyRoleFilters(tenantId, new ListRolesRequest { Search = search });
+        var matching = string.IsNullOrWhiteSpace(search) ? total : await CountScopesAsync(filtered, cancellationToken);
+        var anyCompany = matching.GetValueOrDefault(RoleScope.AnyCompany);
+        var companies = await filtered.Where(role => role.Scope == RoleScope.SpecificCompany && role.CompanyId != null)
+            .GroupBy(role => role.CompanyId!.Value)
+            .Select(group => new { CompanyId = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(row => row.CompanyId, row => row.Count + anyCompany, cancellationToken);
+        return new RoleFilterCountsResponse(ScopeCounts(matching), ScopeCounts(total), anyCompany, companies);
+    }
+
+    private static Task<Dictionary<RoleScope, int>> CountScopesAsync(IQueryable<Role> roles, CancellationToken ct) =>
+        roles.GroupBy(role => role.Scope).Select(group => new { Scope = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(row => row.Scope, row => row.Count, ct);
+
+    private static RoleScopeCounts ScopeCounts(IReadOnlyDictionary<RoleScope, int> counts) =>
+        new(counts.Values.Sum(), counts.GetValueOrDefault(RoleScope.Organization),
+            counts.GetValueOrDefault(RoleScope.AnyCompany) + counts.GetValueOrDefault(RoleScope.SpecificCompany));
+
     public async Task<IReadOnlyList<RoleRow>> ListAllAsync(CancellationToken cancellationToken)
     {
         var tenantId = tenantContext.RequiredTenantId;
@@ -34,6 +57,21 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
     {
         ArgumentNullException.ThrowIfNull(request);
         var tenantId = tenantContext.RequiredTenantId;
+        var roles = ApplyRoleFilters(tenantId, request)
+            .ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, role => role.Id);
+        var page = await roles.ToPagedResultAsync(request, cancellationToken);
+        if (page.Items.Count == 0)
+            return new PagedResult<RoleRow>([], page.Page, page.PageSize, page.TotalCount);
+
+        var roleIds = page.Items.Select(role => role.Id).ToArray();
+        var rows = await Project(context.Roles.AsNoTracking().Where(role => roleIds.Contains(role.Id)), tenantId)
+            .ToDictionaryAsync(role => role.Id, cancellationToken);
+        return new PagedResult<RoleRow>([.. page.Items.Select(role => SortPermissions(rows[role.Id]))],
+            page.Page, page.PageSize, page.TotalCount);
+    }
+
+    private IQueryable<Role> ApplyRoleFilters(Guid tenantId, ListRolesRequest request)
+    {
         var roles = context.Roles.AsNoTracking().Where(role => role.TenantId == tenantId)
             .ApplySearch(request.Search, role => role.Name, role => role.Description);
         if (request.SystemRoleKey is { } systemKey)
@@ -47,17 +85,9 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
         if (request.CompanyId is { } companyId)
             roles = roles.Where(role => role.Scope == RoleScope.AnyCompany
                 || role.Scope == RoleScope.SpecificCompany && role.CompanyId == companyId);
-        roles = roles
-            .ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, role => role.Id);
-        var page = await roles.ToPagedResultAsync(request, cancellationToken);
-        if (page.Items.Count == 0)
-            return new PagedResult<RoleRow>([], page.Page, page.PageSize, page.TotalCount);
-
-        var roleIds = page.Items.Select(role => role.Id).ToArray();
-        var rows = await Project(context.Roles.AsNoTracking().Where(role => roleIds.Contains(role.Id)), tenantId)
-            .ToDictionaryAsync(role => role.Id, cancellationToken);
-        return new PagedResult<RoleRow>([.. page.Items.Select(role => SortPermissions(rows[role.Id]))],
-            page.Page, page.PageSize, page.TotalCount);
+        if (request.OnlyOwn)
+            roles = roles.Where(role => role.Scope == RoleScope.SpecificCompany && role.CompanyId == request.CompanyId);
+        return roles;
     }
 
     public async Task<RoleRow?> FindByIdAsync(Guid roleId, CancellationToken cancellationToken)
@@ -137,7 +167,9 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
             .Select(assignment => assignment.MemberId).Distinct().Count(),
         role.Permissions.ToArray(),
         role.Version,
-        role.CreatedAtUtc));
+        role.CreatedAtUtc,
+        context.Companies.Where(company => company.TenantId == tenantId && company.Id == role.CompanyId)
+            .Select(company => company.Name).FirstOrDefault()));
 
     private static RoleRow SortPermissions(RoleRow role) =>
         role with { Permissions = role.Permissions.Order(StringComparer.Ordinal).ToArray() };

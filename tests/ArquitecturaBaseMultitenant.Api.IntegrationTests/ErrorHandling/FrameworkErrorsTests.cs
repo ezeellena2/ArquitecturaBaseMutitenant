@@ -2,7 +2,10 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Collections.Concurrent;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.ErrorHandling;
 
@@ -13,6 +16,42 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.ErrorHandling;
 [Collection(ApiTestGroup.Name)]
 public sealed class FrameworkErrorsTests(ApiFactory factory)
 {
+    [Theory]
+    [InlineData("application/json")]
+    [InlineData("text/html")]
+    public async Task Handled_exception_never_logs_its_message_even_with_an_unsupported_accept(string accept)
+    {
+        var logs = new ExceptionLogCapture();
+        using var host = factory.WithWebHostBuilder(builder => builder.ConfigureLogging(logging => logging.AddProvider(logs)));
+        using var client = host.CreateClient();
+        logs.Entries.Clear();
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/test/throw");
+        request.Headers.Accept.ParseAdd(accept);
+        using var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        Assert.False(string.IsNullOrWhiteSpace(body.RootElement.GetProperty("traceId").GetString()));
+        Assert.DoesNotContain(logs.Entries, entry => entry.Message.Contains("PRIVATE_TEST_EXCEPTION", StringComparison.Ordinal)
+            || entry.Exception?.ToString().Contains("PRIVATE_TEST_EXCEPTION", StringComparison.Ordinal) == true);
+        Assert.Contains(logs.Entries, entry => entry.Message.Contains(nameof(InvalidOperationException), StringComparison.Ordinal)
+            && entry.Message.Contains("Throw", StringComparison.Ordinal));
+    }
+
+    private sealed class ExceptionLogCapture : ILoggerProvider
+    {
+        internal ConcurrentQueue<(string Message, Exception? Exception)> Entries { get; } = new();
+        public ILogger CreateLogger(string categoryName) => new Capture(this);
+        public void Dispose() { }
+        private sealed class Capture(ExceptionLogCapture owner) : ILogger
+        {
+            public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+            public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Warning;
+            public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
+                Func<TState, Exception?, string> formatter) => owner.Entries.Enqueue((formatter(state, exception), exception));
+        }
+    }
+
     [Theory]
     [InlineData("/api/does-not-exist", "GET", HttpStatusCode.NotFound, "Http.NotFound")]
     [InlineData("/test/validation", "DELETE", HttpStatusCode.MethodNotAllowed, "Http.MethodNotAllowed")]

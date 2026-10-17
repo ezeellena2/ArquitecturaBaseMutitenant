@@ -10,6 +10,10 @@ public static class FormattingTexts
     internal static ResourceManager ResourceManager { get; } =
         new("ArquitecturaBaseMultitenant.Application.Resources.Formatting", typeof(FormattingTexts).Assembly);
 
+    /// <summary>Etiqueta de la identidad anonimizada, traducida al leer con la cultura de la petición.</summary>
+    public static string DeletedAccount => ResourceManager.GetString("DeletedAccount", CultureInfo.CurrentUICulture)
+        ?? throw new InvalidOperationException("Formatting resource DeletedAccount is missing.");
+
     public static string Get(string key, CultureProfile profile)
     {
         foreach (var language in profile.ResourceLanguages)

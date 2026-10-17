@@ -3,13 +3,14 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Messaging;
+using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging;
 
 /// <summary>Orquesta commit del claim, transporte sin transacción y commit del receipt en scopes separados.</summary>
-internal sealed partial class OutboxDeliveryProcessor(IServiceScopeFactory scopes, IPayloadProtector protector,
+internal sealed class OutboxDeliveryProcessor(IServiceScopeFactory scopes, IPayloadProtector protector,
     TimeProvider clock, IOptions<OutboxOptions> options, ILogger<OutboxDeliveryProcessor> logger)
 {
     internal async Task<int> ProcessOnceAsync(IReadOnlyCollection<IChannelSender> senders, CancellationToken ct)
@@ -38,7 +39,8 @@ internal sealed partial class OutboxDeliveryProcessor(IServiceScopeFactory scope
         }
         catch (Exception exception)
         {
-            LogDeliveryFailed(logger, claim.MessageId, exception.GetType().Name);
+            using var logScope = logger.BeginScope(new Dictionary<string, object> { ["MessageId"] = claim.MessageId });
+            ExceptionLog.Write(logger, nameof(OutboxDeliveryProcessor), exception);
             receipt = OutboxDeliveryReceipt.Rejected("Outbox.Transport.Failed", retryable: true);
         }
         using var completion = new CancellationTokenSource(TimeSpan.FromSeconds(options.Value.CompletionTimeoutSeconds), clock);
@@ -47,6 +49,4 @@ internal sealed partial class OutboxDeliveryProcessor(IServiceScopeFactory scope
                 .CompleteAsync(claim.MessageId, claim.LeaseId, receipt, completion.Token);
         return 1;
     }
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Outbox message {MessageId} failed with {ExceptionType}")]
-    private static partial void LogDeliveryFailed(ILogger logger, Guid messageId, string exceptionType);
 }

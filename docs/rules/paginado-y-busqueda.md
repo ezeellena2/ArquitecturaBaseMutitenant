@@ -24,6 +24,7 @@
 - **Orden de textos:** lo da la collation ICU `es-AR` de la base ([persistencia-ef](persistencia-ef.md)), sin `ToLower` ni `COLLATE` a mano.
 - **Cursor:** `CursorRequest`, `CursorResult<T>` y `ToCursorResultAsync`. Orden fijo por instante UTC e Id, del más nuevo al más viejo; sin total. `CursorCodec` codifica ambos en base64url; un cursor inválido devuelve 400 `Validation.Failed` con `errors.after`.
 - **Contrato HTTP:** `<X>Query` con `page`, `pageSize`, `sort`, `search` y los filtros, mapeado a mano.
+- **Compatibilidad de arrays anteriores:** un recurso creciente incorpora una ruta paginada aditiva. Su adaptador anterior devuelve sólo la primera página de 10 desde SQL, lleva `BoundedLegacyCollection` con la sucesora y publica `deprecated`, `maxItems: 10` y `x-successor` en OpenAPI. No habilita una lista completa ni una excepción por área; las únicas listas completas son catálogos cerrados. Las opciones de auditoría paginan el conjunto de actores u organizaciones distintos, mientras el historial conserva su cursor sin total.
 
 ## Prohibido
 - Devolver listas sin paginar.
@@ -38,6 +39,7 @@
 
 ## Lo verifica
 - `HarnessTests` (E0): formato y referencias de la ficha.
+- `GrowingCollectionContractTests` (E0), correctivo C9: detecta arrays e interfaces de colección HTTP también dentro de respuestas anidadas, permite sólo catálogos cerrados o adaptadores legacy acotados con sucesora paginada y verifica los límites publicados; cada relación anidada permitida se declara por propiedad. `HomeResponse.Pending` es el adaptador vacío (`maxItems: 0`); los pendientes HTTP van en los grupos acotados.
 
 ## Detalle
 [backend.md §9, "Paginado, orden y búsqueda"](../architecture/backend.md#paginado-orden-y-búsqueda)

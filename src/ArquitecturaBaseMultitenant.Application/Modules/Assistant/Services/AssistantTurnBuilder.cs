@@ -37,7 +37,7 @@ internal sealed class AssistantTurnBuilder(IAssistantTurnRepository turns, IAssi
                     frames[index] = AssistantTurnJson.Frame("title", frames[index].Sequence, title with { Version = conversation.Version });
                 }
         }
-        var terminal = turn.Status is "Complete" or "Stopped" or "Failed";
+        var terminal = turn.Status is AssistantTurnStatus.Complete or AssistantTurnStatus.Stopped or AssistantTurnStatus.Failed;
         if (terminal && turn.Sequence + 1 > after)
         {
             var snapshot = Restore(binding);
@@ -64,7 +64,7 @@ internal sealed class AssistantTurnBuilder(IAssistantTurnRepository turns, IAssi
         catch (System.Text.Json.JsonException) { turnId = Restore(binding).Result.TurnId; }
         var turn = await turns.GetAsync(Owner, Access, turnId, false, ct);
         if (turn is null) return AssistantErrors.ConversationNotFound;
-        if (turn.Status is "Pending" or "Running") return AssistantErrors.TurnInProgress;
+        if (turn.Status is AssistantTurnStatus.Pending or AssistantTurnStatus.Running) return AssistantErrors.TurnInProgress;
         allowed = await policy.AuthorizeAsync(ct);
         if (allowed.IsFailure) return allowed.Error;
         var safe = await privacy.CheckAsync(Owner, binding.SubjectUserIds, ct);

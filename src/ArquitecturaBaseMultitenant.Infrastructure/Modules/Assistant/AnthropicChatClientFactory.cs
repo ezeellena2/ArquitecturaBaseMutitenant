@@ -17,8 +17,7 @@ using Microsoft.Extensions.Options;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant;
 
 internal sealed class AnthropicChatClientFactory(IAssistantConfigurationPolicy policy, IAssistantSettingsReader settings,
-    IAssistantKeyProtector protector, IOptions<AssistantOptions> options, ICurrentUser user, ApplicationDbContext context, IAssistantModelReader models, IAssistantChatContext execution,
-    AssistantFakeChatMetrics metrics, TimeProvider clock) : IChatClientFactory
+    IAssistantKeyProtector protector, IOptions<AssistantOptions> options, ICurrentUser user, ApplicationDbContext context, IAssistantModelReader models, IAssistantChatContext execution) : IChatClientFactory
 {
     public async Task<Result<IChatClient>> CreateAsync(CancellationToken cancellationToken)
     {
@@ -36,7 +35,6 @@ internal sealed class AnthropicChatClientFactory(IAssistantConfigurationPolicy p
                 return AssistantErrors.ModelNotAllowed;
             configuration = configuration with { Model = admittedModel, Effort = binding.Effort };
         }
-        if (options.Value.UseFakeChatClient) return new FakeChatClient(metrics, clock);
         try
         {
             var material = configuration.Mode == AssistantMode.OwnKey
@@ -45,7 +43,7 @@ internal sealed class AnthropicChatClientFactory(IAssistantConfigurationPolicy p
                 ? configuration.Mode == AssistantMode.OwnKey ? protector.UnprotectOrganization(material.Ciphertext) : protector.UnprotectPlatform(material.Ciphertext)
                 : configuration.Mode == AssistantMode.PlatformKey && !material.HasOverride ? options.Value.Platform.ApiKey : null;
             if (string.IsNullOrWhiteSpace(key)) return AssistantErrors.SettingsNotConfigured;
-            return Result.Success(Build(key, configuration.Model.ProviderModelId, configuration.Effort, AssistantTechnicalLimits.MaxOutputTokens));
+            return Result.Success(Build(key, configuration.Model.ProviderModelId, configuration.Effort, AssistantTechnicalLimits.MaxOutputTokens, timeout: options.Value.ProviderTimeout));
         }
         catch (CryptographicException) { return AssistantErrors.SettingsNotConfigured; }
     }
@@ -59,14 +57,13 @@ internal sealed class AnthropicChatClientFactory(IAssistantConfigurationPolicy p
         var model = candidates.FirstOrDefault(value => value.Id == platform.DefaultModelId)
             ?? candidates.OrderBy(value => value.InputPricePerMillion.Amount + value.OutputPricePerMillion.Amount).ThenBy(value => value.Id).FirstOrDefault();
         if (model is null) return AssistantErrors.ModelNotAllowed;
-        if (options.Value.UseFakeChatClient) return Result.Success();
-        return await ValidateDraftAsync(key, model.ProviderModelId, null, cancellationToken);
+        return await ValidateDraftAsync(key, model.ProviderModelId, null, cancellationToken, options.Value.ProviderTimeout);
     }
-    internal static async Task<Result> ValidateDraftAsync(string key, string model, HttpClient? transport, CancellationToken cancellationToken)
+    internal static async Task<Result> ValidateDraftAsync(string key, string model, HttpClient? transport, CancellationToken cancellationToken, TimeSpan? timeout = null)
     {
         try
         {
-            using var client = Build(key, model, AssistantEffort.Low, AssistantTechnicalLimits.TitleMaxOutputTokens, transport);
+            using var client = Build(key, model, AssistantEffort.Low, AssistantTechnicalLimits.TitleMaxOutputTokens, transport, timeout);
             await client.GetResponseAsync([new ChatMessage(ChatRole.User, "Reply OK.")], cancellationToken: cancellationToken);
             return Result.Success();
         }
@@ -79,10 +76,10 @@ internal sealed class AnthropicChatClientFactory(IAssistantConfigurationPolicy p
         catch (HttpRequestException) { return AssistantErrors.ProviderUnavailable; }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { return AssistantErrors.ProviderUnavailable; }
     }
-    internal static IChatClient Build(string key, string model, AssistantEffort effort, int maxOutputTokens, HttpClient? transport = null)
+    internal static IChatClient Build(string key, string model, AssistantEffort effort, int maxOutputTokens, HttpClient? transport = null, TimeSpan? timeout = null)
     {
         var ownedTransport = transport ?? new HttpClient();
-        var client = new AnthropicClient { ApiKey = key, MaxRetries = 0, Timeout = TimeSpan.FromSeconds(30), HttpClient = ownedTransport };
+        var client = new AnthropicClient { ApiKey = key, MaxRetries = 0, Timeout = timeout ?? new AssistantOptions().ProviderTimeout, HttpClient = ownedTransport };
         return new AssistantChatClient(client.AsIChatClient(model, maxOutputTokens, AnthropicThinkingMode.Adaptive), client, ownedTransport, model, effort, maxOutputTokens);
     }
 }

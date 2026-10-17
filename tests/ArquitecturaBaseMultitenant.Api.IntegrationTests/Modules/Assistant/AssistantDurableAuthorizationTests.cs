@@ -25,7 +25,7 @@ public sealed class AssistantDurableAuthorizationTests(ApiFactory factory)
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web) { Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() } };
 
     [Fact]
-    public async Task Operator_durable_create_is_global_and_usage_remains_501_without_a_provider()
+    public async Task Operator_durable_create_and_usage_are_global_without_a_provider()
     {
         var provider = new NoChat();
         using var host = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services => services.Replace(ServiceDescriptor.Singleton<IChatClientFactory>(provider))));
@@ -40,11 +40,18 @@ public sealed class AssistantDurableAuthorizationTests(ApiFactory factory)
         using var replay = await AssistantDurableConversationTests.PostAsync(client, "/api/platform/assistant/conversations", "{}", key);
         Assert.Equal(await created.Content.ReadAsStringAsync(Ct), await replay.Content.ReadAsStringAsync(Ct));
         using var usage = await AssistantDurableConversationTests.PostAsync(client, "/api/platform/assistant/quick/assistant_usage", "{}", Guid.NewGuid());
-        Assert.Equal(HttpStatusCode.NotImplemented, usage.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, usage.StatusCode);
+        using var usageResponse = JsonDocument.Parse(await usage.Content.ReadAsStringAsync(Ct));
+        var usageConversationId = usageResponse.RootElement.GetProperty("conversation").GetProperty("id").GetGuid();
+        Assert.True(usageResponse.RootElement.GetProperty("result").GetProperty("data").GetProperty("usage").TryGetProperty("rows", out _));
+        using var createdResponse = JsonDocument.Parse(await created.Content.ReadAsStringAsync(Ct));
+        var createdConversationId = createdResponse.RootElement.GetProperty("id").GetGuid();
         using var scope = host.Services.CreateScope();
         var database = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        Assert.Single(await database.Set<Domain.Assistant.PlatformAssistantConversation>().Where(row => row.OwnerUserId == account.UserId).ToArrayAsync(Ct));
-        Assert.Single(await database.Set<Domain.Assistant.PlatformAssistantDurableOperation>().Where(row => row.OwnerUserId == account.UserId).ToArrayAsync(Ct));
+        Assert.Equal(new[] { createdConversationId, usageConversationId }.Order(),
+            await database.Set<Domain.Assistant.PlatformAssistantConversation>().Where(row => row.OwnerUserId == account.UserId).OrderBy(row => row.Id).Select(row => row.Id).ToArrayAsync(Ct));
+        Assert.Equal(new[] { "assistant.conversation", "assistant.quick" },
+            await database.Set<Domain.Assistant.PlatformAssistantDurableOperation>().Where(row => row.OwnerUserId == account.UserId).OrderBy(row => row.Kind).Select(row => row.Kind).ToArrayAsync(Ct));
         Assert.Null(scope.ServiceProvider.GetRequiredService<Application.Interfaces.Integrations.Request.ITenantContext>().TenantId);
         Assert.Equal(0, provider.Calls);
     }

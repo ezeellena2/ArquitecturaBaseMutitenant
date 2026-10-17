@@ -1,34 +1,39 @@
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
 using Microsoft.Extensions.Options;
+using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
+using Microsoft.Extensions.DependencyInjection;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 public sealed class WhatsAppChannelSettingsTests
 {
+    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
     [Theory]
-    [InlineData(null, false)]
-    [InlineData("", false)]
-    [InlineData(" \t", false)]
-    [InlineData("fixture-number", true)]
-    public void Login_channel_availability_tracks_configured_number_and_subsequent_changes(string? number, bool available)
+    [InlineData(null, false, false)]
+    [InlineData(WhatsAppNumberStatus.Connected, true, true)]
+    [InlineData(WhatsAppNumberStatus.PaymentMissing, false, true)]
+    public async Task Login_channel_follows_the_connected_platform_number_and_its_payment(WhatsAppNumberStatus? status, bool codes, bool attending)
     {
-        var options = new ChangingWhatsAppOptions { Value = new WhatsAppOptions { PhoneNumberId = number } };
-        var settings = new WhatsAppChannelSettings(options,
-            Options.Create(new ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email.EmailOptions()));
+        var reader = new Reader();
+        var (settings, state) = Settings(reader, new WhatsAppOptions());
+        reader.Row = status is { } value ? new WhatsAppPlatformChannelRow(Guid.NewGuid(), "fixture-number", "+15551234567", value, true) : null;
+        await state.RefreshAsync(Ct);
         var channel = new WhatsAppLoginCodeChannel(settings, null!, null!);
         Assert.Equal("whatsapp", channel.Key);
         Assert.Equal(LoginMethodType.Phone, channel.SupportedMethodType);
-        Assert.Equal(available, channel.IsAvailable);
+        Assert.Equal(codes, channel.IsAvailable);
+        Assert.Equal(attending, settings.IsAttending);
+        Assert.Equal(attending ? "fixture-number" : null, settings.PhoneNumberId);
 
-        options.Value = new WhatsAppOptions { PhoneNumberId = available ? " \t" : "fixture-number" };
-        Assert.Equal(!available, channel.IsAvailable);
-    }
-
-    private sealed class ChangingWhatsAppOptions : IOptions<WhatsAppOptions>
-    {
-        public WhatsAppOptions Value { get; set; } = new();
+        reader.Row = null;
+        await state.RefreshAsync(Ct);
+        Assert.False(channel.IsAvailable);
     }
 
     [Theory]
@@ -46,20 +51,46 @@ public sealed class WhatsAppChannelSettingsTests
     [InlineData("+1 555 123 4567", "+15551234567")]
     [InlineData(null, null)]
     [InlineData("invalid", null)]
-    public void Contact_phone_is_canonical_and_never_technical_id(string? display, string? expected)
-    {
-        var settings = new WhatsAppChannelSettings(Options.Create(new WhatsAppOptions { PhoneNumberId = "technical-id", DisplayPhoneNumber = display }), Options.Create(new ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email.EmailOptions()));
-        Assert.Equal(expected, settings.ContactPhone);
-    }
+    public void Configured_contact_phone_is_canonical_and_never_technical_id(string? display, string? expected) =>
+        Assert.Equal(expected, WhatsAppChannelBootstrapService.Display(display)?.Value);
     [Theory]
     [InlineData("AR", "+14155552671", false)]
     [InlineData("US", "+5491134567890", true)]
-    public void Policy_uses_actual_region_of_E164_and_ignores_declared_country(string declaredCountry, string phone, bool allowed)
+    public async Task Policy_uses_actual_region_of_E164_and_ignores_declared_country(string declaredCountry, string phone, bool allowed)
     {
-        var settings = new WhatsAppChannelSettings(Options.Create(new WhatsAppOptions { PhoneNumberId = "technical-id", AllowedCountries = ["AR"] }), Options.Create(new ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email.EmailOptions()));
+        var reader = new Reader { Row = new WhatsAppPlatformChannelRow(Guid.NewGuid(), "technical-id", null, WhatsAppNumberStatus.Connected, false) };
+        var (settings, state) = Settings(reader, new WhatsAppOptions { AllowedCountries = ["AR"] });
+        await state.RefreshAsync(Ct);
         var channel = new WhatsAppLoginCodeChannel(settings, null!, null!);
         var result = channel.ValidateNewDestination(LoginCodeDestination.ForPhone(PhoneNumber.Create(phone).Value, "whatsapp"), declaredCountry);
         Assert.Equal(allowed, result.IsSuccess);
         if (!allowed) Assert.Equal("WhatsApp.Phone.CountryNotAllowed", result.Error.Code);
+    }
+
+    private static (WhatsAppChannelSettings Settings, WhatsAppPlatformChannelState State) Settings(Reader reader, WhatsAppOptions options)
+    {
+        var provider = new ServiceCollection().AddSingleton<IWhatsAppChannelReader>(reader).BuildServiceProvider();
+        var state = new WhatsAppPlatformChannelState(provider.GetRequiredService<IServiceScopeFactory>(), Options.Create(options));
+        return (new WhatsAppChannelSettings(Options.Create(options),
+            Options.Create(new ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email.EmailOptions()), state), state);
+    }
+
+    /// <summary>Solo el número vigente de Plataforma; las demás lecturas no se usan en estas pruebas.</summary>
+    private sealed class Reader : IWhatsAppChannelReader
+    {
+        public WhatsAppPlatformChannelRow? Row { get; set; }
+        public Task<WhatsAppPlatformChannelRow?> FindPlatformStateAsync(CancellationToken ct) => Task.FromResult(Row);
+        public Task<PagedResult<WhatsAppNumberResponse>> ListOrganizationAsync(WhatsAppNumberListRequest request, DateTime nowUtc, CancellationToken ct) => throw new NotSupportedException();
+        public Task<WhatsAppNumberResponse?> FindOrganizationAsync(Guid id, DateTime nowUtc, CancellationToken ct) => throw new NotSupportedException();
+        public Task<int> CountOrganizationAsync(WhatsAppNumberStatus? status, CancellationToken ct) => throw new NotSupportedException();
+        public Task<IReadOnlyList<WhatsAppNumberPendingRow>> ListPaymentMissingAsync(int limit, CancellationToken ct) => throw new NotSupportedException();
+        public Task<WhatsAppPlatformNumberRow?> FindPlatformAsync(DateTime nowUtc, CancellationToken ct) => throw new NotSupportedException();
+        public Task<bool> IsActiveAsync(string phoneNumberId, CancellationToken ct) => throw new NotSupportedException();
+        public Task<IReadOnlyList<Guid>> ListOrganizationIdsAsync(CancellationToken ct) => throw new NotSupportedException();
+        public Task<WhatsAppInboundChannel?> FindInboundAsync(Guid? channelId, string phoneNumberId, CancellationToken ct) => throw new NotSupportedException();
+        public Task<WhatsAppSendingChannelRow?> FindSendingAsync(Guid? channelId, string phoneNumberId, CancellationToken ct) => throw new NotSupportedException();
+        public Task<IReadOnlyList<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.WhatsAppTemplateAccountRow>> ListTemplateAccountsAsync(bool platform, CancellationToken ct) => throw new NotSupportedException();
+        public Task<IReadOnlyList<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.WhatsAppTemplateAccountRow>> ListAllTemplateAccountsAsync(CancellationToken ct) => throw new NotSupportedException();
+        public Task<bool> HasActiveAccountAsync(string wabaId, CancellationToken ct) => throw new NotSupportedException();
     }
 }

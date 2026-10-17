@@ -62,11 +62,8 @@ public static class DependencyInjection
         services.AddPersistence(configuration);
         services.AddFeatures(configuration);
         services.AddIdentityServices(configuration, environment);
-        services.AddScoped<IAccountDeletionParticipant, MembershipDeletionParticipant>();
-        services.AddScoped<IAccountDeletionParticipant, PersonalSpaceDeletionParticipant>();
         services.AddScoped<IAccountDeletionParticipant, LegalAcceptanceDeletionParticipant>();
         services.AddScoped<IAccountDeletionParticipant, OutboxDeletionParticipant>();
-        services.AddScoped<IAccountDeletionParticipant, RecoveryDeletionParticipant>();
         services.AddScoped<EngagementCopyDeletion>();
         services.AddScoped<IConsumerCopyDeletion>(provider => provider.GetRequiredService<EngagementCopyDeletion>());
         services.AddScoped<IAccountDeletionParticipant, EngagementDeletionParticipant>();

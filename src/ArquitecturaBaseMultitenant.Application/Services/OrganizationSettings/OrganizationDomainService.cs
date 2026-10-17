@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
+using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -20,9 +21,17 @@ internal sealed class OrganizationDomainService(ITenantDomainReader reader, IReq
         OperationLog.RunAsync<IReadOnlyList<OrganizationDomainResponse>>(logger, timeProvider,
             "ListOrganizationDomains", async () =>
             {
-                var rows = await reader.ListCurrentAsync(cancellationToken);
-                return rows.Select(ToResponse).ToArray();
+                var page = await reader.ListPagedAsync(new ListOrganizationDomainsRequest(), cancellationToken);
+                return page.Items.Select(ToResponse).ToArray();
             });
+
+    public Task<Result<PagedResult<OrganizationDomainResponse>>> ListPagedAsync(ListOrganizationDomainsRequest request, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync<PagedResult<OrganizationDomainResponse>>(logger, timeProvider, "ListOrganizationDomainsPaged", async () =>
+        {
+            if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+            var page = await reader.ListPagedAsync(request, cancellationToken);
+            return new PagedResult<OrganizationDomainResponse>([.. page.Items.Select(ToResponse)], page.Page, page.PageSize, page.TotalCount);
+        });
 
     public Task<Result<OrganizationDomainResponse>> RegisterAsync(RegisterOrganizationDomainRequest request,
         CancellationToken cancellationToken)

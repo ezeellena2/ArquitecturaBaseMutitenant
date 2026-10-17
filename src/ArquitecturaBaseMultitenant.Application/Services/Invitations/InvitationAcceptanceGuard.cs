@@ -18,15 +18,14 @@ internal sealed class InvitationAcceptanceGuard(IExternalLoginLock externalLock,
 
     internal async Task LockAsync(LoginInvitationContext context, CancellationToken ct)
     {
-        await LockEmailAsync(context.Destination, context.ExpectedOwnerId, ct);
+        await LockDestinationAsync(context.Destination, context.ExpectedOwnerId, ct);
         await invitations.LockAsync(context.InvitationId, ct);
         if (context.ExpectedOwnerId is { } existing) await members.LockUserAsync(existing, ct);
     }
 
-    internal async Task LockEmailAsync(ArquitecturaBaseMultitenant.Domain.ValueObjects.Email destination,
-        Guid? expectedOwnerId, CancellationToken ct)
+    internal async Task LockDestinationAsync(InvitationIdentity destination, Guid? expectedOwnerId, CancellationToken ct)
     {
-        await externalLock.LockEmailAsync(destination, ct);
+        await externalLock.LockIdentityAsync(destination, ct);
         if (expectedOwnerId is { } owner) await methods.LockUserAsync(owner, ct);
         await invitations.LockDestinationAsync(destination, ct);
     }
@@ -37,10 +36,10 @@ internal sealed class InvitationAcceptanceGuard(IExternalLoginLock externalLock,
     internal Task<Result<Guid?>> CheckVerifiedOwnerAsync(LoginInvitationContext context, CancellationToken ct) =>
         CheckOwnerAsync(context.Destination, context.ExpectedOwnerId, context.ExpectedOwnerId, ct);
 
-    private async Task<Result<Guid?>> CheckOwnerAsync(ArquitecturaBaseMultitenant.Domain.ValueObjects.Email destination,
-        Guid? expectedOwnerId, Guid? currentUserId, CancellationToken ct)
+    private async Task<Result<Guid?>> CheckOwnerAsync(InvitationIdentity destination, Guid? expectedOwnerId, Guid? currentUserId,
+        CancellationToken ct)
     {
-        var owners = await lookup.FindVerifiedUsersByEmailAsync(destination, ct);
+        var owners = await lookup.FindOwnersAsync(destination, ct);
         if (owners.Count > 1) return InvitationErrors.WrongAccount;
         Guid? owner = owners.Count == 0 ? null : owners[0];
         if (owner != expectedOwnerId)

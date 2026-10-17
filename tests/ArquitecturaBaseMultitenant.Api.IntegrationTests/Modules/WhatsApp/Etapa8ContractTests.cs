@@ -2,14 +2,21 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using ArquitecturaBaseMultitenant.Api.Features;
+using ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Contracts;
 
-public sealed partial class Etapa8ContractTests
+public sealed partial class Etapa8ContractTests : IAsyncLifetime
 {
+    // «Sin canal» es sin número de Plataforma conectado en la base que comparte la colección (decisión 3 de la E11): se
+    // asegura antes de cada caso.
+    public async ValueTask InitializeAsync() => await PlatformWhatsAppNumberReset.DisconnectAsync(factory, Ct);
+
+    public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+
     [Theory]
     [InlineData(false, false)]
     [InlineData(true, false)]

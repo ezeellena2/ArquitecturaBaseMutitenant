@@ -1,6 +1,6 @@
 # ADR 0038 · WhatsApp de atención: plataforma, organizaciones y personas
 
-Estado: aceptada el 2026-10-03, pantalla por pantalla con el dueño del producto. La fuente visual es la página «Organización · WhatsApp» del lienzo v69 (`../ArquitecturaBaseMutitenantFront/docs/design/lienzo`, tableros `WA-*` para la compu y `M-WA-*` para el teléfono), y el detalle de cada elección está en el tablero «Criterio · Decisiones por pantalla». El plan ejecutable es [la Etapa 11](../plans/2026-10-03-etapa-11-whatsapp.md).
+Estado: aceptada el 2026-10-03, pantalla por pantalla con el dueño del producto. La fuente visual es la página «Organización · WhatsApp» del lienzo v69 (`../ArquitecturaBaseMutitenantFront/docs/design/lienzo`, tableros `WA-*` para la compu y `M-WA-*` para el teléfono), y el detalle de cada elección está en el tablero «Criterio · Decisiones por pantalla». El plan ejecutable es [la Etapa 11](../plans/2026-10-13-etapa-11-whatsapp.md).
 
 ## Contexto
 
@@ -61,7 +61,7 @@ Lo decidió el dueño del producto junto con los tableros `Plat-WA-*` y `M-Plat-
   - La opción del sistema «Entrar a mi cuenta» manda el enlace para entrar (Etapa 8). No se borra y existe solo en la plataforma.
 - **Equipos:** son de operadores (por ejemplo, Soporte y Altas), sin elegir bandeja.
 - **Plantillas:**
-  - Dos pestañas: «Para consultas» y «Del sistema».
+  - Dos vistas, «Para consultas» y «Del sistema», con control segmentado arriba de la lista (regla del usuario del 2026-10-13: dos vistas de la misma lista no van en pestañas).
   - Las del sistema son las de [`whatsapp-plantillas.md`](../operations/whatsapp-plantillas.md): no se editan ni se borran, y el ⋮ solo deja ver el texto.
   - Sin plantillas de marketing.
 
@@ -70,8 +70,19 @@ Lo decidió el dueño del producto junto con los tableros `Plat-WA-*` y `M-Plat-
 Lo decidió el dueño del producto al repasar la etapa:
 - **El número de la plataforma se conecta desde la pantalla.** Plataforma › WhatsApp › Número lo conecta con el alta embebida de Meta, igual que los números de las organizaciones. Sin un número conectado, WhatsApp queda apagado, y el ingreso y el registro muestran solo correo y Google. La configuración del servidor de la Etapa 8 (`WhatsApp:PhoneNumberId`) queda solo para el arranque; cómo se pasa del valor configurado al número conectado lo fija el plan.
 - **«Cargar teléfonos de empleados» no dice si un número tiene cuenta.** La [0043](0043-las-pantallas-dicen-si-hay-cuenta.md) vale para los datos propios de quien usa la pantalla, y acá son teléfonos de otras personas. Sigue mostrando «Ya es miembro», «Se invita» o «Número inválido».
-- **La invitación por WhatsApp en español se rehace como plantilla nueva al cerrar la Etapa 8.** Meta la clasificó como Marketing, y así llega aprobada como Utilidad a «Cargar teléfonos».
-- **Tech Provider va por producto.** La plantilla es genérica, y cada producto que salga de ella tendrá su propia marca. Al lanzarse, cada uno tramita su app con su nombre, su empresa verificada y la revisión de Meta. La plantilla desarrolla y prueba el alta con el acceso estándar de Meta, en una app en modo desarrollo.
+- **La invitación por WhatsApp en español sale como Marketing** (decisión del usuario, 2026-10-12). Meta clasificó `invitacion_organizacion/es` como Marketing. Al cerrar la Etapa 8 se probó una plantilla nueva con «te invitó a unirte», y Meta la clasificó Marketing otra vez, en español y en inglés. Se mantiene `invitacion_organizacion`. Una invitación en español cuesta algo más y no le llega a quien apagó las promociones de esa empresa.
+- **Tech Provider va por producto.** La plantilla es genérica, y cada producto que salga de ella tendrá su propia marca. Al lanzarse, cada uno tramita su app con su nombre, su empresa verificada y la revisión de Meta. La plantilla desarrolla y prueba el alta con el acceso estándar de Meta, en una app propia **publicada** («Plantilla Multitenant», del portfolio Servicios Ya): una app sin publicar solo recibe los webhooks de prueba del panel, nunca los mensajes reales (precisión del 2026-10-15). Con acceso estándar, solo conectan números las personas con un rol en la app.
+
+### Precisión del 2026-10-13 (plan de la Etapa 11)
+
+Lo decidió el dueño del producto con los datos de Meta verificados ese día ([plan](../plans/2026-10-13-etapa-11-whatsapp.md)):
+- **Pago:** desde el 01/10/2026 Meta cobra por mensaje y da 1.000 mensajes de servicio entregados gratis por número y por mes. Sin medio de pago, el número **responde hasta esos 1.000** y no manda plantillas ni difusiones (reemplaza «no puede ni responder»). La pantalla de números muestra siempre «N de 1.000 gratis este mes».
+- **Vínculo con la cuenta:** se confirma con un botón del bot, que solo se ofrece si el número es un teléfono verificado de una cuenta. «Mensajes» muestra la conversación desde que se vinculó; un número reciclado nunca muestra mensajes del dueño anterior.
+- **Permisos:** son de organización, no por empresa. Solo el Dueño los recibe de entrada. «Atender clientes» incluye ver, editar e importar contactos y cambiar el consentimiento a mano.
+- **Retención:** el texto de los chats se guarda mientras exista el contacto (en Plataforma, la conversación) y se borra con él. Apagar el módulo no borra.
+- **Aviso por correo:** uno por equipo cuando el chat más viejo sin tomar pasa el tiempo elegido; no se repite hasta que la bandeja se vacía y vuelve a llenarse. Se puede elegir «No avisar».
+- **Bot:** no se apaga; con un número conectado siempre responde.
+- **Archivos de los clientes:** en la Etapa 11 se ve «Mandó una foto/audio/documento», sin descarga, que llega con la Etapa 14. Desconectar un número deja sus chats para leer, sin responder.
 
 ## Alternativas descartadas
 
@@ -80,7 +91,7 @@ Lo decidió el dueño del producto al repasar la etapa:
 - Una lista de teléfonos internos aparte de las cuentas: se mantiene dos veces y el acceso no se corta solo cuando alguien deja la organización.
 - Que la plataforma le pague a Meta y les cobre a las organizaciones: exige ser Solution Partner y manejar facturación ajena. Se puede sumar si WhatsApp pasa a ser parte de un plan pago.
 - Un canal de chat web propio para que la persona escriba desde la plataforma: es un segundo canal entero y parte la conversación en dos.
-- Sub-menús en el bot, IA y avisos push al celular: quedan para después. La pestaña «Recorrido» del bot ya está pensada para mostrar ramas.
+- Sub-menús en el bot, IA y avisos push al celular: quedan para después. La vista «Recorrido» del bot ya está pensada para mostrar ramas.
 
 ## Consecuencias
 

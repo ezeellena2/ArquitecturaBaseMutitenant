@@ -1,9 +1,9 @@
 # Hoja de ruta
 
-Orden vigente: **8 → 8b → 11 → 9 → 10**. [AGENTS.md](../../AGENTS.md) define el modo rápido:
+Orden vigente: **8 → 8b → 11 → 9 → 10 → 12 a 17**. [AGENTS.md](../../AGENTS.md) define el modo rápido:
 contrato primero, programación por dueños y una sola puerta. Tras un arreglo se verifica sólo lo afectado.
 La tabla indica el estado; las reglas y conducta viven en fichas, ADR y features.
-El historial se recupera con git show historial-docs:<ruta>, sin cargar planes cerrados.
+El historial se recupera con git show historial-docs:<ruta>, sin cargar planes cerrados. Los planes y la revisión retirados el 2026-10-13 (E8, E8b, correctivos y limpieza) se encuentran con git log --diff-filter=D -- <ruta> y se leen con git show <commit>^:<ruta>.
 
 | Etapa | Estado | Fuente vigente |
 |---|---|---|
@@ -16,30 +16,20 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 6 · Organización | Cerrada | [Organizaciones](../features/organizaciones.md) |
 | 7 · Público/Personal | Cerrada | [Sitio público](../features/sitio-publico.md), [Personal](../features/personal.md) |
 | 8 · WhatsApp de plataforma | Cerrada | [WhatsApp](../features/whatsapp.md), [Identidad](../features/identidad.md) |
-| 8b · Asistente | En curso; pendiente de plan corto del coordinador | [ADR 0048](../decisions/0048-asistente.md), [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md), [Asistente](../features/asistente.md) |
-| 11 · WhatsApp de atención | Pendiente | [ADR 0038](../decisions/0038-whatsapp-de-atencion.md) |
+| 8b · Asistente | Cerrada | [ADR 0048](../decisions/0048-asistente.md), [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md), [Asistente](../features/asistente.md) |
+| 11 · WhatsApp de atención | Plan corto listo, con las decisiones del usuario | [Plan](2026-10-13-etapa-11-whatsapp.md), [ADR 0038](../decisions/0038-whatsapp-de-atencion.md) |
 | 9 · Endurecimiento | Pendiente | Decisiones de abajo |
 | 10 · Operación | Pendiente | Decisiones de abajo |
-
-## Etapa 8b: pendientes vigentes
-
-El [plan anterior](2026-10-08-etapa-8b-asistente.md), su [revisión](../reviews/2026-10-10-revision-8b.md)
-y [propuesta](propuesta-asistente-llm.md) se conservan hasta que el coordinador nuevo confirme
-que su plan corto contiene los pendientes. Las decisiones D1–D26 están en ADR 0048;
-0049/0050/0051 y las decisiones posteriores del usuario gobiernan las precisiones.
+| 12 · Formularios por WhatsApp | Pendiente | [Hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
+| 13 · Catálogos | Pendiente | Ídem |
+| 14 · Fotos y documentos | Pendiente | Ídem |
+| 15 · Planilla y Excel | Pendiente | Ídem |
+| 16 · Reglas, aprobación y PDF | Pendiente | Ídem |
+| 17 · Biblioteca de plantillas | Pendiente | Ídem |
 
 ## Etapa 11: WhatsApp de atención
 
-La plataforma y cada organización atienden con el mismo módulo: alta de números por Meta,
-bot, equipos, bandejas de Clientes/Internos, contactos con consentimiento, plantillas y difusiones.
-El número de Plataforma se conecta desde su pantalla; Cargar teléfonos no revela cuentas.
-Las [precisiones vigentes](../decisions/0038-whatsapp-de-atencion.md) gobiernan sobre el
-[plan anterior aún pendiente de reescritura](2026-10-03-etapa-11-whatsapp.md).
-La fuente visual es el lienzo vigente; el plan corto se prepara después de la 8b.
-Se reutilizan transporte, firma, outbox, plantillas e identidad de la 8; se agrega la fuente
-productiva de Mis mensajes con empresas para el asistente Personal.
-platform.whatsapp.manage entra cuando exista su primera ruta. Los globales respetan ADR 0050.
-Antes de implementar el alta se verifican requisitos y precios vigentes de Meta según el plan de esa etapa.
+La plataforma y cada organización atienden con el mismo módulo: alta de números por Meta, bot, equipos, bandejas de Clientes e Internos, contactos con consentimiento, plantillas y difusiones, y la fuente productiva de «Mis mensajes con empresas». El [plan corto](2026-10-13-etapa-11-whatsapp.md) tiene el contrato, las tareas, los datos de Meta verificados el 2026-10-13 y las decisiones del usuario.
 
 ## Etapa 9: endurecimiento
 
@@ -67,13 +57,35 @@ Antes de implementar el alta se verifican requisitos y precios vigentes de Meta 
 - Security headers, CSP estricta y revisión de cookies.
 - OpenTelemetry con `tenant.id` y `tenant.kind`.
 - `/security-review` y **fuzz de aislamiento**: IDs cruzados en todas las rutas, con los dos accesos, en datos privados, públicos y compartidos, y por subdominio.
+- **Heredado de los correctivos del 12/10 y de la revisión de la 8b** (se difirió a esta etapa):
+  - `PermissionService` hace una consulta por empresa en cada chequeo de Business (2 + N), aunque el permiso pedido no se proyecte desde las empresas. Proyectar solo los permisos de `Permissions.OrganizationProjectedFromCompany` y cachear junto con la caché de permisos.
+  - Los tiempos de seguridad fijos (tokens, cookie, idempotencia, enlace de ingreso, lote de la baja) y el límite del webhook de WhatsApp pasan a opciones con `ValidateOnStart`, sin cambiar sus valores.
+  - Un formateador en el CI, aplicado en un commit propio que reformatee todo el repo.
+  - Límites de pedidos en el asistente: consultas fijas, creación de conversaciones y el `PUT` de configuración con clave nueva (llama a Anthropic y no debe servir para probar claves).
+  - El cliente de Anthropic usa `IHttpClientFactory`, como WhatsApp, en vez de un `HttpClient` por llamada.
+  - Una guarda de arquitectura: toda acción con modo de idempotencia durable declara `[IdempotencyDurable]`; hoy el filtro la deja pasar sin reserva si falta.
+  - `AssistantOrganizationPolicy` conserva `DailyMessageLimit`, `MonthlyBudget` y `RetentionDays`, que nadie lee: se quitan con su migración.
 
 ## Etapa 10: despliegue y operación
 
 - Dockerfile de la Api con el SPA en wwwroot.
 - Chequeo cruzado de contratos en el CI del front: descarga también el repo del back y corre `contracts:check` sin saltearlo (enmienda de la ADR 0016). Si el repo del back es privado, se usa un token de solo lectura.
 - Migration bundle ejecutado con `mt_owner`.
+- Adaptador de nube de `IFileStore` (S3 o Azure Blob, se elige acá; [ADR 0048](../decisions/0048-asistente.md), D15). Lo usan el asistente y, desde la E14, los formularios.
 - CI/CD con GitHub Actions y OIDC.
 - Secretos, certificados de OpenIddict y SMTP real.
 - `docs/operations/runbook.md`: alta de `mt_app` **y creación de la base con ICU `es-AR`**, backup y restore, rotación de certificados, suspensiones, purga y baja de datos personales.
 - **Datos personales (P7, segunda parte):** `POST /api/me/data-export` (`[Idempotent]`), `platform.DataExports`, la preparación en segundo plano del JSON y el correo «Exportación de datos lista» (solo por correo), con un enlace de descarga que vence a las 48 h ([datos-personales](../rules/datos-personales.md)), y su participante de la baja, que borra los archivos. En el front, «Exportar mis datos» en la sección Privacidad de `/cuenta`. La baja de la cuenta ya está en la Etapa 3.
+
+## Etapas 12 a 17: formularios por WhatsApp
+
+Una organización arma formularios, los manda por WhatsApp a sus empleados y ve las respuestas numeradas en una planilla.
+- **Etapas y fuente:** son seis, cada una con su sección y las decisiones de producto tomadas en la [hoja de ruta](2026-10-12-formularios-dinamicos-hoja-de-ruta.md).
+- **Requisitos:** la E11 es requisito duro, porque sin número de la organización no hay formularios. Van después de la E10 para nacer con las guardas de la E9 y la nube de la E10.
+- **Módulo:** `Forms` es un módulo quitable aparte de `WhatsApp`, unidos por puertos neutrales del núcleo.
+- **ArquitecturaBase:** es referencia, no fuente de código; la estructura sale de este repo.
+- **Specs:** cada etapa tiene su especificación detallada en [`formularios/`](formularios/README.md).
+- **Cómo se trabaja cada etapa:**
+  - se escribe en el formato de [etapa en paralelo](../guides/etapa-en-paralelo.md) cuando le toca;
+  - sus tableros se dibujan en el lienzo antes de programar.
+- **Después:** el asistente en WhatsApp con audios y sugerencias, y B2C.

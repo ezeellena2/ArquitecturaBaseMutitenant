@@ -16,7 +16,7 @@ internal sealed class AssistantTurnWorkConfiguration : IEntityTypeConfiguration<
         builder.Property(row => row.Access).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(row => row.TenantKind).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(row => row.Funding).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
-        builder.Property(row => row.Status).HasMaxLength(TextLimits.ShortName);
+        builder.Property(row => row.Status).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(row => row.Effort).HasMaxLength(TextLimits.ShortName);
         builder.Property(row => row.ProviderModelId).HasMaxLength(TextLimits.ShortName);
         builder.Property(row => row.Culture).HasMaxLength(TextLimits.ShortName);

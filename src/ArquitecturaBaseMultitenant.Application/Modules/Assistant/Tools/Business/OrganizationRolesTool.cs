@@ -33,7 +33,7 @@ internal sealed class OrganizationRolesTool(AssistantAccessPolicy policy, IRoleS
         var request = new ListRolesRequest { CompanyId = args.Id("companyId"), Page = args.Page, PageSize = args.PageSize };
         var list = args.Id("companyId") is { } companyId
             ? await roles.ListForCompanyAsync(companyId, request, ct) : await roles.ListAsync(request, ct);
-        return list.IsFailure ? list.Error : new AssistantRolesToolData([.. list.Value.Items.Take(20).Select(Row)], list.Value.TotalCount, list.Value.HasNext);
+        return list.IsFailure ? list.Error : new AssistantRolesToolData([.. list.Value.Items.Take(AssistantTechnicalLimits.QuickRows).Select(Row)], list.Value.TotalCount, list.Value.HasNext);
     }
     private static AssistantRoleToolRow Row(RoleResponse role) => new(role.Id, role.Name, role.Scope.ToString(), role.CompanyId, role.Permissions);
 }

@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using static OpenIddict.Abstractions.OpenIddictConstants;
@@ -28,7 +29,7 @@ namespace ArquitecturaBaseMultitenant.Api.Controllers.Auth;
 [Route("connect")]
 public sealed class ConnectController(IConnectService service, IConnectLogoutService logoutService,
     IConnectAuthorizationService authorizationService,
-    OpenIdPrincipalFactory principalFactory, IConfiguration configuration) : ControllerBase
+    OpenIdPrincipalFactory principalFactory, IOptions<WebClientOptions> webClient) : ControllerBase
 {
     [HttpGet("authorize")]
     [HttpPost("authorize")]
@@ -112,7 +113,7 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
         {
             parameters = parameters.Where(parameter => parameter.Key != Parameters.Prompt).ToList();
         }
-        var loginPath = access == Access.Business ? "/login/empresa" : ReturnUrls.LoginPath;
+        var loginPath = access == Access.Business ? ReturnUrls.BusinessLoginPath : ReturnUrls.LoginPath;
         return Redirect(loginPath + QueryString.Create("returnUrl",
             ReturnUrls.AuthorizePath + QueryString.Create(parameters)));
     }
@@ -145,7 +146,7 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
         var request = HttpContext.GetOpenIddictServerRequest();
-        var preserveInvitation = ShouldPreserveInvitation(request, configuration,
+        var preserveInvitation = ShouldPreserveInvitation(request, webClient.Value,
             Request.Query["preserveInvitation"].ToString());
 
         var hint = await HttpContext.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
@@ -161,27 +162,24 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
             preserveInvitation, cancellationToken);
 
         await HttpContext.SignOutAsync(scheme);
-        return SignOut(new AuthenticationProperties { RedirectUri = "/" },
+        return SignOut(new AuthenticationProperties { RedirectUri = ReturnUrls.ConsumerHomePath },
             OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 
     private static string BrowserScheme(Access access) => access == Access.Platform
         ? BrowserSessionKeys.PlatformScheme : IdentityConstants.ApplicationScheme;
 
-    private static bool ShouldPreserveInvitation(OpenIddictRequest? request, IConfiguration configuration,
+    private static bool ShouldPreserveInvitation(OpenIddictRequest? request, WebClientOptions webClient,
         string preserveInvitation)
     {
-        if (request?.ClientId != "web" || preserveInvitation != "true"
+        if (request?.ClientId != AuthServerDefaults.WebClientId || preserveInvitation != "true"
             || !Uri.TryCreate(request.PostLogoutRedirectUri, UriKind.Absolute, out var redirect)
-            || redirect.AbsolutePath != "/invitacion" || redirect.Query.Length > 0 || redirect.Fragment.Length > 0)
+            || redirect.AbsolutePath != ReturnUrls.InvitationPath || redirect.Query.Length > 0 || redirect.Fragment.Length > 0)
         {
             return false;
         }
 
-        var allowedRedirects = configuration.GetSection("Authentication:Clients:Web:PostLogoutRedirectUris")
-            .Get<string[]>() ?? [];
-        return allowedRedirects.Any(value => Uri.TryCreate(value, UriKind.Absolute, out var allowed)
-            && allowed.Equals(redirect));
+        return webClient.PostLogoutRedirectUris.Any(allowed => allowed.Equals(redirect));
     }
 
     [HttpGet("userinfo")]

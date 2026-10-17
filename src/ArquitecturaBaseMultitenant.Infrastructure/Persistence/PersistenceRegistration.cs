@@ -132,6 +132,7 @@ internal static class PersistenceRegistration
         services.AddScoped<ILegalReader, LegalReader>();
         services.AddScoped<IAccountDeletionTenantReader, AccountDeletionTenantReader>();
         services.AddScoped<IAccountDeletionRepository, AccountDeletionRepository>();
+        services.AddScoped<IAccountDeletionCleanupRepository, AccountDeletionCleanupRepository>();
         services.AddScoped<IConsumerDataRetentionReader, ConsumerDataRetentionReader>();
         services.AddScoped<IConsumerDataRetentionRepository, ConsumerDataRetentionRepository>();
         services.AddScoped<IUserRepository, UserRepository>();

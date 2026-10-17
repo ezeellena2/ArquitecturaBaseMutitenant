@@ -56,7 +56,7 @@ public sealed class InvitationsTests(ApiFactory factory)
             var preview = await services.GetRequiredService<IInvitationService>()
                 .PreviewAsync(new PreviewInvitationRequest(token), Ct);
             Assert.Equal(InvitationPreviewState.NoAccount, preview.Value.State);
-            Assert.Equal(invitation.Destination, preview.Value.Email);
+            Assert.Equal(invitation.Destination.Email, preview.Value.Email);
             var cookie = Assert.Single(initial.Response.Headers.SetCookie);
             Assert.NotNull(cookie);
             Assert.Contains("__Host-MtInvitation=", cookie);

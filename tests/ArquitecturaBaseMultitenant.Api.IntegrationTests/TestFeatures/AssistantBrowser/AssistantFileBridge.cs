@@ -2,7 +2,6 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Recorrido;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
-using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
@@ -12,7 +11,6 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
-using ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -112,9 +110,15 @@ public sealed class AssistantFileBridge
             await WriteAsync(services, async token =>
             {
                 var settings = await db.Set<AssistantPlatformSettings>().SingleAsync(token);
-                var model = await db.Set<AssistantModelPrice>().Where(row => row.IsEnabled).OrderBy(row => row.InputPrice.Amount).FirstAsync(token);
-                settings.Update(model.Id, [model.Id], settings.Effort, 50, Usd(1000m), true, 30);
-                settings.ReplaceKey(services.GetRequiredService<IAssistantKeyProtector>().ProtectPlatform("isolated-assistant-provider-key"), "-key");
+                var model = await db.Set<AssistantModelPrice>().Where(row => row.IsEnabled && row.Technical != null
+                    && row.Technical.SupportsText && row.Technical.SupportsTools && row.Technical.SupportsImages
+                    && row.Technical.SupportsPdf && row.Technical.LowEffort)
+                    .OrderBy(row => row.InputPrice.Amount).FirstAsync(token);
+                settings.Update(model.Id, [model.Id], "Low", 50, Usd(1000m), true, 30);
+                // La clave Fake ya está en las opciones del host aislado. El bridge no es una sesión de operador.
+                settings.ReplaceKey(null, null);
+                db.Entry(settings).Property(row => row.HasKeyOverride).CurrentValue = false;
+                db.RemoveRange(await db.Set<AssistantNoticeAcceptance>().Where(row => row.OwnerUserId == userId && row.Access == access).ToArrayAsync(token));
                 services.GetRequiredService<ISecurityEventRepository>().Add(SecurityEvent.ForPlatformSettings(AuditActorKind.System, Guid.Empty, "Isolated assistant scenario", nowUtc));
                 if (access == Access.Business)
                 {
@@ -132,6 +136,11 @@ public sealed class AssistantFileBridge
                 }
             }, ct);
             if (tenantId is { } cacheId) await services.GetRequiredService<ITenantFeatureCache>().InvalidateAsync(cacheId, ct);
+            // Cada ancho empieza con cuota disponible; se elimina sólo el consumo sintético anterior de este bridge.
+            var reset = await AssistantQuotaFixture.StageAsync(services, binding,
+                JsonSerializer.SerializeToElement(new { remainingMessages = 50, monthlyFraction = 0m }),
+                _fixtures.GetValueOrDefault(binding), ct);
+            _fixtures[binding] = reset.OperationId;
             return new { configured = true };
         }
         var alerts = await AssistantQuotaFixture.StageAsync(services, binding, request.Args,

@@ -60,6 +60,14 @@ public sealed class ControllerInputContractTests
             inputs);
     }
 
+    [Fact]
+    public void Detection_includes_invalid_inputs_in_inherited_controller_actions()
+    {
+        Assert.Equal(["request"], ActionInputs(typeof(InheritedProbeController))
+            .Where(input => !IsAllowedInput(input.Parameter.ParameterType))
+            .Select(input => input.Parameter.Name));
+    }
+
     [Theory]
     [InlineData(typeof(string), true)]
     [InlineData(typeof(int?), true)]
@@ -105,8 +113,8 @@ public sealed class ControllerInputContractTests
             .Select(property => $"{type.Name}.{property.Name}");
 
     private static IEnumerable<string> OffsetParameterViolations(Type controller) =>
-        controller.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
-            .Where(method => !method.IsSpecialName && !method.IsDefined(typeof(NonActionAttribute), inherit: true))
+        controller.GetMethods(BindingFlags.Public | BindingFlags.Instance)
+            .Where(method => method.DeclaringType != typeof(object) && !method.IsSpecialName && !method.IsDefined(typeof(NonActionAttribute), inherit: true))
             .SelectMany(method => method.GetParameters()
                 .Where(parameter => ContainsDateTimeOffset(parameter.ParameterType))
                 .Select(parameter => $"{controller.Name}.{method.Name}({parameter.Name})"));
@@ -122,8 +130,8 @@ public sealed class ControllerInputContractTests
     private static IEnumerable<ActionInput> ActionInputs(Type controller)
     {
         var actions = controller
-            .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
-            .Where(method => !method.IsSpecialName && !method.IsDefined(typeof(NonActionAttribute), inherit: true));
+            .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+            .Where(method => method.DeclaringType != typeof(object) && !method.IsSpecialName && !method.IsDefined(typeof(NonActionAttribute), inherit: true));
 
         foreach (var action in actions)
         {
@@ -175,6 +183,14 @@ public sealed class ControllerInputContractTests
     private sealed record ActionInput(string Action, ParameterInfo Parameter, BindingSource Source);
 
     private sealed record ProbeInputModel(string Value);
+
+    private abstract class ProbeControllerBase : ControllerBase
+    {
+        [HttpPost]
+        public OkResult Write([FromBody] ProbeInputModel request) => Ok();
+    }
+
+    private sealed class InheritedProbeController : ProbeControllerBase;
 
     private sealed record ProbeOffsetHttpRequest(DateTimeOffset? At, IReadOnlyList<DateTimeOffset> History);
 

@@ -98,6 +98,7 @@ internal static class IdentityRegistration
         services.AddScoped<ISignInService, SignInService>();
         services.AddScoped<IUserLookup, UserLookup>();
         services.AddScoped<IUserDisplayNameReader, UserDisplayNameReader>();
+        services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Persistence.IActiveMemberPhoneReader, ActiveMemberPhoneReader>();
         services.AddScoped<IUserStatusReader, UserStatusReader>();
         return services;
     }
@@ -195,9 +196,9 @@ internal static class IdentityRegistration
             options.Events.OnRemoteFailure = context =>
             {
                 var destination = context.Properties?.Items.ContainsKey(GoogleAccountLinkState.UserIdKey) == true
-                    ? "/cuenta"
+                    ? ReturnUrls.AccountPath
                     : context.Properties?.Items.TryGetValue("Access", out var access) == true && access == "business"
-                        ? "/login/empresa" : ReturnUrls.LoginPath;
+                        ? ReturnUrls.BusinessLoginPath : ReturnUrls.LoginPath;
                 context.Response.Redirect(
                     destination + "?error=" + Uri.EscapeDataString("Auth.ExternalLogin.Failed"));
                 context.HandleResponse();

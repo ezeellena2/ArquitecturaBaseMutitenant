@@ -15,7 +15,7 @@
   <data name="Assistant.Model.NotFound" xml:space="preserve"><value>No encontramos ese modelo.</value></data>
   <data name="Assistant.Settings.PlatformLimitsReadOnly" xml:space="preserve"><value>Estos topes los fija la plataforma.</value></data>
   <data name="Assistant.Notice.AcceptanceRequired" xml:space="preserve"><value>Leé el aviso antes de tu primera consulta.</value></data>
-  <data name="Assistant.Limit.DailyReached" xml:space="preserve"><value>Llegaste a las {limit} consultas de hoy. Se renuevan a las {hora}.</value></data>
+  <data name="Assistant.Limit.DailyReached" xml:space="preserve"><value>Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.</value></data>
   <data name="Assistant.Limit.MonthlyReached" xml:space="preserve"><value>Llegaste al tope del mes.</value></data>
   <data name="Assistant.Turn.InProgress" xml:space="preserve"><value>Esperá o detené la respuesta actual.</value></data>
   <data name="Assistant.Turn.NotFound" xml:space="preserve"><value>No encontramos esa respuesta.</value></data>
@@ -45,7 +45,7 @@
   <data name="Assistant.Validation.FileInvalid" xml:space="preserve"><value>Adjuntá un archivo válido.</value></data>
   <data name="Assistant.Validation.CursorInvalid" xml:space="preserve"><value>El cursor no es válido.</value></data>
   <data name="Assistant.Validation.PageInvalid" xml:space="preserve"><value>Elegí una página y un tamaño válidos.</value></data>
-<data name="Assistant.Fake.Response" xml:space="preserve"><value>Respuesta del proveedor de prueba aislado.</value></data>
+
   <data name="Assistant.Validation.EffortsInvalid" xml:space="preserve"><value>Elegí esfuerzos únicos entre bajo, medio y alto.</value></data>
   <data name="Assistant.Validation.TechnicalLimitsInvalid" xml:space="preserve"><value>Ingresá límites positivos: la salida no puede superar la entrada y el umbral debe ser menor que la entrada.</value></data>
   <data name="Assistant.Validation.TechnicalPriceInvalid" xml:space="preserve"><value>Ingresá una tarifa positiva en USD con hasta seis decimales.</value></data>
@@ -60,7 +60,7 @@
   <data name="Export.Assistant" xml:space="preserve"><value>Asistente</value></data>
   <data name="Budget.AlertSubject" xml:space="preserve"><value>Uso mensual del asistente</value></data>
   <data name="Budget.AlertBody" xml:space="preserve"><value>El uso del asistente alcanzó el {0} % del presupuesto mensual. Consumo: {1}. Presupuesto: {2}.</value></data>
-  <data name="Assistant.Fake.Title" xml:space="preserve"><value>Consulta de prueba</value></data>
-  <data name="Assistant.Fake.Prefix" xml:space="preserve"><value>Respuesta de prueba con acentos: </value></data>
-  <data name="Assistant.Fake.Suffix" xml:space="preserve"><value>información útil.</value></data>
+
+
+
 </root>

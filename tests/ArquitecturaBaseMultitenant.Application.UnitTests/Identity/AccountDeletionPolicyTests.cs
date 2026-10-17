@@ -46,10 +46,10 @@ public sealed class AccountDeletionPolicyTests
         user.RememberBusinessTenant(Guid.CreateVersion7());
         Assert.True(user.RequestDeletion("Motivo personal", NowUtc, 30).IsSuccess);
         Assert.Equal(AccountDeletionErrors.GraceExpired.Code, user.CancelDeletion(NowUtc.AddDays(30)).Error.Code);
-        Assert.True(user.CompleteDeletion(NowUtc.AddDays(30), "Cuenta eliminada").IsSuccess);
+        Assert.True(user.CompleteDeletion(NowUtc.AddDays(30)).IsSuccess);
         Assert.Equal(id, user.Id);
         Assert.Equal(UserStatus.Deleted, user.Status);
-        Assert.Equal("Cuenta eliminada", user.DisplayName);
+        Assert.Null(user.DisplayName);
         Assert.Null(user.Email);
         Assert.Null(user.PhoneNumber);
         Assert.Null(user.LastBusinessTenantId);

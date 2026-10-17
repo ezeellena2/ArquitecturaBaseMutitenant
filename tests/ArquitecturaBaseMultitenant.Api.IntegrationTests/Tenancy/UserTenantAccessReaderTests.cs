@@ -98,7 +98,7 @@ public sealed class UserTenantAccessReaderTests(ApiFactory factory)
             Assert.True(suspended.Suspend().IsSuccess);
             var deleted = await context.Users.SingleAsync(user => user.Id == userIds[3], ct);
             Assert.True(deleted.RequestDeletion("Baja de prueba", nowUtc, 1).IsSuccess);
-            Assert.True(deleted.CompleteDeletion(nowUtc.AddDays(2), "Cuenta eliminada").IsSuccess);
+            Assert.True(deleted.CompleteDeletion(nowUtc.AddDays(2)).IsSuccess);
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
 

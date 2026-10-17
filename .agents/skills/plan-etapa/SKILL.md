@@ -14,7 +14,7 @@ El plan tiene que poder ejecutarse sin adivinar. Las decisiones de producto las 
    - las ADR de `docs/decisions/`, con su índice;
    - el lienzo vigente (`docs/design/lienzo/` del front) y sus recorridos guiados (`docs/design/recorridos/`);
    - la guía `docs/guides/etapa-en-paralelo.md`;
-   - como modelo de las tres partes y del texto para cada chat, los planes de la 8 y la 8b (`docs/plans/2026-10-07-etapa-8-whatsapp.md` y `docs/plans/2026-10-08-etapa-8b-asistente.md`), pero no de su largo: tienen 20.700 y 15.800 palabras, y un plan nuevo, unas 4.000 como mucho.
+   - como modelo de las tres partes, del largo (unas 4.000 palabras) y del texto para cada chat, el plan de la 11 (`docs/plans/2026-10-13-etapa-11-whatsapp.md`).
 2. **Si falta un tablero, pedilo antes de escribir el plan.** Lo dibuja «Conversacion - Diseño», la única que toca el lienzo. Si no le podés escribir, dale el texto al usuario.
 3. **Escribí el plan en `docs/plans/<fecha>-etapa-<n>-<tema>.md`, corto (unas 4.000 palabras como mucho, sin historial; `AGENTS.md`, «Velocidad y cierre liviano») y con estas secciones:**
    - **Forma de trabajo:** modo rápido y una sola puerta al final.

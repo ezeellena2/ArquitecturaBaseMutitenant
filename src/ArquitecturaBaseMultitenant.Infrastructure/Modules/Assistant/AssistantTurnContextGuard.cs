@@ -30,11 +30,11 @@ internal static class AssistantTurnContextGuard
                 payloadBytes += 64 + JsonSerializer.SerializeToUtf8Bytes(textOnly, AIJsonUtilities.DefaultOptions).LongLength;
                 foreach (var content in message.Contents.OfType<DataContent>())
                 {
-                    if (content.Data.Length == 0 || content.Data.Length > 10 * 1024 * 1024) return false;
+                    if (content.Data.Length == 0 || content.Data.Length > AssistantTechnicalLimits.MaxAttachmentBytes) return false;
                     payloadBytes += 256 + ((content.Data.Length + 2L) / 3L * 4L);
-                    if (payloadBytes > 32L * 1024 * 1024) return false;
-                    if (content.MediaType is "image/png" or "image/jpeg" or "image/webp") bytes += 8192;
-                    else if (content.MediaType == "application/pdf")
+                    if (payloadBytes > AssistantTechnicalLimits.MaxProviderPayloadBytes) return false;
+                    if (Domain.Common.FileMediaTypes.Images.Contains(content.MediaType)) bytes += 8192;
+                    else if (content.MediaType == Domain.Common.FileMediaTypes.Pdf)
                     {
                         using var input = new MemoryStream(content.Data.ToArray(), writable: false);
                         using var pdf = PdfReader.Open(input, PdfDocumentOpenMode.Import);

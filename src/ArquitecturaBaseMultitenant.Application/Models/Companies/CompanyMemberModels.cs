@@ -11,6 +11,8 @@ public enum CompanyMemberState
     PendingDeletion,
     Inactive,
     Invited,
+    /// <summary>Filtro de invitaciones pendientes vencidas; la fila y el facet conservan Invited.</summary>
+    Expired,
 }
 
 public sealed record ListCompanyMembersRequest : PagedRequest
@@ -19,6 +21,8 @@ public sealed record ListCompanyMembersRequest : PagedRequest
     public CompanyMemberState? State { get; init; }
     public Guid? RoleId { get; init; }
     public bool? WithoutRoles { get; init; }
+    /// <summary>Alcance interno de las invitaciones exclusivas de esta empresa; no se expone por HTTP.</summary>
+    public bool OnlyCompanyInvitations { get; init; }
 }
 
 /// <summary>

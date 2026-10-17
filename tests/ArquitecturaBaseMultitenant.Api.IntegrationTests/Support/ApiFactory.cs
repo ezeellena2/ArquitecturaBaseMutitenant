@@ -98,6 +98,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Seed:PlatformOwner:Phone", string.Empty);
         builder.UseSetting("Email:Delivery", "PickupDirectory");
         builder.UseSetting("WhatsApp:PhoneNumberId", string.Empty);
+        // Desde la E11 la cola de entrada sirve a cualquier número: cada prueba la procesa a mano, sin que otro host compita.
+        builder.UseSetting("WhatsApp:ProcessInboundInBackground", "false");
         // Los hosts auxiliares de preparación no ejecutan turnos de otro host con configuración/proveedor propios.
         builder.UseSetting("Assistant:TurnWorkerEnabled", "false");
         builder.UseSetting("Authentication:Google:ClientId", string.Empty);

@@ -24,6 +24,7 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Platform;
 public sealed partial class PlatformOrganizationPhoneNoticeTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
     [Theory]
     [InlineData("approve", "Aprobamos")]
     [InlineData("reject", "No aprobamos")]

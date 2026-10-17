@@ -17,7 +17,7 @@ internal sealed class CompanyMembersTool(AssistantAccessPolicy policy, ICompanyM
     {
         var result = await members.ListAsync(args.Id("companyId")!.Value, new ListCompanyMembersRequest { State = args.EnumValue<CompanyMemberState>("status"), Page = args.Page, PageSize = args.PageSize }, ct);
         if (result.IsFailure) return result.Error;
-        var rows = result.Value.Items.Take(20).ToArray();
+        var rows = result.Value.Items.Take(AssistantTechnicalLimits.QuickRows).ToArray();
         return new AssistantQuickToolData(new AssistantPeopleQuickDataResponse([.. rows.Select(row =>
             new AssistantPersonRowResponse(row.MemberId, row.DisplayName, row.State.ToString()))], result.Value.TotalCount, result.Value.HasNext))
         {

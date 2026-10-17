@@ -21,8 +21,8 @@ public sealed partial class VersionedContractTests
             .ToHashSet(StringComparer.Ordinal);
         var api = Assembly.Load("ArquitecturaBaseMultitenant.Api");
         var offenders = api.GetTypes()
-            .Where(type => typeof(ControllerBase).IsAssignableFrom(type))
-            .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            .Where(type => !type.IsAbstract && typeof(ControllerBase).IsAssignableFrom(type))
+            .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance))
             .Where(method => method.IsDefined(typeof(HttpPutAttribute)) || method.IsDefined(typeof(HttpDeleteAttribute)))
             .SelectMany(method => method.GetParameters()
                 .Where(parameter => IsHttpContractNamespace(parameter.ParameterType.Namespace))
@@ -51,8 +51,8 @@ public sealed partial class VersionedContractTests
     {
         var api = Assembly.Load("ArquitecturaBaseMultitenant.Api");
         var offenders = api.GetTypes()
-            .Where(type => typeof(ControllerBase).IsAssignableFrom(type))
-            .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            .Where(type => !type.IsAbstract && typeof(ControllerBase).IsAssignableFrom(type))
+            .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance))
             .Where(IsVersionedSave)
             .Where(method => !AnswersTheNewVersion(method))
             .Select(method => $"{method.DeclaringType?.Name}.{method.Name}")
@@ -64,7 +64,7 @@ public sealed partial class VersionedContractTests
     [Fact]
     public void Guard_detects_a_versioned_save_without_the_new_version()
     {
-        var actions = typeof(ProbeController).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+        var actions = typeof(ProbeController).GetMethods(BindingFlags.Public | BindingFlags.Instance)
             .Where(IsVersionedSave).ToDictionary(method => method.Name);
 
         Assert.Equal(["Answers", "PostSilent", "Silent"], actions.Keys.Order(StringComparer.Ordinal));

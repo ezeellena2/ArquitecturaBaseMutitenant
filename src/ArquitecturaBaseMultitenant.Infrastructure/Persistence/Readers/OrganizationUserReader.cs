@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
+using ArquitecturaBaseMultitenant.Application.Models.Home;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -36,6 +37,8 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         DisplayName = input.DisplayName,
         Email = input.Email,
         CreatedAtUtc = input.CreatedAtUtc,
+        PendingSinceUtc = input.MemberStatus == MemberStatus.Invited
+            ? input.PendingInvitationExpiresAtUtc : input.DeletionRequestedAtUtc,
         State = input.MemberStatus == MemberStatus.Invited && input.PendingInvitationExpiresAtUtc != null
             ? input.PendingInvitationExpiresAtUtc <= input.NowUtc
                 ? OrganizationUserState.Expired
@@ -53,8 +56,13 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         ArgumentNullException.ThrowIfNull(request);
         RequireUtc(nowUtc);
         var tenantId = tenantContext.RequiredTenantId;
-        var page = await Filtered(tenantId, request, nowUtc).ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, row => row.MemberId)
-            .ToPagedResultAsync(request, cancellationToken);
+        var query = Filtered(tenantId, request, nowUtc);
+        if (request.PendingPreview)
+            request = request with { Page = PagedRequest.DefaultPage, PageSize = PendingGroup.PreviewLimit };
+        var sorted = request.PendingPreview
+            ? query.OrderBy(row => row.PendingSinceUtc == null).ThenBy(row => row.PendingSinceUtc).ThenBy(row => row.MemberId)
+            : query.ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, row => row.MemberId);
+        var page = await sorted.ToPagedResultAsync(request, cancellationToken);
         if (page.Items.Count == 0)
             return new PagedResult<OrganizationUserRow>([], page.Page, page.PageSize, page.TotalCount);
 
@@ -72,9 +80,19 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
             .Select(group => new { State = group.Key, Count = group.Count() })
             .ToDictionaryAsync(group => group.State, group => group.Count, cancellationToken);
         int Count(OrganizationUserState state) => counts.GetValueOrDefault(state);
+        var companyMembers = Filtered(tenantId, request with { CompanyId = null, WithoutCompany = false }, nowUtc);
+        var companyAll = await companyMembers.CountAsync(cancellationToken);
+        var withoutCompany = await companyMembers.CountAsync(member => !context.CompanyMemberships.Any(membership =>
+            membership.TenantId == tenantId && membership.MemberId == member.MemberId), cancellationToken);
+        var memberIds = companyMembers.Select(member => member.MemberId);
+        var companies = await context.CompanyMemberships.AsNoTracking().Where(membership => membership.TenantId == tenantId
+                && memberIds.Contains(membership.MemberId))
+            .GroupBy(membership => membership.CompanyId)
+            .Select(group => new { CompanyId = group.Key, Count = group.Select(membership => membership.MemberId).Distinct().Count() })
+            .ToDictionaryAsync(row => row.CompanyId, row => row.Count, cancellationToken);
         return new OrganizationUserFilterCountsResponse(counts.Values.Sum(), Count(OrganizationUserState.Active),
             Count(OrganizationUserState.PendingDeletion), Count(OrganizationUserState.Invited),
-            Count(OrganizationUserState.Expired), Count(OrganizationUserState.Inactive));
+            Count(OrganizationUserState.Expired), Count(OrganizationUserState.Inactive), companyAll, withoutCompany, companies);
     }
 
     public async Task<OrganizationUserRow?> FindByIdAsync(Guid memberId, DateTime nowUtc,
@@ -103,11 +121,22 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         if (request.CompanyId is { } companyId)
             members = members.Where(member => context.CompanyMemberships.Any(membership =>
                 membership.TenantId == tenantId && membership.MemberId == member.Id
-                && membership.CompanyId == companyId));
+                && membership.CompanyId == companyId
+                && ((!request.PendingPreview && !request.OnlyCompanyInvitations)
+                    || membership.Status == CompanyMembershipStatus.Active)));
+        if (request.OnlyCompanyInvitations && request.CompanyId is { } invitationCompanyId)
+            // CompanyInvitationPolicy, antes de contar y paginar: únicamente de esta empresa.
+            members = members.Where(member => !context.RoleAssignments.Any(assignment =>
+                    assignment.TenantId == tenantId && assignment.MemberId == member.Id && assignment.CompanyId == null)
+                && !context.CompanyMemberships.Any(membership => membership.TenantId == tenantId
+                    && membership.MemberId == member.Id && membership.CompanyId != invitationCompanyId
+                    && membership.Status == CompanyMembershipStatus.Active));
         if (request.WithoutCompany)
             members = members.Where(member => !context.CompanyMemberships.Any(membership =>
                 membership.TenantId == tenantId && membership.MemberId == member.Id));
         var rows = States(members, tenantId, nowUtc);
+        if (request.PendingPreview)
+            rows = rows.Where(row => row.State == OrganizationUserState.Expired || row.State == OrganizationUserState.PendingDeletion);
         return request.State is { } state ? rows.Where(row => row.State == state) : rows;
     }
 
@@ -128,6 +157,8 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
             MemberStatus = member.Status,
             UserStatus = context.Users.Where(user => user.Id == member.UserId)
                 .Select(user => (UserStatus?)user.Status).FirstOrDefault(),
+            DeletionRequestedAtUtc = context.Users.Where(user => user.Id == member.UserId)
+                .Select(user => user.DeletionRequestedAtUtc).FirstOrDefault(),
             PendingInvitationExpiresAtUtc = context.Invitations.Where(invitation => invitation.TenantId == tenantId
                     && invitation.MemberId == member.Id && invitation.Status == InvitationStatus.Pending)
                 .OrderByDescending(invitation => invitation.IssuedAtUtc)
@@ -189,7 +220,7 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
                                    equals new { company.TenantId, CompanyId = company.Id }
                                where membership.TenantId == tenantId && memberIds.Contains(membership.MemberId)
                                orderby company.Name
-                               select new { membership.MemberId, membership.CompanyId, company.Name, membership.Status })
+                               select new { membership.MemberId, membership.CompanyId, company.Name, membership.Status, CompanyStatus = company.Status })
             .ToArrayAsync(cancellationToken);
         var companyRoles = await (from assignment in context.RoleAssignments.AsNoTracking()
                                   join role in context.Roles.AsNoTracking()
@@ -207,7 +238,7 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         var companiesByMember = companies.GroupBy(row => row.MemberId).ToDictionary(group => group.Key,
             group => (IReadOnlyList<OrganizationUserCompanyRow>)[.. group.Select(row =>
                 new OrganizationUserCompanyRow(row.CompanyId, row.Name, row.Status,
-                    companyRolesByMembership.GetValueOrDefault((row.MemberId, row.CompanyId), []))) ]);
+                    companyRolesByMembership.GetValueOrDefault((row.MemberId, row.CompanyId), []), row.CompanyStatus)) ]);
 
         var invitations = await context.Invitations.AsNoTracking()
             .Where(invitation => invitation.TenantId == tenantId && memberIds.Contains(invitation.MemberId)
@@ -229,14 +260,15 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         {
             var row = projected[state.MemberId];
             var invitation = invitationByMember.GetValueOrDefault(row.MemberId);
-            var emailText = row.Email ?? invitation?.Destination.DisplayValue;
-            var email = emailText is null ? null : Email.Create(emailText).Value;
+            // El correo verificado o el de la invitación; una invitación por teléfono trae el teléfono y no un correo (CC25).
+            var email = row.Email is { } text && text.Contains('@', StringComparison.Ordinal) ? Email.Create(text).Value : invitation?.Destination.Email;
+            var phone = email is null ? invitation?.Destination.Phone : null;
             return new OrganizationUserRow(row.MemberId, row.UserId, row.DisplayName, email,
                 row.UserId is { } userId && managedUserIds.Contains(userId), state.State,
                 invitation?.Id, invitation?.IssuedAtUtc, invitation?.ExpiresAtUtc,
                 rolesByMember.GetValueOrDefault(row.MemberId, []),
                 companiesByMember.GetValueOrDefault(row.MemberId, []), row.Version, row.CreatedAtUtc,
-                row.DeletionScheduledForUtc, row.DeletionRequestedAtUtc);
+                row.DeletionScheduledForUtc, row.DeletionRequestedAtUtc, phone);
         })];
     }
 
@@ -252,6 +284,7 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         public MemberStatus MemberStatus { get; init; }
         public UserStatus? UserStatus { get; init; }
         public DateTime? PendingInvitationExpiresAtUtc { get; init; }
+        public DateTime? DeletionRequestedAtUtc { get; init; }
         public DateTime NowUtc { get; init; }
         public string? DisplayName { get; init; }
         public string? Email { get; init; }
@@ -266,6 +299,7 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         public string? DisplayName { get; init; }
         public string? Email { get; init; }
         public DateTime CreatedAtUtc { get; init; }
+        public DateTime? PendingSinceUtc { get; init; }
     }
 
     private sealed record UserProjection(Guid MemberId, Guid? UserId, string DisplayName, string? Email,

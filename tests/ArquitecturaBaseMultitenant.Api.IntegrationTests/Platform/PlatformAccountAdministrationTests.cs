@@ -143,7 +143,7 @@ public sealed class PlatformAccountAdministrationTests(ApiFactory factory)
         Assert.True(method.GetProperty("canSignIn").GetBoolean());
         var membership = Assert.Single(active.GetProperty("organizations").EnumerateArray());
         Assert.Equal("Activa " + seeded.Prefix, membership.GetProperty("name").GetString());
-        Assert.Equal(SystemRoles.TenantAdmin, membership.GetProperty("roleName").GetString());
+        Assert.Equal("Dueño", membership.GetProperty("roleName").GetString());
         Assert.Equal("Active", membership.GetProperty("status").GetString());
         Assert.Equal(["Activa " + seeded.Prefix], active.GetProperty("soleOwnerOrganizations").EnumerateArray().Select(item => item.GetString()));
         Assert.True(active.GetProperty("hasPersonalSpace").GetBoolean());
@@ -409,7 +409,7 @@ public sealed class PlatformAccountAdministrationTests(ApiFactory factory)
         Assert.True(pending.RequestDeletion("Ya no uso el servicio.", now, 30).IsSuccess);
         var deleted = User("Damián " + prefix);
         Assert.True(deleted.RequestDeletion("Baja", now.AddDays(-31), 30).IsSuccess);
-        Assert.True(deleted.CompleteDeletion(now, "Cuenta eliminada").IsSuccess);
+        Assert.True(deleted.CompleteDeletion(now).IsSuccess);
         var recovery = User("Elena " + prefix);
         var suspendedWithoutMethods = User("Fabián " + prefix);
         Assert.True(suspendedWithoutMethods.Suspend().IsSuccess);

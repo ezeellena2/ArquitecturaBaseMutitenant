@@ -67,7 +67,8 @@ internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILog
                 Kind(account), account.State,
                 row.CreatedAtUtc, row.DeletedAtUtc, account.LastSignInAtUtc, account.LastSignInMethod, account.InvitationExpiresAtUtc,
                 account.HasPersonalSpace, deletion,
-                loginMethods, row.Organizations, deleted ? [] : await soleOwners.ListSoleOwnedOrganizationsAsync(accountId, ct),
+                loginMethods, [.. row.Organizations.Select(organization => organization with
+                { RoleName = organization.RoleName is null ? null : RoleTexts.Name(organization.RoleName) })], deleted ? [] : await soleOwners.ListSoleOwnedOrganizationsAsync(accountId, ct),
                 row.OperatorPermissions, row.OperatorVersion,
                 state is null ? null : new PlatformAccountStateChangeResponse(state.AtUtc,
                     AuditTexts.SecurityEvent(state.Type), state.Reason))
@@ -88,7 +89,7 @@ internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILog
 
     // La identidad eliminada guarda el nombre en la cultura del worker; se traduce al leer.
     private static string? DisplayName(PlatformAccountRow row) => row.State == PlatformAccountState.Deleted
-        ? ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName") : row.DisplayName;
+        ? FormattingTexts.DeletedAccount : row.DisplayName;
 
     private static PlatformAccountKind Kind(PlatformAccountRow row) =>
         row.IsOperator ? PlatformAccountKind.Operator : PlatformAccountKind.Person;

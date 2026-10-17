@@ -562,11 +562,11 @@ public sealed class ProfileServiceTests
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> AcceptOperatorInvitationAsync(Guid userId, DateTime acceptedAtUtc,
             CancellationToken ct) => throw new NotSupportedException();
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> DiscardOperatorInvitationAsync(Guid userId, DateTime discardedAtUtc,
-            string deletedDisplayName, CancellationToken ct) => throw new NotSupportedException();
+            CancellationToken ct) => throw new NotSupportedException();
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> CancelDeletionAsync(Guid userId,
             DateTime cancelledAtUtc, CancellationToken ct) => throw new NotSupportedException();
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> CompleteDeletionAsync(Guid userId,
-            DateTime deletedAtUtc, string deletedDisplayName, CancellationToken ct) => throw new NotSupportedException();
+            DateTime deletedAtUtc, CancellationToken ct) => throw new NotSupportedException();
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> SuspendAsync(Guid userId, CancellationToken ct) =>
             throw new NotSupportedException();
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result<UserStatus>> ReactivateAsync(Guid userId,

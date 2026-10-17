@@ -36,10 +36,13 @@ internal sealed class InvitationAcceptanceWriter(IInvitationRepository invitatio
             if (other is not null && other.Id != member.Id) return InvitationErrors.Invalid;
         }
         var created = owner.Value is null;
-        var userId = owner.Value ?? await registrar.RegisterAsync(context.Proof.TenantId, invitation.Destination, nowUtc, ct);
+        var userId = owner.Value ?? (invitation.Destination.Email is { } email
+            ? await registrar.RegisterAsync(context.Proof.TenantId, email, nowUtc, ct)
+            : throw new InvalidOperationException("A phone invitation is accepted by link only by its verified owner."));
         var hasPersonalBackup = !created
             && await availability.HasPersonalBackupAsync(userId, await methods.ListByUserIdAsync(userId, ct), ct);
-        if (!created) await registrar.EnsureEmailAsync(userId, context.Proof.TenantId, invitation.Destination, nowUtc, ct);
+        if (!created && invitation.Destination.Email is { } ensured)
+            await registrar.EnsureEmailAsync(userId, context.Proof.TenantId, ensured, nowUtc, ct);
         if (member.UserId is null && member.AssignUser(userId).IsFailure)
             throw new InvalidOperationException("A checked invitation member could not be bound.");
         if (member.Activate(nowUtc).IsFailure || invitation.Accept(userId, context.TokenHash, nowUtc,

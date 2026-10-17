@@ -19,7 +19,7 @@ internal sealed class PlatformRecoveriesTool(AssistantAccessPolicy policy, IPlat
     {
         var result = await recoveries.ListAsync(new ListPlatformRecoveriesRequest { Status = AccountRecoveryStatus.Pending, Page = args.Page, PageSize = args.PageSize }, ct);
         if (result.IsFailure) return result.Error;
-        var rows = result.Value.Items.Take(20).ToArray();
+        var rows = result.Value.Items.Take(AssistantTechnicalLimits.QuickRows).ToArray();
         return new AssistantQuickToolData(new AssistantRecoveriesQuickDataResponse([.. rows.Select(row =>
             new AssistantRecoveryRowResponse(row.Id, row.AccountName, row.Status.ToString(), row.CreatedAtUtc))], result.Value.TotalCount, result.Value.HasNext))
         {

@@ -44,7 +44,7 @@ internal sealed class LoginCodeService(
                 throw new InvalidOperationException("A validated login code return became invalid.");
             var destination = verification.Resolve(request.Email, request.Phone, request.Channel);
             if (destination.IsFailure) return destination.Error;
-            var invitation = request.Email is null ? null : await invitations.PrepareAsync(request.Email, selection, cancellationToken);
+            var invitation = await invitations.PrepareAsync(LoginDestinationResolver.Identity(destination.Value), selection, cancellationToken);
             using var scope = invitation is null ? null : tenantScope.Enter(invitation.DefaultsTenantId);
             var verified = await unitOfWork.ExecuteInTransactionAsync(
                 ct => verification.VerifyAsync(request, destination.Value, selection, invitation, ct), CommitPolicy.OnAnyResult, cancellationToken);

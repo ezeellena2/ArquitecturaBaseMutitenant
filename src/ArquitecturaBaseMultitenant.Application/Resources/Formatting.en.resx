@@ -26,4 +26,5 @@
   <data name="Boolean.False" xml:space="preserve"><value>No</value></data>
   <data name="Empty.Value" xml:space="preserve"><value>—</value></data>
   <data name="Enum.TestStatus.Active" xml:space="preserve"><value>Active</value></data>
+  <data name="DeletedAccount" xml:space="preserve"><value>Deleted account</value></data>
 </root>

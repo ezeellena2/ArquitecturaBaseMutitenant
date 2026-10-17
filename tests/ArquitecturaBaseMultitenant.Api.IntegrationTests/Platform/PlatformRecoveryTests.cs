@@ -214,10 +214,12 @@ public sealed class PlatformRecoveryTests(ApiFactory factory)
             // Al correo nuevo le llega un solo aviso, «Recuperaste tu cuenta».
             var notice = Assert.Single(await EmailsAsync(services, newEmail, newOutbox));
             Assert.Equal("Recuperaste tu cuenta", notice.Subject);
+            Assert.Contains("https://localhost:5174/login", notice.TextBody, StringComparison.Ordinal);
             Assert.DoesNotContain("videollamada", notice.TextBody);
             // ADR 0033: como cualquier método nuevo, el correo sumado se avisa en los demás métodos de la cuenta.
-            Assert.Equal("Agregaste un correo a tu cuenta",
-                Assert.Single(await EmailsAsync(services, account.Email.Value, newOutbox)).Subject);
+            var methodNotice = Assert.Single(await EmailsAsync(services, account.Email.Value, newOutbox));
+            Assert.Equal("Agregaste un correo a tu cuenta", methodNotice.Subject);
+            Assert.Contains("https://localhost:5174/cuenta", methodNotice.TextBody, StringComparison.Ordinal);
             Assert.True(await db.SecurityEvents.AsNoTracking().AnyAsync(item =>
                 item.Type == SecurityEventType.LoginMethodChanged && item.TargetAccountId == account.UserId, Ct));
         }

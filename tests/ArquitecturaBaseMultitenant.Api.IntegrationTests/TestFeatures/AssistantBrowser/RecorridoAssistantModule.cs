@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.TestHost;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantBrowser;
 
@@ -16,5 +17,6 @@ public static class RecorridoAssistantModule
             ["Assistant:IsolatedE2E"] = "true",
             ["Assistant:TurnWorkerEnabled"] = "true",
             ["Assistant:Platform:ApiKey"] = "isolated-assistant-provider-key",
-        }));
+        }))
+        .ConfigureTestServices(AssistantFakeChatRegistration.Configure);
 }

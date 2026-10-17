@@ -20,7 +20,7 @@ internal sealed class OrganizationInvitationsTool(AssistantAccessPolicy policy, 
         if (result.IsFailure) return result.Error;
         var invitations = new List<AssistantInvitationRowResponse>();
         var copies = new List<AssistantSnapshotSubjectCopy>();
-        foreach (var row in result.Value.Items.Take(20))
+        foreach (var row in result.Value.Items.Take(AssistantTechnicalLimits.QuickRows))
         {
             // State selection and invitation hydration are separate reads; a transition requires a new query.
             if (row.InvitationId is not { } id || row.InvitationExpiresAtUtc is not { } expiresAtUtc)

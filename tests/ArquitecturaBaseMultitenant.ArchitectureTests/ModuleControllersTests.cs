@@ -37,7 +37,7 @@ public sealed partial class ModuleControllersTests
         using var provider = Microsoft.Extensions.DependencyInjection.ServiceCollectionContainerBuilderExtensions.BuildServiceProvider(registrations);
         var contributors = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetServices<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features.IFeatureDefinitionContributor>(provider);
         var keys = Domain.Features.Features.All.Concat(contributors.SelectMany(value => value.Definitions)).Select(definition => definition.Key).ToHashSet(StringComparer.Ordinal);
-        var controllers = typeof(MeController).Assembly.GetTypes().Where(type => type.IsSubclassOf(typeof(ControllerBase)));
+        var controllers = typeof(MeController).Assembly.GetTypes().Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(ControllerBase)));
         foreach (var controller in controllers)
         {
             var gates = controller.GetCustomAttributes<FeatureGateAttribute>(inherit: true).ToArray();

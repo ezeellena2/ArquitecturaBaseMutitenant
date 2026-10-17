@@ -16,7 +16,7 @@ public sealed class AssistantTurnWork : Entity
     public DateTime? SessionStartedAtUtc { get; private set; }
     public string Culture { get; private set; } = string.Empty;
     public string TimeZoneId { get; private set; } = string.Empty;
-    public string Status { get; private set; } = "Pending";
+    public AssistantTurnStatus Status { get; private set; } = AssistantTurnStatus.Pending;
     public Guid? LeaseId { get; private set; }
     public DateTime? LeaseExpiresAtUtc { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
@@ -30,10 +30,11 @@ public sealed class AssistantTurnWork : Entity
     public AssistantKeyFunding Funding { get; private set; }
     public static AssistantTurnWork Create(Guid turnId, Guid owner, Access access, Guid? tenantId, TenantKind? kind,
         string culture, string timeZoneId, DateTime? sessionStartedAtUtc, Guid modelId, string providerModelId,
-        string effort, AssistantKeyFunding funding, DateTime nowUtc)
+        string effort, AssistantKeyFunding funding, DateTime nowUtc, DateTime deadlineAtUtc)
     {
         new AssistantFinancialBinding(owner, access, tenantId).Validate();
         if (turnId == Guid.Empty || modelId == Guid.Empty || nowUtc.Kind != DateTimeKind.Utc ||
+            deadlineAtUtc.Kind != DateTimeKind.Utc || deadlineAtUtc <= nowUtc ||
             sessionStartedAtUtc is { Kind: not DateTimeKind.Utc } || !Enum.IsDefined(funding) ||
             (access == Access.Platform ? kind is not null : kind != (access == Access.Consumer ? Domain.Tenancy.TenantKind.Personal : Domain.Tenancy.TenantKind.Business)))
             throw new ArgumentException("A complete server work binding is required.");
@@ -46,18 +47,18 @@ public sealed class AssistantTurnWork : Entity
             OwnerUserId = owner, Access = access, ScopeTenantId = tenantId, TenantKind = kind,
             Culture = culture, TimeZoneId = timeZoneId, SessionStartedAtUtc = sessionStartedAtUtc,
             ModelId = modelId, ProviderModelId = providerModelId, Effort = effort, Funding = funding,
-            CreatedAtUtc = nowUtc, DeadlineAtUtc = nowUtc.AddMinutes(3),
+            CreatedAtUtc = nowUtc, DeadlineAtUtc = deadlineAtUtc,
         };
     }
-    public bool IsTerminal => Status is "Complete" or "Stopped" or "Failed";
-    public bool Claim(Guid lease, DateTime nowUtc)
+    public bool IsTerminal => Status is AssistantTurnStatus.Complete or AssistantTurnStatus.Stopped or AssistantTurnStatus.Failed;
+    public bool Claim(Guid lease, DateTime nowUtc, TimeSpan leaseDuration)
     {
         if (lease == Guid.Empty || nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("A UTC lease is required.");
         if (IsTerminal || LeaseExpiresAtUtc > nowUtc) return false;
-        LeaseId = lease; LeaseExpiresAtUtc = nowUtc.AddSeconds(45); Status = "Running";
+        LeaseId = lease; LeaseExpiresAtUtc = nowUtc.Add(leaseDuration); Status = AssistantTurnStatus.Running;
         return true;
     }
-    public void Renew(DateTime nowUtc) => LeaseExpiresAtUtc = nowUtc.AddSeconds(45);
+    public void Renew(DateTime nowUtc, TimeSpan leaseDuration) => LeaseExpiresAtUtc = nowUtc.Add(leaseDuration);
     public void BeginCall(int sequence)
     {
         if (CallStarted || sequence != CallSequence + 1) throw new InvalidOperationException("A provider call cannot be redelivered.");
@@ -68,6 +69,6 @@ public sealed class AssistantTurnWork : Entity
     public void Finish(string status)
     {
         if (status is not ("Complete" or "Stopped" or "Failed")) throw new ArgumentException("A terminal status is required.", nameof(status));
-        Status = status; LeaseExpiresAtUtc = null; LeaseId = null;
+        Status = Enum.Parse<AssistantTurnStatus>(status); LeaseExpiresAtUtc = null; LeaseId = null;
     }
 }

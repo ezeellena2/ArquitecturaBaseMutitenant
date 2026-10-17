@@ -4,6 +4,9 @@ using System.Text.Json.Serialization;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Api.Json;
+using ArquitecturaBaseMultitenant.Domain.Common;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Application.Models.Auditing;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Contracts;
 
@@ -14,6 +17,39 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Contracts;
 [Collection(ApiTestGroup.Name)]
 public sealed class OpenApiTests(ApiFactory factory)
 {
+    [Fact]
+    public async Task Input_lengths_ranges_and_audit_categories_are_published_for_client_validation()
+    {
+        await using var development = factory.WithWebHostBuilder(builder => builder.UseDevelopmentTestOwner());
+        using var client = development.CreateClient();
+        using var response = await client.GetAsync("/openapi/v1.json", TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        var root = document.RootElement;
+        var schemas = root.GetProperty("components").GetProperty("schemas");
+        foreach (var (name, field, length) in new[]
+        {
+            ("UpdatePublicPageHttpRequest", "description", TextLimits.Description),
+            ("UpdatePublicPageHttpRequest", "name", TextLimits.OrganizationName),
+            ("UpdatePublicPageHttpRequest", "contactEmail", Email.MaxLength),
+            ("CreateRoleHttpRequest", "name", TextLimits.ShortName),
+            ("UpdateRoleHttpRequest", "description", TextLimits.Description),
+            ("BusinessSignupHttpRequest", "firstCompanyName", TextLimits.OrganizationName),
+            ("BusinessSignupTaxIdHttpRequest", "number", TextLimits.TaxIdNumber),
+            ("LegalDocumentContentHttpRequest", "text", TextLimits.LegalDocument),
+        })
+            Assert.Equal(length, schemas.GetProperty(name).GetProperty("properties").GetProperty(field).GetProperty("maxLength").GetInt32());
+        var maximumOwned = schemas.GetProperty("UpdatePlatformSettingsHttpRequest").GetProperty("properties").GetProperty("maxOwnedOrganizations");
+        Assert.Equal(1, maximumOwned.GetProperty("minimum").GetInt32());
+        Assert.Equal(50, maximumOwned.GetProperty("maximum").GetInt32());
+        Assert.Equal(OrganizationAuditCategories.EntityTypes.Keys,
+            root.GetProperty("x-organization-audit-categories").EnumerateArray().Select(value => value.GetString()));
+        var category = root.GetProperty("paths").GetProperty("/api/organization/audit").GetProperty("get")
+            .GetProperty("parameters").EnumerateArray().Single(parameter => parameter.GetProperty("name").GetString() == "Category");
+        Assert.Equal(OrganizationAuditCategories.EntityTypes.Keys,
+            category.GetProperty("schema").GetProperty("enum").EnumerateArray().Select(value => value.GetString()));
+    }
+
     private static readonly string[] ReferencePaths =
     [
         "/api/reference-data",

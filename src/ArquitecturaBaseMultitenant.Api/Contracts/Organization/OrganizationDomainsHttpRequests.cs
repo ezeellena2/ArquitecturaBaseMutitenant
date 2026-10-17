@@ -1,6 +1,18 @@
 using ArquitecturaBaseMultitenant.Application.Models.Tenancy;
+using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 
 namespace ArquitecturaBaseMultitenant.Api.Contracts.Organization;
+
+public sealed record OrganizationDomainListHttpQuery(int? Page, int? PageSize, string? Sort, string? Search,
+    TenantDomainStatus? Status = null)
+{
+    public ListOrganizationDomainsRequest ToModel() => new()
+    {
+        Page = Page ?? PagedRequest.DefaultPage, PageSize = PageSize ?? PagedRequest.DefaultPageSize,
+        Sort = Sort, Search = Search, Status = Status,
+    };
+}
 
 public sealed record RegisterOrganizationDomainHttpRequest(string? Domain)
 {

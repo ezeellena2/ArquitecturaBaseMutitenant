@@ -23,9 +23,8 @@ internal sealed class AssistantDurableRepository(ApplicationDbContext db, ITenan
         return db.AcquireAdvisoryLocksAsync(keys, ct);
     }
 
-    private string LockKey(Guid owner, Access access, string resource, Guid id) => access == Access.Platform
-        ? AdvisoryLockKeys.Account(owner) + ":assistant:" + resource + ":" + id.ToString("N")
-        : AdvisoryLockKeys.For(tenant.RequiredTenantId, "assistant:" + resource + ":" + owner.ToString("N") + ":" + access, id);
+    private string LockKey(Guid owner, Access access, string resource, Guid id) =>
+        AssistantLockKeys.Resource(owner, access, tenant.TenantId, resource, id);
 
     public Task<AssistantDurableOperationRow?> GetByKeyAsync(Guid owner, Access access, Guid key, CancellationToken ct) =>
         access == Access.Platform

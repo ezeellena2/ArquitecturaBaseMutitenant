@@ -301,6 +301,23 @@ public sealed class AssistantSettingsTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Business_settings_never_reveal_the_platform_key_suffix()
+    {
+        await using var isolated = new ApiFactory();
+        await isolated.InitializeAsync();
+        using var host = isolated.WithWebHostBuilder(builder => builder.UseSetting("Assistant:Platform:ApiKey", "isolated-platform-7777"));
+        using var client = host.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(host, client, AssistantTestData.Ct);
+        var tenant = await OrganizationJourney.StageAsync(isolated, owner, "Platform key suffix", AssistantTestData.Ct);
+        await AccountJourney.AuthorizeAsync(client, "business", AssistantTestData.Ct, tenant);
+        await AssistantTestData.EnableAsync(isolated, tenant);
+        using var settings = await ReadAsync(client, "/api/organization/assistant/settings");
+        Assert.Equal("PlatformKey", settings.RootElement.GetProperty("mode").GetString());
+        Assert.True(settings.RootElement.GetProperty("hasKey").GetBoolean());
+        Assert.Equal(JsonValueKind.Null, settings.RootElement.GetProperty("maskedKeySuffix").ValueKind);
+    }
+
+    [Fact]
     public async Task Platform_catalog_is_available_without_a_provider_key()
     {
         using var client = AssistantTestData.Client(factory);

@@ -141,4 +141,340 @@
   <data name="Bot.Closed" xml:space="preserve">
     <value>Hi. This number does not have a {0} account and new accounts cannot be created right now. If you have an account with another email or number, sign in with that method or recover your account.</value>
   </data>
+  <data name="Bot.DefaultWelcome" xml:space="preserve">
+    <value>Hi! Thanks for writing to us. We will get back to you shortly.</value>
+  </data>
+  <data name="Bot.DefaultOutOfHours" xml:space="preserve">
+    <value>Thanks for writing to us. We are closed right now: we will reply as soon as we are back.</value>
+  </data>
+  <data name="Bot.MenuButton" xml:space="preserve">
+    <value>See options</value>
+  </data>
+  <data name="Bot.SignInOption" xml:space="preserve">
+    <value>Sign in to my account</value>
+  </data>
+  <data name="Bot.PromotionsQuestion" xml:space="preserve">
+    <value>Would you like to receive promotions on WhatsApp? You can opt out at any time.</value>
+  </data>
+  <data name="Bot.PromotionsYes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="Bot.PromotionsNo" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Bot.PromotionsAccepted" xml:space="preserve">
+    <value>Done, we will send you promotions.</value>
+  </data>
+  <data name="Bot.PromotionsDeclined" xml:space="preserve">
+    <value>Done, we will not send you promotions.</value>
+  </data>
+  <data name="Notice.ChatsWaiting.Subject" xml:space="preserve">
+    <value>Chats waiting in {0}</value>
+  </data>
+  <data name="Notice.ChatsWaiting.Body" xml:space="preserve">
+    <value>Chats nobody took in {0}: {1}.</value>
+  </data>
+  <data name="Notice.ChatsWaiting.Action" xml:space="preserve">
+    <value>See the chats</value>
+  </data>
+  <data name="Notice.ConsultationsWaiting.Subject" xml:space="preserve">
+    <value>Inquiries waiting in {0}</value>
+  </data>
+  <data name="Notice.ConsultationsWaiting.Body" xml:space="preserve">
+    <value>Inquiries nobody took in {0}: {1}.</value>
+  </data>
+  <data name="Notice.ConsultationsWaiting.Action" xml:space="preserve">
+    <value>See the inquiries</value>
+  </data>
+  <data name="Import.Header.Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Import.Header.Phone" xml:space="preserve">
+    <value>Phone</value>
+  </data>
+  <data name="Import.Header.Tag" xml:space="preserve">
+    <value>Tag</value>
+  </data>
+  <data name="Import.Header.Accepts" xml:space="preserve">
+    <value>Accepts promotions</value>
+  </data>
+  <data name="Import.Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="Import.Example.Name" xml:space="preserve">
+    <value>Ana Pérez</value>
+  </data>
+  <data name="Import.Example.Phone" xml:space="preserve">
+    <value>+54 9 11 2345-6789</value>
+  </data>
+  <data name="Import.Example.Tag" xml:space="preserve">
+    <value>Customers</value>
+  </data>
+  <data name="Import.SampleFileName" xml:space="preserve">
+    <value>contacts-sample.xlsx</value>
+  </data>
+  <data name="WhatsApp.Import.Reason.InvalidPhone" xml:space="preserve">
+    <value>The phone is not a valid mobile number.</value>
+  </data>
+  <data name="WhatsApp.Import.Reason.Duplicate" xml:space="preserve">
+    <value>The phone is repeated in the file.</value>
+  </data>
+  <data name="WhatsApp.Import.Reason.TooLong" xml:space="preserve">
+    <value>A value is too long.</value>
+  </data>
+  <data name="Import.SheetName" xml:space="preserve">
+    <value>Contacts</value>
+  </data>
+  <data name="Bot.LinkOffer" xml:space="preserve">
+    <value>Would you like to see this conversation in Messages of your account?</value>
+  </data>
+  <data name="Bot.LinkButton" xml:space="preserve">
+    <value>Link my account</value>
+  </data>
+  <data name="Bot.LinkDone" xml:space="preserve">
+    <value>Done: you will see this conversation in Messages of your account.</value>
+  </data>
+  <data name="WhatsApp.Number.NotFound" xml:space="preserve">
+    <value>We couldn't find that number.</value>
+  </data>
+  <data name="WhatsApp.Number.AlreadyConnected" xml:space="preserve">
+    <value>That number is already connected.</value>
+  </data>
+  <data name="WhatsApp.Number.SignupExpired" xml:space="preserve">
+    <value>The Meta signup expired. Connect the number again.</value>
+  </data>
+  <data name="WhatsApp.Number.MetaRejected" xml:space="preserve">
+    <value>Meta did not accept the connection. Try again; if it happens again, contact support.</value>
+  </data>
+  <data name="WhatsApp.Conversation.NotFound" xml:space="preserve">
+    <value>We couldn't find that conversation.</value>
+  </data>
+  <data name="WhatsApp.Conversation.TakenByOther" xml:space="preserve">
+    <value>Someone else took this conversation and your message was not sent.</value>
+  </data>
+  <data name="WhatsApp.Conversation.WindowClosed" xml:space="preserve">
+    <value>24 hours have passed: you can only send a template.</value>
+  </data>
+  <data name="WhatsApp.Conversation.PaymentRequired" xml:space="preserve">
+    <value>The number needs a payment method in Meta to send this.</value>
+  </data>
+  <data name="WhatsApp.Conversation.ReadOnly" xml:space="preserve">
+    <value>This conversation's number is disconnected.</value>
+  </data>
+  <data name="WhatsApp.Bot.TooManyOptions" xml:space="preserve">
+    <value>The menu allows up to 10 options.</value>
+  </data>
+  <data name="WhatsApp.Team.NotFound" xml:space="preserve">
+    <value>We couldn't find that team.</value>
+  </data>
+  <data name="WhatsApp.Team.NameTaken" xml:space="preserve">
+    <value>There is already a team with that name.</value>
+  </data>
+  <data name="WhatsApp.Contact.NotFound" xml:space="preserve">
+    <value>We couldn't find that contact.</value>
+  </data>
+  <data name="WhatsApp.Template.NotFound" xml:space="preserve">
+    <value>We couldn't find that template.</value>
+  </data>
+  <data name="WhatsApp.Template.NameTaken" xml:space="preserve">
+    <value>There is already a template with that name.</value>
+  </data>
+  <data name="WhatsApp.Template.NotApproved" xml:space="preserve">
+    <value>Meta has not approved that template yet.</value>
+  </data>
+  <data name="WhatsApp.Broadcast.NotFound" xml:space="preserve">
+    <value>We couldn't find that broadcast.</value>
+  </data>
+  <data name="WhatsApp.Broadcast.NoRecipients" xml:space="preserve">
+    <value>None of those contacts accepts promotions.</value>
+  </data>
+  <data name="WhatsApp.Broadcast.NotCancellable" xml:space="preserve">
+    <value>That broadcast can no longer be cancelled.</value>
+  </data>
+  <data name="WhatsApp.Import.InvalidFile" xml:space="preserve">
+    <value>Upload an .xlsx or .csv file like the sample.</value>
+  </data>
+  <data name="WhatsApp.Import.TooManyRows" xml:space="preserve">
+    <value>The file has more than 5,000 rows.</value>
+  </data>
+  <data name="WhatsApp.Link.NotFound" xml:space="preserve">
+    <value>We couldn't find that linked conversation.</value>
+  </data>
+  <data name="WhatsApp.Validation.Required" xml:space="preserve">
+    <value>Complete this field.</value>
+  </data>
+  <data name="WhatsApp.Validation.TooLong" xml:space="preserve">
+    <value>The text is too long.</value>
+  </data>
+  <data name="WhatsApp.Validation.VersionRequired" xml:space="preserve">
+    <value>The version is missing. Reload the screen.</value>
+  </data>
+  <data name="WhatsApp.Validation.SelectionInvalid" xml:space="preserve">
+    <value>Choose a valid option.</value>
+  </data>
+  <data name="WhatsApp.Validation.ScheduleInvalid" xml:space="preserve">
+    <value>Check the days and hours.</value>
+  </data>
+  <data name="WhatsApp.Validation.MenuInvalid" xml:space="preserve">
+    <value>Check the menu options: each one goes to a team or replies with a text.</value>
+  </data>
+  <data name="WhatsApp.Validation.TagsInvalid" xml:space="preserve">
+    <value>Check the tags: up to 10, without repeats.</value>
+  </data>
+  <data name="WhatsApp.Validation.VariablesInvalid" xml:space="preserve">
+    <value>Check the template variables.</value>
+  </data>
+  <data name="WhatsApp.Validation.PhonesInvalid" xml:space="preserve">
+    <value>Load between 1 and 200 phones.</value>
+  </data>
+  <data name="WhatsApp.Validation.ScheduleInPast" xml:space="preserve">
+    <value>Choose a future date and time.</value>
+  </data>
+  <data name="WhatsApp.Validation.TransferTargetRequired" xml:space="preserve">
+    <value>Choose a team or a person.</value>
+  </data>
+  <data name="WhatsApp.Validation.NotifyInvalid" xml:space="preserve">
+    <value>Choose 10, 15 or 30 minutes, or no notice.</value>
+  </data>
+  <data name="WhatsApp.Validation.FileRequired" xml:space="preserve">
+    <value>Choose a file.</value>
+  </data>
+  <data name="Template.LoginCode.Title" xml:space="preserve">
+    <value>Sign-in code</value>
+  </data>
+  <data name="Template.Invitation.Title" xml:space="preserve">
+    <value>Invitation to an organization</value>
+  </data>
+  <data name="Template.LoginMethodChanged.Title" xml:space="preserve">
+    <value>Sign-in methods changed</value>
+  </data>
+  <data name="Template.ReviewLoginMethods.Title" xml:space="preserve">
+    <value>Review your sign-in methods</value>
+  </data>
+  <data name="Template.DeletionRequested.Title" xml:space="preserve">
+    <value>Account deletion requested</value>
+  </data>
+  <data name="Template.DeletionCancelled.Title" xml:space="preserve">
+    <value>Account deletion cancelled</value>
+  </data>
+  <data name="Template.AccountDeleted.Title" xml:space="preserve">
+    <value>Account deleted</value>
+  </data>
+  <data name="Template.DeletionRequestedByPlatform.Title" xml:space="preserve">
+    <value>Deletion started by the platform</value>
+  </data>
+  <data name="Template.DeletionRequestedSuspended.Title" xml:space="preserve">
+    <value>Deletion of a suspended account</value>
+  </data>
+  <data name="Template.RecoveryReceived.Title" xml:space="preserve">
+    <value>Recovery request received</value>
+  </data>
+  <data name="Template.RecoveryApproved.Title" xml:space="preserve">
+    <value>Recovery approved</value>
+  </data>
+  <data name="Template.RecoveryRejected.Title" xml:space="preserve">
+    <value>Recovery rejected</value>
+  </data>
+  <data name="Template.RecoveryRequested.Title" xml:space="preserve">
+    <value>Recovery notice to the account</value>
+  </data>
+  <data name="Template.OrganizationApproved.Title" xml:space="preserve">
+    <value>Organization approved</value>
+  </data>
+  <data name="Template.OrganizationRejected.Title" xml:space="preserve">
+    <value>Organization rejected</value>
+  </data>
+  <data name="Template.PublicPageModerated.Title" xml:space="preserve">
+    <value>Public page moderated</value>
+  </data>
+  <data name="Template.Variable.Code.Label" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="Template.Variable.Code.Example" xml:space="preserve">
+    <value>483920</value>
+  </data>
+  <data name="Template.Variable.Inviter.Label" xml:space="preserve">
+    <value>Who invites</value>
+  </data>
+  <data name="Template.Variable.Inviter.Example" xml:space="preserve">
+    <value>Lucy Smith</value>
+  </data>
+  <data name="Template.Variable.Organization.Label" xml:space="preserve">
+    <value>Organization</value>
+  </data>
+  <data name="Template.Variable.Organization.Example" xml:space="preserve">
+    <value>Delta Group</value>
+  </data>
+  <data name="Template.Variable.Expiration.Label" xml:space="preserve">
+    <value>Expiration</value>
+  </data>
+  <data name="Template.Variable.Expiration.Example" xml:space="preserve">
+    <value>10/04/2026</value>
+  </data>
+  <data name="Template.Variable.Change.Label" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="Template.Variable.Change.Example" xml:space="preserve">
+    <value>added</value>
+  </data>
+  <data name="Template.Variable.Method.Label" xml:space="preserve">
+    <value>Method</value>
+  </data>
+  <data name="Template.Variable.Method.Example" xml:space="preserve">
+    <value>•••• 4521</value>
+  </data>
+  <data name="Template.Variable.Date.Label" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Template.Variable.Date.Example" xml:space="preserve">
+    <value>09/27/2026 at 2:35 PM</value>
+  </data>
+  <data name="Template.Variable.DeletionDate.Label" xml:space="preserve">
+    <value>Deletion date</value>
+  </data>
+  <data name="Template.Variable.DeletionDate.Example" xml:space="preserve">
+    <value>10/27/2026</value>
+  </data>
+  <data name="Template.Variable.Support.Label" xml:space="preserve">
+    <value>Support</value>
+  </data>
+  <data name="Template.Variable.Support.Example" xml:space="preserve">
+    <value>support@example.com</value>
+  </data>
+  <data name="Template.Variable.PageStatus.Label" xml:space="preserve">
+    <value>Page status</value>
+  </data>
+  <data name="Template.Variable.PageStatus.Example" xml:space="preserve">
+    <value>the platform unpublished it; it is a draft and cannot be published until the platform allows it</value>
+  </data>
+  <data name="Template.Unsubscribe.Button" xml:space="preserve">
+    <value>Stop promotions</value>
+  </data>
+  <data name="Template.Rejection.ABUSIVE_CONTENT" xml:space="preserve">
+    <value>The text does not follow WhatsApp policies.</value>
+  </data>
+  <data name="Template.Rejection.INCORRECT_CATEGORY" xml:space="preserve">
+    <value>The text does not match the chosen type.</value>
+  </data>
+  <data name="Template.Rejection.TAG_CONTENT_MISMATCH" xml:space="preserve">
+    <value>The text does not match the chosen type.</value>
+  </data>
+  <data name="Template.Rejection.INVALID_FORMAT" xml:space="preserve">
+    <value>The format is not valid: check the data in braces and that no two are next to each other.</value>
+  </data>
+  <data name="Template.Rejection.PROMOTIONAL" xml:space="preserve">
+    <value>The text has content that WhatsApp does not allow.</value>
+  </data>
+  <data name="Template.Rejection.SCAM" xml:space="preserve">
+    <value>WhatsApp considered it misleading.</value>
+  </data>
+  <data name="Template.Rejection.Other" xml:space="preserve">
+    <value>Meta rejected it for a reason we do not know.</value>
+  </data>
+  <data name="Bot.Unsubscribed" xml:space="preserve">
+    <value>Done, we will not send you any more promotions. If you want them again, let us know here.</value>
+  </data>
+  <data name="WhatsApp.Template.NumberRequired" xml:space="preserve">
+    <value>Connect a number to create templates.</value>
+  </data>
 </root>

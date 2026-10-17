@@ -38,11 +38,11 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
         return (await RequireUserAsync(userId, cancellationToken)).CancelDeletion(cancelledAtUtc);
     }
 
-    public async Task<Result> CompleteDeletionAsync(Guid userId, DateTime deletedAtUtc, string deletedDisplayName,
+    public async Task<Result> CompleteDeletionAsync(Guid userId, DateTime deletedAtUtc,
         CancellationToken cancellationToken)
     {
         context.RequireTransaction();
-        return (await RequireUserAsync(userId, cancellationToken)).CompleteDeletion(deletedAtUtc, deletedDisplayName);
+        return (await RequireUserAsync(userId, cancellationToken)).CompleteDeletion(deletedAtUtc);
     }
 
     public async Task<Result> SuspendAsync(Guid userId, CancellationToken cancellationToken)
@@ -87,12 +87,11 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
         return (await RequireUserAsync(userId, cancellationToken)).AcceptOperatorInvitation(acceptedAtUtc);
     }
 
-    public async Task<Result> DiscardOperatorInvitationAsync(Guid userId, DateTime discardedAtUtc,
-        string deletedDisplayName, CancellationToken cancellationToken)
+    public async Task<Result> DiscardOperatorInvitationAsync(Guid userId, DateTime discardedAtUtc, CancellationToken cancellationToken)
     {
         context.RequireTransaction();
         return (await RequireUserAsync(userId, cancellationToken))
-            .DiscardOperatorInvitation(discardedAtUtc, deletedDisplayName);
+            .DiscardOperatorInvitation(discardedAtUtc);
     }
 
     public async Task<UserAccountRow> CreateAsync(string? displayName, string culture, string timeZoneId,

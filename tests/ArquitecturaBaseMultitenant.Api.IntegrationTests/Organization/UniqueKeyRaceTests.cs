@@ -139,6 +139,9 @@ public sealed class UniqueKeyRaceTests(ApiFactory factory)
 
     private sealed class GatedRoleReader(IRoleReader inner, BothArrived gate) : IRoleReader
     {
+        public Task<RoleFilterCountsResponse> GetFilterCountsAsync(string? search, CancellationToken cancellationToken) =>
+            inner.GetFilterCountsAsync(search, cancellationToken);
+
         public async Task<bool> ExistsByNameAsync(string name, Guid? companyId, Guid? excludedRoleId,
             CancellationToken cancellationToken)
         {

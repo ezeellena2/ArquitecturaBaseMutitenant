@@ -2,7 +2,6 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Legal;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Legal;
-using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.Results;
 
@@ -32,7 +31,7 @@ internal sealed class AccountDeletionProcessor(IAccountDeletionRepository reposi
         foreach (var participant in participants) await participant.ExecuteAsync(context, ct);
         await notifier.DeletedAsync(account, await methods.ListByUserIdAsync(work.UserId, ct), nowUtc, ct);
         await repository.PurgeCredentialsAsync(work.UserId, ct);
-        return await users.CompleteDeletionAsync(work.UserId, nowUtc, ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName"), ct);
+        return await users.CompleteDeletionAsync(work.UserId, nowUtc, ct);
     }
 
     internal async Task InvalidateAsync(AccountDeletionWork work, AccountDeletionTenant? tenant, CancellationToken ct)

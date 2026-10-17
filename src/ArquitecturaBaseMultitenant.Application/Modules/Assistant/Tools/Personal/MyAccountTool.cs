@@ -25,7 +25,7 @@ internal sealed class MyAccountTool(AssistantAccessPolicy policy, IProfileServic
         if (account.IsFailure) return account.Error;
         var stored = await methods.ListByUserIdAsync(profile.Value.Id, ct);
         var rows = new List<AssistantMaskedLoginMethodResponse>();
-        foreach (var method in account.Value.Methods.Take(20))
+        foreach (var method in account.Value.Methods.Take(AssistantTechnicalLimits.QuickRows))
         {
             var source = stored.SingleOrDefault(row => row.Id == method.Id);
             rows.Add(new AssistantMaskedLoginMethodResponse(method.Type.ToString(),

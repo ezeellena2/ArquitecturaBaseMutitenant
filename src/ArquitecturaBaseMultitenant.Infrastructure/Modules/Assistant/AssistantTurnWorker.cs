@@ -1,6 +1,6 @@
+using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Configuration;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
@@ -9,7 +9,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -17,28 +17,18 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant;
 
 /// <summary>Durable discovery is the authority; request lifetime is never a worker cancellation source.</summary>
 internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, TimeProvider clock,
-    IOptions<AssistantOptions> options, ILogger<AssistantTurnWorker> logger) : BackgroundService
+    IOptions<AssistantOptions> options, ILogger<AssistantTurnWorker> logger) : PeriodicWorker(options.Value.WorkerInterval, clock, logger)
 {
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override bool Enabled => options.Value.TurnWorkerEnabled;
+    protected override async Task RunIterationAsync(CancellationToken stoppingToken)
     {
-        if (!options.Value.TurnWorkerEnabled || System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name is "GetDocument.Insider") return;
-        using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100), clock);
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            try
-            {
-                IReadOnlyList<AssistantTurnDiscovery> ready;
-                await using (var discovery = scopes.CreateAsyncScope())
-                    ready = await discovery.ServiceProvider.GetRequiredService<IAssistantTurnRepository>().ListReadyAsync(clock.GetUtcNow().UtcDateTime, stoppingToken);
-                await Parallel.ForEachAsync(ready, new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = stoppingToken },
-                    async (candidate, ct) => await ProcessAsync(candidate, ct));
-            }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
-            catch (Exception exception) { LogFailure(logger, exception.GetType().Name); }
-            try { if (!await timer.WaitForNextTickAsync(stoppingToken)) break; }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
-        }
+        IReadOnlyList<AssistantTurnDiscovery> ready;
+        await using (var discovery = scopes.CreateAsyncScope())
+            ready = await discovery.ServiceProvider.GetRequiredService<IAssistantTurnRepository>().ListReadyAsync(Clock.GetUtcNow().UtcDateTime, stoppingToken);
+        await Parallel.ForEachAsync(ready, new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = stoppingToken },
+            async (candidate, ct) => await ProcessAsync(candidate, ct));
     }
+
     private async Task ProcessAsync(AssistantTurnDiscovery candidate, CancellationToken hostToken)
     {
         var lease = Guid.NewGuid();
@@ -57,12 +47,12 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
         var turn = claimed.Value;
         if (turn.RecoverOnly)
         {
-            using var finish = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            using var finish = new CancellationTokenSource(options.Value.FinalizationTimeout, Clock);
             await service.CompleteAsync(turn.TurnId, lease, "Failed", AssistantErrors.ProviderUnavailable.Code, finish.Token);
             return;
         }
-        using var execution = CancellationTokenSource.CreateLinkedTokenSource(hostToken);
-        execution.CancelAfter(TimeSpan.FromMinutes(3));
+        using var deadline = CreateDeadline(turn.DeadlineAtUtc, Clock);
+        using var execution = CancellationTokenSource.CreateLinkedTokenSource(hostToken, deadline.Token);
         Task monitor;
         using (ExecutionContext.SuppressFlow()) monitor = Task.Run(() => MonitorAsync(candidate, lease, execution), CancellationToken.None);
         string terminal = "Complete";
@@ -141,29 +131,29 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
             }
         }
         catch (OperationCanceledException) { terminal = "Failed"; code = AssistantErrors.ProviderUnavailable.Code; }
-        catch (Exception exception) { terminal = "Failed"; code = AssistantErrors.ProviderUnavailable.Code; LogFailure(logger, exception.GetType().Name); }
+        catch (Exception exception) { terminal = "Failed"; code = AssistantErrors.ProviderUnavailable.Code; ExceptionLog.Write(logger, "AssistantTurn", exception); }
         finally
         {
             execution.Cancel();
             try { await monitor; } catch (OperationCanceledException) { }
         }
         // Separate bounded finalization token, independent of both browser and provider cancellation.
-        using var finalization = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        using var finalization = new CancellationTokenSource(options.Value.FinalizationTimeout, Clock);
         try
         {
             var closed = await service.CompleteAsync(turn.TurnId, lease, terminal, code, finalization.Token);
             if (closed.IsFailure) await RecoverAsync(candidate, lease);
         }
-        catch (Exception exception) { LogFailure(logger, exception.GetType().Name); }
+        catch (Exception exception) { ExceptionLog.Write(logger, "AssistantTurn", exception); }
     }
     private async Task MonitorAsync(AssistantTurnDiscovery candidate, Guid lease, CancellationTokenSource execution)
     {
-        var renewedAt = clock.GetTimestamp();
+        var renewedAt = Clock.GetTimestamp();
         try
         {
             while (!execution.IsCancellationRequested)
             {
-                await Task.Delay(TimeSpan.FromMilliseconds(200), clock, execution.Token);
+                await Task.Delay(options.Value.ExecutionCheckInterval, Clock, execution.Token);
                 await using var scope = scopes.CreateAsyncScope();
                 var actor = await scope.ServiceProvider.GetRequiredService<IExecutionActorFactory>().RevalidateAsync(candidate.Actor, execution.Token);
                 if (actor.IsFailure) { execution.Cancel(); break; }
@@ -171,16 +161,16 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
                 var service = scope.ServiceProvider.GetRequiredService<IAssistantTurnService>();
                 var checkedTurn = await service.CheckExecutionAsync(candidate.TurnId, lease, execution.Token);
                 if (checkedTurn.IsFailure || !checkedTurn.Value) { execution.Cancel(); break; }
-                if (clock.GetElapsedTime(renewedAt) >= TimeSpan.FromSeconds(10))
+                if (Clock.GetElapsedTime(renewedAt) >= options.Value.LeaseHeartbeatInterval)
                 {
                     var renewed = await service.HeartbeatAsync(candidate.TurnId, lease, execution.Token);
                     if (renewed.IsFailure) { execution.Cancel(); break; }
-                    renewedAt = clock.GetTimestamp();
+                    renewedAt = Clock.GetTimestamp();
                 }
             }
         }
         catch (OperationCanceledException) { }
-        catch (Exception exception) { LogFailure(logger, exception.GetType().Name); execution.Cancel(); }
+        catch (Exception exception) { ExceptionLog.Write(logger, "AssistantTurn", exception); execution.Cancel(); }
     }
     private static async Task GenerateTitleAsync(IServiceProvider services, IAssistantTurnService service,
         AssistantTurnExecution turn, Guid lease, CancellationToken ct)
@@ -216,11 +206,24 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
     private async Task RecoverAsync(AssistantTurnDiscovery candidate, Guid lease)
     {
         // Trusted technical closure uses original scope only; no actor, chat, or provider is resolved here.
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        using var timeout = new CancellationTokenSource(options.Value.FinalizationTimeout, Clock);
         await using var scope = scopes.CreateAsyncScope();
-        using var entered = candidate.Actor.TenantId is { } tenantId ? scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(tenantId) : null;
-        var result = await scope.ServiceProvider.GetRequiredService<IAssistantTurnService>().RecoverAsync(candidate.TurnId, lease, timeout.Token);
-        if (result.IsFailure) LogFailure(logger, result.Error.Code);
+        async Task Recover(IServiceProvider provider, CancellationToken ct)
+        {
+            var result = await provider.GetRequiredService<IAssistantTurnService>().RecoverAsync(candidate.TurnId, lease, ct);
+            if (result.IsFailure) LogFailure(logger, result.Error.Code);
+        }
+        if (candidate.Actor.TenantId is { } tenantId)
+            await scope.ServiceProvider.GetRequiredService<TenantJobRunner>().RunAsync([tenantId], Recover, timeout.Token);
+        else await Recover(scope.ServiceProvider, timeout.Token);
+    }
+    internal static CancellationTokenSource CreateDeadline(DateTime deadlineAtUtc, TimeProvider clock)
+    {
+        var remaining = deadlineAtUtc - clock.GetUtcNow().UtcDateTime;
+        if (remaining > TimeSpan.Zero) return new CancellationTokenSource(remaining, clock);
+        var expired = new CancellationTokenSource();
+        expired.Cancel();
+        return expired;
     }
     [LoggerMessage(Level = LogLevel.Warning, Message = "Assistant turn worker failed: {Failure}")]
     private static partial void LogFailure(ILogger logger, string failure);

@@ -23,7 +23,7 @@ internal sealed class AssistantAttachmentService(AssistantAttachmentWriter write
         OperationLog.RunAsync<IdempotentReplayResponse<AssistantAttachmentSummaryResponse>>(logger, clock, "AssistantAttachmentUpload", async () =>
         {
             input = input with { FileName = TextNormalizer.Clean(input.FileName?.Replace('\\', '/').Split('/')[^1]) };
-            if (input.ByteLength is > 10485760) return AssistantErrors.AttachmentTooLarge;
+            if (input.ByteLength is > AssistantTechnicalLimits.MaxAttachmentBytes) return AssistantErrors.AttachmentTooLarge;
             if (await validator.ValidateAsync(input, ct) is { } invalid) return invalid;
             var allowed = await policy.AuthorizeAsync(ct);
             if (allowed.IsFailure) return allowed.Error;
@@ -45,7 +45,7 @@ internal sealed class AssistantAttachmentService(AssistantAttachmentWriter write
             int bytes;
             while ((bytes = await input.Content.ReadAsync(buffer, ct)) != 0)
             {
-                if (content.Length + bytes > 10485760) return AssistantErrors.AttachmentTooLarge;
+                if (content.Length + bytes > AssistantTechnicalLimits.MaxAttachmentBytes) return AssistantErrors.AttachmentTooLarge;
                 content.Write(buffer, 0, bytes);
             }
             if (content.Length != input.ByteLength) return AssistantErrors.AttachmentUnsupportedType;

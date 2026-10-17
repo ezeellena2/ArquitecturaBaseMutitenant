@@ -19,6 +19,13 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
     ICompanyReader companies, IRequestValidator validator, IUnitOfWork unitOfWork, TimeProvider timeProvider,
     ILogger<RoleService> logger) : IRoleService
 {
+    public Task<Result<RoleFilterCountsResponse>> GetFilterCountsAsync(string? search, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync(logger, timeProvider, "GetRoleFilterCounts", async () =>
+        {
+            if (await validator.ValidateAsync(new ListRolesRequest { Search = search }, cancellationToken) is { } invalid) return invalid;
+            return Result.Success(await roles.GetFilterCountsAsync(search, cancellationToken));
+        });
+
     public Task<Result<PagedResult<RoleResponse>>> ListAsync(ListRolesRequest request,
         CancellationToken cancellationToken)
     {
@@ -189,5 +196,5 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
 
     private static RoleResponse ToResponse(RoleRow role) => new(role.Id, RoleTexts.Name(role.Name), RoleTexts.Description(role.Name, role.Description),
         role.Scope, role.CompanyId, role.IsSystemRole, role.UserCount, role.Permissions,
-        role.Version, role.CreatedAtUtc);
+        role.Version, role.CreatedAtUtc, role.CompanyName);
 }

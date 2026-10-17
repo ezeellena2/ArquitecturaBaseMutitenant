@@ -23,6 +23,14 @@ internal sealed class ExternalLoginService(
     TimeProvider timeProvider,
     ILogger<ExternalLoginService> logger) : IExternalLoginService
 {
+    public Task<Result> ValidateStartAsync(ExternalLoginStartRequest request, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync(logger, timeProvider, "ExternalLoginStart", async () =>
+        {
+            ArgumentNullException.ThrowIfNull(request);
+            return await validator.ValidateAsync(request, cancellationToken) is { } invalid
+                ? Result.Failure(invalid) : Result.Success();
+        });
+
     public Task<Result<ExternalSignInResponse>> SignInAsync(
         ExternalSignInRequest request, CancellationToken cancellationToken) =>
         OperationLog.RunAsync<ExternalSignInResponse>(logger, timeProvider, "ExternalSignIn", async () =>

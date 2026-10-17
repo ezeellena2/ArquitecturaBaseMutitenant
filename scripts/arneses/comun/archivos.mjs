@@ -1,7 +1,8 @@
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
-const ignoradas = new Set(['bin', 'obj', 'node_modules', 'dist', '.git', '.local', 'TestResults', '.vs']);
+const ignoradas = new Set(['bin', 'obj', 'node_modules', 'dist', '.git', '.local', 'TestResults', '.vs',
+  '.artifacts', '.playwright-mcp', '.emails']);
 
 /** Índice del árbol de archivos de un repo (rutas relativas con `/`). */
 export async function indexarArchivos(raiz) {

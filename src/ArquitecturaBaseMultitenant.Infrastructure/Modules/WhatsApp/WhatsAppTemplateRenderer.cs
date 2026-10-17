@@ -5,9 +5,8 @@ using ArquitecturaBaseMultitenant.Application.Models.Notifications;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Resources;
-using Microsoft.Extensions.Options;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
-internal sealed class WhatsAppTemplateRenderer(IOptions<WhatsAppOptions> options, WhatsAppTemplateCatalog catalog,
+internal sealed class WhatsAppTemplateRenderer(IWhatsAppChannelSettings settings, WhatsAppTemplateCatalog catalog,
     DisplayFormatter formatter, IPublicOrigin origin) : IWhatsAppTemplateRenderer
 {
     public WhatsAppOutboundMessage RenderCode(string destination, string code, int lifetimeMinutes, CultureProfile culture)
@@ -63,8 +62,8 @@ internal sealed class WhatsAppTemplateRenderer(IOptions<WhatsAppOptions> options
         if (parameters.Count != definition.BodyParameters || (definition.HasUrlButton || definition.IsAuthentication) != (button is not null))
             throw new InvalidOperationException("Template parameter contract mismatch.");
         var language = culture.ResourceLanguages.FirstOrDefault(value => value is "es" or "en") ?? "es";
-        var message = new WhatsAppOutboundMessage(options.Value.PhoneNumberId ?? throw new InvalidOperationException("WhatsApp unavailable."),
-            destination, definition.Name, language, parameters, button, definition.IsAuthentication);
+        var message = new WhatsAppOutboundMessage(settings.PhoneNumberId ?? throw new InvalidOperationException("WhatsApp unavailable."),
+            destination, definition.Name, language, parameters, button, definition.IsAuthentication, ChannelId: settings.PlatformChannelId);
         message.Validate();
         return message;
     }

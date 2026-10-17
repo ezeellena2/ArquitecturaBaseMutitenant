@@ -32,7 +32,7 @@ internal sealed class LoginVerifier(
         VerifyLoginCodeRequest request, LoginCodeDestination destination, AccessSelectionRequest? selection,
         LoginInvitationsContext? invitation, CancellationToken cancellationToken)
     {
-        if (invitation is not null) await invitations.LockEmailAsync(invitation, cancellationToken);
+        if (invitation is not null) await invitations.LockAsync(invitation, cancellationToken);
         var userId = invitation is not null ? invitation.ExpectedOwnerId : await accounts.LockAsync(destination, cancellationToken);
         await attempts.LockDestinationAsync(destination, cancellationToken);
         if (invitation is null && !await accounts.StillOwnsAsync(userId, destination, cancellationToken))

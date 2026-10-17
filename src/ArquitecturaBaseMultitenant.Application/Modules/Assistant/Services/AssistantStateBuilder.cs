@@ -40,7 +40,7 @@ internal sealed class AssistantStateBuilder(AssistantNoticePolicy notices, ICurr
         if (authorized.IsFailure) return authorized.Error;
         return new AssistantStateResponse(current.Configured, current.CanConfigure, current.Models,
             accepted ? quick : [], quota.Limit, quota.ResetAtUtc, quota.Remaining, budget, cost,
-            version, accepted, current.RetentionDays, 10485760, 5, progress);
+            version, accepted, current.RetentionDays, AssistantTechnicalLimits.MaxAttachmentBytes, AssistantTechnicalLimits.MaxAttachments, progress);
     }
 
     private async Task<(Money? Budget, Money? Cost)> ReadMonthAsync(AssistantStateConfigurationRow current, DateTime nowUtc, CancellationToken ct)
@@ -63,6 +63,6 @@ internal sealed class AssistantStateBuilder(AssistantNoticePolicy notices, ICurr
         if (cost.Currency != budget.Currency) throw new InvalidOperationException("State requires one budget currency.");
         var fraction = cost.Amount / budget.Amount;
         return new(fraction, fraction >= 1m ? AssistantBudgetStatus.LimitReached
-            : fraction >= 0.8m ? AssistantBudgetStatus.NearLimit : AssistantBudgetStatus.WithinLimit);
+            : fraction >= AssistantTechnicalLimits.BudgetNearFraction ? AssistantBudgetStatus.NearLimit : AssistantBudgetStatus.WithinLimit);
     }
 }

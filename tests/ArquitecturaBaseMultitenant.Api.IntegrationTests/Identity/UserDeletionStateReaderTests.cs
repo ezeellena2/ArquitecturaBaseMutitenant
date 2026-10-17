@@ -25,7 +25,7 @@ public sealed class UserDeletionStateReaderTests(ApiFactory factory)
         Assert.True(grace.RequestDeletion("Synthetic", NowUtc, 30).IsSuccess);
         Assert.True(leased.RequestDeletion("Synthetic", NowUtc.AddDays(-31), 30).IsSuccess);
         Assert.True(deleted.RequestDeletion("Synthetic", NowUtc.AddDays(-31), 30).IsSuccess);
-        Assert.True(deleted.CompleteDeletion(NowUtc, "Removed").IsSuccess);
+        Assert.True(deleted.CompleteDeletion(NowUtc).IsSuccess);
         await using (var scope = factory.Services.CreateAsyncScope())
         {
             var services = scope.ServiceProvider;

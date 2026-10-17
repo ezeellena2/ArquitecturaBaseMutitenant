@@ -52,7 +52,7 @@ internal sealed class PublicPageEditor(IPublicPageRepository pages, ITenantRepos
 
         if (isNew) pages.Add(page);
         else pages.MarkUpdated(page);
-        auditLog.Record(isNew ? AuditAction.Created : AuditAction.Updated, "PublicPage", page.Id,
+        auditLog.Record(isNew ? AuditAction.Created : AuditAction.Updated, nameof(PublicPage), page.Id,
             new Dictionary<string, object?> { ["fields"] = AuditedFields });
         return page;
     }
@@ -65,7 +65,7 @@ internal sealed class PublicPageEditor(IPublicPageRepository pages, ITenantRepos
         var changed = publish ? page.Publish(clock.GetUtcNow().UtcDateTime) : page.Unpublish();
         if (changed.IsFailure) return changed.Error;
         pages.MarkUpdated(page);
-        auditLog.Record(AuditAction.Updated, "PublicPage", page.Id,
+        auditLog.Record(AuditAction.Updated, nameof(PublicPage), page.Id,
             new Dictionary<string, object?> { ["isPublished"] = publish });
         return page;
     }

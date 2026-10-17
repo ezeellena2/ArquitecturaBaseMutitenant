@@ -201,11 +201,16 @@ public sealed class AssistantSnapshotLegacyVariantsMigrationTests
             AddTypedCase(auditTemplate, (await repository.GetByIdAsync(owner.UserId, Access.Business, legacyAudit.Id, ct))!, legacyAudit.Key, [target.UserId]);
             AddTypedCase(securityTemplate, (await repository.GetByIdAsync(platformOwner.UserId, Access.Platform, legacySecurity.Id, ct))!, legacySecurity.Key, [target.UserId]);
         }
-        var unavailableRequest = Guid.CreateVersion7();
-        using (var unavailable = await AssistantDurableConversationTests.PostAsync(operatorClient, "/api/platform/assistant/quick/assistant_usage", "{}", unavailableRequest))
-            Assert.Equal(HttpStatusCode.NotImplemented, unavailable.StatusCode);
+        var usageRequest = Guid.CreateVersion7();
+        using (var usage = await AssistantDurableConversationTests.PostAsync(operatorClient, "/api/platform/assistant/quick/assistant_usage", "{}", usageRequest))
+            Assert.Equal(HttpStatusCode.OK, usage.StatusCode);
         using (var read = factory.Services.CreateScope())
-            Assert.Null(await read.ServiceProvider.GetRequiredService<IAssistantDurableRepository>().GetByKeyAsync(platformOwner.UserId, Access.Platform, unavailableRequest, ct));
+        {
+            var currentUsage = await read.ServiceProvider.GetRequiredService<IAssistantDurableRepository>().GetByKeyAsync(platformOwner.UserId, Access.Platform, usageRequest, ct);
+            Assert.NotNull(currentUsage);
+            Assert.Equal("assistant.quick", currentUsage.Reference.Kind);
+            Assert.Equal("assistant_usage", currentUsage.QuickKey);
+        }
 
         var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(factory.AdminConnectionString);
         options.UseOpenIddict<Guid>();
@@ -229,6 +234,8 @@ public sealed class AssistantSnapshotLegacyVariantsMigrationTests
                 Assert.False(await db.Set<AssistantSnapshotRetentionIndex>().AnyAsync(row => row.OperationId == original.Id, ct));
             }
         }
+        await using (var migrationDb = new ApplicationDbContext(options.Options, new NoTenant()))
+            await migrationDb.GetService<IMigrator>().MigrateAsync(null, ct);
         foreach (var value in cases)
         {
             using var scope = factory.Services.CreateScope();

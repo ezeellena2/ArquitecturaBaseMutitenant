@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
+using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -32,7 +33,21 @@ internal sealed class PlatformDomainService(ITenantReader tenants, ITenantDomain
             var entered = await guard.EnterAsync(tenantId, AuditTexts.DomainMetadataReadReason(), cancellationToken);
             if (entered.IsFailure) return entered.Error;
             using var lease = entered.Value;
-            return (await domains.ListCurrentAsync(cancellationToken)).Select(OrganizationDomainService.ToResponse).ToArray();
+            var page = await domains.ListPagedAsync(new ListOrganizationDomainsRequest(), cancellationToken);
+            return page.Items.Select(OrganizationDomainService.ToResponse).ToArray();
+        });
+
+    public Task<Result<PagedResult<OrganizationDomainResponse>>> ListPagedAsync(Guid tenantId, ListOrganizationDomainsRequest request, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync<PagedResult<OrganizationDomainResponse>>(logger, clock, "ListPlatformDomainsPaged", async () =>
+        {
+            if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+            var tenant = await tenants.FindByIdAsync(tenantId, cancellationToken);
+            if (tenant is not { Kind: TenantKind.Business }) return TenantErrors.NotFound;
+            var entered = await guard.EnterAsync(tenantId, AuditTexts.DomainMetadataReadReason(), cancellationToken);
+            if (entered.IsFailure) return entered.Error;
+            using var lease = entered.Value;
+            var page = await domains.ListPagedAsync(request, cancellationToken);
+            return new PagedResult<OrganizationDomainResponse>([.. page.Items.Select(OrganizationDomainService.ToResponse)], page.Page, page.PageSize, page.TotalCount);
         });
 
     public Task<Result<VersionResponse>> VerifyAsync(Guid tenantId, string domain, PlatformTenantStateRequest request, CancellationToken cancellationToken) =>

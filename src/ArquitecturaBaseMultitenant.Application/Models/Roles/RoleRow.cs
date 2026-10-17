@@ -4,4 +4,4 @@ namespace ArquitecturaBaseMultitenant.Application.Models.Roles;
 
 /// <summary>Fila proyectada para consultar un rol de la organización activa.</summary>
 public sealed record RoleRow(Guid Id, string Name, string? Description, RoleScope Scope, Guid? CompanyId,
-    bool IsSystemRole, int UserCount, IReadOnlyList<string> Permissions, uint Version, DateTime CreatedAtUtc);
+    bool IsSystemRole, int UserCount, IReadOnlyList<string> Permissions, uint Version, DateTime CreatedAtUtc, string? CompanyName = null);

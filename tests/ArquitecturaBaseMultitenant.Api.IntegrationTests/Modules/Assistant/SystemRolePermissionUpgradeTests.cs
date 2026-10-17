@@ -156,6 +156,8 @@ public sealed class SystemRolePermissionUpgradeTests
         if (corruption is "scope" or "company" or "custom") Assert.Equal(damaged.Permissions, saved.Permissions);
         if (corruption == "missing") Assert.DoesNotContain(Permissions.Roles.Read, saved.Permissions);
         if (corruption == "duplicate") Assert.Equal(2, saved.Permissions.Count(p => p == Permissions.Roles.Read));
+        // La API usa el modelo de hoy: las migraciones posteriores (y las tablas que la seed llena) tienen que estar.
+        await db.GetService<IMigrator>().MigrateAsync(cancellationToken: Ct);
         using var operatorClient = Client(factory);
         var account = await AccountJourney.RegisterAsync(factory, operatorClient, Ct);
         await PlatformOperators.GrantAsync(factory.Services, account.UserId, PlatformOperators.All, Ct);

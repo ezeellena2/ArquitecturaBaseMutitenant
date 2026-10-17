@@ -14,7 +14,7 @@ internal sealed class UpdatePublicPageRequestValidator : AbstractValidator<Updat
 
     public UpdatePublicPageRequestValidator()
     {
-        RuleFor(request => request.Slug).Must(value => TenantSlug.Create(value).IsSuccess)
+        RuleFor(request => request.Slug).MaxLength(TenantSlug.MaxLength).Must(value => TenantSlug.Create(value).IsSuccess)
             .WithMessage(_ => ValidationTexts.SlugInvalid);
         RuleFor(request => request.Name).OrganizationName();
         RuleFor(request => request.Description).Description();

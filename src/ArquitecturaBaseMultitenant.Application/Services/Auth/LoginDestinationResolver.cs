@@ -50,6 +50,11 @@ internal sealed class LoginDestinationResolver(IPhoneNumberParser phones, IEnume
         channels.Single(channel => channel.Key == destination.Channel).AuditMethod;
 
     internal static LoginMethodType Type(LoginCodeDestination destination) => destination.Channel == LoginCodeChannel.Email ? LoginMethodType.Email : LoginMethodType.Phone;
+    /// <summary>El destino del código como identidad de una invitación: lo que la ADR 0047 acepta al probarlo.</summary>
+    internal static ArquitecturaBaseMultitenant.Domain.Invitations.InvitationIdentity Identity(LoginCodeDestination destination) =>
+        Type(destination) == LoginMethodType.Email
+            ? ArquitecturaBaseMultitenant.Domain.Invitations.InvitationIdentity.ForEmail(Email.Create(destination.Value).Value)
+            : ArquitecturaBaseMultitenant.Domain.Invitations.InvitationIdentity.ForPhone(PhoneNumber.Create(destination.Value).Value);
     internal static string Field(LoginCodeDestination destination) => Type(destination) == LoginMethodType.Email ? "email" : "phone";
     internal static LoginMethod Create(Guid userId, LoginCodeDestination destination) => Type(destination) == LoginMethodType.Email
         ? LoginMethod.CreateEmail(userId, Email.Create(destination.Value).Value)

@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Api.Idempotency;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Models.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Users;
@@ -19,12 +20,22 @@ namespace ArquitecturaBaseMultitenant.Api.Controllers.Organization;
 public sealed class OrganizationDomainsController(IOrganizationDomainService service) : ControllerBase
 {
     [HttpGet]
+    [BoundedLegacyCollection("/api/organization/settings/domains/paged")]
     [HasPermission(Permissions.Settings.Read)]
     [ProducesResponseType<IReadOnlyList<OrganizationDomainResponse>>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> List(CancellationToken cancellationToken) =>
         (await service.ListAsync(cancellationToken)).ToActionResult(this);
+
+    [HttpGet("paged")]
+    [HasPermission(Permissions.Settings.Read)]
+    [ProducesResponseType<PagedResult<OrganizationDomainResponse>>(StatusCodes.Status200OK)]
+    [ProducesProblem(StatusCodes.Status400BadRequest)]
+    [ProducesProblem(StatusCodes.Status401Unauthorized)]
+    [ProducesProblem(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> ListPaged([FromQuery] OrganizationDomainListHttpQuery query, CancellationToken cancellationToken) =>
+        (await service.ListPagedAsync(query.ToModel(), cancellationToken)).ToActionResult(this);
 
     [HttpPost]
     [HasPermission(Permissions.Settings.Manage)]

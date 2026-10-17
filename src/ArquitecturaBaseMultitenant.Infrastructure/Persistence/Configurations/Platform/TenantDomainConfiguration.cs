@@ -23,6 +23,7 @@ internal sealed class TenantDomainConfiguration : IEntityTypeConfiguration<Tenan
         builder.HasIndex(domain => domain.Domain).IsUnique()
             .HasFilter("\"Status\" <> 'Removed'").HasDatabaseName(UniqueKeys.TenantDomain);
         builder.HasIndex(domain => new { domain.OrganizationId, domain.Status });
+        builder.HasIndex(domain => new { domain.OrganizationId, domain.Domain, domain.Id });
         builder.HasOne<TenantEntity>().WithMany()
             .HasForeignKey(domain => domain.OrganizationId).OnDelete(DeleteBehavior.Restrict);
     }

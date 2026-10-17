@@ -22,7 +22,7 @@ internal sealed class OrganizationDomainRegistrar(ITenantDomainRepository domain
             timeProvider.GetUtcNow().UtcDateTime);
         if (created.IsFailure) return created.Error;
         domains.Add(created.Value);
-        auditLog.Record(AuditAction.Created, "TenantDomain", created.Value.Id,
+        auditLog.Record(AuditAction.Created, nameof(TenantDomain), created.Value.Id,
             new Dictionary<string, object?>
             {
                 ["domain"] = created.Value.Domain,

@@ -9,8 +9,11 @@ internal sealed class WhatsAppOptions
     public string? AccessToken { get; init; }
     public string? AppSecret { get; init; }
     public string? VerifyToken { get; init; }
+    /// <summary>La app de Meta del alta embebida y su configuración de Facebook Login for Business.</summary>
+    public string? AppId { get; init; }
+    public string? EmbeddedSignupConfigId { get; init; }
     public bool HasWebhookSecrets => !string.IsNullOrWhiteSpace(AppSecret) && !string.IsNullOrWhiteSpace(VerifyToken);
-    public string GraphApiVersion { get; init; } = "v25.0";
+    public string GraphApiVersion { get; init; } = "v26.0";
     public string[] AllowedCountries { get; set; } = ["AR"];
     [Range(1, 10000)] public int DailyAuthCodeLimit { get; init; } = 100;
     [Range(typeof(decimal), "0", "1")] public decimal ProtectedAuthCodeFraction { get; init; } = 0.2m;
@@ -19,6 +22,7 @@ internal sealed class WhatsAppOptions
     [Range(1, 3600)] public int InboundPollSeconds { get; init; } = 30;
     [Range(1, 3600)] public int InboundLeaseSeconds { get; init; } = 120;
     [Range(1, 100)] public int InboundMaxAttempts { get; init; } = 8;
+    [Range(1, 3600)] public int ChannelRefreshSeconds { get; init; } = 30;
     public bool ProcessInboundInBackground { get; init; } = true;
     public bool SendArgentineMobilesWithoutNine { get; init; }
     public WhatsAppTemplateOptions Templates { get; init; } = new();

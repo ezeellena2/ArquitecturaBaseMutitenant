@@ -44,7 +44,7 @@ public sealed class AssistantContractValidationTests
     }
 
     [Fact]
-    public void Message_requires_text_version_and_unique_at_most_five_attachment_ids()
+    public void Message_requires_text_version_and_unique_attachment_ids()
     {
         var validator = new SendAssistantMessageRequestValidator();
         Assert.True(validator.Validate(new SendAssistantMessageRequest("Consulta", [], 0)).IsValid);
@@ -52,7 +52,8 @@ public sealed class AssistantContractValidationTests
         Assert.False(validator.Validate(new SendAssistantMessageRequest("Consulta", [], null)).IsValid);
         var id = Guid.CreateVersion7();
         Assert.False(validator.Validate(new SendAssistantMessageRequest("Consulta", [id, id], 1)).IsValid);
-        Assert.False(validator.Validate(new SendAssistantMessageRequest("Consulta", Enumerable.Range(0, 6).Select(_ => Guid.CreateVersion7()).ToArray(), 1)).IsValid);
+        // The service rejects a sixth attachment with Assistant.Attachment.TooMany, the published code.
+        Assert.True(validator.Validate(new SendAssistantMessageRequest("Consulta", Enumerable.Range(0, 6).Select(_ => Guid.CreateVersion7()).ToArray(), 1)).IsValid);
     }
 
     [Theory]

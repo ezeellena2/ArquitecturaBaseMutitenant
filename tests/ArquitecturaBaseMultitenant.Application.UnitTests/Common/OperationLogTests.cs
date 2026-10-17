@@ -13,6 +13,25 @@ namespace ArquitecturaBaseMultitenant.Application.UnitTests.Common;
 public sealed class OperationLogTests
 {
     [Fact]
+    public async Task Unexpected_failure_preserves_inner_types_and_stacks_without_messages()
+    {
+        var logger = new FakeLogger<OperationLogTests>();
+        var clock = new FakeTimeProvider();
+        await Assert.ThrowsAsync<InvalidOperationException>(() => OperationLog.RunAsync(logger, clock, "PrivateWork", ThrowPrivateFailure));
+        var errors = logger.Collector.GetSnapshot().Where(record => record.Level == LogLevel.Error).ToArray();
+        Assert.Contains(errors, record => record.Message.Contains(nameof(ArgumentException), StringComparison.Ordinal));
+        Assert.Contains(errors, record => record.Message.Contains(nameof(ThrowPrivateFailure), StringComparison.Ordinal));
+        Assert.All(errors, record => Assert.Null(record.Exception));
+        Assert.DoesNotContain("secret-value", string.Join(' ', errors.Select(record => record.Message)));
+    }
+
+    private static Task<Result> ThrowPrivateFailure()
+    {
+        try { throw new ArgumentException("secret-value-inner"); }
+        catch (ArgumentException inner) { throw new InvalidOperationException("secret-value-outer", inner); }
+    }
+
+    [Fact]
     public async Task Successful_operation_logs_start_and_elapsed_time_without_result_data()
     {
         var logger = new FakeLogger<OperationLogTests>();
@@ -65,8 +84,8 @@ public sealed class OperationLogTests
 
         Assert.Equal(secret, thrown.Message);
         var records = logger.Collector.GetSnapshot();
-        Assert.Equal(["Handling SendMessage", "Failed SendMessage: InvalidOperationException"],
-            records.Select(record => record.Message));
+        Assert.Equal("Handling SendMessage", records[0].Message);
+        Assert.StartsWith("Failed SendMessage: InvalidOperationException", records[1].Message, StringComparison.Ordinal);
         Assert.Equal(LogLevel.Error, records[^1].Level);
         Assert.DoesNotContain(secret, string.Join(' ', records.Select(record => record.Message)));
     }

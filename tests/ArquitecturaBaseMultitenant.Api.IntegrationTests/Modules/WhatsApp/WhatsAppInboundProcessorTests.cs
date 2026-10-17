@@ -198,7 +198,8 @@ public sealed class WhatsAppInboundProcessorTests(ApiFactory factory) : IClassFi
     }
 
     private WhatsAppInboundProcessor Worker(IServiceProvider provider) => new(provider.GetRequiredService<WhatsAppInboundSignal>(),
-        provider.GetRequiredService<IServiceScopeFactory>(), Options.Create(new WhatsAppOptions { PhoneNumberId = "fixture-number", InboundMaxAttempts = 2 }), _clock, NullLogger<WhatsAppInboundProcessor>.Instance);
+        provider.GetRequiredService<IServiceScopeFactory>(),
+        Options.Create(new WhatsAppOptions { PhoneNumberId = "fixture-number", InboundMaxAttempts = 2 }), _clock, NullLogger<WhatsAppInboundProcessor>.Instance);
     private static IWhatsAppInboundService Service(IServiceProvider provider) => provider.GetRequiredService<IWhatsAppInboundService>();
     private static Task ResetQueueAsync(IServiceProvider services) => TransactionAsync(services, async (provider, ct) =>
     {

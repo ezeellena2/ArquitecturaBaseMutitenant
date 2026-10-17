@@ -1,6 +1,8 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Help;
 using ArquitecturaBaseMultitenant.Application.Models.Help;
+using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Modules.Assistant;
@@ -8,11 +10,32 @@ namespace ArquitecturaBaseMultitenant.Application.UnitTests.Modules.Assistant;
 public sealed class AssistantHelpTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
-    private static ServiceProvider Provider()
+    private static ServiceProvider Provider(ICultureCatalog? cultures = null)
     {
         var services = new ServiceCollection();
+        services.AddSingleton<ICultureCatalog>(cultures ?? new JsonReferenceDataCatalog());
         ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.AssistantModule.AddAssistantModule(services);
         return services.BuildServiceProvider();
+    }
+
+    [Fact]
+    public async Task Help_does_not_return_documents_in_a_language_disabled_in_the_catalog()
+    {
+        using var provider = Provider(new DisabledEnglishCatalog(new JsonReferenceDataCatalog()));
+        var reader = provider.GetRequiredService<IHelpArticleReader>();
+        var topic = reader.Catalog[0];
+        var context = new HelpArticleContext(topic.Accesses[0], "en", [topic.RouteKey],
+            topic.Permission is { } permission ? [permission] : [], topic.Module is { } module ? [module] : []);
+        Assert.Empty(await reader.SearchAsync(new(topic.TopicKey, null), context, Ct));
+        Assert.Single(await reader.SearchAsync(new(topic.TopicKey, null), context with { Language = "es" }, Ct));
+    }
+
+    private sealed class DisabledEnglishCatalog(ICultureCatalog inner) : ICultureCatalog
+    {
+        public async Task<IReadOnlyList<CultureCatalogEntry>> ListAsync(CancellationToken ct) =>
+            (await inner.ListAsync(ct)).Select(row => row.LanguageCode == "en" ? row with { IsEnabled = false } : row).ToArray();
+        public async Task<CultureCatalogEntry?> FindAsync(string code, CancellationToken ct) =>
+            (await ListAsync(ct)).SingleOrDefault(row => row.Code == code);
     }
 
     [Fact]

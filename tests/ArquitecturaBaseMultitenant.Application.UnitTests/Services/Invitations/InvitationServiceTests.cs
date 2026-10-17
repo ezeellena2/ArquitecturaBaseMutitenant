@@ -50,7 +50,7 @@ public sealed class InvitationServiceTests
         var preview = await setup.Service.PreviewAsync(new PreviewInvitationRequest("valid"), Ct);
 
         Assert.Equal(expected, preview.Value.State);
-        Assert.Equal(setup.Ports.Row.Destination, preview.Value.Email);
+        Assert.Equal(setup.Ports.Row.Destination.Email, preview.Value.Email);
         Assert.Equal(InvitationStatus.Pending, setup.Ports.Row.Status);
         Assert.NotNull(setup.Ports.Continuation);
         Assert.Equal(1, setup.Ports.Entries);
@@ -122,7 +122,7 @@ public sealed class InvitationServiceTests
 
         var preview = await setup.Service.PreviewAsync(new PreviewInvitationRequest("valid"), Ct);
 
-        Assert.Equal(ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName"), preview.Value.InviterName);
+        Assert.Equal(FormattingTexts.DeletedAccount, preview.Value.InviterName);
     }
 
     [Fact]
@@ -147,7 +147,7 @@ public sealed class InvitationServiceTests
         {
             Ports = new Ports(Fixture.TimeProvider.GetUtcNow().UtcDateTime);
             var availability = new LoginMethodAvailabilityPolicy([], Ports, Ports);
-            var previews = new InvitationPreviewBuilder(Ports, Ports, Ports, availability, Ports, Fixture.TimeProvider, Ports);
+            var previews = new InvitationPreviewBuilder(Ports, Ports, Ports, availability, Ports, Fixture.TimeProvider, Ports, []);
             Service = new InvitationService(new InvitationPreviewResolver(Ports, previews, Ports, Fixture.TimeProvider),
                 null!, null!, Ports, Fixture.Validator, new FakeUnitOfWork(), null!, Fixture.TimeProvider, Fixture.Logger);
         }

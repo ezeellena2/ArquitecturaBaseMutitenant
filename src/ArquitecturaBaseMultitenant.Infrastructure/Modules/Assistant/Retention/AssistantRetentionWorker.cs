@@ -1,14 +1,17 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Files;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Common.Logging;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Configuration;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Retention;
 
-internal sealed partial class AssistantRetentionWorker(IServiceScopeFactory scopes, TimeProvider clock, ILogger<AssistantRetentionWorker> logger) : BackgroundService
+internal sealed class AssistantRetentionWorker(IServiceScopeFactory scopes, TenantJobRunner jobs, TimeProvider clock,
+    IOptions<AssistantOptions> options, ILogger<AssistantRetentionWorker> logger) : PeriodicWorker(options.Value.RetentionWorkerInterval, clock, logger)
 {
     internal async Task<int> RunOnceAsync(CancellationToken ct)
     {
@@ -20,37 +23,36 @@ internal sealed partial class AssistantRetentionWorker(IServiceScopeFactory scop
             tenantIds = await repository.ListTenantIdsAsync(ct);
             retentionDays = await repository.RetentionDaysAsync(ct);
         }
-        var cutoffUtc = clock.GetUtcNow().UtcDateTime.AddDays(-retentionDays);
+        var cutoffUtc = Clock.GetUtcNow().UtcDateTime.AddDays(-retentionDays);
         var total = 0;
-        foreach (var tenantId in tenantIds.Select(value => (Guid?)value).Prepend(null))
+        await using (var global = scopes.CreateAsyncScope()) await PurgeScopeAsync(global.ServiceProvider, ct);
+        await jobs.RunAsync(tenantIds, PurgeScopeAsync, ct);
+        async Task PurgeScopeAsync(IServiceProvider services, CancellationToken token)
         {
-            await using var scope = scopes.CreateAsyncScope();
-            var services = scope.ServiceProvider;
-            using var tenantScope = tenantId is { } id ? services.GetRequiredService<ITenantScope>().Enter(id) : null;
             var repository = services.GetRequiredService<IAssistantRetentionRepository>();
             var service = services.GetRequiredService<IAssistantRetentionService>();
             Guid? after = null;
             while (true)
             {
-                var rows = await repository.ListExpiredAsync(cutoffUtc, after, ct);
+                var rows = await repository.ListExpiredAsync(cutoffUtc, after, token);
                 foreach (var row in rows)
                 {
-                    var purged = await service.PurgeAsync(row, cutoffUtc, ct);
+                    var purged = await service.PurgeAsync(row, cutoffUtc, token);
                     if (purged.IsSuccess) total += purged.Value;
                 }
                 if (rows.Count < 100) break;
                 after = rows[^1].Id;
             }
             // Physical deletion is idempotent and outside UoW. Failed keys remain durable for the next pass.
-            foreach (var row in await repository.ListCleanupAsync(ct))
+            foreach (var row in await repository.ListCleanupAsync(token))
             {
                 try
                 {
-                    await services.GetRequiredService<IFileStore>().DeleteAsync(row.StorageKey, ct);
-                    await service.CompleteCleanupAsync(row.Id, ct);
+                    await services.GetRequiredService<IFileStore>().DeleteAsync(row.StorageKey, token);
+                    await service.CompleteCleanupAsync(row.Id, token);
                 }
-                catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
-                catch (Exception exception) { LogFailure(logger, exception.GetType().Name); }
+                catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
+                catch (Exception exception) { ExceptionLog.Write(logger, "AssistantFileCleanup", exception); }
             }
         }
         // A durable filesystem journal closes crashes between the atomic store write and database commit.
@@ -59,18 +61,14 @@ internal sealed partial class AssistantRetentionWorker(IServiceScopeFactory scop
         {
             var maintenance = cleanupScope.ServiceProvider.GetRequiredService<IFileStoreMaintenance>();
             var files = cleanupScope.ServiceProvider.GetRequiredService<IFileStore>();
-            foreach (var key in await maintenance.ListUnconfirmedAsync("assistant", clock.GetUtcNow().UtcDateTime.AddHours(-24), ct))
+            foreach (var key in await maintenance.ListUnconfirmedAsync("assistant", Clock.GetUtcNow().UtcDateTime.Subtract(options.Value.UnconfirmedFileGrace), ct))
             {
                 var referenced = false;
-                foreach (var tenantId in tenantIds.Select(value => (Guid?)value).Prepend(null))
+                await using (var global = scopes.CreateAsyncScope()) await CheckScopeAsync(global.ServiceProvider, ct);
+                if (!referenced) await jobs.RunAsync(tenantIds, CheckScopeAsync, ct);
+                async Task CheckScopeAsync(IServiceProvider services, CancellationToken token)
                 {
-                    await using var readScope = scopes.CreateAsyncScope();
-                    using var tenantScope = tenantId is { } id ? readScope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(id) : null;
-                    if (await readScope.ServiceProvider.GetRequiredService<IAssistantRetentionRepository>().IsStorageReferencedAsync(key, ct))
-                    {
-                        referenced = true;
-                        break;
-                    }
+                    if (!referenced) referenced = await services.GetRequiredService<IAssistantRetentionRepository>().IsStorageReferencedAsync(key, token);
                 }
                 if (referenced) await maintenance.ConfirmAsync(key, "assistant", ct);
                 else await files.DeleteAsync(key, ct);
@@ -79,20 +77,6 @@ internal sealed partial class AssistantRetentionWorker(IServiceScopeFactory scop
         return total;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        if (System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name is "GetDocument.Insider") return;
-        using var timer = new PeriodicTimer(TimeSpan.FromMinutes(5), clock);
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            try { await RunOnceAsync(stoppingToken); }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
-            catch (Exception exception) { LogFailure(logger, exception.GetType().Name); }
-            try { if (!await timer.WaitForNextTickAsync(stoppingToken)) break; }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
-        }
-    }
+    protected override async Task RunIterationAsync(CancellationToken ct) => await RunOnceAsync(ct);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Assistant cleanup failed: {Failure}")]
-    private static partial void LogFailure(ILogger logger, string failure);
 }

@@ -92,9 +92,9 @@ public sealed class PlatformPermissionServiceTests
         public Task<Result> AcceptOperatorInvitationAsync(Guid userId, DateTime acceptedAtUtc,
             CancellationToken ct) => throw new NotSupportedException();
         public Task<Result> DiscardOperatorInvitationAsync(Guid userId, DateTime discardedAtUtc,
-            string deletedDisplayName, CancellationToken ct) => throw new NotSupportedException();
+            CancellationToken ct) => throw new NotSupportedException();
         public Task<Result> CancelDeletionAsync(Guid id, DateTime utc, CancellationToken ct) => throw new NotSupportedException();
-        public Task<Result> CompleteDeletionAsync(Guid id, DateTime utc, string name, CancellationToken ct) => throw new NotSupportedException();
+        public Task<Result> CompleteDeletionAsync(Guid id, DateTime utc, CancellationToken ct) => throw new NotSupportedException();
         public Task<Result> SuspendAsync(Guid id, CancellationToken ct) => throw new NotSupportedException();
         public Task<Result<UserStatus>> ReactivateAsync(Guid id, CancellationToken ct) => throw new NotSupportedException();
         public Task<UserAccountRow> CreateAsync(string? name, string culture, string zone, CancellationToken ct) => throw new NotSupportedException();

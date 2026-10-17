@@ -47,11 +47,7 @@ public static partial class OperationLog
         }
         catch (Exception exception)
         {
-            // Exception.Message can contain values from a request or an external provider.
-            if (logger.IsEnabled(LogLevel.Error))
-            {
-                LogException(logger, operation, exception.GetType().Name);
-            }
+            ExceptionLog.Write(logger, operation, exception);
 
             throw;
         }
@@ -67,6 +63,4 @@ public static partial class OperationLog
     [LoggerMessage(EventId = 102, Level = LogLevel.Warning, Message = "Failed {Operation}: {ErrorCode}")]
     private static partial void LogFailed(ILogger logger, string operation, string errorCode);
 
-    [LoggerMessage(EventId = 103, Level = LogLevel.Error, Message = "Failed {Operation}: {ExceptionType}")]
-    private static partial void LogException(ILogger logger, string operation, string exceptionType);
 }

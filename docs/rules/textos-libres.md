@@ -24,7 +24,7 @@
 - **Identidad (ADR 0046):** nombre y apellido opcionales de 100 cada uno (`TextLimits.FirstName` y `LastName`); `ApplicationUser` deriva y persiste el combinado `DisplayName`, de hasta 201 (`PersonDisplayName`). Las pantallas lo leen sin unir partes. Google sólo rellena vacíos desde sus dos claims verificadas; ajusta Unicode a cada límite sin cortar un rune. El nombre manual se valida sin recortarlo.
 - **Configuración EF:** `HasMaxLength(TextLimits.PersonName)` o la constante específica de cada parte/combinado, la misma que valida la identidad.
 - **Nombres:** después de `Clean`, el helper tipado de nombre colapsa espacios internos solo para `PersonName`, `OrganizationName` y `ShortName`. `Description` y `LongText` conservan los internos y sus saltos de línea.
-- **Front:** los largos llegan por OpenAPI (`maxLength`) y los usan los `zod` generados; no se escriben a mano.
+- **Front:** los largos llegan por OpenAPI (`maxLength`) y se generan como `validationConstraints` en `shared/api/generated/validation.ts` junto a los tipos HTTP; los formularios y sus schemas zod los consumen, sin escribirlos a mano.
 - **Unicidad de nombres:** el índice único compara el texto ya limpio, con la collation española (ver [persistencia-ef](persistencia-ef.md)).
 
 ## Prohibido

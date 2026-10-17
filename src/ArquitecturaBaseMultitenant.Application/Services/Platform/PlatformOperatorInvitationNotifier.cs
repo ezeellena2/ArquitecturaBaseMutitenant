@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -19,7 +20,7 @@ internal sealed class PlatformOperatorInvitationNotifier(IEnumerable<IAccountNot
     {
         var inviter = await users.GetByIdAsync(inviterId, ct)
             ?? throw new InvalidOperationException("The inviting operator must exist.");
-        var url = origin.Value is { } value ? new Uri(value, "/plataforma").AbsoluteUri : "/plataforma";
+        var url = origin.Absolute(ReturnUrls.PlatformPath);
         var channel = channels.FirstOrDefault(item => item.MethodType == LoginMethodType.Email)
             ?? throw new InvalidOperationException("The email notice channel is not registered.");
         await channel.EnqueueAsync(invitee.Id, invitee.Email.Value,

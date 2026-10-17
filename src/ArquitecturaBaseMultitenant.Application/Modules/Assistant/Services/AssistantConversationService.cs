@@ -83,6 +83,7 @@ internal sealed class AssistantConversationService(IAssistantConversationReader 
         OperationLog.RunAsync<AssistantTurnAdmission>(logger, clock, "AssistantConversationSend", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+            if (request.AttachmentIds!.Count > AssistantTechnicalLimits.MaxAttachments) return AssistantErrors.AttachmentTooMany;
             var prepared = await turns.PrepareAsync(id, cancellationToken);
             if (prepared.IsFailure) return prepared.Error;
             try { return await unitOfWork.ExecuteInTransactionAsync(ct => turns.AdmitAsync(id, request, prepared.Value, ct), CommitPolicy.OnSuccess, cancellationToken); }

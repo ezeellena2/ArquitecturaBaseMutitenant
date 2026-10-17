@@ -16,6 +16,8 @@ public static class AssistantModule
         services.AddSingleton<IPersistenceModelContributor, AssistantModelContributor>();
         services.AddScoped<IAssistantSettingsReader, AssistantSettingsReader>();
         services.AddScoped<IAssistantTurnRepository, AssistantTurnRepository>();
+        services.AddScoped<AssistantTurnStore, TenantAssistantTurnStore>();
+        services.AddScoped<AssistantTurnStore, PlatformAssistantTurnStore>();
         services.AddScoped<IAssistantChatContext, AssistantChatContext>();
         services.AddHostedService<AssistantTurnWorker>();
         services.AddScoped<IAssistantConversationReader, AssistantConversationReader>();
@@ -26,7 +28,7 @@ public static class AssistantModule
         services.AddScoped<IAssistantDurableRepository, AssistantDurableRepository>();
         services.AddScoped<IAssistantSnapshotRetentionRepository, AssistantSnapshotRetentionRepository>();
         services.AddHostedService<Retention.AssistantSnapshotRetentionWorker>();
-        services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Legal.IAccountDeletionParticipant, AssistantAccountDeletionParticipant>();
+        services.AddScoped<IAssistantAccountDeletionCleanupRepository, AssistantAccountDeletionCleanupRepository>();
         services.AddScoped<IPlatformAssistantConversationRepository, PlatformAssistantConversationRepository>();
         services.AddScoped<IAssistantSettingsRepository, AssistantSettingsRepository>();
         services.AddScoped<IAssistantModelRepository, AssistantModelRepository>();
@@ -34,20 +36,20 @@ public static class AssistantModule
         services.AddScoped<IAssistantFinanceRepository, AssistantFinanceRepository>();
         services.AddScoped<IAssistantBudgetAlertRepository, AssistantBudgetAlertRepository>();
         services.AddHostedService<AssistantBudgetAlertWorker>();
+        services.AddScoped<IAssistantBudgetEmailRenderer, Email.AssistantBudgetEmailRenderer>();
         services.AddScoped<IAssistantFinanceReader, AssistantFinanceReader>();
         services.AddScoped<IAssistantUsageReader, AssistantUsageReader>();
         services.AddSingleton<IAssistantProviderCatalog, AssistantProviderCatalog>();
         services.AddScoped<IAssistantKeyProtector, AssistantKeyProtector>();
         services.AddScoped<IChatClientFactory, AnthropicChatClientFactory>();
-        services.AddSingleton<AssistantFakeChatMetrics>();
         services.AddScoped<IAssistantAttachmentRepository, AssistantAttachmentRepository>();
         services.AddScoped<IAssistantAttachmentContentReader, AssistantAttachmentContentReader>();
         services.AddScoped<IAssistantExportRenderer, Export.AssistantExportRenderer>();
         services.AddScoped<IAssistantRetentionRepository, AssistantRetentionRepository>();
         services.AddHostedService<Retention.AssistantRetentionWorker>();
         services.AddSingleton<IValidateOptions<AssistantOptions>, AssistantOptionsValidator>();
-        services.AddSingleton<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Help.IHelpArticleReader,
-            ArquitecturaBaseMultitenant.Infrastructure.Help.RepositoryHelpArticleReader>();
+        services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Help.IHelpArticleReader,
+            Help.RepositoryHelpArticleReader>();
         services.AddScoped<IModuleDataSeedContributor, AssistantReferenceDataSeed>();
         return services;
     }

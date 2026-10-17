@@ -2,8 +2,10 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Time;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -77,10 +79,11 @@ internal static class AssistantQuotaFixture
                 select call.Cost.Amount).SumAsync(token);
             var cost = AssistantFileBridge.Usd(Math.Max(0m, budget.Amount * fraction - committed));
             operationId = Guid.NewGuid();
-            var operation = AssistantFinancialOperation.Create(operationId, binding, funding, day, limit, month.Id, budget,
-                AssistantFileBridge.Usd(0m), price, null, nowUtc);
+            // Los snapshots y Money son owned de cada fila; no se comparten con el catálogo ni entre agregados.
+            var operation = AssistantFinancialOperation.Create(operationId, binding, funding, day, limit, month.Id,
+                new Money(budget.Amount, budget.Currency), AssistantFileBridge.Usd(0m), AssistantPriceSnapshotBuilder.Copy(price), null, nowUtc);
             operation.MarkInvoked(); operation.Complete(nowUtc);
-            var callFixture = AssistantFinancialCall.Create(operationId, 1, false, price, 0, 0, cost);
+            var callFixture = AssistantFinancialCall.Create(operationId, 1, false, AssistantPriceSnapshotBuilder.Copy(price), 0, 0, cost);
             callFixture.ReplaceUsage(0, 0, 0, 0, 0, 0, null, true, cost);
             callFixture.FinalizeUsage();
             db.AddRange(operation, callFixture, AssistantUsageFact.Create(operation, callFixture));
@@ -90,7 +93,7 @@ internal static class AssistantQuotaFixture
                     var alert = await db.Set<AssistantBudgetAlert>().SingleOrDefaultAsync(row => row.MonthId == month.Id
                         && row.Funding == funding && row.Threshold == threshold, token);
                     if (alert is null) { alert = AssistantBudgetAlert.Create(binding.ScopeTenantId.Value, month.Id, funding, threshold,
-                        AssistantFileBridge.Usd(budget.Amount * fraction), budget); db.Add(alert); }
+                        AssistantFileBridge.Usd(budget.Amount * fraction), new Money(budget.Amount, budget.Currency)); db.Add(alert); }
                     alertIds.Add(alert.Id);
                 }
         }, ct);

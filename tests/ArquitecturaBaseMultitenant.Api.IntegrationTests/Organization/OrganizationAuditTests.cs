@@ -27,6 +27,97 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
+    public async Task Actor_options_are_paged_searchable_bounded_and_isolated_from_other_organizations()
+    {
+        using var client = Client();
+        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
+        var tag = "actors-" + Guid.NewGuid().ToString("N");
+        var tenant = await CreateBusinessAsync(tag, tag, owner.UserId);
+        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenant.Id);
+            var context = services.GetRequiredService<ApplicationDbContext>();
+            var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+            {
+                foreach (var index in Enumerable.Range(1, 25))
+                {
+                    var user = ApplicationUser.Create($"Actor {index:000}", "es-AR", "America/Argentina/Buenos_Aires", nowUtc).Value;
+                    context.AddRange(user, AuditEntry.Create(tenant.Id, AuditActorKind.User, user.Id, AuditAction.Updated,
+                        nameof(Member), Guid.NewGuid(), "{}", nowUtc));
+                }
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        var path = "/api/organization/audit/actors/paged?period=all&category=users";
+        using var firstResponse = await client.GetAsync(path, Ct);
+        Assert.Equal(HttpStatusCode.OK, firstResponse.StatusCode);
+        using var first = JsonDocument.Parse(await firstResponse.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(10, first.RootElement.GetProperty("items").GetArrayLength());
+        Assert.True(first.RootElement.GetProperty("hasNext").GetBoolean());
+        using var searchResponse = await client.GetAsync(path + "&search=025", Ct);
+        using var searched = JsonDocument.Parse(await searchResponse.Content.ReadAsStringAsync(Ct));
+        Assert.Equal("Actor 025", Assert.Single(searched.RootElement.GetProperty("items").EnumerateArray()).GetProperty("displayName").GetString());
+        using var legacyResponse = await client.GetAsync("/api/organization/audit/actors?period=all&category=users", Ct);
+        using var legacy = JsonDocument.Parse(await legacyResponse.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(10, legacy.RootElement.GetArrayLength());
+        using var otherClient = Client();
+        var otherOwner = await AccountJourney.RegisterAsync(factory, otherClient, Ct);
+        await CreateBusinessAsync("other " + tag, "other-" + tag, otherOwner.UserId);
+        await AccountJourney.AuthorizeAsync(otherClient, "business", Ct);
+        using var otherResponse = await otherClient.GetAsync(path + "&search=Actor", Ct);
+        using var other = JsonDocument.Parse(await otherResponse.Content.ReadAsStringAsync(Ct));
+        Assert.Empty(other.RootElement.GetProperty("items").EnumerateArray());
+        using var anonymous = Client();
+        using var denied = await anonymous.GetAsync(path, Ct);
+        Assert.Equal(HttpStatusCode.Unauthorized, denied.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("es-AR", "Cuenta eliminada")]
+    [InlineData("en-US", "Deleted account")]
+    public async Task Deleted_actor_and_affected_member_are_translated_on_read_without_storing_the_label(string culture, string label)
+    {
+        using var client = Client();
+        var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
+        var tenant = await CreateBusinessAsync("Auditoría baja " + culture, "auditoria-baja-" + culture.ToLowerInvariant(), owner.UserId);
+        await AccountJourney.AuthorizeAsync(client, "business", Ct);
+        Guid auditId;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenant.Id);
+            var context = services.GetRequiredService<ApplicationDbContext>();
+            var now = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+            var account = ApplicationUser.Create("Nombre a borrar", "es-AR", "America/Argentina/Buenos_Aires", now).Value;
+            Assert.True(account.RequestDeletion("Synthetic", now.AddDays(-31), 30).IsSuccess);
+            Assert.True(account.CompleteDeletion(now).IsSuccess);
+            Assert.Null(account.DisplayName);
+            var member = Member.Invite(account.Id);
+            var entry = AuditEntry.Create(tenant.Id, AuditActorKind.User, account.Id, AuditAction.Updated,
+                nameof(Member), member.Id, "{}", now);
+            auditId = entry.Id;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+            {
+                context.AddRange(account, member, entry);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        client.DefaultRequestHeaders.AcceptLanguage.ParseAdd(culture);
+        using var response = await client.GetAsync("/api/organization/audit?period=all&category=users&limit=50", Ct);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
+        var row = json.RootElement.GetProperty("items").EnumerateArray().Single(item => item.GetProperty("id").GetGuid() == auditId);
+        Assert.Equal(label, row.GetProperty("actorDisplayName").GetString());
+        Assert.Equal(label, row.GetProperty("affectedDisplayName").GetString());
+        using var actorsResponse = await client.GetAsync("/api/organization/audit/actors?period=all&category=users", Ct);
+        using var actors = JsonDocument.Parse(await actorsResponse.Content.ReadAsStringAsync(Ct));
+        Assert.Contains(actors.RootElement.EnumerateArray(), actor => actor.GetProperty("displayName").GetString() == label);
+    }
+
+    [Fact]
     public async Task Audit_returns_affected_person_and_company_for_role_changes()
     {
         using var ownerClient = Client();

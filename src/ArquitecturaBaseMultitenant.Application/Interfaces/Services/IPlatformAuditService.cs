@@ -14,4 +14,7 @@ public interface IPlatformAuditService
 
     Task<Result<IReadOnlyList<PlatformAuditOrganizationResponse>>> ListOrganizationsAsync(
         ListPlatformAuditRequest request, CancellationToken ct);
+
+    Task<Result<PagedResult<PlatformAuditOrganizationResponse>>> ListOrganizationsPagedAsync(
+        ListPlatformAuditOrganizationsRequest request, CancellationToken ct);
 }

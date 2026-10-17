@@ -22,11 +22,12 @@ public sealed record UpdateOrganizationUserHttpRequest(IReadOnlyCollection<Guid>
 
 public sealed record ChangeOrganizationUserStatusHttpRequest(bool? IsActive, uint? Version);
 
+/// <summary>Phone es el teléfono en E.164 de una invitación por teléfono (CC25); en esa fila Email viene null.</summary>
 public sealed record OrganizationUserHttpResponse(Guid MemberId, Guid? UserId, string DisplayName, string? Email,
     OrganizationUserState State, bool HasManagedEmail, IReadOnlyList<OrganizationUserRoleRow> Roles,
     IReadOnlyList<OrganizationUserCompanyRow> Companies, Guid? InvitationId,
     DateTime? InvitationIssuedAtUtc, DateTime? InvitationExpiresAtUtc, uint Version, DateTime CreatedAtUtc,
-    DateTime? DeletionScheduledForUtc);
+    DateTime? DeletionScheduledForUtc, string? Phone);
 
 public static class OrganizationUserHttpMappings
 {
@@ -58,5 +59,5 @@ public static class OrganizationUserHttpMappings
         response.MemberId, response.UserId, response.DisplayName, response.Email?.DisplayValue, response.State,
         response.HasManagedEmail, response.Roles, response.Companies, response.InvitationId,
         response.InvitationIssuedAtUtc, response.InvitationExpiresAtUtc, response.Version, response.CreatedAtUtc,
-        response.DeletionScheduledForUtc);
+        response.DeletionScheduledForUtc, response.Phone?.Value);
 }

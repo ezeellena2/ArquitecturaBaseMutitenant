@@ -1,6 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Application.Resources;
-using ArquitecturaBaseMultitenant.Domain.Common;
 using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Validation.Platform;
@@ -14,12 +13,6 @@ internal sealed class PublishLegalDocumentRequestValidator : AbstractValidator<P
             .IsInEnum().WithMessage(_ => ValidationTexts.FilterInvalid);
         RuleFor(request => request.EffectiveOn).NotNull().WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request.Contents).NotEmpty().WithMessage(_ => ValidationTexts.Required);
-        RuleForEach(request => request.Contents).ChildRules(content =>
-        {
-            content.RuleFor(item => item.Culture).NotEmpty().WithMessage(_ => ValidationTexts.Required);
-            content.RuleFor(item => item.Text).Cascade(CascadeMode.Stop)
-                .Must(text => !string.IsNullOrWhiteSpace(text)).WithMessage(_ => ValidationTexts.Required)
-                .MaximumLength(TextLimits.LegalDocument).WithMessage(_ => ValidationTexts.MaxLength);
-        });
+        RuleForEach(request => request.Contents).SetValidator(new LegalDocumentContentInputValidator());
     }
 }

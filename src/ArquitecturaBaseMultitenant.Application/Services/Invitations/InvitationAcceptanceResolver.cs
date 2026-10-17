@@ -37,8 +37,10 @@ internal sealed class InvitationAcceptanceResolver(IInvitationTokenProtector tok
             || !InvitationPreviewBuilder.HashEquals(row.TokenHash, hash)) return InvitationErrors.Invalid;
         if (row.Status == InvitationStatus.Accepted) return InvitationErrors.AlreadyUsed;
         if (row.Status == InvitationStatus.Revoked) return InvitationErrors.Invalid;
-        var owners = await lookup.FindVerifiedUsersByEmailAsync(row.Destination, ct);
+        var owners = await lookup.FindOwnersAsync(row.Destination, ct);
         if (owners.Count > 1) return InvitationErrors.WrongAccount;
+        // El enlace no prueba un teléfono: sin una cuenta con ese teléfono verificado, se entra con el código por WhatsApp.
+        if (row.Destination.IsPhone && owners.Count == 0) return InvitationErrors.SignInRequired;
         if (await validator.ValidateAsync(request with { RequiresRegistration = owners.Count == 0 }, ct) is { } invalid)
             return invalid;
         var continuation = token.Continuation;

@@ -99,7 +99,7 @@ public sealed class PlatformOperatorTests(ApiFactory factory)
                          "Si no esperabas este correo, podés ignorarlo. Sin el código, nadie puede entrar a tu cuenta.",
                      })
                 Assert.Contains(text, notice.TextBody, StringComparison.Ordinal);
-            Assert.Contains("/plataforma", notice.TextBody, StringComparison.Ordinal);
+            Assert.Contains("https://localhost:5174/plataforma", notice.TextBody, StringComparison.Ordinal);
             Assert.All(await db.OutboxMessages.AsNoTracking().Where(message => message.UserId == id)
                 .Select(message => message.Channel).ToArrayAsync(Ct), channel => Assert.Equal("email", channel));
         }

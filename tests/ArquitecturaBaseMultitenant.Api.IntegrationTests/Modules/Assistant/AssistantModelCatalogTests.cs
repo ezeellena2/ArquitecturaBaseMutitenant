@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.TestHost;
+using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantBrowser;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -71,7 +73,7 @@ public sealed class AssistantModelCatalogTests
             await factory.InitializeAsync();
             using var host = factory.WithWebHostBuilder(builder =>
             {
-                builder.UseSetting("Assistant:UseFakeChatClient", "true");
+                builder.UseSetting("Assistant:UseFakeChatClient", "true").ConfigureTestServices(AssistantFakeChatRegistration.Configure);
             });
             using var ownerClient = host.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
             var owner = await AccountJourney.RegisterAsync(host, ownerClient, AssistantTestData.Ct);

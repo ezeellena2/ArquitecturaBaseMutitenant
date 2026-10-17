@@ -35,7 +35,7 @@ public sealed partial class AccountDeletionTests
         await setup.DeleteAsync();
         var saved = await setup.ReadDealAsync(id);
         Assert.Equal(("Resumen de negocio", DealStatus.Confirmed), (saved.Summary, saved.Status));
-        Assert.Equal(ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName"), saved.ConsumerName);
+        Assert.Equal(FormattingTexts.DeletedAccount, saved.ConsumerName);
         var stored = await setup.StoredDealAsync(id);
         Assert.Null(stored.ConsumerName);
         Assert.True(stored.ConsumerCopyDeleted);
@@ -45,7 +45,7 @@ public sealed partial class AccountDeletionTests
         try
         {
             CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en");
-            Assert.Equal(ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName"), (await setup.ReadDealAsync(id)).ConsumerName);
+            Assert.Equal(FormattingTexts.DeletedAccount, (await setup.ReadDealAsync(id)).ConsumerName);
         }
         finally { CultureInfo.CurrentUICulture = previousCulture; }
     }
@@ -169,7 +169,7 @@ public sealed partial class AccountDeletionTests
         Assert.Null((await setup.ReadDealAsync(id)).ConsumerName);
         Assert.False((await setup.StoredDealAsync(id)).ConsumerCopyDeleted);
         await setup.DeleteAsync();
-        Assert.Equal(ErrorTexts.Get("Legal.AccountDeletion.DeletedDisplayName"), (await setup.ReadDealAsync(id)).ConsumerName);
+        Assert.Equal(FormattingTexts.DeletedAccount, (await setup.ReadDealAsync(id)).ConsumerName);
     }
 
     [Theory]

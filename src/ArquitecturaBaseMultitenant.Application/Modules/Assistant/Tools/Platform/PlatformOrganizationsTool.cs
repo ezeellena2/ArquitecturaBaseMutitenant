@@ -18,6 +18,6 @@ internal sealed class PlatformOrganizationsTool(AssistantAccessPolicy policy, IT
     protected override async Task<Result<AssistantToolData>> ExecuteCoreAsync(AssistantToolArguments args, CancellationToken ct)
     {
         var result = await tenants.ListAsync(new ListPlatformTenantsRequest { Status = args.EnumValue<TenantStatus>("status"), Page = args.Page, PageSize = args.PageSize }, ct);
-        return result.IsFailure ? result.Error : new AssistantQuickToolData(new AssistantOrganizationsQuickDataResponse([.. result.Value.Items.Take(20).Select(row => new AssistantOrganizationRowResponse(row.Id, row.Name, row.Status.ToString()))], result.Value.TotalCount, result.Value.HasNext));
+        return result.IsFailure ? result.Error : new AssistantQuickToolData(new AssistantOrganizationsQuickDataResponse([.. result.Value.Items.Take(AssistantTechnicalLimits.QuickRows).Select(row => new AssistantOrganizationRowResponse(row.Id, row.Name, row.Status.ToString()))], result.Value.TotalCount, result.Value.HasNext));
     }
 }

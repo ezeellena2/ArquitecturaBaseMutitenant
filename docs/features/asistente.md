@@ -146,9 +146,9 @@ Quick devuelve un resultado tipado: nueve variantes concretas de data, cada una 
 - Concurrencia: las versiones son uint/xmin; quick declara ResponseVersion(Conversation.Version), validada por la guarda neutral. No versiones manuales ni relectura después del commit.
 - Error 413: ErrorType.PayloadTooLarge y ValidationError con clasificación explícita conservan errors.file. Todos los códigos del módulo se traducen por IErrorTextSource; 429/503 con retryAfter también publican Retry-After.
 
-## Pendiente para Partes 2
+## Paginación y dinero
 
-T03–T09 completan configuración factual, reservas y replay privados, notice, cuotas y alertas, turnos/tools/provider, cancelación y recuperación, archivos/export/limpieza y sus pruebas de conducta. Los validadores de T01 publican reglas de entrada y se prueban dirigidamente; los stubs no simulan esa conducta ni datos de producto. T02 usa paginación local por fecha/Id: conversaciones descendentes, mensajes cronológicos con 50 por defecto, cursores ligados al acceso/tenant/dueño y filtro o conversación. La paginación neutral del núcleo conserva su contrato descendente; la propiedad se revalida en toda consulta.
+Los validadores publican las reglas de entrada y se prueban dirigidamente. La cantidad de adjuntos por mensaje la rechaza el servicio con `Assistant.Attachment.TooMany` sobre `attachmentIds`, antes de abrir la transacción. T02 usa paginación local por fecha/Id: conversaciones descendentes, mensajes cronológicos con 50 por defecto, cursores ligados al acceso/tenant/dueño y filtro o conversación. La paginación neutral del núcleo conserva su contrato descendente; la propiedad se revalida en toda consulta.
 
 T01 publica `AssistantMoney` como schema local cerrado `{amount:decimal,currency:ISO}` para todas las entradas/salidas monetarias, incluidas nullable; conserva `Money` y su converter de Domain y el schema E8 sin modificaciones. Las queries wire se publican camelCase con mes civil ASCII `YYYY-MM` (0001 a 9999), month/version requeridos, defaults de paginado y enums de formato/agrupación. Los ejemplos terminales representan `message.role=assistant`, estado Complete y valores nullable/enums válidos.
 
