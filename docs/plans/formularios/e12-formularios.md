@@ -16,7 +16,7 @@
 - **Publicación en WhatsApp:**
   - un Flow por versión, por idioma completo y por cuenta de WhatsApp Business (WABA);
   - operación durable, con sus estados visibles y la vista previa oficial de Meta.
-- **Envío desde el chat:** «Mandar formulario» en un chat de la bandeja Internos, con la sesión de 24 horas.
+- **Envío desde el chat:** «Enviar formulario» en un chat de la bandeja Internos, con la sesión de 24 horas.
 - **Recepción:**
   - el `nfm_reply` se convierte en una respuesta numerada (`VIS-000123`), sin duplicados;
   - en el chat aparece una tarjeta con los valores, o solo con el número si quien mira no puede ver respuestas.
@@ -42,7 +42,7 @@ Las de producto están en la hoja de ruta (§5) y no se vuelven a preguntar. Las
 | # | Decisión | Por qué |
 | --- | --- | --- |
 | T1 | `Forms` y `WhatsApp` se hablan solo por cuatro puertos neutrales del núcleo (§7). | `ModuleIsolationTests` prohíbe que un módulo use tipos de otro. |
-| T2 | **«Mandar formulario» es de WhatsApp.** La pantalla del chat, la ruta, la sesión y el mensaje van en el módulo WhatsApp, que lista los formularios con `IStructuredFormSource`. No hace falta el registro de acciones internas de la E11. | El que manda es el operador desde el chat, no el empleado con un comando. |
+| T2 | **«Enviar formulario» es de WhatsApp.** La pantalla del chat, la ruta, la sesión y el mensaje van en el módulo WhatsApp, que lista los formularios con `IStructuredFormSource`. No hace falta el registro de acciones internas de la E11. | El que manda es el operador desde el chat, no el empleado con un comando. |
 | T3 | El borrador usa `IVersioned` y 409 `General.ConcurrencyConflict`, sin recibos de cambios. | La edición es interna; ArquitecturaBase gastó días en recibos de 30 días que su ADR 0018 retiró. |
 | T4 | **Hay un solo worker de publicación, el de Forms.** Descubre trabajos en `platform.FormPublicationWorks`, entra con `ExecutionActor` y llama a las fases de `IFormPublicationService`. Fuera de toda UoW llama al canal, que coordina Meta con las fases de `IWhatsAppFlowPublicationService`; cada fase que escribe abre una sola UoW. | Un worker menos que en ArquitecturaBase. Copia la separación entre `AssistantTurnWorker` e `IAssistantTurnService`; ni el worker ni el adaptador neutral reciben `IUnitOfWork`. |
 | T5 | Los workers entran con `IExecutionActorFactory` e `IExecutionActorScope`, no con `ITenantScope.Enter` solo. | Con `Enter` solo, `IFeatureService` da `false`, porque `Enter` deja `TenantKind` en null (backlog #51). |
@@ -102,7 +102,7 @@ Las de producto están en la hoja de ruta (§5) y no se vuelven a preguntar. Las
 | Columna | Tipo | Regla |
 | --- | --- | --- |
 | `Id`, `TenantId`, `DefinitionId`, `VersionId` | uuid | `VersionId` es único |
-| `State` | texto | `Accepted`, `Preparing`, `Publishing`, `Unconfirmed`, `ActivationPending`, `Published`, `Failed` |
+| `State` | texto | `Accepted`, `Preparing`, `Publishing`, `Unconfirmed`, `NeedsReview`, `ActivationPending`, `Published`, `Failed` |
 | `ErrorCode`, `Issues` | texto?, jsonb? | lo que devolvió el canal |
 | `RequestedByUserId`, `RequestedAtUtc`, `CompletedAtUtc?` | — | — |
 | — | índice único filtrado | una sola publicación abierta por definición (`UniqueKeys.FormPublicationOpen`) |
@@ -168,7 +168,7 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | `VersionId`, `BindingId`, `Culture` | — | `VersionId` opaco; `Culture` es el idioma fijado al mandar (T10) |
 | `TokenHash` | texto 64 | único; el token viaja como `flow_token` y no se guarda |
 | `ExpiresAtUtc` | timestamptz | se crea + `WhatsApp:FlowSessionHours` (24 por defecto, de 1 a 168) |
-| `State` | texto | `Pending`, `Completed`, `Rejected`, `Expired` |
+| `State` | texto | `Pending`, `Completed`, `Rejected`, `Expired`. «Venció sin respuesta» se calcula al leer (`Pending` con `ExpiresAtUtc` pasado), sin worker |
 | `RecordId`, `RecordNumber`, `ErrorCode` | — | resultado de Forms |
 | `ResponseMessageId` | uuid? | único; el mensaje entrante **[E11]** |
 
@@ -300,15 +300,15 @@ Todas las rutas Business llevan `[Access(Access.Business)]` y `[FeatureGate("for
    - **Si se cae a mitad:** la reserva vuelve a tomar el trabajo, y el canal, al ver un `InFlight`, verifica en vez de repetir.
 5. **Vista previa:** `IStructuredFormChannel.GetPreviewAsync(versionId, culture)` devuelve la URL de Meta con su vencimiento, sin guardar nada.
 6. **Mandar desde el chat** (módulo WhatsApp).
-   - **Ubicación:** en escritorio, el botón «Formulario» junto al compositor; en el teléfono, la opción «Mandar formulario» en el ⋮ del chat. Ambos abren el mismo diálogo. Si la acción no aplica al acceso, bandeja o permiso, no se muestra.
+   - **Ubicación:** en escritorio, el botón «Enviar formulario» al lado de «Enviar»; en el teléfono, la opción «Enviar formulario» en el ⋮ del chat. Ambos abren el mismo diálogo. Si la acción no aplica al acceso, bandeja o permiso, no se muestra.
    - **Cuándo se puede usar:**
      - el chat es de la bandeja Internos y quien escribe es miembro activo **[E11]**;
      - el operador tiene «Atender internos»;
      - la ventana de 24 horas está abierta;
      - el número está disponible;
-     - no hay otro envío pendiente;
+     - no hay otro envío pendiente ni sin confirmar (ya no bloquea que haya otro formulario sin responder);
      - `IStructuredFormSource.ListSendableAsync(recipientUserId, culture)` devuelve al menos un formulario. Forms filtra los publicados que quien recibe puede responder (`formrecords.create`).
-   - **Si no se puede usar por un impedimento resoluble:** queda apagado. En escritorio, el motivo se abre desde el ⓘ junto al botón; en el ⋮ del teléfono, va debajo de «Mandar formulario», en gris, según la decisión del 2026-10-13 de `docs/rules/pantallas-y-ui.md` del front.
+   - **Si no se puede usar por un impedimento resoluble:** queda apagado. En escritorio, el motivo se abre desde el ⓘ junto al botón; en el ⋮ del teléfono, va debajo de «Enviar formulario», en gris, según la decisión del 2026-10-13 de `docs/rules/pantallas-y-ui.md` del front.
    - **Mandar:**
      - afuera de la UoW se valida el texto (≤1024) y se lee el formulario elegido con `FindSendableAsync`, que decide el idioma (T10): el de la cuenta de quien recibe si la versión lo tiene completo, y si no, el original. Todo el mensaje y el Flow salen en ese idioma;
      - en la UoW: bloqueo de la conversación, se revalidan ventana, empleado y envío pendiente, se toma el chat si no estaba tomado (regla de la E11), se crea la sesión (token aleatorio de 32 bytes; se guarda solo el hash) y se encola el mensaje interactivo de tipo Flow por el outbox (`WhatsAppOutboundMessage` con su variante nueva).
@@ -421,49 +421,57 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 | `F/src/modules/forms/{api,components,hooks,pages}/`, `errors.ts` | `F/src/modules/assistant/` |
 | `F/src/modules/forms/locales/{es,en}/forms.json` y `enums.json` | `F/src/modules/assistant/locales/{es,en}/assistant.json` y `enums.json`; importados por la registration del módulo |
 | `F/src/app/moduleComposition.ts`: suma `formsRegistration` | la línea del Asistente |
-| WhatsApp **[E11]**: el diálogo «Mandar formulario» y la tarjeta de respuesta, en el módulo de WhatsApp del front que deje la E11 | — |
+| WhatsApp **[E11]**: el diálogo «Enviar formulario» y la tarjeta de respuesta, en el módulo de WhatsApp del front que deje la E11 | — |
 
 **Punteros:** cada carpeta nueva lleva su `AGENTS.md` de una a tres líneas («qué va acá · Leé ficha · Copiá de archivo») y un `CLAUDE.md` con `@AGENTS.md`, más su fila en `docs/architecture/arbol.md`. **Se crean con la carpeta, en la E12, no antes** (`HarnessTests`). Al cerrar la etapa nacen `docs/features/formularios.md` y la fila de Forms en «Dónde va cada cosa» de `AGENTS.md`.
 
-## 9. Pantallas (tableros para el chat de Diseño)
+## 9. Pantallas (tableros)
 
-**Se rehacen** (decisión 18 de la hoja de ruta, 2026-10-17). Diseño los dibuja con la disposición de ArquitecturaBase (sus tableros A–E, P1–P3, C1–C5 y R1–R3, y el [05 del traspaso](../2026-10-17-formularios-traspaso/05-pantallas.md)), con las piezas y los criterios de nuestro lienzo y sin alternativas. Lo que más cambia:
-- **el editor es una sola pantalla, sin pestañas,** en dos columnas:
-  - a la izquierda, «Textos en», «El formulario» y «Preguntas», en filas plegables;
-  - a la derecha, la vista previa en un marco de celular;
-- **las acciones,** en este orden: Descartar, Guardar borrador, Publicar en WhatsApp y Ver vista oficial;
-- **«Textos en»** alterna entre el idioma original y la traducción opcional. La traducción incompleta no bloquea publicar (decisión 17).
+**Aprobados y publicados en el lienzo v128** (2026-10-17, front `05fd5444`), página «Organización · Formularios». Siguen la disposición de ArquitecturaBase (decisión 18), con las decisiones en «Criterio · Decisiones por pantalla», grupo «E12 · Formularios con la disposición de ArquitecturaBase». Los tableros del 13/10 y las copias `-v127` quedan en la página «Archivo», solo de referencia.
 
-Si la disposición choca con una regla escrita de este repo, manda la de acá. La tabla de abajo y los tableros de la v122 valen hasta que Diseño publique los nuevos y esta sección los anote.
+| Tablero | Qué muestra |
+| --- | --- |
+| `FRM-Listado` y `M-FRM-Listado` | «Diseñar formularios»: tabla con Formulario, Preguntas, En WhatsApp y Último cambio. El nombre abre el editor, sin columna de acciones. Filtro «Estado ▾». «Nuevo formulario ▾» con «Desde cero» y «Desde una plantilla» (esta, con la E17) |
+| `FRM-Editor` y `M-FRM-Editor` | el editor en una sola pantalla (reemplaza a `FRM-Ficha`, `FRM-Ingles`, `FRM-Pregunta`, `FRM-Prefijo` y `FRM-Nuevo`): <ul><li>«Textos en: Español · original \| English · N sin traducir»;</li><li>el formulario (nombre, texto del botón final y prefijo);</li><li>las preguntas, que se abren en el lugar, con ⋮ (Editar, Subir, Bajar y Quitar);</li><li>«Así lo ve el empleado» al costado.</li></ul>En el teléfono, la pregunta se edita en una hoja y los botones van fijos abajo |
+| `FRM-Publicar` | «Publicar la versión N en WhatsApp»: qué cambia, en qué idioma sale, qué queda fijo y qué va a pasar |
+| `FRM-Publicando` | cómo termina, arriba del editor, con los pasos Aceptada, Enviada a WhatsApp, WhatsApp la revisa y Lista para mandar. Al costado, la vista oficial con «Borrador \| Versión N en WhatsApp» |
+| `WA-Chats-Formulario` y `M-WA-Chats-Formulario` | «Enviar formulario» al lado de «Enviar» en Internos (en el teléfono, en el ⋮ del chat). El diálogo «Enviar un formulario a …» tiene: <ul><li>tarjetas con «Versión N · K preguntas», con buscador y paginado si son muchos;</li><li>el idioma de la cuenta;</li><li>el mensaje prellenado, de hasta 1024 caracteres;</li><li>hasta cuándo se puede mandar.</li></ul>También tiene los tres avisos de catálogo de la E13 |
+| `WA-Chats-Respuesta` y `M-WA-Conversacion-Respuesta` | la tarjeta con las primeras 3 respuestas en grilla, «Ver las N respuestas» (en el teléfono, en una hoja) y «Guardada como VIS-000123» |
+| `Rol` y la ficha de la organización | los cinco permisos y el módulo |
 
-Los tableros nuevos llevan el prefijo `FRM-`, como `WA-` en WhatsApp, para no confundirlos con `Criterio-Formularios`, que trata de los campos de un formulario de pantalla. El texto para el chat de Diseño está en [e12-texto-diseno.md](e12-texto-diseno.md).
-
-| Tablero | Qué muestra | Estados |
-| --- | --- | --- |
-| `FRM-Listado` y `M-FRM-Listado` | listado: nombre, prefijo, estado y última publicación; ⋮; «Nuevo formulario» | vacío, sin resultados, cargando, error; filtro Todos, Publicados y Borradores |
-| `FRM-Nuevo` | diálogo con el nombre | prefijo propuesto |
-| `FRM-Ficha` y `M-FRM-Ficha` | el editor (se rehace como una sola pantalla, ver arriba): preguntas, «Textos en» con el original y la traducción, vista previa del teléfono, versión activa, estado y vista previa oficial | guardado, guardando, no se guardó, conflicto (409), traducción incompleta (aviso, no bloquea) |
-| `FRM-Pregunta` y `M-FRM-Pregunta` | tipo, texto y ayuda en el idioma que muestra «Textos en», obligatoria, largo máximo, decimales u opciones | cada uno de los seis tipos |
-| `FRM-Prefijo` | el prefijo en la ficha | propuesto, editado, tomado, bloqueado |
-| `FRM-Publicar` | diálogo de comprobación: problemas por pregunta, versión nueva y cambios | sin problemas, con problemas, borrador sin guardar, otra publicación en curso, WhatsApp no disponible |
-| `FRM-Publicacion` | el estado en la pestaña Publicación | Publicando, Sin confirmar, Publicada vN, No se pudo publicar (con el motivo por pregunta) |
-| `WA-Chats-Formulario` y `M-WA-Chats-Formulario` | en Internos: botón «Formulario» junto al compositor en escritorio y «Mandar formulario» en el ⋮ del teléfono; diálogo para elegir, texto (≤1024) y vista del mensaje | apagado por un impedimento resoluble (ventana cerrada, no es empleado, sin formularios, envío pendiente): motivo en ⓘ en escritorio y debajo de la opción, en gris, en teléfono; mandando, encolado, falló |
-| `WA-Chats-Respuesta` y `M-WA-Conversacion-Respuesta` | la tarjeta de respuesta en el chat | esperando, recibida con número y valores, recibida solo con número (sin permiso), rechazada, vencida; los seis tipos sin perder «No», «0», «Sin respuesta» ni los decimales |
-| `Rol` | el área «Formularios» con sus cinco permisos | ya existe: solo suma filas |
-
-**Dibujados en el lienzo v122** (2026-10-13), con las decisiones del usuario en «Criterio · Decisiones por pantalla» (E12). Los tableros son:
-- `FRM-Listado`, `FRM-Nuevo`, `FRM-Ficha`, `FRM-Ingles`, `FRM-Pregunta`, `FRM-Prefijo`, `FRM-Publicar` y `FRM-Publicacion`;
-- `WA-Chats-Formulario` y `WA-Chats-Respuesta`;
-- los teléfonos `M-FRM-Listado`, `M-FRM-Ficha`, `M-FRM-Pregunta`, `M-WA-Chats-Formulario` y `M-WA-Conversacion-Respuesta`;
-- los ajustes del menú, de Rol y de la ficha de una organización.
+**Estados que dibujan** (cada uno tiene que poder producirse; si no, es un bug):
+- **Editor:**
+  - guardar, no se guardó (lo escrito se conserva) y guardado sin confirmar con «Consultar guardado»;
+  - otra persona guardó, con «Qué cambió \| Guardado actualmente \| Mis cambios»;
+  - prefijo ocupado, quitar una pregunta, cambiar el tipo y descartar;
+  - solo lectura, cargando y no existe.
+- **Publicar:**
+  - primera publicación y los dos idiomas;
+  - comprobando y primero guardá;
+  - una pregunta que no se puede mostrar, con el botón apagado;
+  - la comprobación venció, cambió después de comprobar y ya se está publicando.
+- **Cómo termina:** publicado; rechazada con «Ir a la pregunta»; sin confirmar con «Consultar ahora» (nunca «Reintentar»); necesita revisión.
+- **Enviar:**
+  - En cola, Leído, y No se pudo mandar (con ⓘ, sin reintento);
+  - Envío sin confirmar con «Ya lo revisé», que pide confirmación;
+  - pedido incierto con «Consultar envío»;
+  - con el diálogo abierto, ventana cerrada y formulario que ya no está.
+- **Respuesta:**
+  - guardando, no se pudo guardar, no reconocida, sin permiso y respondió en inglés;
+  - el mensaje ya no está;
+  - un valor de catálogo, y una opción dada de baja con «Mandar de nuevo»;
+  - venció sin respuesta.
 
 **Mandan sobre esta spec en:**
-- **Menú:** «Formularios» va en el menú principal, debajo de WhatsApp.
-- **«Nuevo formulario»:** pide solo el nombre. El prefijo propuesto se ve y se edita en la caja «Datos» de la ficha, junto con el nombre, y se guarda con el borrador.
-- **Guardado:** a mano («Guardar cambios» y «Descartar cambios»).
-- **Preguntas:** el ⋮ de cada una trae Editar, Subir, Bajar y Quitar.
-- **Estado de la publicación:** una palabra corta con ⓘ.
-- **Teléfono:** se edita todo, como app.
+- **Textos:** el editor se llama «Diseñar formularios», y la acción del chat es «Enviar formulario» (no «Mandar formulario»).
+- **Idioma:** solo el original es obligatorio, y la traducción nunca frena publicar (decisión 17).
+- **Envío pendiente:** un envío pendiente **o sin confirmar** bloquea el chat (`WhatsApp.Chat.SendPending`). Ya no bloquea que haya otro formulario sin responder.
+- **Envío sin confirmar:** lo resuelve una persona con «Ya lo revisé»: «salió» o «no salió», atribuido y durable, como en la §16. Al «pedido incierto», un error de red al pedir el envío, lo resuelve «Consultar envío»: repite el `POST` con la misma `Idempotency-Key` y recibe el resultado guardado.
+- **«Guardado sin confirmar» y «Consultar guardado»,** sin recibos (T3): «Consultar» vuelve a leer el borrador. Si lo guardado es igual a lo que la persona mandó, quedó guardado; si no, se ve la revisión de «otra persona guardó». Un error de red o un 5xx reintenta con la misma versión, y solo un 409 pide revisar.
+- **«La comprobación venció»,** sin ticket del servidor (T8): el diálogo pide comprobar de nuevo si pasaron más de 10 minutos desde la última comprobación. «Cambió después de comprobar» es el 409 de versión al publicar.
+- **«Necesita revisión»:** `FormPublication` suma el estado `NeedsReview`. Es para cuando Meta no confirmó la creación de un Flow y la consulta no puede saber si existe (un Create sin id no se adopta por nombre). Una persona con `forms.publish` lo mira en Meta y lo resuelve.
+- **«No reconocida»:** una respuesta de Flow que no corresponde a ninguna sesión se muestra en el chat como un mensaje sin valores y no crea nada en Forms.
+- **«Venció sin respuesta»:** se calcula al leer: la sesión sigue `Pending` y ya pasó `ExpiresAtUtc`. `Expired` queda para una respuesta que llegó tarde.
 
 ## 10. Tests
 
