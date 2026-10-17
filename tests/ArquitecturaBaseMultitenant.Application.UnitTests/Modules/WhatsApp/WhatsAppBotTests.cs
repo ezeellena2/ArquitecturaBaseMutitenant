@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using Microsoft.Extensions.Time.Testing;
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Modules.WhatsApp;
+
 public sealed class WhatsAppBotTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

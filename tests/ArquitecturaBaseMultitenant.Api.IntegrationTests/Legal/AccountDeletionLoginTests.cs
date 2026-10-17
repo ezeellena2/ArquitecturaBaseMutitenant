@@ -30,9 +30,9 @@ public sealed class AccountDeletionLoginTests(ApiFactory factory)
     public async Task A_proof_from_another_account_cannot_cancel_the_requested_account_or_change_its_return()
     {
         using var provedClient = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         using var otherClient = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var proved = await AccountJourney.RegisterAsync(factory, provedClient, Ct);
         var other = await AccountJourney.RegisterAsync(factory, otherClient, Ct);
         await using var scope = factory.Services.CreateAsyncScope();
@@ -75,7 +75,7 @@ public sealed class AccountDeletionLoginTests(ApiFactory factory)
             services.AddSingleton<TimeProvider>(clock);
         }));
         using var client = host.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
         clock.Advance(TimeSpan.FromMinutes(2));
         using (var deletion = await AccountJourney.PostAsync(client, "/api/me/deletion", new { reason = "Prueba de gracia" }, Ct))
@@ -113,7 +113,7 @@ public sealed class AccountDeletionLoginTests(ApiFactory factory)
     public async Task Cancellation_uses_the_proved_account_and_return_door_and_rejects_replay(string access)
     {
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
         if (access == "platform")
             await PlatformOperators.GrantAsync(factory.Services, account.UserId, PlatformOperators.All, Ct);
@@ -161,7 +161,7 @@ public sealed class AccountDeletionLoginTests(ApiFactory factory)
     public async Task Cancellation_rejects_expired_ticket_or_expired_grace_without_changing_state(bool expiredTicket)
     {
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
         await using var scope = factory.Services.CreateAsyncScope();
         var services = scope.ServiceProvider;

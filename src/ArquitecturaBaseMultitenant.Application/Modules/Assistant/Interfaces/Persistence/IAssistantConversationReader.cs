@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Domain.Users;
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
+
 public interface IAssistantConversationReader
 {
     Task<AssistantConversationSummaryResponse?> FindByIdAsync(Guid ownerUserId, Access access, Guid conversationId, CancellationToken ct);

@@ -60,7 +60,7 @@ public sealed class AccountDeletionParticipantsTests(ApiFactory factory)
     public async Task Current_participants_clean_only_the_account_data_and_can_run_twice()
     {
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         client.DefaultRequestHeaders.UserAgent.ParseAdd("AccountDeletionTest/1.0");
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
         await using var scope = factory.Services.CreateAsyncScope();

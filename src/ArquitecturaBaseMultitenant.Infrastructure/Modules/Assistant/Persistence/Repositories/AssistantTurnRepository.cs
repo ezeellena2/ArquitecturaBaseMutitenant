@@ -24,7 +24,7 @@ internal sealed class AssistantTurnRepository(ApplicationDbContext db, IEnumerab
             .Where(row => row.Status == AssistantTurnStatus.Pending || row.Status == AssistantTurnStatus.Running && row.LeaseExpiresAtUtc <= nowUtc)
             .OrderBy(row => row.CreatedAtUtc).Take(32)
             .Select(row => new AssistantTurnDiscovery(row.Id, new ExecutionActor(row.OwnerUserId, row.Access, row.ScopeTenantId, row.Culture, row.TimeZoneId)
-                { TenantKind = row.TenantKind, SessionStartedAtUtc = row.SessionStartedAtUtc })).ToArrayAsync(ct);
+            { TenantKind = row.TenantKind, SessionStartedAtUtc = row.SessionStartedAtUtc })).ToArrayAsync(ct);
 
     public async Task<AssistantTurnWork?> GetWorkAsync(Guid id, bool forUpdate, CancellationToken ct)
     {

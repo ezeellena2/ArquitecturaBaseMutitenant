@@ -75,10 +75,15 @@ internal sealed class WhatsAppTemplateReader(ApplicationDbContext context, ITena
     private static IQueryable<TemplateProjection> Project<T>(IQueryable<T> templates, IQueryable<WhatsAppTemplateState> states) where T : WhatsAppTemplateBase =>
         templates.Select(template => new TemplateProjection
         {
-            Id = template.Id, Name = template.Name, MetaName = template.MetaName, Language = template.Language, MetaLanguage = template.MetaLanguage,
+            Id = template.Id,
+            Name = template.Name,
+            MetaName = template.MetaName,
+            Language = template.Language,
+            MetaLanguage = template.MetaLanguage,
             Category = states.Where(state => state.MetaName == template.MetaName && state.MetaLanguage == template.MetaLanguage)
                 .OrderBy(state => state.WabaId).Select(state => (WhatsAppTemplateCategory?)state.Category).FirstOrDefault() ?? template.Category,
-            Body = template.Body, Variables = EF.Property<List<WhatsAppTemplateVariable>>(template, "_variables"),
+            Body = template.Body,
+            Variables = EF.Property<List<WhatsAppTemplateVariable>>(template, "_variables"),
             Status = states.Any(state => state.MetaName == template.MetaName && state.MetaLanguage == template.MetaLanguage
                     && state.Status == WhatsAppTemplateStatus.Rejected) ? WhatsAppTemplateStatus.Rejected
                 : states.Any(state => state.MetaName == template.MetaName && state.MetaLanguage == template.MetaLanguage

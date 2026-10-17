@@ -32,8 +32,11 @@ internal sealed class PlatformAuthenticatorSetupWriter(IPlatformFactorRepository
     internal async Task<Result> ConfigureAsync(PlatformFactorChallenge challenge, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(challenge);
-        if (challenge is not { Step: PlatformFactorStep.RecoveryCodes, ProtectedSecret: { } secret,
-                ProtectedRecoveryCodes: { } codes, AcceptedTimeStep: { } acceptedTimeStep }
+        if (challenge is not
+            {
+                Step: PlatformFactorStep.RecoveryCodes, ProtectedSecret: { } secret,
+                ProtectedRecoveryCodes: { } codes, AcceptedTimeStep: { } acceptedTimeStep
+            }
             || await factors.GetAuthenticatorAsync(challenge.UserId, ct) is not null)
             return TwoFactorErrors.InvalidState;
         var nowUtc = clock.GetUtcNow().UtcDateTime;

@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
+
 public interface IWhatsAppMessageRepository
 {
     Task LockStreamAsync(string phoneNumberId, string wamid, CancellationToken ct);

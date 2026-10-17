@@ -356,7 +356,8 @@ public sealed class PlatformOperatorTests(ApiFactory factory)
 
         using var changed = await SendAsync(manager, HttpMethod.Put, path, new
         {
-            version, reason = "Suma la auditoría",
+            version,
+            reason = "Suma la auditoría",
             permissions = new[] { PlatformPermissions.Tenants.Read, PlatformPermissions.Audit.Read },
         }, Guid.NewGuid().ToString("D"));
         var changedVersion = await SavedVersion.ReadAsync(changed, Ct);
@@ -367,13 +368,16 @@ public sealed class PlatformOperatorTests(ApiFactory factory)
             detail.GetProperty("operatorPermissions").EnumerateArray().Select(item => item.GetString()).ToArray());
         using var stale = await SendAsync(manager, HttpMethod.Put, path, new
         {
-            version, reason = "Otra vez", permissions = new[] { PlatformPermissions.Tenants.Read },
+            version,
+            reason = "Otra vez",
+            permissions = new[] { PlatformPermissions.Tenants.Read },
         }, Guid.NewGuid().ToString("D"));
         Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
         using var own = await SendAsync(manager, HttpMethod.Put, $"/api/platform/accounts/{managerId:D}/operator", new
         {
             version = (await DetailAsync(manager, managerId)).GetProperty("operatorVersion").GetUInt32(),
-            reason = "Me saco permisos", permissions = new[] { PlatformPermissions.Tenants.Read },
+            reason = "Me saco permisos",
+            permissions = new[] { PlatformPermissions.Tenants.Read },
         }, Guid.NewGuid().ToString("D"));
         Assert.Equal(HttpStatusCode.Forbidden, own.StatusCode);
         Assert.Equal(UserErrors.CannotModifySelfCode, (await JsonAsync(own)).GetProperty("code").GetString());
@@ -381,7 +385,8 @@ public sealed class PlatformOperatorTests(ApiFactory factory)
         // Quitarlo sale con la versión que respondió el cambio de permisos, sin releer.
         using var removed = await SendAsync(manager, HttpMethod.Delete, path, new
         {
-            version = changedVersion, reason = "Dejó el equipo",
+            version = changedVersion,
+            reason = "Dejó el equipo",
         }, Guid.NewGuid().ToString("D"));
         Assert.Equal(HttpStatusCode.NoContent, removed.StatusCode);
         var after = await DetailAsync(manager, id);
@@ -479,9 +484,10 @@ public sealed class PlatformOperatorTests(ApiFactory factory)
         var key = Guid.NewGuid().ToString("D");
         Assert.Equal((HttpStatusCode.Forbidden, "Auth.Platform.ReauthenticationRequired"), await ResetAsync(manager, targetId, version, key));
         using (var proof = await SendAsync(manager, HttpMethod.Post, "/api/platform/reauthentication", new
-               {
-                   method = "authenticator", code = await PlatformFactorJourney.CurrentCodeAsync(factory.Services, managerId, Ct),
-               }, Guid.NewGuid().ToString("D")))
+        {
+            method = "authenticator",
+            code = await PlatformFactorJourney.CurrentCodeAsync(factory.Services, managerId, Ct),
+        }, Guid.NewGuid().ToString("D")))
             Assert.Equal(HttpStatusCode.OK, proof.StatusCode);
         Assert.Equal(HttpStatusCode.OK, (await ResetAsync(manager, targetId, version, key)).Status);
     }

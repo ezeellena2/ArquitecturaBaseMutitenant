@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persi
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Persistence.Repositories;
+
 internal sealed class PlatformAssistantConversationRepository(ApplicationDbContext context) : IPlatformAssistantConversationRepository
 {
     public void Add(PlatformAssistantConversation conversation) => context.Set<PlatformAssistantConversation>().Add(conversation);

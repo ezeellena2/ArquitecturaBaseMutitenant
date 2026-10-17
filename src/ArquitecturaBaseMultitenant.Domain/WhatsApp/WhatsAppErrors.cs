@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Domain.Results;
 namespace ArquitecturaBaseMultitenant.Domain.WhatsApp;
+
 public static class WhatsAppErrors
 {
     public const string CountryNotAllowedCode = "WhatsApp.Phone.CountryNotAllowed";

@@ -9,8 +9,11 @@ public sealed record OrganizationDomainListHttpQuery(int? Page, int? PageSize, s
 {
     public ListOrganizationDomainsRequest ToModel() => new()
     {
-        Page = Page ?? PagedRequest.DefaultPage, PageSize = PageSize ?? PagedRequest.DefaultPageSize,
-        Sort = Sort, Search = Search, Status = Status,
+        Page = Page ?? PagedRequest.DefaultPage,
+        PageSize = PageSize ?? PagedRequest.DefaultPageSize,
+        Sort = Sort,
+        Search = Search,
+        Status = Status,
     };
 }
 

@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Configuration;
 using Microsoft.Extensions.Options;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Persistence.Readers;
+
 internal sealed class AssistantSettingsReader(ApplicationDbContext context, ITenantContext tenant, IOptions<AssistantOptions> options) : IAssistantSettingsReader
 {
     public Task<bool> IsPersonalEnabledAsync(CancellationToken ct) => context.Set<AssistantPlatformSettings>().AsNoTracking().AnyAsync(value => value.Id == AssistantPlatformSettings.SingletonId && value.PersonalEnabled, ct);

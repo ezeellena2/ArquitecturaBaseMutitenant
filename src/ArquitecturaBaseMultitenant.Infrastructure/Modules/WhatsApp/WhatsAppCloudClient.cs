@@ -51,10 +51,13 @@ internal sealed class WhatsAppCloudClient(HttpClient client, IOptions<WhatsAppOp
                 value.TryGetInt32(out code);
             var safeCode = code switch
             {
-                131030 => "WhatsApp.Send.RecipientNotAllowed", 131047 => "WhatsApp.Send.WindowExpired",
+                131030 => "WhatsApp.Send.RecipientNotAllowed",
+                131047 => "WhatsApp.Send.WindowExpired",
                 131042 => "WhatsApp.Send.PaymentRequired",
-                131026 => "WhatsApp.Send.Undeliverable", 131056 or 130429 => "WhatsApp.Send.RateLimited",
-                190 => "WhatsApp.Send.Credentials", 3 or 10 or >= 200 and <= 299 => "WhatsApp.Send.Permissions",
+                131026 => "WhatsApp.Send.Undeliverable",
+                131056 or 130429 => "WhatsApp.Send.RateLimited",
+                190 => "WhatsApp.Send.Credentials",
+                3 or 10 or >= 200 and <= 299 => "WhatsApp.Send.Permissions",
                 _ => "WhatsApp.Send.Rejected",
             };
             return OutboxDeliveryReceipt.Rejected(safeCode, code is 131056 or 130429 || response.StatusCode is HttpStatusCode.TooManyRequests
@@ -80,15 +83,29 @@ internal sealed class WhatsAppCloudClient(HttpClient client, IOptions<WhatsAppOp
             };
             if (message.Footer is not null) interactive["footer"] = new System.Text.Json.Nodes.JsonObject { ["text"] = message.Footer };
             interactive["action"] = message.LinkUrl is not null
-                ? new System.Text.Json.Nodes.JsonObject { ["name"] = "cta_url", ["parameters"] = new System.Text.Json.Nodes.JsonObject
-                    { ["display_text"] = message.LinkLabel, ["url"] = message.LinkUrl } }
+                ? new System.Text.Json.Nodes.JsonObject
+                {
+                    ["name"] = "cta_url",
+                    ["parameters"] = new System.Text.Json.Nodes.JsonObject
+                    { ["display_text"] = message.LinkLabel, ["url"] = message.LinkUrl }
+                }
                 : message.ListRows is { } rows
-                ? new System.Text.Json.Nodes.JsonObject { ["button"] = message.ListButton, ["sections"] = new System.Text.Json.Nodes.JsonArray(
-                    new System.Text.Json.Nodes.JsonObject { ["rows"] = new System.Text.Json.Nodes.JsonArray([.. rows.Select(row =>
-                        (System.Text.Json.Nodes.JsonNode)new System.Text.Json.Nodes.JsonObject { ["id"] = row.Id, ["title"] = row.Title })]) }) }
-                : new System.Text.Json.Nodes.JsonObject { ["buttons"] = new System.Text.Json.Nodes.JsonArray(
+                ? new System.Text.Json.Nodes.JsonObject
+                {
+                    ["button"] = message.ListButton,
+                    ["sections"] = new System.Text.Json.Nodes.JsonArray(
+                    new System.Text.Json.Nodes.JsonObject
+                    {
+                        ["rows"] = new System.Text.Json.Nodes.JsonArray([.. rows.Select(row =>
+                        (System.Text.Json.Nodes.JsonNode)new System.Text.Json.Nodes.JsonObject { ["id"] = row.Id, ["title"] = row.Title })])
+                    })
+                }
+                : new System.Text.Json.Nodes.JsonObject
+                {
+                    ["buttons"] = new System.Text.Json.Nodes.JsonArray(
                     [.. (message.ReplyButtons ?? []).Select(button => (System.Text.Json.Nodes.JsonNode)new System.Text.Json.Nodes.JsonObject
-                        { ["type"] = "reply", ["reply"] = new System.Text.Json.Nodes.JsonObject { ["id"] = button.Id, ["title"] = button.Title } })]) };
+                        { ["type"] = "reply", ["reply"] = new System.Text.Json.Nodes.JsonObject { ["id"] = button.Id, ["title"] = button.Title } })])
+                };
             return new { messaging_product = "whatsapp", recipient_type = "individual", to, type = "interactive", interactive };
         }
         var components = new List<object>();
@@ -99,7 +116,13 @@ internal sealed class WhatsAppCloudClient(HttpClient client, IOptions<WhatsAppOp
         // «No recibir más» de una Marketing: la respuesta trae este identificador y no el texto del botón.
         if (message.QuickReplyPayload is not null)
             components.Add(new { type = "button", sub_type = "quick_reply", index = "0", parameters = new[] { new { type = "payload", payload = message.QuickReplyPayload } } });
-        return new { messaging_product = "whatsapp", recipient_type = "individual", to, type = "template",
-            template = new { name = message.TemplateName, language = new { code = message.Language }, components } };
+        return new
+        {
+            messaging_product = "whatsapp",
+            recipient_type = "individual",
+            to,
+            type = "template",
+            template = new { name = message.TemplateName, language = new { code = message.Language }, components }
+        };
     }
 }

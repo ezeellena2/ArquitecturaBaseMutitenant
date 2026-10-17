@@ -48,7 +48,7 @@ public sealed class TenantTelemetryTests(ApiFactory factory)
         await AccountJourney.AuthorizeAsync(operatorClient, "platform", Ct);
         using var anonymous = Browser(factory);
         using var subdomain = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://empresa.localhost:5174"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://empresa.localhost:5174"), AllowAutoRedirect = false });
         using var spans = new SpanRecorder();
 
         var platform = await spans.SendAsync(operatorClient, "/api/platform/settings");
@@ -64,7 +64,7 @@ public sealed class TenantTelemetryTests(ApiFactory factory)
 
     private static HttpClient Browser(WebApplicationFactory<Program> host) =>
         host.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
 
     /// <summary>Los spans de pedidos de la Api, encontrados por el traceparent que manda cada prueba.</summary>
     private sealed class SpanRecorder : IDisposable

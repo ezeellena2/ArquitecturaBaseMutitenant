@@ -93,7 +93,8 @@ public sealed class LegacyBrowserSessionTests(ApiFactory factory) : IDisposable
 
     private HttpClient Client() => host.CreateClient(new WebApplicationFactoryClientOptions
     {
-        BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false,
+        BaseAddress = new Uri("https://localhost"),
+        AllowAutoRedirect = false,
     });
 
     private async Task<string> OldPublicCookieAsync(Guid userId)
@@ -107,7 +108,9 @@ public sealed class LegacyBrowserSessionTests(ApiFactory factory) : IDisposable
         var startedAtUtc = provider.GetRequiredService<TimeProvider>().GetUtcNow().AddDays(-2);
         var properties = new AuthenticationProperties
         {
-            IsPersistent = true, IssuedUtc = startedAtUtc, ExpiresUtc = startedAtUtc.AddDays(30),
+            IsPersistent = true,
+            IssuedUtc = startedAtUtc,
+            ExpiresUtc = startedAtUtc.AddDays(30),
         };
         properties.Items[BrowserSessionKeys.CookieSessionId] = Guid.NewGuid().ToString("N");
         properties.Items[BrowserSessionKeys.StartedAtUtc] = BrowserSessionKeys.FormatStartedAtUtc(startedAtUtc.UtcDateTime);

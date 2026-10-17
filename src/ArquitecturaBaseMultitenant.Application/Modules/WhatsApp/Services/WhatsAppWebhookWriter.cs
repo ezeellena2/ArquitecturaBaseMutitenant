@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
+
 internal sealed class WhatsAppWebhookWriter(IWhatsAppContactRepository contacts, IWhatsAppMessageRepository messages,
     IUserLookup lookup, IExternalLoginLock identities, ILoginMethodRepository methods, IPayloadProtector protector,
     WhatsAppChannelUsageWriter usage, TimeProvider clock)

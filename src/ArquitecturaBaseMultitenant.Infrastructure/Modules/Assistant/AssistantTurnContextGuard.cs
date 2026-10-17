@@ -17,7 +17,9 @@ internal static class AssistantTurnContextGuard
             // names, call IDs, result values and metadata. Extra framing covers the provider envelope.
             long bytes = 1024 + JsonSerializer.SerializeToUtf8Bytes(new
             {
-                binding.ProviderModelId, binding.Effort, MaxOutputTokens = AssistantTechnicalLimits.MaxOutputTokens,
+                binding.ProviderModelId,
+                binding.Effort,
+                MaxOutputTokens = AssistantTechnicalLimits.MaxOutputTokens,
             }, AIJsonUtilities.DefaultOptions).LongLength;
             long payloadBytes = bytes;
             foreach (var message in messages)
@@ -25,7 +27,7 @@ internal static class AssistantTurnContextGuard
                 if (message.Contents.Any(content => content is not (TextContent or TextReasoningContent or FunctionCallContent or FunctionResultContent or DataContent)))
                     return false;
                 var textOnly = new ChatMessage(message.Role, message.Contents.Where(content => content is not DataContent).ToList())
-                    { AuthorName = message.AuthorName, AdditionalProperties = message.AdditionalProperties };
+                { AuthorName = message.AuthorName, AdditionalProperties = message.AdditionalProperties };
                 bytes += 64 + JsonSerializer.SerializeToUtf8Bytes(textOnly, AIJsonUtilities.DefaultOptions).LongLength;
                 payloadBytes += 64 + JsonSerializer.SerializeToUtf8Bytes(textOnly, AIJsonUtilities.DefaultOptions).LongLength;
                 foreach (var content in message.Contents.OfType<DataContent>())
@@ -55,7 +57,11 @@ internal static class AssistantTurnContextGuard
                 if (tool is not AIFunctionDeclaration function) return false;
                 bytes += 64 + JsonSerializer.SerializeToUtf8Bytes(new
                 {
-                    function.Name, function.Description, function.JsonSchema, function.ReturnJsonSchema, function.AdditionalProperties,
+                    function.Name,
+                    function.Description,
+                    function.JsonSchema,
+                    function.ReturnJsonSchema,
+                    function.AdditionalProperties,
                 }, AIJsonUtilities.DefaultOptions).LongLength;
                 if (bytes > AssistantTechnicalLimits.MaxInputTokens) return false;
             }

@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Persistence;
+
 internal sealed class WhatsAppMessageRepository(ApplicationDbContext context) : IWhatsAppMessageRepository
 {
     public Task LockStreamAsync(string phoneNumberId, string wamid, CancellationToken ct) =>

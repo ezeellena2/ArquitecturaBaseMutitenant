@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 namespace ArquitecturaBaseMultitenant.Application.Configuration.Auth;
+
 public sealed class LoginLinkOptions
 {
     public const string SectionName = "Authentication:LoginLink";

@@ -16,10 +16,10 @@ internal sealed class RoleAssignmentConfiguration : IEntityTypeConfiguration<Rol
         builder.HasIndex(assignment => new { assignment.TenantId, assignment.MemberId, assignment.RoleId })
             .IsUnique().HasFilter("\"CompanyId\" IS NULL");
         builder.HasIndex(assignment => new
-            { assignment.TenantId, assignment.MemberId, assignment.RoleId, assignment.CompanyId })
+        { assignment.TenantId, assignment.MemberId, assignment.RoleId, assignment.CompanyId })
             .IsUnique().HasFilter("\"CompanyId\" IS NOT NULL");
         builder.HasIndex(assignment => new
-            { assignment.TenantId, assignment.RoleId, assignment.MemberId, assignment.Id });
+        { assignment.TenantId, assignment.RoleId, assignment.MemberId, assignment.Id });
         builder.HasOne<Member>().WithMany()
             .HasForeignKey(assignment => new { assignment.TenantId, assignment.MemberId })
             .OnDelete(DeleteBehavior.Restrict);

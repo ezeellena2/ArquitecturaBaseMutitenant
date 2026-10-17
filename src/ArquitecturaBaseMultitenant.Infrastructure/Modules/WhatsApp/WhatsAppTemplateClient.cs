@@ -32,8 +32,11 @@ internal sealed class WhatsAppTemplateClient(HttpClient client, IOptions<WhatsAp
             components.Add(new JsonObject { ["type"] = "BUTTONS", ["buttons"] = new JsonArray(new JsonObject { ["type"] = "QUICK_REPLY", ["text"] = unsubscribe }) });
         var payload = new JsonObject
         {
-            ["name"] = submission.MetaName, ["language"] = submission.MetaLanguage, ["category"] = submission.Category.ToString().ToUpperInvariant(),
-            ["parameter_format"] = "positional", ["components"] = components,
+            ["name"] = submission.MetaName,
+            ["language"] = submission.MetaLanguage,
+            ["category"] = submission.Category.ToString().ToUpperInvariant(),
+            ["parameter_format"] = "positional",
+            ["components"] = components,
         };
         var created = await SendAsync(HttpMethod.Post, Uri.EscapeDataString(wabaId) + "/message_templates", token, payload, ct);
         if (created.IsFailure) return created.Error;

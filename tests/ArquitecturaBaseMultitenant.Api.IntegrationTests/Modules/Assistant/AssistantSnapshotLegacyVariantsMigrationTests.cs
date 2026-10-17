@@ -164,23 +164,32 @@ public sealed class AssistantSnapshotLegacyVariantsMigrationTests
         // Explicit typed legacy projections cover non-personal labels and ActorId versus TargetAccountId.
         var auditTemplate = cases.First(value => value.QuickKey == "recent_changes");
         var auditSnapshot = AssistantSnapshotBuilder.Restore(auditTemplate.SnapshotJson, 0);
-        auditSnapshot = auditSnapshot with { Result = new AssistantQuickResultResponse("Original labels", [], new AssistantAuditQuickDataResponse(
+        auditSnapshot = auditSnapshot with
+        {
+            Result = new AssistantQuickResultResponse("Original labels", [], new AssistantAuditQuickDataResponse(
             [new(userAudit.Id, "fixture", "Original actor", nowUtc), new(systemAudit.Id, "fixture", "System", nowUtc),
-             new(platformApproval.Id, "fixture", "Platform", nowUtc)], null, false)) };
+             new(platformApproval.Id, "fixture", "Platform", nowUtc)], null, false))
+        };
         var legacyAudit = AssistantDurableOperation.Create(owner.UserId, Access.Business, Guid.CreateVersion7(), "legacy-audit-hash",
             auditTemplate.Request.Route, auditSnapshot.Conversation.Id, "assistant.quick", 200, null,
             AssistantSnapshotBuilder.Serialize(auditSnapshot), "recent_changes", nowUtc);
         var securityTemplate = cases.First(value => value.QuickKey == "today_security");
         var systemSecurity = SecurityEvent.ForPlatformOperatorGrant("Legacy system actor fixture", nowUtc, invited.UserId);
         var securitySnapshot = AssistantSnapshotBuilder.Restore(securityTemplate.SnapshotJson, 0);
-        securitySnapshot = securitySnapshot with { Result = new AssistantQuickResultResponse("Original security actors", [], new AssistantSecurityQuickDataResponse(
+        securitySnapshot = securitySnapshot with
+        {
+            Result = new AssistantQuickResultResponse("Original security actors", [], new AssistantSecurityQuickDataResponse(
             [new(securityActor.Id, "fixture", "Original actor", nowUtc), new(loginAudit.Id, "fixture", "Original actor", nowUtc),
-             new(systemSecurity.Id, "fixture", "System", nowUtc)], null, false)) };
+             new(systemSecurity.Id, "fixture", "System", nowUtc)], null, false))
+        };
         var legacySecurity = PlatformAssistantDurableOperation.Create(platformOwner.UserId, Guid.CreateVersion7(), "legacy-security-hash",
             securityTemplate.Request.Route, securitySnapshot.Conversation.Id, "assistant.quick", 200, null,
             AssistantSnapshotBuilder.Serialize(securitySnapshot), "today_security", nowUtc);
-        var usageSnapshot = securitySnapshot with { Result = new AssistantQuickResultResponse("Unsupported historical usage", [], new AssistantUsageQuickDataResponse(
-            new AssistantUsagePageResponse("2026-10", new Money(0m, CurrencyCode.Create("USD").Value), null, null, 0, 0, new([], 1, 20, 0), null, null))) };
+        var usageSnapshot = securitySnapshot with
+        {
+            Result = new AssistantQuickResultResponse("Unsupported historical usage", [], new AssistantUsageQuickDataResponse(
+            new AssistantUsagePageResponse("2026-10", new Money(0m, CurrencyCode.Create("USD").Value), null, null, 0, 0, new([], 1, 20, 0), null, null)))
+        };
         var unsupportedUsage = PlatformAssistantDurableOperation.Create(platformOwner.UserId, Guid.CreateVersion7(), "usage-hash", "/legacy/usage",
             securitySnapshot.Conversation.Id, "assistant.quick", 200, null, AssistantSnapshotBuilder.Serialize(usageSnapshot), "assistant_usage", nowUtc);
         var mismatchedVariant = PlatformAssistantDurableOperation.Create(platformOwner.UserId, Guid.CreateVersion7(), "mismatch-hash", "/legacy/mismatch",

@@ -44,9 +44,12 @@ internal static class AssistantSnapshotBuilder
     {
         var snapshot = JsonSerializer.Deserialize<AssistantDurableSnapshot>(json, Json)
             ?? throw new InvalidOperationException("A committed assistant snapshot is missing.");
-        return snapshot with { Conversation = snapshot.Conversation with { Version = version },
+        return snapshot with
+        {
+            Conversation = snapshot.Conversation with { Version = version },
             Attachment = snapshot.Attachment is { } attachment ? attachment with { Version = version } : null,
-            Messages = snapshot.Messages.Select(message => message with { Version = version }).ToArray() };
+            Messages = snapshot.Messages.Select(message => message with { Version = version }).ToArray()
+        };
     }
     internal static AssistantConversationSummaryResponse Summary(IAssistantConversation row) =>
         new(row.Id, row.Title, row.IsSaved, row.Version, row.CreatedAtUtc, row.LastActivityAtUtc);

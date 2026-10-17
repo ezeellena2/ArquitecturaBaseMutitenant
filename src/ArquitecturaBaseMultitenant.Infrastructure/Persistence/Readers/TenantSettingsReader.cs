@@ -34,10 +34,10 @@ internal sealed class TenantSettingsLoader(ApplicationDbContext context, ITenant
     {
         using var scope = tenantScope.Enter(tenantId);
         return await (from settings in context.TenantSettings.AsNoTracking()
-            join tenant in context.Tenants.AsNoTracking() on settings.TenantId equals tenant.Id
-            where settings.TenantId == tenantId
-            select new TenantSettingsRow(settings.TenantId, settings.DefaultCulture,
-                settings.DefaultTimeZoneId, settings.DefaultCurrency, tenant.Name, settings.Version))
+                      join tenant in context.Tenants.AsNoTracking() on settings.TenantId equals tenant.Id
+                      where settings.TenantId == tenantId
+                      select new TenantSettingsRow(settings.TenantId, settings.DefaultCulture,
+                          settings.DefaultTimeZoneId, settings.DefaultCurrency, tenant.Name, settings.Version))
             .SingleOrDefaultAsync(cancellationToken);
     }
 }

@@ -344,8 +344,13 @@ public sealed class EngagementTests(EngagementFactory factory) : IClassFixture<E
         using var request = new HttpRequestMessage(HttpMethod.Post, EngagementJourney.PublicUrl(business))
         {
             // Los ids y el nombre enviados de contrabando no existen en el contrato; el contexto y la cuenta mandan.
-            Content = JsonContent.Create(new { summary = "Lo que se pidió", businessTenantId = journey.BusinessB.Id,
-                consumerTenantId = Guid.Empty, consumerName = "Nombre falsificado" }),
+            Content = JsonContent.Create(new
+            {
+                summary = "Lo que se pidió",
+                businessTenantId = journey.BusinessB.Id,
+                consumerTenantId = Guid.Empty,
+                consumerName = "Nombre falsificado"
+            }),
         };
         request.Headers.Add("Idempotency-Key", key.ToString("D"));
         return await journey.Client.SendAsync(request, Ct);

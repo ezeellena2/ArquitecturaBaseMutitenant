@@ -29,7 +29,7 @@ public sealed class AccountGoogleProtocolTests(ApiFactory factory)
             builder.UseSetting("Authentication:Google:ClientSecret", "integration-client-secret");
         });
         using var client = host.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         await AccountJourney.RegisterAsync(factory, client, Ct);
         using var antiforgery = await client.GetAsync("/api/auth/external/google/antiforgery", Ct);
         using var token = await antiforgery.Content.ReadFromJsonAsync<JsonDocument>(Ct);
@@ -49,7 +49,7 @@ public sealed class AccountGoogleProtocolTests(ApiFactory factory)
             builder.UseSetting("Authentication:Google:ClientSecret", "integration-client-secret");
         });
         using var client = host.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
         using var rejected = await client.PostAsJsonAsync("/api/me/external/google", new { }, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, rejected.StatusCode);
@@ -57,7 +57,7 @@ public sealed class AccountGoogleProtocolTests(ApiFactory factory)
         using var token = await antiforgery.Content.ReadFromJsonAsync<JsonDocument>(Ct);
         await using var scope = host.Services.CreateAsyncScope();
         using var request = new HttpRequestMessage(HttpMethod.Post, "/api/me/external/google")
-            { Content = JsonContent.Create(new { userId = Guid.NewGuid() }) };
+        { Content = JsonContent.Create(new { userId = Guid.NewGuid() }) };
         request.Headers.Add("RequestVerificationToken", token!.RootElement.GetProperty("requestToken").GetString());
         using var started = await client.SendAsync(request, Ct);
         Assert.Equal(HttpStatusCode.OK, started.StatusCode);

@@ -158,11 +158,11 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
     private async Task<(AccountJourney Owner, HttpClient Client, AccountJourney Account)> TwoAccountsAsync()
     {
         using var ownerClient = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
         await AgeCodesAsync(owner.Email.Value);
         var client = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         return (owner, client, await AccountJourney.RegisterAsync(factory, client, Ct));
     }
 
@@ -233,7 +233,7 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
     public async Task An_account_can_still_add_the_email_of_its_own_google_sign_in()
     {
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
         var contact = "google-contact-" + Guid.NewGuid().ToString("N") + "@example.test";
         await using (var scope = factory.Services.CreateAsyncScope())
@@ -296,7 +296,7 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
         using var denied = await anonymous.GetAsync("/api/me/login-methods", Ct);
         Assert.Equal(HttpStatusCode.Unauthorized, denied.StatusCode);
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         await AccountJourney.RegisterAsync(factory, client, Ct);
         var foreignMethodId = Guid.Empty;
         await using (var scope = factory.Services.CreateAsyncScope())
@@ -323,7 +323,7 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
     public async Task Add_verify_and_list_exercise_real_contracts_and_idempotent_replay()
     {
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
         await using var scope = factory.Services.CreateAsyncScope();
         var email = "http-added-" + Guid.NewGuid().ToString("N") + "@example.test";
@@ -332,7 +332,7 @@ public sealed class AccountMethodsHttpTests(ApiFactory factory)
         for (var replay = 0; replay < 2; replay++)
         {
             using var request = new HttpRequestMessage(HttpMethod.Post, "/api/me/login-methods")
-                { Content = JsonContent.Create(new { email }) };
+            { Content = JsonContent.Create(new { email }) };
             request.Headers.Add("Idempotency-Key", key);
             using var added = await client.SendAsync(request, Ct);
             Assert.Equal(HttpStatusCode.Accepted, added.StatusCode);

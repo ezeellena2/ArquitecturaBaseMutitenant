@@ -103,41 +103,63 @@ public sealed partial class ModuleControllersTests
             && (controllerPermission is not null || action.GetCustomAttribute<HasPlatformPermissionAttribute>(true) is not null));
     }
 
-    [InstalledModuleRoute("control", InstalledModuleRouteCategory.PlatformManagement)][Access(Access.Consumer)]
+    [InstalledModuleRoute("control", InstalledModuleRouteCategory.PlatformManagement)]
+    [Access(Access.Consumer)]
     private sealed class ConsumerInstalledControl { }
-    [InstalledModuleRoute("control", InstalledModuleRouteCategory.PlatformManagement)][Access(Access.Business)]
+    [InstalledModuleRoute("control", InstalledModuleRouteCategory.PlatformManagement)]
+    [Access(Access.Business)]
     private sealed class BusinessInstalledControl { }
-    [InstalledModuleRoute("control", InstalledModuleRouteCategory.PlatformManagement)][Access(Access.Platform)]
+    [InstalledModuleRoute("control", InstalledModuleRouteCategory.PlatformManagement)]
+    [Access(Access.Platform)]
     private sealed class PlatformWithoutPermissionControl { }
-    [InstalledModuleRoute("control", InstalledModuleRouteCategory.PlatformManagement)][Access(Access.Platform)][AllowAnonymous][HasPlatformPermission("control")]
+    [InstalledModuleRoute("control", InstalledModuleRouteCategory.PlatformManagement)]
+    [Access(Access.Platform)]
+    [AllowAnonymous]
+    [HasPlatformPermission("control")]
     private sealed class AnonymousPlatformControl { }
-    [InstalledModuleRoute("control", InstalledModuleRouteCategory.PlatformManagement)][Access(Access.Consumer, Access.Platform)][HasPlatformPermission("control")]
+    [InstalledModuleRoute("control", InstalledModuleRouteCategory.PlatformManagement)]
+    [Access(Access.Consumer, Access.Platform)]
+    [HasPlatformPermission("control")]
     private sealed class MixedAccessControl { }
-    [InstalledModuleRoute("control")][AllowAnonymous]
+    [InstalledModuleRoute("control")]
+    [AllowAnonymous]
     private sealed class TechnicalWebhookControl { }
-    [InstalledModuleRoute("control", InstalledModuleRouteCategory.PlatformManagement)][Access(Access.Platform)]
+    [InstalledModuleRoute("control", InstalledModuleRouteCategory.PlatformManagement)]
+    [Access(Access.Platform)]
     private sealed class PlatformActionPermissionControl
     {
-        [HttpGet][HasPlatformPermission("control")]
+        [HttpGet]
+        [HasPlatformPermission("control")]
         public static void Read() { }
     }
 
-    [InstalledModuleRoute("control")][AllowAnonymous][Access(Access.Consumer)]
+    [InstalledModuleRoute("control")]
+    [AllowAnonymous]
+    [Access(Access.Consumer)]
     private sealed class TechnicalAccessControl { }
-    [InstalledModuleRoute("control")][AllowAnonymous][HasPlatformPermission("control")]
+    [InstalledModuleRoute("control")]
+    [AllowAnonymous]
+    [HasPlatformPermission("control")]
     private sealed class TechnicalPermissionControl { }
-    [InstalledModuleRoute("control", InstalledModuleRouteCategory.PlatformChat)][Access(Access.Consumer)][HasPlatformPermission("control")]
+    [InstalledModuleRoute("control", InstalledModuleRouteCategory.PlatformChat)]
+    [Access(Access.Consumer)]
+    [HasPlatformPermission("control")]
     private sealed class ChatConsumerControl { }
-    [InstalledModuleRoute("control", InstalledModuleRouteCategory.PlatformChat)][Access(Access.Platform)][HasPlatformPermission("control")]
+    [InstalledModuleRoute("control", InstalledModuleRouteCategory.PlatformChat)]
+    [Access(Access.Platform)]
+    [HasPlatformPermission("control")]
     private sealed class PlatformActionAnonymousControl
     {
-        [HttpGet][AllowAnonymous]
+        [HttpGet]
+        [AllowAnonymous]
         public static void Read() { }
     }
-    [InstalledModuleRoute("control", InstalledModuleRouteCategory.PlatformManagement)][Access(Access.Platform)]
+    [InstalledModuleRoute("control", InstalledModuleRouteCategory.PlatformManagement)]
+    [Access(Access.Platform)]
     private sealed class PlatformActionWrongPermissionControl
     {
-        [HttpGet][HasPermission("control")]
+        [HttpGet]
+        [HasPermission("control")]
         public static void Read() { }
     }
 }

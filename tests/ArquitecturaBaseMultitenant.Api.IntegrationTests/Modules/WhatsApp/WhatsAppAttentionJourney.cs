@@ -111,7 +111,9 @@ internal static class WhatsAppAttentionJourney
 
     internal static object Status(string wamid, string status, string? category = null, string? type = null, int? error = null) => new
     {
-        id = wamid, status, recipient_id = "5491155550000",
+        id = wamid,
+        status,
+        recipient_id = "5491155550000",
         timestamp = TimeProvider.System.GetUtcNow().ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
         pricing = category is null ? null : new { billable = type == "regular", pricing_model = "PMP", type, category },
         errors = error is null ? null : new[] { new { code = error } },

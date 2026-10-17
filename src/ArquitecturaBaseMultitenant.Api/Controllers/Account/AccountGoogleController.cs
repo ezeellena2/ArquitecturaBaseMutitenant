@@ -32,7 +32,7 @@ public sealed class AccountGoogleController(IAccountGoogleService service, IAuth
     {
         if (!await antiforgery.IsRequestValidAsync(HttpContext))
             return Result.Failure(new ValidationError(new Dictionary<string, string[]>
-                { ["requestVerificationToken"] = [ValidationTexts.Required] })).ToActionResult(this);
+            { ["requestVerificationToken"] = [ValidationTexts.Required] })).ToActionResult(this);
         var identity = await service.GetLinkUserIdAsync(cancellationToken);
         if (identity.IsFailure) return Result.Failure(identity.Error).ToActionResult(this);
         if (await schemes.GetSchemeAsync(GoogleDefaults.AuthenticationScheme) is null) return NotFound();

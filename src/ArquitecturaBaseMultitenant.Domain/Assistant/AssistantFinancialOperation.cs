@@ -37,9 +37,22 @@ public sealed class AssistantFinancialOperation : Entity
             || (budget is null) != (budgetMonthId is null) || reservation.Amount < 0
             || reservation.Round(12).Amount != reservation.Amount || !reservation.Currency.Equals(price.Input.Currency))
             throw new ArgumentException("The financial reservation must come from a valid server configuration.");
-        return new(id) { UserId = binding.UserId, Access = binding.Access, ScopeTenantId = binding.ScopeTenantId, Funding = funding,
-            DayUtc = dayUtc, DailyLimit = dailyLimit, BudgetMonthId = budgetMonthId, MonthlyBudget = budget, ReservedCost = reservation,
-            Price = price, TitlePrice = titlePrice, CreatedAtUtc = nowUtc, State = AssistantFinancialState.Reserved };
+        return new(id)
+        {
+            UserId = binding.UserId,
+            Access = binding.Access,
+            ScopeTenantId = binding.ScopeTenantId,
+            Funding = funding,
+            DayUtc = dayUtc,
+            DailyLimit = dailyLimit,
+            BudgetMonthId = budgetMonthId,
+            MonthlyBudget = budget,
+            ReservedCost = reservation,
+            Price = price,
+            TitlePrice = titlePrice,
+            CreatedAtUtc = nowUtc,
+            State = AssistantFinancialState.Reserved
+        };
     }
     public bool IsBoundTo(AssistantFinancialBinding binding) => UserId == binding.UserId && Access == binding.Access && ScopeTenantId == binding.ScopeTenantId;
     public void MarkInvoked()

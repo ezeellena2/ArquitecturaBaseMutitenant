@@ -35,9 +35,23 @@ public sealed class AssistantPriceSnapshot
             throw new ArgumentException("Snapshot prices must have a single currency and six decimal places.");
         if (longThreshold is <= 0 || (longThreshold is null) != prices.Skip(5).All(price => price is null)
             || longThreshold is not null && prices.Skip(5).Any(price => price is null)) throw new ArgumentException("A long tier must be complete.");
-        return new() { ModelId = modelId, ProviderModelId = providerModelId, Revision = revision, BillingCurrency = input.Currency.Value,
-            Input = input, Output = output, CacheWrite5Minutes = cacheWrite5Minutes, CacheWrite1Hour = cacheWrite1Hour,
-            CacheRead = cacheRead, LongPromptThreshold = longThreshold, LongInput = longInput, LongOutput = longOutput,
-            LongCacheWrite5Minutes = longCacheWrite5Minutes, LongCacheWrite1Hour = longCacheWrite1Hour, LongCacheRead = longCacheRead };
+        return new()
+        {
+            ModelId = modelId,
+            ProviderModelId = providerModelId,
+            Revision = revision,
+            BillingCurrency = input.Currency.Value,
+            Input = input,
+            Output = output,
+            CacheWrite5Minutes = cacheWrite5Minutes,
+            CacheWrite1Hour = cacheWrite1Hour,
+            CacheRead = cacheRead,
+            LongPromptThreshold = longThreshold,
+            LongInput = longInput,
+            LongOutput = longOutput,
+            LongCacheWrite5Minutes = longCacheWrite5Minutes,
+            LongCacheWrite1Hour = longCacheWrite1Hour,
+            LongCacheRead = longCacheRead
+        };
     }
 }

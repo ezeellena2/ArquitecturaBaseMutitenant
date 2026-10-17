@@ -29,7 +29,7 @@ public sealed class LegalAcceptanceTests(ApiFactory factory)
         await using var isolated = new ApiFactory();
         await isolated.InitializeAsync();
         using var client = isolated.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var account = await AccountJourney.RegisterAsync(isolated, client, Ct);
         var second = await PublishAsync(isolated, 3);
         using var blocked = await client.GetAsync("/api/me/login-methods", Ct);
@@ -149,11 +149,16 @@ public sealed class LegalAcceptanceTests(ApiFactory factory)
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var nowUtc = scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
         var accepted = await (from method in context.LoginMethods
-            where method.Value == address
-            join acceptance in context.LegalAcceptances on method.UserId equals acceptance.UserId
-            join document in context.LegalDocuments on acceptance.LegalDocumentId equals document.Id
-            select new { acceptance.LegalDocumentId, acceptance.Version, acceptance.AcceptedAtUtc,
-                document.Kind }).ToArrayAsync(Ct);
+                              where method.Value == address
+                              join acceptance in context.LegalAcceptances on method.UserId equals acceptance.UserId
+                              join document in context.LegalDocuments on acceptance.LegalDocumentId equals document.Id
+                              select new
+                              {
+                                  acceptance.LegalDocumentId,
+                                  acceptance.Version,
+                                  acceptance.AcceptedAtUtc,
+                                  document.Kind
+                              }).ToArrayAsync(Ct);
         Assert.Equal(2, accepted.Length);
 
         foreach (var kind in new[] { LegalDocumentKind.Terms, LegalDocumentKind.Privacy })

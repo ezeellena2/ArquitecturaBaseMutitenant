@@ -37,8 +37,11 @@ public abstract partial class WhatsAppTemplateBase : Entity, IVersioned, IAudita
         if (category is not (WhatsAppTemplateCategory.Utility or WhatsAppTemplateCategory.Marketing)) throw new ArgumentOutOfRangeException(nameof(category));
         if (body.Length > WhatsAppTextLimits.TemplateBody) throw new ArgumentException("The body is too long.", nameof(body));
         var list = variables.ToList();
-        if (list.Count != Placeholders(body) || list.Any(variable => variable is not { Label: { Length: > 0 and <= TextLimits.ShortName },
-            Example: { Length: > 0 and <= WhatsAppTextLimits.TemplateVariable } })) throw new ArgumentException("Invalid variables.", nameof(variables));
+        if (list.Count != Placeholders(body) || list.Any(variable => variable is not
+            {
+                Label: { Length: > 0 and <= TextLimits.ShortName },
+                Example: { Length: > 0 and <= WhatsAppTextLimits.TemplateVariable }
+            })) throw new ArgumentException("Invalid variables.", nameof(variables));
         Name = trimmed; MetaName = ToMetaName(trimmed) ?? throw new ArgumentException("The name has no letters or digits.", nameof(name));
         Language = language.Trim(); MetaLanguage = ToMetaLanguage(Language); Category = category; Body = body; _variables = list;
     }

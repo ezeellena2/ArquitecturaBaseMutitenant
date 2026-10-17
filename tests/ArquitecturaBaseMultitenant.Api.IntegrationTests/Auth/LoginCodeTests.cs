@@ -158,7 +158,7 @@ public sealed class LoginCodeTests(ApiFactory factory)
     {
         var email = Email.Create($"managed-ex-member-{Guid.NewGuid():N}@example.test").Value;
         using var signupClient = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var memberAccount = await AccountJourney.RegisterAsync(factory, signupClient, Ct, email);
         var administratorId = await CreateVerifiedEmailAccountAsync($"managed-admin-{Guid.NewGuid():N}@example.test");
         var tenantId = await CreateBusinessOrganizationAsync(memberAccount.UserId, administratorId);
@@ -166,7 +166,7 @@ public sealed class LoginCodeTests(ApiFactory factory)
 
         await AgeLoginCodesAsync(email.Value);
         using var loginClient = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         using var requested = await AccountJourney.PostAsync(loginClient, "/api/auth/login-code", new { email = email.Value }, Ct);
         Assert.Equal(HttpStatusCode.Accepted, requested.StatusCode);
         var code = await ReadPickupCodeAsync(email.Value);

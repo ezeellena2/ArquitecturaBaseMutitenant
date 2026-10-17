@@ -75,9 +75,15 @@ internal sealed class WhatsAppContactReader(ApplicationDbContext context, ITenan
 
     private IQueryable<ContactProjection> Project(IQueryable<WhatsAppCustomer> customers) => customers.Select(customer => new ContactProjection
     {
-        Id = customer.Id, Name = customer.Name, WaId = customer.WaId, Tags = customer.Tags, Consent = customer.Consent,
-        ConsentSource = customer.ConsentSource, ConsentChangedAtUtc = customer.ConsentChangedAtUtc,
-        LastConversationAtUtc = customer.LastConversationAtUtc, Version = customer.Version,
+        Id = customer.Id,
+        Name = customer.Name,
+        WaId = customer.WaId,
+        Tags = customer.Tags,
+        Consent = customer.Consent,
+        ConsentSource = customer.ConsentSource,
+        ConsentChangedAtUtc = customer.ConsentChangedAtUtc,
+        LastConversationAtUtc = customer.LastConversationAtUtc,
+        Version = customer.Version,
         Linked = context.Set<WhatsAppConversationLink>().Any(link => context.Set<WhatsAppChat>()
             .Any(chat => chat.TenantId == customer.TenantId && chat.CustomerId == customer.Id && chat.Id == link.ChatId)),
         LatestConversationId = context.Set<WhatsAppChat>().Where(chat => chat.TenantId == customer.TenantId && chat.CustomerId == customer.Id)

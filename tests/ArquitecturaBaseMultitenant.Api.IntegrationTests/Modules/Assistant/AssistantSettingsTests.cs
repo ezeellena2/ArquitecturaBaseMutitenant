@@ -54,9 +54,14 @@ public sealed class AssistantSettingsTests(ApiFactory factory)
         {
             using var own = await client.PutAsJsonAsync("/api/organization/assistant/settings", new
             {
-                mode = "OwnKey", modelId = model, effort = "low", dailyMessageLimit = 8,
-                monthlyBudget = new { amount, currency = "USD" }, keyAction = version == 0 ? "replace" : "keep",
-                apiKey = version == 0 ? "isolated-roundtrip-8888" : null, version,
+                mode = "OwnKey",
+                modelId = model,
+                effort = "low",
+                dailyMessageLimit = 8,
+                monthlyBudget = new { amount, currency = "USD" },
+                keyAction = version == 0 ? "replace" : "keep",
+                apiKey = version == 0 ? "isolated-roundtrip-8888" : null,
+                version,
             }, AssistantTestData.Ct);
             version = await SavedVersion.ReadAsync(own, AssistantTestData.Ct);
             using var global = await ReadAsync(operatorClient, "/api/platform/assistant/settings");
@@ -138,81 +143,86 @@ public sealed class AssistantSettingsTests(ApiFactory factory)
     [Fact]
     public async Task Invalid_selection_or_effort_never_validates_a_key_and_revocation_during_validation_is_rechecked()
     {
-            await using var isolated = new ApiFactory();
-            await isolated.InitializeAsync();
-            var probe = new ValidationProbe();
-            using var host = isolated.WithWebHostBuilder(builder =>
+        await using var isolated = new ApiFactory();
+        await isolated.InitializeAsync();
+        var probe = new ValidationProbe();
+        using var host = isolated.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
             {
-                builder.ConfigureTestServices(services =>
-                {
-                    services.RemoveAll<IChatClientFactory>();
-                    services.AddScoped<IChatClientFactory>(provider => new DraftClientFactory(provider.GetRequiredService<ApplicationDbContext>(), probe));
-                });
+                services.RemoveAll<IChatClientFactory>();
+                services.AddScoped<IChatClientFactory>(provider => new DraftClientFactory(provider.GetRequiredService<ApplicationDbContext>(), probe));
             });
-            using var client = host.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
-            using var ownerClient = host.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
-            var account = await AccountJourney.RegisterAsync(host, client, AssistantTestData.Ct);
-            await PlatformOperators.GrantAsync(host.Services, account.UserId, PlatformOperators.All, AssistantTestData.Ct);
-            await AccountJourney.AuthorizeAsync(client, "platform", AssistantTestData.Ct);
-            var owner = await AccountJourney.RegisterAsync(host, ownerClient, AssistantTestData.Ct);
-            var tenant = await OrganizationJourney.StageAsync(isolated, owner, "Key preflight", AssistantTestData.Ct);
-            await AccountJourney.AuthorizeAsync(ownerClient, "business", AssistantTestData.Ct, tenant);
-            await AssistantTestData.EnableAsync(isolated, tenant);
-            using var allowed = await client.PutAsJsonAsync($"/api/platform/tenants/{tenant}/assistant/policy", new { allowOwnKey = true, version = 0, reason = "Preflight fixture" }, AssistantTestData.Ct);
-            await SavedVersion.ReadAsync(allowed, AssistantTestData.Ct);
-            using var initial = await ReadAsync(client, "/api/platform/assistant/settings");
-            var version = initial.RootElement.GetProperty("version").GetUInt32();
-            var model = initial.RootElement.GetProperty("defaultModelId").GetGuid();
-            using (var catalog = await ReadAsync(client, "/api/platform/assistant/models?page=1&pageSize=20"))
+        });
+        using var client = host.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        using var ownerClient = host.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var account = await AccountJourney.RegisterAsync(host, client, AssistantTestData.Ct);
+        await PlatformOperators.GrantAsync(host.Services, account.UserId, PlatformOperators.All, AssistantTestData.Ct);
+        await AccountJourney.AuthorizeAsync(client, "platform", AssistantTestData.Ct);
+        var owner = await AccountJourney.RegisterAsync(host, ownerClient, AssistantTestData.Ct);
+        var tenant = await OrganizationJourney.StageAsync(isolated, owner, "Key preflight", AssistantTestData.Ct);
+        await AccountJourney.AuthorizeAsync(ownerClient, "business", AssistantTestData.Ct, tenant);
+        await AssistantTestData.EnableAsync(isolated, tenant);
+        using var allowed = await client.PutAsJsonAsync($"/api/platform/tenants/{tenant}/assistant/policy", new { allowOwnKey = true, version = 0, reason = "Preflight fixture" }, AssistantTestData.Ct);
+        await SavedVersion.ReadAsync(allowed, AssistantTestData.Ct);
+        using var initial = await ReadAsync(client, "/api/platform/assistant/settings");
+        var version = initial.RootElement.GetProperty("version").GetUInt32();
+        var model = initial.RootElement.GetProperty("defaultModelId").GetGuid();
+        using (var catalog = await ReadAsync(client, "/api/platform/assistant/models?page=1&pageSize=20"))
+        {
+            var row = catalog.RootElement.GetProperty("items").EnumerateArray().Single(value => value.GetProperty("id").GetGuid() == model);
+            var body = System.Text.Json.Nodes.JsonNode.Parse(row.GetRawText())!.AsObject();
+            body.Remove("id");
+            body.Remove("technicalRevision");
+            body["technical"]!["efforts"] = new System.Text.Json.Nodes.JsonArray("low");
+            using var changed = await client.PutAsJsonAsync($"/api/platform/assistant/models/{model}", body, AssistantTestData.Ct);
+            await SavedVersion.ReadAsync(changed, AssistantTestData.Ct);
+        }
+        foreach (var mutation in new[] { "effort", "default", "allowed" })
+        {
+            var body = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(PlatformBody(initial, version, "replace", "isolated-preflight-6666")))!;
+            if (mutation == "effort") body["effort"] = "high";
+            if (mutation == "default") body["defaultModelId"] = Guid.CreateVersion7();
+            if (mutation == "allowed") body["allowedModelIds"] = new System.Text.Json.Nodes.JsonArray(JsonSerializer.SerializeToNode(model), JsonSerializer.SerializeToNode(Guid.CreateVersion7()));
+            using var rejected = await client.PutAsJsonAsync("/api/platform/assistant/settings", body, AssistantTestData.Ct);
+            await AssertModelNotAllowedAsync(rejected);
+            Assert.Equal(0, probe.Validations);
+        }
+        foreach (var selection in new[] { model, Guid.CreateVersion7() })
+        {
+            using var rejected = await ownerClient.PutAsJsonAsync("/api/organization/assistant/settings", new
+            { mode = "OwnKey", modelId = selection, effort = "high", keyAction = "replace", apiKey = "isolated-preflight-6666", version = 0 }, AssistantTestData.Ct);
+            await AssertModelNotAllowedAsync(rejected);
+            Assert.Equal(0, probe.Validations);
+        }
+        using var unchanged = await ReadAsync(client, "/api/platform/assistant/settings");
+        Assert.Equal(version, unchanged.RootElement.GetProperty("version").GetUInt32());
+        using var unchangedOwn = await ReadAsync(ownerClient, "/api/organization/assistant/settings");
+        Assert.Equal(0u, unchangedOwn.RootElement.GetProperty("version").GetUInt32());
+        probe.OnValidation = async ct =>
+        {
+            using var catalog = await client.GetFromJsonAsync<JsonDocument>("/api/platform/assistant/models?page=1&pageSize=20", ct);
+            var row = catalog!.RootElement.GetProperty("items").EnumerateArray().Single(value => value.GetProperty("id").GetGuid() == model);
+            using var revoked = await client.PutAsJsonAsync($"/api/platform/assistant/models/{model}", new
             {
-                var row = catalog.RootElement.GetProperty("items").EnumerateArray().Single(value => value.GetProperty("id").GetGuid() == model);
-                var body = System.Text.Json.Nodes.JsonNode.Parse(row.GetRawText())!.AsObject();
-                body.Remove("id");
-                body.Remove("technicalRevision");
-                body["technical"]!["efforts"] = new System.Text.Json.Nodes.JsonArray("low");
-                using var changed = await client.PutAsJsonAsync($"/api/platform/assistant/models/{model}", body, AssistantTestData.Ct);
-                await SavedVersion.ReadAsync(changed, AssistantTestData.Ct);
-            }
-            foreach (var mutation in new[] { "effort", "default", "allowed" })
-            {
-                var body = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(PlatformBody(initial, version, "replace", "isolated-preflight-6666")))!;
-                if (mutation == "effort") body["effort"] = "high";
-                if (mutation == "default") body["defaultModelId"] = Guid.CreateVersion7();
-                if (mutation == "allowed") body["allowedModelIds"] = new System.Text.Json.Nodes.JsonArray(JsonSerializer.SerializeToNode(model), JsonSerializer.SerializeToNode(Guid.CreateVersion7()));
-                using var rejected = await client.PutAsJsonAsync("/api/platform/assistant/settings", body, AssistantTestData.Ct);
-                await AssertModelNotAllowedAsync(rejected);
-                Assert.Equal(0, probe.Validations);
-            }
-            foreach (var selection in new[] { model, Guid.CreateVersion7() })
-            {
-                using var rejected = await ownerClient.PutAsJsonAsync("/api/organization/assistant/settings", new
-                { mode = "OwnKey", modelId = selection, effort = "high", keyAction = "replace", apiKey = "isolated-preflight-6666", version = 0 }, AssistantTestData.Ct);
-                await AssertModelNotAllowedAsync(rejected);
-                Assert.Equal(0, probe.Validations);
-            }
-            using var unchanged = await ReadAsync(client, "/api/platform/assistant/settings");
-            Assert.Equal(version, unchanged.RootElement.GetProperty("version").GetUInt32());
-            using var unchangedOwn = await ReadAsync(ownerClient, "/api/organization/assistant/settings");
-            Assert.Equal(0u, unchangedOwn.RootElement.GetProperty("version").GetUInt32());
-            probe.OnValidation = async ct =>
-            {
-                using var catalog = await client.GetFromJsonAsync<JsonDocument>("/api/platform/assistant/models?page=1&pageSize=20", ct);
-                var row = catalog!.RootElement.GetProperty("items").EnumerateArray().Single(value => value.GetProperty("id").GetGuid() == model);
-                using var revoked = await client.PutAsJsonAsync($"/api/platform/assistant/models/{model}", new
-                {
-                    name = row.GetProperty("name").GetString(), provider = "Anthropic", providerModelId = "claude-sonnet-5-5",
-                    inputPricePerMillion = new { amount = 2m, currency = "USD" }, outputPricePerMillion = new { amount = 10m, currency = "USD" },
-                    isActive = false, version = row.GetProperty("version").GetUInt32(), technical = row.GetProperty("technical"),
-                }, ct);
-                await SavedVersion.ReadAsync(revoked, ct);
-            };
-            using var raced = await client.PutAsJsonAsync("/api/platform/assistant/settings", PlatformBody(initial, version, "replace", "isolated-preflight-6666"), AssistantTestData.Ct);
-            await AssertModelNotAllowedAsync(raced);
-            Assert.Equal(1, probe.Validations);
-            Assert.False(probe.ObservedTransaction);
-            using var final = await ReadAsync(client, "/api/platform/assistant/settings");
-            Assert.Equal(version, final.RootElement.GetProperty("version").GetUInt32());
-            Assert.False(final.RootElement.GetProperty("hasKey").GetBoolean());
+                name = row.GetProperty("name").GetString(),
+                provider = "Anthropic",
+                providerModelId = "claude-sonnet-5-5",
+                inputPricePerMillion = new { amount = 2m, currency = "USD" },
+                outputPricePerMillion = new { amount = 10m, currency = "USD" },
+                isActive = false,
+                version = row.GetProperty("version").GetUInt32(),
+                technical = row.GetProperty("technical"),
+            }, ct);
+            await SavedVersion.ReadAsync(revoked, ct);
+        };
+        using var raced = await client.PutAsJsonAsync("/api/platform/assistant/settings", PlatformBody(initial, version, "replace", "isolated-preflight-6666"), AssistantTestData.Ct);
+        await AssertModelNotAllowedAsync(raced);
+        Assert.Equal(1, probe.Validations);
+        Assert.False(probe.ObservedTransaction);
+        using var final = await ReadAsync(client, "/api/platform/assistant/settings");
+        Assert.Equal(version, final.RootElement.GetProperty("version").GetUInt32());
+        Assert.False(final.RootElement.GetProperty("hasKey").GetBoolean());
 
     }
 
@@ -493,15 +503,22 @@ public sealed class AssistantSettingsTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.Forbidden, denied.StatusCode);
         using var plainPlatform = await client.PutAsJsonAsync("/api/organization/assistant/settings", new
         {
-            mode = "PlatformKey", modelId = before.RootElement.GetProperty("platformKeyModels")[0].GetProperty("id").GetGuid(),
-            effort = "low", keyAction = "keep", version,
+            mode = "PlatformKey",
+            modelId = before.RootElement.GetProperty("platformKeyModels")[0].GetProperty("id").GetGuid(),
+            effort = "low",
+            keyAction = "keep",
+            version,
         }, AssistantTestData.Ct);
         await SavedVersion.ReadAsync(plainPlatform, AssistantTestData.Ct);
         using var platformSaved = await ReadAsync(client, "/api/organization/assistant/settings");
         using var blockedLimits = await client.PutAsJsonAsync("/api/organization/assistant/settings", new
         {
-            mode = "PlatformKey", modelId = before.RootElement.GetProperty("platformKeyModels")[0].GetProperty("id").GetGuid(),
-            effort = "low", dailyMessageLimit = 50, keyAction = "keep", version = platformSaved.RootElement.GetProperty("version").GetUInt32(),
+            mode = "PlatformKey",
+            modelId = before.RootElement.GetProperty("platformKeyModels")[0].GetProperty("id").GetGuid(),
+            effort = "low",
+            dailyMessageLimit = 50,
+            keyAction = "keep",
+            version = platformSaved.RootElement.GetProperty("version").GetUInt32(),
         }, AssistantTestData.Ct);
         Assert.Equal(HttpStatusCode.BadRequest, blockedLimits.StatusCode);
     }
@@ -516,12 +533,25 @@ public sealed class AssistantSettingsTests(ApiFactory factory)
     {
         defaultModelId = document.RootElement.GetProperty("defaultModelId").GetGuid(),
         allowedModelIds = document.RootElement.GetProperty("allowedModelIds").EnumerateArray().Select(value => value.GetGuid()).ToArray(),
-        effort = "low", dailyMessageLimit = 50, monthlyOrganizationBudget = new { amount = 100m, currency = "USD" },
-        personalEnabled = false, retentionDays = 30, keyAction, apiKey, version,
+        effort = "low",
+        dailyMessageLimit = 50,
+        monthlyOrganizationBudget = new { amount = 100m, currency = "USD" },
+        personalEnabled = false,
+        retentionDays = 30,
+        keyAction,
+        apiKey,
+        version,
     };
     private static object OwnBody(Guid modelId, uint version, string keyAction, string? apiKey = null) => new
     {
-        mode = "OwnKey", modelId, effort = "low", dailyMessageLimit = 30, monthlyBudget = new { amount = 100m, currency = "USD" }, keyAction, apiKey, version,
+        mode = "OwnKey",
+        modelId,
+        effort = "low",
+        dailyMessageLimit = 30,
+        monthlyBudget = new { amount = 100m, currency = "USD" },
+        keyAction,
+        apiKey,
+        version,
     };
     private sealed class ValidationProbe
     {

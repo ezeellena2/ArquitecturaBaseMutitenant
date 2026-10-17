@@ -42,7 +42,7 @@ internal sealed class AccountRecoveryNotifier(IEnumerable<ILoginCodeChannel> cod
         var support = (await settings.FindAsync(cancellationToken))?.SupportEmail;
         await notices.EnqueueAsync(userId, available,
             new AccountNotice.RecoveryRequested(requestedAtUtc, account.TimeZoneId)
-                { RecipientName = account.DisplayName, SupportEmail = support },
+            { RecipientName = account.DisplayName, SupportEmail = support },
             account.Culture, principalOnly: false, cancellationToken);
     }
 

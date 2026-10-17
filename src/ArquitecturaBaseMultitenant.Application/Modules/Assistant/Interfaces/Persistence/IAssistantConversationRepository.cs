@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Domain.Assistant;
 using ArquitecturaBaseMultitenant.Domain.Users;
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
+
 public interface IAssistantConversationRepository
 {
     void Add(AssistantConversation conversation);

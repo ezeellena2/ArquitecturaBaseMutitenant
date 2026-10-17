@@ -31,7 +31,8 @@ public sealed class PlatformWhatsAppBotTests(ApiFactory factory) : IClassFixture
         var phoneNumberId = WhatsAppAttentionJourney.NewNumberId();
         await using var host = WhatsAppAttentionJourney.Host(factory, new FakeGraph(), settings: new Dictionary<string, string>
         {
-            ["WhatsApp:PhoneNumberId"] = phoneNumberId, ["WhatsApp:AccessToken"] = "configured-token",
+            ["WhatsApp:PhoneNumberId"] = phoneNumberId,
+            ["WhatsApp:AccessToken"] = "configured-token",
         });
         using var client = await OperatorAsync(host);
 
@@ -69,8 +70,15 @@ public sealed class PlatformWhatsAppBotTests(ApiFactory factory) : IClassFixture
             welcome.ListRows!.Select(row => row.Id));
         Assert.Equal("Entrar a mi cuenta", welcome.ListRows![0].Title);
 
-        await InboundAsync(host, anonymous, phoneNumberId, person, new { type = "interactive", interactive = new { type = "list_reply",
-            list_reply = new { id = BotButtons.Option(PlatformWhatsAppBot.SignInOptionId), title = "Entrar a mi cuenta" } } });
+        await InboundAsync(host, anonymous, phoneNumberId, person, new
+        {
+            type = "interactive",
+            interactive = new
+            {
+                type = "list_reply",
+                list_reply = new { id = BotButtons.Option(PlatformWhatsAppBot.SignInOptionId), title = "Entrar a mi cuenta" }
+            }
+        });
         var replies = await OutboxAsync(host, person);
         Assert.Equal(2, replies.Count);
         Assert.NotEqual("Bienvenidos", replies[1].Body);
@@ -91,7 +99,8 @@ public sealed class PlatformWhatsAppBotTests(ApiFactory factory) : IClassFixture
         var phoneNumberId = WhatsAppAttentionJourney.NewNumberId();
         await using var host = WhatsAppAttentionJourney.Host(factory, new FakeGraph(), settings: new Dictionary<string, string>
         {
-            ["WhatsApp:PhoneNumberId"] = phoneNumberId, ["WhatsApp:AccessToken"] = "configured-token",
+            ["WhatsApp:PhoneNumberId"] = phoneNumberId,
+            ["WhatsApp:AccessToken"] = "configured-token",
         });
         using var manager = await OperatorAsync(host, PlatformPermissions.WhatsApp.Manage, PlatformPermissions.WhatsApp.Attend, PlatformPermissions.Accounts.Read);
         using var attendant = await OperatorAsync(host, PlatformPermissions.WhatsApp.Attend);
@@ -145,20 +154,23 @@ public sealed class PlatformWhatsAppBotTests(ApiFactory factory) : IClassFixture
 
     private static object Bot(object[] menu, uint version) => new
     {
-        welcome = "Bienvenidos", outOfHours = "Estamos cerrados",
+        welcome = "Bienvenidos",
+        outOfHours = "Estamos cerrados",
         schedule = new
         {
             timeZoneId = "America/Argentina/Buenos_Aires",
             days = Enum.GetValues<DayOfWeek>().Select(day => new { day = day.ToString(), from = "00:00:00", to = "23:59:59" }).ToArray(),
         },
-        menu, version,
+        menu,
+        version,
     };
 
     private static async Task InboundAsync(WebApplicationFactory<Program> host, HttpClient client, string phoneNumberId, string from, object content)
     {
         var message = new Dictionary<string, object>
         {
-            ["from"] = from.TrimStart('+'), ["id"] = "wamid.platform." + Guid.NewGuid().ToString("N"),
+            ["from"] = from.TrimStart('+'),
+            ["id"] = "wamid.platform." + Guid.NewGuid().ToString("N"),
             ["timestamp"] = TimeProvider.System.GetUtcNow().ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
         };
         foreach (var property in JsonSerializer.SerializeToElement(content).EnumerateObject()) message[property.Name] = property.Value;

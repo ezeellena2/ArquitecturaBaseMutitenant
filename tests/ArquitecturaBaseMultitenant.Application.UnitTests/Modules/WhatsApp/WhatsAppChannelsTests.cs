@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Modules.WhatsApp;
+
 public sealed class WhatsAppChannelsTests
 {
     [Fact]
@@ -44,7 +45,9 @@ public sealed class WhatsAppChannelsTests
     }
     private sealed class Outbox : IOutbox
     {
-        public int Calls { get; private set; } public Guid? UserId { get; private set; } public string? Channel { get; private set; }
+        public int Calls { get; private set; }
+        public Guid? UserId { get; private set; }
+        public string? Channel { get; private set; }
         public Guid Enqueue(string channel, string payload, Guid? userId = null) { Calls++; UserId = userId; Channel = channel; return Guid.CreateVersion7(); }
     }
     private sealed class Templates : IWhatsAppTemplateRenderer

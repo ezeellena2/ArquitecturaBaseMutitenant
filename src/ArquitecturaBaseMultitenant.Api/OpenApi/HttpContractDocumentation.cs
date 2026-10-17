@@ -28,7 +28,9 @@ public static class HttpContractDocumentation
             if (!operation.Parameters.Any(value => value.Name == "Idempotency-Key"))
                 operation.Parameters.Add(new OpenApiParameter
                 {
-                    Name = "Idempotency-Key", In = ParameterLocation.Header, Required = true,
+                    Name = "Idempotency-Key",
+                    In = ParameterLocation.Header,
+                    Required = true,
                     Description = "UUID por operación. Reusar la misma key y cuerpo para reintentar; otra key representa otra operación.",
                     Schema = new OpenApiSchema { Type = JsonSchemaType.String, Format = "uuid" },
                 });
@@ -65,8 +67,11 @@ public static class HttpContractDocumentation
         var catalog = (JsonArray)Catalog(operation).DeepClone();
         foreach (var error in errors) catalog.Add(new JsonObject
         {
-            ["status"] = error.Status, ["code"] = error.Code, ["field"] = error.Field,
-            ["es"] = error.Spanish, ["en"] = error.English,
+            ["status"] = error.Status,
+            ["code"] = error.Code,
+            ["field"] = error.Field,
+            ["es"] = error.Spanish,
+            ["en"] = error.English,
         });
         operation.Extensions["x-error-codes"] = new JsonNodeExtension(catalog);
         operation.Responses ??= new OpenApiResponses();
@@ -97,8 +102,12 @@ public static class HttpContractDocumentation
                     var detail = culture == "es" ? error.Spanish : error.English;
                     var example = new JsonObject
                     {
-                        ["type"] = "about:blank", ["title"] = culture == "es" ? "Solicitud rechazada" : "Request rejected",
-                        ["status"] = error.Status, ["detail"] = detail, ["code"] = error.Code, ["traceId"] = "example-trace-id",
+                        ["type"] = "about:blank",
+                        ["title"] = culture == "es" ? "Solicitud rechazada" : "Request rejected",
+                        ["status"] = error.Status,
+                        ["detail"] = detail,
+                        ["code"] = error.Code,
+                        ["traceId"] = "example-trace-id",
                     };
                     if (error.Field is not null) example["errors"] = new JsonObject { [error.Field] = new JsonArray(detail) };
                     if (error.Status == 429 && error.Code != "Identity.Account.LockedOut") example["retryAfter"] = 60;
@@ -114,8 +123,17 @@ public static class HttpContractDocumentation
 
     private static string StatusName(int status) => status switch
     {
-        400 => "400", 401 => "401", 403 => "403", 404 => "404", 409 => "409", 413 => "413", 422 => "422",
-        429 => "429", 500 => "500", 501 => "501", 503 => "503",
+        400 => "400",
+        401 => "401",
+        403 => "403",
+        404 => "404",
+        409 => "409",
+        413 => "413",
+        422 => "422",
+        429 => "429",
+        500 => "500",
+        501 => "501",
+        503 => "503",
         _ => throw new ArgumentOutOfRangeException(nameof(status), "An error response status must be explicitly documented."),
     };
 

@@ -113,7 +113,8 @@ public sealed class AssistantSnapshotPrivacyTests
         }
         var target = Guid.CreateVersion7();
         var audit = new PlatformAuditEventResponse(row, NowUtc, "Accounts", "Suspend", "Summary", "Target", null, target,
-            "Actor", "Operator", null, null) { AuditActorId = subject };
+            "Actor", "Operator", null, null)
+        { AuditActorId = subject };
         Assert.NotEqual(audit.TargetAccountId, audit.AuditActorId);
         Assert.DoesNotContain(subject.ToString(), JsonSerializer.Serialize(audit), StringComparison.OrdinalIgnoreCase);
         Assert.Contains(target.ToString(), JsonSerializer.Serialize(audit), StringComparison.OrdinalIgnoreCase);

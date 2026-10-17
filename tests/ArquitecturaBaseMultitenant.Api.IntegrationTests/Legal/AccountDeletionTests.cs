@@ -245,7 +245,7 @@ public sealed partial class AccountDeletionTests(ApiFactory factory)
     }
 
     private HttpClient CreateClient() => factory.CreateClient(new WebApplicationFactoryClientOptions
-        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+    { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
 
     private static async Task<string[]> SoleOwnerOrganizationsAsync(HttpClient client)
     {

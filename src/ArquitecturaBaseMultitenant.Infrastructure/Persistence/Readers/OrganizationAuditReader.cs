@@ -50,13 +50,17 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
         // Las entradas y las acciones de Plataforma van en un mismo cursor, por fecha.
         var feed = entries.Select(entry => new FeedKey
         {
-            Id = entry.Id, OccurredAtUtc = entry.OccurredAtUtc, FromPlatform = false,
+            Id = entry.Id,
+            OccurredAtUtc = entry.OccurredAtUtc,
+            FromPlatform = false,
         });
         if (ShowsPlatformActions(request))
         {
             feed = feed.Concat(PlatformActionsOf(tenantId, startUtc, endUtc).Select(action => new FeedKey
             {
-                Id = action.Id, OccurredAtUtc = action.OccurredAtUtc, FromPlatform = true,
+                Id = action.Id,
+                OccurredAtUtc = action.OccurredAtUtc,
+                FromPlatform = true,
             }));
         }
 
@@ -302,8 +306,11 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
     {
         var unfiltered = filters with { ActorId = null, ActorKind = null };
         var keys = (await FilteredAsync(unfiltered, startUtc, endUtc, cancellationToken))
-            .Select(entry => new { ActorId = entry.ActorKind == AuditActorKind.User ? entry.ActorId : null,
-                Order = entry.ActorKind == AuditActorKind.User ? 0 : entry.ActorKind == AuditActorKind.System ? 1 : 2 });
+            .Select(entry => new
+            {
+                ActorId = entry.ActorKind == AuditActorKind.User ? entry.ActorId : null,
+                Order = entry.ActorKind == AuditActorKind.User ? 0 : entry.ActorKind == AuditActorKind.System ? 1 : 2
+            });
         if (ShowsPlatformActions(unfiltered))
             keys = keys.Concat(PlatformActionsOf(tenantContext.RequiredTenantId, startUtc, endUtc)
                 .Select(action => new { ActorId = (Guid?)null, Order = 2 }));
@@ -316,7 +323,8 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
                       from user in identities.DefaultIfEmpty()
                       select new ActorOption
                       {
-                          ActorId = actor.ActorId, Order = actor.Order,
+                          ActorId = actor.ActorId,
+                          Order = actor.Order,
                           DisplayName = actor.Order != 0 ? actor.Order == 1 ? system : platform
                               : user == null ? null : user.Status == UserStatus.Deleted ? deletedAccount : user.DisplayName,
                       };

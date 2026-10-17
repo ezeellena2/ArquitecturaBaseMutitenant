@@ -44,7 +44,13 @@ public sealed class AssistantModelPrice : Entity, IGlobalSecurityAudited, IVersi
         ArgumentException.ThrowIfNullOrWhiteSpace(displayName);
         ArgumentNullException.ThrowIfNull(inputPrice);
         ArgumentNullException.ThrowIfNull(outputPrice);
-        return new AssistantModelPrice { Provider = provider, ProviderModelId = providerModelId, DisplayName = displayName,
-            InputPrice = new Money(inputPrice.Amount, inputPrice.Currency), OutputPrice = new Money(outputPrice.Amount, outputPrice.Currency) };
+        return new AssistantModelPrice
+        {
+            Provider = provider,
+            ProviderModelId = providerModelId,
+            DisplayName = displayName,
+            InputPrice = new Money(inputPrice.Amount, inputPrice.Currency),
+            OutputPrice = new Money(outputPrice.Amount, outputPrice.Currency)
+        };
     }
 }

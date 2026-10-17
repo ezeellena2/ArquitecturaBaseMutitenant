@@ -140,9 +140,17 @@ public sealed class AssistantTurnProviderRoundtripTests
             Add("message_start", new
             {
                 type = "message_start",
-                message = new { id = first ? "msg_fixture_1" : "msg_fixture_2", type = "message", role = "assistant",
-                    model = json.RootElement.GetProperty("model").GetString(), content = Array.Empty<object>(),
-                    stop_reason = (string?)null, stop_sequence = (string?)null, usage = new { input_tokens = 17, output_tokens = 1 } },
+                message = new
+                {
+                    id = first ? "msg_fixture_1" : "msg_fixture_2",
+                    type = "message",
+                    role = "assistant",
+                    model = json.RootElement.GetProperty("model").GetString(),
+                    content = Array.Empty<object>(),
+                    stop_reason = (string?)null,
+                    stop_sequence = (string?)null,
+                    usage = new { input_tokens = 17, output_tokens = 1 }
+                },
             });
             if (first)
             {
@@ -152,8 +160,12 @@ public sealed class AssistantTurnProviderRoundtripTests
                 Add("content_block_stop", new { type = "content_block_stop", index = 0 });
                 Add("content_block_start", new { type = "content_block_start", index = 1, content_block = new { type = "redacted_thinking", data = Redacted } });
                 Add("content_block_stop", new { type = "content_block_stop", index = 1 });
-                Add("content_block_start", new { type = "content_block_start", index = 2,
-                    content_block = new { type = "tool_use", id = "tool_fixture", name = "my_account", input = new { } } });
+                Add("content_block_start", new
+                {
+                    type = "content_block_start",
+                    index = 2,
+                    content_block = new { type = "tool_use", id = "tool_fixture", name = "my_account", input = new { } }
+                });
                 Add("content_block_delta", new { type = "content_block_delta", index = 2, delta = new { type = "input_json_delta", partial_json = "{}" } });
                 Add("content_block_stop", new { type = "content_block_stop", index = 2 });
             }

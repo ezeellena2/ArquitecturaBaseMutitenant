@@ -42,17 +42,17 @@ internal sealed class PlatformReader(ApplicationDbContext context) : IPlatformRe
         var tenant = await FindTenantAsync(id, ct);
         if (tenant is null) return null;
         var owners = await (from access in context.UserTenantAccesses.AsNoTracking()
-            join user in context.Users.AsNoTracking() on access.UserId equals user.Id
-            where access.TenantId == id && access.Status == MemberStatus.Active && access.RoleName == SystemRoles.TenantAdmin
-            orderby access.JoinedAtUtc, access.UserId
-            select new PlatformTenantOwnerResponse(user.Id, user.DisplayName,
-                user.Email == null ? null : Email.Create(user.Email).Value, user.Status, access.Status,
-                context.LoginAudits.Where(audit => audit.UserId == user.Id && audit.Succeeded)
-                    .OrderByDescending(audit => audit.OccurredAtUtc).ThenByDescending(audit => audit.Id)
-                    .Select(audit => (DateTime?)audit.OccurredAtUtc).FirstOrDefault(),
-                context.LoginAudits.Where(audit => audit.UserId == user.Id && audit.Succeeded)
-                    .OrderByDescending(audit => audit.OccurredAtUtc).ThenByDescending(audit => audit.Id)
-                    .Select(audit => (LoginAuditMethod?)audit.Method).FirstOrDefault())).ToArrayAsync(ct);
+                            join user in context.Users.AsNoTracking() on access.UserId equals user.Id
+                            where access.TenantId == id && access.Status == MemberStatus.Active && access.RoleName == SystemRoles.TenantAdmin
+                            orderby access.JoinedAtUtc, access.UserId
+                            select new PlatformTenantOwnerResponse(user.Id, user.DisplayName,
+                                user.Email == null ? null : Email.Create(user.Email).Value, user.Status, access.Status,
+                                context.LoginAudits.Where(audit => audit.UserId == user.Id && audit.Succeeded)
+                                    .OrderByDescending(audit => audit.OccurredAtUtc).ThenByDescending(audit => audit.Id)
+                                    .Select(audit => (DateTime?)audit.OccurredAtUtc).FirstOrDefault(),
+                                context.LoginAudits.Where(audit => audit.UserId == user.Id && audit.Succeeded)
+                                    .OrderByDescending(audit => audit.OccurredAtUtc).ThenByDescending(audit => audit.Id)
+                                    .Select(audit => (LoginAuditMethod?)audit.Method).FirstOrDefault())).ToArrayAsync(ct);
         // El jsonb conserva evidencia técnica. Una entrada, un cambio de módulos o un replay sin transición
         // no reemplazan el último cambio de estado; las filas históricas sin evidencia quedan fuera.
         var state = await context.SecurityEvents.FromSql($"""

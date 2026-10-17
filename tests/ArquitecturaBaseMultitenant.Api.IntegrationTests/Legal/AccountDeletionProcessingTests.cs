@@ -41,7 +41,7 @@ public sealed class AccountDeletionProcessingTests
         await factory.InitializeAsync();
         await factory.Services.SeedDatabaseAsync(Ct);
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
 
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
         var outboundTenantId = await CreateBusinessSpaceAsync(factory.Services, account.UserId, "Invitación enviada");
@@ -116,7 +116,7 @@ public sealed class AccountDeletionProcessingTests
             services.AddSingleton<IAccountDeletionParticipant>(failure);
         }));
         using var client = host.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
         Guid personalId;
         await using (var scope = host.Services.CreateAsyncScope())

@@ -56,7 +56,10 @@ public sealed class TestController : ControllerBase
     {
         Response.Cookies.Append("MtTestCookie", "1", new CookieOptions
         {
-            Domain = "localhost", SameSite = SameSiteMode.None, Secure = false, HttpOnly = false,
+            Domain = "localhost",
+            SameSite = SameSiteMode.None,
+            Secure = false,
+            HttpOnly = false,
         });
         return NoContent();
     }

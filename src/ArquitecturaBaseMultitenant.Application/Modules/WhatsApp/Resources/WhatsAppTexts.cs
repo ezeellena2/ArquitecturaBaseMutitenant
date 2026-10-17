@@ -3,6 +3,7 @@ using System.Resources;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Localization;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Resources;
+
 public static class WhatsAppTexts
 {
     public static string Format(string key, CultureProfile profile, params object[] values) => DisplayFormatter.FormatResource(Get(key, profile), profile, values);

@@ -228,7 +228,7 @@ public sealed class AssistantSnapshotClaimRaceTests
         }));
 
     private static HttpClient Client(WebApplicationFactory<Program> host) => host.CreateClient(new()
-        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+    { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
 
     private static async Task<RaceData> SetupAsync(ApiFactory factory, WebApplicationFactory<Program> host,
         HttpClient ownerClient, HttpClient targetClient, bool platform)

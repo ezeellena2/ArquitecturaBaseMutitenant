@@ -151,7 +151,7 @@ public sealed class EmailPendingMethodPossessionTests
                 && item.ImplementationType?.Namespace?.Contains(".Modules.", StringComparison.Ordinal) == false);
             services.Remove(descriptor);
             services.Insert(0, ServiceDescriptor.Scoped<IAccountNoticeChannel>(provider =>
-                new FailingNotice( (IAccountNoticeChannel)ActivatorUtilities.CreateInstance(provider, descriptor.ImplementationType!), failure)));
+                new FailingNotice((IAccountNoticeChannel)ActivatorUtilities.CreateInstance(provider, descriptor.ImplementationType!), failure)));
         }));
         var a = await journey.AccountAsync(Ct);
         var b = await journey.AccountAsync(Ct);

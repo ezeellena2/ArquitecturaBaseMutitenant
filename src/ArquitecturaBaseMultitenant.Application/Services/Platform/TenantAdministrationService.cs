@@ -103,7 +103,7 @@ internal sealed class TenantAdministrationService(IPlatformReader reader, Platfo
             if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
             if (await reader.FindTenantAsync(id, ct) is null) return TenantErrors.NotFound;
             var page = await history.ListAsync(new ListPlatformAuditRequest
-                { TenantId = id, Period = "all", After = request.After, Limit = request.Limit }, null, null, false, ct);
+            { TenantId = id, Period = "all", After = request.After, Limit = request.Limit }, null, null, false, ct);
             return new CursorResult<PlatformTenantHistoryResponse>([.. page.Items.Select(row =>
                 new PlatformTenantHistoryResponse(row.Id, row.OccurredAtUtc, AuditTexts.SecurityEvent(row.EventType!.Value),
                     row.ActorKind == AuditActorKind.System ? AuditTexts.Actor(AuditActorKind.System) : ActorName(row.Actor),

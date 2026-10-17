@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
+
 internal sealed class WhatsAppDeliveryObserver(IWhatsAppMessageRepository messages) : IOutboxDeliveryObserver
 {
     public string Key => "whatsapp";

@@ -88,12 +88,12 @@ public sealed class AssistantStartupTests
     [InlineData("longInputPerMillion", "2")]
     public void Invalid_bootstrap_metadata_is_rejected(string property, string value)
     {
-            var row = JsonNode.Parse("""
+        var row = JsonNode.Parse("""
                 {"currency":"USD","revision":"fixture-v2","providerModelId":"isolated-model","nameEs":"Prueba","nameEn":"Test","inputPerMillion":1,"outputPerMillion":2,"cacheWrite5MinutesPerMillion":1.25,"cacheWrite1HourPerMillion":2,"cacheReadPerMillion":0.1,"text":true,"images":true,"pdf":true,"tools":true,"adaptiveThinking":true,"maxInputTokens":1000000,"maxOutputTokens":128000,"efforts":["Low"]}
                 """)!;
-            row[property] = JsonNode.Parse(value);
-            using var document = System.Text.Json.JsonDocument.Parse(row.ToJsonString());
-            Assert.Throws<InvalidOperationException>(() => AssistantProviderCatalog.Read(document.RootElement, null));
+        row[property] = JsonNode.Parse(value);
+        using var document = System.Text.Json.JsonDocument.Parse(row.ToJsonString());
+        Assert.Throws<InvalidOperationException>(() => AssistantProviderCatalog.Read(document.RootElement, null));
     }
 
     private static ServiceProvider Provider(string environment, bool fake, bool isolated, string? references = null)
@@ -103,7 +103,8 @@ public sealed class AssistantStartupTests
         services.AddSingleton<IHostEnvironment>(new EnvironmentStub { EnvironmentName = environment });
         services.AddSingleton<IConfiguration>(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["Assistant:UseFakeChatClient"] = fake.ToString(), ["Assistant:IsolatedE2E"] = isolated.ToString(),
+            ["Assistant:UseFakeChatClient"] = fake.ToString(),
+            ["Assistant:IsolatedE2E"] = isolated.ToString(),
             ["Assistant:ProviderReferenceFile"] = references,
         }).Build());
         ArquitecturaBaseMultitenant.Application.Modules.Assistant.AssistantModule.AddAssistantModule(services);

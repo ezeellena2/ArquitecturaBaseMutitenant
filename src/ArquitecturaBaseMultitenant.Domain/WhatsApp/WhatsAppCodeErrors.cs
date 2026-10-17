@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Domain.Results;
 namespace ArquitecturaBaseMultitenant.Domain.WhatsApp;
+
 public static class WhatsAppCodeErrors
 {
     public const string DailyLimitCode = "WhatsApp.LoginCode.DailyLimit";

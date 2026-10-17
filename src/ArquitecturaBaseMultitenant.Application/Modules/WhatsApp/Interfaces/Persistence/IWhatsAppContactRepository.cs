@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
+
 public interface IWhatsAppContactRepository
 {
     Task LockAsync(string waId, CancellationToken ct);

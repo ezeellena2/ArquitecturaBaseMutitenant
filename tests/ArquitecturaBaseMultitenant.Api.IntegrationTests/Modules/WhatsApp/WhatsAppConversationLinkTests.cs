@@ -88,13 +88,18 @@ public sealed class WhatsAppConversationLinkTests(ApiFactory factory)
 
     private static object Bot() => new
     {
-        welcome = "Bienvenidos", outOfHours = "Estamos cerrados",
+        welcome = "Bienvenidos",
+        outOfHours = "Estamos cerrados",
         schedule = new
         {
             timeZoneId = "America/Argentina/Buenos_Aires",
             days = Enum.GetValues<DayOfWeek>().Select(day => new { day = day.ToString(), from = "00:00:00", to = "23:59:59" }).ToArray(),
         },
-        menu = Array.Empty<object>(), askPromotions = false, offerAccountLink = true, employeesTeamId = (Guid?)null, version = 0u,
+        menu = Array.Empty<object>(),
+        askPromotions = false,
+        offerAccountLink = true,
+        employeesTeamId = (Guid?)null,
+        version = 0u,
     };
 
     private static async Task<IReadOnlyList<string?>> TextsAsync(HttpClient person, Guid linkId) =>

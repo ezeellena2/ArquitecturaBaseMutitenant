@@ -68,13 +68,20 @@ public sealed class WhatsAppQuotaMigrationTests
         Assert.NotEqual(value, other.Hash("192.0.2.1", "number", day)); Assert.DoesNotContain("192.0.2.1", value);
     }
     [Theory]
-    [InlineData(0, 20, "0.2", false)] [InlineData(100, 0, "0.2", false)]
-    [InlineData(100, 20, "-0.01", false)] [InlineData(100, 20, "1.01", false)]
-    [InlineData(1, 20, "0.2", true)] [InlineData(7, 3, "0.5", true)]
+    [InlineData(0, 20, "0.2", false)]
+    [InlineData(100, 0, "0.2", false)]
+    [InlineData(100, 20, "-0.01", false)]
+    [InlineData(100, 20, "1.01", false)]
+    [InlineData(1, 20, "0.2", true)]
+    [InlineData(7, 3, "0.5", true)]
     public void Quota_configuration_validates_total_IP_cap_and_protected_fraction(int total, int ip, string fraction, bool valid)
     {
-        var options = new WhatsAppOptions { DailyAuthCodeLimit = total, DailyNewAuthCodeIpLimit = ip,
-            ProtectedAuthCodeFraction = decimal.Parse(fraction, System.Globalization.CultureInfo.InvariantCulture) };
+        var options = new WhatsAppOptions
+        {
+            DailyAuthCodeLimit = total,
+            DailyNewAuthCodeIpLimit = ip,
+            ProtectedAuthCodeFraction = decimal.Parse(fraction, System.Globalization.CultureInfo.InvariantCulture)
+        };
         Assert.Equal(valid, Validator.TryValidateObject(options, new ValidationContext(options), [], true));
     }
 }

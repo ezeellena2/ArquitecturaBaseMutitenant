@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 namespace ArquitecturaBaseMultitenant.Api.Idempotency;
+
 internal sealed class LoginLinkReplayVerifier(ILoginLinkReplayService service) : IIdempotencyReplayVerifier
 {
     public async Task<Result> ValidateAsync(HttpRequest request, int originalStatusCode, string? originalBody, CancellationToken ct)

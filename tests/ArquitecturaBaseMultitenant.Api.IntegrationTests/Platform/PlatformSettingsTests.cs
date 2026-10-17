@@ -35,9 +35,13 @@ public sealed class PlatformSettingsTests
             .RootElement.GetProperty("supportEmail").ValueKind);
         using var saved = await client.PutAsJsonAsync("/api/platform/settings", new
         {
-            consumerSignup = "Closed", businessSignup = "RequiresApproval", maxOwnedOrganizations = 3,
-            salesEmail = "Ventas@Example.com", supportEmail = "soporte@example.com",
-            version = originalVersion, reason = "Control del alta de prueba",
+            consumerSignup = "Closed",
+            businessSignup = "RequiresApproval",
+            maxOwnedOrganizations = 3,
+            salesEmail = "Ventas@Example.com",
+            supportEmail = "soporte@example.com",
+            version = originalVersion,
+            reason = "Control del alta de prueba",
         }, Ct);
         var savedVersion = await SavedVersion.ReadAsync(saved, Ct);
         using var updated = await client.GetAsync("/api/platform/settings", Ct);
@@ -58,9 +62,13 @@ public sealed class PlatformSettingsTests
 
         using var stale = await client.PutAsJsonAsync("/api/platform/settings", new
         {
-            consumerSignup = "Open", businessSignup = "Open", maxOwnedOrganizations = 1,
-            salesEmail = "ventas@example.com", supportEmail = "soporte@example.com",
-            version = originalVersion, reason = "Cambio obsoleto",
+            consumerSignup = "Open",
+            businessSignup = "Open",
+            maxOwnedOrganizations = 1,
+            salesEmail = "ventas@example.com",
+            supportEmail = "soporte@example.com",
+            version = originalVersion,
+            reason = "Cambio obsoleto",
         }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
         using var staleJson = JsonDocument.Parse(await stale.Content.ReadAsStringAsync(Ct));
@@ -85,9 +93,13 @@ public sealed class PlatformSettingsTests
         // El siguiente guardado sale con la versión que respondió el anterior, sin releer.
         using var reopened = await client.PutAsJsonAsync("/api/platform/settings", new
         {
-            consumerSignup = "Open", businessSignup = "RequiresApproval", maxOwnedOrganizations = 3,
-            salesEmail = "ventas@example.com", supportEmail = "soporte@example.com",
-            version = savedVersion, reason = "Reapertura del alta de prueba",
+            consumerSignup = "Open",
+            businessSignup = "RequiresApproval",
+            maxOwnedOrganizations = 3,
+            salesEmail = "ventas@example.com",
+            supportEmail = "soporte@example.com",
+            version = savedVersion,
+            reason = "Reapertura del alta de prueba",
         }, Ct);
         Assert.NotEqual(savedVersion, await SavedVersion.ReadAsync(reopened, Ct));
     }
@@ -109,8 +121,13 @@ public sealed class PlatformSettingsTests
         Assert.Equal(HttpStatusCode.Forbidden, support.StatusCode);
         using var supportUpdate = await client.PutAsJsonAsync("/api/platform/settings", new
         {
-            consumerSignup = "Open", businessSignup = "Open", maxOwnedOrganizations = 2,
-            salesEmail = "ventas@example.com", supportEmail = "soporte@example.com", version = 1u, reason = "Cambio no autorizado",
+            consumerSignup = "Open",
+            businessSignup = "Open",
+            maxOwnedOrganizations = 2,
+            salesEmail = "ventas@example.com",
+            supportEmail = "soporte@example.com",
+            version = 1u,
+            reason = "Cambio no autorizado",
         }, Ct);
         Assert.Equal(HttpStatusCode.Forbidden, supportUpdate.StatusCode);
     }
@@ -133,9 +150,13 @@ public sealed class PlatformSettingsTests
         {
             using var saved = await client.PutAsJsonAsync("/api/platform/settings", new
             {
-                consumerSignup = "Open", businessSignup = "RequiresApproval", maxOwnedOrganizations = limit,
-                salesEmail = "ventas@example.com", supportEmail = "soporte@example.com",
-                version, reason = "Cambio del límite",
+                consumerSignup = "Open",
+                businessSignup = "RequiresApproval",
+                maxOwnedOrganizations = limit,
+                salesEmail = "ventas@example.com",
+                supportEmail = "soporte@example.com",
+                version,
+                reason = "Cambio del límite",
             }, Ct);
             var savedVersion = await SavedVersion.ReadAsync(saved, Ct);
             Assert.NotEqual(version, savedVersion);
@@ -177,9 +198,13 @@ public sealed class PlatformSettingsTests
         using var initialJson = JsonDocument.Parse(await initial.Content.ReadAsStringAsync(Ct));
         using var baseline = await client.PutAsJsonAsync("/api/platform/settings", new
         {
-            consumerSignup = "Open", businessSignup = "RequiresApproval", maxOwnedOrganizations = 3,
-            salesEmail = "ventas@example.com", supportEmail = "soporte@example.com",
-            version = initialJson.RootElement.GetProperty("version").GetUInt32(), reason = "Configuración inicial",
+            consumerSignup = "Open",
+            businessSignup = "RequiresApproval",
+            maxOwnedOrganizations = 3,
+            salesEmail = "ventas@example.com",
+            supportEmail = "soporte@example.com",
+            version = initialJson.RootElement.GetProperty("version").GetUInt32(),
+            reason = "Configuración inicial",
         }, Ct);
         var version = await SavedVersion.ReadAsync(baseline, Ct);
         using var current = await client.GetAsync("/api/platform/settings", Ct);
@@ -194,8 +219,13 @@ public sealed class PlatformSettingsTests
         {
             using var invalid = await client.PutAsJsonAsync("/api/platform/settings", new
             {
-                consumerSignup = "Closed", businessSignup = "Closed", maxOwnedOrganizations = limit,
-                salesEmail = "nuevo@example.com", supportEmail = "ayuda@example.com", version, reason = "Cambio rechazado",
+                consumerSignup = "Closed",
+                businessSignup = "Closed",
+                maxOwnedOrganizations = limit,
+                salesEmail = "nuevo@example.com",
+                supportEmail = "ayuda@example.com",
+                version,
+                reason = "Cambio rechazado",
             }, Ct);
             Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
             Assert.Equal(language, Assert.Single(invalid.Content.Headers.ContentLanguage));
@@ -238,14 +268,24 @@ public sealed class PlatformSettingsTests
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
         using var invalid = await client.PutAsJsonAsync("/api/platform/settings", new
         {
-            consumerSignup = "Open", businessSignup = "Open", maxOwnedOrganizations = 0,
-            salesEmail = "ventas@example.com", supportEmail = "soporte@example.com", version = 1u, reason = " ",
+            consumerSignup = "Open",
+            businessSignup = "Open",
+            maxOwnedOrganizations = 0,
+            salesEmail = "ventas@example.com",
+            supportEmail = "soporte@example.com",
+            version = 1u,
+            reason = " ",
         }, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
         using var badContact = await client.PutAsJsonAsync("/api/platform/settings", new
         {
-            consumerSignup = "Open", businessSignup = "Open", maxOwnedOrganizations = 2,
-            salesEmail = "no-es-un-correo", supportEmail = "", version = 1u, reason = "Contacto",
+            consumerSignup = "Open",
+            businessSignup = "Open",
+            maxOwnedOrganizations = 2,
+            salesEmail = "no-es-un-correo",
+            supportEmail = "",
+            version = 1u,
+            reason = "Contacto",
         }, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, badContact.StatusCode);
         using var contactProblem = JsonDocument.Parse(await badContact.Content.ReadAsStringAsync(Ct));

@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persi
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Persistence.Repositories;
+
 internal sealed class AssistantConversationRepository(ApplicationDbContext context, ITenantContext tenant) : IAssistantConversationRepository
 {
     public void Add(AssistantConversation conversation) => context.Set<AssistantConversation>().Add(conversation);

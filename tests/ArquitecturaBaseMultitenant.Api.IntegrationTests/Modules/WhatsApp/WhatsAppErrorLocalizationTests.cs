@@ -1,6 +1,7 @@
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
+
 [Collection(ApiTestGroup.Name)]
 public sealed class WhatsAppErrorLocalizationTests(ApiFactory factory)
 {

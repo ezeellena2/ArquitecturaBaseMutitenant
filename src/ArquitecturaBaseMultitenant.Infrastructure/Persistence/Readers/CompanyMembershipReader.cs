@@ -69,8 +69,12 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
                               where assignment.TenantId == tenantId && assignment.CompanyId == companyId
                                   && memberIds.Contains(assignment.MemberId)
                               orderby role.Name
-                              select new { assignment.MemberId, Role = new CompanyMemberRoleRow(role.Id,
-                                  role.Name, role.IsSystemRole, role.Scope, role.CompanyId) })
+                              select new
+                              {
+                                  assignment.MemberId,
+                                  Role = new CompanyMemberRoleRow(role.Id,
+                                  role.Name, role.IsSystemRole, role.Scope, role.CompanyId)
+                              })
             .ToArrayAsync(cancellationToken);
         var rolesByMember = roleRows.GroupBy(item => item.MemberId)
             .ToDictionary(group => group.Key, group => (IReadOnlyList<CompanyMemberRoleRow>)[.. group.Select(item => item.Role)]);
@@ -146,8 +150,12 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
                            where assignment.TenantId == tenantId && memberIds.Contains(assignment.MemberId)
                                && assignment.CompanyId != null && companyIds.Contains(assignment.CompanyId.Value)
                            orderby role.Name
-                           select new { CompanyId = assignment.CompanyId!.Value, Role = new CompanyMemberRoleRow(role.Id,
-                               role.Name, role.IsSystemRole, role.Scope, role.CompanyId) })
+                           select new
+                           {
+                               CompanyId = assignment.CompanyId!.Value,
+                               Role = new CompanyMemberRoleRow(role.Id,
+                               role.Name, role.IsSystemRole, role.Scope, role.CompanyId)
+                           })
             .ToArrayAsync(cancellationToken);
         var rolesByCompany = roles.GroupBy(item => item.CompanyId)
             .ToDictionary(group => group.Key, group => (IReadOnlyList<CompanyMemberRoleRow>)[.. group.Select(item => item.Role)]);
@@ -177,16 +185,16 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
         }
 
         var page = await members.Select(member => new CandidateRow
-            {
-                MemberId = member.Id,
-                DisplayName = context.Users.Where(user => user.Id == member.UserId)
+        {
+            MemberId = member.Id,
+            DisplayName = context.Users.Where(user => user.Id == member.UserId)
                     .Select(user => user.DisplayName ?? string.Empty).FirstOrDefault(),
-                Email = context.LoginMethods
+            Email = context.LoginMethods
                     .Where(method => method.UserId == member.UserId && method.Type == LoginMethodType.Email
                         && method.VerifiedAtUtc != null)
                     .OrderByDescending(method => method.IsPrimary).ThenBy(method => method.Id)
                     .Select(method => method.Value).FirstOrDefault(),
-            })
+        })
             .ApplySort(SortDescriptor.Parse(request.Sort), CandidateSort, DefaultSort, row => row.MemberId)
             .ToPagedResultAsync(request, cancellationToken);
         return new PagedResult<CompanyCandidateRow>([.. page.Items.Select(row => new CompanyCandidateRow(

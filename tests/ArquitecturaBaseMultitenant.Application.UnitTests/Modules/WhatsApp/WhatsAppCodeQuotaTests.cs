@@ -14,6 +14,7 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using Microsoft.Extensions.Time.Testing;
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Modules.WhatsApp;
+
 public sealed class WhatsAppCodeQuotaTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -67,7 +68,10 @@ public sealed class WhatsAppCodeQuotaTests
         Assert.Empty(f.Quotas.Rows); Assert.Empty(f.Quotas.Ips);
     }
     [Theory]
-    [InlineData(1, 0)] [InlineData(2, 1)] [InlineData(6, 4)] [InlineData(99, 79)]
+    [InlineData(1, 0)]
+    [InlineData(2, 1)]
+    [InlineData(6, 4)]
+    [InlineData(99, 79)]
     public async Task Tiny_and_fractional_caps_round_protection_up_without_exceeding_total(int total, int newLimit)
     {
         var f = new Fixture(); f.Settings.DailyAuthCodeLimit = total; f.Settings.DailyNewAuthCodeIpLimit = 10000;

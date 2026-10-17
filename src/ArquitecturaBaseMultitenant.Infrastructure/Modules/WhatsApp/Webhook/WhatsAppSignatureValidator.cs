@@ -4,6 +4,7 @@ using System.Text;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 using Microsoft.Extensions.Options;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Webhook;
+
 internal sealed class WhatsAppSignatureValidator(IOptions<WhatsAppOptions> options) : IWhatsAppSignatureValidator
 {
     public bool IsValidSignature(ReadOnlySpan<byte> body, string? signature)

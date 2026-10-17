@@ -59,8 +59,8 @@ internal sealed class AssistantFinanceRepository(ApplicationDbContext db, ITenan
         var reserved = await operations.Where(row => row.State == AssistantFinancialState.Reserved || row.State == AssistantFinancialState.Invoked)
             .SumAsync(row => row.ReservedCost.Amount, ct);
         var completed = await (from call in db.Set<AssistantFinancialCall>().AsNoTracking()
-            join operation in operations.Where(row => row.State == AssistantFinancialState.Completed) on call.OperationId equals operation.Id
-            select call.Cost.Amount).SumAsync(ct);
+                               join operation in operations.Where(row => row.State == AssistantFinancialState.Completed) on call.OperationId equals operation.Id
+                               select call.Cost.Amount).SumAsync(ct);
         // Multiple admissions in one caller UOW cannot ignore an Added reservation.
         var staged = db.Set<AssistantFinancialOperation>().Local.Where(row => db.Entry(row).State == EntityState.Added
             && row.BudgetMonthId == monthId && row.Funding == funding && row.State is AssistantFinancialState.Reserved or AssistantFinancialState.Invoked)
@@ -74,9 +74,9 @@ internal sealed class AssistantFinanceRepository(ApplicationDbContext db, ITenan
         var staged = db.Set<AssistantFinancialOperation>().Local.Where(row => row.BudgetMonthId == monthId && row.Funding == funding &&
             row.State == AssistantFinancialState.Completed && db.Entry(row).State == EntityState.Modified).Select(row => row.Id).ToArray();
         var persisted = await (from call in db.Set<AssistantFinancialCall>().AsNoTracking()
-            join operation in db.Set<AssistantFinancialOperation>().AsNoTracking() on call.OperationId equals operation.Id
-            where operation.BudgetMonthId == monthId && operation.Funding == funding && operation.State == AssistantFinancialState.Completed && !staged.Contains(operation.Id)
-            select call.Cost.Amount).SumAsync(ct);
+                               join operation in db.Set<AssistantFinancialOperation>().AsNoTracking() on call.OperationId equals operation.Id
+                               where operation.BudgetMonthId == monthId && operation.Funding == funding && operation.State == AssistantFinancialState.Completed && !staged.Contains(operation.Id)
+                               select call.Cost.Amount).SumAsync(ct);
         return persisted + db.Set<AssistantFinancialCall>().Local.Where(row => staged.Contains(row.OperationId)).Sum(row => row.Cost.Amount);
     }
     public async Task<IReadOnlyList<AssistantFinancialCall>> ListCallsAsync(Guid operationId, CancellationToken ct)

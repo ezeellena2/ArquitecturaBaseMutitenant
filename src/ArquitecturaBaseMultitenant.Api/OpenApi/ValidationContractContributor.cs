@@ -60,8 +60,11 @@ internal sealed class ValidationContractContributor(IServiceProvider services) :
             .SelectMany(path => path.Value.Operations?.Values.AsEnumerable() ?? []))
             foreach (var parameter in operation.Parameters?.OfType<OpenApiParameter>() ?? [])
                 if (string.Equals(parameter.Name, "category", StringComparison.OrdinalIgnoreCase))
-                    parameter.Schema = new OpenApiSchema { Type = JsonSchemaType.String,
-                        Enum = OrganizationAuditCategories.EntityTypes.Keys.Select(key => (JsonNode)JsonValue.Create(key)!).ToList() };
+                    parameter.Schema = new OpenApiSchema
+                    {
+                        Type = JsonSchemaType.String,
+                        Enum = OrganizationAuditCategories.EntityTypes.Keys.Select(key => (JsonNode)JsonValue.Create(key)!).ToList()
+                    };
     }
 
     private static OpenApiSchema? FindProperty(OpenApiSchema schema, string path,

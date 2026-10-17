@@ -183,7 +183,8 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
         new(user.Id, user.DisplayName, user.Culture, user.TimeZoneId, user.Status,
             user.IsPlatformOperator, user.Email is null ? null : Email.Create(user.Email).Value,
             user.LastBusinessTenantId, user.Version, user.DeletionScheduledForUtc, user.OperatorInvitationExpiresAtUtc,
-            user.ProfileVersion) { FirstName = user.FirstName, LastName = user.LastName };
+            user.ProfileVersion)
+        { FirstName = user.FirstName, LastName = user.LastName };
 
     private static void EnsureSucceeded(IdentityResult result, string action)
     {

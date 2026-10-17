@@ -12,6 +12,7 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Auth;
+
 public sealed class LoginLinkServiceTests
 {
     [Theory]
@@ -22,9 +23,12 @@ public sealed class LoginLinkServiceTests
     {
         using var fixture = new ServiceFixture<LoginLinkService>(new PreviewLoginLinkRequestValidator());
         var user = Guid.NewGuid(); var method = Guid.NewGuid(); var nowUtc = fixture.TimeProvider.GetUtcNow().UtcDateTime;
-        var repo = new Links { Snapshot = new(user, method, nowUtc.AddMinutes(10), null, null,
+        var repo = new Links
+        {
+            Snapshot = new(user, method, nowUtc.AddMinutes(10), null, null,
             new UserAccountRow(user, "Ana", "es-AR", "UTC", UserStatus.Active, false, null, null),
-            new LoginMethodRow(method, LoginMethodType.Phone, "+5491134567890", true, nowUtc, null, null, null), true, null) };
+            new LoginMethodRow(method, LoginMethodType.Phone, "+5491134567890", true, nowUtc, null, null, null), true, null)
+        };
         repo.AfterRead = () => repo.Snapshot = mutation switch
         {
             "operator" => repo.Snapshot! with { Account = repo.Snapshot!.Account with { IsPlatformOperator = true } },
@@ -40,7 +44,8 @@ public sealed class LoginLinkServiceTests
     { public string Generate() => throw new NotSupportedException(); public string Hash(string token) => "hash"; }
     private sealed class Links : ILoginLinkRepository
     {
-        internal LoginLinkSnapshot? Snapshot { get; set; } internal int Reads { get; private set; }
+        internal LoginLinkSnapshot? Snapshot { get; set; }
+        internal int Reads { get; private set; }
         internal Action? AfterRead { get; set; }
         public Task<LoginLinkSnapshot?> FindAsync(string hash, CancellationToken ct)
         {

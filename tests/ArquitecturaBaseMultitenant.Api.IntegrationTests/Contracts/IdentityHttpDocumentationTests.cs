@@ -42,21 +42,21 @@ public sealed class IdentityHttpDocumentationTests(ApiFactory factory)
         AssertMissing(doc, "/api/platform/recoveries/{id}/approve", "Platform.AccountRecovery.PhoneMethodInUse");
         AssertMissing(doc, "/api/platform/recoveries/{id}/reject", "Platform.AccountRecovery.PhoneMethodInUse", "Platform.AccountRecovery.MethodInUse", "Platform.AccountRecovery.MethodAlreadyOnAccount", "Platform.AccountRecovery.NoAccount", "Platform.AccountRecovery.OperatorAccount");
         foreach (var path in doc["paths"]!.AsObject().Where(path => IdentityPaths.Contains(path.Key)))
-        foreach (var operation in path.Value!.AsObject().Where(item => item.Value is JsonObject))
-        foreach (var error in operation.Value?["x-error-codes"]?.AsArray() ?? [])
-        {
-            var code = error!["code"]!.GetValue<string>();
-            Assert.DoesNotContain(code, new[] { "Auth.Account.Disabled", "Auth.Account.LockedOut" });
-            var status = error["status"]!.GetValue<int>();
-            if (code == "Request.IdempotencyKeyReused") Assert.Equal(422, status);
-            foreach (var language in new[] { "es", "en" })
-            {
-                var example = operation.Value!["responses"]![status.ToString(System.Globalization.CultureInfo.InvariantCulture)]!["content"]!["application/problem+json"]!["examples"]![code + "." + language]!["value"]!;
-                Assert.Equal(status, example["status"]!.GetValue<int>());
-                Assert.Equal(error[language]!.GetValue<string>(), example["detail"]!.GetValue<string>());
-                if (code == "Identity.Account.LockedOut") Assert.Null(example["retryAfter"]);
-            }
-        }
+            foreach (var operation in path.Value!.AsObject().Where(item => item.Value is JsonObject))
+                foreach (var error in operation.Value?["x-error-codes"]?.AsArray() ?? [])
+                {
+                    var code = error!["code"]!.GetValue<string>();
+                    Assert.DoesNotContain(code, new[] { "Auth.Account.Disabled", "Auth.Account.LockedOut" });
+                    var status = error["status"]!.GetValue<int>();
+                    if (code == "Request.IdempotencyKeyReused") Assert.Equal(422, status);
+                    foreach (var language in new[] { "es", "en" })
+                    {
+                        var example = operation.Value!["responses"]![status.ToString(System.Globalization.CultureInfo.InvariantCulture)]!["content"]!["application/problem+json"]!["examples"]![code + "." + language]!["value"]!;
+                        Assert.Equal(status, example["status"]!.GetValue<int>());
+                        Assert.Equal(error[language]!.GetValue<string>(), example["detail"]!.GetValue<string>());
+                        if (code == "Identity.Account.LockedOut") Assert.Null(example["retryAfter"]);
+                    }
+                }
     }
 
     [Theory]

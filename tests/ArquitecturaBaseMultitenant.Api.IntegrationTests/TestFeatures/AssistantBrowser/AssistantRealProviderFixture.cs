@@ -141,8 +141,13 @@ public static class AssistantRealProviderFixture
                 stage = "own-key";
                 using (var saved = await client.PutAsJsonAsync(Root + "/settings", new
                 {
-                    mode = "OwnKey", modelId = model.Id, effort = "low", dailyMessageLimit = 50,
-                    monthlyBudget = new { amount = 10m, currency = "USD" }, keyAction = "replace", apiKey = secret,
+                    mode = "OwnKey",
+                    modelId = model.Id,
+                    effort = "low",
+                    dailyMessageLimit = 50,
+                    monthlyBudget = new { amount = 10m, currency = "USD" },
+                    keyAction = "replace",
+                    apiKey = secret,
                     version = settings.RootElement.GetProperty("version").GetUInt32(),
                 }, ct)) Require(saved.StatusCode == HttpStatusCode.OK, "OwnKeyValidationAndSave");
                 using var ownRead = await ReadAsync(client, Root + "/settings", ct);
@@ -241,9 +246,14 @@ public static class AssistantRealProviderFixture
         Require(!string.IsNullOrWhiteSpace(key), "ConfiguredKeyRequired");
         return new()
         {
-            [KeyName] = key, ["Assistant:UseFakeChatClient"] = "false", ["Assistant:IsolatedE2E"] = "true",
-            ["Assistant:TurnWorkerEnabled"] = "true", ["Seed:PlatformOwner:Email"] = OperatorEmail,
-            ["Seed:PlatformOwner:Phone"] = "", ["Seed:PlatformOwner:FirstName"] = "Operador", ["Seed:PlatformOwner:LastName"] = "Probe",
+            [KeyName] = key,
+            ["Assistant:UseFakeChatClient"] = "false",
+            ["Assistant:IsolatedE2E"] = "true",
+            ["Assistant:TurnWorkerEnabled"] = "true",
+            ["Seed:PlatformOwner:Email"] = OperatorEmail,
+            ["Seed:PlatformOwner:Phone"] = "",
+            ["Seed:PlatformOwner:FirstName"] = "Operador",
+            ["Seed:PlatformOwner:LastName"] = "Probe",
         };
     }
     private static async Task<HttpClient> LoginOperatorAsync(WebApplicationFactory<Program> host, CancellationToken ct)
@@ -324,8 +334,10 @@ public static class AssistantRealProviderFixture
     {
         using var scope = root.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        return await (from call in db.Set<AssistantFinancialCall>() join operation in db.Set<AssistantFinancialOperation>() on call.OperationId equals operation.Id
-            where operation.UserId == ownerId && operation.Access == Access.Business && operation.ScopeTenantId == tenantId select call.Id).CountAsync(ct);
+        return await (from call in db.Set<AssistantFinancialCall>()
+                      join operation in db.Set<AssistantFinancialOperation>() on call.OperationId equals operation.Id
+                      where operation.UserId == ownerId && operation.Access == Access.Business && operation.ScopeTenantId == tenantId
+                      select call.Id).CountAsync(ct);
     }
     private static async Task AssertAlertAsync(IServiceProvider root, Guid tenantId, int threshold, CancellationToken ct)
     {

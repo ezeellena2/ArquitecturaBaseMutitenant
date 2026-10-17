@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integr
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
+
 internal sealed class WhatsAppLoginCodeChannel(IWhatsAppChannelSettings settings, IWhatsAppTemplateRenderer templates, IOutbox outbox) : ILoginCodeChannel
 {
     public string Key => "whatsapp";

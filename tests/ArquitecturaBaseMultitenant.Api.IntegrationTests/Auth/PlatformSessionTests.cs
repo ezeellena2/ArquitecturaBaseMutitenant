@@ -164,7 +164,8 @@ public sealed class PlatformSessionTests(ApiFactory factory) : IDisposable
 
     private HttpClient Client() => host.CreateClient(new WebApplicationFactoryClientOptions
     {
-        BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false,
+        BaseAddress = new Uri("https://localhost"),
+        AllowAutoRedirect = false,
     });
 
     private async Task<AccountJourney> OperatorAsync()
@@ -210,8 +211,11 @@ public sealed class PlatformSessionTests(ApiFactory factory) : IDisposable
         Assert.False(string.IsNullOrEmpty(code));
         using var exchanged = await browser.PostAsync("/connect/token", new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            ["grant_type"] = "authorization_code", ["code"] = code, ["client_id"] = "web",
-            ["redirect_uri"] = "https://localhost:5174/auth/callback", ["code_verifier"] = Verifier,
+            ["grant_type"] = "authorization_code",
+            ["code"] = code,
+            ["client_id"] = "web",
+            ["redirect_uri"] = "https://localhost:5174/auth/callback",
+            ["code_verifier"] = Verifier,
         }), Ct);
         Assert.Equal(HttpStatusCode.OK, exchanged.StatusCode);
         using var tokens = await exchanged.Content.ReadFromJsonAsync<JsonDocument>(Ct);
@@ -223,7 +227,9 @@ public sealed class PlatformSessionTests(ApiFactory factory) : IDisposable
 
     private static Task<HttpResponseMessage> RefreshAsync(HttpClient browser, string refreshToken) => browser.PostAsync("/connect/token", new FormUrlEncodedContent(new Dictionary<string, string>
     {
-        ["grant_type"] = "refresh_token", ["client_id"] = "web", ["refresh_token"] = refreshToken,
+        ["grant_type"] = "refresh_token",
+        ["client_id"] = "web",
+        ["refresh_token"] = refreshToken,
     }), Ct);
 
     private static string AuthorizePath(string access) => "/connect/authorize?client_id=web&response_type=code"

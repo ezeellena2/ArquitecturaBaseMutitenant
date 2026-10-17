@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
+
 internal sealed class WhatsAppChannelSender(WhatsAppCloudClient client) : IChannelReceiptSender
 {
     public string Key => "whatsapp";

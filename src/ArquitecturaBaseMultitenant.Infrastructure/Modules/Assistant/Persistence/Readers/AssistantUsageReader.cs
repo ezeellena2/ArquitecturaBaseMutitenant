@@ -23,34 +23,44 @@ internal sealed class AssistantUsageReader(ApplicationDbContext db, ITenantConte
         var operations = Completed().Where(value => value.Access == Access.Business && value.ScopeTenantId == organizationId
             && periods.Any(period => period.Id == value.BudgetMonthId));
         var source = from operation in operations
-            join period in periods on operation.BudgetMonthId equals period.Id
-            join call in db.Set<AssistantFinancialCall>().AsNoTracking() on operation.Id equals call.OperationId
-            select new UsageSource
-            {
-                OperationId = operation.Id, UserId = operation.UserId, Access = operation.Access,
-                OrganizationId = operation.ScopeTenantId, Funding = operation.Funding,
-                Day = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(operation.CreatedAtUtc, period.TimeZoneId)),
-                ContentDeleted = operation.ContentDeleted, DailyLimit = operation.DailyLimit,
-                Input = call.InputTokens, Output = call.OutputTokens, Read = call.CacheReadTokens,
-                Write = call.CacheWrite5MinutesTokens + call.CacheWrite1HourTokens + call.CacheWriteUnknownTokens,
-                Cost = call.Cost.Amount
-            };
+                     join period in periods on operation.BudgetMonthId equals period.Id
+                     join call in db.Set<AssistantFinancialCall>().AsNoTracking() on operation.Id equals call.OperationId
+                     select new UsageSource
+                     {
+                         OperationId = operation.Id,
+                         UserId = operation.UserId,
+                         Access = operation.Access,
+                         OrganizationId = operation.ScopeTenantId,
+                         Funding = operation.Funding,
+                         Day = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeBySystemTimeZoneId(operation.CreatedAtUtc, period.TimeZoneId)),
+                         ContentDeleted = operation.ContentDeleted,
+                         DailyLimit = operation.DailyLimit,
+                         Input = call.InputTokens,
+                         Output = call.OutputTokens,
+                         Read = call.CacheReadTokens,
+                         Write = call.CacheWrite5MinutesTokens + call.CacheWrite1HourTokens + call.CacheWriteUnknownTokens,
+                         Cost = call.Cost.Amount
+                     };
         var summary = await SummaryAsync(source, operations, false, cancellationToken);
         var person = grouping == AssistantUsageGrouping.Person;
         var grouped = source.GroupBy(value => new
-            {
-                PersonId = person ? (Guid?)value.UserId : null,
-                Day = person ? null : (DateOnly?)value.Day
-            })
+        {
+            PersonId = person ? (Guid?)value.UserId : null,
+            Day = person ? null : (DateOnly?)value.Day
+        })
             .Select(rows => new UsageAggregate
             {
-                PersonId = rows.Key.PersonId, Day = rows.Key.Day,
+                PersonId = rows.Key.PersonId,
+                Day = rows.Key.Day,
                 CanShowPersonName = !rows.Any(value => value.ContentDeleted),
                 Queries = rows.Select(value => value.OperationId).Distinct().Count(),
                 People = rows.Select(value => value.UserId).Distinct().Count(),
-                Input = rows.Sum(value => value.Input), Output = rows.Sum(value => value.Output),
-                Read = rows.Sum(value => value.Read), Write = rows.Sum(value => value.Write),
-                Cost = rows.Sum(value => value.Cost), DailyLimit = rows.Max(value => value.DailyLimit)
+                Input = rows.Sum(value => value.Input),
+                Output = rows.Sum(value => value.Output),
+                Read = rows.Sum(value => value.Read),
+                Write = rows.Sum(value => value.Write),
+                Cost = rows.Sum(value => value.Cost),
+                DailyLimit = rows.Max(value => value.DailyLimit)
             });
         var paged = await grouped.OrderBy(value => value.Day).ThenBy(value => value.PersonId)
             .ToPagedResultAsync(new UsagePage { Page = page, PageSize = pageSize }, cancellationToken);
@@ -78,24 +88,33 @@ internal sealed class AssistantUsageReader(ApplicationDbContext db, ITenantConte
             ? periods.Any(period => period.Id == value.BudgetMonthId && period.OrganizationId == value.ScopeTenantId)
             : value.CreatedAtUtc >= startUtc && (lastMonth || value.CreatedAtUtc < endUtc));
         var source = from operation in operations
-            join call in db.Set<AssistantFinancialCall>().AsNoTracking() on operation.Id equals call.OperationId
-            select new UsageSource
-            {
-                OperationId = operation.Id, UserId = operation.UserId, Access = operation.Access,
-                OrganizationId = operation.Access == Access.Business ? operation.ScopeTenantId : null,
-                Funding = operation.Funding, Input = call.InputTokens, Output = call.OutputTokens,
-                Read = call.CacheReadTokens,
-                Write = call.CacheWrite5MinutesTokens + call.CacheWrite1HourTokens + call.CacheWriteUnknownTokens,
-                Cost = call.Cost.Amount
-            };
+                     join call in db.Set<AssistantFinancialCall>().AsNoTracking() on operation.Id equals call.OperationId
+                     select new UsageSource
+                     {
+                         OperationId = operation.Id,
+                         UserId = operation.UserId,
+                         Access = operation.Access,
+                         OrganizationId = operation.Access == Access.Business ? operation.ScopeTenantId : null,
+                         Funding = operation.Funding,
+                         Input = call.InputTokens,
+                         Output = call.OutputTokens,
+                         Read = call.CacheReadTokens,
+                         Write = call.CacheWrite5MinutesTokens + call.CacheWrite1HourTokens + call.CacheWriteUnknownTokens,
+                         Cost = call.Cost.Amount
+                     };
         var summary = await SummaryAsync(source, operations, true, cancellationToken);
         var aggregate = source.GroupBy(value => new { value.Access, value.OrganizationId, value.Funding })
             .Select(rows => new UsageAggregate
             {
-                Access = rows.Key.Access, OrganizationId = rows.Key.OrganizationId, Funding = rows.Key.Funding,
+                Access = rows.Key.Access,
+                OrganizationId = rows.Key.OrganizationId,
+                Funding = rows.Key.Funding,
                 Queries = rows.Select(value => value.OperationId).Distinct().Count(),
-                Input = rows.Sum(value => value.Input), Output = rows.Sum(value => value.Output),
-                Read = rows.Sum(value => value.Read), Write = rows.Sum(value => value.Write), Cost = rows.Sum(value => value.Cost),
+                Input = rows.Sum(value => value.Input),
+                Output = rows.Sum(value => value.Output),
+                Read = rows.Sum(value => value.Read),
+                Write = rows.Sum(value => value.Write),
+                Cost = rows.Sum(value => value.Cost),
                 Budget = rows.Key.Access == Access.Business
                     ? operations.Where(value => value.Access == Access.Business && value.ScopeTenantId == rows.Key.OrganizationId
                         && value.Funding == rows.Key.Funding)
@@ -103,9 +122,9 @@ internal sealed class AssistantUsageReader(ApplicationDbContext db, ITenantConte
                         .Select(value => (decimal?)value.MonthlyBudget!.Amount).FirstOrDefault() : null
             });
         var named = from row in aggregate
-            join organization in db.Tenants.AsNoTracking() on row.OrganizationId equals organization.Id into organizations
-            from organization in organizations.DefaultIfEmpty()
-            select new { Row = row, Name = organization == null ? null : organization.Name };
+                    join organization in db.Tenants.AsNoTracking() on row.OrganizationId equals organization.Id into organizations
+                    from organization in organizations.DefaultIfEmpty()
+                    select new { Row = row, Name = organization == null ? null : organization.Name };
         var paged = await named.OrderBy(value => value.Row.Access == Access.Business ? 0 : value.Row.Access == Access.Consumer ? 1 : 2)
             .ThenBy(value => value.Name).ThenBy(value => value.Row.OrganizationId).ThenBy(value => value.Row.Funding)
             .ToPagedResultAsync(new UsagePage { Page = page, PageSize = pageSize }, cancellationToken);

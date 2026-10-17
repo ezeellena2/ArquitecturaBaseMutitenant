@@ -1,6 +1,7 @@
 using System.Threading.Channels;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Inbound;
+
 internal sealed class WhatsAppInboundSignal : IWhatsAppInboundSignal
 {
     private readonly Channel<bool> _wake = Channel.CreateBounded<bool>(new BoundedChannelOptions(1) { FullMode = BoundedChannelFullMode.DropWrite });

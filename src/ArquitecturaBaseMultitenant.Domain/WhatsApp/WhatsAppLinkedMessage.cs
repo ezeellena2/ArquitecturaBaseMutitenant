@@ -26,7 +26,11 @@ public sealed class WhatsAppLinkedMessage : Entity, IConsumerBusinessShared
         if (text?.Length > WhatsAppTextLimits.MessageText) throw new ArgumentException("The text is too long.", nameof(text));
         return new WhatsAppLinkedMessage
         {
-            ConsumerTenantId = link.ConsumerTenantId, LinkId = link.Id, Direction = direction, Text = text, MediaKind = mediaKind,
+            ConsumerTenantId = link.ConsumerTenantId,
+            LinkId = link.Id,
+            Direction = direction,
+            Text = text,
+            MediaKind = mediaKind,
             CreatedAtUtc = createdAtUtc,
         };
     }

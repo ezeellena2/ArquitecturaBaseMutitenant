@@ -42,7 +42,7 @@ internal static class LegalVersionCommand
         try
         {
             await File.WriteAllTextAsync(temporaryFile, JsonSerializer.Serialize(new
-                { id = published.Value.Id, version = published.Value.Version }), cancellationToken);
+            { id = published.Value.Id, version = published.Value.Version }), cancellationToken);
             File.Move(temporaryFile, completedFile);
         }
         finally

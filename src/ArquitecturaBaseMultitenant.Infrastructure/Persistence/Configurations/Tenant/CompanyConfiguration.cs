@@ -26,7 +26,10 @@ internal sealed class CompanyConfiguration : IEntityTypeConfiguration<Company>
         builder.HasIndex(company => new { company.TenantId, company.Name, company.Id });
         builder.HasIndex(company => new
         {
-            company.TenantId, company.TaxCountry, company.TaxType, company.TaxNumber,
+            company.TenantId,
+            company.TaxCountry,
+            company.TaxType,
+            company.TaxNumber,
         }).IsUnique().HasFilter("\"TaxCountry\" IS NOT NULL").HasDatabaseName(UniqueKeys.CompanyTaxId);
         builder.HasOne<TenantEntity>().WithMany()
             .HasForeignKey(company => company.TenantId).OnDelete(DeleteBehavior.Restrict);

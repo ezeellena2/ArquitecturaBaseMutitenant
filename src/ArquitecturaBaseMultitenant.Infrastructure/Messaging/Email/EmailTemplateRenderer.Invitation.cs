@@ -78,17 +78,22 @@ internal sealed partial class EmailTemplateRenderer
         var layoutFooter = NotificationTexts.Format("Layout.Footer", culture, options.Value.AppName);
         var content = Fill("Invitation.html", new Dictionary<string, string>
         {
-            ["Title"] = Encode(title), ["Body"] = Encode(body),
+            ["Title"] = Encode(title),
+            ["Body"] = Encode(body),
             ["Details"] = string.Concat(details.Select(detail =>
                 $"<tr><td style=\"padding:6px 16px;width:110px;color:#6b7280;\">{Encode(detail.Label)}</td><td style=\"padding:6px 16px;color:#111827;\">{Encode(detail.Value)}</td></tr>")),
-            ["ActionLabel"] = Encode(action), ["ActionUrl"] = Encode(actionUrl),
+            ["ActionLabel"] = Encode(action),
+            ["ActionUrl"] = Encode(actionUrl),
             ["Note"] = string.Concat(notes.Select((note, index) =>
                 $"<p style=\"margin:{(index == 0 ? 20 : 8)}px 0 0;color:#6b7280;font-size:14px;\">{Encode(note)}</p>")),
         });
         var html = Fill(LayoutTemplate, new Dictionary<string, string>
         {
-            ["Lang"] = Encode(culture.Entry.LanguageCode), ["Title"] = Encode(title), ["Header"] = HeaderHtml(),
-            ["Content"] = content, ["Footer"] = Encode(footer) + "<br>" + Encode(layoutFooter),
+            ["Lang"] = Encode(culture.Entry.LanguageCode),
+            ["Title"] = Encode(title),
+            ["Header"] = HeaderHtml(),
+            ["Content"] = content,
+            ["Footer"] = Encode(footer) + "<br>" + Encode(layoutFooter),
         });
         var text = new List<string> { title, body };
         text.AddRange(details.Select(detail => detail.Label + ": " + detail.Value));

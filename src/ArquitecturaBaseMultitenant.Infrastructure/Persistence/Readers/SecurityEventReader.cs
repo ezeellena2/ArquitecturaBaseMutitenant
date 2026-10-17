@@ -103,8 +103,16 @@ internal sealed class SecurityEventReader(ApplicationDbContext context) : ISecur
             where eventIds.Contains(item.Id)
             select new
             {
-                item.Id, item.OccurredAtUtc, item.Type, item.ActorKind, item.ActorId, item.TargetAccountId,
-                item.TargetTenantId, item.Reason, item.MaskedIpAddress, item.Changes,
+                item.Id,
+                item.OccurredAtUtc,
+                item.Type,
+                item.ActorKind,
+                item.ActorId,
+                item.TargetAccountId,
+                item.TargetTenantId,
+                item.Reason,
+                item.MaskedIpAddress,
+                item.Changes,
                 Actor = context.Users.Where(user => user.Id == item.ActorId)
                     .Select(user => new AccountData(user.DisplayName, user.Email, user.Status, user.IsPlatformOperator)).FirstOrDefault(),
                 Target = context.Users.Where(user => user.Id == item.TargetAccountId)
@@ -116,7 +124,12 @@ internal sealed class SecurityEventReader(ApplicationDbContext context) : ISecur
             where signInIds.Contains(item.Id)
             select new
             {
-                item.Id, item.OccurredAtUtc, item.Method, item.Succeeded, item.FailureCode, item.UserId,
+                item.Id,
+                item.OccurredAtUtc,
+                item.Method,
+                item.Succeeded,
+                item.FailureCode,
+                item.UserId,
                 Account = context.Users.Where(user => user.Id == item.UserId)
                     .Select(user => new AccountData(user.DisplayName, user.Email, user.Status, user.IsPlatformOperator)).FirstOrDefault(),
             }).ToArrayAsync(ct);
@@ -126,11 +139,12 @@ internal sealed class SecurityEventReader(ApplicationDbContext context) : ISecur
             rows[item.Id] = new PlatformAuditRow(item.Id, item.OccurredAtUtc, item.Type, null, false, null, item.ActorKind,
                 ToAccount(item.Actor), ToAccount(item.Target), item.TargetAccountId, item.TargetTenantId, item.TenantName,
                 item.Reason, item.MaskedIpAddress, item.Changes)
-                { AuditActorId = item.ActorKind == AuditActorKind.System ? null : item.ActorId };
+            { AuditActorId = item.ActorKind == AuditActorKind.System ? null : item.ActorId };
         foreach (var item in signIns)
             rows[item.Id] = new PlatformAuditRow(item.Id, item.OccurredAtUtc, null, item.Method, item.Succeeded,
                 item.FailureCode, AuditActorKind.User, ToAccount(item.Account), ToAccount(item.Account), item.UserId, null,
-                null, null, null) { AuditActorId = item.UserId };
+                null, null, null)
+            { AuditActorId = item.UserId };
         return rows;
     }
 

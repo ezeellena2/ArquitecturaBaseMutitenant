@@ -79,8 +79,14 @@ internal sealed class InvitationPreviewBuilder(IInvitationReader invitations, IU
             currentEmail = primary?.Type == LoginMethodType.Email
                 ? Email.Create(primary.Value).Value : primary?.ContactEmail;
         }
-        return await PresentAsync(row, state, ct) with { CanUseEmailCode = emailCode, CanUseGoogle = google, CurrentAccountEmail = currentEmail,
-            CurrentAccountName = currentName, CanUsePhoneCode = phoneCode };
+        return await PresentAsync(row, state, ct) with
+        {
+            CanUseEmailCode = emailCode,
+            CanUseGoogle = google,
+            CurrentAccountEmail = currentEmail,
+            CurrentAccountName = currentName,
+            CanUsePhoneCode = phoneCode
+        };
     }
 
     private async Task<InvitationPreviewResponse> PresentAsync(InvitationRow row, InvitationPreviewState state,

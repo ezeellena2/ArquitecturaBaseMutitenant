@@ -16,7 +16,12 @@ public sealed class PlatformTenantsQuery
     public TenantRegistrationSource? Source { get; init; }
     public ListPlatformTenantsRequest ToModel() => new()
     {
-        Page = Page, PageSize = PageSize, Sort = Sort, Search = Search, Status = Status, Source = Source,
+        Page = Page,
+        PageSize = PageSize,
+        Sort = Sort,
+        Search = Search,
+        Status = Status,
+        Source = Source,
     };
     public override string ToString() => nameof(PlatformTenantsQuery);
 }

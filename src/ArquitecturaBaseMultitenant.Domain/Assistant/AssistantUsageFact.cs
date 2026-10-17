@@ -29,11 +29,24 @@ public sealed class AssistantUsageFact : Entity, ITenantOwned
     {
         if (operation.Access == Access.Platform || call.OperationId != operation.Id || !call.IsFinal)
             throw new ArgumentException("A completed private financial call is required.");
-        return new() { UserId = operation.UserId, Access = operation.Access, OperationId = operation.Id, CallId = call.Id,
-            Funding = operation.Funding, DayUtc = operation.DayUtc, BudgetMonthId = operation.BudgetMonthId,
-            ModelId = call.Price.ModelId, PriceRevision = call.Price.Revision, InputTokens = call.InputTokens,
-            OutputTokens = call.OutputTokens, CacheReadTokens = call.CacheReadTokens,
+        return new()
+        {
+            UserId = operation.UserId,
+            Access = operation.Access,
+            OperationId = operation.Id,
+            CallId = call.Id,
+            Funding = operation.Funding,
+            DayUtc = operation.DayUtc,
+            BudgetMonthId = operation.BudgetMonthId,
+            ModelId = call.Price.ModelId,
+            PriceRevision = call.Price.Revision,
+            InputTokens = call.InputTokens,
+            OutputTokens = call.OutputTokens,
+            CacheReadTokens = call.CacheReadTokens,
             CacheWriteTokens = call.CacheWrite5MinutesTokens + call.CacheWrite1HourTokens + call.CacheWriteUnknownTokens,
-            IsTitle = call.IsTitle, IsEstimated = call.IsEstimated, Cost = new Money(call.Cost.Amount, call.Cost.Currency) };
+            IsTitle = call.IsTitle,
+            IsEstimated = call.IsEstimated,
+            Cost = new Money(call.Cost.Amount, call.Cost.Currency)
+        };
     }
 }

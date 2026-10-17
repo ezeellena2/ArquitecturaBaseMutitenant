@@ -99,8 +99,11 @@ public sealed class WhatsAppQuotaEnqueueTests(ApiFactory factory) : IClassFixtur
         var quota = await CurrentQuotaAsync(db); Assert.Equal(20, (await db.Set<WhatsAppCodeQuotaIp>().SingleAsync(row => row.QuotaId == quota.Id, Ct)).ReservedCount);
     }
     [Theory]
-    [InlineData("locked", false)] [InlineData("deleted", false)] [InlineData("expiredOperator", false)]
-    [InlineData("suspended", true)] [InlineData("pendingDeletion", true)]
+    [InlineData("locked", false)]
+    [InlineData("deleted", false)]
+    [InlineData("expiredOperator", false)]
+    [InlineData("suspended", true)]
+    [InlineData("pendingDeletion", true)]
     public async Task Actual_delivery_decision_controls_spend_and_preserves_unsent_history(string state, bool sends)
     {
         await using var host = Host(); using var client = host.CreateClient();

@@ -37,7 +37,9 @@ internal static class LegacyBrowserSessionCommand
         var startedAtUtc = provider.GetRequiredService<TimeProvider>().GetUtcNow().AddDays(-2);
         var properties = new AuthenticationProperties
         {
-            IsPersistent = true, IssuedUtc = startedAtUtc, ExpiresUtc = startedAtUtc.AddDays(30),
+            IsPersistent = true,
+            IssuedUtc = startedAtUtc,
+            ExpiresUtc = startedAtUtc.AddDays(30),
         };
         properties.Items[BrowserSessionKeys.CookieSessionId] = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
         properties.Items[BrowserSessionKeys.StartedAtUtc] = BrowserSessionKeys.FormatStartedAtUtc(startedAtUtc.UtcDateTime);

@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
+
 public sealed record WhatsAppWebhookBatch(IReadOnlyList<WhatsAppWebhookMessage> Messages, IReadOnlyList<WhatsAppWebhookStatus> Statuses,
     IReadOnlyList<WhatsAppWebhookTemplate>? Templates = null)
 {

@@ -83,7 +83,10 @@ internal sealed class WhatsAppTeamService(IWhatsAppTeamRepository teams, IWhatsA
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var page = await users.ListAsync(new ListOrganizationUsersRequest
             {
-                Page = request.Page, PageSize = request.PageSize, Search = request.Search, State = OrganizationUserState.Active,
+                Page = request.Page,
+                PageSize = request.PageSize,
+                Search = request.Search,
+                State = OrganizationUserState.Active,
             }, clock.GetUtcNow().UtcDateTime, cancellationToken);
             return new PagedResult<WhatsAppReferenceResponse>([.. page.Items.Select(user => new WhatsAppReferenceResponse(user.MemberId, user.DisplayName))],
                 page.Page, page.PageSize, page.TotalCount);

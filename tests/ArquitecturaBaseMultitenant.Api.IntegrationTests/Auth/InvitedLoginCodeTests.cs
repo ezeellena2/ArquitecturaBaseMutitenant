@@ -34,7 +34,7 @@ public sealed class InvitedLoginCodeTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
     private HttpClient CreateClient() => factory.CreateClient(new WebApplicationFactoryClientOptions
-        { AllowAutoRedirect = false, BaseAddress = new Uri("https://localhost") });
+    { AllowAutoRedirect = false, BaseAddress = new Uri("https://localhost") });
 
     [Theory]
     [InlineData("business")]
@@ -507,7 +507,8 @@ public sealed class InvitedLoginCodeTests(ApiFactory factory)
     private static Task<HttpResponseMessage> VerifyAsync(HttpClient client, Email email, string code, string access) =>
         AccountJourney.PostAsync(client, "/api/auth/login-code/verify", new
         {
-            email = email.Value, code,
+            email = email.Value,
+            code,
             returnUrl = "/connect/authorize?client_id=web&access=" + access,
         }, Ct);
 

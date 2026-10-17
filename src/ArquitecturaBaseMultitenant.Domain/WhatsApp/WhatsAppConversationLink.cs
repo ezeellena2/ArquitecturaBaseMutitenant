@@ -41,10 +41,13 @@ public sealed class WhatsAppConversationLink : Entity, IConsumerBusinessShared, 
         if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC required.", nameof(nowUtc));
         return new WhatsAppConversationLink
         {
-            ConsumerTenantId = consumerTenantId, ChatId = chatId, AccountId = accountId,
+            ConsumerTenantId = consumerTenantId,
+            ChatId = chatId,
+            AccountId = accountId,
             ConsumerName = consumerName?.Length > TextLimits.PersonDisplayName ? consumerName[..TextLimits.PersonDisplayName] : consumerName,
             OrganizationName = organizationName.Length > TextLimits.OrganizationName ? organizationName[..TextLimits.OrganizationName] : organizationName,
-            DisplayNumber = displayNumber, LinkedAtUtc = nowUtc,
+            DisplayNumber = displayNumber,
+            LinkedAtUtc = nowUtc,
         };
     }
 

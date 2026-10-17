@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
+
 internal sealed class WhatsAppInboundGuard(IWhatsAppMessageRepository messages, IExternalLoginLock identities,
     ILoginMethodRepository methods, IWhatsAppContactRepository contacts, IUserRepository users, LoginMethodAvailabilityPolicy availability,
     IWhatsAppChannelReader channels, TimeProvider clock)

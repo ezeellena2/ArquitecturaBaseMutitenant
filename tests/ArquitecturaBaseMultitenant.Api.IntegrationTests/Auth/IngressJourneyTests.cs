@@ -43,9 +43,9 @@ public sealed class IngressJourneyTests(ApiFactory factory)
         var diagnostic = host.Services.GetRequiredService<ILoggerFactory>()
             .CreateLogger("IngressJourneyCaptureProbe");
         using (diagnostic.BeginScope(new Dictionary<string, object?>
-               {
-                   ["marker"] = "scope-capture-probe",
-               }))
+        {
+            ["marker"] = "scope-capture-probe",
+        }))
         {
             diagnostic.Log(LogLevel.Trace, new EventId(10_001), "trace-capture-probe", null,
                 static (state, _) => state);

@@ -51,7 +51,7 @@ public sealed class BrowserSecurityTests(ApiFactory factory)
         var subject = Guid.NewGuid().ToString("N");
         await using var host = GoogleHost(subject);
         using var browser = host.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
 
         using var challenge = await browser.GetAsync(
             "/api/auth/external/google?access=consumer&returnUrl=%2Fconnect%2Fauthorize%3Fclient_id%3Dweb", Ct);
@@ -78,7 +78,7 @@ public sealed class BrowserSecurityTests(ApiFactory factory)
 
         // Sin la cookie de correlación, la vuelta no entra.
         using var stranger = host.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         using var forged = await stranger.GetAsync("/signin-google?code=integration-code&state="
             + Uri.EscapeDataString(parameters["state"].ToString()), Ct);
         Assert.Contains("error=Auth.ExternalLogin.Failed", forged.Headers.Location?.OriginalString, StringComparison.Ordinal);
@@ -90,7 +90,7 @@ public sealed class BrowserSecurityTests(ApiFactory factory)
         await using var api = factory.WithWebHostBuilder(builder =>
             builder.UseSetting("Authentication:Issuer", "https://example.test:8443/"));
         using var client = api.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://empresa.example.test:8443"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://empresa.example.test:8443"), AllowAutoRedirect = false });
 
         using var discovery = await client.GetAsync("/.well-known/openid-configuration", Ct);
 
@@ -125,8 +125,12 @@ public sealed class BrowserSecurityTests(ApiFactory factory)
                 ? new { access_token = "integration-access", token_type = "Bearer", expires_in = 3600 }
                 : new
                 {
-                    sub = subject, email = "google-" + subject + "@example.test", email_verified = true,
-                    given_name = "Ana", family_name = "Prueba", name = "Ana Prueba",
+                    sub = subject,
+                    email = "google-" + subject + "@example.test",
+                    email_verified = true,
+                    given_name = "Ana",
+                    family_name = "Prueba",
+                    name = "Ana Prueba",
                 };
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(body) });
         }

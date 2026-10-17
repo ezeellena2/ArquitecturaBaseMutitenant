@@ -40,16 +40,30 @@ public static class AssistantModelReferenceBuilder
         // Explicit, stable shape: display name, enabled and xmin are not technical reference data.
         var technical = model.Technical;
         var tier = technical.LongContext;
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(new { model.Provider, model.ProviderModelId,
-            Input = Rate(model.InputPricePerMillion), Output = Rate(model.OutputPricePerMillion),
-            technical.SupportsText, technical.SupportsTools, technical.SupportsImages, technical.SupportsPdf,
-            technical.SupportsAdaptiveThinking, Efforts = technical.Efforts.Order().ToArray(),
-            technical.MaxInputTokens, technical.MaxOutputTokens,
-            Cache5 = Rate(technical.CacheWrite5MinutesPricePerMillion), CacheHour = Rate(technical.CacheWrite1HourPricePerMillion),
-            CacheRead = Rate(technical.CacheReadPricePerMillion), Threshold = tier?.InputTokensThreshold,
-            LongInput = Rate(tier?.InputPricePerMillion), LongOutput = Rate(tier?.OutputPricePerMillion),
-            LongCache5 = Rate(tier?.CacheWrite5MinutesPricePerMillion), LongCacheHour = Rate(tier?.CacheWrite1HourPricePerMillion),
-            LongCacheRead = Rate(tier?.CacheReadPricePerMillion) });
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            model.Provider,
+            model.ProviderModelId,
+            Input = Rate(model.InputPricePerMillion),
+            Output = Rate(model.OutputPricePerMillion),
+            technical.SupportsText,
+            technical.SupportsTools,
+            technical.SupportsImages,
+            technical.SupportsPdf,
+            technical.SupportsAdaptiveThinking,
+            Efforts = technical.Efforts.Order().ToArray(),
+            technical.MaxInputTokens,
+            technical.MaxOutputTokens,
+            Cache5 = Rate(technical.CacheWrite5MinutesPricePerMillion),
+            CacheHour = Rate(technical.CacheWrite1HourPricePerMillion),
+            CacheRead = Rate(technical.CacheReadPricePerMillion),
+            Threshold = tier?.InputTokensThreshold,
+            LongInput = Rate(tier?.InputPricePerMillion),
+            LongOutput = Rate(tier?.OutputPricePerMillion),
+            LongCache5 = Rate(tier?.CacheWrite5MinutesPricePerMillion),
+            LongCacheHour = Rate(tier?.CacheWrite1HourPricePerMillion),
+            LongCacheRead = Rate(tier?.CacheReadPricePerMillion)
+        });
         return model with { TechnicalRevision = "db-v1-" + Convert.ToHexStringLower(SHA256.HashData(bytes)) };
     }
 

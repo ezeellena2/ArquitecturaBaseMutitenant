@@ -8,7 +8,8 @@ internal sealed class WhatsAppModelContributor : IPersistenceModelContributor
     public string ConfigurationNamespace => typeof(WhatsAppModelContributor).Namespace!;
     public IReadOnlyDictionary<Type, string> GlobalEntities { get; } = new Dictionary<Type, string>
     {
-        [typeof(WhatsAppContact)] = Schemas.Identity, [typeof(WhatsAppMessage)] = Schemas.Identity,
+        [typeof(WhatsAppContact)] = Schemas.Identity,
+        [typeof(WhatsAppMessage)] = Schemas.Identity,
         [typeof(WhatsAppCodeQuota)] = Schemas.Identity,
         [typeof(WhatsAppCodeQuotaIp)] = Schemas.Identity,
         [typeof(WhatsAppChannel)] = Schemas.Identity,

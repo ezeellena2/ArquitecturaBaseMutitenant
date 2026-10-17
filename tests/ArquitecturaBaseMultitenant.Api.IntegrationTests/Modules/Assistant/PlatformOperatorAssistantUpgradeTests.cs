@@ -188,8 +188,13 @@ public sealed class PlatformOperatorAssistantUpgradeTests
         {
             defaultModelId = settings.RootElement.GetProperty("defaultModelId").GetGuid(),
             allowedModelIds = settings.RootElement.GetProperty("allowedModelIds").EnumerateArray().Select(v => v.GetGuid()).ToArray(),
-            effort = "low", dailyMessageLimit = 50, monthlyOrganizationBudget = new { amount = 100m, currency = "USD" },
-            personalEnabled = true, retentionDays = 30, keyAction = "keep", version = settings.RootElement.GetProperty("version").GetUInt32(),
+            effort = "low",
+            dailyMessageLimit = 50,
+            monthlyOrganizationBudget = new { amount = 100m, currency = "USD" },
+            personalEnabled = true,
+            retentionDays = 30,
+            keyAction = "keep",
+            version = settings.RootElement.GetProperty("version").GetUInt32(),
         }, Ct))
             await SavedVersion.ReadAsync(saved, Ct);
         using (var saved = await ReadAsync(manager, "/api/platform/assistant/settings"))

@@ -44,7 +44,10 @@ internal sealed class WhatsAppNumberService(IWhatsAppChannelReader reader, IWhat
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var page = await companies.ListAsync(new ListCompaniesRequest
             {
-                Page = request.Page, PageSize = request.PageSize, Search = request.Search, Status = CompanyStatus.Active,
+                Page = request.Page,
+                PageSize = request.PageSize,
+                Search = request.Search,
+                Status = CompanyStatus.Active,
             }, cancellationToken);
             return new PagedResult<WhatsAppReferenceResponse>([.. page.Items.Select(company => new WhatsAppReferenceResponse(company.Id, company.Name))],
                 page.Page, page.PageSize, page.TotalCount);

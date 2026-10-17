@@ -28,13 +28,18 @@ public sealed partial class RouteIsolationMatrixTests
         cases[$"GET {root}/numbers/{{id:guid}}/bot"] = Foreign(w => Business($"{root}/numbers/{w.B("whatsapp.number")}/bot"));
         cases[$"PUT {root}/numbers/{{id:guid}}/bot"] = Foreign(w => Business($"{root}/numbers/{w.B("whatsapp.number")}/bot", new
         {
-            welcome = "Bienvenidos", outOfHours = "Estamos cerrados",
+            welcome = "Bienvenidos",
+            outOfHours = "Estamos cerrados",
             schedule = new
             {
                 timeZoneId = "America/Argentina/Buenos_Aires",
                 days = Enum.GetValues<DayOfWeek>().Select(day => new { day = day.ToString(), from = "00:00:00", to = "23:59:59" }).ToArray(),
             },
-            menu = Array.Empty<object>(), askPromotions = false, offerAccountLink = false, employeesTeamId = (Guid?)null, version = 1,
+            menu = Array.Empty<object>(),
+            askPromotions = false,
+            offerAccountLink = false,
+            employeesTeamId = (Guid?)null,
+            version = 1,
         }));
         cases[$"GET {root}/contacts/{{id:guid}}"] = Foreign(w => Business($"{root}/contacts/{w.B("whatsapp.contact")}"));
         cases[$"PUT {root}/contacts/{{id:guid}}"] = Foreign(w => Business($"{root}/contacts/{w.B("whatsapp.contact")}",

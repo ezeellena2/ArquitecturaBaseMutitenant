@@ -22,7 +22,11 @@ public sealed class InvitationFlowContext(IHttpContextAccessor accessor, IDataPr
     private HttpContext Context => accessor.HttpContext ?? throw new InvalidOperationException("An HTTP request is required.");
     private static CookieOptions Options => new()
     {
-        HttpOnly = true, Secure = true, SameSite = SameSiteMode.Lax, Path = "/", IsEssential = true,
+        HttpOnly = true,
+        Secure = true,
+        SameSite = SameSiteMode.Lax,
+        Path = "/",
+        IsEssential = true,
     };
 
     public async Task<Guid?> GetUserIdAsync(CancellationToken cancellationToken)

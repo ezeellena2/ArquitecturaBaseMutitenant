@@ -107,8 +107,14 @@ public sealed class WhatsAppIdentityTests(ApiFactory factory) : IClassFixture<Ap
         using var removed = await ownerClient.DeleteAsync($"/api/me/login-methods/{methodId}", Ct);
         Assert.Equal(HttpStatusCode.NoContent, removed.StatusCode);
         object oldProof = business ? SignupBody(phone, oldCode)
-            : new { phone = new { country = "AR", number = phone }, channel = "whatsapp", code = oldCode,
-                returnUrl = fixedReturn ? "/" : AuthorizePath("consumer"), access = fixedReturn ? "consumer" : null };
+            : new
+            {
+                phone = new { country = "AR", number = phone },
+                channel = "whatsapp",
+                code = oldCode,
+                returnUrl = fixedReturn ? "/" : AuthorizePath("consumer"),
+                access = fixedReturn ? "consumer" : null
+            };
         if (!initiallyFree)
         {
             using var lost = await PostAsync(anonymous, business ? "/api/auth/business-signup/verify" : "/api/auth/login-code/verify", oldProof, Ct);

@@ -151,12 +151,12 @@ public sealed class PublicSiteTests(ApiFactory factory)
 
         JsonObject? expected = null;
         foreach (var host in hosts)
-        foreach (var suffix in new[] { "", "/logo" })
-        {
-            var problem = await ReadNotFoundAsync(client, $"https://{host}:5174/api/public-site{suffix}");
-            expected ??= problem;
-            Assert.True(JsonNode.DeepEquals(expected, problem), "No disponible debe tener el mismo cuerpo salvo traceId.");
-        }
+            foreach (var suffix in new[] { "", "/logo" })
+            {
+                var problem = await ReadNotFoundAsync(client, $"https://{host}:5174/api/public-site{suffix}");
+                expected ??= problem;
+                Assert.True(JsonNode.DeepEquals(expected, problem), "No disponible debe tener el mismo cuerpo salvo traceId.");
+            }
     }
 
     [Fact]

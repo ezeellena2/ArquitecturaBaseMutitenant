@@ -17,7 +17,7 @@ internal sealed class AccountDeletionNotifier(AccountNoticeIssuer notices, ISecu
     {
         events.Add(SecurityEvent.ForAccount(SecurityEventType.AccountDeleted, account.Id, nowUtc));
         return notices.EnqueueAsync(account.Id, methods, new AccountNotice.AccountDeleted
-            { RecipientName = account.DisplayName }, account.Culture, true, ct);
+        { RecipientName = account.DisplayName }, account.Culture, true, ct);
     }
 
     internal Task CancelledAsync(UserAccountRow account, IReadOnlyList<LoginMethod> methods, DateTime nowUtc, CancellationToken ct)
@@ -25,7 +25,7 @@ internal sealed class AccountDeletionNotifier(AccountNoticeIssuer notices, ISecu
         events.Add(SecurityEvent.ForAccount(SecurityEventType.AccountDeletionCancelled, account.Id, nowUtc));
         var url = origin.Absolute(ReturnUrls.AccountPath);
         return notices.EnqueueAsync(account.Id, methods, new AccountNotice.DeletionCancelled(nowUtc, account.TimeZoneId, url)
-            { RecipientName = account.DisplayName }, account.Culture, false, ct);
+        { RecipientName = account.DisplayName }, account.Culture, false, ct);
     }
 
     // Baja iniciada por Plataforma: el SecurityEvent con el operador lo registra Plataforma; acá va solo el aviso.
@@ -50,6 +50,6 @@ internal sealed class AccountDeletionNotifier(AccountNoticeIssuer notices, ISecu
         var url = origin.Absolute(ReturnUrls.LoginPath);
         return notices.EnqueueAsync(account.Id, methods,
             new AccountNotice.DeletionRequested(nowUtc, scheduledForUtc, account.TimeZoneId, url)
-                { RecipientName = account.DisplayName }, account.Culture, false, ct);
+            { RecipientName = account.DisplayName }, account.Culture, false, ct);
     }
 }

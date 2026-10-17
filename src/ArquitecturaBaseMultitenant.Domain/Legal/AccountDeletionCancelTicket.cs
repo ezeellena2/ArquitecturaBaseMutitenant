@@ -22,8 +22,11 @@ public sealed class AccountDeletionCancelTicket : Entity
         RequireUtc(issuedAtUtc);
         return new AccountDeletionCancelTicket
         {
-            UserId = userId, TokenHash = tokenHash, IssuedAtUtc = issuedAtUtc,
-            ExpiresAtUtc = issuedAtUtc.AddMinutes(5), ReturnUrl = returnUrl,
+            UserId = userId,
+            TokenHash = tokenHash,
+            IssuedAtUtc = issuedAtUtc,
+            ExpiresAtUtc = issuedAtUtc.AddMinutes(5),
+            ReturnUrl = returnUrl,
         };
     }
 

@@ -24,6 +24,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Time.Testing;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
+
 public sealed class WhatsAppBotTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private const string Secret = "bot-fixture-secret";
@@ -46,11 +47,20 @@ public sealed class WhatsAppBotTests(ApiFactory factory) : IClassFixture<ApiFact
         var texts = new[] { "1234", "12345", "123456", "12-34", "1 2 3 4 5", "12.34.56",
             "Mi código es 1234", "Código: 12345", "Código: 123456" };
         var prefix = Guid.NewGuid().ToString("N");
-        var messages = texts.Select((text, index) => new { id = prefix + index, from = "5491134567899",
+        var messages = texts.Select((text, index) => new
+        {
+            id = prefix + index,
+            from = "5491134567899",
             timestamp = _clock.GetUtcNow().ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
-            type = "text", text = new { body = text } }).ToArray();
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(new { @object = "whatsapp_business_account", entry = new[] {
-            new { changes = new[] { new { field = "messages", value = new { metadata = new { phone_number_id = "fixture-number" }, messages } } } } } });
+            type = "text",
+            text = new { body = text }
+        }).ToArray();
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            @object = "whatsapp_business_account",
+            entry = new[] {
+            new { changes = new[] { new { field = "messages", value = new { metadata = new { phone_number_id = "fixture-number" }, messages } } } } }
+        });
         await using var read = app.Services.CreateAsyncScope(); var db = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var notices = await db.OutboxMessages.CountAsync(Ct); var links = await db.Set<LoginLink>().CountAsync(Ct);
         using var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/whatsapp") { Content = new ByteArrayContent(bytes) };

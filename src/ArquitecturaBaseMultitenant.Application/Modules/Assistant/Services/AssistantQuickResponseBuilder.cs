@@ -55,7 +55,8 @@ internal sealed class AssistantQuickResponseBuilder(DisplayFormatter formatter, 
             links.Add(Link(route, context.Profile, status: status, label: query.Key == "my_signin" ? "Link.ViewAccount" : "Link.View"));
         }
         return new AssistantQuickCompositionResponse(title, new AssistantQuickResultResponse(text, links, data)
-        { SubjectCopies = subjectCopies ?? [] }) { SubjectCopies = subjectCopies ?? [] };
+        { SubjectCopies = subjectCopies ?? [] })
+        { SubjectCopies = subjectCopies ?? [] };
     }
 
     private static AssistantLinkResponse Link(AssistantRouteKey route, CultureProfile profile, Guid? tenantId = null, AssistantLinkStatus? status = null, string label = "Link.View") =>

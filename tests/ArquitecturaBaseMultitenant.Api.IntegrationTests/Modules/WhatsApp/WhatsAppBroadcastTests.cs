@@ -139,7 +139,10 @@ public sealed class WhatsAppBroadcastTests(ApiFactory factory)
         var count = WhatsAppTemplateBase.Placeholders(body);
         using var created = await WhatsAppAttentionJourney.PostAsync(owner, "/api/organization/whatsapp/templates", new
         {
-            name, category, language = "es-AR", body,
+            name,
+            category,
+            language = "es-AR",
+            body,
             variables = Enumerable.Range(1, count).Select(index => new { label = "dato " + index, example = "ejemplo" }).ToArray(),
         }, Ct);
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
@@ -161,7 +164,10 @@ public sealed class WhatsAppBroadcastTests(ApiFactory factory)
     {
         using var created = await WhatsAppAttentionJourney.PostAsync(owner, "/api/organization/whatsapp/broadcasts", new
         {
-            name = "Promo " + Guid.NewGuid().ToString("N")[..6], templateId, variables = new[] { "20%" }, audience = new { kind = "AllAccepting" },
+            name = "Promo " + Guid.NewGuid().ToString("N")[..6],
+            templateId,
+            variables = new[] { "20%" },
+            audience = new { kind = "AllAccepting" },
             scheduledAtUtc,
         }, Ct);
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);

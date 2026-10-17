@@ -25,7 +25,8 @@ public sealed class RolePermissionCacheIsolationTests
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
     private static HttpClient Client(ApiFactory factory) => factory.CreateClient(new()
     {
-        BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false,
+        BaseAddress = new Uri("https://localhost"),
+        AllowAutoRedirect = false,
     });
 
     [Fact]

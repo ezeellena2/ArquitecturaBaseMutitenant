@@ -103,8 +103,11 @@ internal sealed class WhatsAppBroadcastReader(ApplicationDbContext context, ITen
                    .Where(customer => customer.TenantId == tenantId && customer.Id == recipient.CustomerId).DefaultIfEmpty()
                select new RecipientProjection
                {
-                   Id = recipient.Id, BroadcastId = recipient.BroadcastId, ContactId = recipient.CustomerId,
-                   ContactName = customer == null ? null : customer.Name, WaId = recipient.WaId,
+                   Id = recipient.Id,
+                   BroadcastId = recipient.BroadcastId,
+                   ContactId = recipient.CustomerId,
+                   ContactName = customer == null ? null : customer.Name,
+                   WaId = recipient.WaId,
                    Status = recipient.Status != WhatsAppRecipientStatus.Sent ? recipient.Status
                        : outbox != null && (outbox.Status == OutboxStatus.Failed || outbox.Status == OutboxStatus.Cancelled) ? WhatsAppRecipientStatus.Failed
                        : accepted == null ? WhatsAppRecipientStatus.Sent

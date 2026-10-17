@@ -26,7 +26,8 @@ public sealed class OrganizationDomainsTests(ApiFactory factory)
     {
         using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
         {
-            BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false,
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
         });
         var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
         await CreateOrganizationAsync(owner.UserId);
@@ -165,9 +166,9 @@ public sealed class OrganizationDomainsTests(ApiFactory factory)
     public async Task Concurrent_organizations_cannot_register_the_same_email_domain()
     {
         using var firstClient = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         using var secondClient = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var firstOwner = await AccountJourney.RegisterAsync(factory, firstClient, Ct);
         var secondOwner = await AccountJourney.RegisterAsync(factory, secondClient, Ct);
         await CreateOrganizationAsync(firstOwner.UserId);
@@ -194,9 +195,9 @@ public sealed class OrganizationDomainsTests(ApiFactory factory)
     public async Task Organization_cannot_list_or_remove_another_organizations_email_domain()
     {
         using var ownerClient = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         using var otherOwnerClient = factory.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
         var otherOwner = await AccountJourney.RegisterAsync(factory, otherOwnerClient, Ct);
         await CreateOrganizationAsync(owner.UserId);

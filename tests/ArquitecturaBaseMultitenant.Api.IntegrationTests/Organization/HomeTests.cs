@@ -211,7 +211,8 @@ public sealed partial class HomeTests(ApiFactory factory)
         var invitee = Email.Create($"Vencida-{Guid.NewGuid():N}@Example.test").Value;
         using var issued = await AccountJourney.PostAsync(ownerClient, "/api/users/invitations", new
         {
-            email = invitee.DisplayValue, roleIds = Array.Empty<Guid>(),
+            email = invitee.DisplayValue,
+            roleIds = Array.Empty<Guid>(),
             companies = new[] { new { companyId, roleIds = new[] { companyAdminRoleId } } },
         }, Ct);
         Assert.True(issued.StatusCode == HttpStatusCode.Created, await issued.Content.ReadAsStringAsync(Ct));

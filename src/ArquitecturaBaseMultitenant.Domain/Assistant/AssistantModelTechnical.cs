@@ -39,12 +39,28 @@ public sealed record AssistantModelTechnical
             || value.Amount >= 1_000_000_000_000m || value.Round(6).Amount != value.Amount || value.Currency != cacheRead.Currency)
             || (threshold is null ? prices.Skip(3).Any(value => value is not null) : prices.Skip(3).Any(value => value is null)))
             throw new ArgumentException("Technical tariffs must be positive, complete and have six decimal places in one currency.");
-        return new() { SupportsText = text, SupportsTools = tools, SupportsImages = images, SupportsPdf = pdf,
-            SupportsAdaptiveThinking = adaptive, LowEffort = low, MediumEffort = medium, HighEffort = high,
-            MaxInputTokens = maxInput, MaxOutputTokens = maxOutput, CacheWrite5Minutes = Copy(cache5Minutes)!,
-            CacheWrite1Hour = Copy(cache1Hour)!, CacheRead = Copy(cacheRead)!, LongInputTokensThreshold = threshold,
-            LongInput = Copy(longInput), LongOutput = Copy(longOutput), LongCacheWrite5Minutes = Copy(longCache5Minutes),
-            LongCacheWrite1Hour = Copy(longCache1Hour), LongCacheRead = Copy(longCacheRead) };
+        return new()
+        {
+            SupportsText = text,
+            SupportsTools = tools,
+            SupportsImages = images,
+            SupportsPdf = pdf,
+            SupportsAdaptiveThinking = adaptive,
+            LowEffort = low,
+            MediumEffort = medium,
+            HighEffort = high,
+            MaxInputTokens = maxInput,
+            MaxOutputTokens = maxOutput,
+            CacheWrite5Minutes = Copy(cache5Minutes)!,
+            CacheWrite1Hour = Copy(cache1Hour)!,
+            CacheRead = Copy(cacheRead)!,
+            LongInputTokensThreshold = threshold,
+            LongInput = Copy(longInput),
+            LongOutput = Copy(longOutput),
+            LongCacheWrite5Minutes = Copy(longCache5Minutes),
+            LongCacheWrite1Hour = Copy(longCache1Hour),
+            LongCacheRead = Copy(longCacheRead)
+        };
     }
     internal void UpdateFrom(AssistantModelTechnical value)
     {

@@ -96,7 +96,7 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
         var google = signInTypes.Contains(LoginMethodType.Google);
         var phone = signInTypes.Contains(LoginMethodType.Phone);
         return from user in context.Users.AsNoTracking()
-               // Una invitación de operador revocada no es una cuenta: queda eliminada con su vencimiento como marca.
+                   // Una invitación de operador revocada no es una cuenta: queda eliminada con su vencimiento como marca.
                where user.Status != UserStatus.Deleted || user.OperatorInvitationExpiresAtUtc == null
                let usable = context.LoginMethods.Any(method => method.UserId == user.Id && method.VerifiedAtUtc != null
                    && ((method.Type == LoginMethodType.Email && email) || (method.Type == LoginMethodType.Google && google)

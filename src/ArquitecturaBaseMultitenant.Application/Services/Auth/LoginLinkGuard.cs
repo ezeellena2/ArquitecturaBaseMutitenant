@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
+
 internal sealed class LoginLinkGuard(ILoginLinkRepository links, ILoginMethodRepository methods,
     LoginMethodAvailabilityPolicy availability)
 {

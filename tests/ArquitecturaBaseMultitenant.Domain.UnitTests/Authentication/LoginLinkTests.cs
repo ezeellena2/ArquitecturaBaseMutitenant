@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Authentication;
+
 public sealed class LoginLinkTests
 {
     private static readonly DateTime Now = new(2026, 10, 8, 12, 0, 0, DateTimeKind.Utc);

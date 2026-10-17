@@ -113,26 +113,31 @@ internal sealed class SecurityContractContributor : IHttpContractContributor
         {
             ["recoveryCodes"] = new OpenApiSchema
             {
-                Type = JsonSchemaType.Array, MinItems = PlatformFactorChallengeResponse.RecoveryCodeCount,
-                MaxItems = PlatformFactorChallengeResponse.RecoveryCodeCount, UniqueItems = true,
+                Type = JsonSchemaType.Array,
+                MinItems = PlatformFactorChallengeResponse.RecoveryCodeCount,
+                MaxItems = PlatformFactorChallengeResponse.RecoveryCodeCount,
+                UniqueItems = true,
                 Items = new OpenApiSchema { Type = JsonSchemaType.String, Pattern = "^[A-Z0-9]{4}-[A-Z0-9]{4}$" },
                 Description = "Los ocho códigos de un solo uso; copiar y descargar son acciones locales del navegador.",
             },
         });
         Union(document, schemas, "PlatformFactorChallengeResponse", "state", new()
         {
-            ["verify"] = "PlatformFactorVerifyChallenge", ["setup"] = "PlatformFactorSetupChallenge",
+            ["verify"] = "PlatformFactorVerifyChallenge",
+            ["setup"] = "PlatformFactorSetupChallenge",
             ["recoveryCodes"] = "PlatformFactorRecoveryCodesChallenge",
         }, "El paso del desafío pendiente de Plataforma (E9).");
 
         schemas["VerifyPlatformFactorAuthorizeResponse"] = Closed(new()
         {
-            ["next"] = Literal("authorize"), ["returnUrl"] = new OpenApiSchema { Type = JsonSchemaType.String, Description = "Retorno validado del ingreso; el SPA abre el authorize." },
+            ["next"] = Literal("authorize"),
+            ["returnUrl"] = new OpenApiSchema { Type = JsonSchemaType.String, Description = "Retorno validado del ingreso; el SPA abre el authorize." },
         });
         schemas["VerifyPlatformFactorRecoveryCodesResponse"] = Closed(new() { ["next"] = Literal("recoveryCodes") });
         Union(document, schemas, "VerifyPlatformFactorResponse", "next", new()
         {
-            ["authorize"] = "VerifyPlatformFactorAuthorizeResponse", ["recoveryCodes"] = "VerifyPlatformFactorRecoveryCodesResponse",
+            ["authorize"] = "VerifyPlatformFactorAuthorizeResponse",
+            ["recoveryCodes"] = "VerifyPlatformFactorRecoveryCodesResponse",
         }, "authorize con la sesión creada o recoveryCodes al verificar el alta (E9).");
 
         foreach (var name in new[] { "VerifyPlatformFactorHttpRequest", "PlatformReauthenticationHttpRequest" })
@@ -149,7 +154,9 @@ internal sealed class SecurityContractContributor : IHttpContractContributor
             complete.Required = new HashSet<string>(StringComparer.Ordinal) { "savedRecoveryCodes" };
             complete.Properties!["savedRecoveryCodes"] = new OpenApiSchema
             {
-                Type = JsonSchemaType.Boolean, Enum = [JsonValue.Create(true)], Description = "La casilla «Guardé los códigos»; sólo vale true.",
+                Type = JsonSchemaType.Boolean,
+                Enum = [JsonValue.Create(true)],
+                Description = "La casilla «Guardé los códigos»; sólo vale true.",
             };
         }
         if (Schema(schemas, "PlatformReauthenticationResponse") is { } recent) Close(recent);
@@ -199,7 +206,9 @@ internal sealed class SecurityContractContributor : IHttpContractContributor
 
     private static OpenApiSchema Closed(Dictionary<string, IOpenApiSchema> properties) => new()
     {
-        Type = JsonSchemaType.Object, AdditionalPropertiesAllowed = false, Properties = properties,
+        Type = JsonSchemaType.Object,
+        AdditionalPropertiesAllowed = false,
+        Properties = properties,
         Required = properties.Keys.ToHashSet(StringComparer.Ordinal),
     };
 
@@ -213,7 +222,9 @@ internal sealed class SecurityContractContributor : IHttpContractContributor
 
     private static OpenApiSchema Range(int minimum, int maximum, string description) => new()
     {
-        Type = JsonSchemaType.Integer, Format = "int32", Description = description,
+        Type = JsonSchemaType.Integer,
+        Format = "int32",
+        Description = description,
         // Valores del contrato, no texto para una persona: igual que ValidationContractContributor.
         Minimum = Convert.ToString(minimum, System.Globalization.CultureInfo.InvariantCulture),
         Maximum = Convert.ToString(maximum, System.Globalization.CultureInfo.InvariantCulture),

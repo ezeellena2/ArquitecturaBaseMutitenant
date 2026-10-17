@@ -135,7 +135,7 @@ public sealed class GoogleNamesTests(ApiFactory factory)
         if (expectedVersion > 0)
         {
             using var stale = await client.PutAsJsonAsync("/api/me", new
-                { firstName = "Viejo", lastName = (string?)null, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires", version = 0 }, Ct);
+            { firstName = "Viejo", lastName = (string?)null, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires", version = 0 }, Ct);
             Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
         }
     }
@@ -159,11 +159,11 @@ public sealed class GoogleNamesTests(ApiFactory factory)
         var user = await ReadUserAsync(host, account.UserId);
         AssertNames(user, identity.GivenName, identity.FamilyName, 1);
         using var saved = await client.PutAsJsonAsync("/api/me", new
-            { firstName = user.FirstName, lastName = user.LastName, culture = "en-US", timeZoneId = "America/Argentina/Buenos_Aires", version = user.ProfileVersion }, Ct);
+        { firstName = user.FirstName, lastName = user.LastName, culture = "en-US", timeZoneId = "America/Argentina/Buenos_Aires", version = user.ProfileVersion }, Ct);
         Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
         AssertNames(await ReadUserAsync(host, account.UserId), identity.GivenName, identity.FamilyName, 2);
         using var invalid = await client.PutAsJsonAsync("/api/me", new
-            { firstName = new string('N', 101), lastName = user.LastName, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires", version = 2 }, Ct);
+        { firstName = new string('N', 101), lastName = user.LastName, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires", version = 2 }, Ct);
         Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
         using var problem = await invalid.Content.ReadFromJsonAsync<JsonDocument>(Ct);
         Assert.Equal("Validation.Failed", problem!.RootElement.GetProperty("code").GetString());
@@ -221,7 +221,7 @@ public sealed class GoogleNamesTests(ApiFactory factory)
     });
 
     private static HttpClient Client(WebApplicationFactory<Program> host) => host.CreateClient(new()
-        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+    { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
 
     private static async Task ChallengeAsync(HttpClient client, string access, bool signup = false, bool link = false)
     {
@@ -239,8 +239,12 @@ public sealed class GoogleNamesTests(ApiFactory factory)
         {
             using var response = await client.PostAsync("/api/auth/external/google", new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                ["signup"] = "true", ["acceptedTerms"] = "true", ["access"] = access,
-                ["returnTo"] = "/", ["culture"] = "es-AR", ["timeZoneId"] = "America/Argentina/Buenos_Aires",
+                ["signup"] = "true",
+                ["acceptedTerms"] = "true",
+                ["access"] = access,
+                ["returnTo"] = "/",
+                ["culture"] = "es-AR",
+                ["timeZoneId"] = "America/Argentina/Buenos_Aires",
                 ["__RequestVerificationToken"] = requestToken,
             }), Ct);
             Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);

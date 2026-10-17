@@ -299,7 +299,8 @@ public sealed class SubdomainTests(ApiFactory factory)
         {
             var descriptor = new OpenIddictApplicationDescriptor
             {
-                ClientId = "other-" + Guid.NewGuid().ToString("N"), ClientType = ClientTypes.Public,
+                ClientId = "other-" + Guid.NewGuid().ToString("N"),
+                ClientType = ClientTypes.Public,
             };
             descriptor.RedirectUris.Add(new Uri("https://localhost:5174/auth/callback"));
             descriptor.PostLogoutRedirectUris.Add(new Uri("https://localhost:5174/"));
@@ -402,8 +403,14 @@ public sealed class SubdomainTests(ApiFactory factory)
         var redirect = PublicOrigin(site.Slug!) + "/auth/callback";
         using var browser = Client();
         using (var missing = await browser.GetAsync(QueryHelpers.AddQueryString("/connect/authorize",
-            new Dictionary<string, string?> { ["client_id"] = "web", ["response_type"] = "code",
-                ["redirect_uri"] = redirect, ["scope"] = "openid api", ["access"] = "consumer" }), Ct))
+            new Dictionary<string, string?>
+            {
+                ["client_id"] = "web",
+                ["response_type"] = "code",
+                ["redirect_uri"] = redirect,
+                ["scope"] = "openid api",
+                ["access"] = "consumer"
+            }), Ct))
         {
             var result = missing.Headers.Location?.ToString() ?? await missing.Content.ReadAsStringAsync(Ct);
             Assert.Contains("invalid_request", result, StringComparison.Ordinal);
@@ -416,8 +423,14 @@ public sealed class SubdomainTests(ApiFactory factory)
         var code = QueryHelpers.ParseQuery(authorized.Headers.Location!.Query)["code"].ToString();
         Assert.False(string.IsNullOrEmpty(code));
         using var rejected = await browser.PostAsync(PublicOrigin(site.Slug!) + "/connect/token", new FormUrlEncodedContent(
-            new Dictionary<string, string> { ["grant_type"] = "authorization_code", ["client_id"] = "web",
-                ["code"] = code, ["redirect_uri"] = redirect, ["code_verifier"] = new string('B', 64) }), Ct);
+            new Dictionary<string, string>
+            {
+                ["grant_type"] = "authorization_code",
+                ["client_id"] = "web",
+                ["code"] = code,
+                ["redirect_uri"] = redirect,
+                ["code_verifier"] = new string('B', 64)
+            }), Ct);
         Assert.Equal(HttpStatusCode.BadRequest, rejected.StatusCode);
         using var error = await rejected.Content.ReadFromJsonAsync<JsonDocument>(Ct);
         Assert.Equal("invalid_grant", error!.RootElement.GetProperty("error").GetString());
@@ -438,14 +451,20 @@ public sealed class SubdomainTests(ApiFactory factory)
 
         var refreshed = await ExchangeAsync(browser, origin, new Dictionary<string, string>
         {
-            ["grant_type"] = "refresh_token", ["client_id"] = "web", ["refresh_token"] = tokens.RefreshToken,
+            ["grant_type"] = "refresh_token",
+            ["client_id"] = "web",
+            ["refresh_token"] = tokens.RefreshToken,
         });
         using var claims = ReadClaims(refreshed.IdToken);
         Assert.Equal("https://localhost:5174/", claims.RootElement.GetProperty("iss").GetString());
         Assert.Equal("consumer", claims.RootElement.GetProperty("access").GetString());
         using var revoked = await browser.PostAsync(origin + "/connect/revoke", new FormUrlEncodedContent(
-            new Dictionary<string, string> { ["client_id"] = "web", ["token"] = refreshed.AccessToken,
-                ["token_type_hint"] = "access_token" }), Ct);
+            new Dictionary<string, string>
+            {
+                ["client_id"] = "web",
+                ["token"] = refreshed.AccessToken,
+                ["token_type_hint"] = "access_token"
+            }), Ct);
         Assert.Equal(HttpStatusCode.OK, revoked.StatusCode);
         using var denied = await UserInfoAsync(browser, origin, refreshed.AccessToken);
         Assert.Equal(HttpStatusCode.Unauthorized, denied.StatusCode);
@@ -471,8 +490,12 @@ public sealed class SubdomainTests(ApiFactory factory)
             value.StartsWith(".AspNetCore.Identity.Application=;", StringComparison.Ordinal));
 
         using var revoked = await browser.PostAsync(PublicOrigin(site.Slug!) + "/connect/token", new FormUrlEncodedContent(
-            new Dictionary<string, string> { ["grant_type"] = "refresh_token", ["client_id"] = "web",
-                ["refresh_token"] = tokens.RefreshToken }), Ct);
+            new Dictionary<string, string>
+            {
+                ["grant_type"] = "refresh_token",
+                ["client_id"] = "web",
+                ["refresh_token"] = tokens.RefreshToken
+            }), Ct);
         Assert.Equal(HttpStatusCode.BadRequest, revoked.StatusCode);
     }
 
@@ -496,20 +519,32 @@ public sealed class SubdomainTests(ApiFactory factory)
         var site = await CreateSiteAsync();
         using var browser = Client();
         using var fixedReturn = await browser.GetAsync(QueryHelpers.AddQueryString("/connect/logout",
-            new Dictionary<string, string?> { ["client_id"] = "web", ["id_token_hint"] = "invalid-hint",
-                ["post_logout_redirect_uri"] = "https://localhost:5174/" }), Ct);
+            new Dictionary<string, string?>
+            {
+                ["client_id"] = "web",
+                ["id_token_hint"] = "invalid-hint",
+                ["post_logout_redirect_uri"] = "https://localhost:5174/"
+            }), Ct);
         Assert.Equal(HttpStatusCode.Redirect, fixedReturn.StatusCode);
         Assert.Equal("https://localhost:5174/", fixedReturn.Headers.Location!.AbsoluteUri);
 
         using var response = await browser.GetAsync(QueryHelpers.AddQueryString("/connect/logout",
-            new Dictionary<string, string?> { ["client_id"] = "web", ["id_token_hint"] = "invalid-hint",
-                ["post_logout_redirect_uri"] = PublicOrigin(site.Slug!) + "/" }), Ct);
+            new Dictionary<string, string?>
+            {
+                ["client_id"] = "web",
+                ["id_token_hint"] = "invalid-hint",
+                ["post_logout_redirect_uri"] = PublicOrigin(site.Slug!) + "/"
+            }), Ct);
         Assert.Equal(fixedReturn.StatusCode, response.StatusCode);
         Assert.Equal(PublicOrigin(site.Slug!) + "/", response.Headers.Location!.AbsoluteUri);
 
         using var unknown = await browser.GetAsync(QueryHelpers.AddQueryString("/connect/logout",
-            new Dictionary<string, string?> { ["client_id"] = "web", ["id_token_hint"] = "invalid-hint",
-                ["post_logout_redirect_uri"] = "https://unknown.localhost:5174/" }), Ct);
+            new Dictionary<string, string?>
+            {
+                ["client_id"] = "web",
+                ["id_token_hint"] = "invalid-hint",
+                ["post_logout_redirect_uri"] = "https://unknown.localhost:5174/"
+            }), Ct);
         Assert.Equal(HttpStatusCode.BadRequest, unknown.StatusCode);
         Assert.Null(unknown.Headers.Location);
     }
@@ -616,7 +651,8 @@ public sealed class SubdomainTests(ApiFactory factory)
         var code = await PickupCodeReader.ReadAsync(factory.Services, account.Email.Value, Ct);
         using var verified = await AccountJourney.PostAsync(browser, "/api/auth/login-code/verify", new
         {
-            email = account.Email.Value, code,
+            email = account.Email.Value,
+            code,
             returnUrl = AuthorizePath("https://localhost:5174/auth/callback", "business", tenantId),
         }, Ct);
         Assert.Equal(HttpStatusCode.OK, verified.StatusCode);
@@ -627,9 +663,13 @@ public sealed class SubdomainTests(ApiFactory factory)
     private static string AuthorizePath(string redirect, string access = "consumer", Guid? tenantId = null) =>
         QueryHelpers.AddQueryString("/connect/authorize", new Dictionary<string, string?>
         {
-            ["client_id"] = "web", ["response_type"] = "code", ["redirect_uri"] = redirect,
-            ["scope"] = "openid profile email api offline_access", ["access"] = access,
-            ["tenant"] = tenantId?.ToString("D"), ["code_challenge_method"] = "S256",
+            ["client_id"] = "web",
+            ["response_type"] = "code",
+            ["redirect_uri"] = redirect,
+            ["scope"] = "openid profile email api offline_access",
+            ["access"] = access,
+            ["tenant"] = tenantId?.ToString("D"),
+            ["code_challenge_method"] = "S256",
             ["code_challenge"] = WebEncoders.Base64UrlEncode(SHA256.HashData(Encoding.ASCII.GetBytes(Verifier))),
         });
 
@@ -643,8 +683,11 @@ public sealed class SubdomainTests(ApiFactory factory)
         Assert.True(parameters.ContainsKey("code"), "La autorización no entregó un código OIDC.");
         return await ExchangeAsync(browser, origin, new Dictionary<string, string>
         {
-            ["grant_type"] = "authorization_code", ["client_id"] = "web", ["code"] = parameters["code"].ToString(),
-            ["redirect_uri"] = redirect, ["code_verifier"] = Verifier,
+            ["grant_type"] = "authorization_code",
+            ["client_id"] = "web",
+            ["code"] = parameters["code"].ToString(),
+            ["redirect_uri"] = redirect,
+            ["code_verifier"] = Verifier,
         });
     }
 

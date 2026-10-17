@@ -59,8 +59,13 @@ public sealed class LoginCodeConcurrencyTests(ApiFactory factory)
         gate.Arm();
 
         var path = signup ? "/test/auth/signup/verify" : "/test/auth/verify-code";
-        var body = new { email = address, code, acceptedTerms = true,
-            returnUrl = "/connect/authorize?client_id=web" };
+        var body = new
+        {
+            email = address,
+            code,
+            acceptedTerms = true,
+            returnUrl = "/connect/authorize?client_id=web"
+        };
         var first = firstClient.PostAsJsonAsync(path, body, Ct);
         await gate.FirstRead.Task.WaitAsync(TimeSpan.FromSeconds(15), Ct);
         var second = secondClient.PostAsJsonAsync(path, body, Ct);

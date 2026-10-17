@@ -41,8 +41,11 @@ internal sealed class AccountDeletionCancelIssuer(IAccountDeletionCancelTicketRe
         {
             Metadata = new Dictionary<string, object?>
             {
-                ["scheduledForUtc"] = date, ["cancelTicket"] = secret, ["timeZoneId"] = account.TimeZoneId,
-                ["returnUrl"] = returnUrl, ["cancelTicketExpiresAtUtc"] = ticket.ExpiresAtUtc,
+                ["scheduledForUtc"] = date,
+                ["cancelTicket"] = secret,
+                ["timeZoneId"] = account.TimeZoneId,
+                ["returnUrl"] = returnUrl,
+                ["cancelTicketExpiresAtUtc"] = ticket.ExpiresAtUtc,
             },
         };
     }

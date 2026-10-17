@@ -14,17 +14,17 @@ internal sealed class InvitationReader(ApplicationDbContext context, ITenantCont
     {
         _ = tenantContext.RequiredTenantId;
         return (from invitation in context.Invitations.AsNoTracking()
-            where invitation.Id == id
-            join member in context.Members.AsNoTracking()
-                on new { invitation.TenantId, Id = invitation.MemberId } equals new { member.TenantId, member.Id }
-            join tenant in context.Tenants.AsNoTracking() on invitation.TenantId equals tenant.Id
-            join inviter in context.Users.AsNoTracking() on invitation.InviterUserId equals inviter.Id
-            select new InvitationRow(invitation.Id, invitation.MemberId, member.UserId, member.Status,
-                invitation.TenantId, tenant.Kind, tenant.Status, tenant.Name, invitation.Destination,
-                invitation.Channel, invitation.TokenHash, invitation.Status, invitation.IssuedAtUtc,
-                invitation.ExpiresAtUtc, invitation.AcceptedAtUtc, invitation.AcceptedByUserId,
-                invitation.BootstrapNonceHash, inviter.Status == UserStatus.Deleted ? null : inviter.DisplayName,
-                inviter.Status == UserStatus.Deleted, invitation.InviterUserId))
+                where invitation.Id == id
+                join member in context.Members.AsNoTracking()
+                    on new { invitation.TenantId, Id = invitation.MemberId } equals new { member.TenantId, member.Id }
+                join tenant in context.Tenants.AsNoTracking() on invitation.TenantId equals tenant.Id
+                join inviter in context.Users.AsNoTracking() on invitation.InviterUserId equals inviter.Id
+                select new InvitationRow(invitation.Id, invitation.MemberId, member.UserId, member.Status,
+                    invitation.TenantId, tenant.Kind, tenant.Status, tenant.Name, invitation.Destination,
+                    invitation.Channel, invitation.TokenHash, invitation.Status, invitation.IssuedAtUtc,
+                    invitation.ExpiresAtUtc, invitation.AcceptedAtUtc, invitation.AcceptedByUserId,
+                    invitation.BootstrapNonceHash, inviter.Status == UserStatus.Deleted ? null : inviter.DisplayName,
+                    inviter.Status == UserStatus.Deleted, invitation.InviterUserId))
             .SingleOrDefaultAsync(cancellationToken);
     }
 
@@ -38,10 +38,10 @@ internal sealed class InvitationReader(ApplicationDbContext context, ITenantCont
         var invitedMembers = context.Members.AsNoTracking().Where(member => member.Id == memberId)
             .Select(member => member.Id);
         var companies = await (from membership in context.CompanyMemberships.AsNoTracking()
-                where membership.MemberId == memberId && membership.Status == CompanyMembershipStatus.Active
-                join company in context.Companies.AsNoTracking() on membership.CompanyId equals company.Id
-                orderby company.Name
-                select company.Name)
+                               where membership.MemberId == memberId && membership.Status == CompanyMembershipStatus.Active
+                               join company in context.Companies.AsNoTracking() on membership.CompanyId equals company.Id
+                               orderby company.Name
+                               select company.Name)
             .ToListAsync(cancellationToken);
         // De quien invita se muestra su rol en la organización («Dueño»); si solo tiene roles de empresa, esos.
         var inviterRoles = await RolesAsync(inviterMembers, cancellationToken);
@@ -52,10 +52,10 @@ internal sealed class InvitationReader(ApplicationDbContext context, ITenantCont
 
     private Task<List<GrantedRole>> RolesAsync(IQueryable<Guid> memberIds, CancellationToken cancellationToken) =>
         (from assignment in context.RoleAssignments.AsNoTracking()
-            where memberIds.Contains(assignment.MemberId)
-            join role in context.Roles.AsNoTracking() on assignment.RoleId equals role.Id
-            orderby assignment.CompanyId != null, role.Name
-            select new GrantedRole(role.Name, assignment.CompanyId == null))
+         where memberIds.Contains(assignment.MemberId)
+         join role in context.Roles.AsNoTracking() on assignment.RoleId equals role.Id
+         orderby assignment.CompanyId != null, role.Name
+         select new GrantedRole(role.Name, assignment.CompanyId == null))
         .ToListAsync(cancellationToken);
 
     private static string[] Names(IEnumerable<GrantedRole> roles) =>

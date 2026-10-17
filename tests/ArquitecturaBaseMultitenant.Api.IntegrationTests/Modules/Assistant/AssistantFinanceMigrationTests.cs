@@ -28,7 +28,7 @@ public sealed class AssistantFinanceMigrationTests
         await db.Database.ExecuteSqlAsync($"""
             INSERT INTO platform."PlatformAssistantUsageDaily"
                 ("Id", "UserId", "Day", "InputTokens", "OutputTokens", "MessageCount", "CostAmount", "CostCurrency")
-            VALUES ({id}, {Guid.CreateVersion7()}, {new DateOnly(2026,10,10)}, 1000, 100, 1, 0.123456, 'USD');
+            VALUES ({id}, {Guid.CreateVersion7()}, {new DateOnly(2026, 10, 10)}, 1000, 100, 1, 0.123456, 'USD');
             """, ct);
         await migrator.MigrateAsync(current, ct);
         await AssertSchemaAsync(12);

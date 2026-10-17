@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Metadata;
 using WhatsAppUniqueKeys = ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.UniqueKeys;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Persistence;
+
 internal sealed class WhatsAppMessageConfiguration : IEntityTypeConfiguration<WhatsAppMessage>
 {
     public void Configure(EntityTypeBuilder<WhatsAppMessage> builder)

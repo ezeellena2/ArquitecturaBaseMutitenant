@@ -25,9 +25,12 @@ public sealed class ConsumerDataRetention : Entity
         RequireUtc(retainUntilUtc);
         return new ConsumerDataRetention
         {
-            EntityTypeKey = entityTypeKey, EntityId = entityId,
-            ConsumerTenantId = consumerTenantId, BusinessTenantId = businessTenantId,
-            Reason = reason, RetainUntilUtc = retainUntilUtc,
+            EntityTypeKey = entityTypeKey,
+            EntityId = entityId,
+            ConsumerTenantId = consumerTenantId,
+            BusinessTenantId = businessTenantId,
+            Reason = reason,
+            RetainUntilUtc = retainUntilUtc,
         };
     }
 

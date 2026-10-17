@@ -18,6 +18,7 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.TechnicalContribu
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
+
 public sealed class WhatsAppPersistenceTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     [Fact]

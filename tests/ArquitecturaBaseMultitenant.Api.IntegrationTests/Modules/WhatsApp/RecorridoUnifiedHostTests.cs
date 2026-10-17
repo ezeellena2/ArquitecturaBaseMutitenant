@@ -135,8 +135,11 @@ public sealed class RecorridoUnifiedHostTests(ApiFactory postgres) : IClassFixtu
             var token = (await JsonAsync(tokenResponse)).GetProperty("requestToken").GetString()!;
             using var form = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                ["signup"] = "true", ["acceptedTerms"] = "true", ["access"] = access,
-                ["returnTo"] = "/", ["__RequestVerificationToken"] = token,
+                ["signup"] = "true",
+                ["acceptedTerms"] = "true",
+                ["access"] = access,
+                ["returnTo"] = "/",
+                ["__RequestVerificationToken"] = token,
             });
             using var response = await client.PostAsync("/api/auth/external/google", form, Ct);
             Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);

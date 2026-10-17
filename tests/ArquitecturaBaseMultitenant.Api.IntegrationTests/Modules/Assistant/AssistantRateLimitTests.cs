@@ -108,8 +108,14 @@ public sealed class AssistantRateLimitTests(ApiFactory factory) : IClassFixture<
     {
         defaultModelId = settings.RootElement.GetProperty("defaultModelId").GetGuid(),
         allowedModelIds = settings.RootElement.GetProperty("allowedModelIds").EnumerateArray().Select(value => value.GetGuid()).ToArray(),
-        effort = "low", dailyMessageLimit = 50, monthlyOrganizationBudget = new { amount = 100m, currency = "USD" },
-        personalEnabled = false, retentionDays = 30, keyAction, apiKey, version,
+        effort = "low",
+        dailyMessageLimit = 50,
+        monthlyOrganizationBudget = new { amount = 100m, currency = "USD" },
+        personalEnabled = false,
+        retentionDays = 30,
+        keyAction,
+        apiKey,
+        version,
     };
 
     /// <summary>El proveedor: sólo cuenta las pruebas de clave; esta prueba nunca conversa.</summary>

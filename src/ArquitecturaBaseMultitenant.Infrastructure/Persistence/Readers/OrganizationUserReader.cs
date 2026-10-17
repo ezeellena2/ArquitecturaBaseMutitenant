@@ -208,8 +208,12 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
                            where assignment.TenantId == tenantId && assignment.CompanyId == null
                                && memberIds.Contains(assignment.MemberId)
                            orderby role.Name
-                           select new { assignment.MemberId, Role = new OrganizationUserRoleRow(role.Id,
-                               role.Name, role.IsSystemRole, role.Scope, role.CompanyId) })
+                           select new
+                           {
+                               assignment.MemberId,
+                               Role = new OrganizationUserRoleRow(role.Id,
+                               role.Name, role.IsSystemRole, role.Scope, role.CompanyId)
+                           })
             .ToArrayAsync(cancellationToken);
         var rolesByMember = roles.GroupBy(row => row.MemberId)
             .ToDictionary(group => group.Key, group => (IReadOnlyList<OrganizationUserRoleRow>)[.. group.Select(row => row.Role)]);
@@ -229,9 +233,13 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
                                   where assignment.TenantId == tenantId && assignment.CompanyId != null
                                       && memberIds.Contains(assignment.MemberId)
                                   orderby role.Name
-                                  select new { assignment.MemberId, CompanyId = assignment.CompanyId!.Value,
+                                  select new
+                                  {
+                                      assignment.MemberId,
+                                      CompanyId = assignment.CompanyId!.Value,
                                       Role = new OrganizationUserRoleRow(role.Id, role.Name, role.IsSystemRole,
-                                          role.Scope, role.CompanyId) })
+                                          role.Scope, role.CompanyId)
+                                  })
             .ToArrayAsync(cancellationToken);
         var companyRolesByMembership = companyRoles.GroupBy(row => (row.MemberId, row.CompanyId))
             .ToDictionary(group => group.Key, group => (IReadOnlyList<OrganizationUserRoleRow>)[.. group.Select(row => row.Role)]);
@@ -244,8 +252,14 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
             .Where(invitation => invitation.TenantId == tenantId && memberIds.Contains(invitation.MemberId)
                 && invitation.Status == InvitationStatus.Pending)
             .OrderByDescending(invitation => invitation.IssuedAtUtc)
-            .Select(invitation => new { invitation.MemberId, invitation.Id,
-                invitation.Destination, invitation.IssuedAtUtc, invitation.ExpiresAtUtc })
+            .Select(invitation => new
+            {
+                invitation.MemberId,
+                invitation.Id,
+                invitation.Destination,
+                invitation.IssuedAtUtc,
+                invitation.ExpiresAtUtc
+            })
             .ToArrayAsync(cancellationToken);
         var invitationByMember = invitations.GroupBy(row => row.MemberId)
             .ToDictionary(group => group.Key, group => group.First());

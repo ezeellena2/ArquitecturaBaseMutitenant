@@ -25,8 +25,17 @@ public sealed class AssistantFinancialCall : Entity
         long input, long output, Money conservativeCost)
     {
         if (operationId == Guid.Empty || sequence < 1 || input < 0 || output < 0) throw new ArgumentException("A bounded call is required.");
-        return new() { OperationId = operationId, Sequence = sequence, IsTitle = isTitle, Price = price,
-            InputTokens = input, OutputTokens = output, Cost = conservativeCost, IsEstimated = true };
+        return new()
+        {
+            OperationId = operationId,
+            Sequence = sequence,
+            IsTitle = isTitle,
+            Price = price,
+            InputTokens = input,
+            OutputTokens = output,
+            Cost = conservativeCost,
+            IsEstimated = true
+        };
     }
     /// <summary>Reemplaza un update acumulativo; jamás suma como una llamada nueva.</summary>
     public void ReplaceUsage(long input, long output, long read, long write5, long write1, long writeUnknown,

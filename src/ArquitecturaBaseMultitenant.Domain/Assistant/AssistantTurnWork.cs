@@ -44,10 +44,19 @@ public sealed class AssistantTurnWork : Entity
         ArgumentException.ThrowIfNullOrWhiteSpace(effort);
         return new(turnId)
         {
-            OwnerUserId = owner, Access = access, ScopeTenantId = tenantId, TenantKind = kind,
-            Culture = culture, TimeZoneId = timeZoneId, SessionStartedAtUtc = sessionStartedAtUtc,
-            ModelId = modelId, ProviderModelId = providerModelId, Effort = effort, Funding = funding,
-            CreatedAtUtc = nowUtc, DeadlineAtUtc = deadlineAtUtc,
+            OwnerUserId = owner,
+            Access = access,
+            ScopeTenantId = tenantId,
+            TenantKind = kind,
+            Culture = culture,
+            TimeZoneId = timeZoneId,
+            SessionStartedAtUtc = sessionStartedAtUtc,
+            ModelId = modelId,
+            ProviderModelId = providerModelId,
+            Effort = effort,
+            Funding = funding,
+            CreatedAtUtc = nowUtc,
+            DeadlineAtUtc = deadlineAtUtc,
         };
     }
     public bool IsTerminal => Status is AssistantTurnStatus.Complete or AssistantTurnStatus.Stopped or AssistantTurnStatus.Failed;

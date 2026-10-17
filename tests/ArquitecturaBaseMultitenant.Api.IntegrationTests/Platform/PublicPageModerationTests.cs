@@ -69,7 +69,10 @@ public sealed class PublicPageModerationTests(ApiFactory factory)
         await AccountJourney.AuthorizeAsync(business, "business", Ct);
         using var saved = await business.PutAsJsonAsync("/api/organization/public-page", new
         {
-            slug = tenant.Slug, name = "Página de prueba", description = "Contenido que no expone Plataforma", version = 0,
+            slug = tenant.Slug,
+            name = "Página de prueba",
+            description = "Contenido que no expone Plataforma",
+            version = 0,
         }, Ct);
         Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
         using var firstPublish = await business.PostAsJsonAsync("/api/organization/public-page/publish",

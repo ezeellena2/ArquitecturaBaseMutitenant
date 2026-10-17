@@ -33,24 +33,24 @@ public sealed class MemberStateParityTests
         ];
 
         foreach (var memberStatus in Enum.GetValues<MemberStatus>())
-        foreach (var userStatus in UserStatuses)
-        foreach (var invitation in invitations)
-        {
-            var expected = OrganizationUserStatePolicy.Resolve(memberStatus, userStatus, invitation.Status,
-                invitation.ExpiresAtUtc, NowUtc);
-            // El reader lee el vencimiento de la invitación pendiente más nueva; las demás no cuentan.
-            var actual = withState(new OrganizationUserReader.StateInput
-            {
-                MemberStatus = memberStatus,
-                UserStatus = userStatus,
-                PendingInvitationExpiresAtUtc = invitation.Status == InvitationStatus.Pending
-                    ? invitation.ExpiresAtUtc : null,
-                NowUtc = NowUtc,
-            }).State;
+            foreach (var userStatus in UserStatuses)
+                foreach (var invitation in invitations)
+                {
+                    var expected = OrganizationUserStatePolicy.Resolve(memberStatus, userStatus, invitation.Status,
+                        invitation.ExpiresAtUtc, NowUtc);
+                    // El reader lee el vencimiento de la invitación pendiente más nueva; las demás no cuentan.
+                    var actual = withState(new OrganizationUserReader.StateInput
+                    {
+                        MemberStatus = memberStatus,
+                        UserStatus = userStatus,
+                        PendingInvitationExpiresAtUtc = invitation.Status == InvitationStatus.Pending
+                            ? invitation.ExpiresAtUtc : null,
+                        NowUtc = NowUtc,
+                    }).State;
 
-            Assert.True(expected == actual,
-                $"{memberStatus}, {userStatus}, {invitation.Status}, {invitation.ExpiresAtUtc:O}: {expected} != {actual}");
-        }
+                    Assert.True(expected == actual,
+                        $"{memberStatus}, {userStatus}, {invitation.Status}, {invitation.ExpiresAtUtc:O}: {expected} != {actual}");
+                }
     }
 
     [Fact]
@@ -59,18 +59,18 @@ public sealed class MemberStateParityTests
         var withState = CompanyMembershipReader.WithState.Compile();
 
         foreach (var memberStatus in Enum.GetValues<MemberStatus>())
-        foreach (var userStatus in UserStatuses)
-        foreach (var membershipStatus in Enum.GetValues<CompanyMembershipStatus>())
-        {
-            var expected = CompanyMemberStatePolicy.Resolve(memberStatus, userStatus, membershipStatus);
-            var actual = withState(new CompanyMembershipReader.StateInput
-            {
-                MemberStatus = memberStatus,
-                UserStatus = userStatus,
-                MembershipStatus = membershipStatus,
-            }).State;
+            foreach (var userStatus in UserStatuses)
+                foreach (var membershipStatus in Enum.GetValues<CompanyMembershipStatus>())
+                {
+                    var expected = CompanyMemberStatePolicy.Resolve(memberStatus, userStatus, membershipStatus);
+                    var actual = withState(new CompanyMembershipReader.StateInput
+                    {
+                        MemberStatus = memberStatus,
+                        UserStatus = userStatus,
+                        MembershipStatus = membershipStatus,
+                    }).State;
 
-            Assert.True(expected == actual, $"{memberStatus}, {userStatus}, {membershipStatus}: {expected} != {actual}");
-        }
+                    Assert.True(expected == actual, $"{memberStatus}, {userStatus}, {membershipStatus}: {expected} != {actual}");
+                }
     }
 }

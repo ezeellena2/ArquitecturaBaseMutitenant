@@ -219,8 +219,10 @@ public sealed class PlatformAccountDeletionTests(ApiFactory factory)
             consumerSignup = settings.GetProperty("consumerSignup").GetString(),
             businessSignup = settings.GetProperty("businessSignup").GetString(),
             maxOwnedOrganizations = settings.GetProperty("maxOwnedOrganizations").GetInt32(),
-            salesEmail = "ventas@example.test", supportEmail = support,
-            version = settings.GetProperty("version").GetUInt32(), reason = "Contacto de soporte",
+            salesEmail = "ventas@example.test",
+            supportEmail = support,
+            version = settings.GetProperty("version").GetUInt32(),
+            reason = "Contacto de soporte",
         }, Ct);
         Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
         return support;

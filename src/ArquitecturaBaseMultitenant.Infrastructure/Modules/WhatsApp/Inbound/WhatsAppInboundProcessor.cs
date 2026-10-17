@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Inbound;
+
 internal sealed class WhatsAppInboundProcessor(WhatsAppInboundSignal signal, IServiceScopeFactory scopes,
     IOptions<WhatsAppOptions> options, TimeProvider clock, ILogger<WhatsAppInboundProcessor> logger)
     : PeriodicWorker(TimeSpan.FromSeconds(options.Value.InboundPollSeconds), clock, logger)

@@ -86,7 +86,7 @@ public sealed class AssistantExecutionActorSecurityTests(ApiFactory factory)
             Assert.True((await tools.Single(row => row.Key == "my_account").ExecuteAsync(Empty, Ct)).IsFailure);
         }
         Assert.True((await provider.GetRequiredService<IExecutionActorFactory>().RevalidateAsync(actor with
-            { Access = Access.Consumer, TenantId = Guid.NewGuid(), TenantKind = TenantKind.Personal }, Ct)).IsFailure);
+        { Access = Access.Consumer, TenantId = Guid.NewGuid(), TenantKind = TenantKind.Personal }, Ct)).IsFailure);
     }
 
     [Fact]

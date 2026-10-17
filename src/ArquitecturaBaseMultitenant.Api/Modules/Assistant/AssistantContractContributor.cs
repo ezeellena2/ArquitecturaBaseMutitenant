@@ -148,8 +148,10 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         if (path.EndsWith("/attachments", StringComparison.Ordinal) && method == HttpMethod.Post)
         { yield return ("file", "FileInvalid"); yield return ("conversationVersion", "VersionRequired"); }
         if (path.EndsWith("/settings", StringComparison.Ordinal) && method == HttpMethod.Put)
-        { yield return ("apiKey", "KeyRequired"); yield return ("apiKey", "KeyUnexpected"); yield return ("apiKey", "KeyTooLong"); yield return ("keyAction", "SelectionInvalid"); yield return ("effort", "SelectionInvalid"); yield return (path.StartsWith("/api/platform/", StringComparison.Ordinal) ? "defaultModelId" : "modelId", "Required"); yield return ("dailyMessageLimit", "LimitsInvalid"); yield return (path.StartsWith("/api/platform/", StringComparison.Ordinal) ? "monthlyOrganizationBudget" : "monthlyBudget", "PriceInvalid");
-          if (path.StartsWith("/api/platform/", StringComparison.Ordinal)) { yield return ("allowedModelIds", "IdsInvalid"); yield return ("personalEnabled", "Required"); yield return ("retentionDays", "LimitsInvalid"); } else yield return ("mode", "SelectionInvalid"); }
+        {
+            yield return ("apiKey", "KeyRequired"); yield return ("apiKey", "KeyUnexpected"); yield return ("apiKey", "KeyTooLong"); yield return ("keyAction", "SelectionInvalid"); yield return ("effort", "SelectionInvalid"); yield return (path.StartsWith("/api/platform/", StringComparison.Ordinal) ? "defaultModelId" : "modelId", "Required"); yield return ("dailyMessageLimit", "LimitsInvalid"); yield return (path.StartsWith("/api/platform/", StringComparison.Ordinal) ? "monthlyOrganizationBudget" : "monthlyBudget", "PriceInvalid");
+            if (path.StartsWith("/api/platform/", StringComparison.Ordinal)) { yield return ("allowedModelIds", "IdsInvalid"); yield return ("personalEnabled", "Required"); yield return ("retentionDays", "LimitsInvalid"); } else yield return ("mode", "SelectionInvalid");
+        }
         if (path.Contains("/models", StringComparison.Ordinal) && method != HttpMethod.Get)
         {
             yield return ("name", "Required"); yield return ("provider", "SelectionInvalid"); yield return ("providerModelId", "Required");
@@ -261,8 +263,11 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
                 var model = legacy["items"]![0]!;
                 model["technical"] = null; model["technicalRevision"] = null;
                 model["providerModelId"] = "legacy-unknown";
-                media.Examples["legacyIncomplete"] = new OpenApiExample { Value = legacy,
-                    Description = "Fila heredada sin referencia conocida: se conserva y debe completarse para resultar elegible." };
+                media.Examples["legacyIncomplete"] = new OpenApiExample
+                {
+                    Value = legacy,
+                    Description = "Fila heredada sin referencia conocida: se conserva y debe completarse para resultar elegible."
+                };
             }
             if (reference.Reference.Id == "OrganizationAssistantSettingsResponse")
             {
@@ -381,11 +386,18 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
 
     private static JsonObject TechnicalExample() => new()
     {
-        ["supportsText"] = true, ["supportsTools"] = true, ["supportsImages"] = true, ["supportsPdf"] = true,
-        ["supportsAdaptiveThinking"] = true, ["efforts"] = new JsonArray("low", "medium", "high"),
-        ["maxInputTokens"] = 1000000, ["maxOutputTokens"] = 128000,
-        ["cacheWrite5MinutesPricePerMillion"] = UsageMoney(2.5m), ["cacheWrite1HourPricePerMillion"] = UsageMoney(4m),
-        ["cacheReadPricePerMillion"] = UsageMoney(.1m), ["longContext"] = null,
+        ["supportsText"] = true,
+        ["supportsTools"] = true,
+        ["supportsImages"] = true,
+        ["supportsPdf"] = true,
+        ["supportsAdaptiveThinking"] = true,
+        ["efforts"] = new JsonArray("low", "medium", "high"),
+        ["maxInputTokens"] = 1000000,
+        ["maxOutputTokens"] = 128000,
+        ["cacheWrite5MinutesPricePerMillion"] = UsageMoney(2.5m),
+        ["cacheWrite1HourPricePerMillion"] = UsageMoney(4m),
+        ["cacheReadPricePerMillion"] = UsageMoney(.1m),
+        ["longContext"] = null,
     };
 
     private static JsonObject EligibleModelExample(OpenApiDocument document)
@@ -420,8 +432,12 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         row["monthlyBudget"] = usage["budget"]!.DeepClone();
         row["dailyUsage"] = historical ? null : new JsonObject
         {
-            ["dayUtc"] = "2026-10-09", ["resetAtUtc"] = "2026-10-10T00:00:00Z", ["scope"] = scope,
-            ["queries"] = scope == "PlatformKey" ? 49 : 50, ["limit"] = 50, ["limitReached"] = true,
+            ["dayUtc"] = "2026-10-09",
+            ["resetAtUtc"] = "2026-10-10T00:00:00Z",
+            ["scope"] = scope,
+            ["queries"] = scope == "PlatformKey" ? 49 : 50,
+            ["limit"] = 50,
+            ["limitReached"] = true,
         };
         SetUsageRows(usage, new JsonArray(row), totalCount: 1);
         return usage;
@@ -449,8 +465,13 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         var totalPages = (totalCount + pageSize - 1) / pageSize;
         usage["rows"] = new JsonObject
         {
-            ["items"] = rows, ["page"] = page, ["pageSize"] = pageSize, ["totalCount"] = totalCount,
-            ["totalPages"] = totalPages, ["hasPrevious"] = page > 1, ["hasNext"] = page < totalPages,
+            ["items"] = rows,
+            ["page"] = page,
+            ["pageSize"] = pageSize,
+            ["totalCount"] = totalCount,
+            ["totalPages"] = totalPages,
+            ["hasPrevious"] = page > 1,
+            ["hasNext"] = page < totalPages,
         };
     }
 
@@ -690,12 +711,18 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         };
         schemas["AssistantInputMoney"] = new OpenApiSchema
         {
-            Type = JsonSchemaType.Object, AdditionalPropertiesAllowed = false,
+            Type = JsonSchemaType.Object,
+            AdditionalPropertiesAllowed = false,
             Required = new HashSet<string>(StringComparer.Ordinal) { "amount", "currency" },
             Properties = new Dictionary<string, IOpenApiSchema>
             {
-                ["amount"] = new OpenApiSchema { Type = JsonSchemaType.Number, Format = "decimal", Minimum = "0",
-                    ExclusiveMaximum = Application.Common.Formatting.VersionWireFormatter.FormatCanonicalDecimal(AssistantContractPolicy.MaxAmountExclusive) },
+                ["amount"] = new OpenApiSchema
+                {
+                    Type = JsonSchemaType.Number,
+                    Format = "decimal",
+                    Minimum = "0",
+                    ExclusiveMaximum = Application.Common.Formatting.VersionWireFormatter.FormatCanonicalDecimal(AssistantContractPolicy.MaxAmountExclusive)
+                },
                 ["currency"] = new OpenApiSchema { Type = JsonSchemaType.String, Pattern = "^[A-Z]{3}$", MinLength = 3, MaxLength = 3 },
             },
         };

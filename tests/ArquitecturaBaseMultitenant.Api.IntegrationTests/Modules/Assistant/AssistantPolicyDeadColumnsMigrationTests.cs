@@ -27,7 +27,7 @@ public sealed class AssistantPolicyDeadColumnsMigrationTests
         await using var isolated = new ApiFactory();
         await isolated.InitializeAsync();
         using var client = isolated.CreateClient(new WebApplicationFactoryClientOptions
-            { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var owner = await AccountJourney.RegisterAsync(isolated, client, ct);
         var tenantId = await OrganizationJourney.StageAsync(isolated, owner, "Política vieja " + Guid.NewGuid().ToString("N")[..8], ct);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(isolated.AdminConnectionString);

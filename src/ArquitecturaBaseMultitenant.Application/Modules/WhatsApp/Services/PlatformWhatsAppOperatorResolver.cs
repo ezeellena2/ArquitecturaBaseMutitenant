@@ -14,8 +14,11 @@ internal sealed class PlatformWhatsAppOperatorResolver(IPlatformAccountReader ac
     {
         var page = await accounts.ListAsync(new ListPlatformAccountsRequest
         {
-            Page = request.Page, PageSize = request.PageSize, Search = request.Search,
-            Kind = PlatformAccountKind.Operator, State = PlatformAccountState.Active,
+            Page = request.Page,
+            PageSize = request.PageSize,
+            Search = request.Search,
+            Kind = PlatformAccountKind.Operator,
+            State = PlatformAccountState.Active,
         }, availability.SignInTypes(), clock.GetUtcNow().UtcDateTime, ct);
         return new PagedResult<WhatsAppReferenceResponse>([.. page.Items.Select(account => new WhatsAppReferenceResponse(account.Id,
             account.DisplayName ?? string.Empty))], page.Page, page.PageSize, page.TotalCount);

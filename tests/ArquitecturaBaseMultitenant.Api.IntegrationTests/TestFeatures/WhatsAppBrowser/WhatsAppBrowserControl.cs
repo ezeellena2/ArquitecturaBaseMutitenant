@@ -63,7 +63,8 @@ public sealed partial class WhatsAppBrowserControl
         {
             var payload = JsonSerializer.Serialize(new
             {
-                @object = "whatsapp_business_account", entry = new[] { new { id = "fixture-waba", changes = new[] { new
+                @object = "whatsapp_business_account",
+                entry = new[] { new { id = "fixture-waba", changes = new[] { new
                 {
                     field = "messages", value = new { messaging_product = "whatsapp", metadata = new { phone_number_id = NumberId },
                         messages = new[] { new { from = request.Phone[1..], id = "wamid.fixture." + request.Scenario,

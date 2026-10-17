@@ -14,8 +14,13 @@ internal sealed class ConsumerDataRetentionConfiguration : IEntityTypeConfigurat
         builder.HasKey(retention => retention.Id);
         builder.Property(retention => retention.EntityTypeKey).HasMaxLength(TextLimits.Description).IsRequired();
         builder.Property(retention => retention.Reason).HasMaxLength(TextLimits.Description).IsRequired();
-        builder.HasIndex(retention => new { retention.EntityTypeKey, retention.ConsumerTenantId,
-            retention.BusinessTenantId, retention.EntityId }).IsUnique().HasDatabaseName("UX_ConsumerDataRetentions_SharedRow");
+        builder.HasIndex(retention => new
+        {
+            retention.EntityTypeKey,
+            retention.ConsumerTenantId,
+            retention.BusinessTenantId,
+            retention.EntityId
+        }).IsUnique().HasDatabaseName("UX_ConsumerDataRetentions_SharedRow");
         builder.HasIndex(retention => new { retention.RetainUntilUtc, retention.Id })
             .HasFilter("\"CopyReplacedAtUtc\" IS NULL").HasDatabaseName("IX_ConsumerDataRetentions_Pending");
         builder.HasOne<Domain.Tenancy.Tenant>().WithMany().HasForeignKey(retention => retention.ConsumerTenantId).OnDelete(DeleteBehavior.Restrict);

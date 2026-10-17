@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.Extensions.DependencyInjection;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Webhook;
+
 internal sealed class WhatsAppWebhookReplay(IServiceScopeFactory scopes) : IWhatsAppWebhookReplay
 {
     private static readonly AsyncLocal<bool> Replaying = new();

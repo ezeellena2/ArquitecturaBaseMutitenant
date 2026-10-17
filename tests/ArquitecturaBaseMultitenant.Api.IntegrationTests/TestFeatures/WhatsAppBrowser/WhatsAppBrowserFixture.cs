@@ -86,8 +86,11 @@ public static class WhatsAppBrowserFixture
             var control = new WhatsAppBrowserControl(app.Services);
             var psi = new ProcessStartInfo("node")
             {
-                WorkingDirectory = front, UseShellExecute = false,
-                RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true,
+                WorkingDirectory = front,
+                UseShellExecute = false,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
                 CreateNoWindow = true,
             };
             psi.ArgumentList.Add(script);

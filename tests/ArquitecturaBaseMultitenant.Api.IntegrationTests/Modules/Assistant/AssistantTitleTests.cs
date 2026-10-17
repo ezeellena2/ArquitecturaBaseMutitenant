@@ -61,7 +61,8 @@ public sealed class AssistantTitleTests
         var late = lateScope.ServiceProvider;
         var work = await late.GetRequiredService<ApplicationDbContext>().Set<AssistantTurnWork>().AsNoTracking().SingleAsync(row => row.Id == operation.Id, Ct);
         var actor = await late.GetRequiredService<IExecutionActorFactory>().RevalidateAsync(new ExecutionActor(work.OwnerUserId, work.Access,
-            work.ScopeTenantId, work.Culture, work.TimeZoneId) { TenantKind = work.TenantKind, SessionStartedAtUtc = work.SessionStartedAtUtc }, Ct);
+            work.ScopeTenantId, work.Culture, work.TimeZoneId)
+        { TenantKind = work.TenantKind, SessionStartedAtUtc = work.SessionStartedAtUtc }, Ct);
         Assert.True(actor.IsSuccess, actor.Error.Code);
         using var entered = late.GetRequiredService<IExecutionActorScope>().Enter(actor.Value);
         var lateFrames = await late.GetRequiredService<IAssistantTurnService>().ReadAsync(work.Id, -1, Ct);

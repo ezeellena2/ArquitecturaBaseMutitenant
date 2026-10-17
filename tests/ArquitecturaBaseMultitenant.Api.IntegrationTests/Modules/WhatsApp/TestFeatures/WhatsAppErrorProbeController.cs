@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures;
+
 [ApiController, Route("test/whatsapp-errors"), AllowAnonymous]
 public sealed class WhatsAppErrorProbeController(ProblemDetailsFactory factory) : ControllerBase
 {

@@ -22,8 +22,11 @@ public sealed class DealsController : ControllerBase
     [HttpGet]
     // Un módulo real agrega HasPermission("deals.read") a su bandeja Business; el catálogo productivo sigue vacío.
     public async Task<IActionResult> List([FromQuery] IsolationListHttpQuery query, CancellationToken cancellationToken) =>
-        (await _service.ListAsync(new IsolationListRequest { Page = query.Page ?? PagedRequest.DefaultPage,
-            PageSize = query.PageSize ?? PagedRequest.DefaultPageSize }, cancellationToken)).ToActionResult(this);
+        (await _service.ListAsync(new IsolationListRequest
+        {
+            Page = query.Page ?? PagedRequest.DefaultPage,
+            PageSize = query.PageSize ?? PagedRequest.DefaultPageSize
+        }, cancellationToken)).ToActionResult(this);
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> Get(Guid id, CancellationToken cancellationToken) =>

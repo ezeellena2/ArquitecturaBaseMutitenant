@@ -21,7 +21,7 @@ public sealed class AccountSessionActionsTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
     private HttpClient CreateClient() => factory.CreateClient(new WebApplicationFactoryClientOptions
-        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+    { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
 
     [Fact]
     public async Task Adding_email_sends_only_its_own_code_and_notifies_existing_methods_after_verification()
@@ -77,11 +77,11 @@ public sealed class AccountSessionActionsTests(ApiFactory factory)
         Assert.Single(await EmailsToAsync(account.Email.Value, before));
         before = await OutboxIdsAsync();
         using var removed = await client.SendAsync(new HttpRequestMessage(HttpMethod.Delete, $"/api/me/login-methods/{second.Id:D}")
-            { Content = JsonContent.Create(new { }) }, Ct);
+        { Content = JsonContent.Create(new { }) }, Ct);
         Assert.Equal(HttpStatusCode.NoContent, removed.StatusCode);
         Assert.Single(await EmailsToAsync(account.Email.Value, before));
         using var last = await client.SendAsync(new HttpRequestMessage(HttpMethod.Delete, $"/api/me/login-methods/{originalId:D}")
-            { Content = JsonContent.Create(new { }) }, Ct);
+        { Content = JsonContent.Create(new { }) }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, last.StatusCode);
         using var problem = await last.Content.ReadFromJsonAsync<JsonDocument>(Ct);
         Assert.Equal(LoginMethodErrors.LastMethod.Code, problem!.RootElement.GetProperty("code").GetString());

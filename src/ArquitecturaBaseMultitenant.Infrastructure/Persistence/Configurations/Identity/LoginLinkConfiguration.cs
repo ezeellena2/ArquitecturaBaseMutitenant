@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Configurations.Identity;
+
 internal sealed class LoginLinkConfiguration : IEntityTypeConfiguration<LoginLink>
 {
     public void Configure(EntityTypeBuilder<LoginLink> builder)

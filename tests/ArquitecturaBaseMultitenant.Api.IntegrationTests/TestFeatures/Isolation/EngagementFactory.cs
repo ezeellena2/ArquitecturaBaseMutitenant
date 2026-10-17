@@ -69,7 +69,8 @@ public sealed class EngagementFactory : IAsyncLifetime
 
     internal HttpClient Client() => Host.CreateClient(new()
     {
-        BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false,
+        BaseAddress = new Uri("https://localhost"),
+        AllowAutoRedirect = false,
     });
 
     public async ValueTask DisposeAsync()

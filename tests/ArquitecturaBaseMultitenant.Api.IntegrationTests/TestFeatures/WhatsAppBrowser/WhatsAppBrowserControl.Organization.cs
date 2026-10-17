@@ -92,7 +92,8 @@ public sealed partial class WhatsAppBrowserControl
     {
         var message = new Dictionary<string, object>
         {
-            ["from"] = scenario.Phone[1..], ["id"] = "wamid.fixture.org." + Guid.NewGuid().ToString("N"),
+            ["from"] = scenario.Phone[1..],
+            ["id"] = "wamid.fixture.org." + Guid.NewGuid().ToString("N"),
             ["timestamp"] = new DateTimeOffset(nowUtc).ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
         };
         if (request.Text is { } text) { message["type"] = "text"; message["text"] = new { body = text }; }
@@ -112,7 +113,8 @@ public sealed partial class WhatsAppBrowserControl
         }
         var payload = JsonSerializer.Serialize(new
         {
-            @object = "whatsapp_business_account", entry = new[] { new { id = OrganizationWabaId, changes = new[] { new
+            @object = "whatsapp_business_account",
+            entry = new[] { new { id = OrganizationWabaId, changes = new[] { new
             {
                 field = "messages", value = new { messaging_product = "whatsapp",
                     metadata = new { display_phone_number = OrganizationDisplayNumber[1..], phone_number_id = number.PhoneNumberId },

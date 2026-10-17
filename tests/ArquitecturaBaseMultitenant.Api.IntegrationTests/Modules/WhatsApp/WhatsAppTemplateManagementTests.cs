@@ -65,10 +65,23 @@ public sealed class WhatsAppTemplateManagementTests(ApiFactory factory)
             Assert.Equal(HttpStatusCode.BadRequest, gaps.StatusCode);
 
         // Meta la aprueba y después la pasa a Utility: la plantilla sigue a sus webhooks.
-        await TemplateWebhookAsync(owner, wabaId, "message_template_status_update", new { @event = "APPROVED", message_template_id = 7_000_001L,
-            message_template_name = "promo_de_otono", message_template_language = "es_AR", reason = "NONE", message_template_category = "MARKETING" });
-        await TemplateWebhookAsync(owner, wabaId, "template_category_update", new { message_template_id = 7_000_001L,
-            message_template_name = "promo_de_otono", message_template_language = "es-AR", previous_category = "MARKETING", new_category = "UTILITY" });
+        await TemplateWebhookAsync(owner, wabaId, "message_template_status_update", new
+        {
+            @event = "APPROVED",
+            message_template_id = 7_000_001L,
+            message_template_name = "promo_de_otono",
+            message_template_language = "es_AR",
+            reason = "NONE",
+            message_template_category = "MARKETING"
+        });
+        await TemplateWebhookAsync(owner, wabaId, "template_category_update", new
+        {
+            message_template_id = 7_000_001L,
+            message_template_name = "promo_de_otono",
+            message_template_language = "es-AR",
+            previous_category = "MARKETING",
+            new_category = "UTILITY"
+        });
         var approved = await JsonAsync(await owner.GetAsync($"/api/organization/whatsapp/templates/{id}", Ct));
         Assert.Equal(("Approved", "Utility"), (approved.GetProperty("status").GetString(), approved.GetProperty("category").GetString()));
         Assert.Equal([("es-AR", "Utility")], Languages(approved));
@@ -77,8 +90,14 @@ public sealed class WhatsAppTemplateManagementTests(ApiFactory factory)
         Assert.Equal(id, Assert.Single(list.GetProperty("templates").GetProperty("items").EnumerateArray()).GetProperty("id").GetGuid());
         await AssertCatalogCulturesAsync(owner, list);
 
-        await TemplateWebhookAsync(owner, wabaId, "message_template_status_update", new { @event = "REJECTED", message_template_id = 7_000_001L,
-            message_template_name = "promo_de_otono", message_template_language = "es_AR", reason = "INVALID_FORMAT" });
+        await TemplateWebhookAsync(owner, wabaId, "message_template_status_update", new
+        {
+            @event = "REJECTED",
+            message_template_id = 7_000_001L,
+            message_template_name = "promo_de_otono",
+            message_template_language = "es_AR",
+            reason = "INVALID_FORMAT"
+        });
         var rejected = await JsonAsync(await owner.GetAsync($"/api/organization/whatsapp/templates/{id}", Ct));
         Assert.Equal("Rejected", rejected.GetProperty("status").GetString());
         Assert.Contains("formato", rejected.GetProperty("rejectionReason").GetString(), StringComparison.Ordinal);
@@ -112,7 +131,10 @@ public sealed class WhatsAppTemplateManagementTests(ApiFactory factory)
 
     private static object Template(string name) => new
     {
-        name, category = "Marketing", language = "es-AR", body = "Hola {{1}}, esta semana tenés {{2}} de descuento.",
+        name,
+        category = "Marketing",
+        language = "es-AR",
+        body = "Hola {{1}}, esta semana tenés {{2}} de descuento.",
         variables = new[] { new { label = "nombre", example = "Ana" }, new { label = "oferta", example = "20%" } },
     };
 
@@ -133,8 +155,12 @@ public sealed class WhatsAppTemplateManagementTests(ApiFactory factory)
 
     internal static async Task TemplateWebhookAsync(HttpClient client, string wabaId, string field, object value)
     {
-        var body = JsonSerializer.Serialize(new { @object = "whatsapp_business_account", entry = new[] { new { id = wabaId, time = 1_760_000_000L,
-            changes = new[] { new { field, value } } } } });
+        var body = JsonSerializer.Serialize(new
+        {
+            @object = "whatsapp_business_account",
+            entry = new[] { new { id = wabaId, time = 1_760_000_000L,
+            changes = new[] { new { field, value } } } }
+        });
         using var received = await WhatsAppAttentionJourney.WebhookAsync(client, body, Ct);
         Assert.Equal(HttpStatusCode.OK, received.StatusCode);
     }
@@ -162,7 +188,9 @@ public sealed class PlatformWhatsAppTemplateManagementTests(ApiFactory factory) 
         var templates = new FakeTemplates();
         await using var host = WhatsAppAttentionJourney.Host(factory, new FakeGraph(), settings: new Dictionary<string, string>
         {
-            ["WhatsApp:PhoneNumberId"] = phoneNumberId, ["WhatsApp:AccessToken"] = "configured-token", ["WhatsApp:BusinessAccountId"] = wabaId,
+            ["WhatsApp:PhoneNumberId"] = phoneNumberId,
+            ["WhatsApp:AccessToken"] = "configured-token",
+            ["WhatsApp:BusinessAccountId"] = wabaId,
         }, templates: templates);
         using var client = WhatsAppAttentionJourney.Client(host);
         var account = await AccountJourney.RegisterAsync(host, client, Ct);
@@ -174,8 +202,14 @@ public sealed class PlatformWhatsAppTemplateManagementTests(ApiFactory factory) 
             new { name = "Promo", category = "Marketing", language = "es-AR", body = "Hola", variables = Array.Empty<object>() }, Ct))
             Assert.Equal(HttpStatusCode.BadRequest, marketing.StatusCode);
         using var created = await WhatsAppAttentionJourney.PostAsync(client, "/api/platform/whatsapp/templates",
-            new { name = "Seguimiento", category = "Utility", language = "es-AR", body = "Hola {{1}}, seguimos tu consulta.",
-                variables = new[] { new { label = "nombre", example = "Ana" } } }, Ct);
+            new
+            {
+                name = "Seguimiento",
+                category = "Utility",
+                language = "es-AR",
+                body = "Hola {{1}}, seguimos tu consulta.",
+                variables = new[] { new { label = "nombre", example = "Ana" } }
+            }, Ct);
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
         Assert.Equal((wabaId, "seguimiento"), Assert.Single(templates.Created) is var (waba, submission) ? (waba, submission.MetaName) : default);
         Assert.Null(templates.Created.Single().Submission.UnsubscribeButton);

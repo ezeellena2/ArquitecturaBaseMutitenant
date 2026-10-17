@@ -108,7 +108,7 @@ public sealed partial class PlatformRecoveryDestinationConflictTests
     }
 
     private static HttpClient Client(WebApplicationFactory<Program> app) => app.CreateClient(new()
-        { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+    { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
 
     private static async Task OccupyAsync(IServiceProvider services, Guid userId, LoginMethodType type, string destination)
     {

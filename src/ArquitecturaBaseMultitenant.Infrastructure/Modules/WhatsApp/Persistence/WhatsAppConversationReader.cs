@@ -94,11 +94,27 @@ internal sealed class WhatsAppConversationReader(ApplicationDbContext context, I
                    from team in context.Set<PlatformWhatsAppTeam>().AsNoTracking().Where(team => team.Id == chat.TeamId).DefaultIfEmpty()
                    select new ConversationProjection
                    {
-                       Id = chat.Id, Inbox = null, ContactId = null, ContactName = null, Tags = null, MemberUserId = null, WaId = chat.WaId,
-                       LastMessagePreview = chat.LastMessagePreview, LastMessageAtUtc = chat.LastMessageAtUtc, AwaitingReply = chat.AwaitingReply,
-                       TeamId = chat.TeamId, TeamName = team == null ? null : team.Name, AssigneeUserId = chat.AssigneeUserId,
-                       AssigneeMemberId = null, LastInboundAtUtc = chat.LastInboundAtUtc, ChannelId = channel.Id, Linked = false,
-                       ChannelNumber = channel.DisplayNumber, ChannelStatus = channel.Status, Version = chat.Version, ChannelWabaId = channel.WabaId,
+                       Id = chat.Id,
+                       Inbox = null,
+                       ContactId = null,
+                       ContactName = null,
+                       Tags = null,
+                       MemberUserId = null,
+                       WaId = chat.WaId,
+                       LastMessagePreview = chat.LastMessagePreview,
+                       LastMessageAtUtc = chat.LastMessageAtUtc,
+                       AwaitingReply = chat.AwaitingReply,
+                       TeamId = chat.TeamId,
+                       TeamName = team == null ? null : team.Name,
+                       AssigneeUserId = chat.AssigneeUserId,
+                       AssigneeMemberId = null,
+                       LastInboundAtUtc = chat.LastInboundAtUtc,
+                       ChannelId = channel.Id,
+                       Linked = false,
+                       ChannelNumber = channel.DisplayNumber,
+                       ChannelStatus = channel.Status,
+                       Version = chat.Version,
+                       ChannelWabaId = channel.WabaId,
                    };
         var tenantId = tenant.RequiredTenantId;
         var box = inbox.Value;
@@ -113,13 +129,27 @@ internal sealed class WhatsAppConversationReader(ApplicationDbContext context, I
                    .DefaultIfEmpty()
                select new ConversationProjection
                {
-                   Id = chat.Id, Inbox = chat.Inbox, ContactId = chat.CustomerId, ContactName = customer == null ? null : customer.Name,
-                   Tags = customer == null ? null : customer.Tags, MemberUserId = chat.MemberUserId, WaId = chat.WaId,
-                   LastMessagePreview = chat.LastMessagePreview, LastMessageAtUtc = chat.LastMessageAtUtc, AwaitingReply = chat.AwaitingReply,
-                   TeamId = chat.TeamId, TeamName = team == null ? null : team.Name, AssigneeUserId = chat.AssigneeUserId,
-                   AssigneeMemberId = member == null ? null : member.Id, LastInboundAtUtc = chat.LastInboundAtUtc, ChannelId = channel.Id,
+                   Id = chat.Id,
+                   Inbox = chat.Inbox,
+                   ContactId = chat.CustomerId,
+                   ContactName = customer == null ? null : customer.Name,
+                   Tags = customer == null ? null : customer.Tags,
+                   MemberUserId = chat.MemberUserId,
+                   WaId = chat.WaId,
+                   LastMessagePreview = chat.LastMessagePreview,
+                   LastMessageAtUtc = chat.LastMessageAtUtc,
+                   AwaitingReply = chat.AwaitingReply,
+                   TeamId = chat.TeamId,
+                   TeamName = team == null ? null : team.Name,
+                   AssigneeUserId = chat.AssigneeUserId,
+                   AssigneeMemberId = member == null ? null : member.Id,
+                   LastInboundAtUtc = chat.LastInboundAtUtc,
+                   ChannelId = channel.Id,
                    Linked = context.Set<WhatsAppConversationLink>().Any(link => link.ChatId == chat.Id),
-                   ChannelNumber = channel.DisplayNumber, ChannelStatus = channel.Status, Version = chat.Version, ChannelWabaId = channel.WabaId,
+                   ChannelNumber = channel.DisplayNumber,
+                   ChannelStatus = channel.Status,
+                   Version = chat.Version,
+                   ChannelWabaId = channel.WabaId,
                    ContactConsent = customer == null ? null : customer.Consent,
                };
     }
@@ -140,10 +170,18 @@ internal sealed class WhatsAppConversationReader(ApplicationDbContext context, I
                           orderby message.CreatedAtUtc descending, message.Id descending
                           select new MessageProjection
                           {
-                              Id = message.Id, Kind = message.Kind, Direction = message.Direction, Author = message.AuthorName, Text = message.Text,
-                              MediaKind = message.MediaKind, Status = message.Status, FailureReason = message.FailureReason,
-                              CreatedAtUtc = message.CreatedAtUtc, OutboxStatus = outbox == null ? null : outbox.Status,
-                              OutboxError = outbox == null ? null : outbox.LastErrorCode, Delivery = accepted == null ? null : accepted.Status,
+                              Id = message.Id,
+                              Kind = message.Kind,
+                              Direction = message.Direction,
+                              Author = message.AuthorName,
+                              Text = message.Text,
+                              MediaKind = message.MediaKind,
+                              Status = message.Status,
+                              FailureReason = message.FailureReason,
+                              CreatedAtUtc = message.CreatedAtUtc,
+                              OutboxStatus = outbox == null ? null : outbox.Status,
+                              OutboxError = outbox == null ? null : outbox.LastErrorCode,
+                              Delivery = accepted == null ? null : accepted.Status,
                           }).ToPagedResultAsync(request, ct);
         return new PagedResult<WhatsAppChatMessageResponse>([.. page.Items.Select(Message)], page.Page, page.PageSize, page.TotalCount);
     }

@@ -147,7 +147,7 @@ public sealed class AssistantContractTests(ApiFactory factory)
             Assert.NotNull(stored.ReferenceId);
         }
         using var message = new HttpRequestMessage(HttpMethod.Post, $"/api/me/assistant/conversations/{Guid.CreateVersion7():D}/messages")
-            { Content = JsonContent.Create(new { text = "Contenido privado de prueba", attachmentIds = Array.Empty<Guid>(), conversationVersion = 0 }) };
+        { Content = JsonContent.Create(new { text = "Contenido privado de prueba", attachmentIds = Array.Empty<Guid>(), conversationVersion = 0 }) };
         message.Headers.Add("Idempotency-Key", Guid.CreateVersion7().ToString("D"));
         using var response = await client.SendAsync(message, Ct);
         await ConversationNotFoundAsync(response);

@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integr
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Resources;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
+
 internal sealed class WhatsAppTemplateRenderer(IWhatsAppChannelSettings settings, WhatsAppTemplateCatalog catalog,
     DisplayFormatter formatter, IPublicOrigin origin) : IWhatsAppTemplateRenderer
 {

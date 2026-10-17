@@ -39,7 +39,8 @@ internal sealed class OrganizationPendingTool(AssistantAccessPolicy policy, IHom
         }
         return new AssistantPendingToolData([.. pending.Select(row => new AssistantPendingToolRow(row.Area, row.Kind, row.Subject, row.Urgent))], result.Value.Pending.Count > 20)
         {
-            SubjectUserIds = subjects.Order().ToArray(), PrivacySubjectsKnown = true,
+            SubjectUserIds = subjects.Order().ToArray(),
+            PrivacySubjectsKnown = true,
         };
     }
 }

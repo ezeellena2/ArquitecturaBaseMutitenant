@@ -28,7 +28,12 @@ public sealed class PlatformAccountsQuery
 
     public ListPlatformAccountsRequest ToModel() => new()
     {
-        Page = Page, PageSize = PageSize, Sort = Sort, Search = Search, State = State, Kind = Kind,
+        Page = Page,
+        PageSize = PageSize,
+        Sort = Sort,
+        Search = Search,
+        State = State,
+        Kind = Kind,
     };
 
     // La búsqueda puede ser un correo o un teléfono: nunca se registra.

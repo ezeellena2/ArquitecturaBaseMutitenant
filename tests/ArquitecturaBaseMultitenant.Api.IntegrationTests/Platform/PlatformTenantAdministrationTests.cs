@@ -115,15 +115,15 @@ public sealed class PlatformTenantAdministrationTests(ApiFactory factory)
         using var afterClose = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{id:D}/reactivate",
             new { version = closedVersion, reason = "Estado cerrado" }, Ct);
         Assert.Equal(TenantErrors.InvalidTransitionCode, await ErrorCodeAsync(afterClose));
-        Assert.Equal(TenantStatus.Closed, (await StoredTenantAsync(factory,id)).Status);
+        Assert.Equal(TenantStatus.Closed, (await StoredTenantAsync(factory, id)).Status);
         var pending = await SeedBusinessAsync(factory, "Rechazo " + Guid.NewGuid().ToString("N")[..8], true, member.UserId);
-        using var rejected = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{pending:D}/reject", new { version = await VersionAsync(ownerClient,pending), reason = "Solicitud no válida" }, Ct);
+        using var rejected = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{pending:D}/reject", new { version = await VersionAsync(ownerClient, pending), reason = "Solicitud no válida" }, Ct);
         var rejectedVersion = await SavedVersion.ReadAsync(rejected, Ct);
         Assert.Equal(rejectedVersion, await VersionAsync(ownerClient, pending));
         using var afterReject = await PlatformJourney.PostAsync(ownerClient, $"/api/platform/tenants/{pending:D}/reject",
             new { version = rejectedVersion, reason = "Estado resuelto" }, Ct);
         Assert.Equal(TenantErrors.InvalidTransitionCode, await ErrorCodeAsync(afterReject));
-        Assert.Equal(TenantStatus.Closed, (await StoredTenantAsync(factory,pending)).Status);
+        Assert.Equal(TenantStatus.Closed, (await StoredTenantAsync(factory, pending)).Status);
         await using var scope = factory.Services.CreateAsyncScope();
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         Assert.Equal(4, await context.SecurityEvents.CountAsync(e => e.TargetTenantId == id, Ct));

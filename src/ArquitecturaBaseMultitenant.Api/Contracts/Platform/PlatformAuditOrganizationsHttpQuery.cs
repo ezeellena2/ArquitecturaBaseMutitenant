@@ -8,8 +8,14 @@ public sealed record PlatformAuditOrganizationsHttpQuery(int? Page, int? PageSiz
 {
     public ListPlatformAuditOrganizationsRequest ToModel() => new()
     {
-        Page = Page ?? PagedRequest.DefaultPage, PageSize = PageSize ?? PagedRequest.DefaultPageSize,
-        Sort = Sort, Search = Search, Period = Period, Type = Type, AccountId = AccountId, AuditSearch = AuditSearch,
+        Page = Page ?? PagedRequest.DefaultPage,
+        PageSize = PageSize ?? PagedRequest.DefaultPageSize,
+        Sort = Sort,
+        Search = Search,
+        Period = Period,
+        Type = Type,
+        AccountId = AccountId,
+        AuditSearch = AuditSearch,
     };
     public override string ToString() => nameof(PlatformAuditOrganizationsHttpQuery);
 }

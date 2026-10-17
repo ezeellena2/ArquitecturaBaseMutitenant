@@ -13,8 +13,11 @@ public sealed class PendingDeletionCookie(IDataProtectionProvider protection, Ti
     private readonly IDataProtector protector = protection.CreateProtector("AccountDeletion.Pending.v1");
     private static CookieOptions Options => new()
     {
-        HttpOnly = true, Secure = true, SameSite = SameSiteMode.Lax,
-        Path = "/api/auth/deletion", MaxAge = TimeSpan.FromMinutes(5),
+        HttpOnly = true,
+        Secure = true,
+        SameSite = SameSiteMode.Lax,
+        Path = "/api/auth/deletion",
+        MaxAge = TimeSpan.FromMinutes(5),
     };
 
     public void Write(HttpContext context, Error error)

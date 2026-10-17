@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Resources;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
+
 internal sealed class WhatsAppBotReplyBuilder(ICultureCatalog cultures)
 {
     internal async Task<WhatsAppOutboundMessage> BuildAsync(string numberId, string destination, string appName, string? culture,

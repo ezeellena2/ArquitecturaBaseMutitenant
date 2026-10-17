@@ -99,12 +99,12 @@ public sealed partial class Etapa8ContractTests(ApiFactory factory)
         Assert.Equal(400, email!["status"]!.GetValue<int>()); // FieldErrors conserva el 400 actual, aunque la fábrica base sea NotFound.
         AssertWhatsAppContract(doc);
         foreach (var (path, method) in OriginalE8Operations)
-            {
-                var operation = doc["paths"]![path]![method]!;
-                Assert.Null(operation?["responses"]?["501"]);
-                Assert.DoesNotContain("T01", operation?["description"]?.GetValue<string>() ?? "");
-                Assert.DoesNotContain(operation?["x-error-codes"]?.AsArray() ?? [], value => value?["code"]?.GetValue<string>() == "General.Contract.NotImplemented");
-            }
+        {
+            var operation = doc["paths"]![path]![method]!;
+            Assert.Null(operation?["responses"]?["501"]);
+            Assert.DoesNotContain("T01", operation?["description"]?.GetValue<string>() ?? "");
+            Assert.DoesNotContain(operation?["x-error-codes"]?.AsArray() ?? [], value => value?["code"]?.GetValue<string>() == "General.Contract.NotImplemented");
+        }
     }
 
     static partial void AssertWhatsAppContract(JsonObject document);

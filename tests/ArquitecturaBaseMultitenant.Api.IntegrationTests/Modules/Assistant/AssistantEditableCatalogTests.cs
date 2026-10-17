@@ -43,9 +43,13 @@ public sealed class AssistantEditableCatalogTests
         await AccountJourney.AuthorizeAsync(client, "platform", AssistantTestData.Ct);
         using var created = await AccountJourney.PostAsync(client, "/api/platform/assistant/models", new
         {
-            name = "Modelo editable", provider = "Anthropic", providerModelId = "isolated-editable-model",
+            name = "Modelo editable",
+            provider = "Anthropic",
+            providerModelId = "isolated-editable-model",
             inputPricePerMillion = new { amount = 0.123456m, currency = "USD" },
-            outputPricePerMillion = new { amount = 2m, currency = "USD" }, isActive = true, technical = Technical(),
+            outputPricePerMillion = new { amount = 2m, currency = "USD" },
+            isActive = true,
+            technical = Technical(),
         }, AssistantTestData.Ct);
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
         using var result = JsonDocument.Parse(await created.Content.ReadAsStringAsync(AssistantTestData.Ct));
@@ -58,8 +62,13 @@ public sealed class AssistantEditableCatalogTests
         Assert.DoesNotContain(settings.RootElement.GetProperty("platformKeyModels").EnumerateArray(), row => row.GetProperty("id").GetGuid() == id);
         using var selected = await ownerClient.PutAsJsonAsync("/api/organization/assistant/settings", new
         {
-            mode = "OwnKey", modelId = id, effort = "low", monthlyBudget = new { amount = 0.125m, currency = "USD" },
-            keyAction = "replace", apiKey = "isolated-own-key-9999", version = 0,
+            mode = "OwnKey",
+            modelId = id,
+            effort = "low",
+            monthlyBudget = new { amount = 0.125m, currency = "USD" },
+            keyAction = "replace",
+            apiKey = "isolated-own-key-9999",
+            version = 0,
         }, AssistantTestData.Ct);
         var organizationVersion = await SavedVersion.ReadAsync(selected, AssistantTestData.Ct);
         var ownConfiguration = await ResolveAsync(host, tenant, owner.UserId);
@@ -69,9 +78,15 @@ public sealed class AssistantEditableCatalogTests
         using var platform = await client.GetFromJsonAsync<JsonDocument>("/api/platform/assistant/settings", AssistantTestData.Ct);
         using var permitted = await client.PutAsJsonAsync("/api/platform/assistant/settings", new
         {
-            defaultModelId = id, allowedModelIds = new[] { id }, effort = "low", dailyMessageLimit = 50,
-            monthlyOrganizationBudget = new { amount = 100m, currency = "USD" }, personalEnabled = false,
-            retentionDays = 30, keyAction = "replace", apiKey = "isolated-platform-key-9999",
+            defaultModelId = id,
+            allowedModelIds = new[] { id },
+            effort = "low",
+            dailyMessageLimit = 50,
+            monthlyOrganizationBudget = new { amount = 100m, currency = "USD" },
+            personalEnabled = false,
+            retentionDays = 30,
+            keyAction = "replace",
+            apiKey = "isolated-platform-key-9999",
             version = platform!.RootElement.GetProperty("version").GetUInt32(),
         }, AssistantTestData.Ct);
         await SavedVersion.ReadAsync(permitted, AssistantTestData.Ct);
@@ -105,7 +120,8 @@ public sealed class AssistantEditableCatalogTests
         edit["technical"]!["supportsPdf"] = false;
         edit["technical"]!["longContext"] = JsonSerializer.SerializeToNode(new
         {
-            inputTokensThreshold = 75000, inputPricePerMillion = new { amount = .234567m, currency = "USD" },
+            inputTokensThreshold = 75000,
+            inputPricePerMillion = new { amount = .234567m, currency = "USD" },
             outputPricePerMillion = new { amount = 3.456789m, currency = "USD" },
             cacheWrite5MinutesPricePerMillion = new { amount = .345678m, currency = "USD" },
             cacheWrite1HourPricePerMillion = new { amount = .456789m, currency = "USD" },
@@ -237,10 +253,17 @@ public sealed class AssistantEditableCatalogTests
 
     internal static object Technical() => new
     {
-        supportsText = true, supportsTools = true, supportsImages = true, supportsPdf = true, supportsAdaptiveThinking = true,
-        efforts = new[] { "low", "medium", "high" }, maxInputTokens = 100000, maxOutputTokens = 4096,
+        supportsText = true,
+        supportsTools = true,
+        supportsImages = true,
+        supportsPdf = true,
+        supportsAdaptiveThinking = true,
+        efforts = new[] { "low", "medium", "high" },
+        maxInputTokens = 100000,
+        maxOutputTokens = 4096,
         cacheWrite5MinutesPricePerMillion = new { amount = 0.125m, currency = "USD" },
         cacheWrite1HourPricePerMillion = new { amount = 0.2m, currency = "USD" },
-        cacheReadPricePerMillion = new { amount = 0.01m, currency = "USD" }, longContext = (object?)null,
+        cacheReadPricePerMillion = new { amount = 0.01m, currency = "USD" },
+        longContext = (object?)null,
     };
 }

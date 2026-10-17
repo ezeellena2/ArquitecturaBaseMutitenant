@@ -30,8 +30,14 @@ public sealed class AssistantModelCatalogTests
         var originalVersion = model.GetProperty("version").GetUInt32();
         using var changed = await client.PutAsJsonAsync($"/api/platform/assistant/models/{id}", new
         {
-            name = "Precio editado", provider = "Anthropic", providerModelId = "renamed-preloaded-model", inputPricePerMillion = new { amount = 3.125m, currency = "USD" },
-            outputPricePerMillion = new { amount = 12m, currency = "USD" }, isActive = true, version = originalVersion, technical = model.GetProperty("technical"),
+            name = "Precio editado",
+            provider = "Anthropic",
+            providerModelId = "renamed-preloaded-model",
+            inputPricePerMillion = new { amount = 3.125m, currency = "USD" },
+            outputPricePerMillion = new { amount = 12m, currency = "USD" },
+            isActive = true,
+            version = originalVersion,
+            technical = model.GetProperty("technical"),
         }, AssistantTestData.Ct);
         var version = await SavedVersion.ReadAsync(changed, AssistantTestData.Ct);
         using (var scope = factory.Services.CreateScope())
@@ -58,8 +64,13 @@ public sealed class AssistantModelCatalogTests
         Assert.Equal(HttpStatusCode.OK, configuration.StatusCode);
         using var denied = await AccountJourney.PostAsync(client, "/api/platform/assistant/models", new
         {
-            name = "Dato nuevo", provider = "Anthropic", providerModelId = "unknown-model", inputPricePerMillion = new { amount = 1m, currency = "USD" },
-            outputPricePerMillion = new { amount = 2m, currency = "USD" }, isActive = true, technical = AssistantEditableCatalogTests.Technical(),
+            name = "Dato nuevo",
+            provider = "Anthropic",
+            providerModelId = "unknown-model",
+            inputPricePerMillion = new { amount = 1m, currency = "USD" },
+            outputPricePerMillion = new { amount = 2m, currency = "USD" },
+            isActive = true,
+            technical = AssistantEditableCatalogTests.Technical(),
         }, AssistantTestData.Ct);
         Assert.Equal(HttpStatusCode.BadRequest, denied.StatusCode);
     }
@@ -67,43 +78,54 @@ public sealed class AssistantModelCatalogTests
     [Fact]
     public async Task Database_metadata_allows_catalog_creation_and_own_selection_without_being_platform_allowed()
     {
-            await using var factory = new ApiFactory();
-            await factory.InitializeAsync();
-            using var host = factory.WithWebHostBuilder(builder =>
-            {
-                builder.UseSetting("Assistant:UseFakeChatClient", "true").ConfigureTestServices(AssistantFakeChatRegistration.Configure);
-            });
-            using var ownerClient = host.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
-            var owner = await AccountJourney.RegisterAsync(host, ownerClient, AssistantTestData.Ct);
-            var tenant = await OrganizationJourney.StageAsync(factory, owner, "Additional model", AssistantTestData.Ct);
-            await AccountJourney.AuthorizeAsync(ownerClient, "business", AssistantTestData.Ct, tenant);
-            await AssistantTestData.EnableAsync(factory, tenant);
-            using var client = host.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
-            var account = await AccountJourney.RegisterAsync(host, client, AssistantTestData.Ct);
-            await PlatformOperators.GrantAsync(host.Services, account.UserId, PlatformOperators.All, AssistantTestData.Ct);
-            await AccountJourney.AuthorizeAsync(client, "platform", AssistantTestData.Ct);
-            using var created = await AccountJourney.PostAsync(client, "/api/platform/assistant/models", new
-            {
-                name = "Modelo adicional", provider = "Anthropic", providerModelId = "isolated-compatible-model", inputPricePerMillion = new { amount = 0.125m, currency = "USD" },
-                outputPricePerMillion = new { amount = 2m, currency = "USD" }, isActive = true, technical = AssistantEditableCatalogTests.Technical(),
-            }, AssistantTestData.Ct);
-            Assert.True(created.IsSuccessStatusCode, await created.Content.ReadAsStringAsync(AssistantTestData.Ct));
-            using var result = JsonDocument.Parse(await created.Content.ReadAsStringAsync(AssistantTestData.Ct));
-            var id = result.RootElement.GetProperty("id").GetGuid();
-            using var allowed = await client.PutAsJsonAsync($"/api/platform/tenants/{tenant}/assistant/policy", new { allowOwnKey = true, version = 0, reason = "Additional model fixture" }, AssistantTestData.Ct);
-            await SavedVersion.ReadAsync(allowed, AssistantTestData.Ct);
-            using var settings = await ownerClient.GetFromJsonAsync<JsonDocument>("/api/organization/assistant/settings", AssistantTestData.Ct);
-            Assert.Contains(settings!.RootElement.GetProperty("ownKeyModels").EnumerateArray(), row => row.GetProperty("id").GetGuid() == id);
-            Assert.Equal(0.125m, settings.RootElement.GetProperty("ownKeyModels").EnumerateArray().Single(row => row.GetProperty("id").GetGuid() == id).GetProperty("inputPricePerMillion").GetProperty("amount").GetDecimal());
-            Assert.DoesNotContain(settings.RootElement.GetProperty("platformKeyModels").EnumerateArray(), row => row.GetProperty("id").GetGuid() == id);
-            using var selected = await ownerClient.PutAsJsonAsync("/api/organization/assistant/settings", new
-            {
-                mode = "OwnKey", modelId = id, effort = "low", monthlyBudget = new { amount = 0.125m, currency = "USD" }, keyAction = "replace", apiKey = "isolated-own-key-9999", version = 0,
-            }, AssistantTestData.Ct);
-            await SavedVersion.ReadAsync(selected, AssistantTestData.Ct);
-            using var saved = await ownerClient.GetFromJsonAsync<JsonDocument>("/api/organization/assistant/settings", AssistantTestData.Ct);
-            Assert.Equal(id, saved!.RootElement.GetProperty("modelId").GetGuid());
-            Assert.Equal(0.13m, saved.RootElement.GetProperty("monthlyBudget").GetProperty("amount").GetDecimal());
+        await using var factory = new ApiFactory();
+        await factory.InitializeAsync();
+        using var host = factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("Assistant:UseFakeChatClient", "true").ConfigureTestServices(AssistantFakeChatRegistration.Configure);
+        });
+        using var ownerClient = host.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var owner = await AccountJourney.RegisterAsync(host, ownerClient, AssistantTestData.Ct);
+        var tenant = await OrganizationJourney.StageAsync(factory, owner, "Additional model", AssistantTestData.Ct);
+        await AccountJourney.AuthorizeAsync(ownerClient, "business", AssistantTestData.Ct, tenant);
+        await AssistantTestData.EnableAsync(factory, tenant);
+        using var client = host.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var account = await AccountJourney.RegisterAsync(host, client, AssistantTestData.Ct);
+        await PlatformOperators.GrantAsync(host.Services, account.UserId, PlatformOperators.All, AssistantTestData.Ct);
+        await AccountJourney.AuthorizeAsync(client, "platform", AssistantTestData.Ct);
+        using var created = await AccountJourney.PostAsync(client, "/api/platform/assistant/models", new
+        {
+            name = "Modelo adicional",
+            provider = "Anthropic",
+            providerModelId = "isolated-compatible-model",
+            inputPricePerMillion = new { amount = 0.125m, currency = "USD" },
+            outputPricePerMillion = new { amount = 2m, currency = "USD" },
+            isActive = true,
+            technical = AssistantEditableCatalogTests.Technical(),
+        }, AssistantTestData.Ct);
+        Assert.True(created.IsSuccessStatusCode, await created.Content.ReadAsStringAsync(AssistantTestData.Ct));
+        using var result = JsonDocument.Parse(await created.Content.ReadAsStringAsync(AssistantTestData.Ct));
+        var id = result.RootElement.GetProperty("id").GetGuid();
+        using var allowed = await client.PutAsJsonAsync($"/api/platform/tenants/{tenant}/assistant/policy", new { allowOwnKey = true, version = 0, reason = "Additional model fixture" }, AssistantTestData.Ct);
+        await SavedVersion.ReadAsync(allowed, AssistantTestData.Ct);
+        using var settings = await ownerClient.GetFromJsonAsync<JsonDocument>("/api/organization/assistant/settings", AssistantTestData.Ct);
+        Assert.Contains(settings!.RootElement.GetProperty("ownKeyModels").EnumerateArray(), row => row.GetProperty("id").GetGuid() == id);
+        Assert.Equal(0.125m, settings.RootElement.GetProperty("ownKeyModels").EnumerateArray().Single(row => row.GetProperty("id").GetGuid() == id).GetProperty("inputPricePerMillion").GetProperty("amount").GetDecimal());
+        Assert.DoesNotContain(settings.RootElement.GetProperty("platformKeyModels").EnumerateArray(), row => row.GetProperty("id").GetGuid() == id);
+        using var selected = await ownerClient.PutAsJsonAsync("/api/organization/assistant/settings", new
+        {
+            mode = "OwnKey",
+            modelId = id,
+            effort = "low",
+            monthlyBudget = new { amount = 0.125m, currency = "USD" },
+            keyAction = "replace",
+            apiKey = "isolated-own-key-9999",
+            version = 0,
+        }, AssistantTestData.Ct);
+        await SavedVersion.ReadAsync(selected, AssistantTestData.Ct);
+        using var saved = await ownerClient.GetFromJsonAsync<JsonDocument>("/api/organization/assistant/settings", AssistantTestData.Ct);
+        Assert.Equal(id, saved!.RootElement.GetProperty("modelId").GetGuid());
+        Assert.Equal(0.13m, saved.RootElement.GetProperty("monthlyBudget").GetProperty("amount").GetDecimal());
 
     }
 }

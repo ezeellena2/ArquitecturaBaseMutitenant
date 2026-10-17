@@ -30,8 +30,10 @@ public sealed record AccountLifecycle(UserStatus Status, DateTime? DeletionReque
         return this with
         {
             Status = Status == UserStatus.Active ? UserStatus.PendingDeletion : Status,
-            DeletionRequestedAtUtc = requestedAtUtc, DeletionScheduledForUtc = requestedAtUtc.AddDays(graceDays),
-            DeletionReason = reason, DeletionRequestedByOperatorId = operatorId,
+            DeletionRequestedAtUtc = requestedAtUtc,
+            DeletionScheduledForUtc = requestedAtUtc.AddDays(graceDays),
+            DeletionReason = reason,
+            DeletionRequestedByOperatorId = operatorId,
         };
     }
 
@@ -41,8 +43,14 @@ public sealed record AccountLifecycle(UserStatus Status, DateTime? DeletionReque
         if (Status == UserStatus.Suspended) return AccountErrors.Suspended;
         if (Status != UserStatus.PendingDeletion || DeletionScheduledForUtc is null) return UserErrors.InvalidTransition;
         if (cancelledAtUtc >= DeletionScheduledForUtc) return AccountDeletionErrors.GraceExpired;
-        return this with { Status = UserStatus.Active, DeletionRequestedAtUtc = null,
-            DeletionScheduledForUtc = null, DeletionReason = null, DeletionRequestedByOperatorId = null };
+        return this with
+        {
+            Status = UserStatus.Active,
+            DeletionRequestedAtUtc = null,
+            DeletionScheduledForUtc = null,
+            DeletionReason = null,
+            DeletionRequestedByOperatorId = null
+        };
     }
 
     public Result<AccountLifecycle> CompleteDeletion(DateTime deletedAtUtc)

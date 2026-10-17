@@ -81,8 +81,12 @@ public sealed partial class RouteIsolationMatrixTests(ApiFactory factory)
             ["GET /api/roles/{id:guid}"] = Foreign(w => Business($"/api/roles/{w.B("role")}")),
             ["PUT /api/roles/{id:guid}"] = Foreign(w => Business($"/api/roles/{w.B("role")}", new
             {
-                name = "Matriz", description = (string?)null, scope = nameof(RoleScope.Organization), companyId = (Guid?)null,
-                permissions = new[] { "roles.read" }, version = 1,
+                name = "Matriz",
+                description = (string?)null,
+                scope = nameof(RoleScope.Organization),
+                companyId = (Guid?)null,
+                permissions = new[] { "roles.read" },
+                version = 1,
             })),
             ["DELETE /api/roles/{id:guid}"] = Foreign(w => Business($"/api/roles/{w.B("role")}", new { version = 1 })),
             ["POST /api/users/invitations/{invitationid:guid}/resend"] = Foreign(w => Business($"/api/users/invitations/{w.B("invitation")}/resend")),
@@ -298,8 +302,11 @@ public sealed partial class RouteIsolationMatrixTests(ApiFactory factory)
             Assert.True(added.IsSuccessStatusCode, await added.Content.ReadAsStringAsync(Ct));
         world.Foreign["role"] = await CreatedIdAsync(foreign, "/api/roles", new
         {
-            name = world.OrganizationMark + " rol", description = (string?)null, scope = nameof(RoleScope.Organization),
-            companyId = (Guid?)null, permissions = new[] { "roles.read" },
+            name = world.OrganizationMark + " rol",
+            description = (string?)null,
+            scope = nameof(RoleScope.Organization),
+            companyId = (Guid?)null,
+            permissions = new[] { "roles.read" },
         }, "id");
         using (var roles = await foreign.GetAsync($"/api/roles/paged?companyId={world.B("company")}&pageSize=50", Ct))
         {
@@ -308,7 +315,8 @@ public sealed partial class RouteIsolationMatrixTests(ApiFactory factory)
                 .First(role => role.GetProperty("isSystemRole").GetBoolean()).GetProperty("id").GetGuid();
             world.Foreign["invitation"] = await CreatedIdAsync(foreign, "/api/users/invitations", new
             {
-                email = world.OrganizationMark + "@example.test", roleIds = Array.Empty<Guid>(),
+                email = world.OrganizationMark + "@example.test",
+                roleIds = Array.Empty<Guid>(),
                 companies = new[] { new { companyId = world.B("company"), roleIds = new[] { companyRole } } },
             }, "invitationId");
         }

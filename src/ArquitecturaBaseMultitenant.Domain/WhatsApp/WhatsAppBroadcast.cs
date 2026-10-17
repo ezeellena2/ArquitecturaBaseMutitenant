@@ -53,9 +53,17 @@ public sealed class WhatsAppBroadcast : Entity, ITenantOwned, IVersioned, IAudit
             throw new ArgumentException("Invalid variables.", nameof(variables));
         return new WhatsAppBroadcast
         {
-            Name = name.Trim(), TemplateId = templateId, TemplateName = templateName, _variables = values, AudienceKind = kind, AudienceTag = tag?.Trim(),
-            Status = WhatsAppBroadcastStatus.Scheduled, ScheduledAtUtc = scheduledAtUtc, Recipients = recipients,
-            EstimatedCostAmount = estimatedCost.Amount, EstimatedCostCurrency = estimatedCost.Currency.Value,
+            Name = name.Trim(),
+            TemplateId = templateId,
+            TemplateName = templateName,
+            _variables = values,
+            AudienceKind = kind,
+            AudienceTag = tag?.Trim(),
+            Status = WhatsAppBroadcastStatus.Scheduled,
+            ScheduledAtUtc = scheduledAtUtc,
+            Recipients = recipients,
+            EstimatedCostAmount = estimatedCost.Amount,
+            EstimatedCostCurrency = estimatedCost.Currency.Value,
         };
     }
 
@@ -104,7 +112,11 @@ public sealed class WhatsAppBroadcastRecipient : Entity, ITenantOwned
 
     public static WhatsAppBroadcastRecipient Create(Guid broadcastId, Guid customerId, PhoneNumber waId, DateTime nowUtc) => new()
     {
-        BroadcastId = broadcastId, CustomerId = customerId, WaId = waId.Value, Status = WhatsAppRecipientStatus.Pending, ChangedAtUtc = nowUtc,
+        BroadcastId = broadcastId,
+        CustomerId = customerId,
+        WaId = waId.Value,
+        Status = WhatsAppRecipientStatus.Pending,
+        ChangedAtUtc = nowUtc,
     };
 
     public void MarkSent(Guid outboxMessageId, DateTime nowUtc)

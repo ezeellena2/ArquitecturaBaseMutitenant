@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Time.Testing;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
+
 public sealed class WhatsAppCloudClientTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

@@ -292,9 +292,14 @@ public sealed class DistributedRateLimitTests(ApiFactory factory) : IClassFixtur
         string reason) =>
         client.PutAsJsonAsync("/api/platform/settings", new JsonObject
         {
-            ["consumerSignup"] = "Open", ["businessSignup"] = "Open", ["maxOwnedOrganizations"] = 1,
-            ["salesEmail"] = "ventas@example.com", ["supportEmail"] = "soporte@example.com",
-            ["version"] = version, ["reason"] = reason, ["rateLimits"] = limits,
+            ["consumerSignup"] = "Open",
+            ["businessSignup"] = "Open",
+            ["maxOwnedOrganizations"] = 1,
+            ["salesEmail"] = "ventas@example.com",
+            ["supportEmail"] = "soporte@example.com",
+            ["version"] = version,
+            ["reason"] = reason,
+            ["rateLimits"] = limits,
         }, Ct);
 
     private static async Task<HttpResponseMessage> PostCodeAsync(HttpClient client, string path, string ip, bool preview)

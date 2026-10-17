@@ -32,7 +32,7 @@ public sealed class EmailAccountStatesTests(ApiFactory factory)
         for (var attempt = 0; attempt < 2; attempt++)
         {
             using var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/signup")
-                { Content = JsonContent.Create(new { email = account.Email.Value.ToUpperInvariant(), acceptedTerms = true }) };
+            { Content = JsonContent.Create(new { email = account.Email.Value.ToUpperInvariant(), acceptedTerms = true }) };
             request.Headers.Add("Idempotency-Key", key);
             using var response = await anonymous.SendAsync(request, Ct);
             await AssertFieldAsync(response, HttpStatusCode.BadRequest, "Auth.Signup.EmailTaken", "email", "Ya tenés una cuenta con ese correo.");

@@ -20,17 +20,23 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
         document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
         document.Components.SecuritySchemes["Bearer"] = new OpenApiSecurityScheme
         {
-            Type = SecuritySchemeType.Http, Scheme = "bearer", BearerFormat = "JWT",
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
             Description = "Token OIDC del acceso firmado consumer, business o platform. Mi cuenta no exige permiso de organización.",
         };
         document.Components.SecuritySchemes["PublicCookie"] = new OpenApiSecurityScheme
         {
-            Type = SecuritySchemeType.ApiKey, In = ParameterLocation.Cookie, Name = ".AspNetCore.Identity.Application",
+            Type = SecuritySchemeType.ApiKey,
+            In = ParameterLocation.Cookie,
+            Name = ".AspNetCore.Identity.Application",
             Description = "Cookie pública HttpOnly de identidad probada; no es un token OIDC ni elige empresa/persona.",
         };
         document.Components.SecuritySchemes["Antiforgery"] = new OpenApiSecurityScheme
         {
-            Type = SecuritySchemeType.ApiKey, In = ParameterLocation.Header, Name = "RequestVerificationToken",
+            Type = SecuritySchemeType.ApiKey,
+            In = ParameterLocation.Header,
+            Name = "RequestVerificationToken",
             Description = "Prueba antiforgery vigente de alta empresarial, junto con su cookie.",
         };
         DescribeSchemas(document);
@@ -132,13 +138,13 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
         var examples = document.Paths["/api/auth/login-code/verify"].Operations![HttpMethod.Post]
             .Responses!["403"].Content!["application/problem+json"].Examples!;
         foreach (var error in BusinessVerifyErrors().Where(error => error.Code != "Tenancy.Access.NotMember"))
-        foreach (var language in new[] { "es", "en" })
-        {
-            if (examples[error.Code + "." + language] is not OpenApiExample { Value: JsonObject example })
-                throw new InvalidOperationException("Missing business verification error example.");
-            example["organizationName"] = language == "es" ? "Organización de ejemplo" : "Example organization";
-            example["tenantId"] = "11111111-1111-4111-8111-111111111111";
-        }
+            foreach (var language in new[] { "es", "en" })
+            {
+                if (examples[error.Code + "." + language] is not OpenApiExample { Value: JsonObject example })
+                    throw new InvalidOperationException("Missing business verification error example.");
+                example["organizationName"] = language == "es" ? "Organización de ejemplo" : "Example organization";
+                example["tenantId"] = "11111111-1111-4111-8111-111111111111";
+            }
     }
 
     private static void AppendDescription(OpenApiDocument document, string path, string text) =>
@@ -203,7 +209,9 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
                 schema.Properties[property] = new OpenApiSchema { Type = JsonSchemaType.String | JsonSchemaType.Null, Pattern = "^[A-Za-z0-9_-]{43}$", Description = "Secreto de 32 bytes, base64url sin padding. Solo cuerpo/memoria; sin logs." };
             if (CodeRequests.Contains(name)) schema.Properties["code"] = new OpenApiSchema
             {
-                Type = JsonSchemaType.String | JsonSchemaType.Null, Pattern = "^[0-9]+$", Description = "Dígitos ASCII; longitud configurada en Authentication:LoginCode (6 por defecto). No normalizar ni registrar.",
+                Type = JsonSchemaType.String | JsonSchemaType.Null,
+                Pattern = "^[0-9]+$",
+                Description = "Dígitos ASCII; longitud configurada en Authentication:LoginCode (6 por defecto). No normalizar ni registrar.",
             };
             if (name == "VerifyLoginCodeHttpRequest") schema.Properties["access"] = new OpenApiSchema
             {
@@ -217,7 +225,9 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
             };
             if (name == "LoginChannelAvailability") schema.Properties["contactPhone"] = new OpenApiSchema
             {
-                Type = JsonSchemaType.String | JsonSchemaType.Null, Pattern = "^\\+[1-9][0-9]{7,14}$", Description = "Número público E.164 aportado por el canal. Opcional; no es identificador del proveedor.",
+                Type = JsonSchemaType.String | JsonSchemaType.Null,
+                Pattern = "^\\+[1-9][0-9]{7,14}$",
+                Description = "Número público E.164 aportado por el canal. Opcional; no es identificador del proveedor.",
             };
             if (name is "PlatformAccountResponse" or "PlatformAccountDetailResponse" or "MeResponse"
                 && schema.Properties.TryGetValue("maskedPrimaryPhone", out var phoneProperty) && phoneProperty is OpenApiSchema primaryPhone)
@@ -230,7 +240,8 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
 
     private static OpenApiSchema ContactShape(OpenApiDocument document, string chosen, string other) => new()
     {
-        Type = JsonSchemaType.Object, Required = new HashSet<string>(StringComparer.Ordinal) { chosen },
+        Type = JsonSchemaType.Object,
+        Required = new HashSet<string>(StringComparer.Ordinal) { chosen },
         Properties = new Dictionary<string, IOpenApiSchema>
         {
             [chosen] = chosen.EndsWith("Email", StringComparison.Ordinal) || chosen == "email"

@@ -262,7 +262,8 @@ public sealed class WhatsAppWebhookTests(ApiFactory factory) : IClassFixture<Api
     private static object Status(string id, string state, string time) => new { id, status = state, timestamp = time };
     private static string Envelope(object[] messages, object[]? statuses = null, string number = "fixture-number") => JsonSerializer.Serialize(new
     {
-        @object = "whatsapp_business_account", entry = new[] { new { changes = new[] { new { field = "messages", value = new { metadata = new { phone_number_id = number }, messages, statuses = statuses ?? [] } } } } },
+        @object = "whatsapp_business_account",
+        entry = new[] { new { changes = new[] { new { field = "messages", value = new { metadata = new { phone_number_id = number }, messages, statuses = statuses ?? [] } } } } },
     });
 
     private sealed class LyingContent(byte[] bytes, long? length) : HttpContent

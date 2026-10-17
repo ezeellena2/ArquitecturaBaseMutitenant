@@ -38,8 +38,13 @@ internal sealed partial class SharedContractRules(IApiDescriptionGroupCollection
 
     private static HttpMethod? Method(string verb) => verb.ToUpperInvariant() switch
     {
-        "GET" => HttpMethod.Get, "POST" => HttpMethod.Post, "PUT" => HttpMethod.Put, "DELETE" => HttpMethod.Delete,
-        "PATCH" => HttpMethod.Patch, "HEAD" => HttpMethod.Head, _ => null,
+        "GET" => HttpMethod.Get,
+        "POST" => HttpMethod.Post,
+        "PUT" => HttpMethod.Put,
+        "DELETE" => HttpMethod.Delete,
+        "PATCH" => HttpMethod.Patch,
+        "HEAD" => HttpMethod.Head,
+        _ => null,
     };
 
     [GeneratedRegex(@"\{\*?([^}:?=]+)[^}]*\}", RegexOptions.CultureInvariant)]

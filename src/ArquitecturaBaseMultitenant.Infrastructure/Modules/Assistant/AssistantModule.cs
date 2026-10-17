@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Configuration;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
 using Microsoft.Extensions.Options;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant;
+
 public static class AssistantModule
 {
     public static IServiceCollection AddAssistantModule(this IServiceCollection services)

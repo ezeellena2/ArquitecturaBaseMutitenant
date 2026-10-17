@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Auth;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using FluentValidation;
 namespace ArquitecturaBaseMultitenant.Application.Validation.Auth;
+
 internal sealed class PreviewLoginLinkRequestValidator : AbstractValidator<PreviewLoginLinkRequest>
 {
     public PreviewLoginLinkRequestValidator() => RuleFor(request => request.Token)

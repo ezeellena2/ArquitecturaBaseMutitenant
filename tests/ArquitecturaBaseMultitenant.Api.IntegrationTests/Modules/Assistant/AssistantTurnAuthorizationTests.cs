@@ -109,7 +109,8 @@ public sealed class AssistantTurnAuthorizationTests
         }
         var attachmentBody = JsonSerializer.Serialize(new
         {
-            text = "Adjunto que no pertenece a la conversación", attachmentIds = new[] { foreignFile.Id },
+            text = "Adjunto que no pertenece a la conversación",
+            attachmentIds = new[] { foreignFile.Id },
             conversationVersion = current.Conversation.Version,
         });
         using (var attachment = AssistantTurnTestSession.Request(HttpMethod.Post, path, attachmentBody, Guid.NewGuid()))

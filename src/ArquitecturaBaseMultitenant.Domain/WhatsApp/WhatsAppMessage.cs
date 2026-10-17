@@ -43,12 +43,26 @@ public sealed class WhatsAppMessage : Entity, IVersioned
             throw new ArgumentException("UTC required.");
         if (kind == WhatsAppMessageKind.Authentication && encryptedText is not null)
             throw new ArgumentException("Authentication messages contain metadata only.", nameof(encryptedText));
-        return new WhatsAppMessage { PhoneNumberId = phoneNumberId, Wamid = wamid, EventType = eventType,
-            Direction = direction, Kind = kind, Status = status, OccurredAtUtc = occurredAtUtc,
-            ReceivedAtUtc = receivedAtUtc, ContactId = contactId, EncryptedText = encryptedText, OutboxMessageId = outboxMessageId,
-            OriginalUserId = originalUserId, OriginalMethodId = originalMethodId, ReplyId = replyId, ChannelId = channelId,
+        return new WhatsAppMessage
+        {
+            PhoneNumberId = phoneNumberId,
+            Wamid = wamid,
+            EventType = eventType,
+            Direction = direction,
+            Kind = kind,
+            Status = status,
+            OccurredAtUtc = occurredAtUtc,
+            ReceivedAtUtc = receivedAtUtc,
+            ContactId = contactId,
+            EncryptedText = encryptedText,
+            OutboxMessageId = outboxMessageId,
+            OriginalUserId = originalUserId,
+            OriginalMethodId = originalMethodId,
+            ReplyId = replyId,
+            ChannelId = channelId,
             ContentType = contentType is { Length: > 0 and <= TextLimits.ShortName } ? contentType : null,
-            NextAttemptAtUtc = direction == WhatsAppMessageDirection.Inbound ? receivedAtUtc : null };
+            NextAttemptAtUtc = direction == WhatsAppMessageDirection.Inbound ? receivedAtUtc : null
+        };
     }
     public bool TryLease(Guid leaseId, DateTime nowUtc, TimeSpan lifetime, int maxAttempts = 8)
     {

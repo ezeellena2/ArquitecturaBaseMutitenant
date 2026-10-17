@@ -26,7 +26,7 @@ public sealed class AccountProfileNamesTests(ApiFactory factory)
         using var before = await client.GetFromJsonAsync<JsonDocument>("/api/me", Ct);
         var version = before!.RootElement.GetProperty("version").GetUInt32();
         using var saved = await client.PutAsJsonAsync("/api/me", new
-            { firstName, lastName, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires", version }, Ct);
+        { firstName, lastName, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires", version }, Ct);
         var savedVersion = await SavedVersion.ReadAsync(saved, Ct);
         using var after = await client.GetFromJsonAsync<JsonDocument>("/api/me", Ct);
         Assert.True(after!.RootElement.TryGetProperty("firstName", out var first), "GET /api/me must expose firstName.");
@@ -36,7 +36,7 @@ public sealed class AccountProfileNamesTests(ApiFactory factory)
         Assert.Equal(expectedDisplay, after.RootElement.GetProperty("displayName").GetString());
         Assert.Equal(savedVersion, after.RootElement.GetProperty("version").GetUInt32());
         using var stale = await client.PutAsJsonAsync("/api/me", new
-            { firstName = "Otro", lastName = "Nombre", culture = "en-US", timeZoneId = "America/Argentina/Buenos_Aires", version }, Ct);
+        { firstName = "Otro", lastName = "Nombre", culture = "en-US", timeZoneId = "America/Argentina/Buenos_Aires", version }, Ct);
         Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
         using var staleProblem = await stale.Content.ReadFromJsonAsync<JsonDocument>(Ct);
         Assert.Equal("General.ConcurrencyConflict", staleProblem!.RootElement.GetProperty("code").GetString());
@@ -53,8 +53,11 @@ public sealed class AccountProfileNamesTests(ApiFactory factory)
         var version = before!.RootElement.GetProperty("version").GetUInt32();
         var body = new Dictionary<string, object?>
         {
-            ["firstName"] = "Ana", ["lastName"] = "María", ["culture"] = "es-AR",
-            ["timeZoneId"] = "America/Argentina/Buenos_Aires", ["version"] = version,
+            ["firstName"] = "Ana",
+            ["lastName"] = "María",
+            ["culture"] = "es-AR",
+            ["timeZoneId"] = "America/Argentina/Buenos_Aires",
+            ["version"] = version,
             [field] = new string('N', (field == "firstName" ? TextLimits.FirstName : TextLimits.LastName) + 1),
         };
         using var response = await client.PutAsJsonAsync("/api/me", body, Ct);
@@ -74,7 +77,7 @@ public sealed class AccountProfileNamesTests(ApiFactory factory)
         var firstName = new string('李', TextLimits.FirstName);
         var lastName = new string('Ñ', TextLimits.LastName);
         using var response = await client.PutAsJsonAsync("/api/me", new
-            { firstName, lastName, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires", version = before!.RootElement.GetProperty("version").GetUInt32() }, Ct);
+        { firstName, lastName, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires", version = before!.RootElement.GetProperty("version").GetUInt32() }, Ct);
         await SavedVersion.ReadAsync(response, Ct);
         using var after = await client.GetFromJsonAsync<JsonDocument>("/api/me", Ct);
         Assert.Equal(firstName + " " + lastName, after!.RootElement.GetProperty("displayName").GetString());

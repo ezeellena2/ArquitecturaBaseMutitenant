@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;
 using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
+
 internal sealed partial class WhatsAppOptionsValidator(IOptions<LoginCodeOptions> loginCodes) : IValidateOptions<WhatsAppOptions>
 {
     public ValidateOptionsResult Validate(string? name, WhatsAppOptions options)

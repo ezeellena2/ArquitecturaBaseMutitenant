@@ -29,16 +29,20 @@ internal sealed class AssistantDurableRepository(ApplicationDbContext db, ITenan
     public Task<AssistantDurableOperationRow?> GetByKeyAsync(Guid owner, Access access, Guid key, CancellationToken ct) =>
         access == Access.Platform
             ? Platform(owner).Where(row => row.Key == key).Select(row => new AssistantDurableOperationRow(
-                new IdempotentReference(row.Kind, row.Id, row.StatusCode, row.Location), row.ConversationId, row.BodyHash, row.Route, row.SnapshotJson, row.QuickKey, EffectiveVersion(row.OriginalSnapshotVersion, row.Version), row.CreatedAtUtc) { SubjectUserIds = row.SubjectUserIds }).SingleOrDefaultAsync(ct)
+                new IdempotentReference(row.Kind, row.Id, row.StatusCode, row.Location), row.ConversationId, row.BodyHash, row.Route, row.SnapshotJson, row.QuickKey, EffectiveVersion(row.OriginalSnapshotVersion, row.Version), row.CreatedAtUtc)
+            { SubjectUserIds = row.SubjectUserIds }).SingleOrDefaultAsync(ct)
             : Private(owner, access).Where(row => row.Key == key).Select(row => new AssistantDurableOperationRow(
-                new IdempotentReference(row.Kind, row.Id, row.StatusCode, row.Location), row.ConversationId, row.BodyHash, row.Route, row.SnapshotJson, row.QuickKey, EffectiveVersion(row.OriginalSnapshotVersion, row.Version), row.CreatedAtUtc) { SubjectUserIds = row.SubjectUserIds }).SingleOrDefaultAsync(ct);
+                new IdempotentReference(row.Kind, row.Id, row.StatusCode, row.Location), row.ConversationId, row.BodyHash, row.Route, row.SnapshotJson, row.QuickKey, EffectiveVersion(row.OriginalSnapshotVersion, row.Version), row.CreatedAtUtc)
+            { SubjectUserIds = row.SubjectUserIds }).SingleOrDefaultAsync(ct);
 
     public Task<AssistantDurableOperationRow?> GetByIdAsync(Guid owner, Access access, Guid id, CancellationToken ct) =>
         access == Access.Platform
             ? Platform(owner).Where(row => row.Id == id).Select(row => new AssistantDurableOperationRow(
-                new IdempotentReference(row.Kind, row.Id, row.StatusCode, row.Location), row.ConversationId, row.BodyHash, row.Route, row.SnapshotJson, row.QuickKey, EffectiveVersion(row.OriginalSnapshotVersion, row.Version), row.CreatedAtUtc) { SubjectUserIds = row.SubjectUserIds }).SingleOrDefaultAsync(ct)
+                new IdempotentReference(row.Kind, row.Id, row.StatusCode, row.Location), row.ConversationId, row.BodyHash, row.Route, row.SnapshotJson, row.QuickKey, EffectiveVersion(row.OriginalSnapshotVersion, row.Version), row.CreatedAtUtc)
+            { SubjectUserIds = row.SubjectUserIds }).SingleOrDefaultAsync(ct)
             : Private(owner, access).Where(row => row.Id == id).Select(row => new AssistantDurableOperationRow(
-                new IdempotentReference(row.Kind, row.Id, row.StatusCode, row.Location), row.ConversationId, row.BodyHash, row.Route, row.SnapshotJson, row.QuickKey, EffectiveVersion(row.OriginalSnapshotVersion, row.Version), row.CreatedAtUtc) { SubjectUserIds = row.SubjectUserIds }).SingleOrDefaultAsync(ct);
+                new IdempotentReference(row.Kind, row.Id, row.StatusCode, row.Location), row.ConversationId, row.BodyHash, row.Route, row.SnapshotJson, row.QuickKey, EffectiveVersion(row.OriginalSnapshotVersion, row.Version), row.CreatedAtUtc)
+            { SubjectUserIds = row.SubjectUserIds }).SingleOrDefaultAsync(ct);
 
     // Project both physical columns; bigint and PostgreSQL xid cannot safely share a SQL COALESCE.
     private static uint EffectiveVersion(uint? originalSnapshotVersion, uint version) => originalSnapshotVersion ?? version;

@@ -190,11 +190,11 @@ public sealed class CompanyAdminTests(ApiFactory factory)
         Assert.Single(HomeTests.Pending(await OrganizationJourney.HomeAsync(adminClient, Ct)));
 
         using (var edited = await ownerClient.PutAsJsonAsync($"/api/users/{memberId:D}", new
-               {
-                   roleIds = Array.Empty<Guid>(),
-                   companies = Array.Empty<object>(),
-                   version = invited.GetProperty("version").GetUInt32(),
-               }, Ct))
+        {
+            roleIds = Array.Empty<Guid>(),
+            companies = Array.Empty<object>(),
+            version = invited.GetProperty("version").GetUInt32(),
+        }, Ct))
             Assert.True(edited.StatusCode == HttpStatusCode.OK, await edited.Content.ReadAsStringAsync(Ct));
 
         Assert.Empty(HomeTests.Pending(await OrganizationJourney.HomeAsync(adminClient, Ct)));

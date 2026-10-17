@@ -75,8 +75,9 @@ internal static class AssistantQuotaFixture
                 model.OutputPrice, model.InputPrice, model.InputPrice, model.InputPrice, null, null, null, null, null, null);
             var otherOperations = db.Set<AssistantFinancialOperation>().Where(row => row.BudgetMonthId == month.Id && row.Funding == funding
                 && row.State == AssistantFinancialState.Completed && row.Id != previousFixtureId);
-            var committed = await (from call in db.Set<AssistantFinancialCall>() join recordedOperation in otherOperations on call.OperationId equals recordedOperation.Id
-                select call.Cost.Amount).SumAsync(token);
+            var committed = await (from call in db.Set<AssistantFinancialCall>()
+                                   join recordedOperation in otherOperations on call.OperationId equals recordedOperation.Id
+                                   select call.Cost.Amount).SumAsync(token);
             var cost = AssistantFileBridge.Usd(Math.Max(0m, budget.Amount * fraction - committed));
             operationId = Guid.NewGuid();
             // Los snapshots y Money son owned de cada fila; no se comparten con el catálogo ni entre agregados.
@@ -92,8 +93,11 @@ internal static class AssistantQuotaFixture
                 {
                     var alert = await db.Set<AssistantBudgetAlert>().SingleOrDefaultAsync(row => row.MonthId == month.Id
                         && row.Funding == funding && row.Threshold == threshold, token);
-                    if (alert is null) { alert = AssistantBudgetAlert.Create(binding.ScopeTenantId.Value, month.Id, funding, threshold,
-                        AssistantFileBridge.Usd(budget.Amount * fraction), new Money(budget.Amount, budget.Currency)); db.Add(alert); }
+                    if (alert is null)
+                    {
+                        alert = AssistantBudgetAlert.Create(binding.ScopeTenantId.Value, month.Id, funding, threshold,
+                        AssistantFileBridge.Usd(budget.Amount * fraction), new Money(budget.Amount, budget.Currency)); db.Add(alert);
+                    }
                     alertIds.Add(alert.Id);
                 }
         }, ct);

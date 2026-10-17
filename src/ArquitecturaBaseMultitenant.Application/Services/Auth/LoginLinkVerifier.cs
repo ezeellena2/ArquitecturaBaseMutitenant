@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
+
 internal sealed class LoginLinkVerifier(LoginLinkGuard guard, ISignInService signIn,
     ILoginAuditRepository audits, AccountDeletionCancelIssuer cancellation, TimeProvider clock)
 {

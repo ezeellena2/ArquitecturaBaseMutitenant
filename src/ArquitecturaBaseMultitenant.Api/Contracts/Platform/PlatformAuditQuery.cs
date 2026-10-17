@@ -15,7 +15,12 @@ public sealed class PlatformAuditQuery
 
     public ListPlatformAuditRequest ToModel() => new()
     {
-        After = After, Limit = Limit, Period = Period, Type = Type, TenantId = TenantId, AccountId = AccountId,
+        After = After,
+        Limit = Limit,
+        Period = Period,
+        Type = Type,
+        TenantId = TenantId,
+        AccountId = AccountId,
         Search = Search,
     };
 

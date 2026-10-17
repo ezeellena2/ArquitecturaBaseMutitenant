@@ -29,8 +29,8 @@ internal sealed class MemberReader(ApplicationDbContext context, ITenantContext 
         }
 
         return from member in members.OrderBy(member => member.UserId)
-            join user in context.Users.AsNoTracking() on member.UserId equals user.Id
-            select new MemberRow(member.TenantId, user.Id, member.Status,
-                user.Status, user.DisplayName);
+               join user in context.Users.AsNoTracking() on member.UserId equals user.Id
+               select new MemberRow(member.TenantId, user.Id, member.Status,
+                   user.Status, user.DisplayName);
     }
 }

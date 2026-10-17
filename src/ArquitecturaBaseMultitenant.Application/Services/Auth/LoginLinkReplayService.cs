@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.Extensions.Logging;
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
+
 internal sealed class LoginLinkReplayService(LoginLinkGuard guard, ISecureTokenGenerator tokens,
     TimeProvider clock, ILogger<LoginLinkReplayService> logger) : ILoginLinkReplayService
 {

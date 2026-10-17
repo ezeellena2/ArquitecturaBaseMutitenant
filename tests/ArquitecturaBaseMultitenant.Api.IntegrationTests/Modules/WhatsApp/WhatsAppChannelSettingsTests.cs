@@ -10,6 +10,7 @@ using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
 using Microsoft.Extensions.DependencyInjection;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
+
 public sealed class WhatsAppChannelSettingsTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

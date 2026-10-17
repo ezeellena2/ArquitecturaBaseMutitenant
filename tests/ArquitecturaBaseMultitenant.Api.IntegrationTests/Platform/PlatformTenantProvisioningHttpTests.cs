@@ -353,8 +353,11 @@ public sealed class PlatformTenantProvisioningHttpTests(ApiFactory factory)
         var email = Email.Create($"revoked-owner-{Guid.NewGuid():N}@example.test").Value;
         using var created = await CreateAsync(client, operationId, new
         {
-            name = "Revocada " + operationId.ToString("N")[..8], firstCompanyName = "Primera empresa",
-            ownerEmail = email.Value, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires",
+            name = "Revocada " + operationId.ToString("N")[..8],
+            firstCompanyName = "Primera empresa",
+            ownerEmail = email.Value,
+            culture = "es-AR",
+            timeZoneId = "America/Argentina/Buenos_Aires",
         });
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
         using var createdJson = JsonDocument.Parse(await created.Content.ReadAsStringAsync(Ct));

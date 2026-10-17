@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
+
 internal sealed class LoginLinkRepository(ApplicationDbContext context) : ILoginLinkRepository
 {
     public Task<LoginLinkOwnerSnapshot?> FindOwnerAsync(Guid userId, Guid methodId, CancellationToken ct) =>

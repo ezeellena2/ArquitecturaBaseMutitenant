@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+
 public sealed record LoginLinkSnapshot(Guid UserId, Guid MethodId, DateTime ExpiresAtUtc,
     DateTime? ConsumedAtUtc, DateTime? InvalidatedAtUtc, UserAccountRow Account, LoginMethodRow Method,
     bool LockoutEnabled, DateTime? LockoutEndUtc)

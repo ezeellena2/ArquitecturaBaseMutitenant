@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Persistence;
+
 internal sealed class WhatsAppCodeQuotaRepository(ApplicationDbContext context) : IWhatsAppCodeQuotaRepository
 {
     public Task LockAsync(string phoneNumberId, DateOnly dayUtc, CancellationToken ct) => context.AcquireAdvisoryLocksAsync(

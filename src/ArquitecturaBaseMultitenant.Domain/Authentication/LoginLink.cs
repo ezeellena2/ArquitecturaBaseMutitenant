@@ -24,8 +24,14 @@ public sealed class LoginLink : Entity
         ArgumentException.ThrowIfNullOrWhiteSpace(hash);
         ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(lifetime, TimeSpan.Zero);
         RequireUtc(nowUtc);
-        return new LoginLink { UserId = userId, MethodId = methodId, TokenHash = hash,
-            CreatedAtUtc = nowUtc, ExpiresAtUtc = nowUtc + lifetime };
+        return new LoginLink
+        {
+            UserId = userId,
+            MethodId = methodId,
+            TokenHash = hash,
+            CreatedAtUtc = nowUtc,
+            ExpiresAtUtc = nowUtc + lifetime
+        };
     }
     public bool IsActive(DateTime nowUtc) => ConsumedAtUtc is null && InvalidatedAtUtc is null && nowUtc < ExpiresAtUtc;
     public void Invalidate(DateTime nowUtc) { RequireUtc(nowUtc); InvalidatedAtUtc ??= nowUtc; }

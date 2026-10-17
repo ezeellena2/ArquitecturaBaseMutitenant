@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Invitations;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
+
 internal sealed class WhatsAppInvitationChannel(IWhatsAppChannelSettings settings, IWhatsAppTemplateRenderer templates, IOutbox outbox) : IInvitationChannel
 {
     internal const string ChannelKey = "whatsapp";

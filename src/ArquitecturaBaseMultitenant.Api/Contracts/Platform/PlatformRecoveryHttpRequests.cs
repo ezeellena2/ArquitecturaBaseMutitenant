@@ -14,7 +14,11 @@ public sealed class PlatformRecoveriesQuery
 
     public ListPlatformRecoveriesRequest ToModel() => new()
     {
-        Page = Page, PageSize = PageSize, Sort = Sort, Search = Search, Status = Status,
+        Page = Page,
+        PageSize = PageSize,
+        Sort = Sort,
+        Search = Search,
+        Status = Status,
     };
 
     // La búsqueda puede ser un correo o un teléfono: nunca se registra.

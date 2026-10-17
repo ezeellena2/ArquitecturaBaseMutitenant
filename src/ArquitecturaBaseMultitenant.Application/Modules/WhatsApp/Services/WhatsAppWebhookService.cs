@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using Microsoft.Extensions.Logging;
 using WhatsAppUniqueKeys = ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.UniqueKeys;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
+
 internal sealed class WhatsAppWebhookService(IWhatsAppSignatureValidator signatures, IWhatsAppWebhookReader reader,
     WhatsAppWebhookWriter writer, WhatsAppTemplateStateWriter templates, IWhatsAppInboundSignal signal, IWhatsAppWebhookReplay replay, IWhatsAppChannelCache channels, IUnitOfWork unitOfWork,
     TimeProvider clock, ILogger<WhatsAppWebhookService> logger) : IWhatsAppWebhookService

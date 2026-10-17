@@ -52,8 +52,11 @@ internal sealed class WhatsAppBroadcastService(IWhatsAppBroadcastReader reader, 
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             if (await reader.FindAsync(id, cancellationToken) is not { } broadcast) return WhatsAppErrors.BroadcastNotFound;
             var recipients = await reader.ListRecipientsAsync(id, request, cancellationToken);
-            return new WhatsAppBroadcastDetailResponse(broadcast, recipients with { Items = [.. recipients.Items.Select(recipient =>
-                recipient with { FailureReason = WhatsAppConversationResponseBuilder.FailureText(recipient.FailureReason) })] });
+            return new WhatsAppBroadcastDetailResponse(broadcast, recipients with
+            {
+                Items = [.. recipients.Items.Select(recipient =>
+                recipient with { FailureReason = WhatsAppConversationResponseBuilder.FailureText(recipient.FailureReason) })]
+            });
         });
 
     public Task<Result<WhatsAppBroadcastEstimateResponse>> EstimateAsync(WhatsAppBroadcastEstimateRequest request, CancellationToken cancellationToken) =>

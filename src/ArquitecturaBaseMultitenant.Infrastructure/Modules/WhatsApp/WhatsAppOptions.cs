@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
+
 internal sealed class WhatsAppOptions
 {
     public const string SectionName = "WhatsApp";

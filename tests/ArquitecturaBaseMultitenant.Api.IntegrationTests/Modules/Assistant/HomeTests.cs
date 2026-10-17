@@ -15,23 +15,23 @@ public sealed partial class HomeTests
     public Task Installed_assistant_preserves_company_only_home(bool assistantEnabled) =>
         AssertCompanyHomeAsync(async (tenantId, adminClient) =>
         {
-        if (assistantEnabled)
-        {
-            await AssistantTestData.EnableAsync(factory, tenantId);
-            using var beforeNotice = await adminClient.GetAsync("/api/organization/assistant/conversations", Ct);
-            Assert.Equal(HttpStatusCode.BadRequest, beforeNotice.StatusCode);
-            using var problem = await beforeNotice.Content.ReadFromJsonAsync<JsonDocument>(Ct);
-            Assert.Equal(ArquitecturaBaseMultitenant.Domain.Assistant.AssistantErrors.NoticeAcceptanceRequiredCode,
-                problem!.RootElement.GetProperty("code").GetString());
-            await AssistantExecutionActorTests.AcceptNoticeAsync(adminClient, "/api/organization/assistant/notice");
-        }
-        using var assistant = await adminClient.GetAsync("/api/organization/assistant/conversations", Ct);
-        Assert.Equal(assistantEnabled ? HttpStatusCode.OK : HttpStatusCode.NotFound, assistant.StatusCode);
-        using var profile = await adminClient.GetAsync("/api/me", Ct);
-        Assert.Equal(HttpStatusCode.OK, profile.StatusCode);
-        using var profileJson = JsonDocument.Parse(await profile.Content.ReadAsStringAsync(Ct));
-        Assert.Contains(Permissions.Assistant.Use, profileJson.RootElement.GetProperty("effectivePermissions")
-            .GetProperty("organization").EnumerateArray().Select(permission => permission.GetString()));
+            if (assistantEnabled)
+            {
+                await AssistantTestData.EnableAsync(factory, tenantId);
+                using var beforeNotice = await adminClient.GetAsync("/api/organization/assistant/conversations", Ct);
+                Assert.Equal(HttpStatusCode.BadRequest, beforeNotice.StatusCode);
+                using var problem = await beforeNotice.Content.ReadFromJsonAsync<JsonDocument>(Ct);
+                Assert.Equal(ArquitecturaBaseMultitenant.Domain.Assistant.AssistantErrors.NoticeAcceptanceRequiredCode,
+                    problem!.RootElement.GetProperty("code").GetString());
+                await AssistantExecutionActorTests.AcceptNoticeAsync(adminClient, "/api/organization/assistant/notice");
+            }
+            using var assistant = await adminClient.GetAsync("/api/organization/assistant/conversations", Ct);
+            Assert.Equal(assistantEnabled ? HttpStatusCode.OK : HttpStatusCode.NotFound, assistant.StatusCode);
+            using var profile = await adminClient.GetAsync("/api/me", Ct);
+            Assert.Equal(HttpStatusCode.OK, profile.StatusCode);
+            using var profileJson = JsonDocument.Parse(await profile.Content.ReadAsStringAsync(Ct));
+            Assert.Contains(Permissions.Assistant.Use, profileJson.RootElement.GetProperty("effectivePermissions")
+                .GetProperty("organization").EnumerateArray().Select(permission => permission.GetString()));
 
         });
 

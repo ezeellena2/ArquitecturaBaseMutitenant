@@ -30,7 +30,10 @@ public sealed class WhatsAppRate : Entity
         if (price.Amount < 0) throw new ArgumentOutOfRangeException(nameof(price));
         return new WhatsAppRate
         {
-            CountryCode = countryCode.Trim().ToUpperInvariant(), Category = category, Amount = price.Amount, CurrencyCode = price.Currency.Value,
+            CountryCode = countryCode.Trim().ToUpperInvariant(),
+            Category = category,
+            Amount = price.Amount,
+            CurrencyCode = price.Currency.Value,
             EffectiveFrom = effectiveFrom,
         };
     }

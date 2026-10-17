@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Persistence;
+
 internal sealed class WhatsAppCodeQuotaConfiguration : IEntityTypeConfiguration<WhatsAppCodeQuota>
 {
     public void Configure(EntityTypeBuilder<WhatsAppCodeQuota> builder)

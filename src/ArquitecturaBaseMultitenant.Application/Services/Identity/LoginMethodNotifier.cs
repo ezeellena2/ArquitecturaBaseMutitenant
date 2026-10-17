@@ -21,7 +21,8 @@ internal sealed class LoginMethodNotifier(AccountNoticeIssuer notices, ISecurity
         var url = origin.Absolute(ReturnUrls.AccountPath);
         var notice = new AccountNotice.LoginMethodChanged(change, changed.Type,
             PersonalDataMask.LoginMethod(changed.Type, changed.Value, changed.ContactEmail?.Value), nowUtc,
-            account.TimeZoneId, url) { RecipientName = account.DisplayName };
+            account.TimeZoneId, url)
+        { RecipientName = account.DisplayName };
         var available = await availability.AvailableAsync(destinations, ct);
         var others = available.Where(method => method.Id != changed.Id && Contact(method) != Contact(changed)).ToArray();
         await notices.EnqueueAsync(account.Id, others, notice, account.Culture, false, ct);

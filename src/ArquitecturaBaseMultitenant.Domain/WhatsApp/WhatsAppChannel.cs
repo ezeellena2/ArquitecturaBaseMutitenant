@@ -59,9 +59,16 @@ public sealed class WhatsAppChannel : Entity, IGlobalSecurityAudited, IVersioned
         if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC required.", nameof(nowUtc));
         return new WhatsAppChannel
         {
-            OrganizationId = organizationId, CompanyId = companyId, PhoneNumberId = phoneNumberId, WabaId = wabaId,
-            DisplayNumber = displayNumber?.Value, VerifiedName = string.IsNullOrWhiteSpace(verifiedName) ? null : verifiedName.Trim(),
-            Coexistence = coexistence, Source = source, UsageTimeZoneId = usageTimeZoneId, ConnectedAtUtc = nowUtc,
+            OrganizationId = organizationId,
+            CompanyId = companyId,
+            PhoneNumberId = phoneNumberId,
+            WabaId = wabaId,
+            DisplayNumber = displayNumber?.Value,
+            VerifiedName = string.IsNullOrWhiteSpace(verifiedName) ? null : verifiedName.Trim(),
+            Coexistence = coexistence,
+            Source = source,
+            UsageTimeZoneId = usageTimeZoneId,
+            ConnectedAtUtc = nowUtc,
             Status = hasPayment ? WhatsAppNumberStatus.Connected : WhatsAppNumberStatus.PaymentMissing,
             // El de Plataforma conectado por la pantalla atiende consultas; el que sale de la configuración (una instalación de la
             // Etapa 8) sigue solo con el bot de ingreso hasta que un operador las prende.

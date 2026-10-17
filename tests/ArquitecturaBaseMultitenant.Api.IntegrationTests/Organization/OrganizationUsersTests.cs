@@ -32,8 +32,11 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
     [Fact]
     public async Task Owner_invites_unknown_email_resends_and_revokes_each_invitation_independently()
     {
-        using var ownerClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"),
-            AllowAutoRedirect = false });
+        using var ownerClient = factory.CreateClient(new()
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false
+        });
         var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
         var (tenantId, ownerMemberId) = await CreateOrganizationAsync(owner.UserId);
         await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct);
@@ -106,8 +109,11 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
     [Fact]
     public async Task Owner_lists_fifty_members_and_cannot_remove_the_last_dueño()
     {
-        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"),
-            AllowAutoRedirect = false });
+        using var client = factory.CreateClient(new()
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false
+        });
         var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
         var (tenantId, ownerMemberId) = await CreateOrganizationAsync(owner.UserId);
         await AccountJourney.AuthorizeAsync(client, "business", Ct);
@@ -158,8 +164,11 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
     [Fact]
     public async Task Searching_users_ignores_accents_and_finds_pending_invitations()
     {
-        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"),
-            AllowAutoRedirect = false });
+        using var client = factory.CreateClient(new()
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false
+        });
         var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
         var (tenantId, ownerMemberId) = await CreateOrganizationAsync(owner.UserId);
         await AccountJourney.AuthorizeAsync(client, "business", Ct);
@@ -192,11 +201,17 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
     [Fact]
     public async Task Demoting_an_owner_checks_only_this_organization()
     {
-        using var ownerClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"),
-            AllowAutoRedirect = false });
+        using var ownerClient = factory.CreateClient(new()
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false
+        });
         var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
-        using var memberClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"),
-            AllowAutoRedirect = false });
+        using var memberClient = factory.CreateClient(new()
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false
+        });
         var user = await AccountJourney.RegisterAsync(factory, memberClient, Ct);
         var (tenantId, _) = await CreateOrganizationAsync(owner.UserId);
         // La otra cuenta es la única Dueña de otra organización.
@@ -243,11 +258,17 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
     [Fact]
     public async Task Updating_organization_roles_preserves_company_roles_for_an_inactive_membership()
     {
-        using var ownerClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"),
-            AllowAutoRedirect = false });
+        using var ownerClient = factory.CreateClient(new()
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false
+        });
         var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
-        using var memberClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"),
-            AllowAutoRedirect = false });
+        using var memberClient = factory.CreateClient(new()
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false
+        });
         var user = await AccountJourney.RegisterAsync(factory, memberClient, Ct);
         var (tenantId, _) = await CreateOrganizationAsync(owner.UserId);
         await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct);
@@ -334,11 +355,17 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
     [Fact]
     public async Task Saving_the_user_changes_status_with_roles_and_shows_when_the_account_is_deleted()
     {
-        using var ownerClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"),
-            AllowAutoRedirect = false });
+        using var ownerClient = factory.CreateClient(new()
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false
+        });
         var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
-        using var memberClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"),
-            AllowAutoRedirect = false });
+        using var memberClient = factory.CreateClient(new()
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false
+        });
         var user = await AccountJourney.RegisterAsync(factory, memberClient, Ct);
         var (tenantId, ownerMemberId) = await CreateOrganizationAsync(owner.UserId);
         await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct);
@@ -400,8 +427,11 @@ public sealed class OrganizationUsersTests(ApiFactory factory)
     [Fact]
     public async Task The_invitation_shows_who_invited_with_their_role_and_the_company_and_roles_offered()
     {
-        using var ownerClient = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"),
-            AllowAutoRedirect = false });
+        using var ownerClient = factory.CreateClient(new()
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false
+        });
         var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
         await CreateOrganizationAsync(owner.UserId);
         await AccountJourney.AuthorizeAsync(ownerClient, "business", Ct);

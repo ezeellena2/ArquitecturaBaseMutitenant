@@ -12,6 +12,7 @@ using ArquitecturaBaseMultitenant.Infrastructure.Time;
 using Microsoft.Extensions.Options;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Resources;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
+
 public sealed class WhatsAppTemplateTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;

@@ -63,8 +63,11 @@ internal sealed record AccountJourney(Guid UserId, Email Email)
         var tokenEndpoint = redirectUri is null ? "/connect/token" : new Uri(redirectUri, "/connect/token").AbsoluteUri;
         using var exchanged = await client.PostAsync(tokenEndpoint, new FormUrlEncodedContent(new Dictionary<string, string>
         {
-            ["grant_type"] = "authorization_code", ["code"] = authorizationCode, ["client_id"] = "web",
-            ["redirect_uri"] = redirect, ["code_verifier"] = Verifier,
+            ["grant_type"] = "authorization_code",
+            ["code"] = authorizationCode,
+            ["client_id"] = "web",
+            ["redirect_uri"] = redirect,
+            ["code_verifier"] = Verifier,
         }), ct);
         Assert.Equal(HttpStatusCode.OK, exchanged.StatusCode);
         using var tokens = await exchanged.Content.ReadFromJsonAsync<JsonDocument>(ct);

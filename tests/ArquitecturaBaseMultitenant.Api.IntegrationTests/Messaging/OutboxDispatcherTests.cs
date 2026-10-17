@@ -40,8 +40,12 @@ public sealed class OutboxDispatcherTests(ApiFactory factory)
         using var stop = new CancellationTokenSource();
         var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var sender = new TestSender { Key = channel, DuringSend = async token =>
-        { entered.TrySetResult(); await release.Task.WaitAsync(token); Assert.False(token.IsCancellationRequested); } };
+        var sender = new TestSender
+        {
+            Key = channel,
+            DuringSend = async token =>
+        { entered.TrySetResult(); await release.Task.WaitAsync(token); Assert.False(token.IsCancellationRequested); }
+        };
         var dispatcher = CreateDispatcher(services, protector, clock);
         var sending = dispatcher.DispatchOnceAsync([sender], stop.Token);
         await entered.Task.WaitAsync(Ct);
@@ -129,7 +133,8 @@ public sealed class OutboxDispatcherTests(ApiFactory factory)
         {
             clock.Advance(TimeSpan.FromMinutes(1));
             return Task.CompletedTask;
-        }) { Key = "email-slow", Fail = true };
+        })
+        { Key = "email-slow", Fail = true };
         var dispatcher = CreateDispatcher(services, protector, clock);
 
         Assert.Equal(1, (await dispatcher.DispatchOnceAsync([sender], Ct)).Value);
@@ -158,7 +163,8 @@ public sealed class OutboxDispatcherTests(ApiFactory factory)
         {
             entered.TrySetResult();
             await release.Task.WaitAsync(Ct);
-        }) { Key = "email-concurrent" };
+        })
+        { Key = "email-concurrent" };
         var firstDispatcher = CreateDispatcher(first, protector, clock);
         var secondDispatcher = CreateDispatcher(second, protector, clock);
 
@@ -192,7 +198,8 @@ public sealed class OutboxDispatcherTests(ApiFactory factory)
         {
             stop.Cancel();
             return Task.CompletedTask;
-        }) { Key = channel };
+        })
+        { Key = channel };
         var dispatcher = CreateDispatcher(services, protector, clock);
 
         Assert.Equal(1, (await dispatcher.DispatchOnceAsync([sender], stop.Token)).Value);

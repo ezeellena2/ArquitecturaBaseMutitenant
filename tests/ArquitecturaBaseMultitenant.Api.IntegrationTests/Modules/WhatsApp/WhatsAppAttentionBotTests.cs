@@ -140,13 +140,18 @@ public sealed class WhatsAppAttentionBotTests(ApiFactory factory)
 
     private static object Bot(object[] menu, uint version, Guid? employeesTeamId = null, bool askPromotions = false, object[]? days = null) => new
     {
-        welcome = "Bienvenidos", outOfHours = "Estamos cerrados",
+        welcome = "Bienvenidos",
+        outOfHours = "Estamos cerrados",
         schedule = new
         {
             timeZoneId = "America/Argentina/Buenos_Aires",
             days = days ?? [.. Enum.GetValues<DayOfWeek>().Select(day => (object)new { day = day.ToString(), from = "00:00:00", to = "23:59:59" })],
         },
-        menu, askPromotions, offerAccountLink = false, employeesTeamId, version,
+        menu,
+        askPromotions,
+        offerAccountLink = false,
+        employeesTeamId,
+        version,
     };
 
     private static object Team(string label, Guid teamId) => new { label, action = "Team", teamId };

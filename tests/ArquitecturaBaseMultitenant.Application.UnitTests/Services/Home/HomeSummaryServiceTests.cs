@@ -36,7 +36,7 @@ public sealed class HomeSummaryServiceTests
         var reader = new ChangingCompanyReader(row);
         var source = new OrganizationUserPendingItems(reader, new PermissionsProbe(false), fixture.TimeProvider);
         var context = new PendingItemContext(Guid.NewGuid(), [], new Dictionary<Guid, IReadOnlyList<string>>
-            { [companyId] = [Permissions.Company.Members.Manage] });
+        { [companyId] = [Permissions.Company.Members.Manage] });
 
         var groups = await source.RevalidateGroupsAsync([new("users", "invitationExpired", 1,
             [new("users", "invitationExpired", null, false, nowUtc, null, row.MemberId, companyId, "Norte")],

@@ -59,8 +59,11 @@ public sealed class PendingPreviewReaderTests(ApiFactory factory)
 
         // El mismo recorrido, ahora con una sola fila: ninguna consulta nueva depende de la cantidad de pendientes.
         sql.Reset();
-        var one = await reader.ListPendingAsync(new() { State = OrganizationUserState.Expired,
-            Search = invitations[999].Invitation.Destination.DisplayValue }, NowUtc, Ct);
+        var one = await reader.ListPendingAsync(new()
+        {
+            State = OrganizationUserState.Expired,
+            Search = invitations[999].Invitation.Destination.DisplayValue
+        }, NowUtc, Ct);
         Assert.Single(one.Items);
         Assert.Equal(1, one.TotalCount);
         Assert.Equal(countForThousand, sql.Queries.Count);
@@ -102,8 +105,12 @@ public sealed class PendingPreviewReaderTests(ApiFactory factory)
         var services = scope.ServiceProvider;
         using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenantId);
         var reader = services.GetRequiredService<IOrganizationUserReader>();
-        var page = await reader.ListPendingAsync(new() { State = OrganizationUserState.Expired,
-            CompanyId = north.Id, OnlyCompanyInvitations = true }, NowUtc, Ct);
+        var page = await reader.ListPendingAsync(new()
+        {
+            State = OrganizationUserState.Expired,
+            CompanyId = north.Id,
+            OnlyCompanyInvitations = true
+        }, NowUtc, Ct);
 
         Assert.Equal(12, page.TotalCount);
         Assert.Equal(allowed.OrderBy(row => row.Member.Id).Take(10).Select(row => row.Member.Id),
@@ -165,11 +172,11 @@ public sealed class PendingPreviewReaderTests(ApiFactory factory)
         Assert.Contains("LIMIT", sql.Queries[0], StringComparison.Ordinal);
 
         var verifiedPage = await reader.ListPagedAsync(new ListOrganizationDomainsRequest
-            { Status = TenantDomainStatus.Verified }, Ct);
+        { Status = TenantDomainStatus.Verified }, Ct);
         Assert.Equal(1, verifiedPage.TotalCount);
         Assert.Equal(verified.Id, Assert.Single(verifiedPage.Items).Id);
         var pendingPage = await reader.ListPagedAsync(new ListOrganizationDomainsRequest
-            { Status = TenantDomainStatus.Pending }, Ct);
+        { Status = TenantDomainStatus.Pending }, Ct);
         Assert.Equal(1_000, pendingPage.TotalCount);
         Assert.All(pendingPage.Items, domain => Assert.Equal(TenantDomainStatus.Pending, domain.Status));
     }
@@ -195,7 +202,7 @@ public sealed class PendingPreviewReaderTests(ApiFactory factory)
         var services = scope.ServiceProvider;
         using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenantId);
         var page = await services.GetRequiredService<IOrganizationUserReader>().ListPendingAsync(new()
-            { State = OrganizationUserState.PendingDeletion }, NowUtc, Ct);
+        { State = OrganizationUserState.PendingDeletion }, NowUtc, Ct);
 
         Assert.Equal(15, page.TotalCount);
         Assert.Equal(rows.OrderBy(row => row.User.DeletionRequestedAtUtc).ThenBy(row => row.Member.Id).Take(10)

@@ -35,8 +35,12 @@ public sealed class AssistantBrowserPreparationTests
             await AssertPreparedAsync();
             await CommandAsync("quotas", JsonSerializer.SerializeToElement(new
             {
-                email = session.Account.Email.Value, access, tenantId = access == "platform" ? null : session.TenantId,
-                remainingMessages = 0, monthlyFraction = 1m, notify = access == "business",
+                email = session.Account.Email.Value,
+                access,
+                tenantId = access == "platform" ? null : session.TenantId,
+                remainingMessages = 0,
+                monthlyFraction = 1m,
+                notify = access == "business",
             }));
             await CommandAsync("prepare", args);
             await AssertPreparedAsync();

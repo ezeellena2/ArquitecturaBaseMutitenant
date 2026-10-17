@@ -27,8 +27,12 @@ public sealed class WhatsAppTemplateState : Entity
         ArgumentException.ThrowIfNullOrWhiteSpace(metaLanguage);
         return new WhatsAppTemplateState
         {
-            WabaId = wabaId, MetaName = metaName, MetaLanguage = WhatsAppTemplateBase.ToMetaLanguage(metaLanguage), Category = category,
-            Status = WhatsAppTemplateStatus.Pending, UpdatedAtUtc = nowUtc,
+            WabaId = wabaId,
+            MetaName = metaName,
+            MetaLanguage = WhatsAppTemplateBase.ToMetaLanguage(metaLanguage),
+            Category = category,
+            Status = WhatsAppTemplateStatus.Pending,
+            UpdatedAtUtc = nowUtc,
         };
     }
 

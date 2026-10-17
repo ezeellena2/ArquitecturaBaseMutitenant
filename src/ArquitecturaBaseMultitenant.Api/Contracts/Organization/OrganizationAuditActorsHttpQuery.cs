@@ -8,8 +8,13 @@ public sealed record OrganizationAuditActorsHttpQuery(int? Page, int? PageSize, 
 {
     public ListOrganizationAuditActorsRequest ToModel() => new()
     {
-        Page = Page ?? PagedRequest.DefaultPage, PageSize = PageSize ?? PagedRequest.DefaultPageSize,
-        Sort = Sort, Search = Search, Period = Period, Category = Category, AuditSearch = AuditSearch,
+        Page = Page ?? PagedRequest.DefaultPage,
+        PageSize = PageSize ?? PagedRequest.DefaultPageSize,
+        Sort = Sort,
+        Search = Search,
+        Period = Period,
+        Category = Category,
+        AuditSearch = AuditSearch,
     };
     public override string ToString() => nameof(OrganizationAuditActorsHttpQuery);
 }

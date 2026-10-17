@@ -51,9 +51,9 @@ internal sealed class AssistantFinanceReader(ApplicationDbContext db, ITenantCon
             {
                 Budget = row.MonthlyBudget,
                 Cost = (from call in db.Set<AssistantFinancialCall>().AsNoTracking()
-                    join operation in completed on call.OperationId equals operation.Id
-                    where operation.BudgetMonthId == row.BudgetMonthId && operation.Funding == row.Funding
-                    select call.Cost.Amount).Sum()
+                        join operation in completed on call.OperationId equals operation.Id
+                        where operation.BudgetMonthId == row.BudgetMonthId && operation.Funding == row.Funding
+                        select call.Cost.Amount).Sum()
             }).FirstOrDefaultAsync(ct);
         return snapshot?.Budget is { } budget ? new(budget, new Money(snapshot.Cost, budget.Currency)) : new(null, null);
     }
@@ -64,19 +64,30 @@ internal sealed class AssistantFinanceReader(ApplicationDbContext db, ITenantCon
         var operations = db.Set<AssistantFinancialOperation>().AsNoTracking().Where(row => row.State == AssistantFinancialState.Completed
             && row.CreatedAtUtc >= startUtc && row.CreatedAtUtc < endUtc);
         var aggregate = await (from call in db.Set<AssistantFinancialCall>().AsNoTracking()
-            join operation in operations on call.OperationId equals operation.Id
-            group new { call, operation } by new { operation.Access, OrganizationId = operation.Access == Access.Business ? operation.ScopeTenantId : null,
-                operation.Funding, operation.BudgetMonthId, call.Cost.Currency } into rows
-            select new
-            {
-                rows.Key.Access, rows.Key.OrganizationId, rows.Key.Funding, rows.Key.BudgetMonthId, rows.Key.Currency,
-                Queries = rows.Select(row => row.operation.Id).Distinct().LongCount(),
-                People = rows.Select(row => row.operation.UserId).Distinct().LongCount(),
-                Input = rows.Sum(row => row.call.InputTokens), Output = rows.Sum(row => row.call.OutputTokens),
-                Read = rows.Sum(row => row.call.CacheReadTokens),
-                Write = rows.Sum(row => row.call.CacheWrite5MinutesTokens + row.call.CacheWrite1HourTokens + row.call.CacheWriteUnknownTokens),
-                Cost = rows.Sum(row => row.call.Cost.Amount)
-            }).ToArrayAsync(ct);
+                               join operation in operations on call.OperationId equals operation.Id
+                               group new { call, operation } by new
+                               {
+                                   operation.Access,
+                                   OrganizationId = operation.Access == Access.Business ? operation.ScopeTenantId : null,
+                                   operation.Funding,
+                                   operation.BudgetMonthId,
+                                   call.Cost.Currency
+                               } into rows
+                               select new
+                               {
+                                   rows.Key.Access,
+                                   rows.Key.OrganizationId,
+                                   rows.Key.Funding,
+                                   rows.Key.BudgetMonthId,
+                                   rows.Key.Currency,
+                                   Queries = rows.Select(row => row.operation.Id).Distinct().LongCount(),
+                                   People = rows.Select(row => row.operation.UserId).Distinct().LongCount(),
+                                   Input = rows.Sum(row => row.call.InputTokens),
+                                   Output = rows.Sum(row => row.call.OutputTokens),
+                                   Read = rows.Sum(row => row.call.CacheReadTokens),
+                                   Write = rows.Sum(row => row.call.CacheWrite5MinutesTokens + row.call.CacheWrite1HourTokens + row.call.CacheWriteUnknownTokens),
+                                   Cost = rows.Sum(row => row.call.Cost.Amount)
+                               }).ToArrayAsync(ct);
         var result = new List<AssistantFinancialAggregateRow>();
         foreach (var row in aggregate)
         {
@@ -95,12 +106,22 @@ internal sealed class AssistantFinanceReader(ApplicationDbContext db, ITenantCon
         var scopedOperations = db.Set<AssistantFinancialOperation>().AsNoTracking().Where(row => row.ScopeTenantId == id
             && row.Access == Access.Business && row.State == AssistantFinancialState.Completed && row.CreatedAtUtc >= startUtc && row.CreatedAtUtc < endUtc);
         var facts = from fact in db.Set<AssistantUsageFact>().AsNoTracking().Where(row => row.TenantId == id && row.Access == Access.Business)
-            join operation in scopedOperations on fact.OperationId equals operation.Id select fact;
+                    join operation in scopedOperations on fact.OperationId equals operation.Id
+                    select fact;
         var rows = await facts.GroupBy(row => new { row.Funding, row.BudgetMonthId, row.Cost.Currency })
-            .Select(group => new { group.Key.Funding, group.Key.Currency, group.Key.BudgetMonthId,
-                Queries = group.Select(row => row.OperationId).Distinct().LongCount(), People = group.Select(row => row.UserId).Distinct().LongCount(),
-                Input = group.Sum(row => row.InputTokens), Output = group.Sum(row => row.OutputTokens),
-                Read = group.Sum(row => row.CacheReadTokens), Write = group.Sum(row => row.CacheWriteTokens), Cost = group.Sum(row => row.Cost.Amount) }).ToArrayAsync(ct);
+            .Select(group => new
+            {
+                group.Key.Funding,
+                group.Key.Currency,
+                group.Key.BudgetMonthId,
+                Queries = group.Select(row => row.OperationId).Distinct().LongCount(),
+                People = group.Select(row => row.UserId).Distinct().LongCount(),
+                Input = group.Sum(row => row.InputTokens),
+                Output = group.Sum(row => row.OutputTokens),
+                Read = group.Sum(row => row.CacheReadTokens),
+                Write = group.Sum(row => row.CacheWriteTokens),
+                Cost = group.Sum(row => row.Cost.Amount)
+            }).ToArrayAsync(ct);
         var result = new List<AssistantFinancialAggregateRow>();
         foreach (var row in rows)
         {

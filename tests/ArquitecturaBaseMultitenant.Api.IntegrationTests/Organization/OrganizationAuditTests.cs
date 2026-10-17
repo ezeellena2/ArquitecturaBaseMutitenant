@@ -323,11 +323,11 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
         var organizationRole = await CreateOrganizationRoleAsync(client, "Recursos humanos");
         var member = await JsonAsync(client, $"/api/users/{company.MemberId:D}");
         using (var saved = await client.PutAsJsonAsync($"/api/users/{company.MemberId:D}", new
-               {
-                   roleIds = new[] { organizationRole },
-                   companies = new[] { new { companyId = company.CompanyId, roleIds = new[] { company.Sales, company.ReadOnly } } },
-                   version = member.GetProperty("version").GetUInt32(),
-               }, Ct))
+        {
+            roleIds = new[] { organizationRole },
+            companies = new[] { new { companyId = company.CompanyId, roleIds = new[] { company.Sales, company.ReadOnly } } },
+            version = member.GetProperty("version").GetUInt32(),
+        }, Ct))
             Assert.True(saved.StatusCode == HttpStatusCode.OK, await saved.Content.ReadAsStringAsync(Ct));
         var before = await EntryIdsAsync(client);
 
@@ -544,33 +544,33 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
             Assert.True(disabled.StatusCode == HttpStatusCode.OK, await disabled.Content.ReadAsStringAsync(Ct));
         var settings = await JsonAsync(client, "/api/organization/settings");
         using (var changed = await client.PutAsJsonAsync("/api/organization/settings", new
-               {
-                   name = settings.GetProperty("name").GetString(),
-                   defaultCulture = "en-US",
-                   defaultTimeZoneId = settings.GetProperty("defaultTimeZoneId").GetString(),
-                   defaultCurrency = settings.GetProperty("defaultCurrency").GetString(),
-                   version = settings.GetProperty("version").GetUInt32(),
-               }, Ct))
+        {
+            name = settings.GetProperty("name").GetString(),
+            defaultCulture = "en-US",
+            defaultTimeZoneId = settings.GetProperty("defaultTimeZoneId").GetString(),
+            defaultCurrency = settings.GetProperty("defaultCurrency").GetString(),
+            version = settings.GetProperty("version").GetUInt32(),
+        }, Ct))
             Assert.True(changed.StatusCode == HttpStatusCode.OK, await changed.Content.ReadAsStringAsync(Ct));
         // Dos campos en un guardado: el resumen general.
         settings = await JsonAsync(client, "/api/organization/settings");
         using (var both = await client.PutAsJsonAsync("/api/organization/settings", new
-               {
-                   name = settings.GetProperty("name").GetString(),
-                   defaultCulture = "es-AR",
-                   defaultTimeZoneId = "America/Argentina/Cordoba",
-                   defaultCurrency = settings.GetProperty("defaultCurrency").GetString(),
-                   version = settings.GetProperty("version").GetUInt32(),
-               }, Ct))
+        {
+            name = settings.GetProperty("name").GetString(),
+            defaultCulture = "es-AR",
+            defaultTimeZoneId = "America/Argentina/Cordoba",
+            defaultCurrency = settings.GetProperty("defaultCurrency").GetString(),
+            version = settings.GetProperty("version").GetUInt32(),
+        }, Ct))
             Assert.True(both.StatusCode == HttpStatusCode.OK, await both.Content.ReadAsStringAsync(Ct));
         var delta = await JsonAsync(client, $"/api/companies/{company.CompanyId:D}");
         using (var moved = await client.PutAsJsonAsync($"/api/companies/{company.CompanyId:D}", new
-               {
-                   name = "Delta S.A.",
-                   taxIdNumber = (string?)null,
-                   timeZoneId = "America/Argentina/Cordoba",
-                   version = delta.GetProperty("version").GetUInt32(),
-               }, Ct))
+        {
+            name = "Delta S.A.",
+            taxIdNumber = (string?)null,
+            timeZoneId = "America/Argentina/Cordoba",
+            version = delta.GetProperty("version").GetUInt32(),
+        }, Ct))
             Assert.True(moved.StatusCode == HttpStatusCode.OK, await moved.Content.ReadAsStringAsync(Ct));
 
         // Tablero Auditoria-Org: cada fila con su nombre y su valor, nunca «un registro», fechas, canales ni estados

@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Notifications;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
+
 internal sealed class WhatsAppAccountNoticeChannel(IWhatsAppChannelSettings settings, IWhatsAppTemplateRenderer templates, IOutbox outbox) : IAccountNoticeChannel
 {
     public string Key => "whatsapp";
