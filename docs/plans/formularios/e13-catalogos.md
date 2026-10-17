@@ -280,7 +280,8 @@ Los modelos están en este repo; no se copia código de ArquitecturaBase. Las ab
 **Mandan sobre esta spec en:**
 - **Guardado (C6):** todo se guarda junto en un `PUT` del catálogo, con su versión; ya no hay rutas por opción.
 - **Nuevo catálogo:** primero se elige el origen, y el nombre se escribe en el editor; el `POST` sale de «Crear catálogo».
-- **Más de 200 con filtros:** el tablero `FRM-Catalogo-Filtros` dice «no se guarda», como en ArquitecturaBase. **Se corrige en el tablero:** el usuario confirmó la decisión 22 (se guarda con aviso y frena el envío), y Diseño lo ajusta en la próxima versión.
+- **Más de 200 con filtros:** el tablero `FRM-Catalogo-Filtros` dice «no se guarda», como en ArquitecturaBase. **Se corrige en el tablero:** el usuario confirmó la decisión 22 (se guarda con aviso y frena el envío). Diseño corrige `FRM-Catalogo-Filtros` y `M-FRM-Catalogo-Filtros` en la v130, junto con el ajuste de la E17.
+- **Nombres de más de 30 caracteres:** se cortan con «…» y van completos en el detalle (decisión 21). Los mismos dos tableros se corrigen en la v130.
 - **Persona de ejemplo:** sin ella no se crea un catálogo con filtros (`Forms.Catalog.SampleMemberRequired`).
 - **El código de la opción se ve en la tarjeta de la respuesta,** debajo del valor (nunca en WhatsApp). Por eso la captura guarda también el código histórico (`ChoiceCode`), junto con `ChoiceTexts`.
 - **Catálogos en otro idioma:** siguen sin aparecer en el selector (C11, decisión 20). Los que no se pueden usar por algo que se resuelve, sí aparecen apagados.
