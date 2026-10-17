@@ -91,6 +91,7 @@ try
         await PlatformCommand.TryExecuteAsync(host.Services, readyFile, prepared.BusinessId, prepared.UserId, cancellationToken);
         await LegacyBrowserSessionCommand.TryExecuteAsync(host.Services, readyFile, cancellationToken);
         await LoginCodeCommand.TryExecuteAsync(host.Services, readyFile, cancellationToken);
+        await RecentProofCommand.TryExecuteAsync(host.Services, readyFile, cancellationToken);
     }
     return 0;
 }

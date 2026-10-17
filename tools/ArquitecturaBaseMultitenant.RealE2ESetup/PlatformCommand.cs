@@ -34,7 +34,9 @@ internal static class PlatformCommand
         var unitOfWork = provider.GetRequiredService<IUnitOfWork>();
         // Cada recorrido tiene su cuenta real: la cuota por destino no debe depender
         // de los códigos consumidos por otro caso del mismo E2E completo.
-        foreach (var key in new[] { "reduced", "a2", "5a", "a1", "a3", "a8", "a9", "5b", "5c", "5d" })
+        // E9: e9a confirma y restablece, e9b es el operador restablecido, e9r entra con códigos de recuperación y e9l prueba
+        // el bloqueo; cada uno configura su autenticador en el primer ingreso.
+        foreach (var key in new[] { "reduced", "a2", "5a", "a1", "a3", "a8", "a9", "5b", "5c", "5d", "e9a", "e9b", "e9r", "e9l" })
         {
             Phase = $"operator-{key}";
             await unitOfWork.ExecuteInTransactionAsync(async token =>
