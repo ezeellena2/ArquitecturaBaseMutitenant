@@ -145,7 +145,6 @@ Se define en el código, en `Application/Modules/Forms/Catalogs/MembersCatalogSo
 | `Forms.Catalog.MoveOutOfRange` | Conflict | subir la primera o bajar la última |
 | `Forms.Catalog.Inactive` | Conflict | cambiar opciones de un catálogo dado de baja, o elegirlo en una pregunta nueva |
 | `Forms.Catalog.WrongSource` | Conflict | opciones en un catálogo con filtros, o filtros en uno a mano |
-| `Forms.Catalog.TooManyOptions` | Conflict | un catálogo con filtros da más de 200 opciones para la persona de ejemplo: no se guarda |
 | `Forms.Catalog.SampleMemberRequired` | Validation (campo `sampleMemberId`) | crear o guardar un catálogo con filtros sin persona de ejemplo |
 | `Forms.Catalog.FiltersInvalid` | Validation (campo `conditions[i]`) | columna, operador o valor fuera de la fuente |
 | `Forms.Catalog.SampleMemberNotFound` | Validation | la persona de ejemplo no es de la organización |
@@ -197,7 +196,7 @@ Las pruebas de integración recorren una segunda página de `used-by`, roles y e
 3. **Filtros:**
    - `POST` o `PUT` del catálogo con su versión y la persona de ejemplo: sin ella no se crea;
    - los filtros se validan contra la fuente y se vuelve a correr la vista previa con esa persona;
-   - **con más de 200 resultados no se guarda** (`Forms.Catalog.TooManyOptions`): lo cambió el usuario al aprobar los tableros de la v129 ([§13](#13-decisiones-de-producto-de-la-etapa)). Al mandar, el tope se vuelve a comprobar para cada destinatario.
+   - con más de 200 resultados para esa persona **se guarda**: la vista previa avisa, y lo que frena es el envío, donde el tope se comprueba para cada destinatario (decisión 22, [§13](#13-decisiones-de-producto-de-la-etapa)).
 4. **Vista previa:** corre el lector con los filtros sin guardar, con la persona de ejemplo como destinatario. No toma su identidad ni sus permisos, y no escribe nada.
 5. **Pregunta de catálogo:**
    - `PUT …/draft` valida que el catálogo exista y se pueda usar;
@@ -270,7 +269,7 @@ Los modelos están en este repo; no se copia código de ArquitecturaBase. Las ab
   - guardado, no se guardó y la revisión si otra persona guardó;
   - sin opciones, 500 opciones, nuevo, falta el nombre, cargando y no existe.
 - **Catálogo con filtros:**
-  - con más de 200 opciones, no se guarda;
+  - con más de 200 opciones, el tablero dice «no se guarda»: **se corrige en el tablero** (vale la decisión 22, se guarda con aviso);
   - sin persona de ejemplo, no se crea;
   - un rol que ya no existe deja el catálogo en «No se puede usar».
 - **Al mandar:**
@@ -281,7 +280,8 @@ Los modelos están en este repo; no se copia código de ArquitecturaBase. Las ab
 **Mandan sobre esta spec en:**
 - **Guardado (C6):** todo se guarda junto en un `PUT` del catálogo, con su versión; ya no hay rutas por opción.
 - **Nuevo catálogo:** primero se elige el origen, y el nombre se escribe en el editor; el `POST` sale de «Crear catálogo».
-- **Más de 200 con filtros:** **no se guarda** (`Forms.Catalog.TooManyOptions`), y sin persona de ejemplo no se crea (`Forms.Catalog.SampleMemberRequired`). El usuario lo cambió al aprobar estos tableros: reemplaza a la 12 y a la 22 de la hoja de ruta ([§13](#13-decisiones-de-producto-de-la-etapa)).
+- **Más de 200 con filtros:** el tablero `FRM-Catalogo-Filtros` dice «no se guarda», como en ArquitecturaBase. **Se corrige en el tablero:** el usuario confirmó la decisión 22 (se guarda con aviso y frena el envío), y Diseño lo ajusta en la próxima versión.
+- **Persona de ejemplo:** sin ella no se crea un catálogo con filtros (`Forms.Catalog.SampleMemberRequired`).
 - **El código de la opción se ve en la tarjeta de la respuesta,** debajo del valor (nunca en WhatsApp). Por eso la captura guarda también el código histórico (`ChoiceCode`), junto con `ChoiceTexts`.
 - **Catálogos en otro idioma:** siguen sin aparecer en el selector (C11, decisión 20). Los que no se pueden usar por algo que se resuelve, sí aparecen apagados.
 - **Textos del listado:** «De dónde salen» dice «Escritas a mano» o «De los miembros, con filtros».
@@ -314,7 +314,7 @@ Los modelos están en este repo; no se copia código de ArquitecturaBase. Las ab
 Las tomó el usuario el 2026-10-13. No se vuelven a preguntar.
 
 1. **Un nombre de miembro de más de 30 caracteres** (el título de una opción en WhatsApp) se corta en 29 y se le agrega «…», y el nombre completo va primero en el detalle de la opción. Siempre se puede mandar. Las opciones a mano no lo necesitan, porque su texto ya tiene un tope de 30 al guardarse.
-2. **Un catálogo con filtros que da más de 200 opciones no se guarda.** Así lo eligió el usuario al aprobar los tableros de la v129 (2026-10-17), como en ArquitecturaBase. Reemplaza la decisión del 13/10 y la 22 de la hoja de ruta. Al mandar, el tope se vuelve a comprobar, porque la cantidad cambia cuando la organización crece.
+2. **Un catálogo con filtros que da más de 200 opciones se puede guardar.** La vista previa avisa «Más de 200: no se va a poder mandar», y el bloqueo es al mandar, porque la cantidad cambia igual cuando la organización crece. El usuario la confirmó el 2026-10-17 (decisión 22).
 
 ## 14. Referencia tomada de ArquitecturaBase
 
@@ -343,7 +343,7 @@ La puerta de la etapa, más una **prueba real con Meta** con el número de una o
 Vienen del anexo C §2 (etapa 2, cerrada el 2026-10-15) y del [06 de lecciones](../2026-10-17-formularios-traspaso/06-lecciones.md) del traspaso:
 - **Los límites del canal se validan al guardar** (30 y 300 por idioma), no al mandar; la vista previa marca lo que no entra.
   - En ArquitecturaBase, nunca se trunca. Acá, la decisión 11 corta los nombres largos con «…», y la decisión 21 (2026-10-17) la mantiene.
-- **Más de 200 resultados:** como en ArquitecturaBase, un catálogo con filtros que da más de 200 no se guarda. Lo eligió el usuario con los tableros de la v129 (decisión 22, actualizada).
+- **Más de 200 resultados:** en ArquitecturaBase, un catálogo con filtros que da más de 200 no se guarda. Acá se guarda con aviso, y lo que frena es el envío (decisiones 12 y 22).
 - **Referencias por id,** nunca por nombre: un rol renombrado no vacía el catálogo, y dar de baja un rol tampoco lo invalida.
 - **Opciones vacías:** no viajan, y el texto de una opción sale de un campo que siempre tiene valor (en Miembros, el nombre).
 - **Al operador** le llegan solo la cantidad y los problemas, nunca los nombres de las personas ofrecidas.
