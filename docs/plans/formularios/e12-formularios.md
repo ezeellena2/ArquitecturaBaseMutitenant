@@ -537,3 +537,44 @@ Es lo único que se toma de ArquitecturaBase: lo que dice Meta y lo que ya se pa
 | Valores | Texto: hasta el largo y sin NUL. Número: punto o coma, sin exponente ni separador de miles, sin redondear; se recortan los ceros a la derecha. Fecha: `yyyy-MM-dd`. Sí/no: solo `true` o `false`. Opción: un `ChoiceId` de la versión sellada. Vacío: si es obligatoria, error; si no, ausente. |
 | Lecciones | <ol><li>commitear `InFlight` antes de cada POST, y ante una duda verificar, no repetir;</li><li>un Create sin id confirmado nunca se adopta por nombre;</li><li>usar la hora firmada de Meta para vencer, y aislar los errores mensaje por mensaje;</li><li>el token no forma parte de la identidad de la cuenta (WABA + número): rotarlo no rompe nada;</li><li>no hashear arreglos sin orden fijo;</li><li>en el teléfono quedó sin probar: ausente contra `false`, el largo máximo de texto y la sesión de una versión anterior. Entran en la prueba con Meta.</li></ol> |
 | No se toma | El número y la WABA globales; los permisos planos (`formtemplates.*`); el contacto atado 1:1 a un usuario con `LinkRevision`; el bloqueo global `forms:definitions` y el prefijo global; los modos Manual, Bot y Asistente; la pausa de 6 s por destinatario en Redis; los recibos de borrador de 30 días; los formatos de manifiesto 1 y 2 y las revisiones r1 a r4 del perfil. |
+
+## 15. Cómo se cierra
+
+La puerta de la etapa ([etapa en paralelo](../../guides/etapa-en-paralelo.md)) tiene las suites, el E2E real, la documentación en 0, la galería y el recorrido. Además, hay una **prueba real con Meta** con el número de una organización de prueba:
+1. **Formulario de prueba:** se crea en español con el inglés incompleto y los seis tipos de pregunta, y se publica. Meta confirma `PUBLISHED`, con un solo Flow, en español.
+2. **Mandar a una cuenta en inglés:** el formulario llega **entero en español**. Se completa en el teléfono dejando vacía una opcional y poniendo `12.50` en el número, y en el chat aparece el número de la respuesta tras recargar.
+3. **Completar el inglés:** se publica la versión 2, con dos Flows. Mandado de nuevo, el formulario llega en inglés.
+4. **Mirar lo que llega de Meta:** qué manda para una opcional vacía (en ArquitecturaBase la omitía), y que `12.50` y `12,50` se guardan iguales.
+5. **Una WABA sin medio de pago** (si se puede probar): queda `AccountUnavailable` visible, no «Sin confirmar» para siempre.
+
+## 16. Lo que ArquitecturaBase aprendió después de esta spec
+
+Vienen del [traspaso del 2026-10-17](../2026-10-17-formularios-traspaso/README.md): el anexo C §2 y el [06 de lecciones](../2026-10-17-formularios-traspaso/06-lecciones.md). Son criterios de la etapa, y el plan los toma.
+
+- **Captura:**
+  - una falla técnica se reintenta hasta **5 veces y al menos 15 minutos** desde la primera, con intervalos 30, 90, 210, 450 y 930 s; recién ahí queda `Rejected` y visible;
+  - un mensaje trabado no frena a los demás.
+- **Estados inciertos:**
+  - un error definitivo de Meta termina en «No se pudo», visible;
+  - «Sin confirmar» se **consulta** y, si sigue incierto, una persona dice «salió» o «no salió»; nunca se ofrece «Reintentar» sobre lo incierto;
+  - un envío del chat que quedó incierto sigue la misma regla **[E11]**.
+- **Contratos:**
+  - cada campo nuevo de un DTO se exporta y el front lo consume en el mismo corte;
+  - las rutas de error tienen la misma forma en los dos lados;
+  - `""` no es `null`: lo que falta va como `null`, y una propiedad vacía se omite en lo que va a Meta;
+  - una entrada inválida es 400, nunca 500;
+  - un campo omitido no apaga nada.
+- **Guardado:** ante un error de red o un 5xx, el editor reintenta con la misma versión; solo un 409 pide revisar. Un botón sin cambios no pide confirmación ni sube la versión.
+- **Pantalla:**
+  - **errores:** un solo dueño por error (toast común o junto al campo, nunca los dos), y «Reintentar» solo ante errores de red;
+  - **navegación:** no desmonta el editor; se conserva el contenido con `aria-busy` y el foco nunca queda en `body`;
+  - **permisos:** un 403 en una acción no oculta la pantalla de lectura.
+- **Privacidad:**
+  - `ToString` redactado en todo modelo con valores o nombres;
+  - sin `formrecords.read`, ningún valor en avisos, vistas previas, `aria-label` ni caché;
+  - lo sellado (payloads cifrados) entra en la retención.
+- **Meta, solo para versiones futuras, sin recompilar lo sellado:**
+  - el perfil se versiona;
+  - los IDs de pantalla son solo letras y guiones bajos;
+  - 141006 cuando la WABA no tiene medio de pago;
+  - 131030 con el 9 argentino en un número de prueba.

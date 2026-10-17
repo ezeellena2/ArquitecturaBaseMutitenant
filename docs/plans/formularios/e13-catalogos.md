@@ -10,7 +10,8 @@
 ## 1. Alcance
 
 **Entra:**
-- **Catálogos de la organización:** listado, alta con el origen fijo (a mano o con filtros), datos y estado «Se puede usar» o «No se puede usar».
+- **Catálogos de la organización:** listado, alta con el origen fijo (a mano o con filtros), datos y estado «Se puede usar», «Dado de baja» o «No se puede usar».
+- **Dar de baja y reactivar un catálogo** desde su pantalla, con su versión, sin borrarlo. Dado de baja, no se elige en preguntas nuevas, y los formularios publicados que lo usan no se pueden mandar: la confirmación de la baja lo advierte. Dar de baja uno con filtros no necesita vista previa, y reactivarlo sí. Es una regla de producto de ArquitecturaBase (cerrada el 2026-10-15), que se copia por la decisión 18.
 - **A mano:**
   - opciones con texto, detalle y código;
   - el idioma original del catálogo es obligatorio y la traducción, opcional. No hay respaldo opción por opción: si alguna opción ofrecida no tiene el idioma de quien recibe, todo el formulario sale en el original (decisión 17 de la hoja de ruta);
@@ -29,7 +30,6 @@
 
 **No entra:**
 - catálogos con una consulta SQL, decidido en la hoja de ruta;
-- dar de baja un catálogo entero;
 - otras fuentes, como clientes o productos, que no existen en la plantilla;
 - importar opciones desde Excel;
 - la búsqueda en vivo o las listas dependientes, porque necesitan el intercambio cifrado con Meta;
@@ -51,7 +51,7 @@ Valen las de la E12. Estas son las nuevas, técnicas. Las de producto están en 
 | C8 | Una pregunta de catálogo guarda solo `catalogId`. Cambiar el catálogo de una pregunta publicada crea una pregunta nueva, como cambiar el tipo. | Cambiar opciones no obliga a republicar, y las respuestas viejas no cambian de sentido. |
 | C9 | La gramática de condiciones es general: `{column, operator, values[]}`, unidas con «y». La E15 la reusa para los filtros de la planilla. | Una sola gramática. |
 | C10 | El Flow pasa a un perfil con datos iniciales. Cada pregunta de catálogo es un `Dropdown` con `data-source: ${data.field_<N>}`, y la pantalla declara su `data` con un `__example__` **[Meta]**. | Es lo que permite mandar opciones distintas a cada persona sin un endpoint de intercambio. |
-| C11 | **Idioma de un catálogo a mano:** tiene su idioma original, que se elige al crearlo y no cambia. Una pregunta solo puede usar un catálogo a mano con el **mismo idioma original que el formulario**; los otros aparecen apagados con el motivo «Está en otro idioma» (`Forms.Draft.CatalogLanguageMismatch`). Un catálogo de `Members` sirve en cualquier formulario, porque los nombres no se traducen. | Así el original de cada opción siempre existe y nunca se mezclan idiomas (decisión 17). Es lo más simple; si una organización necesitara catálogos en otro idioma, se revisa. |
+| C11 | **Idioma de un catálogo a mano:** tiene su idioma original, que se elige al crearlo y no cambia. Una pregunta solo puede usar un catálogo a mano con el **mismo idioma original que el formulario**. Los demás **no aparecen** en el selector, porque el idioma no se puede cambiar y no hay nada que resolver (`pantallas-y-ui.md` del front: lo que no aplica, no va). El servidor igual rechaza una referencia así con `Forms.Draft.CatalogLanguageMismatch`. Un catálogo de `Members` sirve en cualquier formulario, porque los nombres no se traducen. | Así el original de cada opción siempre existe y nunca se mezclan idiomas (decisión 17). ArquitecturaBase no resolvió este caso. **Pendiente de elección del usuario** ([decisiones pendientes](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md#7-decisiones-pendientes)): esta es la opción A; mientras no elija, vale esta. |
 
 ## 3. Modelo de datos
 
@@ -143,6 +143,7 @@ Se define en el código, en `Application/Modules/Forms/Catalogs/MembersCatalogSo
 | `Forms.Catalog.DuplicateCode` | Conflict (campo `code`) | el código ya existe en el catálogo |
 | `Forms.Catalog.TooManyItems` | Conflict | más de 500 opciones |
 | `Forms.Catalog.MoveOutOfRange` | Conflict | subir la primera o bajar la última |
+| `Forms.Catalog.Inactive` | Conflict | cambiar opciones de un catálogo dado de baja, o elegirlo en una pregunta nueva |
 | `Forms.Catalog.WrongSource` | Conflict | opciones en un catálogo con filtros, o filtros en uno a mano |
 | `Forms.Catalog.FiltersInvalid` | Validation (campo `conditions[i]`) | columna, operador o valor fuera de la fuente |
 | `Forms.Catalog.SampleMemberNotFound` | Validation | la persona de ejemplo no es de la organización |
@@ -166,7 +167,7 @@ Las rutas de Business llevan `[Access(Access.Business)]` y `[FeatureGate("forms"
 | POST `/api/organization/forms/catalogs` | `formcatalogs.manage` | `{name{…}, description?, source, originalCulture?, filters?}` (sin cultura, la de quien crea; `Members` no lleva) | 201 detalle + Location |
 | GET `/api/organization/forms/catalogs/{id}` | `formcatalogs.read` | — | 200 `{id, name, description, source, filters?, usable, unusableReason?, usedByCount, canManage, version}` |
 | GET `/api/organization/forms/catalogs/{id}/used-by` | `formcatalogs.read` | `page`, `pageSize`, `search`, `sort` (`name`) | 200 `PagedResult<{formId, name}>` |
-| PUT `/api/organization/forms/catalogs/{id}` | `formcatalogs.manage` | `{name, description, filters?, version}` | 200 `VersionResponse` |
+| PUT `/api/organization/forms/catalogs/{id}` | `formcatalogs.manage` | `{name, description, filters?, isActive, version}` (`isActive` es obligatorio: omitirlo no apaga nada) | 200 `VersionResponse` |
 | GET `/api/organization/forms/catalogs/{id}/items` | `formcatalogs.read` | `page`, `pageSize`, `search`, `status` (`active`, `inactive`, `all`) | 200 `PagedResult<{id, code, text{…}, detail{…}, position, isActive, version}>`, ordenado por posición |
 | POST `/api/organization/forms/catalogs/{id}/items` | `formcatalogs.manage` | `{code, text{…}, detail?{…}}` (el original obligatorio) | 201; queda última |
 | PUT `/api/organization/forms/catalogs/{id}/items/{itemId}` | `formcatalogs.manage` | `{code, text, detail, isActive, version}` | 200 `VersionResponse` |
@@ -318,7 +319,7 @@ Valen los criterios y los datos de ejemplo de la E12 ([texto para Diseño](e12-t
 | [E12] | El formato del borrador y de la versión, y el mecanismo de identidad nueva al cambiar el tipo. | `CatalogChoice` + `catalogId` en el mismo formato, y el mismo mecanismo de identidad. |
 | [E12] | La sesión, el verificador y el armado del Flow que haya dejado la E12. | Se suman `ProtectedOffer`, `OfferHash` y el perfil con datos. |
 | [E12] | El participante de la baja de la cuenta. | `ChoiceLabel` puede ser el nombre de otra persona (catálogo de miembros): el participante lo tiene que contemplar. |
-| [Meta] | Los límites del `Dropdown` dinámico: cuántas opciones, el largo del título y del detalle, y el tamaño de `data` en el mensaje. | 200 opciones, título ≤30 y detalle ≤300. Se verifica en la documentación vigente y en la prueba con Meta. |
+| [Meta] | Los límites del `Dropdown` dinámico: cuántas opciones, el largo del título y del detalle, y el tamaño de `data` en el mensaje. | 200 opciones, título ≤30 y detalle ≤300 por idioma. **El piloto de ArquitecturaBase del 2026-10-15 lo confirmó:** Meta aceptó 200 opciones con 136 caracteres de detalle cada una (`PIL200-000001`). Se vuelve a mirar en la documentación vigente al planificar. |
 | [E9] | Los límites por organización. | Como en la E12. |
 
 ## 13. Decisiones de producto de la etapa
@@ -340,3 +341,28 @@ Se toma solo como referencia, en `origin/main` (`202b65d`). Las rutas son de `Ar
 | Pregunta y envío (solo diseño allá) | La versión guarda solo la referencia; cambiar el catálogo de una pregunta publicada crea una nueva; `Dropdown` con `data-source: ${data.<pregunta>_options}`; la oferta en la sesión; con filtros alcanza con estar en la oferta; una opción a mano dada de baja no guarda nada y el aviso nombra la pregunta, no la opción. |
 | Pantallas (`ArquitecturaBaseFront/docs/design/formularios-whatsapp.md`, K1–K7) | K1 listado, K2 origen en dos tarjetas, K3 opciones, K4 filtros con «Como si lo recibiera», K6 pregunta y K7 envío y tarjeta. Sirven para el contenido; el dibujo es de nuestro lienzo. |
 | No se toma | La vista SQL sobre `AspNetUsers` y roles globales; los permisos y el bloqueo globales; el guardado en lote con ids locales y mapa de identidades; el nombre en jsonb con columnas calculadas; los catálogos sin dueño. |
+
+## 15. Cómo se cierra
+
+La puerta de la etapa, más una **prueba real con Meta** con el número de una organización de prueba:
+1. **A mano:** un catálogo con y sin detalle, en un formulario publicado. Se manda, se responde y la respuesta guarda el texto, el detalle y el catálogo; se ven igual después de recargar.
+2. **Miembros:** un catálogo con filtros, vacío y con opciones, con «Sin incluir a quien lo recibe».
+3. **Opción dada de baja después de mandar:** la respuesta se rechaza sin número. «Mandar de nuevo» da el número siguiente, sin saltos.
+4. **Idioma:** una cuenta en inglés con un catálogo sin inglés recibe todo el formulario en español, sin opciones mezcladas.
+5. **El tope:** un catálogo de 200 opciones con detalle viaja y vuelve con los ids intactos.
+
+## 16. Lo que ArquitecturaBase aprendió después de esta spec
+
+Vienen del anexo C §2 (etapa 2, cerrada el 2026-10-15) y del [06 de lecciones](../2026-10-17-formularios-traspaso/06-lecciones.md) del traspaso:
+- **Los límites del canal se validan al guardar** (30 y 300 por idioma), no al mandar; la vista previa marca lo que no entra.
+  - En ArquitecturaBase, nunca se trunca. Acá, la decisión 11 corta los nombres largos con «…»: la diferencia va a la [lista de pendientes](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md#7-decisiones-pendientes).
+- **Más de 200 resultados:** en ArquitecturaBase, un catálogo con filtros que da más de 200 no se guarda. Acá, la decisión 12 lo deja guardar con aviso: también va a la lista.
+- **Referencias por id,** nunca por nombre: un rol renombrado no vacía el catálogo, y dar de baja un rol tampoco lo invalida.
+- **Opciones vacías:** no viajan, y el texto de una opción sale de un campo que siempre tiene valor (en Miembros, el nombre).
+- **Al operador** le llegan solo la cantidad y los problemas, nunca los nombres de las personas ofrecidas.
+- **La captura** guarda todas las variantes de idioma del texto y del detalle (R1017 #3), y comprueba la baja de una opción a mano bajo el mismo bloqueo con que se edita.
+- **Reintentos:** 5 fallas y 15 minutos, como en la E12.
+- **En el front:**
+  - la búsqueda de personas espera 300 ms y conserva el editor y el foco;
+  - una página tardía de otro catálogo se descarta;
+  - una pregunta de catálogo sin selección manda `null` y recibe la validación en su campo.

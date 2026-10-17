@@ -261,3 +261,11 @@ Valen los criterios de la E12. El texto para Diseño está en [e17-texto-diseno.
 | [E13] | El modelo de catálogos a mano y sus límites. | Una plantilla trae catálogos con los mismos límites (500 opciones, textos de 30). |
 | [E16] | Qué es una regla, cómo se guarda y a quién avisa. | Las reglas viajan en la plantilla sin destinatarios propios de una organización; la copia las deja para completar. Se especifica cuando exista la spec de la E16. |
 | ADR 0050 | El tipo de evento para lo global del módulo. | `PlatformSettingsChanged` con destino global. |
+
+## 11. Cómo se cierra
+
+La puerta de la etapa, más una **prueba real con Meta**:
+1. **En Plataforma:** un operador crea una plantilla en español con el inglés incompleto, con un catálogo a mano, y la publica con motivo.
+2. **En una organización de prueba:** alguien la usa. El formulario queda en borrador, con su catálogo propio y el prefijo propuesto; se publica en Meta con el número de la organización, se manda desde un chat de Internos y se responde en el teléfono.
+3. **El retiro:** la plataforma retira la plantilla, y la copia de la organización sigue igual.
+4. **El conteo:** un segundo uso en la misma organización no suma; un uso en otra organización, sí.
