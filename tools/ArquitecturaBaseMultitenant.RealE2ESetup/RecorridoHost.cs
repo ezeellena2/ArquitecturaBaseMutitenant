@@ -77,6 +77,7 @@ internal static class RecorridoHost
             await PlatformCommand.TryExecuteAsync(app.Services, readyFile, prepared.BusinessId, prepared.UserId, ct);
             await LegacyBrowserSessionCommand.TryExecuteAsync(app.Services, readyFile, ct);
             await LoginCodeCommand.TryExecuteAsync(app.Services, readyFile, ct);
+            await RecentProofCommand.TryExecuteAsync(app.Services, readyFile, ct);
             await bridge.TryExecuteAsync(client, ct);
             await assistant.TryExecuteAsync(ct);
             // Un único claim email por tick; WhatsApp cifrado permanece disponible para su control privado.
