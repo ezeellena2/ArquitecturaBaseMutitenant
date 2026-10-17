@@ -13,7 +13,7 @@ Esta carpeta está fuera del detector (`docs/plans/**`).
 | Etapa | Spec | Estado |
 | --- | --- | --- |
 | 12 · Formularios: crear, publicar, mandar y recibir | [e12-formularios.md](e12-formularios.md) | Spec escrita; tableros en el lienzo v122 |
-| 13 · Catálogos | [e13-catalogos.md](e13-catalogos.md) | Spec escrita |
+| 13 · Catálogos | [e13-catalogos.md](e13-catalogos.md) | Spec escrita; tableros en el lienzo v124 |
 | 14 · Fotos y documentos | — | Cuando ArquitecturaBase programe su etapa 2B |
 | 15 · Planilla y Excel | — | Cuando ArquitecturaBase programe su etapa 3 |
 | 16 · Reglas, aprobación y PDF | — | Cuando ArquitecturaBase programe su etapa 4 |

@@ -251,11 +251,11 @@ Valen los criterios y los datos de ejemplo de la E12 ([texto para Diseño](e12-t
 
 | Tablero | Qué muestra | Estados |
 | --- | --- | --- |
-| `FRM-Catalogos` y `M-FRM-Catalogos` | listado: nombre, origen (A mano o Con filtros), opciones, «Lo usan» y estado; «Nuevo catálogo»; filtro Todos, A mano y Con filtros | vacío, sin resultados, «No se puede usar» con ⓘ del motivo |
+| `FRM-Catalogos` y `M-FRM-Catalogos` | listado: nombre, origen (A mano o Con filtros), opciones, «Lo usan» y estado; «Nuevo catálogo»; filtro «Origen ▾» | vacío, sin resultados, «No se puede usar» con ⓘ del motivo |
 | `FRM-Catalogo-Nuevo` | diálogo: nombre y origen con el control segmentado «Escribirlas a mano | Tomarlas de los miembros, con filtros», la pieza de Plantilla nueva, Difusión nueva, el bot y el asistente (decisión del usuario del 2026-10-13); el ⓘ dice «No se puede cambiar después.» | — |
 | `FRM-Catalogo` y `M-FRM-Catalogo` (a mano) | ficha con pestañas: **Opciones** (tabla con posición, texto, detalle y código, ⋮ con Editar, Subir, Bajar y Dar de baja o Reactivar; filtro Activas, Dadas de baja y Todas; «Agregar opción») y **Datos** (nombre y descripción es/en; «Lo usan») | sin opciones, 500 alcanzadas, conflicto |
 | `FRM-Catalogo-Opcion` y `M-FRM-Catalogo-Opcion` | diálogo u hoja: texto es/en (≤30, con contador), detalle es/en y código | código repetido, texto largo |
-| `FRM-Catalogo-Filtros` | ficha con filtros: filas de condición («Si», «y») con columna, operador y valor; «Sin incluir a quien lo recibe»; detalle (ninguno, roles, empresas) y orden. Al costado, «Como si lo recibiera» con una persona elegida, «Probar» y el resultado | N opciones, ninguna, más de 200 (aviso), rol o empresa que ya no existe |
+| `FRM-Catalogo-Filtros` y `M-FRM-Catalogo-Filtros` | ficha con filtros: filas de condición («Si», «y») con columna, operador y valor; «Sin incluir a quien lo recibe»; detalle (ninguno, roles, empresas) y orden. Al costado, «Como si lo recibiera» con una persona elegida, «Probar» y el resultado | N opciones, ninguna, más de 200 (aviso), rol o empresa que ya no existe |
 | `FRM-Pregunta` (variante) | tipo «Elegir de un catálogo», con un selector de catálogo; los que no se pueden usar aparecen apagados con su motivo | catálogo elegido, sin catálogos |
 | `WA-Chats-Formulario` (variante) | avisos por pregunta: más de 200 opciones, ninguna en una obligatoria, catálogo que no se puede usar; «Mandar» apagado | — |
 | `WA-Chats-Respuesta` (variante) | la tarjeta con un valor de catálogo; rechazada porque «una opción se dio de baja», nombrando la pregunta, con «Mandar de nuevo» | — |
@@ -263,8 +263,35 @@ Valen los criterios y los datos de ejemplo de la E12 ([texto para Diseño](e12-t
 
 **Dónde viven los catálogos** (decisión del usuario del 2026-10-13): en el segundo panel de Formularios, que abre «Formularios» y «Catálogos»; en el teléfono, en el grupo de «Más». Sigue la regla de secciones, pestañas y filtros de `docs/rules/pantallas-y-ui.md` del front, y los filtros de los listados van como desplegables, no como pestañas.
 
-**Elecciones para mostrar con opciones:**
-- **El editor de filtros en el teléfono:** completo, o solo para ver.
+**Dibujados y aprobados en el lienzo v124**, con las decisiones del usuario del 13 y el 14/10 en «Criterio · Decisiones por pantalla» (grupo E13). Los tableros son:
+- `FRM-Catalogos`, `FRM-Catalogo-Nuevo`, `FRM-Catalogo`, `FRM-Catalogo-Opcion` y `FRM-Catalogo-Filtros`;
+- los teléfonos `M-FRM-Catalogos`, `M-FRM-Catalogo`, `M-FRM-Catalogo-Opcion` y `M-FRM-Catalogo-Filtros`;
+- el tipo catálogo en `FRM-Pregunta`;
+- las variantes de `WA-Chats-Formulario` y `WA-Chats-Respuesta`;
+- los dos permisos en `Rol`.
+
+**Mandan sobre esta spec en:**
+- **Regla general (Criterio · Menús):**
+  - las secciones de un área van en un segundo panel y las pestañas, solo en los grupos de datos de una ficha;
+  - los filtros de un listado son desplegables (en el teléfono, «Filtros» con un punto);
+  - dos vistas de una misma lista usan un control segmentado;
+  - lo que no aplica no aparece, y lo que no se puede usar por algo que se resuelve va en gris, con su motivo debajo.
+- **Listado:** «Catálogos» es un ítem del panel «Formularios», al lado de Formularios, con nombre, origen, opciones, «Lo usan» y estado con ⓘ. El filtro es el desplegable «Origen ▾», no pestañas Todos, A mano y Con filtros.
+- **Nuevo catálogo:** el origen se elige con el control segmentado «Escribirlas a mano | Tomarlas de los miembros, con filtros». El ⓘ dice «No se puede cambiar después.».
+- **Catálogo a mano:**
+  - pestañas «Opciones | Datos»;
+  - la tabla tiene número, texto, detalle, código y estado, con ⋮ (Editar, Subir, Bajar y Dar de baja o Reactivar), y el tope de 500;
+  - en Datos, el nombre y la descripción en es/en y «Lo usan», en grilla.
+- **Opción:** cada texto lleva su inglés a la derecha. El texto tiene hasta 30 caracteres, con contador, y el código es único en el catálogo.
+- **Catálogo con filtros:**
+  - pestañas «Filtros | Datos»;
+  - cada condición es una fila con tres desplegables, más «Otras opciones»;
+  - «Como si lo recibiera» va al costado, con «Probar»;
+  - con más de 200 opciones avisa y se puede guardar, y un rol borrado deja el catálogo sin poder usarse.
+- **Pregunta:** el campo «Catálogo». Los que no se pueden usar aparecen apagados, con su motivo.
+- **Mandar desde el chat:** un aviso por pregunta (más de 200 opciones, ninguna, o un catálogo que no se puede usar) con «Ver el catálogo», y «Mandar» apagado. En el teléfono, lo mismo en la hoja.
+- **Respuesta:** se guarda el texto que vio la persona. Si la opción a mano se dio de baja, la tarjeta roja nombra la pregunta y ofrece «Mandar de nuevo».
+- **Teléfono:** el listado con «Filtros» y «+», y las fichas con pestañas y hojas. **El editor de filtros va completo,** como la ficha de un formulario. Esto era la elección que quedaba abierta.
 
 ## 11. Tests
 
