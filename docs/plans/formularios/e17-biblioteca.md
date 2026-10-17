@@ -11,7 +11,7 @@
 
 **Entra:**
 - **Plataforma:**
-  - **Plantillas:** cada una trae un formulario (preguntas en es/en, botón y prefijo sugerido), sus catálogos a mano y sus reglas de ejemplo **[E16]**. Tiene categoría y descripción en es/en.
+  - **Plantillas:** cada una trae un formulario (preguntas en su idioma original, con traducción opcional; botón y prefijo sugerido), sus catálogos a mano y sus reglas de ejemplo **[E16]**. Tiene categoría y descripción, con la misma regla de idioma (decisión 17 de la hoja de ruta).
   - **Edición:** borrador y publicar, con versiones. Publicar y retirar piden motivo.
   - **Categorías:** las arma la plataforma.
   - **Uso:** solo la cantidad de organizaciones que usaron cada plantilla.
@@ -32,7 +32,7 @@
 **De producto, tomadas por el usuario el 2026-10-13** (decisiones 13 a 16 de la hoja de ruta):
 1. **Edición:** borrador y publicar. Los cambios quedan en un borrador, y «Publicar» crea la versión nueva que ven las organizaciones. Publicar y retirar piden motivo, como el resto de Plataforma.
 2. **Catálogos:** solo a mano. Los catálogos con filtros dependen de roles y empresas de cada organización.
-3. **Categorías:** las arma la plataforma, en una lista corta con nombre es/en y orden que se edita en la misma biblioteca. Ninguna lista fija en el código.
+3. **Categorías:** las arma la plataforma, en una lista corta con nombre y orden que se edita en la misma biblioteca. Ninguna lista fija en el código. Desde la decisión 17, el nombre lleva un idioma original obligatorio y una traducción opcional; se muestra en el idioma de quien mira si existe, y si no, en el original.
 4. **Uso:** la plataforma ve solo la cantidad («La usaron 12 organizaciones»), nunca cuáles.
 
 **Técnicas, o de producto menor**, con su porqué:
@@ -46,7 +46,7 @@
 | B5 | **El conteo de uso:** una fila técnica `platform.FormTemplateUsages(TemplateId, UsedByCount)` suma 1 la primera vez que una organización usa la plantilla. Para saber si es la primera, se mira si esa organización ya tiene un formulario con ese `SourceTemplateId`, en sus propios datos. | Cuenta organizaciones sin guardar cuáles fueron. La plataforma nunca lee datos de una organización. |
 | B6 | Las plantillas, sus versiones y las categorías son globales, en `platform`, con `IGlobalSecurityAudited` y `PlatformSettingsChanged` con destino global (ADR 0050). Guardar el borrador registra un motivo fijo; publicar, retirar y cambiar categorías usan el motivo que escribe el operador. | La regla vigente de auditoría de lo global. |
 | B7 | **El editor de la plataforma es el mismo de la E12,** montado en la ruta de Plataforma, y suma la pestaña «Catálogos». Sin Meta: la vista previa es solo la orientativa del teléfono. | Un solo editor. Una plantilla no se publica en WhatsApp. |
-| B8 | **Publicar comprueba:** las reglas de Forms, los dos idiomas completos, los catálogos de la plantilla y `IStructuredFormChannel.Check` (es puro, no llama a Meta). Si WhatsApp no está instalado, la comprobación del canal no corre. | La copia nace lista para publicar. |
+| B8 | **Publicar comprueba:** las reglas de Forms, el idioma original completo (la traducción es opcional y no bloquea), los catálogos de la plantilla y `IStructuredFormChannel.Check` (es puro, no llama a Meta). Si WhatsApp no está instalado, la comprobación del canal no corre. | La copia nace lista para publicar. |
 | B9 | La copia guarda `SourceTemplateId` y `SourceTemplateVersion` en la definición. | Sirve para el conteo (B5) y para el futuro aviso de versión nueva. |
 | B10 | La plataforma no tiene formularios propios ni manda formularios. | Decisión 4 de la hoja de ruta: el número de la plataforma no manda formularios. |
 
@@ -77,10 +77,10 @@ Una categoría se borra solo si ninguna plantilla la usa (`Forms.TemplateCategor
 | auditoría | — | `IGlobalSecurityAudited` |
 
 **`FormTemplateDraft`** (jsonb, `format: 1`):
-- `name{es,en}`, `description{es,en}` (≤300), `suggestedPrefix`, `submitLabel{es,en}`;
+- `originalCulture` (no cambia), `name{…}`, `description{…}` (≤300), `suggestedPrefix`, `submitLabel{…}`; los textos son mapas por cultura, con el original obligatorio;
 - `questions[]`, en el formato del borrador de la E12;
 - en una pregunta `CatalogChoice`, `catalogRef` (id local de la plantilla) en lugar de `catalogId`;
-- `catalogs[]`: `{catalogRef, name{es,en}, items[{code, text{es,en}, detail{es,en}}]}`;
+- `catalogs[]`: `{catalogRef, name{…}, items[{code, text{…}, detail{…}}]}`, en el mismo idioma original que la plantilla (C11 de la E13);
 - `rules[]` **[E16]**.
 
 **FormTemplateVersions** (inmutable)
@@ -107,12 +107,13 @@ Una categoría se borra solo si ninguna plantilla la usa (`Forms.TemplateCategor
 **Copiar** (`FormTemplateCopyCreator`, en Application) arma, desde la versión publicada:
 - los catálogos nuevos, con posiciones de 1 a n;
 - el borrador del formulario, con `FieldId` y `ChoiceId` nuevos y los `catalogRef` traducidos a los ids de los catálogos nuevos;
-- el nombre de la plantilla, el prefijo libre y la fuente.
+- el nombre de la plantilla, el prefijo libre y la fuente;
+- el mismo idioma original que la plantilla, en el formulario y en sus catálogos, con la traducción que tenga.
 
 | Código | Tipo | Cuándo |
 | --- | --- | --- |
 | `Forms.Template.NotFound` | NotFound | inexistente; en la organización, también si no está publicada |
-| `Forms.Template.MissingTranslation` | Validation (campo) | falta un idioma al publicar |
+| `Forms.Template.OriginalIncomplete` | Validation (campo) | falta un texto en el idioma original al publicar. Una traducción incompleta no bloquea: la comprobación solo la informa. |
 | `Forms.Template.Invalid` | Validation (campo) | pregunta, catálogo o `catalogRef` fuera de regla |
 | `Forms.Template.ChannelIssues` | Validation | el perfil del canal marcó problemas (como en la E12) |
 | `Forms.Template.NothingToPublish` | Conflict | publicada y sin cambios |

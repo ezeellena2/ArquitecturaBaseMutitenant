@@ -13,7 +13,7 @@
 - **Catálogos de la organización:** listado, alta con el origen fijo (a mano o con filtros), datos y estado «Se puede usar» o «No se puede usar».
 - **A mano:**
   - opciones con texto, detalle y código;
-  - el inglés es opcional y, si falta, se usa el español;
+  - el idioma original del catálogo es obligatorio y la traducción, opcional. No hay respaldo opción por opción: si alguna opción ofrecida no tiene el idioma de quien recibe, todo el formulario sale en el original (decisión 17 de la hoja de ruta);
   - las opciones se dan de baja sin borrarse y se reordenan con «subir» y «bajar».
 - **Con filtros:**
   - sobre la fuente «Miembros de la organización», con condiciones armadas por el sistema y «Sin incluir a quien lo recibe»;
@@ -51,6 +51,7 @@ Valen las de la E12. Estas son las nuevas, técnicas. Las de producto están en 
 | C8 | Una pregunta de catálogo guarda solo `catalogId`. Cambiar el catálogo de una pregunta publicada crea una pregunta nueva, como cambiar el tipo. | Cambiar opciones no obliga a republicar, y las respuestas viejas no cambian de sentido. |
 | C9 | La gramática de condiciones es general: `{column, operator, values[]}`, unidas con «y». La E15 la reusa para los filtros de la planilla. | Una sola gramática. |
 | C10 | El Flow pasa a un perfil con datos iniciales. Cada pregunta de catálogo es un `Dropdown` con `data-source: ${data.field_<N>}`, y la pantalla declara su `data` con un `__example__` **[Meta]**. | Es lo que permite mandar opciones distintas a cada persona sin un endpoint de intercambio. |
+| C11 | **Idioma de un catálogo a mano:** tiene su idioma original, que se elige al crearlo y no cambia. Una pregunta solo puede usar un catálogo a mano con el **mismo idioma original que el formulario**; los otros aparecen apagados con el motivo «Está en otro idioma» (`Forms.Draft.CatalogLanguageMismatch`). Un catálogo de `Members` sirve en cualquier formulario, porque los nombres no se traducen. | Así el original de cada opción siempre existe y nunca se mezclan idiomas (decisión 17). Es lo más simple; si una organización necesitara catálogos en otro idioma, se revisa. |
 
 ## 3. Modelo de datos
 
@@ -61,7 +62,8 @@ Todas las tablas son `ITenantOwned` en `tenant`, con RLS, FK compuestas y `TextL
 | Columna | Tipo | Regla |
 | --- | --- | --- |
 | `Id`, `TenantId` | uuid | — |
-| `NameEs`, `NameEn` | texto ≤80 | el español es obligatorio y el inglés no; si falta, se usa el español |
+| `OriginalCulture` | texto | es o en, de los datos de referencia; no cambia (C11). Un catálogo de `Members` no tiene: los nombres no se traducen |
+| `NameEs`, `NameEn` | texto ≤80 | el del idioma original es obligatorio; el otro, opcional. En pantalla se muestra el del idioma de quien mira, y si falta, el original |
 | `DescriptionEs`, `DescriptionEn` | texto ≤300? | opcionales |
 | `Source` | texto | `Manual` o `Members`; no cambia después de crear |
 | `Filters` | jsonb? | solo con `Members`; CHECK que lo ata a `Source` |
@@ -83,15 +85,15 @@ Todas las tablas son `ITenantOwned` en `tenant`, con RLS, FK compuestas y `TextL
 | --- | --- | --- |
 | `Id`, `TenantId`, `CatalogId` | uuid | FK compuesta |
 | `Code` | texto ≤40 | obligatorio; único por catálogo sin distinguir mayúsculas (`CodeNormalized` + `UniqueKeys.FormCatalogItemCode`). No se ve en WhatsApp. |
-| `TextEs`, `TextEn` | texto ≤30 **[Meta]** | el español es obligatorio; es el título de la opción en WhatsApp |
-| `DetailEs`, `DetailEn` | texto ≤300? **[Meta]** | opcional; la descripción de la opción |
+| `TextEs`, `TextEn` | texto ≤30 por idioma, validado al guardar | el del idioma original del catálogo es obligatorio; es el título de la opción en WhatsApp |
+| `DetailEs`, `DetailEn` | texto ≤300 por idioma, validado al guardar | opcional; la descripción de la opción. Si no hay detalle, el Flow omite `description` |
 | `Position` | int | única por catálogo, `DEFERRABLE INITIALLY DEFERRED` (C7) |
 | `IsActive` | bool | dar de baja = `false`; no se borra |
 
 Un catálogo a mano tiene hasta **500 opciones**, entre activas y dadas de baja. La E12 queda así:
 - **`FormDraft` y `FormVersions`:** el tipo `CatalogChoice` suma `catalogId` a la pregunta.
-- **`FormRecordValues`:** suma `CatalogId uuid?`. `ChoiceId` es el id del ítem (opción a mano o miembro) y `ChoiceLabel` es el texto que vio la persona.
-- **`WhatsAppFlowSessions`:** suma `ProtectedOffer` (bytea, cifrado con `IPayloadProtector`) y `OfferHash`. La oferta es `[{fieldId, options: [{localId, catalogId, itemId, text, detail?}]}]`.
+- **`FormRecordValues`:** suma `CatalogId uuid?` y `ChoiceTexts jsonb`. `ChoiceId` es el id del ítem (opción a mano o miembro), y `ChoiceTexts` guarda **todas** las variantes de idioma del texto y el detalle tal como estaban al responder (`{es?: {text, detail?}, en?: {…}}`). La copia fija de un PDF en otro idioma no mezcla idiomas: es una lección de ArquitecturaBase (R1017 #3).
+- **`WhatsAppFlowSessions`:** suma `ProtectedOffer` (bytea, cifrado con `IPayloadProtector`) y `OfferHash`. La oferta es `[{fieldId, options: [{localId, catalogId, itemId, texts{…}, detail?}]}]`, con todas las variantes de idioma.
 
 ## 4. La fuente «Miembros»
 
@@ -146,6 +148,7 @@ Se define en el código, en `Application/Modules/Forms/Catalogs/MembersCatalogSo
 | `Forms.Catalog.SampleMemberNotFound` | Validation | la persona de ejemplo no es de la organización |
 | `Forms.Catalog.ItemText…` | Validation | textos fuera de límite (`text.es`, `detail.en`…) |
 | `Forms.Draft.CatalogUnavailable` | Validation (campo `questions[i]`) | la pregunta apunta a un catálogo que no se puede usar o ajeno |
+| `Forms.Draft.CatalogLanguageMismatch` | Validation (campo `questions[i]`) | el catálogo a mano está en otro idioma original que el formulario (C11) |
 | `Forms.Offer.TooManyOptions` | Conflict | más de 200 opciones para ese destinatario |
 | `Forms.Offer.NoOptions` | Conflict | ninguna opción en una pregunta obligatoria |
 | `Forms.Offer.CatalogUnavailable` | Conflict | el catálogo dejó de poder usarse |
@@ -160,12 +163,12 @@ Las rutas de Business llevan `[Access(Access.Business)]` y `[FeatureGate("forms"
 | --- | --- | --- | --- |
 | GET `/api/organization/forms/catalogs` | `formcatalogs.read` | `page`, `pageSize`, `sort` (`name`, `updatedAtUtc`), `search`, `source` (`all`, `manual`, `members`), `usable?` | 200 `PagedResult<{id, name, source, optionsCount?, usedByCount, usable, unusableReason?}>` |
 | GET `/api/organization/forms/catalogs/filter-counts` | `formcatalogs.read` | `search` | 200 `{all, manual, members}` |
-| POST `/api/organization/forms/catalogs` | `formcatalogs.manage` | `{name{es,en?}, description?, source, filters?}` | 201 detalle + Location |
+| POST `/api/organization/forms/catalogs` | `formcatalogs.manage` | `{name{…}, description?, source, originalCulture?, filters?}` (sin cultura, la de quien crea; `Members` no lleva) | 201 detalle + Location |
 | GET `/api/organization/forms/catalogs/{id}` | `formcatalogs.read` | — | 200 `{id, name, description, source, filters?, usable, unusableReason?, usedByCount, canManage, version}` |
 | GET `/api/organization/forms/catalogs/{id}/used-by` | `formcatalogs.read` | `page`, `pageSize`, `search`, `sort` (`name`) | 200 `PagedResult<{formId, name}>` |
 | PUT `/api/organization/forms/catalogs/{id}` | `formcatalogs.manage` | `{name, description, filters?, version}` | 200 `VersionResponse` |
-| GET `/api/organization/forms/catalogs/{id}/items` | `formcatalogs.read` | `page`, `pageSize`, `search`, `status` (`active`, `inactive`, `all`) | 200 `PagedResult<{id, code, text{es,en}, detail{es,en}, position, isActive, version}>`, ordenado por posición |
-| POST `/api/organization/forms/catalogs/{id}/items` | `formcatalogs.manage` | `{code, text{es,en?}, detail?}` | 201; queda última |
+| GET `/api/organization/forms/catalogs/{id}/items` | `formcatalogs.read` | `page`, `pageSize`, `search`, `status` (`active`, `inactive`, `all`) | 200 `PagedResult<{id, code, text{…}, detail{…}, position, isActive, version}>`, ordenado por posición |
+| POST `/api/organization/forms/catalogs/{id}/items` | `formcatalogs.manage` | `{code, text{…}, detail?{…}}` (el original obligatorio) | 201; queda última |
 | PUT `/api/organization/forms/catalogs/{id}/items/{itemId}` | `formcatalogs.manage` | `{code, text, detail, isActive, version}` | 200 `VersionResponse` |
 | POST `/api/organization/forms/catalogs/{id}/items/{itemId}/move` | `formcatalogs.manage` | `{direction: up\|down, version}` | 200 `VersionResponse` |
 | GET `/api/organization/forms/catalogs/sources/members` | `formcatalogs.manage` | — | 200 `{version, columns[{key, type, operators, canDetail, canSort}]}`; catálogo cerrado de columnas y operadores de la §4 |
@@ -198,7 +201,9 @@ Las pruebas de integración recorren una segunda página de `used-by`, roles y e
    - cambiar el catálogo de una pregunta ya publicada emite un `FieldId` nuevo;
    - `IStructuredFormChannel.Check(StructuredFormVersion)`, síncrono y puro, valida el perfil con datos.
 6. **Mandar** (cambia la §6.6 de la E12):
-   - `FindSendableAsync` de Forms resuelve, para quien recibe y en su idioma, la oferta de cada pregunta de catálogo. Lee los catálogos a mano activos o la fuente con los filtros; es solo lectura.
+   - `FindSendableAsync` de Forms resuelve, para quien recibe, la oferta de cada pregunta de catálogo. Lee los catálogos a mano activos o la fuente con los filtros; es solo lectura.
+   - **El idioma del envío** (cambia la T10 de la E12): el de quien recibe, solo si la versión está completa en ese idioma **y** todas las opciones ofrecidas lo tienen. Si no, todo va en el original del formulario: preguntas, opciones y mensaje.
+   - **Al operador** le llega solo la cantidad de opciones por pregunta y los problemas, nunca los nombres. Las opciones completas quedan en la sesión (lección de privacidad de ArquitecturaBase).
    - Si una pregunta tiene un problema, no se puede mandar.
    - **Nombres largos:** un nombre de la fuente «Miembros» de más de 30 caracteres se corta en 29 más «…», y el completo va primero en el detalle ([§13](#13-decisiones-de-producto-de-la-etapa)).
    - **En la UoW de WhatsApp:**
@@ -217,7 +222,7 @@ No hay puertos nuevos; cambian los modelos de la E12:
 - **`StructuredFormVersion.Questions[]`:** suma el tipo `CatalogChoice`.
 - **`FindSendableAsync`:** devuelve `StructuredSendableForm(Version, Offers[FieldId → Options[ItemRef(CatalogId, ItemId), Text, Detail?]], Problems[FieldId, Code])`.
 - **`ListSendableAsync`:** suma `HasProblems` por formulario.
-- **`StructuredRecordCapture.Values[]`:** suma `CatalogId?`, con `ChoiceId` y `ChoiceLabel`.
+- **`StructuredRecordCapture.Values[]`:** suma `CatalogId?` y `ChoiceTexts` (todas las variantes de idioma), con `ChoiceId`.
 
 ## 9. Archivos
 
@@ -254,7 +259,7 @@ Valen los criterios y los datos de ejemplo de la E12 ([texto para Diseño](e12-t
 | `FRM-Catalogos` y `M-FRM-Catalogos` | listado: nombre, origen (A mano o Con filtros), opciones, «Lo usan» y estado; «Nuevo catálogo»; filtro «Origen ▾» | vacío, sin resultados, «No se puede usar» con ⓘ del motivo |
 | `FRM-Catalogo-Nuevo` | diálogo: nombre y origen con el control segmentado «Escribirlas a mano | Tomarlas de los miembros, con filtros», la pieza de Plantilla nueva, Difusión nueva, el bot y el asistente (decisión del usuario del 2026-10-13); el ⓘ dice «No se puede cambiar después.» | — |
 | `FRM-Catalogo` y `M-FRM-Catalogo` (a mano) | ficha con pestañas: **Opciones** (tabla con posición, texto, detalle y código, ⋮ con Editar, Subir, Bajar y Dar de baja o Reactivar; filtro Activas, Dadas de baja y Todas; «Agregar opción») y **Datos** (nombre y descripción es/en; «Lo usan») | sin opciones, 500 alcanzadas, conflicto |
-| `FRM-Catalogo-Opcion` y `M-FRM-Catalogo-Opcion` | diálogo u hoja: texto es/en (≤30, con contador), detalle es/en y código | código repetido, texto largo |
+| `FRM-Catalogo-Opcion` y `M-FRM-Catalogo-Opcion` | diálogo u hoja: texto en el original y su traducción (≤30 cada uno, con contador), detalle (≤300) y código | código repetido, texto largo |
 | `FRM-Catalogo-Filtros` y `M-FRM-Catalogo-Filtros` | ficha con filtros: filas de condición («Si», «y») con columna, operador y valor; «Sin incluir a quien lo recibe»; detalle (ninguno, roles, empresas) y orden. Al costado, «Como si lo recibiera» con una persona elegida, «Probar» y el resultado | N opciones, ninguna, más de 200 (aviso), rol o empresa que ya no existe |
 | `FRM-Pregunta` (variante) | tipo «Elegir de un catálogo», con un selector de catálogo; los que no se pueden usar aparecen apagados con su motivo | catálogo elegido, sin catálogos |
 | `WA-Chats-Formulario` (variante) | avisos por pregunta: más de 200 opciones, ninguna en una obligatoria, catálogo que no se puede usar; «Mandar» apagado | — |
@@ -298,7 +303,7 @@ Valen los criterios y los datos de ejemplo de la E12 ([texto para Diseño](e12-t
 | Dónde | Qué |
 | --- | --- |
 | `tests/…Domain.UnitTests/Forms/` | origen fijo; código único sin distinguir mayúsculas; intercambio de posiciones en los extremos; estado y motivos de «se puede usar» |
-| `tests/…Application.UnitTests/Modules/Forms/` | validación de filtros contra la fuente (columna, operador, ids); el armado de la oferta (más de 200, ninguna en una obligatoria, el inglés que usa el español si falta); el perfil con datos y el verificador (`localId` fuera de la oferta) |
+| `tests/…Application.UnitTests/Modules/Forms/` | validación de filtros contra la fuente (columna, operador, ids); el armado de la oferta (más de 200, ninguna en una obligatoria, una opción sin el idioma de quien recibe = todo en el original, catálogo en otro idioma que el formulario); la captura guarda todas las variantes de idioma; el perfil con datos y el verificador (`localId` fuera de la oferta) |
 | `tests/…Api.IntegrationTests/Modules/Forms/` | cada ruta con 401, 403, feature apagada = 404, validación, 409 e idempotencia; subir y bajar con dos personas a la vez; vista previa sin escribir; captura con opción dada de baja = sin número; la tarjeta con «Mandar de nuevo» |
 | Aislamiento | la fuente «Miembros» nunca devuelve miembros de otra organización ni correos; la persona de ejemplo de otra organización da error; cada ruta nueva le responde 404 a otra organización |
 | Guardas | `IdentityAccessTests` (partial de Forms), `ExplicitRouteInventoryTests`, `ResourceParityTests` y `PermissionTextsTests` |
@@ -329,7 +334,7 @@ Se toma solo como referencia, en `origin/main` (`202b65d`). Las rutas son de `Ar
 
 | Tema | Lo que sirve |
 | --- | --- |
-| Opciones a mano | Texto obligatorio en español y opcional en inglés, que usa el español si falta (también si está vacío: fue un error en la búsqueda y el orden). El código no se ve en WhatsApp. Las opciones no se borran. Tope de 500. La posición es del servidor, con restricción diferida (`Migrations/20261012015620_*`). El cliente nunca manda posiciones. |
+| Opciones a mano | Texto obligatorio en español y opcional en inglés, que usaba el español si faltaba; acá lo reemplaza la decisión 17 (todo en el original, sin mezclar). La vacía cuenta como faltante: fue un error en la búsqueda y el orden. El código no se ve en WhatsApp. Las opciones no se borran. Tope de 500. La posición es del servidor, con restricción diferida (`Migrations/20261012015620_*`). El cliente nunca manda posiciones. |
 | Errores pagados | `a2038f8`: posiciones del cliente quitadas y la vacía tomada como inglés. `6da3263`: «Lo usan» en 0 sin permiso, ahora null. Front `73a26c7`: una página tardía de otro catálogo se cargaba en el borrador; las respuestas se descartan si cambió el catálogo o quien mira. |
 | Filtros | Valores siempre como parámetros, columnas de una lista cerrada, timeout de 3 s y 201 filas para detectar «más de 200». La vista previa no toma la identidad de la persona de ejemplo (`Infrastructure/Modules/BusinessForms/Persistence/Readers/FormCatalogFilterReader.cs`, a medio hacer). |
 | Pregunta y envío (solo diseño allá) | La versión guarda solo la referencia; cambiar el catálogo de una pregunta publicada crea una nueva; `Dropdown` con `data-source: ${data.<pregunta>_options}`; la oferta en la sesión; con filtros alcanza con estar en la oferta; una opción a mano dada de baja no guarda nada y el aviso nombra la pregunta, no la opción. |

@@ -10,7 +10,7 @@ Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sec
 
 ## 1. Qué es el producto
 
-- **Formularios propios.** Una organización arma sus formularios: preguntas tipadas, textos en español e inglés, versiones y un prefijo de numeración propio. No hay circuitos rígidos: cada formulario es independiente.
+- **Formularios propios.** Una organización arma sus formularios: preguntas tipadas, textos en un idioma original con una traducción opcional (decisión 17), versiones y un prefijo de numeración propio. No hay circuitos rígidos: cada formulario es independiente.
 - **Por WhatsApp.**
   - Se publican como Flows de Meta en el número de la organización.
   - Se mandan desde el chat, y el empleado los completa dentro de WhatsApp.
@@ -101,7 +101,7 @@ Valen todas las de [AGENTS.md](../../AGENTS.md) y las [fichas](../rules/README.m
 | [Idempotencia](../rules/idempotencia.md) | `[Idempotent]` en los `POST` que crean, publican, mandan o deciden una aprobación. La captura usa el recibo de Meta como clave. |
 | [Fechas](../rules/fechas-y-zonas.md) | «Fecha sin hora» es `DateOnly`; lo recibido, `…Utc`. Los vencimientos usan `TimeProvider` y la hora firmada por Meta. |
 | [Números](../rules/numeros-y-moneda.md) | «Número con decimales» es `decimal` con precisión y escala, nunca `double`; `null` es «Sin respuesta». |
-| [Textos](../rules/textos-y-traducciones.md) y [textos libres](../rules/textos-libres.md) | La interfaz sale de resources es/en. Las preguntas son contenido de la organización, en es/en. Lo que escribe la persona pasa por `TextLimits`. |
+| [Textos](../rules/textos-y-traducciones.md) y [textos libres](../rules/textos-libres.md) | La interfaz sale de resources es/en. Las preguntas son contenido de la organización: un idioma original obligatorio y una traducción opcional, sin mezclar al mandar (decisión 17). Lo que escribe la persona pasa por `TextLimits`. |
 | [Formato](../architecture/backend.md#18-representación-y-formato-de-datos-unificado) | El PDF y los avisos por WhatsApp se formatean con `DisplayFormatter`, con cultura y zona explícitas. |
 | [Paginado](../rules/paginado-y-busqueda.md) | Planilla, catálogos y listados paginados, 10 por defecto. Los filtros con texto libre van en el cuerpo. |
 | [Logs](../rules/logs.md) | `[LoggerMessage]` y `OperationLog.RunAsync`. Nunca el token de sesión, los valores de una respuesta ni teléfonos completos. |
@@ -125,17 +125,18 @@ Cada una tiene tableros a dibujar en el lienzo vigente del front antes de progra
 
 - **Editor.**
   - Seis tipos: texto corto, texto largo, número con decimales (precisión y escala), fecha sin hora, sí/no y lista de opciones escritas en la pregunta.
-  - Nombre, preguntas, ayudas, opciones y botón final en español e inglés. Se puede guardar incompleto, pero se publica con los dos idiomas completos.
+  - Nombre, preguntas, ayudas, opciones y botón final en el idioma original del formulario, que se elige al crearlo y no cambia. La traducción es opcional: se puede guardar y publicar sin ella (decisión 17).
   - **Prefijo de numeración:** se propone desde el nombre, se edita hasta la primera publicación, es único y no se recicla.
   - Vista previa en el teléfono.
   - El borrador se guarda con revisión y 409, como la configuración interna (`IVersioned`).
 - **Publicar.**
   - Comprobación local antes de mandar: tipos, límites del perfil de Meta y un presupuesto de respuesta de 16 KiB.
   - Publicación en Meta como **operación durable** (efecto externo): crear, subir el `FLOW_JSON`, verificar y publicar, con estados aceptada, preparando, publicando, sin confirmar, activación pendiente, publicada y fallida.
-  - Un Flow por versión y por idioma. Vista previa oficial de Meta. Solo «Sin confirmar» cuando pudo haber efecto en Meta; un error definitivo termina en fallida y visible.
+  - Un Flow por versión y por idioma **completo**: solo los idiomas completos se publican en Meta. Vista previa oficial de Meta. Solo «Sin confirmar» cuando pudo haber efecto en Meta; un error definitivo termina en fallida y visible.
 - **Versiones.** Publicar fija las preguntas. Cambiar crea una versión nueva, y cada respuesta conserva la versión con la que llegó.
 - **Mandar desde el chat** (bandeja Internos de E11).
-  - El botón aparece si el contacto es un empleado activo, con idioma y `formrecords.create`, y dentro de las 24 horas.
+  - El botón aparece si el contacto es un empleado activo, con `formrecords.create`, y dentro de las 24 horas.
+  - Va en el idioma de la cuenta de quien recibe si la versión lo tiene completo; si no, entero en el original.
   - El mensaje lleva un texto de hasta 1024 caracteres y un único botón, «Abrir formulario».
   - Se crea una sesión con un token aleatorio, válida 24 horas (configurable), y el mensaje sale por el outbox.
 - **Recibir.**
@@ -151,7 +152,7 @@ Cada una tiene tableros a dibujar en el lienzo vigente del front antes de progra
 
 - **Listado y alta.** Se elige el origen al crear y no cambia después.
 - **Escritos a mano.**
-  - Cada opción tiene texto, detalle y código. El inglés es opcional y, si falta, se usa el español.
+  - Cada opción tiene texto, detalle y código, en el idioma original del catálogo, con traducción opcional. Si alguna opción ofrecida no tiene el idioma de quien recibe, todo el formulario sale en el original.
   - Una opción se da de baja sin borrarse. Las posiciones son únicas y se reordena con «mover» por id.
 - **Con filtros.**
   - Condiciones armadas por el sistema sobre fuentes definidas en el código y versionadas (no vistas SQL: ver la spec de la E13), con columnas permitidas y valores como parámetros, usando la conexión normal.
@@ -208,7 +209,7 @@ Cada una tiene tableros a dibujar en el lienzo vigente del front antes de progra
   - Nadie aprueba lo que cargó. La respuesta conserva la revisión de reglas con la que llegó.
   - Pendientes en «Para resolver».
 - **PDF.**
-  - Diseño simple con revisiones propias, en el idioma de quien lo recibe, como copia fija.
+  - Diseño simple con revisiones propias, como copia fija, en el idioma de quien lo recibe si está completo; si no, entero en el original.
   - Opción de incluir las fotos. Se guarda con `IFileStore`.
 - **Avisos por WhatsApp.**
   - Salen por el outbox con el número de la organización. Dentro de 24 horas, como texto o documento.
@@ -219,8 +220,8 @@ Cada una tiene tableros a dibujar en el lienzo vigente del front antes de progra
 Va al final del bloque para que las plantillas puedan traer reglas de ejemplo.
 
 - **Plataforma.**
-  - Arma plantillas: formulario (preguntas es/en, botón y prefijo sugerido), sus catálogos escritos a mano y sus reglas de ejemplo.
-  - Categoría, descripción es/en, versiones y publicada o retirada.
+  - Arma plantillas: formulario (preguntas en su idioma original, con traducción opcional; botón y prefijo sugerido), sus catálogos escritos a mano y sus reglas de ejemplo.
+  - Categoría, descripción, versiones y publicada o retirada. Publicar exige solo el idioma original.
   - Datos globales en `platform`, con auditoría (ADR 0050).
 - **Organización.**
   - Con el feature `forms` ve la biblioteca y elige «Usar esta plantilla».
