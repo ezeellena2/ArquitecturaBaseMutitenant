@@ -27,7 +27,7 @@
     - un formulario que la persona no puede completar se trata como inexistente.
   - **Sugerencias entre formularios (s1–s4):** origen, destino, «cuándo», condición opcional, modo Assistant (decide la IA) o Always (por condición, sin IA) y mapeo de preguntas del mismo tipo. Las respuestas guardan su origen.
   - **Catálogo propuesto (H4):** se pide desde el chat administrativo, solo con filtros. Queda inactivo hasta que lo apruebe una persona con `formcatalogs.manage`.
-  - **Audios (H6):** se transcriben con un proveedor de transcripción (OpenAI, como en ArquitecturaBase), y la transcripción la ve también el operador (decisión 27).
+  - **Audios (H6):** se bajan como los archivos de la E14 y se transcriben por un puerto del núcleo (`Application/Interfaces/Integrations`), como el transporte del asistente. La transcripción la ve también el operador. El proveedor se elige con su ADR al planificar (decisión 27).
   - **Formularios que faltan (H7):** pedidos agrupados por tema, sin nombres ni mensajes. Quien diseña formularios lo crea o descarta el pedido.
 - **Front:**
   - el selector de modo del chat;
@@ -82,7 +82,7 @@
 
 - **Idioma:** «Cuándo lo ofrece», los pedidos y los temas se escriben en un solo idioma.
 - **Pantallas:** se copian de ArquitecturaBase (decisión 18).
-- **Audios:** con un proveedor de transcripción, dentro del tope de IA de la organización (decisión 27).
+- **Audios:** con un puerto de transcripción del núcleo, la clave en user-secrets y el costo dentro del tope de IA de la organización. El proveedor, con su ADR al planificar (decisión 27).
 - **Modo Asistente:** lo activa quien tiene «Administrar WhatsApp» (decisión 28).
 - **Bandeja:** solo Internos (decisión 29).
 

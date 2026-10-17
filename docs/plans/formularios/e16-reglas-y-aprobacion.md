@@ -35,7 +35,7 @@ Se planifica con `/plan-etapa` cuando le toque, después de la E15.
     - al aprobar, se fija una **copia fija** A4, una por ejecución y por idioma, que se escribe una sola vez;
     - solo se ve por la Api, con `formrecords.read`.
   - **Avisos por WhatsApp:**
-    - salen por la misma cola de salida, marcados como «acción de formulario» y sin duplicados por ejecución;
+    - Forms los pide por un **puerto neutral del núcleo**, como el envío de la E12, y nunca referencia WhatsApp (lo controla `ModuleIsolationTests`). WhatsApp los encola en su misma cola de salida, marcados como «acción de formulario» y sin duplicados por ejecución;
     - la ventana de 24 horas se mira al aceptar y al despachar;
     - un documento se sube a Meta antes de mandarlo;
     - un aviso «Sin confirmar» lo revisa una persona: «salió» o «no salió».
@@ -76,14 +76,14 @@ La puerta de la etapa, más una **prueba real con Meta y el almacenamiento de la
 ## Requisitos previos
 
 - La E12 a la E15 cerradas, y la E10 (almacenamiento).
-- Las plantillas de Meta para los avisos fuera de las 24 horas (decisión 26): de categoría Utilidad, se crean al empezar la etapa, una por WABA, siguiendo [whatsapp-plantillas](../../operations/whatsapp-plantillas.md).
+- **Sin plantillas de Meta nuevas:** fuera de las 24 horas, el aviso queda «No se pudo» (decisión 26).
 
 ## Ajustes ya decididos
 
 - **Idioma:** reglas, mensajes y diseño exigen solo el original. Para cada evento, si el idioma de quien recibe no está completo en todos los avisos de esa revisión y en el diseño del PDF, todo sale en el original, y esa elección queda fijada en la ejecución.
 - **PDF:** se reusa PDFsharp-MigraDoc, que ya está en el asistente; no se suma SkiaSharp.
 - **Quién aprueba:** cualquiera de la organización con el rol de la regla y `formapprovals.decide`, salvo quien cargó la respuesta (decisión 25).
-- **Avisos fuera de las 24 horas:** con plantillas de Meta (decisión 26).
+- **Avisos fuera de las 24 horas:** quedan «No se pudo», a la vista, y el PDF queda guardado. El operador puede mandar una plantilla desde el chat con lo que ya trae la E11. El envío automático con plantilla queda para después (decisión 26).
 
 ## En el multitenant
 

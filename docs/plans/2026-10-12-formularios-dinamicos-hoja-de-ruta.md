@@ -241,7 +241,7 @@ Cada una tiene tableros a dibujar en el lienzo vigente del front antes de progra
   - Opción de incluir las fotos. Se guarda con `IFileStore`.
 - **Avisos por WhatsApp.**
   - Salen por el outbox con el número de la organización. Dentro de 24 horas, como texto o documento.
-  - **Fuera de las 24 horas:** con plantillas de Meta aprobadas, de categoría Utilidad, una por WABA, creadas al empezar la etapa (decisión 26). En ArquitecturaBase quedan «No se pudo».
+  - **Fuera de las 24 horas:** el aviso queda «No se pudo», a la vista, y el PDF queda guardado (decisión 26, como en ArquitecturaBase). El operador puede mandar una plantilla desde el chat con lo que ya trae la E11.
 - **Resumen de la etapa:** [formularios/e16-reglas-y-aprobacion.md](formularios/e16-reglas-y-aprobacion.md).
 - **Criterios:**
   - la configuración que usa un efecto se valida al reservar (un rol borrado colgaba una aprobación);
@@ -292,6 +292,7 @@ Va al final del bloque para que las plantillas puedan traer reglas de ejemplo.
 - Borrador de formulario armado por la IA.
 - Copiar y eliminar formularios, y deprecar Flows viejos.
 - Límites por plan.
+- Avisos automáticos con plantilla de Meta fuera de las 24 horas: necesitan plantillas del sistema en la WABA de cada organización, con su alta y aprobación por WABA, que el proyecto no tiene.
 
 ## 4. Lo que aprendimos en ArquitecturaBase
 
@@ -356,8 +357,11 @@ Elegidas por el usuario el 2026-10-17, entre las que quedaron al alinear el bloq
 23. **Cuánto se guardan las respuestas, sus archivos y sus PDF:** sin plazo mientras exista la organización. Se borran con la baja de la organización, y lo personal de quien da de baja su cuenta, con el participante de la baja. Se revisa con el primer cliente.
 24. **La empresa en la planilla:** un filtro «Empresa ▾» y una columna «Empresas» que se puede ocultar desde «Columnas».
 25. **Quién aprueba:** cualquiera de la organización con el rol de la regla y `formapprovals.decide`, salvo quien cargó la respuesta.
-26. **Avisos por WhatsApp fuera de las 24 horas:** con plantillas de Meta de categoría Utilidad, una por WABA, creadas al empezar la E16.
-27. **Transcribir audios en el asistente:** con un proveedor de transcripción (OpenAI, como en ArquitecturaBase), con el costo dentro del tope mensual de IA de la organización (ADR 0051).
+26. **Avisos por WhatsApp fuera de las 24 horas:** quedan «No se pudo», a la vista, y el PDF queda guardado, como en ArquitecturaBase. El operador puede mandar una plantilla desde el chat con lo que ya trae la E11, y el envío automático con plantilla queda para después.
+    - El usuario había elegido la A (plantillas de Meta), pero pedía un mecanismo que el proyecto no tiene: plantillas del sistema en la WABA de cada organización, con su alta y aprobación por WABA y las variables armadas solas.
+    - `docs/operations/whatsapp-plantillas.md` cubre solo las del número de la plataforma, y la E11 manda solo una plantilla que elige una persona en el chat.
+    - Por eso, la Guía la pasó a la B el 2026-10-17, por la condición de abajo.
+27. **Transcribir audios en el asistente:** sí, por un puerto del núcleo en `Application/Interfaces/Integrations`, como el transporte del asistente. La clave va en user-secrets (ficha de configuración), y el costo entra en el tope mensual de IA de la organización (ADR 0048 y 0051). El proveedor se elige con su ADR al planificar el asistente.
 28. **Quién pasa una conversación a modo Asistente:** quien tiene «Administrar WhatsApp», sin permiso nuevo.
 29. **Dónde actúa el asistente:** solo en la bandeja Internos, con empleados.
 

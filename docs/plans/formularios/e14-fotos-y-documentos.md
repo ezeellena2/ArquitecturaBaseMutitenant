@@ -14,7 +14,7 @@
     - Documento: PDF, Excel, Word, JPEG y PNG;
     - mínimo y máximo por pregunta; obligatoria quiere decir mínimo 1;
     - no se publica si la suma de los máximos pasa de 10.
-  - **Tope por archivo:** uno de la instalación, de 1 a 25 MiB, y se sella al publicar.
+  - **Tope por archivo:** una opción del módulo en `Application/Configuration/Forms`, de 1 a 25 MiB, con `ValidateOnStart`, que se sella al publicar.
   - **Flow:** `PhotoPicker` y `DocumentPicker`, una pregunta de archivo por pantalla. Los IDs de pantalla son solo letras y guiones bajos, con un perfil nuevo.
   - **Captura con archivos:**
     - baja cada archivo de la API de medios, solo por HTTPS desde hosts de Meta y sin redirecciones;
@@ -25,7 +25,7 @@
   - **Acceso:**
     - miniatura y original solo por la Api, con `formrecords.read` y pertenencia, `no-store` y `nosniff`;
     - los documentos siempre se descargan, con un nombre que lleva la extensión del tipo verificado;
-    - tiene un cupo propio de lecturas.
+    - las lecturas cuentan en las cuotas generales de [cuotas](../../rules/cuotas.md) (identidad y organización). Un perfil propio sería un cambio de esa ficha, con su test, nunca una cuota del módulo.
   - **Limpieza** de archivos huérfanos cada hora.
 - **Front:**
   - en el editor, los dos tipos y el contador «Archivos: hasta N de 10»;
@@ -74,7 +74,7 @@ La puerta de la etapa, más una **prueba real con Meta y el almacenamiento de la
 - **Almacenamiento (E10):** los archivos van en `IFileStore`, con un prefijo o un contenedor por organización (lo fija la E10). La limpieza usa su diario (`IFileStoreMaintenance`).
 - **Workers:**
   - la captura y la limpieza entran a la organización con `ExecutionActor`, que usa `ITenantScope` por dentro (T5 de la E12);
-  - la limpieza recorre las organizaciones con `TenantJobRunner`, o un registro técnico sin datos de negocio.
+  - la limpieza recorre las organizaciones con `TenantJobRunner`, copiando `InvitationExpiryWorker`.
 - **Feature `forms`:** las rutas nuevas llevan `[FeatureGate("forms")]`.
 - **Permisos:** ninguno nuevo; ver y descargar pide `formrecords.read`.
 - **WhatsApp (E11):** la API de medios se llama con el token de la WABA de la organización.

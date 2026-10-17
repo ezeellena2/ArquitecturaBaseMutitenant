@@ -20,11 +20,11 @@
     - condiciones unidas con «y», con la gramática de la E13 por tipo: texto `contains`/`equals`; número y fecha `equals`/`gte`/`lte`; elección y sí/no `in`; y en todos, `answered`/`unanswered`/`notAsked`;
     - además, persona, versión, rango de recepción (UTC, con fin exclusivo) y empresa;
     - la búsqueda mira solo los textos largos;
-    - textos, personas y condiciones viajan por `POST` en el cuerpo.
+    - textos, personas y condiciones viajan en el cuerpo: la planilla usa `POST …/search` con el mismo contrato `<X>Query` de [paginado-y-busqueda](../../rules/paginado-y-busqueda.md) (página, tamaño, orden, búsqueda y filtros). Esa variante para listados con filtros estructurados se suma a la ficha, con su test, al planificar la E15: vale para todo el repo, no es una excepción del módulo.
   - **Conteos por faceta:** cada uno ignora solo su propia dimensión y conserva las opciones históricas.
   - **Excel (`.xlsx`):**
     - con los filtros aplicados y `formrecords.export`;
-    - hasta 10.000 respuestas: una consulta de ids ordenados e hidratación en lotes de 100, con un presupuesto de 30 s y una exportación a la vez por persona;
+    - hasta 10.000 respuestas: una consulta de ids ordenados e hidratación en lotes de 100, con un presupuesto de 30 s y una exportación a la vez por persona, con un candado de PostgreSQL como los `I<X>Lock` de `Application/Interfaces/Persistence` (`AdvisoryLockExtensions`), nunca uno por proceso;
     - números, fechas y sí/no van como tipos de Excel; de los archivos, la cantidad y los nombres.
   - **Detalle D2:** los datos de una respuesta con las preguntas de su versión, su origen y su historial.
 - **Front:**
