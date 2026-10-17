@@ -128,10 +128,10 @@
   <data name="SecurityEvent.PlatformOperatorRemoved" xml:space="preserve"><value>Quitó al operador</value></data>
   <data name="SecurityEvent.PlatformOperatorInvitationResent" xml:space="preserve"><value>Reenvió la invitación de un operador</value></data>
   <data name="SecurityEvent.PlatformOperatorInvitationRevoked" xml:space="preserve"><value>Revocó la invitación de un operador</value></data>
-  <data name="SecurityEvent.PlatformAuthenticatorConfigured" xml:space="preserve"><value>Configuró su autenticador</value></data>
-  <data name="SecurityEvent.PlatformAuthenticatorReset" xml:space="preserve"><value>Restableció el autenticador de un operador</value></data>
-  <data name="SecurityEvent.PlatformRecoveryCodeUsed" xml:space="preserve"><value>Usó un código de recuperación</value></data>
-  <data name="SecurityEvent.PlatformReauthenticated" xml:space="preserve"><value>Confirmó su identidad</value></data>
+  <data name="SecurityEvent.PlatformAuthenticatorConfigured" xml:space="preserve"><value>Configuró el autenticador</value></data>
+  <data name="SecurityEvent.PlatformAuthenticatorReset" xml:space="preserve"><value>Restableció el autenticador</value></data>
+  <data name="SecurityEvent.PlatformRecoveryCodeUsed" xml:space="preserve"><value>Confirmó con un código de recuperación</value></data>
+  <data name="SecurityEvent.PlatformReauthenticated" xml:space="preserve"><value>Confirmó con el autenticador</value></data>
   <data name="SecurityEvent.LegalDocumentPublished" xml:space="preserve"><value>Publicó una versión de un documento legal</value></data>
   <data name="Platform.LegalPublicationReason" xml:space="preserve"><value>Publicación de una versión de un documento legal.</value></data>
   <data name="Platform.AuthenticatorConfiguredReason" xml:space="preserve"><value>Alta del autenticador al ingresar.</value></data>

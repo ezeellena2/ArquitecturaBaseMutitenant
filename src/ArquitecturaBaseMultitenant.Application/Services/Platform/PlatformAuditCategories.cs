@@ -23,21 +23,25 @@ internal static class PlatformAuditCategories
             or SecurityEventType.TenantFeaturesChanged or SecurityEventType.PublicPageUnpublished
             or SecurityEventType.PublicPagePublicationAllowed or SecurityEventType.OrganizationDomainVerified
             or SecurityEventType.OrganizationDomainRemoved or SecurityEventType.OrganizationMembershipEnded => Organizations,
+        // Los automáticos del segundo factor (E9) son ingresos, como en el tablero; el restablecimiento es de una cuenta.
+        SecurityEventType.PlatformAuthenticatorConfigured or SecurityEventType.PlatformReauthenticated
+            or SecurityEventType.PlatformRecoveryCodeUsed => SignIns,
         SecurityEventType.LoginMethodChanged or SecurityEventType.AccountDeletionRequested
             or SecurityEventType.AccountDeletionCancelled or SecurityEventType.AccountDeleted
             or SecurityEventType.AccountSuspended or SecurityEventType.AccountReactivated
             or SecurityEventType.AccountSessionsRevoked or SecurityEventType.AccountRecoveryApproved
-            or SecurityEventType.AccountRecoveryRejected => Accounts,
+            or SecurityEventType.AccountRecoveryRejected or SecurityEventType.PlatformAuthenticatorReset => Accounts,
         SecurityEventType.PlatformOperatorGranted or SecurityEventType.PlatformOperatorInvited
             or SecurityEventType.PlatformOperatorInvitationResent or SecurityEventType.PlatformOperatorInvitationRevoked
-            or SecurityEventType.PlatformOperatorPermissionsChanged or SecurityEventType.PlatformOperatorRemoved
-            or SecurityEventType.PlatformAuthenticatorConfigured or SecurityEventType.PlatformAuthenticatorReset
-            or SecurityEventType.PlatformRecoveryCodeUsed or SecurityEventType.PlatformReauthenticated => Operators,
+            or SecurityEventType.PlatformOperatorPermissionsChanged or SecurityEventType.PlatformOperatorRemoved => Operators,
         SecurityEventType.PlatformSettingsChanged or SecurityEventType.LegalDocumentPublished => Settings,
         _ => Other,
     };
 
-    /// <summary>Los tipos de evento de una categoría; los ingresos no son eventos y salen de LoginAudits.</summary>
+    /// <summary>Los tipos de evento de una categoría. Los ingresos suman a LoginAudits los automáticos del segundo factor.</summary>
     public static IReadOnlyCollection<SecurityEventType> TypesOf(string category) =>
         [.. Enum.GetValues<SecurityEventType>().Where(type => Of(type) == category)];
+
+    /// <summary>Un ingreso es automático: el tablero muestra «—» como motivo, aunque el evento guarde uno de sistema.</summary>
+    public static bool ShowsReason(SecurityEventType type) => Of(type) != SignIns;
 }

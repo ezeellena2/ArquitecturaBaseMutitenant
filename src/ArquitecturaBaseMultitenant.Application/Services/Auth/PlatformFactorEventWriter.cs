@@ -7,8 +7,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
 /// <summary>
 /// Agrega los eventos automáticos del segundo factor del propio operador (E9) en la transacción del llamador: configuró
-/// su autenticador, usó un código de recuperación o confirmó su identidad. Llevan un motivo de sistema traducido y la
-/// IP enmascarada, sin códigos ni secretos.
+/// el autenticador, o confirmó una acción sensible con el autenticador o con un código de recuperación. Guardan un
+/// motivo de sistema traducido, que Auditoría no muestra, y la IP enmascarada, sin códigos ni secretos.
 /// </summary>
 internal sealed class PlatformFactorEventWriter(ISecurityEventRepository events, IRequestInfo requestInfo, TimeProvider clock)
 {

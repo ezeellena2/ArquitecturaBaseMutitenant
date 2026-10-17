@@ -1,13 +1,21 @@
 using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Platform;
 
 /// <summary>
 /// Plataforma › Auditoría: los SecurityEvent y los ingresos de identity.LoginAudits, del más nuevo al más viejo, por
-/// cursor estable, con textos traducidos y sin correos, teléfonos, códigos ni enlaces completos.
+/// cursor estable, con textos traducidos y sin correos, teléfonos, códigos ni enlaces completos. El segundo factor sigue
+/// a Auditoria-Plat de la v125: una fila por acción.
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class PlatformSecurityAuditTests(ApiFactory factory)
@@ -91,6 +99,46 @@ public sealed class PlatformSecurityAuditTests(ApiFactory factory)
         Assert.DoesNotContain(code, raw, StringComparison.Ordinal);
     }
 
+    // E9 (I1): los automáticos del segundo factor son ingresos, sin motivo; el restablecimiento es de la cuenta
+    // restablecida y conserva el motivo que escribió el operador.
+    [Fact]
+    public async Task Second_factor_events_are_one_row_per_action_as_on_the_board()
+    {
+        using var auditor = await OperatorAsync([PlatformPermissions.Audit.Read]);
+        var (manager, _) = await OperatorWithIdAsync(PlatformOperators.All);
+        var (target, targetId) = await OperatorWithIdAsync([PlatformPermissions.Accounts.Read]);
+        using (manager)
+        using (target)
+        {
+            await ReauthenticateAsync(target, "authenticator", await PlatformFactorJourney.CurrentCodeAsync(factory.Services, targetId, Ct));
+            await ReauthenticateAsync(target, "recoveryCode", await RecoveryCodeAsync(targetId));
+            uint version;
+            using (var detail = await manager.GetAsync($"/api/platform/accounts/{targetId:D}", Ct))
+                version = (await detail.Content.ReadFromJsonAsync<JsonElement>(Ct)).GetProperty("operatorVersion").GetUInt32();
+            using var resetting = await SendAsync(manager, $"/api/platform/accounts/{targetId:D}/authenticator/reset",
+                new { version, reason = "Perdió el celular" });
+            Assert.True(resetting.IsSuccessStatusCode, await resetting.Content.ReadAsStringAsync(Ct));
+        }
+
+        var signIns = (await GetAsync(auditor, $"?type=signins&accountId={targetId:D}")).GetProperty("items").EnumerateArray().ToArray();
+        Assert.Equal(["Confirmó con un código de recuperación", "Confirmó con el autenticador", "Configuró el autenticador"],
+            signIns.Where(item => item.GetProperty("action").GetString()!.StartsWith("Platform", StringComparison.Ordinal))
+                .Select(item => item.GetProperty("summary").GetString()));
+        Assert.All(signIns, item =>
+        {
+            Assert.Equal("signins", item.GetProperty("type").GetString());
+            Assert.Equal(JsonValueKind.Null, item.GetProperty("reason").ValueKind);
+        });
+        var reset = Assert.Single((await GetAsync(auditor, $"?type=accounts&accountId={targetId:D}")).GetProperty("items")
+            .EnumerateArray(), item => item.GetProperty("action").GetString() == "PlatformAuthenticatorReset");
+        Assert.Equal("Restableció el autenticador", reset.GetProperty("summary").GetString());
+        Assert.Equal(targetId, reset.GetProperty("targetAccountId").GetGuid());
+        Assert.Equal("Perdió el celular", reset.GetProperty("reason").GetString());
+        Assert.DoesNotContain((await GetAsync(auditor, $"?type=operators&accountId={targetId:D}")).GetProperty("items")
+            .EnumerateArray(), item => item.GetProperty("action").GetString()!.Contains("Authenticator", StringComparison.Ordinal)
+                || item.GetProperty("action").GetString() is "PlatformRecoveryCodeUsed" or "PlatformReauthenticated");
+    }
+
     [Fact]
     public async Task Only_operators_with_audit_read_query_and_a_bad_cursor_is_rejected()
     {
@@ -116,13 +164,46 @@ public sealed class PlatformSecurityAuditTests(ApiFactory factory)
     private HttpClient Client() =>
         factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
 
-    private async Task<HttpClient> OperatorAsync(IReadOnlyCollection<string> permissions)
+    private async Task<HttpClient> OperatorAsync(IReadOnlyCollection<string> permissions) =>
+        (await OperatorWithIdAsync(permissions)).Client;
+
+    private async Task<(HttpClient Client, Guid Id)> OperatorWithIdAsync(IReadOnlyCollection<string> permissions)
     {
         var client = Client();
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
         await PlatformOperators.GrantAsync(factory.Services, account.UserId, permissions, Ct);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
-        return client;
+        return (client, account.UserId);
+    }
+
+    private static async Task ReauthenticateAsync(HttpClient client, string method, string code)
+    {
+        using var confirmed = await SendAsync(client, "/api/platform/reauthentication", new { method, code });
+        Assert.True(confirmed.StatusCode == HttpStatusCode.OK, await confirmed.Content.ReadAsStringAsync(Ct));
+    }
+
+    /// <summary>Un código de recuperación conocido, guardado como lo guarda el alta.</summary>
+    private async Task<string> RecoveryCodeAsync(Guid userId)
+    {
+        const string code = "AUDI-TORA";
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var hash = services.GetRequiredService<IPlatformFactorSecrets>().HashRecoveryCode(userId, code);
+        var saved = await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+        {
+            services.GetRequiredService<ApplicationDbContext>().Add(PlatformRecoveryCode.Issue(userId, hash,
+                services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime));
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+        Assert.True(saved.IsSuccess);
+        return code;
+    }
+
+    private static async Task<HttpResponseMessage> SendAsync(HttpClient client, string path, object body)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, path) { Content = JsonContent.Create(body) };
+        request.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("D"));
+        return await client.SendAsync(request, Ct);
     }
 
     private static async Task<JsonElement> GetAsync(HttpClient client, string suffix)

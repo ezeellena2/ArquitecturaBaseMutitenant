@@ -62,8 +62,9 @@ internal sealed class PlatformReauthenticationService(
         nowUtc = nowUtc.AddTicks(-(nowUtc.Ticks % TimeSpan.TicksPerMicrosecond));
         session.ConfirmRecentProof(nowUtc);
         await signIn.ResetFailedAttemptsAsync(userId, ct);
-        events.RecordReauthenticated(userId);
+        // Una fila por acción, como Auditoría: confirmó con el autenticador o con un código de recuperación.
         if (proved.Value == LoginAuditMethod.RecoveryCode) events.RecordRecoveryCodeUsed(userId);
+        else events.RecordReauthenticated(userId);
         var durable = requests.Request ?? throw new InvalidOperationException("A durable request is required.");
         var operation = PlatformFactorOperation.ForReauthentication(durable.Key, userId, session.Id, durable.BodyHash,
             durable.Route, session.RecentProofAtUtc, session.RecentProofUntilUtc, nowUtc);

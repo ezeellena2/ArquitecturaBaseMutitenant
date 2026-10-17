@@ -66,12 +66,8 @@ internal sealed class PlatformAuditService(ISecurityEventReader reader, IUserRep
             return Result.Success(await reader.ListOrganizationsPagedAsync(filters, request, since, EventTypes(filters.Type), ct));
         });
 
-    private static IReadOnlyCollection<SecurityEventType>? EventTypes(string? category) => category switch
-    {
-        null => null,
-        PlatformAuditCategories.SignIns => [],
-        var type => PlatformAuditCategories.TypesOf(type),
-    };
+    private static IReadOnlyCollection<SecurityEventType>? EventTypes(string? category) =>
+        category is null ? null : PlatformAuditCategories.TypesOf(category);
 
     private async Task<DateTime?> SinceAsync(string? period, CancellationToken ct)
     {
@@ -110,7 +106,7 @@ internal sealed class PlatformAuditService(ISecurityEventReader reader, IUserRep
         var actor = row.ActorKind == AuditActorKind.System ? AuditTexts.Actor(AuditActorKind.System) : Name(row.Actor);
         return new PlatformAuditEventResponse(row.Id, row.OccurredAtUtc, PlatformAuditCategories.Of(type), type.ToString(),
             AuditTexts.SecurityEvent(type), target, row.TargetTenantId, row.TargetAccountId, actor,
-            AuditTexts.ActorRole(row.ActorKind), row.Reason, row.MaskedIpAddress)
+            AuditTexts.ActorRole(row.ActorKind), PlatformAuditCategories.ShowsReason(type) ? row.Reason : null, row.MaskedIpAddress)
         { AuditActorId = row.AuditActorId };
     }
 

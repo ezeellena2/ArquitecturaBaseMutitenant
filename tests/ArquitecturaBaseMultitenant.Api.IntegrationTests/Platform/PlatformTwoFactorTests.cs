@@ -173,7 +173,8 @@ public sealed class PlatformTwoFactorTests(ApiFactory factory)
         await using var scope = factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         Assert.Equal(1, await db.PlatformRecoveryCodes.CountAsync(code => code.UserId == userId && code.UsedAtUtc != null, Ct));
-        Assert.True(await db.SecurityEvents.AnyAsync(item => item.Type == SecurityEventType.PlatformRecoveryCodeUsed
+        // Una fila por acción (E9): el ingreso con un código de recuperación queda sólo como ese ingreso.
+        Assert.False(await db.SecurityEvents.AnyAsync(item => item.Type == SecurityEventType.PlatformRecoveryCodeUsed
             && item.TargetAccountId == userId, Ct));
         Assert.True(await db.LoginAudits.AnyAsync(audit => audit.UserId == userId && audit.Succeeded
             && audit.Method == LoginAuditMethod.RecoveryCode, Ct));

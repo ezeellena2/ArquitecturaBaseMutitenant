@@ -11,10 +11,11 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 /// <summary>
 /// Termina el ingreso de un operador dentro de la transacción del segundo factor (E9): acepta la invitación pendiente,
 /// completa el desafío, crea la sesión de Plataforma, borra los fallos y registra el ingreso con el método usado. El
-/// vínculo durable con la clave de idempotencia se confirma junto con todo eso; la cookie sale después del commit.
+/// vínculo durable con la clave de idempotencia se confirma junto con todo eso; la cookie sale después del commit. El
+/// ingreso con un código de recuperación queda sólo como ese ingreso: una fila por acción, como Auditoría (E9).
 /// </summary>
 internal sealed class PlatformSignInWriter(IPlatformFactorRepository factors, IPlatformFactorSecrets secrets,
-    IUserRepository users, ISignInService signIn, ILoginAuditRepository audits, PlatformFactorEventWriter events,
+    IUserRepository users, ISignInService signIn, ILoginAuditRepository audits,
     ISecureTokenGenerator tokens, IIdempotentRequestContext requests, TimeProvider clock)
 {
     internal async Task<Result<PlatformSignIn>> SignInAsync(GuardedPlatformFactor guarded, PlatformFactorStep expected,
@@ -39,7 +40,6 @@ internal sealed class PlatformSignInWriter(IPlatformFactorRepository factors, IP
         factors.Add(session);
         await signIn.ResetFailedAttemptsAsync(account.Id, ct);
         audits.Add(LoginAudit.Success(account.Id, method, nowUtc));
-        if (method == LoginAuditMethod.RecoveryCode) events.RecordRecoveryCodeUsed(account.Id);
 
         var request = requests.Request ?? throw new InvalidOperationException("A durable request is required.");
         var operation = PlatformFactorOperation.ForSignIn(request.Key, kind, account.Id, challenge.Id, request.BodyHash,
