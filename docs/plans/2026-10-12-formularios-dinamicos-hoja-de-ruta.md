@@ -275,7 +275,7 @@ Aplicarlo desde el primer día evita lo que nos frenó la Etapa 1 durante días:
 
 ## 5. Decisiones de producto
 
-Decididas por el usuario el 2026-10-12. No se vuelven a preguntar.
+Decididas por el usuario entre el 2026-10-12 y el 2026-10-17. No se vuelven a preguntar.
 
 1. **Formularios por organización.** En la v1 son de la organización; la respuesta guarda la empresa de quien respondió y la planilla filtra por empresa. Formularios y permisos por empresa (`ICompanyOwned`), después.
 2. **Las plantillas se toman como copia independiente.** Una referencia obliga a resolver qué pasa con las respuestas cuando la plataforma cambia la plantilla.
@@ -284,7 +284,7 @@ Decididas por el usuario el 2026-10-12. No se vuelven a preguntar.
 5. **Sin límites por plan en la v1** (formularios, respuestas, almacenamiento): solo se habilita el feature. Medir el uso real antes de poner topes.
 6. **El bloque va después de la E10:** 8b → 11 → 9 → 10 → 12 a 17. Nace con Redis, límites y el fuzz de la E9, y con la nube de la E10.
 7. **`Forms` es un módulo aparte de `WhatsApp`,** unidos por puertos neutrales del núcleo, como en ArquitecturaBase.
-8. **Alcance:** seis etapas, con la biblioteca al final. El asistente en WhatsApp (antes F7) queda para después.
+8. **Alcance:** seis etapas, con la biblioteca al final. El asistente en WhatsApp (antes F7) se programa después; su diseño se adelanta (decisión 19).
 9. **Varias empresas:** si quien responde es miembro de varias empresas, la respuesta guarda todas sus empresas activas, y el filtro por empresa la encuentra por cualquiera.
 10. **Quién manda un formulario desde el chat:** cualquiera con «Atender internos», sin permiso aparte. Lo que limita es que quien recibe tenga `formrecords.create`.
 11. **Nombres largos en un catálogo de miembros:** si pasan los 30 caracteres del título de una opción en WhatsApp, se cortan con «…» y el nombre completo va en el detalle.
@@ -293,6 +293,18 @@ Decididas por el usuario el 2026-10-12. No se vuelven a preguntar.
 14. **Biblioteca, catálogos:** una plantilla trae solo catálogos a mano.
 15. **Biblioteca, categorías:** las arma la plataforma (nombre es/en y orden), sin listas fijas en el código.
 16. **Biblioteca, uso:** la plataforma ve solo cuántas organizaciones usaron cada plantilla, nunca cuáles.
+
+Decididas el 2026-10-17, con el [traspaso de ArquitecturaBase](2026-10-17-formularios-traspaso/README.md):
+
+17. **Idioma.** Se aplica desde el principio la regla que ArquitecturaBase adoptó el 2026-10-16:
+    - solo el idioma original es obligatorio para guardar y publicar, y la traducción es opcional;
+    - si la traducción no está completa, el formulario, el PDF, los mensajes y las opciones de catálogo salen enteros en el idioma original, sin mezclar;
+    - el idioma de las pantallas del sistema no cambia.
+18. **Pantallas.** Se copian de ArquitecturaBase:
+    - Diseño rehace los tableros de la 12 y la 13 con la disposición de su lienzo y del [05 del traspaso](2026-10-17-formularios-traspaso/05-pantallas.md), con las piezas y los criterios de nuestro lienzo y sin mostrar alternativas;
+    - la 17 no existe allá: sus tableros se quedan y solo se ajustan al editor nuevo;
+    - si la disposición choca con una regla escrita de este repo, manda la de acá.
+19. **Asistente** (antes F7, la etapa 5 de ArquitecturaBase). Se diseña ahora, después de los tableros de la 16. Se sigue programando después del bloque.
 
 ## 6. Qué tomar de ArquitecturaBase
 
