@@ -119,7 +119,7 @@ Valen todas las de [AGENTS.md](../../AGENTS.md) y las [fichas](../rules/README.m
 
 Cada etapa lleva su número del plan de desarrollo, de la E12 a la E17. Antes se llamaban F1, F2, F4, F5, F6 y F3; el asistente (F7) pasó a [Después](#después-del-bloque). Entre paréntesis va la etapa de ArquitecturaBase que sirve de referencia.
 
-Cada una tiene tableros a dibujar en el lienzo vigente del front antes de programar. Los de ArquitecturaBase sirven de referencia de contenido, no de estilo.
+Cada una tiene tableros a dibujar en el lienzo vigente del front antes de programar. Desde la decisión 18, Diseño copia la disposición de los tableros de ArquitecturaBase, con nuestras piezas y criterios. Los **criterios** de cada etapa son las lecciones del [06 del traspaso](2026-10-17-formularios-traspaso/06-lecciones.md): el plan de la etapa los toma como lista de control.
 
 ### E12 · Formularios: crear, publicar, mandar y recibir (AB etapa 1)
 
@@ -147,6 +147,12 @@ Cada una tiene tableros a dibujar en el lienzo vigente del front antes de progra
   - La respuesta cruda se cifra y se purga con la retención de WhatsApp.
 - **Módulo.** Los puertos neutrales del núcleo y sus implementaciones apagadas, `AddFormsModule()` y el retiro probado una vez.
 - **Cómo se cierra.** Puerta de etapa, más una prueba real con el número de una organización: publicar, mandar, completar en el teléfono y ver el número tras recargar.
+- **Criterios:**
+  - lo incierto se consulta, y si sigue incierto lo resuelve una persona («salió» o «no salió»); lo definitivo termina en «No se pudo»;
+  - los reintentos se acotan por cantidad y por tiempo (5 fallas y 15 minutos), y un mensaje trabado no frena a los demás;
+  - los campos nuevos de un DTO se exportan en el mismo corte; `""` no es `null`; una entrada inválida es 400, y un campo omitido no apaga nada;
+  - un solo dueño por error; «Reintentar» solo ante errores de red, con la misma versión;
+  - sin `formrecords.read`, ningún valor en avisos, vistas previas ni caché.
 
 ### E13 · Catálogos a mano y con filtros (AB etapa 2)
 
@@ -165,7 +171,13 @@ Cada una tiene tableros a dibujar en el lienzo vigente del front antes de progra
 - **Al responder.**
   - La opción tiene que estar en la oferta. Se guarda el texto que vio la persona.
   - Si una opción escrita a mano se dio de baja antes de responder, no se guarda nada, se avisa al operador sin valores y puede reenviar.
+- **Dar de baja un catálogo entero** y reactivarlo, sin borrarlo (regla de ArquitecturaBase, decisión 18).
 - **Fuera.** SQL configurable (catálogo con consulta): no se ofrece.
+- **Criterios:**
+  - los límites del canal se validan al guardar (30 y 300 por idioma), y la vista previa marca lo que no entra;
+  - las referencias van por id, nunca por nombre, y las opciones vacías no viajan;
+  - al operador le llegan solo cantidades, nunca los nombres ofrecidos;
+  - lo capturado guarda todas las variantes de idioma.
 
 ### E14 · Fotos y documentos (AB etapa 2B)
 
@@ -180,6 +192,12 @@ Cada una tiene tableros a dibujar en el lienzo vigente del front antes de progra
   - Bajar y subir con clave determinística: alcanza con un reintento simple.
 - **Ver.** Visor y descarga solo por la Api, con `formrecords.read`, `no-store` y `nosniff`. Los documentos siempre se descargan.
 - **Antes de producción.** Un antivirus. El adaptador de nube ya llega con la E10.
+- **Resumen de la etapa:** [formularios/e14-fotos-y-documentos.md](formularios/e14-fotos-y-documentos.md).
+- **Criterios:**
+  - las dimensiones de una foto se rechazan por el encabezado, antes de decodificar; el tipo sale del contenido, nunca de la extensión;
+  - el nombre de descarga lleva la extensión del tipo verificado y sin caracteres de formato (U+202E);
+  - no se confía en los tipos del proveedor: el id de medio puede llegar como número y una opcional vacía llega omitida;
+  - si falta el archivo guardado, 404; las miniaturas privadas se cachean por ámbito y se cargan solo las visibles.
 
 ### E15 · Planilla, detalle y Excel (AB etapa 3)
 
@@ -188,12 +206,22 @@ Cada una tiene tableros a dibujar en el lienzo vigente del front antes de progra
   - Columnas fijas: número, recibida, quién cargó y canal. Una columna por pregunta de todas las versiones.
   - «—» si la pregunta no existía en esa versión; «Sin respuesta» si quedó vacía. Ausencia, cero y false se distinguen.
 - **Filtros por tipo.** Usan la gramática de condiciones de la E13 y conteos con la misma definición. Los textos libres van en el cuerpo, nunca en la URL.
-- **Detalle.** Valores con las preguntas de su versión, origen e historial, y galería de archivos.
+- **Detalle D2:** la respuesta se abre en un **panel al costado de la planilla** (y de «Por aprobar»), sin salir de la lista. Lo eligió ArquitecturaBase el 2026-10-17 y se copia por la decisión 18.
+  - **Cabecera:** el número y el estado, ↑ ↓ y ✕.
+  - **Contenido:** los momentos del estado, armados con las reglas que tenía el formulario al llegar la respuesta, y las pestañas Respuesta, Fotos, Actividad y PDF.
+  - **Teléfono:** la respuesta se abre a pantalla completa.
+  - **URL:** lleva la respuesta abierta. La disposición está en el [05 del traspaso](2026-10-17-formularios-traspaso/05-pantallas.md).
 - **Excel.**
   - `.xlsx` con los filtros aplicados y permiso `formrecords.export`, hasta 10.000 respuestas por vez y sin trabajos en segundo plano.
   - De los archivos, cantidad y nombres. Encabezados en el idioma de quien exporta.
   - La biblioteca se adopta según P12.
 - **Robustez.** Todo es lectura: sin recibos ni pruebas de varios hosts.
+- **Resumen de la etapa:** [formularios/e15-planilla.md](formularios/e15-planilla.md).
+- **Criterios:**
+  - para exportar, una consulta de ids ordenados e hidratación por lotes; el esquema se deserializa una vez por versión; SQL con parámetros; una exportación a la vez por persona;
+  - la misma regla en memoria y en SQL («sin respuesta» sobre una pregunta que no existía);
+  - lo privado (textos buscados, personas y condiciones) nunca va en la URL, el storage ni las cachés persistentes;
+  - EXPLAIN sobre el SQL que genera EF.
 
 ### E16 · Reglas, aprobación, PDF y avisos (AB etapa 4)
 
@@ -213,7 +241,14 @@ Cada una tiene tableros a dibujar en el lienzo vigente del front antes de progra
   - Opción de incluir las fotos. Se guarda con `IFileStore`.
 - **Avisos por WhatsApp.**
   - Salen por el outbox con el número de la organización. Dentro de 24 horas, como texto o documento.
-  - **Fuera de las 24 horas, con plantillas de Meta aprobadas**, creadas al empezar la etapa, como manda este repo (en ArquitecturaBase quedaba fuera).
+  - **Fuera de las 24 horas:** pendiente de elección ([§7](#7-decisiones-pendientes), punto 7). La recomendada son plantillas de Meta aprobadas, creadas al empezar la etapa; en ArquitecturaBase quedan «No se pudo».
+- **Resumen de la etapa:** [formularios/e16-reglas-y-aprobacion.md](formularios/e16-reglas-y-aprobacion.md).
+- **Criterios:**
+  - la configuración que usa un efecto se valida al reservar (un rol borrado colgaba una aprobación);
+  - un destinatario inalcanzable no tumba a los demás;
+  - lo sellado manda, y no se copia la respuesta entera en cada ejecución: se fija solo lo que cambia;
+  - el PDF se muestra con `<object>`, con descarga como alternativa, nunca en un iframe con sandbox;
+  - cada worker tiene un test de su bucle.
 
 ### E17 · Biblioteca de plantillas de la plataforma (nueva)
 
@@ -232,8 +267,8 @@ Va al final del bloque para que las plantillas puedan traer reglas de ejemplo.
 
 ### Después del bloque
 
-**Asistente en WhatsApp, sugerencias y audios** (antes F7; AB etapa 5).
-- **Por qué quedó afuera:** requiere dos cosas que no están planificadas:
+**Asistente en WhatsApp, sugerencias y audios** (antes F7; AB etapa 5). **Se diseña ahora, después de los tableros de la 16, y se programa después del bloque** (decisión 19). Resumen: [formularios/asistente.md](formularios/asistente.md).
+- **Por qué su programación queda afuera:** requiere dos cosas que no están planificadas:
   - el asistente v2 con acciones con confirmación (ADR 0048, D8);
   - la IA en WhatsApp, que la ADR 0038 deja para después.
 - **Cómo se haría:** las herramientas siguen la receta de este repo ([agregar una herramienta](../guides/agregar-una-herramienta-al-asistente.md)); el modelo lee o propone, y ejecuta el servicio del módulo dueño. Los costos de IA, incluida la transcripción de audios, entran en el tope mensual en USD por organización del asistente (ADR 0051).
@@ -262,7 +297,13 @@ Va al final del bloque para que las plantillas puedan traer reglas de ejemplo.
 
 Aplicarlo desde el primer día evita lo que nos frenó la Etapa 1 durante días:
 
-1. **Robustez proporcional al efecto.** Recuperación durable, «Sin confirmar» y pruebas de varios hosts solo para Meta, archivos, IA y mensajes a personas. Lo interno se guarda con revisión y 409.
+1. **Robustez proporcional al efecto** (ADR 0018 de ArquitecturaBase). Mandan nuestras fichas de [guardado](../rules/guardado.md), [concurrencia](../rules/concurrencia.md) e [idempotencia](../rules/idempotencia.md):
+
+   | Efecto | Cómo se hace acá |
+   | --- | --- |
+   | **Fuera del sistema:** Meta, descarga de medios, almacenamiento, IA y mensajes a personas | Operación durable: un trabajo con lease y fence en un registro técnico (como `AssistantTurnWorks`). Antes de cada llamada se commitea `InFlight`, y la llamada va fuera de la UoW. Lo incierto queda «Sin confirmar» y se consulta antes de repetir. Idempotencia por el id del trabajo o de la sesión, y `[Idempotent]` en el `POST` que lo pide. Pruebas de varios hosts. |
+   | **Lectura:** planilla, filtros, Excel | Sin recibos ni leases: presupuesto de tiempo y topes. |
+   | **Configuración interna:** borradores, catálogos, reglas, diseño del PDF, plantillas | Una sola `ExecuteInTransactionAsync`, `IVersioned` y 409 `General.ConcurrencyConflict`. `[Idempotent]` solo en las altas, y sin recibos de 30 días. |
 2. **El contrato es el código:** DTO, OpenAPI y ejemplos exportados, no un documento de contrato de 60 KB.
 3. **Planes cortos.** Un resumen por etapa con las decisiones ya tomadas, que no se vuelven a preguntar. Lo que el plan no fija se resuelve con lo más simple que cumpla las reglas. Un contrato todavía no publicado se cambia sin capas de compatibilidad.
 4. **Tests rápidos por corte;** integración y visuales una vez, al terminar.
@@ -311,7 +352,7 @@ Decididas el 2026-10-17, con el [traspaso de ArquitecturaBase](2026-10-17-formul
 
 Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBaseFront`. **El código está en `origin/main`:** antes de leerlo, traé los cambios, porque la copia local puede estar atrasada. Se sigue desarrollando allá, así que cada etapa mira lo que haya al planificarse.
 
-**Es referencia, no se copia:** la estructura (módulos, entidades, servicios, rutas y pantallas) sale de este repo, con su modelo de organizaciones, empresas y plataforma, sus fichas y sus módulos de ejemplo (Asistente y WhatsApp). De ArquitecturaBase se toma solo lo que no depende del modelo de negocio:
+**Qué se copia:** desde la decisión 18 (2026-10-17), las pantallas y las reglas de producto se copian de ArquitecturaBase. **El código no:** la estructura (módulos, entidades, servicios y rutas) sale de este repo, con su modelo de organizaciones, empresas y plataforma, sus fichas y sus módulos de ejemplo (Asistente y WhatsApp). De ArquitecturaBase se toma solo lo que no depende del modelo de negocio:
 - cómo se arma y se publica un Flow;
 - los límites de Meta;
 - el formato de los valores;
@@ -344,3 +385,51 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 - los puertos van en `Application/Interfaces/Integrations/StructuredData/`, no en `Interfaces/Channels/`;
 - permisos en el catálogo del núcleo, tres clases de datos con RLS, `[Access]`, `[FeatureGate]`, `[Idempotent]`, `OperationLog.RunAsync` e `IVersioned`;
 - la lista cerrada de sufijos de helpers: `Compiler` y `Codec` no están. Se renombran a uno de la lista (por ejemplo, `WhatsAppFlowBuilder`), o se suma el sufijo a la ficha con su test.
+
+## 7. Decisiones pendientes
+
+Las armó el chat de Formularios el 2026-10-17, al alinear el bloque con el traspaso, para que el usuario elija todo junto. En cada una, la primera opción es la recomendada; mientras no elija, las specs y los resúmenes siguen esa.
+
+**Idioma y catálogos (E13)**
+1. **Un catálogo a mano escrito en otro idioma que el formulario** (C11 de la E13):
+   - **A (recomendada):** solo sirven los catálogos con el mismo idioma original que el formulario; los demás no aparecen en el selector.
+   - **B:** también sirve uno que tenga completo el idioma original del formulario. Es más flexible, pero si esa traducción queda incompleta después de publicar, el envío se bloquea.
+2. **Nombres de miembros de más de 30 caracteres** (el título de una opción en WhatsApp). Hoy la decisión 11 los corta con «…»; ArquitecturaBase nunca trunca y no deja mandar.
+   - **A (recomendada):** mantener la 11. El nombre es el de la cuenta de cada persona y quien diseña no lo puede cambiar: bloquear dejaría sin uso todo el catálogo por una persona.
+   - **B:** como ArquitecturaBase: no se corta, la vista previa marca el nombre y no se puede mandar.
+3. **Un catálogo con filtros que da más de 200 opciones.** Hoy la decisión 12 deja guardarlo con aviso; ArquitecturaBase no lo guarda.
+   - **A (recomendada):** mantener la 12. La cantidad cambia igual cuando la organización crece, y el bloqueo que importa es al mandar.
+   - **B:** como ArquitecturaBase: no se guarda.
+
+**Lo que se guarda (E14 a E16)**
+
+4. **Cuánto tiempo se guardan las respuestas, sus archivos y sus PDF.** ArquitecturaBase no lo decidió, y lo deja para antes de producción.
+   - **A (recomendada):** sin plazo mientras exista la organización. Se borran con la baja de la organización, y lo personal de quien da de baja su cuenta, con el participante de la baja. Se revisa con el primer cliente.
+   - **B:** un plazo que configura cada organización.
+
+**Planilla (E15)**
+
+5. **La empresa en la planilla** (decisiones 1 y 9):
+   - **A (recomendada):** un filtro «Empresa ▾» y una columna «Empresas» que se puede ocultar desde «Columnas».
+   - **B:** solo el filtro.
+
+**Reglas, aprobación y avisos (E16)**
+
+6. **Quién aprueba:**
+   - **A (recomendada):** cualquiera de la organización con el rol elegido en la regla y `formapprovals.decide`, salvo quien cargó la respuesta. Los formularios son de la organización (decisión 1).
+   - **B:** solo quien tiene ese rol en alguna empresa de quien respondió.
+7. **Avisos por WhatsApp fuera de las 24 horas.** La hoja decía «con plantillas de Meta»; ArquitecturaBase los deja en «No se pudo».
+   - **A (recomendada):** con plantillas de Meta de categoría Utilidad, una por WABA, creadas al empezar la E16. Una aprobación suele tardar más de 24 horas, y sin plantilla el aviso al empleado no sale.
+   - **B:** como ArquitecturaBase: «No se pudo», visible, y el PDF queda guardado.
+
+**Asistente**
+
+8. **Transcribir audios.** El asistente de la 8b no transcribe, y ArquitecturaBase usa OpenAI.
+   - **A (recomendada):** un proveedor de transcripción (OpenAI, como allá), con el costo dentro del tope mensual de IA de la organización (ADR 0051).
+   - **B:** sin audios en la primera versión: el audio queda para el operador.
+9. **Quién pasa una conversación a modo Asistente:**
+   - **A (recomendada):** quien tiene «Administrar WhatsApp», sin permiso nuevo.
+   - **B:** un permiso nuevo, como `whatsapp.configureassistant` en ArquitecturaBase.
+10. **En qué bandeja actúa el asistente:**
+    - **A (recomendada):** solo en Internos, con empleados, como los formularios de la v1.
+    - **B:** también en Clientes. Necesita formularios para clientes (B2C), que van después del bloque.
