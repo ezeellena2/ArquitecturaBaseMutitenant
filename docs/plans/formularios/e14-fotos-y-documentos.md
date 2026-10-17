@@ -66,7 +66,7 @@ La puerta de la etapa, más una **prueba real con Meta y el almacenamiento de la
 
 - **Idioma:** solo el original es obligatorio, sin mezclar al mandar (decisión 17).
 - **Pantallas:** se copian de ArquitecturaBase (decisión 18).
-- **Cuánto se guardan los archivos:** pendiente ([§7 de la hoja](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md#7-decisiones-pendientes), punto 4).
+- **Cuánto se guardan los archivos:** sin plazo mientras exista la organización (decisión 23 de la hoja de ruta).
 
 ## En el multitenant
 

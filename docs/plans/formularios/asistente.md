@@ -27,7 +27,7 @@
     - un formulario que la persona no puede completar se trata como inexistente.
   - **Sugerencias entre formularios (s1–s4):** origen, destino, «cuándo», condición opcional, modo Assistant (decide la IA) o Always (por condición, sin IA) y mapeo de preguntas del mismo tipo. Las respuestas guardan su origen.
   - **Catálogo propuesto (H4):** se pide desde el chat administrativo, solo con filtros. Queda inactivo hasta que lo apruebe una persona con `formcatalogs.manage`.
-  - **Audios (H6):** pendiente de elección (punto 8 de la §7).
+  - **Audios (H6):** se transcriben con un proveedor de transcripción (OpenAI, como en ArquitecturaBase), y la transcripción la ve también el operador (decisión 27).
   - **Formularios que faltan (H7):** pedidos agrupados por tema, sin nombres ni mensajes. Quien diseña formularios lo crea o descarta el pedido.
 - **Front:**
   - el selector de modo del chat;
@@ -82,7 +82,9 @@
 
 - **Idioma:** «Cuándo lo ofrece», los pedidos y los temas se escriben en un solo idioma.
 - **Pantallas:** se copian de ArquitecturaBase (decisión 18).
-- **Pendientes de la §7:** audios (punto 8), quién pasa a modo Asistente (punto 9) y en qué bandeja actúa (punto 10).
+- **Audios:** con un proveedor de transcripción, dentro del tope de IA de la organización (decisión 27).
+- **Modo Asistente:** lo activa quien tiene «Administrar WhatsApp» (decisión 28).
+- **Bandeja:** solo Internos (decisión 29).
 
 ## En el multitenant
 
@@ -91,7 +93,7 @@
 - **Workers:** entran con `ExecutionActor`, que usa `ITenantScope` por dentro.
 - **Features:** `forms` y `assistant` prendidos en la organización.
 - **Permisos de organización:**
-  - `formsuggestions.manage`, más el de pasar a modo Asistente (punto 9 de la §7);
+  - `formsuggestions.manage`; pasar a modo Asistente pide «Administrar WhatsApp» (`whatsapp.manage`), sin permiso nuevo (decisión 28);
   - los pedidos se ven con `forms.manage`.
-- **WhatsApp (E11):** el asistente actúa en el número de la organización y, en la v1, solo en Internos (punto 10 de la §7).
+- **WhatsApp (E11):** el asistente actúa en el número de la organización y, solo en Internos (decisión 29).
 - **Almacenamiento (E10):** los audios siguen la retención de los mensajes de WhatsApp.

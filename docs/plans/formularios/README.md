@@ -1,6 +1,6 @@
 # Formularios por WhatsApp: specs por etapa
 
-Cada etapa del bloque tiene acá su especificación detallada (la 12, la 13 y la 17) o un resumen de una página (la 14, la 15, la 16 y el asistente), con la forma de los de ArquitecturaBase. Las decisiones que faltan están juntas en la [§7 de la hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md#7-decisiones-pendientes). La escribimos mientras se terminan las etapas anteriores, para que al programar no haya que pensar de nuevo. La fuente de alcance y decisiones es la [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md).
+Cada etapa del bloque tiene acá su especificación detallada (la 12, la 13 y la 17) o un resumen de una página (la 14, la 15, la 16 y el asistente), con la forma de los de ArquitecturaBase. Las decisiones de producto están en la [§5 de la hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md#5-decisiones-de-producto). La escribimos mientras se terminan las etapas anteriores, para que al programar no haya que pensar de nuevo. La fuente de alcance y decisiones es la [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md).
 
 **Cómo se usa.** Cuando le toca a una etapa, [`/plan-etapa`](../../../.agents/skills/plan-etapa/SKILL.md) toma su spec y la verifica contra el código real, sobre todo los puntos de contacto con las etapas anteriores. Con eso arma el plan corto: contrato, back y front en paralelo, e integración y puerta.
 

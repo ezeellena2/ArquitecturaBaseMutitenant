@@ -13,7 +13,7 @@
 - **Back:**
   - **Navegación:** los formularios publicados que la persona puede ver, paginados y ordenados en SQL. Nada queda fijo en el front.
   - **Planilla:**
-    - columnas fijas: número, recibida, persona y canal, y la empresa (pendiente, punto 5 de la §7);
+    - columnas fijas: número, recibida, persona y canal, y las empresas de quien respondió (decisión 24);
     - una columna por pregunta, unidas por `FieldId` entre versiones: primero el orden de la versión activa y después las retiradas;
     - «—» si la pregunta no existía en esa versión, y «Sin respuesta» si quedó vacía; cero y `false` se distinguen.
   - **Filtros:**
@@ -79,6 +79,6 @@ No necesita una prueba nueva con Meta: lee lo que ya llegó.
 - **Workers:** no hay.
 - **Feature `forms`:** las rutas llevan `[FeatureGate("forms")]`.
 - **Permisos de organización:** `formrecords.read` y `formrecords.export`, con la migración de roles de sistema.
-- **La empresa:** filtro y columna, según la elección del punto 5 de la §7.
+- **La empresa:** un filtro «Empresa ▾» y una columna «Empresas» que se puede ocultar (decisión 24).
 - **Ni WhatsApp (E11) ni el almacenamiento (E10):** solo se leen las miniaturas por las rutas de la E14.
 - **«Por aprobar»:** llega con la E16.

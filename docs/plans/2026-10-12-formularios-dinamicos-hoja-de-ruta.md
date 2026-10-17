@@ -241,7 +241,7 @@ Cada una tiene tableros a dibujar en el lienzo vigente del front antes de progra
   - Opción de incluir las fotos. Se guarda con `IFileStore`.
 - **Avisos por WhatsApp.**
   - Salen por el outbox con el número de la organización. Dentro de 24 horas, como texto o documento.
-  - **Fuera de las 24 horas:** pendiente de elección ([§7](#7-decisiones-pendientes), punto 7). La recomendada son plantillas de Meta aprobadas, creadas al empezar la etapa; en ArquitecturaBase quedan «No se pudo».
+  - **Fuera de las 24 horas:** con plantillas de Meta aprobadas, de categoría Utilidad, una por WABA, creadas al empezar la etapa (decisión 26). En ArquitecturaBase quedan «No se pudo».
 - **Resumen de la etapa:** [formularios/e16-reglas-y-aprobacion.md](formularios/e16-reglas-y-aprobacion.md).
 - **Criterios:**
   - la configuración que usa un efecto se valida al reservar (un rol borrado colgaba una aprobación);
@@ -348,6 +348,21 @@ Decididas el 2026-10-17, con el [traspaso de ArquitecturaBase](2026-10-17-formul
     - si la disposición choca con una regla escrita de este repo, manda la de acá.
 19. **Asistente** (antes F7, la etapa 5 de ArquitecturaBase). Se diseña ahora, después de los tableros de la 16. Se sigue programando después del bloque.
 
+Elegidas por el usuario el 2026-10-17, entre las que quedaron al alinear el bloque con el traspaso (todas las opciones recomendadas):
+
+20. **Catálogo a mano en otro idioma que el formulario:** solo sirven los catálogos con el mismo idioma original que el formulario; los demás no aparecen en el selector (C11 de la E13).
+21. **Nombres de miembros de más de 30 caracteres:** se mantiene la decisión 11, que los corta con «…» y pone el nombre completo en el detalle. ArquitecturaBase no trunca, pero acá el nombre es el de la cuenta de cada persona y bloquear dejaría sin uso el catálogo.
+22. **Catálogo con filtros de más de 200 opciones:** se mantiene la decisión 12. Se guarda con aviso, y el bloqueo es al mandar.
+23. **Cuánto se guardan las respuestas, sus archivos y sus PDF:** sin plazo mientras exista la organización. Se borran con la baja de la organización, y lo personal de quien da de baja su cuenta, con el participante de la baja. Se revisa con el primer cliente.
+24. **La empresa en la planilla:** un filtro «Empresa ▾» y una columna «Empresas» que se puede ocultar desde «Columnas».
+25. **Quién aprueba:** cualquiera de la organización con el rol de la regla y `formapprovals.decide`, salvo quien cargó la respuesta.
+26. **Avisos por WhatsApp fuera de las 24 horas:** con plantillas de Meta de categoría Utilidad, una por WABA, creadas al empezar la E16.
+27. **Transcribir audios en el asistente:** con un proveedor de transcripción (OpenAI, como en ArquitecturaBase), con el costo dentro del tope mensual de IA de la organización (ADR 0051).
+28. **Quién pasa una conversación a modo Asistente:** quien tiene «Administrar WhatsApp», sin permiso nuevo.
+29. **Dónde actúa el asistente:** solo en la bandeja Internos, con empleados.
+
+**Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
+
 ## 6. Qué tomar de ArquitecturaBase
 
 Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBaseFront`. **El código está en `origin/main`:** antes de leerlo, traé los cambios, porque la copia local puede estar atrasada. Se sigue desarrollando allá, así que cada etapa mira lo que haya al planificarse.
@@ -388,48 +403,4 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 ## 7. Decisiones pendientes
 
-Las armó el chat de Formularios el 2026-10-17, al alinear el bloque con el traspaso, para que el usuario elija todo junto. En cada una, la primera opción es la recomendada; mientras no elija, las specs y los resúmenes siguen esa.
-
-**Idioma y catálogos (E13)**
-1. **Un catálogo a mano escrito en otro idioma que el formulario** (C11 de la E13):
-   - **A (recomendada):** solo sirven los catálogos con el mismo idioma original que el formulario; los demás no aparecen en el selector.
-   - **B:** también sirve uno que tenga completo el idioma original del formulario. Es más flexible, pero si esa traducción queda incompleta después de publicar, el envío se bloquea.
-2. **Nombres de miembros de más de 30 caracteres** (el título de una opción en WhatsApp). Hoy la decisión 11 los corta con «…»; ArquitecturaBase nunca trunca y no deja mandar.
-   - **A (recomendada):** mantener la 11. El nombre es el de la cuenta de cada persona y quien diseña no lo puede cambiar: bloquear dejaría sin uso todo el catálogo por una persona.
-   - **B:** como ArquitecturaBase: no se corta, la vista previa marca el nombre y no se puede mandar.
-3. **Un catálogo con filtros que da más de 200 opciones.** Hoy la decisión 12 deja guardarlo con aviso; ArquitecturaBase no lo guarda.
-   - **A (recomendada):** mantener la 12. La cantidad cambia igual cuando la organización crece, y el bloqueo que importa es al mandar.
-   - **B:** como ArquitecturaBase: no se guarda.
-
-**Lo que se guarda (E14 a E16)**
-
-4. **Cuánto tiempo se guardan las respuestas, sus archivos y sus PDF.** ArquitecturaBase no lo decidió, y lo deja para antes de producción.
-   - **A (recomendada):** sin plazo mientras exista la organización. Se borran con la baja de la organización, y lo personal de quien da de baja su cuenta, con el participante de la baja. Se revisa con el primer cliente.
-   - **B:** un plazo que configura cada organización.
-
-**Planilla (E15)**
-
-5. **La empresa en la planilla** (decisiones 1 y 9):
-   - **A (recomendada):** un filtro «Empresa ▾» y una columna «Empresas» que se puede ocultar desde «Columnas».
-   - **B:** solo el filtro.
-
-**Reglas, aprobación y avisos (E16)**
-
-6. **Quién aprueba:**
-   - **A (recomendada):** cualquiera de la organización con el rol elegido en la regla y `formapprovals.decide`, salvo quien cargó la respuesta. Los formularios son de la organización (decisión 1).
-   - **B:** solo quien tiene ese rol en alguna empresa de quien respondió.
-7. **Avisos por WhatsApp fuera de las 24 horas.** La hoja decía «con plantillas de Meta»; ArquitecturaBase los deja en «No se pudo».
-   - **A (recomendada):** con plantillas de Meta de categoría Utilidad, una por WABA, creadas al empezar la E16. Una aprobación suele tardar más de 24 horas, y sin plantilla el aviso al empleado no sale.
-   - **B:** como ArquitecturaBase: «No se pudo», visible, y el PDF queda guardado.
-
-**Asistente**
-
-8. **Transcribir audios.** El asistente de la 8b no transcribe, y ArquitecturaBase usa OpenAI.
-   - **A (recomendada):** un proveedor de transcripción (OpenAI, como allá), con el costo dentro del tope mensual de IA de la organización (ADR 0051).
-   - **B:** sin audios en la primera versión: el audio queda para el operador.
-9. **Quién pasa una conversación a modo Asistente:**
-   - **A (recomendada):** quien tiene «Administrar WhatsApp», sin permiso nuevo.
-   - **B:** un permiso nuevo, como `whatsapp.configureassistant` en ArquitecturaBase.
-10. **En qué bandeja actúa el asistente:**
-    - **A (recomendada):** solo en Internos, con empleados, como los formularios de la v1.
-    - **B:** también en Clientes. Necesita formularios para clientes (B2C), que van después del bloque.
+Ninguna por ahora. Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29.

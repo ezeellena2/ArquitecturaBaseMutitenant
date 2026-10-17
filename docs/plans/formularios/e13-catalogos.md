@@ -51,7 +51,7 @@ Valen las de la E12. Estas son las nuevas, técnicas. Las de producto están en 
 | C8 | Una pregunta de catálogo guarda solo `catalogId`. Cambiar el catálogo de una pregunta publicada crea una pregunta nueva, como cambiar el tipo. | Cambiar opciones no obliga a republicar, y las respuestas viejas no cambian de sentido. |
 | C9 | La gramática de condiciones es general: `{column, operator, values[]}`, unidas con «y». La E15 la reusa para los filtros de la planilla. | Una sola gramática. |
 | C10 | El Flow pasa a un perfil con datos iniciales. Cada pregunta de catálogo es un `Dropdown` con `data-source: ${data.field_<N>}`, y la pantalla declara su `data` con un `__example__` **[Meta]**. | Es lo que permite mandar opciones distintas a cada persona sin un endpoint de intercambio. |
-| C11 | **Idioma de un catálogo a mano:** tiene su idioma original, que se elige al crearlo y no cambia. Una pregunta solo puede usar un catálogo a mano con el **mismo idioma original que el formulario**. Los demás **no aparecen** en el selector, porque el idioma no se puede cambiar y no hay nada que resolver (`pantallas-y-ui.md` del front: lo que no aplica, no va). El servidor igual rechaza una referencia así con `Forms.Draft.CatalogLanguageMismatch`. Un catálogo de `Members` sirve en cualquier formulario, porque los nombres no se traducen. | Así el original de cada opción siempre existe y nunca se mezclan idiomas (decisión 17). ArquitecturaBase no resolvió este caso. **Pendiente de elección del usuario** ([decisiones pendientes](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md#7-decisiones-pendientes)): esta es la opción A; mientras no elija, vale esta. |
+| C11 | **Idioma de un catálogo a mano:** tiene su idioma original, que se elige al crearlo y no cambia. Una pregunta solo puede usar un catálogo a mano con el **mismo idioma original que el formulario**. Los demás **no aparecen** en el selector, porque el idioma no se puede cambiar y no hay nada que resolver (`pantallas-y-ui.md` del front: lo que no aplica, no va). El servidor igual rechaza una referencia así con `Forms.Draft.CatalogLanguageMismatch`. Un catálogo de `Members` sirve en cualquier formulario, porque los nombres no se traducen. | Así el original de cada opción siempre existe y nunca se mezclan idiomas (decisión 17). ArquitecturaBase no resolvió este caso. Lo eligió el usuario el 2026-10-17: decisión 20 de la hoja de ruta. |
 
 ## 3. Modelo de datos
 
@@ -355,8 +355,8 @@ La puerta de la etapa, más una **prueba real con Meta** con el número de una o
 
 Vienen del anexo C §2 (etapa 2, cerrada el 2026-10-15) y del [06 de lecciones](../2026-10-17-formularios-traspaso/06-lecciones.md) del traspaso:
 - **Los límites del canal se validan al guardar** (30 y 300 por idioma), no al mandar; la vista previa marca lo que no entra.
-  - En ArquitecturaBase, nunca se trunca. Acá, la decisión 11 corta los nombres largos con «…»: la diferencia va a la [lista de pendientes](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md#7-decisiones-pendientes).
-- **Más de 200 resultados:** en ArquitecturaBase, un catálogo con filtros que da más de 200 no se guarda. Acá, la decisión 12 lo deja guardar con aviso: también va a la lista.
+  - En ArquitecturaBase, nunca se trunca. Acá, la decisión 11 corta los nombres largos con «…», y la decisión 21 (2026-10-17) la mantiene.
+- **Más de 200 resultados:** en ArquitecturaBase, un catálogo con filtros que da más de 200 no se guarda. Acá, la decisión 12 lo deja guardar con aviso, y la decisión 22 la mantiene.
 - **Referencias por id,** nunca por nombre: un rol renombrado no vacía el catálogo, y dar de baja un rol tampoco lo invalida.
 - **Opciones vacías:** no viajan, y el texto de una opción sale de un campo que siempre tiene valor (en Miembros, el nombre).
 - **Al operador** le llegan solo la cantidad y los problemas, nunca los nombres de las personas ofrecidas.

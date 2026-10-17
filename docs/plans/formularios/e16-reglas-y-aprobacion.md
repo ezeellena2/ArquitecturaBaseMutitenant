@@ -76,13 +76,14 @@ La puerta de la etapa, más una **prueba real con Meta y el almacenamiento de la
 ## Requisitos previos
 
 - La E12 a la E15 cerradas, y la E10 (almacenamiento).
-- Las plantillas de Meta para los avisos, si se eligen (punto 7 de la §7): se crean al empezar la etapa, una por WABA.
+- Las plantillas de Meta para los avisos fuera de las 24 horas (decisión 26): de categoría Utilidad, se crean al empezar la etapa, una por WABA, siguiendo [whatsapp-plantillas](../../operations/whatsapp-plantillas.md).
 
 ## Ajustes ya decididos
 
 - **Idioma:** reglas, mensajes y diseño exigen solo el original. Para cada evento, si el idioma de quien recibe no está completo en todos los avisos de esa revisión y en el diseño del PDF, todo sale en el original, y esa elección queda fijada en la ejecución.
 - **PDF:** se reusa PDFsharp-MigraDoc, que ya está en el asistente; no se suma SkiaSharp.
-- **Pendientes de la §7:** quién aprueba (punto 6) y los avisos fuera de las 24 horas (punto 7).
+- **Quién aprueba:** cualquiera de la organización con el rol de la regla y `formapprovals.decide`, salvo quien cargó la respuesta (decisión 25).
+- **Avisos fuera de las 24 horas:** con plantillas de Meta (decisión 26).
 
 ## En el multitenant
 
