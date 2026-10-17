@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.Idempotency;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Idempotency;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,8 @@ namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
 /// <summary>
 /// Detecta acciones POST que crean o envían sin declarar idempotencia. Protege las operaciones frente a
-/// pedidos repetidos.
+/// pedidos repetidos. Desde la E9, una acción en modo durable declara además su verificador concreto: sin él, el filtro
+/// la dejaría pasar sin reserva ni replay.
 /// </summary>
 public sealed class IdempotentActionsTests
 {
@@ -42,6 +44,32 @@ public sealed class IdempotentActionsTests
         Assert.True(NeedsIdempotency(typeof(FixtureController).GetMethod(nameof(FixtureController.CreateViaResult))!));
         Assert.True(NeedsIdempotency(typeof(FixtureController).GetMethod(nameof(FixtureController.SendViaResult))!));
     }
+
+    [Fact]
+    public void Durable_posts_declare_a_concrete_verifier()
+    {
+        var violations = typeof(ControllerResultExtensions).Assembly.GetTypes()
+            .Where(type => type.IsSubclassOf(typeof(ControllerBase)))
+            .SelectMany(type => type.GetMethods(BindingFlags.Instance | BindingFlags.Public))
+            .Where(method => !DeclaresDurableVerifier(method))
+            .Select(method => $"{method.DeclaringType?.Name}.{method.Name}");
+
+        Assert.Empty(violations);
+    }
+
+    [Fact]
+    public void A_durable_post_without_a_concrete_verifier_is_detected()
+    {
+        Assert.False(DeclaresDurableVerifier(typeof(FixtureController).GetMethod(nameof(FixtureController.DurableWithoutVerifier))!));
+        Assert.False(DeclaresDurableVerifier(typeof(FixtureController).GetMethod(nameof(FixtureController.DurableWithInterfaceVerifier))!));
+        Assert.True(DeclaresDurableVerifier(typeof(FixtureController).GetMethod(nameof(FixtureController.DurableWithVerifier))!));
+        Assert.True(DeclaresDurableVerifier(typeof(FixtureController).GetMethod(nameof(FixtureController.CreateViaResult))!));
+    }
+
+    private static bool DeclaresDurableVerifier(MethodInfo method) =>
+        method.GetCustomAttribute<IdempotentAttribute>(inherit: true)?.Mode
+            is not (IdempotencyMode.DurableReference or IdempotencyMode.DurableStream)
+        || method.GetCustomAttribute<IdempotencyDurableAttribute>(inherit: true)?.VerifierType is { IsAbstract: false, IsInterface: false };
 
     private static bool NeedsIdempotency(MethodInfo method) =>
         method.IsDefined(typeof(HttpPostAttribute), inherit: true)
@@ -87,5 +115,19 @@ public sealed class IdempotentActionsTests
 
         [HttpPost]
         public IActionResult SendViaResult() => Result.Success().ToAcceptedResult(this);
+
+        [HttpPost]
+        [Idempotent(Mode = IdempotencyMode.DurableStream)]
+        public static StatusCodeResult DurableWithoutVerifier() => new(StatusCodes.Status200OK);
+
+        [HttpPost]
+        [Idempotent(Mode = IdempotencyMode.DurableReference)]
+        [IdempotencyDurable(typeof(IIdempotentRequestVerifier))]
+        public static StatusCodeResult DurableWithInterfaceVerifier() => new(StatusCodes.Status201Created);
+
+        [HttpPost]
+        [Idempotent(Mode = IdempotencyMode.DurableReference)]
+        [IdempotencyDurable(typeof(PlatformFactorDurableAdapter))]
+        public static StatusCodeResult DurableWithVerifier() => new(StatusCodes.Status201Created);
     }
 }
