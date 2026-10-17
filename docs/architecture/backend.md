@@ -187,7 +187,7 @@ Los recorridos de ingreso, Google, métodos, invitaciones, enlaces y recuperaci�
 
 ## 14. Autorización
 
-[Permisos](../rules/permisos.md) define los cuatro catálogos, la autorización por acceso y empresa y sus policies. [Roles](../features/roles.md) explica los alcances de organización y empresa. [Plataforma](../features/plataforma.md) define los permisos individuales de operadores. Los tokens identifican el acceso; los permisos se consultan en vivo.
+[Permisos](../rules/permisos.md) define los cuatro catálogos, la autorización por acceso y empresa y sus policies. [Roles](../features/roles.md) explica los alcances de organización y empresa. [Plataforma](../features/plataforma.md) define los permisos individuales de operadores. Los tokens identifican el acceso; los permisos se consultan en vivo. Una ruta de empresa con una empresa que no es de la organización activa responde 404, no 403: `CompanyNotFoundResultHandler` lo resuelve cuando la autorización falla por eso (E9).
 
 ## 15. WhatsApp: un módulo quitable
 

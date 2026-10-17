@@ -6,7 +6,7 @@
 - **Organización:** `[Access(Business)] [HasPermission(Permissions.Users.Manage)]`.
 - **Asignados y efectivos:** `IPermissionService.GetAssignedOrganizationPermissionsAsync` devuelve los permisos de roles organizacionales asignados, sin proyecciones. Se usa para el modo Inicio-Org/Inicio-Miembro. La autorización, el perfil y el contexto de tarjetas/pendientes usan `GetOrganizationPermissionsAsync`, que agrega las proyecciones explícitas permitidas. No se filtra un código de módulo para decidir el modo. `HomeTests` verifica permisos proyectados con feature apagada/encendida y un rol organizacional explícito que solo concede `assistant.use`.
 - **Proyección desde empresa:** `Permissions.OrganizationProjectedFromCompany` es una lista explícita de permisos de organización que puede aportar una asignación empresarial activa. En E8b contiene solo `assistant.use`; conserva su alcance de organización y nunca aporta `assistant.configure` ni otros permisos. `PermissionService` intersecta esa lista con permisos de empresas, membresías, miembros y asignaciones activos del tenant vigente; no autoriza nombres de roles ni une todo el catálogo empresarial. Se verifica en `AssistantAuthorizationTests`, incluyendo revocación sin depender de un caché de asignaciones.
-- **Empresa** (con `{companyId}` en la ruta): `[HasCompanyPermission(Permissions.Company.Members.Manage)]`. Si un permiso de la organización también alcanza, va como segundo argumento: la ficha de una empresa lleva `[HasCompanyPermission(Permissions.Company.Members.Read, organizationPermission: Permissions.Companies.Read)]`.
+- **Empresa** (con `{companyId}` en la ruta): `[HasCompanyPermission(Permissions.Company.Members.Manage)]`. Si un permiso de la organización también alcanza, va como segundo argumento: la ficha de una empresa lleva `[HasCompanyPermission(Permissions.Company.Members.Read, organizationPermission: Permissions.Companies.Read)]`. Una empresa que no es de la organización activa, o que no existe, responde 404 `Tenancy.Company.NotFound`; 403 queda para una empresa propia sin el permiso (E9).
 - **Plataforma:** `[HasPlatformPermission(PlatformPermissions.Tenants.Manage)]`.
 - **Persona (B2C):** `[Access(Consumer)]` sin permiso, porque la persona los tiene todos sobre su espacio personal. Sobre un dato compartido, lo que puede hacer cada parte lo decide `PartyPolicy`, no un permiso.
 - **Catálogo de la organización, sin prefijo** (como ArquitecturaBase): `users.read`, `users.invite`, `users.manage`, `roles.read`, `roles.manage`, `roles.assign`, `companies.read`, `companies.manage`, `settings.read`, `settings.manage` (incluye verificar el dominio de correo), `audit.read`, `publicpage.manage` y, del Asistente, `assistant.use` y `assistant.configure`; por empresa, `company.members.read` y `company.members.manage` ([backend.md §14](../architecture/backend.md#14-autorización)). Nunca `tenant.users.read`.
@@ -36,6 +36,7 @@
 
 ## Lo verifica
 - `HarnessTests` (E0): formato y referencias de la ficha.
+- `RouteIsolationMatrixTests` (E9): toda ruta con el acceso que no declara, y con una empresa de otra organización.
 
 ## Detalle
 [backend.md §14](../architecture/backend.md#14-autorización)

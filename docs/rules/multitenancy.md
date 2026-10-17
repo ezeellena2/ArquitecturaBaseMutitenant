@@ -42,6 +42,7 @@
 
 ## Lo verifica
 - `DataClassificationTests` (E2), `TenantScopeUsageTests` (E2; desde la E11 también limita `SetFromAccess`), `QueryFilterBypassTests` (E0), `IdentityAccessTests` (E0), `AccessDeclarationTests` (E0)
+- `RouteIsolationMatrixTests` (E9): toda ruta de la Api, módulos incluidos, sin exclusiones. Un acceso no declarado recibe 403 y uno sin sesión, 401; el sitio público responde sólo en el subdominio de una organización publicada. Con datos de otra organización, persona u operador, la respuesta es 404 e idéntica a la de un identificador inventado, sin devolver sus datos ni cambiar sus filas.
 
 ## Detalle
 [multitenancy.md](../architecture/multitenancy.md)
