@@ -24,7 +24,8 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Security;
 /// Las cuotas compartidas de E9 sobre una base propia. Dos APIs cuentan en las mismas ventanas; cada IP, persona y
 /// organización tiene su cuenta y el sitio público usa la suya. El rechazo es 429 con retryAfter y Retry-After. Plataforma
 /// edita las doce cuotas con versión, y sin Redis el consumo sigue en PostgreSQL, sin reiniciarse al caer ni al volver.
-/// Cada caso cuenta en un ambiente de Redis propio, así nada de la corrida se mezcla con sus contadores.
+/// Cada caso cuenta en un ambiente de Redis propio, así nada de la corrida se mezcla con sus contadores. Las cuotas, en
+/// cambio, viven en la configuración de la base que comparte la clase: cada caso fija las suyas antes de preparar nada.
 /// </summary>
 public sealed class DistributedRateLimitTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
@@ -81,6 +82,8 @@ public sealed class DistributedRateLimitTests(ApiFactory factory) : IClassFixtur
     [Fact]
     public async Task Each_person_and_each_organization_count_apart_with_their_signed_claims()
     {
+        // La preparación registra dos cuentas desde la misma IP: arranca sin topes, no con las del caso anterior.
+        await SetLimitsAsync(TestRateLimits.Unlimited);
         await using var host = Host(NewEnvironment());
         using var ownerClient = Browser(host);
         using var memberClient = Browser(host);
@@ -125,12 +128,13 @@ public sealed class DistributedRateLimitTests(ApiFactory factory) : IClassFixtur
     [Fact]
     public async Task Platform_edits_the_twelve_limits_with_its_version_and_the_next_request_uses_them()
     {
+        // El alta del operador arranca sin topes, no con las cuotas del caso anterior.
+        await SetLimitsAsync(TestRateLimits.Unlimited);
         await using var host = Host(NewEnvironment());
         using var operatorClient = Browser(host);
         var account = await AccountJourney.RegisterAsync(host, operatorClient, Ct);
         await PlatformOperators.GrantAsync(host.Services, account.UserId, PlatformOperators.All, Ct);
         await AccountJourney.AuthorizeAsync(operatorClient, "platform", Ct);
-        await SetLimitsAsync(TestRateLimits.Unlimited);
         var (version, limits) = await ReadSettingsAsync(operatorClient);
         limits["loginCode"] = new JsonObject { ["permitLimit"] = 1, ["windowSeconds"] = 900 };
 
