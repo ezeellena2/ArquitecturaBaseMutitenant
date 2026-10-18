@@ -15,7 +15,7 @@ Esta carpeta está fuera del detector (`docs/plans/**`).
 | 12 · Formularios: crear, publicar, mandar y recibir | [e12-formularios.md](e12-formularios.md) | Spec escrita; tableros aprobados en el lienzo v128, con la disposición de ArquitecturaBase |
 | 13 · Catálogos | [e13-catalogos.md](e13-catalogos.md) | Spec escrita; tableros aprobados en el lienzo v129 y corregidos en la v130, con la disposición de ArquitecturaBase |
 | 14 · Fotos y documentos | [e14-fotos-y-documentos.md](e14-fotos-y-documentos.md) | Resumen de una página (2026-10-17); tableros aprobados en el lienzo v130 |
-| 15 · Planilla y Excel | [e15-planilla.md](e15-planilla.md) | Resumen de una página (2026-10-17), con el detalle D2 |
+| 15 · Planilla y Excel | [e15-planilla.md](e15-planilla.md) | Resumen de una página (2026-10-17), con el detalle D2; tableros aprobados en el lienzo v131 |
 | 16 · Reglas, aprobación y PDF | [e16-reglas-y-aprobacion.md](e16-reglas-y-aprobacion.md) | Resumen de una página (2026-10-17) |
 | 17 · Biblioteca de plantillas | [e17-biblioteca.md](e17-biblioteca.md) | Spec escrita; tableros de la v126, ajustados al editor nuevo en la v130; las reglas de ejemplo esperan la E16 |
 | El asistente en WhatsApp | [asistente.md](asistente.md) | Resumen de una página (2026-10-17). Se diseña después de los tableros de la 16 y se programa después del bloque |

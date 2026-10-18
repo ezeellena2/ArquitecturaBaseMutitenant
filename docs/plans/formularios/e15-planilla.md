@@ -36,7 +36,29 @@
     - pestañas Respuesta y Fotos; las de Actividad y PDF llegan con la E16;
     - en el teléfono, a pantalla completa;
   - el diálogo de exportar.
-- **Tablero:** T1, T2, T4 y T5 de ArquitecturaBase, y D2 en lugar de T3 (decisión 18).
+- **Tableros:** T1, T2, T4 y T5 de ArquitecturaBase, y D2 en lugar de T3 (decisión 18), **aprobados en el lienzo v131** (2026-10-18, front `c6958ecc`):
+  - **`FRM-Respuestas` (T1 y T4), la planilla:**
+    - columnas fijas N°, Recibida, Cargó (con el canal) y Empresas; después, una por pregunta, con las retiradas al final;
+    - «Sin respuesta» y «—» van en gris, y la planilla se desplaza a lo ancho con el N° fijo;
+    - filtros: «Buscar en …» (solo en los textos largos), «Empresa ▾», «Recibida ▾», «Más filtros» y «Columnas · N oculta ▾»;
+    - casos: cargando, sin respuestas, sin coincidencias, error, no se pudo actualizar, sin permiso, muchos formularios y sin permiso para exportar.
+  - **`FRM-Respuestas-Filtros` (T2):** panel al costado, con conteos por opción, incluidas la opción dada de baja y «No existía en esa versión».
+  - **`FRM-Respuesta` (D2), al costado de la planilla:**
+    - ↑ ↓ y ✕, con los atajos en el tooltip, «Abrir conversación» y el momento Recibida;
+    - pestañas Respuesta y Fotos; Actividad y PDF llegan con la E16;
+    - estados: la primera de la lista, una versión anterior, cargando y «No encontramos esta respuesta».
+  - **`FRM-Respuestas-Exportar` (T5):**
+    - el botón va en la banda, y aparece solo con `formrecords.export`;
+    - se elige entre todas las preguntas o solo las columnas visibles, y lo de los archivos va en ⓘ;
+    - con más de 10.000, Exportar se apaga; también están «Ya hay una exportación en curso» y «No se pudo exportar».
+  - **Teléfono:**
+    - `M-FRM-Respuestas` (Más › Formularios › Respuestas): la lista de formularios, las respuestas, y los filtros y exportar en hojas;
+    - `M-FRM-Respuesta`: a pantalla completa, con «5 de 24».
+  - **Mandan sobre este resumen en:**
+    - **el panel:** «Respuestas» es un grupo del panel, como «Gestión de usuarios», y en el teléfono «Formularios» pasa a «Diseñar formularios»;
+    - **la empresa** va como columna «Empresas» y filtro «Empresa ▾» (decisión 24);
+    - **«Ya hay una exportación en curso»** es el candado de PostgreSQL de una exportación por persona; **«No se pudo actualizar»** es el error al volver a leer, que conserva lo que se ve;
+    - **el botón de exportar** no aparece sin `formrecords.export`, porque no es algo que la persona pueda resolver.
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
