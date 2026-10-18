@@ -407,4 +407,17 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 ## 7. Decisiones pendientes
 
-Ninguna por ahora. Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29.
+Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29. Pendientes desde el 2026-10-18, sobre las reglas de ejemplo de la biblioteca (E17). En cada una, la primera opción es la recomendada; mientras el usuario no elija, la spec de la E17 sigue esa:
+
+1. **Cómo llegan las reglas que piden un rol al usar una plantilla:**
+   - **A (recomendada):** precargadas y sin guardar en «Cuando llega una respuesta», con «Elegí el rol» en cada acción que lo pide; se activan al guardarlas. Hasta entonces, el formulario se puede publicar sin reglas.
+   - **B:** se copian solo las reglas que no piden rol (armar el PDF y avisarle a quien cargó); las otras quedan afuera.
+2. **Si la plantilla trae el diseño del PDF:**
+   - **A (recomendada):** sí, y se copia como primer diseño, porque no tiene datos de la organización.
+   - **B:** no; la organización lo arma desde cero.
+3. **Si la plataforma sugiere el rol:**
+   - **A (recomendada):** un texto «Rol sugerido» (por ejemplo, «Supervisor») que solo se muestra, sin elegir ningún rol solo, porque las referencias van por id y nunca por nombre.
+   - **B:** sin sugerencia.
+4. **Dónde edita la plataforma las reglas y el PDF de una plantilla:**
+   - **A (recomendada):** en la pestaña «Plantilla», debajo de las preguntas, con la misma sección de la E16, como en el editor de la organización.
+   - **B:** en una pestaña «Reglas» aparte.

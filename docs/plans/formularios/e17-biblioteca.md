@@ -11,7 +11,7 @@
 
 **Entra:**
 - **Plataforma:**
-  - **Plantillas:** cada una trae un formulario (preguntas en su idioma original, con traducción opcional; botón y prefijo sugerido), sus catálogos a mano y sus reglas de ejemplo **[E16]**. Tiene categoría y descripción, con la misma regla de idioma (decisión 17 de la hoja de ruta).
+  - **Plantillas:** cada una trae un formulario (preguntas en su idioma original, con traducción opcional; botón y prefijo sugerido), sus catálogos a mano, sus reglas de ejemplo y el diseño del PDF (de la E16; ver [«Reglas de ejemplo»](#reglas-de-ejemplo-y-diseño-del-pdf)). Tiene categoría y descripción, con la misma regla de idioma (decisión 17 de la hoja de ruta).
   - **Edición:** borrador y publicar, con versiones. Publicar y retirar piden motivo.
   - **Categorías:** las arma la plataforma.
   - **Uso:** solo la cantidad de organizaciones que usaron cada plantilla.
@@ -81,7 +81,20 @@ Una categoría se borra solo si ninguna plantilla la usa (`Forms.TemplateCategor
 - `questions[]`, en el formato del borrador de la E12;
 - en una pregunta `CatalogChoice`, `catalogRef` (id local de la plantilla) en lugar de `catalogId`;
 - `catalogs[]`: `{catalogRef, name{…}, items[{code, text{…}, detail{…}}]}`, en el mismo idioma original que la plantilla (C11 de la E13);
-- `rules[]` **[E16]**.
+- `rules[]`: las reglas de ejemplo, en el formato de la E16 (un evento, hasta 10 condiciones y hasta 10 acciones), con dos diferencias:
+  - las condiciones apuntan a las preguntas y opciones de la plantilla (ids locales); en una pregunta de catálogo, a `catalogRef` más el código de la opción;
+  - las acciones que piden un rol (pedir aprobación y avisar a un rol) **no llevan rol**. Llevan un `roleHint` opcional: un texto que solo se muestra, como «Supervisor»;
+- `pdfDesign?`: el diseño del PDF de la E16 (nombre, preguntas, quién aprobó, pie e «Incluir las fotos»), con las preguntas por id local.
+
+### Reglas de ejemplo y diseño del PDF
+
+Se completó el 2026-10-18 con el [resumen](e16-reglas-y-aprobacion.md) y los tableros de la E16 (v132). La regla: las reglas viajan en la plantilla sin destinatarios propios de una organización, y la copia las deja para completar.
+- **Al publicar la plantilla:** las reglas se validan con las reglas de la E16 (pedir aprobación es la última acción y solo al recibir, el PDF solo al aprobar, adjuntarlo pide una acción anterior que lo genere, y los textos van en el idioma original), salvo el rol. Lo mismo vale para el diseño del PDF.
+- **Al usar la plantilla** (pendiente de elección; esto es lo recomendado, ver la [§7 de la hoja](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md#7-decisiones-pendientes)):
+  - las reglas **no se activan solas**. Quedan como reglas sugeridas en la definición (`FormDefinitions.SuggestedRules`, jsonb) y el editor las muestra precargadas en «Cuando llega una respuesta», sin guardar, con «Elegí el rol» en cada acción que lo pide;
+  - cuando la persona elige los roles y toca «Guardar reglas», se crea la revisión 1, con la regla de guardado de la E16. Hasta entonces, el formulario se puede publicar sin reglas;
+  - el diseño del PDF se copia como primera revisión del diseño, porque no tiene datos de la organización;
+  - el `roleHint` se muestra como ayuda, sin elegir ningún rol solo: las referencias van por id, nunca por nombre (lección del 06 del traspaso).
 
 **FormTemplateVersions** (inmutable)
 
@@ -108,13 +121,14 @@ Una categoría se borra solo si ninguna plantilla la usa (`Forms.TemplateCategor
 - los catálogos nuevos, con posiciones de 1 a n;
 - el borrador del formulario, con `FieldId` y `ChoiceId` nuevos y los `catalogRef` traducidos a los ids de los catálogos nuevos;
 - el nombre de la plantilla, el prefijo libre y la fuente;
-- el mismo idioma original que la plantilla, en el formulario y en sus catálogos, con la traducción que tenga.
+- el mismo idioma original que la plantilla, en el formulario y en sus catálogos, con la traducción que tenga;
+- las reglas sugeridas y el diseño del PDF, con los ids de preguntas, opciones e ítems de catálogo traducidos a los nuevos (los ítems, por `catalogRef` y código).
 
 | Código | Tipo | Cuándo |
 | --- | --- | --- |
 | `Forms.Template.NotFound` | NotFound | inexistente; en la organización, también si no está publicada |
 | `Forms.Template.OriginalIncomplete` | Validation (campo) | falta un texto en el idioma original al publicar. Una traducción incompleta no bloquea: la comprobación solo la informa. |
-| `Forms.Template.Invalid` | Validation (campo) | pregunta, catálogo o `catalogRef` fuera de regla |
+| `Forms.Template.Invalid` | Validation (campo) | pregunta, catálogo, `catalogRef`, regla (`rules[i].actions[j]…`) o diseño del PDF fuera de regla |
 | `Forms.Template.ChannelIssues` | Validation | el perfil del canal marcó problemas (como en la E12) |
 | `Forms.Template.NothingToPublish` | Conflict | publicada y sin cambios |
 | `Forms.Template.NotPublished` | Conflict | retirar una que no está publicada |
@@ -150,7 +164,7 @@ Una categoría se borra solo si ninguna plantilla la usa (`Forms.TemplateCategor
 | --- | --- | --- |
 | GET `/api/organization/forms/templates` | `page`, `pageSize`, `search`, `categoryId?` | 200 `PagedResult<{id, name, description, category, questionCount, catalogCount}>`, solo las publicadas |
 | GET `/api/organization/forms/template-categories` | `page`, `pageSize`, `search` | 200 `PagedResult<{id, name, position}>`, solo categorías con al menos una plantilla publicada, por posición e Id |
-| GET `/api/organization/forms/templates/{id}` | — | 200 la versión publicada, para ver: preguntas, catálogos con sus opciones y reglas **[E16]** |
+| GET `/api/organization/forms/templates/{id}` | — | 200 la versión publicada, para ver: preguntas, catálogos con sus opciones, reglas de ejemplo en palabras (con «Rol a elegir») y si trae diseño del PDF |
 | POST `/api/organization/forms/templates/{id}/use` | `{name?}` y `[Idempotent]` | 201 `FormDetail` de la E12 + Location al formulario nuevo |
 
 Las categorías son editables y pueden crecer: tanto su administración como los selectores de categoría consumen páginas, con las lecturas comunes de paginado y búsqueda (10 por defecto, 20, 50 o 100). El historial de versiones usa el cursor común, sin anidarlo completo en el detalle ni contar sus filas. Se verifica en integración que una segunda página/tanda no omita ni repita elementos, y que el contrato no exponga arrays crecientes sin límite (`GrowingCollectionContractTests`).
@@ -220,6 +234,11 @@ Valen los criterios de la E12. El texto para Diseño está en [e17-texto-diseno.
 
 **Ajustados al editor nuevo en la v130** (2026-10-18, front `e074a7d7`), aprobada por el usuario. `Plat-FRM-Plantilla` deja las pestañas «Preguntas» e «Inglés», y su pestaña «Plantilla» es el editor de una sola pantalla de la E12.
 
+**Falta dibujar, para las reglas de ejemplo** (después de que el usuario elija los puntos pendientes de la §7 de la hoja):
+- en la pestaña «Plantilla» de `Plat-FRM-Plantilla`: la sección «Cuando llega una respuesta» de la E16 (`FRM-Editor-Reglas`), con «Rol a elegir» y el rol sugerido en lugar del selector de roles, y el diseño del PDF de la plantilla (`FRM-Pdf`);
+- en la organización, después de usar una plantilla: `FRM-Editor-Reglas` con las reglas sugeridas precargadas, sin guardar, y «Elegí el rol» en cada acción que lo pide;
+- en `FRM-Plantilla`: las reglas de ejemplo en palabras.
+
 **Decisiones del usuario.** Eligió todas las recomendadas, y ya no hay elecciones abiertas:
 - **Plataforma:** «Formularios» es un grupo de Administración, con Biblioteca y Categorías.
 - **Pestaña Catálogos de la plantilla:** una fila por catálogo, con sus opciones y la pregunta que lo usa. Cada catálogo se abre aparte.
@@ -261,7 +280,7 @@ Valen los criterios de la E12. El texto para Diseño está en [e17-texto-diseno.
 | --- | --- | --- |
 | [E12] | El formato del borrador y el editor del front, para reusarlo en Plataforma. | El mismo formato, con `catalogRef`. |
 | [E13] | El modelo de catálogos a mano y sus límites. | Una plantilla trae catálogos con los mismos límites (500 opciones, textos de 30). |
-| [E16] | Qué es una regla, cómo se guarda y a quién avisa. | Las reglas viajan en la plantilla sin destinatarios propios de una organización; la copia las deja para completar. Se especifica cuando exista la spec de la E16. |
+| [E16] | El formato de las reglas y del diseño del PDF que deje la E16. | **Resuelto el 2026-10-18** con su resumen y sus tableros (v132): ver «Reglas de ejemplo y diseño del PDF» en la §3. |
 | ADR 0050 | El tipo de evento para lo global del módulo. | `PlatformSettingsChanged` con destino global. |
 
 ## 11. Cómo se cierra

@@ -17,5 +17,5 @@ Esta carpeta está fuera del detector (`docs/plans/**`).
 | 14 · Fotos y documentos | [e14-fotos-y-documentos.md](e14-fotos-y-documentos.md) | Resumen de una página (2026-10-17); tableros aprobados en el lienzo v130 |
 | 15 · Planilla y Excel | [e15-planilla.md](e15-planilla.md) | Resumen de una página (2026-10-17), con el detalle D2; tableros aprobados en el lienzo v131 |
 | 16 · Reglas, aprobación y PDF | [e16-reglas-y-aprobacion.md](e16-reglas-y-aprobacion.md) | Resumen de una página (2026-10-17); tableros aprobados en el lienzo v132 |
-| 17 · Biblioteca de plantillas | [e17-biblioteca.md](e17-biblioteca.md) | Spec escrita; tableros de la v126, ajustados al editor nuevo en la v130; las reglas de ejemplo esperan la E16 |
+| 17 · Biblioteca de plantillas | [e17-biblioteca.md](e17-biblioteca.md) | Spec escrita; tableros de la v126, ajustados al editor nuevo en la v130; reglas de ejemplo con 4 puntos pendientes (§7 de la hoja) |
 | El asistente en WhatsApp | [asistente.md](asistente.md) | Resumen de una página (2026-10-17). Se diseña después de los tableros de la 16 y se programa después del bloque |
