@@ -21,7 +21,7 @@
 | Galería | 5a656e0b | 156 pantallas al lado de su tablero de la v124; 27 pendientes con su motivo (`docs/design/capturas/etapa-11/` del front) |
 | Recorrido de usuario | f1e66026 | 182/182 |
 | Quitar el módulo | back affe0a2a y front f1e66026 | en verde, con base vacía y migrada; guía corregida (3bf879db, d9c94b89); Google, a mano |
-| Meta real (I3), número de prueba como número de Plataforma | main | Recibir, bot y menú, tomar, responder, nota que no sale, y plantilla creada y aprobada por Meta con su aviso: en verde. Falta mandar la plantilla con la ventana cerrada |
+| Meta real (I3), número de prueba como número de Plataforma | main | Recibir, bot y menú, tomar, responder, nota que no sale, plantilla creada y aprobada por Meta con su aviso, y plantilla mandada con la ventana cerrada (llegó al celular, 18/10): en verde |
 | Meta real (I3), alta de una organización | — | Falta: con el número real del usuario, en un portfolio distinto de Servicios Ya |
 
 Arreglos que salieron de la puerta:
