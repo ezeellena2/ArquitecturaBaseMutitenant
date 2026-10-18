@@ -90,7 +90,7 @@ Lo que sigue es cómo está armado en ArquitecturaBase. **Cuando una regla de es
 
 ## Integración con Meta
 
-- **Flow JSON 7.3, con perfiles de compilación versionados** (r3, r4, r5):
+- **Flow JSON 7.3, con perfiles de compilación versionados** (r3 a r7; el vigente es r7):
   - una publicación queda sellada con su perfil;
   - los formularios publicados con perfiles viejos siguen mandándose y capturándose;
   - un rechazo definitivo de Meta termina en «No se pudo», visible.

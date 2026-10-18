@@ -42,7 +42,7 @@ Las respuestas se numeran `VIS-000001`, `VIS-000002`…
 ### 2. Publica (Etapa 1)
 
 1. **«Publicar en WhatsApp»** muestra qué incluye y qué va a pasar: la versión queda fija, se manda a WhatsApp y después se puede mandar desde el chat.
-2. **El sistema compila el formulario a un WhatsApp Flow** (Flow JSON 7.3, perfil fijo r3, r4 o r5) y lo publica en el WABA. WhatsApp lo valida; si una pregunta no se puede mostrar, se dice cuál. El estado va de «Publicando» a «Publicado» o «No se pudo», con el motivo.
+2. **El sistema compila el formulario a un WhatsApp Flow** (Flow JSON 7.3, con un perfil de compilación versionado: hoy r7) y lo publica en el WABA. WhatsApp lo valida; si una pregunta no se puede mostrar, se dice cuál. El estado va de «Publicando» a «Publicado» o «No se pudo», con el motivo.
 3. **Cada publicación es una versión nueva e inmutable.** Las respuestas quedan atadas a la versión con la que llegaron. Cambiar el formulario nunca rompe lo ya cargado.
 
 ### 3. Lo manda (Etapa 1, 2)
