@@ -44,7 +44,31 @@ Se planifica con `/plan-etapa` cuando le toque, después de la E15.
   - la página del diseño del PDF, en dos columnas, con la vista previa y su selector de idioma;
   - «Por aprobar», con «Para mí» y «Todas»;
   - en D2: Aprobar y Rechazar en el momento «Por aprobar», y las pestañas Actividad (con «Consultar» y «Reintentar») y PDF.
-- **Tablero:** G1 a G6 de ArquitecturaBase (decisión 18).
+- **Tableros:** G1 a G6 de ArquitecturaBase (decisión 18), **aprobados en el lienzo v132** (2026-10-18, front `ba95490c`):
+  - **`FRM-Editor-Reglas` (G1):** «Cuando llega una respuesta», debajo de las preguntas del editor.
+    - Las reglas van en palabras (Cuando, Si, Hacer en orden), con ⋮ por regla y por acción, y se editan en el lugar.
+    - Tienen «Guardar reglas» propio y el historial a la derecha.
+    - Estados: con errores (por ejemplo, pedir aprobación tiene que ser la última acción), las reglas cambiaron, ver una revisión, sin reglas y sin permiso.
+  - **`FRM-Pdf` (G2):**
+    - el comprobante y la vista previa en Español o English, con «Descartar» y «Guardar diseño» en la banda;
+    - estados: falta el inglés, sin las fotos, falta el nombre, el diseño cambió y guardado.
+  - **`FRM-Por-Aprobar` (G3):**
+    - va primero en el panel de Formularios, con su cantidad, y tiene «Ver: para mí ▾» y «Formulario ▾»;
+    - también aparece en «Para resolver» de `Inicio-Org` y `M-Inicio-Org`.
+  - **`FRM-Respuesta-Aprobacion` (G4 y G5):** D2 con el momento «Por aprobar», Aprobar y Rechazar.
+    - Rechazar pide un motivo de hasta 500 caracteres. La respuesta propia queda apagada con ⓘ, y si otra persona decidió antes, avisa.
+    - Suma las pestañas Actividad (Reintentar, Consultar y «Resolver el envío») y PDF (la copia fija).
+    - La planilla suma la columna Estado y su filtro.
+  - **`WA-Chats-Avisos` (G6):** una burbuja «Automático» con «Acción del formulario». Fuera de las 24 horas, «No se pudo» (decisión 26).
+  - **Teléfono:**
+    - `M-FRM-Reglas`, `M-FRM-Por-Aprobar`, `M-FRM-Respuesta-Aprobacion` (con la decisión fija abajo) y `M-WA-Conversacion-Avisos`;
+    - un enlace a las reglas en `M-FRM-Editor`, y «Por aprobar» en Más › Formularios.
+  - **Mandan sobre este resumen en:**
+    - **«Por aprobar» está en dos lugares:** una página del panel de Formularios, con su cantidad, y un grupo de «Para resolver» en Inicio (el `IPendingItemSource` de ADR 0040), con la misma fuente;
+    - **quien tiene `formapprovals.decide` y no `formrecords.read`** decide en un diálogo sin los datos de la respuesta: el permiso de decidir lee solo la tarea;
+    - **«Resolver el envío»** es la revisión humana de un aviso «Sin confirmar» («salió» o «no salió»), con `formrules.manage`;
+    - **la planilla de la E15 suma la columna Estado y su filtro,** para los formularios que piden aprobación. El filtro por estado se agrega a la gramática de la planilla en esta etapa;
+    - **el diseño del PDF** guarda con «Guardar diseño», aparte de las reglas, y su vista previa no guarda nada.
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
