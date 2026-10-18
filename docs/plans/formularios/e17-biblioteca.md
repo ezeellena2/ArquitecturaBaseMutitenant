@@ -204,7 +204,7 @@ Valen los criterios de la E12. El texto para Diseño está en [e17-texto-diseno.
 | --- | --- | --- |
 | `Plat-FRM-Biblioteca` y `M-Plat-FRM-Biblioteca` | listado: nombre, categoría, estado (Borrador, Publicada · v2, Retirada), «Cambios sin publicar» y «La usaron N»; filtro por estado y categoría; «Nueva plantilla»; «Categorías» como otra sección del área, no como pestaña (regla del 2026-10-13 en `docs/rules/pantallas-y-ui.md` del front) | vacío, sin resultados |
 | `Plat-FRM-Plantilla-Nueva` | diálogo con el nombre y la categoría | — |
-| `Plat-FRM-Plantilla` | ficha con pestañas: **Preguntas** e **Inglés** (las piezas de la E12), **Catálogos** (los catálogos a mano de la plantilla, con sus opciones) y **Publicación** (estado, versiones con fecha, operador y motivo, «Publicar», «Retirar» y «Volver a publicar») | cambios sin publicar, conflicto |
+| `Plat-FRM-Plantilla` | ficha con pestañas **Plantilla**, **Catálogos** y **Publicación** (ajustada en la v130). **Plantilla** es el editor de la E12: «Textos en», categoría, prefijo sugerido, descripción, preguntas en el lugar y «Así lo ve el empleado». Con cambios: Descartar, Guardar borrador y Publicar. **Catálogos:** una fila por catálogo, que se abre aparte. **Publicación:** estado, versiones con fecha, operador y motivo, «Retirar» en el ⋮ de la banda y «Volver a publicar» | Plantilla, cambios sin guardar, otra persona cambió, textos en inglés, catálogos, un catálogo abierto, publicación (con su menú, borrador y retirada) |
 | `Plat-FRM-Publicar` y `Plat-FRM-Retirar` | diálogos con el motivo. Publicar muestra además la comprobación (problemas por pregunta o catálogo) | sin problemas, con problemas |
 | `Plat-FRM-Categorias` | lista con orden (⋮ con Editar, Subir, Bajar y Borrar), diálogo de alta y edición con motivo | una en uso: «Borrar» apagado con su motivo |
 | `FRM-Biblioteca` y `M-FRM-Biblioteca` | para la organización: tarjetas por categoría, con un buscador | sin plantillas |
@@ -217,6 +217,8 @@ Valen los criterios de la E12. El texto para Diseño está en [e17-texto-diseno.
 - `FRM-Biblioteca`, `FRM-Plantilla` y `FRM-Plantilla-Usar`;
 - los teléfonos `M-Plat-FRM-Biblioteca`, `M-FRM-Biblioteca` y `M-FRM-Plantilla`;
 - el ajuste de `Cuenta-Plat`.
+
+**Ajustados al editor nuevo en la v130** (2026-10-18, front `e074a7d7`), aprobada por el usuario. `Plat-FRM-Plantilla` deja las pestañas «Preguntas» e «Inglés», y su pestaña «Plantilla» es el editor de una sola pantalla de la E12.
 
 **Decisiones del usuario.** Eligió todas las recomendadas, y ya no hay elecciones abiertas:
 - **Plataforma:** «Formularios» es un grupo de Administración, con Biblioteca y Categorías.

@@ -471,6 +471,7 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 - **«La comprobación venció»,** sin ticket del servidor (T8): el diálogo pide comprobar de nuevo si pasaron más de 10 minutos desde la última comprobación. «Cambió después de comprobar» es el 409 de versión al publicar.
 - **«Necesita revisión»:** `FormPublication` suma el estado `NeedsReview`. Es para cuando Meta no confirmó la creación de un Flow y la consulta no puede saber si existe (un Create sin id no se adopta por nombre). Una persona con `forms.publish` lo mira en Meta y lo resuelve.
 - **«No reconocida»:** una respuesta de Flow que no corresponde a ninguna sesión se muestra en el chat como un mensaje sin valores y no crea nada en Forms.
+- **La banda de conflicto** («Otra persona cambió esto mientras lo editabas.») lleva ⚠, no el círculo: es un cambio transversal de la E9, aplicado también a los tableros de formularios en la v130.
 - **«Venció sin respuesta»:** se calcula al leer: la sesión sigue `Pending` y ya pasó `ExpiresAtUtc`. `Expired` queda para una respuesta que llegó tarde.
 
 ## 10. Tests
