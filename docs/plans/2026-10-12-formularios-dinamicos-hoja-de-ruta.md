@@ -255,12 +255,13 @@ Cada una tiene tableros a dibujar en el lienzo vigente del front antes de progra
 Va al final del bloque para que las plantillas puedan traer reglas de ejemplo.
 
 - **Plataforma.**
-  - Arma plantillas: formulario (preguntas en su idioma original, con traducción opcional; botón y prefijo sugerido), sus catálogos escritos a mano y sus reglas de ejemplo.
+  - Arma plantillas: formulario (preguntas en su idioma original, con traducción opcional; botón y prefijo sugerido), sus catálogos escritos a mano, sus reglas de ejemplo y el diseño del PDF.
   - Categoría, descripción, versiones y publicada o retirada. Publicar exige solo el idioma original.
   - Datos globales en `platform`, con auditoría (ADR 0050).
 - **Organización.**
   - Con el feature `forms` ve la biblioteca y elige «Usar esta plantilla».
-  - **Se copia:** se crea un formulario en borrador, con sus catálogos y reglas como datos propios (`ITenantOwned`), con identidades nuevas y prefijo propio. Desde ahí son independientes.
+  - **Se copia:** se crea un formulario en borrador, con sus catálogos (nuevos) y el diseño del PDF como datos propios (`ITenantOwned`), con prefijo propio. Desde ahí son independientes.
+  - **Las reglas de ejemplo no se copian:** se muestran precargadas hasta que la organización guarda las suyas (decisiones 30 a 33).
   - Nunca se publica sola: la organización revisa y publica.
 - **Privacidad.** La plataforma solo ve cuántas organizaciones usaron cada plantilla, nunca qué respondieron.
 - **Fuera.** Avisar «hay una versión nueva de la plantilla» y actualizar una copia: después, si se pide.
@@ -318,7 +319,7 @@ Aplicarlo desde el primer día evita lo que nos frenó la Etapa 1 durante días:
 
 ## 5. Decisiones de producto
 
-Decididas por el usuario entre el 2026-10-12 y el 2026-10-17. No se vuelven a preguntar.
+Decididas por el usuario entre el 2026-10-12 y el 2026-10-18. No se vuelven a preguntar.
 
 1. **Formularios por organización.** En la v1 son de la organización; la respuesta guarda la empresa de quien respondió y la planilla filtra por empresa. Formularios y permisos por empresa (`ICompanyOwned`), después.
 2. **Las plantillas se toman como copia independiente.** Una referencia obliga a resolver qué pasa con las respuestas cuando la plataforma cambia la plantilla.
@@ -365,6 +366,15 @@ Elegidas por el usuario el 2026-10-17, entre las que quedaron al alinear el bloq
 28. **Quién pasa una conversación a modo Asistente:** quien tiene «Administrar WhatsApp», sin permiso nuevo.
 29. **Dónde actúa el asistente:** solo en la bandeja Internos, con empleados.
 
+Elegidas por el usuario el 2026-10-18, sobre las reglas de ejemplo de la biblioteca (E17), todas las recomendadas:
+
+30. **Reglas que piden un rol, al usar una plantilla:** llegan precargadas y sin guardar en «Cuando llega una respuesta», con «Elegí el rol» en cada acción que lo pide, y se activan al guardarlas. Hasta entonces, el formulario se puede publicar sin reglas.
+    - **Sin estado nuevo:** la copia no guarda las reglas de ejemplo. El editor las lee de la versión de la plantilla de la que salió el formulario, que la copia ya conserva (B9 de la E17), mientras el formulario no tenga ninguna revisión de reglas.
+    - Al guardar la primera revisión, aunque esté vacía, dejan de mostrarse.
+31. **Diseño del PDF:** la plantilla lo trae, y se copia como primer diseño, porque no tiene datos de la organización.
+32. **Rol sugerido:** la plantilla puede mostrar un «Rol sugerido» (por ejemplo, «Supervisor») como ayuda, sin elegir ningún rol sola: las referencias van por id, nunca por nombre.
+33. **Dónde edita la plataforma las reglas y el PDF de una plantilla:** en la pestaña «Plantilla», debajo de las preguntas, con la misma sección de la E16 que en el editor de la organización.
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase
@@ -407,17 +417,4 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 ## 7. Decisiones pendientes
 
-Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29. Pendientes desde el 2026-10-18, sobre las reglas de ejemplo de la biblioteca (E17). En cada una, la primera opción es la recomendada; mientras el usuario no elija, la spec de la E17 sigue esa:
-
-1. **Cómo llegan las reglas que piden un rol al usar una plantilla:**
-   - **A (recomendada):** precargadas y sin guardar en «Cuando llega una respuesta», con «Elegí el rol» en cada acción que lo pide; se activan al guardarlas. Hasta entonces, el formulario se puede publicar sin reglas.
-   - **B:** se copian solo las reglas que no piden rol (armar el PDF y avisarle a quien cargó); las otras quedan afuera.
-2. **Si la plantilla trae el diseño del PDF:**
-   - **A (recomendada):** sí, y se copia como primer diseño, porque no tiene datos de la organización.
-   - **B:** no; la organización lo arma desde cero.
-3. **Si la plataforma sugiere el rol:**
-   - **A (recomendada):** un texto «Rol sugerido» (por ejemplo, «Supervisor») que solo se muestra, sin elegir ningún rol solo, porque las referencias van por id y nunca por nombre.
-   - **B:** sin sugerencia.
-4. **Dónde edita la plataforma las reglas y el PDF de una plantilla:**
-   - **A (recomendada):** en la pestaña «Plantilla», debajo de las preguntas, con la misma sección de la E16, como en el editor de la organización.
-   - **B:** en una pestaña «Reglas» aparte.
+Ninguna. Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, y las del 2026-10-18 como decisiones 30 a 33.
