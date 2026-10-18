@@ -86,7 +86,11 @@ La puerta de la etapa, más una **prueba real con Meta y el almacenamiento de la
 ## En el multitenant
 
 - **Datos de la organización:** `FormRecordFiles` (respuesta, pregunta, orden, clave, nombre, tipo, tamaño, SHA-256 y miniatura) es `ITenantOwned`, con RLS.
-- **Almacenamiento (E10):** los archivos van en `IFileStore`, con un prefijo o un contenedor por organización (lo fija la E10). La limpieza usa su diario (`IFileStoreMaintenance`).
+- **Almacenamiento (E10):** los archivos van en `IFileStore`, **sin prefijo ni contenedor por organización**, como lo decidió la E10 (`5624d4e5`).
+  - Las claves siguen opacas en un solo contenedor privado.
+  - El aislamiento lo dan la metadata del módulo (`FormRecordFiles`, con RLS) y la Api.
+  - Borrar lo de una organización recorre esa metadata.
+  - La limpieza usa el diario de `IFileStoreMaintenance`.
 - **Workers:**
   - la captura y la limpieza entran a la organización con `ExecutionActor`, que usa `ITenantScope` por dentro (T5 de la E12);
   - la limpieza recorre las organizaciones con `TenantJobRunner`, copiando `InvitationExpiryWorker`.
