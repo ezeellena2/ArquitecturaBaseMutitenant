@@ -23,9 +23,9 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 12 · Formularios por WhatsApp | Pendiente. Spec lista, con los tableros aprobados en el lienzo v128 | [Spec](formularios/e12-formularios.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
 | 13 · Catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v130 | [Spec](formularios/e13-catalogos.md) |
 | 14 · Fotos y documentos | Pendiente. Resumen listo, con los tableros aprobados en el lienzo v130 | [Resumen](formularios/e14-fotos-y-documentos.md) |
-| 15 · Planilla y Excel | Pendiente. Resumen listo; faltan los tableros | [Resumen](formularios/e15-planilla.md) |
-| 16 · Reglas, aprobación y PDF | Pendiente. Resumen listo; faltan los tableros | [Resumen](formularios/e16-reglas-y-aprobacion.md) |
-| 17 · Biblioteca de plantillas | Pendiente. Spec lista, con los tableros aprobados en el lienzo v130 | [Spec](formularios/e17-biblioteca.md) |
+| 15 · Planilla y Excel | Pendiente. Resumen listo, con los tableros aprobados en el lienzo v131 | [Resumen](formularios/e15-planilla.md) |
+| 16 · Reglas, aprobación y PDF | Pendiente. Resumen listo, con los tableros aprobados en el lienzo v132 | [Resumen](formularios/e16-reglas-y-aprobacion.md) |
+| 17 · Biblioteca de plantillas | Pendiente. Spec lista, con los tableros aprobados en el lienzo v130; faltan los de las reglas de ejemplo | [Spec](formularios/e17-biblioteca.md) |
 
 ## Etapa 11: WhatsApp de atención
 
