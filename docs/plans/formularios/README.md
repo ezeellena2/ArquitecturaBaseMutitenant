@@ -18,4 +18,4 @@ Esta carpeta está fuera del detector (`docs/plans/**`).
 | 15 · Planilla y Excel | [e15-planilla.md](e15-planilla.md) | Resumen de una página (2026-10-17), con el detalle D2; tableros aprobados en el lienzo v131 |
 | 16 · Reglas, aprobación y PDF | [e16-reglas-y-aprobacion.md](e16-reglas-y-aprobacion.md) | Resumen de una página (2026-10-17); tableros aprobados en el lienzo v132 |
 | 17 · Biblioteca de plantillas | [e17-biblioteca.md](e17-biblioteca.md) | Spec escrita; tableros de la v126, ajustados al editor nuevo en la v130; reglas de ejemplo decididas el 2026-10-18 (decisiones 30 a 33 de la hoja); faltan sus tableros |
-| El asistente en WhatsApp | [asistente.md](asistente.md) | Resumen de una página (2026-10-17), con los tableros aprobados en el lienzo v133; se programa después del bloque. Un estado de los audios choca con la D4 de la E11 y espera a la Guía |
+| El asistente en WhatsApp | [asistente.md](asistente.md) | Resumen de una página (2026-10-17), con los tableros aprobados en el lienzo v133; se programa después del bloque. El estado «borrado» de los audios sale del tablero: manda la D4 de la E11 |

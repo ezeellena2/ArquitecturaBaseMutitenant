@@ -43,7 +43,7 @@
     - mientras atiende el asistente, en lugar del compositor va «Tomar atención manual»;
     - casos: pregunta con botones si duda, una consulta queda «Sin respuesta del asistente · queda para un operador», «ahora no», no hay formulario (anota el pedido), fuera de las 24 horas, tomar a mitad de un envío (ese envío termina) y asistente no disponible (sigue en atención manual).
   - **`WA-Chats-Sugerencia` (H2):** «El asistente sugiere…» arriba del compositor, con «No, gracias» y «Revisar y enviar». «Revisar y enviar» abre el envío de la E12 con «Datos que van prellenados» para destildar.
-  - **`WA-Chats-Audio` (H6):** el audio con su transcripción, que ve también el operador. Estados: pasando a texto, transcripto, leído por el asistente, sugerencia en atención manual, «No pudimos pasar este audio a texto…» (queda sin leer para un operador) y borrado.
+  - **`WA-Chats-Audio` (H6):** el audio con su transcripción, que ve también el operador. Estados: pasando a texto, transcripto, leído por el asistente, sugerencia en atención manual, «No pudimos pasar este audio a texto…» (queda sin leer para un operador).
   - **`FRM-Catalogo-Propuesta` (H4):** la pantalla del catálogo con filtros de la E13, marcada «Propuesta del asistente», con quién la pidió y cuándo. Tiene «Descartar propuesta» y «Aprobar y activar»; lo que no se pudo filtrar se avisa debajo de la vista previa.
   - **`FRM-Faltan` (H7):** «Formularios que faltan», en el panel de Formularios y en Más › Formularios.
     - Por cada tema: la cantidad de pedidos y de personas y el último pedido, sin nombres ni mensajes.
@@ -59,7 +59,7 @@
     - **«La IA decide»** es el modo Assistant y **«Preguntar siempre»** es Always: por condición, sin IA;
     - **«No pudimos pasar este audio a texto»** cubre también el tope de IA de la organización agotado: la transcripción va por el puerto del núcleo y su costo entra en ese tope (decisión 27, ADR 0051);
     - **«Aprobar y activar»** pide `formcatalogs.manage`, y **«Formularios que faltan»** pide `forms.manage`;
-    - **el estado «borrado» de un audio choca con la regla D4 de la E11:** el tablero dice «se borran a los 90 días, como el texto de los mensajes». Acá el texto de los chats de una organización se guarda mientras exista el contacto, y los 90 días son solo de la copia global de la entrada ([WhatsApp](../../features/whatsapp.md), «Retención de la atención»). Se lo avisé a la Guía el 2026-10-18; hasta que decida, manda la D4 (condición de la §5) y ese estado no se programa.
+    - **el estado «borrado» de un audio sale del tablero:** decía «se borran a los 90 días, como el texto de los mensajes», que es la regla de ArquitecturaBase. Manda la D4 de la E11 (condición de la §5): el texto de los chats de una organización se guarda mientras exista el contacto y se borra con él, y los 90 días son solo de la copia global de la entrada ([WhatsApp](../../features/whatsapp.md), «Retención de la atención»). El audio y su transcripción siguen esa misma regla, así que nunca se ven borrados dentro de un chat que existe. Lo resolvió la Guía el 2026-10-18; Diseño corrige el tablero.
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
