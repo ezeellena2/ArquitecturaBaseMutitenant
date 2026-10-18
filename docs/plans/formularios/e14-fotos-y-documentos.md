@@ -31,7 +31,22 @@
   - en el editor, los dos tipos y el contador «Archivos: hasta N de 10»;
   - en la tarjeta del chat, «bajando» o «reintentando», guardada (con miniaturas y «+N») o rechazada (con «Mandar de nuevo»);
   - el visor común: anterior, siguiente, tira de miniaturas y Descargar.
-- **Tablero:** F1 a F5 de ArquitecturaBase, con la disposición copiada (decisión 18).
+- **Tableros:** F1 a F5 de ArquitecturaBase, **aprobados en el lienzo v130** (2026-10-18, front `e074a7d7`), con la disposición copiada (decisión 18).
+  - **`FRM-Editor` y `M-FRM-Editor`:**
+    - los estados «Pregunta de foto», «Pregunta de documento» y «Sin almacenamiento», con Foto y Documento apagados y su motivo;
+    - arriba, «Archivos: hasta N de 10».
+  - **`FRM-Publicar`:** «Más de 10 archivos».
+  - **`WA-Chats-Respuesta` y `M-WA-Conversacion-Respuesta`:**
+    - bajando los archivos, reintentando;
+    - con fotos y un documento, y con muchas fotos;
+    - no se pudo bajar un archivo, y un archivo no es lo que dice.
+  - **El visor nuevo:** `WA-Chats-Visor` y `M-WA-Chats-Visor`.
+  - **Mandan sobre este resumen en:**
+    - **«Sin almacenamiento»:** Foto y Documento aparecen apagados con su motivo, no ocultos, porque se resuelve conectando el almacenamiento (`pantallas-y-ui.md` del front);
+    - **«Más de 10 archivos»** es un problema de la comprobación al publicar, con el botón apagado, como «una pregunta que no se puede mostrar» de la E12;
+    - **«Un archivo no es lo que dice»** es el rechazo por tipo real distinto del declarado, y «No se pudo bajar un archivo», el rechazo después de los reintentos. Los dos nombran la pregunta y ofrecen «Mandar de nuevo»;
+    - **«Reintentando»** se ve mientras corren los reintentos acotados (5 fallas y 15 minutos), sin acción del operador;
+    - **la banda de conflicto** lleva ⚠ (cambio transversal de la E9).
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
