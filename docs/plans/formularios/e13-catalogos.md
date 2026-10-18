@@ -269,7 +269,7 @@ Los modelos están en este repo; no se copia código de ArquitecturaBase. Las ab
   - guardado, no se guardó y la revisión si otra persona guardó;
   - sin opciones, 500 opciones, nuevo, falta el nombre, cargando y no existe.
 - **Catálogo con filtros:**
-  - con más de 200 opciones, el tablero dice «no se guarda»: **se corrige en el tablero** (vale la decisión 22, se guarda con aviso);
+  - con más de 200 opciones, se guarda y avisa «Más de 200: no se va a poder mandar.» con ⓘ (decisión 22, corregido en la v130);
   - sin persona de ejemplo, no se crea;
   - un rol que ya no existe deja el catálogo en «No se puede usar».
 - **Al mandar:**
@@ -280,8 +280,8 @@ Los modelos están en este repo; no se copia código de ArquitecturaBase. Las ab
 **Mandan sobre esta spec en:**
 - **Guardado (C6):** todo se guarda junto en un `PUT` del catálogo, con su versión; ya no hay rutas por opción.
 - **Nuevo catálogo:** primero se elige el origen, y el nombre se escribe en el editor; el `POST` sale de «Crear catálogo».
-- **Más de 200 con filtros:** el tablero `FRM-Catalogo-Filtros` dice «no se guarda», como en ArquitecturaBase. **Se corrige en el tablero:** el usuario confirmó la decisión 22 (se guarda con aviso y frena el envío). Diseño corrige `FRM-Catalogo-Filtros` y `M-FRM-Catalogo-Filtros` en la v130, junto con el ajuste de la E17.
-- **Nombres de más de 30 caracteres:** se cortan con «…» y van completos en el detalle (decisión 21). Los mismos dos tableros se corrigen en la v130.
+- **Más de 200 con filtros:** se guarda con el aviso «Más de 200: no se va a poder mandar.» y su ⓘ, y lo que frena es el envío (decisión 22). Lo corrigió la v130 (2026-10-18, front `e074a7d7`), aprobada por el usuario.
+- **Nombres de más de 30 caracteres:** se cortan en la lista y se ven completos en el detalle (decisión 21), también corregido en la v130.
 - **Persona de ejemplo:** sin ella no se crea un catálogo con filtros (`Forms.Catalog.SampleMemberRequired`).
 - **El código de la opción se ve en la tarjeta de la respuesta,** debajo del valor (nunca en WhatsApp). Por eso la captura guarda también el código histórico (`ChoiceCode`), junto con `ChoiceTexts`.
 - **Catálogos en otro idioma:** siguen sin aparecer en el selector (C11, decisión 20). Los que no se pueden usar por algo que se resuelve, sí aparecen apagados.
