@@ -59,7 +59,7 @@
     - **«La IA decide»** es el modo Assistant y **«Preguntar siempre»** es Always: por condición, sin IA;
     - **«No pudimos pasar este audio a texto»** cubre también el tope de IA de la organización agotado: la transcripción va por el puerto del núcleo y su costo entra en ese tope (decisión 27, ADR 0051);
     - **«Aprobar y activar»** pide `formcatalogs.manage`, y **«Formularios que faltan»** pide `forms.manage`;
-    - **el estado «borrado» de un audio sale del tablero:** decía «se borran a los 90 días, como el texto de los mensajes», que es la regla de ArquitecturaBase. Manda la D4 de la E11 (condición de la §5): el texto de los chats de una organización se guarda mientras exista el contacto y se borra con él, y los 90 días son solo de la copia global de la entrada ([WhatsApp](../../features/whatsapp.md), «Retención de la atención»). El audio y su transcripción siguen esa misma regla, así que nunca se ven borrados dentro de un chat que existe. Lo resolvió la Guía el 2026-10-18; Diseño corrige el tablero.
+    - **el estado «borrado» de un audio sale del tablero:** decía «se borran a los 90 días, como el texto de los mensajes», que es la regla de ArquitecturaBase. Manda la D4 de la E11 (condición de la §5): el texto de los chats de una organización se guarda mientras exista el contacto y se borra con él, y los 90 días son solo de la copia global de la entrada ([WhatsApp](../../features/whatsapp.md), «Retención de la atención»). El audio y su transcripción siguen esa misma regla, así que nunca se ven borrados dentro de un chat que existe. Lo resolvió la Guía el 2026-10-18, y Diseño corrigió el tablero en la v134.
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 

@@ -50,6 +50,7 @@
 | B9 | La copia guarda `SourceTemplateId` y `SourceTemplateVersion` en la definición. | Sirve para el conteo (B5), para leer las reglas de ejemplo (decisión 30) y para el futuro aviso de versión nueva. |
 | B10 | La plataforma no tiene formularios propios ni manda formularios. | Decisión 4 de la hoja de ruta: el número de la plataforma no manda formularios. |
 | B11 | **La copia conserva los `FieldId` y `ChoiceId` de la versión de la plantilla.** Los catálogos y sus ítems sí son nuevos (B3). | Son únicos dentro de cada formulario, y nada los cruza entre formularios: las respuestas, la planilla y la publicación se unen siempre por formulario. Así las reglas de ejemplo y el diseño del PDF apuntan a las mismas preguntas sin guardar una tabla de equivalencias. |
+| B12 | **Copiar el diseño del PDF no pide `formrules.manage`.** Verlo y cambiarlo sí lo piden. | Es parte del formulario nuevo y no hace nada hasta que alguien con ese permiso guarda reglas que lo usan. Si se pidiera el permiso, «Usar esta plantilla» se apagaría para quien diseña formularios sin armar reglas. |
 
 ## 3. Modelo de datos
 
@@ -242,10 +243,24 @@ Valen los criterios de la E12. El texto para Diseño está en [e17-texto-diseno.
 
 **Ajustados al editor nuevo en la v130** (2026-10-18, front `e074a7d7`), aprobada por el usuario. `Plat-FRM-Plantilla` deja las pestañas «Preguntas» e «Inglés», y su pestaña «Plantilla» es el editor de una sola pantalla de la E12.
 
-**Falta dibujar, para las reglas de ejemplo** (decisiones 30 a 33 de la hoja, elegidas el 2026-10-18):
-- en la pestaña «Plantilla» de `Plat-FRM-Plantilla`: la sección «Cuando llega una respuesta» de la E16 (`FRM-Editor-Reglas`), con «Rol a elegir» y el rol sugerido en lugar del selector de roles, y el diseño del PDF de la plantilla (`FRM-Pdf`);
-- en la organización, después de usar una plantilla: `FRM-Editor-Reglas` con las reglas sugeridas precargadas, sin guardar, y «Elegí el rol» en cada acción que lo pide;
-- en `FRM-Plantilla`: las reglas de ejemplo en palabras.
+**Las reglas de ejemplo y el PDF, aprobados en el lienzo v134** (2026-10-20, front `8594d796`), con las decisiones 30 a 33 de la hoja:
+- **`Plat-FRM-Plantilla-Reglas`:** «Cuando llega una respuesta» de la E16, debajo de las preguntas de la pestaña «Plantilla». No tiene botón propio ni historial, porque se guarda con el borrador.
+  - En una acción que pide un rol: «Rol: Lo elige cada organización», con candado, y «Rol sugerido».
+  - Estados: reglas, editar una regla, una regla con errores, sin reglas y borrador guardado.
+- **`Plat-FRM-Pdf`:** el diseño del PDF de la E16, que se abre desde «Ver el diseño», con «Descartar» y «Guardar borrador». La vista previa muestra «Logo» y «Nombre de la organización» en lugar de los de una organización.
+- **`Plat-FRM-Publicar`, con problemas:** suma los de las reglas, como «Regla 1 · Cuando se recibe una respuesta — Pedir aprobación tiene que ser la última acción.».
+- **`FRM-Editor-Reglas-Plantilla` y `M-FRM-Reglas-Plantilla`:** el editor de la organización después de usar la plantilla.
+  - Las reglas llegan precargadas, con «De la plantilla» y «Sin guardar», y el historial dice «Todavía no se guardaron reglas.».
+  - Cada acción que pide un rol muestra «Elegí el rol», con «Rol sugerido» debajo. Ningún rol viene elegido, aunque exista uno con el nombre sugerido.
+  - «Guardar reglas» queda apagado con ⓘ hasta elegir los roles. Al guardar, se crea la revisión 1.
+  - Una pregunta borrada del borrador queda marcada en la condición y en el texto que la nombra (`{Monto estimado}`).
+- **`FRM-Plantilla`, `FRM-Plantilla-Usar` y `M-FRM-Plantilla`:** «Reglas de ejemplo» en palabras, debajo de los catálogos, con «un rol que elegís al usarla» y el sugerido.
+- **Mandan sobre esta spec en:**
+  - **en Plataforma, las reglas y el diseño del PDF se guardan con el borrador:** van en `FormTemplateDraft` (`rules[]` y `pdfDesign`), con el mismo `PUT …/draft`, su versión y el 409. «Guardar borrador» de `Plat-FRM-Pdf` es ese mismo guardado, y el historial es el de las versiones, en «Publicación»;
+  - **los problemas de las reglas al publicar** son `Forms.Template.Invalid` con el campo `rules[i]…`, y la comprobación los muestra por regla (B8);
+  - **«Guardar reglas» apagado hasta elegir los roles** es una ayuda del front: el servidor igual valida con la regla de la E16, que pide el rol en esas acciones;
+  - **las reglas precargadas se ven y se guardan con `formrules.manage`,** como cualquier regla de la E16. Sin ese permiso, la sección muestra su estado «sin permiso»;
+  - **«Logo» y «Nombre de la organización»** van como marcadores, porque la plataforma no ve datos de ninguna organización.
 
 **Decisiones del usuario.** Eligió todas las recomendadas, y ya no hay elecciones abiertas:
 - **Plataforma:** «Formularios» es un grupo de Administración, con Biblioteca y Categorías.

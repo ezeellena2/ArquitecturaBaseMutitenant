@@ -25,7 +25,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 14 · Fotos y documentos | Pendiente. Resumen listo, con los tableros aprobados en el lienzo v130 | [Resumen](formularios/e14-fotos-y-documentos.md) |
 | 15 · Planilla y Excel | Pendiente. Resumen listo, con los tableros aprobados en el lienzo v131 | [Resumen](formularios/e15-planilla.md) |
 | 16 · Reglas, aprobación y PDF | Pendiente. Resumen listo, con los tableros aprobados en el lienzo v132 | [Resumen](formularios/e16-reglas-y-aprobacion.md) |
-| 17 · Biblioteca de plantillas | Pendiente. Spec lista, con los tableros aprobados en el lienzo v130; faltan los de las reglas de ejemplo | [Spec](formularios/e17-biblioteca.md) |
+| 17 · Biblioteca de plantillas | Pendiente. Spec lista, con los tableros aprobados en el lienzo v134 | [Spec](formularios/e17-biblioteca.md) |
 
 ## Etapa 11: WhatsApp de atención
 
