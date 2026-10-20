@@ -4,7 +4,7 @@ Estado: plan (E10), sin implementar. Alcance exclusivo de [Etapa 10 de la hoja d
 
 ## Forma de trabajo
 
-**Se programa desde el 2026-10-20, con la 9 cerrada, en paralelo con las cuentas** (decisión del usuario). Las decisiones P1–P7 las tomó el usuario el 2026-10-16, y la P8 el 2026-10-18 (al final del plan).
+**Se programa cuando termine la prueba de punta a punta de todo el sistema en local, que hace Codex, en paralelo con las cuentas** (decisiones del usuario del 2026-10-20). La 9 ya cerró. Las decisiones P1–P7 las tomó el usuario el 2026-10-16, y la P8 el 2026-10-18 (al final del plan).
 
 K1, B1 a B5 y F1 a F4 no esperan las cuentas: el almacenamiento se prueba con su emulador, y la imagen y el despliegue se arman sin publicar. Mientras tanto, el usuario prepara:
 - la suscripción de Azure, con la región y el presupuesto confirmados con la cotización;
