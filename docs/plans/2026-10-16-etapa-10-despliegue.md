@@ -4,7 +4,14 @@ Estado: plan (E10), sin implementar. Alcance exclusivo de [Etapa 10 de la hoja d
 
 ## Forma de trabajo
 
-**Se empieza a programar cuando cierre la 9.** Las decisiones P1–P7 las tomó el usuario el 2026-10-16, y la P8 el 2026-10-18 (al final del plan). Antes de K1, el usuario deja lista la suscripción de Azure, confirma región y presupuesto con la cotización y compra el dominio. Para WhatsApp (P8) también elige el portafolio de Meta de la plataforma, con su nombre y su marca, y el número real, y crea la app de producción. El Coordinador los registra. Se implementa un solo despliegue y un solo adaptador de nube, los elegidos, sin construir alternativas.
+**Se programa desde el 2026-10-20, con la 9 cerrada, en paralelo con las cuentas** (decisión del usuario). Las decisiones P1–P7 las tomó el usuario el 2026-10-16, y la P8 el 2026-10-18 (al final del plan).
+
+K1, B1 a B5 y F1 a F4 no esperan las cuentas: el almacenamiento se prueba con su emulador, y la imagen y el despliegue se arman sin publicar. Mientras tanto, el usuario prepara:
+- la suscripción de Azure, con la región y el presupuesto confirmados con la cotización;
+- el dominio comprado;
+- para WhatsApp (P8), el portafolio de Meta de la plataforma, con su nombre y su marca, el número real y la app de producción.
+
+El Coordinador los registra cuando estén. Lo que los necesita se hace con ellos, en I1: la prueba contra la cuenta real del almacenamiento, el despliegue y la integración. Se implementa un solo despliegue y un solo adaptador de nube, los elegidos, sin construir alternativas.
 
 Contrato primero y commiteado en ambos repos; Back y Front en paralelo; integración y una `/puerta` al final. Commits chicos en español, con pathspec, sin push; cada dueño toca su repo. Tests de lógica dirigidos, build afectado e integración/seguridad del área al terminarla; suites completas una vez en puerta. Después de un arreglo, sólo lo afectado, con las excepciones transversales de AGENTS. Sin actas, evidencia versionada ni revisiones por tarea; worktrees sólo para puerta. Diseño es el único que modifica el lienzo.
 
@@ -92,7 +99,7 @@ Rutas de código abreviadas bajo `src/ArquitecturaBaseMultitenant.<Capa>/`; test
 
 **Texto para «Multitenant · 10 · Back» (Claude):**
 
-> Leé AGENTS.md, fichas, ADR y docs/plans/2026-10-16-etapa-10-despliegue.md. Empezá tras cierre de E9, decisiones P1–P7 registradas y K1 publicado. Hacé B1–B5 sólo en el back; implementá un proveedor de archivos y un despliegue, los aprobados. Conservá IFileStoreMaintenance, leases/UoW y privacidad de los módulos. Copiá por responsabilidad los archivos citados; tests focales y de integración/seguridad del área. Commits chicos en español, pathspec, sin push; suites completas sólo en puerta. No adelantes formularios. Cambios técnicos del contrato por Coordinador y Cambios al contrato; secretos sólo por nombre.
+> Leé AGENTS.md, fichas, ADR y docs/plans/2026-10-16-etapa-10-despliegue.md. La 9 ya cerró: empezá con K1 publicado, sin esperar las cuentas. Probá el almacenamiento con su emulador y dejá para I1 la prueba contra la cuenta real y el despliegue real. Hacé B1–B5 sólo en el back; implementá un proveedor de archivos y un despliegue, los aprobados. Conservá IFileStoreMaintenance, leases/UoW y privacidad de los módulos. Copiá por responsabilidad los archivos citados; tests focales y de integración/seguridad del área. Commits chicos en español, pathspec, sin push; suites completas sólo en puerta. No adelantes formularios. Cambios técnicos del contrato por Coordinador y Cambios al contrato; secretos sólo por nombre.
 
 ## Front
 
@@ -107,7 +114,7 @@ Rutas bajo `../ArquitecturaBaseMutitenantFront/`; tableros Cuenta/M-Cuenta y Men
 
 **Texto para «Multitenant · 10 · Front» (Claude):**
 
-> Leé AGENTS.md de ambos repos, fichas y el plan de E10 del back. Tras cierre de E9 y K1, regenerá tipos y hacé F1–F4 sólo en el front, copiando Cuenta/M-Cuenta y las piezas citadas. Conservá la sesión como prueba, sin reauth personal ni URLs públicas del archivo. Activá el chequeo cruzado obligatorio en CI, también para repos privados. Estados faltantes a Multitenant · Diseño mediante Para Diseño; no dibujes. Commits chicos con pathspec, sin push; tests focales y una sola puerta final. Informá cambios de contrato al Coordinador antes de publicarlos.
+> Leé AGENTS.md de ambos repos, fichas y el plan de E10 del back. La 9 ya cerró: con K1 publicado, regenerá tipos y hacé F1–F4 sólo en el front, copiando Cuenta/M-Cuenta y las piezas citadas. Conservá la sesión como prueba, sin reauth personal ni URLs públicas del archivo. Activá el chequeo cruzado obligatorio en CI, también para repos privados. Estados faltantes a Multitenant · Diseño mediante Para Diseño; no dibujes. Commits chicos con pathspec, sin push; tests focales y una sola puerta final. Informá cambios de contrato al Coordinador antes de publicarlos.
 
 ## Integración y puerta
 
@@ -116,7 +123,7 @@ Rutas bajo `../ArquitecturaBaseMutitenantFront/`; tableros Cuenta/M-Cuenta y Men
 
 **Texto para «Multitenant · 10 · Coordinador» (Claude):**
 
-> Leé AGENTS.md de ambos repos, /plan-etapa, etapa-en-paralelo y este plan. Esperá el cierre de E9. Registrá P1–P7 con cotización completa/cuentas/dominio, enviá Para Diseño y publicá K1 en ambos repos; después habilitá Back/Front en paralelo con estos textos. Coordiná SHAs, contrato, artefactos y permisos de lectura/OIDC. Integrá I1 y una /puerta con /recorrido, sin repetir suites por cada arreglo. No contrates recursos fuera del presupuesto aprobado ni publiques credenciales. Dejá tabla final y runbook aplicable; sin push, sin lienzo ni funcionalidades fuera de E10.
+> Leé AGENTS.md de ambos repos, /plan-etapa, etapa-en-paralelo y este plan. La 9 ya cerró. Publicá K1 en ambos repos y habilitá Back/Front en paralelo con estos textos, sin esperar las cuentas. Registrá P1–P8 cuando el usuario tenga Azure, el dominio y Meta; lo que los necesita va en I1. El «Para Diseño» ya está en la cola de Multitenant · Diseño. Coordiná SHAs, contrato, artefactos y permisos de lectura/OIDC. Integrá I1 y una /puerta con /recorrido, sin repetir suites por cada arreglo. No contrates recursos fuera del presupuesto aprobado ni publiques credenciales. Dejá tabla final y runbook aplicable; sin push, sin lienzo ni funcionalidades fuera de E10.
 
 ## Relación con otras etapas
 
