@@ -180,7 +180,7 @@ Rutas bajo `../ArquitecturaBaseMutitenantFront/`. Tableros vigentes Ingreso/M-In
 | Revisión de seguridad | Sin hallazgos con confianza de 8 o más |
 | Retiro de módulos | No corresponde; sus guardas pasan en la suite |
 
-Falta solo lo manual del recorrido, que es del usuario; no hay push. Queda fuera de la E9 la barra del teléfono, que se va con el scroll en las pantallas largas y es anterior a esta etapa.
+**Cerrada (20/10).** El usuario hizo la prueba a mano: escaneó el QR con la app del celular, volvió a entrar con su código y dio la etapa por cerrada. Queda fuera de la E9 la barra del teléfono, que se va con el scroll en las pantallas largas y es anterior a esta etapa.
 
 **Texto para «Multitenant · 9 · Coordinador» (Claude):**
 

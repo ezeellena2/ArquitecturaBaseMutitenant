@@ -18,7 +18,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 8 · WhatsApp de plataforma | Cerrada | [WhatsApp](../features/whatsapp.md), [Identidad](../features/identidad.md) |
 | 8b · Asistente | Cerrada | [ADR 0048](../decisions/0048-asistente.md), [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md), [Asistente](../features/asistente.md) |
 | 11 · WhatsApp de atención | Programada, con la puerta automática en verde. Faltan dos pruebas con Meta: mandar una plantilla y el alta de una organización con un número real | [Plan](2026-10-13-etapa-11-whatsapp.md), [ADR 0038](../decisions/0038-whatsapp-de-atencion.md) |
-| 9 · Endurecimiento | Programada, con la puerta en verde el 2026-10-17. Faltan la prueba a mano del autenticador y el visto bueno del usuario | [Plan](2026-10-16-etapa-9-endurecimiento.md), [ADR 0052](../decisions/0052-cache-compartida-redis.md) |
+| 9 · Endurecimiento | Cerrada | [Plan](2026-10-16-etapa-9-endurecimiento.md), [ADR 0052](../decisions/0052-cache-compartida-redis.md) |
 | 10 · Operación | Pendiente. El plan corto está listo, con las decisiones del usuario, y arranca al cerrar la 9 | [Plan](2026-10-16-etapa-10-despliegue.md), [manual de operación](../operations/runbook.md) |
 | 12 · Formularios por WhatsApp | Pendiente. Spec lista, con los tableros aprobados en el lienzo v128 | [Spec](formularios/e12-formularios.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
 | 13 · Catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v130 | [Spec](formularios/e13-catalogos.md) |
