@@ -114,7 +114,7 @@ Rutas bajo `../ArquitecturaBaseMutitenantFront/`; tableros Cuenta/M-Cuenta y Men
 
 **Texto para «Multitenant · 10 · Front» (Claude):**
 
-> Leé AGENTS.md de ambos repos, fichas y el plan de E10 del back. La 9 ya cerró: con K1 publicado, regenerá tipos y hacé F1–F4 sólo en el front, copiando Cuenta/M-Cuenta y las piezas citadas. Conservá la sesión como prueba, sin reauth personal ni URLs públicas del archivo. Activá el chequeo cruzado obligatorio en CI, también para repos privados. Estados faltantes a Multitenant · Diseño mediante Para Diseño; no dibujes. Commits chicos con pathspec, sin push; tests focales y una sola puerta final. Informá cambios de contrato al Coordinador antes de publicarlos.
+> Leé AGENTS.md de ambos repos, fichas y el plan de E10 del back. La 9 ya cerró: con K1 publicado, regenerá tipos y hacé F1–F4 sólo en el front, copiando Cuenta/M-Cuenta y las piezas citadas. Conservá la sesión como prueba, sin reauth personal ni URLs públicas del archivo. Activá el chequeo cruzado obligatorio en CI, también para repos privados. Los estados y textos salen de los tableros de la v135; si falta uno, pedíselo a Multitenant · Diseño, sin dibujarlo. Commits chicos con pathspec, sin push; tests focales y una sola puerta final. Informá cambios de contrato al Coordinador antes de publicarlos.
 
 ## Integración y puerta
 
@@ -123,7 +123,7 @@ Rutas bajo `../ArquitecturaBaseMutitenantFront/`; tableros Cuenta/M-Cuenta y Men
 
 **Texto para «Multitenant · 10 · Coordinador» (Claude):**
 
-> Leé AGENTS.md de ambos repos, /plan-etapa, etapa-en-paralelo y este plan. La 9 ya cerró. Publicá K1 en ambos repos y habilitá Back/Front en paralelo con estos textos, sin esperar las cuentas. Registrá P1–P8 cuando el usuario tenga Azure, el dominio y Meta; lo que los necesita va en I1. El «Para Diseño» ya está en la cola de Multitenant · Diseño. Coordiná SHAs, contrato, artefactos y permisos de lectura/OIDC. Integrá I1 y una /puerta con /recorrido, sin repetir suites por cada arreglo. No contrates recursos fuera del presupuesto aprobado ni publiques credenciales. Dejá tabla final y runbook aplicable; sin push, sin lienzo ni funcionalidades fuera de E10.
+> Leé AGENTS.md de ambos repos, /plan-etapa, etapa-en-paralelo y este plan. La 9 ya cerró. Publicá K1 en ambos repos y habilitá Back/Front en paralelo con estos textos, sin esperar las cuentas. Registrá P1–P8 cuando el usuario tenga Azure, el dominio y Meta; lo que los necesita va en I1. Los tableros ya están aprobados (v135). Coordiná SHAs, contrato, artefactos y permisos de lectura/OIDC. Integrá I1 y una /puerta con /recorrido, sin repetir suites por cada arreglo. No contrates recursos fuera del presupuesto aprobado ni publiques credenciales. Dejá tabla final y runbook aplicable; sin push, sin lienzo ni funcionalidades fuera de E10.
 
 ## Relación con otras etapas
 
@@ -131,11 +131,22 @@ Rutas bajo `../ArquitecturaBaseMutitenantFront/`; tableros Cuenta/M-Cuenta y Men
 - **E8b/E11:** nube sirve al Asistente; exportación respeta autoría y retención del inventario WhatsApp. WhatsApp funciona en producción desde la 10 (P8), y el acceso del alta embebida de producción no vence.
 - **E12–E17:** reciben operación y almacenamiento de E10; no se implementan formularios, adjuntos WhatsApp/E14 ni IStructured* de las specs.
 
-## Para Diseño
+## Tableros (lienzo v135)
 
-Texto para **«Multitenant · Diseño»**:
-
-> E10: Cuenta/M-Cuenta ya tienen Exportar mis datos. Agregá enviando, pedido aceptado (avisa que llega por correo), fallo/reintento, límite de pedidos y acción apagada con motivo al faltar correo verificado; llegada desde el correo, descarga, enlace vencido y cuenta distinta, sin historial ni pantalla nueva. Mensajes ya tiene «Exportación de datos lista»: conservar enlace y vencimiento de 48 h. Aplicar las fichas de avisos, formatos y accesibilidad, sin reautenticación personal. No agregar opciones de alcance ni destinatario.
+Los aprobó el usuario el 2026-10-20 en `Cuenta` y `M-Cuenta` (front 6bf8ec65), con el recorrido «Pedir mis datos». El correo «Exportación de datos lista» de Mensajes no cambia. Mandan sobre este plan en estos estados y textos:
+- **Pidiendo:** el botón dice «Pidiendo…» y queda apagado.
+- **202:** aviso verde, «Recibimos tu pedido. Te mandamos tus datos por correo cuando estén listos.».
+- **Sin red:** aviso rojo con «Reintentar» y ✕, «No pudimos conectarnos. Revisá tu conexión.».
+- **429:** cartel «Hiciste muchos pedidos seguidos. Esperá un momento.» y el botón «Reintentá en 0:41», como en la E9.
+- **400 `EmailRequired`:**
+  - «Exportar» queda apagado, con un ⓘ junto al rótulo; los dos abren el motivo «No podemos mandarte tus datos»;
+  - el motivo dice «Agregá y verificá un correo para recibir tus datos.»;
+  - en qué hacer, ofrece «Agregá un correo en «Cómo entrás»» o «O vinculá tu cuenta de Google», con el botón «Entendido».
+- **Desde el enlace del correo:** el cartel «Descargando tus datos…» y después el aviso verde «Descargamos tus datos.».
+- **Avisos rojos:**
+  - `Expired`: «Este enlace venció. Volvé a pedir tus datos.»;
+  - `NotFound`: «No encontramos esos datos en tu cuenta. Si los pediste con otra, entrá con esa.» (no dice si el pedido existe);
+  - `StorageUnavailable` (503): «No pudimos descargar tus datos. Probá de nuevo.», con «Reintentar».
 
 ## Cambios al contrato
 
