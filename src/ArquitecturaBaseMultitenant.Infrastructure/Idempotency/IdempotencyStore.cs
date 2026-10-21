@@ -91,6 +91,7 @@ public sealed class IdempotencyStore : IIdempotencyStore
         bool sameRequest;
         int? responseStatusCode;
         string? responseBody;
+        string? responseLocation;
         IdempotentReference? reference;
         await using (var existing = connection.CreateCommand())
         {
@@ -112,16 +113,17 @@ public sealed class IdempotencyStore : IIdempotencyStore
                 && string.Equals(reader.GetString(2), route, StringComparison.Ordinal);
             responseStatusCode = reader.IsDBNull(3) ? null : reader.GetInt32(3);
             responseBody = reader.IsDBNull(4) ? null : reader.GetString(4);
+            responseLocation = reader.IsDBNull(7) ? null : reader.GetString(7);
             reference = reader.IsDBNull(5) || reader.IsDBNull(6) || responseStatusCode is null ? null
                 : new IdempotentReference(reader.GetString(5), reader.GetGuid(6), responseStatusCode.Value,
-                    reader.IsDBNull(7) ? null : reader.GetString(7));
+                    responseLocation);
         }
 
         await transaction.CommitAsync(cancellationToken);
 
         return sameRequest
             ? responseStatusCode is { } completedStatus
-                ? new IdempotencyReservation(existingId, IdempotencyReservationState.Replay, completedStatus, responseBody, reference)
+                ? new IdempotencyReservation(existingId, IdempotencyReservationState.Replay, completedStatus, responseBody, reference, responseLocation)
                 : new IdempotencyReservation(existingId, IdempotencyReservationState.InProgress)
             : new IdempotencyReservation(existingId, IdempotencyReservationState.Reused);
     }
@@ -148,7 +150,7 @@ public sealed class IdempotencyStore : IIdempotencyStore
     }
 
     /// <summary>Se llama solo después de que terminó el UoW de la acción.</summary>
-    public async Task CompleteAsync(Guid id, int statusCode, string responseBody, CancellationToken cancellationToken)
+    public async Task CompleteAsync(Guid id, int statusCode, string responseBody, string? responseLocation, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(responseBody);
         await using var connection = new NpgsqlConnection(_connectionString);
@@ -156,12 +158,13 @@ public sealed class IdempotencyStore : IIdempotencyStore
         await using var command = connection.CreateCommand();
         command.CommandText = """
             UPDATE platform."IdempotencyKeys"
-            SET "ResponseStatusCode" = @status, "ResponseBody" = @body
+            SET "ResponseStatusCode" = @status, "ResponseBody" = @body, "ResponseLocation" = @location
             WHERE "Id" = @id AND "ResponseStatusCode" IS NULL
             """;
         command.Parameters.AddWithValue("id", id);
         command.Parameters.AddWithValue("status", statusCode);
         command.Parameters.AddWithValue("body", responseBody);
+        command.Parameters.AddWithValue("location", NpgsqlDbType.Text, (object?)responseLocation ?? DBNull.Value);
         if (await command.ExecuteNonQueryAsync(cancellationToken) != 1)
         {
             throw new InvalidOperationException("The idempotency reservation could not be completed.");

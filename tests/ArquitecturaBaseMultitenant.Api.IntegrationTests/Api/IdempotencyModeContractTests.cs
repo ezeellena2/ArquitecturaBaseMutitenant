@@ -100,7 +100,7 @@ public sealed class IdempotencyModeContractTests
         public string? Body { get; private set; }
         public Task<IdempotencyReservation> ReserveAsync(Guid? tenantId, Guid userId, Guid key, string bodyHash, string route, CancellationToken cancellationToken)
         { Reserves++; return Task.FromResult(new IdempotencyReservation(Guid.CreateVersion7(), IdempotencyReservationState.Reserved)); }
-        public Task CompleteAsync(Guid id, int statusCode, string responseBody, CancellationToken cancellationToken)
+        public Task CompleteAsync(Guid id, int statusCode, string responseBody, string? responseLocation, CancellationToken cancellationToken)
         { Completions++; Body = responseBody; return Task.CompletedTask; }
         public Task ReleaseAsync(Guid id, CancellationToken cancellationToken) { Releases++; return Task.CompletedTask; }
         public Task<int> CleanupExpiredAsync(CancellationToken cancellationToken) => Task.FromResult(0);

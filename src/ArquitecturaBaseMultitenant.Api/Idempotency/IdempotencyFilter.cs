@@ -87,6 +87,8 @@ public sealed class IdempotencyFilter(
                     }
                 }
                 httpContext.Response.Headers["Idempotent-Replayed"] = "true";
+                if (reservation.ResponseLocation is { } location)
+                    httpContext.Response.Headers.Location = location;
                 context.Result = new ContentResult
                 {
                     StatusCode = reservation.ResponseStatusCode,
@@ -217,7 +219,7 @@ public sealed class IdempotencyFilter(
             {
                 preserveReservation = true;
                 var body = Encoding.UTF8.GetString(capture.ToArray());
-                await store.CompleteAsync(reservationId, response.StatusCode, body,
+                await store.CompleteAsync(reservationId, response.StatusCode, body, response.Headers.Location.FirstOrDefault(),
                     CancellationToken.None);
             }
             else

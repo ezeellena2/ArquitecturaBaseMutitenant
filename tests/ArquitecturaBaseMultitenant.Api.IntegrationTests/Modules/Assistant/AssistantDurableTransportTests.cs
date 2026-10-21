@@ -193,7 +193,7 @@ public sealed class AssistantDurableTransportTests(ApiFactory factory)
             }
             return result;
         }
-        public Task CompleteAsync(Guid id, int status, string body, CancellationToken ct) => Inner.CompleteAsync(id, status, body, ct);
+        public Task CompleteAsync(Guid id, int status, string body, string? responseLocation, CancellationToken ct) => Inner.CompleteAsync(id, status, body, responseLocation, ct);
         public async Task CompleteReferenceAsync(Guid id, IdempotentReference reference, CancellationToken ct)
         {
             Fault.Reference = reference;

@@ -18,6 +18,27 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Api;
 public sealed class IdempotencyTests(ApiFactory factory)
 {
     [Fact]
+    public async Task Created_response_replays_the_original_location_without_executing_again()
+    {
+        using var client = factory.CreateClient();
+        var probe = IdempotencyProbe.Create();
+        var key = Guid.NewGuid();
+        var body = new IdempotencyTestRequest(probe.Id, "uno");
+
+        using var first = await SendAsync(client, "create", body, key);
+        using var replay = await SendAsync(client, "create", body, key);
+
+        Assert.Equal(HttpStatusCode.Created, first.StatusCode);
+        Assert.Equal(new Uri($"/test/idempotency/resources/{probe.Id:D}", UriKind.Relative), first.Headers.Location);
+        Assert.Equal(first.StatusCode, replay.StatusCode);
+        Assert.Equal(first.Headers.Location, replay.Headers.Location);
+        Assert.Equal(await first.Content.ReadAsStringAsync(TestContext.Current.CancellationToken),
+            await replay.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        Assert.Equal("true", replay.Headers.GetValues("Idempotent-Replayed").Single());
+        Assert.Equal(1, probe.ExecutionCount);
+    }
+
+    [Fact]
     public async Task Parallel_requests_with_the_same_key_execute_once_and_replay_the_response()
     {
         using var client = factory.CreateClient();

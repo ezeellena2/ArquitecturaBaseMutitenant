@@ -17,7 +17,8 @@ public sealed record IdempotencyReservation(
     IdempotencyReservationState State,
     int? ResponseStatusCode = null,
     string? ResponseBody = null,
-    IdempotentReference? Reference = null);
+    IdempotentReference? Reference = null,
+    string? ResponseLocation = null);
 
 /// <summary>Reserva técnica independiente del UnitOfWork del caso de uso.</summary>
 public interface IIdempotencyStore
@@ -30,7 +31,7 @@ public interface IIdempotencyStore
         string route,
         CancellationToken cancellationToken);
 
-    Task CompleteAsync(Guid id, int statusCode, string responseBody, CancellationToken cancellationToken);
+    Task CompleteAsync(Guid id, int statusCode, string responseBody, string? responseLocation, CancellationToken cancellationToken);
 
     Task CompleteReferenceAsync(Guid id, IdempotentReference reference, CancellationToken cancellationToken) =>
         throw new NotSupportedException("This store does not support durable references.");

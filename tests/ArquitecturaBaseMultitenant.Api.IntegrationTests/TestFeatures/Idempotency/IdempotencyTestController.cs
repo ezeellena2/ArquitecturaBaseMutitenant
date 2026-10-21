@@ -38,7 +38,7 @@ public sealed class IdempotencyTestController : ControllerBase
             return BadRequest(new { execution, request.Name });
         }
 
-        return StatusCode(StatusCodes.Status201Created, new { execution, request.Name });
+        return Created($"/test/idempotency/resources/{probe.Id:D}", new { execution, request.Name });
     }
 
     [HttpPost("create-abort-after-result")]

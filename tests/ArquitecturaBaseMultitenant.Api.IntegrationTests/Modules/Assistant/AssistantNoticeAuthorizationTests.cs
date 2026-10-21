@@ -159,7 +159,7 @@ public sealed class AssistantNoticeAuthorizationTests(ApiFactory factory)
             if (result.State == IdempotencyReservationState.Replay) await Pause.AtAsync("replay", cancellationToken);
             return result;
         }
-        public Task CompleteAsync(Guid id, int statusCode, string responseBody, CancellationToken cancellationToken) => Inner.CompleteAsync(id, statusCode, responseBody, cancellationToken);
+        public Task CompleteAsync(Guid id, int statusCode, string responseBody, string? responseLocation, CancellationToken cancellationToken) => Inner.CompleteAsync(id, statusCode, responseBody, responseLocation, cancellationToken);
         public Task CompleteReferenceAsync(Guid id, IdempotentReference reference, CancellationToken cancellationToken) => Inner.CompleteReferenceAsync(id, reference, cancellationToken);
         public Task ReleaseAsync(Guid id, CancellationToken cancellationToken) => Inner.ReleaseAsync(id, cancellationToken);
         public Task<int> CleanupExpiredAsync(CancellationToken cancellationToken) => Inner.CleanupExpiredAsync(cancellationToken);
