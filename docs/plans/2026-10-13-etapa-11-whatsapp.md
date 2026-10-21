@@ -6,7 +6,7 @@
 | 1 · Contrato | K1, CC01–CC27 | Hecha: OpenAPI, permisos, migración de datos, textos y tipos del front |
 | 2a · Back | B1–B7 | Hecha |
 | 2b · Front | F1–F8 | Hecha |
-| 3 · Integración y puerta | I1–I3 | I1 hecha (app publicada, webhook y 8 campos). I2 e I3 en verde, salvo la prueba con Meta real que falta (abajo) |
+| 3 · Integración y puerta | I1–I3 | Hecha. **Etapa cerrada el 2026-10-21** por decisión del usuario; el alta de una organización con un número real pasó a la I1 de la 10 |
 
 ## Resultado de la puerta
 
@@ -22,7 +22,7 @@
 | Recorrido de usuario | f1e66026 | 182/182 |
 | Quitar el módulo | back affe0a2a y front f1e66026 | en verde, con base vacía y migrada; guía corregida (3bf879db, d9c94b89); Google, a mano |
 | Meta real (I3), número de prueba como número de Plataforma | main | Recibir, bot y menú, tomar, responder, nota que no sale, plantilla creada y aprobada por Meta con su aviso, y plantilla mandada con la ventana cerrada (llegó al celular, 18/10): en verde |
-| Meta real (I3), alta de una organización | — | Falta: con el número real del usuario, en un portfolio distinto de Servicios Ya |
+| Meta real (I3), alta de una organización | — | Pasó a la I1 de la 10 (2026-10-21), que la prueba en producción con el alta embebida (P8) |
 
 Arreglos que salieron de la puerta:
 - Front: nombre opcional en el contacto (485db5d8); el hilo en orden y el borrador que no se pierde (7a6452a2); la galería (477f020a, 6ae82d6c).
