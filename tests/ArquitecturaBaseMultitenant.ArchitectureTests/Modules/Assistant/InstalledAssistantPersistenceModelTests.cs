@@ -1,10 +1,39 @@
 using ArquitecturaBaseMultitenant.Domain.Assistant;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
 public sealed class InstalledAssistantPersistenceModelTests
 {
+    [Theory]
+    [InlineData(typeof(AssistantConversation), typeof(AssistantConversationActivity), "tenant", "AssistantConversationActivities")]
+    [InlineData(typeof(PlatformAssistantConversation), typeof(PlatformAssistantConversationActivity), "platform", "PlatformAssistantConversationActivities")]
+    public void Technical_activity_is_required_and_independent_from_the_editable_conversation_version(Type conversationType,
+        Type activityType, string schema, string table)
+    {
+        var entities = ArchitectureModel.EntityTypes().ToArray();
+        var conversation = Assert.Single(entities, value => value.ClrType == conversationType);
+        var activity = Assert.Single(entities, value => value.ClrType == activityType);
+        Assert.Null(activity.BaseType);
+        Assert.Equal(schema, activity.GetSchema());
+        Assert.Equal(table, activity.GetTableName());
+        Assert.Equal(schema == "tenant" ? new[] { "TenantId", "Id" } : ["Id"],
+            activity.FindPrimaryKey()!.Properties.Select(value => value.Name));
+        Assert.Null(activity.FindProperty("Version"));
+        Assert.True(conversation.FindProperty("Version")!.IsConcurrencyToken);
+        Assert.Null(conversation.FindProperty("Title"));
+        Assert.Null(conversation.FindProperty("LastActivityAtUtc"));
+        Assert.Equal("Title", conversation.FindProperty("ManualTitle")!.GetColumnName());
+        Assert.Equal(PropertySaveBehavior.Throw, activity.FindProperty("OwnerUserId")!.GetAfterSaveBehavior());
+        Assert.Equal(PropertySaveBehavior.Throw, activity.FindProperty("Access")!.GetAfterSaveBehavior());
+        var navigation = conversation.FindNavigation("Activity")!;
+        Assert.True(navigation.IsEagerLoaded);
+        Assert.True(navigation.ForeignKey.IsRequiredDependent);
+        Assert.Equal(DeleteBehavior.Cascade, navigation.ForeignKey.DeleteBehavior);
+        Assert.Contains(activity.GetIndexes(), index => index.Properties.Any(property => property.Name == "LastActivityAtUtc"));
+    }
+
     [Fact]
     public void Shared_assistant_bases_are_unmapped_and_preserve_independent_private_and_platform_tables()
     {

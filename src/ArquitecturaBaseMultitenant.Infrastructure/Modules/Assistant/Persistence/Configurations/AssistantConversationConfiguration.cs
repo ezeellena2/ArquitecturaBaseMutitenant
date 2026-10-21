@@ -14,9 +14,10 @@ internal sealed class AssistantConversationConfiguration : IEntityTypeConfigurat
         builder.ToTable("AssistantConversations", Schemas.Tenant);
         builder.HasKey(value => new { value.TenantId, value.Id });
         builder.HasOne<ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant>().WithMany().HasForeignKey(value => value.TenantId).OnDelete(DeleteBehavior.Restrict);
-        builder.Property(value => value.Title).HasMaxLength(TextLimits.AssistantTitle);
+        builder.Ignore(value => value.Title);
+        builder.Ignore(value => value.LastActivityAtUtc);
+        builder.Property(value => value.ManualTitle).HasColumnName("Title").HasMaxLength(TextLimits.AssistantTitle);
         builder.Property(value => value.Access).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
-        builder.HasIndex(value => new { value.TenantId, value.OwnerUserId, value.Access, value.LastActivityAtUtc, value.Id });
-        builder.HasIndex(value => new { value.TenantId, value.LastActivityAtUtc, value.Id });
+        builder.Navigation(value => value.Activity).IsRequired().AutoInclude();
     }
 }

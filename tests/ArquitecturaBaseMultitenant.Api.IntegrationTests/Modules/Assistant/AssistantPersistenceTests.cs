@@ -23,6 +23,157 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Assistant;
 public sealed class AssistantPersistenceTests(ApiFactory factory)
 {
     [Fact]
+    public async Task Activity_upgrade_and_downgrade_preserve_titles_dates_and_scope_with_cascading_cleanup()
+    {
+        var ct = AssistantTestData.Ct;
+        var database = "assistant_activity_" + Guid.CreateVersion7().ToString("N");
+        await using (var bootstrap = new NpgsqlConnection(factory.BootstrapConnectionString))
+        {
+            await bootstrap.OpenAsync(ct);
+            await using var create = new NpgsqlCommand($"CREATE DATABASE \"{database}\" OWNER mt_owner LOCALE_PROVIDER icu ICU_LOCALE 'es-AR' TEMPLATE template0", bootstrap);
+            await create.ExecuteNonQueryAsync(ct);
+        }
+        var adminString = new NpgsqlConnectionStringBuilder(factory.AdminConnectionString) { Database = database }.ConnectionString;
+        var runtimeString = new NpgsqlConnectionStringBuilder(factory.RuntimeConnectionString) { Database = database }.ConnectionString;
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(adminString);
+        options.UseOpenIddict<Guid>();
+        await using var context = new ApplicationDbContext(options.Options, new TenantContext());
+        var migrator = context.GetService<IMigrator>();
+        const string previous = "20261016214625_AssistantPolicyDeadColumns";
+        var upgrade = context.Database.GetMigrations().Single(value => value.EndsWith("_AssistantConversationActivities", StringComparison.Ordinal));
+        await migrator.MigrateAsync(previous, ct);
+        var rows = new List<LegacyConversation>();
+        var created = new DateTime(2026, 10, 20, 12, 0, 0, DateTimeKind.Utc);
+        await using (var connection = new NpgsqlConnection(adminString))
+        {
+            await connection.OpenAsync(ct);
+            await using var transaction = await connection.BeginTransactionAsync(ct);
+            foreach (var access in new[] { Access.Consumer, Access.Business, Access.Platform })
+            {
+                Guid? tenantId = access == Access.Platform ? null : Guid.CreateVersion7();
+                if (tenantId is { } tenant)
+                {
+                    await using var insertTenant = new NpgsqlCommand("""
+                        INSERT INTO platform."Tenants" ("Id", "Name", "Kind", "Status", "RegistrationSource")
+                        VALUES (@id, 'Activity migration fixture', @kind, 'Active', 'SelfService')
+                        """, connection, transaction);
+                    insertTenant.Parameters.AddWithValue("id", tenant);
+                    insertTenant.Parameters.AddWithValue("kind", access == Access.Consumer ? "Personal" : "Business");
+                    await insertTenant.ExecuteNonQueryAsync(ct);
+                }
+                await SetActivityScopeAsync(connection, transaction, tenantId);
+                foreach (var (title, manual) in new (string? Title, bool Manual)[] { (null, false), ("Automatic", false), ("Manual", true) })
+                {
+                    var row = new LegacyConversation(Guid.CreateVersion7(), Guid.CreateVersion7(), tenantId, access, title, manual, created, created.AddHours(1));
+                    rows.Add(row);
+                    var target = tenantId is null ? "platform.\"PlatformAssistantConversations\"" : "tenant.\"AssistantConversations\"";
+                    var scopeColumns = tenantId is null ? "" : "\"TenantId\", \"Access\",";
+                    var scopeValues = tenantId is null ? "" : "@tenant, @access,";
+                    await using var insert = new NpgsqlCommand($"""
+                        INSERT INTO {target} ({scopeColumns} "Id", "OwnerUserId", "Title", "IsTitleManual", "IsSaved", "CreatedAtUtc", "LastActivityAtUtc")
+                        VALUES ({scopeValues} @id, @owner, @title, @manual, true, @created, @activity)
+                        """, connection, transaction);
+                    insert.Parameters.AddWithValue("id", row.Id);
+                    insert.Parameters.AddWithValue("owner", row.Owner);
+                    insert.Parameters.AddWithValue("title", NpgsqlTypes.NpgsqlDbType.Text, (object?)title ?? DBNull.Value);
+                    insert.Parameters.AddWithValue("manual", manual);
+                    insert.Parameters.AddWithValue("created", created);
+                    insert.Parameters.AddWithValue("activity", row.LastActivity);
+                    if (tenantId is { } tenantValue)
+                    {
+                        insert.Parameters.AddWithValue("tenant", tenantValue);
+                        insert.Parameters.AddWithValue("access", access.ToString());
+                    }
+                    await insert.ExecuteNonQueryAsync(ct);
+                }
+            }
+            await transaction.CommitAsync(ct);
+        }
+        await migrator.MigrateAsync(upgrade, ct);
+        await AssertActivityRowsAsync(adminString, rows, split: true);
+        await migrator.MigrateAsync(previous, ct);
+        await AssertActivityRowsAsync(adminString, rows, split: false);
+        await migrator.MigrateAsync(upgrade, ct);
+        await AssertActivityRowsAsync(adminString, rows, split: true);
+        await using (var runtime = new NpgsqlConnection(runtimeString))
+        {
+            await runtime.OpenAsync(ct);
+            await using (var permissions = new NpgsqlCommand("""
+                SELECT count(*) = 2 AND bool_and(
+                    has_table_privilege(current_user, format('%I.%I', schemaname, tablename), 'SELECT')
+                    AND has_table_privilege(current_user, format('%I.%I', schemaname, tablename), 'INSERT')
+                    AND has_table_privilege(current_user, format('%I.%I', schemaname, tablename), 'UPDATE')
+                    AND has_table_privilege(current_user, format('%I.%I', schemaname, tablename), 'DELETE'))
+                FROM pg_tables WHERE (schemaname, tablename) IN
+                    (('tenant', 'AssistantConversationActivities'), ('platform', 'PlatformAssistantConversationActivities'))
+                """, runtime))
+                Assert.Equal(true, await permissions.ExecuteScalarAsync(ct));
+            await using var hidden = new NpgsqlCommand("SELECT count(*) FROM tenant.\"AssistantConversationActivities\"", runtime);
+            Assert.Equal(0L, await hidden.ExecuteScalarAsync(ct));
+        }
+        await using (var connection = new NpgsqlConnection(adminString))
+        {
+            await connection.OpenAsync(ct);
+            await using var transaction = await connection.BeginTransactionAsync(ct);
+            foreach (var row in rows)
+            {
+                await SetActivityScopeAsync(connection, transaction, row.TenantId);
+                var conversations = row.TenantId is null ? "platform.\"PlatformAssistantConversations\"" : "tenant.\"AssistantConversations\"";
+                var activities = row.TenantId is null ? "platform.\"PlatformAssistantConversationActivities\"" : "tenant.\"AssistantConversationActivities\"";
+                await using var delete = new NpgsqlCommand($"DELETE FROM {conversations} WHERE \"Id\"=@id; SELECT count(*) FROM {activities} WHERE \"Id\"=@id", connection, transaction);
+                delete.Parameters.AddWithValue("id", row.Id);
+                Assert.Equal(0L, await delete.ExecuteScalarAsync(ct));
+            }
+            await transaction.CommitAsync(ct);
+        }
+    }
+
+    private static async Task SetActivityScopeAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, Guid? tenantId)
+    {
+        await using var scope = new NpgsqlCommand("SELECT set_config('app.tenant_id', @scope, true)", connection, transaction);
+        scope.Parameters.AddWithValue("scope", tenantId?.ToString("D") ?? string.Empty);
+        await scope.ExecuteNonQueryAsync(AssistantTestData.Ct);
+    }
+
+    private static async Task AssertActivityRowsAsync(string connectionString, IReadOnlyList<LegacyConversation> rows, bool split)
+    {
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync(AssistantTestData.Ct);
+        await using var transaction = await connection.BeginTransactionAsync(AssistantTestData.Ct);
+        foreach (var row in rows)
+        {
+            await SetActivityScopeAsync(connection, transaction, row.TenantId);
+            var schema = row.TenantId is null ? "platform" : "tenant";
+            var name = row.TenantId is null ? "PlatformAssistantConversation" : "AssistantConversation";
+            var join = row.TenantId is null ? "c.\"Id\"=a.\"Id\"" : "c.\"Id\"=a.\"Id\" AND c.\"TenantId\"=a.\"TenantId\"";
+            var query = split ? $"""
+                SELECT c."Title", a."AutomaticTitle", a."LastActivityAtUtc", c."CreatedAtUtc", c."IsSaved", c."IsTitleManual", a."OwnerUserId", a."Access"
+                FROM {schema}."{name}s" c JOIN {schema}."{name}Activities" a ON {join} WHERE c."Id"=@id
+                """ : $"""
+                SELECT c."Title", NULL::text, c."LastActivityAtUtc", c."CreatedAtUtc", c."IsSaved", c."IsTitleManual", c."OwnerUserId", @access
+                FROM {schema}."{name}s" c WHERE c."Id"=@id
+                """;
+            await using var command = new NpgsqlCommand(query, connection, transaction);
+            command.Parameters.AddWithValue("id", row.Id);
+            if (!split) command.Parameters.AddWithValue("access", row.Access.ToString());
+            await using var reader = await command.ExecuteReaderAsync(AssistantTestData.Ct);
+            Assert.True(await reader.ReadAsync(AssistantTestData.Ct));
+            Assert.Equal(split && !row.Manual ? null : row.Title, reader.IsDBNull(0) ? null : reader.GetString(0));
+            Assert.Equal(split && !row.Manual ? row.Title : null, reader.IsDBNull(1) ? null : reader.GetString(1));
+            Assert.Equal(row.LastActivity, reader.GetDateTime(2));
+            Assert.Equal(row.Created, reader.GetDateTime(3));
+            Assert.True(reader.GetBoolean(4));
+            Assert.Equal(row.Manual, reader.GetBoolean(5));
+            Assert.Equal(row.Owner, reader.GetGuid(6));
+            Assert.Equal(row.Access.ToString(), reader.GetString(7));
+            Assert.False(await reader.ReadAsync(AssistantTestData.Ct));
+        }
+    }
+
+    private sealed record LegacyConversation(Guid Id, Guid Owner, Guid? TenantId, Access Access, string? Title, bool Manual,
+        DateTime Created, DateTime LastActivity);
+
+    [Fact]
     public async Task Incremental_title_limit_round_trips_eighty_characters_in_both_storage_sides()
     {
         using var client = AssistantTestData.Client(factory);
@@ -39,9 +190,9 @@ public sealed class AssistantPersistenceTests(ApiFactory factory)
             await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
             {
                 var row = await db.Set<AssistantConversation>().SingleAsync(value => value.Id == conversation.Id, ct);
-                db.Entry(row).Property(value => value.Title).CurrentValue = title;
+                row.Update(title, false, services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
                 db.Add(platform);
-                db.Entry(platform).Property(value => value.Title).CurrentValue = title;
+                platform.Update(title, false, services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
                 return Result.Success();
             }, CommitPolicy.OnSuccess, AssistantTestData.Ct);
         }
@@ -180,6 +331,8 @@ public sealed class AssistantPersistenceTests(ApiFactory factory)
         using var core = new ApplicationDbContext(options.Options, new TenantContext(), []);
         Assert.Null(core.Model.FindEntityType(typeof(AssistantConversation)));
         Assert.Null(core.Model.FindEntityType(typeof(PlatformAssistantConversation)));
+        Assert.Null(core.Model.FindEntityType(typeof(AssistantConversationActivity)));
+        Assert.Null(core.Model.FindEntityType(typeof(PlatformAssistantConversationActivity)));
         Assert.Null(core.Model.FindEntityType(typeof(AssistantModelPrice)));
         Assert.Equal("xmin", runtime.Model.FindEntityType(typeof(AssistantConversation))!.FindProperty("Version")!.GetColumnName());
     }
@@ -191,6 +344,8 @@ public sealed class AssistantPersistenceTests(ApiFactory factory)
         var account = await AccountJourney.RegisterAsync(factory, client, AssistantTestData.Ct);
         var tenantId = await AssistantTestData.ActiveTenantAsync(client);
         var conversation = await AssistantTestData.ConversationAsync(factory, tenantId, account.UserId, Access.Consumer);
+        Assert.Equal(tenantId, conversation.Activity.TenantId);
+        Assert.Equal(conversation.Id, conversation.Activity.Id);
         using (var scope = factory.Services.CreateScope())
         {
             var services = scope.ServiceProvider;
@@ -214,7 +369,7 @@ public sealed class AssistantPersistenceTests(ApiFactory factory)
         await using var admin = new NpgsqlConnection(factory.AdminConnectionString);
         await admin.OpenAsync(AssistantTestData.Ct);
         await using var policies = new NpgsqlCommand("SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='tenant' AND c.relname LIKE 'Assistant%' AND c.relrowsecurity AND c.relforcerowsecurity", admin);
-        // T06a adds own-key quota and financial facts, both with forced tenant RLS.
-        Assert.Equal(10L, await policies.ExecuteScalarAsync(AssistantTestData.Ct));
+        // La actividad técnica conserva el mismo aislamiento privado que la conversación.
+        Assert.Equal(11L, await policies.ExecuteScalarAsync(AssistantTestData.Ct));
     }
 }

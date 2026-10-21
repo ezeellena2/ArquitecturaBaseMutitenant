@@ -10,6 +10,7 @@ internal sealed class AssistantModelContributor : IPersistenceModelContributor
     public IReadOnlyDictionary<Type, string> GlobalEntities { get; } = new Dictionary<Type, string>
     {
         [typeof(PlatformAssistantConversation)] = Schemas.Platform,
+        [typeof(PlatformAssistantConversationActivity)] = Schemas.Platform,
         [typeof(PlatformAssistantDurableOperation)] = Schemas.Platform,
         [typeof(AssistantTurnWork)] = Schemas.Platform,
         [typeof(AssistantSnapshotRetentionIndex)] = Schemas.Platform,

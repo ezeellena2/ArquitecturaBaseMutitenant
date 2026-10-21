@@ -19,6 +19,7 @@ public interface IAssistantTurnRepository
     Guid AddMessage(Guid conversationId, Access access, string role, string status, string? text, DateTime nowUtc, IReadOnlyCollection<Guid>? subjects = null);
     void Add(AssistantTurnWork work);
     void Touch(IAssistantConversation conversation, DateTime nowUtc);
+    void TouchActivity(IAssistantConversation conversation, DateTime nowUtc);
     Task CheckpointMessageAsync(Guid owner, Access access, IAssistantTurn turn, string? text, string? status, CancellationToken ct);
     Task FinishMessageStatusAsync(Guid owner, Access access, IAssistantTurn turn, string status, CancellationToken ct);
     Task AddSubjectsAsync(Guid owner, Access access, Guid bindingId, IReadOnlyList<Guid> subjects, CancellationToken ct);

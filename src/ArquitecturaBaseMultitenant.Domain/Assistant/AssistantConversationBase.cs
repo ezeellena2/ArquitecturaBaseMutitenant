@@ -6,24 +6,22 @@ public abstract class AssistantConversationBase : Entity, IAssistantConversation
 {
     public uint Version { get; private set; }
     public Guid OwnerUserId { get; private set; }
-    public string? Title { get; private set; }
+    public string? ManualTitle { get; private set; }
+    public string? Title => ManualTitle ?? ActivityState.AutomaticTitle;
     public bool IsSaved { get; private set; }
     public bool IsTitleManual { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
-    public DateTime LastActivityAtUtc { get; private set; }
+    public DateTime LastActivityAtUtc => ActivityState.LastActivityAtUtc;
+    protected abstract AssistantConversationActivityBase ActivityState { get; }
 
     public void Touch(DateTime nowUtc)
     {
-        if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC is required.", nameof(nowUtc));
-        LastActivityAtUtc = nowUtc;
+        ActivityState.Touch(nowUtc);
     }
     public bool TrySetAutomaticTitle(string title, uint expectedVersion, DateTime nowUtc)
     {
         if (IsTitleManual || Title is not null || Version != expectedVersion) return false;
-        ArgumentException.ThrowIfNullOrWhiteSpace(title);
-        if (title.Length > TextLimits.AssistantTitle) throw new ArgumentException("The title is too long.", nameof(title));
-        Touch(nowUtc); Title = title;
-        return true;
+        return ActivityState.TrySetAutomaticTitle(title, nowUtc);
     }
     public void Update(string? title, bool isSaved, DateTime nowUtc)
     {
@@ -32,9 +30,9 @@ public abstract class AssistantConversationBase : Entity, IAssistantConversation
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(title);
             if (title.Length > TextLimits.AssistantTitle) throw new ArgumentException("The title is too long.", nameof(title));
-            Title = title;
+            ManualTitle = title;
             IsTitleManual = true;
-            LastActivityAtUtc = nowUtc;
+            Touch(nowUtc);
         }
         IsSaved = isSaved;
     }
@@ -44,14 +42,14 @@ public abstract class AssistantConversationBase : Entity, IAssistantConversation
         ArgumentException.ThrowIfNullOrWhiteSpace(title);
         if (title.Length > TextLimits.AssistantTitle) throw new ArgumentException("The title is too long.", nameof(title));
         if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC is required.", nameof(nowUtc));
-        if (!IsTitleManual && Title is null) Title = title;
-        LastActivityAtUtc = nowUtc;
+        if (!IsTitleManual && Title is null) ActivityState.TrySetAutomaticTitle(title, nowUtc);
+        Touch(nowUtc);
     }
 
     protected void Initialize(Guid ownerUserId, DateTime nowUtc)
     {
         if (ownerUserId == Guid.Empty) throw new ArgumentException("An owner is required.", nameof(ownerUserId));
         if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC is required.", nameof(nowUtc));
-        OwnerUserId = ownerUserId; CreatedAtUtc = nowUtc; LastActivityAtUtc = nowUtc;
+        OwnerUserId = ownerUserId; CreatedAtUtc = nowUtc;
     }
 }

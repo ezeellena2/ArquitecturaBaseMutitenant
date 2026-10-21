@@ -230,7 +230,10 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
             checked((int)calls.Sum(row => row.CacheReadTokens)), cost, remaining <= AssistantTechnicalLimits.RemainingMessagesNotice ? remaining : null, monthlyUsed));
         var conversation = await turns.GetConversationAsync(Owner, Access, turn.ConversationId, null, ct);
         if (conversation is null) return Result.Success();
-        turns.Touch(conversation, clock.GetUtcNow().UtcDateTime);
+        turns.TouchActivity(conversation, clock.GetUtcNow().UtcDateTime);
+        // Completar sólo escribe la actividad técnica. La versión editable se
+        // conserva en el snapshot; xmin del binding pertenece a otra fila.
+        result = result with { ConversationVersion = conversation.Version };
         await turns.SetSnapshotAsync(Owner, Access, turn.BindingId, AssistantTurnJson.Serialize(new AssistantTurnSnapshot(result, status == "Failed" ? code ?? AssistantErrors.ProviderUnavailable.Code : null)), ct);
         return Result.Success();
     }

@@ -35,7 +35,7 @@ public sealed class AssistantRetentionTests(ApiFactory factory)
             foreach (var id in new[] { expired.Id, saved.Id })
             {
                 var row = await db.Set<AssistantConversation>().SingleAsync(row => row.Id == id, ct);
-                db.Entry(row).Property(row => row.LastActivityAtUtc).CurrentValue = cutoff;
+                row.Activity.Touch(cutoff);
                 db.Entry(row).Property(row => row.CreatedAtUtc).CurrentValue = cutoff.AddDays(-1);
             }
             db.Add(AssistantAttachment.Create(expired.Id, "private-file.pdf", "application/pdf", Guid.NewGuid().ToString("N"), 12, cutoff));

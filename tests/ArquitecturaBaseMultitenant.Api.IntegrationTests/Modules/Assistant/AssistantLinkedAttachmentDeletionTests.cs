@@ -95,7 +95,7 @@ public sealed class AssistantLinkedAttachmentDeletionTests(ApiFactory factory)
             if (expiresAtUtc is { } cutoff)
             {
                 var row = await db.Set<AssistantConversation>().SingleAsync(row => row.Id == conversationId, ct);
-                db.Entry(row).Property(row => row.LastActivityAtUtc).CurrentValue = cutoff;
+                row.Activity.Touch(cutoff);
                 db.Entry(row).Property(row => row.CreatedAtUtc).CurrentValue = cutoff.AddDays(-1);
             }
             return Result.Success();
@@ -116,7 +116,7 @@ public sealed class AssistantLinkedAttachmentDeletionTests(ApiFactory factory)
             db.AddRange(conversation, message, attachment);
             if (expiresAtUtc is { } cutoff)
             {
-                db.Entry(conversation).Property(row => row.LastActivityAtUtc).CurrentValue = cutoff;
+                conversation.Activity.Touch(cutoff);
                 db.Entry(conversation).Property(row => row.CreatedAtUtc).CurrentValue = cutoff.AddDays(-1);
             }
             return Task.FromResult(Result.Success());

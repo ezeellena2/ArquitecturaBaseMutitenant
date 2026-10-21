@@ -17,10 +17,10 @@ internal sealed class AssistantConversationReader(ApplicationDbContext context, 
         Validate(ownerUserId, access);
         if (access == Access.Platform)
             return context.Set<PlatformAssistantConversation>().AsNoTracking().Where(value => value.Id == conversationId && value.OwnerUserId == ownerUserId)
-                .Select(value => new AssistantConversationSummaryResponse(value.Id, value.Title, value.IsSaved, value.Version, value.CreatedAtUtc, value.LastActivityAtUtc)).SingleOrDefaultAsync(ct);
+                .Select(value => new AssistantConversationSummaryResponse(value.Id, value.ManualTitle ?? value.Activity.AutomaticTitle, value.IsSaved, value.Version, value.CreatedAtUtc, value.Activity.LastActivityAtUtc)).SingleOrDefaultAsync(ct);
         var tenantId = tenant.RequiredTenantId;
         return context.Set<AssistantConversation>().AsNoTracking().Where(value => value.Id == conversationId && value.TenantId == tenantId && value.OwnerUserId == ownerUserId && value.Access == access)
-            .Select(value => new AssistantConversationSummaryResponse(value.Id, value.Title, value.IsSaved, value.Version, value.CreatedAtUtc, value.LastActivityAtUtc)).SingleOrDefaultAsync(ct);
+            .Select(value => new AssistantConversationSummaryResponse(value.Id, value.ManualTitle ?? value.Activity.AutomaticTitle, value.IsSaved, value.Version, value.CreatedAtUtc, value.Activity.LastActivityAtUtc)).SingleOrDefaultAsync(ct);
     }
 
     public async Task<CursorResult<AssistantConversationSummaryResponse>> ListAsync(Guid ownerUserId, Access access, AssistantConversationListRequest request, CancellationToken ct)
@@ -29,9 +29,9 @@ internal sealed class AssistantConversationReader(ApplicationDbContext context, 
         var tenantId = access == Access.Platform ? Guid.Empty : tenant.RequiredTenantId;
         var query = access == Access.Platform
             ? context.Set<PlatformAssistantConversation>().AsNoTracking().Where(value => value.OwnerUserId == ownerUserId && (request.Saved == null || value.IsSaved == request.Saved))
-                .Select(value => new { value.Id, value.Title, value.IsSaved, value.Version, value.CreatedAtUtc, value.LastActivityAtUtc })
+                .Select(value => new { value.Id, Title = value.ManualTitle ?? value.Activity.AutomaticTitle, value.IsSaved, value.Version, value.CreatedAtUtc, value.Activity.LastActivityAtUtc })
             : context.Set<AssistantConversation>().AsNoTracking().Where(value => value.TenantId == tenantId && value.OwnerUserId == ownerUserId && value.Access == access && (request.Saved == null || value.IsSaved == request.Saved))
-                .Select(value => new { value.Id, value.Title, value.IsSaved, value.Version, value.CreatedAtUtc, value.LastActivityAtUtc });
+                .Select(value => new { value.Id, Title = value.ManualTitle ?? value.Activity.AutomaticTitle, value.IsSaved, value.Version, value.CreatedAtUtc, value.Activity.LastActivityAtUtc });
         var page = await AssistantCursorPagination.ToCursorResultAsync(query, request.Limit ?? AssistantTechnicalLimits.QuickRows, request.Cursor,
             $"conversations:{tenantId:N}:{ownerUserId:N}:{access}:{request.Saved?.ToString() ?? "all"}", false,
             value => value.LastActivityAtUtc, value => value.Id, ct);

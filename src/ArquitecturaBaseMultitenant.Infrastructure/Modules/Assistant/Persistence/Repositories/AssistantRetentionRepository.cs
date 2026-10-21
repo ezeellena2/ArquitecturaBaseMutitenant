@@ -18,10 +18,10 @@ internal sealed class AssistantRetentionRepository(ApplicationDbContext db, ITen
     public async Task<IReadOnlyList<AssistantConversationRetentionRow>> ListExpiredAsync(DateTime cutoffUtc, Guid? after, CancellationToken ct)
     {
         if (tenant.TenantId is { } tenantId)
-            return await db.Set<AssistantConversation>().AsNoTracking().Where(row => row.TenantId == tenantId && !row.IsSaved && row.LastActivityAtUtc <= cutoffUtc &&
+            return await db.Set<AssistantConversation>().AsNoTracking().Where(row => row.TenantId == tenantId && !row.IsSaved && row.Activity.LastActivityAtUtc <= cutoffUtc &&
                 (after == null || row.Id.CompareTo(after.Value) > 0)).OrderBy(row => row.Id).Take(100)
                 .Select(row => new AssistantConversationRetentionRow(row.Id, row.OwnerUserId, row.Access)).ToArrayAsync(ct);
-        return await db.Set<PlatformAssistantConversation>().AsNoTracking().Where(row => !row.IsSaved && row.LastActivityAtUtc <= cutoffUtc &&
+        return await db.Set<PlatformAssistantConversation>().AsNoTracking().Where(row => !row.IsSaved && row.Activity.LastActivityAtUtc <= cutoffUtc &&
             (after == null || row.Id.CompareTo(after.Value) > 0)).OrderBy(row => row.Id).Take(100)
             .Select(row => new AssistantConversationRetentionRow(row.Id, row.OwnerUserId, Access.Platform)).ToArrayAsync(ct);
     }

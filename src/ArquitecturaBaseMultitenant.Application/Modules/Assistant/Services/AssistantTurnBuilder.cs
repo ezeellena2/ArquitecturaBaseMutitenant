@@ -90,6 +90,10 @@ internal sealed class AssistantTurnBuilder(IAssistantTurnRepository turns, IAssi
     private static AssistantTurnSnapshot Restore(AssistantDurableOperationRow binding)
     {
         var snapshot = AssistantTurnJson.Restore<AssistantTurnSnapshot>(binding.SnapshotJson!);
-        return snapshot with { Result = snapshot.Result with { ConversationVersion = binding.Version, Message = snapshot.Result.Message with { Version = binding.Version } } };
+        return snapshot with { Result = snapshot.Result with
+        {
+            ConversationVersion = snapshot.Result.ConversationVersion == 0 ? binding.Version : snapshot.Result.ConversationVersion,
+            Message = snapshot.Result.Message with { Version = binding.Version },
+        } };
     }
 }

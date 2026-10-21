@@ -45,7 +45,15 @@ internal sealed class AssistantTurnRepository(ApplicationDbContext db, IEnumerab
         return row;
     }
     public Task<Guid?> FindActiveAsync(Guid owner, Access access, Guid conversationId, CancellationToken ct) => Store(access).FindActiveAsync(owner, access, conversationId, ct);
-    public async Task<IAssistantConversation?> GetConversationAsync(Guid owner, Access access, Guid id, uint? version, CancellationToken ct) => await ReloadAsync(await Store(access).GetConversationAsync(owner, access, id, version, ct), ct);
+    public async Task<IAssistantConversation?> GetConversationAsync(Guid owner, Access access, Guid id, uint? version, CancellationToken ct)
+    {
+        var row = await ReloadAsync(await Store(access).GetConversationAsync(owner, access, id, version, ct), ct);
+        // El contexto puede haber seguido la navegación antes de tomar el lock.
+        // Recargar main no refresca su fila técnica de actividad.
+        if (row is AssistantConversation local) await ReloadAsync(local.Activity, ct);
+        else if (row is PlatformAssistantConversation global) await ReloadAsync(global.Activity, ct);
+        return row;
+    }
     public async Task<IReadOnlyList<AssistantHistoryMessageRow>> FindHistoryPrivacyAsync(Guid owner, Access access, Guid conversationId, CancellationToken ct) => await Store(access).FindHistoryPrivacyAsync(owner, access, conversationId, ct);
     public async Task<IReadOnlyList<AssistantMessageResponse>> ListMessagesAsync(Guid owner, Access access, Guid conversationId, CancellationToken ct, IReadOnlyList<Guid>? messageIds = null)
     {
@@ -83,6 +91,7 @@ internal sealed class AssistantTurnRepository(ApplicationDbContext db, IEnumerab
         conversation.Touch(nowUtc);
         db.Entry(conversation).State = EntityState.Modified;
     }
+    public void TouchActivity(IAssistantConversation conversation, DateTime nowUtc) => conversation.Touch(nowUtc);
     public async Task CheckpointMessageAsync(Guid owner, Access access, IAssistantTurn turn, string? text, string? status, CancellationToken ct)
     {
         db.RequireTransaction();

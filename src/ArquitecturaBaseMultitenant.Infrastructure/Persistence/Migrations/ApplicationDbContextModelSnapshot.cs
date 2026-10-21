@@ -178,15 +178,13 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsTitleManual")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime>("LastActivityAtUtc")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("ManualTitle")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("Title");
 
                     b.Property<Guid>("OwnerUserId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("Title")
-                        .HasMaxLength(80)
-                        .HasColumnType("character varying(80)");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
@@ -196,11 +194,39 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasKey("TenantId", "Id");
 
+                    b.ToTable("AssistantConversations", "tenant");
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantConversationActivity", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Access")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("AutomaticTitle")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<DateTime>("LastActivityAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("TenantId", "Id");
+
                     b.HasIndex("TenantId", "LastActivityAtUtc", "Id");
 
                     b.HasIndex("TenantId", "OwnerUserId", "Access", "LastActivityAtUtc", "Id");
 
-                    b.ToTable("AssistantConversations", "tenant");
+                    b.ToTable("AssistantConversationActivities", "tenant");
                 });
 
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantDurableOperation", b =>
@@ -1147,15 +1173,13 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsTitleManual")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime>("LastActivityAtUtc")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("ManualTitle")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("Title");
 
                     b.Property<Guid>("OwnerUserId")
                         .HasColumnType("uuid");
-
-                    b.Property<string>("Title")
-                        .HasMaxLength(80)
-                        .HasColumnType("character varying(80)");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
@@ -1165,9 +1189,34 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.ToTable("PlatformAssistantConversations", "platform");
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.PlatformAssistantConversationActivity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Access")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("AutomaticTitle")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<DateTime>("LastActivityAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
                     b.HasIndex("OwnerUserId", "LastActivityAtUtc", "Id");
 
-                    b.ToTable("PlatformAssistantConversations", "platform");
+                    b.ToTable("PlatformAssistantConversationActivities", "platform");
                 });
 
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.PlatformAssistantDurableOperation", b =>
@@ -5526,6 +5575,21 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantConversationActivity", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantConversation", null)
+                        .WithOne("Activity")
+                        .HasForeignKey("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantConversationActivity", "TenantId", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantDurableOperation", b =>
                 {
                     b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", null)
@@ -7697,6 +7761,15 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.PlatformAssistantConversationActivity", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Assistant.PlatformAssistantConversation", null)
+                        .WithOne("Activity")
+                        .HasForeignKey("ArquitecturaBaseMultitenant.Domain.Assistant.PlatformAssistantConversationActivity", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.PlatformAssistantMessage", b =>
                 {
                     b.HasOne("ArquitecturaBaseMultitenant.Domain.Assistant.PlatformAssistantConversation", null)
@@ -8548,6 +8621,18 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Navigation("Application");
 
                     b.Navigation("Authorization");
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantConversation", b =>
+                {
+                    b.Navigation("Activity")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.PlatformAssistantConversation", b =>
+                {
+                    b.Navigation("Activity")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("OpenIddict.EntityFrameworkCore.Models.OpenIddictEntityFrameworkCoreApplication<System.Guid>", b =>
