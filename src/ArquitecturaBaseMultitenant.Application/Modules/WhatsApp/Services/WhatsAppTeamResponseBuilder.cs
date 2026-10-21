@@ -7,7 +7,7 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 
 /// <summary>
 /// Arma equipos con los nombres de sus integrantes. En la organización cada integrante es un miembro activo (memberId) y
-/// su nombre sale de su cuenta (vacío si no lo tiene, como en Usuarios); en Plataforma, una cuenta de operador. Un integrante
+/// su nombre sale de su cuenta (vacío si no lo tiene, como en Usuarios); en Plataforma, el nombre o correo del operador. Un integrante
 /// que dejó de estar activo no se muestra.
 /// </summary>
 internal sealed class WhatsAppTeamResponseBuilder(IWhatsAppTeamReader teams, IUserDisplayNameReader names)
@@ -30,8 +30,10 @@ internal sealed class WhatsAppTeamResponseBuilder(IWhatsAppTeamReader teams, IUs
     internal async Task<IReadOnlyDictionary<Guid, TeamPerson>> PeopleAsync(IEnumerable<Guid> ids, bool platform, CancellationToken ct)
     {
         var distinct = ids.Distinct().ToArray();
-        var accounts = platform ? distinct.ToDictionary(id => id, id => id)
-            : (await teams.ListActiveMembersAsync(distinct, ct)).ToDictionary(member => member.MemberId, member => member.UserId);
+        if (platform)
+            return (await teams.ListPlatformOperatorsAsync(distinct, ct)).ToDictionary(person => person.UserId,
+                person => new TeamPerson(person.UserId, PlatformWhatsAppOperatorResolver.Label(person.DisplayName, person.Email)));
+        var accounts = (await teams.ListActiveMembersAsync(distinct, ct)).ToDictionary(member => member.MemberId, member => member.UserId);
         var displayNames = await names.FindAsync([.. accounts.Values.Distinct()], ct);
         return accounts.ToDictionary(pair => pair.Key, pair => new TeamPerson(pair.Value, displayNames.GetValueOrDefault(pair.Value) ?? string.Empty));
     }

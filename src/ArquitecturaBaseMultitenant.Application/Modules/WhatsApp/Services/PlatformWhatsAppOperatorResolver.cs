@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 
@@ -21,8 +22,11 @@ internal sealed class PlatformWhatsAppOperatorResolver(IPlatformAccountReader ac
             State = PlatformAccountState.Active,
         }, availability.SignInTypes(), clock.GetUtcNow().UtcDateTime, ct);
         return new PagedResult<WhatsAppReferenceResponse>([.. page.Items.Select(account => new WhatsAppReferenceResponse(account.Id,
-            account.DisplayName ?? string.Empty))], page.Page, page.PageSize, page.TotalCount);
+            Label(account.DisplayName, account.PrimaryEmail)))], page.Page, page.PageSize, page.TotalCount);
     }
+
+    internal static string Label(string? displayName, Email? email) =>
+        string.IsNullOrWhiteSpace(displayName) ? email?.DisplayValue ?? string.Empty : displayName;
 
     internal async Task<bool> AreOperatorsAsync(IEnumerable<Guid> accountIds, CancellationToken ct)
     {

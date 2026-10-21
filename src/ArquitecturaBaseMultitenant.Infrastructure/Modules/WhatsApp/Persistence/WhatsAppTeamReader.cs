@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
+using EmailValue = ArquitecturaBaseMultitenant.Domain.ValueObjects.Email;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Persistence;
 
@@ -70,5 +71,15 @@ internal sealed class WhatsAppTeamReader(ApplicationDbContext context, ITenantCo
             .Where(member => member.TenantId == tenantId && member.UserId != null && userIds.Contains(member.UserId.Value)
                 && member.Status == MemberStatus.Active)
             .Select(member => new WhatsAppTeamMemberRow(member.Id, member.UserId!.Value)).ToArrayAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<WhatsAppTeamOperatorRow>> ListPlatformOperatorsAsync(IReadOnlyCollection<Guid> userIds, CancellationToken ct)
+    {
+        if (userIds.Count == 0) return [];
+        var rows = await context.Users.AsNoTracking()
+            .Where(user => userIds.Contains(user.Id) && user.IsPlatformOperator && user.DeletedAtUtc == null && user.DeletionLeaseId == null)
+            .Select(user => new { user.Id, user.DisplayName, user.Email }).ToArrayAsync(ct);
+        return [.. rows.Select(user => new WhatsAppTeamOperatorRow(user.Id, user.DisplayName,
+            user.Email is null ? null : EmailValue.Create(user.Email).Value))];
     }
 }
