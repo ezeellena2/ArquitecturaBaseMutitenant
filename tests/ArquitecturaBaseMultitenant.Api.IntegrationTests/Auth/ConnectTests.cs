@@ -3,7 +3,10 @@ using System.Net.Http.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
@@ -89,6 +92,60 @@ public sealed class ConnectTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.Contains("error=login_required", response.Headers.Location?.ToString(), StringComparison.Ordinal);
         Assert.DoesNotContain("/login", response.Headers.Location?.ToString(), StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(false, "Tenancy.Access.NotMember")]
+    [InlineData(true, "Tenancy.Tenant.PendingApproval")]
+    public async Task Rejected_business_authorization_preserves_the_domain_error_and_state_without_granting_business(
+        bool pendingOrganization, string expectedCode)
+    {
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+        });
+        var account = await AccountJourney.RegisterAsync(factory, client, Ct);
+        const string organizationName = "Empresa en revisión & Sur";
+        if (pendingOrganization)
+        {
+            var organization = Tenant.CreateBusiness(organizationName, requiresApproval: true);
+            await using var scope = factory.Services.CreateAsyncScope();
+            var services = scope.ServiceProvider;
+            using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(organization.Id);
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+            {
+                services.GetRequiredService<TenantSpaceProvisioner>().Stage(organization,
+                    TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [account.UserId], account.UserId);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+
+        foreach (var prompt in new[] { "", "&prompt=none" })
+        {
+            var state = Guid.NewGuid().ToString("N");
+            using var denied = await client.GetAsync(AuthorizePath("business") + "&state=" + state + prompt, Ct);
+            Assert.Equal(HttpStatusCode.Redirect, denied.StatusCode);
+            var location = denied.Headers.Location;
+            Assert.NotNull(location);
+            Assert.Equal("/auth/callback", location.AbsolutePath);
+            var parameters = QueryHelpers.ParseQuery(location.Query);
+            Assert.Equal("access_denied", parameters["error"].ToString());
+            Assert.Equal(pendingOrganization ? expectedCode + "|" + Uri.EscapeDataString(organizationName) : expectedCode,
+                parameters["error_description"].ToString());
+            Assert.Equal(state, parameters["state"].ToString());
+            Assert.False(parameters.ContainsKey("code"));
+            Assert.False(parameters.ContainsKey("access_token"));
+            Assert.False(parameters.ContainsKey("id_token"));
+        }
+
+        using var profile = await client.GetAsync("/api/me", Ct);
+        Assert.Equal(HttpStatusCode.OK, profile.StatusCode);
+        using var body = await profile.Content.ReadFromJsonAsync<System.Text.Json.JsonDocument>(Ct);
+        Assert.Equal(account.UserId, body!.RootElement.GetProperty("id").GetGuid());
+        Assert.Equal("consumer", body.RootElement.GetProperty("access").GetString());
+        Assert.Empty(body.RootElement.GetProperty("effectivePermissions").GetProperty("organization").EnumerateArray());
+        Assert.Empty(body.RootElement.GetProperty("effectivePermissions").GetProperty("platform").EnumerateArray());
     }
 
     [Fact]
