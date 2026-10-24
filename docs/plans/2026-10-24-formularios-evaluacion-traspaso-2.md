@@ -63,18 +63,18 @@ Lo fijaste el 23/10 para los dos proyectos y lo confirmaste acá el 24/10: los b
 
 ### 2.2 Idioma (decisión B2)
 
-La regla del 23/10, que el usuario confirmó acá el 24/10:
-- lo que se crea se escribe en el idioma elegido en el menú del encabezado. Ese es su idioma original y el único obligatorio;
-- no es obligatorio crearlo en los dos idiomas, y no se muestra cómo queda en los dos. No hay:
+El usuario lo precisó el 24/10, más simple que la regla de ArquitecturaBase: **el contenido no tiene idioma.**
+- Lo que crea una organización (formularios, catálogos, opciones, campos y datos de las personas) se guarda en un solo texto, tal como lo escribió la persona, en el idioma que quiera.
+- No depende del idioma elegido en el menú. En palabras del usuario: «si el usuario quiere trabajar en inglés y crea un formulario en español, es problema del usuario».
+- El botón de idioma del encabezado cambia solo los textos del sistema.
+- No hay traducciones del contenido. Por eso no hay:
   - selector «Textos en»;
   - pares «Nombre» / «Nombre en inglés»;
-  - vista previa doble;
-  - avisos de lo que falta traducir;
-- con el menú en otro idioma se ve lo escrito en ese idioma. Traducir es opcional, y se hace cambiando el menú;
-- abarca formularios, catálogos, opciones, campos y datos de las personas;
-- por WhatsApp, cada persona lo recibe en su idioma si existe y, si no, en el original, sin mezclar.
+  - vista previa en dos idiomas;
+  - avisos de traducción.
+- Un formulario se ve y se manda igual con el menú en cualquier idioma. Por WhatsApp sale como está escrito, y los textos del sistema que lo acompañan van en el idioma de la cuenta de quien recibe.
 
-**Choca con el tercer punto de nuestra decisión 17** («el idioma de las pantallas del sistema no cambia»): para traducir, la persona cambia el menú, y con él cambian las pantallas. Los otros dos puntos siguen.
+Reemplaza la decisión 17 (original obligatorio y traducción opcional), y la 20 deja de aplicar: sirve cualquier catálogo de la organización.
 
 Hoy hay **18 tableros** con «Textos en», «En español: …» o pares en inglés, y tres avisos que exigen el inglés.
 
@@ -136,9 +136,7 @@ Allá se pasó de Codex a un chat de Claude, el «Codificador». Acá ya program
 - la IA va dentro del tope mensual de la organización (ADR 0051).
 
 ### E12 · Formularios: crear, publicar, mandar y recibir
-- **Idioma del menú** (B2):
-  - el original fijo ya está en la spec (2e2a9a68);
-  - cambian el editor y la publicación: no hay selector ni vista previa en los dos idiomas, y publicar no pide la traducción.
+- **Idioma** (B2): sale de la spec lo del idioma original, la traducción y las culturas completas (2e2a9a68). Queda un solo texto por campo y un Flow por versión, sin selector ni vista previa en dos idiomas.
 - **«Elegir varias»** (B1):
   - en WhatsApp es un `CheckboxGroup` de 1 a 20 opciones, con mínimo y máximo, en el perfil `flow-static-7.3-r9`;
   - la captura guarda una fila por opción, con su posición;
@@ -201,7 +199,8 @@ Sin cambios:
 
 ### E15 · «Formularios», planilla, detalle y Excel
 - **La pantalla «Formularios» (MF1):**
-  - en el panel, reemplaza «Respuestas» y «Por aprobar» por una sola entrada, dentro de «Gestión de formularios». «Diseñar formularios», «Catálogos» y «Formularios que faltan» quedan como están;
+  - la navegación queda como en ArquitecturaBase. El menú principal dice «Gestión de formularios», y su panel tiene Formularios, Diseñar formularios, Catálogos y Formularios que faltan. «Respuestas» y «Por aprobar» salen del panel;
+  - «Formularios» es la lista de formularios. Desde ahí se entra a cada uno, con sus respuestas y sus acciones;
   - es una tabla de formularios con «Respuestas», «Última respuesta» y «Por aprobar»;
   - tiene los filtros «Activos · Dados de baja» y «Con algo por aprobar», sin bandeja aparte;
   - quien solo aprueba ve solo lo que espera.
@@ -209,7 +208,7 @@ Sin cambios:
   La columna «Por aprobar» llega con la E16.
 - **El detalle:**
   - FRM-Respuesta (D2 allá) queda como vista rápida, al costado;
-  - «En pantalla completa» (DC0) abre la pantalla propia, con flechas que siguen el orden de la planilla y la vuelta a la misma fila con sus filtros.
+  - «En pantalla completa» (DC0) abre la pantalla propia, con todas las acciones de la respuesta (aprobar, rechazar, abrir la conversación y el PDF), flechas que siguen el orden de la planilla y la vuelta a la misma fila con sus filtros.
 - **La planilla:**
   - suma subcolumnas de los campos sellados: los «Dato», visibles; los «Filtro», en «Columnas»;
   - tiene el filtro «alguna de» para «elegir varias»;
@@ -282,7 +281,7 @@ Los números son nombres, no orden, como con la 8b y con la 11 antes de la 9. Se
 
 | Orden | Etapa | Alcance | Depende de | Tableros (§5) |
 |---|---|---|---|---|
-| 1 | E12 | Formularios, con «elegir varias» y el idioma del menú | E10 | Redibujar 4 |
+| 1 | E12 | Formularios, con «elegir varias» y sin idioma en el contenido | E10 | Redibujar 4 |
 | 2 | E12b | Ciclo de vida | E12 | BA1-A a BA6 |
 | 3 | E13 | Catálogos base | E12 | Redibujar 5; CA1-A a CA6 |
 | 4 | E13b | Campos extra y qué viaja a WhatsApp | E13 | CE1, CE2 y CE3-B |
@@ -382,13 +381,12 @@ Se pregunta solo dónde va cada cosa, cuándo, y lo que choca con decisiones nue
 - **Alternativa:** 6 etapas más grandes. La E13 junta E1 y E2, y el ciclo de vida y los Documentos quedan para después del bloque.
 - **Consecuencia:** las etapas chicas tienen cada una su review y su puerta. Eso es lo que allá faltó con E2, que juntó 39 problemas en una sola entrega.
 
-**B2. La decisión 17: el idioma.** Lo confirmaste el 24/10 (§2.2): sale el tercer punto de la decisión 17 y se redibujan los 18 tableros. Queda una sola pregunta. Con el menú en inglés, ¿qué pasa con un formulario que se creó solo en español?
-- **Recomendado:** aparece igual, con sus textos en español, y quien quiera lo traduce ahí. Nadie de la organización pierde de vista un formulario.
-- **Alternativa:** no aparece, porque cada idioma tiene sus formularios. Un compañero con el menú en inglés no ve los que creaste en español.
+**B2. La decisión 17: el idioma.** Lo precisaste el 24/10 (§2.2): el contenido no tiene idioma ni traducciones, y el menú cambia solo los textos del sistema. Un formulario se ve igual con el menú en cualquier idioma. Se redibujan los 18 tableros.
 
 **B3. La decisión 20: un catálogo en otro idioma.**
 - **Recomendado:** se mantiene: solo sirven los catálogos con el mismo idioma original que el formulario. Así no se mezclan idiomas en un mismo envío, y con B2 lo natural es escribir todo en un idioma.
 - **Alternativa:** como allá: sirve cualquier catálogo, y cada opción sin traducción sale en su original.
+- **Después de B2, deja de aplicar:** el contenido no tiene idioma, así que sirve cualquier catálogo de la organización.
 
 **B4. Las decisiones 11 y 21: nombres de más de 30 caracteres.**
 - **Recomendado:** se mantiene el recorte con «…», con el nombre completo en el detalle. Se suma la presentación de la E13b, que elige qué campos van al título y cuáles a la descripción.
@@ -479,7 +477,8 @@ Se pregunta solo dónde va cada cosa, cuándo, y lo que choca con decisiones nue
 - en §4, los «Criterios» de cada etapa, con las lecciones de §3.
 
 **Specs** (`formularios/`):
-- **`e12-formularios.md`:** suma «elegir varias», el idioma del menú y el prellenado vacío.
+- **Todas:** sale el idioma original, las traducciones y las culturas completas (35), y la regla de la 20.
+- **`e12-formularios.md`:** suma «elegir varias» y el prellenado vacío.
 - **`e13-catalogos.md`:** pasa al alcance de E1, con el tope de 10.000.
 - **Resúmenes de una página nuevos:** `e12b-ciclo-de-vida.md`, `e13b-campos-extra.md` y `e13c-datos-de-las-personas.md`.
 - **`e15-planilla.md`:** suma MF1, DC0, las subcolumnas, «alguna de» y el Excel de «elegir varias».

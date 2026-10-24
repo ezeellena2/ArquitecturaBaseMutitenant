@@ -10,7 +10,7 @@ Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sec
 
 ## 1. Qué es el producto
 
-- **Formularios propios.** Una organización arma sus formularios: preguntas tipadas, textos en un idioma original con una traducción opcional (decisión 17), versiones y un prefijo de numeración propio. No hay circuitos rígidos: cada formulario es independiente.
+- **Formularios propios.** Una organización arma sus formularios: preguntas tipadas, textos tal como los escribe la persona, sin idioma ni traducciones (decisión 35), versiones y un prefijo de numeración propio. No hay circuitos rígidos: cada formulario es independiente.
 - **Por WhatsApp.**
   - Se publican como Flows de Meta en el número de la organización.
   - Se mandan desde el chat, y el empleado los completa dentro de WhatsApp.
@@ -101,7 +101,7 @@ Valen todas las de [AGENTS.md](../../AGENTS.md) y las [fichas](../rules/README.m
 | [Idempotencia](../rules/idempotencia.md) | `[Idempotent]` en los `POST` que crean, publican, mandan o deciden una aprobación. La captura usa el recibo de Meta como clave. |
 | [Fechas](../rules/fechas-y-zonas.md) | «Fecha sin hora» es `DateOnly`; lo recibido, `…Utc`. Los vencimientos usan `TimeProvider` y la hora firmada por Meta. |
 | [Números](../rules/numeros-y-moneda.md) | «Número con decimales» es `decimal` con precisión y escala, nunca `double`; `null` es «Sin respuesta». |
-| [Textos](../rules/textos-y-traducciones.md) y [textos libres](../rules/textos-libres.md) | La interfaz sale de resources es/en. Las preguntas son contenido de la organización: se escriben en el idioma del menú, que es su original y el único obligatorio, con traducción opcional y sin mezclar al mandar (decisiones 17 y 35). Lo que escribe la persona pasa por `TextLimits`. |
+| [Textos](../rules/textos-y-traducciones.md) y [textos libres](../rules/textos-libres.md) | La interfaz sale de resources es/en. Las preguntas son contenido de la organización: un solo texto, como lo escribió la persona, sin idioma ni traducciones (decisión 35). Lo que escribe la persona pasa por `TextLimits`. |
 | Producto genérico | Ningún cliente, tipo de documento ni respuesta va escrito en el código: lo particular es configuración de cada organización (2026-10-24). |
 | [Formato](../architecture/backend.md#18-representación-y-formato-de-datos-unificado) | El PDF y los avisos por WhatsApp se formatean con `DisplayFormatter`, con cultura y zona explícitas. |
 | [Paginado](../rules/paginado-y-busqueda.md) | Planilla, catálogos y listados paginados, 10 por defecto. Los filtros con texto libre van en el cuerpo. |
@@ -345,10 +345,10 @@ Decididas por el usuario entre el 2026-10-12 y el 2026-10-24. No se vuelven a pr
 
 Decididas el 2026-10-17, con el [traspaso de ArquitecturaBase](2026-10-17-formularios-traspaso/README.md):
 
-17. **Idioma.** Se aplica desde el principio la regla que ArquitecturaBase adoptó el 2026-10-16:
+17. **Idioma.** Reemplazada por la 35 (2026-10-24), que saca el idioma y las traducciones del contenido. Decía, con la regla que ArquitecturaBase adoptó el 2026-10-16:
     - solo el idioma original es obligatorio para guardar y publicar, y la traducción es opcional;
     - si la traducción no está completa, el formulario, el PDF, los mensajes y las opciones de catálogo salen enteros en el idioma original, sin mezclar;
-    - desde el 2026-10-24, lo que se crea se escribe en el idioma del menú, y para traducir se cambia el menú (35). Reemplaza «el idioma de las pantallas del sistema no cambia».
+    - el idioma de las pantallas del sistema no cambia.
 18. **Pantallas.** Se copian de ArquitecturaBase:
     - Diseño rehace los tableros de la 12 y la 13 con la disposición de su lienzo y del [05 del traspaso](2026-10-17-formularios-traspaso/05-pantallas.md), con las piezas y los criterios de nuestro lienzo y sin mostrar alternativas;
     - la 17 no existe allá: sus tableros se quedan y solo se ajustan al editor nuevo;
@@ -357,7 +357,7 @@ Decididas el 2026-10-17, con el [traspaso de ArquitecturaBase](2026-10-17-formul
 
 Elegidas por el usuario el 2026-10-17, entre las que quedaron al alinear el bloque con el traspaso (todas las opciones recomendadas):
 
-20. **Catálogo a mano en otro idioma que el formulario:** solo sirven los catálogos con el mismo idioma original que el formulario; los demás no aparecen en el selector (C11 de la E13). Confirmada el 2026-10-24.
+20. **Catálogo a mano en otro idioma que el formulario:** solo sirven los catálogos con el mismo idioma original que el formulario; los demás no aparecen en el selector (C11 de la E13). Deja de aplicar con la 35 (2026-10-24): el contenido no tiene idioma, así que sirve cualquier catálogo de la organización.
 21. **Nombres de miembros de más de 30 caracteres:** se mantiene la decisión 11, que los corta con «…» y pone el nombre completo en el detalle. ArquitecturaBase no trunca, pero acá el nombre es el de la cuenta de cada persona y bloquear dejaría sin uso el catálogo.
 22. **Catálogo con filtros de más de 200 opciones:** se mantiene la decisión 12. Se guarda con aviso, y el bloqueo es al mandar. El usuario la confirmó el 2026-10-17, después de los tableros de la v129, que se corrigen.
 23. **Cuánto se guardan las respuestas, sus archivos y sus PDF:** sin plazo mientras exista la organización. Se borran con la baja de la organización, y lo personal de quien da de baja su cuenta, con el participante de la baja. Se revisa con el primer cliente.
@@ -397,12 +397,15 @@ Elegidas por el usuario el 2026-10-24, con la [evaluación del traspaso 2](2026-
 
     Reemplaza la 8. El alcance está en la §3 de la evaluación. Dos cambios de fondo:
     - el ciclo de vida (dar de baja, reactivar, eliminar y deprecar los Flows por WABA) entra al bloque;
-    - la pantalla «Formularios» (MF1) llega en la E15 y reemplaza «Respuestas» y «Por aprobar» del panel.
-35. **Idioma** (cambia la 17): se crea en el idioma elegido en el menú del encabezado, que es su original y el único obligatorio.
-    - No es obligatorio el otro idioma, y no se muestra cómo queda en los dos: no hay selector, pares, vista previa doble ni avisos de traducción.
-    - Con el menú en otro idioma se ve lo escrito en ese idioma. Un formulario creado solo en español aparece igual con el menú en inglés, con sus textos en español, y quien quiera lo traduce ahí.
-    - Por WhatsApp, cada persona lo recibe en el idioma de su cuenta si existe y, si no, en el original, sin mezclar.
-    - Vale para formularios, catálogos, opciones, campos y datos de las personas.
+    - la navegación queda como en ArquitecturaBase. El menú principal dice «Gestión de formularios», y su panel tiene Formularios, Diseñar formularios, Catálogos y Formularios que faltan;
+    - «Formularios» (MF1, E15) es la lista de formularios, y desde ahí se entra a cada uno, con sus respuestas y sus acciones;
+    - una respuesta se ve rápido en el panel de la derecha y completa en su propia pantalla, también con sus acciones.
+35. **Idioma** (reemplaza la 17): el contenido no tiene idioma.
+    - Lo que crea una organización (formularios, catálogos, opciones, campos y datos de las personas) se guarda en un solo texto, tal como lo escribió la persona, en el idioma que quiera.
+    - No depende del idioma elegido en el menú. En palabras del usuario: «si el usuario quiere trabajar en inglés y crea un formulario en español, es problema del usuario».
+    - El botón de idioma del encabezado cambia solo los textos del sistema.
+    - No hay traducciones del contenido: no hay selector, pares «Nombre» / «Nombre en inglés», vista previa en dos idiomas ni avisos de traducción.
+    - Un formulario se ve y se manda igual con el menú en cualquier idioma. Por WhatsApp sale como está escrito, y los textos del sistema que lo acompañan van en el idioma de la cuenta de quien recibe.
 36. **Nombres de más de 30 caracteres** (11 y 21): se mantiene el recorte con «…». Se suma la presentación de la E13b, que elige qué campos van al título (30) y a la descripción (300).
 37. **Catálogos de más de 200 opciones** (12 y 22): se mantienen. Al publicar se suman dos avisos que no frenan, el máximo por persona y las personas sin el dato, y el tope de 20 en «elegir varias».
 38. **«Elegir varias»:** va en la E12, con los demás tipos de pregunta.
@@ -416,7 +419,7 @@ Elegidas por el usuario el 2026-10-24, con la [evaluación del traspaso 2](2026-
     - la lectura usa el proveedor de la plataforma y entra en el tope mensual de IA de la organización, con un tope por persona y por día.
 42. **Lo que es igual para todas las organizaciones:**
     - los idiomas: español e inglés, sin configurar;
-    - quien recibe, en el idioma de su cuenta;
+    - los textos del sistema que recibe una persona, en el idioma de su cuenta;
     - los topes de catálogos: 10.000 opciones, 20 campos y 20 datos de las personas.
 
     Los datos de las personas son por organización y por miembro. En la v1 no dependen de la empresa ni hay para B2C.
