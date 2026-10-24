@@ -1,67 +1,69 @@
-# E15 · Planilla, detalle y Excel (resumen)
+# E15 · «Formularios», planilla, detalle y Excel (resumen)
 
-**Estado:** resumen del 2026-10-17, armado desde el [traspaso](../2026-10-17-formularios-traspaso/README.md). Corresponde a la etapa 3 de ArquitecturaBase, que cerró el 2026-10-16, con el detalle D2 que se eligió allá el 2026-10-17 en lugar de la página de detalle. Se planifica con `/plan-etapa` cuando le toque, después de la E14.
+**Estado:** resumen de la séptima etapa del bloque (decisión 34). Corresponde a la etapa 3 de ArquitecturaBase, con la pantalla «Formularios» (MF1) y el detalle completo (DC0 y DC1) que programó allá después. Se planifica con `/plan-etapa` cuando le toque, después de la E14.
 
 **Dónde está el detalle:**
-- en el traspaso: [04 §3](../2026-10-17-formularios-traspaso/04-etapas.md), [05 · D2](../2026-10-17-formularios-traspaso/05-pantallas.md), anexo C §2 (etapa 3) y anexo B (E3);
-- en ArquitecturaBase: `docs/features/formularios.md` en `origin/main`, y el resumen de la etapa en el historial (`577d1c3:docs/plans/formularios/etapa-3-planilla.md`).
+- en el traspaso del 17/10: [04 §3](../2026-10-17-formularios-traspaso/04-etapas.md), [05 · D2](../2026-10-17-formularios-traspaso/05-pantallas.md), anexo C §2 (etapa 3) y anexo B (E3);
+- en el traspaso 2 de ArquitecturaBase: el anexo C §5 (G-01 a G-08), §6 (L-01 a L-04), §10 (C1-05) y §11 (C2-07), y el anexo D (MF1, DC0, DC1 ajustado, CA5, CE5 y CE6).
 
 **Esta etapa solo lee.**
 
 ## Qué se construye
 
 - **Back:**
-  - **Navegación:** los formularios publicados que la persona puede ver, paginados y ordenados en SQL. Nada queda fijo en el front.
-  - **Planilla:**
+  - **«Formularios» (MF1):**
+    - una tabla con los formularios publicados no eliminados: el nombre de su versión activa, la cantidad de respuestas (de `LastRecordNumber`) y la última respuesta (número, cuándo y estado, sin valores);
+    - filtros «Activos · Dados de baja», con sus cantidades calculadas antes de paginar;
+    - orden: por la última respuesta. La E16 suma «Por aprobar», que pasa primero;
+    - una sola consulta paginada, sin consultas por fila; la autorización se comprueba otra vez antes de devolver;
+    - pide `formrecords.read`. La E16 suma quien solo aprueba.
+  - **Planilla de un formulario:**
     - columnas fijas: número, recibida, persona y canal, y las empresas de quien respondió (decisión 24);
     - una columna por pregunta, unidas por `FieldId` entre versiones: primero el orden de la versión activa y después las retiradas;
-    - «—» si la pregunta no existía en esa versión, y «Sin respuesta» si quedó vacía; cero y `false` se distinguen.
+    - «—» si la pregunta no existía en esa versión, y «Sin respuesta» si quedó vacía; cero y `false` se distinguen;
+    - **las subcolumnas de los campos sellados de catálogo** (E13b): las de papel «Dato» se ven, y las de «Filtro» se prenden en «Columnas». Son de solo lectura: no se ordenan, ni filtran, ni cuentan en las facetas;
+    - **«elegir varias»** muestra las opciones en el orden en que se eligieron, separadas por coma, y su columna no se ordena.
   - **Filtros:**
-    - condiciones unidas con «y», con la gramática de la E13 por tipo: texto `contains`/`equals`; número y fecha `equals`/`gte`/`lte`; elección y sí/no `in`; y en todos, `answered`/`unanswered`/`notAsked`;
+    - condiciones unidas con «y», con la gramática de la E13 por tipo: texto `contains`/`equals`; número y fecha `equals`/`gte`/`lte`; elegir una y sí/no `in`; **elegir varias `anyOf` («alguna de»)**; y en todos, `answered`/`unanswered`/`notAsked`;
+    - `unanswered` incluye la opcional vacía y la pregunta que no existía en esa versión; `notAsked` distingue la segunda. La misma regla en memoria y en SQL;
     - además, persona, versión, rango de recepción (UTC, con fin exclusivo) y empresa;
     - la búsqueda mira solo los textos largos;
-    - textos, personas y condiciones viajan en el cuerpo: la planilla usa `POST …/search` con el mismo contrato `<X>Query` de [paginado-y-busqueda](../../rules/paginado-y-busqueda.md) (página, tamaño, orden, búsqueda y filtros). Esa variante para listados con filtros estructurados se suma a la ficha, con su test, al planificar la E15: vale para todo el repo, no es una excepción del módulo.
-  - **Conteos por faceta:** cada uno ignora solo su propia dimensión y conserva las opciones históricas.
+    - textos, personas y condiciones viajan en el cuerpo: la planilla usa `POST …/search` con el mismo contrato `<X>Query` de [paginado-y-busqueda](../../rules/paginado-y-busqueda.md). Esa variante para listados con filtros estructurados se suma a la ficha, con su test, al planificar la etapa: vale para todo el repo.
+  - **Conteos por faceta:** cada uno ignora solo su propia dimensión y conserva las opciones históricas. En «elegir varias», una respuesta cuenta en cada opción que eligió.
   - **Excel (`.xlsx`):**
     - con los filtros aplicados y `formrecords.export`;
-    - hasta 10.000 respuestas: una consulta de ids ordenados e hidratación en lotes de 100, con un presupuesto de 30 s y una exportación a la vez por persona, con un candado de PostgreSQL como los `I<X>Lock` de `Application/Interfaces/Persistence` (`AdvisoryLockExtensions`), nunca uno por proceso;
-    - números, fechas y sí/no van como tipos de Excel; de los archivos, la cantidad y los nombres.
-  - **Detalle D2:** los datos de una respuesta con las preguntas de su versión, su origen y su historial.
+    - hasta 10.000 respuestas: una consulta de ids ordenados e hidratación en lotes de 100, con un presupuesto de 30 s y una exportación a la vez por persona, con un candado de PostgreSQL como los `I<X>Lock` (`AdvisoryLockExtensions`), nunca uno por proceso;
+    - números, fechas y sí/no van como tipos de Excel; de los archivos, la cantidad y los nombres;
+    - **«elegir varias»** va en una celda, unido con «; ». En un catálogo tipado, se suma la columna «pregunta · valor», con los valores canónicos;
+    - los campos sellados: todos, ninguno o los elegidos.
+  - **El detalle:**
+    - **la vista rápida (FRM-Respuesta, D2 allá),** al costado de la planilla: los datos de la respuesta con las preguntas de su versión, su origen y su historial;
+    - **la pantalla completa (DC0, con el ajuste de DC1):** en `/org/formularios/{formId}/respuestas/{recordId}/completa`, con las secciones «Respuesta» y «Actividad», a todo el ancho y plegables. Arriba, el número, el estado, ↑ ↓ en el orden de la planilla, «Abrir conversación» y «Descargar ▾». La E16 suma aprobar, rechazar y el PDF;
+    - **ubicar una respuesta:** `POST …/records/{recordId}/navigation` devuelve la anterior, la siguiente, la posición y el total, con el mismo filtro y orden que la planilla, en SQL (`ROW_NUMBER`, `LAG` y `LEAD`). Lo ausente, lo excluido y lo ajeno dan el mismo 404;
+    - **la dirección compartible** lleva solo el orden, la pregunta de orden y las versiones: nunca la búsqueda, las personas ni las condiciones. «Volver» regresa a la misma fila, página, columnas, filtros y orden.
 - **Front:**
-  - el panel «Respuestas»;
-  - la planilla, con «Columnas» (que vive en la URL), «Más filtros» en un panel lateral y el desplazamiento a lo ancho;
-  - **el panel D2 al costado:**
-    - cabecera con el número y el estado, ↑ ↓ (también con el teclado) y ✕;
-    - momentos del estado;
-    - pestañas Respuesta y Fotos; las de Actividad y PDF llegan con la E16;
-    - en el teléfono, a pantalla completa;
+  - «Formularios» (MF1) en el panel de «Gestión de formularios» (34);
+  - la planilla de cada formulario, con «Columnas» (que vive en la URL), «Más filtros» en un panel lateral y el desplazamiento a lo ancho;
+  - **la vista rápida al costado:** cabecera con el número y el estado, ↑ ↓ (también con el teclado), «Abrir en pantalla completa» y ✕; pestañas Respuesta y Fotos (Actividad y PDF llegan con la E16);
+  - **la pantalla completa;** en el teléfono, tocar una fila la abre directo, sin vista rápida;
   - el diálogo de exportar.
-- **Tableros:** T1, T2, T4 y T5 de ArquitecturaBase, y D2 en lugar de T3 (decisión 18), **aprobados en el lienzo v131** (2026-10-18, front `c6958ecc`):
-  - **`FRM-Respuestas` (T1 y T4), la planilla:**
-    - columnas fijas N°, Recibida, Cargó (con el canal) y Empresas; después, una por pregunta, con las retiradas al final;
-    - «Sin respuesta» y «—» van en gris, y la planilla se desplaza a lo ancho con el N° fijo;
-    - filtros: «Buscar en …» (solo en los textos largos), «Empresa ▾», «Recibida ▾», «Más filtros» y «Columnas · N oculta ▾»;
-    - casos: cargando, sin respuestas, sin coincidencias, error, no se pudo actualizar, sin permiso, muchos formularios y sin permiso para exportar.
-  - **`FRM-Respuestas-Filtros` (T2):** panel al costado, con conteos por opción, incluidas la opción dada de baja y «No existía en esa versión».
-  - **`FRM-Respuesta` (D2), al costado de la planilla:**
-    - ↑ ↓ y ✕, con los atajos en el tooltip, «Abrir conversación» y el momento Recibida;
-    - pestañas Respuesta y Fotos; Actividad y PDF llegan con la E16;
-    - estados: la primera de la lista, una versión anterior, cargando y «No encontramos esta respuesta».
-  - **`FRM-Respuestas-Exportar` (T5):**
-    - el botón va en la banda, y aparece solo con `formrecords.export`;
-    - se elige entre todas las preguntas o solo las columnas visibles, y lo de los archivos va en ⓘ;
-    - con más de 10.000, Exportar se apaga; también están «Ya hay una exportación en curso» y «No se pudo exportar».
-  - **Teléfono:**
-    - `M-FRM-Respuestas` (Más › Formularios › Respuestas): la lista de formularios, las respuestas, y los filtros y exportar en hojas;
-    - `M-FRM-Respuesta`: a pantalla completa, con «5 de 24».
+- **Tableros:**
+  - **Diseño dibuja nuevos** (evaluación, §5.2), con nuestras piezas y la decisión 43:
+    - `MF1` · Una tabla de formularios, con el panel de «Gestión de formularios»;
+    - `DC0` · De la vista rápida a la pantalla completa, con el ajuste de DC1 (Respuesta y Actividad);
+    - `CE5` · Las respuestas, con las subcolumnas de los campos sellados;
+    - `CE6` · El circuito de punta a punta de los catálogos.
+  - **Diseño ajusta** `FRM-Respuesta`: «Abrir en pantalla completa» en la cabecera. El panel de todos los FRM de la compu cambia con MF1.
+  - **Se quedan** los aprobados en el lienzo v131: `FRM-Respuestas` (la planilla), `FRM-Respuestas-Filtros`, `FRM-Respuestas-Exportar`, `M-FRM-Respuestas` y `M-FRM-Respuesta`. `CA5` (de la E13) muestra «elegir varias» en la planilla, el detalle y el Excel.
   - **Mandan sobre este resumen en:**
-    - **el panel:** «Respuestas» es un grupo del panel, como «Gestión de usuarios», y en el teléfono «Formularios» pasa a «Diseñar formularios»;
+    - **la navegación (34):** el menú principal dice «Gestión de formularios», y su panel tiene Formularios, Diseñar formularios, Catálogos y Formularios que faltan, sin «Respuestas» ni «Por aprobar». Desde «Formularios» se entra a cada formulario, con sus respuestas y sus acciones;
     - **la empresa** va como columna «Empresas» y filtro «Empresa ▾» (decisión 24);
     - **«Ya hay una exportación en curso»** es el candado de PostgreSQL de una exportación por persona; **«No se pudo actualizar»** es el error al volver a leer, que conserva lo que se ve;
     - **el botón de exportar** no aparece sin `formrecords.export`, porque no es algo que la persona pueda resolver.
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
+- **La navegación de ArquitecturaBase** (34): MF1 con su detalle rápido y completo.
 - **Sin migrar:** las respuestas de las etapas anteriores aparecen tal cual.
 - **Exportar:** `.xlsx` con permiso propio, hasta 10.000 respuestas (con más, el diálogo pide acotar) y sin trabajos de fondo.
 - **Historia:** filtrar por una opción retirada conserva la historia.
@@ -74,26 +76,28 @@
 - Cargar respuestas desde la web, importarlas desde Excel y corregirlas.
 - Exportar los archivos o exportar en segundo plano.
 - Permisos por formulario.
-- Estado, aprobación, PDF y avisos (E16).
+- «Por aprobar», el estado, la aprobación, el PDF y los avisos (E16).
+- El tablero por formulario (E19).
 
 ## Cómo se cierra
 
-La puerta de la etapa, más un **recorrido real**:
-- respuestas capturadas por Meta en las E12 a E14, con fotos, un catálogo y una opcional vacía, en la planilla, los filtros y D2;
+La puerta de la etapa, con la lista de control de `/puerta`, más un **recorrido real**:
+- respuestas capturadas por Meta en las etapas anteriores, con fotos, un catálogo con campos, «elegir varias» y una opcional vacía, en MF1, la planilla, los filtros, la vista rápida y la pantalla completa;
+- un enlace a una respuesta abierto en otra pestaña, sin la búsqueda ni los filtros privados;
 - el `.xlsx` abierto en Excel sin reparación;
-- EXPLAIN sobre unas 10.000 respuestas.
+- EXPLAIN sobre unas 10.000 respuestas, en MF1, la planilla, los conteos, la navegación y el Excel.
 
 No necesita una prueba nueva con Meta: lee lo que ya llegó.
 
 ## Requisitos previos
 
-- La E12, la E13 y la E14 cerradas.
-- ClosedXML ya está en el repo desde la E11 (importar contactos), así que la exportación usa la misma biblioteca (P12).
+- La E13c y la E14 cerradas.
+- ClosedXML ya está en el repo desde la E11, así que la exportación usa la misma biblioteca.
 
 ## Ajustes ya decididos
 
-- **Idioma:** los encabezados van en el idioma de quien mira. Si una pregunta no tiene ese idioma, va en el original de su versión.
-- **Pantallas:** se copian de ArquitecturaBase, con D2 (decisión 18).
+- **Idioma** (35): las preguntas y las opciones se ven como se escribieron. Los encabezados fijos y los textos del sistema van en el idioma de quien mira.
+- **Pantallas:** se copian de ArquitecturaBase (decisión 18), con los botones de la decisión 43.
 
 ## En el multitenant
 
@@ -103,4 +107,4 @@ No necesita una prueba nueva con Meta: lee lo que ya llegó.
 - **Permisos de organización:** `formrecords.read` y `formrecords.export`, con la migración de roles de sistema.
 - **La empresa:** un filtro «Empresa ▾» y una columna «Empresas» que se puede ocultar (decisión 24).
 - **Ni WhatsApp (E11) ni el almacenamiento (E10):** solo se leen las miniaturas por las rutas de la E14.
-- **«Por aprobar»:** llega con la E16.
+- **«Por aprobar»:** llega con la E16, en MF1 y en «Para resolver».
