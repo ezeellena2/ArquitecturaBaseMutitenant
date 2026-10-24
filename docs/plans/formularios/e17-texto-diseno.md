@@ -1,89 +1,32 @@
 # E17 · Texto para el chat de Diseño
 
-Se pega tal cual en el chat de Diseño, **después de cerrar los tableros de la E12 y la E13**: el editor de la plataforma reusa sus piezas.
+Se pega tal cual en el chat de Diseño, **después de cerrar los tableros de la E12, la E13 y la E16**: el editor de la plataforma reusa sus piezas.
 
 ---
 
-Seguimos con «Formularios por WhatsApp»: los tableros de la E17, la biblioteca de plantillas. Como siempre, solo tableros.
+Te paso los tableros de la E17, la biblioteca de plantillas, para el lienzo del multitenant. No hay que programar nada: solo tableros.
 
-**Contexto.** La plataforma arma plantillas de formularios. Cada plantilla trae:
-- las preguntas en es/en, el botón y el prefijo sugerido;
-- sus catálogos a mano;
-- más adelante, reglas de ejemplo.
-
-Las plantillas se ordenan en categorías, se publican y se retiran. Una organización ve las plantillas publicadas y elige «Usar esta plantilla»: obtiene una **copia propia**, un formulario en borrador con sus catálogos, que revisa y publica ella. La plataforma solo ve cuántas organizaciones usaron cada plantilla, nunca cuáles ni qué hicieron con la copia.
+**Contexto.** Los tableros de la E17 están aprobados en la v126, la v130 y la v134. Con las decisiones 34 a 46 del 2026-10-24 cambian varias cosas:
+- **40:** la biblioteca de plantillas es también la biblioteca de formularios estándar. Una plantilla puede traer su «Lectura de documentos», que se programa con la E19;
+- **35 y 45:** el contenido no tiene idioma. Las plantillas y las categorías son un solo texto, sin «Textos en», sin pares en inglés y sin el inglés obligatorio;
+- **43:** botones habilitados o grisados, sin textos al lado ni debajo, sin «Cambios sin guardar»; si falta un dato obligatorio, el botón sigue habilitado y al tocarlo se marca lo que falta;
+- **el estado de una plantilla** (ajuste de la Guía con la 43): la lista y la banda dicen solo «Borrador», «Publicada» o «Retirada». Sale «Cambios sin publicar», porque «Publicar» habilitado ya lo dice, y el número de versión va solo en el historial de «Publicación».
 
 **Leé primero,** en el repo del back `ArquitecturaBaseMutitenant`:
-1. **La spec:** `docs/plans/formularios/e17-biblioteca.md`. Sobre todo:
-   - la §8, con los tableros, sus estados y las decisiones;
-   - la §1, con el alcance;
-   - la §2, con las decisiones ya tomadas;
-   - la §6, con los flujos de publicar, retirar y usar.
-2. **Los textos para Diseño de las etapas anteriores:** `docs/plans/formularios/e12-texto-diseno.md` y `e13-texto-diseno.md`. Ahí están los criterios y las piezas del editor y de los catálogos que se reusan.
-3. **En ArquitecturaBase no hay nada de esto:** la biblioteca es propia de este proyecto. Para cómo se ven las pantallas de Plataforma, mirá las nuestras: «Legales», que tiene versiones y publicar, y las que piden motivo.
+1. **La spec:** `docs/plans/formularios/e17-biblioteca.md`, sobre todo la §8 (tableros, qué se redibuja y en qué mandan).
+2. **La hoja de ruta:** `docs/plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md`, §5, decisiones 34 a 46.
+3. **La evaluación:** `docs/plans/2026-10-24-formularios-evaluacion-traspaso-2.md`, §2.1, §2.2 y §5.
+4. **ArquitecturaBase, como referencia de contenido:** DOC1 en el anexo D del traspaso 2 (`../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/anexo-d-tableros-desde-17-10.md`). Hacé `git fetch` antes.
 
-**Cómo trabajamos:** igual que en la E12 y la E13.
-- Una pantalla por vez, con 2 o 3 opciones y una recomendada.
-- Primero la compu y después el teléfono.
-- Las piezas de nuestro lienzo y el teléfono como app.
-- Voseo, y cada decisión en «Criterio · Decisiones por pantalla».
-- **Dónde van los tableros:**
-  - los de Plataforma, en una página «Plataforma · Formularios», con el prefijo `Plat-FRM-`, como `Plat-WA-`;
-  - los de la organización, en «Organización · Formularios», con `FRM-`.
+**Qué se redibuja:**
+- `Plat-FRM-Plantilla`, `Plat-FRM-Publicar`, `Plat-FRM-Retirar`, `Plat-FRM-Plantilla-Reglas`, `Plat-FRM-Pdf`, `Plat-FRM-Categorias` y `M-FRM-Plantilla`, con las reglas de arriba;
+- `Plat-FRM-Biblioteca`, `M-Plat-FRM-Biblioteca` y `Plat-FRM-Plantilla-Nueva`, por el estado de la plantilla;
+- en `Plat-FRM-Categorias`, el nombre es un solo campo.
 
-**Datos de ejemplo:**
-- **Categorías:** Ventas, Logística y Mantenimiento.
-- **Plantillas:**
-  - «Visita a cliente» (Ventas): publicada en la versión 2, con cambios sin publicar, que la usaron 12 organizaciones;
-  - «Control de vehículo» (Logística): borrador, nunca publicada;
-  - «Orden de trabajo» (Mantenimiento): retirada.
-- **Versiones de «Visita a cliente»:**
-  - v1, publicada por un operador con el motivo «Primera versión»;
-  - v2, con el motivo «Agrega el monto estimado».
-- **Del lado de la organización:** Grupo Delta, con Lucía Fernández usando «Visita a cliente». El prefijo sugerido «VIS» ya está tomado, así que se propone otro.
+**Qué se dibuja nuevo:** `DOC1` · La biblioteca y la lectura. La disposición se copia sin mostrar alternativas, con nuestras piezas y criterios (decisión 18):
+- `FRM-Biblioteca` como la biblioteca de formularios estándar, con en qué formularios propios se usó cada plantilla;
+- la sección «Lectura de documentos» de una plantilla, en la pestaña «Plantilla» de `Plat-FRM-Plantilla`: «Cómo reconocerlo», qué pregunta recibe cada dato estándar y las validaciones fijas, con candado.
 
-**Tableros de Plataforma, en este orden:**
-1. **`Plat-FRM-Biblioteca`:**
-   - nombre, categoría, estado («Borrador», «Publicada · v2», «Retirada»), «Cambios sin publicar» y «La usaron 12»;
-   - filtro por estado y por categoría, y «Nueva plantilla»;
-   - «Categorías» como otra sección del área, no como pestaña (regla del 2026-10-13);
-   - estados vacío y sin resultados.
-2. **`Plat-FRM-Plantilla-Nueva`:** un diálogo con el nombre y la categoría.
-3. **`Plat-FRM-Plantilla`,** una ficha con estas pestañas:
-   - **Preguntas** e **Inglés:** las piezas del editor de la E12;
-   - **Catálogos:** los catálogos a mano de la plantilla, con sus opciones (las piezas de la E13);
-   - **Publicación:** el estado, la lista de versiones (número, fecha, operador y motivo), «Publicar», «Retirar» y «Volver a publicar».
+**Datos de ejemplo:** las categorías Ventas, Logística y Mantenimiento; «Visita a cliente» (Ventas), publicada, con cambios guardados sin publicar, que la usaron 12 organizaciones; «Control de vehículo» (Logística), borrador; «Orden de trabajo» (Mantenimiento), retirada; y «Comprobante de transferencia», con su lectura de documentos.
 
-   Estados: cambios sin publicar y conflicto.
-4. **`Plat-FRM-Publicar`:** un diálogo con el motivo y la comprobación: problemas por pregunta o por catálogo, o sin problemas.
-5. **`Plat-FRM-Retirar`:** un diálogo con el motivo. Las copias ya hechas no cambian.
-6. **`Plat-FRM-Categorias`:** la lista con su orden y ⋮ con Editar, Subir, Bajar y Borrar. Crear, editar, mover y borrar piden motivo. Una categoría en uso deja «Borrar» apagado, con su motivo.
-7. **Ajuste en `Cuenta-Plat`:** los permisos del operador suman «Administrar la biblioteca de formularios».
-
-**Tableros de la organización:**
-
-8. **`FRM-Biblioteca`:** tarjetas por categoría, con un buscador. Cada tarjeta muestra el nombre, la descripción y cuántas preguntas y catálogos trae. Estado: sin plantillas.
-9. **`FRM-Plantilla`:** la vista de una plantilla, con la descripción, las preguntas, los catálogos que trae, la vista del teléfono y «Usar esta plantilla». Sin permiso para administrar catálogos, el botón aparece apagado con su motivo en ⓘ.
-10. **`FRM-Plantilla-Usar`:** un diálogo con el nombre y el prefijo propuesto (si el sugerido está tomado, se propone otro). Al confirmar, abre la ficha del formulario nuevo, en borrador.
-
-Después vienen los teléfonos: `M-Plat-FRM-Biblioteca`, `M-FRM-Biblioteca` y `M-FRM-Plantilla`. En el teléfono de Plataforma, la biblioteca es solo para ver.
-
-**Ya decidido** (tableros en el lienzo v126, front `8863e87e`; el detalle está en «Criterio · Decisiones por pantalla», grupo E17):
-- en Plataforma, «Formularios» es un grupo de Administración, con Biblioteca y Categorías;
-- la pestaña Catálogos de la plantilla va en filas, y cada catálogo se abre aparte;
-- «Retirar» va en el ⋮ de la banda;
-- una categoría en uso deja «Borrar» apagado, con su motivo;
-- la biblioteca de la organización se abre desde «Nuevo formulario ▾», con «Desde cero» y «Desde una plantilla».
-
-**Textos que ya fija la spec:**
-- «Publicada · vN», «Borrador», «Retirada», «Cambios sin publicar» y «La usaron N»;
-- «Publicar», «Retirar», «Volver a publicar», «Usar esta plantilla», «Desde cero» y «Desde una plantilla»;
-- el permiso «Administrar la biblioteca de formularios».
-
-**No se dibuja ahora:**
-- el aviso de «hay una versión nueva de la plantilla» y actualizar una copia;
-- las reglas de ejemplo, que se suman cuando exista la spec de la E16;
-- catálogos con filtros en una plantilla;
-- borrar plantillas.
-
-**Al terminar,** avisá la versión del lienzo y la lista de tableros aprobados.
+**Al decidir y al cerrar:** cada decisión suma su fila en «Criterio · Decisiones por pantalla». Al terminar, publicás la versión nueva del lienzo con el recorrido guiado de la etapa (44) y avisás la versión y la lista de tableros, para anotarlos en la spec.
