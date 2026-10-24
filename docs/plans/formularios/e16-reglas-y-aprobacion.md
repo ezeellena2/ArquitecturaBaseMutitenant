@@ -61,7 +61,7 @@
     - **«Resolver el envío»** es la revisión humana de un aviso «Sin confirmar» («salió» o «no salió»), con `formrules.manage`;
     - **la planilla de la E15 suma la columna Estado y su filtro** (Recibida, Por aprobar, Aprobada o Rechazada), para los formularios que piden aprobación, compartido por la lista, los conteos y el Excel. La fila indica si hay una copia PDF confirmada;
     - **el diseño del PDF** guarda con «Guardar diseño», aparte de las reglas, y su vista previa no guarda nada;
-    - **«Reglas de la revisión N»** se puede ver en Actividad, porque es un historial (43).
+    - **«Reglas de la revisión N»** se queda en Actividad, porque es un historial, y ahí van los números de revisión (43; ajuste de la Guía del 2026-10-24).
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
