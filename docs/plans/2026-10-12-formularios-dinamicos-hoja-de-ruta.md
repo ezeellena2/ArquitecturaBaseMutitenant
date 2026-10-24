@@ -1,6 +1,6 @@
 # Formularios dinámicos por WhatsApp: hoja de ruta
 
-Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sección 5](#5-decisiones-de-producto)). Está sumada al [plan de desarrollo](2026-09-27-plan-de-desarrollo.md) como **etapas 12 a 17, después de la E10**. No es un plan de etapa: cada etapa se escribe en el formato de [etapa en paralelo](../guides/etapa-en-paralelo.md) cuando le toque, a partir de su sección de acá.
+Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sección 5](#5-decisiones-de-producto)). Está sumada al [plan de desarrollo](2026-09-27-plan-de-desarrollo.md) como **las once etapas de la decisión 34, de la E12 a la E19, después de la E10**. No es un plan de etapa: cada etapa se escribe en el formato de [etapa en paralelo](../guides/etapa-en-paralelo.md) cuando le toque, a partir de su sección de acá.
 
 **Origen.** Es la misma funcionalidad que se está construyendo en `ArquitecturaBase`, adaptada a organizaciones, empresas, plataforma y personas. Allá la Etapa 1 está cerrada y probada con Meta real (envío, respuesta y número guardado), y las demás tienen diseño y decisiones elegidas.
 
@@ -19,8 +19,9 @@ Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sec
 - **Fotos y documentos dentro del formulario.** Con cámara o galería: PDF, Excel, Word e imágenes.
 - **Planilla.** Cada formulario es una planilla con filtros, detalle y exportación a Excel.
 - **Reglas.** Al llegar una respuesta se puede pedir aprobación, armar un PDF y avisar por WhatsApp.
-- **Plataforma (nuevo respecto de ArquitecturaBase).** Una biblioteca de plantillas (formularios, catálogos y reglas de ejemplo) que la organización puede tomar como copia propia, o crear desde cero.
-- **Después del bloque:** el asistente que reconoce lo que la persona cuenta (texto o audio) y ofrece el formulario prellenado, y las sugerencias entre formularios ([Después](#después-del-bloque)).
+- **Plataforma (nuevo respecto de ArquitecturaBase).** Una biblioteca de plantillas y formularios estándar (formularios, catálogos y reglas de ejemplo) que la organización puede tomar como copia propia, o crear desde cero.
+- **El asistente con Casos (E18):** reconoce lo que la persona cuenta (texto o audio), ofrece el formulario prellenado, contesta lo que configure la organización y deriva lo demás.
+- **Documentos (E19):** lee con IA lo que mandan las personas y propone el formulario prellenado, siempre con la confirmación de una persona.
 
 ## 2. Cómo encaja en el modelo multitenant
 
@@ -81,6 +82,7 @@ Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sec
   - `forms.read`, `forms.manage` y `forms.publish` (E12);
   - `formrecords.create` y `formrecords.read` (E12);
   - `formcatalogs.read` y `formcatalogs.manage` (E13);
+  - `formpersondata.manage` (E13c), el único que suma el traspaso 2;
   - `formrecords.export` (E15);
   - `formrules.manage` y `formapprovals.decide` (E16).
 - Cada permiso nuevo trae su migración que actualiza los roles de sistema de las organizaciones existentes (modelo: `20261010203618_SystemRoleAssistantPermissions.cs`).
@@ -114,191 +116,158 @@ Valen todas las de [AGENTS.md](../../AGENTS.md) y las [fichas](../rules/README.m
 
 - **Cada organización publica en su propio WABA**, con el token de E11. Antes de publicar se verifica que el número pertenezca a ese WABA, como en ArquitecturaBase. Sin medio de pago en el WABA, Meta rechaza el envío (en ArquitecturaBase fue el error 141006).
 - **Los costos de Meta los paga la organización** (E11).
-- **Límites técnicos iguales para todos en la v1:** hasta 10 archivos y 100 MiB por respuesta (tope de Meta), un tope por archivo de la instalación, hasta 200 opciones por lista y hasta 10.000 respuestas por exportación. Límites por plan, después.
+- **Límites técnicos iguales para todos en la v1:** hasta 10 archivos y 100 MiB por respuesta (tope de Meta), un tope por archivo de la instalación, hasta 200 opciones en «elegir una» y 20 en «elegir varias», hasta 10.000 opciones por catálogo, 20 campos y 20 datos de las personas (42), y hasta 10.000 respuestas por exportación. Límites por plan, después.
 
 ## 3. Etapas
 
-Cada etapa lleva su número del plan de desarrollo, de la E12 a la E17. Antes se llamaban F1, F2, F4, F5, F6 y F3; el asistente (F7) pasó a [Después](#después-del-bloque). Entre paréntesis va la etapa de ArquitecturaBase que sirve de referencia.
+Son once, en el orden de la decisión 34: E12, E12b, E13, E13b, E13c, E14, E15, E16, E17, E18 y E19. Los números son nombres, no orden. Entre paréntesis va la etapa de ArquitecturaBase que sirve de referencia. Cada etapa tiene su spec o su resumen en [`formularios/`](formularios/README.md), y sus tableros se dibujan en el lienzo antes de programar (decisiones 18 y 44).
 
-Cada una tiene tableros a dibujar en el lienzo vigente del front antes de programar. Desde la decisión 18, Diseño copia la disposición de los tableros de ArquitecturaBase, con nuestras piezas y criterios. Los **criterios** de cada etapa son las lecciones del [06 del traspaso](2026-10-17-formularios-traspaso/06-lecciones.md): el plan de la etapa los toma como lista de control.
+**Criterios.** En todas las etapas rige la lista de control de la skill `/puerta`: doce puntos que salen de los 142 problemas de los reviews de ArquitecturaBase ([§4](#4-lo-que-aprendimos-en-arquitecturabase)). Cada etapa suma los suyos. El plan de la etapa los toma como lista de control, y cada punto que aplica lleva su test.
 
-**Desde el 2026-10-24 (decisión 34), el bloque tiene once etapas,** en este orden: E12, E12b, E13, E13b, E13c, E14, E15, E16, E17, E18 y E19.
-- El detalle de abajo es todavía el de las seis originales. Formularios lo actualiza junto con las specs.
-- El alcance nuevo de cada etapa está en la [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md), en §3 y §4.
+### E12 · Formularios: crear, publicar, mandar y recibir (AB 1)
 
-### E12 · Formularios: crear, publicar, mandar y recibir (AB etapa 1)
-
-- **Editor.**
-  - Seis tipos: texto corto, texto largo, número con decimales (precisión y escala), fecha sin hora, sí/no y lista de opciones escritas en la pregunta.
-  - Nombre, preguntas, ayudas, opciones y botón final en el idioma original del formulario, que se elige al crearlo y no cambia. La traducción es opcional: se puede guardar y publicar sin ella (decisión 17).
-  - **Prefijo de numeración:** se propone desde el nombre, se edita hasta la primera publicación, es único y no se recicla.
-  - Vista previa en el teléfono.
-  - El borrador se guarda con revisión y 409, como la configuración interna (`IVersioned`).
-- **Publicar.**
-  - Comprobación local antes de mandar: tipos, límites del perfil de Meta y un presupuesto de respuesta de 16 KiB.
-  - Publicación en Meta como **operación durable** (efecto externo): crear, subir el `FLOW_JSON`, verificar y publicar, con estados aceptada, preparando, publicando, sin confirmar, activación pendiente, publicada y fallida.
-  - Un Flow por versión y por idioma **completo**: solo los idiomas completos se publican en Meta. Vista previa oficial de Meta. Solo «Sin confirmar» cuando pudo haber efecto en Meta; un error definitivo termina en fallida y visible.
-- **Versiones.** Publicar fija las preguntas. Cambiar crea una versión nueva, y cada respuesta conserva la versión con la que llegó.
-- **Mandar desde el chat** (bandeja Internos de E11).
-  - El botón aparece si el contacto es un empleado activo, con `formrecords.create`, y dentro de las 24 horas.
-  - Va en el idioma de la cuenta de quien recibe si la versión lo tiene completo; si no, entero en el original.
-  - El mensaje lleva un texto de hasta 1024 caracteres y un único botón, «Abrir formulario».
-  - Se crea una sesión con un token aleatorio, válida 24 horas (configurable), y el mensaje sale por el outbox.
-- **Recibir.**
-  - El `nfm_reply` firmado se procesa en un worker que aísla los errores por mensaje y vence según la hora firmada por Meta.
-  - El codec de la versión sellada da los valores exactos, sin redondeos. La ayuda pide punto decimal y se rechazan más decimales que la escala.
-  - La respuesta numerada se guarda en un commit, de forma idempotente.
-  - En el chat, una tarjeta con valores solo para quien tiene `formrecords.read`; sin ese permiso, solo el número.
-  - La respuesta cruda se cifra y se purga con la retención de WhatsApp.
-- **Módulo.** Los puertos neutrales del núcleo y sus implementaciones apagadas, `AddFormsModule()` y el retiro probado una vez.
-- **Cómo se cierra.** Puerta de etapa, más una prueba real con el número de una organización: publicar, mandar, completar en el teléfono y ver el número tras recargar.
+- **Editor:** siete tipos de pregunta, entre ellos «elegir varias» (38), un `CheckboxGroup` de 1 a 20 opciones con mínimo y máximo. Cada texto es uno solo, sin idioma (35). Prefijo propio, versiones y vista previa en el teléfono.
+- **Publicar:** operación durable en Meta, con un Flow por versión y por WABA de la organización.
+- **Mandar** desde el chat de Internos, con una sesión de 24 horas. Un mensaje sin datos no lleva `data` vacía.
+- **Recibir:** la respuesta numerada, idempotente, y su tarjeta en el chat.
+- **Módulo:** `Forms` quitable, con los puertos neutrales del núcleo.
+- **Spec:** [formularios/e12-formularios.md](formularios/e12-formularios.md).
 - **Criterios:**
-  - lo incierto se consulta, y si sigue incierto lo resuelve una persona («salió» o «no salió»); lo definitivo termina en «No se pudo»;
-  - los reintentos se acotan por cantidad y por tiempo (5 fallas y 15 minutos), y un mensaje trabado no frena a los demás;
-  - los campos nuevos de un DTO se exportan en el mismo corte; `""` no es `null`; una entrada inválida es 400, y un campo omitido no apaga nada;
-  - un solo dueño por error; «Reintentar» solo ante errores de red, con la misma versión;
-  - sin `formrecords.read`, ningún valor en avisos, vistas previas ni caché.
+  - lo incierto se consulta y, si sigue incierto, lo resuelve una persona («salió» o «no salió»); lo definitivo termina en «No se pudo»;
+  - los reintentos se acotan (5 fallas y 15 minutos), y un mensaje trabado no frena a los demás;
+  - si no se sabe si algo salió, la pantalla vuelve a leer sola (43);
+  - los campos nuevos de un DTO se exportan con su ejemplo real en el mismo corte; `""` no es `null`; una entrada inválida es 400;
+  - sin `formrecords.read`, ningún valor en avisos, vistas previas ni caché;
+  - cada variante del Flow se abre en un celular.
 
-### E13 · Catálogos a mano y con filtros (AB etapa 2)
+### E12b · Ciclo de vida (AB, dar de baja y eliminar)
 
-- **Listado y alta.** Se elige el origen al crear y no cambia después.
-- **Escritos a mano.**
-  - Cada opción tiene texto, detalle y código, en el idioma original del catálogo, con traducción opcional. Si alguna opción ofrecida no tiene el idioma de quien recibe, todo el formulario sale en el original.
-  - Una opción se da de baja sin borrarse. Las posiciones son únicas y se reordena con «mover» por id.
-- **Con filtros.**
-  - Condiciones armadas por el sistema sobre fuentes definidas en el código y versionadas (no vistas SQL: ver la spec de la E13), con columnas permitidas y valores como parámetros, usando la conexión normal.
-  - Primera fuente: **miembros de la organización** (nombre, rol, empresa y activo), con RLS. Nunca correo ni teléfono.
-  - Único parámetro de contexto: el destinatario. «Sin incluir a quien lo recibe». Vista previa con una persona de ejemplo elegida explícitamente.
-- **La pregunta «Elegir de un catálogo».** La versión guarda solo la referencia. Cambiar el catálogo de una pregunta publicada crea una pregunta nueva.
-- **Al mandar.**
-  - Las opciones se arman para cada destinatario y viajan dentro del mensaje, sin endpoint de intercambio.
-  - Más de 200 opciones, o ninguna en una pregunta obligatoria, no deja mandar.
-- **Al responder.**
-  - La opción tiene que estar en la oferta. Se guarda el texto que vio la persona.
-  - Si una opción escrita a mano se dio de baja antes de responder, no se guarda nada, se avisa al operador sin valores y puede reenviar.
-- **Dar de baja un catálogo entero** y reactivarlo, sin borrarlo (regla de ArquitecturaBase, decisión 18).
-- **Fuera.** SQL configurable (catálogo con consulta): no se ofrece.
+- **Dar de baja** conserva la versión activa y los envíos abiertos; **reactivar** es publicar una versión nueva; **eliminar** es lógico, sin respuestas ni envíos abiertos, y deja el prefijo reservado.
+- **Deprecar los Flows** por WABA de la organización, como operación durable, al vencer el último envío.
+- **Resumen:** [formularios/e12b-ciclo-de-vida.md](formularios/e12b-ciclo-de-vida.md).
 - **Criterios:**
-  - los límites del canal se validan al guardar (30 y 300 por idioma), y la vista previa marca lo que no entra;
-  - las referencias van por id, nunca por nombre, y las opciones vacías no viajan;
-  - al operador le llegan solo cantidades, nunca los nombres ofrecidos;
-  - lo capturado guarda todas las variantes de idioma.
+  - un rechazo de Meta al deprecar se clasifica y tiene una salida: no se repite para siempre;
+  - un solo filtro de disponibilidad para el chat, el asistente y las sugerencias.
 
-### E14 · Fotos y documentos (AB etapa 2B)
+### E13 · Catálogos base (AB E1)
 
-- **Preguntas nuevas.**
-  - «Foto»: cámara o galería, o solo cámara (evidencia en el momento).
-  - «Documento»: PDF, Excel, Word e imágenes. CSV no, porque Meta no lo admite.
-  - Mínimo y máximo por pregunta. Una pregunta de archivo por pantalla del Flow.
-- **Al responder.**
-  - El worker baja cada archivo con el token de la organización y verifica hash, tamaño y tipo real.
-  - Lo guarda con `IFileStore` y metadatos en `tenant`, y arma una miniatura liviana.
-  - Completa o nada: si un archivo falla, la respuesta no se guarda y el operador puede reenviar.
-  - Bajar y subir con clave determinística: alcanza con un reintento simple.
-- **Ver.** Visor y descarga solo por la Api, con `formrecords.read`, `no-store` y `nosniff`. Los documentos siempre se descargan.
-- **Antes de producción.** Un antivirus. El adaptador de nube ya llega con la E10.
-- **Resumen de la etapa:** [formularios/e14-fotos-y-documentos.md](formularios/e14-fotos-y-documentos.md).
+- **A mano y con filtros** de miembros, con tipo de valor, carga de una vez (XLSX, CSV o pegar), exportar y la plantilla. Hasta 10.000 opciones (42).
+- **Guardar todo junto,** mandando y escribiendo solo lo que cambió.
+- **Las preguntas de catálogo,** de elegir una o varias. Las opciones viajan en el mensaje, con ids locales a la oferta.
+- **Spec:** [formularios/e13-catalogos.md](formularios/e13-catalogos.md).
+- **Criterios:**
+  - los números y las fechas de un archivo se leen con la cultura del pedido, y lo ambiguo se rechaza;
+  - ninguna lectura trae las 10.000 opciones para quedarse con pocas;
+  - guardar sin cambios no escribe, y guardar una opción no reescribe las demás;
+  - los límites del canal se validan al guardar; las referencias van por id; al operador le llegan solo cantidades.
+
+### E13b · Campos extra y qué viaja a WhatsApp (AB E2, primera mitad)
+
+- **Campos por opción** (hasta 20, 42), con tipo, reglas y papel «Dato» o «Filtro», y valores en jsonb con índice GIN.
+- **La presentación:** qué campos van al título y a la descripción, en el catálogo o en una pregunta (36).
+- **El sellado** de los campos en la respuesta.
+- **Resumen:** [formularios/e13b-campos-extra.md](formularios/e13b-campos-extra.md).
+- **Criterios:** las cuatro lecciones de gravedad alta del review E2 de allá, cada una con su test (están en el resumen).
+
+### E13c · Datos de las personas y filtros por destinatario (AB E2, segunda mitad)
+
+- **Datos de las personas,** como «Zona», por organización y por miembro (42), con el permiso nuevo `formpersondata.manage`.
+- **Filtros por destinatario:** a quien no tiene el dato no se le manda, y se dice por qué. Al publicar, dos avisos que no frenan (37).
+- **Resumen:** [formularios/e13c-datos-de-las-personas.md](formularios/e13c-datos-de-las-personas.md).
+- **Criterios:**
+  - nunca se retira el filtro ni se manda la lista entera;
+  - nada nombra opciones que la persona no puede leer, tampoco la vista previa;
+  - cada exclusión o lock lleva un test con dos actores a la vez.
+
+### E14 · Fotos y documentos (AB 2B)
+
+- **Preguntas «Foto» y «Documento»,** con mínimo y máximo, una por pantalla del Flow.
+- **Al responder:** el worker baja cada archivo con el token de la organización, verifica hash, tamaño y tipo real, y lo guarda con `IFileStore`. Completa o nada.
+- **Ver:** visor y descarga solo por la Api, con `formrecords.read`. El antivirus está en la lista de lanzamiento.
+- **Resumen:** [formularios/e14-fotos-y-documentos.md](formularios/e14-fotos-y-documentos.md).
 - **Criterios:**
   - las dimensiones de una foto se rechazan por el encabezado, antes de decodificar; el tipo sale del contenido, nunca de la extensión;
   - el nombre de descarga lleva la extensión del tipo verificado y sin caracteres de formato (U+202E);
   - no se confía en los tipos del proveedor: el id de medio puede llegar como número y una opcional vacía llega omitida;
-  - si falta el archivo guardado, 404; las miniaturas privadas se cachean por ámbito y se cargan solo las visibles.
+  - si falta el archivo guardado, 404; las miniaturas privadas se cargan solo las visibles.
 
-### E15 · Planilla, detalle y Excel (AB etapa 3)
+### E15 · «Formularios», planilla, detalle y Excel (AB 3, MF1 y DC0)
 
-- **Navegación y planilla.**
-  - «Respuestas» en el panel, con un enlace por formulario visible.
-  - Columnas fijas: número, recibida, quién cargó y canal. Una columna por pregunta de todas las versiones.
-  - «—» si la pregunta no existía en esa versión; «Sin respuesta» si quedó vacía. Ausencia, cero y false se distinguen.
-- **Filtros por tipo.** Usan la gramática de condiciones de la E13 y conteos con la misma definición. Los textos libres van en el cuerpo, nunca en la URL.
-- **Detalle D2:** la respuesta se abre en un **panel al costado de la planilla** (y de «Por aprobar»), sin salir de la lista. Lo eligió ArquitecturaBase el 2026-10-17 y se copia por la decisión 18.
-  - **Cabecera:** el número y el estado, ↑ ↓ y ✕.
-  - **Contenido:** los momentos del estado, armados con las reglas que tenía el formulario al llegar la respuesta, y las pestañas Respuesta, Fotos, Actividad y PDF.
-  - **Teléfono:** la respuesta se abre a pantalla completa.
-  - **URL:** lleva la respuesta abierta. La disposición está en el [05 del traspaso](2026-10-17-formularios-traspaso/05-pantallas.md).
-- **Excel.**
-  - `.xlsx` con los filtros aplicados y permiso `formrecords.export`, hasta 10.000 respuestas por vez y sin trabajos en segundo plano.
-  - De los archivos, cantidad y nombres. Encabezados en el idioma de quien exporta.
-  - La biblioteca se adopta según P12.
-- **Robustez.** Todo es lectura: sin recibos ni pruebas de varios hosts.
-- **Resumen de la etapa:** [formularios/e15-planilla.md](formularios/e15-planilla.md).
+- **«Formularios» (MF1)** en el panel de «Gestión de formularios» (34): la tabla de formularios, desde donde se entra a cada uno.
+- **La planilla** de cada formulario, con las subcolumnas «Dato» y «Filtro», el filtro «alguna de» y la empresa (24).
+- **El detalle:** la vista rápida al costado y la pantalla completa, con ↑ ↓ en el orden de la planilla.
+- **Excel** con los filtros aplicados; «elegir varias» unido con «; ».
+- **Resumen:** [formularios/e15-planilla.md](formularios/e15-planilla.md).
 - **Criterios:**
-  - para exportar, una consulta de ids ordenados e hidratación por lotes; el esquema se deserializa una vez por versión; SQL con parámetros; una exportación a la vez por persona;
+  - para exportar, una consulta de ids ordenados e hidratación por lotes; una exportación a la vez por persona;
   - la misma regla en memoria y en SQL («sin respuesta» sobre una pregunta que no existía);
   - lo privado (textos buscados, personas y condiciones) nunca va en la URL, el storage ni las cachés persistentes;
-  - EXPLAIN sobre el SQL que genera EF.
+  - EXPLAIN con 10.000 respuestas.
 
-### E16 · Reglas, aprobación, PDF y avisos (AB etapa 4)
+### E16 · Reglas, aprobación, PDF y avisos (AB 4)
 
-- **Reglas «Cuando llega una respuesta».**
-  - Guardado e historial propios, sin versión nueva ni republicar.
-  - Cada regla: cuándo (se recibe, se aprueba o se rechaza), si (condición opcional) y hacer (acciones en orden).
-- **Un solo motor de acciones.**
-  - Ejecuciones creadas en el commit de la captura o de la decisión, con clave idempotente.
-  - El efecto se hace fuera de la transacción y un timeout queda «Sin confirmar».
-  - Se ve en «Qué pasó después».
-- **Aprobación de un nivel.**
-  - «Pedir aprobación» es la última acción de su regla: nunca hay PDF de algo sin aprobar.
-  - Nadie aprueba lo que cargó. La respuesta conserva la revisión de reglas con la que llegó.
-  - Pendientes en «Para resolver».
-- **PDF.**
-  - Diseño simple con revisiones propias, como copia fija, en el idioma de quien lo recibe si está completo; si no, entero en el original.
-  - Opción de incluir las fotos. Se guarda con `IFileStore`.
-- **Avisos por WhatsApp.**
-  - Salen por el outbox con el número de la organización. Dentro de 24 horas, como texto o documento.
-  - **Fuera de las 24 horas:** el aviso queda «No se pudo», a la vista, y el PDF queda guardado (decisión 26, como en ArquitecturaBase). El operador puede mandar una plantilla desde el chat con lo que ya trae la E11.
-- **Resumen de la etapa:** [formularios/e16-reglas-y-aprobacion.md](formularios/e16-reglas-y-aprobacion.md).
+- **Reglas** «Cuando llega una respuesta», con guardado e historial propios, sin versión nueva ni republicar.
+- **Un solo motor de acciones,** con ejecuciones idempotentes y el efecto fuera de la transacción.
+- **Aprobación de un nivel:** nadie aprueba lo que cargó. «Por aprobar» va en MF1 y en «Para resolver», con la misma fuente (ADR 0040).
+- **PDF** como copia fija, con los campos «Dato».
+- **Avisos por WhatsApp** con el número de la organización. Fuera de las 24 horas, «No se pudo» (decisión 26).
+- **Resumen:** [formularios/e16-reglas-y-aprobacion.md](formularios/e16-reglas-y-aprobacion.md).
 - **Criterios:**
   - la configuración que usa un efecto se valida al reservar (un rol borrado colgaba una aprobación);
   - un destinatario inalcanzable no tumba a los demás;
-  - lo sellado manda, y no se copia la respuesta entera en cada ejecución: se fija solo lo que cambia;
+  - lo sellado manda, y no se copia la respuesta entera en cada ejecución;
   - el PDF se muestra con `<object>`, con descarga como alternativa, nunca en un iframe con sandbox;
   - cada worker tiene un test de su bucle.
 
 ### E17 · Biblioteca de plantillas de la plataforma (nueva)
 
-Va al final del bloque para que las plantillas puedan traer reglas de ejemplo.
+- **Plataforma:** arma plantillas (formulario, catálogos a mano, reglas de ejemplo y diseño del PDF), con categoría, descripción, versiones y publicada o retirada. Datos globales en `platform`, con auditoría (ADR 0050).
+- **Es la biblioteca de formularios estándar** (40). La «Lectura de documentos» de una plantilla se suma en la E19.
+- **Organización:** «Usar esta plantilla» crea una copia independiente en borrador, con sus catálogos y el diseño del PDF. Las reglas de ejemplo se muestran precargadas hasta que guarda las suyas (30 a 33). Nunca se publica sola.
+- **Privacidad:** la plataforma solo ve cuántas organizaciones usaron cada plantilla.
+- **Spec:** [formularios/e17-biblioteca.md](formularios/e17-biblioteca.md).
+- **Criterios:**
+  - la plataforma no tiene ninguna ruta que lea datos de una organización;
+  - las referencias de una plantilla van por id local, nunca por nombre.
 
-- **Plataforma.**
-  - Arma plantillas: formulario (preguntas en su idioma original, con traducción opcional; botón y prefijo sugerido), sus catálogos escritos a mano, sus reglas de ejemplo y el diseño del PDF.
-  - Categoría, descripción, versiones y publicada o retirada. Publicar exige solo el idioma original.
-  - Datos globales en `platform`, con auditoría (ADR 0050).
-- **Organización.**
-  - Con el feature `forms` ve la biblioteca y elige «Usar esta plantilla».
-  - **Se copia:** se crea un formulario en borrador, con sus catálogos (nuevos) y el diseño del PDF como datos propios (`ITenantOwned`), con prefijo propio. Desde ahí son independientes.
-  - **Las reglas de ejemplo no se copian:** se muestran precargadas hasta que la organización guarda las suyas (decisiones 30 a 33).
-  - Nunca se publica sola: la organización revisa y publica.
-- **Privacidad.** La plataforma solo ve cuántas organizaciones usaron cada plantilla, nunca qué respondieron.
-- **Fuera.** Avisar «hay una versión nueva de la plantilla» y actualizar una copia: después, si se pide.
+### E18 · El asistente, con Casos (AB 5 y Casos)
+
+- **Modo Asistente** por conversación, solo en Internos (29), que activa quien tiene «Administrar WhatsApp» (28).
+- **Casos** (39): cada organización configura perfil, conocimiento, casos y límites. Seis acciones, respuestas redactadas dentro de los límites y «Cualquier otra cosa» al final. Pide su ADR de respuestas redactadas.
+- **Cómo trabaja:** historial de 24 horas de esa conversación, ráfagas de 4 s con tope de 15 s y hasta 3 acciones por turno.
+- **Lo de la etapa 5 de allá:** sugerencias al operador y entre formularios, audios transcriptos (27), «Formularios que faltan» y el catálogo propuesto.
+- **Desde el primer día:** la espera corta, el aislamiento por conversación y la medición.
+- **Costos:** dentro del tope mensual de IA de la organización (ADR 0051).
+- **Resumen:** [formularios/e18-asistente.md](formularios/e18-asistente.md).
+- **Criterios:**
+  - el modelo lee o propone, y ejecuta el módulo dueño;
+  - un texto redactado que no pasa el validador no sale y deriva;
+  - el historial nunca es de otra conversación ni de otra organización, con un test de dos personas a la vez;
+  - se mide de texto a envío y de audio a envío.
+
+### E19 · Documentos por WhatsApp (nueva en el bloque)
+
+- **Lee con IA** lo que mandan las cuentas vinculadas (foto, PDF, Word, Excel, ubicación y contacto) y propone el formulario prellenado. Siempre confirma una persona.
+- **Pantallas:** la bandeja «Documentos recibidos», «Armar formulario con la IA» y el tablero por formulario.
+- **Validaciones fijas** como datos de referencia; lo descartado se borra a los 90 días; la lectura entra en el tope de la organización, con un tope por persona y por día (41).
+- **Resumen:** [formularios/e19-documentos.md](formularios/e19-documentos.md).
+- **Criterios:**
+  - precargar un archivo en un Flow se prueba con Meta antes de planificar;
+  - la IA nunca carga sola, y lo leído es un dato, nunca una instrucción;
+  - las validaciones fijas corren en el servidor, sin IA, también al confirmar.
 
 ### Después del bloque
 
-**Asistente en WhatsApp, sugerencias y audios** (antes F7; AB etapa 5). **Pasó al bloque como E18, con Casos, después de la E17** (decisiones 34 y 39). Resumen: [formularios/asistente.md](formularios/asistente.md).
-- **Lo que la E18 tiene que planificar:**
-  - el asistente v2 con acciones con confirmación (ADR 0048, D8);
-  - la IA en WhatsApp, que la ADR 0038 dejaba para después.
-- **Cómo se haría:** las herramientas siguen la receta de este repo ([agregar una herramienta](../guides/agregar-una-herramienta-al-asistente.md)); el modelo lee o propone, y ejecuta el servicio del módulo dueño. Los costos de IA, incluida la transcripción de audios, entran en el tope mensual en USD por organización del asistente (ADR 0051).
-- **Modo Asistente por conversación.**
-  - Reconoce el pedido y manda el formulario prellenado. En atención manual solo le sugiere al operador.
-  - Solo formularios con «Cuándo lo ofrece el asistente» completado.
-  - Hasta 2 ofrecimientos por día y por conversación.
-  - Lo que no es un formulario lo contestan los Casos de la organización, y lo demás se deriva a un operador (decisión 39).
-- **Sugerencias entre formularios.** Una entrega puede sugerir una factura, por ejemplo. Modos Assistant (decide la IA) o Always (por condición, sin IA), con mapeo de preguntas y la cadena de origen en el detalle.
-- **Audios.** Se bajan como los archivos de la E14, se transcriben con un proveedor elegido y la transcripción la ve también el operador.
-- **Formularios que faltan.** Si la persona quiere registrar algo y no hay formulario, el asistente lo avisa y registra el pedido. Quien diseña formularios los ve agrupados.
-- **Catálogo propuesto por el asistente.** Solo con filtros; lo aprueba una persona.
-- **Casos de evaluación.** Mensajes de ejemplo con el resultado esperado, que se corren antes de habilitar un modelo o instrucciones nuevas.
-
-**Lo demás que queda para después:**
-- **B2C, formularios para clientes:** la persona responde como cliente de una organización desde la bandeja Clientes de E11. Respuesta compartida con copia para «Mis mensajes» (`IConsumerInteractionSource`).
-- Intercambio cifrado con Meta: búsqueda en vivo, listas dependientes y listas largas.
-- Grupos y remitos con líneas.
-- Corregir una respuesta con una respuesta sucesora.
-- Cargar respuestas desde la web e importar desde Excel.
-- Borrador de formulario armado por la IA, salvo «Armar formulario con la IA» de los Documentos, que va en la E19.
-- Copiar formularios. Eliminar y deprecar los Flows viejos pasaron a la E12b.
-- Límites por plan.
-- Avisos automáticos con plantilla de Meta fuera de las 24 horas: necesitan plantillas del sistema en la WABA de cada organización, con su alta y aprobación por WABA, que el proyecto no tiene.
+- **Integraciones:** un módulo `Integrations`, con conexiones y credenciales por organización. La API pública y el MCP necesitan una identidad por organización. Quedan abiertas las 13 decisiones de su estudio.
+- **Catálogos, fases 3 a 6:** la búsqueda en vivo, el asistente que arma catálogos y los orígenes externos.
+- **La conexión a la base de un cliente,** con una solución simple: un agente del lado del cliente o una réplica de solo lectura.
+- **B2C, formularios para clientes:** la persona responde como cliente de una organización desde la bandeja Clientes de E11, con el backlog #51 resuelto.
+- **La carga automática de documentos,** con datos medidos.
+- **Los tableros que cruzan formularios.**
+- **Grupos y remitos con líneas, corregir una respuesta, cargar respuestas desde la web e importar desde Excel.**
+- **Copiar formularios.**
+- **Límites por plan.**
+- **Avisos automáticos con plantilla de Meta fuera de las 24 horas:** necesitan plantillas del sistema en la WABA de cada organización, que el proyecto no tiene.
 
 ## 4. Lo que aprendimos en ArquitecturaBase
 
@@ -314,13 +283,14 @@ Aplicarlo desde el primer día evita lo que nos frenó la Etapa 1 durante días:
 2. **El contrato es el código:** DTO, OpenAPI y ejemplos exportados, no un documento de contrato de 60 KB. Los ejemplos salen de una corrida real, con sus estados y sus errores de negocio, y el front los valida con zod estricto (2026-10-24: en ArquitecturaBase, el back mandaba `pending` y el front esperaba `Pending`).
 3. **Planes cortos.** Un resumen por etapa con las decisiones ya tomadas, que no se vuelven a preguntar. Lo que el plan no fija se resuelve con lo más simple que cumpla las reglas. Un contrato todavía no publicado se cambia sin capas de compatibilidad.
 4. **Tests rápidos por corte;** integración y visuales una vez, al terminar.
-5. **Pantalla nueva: primero el tablero**, elegido por el usuario.
+5. **Pantalla nueva: primero el tablero**, elegido por el usuario, y el recorrido guiado en el lienzo (44).
 6. **Errores que ya pagamos:**
    - una respuesta con error frenaba la cola entera, y ahora se aísla por mensaje;
    - las respuestas pasados 30 minutos se perdían, y ahora la sesión dura 24 horas y vence según la hora de Meta;
    - las respuestas grandes se descartaban sin rastro, y ahora hay un presupuesto de 16 KiB al publicar y un rechazo visible;
    - errores definitivos de Meta quedaban «Sin confirmar» para siempre;
    - en la Argentina, «125.500» puede leerse como 125,5, por eso la ayuda pide punto decimal y se valida la escala.
+7. **La lista de control de la puerta.** Los 142 problemas de los reviews de ArquitecturaBase quedaron en doce puntos, en la skill `/puerta` y en [tests](../rules/tests.md): números y fechas con la cultura del pedido, el front que no tapa al servidor, cambiar algo en uso, guardar sin cambios, lecturas con el volumen máximo, nada que nombre lo que no se puede leer, nada que exija un idioma, un test por cada lock, migraciones portables, botones y avisos (43), arreglos en los caminos hermanos y respuestas de proveedores clasificadas. Cada etapa del bloque la aplica, con un test por punto.
 
 ## 5. Decisiones de producto
 
