@@ -1,6 +1,6 @@
 # E14 · Fotos y documentos (resumen)
 
-**Estado:** resumen del 2026-10-17, armado desde el [traspaso](../2026-10-17-formularios-traspaso/README.md). Corresponde a la etapa 2B de ArquitecturaBase, que cerró el 2026-10-15 con Meta y Azure reales. Se planifica con `/plan-etapa` cuando le toque, después de la E13.
+**Estado:** resumen de la sexta etapa del bloque (decisión 34), armado desde el [traspaso](../2026-10-17-formularios-traspaso/README.md). Corresponde a la etapa 2B de ArquitecturaBase, cerrada con Meta y Azure reales; el traspaso 2 no le cambia el alcance. Se planifica con `/plan-etapa` cuando le toque, después de la E13c.
 
 **Dónde está el detalle:**
 - en el traspaso: [04 §2B](../2026-10-17-formularios-traspaso/04-etapas.md), anexo C §2 (etapa 2B), anexo B (E2B) y anexo D (F1–F5);
@@ -42,8 +42,8 @@
     - no se pudo bajar un archivo, y un archivo no es lo que dice.
   - **El visor nuevo:** `WA-Chats-Visor` y `M-WA-Chats-Visor`.
   - **Mandan sobre este resumen en:**
-    - **«Sin almacenamiento»:** Foto y Documento aparecen apagados con su motivo, no ocultos, porque se resuelve conectando el almacenamiento (`pantallas-y-ui.md` del front);
-    - **«Más de 10 archivos»** es un problema de la comprobación al publicar, con el botón apagado, como «una pregunta que no se puede mostrar» de la E12;
+    - **«Sin almacenamiento»:** Foto y Documento aparecen grisados, con el motivo en su tooltip (43), no ocultos, porque se resuelve conectando el almacenamiento;
+    - **«Más de 10 archivos»** es un problema de la comprobación al publicar, con el botón grisado, como «una pregunta que no se puede mostrar» de la E12;
     - **«Un archivo no es lo que dice»** es el rechazo por tipo real distinto del declarado, y «No se pudo bajar un archivo», el rechazo después de los reintentos. Los dos nombran la pregunta y ofrecen «Mandar de nuevo»;
     - **«Reintentando»** se ve mientras corren los reintentos acotados (5 fallas y 15 minutos), sin acción del operador;
     - **la banda de conflicto** lleva ⚠ (cambio transversal de la E9).
@@ -62,7 +62,7 @@
 ## Fuera de esta etapa
 
 - Exportar los archivos y descargar todas las fotos juntas.
-- El antivirus, que es requisito antes de producción y se decide con la operación.
+- El antivirus, que está en la lista de lanzamiento: es requisito antes de producción.
 - Video, comprimidos y CSV.
 
 ## Cómo se cierra
@@ -74,13 +74,13 @@ La puerta de la etapa, más una **prueba real con Meta y el almacenamiento de la
 
 ## Requisitos previos
 
-- La E12 y la E13 cerradas.
+- La E12 cerrada. No depende de los catálogos.
 - **De la E10:** el adaptador de nube de `IFileStore`. En desarrollo alcanza con `LocalFileStore` o el emulador que elija la E10.
 
 ## Ajustes ya decididos
 
-- **Idioma:** solo el original es obligatorio, sin mezclar al mandar (decisión 17).
-- **Pantallas:** se copian de ArquitecturaBase (decisión 18).
+- **Idioma:** el contenido no tiene idioma (35); los nombres de los archivos se guardan como llegan.
+- **Pantallas:** se copian de ArquitecturaBase (decisión 18), con los botones de la decisión 43.
 - **Cuánto se guardan los archivos:** sin plazo mientras exista la organización (decisión 23 de la hoja de ruta).
 
 ## En el multitenant
