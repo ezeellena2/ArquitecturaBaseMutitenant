@@ -14,6 +14,7 @@
     - los envíos abiertos conservan su versión y se responden hasta vencer. Respuestas, archivos, numeración, aprobaciones y reglas siguen disponibles;
     - las sugerencias de otros formularios que apuntan a él dejan de ofrecerse, y vuelven si se reactiva.
   - **Reactivar** es la publicación de siempre con el borrador actual: versión nueva y Flows nuevos. Sigue dado de baja hasta que se confirma la versión nueva, y la numeración continúa.
+  - **Copiar un formulario** (74): crea uno nuevo en borrador con el borrador del original, su diseño del PDF y sus reglas vigentes (como su primera revisión), y un prefijo nuevo propuesto con la regla de la E12. Usa los mismos catálogos, sin duplicarlos. Pide `forms.manage`. No copia versiones, respuestas ni publicaciones.
   - **Eliminar:**
     - es lógico, y solo se puede sin respuestas, sin envíos abiertos ni respuestas en proceso, y sin publicación en curso. Se comprueba bajo el mismo bloqueo que las otras escrituras;
     - no borra versiones ni evidencias del canal;
@@ -50,7 +51,6 @@
 
 ## Fuera de esta etapa
 
-- Copiar formularios.
 - Borrar respuestas por antigüedad: rige la decisión 23.
 
 ## Cómo se cierra

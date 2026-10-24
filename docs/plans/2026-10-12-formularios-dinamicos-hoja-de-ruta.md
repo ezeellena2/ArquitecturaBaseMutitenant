@@ -122,7 +122,7 @@ Valen todas las de [AGENTS.md](../../AGENTS.md) y las [fichas](../rules/README.m
 
 ## 3. Etapas
 
-Son trece, en el orden de las decisiones 34, 54 y 69: E12, E12b, E13, E13b, E13c, E13d, E14, E15, E16, E17, E18, E18b y E19. Los números son nombres, no orden. Entre paréntesis va la etapa de ArquitecturaBase que sirve de referencia. Cada etapa tiene su spec o su resumen en [`formularios/`](formularios/README.md), y sus tableros se dibujan en el lienzo antes de programar (decisiones 18 y 44).
+Son catorce, en el orden de las decisiones 34, 54, 69 y 73: E12, E12b, E13, E13b, E13c, E13d, E14, E14b, E15, E16, E17, E18, E18b y E19. Los números son nombres, no orden. Entre paréntesis va la etapa de ArquitecturaBase que sirve de referencia. Cada etapa tiene su spec o su resumen en [`formularios/`](formularios/README.md), y sus tableros se dibujan en el lienzo antes de programar (decisiones 18 y 44).
 
 **Criterios.** En todas las etapas rige la lista de control de la skill `/puerta`: doce puntos que salen de los 142 problemas de los reviews de ArquitecturaBase ([§4](#4-lo-que-aprendimos-en-arquitecturabase)). Cada etapa suma los suyos. El plan de la etapa los toma como lista de control, y cada punto que aplica lleva su test.
 
@@ -144,6 +144,7 @@ Son trece, en el orden de las decisiones 34, 54 y 69: E12, E12b, E13, E13b, E13c
 
 ### E12b · Ciclo de vida (AB, dar de baja y eliminar)
 
+- **Copiar un formulario** (74), con su borrador, su PDF y sus reglas, y un prefijo nuevo.
 - **Dar de baja** conserva la versión activa y los envíos abiertos; **reactivar** es publicar una versión nueva; **eliminar** es lógico, sin respuestas ni envíos abiertos, y deja el prefijo reservado.
 - **Deprecar los Flows** por WABA de la organización, como operación durable, al vencer el último envío.
 - **Resumen:** [formularios/e12b-ciclo-de-vida.md](formularios/e12b-ciclo-de-vida.md).
@@ -205,6 +206,12 @@ Son trece, en el orden de las decisiones 34, 54 y 69: E12, E12b, E13, E13b, E13c
   - el nombre de descarga lleva la extensión del tipo verificado y sin caracteres de formato (U+202E);
   - no se confía en los tipos del proveedor: el id de medio puede llegar como número y una opcional vacía llega omitida;
   - si falta el archivo guardado, 404; las miniaturas privadas se cargan solo las visibles.
+
+### E14b · Cargar una respuesta desde la web (nueva)
+
+- **Un empleado completa un formulario desde la web,** a su nombre, con la misma captura que por WhatsApp: condiciones, cálculos, líneas, catálogos y archivos (73).
+- **Resumen:** [formularios/e14b-cargar-desde-la-web.md](formularios/e14b-cargar-desde-la-web.md).
+- **Criterios:** un solo lugar valida y numera; los archivos que se suben se verifican igual que los de WhatsApp.
 
 ### E15 · «Formularios», planilla, detalle y Excel (AB 3, MF1 y DC0)
 
@@ -281,6 +288,7 @@ Son trece, en el orden de las decisiones 34, 54 y 69: E12, E12b, E13, E13b, E13c
 
 - **Lee con IA** lo que mandan los empleados y los clientes (foto, PDF, Word, Excel, ubicación y contacto) y propone el formulario prellenado (70). Confirma una persona, salvo con «Cargar solo si es seguro» y sus tres señales (71).
 - **Pantallas:** la bandeja «Documentos recibidos» y «Armar formulario con la IA». El tablero por formulario pasó a la E15 (57).
+- **Armar formularios y catálogos desde el asistente de la web** (75): se le pasa un PDF o se le escribe cómo se quiere, y crea el borrador y los catálogos sin activar.
 - **Validaciones fijas** como datos de referencia; lo descartado se borra a los 90 días; la lectura entra en el tope de la organización, con un tope por persona y por día (41).
 - **Resumen:** [formularios/e19-documentos.md](formularios/e19-documentos.md).
 - **Criterios:**
@@ -290,12 +298,11 @@ Son trece, en el orden de las decisiones 34, 54 y 69: E12, E12b, E13, E13b, E13c
 
 ### Después del bloque
 
-- **Integraciones:** un módulo `Integrations`, con conexiones y credenciales por organización. La API pública y el MCP necesitan una identidad por organización. Quedan abiertas las 13 decisiones de su estudio.
+- **Integraciones, lo primero después del bloque** (76): un módulo `Integrations`, con conexiones y credenciales por organización. La API pública y el MCP necesitan una identidad por organización. Quedan abiertas las 13 decisiones de su estudio.
 - **Catálogos, fases 3 a 6:** la búsqueda en vivo, el asistente que arma catálogos y los orígenes externos.
 - **La conexión a la base de un cliente,** con una solución simple: un agente del lado del cliente o una réplica de solo lectura.
 - **Los tableros que cruzan formularios.**
-- **Cargar respuestas desde la web e importar desde Excel.** Las líneas pasaron a la E13d (54) y corregir una respuesta, a la E16 (58).
-- **Copiar formularios.**
+- **Importar respuestas desde Excel, y cargar a nombre de otra persona.** Las líneas pasaron a la E13d (54), corregir una respuesta a la E16 (58), cargar desde la web a la E14b (73) y copiar formularios a la E12b (74).
 - **Varios niveles de aprobación** (60).
 - **Límites por plan.**
 
@@ -492,6 +499,13 @@ Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 8, los docum
 71. **La carga sin confirmar entra al bloque,** en la E19: un interruptor «Cargar solo si es seguro» por formulario, que carga sin preguntar solo si el formulario quedó reconocido sin duda, las validaciones dan bien sin duplicado, y ese formulario tiene sus últimas 20 cargas confirmadas sin correcciones. Nunca se usa la seguridad que declara el modelo, y lo cargado se puede corregir (58).
 72. **El único formulario estándar de la primera versión** es «Comprobante de transferencia». Los demás los suma la plataforma después, como plantillas.
 
+Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 9, lo que queda afuera):
+
+73. **Cargar una respuesta desde la web** entra al bloque: un empleado, a su nombre, con la misma captura que por WhatsApp. Es la etapa E14b, después de la E14.
+74. **Copiar un formulario** entra al bloque, en la E12b.
+75. **El asistente de la web arma formularios y catálogos:** se le pasa un PDF o se le escribe cómo se quiere, y crea el formulario en borrador y los catálogos sin activar, y lleva al editor. Nada se publica solo. Va en la E19, con «Armar formulario con la IA».
+76. **Después del bloque, lo primero son las integraciones:** ARCA, Mercado Libre, Mercado Pago y webhooks, con plantillas conectadas en la biblioteca.
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase
@@ -536,4 +550,4 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 Ninguna.
 
-Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 72.
+Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 76.
