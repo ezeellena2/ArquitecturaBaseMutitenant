@@ -31,35 +31,31 @@ El 23/10 el usuario fijó reglas nuevas de interfaz y de idioma para los dos pro
 
 ## 2. Antes de cualquier etapa
 
-### 2.1 Reglas de interfaz del 23/10 contra las nuestras
+### 2.1 Botones y avisos
 
-Valen para los dos proyectos (capítulo 04 del traspaso), así que se adoptan. §6 A pregunta solo su alcance y un caso que no cubren.
+Lo fijaste el 23/10 para los dos proyectos y lo confirmaste acá el 24/10: los botones no explican ni cuentan lo que pasa. El flujo queda así:
+- **Un botón está habilitado o grisado,** sin textos al lado ni debajo, como «No hay cambios para guardar», «Primero guardá los cambios» o «Revisá los datos marcados». Si el motivo no es obvio, va en su tooltip.
+- **«Guardar cambios» se habilita cuando hay cambios.**
+  - No hay «Cambios sin guardar» ni números de revisión a la vista: las revisiones quedan en los historiales.
+  - Al salir con cambios, se pregunta antes.
+- **Lo que necesita algo antes queda grisado,** como publicar con cambios sin guardar.
+- **Mientras trabaja, el botón queda grisado con su mismo texto,** sin «Guardando…».
+- **Lo que salió bien va en el aviso de siempre,** que se cierra solo.
+- **Un error va con los estilos de siempre:** debajo del campo o en el aviso rojo. Nunca va en rojo una fila recién agregada.
+- **Si no se sabe si algo salió** (por un corte de red), la pantalla vuelve a leer sola y muestra lo que quedó. No hay botones como «Consultar guardado».
+- **Las acciones van al borde derecho** del encabezado de su superficie.
+- **Lo elegido al crear que ya no se cambia va como dato** («Escritas a mano · Texto»), no como un campo con candado. La A11 (campos apagados) sigue para quien abre algo sin permiso de editarlo.
 
-**Un botón está habilitado o deshabilitado, sin textos al lado ni debajo.** Si el motivo no es obvio, va en un tooltip.
-- **Hoy acá:**
-  - Criterio-Botones prohíbe «Deshabilitar un botón en vez de explicar qué falta»;
-  - el README del lienzo dice «nada se deshabilita sin explicar por qué».
+**Qué cambia acá:**
+- **El lienzo:** Criterio-Botones prohíbe «Deshabilitar un botón en vez de explicar qué falta», y el README dice «nada se deshabilita sin explicar por qué». Es el equivalente de la frase que causó el error allá. Diseño corrige esos dos y Criterio-Marco.
+- **Las fichas del front:** `pantallas-y-ui.md` y `formularios.md`, corregidas el 24/10.
+- **El código del front:** va como F5 de la 10, antes de producción.
+  - `useEditPage` pone «Cambios sin guardar» en todas las pantallas, y `Button` cambia su texto mientras trabaja.
+  - Es una tarea chica.
+- **Los tableros:** «Cambios sin guardar» está en 57 tableros de todo el sistema. Además, seis tableros de formularios apagan Guardar por un error, contra la regla de crear de hoy (`submit-buttons.test.ts`, E7).
+- **La spec de la 12:** salen «Guardado sin confirmar», «Consultar guardado» y «Consultar envío».
 
-  **Es el equivalente de la frase que causó el error allá.**
-- **Qué cambia:** las dos frases pasan a decir «Un botón está habilitado o deshabilitado, sin textos al lado ni debajo. Si el motivo no es obvio, va en el tooltip del botón o en el ⓘ de la acción».
-
-**Sin «Cambios sin guardar» ni números de revisión a la vista.** Se conserva el aviso al salir.
-- **Hoy acá:** `pantallas-y-ui.md` y Criterio-Marco lo ponen en la segunda línea de la banda, y aparece en **57 tableros** de todo el sistema.
-- **Qué cambia:** sale de la banda, y las revisiones quedan solo en los historiales. El alcance sobre lo ya programado es la decisión A1.
-
-**Las acciones van al borde derecho del encabezado.**
-- **Hoy acá:** la banda ya lo hace, pero los encabezados de las cajas no se revisaron.
-- **Qué cambia:** se escribe en `pantallas-y-ui.md` y se revisa `Section`.
-
-**Se valida al intentar guardar, y después en vivo.** Nunca va en rojo una fila recién agregada.
-- **Hoy acá:** no está escrito, y seis tableros apagan Guardar mientras hay un error.
-- **Qué cambia:** se suma a `formularios.md` del front, y esos seis tableros se redibujan.
-
-**Lo elegido antes que ya no se cambia va como dato de solo lectura** («Escritas a mano · Texto»).
-- **Hoy acá:** el origen de un catálogo es un campo con candado que dice «No se cambia».
-- **Qué cambia:** pasa a dato. La A11 (campos apagados) sigue para quien abre algo sin permiso de editarlo.
-
-**Lo que la regla no cubre** es una opción de menú apagada. Hoy `pantallas-y-ui.md` le pone el motivo debajo, en gris (decisión A2).
+**Quedan dos preguntas** (§6 A): qué pasa con una opción de menú apagada, y qué pasa si falta un dato obligatorio.
 
 ### 2.2 Idioma (decisión B2)
 
@@ -112,7 +108,7 @@ Pediste sumar a la puerta el capítulo 05 y la lista «no repetir» del anexo E.
     - sus respuestas se clasifican en definitiva, transitoria o desconocida, y cada estado tiene una salida;
     - cada variante de WhatsApp se abre en un celular: no alcanza con que Meta la acepte.
 
-### 2.6 Ver todo antes de programar (decisión A3)
+### 2.6 Ver todo antes de programar (decisión A4)
 
 **El lienzo ya es navegable:**
 - tiene Play entre tableros, el índice general y uno por área;
@@ -314,7 +310,7 @@ Si las fotos importan antes, la E14 puede ir después de la E12b: no depende de 
 
 **Además:**
 - los tres criterios del lienzo cambian con §2.1: Marco, Botones y Decisiones;
-- con A1, «Cambios sin guardar» sale de los 57 tableros del sistema;
+- «Cambios sin guardar» sale de los 57 tableros del sistema (A1);
 - con MF1, cambia el panel de todos los FRM de la compu, y FRM-Por-Aprobar y M-FRM-Por-Aprobar pasan al Archivo.
 
 ### 5.2 Dibujar nuevos (34)
@@ -351,16 +347,19 @@ Se pregunta solo dónde va cada cosa, cuándo, y lo que choca con decisiones nue
 
 ### A. Interfaz
 
-**A1. Las pantallas ya programadas.**
-- **Recomendado:** sacar «Cambios sin guardar» y los textos junto a botones de todo el sistema, de una vez, en la E12. Es sobre todo `Page` y las pantallas que le pasan ese texto, y un sistema con dos formas confunde. Respeta «lo cerrado no se reabre»: se arregla en la etapa en curso.
-- **Alternativa:** solo en lo nuevo. Las pantallas de las etapas cerradas quedan como están.
-- **Consecuencia:** Diseño saca la frase de los 57 tableros, y el front de la E12 suma una tarea chica.
+**A1. Las pantallas ya programadas.** Lo resolviste el 24/10: no va «Cambios sin guardar» en ningún lado. Sale de todo el sistema con la F5 de la 10 (§2.1), y Diseño lo saca de los 57 tableros.
 
 **A2. Una opción de menú apagada.**
-- **Recomendado:** se mantiene el motivo debajo, en gris, como dice hoy `pantallas-y-ui.md`. Es un menú y no un botón, y en el celular no hay tooltip.
-- **Alternativa:** se pasa a tooltip, como en los botones.
+- **Recomendado:** queda solo grisada, como los botones. El motivo va en su tooltip en la compu y para el lector de pantalla. Cambia tu decisión del 13/10, que lo ponía debajo, en gris.
+- **Alternativa:** se mantiene el motivo debajo, en gris.
 
-**A3. Cómo ves todo antes de programar.**
+**A3. Si falta un dato obligatorio.**
+- **Recomendado:** el botón queda habilitado, y al tocarlo, el campo que falta se marca con el error de siempre.
+  - Así se ve qué falta, también en un formulario largo.
+  - Es como funciona hoy («Crear rol» con el nombre vacío), y es la regla que fijaste allá el 23/10.
+- **Alternativa:** el botón queda grisado hasta completar lo obligatorio, sin marcar qué falta.
+
+**A4. Cómo ves todo antes de programar.**
 - **Recomendado:** el lienzo navegable, con Play, los índices y un recorrido guiado por etapa.
 - **Alternativa:** una maqueta viva como la de allá, con el front real, un back falso y un celular simulado. Se recorre como la app real, pero es otro repo que hay que mantener en cada etapa.
 
@@ -483,7 +482,7 @@ Se pregunta solo dónde va cada cosa, cuándo, y lo que choca con decisiones nue
 - **Los textos para Diseño** (`e12-`, `e13-` y `e17-texto-diseno.md`): siguen a sus specs.
 
 **Guías:**
-- §2.1 (y A2) en `pantallas-y-ui.md` y `formularios.md` del front;
+- §2.1 en `pantallas-y-ui.md` y `formularios.md` del front: hecho el 24/10, y falta sumar lo que decidas en A2 y A3;
 - §2.4 en `api-http.md` del back y `datos-y-api.md` del front;
 - §2.5 en `docs/rules/tests.md` y en la skill `/puerta`;
 - §2.1 en los criterios del lienzo (Marco, Botones y Decisiones), que cambia Diseño.
