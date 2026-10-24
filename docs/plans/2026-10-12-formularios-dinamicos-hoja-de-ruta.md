@@ -459,11 +459,11 @@ Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 5, reglas, a
 
 59. **El diseño del PDF** (E16): una base bien hecha, con personalización acotada: el logo, el color de la organización, un encabezado con sus datos, las preguntas agrupadas en secciones con título y en el orden que se elija, mostrar u ocultar cada pregunta, y un lugar para firmas. Sin editor libre. Diseño muestra dos o tres estilos para elegir.
 60. **La aprobación es de un nivel.** Varios niveles, después del bloque.
-61. **Fuera de las 24 horas, todos los avisos de WhatsApp** (a empleados y a clientes) van con una plantilla aprobada de la organización. Reemplaza la 26.
+61. **Fuera de las 24 horas, todos los avisos de WhatsApp** (a empleados y a clientes) van con una plantilla aprobada de la organización. Reemplaza la 26. Si la organización no tiene la plantilla aprobada, el aviso queda «No se pudo», a la vista, para que nadie espere un envío que no puede salir.
 62. **Dos acciones más en las reglas** (E16):
     - **avisar a una persona** puntual, no solo a un rol;
     - **mandar por correo**: a quien cargó, a un rol o a una persona, al correo de su cuenta; a una dirección fija escrita en la regla; o al correo de una pregunta del formulario, con un tipo de pregunta «Correo» nuevo.
-63. **Armar una regla desde un texto** (E18): la persona la escribe en palabras, la IA la convierte en una regla normal, y la persona la revisa y la guarda. Después corre siempre igual, sin IA. La IA no interpreta el texto en cada respuesta.
+63. **Armar una regla desde un texto** (E18): la persona la escribe en palabras, la IA la convierte en una regla normal, y la persona la revisa y la guarda. Después corre siempre igual, sin IA. La IA no interpreta el texto en cada respuesta. La propuesta entra en el tope mensual de IA de la organización (ADR 0051): con el tope agotado, «Armar desde un texto» queda grisado, con el motivo en su tooltip, y la regla se arma a mano.
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
