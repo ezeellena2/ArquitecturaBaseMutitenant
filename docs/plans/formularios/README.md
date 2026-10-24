@@ -10,7 +10,7 @@ Cada etapa del bloque tiene acá su especificación detallada (la 12, la 13 y la
 
 Esta carpeta está fuera del detector (`docs/plans/**`).
 
-Las etapas van en el orden de las decisiones 34 y 54. Los tableros son los de la §5 de la [evaluación del traspaso 2](../2026-10-24-formularios-evaluacion-traspaso-2.md), y los dibuja Diseño.
+Las etapas van en el orden de las decisiones 34, 54 y 69. Los tableros son los de la §5 de la [evaluación del traspaso 2](../2026-10-24-formularios-evaluacion-traspaso-2.md), y los dibuja Diseño.
 
 | Orden | Etapa | Spec | Tableros |
 | --- | --- | --- | --- |
@@ -24,5 +24,6 @@ Las etapas van en el orden de las decisiones 34 y 54. Los tableros son los de la
 | 8 | E15 · «Formularios», planilla, detalle y Excel | [e15-planilla.md](e15-planilla.md) | Aprobados en el lienzo v131. Por dibujar `MF1`, `DC0`, `CE5`, `CE6` y `DOC7-A` (el tablero, 57), y se ajusta `FRM-Respuesta` |
 | 9 | E16 · Reglas, aprobación, PDF y avisos | [e16-reglas-y-aprobacion.md](e16-reglas-y-aprobacion.md) | Aprobados en el lienzo v132. Se redibujan 7, con la acción «Mandar el PDF a un cliente» (47), y por dibujar `FRM-Respuesta-Corregir` (58) |
 | 10 | E17 · Biblioteca de plantillas y formularios estándar | [e17-biblioteca.md](e17-biblioteca.md) | Aprobados en el lienzo v126, v130 y v134. Se redibujan 7, y por dibujar `DOC1` |
-| 11 | E18 · El asistente, con Casos | [e18-asistente.md](e18-asistente.md) | Aprobados en el lienzo v133. Se redibuja `FRM-Editor-Asistente`, y por dibujar `AS1-A` a `AS6` |
-| 12 | E19 · Documentos por WhatsApp | [e19-documentos.md](e19-documentos.md) | Por dibujar: `DOC2` a `DOC6` |
+| 11 | E18 · El asistente, con Casos | [e18-asistente.md](e18-asistente.md) | Aprobados en el lienzo v133. Se redibuja `FRM-Editor-Asistente`, y por dibujar `AS1-A` a `AS6`, `WA-Modo-Atencion` y `WA-Preguntas-Sin-Respuesta` |
+| 12 | E18b · Varios asistentes, uno por equipo | [e18b-varios-asistentes.md](e18b-varios-asistentes.md) | Por dibujar: `WA-Asistentes` y `WA-Equipo-Asistente` |
+| 13 | E19 · Documentos por WhatsApp | [e19-documentos.md](e19-documentos.md) | Por dibujar: `DOC2` a `DOC6` |

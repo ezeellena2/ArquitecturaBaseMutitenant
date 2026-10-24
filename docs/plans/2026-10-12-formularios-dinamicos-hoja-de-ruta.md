@@ -122,7 +122,7 @@ Valen todas las de [AGENTS.md](../../AGENTS.md) y las [fichas](../rules/README.m
 
 ## 3. Etapas
 
-Son doce, en el orden de las decisiones 34 y 54: E12, E12b, E13, E13b, E13c, E13d, E14, E15, E16, E17, E18 y E19. Los números son nombres, no orden. Entre paréntesis va la etapa de ArquitecturaBase que sirve de referencia. Cada etapa tiene su spec o su resumen en [`formularios/`](formularios/README.md), y sus tableros se dibujan en el lienzo antes de programar (decisiones 18 y 44).
+Son trece, en el orden de las decisiones 34, 54 y 69: E12, E12b, E13, E13b, E13c, E13d, E14, E15, E16, E17, E18, E18b y E19. Los números son nombres, no orden. Entre paréntesis va la etapa de ArquitecturaBase que sirve de referencia. Cada etapa tiene su spec o su resumen en [`formularios/`](formularios/README.md), y sus tableros se dibujan en el lienzo antes de programar (decisiones 18 y 44).
 
 **Criterios.** En todas las etapas rige la lista de control de la skill `/puerta`: doce puntos que salen de los 142 problemas de los reviews de ArquitecturaBase ([§4](#4-lo-que-aprendimos-en-arquitecturabase)). Cada etapa suma los suyos. El plan de la etapa los toma como lista de control, y cada punto que aplica lleva su test.
 
@@ -254,6 +254,8 @@ Son doce, en el orden de las decisiones 34 y 54: E12, E12b, E13, E13b, E13c, E13
 
 - **El asistente atiende empleados y clientes** (51). Cada organización configura, por bandeja, quién atiende los chats nuevos y cuándo vuelve un chat al modo configurado; cada chat se cambia o se fija a mano (52). Se configura con «Administrar WhatsApp» (28).
 - **Armar una regla desde un texto** (63): la IA propone la regla y la persona la revisa y la guarda.
+- **Sin información cargada** (67): ayuda con lo general, nunca inventa datos de la organización, pregunta y deriva, y anota la pregunta en «Preguntas sin respuesta».
+- **Límites por bandeja** (65), y el tope de ofrecimientos lo elige cada organización (66).
 - **Casos** (39): cada organización configura perfil, conocimiento, casos y límites. Seis acciones, respuestas redactadas dentro de los límites y «Cualquier otra cosa» al final. Pide su ADR de respuestas redactadas.
 - **Cómo trabaja:** historial de 24 horas de esa conversación, ráfagas de 4 s con tope de 15 s y hasta 3 acciones por turno.
 - **Lo de la etapa 5 de allá:** sugerencias al operador y entre formularios, audios transcriptos (27), «Formularios que faltan» y el catálogo propuesto.
@@ -265,6 +267,15 @@ Son doce, en el orden de las decisiones 34 y 54: E12, E12b, E13, E13b, E13c, E13
   - un texto redactado que no pasa el validador no sale y deriva;
   - el historial nunca es de otra conversación ni de otra organización, con un test de dos personas a la vez;
   - se mide de texto a envío y de audio a envío.
+
+### E18b · Varios asistentes, uno por equipo (nueva)
+
+- **Varios asistentes por organización,** cada uno con su perfil, sus casos y sus límites; el conocimiento lo comparten (46).
+- **Quién contesta: por equipo** (68). Cada equipo de la bandeja tiene su asistente, y un chat sin equipo lo contesta el principal.
+- **Resumen:** [formularios/e18b-varios-asistentes.md](formularios/e18b-varios-asistentes.md).
+- **Criterios:**
+  - en cada chat se ve qué asistente contesta;
+  - cambiar de equipo cambia el asistente desde el mensaje siguiente, con el mismo historial.
 
 ### E19 · Documentos por WhatsApp (nueva en el bloque)
 
@@ -469,6 +480,14 @@ Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 6, la biblio
 
 64. **Una plantilla puede traer catálogos de los miembros y de los contactos,** sin filtros, además de los escritos a mano. La organización les pone sus filtros después de usarla. Cambia la 14. El usuario reconfirmó que la copia es independiente (no se entera de las versiones nuevas) y que todas las organizaciones ven todas las plantillas.
 
+Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 7, el asistente):
+
+65. **Los límites del asistente son uno por bandeja:** con los clientes, la organización puede ser más estricta que con los empleados.
+66. **El tope de ofrecimientos de formularios** (2 por conversación y día) lo elige cada organización, dentro de un máximo de la plataforma.
+67. **Sin la información cargada,** el asistente ayuda con lo general, que no compromete a la organización. Lo de la organización (precios, envíos, stock, horarios, garantías) lo contesta solo si está cargado. Si falta, pregunta para entender, dice que lo consulta y deriva a una persona, y anota la pregunta en «Preguntas sin respuesta», agrupada por tema, para que la organización complete su conocimiento.
+68. **Varios asistentes, uno por equipo:** cada equipo de la bandeja tiene su asistente, con su perfil, sus casos y sus límites; el conocimiento lo comparten. Un chat sin equipo lo contesta el principal, y en cada chat se ve quién contesta.
+69. **Los varios asistentes son una etapa propia, la E18b,** después de la E18.
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase
@@ -513,4 +532,4 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 - **Paso 8 de la revalidación con el usuario:** si la E19 lee también los documentos que mandan los clientes (49 y 51).
 
-Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 64.
+Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 69.

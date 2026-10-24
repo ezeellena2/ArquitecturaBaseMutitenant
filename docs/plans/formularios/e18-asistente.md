@@ -23,7 +23,7 @@
     - **Perfil:** nombre, presentación, tono, qué hace y qué no, qué hacer cuando no sabe y el mensaje fijo al derivar;
     - **Conocimiento:** la información del negocio que usa para redactar, una por organización. Se edita en su propia pestaña, con el mismo Guardar y con «Administrar WhatsApp» (decisión 46). Una sección vacía no se usa: nunca se presenta como un hecho lo que no está cargado;
     - **Casos:** por cada uno, cuándo (un texto), para quién (empleados, clientes o los dos, como los formularios, 50), el tipo de entrada (cualquiera, texto o audio; los documentos llegan con la E19), qué hacer, el orden y si está activo. Los formularios van en un bloque fijo, con su «Cuándo lo ofrece», y «Cualquier otra cosa» va al final y no se borra. Sin perfil, «Cualquier otra cosa» empieza en «No responder»;
-    - **Límites:** temas que no responde, lo que no puede prometer, el largo máximo de una respuesta, el tope de respuestas por conversación y por día, y las acciones permitidas. La plataforma fija un máximo para cada límite.
+    - **Límites, uno por bandeja** (65): temas que no responde, lo que no puede prometer, el largo máximo de una respuesta, el tope de respuestas por conversación y por día, el tope de ofrecimientos de formularios (66) y las acciones permitidas. Con los clientes, la organización puede ser más estricta, por ejemplo solo con textos exactos. La plataforma fija un máximo para cada límite.
   - **Seis acciones,** un menú cerrado en el código:
     1. mandar un formulario;
     2. responder con un texto exacto, escrito por la organización;
@@ -35,8 +35,9 @@
     Un caso nuevo es configuración; una acción nueva es código, con su herramienta y sus casos de evaluación.
   - **Probar** muestra qué caso elige, por qué y qué respondería, con lo guardado y sin mandar nada. Llama al modelo, así que cuenta en el tope de IA de la organización.
   - **Respuestas redactadas:** antes de planificar, una ADR de acá, equivalente a la 0021 de allá, fija los límites:
-    - **fuentes:** solo lo que cargó la organización, el historial de esa conversación y los datos del sistema que el canal le da, como la hora y la zona de la organización. Lo leído es un dato, nunca una instrucción;
-    - **forma y contenido:** corta, con el largo máximo y en el idioma de la conversación; sin enlaces, teléfonos, correos, precios ni compromisos que no estén cargados. Si no sabe, deriva;
+    - **fuentes** (67): para lo de la organización (precios, envíos, stock, horarios, garantías, plazos y políticas), solo lo que cargó en su conocimiento. Para lo general, que no compromete a la organización (cómo sacar una foto, qué es un CBU, cómo completar el formulario), puede ayudar con lo que sabe el modelo. Además, el historial de esa conversación y los datos del sistema que el canal le da, como la hora y la zona de la organización. Lo leído es un dato, nunca una instrucción;
+    - **forma y contenido:** corta, con el largo máximo y en el idioma de la conversación; sin enlaces, teléfonos, correos, precios ni compromisos que no estén cargados;
+    - **si es de la organización y no está cargado** (67): primero pregunta para entender, después dice que lo consulta con el equipo y deriva. Nunca contesta algo genérico en lugar del dato;
     - **control del servidor:** la respuesta llega como propuesta tipada, y WhatsApp la valida (largo, idioma, enlaces y datos de contacto) antes de encolarla. Si no pasa, no sale y deriva;
     - **trazabilidad:** «Por qué respondió esto» guarda el texto, el caso y lo que usó; los logs no llevan el contenido;
     - **cupos:** las respuestas tienen su tope por conversación y día, aparte de los 2 ofrecimientos de formularios.
@@ -48,10 +49,11 @@
     5. encola en la salida y guarda el porqué de cada acción;
     6. **derivar** manda el mensaje fijo, pasa a Atención manual y marca la conversación «Necesita una persona», en la cabecera, en la lista y con su filtro. La marca se quita cuando responde una persona;
     7. en Atención manual, la respuesta redactada se le ofrece al operador como borrador.
-  - **Ofrecer formularios:** hasta 2 por conversación y día, en la zona de la organización; solo los publicados, activos y con «Cuándo lo ofrece», que son para ese tipo de destinatario (50) y, a un empleado, que puede completar. El prellenado propone texto, números, fechas, sí/no y una opción ofrecida, nunca fotos, documentos ni «elegir varias».
+  - **Ofrecer formularios:** hasta el tope que elige la organización por conversación y día (2 por defecto, con un máximo de la plataforma; 66), en la zona de la organización; solo los publicados, activos y con «Cuándo lo ofrece», que son para ese tipo de destinatario (50) y, a un empleado, que puede completar. El prellenado propone texto, números, fechas, sí/no y una opción ofrecida, nunca fotos, documentos ni «elegir varias».
   - **Sugerencias entre formularios (s1–s4):** `formsuggestions.manage`, hasta 20 por formulario. Modo «La IA decide» (Assistant) o «Preguntar siempre» (Always, por condición y sin IA), con mapeos entre preguntas del mismo tipo; una elección solo se mapea entre preguntas del mismo catálogo. Tienen guardado e historial propios, y la respuesta conserva su origen y la cadena.
   - **Audios (H6):** se bajan como los archivos de la E14 y se transcriben por un puerto del núcleo (27). La transcripción la ve también el operador; sin ella, el audio queda para el operador.
   - **Armar una regla desde un texto** (63): en el editor de reglas de la E16, la persona escribe la regla en palabras. La IA la convierte en una regla normal (cuándo, si, hacer), y la persona la revisa, la corrige y la guarda con «Guardar reglas» y `formrules.manage`. Después corre siempre igual, sin IA. La IA solo propone: nunca guarda una regla. El costo entra en el tope de IA de la organización (ADR 0051): con el tope agotado, «Armar desde un texto» queda grisado, con el motivo en su tooltip, y la regla se arma a mano.
+  - **Preguntas sin respuesta** (67): lo que preguntaron sobre la organización y no estaba cargado queda en una lista agrupada por tema, sin nombres ni mensajes, con cantidad de preguntas y de personas, como «Formularios que faltan». Quien tiene «Administrar WhatsApp» la ve, completa el conocimiento desde ahí o descarta el tema. Así el asistente contesta más con el uso.
   - **Formularios que faltan (H7):** pedidos agrupados por tema, sin nombres ni mensajes. Quien diseña formularios lo crea o descarta el pedido.
   - **Catálogo propuesto (H4):** se pide desde el chat administrativo, solo con filtros. Queda inactivo hasta que lo apruebe una persona con `formcatalogs.manage`.
   - **Desde el primer día** (lo que allá costó arreglar):
@@ -74,7 +76,9 @@
     - `AS4` · El chat: el porqué, derivar y «Necesita una persona», el texto exacto, los botones, el tope del día y el borrador en Atención manual;
     - `AS5` · Límites y conocimiento: el conocimiento se edita ahí, sección por sección (46);
     - `AS6` · El circuito de punta a punta;
-    - `WA-Modo-Atencion` · El modo de atención (52): por bandeja, quién atiende los chats nuevos y cuándo vuelve un chat; en el chat, cambiar el modo y fijarlo.
+    - `WA-Modo-Atencion` · El modo de atención (52): por bandeja, quién atiende los chats nuevos y cuándo vuelve un chat; en el chat, cambiar el modo y fijarlo;
+    - `WA-Preguntas-Sin-Respuesta` · las preguntas sin respuesta por tema, con «Completar el conocimiento» y «Descartar» (67);
+    - en `AS5`, los límites por bandeja (65) y el tope de ofrecimientos (66).
   - **Diseño redibuja** `FRM-Editor-Asistente`, sin «Textos en» ni «Cambios sin guardar».
   - **Se quedan** los aprobados en el lienzo v133: `WA-Chats-Asistente`, `WA-Chats-Sugerencia`, `WA-Chats-Audio` (corregido en la v134), `FRM-Faltan`, `FRM-Respuesta-Cadena`, `M-WA-Conversacion-Asistente` y `M-FRM-Faltan`. `FRM-Catalogo-Propuesta` se redibuja con la E13, y `FRM-Editor-Sugerencias`, con la E16.
   - **Mandan sobre este resumen en:**
@@ -100,7 +104,7 @@
 
 ## Fuera de esta etapa
 
-- Varios agentes y su ruteo.
+- Varios asistentes y quién contesta cada chat: van en la E18b (68 y 69). La E18 guarda el asistente como «el agente principal», una fila, para que la E18b sume filas sin rehacer nada.
 - Herramientas que escriben (piden una ADR nueva).
 - Leer fotos y documentos (E19).
 - El borrador de un formulario armado por la IA, salvo «Armar formulario con la IA» de la E19.
