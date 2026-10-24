@@ -279,13 +279,13 @@ Son trece, en el orden de las decisiones 34, 54 y 69: E12, E12b, E13, E13b, E13c
 
 ### E19 · Documentos por WhatsApp (nueva en el bloque)
 
-- **Lee con IA** lo que mandan las cuentas vinculadas (foto, PDF, Word, Excel, ubicación y contacto) y propone el formulario prellenado. Siempre confirma una persona.
+- **Lee con IA** lo que mandan los empleados y los clientes (foto, PDF, Word, Excel, ubicación y contacto) y propone el formulario prellenado (70). Confirma una persona, salvo con «Cargar solo si es seguro» y sus tres señales (71).
 - **Pantallas:** la bandeja «Documentos recibidos» y «Armar formulario con la IA». El tablero por formulario pasó a la E15 (57).
 - **Validaciones fijas** como datos de referencia; lo descartado se borra a los 90 días; la lectura entra en el tope de la organización, con un tope por persona y por día (41).
 - **Resumen:** [formularios/e19-documentos.md](formularios/e19-documentos.md).
 - **Criterios:**
   - precargar un archivo en un Flow se prueba con Meta antes de planificar;
-  - la IA nunca carga sola, y lo leído es un dato, nunca una instrucción;
+  - la IA solo carga sola con las tres señales de la 71, nunca con la seguridad que declara el modelo; lo leído es un dato, nunca una instrucción;
   - las validaciones fijas corren en el servidor, sin IA, también al confirmar.
 
 ### Después del bloque
@@ -293,7 +293,6 @@ Son trece, en el orden de las decisiones 34, 54 y 69: E12, E12b, E13, E13b, E13c
 - **Integraciones:** un módulo `Integrations`, con conexiones y credenciales por organización. La API pública y el MCP necesitan una identidad por organización. Quedan abiertas las 13 decisiones de su estudio.
 - **Catálogos, fases 3 a 6:** la búsqueda en vivo, el asistente que arma catálogos y los orígenes externos.
 - **La conexión a la base de un cliente,** con una solución simple: un agente del lado del cliente o una réplica de solo lectura.
-- **La carga automática de documentos,** con datos medidos.
 - **Los tableros que cruzan formularios.**
 - **Cargar respuestas desde la web e importar desde Excel.** Las líneas pasaron a la E13d (54) y corregir una respuesta, a la E16 (58).
 - **Copiar formularios.**
@@ -488,6 +487,12 @@ Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 7, el asiste
 68. **Varios asistentes, uno por equipo:** cada equipo de la bandeja tiene su asistente, con su perfil, sus casos y sus límites; el conocimiento lo comparten. Un chat sin equipo lo contesta el principal, y en cada chat se ve quién contesta.
 69. **Los varios asistentes son una etapa propia, la E18b,** después de la E18.
 
+Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 8, los documentos):
+
+70. **También se leen los documentos que mandan los clientes,** con los formularios que son para clientes (50).
+71. **La carga sin confirmar entra al bloque,** en la E19: un interruptor «Cargar solo si es seguro» por formulario, que carga sin preguntar solo si el formulario quedó reconocido sin duda, las validaciones dan bien sin duplicado, y ese formulario tiene sus últimas 20 cargas confirmadas sin correcciones. Nunca se usa la seguridad que declara el modelo, y lo cargado se puede corregir (58).
+72. **El único formulario estándar de la primera versión** es «Comprobante de transferencia». Los demás los suma la plataforma después, como plantillas.
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase
@@ -530,6 +535,6 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 ## 7. Decisiones pendientes
 
-- **Paso 8 de la revalidación con el usuario:** si la E19 lee también los documentos que mandan los clientes (49 y 51).
+Ninguna.
 
-Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 69.
+Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 72.

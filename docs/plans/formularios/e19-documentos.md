@@ -7,7 +7,7 @@
 ## Qué se construye
 
 - **Back:**
-  - **Qué se lee:** lo que manda un empleado: un miembro activo, con teléfono verificado y `formrecords.create`, en la bandeja Internos. Lo que manda un cliente o un número desconocido queda en el chat para un operador, sin leerse. Con las decisiones 49 y 51, leer documentos de clientes se revalida con el usuario en el paso 8.
+  - **Qué se lee** (70): lo que manda un empleado (un miembro activo, con teléfono verificado y `formrecords.create`, en Internos) y lo que manda un cliente (cualquier contacto de Clientes, 49). A cada uno se le proponen solo los formularios que son para él (50). El tope por persona y por día cuenta también por contacto.
 
     | Lo que llega | Cómo se lee |
     | --- | --- |
@@ -27,7 +27,7 @@
     3. **extraer** los datos según las preguntas del formulario elegido, con su seguridad por dato;
     4. **validar sin IA:** las validaciones fijas, el cruce con los catálogos (por ejemplo, el CUIT como campo de un catálogo de la E13b) y los duplicados (el mismo archivo, o la misma operación, monto y fecha);
     5. **proponer** el formulario prellenado por WhatsApp, con el documento adjunto en su pregunta de archivo. Lo que no se pudo leer queda vacío, y lo dudoso, marcado;
-    6. **confirmar o corregir** lo hace la persona. Al confirmar se vuelven a revisar las validaciones fijas y los duplicados con lo corregido. **La IA nunca carga sola;**
+    6. **confirmar o corregir** lo hace la persona. Al confirmar se vuelven a revisar las validaciones fijas y los duplicados con lo corregido. La carga sin confirmar existe solo con «Cargar solo si es seguro» (71);
     7. **organizar:** queda como una respuesta más, con sus reglas, su aprobación y su PDF.
   - **La «Lectura de documentos» de un formulario,** en su borrador, que se sella al publicar:
     - «Cómo reconocerlo», qué pregunta recibe cada dato estándar, las validaciones fijas, el cruce con catálogos y la regla de duplicados;
@@ -43,6 +43,12 @@
     - búsqueda por los datos (monto con o sin puntos, CUIT u operación), también en lo que no se cargó, sobre jsonb con índice GIN;
     - revisar: corregir, cambiar el formulario reconocido (vuelve a leer), pasar al formulario y descartar con confirmación. La respuesta dice de qué documento salió y quién la revisó.
   - **«Armar formulario con la IA»:** sobre un documento «Sin clasificar», o desde el aviso «Llegaron N documentos parecidos» (con tres o más). La IA propone nombre, prefijo, texto del botón, «Cómo reconocerlo» y una pregunta por dato, con su tipo; si se parece a un estándar de la biblioteca, lo sugiere antes. Se crea un borrador con la lectura prendida; una persona lo revisa y lo publica. Si falla, no queda nada a medias.
+  - **«Cargar solo si es seguro»** (71): un interruptor por formulario, en su «Lectura de documentos». Con él prendido, carga sin preguntar solo si se cumplen las tres señales:
+    1. el formulario quedó reconocido sin duda;
+    2. las validaciones fijas de los datos elegidos dan bien, y no es un duplicado;
+    3. ese formulario tiene sus últimas 20 cargas confirmadas sin correcciones en esos datos.
+
+    **Nunca se usa la seguridad que declara el modelo.** Si falta una señal, se propone y confirma una persona, como siempre. A la persona le llega «Cargué tu transferencia de $150.000 (REC-000123). Si algo está mal, avisá», y en la bandeja queda «Cargada automáticamente». Si avisa un error, un operador corrige la respuesta (58) mientras no esté decidida. La respuesta sigue sus reglas, su aprobación y su PDF;
   - **Cómo mejora con el uso:** cada corrección queda registrada (el dato propuesto, el confirmado y quién lo corrigió) y se suma como ejemplo a «Cómo reconocerlo». Se mide la precisión por formulario y por dato. No se entrena ningún modelo.
   - **Lo que va al proveedor de IA:** solo el documento preparado y las preguntas del formulario candidato. Se registra qué se mandó (hash y tamaño), sin el contenido. Lo leído es un dato, nunca una instrucción.
   - **Costos:** la lectura entra en el tope mensual de IA de la organización (ADR 0051), con un tope por persona y por día (41). Al llegar a un tope, el documento queda en la bandeja sin leerse.
@@ -55,7 +61,8 @@
   - `DOC2` · Los tres casos en el celular, y los otros formatos;
   - `DOC3` · El formulario prellenado: lo dudoso con «Revisá», lo no leído vacío y el documento adjunto;
   - `DOC4` · Los casos difíciles: foto movida, PDF con contraseña, repetido, CBU mal leído, formulario que no se le puede mandar, formatos viejos y número sin cuenta vinculada;
-  - `DOC5-A` · La bandeja, una planilla con panel;
+  - `DOC5-A` · La bandeja, una planilla con panel, con el estado «Cargada automáticamente» (71);
+  - en la «Lectura de documentos» del editor (`DOC1`, de la E17), el interruptor «Cargar solo si es seguro», con cuántas cargas sin correcciones lleva el formulario (71);
   - `DOC6` · «Armar formulario con la IA»;
 
   `DOC1` (la biblioteca y la lectura) va con la E17.
@@ -74,7 +81,6 @@
 
 ## Fuera de esta etapa
 
-- La carga automática («Cargar solo si es seguro»): después, con datos medidos.
 - Varias fotos de un mismo documento, o varios documentos en un mensaje.
 - Leer lo que manda un número desconocido, y B2C.
 - Los tableros que cruzan formularios o suman datos externos.
