@@ -26,7 +26,7 @@ El 23/10 el usuario fijó reglas nuevas de interfaz y de idioma para los dos pro
 **Qué significa acá:**
 1. **Antes de redibujar, las reglas del 23/10 entran en nuestras guías.** Hoy tenemos dos frases que inducen el mismo error (§2.1).
 2. **Hay más etapas.** Los catálogos crecieron mucho, y se suman el ciclo de vida, la pantalla «Formularios», los Casos y los Documentos. Propongo pasar de 6 etapas a 11, más chicas, cada una con su review (§4).
-3. **Hay mucho para dibujar:** 24 de los 60 tableros vigentes de formularios se redibujan, y hay unos 35 nuevos (§5).
+3. **Hay mucho para dibujar:** 24 de los 60 tableros vigentes de formularios se redibujan, y hay 34 nuevos (§5).
 4. **La puerta y las specs suman las lecciones** de los 142 problemas (§2.5 y §3).
 
 ## 2. Antes de cualquier etapa
@@ -63,12 +63,16 @@ Valen para los dos proyectos (capítulo 04 del traspaso), así que se adoptan. �
 
 ### 2.2 Idioma (decisión B2)
 
-La regla del 23/10:
-- lo que se crea se escribe en el idioma del menú, que es su original y el único obligatorio;
-- se traduce cambiando el menú: no hay selector «Textos en» ni pares «Nombre» / «Nombre en inglés»;
-- un campo sin traducción muestra el original como referencia, sin copiarlo;
+La regla del 23/10, que el usuario confirmó acá el 24/10:
+- lo que se crea se escribe en el idioma elegido en el menú del encabezado. Ese es su idioma original y el único obligatorio;
+- no es obligatorio crearlo en los dos idiomas, y no se muestra cómo queda en los dos. No hay:
+  - selector «Textos en»;
+  - pares «Nombre» / «Nombre en inglés»;
+  - vista previa doble;
+  - avisos de lo que falta traducir;
+- con el menú en otro idioma se ve lo escrito en ese idioma. Traducir es opcional, y se hace cambiando el menú;
 - abarca formularios, catálogos, opciones, campos y datos de las personas;
-- para mandar y publicar sigue la regla de hoy: cultura completa, sin mezclar idiomas, y el original como respaldo.
+- por WhatsApp, cada persona lo recibe en su idioma si existe y, si no, en el original, sin mezclar.
 
 **Choca con el tercer punto de nuestra decisión 17** («el idioma de las pantallas del sistema no cambia»): para traducir, la persona cambia el menú, y con él cambian las pantallas. Los otros dos puntos siguen.
 
@@ -134,7 +138,7 @@ Allá se pasó de Codex a un chat de Claude, el «Codificador». Acá ya program
 ### E12 · Formularios: crear, publicar, mandar y recibir
 - **Idioma del menú** (B2):
   - el original fijo ya está en la spec (2e2a9a68);
-  - cambian el editor y la publicación: no hay selector, y el texto sin traducir muestra el original como referencia.
+  - cambian el editor y la publicación: no hay selector ni vista previa en los dos idiomas, y publicar no pide la traducción.
 - **«Elegir varias»** (B1):
   - en WhatsApp es un `CheckboxGroup` de 1 a 20 opciones, con mínimo y máximo, en el perfil `flow-static-7.3-r9`;
   - la captura guarda una fila por opción, con su posición;
@@ -278,7 +282,7 @@ Los números son nombres, no orden, como con la 8b y con la 11 antes de la 9. Se
 
 | Orden | Etapa | Alcance | Depende de | Tableros (§5) |
 |---|---|---|---|---|
-| 1 | E12 | Formularios, con «elegir varias» y el idioma del menú | E10 | Redibujar 4; I3 |
+| 1 | E12 | Formularios, con «elegir varias» y el idioma del menú | E10 | Redibujar 4 |
 | 2 | E12b | Ciclo de vida | E12 | BA1-A a BA6 |
 | 3 | E13 | Catálogos base | E12 | Redibujar 5; CA1-A a CA6 |
 | 4 | E13b | Campos extra y qué viaja a WhatsApp | E13 | CE1, CE2 y CE3-B |
@@ -313,13 +317,12 @@ Si las fotos importan antes, la E14 puede ir después de la E12b: no depende de 
 - con A1, «Cambios sin guardar» sale de los 57 tableros del sistema;
 - con MF1, cambia el panel de todos los FRM de la compu, y FRM-Por-Aprobar y M-FRM-Por-Aprobar pasan al Archivo.
 
-### 5.2 Dibujar nuevos (unos 35)
+### 5.2 Dibujar nuevos (34)
 
-Son los elegidos allá, con nuestras piezas, adaptados a organizaciones y con las reglas de §2.1. El anexo D marca que varios violan esas reglas allá: I1, BA2, BA4, BA6, AS2, AS3, CA1-A, CA2, CA3, CE1, CE2 y CE3-B. Esos se dibujan corregidos.
+Son los elegidos allá, con nuestras piezas, adaptados a organizaciones y con las reglas de §2.1. El anexo D marca que varios violan esas reglas allá: BA2, BA4, BA6, AS2, AS3, CA1-A, CA2, CA3, CE1, CE2 y CE3-B. Esos se dibujan corregidos. Los de idioma de allá (I1 a I3) no se dibujan: con §2.2 no hace falta mostrar los dos idiomas.
 
 | Etapa | Tableros |
 |---|---|
-| E12 | I3 (los idiomas al publicar), sin selector |
 | E12b | BA1-A a BA6; BA5 es el circuito |
 | E13 | CA1-A a CA6; CA6 es el circuito |
 | E13b | CE1, CE2 y CE3-B |
@@ -372,13 +375,9 @@ Se pregunta solo dónde va cada cosa, cuándo, y lo que choca con decisiones nue
 - **Alternativa:** 6 etapas más grandes. La E13 junta E1 y E2, y el ciclo de vida y los Documentos quedan para después del bloque.
 - **Consecuencia:** las etapas chicas tienen cada una su review y su puerta. Eso es lo que allá faltó con E2, que juntó 39 problemas en una sola entrega.
 
-**B2. La decisión 17: el idioma.**
-- **Recomendado:**
-  - se escribe en el idioma del menú, sin selector;
-  - para traducir se cambia el menú, y la traducción es opcional;
-  - sale el tercer punto de la decisión 17.
-- **Alternativa:** se mantienen el selector «Textos en» y las pantallas fijas.
-- **Consecuencia:** se redibujan los 18 tableros de §2.2.
+**B2. La decisión 17: el idioma.** Lo confirmaste el 24/10 (§2.2): sale el tercer punto de la decisión 17 y se redibujan los 18 tableros. Queda una sola pregunta. Con el menú en inglés, ¿qué pasa con un formulario que se creó solo en español?
+- **Recomendado:** aparece igual, con sus textos en español, y quien quiera lo traduce ahí. Nadie de la organización pierde de vista un formulario.
+- **Alternativa:** no aparece, porque cada idioma tiene sus formularios. Un compañero con el menú en inglés no ve los que creaste en español.
 
 **B3. La decisión 20: un catálogo en otro idioma.**
 - **Recomendado:** se mantiene: solo sirven los catálogos con el mismo idioma original que el formulario. Así no se mezclan idiomas en un mismo envío, y con B2 lo natural es escribir todo en un idioma.
