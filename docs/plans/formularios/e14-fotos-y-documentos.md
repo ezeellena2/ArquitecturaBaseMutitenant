@@ -27,11 +27,15 @@
     - los documentos siempre se descargan, con un nombre que lleva la extensión del tipo verificado;
     - las lecturas cuentan en las cuotas generales de [cuotas](../../rules/cuotas.md) (identidad y organización). Un perfil propio sería un cambio de esa ficha, con su test, nunca una cuota del módulo.
   - **Limpieza** de archivos huérfanos cada hora.
+  - **Los archivos del chat** (decisión 48), en todos los chats de atención de la E11, de una organización y de Plataforma:
+    - **recibir:** las fotos, audios, documentos y videos que llegan se bajan con el token de la organización, se verifican igual que los de un formulario y se ven y se descargan desde el chat. Es lo que la ADR 0038 (D7) dejó para esta etapa;
+    - **mandar:** el operador adjunta fotos, documentos, audios o videos desde el compositor, con los topes de Meta para cada tipo. El archivo se guarda en `IFileStore`, se sube a Meta y sale por la cola de salida. Solo dentro de las 24 horas, como el texto libre; fuera, siguen las plantillas;
+    - pide el mismo permiso que responder en esa bandeja, y el archivo sigue la retención del chat (D4 de la E11).
 - **Front:**
   - en el editor, los dos tipos y el contador «Archivos: hasta N de 10»;
   - en la tarjeta del chat, «bajando» o «reintentando», guardada (con miniaturas y «+N») o rechazada (con «Mandar de nuevo»);
   - el visor común: anterior, siguiente, tira de miniaturas y Descargar.
-- **Tableros:** F1 a F5 de ArquitecturaBase, **aprobados en el lienzo v130** (2026-10-18, front `e074a7d7`), con la disposición copiada (decisión 18).
+- **Tableros:** F1 a F5 de ArquitecturaBase, **aprobados en el lienzo v130** (2026-10-18, front `e074a7d7`), con la disposición copiada (decisión 18). **Diseño dibuja** `WA-Chats-Adjuntos` y su teléfono, para los archivos del chat (48): adjuntar desde el compositor, subiendo, enviado, no se pudo, fuera de las 24 horas (adjuntar grisado, con el motivo en su tooltip), y un archivo recibido con su vista y su descarga.
   - **`FRM-Editor` y `M-FRM-Editor`:**
     - los estados «Pregunta de foto», «Pregunta de documento» y «Sin almacenamiento», con Foto y Documento apagados y su motivo;
     - arriba, «Archivos: hasta N de 10».
@@ -70,7 +74,8 @@
 La puerta de la etapa, más una **prueba real con Meta y el almacenamiento de la E10**:
 1. una respuesta con cámara, un PDF y una pregunta de archivo opcional vacía (mirar qué manda Meta: en ArquitecturaBase la omitía);
 2. las descargas íntegras, con el tamaño y el SHA-256 iguales a los guardados;
-3. un rechazo y el reenvío manual, sin saltos de numeración.
+3. un rechazo y el reenvío manual, sin saltos de numeración;
+4. en un chat de Clientes, ver y bajar una foto que mandó el contacto, y mandarle un PDF y una foto desde el compositor, abriéndolos en el celular.
 
 ## Requisitos previos
 
@@ -85,7 +90,7 @@ La puerta de la etapa, más una **prueba real con Meta y el almacenamiento de la
 
 ## En el multitenant
 
-- **Datos de la organización:** `FormRecordFiles` (respuesta, pregunta, orden, clave, nombre, tipo, tamaño, SHA-256 y miniatura) es `ITenantOwned`, con RLS.
+- **Datos de la organización:** `FormRecordFiles` (respuesta, pregunta, orden, clave, nombre, tipo, tamaño, SHA-256 y miniatura) es `ITenantOwned`, con RLS. Los archivos del chat van en una tabla del módulo WhatsApp, también `ITenantOwned`, y en Plataforma, en su esquema global.
 - **Almacenamiento (E10):** los archivos van en `IFileStore`, **sin prefijo ni contenedor por organización**, como lo decidió la E10 (`5624d4e5`).
   - Las claves siguen opacas en un solo contenedor privado.
   - El aislamiento lo dan la metadata del módulo (`FormRecordFiles`, con RLS) y la Api.

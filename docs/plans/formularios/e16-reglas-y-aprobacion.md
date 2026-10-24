@@ -12,7 +12,7 @@
   - **Reglas** «Cuando llega una respuesta»:
     - cada guardado crea una revisión inmutable y mueve el puntero activo, con su versión y 409. Guardar no crea versión ni republica, y guardar una lista vacía deshabilita las reglas;
     - **cada regla:** un evento (Recibida, Aprobada o Rechazada), hasta 10 condiciones unidas con «y» (la gramática de la E15, con «alguna de» para «elegir varias») y hasta 10 acciones en orden;
-    - **las acciones:** pedir aprobación a un rol, armar el PDF, mandar un mensaje a quien la cargó (con el PDF o sin él) y avisar a las personas de un rol;
+    - **las acciones:** pedir aprobación a un rol, armar el PDF, mandar un mensaje a quien la cargó (con el PDF o sin él), avisar a las personas de un rol y **mandar el PDF a un cliente de la organización** (decisión 47);
     - los textos usan `{número}` y `{pregunta}`, y son un solo texto, como los escribe la persona (35);
     - una condición sobre una pregunta que no existía en esa versión cuenta como «sin respuesta».
   - **Motor único de acciones:**
@@ -40,6 +40,7 @@
     - Forms los pide por un **puerto neutral del núcleo**, como el envío de la E12, y nunca referencia WhatsApp (lo controla `ModuleIsolationTests`). WhatsApp los encola en su misma cola de salida, marcados como «acción de formulario» y sin duplicados por ejecución;
     - la ventana de 24 horas se mira al aceptar y al despachar;
     - un documento se sube a Meta antes de mandarlo;
+    - **el PDF a un cliente** (47): el número sale del campo «teléfono» (E13b) de la opción elegida en una pregunta de catálogo, que la regla nombra. El mensaje cae en el chat de ese contacto, en la bandeja Clientes. Si el contacto escribió en las últimas 24 horas, va como documento; si no, con la plantilla aprobada de la organización (E11) que elige la regla. Sin número, sin plantilla aprobada o con la plantilla rechazada, queda «No se pudo», a la vista;
     - un aviso «Sin confirmar» lo revisa una persona: «salió» o «no salió».
 - **Front:**
   - la sección «Cuando llega una respuesta» en el editor, con «Guardar reglas» y su historial;
@@ -100,7 +101,7 @@ La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba r
 - **Idioma** (35): reglas, mensajes y diseño son un solo texto, como los escribe la persona. Los textos del sistema que recibe una persona van en el idioma de su cuenta (42).
 - **PDF:** se reusa PDFsharp-MigraDoc, que ya está en el asistente; no se suma SkiaSharp.
 - **Quién aprueba:** cualquiera de la organización con el rol de la regla y `formapprovals.decide`, salvo quien cargó la respuesta (decisión 25).
-- **Avisos fuera de las 24 horas:** quedan «No se pudo», a la vista, y el PDF queda guardado. El operador puede mandar una plantilla desde el chat con lo que ya trae la E11. El envío automático con plantilla queda para después (decisión 26).
+- **Avisos fuera de las 24 horas:** a quien cargó y a un rol, quedan «No se pudo», a la vista, y el PDF queda guardado. El operador puede mandar una plantilla desde el chat con lo que ya trae la E11 (decisión 26). La acción «Mandar el PDF a un cliente» sí usa una plantilla de la organización fuera de las 24 horas (47). Antes de planificar se verifica con Meta que una plantilla de la E11 acepte un documento en el encabezado.
 - **Botones:** según la decisión 43.
 
 ## En el multitenant

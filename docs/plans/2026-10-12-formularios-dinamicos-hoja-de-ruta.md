@@ -185,6 +185,7 @@ Son once, en el orden de la decisión 34: E12, E12b, E13, E13b, E13c, E14, E15, 
 - **Preguntas «Foto» y «Documento»,** con mínimo y máximo, una por pantalla del Flow.
 - **Al responder:** el worker baja cada archivo con el token de la organización, verifica hash, tamaño y tipo real, y lo guarda con `IFileStore`. Completa o nada.
 - **Ver:** visor y descarga solo por la Api, con `formrecords.read`. El antivirus está en la lista de lanzamiento.
+- **Archivos en el chat** (48): el operador ve y baja lo que le mandan, y manda fotos y archivos desde el compositor, dentro de las 24 horas.
 - **Resumen:** [formularios/e14-fotos-y-documentos.md](formularios/e14-fotos-y-documentos.md).
 - **Criterios:**
   - las dimensiones de una foto se rechazan por el encabezado, antes de decodificar; el tipo sale del contenido, nunca de la extensión;
@@ -212,6 +213,7 @@ Son once, en el orden de la decisión 34: E12, E12b, E13, E13b, E13c, E14, E15, 
 - **Aprobación de un nivel:** nadie aprueba lo que cargó. «Por aprobar» va en MF1 y en «Para resolver», con la misma fuente (ADR 0040).
 - **PDF** como copia fija, con los campos «Dato».
 - **Avisos por WhatsApp** con el número de la organización. Fuera de las 24 horas, «No se pudo» (decisión 26).
+- **Mandar el PDF a un cliente** de la organización (47), con su teléfono del catálogo; fuera de las 24 horas, con una plantilla de la organización.
 - **Resumen:** [formularios/e16-reglas-y-aprobacion.md](formularios/e16-reglas-y-aprobacion.md).
 - **Criterios:**
   - la configuración que usa un efecto se valida al reservar (un rol borrado colgaba una aprobación);
@@ -334,7 +336,7 @@ Elegidas por el usuario el 2026-10-17, entre las que quedaron al alinear el bloq
 23. **Cuánto se guardan las respuestas, sus archivos y sus PDF:** sin plazo mientras exista la organización. Se borran con la baja de la organización, y lo personal de quien da de baja su cuenta, con el participante de la baja. Se revisa con el primer cliente.
 24. **La empresa en la planilla:** un filtro «Empresa ▾» y una columna «Empresas» que se puede ocultar desde «Columnas».
 25. **Quién aprueba:** cualquiera de la organización con el rol de la regla y `formapprovals.decide`, salvo quien cargó la respuesta.
-26. **Avisos por WhatsApp fuera de las 24 horas:** quedan «No se pudo», a la vista, y el PDF queda guardado, como en ArquitecturaBase. El operador puede mandar una plantilla desde el chat con lo que ya trae la E11, y el envío automático con plantilla queda para después.
+26. **Avisos por WhatsApp fuera de las 24 horas:** quedan «No se pudo», a la vista, y el PDF queda guardado, como en ArquitecturaBase. La 47 la cambia para el PDF a un cliente. El operador puede mandar una plantilla desde el chat con lo que ya trae la E11, y el envío automático con plantilla queda para después.
     - El usuario había elegido la A (plantillas de Meta), pero pedía un mecanismo que el proyecto no tiene: plantillas del sistema en la WABA de cada organización, con su alta y aprobación por WABA y las variables armadas solas.
     - `docs/operations/whatsapp-plantillas.md` cubre solo las del número de la plataforma, y la E11 manda solo una plantilla que elige una persona en el chat.
     - Por eso, la Guía la pasó a la B el 2026-10-17, por la condición de abajo.
@@ -402,10 +404,12 @@ Elegidas por el usuario el 2026-10-24, con la [evaluación del traspaso 2](2026-
     - la única cuenta en un botón es «Reenviar en 30 s», al pedir un código.
 44. **Ver antes de programar:** el lienzo navegable, con un recorrido guiado por etapa, sin maqueta viva.
 
-Elegidas por el usuario el 2026-10-24, al actualizar las specs (las recomendadas):
+Elegidas por el usuario el 2026-10-24, al actualizar las specs:
 
 45. **El nombre de una categoría de la biblioteca** (E17) es un solo texto, como el resto de la biblioteca. Reemplaza el «es/en» de la 15.
 46. **El conocimiento del asistente** (E18) es una pestaña de la pantalla del asistente: la información del negocio de cada organización, que se edita ahí, con el mismo Guardar y con «Administrar WhatsApp». No suma pantalla ni permiso.
+47. **Mandar el PDF a un cliente** (E16): una acción más de las reglas, que le manda el PDF a un cliente de la organización (un contacto que no es empleado), con el teléfono de la opción elegida en una pregunta de catálogo (campo «teléfono» de la E13b). Dentro de las 24 horas va como documento; fuera, con una plantilla aprobada de la organización (E11). Para esta acción cambia la 26, porque la E11 ya trae las plantillas de cada organización.
+48. **Archivos en el chat** (E14): en todos los chats de atención, el operador ve y baja lo que le mandan (fotos, audios, documentos y videos) y puede mandar archivos desde el compositor, dentro de las 24 horas.
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 

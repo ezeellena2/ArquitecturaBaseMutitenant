@@ -19,9 +19,9 @@ Las etapas van en el orden de la decisión 34. Los tableros son los de la §5 de
 | 3 | E13 · Catálogos base | [e13-catalogos.md](e13-catalogos.md) | Aprobados en el lienzo v129 y v130. Se redibujan 5, y por dibujar `CA1-A` a `CA6` |
 | 4 | E13b · Campos extra y qué viaja a WhatsApp | [e13b-campos-extra.md](e13b-campos-extra.md) | Por dibujar: `CE1`, `CE2` y `CE3-B` |
 | 5 | E13c · Datos de las personas y filtros por destinatario | [e13c-datos-de-las-personas.md](e13c-datos-de-las-personas.md) | Por dibujar: `CE4-A` y el diálogo para definir un dato |
-| 6 | E14 · Fotos y documentos | [e14-fotos-y-documentos.md](e14-fotos-y-documentos.md) | Aprobados en el lienzo v130, sin cambios |
+| 6 | E14 · Fotos y documentos | [e14-fotos-y-documentos.md](e14-fotos-y-documentos.md) | Aprobados en el lienzo v130. Por dibujar `WA-Chats-Adjuntos`, para los archivos del chat (48) |
 | 7 | E15 · «Formularios», planilla, detalle y Excel | [e15-planilla.md](e15-planilla.md) | Aprobados en el lienzo v131. Por dibujar `MF1`, `DC0`, `CE5` y `CE6`, y se ajusta `FRM-Respuesta` |
-| 8 | E16 · Reglas, aprobación, PDF y avisos | [e16-reglas-y-aprobacion.md](e16-reglas-y-aprobacion.md) | Aprobados en el lienzo v132. Se redibujan 7 |
+| 8 | E16 · Reglas, aprobación, PDF y avisos | [e16-reglas-y-aprobacion.md](e16-reglas-y-aprobacion.md) | Aprobados en el lienzo v132. Se redibujan 7, con la acción «Mandar el PDF a un cliente» (47) |
 | 9 | E17 · Biblioteca de plantillas y formularios estándar | [e17-biblioteca.md](e17-biblioteca.md) | Aprobados en el lienzo v126, v130 y v134. Se redibujan 7, y por dibujar `DOC1` |
 | 10 | E18 · El asistente, con Casos | [e18-asistente.md](e18-asistente.md) | Aprobados en el lienzo v133. Se redibuja `FRM-Editor-Asistente`, y por dibujar `AS1-A` a `AS6` |
 | 11 | E19 · Documentos por WhatsApp | [e19-documentos.md](e19-documentos.md) | Por dibujar: `DOC2` a `DOC7-A` |

@@ -25,7 +25,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 13 · Catálogos base | Pendiente. Spec lista; se redibujan 5 tableros y hay nuevos por dibujar | [Spec](formularios/e13-catalogos.md) |
 | 13b · Campos extra | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/e13b-campos-extra.md) |
 | 13c · Datos de las personas | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/e13c-datos-de-las-personas.md) |
-| 14 · Fotos y documentos | Pendiente. Resumen listo, con los tableros aprobados en el lienzo v130 | [Resumen](formularios/e14-fotos-y-documentos.md) |
+| 14 · Fotos y documentos | Pendiente. Resumen listo, con los archivos del chat; un tablero por dibujar | [Resumen](formularios/e14-fotos-y-documentos.md) |
 | 15 · «Formularios», planilla y Excel | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/e15-planilla.md) |
 | 16 · Reglas, aprobación y PDF | Pendiente. Resumen listo; se redibujan 7 tableros | [Resumen](formularios/e16-reglas-y-aprobacion.md) |
 | 17 · Biblioteca de plantillas | Pendiente. Spec lista; se redibujan 7 tableros y hay uno nuevo por dibujar | [Spec](formularios/e17-biblioteca.md) |

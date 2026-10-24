@@ -10,7 +10,7 @@
   - **Campos por opción,** solo en los catálogos a mano:
     - hasta 20 por catálogo, contando los inactivos (42), en `FieldsJson` del catálogo, con su versión y el 409;
     - cada campo tiene identidad estable, clave en minúsculas (fija después de guardar), nombre (un solo texto, 35), tipo, reglas, papel, posición y estado;
-    - **tipos:** texto, entero, decimal, fecha, sí/no y «elegir de otro catálogo», que toma los valores de otro catálogo a mano activo de la misma organización;
+    - **tipos:** texto, entero, decimal, fecha, sí/no, teléfono y «elegir de otro catálogo», que toma los valores de otro catálogo a mano activo de la misma organización. El teléfono se guarda y se valida según la ficha de [teléfonos](../../rules/telefonos.md), con el país de la organización; lo usa la acción «Mandar el PDF a un cliente» de la E16 (decisión 47);
     - **reglas:** obligatorio, único, mínimo, máximo y, en un texto, el largo. Obligatorio y único se comprueban sobre las opciones activas;
     - **papel:** «Dato» (viaja con la respuesta y se ve en la planilla, el Excel y el PDF) o «Filtro» (lo usan los filtros de la E13c).
   - **El ciclo de un campo:**
