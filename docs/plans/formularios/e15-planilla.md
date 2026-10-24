@@ -22,7 +22,8 @@
     - una columna por pregunta, unidas por `FieldId` entre versiones: primero el orden de la versión activa y después las retiradas;
     - «—» si la pregunta no existía en esa versión, y «Sin respuesta» si quedó vacía; cero y `false` se distinguen;
     - **las subcolumnas de los campos sellados de catálogo** (E13b): las de papel «Dato» se ven, y las de «Filtro» se prenden en «Columnas». Son de solo lectura: no se ordenan, ni filtran, ni cuentan en las facetas;
-    - **«elegir varias»** muestra las opciones en el orden en que se eligieron, separadas por coma, y su columna no se ordena.
+    - **«elegir varias»** muestra las opciones en el orden en que se eligieron, separadas por coma, y su columna no se ordena;
+    - **las líneas y los cálculos de la E13d:** la columna de un grupo de líneas dice cuántos renglones tiene, y el detalle los muestra en una tabla; un cálculo es una columna más, que se filtra como un número.
   - **Filtros:**
     - condiciones unidas con «y», con la gramática de la E13 por tipo: texto `contains`/`equals`; número y fecha `equals`/`gte`/`lte`; elegir una y sí/no `in`; **elegir varias `anyOf` («alguna de»)**; y en todos, `answered`/`unanswered`/`notAsked`;
     - `unanswered` incluye la opcional vacía y la pregunta que no existía en esa versión; `notAsked` distingue la segunda. La misma regla en memoria y en SQL;
@@ -35,7 +36,8 @@
     - hasta 10.000 respuestas: una consulta de ids ordenados e hidratación en lotes de 100, con un presupuesto de 30 s y una exportación a la vez por persona, con un candado de PostgreSQL como los `I<X>Lock` (`AdvisoryLockExtensions`), nunca uno por proceso;
     - números, fechas y sí/no van como tipos de Excel; de los archivos, la cantidad y los nombres;
     - **«elegir varias»** va en una celda, unido con «; ». En un catálogo tipado, se suma la columna «pregunta · valor», con los valores canónicos;
-    - los campos sellados: todos, ninguno o los elegidos.
+    - los campos sellados: todos, ninguno o los elegidos;
+    - una hoja «Líneas», con un renglón por línea y el número de la respuesta (E13d).
   - **El detalle:**
     - **la vista rápida (FRM-Respuesta, D2 allá),** al costado de la planilla: los datos de la respuesta con las preguntas de su versión, su origen y su historial;
     - **la pantalla completa (DC0, con el ajuste de DC1):** en `/org/formularios/{formId}/respuestas/{recordId}/completa`, con las secciones «Respuesta» y «Actividad», a todo el ancho y plegables. Arriba, el número, el estado, ↑ ↓ en el orden de la planilla, «Abrir conversación» y «Descargar ▾». La E16 suma aprobar, rechazar y el PDF;

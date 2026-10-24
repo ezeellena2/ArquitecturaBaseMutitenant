@@ -11,7 +11,7 @@
 - **Back:**
   - **Reglas** «Cuando llega una respuesta»:
     - cada guardado crea una revisión inmutable y mueve el puntero activo, con su versión y 409. Guardar no crea versión ni republica, y guardar una lista vacía deshabilita las reglas;
-    - **cada regla:** un evento (Recibida, Aprobada o Rechazada), hasta 10 condiciones unidas con «y» (la gramática de la E15, con «alguna de» para «elegir varias») y hasta 10 acciones en orden;
+    - **cada regla:** un evento (Recibida, Aprobada o Rechazada), hasta 10 condiciones unidas con «y» (la gramática de la E15, con «alguna de» para «elegir varias» y los cálculos de la E13d) y hasta 10 acciones en orden;
     - **las acciones:** pedir aprobación a un rol, armar el PDF, mandar un mensaje a quien la cargó (con el PDF o sin él), avisar a las personas de un rol y **mandar el PDF a un cliente de la organización** (decisión 47);
     - los textos usan `{número}` y `{pregunta}`, y son un solo texto, como los escribe la persona (35);
     - una condición sobre una pregunta que no existía en esa versión cuenta como «sin respuesta».

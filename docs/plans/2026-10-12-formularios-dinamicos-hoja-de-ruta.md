@@ -121,7 +121,7 @@ Valen todas las de [AGENTS.md](../../AGENTS.md) y las [fichas](../rules/README.m
 
 ## 3. Etapas
 
-Son once, en el orden de la decisión 34: E12, E12b, E13, E13b, E13c, E14, E15, E16, E17, E18 y E19. Los números son nombres, no orden. Entre paréntesis va la etapa de ArquitecturaBase que sirve de referencia. Cada etapa tiene su spec o su resumen en [`formularios/`](formularios/README.md), y sus tableros se dibujan en el lienzo antes de programar (decisiones 18 y 44).
+Son doce, en el orden de las decisiones 34 y 54: E12, E12b, E13, E13b, E13c, E13d, E14, E15, E16, E17, E18 y E19. Los números son nombres, no orden. Entre paréntesis va la etapa de ArquitecturaBase que sirve de referencia. Cada etapa tiene su spec o su resumen en [`formularios/`](formularios/README.md), y sus tableros se dibujan en el lienzo antes de programar (decisiones 18 y 44).
 
 **Criterios.** En todas las etapas rige la lista de control de la skill `/puerta`: doce puntos que salen de los 142 problemas de los reviews de ArquitecturaBase ([§4](#4-lo-que-aprendimos-en-arquitecturabase)). Cada etapa suma los suyos. El plan de la etapa los toma como lista de control, y cada punto que aplica lleva su test.
 
@@ -179,6 +179,18 @@ Son once, en el orden de la decisión 34: E12, E12b, E13, E13b, E13c, E14, E15, 
   - nunca se retira el filtro ni se manda la lista entera;
   - nada nombra opciones que la persona no puede leer, tampoco la vista previa;
   - cada exclusión o lock lleva un test con dos actores a la vez.
+
+### E13d · Condiciones, cálculos y líneas (nueva)
+
+- **Preguntas condicionales:** «Mostrar si» otra respuesta cumple una condición. El servidor las vuelve a evaluar al capturar.
+- **Cálculos:** una pregunta «Cálculo» con las cuatro operaciones sobre números de la respuesta, campos del catálogo y la suma de una columna de líneas. Se calcula al llegar la respuesta (54).
+- **Líneas:** un grupo de renglones con sus columnas, con un tope de 1 a 10 (54).
+- **Resumen:** [formularios/e13d-condiciones-calculos-y-lineas.md](formularios/e13d-condiciones-calculos-y-lineas.md).
+- **Criterios:**
+  - antes de planificar, se prueban con Meta el componente `If` y los renglones, en un celular;
+  - el servidor nunca confía en lo que llega: vuelve a evaluar condiciones y cálculos;
+  - un cálculo que no se puede hacer queda «Sin respuesta», nunca rompe la captura;
+  - los montos van en `decimal`, con moneda y redondeo `AwayFromZero`.
 
 ### E14 · Fotos y documentos (AB 2B)
 
@@ -420,7 +432,11 @@ Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 1, quién pa
     - y cuándo vuelve un chat al modo configurado después de que lo tomó una persona: cuando pasa un tiempo sin mensajes (que elige la organización), cuando la persona lo marca «Resuelto», o nunca;
     - cada chat se cambia a mano en cualquier momento, en los dos sentidos, y se puede fijar para que no vuelva solo;
     - el bot del menú de la E11 aparece solo en los chats de Clientes que están en atención manual.
-53. **Las preguntas condicionales y los cálculos van dentro del bloque.** Dónde van, y si se suman las líneas (un pedido con varios productos), se decide en el paso 2 de la revalidación.
+53. **Las preguntas condicionales y los cálculos van dentro del bloque.**
+
+Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 2, armar y mandar un formulario):
+
+54. **Condiciones, cálculos y líneas son una etapa propia, la E13d,** después de la E13c, porque un cálculo usa los campos de los catálogos. Los cálculos se hacen al llegar la respuesta: quien completa no ve el total en WhatsApp antes de enviar. Las líneas (un pedido con varios productos) llevan un tope de renglones, que se prueba antes con Meta.
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
@@ -464,7 +480,6 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 ## 7. Decisiones pendientes
 
-- **Paso 2 de la revalidación con el usuario:** dónde van las preguntas condicionales y los cálculos (53), y si se suman las líneas.
 - **Paso 8 de la revalidación con el usuario:** si la E19 lee también los documentos que mandan los clientes (49 y 51).
 
-Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 53.
+Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 54.

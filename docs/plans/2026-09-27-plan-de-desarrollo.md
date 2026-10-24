@@ -1,6 +1,6 @@
 # Hoja de ruta
 
-Orden vigente: **8 → 8b → 11 → 9 → 10 → 12 → 12b → 13 → 13b → 13c → 14 → 15 → 16 → 17 → 18 → 19**. [AGENTS.md](../../AGENTS.md) define el modo rápido:
+Orden vigente: **8 → 8b → 11 → 9 → 10 → 12 → 12b → 13 → 13b → 13c → 13d → 14 → 15 → 16 → 17 → 18 → 19**. [AGENTS.md](../../AGENTS.md) define el modo rápido:
 contrato primero, programación por dueños y una sola puerta. Tras un arreglo se verifica sólo lo afectado.
 La tabla indica el estado; las reglas y conducta viven en fichas, ADR y features.
 El historial se recupera con git show historial-docs:<ruta>, sin cargar planes cerrados. Los planes y la revisión retirados el 2026-10-13 (E8, E8b, correctivos y limpieza) se encuentran con git log --diff-filter=D -- <ruta> y se leen con git show <commit>^:<ruta>.
@@ -25,6 +25,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 13 · Catálogos base | Pendiente. Spec lista; se redibujan 5 tableros y hay nuevos por dibujar | [Spec](formularios/e13-catalogos.md) |
 | 13b · Campos extra | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/e13b-campos-extra.md) |
 | 13c · Datos de las personas | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/e13c-datos-de-las-personas.md) |
+| 13d · Condiciones, cálculos y líneas | Pendiente. Resumen listo; tableros por dibujar, y antes de planificar, la prueba con Meta | [Resumen](formularios/e13d-condiciones-calculos-y-lineas.md) |
 | 14 · Fotos y documentos | Pendiente. Resumen listo, con los archivos del chat; un tablero por dibujar | [Resumen](formularios/e14-fotos-y-documentos.md) |
 | 15 · «Formularios», planilla y Excel | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/e15-planilla.md) |
 | 16 · Reglas, aprobación y PDF | Pendiente. Resumen listo; se redibujan 7 tableros | [Resumen](formularios/e16-reglas-y-aprobacion.md) |
@@ -85,7 +86,7 @@ La plataforma y cada organización atienden con el mismo módulo: alta de númer
 ## Etapas 12 a 19: formularios por WhatsApp
 
 Una organización arma formularios, los manda por WhatsApp a sus empleados y ve las respuestas numeradas en una planilla.
-- **Etapas y fuente:** son once, en el orden de la decisión 34, cada una con su sección y las decisiones de producto tomadas en la [hoja de ruta](2026-10-12-formularios-dinamicos-hoja-de-ruta.md). El alcance de cada una sale de la [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md).
+- **Etapas y fuente:** son doce, en el orden de las decisiones 34 y 54, cada una con su sección y las decisiones de producto tomadas en la [hoja de ruta](2026-10-12-formularios-dinamicos-hoja-de-ruta.md). El alcance de cada una sale de la [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md).
 - **Requisitos:** la E11 es requisito duro, porque sin número de la organización no hay formularios. Van después de la E10 para nacer con las guardas de la E9 y la nube de la E10.
 - **Módulo:** `Forms` es un módulo quitable aparte de `WhatsApp`, unidos por puertos neutrales del núcleo.
 - **ArquitecturaBase:** es referencia, no fuente de código; la estructura sale de este repo.
