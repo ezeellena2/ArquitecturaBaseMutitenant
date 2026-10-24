@@ -18,7 +18,7 @@
     - una sola consulta paginada, sin consultas por fila; la autorización se comprueba otra vez antes de devolver;
     - pide `formrecords.read`. La E16 suma quien solo aprueba.
   - **Planilla de un formulario:**
-    - columnas fijas: número, recibida, persona y canal, y las empresas de quien respondió (decisión 24);
+    - columnas fijas: número, recibida, persona y canal, y las empresas de quien respondió (decisión 24). La persona es un empleado o un cliente, con la marca «Cliente» (49); un cliente no tiene empresas;
     - una columna por pregunta, unidas por `FieldId` entre versiones: primero el orden de la versión activa y después las retiradas;
     - «—» si la pregunta no existía en esa versión, y «Sin respuesta» si quedó vacía; cero y `false` se distinguen;
     - **las subcolumnas de los campos sellados de catálogo** (E13b): las de papel «Dato» se ven, y las de «Filtro» se prenden en «Columnas». Son de solo lectura: no se ordenan, ni filtran, ni cuentan en las facetas;

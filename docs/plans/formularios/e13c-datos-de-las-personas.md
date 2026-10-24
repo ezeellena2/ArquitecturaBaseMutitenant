@@ -17,7 +17,8 @@
     - filtros de igualdad, uno por campo de papel «Filtro»: con un valor fijo, o con un dato de quien recibe (el campo y el dato eligen de la misma fuente);
     - la preparación de la oferta resuelve al miembro real y filtra en SQL, antes del tope de 200 o 20;
     - **a quien no tiene el dato no se le manda, y se dice el motivo** (`Forms.Record.RecipientDataMissing`). Un filtro que dejó de funcionar da `Forms.Record.CatalogFilterUnavailable`. **Nunca se retira el filtro ni se manda la lista entera;**
-    - el envío desde el chat, el asistente, el prellenado y las sugerencias usan esa misma preparación.
+    - el envío desde el chat, el asistente, el prellenado y las sugerencias usan esa misma preparación;
+    - **los datos de las personas son de los empleados** (42): un cliente no los tiene. Una pregunta con filtro por destinatario no se puede mandar a un cliente, y la comprobación de publicar lo marca en un formulario que es para clientes (50).
   - **La vista previa «Como si lo recibiera»:** con una persona de ejemplo, pide `formcatalogs.read`, no guarda ni toma bloqueos, y distingue «Lista», «Le falta el dato» y «El filtro no funciona».
   - **Al publicar:** separa los problemas, que frenan, de dos avisos que no frenan (37):
     - el máximo de opciones por combinación de datos, contra 200 o 20;

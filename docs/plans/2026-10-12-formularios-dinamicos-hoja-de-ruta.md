@@ -13,7 +13,7 @@ Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sec
 - **Formularios propios.** Una organización arma sus formularios: preguntas tipadas, textos tal como los escribe la persona, sin idioma ni traducciones (decisión 35), versiones y un prefijo de numeración propio. No hay circuitos rígidos: cada formulario es independiente.
 - **Por WhatsApp.**
   - Se publican como Flows de Meta en el número de la organización.
-  - Se mandan desde el chat, y el empleado los completa dentro de WhatsApp.
+  - Se mandan desde el chat, y el empleado o el cliente los completa dentro de WhatsApp (49).
   - La respuesta queda numerada (`VIS-000123`) y se ve en el chat.
 - **Catálogos.** Listas compartidas entre formularios (clientes, supervisores, equipos), escritas a mano o tomadas de los datos del sistema con filtros.
 - **Fotos y documentos dentro del formulario.** Con cámara o galería: PDF, Excel, Word e imágenes.
@@ -33,13 +33,13 @@ Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sec
 | **Organización (B2B)** | Dueña de sus formularios, catálogos, reglas, respuestas y archivos. Los diseña quien tiene permiso; los responden sus empleados. |
 | **Empresa** | En la v1 los formularios son de la organización; la respuesta guarda las empresas de quien respondió, para filtrar ([decisiones 1 y 9](#5-decisiones-de-producto)). |
 | **Empleado** | Miembro activo con teléfono verificado y permiso `formrecords.create`. Lo reconoce la bandeja «Internos» de E11. |
-| **Persona (B2C)** | Fuera de la v1. Responder como cliente de una organización es una etapa posterior ([decisión 3](#5-decisiones-de-producto)). |
+| **Cliente de la organización** | Cualquier contacto de la bandeja «Clientes» de E11, tenga o no cuenta. Completa los formularios que son para clientes (decisiones 49 y 50). Si vinculó su cuenta personal, ve la copia en «Mis mensajes». |
 
 ### Clasificación de los datos
 
 - **Privado de la organización (`ITenantOwned`, esquema `tenant`, RLS):** definiciones, versiones, catálogos e ítems, respuestas y valores, recibos, reglas, ejecuciones, tareas, documentos y metadatos de archivos.
 - **Global de plataforma (esquema `platform`, ADR 0050):** la biblioteca de plantillas y sus versiones.
-- **Compartido persona↔organización (`IConsumerBusinessShared`):** solo cuando llegue B2C. Requiere resolver antes el backlog #51: `Enter` borra `TenantKind`, así que hoy un worker no puede crear datos compartidos.
+- **La respuesta de un cliente** es dato de la organización (`ITenantOwned`), como la de un empleado. La copia de quien vinculó su cuenta va por la copia de la conversación de la E11, sin datos compartidos (`IConsumerBusinessShared`).
 - **Entrada de WhatsApp:** el webhook sigue global (`identity`). El worker resuelve la organización por el número de E11 (la tabla de números la define esa etapa) y captura dentro de `ITenantScope.Enter(tenantId)`, con `IFeatureService` antes de actuar.
 - Un recurso de otra organización responde 404. Cada ruta nueva lleva su test de aislamiento.
 
@@ -129,7 +129,7 @@ Son once, en el orden de la decisión 34: E12, E12b, E13, E13b, E13c, E14, E15, 
 
 - **Editor:** siete tipos de pregunta, entre ellos «elegir varias» (38), un `CheckboxGroup` de 1 a 20 opciones con mínimo y máximo. Cada texto es uno solo, sin idioma (35). Prefijo propio, versiones y vista previa en el teléfono.
 - **Publicar:** operación durable en Meta, con un Flow por versión y por WABA de la organización.
-- **Mandar** desde el chat de Internos, con una sesión de 24 horas. Un mensaje sin datos no lleva `data` vacía.
+- **Mandar** desde el chat, a un empleado (Internos) o a un cliente (Clientes), según para quién es el formulario (49 y 50), con una sesión de 24 horas. Un mensaje sin datos no lleva `data` vacía.
 - **Recibir:** la respuesta numerada, idempotente, y su tarjeta en el chat.
 - **Módulo:** `Forms` quitable, con los puertos neutrales del núcleo.
 - **Spec:** [formularios/e12-formularios.md](formularios/e12-formularios.md).
@@ -235,7 +235,7 @@ Son once, en el orden de la decisión 34: E12, E12b, E13, E13b, E13c, E14, E15, 
 
 ### E18 · El asistente, con Casos (AB 5 y Casos)
 
-- **Modo Asistente** por conversación, solo en Internos (29), que activa quien tiene «Administrar WhatsApp» (28).
+- **El asistente atiende empleados y clientes** (51). Cada organización configura, por bandeja, quién atiende los chats nuevos y cuándo vuelve un chat al modo configurado; cada chat se cambia o se fija a mano (52). Se configura con «Administrar WhatsApp» (28).
 - **Casos** (39): cada organización configura perfil, conocimiento, casos y límites. Seis acciones, respuestas redactadas dentro de los límites y «Cualquier otra cosa» al final. Pide su ADR de respuestas redactadas.
 - **Cómo trabaja:** historial de 24 horas de esa conversación, ráfagas de 4 s con tope de 15 s y hasta 3 acciones por turno.
 - **Lo de la etapa 5 de allá:** sugerencias al operador y entre formularios, audios transcriptos (27), «Formularios que faltan» y el catálogo propuesto.
@@ -264,7 +264,6 @@ Son once, en el orden de la decisión 34: E12, E12b, E13, E13b, E13c, E14, E15, 
 - **Integraciones:** un módulo `Integrations`, con conexiones y credenciales por organización. La API pública y el MCP necesitan una identidad por organización. Quedan abiertas las 13 decisiones de su estudio.
 - **Catálogos, fases 3 a 6:** la búsqueda en vivo, el asistente que arma catálogos y los orígenes externos.
 - **La conexión a la base de un cliente,** con una solución simple: un agente del lado del cliente o una réplica de solo lectura.
-- **B2C, formularios para clientes:** la persona responde como cliente de una organización desde la bandeja Clientes de E11, con el backlog #51 resuelto.
 - **La carga automática de documentos,** con datos medidos.
 - **Los tableros que cruzan formularios.**
 - **Grupos y remitos con líneas, corregir una respuesta, cargar respuestas desde la web e importar desde Excel.**
@@ -301,7 +300,7 @@ Decididas por el usuario entre el 2026-10-12 y el 2026-10-24. No se vuelven a pr
 
 1. **Formularios por organización.** En la v1 son de la organización; la respuesta guarda la empresa de quien respondió y la planilla filtra por empresa. Formularios y permisos por empresa (`ICompanyOwned`), después.
 2. **Las plantillas se toman como copia independiente.** Una referencia obliga a resolver qué pasa con las respuestas cuando la plataforma cambia la plantilla.
-3. **B2C, después del bloque,** con la bandeja Clientes de E11 andando y el backlog #51 resuelto.
+3. **B2C, después del bloque,** con la bandeja Clientes de E11 andando y el backlog #51 resuelto. Reemplazada por la 49 para los formularios: los clientes los completan desde el principio.
 4. **El número de la plataforma (E8) no manda formularios:** es para ingreso y avisos de cuenta.
 5. **Sin límites por plan en la v1** (formularios, respuestas, almacenamiento): solo se habilita el feature. Medir el uso real antes de poner topes.
 6. **El bloque va después de la E10:** 8b → 11 → 9 → 10 → 12 a 17. Nace con Redis, límites y el fuzz de la E9, y con la nube de la E10.
@@ -342,7 +341,7 @@ Elegidas por el usuario el 2026-10-17, entre las que quedaron al alinear el bloq
     - Por eso, la Guía la pasó a la B el 2026-10-17, por la condición de abajo.
 27. **Transcribir audios en el asistente:** sí, por un puerto del núcleo en `Application/Interfaces/Integrations`, como el transporte del asistente. La clave va en user-secrets (ficha de configuración), y el costo entra en el tope mensual de IA de la organización (ADR 0048 y 0051). El proveedor se elige con su ADR al planificar el asistente.
 28. **Quién pasa una conversación a modo Asistente:** quien tiene «Administrar WhatsApp», sin permiso nuevo.
-29. **Dónde actúa el asistente:** solo en la bandeja Internos, con empleados.
+29. **Dónde actúa el asistente:** solo en la bandeja Internos, con empleados. Reemplazada por la 51.
 
 Elegidas por el usuario el 2026-10-18, sobre las reglas de ejemplo de la biblioteca (E17), todas las recomendadas:
 
@@ -411,6 +410,18 @@ Elegidas por el usuario el 2026-10-24, al actualizar las specs:
 47. **Mandar el PDF a un cliente** (E16): una acción más de las reglas, que le manda el PDF a un cliente de la organización (un contacto que no es empleado), con el teléfono de la opción elegida en una pregunta de catálogo (campo «teléfono» de la E13b). Dentro de las 24 horas va como documento; fuera, con una plantilla aprobada de la organización (E11). Para esta acción cambia la 26, porque la E11 ya trae las plantillas de cada organización.
 48. **Archivos en el chat** (E14): en todos los chats de atención, el operador ve y baja lo que le mandan (fotos, audios, documentos y videos) y puede mandar archivos desde el compositor, dentro de las 24 horas.
 
+Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 1, quién participa):
+
+49. **Los clientes completan formularios desde el principio.** Cualquier contacto de la bandeja Clientes, tenga o no cuenta: se lo reconoce por su número. Si vinculó su cuenta personal, ve la copia en «Mis mensajes». Reemplaza la 3 para los formularios.
+50. **Cada formulario dice para quién es:** solo empleados, solo clientes, o los dos. El envío, el asistente y las sugerencias ofrecen solo los que corresponden a quien recibe.
+51. **El asistente atiende también a los clientes,** en la bandeja Clientes, con los mismos límites configurables. Reemplaza la 29.
+52. **El modo de atención es configurable:**
+    - cada organización elige, por bandeja, quién atiende los chats nuevos: el asistente o una persona;
+    - y cuándo vuelve un chat al modo configurado después de que lo tomó una persona: cuando pasa un tiempo sin mensajes (que elige la organización), cuando la persona lo marca «Resuelto», o nunca;
+    - cada chat se cambia a mano en cualquier momento, en los dos sentidos, y se puede fijar para que no vuelva solo;
+    - el bot del menú de la E11 aparece solo en los chats de Clientes que están en atención manual.
+53. **Las preguntas condicionales y los cálculos van dentro del bloque.** Dónde van, y si se suman las líneas (un pedido con varios productos), se decide en el paso 2 de la revalidación.
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase
@@ -453,4 +464,7 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 ## 7. Decisiones pendientes
 
-Ninguna. Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 46.
+- **Paso 2 de la revalidación con el usuario:** dónde van las preguntas condicionales y los cálculos (53), y si se suman las líneas.
+- **Paso 8 de la revalidación con el usuario:** si la E19 lee también los documentos que mandan los clientes (49 y 51).
+
+Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 53.

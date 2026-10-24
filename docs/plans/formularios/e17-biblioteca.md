@@ -79,7 +79,7 @@ Una categoría se borra solo si ninguna plantilla la usa (`Forms.TemplateCategor
 | auditoría | — | `IGlobalSecurityAudited` |
 
 **`FormTemplateDraft`** (jsonb, `format: 1`):
-- `name`, `description` (≤300), `suggestedPrefix` y `submitLabel`, cada uno un solo texto (35);
+- `name`, `description` (≤300), `suggestedPrefix` y `submitLabel`, cada uno un solo texto (35), y `audience`: para quién es el formulario (50), que la copia conserva;
 - `questions[]`, en el formato del borrador de la E12;
 - en una pregunta de elegir con catálogo, `catalogRef` (id local de la plantilla) en lugar de `catalogId`;
 - `catalogs[]`: `{catalogRef, name, valueType, fields[], items[{code, text, detail?, value?, fields{}}]}`, con los límites de la E13 y la E13b. Un campo «elegir de otro catálogo» apunta a otro `catalogRef` de la misma plantilla;

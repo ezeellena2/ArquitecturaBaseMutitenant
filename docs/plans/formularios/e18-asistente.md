@@ -1,6 +1,6 @@
 # E18 · El asistente, con Casos (resumen)
 
-**Estado:** resumen de la décima etapa del bloque (decisiones 34 y 39). Junta la etapa 5 de ArquitecturaBase, cerrada y en piloto, con los Casos del asistente, decididos allá sin programar. Se planifica con `/plan-etapa` después de la E17 (decisión 19).
+**Estado:** resumen de la décima etapa del bloque (decisiones 34, 39, 51 y 52). Junta la etapa 5 de ArquitecturaBase, cerrada y en piloto, con los Casos del asistente, decididos allá sin programar. Se planifica con `/plan-etapa` después de la E17 (decisión 19).
 
 **Dónde está el detalle:**
 - en el traspaso del 17/10: [04 §5](../2026-10-17-formularios-traspaso/04-etapas.md), [05 · Etapa 5](../2026-10-17-formularios-traspaso/05-pantallas.md), anexo C §2 (etapa 5) y anexo D (H1–H7, s1–s4 y 03);
@@ -13,13 +13,16 @@
   - **Las piezas de la IA:** el asistente de la 8b (ADR 0048) suma canales para WhatsApp: el modo Asistente, la sugerencia al operador y el chat administrativo.
     - Forms y WhatsApp aportan **herramientas** que solo leen o proponen, siguiendo la [guía de herramientas](../../guides/agregar-una-herramienta-al-asistente.md).
     - Ejecuta siempre el módulo dueño, con su servicio, su UoW y su cola.
-  - **El modo de cada conversación:** Asistente o Atención manual.
-    - Pasar a Asistente pide «Administrar WhatsApp» (28) y solo existe en Internos (29).
-    - «Tomar atención manual» pide solo el permiso de atender, no depende de la IA, de la ventana de 24 horas ni de los envíos pendientes, y deja sin efecto una propuesta que llegue tarde.
+  - **El asistente atiende empleados y clientes** (51), en Internos y en Clientes.
+  - **El modo de atención** (52), configurable por cada organización con «Administrar WhatsApp» (28):
+    - **por bandeja,** quién atiende los chats nuevos: el asistente o una persona;
+    - **por bandeja,** cuándo vuelve un chat al modo configurado después de que lo tomó una persona: cuando pasa un tiempo sin mensajes (lo elige la organización), cuando la persona lo marca «Resuelto», o nunca. Se mira al llegar un mensaje, sin worker: si el chat está en manual, no está fijado y se cumple la regla, vuelve al modo configurado antes de procesarlo;
+    - **cada chat** se cambia a mano en cualquier momento, en los dos sentidos, y se puede fijar para que no vuelva solo. Pasar un chat a Asistente pide «Administrar WhatsApp»; tomar la atención manual pide solo el permiso de atender esa bandeja, no depende de la IA, de la ventana de 24 horas ni de los envíos pendientes, y deja sin efecto una propuesta que llegue tarde;
+    - **el bot del menú** de la E11 aparece solo en los chats de Clientes que están en atención manual.
   - **Los Casos** (39), configurados por cada organización con «Administrar WhatsApp», en una pantalla con un solo Guardar, con versión y 409 (configuración interna). Se guardan como **el agente principal**, una fila con todo lo suyo, así una etapa de varios agentes suma filas sin rehacer nada:
     - **Perfil:** nombre, presentación, tono, qué hace y qué no, qué hacer cuando no sabe y el mensaje fijo al derivar;
     - **Conocimiento:** la información del negocio que usa para redactar, una por organización. Se edita en su propia pestaña, con el mismo Guardar y con «Administrar WhatsApp» (decisión 46). Una sección vacía no se usa: nunca se presenta como un hecho lo que no está cargado;
-    - **Casos:** por cada uno, cuándo (un texto), el tipo de entrada (cualquiera, texto o audio; los documentos llegan con la E19), qué hacer, el orden y si está activo. Los formularios van en un bloque fijo, con su «Cuándo lo ofrece», y «Cualquier otra cosa» va al final y no se borra. Sin perfil, «Cualquier otra cosa» empieza en «No responder»;
+    - **Casos:** por cada uno, cuándo (un texto), para quién (empleados, clientes o los dos, como los formularios, 50), el tipo de entrada (cualquiera, texto o audio; los documentos llegan con la E19), qué hacer, el orden y si está activo. Los formularios van en un bloque fijo, con su «Cuándo lo ofrece», y «Cualquier otra cosa» va al final y no se borra. Sin perfil, «Cualquier otra cosa» empieza en «No responder»;
     - **Límites:** temas que no responde, lo que no puede prometer, el largo máximo de una respuesta, el tope de respuestas por conversación y por día, y las acciones permitidas. La plataforma fija un máximo para cada límite.
   - **Seis acciones,** un menú cerrado en el código:
     1. mandar un formulario;
@@ -38,14 +41,14 @@
     - **trazabilidad:** «Por qué respondió esto» guarda el texto, el caso y lo que usó; los logs no llevan el contenido;
     - **cupos:** las respuestas tienen su tope por conversación y día, aparte de los 2 ofrecimientos de formularios.
   - **Un turno:**
-    1. llega un texto o un audio transcripto de una cuenta vinculada y activa, en modo Asistente y dentro de las 24 horas;
+    1. llega un texto o un audio transcripto de un empleado activo (Internos) o de un cliente (Clientes), en un chat en modo Asistente y dentro de las 24 horas;
     2. **la ráfaga:** espera 4 s sin mensajes nuevos, con un tope de 15 s, y procesa todo junto;
     3. arma el pedido en un orden estable: perfil, casos, formularios candidatos, **el historial de las últimas 24 horas de esa misma conversación** (hasta 10 mensajes, con las transcripciones) y lo que ya hizo;
     4. el modelo elige el caso y propone **hasta 3 acciones, en orden**, y el sistema valida cada una por separado;
     5. encola en la salida y guarda el porqué de cada acción;
     6. **derivar** manda el mensaje fijo, pasa a Atención manual y marca la conversación «Necesita una persona», en la cabecera, en la lista y con su filtro. La marca se quita cuando responde una persona;
     7. en Atención manual, la respuesta redactada se le ofrece al operador como borrador.
-  - **Ofrecer formularios:** hasta 2 por conversación y día, en la zona de la organización; solo los publicados, activos y con «Cuándo lo ofrece», que esa persona puede completar. El prellenado propone texto, números, fechas, sí/no y una opción ofrecida, nunca fotos, documentos ni «elegir varias».
+  - **Ofrecer formularios:** hasta 2 por conversación y día, en la zona de la organización; solo los publicados, activos y con «Cuándo lo ofrece», que son para ese tipo de destinatario (50) y, a un empleado, que puede completar. El prellenado propone texto, números, fechas, sí/no y una opción ofrecida, nunca fotos, documentos ni «elegir varias».
   - **Sugerencias entre formularios (s1–s4):** `formsuggestions.manage`, hasta 20 por formulario. Modo «La IA decide» (Assistant) o «Preguntar siempre» (Always, por condición y sin IA), con mapeos entre preguntas del mismo tipo; una elección solo se mapea entre preguntas del mismo catálogo. Tienen guardado e historial propios, y la respuesta conserva su origen y la cadena.
   - **Audios (H6):** se bajan como los archivos de la E14 y se transcriben por un puerto del núcleo (27). La transcripción la ve también el operador; sin ella, el audio queda para el operador.
   - **Formularios que faltan (H7):** pedidos agrupados por tema, sin nombres ni mensajes. Quien diseña formularios lo crea o descarta el pedido.
@@ -69,12 +72,13 @@
     - `AS3` · Probar el asistente: las acciones en orden, cada una con su caso y su porqué, y «No se mandó nada»;
     - `AS4` · El chat: el porqué, derivar y «Necesita una persona», el texto exacto, los botones, el tope del día y el borrador en Atención manual;
     - `AS5` · Límites y conocimiento: el conocimiento se edita ahí, sección por sección (46);
-    - `AS6` · El circuito de punta a punta.
+    - `AS6` · El circuito de punta a punta;
+    - `WA-Modo-Atencion` · El modo de atención (52): por bandeja, quién atiende los chats nuevos y cuándo vuelve un chat; en el chat, cambiar el modo y fijarlo.
   - **Diseño redibuja** `FRM-Editor-Asistente`, sin «Textos en» ni «Cambios sin guardar».
   - **Se quedan** los aprobados en el lienzo v133: `WA-Chats-Asistente`, `WA-Chats-Sugerencia`, `WA-Chats-Audio` (corregido en la v134), `FRM-Faltan`, `FRM-Respuesta-Cadena`, `M-WA-Conversacion-Asistente` y `M-FRM-Faltan`. `FRM-Catalogo-Propuesta` se redibuja con la E13, y `FRM-Editor-Sugerencias`, con la E16.
   - **Mandan sobre este resumen en:**
     - **con los Casos, una consulta ya no queda sin respuesta:** la contesta un caso o se deriva. `AS4` reemplaza el estado «Sin respuesta del asistente · queda para un operador» de `WA-Chats-Asistente`;
-    - **«Pasar a modo Asistente»** pide «Administrar WhatsApp» (28) y solo aparece en Internos (29). «Tomar atención manual» pide solo el permiso de atender;
+    - **«Pasar a modo Asistente»** pide «Administrar WhatsApp» (28), en Internos y en Clientes (51). «Tomar atención manual» pide solo el permiso de atender;
     - **«La IA decide»** es el modo Assistant y **«Preguntar siempre»** es Always: por condición, sin IA;
     - **«No pudimos pasar este audio a texto»** cubre también el tope de IA de la organización agotado;
     - **«Aprobar y activar»** pide `formcatalogs.manage`, y **«Formularios que faltan»** pide `forms.manage`;
@@ -90,13 +94,12 @@
 - **Los catálogos del asistente** son solo con filtros, nunca SQL, y siempre los aprueba una persona.
 - **Un modelo se habilita solo con un perfil calificado,** y los casos de evaluación se corren antes.
 - **«Tomar atención manual»** siempre se puede, con el permiso de atender.
-- **Solo Internos** (29) y **«Administrar WhatsApp»** (28), sin permiso nuevo para los Casos.
+- **Empleados y clientes** (51), con el modo de atención configurable (52), y **«Administrar WhatsApp»** (28), sin permiso nuevo para los Casos.
 - **El conocimiento** es una pestaña de la pantalla del asistente, sin pantalla ni permiso aparte (46).
 
 ## Fuera de esta etapa
 
 - Varios agentes y su ruteo.
-- Los Casos en la bandeja Clientes: siguen con el bot del menú de la E11 (29).
 - Herramientas que escriben (piden una ADR nueva).
 - Leer fotos y documentos (E19).
 - El borrador de un formulario armado por la IA, salvo «Armar formulario con la IA» de la E19.
@@ -115,14 +118,16 @@
   - bucles de sugerencias;
   - la IA no disponible;
   - una ráfaga de tres mensajes con tres acciones;
-  - tres personas escribiendo a la vez, sin mezclar historiales.
+  - tres personas escribiendo a la vez, sin mezclar historiales;
+  - el modo de atención: un chat nuevo arranca según su bandeja, uno tomado vuelve solo después del tiempo configurado, y uno fijado no vuelve.
 - **La medición** de texto a envío y de audio a envío.
 - **Prueba real con la IA y Meta:**
   - «hola» y «¿qué hora es?» reciben una respuesta con sentido;
   - una consulta con la información cargada se responde, y una sin información deriva;
   - «se rompió la heladera» manda el formulario;
   - «quiero hablar con alguien» deriva y aparece en la lista;
-  - un audio transcripto.
+  - un audio transcripto;
+  - un cliente en la bandeja Clientes recibe una respuesta y un formulario para clientes.
 
 ## Requisitos previos
 
@@ -149,5 +154,5 @@
   - `formsuggestions.manage`;
   - configurar los Casos y pasar a modo Asistente piden «Administrar WhatsApp» (`whatsapp.manage`), sin permiso nuevo (28 y 39);
   - los pedidos se ven con `forms.manage`.
-- **WhatsApp (E11):** el asistente actúa en el número de la organización y solo en Internos (29).
+- **WhatsApp (E11):** el asistente actúa en el número de la organización, en Internos y en Clientes (51).
 - **Almacenamiento (E10):** los audios siguen la retención de los mensajes de WhatsApp: en una organización, mientras exista el contacto (D4 de la E11).

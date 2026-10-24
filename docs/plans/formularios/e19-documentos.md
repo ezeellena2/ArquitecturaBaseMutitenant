@@ -7,7 +7,7 @@
 ## Qué se construye
 
 - **Back:**
-  - **Qué se lee:** lo que manda una cuenta vinculada: un miembro activo, con teléfono verificado y `formrecords.create`, en la bandeja Internos (decisión 29). Lo que manda un número desconocido queda en el chat para un operador, sin leerse.
+  - **Qué se lee:** lo que manda un empleado: un miembro activo, con teléfono verificado y `formrecords.create`, en la bandeja Internos. Lo que manda un cliente o un número desconocido queda en el chat para un operador, sin leerse. Con las decisiones 49 y 51, leer documentos de clientes se revalida con el usuario en el paso 8.
 
     | Lo que llega | Cómo se lee |
     | --- | --- |

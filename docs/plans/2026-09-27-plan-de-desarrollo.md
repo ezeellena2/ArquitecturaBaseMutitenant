@@ -93,4 +93,4 @@ Una organización arma formularios, los manda por WhatsApp a sus empleados y ve 
 - **Cómo se trabaja cada etapa:**
   - se escribe en el formato de [etapa en paralelo](../guides/etapa-en-paralelo.md) cuando le toca;
   - sus tableros se dibujan en el lienzo antes de programar.
-- **Después:** las integraciones, los catálogos con orígenes externos y B2C.
+- **Después:** las integraciones y los catálogos con orígenes externos. Los clientes completan formularios desde el principio (decisión 49).

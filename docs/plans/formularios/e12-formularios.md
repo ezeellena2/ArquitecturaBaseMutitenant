@@ -16,7 +16,7 @@
 - **Publicación en WhatsApp:**
   - un Flow por versión y por cuenta de WhatsApp Business (WABA);
   - operación durable, con sus estados visibles y la vista previa oficial de Meta.
-- **Envío desde el chat:** «Enviar formulario» en un chat de la bandeja Internos, con la sesión de 24 horas.
+- **Envío desde el chat:** «Enviar formulario» en un chat de Internos (a un empleado) o de Clientes (a un cliente), con la sesión de 24 horas. Cada formulario dice para quién es: solo empleados, solo clientes, o los dos (49 y 50).
 - **Recepción:**
   - el `nfm_reply` se convierte en una respuesta numerada (`VIS-000123`), sin duplicados;
   - en el chat aparece una tarjeta con los valores, o solo con el número si quien mira no puede ver respuestas.
@@ -33,7 +33,7 @@
 - reglas y aprobación (E16);
 - biblioteca de plantillas (E17);
 - prellenado del asistente y sugerencias (E18);
-- copiar formularios, clientes B2C y límites por plan.
+- copiar formularios y límites por plan.
 
 ## 2. Decisiones técnicas
 
@@ -55,6 +55,8 @@ Las de producto están en la hoja de ruta (§5). Estas siguen las reglas del rep
 | T12 | **Las capturas rechazadas no crean nada en Forms.** El rechazo queda en la sesión de WhatsApp, con su código. | La idempotencia la da el índice único `SourceKey`. |
 | T13 | **«Elegir varias» es un tipo propio** (`MultiChoice`), no una marca de la lista: de 1 a 20 opciones, con `0 ≤ mínimo ≤ máximo ≤ 20` y máximo mayor que cero. Es obligatoria si y solo si el mínimo es mayor que cero. Pasar de «elegir una» a «elegir varias» crea otra identidad; cambiar el rango la conserva. Sin ninguna marcada es «Sin respuesta». | Es la regla de ArquitecturaBase (C1-04), con el tope de WhatsApp. |
 | T14 | **Un mensaje sin datos no lleva `data`.** Un mapa vacío (`prefill_FORM:{}`) hace que el Flow no abra en Android. | Error ya pagado en el piloto de ArquitecturaBase. |
+| T15 | **Quien recibe y quien responde es un empleado o un cliente** (49). La sesión y la respuesta guardan uno de los dos: el usuario del miembro, o el contacto de la bandeja Clientes. A un empleado se le revisan la membresía y `formrecords.create`; a un cliente, que el formulario sea para clientes. | Un cliente no tiene cuenta ni permisos: se lo reconoce por el contacto, que es su número. |
+| T16 | **La respuesta de un cliente es dato de la organización** (`ITenantOwned`). Si el contacto vinculó su cuenta personal, ve la copia por la copia de la conversación de la E11, sin datos compartidos. Si el contacto se borra, la respuesta queda (decisión 23) sin el vínculo ni el nombre. | La regla de datos personales y la D4 de la E11. |
 
 ## 3. Modelo de datos
 
@@ -74,6 +76,7 @@ Las de producto están en la hoja de ruta (§5). Estas siguen las reglas del rep
 | `Id`, `TenantId` | uuid | v7 |
 | `Name` | texto ≤80 | obligatorio para publicar |
 | `Prefix` | texto ≤12 | `^[A-Z][A-Z0-9]{0,11}$`; único por organización (`UniqueKeys.FormPrefix`) |
+| `Audience` | texto | `Employees`, `Customers` o `Both` (50); va en el borrador y se sella con la versión |
 | `PrefixLockedAtUtc` | timestamptz? | se fija en la primera publicación aceptada |
 | `Draft` | jsonb | `FormDraft` (abajo) |
 | `ActiveVersionId` | uuid? | FK compuesta a `FormVersions` |
@@ -114,8 +117,9 @@ Las de producto están en la hoja de ruta (§5). Estas siguen las reglas del rep
 | `Number` | int | único por definición. Se muestra como `PREFIX-000123`, armado al leer. |
 | `SourceKey` | texto ≤200 | único por organización: `whatsapp:<sessionId>` |
 | `Channel` | texto | `whatsapp` |
-| `RespondentUserId` | uuid | quien respondió |
-| `RespondentCompanyIds` | uuid[] | todas las empresas activas de quien respondió, al responder (decisión 9) |
+| `RespondentUserId` | uuid? | el empleado que respondió |
+| `RespondentContactId` | uuid? | el cliente que respondió (contacto de la E11); `null` si el contacto se borró. Un CHECK exige uno de los dos al crear |
+| `RespondentCompanyIds` | uuid[] | todas las empresas activas del empleado que respondió, al responder (decisión 9); vacío para un cliente |
 | `SubmittedAtUtc` | timestamptz | la hora firmada por Meta |
 | `CreatedAtUtc` | — | — |
 
@@ -161,7 +165,7 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | --- | --- | --- |
 | `Id`, `TenantId` | uuid | — |
 | `ConversationId` | uuid | **[E11]** |
-| `RecipientUserId`, `SentByUserId` | uuid | — |
+| `RecipientUserId` o `RecipientContactId`, `SentByUserId` | uuid | quien recibe es un empleado o un cliente (T15) |
 | `VersionId`, `BindingId`, `Culture` | — | `VersionId` opaco; `Culture` es el idioma de la cuenta de quien recibe, para los textos del sistema (T10) |
 | `TokenHash` | texto 64 | único; el token viaja como `flow_token` y no se guarda |
 | `ExpiresAtUtc` | timestamptz | se crea + `WhatsApp:FlowSessionHours` (24 por defecto, de 1 a 168) |
@@ -246,8 +250,8 @@ Todas las rutas Business llevan `[Access(Access.Business)]` y `[FeatureGate("for
 | POST `/api/organization/forms/{id}/publications` | `forms.publish` | `{version}` | 202 `{publicationId, state}` + Location; no llama a Meta |
 | GET `/api/organization/forms/{id}/publications/{publicationId}` | `forms.read` | — | 200 `{state, errorCode?, issues?, versionNumber}` |
 | GET `/api/organization/forms/{id}/versions/{versionId}/preview` | `forms.read` | — | 200 `{url, expiresAtUtc}`, con `Cache-Control: no-store` |
-| GET `/api/organization/whatsapp/conversations/{id}/forms` **[E11]** | «Atender internos» | `page`, `search` | 200 `{available, reason?, culture, forms: PagedResult<{definitionId, versionId, name, prefix}>}`; `culture` es el idioma de los textos del sistema que acompañan |
-| POST `/api/organization/whatsapp/conversations/{id}/forms` **[E11]** | «Atender internos» | `{definitionId, versionId, text}` (≤1024) | 202 `{sessionId, messageId}` |
+| GET `/api/organization/whatsapp/conversations/{id}/forms` **[E11]** | «Atender internos» o «Atender clientes», según la bandeja | `page`, `search` | 200 `{available, reason?, culture, forms: PagedResult<{definitionId, versionId, name, prefix}>}`; `culture` es el idioma de los textos del sistema que acompañan |
+| POST `/api/organization/whatsapp/conversations/{id}/forms` **[E11]** | «Atender internos» o «Atender clientes», según la bandeja | `{definitionId, versionId, text}` (≤1024) | 202 `{sessionId, messageId}` |
 
 **Otras piezas del contrato:**
 - **Tarjeta de respuesta [E11]:** los mensajes de la conversación suman un tipo `form`: `{sessionId, state, formName, displayNumber?, values?: [{fieldId, label, type, value}], canReadValues}`. En «elegir varias», `value` es la lista de opciones en el orden recibido.
@@ -301,12 +305,12 @@ Todas las rutas Business llevan `[Access(Access.Business)]` y `[FeatureGate("for
 6. **Mandar desde el chat** (módulo WhatsApp).
    - **Ubicación:** en escritorio, el botón «Enviar formulario» al lado de «Enviar»; en el teléfono, la opción «Enviar formulario» en el ⋮ del chat. Ambos abren el mismo diálogo. Si la acción no aplica al acceso, bandeja o permiso, no se muestra.
    - **Cuándo se puede usar:**
-     - el chat es de la bandeja Internos y quien escribe es miembro activo **[E11]**;
-     - el operador tiene «Atender internos» (decisión 10);
+     - en Internos, quien escribe es miembro activo y el operador tiene «Atender internos» (decisión 10) **[E11]**;
+     - en Clientes, el operador tiene «Atender clientes» **[E11]**;
      - la ventana de 24 horas está abierta;
      - el número está disponible;
      - no hay otro envío pendiente ni sin confirmar;
-     - `IStructuredFormSource.ListSendableAsync(recipientUserId)` devuelve al menos un formulario. Forms filtra los publicados que quien recibe puede responder (`formrecords.create`).
+     - `IStructuredFormSource.ListSendableAsync(recipient)` devuelve al menos un formulario. Forms filtra los publicados para ese tipo de destinatario (50) y, a un empleado, los que puede responder (`formrecords.create`).
    - **Si no se puede usar:** el botón y la opción del ⋮ quedan grisados, con el motivo en su tooltip (43).
    - **Mandar:**
      - afuera de la UoW se valida el texto (≤1024) y se lee el formulario elegido con `FindSendableAsync`. El idioma de los textos del sistema es el de la cuenta de quien recibe (T10);
@@ -321,7 +325,7 @@ Todas las rutas Business llevan `[Access(Access.Business)]` y `[FeatureGate("for
      4. revalida y entra con `ExecutionActor` (quien respondió) y, sin transacción abierta, llama a `IStructuredRecordSink.CaptureAsync`. Las escrituras previas de reserva o vencimiento son fases de `IWhatsAppFlowReplyService.ClaimAsync`, con una única UoW; el worker no las abre.
    - **La captura en Forms:** `FormRecordSink` delega en `IFormRecordService.CaptureAsync`, que abre su única UoW:
      - busca el `SourceKey`: si ya existe con el mismo contenido, devuelve el mismo número; si el contenido es otro, `ReplayConflict`;
-     - revalida la membresía y `formrecords.create`;
+     - a un empleado le revalida la membresía y `formrecords.create`; a un cliente, que el formulario siga siendo para clientes;
      - valida estricto contra la versión sellada;
      - bloquea la definición y suma `LastRecordNumber`;
      - guarda la respuesta y sus valores.
@@ -348,8 +352,8 @@ Los nombres no mencionan formularios ni WhatsApp.
 // WhatsApp → Forms (implementa Forms)
 public interface IStructuredFormSource
 {
-    Task<PagedResult<StructuredFormChoice>> ListSendableAsync(Guid recipientUserId, PagedRequest page, CancellationToken ct);
-    Task<StructuredFormVersion?> FindSendableAsync(Guid recipientUserId, Guid definitionId, Guid versionId, CancellationToken ct);
+    Task<PagedResult<StructuredFormChoice>> ListSendableAsync(StructuredRecipient recipient, PagedRequest page, CancellationToken ct);
+    Task<StructuredFormVersion?> FindSendableAsync(StructuredRecipient recipient, Guid definitionId, Guid versionId, CancellationToken ct);
 }
 // Forms → WhatsApp (implementa WhatsApp)
 public interface IStructuredFormChannel
@@ -373,7 +377,8 @@ public interface IStructuredRecordSource
 
 **Modelos:**
 - `StructuredFormVersion(DefinitionId, VersionId, Number, Prefix, Name, SubmitLabel, Questions[FieldId, Type, Label, Help, Required, MaxLength?, Decimals?, MinSelections?, MaxSelections?, Options[ChoiceId, Label]], ContentHash)`;
-- `StructuredRecordCapture(SourceKey, DefinitionId, VersionId, RespondentUserId, SubmittedAtUtc, Values[FieldId, Text?|Number?|Date?|Bool?|ChoiceId?|ChoiceIds[]?])`;
+- `StructuredRecipient(Kind: Member|Contact, UserId?, ContactId?)`: quien recibe (T15);
+- `StructuredRecordCapture(SourceKey, DefinitionId, VersionId, Respondent: StructuredRecipient, SubmittedAtUtc, Values[FieldId, Text?|Number?|Date?|Bool?|ChoiceId?|ChoiceIds[]?])`;
 - `StructuredRecordReceipt(RecordId, Number, DisplayNumber)`;
 - `StructuredRecordCard(RecordId, DisplayNumber, FormName, CanReadValues, Values?)`;
 - `StructuredPublicationResult(State: Published|Pending|Uncertain|Failed, Issues[], NextCheckAtUtc?)`.
@@ -441,7 +446,7 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 
 **Se quedan como están:**
 - `FRM-Listado` y `M-FRM-Listado`: «Diseñar formularios», una tabla con Formulario, Preguntas, En WhatsApp y Último cambio. El nombre abre el editor, sin columna de acciones. Tiene el filtro «Estado ▾» y «Nuevo formulario ▾», con «Desde cero» y «Desde una plantilla» (esta, con la E17). La E12b le suma el ciclo de vida;
-- `WA-Chats-Formulario` y `M-WA-Chats-Formulario`: «Enviar formulario» al lado de «Enviar» en Internos (en el teléfono, en el ⋮ del chat). El diálogo «Enviar un formulario a …» tiene:
+- `WA-Chats-Formulario` y `M-WA-Chats-Formulario`: «Enviar formulario» al lado de «Enviar» en Internos (en el teléfono, en el ⋮ del chat). **Diseño suma** la misma acción en un chat de Clientes, y en el editor, «Para quién es» (empleados, clientes o los dos). El diálogo «Enviar un formulario a …» tiene:
   - tarjetas con «Versión N · K preguntas», con buscador y paginado si son muchos;
   - el mensaje prellenado, de hasta 1024 caracteres;
   - hasta cuándo se puede mandar;
@@ -533,7 +538,7 @@ Al planificar la E12 se verifican contra el código real.
 
 ## 13. Decisiones de producto de la etapa
 
-Están en la §5 de la hoja de ruta y no se vuelven a preguntar: 9 (la respuesta guarda todas las empresas activas de quien respondió), 10 (manda cualquiera con «Atender internos»), 35 (el contenido no tiene idioma), 38 («elegir varias» va acá) y 43 (botones y avisos).
+Están en la §5 de la hoja de ruta y no se vuelven a preguntar: 9 (la respuesta guarda todas las empresas activas de quien respondió), 10 (manda cualquiera con «Atender internos», y a un cliente, con «Atender clientes»), 49 y 50 (los clientes completan los formularios que son para clientes), 35 (el contenido no tiene idioma), 38 («elegir varias» va acá) y 43 (botones y avisos).
 
 ## 14. Referencia de Meta (tomada de ArquitecturaBase)
 
