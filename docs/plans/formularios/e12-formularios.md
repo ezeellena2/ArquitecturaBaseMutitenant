@@ -1,20 +1,20 @@
 # E12 · Formularios: crear, publicar, mandar y recibir (spec)
 
-**Estado:** spec escrita el 2026-10-12, antes de las etapas 11, 9 y 10. No es el plan de la etapa: `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E11]**, **[E9]** y **[E10]** contra el código real.
+**Estado:** spec de la primera etapa del bloque (decisión 34), con las decisiones 35, 38 y 43. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E11]**, **[E9]** y **[E10]** contra el código real.
 
 **Fuentes:**
 - alcance y decisiones de producto: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E12 y §5;
 - reglas: [AGENTS.md](../../../AGENTS.md) y las [fichas](../../rules/README.md);
-- conocimiento de Meta: ArquitecturaBase, `origin/main` `202b65d` ([sección 14](#14-referencia-de-meta-tomada-de-arquitecturabase)). Es solo referencia, no código para copiar.
+- conocimiento de Meta: ArquitecturaBase ([sección 14](#14-referencia-de-meta-tomada-de-arquitecturabase)). Es solo referencia, no código para copiar.
 
-**Requisitos:** la E11 cerrada (números por organización, bandeja Internos, token por organización), la E9 (Redis, límites y fuzz) y la E10.
+**Requisitos:** la E11 (números por organización, bandeja Internos, token por organización), la E9 (Redis, límites y fuzz) y la E10.
 
 ## 1. Alcance
 
 **Entra:**
-- **Editor:** formularios de la organización con seis tipos de pregunta, un idioma original obligatorio y una traducción opcional (decisión 17 de la hoja de ruta), prefijo de numeración y vista previa en el teléfono.
+- **Editor:** formularios de la organización con siete tipos de pregunta, entre ellos «elegir varias» (38), prefijo de numeración y vista previa en el teléfono. El contenido es un solo texto por campo, tal como lo escribe la persona, en el idioma que quiera (35).
 - **Publicación en WhatsApp:**
-  - un Flow por versión, por idioma completo y por cuenta de WhatsApp Business (WABA);
+  - un Flow por versión y por cuenta de WhatsApp Business (WABA);
   - operación durable, con sus estados visibles y la vista previa oficial de Meta.
 - **Envío desde el chat:** «Enviar formulario» en un chat de la bandeja Internos, con la sesión de 24 horas.
 - **Recepción:**
@@ -25,35 +25,36 @@
   - los cuatro puertos neutrales del núcleo con sus implementaciones apagadas;
   - el retiro probado una vez.
 
-**No entra** (va en etapas posteriores o en «Después»):
-- catálogos (E13);
+**No entra:**
+- dar de baja, reactivar, eliminar y deprecar los Flows (E12b);
+- catálogos (E13 a E13c);
 - fotos y documentos (E14);
-- planilla, detalle de una respuesta y Excel (E15);
+- «Formularios», planilla, detalle de una respuesta y Excel (E15);
 - reglas y aprobación (E16);
 - biblioteca de plantillas (E17);
-- copiar o eliminar formularios, y deprecar Flows viejos;
-- clientes B2C;
-- límites por plan.
+- prellenado del asistente y sugerencias (E18);
+- copiar formularios, clientes B2C y límites por plan.
 
-## 2. Decisiones de la etapa
+## 2. Decisiones técnicas
 
-Las de producto están en la hoja de ruta (§5) y no se vuelven a preguntar. Las técnicas que siguen las tomé al escribir esta spec. Siguen las reglas del repo y, cuando hay más de una forma de hacer algo, la más simple.
+Las de producto están en la hoja de ruta (§5). Estas siguen las reglas del repo y, cuando hay más de una forma, la más simple.
 
 | # | Decisión | Por qué |
 | --- | --- | --- |
 | T1 | `Forms` y `WhatsApp` se hablan solo por cuatro puertos neutrales del núcleo (§7). | `ModuleIsolationTests` prohíbe que un módulo use tipos de otro. |
-| T2 | **«Enviar formulario» es de WhatsApp.** La pantalla del chat, la ruta, la sesión y el mensaje van en el módulo WhatsApp, que lista los formularios con `IStructuredFormSource`. No hace falta el registro de acciones internas de la E11. | El que manda es el operador desde el chat, no el empleado con un comando. |
-| T3 | El borrador usa `IVersioned` y 409 `General.ConcurrencyConflict`, sin recibos de cambios. | La edición es interna; ArquitecturaBase gastó días en recibos de 30 días que su ADR 0018 retiró. |
-| T4 | **Hay un solo worker de publicación, el de Forms.** Descubre trabajos en `platform.FormPublicationWorks`, entra con `ExecutionActor` y llama a las fases de `IFormPublicationService`. Fuera de toda UoW llama al canal, que coordina Meta con las fases de `IWhatsAppFlowPublicationService`; cada fase que escribe abre una sola UoW. | Un worker menos que en ArquitecturaBase. Copia la separación entre `AssistantTurnWorker` e `IAssistantTurnService`; ni el worker ni el adaptador neutral reciben `IUnitOfWork`. |
+| T2 | **«Enviar formulario» es de WhatsApp.** La pantalla del chat, la ruta, la sesión y el mensaje van en el módulo WhatsApp, que lista los formularios con `IStructuredFormSource`. | El que manda es el operador desde el chat. |
+| T3 | El borrador usa `IVersioned` y 409 `General.ConcurrencyConflict`, sin recibos de cambios. | La edición es interna (robustez proporcional, §4 de la hoja de ruta). |
+| T4 | **Un solo worker de publicación, el de Forms.** Descubre trabajos en `platform.FormPublicationWorks`, entra con `ExecutionActor` y llama a las fases de `IFormPublicationService`. Fuera de toda UoW llama al canal, que coordina Meta con las fases de `IWhatsAppFlowPublicationService`; cada fase que escribe abre una sola UoW. | Copia la separación entre `AssistantTurnWorker` e `IAssistantTurnService`; ni el worker ni el adaptador neutral reciben `IUnitOfWork`. |
 | T5 | Los workers entran con `IExecutionActorFactory` e `IExecutionActorScope`, no con `ITenantScope.Enter` solo. | Con `Enter` solo, `IFeatureService` da `false`, porque `Enter` deja `TenantKind` en null (backlog #51). |
-| T6 | El Flow se ata a la versión, a un idioma completo y a la WABA. Solo se publican en Meta los idiomas completos de la versión. | Un Flow vive en una WABA; una organización puede tener números en WABAs distintas **[E11]**. Un idioma incompleto nunca llega a WhatsApp (decisión 17). |
+| T6 | **Un Flow por versión y por WABA.** Los dos textos del sistema que van adentro del Flow (la ayuda de los números y «Elegí hasta N») viajan en el `data` del mensaje, en el idioma de la cuenta de quien recibe (35 y 42). | El contenido no tiene idioma; los textos del sistema sí, y cambian por destinatario sin otro Flow. |
 | T7 | **Numeración:** `LastRecordNumber` en la definición, sumado bajo bloqueo de fila al capturar, con índice único (definición, número). El prefijo es único **dentro de la organización**. | Sin bloqueos globales: cada organización numera aparte. |
-| T8 | **Sin ticket de comprobación:** `publication-checks` solo informa, y `publications` vuelve a comprobar todo adentro de su transacción. | Un paso y un secreto menos. La comprobación final es la que vale. |
+| T8 | **Sin ticket de comprobación:** `publication-checks` solo informa, y `publications` vuelve a comprobar todo adentro de su transacción. | La comprobación final es la que vale. |
 | T9 | **«Número con decimales»:** cada pregunta fija sus decimales (de 0 a 6) y admite hasta 15 dígitos enteros. Al responder se acepta punto o coma; más decimales que los permitidos se rechaza. | Evita que «125.500» se lea como 125,5: con 0 decimales, se rechaza. |
-| T10 | **El idioma del formulario que se manda:** el de la cuenta de quien lo recibe si la versión está completa en ese idioma; si no, todo va en el idioma original. El operador no lo elige, y la sesión fija el idioma usado. | Decisión 17: nunca se mezclan idiomas. Se usa la cultura de la cuenta. |
-| T13 | **Idioma original:** cada formulario tiene uno (`OriginalCulture`), que se elige al crearlo y no cambia; por defecto, la cultura de quien lo crea. Las culturas posibles salen de los datos de referencia (hoy es y en), nunca de una lista en el código. **«Completo en un idioma»** quiere decir que cada texto que existe en el original (nombre, preguntas, ayudas, opciones y botón) tiene su traducción. | Es la regla de ArquitecturaBase del 2026-10-16, que acá se aplica desde el principio. |
-| T11 | Los valores viven en filas tipadas (`FormRecordValues`), sin un JSON paralelo. | Una sola fuente. La planilla de la E15 filtra sobre las columnas. |
-| T12 | **Las capturas rechazadas no crean nada en Forms.** El rechazo queda en la sesión de WhatsApp, con su código. | Sin tabla de recibos: la idempotencia la da el índice único `SourceKey`. |
+| T10 | **Lo que recibe la persona:** el formulario sale como está escrito. El mensaje por defecto, el botón «Abrir formulario» y los textos del sistema del Flow van en el idioma de su cuenta (35 y 42). La sesión guarda ese idioma. | Un formulario se ve y se manda igual con el menú en cualquier idioma. |
+| T11 | Los valores viven en filas tipadas (`FormRecordValues`), sin un JSON paralelo. «Elegir varias» guarda una fila por opción, con su posición. | Una sola fuente. La planilla de la E15 filtra sobre las columnas. |
+| T12 | **Las capturas rechazadas no crean nada en Forms.** El rechazo queda en la sesión de WhatsApp, con su código. | La idempotencia la da el índice único `SourceKey`. |
+| T13 | **«Elegir varias» es un tipo propio** (`MultiChoice`), no una marca de la lista: de 1 a 20 opciones, con `0 ≤ mínimo ≤ máximo ≤ 20` y máximo mayor que cero. Es obligatoria si y solo si el mínimo es mayor que cero. Pasar de «elegir una» a «elegir varias» crea otra identidad; cambiar el rango la conserva. Sin ninguna marcada es «Sin respuesta». | Es la regla de ArquitecturaBase (C1-04), con el tope de WhatsApp. |
+| T14 | **Un mensaje sin datos no lleva `data`.** Un mapa vacío (`prefill_FORM:{}`) hace que el Flow no abra en Android. | Error ya pagado en el piloto de ArquitecturaBase. |
 
 ## 3. Modelo de datos
 
@@ -71,8 +72,7 @@ Las de producto están en la hoja de ruta (§5) y no se vuelven a preguntar. Las
 | Columna | Tipo | Regla |
 | --- | --- | --- |
 | `Id`, `TenantId` | uuid | v7 |
-| `OriginalCulture` | texto | es o en, de los datos de referencia; no cambia (T13) |
-| `NameEs`, `NameEn` | texto ≤80 | el del idioma original es obligatorio; el otro, opcional |
+| `Name` | texto ≤80 | obligatorio para publicar |
 | `Prefix` | texto ≤12 | `^[A-Z][A-Z0-9]{0,11}$`; único por organización (`UniqueKeys.FormPrefix`) |
 | `PrefixLockedAtUtc` | timestamptz? | se fija en la primera publicación aceptada |
 | `Draft` | jsonb | `FormDraft` (abajo) |
@@ -81,10 +81,10 @@ Las de producto están en la hoja de ruta (§5) y no se vuelven a preguntar. Las
 | `CreatedAtUtc` y demás auditoría | — | `IAuditable` |
 | `Version` | xmin | 409 |
 
-**`FormDraft`** (jsonb, versionado con `format: 1`). Los textos son mapas por cultura (`{es?, en?}`): el del idioma original es obligatorio para publicar, y el otro es opcional.
-- `submitLabel{…}`;
-- `questions[]`, cada una con `fieldId`, `type`, `label{…}`, `help{…}`, `required`, `maxLength?`, `decimals?` y `options[]`;
-- cada opción lleva `{choiceId, label{…}}`.
+**`FormDraft`** (jsonb, `format: 1`). Cada texto es uno solo:
+- `submitLabel`;
+- `questions[]`, cada una con `fieldId`, `type`, `label`, `help`, `required`, `maxLength?`, `decimals?`, `minSelections?`, `maxSelections?` y `options[]`;
+- cada opción lleva `{choiceId, label}`.
 
 **FormVersions** (inmutable)
 
@@ -92,8 +92,7 @@ Las de producto están en la hoja de ruta (§5) y no se vuelven a preguntar. Las
 | --- | --- | --- |
 | `Id`, `TenantId`, `DefinitionId` | uuid | FK compuesta |
 | `Number` | int | único por definición |
-| `OriginalCulture`, `NameEs`, `NameEn`, `Questions`, `SubmitLabel` | texto y jsonb | copia sellada, con el original completo y la traducción como esté |
-| `CompleteCultures` | text[] | los idiomas completos al sellar (siempre incluye el original); son los que se publican en Meta |
+| `Name`, `Questions`, `SubmitLabel` | texto y jsonb | copia sellada |
 | `ContentHash` | texto 64 | SHA-256 del JSON canónico (formato versionado y orden fijo) |
 | `CreatedAtUtc`, `CreatedByUserId` | — | — |
 
@@ -116,8 +115,7 @@ Las de producto están en la hoja de ruta (§5) y no se vuelven a preguntar. Las
 | `SourceKey` | texto ≤200 | único por organización: `whatsapp:<sessionId>` |
 | `Channel` | texto | `whatsapp` |
 | `RespondentUserId` | uuid | quien respondió |
-| `RespondentCompanyIds` | uuid[] | todas las empresas activas de quien respondió, al responder ([§13](#13-decisiones-de-producto-de-la-etapa)) |
-| `Culture` | texto | el idioma en el que se mandó y respondió (el de la sesión) |
+| `RespondentCompanyIds` | uuid[] | todas las empresas activas de quien respondió, al responder (decisión 9) |
 | `SubmittedAtUtc` | timestamptz | la hora firmada por Meta |
 | `CreatedAtUtc` | — | — |
 
@@ -125,7 +123,7 @@ Las de producto están en la hoja de ruta (§5) y no se vuelven a preguntar. Las
 
 | Columna | Tipo | Regla |
 | --- | --- | --- |
-| `TenantId`, `RecordId`, `FieldId` | uuid | PK; `FieldId` sin FK (se valida contra la versión sellada) |
+| `TenantId`, `RecordId`, `FieldId`, `Position` | uuid y smallint | PK; `FieldId` sin FK (se valida contra la versión sellada); `Position` es 0, salvo en «elegir varias» (0 a 19, en el orden recibido) |
 | `Type` | texto | el tipo de la pregunta |
 | `TextValue` | texto ≤10.000 | — |
 | `NumberValue` | numeric | sin redondeo |
@@ -149,14 +147,13 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | --- | --- | --- |
 | `Id`, `TenantId` | uuid | — |
 | `PublicationId`, `VersionId` | uuid | ids opacos de Forms, sin FK |
-| `Culture` | texto | un idioma completo de la versión |
 | `WabaId` | texto | **[E11]** la cuenta del número |
 | `MetaFlowId` | texto? | único |
 | `Step` | texto | `Create`, `Upload`, `Validate`, `Publish`, `Verify` |
 | `State` | texto | `Accepted`, `InFlight`, `Uncertain`, `Published`, `Failed` |
 | `FlowJsonHash`, `FieldMap` | texto, jsonb | `field_<N>` ↔ `FieldId`/`ChoiceId` |
 | `ErrorCode` y fechas | — | — |
-| — | único | `(TenantId, VersionId, Culture, WabaId)` |
+| — | único | `(TenantId, VersionId, WabaId)` |
 
 **WhatsAppFlowSessions**
 
@@ -165,7 +162,7 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | `Id`, `TenantId` | uuid | — |
 | `ConversationId` | uuid | **[E11]** |
 | `RecipientUserId`, `SentByUserId` | uuid | — |
-| `VersionId`, `BindingId`, `Culture` | — | `VersionId` opaco; `Culture` es el idioma fijado al mandar (T10) |
+| `VersionId`, `BindingId`, `Culture` | — | `VersionId` opaco; `Culture` es el idioma de la cuenta de quien recibe, para los textos del sistema (T10) |
 | `TokenHash` | texto 64 | único; el token viaja como `flow_token` y no se guarda |
 | `ExpiresAtUtc` | timestamptz | se crea + `WhatsApp:FlowSessionHours` (24 por defecto, de 1 a 168) |
 | `State` | texto | `Pending`, `Completed`, `Rejected`, `Expired`. «Venció sin respuesta» se calcula al leer (`Pending` con `ExpiresAtUtc` pasado), sin worker |
@@ -185,8 +182,8 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 - **`FormRecord`**, con sus valores.
 
 **Tipos de pregunta y límites:**
-- **Tipos** (`FormQuestionType`): `ShortText`, `LongText`, `Number`, `Date`, `YesNo` y `Choice`.
-- **Límites de Forms:** nombre ≤80, prefijo ≤12, hasta 40 preguntas y hasta 50 opciones por lista.
+- **Tipos** (`FormQuestionType`): `ShortText`, `LongText`, `Number`, `Date`, `YesNo`, `Choice` y `MultiChoice`.
+- **Límites de Forms:** nombre ≤80, prefijo ≤12, hasta 40 preguntas, hasta 50 opciones en «elegir una» y de 1 a 20 en «elegir varias» (T13).
 - **Límites de WhatsApp:** los fija el perfil del canal, con `Check(StructuredFormVersion)` (§7 y §14), síncrono y puro.
 
 **Reglas:**
@@ -196,13 +193,14 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
   - una identidad quitada no vuelve.
 - **Guardar y publicar:**
   - el borrador se puede guardar incompleto;
-  - para publicar, nombre, preguntas, ayudas, opciones y botón tienen que estar completos **en el idioma original**. La traducción es opcional: si está incompleta, la comprobación lo informa («El inglés está incompleto: va a salir en español»), pero no bloquea;
-  - la versión sella qué idiomas quedaron completos, y solo esos se publican en Meta;
+  - para publicar, nombre, preguntas, opciones y botón tienen que tener texto;
+  - guardar sin cambios no escribe: no cambian la versión, `ModifiedAtUtc` ni la auditoría;
   - publicar sella una versión nueva solo si el borrador cambió respecto de la activa. Si no cambió, devuelve `Forms.Publication.NothingToPublish`.
 - **Prefijo:** se propone desde el nombre (letras sin acentos, en mayúsculas, hasta 3, y un número si ya está tomado). Se edita hasta la primera publicación aceptada, y nunca se recicla.
 - **Respuestas:**
   - cada respuesta conserva la versión con la que llegó;
-  - la versión que se manda es la activa al momento de mandar.
+  - la versión que se manda es la activa al momento de mandar;
+  - «elegir varias» valida ids distintos de la versión sellada, sin ordenarlos ni quitar repetidos, y entre el mínimo y el máximo.
 
 **Errores** (en `Domain/Forms/<Entidad>Errors.cs`, con textos en `Application/Modules/Forms/Resources/FormsTexts.resx` y `.en.resx`). El modelo es `Domain/Assistant/AssistantErrors.cs` y su `AssistantErrorTextSource`:
 
@@ -212,16 +210,16 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | `Forms.Definition.PrefixTaken` | Conflict | el prefijo ya existe en la organización |
 | `Forms.Definition.PrefixLocked` | Conflict | se quiso cambiar después de publicar |
 | `Forms.Definition.PrefixInvalid` | Validation (campo `prefix`) | no cumple el formato |
-| `Forms.Draft.QuestionInvalid` | Validation (campo `questions[i]`) | tipo, opciones o decimales fuera de regla |
-| `Forms.Draft.TooManyQuestions` / `TooManyOptions` | Validation | más de 40 preguntas o más de 50 opciones |
-| `Forms.Publication.OriginalIncomplete` | Validation (campo por pregunta) | falta un texto en el idioma original. Una traducción incompleta no es un error. |
-| `Forms.Publication.ChannelIssues` | Validation | el canal marcó problemas: lista de `{fieldId, choiceId?, path, code, limit?, culture}` |
+| `Forms.Draft.QuestionInvalid` | Validation (campo `questions[i]`) | tipo, opciones, decimales o rango de «elegir varias» fuera de regla |
+| `Forms.Draft.TooManyQuestions` / `TooManyOptions` | Validation | más de 40 preguntas, más de 50 opciones en «elegir una» o más de 20 en «elegir varias» |
+| `Forms.Publication.Incomplete` | Validation (campo por pregunta) | falta un texto obligatorio |
+| `Forms.Publication.ChannelIssues` | Validation | el canal marcó problemas: lista de `{fieldId, choiceId?, path, code, limit?}` |
 | `Forms.Publication.InProgress` | Conflict | ya hay una publicación abierta |
 | `Forms.Publication.NothingToPublish` | Conflict | el borrador es igual a la versión activa |
 | `Forms.Publication.ChannelUnavailable` | ServiceUnavailable | sin WhatsApp, o sin número conectado [E11] |
 | `Forms.Publication.NotFound` | NotFound | — |
-| `Forms.Preview.NotAvailable` | NotFound | la versión no tiene Flow publicado en ese idioma (no estaba completo al sellar) |
-| `Forms.Record.InvalidResponse` | Validation | valor desconocido, falta uno obligatorio o se pasa del límite |
+| `Forms.Preview.NotAvailable` | NotFound | la versión no tiene un Flow publicado |
+| `Forms.Record.InvalidResponse` | Validation | valor desconocido, falta uno obligatorio, se pasa del límite o queda fuera del rango de «elegir varias» |
 | `Forms.Record.ReplayConflict` | Conflict | la misma sesión llegó con otro contenido |
 | `Forms.Record.NotAllowed` | Forbidden | quien responde ya no tiene `formrecords.create` o dejó de ser miembro |
 | `WhatsApp.Flow.TextTooLong` / `TooManyComponents` / `ResponseTooLarge` | Validation | límites del perfil (§14) |
@@ -231,28 +229,28 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | `WhatsApp.Flow.SessionExpired` | Conflict | la respuesta llegó pasada la sesión (hora de Meta) |
 | `WhatsApp.Chat.WindowClosed` / `NotEmployee` / `FormUnavailable` / `SendPending` | Conflict | reglas del botón (§6.6) |
 
-Los códigos siguen `^[A-Z][A-Za-z]+(\.[A-Z][A-Za-z0-9]+){2,}$` (`ErrorCodeTests`). El 409 de edición es el común, `General.ConcurrencyConflict`.
+Los códigos siguen `^[A-Z][A-Za-z]+(\.[A-Z][A-Za-z0-9]+){2,}$` (`ErrorCodeTests`). El 409 de edición es el común, `General.ConcurrencyConflict`, y es el único que pone el editor en conflicto: los otros 409 son errores que se corrigen.
 
 ## 5. Contrato borrador
 
-Todas las rutas Business llevan `[Access(Access.Business)]` y `[FeatureGate("forms")]`. Las escrituras que crean o envían llevan `[Idempotent]`. Los listados, `PagedRequest` (10 por defecto) y `filter-counts`. El modelo es `Api/Modules/Assistant/Controllers/BusinessAssistantController.cs`.
+Todas las rutas Business llevan `[Access(Access.Business)]` y `[FeatureGate("forms")]`. Las escrituras que crean o envían llevan `[Idempotent]`. Los listados, `PagedRequest` (10 por defecto) y `filter-counts`. Toda respuesta que consume el front tiene ejemplos exportados de una corrida real, con sus estados y sus errores de negocio. El modelo es `Api/Modules/Assistant/Controllers/BusinessAssistantController.cs`.
 
 | Método y ruta | Permiso | Pide | Devuelve |
 | --- | --- | --- | --- |
 | GET `/api/organization/forms` | `forms.read` | `page`, `pageSize`, `sort` (`name`, `updatedAtUtc`), `search`, `status` (`all`, `published`, `drafts`) | 200 `PagedResult<FormSummary>`: `{id, name, prefix, status, activeVersionNumber?, publishedAtUtc?, publicationState?}` |
 | GET `/api/organization/forms/filter-counts` | `forms.read` | `search` | 200 `{all, published, drafts}` |
-| POST `/api/organization/forms` | `forms.manage` | `{name, originalCulture?}` (el nombre, en el original; sin cultura, la de quien crea) | 201 `FormDetail` + Location, con el prefijo propuesto |
-| GET `/api/organization/forms/{id}` | `forms.read` | — | 200 `FormDetail`: `{id, originalCulture, name{…}, prefix, prefixLocked, submitLabel, questions[], completeCultures[], activeVersion?{id, number, publishedAtUtc, completeCultures[]}, publication?{id, state, errorCode?, issues?}, canManage, canPublish, version}` |
-| PUT `/api/organization/forms/{id}/draft` | `forms.manage` | `{name{…}, prefix, submitLabel{…}, questions[], version}` (no cambia `originalCulture`) | 200 `{version, questions[], completeCultures[]}`, con las identidades emitidas; 409 |
-| POST `/api/organization/forms/{id}/publication-checks` | `forms.publish` | `{version}` | 200 `{canPublish, nextVersionNumber, issues[], changes[], cultures[{culture, complete, missing}]}`; no escribe |
+| POST `/api/organization/forms` | `forms.manage` | `{name}` | 201 `FormDetail` + Location, con el prefijo propuesto |
+| GET `/api/organization/forms/{id}` | `forms.read` | — | 200 `FormDetail`: `{id, name, prefix, prefixLocked, submitLabel, questions[], activeVersion?{id, number, publishedAtUtc}, publication?{id, state, errorCode?, issues?}, canManage, canPublish, version}` |
+| PUT `/api/organization/forms/{id}/draft` | `forms.manage` | `{name, prefix, submitLabel, questions[], version}` | 200 `{version, questions[]}`, con las identidades emitidas; 409 |
+| POST `/api/organization/forms/{id}/publication-checks` | `forms.publish` | `{version}` | 200 `{canPublish, nextVersionNumber, issues[], changes[]}`; no escribe |
 | POST `/api/organization/forms/{id}/publications` | `forms.publish` | `{version}` | 202 `{publicationId, state}` + Location; no llama a Meta |
 | GET `/api/organization/forms/{id}/publications/{publicationId}` | `forms.read` | — | 200 `{state, errorCode?, issues?, versionNumber}` |
-| GET `/api/organization/forms/{id}/versions/{versionId}/preview` | `forms.read` | `culture` (un idioma completo de la versión) | 200 `{url, expiresAtUtc}`, con `Cache-Control: no-store` |
-| GET `/api/organization/whatsapp/conversations/{id}/forms` **[E11]** | «Atender internos» | `page`, `search` | 200 `{available, reason?, culture, forms: PagedResult<{definitionId, versionId, name, prefix}>}` |
+| GET `/api/organization/forms/{id}/versions/{versionId}/preview` | `forms.read` | — | 200 `{url, expiresAtUtc}`, con `Cache-Control: no-store` |
+| GET `/api/organization/whatsapp/conversations/{id}/forms` **[E11]** | «Atender internos» | `page`, `search` | 200 `{available, reason?, culture, forms: PagedResult<{definitionId, versionId, name, prefix}>}`; `culture` es el idioma de los textos del sistema que acompañan |
 | POST `/api/organization/whatsapp/conversations/{id}/forms` **[E11]** | «Atender internos» | `{definitionId, versionId, text}` (≤1024) | 202 `{sessionId, messageId}` |
 
 **Otras piezas del contrato:**
-- **Tarjeta de respuesta [E11]:** los mensajes de la conversación suman un tipo `form`: `{sessionId, state, formName, displayNumber?, values?: [{fieldId, label, type, value}], canReadValues}`.
+- **Tarjeta de respuesta [E11]:** los mensajes de la conversación suman un tipo `form`: `{sessionId, state, formName, displayNumber?, values?: [{fieldId, label, type, value}], canReadValues}`. En «elegir varias», `value` es la lista de opciones en el orden recibido.
 - **Webhook:** la misma ruta de la E8. Se agrega leer `interactive.nfm_reply`.
 - **Plataforma:** no tiene rutas nuevas. La feature `forms` aparece sola en la pestaña «Módulos» de la ficha de la organización.
 
@@ -269,12 +267,13 @@ Todas las rutas Business llevan `[Access(Access.Business)]` y `[FeatureGate("for
    - Afuera: se validan el pedido y las reglas de las preguntas.
    - En la UoW:
      - se carga la definición con la versión esperada;
+     - si el contenido no cambió, no se escribe nada y se responde la misma versión;
      - si el prefijo cambió, se comprueba que no esté bloqueado y que esté libre (el choque del índice se traduce a `PrefixTaken`);
      - se emiten las identidades nuevas y se guarda.
    - Responde 200 `{version, questions}`.
 3. **Comprobar.** Es solo lectura:
-   - reglas de Forms y el idioma original completo; informa qué traducción falta, sin bloquear;
-   - `IStructuredFormChannel.Check(StructuredFormVersion)`, síncrono y puro: sin escrituras, sin bloqueos y sin Meta; revisa solo los idiomas completos;
+   - reglas de Forms y textos obligatorios;
+   - `IStructuredFormChannel.Check(StructuredFormVersion)`, síncrono y puro: sin escrituras, sin bloqueos y sin Meta;
    - la diferencia con la versión activa.
 4. **Publicar.**
    - **En la UoW del pedido:**
@@ -282,14 +281,14 @@ Todas las rutas Business llevan `[Access(Access.Business)]` y `[FeatureGate("for
      - la versión esperada;
      - se comprueba otra vez todo lo del punto 3;
      - que no haya otra publicación abierta;
-     - se sella la `FormVersion` (número = última + 1), con sus `CompleteCultures`;
+     - se sella la `FormVersion` (número = última + 1);
      - se crean `FormPublication` (`Accepted`) y `FormPublicationWorks`;
      - se bloquea el prefijo.
    - Responde 202.
    - **El worker** (`Infrastructure/Modules/Forms/FormPublicationWorker.cs`, modelo `AssistantTurnWorker`) hace tres pasos:
      1. busca trabajos listos y entra con `ExecutionActor` (el operador que publicó, revalidado: si perdió `forms.publish` antes de tocar Meta, la publicación termina `Failed`). Llama a `IFormPublicationService.ClaimAsync`, que reserva en su única UoW y pasa a `Preparing`;
      2. fuera de toda UoW llama a `IStructuredFormChannel.PublishAsync`:
-        - el canal arma el Flow de cada idioma completo de la versión para cada WABA con números conectados **[E11]**;
+        - el canal arma el Flow de la versión para cada WABA con números conectados **[E11]**;
         - por cada uno sigue los pasos Create → Upload → Validate → Publish → Verify;
         - el adaptador `WhatsAppStructuredFormChannel` llama a `IWhatsAppFlowPublicationService.BeginStepAsync` para reservar el binding/paso y guardar `InFlight` en su única UoW; hace la llamada a Meta después del commit y entrega el resultado a `CompleteStepAsync`, que abre otra UoW. El adaptador no abre transacciones;
      3. entrega lo que devolvió el canal a `IFormPublicationService.CompleteAsync`, que en su única UoW aplica:
@@ -298,19 +297,19 @@ Todas las rutas Business llevan `[Access(Access.Business)]` y `[FeatureGate("for
         - rechazo definitivo → `Failed`, con sus `issues`.
    - **Cuando quedó `Unconfirmed`,** el worker vuelve a consultar con `GetPublicationAsync`, que solo verifica y nunca repite un POST.
    - **Si se cae a mitad:** la reserva vuelve a tomar el trabajo, y el canal, al ver un `InFlight`, verifica en vez de repetir.
-5. **Vista previa:** `IStructuredFormChannel.GetPreviewAsync(versionId, culture)` devuelve la URL de Meta con su vencimiento, sin guardar nada.
+5. **Vista previa:** `IStructuredFormChannel.GetPreviewAsync(versionId)` devuelve la URL de Meta con su vencimiento, sin guardar nada.
 6. **Mandar desde el chat** (módulo WhatsApp).
    - **Ubicación:** en escritorio, el botón «Enviar formulario» al lado de «Enviar»; en el teléfono, la opción «Enviar formulario» en el ⋮ del chat. Ambos abren el mismo diálogo. Si la acción no aplica al acceso, bandeja o permiso, no se muestra.
    - **Cuándo se puede usar:**
      - el chat es de la bandeja Internos y quien escribe es miembro activo **[E11]**;
-     - el operador tiene «Atender internos»;
+     - el operador tiene «Atender internos» (decisión 10);
      - la ventana de 24 horas está abierta;
      - el número está disponible;
-     - no hay otro envío pendiente ni sin confirmar (ya no bloquea que haya otro formulario sin responder);
-     - `IStructuredFormSource.ListSendableAsync(recipientUserId, culture)` devuelve al menos un formulario. Forms filtra los publicados que quien recibe puede responder (`formrecords.create`).
-   - **Si no se puede usar por un impedimento resoluble:** queda apagado. En escritorio, el motivo se abre desde el ⓘ junto al botón; en el ⋮ del teléfono, va debajo de «Enviar formulario», en gris, según la decisión del 2026-10-13 de `docs/rules/pantallas-y-ui.md` del front.
+     - no hay otro envío pendiente ni sin confirmar;
+     - `IStructuredFormSource.ListSendableAsync(recipientUserId)` devuelve al menos un formulario. Forms filtra los publicados que quien recibe puede responder (`formrecords.create`).
+   - **Si no se puede usar:** el botón y la opción del ⋮ quedan grisados, con el motivo en su tooltip (43).
    - **Mandar:**
-     - afuera de la UoW se valida el texto (≤1024) y se lee el formulario elegido con `FindSendableAsync`, que decide el idioma (T10): el de la cuenta de quien recibe si la versión lo tiene completo, y si no, el original. Todo el mensaje y el Flow salen en ese idioma;
+     - afuera de la UoW se valida el texto (≤1024) y se lee el formulario elegido con `FindSendableAsync`. El idioma de los textos del sistema es el de la cuenta de quien recibe (T10);
      - en la UoW: bloqueo de la conversación, se revalidan ventana, empleado y envío pendiente, se toma el chat si no estaba tomado (regla de la E11), se crea la sesión (token aleatorio de 32 bytes; se guarda solo el hash) y se encola el mensaje interactivo de tipo Flow por el outbox (`WhatsAppOutboundMessage` con su variante nueva).
    - **Si la WABA del número no tiene Flow de esa versión:** `WhatsApp.Flow.NotPublishedForNumber`.
 7. **Recibir y capturar** (worker de WhatsApp, siguiendo la entrada de la E11 **[E11]**).
@@ -318,7 +317,7 @@ Todas las rutas Business llevan `[Access(Access.Business)]` y `[FeatureGate("for
    - **El worker,** por cada mensaje, aislando los errores mensaje por mensaje:
      1. saca el hash del `flow_token` y busca la sesión;
      2. compara la hora firmada de Meta con `ExpiresAtUtc`: si se pasó, `Expired`;
-     3. decodifica con el `FieldMap` del binding (§14);
+     3. decodifica con el `FieldMap` del binding (§14); los arrays de «elegir varias» van a la captura, nunca a la descarga de medios;
      4. revalida y entra con `ExecutionActor` (quien respondió) y, sin transacción abierta, llama a `IStructuredRecordSink.CaptureAsync`. Las escrituras previas de reserva o vencimiento son fases de `IWhatsAppFlowReplyService.ClaimAsync`, con una única UoW; el worker no las abre.
    - **La captura en Forms:** `FormRecordSink` delega en `IFormRecordService.CaptureAsync`, que abre su única UoW:
      - busca el `SourceKey`: si ya existe con el mismo contenido, devuelve el mismo número; si el contenido es otro, `ReplayConflict`;
@@ -329,12 +328,12 @@ Todas las rutas Business llevan `[Access(Access.Business)]` y `[FeatureGate("for
    - **Después:** `IWhatsAppFlowReplyService.CompleteAsync` abre su única UoW en WhatsApp y marca la sesión `Completed` (con número) o `Rejected` (con código).
    - **Si se cae entre las dos UoW:** se repite y devuelve el mismo número.
 8. **Tarjeta en el chat.**
-   - Al listar los mensajes, WhatsApp llama a `IStructuredRecordSource.ReadAsync(recordIds, culture)`.
+   - Al listar los mensajes, WhatsApp llama a `IStructuredRecordSource.ReadAsync(recordIds, culture)`, con el idioma de quien mira para los textos del sistema («Sí», «No»).
    - Forms decide con los permisos de quien mira: con `formrecords.read` devuelve los valores, y sin él solo el número.
    - En la lista de chats, la vista previa es el texto fijo «Respuesta del formulario».
 9. **Retención y baja.**
-   - La retención de WhatsApp borra `ProtectedFlowResponse` cuando el mensaje ya se procesó; la respuesta y su número quedan.
-   - `Application/Modules/Forms/Services/FormsAccountDeletionParticipant` decide las reglas dentro del alcance y la UoW de la baja, sin abrir otra; qué se conserva lo decide el plan de la etapa ([datos-personales](../../rules/datos-personales.md)). Copia `Application/Modules/Assistant/Services/AssistantAccountDeletionParticipant.cs`: usa un puerto `IFormsAccountDeletionCleanupRepository`, cuya implementación en Infrastructure hace solo el cleanup EF y exige la transacción del llamador. Lo protege `AssistantMaintenanceLayerTests`, que se extiende para Forms.
+   - La retención de WhatsApp borra `ProtectedFlowResponse` cuando el mensaje ya se procesó; la respuesta y su número quedan (decisión 23).
+   - `Application/Modules/Forms/Services/FormsAccountDeletionParticipant` decide las reglas dentro del alcance y la UoW de la baja, sin abrir otra ([datos-personales](../../rules/datos-personales.md)). Copia `Application/Modules/Assistant/Services/AssistantAccountDeletionParticipant.cs`: usa un puerto `IFormsAccountDeletionCleanupRepository`, cuya implementación en Infrastructure hace solo el cleanup EF y exige la transacción del llamador. Lo protege `AssistantMaintenanceLayerTests`, que se extiende para Forms.
 
 ## 7. Puertos neutrales del núcleo
 
@@ -349,8 +348,8 @@ Los nombres no mencionan formularios ni WhatsApp.
 // WhatsApp → Forms (implementa Forms)
 public interface IStructuredFormSource
 {
-    Task<PagedResult<StructuredFormChoice>> ListSendableAsync(Guid recipientUserId, string culture, PagedRequest page, CancellationToken ct);
-    Task<StructuredFormVersion?> FindSendableAsync(Guid recipientUserId, Guid definitionId, Guid versionId, string culture, CancellationToken ct);
+    Task<PagedResult<StructuredFormChoice>> ListSendableAsync(Guid recipientUserId, PagedRequest page, CancellationToken ct);
+    Task<StructuredFormVersion?> FindSendableAsync(Guid recipientUserId, Guid definitionId, Guid versionId, CancellationToken ct);
 }
 // Forms → WhatsApp (implementa WhatsApp)
 public interface IStructuredFormChannel
@@ -359,7 +358,7 @@ public interface IStructuredFormChannel
     StructuredFormCheck Check(StructuredFormVersion version);                           // puro
     Task<StructuredPublicationResult> PublishAsync(StructuredPublicationRequest request, CancellationToken ct);
     Task<StructuredPublicationResult> GetPublicationAsync(Guid publicationId, CancellationToken ct);
-    Task<StructuredPreview?> GetPreviewAsync(Guid versionId, string culture, CancellationToken ct);
+    Task<StructuredPreview?> GetPreviewAsync(Guid versionId, CancellationToken ct);
 }
 // WhatsApp → Forms (implementa Forms)
 public interface IStructuredRecordSink
@@ -373,8 +372,8 @@ public interface IStructuredRecordSource
 ```
 
 **Modelos:**
-- `StructuredFormVersion(DefinitionId, VersionId, Number, Prefix, OriginalCulture, CompleteCultures[], Name{…}, SubmitLabel{…}, Questions[FieldId, Type, Label{…}, Help{…}, Required, MaxLength?, Decimals?, Options[ChoiceId, Label{…}]], ContentHash)`. Los textos son mapas por cultura, y `FindSendableAsync` agrega la `Culture` elegida para el envío;
-- `StructuredRecordCapture(SourceKey, DefinitionId, VersionId, RespondentUserId, Culture, SubmittedAtUtc, Values[FieldId, Text?|Number?|Date?|Bool?|ChoiceId?])`;
+- `StructuredFormVersion(DefinitionId, VersionId, Number, Prefix, Name, SubmitLabel, Questions[FieldId, Type, Label, Help, Required, MaxLength?, Decimals?, MinSelections?, MaxSelections?, Options[ChoiceId, Label]], ContentHash)`;
+- `StructuredRecordCapture(SourceKey, DefinitionId, VersionId, RespondentUserId, SubmittedAtUtc, Values[FieldId, Text?|Number?|Date?|Bool?|ChoiceId?|ChoiceIds[]?])`;
 - `StructuredRecordReceipt(RecordId, Number, DisplayNumber)`;
 - `StructuredRecordCard(RecordId, DisplayNumber, FormName, CanReadValues, Values?)`;
 - `StructuredPublicationResult(State: Published|Pending|Uncertain|Failed, Issues[], NextCheckAtUtc?)`.
@@ -417,7 +416,7 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 
 | Archivo nuevo | Modelo |
 | --- | --- |
-| `F/src/modules/forms/registration.ts`: rutas `/org/formularios` y `/org/formularios/:id`; guarda con `features.includes("forms")` y `forms.read`; `navigation` en el teléfono y en la administración; aporta `resources` es/en de `forms` y sus entradas de `enums` | `F/src/modules/assistant/registration.ts` |
+| `F/src/modules/forms/registration.ts`: rutas `/org/formularios/disenar` y `/org/formularios/disenar/:id`; guarda con `features.includes("forms")` y `forms.read`; la entrada «Gestión de formularios» del menú (34), en el teléfono y en la compu; aporta `resources` es/en de `forms` y sus entradas de `enums` | `F/src/modules/assistant/registration.ts` |
 | `F/src/modules/forms/{api,components,hooks,pages}/`, `errors.ts` | `F/src/modules/assistant/` |
 | `F/src/modules/forms/locales/{es,en}/forms.json` y `enums.json` | `F/src/modules/assistant/locales/{es,en}/assistant.json` y `enums.json`; importados por la registration del módulo |
 | `F/src/app/moduleComposition.ts`: suma `formsRegistration` | la línea del Asistente |
@@ -427,66 +426,77 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 
 ## 9. Pantallas (tableros)
 
-**Aprobados y publicados en el lienzo v128** (2026-10-17, front `05fd5444`), página «Organización · Formularios». Siguen la disposición de ArquitecturaBase (decisión 18), con las decisiones en «Criterio · Decisiones por pantalla», grupo «E12 · Formularios con la disposición de ArquitecturaBase». Los tableros del 13/10 y las copias `-v127` quedan en la página «Archivo», solo de referencia.
+**Navegación (34):** el menú principal dice «Gestión de formularios». En esta etapa su panel tiene solo «Diseñar formularios»; Catálogos, Formularios y Formularios que faltan llegan con sus etapas.
 
-| Tablero | Qué muestra |
-| --- | --- |
-| `FRM-Listado` y `M-FRM-Listado` | «Diseñar formularios»: tabla con Formulario, Preguntas, En WhatsApp y Último cambio. El nombre abre el editor, sin columna de acciones. Filtro «Estado ▾». «Nuevo formulario ▾» con «Desde cero» y «Desde una plantilla» (esta, con la E17) |
-| `FRM-Editor` y `M-FRM-Editor` | el editor en una sola pantalla (reemplaza a `FRM-Ficha`, `FRM-Ingles`, `FRM-Pregunta`, `FRM-Prefijo` y `FRM-Nuevo`): <ul><li>«Textos en: Español · original \| English · N sin traducir»;</li><li>el formulario (nombre, texto del botón final y prefijo);</li><li>las preguntas, que se abren en el lugar, con ⋮ (Editar, Subir, Bajar y Quitar);</li><li>«Así lo ve el empleado» al costado.</li></ul>En el teléfono, la pregunta se edita en una hoja y los botones van fijos abajo |
-| `FRM-Publicar` | «Publicar la versión N en WhatsApp»: qué cambia, en qué idioma sale, qué queda fijo y qué va a pasar |
-| `FRM-Publicando` | cómo termina, arriba del editor, con los pasos Aceptada, Enviada a WhatsApp, WhatsApp la revisa y Lista para mandar. Al costado, la vista oficial con «Borrador \| Versión N en WhatsApp» |
-| `WA-Chats-Formulario` y `M-WA-Chats-Formulario` | «Enviar formulario» al lado de «Enviar» en Internos (en el teléfono, en el ⋮ del chat). El diálogo «Enviar un formulario a …» tiene: <ul><li>tarjetas con «Versión N · K preguntas», con buscador y paginado si son muchos;</li><li>el idioma de la cuenta;</li><li>el mensaje prellenado, de hasta 1024 caracteres;</li><li>hasta cuándo se puede mandar.</li></ul>También tiene los tres avisos de catálogo de la E13 |
-| `WA-Chats-Respuesta` y `M-WA-Conversacion-Respuesta` | la tarjeta con las primeras 3 respuestas en grilla, «Ver las N respuestas» (en el teléfono, en una hoja) y «Guardada como VIS-000123» |
-| `Rol` y la ficha de la organización | los cinco permisos y el módulo |
+**Diseño redibuja** (evaluación del traspaso 2, §5.1), sin «Textos en», «Cambios sin guardar», revisiones junto a Guardar ni textos junto a los botones:
+- `FRM-Editor` y `M-FRM-Editor`: el editor en una sola pantalla:
+  - el formulario (nombre, texto del botón final y prefijo);
+  - las preguntas, que se abren en el lugar, con ⋮ (Editar, Subir, Bajar y Quitar);
+  - «elegir varias», con el mínimo y el máximo;
+  - «Así lo ve el empleado» al costado.
 
-**Estados que dibujan** (cada uno tiene que poder producirse; si no, es un bug):
+  En el teléfono, la pregunta se edita en una hoja y los botones van fijos abajo.
+- `FRM-Publicar`: «Publicar la versión N en WhatsApp», con qué cambia, qué queda fijo y qué va a pasar.
+- `FRM-Publicando`: cómo termina, arriba del editor, con los pasos Aceptada, Enviada a WhatsApp, WhatsApp la revisa y Lista para mandar. Al costado, la vista oficial con «Borrador | Versión N en WhatsApp».
+
+**Se quedan como están:**
+- `FRM-Listado` y `M-FRM-Listado`: «Diseñar formularios», una tabla con Formulario, Preguntas, En WhatsApp y Último cambio. El nombre abre el editor, sin columna de acciones. Tiene el filtro «Estado ▾» y «Nuevo formulario ▾», con «Desde cero» y «Desde una plantilla» (esta, con la E17). La E12b le suma el ciclo de vida;
+- `WA-Chats-Formulario` y `M-WA-Chats-Formulario`: «Enviar formulario» al lado de «Enviar» en Internos (en el teléfono, en el ⋮ del chat). El diálogo «Enviar un formulario a …» tiene:
+  - tarjetas con «Versión N · K preguntas», con buscador y paginado si son muchos;
+  - el mensaje prellenado, de hasta 1024 caracteres;
+  - hasta cuándo se puede mandar;
+- `WA-Chats-Respuesta` y `M-WA-Conversacion-Respuesta`: la tarjeta con las primeras 3 respuestas en grilla, «Ver las N respuestas» (en el teléfono, en una hoja) y «Guardada como VIS-000123»;
+- `Rol` y la ficha de la organización: los cinco permisos y el módulo.
+
+**Estados que se dibujan** (cada uno tiene que poder producirse; si no, es un bug):
 - **Editor:**
-  - guardar, no se guardó (lo escrito se conserva) y guardado sin confirmar con «Consultar guardado»;
-  - otra persona guardó, con «Qué cambió \| Guardado actualmente \| Mis cambios»;
+  - guardar, no se guardó (lo escrito se conserva);
+  - otra persona guardó, con «Qué cambió | Guardado actualmente | Mis cambios»;
   - prefijo ocupado, quitar una pregunta, cambiar el tipo y descartar;
   - solo lectura, cargando y no existe.
 - **Publicar:**
-  - primera publicación y los dos idiomas;
-  - comprobando y primero guardá;
-  - una pregunta que no se puede mostrar, con el botón apagado;
-  - la comprobación venció, cambió después de comprobar y ya se está publicando.
+  - primera publicación;
+  - comprobando, y publicar grisado mientras hay cambios sin guardar;
+  - una pregunta que no se puede mostrar, con el botón grisado;
+  - cambió después de comprobar y ya se está publicando.
 - **Cómo termina:** publicado; rechazada con «Ir a la pregunta»; sin confirmar con «Consultar ahora» (nunca «Reintentar»); necesita revisión.
 - **Enviar:**
   - En cola, Leído, y No se pudo mandar (con ⓘ, sin reintento);
   - Envío sin confirmar con «Ya lo revisé», que pide confirmación;
-  - pedido incierto con «Consultar envío»;
   - con el diálogo abierto, ventana cerrada y formulario que ya no está.
 - **Respuesta:**
-  - guardando, no se pudo guardar, no reconocida, sin permiso y respondió en inglés;
+  - guardando, no se pudo guardar, no reconocida y sin permiso;
   - el mensaje ya no está;
-  - un valor de catálogo, y una opción dada de baja con «Mandar de nuevo»;
+  - una respuesta de «elegir varias»;
   - venció sin respuesta.
 
 **Mandan sobre esta spec en:**
-- **Textos:** el editor se llama «Diseñar formularios», y la acción del chat es «Enviar formulario» (no «Mandar formulario»).
-- **Idioma:** solo el original es obligatorio, y la traducción nunca frena publicar (decisión 17).
-- **Envío pendiente:** un envío pendiente **o sin confirmar** bloquea el chat (`WhatsApp.Chat.SendPending`). Ya no bloquea que haya otro formulario sin responder.
-- **Envío sin confirmar:** lo resuelve una persona con «Ya lo revisé»: «salió» o «no salió», atribuido y durable, como en la §16. Al «pedido incierto», un error de red al pedir el envío, lo resuelve «Consultar envío»: repite el `POST` con la misma `Idempotency-Key` y recibe el resultado guardado.
-- **«Guardado sin confirmar» y «Consultar guardado»,** sin recibos (T3): «Consultar» vuelve a leer el borrador y compara **solo el contenido**, sin las identidades que emite el servidor. Si es igual a lo que la persona mandó, quedó guardado; si no, se ve la revisión de «otra persona guardó». Un error de red o un 5xx reintenta con la misma versión, y solo un 409 pide revisar.
-- **«La comprobación venció»,** sin ticket del servidor (T8): el diálogo pide comprobar de nuevo si pasaron más de 10 minutos desde la última comprobación. «Cambió después de comprobar» es el 409 de versión al publicar.
-- **«Necesita revisión»:** `FormPublication` suma el estado `NeedsReview`. Es para cuando Meta no confirmó la creación de un Flow y la consulta no puede saber si existe (un Create sin id no se adopta por nombre). Una persona con `forms.publish` lo mira en Meta y lo resuelve.
+- **Textos:** el editor se llama «Diseñar formularios», y la acción del chat es «Enviar formulario».
+- **Botones (43):** «Guardar cambios» se habilita cuando hay cambios, sin «Cambios sin guardar». Mientras trabaja, queda grisado con su mismo texto. Si falta un dato obligatorio, el botón sigue habilitado y al tocarlo se marca el campo.
+- **Si no se sabe si algo salió (43):** ante un corte de red al guardar o al mandar, la pantalla vuelve a leer sola y muestra lo que quedó, sin pisar lo escrito:
+  - **al guardar:** relee el borrador y compara **solo el contenido**, sin las identidades que emite el servidor. Si es igual a lo mandado, quedó guardado; si no, Guardar sigue habilitado con lo escrito;
+  - **al mandar:** relee el chat. Si la sesión existe, se ve el envío; si no, se puede mandar de nuevo con la misma `Idempotency-Key`, que devuelve el resultado guardado si el primero sí llegó.
+- **Envío pendiente:** un envío pendiente **o sin confirmar** bloquea el chat (`WhatsApp.Chat.SendPending`). No bloquea que haya otro formulario sin responder.
+- **Envío sin confirmar:** lo resuelve una persona con «Ya lo revisé»: «salió» o «no salió», atribuido y durable.
+- **«Cambió después de comprobar»** es el 409 de versión al publicar (T8).
+- **«Necesita revisión»:** `FormPublication` tiene el estado `NeedsReview`. Es para cuando Meta no confirmó la creación de un Flow y la consulta no puede saber si existe (un Create sin id no se adopta por nombre). Una persona con `forms.publish` lo mira en Meta y lo resuelve.
 - **«No reconocida»:** una respuesta de Flow que no corresponde a ninguna sesión se muestra en el chat como un mensaje sin valores y no crea nada en Forms.
-- **La banda de conflicto** («Otra persona cambió esto mientras lo editabas.») lleva ⚠, no el círculo: es un cambio transversal de la E9, aplicado también a los tableros de formularios en la v130.
+- **La banda de conflicto** («Otra persona cambió esto mientras lo editabas.») lleva ⚠.
 - **«Venció sin respuesta»:** se calcula al leer: la sesión sigue `Pending` y ya pasó `ExpiresAtUtc`. `Expired` queda para una respuesta que llegó tarde.
 
 ## 10. Tests
 
 | Dónde | Qué |
 | --- | --- |
-| `tests/…Domain.UnitTests/Forms/` | identidades; tipo cambiado = identidad nueva; prefijo (formato, bloqueo); transiciones de `FormPublication`; numeración |
-| `tests/…Application.UnitTests/Modules/Forms/` | validadores; reglas de publicar (original completo obligatorio, traducción incompleta que no bloquea, `CompleteCultures` sellados, «nada para publicar»); elección del idioma al mandar (completo → el de quien recibe; incompleto → todo en el original, sin mezclar); armado del Flow y verificador de respuestas (cada tipo, punto y coma, decimales de más, «125.500» con 0 decimales, obligatoria vacía, opción ajena, presupuesto de 16 KiB) |
-| `tests/…Api.IntegrationTests/Modules/Forms/` | cada ruta: 401, 403, feature apagada = 404, validación, 409, idempotencia y paginado; publicar con un canal de prueba (Published, Uncertain → verifica, Failed); captura idempotente y número sin saltos con dos capturas a la vez; tarjeta con y sin `formrecords.read`; baja de cuenta |
+| `tests/…Domain.UnitTests/Forms/` | identidades; tipo cambiado = identidad nueva; de «elegir una» a «elegir varias» = identidad nueva, y cambiar el rango la conserva; prefijo (formato, bloqueo); transiciones de `FormPublication`; numeración |
+| `tests/…Application.UnitTests/Modules/Forms/` | validadores (rango de «elegir varias»); reglas de publicar (textos obligatorios, «nada para publicar»); guardar sin cambios no escribe; armado del Flow (el `CheckboxGroup`, sin `data` cuando no hay nada que mandar, los textos del sistema en el idioma de quien recibe) y verificador de respuestas (cada tipo, punto y coma, decimales de más, «125.500» con 0 decimales, obligatoria vacía, opción ajena, ids repetidos o fuera del rango en «elegir varias», presupuesto de 16 KiB) |
+| `tests/…Api.IntegrationTests/Modules/Forms/` | cada ruta: 401, 403, feature apagada = 404, validación, 409, idempotencia y paginado; publicar con un canal de prueba (Published, Uncertain → verifica, Failed); captura idempotente y número sin saltos con dos capturas a la vez; «elegir varias» con una fila por opción y su posición; tarjeta con y sin `formrecords.read`; baja de cuenta; ejemplos exportados de cada respuesta |
 | `tests/…Api.IntegrationTests/Modules/Forms/*IsolationTests.cs` | otra organización recibe 404 en cada ruta; RLS de cada tabla; la captura no cruza organizaciones (modelo: `Modules/Assistant/AssistantConversationIsolationTests.cs`) |
 | `tests/…Api.IntegrationTests/Modules/WhatsApp/` **[E11]** | botón y motivos; sesión vencida por la hora de Meta; un mensaje con error no frena a los demás; respuesta de más de 16 KiB rechazada y visible |
 | Guardas (partials del módulo) | `ExplicitRouteInventoryTests`, `ModuleControllersTests`, `ApplicationServicesTests`, `TenantScopeUsageTests`, `ResourceParityTests` (sumar los resx de Forms), `PermissionTextsTests` y `ModuleIsolationTests` en verde; `TransactionBoundaryTests` sin ampliar excepciones, y la guarda de capas de baja como `AssistantMaintenanceLayerTests` |
-| Front | Vitest con MSW y axe en las páginas y el diálogo; `registration`, `navigation` y `composition` del módulo; paridad de sus recursos `forms` y `enums` compuestos desde `registration.ts`, también al retirar Forms |
-| E2E real y recorrido | crear en español con el inglés incompleto, publicar contra el canal real o el de prueba, mandar a una cuenta en inglés (llega entero en español), completar el inglés, publicar otra versión y mandar de nuevo (llega en inglés); responder y ver el número tras recargar |
-| Prueba con Meta | con el número de una organización de prueba: publicar, mandar, completar en el teléfono y ver el número |
+| Front | Vitest con MSW y axe en las páginas y el diálogo; los ejemplos exportados validados con zod estricto; `registration`, `navigation` y `composition` del módulo; paridad de sus recursos `forms` y `enums` compuestos desde `registration.ts`, también al retirar Forms; los botones según la decisión 43 |
+| E2E real y recorrido | crear con los siete tipos, publicar contra el canal real o el de prueba, mandar a una cuenta en inglés (el formulario llega como está escrito y los textos del sistema, en inglés); responder y ver el número tras recargar |
+| Prueba con Meta | con el número de una organización de prueba: §15 |
 | Retiro | una vez, con la base vacía: quitar `Forms` (guía nueva, `docs/guides/quitar-formularios.md`, copiando `quitar-asistente.md`) y que el núcleo y WhatsApp sigan en verde |
 
 ## 11. Premisas aplicadas
@@ -499,8 +509,8 @@ Rige la tabla de la [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-r
   - `[LoggerMessage]`, con códigos y ids;
   - nunca el `flow_token`, los valores de una respuesta, el texto del mensaje ni teléfonos completos.
 - **Textos:**
-  - lo que ve una persona en WhatsApp (el botón «Abrir formulario», la ayuda «Usá punto para los decimales») sale de resources es/en del módulo WhatsApp;
-  - los textos del formulario son de la organización.
+  - lo que ve una persona en WhatsApp por el sistema (el botón «Abrir formulario», la ayuda de los números y «Elegí hasta N») sale de resources es/en del módulo WhatsApp, en el idioma de su cuenta;
+  - los textos del formulario son de la organización, un solo texto sin idioma (35).
 - **Fechas:** `SubmittedAtUtc` y `ExpiresAtUtc` con `TimeProvider`, comparados con la hora firmada de Meta.
 - **Sin datos de ejemplo:** no hay formularios sembrados.
 
@@ -510,55 +520,52 @@ Al planificar la E12 se verifican contra el código real.
 
 | Marca | Qué hay que confirmar | Qué asume esta spec |
 | --- | --- | --- |
-| [E11] | El modelo de números: `WhatsAppChannels`, la WABA de cada número y el token por organización. | Un Flow por versión, idioma y WABA. Se publica en todas las WABAs con números conectados. |
+| [E11] | El modelo de números: `WhatsAppChannels`, la WABA de cada número y el token por organización. | Un Flow por versión y WABA. Se publica en todas las WABAs con números conectados. |
 | [E11] | Conversaciones y mensajes: ids, tipos de mensaje y el contrato de la lista de mensajes. | Se suman un mensaje saliente «Formulario» y la tarjeta `form`. |
 | [E11] | Reconocer al empleado y la bandeja Internos; «tomar» un chat. | Mandar cuenta como responder: toma el chat. |
-| [E11] | La entrada de mensajes por organización. Hoy hay un solo `IWhatsAppInboundConsumer` y no se lee `nfm_reply`. | El worker de respuestas de Flow sigue el patrón de entrada de la E11. |
+| [E11] | La entrada de mensajes por organización. | El worker de respuestas de Flow sigue el patrón de entrada de la E11. |
 | [E11] | El outbox con el número de la organización. | `WhatsAppOutboundMessage` suma la variante Flow con el `PhoneNumberId` de la organización. |
 | [E11] | Las rutas de WhatsApp (`/api/organization/whatsapp/...`) y el módulo de WhatsApp del front. | Los nombres de esta spec son provisorios. |
-| [E9] | Los límites por organización y por usuario. | Las rutas de Forms usan la política de la E9; no se definen límites propios. |
+| [E9] | Las cuotas compartidas ([cuotas](../../rules/cuotas.md)). | Las rutas de Forms cuentan en las cuotas generales; no se definen perfiles propios. |
 | [E9] | Redis. | La E12 no cachea nada nuevo. |
 | [E10] | La nube de `IFileStore`. | La E12 no guarda archivos. |
 | #51 | `Enter` borra `TenantKind`. | Se usa `ExecutionActor` (T5). |
 
 ## 13. Decisiones de producto de la etapa
 
-Las tomó el usuario el 2026-10-12. No se vuelven a preguntar.
-
-1. **La respuesta guarda todas las empresas activas de quien respondió,** tomadas al responder. El filtro por empresa de la planilla (E15) la encuentra por cualquiera de ellas.
-2. **Puede mandar un formulario cualquiera con «Atender internos»,** sin un permiso de formularios aparte. Lo que limita es que quien recibe tenga `formrecords.create`.
+Están en la §5 de la hoja de ruta y no se vuelven a preguntar: 9 (la respuesta guarda todas las empresas activas de quien respondió), 10 (manda cualquiera con «Atender internos»), 35 (el contenido no tiene idioma), 38 («elegir varias» va acá) y 43 (botones y avisos).
 
 ## 14. Referencia de Meta (tomada de ArquitecturaBase)
 
-Es lo único que se toma de ArquitecturaBase: lo que dice Meta y lo que ya se pagó. Se lee en `origin/main` (`202b65d`); los archivos están en `src/ArquitecturaBase.*/Modules/WhatsApp/`. **Antes de programar, se verifica contra la documentación vigente de Meta.**
+Es lo único que se toma de ArquitecturaBase: lo que dice Meta y lo que ya se pagó. Los archivos están en `src/ArquitecturaBase.*/Modules/WhatsApp/` de `origin/main`. **Antes de programar, se verifica contra la documentación vigente de Meta.**
 
 | Tema | Lo que se sabe |
 | --- | --- |
-| Perfil | Flow JSON `7.3`, Graph `v25.0` (configuración del módulo), sin endpoint ni `data_api_version`. Una pantalla `FORM` terminal: `SingleColumnLayout` > `Form` > controles + `Footer` con `on-click-action: complete` y un payload `field_<GuidN>: ${form.field_<GuidN>}`. |
-| Componentes | Texto corto: `TextInput` con `max-chars` (80 por defecto). Texto largo: `TextArea` con `max-length` (600). Número: `TextInput` de texto con el patrón `^-?(0|[1-9][0-9]*)([.,][0-9]+)?$`, de hasta 60 caracteres. Fecha: `CalendarPicker` single. Sí/no: `RadioButtonsGroup` con ids `true` y `false`. Lista: `Dropdown` con el `ChoiceId` como id. `max-chars` y `max-length` van como **números** JSON (Meta rechazó la versión que los mandaba como texto). |
-| Límites | Etiqueta: 20 caracteres (30 en sí/no, 40 en fecha). Ayuda: 80 (300 en la descripción de sí/no). Opción: 30. Título: 80. Botón: 35. Hasta 40 preguntas, 50 opciones y 50 componentes; JSON ≤1 MiB. Se cuentan en UTF-16. Sin recortar ni usar el otro idioma: si no entra, se informa con su `FieldId` y el texto. |
-| Presupuesto de respuesta | 16 KiB. El peor caso es 785 + la suma de (42 + los bytes del valor): texto 2 + 6 × largo, número 62, fecha 12, sí/no 7, opción 38. Si se pasa, no se publica (`ResponseTooLarge` sobre los largos de texto). |
-| Publicar | (1) Comprobar que el número sea de la WABA: `GET {waba}/phone_numbers`. (2) `POST {waba}/flows` con `{name, categories:["OTHER"]}`. (3) `POST {flow}/assets` multipart con `asset_type=FLOW_JSON`; los `validation_errors[].pointers[].path` se mapean a la pregunta y se descarta el texto de Meta. (4) `POST {flow}/publish`. (5) Verificar: `GET` del Flow y de la salud del número, bajar el asset (solo de `*.fbcdn.net` o `mmg.whatsapp.net`, sin redirecciones, ≤1 MiB) y comparar el SHA-256. Nombre técnico del Flow: `form_<publicationId>_<culture>`. |
+| Perfil | `flow-static-7.3-r9`: Flow JSON `7.3`, Graph `v25.0` (configuración del módulo), sin endpoint ni `data_api_version`. Una pantalla `FORM` terminal: `SingleColumnLayout` > `Form` > controles + `Footer` con `on-click-action: complete` y un payload `field_<GuidN>: ${form.field_<GuidN>}`. Los textos del sistema son propiedades dinámicas de `data` (T6). |
+| Componentes | Texto corto: `TextInput` con `max-chars` (80 por defecto). Texto largo: `TextArea` con `max-length` (600). Número: `TextInput` de texto con el patrón `^-?(0|[1-9][0-9]*)([.,][0-9]+)?$`, de hasta 60 caracteres. Fecha: `CalendarPicker` single. Sí/no: `RadioButtonsGroup` con ids `true` y `false`. Elegir una: `Dropdown` con el `ChoiceId` como id. Elegir varias: `CheckboxGroup` de 1 a 20 opciones, con `min-selected-items` y `max-selected-items` sellados; sin ayuda, dice «Elegí hasta N». `max-chars` y `max-length` van como **números** JSON (Meta rechazó la versión que los mandaba como texto). |
+| Límites | Etiqueta: 20 caracteres (30 en sí/no y en elegir varias, 40 en fecha). Ayuda: 80 (300 en la descripción de sí/no y en elegir varias). Opción: 30. Título: 80. Botón: 35. Hasta 40 preguntas, 50 opciones y 50 componentes; JSON ≤1 MiB. Se cuentan en UTF-16. Sin recortar: si no entra, se informa con su `FieldId` y el texto. |
+| Presupuesto de respuesta | 16 KiB. El peor caso es 785 + la suma de (42 + los bytes del valor): texto 2 + 6 × largo, número 62, fecha 12, sí/no 7, opción 38, elegir varias 38 por opción marcable. Si se pasa, no se publica (`ResponseTooLarge` sobre los largos de texto). |
+| Publicar | (1) Comprobar que el número sea de la WABA: `GET {waba}/phone_numbers`. (2) `POST {waba}/flows` con `{name, categories:["OTHER"]}`. (3) `POST {flow}/assets` multipart con `asset_type=FLOW_JSON`; los `validation_errors[].pointers[].path` se mapean a la pregunta y se descarta el texto de Meta. (4) `POST {flow}/publish`. (5) Verificar: `GET` del Flow y de la salud del número, bajar el asset (solo de `*.fbcdn.net` o `mmg.whatsapp.net`, sin redirecciones, ≤1 MiB) y comparar el SHA-256. Nombre técnico del Flow: `form_<publicationId>_<wabaId>`. |
 | Vista previa | `GET {flow}?fields=preview.invalidate(false)`. La URL tiene que ser de `business.facebook.com` y trae `expires_at`. |
-| Errores | **Incierto** (no se repite solo, se verifica): 5xx, 429, timeout, cuerpo ilegible, Create 2xx sin id. **Definitivo:** otros 4xx y 2xx con `validation_errors`. Lo que falla antes de llamar a Meta termina en fallida, no en «Sin confirmar». **Sin medio de pago** (141006): el Flow aparece disponible pero la salud total queda BLOCKED. En ArquitecturaBase la operación quedaba incierta: acá se muestra como `WhatsApp.Flow.AccountUnavailable`. |
-| Mensaje | `type: interactive`, `interactive.type: flow`, cuerpo ≤1024, `action.name: flow`, `parameters: {flow_message_version: "3", flow_id, flow_token (≤128), flow_cta (≤20, «Abrir formulario»), flow_action: navigate, flow_action_payload: {screen: "FORM"}}`. |
-| Respuesta | `messages[].interactive.type == "nfm_reply"`, `nfm_reply.name == "flow"`, `response_json` (texto) con `flow_token` y `field_<GuidN>`. Profundidad ≤4, ≤50 campos, solo escalares. Una respuesta de más de 16 KiB se guarda como rechazada, visible, y no se descarta en silencio. |
-| Valores | Texto: hasta el largo y sin NUL. Número: punto o coma, sin exponente ni separador de miles, sin redondear; se recortan los ceros a la derecha. Fecha: `yyyy-MM-dd`. Sí/no: solo `true` o `false`. Opción: un `ChoiceId` de la versión sellada. Vacío: si es obligatoria, error; si no, ausente. |
-| Lecciones | <ol><li>commitear `InFlight` antes de cada POST, y ante una duda verificar, no repetir;</li><li>un Create sin id confirmado nunca se adopta por nombre;</li><li>usar la hora firmada de Meta para vencer, y aislar los errores mensaje por mensaje;</li><li>el token no forma parte de la identidad de la cuenta (WABA + número): rotarlo no rompe nada;</li><li>no hashear arreglos sin orden fijo;</li><li>en el teléfono quedó sin probar: ausente contra `false`, el largo máximo de texto y la sesión de una versión anterior. Entran en la prueba con Meta.</li></ol> |
-| No se toma | El número y la WABA globales; los permisos planos (`formtemplates.*`); el contacto atado 1:1 a un usuario con `LinkRevision`; el bloqueo global `forms:definitions` y el prefijo global; los modos Manual, Bot y Asistente; la pausa de 6 s por destinatario en Redis; los recibos de borrador de 30 días; los formatos de manifiesto 1 y 2 y las revisiones r1 a r4 del perfil. |
+| Errores | **Incierto** (no se repite solo, se verifica): 5xx, 429, timeout, cuerpo ilegible, Create 2xx sin id. **Definitivo:** otros 4xx y 2xx con `validation_errors`. Lo que falla antes de llamar a Meta termina en fallida, no en «Sin confirmar». **Sin medio de pago** (141006): el Flow aparece disponible pero la salud total queda BLOCKED; acá se muestra como `WhatsApp.Flow.AccountUnavailable`. |
+| Mensaje | `type: interactive`, `interactive.type: flow`, cuerpo ≤1024, `action.name: flow`, `parameters: {flow_message_version: "3", flow_id, flow_token (≤128), flow_cta (≤20, «Abrir formulario»), flow_action: navigate, flow_action_payload: {screen: "FORM", data?}}`. `data` lleva solo los textos del sistema que el Flow usa; si no hay ninguno, no se manda (T14). |
+| Respuesta | `messages[].interactive.type == "nfm_reply"`, `nfm_reply.name == "flow"`, `response_json` (texto) con `flow_token` y `field_<GuidN>`. Profundidad ≤4, ≤50 campos; «elegir varias» llega como array de ids. Una respuesta de más de 16 KiB se guarda como rechazada, visible, y no se descarta en silencio. |
+| Valores | Texto: hasta el largo y sin NUL. Número: punto o coma, sin exponente ni separador de miles, sin redondear; se recortan los ceros a la derecha. Fecha: `yyyy-MM-dd`. Sí/no: solo `true` o `false`. Opción: un `ChoiceId` de la versión sellada. Elegir varias: ids distintos de la versión, en el orden recibido. Vacío: si es obligatoria, error; si no, ausente. Veinte selecciones no consumen el tope de diez archivos. |
+| Lecciones | <ol><li>commitear `InFlight` antes de cada POST, y ante una duda verificar, no repetir;</li><li>un Create sin id confirmado nunca se adopta por nombre;</li><li>usar la hora firmada de Meta para vencer, y aislar los errores mensaje por mensaje;</li><li>el token no forma parte de la identidad de la cuenta (WABA + número): rotarlo no rompe nada;</li><li>no hashear arreglos sin orden fijo;</li><li>en el teléfono hay que probar: ausente contra `false`, el largo máximo de texto y la sesión de una versión anterior. Entran en la prueba con Meta.</li></ol> |
+| No se toma | El número y la WABA globales; los permisos planos (`formtemplates.*`); el contacto atado 1:1 a un usuario con `LinkRevision`; el bloqueo global `forms:definitions` y el prefijo global; un Flow por idioma; los modos Manual, Bot y Asistente; la pausa de 6 s por destinatario en Redis; los recibos de borrador de 30 días; los perfiles anteriores a r9. |
 
 ## 15. Cómo se cierra
 
-La puerta de la etapa ([etapa en paralelo](../../guides/etapa-en-paralelo.md)) tiene las suites, el E2E real, la documentación en 0, la galería y el recorrido. Además, hay una **prueba real con Meta** con el número de una organización de prueba:
-1. **Formulario de prueba:** se crea en español con el inglés incompleto y los seis tipos de pregunta, y se publica. Meta confirma `PUBLISHED`, con un solo Flow, en español.
-2. **Mandar a una cuenta en inglés:** el formulario llega **entero en español**. Se completa en el teléfono dejando vacía una opcional y poniendo `12.50` en el número, y en el chat aparece el número de la respuesta tras recargar.
-3. **Completar el inglés:** se publica la versión 2, con dos Flows. Mandado de nuevo, el formulario llega en inglés.
-4. **Mirar lo que llega de Meta:** qué manda para una opcional vacía (en ArquitecturaBase la omitía), y que `12.50` y `12,50` se guardan iguales.
+La puerta de la etapa ([etapa en paralelo](../../guides/etapa-en-paralelo.md)) tiene las suites, el E2E real, la documentación en 0, la galería, el recorrido y la lista de control de `/puerta`. Además, hay una **prueba real con Meta** con el número de una organización de prueba, abriendo cada variante en un celular:
+1. **Formulario de prueba:** con los siete tipos de pregunta, entre ellos «elegir varias» con mínimo 1 y máximo 3. Meta confirma `PUBLISHED`, con un solo Flow.
+2. **Mandar a una cuenta en inglés:** el formulario llega como está escrito, y el botón, la ayuda de los números y «Elegí hasta N» llegan en inglés. Se abre en Android y en iPhone.
+3. **Completar:** dejar vacía una opcional, poner `12.50` en el número y marcar dos opciones. En el chat aparece el número de la respuesta tras recargar, y las dos opciones quedan en su orden.
+4. **Mirar lo que llega de Meta:** qué manda para una opcional vacía y para «elegir varias» sin marcar, y que `12.50` y `12,50` se guardan iguales.
 5. **Una WABA sin medio de pago** (si se puede probar): queda `AccountUnavailable` visible, no «Sin confirmar» para siempre.
 
-## 16. Lo que ArquitecturaBase aprendió después de esta spec
+## 16. Criterios
 
-Vienen del [traspaso del 2026-10-17](../2026-10-17-formularios-traspaso/README.md): el anexo C §2 y el [06 de lecciones](../2026-10-17-formularios-traspaso/06-lecciones.md). Son criterios de la etapa, y el plan los toma.
+Salen de los reviews y los pilotos de ArquitecturaBase. El plan los toma como lista de control, junto con la de `/puerta`.
 
 - **Captura:**
   - una falla técnica se reintenta hasta **5 veces y al menos 15 minutos** desde la primera, con intervalos 30, 90, 210, 450 y 930 s; recién ahí queda `Rejected` y visible;
@@ -568,22 +575,22 @@ Vienen del [traspaso del 2026-10-17](../2026-10-17-formularios-traspaso/README.m
   - «Sin confirmar» se **consulta** y, si sigue incierto, una persona dice «salió» o «no salió»; nunca se ofrece «Reintentar» sobre lo incierto;
   - un envío del chat que quedó incierto sigue la misma regla **[E11]**.
 - **Contratos:**
-  - cada campo nuevo de un DTO se exporta y el front lo consume en el mismo corte;
+  - cada campo nuevo de un DTO se exporta, con su ejemplo de una corrida real, y el front lo consume con zod estricto en el mismo corte;
   - las rutas de error tienen la misma forma en los dos lados;
   - `""` no es `null`: lo que falta va como `null`, y una propiedad vacía se omite en lo que va a Meta;
   - una entrada inválida es 400, nunca 500;
   - un campo omitido no apaga nada.
-- **Guardado:** ante un error de red o un 5xx, el editor reintenta con la misma versión; solo un 409 pide revisar. Un botón sin cambios no pide confirmación ni sube la versión.
+- **Guardado:** ante un error de red o un 5xx, el editor relee solo y reintenta con la misma versión; solo el 409 de versión pide revisar. Guardar sin cambios no escribe.
 - **Pantalla:**
-  - **errores:** un solo dueño por error (toast común o junto al campo, nunca los dos), y «Reintentar» solo ante errores de red;
+  - **errores:** un solo dueño por error (aviso común o junto al campo, nunca los dos), y «Reintentar» solo ante errores de red;
   - **navegación:** no desmonta el editor; se conserva el contenido con `aria-busy` y el foco nunca queda en `body`;
   - **permisos:** un 403 en una acción no oculta la pantalla de lectura.
 - **Privacidad:**
   - `ToString` redactado en todo modelo con valores o nombres;
   - sin `formrecords.read`, ningún valor en avisos, vistas previas, `aria-label` ni caché;
   - lo sellado (payloads cifrados) entra en la retención.
-- **Meta, solo para versiones futuras, sin recompilar lo sellado:**
-  - el perfil se versiona;
+- **Meta:**
+  - el perfil se versiona, y lo sellado no se recompila;
   - los IDs de pantalla son solo letras y guiones bajos;
   - 141006 cuando la WABA no tiene medio de pago;
   - 131030 con el 9 argentino en un número de prueba.
