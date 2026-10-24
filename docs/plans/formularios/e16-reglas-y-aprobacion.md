@@ -1,6 +1,6 @@
 # E16 · Reglas, aprobación, PDF y avisos (resumen)
 
-**Estado:** resumen de la octava etapa del bloque (decisión 34). Corresponde a la etapa 4 de ArquitecturaBase, implementada y probada allá con un piloto real. Se planifica con `/plan-etapa` cuando le toque, después de la E15.
+**Estado:** resumen de la décima etapa del bloque (decisiones 34, 54 y 73). Corresponde a la etapa 4 de ArquitecturaBase, implementada y probada allá con un piloto real. Se planifica con `/plan-etapa` cuando le toque, después de la E15.
 
 **Dónde está el detalle:**
 - en el traspaso del 17/10: [04 §4](../2026-10-17-formularios-traspaso/04-etapas.md), anexo C §2 (etapa 4), anexo B (E4) y anexo D (G1–G6);
@@ -32,6 +32,7 @@
     - la respuesta conserva su número y queda marcada «Corregida». La actividad guarda quién, cuándo, y el valor de antes y el de después;
     - los cálculos de la E13d se vuelven a hacer. Las reglas no vuelven a correr: quien aprueba ve los valores corregidos y la historia;
     - una UoW, con la versión de la respuesta (`IVersioned`) y 409 si otro la corrigió o la decidió antes.
+  - **Copiar un formulario** (74, E12b) suma desde esta etapa el diseño del PDF y las reglas vigentes del original, como su primera revisión.
   - **«Por aprobar» en «Formularios» (MF1),** con la misma fuente que «Para resolver» (el `IPendingItemSource` de ADR 0040):
     - MF1 suma la columna «Por aprobar» y el filtro «Con algo por aprobar», y los formularios que esperan una decisión van primero;
     - cuenta solo las tareas que esa cuenta puede decidir con su rol vigente, sin las respuestas propias;
@@ -42,7 +43,7 @@
     - un diseño con revisiones propias: nombre (hasta 160), preguntas, quién aprobó, pie (hasta 1000) e «Incluir las fotos». Cada texto es uno solo (35);
     - **un diseño de base bien hecho, con personalización acotada** (59): el logo, el color de la organización, un encabezado con sus datos, las preguntas agrupadas en secciones con título y en el orden que se elija, mostrar u ocultar cada pregunta, y un lugar para firmas. No hay un editor libre;
     - **muestra los campos «Dato»** de las opciones de catálogo elegidas (E13b), junto a su pregunta, y en un catálogo tipado, «texto · valor»;
-    - al aprobar, se fija una **copia fija** A4, una por ejecución, que se escribe una sola vez. El contenido va como está escrito, y los textos del sistema («Aprobada por», «Página 1 de 1»), en el idioma de la cuenta de quien cargó la respuesta (42);
+    - al aprobar, se fija una **copia fija** A4, una por ejecución, que se escribe una sola vez. El contenido va como está escrito, y los textos del sistema («Aprobada por», «Página 1 de 1»), en el idioma de la cuenta de quien cargó la respuesta; si es un cliente sin cuenta, en el de la organización (42);
     - solo se ve por la Api, con `formrecords.read`.
   - **Avisos por WhatsApp:**
     - Forms los pide por un **puerto neutral del núcleo**, como el envío de la E12, y nunca referencia WhatsApp (lo controla `ModuleIsolationTests`). WhatsApp los encola en su misma cola de salida, marcados como «acción de formulario» y sin duplicados por ejecución;
@@ -95,7 +96,7 @@
 
 - Varios niveles o varios aprobadores.
 - Acciones de otros módulos y compensaciones.
-- Cargar desde la web e importar respuestas.
+- Importar respuestas desde Excel.
 - El asistente y las sugerencias (E18).
 
 ## Cómo se cierra

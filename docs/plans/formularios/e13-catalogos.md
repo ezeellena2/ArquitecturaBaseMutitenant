@@ -37,7 +37,7 @@
 - campos extra y qué viaja a WhatsApp (E13b);
 - datos de las personas y filtros por destinatario (E13c);
 - catálogos con una consulta SQL;
-- otras fuentes, como clientes o productos, que no existen en la plantilla;
+- productos u otras fuentes externas, que no existen en la plantilla (los clientes son la fuente «Contactos», 55);
 - la búsqueda en vivo o las listas dependientes, porque necesitan el intercambio cifrado con Meta;
 - límites por plan: los topes son iguales para todas (42).
 
@@ -63,7 +63,7 @@ Valen las de la E12. Las de producto están en la §5 de la hoja de ruta.
 | C14 | **Números y fechas de un archivo o de lo pegado** se leen con la cultura del pedido. Lo que se puede leer de dos formas («1.500», «12.345», «3/4/2026») da `Forms.CatalogImport.ValueAmbiguous`, en su fila y columna. | Lista de control de `/puerta`, punto 1. |
 | C15 | **Exportar** escribe el valor canónico como texto, con las columnas de la plantilla, y se vuelve a importar sin diferencias. La plantilla trae una columna por dato, si es obligatorio, y una fila de ejemplo. | Exportar e importar son el camino para los cambios grandes. |
 | C17 | **La fuente «Contactos» la da WhatsApp por un puerto neutral del núcleo** (`IStructuredContactSource`, en `Application/Interfaces/Integrations/StructuredData/`). Forms nunca referencia a WhatsApp; sin WhatsApp, la implementación apagada no devuelve contactos y el origen no aparece. | `ModuleIsolationTests`, como los puertos de la E12. |
-| C16 | **La vista previa, aplicar y exportar van de a uno por persona,** con el candado de PostgreSQL de la E15 (`AdvisoryLockExtensions`). La segunda da `Forms.CatalogImport.Busy`. Cuentan en las cuotas generales ([cuotas](../../rules/cuotas.md)), sin perfil propio. | Nunca un limitador por proceso. |
+| C16 | **La vista previa, aplicar y exportar van de a uno por persona,** con el candado de PostgreSQL del núcleo, como los `I<X>Lock` de `Application/Interfaces/Persistence` (`AdvisoryLockExtensions`). La segunda da `Forms.CatalogImport.Busy`. Cuentan en las cuotas generales ([cuotas](../../rules/cuotas.md)), sin perfil propio. | Nunca un limitador por proceso. |
 
 ## 3. Modelo de datos
 
@@ -78,7 +78,7 @@ Todas las tablas son `ITenantOwned` en `tenant`, con RLS, FK compuestas y `TextL
 | `Description` | texto ≤300? | opcional |
 | `Source` | texto | `Manual`, `Members` o `Contacts`; no cambia después de crear |
 | `ValueType` | texto | `Text`, `Integer`, `Decimal` o `Date`; no cambia; `Members` es siempre `Text` (C11) |
-| `Filters` | jsonb? | solo con `Members`; CHECK que lo ata a `Source` |
+| `Filters` | jsonb? | solo con `Members` o `Contacts`; CHECK que lo ata a `Source` |
 | `IsActive` | bool | dar de baja = `false` |
 | `Version` y auditoría | — | — |
 
@@ -153,12 +153,13 @@ Se define en el código, en `Application/Modules/Forms/Catalogs/MembersCatalogSo
 ## 5. Dominio y errores
 
 **Entidades** (`Domain/Forms`):
-- **`FormCatalog`:** `CreateManual(valueType)`, `CreateMembers`, `Rename`, `ChangeFilters` (solo `Members`), `Deactivate` y `Reactivate`.
+- **`FormCatalog`:** `CreateManual(valueType)`, `CreateMembers`, `CreateContacts`, `Rename`, `ChangeFilters` (solo `Members` y `Contacts`), `Deactivate` y `Reactivate`.
 - **`FormCatalogItem`:** `Create`, `Edit`, `Deactivate`, `Reactivate` y `SwapPosition`.
 
 **Estado de un catálogo** (se calcula, no se guarda): «Se puede usar» o «No se puede usar», con estos motivos:
 - `NoActiveOptions`: un catálogo a mano sin opciones activas;
 - `SourceOutdated`;
+- `ChannelUnavailable`: un catálogo de `Contacts` sin WhatsApp instalado;
 - `RoleMissing` o `CompanyMissing`: falta un rol o una empresa de una condición.
 
 | Código | Tipo | Cuándo |
@@ -171,7 +172,7 @@ Se define en el código, en `Application/Modules/Forms/Catalogs/MembersCatalogSo
 | `Forms.Catalog.MoveOutOfRange` | Conflict | subir la primera o bajar la última |
 | `Forms.Catalog.Inactive` | Conflict | cambiar opciones de un catálogo dado de baja, o elegirlo en una pregunta nueva |
 | `Forms.Catalog.WrongSource` | Conflict | opciones en un catálogo con filtros, o filtros en uno a mano |
-| `Forms.Catalog.SampleMemberRequired` | Validation (campo `sampleMemberId`) | crear o guardar un catálogo con filtros sin persona de ejemplo |
+| `Forms.Catalog.SampleMemberRequired` | Validation (campo `sampleMemberId`) | crear o guardar un catálogo de `Members` con condiciones sin persona de ejemplo. Sin condiciones no hace falta, como en la copia de una plantilla (E17) |
 | `Forms.Catalog.FiltersInvalid` | Validation (campo `conditions[i]`) | columna, operador o valor fuera de la fuente |
 | `Forms.Catalog.SampleMemberNotFound` | Validation | la persona de ejemplo no es de la organización |
 | `Forms.Catalog.ItemTextTooLong` / `ItemDetailTooLong` | Validation (campo `items[i].text` o `.detail`) | textos fuera de límite |
@@ -196,7 +197,7 @@ Las rutas de Business llevan `[Access(Access.Business)]` y `[FeatureGate("forms"
 | Método y ruta | Permiso | Pide | Devuelve |
 | --- | --- | --- | --- |
 | GET `/api/organization/forms/catalogs` | `formcatalogs.read` | `page`, `pageSize`, `sort` (`name`, `updatedAtUtc`), `search`, `source` (`all`, `manual`, `members`, `contacts`), `status` (`all`, `active`, `inactive`) | 200 `PagedResult<{id, name, description?, source, valueType, optionsCount?, usedByCount, isActive, usable, unusableReason?}>` |
-| GET `/api/organization/forms/catalogs/filter-counts` | `formcatalogs.read` | `search` | 200 `{all, manual, members, active, inactive}` |
+| GET `/api/organization/forms/catalogs/filter-counts` | `formcatalogs.read` | `search` | 200 `{all, manual, members, contacts, active, inactive}` |
 | POST `/api/organization/forms/catalogs` | `formcatalogs.manage` | `{name, description?, source, valueType?, items?[], filters?, sampleMemberId?}`. Sin tipo, `Text`; `Members` exige `sampleMemberId` | 201 detalle + Location, con el mapa de ids |
 | GET `/api/organization/forms/catalogs/{id}` | `formcatalogs.read` | — | 200 `{id, name, description, source, valueType, filters?, isActive, usable, unusableReason?, usedByCount, canManage, version}` |
 | GET `/api/organization/forms/catalogs/{id}/used-by` | `formcatalogs.read` | `page`, `pageSize`, `search`, `sort` (`name`) | 200 `PagedResult<{formId, name}>` |
@@ -210,7 +211,8 @@ Las rutas de Business llevan `[Access(Access.Business)]` y `[FeatureGate("forms"
 | GET `/api/organization/forms/catalogs/sources/members/roles` | `formcatalogs.manage` | `page`, `pageSize`, `search`, `sort` (`name`) | 200 `PagedResult<{id, name}>` de roles de la organización |
 | GET `/api/organization/forms/catalogs/sources/members/companies` | `formcatalogs.manage` | `page`, `pageSize`, `search`, `sort` (`name`) | 200 `PagedResult<{id, name}>` de empresas de la organización |
 | GET `/api/organization/forms/catalogs/sample-members` | `formcatalogs.manage` | `page`, `search` | 200 `PagedResult<{memberId, name}>`, sin correo |
-| POST `/api/organization/forms/catalogs/previews` | `formcatalogs.manage` | `{filters, sampleMemberId, multiple}` | 200 `{options[{text, detail?}], total, exceedsLimit}`; no escribe |
+| GET `/api/organization/forms/catalogs/sources/contacts/tags` | `formcatalogs.manage` | `page`, `pageSize`, `search` | 200 `PagedResult<{id, name}>` de etiquetas de contactos de la organización, por el puerto `IStructuredContactSource` (C17) |
+| POST `/api/organization/forms/catalogs/previews` | `formcatalogs.manage` | `{source, filters, sampleMemberId?, multiple}`; con `Contacts` no hay persona de ejemplo | 200 `{options[{text, detail?}], total, exceedsLimit}`; no escribe |
 
 Las pruebas de integración recorren una segunda página de `used-by`, opciones, roles, empresas y errores de importación, con búsqueda y desempate; `GrowingCollectionContractTests` verifica sus contratos sin agregar excepciones por módulo. La vista previa y la oferta conservan su límite explícito (200 o 20).
 
@@ -260,7 +262,9 @@ Las pruebas de integración recorren una segunda página de `used-by`, opciones,
 
 ## 8. Puertos
 
-No hay puertos nuevos; cambian los modelos de la E12:
+**Un puerto nuevo, `IStructuredContactSource`** (C17), en `Application/Interfaces/Integrations/StructuredData/`: lista los contactos de la organización por página, con sus filtros por etiqueta y una fila más que el tope, sin teléfonos. Lo implementa WhatsApp y su versión apagada está en `Infrastructure/StructuredData/`.
+
+Cambian además los modelos de la E12:
 - **`StructuredFormVersion.Questions[]`:** suma `CatalogId?` en las preguntas de elegir.
 - **`FindSendableAsync`:** devuelve `StructuredSendableForm(Version, Offers[FieldId → Options[ItemRef(CatalogId, ItemId), Text, Detail?, Code?, Value?]], Problems[FieldId, Code])`.
 - **`ListSendableAsync`:** suma `HasProblems` por formulario.
@@ -274,7 +278,8 @@ Los modelos están en este repo; no se copia código de ArquitecturaBase. Las ab
 | --- | --- |
 | `D/Forms/FormCatalog.cs`, `FormCatalogItem.cs`, `FormCatalogSource.cs`, `FormCatalogValueType.cs`, `FormCatalogErrors.cs`, `FormCatalogImportErrors.cs`, `FormOfferErrors.cs` | las entidades de la E12 |
 | `D/Authorization/Permissions.cs`: suma `formcatalogs.read` y `formcatalogs.manage` | la clase `Forms` de la E12 |
-| `A/Modules/Forms/Interfaces/Services/IFormCatalogService.cs`, `IFormCatalogImportService.cs` y sus servicios, con los helpers `FormCatalogFiltersPolicy`, `FormCatalogItemEditor`, `FormCatalogPositionGuard`, `FormCatalogFileReader`, `FormCatalogImportPlanner`, `FormCatalogFileWriter` y `FormOfferBuilder` | los servicios de la E12; el sufijo de cada helper sale de la lista cerrada de [capas-y-flujo](../../rules/capas-y-flujo.md), y si uno no está, se renombra |
+| `A/Modules/Forms/Interfaces/Services/IFormCatalogService.cs`, `IFormCatalogImportService.cs` y sus servicios, con los helpers `FormCatalogFiltersPolicy`, `FormCatalogItemEditor`, `FormCatalogPositionGuard`, `FormCatalogFileResolver` (lee el archivo o lo pegado), `FormCatalogImportPolicy` (decide altas, cambios, bajas y errores, sin escribir), `FormCatalogExportBuilder` (arma el `.xlsx`) y `FormOfferBuilder` | los servicios de la E12; los sufijos son los de la lista cerrada de [capas-y-flujo](../../rules/capas-y-flujo.md) |
+| `A/Interfaces/Integrations/StructuredData/IStructuredContactSource.cs`, su modelo y `I/StructuredData/DisabledStructuredContactSource.cs`; en WhatsApp, `WhatsAppStructuredContactSource.cs` | los puertos de la E12 y sus implementaciones apagadas |
 | `A/Modules/Forms/Catalogs/MembersCatalogSource.cs` (columnas, operadores y versión) | — (nuevo; es una definición, sin servicios) |
 | `A/Modules/Forms/Interfaces/Persistence/IFormCatalogRepository.cs`, `IFormCatalogReader.cs`, `IFormMembersCatalogReader.cs`, `IFormCatalogLock.cs` | los de la E12; el candado, como los `I<X>Lock` de `Application/Interfaces/Persistence` |
 | `I/Modules/Forms/Persistence/Configurations/FormCatalogConfiguration.cs`, `FormCatalogItemConfiguration.cs`; `Readers/FormCatalogReader.cs`, `FormMembersCatalogReader.cs` | las configuraciones de la E12; `I/Persistence/Readers/` del núcleo para miembros |
@@ -295,7 +300,7 @@ Los modelos están en este repo; no se copia código de ArquitecturaBase. Las ab
 **Diseño redibuja** (evaluación, §5.1): `FRM-Catalogo`, `M-FRM-Catalogo`, `FRM-Catalogo-Filtros`, `M-FRM-Catalogo-Filtros` y `FRM-Catalogo-Propuesta`. Sale «Textos en», sale «Cambios sin guardar», y el origen y el tipo de valor van como la A11: en su campo, apagados y en gris, sin «No se cambia» (43).
 
 **Diseño dibuja nuevos** (evaluación, §5.2), con nuestras piezas y la decisión 43:
-- `CA1-A` · Todo a la vista: el editor de un catálogo a mano con la barra de Opciones (Agregar opción, Pegar desde Excel, Importar, Exportar y «⋯» con la plantilla, ordenar de la A a la Z y generar los códigos que faltan), la búsqueda, la tabla editable en la compu, la selección de filas para dar de baja o reactivar, y «Así lo ve el empleado» con «Una opción / Varias». En el celular, el editor por opción;
+- `CA1-A` · Todo a la vista: el editor de un catálogo a mano con la barra de Opciones (Agregar opción, Pegar desde Excel, Importar, Exportar y «⋯» con la plantilla, ordenar de la A a la Z y generar los códigos que faltan), la búsqueda, la tabla editable en la compu, la selección de filas para dar de baja o reactivar, y «Así lo ve quien lo recibe» con «Una opción / Varias». En el celular, el editor por opción;
 - `CA2` · Importar (y pegar): archivo o filas pegadas, revisar (Errores, Altas, Cambios y Bajas, por fila y columna) y aplicar, con la confirmación de bajas, «Aplicar sin las N filas con errores» y el 409;
 - `CA3` · Tipo de valor: se elige al crear, la columna «Valor», el error en el campo, y el tipo en el editor de formularios, el Excel y el PDF;
 - `CA4` · Elegir varias: «Permitir elegir varias» en la pregunta de catálogo, con mínimo y máximo, «varias, hasta N» en la lista de preguntas y la vista previa con casillas;

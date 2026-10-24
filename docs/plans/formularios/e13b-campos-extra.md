@@ -63,7 +63,7 @@ Cada una lleva su test, escrito durante la etapa:
 - Los filtros por destinatario y los datos de las personas (E13c).
 - Operadores distintos de «es igual a», y varios valores de un mismo campo.
 - Completar otras preguntas con los datos de la opción.
-- La búsqueda en vivo, el asistente que arma catálogos y los orígenes externos: después del bloque.
+- La búsqueda en vivo y los orígenes externos: después del bloque. El asistente que arma catálogos llega con la E19 (75).
 
 ## Cómo se cierra
 

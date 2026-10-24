@@ -1,4 +1,4 @@
-# E12b · Ciclo de vida: dar de baja, reactivar y eliminar (resumen)
+# E12b · Ciclo de vida: dar de baja, reactivar, eliminar y copiar (resumen)
 
 **Estado:** resumen de la segunda etapa del bloque (decisión 34). En ArquitecturaBase está programado y revisado. Se planifica con `/plan-etapa` cuando le toque, después de la E12.
 
@@ -14,7 +14,7 @@
     - los envíos abiertos conservan su versión y se responden hasta vencer. Respuestas, archivos, numeración, aprobaciones y reglas siguen disponibles;
     - las sugerencias de otros formularios que apuntan a él dejan de ofrecerse, y vuelven si se reactiva.
   - **Reactivar** es la publicación de siempre con el borrador actual: versión nueva y Flows nuevos. Sigue dado de baja hasta que se confirma la versión nueva, y la numeración continúa.
-  - **Copiar un formulario** (74): crea uno nuevo en borrador con el borrador del original, su diseño del PDF y sus reglas vigentes (como su primera revisión), y un prefijo nuevo propuesto con la regla de la E12. Usa los mismos catálogos, sin duplicarlos. Pide `forms.manage`. No copia versiones, respuestas ni publicaciones.
+  - **Copiar un formulario** (74): crea uno nuevo en borrador con el borrador del original, con un prefijo nuevo propuesto con la regla de la E12. Pide `forms.manage`. No copia versiones, respuestas ni publicaciones. Las etapas siguientes suman lo suyo a la copia: con la E13, las preguntas de catálogo apuntan a los mismos catálogos, sin duplicarlos; con la E16, se copian el diseño del PDF y las reglas vigentes, como su primera revisión.
   - **Eliminar:**
     - es lógico, y solo se puede sin respuestas, sin envíos abiertos ni respuestas en proceso, y sin publicación en curso. Se comprueba bajo el mismo bloqueo que las otras escrituras;
     - no borra versiones ni evidencias del canal;
@@ -36,7 +36,8 @@
   - `BA3` · El diálogo «Dar de baja»: qué deja de pasar, los envíos abiertos, WhatsApp y lo que se conserva;
   - `BA4` · Reactivar y eliminar;
   - `BA5` · El circuito de punta a punta;
-  - `BA6` · Una sugerencia hacia un dado de baja. Se programa con la E18, que trae el editor de sugerencias.
+  - `BA6` · Una sugerencia hacia un dado de baja. Se programa con la E18, que trae el editor de sugerencias;
+  - `FRM-Copiar` · el diálogo de copiar, con el nombre y el prefijo propuesto, desde el ⋮ de «Diseñar formularios» y del editor (74).
 - **Mandan sobre este resumen en:**
   - **una acción que no se puede usar** queda grisada, con el motivo en su tooltip, también en el ⋮ (43). Sin el permiso, no se dibuja;
   - **con respuestas, Eliminar no aparece;**

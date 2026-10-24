@@ -11,9 +11,9 @@
   - **Archivos:** se suben a la Api con los mismos topes y la misma verificación por contenido que los que llegan por WhatsApp (E14).
   - **`[Idempotent]`** en el `POST` que la crea, para que un doble clic no cree dos respuestas.
 - **Front:**
-  - «Cargar respuesta» en la planilla de cada formulario, y en el teléfono, en su menú;
+  - «Cargar respuesta» en el ⋮ de cada formulario publicado de «Diseñar formularios», y en el teléfono, en su menú. La E15 la mueve a la planilla;
   - el formulario armado desde la versión activa, con todas sus preguntas, condiciones, líneas y archivos;
-  - al guardar, la respuesta abre con su número.
+  - al guardar, se ve el número de la respuesta y su tarjeta, como en el chat.
 - **Tableros que dibuja Diseño,** con nuestras piezas y la decisión 43:
   - `FRM-Cargar-Respuesta` y su teléfono: el formulario en la web, con las preguntas que aparecen según otra respuesta, las líneas y los archivos.
 
@@ -29,7 +29,7 @@
 
 ## Cómo se cierra
 
-La puerta de la etapa, con la lista de control de `/puerta`, más un **recorrido real**: cargar desde la web una respuesta con una condición, dos renglones, un cálculo y una foto, y ver que queda igual que una por WhatsApp en la planilla, el PDF y las reglas.
+La puerta de la etapa, con la lista de control de `/puerta`, más un **recorrido real**: cargar desde la web una respuesta con una condición, dos renglones, un cálculo y una foto, y ver que queda igual que una por WhatsApp: el mismo número correlativo, los mismos valores y el cálculo. La planilla, el PDF y las reglas la prueban en sus etapas.
 
 ## Requisitos previos
 

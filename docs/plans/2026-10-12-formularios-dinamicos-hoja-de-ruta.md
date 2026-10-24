@@ -1,6 +1,6 @@
 # Formularios dinámicos por WhatsApp: hoja de ruta
 
-Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sección 5](#5-decisiones-de-producto)). Está sumada al [plan de desarrollo](2026-09-27-plan-de-desarrollo.md) como **las once etapas de la decisión 34, de la E12 a la E19, después de la E10**. No es un plan de etapa: cada etapa se escribe en el formato de [etapa en paralelo](../guides/etapa-en-paralelo.md) cuando le toque, a partir de su sección de acá.
+Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sección 5](#5-decisiones-de-producto)). Está sumada al [plan de desarrollo](2026-09-27-plan-de-desarrollo.md) como **las catorce etapas de las decisiones 34, 54, 69 y 73, de la E12 a la E19, después de la E10**. No es un plan de etapa: cada etapa se escribe en el formato de [etapa en paralelo](../guides/etapa-en-paralelo.md) cuando le toque, a partir de su sección de acá.
 
 **Origen.** Es la misma funcionalidad que se está construyendo en `ArquitecturaBase`, adaptada a organizaciones, empresas, plataforma y personas. Allá la Etapa 1 está cerrada y probada con Meta real (envío, respuesta y número guardado), y las demás tienen diseño y decisiones elegidas.
 
@@ -21,7 +21,7 @@ Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sec
 - **Reglas.** Al llegar una respuesta se puede pedir aprobación, armar un PDF y avisar por WhatsApp.
 - **Plataforma (nuevo respecto de ArquitecturaBase).** Una biblioteca de plantillas y formularios estándar (formularios, catálogos y reglas de ejemplo) que la organización puede tomar como copia propia, o crear desde cero.
 - **El asistente con Casos (E18):** reconoce lo que la persona cuenta (texto o audio), ofrece el formulario prellenado, contesta lo que configure la organización y deriva lo demás.
-- **Documentos (E19):** lee con IA lo que mandan las personas y propone el formulario prellenado, siempre con la confirmación de una persona.
+- **Documentos (E19):** lee con IA lo que mandan los empleados y los clientes y propone el formulario prellenado, con la confirmación de una persona, salvo con «Cargar solo si es seguro» y sus tres señales (71).
 
 ## 2. Cómo encaja en el modelo multitenant
 
@@ -30,7 +30,7 @@ Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sec
 | Acceso | Rol en formularios |
 | --- | --- |
 | **Plataforma** | Mantiene la biblioteca de plantillas y habilita el módulo por organización. **Nunca ve formularios, respuestas ni archivos de una organización.** |
-| **Organización (B2B)** | Dueña de sus formularios, catálogos, reglas, respuestas y archivos. Los diseña quien tiene permiso; los responden sus empleados. |
+| **Organización (B2B)** | Dueña de sus formularios, catálogos, reglas, respuestas y archivos. Los diseña quien tiene permiso; los responden sus empleados y sus clientes (49). |
 | **Empresa** | En la v1 los formularios son de la organización; la respuesta guarda las empresas de quien respondió, para filtrar ([decisiones 1 y 9](#5-decisiones-de-producto)). |
 | **Empleado** | Miembro activo con teléfono verificado y permiso `formrecords.create`. Lo reconoce la bandeja «Internos» de E11. |
 | **Cliente de la organización** | Cualquier contacto de la bandeja «Clientes» de E11, tenga o no cuenta. Completa los formularios que son para clientes (decisiones 49 y 50). Si vinculó su cuenta personal, ve la copia en «Mis mensajes». |
@@ -39,8 +39,8 @@ Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sec
 
 - **Privado de la organización (`ITenantOwned`, esquema `tenant`, RLS):** definiciones, versiones, catálogos e ítems, respuestas y valores, recibos, reglas, ejecuciones, tareas, documentos y metadatos de archivos.
 - **Global de plataforma (esquema `platform`, ADR 0050):** la biblioteca de plantillas y sus versiones.
-- **La respuesta de un cliente** es dato de la organización (`ITenantOwned`), como la de un empleado. La copia de quien vinculó su cuenta va por la copia de la conversación de la E11, sin datos compartidos (`IConsumerBusinessShared`).
-- **Entrada de WhatsApp:** el webhook sigue global (`identity`). El worker resuelve la organización por el número de E11 (la tabla de números la define esa etapa) y captura dentro de `ITenantScope.Enter(tenantId)`, con `IFeatureService` antes de actuar.
+- **La respuesta de un cliente** es dato de la organización (`ITenantOwned`), como la de un empleado. La copia de quien vinculó su cuenta va por la copia de la conversación de la E11 (que ya es `IConsumerBusinessShared`): Forms no suma tablas compartidas. En «Mis mensajes», la persona ve la tarjeta del formulario con sus propias respuestas.
+- **Entrada de WhatsApp:** el webhook sigue global (`identity`). El worker resuelve la organización por el número de E11 (`WhatsAppChannels`) y captura dentro de `ITenantScope.Enter(tenantId)`, con `IFeatureService` antes de actuar.
 - Un recurso de otra organización responde 404. Cada ruta nueva lleva su test de aislamiento.
 
 ### Dependencias
@@ -108,17 +108,17 @@ Valen todas las de [AGENTS.md](../../AGENTS.md) y las [fichas](../rules/README.m
 | [Textos](../rules/textos-y-traducciones.md) y [textos libres](../rules/textos-libres.md) | La interfaz sale de resources es/en. Las preguntas son contenido de la organización: un solo texto, como lo escribió la persona, sin idioma ni traducciones (decisión 35). Lo que escribe la persona pasa por `TextLimits`. |
 | Producto genérico | Ningún cliente, tipo de documento ni respuesta va escrito en el código: lo particular es configuración de cada organización (2026-10-24). |
 | [Formato](../architecture/backend.md#18-representación-y-formato-de-datos-unificado) | El PDF y los avisos por WhatsApp se formatean con `DisplayFormatter`, con cultura y zona explícitas. |
-| [Paginado](../rules/paginado-y-busqueda.md) | Planilla, catálogos y listados paginados, 10 por defecto. Los filtros con texto libre van en el cuerpo. |
+| [Paginado](../rules/paginado-y-busqueda.md) | Planilla, catálogos y listados paginados, 10 por defecto. En la planilla (E15) y en la bandeja de documentos (E19), los filtros con texto libre van en el cuerpo; los listados simples usan `search` común. |
 | [Logs](../rules/logs.md) | `[LoggerMessage]` y `OperationLog.RunAsync`. Nunca el token de sesión, los valores de una respuesta ni teléfonos completos. |
-| [Datos personales](../rules/datos-personales.md) | Las respuestas guardan quién respondió: el módulo registra su `IAccountDeletionParticipant`. Qué se conserva lo fija el plan de la E12. |
-| [WhatsApp](../rules/modulos.md) | Todo envío sale por el outbox. Fuera de las 24 horas, con plantillas de Meta aprobadas, creadas al empezar la etapa que las usa. |
+| [Datos personales](../rules/datos-personales.md) | Las respuestas guardan quién respondió: el módulo registra su `IAccountDeletionParticipant`. Qué se conserva lo fija la decisión 23. |
+| [WhatsApp](../rules/modulos.md) | Todo envío sale por el outbox. Fuera de las 24 horas, con una plantilla aprobada de la organización (E11 y 61); sin ella, «No se pudo». |
 | Datos de ejemplo | No hay: la biblioteca nace vacía y la llenan los operadores. |
 
 ### Meta, costos y límites
 
 - **Cada organización publica en su propio WABA**, con el token de E11. Antes de publicar se verifica que el número pertenezca a ese WABA, como en ArquitecturaBase. Sin medio de pago en el WABA, Meta rechaza el envío (en ArquitecturaBase fue el error 141006).
 - **Los costos de Meta los paga la organización** (E11).
-- **Límites técnicos iguales para todos en la v1:** hasta 10 archivos y 100 MiB por respuesta (tope de Meta), un tope por archivo de la instalación, hasta 200 opciones en «elegir una» y 20 en «elegir varias», hasta 10.000 opciones por catálogo, 20 campos y 20 datos de las personas (42), y hasta 10.000 respuestas por exportación. Límites por plan, después.
+- **Límites técnicos iguales para todos en la v1:** hasta 10 archivos y 100 MiB por respuesta (tope de Meta), un tope por archivo de la instalación, hasta 50 opciones escritas en una pregunta, hasta 200 de un catálogo en «elegir una» y 20 en «elegir varias», hasta 10.000 opciones por catálogo, 20 campos y 20 datos de las personas (42), y hasta 10.000 respuestas por exportación. Límites por plan, después.
 
 ## 3. Etapas
 
@@ -289,7 +289,7 @@ Son catorce, en el orden de las decisiones 34, 54, 69 y 73: E12, E12b, E13, E13b
 - **Lee con IA** lo que mandan los empleados y los clientes (foto, PDF, Word, Excel, ubicación y contacto) y propone el formulario prellenado (70). Confirma una persona, salvo con «Cargar solo si es seguro» y sus tres señales (71).
 - **Pantallas:** la bandeja «Documentos recibidos» y «Armar formulario con la IA». El tablero por formulario pasó a la E15 (57).
 - **Armar formularios y catálogos desde el asistente de la web** (75): se le pasa un PDF o se le escribe cómo se quiere, y crea el borrador y los catálogos sin activar.
-- **Validaciones fijas** como datos de referencia; lo descartado se borra a los 90 días; la lectura entra en el tope de la organización, con un tope por persona y por día (41).
+- **Validaciones fijas:** un conjunto cerrado en el código, y la tabla de entidades del BCRA como dato de referencia; lo descartado se borra a los 90 días; la lectura entra en el tope de la organización, con un tope por persona y por día (41).
 - **Resumen:** [formularios/e19-documentos.md](formularios/e19-documentos.md).
 - **Criterios:**
   - precargar un archivo en un Flow se prueba con Meta antes de planificar;
@@ -299,7 +299,7 @@ Son catorce, en el orden de las decisiones 34, 54, 69 y 73: E12, E12b, E13, E13b
 ### Después del bloque
 
 - **Integraciones, lo primero después del bloque** (76): un módulo `Integrations`, con conexiones y credenciales por organización. La API pública y el MCP necesitan una identidad por organización. Quedan abiertas las 13 decisiones de su estudio.
-- **Catálogos, fases 3 a 6:** la búsqueda en vivo, el asistente que arma catálogos y los orígenes externos.
+- **Catálogos, fases 3 a 6:** la búsqueda en vivo (56) y los orígenes externos. El asistente que arma catálogos pasó a la E19 (75).
 - **La conexión a la base de un cliente,** con una solución simple: un agente del lado del cliente o una réplica de solo lectura.
 - **Los tableros que cruzan formularios.**
 - **Importar respuestas desde Excel, y cargar a nombre de otra persona.** Las líneas pasaron a la E13d (54), corregir una respuesta a la E16 (58), cargar desde la web a la E14b (73) y copiar formularios a la E12b (74).
@@ -338,11 +338,11 @@ Decididas por el usuario entre el 2026-10-12 y el 2026-10-24. No se vuelven a pr
 3. **B2C, después del bloque,** con la bandeja Clientes de E11 andando y el backlog #51 resuelto. Reemplazada por la 49 para los formularios: los clientes los completan desde el principio.
 4. **El número de la plataforma (E8) no manda formularios:** es para ingreso y avisos de cuenta.
 5. **Sin límites por plan en la v1** (formularios, respuestas, almacenamiento): solo se habilita el feature. Medir el uso real antes de poner topes.
-6. **El bloque va después de la E10:** 8b → 11 → 9 → 10 → 12 a 17. Nace con Redis, límites y el fuzz de la E9, y con la nube de la E10.
+6. **El bloque va después de la E10:** 8b → 11 → 9 → 10 → 12 a 19 (12 a 17 cuando se decidió). Nace con Redis, límites y el fuzz de la E9, y con la nube de la E10.
 7. **`Forms` es un módulo aparte de `WhatsApp`,** unidos por puertos neutrales del núcleo, como en ArquitecturaBase.
 8. **Alcance:** seis etapas, con la biblioteca al final. El asistente en WhatsApp (antes F7) se programa después; su diseño se adelanta (decisión 19). Reemplazada por la 34.
 9. **Varias empresas:** si quien responde es miembro de varias empresas, la respuesta guarda todas sus empresas activas, y el filtro por empresa la encuentra por cualquiera.
-10. **Quién manda un formulario desde el chat:** cualquiera con «Atender internos», sin permiso aparte. Lo que limita es que quien recibe tenga `formrecords.create`.
+10. **Quién manda un formulario desde el chat:** cualquiera con «Atender internos», sin permiso aparte. Lo que limita es que quien recibe tenga `formrecords.create`. Desde la 49, a un cliente lo manda quien tiene «Atender clientes».
 11. **Nombres largos en un catálogo de miembros:** si pasan los 30 caracteres del título de una opción en WhatsApp, se cortan con «…» y el nombre completo va en el detalle. Se le suma la presentación (36).
 12. **Catálogo con filtros de más de 200 opciones:** se puede guardar con aviso; el bloqueo es al mandar. Se le suman los avisos de la 37.
 13. **Biblioteca, edición:** borrador y publicar, con versiones; publicar y retirar piden motivo.
@@ -370,7 +370,7 @@ Elegidas por el usuario el 2026-10-17, entre las que quedaron al alinear el bloq
 23. **Cuánto se guardan las respuestas, sus archivos y sus PDF:** sin plazo mientras exista la organización. Se borran con la baja de la organización, y lo personal de quien da de baja su cuenta, con el participante de la baja. Se revisa con el primer cliente.
 24. **La empresa en la planilla:** un filtro «Empresa ▾» y una columna «Empresas» que se puede ocultar desde «Columnas».
 25. **Quién aprueba:** cualquiera de la organización con el rol de la regla y `formapprovals.decide`, salvo quien cargó la respuesta.
-26. **Avisos por WhatsApp fuera de las 24 horas:** quedan «No se pudo», a la vista, y el PDF queda guardado, como en ArquitecturaBase. Reemplazada por la 61: fuera de las 24 horas, todos los avisos van con una plantilla de la organización. El operador puede mandar una plantilla desde el chat con lo que ya trae la E11, y el envío automático con plantilla queda para después.
+26. **Avisos por WhatsApp fuera de las 24 horas:** quedan «No se pudo», a la vista, y el PDF queda guardado, como en ArquitecturaBase. Reemplazada por la 61: fuera de las 24 horas, todos los avisos van con una plantilla de la organización.
     - El usuario había elegido la A (plantillas de Meta), pero pedía un mecanismo que el proyecto no tiene: plantillas del sistema en la WABA de cada organización, con su alta y aprobación por WABA y las variables armadas solas.
     - `docs/operations/whatsapp-plantillas.md` cubre solo las del número de la plataforma, y la E11 manda solo una plantilla que elige una persona en el chat.
     - Por eso, la Guía la pasó a la B el 2026-10-17, por la condición de abajo.
@@ -389,7 +389,7 @@ Elegidas por el usuario el 2026-10-18, sobre las reglas de ejemplo de la bibliot
 
 Elegidas por el usuario el 2026-10-24, con la [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md), todas las recomendadas:
 
-34. **Once etapas, en este orden:**
+34. **Once etapas, en este orden** (cambiada por la 54, la 69 y la 73, que suman la E13d, la E18b y la E14b):
     1. E12, formularios;
     2. E12b, ciclo de vida;
     3. E13, catálogos base;
@@ -417,7 +417,7 @@ Elegidas por el usuario el 2026-10-24, con la [evaluación del traspaso 2](2026-
 37. **Catálogos de más de 200 opciones** (12 y 22): se mantienen. Al publicar se suman dos avisos que no frenan, el máximo por persona y las personas sin el dato, y el tope de 20 en «elegir varias».
 38. **«Elegir varias»:** va en la E12, con los demás tipos de pregunta.
 39. **El asistente con Casos** (E18): contesta lo que configure cada organización (perfil, conocimiento, casos y límites), redacta dentro de esos límites y deriva lo demás. Reemplaza «lo que no es un formulario no se contesta».
-    - En la primera versión, solo en Internos: se mantiene la 29.
+    - En la primera versión, solo en Internos. Cambiada por la 51: también en Clientes.
     - Se configura con «Administrar WhatsApp»: se mantiene la 28.
     - Pide un ADR de respuestas redactadas, como la 0021 de ArquitecturaBase.
 40. **Biblioteca** (E17): es la misma que la de formularios estándar. La «Lectura de documentos» de una plantilla se suma en la E19.
@@ -450,7 +450,7 @@ Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 1, quién pa
 49. **Los clientes completan formularios desde el principio.** Cualquier contacto de la bandeja Clientes, tenga o no cuenta: se lo reconoce por su número. Si vinculó su cuenta personal, ve la copia en «Mis mensajes». Reemplaza la 3 para los formularios.
 50. **Cada formulario dice para quién es:** solo empleados, solo clientes, o los dos. El envío, el asistente y las sugerencias ofrecen solo los que corresponden a quien recibe.
 51. **El asistente atiende también a los clientes,** en la bandeja Clientes, con los mismos límites configurables. Reemplaza la 29.
-52. **El modo de atención es configurable:**
+52. **El modo de atención es configurable** (la 77 lo precisa con varios asistentes):
     - cada organización elige, por bandeja, quién atiende los chats nuevos: el asistente o una persona;
     - y cuándo vuelve un chat al modo configurado después de que lo tomó una persona: cuando pasa un tiempo sin mensajes (que elige la organización), cuando la persona lo marca «Resuelto», o nunca;
     - cada chat se cambia a mano en cualquier momento, en los dos sentidos, y se puede fijar para que no vuelva solo;
@@ -506,6 +506,10 @@ Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 9, lo que qu
 75. **El asistente de la web arma formularios y catálogos:** se le pasa un PDF o se le escribe cómo se quiere, y crea el formulario en borrador y los catálogos sin activar, y lleva al editor. Nada se publica solo. Va en la E19, con «Armar formulario con la IA».
 76. **Después del bloque, lo primero son las integraciones:** ARCA, Mercado Libre, Mercado Pago y webhooks, con plantillas conectadas en la biblioteca.
 
+Elegida por el usuario el 2026-10-24, en la revisión completa del bloque:
+
+77. **Con varios asistentes (E18b), el chat nuevo arranca con el menú del bot,** aunque la bandeja esté en modo Asistente. La persona elige el equipo, y desde ahí le contesta el asistente de ese equipo. Con un solo asistente, el menú sigue apareciendo solo en atención manual (52).
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase
@@ -550,4 +554,4 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 Ninguna.
 
-Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 76.
+Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 77.

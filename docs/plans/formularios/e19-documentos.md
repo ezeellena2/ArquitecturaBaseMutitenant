@@ -39,8 +39,8 @@
     - la tabla de entidades del BCRA (prefijo → banco o billetera) es un dato de referencia global, según [datos de referencia](../../rules/datos-de-referencia.md). Nunca una lista en el código.
   - **La bandeja «Documentos recibidos»:**
     - una planilla como la de respuestas, con el documento en un panel al costado, junto a sus datos;
-    - filtros: formulario, quién lo mandó, cuándo llegó, estado (propuesto, sin clasificar, confirmado o descartado) y «Empresa ▾» (decisión 24). Todo vive en la dirección, salvo la búsqueda;
-    - búsqueda por los datos (monto con o sin puntos, CUIT u operación), también en lo que no se cargó, sobre jsonb con índice GIN;
+    - filtros: formulario, quién lo mandó, cuándo llegó, estado (propuesto, sin clasificar, confirmado o descartado) y «Empresa ▾» (decisión 24). La dirección lleva el formulario, la fecha, el estado y la página, nunca quién lo mandó ni la búsqueda;
+    - búsqueda por los datos (monto con o sin puntos, CUIT u operación), también en lo que no se cargó, sobre jsonb con índice GIN. Es una excepción a `ApplySearch` que se anota en la ficha de [paginado y búsqueda](../../rules/paginado-y-busqueda.md) y en `SearchIndexTests` al planificar la etapa;
     - revisar: corregir, cambiar el formulario reconocido (vuelve a leer), pasar al formulario y descartar con confirmación. La respuesta dice de qué documento salió y quién la revisó.
   - **«Armar formulario con la IA»:** sobre un documento «Sin clasificar», o desde el aviso «Llegaron N documentos parecidos» (con tres o más). La IA propone nombre, prefijo, texto del botón, «Cómo reconocerlo» y una pregunta por dato, con su tipo; si se parece a un estándar de la biblioteca, lo sugiere antes. Se crea un borrador con la lectura prendida; una persona lo revisa y lo publica. Si falla, no queda nada a medias.
   - **Armar formularios y catálogos desde el asistente de la web** (75): la misma pieza, desde el chat del Inicio (8b). La persona le pasa un PDF, una planilla o una foto de lo que hoy usa en papel, o le escribe cómo quiere un formulario o un catálogo.
@@ -65,7 +65,7 @@
 - **Tableros que dibuja Diseño** (evaluación, §5.2), con nuestras piezas y la decisión 43:
   - `DOC2` · Los tres casos en el celular, y los otros formatos;
   - `DOC3` · El formulario prellenado: lo dudoso con «Revisá», lo no leído vacío y el documento adjunto;
-  - `DOC4` · Los casos difíciles: foto movida, PDF con contraseña, repetido, CBU mal leído, formulario que no se le puede mandar, formatos viejos y número sin cuenta vinculada;
+  - `DOC4` · Los casos difíciles: foto movida, PDF con contraseña, repetido, CBU mal leído, formulario que no se le puede mandar, formatos viejos, y un número que no es contacto de la organización;
   - `DOC5-A` · La bandeja, una planilla con panel, con el estado «Cargada automáticamente» (71);
   - en la «Lectura de documentos» del editor (`DOC1`, de la E17), el interruptor «Cargar solo si es seguro», con cuántas cargas sin correcciones lleva el formulario (71);
   - `DOC6` · «Armar formulario con la IA»;
@@ -76,9 +76,9 @@
 
 - **Retención** (41): un documento usado sigue a su respuesta, que dura lo que la organización (23). Uno descartado o sin clasificar se borra a los 90 días, con su lectura.
 - **Costos** (41): el proveedor de la plataforma, dentro del tope mensual de IA de la organización, con un tope por persona y por día.
-- **Permisos** (ajuste de la Guía del 2026-10-24, con la fila 24 de la evaluación: el único permiso nuevo del bloque es `formpersondata.manage`):
+- **Permisos** (ajuste de la Guía del 2026-10-24, sin permisos nuevos en esta etapa):
   - ver la bandeja pide `formrecords.read`;
-  - revisar (corregir, pasar al formulario y descartar) pide además «Atender internos»;
+  - revisar (corregir, pasar al formulario y descartar) pide además el permiso de atender la bandeja de donde llegó el documento: «Atender internos» o «Atender clientes» (70);
   - «Armar formulario con la IA» pide además `forms.manage`.
 - **La empresa** (ajuste de la Guía del 2026-10-24): columna y filtro «Empresa ▾» en la bandeja, como en la planilla (24).
 - **La biblioteca** es la de la E17 (40).
@@ -87,7 +87,7 @@
 ## Fuera de esta etapa
 
 - Varias fotos de un mismo documento, o varios documentos en un mensaje.
-- Leer lo que manda un número desconocido, y B2C.
+- Leer lo que manda un número que no es contacto de la organización.
 - Los tableros que cruzan formularios o suman datos externos.
 - Los validadores de otros estándares, como el QR de una factura.
 
@@ -101,7 +101,7 @@ La puerta de la etapa, con la lista de control de `/puerta`. Antes, la calificac
 
 ## Requisitos previos
 
-- La E13c (el cruce por CUIT), la E17 (los estándares) y la E18 (las ráfagas, las acciones, derivar y la ADR de las herramientas que escriben), cerradas.
+- La E13b (el cruce por CUIT), la E13c (los filtros por persona), la E17 (los estándares) y la E18 (las ráfagas, las acciones, derivar y la ADR de las herramientas que escriben), cerradas.
 - La prueba con Meta del archivo precargado en un Flow.
 
 ## Ajustes ya decididos

@@ -48,7 +48,7 @@ Cada una lleva su test, escrito durante la etapa:
 - **Por organización y por miembro** (42). Un dato no depende de la empresa.
 - **Hasta 20 datos de las personas,** iguales para todas las organizaciones (42).
 - **Los avisos de publicar** no frenan (37).
-- **El único permiso nuevo del bloque** es `formpersondata.manage` (evaluación, tema 24).
+- **`formpersondata.manage`** es uno de los dos permisos nuevos del bloque; el otro es `formrecords.correct` (58).
 
 ## Fuera de esta etapa
 

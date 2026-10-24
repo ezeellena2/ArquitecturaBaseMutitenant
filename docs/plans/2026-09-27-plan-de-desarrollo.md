@@ -19,7 +19,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 8b · Asistente | Cerrada | [ADR 0048](../decisions/0048-asistente.md), [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md), [Asistente](../features/asistente.md) |
 | 11 · WhatsApp de atención | Cerrada el 2026-10-21. El alta de una organización con un número real pasó a la I1 de la 10 | [Plan](2026-10-13-etapa-11-whatsapp.md), [ADR 0038](../decisions/0038-whatsapp-de-atencion.md) |
 | 9 · Endurecimiento | Cerrada | [Plan](2026-10-16-etapa-9-endurecimiento.md), [ADR 0052](../decisions/0052-cache-compartida-redis.md) |
-| 10 · Operación | Pendiente. El plan corto está listo, con las decisiones del usuario, y arranca al cerrar la 9 | [Plan](2026-10-16-etapa-10-despliegue.md), [manual de operación](../operations/runbook.md) |
+| 10 · Operación | Pendiente. El plan corto está listo, con las decisiones del usuario | [Plan](2026-10-16-etapa-10-despliegue.md), [manual de operación](../operations/runbook.md) |
 | 12 · Formularios por WhatsApp | Pendiente. Spec lista; se redibujan 4 tableros | [Spec](formularios/e12-formularios.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md), [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md) |
 | 12b · Ciclo de vida | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/e12b-ciclo-de-vida.md) |
 | 13 · Catálogos base | Pendiente. Spec lista; se redibujan 5 tableros y hay nuevos por dibujar | [Spec](formularios/e13-catalogos.md) |
@@ -30,7 +30,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 14b · Cargar desde la web | Pendiente. Resumen listo; un tablero por dibujar | [Resumen](formularios/e14b-cargar-desde-la-web.md) |
 | 15 · «Formularios», planilla y Excel | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/e15-planilla.md) |
 | 16 · Reglas, aprobación y PDF | Pendiente. Resumen listo; se redibujan 7 tableros | [Resumen](formularios/e16-reglas-y-aprobacion.md) |
-| 17 · Biblioteca de plantillas | Pendiente. Spec lista; se redibujan 7 tableros y hay uno nuevo por dibujar | [Spec](formularios/e17-biblioteca.md) |
+| 17 · Biblioteca de plantillas | Pendiente. Spec lista; se redibujan 10 tableros y hay uno nuevo por dibujar | [Spec](formularios/e17-biblioteca.md) |
 | 18 · Asistente con Casos | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/e18-asistente.md) |
 | 18b · Varios asistentes | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/e18b-varios-asistentes.md) |
 | 19 · Documentos por WhatsApp | Pendiente. Resumen listo; tableros por dibujar, y antes de planificar, la prueba con Meta del archivo precargado | [Resumen](formularios/e19-documentos.md) |
@@ -87,8 +87,8 @@ La plataforma y cada organización atienden con el mismo módulo: alta de númer
 
 ## Etapas 12 a 19: formularios por WhatsApp
 
-Una organización arma formularios, los manda por WhatsApp a sus empleados y ve las respuestas numeradas en una planilla.
-- **Etapas y fuente:** son catorce, en el orden de las decisiones 34, 54, 69 y 73, cada una con su sección y las decisiones de producto tomadas en la [hoja de ruta](2026-10-12-formularios-dinamicos-hoja-de-ruta.md). El alcance de cada una sale de la [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md).
+Una organización arma formularios, los manda por WhatsApp a sus empleados y a sus clientes (decisión 49) y ve las respuestas numeradas en una planilla.
+- **Etapas y fuente:** son catorce, en el orden de las decisiones 34, 54, 69 y 73, cada una con su sección y las decisiones de producto tomadas en la [hoja de ruta](2026-10-12-formularios-dinamicos-hoja-de-ruta.md). El alcance de cada una sale de la [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md) y de las decisiones 47 a 77.
 - **Requisitos:** la E11 es requisito duro, porque sin número de la organización no hay formularios. Van después de la E10 para nacer con las guardas de la E9 y la nube de la E10.
 - **Módulo:** `Forms` es un módulo quitable aparte de `WhatsApp`, unidos por puertos neutrales del núcleo.
 - **ArquitecturaBase:** es referencia, no fuente de código; la estructura sale de este repo.

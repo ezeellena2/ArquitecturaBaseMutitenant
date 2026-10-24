@@ -1,6 +1,6 @@
 # E14 · Fotos y documentos (resumen)
 
-**Estado:** resumen de la sexta etapa del bloque (decisión 34), armado desde el [traspaso](../2026-10-17-formularios-traspaso/README.md). Corresponde a la etapa 2B de ArquitecturaBase, cerrada con Meta y Azure reales; el traspaso 2 no le cambia el alcance. Se planifica con `/plan-etapa` cuando le toque, después de la E13c.
+**Estado:** resumen de la séptima etapa del bloque (decisiones 34 y 54), armado desde el [traspaso](../2026-10-17-formularios-traspaso/README.md). Corresponde a la etapa 2B de ArquitecturaBase, cerrada con Meta y Azure reales; el traspaso 2 no le cambia el alcance. Se planifica con `/plan-etapa` cuando le toque, después de la E13d.
 
 **Dónde está el detalle:**
 - en el traspaso: [04 §2B](../2026-10-17-formularios-traspaso/04-etapas.md), anexo C §2 (etapa 2B), anexo B (E2B) y anexo D (F1–F5);
@@ -99,6 +99,6 @@ La puerta de la etapa, más una **prueba real con Meta y el almacenamiento de la
 - **Workers:**
   - la captura y la limpieza entran a la organización con `ExecutionActor`, que usa `ITenantScope` por dentro (T5 de la E12);
   - la limpieza recorre las organizaciones con `TenantJobRunner`, copiando `InvitationExpiryWorker`.
-- **Feature `forms`:** las rutas nuevas llevan `[FeatureGate("forms")]`.
+- **Feature `forms`:** las rutas de los archivos de las respuestas llevan `[FeatureGate("forms")]`. Las de los archivos del chat (48) son del módulo WhatsApp: van sin ese gate, con los permisos de cada bandeja, y valen también en Plataforma.
 - **Permisos:** ninguno nuevo; ver y descargar pide `formrecords.read`.
 - **WhatsApp (E11):** la API de medios se llama con el token de la WABA de la organización.

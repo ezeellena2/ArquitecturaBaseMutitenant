@@ -1,6 +1,6 @@
 # E15 · «Formularios», planilla, detalle y Excel (resumen)
 
-**Estado:** resumen de la séptima etapa del bloque (decisión 34). Corresponde a la etapa 3 de ArquitecturaBase, con la pantalla «Formularios» (MF1) y el detalle completo (DC0 y DC1) que programó allá después. Se planifica con `/plan-etapa` cuando le toque, después de la E14.
+**Estado:** resumen de la novena etapa del bloque (decisiones 34, 54 y 73). Corresponde a la etapa 3 de ArquitecturaBase, con la pantalla «Formularios» (MF1) y el detalle completo (DC0 y DC1) que programó allá después. Se planifica con `/plan-etapa` cuando le toque, después de la E14b.
 
 **Dónde está el detalle:**
 - en el traspaso del 17/10: [04 §3](../2026-10-17-formularios-traspaso/04-etapas.md), [05 · D2](../2026-10-17-formularios-traspaso/05-pantallas.md), anexo C §2 (etapa 3) y anexo B (E3);
@@ -54,6 +54,7 @@
   - **la vista rápida al costado:** cabecera con el número y el estado, ↑ ↓ (también con el teclado), «Abrir en pantalla completa» y ✕; pestañas Respuesta y Fotos (Actividad y PDF llegan con la E16);
   - **la pantalla completa;** en el teléfono, tocar una fila la abre directo, sin vista rápida;
   - el diálogo de exportar;
+  - «Cargar respuesta» (E14b) pasa a la planilla de cada formulario, y el canal «web» aparece en la columna de canal y en sus filtros;
   - la pestaña «Tablero».
 - **Tableros:**
   - **Diseño dibuja nuevos** (evaluación, §5.2), con nuestras piezas y la decisión 43:
@@ -77,12 +78,12 @@
 - **Exportar:** `.xlsx` con permiso propio, hasta 10.000 respuestas (con más, el diálogo pide acotar) y sin trabajos de fondo.
 - **Historia:** filtrar por una opción retirada conserva la historia.
 - **Permisos:** un 403 o un permiso revocado no exponen datos ni conteos.
-- **«Columnas»:** vive en la URL y no se guarda en el servidor.
+- **«Columnas»:** vive en la URL y no se guarda en el servidor. Los ajustes del tablero (57) sí se guardan, por persona y formulario.
 - **«Estado»:** llega con la aprobación (E16), solo en formularios que la piden.
 
 ## Fuera de esta etapa
 
-- Cargar respuestas desde la web e importarlas desde Excel. Corregirlas llega con la E16 (58).
+- Importar respuestas desde Excel. Corregirlas llega con la E16 (58).
 - Exportar los archivos o exportar en segundo plano.
 - Permisos por formulario.
 - «Por aprobar», el estado, la aprobación, el PDF y los avisos (E16).
@@ -99,7 +100,7 @@ No necesita una prueba nueva con Meta: lee lo que ya llegó.
 
 ## Requisitos previos
 
-- La E13c y la E14 cerradas.
+- La E13d y la E14b cerradas: la planilla muestra las líneas, los cálculos y el canal «web».
 - ClosedXML ya está en el repo desde la E11, así que la exportación usa la misma biblioteca.
 
 ## Ajustes ya decididos
@@ -109,7 +110,7 @@ No necesita una prueba nueva con Meta: lee lo que ya llegó.
 
 ## En el multitenant
 
-- **Datos de la organización:** todas las lecturas van dentro de RLS. No hay tablas nuevas.
+- **Datos de la organización:** todas las lecturas van dentro de RLS. La única tabla nueva guarda los ajustes del tablero de cada persona (`FormDashboardSettings`, `ITenantOwned` con RLS, por miembro y formulario).
 - **Workers:** no hay.
 - **Feature `forms`:** las rutas llevan `[FeatureGate("forms")]`.
 - **Permisos de organización:** `formrecords.read` y `formrecords.export`, con la migración de roles de sistema.

@@ -1,9 +1,9 @@
 # E17 · Biblioteca de plantillas de la plataforma (spec)
 
-**Estado:** spec de la novena etapa del bloque (decisión 34). **Es también la biblioteca de formularios estándar** (40): la «Lectura de documentos» de una plantilla se suma en la E19. Se arma con las piezas de este repo y las de las etapas anteriores. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E12]**, **[E13]** y **[E16]** contra el código.
+**Estado:** spec de la undécima etapa del bloque (decisiones 34, 54 y 73). **Es también la biblioteca de formularios estándar** (40): la «Lectura de documentos» de una plantilla se suma en la E19. Se arma con las piezas de este repo y las de las etapas anteriores. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E12]**, **[E13]** y **[E16]** contra el código.
 
 **Fuentes:**
-- alcance y decisiones: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E17 y decisiones 2, 13 a 16, 30 a 33, 35, 40 y 45;
+- alcance y decisiones: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E17 y decisiones 2, 13 a 16, 30 a 33, 35, 40, 45, 50, 59, 61, 62 y 64;
 - reglas: [AGENTS.md](../../../AGENTS.md), las [fichas](../../rules/README.md) y la [ADR 0050](../../decisions/0050-auditoria-global-de-modulos.md) (auditoría de lo global);
 - las specs de la [E12](e12-formularios.md) y la [E13](e13-catalogos.md).
 
@@ -86,7 +86,8 @@ Una categoría se borra solo si ninguna plantilla la usa (`Forms.TemplateCategor
 - `rules[]`: las reglas de ejemplo, en el formato de la E16 (un evento, hasta 10 condiciones y hasta 10 acciones), con dos diferencias:
   - las condiciones apuntan a las preguntas y opciones de la plantilla (ids locales); en una pregunta de catálogo, a `catalogRef` más el código de la opción;
   - las acciones que piden un rol (pedir aprobación y avisar a un rol) **no llevan rol**. Llevan un `roleHint` opcional: un texto que solo se muestra, como «Supervisor»;
-- `pdfDesign?`: el diseño del PDF de la E16 (nombre, preguntas, quién aprobó, pie e «Incluir las fotos»), con las preguntas por id local.
+  - **lo que es de cada organización tampoco viaja,** y se trata como el rol: «Lo elige cada organización». Son la persona de «Avisar a una persona», la dirección fija de «Mandar por correo» (62) y la plantilla de WhatsApp para fuera de las 24 horas (61). Al usar la plantilla, el editor las pide como pide el rol;
+- `pdfDesign?`: el diseño del PDF de la E16 (nombre, preguntas, quién aprobó, pie, «Incluir las fotos», secciones con título y orden, mostrar u ocultar y firmas; 59), con las preguntas por id local. El logo, el color y los datos del encabezado son de cada organización: la plantilla no los trae;
 
 ### Reglas de ejemplo y diseño del PDF
 
@@ -228,7 +229,7 @@ Valen los criterios de la E12 y la decisión 43. El texto para Diseño está en 
 | --- | --- | --- |
 | `Plat-FRM-Biblioteca` y `M-Plat-FRM-Biblioteca` | listado: nombre, categoría, estado (Borrador, Publicada o Retirada) y «La usaron N»; filtro por estado y categoría; «Nueva plantilla»; «Categorías» como otra sección del área, no como pestaña | vacío, sin resultados |
 | `Plat-FRM-Plantilla-Nueva` | diálogo con el nombre y la categoría | — |
-| `Plat-FRM-Plantilla` | ficha con pestañas **Plantilla**, **Catálogos** y **Publicación**. **Plantilla** es el editor de la E12: categoría, prefijo sugerido, descripción, preguntas en el lugar y, debajo, las reglas de ejemplo y el diseño del PDF (33), con «Así lo ve el empleado». Descartar, Guardar borrador y Publicar. **Catálogos:** una fila por catálogo, que se abre aparte. **Publicación:** estado, versiones con número, fecha, operador y motivo, «Retirar» en el ⋮ de la banda y «Volver a publicar» | cambios sin guardar, otra persona cambió, catálogos, un catálogo abierto, publicación (con su menú, borrador y retirada) |
+| `Plat-FRM-Plantilla` | ficha con pestañas **Plantilla**, **Catálogos** y **Publicación**. **Plantilla** es el editor de la E12: categoría, prefijo sugerido, descripción, para quién es (50), preguntas en el lugar y, debajo, las reglas de ejemplo y el diseño del PDF (33), con «Así lo ve quien lo recibe». Descartar, Guardar borrador y Publicar. **Catálogos:** una fila por catálogo, que se abre aparte. **Publicación:** estado, versiones con número, fecha, operador y motivo, «Retirar» en el ⋮ de la banda y «Volver a publicar» | cambios sin guardar, otra persona cambió, catálogos, un catálogo abierto, publicación (con su menú, borrador y retirada) |
 | `Plat-FRM-Plantilla-Reglas` | «Cuando llega una respuesta» de la E16 en la pestaña «Plantilla», sin botón propio ni historial. En una acción que pide un rol: «Rol: Lo elige cada organización», con candado, y «Rol sugerido» | reglas, editar una regla, una regla con errores, sin reglas y borrador guardado |
 | `Plat-FRM-Pdf` | el diseño del PDF de la E16, desde «Ver el diseño», con «Descartar» y «Guardar borrador». La vista previa muestra «Logo» y «Nombre de la organización» como marcadores | — |
 | `Plat-FRM-Publicar` y `Plat-FRM-Retirar` | diálogos con el motivo. Publicar muestra además la comprobación: problemas por pregunta, catálogo o regla | sin problemas, con problemas |
@@ -240,7 +241,7 @@ Valen los criterios de la E12 y la decisión 43. El texto para Diseño está en 
 | `Cuenta-Plat` (ajuste) | los permisos del operador suman «Administrar la biblioteca de formularios» | — |
 
 **Diseño redibuja** (evaluación, §5.1, y ajuste de la Guía del 2026-10-24), sin «Textos en», sin el inglés obligatorio, sin «Cambios sin guardar» ni «Cambios sin publicar», sin el número de versión en la lista ni en la banda, y sin textos junto a los botones (35 y 43):
-- `Plat-FRM-Plantilla`, `Plat-FRM-Publicar`, `Plat-FRM-Retirar`, `Plat-FRM-Plantilla-Reglas`, `Plat-FRM-Pdf`, `Plat-FRM-Categorias` y `M-FRM-Plantilla`;
+- `Plat-FRM-Plantilla`, `Plat-FRM-Publicar`, `Plat-FRM-Retirar`, `Plat-FRM-Plantilla-Reglas` (con las acciones de la 61 y la 62, que quedan «Lo elige cada organización»), `Plat-FRM-Pdf` (con la base de la 59), `Plat-FRM-Categorias` y `M-FRM-Plantilla`;
 - `Plat-FRM-Biblioteca`, `M-Plat-FRM-Biblioteca` y `Plat-FRM-Plantilla-Nueva`, por el estado de la plantilla;
 - `FRM-Editor-Reglas-Plantilla` y `M-FRM-Reglas-Plantilla` se redibujan con la E16.
 

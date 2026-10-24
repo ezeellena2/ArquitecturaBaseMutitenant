@@ -6,15 +6,19 @@ Se pega tal cual en el chat de Diseño, **después de cerrar los tableros de la 
 
 Te paso los tableros de la E17, la biblioteca de plantillas, para el lienzo del multitenant. No hay que programar nada: solo tableros.
 
-**Contexto.** Los tableros de la E17 están aprobados en la v126, la v130 y la v134. Con las decisiones 34 a 46 del 2026-10-24 cambian varias cosas:
+**Contexto.** Los tableros de la E17 están aprobados en la v126, la v130 y la v134. Con las decisiones 34 a 77 del 2026-10-24 cambian varias cosas:
 - **40:** la biblioteca de plantillas es también la biblioteca de formularios estándar. Una plantilla puede traer su «Lectura de documentos», que se programa con la E19;
 - **35 y 45:** el contenido no tiene idioma. Las plantillas y las categorías son un solo texto, sin «Textos en», sin pares en inglés y sin el inglés obligatorio;
 - **43:** botones habilitados o grisados, sin textos al lado ni debajo, sin «Cambios sin guardar»; si falta un dato obligatorio, el botón sigue habilitado y al tocarlo se marca lo que falta;
+- **50:** cada plantilla dice para quién es su formulario: empleados, clientes o los dos;
+- **59:** el diseño del PDF tiene una base con secciones, mostrar u ocultar preguntas y firmas; el logo y el color los pone cada organización;
+- **61 y 62:** en las reglas de ejemplo, la persona de «Avisar a una persona», la dirección de «Mandar por correo» y la plantilla de WhatsApp quedan «Lo elige cada organización», como el rol;
+- **64:** una plantilla puede traer catálogos de los miembros y de los contactos, sin filtros; la pestaña «Catálogos» muestra el origen de cada uno;
 - **el estado de una plantilla** (ajuste de la Guía con la 43): la lista y la banda dicen solo «Borrador», «Publicada» o «Retirada». Sale «Cambios sin publicar», porque «Publicar» habilitado ya lo dice, y el número de versión va solo en el historial de «Publicación».
 
 **Leé primero,** en el repo del back `ArquitecturaBaseMutitenant`:
 1. **La spec:** `docs/plans/formularios/e17-biblioteca.md`, sobre todo la §8 (tableros, qué se redibuja y en qué mandan).
-2. **La hoja de ruta:** `docs/plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md`, §5, decisiones 34 a 46.
+2. **La hoja de ruta:** `docs/plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md`, §5, decisiones 34 a 77.
 3. **La evaluación:** `docs/plans/2026-10-24-formularios-evaluacion-traspaso-2.md`, §2.1, §2.2 y §5.
 4. **ArquitecturaBase, como referencia de contenido:** DOC1 en el anexo D del traspaso 2 (`../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/anexo-d-tableros-desde-17-10.md`). Hacé `git fetch` antes.
 
