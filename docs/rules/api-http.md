@@ -25,6 +25,12 @@
 - **Destinos del front:** las rutas de navegación se declaran sólo en `Application/Models/Auth/ReturnUrls.cs`; los parámetros se componen en el flujo que los usa. Los avisos usan `IPublicOrigin.Absolute(path)`, que conserva el origen configurado y el fallback relativo; las invitaciones siguen exigiendo origen. El catálogo no amplía los retornos autorizados de cada ingreso (`FrontendReturnUrlTests`).
 - Los controllers de protocolo siguen inyectando un servicio de Application. La excepción técnica cerrada del constructor permite además `OpenIdPrincipalFactory` e `IOptions<WebClientOptions>` solo en `ConnectController`, e `IAuthenticationSchemeProvider` solo en `ExternalLoginController`; `ControllerServiceRepositoryTests` rechaza cualquier otra dependencia directa. El inicio Google se valida con `ExternalLoginStartRequest` y su validador a través de `IExternalLoginService`; antiforgery sigue en el adaptador HTTP.
 - **Después de cambiar un contrato:** regenerar `docs/contracts/openapi.json` (lo hace el build) y avisar al front (`npm run contracts`).
+- **Ejemplos de una corrida real** (desde la E12, decisión del 2026-10-24):
+  - toda respuesta que consume el front tiene ejemplos exportados de una corrida real, con sus estados y sus errores de negocio, junto con `openapi.json`;
+  - el front los valida con zod estricto;
+  - la E12 suma la exportación y su guarda.
+
+  En ArquitecturaBase, el back mandaba `pending` y el front esperaba `Pending`, y el chat de Inicio estuvo roto una semana.
 - El esquema de `application/problem+json` declara `code` y `traceId` obligatorios, y `errors` (campo → mensajes) y `retryAfter` (segundos) opcionales; es la misma forma que devuelve el mapper HTTP.
 - Un rechazo de una cuota responde 429 con ProblemDetails (`Security.RateLimit.Exceeded`, `traceId`, `retryAfter`) y el header `Retry-After` con los mismos segundos enteros ([cuotas](cuotas.md)). `Http.TooManyRequests` queda sólo para un 429 que arme el framework.
 - **Encabezados y cookies (E9):** toda respuesta lleva `X-Content-Type-Options`, `Referrer-Policy` y la CSP, también en 4xx y 5xx. `script-src` nunca tiene `'unsafe-inline'` ni `'unsafe-eval'`, ni siquiera con módulos. Toda cookie sale Secure, HttpOnly, SameSite Lax como mínimo y sin `Domain` ([backend.md §19](../architecture/backend.md#19-front-y-hosting)).

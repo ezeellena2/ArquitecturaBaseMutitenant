@@ -6,6 +6,7 @@
 - Para un cambio de lógica, observar rojo por la conducta ausente, implementar, repetir el test focal en verde y commitear el cambio coherente. Los pasos internos no necesitan un commit ni una suite completa cada uno.
 - Si la tarea cambia una ruta, persistencia, autenticación o aislamiento, al terminarla (no antes de cada commit) se corren los tests de integración y de seguridad de esa área. Las pruebas con Testcontainers usan Docker. La suite completa corre una vez, en la puerta.
 - Para documentación, capturas o configuración sin lógica, usar la comprobación pertinente; no escribir un test que solo repita el cambio.
+- **Lista de control de cada etapa (2026-10-24):** los doce puntos de la skill `/puerta` («Lista de control»). Cada punto que aplica a la etapa lleva su test, escrito durante la etapa, y la revisión de código del cierre lo comprueba.
 | Qué | Dónde | Con qué |
 |---|---|---|
 | Regla de una entidad o value object | `Domain.UnitTests/<Área>/` | puro |

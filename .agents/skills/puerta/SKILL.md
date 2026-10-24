@@ -29,6 +29,7 @@ La puerta se corre **una sola vez, al final de la etapa** (`AGENTS.md`, «Cierre
    | Galería | front | `node scripts/capturar-etapa-<etapa>.mjs` y, si existe, `node scripts/generar-galeria-etapa-<etapa>.mjs` | solo las pantallas nuevas o cambiadas en la etapa, cada una al lado de su tablero en `docs/design/capturas/etapa-<etapa>/`, y alguien la mira |
    | Recorrido de usuario | front | `node scripts/recorrido-usuario.mjs --no-build` (ver la skill `/recorrido`) | todas las comprobaciones en verde |
    | Quitar el módulo | copia descartable | solo en la etapa del módulo, una sola vez y con la base vacía, según su guía (por ejemplo `docs/guides/quitar-whatsapp.md`) | núcleo, build, tests e ingreso en verde |
+   | Lista de control | los dos | la revisión de código del cierre, contra la lista de abajo | cada punto que aplica a la etapa tiene su test, y pasa |
 
 4. **Leé solo los resúmenes:** totales, `passed` y `failed`, `# pass` y `# fail`, y los contadores del detector. Si algo falla, abrí solo las líneas del fallo.
 5. **Antes de contar un fallo, descartá el entorno.** Si un test se pasó de tiempo, corré ese archivo solo. Si así pasa, el problema era el entorno y no cuenta como fallo.
@@ -40,6 +41,27 @@ La puerta se corre **una sola vez, al final de la etapa** (`AGENTS.md`, «Cierre
 - **Por cada fallo:** `archivo:línea`, la causa en una línea y a qué dueño vuelve (Back o Front).
 - **El corte medido:** los dos commits.
 - **Qué falta para cerrar la etapa.** No digas «cerrada» si falta el E2E real, la galería o el recorrido de usuario.
+
+## Lista de control
+
+Sale de los 142 problemas que encontraron los reviews de ArquitecturaBase: capítulo 05 y anexo E del traspaso del 2026-10-23, pedido del usuario del 2026-10-24. Cada punto que aplica a la etapa tiene un test escrito durante la etapa. Si falta uno, vuelve a su dueño como un fallo.
+
+1. **Números y fechas** se leen con la cultura del pedido, y lo ambiguo se rechaza. Se prueba con «1.500», «1,500», «12.345» y «3/4/2026», en es y en.
+2. **El front no tapa la validación del servidor.** Solo el 409 de versión pone el editor en conflicto; otro 409 es un error que se corrige.
+3. **Cambiar algo en uso** (tipo, fuente, papel, obligatorio, activo o eliminado):
+   - se frena por el uso, o pide confirmación y limpia;
+   - lo guardado que apunta a algo dado de baja sigue valiendo.
+4. **Guardar sin cambios no escribe.** No cambian `ModifiedAtUtc`, la versión ni la auditoría.
+5. **Ninguna lectura trae todo para quedarse con poco.** Se prueba con el volumen máximo de la etapa.
+6. **Nada nombra otro recurso sin permiso de leerlo:** ni un 409, ni un aviso, ni una vista previa.
+7. **Nada exige un idioma fijo.** Se guarda y se relee con una traducción vacía, con `null` y con una referencia inactiva.
+8. **Cada exclusión o lock tiene un test** con dos conversaciones, canales o actores a la vez.
+9. **Las migraciones son portables:**
+   - el SQL va en una línea y sin `\r`;
+   - el Down se niega antes de perder datos.
+10. **Botones y avisos** según `pantallas-y-ui.md` del front: sin textos al lado de un botón, sin «Cambios sin guardar» y sin textos de espera.
+11. **Cada arreglo busca el mismo defecto** en los caminos hermanos y en las piezas compartidas, y cada `fix` dice qué pasaba.
+12. **Cada respuesta de un proveedor** se clasifica como definitiva, transitoria o desconocida, y cada estado tiene una salida. Cada variante de WhatsApp se abre en un celular.
 
 ## Nunca
 
