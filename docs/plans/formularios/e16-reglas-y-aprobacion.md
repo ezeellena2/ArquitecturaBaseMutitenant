@@ -25,6 +25,13 @@
     - decide una cuenta activa con `formapprovals.decide` y el rol de la regla, **nunca quien cargó la respuesta**;
     - hay una sola tarea abierta por respuesta; decidir es un solo commit, y si otro decidió antes, 409;
     - rechazar exige un motivo de hasta 500 caracteres.
+  - **Corregir una respuesta** (decisión 58):
+    - pide un permiso nuevo, `formrecords.correct` («Corregir respuestas»), que va en el catálogo, en `Permissions.resx` y su `.en`, y en el seed de los roles de sistema, con su migración;
+    - se corrige desde la pantalla completa, **solo mientras la respuesta está recibida o por aprobar**: lo aprobado o rechazado queda fijo, igual que su PDF;
+    - **solo los valores:** textos, números, fechas y elecciones. Los archivos quedan como llegaron;
+    - la respuesta conserva su número y queda marcada «Corregida». La actividad guarda quién, cuándo, y el valor de antes y el de después;
+    - los cálculos de la E13d se vuelven a hacer. Las reglas no vuelven a correr: quien aprueba ve los valores corregidos y la historia;
+    - una UoW, con la versión de la respuesta (`IVersioned`) y 409 si otro la corrigió o la decidió antes.
   - **«Por aprobar» en «Formularios» (MF1),** con la misma fuente que «Para resolver» (el `IPendingItemSource` de ADR 0040):
     - MF1 suma la columna «Por aprobar» y el filtro «Con algo por aprobar», y los formularios que esperan una decisión van primero;
     - cuenta solo las tareas que esa cuenta puede decidir con su rol vigente, sin las respuestas propias;
@@ -54,7 +61,8 @@
     - `FRM-Editor-Reglas-Plantilla` y `M-FRM-Reglas-Plantilla` (las reglas que llegan de una plantilla, E17);
     - `FRM-Editor-Sugerencias` (lo usa la E18);
     - `FRM-Pdf`, con la vista previa en un solo idioma y los campos «Dato»;
-    - `M-FRM-Respuesta-Aprobacion`.
+    - `M-FRM-Respuesta-Aprobacion`;
+    - y dibuja nuevo `FRM-Respuesta-Corregir`: «Corregir» en la pantalla completa, los campos editables, la marca «Corregida» y la historia en Actividad (58).
   - **Se quedan** los aprobados en el lienzo v132: `FRM-Respuesta-Aprobacion`, `WA-Chats-Avisos`, `M-WA-Conversacion-Avisos` y «Por aprobar» en «Para resolver» de `Inicio-Org` y `M-Inicio-Org`.
   - **Pasan al Archivo** `FRM-Por-Aprobar` y `M-FRM-Por-Aprobar`: «Por aprobar» vive en MF1 (34).
   - **Mandan sobre este resumen en:**
@@ -81,7 +89,7 @@
 
 - Varios niveles o varios aprobadores.
 - Acciones de otros módulos y compensaciones.
-- Cargar desde la web, importar y corregir respuestas.
+- Cargar desde la web e importar respuestas.
 - El asistente y las sugerencias (E18).
 
 ## Cómo se cierra
@@ -111,7 +119,7 @@ La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba r
 - **Workers:** el de acciones descubre trabajo en un registro técnico global sin datos de negocio y entra con `ExecutionActor`, que usa `ITenantScope` por dentro (T4 y T5 de la E12).
 - **Feature `forms`:** las rutas llevan `[FeatureGate("forms")]`.
 - **Permisos de organización:**
-  - `formrules.manage` (reglas, diseño y revisión de avisos) y `formapprovals.decide`, con la migración de roles de sistema;
+  - `formrules.manage` (reglas, diseño y revisión de avisos), `formapprovals.decide` y `formrecords.correct` (58), con la migración de roles de sistema;
   - los roles son los de la organización.
 - **WhatsApp (E11):** los avisos salen por el número de la organización.
 - **Almacenamiento (E10):** los PDF van en `IFileStore`.

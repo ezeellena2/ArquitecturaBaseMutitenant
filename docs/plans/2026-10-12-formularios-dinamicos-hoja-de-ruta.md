@@ -85,6 +85,7 @@ Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sec
   - `formsuggestions.manage` (E18);
   - `formpersondata.manage` (E13c), el único que suma el traspaso 2;
   - `formrecords.export` (E15);
+  - `formrecords.correct` (E16), para corregir una respuesta (58);
   - `formrules.manage` y `formapprovals.decide` (E16).
 - Cada permiso nuevo trae su migración que actualiza los roles de sistema de las organizaciones existentes (modelo: `20261010203618_SystemRoleAssistantPermissions.cs`).
 - **Permiso de plataforma:** uno para mantener la biblioteca (E17), con `[HasPlatformPermission]`.
@@ -211,6 +212,7 @@ Son doce, en el orden de las decisiones 34 y 54: E12, E12b, E13, E13b, E13c, E13
 - **La planilla** de cada formulario, con las subcolumnas «Dato» y «Filtro», el filtro «alguna de» y la empresa (24).
 - **El detalle:** la vista rápida al costado y la pantalla completa, con ↑ ↓ en el orden de la planilla.
 - **Excel** con los filtros aplicados; «elegir varias» unido con «; ».
+- **El tablero de cada formulario** (57): gráficos armados solos desde los tipos de las preguntas, ajustables por cada persona.
 - **Resumen:** [formularios/e15-planilla.md](formularios/e15-planilla.md).
 - **Criterios:**
   - para exportar, una consulta de ids ordenados e hidratación por lotes; una exportación a la vez por persona;
@@ -224,6 +226,7 @@ Son doce, en el orden de las decisiones 34 y 54: E12, E12b, E13, E13b, E13c, E13
 - **Un solo motor de acciones,** con ejecuciones idempotentes y el efecto fuera de la transacción.
 - **Aprobación de un nivel:** nadie aprueba lo que cargó. «Por aprobar» va en MF1 y en «Para resolver», con la misma fuente (ADR 0040).
 - **PDF** como copia fija, con los campos «Dato».
+- **Corregir una respuesta** (58), con el permiso nuevo «Corregir respuestas»: solo los valores, y solo mientras está recibida o por aprobar.
 - **Avisos por WhatsApp** con el número de la organización. Fuera de las 24 horas, «No se pudo» (decisión 26).
 - **Mandar el PDF a un cliente** de la organización (47), al chat del contacto elegido en el formulario (55); fuera de las 24 horas, con una plantilla de la organización.
 - **Resumen:** [formularios/e16-reglas-y-aprobacion.md](formularios/e16-reglas-y-aprobacion.md).
@@ -263,7 +266,7 @@ Son doce, en el orden de las decisiones 34 y 54: E12, E12b, E13, E13b, E13c, E13
 ### E19 · Documentos por WhatsApp (nueva en el bloque)
 
 - **Lee con IA** lo que mandan las cuentas vinculadas (foto, PDF, Word, Excel, ubicación y contacto) y propone el formulario prellenado. Siempre confirma una persona.
-- **Pantallas:** la bandeja «Documentos recibidos», «Armar formulario con la IA» y el tablero por formulario.
+- **Pantallas:** la bandeja «Documentos recibidos» y «Armar formulario con la IA». El tablero por formulario pasó a la E15 (57).
 - **Validaciones fijas** como datos de referencia; lo descartado se borra a los 90 días; la lectura entra en el tope de la organización, con un tope por persona y por día (41).
 - **Resumen:** [formularios/e19-documentos.md](formularios/e19-documentos.md).
 - **Criterios:**
@@ -278,7 +281,7 @@ Son doce, en el orden de las decisiones 34 y 54: E12, E12b, E13, E13b, E13c, E13
 - **La conexión a la base de un cliente,** con una solución simple: un agente del lado del cliente o una réplica de solo lectura.
 - **La carga automática de documentos,** con datos medidos.
 - **Los tableros que cruzan formularios.**
-- **Grupos y remitos con líneas, corregir una respuesta, cargar respuestas desde la web e importar desde Excel.**
+- **Cargar respuestas desde la web e importar desde Excel.** Las líneas pasaron a la E13d (54) y corregir una respuesta, a la E16 (58).
 - **Copiar formularios.**
 - **Límites por plan.**
 - **Avisos automáticos con plantilla de Meta fuera de las 24 horas:** necesitan plantillas del sistema en la WABA de cada organización, que el proyecto no tiene.
@@ -443,6 +446,11 @@ Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 3, catálogo
 55. **Un catálogo puede salir de los contactos de WhatsApp** de la organización (E13), como hoy sale de los miembros. Así, para mandar el PDF a un cliente (47), se elige su contacto en una pregunta y el PDF va a su chat, sin cargar su teléfono dos veces. El teléfono no se muestra.
 56. **Los catálogos grandes** (más de 200 opciones para una persona) se resuelven por ahora con los filtros por persona; la búsqueda mientras se escribe queda después del bloque.
 
+Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 4, ver las respuestas):
+
+57. **El tablero automático de cada formulario** pasa de la E19 a la E15, junto con la planilla: no depende de los documentos.
+58. **Corregir una respuesta** entra al bloque, en la E16: con un permiso nuevo, «Corregir respuestas»; solo mientras está recibida o por aprobar, porque lo aprobado queda fijo con su PDF; solo los valores, no los archivos. Conserva el número, queda marcada «Corregida» y la actividad guarda qué cambió. El Excel sigue con hasta 10.000 respuestas por vez.
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase
@@ -487,4 +495,4 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 - **Paso 8 de la revalidación con el usuario:** si la E19 lee también los documentos que mandan los clientes (49 y 51).
 
-Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 56.
+Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 58.

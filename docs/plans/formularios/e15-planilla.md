@@ -6,7 +6,7 @@
 - en el traspaso del 17/10: [04 §3](../2026-10-17-formularios-traspaso/04-etapas.md), [05 · D2](../2026-10-17-formularios-traspaso/05-pantallas.md), anexo C §2 (etapa 3) y anexo B (E3);
 - en el traspaso 2 de ArquitecturaBase: el anexo C §5 (G-01 a G-08), §6 (L-01 a L-04), §10 (C1-05) y §11 (C2-07), y el anexo D (MF1, DC0, DC1 ajustado, CA5, CE5 y CE6).
 
-**Esta etapa solo lee.**
+**Esta etapa solo lee,** salvo los ajustes del tablero de cada persona.
 
 ## Qué se construye
 
@@ -38,6 +38,11 @@
     - **«elegir varias»** va en una celda, unido con «; ». En un catálogo tipado, se suma la columna «pregunta · valor», con los valores canónicos;
     - los campos sellados: todos, ninguno o los elegidos;
     - una hoja «Líneas», con un renglón por línea y el número de la respuesta (E13d).
+  - **El tablero por formulario** (decisión 57): una pestaña «Tablero», junto a la planilla de cada formulario, armada sola desde los tipos de las preguntas:
+    - cantidad de respuestas por día, semana o mes; totales, promedios, mínimo y máximo de los números (un monto, por moneda); el reparto por opción y por persona; y el estado (E16);
+    - se ajusta sumando o quitando gráficos y filtrando con la gramática de la planilla. Los ajustes son de cada persona, como las columnas;
+    - tiene «Empresa ▾» (decisión 24), y lo ve quien tiene `formrecords.read`;
+    - ningún gráfico va escrito en el código: salen de los tipos de las preguntas.
   - **El detalle:**
     - **la vista rápida (FRM-Respuesta, D2 allá),** al costado de la planilla: los datos de la respuesta con las preguntas de su versión, su origen y su historial;
     - **la pantalla completa (DC0, con el ajuste de DC1):** en `/org/formularios/{formId}/respuestas/{recordId}/completa`, con las secciones «Respuesta» y «Actividad», a todo el ancho y plegables. Arriba, el número, el estado, ↑ ↓ en el orden de la planilla, «Abrir conversación» y «Descargar ▾». La E16 suma aprobar, rechazar y el PDF;
@@ -48,13 +53,15 @@
   - la planilla de cada formulario, con «Columnas» (que vive en la URL), «Más filtros» en un panel lateral y el desplazamiento a lo ancho;
   - **la vista rápida al costado:** cabecera con el número y el estado, ↑ ↓ (también con el teclado), «Abrir en pantalla completa» y ✕; pestañas Respuesta y Fotos (Actividad y PDF llegan con la E16);
   - **la pantalla completa;** en el teléfono, tocar una fila la abre directo, sin vista rápida;
-  - el diálogo de exportar.
+  - el diálogo de exportar;
+  - la pestaña «Tablero».
 - **Tableros:**
   - **Diseño dibuja nuevos** (evaluación, §5.2), con nuestras piezas y la decisión 43:
     - `MF1` · Una tabla de formularios, con el panel de «Gestión de formularios»;
     - `DC0` · De la vista rápida a la pantalla completa, con el ajuste de DC1 (Respuesta y Actividad);
     - `CE5` · Las respuestas, con las subcolumnas de los campos sellados;
-    - `CE6` · El circuito de punta a punta de los catálogos.
+    - `CE6` · El circuito de punta a punta de los catálogos;
+    - `DOC7-A` · El tablero, con tarjetas armadas solas (57).
   - **Diseño ajusta** `FRM-Respuesta`: «Abrir en pantalla completa» en la cabecera. El panel de todos los FRM de la compu cambia con MF1.
   - **Se quedan** los aprobados en el lienzo v131: `FRM-Respuestas` (la planilla), `FRM-Respuestas-Filtros`, `FRM-Respuestas-Exportar`, `M-FRM-Respuestas` y `M-FRM-Respuesta`. `CA5` (de la E13) muestra «elegir varias» en la planilla, el detalle y el Excel.
   - **Mandan sobre este resumen en:**
@@ -75,11 +82,10 @@
 
 ## Fuera de esta etapa
 
-- Cargar respuestas desde la web, importarlas desde Excel y corregirlas.
+- Cargar respuestas desde la web e importarlas desde Excel. Corregirlas llega con la E16 (58).
 - Exportar los archivos o exportar en segundo plano.
 - Permisos por formulario.
 - «Por aprobar», el estado, la aprobación, el PDF y los avisos (E16).
-- El tablero por formulario (E19).
 
 ## Cómo se cierra
 

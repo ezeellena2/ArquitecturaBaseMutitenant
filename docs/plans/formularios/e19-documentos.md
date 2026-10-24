@@ -43,7 +43,6 @@
     - búsqueda por los datos (monto con o sin puntos, CUIT u operación), también en lo que no se cargó, sobre jsonb con índice GIN;
     - revisar: corregir, cambiar el formulario reconocido (vuelve a leer), pasar al formulario y descartar con confirmación. La respuesta dice de qué documento salió y quién la revisó.
   - **«Armar formulario con la IA»:** sobre un documento «Sin clasificar», o desde el aviso «Llegaron N documentos parecidos» (con tres o más). La IA propone nombre, prefijo, texto del botón, «Cómo reconocerlo» y una pregunta por dato, con su tipo; si se parece a un estándar de la biblioteca, lo sugiere antes. Se crea un borrador con la lectura prendida; una persona lo revisa y lo publica. Si falla, no queda nada a medias.
-  - **El tablero por formulario:** una pestaña «Tablero», junto a las respuestas del formulario en «Formularios» (MF1), armada sola desde los tipos de las preguntas: cantidad por período, totales y promedios de los números (un monto, por moneda), el reparto por opción y por persona, y el estado. Se ajusta con la gramática de la planilla, y los ajustes son de cada persona. Tiene «Empresa ▾» (decisión 24).
   - **Cómo mejora con el uso:** cada corrección queda registrada (el dato propuesto, el confirmado y quién lo corrigió) y se suma como ejemplo a «Cómo reconocerlo». Se mide la precisión por formulario y por dato. No se entrena ningún modelo.
   - **Lo que va al proveedor de IA:** solo el documento preparado y las preguntas del formulario candidato. Se registra qué se mandó (hash y tamaño), sin el contenido. Lo leído es un dato, nunca una instrucción.
   - **Costos:** la lectura entra en el tope mensual de IA de la organización (ADR 0051), con un tope por persona y por día (41). Al llegar a un tope, el documento queda en la bandeja sin leerse.
@@ -51,14 +50,13 @@
 - **Front:**
   - en el chat, «Por qué lo propuso» o «Por qué preguntó» debajo del documento, como en la E18;
   - la sección «Lectura de documentos» en el editor;
-  - la bandeja, «Armar formulario con la IA» y el tablero.
+  - la bandeja y «Armar formulario con la IA». El tablero por formulario pasó a la E15 (57).
 - **Tableros que dibuja Diseño** (evaluación, §5.2), con nuestras piezas y la decisión 43:
   - `DOC2` · Los tres casos en el celular, y los otros formatos;
   - `DOC3` · El formulario prellenado: lo dudoso con «Revisá», lo no leído vacío y el documento adjunto;
   - `DOC4` · Los casos difíciles: foto movida, PDF con contraseña, repetido, CBU mal leído, formulario que no se le puede mandar, formatos viejos y número sin cuenta vinculada;
   - `DOC5-A` · La bandeja, una planilla con panel;
   - `DOC6` · «Armar formulario con la IA»;
-  - `DOC7-A` · El tablero, con tarjetas armadas solas.
 
   `DOC1` (la biblioteca y la lectura) va con la E17.
 
@@ -67,10 +65,10 @@
 - **Retención** (41): un documento usado sigue a su respuesta, que dura lo que la organización (23). Uno descartado o sin clasificar se borra a los 90 días, con su lectura.
 - **Costos** (41): el proveedor de la plataforma, dentro del tope mensual de IA de la organización, con un tope por persona y por día.
 - **Permisos** (ajuste de la Guía del 2026-10-24, con la fila 24 de la evaluación: el único permiso nuevo del bloque es `formpersondata.manage`):
-  - ver la bandeja y el tablero pide `formrecords.read`;
+  - ver la bandeja pide `formrecords.read`;
   - revisar (corregir, pasar al formulario y descartar) pide además «Atender internos»;
   - «Armar formulario con la IA» pide además `forms.manage`.
-- **La empresa** (ajuste de la Guía del 2026-10-24): columna y filtro «Empresa ▾» en la bandeja y en el tablero, como en la planilla (24).
+- **La empresa** (ajuste de la Guía del 2026-10-24): columna y filtro «Empresa ▾» en la bandeja, como en la planilla (24).
 - **La biblioteca** es la de la E17 (40).
 - **Genérico:** ningún tipo de documento va en el código. Un estándar nuevo es una plantilla que carga un operador.
 
@@ -88,7 +86,7 @@ La puerta de la etapa, con la lista de control de `/puerta`. Antes, la calificac
 - reconocimiento seguro, con duda y sin reconocer;
 - un CBU con el dígito verificador mal leído, que no pasa;
 - un duplicado y una foto movida;
-- la bandeja, las correcciones registradas y el tablero.
+- la bandeja y las correcciones registradas.
 
 ## Requisitos previos
 
@@ -102,7 +100,7 @@ La puerta de la etapa, con la lista de control de `/puerta`. Antes, la calificac
 
 ## En el multitenant
 
-- **Datos de la organización:** documentos, lecturas, correcciones, precisión y ajustes del tablero son `ITenantOwned`, con RLS. Cada ruta nueva lleva su test de aislamiento.
+- **Datos de la organización:** documentos, lecturas, correcciones y precisión son `ITenantOwned`, con RLS. Cada ruta nueva lleva su test de aislamiento.
 - **Workers:** la bajada y la lectura son operaciones durables (efecto externo), descubiertas en un registro técnico global sin datos de negocio, y entran con `ExecutionActor`. El borrado de los 90 días recorre las organizaciones con `TenantJobRunner`.
 - **Feature `forms`:** las rutas llevan `[FeatureGate("forms")]`.
 - **Tope por persona y por día:** una opción del módulo en `Application/Configuration/Forms`, con `ValidateOnStart`, igual para todas las organizaciones.
