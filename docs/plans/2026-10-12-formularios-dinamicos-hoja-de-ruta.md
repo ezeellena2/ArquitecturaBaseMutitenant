@@ -298,7 +298,6 @@ Son trece, en el orden de las decisiones 34, 54 y 69: E12, E12b, E13, E13b, E13c
 - **Copiar formularios.**
 - **Varios niveles de aprobación** (60).
 - **Límites por plan.**
-- **Avisos automáticos con plantilla de Meta fuera de las 24 horas:** necesitan plantillas del sistema en la WABA de cada organización, que el proyecto no tiene.
 
 ## 4. Lo que aprendimos en ArquitecturaBase
 
