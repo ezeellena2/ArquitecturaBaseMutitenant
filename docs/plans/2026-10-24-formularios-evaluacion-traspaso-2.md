@@ -1,6 +1,6 @@
 # Formularios: evaluación del traspaso 2 de ArquitecturaBase
 
-Estado: **propuesta del 2026-10-24.** No cambia la [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) ni las [specs](formularios/README.md) hasta que el usuario decida (§6).
+Estado: **decidida el 2026-10-24.** El usuario eligió todas las recomendadas de §6, que quedaron como las decisiones 34 a 44 de la [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md). Las [specs](formularios/README.md) se actualizan según §7.
 
 Fuente: `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/` (README, capítulos 01 a 07 y anexos A a F), en el main `0e8189bd` del 2026-10-24.
 
@@ -334,7 +334,7 @@ Son los elegidos allá, con nuestras piezas, adaptados a organizaciones y con la
 
 ## 6. Decisiones para el usuario
 
-En todas va primero la recomendada.
+En todas va primero la recomendada. **El usuario eligió todas las recomendadas el 2026-10-24.**
 
 **No se vuelve a preguntar:**
 - lo que fijaste el 23/10 para los dos proyectos (§2.1 y §2.3);

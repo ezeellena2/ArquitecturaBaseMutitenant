@@ -101,7 +101,8 @@ Valen todas las de [AGENTS.md](../../AGENTS.md) y las [fichas](../rules/README.m
 | [Idempotencia](../rules/idempotencia.md) | `[Idempotent]` en los `POST` que crean, publican, mandan o deciden una aprobación. La captura usa el recibo de Meta como clave. |
 | [Fechas](../rules/fechas-y-zonas.md) | «Fecha sin hora» es `DateOnly`; lo recibido, `…Utc`. Los vencimientos usan `TimeProvider` y la hora firmada por Meta. |
 | [Números](../rules/numeros-y-moneda.md) | «Número con decimales» es `decimal` con precisión y escala, nunca `double`; `null` es «Sin respuesta». |
-| [Textos](../rules/textos-y-traducciones.md) y [textos libres](../rules/textos-libres.md) | La interfaz sale de resources es/en. Las preguntas son contenido de la organización: un idioma original obligatorio y una traducción opcional, sin mezclar al mandar (decisión 17). Lo que escribe la persona pasa por `TextLimits`. |
+| [Textos](../rules/textos-y-traducciones.md) y [textos libres](../rules/textos-libres.md) | La interfaz sale de resources es/en. Las preguntas son contenido de la organización: se escriben en el idioma del menú, que es su original y el único obligatorio, con traducción opcional y sin mezclar al mandar (decisiones 17 y 35). Lo que escribe la persona pasa por `TextLimits`. |
+| Producto genérico | Ningún cliente, tipo de documento ni respuesta va escrito en el código: lo particular es configuración de cada organización (2026-10-24). |
 | [Formato](../architecture/backend.md#18-representación-y-formato-de-datos-unificado) | El PDF y los avisos por WhatsApp se formatean con `DisplayFormatter`, con cultura y zona explícitas. |
 | [Paginado](../rules/paginado-y-busqueda.md) | Planilla, catálogos y listados paginados, 10 por defecto. Los filtros con texto libre van en el cuerpo. |
 | [Logs](../rules/logs.md) | `[LoggerMessage]` y `OperationLog.RunAsync`. Nunca el token de sesión, los valores de una respuesta ni teléfonos completos. |
@@ -120,6 +121,10 @@ Valen todas las de [AGENTS.md](../../AGENTS.md) y las [fichas](../rules/README.m
 Cada etapa lleva su número del plan de desarrollo, de la E12 a la E17. Antes se llamaban F1, F2, F4, F5, F6 y F3; el asistente (F7) pasó a [Después](#después-del-bloque). Entre paréntesis va la etapa de ArquitecturaBase que sirve de referencia.
 
 Cada una tiene tableros a dibujar en el lienzo vigente del front antes de programar. Desde la decisión 18, Diseño copia la disposición de los tableros de ArquitecturaBase, con nuestras piezas y criterios. Los **criterios** de cada etapa son las lecciones del [06 del traspaso](2026-10-17-formularios-traspaso/06-lecciones.md): el plan de la etapa los toma como lista de control.
+
+**Desde el 2026-10-24 (decisión 34), el bloque tiene once etapas,** en este orden: E12, E12b, E13, E13b, E13c, E14, E15, E16, E17, E18 y E19.
+- El detalle de abajo es todavía el de las seis originales. Formularios lo actualiza junto con las specs.
+- El alcance nuevo de cada etapa está en la [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md), en §3 y §4.
 
 ### E12 · Formularios: crear, publicar, mandar y recibir (AB etapa 1)
 
@@ -268,16 +273,16 @@ Va al final del bloque para que las plantillas puedan traer reglas de ejemplo.
 
 ### Después del bloque
 
-**Asistente en WhatsApp, sugerencias y audios** (antes F7; AB etapa 5). **Se diseña ahora, después de los tableros de la 16, y se programa después del bloque** (decisión 19). Resumen: [formularios/asistente.md](formularios/asistente.md).
-- **Por qué su programación queda afuera:** requiere dos cosas que no están planificadas:
+**Asistente en WhatsApp, sugerencias y audios** (antes F7; AB etapa 5). **Pasó al bloque como E18, con Casos, después de la E17** (decisiones 34 y 39). Resumen: [formularios/asistente.md](formularios/asistente.md).
+- **Lo que la E18 tiene que planificar:**
   - el asistente v2 con acciones con confirmación (ADR 0048, D8);
-  - la IA en WhatsApp, que la ADR 0038 deja para después.
+  - la IA en WhatsApp, que la ADR 0038 dejaba para después.
 - **Cómo se haría:** las herramientas siguen la receta de este repo ([agregar una herramienta](../guides/agregar-una-herramienta-al-asistente.md)); el modelo lee o propone, y ejecuta el servicio del módulo dueño. Los costos de IA, incluida la transcripción de audios, entran en el tope mensual en USD por organización del asistente (ADR 0051).
 - **Modo Asistente por conversación.**
   - Reconoce el pedido y manda el formulario prellenado. En atención manual solo le sugiere al operador.
   - Solo formularios con «Cuándo lo ofrece el asistente» completado.
   - Hasta 2 ofrecimientos por día y por conversación.
-  - Lo que no es un formulario no se contesta: queda sin leer para un operador.
+  - Lo que no es un formulario lo contestan los Casos de la organización, y lo demás se deriva a un operador (decisión 39).
 - **Sugerencias entre formularios.** Una entrega puede sugerir una factura, por ejemplo. Modos Assistant (decide la IA) o Always (por condición, sin IA), con mapeo de preguntas y la cadena de origen en el detalle.
 - **Audios.** Se bajan como los archivos de la E14, se transcriben con un proveedor elegido y la transcripción la ve también el operador.
 - **Formularios que faltan.** Si la persona quiere registrar algo y no hay formulario, el asistente lo avisa y registra el pedido. Quien diseña formularios los ve agrupados.
@@ -290,8 +295,8 @@ Va al final del bloque para que las plantillas puedan traer reglas de ejemplo.
 - Grupos y remitos con líneas.
 - Corregir una respuesta con una respuesta sucesora.
 - Cargar respuestas desde la web e importar desde Excel.
-- Borrador de formulario armado por la IA.
-- Copiar y eliminar formularios, y deprecar Flows viejos.
+- Borrador de formulario armado por la IA, salvo «Armar formulario con la IA» de los Documentos, que va en la E19.
+- Copiar formularios. Eliminar y deprecar los Flows viejos pasaron a la E12b.
 - Límites por plan.
 - Avisos automáticos con plantilla de Meta fuera de las 24 horas: necesitan plantillas del sistema en la WABA de cada organización, con su alta y aprobación por WABA, que el proyecto no tiene.
 
@@ -306,7 +311,7 @@ Aplicarlo desde el primer día evita lo que nos frenó la Etapa 1 durante días:
    | **Fuera del sistema:** Meta, descarga de medios, almacenamiento, IA y mensajes a personas | Operación durable: un trabajo con lease y fence en un registro técnico (como `AssistantTurnWorks`). Antes de cada llamada se commitea `InFlight`, y la llamada va fuera de la UoW. Lo incierto queda «Sin confirmar» y se consulta antes de repetir. Idempotencia por el id del trabajo o de la sesión, y `[Idempotent]` en el `POST` que lo pide. Pruebas de varios hosts. |
    | **Lectura:** planilla, filtros, Excel | Sin recibos ni leases: presupuesto de tiempo y topes. |
    | **Configuración interna:** borradores, catálogos, reglas, diseño del PDF, plantillas | Una sola `ExecuteInTransactionAsync`, `IVersioned` y 409 `General.ConcurrencyConflict`. `[Idempotent]` solo en las altas, y sin recibos de 30 días. |
-2. **El contrato es el código:** DTO, OpenAPI y ejemplos exportados, no un documento de contrato de 60 KB.
+2. **El contrato es el código:** DTO, OpenAPI y ejemplos exportados, no un documento de contrato de 60 KB. Los ejemplos salen de una corrida real, con sus estados y sus errores de negocio, y el front los valida con zod estricto (2026-10-24: en ArquitecturaBase, el back mandaba `pending` y el front esperaba `Pending`).
 3. **Planes cortos.** Un resumen por etapa con las decisiones ya tomadas, que no se vuelven a preguntar. Lo que el plan no fija se resuelve con lo más simple que cumpla las reglas. Un contrato todavía no publicado se cambia sin capas de compatibilidad.
 4. **Tests rápidos por corte;** integración y visuales una vez, al terminar.
 5. **Pantalla nueva: primero el tablero**, elegido por el usuario.
@@ -319,7 +324,7 @@ Aplicarlo desde el primer día evita lo que nos frenó la Etapa 1 durante días:
 
 ## 5. Decisiones de producto
 
-Decididas por el usuario entre el 2026-10-12 y el 2026-10-18. No se vuelven a preguntar.
+Decididas por el usuario entre el 2026-10-12 y el 2026-10-24. No se vuelven a preguntar.
 
 1. **Formularios por organización.** En la v1 son de la organización; la respuesta guarda la empresa de quien respondió y la planilla filtra por empresa. Formularios y permisos por empresa (`ICompanyOwned`), después.
 2. **Las plantillas se toman como copia independiente.** Una referencia obliga a resolver qué pasa con las respuestas cuando la plataforma cambia la plantilla.
@@ -328,11 +333,11 @@ Decididas por el usuario entre el 2026-10-12 y el 2026-10-18. No se vuelven a pr
 5. **Sin límites por plan en la v1** (formularios, respuestas, almacenamiento): solo se habilita el feature. Medir el uso real antes de poner topes.
 6. **El bloque va después de la E10:** 8b → 11 → 9 → 10 → 12 a 17. Nace con Redis, límites y el fuzz de la E9, y con la nube de la E10.
 7. **`Forms` es un módulo aparte de `WhatsApp`,** unidos por puertos neutrales del núcleo, como en ArquitecturaBase.
-8. **Alcance:** seis etapas, con la biblioteca al final. El asistente en WhatsApp (antes F7) se programa después; su diseño se adelanta (decisión 19).
+8. **Alcance:** seis etapas, con la biblioteca al final. El asistente en WhatsApp (antes F7) se programa después; su diseño se adelanta (decisión 19). Reemplazada por la 34.
 9. **Varias empresas:** si quien responde es miembro de varias empresas, la respuesta guarda todas sus empresas activas, y el filtro por empresa la encuentra por cualquiera.
 10. **Quién manda un formulario desde el chat:** cualquiera con «Atender internos», sin permiso aparte. Lo que limita es que quien recibe tenga `formrecords.create`.
-11. **Nombres largos en un catálogo de miembros:** si pasan los 30 caracteres del título de una opción en WhatsApp, se cortan con «…» y el nombre completo va en el detalle.
-12. **Catálogo con filtros de más de 200 opciones:** se puede guardar con aviso; el bloqueo es al mandar.
+11. **Nombres largos en un catálogo de miembros:** si pasan los 30 caracteres del título de una opción en WhatsApp, se cortan con «…» y el nombre completo va en el detalle. Se le suma la presentación (36).
+12. **Catálogo con filtros de más de 200 opciones:** se puede guardar con aviso; el bloqueo es al mandar. Se le suman los avisos de la 37.
 13. **Biblioteca, edición:** borrador y publicar, con versiones; publicar y retirar piden motivo.
 14. **Biblioteca, catálogos:** una plantilla trae solo catálogos a mano.
 15. **Biblioteca, categorías:** las arma la plataforma (nombre es/en y orden), sin listas fijas en el código.
@@ -343,16 +348,16 @@ Decididas el 2026-10-17, con el [traspaso de ArquitecturaBase](2026-10-17-formul
 17. **Idioma.** Se aplica desde el principio la regla que ArquitecturaBase adoptó el 2026-10-16:
     - solo el idioma original es obligatorio para guardar y publicar, y la traducción es opcional;
     - si la traducción no está completa, el formulario, el PDF, los mensajes y las opciones de catálogo salen enteros en el idioma original, sin mezclar;
-    - el idioma de las pantallas del sistema no cambia.
+    - desde el 2026-10-24, lo que se crea se escribe en el idioma del menú, y para traducir se cambia el menú (35). Reemplaza «el idioma de las pantallas del sistema no cambia».
 18. **Pantallas.** Se copian de ArquitecturaBase:
     - Diseño rehace los tableros de la 12 y la 13 con la disposición de su lienzo y del [05 del traspaso](2026-10-17-formularios-traspaso/05-pantallas.md), con las piezas y los criterios de nuestro lienzo y sin mostrar alternativas;
     - la 17 no existe allá: sus tableros se quedan y solo se ajustan al editor nuevo;
     - si la disposición choca con una regla escrita de este repo, manda la de acá.
-19. **Asistente** (antes F7, la etapa 5 de ArquitecturaBase). Se diseña ahora, después de los tableros de la 16. Se sigue programando después del bloque.
+19. **Asistente** (antes F7, la etapa 5 de ArquitecturaBase). Se diseña ahora, después de los tableros de la 16. Se sigue programando después del bloque. Desde la 34, es la E18, después de la E17, con Casos (39).
 
 Elegidas por el usuario el 2026-10-17, entre las que quedaron al alinear el bloque con el traspaso (todas las opciones recomendadas):
 
-20. **Catálogo a mano en otro idioma que el formulario:** solo sirven los catálogos con el mismo idioma original que el formulario; los demás no aparecen en el selector (C11 de la E13).
+20. **Catálogo a mano en otro idioma que el formulario:** solo sirven los catálogos con el mismo idioma original que el formulario; los demás no aparecen en el selector (C11 de la E13). Confirmada el 2026-10-24.
 21. **Nombres de miembros de más de 30 caracteres:** se mantiene la decisión 11, que los corta con «…» y pone el nombre completo en el detalle. ArquitecturaBase no trunca, pero acá el nombre es el de la cuenta de cada persona y bloquear dejaría sin uso el catálogo.
 22. **Catálogo con filtros de más de 200 opciones:** se mantiene la decisión 12. Se guarda con aviso, y el bloqueo es al mandar. El usuario la confirmó el 2026-10-17, después de los tableros de la v129, que se corrigen.
 23. **Cuánto se guardan las respuestas, sus archivos y sus PDF:** sin plazo mientras exista la organización. Se borran con la baja de la organización, y lo personal de quien da de baja su cuenta, con el participante de la baja. Se revisa con el primer cliente.
@@ -374,6 +379,54 @@ Elegidas por el usuario el 2026-10-18, sobre las reglas de ejemplo de la bibliot
 31. **Diseño del PDF:** la plantilla lo trae, y se copia como primer diseño, porque no tiene datos de la organización.
 32. **Rol sugerido:** la plantilla puede mostrar un «Rol sugerido» (por ejemplo, «Supervisor») como ayuda, sin elegir ningún rol sola: las referencias van por id, nunca por nombre.
 33. **Dónde edita la plataforma las reglas y el PDF de una plantilla:** en la pestaña «Plantilla», debajo de las preguntas, con la misma sección de la E16 que en el editor de la organización.
+
+Elegidas por el usuario el 2026-10-24, con la [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md), todas las recomendadas:
+
+34. **Once etapas, en este orden:**
+    1. E12, formularios;
+    2. E12b, ciclo de vida;
+    3. E13, catálogos base;
+    4. E13b, campos extra;
+    5. E13c, datos de las personas y filtros por destinatario;
+    6. E14, fotos y documentos;
+    7. E15, «Formularios», planilla, detalle y Excel;
+    8. E16, reglas, aprobación, PDF y avisos;
+    9. E17, biblioteca;
+    10. E18, el asistente con Casos;
+    11. E19, Documentos por WhatsApp.
+
+    Reemplaza la 8. El alcance está en la §3 de la evaluación. Dos cambios de fondo:
+    - el ciclo de vida (dar de baja, reactivar, eliminar y deprecar los Flows por WABA) entra al bloque;
+    - la pantalla «Formularios» (MF1) llega en la E15 y reemplaza «Respuestas» y «Por aprobar» del panel.
+35. **Idioma** (cambia la 17): se crea en el idioma elegido en el menú del encabezado, que es su original y el único obligatorio.
+    - No es obligatorio el otro idioma, y no se muestra cómo queda en los dos: no hay selector, pares, vista previa doble ni avisos de traducción.
+    - Con el menú en otro idioma se ve lo escrito en ese idioma. Un formulario creado solo en español aparece igual con el menú en inglés, con sus textos en español, y quien quiera lo traduce ahí.
+    - Por WhatsApp, cada persona lo recibe en el idioma de su cuenta si existe y, si no, en el original, sin mezclar.
+    - Vale para formularios, catálogos, opciones, campos y datos de las personas.
+36. **Nombres de más de 30 caracteres** (11 y 21): se mantiene el recorte con «…». Se suma la presentación de la E13b, que elige qué campos van al título (30) y a la descripción (300).
+37. **Catálogos de más de 200 opciones** (12 y 22): se mantienen. Al publicar se suman dos avisos que no frenan, el máximo por persona y las personas sin el dato, y el tope de 20 en «elegir varias».
+38. **«Elegir varias»:** va en la E12, con los demás tipos de pregunta.
+39. **El asistente con Casos** (E18): contesta lo que configure cada organización (perfil, conocimiento, casos y límites), redacta dentro de esos límites y deriva lo demás. Reemplaza «lo que no es un formulario no se contesta».
+    - En la primera versión, solo en Internos: se mantiene la 29.
+    - Se configura con «Administrar WhatsApp»: se mantiene la 28.
+    - Pide un ADR de respuestas redactadas, como la 0021 de ArquitecturaBase.
+40. **Biblioteca** (E17): es la misma que la de formularios estándar. La «Lectura de documentos» de una plantilla se suma en la E19.
+41. **Documentos** (E19):
+    - los usados siguen a su respuesta (23), y los descartados o sin clasificar se borran a los 90 días;
+    - la lectura usa el proveedor de la plataforma y entra en el tope mensual de IA de la organización, con un tope por persona y por día.
+42. **Lo que es igual para todas las organizaciones:**
+    - los idiomas: español e inglés, sin configurar;
+    - quien recibe, en el idioma de su cuenta;
+    - los topes de catálogos: 10.000 opciones, 20 campos y 20 datos de las personas.
+
+    Los datos de las personas son por organización y por miembro. En la v1 no dependen de la empresa ni hay para B2C.
+43. **Botones y avisos, en todo el sistema** (`pantallas-y-ui.md` y `formularios.md` del front):
+    - un botón está habilitado o grisado, sin textos al lado ni debajo. Mientras trabaja, queda grisado con su mismo texto;
+    - nunca aparece «Cambios sin guardar»;
+    - si falta un dato obligatorio, el botón queda habilitado, y al tocarlo se marca el campo con el error de siempre;
+    - una opción de menú que no se puede usar queda solo grisada, con el motivo en su tooltip. Reemplaza la decisión del 13/10;
+    - la única cuenta en un botón es «Reenviar en 30 s», al pedir un código.
+44. **Ver antes de programar:** el lienzo navegable, con un recorrido guiado por etapa, sin maqueta viva.
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
@@ -417,4 +470,4 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 ## 7. Decisiones pendientes
 
-Ninguna. Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, y las del 2026-10-18 como decisiones 30 a 33.
+Ninguna. Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 44.
