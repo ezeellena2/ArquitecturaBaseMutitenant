@@ -11,7 +11,7 @@
 
 **Entra:**
 - **Plataforma:**
-  - **Plantillas:** cada una trae un formulario (preguntas, botón y prefijo sugerido), sus catálogos a mano con su tipo de valor y sus campos, sus reglas de ejemplo y el diseño del PDF (ver [«Reglas de ejemplo»](#reglas-de-ejemplo-y-diseño-del-pdf)). Tiene categoría y descripción. Cada texto es uno solo, sin idioma (35).
+  - **Plantillas:** cada una trae un formulario (preguntas, botón y prefijo sugerido), sus catálogos (a mano, con su tipo de valor y sus campos; y de los miembros o de los contactos, sin filtros, 64), sus reglas de ejemplo y el diseño del PDF (ver [«Reglas de ejemplo»](#reglas-de-ejemplo-y-diseño-del-pdf)). Tiene categoría y descripción. Cada texto es uno solo, sin idioma (35).
   - **Edición:** borrador y publicar, con versiones. Publicar y retirar piden motivo.
   - **Categorías:** las arma la plataforma.
   - **Uso:** solo la cantidad de organizaciones que usaron cada plantilla.
@@ -22,7 +22,7 @@
 
 **No entra:**
 - avisar «hay una versión nueva» o actualizar una copia: queda para después, si se pide;
-- catálogos con filtros en una plantilla (decisión 14), y los filtros por destinatario de la E13c, que dependen de los datos de las personas de cada organización;
+- filtros en los catálogos de una plantilla: los de los miembros y de los contactos llegan sin filtros, y la organización los ajusta (64). Tampoco los filtros por destinatario de la E13c, que dependen de los datos de las personas de cada organización;
 - plantillas de una organización para otra;
 - saber qué organizaciones usaron una plantilla (decisión 16);
 - borrar plantillas: se retiran.
@@ -31,7 +31,7 @@
 
 **De producto, tomadas por el usuario el 2026-10-13** (decisiones 13 a 16 de la hoja de ruta):
 1. **Edición:** borrador y publicar. Los cambios quedan en un borrador, y «Publicar» crea la versión nueva que ven las organizaciones. Publicar y retirar piden motivo, como el resto de Plataforma.
-2. **Catálogos:** solo a mano. Los catálogos con filtros dependen de roles y empresas de cada organización.
+2. **Catálogos:** a mano, y de los miembros o de los contactos sin filtros (64, que cambia la 14). Los filtros dependen de los roles, las empresas y las etiquetas de cada organización: los pone la organización después de usar la plantilla.
 3. **Categorías:** las arma la plataforma, en una lista corta con nombre y orden que se edita en la misma biblioteca. Ninguna lista fija en el código. El nombre es un solo texto, como el resto de la biblioteca (decisión 45, que reemplaza el «es/en» de la 15).
 4. **Uso:** la plataforma ve solo la cantidad («La usaron 12 organizaciones»), nunca cuáles.
 
@@ -82,7 +82,7 @@ Una categoría se borra solo si ninguna plantilla la usa (`Forms.TemplateCategor
 - `name`, `description` (≤300), `suggestedPrefix` y `submitLabel`, cada uno un solo texto (35), y `audience`: para quién es el formulario (50), que la copia conserva;
 - `questions[]`, en el formato del borrador de la E12;
 - en una pregunta de elegir con catálogo, `catalogRef` (id local de la plantilla) en lugar de `catalogId`;
-- `catalogs[]`: `{catalogRef, name, valueType, fields[], items[{code, text, detail?, value?, fields{}}]}`, con los límites de la E13 y la E13b. Un campo «elegir de otro catálogo» apunta a otro `catalogRef` de la misma plantilla;
+- `catalogs[]`: `{catalogRef, name, source, valueType, fields[], items[{code, text, detail?, value?, fields{}}]}`, donde `source` es `Manual`, `Members` o `Contacts`. Solo los `Manual` llevan opciones; los otros dos llegan sin filtros (64), con los límites de la E13 y la E13b. Un campo «elegir de otro catálogo» apunta a otro `catalogRef` de la misma plantilla;
 - `rules[]`: las reglas de ejemplo, en el formato de la E16 (un evento, hasta 10 condiciones y hasta 10 acciones), con dos diferencias:
   - las condiciones apuntan a las preguntas y opciones de la plantilla (ids locales); en una pregunta de catálogo, a `catalogRef` más el código de la opción;
   - las acciones que piden un rol (pedir aprobación y avisar a un rol) **no llevan rol**. Llevan un `roleHint` opcional: un texto que solo se muestra, como «Supervisor»;
@@ -125,7 +125,7 @@ Se completó el 2026-10-18 con el [resumen](e16-reglas-y-aprobacion.md) y los ta
 - **`FormTemplateCategory`:** `Rename` y `SwapPosition`.
 
 **Copiar** (`FormTemplateCopyCreator`, en Application) arma, desde la versión publicada:
-- los catálogos nuevos, con posiciones de 1 a n, su tipo de valor, sus campos y sus valores;
+- los catálogos nuevos: los a mano con posiciones de 1 a n, su tipo de valor, sus campos y sus valores; los de los miembros y de los contactos, sin filtros. Sin WhatsApp, uno de los contactos queda «No se puede usar» hasta que se instale;
 - el borrador del formulario, con los `FieldId` y `ChoiceId` de la versión (B11) y los `catalogRef` traducidos a los ids de los catálogos nuevos;
 - el nombre de la plantilla, el prefijo libre y la fuente;
 - el diseño del PDF, como primera revisión del diseño (decisión 31). Las reglas de ejemplo no se copian: se leen de la versión (decisión 30).

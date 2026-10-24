@@ -241,7 +241,7 @@ Son doce, en el orden de las decisiones 34 y 54: E12, E12b, E13, E13b, E13c, E13
 
 ### E17 · Biblioteca de plantillas de la plataforma (nueva)
 
-- **Plataforma:** arma plantillas (formulario, catálogos a mano, reglas de ejemplo y diseño del PDF), con categoría, descripción, versiones y publicada o retirada. Datos globales en `platform`, con auditoría (ADR 0050).
+- **Plataforma:** arma plantillas (formulario, catálogos a mano, de los miembros o de los contactos sin filtros, reglas de ejemplo y diseño del PDF), con categoría, descripción, versiones y publicada o retirada. Datos globales en `platform`, con auditoría (ADR 0050).
 - **Es la biblioteca de formularios estándar** (40). La «Lectura de documentos» de una plantilla se suma en la E19.
 - **Organización:** «Usar esta plantilla» crea una copia independiente en borrador, con sus catálogos y el diseño del PDF. Las reglas de ejemplo se muestran precargadas hasta que guarda las suyas (30 a 33). Nunca se publica sola.
 - **Privacidad:** la plataforma solo ve cuántas organizaciones usaron cada plantilla.
@@ -330,7 +330,7 @@ Decididas por el usuario entre el 2026-10-12 y el 2026-10-24. No se vuelven a pr
 11. **Nombres largos en un catálogo de miembros:** si pasan los 30 caracteres del título de una opción en WhatsApp, se cortan con «…» y el nombre completo va en el detalle. Se le suma la presentación (36).
 12. **Catálogo con filtros de más de 200 opciones:** se puede guardar con aviso; el bloqueo es al mandar. Se le suman los avisos de la 37.
 13. **Biblioteca, edición:** borrador y publicar, con versiones; publicar y retirar piden motivo.
-14. **Biblioteca, catálogos:** una plantilla trae solo catálogos a mano.
+14. **Biblioteca, catálogos:** una plantilla trae solo catálogos a mano. Cambiada por la 64: también trae catálogos de los miembros y de los contactos, sin filtros.
 15. **Biblioteca, categorías:** las arma la plataforma (nombre y orden), sin listas fijas en el código. El nombre es un solo texto desde la 45.
 16. **Biblioteca, uso:** la plataforma ve solo cuántas organizaciones usaron cada plantilla, nunca cuáles.
 
@@ -465,6 +465,10 @@ Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 5, reglas, a
     - **mandar por correo**: a quien cargó, a un rol o a una persona, al correo de su cuenta; a una dirección fija escrita en la regla; o al correo de una pregunta del formulario, con un tipo de pregunta «Correo» nuevo.
 63. **Armar una regla desde un texto** (E18): la persona la escribe en palabras, la IA la convierte en una regla normal, y la persona la revisa y la guarda. Después corre siempre igual, sin IA. La IA no interpreta el texto en cada respuesta. La propuesta entra en el tope mensual de IA de la organización (ADR 0051): con el tope agotado, «Armar desde un texto» queda grisado, con el motivo en su tooltip, y la regla se arma a mano.
 
+Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 6, la biblioteca):
+
+64. **Una plantilla puede traer catálogos de los miembros y de los contactos,** sin filtros, además de los escritos a mano. La organización les pone sus filtros después de usarla. Cambia la 14. El usuario reconfirmó que la copia es independiente (no se entera de las versiones nuevas) y que todas las organizaciones ven todas las plantillas.
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase
@@ -509,4 +513,4 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 - **Paso 8 de la revalidación con el usuario:** si la E19 lee también los documentos que mandan los clientes (49 y 51).
 
-Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 63.
+Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 64.
