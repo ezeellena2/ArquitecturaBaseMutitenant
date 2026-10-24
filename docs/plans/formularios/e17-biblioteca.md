@@ -3,7 +3,7 @@
 **Estado:** spec de la novena etapa del bloque (decisión 34). **Es también la biblioteca de formularios estándar** (40): la «Lectura de documentos» de una plantilla se suma en la E19. Se arma con las piezas de este repo y las de las etapas anteriores. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E12]**, **[E13]** y **[E16]** contra el código.
 
 **Fuentes:**
-- alcance y decisiones: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E17 y decisiones 2, 13 a 16, 30 a 33, 35 y 40;
+- alcance y decisiones: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E17 y decisiones 2, 13 a 16, 30 a 33, 35, 40 y 45;
 - reglas: [AGENTS.md](../../../AGENTS.md), las [fichas](../../rules/README.md) y la [ADR 0050](../../decisions/0050-auditoria-global-de-modulos.md) (auditoría de lo global);
 - las specs de la [E12](e12-formularios.md) y la [E13](e13-catalogos.md).
 
@@ -32,7 +32,7 @@
 **De producto, tomadas por el usuario el 2026-10-13** (decisiones 13 a 16 de la hoja de ruta):
 1. **Edición:** borrador y publicar. Los cambios quedan en un borrador, y «Publicar» crea la versión nueva que ven las organizaciones. Publicar y retirar piden motivo, como el resto de Plataforma.
 2. **Catálogos:** solo a mano. Los catálogos con filtros dependen de roles y empresas de cada organización.
-3. **Categorías:** las arma la plataforma, en una lista corta con nombre y orden que se edita en la misma biblioteca. Ninguna lista fija en el código. Desde la decisión 17, el nombre lleva un idioma original obligatorio y una traducción opcional; se muestra en el idioma de quien mira si existe, y si no, en el original.
+3. **Categorías:** las arma la plataforma, en una lista corta con nombre y orden que se edita en la misma biblioteca. Ninguna lista fija en el código. El nombre es un solo texto, como el resto de la biblioteca (decisión 45, que reemplaza el «es/en» de la 15).
 4. **Uso:** la plataforma ve solo la cantidad («La usaron 12 organizaciones»), nunca cuáles.
 
 **Técnicas, o de producto menor**, con su porqué:
@@ -61,7 +61,7 @@
 | Columna | Tipo | Regla |
 | --- | --- | --- |
 | `Id` | uuid | — |
-| `NameEs`, `NameEn` | texto ≤40 | los dos son obligatorios |
+| `Name` | texto ≤40 | obligatorio, un solo texto (45) |
 | `Position` | int | única, `DEFERRABLE INITIALLY DEFERRED` (como E13 C7) |
 
 Una categoría se borra solo si ninguna plantilla la usa (`Forms.TemplateCategory.InUse`).
@@ -158,8 +158,8 @@ Se completó el 2026-10-18 con el [resumen](e16-reglas-y-aprobacion.md) y los ta
 | POST `/api/platform/forms/templates/{id}/publication-checks` | `{version}` | 200 `{canPublish, issues[], nextVersionNumber}`; no escribe |
 | POST `/api/platform/forms/templates/{id}/publish` | `{version, reason}` | 200 `{versionNumber, version}`. Sirve también para volver a publicar. |
 | POST `/api/platform/forms/templates/{id}/retire` | `{version, reason}` | 200 `VersionResponse` |
-| GET `/api/platform/forms/template-categories` | `page`, `pageSize`, `search` | 200 `PagedResult<{id, name{es,en}, position, templateCount, version}>`, por posición e Id |
-| POST `/api/platform/forms/template-categories` | `{name{es,en}, reason}` | 201 |
+| GET `/api/platform/forms/template-categories` | `page`, `pageSize`, `search` | 200 `PagedResult<{id, name, position, templateCount, version}>`, por posición e Id |
+| POST `/api/platform/forms/template-categories` | `{name, reason}` | 201 |
 | PUT `/api/platform/forms/template-categories/{id}` | `{name, version, reason}` | 200 `VersionResponse` |
 | POST `/api/platform/forms/template-categories/{id}/move` | `{direction, version, reason}` | 200 `VersionResponse` |
 | DELETE `/api/platform/forms/template-categories/{id}` | `?version=` y `reason` | 204; o 409 `InUse` |
