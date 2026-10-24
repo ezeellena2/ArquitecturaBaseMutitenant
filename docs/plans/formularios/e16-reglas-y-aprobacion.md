@@ -12,7 +12,7 @@
   - **Reglas** «Cuando llega una respuesta»:
     - cada guardado crea una revisión inmutable y mueve el puntero activo, con su versión y 409. Guardar no crea versión ni republica, y guardar una lista vacía deshabilita las reglas;
     - **cada regla:** un evento (Recibida, Aprobada o Rechazada), hasta 10 condiciones unidas con «y» (la gramática de la E15, con «alguna de» para «elegir varias» y los cálculos de la E13d) y hasta 10 acciones en orden;
-    - **las acciones:** pedir aprobación a un rol, armar el PDF, mandar un mensaje a quien la cargó (con el PDF o sin él), avisar a las personas de un rol y **mandar el PDF a un cliente de la organización** (decisión 47);
+    - **las acciones:** pedir aprobación a un rol, armar el PDF, mandar un mensaje a quien la cargó (con el PDF o sin él), avisar a las personas de un rol, **avisar a una persona** (62), **mandar por correo** (62) y **mandar el PDF a un cliente de la organización** (47);
     - los textos usan `{número}` y `{pregunta}`, y son un solo texto, como los escribe la persona (35);
     - una condición sobre una pregunta que no existía en esa versión cuenta como «sin respuesta».
   - **Motor único de acciones:**
@@ -40,6 +40,7 @@
     - **leer y decidir son independientes:** un 403 de decidir retira las tareas sin retirar la planilla, y un 403 de leer retira valores, archivos y PDF y deja la metadata de la tarea si decidir sigue vigente.
   - **PDF:**
     - un diseño con revisiones propias: nombre (hasta 160), preguntas, quién aprobó, pie (hasta 1000) e «Incluir las fotos». Cada texto es uno solo (35);
+    - **un diseño de base bien hecho, con personalización acotada** (59): el logo, el color de la organización, un encabezado con sus datos, las preguntas agrupadas en secciones con título y en el orden que se elija, mostrar u ocultar cada pregunta, y un lugar para firmas. No hay un editor libre;
     - **muestra los campos «Dato»** de las opciones de catálogo elegidas (E13b), junto a su pregunta, y en un catálogo tipado, «texto · valor»;
     - al aprobar, se fija una **copia fija** A4, una por ejecución, que se escribe una sola vez. El contenido va como está escrito, y los textos del sistema («Aprobada por», «Página 1 de 1»), en el idioma de la cuenta de quien cargó la respuesta (42);
     - solo se ve por la Api, con `formrecords.read`.
@@ -47,7 +48,11 @@
     - Forms los pide por un **puerto neutral del núcleo**, como el envío de la E12, y nunca referencia WhatsApp (lo controla `ModuleIsolationTests`). WhatsApp los encola en su misma cola de salida, marcados como «acción de formulario» y sin duplicados por ejecución;
     - la ventana de 24 horas se mira al aceptar y al despachar;
     - un documento se sube a Meta antes de mandarlo;
-    - **el PDF a un cliente** (47 y 55): va al chat del contacto elegido en una pregunta de un catálogo «De los contactos» (E13), que la regla nombra. El mensaje cae en el chat de ese contacto, en la bandeja Clientes. Si el contacto escribió en las últimas 24 horas, va como documento; si no, con la plantilla aprobada de la organización (E11) que elige la regla. Sin contacto, con el contacto borrado, sin plantilla aprobada o con la plantilla rechazada, queda «No se pudo», a la vista;
+    - **el PDF a un cliente** (47 y 55): va al chat del contacto elegido en una pregunta de un catálogo «De los contactos» (E13), que la regla nombra. El mensaje cae en el chat de ese contacto, en la bandeja Clientes. Sin contacto o con el contacto borrado, queda «No se pudo», a la vista;
+    - **fuera de las 24 horas, todos los avisos de WhatsApp** (a quien cargó, a un rol, a una persona y a un cliente) van con una plantilla aprobada de la organización (E11), que elige la regla (61). Sin plantilla aprobada, o con la plantilla rechazada, queda «No se pudo», a la vista;
+    - **avisar a una persona** (62): la regla elige un miembro de la organización, por id. Se valida al reservar la ejecución: si dejó de ser miembro, queda «No se pudo»;
+    - **mandar por correo** (62): a quien cargó, a un rol o a una persona, al correo de su cuenta; a una dirección fija escrita en la regla; o al correo de una pregunta del formulario. Lleva el texto de la regla y, si se elige, el PDF adjunto. Sale por el envío de correos del núcleo, como operación durable. Un cliente sin correo no lo recibe, y queda «No se pudo». Las direcciones se validan con la ficha de [correos](../../rules/emails.md), y nunca van completas a los logs;
+    - **la pregunta «Correo»:** un tipo de pregunta nuevo, validado con la misma ficha, para que el formulario pida un correo (62);
     - un aviso «Sin confirmar» lo revisa una persona: «salió» o «no salió»;
     - **quien cargó puede ser un cliente** (49): mandarle un mensaje o el PDF sigue la regla de la 47, con una plantilla de la organización fuera de las 24 horas.
 - **Front:**
@@ -60,7 +65,8 @@
     - `FRM-Editor-Reglas` y `M-FRM-Reglas`;
     - `FRM-Editor-Reglas-Plantilla` y `M-FRM-Reglas-Plantilla` (las reglas que llegan de una plantilla, E17);
     - `FRM-Editor-Sugerencias` (lo usa la E18);
-    - `FRM-Pdf`, con la vista previa en un solo idioma y los campos «Dato»;
+    - `FRM-Pdf`, con la vista previa en un solo idioma y los campos «Dato». **Diseño muestra dos o tres estilos de PDF** para que el usuario elija uno (59), con logo, color, encabezado, secciones y firmas;
+    - en `FRM-Editor-Reglas`, las acciones «Avisar a una persona» y «Mandar por correo», y la plantilla para fuera de las 24 horas (61 y 62);
     - `M-FRM-Respuesta-Aprobacion`;
     - y dibuja nuevo `FRM-Respuesta-Corregir`: «Corregir» en la pantalla completa, los campos editables, la marca «Corregida» y la historia en Actividad (58).
   - **Se quedan** los aprobados en el lienzo v132: `FRM-Respuesta-Aprobacion`, `WA-Chats-Avisos`, `M-WA-Conversacion-Avisos` y «Por aprobar» en «Para resolver» de `Inicio-Org` y `M-Inicio-Org`.
@@ -98,19 +104,22 @@ La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba r
 1. llega un aviso al recibir;
 2. otra cuenta con el rol aprueba desde MF1 y desde «Para resolver»;
 3. el PDF con la foto y los campos «Dato» se abre en el celular, y las acciones quedan en «Hecho»;
-4. una cuenta en inglés recibe el aviso y el PDF con el contenido como está escrito y los textos del sistema en inglés.
+4. una cuenta en inglés recibe el aviso y el PDF con el contenido como está escrito y los textos del sistema en inglés;
+5. un aviso a un empleado fuera de las 24 horas llega con la plantilla de la organización;
+6. un correo con el PDF adjunto llega a una dirección fija y al correo escrito en el formulario.
 
 ## Requisitos previos
 
 - La E15 cerrada, y la E10 (almacenamiento).
-- **Sin plantillas de Meta nuevas:** fuera de las 24 horas, el aviso queda «No se pudo» (decisión 26).
+- **Antes de planificar,** se verifica con Meta que una plantilla de la organización (E11) acepte un documento en el encabezado (47 y 61).
 
 ## Ajustes ya decididos
 
 - **Idioma** (35): reglas, mensajes y diseño son un solo texto, como los escribe la persona. Los textos del sistema que recibe una persona van en el idioma de su cuenta (42).
 - **PDF:** se reusa PDFsharp-MigraDoc, que ya está en el asistente; no se suma SkiaSharp.
 - **Quién aprueba:** cualquiera de la organización con el rol de la regla y `formapprovals.decide`, salvo quien cargó la respuesta (decisión 25).
-- **Avisos fuera de las 24 horas:** a quien cargó y a un rol, quedan «No se pudo», a la vista, y el PDF queda guardado. El operador puede mandar una plantilla desde el chat con lo que ya trae la E11 (decisión 26). La acción «Mandar el PDF a un cliente» sí usa una plantilla de la organización fuera de las 24 horas (47). Antes de planificar se verifica con Meta que una plantilla de la E11 acepte un documento en el encabezado.
+- **Avisos fuera de las 24 horas:** van con una plantilla aprobada de la organización, a empleados y a clientes (61, que reemplaza la 26). Sin plantilla, quedan «No se pudo», a la vista, y el PDF queda guardado.
+- **Aprobación de un nivel:** varios niveles quedan para después del bloque (60).
 - **Botones:** según la decisión 43.
 
 ## En el multitenant

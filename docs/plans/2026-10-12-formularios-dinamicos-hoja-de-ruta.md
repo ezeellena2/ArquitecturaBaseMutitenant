@@ -227,8 +227,10 @@ Son doce, en el orden de las decisiones 34 y 54: E12, E12b, E13, E13b, E13c, E13
 - **Aprobación de un nivel:** nadie aprueba lo que cargó. «Por aprobar» va en MF1 y en «Para resolver», con la misma fuente (ADR 0040).
 - **PDF** como copia fija, con los campos «Dato».
 - **Corregir una respuesta** (58), con el permiso nuevo «Corregir respuestas»: solo los valores, y solo mientras está recibida o por aprobar.
-- **Avisos por WhatsApp** con el número de la organización. Fuera de las 24 horas, «No se pudo» (decisión 26).
-- **Mandar el PDF a un cliente** de la organización (47), al chat del contacto elegido en el formulario (55); fuera de las 24 horas, con una plantilla de la organización.
+- **Avisos por WhatsApp** con el número de la organización. Fuera de las 24 horas, con una plantilla aprobada de la organización (61).
+- **Avisar a una persona y mandar por correo** (62), con el PDF adjunto si se elige.
+- **El diseño del PDF:** una base bien hecha con logo, color, encabezado, secciones, mostrar u ocultar preguntas y firmas (59).
+- **Mandar el PDF a un cliente** de la organización (47), al chat del contacto elegido en el formulario (55).
 - **Resumen:** [formularios/e16-reglas-y-aprobacion.md](formularios/e16-reglas-y-aprobacion.md).
 - **Criterios:**
   - la configuración que usa un efecto se valida al reservar (un rol borrado colgaba una aprobación);
@@ -251,6 +253,7 @@ Son doce, en el orden de las decisiones 34 y 54: E12, E12b, E13, E13b, E13c, E13
 ### E18 · El asistente, con Casos (AB 5 y Casos)
 
 - **El asistente atiende empleados y clientes** (51). Cada organización configura, por bandeja, quién atiende los chats nuevos y cuándo vuelve un chat al modo configurado; cada chat se cambia o se fija a mano (52). Se configura con «Administrar WhatsApp» (28).
+- **Armar una regla desde un texto** (63): la IA propone la regla y la persona la revisa y la guarda.
 - **Casos** (39): cada organización configura perfil, conocimiento, casos y límites. Seis acciones, respuestas redactadas dentro de los límites y «Cualquier otra cosa» al final. Pide su ADR de respuestas redactadas.
 - **Cómo trabaja:** historial de 24 horas de esa conversación, ráfagas de 4 s con tope de 15 s y hasta 3 acciones por turno.
 - **Lo de la etapa 5 de allá:** sugerencias al operador y entre formularios, audios transcriptos (27), «Formularios que faltan» y el catálogo propuesto.
@@ -283,6 +286,7 @@ Son doce, en el orden de las decisiones 34 y 54: E12, E12b, E13, E13b, E13c, E13
 - **Los tableros que cruzan formularios.**
 - **Cargar respuestas desde la web e importar desde Excel.** Las líneas pasaron a la E13d (54) y corregir una respuesta, a la E16 (58).
 - **Copiar formularios.**
+- **Varios niveles de aprobación** (60).
 - **Límites por plan.**
 - **Avisos automáticos con plantilla de Meta fuera de las 24 horas:** necesitan plantillas del sistema en la WABA de cada organización, que el proyecto no tiene.
 
@@ -350,7 +354,7 @@ Elegidas por el usuario el 2026-10-17, entre las que quedaron al alinear el bloq
 23. **Cuánto se guardan las respuestas, sus archivos y sus PDF:** sin plazo mientras exista la organización. Se borran con la baja de la organización, y lo personal de quien da de baja su cuenta, con el participante de la baja. Se revisa con el primer cliente.
 24. **La empresa en la planilla:** un filtro «Empresa ▾» y una columna «Empresas» que se puede ocultar desde «Columnas».
 25. **Quién aprueba:** cualquiera de la organización con el rol de la regla y `formapprovals.decide`, salvo quien cargó la respuesta.
-26. **Avisos por WhatsApp fuera de las 24 horas:** quedan «No se pudo», a la vista, y el PDF queda guardado, como en ArquitecturaBase. La 47 la cambia para el PDF a un cliente. El operador puede mandar una plantilla desde el chat con lo que ya trae la E11, y el envío automático con plantilla queda para después.
+26. **Avisos por WhatsApp fuera de las 24 horas:** quedan «No se pudo», a la vista, y el PDF queda guardado, como en ArquitecturaBase. Reemplazada por la 61: fuera de las 24 horas, todos los avisos van con una plantilla de la organización. El operador puede mandar una plantilla desde el chat con lo que ya trae la E11, y el envío automático con plantilla queda para después.
     - El usuario había elegido la A (plantillas de Meta), pero pedía un mecanismo que el proyecto no tiene: plantillas del sistema en la WABA de cada organización, con su alta y aprobación por WABA y las variables armadas solas.
     - `docs/operations/whatsapp-plantillas.md` cubre solo las del número de la plataforma, y la E11 manda solo una plantilla que elige una persona en el chat.
     - Por eso, la Guía la pasó a la B el 2026-10-17, por la condición de abajo.
@@ -451,6 +455,16 @@ Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 4, ver las r
 57. **El tablero automático de cada formulario** pasa de la E19 a la E15, junto con la planilla: no depende de los documentos.
 58. **Corregir una respuesta** entra al bloque, en la E16: con un permiso nuevo, «Corregir respuestas»; solo mientras está recibida o por aprobar, porque lo aprobado queda fijo con su PDF; solo los valores, no los archivos. Conserva el número, queda marcada «Corregida» y la actividad guarda qué cambió. El Excel sigue con hasta 10.000 respuestas por vez.
 
+Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 5, reglas, aprobación y PDF):
+
+59. **El diseño del PDF** (E16): una base bien hecha, con personalización acotada: el logo, el color de la organización, un encabezado con sus datos, las preguntas agrupadas en secciones con título y en el orden que se elija, mostrar u ocultar cada pregunta, y un lugar para firmas. Sin editor libre. Diseño muestra dos o tres estilos para elegir.
+60. **La aprobación es de un nivel.** Varios niveles, después del bloque.
+61. **Fuera de las 24 horas, todos los avisos de WhatsApp** (a empleados y a clientes) van con una plantilla aprobada de la organización. Reemplaza la 26.
+62. **Dos acciones más en las reglas** (E16):
+    - **avisar a una persona** puntual, no solo a un rol;
+    - **mandar por correo**: a quien cargó, a un rol o a una persona, al correo de su cuenta; a una dirección fija escrita en la regla; o al correo de una pregunta del formulario, con un tipo de pregunta «Correo» nuevo.
+63. **Armar una regla desde un texto** (E18): la persona la escribe en palabras, la IA la convierte en una regla normal, y la persona la revisa y la guarda. Después corre siempre igual, sin IA. La IA no interpreta el texto en cada respuesta.
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase
@@ -495,4 +509,4 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 - **Paso 8 de la revalidación con el usuario:** si la E19 lee también los documentos que mandan los clientes (49 y 51).
 
-Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 58.
+Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 63.
