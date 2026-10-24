@@ -40,11 +40,15 @@ Lo fijaste el 23/10 para los dos proyectos y lo confirmaste acá el 24/10: los b
   - Al salir con cambios, se pregunta antes.
 - **Lo que necesita algo antes queda grisado,** como publicar con cambios sin guardar.
 - **Mientras trabaja, el botón queda grisado con su mismo texto,** sin «Guardando…».
+- **Después de muchos intentos, el botón queda grisado con su mismo texto,** y el aviso de error de siempre dice cuándo se puede volver a probar.
 - **Lo que salió bien va en el aviso de siempre,** que se cierra solo.
 - **Un error va con los estilos de siempre:** debajo del campo o en el aviso rojo. Nunca va en rojo una fila recién agregada.
 - **Si no se sabe si algo salió** (por un corte de red), la pantalla vuelve a leer sola y muestra lo que quedó. No hay botones como «Consultar guardado».
 - **Las acciones van al borde derecho** del encabezado de su superficie.
-- **Lo elegido al crear que ya no se cambia va como dato** («Escritas a mano · Texto»), no como un campo con candado. La A11 (campos apagados) sigue para quien abre algo sin permiso de editarlo.
+- **Lo que ya no se cambia va como la A11:** en su campo, apagado y gris, sin textos como «No se cambia».
+  - Es la forma que ya aprobaste para todo lo que no se edita (v113 y v136), y ya está programada.
+  - La regla del 23/10 apunta a la explicación al lado del campo, y acá no la hay.
+  - Así hay una sola forma, también para el origen de un catálogo.
 
 **Qué cambia acá:**
 - **El lienzo:** Criterio-Botones prohíbe «Deshabilitar un botón en vez de explicar qué falta», y el README dice «nada se deshabilita sin explicar por qué». Es el equivalente de la frase que causó el error allá. Diseño corrige esos dos y Criterio-Marco.
@@ -55,7 +59,7 @@ Lo fijaste el 23/10 para los dos proyectos y lo confirmaste acá el 24/10: los b
 - **Los tableros:** «Cambios sin guardar» está en 57 tableros de todo el sistema. Además, seis tableros de formularios apagan Guardar por un error, contra la regla de crear de hoy (`submit-buttons.test.ts`, E7).
 - **La spec de la 12:** salen «Guardado sin confirmar», «Consultar guardado» y «Consultar envío».
 
-**Quedan dos preguntas** (§6 A): qué pasa con una opción de menú apagada, y qué pasa si falta un dato obligatorio.
+**Quedan tres preguntas** (§6 A): qué pasa con una opción de menú apagada, qué pasa si falta un dato obligatorio y cómo se muestra la cuenta para reenviar un código.
 
 ### 2.2 Idioma (decisión B2)
 
@@ -358,6 +362,10 @@ Se pregunta solo dónde va cada cosa, cuándo, y lo que choca con decisiones nue
   - Así se ve qué falta, también en un formulario largo.
   - Es como funciona hoy («Crear rol» con el nombre vacío), y es la regla que fijaste allá el 23/10.
 - **Alternativa:** el botón queda grisado hasta completar lo obligatorio, sin marcar qué falta.
+
+**A5. La cuenta para reenviar un código** (en el ingreso, el registro y «Confirmá que sos vos»).
+- **Recomendado:** se mantiene «Reenviar en 30 s» en el botón. Es lo que hacen los sistemas comunes, y sin la cuenta no se sabe cuándo se puede pedir otro código. Es la única excepción a «el botón no cambia su texto».
+- **Alternativa:** «Reenviar código» queda grisado 30 s, sin la cuenta.
 
 **A4. Cómo ves todo antes de programar.**
 - **Recomendado:** el lienzo navegable, con Play, los índices y un recorrido guiado por etapa.
