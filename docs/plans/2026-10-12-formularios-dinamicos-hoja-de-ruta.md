@@ -82,6 +82,7 @@ Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sec
   - `forms.read`, `forms.manage` y `forms.publish` (E12);
   - `formrecords.create` y `formrecords.read` (E12);
   - `formcatalogs.read` y `formcatalogs.manage` (E13);
+  - `formsuggestions.manage` (E18);
   - `formpersondata.manage` (E13c), el único que suma el traspaso 2;
   - `formrecords.export` (E15);
   - `formrules.manage` y `formapprovals.decide` (E16).
@@ -310,7 +311,7 @@ Decididas por el usuario entre el 2026-10-12 y el 2026-10-24. No se vuelven a pr
 12. **Catálogo con filtros de más de 200 opciones:** se puede guardar con aviso; el bloqueo es al mandar. Se le suman los avisos de la 37.
 13. **Biblioteca, edición:** borrador y publicar, con versiones; publicar y retirar piden motivo.
 14. **Biblioteca, catálogos:** una plantilla trae solo catálogos a mano.
-15. **Biblioteca, categorías:** las arma la plataforma (nombre es/en y orden), sin listas fijas en el código.
+15. **Biblioteca, categorías:** las arma la plataforma (nombre y orden), sin listas fijas en el código. El nombre es un solo texto desde la 45.
 16. **Biblioteca, uso:** la plataforma ve solo cuántas organizaciones usaron cada plantilla, nunca cuáles.
 
 Decididas el 2026-10-17, con el [traspaso de ArquitecturaBase](2026-10-17-formularios-traspaso/README.md):
@@ -401,6 +402,11 @@ Elegidas por el usuario el 2026-10-24, con la [evaluación del traspaso 2](2026-
     - la única cuenta en un botón es «Reenviar en 30 s», al pedir un código.
 44. **Ver antes de programar:** el lienzo navegable, con un recorrido guiado por etapa, sin maqueta viva.
 
+Elegidas por el usuario el 2026-10-24, al actualizar las specs (las recomendadas):
+
+45. **El nombre de una categoría de la biblioteca** (E17) es un solo texto, como el resto de la biblioteca. Reemplaza el «es/en» de la 15.
+46. **El conocimiento del asistente** (E18) es una pestaña de la pantalla del asistente: la información del negocio de cada organización, que se edita ahí, con el mismo Guardar y con «Administrar WhatsApp». No suma pantalla ni permiso.
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase
@@ -443,4 +449,4 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 ## 7. Decisiones pendientes
 
-Ninguna. Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 44.
+Ninguna. Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 46.
