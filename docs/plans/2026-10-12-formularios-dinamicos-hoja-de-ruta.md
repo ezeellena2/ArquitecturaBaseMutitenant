@@ -152,7 +152,7 @@ Son doce, en el orden de las decisiones 34 y 54: E12, E12b, E13, E13b, E13c, E13
 
 ### E13 · Catálogos base (AB E1)
 
-- **A mano y con filtros** de miembros, con tipo de valor, carga de una vez (XLSX, CSV o pegar), exportar y la plantilla. Hasta 10.000 opciones (42).
+- **A mano, de los miembros o de los contactos de WhatsApp** (55), con tipo de valor, carga de una vez (XLSX, CSV o pegar), exportar y la plantilla. Hasta 10.000 opciones (42).
 - **Guardar todo junto,** mandando y escribiendo solo lo que cambió.
 - **Las preguntas de catálogo,** de elegir una o varias. Las opciones viajan en el mensaje, con ids locales a la oferta.
 - **Spec:** [formularios/e13-catalogos.md](formularios/e13-catalogos.md).
@@ -225,7 +225,7 @@ Son doce, en el orden de las decisiones 34 y 54: E12, E12b, E13, E13b, E13c, E13
 - **Aprobación de un nivel:** nadie aprueba lo que cargó. «Por aprobar» va en MF1 y en «Para resolver», con la misma fuente (ADR 0040).
 - **PDF** como copia fija, con los campos «Dato».
 - **Avisos por WhatsApp** con el número de la organización. Fuera de las 24 horas, «No se pudo» (decisión 26).
-- **Mandar el PDF a un cliente** de la organización (47), con su teléfono del catálogo; fuera de las 24 horas, con una plantilla de la organización.
+- **Mandar el PDF a un cliente** de la organización (47), al chat del contacto elegido en el formulario (55); fuera de las 24 horas, con una plantilla de la organización.
 - **Resumen:** [formularios/e16-reglas-y-aprobacion.md](formularios/e16-reglas-y-aprobacion.md).
 - **Criterios:**
   - la configuración que usa un efecto se valida al reservar (un rol borrado colgaba una aprobación);
@@ -406,7 +406,7 @@ Elegidas por el usuario el 2026-10-24, con la [evaluación del traspaso 2](2026-
     - los textos del sistema que recibe una persona, en el idioma de su cuenta;
     - los topes de catálogos: 10.000 opciones, 20 campos y 20 datos de las personas.
 
-    Los datos de las personas son por organización y por miembro. En la v1 no dependen de la empresa ni hay para B2C.
+    Los datos de las personas son por organización y por miembro. En la v1 no dependen de la empresa ni hay para B2C. El usuario lo reconfirmó el 2026-10-24 con la 49: los clientes no tienen datos de las personas.
 43. **Botones y avisos, en todo el sistema** (`pantallas-y-ui.md` y `formularios.md` del front):
     - un botón está habilitado o grisado, sin textos al lado ni debajo. Mientras trabaja, queda grisado con su mismo texto;
     - nunca aparece «Cambios sin guardar»;
@@ -419,7 +419,7 @@ Elegidas por el usuario el 2026-10-24, al actualizar las specs:
 
 45. **El nombre de una categoría de la biblioteca** (E17) es un solo texto, como el resto de la biblioteca. Reemplaza el «es/en» de la 15.
 46. **El conocimiento del asistente** (E18) es una pestaña de la pantalla del asistente: la información del negocio de cada organización, que se edita ahí, con el mismo Guardar y con «Administrar WhatsApp». No suma pantalla ni permiso.
-47. **Mandar el PDF a un cliente** (E16): una acción más de las reglas, que le manda el PDF a un cliente de la organización (un contacto que no es empleado), con el teléfono de la opción elegida en una pregunta de catálogo (campo «teléfono» de la E13b). Dentro de las 24 horas va como documento; fuera, con una plantilla aprobada de la organización (E11). Para esta acción cambia la 26, porque la E11 ya trae las plantillas de cada organización.
+47. **Mandar el PDF a un cliente** (E16): una acción más de las reglas, que le manda el PDF a un cliente de la organización (un contacto que no es empleado), al chat del contacto elegido en una pregunta de un catálogo «De los contactos» (55). Dentro de las 24 horas va como documento; fuera, con una plantilla aprobada de la organización (E11). Para esta acción cambia la 26, porque la E11 ya trae las plantillas de cada organización.
 48. **Archivos en el chat** (E14): en todos los chats de atención, el operador ve y baja lo que le mandan (fotos, audios, documentos y videos) y puede mandar archivos desde el compositor, dentro de las 24 horas.
 
 Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 1, quién participa):
@@ -437,6 +437,11 @@ Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 1, quién pa
 Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 2, armar y mandar un formulario):
 
 54. **Condiciones, cálculos y líneas son una etapa propia, la E13d,** después de la E13c, porque un cálculo usa los campos de los catálogos. Los cálculos se hacen al llegar la respuesta: quien completa no ve el total en WhatsApp antes de enviar. Las líneas (un pedido con varios productos) llevan un tope de renglones, que se prueba antes con Meta.
+
+Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 3, catálogos):
+
+55. **Un catálogo puede salir de los contactos de WhatsApp** de la organización (E13), como hoy sale de los miembros. Así, para mandar el PDF a un cliente (47), se elige su contacto en una pregunta y el PDF va a su chat, sin cargar su teléfono dos veces. El teléfono no se muestra.
+56. **Los catálogos grandes** (más de 200 opciones para una persona) se resuelven por ahora con los filtros por persona; la búsqueda mientras se escribe queda después del bloque.
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
@@ -482,4 +487,4 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 - **Paso 8 de la revalidación con el usuario:** si la E19 lee también los documentos que mandan los clientes (49 y 51).
 
-Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 54.
+Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33 y las del 2026-10-24 como decisiones 34 a 56.

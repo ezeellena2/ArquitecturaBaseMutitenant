@@ -16,7 +16,7 @@ Las etapas van en el orden de las decisiones 34 y 54. Los tableros son los de la
 | --- | --- | --- | --- |
 | 1 | E12 · Formularios: crear, publicar, mandar y recibir | [e12-formularios.md](e12-formularios.md) | Aprobados en el lienzo v128. Se redibujan 4: `FRM-Editor`, `M-FRM-Editor`, `FRM-Publicar` y `FRM-Publicando` |
 | 2 | E12b · Ciclo de vida | [e12b-ciclo-de-vida.md](e12b-ciclo-de-vida.md) | Por dibujar: `BA1-A` a `BA6` |
-| 3 | E13 · Catálogos base | [e13-catalogos.md](e13-catalogos.md) | Aprobados en el lienzo v129 y v130. Se redibujan 5, y por dibujar `CA1-A` a `CA6` |
+| 3 | E13 · Catálogos base | [e13-catalogos.md](e13-catalogos.md) | Aprobados en el lienzo v129 y v130. Se redibujan 5, y por dibujar `CA1-A` a `CA6` y `FRM-Catalogo-Contactos` |
 | 4 | E13b · Campos extra y qué viaja a WhatsApp | [e13b-campos-extra.md](e13b-campos-extra.md) | Por dibujar: `CE1`, `CE2` y `CE3-B` |
 | 5 | E13c · Datos de las personas y filtros por destinatario | [e13c-datos-de-las-personas.md](e13c-datos-de-las-personas.md) | Por dibujar: `CE4-A` y el diálogo para definir un dato |
 | 6 | E13d · Condiciones, cálculos y líneas | [e13d-condiciones-calculos-y-lineas.md](e13d-condiciones-calculos-y-lineas.md) | Por dibujar: `FRM-Editor-Condiciones`, `FRM-Editor-Calculo`, `FRM-Editor-Lineas` y `FRM-Respuesta-Lineas` |

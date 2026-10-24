@@ -40,7 +40,7 @@
     - Forms los pide por un **puerto neutral del núcleo**, como el envío de la E12, y nunca referencia WhatsApp (lo controla `ModuleIsolationTests`). WhatsApp los encola en su misma cola de salida, marcados como «acción de formulario» y sin duplicados por ejecución;
     - la ventana de 24 horas se mira al aceptar y al despachar;
     - un documento se sube a Meta antes de mandarlo;
-    - **el PDF a un cliente** (47): el número sale del campo «teléfono» (E13b) de la opción elegida en una pregunta de catálogo, que la regla nombra. El mensaje cae en el chat de ese contacto, en la bandeja Clientes. Si el contacto escribió en las últimas 24 horas, va como documento; si no, con la plantilla aprobada de la organización (E11) que elige la regla. Sin número, sin plantilla aprobada o con la plantilla rechazada, queda «No se pudo», a la vista;
+    - **el PDF a un cliente** (47 y 55): va al chat del contacto elegido en una pregunta de un catálogo «De los contactos» (E13), que la regla nombra. El mensaje cae en el chat de ese contacto, en la bandeja Clientes. Si el contacto escribió en las últimas 24 horas, va como documento; si no, con la plantilla aprobada de la organización (E11) que elige la regla. Sin contacto, con el contacto borrado, sin plantilla aprobada o con la plantilla rechazada, queda «No se pudo», a la vista;
     - un aviso «Sin confirmar» lo revisa una persona: «salió» o «no salió»;
     - **quien cargó puede ser un cliente** (49): mandarle un mensaje o el PDF sigue la regla de la 47, con una plantilla de la organización fuera de las 24 horas.
 - **Front:**

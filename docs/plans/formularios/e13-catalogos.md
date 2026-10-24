@@ -19,6 +19,7 @@
   - **la carga de una vez:** pegar desde Excel (agrega) o importar un XLSX o un CSV (reemplaza), con vista previa;
   - **exportar** y bajar la plantilla;
   - **hasta 10.000 opciones** por catálogo, contando las dadas de baja.
+- **De los contactos** (decisión 55): las opciones son los contactos de WhatsApp de la organización, los de la bandeja Clientes, con su nombre. Sirve para elegir a un cliente en un formulario y mandarle el PDF a su chat (47). Ver la §4b.
 - **Con filtros:**
   - sobre la fuente «Miembros de la organización», con condiciones armadas por el sistema y «Sin incluir a quien lo recibe»;
   - vista previa con una persona de ejemplo, elegida a propósito;
@@ -61,6 +62,7 @@ Valen las de la E12. Las de producto están en la §5 de la hoja de ruta.
 | C13 | **Topes del archivo:** 10 MiB, 64 columnas, 10.000 filas de datos y 640.128 celdas de trabajo, contando las vacías con formato y las fórmulas matriciales; un XLSX hasta 100 MiB descomprimido. Las fórmulas cuentan por su valor guardado. El CSV va en UTF-8 estricto. Se lee con ClosedXML, que ya está en el repo. | Las celdas vacías con formato pasaron los topes en ArquitecturaBase. |
 | C14 | **Números y fechas de un archivo o de lo pegado** se leen con la cultura del pedido. Lo que se puede leer de dos formas («1.500», «12.345», «3/4/2026») da `Forms.CatalogImport.ValueAmbiguous`, en su fila y columna. | Lista de control de `/puerta`, punto 1. |
 | C15 | **Exportar** escribe el valor canónico como texto, con las columnas de la plantilla, y se vuelve a importar sin diferencias. La plantilla trae una columna por dato, si es obligatorio, y una fila de ejemplo. | Exportar e importar son el camino para los cambios grandes. |
+| C17 | **La fuente «Contactos» la da WhatsApp por un puerto neutral del núcleo** (`IStructuredContactSource`, en `Application/Interfaces/Integrations/StructuredData/`). Forms nunca referencia a WhatsApp; sin WhatsApp, la implementación apagada no devuelve contactos y el origen no aparece. | `ModuleIsolationTests`, como los puertos de la E12. |
 | C16 | **La vista previa, aplicar y exportar van de a uno por persona,** con el candado de PostgreSQL de la E15 (`AdvisoryLockExtensions`). La segunda da `Forms.CatalogImport.Busy`. Cuentan en las cuotas generales ([cuotas](../../rules/cuotas.md)), sin perfil propio. | Nunca un limitador por proceso. |
 
 ## 3. Modelo de datos
@@ -74,7 +76,7 @@ Todas las tablas son `ITenantOwned` en `tenant`, con RLS, FK compuestas y `TextL
 | `Id`, `TenantId` | uuid | — |
 | `Name` | texto ≤80 | obligatorio |
 | `Description` | texto ≤300? | opcional |
-| `Source` | texto | `Manual` o `Members`; no cambia después de crear |
+| `Source` | texto | `Manual`, `Members` o `Contacts`; no cambia después de crear |
 | `ValueType` | texto | `Text`, `Integer`, `Decimal` o `Date`; no cambia; `Members` es siempre `Text` (C11) |
 | `Filters` | jsonb? | solo con `Members`; CHECK que lo ata a `Source` |
 | `IsActive` | bool | dar de baja = `false` |
@@ -139,6 +141,15 @@ Se define en el código, en `Application/Modules/Forms/Catalogs/MembersCatalogSo
   - si una versión nueva de la fuente cambia las columnas o los operadores, un catálogo con `sourceVersion` vieja pasa a «No se puede usar»;
   - sin migración de datos.
 
+## 4b. La fuente «Contactos» (55)
+
+- **Qué devuelve:** cada opción es un contacto de la bandeja Clientes de la organización. Su id es el del contacto y su texto, el nombre del contacto.
+- **Lo que nunca sale:** el teléfono, ni a quien completa el formulario ni en la planilla. El sistema lo usa solo para mandar al chat del contacto (47).
+- **Filtros:** por etiqueta del contacto (`hasAny`, `hasNone`), con la misma gramática que «Miembros». Hasta 10 condiciones.
+- **Ejecución:** como «Miembros»: lee una fila más que el tope, con un timeout corto, sin traer todos los contactos a memoria.
+- **Un contacto borrado** deja de ofrecerse; las respuestas guardan el nombre que tenía, sellado.
+- **El valor es siempre de texto.**
+
 ## 5. Dominio y errores
 
 **Entidades** (`Domain/Forms`):
@@ -184,7 +195,7 @@ Las rutas de Business llevan `[Access(Access.Business)]` y `[FeatureGate("forms"
 
 | Método y ruta | Permiso | Pide | Devuelve |
 | --- | --- | --- | --- |
-| GET `/api/organization/forms/catalogs` | `formcatalogs.read` | `page`, `pageSize`, `sort` (`name`, `updatedAtUtc`), `search`, `source` (`all`, `manual`, `members`), `status` (`all`, `active`, `inactive`) | 200 `PagedResult<{id, name, description?, source, valueType, optionsCount?, usedByCount, isActive, usable, unusableReason?}>` |
+| GET `/api/organization/forms/catalogs` | `formcatalogs.read` | `page`, `pageSize`, `sort` (`name`, `updatedAtUtc`), `search`, `source` (`all`, `manual`, `members`, `contacts`), `status` (`all`, `active`, `inactive`) | 200 `PagedResult<{id, name, description?, source, valueType, optionsCount?, usedByCount, isActive, usable, unusableReason?}>` |
 | GET `/api/organization/forms/catalogs/filter-counts` | `formcatalogs.read` | `search` | 200 `{all, manual, members, active, inactive}` |
 | POST `/api/organization/forms/catalogs` | `formcatalogs.manage` | `{name, description?, source, valueType?, items?[], filters?, sampleMemberId?}`. Sin tipo, `Text`; `Members` exige `sampleMemberId` | 201 detalle + Location, con el mapa de ids |
 | GET `/api/organization/forms/catalogs/{id}` | `formcatalogs.read` | — | 200 `{id, name, description, source, valueType, filters?, isActive, usable, unusableReason?, usedByCount, canManage, version}` |
@@ -290,6 +301,8 @@ Los modelos están en este repo; no se copia código de ArquitecturaBase. Las ab
 - `CA4` · Elegir varias: «Permitir elegir varias» en la pregunta de catálogo, con mínimo y máximo, «varias, hasta N» en la lista de preguntas y la vista previa con casillas;
 - `CA5` · Las respuestas con varias opciones: la planilla, «alguna de», el detalle, el chat, el Excel y el PDF (los usa la E15);
 - `CA6` · El circuito de punta a punta.
+
+**Diseño dibuja también** `FRM-Catalogo-Contactos`: un catálogo «De los contactos», con sus filtros por etiqueta y la vista previa (55). `FRM-Catalogo-Nuevo` suma la tercera tarjeta, «De los contactos de WhatsApp».
 
 **Se quedan como están:** `FRM-Catalogos`, `M-FRM-Catalogos`, `FRM-Catalogo-Nuevo` (suma el tipo de valor) y la pregunta de catálogo en `FRM-Editor` y `WA-Chats-Formulario`.
 
