@@ -27,6 +27,8 @@ El plan tiene que poder ejecutarse sin adivinar. Las decisiones de producto las 
 
    Si planifica la Guía (Claude), el plan lo escribe un chat de Codex, así no se gasta el uso de Claude. La Guía le pasa este punto como texto y después lo revisa.
 4. **Revisá el plan antes de dárselo al usuario.** Tiene que aplicar las ADR nuevas, el contrato tiene que estar completo y nada puede quedar condicional.
+   - **La etapa usa solo lo que dejaron las anteriores** (pedido del usuario, 2026-10-25). Lo que usa, prueba o dibuja tiene que estar hecho antes. Lo que necesita una etapa posterior pasa a esa etapa.
+   - **Lo que suma la etapa aparece en todas las pantallas que ya existen.** Por ejemplo, un tipo de pregunta nuevo se ve en la planilla, el detalle y el PDF, si ya están.
 5. **Resolvé «Para decidir» con el usuario:**
    - en tandas de cuatro preguntas como mucho, con opciones y la recomendada primero;
    - al usuario se le preguntan solo las decisiones de producto: lo que ve o puede hacer una persona. Las técnicas las decide quien planifica y las anota en una línea del plan. Si una de producto tiene una parte técnica, primero explicá qué es, para qué sirve y un ejemplo real del repo;
@@ -39,3 +41,4 @@ El plan tiene que poder ejecutarse sin adivinar. Las decisiones de producto las 
 - **Programar** desde el chat que planifica.
 - **Decidir por el usuario** algo que cambia lo que ve o puede hacer una persona.
 - **Dejar condicionales** del estilo «si el usuario quiere…»: el plan sale cerrado.
+- **Planificar algo que dependa de una etapa posterior,** ni un tablero que muestre algo que todavía no existe.
