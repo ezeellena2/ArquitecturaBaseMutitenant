@@ -1,6 +1,6 @@
 # Hoja de ruta
 
-Orden vigente: **8 → 8b → 11 → 9 → 10 → 12 → 12b → 13 → 13b → 13c → 13d → 14 → 14b → 15 → 16 → 17 → 18 → 18b → 19**. [AGENTS.md](../../AGENTS.md) define el modo rápido:
+Orden vigente: **8 → 8b → 11 → 9 → 10 → base → 12 → 13 → 14 → 15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25**. [AGENTS.md](../../AGENTS.md) define el modo rápido:
 contrato primero, programación por dueños y una sola puerta. Tras un arreglo se verifica sólo lo afectado.
 La tabla indica el estado; las reglas y conducta viven en fichas, ADR y features.
 El historial se recupera con git show historial-docs:<ruta>, sin cargar planes cerrados. Los planes y la revisión retirados el 2026-10-13 (E8, E8b, correctivos y limpieza) se encuentran con git log --diff-filter=D -- <ruta> y se leen con git show <commit>^:<ruta>.
@@ -19,21 +19,22 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 8b · Asistente | Cerrada | [ADR 0048](../decisions/0048-asistente.md), [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md), [Asistente](../features/asistente.md) |
 | 11 · WhatsApp de atención | Cerrada el 2026-10-21. El alta de una organización con un número real pasó a la I1 de la 10 | [Plan](2026-10-13-etapa-11-whatsapp.md), [ADR 0038](../decisions/0038-whatsapp-de-atencion.md) |
 | 9 · Endurecimiento | Cerrada | [Plan](2026-10-16-etapa-9-endurecimiento.md), [ADR 0052](../decisions/0052-cache-compartida-redis.md) |
-| 10 · Operación | Pendiente. El plan corto está listo, con las decisiones del usuario | [Plan](2026-10-16-etapa-10-despliegue.md), [manual de operación](../operations/runbook.md) |
-| 12 · Formularios por WhatsApp | Pendiente. Spec lista, con los tableros aprobados en el lienzo v139 | [Spec](formularios/e12-formularios.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md), [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md) |
-| 12b · Ciclo de vida | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/e12b-ciclo-de-vida.md) |
-| 13 · Catálogos base | Pendiente. Spec lista; se redibujan 5 tableros y hay nuevos por dibujar | [Spec](formularios/e13-catalogos.md) |
-| 13b · Campos extra | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/e13b-campos-extra.md) |
-| 13c · Datos de las personas | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/e13c-datos-de-las-personas.md) |
-| 13d · Condiciones, cálculos y líneas | Pendiente. Resumen listo; tableros por dibujar, y antes de planificar, la prueba con Meta | [Resumen](formularios/e13d-condiciones-calculos-y-lineas.md) |
-| 14 · Fotos y documentos | Pendiente. Resumen listo, con los archivos del chat; un tablero por dibujar | [Resumen](formularios/e14-fotos-y-documentos.md) |
-| 14b · Cargar desde la web | Pendiente. Resumen listo; un tablero por dibujar | [Resumen](formularios/e14b-cargar-desde-la-web.md) |
-| 15 · «Formularios», planilla y Excel | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/e15-planilla.md) |
-| 16 · Reglas, aprobación y PDF | Pendiente. Resumen listo; se redibujan 7 tableros | [Resumen](formularios/e16-reglas-y-aprobacion.md) |
-| 17 · Biblioteca de plantillas | Pendiente. Spec lista; se redibujan 10 tableros y hay uno nuevo por dibujar | [Spec](formularios/e17-biblioteca.md) |
-| 18 · Asistente con Casos | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/e18-asistente.md) |
-| 18b · Varios asistentes | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/e18b-varios-asistentes.md) |
-| 19 · Documentos por WhatsApp | Pendiente. Resumen listo; tableros por dibujar, y antes de planificar, la prueba con Meta del archivo precargado | [Resumen](formularios/e19-documentos.md) |
+| 10 · Operación | Pendiente. El plan corto está listo, con las decisiones del usuario; la F5 de botones pasó a la base de la 12 | [Plan](2026-10-16-etapa-10-despliegue.md), [manual de operación](../operations/runbook.md) |
+| Base de la 12 | Pendiente: los botones (la F5 de la 10), la campana en el núcleo y el tamaño general (zoom del 85 % en la maqueta, sin confirmar) | [Formularios](#etapas-12-a-25-formularios-por-whatsapp) |
+| 12 · Catálogos | Pendiente. Spec lista; se redibujan 6 tableros y hay nuevos por dibujar | [Spec](formularios/12-catalogos.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
+| 13 · Campos de los catálogos | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/13-campos.md) |
+| 14 · Formularios | Pendiente. Spec lista, con los tableros de la v139 y lo que suman la 78 a la 80 por dibujar | [Spec](formularios/14-formularios.md) |
+| 15 · Respuestas, planilla y Excel | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/15-respuestas.md) |
+| 16 · Datos de las personas y filtros | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/16-datos-de-las-personas.md) |
+| 17 · Ciclo de vida y copiar | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/17-ciclo-de-vida.md) |
+| 18 · Fotos y documentos | Pendiente. Resumen listo, con los archivos del chat; un tablero por dibujar | [Resumen](formularios/18-fotos-y-documentos.md) |
+| 19 · Condiciones, cálculos y líneas | Pendiente. Resumen listo; tableros por dibujar, y antes de planificar, la prueba con Meta | [Resumen](formularios/19-condiciones-calculos-y-lineas.md) |
+| 20 · Cargar desde la web | Pendiente. Resumen listo; un tablero por dibujar | [Resumen](formularios/20-cargar-desde-la-web.md) |
+| 21 · Reglas, aprobación y PDF | Pendiente. Resumen listo; se redibujan 4 tableros | [Resumen](formularios/21-reglas-y-aprobacion.md) |
+| 22 · Biblioteca de plantillas | Pendiente. Spec lista; se redibujan 12 tableros y hay uno nuevo por dibujar | [Spec](formularios/22-biblioteca.md) |
+| 23 · Asistente con Casos | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/23-asistente.md) |
+| 24 · Varios asistentes | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/24-varios-asistentes.md) |
+| 25 · Documentos por WhatsApp | Pendiente. Resumen listo; tableros por dibujar, y antes de planificar, la prueba con Meta del archivo precargado | [Resumen](formularios/25-documentos.md) |
 
 ## Etapa 11: WhatsApp de atención
 
@@ -79,16 +80,22 @@ La plataforma y cada organización atienden con el mismo módulo: alta de númer
 - Dockerfile de la Api con el SPA en wwwroot.
 - Chequeo cruzado de contratos en el CI del front: descarga también el repo del back y corre `contracts:check` sin saltearlo (enmienda de la ADR 0016). Si el repo del back es privado, se usa un token de solo lectura.
 - Migration bundle ejecutado con `mt_owner`.
-- Adaptador de nube de `IFileStore` (S3 o Azure Blob, se elige acá; [ADR 0048](../decisions/0048-asistente.md), D15). Lo usan el asistente y, desde la E14, los formularios.
+- Adaptador de nube de `IFileStore` (S3 o Azure Blob, se elige acá; [ADR 0048](../decisions/0048-asistente.md), D15). Lo usan el asistente y, desde la E18, los formularios.
 - CI/CD con GitHub Actions y OIDC.
 - Secretos, certificados de OpenIddict y SMTP real.
 - `docs/operations/runbook.md`: alta de `mt_app` **y creación de la base con ICU `es-AR`**, backup y restore, rotación de certificados, suspensiones, purga y baja de datos personales.
 - **Datos personales (P7, segunda parte):** `POST /api/me/data-export` (`[Idempotent]`), `platform.DataExports`, la preparación en segundo plano del JSON y el correo «Exportación de datos lista» (solo por correo), con un enlace de descarga que vence a las 48 h ([datos-personales](../rules/datos-personales.md)), y su participante de la baja, que borra los archivos. En el front, «Exportar mis datos» en la sección Privacidad de `/cuenta`. La baja de la cuenta ya está en la Etapa 3.
 
-## Etapas 12 a 19: formularios por WhatsApp
+## Etapas 12 a 25: formularios por WhatsApp
 
 Una organización arma formularios, los manda por WhatsApp a sus empleados y a sus clientes (decisión 49) y ve las respuestas numeradas en una planilla.
-- **Etapas y fuente:** son catorce, en el orden de las decisiones 34, 54, 69 y 73, cada una con su sección y las decisiones de producto tomadas en la [hoja de ruta](2026-10-12-formularios-dinamicos-hoja-de-ruta.md). El alcance de cada una sale de la [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md) y de las decisiones 47 a 77.
+- **Etapas y fuente:** son catorce, de la 12 a la 25, en el orden de la decisión 78: **el número es el orden**, con los catálogos primero. Cada una tiene su sección y las decisiones de producto tomadas en la [hoja de ruta](2026-10-12-formularios-dinamicos-hoja-de-ruta.md). El alcance de cada una sale de la [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md), que usa los números de antes, y de las decisiones 47 a 82. La equivalencia está en [`formularios/`](formularios/README.md).
+- **La regla del orden:** cada etapa usa solo lo de las anteriores, lo que suma se ve en las pantallas que ya existen, y nada nombra, prueba ni dibuja algo de una etapa posterior. La controla `/plan-etapa`.
+- **La base, al principio de la 12:**
+  - los botones y avisos de la decisión 43, que eran la F5 de la 10;
+  - la campana, en el núcleo;
+  - el tamaño general, con un zoom del 85 % en la maqueta, que el usuario todavía no confirmó.
+- **Para la prueba con Meta de la 14:** una organización con su número conectado, que prueba la I1 de la 10.
 - **Requisitos:** la E11 es requisito duro, porque sin número de la organización no hay formularios. Van después de la E10 para nacer con las guardas de la E9 y la nube de la E10.
 - **Módulo:** `Forms` es un módulo quitable aparte de `WhatsApp`, unidos por puertos neutrales del núcleo.
 - **ArquitecturaBase:** es referencia, no fuente de código; la estructura sale de este repo.

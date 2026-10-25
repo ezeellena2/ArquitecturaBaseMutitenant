@@ -190,7 +190,7 @@ Rutas bajo `../ArquitecturaBaseMutitenantFront/`. Tableros vigentes Ingreso/M-In
 
 - **E8/E8b/E11:** conserva módulos quitables, precisión Money y presupuestos de IA; elimina sólo los tres campos muertos heredados. CSP permite el SDK/marco de Facebook y el rate limit cubre todas las rutas E11, incluido el webhook. El ingreso del bot sigue neutro para operadores (0049).
 - **E10:** recibe Redis/TLS, anillo compartido y opciones documentadas; despliegue, certificados, nube, exportación de datos y CI cruzado siguen siendo E10.
-- **E12–E17:** nacen con guardas de acceso, idempotencia, caché e inventario de rutas; E9 no implementa formularios ni sus puertos nuevos.
+- **12 a 25 (formularios):** nacen con guardas de acceso, idempotencia, caché e inventario de rutas; E9 no implementa formularios ni sus puertos nuevos.
 
 ## Para Diseño
 

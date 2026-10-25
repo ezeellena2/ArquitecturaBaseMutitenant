@@ -168,7 +168,7 @@ Leé AGENTS.md del front y ../ArquitecturaBaseMutitenant/docs/plans/2026-10-13-e
 
 ## Relación con otras etapas
 
-- **E12 a E17 (formularios):** usan `WhatsAppChannels` (`WabaId` y token por organización), las conversaciones de Internos, la regla de tomar y la cola de entrada. No se adelanta nada de formularios.
+- **12 a 25 (formularios):** usan `WhatsAppChannels` (`WabaId` y token por organización), las conversaciones de Internos, la regla de tomar y la cola de entrada. No se adelanta nada de formularios.
 - **E9:** la CSP tiene que permitir el SDK de Facebook (`connect.facebook.net` y el marco de `facebook.com`), y los límites de pedidos cubren las rutas nuevas.
 - **E10:** exportar mis datos incluye contactos ligados, vínculos y mensajes propios, según el inventario de B7. Antes de lanzar, resolver el acceso del alta embebida: la configuración de desarrollo (`EmbeddedSignupConfigId` 2541931872886066) da un acceso de usuario del sistema que vence a los 60 días y hoy no se renueva. Hay que usar una configuración con acceso que no vence o renovarlo.
 
@@ -182,7 +182,7 @@ Leé AGENTS.md del front y ../ArquitecturaBaseMutitenant/docs/plans/2026-10-13-e
 | D4 | El texto de los chats se guarda mientras exista el contacto (en Plataforma, la conversación) y se borra con él. Apagar el módulo no borra. |
 | D5 | «Mensajes» muestra la conversación desde que se vinculó. Un número reciclado nunca muestra mensajes del dueño anterior. |
 | D6 | Un correo «Chats esperando» por equipo cuando el chat más viejo sin tomar pasa el tiempo elegido; no se repite hasta que la bandeja se vacía y vuelve a llenarse. «No avisar» es una opción. |
-| D7 | Fotos, audios y documentos se ven como «Mandó una foto/audio/documento», sin descarga (llega con la E14). Desconectar un número deja sus chats para leer, sin responder. |
+| D7 | Fotos, audios y documentos se ven como «Mandó una foto/audio/documento», sin descarga (llega con la E18). Desconectar un número deja sus chats para leer, sin responder. |
 | D8 | Se desarrolla con una app nueva de Meta en el mismo portfolio, y «Servicios Ya» no se toca. El 15/10 el usuario decidió publicarla, en live mode con acceso estándar: sin publicar no recibe mensajes reales. Con acceso estándar, solo conectan números quienes tienen rol en la app. La política de privacidad es la de Servicios Ya, del mismo negocio. |
 | D9 | El bot no se apaga: con un número conectado siempre responde. Diseño saca «Activo» de los tableros del bot. |
 | D10 | Al editar un contacto se puede crear una etiqueta nueva («Crear «VIP»»). Si ya hay una igual sin distinguir mayúsculas, se elige esa. Vale también para «Etiqueta para todos» al importar. Es solo del front; el contrato ya la acepta. |
