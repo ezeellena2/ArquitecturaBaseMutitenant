@@ -20,7 +20,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 11 · WhatsApp de atención | Cerrada el 2026-10-21. El alta de una organización con un número real pasó a la I1 de la 10 | [Plan](2026-10-13-etapa-11-whatsapp.md), [ADR 0038](../decisions/0038-whatsapp-de-atencion.md) |
 | 9 · Endurecimiento | Cerrada | [Plan](2026-10-16-etapa-9-endurecimiento.md), [ADR 0052](../decisions/0052-cache-compartida-redis.md) |
 | 10 · Operación | Pendiente. El plan corto está listo, con las decisiones del usuario | [Plan](2026-10-16-etapa-10-despliegue.md), [manual de operación](../operations/runbook.md) |
-| 12 · Formularios por WhatsApp | Pendiente. Spec lista; se redibujan 4 tableros | [Spec](formularios/e12-formularios.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md), [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md) |
+| 12 · Formularios por WhatsApp | Pendiente. Spec lista, con los tableros aprobados en el lienzo v139 | [Spec](formularios/e12-formularios.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md), [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md) |
 | 12b · Ciclo de vida | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/e12b-ciclo-de-vida.md) |
 | 13 · Catálogos base | Pendiente. Spec lista; se redibujan 5 tableros y hay nuevos por dibujar | [Spec](formularios/e13-catalogos.md) |
 | 13b · Campos extra | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/e13b-campos-extra.md) |

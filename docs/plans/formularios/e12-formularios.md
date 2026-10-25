@@ -435,48 +435,38 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 
 ## 9. Pantallas (tableros)
 
-**Navegación (34):** el menú principal dice «Gestión de formularios». En esta etapa su panel tiene solo «Diseñar formularios»; Catálogos, Formularios y Formularios que faltan llegan con sus etapas.
+**Navegación (34):** el menú principal dice «Gestión de formularios». En esta etapa su panel tiene solo «Diseñar formularios»; Catálogos, Formularios y Formularios que faltan llegan con sus etapas, aunque el lienzo ya muestre el panel completo.
 
-**Diseño redibuja** (evaluación del traspaso 2, §5.1), sin «Textos en», «Cambios sin guardar», revisiones junto a Guardar ni textos junto a los botones:
-- `FRM-Editor` y `M-FRM-Editor`: el editor en una sola pantalla:
-  - el formulario (nombre, texto del botón final y prefijo);
+**Aprobados y publicados en el lienzo v139** (2026-10-24, front `396c15e1`), sin idioma en el contenido y con los botones de la decisión 43:
+- **`FRM-Editor` y `M-FRM-Editor`:** el editor en una sola pantalla:
+  - el formulario: nombre, «Para quién es» (empleados, clientes o los dos; 50), texto del botón final y prefijo;
   - las preguntas, que se abren en el lugar, con ⋮ (Editar, Subir, Bajar y Quitar);
-  - «elegir varias», con el mínimo y el máximo;
+  - «elegir varias», con el mínimo y el máximo (en el ejemplo, «Fallas», de 1 a 3);
   - «Así lo ve quien lo recibe» al costado.
 
   En el teléfono, la pregunta se edita en una hoja y los botones van fijos abajo.
-- `FRM-Publicar`: «Publicar la versión N en WhatsApp», con qué cambia, qué queda fijo y qué va a pasar.
-- `FRM-Publicando`: cómo termina, arriba del editor, con los pasos Aceptada, Enviada a WhatsApp, WhatsApp la revisa y Lista para mandar. Al costado, la vista oficial con «Borrador | Versión N en WhatsApp».
+- **`FRM-Publicar`:** «Publicar la versión N en WhatsApp», con qué cambia y qué queda fijo.
+- **`FRM-Publicando`:** cómo termina, arriba del editor, con los pasos Aceptada, Enviada a WhatsApp, WhatsApp la revisa y Lista para mandar. Al costado, la vista oficial con «Borrador | Versión N en WhatsApp».
+- **`WA-Chats-Formulario` y `M-WA-Chats-Formulario`:** «Enviar formulario» al lado de «Enviar» en Internos (en el teléfono, en el ⋮ del chat). El diálogo «Enviar un formulario a …» tiene tarjetas con «Versión N · K preguntas» (con buscador y paginado si son muchos), el mensaje prellenado de hasta 1024 caracteres y hasta cuándo se puede mandar. «Ya lo revisé» abre «Resolver el envío», con «Salió» o «No salió».
+- **`WA-Chats-Formulario-Cliente` y `M-WA-Chats-Formulario-Cliente`** (nuevos): «Enviar formulario» en un chat de Clientes, con solo los formularios para clientes o para los dos (49 y 50). En el ejemplo, «Entrega de pedido» es para los dos.
+- **`WA-Chats-Respuesta` y `M-WA-Conversacion-Respuesta`:** la tarjeta con las primeras 3 respuestas en grilla, «Ver las N respuestas» (en el teléfono, en una hoja) y «Guardada como VIS-000123».
 
 **Se quedan como están:**
 - `FRM-Listado` y `M-FRM-Listado`: «Diseñar formularios», una tabla con Formulario, Preguntas, En WhatsApp y Último cambio. El nombre abre el editor, sin columna de acciones. Tiene el filtro «Estado ▾» y «Nuevo formulario ▾», con «Desde cero» y «Desde una plantilla» (esta, con la E17). La E12b le suma el ciclo de vida;
-- `WA-Chats-Formulario` y `M-WA-Chats-Formulario`: «Enviar formulario» al lado de «Enviar» en Internos (en el teléfono, en el ⋮ del chat). **Diseño suma** la misma acción en un chat de Clientes, y en el editor, «Para quién es» (empleados, clientes o los dos). El diálogo «Enviar un formulario a …» tiene:
-  - tarjetas con «Versión N · K preguntas», con buscador y paginado si son muchos;
-  - el mensaje prellenado, de hasta 1024 caracteres;
-  - hasta cuándo se puede mandar;
-- `WA-Chats-Respuesta` y `M-WA-Conversacion-Respuesta`: la tarjeta con las primeras 3 respuestas en grilla, «Ver las N respuestas» (en el teléfono, en una hoja) y «Guardada como VIS-000123»;
 - `Rol` y la ficha de la organización: los cinco permisos y el módulo.
 
 **Estados que se dibujan** (cada uno tiene que poder producirse; si no, es un bug):
-- **Editor:**
-  - guardar, no se guardó (lo escrito se conserva);
-  - otra persona guardó, con «Qué cambió | Guardado actualmente | Mis cambios»;
-  - prefijo ocupado, quitar una pregunta, cambiar el tipo y descartar;
-  - solo lectura, cargando y no existe.
-- **Publicar:**
-  - primera publicación;
-  - comprobando, y publicar grisado mientras hay cambios sin guardar;
-  - una pregunta que no se puede mostrar, con el botón grisado;
-  - cambió después de comprobar y ya se está publicando.
-- **Cómo termina:** publicado; rechazada con «Ir a la pregunta»; sin confirmar con «Consultar ahora» (nunca «Reintentar»); necesita revisión.
+- **Editor:** con cambios, guardando (el botón grisado con su mismo texto), guardado, no se guardó (lo escrito se conserva), otra persona guardó (con «Qué cambió | Guardado actualmente | Mis cambios»), prefijo ocupado, para quién es, quitar una pregunta, cambiar el tipo, descartar, solo lectura, cargando y no existe.
+- **Publicar:** versión nueva, primera publicación, comprobando, con cambios sin guardar (publicar grisado, con el motivo en su tooltip), una pregunta que no se puede mostrar, más de 10 archivos (llega con la E14), cambió después de comprobar y ya se está publicando.
+- **Cómo termina:** publicando, publicado, rechazada con «Ir a la pregunta», sin confirmar con «Consultar ahora» (nunca «Reintentar»), necesita revisión y la vista oficial.
 - **Enviar:**
   - En cola, Leído, y No se pudo mandar (con ⓘ, sin reintento);
-  - Envío sin confirmar con «Ya lo revisé», que pide confirmación;
+  - envío sin confirmar con «Ya lo revisé», que abre «Resolver el envío»;
   - con el diálogo abierto, ventana cerrada y formulario que ya no está.
 - **Respuesta:**
   - guardando, no se pudo guardar, no reconocida y sin permiso;
   - el mensaje ya no está;
-  - una respuesta de «elegir varias»;
+  - con «elegir varias»;
   - venció sin respuesta.
 
 **Mandan sobre esta spec en:**
@@ -491,6 +481,8 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 - **«Necesita revisión»:** `FormPublication` tiene el estado `NeedsReview`. Es para cuando Meta no confirmó la creación de un Flow y la consulta no puede saber si existe (un Create sin id no se adopta por nombre). Una persona con `forms.publish` lo mira en Meta y lo resuelve.
 - **«No reconocida»:** una respuesta de Flow que no corresponde a ninguna sesión se muestra en el chat como un mensaje sin valores y no crea nada en Forms.
 - **La banda de conflicto** («Otra persona cambió esto mientras lo editabas.») lleva ⚠.
+- **«4 reglas · Revisión 3»** en el teléfono del editor es un resto de la E16 que cambia con esa etapa: la revisión va solo en el historial (43).
+- **«Más de 10 archivos»** en `FRM-Publicar` se programa con la E14, cuando existen las preguntas de archivo.
 - **«Venció sin respuesta»:** se calcula al leer: la sesión sigue `Pending` y ya pasó `ExpiresAtUtc`. `Expired` queda para una respuesta que llegó tarde.
 
 ## 10. Tests
