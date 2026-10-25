@@ -2,6 +2,8 @@
 
 Estado: **decidida el 2026-10-24.** El usuario eligió todas las recomendadas de §6, que quedaron como las decisiones 34 a 44 de la [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md). Las [specs](formularios/README.md) se actualizan según §7.
 
+**Los números de etapa de este documento son los de antes de la decisión 78** (2026-10-25). La equivalencia con los de ahora está en la [tabla de las specs](formularios/README.md#equivalencia-con-los-números-de-antes).
+
 Fuente: `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/` (README, capítulos 01 a 07 y anexos A a F), en el main `0e8189bd` del 2026-10-24.
 
 Rige la condición de la hoja de ruta: nada de lo que viene de ArquitecturaBase pasa por encima de `AGENTS.md` ni de `docs/rules/`. Si algo choca, manda lo de acá.
