@@ -1,8 +1,13 @@
 # Formularios por WhatsApp: specs por etapa
 
-Cada etapa del bloque tiene acá su especificación detallada (la 12, la 13 y la 17) o un resumen de una página (las demás), con la forma de los de ArquitecturaBase. Las decisiones de producto están en la [§5 de la hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md#5-decisiones-de-producto), y el alcance de cada etapa, en su §3. Se escriben antes de programar, para que al programar no haya que pensar de nuevo.
+Cada etapa del bloque tiene acá su especificación detallada (la 12, la 14 y la 22) o un resumen de una página (las demás), con la forma de los de ArquitecturaBase. Las decisiones de producto están en la [§5 de la hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md#5-decisiones-de-producto), y el alcance de cada etapa, en su §3. Se escriben antes de programar, para que al programar no haya que pensar de nuevo.
 
 **Cómo se usa.** Cuando le toca a una etapa, [`/plan-etapa`](../../../.agents/skills/plan-etapa/SKILL.md) toma su spec y la verifica contra el código real, sobre todo los puntos de contacto con las etapas anteriores. Con eso arma el plan corto: contrato, back y front en paralelo, e integración y puerta.
+
+**La regla del orden** (decisión 78, que controla `/plan-etapa`):
+- cada etapa usa solo lo que dejaron las anteriores;
+- lo que suma se ve en todas las pantallas que ya existen: un tipo de pregunta nuevo, en la planilla, el detalle, el Excel y el PDF, si ya están;
+- nada nombra, prueba ni dibuja algo de una etapa posterior: eso pasa a esa etapa.
 
 **Qué no va acá:**
 - **Código para copiar:** cada spec nombra el archivo real de este repo que sirve de modelo. ArquitecturaBase es referencia, no fuente de código.
@@ -10,21 +15,42 @@ Cada etapa del bloque tiene acá su especificación detallada (la 12, la 13 y la
 
 Esta carpeta está fuera del detector (`docs/plans/**`).
 
-Las etapas van en el orden de las decisiones 34, 54, 69 y 73. Los tableros son los de la §5 de la [evaluación del traspaso 2](../2026-10-24-formularios-evaluacion-traspaso-2.md) y los que suman las decisiones 47 a 77, y los dibuja Diseño.
+Las etapas van en el orden de la decisión 78, y **el número es el orden**. Antes de la 12 va la base del [plan de desarrollo](../2026-09-27-plan-de-desarrollo.md#etapas-12-a-25-formularios-por-whatsapp). Los tableros son los de la §5 de la [evaluación del traspaso 2](../2026-10-24-formularios-evaluacion-traspaso-2.md) y los que suman las decisiones 47 a 82, y los dibuja Diseño.
 
-| Orden | Etapa | Spec | Tableros |
-| --- | --- | --- | --- |
-| 1 | E12 · Formularios: crear, publicar, mandar y recibir | [e12-formularios.md](e12-formularios.md) | Aprobados en el lienzo v139 (front `396c15e1`), con los de clientes |
-| 2 | E12b · Ciclo de vida | [e12b-ciclo-de-vida.md](e12b-ciclo-de-vida.md) | Por dibujar: `BA1-A` a `BA6` y `FRM-Copiar` |
-| 3 | E13 · Catálogos base | [e13-catalogos.md](e13-catalogos.md) | Aprobados en el lienzo v129 y v130. Se redibujan 5, y por dibujar `CA1-A` a `CA6` y `FRM-Catalogo-Contactos` |
-| 4 | E13b · Campos extra y qué viaja a WhatsApp | [e13b-campos-extra.md](e13b-campos-extra.md) | Por dibujar: `CE1`, `CE2` y `CE3-B` |
-| 5 | E13c · Datos de las personas y filtros por destinatario | [e13c-datos-de-las-personas.md](e13c-datos-de-las-personas.md) | Por dibujar: `CE4-A` y el diálogo para definir un dato |
-| 6 | E13d · Condiciones, cálculos y líneas | [e13d-condiciones-calculos-y-lineas.md](e13d-condiciones-calculos-y-lineas.md) | Por dibujar: `FRM-Editor-Condiciones`, `FRM-Editor-Calculo`, `FRM-Editor-Lineas` y `FRM-Respuesta-Lineas` |
-| 7 | E14 · Fotos y documentos | [e14-fotos-y-documentos.md](e14-fotos-y-documentos.md) | Aprobados en el lienzo v130. Por dibujar `WA-Chats-Adjuntos`, para los archivos del chat (48) |
-| 8 | E14b · Cargar una respuesta desde la web | [e14b-cargar-desde-la-web.md](e14b-cargar-desde-la-web.md) | Por dibujar: `FRM-Cargar-Respuesta` |
-| 9 | E15 · «Formularios», planilla, detalle y Excel | [e15-planilla.md](e15-planilla.md) | Aprobados en el lienzo v131. Por dibujar `MF1`, `DC0`, `CE5`, `CE6` y `DOC7-A` (el tablero, 57), y se ajusta `FRM-Respuesta` |
-| 10 | E16 · Reglas, aprobación, PDF y avisos | [e16-reglas-y-aprobacion.md](e16-reglas-y-aprobacion.md) | Aprobados en el lienzo v132. Se redibujan 7, con la acción «Mandar el PDF a un cliente» (47), y por dibujar `FRM-Respuesta-Corregir` (58) |
-| 11 | E17 · Biblioteca de plantillas y formularios estándar | [e17-biblioteca.md](e17-biblioteca.md) | Aprobados en el lienzo v126, v130 y v134. Se redibujan 10 (siete de la plataforma, más la lista, su teléfono y el alta), y por dibujar `DOC1` |
-| 12 | E18 · El asistente, con Casos | [e18-asistente.md](e18-asistente.md) | Aprobados en el lienzo v133. Se redibuja `FRM-Editor-Asistente`, y por dibujar `AS1-A` a `AS6`, `WA-Modo-Atencion` y `WA-Preguntas-Sin-Respuesta` |
-| 13 | E18b · Varios asistentes, uno por equipo | [e18b-varios-asistentes.md](e18b-varios-asistentes.md) | Por dibujar: `WA-Asistentes` y `WA-Equipo-Asistente` |
-| 14 | E19 · Documentos por WhatsApp | [e19-documentos.md](e19-documentos.md) | Por dibujar: `DOC2` a `DOC6` |
+| Etapa | Spec | Tableros |
+| --- | --- | --- |
+| E12 · Catálogos | [12-catalogos.md](12-catalogos.md) | Aprobados en el lienzo v129 y v130. Se redibujan 6, y por dibujar `CA1-A` a `CA3` y `FRM-Catalogo-Contactos` |
+| E13 · Campos de los catálogos | [13-campos.md](13-campos.md) | Por dibujar: `CE1`, `CE2` y `CE3-B`, solo del catálogo |
+| E14 · Formularios: crear, publicar, mandar y recibir | [14-formularios.md](14-formularios.md) | Aprobados en el lienzo v139 (front `396c15e1`). Por dibujar la lista «Formularios» (79), `CA4`, el envío sin «Ya lo revisé» (80) y la tarjeta en «Mis mensajes» |
+| E15 · Respuestas: planilla, detalle, Excel y tablero | [15-respuestas.md](15-respuestas.md) | Aprobados en el lienzo v131. Por dibujar `MF1`, `DC0`, `CA5`, `CA6`, `CE5`, `CE6` y `DOC7-A` (el tablero, 57), y se ajusta `FRM-Respuesta` |
+| E16 · Datos de las personas y filtros por destinatario | [16-datos-de-las-personas.md](16-datos-de-las-personas.md) | Por dibujar: `CE4-A`, el diálogo para definir un dato y el papel de un campo |
+| E17 · Ciclo de vida y copiar | [17-ciclo-de-vida.md](17-ciclo-de-vida.md) | Por dibujar: `BA1-A` a `BA5` y `FRM-Copiar` |
+| E18 · Fotos y documentos | [18-fotos-y-documentos.md](18-fotos-y-documentos.md) | Aprobados en el lienzo v130. Por dibujar `WA-Chats-Adjuntos`, para los archivos del chat (48), y los archivos en la planilla y el detalle |
+| E19 · Condiciones, cálculos y líneas | [19-condiciones-calculos-y-lineas.md](19-condiciones-calculos-y-lineas.md) | Por dibujar: `FRM-Editor-Condiciones`, `FRM-Editor-Calculo`, `FRM-Editor-Lineas` y `FRM-Respuesta-Lineas` |
+| E20 · Cargar una respuesta desde la web | [20-cargar-desde-la-web.md](20-cargar-desde-la-web.md) | Por dibujar: `FRM-Cargar-Respuesta` |
+| E21 · Reglas, aprobación, PDF y avisos | [21-reglas-y-aprobacion.md](21-reglas-y-aprobacion.md) | Aprobados en el lienzo v132. Se redibujan 4, con «Mandar el PDF a un cliente» (47) y el PDF de la 82, y por dibujar `FRM-Respuesta-Corregir` (58) |
+| E22 · Biblioteca de plantillas y formularios estándar | [22-biblioteca.md](22-biblioteca.md) | Aprobados en el lienzo v126, v130 y v134. Se redibujan 12, con las reglas que llegan de una plantilla, y por dibujar `DOC1` sin la lectura |
+| E23 · El asistente, con Casos | [23-asistente.md](23-asistente.md) | Aprobados en el lienzo v133. Se redibujan `FRM-Editor-Asistente`, `FRM-Editor-Sugerencias` y `FRM-Catalogo-Propuesta`, y por dibujar `AS1-A` a `AS6`, `BA6`, `WA-Modo-Atencion` y `WA-Preguntas-Sin-Respuesta` |
+| E24 · Varios asistentes, uno por equipo | [24-varios-asistentes.md](24-varios-asistentes.md) | Por dibujar: `WA-Asistentes` y `WA-Equipo-Asistente` |
+| E25 · Documentos por WhatsApp | [25-documentos.md](25-documentos.md) | Por dibujar: `DOC2` a `DOC6` y la sección de lectura de `DOC1` |
+
+## Equivalencia con los números de antes
+
+Hasta el 2026-10-25 los números de las etapas eran nombres, no orden. Los documentos anteriores, como la [evaluación del traspaso 2](../2026-10-24-formularios-evaluacion-traspaso-2.md), usan los de antes.
+
+| Antes | Ahora | Cambió el alcance |
+| --- | --- | --- |
+| E13 | E12 · Catálogos | Sin formularios; nace el módulo |
+| E13b | E13 · Campos de los catálogos | Solo lo del catálogo |
+| E12 | E14 · Formularios | Suma las preguntas de catálogo, la oferta, la presentación propia de una pregunta y el sellado |
+| E15 | E15 · Respuestas | Sin las fotos, las líneas ni el canal «web», que suman sus etapas |
+| E13c | E16 · Datos de las personas y filtros | Entera, con el papel «Filtro» de un campo |
+| E12b | E17 · Ciclo de vida y copiar | — |
+| E14 | E18 · Fotos y documentos | Suma los archivos a la planilla y el detalle |
+| E13d | E19 · Condiciones, cálculos y líneas | Suma lo suyo a la planilla, el detalle y el Excel |
+| E14b | E20 · Cargar desde la web | — |
+| E16 | E21 · Reglas, aprobación, PDF y avisos | — |
+| E17 | E22 · Biblioteca | Sin la lectura de documentos de una plantilla |
+| E18 | E23 · Asistente | Con `BA6` y las sugerencias |
+| E18b | E24 · Varios asistentes | — |
+| E19 | E25 · Documentos | Con la lectura de documentos de una plantilla |

@@ -1,6 +1,6 @@
-# E14 · Fotos y documentos (resumen)
+# E18 · Fotos y documentos (resumen)
 
-**Estado:** resumen de la séptima etapa del bloque (decisiones 34 y 54), armado desde el [traspaso](../2026-10-17-formularios-traspaso/README.md). Corresponde a la etapa 2B de ArquitecturaBase, cerrada con Meta y Azure reales; el traspaso 2 no le cambia el alcance. Se planifica con `/plan-etapa` cuando le toque, después de la E13d.
+**Estado:** resumen de la etapa 18 del bloque (decisiones 34, 48 y 78), armado desde el [traspaso](../2026-10-17-formularios-traspaso/README.md). Corresponde a la etapa 2B de ArquitecturaBase, cerrada con Meta y Azure reales; el traspaso 2 no le cambia el alcance. Se planifica con `/plan-etapa` cuando le toque, después de la E17.
 
 **Dónde está el detalle:**
 - en el traspaso: [04 §2B](../2026-10-17-formularios-traspaso/04-etapas.md), anexo C §2 (etapa 2B), anexo B (E2B) y anexo D (F1–F5);
@@ -15,7 +15,7 @@
     - mínimo y máximo por pregunta; obligatoria quiere decir mínimo 1;
     - no se publica si la suma de los máximos pasa de 10.
   - **Tope por archivo:** una opción del módulo en `Application/Configuration/Forms`, de 1 a 25 MiB, con `ValidateOnStart`, que se sella al publicar.
-  - **Flow:** `PhotoPicker` y `DocumentPicker`, una pregunta de archivo por pantalla. Los IDs de pantalla son solo letras y guiones bajos, con un perfil nuevo.
+  - **Flow:** `PhotoPicker` y `DocumentPicker`, una pregunta de archivo por pantalla. Los IDs de pantalla son solo letras y guiones bajos, con un perfil nuevo. Las opciones de catálogo que viajan en `data` (T21 de la E14) llegan a la pantalla que las usa, aunque el Flow tenga varias **[Meta]**.
   - **Captura con archivos:**
     - baja cada archivo de la API de medios, solo por HTTPS desde hosts de Meta y sin redirecciones;
     - verifica hash, tamaño y tipo real, con las dimensiones antes de decodificar;
@@ -31,6 +31,10 @@
     - **recibir:** las fotos, audios, documentos y videos que llegan se bajan con el token de la organización, se verifican igual que los de un formulario y se ven y se descargan desde el chat. Es lo que la ADR 0038 (D7) dejó para esta etapa;
     - **mandar:** el operador adjunta fotos, documentos, audios o videos desde el compositor, con los topes de Meta para cada tipo. El archivo se guarda en `IFileStore`, se sube a Meta y sale por la cola de salida. Solo dentro de las 24 horas, como el texto libre; fuera, siguen las plantillas;
     - pide el mismo permiso que responder en esa bandeja, y el archivo sigue la retención del chat (D4 de la E11).
+- **Lo que suma a las pantallas que ya existen:**
+  - en la planilla (E15), la columna de una pregunta de archivo dice cuántos archivos tiene; el Excel lleva la cantidad y los nombres;
+  - la vista rápida y la pantalla completa suman la pestaña «Fotos», con el visor;
+  - la copia de un formulario (E17) copia las preguntas de archivo como cualquier otra.
 - **Front:**
   - en el editor, los dos tipos y el contador «Archivos: hasta N de 10»;
   - en la tarjeta del chat, «bajando» o «reintentando», guardada (con miniaturas y «+N») o rechazada (con «Mandar de nuevo»);
@@ -45,9 +49,10 @@
     - con fotos y un documento, y con muchas fotos;
     - no se pudo bajar un archivo, y un archivo no es lo que dice.
   - **El visor nuevo:** `WA-Chats-Visor` y `M-WA-Chats-Visor`.
+  - **`FRM-Respuestas` y `FRM-Respuesta`:** la columna de archivos y la pestaña «Fotos».
   - **Mandan sobre este resumen en:**
     - **«Sin almacenamiento»:** Foto y Documento aparecen grisados, con el motivo en su tooltip (43), no ocultos, porque se resuelve conectando el almacenamiento;
-    - **«Más de 10 archivos»** es un problema de la comprobación al publicar, con el botón grisado, como «una pregunta que no se puede mostrar» de la E12;
+    - **«Más de 10 archivos»** es un problema de la comprobación al publicar, con el botón grisado, como «una pregunta que no se puede mostrar» de la E14;
     - **«Un archivo no es lo que dice»** es el rechazo por tipo real distinto del declarado, y «No se pudo bajar un archivo», el rechazo después de los reintentos. Los dos nombran la pregunta y ofrecen «Mandar de nuevo»;
     - **«Reintentando»** se ve mientras corren los reintentos acotados (5 fallas y 15 minutos), sin acción del operador;
     - **la banda de conflicto** lleva ⚠ (cambio transversal de la E9).
@@ -75,11 +80,12 @@ La puerta de la etapa, más una **prueba real con Meta y el almacenamiento de la
 1. una respuesta con cámara, un PDF y una pregunta de archivo opcional vacía (mirar qué manda Meta: en ArquitecturaBase la omitía);
 2. las descargas íntegras, con el tamaño y el SHA-256 iguales a los guardados;
 3. un rechazo y el reenvío manual, sin saltos de numeración;
-4. en un chat de Clientes, ver y bajar una foto que mandó el contacto, y mandarle un PDF y una foto desde el compositor, abriéndolos en el celular.
+4. en un chat de Clientes, ver y bajar una foto que mandó el contacto, y mandarle un PDF y una foto desde el compositor, abriéndolos en el celular;
+5. un formulario con una pregunta de catálogo y dos de archivo, cada una en su pantalla: las opciones llegan a su pantalla y la respuesta vuelve completa.
 
 ## Requisitos previos
 
-- La E12 cerrada. No depende de los catálogos.
+- La E17 cerrada.
 - **De la E10:** el adaptador de nube de `IFileStore`. En desarrollo alcanza con `LocalFileStore` o el emulador que elija la E10.
 
 ## Ajustes ya decididos
@@ -97,7 +103,7 @@ La puerta de la etapa, más una **prueba real con Meta y el almacenamiento de la
   - Borrar lo de una organización recorre esa metadata.
   - La limpieza usa el diario de `IFileStoreMaintenance`.
 - **Workers:**
-  - la captura y la limpieza entran a la organización con `ExecutionActor`, que usa `ITenantScope` por dentro (T5 de la E12);
+  - la captura con archivos es la fase de captura de la E14 (T5): sin `ExecutionActor`, con el contexto de `SetFromAccess`;
   - la limpieza recorre las organizaciones con `TenantJobRunner`, copiando `InvitationExpiryWorker`.
 - **Feature `forms`:** las rutas de los archivos de las respuestas llevan `[FeatureGate("forms")]`. Las de los archivos del chat (48) son del módulo WhatsApp: van sin ese gate, con los permisos de cada bandeja, y valen también en Plataforma.
 - **Permisos:** ninguno nuevo; ver y descargar pide `formrecords.read`.

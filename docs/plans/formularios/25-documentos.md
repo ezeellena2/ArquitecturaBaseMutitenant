@@ -1,8 +1,8 @@
-# E19 · Documentos por WhatsApp (resumen)
+# E25 · Documentos por WhatsApp (resumen)
 
-**Estado:** resumen de la última etapa del bloque (decisiones 34 y 41). En ArquitecturaBase está decidido, con su ADR 0022 y sus tableros, y sin programar. **Antes de planificar** se prueba con Meta si un Flow acepta un archivo precargado en una pregunta de documento: es el mayor riesgo técnico, y el plan de la etapa parte de ese resultado.
+**Estado:** resumen de la etapa 25, la última del bloque (decisiones 34, 41 y 78). En ArquitecturaBase está decidido, con su ADR 0022 y sus tableros, y sin programar. **Antes de planificar** se prueba con Meta si un Flow acepta un archivo precargado en una pregunta de documento: es el mayor riesgo técnico, y el plan de la etapa parte de ese resultado.
 
-**Dónde está el detalle:** en el traspaso 2 de ArquitecturaBase, el anexo F (F3), el anexo D (DOC1 a DOC7-A) y el capítulo 07 («E14» y «E17»); allá, la ADR 0022 (lectura de documentos con IA).
+**Dónde está el detalle:** en el traspaso 2 de ArquitecturaBase, el anexo F (F3), el anexo D (DOC1 a DOC7-A) y el capítulo 07 («E18» y «E22»); allá, la ADR 0022 (lectura de documentos con IA).
 
 ## Qué se construye
 
@@ -14,24 +14,24 @@
     | Foto o captura (JPEG, PNG) | la lee la IA |
     | PDF | la IA lee todas sus páginas, con un tope |
     | Word (`.docx`) | el servidor saca el texto y las tablas, sin ejecutar nada, y la IA los lee |
-    | Excel (`.xlsx`) | el servidor lee las hojas con los topes de la importación de catálogos (E13). Varias filas del mismo tipo proponen hasta 3 cargas por mensaje (el tope de acciones de la E18), y las demás quedan propuestas en la bandeja |
+    | Excel (`.xlsx`) | el servidor lee las hojas con los topes de la importación de catálogos (E12). Varias filas del mismo tipo proponen hasta 3 cargas por mensaje (el tope de acciones de la E23), y las demás quedan propuestas en la bandeja |
     | Ubicación y contacto | sin IA: completan las preguntas elegidas en el editor |
 
-    No se leen los formatos viejos (`.doc`, `.xls`), los archivos con macros ni los que tienen contraseña: se pide un PDF o una versión sin macros ni contraseña. El tipo se verifica por el contenido, nunca por la extensión, como los archivos de la E14.
+    No se leen los formatos viejos (`.doc`, `.xls`), los archivos con macros ni los que tienen contraseña: se pide un PDF o una versión sin macros ni contraseña. El tipo se verifica por el contenido, nunca por la extensión, como los archivos de la E18.
   - **El circuito:**
-    1. **recibir:** el archivo se baja con el token de la organización y se guarda como copia privada en `IFileStore`, como los audios de la E18;
+    1. **recibir:** el archivo se baja con el token de la organización y se guarda como copia privada en `IFileStore`, como los audios de la E23;
     2. **clasificar** entre los formularios con «Lectura de documentos» que esa persona puede completar:
        - seguro: propone ese formulario;
-       - con duda: pregunta «¿Qué es este documento?» con botones para 2 o 3 formularios y «Otro»;
-       - sin reconocerlo: ofrece la lista que esa persona puede completar, hasta 10 filas con «Otro». «Otro» lo deja «Sin clasificar» en la bandeja y lo anota en «Formularios que faltan» (E18);
+       - con duda entre dos: pregunta «¿Qué es este documento?» con un botón para cada uno y «Otro» (WhatsApp admite 3 botones); con más candidatos, la lista del caso siguiente;
+       - sin reconocerlo: ofrece la lista que esa persona puede completar, hasta 10 filas con «Otro». «Otro» lo deja «Sin clasificar» en la bandeja y lo anota en «Formularios que faltan» (E23);
     3. **extraer** los datos según las preguntas del formulario elegido, con su seguridad por dato;
-    4. **validar sin IA:** las validaciones fijas, el cruce con los catálogos (por ejemplo, el CUIT como campo de un catálogo de la E13b) y los duplicados (el mismo archivo, o la misma operación, monto y fecha);
+    4. **validar sin IA:** las validaciones fijas, el cruce con los catálogos (por ejemplo, el CUIT como campo de un catálogo de la E13) y los duplicados (el mismo archivo, o la misma operación, monto y fecha);
     5. **proponer** el formulario prellenado por WhatsApp, con el documento adjunto en su pregunta de archivo. Lo que no se pudo leer queda vacío, y lo dudoso, marcado;
     6. **confirmar o corregir** lo hace la persona. Al confirmar se vuelven a revisar las validaciones fijas y los duplicados con lo corregido. La carga sin confirmar existe solo con «Cargar solo si es seguro» (71);
     7. **organizar:** queda como una respuesta más, con sus reglas, su aprobación y su PDF.
   - **La «Lectura de documentos» de un formulario,** en su borrador, que se sella al publicar:
     - «Cómo reconocerlo», qué pregunta recibe cada dato estándar, las validaciones fijas, el cruce con catálogos y la regla de duplicados;
-    - un formulario que salió de una plantilla con lectura (E17) trae lo suyo, y las validaciones del estándar van con candado;
+    - **en la biblioteca (E22):** el borrador de una plantilla (`FormTemplateDraft`) suma su «Lectura de documentos», que la plataforma edita en la pestaña «Plantilla», y la copia de una organización la trae con las validaciones del estándar con candado;
     - cambiarle el nombre a una pregunta no corta la lectura, y un dato sin pregunta no se lee.
   - **Las validaciones fijas** son un conjunto cerrado en el código, y cada formulario elige cuáles usa:
     - CUIT y CUIL reusan el validador de `platform.TaxIdTypes` (`ar-cuit-mod11`);
@@ -44,11 +44,12 @@
     - revisar: corregir, cambiar el formulario reconocido (vuelve a leer), pasar al formulario y descartar con confirmación. La respuesta dice de qué documento salió y quién la revisó.
   - **«Armar formulario con la IA»:** sobre un documento «Sin clasificar», o desde el aviso «Llegaron N documentos parecidos» (con tres o más). La IA propone nombre, prefijo, texto del botón, «Cómo reconocerlo» y una pregunta por dato, con su tipo; si se parece a un estándar de la biblioteca, lo sugiere antes. Se crea un borrador con la lectura prendida; una persona lo revisa y lo publica. Si falla, no queda nada a medias.
   - **Armar formularios y catálogos desde el asistente de la web** (75): la misma pieza, desde el chat del Inicio (8b). La persona le pasa un PDF, una planilla o una foto de lo que hoy usa en papel, o le escribe cómo quiere un formulario o un catálogo.
-    - El asistente crea el formulario **en borrador**, con sus preguntas y sus tipos, y los catálogos que necesita, con sus opciones, **sin activar** (como el catálogo propuesto de la E18). Después lleva al editor.
+    - El asistente crea el formulario **en borrador**, con sus preguntas y sus tipos, y los catálogos que necesita, con sus opciones, **sin activar** (como el catálogo propuesto de la E23). Después lleva al editor.
     - Nada se publica ni se activa solo: una persona revisa, activa los catálogos y publica.
     - Pide `forms.manage`, y para los catálogos, `formcatalogs.manage`. El costo entra en el tope de IA de la organización.
-    - Es una herramienta del asistente que escribe: pide su ADR, la de las acciones con confirmación (ADR 0048, D8), que se planifica con la E18. El pedido de la persona en el chat es la confirmación.
-  - **«Cargar solo si es seguro»** (71): un interruptor por formulario, en su «Lectura de documentos». Con él prendido, carga sin preguntar solo si se cumplen las tres señales:
+    - Es una herramienta del asistente que escribe: pide su ADR, la de las acciones con confirmación (ADR 0048, D8), que se planifica con la E23. El pedido de la persona en el chat es la confirmación.
+  - **Los Casos de la E23** suman el tipo de entrada «documento».
+  - **«Cargar solo si es seguro»** (71): un interruptor por formulario, en su «Lectura de documentos». La respuesta que carga es de quien mandó el documento, por el canal `whatsapp`, con `SourceKey` `document:<id>`, y pasa por la misma captura (T5 de la E14), que le revisa a un empleado la membresía y `formrecords.create`. Con el interruptor prendido, carga sin preguntar solo si se cumplen las tres señales:
     1. el formulario quedó reconocido sin duda;
     2. las validaciones fijas de los datos elegidos dan bien, y no es un duplicado;
     3. ese formulario tiene sus últimas 20 cargas confirmadas sin correcciones en esos datos.
@@ -59,18 +60,16 @@
   - **Costos:** la lectura entra en el tope mensual de IA de la organización (ADR 0051), con un tope por persona y por día (41). Al llegar a un tope, el documento queda en la bandeja sin leerse.
   - **Calificación:** el perfil de lectura se califica antes de habilitarlo, con casos ficticios: comprobantes de varios bancos, fotos movidas, documentos que no son de ningún tipo, instrucciones escondidas en el documento, Word y Excel.
 - **Front:**
-  - en el chat, «Por qué lo propuso» o «Por qué preguntó» debajo del documento, como en la E18;
+  - en el chat, «Por qué lo propuso» o «Por qué preguntó» debajo del documento, como en la E23;
   - la sección «Lectura de documentos» en el editor;
-  - la bandeja y «Armar formulario con la IA». El tablero por formulario pasó a la E15 (57).
+  - la bandeja y «Armar formulario con la IA».
 - **Tableros que dibuja Diseño** (evaluación, §5.2), con nuestras piezas y la decisión 43:
   - `DOC2` · Los tres casos en el celular, y los otros formatos;
   - `DOC3` · El formulario prellenado: lo dudoso con «Revisá», lo no leído vacío y el documento adjunto;
   - `DOC4` · Los casos difíciles: foto movida, PDF con contraseña, repetido, CBU mal leído, formulario que no se le puede mandar, formatos viejos, y un número que no es contacto de la organización;
   - `DOC5-A` · La bandeja, una planilla con panel, con el estado «Cargada automáticamente» (71);
-  - en la «Lectura de documentos» del editor (`DOC1`, de la E17), el interruptor «Cargar solo si es seguro», con cuántas cargas sin correcciones lleva el formulario (71);
-  - `DOC6` · «Armar formulario con la IA»;
-
-  `DOC1` (la biblioteca y la lectura) va con la E17.
+  - la sección «Lectura de documentos» de `DOC1`: en `Plat-FRM-Plantilla` de la E22 («Cómo reconocerlo», qué pregunta recibe cada dato estándar y las validaciones fijas, con candado) y en el editor de la organización, con el interruptor «Cargar solo si es seguro» y cuántas cargas sin correcciones lleva el formulario (71);
+  - `DOC6` · «Armar formulario con la IA».
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
@@ -81,8 +80,12 @@
   - revisar (corregir, pasar al formulario y descartar) pide además el permiso de atender la bandeja de donde llegó el documento: «Atender internos» o «Atender clientes» (70);
   - «Armar formulario con la IA» pide además `forms.manage`.
 - **La empresa** (ajuste de la Guía del 2026-10-24): columna y filtro «Empresa ▾» en la bandeja, como en la planilla (24).
-- **La biblioteca** es la de la E17 (40).
+- **La biblioteca** es la de la E22 (40).
 - **Genérico:** ningún tipo de documento va en el código. Un estándar nuevo es una plantilla que carga un operador.
+
+## Para decidir
+
+- **«Pasar al formulario» desde la bandeja:** un operador carga, con lo que leyó la IA, la respuesta de otra persona. Falta decidir por qué canal queda, quién figura como quien respondió, su `SourceKey` y qué permiso pide. Es cargar a nombre de otro, que la E20 dejó afuera (73). Se resuelve con el usuario al planificar la etapa, o se saca.
 
 ## Fuera de esta etapa
 
@@ -101,7 +104,7 @@ La puerta de la etapa, con la lista de control de `/puerta`. Antes, la calificac
 
 ## Requisitos previos
 
-- La E13b (el cruce por CUIT), la E13c (los filtros por persona), la E17 (los estándares) y la E18 (las ráfagas, las acciones, derivar y la ADR de las herramientas que escriben), cerradas.
+- La E24 cerrada. Usa sobre todo la E13 (el cruce por CUIT), la E16 (los filtros por persona), la E22 (los estándares) y la E23 (las ráfagas, las acciones, derivar y la ADR de las herramientas que escriben).
 - La prueba con Meta del archivo precargado en un Flow.
 
 ## Ajustes ya decididos
@@ -112,9 +115,9 @@ La puerta de la etapa, con la lista de control de `/puerta`. Antes, la calificac
 ## En el multitenant
 
 - **Datos de la organización:** documentos, lecturas, correcciones y precisión son `ITenantOwned`, con RLS. Cada ruta nueva lleva su test de aislamiento.
-- **Workers:** la bajada y la lectura son operaciones durables (efecto externo), descubiertas en un registro técnico global sin datos de negocio, y entran con `ExecutionActor`. El borrado de los 90 días recorre las organizaciones con `TenantJobRunner`.
+- **Workers:** la bajada y la lectura son operaciones durables (efecto externo), descubiertas en un registro técnico global sin datos de negocio, y entran a la organización como la captura de la E14 (T5), sin `ExecutionActor`, porque quien manda puede ser un cliente sin cuenta. El borrado de los 90 días recorre las organizaciones con `TenantJobRunner`.
 - **Feature `forms`:** las rutas llevan `[FeatureGate("forms")]`.
 - **Tope por persona y por día:** una opción del módulo en `Application/Configuration/Forms`, con `ValidateOnStart`, igual para todas las organizaciones.
 - **WhatsApp (E11):** la bajada usa la WABA y el token de la organización.
-- **Almacenamiento (E10):** las copias privadas van en `IFileStore`, con claves opacas, como en la E14, y el antivirus de la lista de lanzamiento.
+- **Almacenamiento (E10):** las copias privadas van en `IFileStore`, con claves opacas, como en la E18, y el antivirus de la lista de lanzamiento.
 - **Baja de la cuenta:** el participante del módulo borra los documentos sin usar de esa persona; los usados siguen a su respuesta.

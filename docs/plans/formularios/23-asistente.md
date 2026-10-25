@@ -1,6 +1,6 @@
-# E18 · El asistente, con Casos (resumen)
+# E23 · El asistente, con Casos (resumen)
 
-**Estado:** resumen de la duodécima etapa del bloque (decisiones 34, 39, 51, 52 y 65 a 67). Junta la etapa 5 de ArquitecturaBase, cerrada y en piloto, con los Casos del asistente, decididos allá sin programar. Se planifica con `/plan-etapa` después de la E17 (decisión 19).
+**Estado:** resumen de la etapa 23 del bloque (decisiones 34, 39, 51, 52, 65 a 67 y 78). Junta la etapa 5 de ArquitecturaBase, cerrada y en piloto, con los Casos del asistente, decididos allá sin programar. Se planifica con `/plan-etapa` después de la E22 (decisión 19).
 
 **Dónde está el detalle:**
 - en el traspaso del 17/10: [04 §5](../2026-10-17-formularios-traspaso/04-etapas.md), [05 · Etapa 5](../2026-10-17-formularios-traspaso/05-pantallas.md), anexo C §2 (etapa 5) y anexo D (H1–H7, s1–s4 y 03);
@@ -18,11 +18,11 @@
     - **por bandeja,** quién atiende los chats nuevos: el asistente o una persona;
     - **por bandeja,** cuándo vuelve un chat al modo configurado después de que lo tomó una persona: cuando pasa un tiempo sin mensajes (lo elige la organización), cuando la persona lo marca «Resuelto», o nunca. Se mira al llegar un mensaje, sin worker: si el chat está en manual, no está fijado y se cumple la regla, vuelve al modo configurado antes de procesarlo;
     - **cada chat** se cambia a mano en cualquier momento, en los dos sentidos, y se puede fijar para que no vuelva solo. Pasar un chat a Asistente pide «Administrar WhatsApp»; tomar la atención manual pide solo el permiso de atender esa bandeja, no depende de la IA, de la ventana de 24 horas ni de los envíos pendientes, y deja sin efecto una propuesta que llegue tarde;
-    - **el bot del menú** de la E11 aparece solo en los chats de Clientes que están en atención manual. Con varios asistentes (E18b), también al empezar un chat nuevo, para elegir el equipo (77).
+    - **el bot del menú** de la E11 aparece solo en los chats de Clientes que están en atención manual.
   - **Los Casos** (39), configurados por cada organización con «Administrar WhatsApp», en una pantalla con un solo Guardar, con versión y 409 (configuración interna). Se guardan como **el agente principal**, una fila con todo lo suyo, así una etapa de varios agentes suma filas sin rehacer nada:
     - **Perfil:** nombre, presentación, tono, qué hace y qué no, qué hacer cuando no sabe y el mensaje fijo al derivar;
     - **Conocimiento:** la información del negocio que usa para redactar, una por organización. Se edita en su propia pestaña, con el mismo Guardar y con «Administrar WhatsApp» (decisión 46). Una sección vacía no se usa: nunca se presenta como un hecho lo que no está cargado;
-    - **Casos:** por cada uno, cuándo (un texto), para quién (empleados, clientes o los dos, como los formularios, 50), el tipo de entrada (cualquiera, texto o audio; los documentos llegan con la E19), qué hacer, el orden y si está activo. Los formularios van en un bloque fijo, con su «Cuándo lo ofrece», y «Cualquier otra cosa» va al final y no se borra. Sin perfil, «Cualquier otra cosa» empieza en «No responder»;
+    - **Casos:** por cada uno, cuándo (un texto), para quién (empleados, clientes o los dos, como los formularios, 50), el tipo de entrada (cualquiera, texto o audio), qué hacer, el orden y si está activo. Los formularios van en un bloque fijo, con su «Cuándo lo ofrece», y «Cualquier otra cosa» va al final y no se borra. Sin perfil, «Cualquier otra cosa» empieza en «No responder»;
     - **Límites, uno por bandeja** (65): temas que no responde, lo que no puede prometer, el largo máximo de una respuesta, el tope de respuestas por conversación y por día, el tope de ofrecimientos de formularios (66) y las acciones permitidas. Con los clientes, la organización puede ser más estricta, por ejemplo solo con textos exactos. La plataforma fija un máximo para cada límite.
   - **Seis acciones,** un menú cerrado en el código:
     1. mandar un formulario;
@@ -49,13 +49,15 @@
     5. encola en la salida y guarda el porqué de cada acción;
     6. **derivar** manda el mensaje fijo, pasa a Atención manual y marca la conversación «Necesita una persona», en la cabecera, en la lista y con su filtro. La marca se quita cuando responde una persona;
     7. en Atención manual, la respuesta redactada se le ofrece al operador como borrador.
-  - **Ofrecer formularios:** hasta el tope que elige la organización por conversación y día (2 por defecto, con un máximo de la plataforma; 66), en la zona de la organización; solo los publicados, activos y con «Cuándo lo ofrece», que son para ese tipo de destinatario (50) y, a un empleado, que puede completar. El prellenado propone texto, números, fechas, sí/no y una opción ofrecida, nunca fotos, documentos ni «elegir varias».
-  - **Sugerencias entre formularios (s1–s4):** `formsuggestions.manage`, hasta 20 por formulario. Modo «La IA decide» (Assistant) o «Preguntar siempre» (Always, por condición y sin IA), con mapeos entre preguntas del mismo tipo; una elección solo se mapea entre preguntas del mismo catálogo. Tienen guardado e historial propios, y la respuesta conserva su origen y la cadena.
-  - **Audios (H6):** se bajan como los archivos de la E14 y se transcriben por un puerto del núcleo (27). La transcripción la ve también el operador; sin ella, el audio queda para el operador.
-  - **Armar una regla desde un texto** (63): en el editor de reglas de la E16, la persona escribe la regla en palabras. La IA la convierte en una regla normal (cuándo, si, hacer), y la persona la revisa, la corrige y la guarda con «Guardar reglas» y `formrules.manage`. Después corre siempre igual, sin IA. La IA solo propone: nunca guarda una regla. El costo entra en el tope de IA de la organización (ADR 0051): con el tope agotado, «Armar desde un texto» queda grisado, con el motivo en su tooltip, y la regla se arma a mano.
+  - **Ofrecer formularios:** hasta el tope que elige la organización por conversación y día (2 por defecto, con un máximo de la plataforma; 66), en la zona de la organización; solo los publicados, activos y con «Cuándo lo ofrece», que son para ese tipo de destinatario (50) y, a un empleado, que puede completar. Usa el filtro de disponibilidad de la E17.
+  - **Quién manda y el prellenado:** el formulario lo manda el asistente, no un operador. La sesión guarda que lo mandó el asistente, en lugar de un usuario, y el envío no toma el chat; ventana, envío pendiente, destinatario, oferta de catálogo y filtros por destinatario son los de la E14 y la E16. El prellenado propone texto, números, fechas, sí/no y una opción ofrecida, nunca fotos, documentos ni «elegir varias»: viaja en el `data` del mensaje como valores iniciales de un perfil nuevo del Flow **[Meta]**, que se sella al publicar la versión siguiente de cada formulario. Uno publicado antes se manda sin prellenar.
+  - **Lo que el asistente no ve:** los valores de las respuestas ni los campos sellados de catálogo.
+  - **Sugerencias entre formularios (s1–s4):** `formsuggestions.manage`, hasta 20 por formulario, solo hacia formularios para el mismo tipo de destinatario (50). Una sugerencia hacia un formulario dado de baja (E17) deja de ofrecerse, y vuelve si se reactiva. Modo «La IA decide» (Assistant) o «Preguntar siempre» (Always, por condición y sin IA), con mapeos entre preguntas del mismo tipo; una elección solo se mapea entre preguntas del mismo catálogo. Tienen guardado e historial propios, y la respuesta conserva su origen y la cadena.
+  - **Audios (H6):** se bajan como los archivos de la E18 y se transcriben por un puerto del núcleo (27). La transcripción la ve también el operador; sin ella, el audio queda para el operador.
+  - **Armar una regla desde un texto** (63): en el editor de reglas de la E21, la persona escribe la regla en palabras. La IA la convierte en una regla normal (cuándo, si, hacer), y la persona la revisa, la corrige y la guarda con «Guardar reglas» y `formrules.manage`. Después corre siempre igual, sin IA. La IA solo propone: nunca guarda una regla. El costo entra en el tope de IA de la organización (ADR 0051): con el tope agotado, «Armar desde un texto» queda grisado, con el motivo en su tooltip, y la regla se arma a mano.
   - **Preguntas sin respuesta** (67): lo que preguntaron sobre la organización y no estaba cargado queda en una lista agrupada por tema, sin nombres ni mensajes, con cantidad de preguntas y de personas, como «Formularios que faltan». Quien tiene «Administrar WhatsApp» la ve, completa el conocimiento desde ahí o descarta el tema. Así el asistente contesta más con el uso.
   - **Formularios que faltan (H7):** pedidos agrupados por tema, sin nombres ni mensajes. Quien diseña formularios lo crea o descarta el pedido.
-  - **Catálogo propuesto (H4):** se pide desde el chat administrativo, solo con filtros en esta etapa (la E19 suma los escritos a mano, 75). Queda inactivo hasta que lo apruebe una persona con `formcatalogs.manage`.
+  - **Catálogo propuesto (H4):** se pide desde el chat administrativo, solo con filtros. Queda inactivo hasta que lo apruebe una persona con `formcatalogs.manage`.
   - **Desde el primer día** (lo que allá costó arreglar):
     - **la espera:** los cierres del motor avisan por una señal local al confirmar la UoW, sin contenido; la entrada sondea cada 2 s solo mientras hay algo pendiente; el webhook despierta la captura. Una sola cola durable, sin colas nuevas. Allá bajó de 35 s a 6,6 s;
     - **el aislamiento por conversación:** `ChannelConversationId`, opaco, en el contexto, la huella, la recuperación y la cancelación, con el índice `(TenantId, OwnerUserId, ChannelId, ChannelConversationId)`. En Atención manual, el ámbito es el contacto. Se prueba con tres personas a la vez;
@@ -80,9 +82,10 @@
     - `AS6` · El circuito de punta a punta;
     - `WA-Modo-Atencion` · El modo de atención (52): por bandeja, quién atiende los chats nuevos y cuándo vuelve un chat; en el chat, cambiar el modo y fijarlo;
     - `WA-Preguntas-Sin-Respuesta` · las preguntas sin respuesta por tema, con «Completar el conocimiento» y «Descartar» (67);
-    - en `AS5`, los límites por bandeja (65) y el tope de ofrecimientos (66).
-  - **Diseño redibuja** `FRM-Editor-Asistente`, sin «Textos en» ni «Cambios sin guardar».
-  - **Se quedan** los aprobados en el lienzo v133: `WA-Chats-Asistente`, `WA-Chats-Sugerencia`, `WA-Chats-Audio` (corregido en la v134), `FRM-Faltan`, `FRM-Respuesta-Cadena`, `M-WA-Conversacion-Asistente` y `M-FRM-Faltan`. `FRM-Catalogo-Propuesta` se redibuja con la E13, y `FRM-Editor-Sugerencias`, con la E16.
+    - en `AS5`, los límites por bandeja (65) y el tope de ofrecimientos (66);
+    - `BA6` · Una sugerencia hacia un formulario dado de baja.
+  - **Diseño redibuja** `FRM-Editor-Asistente`, `FRM-Editor-Sugerencias` y `FRM-Catalogo-Propuesta`, sin «Textos en» ni «Cambios sin guardar», como pestañas o secciones del formulario y del catálogo (79).
+  - **Se quedan** los aprobados en el lienzo v133: `WA-Chats-Asistente`, `WA-Chats-Sugerencia`, `WA-Chats-Audio` (corregido en la v134), `FRM-Faltan`, `FRM-Respuesta-Cadena`, `M-WA-Conversacion-Asistente` y `M-FRM-Faltan`.
   - **Mandan sobre este resumen en:**
     - **con los Casos, una consulta ya no queda sin respuesta:** la contesta un caso o se deriva. `AS4` reemplaza el estado «Sin respuesta del asistente · queda para un operador» de `WA-Chats-Asistente`;
     - **«Pasar a modo Asistente»** pide «Administrar WhatsApp» (28), en Internos y en Clientes (51). «Tomar atención manual» pide solo el permiso de atender;
@@ -98,7 +101,7 @@
 - **La configuración vive en nuestra base,** por organización, nunca en el panel del proveedor de IA.
 - **Genérico:** ninguna respuesta queda escrita en el código.
 - **Un solo botón, «Abrir formulario»,** también en las sugerencias.
-- **Los catálogos del asistente** son solo con filtros en esta etapa (la E19 suma los escritos a mano, 75), nunca SQL, y siempre los aprueba una persona.
+- **Los catálogos del asistente** son solo con filtros, nunca SQL, y siempre los aprueba una persona.
 - **Un modelo se habilita solo con un perfil calificado,** y los casos de evaluación se corren antes.
 - **«Tomar atención manual»** siempre se puede, con el permiso de atender.
 - **Empleados y clientes** (51), con el modo de atención configurable (52), y **«Administrar WhatsApp»** (28), sin permiso nuevo para los Casos.
@@ -106,10 +109,10 @@
 
 ## Fuera de esta etapa
 
-- Varios asistentes y quién contesta cada chat: van en la E18b (68 y 69). La E18 guarda el asistente como «el agente principal», una fila, para que la E18b sume filas sin rehacer nada.
-- Herramientas que escriben: su ADR, la de las acciones con confirmación (ADR 0048, D8), nace con esta etapa, y la estrena la E19 (75).
-- Leer fotos y documentos (E19).
-- El borrador de un formulario armado por la IA, salvo «Armar formulario con la IA» de la E19.
+- Varios asistentes y quién contesta cada chat: van en la E24 (68 y 69). La E23 guarda el asistente como «el agente principal», una fila, para que la E24 sume filas sin rehacer nada.
+- Herramientas que escriben: su ADR, la de las acciones con confirmación (ADR 0048, D8), nace con esta etapa, y la estrena la E25 (75).
+- Leer fotos y documentos (E25).
+- El borrador de un formulario armado por la IA, salvo «Armar formulario con la IA» de la E25.
 - El acceso Personal: lo que ve un cliente con cuenta en «Mis mensajes» es la copia de la conversación de la E11.
 
 ## Cómo se cierra
@@ -138,7 +141,7 @@
 
 ## Requisitos previos
 
-- La E12 a la E17 cerradas: la cola marcada con su origen (E16) y la bajada de medios (E14).
+- La E22 cerrada: con ella están la cola marcada con su origen (E21) y la bajada de medios (E18).
 - **La ADR de respuestas redactadas,** antes de planificar.
 - **Dos piezas que se planifican con la etapa:**
   - el asistente con acciones con confirmación (ADR 0048, D8);
@@ -155,7 +158,7 @@
 - **Tope de IA por organización (ADR 0051):** el costo del modelo, de la transcripción y de Probar entra en el tope mensual de la organización.
 - **Datos de la organización:** el agente, sus casos y límites, el conocimiento, la marca «Necesita una persona», el resultado de cada acción, las sugerencias y los pedidos son `ITenantOwned`, con RLS.
 - **El historial** nunca es de otra conversación ni de otra organización, con su test de aislamiento.
-- **Workers:** entran con `ExecutionActor`, que usa `ITenantScope` por dentro.
+- **Workers:** los turnos de un chat de WhatsApp entran a la organización como la captura de la E14 (T5), sin `ExecutionActor`, porque un cliente no tiene cuenta; los demás, con `ExecutionActor`.
 - **Features:** `forms` y `assistant` prendidos en la organización.
 - **Permisos de organización:**
   - `formsuggestions.manage`;

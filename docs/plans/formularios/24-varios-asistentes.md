@@ -1,11 +1,11 @@
-# E18b · Varios asistentes, uno por equipo (resumen)
+# E24 · Varios asistentes, uno por equipo (resumen)
 
-**Estado:** resumen de una etapa nueva del bloque (decisiones 68, 69 y 77), justo después de la E18. No tiene equivalente programado en ArquitecturaBase, que lo dejó para una tercera etapa del asistente (anexo F, F2).
+**Estado:** resumen de la etapa 24 del bloque (decisiones 68, 69, 77 y 78), justo después de la E23. No tiene equivalente programado en ArquitecturaBase, que lo dejó para una tercera etapa del asistente (anexo F, F2).
 
 ## Qué se construye
 
 - **Back:**
-  - **Varios asistentes por organización.** Cada uno tiene su nombre, su perfil, sus casos y sus límites por bandeja, como el de la E18. El conocimiento es de la organización y lo comparten todos (46).
+  - **Varios asistentes por organización.** Cada uno tiene su nombre, su perfil, sus casos y sus límites por bandeja, como el de la E23. El conocimiento es de la organización y lo comparten todos (46).
   - **Quién contesta cada chat: por equipo** (68):
     - cada equipo de la bandeja de la E11 (Ventas, Soporte) puede tener un asistente; un equipo tiene como mucho uno;
     - **cómo llega un chat nuevo a su equipo** (77): con varios asistentes, el chat nuevo arranca con el menú del bot, aunque la bandeja esté en modo Asistente. La persona elige el equipo, y desde ahí le contesta el asistente de ese equipo;
@@ -16,7 +16,7 @@
   - **El modo de atención** (52) y los topes siguen siendo por bandeja y por chat. El tope mensual de IA es uno para toda la organización (ADR 0051).
   - **«Probar»** se elige por asistente.
 - **Front:**
-  - la lista «Asistentes» en el panel de WhatsApp, con «Nuevo asistente». Cada uno abre la pantalla de la E18;
+  - la lista «Asistentes» en el panel de WhatsApp, con «Nuevo asistente». Cada uno abre la pantalla de la E23;
   - en la configuración de cada equipo de la E11, «Asistente de este equipo»;
   - en el chat, qué asistente contesta.
 - **Tableros que dibuja Diseño,** con nuestras piezas y la decisión 43:
@@ -28,7 +28,7 @@
 
 - **Por equipo** (68): usa los equipos que ya existen, es predecible y en cada chat se ve quién contesta.
 - **El menú elige el equipo** (77): decide la persona, no la IA.
-- **Etapa propia,** después de la E18, que ya es grande (69).
+- **Etapa propia,** después de la E23, que ya es grande (69).
 - **Sin permiso nuevo:** se configura con «Administrar WhatsApp» (28).
 
 ## Fuera de esta etapa
@@ -46,7 +46,7 @@ La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba r
 
 ## Requisitos previos
 
-La E18 cerrada.
+La E23 cerrada.
 
 ## Ajustes ya decididos
 
@@ -56,6 +56,6 @@ La E18 cerrada.
 ## En el multitenant
 
 - **Datos de la organización:** los asistentes y la asignación a equipos son `ITenantOwned`, con RLS.
-- **Workers:** los de la E18.
+- **Workers:** los de la E23.
 - **Features:** `forms` y `assistant`.
 - **WhatsApp (E11):** los equipos y el número de la organización.
