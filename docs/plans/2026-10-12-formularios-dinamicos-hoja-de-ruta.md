@@ -131,7 +131,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - lo que suma se ve en todas las pantallas que ya existen: un tipo de pregunta nuevo, en la planilla, el detalle, el Excel y el PDF, si ya están;
 - nada nombra, prueba ni dibuja algo de una etapa posterior: eso pasa a esa etapa.
 
-**La base, antes de la E12:** los botones (la F5 que sale de la 10), la campana en el núcleo y el tamaño general, con un zoom del 85 % en la maqueta, que el usuario todavía no confirmó. Para la prueba con Meta de la E14 hace falta una organización con su número conectado (la I1 de la 10).
+**La base, antes de la E12:** lo que se copia de la maqueta, que lista el [plan de desarrollo](2026-09-27-plan-de-desarrollo.md#etapas-12-a-25-formularios-por-whatsapp): los botones (la F5 que sale de la 10), la campana en el núcleo, donde también se avisa la versión nueva, y la letra al 85 %, que confirmó el usuario. Para la prueba con Meta de la E14 hace falta una organización con su número conectado (la I1 de la 10).
 
 **Criterios.** En todas las etapas rige la lista de control de la skill `/puerta`: doce puntos que salen de los 142 problemas de los reviews de ArquitecturaBase ([§4](#4-lo-que-aprendimos-en-arquitecturabase)). Cada etapa suma los suyos. El plan de la etapa los toma como lista de control, y cada punto que aplica lleva su test.
 

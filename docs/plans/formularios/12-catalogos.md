@@ -22,11 +22,11 @@
   - **la carga de una vez:** pegar desde Excel (agrega) o importar un XLSX o un CSV (reemplaza), con vista previa;
   - **exportar** y bajar la plantilla;
   - **hasta 10.000 opciones** por catálogo, contando las dadas de baja.
-- **De los contactos** (55): las opciones son los contactos de WhatsApp de la organización, los de la bandeja Clientes, con su nombre. Ver la §4b.
+- **De los contactos** (55): las opciones son los contactos de WhatsApp de la organización, los de la bandeja Clientes, con su nombre. Su vista previa elige un cliente de ejemplo, igual que la de los miembros. Ver la §4b.
 - **El nombre de un contacto** (81): un contacto sin nombre toma el de su perfil de WhatsApp cuando escribe, y se puede cambiar. El teléfono nunca se muestra.
 - **Con filtros:**
   - sobre la fuente «Miembros de la organización», con condiciones armadas por el sistema y «Sin incluir a quien lo recibe»;
-  - vista previa con una persona de ejemplo, elegida a propósito;
+  - vista previa con una persona de ejemplo, elegida a propósito: el teléfono, con solo el desplegable «Persona» arriba, que se actualiza sola;
   - el valor es siempre de texto.
 - **Permisos:** `formcatalogs.read` y `formcatalogs.manage`.
 
@@ -173,9 +173,9 @@ Se define en el código, en `Application/Modules/Forms/Catalogs/MembersCatalogSo
 | `Forms.Catalog.MoveOutOfRange` | Conflict | subir la primera o bajar la última |
 | `Forms.Catalog.Inactive` | Conflict | cambiar opciones de un catálogo dado de baja |
 | `Forms.Catalog.WrongSource` | Conflict | opciones en un catálogo con filtros, o filtros en uno a mano |
-| `Forms.Catalog.SampleMemberRequired` | Validation (campo `sampleMemberId`) | crear o guardar un catálogo de `Members` con condiciones sin persona de ejemplo. Sin condiciones no hace falta |
+| `Forms.Catalog.SampleRequired` | Validation (campo `sampleMemberId`; el texto es «Elegí una persona.») | crear o guardar un catálogo de `Members` con condiciones sin persona de ejemplo. Sin condiciones no hace falta |
 | `Forms.Catalog.FiltersInvalid` | Validation (campo `conditions[i]`) | columna, operador o valor fuera de la fuente |
-| `Forms.Catalog.SampleMemberNotFound` | Validation | la persona de ejemplo no es de la organización |
+| `Forms.Catalog.SampleMemberNotFound` / `SampleContactNotFound` | Validation | la persona o el cliente de ejemplo no es de la organización |
 | `Forms.Catalog.ItemTextTooLong` / `ItemDetailTooLong` | Validation (campo `items[i].text` o `.detail`) | textos fuera de límite |
 | `Forms.CatalogImport.FileChanged` | Conflict | el archivo que se aplica no es el de la vista previa (SHA-256) |
 | `Forms.CatalogImport.FileInvalid` | Validation | formato, codificación o topes del archivo (C8) |
@@ -204,11 +204,12 @@ Las rutas de Business llevan `[Access(Access.Business)]` y `[FeatureGate("forms"
 | GET `/api/organization/forms/catalogs/sources/members` | `formcatalogs.manage` | — | 200 `{version, columns[{key, type, operators, canDetail, canSort}]}`; catálogo cerrado de columnas y operadores de la §4 |
 | GET `/api/organization/forms/catalogs/sources/members/roles` | `formcatalogs.manage` | `page`, `pageSize`, `search`, `sort` (`name`) | 200 `PagedResult<{id, name}>` de roles de la organización |
 | GET `/api/organization/forms/catalogs/sources/members/companies` | `formcatalogs.manage` | `page`, `pageSize`, `search`, `sort` (`name`) | 200 `PagedResult<{id, name}>` de empresas de la organización |
-| GET `/api/organization/forms/catalogs/sample-members` | `formcatalogs.manage` | `page`, `search` | 200 `PagedResult<{memberId, name}>`, sin correo |
+| GET `/api/organization/forms/catalogs/sample-members` | `formcatalogs.read` | `page`, `pageSize`, `search` | 200 `PagedResult<{memberId, name}>`, sin correo |
+| GET `/api/organization/forms/catalogs/sample-contacts` | `formcatalogs.read` | `page`, `pageSize`, `search` | 200 `PagedResult<{contactId, name}>` de los contactos de Clientes, sin teléfono, por el puerto `IStructuredContactSource` (C12) |
 | GET `/api/organization/forms/catalogs/sources/contacts/tags` | `formcatalogs.manage` | `page`, `pageSize`, `search` | 200 `PagedResult<{name}>` con los textos de etiqueta que usan los contactos de la organización, por el puerto `IStructuredContactSource` (C12) |
-| POST `/api/organization/forms/catalogs/previews` | `formcatalogs.manage` | `{source, filters, sampleMemberId?}`; con `Contacts` no hay persona de ejemplo. El catálogo no elige entre una opción o varias: lo decide la pregunta | 200 `{options[{text, detail?}], total, exceedsLimit}`; no escribe |
+| POST `/api/organization/forms/catalogs/previews` | `formcatalogs.read` | `{source, filters, sampleMemberId?, sampleContactId?}`: la persona de ejemplo con `Members`, y el cliente de ejemplo con `Contacts`. El catálogo no elige entre una opción o varias: lo decide la pregunta | 200 `{options[{text, detail?}], total, exceedsLimit}`; no escribe |
 
-Las pruebas de integración recorren una segunda página de opciones, roles, empresas, etiquetas y errores de importación, con búsqueda y desempate; `GrowingCollectionContractTests` verifica sus contratos sin agregar excepciones por módulo. La vista previa conserva su límite explícito (200).
+Las pruebas de integración recorren una segunda página de opciones, roles, empresas, etiquetas, personas y clientes de ejemplo, y errores de importación, con búsqueda y desempate; `GrowingCollectionContractTests` verifica sus contratos sin agregar excepciones por módulo. La vista previa conserva su límite explícito (200).
 
 **Plataforma:** no tiene rutas nuevas. La feature `forms` aparece sola en la pestaña «Módulos» de la ficha de la organización.
 
@@ -232,7 +233,7 @@ Las pruebas de integración recorren una segunda página de opciones, roles, emp
    - `POST` o `PUT` del catálogo con su versión y, en `Members` con condiciones, la persona de ejemplo: sin ella no se crea;
    - los filtros se validan contra la fuente y se vuelve a correr la vista previa con esa persona;
    - con más de 200 resultados para esa persona **se guarda**: la vista previa avisa, y lo que frena es el envío de la E14, donde el tope se comprueba para cada destinatario (decisiones 12, 22 y 37).
-6. **Vista previa:** corre el lector con los filtros sin guardar, con la persona de ejemplo como destinatario. No toma su identidad ni sus permisos, y no escribe nada. Un nombre de más de 30 caracteres se ve cortado con la regla de la decisión 36, la misma que la E14 aplica al mandar.
+6. **Vista previa:** corre el lector con los filtros sin guardar, con la persona o el cliente de ejemplo como destinatario. La pantalla la vuelve a pedir sola al cambiar los filtros o la persona, sin botón «Probar». No toma su identidad ni sus permisos, y no escribe nada. Un nombre de más de 30 caracteres se ve cortado con la regla de la decisión 36, la misma que la E14 aplica al mandar.
 
 ## 8. Puertos
 
@@ -309,7 +310,8 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
   - el catálogo no tiene «Una opción | Varias»: lo decide la pregunta.
 - **Guardado (C3):** todo se guarda junto en un `PUT` del catálogo, con su versión, y viaja solo lo que cambió.
 - **Nuevo catálogo:** primero se elige el origen, y para los escritos a mano, el tipo de valor; el nombre se escribe en el editor y el `POST` sale de «Crear catálogo».
-- **Persona de ejemplo:** sin ella no se crea un catálogo de miembros con condiciones (`Forms.Catalog.SampleMemberRequired`).
+- **Persona de ejemplo:** sin ella no se crea un catálogo de miembros con condiciones (`Forms.Catalog.SampleRequired`, «Elegí una persona.»).
+- **La vista previa de un catálogo de miembros o de contactos** es el teléfono, con solo el desplegable «Persona» arriba, y se actualiza sola; no hay «Probar». Se ve con `formcatalogs.read`, como el catálogo.
 
 ## 11. Tests
 
@@ -320,7 +322,7 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 | `tests/…Api.IntegrationTests/Modules/Forms/` | cada ruta con 401, 403, feature apagada = 404, validación, 409, idempotencia y paginado; guardar sin cambios compara la versión sin tocar ni auditar opciones; guardar una opción entre 10.000 escribe y audita solo esa, y sube la versión del catálogo; un código repetido en un intercambio da el error de validación, nunca un 500 en el commit; subir y bajar con dos personas a la vez; aplicar con otro archivo = 409; dos importaciones de la misma persona a la vez = `Busy`, y una barrera vencida se vuelve a tomar; vista previa sin escribir; ejemplos exportados de cada respuesta |
 | `tests/…Api.IntegrationTests/Modules/WhatsApp/` | un contacto sin nombre toma el de su perfil al escribir; uno con nombre puesto por una persona no se pisa (C14) |
 | Volumen | un catálogo de 10.000 opciones: listar, buscar, guardar una opción y exportar, sin traer todo para quedarse con poco, con EXPLAIN |
-| Aislamiento | la fuente «Miembros» nunca devuelve miembros de otra organización ni correos; la de «Contactos», ni contactos de otra ni teléfonos; la persona de ejemplo de otra organización da error; cada ruta nueva le responde 404 a otra organización |
+| Aislamiento | la fuente «Miembros» nunca devuelve miembros de otra organización ni correos; la de «Contactos», ni contactos de otra ni teléfonos; la persona o el cliente de ejemplo de otra organización da error; cada ruta nueva le responde 404 a otra organización |
 | Guardas (partials del módulo) | `IdentityAccessTests`, `ExplicitRouteInventoryTests`, `ModuleControllersTests`, `ApplicationServicesTests`, `ModuleIsolationTests`, `ResourceParityTests` (suma los resx de Forms) y `PermissionTextsTests` |
 | Front | páginas de catálogos, la tabla editable, el diálogo de importar, el editor de filtros y la vista previa, con MSW, axe y los ejemplos exportados validados con zod estricto; `registration`, `navigation` y `composition` del módulo; los botones según la decisión 43 |
 | E2E y recorrido | pegar opciones desde una planilla, importar un archivo que da de baja algunas, exportar; un catálogo de miembros con filtros y su vista previa; uno de los contactos filtrado por etiqueta |

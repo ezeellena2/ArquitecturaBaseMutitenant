@@ -9,12 +9,12 @@
 - **Back:**
   - **Campos por opción,** solo en los catálogos a mano:
     - hasta 20 por catálogo, contando los inactivos (42), en `FieldsJson` del catálogo, con su versión y el 409;
-    - cada campo tiene identidad estable, clave en minúsculas (fija después de guardar), nombre (un solo texto, 35), tipo, reglas, posición y estado;
-    - **tipos:** texto, entero, decimal, fecha, sí/no y «elegir de otro catálogo», que toma los valores de otro catálogo a mano activo de la misma organización;
-    - **reglas:** obligatorio, único, mínimo, máximo y, en un texto, el largo. Obligatorio y único se comprueban sobre las opciones activas.
+    - cada campo tiene identidad estable, nombre (un solo texto, 35), tipo, reglas, posición y estado. Su clave se arma sola con el nombre, en minúsculas, queda fija después de guardar y no se muestra;
+    - **tipos:** Texto, Número entero, Número con decimales, Fecha, Sí/No y «De un catálogo: …», que toma los valores de otro catálogo a mano activo de la misma organización;
+    - **reglas:** obligatorio, único y un límite: el largo en un texto, y el mínimo y el máximo en un número o una fecha. Obligatorio y único se comprueban sobre las opciones activas.
   - **El ciclo de un campo:**
     - nace opcional, y se cargan valores después de guardarlo;
-    - quitar es inactivar, conservando el nombre. Con valores, pide confirmación;
+    - quitar es inactivar, conservando el nombre. Con valores, pide confirmación. Un campo en uso no se quita;
     - cambiar el tipo o las reglas valida todas las opciones bajo el bloqueo del catálogo, y un error revierte todo;
     - al convertir a número o a fecha se lee con la cultura del pedido, y lo ambiguo («1.500», «12.345») no convierte.
   - **Valores:**
@@ -22,18 +22,18 @@
     - en el `PUT` del catálogo, `items[i].fields` es un delta: ausente conserva y `null` limpia. La importación manda todos los campos activos de la fila;
     - un valor de «elegir de otro catálogo» guarda la identidad de la opción fuente. Un valor nuevo exige una opción activa, y **el guardado que apunta a una opción dada de baja se conserva y no impide guardar**;
     - un catálogo usado como fuente por campos activos no se da de baja.
-  - **La tabla, pegar, importar y exportar:** una columna por campo después del código. Los encabezados se reconocen por la clave o por el nombre. La plantilla y la exportación suman las columnas, y en una fuente se acepta la identidad, el código o el texto único de la opción.
+  - **La tabla, pegar, importar y exportar:** una columna por campo después del código. Los encabezados se reconocen por el nombre o por la clave. La plantilla y la exportación suman las columnas, y en una fuente se acepta la identidad, el código o el texto único de la opción.
   - **Qué se ve en WhatsApp (la presentación del catálogo):**
     - el catálogo elige qué campos arman el título (hasta 30, con contenido) y la descripción (hasta 300) de cada opción, unidos con « · »;
     - el editor guarda y avisa, opción por opción, lo que no entra;
     - el texto de la opción sigue siendo su etiqueta.
   - **Volumen:** 10.000 opciones por 20 campos, medido con EXPLAIN al guardar, importar y exportar. Guardar manda y escribe solo lo que cambió (C3 de la E12).
 - **Front:**
-  - la sección «Campos» del editor de un catálogo a mano;
+  - la sección «Campos» del editor de un catálogo a mano, en la forma B: una tabla que se edita ahí mismo, sin diálogo, con las columnas Campo, Tipo, Obligatorio, Único, Límite y ⋮ (Subir, Bajar y Quitar). Quitar queda apagado si el campo está en uso, con el motivo en su tooltip. Los errores van debajo de su celda, al guardar;
   - una columna por campo en la tabla, con el control de su tipo;
   - la sección «En WhatsApp» del catálogo, y el teléfono al costado, con el título y la descripción armados.
 - **Tableros que dibuja Diseño** (evaluación, §5.2), corregidos con la decisión 43 y con el «Ajuste del review de E2» de allá, mostrando solo el catálogo:
-  - `CE1` · Definir los campos de un catálogo;
+  - `CE1` · Definir los campos de un catálogo, en la forma B que aprobó el usuario el 2026-10-25 en la maqueta;
   - `CE2` · Cargar los valores;
   - `CE3-B` · Qué se ve en WhatsApp, en el catálogo.
 - **Mandan sobre este resumen en:**
