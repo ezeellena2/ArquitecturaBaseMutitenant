@@ -12,7 +12,7 @@
 
 - **Back:**
   - **La lista «Formularios» (79, MF1):**
-    - suma a cada formulario la cantidad de respuestas (de `LastRecordNumber`) y la última respuesta (número y cuándo, sin valores), y se ordena por la última respuesta;
+    - suma a cada formulario tres columnas, un dato en cada una: la cantidad de respuestas (de `LastRecordNumber`), el número de la última respuesta y cuándo llegó, con fecha y hora; sin valores. Se ordena por la última respuesta;
     - una sola consulta paginada, sin consultas por fila; la autorización se comprueba otra vez antes de devolver;
     - las columnas de respuestas se ven con `formrecords.read`.
   - **Planilla de un formulario,** en su pestaña «Respuestas»:
@@ -64,6 +64,7 @@
   - **Diseño ajusta** `FRM-Respuesta`: «Abrir en pantalla completa» en la cabecera, sin fotos, estado, Actividad de aprobación ni PDF.
   - **Se quedan** los aprobados en el lienzo v131: `FRM-Respuestas` (la planilla), `FRM-Respuestas-Filtros`, `FRM-Respuestas-Exportar`, `M-FRM-Respuestas` y `M-FRM-Respuesta`, sin lo que llega con etapas posteriores.
   - **Mandan sobre este resumen en:**
+    - **las fichas del front** (pedido del usuario del 2026-10-25): un dato por celda, en un renglón; las fechas completas, con fecha y hora en la zona de quien mira, nunca «hoy», «ayer» ni «hace…»; y sin rótulos que expliquen;
     - **la navegación (34 y 79):** el menú principal dice «Gestión de formularios», y su panel tiene Formularios y Catálogos, sin «Respuestas» ni «Por aprobar». Desde «Formularios» se entra a cada formulario, con sus pestañas;
     - **la empresa** va como columna «Empresas» y filtro «Empresa ▾» (decisión 24);
     - **«Ya hay una exportación en curso»** es la barrera de una exportación por persona; **«No se pudo actualizar»** es el error al volver a leer, que conserva lo que se ve;

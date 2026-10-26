@@ -25,7 +25,7 @@
   - **Copiar un formulario** (E17) copia las condiciones, los cálculos y las líneas.
 - **Front:**
   - en el editor: «Mostrar si» en cada pregunta, la pregunta «Cálculo» con su fórmula y el «Grupo de líneas» con sus columnas y su tope;
-  - en «Así lo ve quien lo recibe»: la pregunta que aparece y los renglones;
+  - en el teléfono al costado: la pregunta que aparece y los renglones;
   - en la planilla, el detalle y el Excel: «No se mostró», la tabla de líneas y los cálculos.
 - **Tableros que dibuja Diseño,** con nuestras piezas y la decisión 43:
   - `FRM-Editor-Condiciones`: «Mostrar si» en una pregunta;

@@ -44,7 +44,7 @@
     - un diseño con revisiones propias: nombre (hasta 160), preguntas, quién aprobó, pie (hasta 1000) e «Incluir las fotos». Cada texto es uno solo (35);
     - **un diseño de base bien hecho, con personalización acotada** (59): el logo, un color, un encabezado con los datos de la organización, las preguntas agrupadas en secciones con título y en el orden que se elija, mostrar u ocultar cada pregunta, y un lugar para firmas. No hay un editor libre;
     - **de dónde sale cada cosa** (82): el logo y los datos del encabezado, de la página pública de la organización; el color se elige en el diseño del PDF de cada formulario, y arranca con el del sistema de entrada. Una organización sin página pública arma el PDF sin logo y con su nombre;
-    - **muestra los campos «Dato»** de las opciones de catálogo elegidas (E13 y E16), junto a su pregunta, y en un catálogo tipado, «texto · valor»;
+    - **muestra los campos «Dato»** de las opciones de catálogo elegidas (E13 y E16), junto a su pregunta, y en un catálogo tipado, el texto y el valor, cada uno en su lugar;
     - **muestra lo de las etapas anteriores:** las fotos (E18), la tabla de líneas, los cálculos y «No se mostró» (E19);
     - al aprobar, se fija una **copia fija** A4, una por ejecución, que se escribe una sola vez. El contenido va como está escrito, y los textos del sistema («Aprobada por», «Página 1 de 1»), en el idioma de la cuenta de quien cargó la respuesta; si es un cliente sin cuenta, en el de la organización (42);
     - solo se ve por la Api, con `formrecords.read`.

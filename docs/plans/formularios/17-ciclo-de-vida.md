@@ -24,10 +24,10 @@
     - cada binding se deprecia con lease, fence y estado. Lo incierto queda «Sin confirmar» y se consulta por id, nombre técnico y WABA antes de repetir;
     - cada respuesta de Meta se clasifica en definitiva, transitoria o desconocida. Un rechazo no se repite para siempre: después de esperar 5, 15, 30 y 60 minutos queda «No se pudo», a la vista en el editor, y no frena nada del formulario;
     - otro puerto, solo de lectura, le devuelve a Forms el último vencimiento y el estado de la deprecación.
-  - **La lista «Formularios»** (79) filtra Activos (publicados y borradores), Publicados, Borradores y Dados de baja. Sin `formrecords.read`, la cantidad de respuestas de la E15 es `null`.
+  - **La lista «Formularios»** (79): el filtro «Estado» suma la opción «Dados de baja», junto a Activos (publicados y borradores), Publicados y Borradores. No es una vista aparte. Sin `formrecords.read`, la cantidad de respuestas de la E15 es `null`.
 - **Front:**
   - las acciones en la fila de «Formularios» y en el ⋮ del formulario, según el permiso y el estado;
-  - el formulario dado de baja, con quién y cuándo, y lo que pasa en WhatsApp;
+  - el formulario dado de baja, con quién y cuándo (fecha y hora completas), cada uno en su lugar, y lo que pasa en WhatsApp;
   - los diálogos de dar de baja, reactivar y eliminar.
 - **Tableros que dibuja Diseño** (evaluación, §5.2), con nuestras piezas y la decisión 43:
   - `BA1-A` · Las acciones en la fila;

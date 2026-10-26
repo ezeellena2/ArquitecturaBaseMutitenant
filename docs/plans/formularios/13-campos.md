@@ -31,7 +31,7 @@
 - **Front:**
   - la sección «Campos» del editor de un catálogo a mano;
   - una columna por campo en la tabla, con el control de su tipo;
-  - la sección «En WhatsApp» del catálogo, y «Así lo ve quien lo recibe» con el título y la descripción armados.
+  - la sección «En WhatsApp» del catálogo, y el teléfono al costado, con el título y la descripción armados.
 - **Tableros que dibuja Diseño** (evaluación, §5.2), corregidos con la decisión 43 y con el «Ajuste del review de E2» de allá, mostrando solo el catálogo:
   - `CE1` · Definir los campos de un catálogo;
   - `CE2` · Cargar los valores;
@@ -67,7 +67,7 @@ Cada una lleva su test, escrito durante la etapa:
 
 La puerta de la etapa, con la lista de control de `/puerta`. No hay prueba con Meta, porque la etapa no manda nada por WhatsApp. El recorrido prueba:
 1. un catálogo «Proveedores» con CUIT, Zona (elegir del catálogo «Zonas») y Plazo de pago, cargados importando una planilla, y exportado de nuevo sin diferencias;
-2. la presentación con el CUIT en la descripción, vista en «Así lo ve quien lo recibe»;
+2. la presentación con el CUIT en la descripción, vista en el teléfono al costado;
 3. dar de baja una zona: «Proveedores» se sigue guardando, importando y exportando, con el valor que tenía.
 
 ## Requisitos previos
