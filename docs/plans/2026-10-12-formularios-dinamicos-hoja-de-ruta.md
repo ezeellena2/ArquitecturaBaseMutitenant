@@ -80,15 +80,23 @@ Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sec
 - **Feature `forms`.**
   - `IFeatureDefinitionContributor`, `FeatureScope.Business`. La plataforma lo habilita por organización (Plan, Manual o Trial).
   - Con el feature apagado, las rutas responden 404.
-- **Permisos de organización** (en `Permissions.cs` del núcleo, como manda acá; cada uno entra con la etapa que tiene una ruta que lo usa):
-  - `forms.read`, `forms.manage` y `forms.publish` (E14);
-  - `formrecords.create` y `formrecords.read` (E14);
-  - `formcatalogs.read` y `formcatalogs.manage` (E12);
-  - `formsuggestions.manage` (E23);
-  - `formpersondata.manage` (E16);
-  - `formrecords.export` (E15);
-  - `formrecords.correct` (E21), para corregir una respuesta (58);
-  - `formrules.manage` y `formapprovals.decide` (E21).
+- **Permisos de organización:** van en `Permissions.cs` del núcleo, como manda acá, y cada uno entra con la etapa que tiene una ruta que lo usa. Sus nombres van en `Permissions.resx` y `.en.resx` (regla 6), y se ven en el editor de roles:
+
+  | Código | Etapa | Nombre (es) | Nombre (en) | Qué permite |
+  | --- | --- | --- | --- | --- |
+  | `formcatalogs.read` | E12 | Ver catálogos | View catalogs | Ver los catálogos y sus opciones. |
+  | `formcatalogs.manage` | E12 | Administrar catálogos | Manage catalogs | Crear y editar catálogos, importarlos, darlos de baja y aprobar los que propone el asistente. |
+  | `forms.read` | E14 | Ver formularios | View forms | Ver la lista «Formularios» y cada formulario, sin cambiarlo. |
+  | `forms.manage` | E14 | Diseñar formularios | Design forms | Crear y editar formularios en la pestaña «Diseño», copiarlos y borrarlos. |
+  | `forms.publish` | E14 | Publicar formularios | Publish forms | Publicar un formulario en WhatsApp, darlo de baja y reactivarlo. |
+  | `formrecords.create` | E14 | Responder formularios | Answer forms | Completar formularios por WhatsApp o desde la web. |
+  | `formrecords.read` | E14 | Ver respuestas | View responses | Ver las respuestas y sus valores. |
+  | `formrecords.export` | E15 | Exportar respuestas | Export responses | Bajar las respuestas en Excel. |
+  | `formpersondata.manage` | E16 | Administrar los datos de las personas | Manage people data | Definir los datos de las personas, como «Zona». |
+  | `formrules.manage` | E21 | Administrar reglas y PDF | Manage rules and PDF | Armar las reglas de un formulario y el diseño de su PDF. |
+  | `formapprovals.decide` | E21 | Aprobar o rechazar respuestas | Approve or reject responses | Decidir las respuestas que piden aprobación, según el rol de la regla (25). |
+  | `formrecords.correct` | E21 | Corregir respuestas | Correct responses | Corregir los valores de una respuesta mientras está recibida o por aprobar (58). |
+  | `formsuggestions.manage` | E23 | Administrar sugerencias entre formularios | Manage suggestions between forms | Elegir qué formulario se sugiere después de otro. |
 - Cada permiso nuevo trae su migración que actualiza los roles de sistema de las organizaciones existentes (modelo: `20261010203618_SystemRoleAssistantPermissions.cs`).
 - **Permiso de plataforma:** uno para mantener la biblioteca (E22), con `[HasPlatformPermission]`.
 - **«Para resolver»:** las respuestas por aprobar (E21) aportan un `IPendingItemSource` (ADR 0040), en lugar de un contador propio.
