@@ -82,21 +82,21 @@ Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sec
   - Con el feature apagado, las rutas responden 404.
 - **Permisos de organización:** van en `Permissions.cs` del núcleo, como manda acá, y cada uno entra con la etapa que tiene una ruta que lo usa. Sus nombres van en `Permissions.resx` y `.en.resx` (regla 6), y se ven en el editor de roles:
 
-  | Código | Etapa | Nombre (es) | Nombre (en) | Qué permite |
-  | --- | --- | --- | --- | --- |
-  | `formcatalogs.read` | E12 | Ver catálogos | View catalogs | Ver los catálogos y sus opciones. |
-  | `formcatalogs.manage` | E12 | Administrar catálogos | Manage catalogs | Crear y editar catálogos, importarlos, darlos de baja y aprobar los que propone el asistente. |
-  | `forms.read` | E14 | Ver formularios | View forms | Ver la lista «Formularios» y cada formulario, sin cambiarlo. |
-  | `forms.manage` | E14 | Diseñar formularios | Design forms | Crear y editar formularios en la pestaña «Diseño», copiarlos y borrarlos. |
-  | `forms.publish` | E14 | Publicar formularios | Publish forms | Publicar un formulario en WhatsApp, darlo de baja y reactivarlo. |
-  | `formrecords.create` | E14 | Responder formularios | Answer forms | Completar formularios por WhatsApp o desde la web. |
-  | `formrecords.read` | E14 | Ver respuestas | View responses | Ver las respuestas y sus valores. |
-  | `formrecords.export` | E15 | Exportar respuestas | Export responses | Bajar las respuestas en Excel. |
-  | `formpersondata.manage` | E16 | Administrar los datos de las personas | Manage people data | Definir los datos de las personas, como «Zona». |
-  | `formrules.manage` | E21 | Administrar reglas y PDF | Manage rules and PDF | Armar las reglas de un formulario y el diseño de su PDF. |
-  | `formapprovals.decide` | E21 | Aprobar o rechazar respuestas | Approve or reject responses | Decidir las respuestas que piden aprobación, según el rol de la regla (25). |
-  | `formrecords.correct` | E21 | Corregir respuestas | Correct responses | Corregir los valores de una respuesta mientras está recibida o por aprobar (58). |
-  | `formsuggestions.manage` | E23 | Administrar sugerencias entre formularios | Manage suggestions between forms | Elegir qué formulario se sugiere después de otro. |
+  | Código | Etapa | Nombre (es) | Nombre (en) | Qué permite (es) | Qué permite (en) |
+  | --- | --- | --- | --- | --- | --- |
+  | `formcatalogs.read` | E12 | Ver catálogos | View catalogs | Ver los catálogos y sus opciones. | View catalogs and their options. |
+  | `formcatalogs.manage` | E12 | Administrar catálogos | Manage catalogs | Crear y editar catálogos, importarlos, darlos de baja y aprobar los que propone el asistente. | Create and edit catalogs, import them, deactivate them and approve the ones the assistant proposes. |
+  | `forms.read` | E14 | Ver formularios | View forms | Ver la lista «Formularios» y cada formulario, sin cambiarlo. | View the Forms list and each form, without changing it. |
+  | `forms.manage` | E14 | Diseñar formularios | Design forms | Crear y editar formularios en la pestaña «Diseño», copiarlos y borrarlos. | Create and edit forms in the Design tab, copy them and delete them. |
+  | `forms.publish` | E14 | Publicar formularios | Publish forms | Publicar un formulario en WhatsApp, darlo de baja y reactivarlo. | Publish a form on WhatsApp, deactivate it and reactivate it. |
+  | `formrecords.create` | E14 | Responder formularios | Answer forms | Completar formularios por WhatsApp o desde la web. | Fill in forms on WhatsApp or on the web. |
+  | `formrecords.read` | E14 | Ver respuestas | View responses | Ver las respuestas y sus valores. | View responses and their values. |
+  | `formrecords.export` | E15 | Exportar respuestas | Export responses | Bajar en Excel las respuestas, con los filtros aplicados. | Download the responses to Excel, with the filters applied. |
+  | `formpersondata.manage` | E16 | Administrar los datos de las personas | Manage people data | Definir los datos de las personas, como «Zona». | Define people data, such as Zone. |
+  | `formrules.manage` | E21 | Administrar reglas y PDF | Manage rules and PDF | Armar las reglas de un formulario y el diseño de su PDF. | Build a form's rules and its PDF design. |
+  | `formapprovals.decide` | E21 | Aprobar o rechazar respuestas | Approve or reject responses | Decidir las respuestas que piden aprobación, según el rol de la regla, menos las que cargó la misma persona (25). | Decide the responses that need approval, according to the rule's role, except the ones the same person submitted. |
+  | `formrecords.correct` | E21 | Corregir respuestas | Correct responses | Corregir los valores de una respuesta mientras está recibida o por aprobar (58). | Correct a response's values while it is received or awaiting approval. |
+  | `formsuggestions.manage` | E23 | Administrar sugerencias entre formularios | Manage suggestions between forms | Elegir qué formulario se sugiere después de otro. | Choose which form is suggested after another. |
 - Cada permiso nuevo trae su migración que actualiza los roles de sistema de las organizaciones existentes (modelo: `20261010203618_SystemRoleAssistantPermissions.cs`).
 - **Permiso de plataforma:** uno para mantener la biblioteca (E22), con `[HasPlatformPermission]`.
 - **«Para resolver»:** las respuestas por aprobar (E21) aportan un `IPendingItemSource` (ADR 0040), en lugar de un contador propio.
