@@ -100,7 +100,8 @@ Una organización arma formularios, los manda por WhatsApp a sus empleados y a s
   - los carteles de las pantallas cerradas pasan a la banda o a la campana: Usuario, Cuenta y Organización de Plataforma, Legales, Recuperaciones, Inicio personal y Mi cuenta;
   - la pestaña «Miembros» de una empresa no se dibuja sin el permiso (es un error del sistema real);
   - los filtros de Chats en una fila;
-  - el tamaño general: la letra de la raíz al 85 %, con los tamaños de las clases en rem en lugar de px (sin `zoom`, que corre los menús). El usuario todavía no lo confirmó.
+  - el tamaño general: la letra de la raíz al 85 %, con los tamaños de las clases en rem en lugar de px (sin `zoom`, que corre los menús); lo confirmó el usuario el 25/10;
+  - la versión nueva se avisa en la campana, sin franja, y la columna ordenada muestra ▲ o ▼ (decisiones del usuario del 25/10).
 - **Para la prueba con Meta de la 14:** una organización con su número conectado, que prueba la I1 de la 10.
 - **Requisitos:** la E11 es requisito duro, porque sin número de la organización no hay formularios. Van después de la E10 para nacer con las guardas de la E9 y la nube de la E10.
 - **Módulo:** `Forms` es un módulo quitable aparte de `WhatsApp`, unidos por puertos neutrales del núcleo.
