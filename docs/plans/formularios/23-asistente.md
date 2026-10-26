@@ -57,7 +57,7 @@
   - **Armar una regla desde un texto** (63): en el editor de reglas de la E21, la persona escribe la regla en palabras. La IA la convierte en una regla normal (cuándo, si, hacer), y la persona la revisa, la corrige y la guarda con «Guardar reglas» y `formrules.manage`. Después corre siempre igual, sin IA. La IA solo propone: nunca guarda una regla. El costo entra en el tope de IA de la organización (ADR 0051): con el tope agotado, «Armar desde un texto» queda grisado, con el motivo en su tooltip, y la regla se arma a mano.
   - **Preguntas sin respuesta** (67): lo que preguntaron sobre la organización y no estaba cargado queda en una lista agrupada por tema, sin nombres ni mensajes, con cantidad de preguntas y de personas, como «Formularios que faltan». Quien tiene «Administrar WhatsApp» la ve, completa el conocimiento desde ahí o descarta el tema. Así el asistente contesta más con el uso.
   - **Formularios que faltan (H7):** pedidos agrupados por tema, sin nombres ni mensajes. Quien diseña formularios lo crea o descarta el pedido.
-  - **Catálogo propuesto (H4):** se pide desde el chat administrativo, solo con filtros. Queda de baja hasta que lo apruebe una persona con `formcatalogs.manage`.
+  - **Catálogo propuesto (H4):** se pide desde el chat administrativo, solo con filtros. Los catálogos suman el estado «Por aprobar», como lo que espera aprobación en Formularios y en Reglas: el propuesto queda así hasta que una persona con `formcatalogs.manage` toca «Aprobar». Una propuesta nunca se usó, así que no queda «De baja».
   - **Desde el primer día** (lo que allá costó arreglar):
     - **la espera:** los cierres del motor avisan por una señal local al confirmar la UoW, sin contenido; la entrada sondea cada 2 s solo mientras hay algo pendiente; el webhook despierta la captura. Una sola cola durable, sin colas nuevas. Allá bajó de 35 s a 6,6 s;
     - **el aislamiento por conversación:** `ChannelConversationId`, opaco, en el contexto, la huella, la recuperación y la cancelación, con el índice `(TenantId, OwnerUserId, ChannelId, ChannelConversationId)`. En Atención manual, el ámbito es el contacto. Se prueba con tres personas a la vez;
@@ -91,7 +91,7 @@
     - **«Pasar a modo Asistente»** pide «Administrar WhatsApp» (28), en Internos y en Clientes (51). «Tomar atención manual» pide solo el permiso de atender;
     - **«La IA decide»** es el modo Assistant y **«Preguntar siempre»** es Always: por condición, sin IA;
     - **«No pudimos pasar este audio a texto»** cubre también el tope de IA de la organización agotado;
-    - **«Aprobar y activar»** pide `formcatalogs.manage`, y **«Formularios que faltan»** pide `forms.manage`;
+    - **«Aprobar»** pide `formcatalogs.manage`, y **«Formularios que faltan»** pide `forms.manage`;
     - **un audio no se ve «borrado» dentro de un chat que existe:** el audio y su transcripción siguen la retención del chat, la D4 de la E11 (se guardan mientras exista el contacto).
 
 ## Decisiones tomadas (no se vuelven a preguntar)

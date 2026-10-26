@@ -44,8 +44,8 @@
     - revisar: corregir, cambiar el formulario reconocido (vuelve a leer), pasar al formulario y descartar con confirmación. La respuesta dice de qué documento salió y quién la revisó.
   - **«Armar formulario con la IA»:** sobre un documento «Sin clasificar», o desde el aviso «Llegaron N documentos parecidos» (con tres o más). La IA propone nombre, prefijo, texto del botón, «Cómo reconocerlo» y una pregunta por dato, con su tipo; si se parece a un estándar de la biblioteca, lo sugiere antes. Se crea un borrador con la lectura prendida; una persona lo revisa y lo publica. Si falla, no queda nada a medias.
   - **Armar formularios y catálogos desde el asistente de la web** (75): la misma pieza, desde el chat del Inicio (8b). La persona le pasa un PDF, una planilla o una foto de lo que hoy usa en papel, o le escribe cómo quiere un formulario o un catálogo.
-    - El asistente crea el formulario **en borrador**, con sus preguntas y sus tipos, y los catálogos que necesita, con sus opciones, **sin activar** (como el catálogo propuesto de la E23). Después lleva al editor.
-    - Nada se publica ni se activa solo: una persona revisa, activa los catálogos y publica.
+    - El asistente crea el formulario **en borrador**, con sus preguntas y sus tipos, y los catálogos que necesita, con sus opciones, **por aprobar** (como el catálogo propuesto de la E23). Después lleva al editor.
+    - Nada se publica ni se aprueba solo: una persona revisa, aprueba los catálogos y publica.
     - Pide `forms.manage`, y para los catálogos, `formcatalogs.manage`. El costo entra en el tope de IA de la organización.
     - Es una herramienta del asistente que escribe: pide su ADR, la de las acciones con confirmación (ADR 0048, D8), que se planifica con la E23. El pedido de la persona en el chat es la confirmación.
   - **Los Casos de la E23** suman el tipo de entrada «documento».

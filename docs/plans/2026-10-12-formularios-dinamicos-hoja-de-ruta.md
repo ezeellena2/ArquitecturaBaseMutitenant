@@ -300,7 +300,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Lee con IA** lo que mandan los empleados y los clientes (foto, PDF, Word, Excel, ubicación y contacto) y propone el formulario prellenado (70). Confirma una persona, salvo con «Cargar solo si es seguro» y sus tres señales (71).
 - **La «Lectura de documentos»** de un formulario y de una plantilla de la biblioteca.
 - **Pantallas:** la bandeja «Documentos recibidos» y «Armar formulario con la IA».
-- **Armar formularios y catálogos desde el asistente de la web** (75): se le pasa un PDF o se le escribe cómo se quiere, y crea el borrador y los catálogos sin activar.
+- **Armar formularios y catálogos desde el asistente de la web** (75): se le pasa un PDF o se le escribe cómo se quiere, y crea el borrador y los catálogos por aprobar.
 - **Validaciones fijas:** un conjunto cerrado en el código, y la tabla de entidades del BCRA como dato de referencia; lo descartado se borra a los 90 días; la lectura entra en el tope de la organización, con un tope por persona y por día (41).
 - **Para decidir al planificar:** «Pasar al formulario» desde la bandeja, que es cargar a nombre de otro.
 - **Resumen:** [formularios/25-documentos.md](formularios/25-documentos.md).
@@ -516,7 +516,7 @@ Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 9, lo que qu
 
 73. **Cargar una respuesta desde la web** entra al bloque: un empleado, a su nombre, con la misma captura que por WhatsApp. Es la etapa E20, después de la E18.
 74. **Copiar un formulario** entra al bloque, en la E17.
-75. **El asistente de la web arma formularios y catálogos:** se le pasa un PDF o se le escribe cómo se quiere, y crea el formulario en borrador y los catálogos sin activar, y lleva al editor. Nada se publica solo. Va en la E25, con «Armar formulario con la IA».
+75. **El asistente de la web arma formularios y catálogos:** se le pasa un PDF o se le escribe cómo se quiere, y crea el formulario en borrador y los catálogos por aprobar, y lleva al editor. Nada se publica solo. Va en la E25, con «Armar formulario con la IA».
 76. **Después del bloque, lo primero son las integraciones:** ARCA, Mercado Libre, Mercado Pago y webhooks, con plantillas conectadas en la biblioteca.
 
 Elegida por el usuario el 2026-10-24, en la revisión completa del bloque:
