@@ -21,9 +21,9 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 9 · Endurecimiento | Cerrada | [Plan](2026-10-16-etapa-9-endurecimiento.md), [ADR 0052](../decisions/0052-cache-compartida-redis.md) |
 | 10 · Operación | Pendiente. El plan corto está listo, con las decisiones del usuario; la F5 de botones pasó a la base de la 12 | [Plan](2026-10-16-etapa-10-despliegue.md), [manual de operación](../operations/runbook.md) |
 | Base de la 12 | Pendiente: los botones (la F5 de la 10), la campana en el núcleo y el tamaño general (zoom del 85 % en la maqueta, sin confirmar) | [Formularios](#etapas-12-a-25-formularios-por-whatsapp) |
-| 12 · Catálogos | Pendiente. Spec lista; se redibujan 6 tableros y hay nuevos por dibujar | [Spec](formularios/12-catalogos.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
+| 12 · Catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v141 | [Spec](formularios/12-catalogos.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
 | 13 · Campos de los catálogos | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/13-campos.md) |
-| 14 · Formularios | Pendiente. Spec lista, con los tableros de la v139 y lo que suman la 78 a la 80 por dibujar | [Spec](formularios/14-formularios.md) |
+| 14 · Formularios | Pendiente. Spec lista, con los tableros aprobados en el lienzo v141 | [Spec](formularios/14-formularios.md) |
 | 15 · Respuestas, planilla y Excel | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/15-respuestas.md) |
 | 16 · Datos de las personas y filtros | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/16-datos-de-las-personas.md) |
 | 17 · Ciclo de vida y copiar | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/17-ciclo-de-vida.md) |

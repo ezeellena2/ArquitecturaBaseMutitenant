@@ -13,7 +13,7 @@
 
 **Entra:**
 - **El módulo `Forms`:** quitable, con su feature `forms`, sus permisos de catálogos y la entrada «Gestión de formularios» del menú, que en esta etapa tiene solo «Catálogos» (34 y 78).
-- **Catálogos de la organización:** listado, alta con el origen fijo (a mano, de los miembros o de los contactos), datos y estado «Se puede usar», «Dado de baja» o «No se puede usar».
+- **Catálogos de la organización:** listado, alta con el origen fijo (a mano, de los miembros o de los contactos), datos y estado «Activo», «Dado de baja» o «No se puede usar».
 - **Dar de baja y reactivar un catálogo** desde su pantalla, con su versión, sin borrarlo. Dar de baja uno con filtros no necesita vista previa, y reactivarlo sí.
 - **A mano:**
   - **tipo de valor:** texto, entero, decimal o fecha, que se elige al crear y no cambia;
@@ -133,7 +133,7 @@ Se define en el código, en `Application/Modules/Forms/Catalogs/MembersCatalogSo
   - el puerto neutral `IMemberDirectoryReader`, en `Application/Interfaces/Persistence/`, y su reader del núcleo en `Infrastructure/Persistence/Readers/MemberDirectoryReader.cs`, sobre `Member`, `CompanyMembership`, las asignaciones de roles y el nombre de la cuenta. No sabe de formularios: recibe condiciones de la lista cerrada y devuelve id, nombre y, si se pide, roles o empresas;
   - EF con parámetros y RLS de la organización, con la conexión normal;
   - un timeout corto (3 s);
-  - lee una fila más que el tope (201 en «una opción», 21 en «varias»): si la hay, devuelve `exceedsLimit`.
+  - lee una fila más que el tope que se le pide (201 en la vista previa): si la hay, devuelve `exceedsLimit`.
 - **Guarda de acceso global:** el reader del núcleo entra en la lista cerrada de `IdentityAccessTests`, porque lee la cuenta global (`identity`).
 - **Versión:**
   - `sourceVersion` es 1;
@@ -155,7 +155,7 @@ Se define en el código, en `Application/Modules/Forms/Catalogs/MembersCatalogSo
 - **`FormCatalog`:** `CreateManual(valueType)`, `CreateMembers`, `CreateContacts`, `Rename`, `ChangeFilters` (solo `Members` y `Contacts`), `Deactivate` y `Reactivate`.
 - **`FormCatalogItem`:** `Create`, `Edit`, `Deactivate`, `Reactivate` y `SwapPosition`.
 
-**Estado de un catálogo** (se calcula, no se guarda): «Se puede usar» o «No se puede usar», con estos motivos:
+**Estado de un catálogo:** «Dado de baja» si se dio de baja; si no, se calcula, sin guardarse: «Activo» o «No se puede usar», con estos motivos:
 - `NoActiveOptions`: un catálogo a mano sin opciones activas;
 - `SourceOutdated`;
 - `ChannelUnavailable`: un catálogo de `Contacts` sin WhatsApp instalado;
@@ -206,9 +206,9 @@ Las rutas de Business llevan `[Access(Access.Business)]` y `[FeatureGate("forms"
 | GET `/api/organization/forms/catalogs/sources/members/companies` | `formcatalogs.manage` | `page`, `pageSize`, `search`, `sort` (`name`) | 200 `PagedResult<{id, name}>` de empresas de la organización |
 | GET `/api/organization/forms/catalogs/sample-members` | `formcatalogs.manage` | `page`, `search` | 200 `PagedResult<{memberId, name}>`, sin correo |
 | GET `/api/organization/forms/catalogs/sources/contacts/tags` | `formcatalogs.manage` | `page`, `pageSize`, `search` | 200 `PagedResult<{name}>` con los textos de etiqueta que usan los contactos de la organización, por el puerto `IStructuredContactSource` (C12) |
-| POST `/api/organization/forms/catalogs/previews` | `formcatalogs.manage` | `{source, filters, sampleMemberId?, multiple}`; con `Contacts` no hay persona de ejemplo | 200 `{options[{text, detail?}], total, exceedsLimit}`; no escribe |
+| POST `/api/organization/forms/catalogs/previews` | `formcatalogs.manage` | `{source, filters, sampleMemberId?}`; con `Contacts` no hay persona de ejemplo. El catálogo no elige entre una opción o varias: lo decide la pregunta | 200 `{options[{text, detail?}], total, exceedsLimit}`; no escribe |
 
-Las pruebas de integración recorren una segunda página de opciones, roles, empresas, etiquetas y errores de importación, con búsqueda y desempate; `GrowingCollectionContractTests` verifica sus contratos sin agregar excepciones por módulo. La vista previa conserva su límite explícito (200 o 20).
+Las pruebas de integración recorren una segunda página de opciones, roles, empresas, etiquetas y errores de importación, con búsqueda y desempate; `GrowingCollectionContractTests` verifica sus contratos sin agregar excepciones por módulo. La vista previa conserva su límite explícito (200).
 
 **Plataforma:** no tiene rutas nuevas. La feature `forms` aparece sola en la pestaña «Módulos» de la ficha de la organización.
 
@@ -276,15 +276,14 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 
 **Navegación (34 y 78):** «Gestión de formularios» llega con esta etapa, y su panel tiene solo «Catálogos». Los tableros de la etapa muestran solo eso.
 
-**Diseño redibuja** (evaluación, §5.1): `FRM-Catalogo`, `M-FRM-Catalogo`, `FRM-Catalogo-Filtros` y `M-FRM-Catalogo-Filtros`. Sale «Textos en», sale «Cambios sin guardar», y el origen y el tipo de valor van como la A11: en su campo, apagados y en gris, sin «No se cambia» (43).
-
-**Diseño dibuja nuevos** (evaluación, §5.2), con nuestras piezas y la decisión 43:
-- `CA1-A` · Todo a la vista: el editor de un catálogo a mano con la barra de Opciones (Agregar opción, Pegar desde Excel, Importar, Exportar y «⋯» con la plantilla, ordenar de la A a la Z y generar los códigos que faltan), la búsqueda, la tabla editable en la compu, la selección de filas para dar de baja o reactivar, y «Así lo ve quien lo recibe» con «Una opción / Varias». En el celular, el editor por opción;
-- `CA2` · Importar (y pegar): archivo o filas pegadas, revisar (Errores, Altas, Cambios y Bajas, por fila y columna) y aplicar, con la confirmación de bajas, «Aplicar sin las N filas con errores» y el 409;
-- `CA3` · Tipo de valor: se elige al crear, la columna «Valor» y el error en el campo;
-- `FRM-Catalogo-Contactos`: un catálogo «De los contactos», con sus filtros por etiqueta y la vista previa (55). `FRM-Catalogo-Nuevo` suma la tercera tarjeta, «De los contactos de WhatsApp».
-
-**Se ajustan:** `FRM-Catalogos` y `M-FRM-Catalogos`, sin la columna «Lo usan», que llega con los formularios; `FRM-Catalogo-Nuevo` suma el tipo de valor.
+**Aprobados y publicados en el lienzo v141** (2026-10-25, front `93cb7d01`), con sus teléfonos, sin «Textos en» ni «Cambios sin guardar», y con el origen y el tipo de valor como la A11: en su campo, apagados y en gris, sin «No se cambia» (43):
+- `FRM-Catalogos`: el listado, sin la columna «Lo usan», que llega con los formularios;
+- `FRM-Catalogo-Nuevo`: el origen, con la tarjeta «De los contactos de WhatsApp», y el tipo de valor;
+- `FRM-Catalogo` (`CA1-A`): el editor de un catálogo a mano con la barra de Opciones (Agregar opción, Pegar desde Excel, Importar, Exportar y «⋯» con la plantilla, ordenar de la A a la Z y generar los códigos que faltan), la búsqueda, la tabla editable en la compu, la selección de filas para dar de baja o reactivar, y el teléfono al costado. En el celular, el editor por opción;
+- `FRM-Catalogo-Importar` (`CA2`): archivo o filas pegadas, revisar (Errores, Altas, Cambios y Bajas, por fila y columna) y aplicar, con la confirmación de bajas, «Aplicar sin las N filas con errores» y el 409;
+- `FRM-Catalogo-Tipo` (`CA3`): el tipo de valor se elige al crear, con la columna «Valor» y el error en el campo;
+- `FRM-Catalogo-Filtros`: un catálogo de los miembros, con sus filtros y la vista previa;
+- `FRM-Catalogo-Contactos`: un catálogo «De los contactos», con sus filtros por etiqueta y la vista previa (55).
 
 **Estados que se dibujan** (cada uno tiene que poder producirse; si no, es un bug):
 - **Listado:** filtro abierto, sin coincidencias, cargando, vacío y error.
@@ -302,6 +301,12 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 - **Catálogo de los contactos:** sin WhatsApp, «No se puede usar».
 
 **Mandan sobre esta spec en:**
+- **Las fichas del front** (pedido del usuario del 2026-10-25):
+  - un dato por celda, en un renglón;
+  - las fechas, completas, con fecha y hora en la zona de quien mira; nunca «hoy», «ayer» ni «hace…»;
+  - sin rótulos que expliquen: la vista previa es el teléfono al costado;
+  - «Dados de baja» es una opción del filtro «Estado», no una vista aparte;
+  - el catálogo no tiene «Una opción | Varias»: lo decide la pregunta.
 - **Guardado (C3):** todo se guarda junto en un `PUT` del catálogo, con su versión, y viaja solo lo que cambió.
 - **Nuevo catálogo:** primero se elige el origen, y para los escritos a mano, el tipo de valor; el nombre se escribe en el editor y el `POST` sale de «Crear catálogo».
 - **Persona de ejemplo:** sin ella no se crea un catálogo de miembros con condiciones (`Forms.Catalog.SampleMemberRequired`).
@@ -310,7 +315,7 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 
 | Dónde | Qué |
 | --- | --- |
-| `tests/…Domain.UnitTests/Forms/` | origen y tipo fijos; código único sin distinguir mayúsculas; intercambio de posiciones en los extremos; valor obligatorio y del tipo; estado y motivos de «se puede usar» |
+| `tests/…Domain.UnitTests/Forms/` | origen y tipo fijos; código único sin distinguir mayúsculas; intercambio de posiciones en los extremos; valor obligatorio y del tipo; el estado «Activo» o «No se puede usar» y sus motivos |
 | `tests/…Application.UnitTests/Modules/Forms/` | validación de filtros contra la fuente; la lectura de archivos y de lo pegado con «1.500», «1,500», «12.345» y «3/4/2026» en es y en; topes del archivo con celdas vacías con formato; el plan de importación (altas, cambios, bajas, columna ausente y columna vacía); exportar y volver a importar sin diferencias; el corte de nombres largos en la vista previa |
 | `tests/…Api.IntegrationTests/Modules/Forms/` | cada ruta con 401, 403, feature apagada = 404, validación, 409, idempotencia y paginado; guardar sin cambios compara la versión sin tocar ni auditar opciones; guardar una opción entre 10.000 escribe y audita solo esa, y sube la versión del catálogo; un código repetido en un intercambio da el error de validación, nunca un 500 en el commit; subir y bajar con dos personas a la vez; aplicar con otro archivo = 409; dos importaciones de la misma persona a la vez = `Busy`, y una barrera vencida se vuelve a tomar; vista previa sin escribir; ejemplos exportados de cada respuesta |
 | `tests/…Api.IntegrationTests/Modules/WhatsApp/` | un contacto sin nombre toma el de su perfil al escribir; uno con nombre puesto por una persona no se pisa (C14) |

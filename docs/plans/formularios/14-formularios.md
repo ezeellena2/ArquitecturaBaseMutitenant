@@ -503,27 +503,25 @@ El esqueleto del módulo lo deja la E12: `AddFormsModule` en las tres capas, la 
 
 **Navegación (34, 78 y 79):** el menú principal dice «Gestión de formularios», y su panel ya tiene «Catálogos» (E12). Esta etapa suma «Formularios»: una sola lista, con «Nuevo formulario», y cada formulario se abre con su pestaña «Diseño». No existe «Diseñar formularios». Los tableros de la etapa muestran solo lo que existe hasta ella.
 
-**Aprobados y publicados en el lienzo v139** (2026-10-24, front `396c15e1`), sin idioma en el contenido y con los botones de la decisión 43:
-- **`FRM-Editor` y `M-FRM-Editor`:** el editor en una sola pantalla:
-  - el formulario: nombre, «Para quién es» (empleados, clientes o los dos; 50), texto del botón final y prefijo;
+**Aprobados y publicados en el lienzo v141** (2026-10-25, front `93cb7d01`), con sus teléfonos, sin idioma en el contenido y con los botones de la decisión 43. Reemplazan a los de la v139:
+- **`FRM-Formularios`:** la lista «Formularios» (79), una tabla con Formulario, Preguntas, En WhatsApp y Último cambio (fecha y hora completas), el filtro «Estado ▾» y «Nuevo formulario». El nombre abre el formulario con su pestaña «Diseño». Reemplaza a `FRM-Listado`;
+- **`FRM-Editor` (con `CA4`):** el editor en una sola pantalla:
+  - el formulario: nombre, «Para quién es» (empleados, clientes o los dos; 50), texto del botón final y prefijo, cada uno en su campo;
   - las preguntas, que se abren en el lugar, con ⋮ (Editar, Subir, Bajar y Quitar);
   - «elegir varias», con el mínimo y el máximo (en el ejemplo, «Fallas», de 1 a 3);
-  - «Así lo ve quien lo recibe» al costado.
+  - la pregunta «De un catálogo» (`CA4`): el selector, «Permitir elegir varias» con mínimo y máximo, «varias, hasta N» en la lista de preguntas, un catálogo de más de 20 y la presentación de la pregunta (la del catálogo o la suya);
+  - el teléfono al costado.
 
   En el teléfono, la pregunta se edita en una hoja y los botones van fijos abajo.
+- **`FRM-Catalogos-14`:** el listado de catálogos de la E12 con la columna «Lo usan».
+- **`WA-Mensajes-14`:** «Mis mensajes», con la tarjeta de una respuesta propia de un cliente que vinculó su cuenta.
 - **`FRM-Publicar`:** «Publicar la versión N en WhatsApp», con qué cambia y qué queda fijo.
 - **`FRM-Publicando`:** cómo termina, arriba del editor, con los pasos Aceptada, Enviada a WhatsApp, WhatsApp la revisa y Lista para mandar. Al costado, la vista oficial con «Borrador | Versión N en WhatsApp».
-- **`WA-Chats-Formulario` y `M-WA-Chats-Formulario`:** «Enviar formulario» al lado de «Enviar» en Internos (en el teléfono, en el ⋮ del chat). El diálogo «Enviar un formulario a …» tiene tarjetas con «Versión N · K preguntas» (con buscador y paginado si son muchos), el mensaje prellenado de hasta 1024 caracteres y hasta cuándo se puede mandar. Salen «Ya lo revisé» y «Resolver el envío» (80).
+- **`WA-Chats-Formulario` y `M-WA-Chats-Formulario`:** «Enviar formulario» al lado de «Enviar» en Internos (en el teléfono, en el ⋮ del chat). El diálogo «Enviar un formulario a …» tiene una tarjeta por formulario, con la versión y la cantidad de preguntas cada una en su lugar (con buscador y paginado si son muchos), la cantidad de opciones por pregunta de catálogo y los problemas de la oferta, el mensaje prellenado de hasta 1024 caracteres y hasta cuándo se puede mandar, con fecha y hora. Sin «Ya lo revisé» ni «Resolver el envío» (80).
 - **`WA-Chats-Formulario-Cliente` y `M-WA-Chats-Formulario-Cliente`** (nuevos): «Enviar formulario» en un chat de Clientes, con solo los formularios para clientes o para los dos (49 y 50). En el ejemplo, «Entrega de pedido» es para los dos.
-- **`WA-Chats-Respuesta` y `M-WA-Conversacion-Respuesta`:** la tarjeta con las primeras 3 respuestas en grilla, «Ver las N respuestas» (en el teléfono, en una hoja) y «Guardada como VIS-000123».
+- **`WA-Chats-Respuesta` y su teléfono:** la tarjeta con las primeras 3 respuestas en grilla, «Ver las N respuestas» (en el teléfono, en una hoja) y «Guardada como VIS-000123»; el valor de catálogo con su código, y el rechazo de una opción dada de baja con «Mandar de nuevo».
 
-**Por dibujar (78, 79 y 80),** con nuestras piezas y la decisión 43:
-- **«Formularios» (79):** la lista, una tabla con Formulario, Preguntas, En WhatsApp y Último cambio, el filtro «Estado ▾» y «Nuevo formulario». El nombre abre el formulario con su pestaña «Diseño», que es el editor de `FRM-Editor`. Reemplaza a `FRM-Listado` y `M-FRM-Listado`, y la maqueta ya la tiene (`6d859a8`);
-- `CA4` · Elegir de un catálogo: en `FRM-Editor` y su teléfono, la pregunta con «De un catálogo», el selector, «Permitir elegir varias» con mínimo y máximo, «varias, hasta N» en la lista de preguntas, la vista previa con casillas, un catálogo de más de 20 y la presentación propia de la pregunta (la del catálogo o la suya);
-- en `WA-Chats-Formulario`, la cantidad de opciones por pregunta y los problemas de la oferta, sin «Ya lo revisé» ni «Resolver el envío» (80); en `WA-Chats-Respuesta`, el valor con su código y el rechazo con «Mandar de nuevo»;
-- en «Mis mensajes», la tarjeta de una respuesta propia.
-
-**Se ajustan:** `FRM-Editor` y `M-FRM-Editor` pierden «4 reglas · Revisión 3», y `FRM-Publicar`, «Más de 10 archivos»: los suman sus etapas. `FRM-Catalogos` y `M-FRM-Catalogos` suman la columna «Lo usan», y `Rol`, los cinco permisos de formularios.
+**Sin rastro de etapas posteriores:** los tableros de la v141 no tienen «4 reglas · Revisión 3» ni «Más de 10 archivos». `Rol` suma los cinco permisos de formularios.
 
 **Estados que se dibujan** (cada uno tiene que poder producirse; si no, es un bug):
 - **Editor:** con cambios, guardando (el botón grisado con su mismo texto), guardado, no se guardó (lo escrito se conserva), otra persona guardó (con «Qué cambió | Guardado actualmente | Mis cambios»), prefijo ocupado, para quién es, quitar una pregunta, cambiar el tipo, descartar, solo lectura, cargando y no existe.
@@ -541,6 +539,7 @@ El esqueleto del módulo lo deja la E12: `AddFormsModule` en las tres capas, la 
   - venció sin respuesta.
 
 **Mandan sobre esta spec en:**
+- **Las fichas del front** (pedido del usuario del 2026-10-25): un dato por celda, en un renglón; las fechas completas, con fecha y hora en la zona de quien mira, nunca «hoy», «ayer» ni «hace…»; sin rótulos que expliquen, así que la vista previa es el teléfono al costado; y «Dados de baja», cuando llegue, es una opción del filtro «Estado».
 - **Textos:** la lista se llama «Formularios», la pestaña del editor «Diseño», y la acción del chat es «Enviar formulario» (79).
 - **Botones (43):** «Guardar cambios» se habilita cuando hay cambios, sin «Cambios sin guardar». Mientras trabaja, queda grisado con su mismo texto. Si falta un dato obligatorio, el botón sigue habilitado y al tocarlo se marca el campo.
 - **Si no se sabe si algo salió (43):** ante un corte de red al guardar o al mandar, la pantalla vuelve a leer sola y muestra lo que quedó, sin pisar lo escrito:
