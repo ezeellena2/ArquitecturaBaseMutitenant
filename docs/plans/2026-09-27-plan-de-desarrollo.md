@@ -96,6 +96,7 @@ Una organización arma formularios, los manda por WhatsApp a sus empleados y a s
   - la campana, en el núcleo, con las dos rutas de avisos;
   - «Más filtros» en `FilterBar`, con el buscador y hasta tres filtros en una fila;
   - un dato por celda, en un renglón: `DataTable` deja de dibujar `detail` en la computadora, y cada pantalla pasa a columnas lo que hace falta (decisión del usuario del 25/10);
+  - las fechas siempre con fecha y hora completas en la zona de la cuenta: salen `relative`, `formatCalendar` y las fechas cortas, también en Usuarios y en la tarjeta de Auditoría de Inicio (decisión del usuario del 25/10);
   - los carteles de las pantallas cerradas pasan a la banda o a la campana: Usuario, Cuenta y Organización de Plataforma, Legales, Recuperaciones, Inicio personal y Mi cuenta;
   - la pestaña «Miembros» de una empresa no se dibuja sin el permiso (es un error del sistema real);
   - los filtros de Chats en una fila;
