@@ -26,7 +26,7 @@
   - **al publicar:** un catálogo a mano con más de 200 opciones activas en «elegir una», o más de 20 en «elegir varias», no se publica, porque nunca se podría mandar;
   - **al mandar:** las opciones se arman para cada destinatario y viajan dentro del mensaje. No se puede mandar con más de 200 opciones en «elegir una», con más de 20 en «elegir varias», ni sin ninguna si la pregunta es obligatoria;
   - **al responder:** la opción tiene que estar en la oferta, y se sellan el texto, el detalle, el código, el valor y los campos que vio la persona. Si era una opción a mano dada de baja, no se guarda nada, el operador ve el motivo y puede mandar de nuevo;
-  - **en los catálogos:** «Lo usan» en el listado y en el catálogo. Dado de baja, un catálogo no se elige en preguntas nuevas, y los formularios publicados que lo usan no se pueden mandar: la confirmación de la baja lo advierte. Un campo que usa la presentación propia de una pregunta no se quita, y el error dice qué formulario y qué pregunta.
+  - **en los catálogos:** «Lo usan» en el listado y en el catálogo, sin la cantidad en el encabezado de la sección. Dado de baja, un catálogo no se elige en preguntas nuevas, y los formularios publicados que lo usan no se pueden mandar: la confirmación de la baja lo advierte. Un campo que usa la presentación propia de una pregunta no se quita, y el error dice qué formulario y qué pregunta.
 - **El módulo** (nace en la E12):
   - los permisos de formularios;
   - los cuatro puertos neutrales de los formularios, con sus implementaciones apagadas;
