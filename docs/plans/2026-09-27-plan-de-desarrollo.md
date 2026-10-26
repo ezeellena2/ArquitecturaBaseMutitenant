@@ -91,10 +91,15 @@ La plataforma y cada organización atienden con el mismo módulo: alta de númer
 Una organización arma formularios, los manda por WhatsApp a sus empleados y a sus clientes (decisión 49) y ve las respuestas numeradas en una planilla.
 - **Etapas y fuente:** son catorce, de la 12 a la 25, en el orden de la decisión 78: **el número es el orden**, con los catálogos primero. Cada una tiene su sección y las decisiones de producto tomadas en la [hoja de ruta](2026-10-12-formularios-dinamicos-hoja-de-ruta.md). El alcance de cada una sale de la [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md), que usa los números de antes, y de las decisiones 47 a 82. La equivalencia está en [`formularios/`](formularios/README.md).
 - **La regla del orden:** cada etapa usa solo lo de las anteriores, lo que suma se ve en las pantallas que ya existen, y nada nombra, prueba ni dibuja algo de una etapa posterior. La controla `/plan-etapa`.
-- **La base, al principio de la 12:**
+- **La base, al principio de la 12.** Se copia de la maqueta (`MaquetaMultitenant`, commits del 25/10):
   - los botones y avisos de la decisión 43, que eran la F5 de la 10;
-  - la campana, en el núcleo;
-  - el tamaño general, con un zoom del 85 % en la maqueta, que el usuario todavía no confirmó.
+  - la campana, en el núcleo, con las dos rutas de avisos;
+  - «Más filtros» en `FilterBar`, con el buscador y hasta tres filtros en una fila;
+  - un dato por celda, en un renglón: `DataTable` deja de dibujar `detail` en la computadora, y cada pantalla pasa a columnas lo que hace falta (decisión del usuario del 25/10);
+  - los carteles de las pantallas cerradas pasan a la banda o a la campana: Usuario, Cuenta y Organización de Plataforma, Legales, Recuperaciones, Inicio personal y Mi cuenta;
+  - la pestaña «Miembros» de una empresa no se dibuja sin el permiso (es un error del sistema real);
+  - los filtros de Chats en una fila;
+  - el tamaño general: la letra de la raíz al 85 %, con los tamaños de las clases en rem en lugar de px (sin `zoom`, que corre los menús). El usuario todavía no lo confirmó.
 - **Para la prueba con Meta de la 14:** una organización con su número conectado, que prueba la I1 de la 10.
 - **Requisitos:** la E11 es requisito duro, porque sin número de la organización no hay formularios. Van después de la E10 para nacer con las guardas de la E9 y la nube de la E10.
 - **Módulo:** `Forms` es un módulo quitable aparte de `WhatsApp`, unidos por puertos neutrales del núcleo.
