@@ -196,10 +196,10 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
   - nada nombra opciones que la persona no puede leer, tampoco la vista previa;
   - cada exclusión o lock lleva un test con dos actores a la vez.
 
-### E17 · Ciclo de vida y copiar (AB, dar de baja y eliminar)
+### E17 · Ciclo de vida y copiar (AB, dar de baja y borrar)
 
 - **Copiar un formulario** (74), con su borrador y un prefijo nuevo; las etapas siguientes suman lo suyo a la copia.
-- **Dar de baja** conserva la versión activa y los envíos abiertos; **reactivar** es publicar una versión nueva; **eliminar** es lógico, sin respuestas ni envíos abiertos, y deja el prefijo reservado.
+- **Dar de baja** conserva la versión activa y los envíos abiertos; **reactivar** es publicar una versión nueva; **borrar** es lógico, sin respuestas ni envíos abiertos, y deja el prefijo reservado.
 - **Deprecar los Flows** por WABA de la organización, como operación durable, al vencer el último envío.
 - **Resumen:** [formularios/17-ciclo-de-vida.md](formularios/17-ciclo-de-vida.md).
 - **Criterios:**
@@ -416,7 +416,7 @@ Elegidas por el usuario el 2026-10-24, con la [evaluación del traspaso 2](2026-
     11. E25, Documentos por WhatsApp.
 
     Reemplaza la 8. El alcance está en la §3 de la evaluación. Dos cambios de fondo:
-    - el ciclo de vida (dar de baja, reactivar, eliminar y deprecar los Flows por WABA) entra al bloque;
+    - el ciclo de vida (dar de baja, reactivar, borrar y deprecar los Flows por WABA) entra al bloque;
     - la navegación queda como en ArquitecturaBase. El menú principal dice «Gestión de formularios», y su panel tiene Formularios, Diseñar formularios, Catálogos y Formularios que faltan (la 79 saca «Diseñar formularios»);
     - «Formularios» (MF1, E15) es la lista de formularios, y desde ahí se entra a cada uno, con sus respuestas y sus acciones;
     - una respuesta se ve rápido en el panel de la derecha y completa en su propia pantalla, también con sus acciones.

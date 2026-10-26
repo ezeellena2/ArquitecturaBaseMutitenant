@@ -33,7 +33,7 @@
   - el retiro probado una vez, con los catálogos de la E12 y la E13.
 
 **No entra:**
-- dar de baja, reactivar, eliminar y deprecar los Flows (E17);
+- dar de baja, reactivar, borrar y deprecar los Flows (E17);
 - los datos de las personas y los filtros por destinatario (E16);
 - fotos y documentos (E18);
 - las respuestas: pestañas «Respuestas» y «Tablero», planilla, detalle y Excel (E15);
