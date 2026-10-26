@@ -280,7 +280,7 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 **Aprobados y publicados en el lienzo v141** (2026-10-25, front `93cb7d01`), con sus teléfonos, sin «Textos en» ni «Cambios sin guardar», y con el origen y el tipo de valor como la A11: en su campo, apagados y en gris, sin «No se cambia» (43):
 - `FRM-Catalogos`: el listado, sin la columna «Lo usan», que llega con los formularios;
 - `FRM-Catalogo-Nuevo`: el origen, con la tarjeta «De los contactos de WhatsApp», y el tipo de valor;
-- `FRM-Catalogo` (`CA1-A`): el editor de un catálogo a mano con la barra de Opciones (Agregar opción, Pegar desde Excel, Importar, Exportar y «⋯» con la plantilla, ordenar de la A a la Z y generar los códigos que faltan), la búsqueda, la tabla editable en la compu, la selección de filas para dar de baja o reactivar, y el teléfono al costado. En el celular, el editor por opción;
+- `FRM-Catalogo` (`CA1-A`): el editor de un catálogo a mano con la barra de Opciones (Agregar opción, Pegar desde Excel, Importar, Exportar y «⋯» con la plantilla, ordenar de la A a la Z y generar los códigos que faltan), la búsqueda, la tabla editable en la compu, la selección de filas para dar de baja o reactivar, solo el ⋮ en cada fila (con «Editar» adentro, sin un ✎ aparte; lienzo v143), y el teléfono al costado. En el celular, el editor por opción;
 - `FRM-Catalogo-Importar` (`CA2`): archivo o filas pegadas, revisar (Errores, Altas, Cambios y Bajas, por fila y columna) y aplicar, con la confirmación de bajas, «Aplicar sin las N filas con errores» y el 409;
 - `FRM-Catalogo-Tipo` (`CA3`): el tipo de valor se elige al crear, con la columna «Valor» y el error en el campo;
 - `FRM-Catalogo-Filtros`: un catálogo de los miembros, con sus filtros y la vista previa;
@@ -308,7 +308,7 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
   - sin rótulos que expliquen: la vista previa es el teléfono al costado;
   - «Dados de baja» es una opción del filtro «Estado», no una vista aparte;
   - el catálogo no tiene «Una opción | Varias»: lo decide la pregunta.
-- **La tabla de opciones no se aplasta:** cada columna tiene su ancho mínimo (Texto y Detalle 12rem, Código 6rem, el valor y cada campo 8rem). Si no entra, la tabla se desplaza a lo ancho dentro de su caja, con la casilla, el número y «Texto» fijos a la izquierda y las acciones fijas a la derecha. Se copia de la maqueta: `OptionsSection.tsx` y `fixedColumns.ts` (a1303a5 y af5eceb).
+- **La tabla de opciones no se aplasta:** cada columna tiene su ancho mínimo (Texto y Detalle 12rem, Código 6rem, el valor y cada campo 8rem). Si no entra, la tabla se desplaza a lo ancho dentro de su caja, con la casilla, el número y «Texto» fijos a la izquierda y el ⋮ de la fila fijo a la derecha. Se copia de la maqueta: `OptionsSection.tsx` y `fixedColumns.ts` (a1303a5 y af5eceb).
 - **Guardado (C3):** todo se guarda junto en un `PUT` del catálogo, con su versión, y viaja solo lo que cambió.
 - **Nuevo catálogo:** primero se elige el origen, y para los escritos a mano, el tipo de valor; el nombre se escribe en el editor y el `POST` sale de «Crear catálogo».
 - **Persona de ejemplo:** sin ella no se crea un catálogo de miembros con condiciones (`Forms.Catalog.SampleRequired`, «Elegí una persona.»).
