@@ -17,7 +17,7 @@ Te paso los tableros de la E13, campos de los catálogos, para el lienzo del mul
    - dos renglones, «Título» y «Descripción»;
    - el título, con un solo desplegable que arranca en «Texto»;
    - la descripción, con un desplegable por lugar, un ✕ para quitarlo y un «+» que suma otro; los lugares se unen con « · »;
-   - cada desplegable lista Texto, Código, el valor si el catálogo lo tiene, y los campos. Un campo que no puede ir a WhatsApp aparece apagado, con el motivo en su tooltip;
+   - cada desplegable lista Texto, Código, el valor si el catálogo lo tiene, Detalle y los campos: lo que todavía no está en ese mismo renglón, más lo que ya tiene elegido. Ninguno aparece apagado;
    - sin «Por ejemplo», sin «No salen del sistema» y sin los largos: el teléfono al costado muestra cómo queda.
 
 **Datos de ejemplo:** Grupo Delta. «Proveedores», a mano, con los campos CUIT, Zona (de un catálogo: «Zonas») y Plazo de pago, y el CUIT en la descripción.

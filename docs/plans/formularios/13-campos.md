@@ -25,8 +25,8 @@
   - **La tabla, pegar, importar y exportar:** una columna por campo después del código. Los encabezados se reconocen por el nombre o por la clave. La plantilla y la exportación suman las columnas, y en una fuente se acepta la identidad, el código o el texto único de la opción.
   - **Qué se ve en WhatsApp (la presentación del catálogo):**
     - el catálogo elige qué arma el título (hasta 30, con contenido) y la descripción (hasta 300) de cada opción. El título sale de un solo lugar, que arranca en «Texto»; la descripción, de uno o más lugares, unidos con « · »;
-    - cada lugar es el texto, el código, el valor (si el catálogo es tipado) o un campo. Un campo que no puede ir a WhatsApp no se elige;
-    - se guarda en el catálogo, con su versión: `presentation: {title: <lugar>, description: [<lugar>…]}`, donde un lugar es `text`, `code`, `value` o `field:<id>`;
+    - cada lugar es el texto, el código, el valor (si el catálogo es tipado), el detalle o un campo. Todos pueden ir a WhatsApp;
+    - se guarda en el catálogo, con su versión: `presentation: {title: <lugar>, description: [<lugar>…]}`, donde un lugar es `text`, `code`, `value`, `detail` o `field:<id>`;
     - el editor guarda y avisa, opción por opción, lo que no entra;
     - el texto de la opción sigue siendo su etiqueta.
   - **Volumen:** 10.000 opciones por 20 campos, medido con EXPLAIN al guardar, importar y exportar. Guardar manda y escribe solo lo que cambió (C3 de la E12).
@@ -37,7 +37,7 @@
     - dos renglones, «Título» y «Descripción»;
     - el título lleva un solo desplegable, que arranca en «Texto»;
     - la descripción lleva un desplegable por lugar, con un ✕ para quitarlo y un «+» que suma otro;
-    - cada desplegable lista Texto, Código, el valor si el catálogo lo tiene, y los campos. Un campo que no puede ir a WhatsApp (en la maqueta, «Detalle») aparece apagado, con el motivo en su tooltip;
+    - cada desplegable lista Texto, Código, el valor si el catálogo lo tiene, Detalle y los campos: lo que todavía no está en ese mismo renglón, más lo que ya tiene elegido. Ninguno aparece apagado;
     - sin «Por ejemplo», sin la nota «No salen del sistema» y sin los largos en pantalla: el teléfono al costado muestra cómo queda.
 - **Tableros que dibuja Diseño** (evaluación, §5.2), corregidos con la decisión 43 y con el «Ajuste del review de E2» de allá, mostrando solo el catálogo:
   - `CE1` · Definir los campos de un catálogo, en la forma B que aprobó el usuario el 2026-10-25 en la maqueta;
