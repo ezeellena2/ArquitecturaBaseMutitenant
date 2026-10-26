@@ -15,7 +15,7 @@
   - **Reactivar** es la publicación de siempre con el borrador actual: versión nueva y Flows nuevos. Sigue dado de baja hasta que se confirma la versión nueva, y la numeración continúa.
   - **Copiar un formulario** (74): crea uno nuevo en borrador con el borrador del original, con un prefijo nuevo propuesto con la regla de la E14. Pide `forms.manage`. No copia versiones, respuestas ni publicaciones. Las preguntas de catálogo apuntan a los mismos catálogos, sin duplicarlos, con su presentación propia y sus filtros por destinatario. Las etapas siguientes suman lo suyo a la copia.
   - **Borrar:**
-    - en el ⋮ dice «Borrar»; el diálogo, «¿Borrar «…»?», y el aviso, «Borramos «…».». Es la regla de textos del front: «Borrar» y nunca «Eliminar»;
+    - en el ⋮ dice «Borrar»; el diálogo, «¿Borrar «…»?», y el aviso, «Borramos «…».», como manda [textos](../../rules/textos-y-traducciones.md): «Borrar» y nunca «Eliminar»;
     - es lógico, y solo se puede sin respuestas, sin envíos abiertos ni respuestas en proceso, y sin publicación en curso. Se comprueba bajo el mismo bloqueo que las otras escrituras;
     - no borra versiones ni evidencias del canal;
     - el prefijo queda reservado dentro de la organización.
