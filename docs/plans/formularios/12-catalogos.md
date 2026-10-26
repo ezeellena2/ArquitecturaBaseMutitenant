@@ -308,6 +308,7 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
   - sin rótulos que expliquen: la vista previa es el teléfono al costado;
   - «Dados de baja» es una opción del filtro «Estado», no una vista aparte;
   - el catálogo no tiene «Una opción | Varias»: lo decide la pregunta.
+- **La tabla de opciones no se aplasta:** cada columna tiene su ancho mínimo (Texto y Detalle 12rem, Código 6rem, el valor y cada campo 8rem). Si no entra, la tabla se desplaza a lo ancho dentro de su caja, con la casilla, el número y «Texto» fijos a la izquierda y las acciones fijas a la derecha. Se copia de la maqueta: `OptionsSection.tsx` y `fixedColumns.ts` (a1303a5 y af5eceb).
 - **Guardado (C3):** todo se guarda junto en un `PUT` del catálogo, con su versión, y viaja solo lo que cambió.
 - **Nuevo catálogo:** primero se elige el origen, y para los escritos a mano, el tipo de valor; el nombre se escribe en el editor y el `POST` sale de «Crear catálogo».
 - **Persona de ejemplo:** sin ella no se crea un catálogo de miembros con condiciones (`Forms.Catalog.SampleRequired`, «Elegí una persona.»).

@@ -29,7 +29,7 @@
     - el texto de la opción sigue siendo su etiqueta.
   - **Volumen:** 10.000 opciones por 20 campos, medido con EXPLAIN al guardar, importar y exportar. Guardar manda y escribe solo lo que cambió (C3 de la E12).
 - **Front:**
-  - la sección «Campos» del editor de un catálogo a mano, en la forma B: una tabla que se edita ahí mismo, sin diálogo, con las columnas Campo, Tipo, Obligatorio, Único, Límite y ⋮ (Subir, Bajar y Quitar). Quitar queda apagado si el campo está en uso, con el motivo en su tooltip. Los errores van debajo de su celda, al guardar;
+  - la sección «Campos» del editor de un catálogo a mano, en la forma B: una tabla que se edita ahí mismo, sin diálogo, con las columnas Campo, Tipo, Obligatorio, Único, Límite y ⋮ (Subir, Bajar y Quitar). Quitar queda apagado si el campo está en uso, con el motivo en su tooltip. Los errores van debajo de su celda, al guardar. «Campo» va fijo a la izquierda y el ⋮ fijo a la derecha, como en la tabla de opciones de la E12; se copia de la maqueta: `FieldsSection.tsx` y `fixedColumns.ts` (a1303a5 y af5eceb);
   - una columna por campo en la tabla, con el control de su tipo;
   - la sección «En WhatsApp» del catálogo, y el teléfono al costado, con el título y la descripción armados.
 - **Tableros que dibuja Diseño** (evaluación, §5.2), corregidos con la decisión 43 y con el «Ajuste del review de E2» de allá, mostrando solo el catálogo:
