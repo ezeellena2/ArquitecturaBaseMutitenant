@@ -101,7 +101,9 @@ Una organización arma formularios, los manda por WhatsApp a sus empleados y a s
   - la pestaña «Miembros» de una empresa no se dibuja sin el permiso (es un error del sistema real);
   - los filtros de Chats en una fila;
   - el tamaño general: la letra de la raíz al 85 %, con los tamaños de las clases en rem en lugar de px (sin `zoom`, que corre los menús); lo confirmó el usuario el 25/10;
-  - la versión nueva se avisa en la campana, sin franja, y la columna ordenada muestra ▲ o ▼ (decisiones del usuario del 25/10).
+  - la versión nueva se avisa en la campana, sin franja, y la columna ordenada muestra ▲ o ▼ (decisiones del usuario del 25/10);
+  - «Dar de baja» y «Reactivar» en todo el sistema, con el estado «De baja»: Usuarios dejan «Deshabilitar» y Roles, «Inactivar», en el front, en los textos del back y en sus tests (decisión del usuario del 25/10);
+  - un link del otro acceso abre «Otro acceso», que ofrece entrar con ese acceso y después abre el link; antes lo dibuja Diseño (decisión del usuario del 25/10).
 - **Para la prueba con Meta de la 14:** una organización con su número conectado, que prueba la I1 de la 10.
 - **Requisitos:** la E11 es requisito duro, porque sin número de la organización no hay formularios. Van después de la E10 para nacer con las guardas de la E9 y la nube de la E10.
 - **Módulo:** `Forms` es un módulo quitable aparte de `WhatsApp`, unidos por puertos neutrales del núcleo.
