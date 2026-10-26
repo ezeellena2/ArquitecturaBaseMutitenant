@@ -103,7 +103,7 @@ Una organización arma formularios, los manda por WhatsApp a sus empleados y a s
   - el tamaño general: la letra de la raíz al 85 %, con los tamaños de las clases en rem en lugar de px (sin `zoom`, que corre los menús); lo confirmó el usuario el 25/10;
   - la versión nueva se avisa en la campana, sin franja, y la columna ordenada muestra ▲ o ▼ (decisiones del usuario del 25/10);
   - «Dar de baja» y «Reactivar» en todo el sistema, con el estado «De baja»: Usuarios dejan «Deshabilitar», Roles y Empresas, «Inactivar», y los miembros de una empresa, «Quitar» y «Volver a sumar», en el front, en los textos del back y en sus tests (decisión del usuario del 25/10);
-  - borrar la cuenta propia dice «Borrar mi cuenta» y su estado, «Por borrar», en lugar de «Baja pedida» (decisión del usuario del 26/10);
+  - borrar la cuenta propia dice «Borrar mi cuenta» y su estado, «Por borrar», en lugar de «Baja pedida» (decisión del usuario del 26/10). Cambian también los textos de los correos y de las plantillas de WhatsApp de la cuenta: se actualiza `docs/operations/whatsapp-plantillas.md` y las plantillas se vuelven a aprobar en Meta, con el mismo nombre (eso lo hace el usuario);
   - un link del otro acceso abre «Otro acceso» (tableros `Otro-Acceso` y `Otro-Acceso-Persona` del lienzo v144), que ofrece entrar con ese acceso y después abre el link (decisión del usuario del 25/10).
 - **Para la prueba con Meta de la 14:** una organización con su número conectado, que prueba la I1 de la 10.
 - **Requisitos:** la E11 es requisito duro, porque sin número de la organización no hay formularios. Van después de la E10 para nacer con las guardas de la E9 y la nube de la E10.
