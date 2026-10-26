@@ -24,18 +24,25 @@
     - un catálogo usado como fuente por campos activos no se da de baja.
   - **La tabla, pegar, importar y exportar:** una columna por campo después del código. Los encabezados se reconocen por el nombre o por la clave. La plantilla y la exportación suman las columnas, y en una fuente se acepta la identidad, el código o el texto único de la opción.
   - **Qué se ve en WhatsApp (la presentación del catálogo):**
-    - el catálogo elige qué campos arman el título (hasta 30, con contenido) y la descripción (hasta 300) de cada opción, unidos con « · »;
+    - el catálogo elige qué arma el título (hasta 30, con contenido) y la descripción (hasta 300) de cada opción. El título sale de un solo lugar, que arranca en «Texto»; la descripción, de uno o más lugares, unidos con « · »;
+    - cada lugar es el texto, el código, el valor (si el catálogo es tipado) o un campo. Un campo que no puede ir a WhatsApp no se elige;
+    - se guarda en el catálogo, con su versión: `presentation: {title: <lugar>, description: [<lugar>…]}`, donde un lugar es `text`, `code`, `value` o `field:<id>`;
     - el editor guarda y avisa, opción por opción, lo que no entra;
     - el texto de la opción sigue siendo su etiqueta.
   - **Volumen:** 10.000 opciones por 20 campos, medido con EXPLAIN al guardar, importar y exportar. Guardar manda y escribe solo lo que cambió (C3 de la E12).
 - **Front:**
   - la sección «Campos» del editor de un catálogo a mano, en la forma B: una tabla que se edita ahí mismo, sin diálogo, con las columnas Campo, Tipo, Obligatorio, Único, Límite y ⋮ (Subir, Bajar y Quitar). Quitar queda apagado si el campo está en uso, con el motivo en su tooltip. El encabezado de la sección no lleva cantidades (ni «N de 20» ni «N campos»), y «Agregar campo» queda apagado al llegar al tope de 20, con el motivo en su tooltip. Los errores van debajo de su celda, al guardar. «Campo» va fijo a la izquierda y el ⋮ fijo a la derecha, como en la tabla de opciones de la E12; se copia de la maqueta: `FieldsSection.tsx` y `fixedColumns.ts` (a1303a5 y af5eceb);
   - una columna por campo en la tabla, con el control de su tipo;
-  - la sección «En WhatsApp» del catálogo, y el teléfono al costado, con el título y la descripción armados.
+  - **la sección «En WhatsApp» del catálogo, en la forma C** (la eligió el usuario el 2026-10-26):
+    - dos renglones, «Título» y «Descripción»;
+    - el título lleva un solo desplegable, que arranca en «Texto»;
+    - la descripción lleva un desplegable por lugar, con un ✕ para quitarlo y un «+» que suma otro;
+    - cada desplegable lista Texto, Código, el valor si el catálogo lo tiene, y los campos. Un campo que no puede ir a WhatsApp (en la maqueta, «Detalle») aparece apagado, con el motivo en su tooltip;
+    - sin «Por ejemplo», sin la nota «No salen del sistema» y sin los largos en pantalla: el teléfono al costado muestra cómo queda.
 - **Tableros que dibuja Diseño** (evaluación, §5.2), corregidos con la decisión 43 y con el «Ajuste del review de E2» de allá, mostrando solo el catálogo:
   - `CE1` · Definir los campos de un catálogo, en la forma B que aprobó el usuario el 2026-10-25 en la maqueta;
   - `CE2` · Cargar los valores;
-  - `CE3-B` · Qué se ve en WhatsApp, en el catálogo.
+  - `CE3-B` · Qué se ve en WhatsApp, en el catálogo: `FRM-Catalogo-13`, en la forma C, en el lienzo v145.
 - **Mandan sobre este resumen en:**
   - **una columna de un campo nuevo** queda grisada hasta guardar el catálogo, con el motivo en su tooltip (43);
   - **un campo que usa la presentación** del catálogo se puede quitar: sale del título y de la descripción.

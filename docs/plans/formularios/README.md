@@ -20,7 +20,7 @@ Las etapas van en el orden de la decisión 78, y **el número es el orden**. Ant
 | Etapa | Spec | Tableros |
 | --- | --- | --- |
 | E12 · Catálogos | [12-catalogos.md](12-catalogos.md) | Aprobados en el lienzo v141 (front `93cb7d01`): `FRM-Catalogos`, `FRM-Catalogo-Nuevo`, `FRM-Catalogo` (`CA1-A`), `FRM-Catalogo-Importar` (`CA2`), `FRM-Catalogo-Tipo` (`CA3`), `FRM-Catalogo-Filtros` y `FRM-Catalogo-Contactos`, con sus teléfonos |
-| E13 · Campos de los catálogos | [13-campos.md](13-campos.md) | Por dibujar: `CE1`, `CE2` y `CE3-B`, solo del catálogo |
+| E13 · Campos de los catálogos | [13-campos.md](13-campos.md) | Por dibujar: `CE1` y `CE2`, solo del catálogo. `CE3-B` es `FRM-Catalogo-13`, con «En WhatsApp» en la forma C, en el lienzo v145 |
 | E14 · Formularios: crear, publicar, mandar y recibir | [14-formularios.md](14-formularios.md) | Aprobados en el lienzo v141 (front `93cb7d01`): `FRM-Formularios`, `FRM-Editor` (`CA4`), `FRM-Publicar`, `FRM-Publicando`, `WA-Chats-Formulario`, `WA-Chats-Respuesta`, `WA-Chats-Formulario-Cliente`, `WA-Mensajes-14` y `FRM-Catalogos-14`, con sus teléfonos |
 | E15 · Respuestas: planilla, detalle, Excel y tablero | [15-respuestas.md](15-respuestas.md) | Aprobados en el lienzo v131. Por dibujar `MF1`, `DC0`, `CA5`, `CA6`, `CE5`, `CE6` y `DOC7-A` (el tablero, 57), y se ajusta `FRM-Respuesta` |
 | E16 · Datos de las personas y filtros por destinatario | [16-datos-de-las-personas.md](16-datos-de-las-personas.md) | Por dibujar: `CE4-A`, el diálogo para definir un dato y el papel de un campo |
