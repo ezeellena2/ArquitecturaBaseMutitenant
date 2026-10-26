@@ -8,10 +8,10 @@
 
 - **Back:**
   - **Los datos de las personas,** como «Zona»:
-    - los define cada organización: clave reservada, nombre (un solo texto, 35), tipo (texto o elegir de un catálogo a mano), fuente, posición, estado y versión. Hasta 20, contando los inactivos (42);
+    - los define cada organización: clave reservada, nombre (un solo texto, 35), tipo (texto o elegir de un catálogo a mano), fuente, posición, estado y versión. Un dato se da de baja y se reactiva, sin borrarse («Dar de baja» y «Reactivar»). Hasta 20, contando los dados de baja (42);
     - son de la organización y del miembro: `ITenantOwned`, con clave por membresía y no por cuenta (42). Una persona puede ser «Centro» en una organización y no tener el dato en otra;
     - **los valores:** una fila por miembro, con su propia versión y un `PUT` delta. Un texto tiene hasta 300 caracteres; uno de catálogo exige una opción activa de la fuente, y el guardado que apunta a una opción dada de baja se conserva;
-    - un dato que usa un filtro del borrador o de la versión activa de un formulario no cambia de tipo ni de fuente, ni se desactiva. Si hay personas con el dato cargado, cambiar el tipo o la fuente pide confirmarlo y borra esos valores;
+    - un dato que usa un filtro del borrador o de la versión activa de un formulario no cambia de tipo ni de fuente, ni se da de baja. Si hay personas con el dato cargado, cambiar el tipo o la fuente pide confirmarlo y borra esos valores;
     - los bloqueos van en orden: definiciones, datos, fuentes; y para los valores, datos, persona, fuentes.
   - **El papel de un campo:** los campos de los catálogos (E13) suman su papel, «Dato» (el de siempre) o «Filtro». Los dos se sellan al responder; en la planilla, las subcolumnas de un campo «Filtro» salen apagadas y se prenden en «Columnas».
   - **Los filtros por destinatario,** en una pregunta de catálogo a mano:

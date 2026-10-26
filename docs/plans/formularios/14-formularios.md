@@ -393,7 +393,7 @@ Cambia los flujos 2, 3, 6 y 7 para las preguntas con `catalogId`.
 1. **Guardar y comprobar:**
    - `PUT …/draft` valida que el catálogo exista y se pueda usar;
    - cambiar el catálogo de una pregunta ya publicada emite un `FieldId` nuevo (T17);
-   - la presentación propia de la pregunta se guarda en el borrador; si usa un campo inactivo o inexistente, es `QuestionInvalid` en su pregunta;
+   - la presentación propia de la pregunta se guarda en el borrador; si usa un campo quitado o inexistente, es `QuestionInvalid` en su pregunta;
    - `IStructuredFormChannel.Check(StructuredFormVersion)` valida el perfil con datos (T21); un catálogo a mano que nunca se podría mandar no se publica (T23), ni una presentación que no entra (T22).
 2. **Mandar:**
    - `FindSendableAsync` de Forms resuelve, para quien recibe, la oferta de cada pregunta de catálogo, con la presentación de la pregunta o la del catálogo. Lee los catálogos a mano activos o la fuente con los filtros (los lectores de la E12), con una fila más que el tope; es solo lectura.

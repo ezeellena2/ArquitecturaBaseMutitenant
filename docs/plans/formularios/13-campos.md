@@ -8,13 +8,13 @@
 
 - **Back:**
   - **Campos por opción,** solo en los catálogos a mano:
-    - hasta 20 por catálogo, contando los inactivos (42), en `FieldsJson` del catálogo, con su versión y el 409;
+    - hasta 20 por catálogo, contando los quitados (42), en `FieldsJson` del catálogo, con su versión y el 409;
     - cada campo tiene identidad estable, nombre (un solo texto, 35), tipo, reglas, posición y estado. Su clave se arma sola con el nombre, en minúsculas, queda fija después de guardar y no se muestra;
     - **tipos:** Texto, Número entero, Número con decimales, Fecha, Sí/No y «De un catálogo: …», que toma los valores de otro catálogo a mano activo de la misma organización;
     - **reglas:** obligatorio, único y un límite: el largo en un texto, y el mínimo y el máximo en un número o una fecha. Obligatorio y único se comprueban sobre las opciones activas.
   - **El ciclo de un campo:**
     - nace opcional, y se cargan valores después de guardarlo;
-    - quitar es inactivar, conservando el nombre. Con valores, pide confirmación. Un campo en uso no se quita;
+    - quitar un campo lo saca de la tabla y conserva sus valores en las respuestas que ya lo tienen. No se reactiva desde la pantalla. Con valores, pide confirmación. Un campo en uso no se quita;
     - cambiar el tipo o las reglas valida todas las opciones bajo el bloqueo del catálogo, y un error revierte todo;
     - al convertir a número o a fecha se lee con la cultura del pedido, y lo ambiguo («1.500», «12.345») no convierte.
   - **Valores:**
@@ -45,7 +45,7 @@
 Cada una lleva su test, escrito durante la etapa:
 1. **Dar de baja una opción de la fuente no bloquea los catálogos que la usan.** Test: un catálogo con un campo que apunta a una opción dada de baja se guarda, se importa y se exporta sin error, y conserva ese valor.
 2. **Un 409 de una regla no es un conflicto de versión.** Solo `General.ConcurrencyConflict` pone el editor en conflicto; dar de baja un catálogo que es fuente de campos activos es un error que se corrige. Test en el back (el código de cada 409) y en el front (el editor queda editable).
-3. **Un texto vacío no rompe la lectura.** Allá era una traducción `""`; acá se prueba con un nombre o un valor de texto `""`, con `null` y con una referencia a una opción inactiva, guardando y releyendo.
+3. **Un texto vacío no rompe la lectura.** Allá era una traducción `""`; acá se prueba con un nombre o un valor de texto `""`, con `null` y con una referencia a una opción dada de baja, guardando y releyendo.
 4. **El front no tapa al servidor al cambiar el tipo.** Test: cambiar el tipo de un campo con valores que no convierten muestra los errores del servidor por fila, y el front no bloquea antes de mandar.
 
 ## Decisiones tomadas (no se vuelven a preguntar)

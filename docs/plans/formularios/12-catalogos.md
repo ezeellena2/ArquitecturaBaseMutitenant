@@ -13,7 +13,7 @@
 
 **Entra:**
 - **El módulo `Forms`:** quitable, con su feature `forms`, sus permisos de catálogos y la entrada «Gestión de formularios» del menú, que en esta etapa tiene solo «Catálogos» (34 y 78).
-- **Catálogos de la organización:** listado, alta con el origen fijo (a mano, de los miembros o de los contactos), datos y estado «Activo», «Dado de baja» o «No se puede usar».
+- **Catálogos de la organización:** listado, alta con el origen fijo (a mano, de los miembros o de los contactos), datos y estado «Activo», «De baja» o «No se puede usar».
 - **Dar de baja y reactivar un catálogo** desde su pantalla, con su versión, sin borrarlo. Dar de baja uno con filtros no necesita vista previa, y reactivarlo sí.
 - **A mano:**
   - **tipo de valor:** texto, entero, decimal o fecha, que se elige al crear y no cambia;
@@ -155,7 +155,7 @@ Se define en el código, en `Application/Modules/Forms/Catalogs/MembersCatalogSo
 - **`FormCatalog`:** `CreateManual(valueType)`, `CreateMembers`, `CreateContacts`, `Rename`, `ChangeFilters` (solo `Members` y `Contacts`), `Deactivate` y `Reactivate`.
 - **`FormCatalogItem`:** `Create`, `Edit`, `Deactivate`, `Reactivate` y `SwapPosition`.
 
-**Estado de un catálogo:** «Dado de baja» si se dio de baja; si no, se calcula, sin guardarse: «Activo» o «No se puede usar», con estos motivos:
+**Estado de un catálogo:** «De baja» si se dio de baja; si no, se calcula, sin guardarse: «Activo» o «No se puede usar», con estos motivos:
 - `NoActiveOptions`: un catálogo a mano sin opciones activas;
 - `SourceOutdated`;
 - `ChannelUnavailable`: un catálogo de `Contacts` sin WhatsApp instalado;
@@ -306,7 +306,7 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
   - un dato por celda, en un renglón;
   - las fechas, completas, con fecha y hora en la zona de quien mira; nunca «hoy», «ayer» ni «hace…»;
   - sin rótulos que expliquen: la vista previa es el teléfono al costado;
-  - «Dados de baja» es una opción del filtro «Estado», no una vista aparte;
+  - lo dado de baja es una opción del filtro «Estado», no una vista aparte, en plural y de acuerdo con lo que se lista: en la lista de catálogos, «Activos · Dados de baja»; en la tabla de opciones, «Todas · Activas · Dadas de baja»;
   - el catálogo no tiene «Una opción | Varias»: lo decide la pregunta.
 - **La tabla de opciones no se aplasta:** cada columna tiene su ancho mínimo (Texto y Detalle 12rem, Código 6rem, el valor y cada campo 8rem). Si no entra, la tabla se desplaza a lo ancho dentro de su caja, con la casilla, el número y «Texto» fijos a la izquierda y el ⋮ de la fila fijo a la derecha. Se copia de la maqueta: `OptionsSection.tsx` y `fixedColumns.ts` (a1303a5 y af5eceb).
 - **Guardado (C3):** todo se guarda junto en un `PUT` del catálogo, con su versión, y viaja solo lo que cambió.
