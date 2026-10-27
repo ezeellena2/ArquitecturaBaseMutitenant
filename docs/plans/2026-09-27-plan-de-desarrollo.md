@@ -21,9 +21,9 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 9 · Endurecimiento | Cerrada | [Plan](2026-10-16-etapa-9-endurecimiento.md), [ADR 0052](../decisions/0052-cache-compartida-redis.md) |
 | 10 · Operación | Pendiente. El plan corto está listo, con las decisiones del usuario; la F5 de botones pasó a la base de la 12 | [Plan](2026-10-16-etapa-10-despliegue.md), [manual de operación](../operations/runbook.md) |
 | Base de la 12 | Pendiente: lo que se copia de la maqueta, con los botones (la F5 de la 10), la campana en el núcleo y la letra al 85 %, que confirmó el usuario | [Formularios](#etapas-12-a-25-formularios-por-whatsapp) |
-| 12 · Catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v141 | [Spec](formularios/12-catalogos.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
-| 13 · Campos de los catálogos | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/13-campos.md) |
-| 14 · Formularios | Pendiente. Spec lista, con los tableros aprobados en el lienzo v141 | [Spec](formularios/14-formularios.md) |
+| 12 · Catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v141 y al día en la v145 | [Spec](formularios/12-catalogos.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
+| 13 · Campos de los catálogos | Pendiente. Resumen listo, con los tableros aprobados en el lienzo v145 (decisión del usuario del 27/10) | [Resumen](formularios/13-campos.md) |
+| 14 · Formularios | Pendiente. Spec lista, con los tableros aprobados en el lienzo v141 y al día en la v145 | [Spec](formularios/14-formularios.md) |
 | 15 · Respuestas, planilla y Excel | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/15-respuestas.md) |
 | 16 · Datos de las personas y filtros | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/16-datos-de-las-personas.md) |
 | 17 · Ciclo de vida y copiar | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/17-ciclo-de-vida.md) |
