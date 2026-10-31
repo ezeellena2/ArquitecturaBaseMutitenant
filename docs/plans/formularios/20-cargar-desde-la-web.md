@@ -1,6 +1,6 @@
 # E20 · Cargar una respuesta desde la web (resumen)
 
-**Estado:** resumen de la etapa 20 del bloque (decisiones 73, 78, 83 a 90 y 94 a 98), después de la E19. Corresponde a la Etapa 1 de «Cargar formularios desde la app» de ArquitecturaBase, programada y revisada allá el 2026-10-30, y a sus etapas 2 (lo propio), 4 (listas dependientes) y 5 (títulos de sección), decididas allá y sin programar. Se planifica con `/plan-etapa` cuando le toque.
+**Estado:** pendiente · resumen de la etapa 20 del bloque (decisiones 73, 78, 83 a 90 y 94 a 98), después de la E19. Corresponde a la Etapa 1 de «Cargar formularios desde la app» de ArquitecturaBase, programada y revisada allá el 2026-10-30, y a sus etapas 2 (lo propio), 4 (listas dependientes) y 5 (títulos de sección), decididas allá y sin programar. Se planifica con `/plan-etapa` cuando le toque.
 
 **Dónde está el detalle,** en ArquitecturaBase (los commits todavía no están en GitHub, se leen en la copia local):
 - el traspaso 3: `docs/plans/2026-10-30-traspaso-multitenant-carga-desde-la-app.md`;
@@ -26,7 +26,7 @@ Se toman las pantallas y las reglas de producto; el código sale de este repo (1
     - si el formulario se dio de baja, 409 `Forms.Entry.Unavailable`;
     - una pregunta que no existe, 404 `Forms.Entry.QuestionNotFound`.
   - **La oferta sella solo lo elegido.** Antes de guardar se comprueba que cada opción esté activa y pase los filtros para esa persona, también en un catálogo de miembros o de contactos. La lista completa no se guarda, porque puede tener miles. Una opción dada de baja entre abrir y enviar responde `Forms.Record.OptionWithdrawn` en su pregunta.
-  - **Los filtros por persona (E16):** si a la persona le falta el dato que pide un filtro, la pregunta frena con `Forms.Record.RecipientDataMissing` y el nombre del dato. Si los filtros dejan una sola opción, esa opción ya viene elegida.
+  - **Los filtros por persona (E16):** si a la persona le falta el dato que pide un filtro, la pregunta frena con `Forms.Offer.RecipientDataMissing` y el nombre del dato. Si los filtros dejan una sola opción, esa opción ya viene elegida.
   - **Las listas dependientes** (94): un tercer filtro, «según otra respuesta», junto a «fijo» y «según quien lo recibe» de la E16:
     - la pregunta de la que depende va antes, es de elegir una y elige del mismo catálogo que el campo de papel «Filtro». No es una condición de la E19: no oculta la pregunta, achica sus opciones;
     - al guardar se comprueba que la opción corresponda a esa respuesta;

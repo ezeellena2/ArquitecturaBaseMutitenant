@@ -1,6 +1,6 @@
 # Formularios dinámicos por WhatsApp: hoja de ruta
 
-Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sección 5](#5-decisiones-de-producto)). Está sumada al [plan de desarrollo](2026-09-27-plan-de-desarrollo.md) como **las catorce etapas de la E12 a la E25, en el orden de la decisión 78, después de la E10**. No es un plan de etapa: cada etapa se escribe en el formato de [etapa en paralelo](../guides/etapa-en-paralelo.md) cuando le toque, a partir de su sección de acá.
+**Estado:** en curso · aprobada el 2026-10-12, con las decisiones de producto tomadas ([sección 5](#5-decisiones-de-producto)). Está sumada al [plan de desarrollo](2026-09-27-plan-de-desarrollo.md) como **las catorce etapas de la E12 a la E25, en el orden de la decisión 78, después de la E10**. No es un plan de etapa: cada etapa se escribe en el formato de [etapa en paralelo](../guides/etapa-en-paralelo.md) cuando le toque, a partir de su sección de acá.
 
 **Origen.** Es la misma funcionalidad que se está construyendo en `ArquitecturaBase`, adaptada a organizaciones, empresas, plataforma y personas. Allá la Etapa 1 está cerrada y probada con Meta real (envío, respuesta y número guardado), y las demás tienen diseño y decisiones elegidas.
 
@@ -198,7 +198,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 
 - **Datos de las personas,** como «Zona», por organización y por miembro (42), con el permiso nuevo `formpersondata.manage`.
 - **El papel «Filtro»** de un campo, y los **filtros por destinatario** en una pregunta de catálogo: a quien no tiene el dato no se le manda, y se dice por qué. Al publicar, dos avisos que no frenan (37).
-- **Resumen:** [formularios/16-datos-de-las-personas.md](formularios/16-datos-de-las-personas.md).
+- **Spec:** [formularios/16-datos-de-las-personas.md](formularios/16-datos-de-las-personas.md).
 - **Criterios:**
   - nunca se retira el filtro ni se manda la lista entera;
   - nada nombra opciones que la persona no puede leer, tampoco la vista previa;

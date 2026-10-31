@@ -1,5 +1,7 @@
 # Hoja de ruta
 
+**Estado:** en curso · la tabla dice el estado de cada etapa. Lo que quedó para después está en el [backlog](../backlog.md).
+
 Orden vigente: **8 → 8b → 11 → 9 → 10 → base → 12 → 13 → 14 → 15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25**. [AGENTS.md](../../AGENTS.md) define el modo rápido:
 contrato primero, programación por dueños y una sola puerta. Tras un arreglo se verifica sólo lo afectado.
 La tabla indica el estado; las reglas y conducta viven en fichas, ADR y features.
@@ -25,7 +27,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 13 · Campos de los catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v145 (decisión del usuario del 27/10) | [Spec](formularios/13-campos.md) |
 | 14 · Formularios | Pendiente. Spec lista, con los tableros aprobados en el lienzo v141 y al día en la v145; se redibuja `FRM-Editor`, con los títulos de sección | [Spec](formularios/14-formularios.md) |
 | 15 · Respuestas, planilla y Excel | Pendiente. Spec lista; tableros a revisar y por dibujar | [Spec](formularios/15-respuestas.md) |
-| 16 · Datos de las personas y filtros | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/16-datos-de-las-personas.md) |
+| 16 · Datos de las personas y filtros | Pendiente. Spec lista; tableros por dibujar | [Spec](formularios/16-datos-de-las-personas.md) |
 | 17 · Ciclo de vida y copiar | Pendiente. Resumen listo; tableros a revisar | [Resumen](formularios/17-ciclo-de-vida.md) |
 | 18 · Fotos y documentos | Pendiente. Resumen listo, con los archivos del chat; tableros a revisar y uno por dibujar | [Resumen](formularios/18-fotos-y-documentos.md) |
 | 19 · Condiciones, cálculos y líneas | Pendiente. Resumen listo; tableros por dibujar, y antes de planificar, la prueba con Meta | [Resumen](formularios/19-condiciones-calculos-y-lineas.md) |
