@@ -1,8 +1,10 @@
 # Formularios por WhatsApp: specs por etapa
 
-Cada etapa del bloque tiene acá su especificación detallada (la 12, la 14 y la 22) o un resumen de una página (las demás), con la forma de los de ArquitecturaBase. Las decisiones de producto están en la [§5 de la hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md#5-decisiones-de-producto), y el alcance de cada etapa, en su §3. Se escriben antes de programar, para que al programar no haya que pensar de nuevo.
+Cada etapa del bloque tiene acá su spec, y todas van hacia el mismo [formato](plantilla.md): qué leer, pantallas, contrato, datos, pasos, qué verificar al arrancar y cómo se cierra. Las decisiones de producto están en la [§5 de la hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md#5-decisiones-de-producto), y el alcance de cada etapa, en su §3. Se escriben antes de programar, para que al programar no haya que pensar de nuevo.
 
-**Cómo se usa.** Cuando le toca a una etapa, [`/plan-etapa`](../../../.agents/skills/plan-etapa/SKILL.md) toma su spec y la verifica contra el código real, sobre todo los puntos de contacto con las etapas anteriores. Con eso arma el plan corto: contrato, back y front en paralelo, e integración y puerta.
+**Cómo se sabe qué falta.** `node scripts/arneses/arnes.mjs alinear-etapas --detectar` no gasta tokens y dice qué etapa no está lista: secciones que le faltan, tableros que no coinciden con el lienzo, y permisos, decisiones, enlaces y estados que no cierran. No reemplaza leer las specs de punta a punta: una contradicción de sentido no la ve ningún script.
+
+**Cómo se usa.** Cuando le toca a una etapa, [`/plan-etapa`](../../../.agents/skills/plan-etapa/SKILL.md) toma su spec y contrasta «Qué verificar al arrancar» con el código real. El contrato, los datos y los pasos ya están escritos: el plan corto anota solo lo que cambió, y suma el texto para cada chat.
 
 **La regla del orden** (decisión 78, que controla `/plan-etapa`):
 - cada etapa usa solo lo que dejaron las anteriores;
@@ -13,24 +15,30 @@ Cada etapa del bloque tiene acá su especificación detallada (la 12, la 14 y la
 - **Código para copiar:** cada spec nombra el archivo real de este repo que sirve de modelo. ArquitecturaBase es referencia, no fuente de código.
 - **La ficha de `docs/features/` y los `AGENTS.md` de cada carpeta:** nacen al cerrar la etapa, del código real. El detector de documentación los controla y no puede haber punteros a carpetas que no existen.
 
-Esta carpeta está fuera del detector (`docs/plans/**`).
+Esta carpeta está fuera de `realinear-docs` (`docs/plans/**`); la controla `alinear-etapas`.
 
-Las etapas van en el orden de la decisión 78, y **el número es el orden**. Antes de la 12 va la base del [plan de desarrollo](../2026-09-27-plan-de-desarrollo.md#etapas-12-a-25-formularios-por-whatsapp). Los tableros son los de la §5 de la [evaluación del traspaso 2](../2026-10-24-formularios-evaluacion-traspaso-2.md) y los que suman las decisiones 47 a 82, y los dibuja Diseño.
+Las etapas van en el orden de la decisión 78, y **el número es el orden**. Antes de la 12 va la base del [plan de desarrollo](../2026-09-27-plan-de-desarrollo.md#etapas-12-a-25-formularios-por-whatsapp). Los tableros son los de la §5 de la [evaluación del traspaso 2](../2026-10-24-formularios-evaluacion-traspaso-2.md) y los que suman las decisiones 47 a 98, y los dibuja Diseño.
+
+**En la columna «Tableros»** cada estado va con su etiqueta, y `alinear-etapas` la compara con el lienzo:
+- **Aprobados:** listos y al día.
+- **A revisar:** dibujados antes de las reglas del 25 y el 26/10. Están en el lienzo, y Diseño los revisa con su etapa.
+- **Se redibujan:** están en el lienzo y una decisión posterior los cambia.
+- **Por dibujar:** todavía no existen. Un código como `CE4-A` es un tablero de ArquitecturaBase que todavía no tiene nombre acá.
 
 | Etapa | Spec | Tableros |
 | --- | --- | --- |
-| E12 · Catálogos | [12-catalogos.md](12-catalogos.md) | Aprobados en el lienzo v141 (front `93cb7d01`): `FRM-Catalogos`, `FRM-Catalogo-Nuevo`, `FRM-Catalogo` (`CA1-A`), `FRM-Catalogo-Importar` (`CA2`), `FRM-Catalogo-Tipo` (`CA3`), `FRM-Catalogo-Filtros` y `FRM-Catalogo-Contactos`, con sus teléfonos |
-| E13 · Campos de los catálogos | [13-campos.md](13-campos.md) | Por dibujar: `CE1` y `CE2`, solo del catálogo. `CE3-B` es `FRM-Catalogo-13`, con «En WhatsApp» en la forma C, en el lienzo v145 |
-| E14 · Formularios: crear, publicar, mandar y recibir | [14-formularios.md](14-formularios.md) | Aprobados en el lienzo v141 (front `93cb7d01`): `FRM-Formularios`, `FRM-Editor` (`CA4`), `FRM-Publicar`, `FRM-Publicando`, `WA-Chats-Formulario`, `WA-Chats-Respuesta`, `WA-Chats-Formulario-Cliente`, `WA-Mensajes-14` y `FRM-Catalogos-14`, con sus teléfonos. Se redibujan `FRM-Editor` y su teléfono, con «Agregar título» (88) |
-| E15 · Respuestas: planilla, detalle, Excel y tablero | [15-respuestas.md](15-respuestas.md) | Aprobados en el lienzo v131. Por dibujar `MF1`, `DC0`, `CA5`, `CA6`, `CE5`, `CE6` y `DOC7-A` (el tablero, 57), y se ajusta `FRM-Respuesta` |
+| E12 · Catálogos | [12-catalogos.md](12-catalogos.md) | Aprobados: `FRM-Catalogos`, `FRM-Catalogo-Nuevo`, `FRM-Catalogo` (`CA1-A`), `FRM-Catalogo-Importar` (`CA2`), `FRM-Catalogo-Tipo` (`CA3`), `FRM-Catalogo-Filtros` y `FRM-Catalogo-Contactos`, con sus teléfonos, en el lienzo v141 y al día en la v145 |
+| E13 · Campos de los catálogos | [13-campos.md](13-campos.md) | Aprobados: `FRM-Catalogo-13` y `M-FRM-Catalogo-13` (`CE1`, `CE2` y `CE3-B`, con «En WhatsApp» en la forma C), en el lienzo v145 |
+| E14 · Formularios: crear, publicar, mandar y recibir | [14-formularios.md](14-formularios.md) | Aprobados: `FRM-Formularios`, `FRM-Publicar`, `FRM-Publicando`, `WA-Chats-Formulario`, `WA-Chats-Respuesta`, `WA-Chats-Formulario-Cliente`, `WA-Mensajes-14` y `FRM-Catalogos-14`, con sus teléfonos, en el lienzo v141 y al día en la v145. Se redibujan: `FRM-Editor` (`CA4`) y `M-FRM-Editor`, con «Agregar título» (88) |
+| E15 · Respuestas: planilla, detalle, Excel y tablero | [15-respuestas.md](15-respuestas.md) | A revisar: `FRM-Formularios-15` (`MF1`), `FRM-Respuestas`, `FRM-Respuestas-Filtros`, `FRM-Respuesta`, `FRM-Respuestas-Exportar` y `FRM-Tablero` (`DOC7-A`), con sus teléfonos. Por dibujar: `DC0`, `CA5`, `CA6`, `CE5` y `CE6` |
 | E16 · Datos de las personas y filtros por destinatario | [16-datos-de-las-personas.md](16-datos-de-las-personas.md) | Por dibujar: `CE4-A`, el diálogo para definir un dato y el papel de un campo |
-| E17 · Ciclo de vida y copiar | [17-ciclo-de-vida.md](17-ciclo-de-vida.md) | Por dibujar: `BA1-A` a `BA5` y `FRM-Copiar` |
-| E18 · Fotos y documentos | [18-fotos-y-documentos.md](18-fotos-y-documentos.md) | Aprobados en el lienzo v130. Por dibujar `WA-Chats-Adjuntos`, para los archivos del chat (48), y los archivos en la planilla y el detalle |
+| E17 · Ciclo de vida y copiar | [17-ciclo-de-vida.md](17-ciclo-de-vida.md) | A revisar: `FRM-Formularios-17`, `FRM-Editor-Baja`, `FRM-Dar-De-Baja`, `FRM-Reactivar-Eliminar` y `FRM-Copiar`, con sus teléfonos (`BA1-A` a `BA4`). `BA5` va como recorrido de la guía |
+| E18 · Fotos y documentos | [18-fotos-y-documentos.md](18-fotos-y-documentos.md) | A revisar: `FRM-Editor-18`, `FRM-Publicar-18`, `WA-Chats-Respuesta-18` y `WA-Chats-Visor`, con sus teléfonos. Por dibujar: `WA-Chats-Adjuntos`, para los archivos del chat (48), y los archivos en la planilla y el detalle |
 | E19 · Condiciones, cálculos y líneas | [19-condiciones-calculos-y-lineas.md](19-condiciones-calculos-y-lineas.md) | Por dibujar: `FRM-Editor-Condiciones`, `FRM-Editor-Calculo`, `FRM-Editor-Lineas` y `FRM-Respuesta-Lineas` |
 | E20 · Cargar una respuesta desde la web | [20-cargar-desde-la-web.md](20-cargar-desde-la-web.md), [texto para Diseño](20-texto-diseno.md) | Por dibujar: `FRM-Formularios-20`, `FRM-Cargar-Respuesta`, `FRM-Cargar-Panel`, `FRM-Cargar-Lista`, `FRM-Cargar-Archivos`, `FRM-Cargar-Enviada`, `FRM-Respuestas-20`, `FRM-Respuesta-20`, `FRM-Respuestas-Propias`, `FRM-Editor-Listas` y `FRM-Publicar-20`, con sus teléfonos |
-| E21 · Reglas, aprobación, PDF y avisos | [21-reglas-y-aprobacion.md](21-reglas-y-aprobacion.md) | Aprobados en el lienzo v132. Se redibujan 4, con «Mandar el PDF a un cliente» (47), y por dibujar el PDF con el logo, los datos y el color de la 82, `FRM-Respuesta-Corregir` (91), `FRM-Respuesta-Anular` (92) y `FRM-Respuestas-Propias-21` (85) |
-| E22 · Biblioteca de plantillas y formularios estándar | [22-biblioteca.md](22-biblioteca.md) | Aprobados en el lienzo v126, v130 y v134. Se redibujan 12, con las reglas que llegan de una plantilla, y por dibujar `DOC1` sin la lectura |
-| E23 · El asistente, con Casos | [23-asistente.md](23-asistente.md) | Aprobados en el lienzo v133. Se redibujan `FRM-Editor-Asistente`, `FRM-Editor-Sugerencias` y `FRM-Catalogo-Propuesta`, y por dibujar `AS1-A` a `AS6`, `BA6`, `WA-Modo-Atencion` y `WA-Preguntas-Sin-Respuesta` |
+| E21 · Reglas, aprobación, PDF y avisos | [21-reglas-y-aprobacion.md](21-reglas-y-aprobacion.md) | A revisar: `FRM-Formularios-21`, `FRM-Respuesta-Aprobacion` y `WA-Chats-Avisos`, con sus teléfonos. Se redibujan: `FRM-Editor-Reglas`, `FRM-Pdf`, `M-FRM-Reglas` y `M-FRM-Respuesta-Aprobacion`, con «Mandar el PDF a un cliente» (47). Por dibujar: el PDF con el logo, los datos y el color de la 82, `FRM-Respuesta-Corregir` (91), `FRM-Respuesta-Anular` (92) y `FRM-Respuestas-Propias-21` (85) |
+| E22 · Biblioteca de plantillas y formularios estándar | [22-biblioteca.md](22-biblioteca.md) | A revisar: `FRM-Formularios-22`, `FRM-Biblioteca`, `FRM-Plantilla`, `FRM-Plantilla-Usar` y `FRM-Editor-Reglas-Plantilla`, con sus teléfonos. Se redibujan: 12 tableros de la organización y de Plataforma, con las reglas que llegan de una plantilla (la lista está en la spec). Por dibujar: `DOC1` sin la lectura |
+| E23 · El asistente, con Casos | [23-asistente.md](23-asistente.md) | A revisar: `FRM-Respuesta-Cadena`, `FRM-Faltan`, `WA-Chats-Asistente`, `WA-Chats-Sugerencia` y `WA-Chats-Audio`, con sus teléfonos. Se redibujan: `FRM-Editor-Asistente`, `FRM-Editor-Sugerencias` y `FRM-Catalogo-Propuesta`. Por dibujar: `AS1-A` a `AS6`, `BA6`, `WA-Modo-Atencion` y `WA-Preguntas-Sin-Respuesta` |
 | E24 · Varios asistentes, uno por equipo | [24-varios-asistentes.md](24-varios-asistentes.md) | Por dibujar: `WA-Asistentes` y `WA-Equipo-Asistente` |
 | E25 · Documentos por WhatsApp | [25-documentos.md](25-documentos.md) | Por dibujar: `DOC2` a `DOC6` y la sección de lectura de `DOC1` |
 

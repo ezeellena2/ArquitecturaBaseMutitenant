@@ -9,6 +9,16 @@
 
 **Requisitos:** la E13 cerrada (con ella, el módulo `Forms`, los catálogos y sus campos), la E11 (números por organización, bandejas, token por organización) y la E9 (Redis, límites y fuzz). Para la prueba con Meta, una organización con su número conectado (la I1 de la 10).
 
+## Qué leer
+
+Antes de empezar:
+1. **Lo anterior:** las specs de la [E12](12-catalogos.md) y la [E13](13-campos.md), sobre todo sus datos, su contrato y sus archivos.
+2. **Decisiones** de la hoja de ruta: las de la §13 de esta spec.
+3. **Fichas:** [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [idempotencia](../../rules/idempotencia.md), [multitenancy](../../rules/multitenancy.md), [persistencia-ef](../../rules/persistencia-ef.md), [auditoria](../../rules/auditoria.md), [api-http](../../rules/api-http.md), [permisos](../../rules/permisos.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [result-y-errores](../../rules/result-y-errores.md), [validacion](../../rules/validacion.md), [textos-libres](../../rules/textos-libres.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [numeros-y-moneda](../../rules/numeros-y-moneda.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [datos-personales](../../rules/datos-personales.md), [logs](../../rules/logs.md), [cuotas](../../rules/cuotas.md), [modulos](../../rules/modulos.md) y [tests](../../rules/tests.md). Además, cómo caen en este módulo: §11.
+4. **Código para copiar:** el módulo Asistente y lo que deje la E11, pieza por pieza, en la §8.
+5. **Pantallas:** los tableros de la §9.
+6. **Referencia de Meta:** la §14.
+
 ## 1. Alcance
 
 **Entra:**

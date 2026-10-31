@@ -23,16 +23,16 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | Base de la 12 | Pendiente: lo que se copia de la maqueta, con los botones (la F5 de la 10), la campana en el núcleo y la letra al 85 %, que confirmó el usuario | [Formularios](#etapas-12-a-25-formularios-por-whatsapp) |
 | 12 · Catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v141 y al día en la v145 | [Spec](formularios/12-catalogos.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
 | 13 · Campos de los catálogos | Pendiente. Resumen listo, con los tableros aprobados en el lienzo v145 (decisión del usuario del 27/10) | [Resumen](formularios/13-campos.md) |
-| 14 · Formularios | Pendiente. Spec lista, con los tableros aprobados en el lienzo v141 y al día en la v145 | [Spec](formularios/14-formularios.md) |
-| 15 · Respuestas, planilla y Excel | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/15-respuestas.md) |
+| 14 · Formularios | Pendiente. Spec lista, con los tableros aprobados en el lienzo v141 y al día en la v145; se redibuja `FRM-Editor`, con los títulos de sección | [Spec](formularios/14-formularios.md) |
+| 15 · Respuestas, planilla y Excel | Pendiente. Resumen listo; tableros a revisar y por dibujar | [Resumen](formularios/15-respuestas.md) |
 | 16 · Datos de las personas y filtros | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/16-datos-de-las-personas.md) |
-| 17 · Ciclo de vida y copiar | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/17-ciclo-de-vida.md) |
-| 18 · Fotos y documentos | Pendiente. Resumen listo, con los archivos del chat; un tablero por dibujar | [Resumen](formularios/18-fotos-y-documentos.md) |
+| 17 · Ciclo de vida y copiar | Pendiente. Resumen listo; tableros a revisar | [Resumen](formularios/17-ciclo-de-vida.md) |
+| 18 · Fotos y documentos | Pendiente. Resumen listo, con los archivos del chat; tableros a revisar y uno por dibujar | [Resumen](formularios/18-fotos-y-documentos.md) |
 | 19 · Condiciones, cálculos y líneas | Pendiente. Resumen listo; tableros por dibujar, y antes de planificar, la prueba con Meta | [Resumen](formularios/19-condiciones-calculos-y-lineas.md) |
 | 20 · Cargar desde la web | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/20-cargar-desde-la-web.md) |
-| 21 · Reglas, aprobación y PDF | Pendiente. Resumen listo; se redibujan 4 tableros | [Resumen](formularios/21-reglas-y-aprobacion.md) |
-| 22 · Biblioteca de plantillas | Pendiente. Spec lista; se redibujan 12 tableros y hay uno nuevo por dibujar | [Spec](formularios/22-biblioteca.md) |
-| 23 · Asistente con Casos | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/23-asistente.md) |
+| 21 · Reglas, aprobación y PDF | Pendiente. Resumen listo; tableros a revisar, 4 que se redibujan y otros por dibujar | [Resumen](formularios/21-reglas-y-aprobacion.md) |
+| 22 · Biblioteca de plantillas | Pendiente. Spec lista; tableros a revisar, 12 que se redibujan y uno por dibujar | [Spec](formularios/22-biblioteca.md) |
+| 23 · Asistente con Casos | Pendiente. Resumen listo; tableros a revisar y por dibujar | [Resumen](formularios/23-asistente.md) |
 | 24 · Varios asistentes | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/24-varios-asistentes.md) |
 | 25 · Documentos por WhatsApp | Pendiente. Resumen listo; tableros por dibujar, y antes de planificar, la prueba con Meta del archivo precargado | [Resumen](formularios/25-documentos.md) |
 

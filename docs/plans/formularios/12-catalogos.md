@@ -9,6 +9,15 @@
 
 **Requisitos:** la E11 (los contactos de la bandeja Clientes y sus etiquetas) y la E9 (cuotas y fuzz). El bloque arranca después de la E10, y antes de esta etapa va la base del [plan de desarrollo](../2026-09-27-plan-de-desarrollo.md#etapas-12-a-25-formularios-por-whatsapp): los botones (la F5 que sale de la 10), la campana en el núcleo y el tamaño general.
 
+## Qué leer
+
+Antes de empezar:
+1. **Decisiones** de la hoja de ruta: las de la §13 de esta spec.
+2. **Fichas:** [persistencia-ef](../../rules/persistencia-ef.md), [multitenancy](../../rules/multitenancy.md), [auditoria](../../rules/auditoria.md), [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [idempotencia](../../rules/idempotencia.md), [api-http](../../rules/api-http.md), [permisos](../../rules/permisos.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [result-y-errores](../../rules/result-y-errores.md), [validacion](../../rules/validacion.md), [textos-libres](../../rules/textos-libres.md), [numeros-y-moneda](../../rules/numeros-y-moneda.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [logs](../../rules/logs.md), [cuotas](../../rules/cuotas.md), [modulos](../../rules/modulos.md) y [tests](../../rules/tests.md).
+3. **Código para copiar:** el módulo Asistente, pieza por pieza, en la §9.
+4. **Pantallas:** los tableros de la §10, con el recorrido `armar-un-catalogo` del front, y la maqueta para lo que manda en la §10.
+5. **Referencia de producto:** la §14.
+
 ## 1. Alcance
 
 **Entra:**
