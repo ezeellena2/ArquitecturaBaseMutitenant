@@ -52,7 +52,7 @@ Los tableros están en el lienzo v145 y al día, salvo lo que diga cada fila. **
 
 | Tablero | Qué muestra |
 | --- | --- |
-| `Campana`, `M-Campana` y `M-Campana-Personal` | la campana, con sus avisos, y la pantalla «Avisos» del teléfono |
+| `Campana`, `M-Campana` y `M-Campana-Personal` | la campana, con los avisos de esta etapa, y la pantalla «Avisos» del teléfono. Lo que hoy muestra de etapas posteriores sale: cada una dibuja su versión |
 | `Otro-Acceso` y `Otro-Acceso-Persona`, con sus teléfonos | ofrecer entrar con el otro acceso |
 | Los de cada pantalla que cambia | los textos, las tablas y los filtros, según las fichas del front |
 

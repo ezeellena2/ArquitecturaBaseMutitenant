@@ -97,6 +97,7 @@
   | `formapprovals.decide` | E21 | Aprobar o rechazar respuestas | Approve or reject responses | Decidir las respuestas que piden aprobación, según el rol de la regla, menos las que cargó la misma persona (25). | Decide the responses that need approval, according to the rule's role, except the ones the same person submitted. |
   | `formrecords.correct` | E21 | Corregir y anular respuestas | Correct and void responses | Corregir o anular cualquier respuesta, en cualquier momento (93). | Correct or void any response at any time. |
   | `formsuggestions.manage` | E23 | Administrar sugerencias entre formularios | Manage suggestions between forms | Elegir qué formulario se sugiere después de otro. | Choose which form is suggested after another. |
+- **El texto de un permiso dice solo lo que ya existe** (78). La tabla tiene el texto final, y cada etapa lo completa cuando llega: `forms.manage` y `forms.publish` suman lo suyo en la E17; `formrecords.create` suma «o desde la web» y `forms.publish` deja «en WhatsApp» en la E20 (98), y `formcatalogs.manage` suma el asistente en la E23.
 - Cada permiso nuevo trae su migración que actualiza los roles de sistema de las organizaciones existentes (modelo: `20261010203618_SystemRoleAssistantPermissions.cs`).
 - **Permiso de plataforma:** uno para mantener la biblioteca (E22), con `[HasPlatformPermission]`.
 - **«Para resolver»:** las respuestas por aprobar (E21) aportan un `IPendingItemSource` (ADR 0040), en lugar de un contador propio.
@@ -574,7 +575,7 @@ Elegidas por el usuario el 2026-10-31, al evaluar el traspaso 3 contra este mode
 
 Elegida por el usuario el 2026-10-31, al escribir la spec de la E25, la recomendada:
 
-99. **«Pasar al formulario» desde la bandeja** (E25): un operador con el permiso de atender esa bandeja carga, con lo que leyó la IA, la respuesta de quien mandó el documento. Queda a nombre de esa persona, por el canal `whatsapp`, igual que «Cargar solo si es seguro», y la respuesta dice quién la revisó. Es la única forma de cargar a nombre de otro: en la web, sigue siendo cada uno a su nombre (73).
+99. **«Pasar al formulario» desde la bandeja** (E25): un operador con `formrecords.read` y el permiso de atender esa bandeja carga, con lo que leyó la IA, la respuesta de quien mandó el documento. Queda a nombre de esa persona, por el canal `whatsapp`, igual que «Cargar solo si es seguro», y la respuesta dice quién la revisó. Es la única forma de cargar a nombre de otro: en la web, sigue siendo cada uno a su nombre (73).
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
