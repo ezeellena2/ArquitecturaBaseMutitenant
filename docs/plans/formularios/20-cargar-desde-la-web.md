@@ -216,7 +216,7 @@ Cada punto lleva su test, escrito durante la etapa:
 
 ## Fuera de esta etapa
 
-- Cargar a nombre de otra persona, importar muchas respuestas desde un Excel, borradores guardados y carga sin conexión.
+- Cargar a nombre de otra persona desde la web (73), importar muchas respuestas desde un Excel, borradores guardados y carga sin conexión.
 - La carga en filas (CW2-C), y ofrecer en la web qué cargar después.
 - Las listas dependientes en WhatsApp, con el intercambio cifrado con Meta.
 - El estado, el PDF y el motivo de rechazo en lo propio, y corregir y anular, que suma la E21.

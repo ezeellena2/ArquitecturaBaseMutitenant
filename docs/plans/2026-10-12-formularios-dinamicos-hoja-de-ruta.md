@@ -321,7 +321,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Pantallas:** la bandeja «Documentos recibidos» y «Armar formulario con la IA».
 - **Armar formularios y catálogos desde el asistente de la web** (75): se le pasa un PDF o se le escribe cómo se quiere, y crea el borrador y los catálogos por aprobar.
 - **Validaciones fijas:** un conjunto cerrado en el código, y la tabla de entidades del BCRA como dato de referencia; lo descartado se borra a los 90 días; la lectura entra en el tope de la organización, con un tope por persona y por día (41).
-- **Para decidir al planificar:** «Pasar al formulario» desde la bandeja, que es cargar a nombre de otro.
+- **«Pasar al formulario»** desde la bandeja (99): la respuesta queda a nombre de quien mandó el documento, y dice quién la revisó.
 - **Spec:** [formularios/25-documentos.md](formularios/25-documentos.md).
 - **Criterios:**
   - precargar un archivo en un Flow se prueba con Meta antes de planificar;
@@ -571,6 +571,10 @@ Elegidas por el usuario el 2026-10-31, al evaluar el traspaso 3 contra este mode
 96. **Un catálogo a mano de más de 200 opciones** (E20): si el formulario es para empleados o para los dos, se publica con un aviso y se carga solo desde la web. Si es solo para clientes, sigue sin publicarse.
 97. **Un cálculo no se ve mientras se carga** (E20): igual que por WhatsApp (54), y aparece en «Enviada».
 98. **Publicar solo para la app** (E20): es nueva, no viene de ArquitecturaBase. Una organización sin WhatsApp conectado publica igual, sin Meta, y sus empleados cargan desde la web. Si después conecta un número, vuelve a publicar para mandarlo por WhatsApp. Un formulario solo para clientes no se publica.
+
+Elegida por el usuario el 2026-10-31, al escribir la spec de la E25, la recomendada:
+
+99. **«Pasar al formulario» desde la bandeja** (E25): un operador con el permiso de atender esa bandeja carga, con lo que leyó la IA, la respuesta de quien mandó el documento. Queda a nombre de esa persona, por el canal `whatsapp`, igual que «Cargar solo si es seguro», y la respuesta dice quién la revisó. Es la única forma de cargar a nombre de otro: en la web, sigue siendo cada uno a su nombre (73).
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 

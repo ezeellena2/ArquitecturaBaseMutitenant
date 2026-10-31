@@ -1,6 +1,6 @@
 # E25 · Documentos por WhatsApp (spec)
 
-**Estado:** pendiente · spec de la etapa 25, la última del bloque (decisiones 34, 41 y 78), con el [formato](plantilla.md) de las etapas. En ArquitecturaBase está decidido, con su ADR 0022 y sus tableros, y sin programar. **Antes de programar** se prueba con Meta si un Flow acepta un archivo precargado: es el mayor riesgo técnico. `/plan-etapa` la contrasta con el código real después de la E24.
+**Estado:** pendiente · spec de la etapa 25, la última del bloque (decisiones 34, 41, 78 y 99), con el [formato](plantilla.md) de las etapas. En ArquitecturaBase está decidido, con su ADR 0022 y sus tableros, y sin programar. **Antes de programar** se prueba con Meta si un Flow acepta un archivo precargado: es el mayor riesgo técnico. `/plan-etapa` la contrasta con el código real después de la E24.
 
 ## Qué leer
 
@@ -46,7 +46,7 @@ No se leen `.doc`, `.xls`, los archivos con macros ni los que tienen contraseña
 - una planilla como la de respuestas, con el documento en un panel al costado: acercar, girar, páginas y descargar;
 - filtros: formulario, quién lo mandó, cuándo llegó, estado y «Empresa ▾» (24). La dirección nunca lleva quién lo mandó ni la búsqueda;
 - búsqueda por los datos, como el monto con o sin puntos, un CUIT o una operación, también en lo que no se cargó;
-- revisar: corregir, cambiar el formulario reconocido, que vuelve a leer, pasar al formulario y descartar con confirmación. La respuesta dice de qué documento salió y quién la revisó;
+- revisar: corregir, cambiar el formulario reconocido, que vuelve a leer, pasar al formulario (99) y descartar con confirmación. La respuesta dice de qué documento salió y quién la revisó;
 - la fila de un descartado o sin clasificar muestra cuándo se borra.
 
 **«Armar formulario con la IA»:** sobre un documento «Sin clasificar», o desde «Llegaron N documentos parecidos», con tres o más. La IA propone nombre, prefijo, botón, «Cómo reconocerlo» y una pregunta por dato; si se parece a un estándar, lo sugiere antes. Crea un borrador con la lectura prendida, y una persona lo revisa y lo publica. Si falla, no queda nada a medias.
@@ -188,12 +188,9 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | Bibliotecas | Con qué se saca el texto de `.docx` y `.xlsx` y las páginas de un PDF. | `.xlsx` con ClosedXML; lo demás se elige al planificar, sin ejecutar nada. |
 | Parecidos | Cómo se mide que dos documentos se parecen. | Por la clasificación que devuelve la IA. |
 
-## Para decidir con el usuario
-
-**«Pasar al formulario» desde la bandeja:** un operador carga, con lo que leyó la IA, la respuesta de otra persona. Es cargar a nombre de otro, que la E20 dejó afuera (73). **Recomendación:** queda a nombre de quien mandó el documento, por el canal `whatsapp`, con `SourceKey` `document:<id>`, igual que «Cargar solo si es seguro», y la respuesta dice quién la revisó. Pide el permiso de atender esa bandeja. Si no se aprueba, «Pasar al formulario» sale, y el documento se le vuelve a proponer a la persona.
-
 ## Decisiones tomadas (no se vuelven a preguntar)
 
+- **«Pasar al formulario»** (99): queda a nombre de quien mandó el documento, por el canal `whatsapp`, con `SourceKey` `document:<id>`, igual que «Cargar solo si es seguro», y la respuesta dice quién la revisó. Pide el permiso de atender esa bandeja. Pasa por la misma captura, que le revisa a un empleado la membresía y `formrecords.create`.
 - **Retención** (41): un documento usado sigue a su respuesta (23). Uno descartado o sin clasificar se borra a los 90 días, con su lectura.
 - **Costos** (41): el proveedor de la plataforma, dentro del tope mensual, con un tope por persona y por día.
 - **Permisos:** ver la bandeja pide `formrecords.read`; revisar, además, atender la bandeja de donde llegó, y armar, además, `forms.manage`.
