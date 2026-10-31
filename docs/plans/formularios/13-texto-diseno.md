@@ -1,6 +1,6 @@
 # E13 · Texto para el chat de Diseño
 
-**Estado:** cerrado · Diseño ya dibujó estos tableros.
+**Estado:** pendiente · faltan los tres estados de `FRM-Catalogo-13` que dice este texto; lo demás ya está dibujado.
 
 Se pega tal cual en el chat de Diseño, que es el único que toca el lienzo.
 

@@ -255,7 +255,7 @@ Valen los criterios de la E14 y la decisión 43. El texto para Diseño está en 
 - `Plat-FRM-Biblioteca`, `M-Plat-FRM-Biblioteca` y `Plat-FRM-Plantilla-Nueva`, por el estado de la plantilla;
 - `FRM-Editor-Reglas-Plantilla` y `M-FRM-Reglas-Plantilla`: las reglas que llegan de una plantilla, en la pestaña de reglas de la E21.
 
-**Diseño dibuja nuevo** `DOC1` · La biblioteca (evaluación, §5.2): `FRM-Biblioteca` como la biblioteca de formularios estándar (40), con en qué formularios propios se usó cada plantilla. La sección «Lectura de documentos» de `DOC1` no va en esta etapa.
+**Diseño redibuja** `FRM-Biblioteca` con `DOC1` (evaluación, §5.2): la biblioteca de formularios estándar (40), con en qué formularios propios se usó cada plantilla. La sección «Lectura de documentos» de `DOC1` no va en esta etapa.
 
 **Mandan sobre esta spec en:**
 - **Biblioteca de Plataforma:** filtros Estado y Categoría, y los estados vacía, sin resultados, cargando y error. En el teléfono es solo para ver.

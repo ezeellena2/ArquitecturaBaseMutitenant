@@ -322,7 +322,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Armar formularios y catálogos desde el asistente de la web** (75): se le pasa un PDF o se le escribe cómo se quiere, y crea el borrador y los catálogos por aprobar.
 - **Validaciones fijas:** un conjunto cerrado en el código, y la tabla de entidades del BCRA como dato de referencia; lo descartado se borra a los 90 días; la lectura entra en el tope de la organización, con un tope por persona y por día (41).
 - **Para decidir al planificar:** «Pasar al formulario» desde la bandeja, que es cargar a nombre de otro.
-- **Resumen:** [formularios/25-documentos.md](formularios/25-documentos.md).
+- **Spec:** [formularios/25-documentos.md](formularios/25-documentos.md).
 - **Criterios:**
   - precargar un archivo en un Flow se prueba con Meta antes de planificar;
   - la IA solo carga sola con las tres señales de la 71, nunca con la seguridad que declara el modelo; lo leído es un dato, nunca una instrucción;

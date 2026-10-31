@@ -22,7 +22,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 11 · WhatsApp de atención | Cerrada el 2026-10-21. El alta de una organización con un número real pasó a la I1 de la 10 | [Plan](2026-10-13-etapa-11-whatsapp.md), [ADR 0038](../decisions/0038-whatsapp-de-atencion.md) |
 | 9 · Endurecimiento | Cerrada | [Plan](2026-10-16-etapa-9-endurecimiento.md), [ADR 0052](../decisions/0052-cache-compartida-redis.md) |
 | 10 · Operación | Pendiente. El plan corto está listo, con las decisiones del usuario; la F5 de botones pasó a la base de la 12 | [Plan](2026-10-16-etapa-10-despliegue.md), [manual de operación](../operations/runbook.md) |
-| Base de la 12 | Pendiente: lo que se copia de la maqueta, con los botones (la F5 de la 10), la campana en el núcleo y la letra al 85 %, que confirmó el usuario | [Formularios](#etapas-12-a-25-formularios-por-whatsapp) |
+| Base de la 12 | Pendiente. Spec lista: lo que se copia de la maqueta, con los botones (la F5 de la 10), la campana en el núcleo y la letra al 85 %, que confirmó el usuario | [Spec](formularios/base-de-la-12.md) |
 | 12 · Catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v141 y al día en la v145 | [Spec](formularios/12-catalogos.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
 | 13 · Campos de los catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v145 (decisión del usuario del 27/10) | [Spec](formularios/13-campos.md) |
 | 14 · Formularios | Pendiente. Spec lista, con los tableros aprobados en el lienzo v141 y al día en la v145; se redibuja `FRM-Editor`, con los títulos de sección | [Spec](formularios/14-formularios.md) |
@@ -33,10 +33,10 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 19 · Condiciones, cálculos y líneas | Pendiente. Spec lista; tableros por dibujar, y antes de planificar, la prueba con Meta | [Spec](formularios/19-condiciones-calculos-y-lineas.md) |
 | 20 · Cargar desde la web | Pendiente. Spec lista; tableros por dibujar | [Spec](formularios/20-cargar-desde-la-web.md) |
 | 21 · Reglas, aprobación y PDF | Pendiente. Spec lista; tableros a revisar, 4 que se redibujan y otros por dibujar | [Spec](formularios/21-reglas-y-aprobacion.md) |
-| 22 · Biblioteca de plantillas | Pendiente. Spec lista; tableros a revisar, 12 que se redibujan y uno por dibujar | [Spec](formularios/22-biblioteca.md) |
+| 22 · Biblioteca de plantillas | Pendiente. Spec lista; tableros a revisar y 13 que se redibujan | [Spec](formularios/22-biblioteca.md) |
 | 23 · Asistente con Casos | Pendiente. Spec lista; tableros a revisar y por dibujar | [Spec](formularios/23-asistente.md) |
 | 24 · Varios asistentes | Pendiente. Spec lista; tableros por dibujar | [Spec](formularios/24-varios-asistentes.md) |
-| 25 · Documentos por WhatsApp | Pendiente. Resumen listo; tableros por dibujar, y antes de planificar, la prueba con Meta del archivo precargado | [Resumen](formularios/25-documentos.md) |
+| 25 · Documentos por WhatsApp | Pendiente. Spec lista; tableros por dibujar, y antes de planificar, la prueba con Meta del archivo precargado | [Spec](formularios/25-documentos.md) |
 
 ## Etapa 11: WhatsApp de atención
 
@@ -93,7 +93,7 @@ La plataforma y cada organización atienden con el mismo módulo: alta de númer
 Una organización arma formularios, los manda por WhatsApp a sus empleados y a sus clientes (decisión 49) y ve las respuestas numeradas en una planilla.
 - **Etapas y fuente:** son catorce, de la 12 a la 25, en el orden de la decisión 78: **el número es el orden**, con los catálogos primero. Cada una tiene su sección y las decisiones de producto tomadas en la [hoja de ruta](2026-10-12-formularios-dinamicos-hoja-de-ruta.md). El alcance de cada una sale de la [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md), que usa los números de antes, y de las decisiones 47 a 82. La equivalencia está en [`formularios/`](formularios/README.md).
 - **La regla del orden:** cada etapa usa solo lo de las anteriores, lo que suma se ve en las pantallas que ya existen, y nada nombra, prueba ni dibuja algo de una etapa posterior. La controla `/plan-etapa`.
-- **La base, al principio de la 12.** Se copia de la maqueta (`MaquetaMultitenant`, commits del 25/10):
+- **La base, al principio de la 12** ([spec](formularios/base-de-la-12.md)). Se copia de la maqueta (`MaquetaMultitenant`, commits del 25/10):
   - los botones y avisos de la decisión 43, que eran la F5 de la 10;
   - la campana, en el núcleo, con las dos rutas de avisos;
   - «Más filtros» en `FilterBar`, con el buscador y hasta tres filtros en una fila;

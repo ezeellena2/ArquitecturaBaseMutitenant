@@ -181,7 +181,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | F5 | Temas | `UnansweredTopicsPage.tsx`, `MissingFormsPage.tsx` | `M/…/pages/MissingFormsPage.tsx` | descartar; sin nombres |
 | F6 | El editor | suma a `FormEditorPage.tsx` y `RulesSection.tsx` | esos mismos | «Cuándo lo ofrece»; «Qué sugerir después»; «Armar desde un texto» |
 
-**Al cerrar:** `docs/features/asistente.md`, `whatsapp.md` y `formularios.md` suman su sección, y la regla de WhatsApp pasa a «solo texto redactado con estos límites, o fijo».
+**Al cerrar:** las fichas del asistente, de WhatsApp y de formularios suman su sección, y la regla de WhatsApp pasa a «solo texto redactado con estos límites, o fijo».
 
 ## Qué verificar al arrancar
 
