@@ -13,7 +13,7 @@
 
 **Entra:**
 - **«Formularios»** (79): una sola lista, con «Nuevo formulario». Cada formulario se abre con sus pestañas, y esta etapa trae «Diseño»; lo que ve cada persona depende de sus permisos.
-- **Editor:** formularios de la organización con siete tipos de pregunta, entre ellos «elegir varias» (38), prefijo de numeración y vista previa en el teléfono. El contenido es un solo texto por campo, tal como lo escribe la persona, en el idioma que quiera (35).
+- **Editor:** formularios de la organización con siete tipos de pregunta, entre ellos «elegir varias» (38), títulos de sección entre las preguntas (88), prefijo de numeración y vista previa en el teléfono. El contenido es un solo texto por campo, tal como lo escribe la persona, en el idioma que quiera (35).
 - **Publicación en WhatsApp:**
   - un Flow por versión y por cuenta de WhatsApp Business (WABA);
   - operación durable, con sus estados visibles y la vista previa oficial de Meta.
@@ -74,6 +74,7 @@ Las de producto están en la hoja de ruta (§5). Estas siguen las reglas del rep
 | T21 | El Flow usa un perfil con datos iniciales. Cada pregunta de catálogo es un `Dropdown` o un `CheckboxGroup` con `data-source: ${data.field_<N>}`, y la pantalla declara su `data` con un `__example__` **[Meta]**. | Permite mandar opciones distintas a cada persona sin un endpoint de intercambio. |
 | T22 | **La presentación** arma el título y la descripción de cada opción al mandar: la del catálogo (E13) o la propia de la pregunta, que se guarda en el borrador y se sella con la versión. Lo que queda vacío o no entra frena la comprobación de publicar y el envío (36). Un campo que usa la presentación de una pregunta del borrador o de la versión activa no se quita (`Forms.Catalog.FieldInUse`): en la tabla de campos de la E13, su «Quitar» queda apagado con ese motivo. La captura lee los campos activos de las opciones elegidas, por lote y bajo sus bloqueos, y sella identidad, clave, nombre, tipo y valor. La tarjeta del chat no cambia. | Editar el catálogo después no cambia lo respondido. |
 | T23 | **Un catálogo que nunca se podría mandar no se publica:** uno a mano con más de 200 opciones activas en «elegir una», o más de 20 en «elegir varias» (`Forms.Draft.CatalogTooLarge`). Los de miembros y contactos se comprueban al mandar, porque dependen de quien recibe y cambian solos. | Sin esto, un catálogo de 10.000 opciones se publicaba y nunca se podía mandar. |
+| T24 | **Un título de sección es un elemento del borrador, no una pregunta** (88): tiene un solo texto de hasta 80 caracteres y su lugar entre las preguntas, se sella con la versión y no cuenta en el tope de 40 preguntas. No tiene valor, así que no guarda nada al responder. En WhatsApp sale como subtítulo de la pantalla (`TextSubheading`) y cuenta en el tope de 50 componentes **[Meta]**. Para publicar, tiene texto y al menos una pregunta debajo. | Es la regla de ArquitecturaBase, decidida allá y sin programar. Un elemento aparte evita filas vacías en las respuestas. |
 
 ## 3. Modelo de datos
 
@@ -111,7 +112,8 @@ Las de producto están en la hoja de ruta (§5). Estas siguen las reglas del rep
 - `audience`: `Employees`, `Customers` o `Both` (50);
 - `submitLabel`;
 - `questions[]`, cada una con `fieldId`, `type`, `label`, `help`, `required`, `maxLength?`, `decimals?`, `minSelections?`, `maxSelections?`, `catalogId?` y `presentation?` (en `Choice` y `MultiChoice`, T17 y T22) y `options[]`;
-- cada opción lleva `{choiceId, label}`. Una pregunta con `catalogId` no tiene opciones propias.
+- cada opción lleva `{choiceId, label}`. Una pregunta con `catalogId` no tiene opciones propias;
+- `titles[]`, cada uno con `titleId`, `text` y la pregunta antes de la que va (T24). La forma exacta se fija en el plan.
 
 **FormVersions** (inmutable)
 
@@ -119,7 +121,7 @@ Las de producto están en la hoja de ruta (§5). Estas siguen las reglas del rep
 | --- | --- | --- |
 | `Id`, `TenantId`, `DefinitionId` | uuid | FK compuesta |
 | `Number` | int | único por definición |
-| `Name`, `Audience`, `Questions`, `SubmitLabel` | texto y jsonb | copia sellada |
+| `Name`, `Audience`, `Questions`, `Titles`, `SubmitLabel` | texto y jsonb | copia sellada |
 | `ContentHash` | texto 64 | SHA-256 del JSON canónico (formato versionado y orden fijo) |
 | `CreatedAtUtc`, `CreatedByUserId` | — | — |
 
@@ -244,7 +246,7 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | `Forms.Definition.PrefixInvalid` | Validation (campo `prefix`) | no cumple el formato |
 | `Forms.Draft.QuestionInvalid` | Validation (campo `questions[i]`) | tipo, opciones, decimales o rango de «elegir varias» fuera de regla |
 | `Forms.Draft.TooManyQuestions` / `TooManyOptions` | Validation | más de 40 preguntas, más de 50 opciones en «elegir una» o más de 20 en «elegir varias» |
-| `Forms.Publication.Incomplete` | Validation (campo por pregunta) | falta un texto obligatorio |
+| `Forms.Publication.Incomplete` | Validation (campo por pregunta) | falta un texto obligatorio, o un título no tiene preguntas debajo (T24) |
 | `Forms.Publication.ChannelIssues` | Validation | el canal marcó problemas: lista de `{fieldId, choiceId?, path, code, limit?}` |
 | `Forms.Publication.InProgress` | Conflict | ya hay una publicación abierta |
 | `Forms.Publication.NothingToPublish` | Conflict | el borrador es igual a la versión activa |
@@ -284,8 +286,8 @@ Las rutas Business de Forms llevan `[Access(Access.Business)]` y `[FeatureGate("
 | GET `/api/organization/forms` | `forms.read` | `page`, `pageSize`, `sort` (`name`, `updatedAtUtc`), `search`, `status` (`all`, `published`, `drafts`) | 200 `PagedResult<FormSummary>`: `{id, name, prefix, audience, status, activeVersionNumber?, publishedAtUtc?, publicationState?}`; es la lista «Formularios» (79) |
 | GET `/api/organization/forms/filter-counts` | `forms.read` | `search` | 200 `{all, published, drafts}` |
 | POST `/api/organization/forms` | `forms.manage` | `{name}` | 201 `FormDetail` + Location, con el prefijo propuesto |
-| GET `/api/organization/forms/{id}` | `forms.read` | — | 200 `FormDetail`: `{id, name, prefix, prefixLocked, audience, submitLabel, questions[], activeVersion?{id, number, publishedAtUtc}, publication?{id, state, errorCode?, issues?}, canManage, canPublish, version}` |
-| PUT `/api/organization/forms/{id}/draft` | `forms.manage` | `{name, prefix, audience, submitLabel, questions[], version}` | 200 `{version, questions[]}`, con las identidades emitidas; 409 |
+| GET `/api/organization/forms/{id}` | `forms.read` | — | 200 `FormDetail`: `{id, name, prefix, prefixLocked, audience, submitLabel, questions[], titles[], activeVersion?{id, number, publishedAtUtc}, publication?{id, state, errorCode?, issues?}, canManage, canPublish, version}` |
+| PUT `/api/organization/forms/{id}/draft` | `forms.manage` | `{name, prefix, audience, submitLabel, questions[], titles[], version}` | 200 `{version, questions[], titles[]}`, con las identidades emitidas; 409 |
 | POST `/api/organization/forms/{id}/publication-checks` | `forms.publish` | — | 200 `{contentHash, canPublish, nextVersionNumber, issues[], changes[]}`; no escribe (T8) |
 | POST `/api/organization/forms/{id}/publications` | `forms.publish` | `{contentHash}` | 202 `{publicationId, state}` + Location; no llama a Meta; `DraftChanged` si el borrador cambió (T8) |
 | GET `/api/organization/forms/{id}/publications/{publicationId}` | `forms.read` | — | 200 `{state, errorCode?, issues?, versionNumber}` |
@@ -446,7 +448,7 @@ public interface IStructuredRecordSource
 ```
 
 **Modelos:**
-- `StructuredFormVersion(DefinitionId, VersionId, Number, Prefix, Name, Audience, SubmitLabel, Questions[FieldId, Type, Label, Help, Required, MaxLength?, Decimals?, MinSelections?, MaxSelections?, CatalogId?, Presentation?, Options[ChoiceId, Label]], ContentHash)`;
+- `StructuredFormVersion(DefinitionId, VersionId, Number, Prefix, Name, Audience, SubmitLabel, Questions[FieldId, Type, Label, Help, Required, MaxLength?, Decimals?, MinSelections?, MaxSelections?, CatalogId?, Presentation?, Options[ChoiceId, Label]], Titles[TitleId, Text, BeforeFieldId], ContentHash)`;
 - `StructuredSendableForm(Version, Offers[FieldId → Options[ItemRef(CatalogId, ItemId), Text, Detail?, Code?, Value?]], Problems[FieldId, Code])`: lo que se manda, con la oferta de cada pregunta de catálogo (§6b);
 - `StructuredFormChoice`, de `ListSendableAsync`, suma `HasProblems`;
 - `StructuredRecipient(Kind: Member|Contact, UserId?, ContactId?)`: quien recibe (T15). `ContactId` es el id del `WhatsAppCustomer` de la organización;
@@ -513,6 +515,8 @@ El esqueleto del módulo lo deja la E12: `AddFormsModule` en las tres capas, la 
   - el teléfono al costado.
 
   En el teléfono, la pregunta se edita en una hoja y los botones van fijos abajo.
+
+  **Se redibuja con los títulos de sección (88):** «Agregar título» en el editor, el título entre las preguntas con su ⋮ (Editar, Subir, Bajar y Quitar) y el subtítulo en el teléfono al costado, en `FRM-Editor` y `M-FRM-Editor`. La referencia es CW15-B, del lienzo de ArquitecturaBase.
 - **`FRM-Catalogos-14`:** el listado de catálogos de la E12 con la columna «Lo usan».
 - **`WA-Mensajes-14`:** «Mis mensajes», con la tarjeta de una respuesta propia de un cliente que vinculó su cuenta.
 - **`FRM-Publicar`:** «Publicar la versión N en WhatsApp», con qué cambia y qué queda fijo.
@@ -560,7 +564,7 @@ El esqueleto del módulo lo deja la E12: `AddFormsModule` en las tres capas, la 
 | Dónde | Qué |
 | --- | --- |
 | `tests/…Domain.UnitTests/Forms/` | identidades; tipo cambiado = identidad nueva; de «elegir una» a «elegir varias» = identidad nueva, y cambiar el rango la conserva; prefijo (formato, bloqueo); transiciones de `FormPublication`; numeración en `FormDefinitionState` |
-| `tests/…Application.UnitTests/Modules/Forms/` | validadores (rango de «elegir varias»); reglas de publicar (textos obligatorios, «nada para publicar», un catálogo demasiado grande); guardar sin cambios compara la versión sin emitir identidades; armado del Flow (el `CheckboxGroup`, sin `data` cuando no hay nada que mandar, los textos del sistema en el idioma de quien recibe) y verificador de respuestas (cada tipo, punto y coma, decimales de más, «125.500» con 0 decimales, obligatoria vacía, opción ajena, ids repetidos o fuera del rango en «elegir varias», presupuesto de 16 KiB); el armado de la oferta (más de 200, más de 20 en varias, menos que el mínimo, ninguna en una obligatoria, nombres largos cortados); el perfil con datos y el verificador (`localId` fuera de la oferta) |
+| `tests/…Application.UnitTests/Modules/Forms/` | validadores (rango de «elegir varias»); reglas de publicar (textos obligatorios, un título sin preguntas debajo, «nada para publicar», un catálogo demasiado grande); guardar sin cambios compara la versión sin emitir identidades; armado del Flow (el `CheckboxGroup`, el subtítulo de un título de sección, sin `data` cuando no hay nada que mandar, los textos del sistema en el idioma de quien recibe) y verificador de respuestas (cada tipo, punto y coma, decimales de más, «125.500» con 0 decimales, obligatoria vacía, opción ajena, ids repetidos o fuera del rango en «elegir varias», presupuesto de 16 KiB); el armado de la oferta (más de 200, más de 20 en varias, menos que el mínimo, ninguna en una obligatoria, nombres largos cortados); el perfil con datos y el verificador (`localId` fuera de la oferta) |
 | `tests/…Api.IntegrationTests/Modules/Forms/` | cada ruta: 401, 403, feature apagada = 404, validación, 409, idempotencia y paginado; publicar con un canal de prueba (Published, Uncertain → verifica, Failed); captura idempotente y número sin saltos con dos capturas a la vez; «elegir varias» con una fila por opción y su posición; tarjeta con y sin `formrecords.read`; captura con una opción dada de baja = sin número, y la tarjeta con «Mandar de nuevo»; los campos sellados no cambian al editar el catálogo; un campo que usa la presentación de una pregunta no se quita; «Lo usan» con su segunda página; una respuesta o una publicación que termina mientras alguien edita no le da un 409 al guardar; publicar con un borrador que cambió después de comprobar = `DraftChanged`; baja de cuenta; ejemplos exportados de cada respuesta |
 | `tests/…Api.IntegrationTests/Modules/Forms/*IsolationTests.cs` | otra organización recibe 404 en cada ruta; RLS de cada tabla; la captura no cruza organizaciones; la oferta nunca trae opciones de otra organización (modelo: `Modules/Assistant/AssistantConversationIsolationTests.cs`) |
 | Volumen | ofrecer y capturar con un catálogo de 10.000 opciones y 20 campos, sin traer todo para quedarse con poco, con EXPLAIN |
@@ -607,7 +611,7 @@ Al planificar la E14 se verifican contra el código real.
 
 ## 13. Decisiones de producto de la etapa
 
-Están en la §5 de la hoja de ruta y no se vuelven a preguntar: 9 (la respuesta guarda todas las empresas activas de quien respondió), 10 (manda cualquiera con «Atender internos», y a un cliente, con «Atender clientes»), 11, 21 y 36 (un nombre de más de 30 caracteres se corta en 29 y se le agrega «…», y el completo va primero en el detalle), 12, 22 y 37 (un catálogo con filtros que da más de 200 opciones se guarda, y el tope frena al mandar), 49 y 50 (los clientes completan los formularios que son para clientes), 35 (el contenido no tiene idioma), 38 («elegir varias» va acá), 43 (botones y avisos), 78 (la E14 nace con la pregunta «Elegir de un catálogo»), 79 (una sola lista «Formularios», con la pestaña «Diseño») y 80 (lo que sale por la cola de WhatsApp se reintenta solo, sin «sin confirmar»).
+Están en la §5 de la hoja de ruta y no se vuelven a preguntar: 86 (la unidad va en la etiqueta, sin un dato «Unidad»), 88 (títulos de sección), 9 (la respuesta guarda todas las empresas activas de quien respondió), 10 (manda cualquiera con «Atender internos», y a un cliente, con «Atender clientes»), 11, 21 y 36 (un nombre de más de 30 caracteres se corta en 29 y se le agrega «…», y el completo va primero en el detalle), 12, 22 y 37 (un catálogo con filtros que da más de 200 opciones se guarda, y el tope frena al mandar), 49 y 50 (los clientes completan los formularios que son para clientes), 35 (el contenido no tiene idioma), 38 («elegir varias» va acá), 43 (botones y avisos), 78 (la E14 nace con la pregunta «Elegir de un catálogo»), 79 (una sola lista «Formularios», con la pestaña «Diseño») y 80 (lo que sale por la cola de WhatsApp se reintenta solo, sin «sin confirmar»).
 
 ## 14. Referencia de Meta (tomada de ArquitecturaBase)
 
@@ -616,7 +620,7 @@ Es lo único que se toma de ArquitecturaBase: lo que dice Meta y lo que ya se pa
 | Tema | Lo que se sabe |
 | --- | --- |
 | Perfil | `flow-static-7.3-r9`: Flow JSON `7.3`, la versión de Graph de la configuración del módulo (hoy `v26.0`, no la `v25.0` de ArquitecturaBase), sin endpoint ni `data_api_version`. Una pantalla `FORM` terminal: `SingleColumnLayout` > `Form` > controles + `Footer` con `on-click-action: complete` y un payload `field_<GuidN>: ${form.field_<GuidN>}`. Los textos del sistema son propiedades dinámicas de `data` (T6). |
-| Componentes | Texto corto: `TextInput` con `max-chars` (80 por defecto). Texto largo: `TextArea` con `max-length` (600). Número: `TextInput` de texto con el patrón `^-?(0|[1-9][0-9]*)([.,][0-9]+)?$`, de hasta 60 caracteres. Fecha: `CalendarPicker` single. Sí/no: `RadioButtonsGroup` con ids `true` y `false`. Elegir una: `Dropdown` con el `ChoiceId` como id. Elegir varias: `CheckboxGroup` de 1 a 20 opciones, con `min-selected-items` y `max-selected-items` sellados; sin ayuda, dice «Elegí hasta N». `max-chars` y `max-length` van como **números** JSON (Meta rechazó la versión que los mandaba como texto). |
+| Componentes | Texto corto: `TextInput` con `max-chars` (80 por defecto). Texto largo: `TextArea` con `max-length` (600). Número: `TextInput` de texto con el patrón `^-?(0|[1-9][0-9]*)([.,][0-9]+)?$`, de hasta 60 caracteres. Fecha: `CalendarPicker` single. Sí/no: `RadioButtonsGroup` con ids `true` y `false`. Elegir una: `Dropdown` con el `ChoiceId` como id. Elegir varias: `CheckboxGroup` de 1 a 20 opciones, con `min-selected-items` y `max-selected-items` sellados; sin ayuda, dice «Elegí hasta N». Título de sección: `TextSubheading`, sin probar todavía en ArquitecturaBase. `max-chars` y `max-length` van como **números** JSON (Meta rechazó la versión que los mandaba como texto). |
 | Límites | Etiqueta: 20 caracteres (30 en sí/no y en elegir varias, 40 en fecha). Ayuda: 80 (300 en la descripción de sí/no y en elegir varias). Opción: 30. Título: 80. Botón: 35. Hasta 40 preguntas, 50 opciones y 50 componentes; JSON ≤1 MiB. Se cuentan en UTF-16. Sin recortar: si no entra, se informa con su `FieldId` y el texto. |
 | Presupuesto de respuesta | 16 KiB. El peor caso es 785 + la suma de (42 + los bytes del valor): texto 2 + 6 × largo, número 62, fecha 12, sí/no 7, opción 38, elegir varias 38 por opción marcable. Si se pasa, no se publica (`ResponseTooLarge` sobre los largos de texto). |
 | Publicar | (1) Comprobar que el número sea de la WABA: `GET {waba}/phone_numbers`. (2) `POST {waba}/flows` con `{name, categories:["OTHER"]}`. (3) `POST {flow}/assets` multipart con `asset_type=FLOW_JSON`; los `validation_errors[].pointers[].path` se mapean a la pregunta y se descarta el texto de Meta. (4) `POST {flow}/publish`. (5) Verificar: `GET` del Flow y de la salud del número, bajar el asset (solo de `*.fbcdn.net` o `mmg.whatsapp.net`, sin redirecciones, ≤1 MiB) y comparar el SHA-256. Nombre técnico del Flow: `form_<publicationId>_<wabaId>`. |
@@ -631,7 +635,7 @@ Es lo único que se toma de ArquitecturaBase: lo que dice Meta y lo que ya se pa
 ## 15. Cómo se cierra
 
 La puerta de la etapa ([etapa en paralelo](../../guides/etapa-en-paralelo.md)) tiene las suites, el E2E real, la documentación en 0, la galería, el recorrido y la lista de control de `/puerta`. Además, hay una **prueba real con Meta** con el número de una organización de prueba, abriendo cada variante en un celular:
-1. **Formulario de prueba:** con los siete tipos de pregunta, entre ellos «elegir varias» con mínimo 1 y máximo 3. Meta confirma `PUBLISHED`, con un solo Flow.
+1. **Formulario de prueba:** con los siete tipos de pregunta, entre ellos «elegir varias» con mínimo 1 y máximo 3, y con un título de sección, que se ve como subtítulo. Meta confirma `PUBLISHED`, con un solo Flow.
 2. **Mandar a una cuenta en inglés:** el formulario llega como está escrito, y el botón, la ayuda de los números y «Elegí hasta N» llegan en inglés. Se abre en Android y en iPhone.
 3. **Completar:** dejar vacía una opcional, poner `12.50` en el número y marcar dos opciones. En el chat aparece el número de la respuesta tras recargar, y las dos opciones quedan en su orden.
 4. **Mirar lo que llega de Meta:** qué manda para una opcional vacía y para «elegir varias» sin marcar, y que `12.50` y `12,50` se guardan iguales.
