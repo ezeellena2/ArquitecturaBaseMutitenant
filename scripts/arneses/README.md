@@ -9,6 +9,7 @@ No es lo mismo que [el arnés estático](../../docs/architecture/arnes.md) (fich
 | Arnés | Qué hace | Repos |
 |---|---|---|
 | `realinear-docs` | alinea docs y punteros con el código: corrige rutas, símbolos, `arbol.md`, punteros e índices; crea y borra lo que quedó viejo | back y front |
+| `alinear-etapas` | controla que las etapas que faltan programar estén completas y alineadas: secciones de cada spec, tableros contra el lienzo, permisos, decisiones, enlaces, orden de las etapas y estados. Solo informa, con `--detectar` | back (lee el lienzo del front) |
 
 ## Cómo se corre
 

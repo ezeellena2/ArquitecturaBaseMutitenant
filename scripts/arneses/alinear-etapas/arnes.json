@@ -1,0 +1,16 @@
+{
+  "nombre": "alinear-etapas",
+  "descripcion": "Controla que las etapas que faltan programar estén completas y alineadas entre sí. Solo informa.",
+  "repos": ["back"],
+  "detectores": ["decisiones", "enlaces", "estados", "orden", "permisos", "secciones", "tableros"],
+  "excluir": [],
+  "permisos": {
+    "puedeCrear": [],
+    "puedeBorrar": [],
+    "nuncaToca": ["**/*"]
+  },
+  "verificacion": {
+    "back": ["node --test \"scripts/arneses/**/*.test.mjs\""]
+  },
+  "commit": "docs: alinear las etapas"
+}

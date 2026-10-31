@@ -107,4 +107,5 @@ El inventario de todos los estándares transversales (los definidos y los propue
 - `dotnet test`, o `dotnet test --project tests/<P>/<P>.csproj -- --filter-class "<Clase>"`
 - `aspire run` / `aspire stop`
 - `node scripts/arneses/arnes.mjs realinear-docs --detectar` (0 tokens); sin `--detectar` corre el arnés completo en una rama aparte. Tests: `node --test "scripts/arneses/**/*.test.mjs"`.
+- `node scripts/arneses/arnes.mjs alinear-etapas --detectar` (0 tokens): dice qué etapa que falta programar no está completa o no está alineada.
 - Migración: ver [backend.md §9](docs/architecture/backend.md#9-persistencia).

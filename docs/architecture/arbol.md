@@ -20,6 +20,8 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   ├── arneses/  arneses ejecutables: detectan (0 tokens), arreglan lo mecánico y llaman a un modelo barato (ADR 0037)
 │   │   ├── _plantilla/  se copia para crear un arnés nuevo; el CLI ignora las carpetas con _
 │   │   │   └── detectores/
+│   │   ├── alinear-etapas/  controla que las etapas que faltan programar estén completas y alineadas; solo informa
+│   │   │   └── detectores/
 │   │   ├── comun/  piezas compartidas por todos los arneses
 │   │   │   ├── fakes/  ejecutables falsos de claude y codex para los tests
 │   │   │   └── motores/  misma interfaz para los dos motores
