@@ -1,0 +1,47 @@
+[
+  {
+    "id": "formato|back|docs/features/asistente.md|formato-feature|secciones",
+    "motivo": "Ficha anterior a docs/rules/documentacion.md. Se pasa al formato cuando se la toque, y ahí sale de esta lista.",
+    "fecha": "2026-10-31"
+  },
+  {
+    "id": "formato|back|docs/features/contrato-http.md|formato-feature|secciones",
+    "motivo": "Ficha anterior a docs/rules/documentacion.md. Se pasa al formato cuando se la toque, y ahí sale de esta lista.",
+    "fecha": "2026-10-31"
+  },
+  {
+    "id": "formato|back|docs/features/identidad.md|formato-feature|secciones",
+    "motivo": "Ficha anterior a docs/rules/documentacion.md. Se pasa al formato cuando se la toque, y ahí sale de esta lista.",
+    "fecha": "2026-10-31"
+  },
+  {
+    "id": "formato|back|docs/features/organizaciones.md|formato-feature|secciones",
+    "motivo": "Ficha anterior a docs/rules/documentacion.md. Se pasa al formato cuando se la toque, y ahí sale de esta lista.",
+    "fecha": "2026-10-31"
+  },
+  {
+    "id": "formato|back|docs/features/plataforma.md|formato-feature|secciones",
+    "motivo": "Ficha anterior a docs/rules/documentacion.md. Se pasa al formato cuando se la toque, y ahí sale de esta lista.",
+    "fecha": "2026-10-31"
+  },
+  {
+    "id": "formato|back|docs/features/whatsapp.md|formato-feature|secciones",
+    "motivo": "Ficha anterior a docs/rules/documentacion.md. Se pasa al formato cuando se la toque, y ahí sale de esta lista.",
+    "fecha": "2026-10-31"
+  },
+  {
+    "id": "formato|back|docs/plans/formularios/12-catalogos.md|muy-largo|palabras",
+    "motivo": "Spec detallada, anterior a la plantilla y aprobada así. Muere al cerrar la E12.",
+    "fecha": "2026-10-31"
+  },
+  {
+    "id": "formato|back|docs/plans/formularios/14-formularios.md|muy-largo|palabras",
+    "motivo": "Spec detallada, anterior a la plantilla y aprobada así. Muere al cerrar la E14.",
+    "fecha": "2026-10-31"
+  },
+  {
+    "id": "formato|back|docs/plans/formularios/22-biblioteca.md|muy-largo|palabras",
+    "motivo": "Spec detallada, anterior a la plantilla y aprobada así. Muere al cerrar la E22.",
+    "fecha": "2026-10-31"
+  }
+]

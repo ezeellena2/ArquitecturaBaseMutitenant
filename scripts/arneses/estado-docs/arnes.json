@@ -1,0 +1,16 @@
+{
+  "nombre": "estado-docs",
+  "descripcion": "Dice qué documentos quedaron viejos, terminaron o están fuera de formato. Solo informa.",
+  "repos": ["back"],
+  "detectores": ["deriva", "estados", "formato", "futuro", "huerfanos"],
+  "excluir": [],
+  "permisos": {
+    "puedeCrear": [],
+    "puedeBorrar": [],
+    "nuncaToca": ["**/*"]
+  },
+  "verificacion": {
+    "back": ["node --test \"scripts/arneses/**/*.test.mjs\""]
+  },
+  "commit": "docs: estado de la documentación"
+}
