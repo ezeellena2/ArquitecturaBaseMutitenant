@@ -32,7 +32,7 @@ Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sec
 | **Plataforma** | Mantiene la biblioteca de plantillas y habilita el módulo por organización. **Nunca ve formularios, respuestas ni archivos de una organización.** |
 | **Organización (B2B)** | Dueña de sus formularios, catálogos, reglas, respuestas y archivos. Los diseña quien tiene permiso; los responden sus empleados y sus clientes (49). |
 | **Empresa** | En la v1 los formularios son de la organización; la respuesta guarda las empresas de quien respondió, para filtrar ([decisiones 1 y 9](#5-decisiones-de-producto)). |
-| **Empleado** | Miembro activo con teléfono verificado y permiso `formrecords.create`. Lo reconoce la bandeja «Internos» de E11. |
+| **Empleado** | Miembro activo con permiso `formrecords.create`. Por WhatsApp, además, con teléfono verificado: lo reconoce la bandeja «Internos» de E11. Desde la web (E20) alcanza con su sesión (89). |
 | **Cliente de la organización** | Cualquier contacto de la bandeja «Clientes» de E11, tenga o no cuenta. Completa los formularios que son para clientes (decisiones 49 y 50). Si vinculó su cuenta personal, ve la copia en «Mis mensajes». |
 
 ### Clasificación de los datos
@@ -47,7 +47,7 @@ Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sec
 
 | Dependencia | Para qué | Etapa que la necesita |
 | --- | --- | --- |
-| **E11: WhatsApp por organización** (números propios, alta embebida, token por organización, bandejas y contactos) | Sin número de la organización no hay dónde publicar ni a quién mandar. Los Flows se crean en el WABA de la organización y su costo lo paga la organización. Los catálogos de contactos salen de la bandeja Clientes. | E12 en adelante (requisito duro) |
+| **E11: WhatsApp por organización** (números propios, alta embebida, token por organización, bandejas y contactos) | Sin número de la organización no hay a quién mandar, y hasta la E20 tampoco dónde publicar (98). Los Flows se crean en el WABA de la organización y su costo lo paga la organización. Los catálogos de contactos salen de la bandeja Clientes. | E12 en adelante (requisito duro) |
 | **E9: endurecimiento** | Redis, límites por organización y el fuzz de aislamiento sobre todas las rutas. El módulo nace con esas guardas y el fuzz cubre sus rutas. | E12 en adelante |
 | **E10: almacenamiento en la nube** | El adaptador de nube de `IFileStore` (ADR 0048, D15). En desarrollo alcanza con `LocalFileStore`. | E18 en producción |
 | **Excel (P12)** | Importar y exportar catálogos, y exportar la planilla. Se adopta con ClosedXML, que ya usa la E11, detrás de un puerto del módulo. | E12 |
@@ -69,7 +69,7 @@ Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sec
   - `IStructuredContactSource` (E12): Forms lee los contactos para un catálogo, y sus nombres;
   - `IStructuredRecordOriginSource` (E15): Forms lee la conversación de una respuesta.
 - **Implementaciones apagadas.** El núcleo trae las implementaciones apagadas de esos puertos:
-  - sin WhatsApp, los formularios se diseñan pero no se mandan;
+  - sin WhatsApp, los formularios se diseñan pero no se mandan; desde la E20 se publican solo para la app (98);
   - sin Forms, WhatsApp anda como siempre.
 - **Ids y transacciones.**
   - Cada lado guarda los ids del otro como opacos, sin claves foráneas.
@@ -95,7 +95,7 @@ Estado: **aprobada el 2026-10-12, con las decisiones de producto tomadas** ([sec
   | `formpersondata.manage` | E16 | Administrar los datos de las personas | Manage people data | Definir los datos de las personas, como «Zona». | Define people data, such as Zone. |
   | `formrules.manage` | E21 | Administrar reglas y PDF | Manage rules and PDF | Armar las reglas de un formulario y el diseño de su PDF. | Build a form's rules and its PDF design. |
   | `formapprovals.decide` | E21 | Aprobar o rechazar respuestas | Approve or reject responses | Decidir las respuestas que piden aprobación, según el rol de la regla, menos las que cargó la misma persona (25). | Decide the responses that need approval, according to the rule's role, except the ones the same person submitted. |
-  | `formrecords.correct` | E21 | Corregir respuestas | Correct responses | Corregir los valores de una respuesta mientras está recibida o por aprobar (58). | Correct a response's values while it is received or awaiting approval. |
+  | `formrecords.correct` | E21 | Corregir y anular respuestas | Correct and void responses | Corregir o anular cualquier respuesta, en cualquier momento (93). | Correct or void any response at any time. |
   | `formsuggestions.manage` | E23 | Administrar sugerencias entre formularios | Manage suggestions between forms | Elegir qué formulario se sugiere después de otro. | Choose which form is suggested after another. |
 - Cada permiso nuevo trae su migración que actualiza los roles de sistema de las organizaciones existentes (modelo: `20261010203618_SystemRoleAssistantPermissions.cs`).
 - **Permiso de plataforma:** uno para mantener la biblioteca (E22), con `[HasPlatformPermission]`.
@@ -246,6 +246,8 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Las entradas:** «Cargar» en cada fila de «Formularios» y «Agregar respuesta» en la planilla (83). Se carga en una página propia o en un panel al costado (84).
 - **Lo propio:** quien solo carga abre «Formularios» y ve la planilla con lo suyo (85).
 - **El armado:** hasta tres preguntas por renglón y zonas plegables; el ancho sale del tipo de pregunta (87).
+- **Listas dependientes,** solo en la web (94).
+- **Formularios solo para la app:** sin número conectado, con una lista dependiente o con un catálogo a mano de más de 200 opciones, se publica sin Meta y se carga desde la web (94, 96 y 98).
 - **Resumen:** [formularios/20-cargar-desde-la-web.md](formularios/20-cargar-desde-la-web.md).
 - **Criterios:**
   - un solo lugar valida y numera; los archivos que se suben se verifican igual que los de WhatsApp;
@@ -260,7 +262,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Un solo motor de acciones,** con ejecuciones idempotentes y el efecto fuera de la transacción.
 - **Aprobación de un nivel:** nadie aprueba lo que cargó. «Por aprobar» va en la lista «Formularios» y en «Para resolver», con la misma fuente (ADR 0040).
 - **PDF** como copia fija, con los campos «Dato», las fotos, las líneas y los cálculos.
-- **Corregir una respuesta** (58), con el permiso nuevo «Corregir respuestas»: solo los valores, y solo mientras está recibida o por aprobar. **Pendiente:** P3 de la [§7](#7-decisiones-pendientes), que puede reemplazarla.
+- **Corregir y anular una respuesta** (91 a 93), con el permiso nuevo «Corregir y anular respuestas». La corrección reemplaza a la anterior con el mismo número y vuelve a pasar por las reglas; anular deja la respuesta «Anulada», sin borrarla.
 - **Lo propio de quien solo carga** (85) suma el estado, el PDF y el motivo de rechazo.
 - **Avisos por WhatsApp** con el número de la organización. Fuera de las 24 horas, con una plantilla aprobada de la organización (61), que suma el encabezado con documento y el llenado de sus variables.
 - **Avisar a una persona y mandar por correo** (62), con el PDF adjunto si se elige, y la pregunta «Correo».
@@ -329,7 +331,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 ### Después del bloque
 
 - **Integraciones, lo primero después del bloque** (76): un módulo `Integrations`, con conexiones y credenciales por organización. La API pública y el MCP necesitan una identidad por organización. Quedan abiertas las 13 decisiones de su estudio.
-- **Catálogos, fases 3 a 6:** la búsqueda en vivo (56) y los orígenes externos.
+- **Catálogos, fases 3 a 6:** la búsqueda en vivo (56), las listas dependientes en WhatsApp (94) y los orígenes externos.
 - **La conexión a la base de un cliente,** con una solución simple: un agente del lado del cliente o una réplica de solo lectura.
 - **Los tableros que cruzan formularios.**
 - **Importar respuestas desde Excel, y cargar a nombre de otra persona.**
@@ -499,7 +501,7 @@ Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 3, catálogo
 Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 4, ver las respuestas):
 
 57. **El tablero automático de cada formulario** pasa de la E25 a la E15, junto con la planilla: no depende de los documentos.
-58. **Corregir una respuesta** entra al bloque, en la E21: con un permiso nuevo, «Corregir respuestas»; solo mientras está recibida o por aprobar, porque lo aprobado queda fijo con su PDF; solo los valores, no los archivos. Conserva el número, queda marcada «Corregida» y la actividad guarda qué cambió. El Excel sigue con hasta 10.000 respuestas por vez.
+58. **Corregir una respuesta** entra al bloque, en la E21: con un permiso nuevo, «Corregir respuestas»; solo mientras está recibida o por aprobar, porque lo aprobado queda fijo con su PDF; solo los valores, no los archivos. Conserva el número, queda marcada «Corregida» y la actividad guarda qué cambió. El Excel sigue con hasta 10.000 respuestas por vez. Reemplazada por la 91 a la 93.
 
 Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 5, reglas, aprobación y PDF):
 
@@ -526,7 +528,7 @@ Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 7, el asiste
 Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 8, los documentos):
 
 70. **También se leen los documentos que mandan los clientes,** con los formularios que son para clientes (50).
-71. **La carga sin confirmar entra al bloque,** en la E25: un interruptor «Cargar solo si es seguro» por formulario, que carga sin preguntar solo si el formulario quedó reconocido sin duda, las validaciones dan bien sin duplicado, y ese formulario tiene sus últimas 20 cargas confirmadas sin correcciones. Nunca se usa la seguridad que declara el modelo, y lo cargado se puede corregir (58).
+71. **La carga sin confirmar entra al bloque,** en la E25: un interruptor «Cargar solo si es seguro» por formulario, que carga sin preguntar solo si el formulario quedó reconocido sin duda, las validaciones dan bien sin duplicado, y ese formulario tiene sus últimas 20 cargas confirmadas sin correcciones. Nunca se usa la seguridad que declara el modelo, y lo cargado se puede corregir (91).
 72. **El único formulario estándar de la primera versión** es «Comprobante de transferencia». Los demás los suma la plataforma después, como plantillas.
 
 Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 9, lo que queda afuera):
@@ -556,6 +558,19 @@ Elegidas por el usuario el 2026-10-29 y el 2026-10-30 en ArquitecturaBase, viend
 86. **La unidad va en la etiqueta,** como «Densidad (kg/ha)». No hay un dato «Unidad».
 87. **Hasta tres preguntas por renglón** (E20): tres columnas en la compu, dos en la tableta y una en el teléfono y en el panel. El ancho sale del tipo de pregunta, el autor no lo elige, y las preguntas no se reordenan.
 88. **Títulos de sección** (E14 y E20): el autor agrega títulos entre las preguntas. En WhatsApp, cada título es un subtítulo; en la web, arma una zona. Todas las zonas se pliegan y arrancan abiertas, y al enviar se abre sola la que tiene errores.
+
+Elegidas por el usuario el 2026-10-31, al evaluar el traspaso 3 contra este modelo (las recomendadas, salvo la 98):
+
+89. **Cargar desde la web no exige el teléfono verificado** (E20): alcanza con ser miembro activo y tener `formrecords.create`. El teléfono sigue reconociendo al empleado por WhatsApp.
+90. **El canal se llama «App»** (E20), en la planilla, sus filtros, el detalle y el Excel, también si se cargó desde el teléfono.
+91. **Corregir una respuesta** (E21), como en ArquitecturaBase. Reemplaza la 58. Se corrige con un motivo, también lo aprobado. La corrección reemplaza a la anterior con el mismo número, la anterior queda en el historial con su PDF, y vuelve a pasar por las reglas: si el formulario pide aprobación, vuelve a «Por aprobar».
+92. **Anular una respuesta** (E21): con motivo, queda «Anulada» con quién y cuándo, y cierra la aprobación pendiente. No se borra ni se deshace. Sale de la planilla, los conteos y el Excel, salvo que se pida.
+93. **Quién corrige y anula** (E21): quien la cargó, mientras no esté aprobada (siempre, si el formulario no pide aprobación), y con el permiso `formrecords.correct`, «Corregir y anular respuestas», cualquiera y en cualquier momento. Quien solo ve respuestas, no.
+94. **Listas dependientes** (E20): un filtro de catálogo «según otra respuesta», solo en la web. Va adentro de la E20, para formularios de empleados o para los dos. En WhatsApp, después del bloque, con el intercambio cifrado con Meta.
+95. **El avance al subir** (E20): el botón queda grisado con su texto, y una barra sin palabras muestra cuánto falta. Respeta la 43.
+96. **Un catálogo a mano de más de 200 opciones** (E20): si el formulario es para empleados o para los dos, se publica con un aviso y se carga solo desde la web. Si es solo para clientes, sigue sin publicarse.
+97. **Un cálculo no se ve mientras se carga** (E20): igual que por WhatsApp (54), y aparece en «Enviada».
+98. **Publicar solo para la app** (E20): es nueva, no viene de ArquitecturaBase. Una organización sin WhatsApp conectado publica igual, sin Meta, y sus empleados cargan desde la web. Si después conecta un número, vuelve a publicar para mandarlo por WhatsApp. Un formulario solo para clientes no se publica.
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
@@ -599,21 +614,6 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 ## 7. Decisiones pendientes
 
-Salen de evaluar el [traspaso 3](../../../ArquitecturaBase/docs/plans/2026-10-30-traspaso-multitenant-carga-desde-la-app.md) contra este modelo. Se le preguntan al usuario de a una y, al decidirse, pasan a la §5.
+Ninguna.
 
-- **P1 · El teléfono verificado para cargar desde la web (E20).** La §2 dice que un empleado es un miembro activo con teléfono verificado, porque WhatsApp lo reconoce por su número. En la web ya entra con su sesión, y allá no se exige. **Recomendada:** no exigirlo.
-- **P2 · La palabra del canal (E20).** Falta elegir qué dice «Canal» en la planilla. Allá dice «App», porque también cubre el teléfono. **Recomendada:** «App». El valor técnico sigue siendo `web`.
-- **P3 · Corregir y anular (E21).** Las decisiones 6 a 8 de allá chocan con la 58:
-  - la 58 corrige solo valores, solo mientras la respuesta está recibida o por aprobar, sin volver a correr las reglas;
-  - allá la corrección reemplaza a la anterior con el mismo número, pide motivo, vuelve a pasar por las reglas y puede tocar una aprobada, que vuelve a «Por aprobar»;
-  - allá se suma anular con motivo, un estado que acá no existe;
-  - allá corrige y anula quien la cargó, mientras no esté aprobada, y con un permiso, cualquiera y siempre.
-
-  **Recomendada:** adoptar las de allá, que reemplazan a la 58, y que `formrecords.correct` pase a «Corregir y anular respuestas».
-- **P4 · Listas dependientes (E20).** Es un filtro de catálogo «según otra respuesta», no una condición de la E19: no oculta la pregunta, sino que achica sus opciones. Un Flow de WhatsApp no puede hacerlo sin el intercambio cifrado con Meta. Por la 78 no puede ir en la E16, porque hasta la E20 no hay dónde usarlo. **Recomendada:** adentro de la E20, solo en la web, para formularios de empleados.
-- **P5 · El avance al subir (E20).** Allá el botón dice «Enviando… 64 %», y la 43 dice que mientras trabaja queda grisado con su mismo texto. **Recomendada:** el botón grisado con su texto y una barra de avance sin palabras.
-- **P6 · Un formulario que solo se puede cargar por la web (E14 y E20).** La T23 de la E14 no deja publicar un catálogo a mano de más de 200 opciones porque «nunca se podría mandar», pero desde la web sí se puede cargar. **Recomendada:** desde la E20, si es para empleados o para los dos, se publica con un aviso que no frena (37) y solo se carga desde la web. Si es solo para clientes, sigue sin publicarse.
-- **P7 · Ver un cálculo mientras se carga (E20).** La 54 dice que por WhatsApp no se ve el total antes de enviar, y no habla de la web. **Recomendada:** igual que por WhatsApp: se ve en «Enviada».
-- **P8 · Una organización sin WhatsApp (E14 y E20).** Es nuevo, no está en el traspaso. Publicar es publicar en Meta: sin número conectado responde `ChannelUnavailable`, y sin una versión publicada no hay nada para cargar desde la web. **Recomendada:** dejarlo así en el bloque.
-
-Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82 y las del traspaso 3 como decisiones 83 a 88.
+Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, y las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98.
