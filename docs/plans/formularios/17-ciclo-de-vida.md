@@ -1,6 +1,6 @@
 # E17 · Ciclo de vida: dar de baja, reactivar, borrar y copiar (spec)
 
-**Estado:** spec de la etapa 17 del bloque (decisiones 34, 74 y 78), con el [formato](plantilla.md) de las etapas. En ArquitecturaBase está programado y revisado; copiar no existe allá. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E16.
+**Estado:** pendiente · spec de la etapa 17 del bloque (decisiones 34, 74 y 78), con el [formato](plantilla.md) de las etapas. En ArquitecturaBase está programado y revisado; copiar no existe allá. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E16.
 
 ## Qué leer
 
