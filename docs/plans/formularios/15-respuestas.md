@@ -32,7 +32,7 @@ Antes de empezar, en este orden:
 ## Qué se construye
 
 **La lista «Formularios» (79, `MF1`):**
-- con `formrecords.read` suma tres columnas, un dato en cada una: Respuestas (de `LastRecordNumber`), Última respuesta (su número, que la abre) y Recibida. Sin valores, en una sola consulta paginada;
+- con `formrecords.read`, Preguntas y Último cambio dan lugar a tres columnas, un dato en cada una: Respuestas (de `LastRecordNumber`), Última respuesta (su número, que la abre) y Recibida. Sin valores, en una sola consulta paginada. Sin ese permiso, la lista sigue como en la E14;
 - quien ve respuestas y no tiene `forms.read` usa otra ruta, porque `[HasPermission]` pide un solo permiso. Ve solo los formularios publicados, con el nombre de su versión activa y nunca el del borrador, sin «En WhatsApp»;
 - el nombre abre «Respuestas» si hay una versión publicada y se pueden ver; si no, «Diseño».
 
@@ -234,6 +234,7 @@ Cada punto lleva su test, escrito durante la etapa:
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
+- **La planilla pagina por páginas y con total,** aunque las respuestas solo crezcan: es un listado de negocio, con filtros y conteos, no un historial como la auditoría o los mensajes, que paginan por cursor. Lo sostienen sus índices, y se prueba con volumen.
 - **La navegación** (34), con una sola lista «Formularios» y pestañas por formulario (79).
 - **Sin migrar:** las respuestas de las etapas anteriores aparecen tal cual.
 - **Exportar:** `.xlsx`, con permiso propio, hasta 10.000 respuestas y sin trabajos de fondo.

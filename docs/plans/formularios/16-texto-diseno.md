@@ -28,7 +28,7 @@ Te paso los tableros de la E16, datos de las personas y filtros por destinatario
    - estados: «Le falta el dato», «El filtro no funciona», más opciones que el tope y solo lectura. Sin campos de papel «Filtro», la sección no aparece.
 5. **`FRM-Publicar-16`:** sobre `FRM-Publicar`, los avisos en su lista, aparte de lo que frena: «Como mucho 18 opciones por persona» y «2 personas sin Zona». Los avisos no apagan «Publicar». En un formulario para los dos, un aviso dice que no se le va a poder mandar a un cliente.
 6. **`WA-Chats-Formulario-16` y `M-WA-Chats-Formulario-16`:** sobre `WA-Chats-Formulario`, un formulario que no se puede mandar, con el motivo en rojo y el envío grisado: le falta «Zona», el filtro no funciona, y a un cliente.
-7. **`FRM-Respuestas-16`:** sobre `FRM-Respuestas`, «Columnas» con la subcolumna «Proveedor · Zona» apagada: los campos de papel «Filtro» salen apagados y se prenden ahí.
+7. **`FRM-Respuestas-16` y `M-FRM-Respuestas-16`:** sobre `FRM-Respuestas`, «Columnas» con la subcolumna «Proveedor · Zona» apagada: los campos de papel «Filtro» salen apagados y se prenden ahí.
 
 **Recorrido guiado.** Definir «Zona», cargársela a dos personas, marcar «Zona» como filtro en «Proveedores», armar el filtro en la pregunta, verlo con «Como si lo recibiera», publicar con el aviso y mandarle a alguien sin el dato.
 

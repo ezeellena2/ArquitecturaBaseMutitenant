@@ -73,7 +73,7 @@ Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](16-texto-d
 | `FRM-Editor-16` y `M-FRM-Editor-16` | «Qué opciones ve cada persona» en la pregunta (`CE4-A`) |
 | `FRM-Publicar-16` | los avisos, aparte de lo que frena |
 | `WA-Chats-Formulario-16` y `M-WA-Chats-Formulario-16` | el formulario que no se puede mandar, con el motivo |
-| `FRM-Respuestas-16` | «Columnas», con las subcolumnas de los filtros apagadas |
+| `FRM-Respuestas-16` y `M-FRM-Respuestas-16` | «Columnas», con las subcolumnas de los filtros apagadas |
 
 **«Datos de las personas»:** dos secciones. Los datos: nombre, tipo, quién lo usa, cuántos tienen valor, estado y ⋮ (Editar, Dar de baja o Reactivar). Las personas: una columna por dato activo, «—» si no tiene y ✎ con `users.manage`. Con el tope de 20, «Nuevo dato» queda grisado, con el motivo en su tooltip. Sin `users.read`, la segunda sección no aparece.
 
@@ -81,7 +81,7 @@ Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](16-texto-d
 
 **La ficha del usuario:** las pestañas aparecen solo si un módulo aporta una; si no, queda como hoy. «Datos» tiene sus botones y se guarda aparte del acceso, solo si cambió. Salir con cambios pregunta antes. Un error queda en la pestaña.
 
-**«Qué opciones ve cada persona»:** un renglón por filtro, «Campo es valor», con ✕; «Agregar un filtro según quien lo recibe» y «Agregar un filtro fijo»; «Como si lo recibiera», con la persona y el resultado; y debajo el máximo por persona y quién no tiene el dato, con «Cargar los datos» para quien tiene `formpersondata.manage`. Sin campos de papel «Filtro», la sección no aparece. Con solo `forms.read`, se lee sin editar.
+**«Qué opciones ve cada persona»:** un renglón por filtro, «Campo es valor», con ✕; «Agregar un filtro según quien lo recibe» y «Agregar un filtro fijo»; «Como si lo recibiera», con la persona y el resultado; y debajo el máximo por persona y quién no tiene el dato, con «Cargar los datos» para quien tiene `formpersondata.manage` y `users.manage`. Sin campos de papel «Filtro», la sección no aparece. Con solo `forms.read`, se lee sin editar.
 
 **Estados:** para cada tablero, cargando, vacío y error, más:
 - **Datos:** 20 datos, un dato en uso (dar de baja grisado, con quién lo usa en su tooltip), cambiar el tipo con valores, y solo `formpersondata.manage`;
@@ -115,9 +115,9 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]` y `[Feat
 | Ruta | Qué suma |
 | --- | --- |
 | `GET` y `PUT /catalogs/{id}` | `fields[].role` (`Data` o `Filter`); ausente es `Data` |
-| `GET /{id}` y `PUT /{id}/draft` | `questions[].recipientFilters?[]`: `{fieldId, mode, personDataId?, value?}`, con `mode` `fixed` o `recipient` |
+| `GET /{id}` y `PUT /{id}/draft` | `questions[].recipientFilters?[]`: `{fieldId, fieldName, mode, personDataId?, personDataName?, value?, valueLabel?}`, con `mode` `fixed` o `recipient`. Los nombres van en la lectura, porque con solo `forms.read` no se llega a `/person-data/options` |
 | `POST /{id}/publication-checks` | `warnings[]`: `{fieldId, code, max?, maxLabel?, limit?, people?}`, con `code` `MaxOptionsPerRecipient`, `PeopleWithoutData` o `NotForCustomers` |
-| `GET …/conversations/{id}/forms` | `offerProblems` suma `RecipientDataMissing`, con `dataName`, `FilterUnavailable` y `NotForCustomers` |
+| `GET …/conversations/{id}/forms` | `offerProblems` suma `RecipientDataMissing`, con `dataName`, `FilterUnavailable` y `NotForCustomers`. `StructuredFormChoice.OfferProblems` suma `DataName?` |
 | `GET /{id}/records/columns` y el detalle | `catalogField.role` y `fields[].role`; ausente es `Data` |
 
 **Errores** (en `Domain/Forms/`, con sus textos en `FormsTexts.resx` y `.en.resx`):
@@ -161,7 +161,8 @@ Dos migraciones: `<fecha>_FormPersonData.cs` y `<fecha>_SystemRoleFormPersonData
 
 | Columna | Tipo | Regla |
 | --- | --- | --- |
-| `TenantId`, `MemberId` | uuid | clave; FK compuesta a `Members` |
+| `TenantId`, `Id` | uuid | clave. La auditoría pide un `Id` propio |
+| `MemberId` | uuid | único; FK compuesta a `Members` |
 | `Values` | jsonb, `{}` por defecto | mapa de identidad del dato a texto o a identidad de la opción, con índice GIN `jsonb_path_ops` |
 
 ## Pasos

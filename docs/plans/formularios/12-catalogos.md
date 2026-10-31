@@ -67,7 +67,7 @@ Siguen las reglas del repo y, cuando hay más de una forma, la más simple. Las 
 | C11 | **La vista previa, aplicar y exportar van de a uno por persona.** Es una barrera con vencimiento (lease) por persona, guardada en PostgreSQL, que se toma sin esperar: si está tomada, `Forms.CatalogImport.Busy`. No es `AdvisoryLockExtensions`, que espera, ni necesita transacción, porque la vista previa no la abre. La barrera vence sola si el proceso se cae. Cuentan en las cuotas generales ([cuotas](../../rules/cuotas.md)), sin perfil propio. | Nunca un limitador por proceso. El repo no tiene un «probar sin esperar»: la forma se suma a la ficha de [concurrencia](../../rules/concurrencia.md) al planificar. |
 | C12 | **La fuente «Contactos» la da WhatsApp por un puerto neutral del núcleo** (`IStructuredContactSource`, en `Application/Interfaces/Integrations/StructuredData/`). Forms nunca referencia a WhatsApp; sin WhatsApp, la implementación apagada no devuelve contactos y el origen no aparece. Las etiquetas de un contacto son textos (`text[]`), y los filtros comparan el texto. | `ModuleIsolationTests`. |
 | C13 | **El módulo nace acá,** como el Asistente: `AddFormsModule` en las tres capas, la feature `forms` (`FeatureScope.Business`, apagada por defecto), `FormsModelContributor`, `FormsContractContributor`, sus recursos y su registro en el front. El retiro probado y su guía van en la E14, cuando el módulo ya se conecta con WhatsApp por todos sus puertos. | El módulo nace con su primera etapa, y el retiro se prueba una vez ([AGENTS.md](../../../AGENTS.md)). |
-| C14 | **El nombre de un contacto** (81): la entrada de mensajes de WhatsApp completa el nombre de un contacto sin nombre con el de su perfil, una sola vez; si una persona lo cambia, la entrada no lo pisa. En las opciones, un nombre de más de 30 caracteres se corta como el de un miembro (36). Un contacto sin nombre ni perfil no se ofrece. | El nombre del contacto es opcional en la E11, y la entrada no lo completaba. |
+| C14 | **El nombre de un contacto** (81): el webhook lee el nombre del perfil, `contacts[].profile.name`, y lo guarda en `WhatsAppMessage.ProfileName`, que se limpia con los datos personales del mensaje. La entrada completa el nombre de un contacto sin nombre con ese dato, una sola vez: `WhatsAppCustomer.ProfileNameTakenAtUtc` lo marca, así un nombre que una persona cambió o vació no se vuelve a llenar. En las opciones, un nombre de más de 30 caracteres se corta como el de un miembro (36). Un contacto sin nombre ni perfil no se ofrece. | El nombre del contacto es opcional en la E11, y la entrada no lo completaba. |
 
 ## 3. Modelo de datos
 
@@ -83,7 +83,7 @@ Siguen las reglas del repo y, cuando hay más de una forma, la más simple. Las 
 | Columna | Tipo | Regla |
 | --- | --- | --- |
 | `Id`, `TenantId` | uuid | — |
-| `Name` | texto ≤80 | obligatorio |
+| `Name` | texto ≤60, `ShortName()` | obligatorio |
 | `Description` | texto ≤300? | opcional |
 | `Source` | texto | `Manual`, `Members` o `Contacts`; no cambia después de crear |
 | `ValueType` | texto | `Text`, `Integer`, `Decimal` o `Date`; no cambia; `Members` y `Contacts` son siempre `Text` (C6) |
@@ -262,7 +262,7 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 | `A/Modules/Forms/Interfaces/Services/IFormCatalogService.cs`, `IFormCatalogImportService.cs` y sus servicios, con los helpers `FormCatalogFiltersPolicy`, `FormCatalogItemEditor`, `FormCatalogPositionGuard`, `FormCatalogFileResolver` (lee el archivo o lo pegado), `FormCatalogImportPolicy` (decide altas, cambios, bajas y errores, sin escribir) y `FormCatalogExportBuilder` (arma las filas que se exportan) | `AssistantConversationService.cs` y sus helpers; los sufijos son los de la lista cerrada de [capas-y-flujo](../../rules/capas-y-flujo.md) |
 | `A/Modules/Forms/Interfaces/Integrations/IFormCatalogSpreadsheet.cs` e `I/Modules/Forms/FormCatalogSpreadsheet.cs` (ClosedXML o CSV, solo celdas) | `IWhatsAppContactSpreadsheet.cs` y `I/Modules/WhatsApp/WhatsAppContactSpreadsheet.cs` |
 | `A/Interfaces/Persistence/IMemberDirectoryReader.cs` e `I/Persistence/Readers/MemberDirectoryReader.cs` (C2) | los readers del núcleo de `I/Persistence/Readers/` |
-| WhatsApp: la entrada de mensajes completa el nombre de un contacto sin nombre con el de su perfil (C14) | `I/Modules/WhatsApp/WhatsAppInboundProcessor.cs` |
+| WhatsApp: el nombre del perfil (C14): suma a `A/Modules/WhatsApp/Models/WhatsAppWebhookBatch.cs`, `D/WhatsApp/WhatsAppMessage.cs`, `D/WhatsApp/WhatsAppCustomer.cs` y `A/Modules/WhatsApp/Services/WhatsAppOrganizationInboundWriter.cs`, donde se crea el contacto, con su migración | esos mismos |
 | `A/Interfaces/Integrations/StructuredData/IStructuredContactSource.cs`, su modelo y `I/StructuredData/DisabledStructuredContactSource.cs`; en WhatsApp, `WhatsAppStructuredContactSource.cs` | `A/Interfaces/Integrations/Messaging/ILoginCodeChannel.cs`, `I/Messaging/Email/EmailLoginCodeChannel.cs` y `A/Modules/WhatsApp/Services/WhatsAppLoginCodeChannel.cs` |
 | `A/Modules/Forms/Catalogs/MembersCatalogSource.cs` (columnas, operadores y versión) | — (es una definición, sin servicios) |
 | `A/Modules/Forms/Interfaces/Persistence/IFormCatalogRepository.cs`, `IFormCatalogReader.cs`, `IFormWorkLease.cs`, `UniqueKeys.cs` | `A/Modules/Assistant/Interfaces/Persistence/` |

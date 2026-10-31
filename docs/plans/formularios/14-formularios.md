@@ -76,10 +76,10 @@ Las de producto están en la hoja de ruta (§5). Estas siguen las reglas del rep
 | T13 | **«Elegir varias» es un tipo propio** (`MultiChoice`), no una marca de la lista: de 1 a 20 opciones, con `0 ≤ mínimo ≤ máximo ≤ 20` y máximo mayor que cero. Es obligatoria si y solo si el mínimo es mayor que cero. Pasar de «elegir una» a «elegir varias» crea otra identidad; cambiar el rango la conserva. Sin ninguna marcada es «Sin respuesta». | Es la regla de ArquitecturaBase (C1-04), con el tope de WhatsApp. |
 | T14 | **Un mensaje sin datos no lleva `data`.** Un mapa vacío (`prefill_FORM:{}`) hace que el Flow no abra en Android. | Error ya pagado en el piloto de ArquitecturaBase. |
 | T15 | **Quien recibe y quien responde es un empleado o un cliente** (49). La sesión y la respuesta guardan uno de los dos: el usuario del miembro, o el contacto de la bandeja Clientes. A un empleado se le revisan la membresía y `formrecords.create`; a un cliente, que el formulario sea para clientes. | Un cliente no tiene cuenta ni permisos: se lo reconoce por el contacto, que es su número. |
-| T16 | **La respuesta de un cliente es dato de la organización** (`ITenantOwned`). Si el contacto vinculó su cuenta personal, ve la copia por la copia de la conversación de la E11, que ya es compartida: Forms no suma tablas compartidas. **En «Mis mensajes» ve la tarjeta con sus propias respuestas:** al capturar, WhatsApp guarda en esa copia la tarjeta armada (el nombre del formulario, el número y los valores que mandó), porque el acceso personal no lee `tenant` ni tiene `formrecords.read`. Si el contacto se borra, la respuesta queda (decisión 23) sin el vínculo ni el nombre. Si el cliente da de baja su cuenta vinculada, la respuesta queda con el contacto, y solo desaparece la copia de «Mis mensajes». | La regla de datos personales y la D4 de la E11. |
+| T16 | **La respuesta de un cliente es dato de la organización** (`ITenantOwned`). Si el contacto vinculó su cuenta personal, ve la copia por la copia de la conversación de la E11, que ya es compartida: Forms no suma tablas compartidas. **En «Mis mensajes» ve la tarjeta con sus propias respuestas:** al capturar, WhatsApp guarda en esa copia la tarjeta que le devuelve la captura (el nombre del formulario, el número y los valores que mandó), porque el acceso personal no lee `tenant` ni tiene `formrecords.read`. Si el contacto se borra, la respuesta queda (decisión 23) sin el vínculo ni el nombre. Si el cliente da de baja su cuenta vinculada, la respuesta queda con el contacto, y solo desaparece la copia de «Mis mensajes». | La regla de datos personales y la D4 de la E11. |
 | T17 | Una pregunta de elegir toma sus opciones de la pregunta o de un catálogo (`catalogId`). Cambiar el catálogo, o pasar de opciones propias a un catálogo, en una pregunta publicada crea una pregunta nueva, como cambiar el tipo. | Cambiar opciones no obliga a republicar, y las respuestas viejas no cambian de sentido. |
 | T18 | **Los ids que viajan a Meta son locales a la oferta** (`o1` … `o200`). La sesión guarda a qué ítem corresponde cada uno. También en «elegir varias». | No se mandan a Meta ids internos ni de personas, y «estar en la oferta» se comprueba solo. |
-| T19 | **La oferta la arma Forms y la guarda WhatsApp,** cifrada en la sesión (`ProtectedOffer`, texto que devuelve `IPayloadProtector`). Se borra con la retención, una vez procesada. | Forms conoce los catálogos y WhatsApp conoce la sesión. Como contiene nombres de personas, va cifrada. |
+| T19 | **La oferta la arma Forms y la guarda WhatsApp,** cifrada en la sesión (`ProtectedOffer`, texto que devuelve `IPayloadProtector`). Se borra una vez procesada o vencida (§6, punto 9). | Forms conoce los catálogos y WhatsApp conoce la sesión. Como contiene nombres de personas, va cifrada. |
 | T20 | Para un catálogo a mano, la captura comprueba que la opción siga activa; si no, `Forms.Record.OptionWithdrawn`. Para uno con filtros alcanza con que esté en la oferta. | Con filtros, lo que vio la persona es lo que vale. |
 | T21 | El Flow usa un perfil con datos iniciales. Cada pregunta de catálogo es un `Dropdown` o un `CheckboxGroup` con `data-source: ${data.field_<N>}`, y la pantalla declara su `data` con un `__example__` **[Meta]**. | Permite mandar opciones distintas a cada persona sin un endpoint de intercambio. |
 | T22 | **La presentación** arma el título y la descripción de cada opción al mandar: la del catálogo (E13) o la propia de la pregunta, que se guarda en el borrador y se sella con la versión. Lo que queda vacío o no entra frena la comprobación de publicar y el envío (36). Un campo que usa la presentación de una pregunta del borrador o de la versión activa no se quita (`Forms.Catalog.FieldInUse`): en la tabla de campos de la E13, su «Quitar» queda apagado con ese motivo. La captura lee los campos activos de las opciones elegidas, por lote y bajo sus bloqueos, y sella identidad, clave, nombre, tipo y valor. La tarjeta del chat no cambia. | Editar el catálogo después no cambia lo respondido. |
@@ -153,8 +153,9 @@ Las de producto están en la hoja de ruta (§5). Estas siguen las reglas del rep
 | `Number` | int | único por definición. Se muestra como `PREFIX-000123`, armado al leer. |
 | `SourceKey` | texto ≤200 | único por organización: `whatsapp:<sessionId>` |
 | `Channel` | texto | `whatsapp` |
-| `RespondentUserId` | uuid? | el empleado que respondió |
-| `RespondentContactId` | uuid? | el cliente que respondió: el id de su `WhatsAppCustomer` de la E11 (el contacto de la organización, no el `WhatsAppContact` técnico global); `null` si el contacto se borró. Un CHECK exige uno de los dos al crear |
+| `RespondentKind` | texto | `Member` o `Contact`, nunca nulo: dice quién respondió aunque el id ya no esté |
+| `RespondentUserId` | uuid? | el empleado que respondió; `null` si dio de baja su cuenta |
+| `RespondentContactId` | uuid? | el cliente que respondió: el id de su `WhatsAppCustomer` de la E11 (el contacto de la organización, no el `WhatsAppContact` técnico global); `null` si el contacto se borró. Un CHECK ata cada id a su tipo: `Member` no lleva `RespondentContactId`, y `Contact` no lleva `RespondentUserId` |
 | `RespondentCompanyIds` | uuid[] | todas las empresas activas del empleado que respondió, al responder (decisión 9); vacío para un cliente |
 | `SubmittedAtUtc` | timestamptz | la hora firmada por Meta |
 | `CreatedAtUtc` | — | — |
@@ -193,6 +194,7 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | `MetaFlowId` | texto? | único |
 | `Step` | texto | `Create`, `Upload`, `Validate`, `Publish`, `Verify` |
 | `State` | texto | `Accepted`, `InFlight`, `Uncertain`, `Published`, `Failed` |
+| `Profile` | texto | el perfil con que se publicó (§14) |
 | `FlowJsonHash`, `FieldMap` | texto, jsonb | `field_<N>` ↔ `FieldId`/`ChoiceId` |
 | `ErrorCode` y fechas | — | — |
 | — | único | `(TenantId, VersionId, WabaId)` |
@@ -204,17 +206,18 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | `Id`, `TenantId` | uuid | — |
 | `ConversationId` | uuid | **[E11]** |
 | `RecipientUserId` o `RecipientContactId`, `SentByUserId` | uuid | quien recibe es un empleado o un cliente (T15) |
-| `VersionId`, `BindingId`, `Culture` | — | `VersionId` opaco; `Culture` es el idioma de la cuenta de quien recibe, para los textos del sistema (T10) |
+| `VersionId`, `BindingId`, `FormName`, `Culture` | — | `VersionId` opaco; `FormName` se copia al mandar, porque una sesión rechazada o pendiente no tiene respuesta de donde leerlo; `Culture` es el idioma de la cuenta de quien recibe, para los textos del sistema (T10) |
 | `TokenHash` | texto 64 | único; el token viaja como `flow_token` y no se guarda |
 | `ExpiresAtUtc` | timestamptz | se crea + `WhatsApp:FlowSessionHours` (24 por defecto, de 1 a 168) |
 | `State` | texto | `Pending`, `Completed`, `Rejected`, `Expired`. «Venció sin respuesta» se calcula al leer (`Pending` con `ExpiresAtUtc` pasado), sin worker |
-| `RecordId`, `RecordNumber`, `ErrorCode` | — | resultado de Forms |
+| `RecordId`, `RecordNumber`, `ErrorCode`, `ErrorFieldLabel` | — | resultado de Forms; `ErrorFieldLabel` es el texto de la pregunta que nombra un rechazo |
 | `ResponseMessageId` | uuid? | único; el mensaje entrante **[E11]** |
 | `ProtectedOffer`, `OfferHash` | texto?, texto? | la oferta de las preguntas de catálogo, cifrada con `IPayloadProtector` (T19): `[{fieldId, options: [{localId, catalogId, itemId, text, detail?, code?, value?}]}]` |
 
 **Lo que se suma a las tablas de la E11 [E11]:**
 - **mensaje saliente:** un tipo «Formulario» que apunta a la sesión;
-- **mensaje entrante:** `ProtectedFlowResponse`, cifrado con `IPayloadProtector` y de hasta 24 KiB. Se borra con la retención de WhatsApp, solo cuando ya se procesó.
+- **mensaje entrante:** `ProtectedFlowResponse`, cifrado con `IPayloadProtector` y de hasta 24 KiB. Se borra con la retención de WhatsApp, solo cuando ya se procesó;
+- **copia compartida:** `WhatsAppLinkedMessage` suma `FormCard` jsonb, la tarjeta de T16.
 
 ## 4. Dominio y errores
 
@@ -263,6 +266,7 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | `Forms.Publication.DraftChanged` | Conflict | el borrador cambió después de comprobar (T8) |
 | `Forms.Publication.ChannelUnavailable` | ServiceUnavailable | sin WhatsApp, o sin número conectado [E11] |
 | `Forms.Publication.NotFound` | NotFound | — |
+| `Forms.Publication.NotResolvable` | Conflict | decir qué pasó con una publicación que no está `Unconfirmed` ni `NeedsReview` |
 | `Forms.Preview.NotAvailable` | NotFound | la versión no tiene un Flow publicado |
 | `Forms.Record.InvalidResponse` | Validation | valor desconocido, falta uno obligatorio, se pasa del límite o queda fuera del rango de «elegir varias» |
 | `Forms.Record.ReplayConflict` | Conflict | la misma sesión llegó con otro contenido |
@@ -283,7 +287,7 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | `WhatsApp.Flow.AccountUnavailable` | ServiceUnavailable | la WABA sin medio de pago o sin salud [E11] |
 | `WhatsApp.Flow.NotPublishedForNumber` | Conflict | el número del chat está en una WABA sin Flow de esa versión |
 | `WhatsApp.Flow.SessionExpired` | Conflict | la respuesta llegó pasada la sesión (hora de Meta) |
-| `WhatsApp.Chat.WindowClosed` / `NotEmployee` / `FormUnavailable` / `SendPending` | Conflict | reglas del botón (§6.6) |
+| `WhatsApp.Conversation.WindowClosed` (el de la E11), `WhatsApp.Chat.NotEmployee` / `FormUnavailable` / `SendPending` | Conflict | reglas del botón (§6.6) |
 
 Los códigos siguen `^[A-Z][A-Za-z]+(\.[A-Z][A-Za-z0-9]+){2,}$` (`ErrorCodeTests`). El 409 de edición es el común, `General.ConcurrencyConflict`, y es el único que pone el editor en conflicto: los otros 409 son errores que se corrigen.
 
@@ -301,11 +305,14 @@ Las rutas Business de Forms llevan `[Access(Access.Business)]` y `[FeatureGate("
 | POST `/api/organization/forms/{id}/publication-checks` | `forms.publish` | — | 200 `{contentHash, canPublish, nextVersionNumber, issues[], changes[]}`; no escribe (T8) |
 | POST `/api/organization/forms/{id}/publications` | `forms.publish` | `{contentHash}` | 202 `{publicationId, state}` + Location; no llama a Meta; `DraftChanged` si el borrador cambió (T8) |
 | GET `/api/organization/forms/{id}/publications/{publicationId}` | `forms.read` | — | 200 `{state, errorCode?, issues?, versionNumber}` |
+| POST `/api/organization/forms/{id}/publications/{publicationId}/check` | `forms.publish` | — | 200 `{state, errorCode?, issues?, versionNumber}`: «Consultar ahora» le pregunta a Meta y nunca repite un POST |
+| POST `/api/organization/forms/{id}/publications/{publicationId}/resolution` | `forms.publish` | `{outcome}`, `Published` o `NotPublished` | 200 lo mismo: la persona dice qué pasó, solo en `Unconfirmed` o `NeedsReview` |
 | GET `/api/organization/forms/{id}/versions/{versionId}/preview` | `forms.read` | — | 200 `{url, expiresAtUtc}`, con `Cache-Control: no-store` |
-| GET `/api/organization/whatsapp/{customers\|internal}/conversations/{id}/forms` **[E11]** | «Atender internos» o «Atender clientes», según la bandeja | `page`, `search` | 200 `{available, reason?, culture, forms: PagedResult<{definitionId, versionId, name, prefix}>}`; `culture` es el idioma de los textos del sistema que acompañan |
+| GET `/api/organization/whatsapp/{customers\|internal}/conversations/{id}/forms` **[E11]** | «Atender internos» o «Atender clientes», según la bandeja | `page`, `search` | 200 `{available, reason?, culture, forms: PagedResult<{definitionId, versionId, versionNumber, name, prefix, questionCount, optionCounts[{fieldId, count}], offerProblems[]}>}`; `culture` es el idioma de los textos del sistema que acompañan |
 | POST `/api/organization/whatsapp/{customers\|internal}/conversations/{id}/forms` **[E11]** | «Atender internos» o «Atender clientes», según la bandeja | `{definitionId, versionId, text}` (≤1024) | 202 `{sessionId, messageId}` |
 
 **Otras piezas del contrato:**
+- **La campana:** Forms aporta `formPublicationFailed` por `INotificationSource` (base de la 12), a quien tiene `forms.publish`.
 - **Tarjeta de respuesta [E11]:** los mensajes de la conversación suman un tipo `form`: `{sessionId, state, errorCode?, formName, displayNumber?, values?: [{fieldId, label, type, value, code?}], canReadValues}`. En «elegir varias», `value` es la lista de opciones en el orden recibido. El valor de catálogo muestra el texto que vio la persona y su código. Si la respuesta se rechazó con `OptionWithdrawn`, nombra la pregunta, no la opción.
 - **Webhook:** la misma ruta de la E8. Se agrega leer `interactive.nfm_reply`.
 
@@ -313,8 +320,8 @@ Las rutas Business de Forms llevan `[Access(Access.Business)]` y `[FeatureGate("
 - **`FormDetail` y `PUT …/draft`:** las preguntas `Choice` y `MultiChoice` llevan `catalogId?`. El selector de catálogo de la pregunta usa el listado de la E12, con `status=active`, y pide `formcatalogs.read`; sin ese permiso, «De un catálogo» queda grisado, con el motivo en su tooltip (43).
 - **`FormDetail` y `PUT …/draft`:** la pregunta lleva también su `presentation?` propia (T22).
 - **`publication-checks`:** suma `Forms.Draft.CatalogUnavailable`, `CatalogTooLarge` y `CatalogPresentationInvalid`.
-- **`GET …/conversations/{id}/forms`:** cada formulario trae `offerProblems[{fieldId, code}]` (`TooManyOptions`, `TooFewOptions`, `NoOptions`, `CatalogUnavailable` y `PresentationInvalid`) y la cantidad de opciones de cada pregunta de catálogo, nunca sus nombres. Si hay algún problema, el formulario aparece pero no se puede mandar.
-- **Las rutas de catálogos de la E12:** el listado y el detalle suman `usedByCount` (`null` sin `forms.read`), y se suma GET `/api/organization/forms/catalogs/{id}/used-by` (`formcatalogs.read`; `page`, `pageSize`, `search`, `sort` (`name`) → 200 `PagedResult<{formId, name}>`), con su segunda página en las pruebas de integración.
+- **`GET …/conversations/{id}/forms`:** cada formulario trae `offerProblems[{fieldId, code}]` (`TooManyOptions`, `TooFewOptions`, `NoOptions`, `CatalogUnavailable` y `PresentationInvalid`) y `optionCounts`, la cantidad de opciones de cada pregunta de catálogo, nunca sus nombres. Si hay algún problema, el formulario aparece pero no se puede mandar.
+- **Las rutas de catálogos de la E12:** el listado y el detalle suman `usedByCount` (`null` sin `forms.read`), y `fields[]` suma `inUse`, que apaga «Quitar». Se suma GET `/api/organization/forms/catalogs/{id}/used-by` (`forms.read`, porque da nombres de formularios; `page`, `pageSize`, `search`, `sort` (`name`) → 200 `PagedResult<{formId, name}>`), con su segunda página en las pruebas de integración.
 
 **Contrato y errores en OpenAPI:** se suman al `FormsContractContributor.cs` de la E12.
 
@@ -336,6 +343,7 @@ Las rutas Business de Forms llevan `[Access(Access.Business)]` y `[FeatureGate("
 3. **Comprobar.** Es solo lectura:
    - reglas de Forms y textos obligatorios;
    - `IStructuredFormChannel.Check(StructuredFormVersion)`, síncrono y puro: sin escrituras, sin bloqueos y sin Meta;
+   - `HasConnectedNumberAsync`, sin Meta: sin un número conectado, `ChannelUnavailable`;
    - la diferencia con la versión activa.
 4. **Publicar.**
    - **En la UoW del pedido:**
@@ -355,9 +363,12 @@ Las rutas Business de Forms llevan `[Access(Access.Business)]` y `[FeatureGate("
         - el adaptador `WhatsAppStructuredFormChannel` llama a `IWhatsAppFlowPublicationService.BeginStepAsync` para reservar el binding/paso y guardar `InFlight` en su única UoW; hace la llamada a Meta después del commit y entrega el resultado a `CompleteStepAsync`, que abre otra UoW. El adaptador no abre transacciones;
      3. entrega lo que devolvió el canal a `IFormPublicationService.CompleteAsync`, que en su única UoW aplica:
         - `Published` → `ActivationPending`, y se activa la versión en la fila de estado, en la misma UoW → `Published`;
+        - `Pending` → `Publishing`, con `NextCheckAtUtc`: Meta la está revisando;
         - `Uncertain` → `Unconfirmed`, con `NextCheckAtUtc`;
-        - rechazo definitivo → `Failed`, con sus `issues`.
-   - **Cuando quedó `Unconfirmed`,** el worker vuelve a consultar con `GetPublicationAsync`, que solo verifica y nunca repite un POST.
+        - rechazo definitivo → `Failed`, con sus `issues`. Una versión se publica en todas las WABAs o en ninguna: si una rechaza, queda `Failed`, y el Flow que haya quedado en otra no se usa.
+   - **Cuando quedó `Publishing` o `Unconfirmed`,** el worker vuelve a consultar con `GetPublicationAsync`, que solo verifica y nunca repite un POST.
+   - **«Consultar ahora»** hace esa misma consulta, en `IFormPublicationService.CheckAsync`, y aplica el resultado con `CompleteAsync`.
+   - **«Salió» y «No salió»,** para una publicación `Unconfirmed` o `NeedsReview`: `IFormPublicationService.ResolveAsync` la lleva a `Published`, activando la versión, o a `Failed`, en su única UoW. Sin `version`: lo protege el estado, bajo el bloqueo de la fila de estado, y dos a la vez dan `NotResolvable`. Sin esto, una publicación trabada frenaría todas las que siguen.
    - **Si se cae a mitad:** la reserva vuelve a tomar el trabajo, y el canal, al ver un `InFlight`, verifica en vez de repetir.
 5. **Vista previa:** `IStructuredFormChannel.GetPreviewAsync(versionId)` devuelve la URL de Meta con su vencimiento, sin guardar nada.
 6. **Mandar desde el chat** (módulo WhatsApp).
@@ -395,7 +406,8 @@ Las rutas Business de Forms llevan `[Access(Access.Business)]` y `[FeatureGate("
    - Forms decide con los permisos de quien mira: con `formrecords.read` devuelve los valores, y sin él solo el número.
    - En la lista de chats, la vista previa es el texto fijo «Respuesta del formulario».
 9. **Retención y baja.**
-   - La retención de WhatsApp borra `ProtectedFlowResponse` y `ProtectedOffer` cuando el mensaje ya se procesó; la respuesta y su número quedan (decisión 23).
+   - La retención de WhatsApp borra `ProtectedFlowResponse` cuando el mensaje ya se procesó; la respuesta y su número quedan (decisión 23).
+   - **`ProtectedOffer`** vive en una tabla de la organización, que esa retención no ve. Lo limpia `WhatsAppFlowSessionCleanupWorker`, que recorre las organizaciones con `TenantJobRunner` y borra la oferta de las sesiones procesadas y de las vencidas, así no quedan nombres de personas guardados.
    - `Application/Modules/Forms/Services/FormsAccountDeletionParticipant` decide las reglas dentro del alcance y la UoW de la baja, sin abrir otra ([datos-personales](../../rules/datos-personales.md)). Copia `Application/Modules/Assistant/Services/AssistantAccountDeletionParticipant.cs`: usa un puerto `IFormsAccountDeletionCleanupRepository`, cuya implementación en Infrastructure hace solo el cleanup EF y exige la transacción del llamador. Lo protege `AssistantMaintenanceLayerTests`, que se extiende para Forms. `ChoiceLabel` puede ser el nombre de otra persona (un catálogo de miembros), y la regla lo contempla.
 
 ## 6b. La pregunta de catálogo
@@ -403,9 +415,9 @@ Las rutas Business de Forms llevan `[Access(Access.Business)]` y `[FeatureGate("
 Cambia los flujos 2, 3, 6 y 7 para las preguntas con `catalogId`.
 
 1. **Guardar y comprobar:**
-   - `PUT …/draft` valida que el catálogo exista y se pueda usar;
+   - `PUT …/draft` rechaza solo un catálogo que no existe o es ajeno. Uno dado de baja, o que no se puede usar, se guarda y frena en `publication-checks`: si no, una baja impediría guardar cualquier otro cambio;
    - cambiar el catálogo de una pregunta ya publicada emite un `FieldId` nuevo (T17);
-   - la presentación propia de la pregunta se guarda en el borrador; si usa un campo quitado o inexistente, es `QuestionInvalid` en su pregunta;
+   - la presentación propia de la pregunta se guarda en el borrador; si usa un campo quitado o inexistente, se guarda y frena al publicar, con `QuestionInvalid` en su pregunta;
    - `IStructuredFormChannel.Check(StructuredFormVersion)` valida el perfil con datos (T21); un catálogo a mano que nunca se podría mandar no se publica (T23), ni una presentación que no entra (T22).
 2. **Mandar:**
    - `FindSendableAsync` de Forms resuelve, para quien recibe, la oferta de cada pregunta de catálogo, con la presentación de la pregunta o la del catálogo. Lee los catálogos a mano activos o la fuente con los filtros (los lectores de la E12), con una fila más que el tope; es solo lectura.
@@ -441,6 +453,7 @@ public interface IStructuredFormSource
 public interface IStructuredFormChannel
 {
     bool IsAvailable { get; }
+    Task<bool> HasConnectedNumberAsync(CancellationToken ct);
     StructuredFormCheck Check(StructuredFormVersion version);                           // puro
     Task<StructuredPublicationResult> PublishAsync(StructuredPublicationRequest request, CancellationToken ct);
     Task<StructuredPublicationResult> GetPublicationAsync(Guid publicationId, CancellationToken ct);
@@ -460,15 +473,15 @@ public interface IStructuredRecordSource
 **Modelos:**
 - `StructuredFormVersion(DefinitionId, VersionId, Number, Prefix, Name, Audience, SubmitLabel, Questions[FieldId, Type, Label, Help, Required, MaxLength?, Decimals?, MinSelections?, MaxSelections?, CatalogId?, Presentation?, Options[ChoiceId, Label]], Titles[TitleId, Text, BeforeFieldId], ContentHash)`;
 - `StructuredSendableForm(Version, Offers[FieldId → Options[ItemRef(CatalogId, ItemId), Text, Detail?, Code?, Value?]], Problems[FieldId, Code])`: lo que se manda, con la oferta de cada pregunta de catálogo (§6b);
-- `StructuredFormChoice`, de `ListSendableAsync`, suma `HasProblems`;
+- `StructuredFormChoice(DefinitionId, VersionId, VersionNumber, Name, Prefix, QuestionCount, OptionCounts[FieldId, Count], OfferProblems[FieldId, Code])`, de `ListSendableAsync`, con lo que muestra el diálogo;
 - `StructuredRecipient(Kind: Member|Contact, UserId?, ContactId?)`: quien recibe (T15). `ContactId` es el id del `WhatsAppCustomer` de la organización;
-- `StructuredRecordCapture(SourceKey, DefinitionId, VersionId, Respondent: StructuredRecipient, SubmittedAtUtc, Values[FieldId, Text?|Number?|Date?|Bool?|ChoiceId?|ChoiceIds[]?, CatalogId?, ChoiceCode?, ChoiceDetail?, ChoiceValue?])`;
-- `StructuredRecordReceipt(RecordId, Number, DisplayNumber)`;
+- `StructuredRecordCapture(SourceKey, DefinitionId, VersionId, Respondent: StructuredRecipient, SubmittedAtUtc, Values[FieldId, Text?|Number?|Date?|Bool?|Choices[]?])`. Cada opción elegida es `StructuredChosenOption(ChoiceId, Label, CatalogId?, Code?, Detail?, Value?)`, y «elegir varias» manda una por opción, en el orden recibido;
+- `StructuredRecordReceipt(RecordId, Number, DisplayNumber, Card)`: la tarjeta, con el nombre del formulario y lo que mandó, para la copia de T16;
 - `StructuredRecordCard(RecordId, DisplayNumber, FormName, CanReadValues, Values?)`;
 - `StructuredPublicationResult(State: Published|Pending|Uncertain|Failed, Issues[], NextCheckAtUtc?)`.
 
 **Implementaciones apagadas:**
-- **Sin WhatsApp:** `IsAvailable = false`. Se puede diseñar, y publicar responde `ChannelUnavailable`.
+- **Sin WhatsApp:** `IsAvailable = false` y ningún número. Se puede diseñar, y publicar responde `ChannelUnavailable`.
 - **Sin Forms:** la fuente devuelve una lista vacía, el botón no aparece y la captura devuelve un error que deja la sesión `Rejected`.
 
 ## 8. Archivos
@@ -484,7 +497,7 @@ El esqueleto del módulo lo deja la E12: `AddFormsModule` en las tres capas, la 
 | Archivo nuevo o cambiado | Modelo en este repo |
 | --- | --- |
 | `D/Forms/FormDefinition.cs`, `FormDefinitionState.cs`, `FormVersion.cs`, `FormPublication.cs`, `FormRecord.cs`, `FormQuestionType.cs`, `FormDraft.cs`, `*Errors.cs` (con `FormOfferErrors.cs`) | `D/Assistant/AssistantOrganizationSettings.cs`, `D/Assistant/AssistantErrors.cs` |
-| `D/Authorization/Permissions.cs`: la clase `Forms` de la E12 suma `forms.read`, `forms.manage`, `forms.publish`, `formrecords.create` y `formrecords.read` | la clase `Assistant` del mismo archivo |
+| `D/Authorization/Permissions.cs`: la clase `Forms` de la E12 suma `forms.read`, `forms.manage`, `forms.publish`, `formrecords.create` y `formrecords.read`. Los dos últimos todavía no los pide una ruta: los usa la lógica, en la captura y en la tarjeta, y por eso no son permisos sin uso ([permisos](../../rules/permisos.md)) | la clase `Assistant` del mismo archivo |
 | `A/Modules/Forms/Interfaces/Services/IFormDefinitionService.cs`, `IFormPublicationService.cs`, `IFormRecordService.cs` | `IAssistantConversationService.cs`; `IAssistantTurnService.cs` para las fases |
 | `A/Modules/Forms/Services/FormDefinitionService.cs`, `FormPublicationService.cs`, `FormRecordService.cs` y los helpers `FormPrefixResolver`, `FormDraftEditor`, `FormVersionCreator`, `FormRecordNumberIssuer`, `FormRecordWriter` y `FormOfferBuilder` (arma la oferta de cada pregunta de catálogo) | `AssistantConversationService.cs`, `AssistantTurnService.cs` y sus helpers |
 | `A/Modules/Forms/Services/FormStructuredSource.cs`, `FormRecordSink.cs`, `FormRecordSource.cs` (implementan los puertos) | `A/Modules/WhatsApp/Services/WhatsAppLoginCodeChannel.cs` (un módulo implementa un puerto del núcleo) |
@@ -495,6 +508,7 @@ El esqueleto del módulo lo deja la E12: `AddFormsModule` en las tres capas, la 
 | `I/Modules/Forms/Persistence/Configurations/*.cs`, `Repositories/*.cs`, `Readers/*.cs` | `I/Modules/Assistant/Persistence/` |
 | `A/Modules/Forms/Services/FormsAccountDeletionParticipant.cs`, `A/Modules/Forms/Interfaces/Persistence/IFormsAccountDeletionCleanupRepository.cs`; `I/Modules/Forms/Persistence/Repositories/FormsAccountDeletionCleanupRepository.cs` | `A/Modules/Assistant/Services/AssistantAccountDeletionParticipant.cs`, su puerto de cleanup y `I/Modules/Assistant/Persistence/Repositories/AssistantAccountDeletionCleanupRepository.cs`; `AssistantMaintenanceLayerTests` |
 | `I/Modules/Forms/FormPublicationWorker.cs` | `I/Modules/Assistant/AssistantTurnWorker.cs` (descubre, entra con actor y llama fases del servicio) |
+| `I/Modules/WhatsApp/WhatsAppFlowSessionCleanupWorker.cs` | `I/Modules/WhatsApp/WhatsAppBroadcastWorker.cs` y `TenantJobRunner.cs` |
 | `I/Persistence/Migrations/<fecha>_FormDefinitions.cs` y `<fecha>_SystemRoleFormsPermissions.cs` | `20261010011328_AssistantModule.cs`, `20261010203618_SystemRoleAssistantPermissions.cs` |
 | `P/Modules/Forms/Controllers/BusinessFormsController.cs`, `Contracts/*HttpRequest.cs`; `BusinessFormCatalogsController` suma `used-by` | `P/Modules/Assistant/...` |
 | WhatsApp: `A/Modules/WhatsApp/Services/WhatsAppFlowBuilder.cs` (con el perfil con datos y el `CheckboxGroup` de catálogo), `WhatsAppFlowReplyVerifier.cs` (con la oferta), `WhatsAppFormSendService.cs` (con `ProtectedOffer`), `WhatsAppStructuredFormChannel.cs`; `I/Modules/WhatsApp/WhatsAppFlowClient.cs`, la fase de captura del procesador de entrada (T5), la copia de la tarjeta para «Mis mensajes» (T16) y las configuraciones de `WhatsAppFlowBindings` y `WhatsAppFlowSessions` | `I/Modules/WhatsApp/WhatsAppCloudClient.cs`, `WhatsAppInboundProcessor.cs` y lo que deje la E11 **[E11]** |
@@ -528,6 +542,8 @@ El esqueleto del módulo lo deja la E12: `AddFormsModule` en las tres capas, la 
 
   **Se redibuja con los títulos de sección (88):** «Agregar título» en el editor, el título entre las preguntas con su ⋮ (Editar, Subir, Bajar y Quitar) y el subtítulo en el teléfono al costado, en `FRM-Editor` y `M-FRM-Editor`. La referencia es CW15-B, del lienzo de ArquitecturaBase.
 - **`FRM-Catalogos-14`:** el listado de catálogos de la E12 con la columna «Lo usan».
+- **`FRM-Catalogo-14` y `M-FRM-Catalogo-14`** (por dibujar): el catálogo, con la sección «Lo usan», «Quitar» apagado en un campo en uso, con el motivo en su tooltip, y la advertencia al darlo de baja.
+- **`Campana-14`** (por dibujar): «WhatsApp rechazó la versión N de …», que lleva al formulario.
 - **`WA-Mensajes-14`:** «Mis mensajes», con la tarjeta de una respuesta propia de un cliente que vinculó su cuenta.
 - **`FRM-Publicar`:** «Publicar la versión N en WhatsApp», con qué cambia y qué queda fijo.
 - **`FRM-Publicando`:** cómo termina, arriba del editor, con los pasos Aceptada, Enviada a WhatsApp, WhatsApp la revisa y Lista para mandar. Al costado, la vista oficial con «Borrador | Versión N en WhatsApp».
@@ -539,8 +555,8 @@ El esqueleto del módulo lo deja la E12: `AddFormsModule` en las tres capas, la 
 
 **Estados que se dibujan** (cada uno tiene que poder producirse; si no, es un bug):
 - **Editor:** con cambios, guardando (el botón grisado con su mismo texto), guardado, no se guardó (lo escrito se conserva), otra persona guardó (con «Qué cambió | Guardado actualmente | Mis cambios»), prefijo ocupado, para quién es, quitar una pregunta, cambiar el tipo, descartar, solo lectura, cargando y no existe.
-- **Publicar:** versión nueva, primera publicación, comprobando, con cambios sin guardar (publicar grisado, con el motivo en su tooltip), una pregunta que no se puede mostrar, un catálogo demasiado grande, cambió después de comprobar y ya se está publicando.
-- **Cómo termina:** publicando, publicado, rechazada con «Ir a la pregunta», sin confirmar con «Consultar ahora» (nunca «Reintentar»), necesita revisión y la vista oficial.
+- **Publicar:** versión nueva, primera publicación, comprobando, con cambios sin guardar (publicar grisado, con el motivo en su tooltip), una pregunta que no se puede mostrar, un catálogo demasiado grande, cambió después de comprobar, ya se está publicando y sin número conectado.
+- **Cómo termina:** publicando, publicado, rechazada con «Ir a la pregunta», sin confirmar con «Consultar ahora» (nunca «Reintentar»), necesita revisión, con «Salió» y «No salió», y la vista oficial.
 - **Enviar:**
   - En cola, Leído, y No se pudo mandar (con ⓘ, sin reintento);
   - con el diálogo abierto, ventana cerrada y formulario que ya no está.
@@ -578,7 +594,7 @@ El esqueleto del módulo lo deja la E12: `AddFormsModule` en las tres capas, la 
 | `tests/…Api.IntegrationTests/Modules/Forms/` | cada ruta: 401, 403, feature apagada = 404, validación, 409, idempotencia y paginado; publicar con un canal de prueba (Published, Uncertain → verifica, Failed); captura idempotente y número sin saltos con dos capturas a la vez; «elegir varias» con una fila por opción y su posición; tarjeta con y sin `formrecords.read`; captura con una opción dada de baja = sin número, y la tarjeta con «Mandar de nuevo»; los campos sellados no cambian al editar el catálogo; un campo que usa la presentación de una pregunta no se quita; «Lo usan» con su segunda página; una respuesta o una publicación que termina mientras alguien edita no le da un 409 al guardar; publicar con un borrador que cambió después de comprobar = `DraftChanged`; baja de cuenta; ejemplos exportados de cada respuesta |
 | `tests/…Api.IntegrationTests/Modules/Forms/*IsolationTests.cs` | otra organización recibe 404 en cada ruta; RLS de cada tabla; la captura no cruza organizaciones; la oferta nunca trae opciones de otra organización (modelo: `Modules/Assistant/AssistantConversationIsolationTests.cs`) |
 | Volumen | ofrecer y capturar con un catálogo de 10.000 opciones y 20 campos, sin traer todo para quedarse con poco, con EXPLAIN |
-| `tests/…Api.IntegrationTests/Modules/WhatsApp/` **[E11]** | botón y motivos, por bandeja; sesión vencida por la hora de Meta; un mensaje con error no frena a los demás; respuesta de más de 16 KiB rechazada y visible; la captura de un cliente sin cuenta, sin `ExecutionActor` y fuera de la transacción del procesador; con `forms` apagada, rechazada; un empleado que perdió el permiso o la membresía, `NotAllowed`; un `nfm_reply` nunca llega al bot; la tarjeta copiada en «Mis mensajes» de quien vinculó su cuenta |
+| `tests/…Api.IntegrationTests/Modules/WhatsApp/` **[E11]** | botón y motivos, por bandeja; sesión vencida por la hora de Meta; un mensaje con error no frena a los demás; respuesta de más de 16 KiB rechazada y visible; la captura de un cliente sin cuenta, sin `ExecutionActor` y fuera de la transacción del procesador; con `forms` apagada, rechazada; un empleado que perdió el permiso o la membresía, `NotAllowed`; un `nfm_reply` nunca llega al bot; la tarjeta copiada en «Mis mensajes» de quien vinculó su cuenta; una captura que falla se reintenta con sus intervalos y termina `Rejected`; la oferta de una sesión vencida se borra |
 | Guardas (partials del módulo) | `ExplicitRouteInventoryTests`, `ModuleControllersTests`, `ApplicationServicesTests`, `TenantScopeUsageTests`, `ResourceParityTests` (sumar los resx de Forms), `PermissionTextsTests` y `ModuleIsolationTests` en verde; `TransactionBoundaryTests` sin ampliar excepciones, y la guarda de capas de baja como `AssistantMaintenanceLayerTests` |
 | Front | Vitest con MSW y axe en las páginas y el diálogo; los ejemplos exportados validados con zod estricto; `registration`, `navigation` y `composition` del módulo; paridad de sus recursos `forms` y `enums` compuestos desde `registration.ts`, también al retirar Forms; los botones según la decisión 43 |
 | E2E real y recorrido | crear con los siete tipos, publicar contra el canal real o el de prueba, mandar a una cuenta en inglés (el formulario llega como está escrito y los textos del sistema, en inglés); responder y ver el número tras recargar; usar un catálogo en una pregunta de «elegir varias», mandar y responder; dar de baja una opción antes de responder y mandar de nuevo |
@@ -609,7 +625,7 @@ Al planificar la E14 se verifican contra el código real.
 | [E11] | El modelo de números: `WhatsAppChannels`, la WABA de cada número y el token por organización. | Un Flow por versión y WABA. Se publica en todas las WABAs con números conectados. |
 | [E11] | Conversaciones y mensajes: ids, tipos de mensaje y el contrato de la lista de mensajes. | Se suman un mensaje saliente «Formulario» y la tarjeta `form`. |
 | [E11] | Reconocer al empleado y la bandeja Internos; «tomar» un chat. | Mandar cuenta como responder: toma el chat. |
-| [E11] | La entrada de mensajes por organización: el contexto con `SetFromAccess`, la transacción del procesador y el paso por el bot. | La captura es una fase aparte, fuera de esa transacción y sin bot (T5). |
+| [E11] | La entrada de mensajes por organización: el contexto con `SetFromAccess`, la transacción del procesador, el paso por el bot y `WhatsAppMessage.Fail`. | La captura es una fase aparte, fuera de esa transacción y sin bot (T5), con sus reintentos en la misma cola (§16). |
 | [E11] | El outbox con el número de la organización. | `WhatsAppOutboundMessage` suma la variante Flow con el `PhoneNumberId` de la organización. |
 | [E11] | Las rutas de WhatsApp por bandeja (`customers` e `internal`) y el módulo de WhatsApp del front. | Los nombres de esta spec son provisorios. |
 | [E11] | La copia compartida de la conversación para «Mis mensajes». | Guarda la tarjeta armada al capturar (T16). |
@@ -664,7 +680,7 @@ La puerta de la etapa ([etapa en paralelo](../../guides/etapa-en-paralelo.md)) t
 Salen de los reviews y los pilotos de ArquitecturaBase. El plan los toma como lista de control, junto con la de `/puerta`.
 
 - **Captura:**
-  - una falla técnica se reintenta hasta **5 veces y al menos 15 minutos** desde la primera, con intervalos 30, 90, 210, 450 y 930 s; recién ahí queda `Rejected` y visible;
+  - una falla técnica se reintenta hasta **5 veces y al menos 15 minutos** desde la primera, con intervalos 30, 90, 210, 450 y 930 s; recién ahí queda `Rejected` y visible. El intento vive en el mensaje entrante, en su `Attempts` y `NextAttemptAtUtc`, y lo corre la misma cola: para una respuesta de Flow, `IWhatsAppInboundService.FailAsync` usa estos intervalos en lugar de los 6·n s de hoy, que no llegan a 3 minutos;
   - un mensaje trabado no frena a los demás.
 - **Catálogos al mandar:**
   - al operador le llegan solo la cantidad y los problemas, nunca los nombres de las personas ofrecidas;
