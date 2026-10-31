@@ -84,7 +84,7 @@
 - Importar respuestas desde Excel.
 - Exportar los archivos o exportar en segundo plano.
 - Permisos por formulario.
-- Lo que suman las etapas siguientes a estas pantallas: el papel «Filtro» de un campo (E16), las fotos y los documentos (E18), las líneas, los cálculos y «no se mostró» (E19), «Cargar respuesta» y el canal «web» (E20), y el estado, «Por aprobar», la aprobación, el PDF, los avisos y corregir (E21).
+- Lo que suman las etapas siguientes a estas pantallas: el papel «Filtro» de un campo (E16), las fotos y los documentos (E18), las líneas, los cálculos y «no se mostró» (E19), «Cargar», «Agregar respuesta», el canal de la web, su filtro y lo propio de quien solo carga (E20), y el estado, «Por aprobar», la aprobación, el PDF, los avisos y corregir (E21).
 
 ## Cómo se cierra
 

@@ -58,6 +58,7 @@ Cada una lleva su test, escrito durante la etapa:
 - Un dato que dependa de la empresa.
 - Varios valores de un mismo dato por persona, y operadores distintos de «es igual a».
 - Una columna de datos en la lista de usuarios.
+- El filtro «según otra respuesta» (listas dependientes): no funciona en un Flow de WhatsApp, así que en esta etapa no hay dónde usarlo (P4 de la [§7 de la hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md#7-decisiones-pendientes)).
 
 ## Cómo se cierra
 

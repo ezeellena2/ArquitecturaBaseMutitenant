@@ -26,7 +26,7 @@
     - decide una cuenta activa con `formapprovals.decide` y el rol de la regla, **nunca quien cargó la respuesta**;
     - hay una sola tarea abierta por respuesta; decidir es un solo commit, y si otro decidió antes, 409;
     - rechazar exige un motivo de hasta 500 caracteres.
-  - **Corregir una respuesta** (decisión 58):
+  - **Corregir una respuesta** (decisión 58). **Pendiente:** la P3 de la [§7 de la hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md#7-decisiones-pendientes) puede reemplazar esta sección, por corregir y anular como en ArquitecturaBase:
     - pide un permiso nuevo, `formrecords.correct` («Corregir respuestas»), que va en el catálogo, en `Permissions.resx` y su `.en`, y en el seed de los roles de sistema, con su migración;
     - se corrige desde la pantalla completa, **solo mientras la respuesta está recibida o por aprobar**: lo aprobado o rechazado queda fijo, igual que su PDF;
     - **solo los valores:** textos, números, fechas y elecciones. Los archivos quedan como llegaron;
@@ -57,8 +57,10 @@
     - **las plantillas de la E11 suman un encabezado con documento,** para mandar el PDF, y **la regla llena sus variables:** cada variable de la plantilla se ata a `{número}`, al nombre del formulario o a una pregunta. Hoy una plantilla tiene solo cuerpo (`WhatsAppTemplateBase`), así que el alta de plantillas del módulo WhatsApp suma el encabezado y su envío a Meta;
     - **avisar a una persona** (62): la regla elige un miembro de la organización, por id. Se valida al reservar la ejecución: si dejó de ser miembro, queda «No se pudo»;
     - **mandar por correo** (62): a quien cargó, a un rol o a una persona, al correo de su cuenta; a una dirección fija escrita en la regla; o al correo de una pregunta del formulario. Lleva el texto de la regla y, si se elige, el PDF adjunto. Sale por el envío de correos del núcleo, que suma los adjuntos (hoy no los tiene), como operación durable. Un cliente sin correo no lo recibe, y queda «No se pudo». Las direcciones se validan con la ficha de [correos](../../rules/emails.md), y nunca van completas a los logs;
-    - **la pregunta «Correo»:** un tipo de pregunta nuevo, validado con la misma ficha, para que el formulario pida un correo (62). Toca todo lo que ya existe: el editor y su vista previa, el Flow (un `TextInput` de correo) y el verificador (E14), la planilla, sus filtros (`contains` y `equals`), el detalle, el Excel y el tablero (E15), las condiciones (E19), la carga desde la web (E20) y el PDF;
-    - **quien cargó puede ser un cliente** (49): mandarle un mensaje o el PDF sigue la regla de la 47, con una plantilla de la organización fuera de las 24 horas.
+    - **la pregunta «Correo»:** un tipo de pregunta nuevo, validado con la misma ficha, para que el formulario pida un correo (62). Toca todo lo que ya existe: el editor y su vista previa, el Flow (un `TextInput` de correo) y el verificador (E14), la planilla, sus filtros (`contains` y `equals`), el detalle, el Excel y el tablero (E15), las condiciones (E19), la carga desde la web (E20, donde ocupa dos columnas, como un texto corto de hasta 80) y el PDF;
+    - **quien cargó puede ser un cliente** (49): mandarle un mensaje o el PDF sigue la regla de la 47, con una plantilla de la organización fuera de las 24 horas;
+    - **quien cargó desde la web (E20) puede no tener dónde recibir un mensaje:** «Mandarle un mensaje a quien la cargó» queda «No aplica», no «No se pudo». Lo decide el canal, por un puerto neutral.
+  - **Lo propio de quien solo carga** (85): la planilla recortada de la E20 suma, en sus respuestas, el estado, el PDF y el motivo de rechazo. El PDF se lee con la misma regla que lo propio, filtrada por el servidor.
 - **Front:**
   - la sección «Cuando llega una respuesta» en el editor, con «Guardar reglas» y su historial;
   - la página del diseño del PDF, en dos columnas, con la vista previa;
@@ -71,7 +73,7 @@
     - `FRM-Pdf`, con la vista previa en un solo idioma, los campos «Dato», las líneas y los cálculos. **Diseño muestra dos o tres estilos de PDF** para que el usuario elija uno (59), con el logo y los datos de la página pública, el color elegido, secciones y firmas (82);
     - en `FRM-Editor-Reglas`, las acciones «Avisar a una persona» y «Mandar por correo», y la plantilla para fuera de las 24 horas (61 y 62);
     - `M-FRM-Respuesta-Aprobacion`;
-    - y dibuja nuevo `FRM-Respuesta-Corregir`: «Corregir» en la pantalla completa, los campos editables, la marca «Corregida» y la historia en Actividad (58).
+    - y dibuja nuevos `FRM-Respuesta-Corregir`: «Corregir» en la pantalla completa, los campos editables, la marca «Corregida» y la historia en Actividad (58), y `FRM-Respuestas-Propias-21` y su teléfono: lo propio con el estado, el PDF y el motivo de rechazo (85; CW6-C de ArquitecturaBase).
   - **Se quedan** los aprobados en el lienzo v132: `FRM-Respuesta-Aprobacion`, `WA-Chats-Avisos`, `M-WA-Conversacion-Avisos` y «Por aprobar» en «Para resolver» de `Inicio-Org` y `M-Inicio-Org`.
   - **Pasan al Archivo** `FRM-Por-Aprobar` y `M-FRM-Por-Aprobar`: «Por aprobar» vive en MF1 (34).
   - **Mandan sobre este resumen en:**

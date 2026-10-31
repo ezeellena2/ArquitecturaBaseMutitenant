@@ -7,7 +7,7 @@
 - **Back:**
   - **Preguntas condicionales:**
     - una pregunta puede tener «Mostrar si», con hasta 10 condiciones unidas con «y», con la gramática de condiciones de la E12 (C5) sobre preguntas anteriores: sí/no (`is`), elegir una (`in`), elegir varias (`anyOf`, «alguna de»), número y fecha (`equals`, `gte`, `lte`) y respondida o no (`answered`, `unanswered`);
-    - en WhatsApp, la pregunta aparece o se oculta mientras la persona completa el formulario (el componente `If` del Flow) **[Meta]**;
+    - en WhatsApp, la pregunta aparece o se oculta mientras la persona completa el formulario (el componente `If` del Flow) **[Meta]**. Un título de sección (E14) cuyas preguntas quedan todas ocultas tampoco se ve;
     - **el servidor vuelve a evaluar las condiciones al capturar:** nunca confía en lo que llega. Una pregunta oculta no guarda valor, y «obligatoria» vale solo si se mostró;
     - **«No se mostró»:** la respuesta guarda qué preguntas quedaron ocultas (`FormRecords.HiddenFieldIds`). En la planilla de la E15 se ven como «No se mostró», distintas de «Sin respuesta» y de «—» (no existía en esa versión), y el filtro suma `notShown`.
   - **Cálculos:**
