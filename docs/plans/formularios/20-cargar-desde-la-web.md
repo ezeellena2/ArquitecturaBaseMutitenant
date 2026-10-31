@@ -44,13 +44,14 @@ Antes de empezar, en este orden:
 
 **Formularios solo para la app** (94, 96 y 98). No se pueden mandar por WhatsApp en tres casos: la organización no tiene un número conectado, usa una lista dependiente, o usa en «elegir una» un catálogo a mano de más de 200 opciones. En los tres:
 - si es para empleados o para los dos, se publica con un aviso que no frena (37). No pasa por Meta: sella la versión, la marca y la activa en la misma UoW, sin trabajo durable ni Flow;
+- **los frenos de WhatsApp no corren:** una versión solo para la app no va a Meta, así que no pasa por `Check` ni por el tope de opciones de un filtro fijo. Vuelven a correr al publicar con número;
 - si es solo para clientes, no se publica, porque ellos responden solo por WhatsApp;
 - el envío desde el chat no lo ofrece;
 - para mandarlo cuando se pueda, hay que volver a publicar: `NothingToPublish` no aplica si la versión activa es solo para la app y ahora se puede mandar. Cambia lo que la E14 dice de `ChannelUnavailable` y `CatalogTooLarge`.
 
 **Lo propio** (85): quien tiene `formrecords.create` y no `formrecords.read` lee solo sus respuestas, en la planilla, el detalle y los archivos, también lo que respondió por WhatsApp. El servidor filtra por `RespondentUserId`, y lo ajeno responde 404, también en una dirección directa. Quien solo carga ve «Formularios» con sus formularios y «Cargar», sin conteos; el nombre abre «Respuestas» con lo suyo.
 
-**Las entradas** (83): «Cargar» al final de cada fila de «Formularios». No aparece en los dados de baja, y en uno solo para clientes queda grisado, con el motivo en su tooltip (43). «Agregar respuesta» va en el encabezado de la planilla: en la compu abre el panel, y en el teléfono, la página.
+**Las entradas** (83): «Cargar» al final de cada fila de «Formularios» y «Agregar respuesta» en el encabezado de la planilla, que en la compu abre el panel, y en el teléfono, la página. Las dos siguen la misma regla: no aparecen en un borrador ni en un dado de baja, y en uno solo para clientes quedan grisadas, con el motivo en su tooltip (43).
 
 **La página «Nueva respuesta»** (84), en `/org/formularios/:id/cargar`, para la compu y el teléfono:
 - Cancelar y el botón del formulario van en la banda; en el teléfono, ese botón queda fijo al pie;
@@ -79,11 +80,11 @@ El autor decide el contenido. La app decide la forma, con una tabla fija por tip
 | El renglón entero | Texto largo, texto corto de más de 80 o sin largo máximo, elegir varias con opciones propias, foto, documento y grupo de líneas |
 
 - **Columnas:** tres en la compu, dos en la tableta y una en el teléfono y en el panel. Salen del ancho de la zona: tres desde 46 rem, dos desde 30 rem y una por debajo.
-- **Orden:** las preguntas no se reordenan. Una que no entra baja de renglón, con una línea entre cada renglón visible.
-- **Zonas** (88): cada título de sección arma una zona, y lo que va antes del primero queda en «Datos». Las fotos y los documentos van al final, en «Fotos y documentos». Todas se pliegan y arrancan abiertas; plegada, la banda dice «N de M respondidas», o lo adjuntado, como «2 fotos · 1 archivo». Al enviar con errores, la zona plegada que los tiene se abre sola.
+- **Orden:** las preguntas no se reordenan, salvo las fotos y los documentos, que van al final. Una que no entra baja de renglón, con una línea entre cada renglón visible.
+- **Zonas** (88): cada título de sección arma una zona, y lo que va antes del primero queda en «Datos». Las fotos y los documentos van al final, en «Fotos y documentos». Todas se pliegan y arrancan abiertas, y su banda lleva solo el título, sin cantidades. Al enviar con errores, la zona plegada que los tiene se abre sola.
 - **Controles:** número y fecha son angostos; sí o no arranca sin nada marcado; hasta cinco opciones cortas van en fila, y con más, una lista; elegir varias muestra «Elegí hasta N»; el texto largo tiene de 2 a 6 renglones.
 - **La unidad** va en la etiqueta que escribe el autor (86).
-- **Lo condicional:** una pregunta aparece en su lugar y los renglones se recalculan. Lo oculto no se manda. «N de M» cuenta solo lo visible, y una zona sin preguntas visibles no se ve. **Un cálculo** no se ve al cargar, y aparece en «Enviada» (54 y 97).
+- **Lo condicional:** una pregunta aparece en su lugar y los renglones se recalculan. Lo oculto no se manda, y una zona sin preguntas visibles no se ve. **Un cálculo** no se ve al cargar, y aparece en «Enviada» (54 y 97).
 
 ## Pantallas
 
@@ -112,7 +113,7 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]`, `[Featu
 | --- | --- | --- |
 | `GET /entry` | `page`, `pageSize`, `search` | `PagedResult<{id, name}>`, solo lo que puede cargar, con el filtro de disponibilidad, sin conteos |
 | `GET /{id}/entry` | — | `{versionId, versionNumber, name, submitLabel, maxFileBytes, questions[], titles[]}`. Cada pregunta de catálogo trae `options?{total, single?, missingData?}` |
-| `GET /{id}/entry/questions/{fieldId}/options` | `page`, `pageSize` (50), `search`, `dependsOn?` | `PagedResult<{id, text, detail?}>` |
+| `GET /{id}/entry/questions/{fieldId}/options` | `page`, `pageSize` (50), `search`, `dependsOn?`, `columnId?`, para una columna de catálogo de un grupo | `PagedResult<{id, text, detail?}>` |
 | `POST /{id}/records` | multipart: `versionId`, `answers` y los archivos, con `[Idempotent(Mode = IdempotencyMode.DurableReference)]`, `[IdempotencyDurable]` y `[RequestSizeLimit]` de 101 MiB | 201 `{recordId, displayNumber, submittedAtUtc, calculations[]}` + Location |
 | `GET /{id}/own-records/columns`, `POST …/search`, `POST …/facets`, `GET …/{recordId}`, `POST …/{recordId}/navigation` y `GET …/{recordId}/files/{fileId}/{thumbnail\|content}` | los de la E15 y la E18 | lo mismo, solo con lo de esa persona |
 
@@ -127,7 +128,7 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]`, `[Featu
 | `POST …/records/facets` y `search` | la dimensión y el filtro `channel` |
 | `GET …/records/{recordId}` | `enteredBy?{name, atUtc}` |
 
-**Puerto:** `IStructuredFormChannel` suma `HasConnectedNumberAsync`. `ListSendableAsync` deja afuera las versiones solo para la app.
+**Puerto:** «sin número» sale de `HasConnectedNumberAsync`, de la E14. `ListSendableAsync` deja afuera las versiones solo para la app.
 
 **Errores:**
 
@@ -178,7 +179,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | F2 | Entradas y lista | suma a la lista [E17] y a `FormRecordsPage.tsx` [E15] | esos mismos | quien solo carga; grisado; dados de baja |
 | F3 | El armado de una pregunta | `F/src/modules/forms/components/entry/EntryGrid.tsx`, `EntryZone.tsx` | el tablero | la tabla de anchos; `ResizeObserver`; lecciones 1 a 3 |
 | F4 | Los controles y la lista de catálogo | `components/entry/EntryField.tsx`, `EntryCatalogList.tsx` | `QuestionEditor.tsx` [E14] | búsqueda, «Mostrar 50 más» y lista dependiente; axe |
-| F5 | Lo condicional | suma a `EntryGrid.tsx`, con `lib/conditions.ts` [E19] | el mismo | lo oculto no se manda; «N de M» |
+| F5 | Lo condicional | suma a `EntryGrid.tsx`, con `lib/conditions.ts` [E19] | el mismo | lo oculto no se manda; una zona sin preguntas visibles |
 | F6 | Los archivos | `components/entry/EntryFiles.tsx` | el tablero | límites antes de enviar; cámara; barra sin palabras |
 | F7 | La página, el panel y «Enviada» | `pages/LoadResponsePage.tsx`, `components/entry/EntryPanel.tsx`, `EntrySent.tsx`; `registration.ts` | `useEditForm` y `useUnsavedChangesGuard` | salir; versión nueva sin perder nada; mantener; lo cargado fuera del storage |
 | F8 | Publicar, editor y lo propio | suma a `PublishDialog.tsx` [E16], `CatalogQuestionFields.tsx` [E16] y `FormRecordsPage.tsx` | esos mismos | los tres casos; «Según otra respuesta»; una dirección ajena |
@@ -242,6 +243,6 @@ La E19 cerrada.
 - **Idioma:** el contenido no tiene idioma (35), así que `PresentationCulture` de allá no se toma.
 - **Datos de las personas:** los de esa persona en esa organización (42).
 - **Feature `forms`:** las rutas la llevan.
-- **Permisos:** `formrecords.create`, sin permisos nuevos.
+- **Permisos:** `formrecords.create`, sin permisos nuevos. `formrecords.create` y `forms.publish` completan su texto.
 - **Almacenamiento:** los archivos van en `IFileStore`, como los de la E18.
 - **Cuotas:** las rutas cuentan en las cuotas generales.

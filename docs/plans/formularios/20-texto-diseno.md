@@ -17,14 +17,14 @@ Te paso los tableros de la carga desde la web para el lienzo del multitenant. No
 **Qué se dibuja:**
 1. **`FRM-Editor` y `M-FRM-Editor` (E14):** «Agregar título» en el editor, el título entre las preguntas con su ⋮ (Editar, Subir, Bajar y Quitar) y el subtítulo en el teléfono al costado (CW15-B).
 2. **`FRM-Formularios-20` y su teléfono (CW1-B):**
-   - «Cargar» al final de cada fila; no aparece en los dados de baja, y en uno solo para clientes queda grisado, con el motivo en su tooltip;
+   - «Cargar» al final de cada fila; no aparece en los borradores ni en los dados de baja, y en uno solo para clientes queda grisado, con el motivo en su tooltip;
    - «Solo en la app» en la columna «En WhatsApp»;
    - lo que ve quien solo carga: sus formularios y «Cargar», sin las columnas de respuestas;
    - en el teléfono, con nuestra forma de fila, no una tabla con desplazamiento.
 3. **`FRM-Cargar-Respuesta` y su teléfono (CW2-A, CW12, CW13-A y CW16):**
    - «Nueva respuesta» en su propia página, con el formulario en las migas;
    - Cancelar y el botón del formulario en la banda; en el teléfono, ese botón fijo al pie;
-   - la grilla de hasta tres por renglón, con los anchos de la tabla de la spec, las zonas plegables con «N de M respondidas», y los títulos de sección;
+   - la grilla de hasta tres por renglón, con los anchos de la tabla de la spec, las zonas plegables, sin cantidades en su banda, y los títulos de sección;
    - lo de la E19, que allá no existe: la pregunta que aparece con los renglones recalculados, el grupo de líneas en el renglón entero, y sin cálculo a la vista;
    - los errores en su pregunta, la zona plegada que se abre sola y la confirmación al salir.
 4. **`FRM-Cargar-Panel` (CW2-B):** el panel junto a la planilla, en una columna, con «Mantener las respuestas para la siguiente» y «Pantalla completa». Solo en la compu.

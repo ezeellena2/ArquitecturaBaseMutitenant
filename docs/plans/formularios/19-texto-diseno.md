@@ -19,9 +19,8 @@ Te paso los tableros de la E19, condiciones, cálculos y líneas, para el lienzo
 4. **`FRM-Respuestas-19` y `M-FRM-Respuestas-19`:** sobre `FRM-Respuestas`, una pregunta con «No se mostró», distinto de «Sin respuesta» y de «—»; la columna del cálculo, con su moneda, y la del grupo, con «3 renglones». En «Más filtros», «No se mostró» como opción.
 5. **`FRM-Respuesta-19` y `M-FRM-Respuesta-19`:** sobre `FRM-Respuesta`, la tabla de líneas, el cálculo y «No se mostró», con un estado para la pantalla completa.
 6. **`WA-Chats-Respuesta-19` y `M-WA-Conversacion-Respuesta-19`:** la tarjeta, con los renglones y el total.
-7. **`FRM-Tablero-19`:** sobre `FRM-Tablero`, un monto: «Total de Monto» con su moneda, y su gráfico por período.
-
-**También:** en `FRM-Publicar`, una condición que WhatsApp no puede mostrar y más de 50 componentes, como estados de la comprobación, con «Ir a la pregunta».
+7. **`FRM-Tablero-19` y `M-FRM-Tablero-19`:** sobre `FRM-Tablero`, un monto: «Total de Monto» con su moneda, y su gráfico por período.
+8. **`FRM-Publicar-19`:** sobre `FRM-Publicar`, una condición que WhatsApp no puede mostrar y más de 50 componentes, con «Ir a la pregunta».
 
 **Recorrido guiado.** Un pedido: «¿Se concretó la venta?», «Monto» que aparece si es Sí, un grupo con producto y cantidad, y el total. Publicar, responder y verlo en la planilla, el detalle y el tablero.
 

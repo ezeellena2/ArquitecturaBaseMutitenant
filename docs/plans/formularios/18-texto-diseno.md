@@ -18,7 +18,8 @@ Te paso los tableros de la E18, fotos y documentos, para el lienzo del multitena
 1. **`FRM-Respuestas-18` y `M-FRM-Respuestas-18`:** sobre `FRM-Respuestas`, las columnas «Fotos de la visita» (la primera miniatura y la cantidad, que abre el visor) y «Remito firmado» (un ícono y cuántos, con sus tipos). En «Más filtros», su sección con «Con respuesta», «Sin respuesta» y «La pregunta no existía». En exportar, el ⓘ: las fotos y los documentos no van dentro del Excel, y cada celda dice cuántos hay y sus nombres.
 2. **`FRM-Respuesta-18` y `M-FRM-Respuesta-18`:** sobre `FRM-Respuesta`, las pestañas «Respuesta» y «Fotos», con la cantidad; en «Respuesta», las miniaturas en su pregunta y los documentos con nombre, tamaño y Descargar; «Ver una foto» abre `WA-Chats-Visor`.
 3. **`FRM-Respuesta-Completa-18`:** sobre `FRM-Respuesta-Completa`, las fotos y el remito en «Respuesta», y «Descargar ▾» arriba, con los documentos.
-4. **`WA-Chats-Adjuntos` y `M-WA-Chats-Adjuntos`:** los archivos en un chat de atención, para Clientes, Internos y Plataforma.
+4. **`FRM-Dar-De-Baja-18` y `FRM-Editor-Baja-18`:** «Lo que se conserva» suma las fotos y los documentos.
+5. **`WA-Chats-Adjuntos` y `M-WA-Chats-Adjuntos`:** los archivos en un chat de atención, para Clientes, Internos y Plataforma.
    - En el compositor, el clip para adjuntar. En el teléfono, en el ⋮ o al lado del campo, como el resto del chat.
    - Una vista del archivo antes de mandarlo, con un texto opcional.
    - Estados: subiendo (el botón grisado con su mismo texto), enviado, no se pudo (con ⓘ, sin reintento), demasiado grande y fuera de las 24 horas (adjuntar grisado, con el motivo en su tooltip).

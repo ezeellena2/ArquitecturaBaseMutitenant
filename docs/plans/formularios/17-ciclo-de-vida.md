@@ -48,7 +48,7 @@ Antes de empezar, en este orden:
 
 **Deprecar los Flows en Meta:**
 - **es de WhatsApp,** por cada WABA de la organización y con su token. Forms no llama a Meta ni escribe en WhatsApp;
-- **Forms dice qué versiones ya no se usan:** las reemplazadas y las de un formulario dado de baja o borrado. Una publicación abierta del formulario suspende esa respuesta: si falla, la versión activa sigue en uso;
+- **Forms dice qué versiones ya no se usan:** las reemplazadas, las de una publicación `Failed`, que pudo dejar un Flow publicado en otra WABA, y las de un formulario dado de baja o borrado. Una publicación abierta del formulario suspende esa respuesta: si falla, la versión activa sigue en uso;
 - WhatsApp espera a que no queden sesiones vigentes ni respuestas recibidas a tiempo sin capturar. Nunca lo deduce porque no ve sesiones: lo comprueba bajo el bloqueo del binding;
 - cada binding se deprecia con su reserva, su número de turno y su estado. Lo incierto queda «Sin confirmar» y se consulta por id, nombre técnico y WABA antes de repetir. Todo 4xx también se consulta;
 - cada respuesta de Meta se clasifica en definitiva, transitoria o desconocida. Un rechazo no se repite para siempre: después de esperar 5, 15, 30 y 60 minutos queda «No se pudo», a la vista, y no frena nada del formulario;
@@ -75,6 +75,8 @@ Se dibujaron antes de las reglas del 25 y el 26/10, y Diseño los revisa con est
 
 **Estados dibujados:** la lista con sus filtros y las acciones de un publicado, un borrador, un dado de baja y mientras se publica; «Solo puede publicar», «Solo lectura» y «Quien solo ve respuestas». El dado de baja, ya deprecado, sin confirmar y «No se pudo deprecar». Los diálogos, con y sin envíos abiertos, mientras trabajan y con error. Copiar, sin nombre y con el prefijo ocupado.
 
+**Estados que faltan dibujar:** borrar un publicado sin respuestas, con el aviso de que sus Flows se deprecan y eso no se deshace, y borrar con error.
+
 **Mandan sobre esta spec en:**
 - **Una acción que no se puede usar** queda grisada, con el motivo en su tooltip, también en el ⋮ (43). Sin el permiso, no se dibuja.
 - **Si no se sabe si la baja o el borrado salió,** la pantalla vuelve a leer sola, sin pisar lo escrito (43).
@@ -95,6 +97,8 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]` y `[Feat
 | `POST /{id}/copies` | `forms.manage` | `{name, prefix}`, con `[Idempotent]` | 201 `FormDetail` + Location |
 
 `retirement.state` es `Pending`, `Uncertain`, `Deprecated` o `NeedsAttention`; `null` si nunca hubo un Flow. Entre varias versiones prima `NeedsAttention`, después `Uncertain` y después `Pending`.
+
+**Dar de baja no lleva `version`:** la baja va en la fila de estado, que no es `IVersioned` (T7), y la protege el estado, bajo su bloqueo: dos a la vez dan `AlreadyDeactivated`.
 
 **Rutas que cambian:**
 
@@ -135,7 +139,7 @@ Una migración, `<fecha>_FormLifecycle.cs`, aditiva.
 | Tabla | Columna | Tipo | Regla |
 | --- | --- | --- | --- |
 | `FormDefinitionStates` | `DeactivatedAtUtc`, `DeactivatedByUserId` | timestamptz?, uuid? | van acá por T7: dar de baja no le da un 409 falso a quien edita. Reactivar los limpia en la UoW que activa la versión |
-| `FormDefinitions` | `DeletedAtUtc`, `DeletedByUserId` | timestamptz?, uuid? | `ISoftDeletable`. El índice único del prefijo no se filtra: queda reservado |
+| `FormDefinitions` | `IsDeleted`, `DeletedAtUtc`, `DeletedBy` | bool, timestamptz?, uuid? | `ISoftDeletable`. El índice único del prefijo no se filtra: queda reservado |
 | `WhatsAppFlowBindings` | `DeprecationState` | texto? | `Pending`, `Uncertain`, `Deprecated` o `NeedsAttention` |
 | `WhatsAppFlowBindings` | `DeprecationInFlight` | bool | se commitea antes de llamar a Meta |
 | `WhatsAppFlowBindings` | `DeprecationFence` | bigint | el número de turno de cada reserva |
@@ -157,8 +161,8 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | B3 | Dar de baja, bajo el bloqueo de la fila de estado, con `IAuditLog` | suma a `FormDefinitionService.cs` [E14] | `FormPublicationService.cs` [E14] | publicación abierta; dos a la vez; un editor abierto no recibe 409 |
 | B4 | Reactivar | suma a `FormPublicationService.cs` y `FormVersionCreator.cs` [E14] | esos mismos | sin cambios publica igual; sigue de baja hasta confirmar; si falla, sigue de baja; numeración continua |
 | B5 | Borrar: lo del canal se lee antes de la UoW, y lo de Forms se comprueba bajo el bloqueo | suma a `FormDefinitionService.cs` | esos mismos | con respuestas, con envíos, con publicación; borrador y publicado; `usedByCount` y `FieldInUse` no cuentan lo borrado; un envío que se cruza queda `Rejected`, a la vista |
-| B6 | Copiar | `A/Modules/Forms/Services/FormDefinitionCopier.cs`; suma a `FormPrefixResolver.cs` [E14] | `FormVersionCreator.cs` [E14] | identidades, catálogos, presentación y filtros iguales; prefijo ocupado; idempotencia; de un dado de baja; sin versiones ni respuestas |
-| B7 | Decir qué versiones ya no se usan | suma a `FormStructuredSource.cs` e `IFormReader.cs` | `FormStructuredSource.cs` [E14] | reemplazada, de baja y borrada; la activa no; una publicación abierta suspende |
+| B6 | Copiar | `A/Modules/Forms/Services/FormDefinitionCopyCreator.cs`; suma a `FormPrefixResolver.cs` [E14] | `FormVersionCreator.cs` [E14] | identidades, catálogos, presentación y filtros iguales; prefijo ocupado; idempotencia; de un dado de baja; sin versiones ni respuestas |
+| B7 | Decir qué versiones ya no se usan | suma a `FormStructuredSource.cs` e `IFormReader.cs` | `FormStructuredSource.cs` [E14] | reemplazada, `Failed`, de baja y borrada; la activa no; una publicación abierta suspende |
 | B8 | Binding: reservar, marcar, registrar y verificar | suma a `D/WhatsApp/WhatsAppFlowBinding.cs` [E14]; `WhatsAppFlowBindingErrors.cs` | las transiciones de publicación del binding [E14] | un turno viejo no escribe; `InFlight` se vuelve «Sin confirmar»; las cuatro esperas |
 | B9 | La deprecación en sus fases, cada una con una UoW | `A/Modules/WhatsApp/Interfaces/Services/IWhatsAppFlowDeprecationService.cs`, `WhatsAppFlowDeprecationService.cs` | `IWhatsAppFlowPublicationService.cs` [E14] | sesión vigente; respuesta a tiempo sin capturar; otra WABA; sin token; el token no entra en la identidad |
 | B10 | Hablar con Meta | suma a `I/Modules/WhatsApp/WhatsAppFlowClient.cs` [E14] | el mismo | 2xx, 4xx, 5xx, 429, timeout y cuerpo ilegible; clasificación; ya deprecado |
@@ -232,6 +236,6 @@ La E16 cerrada.
 - **Datos de la organización:** la baja y el borrado van en tablas `ITenantOwned` con RLS.
 - **Workers:** el de deprecación es de WhatsApp y entra por organización con `TenantJobRunner`.
 - **Feature `forms`:** las rutas llevan `[FeatureGate("forms")]`.
-- **Permisos de organización:** sin permisos nuevos.
+- **Permisos de organización:** sin permisos nuevos. `forms.manage` y `forms.publish` completan su texto.
 - **WhatsApp (E11):** la deprecación usa la WABA y el token de cada organización.
 - **Cuotas:** las rutas cuentan en las cuotas generales.

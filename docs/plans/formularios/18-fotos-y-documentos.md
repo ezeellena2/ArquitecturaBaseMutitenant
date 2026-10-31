@@ -77,13 +77,14 @@ Parte está aprobada en el lienzo v130, y Diseño la revisa con el [texto de la 
 
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
-| `FRM-Editor-18` y `M-FRM-Editor-18` | las preguntas de foto y documento, «Archivos: hasta N de 10» y «Sin almacenamiento» | A revisar |
+| `FRM-Editor-18` y `M-FRM-Editor-18` | las preguntas de foto y documento, el tope en el ⓘ de «Cuántas» y «Sin almacenamiento» | A revisar |
 | `FRM-Publicar-18` | «Más de 10 archivos» | A revisar |
 | `WA-Chats-Respuesta-18` y `M-WA-Conversacion-Respuesta-18` | la tarjeta: bajando, reintentando, con fotos y un documento, muchas fotos y los dos rechazos | A revisar |
 | `WA-Chats-Visor` y `M-WA-Chats-Visor` | el visor | A revisar |
 | `FRM-Respuestas-18` y `M-FRM-Respuestas-18` | la planilla con la columna de archivos, su filtro en «Más filtros» y el ⓘ de exportar | Por dibujar |
 | `FRM-Respuesta-18` y `M-FRM-Respuesta-18` | el detalle, con «Fotos» y el visor | Por dibujar |
 | `FRM-Respuesta-Completa-18` | la pantalla completa, con «Descargar ▾» | Por dibujar |
+| `FRM-Dar-De-Baja-18` y `FRM-Editor-Baja-18` | «Lo que se conserva» suma las fotos y los documentos | Por dibujar |
 | `WA-Chats-Adjuntos` y `M-WA-Chats-Adjuntos` | los archivos del chat: adjuntar, subiendo, enviado, no se pudo, fuera de las 24 horas y un archivo recibido | Por dibujar |
 
 **Mandan sobre esta spec en:**
@@ -119,7 +120,7 @@ Parte está aprobada en el lienzo v130, y Diseño la revisa con el [texto de la 
 
 | Ruta | Pide | Devuelve |
 | --- | --- | --- |
-| `POST conversations/{id}/attachments` | multipart: el archivo y `text?`, con `[Idempotent(Mode = IdempotencyMode.DurableReference)]` | 202 `{messageId}` |
+| `POST conversations/{id}/attachments` | multipart: el archivo y `text?`, con `[Idempotent(Mode = IdempotencyMode.DurableReference)]` y `[IdempotencyDurable(typeof(WhatsAppChatFileDurableAdapter))]` | 202 `{messageId}` |
 | `GET conversations/{id}/files/{fileId}/thumbnail` | — | 200 JPEG, en línea |
 | `GET conversations/{id}/files/{fileId}/content` | — | 200 el original |
 
@@ -170,8 +171,9 @@ Tres migraciones: `<fecha>_FormRecordFiles.cs`, `<fecha>_WhatsAppChatFiles.cs` y
 | `MetaMediaId` | texto? | el de entrada, como texto |
 | `Attempts`, `NextAttemptAtUtc` | int, timestamptz? | los mismos intervalos; índice parcial en `Pending` |
 | `StorageKey`, `ThumbnailKey`, `FileName`, `MediaType`, `ByteLength`, `Sha256` | — | como `FormRecordFiles` |
+| `IdempotencyKey` | texto? | la clave del envío de un operador, única por chat: es el vínculo del modo durable, y se confirma en la misma UoW que el mensaje |
 
-**Otras columnas:** `FormVersions` suma `MaxFileBytes`. `WhatsAppFlowSessions` suma el estado `Receiving`, `Attempts` y `NextAttemptAtUtc`. Las categorías de `IFileStore` son `forms` y `whatsapp`. **Las claves no llevan la organización** (decisión de la E10): el aislamiento lo dan estas tablas y la Api.
+**Otras columnas:** `FormVersions` suma `MaxFileBytes`. `WhatsAppFlowSessions` suma el estado `Receiving` y `Attempts`, que muestra la tarjeta. Los reintentos los corre la cola de entrada, con el intento en el mensaje, como en la E14. Las categorías de `IFileStore` son `forms` y `whatsapp`. **Las claves no llevan la organización** (decisión de la E10): el aislamiento lo dan estas tablas y la Api.
 
 ## Pasos
 
@@ -191,8 +193,8 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | B8 | Planilla, conteos, detalle y Excel | suma a `FormRecordColumnsBuilder.cs`, `FormRecordReader.cs` y `FormRecordSheetBuilder.cs` [E15] | esos mismos | `answered` con un archivo; cantidad y nombres en el Excel; sin consultas por fila |
 | B9 | Limpiar lo no confirmado, cada hora | `I/Modules/Forms/FormFileCleanupWorker.cs` y su parte en WhatsApp; `IsStorageReferencedAsync` | `AssistantRetentionWorker.cs` | a las 24 horas; un archivo referenciado se confirma |
 | B10 | Los archivos que llegan al chat | `D/WhatsApp/WhatsAppChatFile*.cs`; suma a `WhatsAppOrganizationInboundWriter.cs` y `PlatformWhatsAppInboundWriter.cs`; `A/Modules/WhatsApp/Services/WhatsAppChatFileService.cs`, `I/Modules/WhatsApp/WhatsAppChatFileWorker.cs` | `WhatsAppBroadcastWorker.cs`, `WhatsAppChatMessageBase.cs` | cada tipo; lo que no se guarda; reintentos; un mensaje trabado no frena a los demás; organización y Plataforma |
-| B11 | Mandar un archivo | suma a `WhatsAppReplyIssuer.cs`, `WhatsAppOutboundMessage.cs` y `WhatsAppCloudClient.cs`; la ruta en `WhatsAppConversationsControllerBase.cs` | `AssistantControllerBase.Upload` y `WhatsAppReplyIssuer.IssueAsync` | ventana cerrada; topes por tipo; idempotencia; falla al subir a Meta; un archivo por mensaje |
-| B12 | Ver, retención y baja | suma a la lectura de mensajes, `WhatsAppContactRemover.cs` y la retención de Plataforma; rutas de archivos | `AssistantRetentionWorker.cs` | borrar el contacto borra sus archivos; sin permiso de la bandeja; la lista de chats no trae nombres |
+| B11 | Mandar un archivo | suma a `WhatsAppReplyIssuer.cs`, `WhatsAppOutboundMessage.cs` y `WhatsAppCloudClient.cs`; la ruta en `WhatsAppConversationsControllerBase.cs`; `P/Modules/WhatsApp/WhatsAppChatFileDurableAdapter.cs` | `AssistantControllerBase.Upload`, `AssistantDurableAdapter.cs` y `WhatsAppReplyIssuer.IssueAsync` | ventana cerrada; topes por tipo; idempotencia; falla al subir a Meta; un archivo por mensaje |
+| B12 | Ver | suma a la lectura de mensajes; rutas de archivos | `AssistantAttachmentService.DownloadAsync` | sin permiso de la bandeja; la lista de chats no trae nombres |
 | B13 | Capacidad, contratos y ejemplos | `FormsCapabilityContributor.cs`; suma a `FormsContractContributor.cs` y al de WhatsApp | `AssistantCapabilityContributor.cs` | cada ruta con 401, 403, feature apagada = 404; `RouteIsolationMatrixTests`; ejemplos exportados |
 
 **Front:**
@@ -200,7 +202,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
 | F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` y `F/src/modules/whatsapp/chats/` | `M/…/api/records.ts` | zod estricto con los ejemplos |
-| F2 | El editor | suma a `QuestionEditor.tsx` [E14] | `M/…/QuestionEditor.tsx` | «Archivos: hasta N de 10»; sin almacenamiento |
+| F2 | El editor | suma a `QuestionEditor.tsx` [E14] | `M/…/QuestionEditor.tsx` | el tope en el ⓘ de «Cuántas»; sin almacenamiento |
 | F3 | El visor común | `F/src/shared/ui/PhotoViewer.tsx` | `M/…/records/RecordValues.tsx` | teclado y foco; solo las miniaturas visibles; perder el permiso lo cierra; axe |
 | F4 | La tarjeta del chat | suma a la tarjeta [E14] | el tablero | los estados; «Mandar de nuevo» |
 | F5 | Planilla, detalle y Excel | suma a `FormRecordsPage.tsx`, `QuickView.tsx`, `RecordFullPage.tsx`, `RecordValues.tsx` y `ExportDialog.tsx` [E15] | `M/…` | columna, pestaña «Fotos» y «Descargar ▾» |
@@ -214,7 +216,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | --- | --- | --- |
 | [E10] | El adaptador de nube de `IFileStore` y de `IFileStoreMaintenance`. | En desarrollo alcanza `LocalFileStore`; las claves son del almacenamiento y opacas. |
 | [E10] | Cómo se sabe que no hay almacenamiento. | La capacidad `form-files` se apaga sin adaptador configurado. |
-| [E14] | La fase de captura, la sesión y el presupuesto de 16 KiB. | Se pueden sumar `Receiving` y los reintentos, y lo de cada archivo entra en el presupuesto. |
+| [E14] | La fase de captura, la sesión y el presupuesto de 16 KiB. | Se puede sumar `Receiving`, lo de cada archivo entra en el presupuesto, y la reserva de la cola, de 120 s, alcanza para los 90 s de una captura. |
 | [E15] | Los nombres de las piezas de lectura. | Los de la columna «Archivos». |
 | [E11] | El mensaje `Media` del chat y el payload de `WhatsAppOutboundMessage`. | La entrada guarda el id de medio de Meta, que hoy descarta; el outbox lleva la clave del archivo. |
 | [Meta] | `PhotoPicker`, `DocumentPicker` y varias pantallas con `data`, sin endpoint. | Lo de la §14 de la E14, y `${data.x}` llega a cada pantalla. |
@@ -262,7 +264,7 @@ La puerta de la etapa, más una **prueba real con Meta y el almacenamiento de la
 ## En el multitenant
 
 - **Datos de la organización:** `FormRecordFiles` y `WhatsAppChatFiles` son `ITenantOwned`, con RLS. Plataforma, en su esquema global.
-- **Almacenamiento:** un solo contenedor privado, sin prefijo por organización. Borrar lo de una organización recorre esa metadata.
+- **Almacenamiento:** un solo contenedor privado, sin prefijo por organización: de quién es cada archivo lo dice su metadata.
 - **Workers:** la captura con archivos es la fase de la E14, sin `ExecutionActor`; la limpieza y los archivos del chat recorren las organizaciones con `TenantJobRunner`.
 - **Feature `forms`:** las rutas de los archivos de las respuestas la llevan. Las del chat son de WhatsApp: van sin ella y valen también en Plataforma.
 - **Permisos:** ninguno nuevo.

@@ -71,11 +71,12 @@ Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](19-texto-d
 | `FRM-Respuestas-19` y `M-FRM-Respuestas-19` | la planilla, con «No se mostró», el cálculo y la columna de renglones, y el filtro en «Más filtros» |
 | `FRM-Respuesta-19` y `M-FRM-Respuesta-19` | el detalle, con la tabla de líneas y los cálculos, también en la pantalla completa |
 | `WA-Chats-Respuesta-19` y `M-WA-Conversacion-Respuesta-19` | la tarjeta, con los renglones y el total |
-| `FRM-Tablero-19` | el tablero, con un monto y su moneda |
+| `FRM-Tablero-19` y `M-FRM-Tablero-19` | el tablero, con un monto y su moneda |
+| `FRM-Publicar-19` | una condición que WhatsApp no puede mostrar y más de 50 componentes |
 
 **Estados que se dibujan:**
 - **Editor:** una condición con cada tipo de pregunta; una fórmula incompleta, con el motivo debajo de su pregunta; una referencia rota; el contador de componentes cerca de 50, y sin preguntas anteriores que sirvan;
-- **Publicar:** una condición que WhatsApp no puede mostrar, y más de 50 componentes;
+- **Publicar:** problemas por pregunta, con «Ir a la pregunta»;
 - **Planilla y detalle:** una respuesta con una pregunta oculta, y un cálculo que quedó «Sin respuesta».
 
 **Mandan sobre esta spec en:** las fichas del front. La fórmula se arma con piezas, sin un campo para escribirla. Un dato por celda, y un monto con su moneda.
@@ -93,15 +94,18 @@ Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](19-texto-d
 | `POST …/records/facets` | `notShown?` en las preguntas condicionales |
 | `POST …/records/export` | la hoja de líneas; una celda «No se mostró» |
 | `POST …/records/dashboard` | `numbers[]` suma los cálculos y `currency?` |
+| `GET …/conversations/{id}/forms` | `optionCounts` y `offerProblems` suman `columnId?` |
 
-**Un dato de la fórmula** es `{kind: "number", value}`, `{kind: "question", fieldId}`, `{kind: "catalogField", fieldId, fieldKey}` o `{kind: "lineSum", fieldId, columnId, times?}`, y `times` es `{kind: "column", columnId}` o `{kind: "catalogField", columnId, fieldKey}`. Las otras piezas son `{kind: "op", op}`, `{kind: "open"}` y `{kind: "close"}`.
+**Un dato de la fórmula** es `{kind: "number", value}`, `{kind: "question", fieldId}`, `{kind: "catalogField", fieldId, catalogFieldId}` o `{kind: "lineSum", fieldId, columnId, times?}`, y `times` es `{kind: "column", columnId}` o `{kind: "catalogField", columnId, catalogFieldId}`. Las otras piezas son `{kind: "op", op}`, `{kind: "open"}` y `{kind: "close"}`.
+
+`catalogFieldId` es la identidad del campo, la misma del contrato de la E13: la clave queda adentro. **Lo que usa un campo o un catálogo cuenta:** `Forms.Catalog.FieldInUse` y «Lo usan» suman las fórmulas y las columnas de catálogo, así quitar un campo no deja los totales en «Sin respuesta» sin avisar.
 
 **Valores nuevos,** en el mapa de la E15:
 - `{kind: "hidden"}`: no se mostró;
 - `{kind: "money", amount, currency}`, para un cálculo con moneda, con el monto como en `Money`;
 - `{kind: "lines", count, rows?[{position, values}]}`: `rows` solo en el detalle.
 
-**Puertos:** `StructuredFormVersion.Questions` suma `VisibleIf`, `Calculation` y `Lines`. `StructuredRecordCapture` suma `Lines[FieldId, RowPosition, ColumnId, Text?|Number?|Date?|Bool?|ChoiceId?, CatalogId?, ChoiceCode?, ChoiceDetail?, ChoiceValue?]`. `StructuredRecordCard` suma las líneas y los cálculos. `IStructuredFormChannel.Check` valida el perfil nuevo.
+**Puertos:** `StructuredFormVersion.Questions` suma `VisibleIf`, `Calculation` y `Lines`. `StructuredRecordCapture` suma `Lines[FieldId, RowPosition, ColumnId, Text?|Number?|Date?|Bool?|Choice?]`, con la opción como en la E14. **Una columna de catálogo tiene su oferta,** con el mismo tope que una pregunta: `StructuredSendableForm.Offers`, `ProtectedOffer` y `StructuredFormChoice` suman `ColumnId?`, y todos los renglones usan la misma lista. `StructuredRecordCard` suma las líneas y los cálculos. `IStructuredFormChannel.Check` valida el perfil nuevo.
 
 **Errores** (con sus textos en `FormsTexts.resx` y `.en.resx`):
 
@@ -122,7 +126,7 @@ Una migración aditiva, `<fecha>_FormLogic.cs`. Lo de una pregunta vive en el js
 | Tabla | Columna | Tipo | Regla |
 | --- | --- | --- | --- |
 | `FormRecords` | `HiddenFieldIds` | uuid[], vacío por defecto | las preguntas que no se mostraron |
-| `FormRecordValues` | `Currency` | texto 3? | en un cálculo con moneda; CHECK que lo ata a `NumberValue` |
+| `FormRecordValues` | `Currency` | texto 3? | en un cálculo con moneda; CHECK que lo ata a `NumberValue`. Se valida con `ValidCurrency()`, sin FK |
 
 **FormRecordLineValues** (`ITenantOwned`, esquema `tenant`, con RLS, sin auditoría: es parte de la respuesta)
 
@@ -145,8 +149,8 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | --- | --- | --- | --- | --- |
 | B1 | Evaluar condiciones en memoria, con la regla de la E15 | `D/Forms/FormConditionEvaluator.cs`, junto a `FormRecordCondition.cs` [E15] | `M/…/lib/conditions.ts` | cada operador; en cadena; la tabla de verdad igual que en SQL |
 | B2 | Calcular una fórmula | `D/Forms/FormFormula.cs` y `FormFormulaEvaluator.cs` | `M/…/lib/formula.ts` | precedencia y paréntesis; división por cero; dato que falta; desborde; `AwayFromZero`; los decimales de la moneda; una suma de líneas con `times` |
-| B3 | Las preguntas en el borrador | suma a `FormQuestionType.cs`, `FormDraft.cs`, `FormDraftEditor.cs` y `FormVersionCreator.cs` [E14]; `A/Modules/Forms/Services/FormLogicPolicy.cs` | `FormRecipientFilterPolicy.cs` [E16] | cada motivo de los tres errores; referencia rota al quitar, mover y cambiar el tipo; guardar incompleto sigue andando |
-| B4 | Publicar y el Flow con `If` y renglones, con un perfil nuevo | suma a `WhatsAppFlowBuilder.cs` y a `Check` [E14] | el mismo | la condición que no se puede mostrar; 50 componentes; 16 KiB; título oculto; lo sellado no se recompila |
+| B3 | Las preguntas en el borrador | suma a `FormQuestionType.cs`, `FormDraft.cs`, `FormDraftEditor.cs`, `FormVersionCreator.cs` y al control de `FieldInUse` [E14]; `A/Modules/Forms/Services/FormLogicPolicy.cs` | `FormRecipientFilterPolicy.cs` [E16] | cada motivo de los tres errores; referencia rota al quitar, mover y cambiar el tipo; guardar incompleto sigue andando; un campo que usa una fórmula no se quita; una columna de catálogo cuenta en «Lo usan» |
+| B4 | Publicar y el Flow con `If` y renglones, con un perfil nuevo | suma a `WhatsAppFlowBuilder.cs`, a `Check` y a `FormOfferBuilder.cs` [E14] | el mismo | la condición que no se puede mostrar; 50 componentes; 16 KiB; título oculto; lo sellado no se recompila; la oferta de una columna de catálogo y sus problemas |
 | B5 | La captura: visibilidad, descarte, renglones, sellado y cálculo, en ese orden | `A/Modules/Forms/Services/FormRecordLogicPolicy.cs`; suma a `FormRecordService.cs`, `FormRecordWriter.cs` [E14] y `WhatsAppFlowReplyVerifier.cs` | esos mismos | un valor en una oculta se descarta; obligatoria oculta; renglones vacíos en el medio; catálogo en un renglón; dos capturas iguales |
 | B6 | Tabla, columnas y migración | `D/Forms/FormRecordLineValue.cs`; `I/…/Configurations/FormRecordLineValueConfiguration.cs`; la migración | `FormRecordValueConfiguration.cs` [E14] | aislamiento y migración, también hacia atrás |
 | B7 | Lo que se lee: planilla, conteos, detalle y navegación | suma a `FormRecordColumnsBuilder.cs`, `FormRecordReader.cs`, `FormRecordQueryFilters.cs` [E15] | esos mismos | `notShown` y `unanswered`; un cálculo se filtra y se ordena; renglones sin consultas por fila |
@@ -189,6 +193,7 @@ No hay revisión de allá. Cada punto lleva su test:
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
+- **Un monto calculado se guarda en `NumberValue`,** con su `Currency`, y se lee como `Money`: es la columna de todos los números, y así se filtra y se ordena con la misma regla. Se redondea a los decimales de la moneda, y un monto de más de 13 dígitos enteros, el tope de un importe, cuenta como demasiado grande.
 - **Una etapa propia** (54), después de las respuestas, así lo que suma se ve en lo que ya existe (78).
 - **Los cálculos se hacen al llegar la respuesta:** quien completa no ve el total en WhatsApp antes de enviar (54).
 - **Las líneas llevan un tope de renglones** (54), de 1 a 10.
