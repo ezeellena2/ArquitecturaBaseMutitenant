@@ -268,7 +268,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Avisar a una persona y mandar por correo** (62), con el PDF adjunto si se elige, y la pregunta «Correo».
 - **El diseño del PDF:** una base bien hecha con logo, color, encabezado, secciones, mostrar u ocultar preguntas y firmas (59). El logo y los datos salen de la página pública, y el color se elige en cada formulario (82).
 - **Mandar el PDF a un cliente** de la organización (47), al chat del contacto elegido en el formulario (55).
-- **Resumen:** [formularios/21-reglas-y-aprobacion.md](formularios/21-reglas-y-aprobacion.md).
+- **Spec:** [formularios/21-reglas-y-aprobacion.md](formularios/21-reglas-y-aprobacion.md).
 - **Criterios:**
   - la configuración que usa un efecto se valida al reservar (un rol borrado colgaba una aprobación);
   - un destinatario inalcanzable no tumba a los demás;
