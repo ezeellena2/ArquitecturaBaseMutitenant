@@ -1,6 +1,6 @@
 # Formularios: evaluación del traspaso 2 de ArquitecturaBase
 
-Estado: **decidida el 2026-10-24.** El usuario eligió todas las recomendadas de §6, que quedaron como las decisiones 34 a 44 de la [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md). Las [specs](formularios/README.md) se actualizan según §7.
+**Estado:** insumo · decidida el 2026-10-24; se retira cuando estén dibujados los tableros de su §5. El usuario eligió todas las recomendadas de §6, que quedaron como las decisiones 34 a 44 de la [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md). Las [specs](formularios/README.md) se actualizan según §7.
 
 **Los números de etapa de este documento son los de antes de la decisión 78** (2026-10-25). La equivalencia con los de ahora está en la [tabla de las specs](formularios/README.md#equivalencia-con-los-números-de-antes).
 

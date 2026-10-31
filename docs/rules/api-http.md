@@ -52,4 +52,4 @@
 - `ControllerInputContractTests` (E1), `ControllerServiceRepositoryTests` (E0), `MinimalApiRoutesTests` (E0), `ControllerOutputContractTests` (E7), `AccessDeclarationTests` (E3), `SecurityHeadersTests` (E9), `BrowserSecurityTests` (E9)
 
 ## Detalle
-[backend.md §5 y §17](../architecture/backend.md#controller) · ADR 0002
+[backend.md §5 y §17](../architecture/backend.md#controller) · ADR 0002 · [errores técnicos del contrato](../features/contrato-http.md)

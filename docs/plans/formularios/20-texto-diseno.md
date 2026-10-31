@@ -1,5 +1,7 @@
 # E20 · Texto para el chat de Diseño
 
+**Estado:** pendiente · Diseño lo toma en su turno.
+
 Se pega tal cual en el chat de Diseño, que es el único que toca el lienzo. Va en su turno, después del bloque 0 y de la E19 del plan de diseño del 27/10. El punto 1 cambia un tablero de la E14, y lo de «Después, con la E21» se dibuja con esa etapa.
 
 ---

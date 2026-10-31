@@ -1,6 +1,6 @@
 # E24 · Varios asistentes, uno por equipo (resumen)
 
-**Estado:** resumen de la etapa 24 del bloque (decisiones 68, 69, 77 y 78), justo después de la E23. No tiene equivalente programado en ArquitecturaBase, que lo dejó para una tercera etapa del asistente (anexo F, F2).
+**Estado:** pendiente · resumen de la etapa 24 del bloque (decisiones 68, 69, 77 y 78), justo después de la E23. No tiene equivalente programado en ArquitecturaBase, que lo dejó para una tercera etapa del asistente (anexo F, F2).
 
 ## Qué se construye
 

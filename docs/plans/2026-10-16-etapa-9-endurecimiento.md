@@ -1,6 +1,6 @@
 # Etapa 9 · Endurecimiento
 
-Estado: plan (E9), sin implementar. Alcance completo y exclusivo de [Etapa 9 de la hoja de ruta](2026-09-27-plan-de-desarrollo.md#etapa-9-endurecimiento). Mandan las decisiones del usuario, las ADR vigentes, AGENTS y las fichas; Roles es el área de referencia.
+**Estado:** cerrado · la etapa cerró el 2026-10-20. Alcance completo y exclusivo de [Etapa 9 de la hoja de ruta](2026-09-27-plan-de-desarrollo.md#etapa-9-endurecimiento). Mandan las decisiones del usuario, las ADR vigentes, AGENTS y las fichas; Roles es el área de referencia.
 
 ## Forma de trabajo
 

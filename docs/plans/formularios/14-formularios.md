@@ -1,6 +1,6 @@
 # E14 · Formularios: crear, publicar, mandar y recibir (spec)
 
-**Estado:** spec de la etapa 14 del bloque (decisiones 34 y 78), con las decisiones 35, 38, 43, 79 y 80. Nace con la pregunta «Elegir de un catálogo», sobre los catálogos de la E12 y sus campos de la E13. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E11]**, **[E12]**, **[E9]** y **[Meta]** contra el código real y la documentación vigente.
+**Estado:** pendiente · spec de la etapa 14 del bloque (decisiones 34 y 78), con las decisiones 35, 38, 43, 79 y 80. Nace con la pregunta «Elegir de un catálogo», sobre los catálogos de la E12 y sus campos de la E13. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E11]**, **[E12]**, **[E9]** y **[Meta]** contra el código real y la documentación vigente.
 
 **Fuentes:**
 - alcance y decisiones de producto: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E14 y §5;

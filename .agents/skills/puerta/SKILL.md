@@ -26,6 +26,7 @@ La puerta se corre **una sola vez, al final de la etapa** (`AGENTS.md`, «Cierre
    | Contrato | front | `npm run contracts:check` | sale 0 |
    | E2E real | front | `npm run test:e2e:real`, **solo**, porque levanta su propio AppHost | 0 fallidos |
    | Documentación | back | `node scripts/arneses/arnes.mjs realinear-docs --detectar` | auto, modelo y humano en 0, en los dos repos |
+   | Estado de los documentos | back | `node scripts/arneses/arnes.mjs estado-docs --detectar` | auto, modelo y humano en 0 |
    | Galería | front | `node scripts/capturar-etapa-<etapa>.mjs` y, si existe, `node scripts/generar-galeria-etapa-<etapa>.mjs` | solo las pantallas nuevas o cambiadas en la etapa, cada una al lado de su tablero en `docs/design/capturas/etapa-<etapa>/`, y alguien la mira |
    | Recorrido de usuario | front | `node scripts/recorrido-usuario.mjs --no-build` (ver la skill `/recorrido`) | todas las comprobaciones en verde |
    | Quitar el módulo | copia descartable | solo en la etapa del módulo, una sola vez y con la base vacía, según su guía (por ejemplo `docs/guides/quitar-whatsapp.md`) | núcleo, build, tests e ingreso en verde |

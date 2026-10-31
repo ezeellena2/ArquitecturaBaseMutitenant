@@ -1,5 +1,7 @@
 # 06 · Lecciones: errores a no repetir
 
+**Estado:** insumo · se retira cuando las etapas 15 a 25 tengan su spec completa.
+
 Cada línea es algo que apareció en un code review o en un piloto de ArquitecturaBase, junto con su corrección. Sirven como lista de control al planificar y al revisar cada etapa de acá. El detalle, con el review y el número de punto, está en el [anexo C §3](anexo-c-reglas.md#3-lecciones-de-los-code-reviews-errores-a-no-repetir).
 
 ## Contratos entre backend y front

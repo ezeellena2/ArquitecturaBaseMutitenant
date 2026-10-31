@@ -1,5 +1,7 @@
 # Sitio público de las organizaciones
 
+**Revisado:** 2026-10-31
+
 Una organización activa puede publicar su página en `<slug>.<host del issuer>`, con el esquema y el puerto de `Authentication:Issuer`. El host resuelve solo el sitio público: no concede acceso a la organización y nunca cambia el `tenant_id` del token. Las reglas generales están en [multitenancy](../rules/multitenancy.md) y [API HTTP](../rules/api-http.md); la edición privada está en [organizaciones](organizaciones.md#página-pública-y-auditoría).
 
 ## La página publicada

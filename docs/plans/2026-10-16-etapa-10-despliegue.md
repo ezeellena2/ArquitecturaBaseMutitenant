@@ -1,6 +1,6 @@
 # Etapa 10 · Despliegue y operación
 
-Estado: plan (E10), sin implementar. Alcance exclusivo de [Etapa 10 de la hoja de ruta](2026-09-27-plan-de-desarrollo.md#etapa-10-despliegue-y-operación), ADR vigentes y fichas. Roles sigue siendo el modelo de código; las decisiones del usuario prevalecen. Este plan no contrata servicios ni publica la aplicación.
+**Estado:** pendiente · plan corto de la E10. Alcance exclusivo de [Etapa 10 de la hoja de ruta](2026-09-27-plan-de-desarrollo.md#etapa-10-despliegue-y-operación), ADR vigentes y fichas. Roles sigue siendo el modelo de código; las decisiones del usuario prevalecen. Este plan no contrata servicios ni publica la aplicación.
 
 ## Forma de trabajo
 

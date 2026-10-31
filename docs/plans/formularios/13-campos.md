@@ -1,6 +1,6 @@
 # E13 · Campos de los catálogos (spec)
 
-**Estado:** spec de la etapa 13 del bloque (decisiones 34 y 78), con el [formato](plantilla.md) de las etapas. Es la parte de catálogo de lo que ArquitecturaBase llama E2, programado allá con un review de 39 puntos: los campos, sus valores, las columnas al importar y qué se ve en WhatsApp, con la vista previa del catálogo. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E12.
+**Estado:** pendiente · spec de la etapa 13 del bloque (decisiones 34 y 78), con el [formato](plantilla.md) de las etapas. Es la parte de catálogo de lo que ArquitecturaBase llama E2, programado allá con un review de 39 puntos: los campos, sus valores, las columnas al importar y qué se ve en WhatsApp, con la vista previa del catálogo. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E12.
 
 ## Qué leer
 

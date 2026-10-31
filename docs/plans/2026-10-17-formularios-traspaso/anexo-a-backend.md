@@ -2,6 +2,8 @@
 
 # Formularios por WhatsApp: inventario del backend para replicarlo
 
+**Estado:** insumo · se retira cuando las etapas 15 a 25 tengan su spec completa.
+
 **Fuente:** repositorio `ArquitecturaBase`, commit `b43edf8fb2027fc9aa60761dd4becdb8454686ee` («fix(formularios): conservar los textos históricos por idioma», 2026-10-17 12:06 -0300). Todo lo de este documento se leyó con `git show HEAD:<archivo>`, no del árbol de trabajo.
 
 **Cambios sin commitear al momento de la lectura (no incluidos acá):** había 22 archivos modificados (Codex trabajando) que agregan la **revisión por destinatario** de un aviso incierto (`ReviewFormActionHttpRequest` suma `RecipientUserId`), evidencia de entrega separada (`StructuredRecordActionReceipt` con `DeliveredAtUtc`/`ReadAtUtc`), resultados por destinatario en el run (`FormActionRecipientOutcome`) y que un `NotifyRole` sin destinatarios termine `Completed`. Donde este inventario describe la revisión de avisos, describe la versión commiteada (una revisión por run).

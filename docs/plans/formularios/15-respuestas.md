@@ -1,6 +1,6 @@
 # E15 · Respuestas: planilla, detalle, Excel y tablero (spec)
 
-**Estado:** spec de la etapa 15 del bloque (decisiones 34, 57, 78 y 79), con el [formato](plantilla.md) de las etapas. Es lo que ArquitecturaBase llama etapa 3, con el menú `MF1`, el detalle completo (`DC0` y `DC1` ajustado) y el tablero `DOC7-A`. **Solo lee,** salvo los ajustes del tablero de cada persona. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E14.
+**Estado:** pendiente · spec de la etapa 15 del bloque (decisiones 34, 57, 78 y 79), con el [formato](plantilla.md) de las etapas. Es lo que ArquitecturaBase llama etapa 3, con el menú `MF1`, el detalle completo (`DC0` y `DC1` ajustado) y el tablero `DOC7-A`. **Solo lee,** salvo los ajustes del tablero de cada persona. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E14.
 
 ## Qué leer
 

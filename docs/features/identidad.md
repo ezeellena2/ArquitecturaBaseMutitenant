@@ -1,5 +1,7 @@
 # Identidad e ingreso
 
+**Revisado:** 2026-10-31
+
 La identidad de una persona es global. Una cuenta puede tener acceso como persona a su espacio `Personal` y, si pertenece a una organización, acceso como empresa a sus espacios `Business`. Los dos accesos no mezclan datos ni se eligen a partir del subdominio. Fuente: [multitenancy.md §2–§3](../architecture/multitenancy.md#2-quiénes-entran).
 
 ## Ingreso

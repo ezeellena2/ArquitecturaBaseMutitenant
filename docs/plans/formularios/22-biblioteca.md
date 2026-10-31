@@ -1,6 +1,6 @@
 # E22 · Biblioteca de plantillas de la plataforma (spec)
 
-**Estado:** spec de la etapa 22 del bloque (decisiones 34, 40, 78 y 79). **Es también la biblioteca de formularios estándar** (40). Se arma con las piezas de este repo y las de las etapas anteriores. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E14]**, **[E12]** y **[E21]** contra el código.
+**Estado:** pendiente · spec de la etapa 22 del bloque (decisiones 34, 40, 78 y 79). **Es también la biblioteca de formularios estándar** (40). Se arma con las piezas de este repo y las de las etapas anteriores. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E14]**, **[E12]** y **[E21]** contra el código.
 
 **Fuentes:**
 - alcance y decisiones: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E22 y decisiones 2, 13 a 16, 30 a 33, 35, 40, 45, 50, 59, 61, 62 y 64;

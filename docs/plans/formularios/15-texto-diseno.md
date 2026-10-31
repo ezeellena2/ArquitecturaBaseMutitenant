@@ -1,5 +1,7 @@
 # E15 · Texto para el chat de Diseño
 
+**Estado:** pendiente · Diseño lo toma en su turno.
+
 Se pega tal cual en el chat de Diseño, que es el único que toca el lienzo.
 
 ---

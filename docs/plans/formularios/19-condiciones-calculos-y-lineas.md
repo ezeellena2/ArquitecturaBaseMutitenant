@@ -1,6 +1,6 @@
 # E19 · Condiciones, cálculos y líneas (resumen)
 
-**Estado:** resumen de la etapa 19 del bloque (decisiones 53, 54 y 78), después de la E18. No tiene equivalente en ArquitecturaBase. **Antes de planificar** se prueba con Meta cómo se ven en el celular una pregunta que aparece según otra, un grupo de renglones y una pregunta de archivo en su pantalla dentro de un `If`, y el plan parte de ese resultado.
+**Estado:** pendiente · resumen de la etapa 19 del bloque (decisiones 53, 54 y 78), después de la E18. No tiene equivalente en ArquitecturaBase. **Antes de planificar** se prueba con Meta cómo se ven en el celular una pregunta que aparece según otra, un grupo de renglones y una pregunta de archivo en su pantalla dentro de un `If`, y el plan parte de ese resultado.
 
 ## Qué se construye
 

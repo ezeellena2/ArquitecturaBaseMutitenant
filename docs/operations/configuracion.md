@@ -151,9 +151,9 @@ La reserva se confirma únicamente con un enqueue real en la UoW; rollback o aus
 
 Las mismas claves, como variables de entorno con doble guion bajo (`Email__Smtp__Password`, `DataProtection__Certificate__Base64`, `WhatsApp__AccessToken`…), en el gestor de secretos del proveedor. Nunca en `appsettings.Production.json`. `DataProtection:Certificate:Base64` es un PFX RSA distinto de los certificados OIDC: el proceso necesita su clave privada para leer el anillo persistido en `platform.DataProtectionKeys`; conservá el mismo certificado en todas las réplicas y en los reinicios. Perderlo impide leer cookies y payloads cifrados con esas claves. `ProtectKeysWithCertificate` cifra las claves **nuevas**; una instalación que ya haya escrito claves sin cifrar necesita tratar ese anillo antes de exponer sus backups. La lista completa de lo obligatorio fuera de Development estará en `runbook.md` (E10).
 
-## Preparación del asistente (E8b, todavía planificada)
+## Asistente
 
-El [configuración del asistente](../features/asistente.md) implementa las claves y opciones siguientes. La prueba manual con proveedor real queda para Integración; las alertas de costo y su SMTP/outbox dependen de T06. No plantillas Meta para el asistente ni cambio de URL del túnel/webhook E8.
+La [configuración del asistente](../features/asistente.md) usa las claves y opciones siguientes. El asistente no usa plantillas de Meta ni cambia la URL del túnel o del webhook de WhatsApp.
 
 ### Claves y catálogo técnico
 

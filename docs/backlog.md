@@ -1,5 +1,7 @@
 # Backlog de la revisión de Etapas 0 a 3c
 
+**Estado:** en curso · lo que las revisiones dejaron para una etapa posterior.
+
 ## Observaciones de 3c para etapas posteriores
 
 - `InvitationPage` sincroniza el fragmento de invitación a estado local después de retirarlo de la barra de direcciones; oxlint informa `react(set-state-in-effect)`. Refactorizar ese paso manteniendo que el token no llegue a la primera consulta mientras siga en la URL. El lint termina con código 0 y el E2E real cubre el flujo; no bloquea 3c.

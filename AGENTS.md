@@ -34,13 +34,14 @@ Las decisiones están en [`docs/decisions/README.md`](docs/decisions/README.md) 
 | limitar pedidos o declarar la cuota de una ruta | [cuotas](docs/rules/cuotas.md) (doce perfiles cerrados; nunca un limitador por proceso) |
 | exponer una ruta | [api-http](docs/rules/api-http.md), [permisos](docs/rules/permisos.md) |
 | loguear | [logs](docs/rules/logs.md) |
-| tocar WhatsApp u otro módulo | [modulos](docs/rules/modulos.md); un mensaje nuevo por WhatsApp: [plantillas](docs/operations/whatsapp-plantillas.md) |
+| tocar WhatsApp u otro módulo | [modulos](docs/rules/modulos.md); un mensaje nuevo por WhatsApp: [plantillas](docs/operations/whatsapp-plantillas.md); probarlo de punta a punta: [e2e-whatsapp](docs/guides/e2e-whatsapp.md) |
 | configurar Google, Gmail o WhatsApp, o cargar secretos | [configuracion](docs/operations/configuracion.md) (nunca un secreto en el repo) |
 | escribir tests | [tests](docs/rules/tests.md) |
 | crear un servicio, un helper, un puerto o un controller | [capas-y-flujo](docs/rules/capas-y-flujo.md) (la lista cerrada de sufijos de los helpers) |
 | agregar un área completa | [agregar-un-area](docs/guides/agregar-un-area.md) |
 | planificar o programar una etapa (back y front en paralelo, desde la E8) | [etapa-en-paralelo](docs/guides/etapa-en-paralelo.md), skill [`/plan-etapa`](.agents/skills/plan-etapa/SKILL.md) |
 | verificar o cerrar una etapa | skills [`/puerta`](.agents/skills/puerta/SKILL.md) y [`/recorrido`](.agents/skills/recorrido/SKILL.md) |
+| crear un documento o saber si uno quedó viejo | [documentacion](docs/rules/documentacion.md) |
 | correr o crear un arnés ejecutable (realinear docs, programar una rutina) | [scripts/arneses/README.md](scripts/arneses/README.md), [agregar-un-arnes](docs/guides/agregar-un-arnes.md) |
 
 El inventario de todos los estándares transversales (los definidos y los propuestos) está en [`docs/architecture/estandares.md`](docs/architecture/estandares.md). Si una regla no está escrita: **copiá cómo lo resuelve ArquitecturaBase** (`../ArquitecturaBase`, `../ArquitecturaBaseFront`); si tampoco está ahí, **decidí vos lo más simple y coherente con estos docs, anotalo en una línea del plan de la etapa y seguí**. Frená y preguntá **solo** si la decisión cambia el producto (qué ve o puede hacer un usuario, una pantalla del lienzo, el modelo de accesos) o contradice una regla escrita. Una duda técnica menor nunca frena una etapa. Una convención transversal nueva se agrega a la ficha y se verifica con un test pertinente, existente o nuevo; una decisión local queda en la feature o el informe, con test de conducta si agrega lógica.
@@ -54,7 +55,7 @@ El inventario de todos los estándares transversales (los definidos y los propue
   - **una sola puerta al final:** suites completas, E2E real, documentación en 0, la galería lado a lado y el recorrido de usuario.
 
   Desde la Etapa 8, el back y el front van en paralelo, con el contrato primero ([etapa-en-paralelo](docs/guides/etapa-en-paralelo.md)).
-- **Velocidad y cierre liviano** (pedido explícito del usuario, 2026-10-11). Las etapas que quedan (11, 9 y 10) tienen que salir mucho más rápido que la 8 y la 8b. Esas dos se programaron en dos días y tardaron otros tantos en cerrarse, por verificar y documentar de más. **El trabajo es programar**; la calidad la cuidan las reglas de abajo y sus tests, no las actas.
+- **Velocidad y cierre liviano** (pedido explícito del usuario, 2026-10-11). Las etapas que quedan tienen que salir mucho más rápido que la 8 y la 8b. Esas dos se programaron en dos días y tardaron otros tantos en cerrarse, por verificar y documentar de más. **El trabajo es programar**; la calidad la cuidan las reglas de abajo y sus tests, no las actas.
   - **Cada verificación pasa completa una sola vez por etapa.** Las suites de cada repo, el E2E real y el recorrido necesitan, cada uno, una corrida completa en verde con el código de la etapa. Lo que falla vuelve a su dueño, y con el arreglo se corre solo lo que ese arreglo toca: el test que falló, los de su área y, en el E2E, sus casos. No se repite todo al final ni se arma un corte nuevo por cada arreglo. La suite completa de un repo se vuelve a correr solo si el arreglo tocó algo que usa todo el repo: autenticación, persistencia base o la composición de la app.
   - **Planes cortos.** Un plan de etapa tiene unas 4.000 palabras como mucho: contrato, tareas con sus archivos y tests, y el texto para cada chat. No lleva historial.
   - **Sin actas.** El estado de un plan es una tabla de tareas (hecha o pendiente), y el resultado de la puerta es otra tabla corta. No se registra cada corrida ni se commitea documentación por cada paso. La documentación se toca cuando cambia una regla, un contrato o una decisión.
@@ -108,4 +109,5 @@ El inventario de todos los estándares transversales (los definidos y los propue
 - `aspire run` / `aspire stop`
 - `node scripts/arneses/arnes.mjs realinear-docs --detectar` (0 tokens); sin `--detectar` corre el arnés completo en una rama aparte. Tests: `node --test "scripts/arneses/**/*.test.mjs"`.
 - `node scripts/arneses/arnes.mjs alinear-etapas --detectar` (0 tokens): dice qué etapa que falta programar no está completa o no está alineada.
+- `node scripts/arneses/arnes.mjs estado-docs --detectar` (0 tokens): dice qué documentos quedaron viejos, terminaron o están fuera de formato.
 - Migración: ver [backend.md §9](docs/architecture/backend.md#9-persistencia).

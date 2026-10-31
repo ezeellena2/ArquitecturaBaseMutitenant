@@ -1,5 +1,7 @@
 # 03 · Arquitectura y premisas técnicas
 
+**Estado:** insumo · se retira cuando las etapas 15 a 25 tengan su spec completa.
+
 Lo que sigue es cómo está armado en ArquitecturaBase. **Cuando una regla de este proyecto (`AGENTS.md`, `docs/rules/`, `docs/architecture/`) dice otra cosa, manda la de acá.** El detalle por clase, tabla y ruta está en el [anexo A](anexo-a-backend.md) y el del front en el [anexo B](anexo-b-front.md).
 
 ## Módulos y puertos

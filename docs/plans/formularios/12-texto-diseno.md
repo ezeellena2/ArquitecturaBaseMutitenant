@@ -1,5 +1,7 @@
 # E12 · Texto para el chat de Diseño
 
+**Estado:** cerrado · Diseño ya dibujó estos tableros.
+
 Se pega tal cual en el chat de Diseño, que es el único que toca el lienzo.
 
 ---

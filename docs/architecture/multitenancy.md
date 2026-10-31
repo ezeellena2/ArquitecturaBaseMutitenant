@@ -66,7 +66,7 @@ Una invitación y su `Member(Invited)` son datos privados del tenant Business, e
 
 `InvitationIssuer` emite dentro de la UoW de su llamador y encola mediante `IInvitationChannel`; no abre su propia transacción, no crea una cuenta y no expone una ruta. El token opaco va en el fragmento del enlace de `/invitacion`; la base conserva solo su hash. La vista previa y la aceptación reciben el token en JSON (`POST /api/invitations/preview` y `POST /api/invitations/accept`), nunca en la URL, query, `Location` ni logs. Preview no consume. Accept comprueba la organización, destino, sesión/cuenta y estados bajo locks y consume Invitation y activa Member en la misma transacción.
 
-Una identidad nueva se crea ya vinculada a la membresía Business, con su método verificado y consentimientos vigentes, pero sin espacio Personal ni acceso Consumer. Una cuenta existente debe demostrar su identidad por el ingreso habitual; el enlace no ingresa por ella ni permite cambiar de cuenta vinculada. El espacio Personal nace solo al entrar luego por Consumer. Si la respuesta de una aceptación nueva se pierde, únicamente el navegador que inició el flujo puede recuperar la sesión durante cinco minutos mediante su nonce protegido HttpOnly; el replay no crea otra identidad ni otra membresía. Emisión administrativa, reenvío y revocación HTTP desde Usuarios quedan para E5/E6; WhatsApp, para E8.
+Una identidad nueva se crea ya vinculada a la membresía Business, con su método verificado y consentimientos vigentes, pero sin espacio Personal ni acceso Consumer. Una cuenta existente debe demostrar su identidad por el ingreso habitual; el enlace no ingresa por ella ni permite cambiar de cuenta vinculada. El espacio Personal nace solo al entrar luego por Consumer. Si la respuesta de una aceptación nueva se pierde, únicamente el navegador que inició el flujo puede recuperar la sesión durante cinco minutos mediante su nonce protegido HttpOnly; el replay no crea otra identidad ni otra membresía. La emisión administrativa, el reenvío y la revocación HTTP se hacen desde Usuarios, y la invitación por WhatsApp va por su módulo.
 
 ## 4. Tres clases de datos
 
@@ -172,7 +172,7 @@ El seed inicial de `PlatformSettings` deja `ConsumerSignup = Open`, `BusinessSig
 
 ## 11. Plataforma
 
-- **Operador:** `access=platform`; el segundo factor llega en la E9. Su cuenta es exclusiva de Plataforma: no tiene perfiles de persona ni entra a una organización. Se lo invita por correo y sus permisos se eligen uno por uno, sin roles; el último operador activo con `platform.operators.manage` no se puede quitar, suspender ni dar de baja ([ADR 0042](../decisions/0042-operadores-de-plataforma.md)).
+- **Operador:** `access=platform`, con segundo factor obligatorio. Su cuenta es exclusiva de Plataforma: no tiene perfiles de persona ni entra a una organización. Se lo invita por correo y sus permisos se eligen uno por uno, sin roles; el último operador activo con `platform.operators.manage` no se puede quitar, suspender ni dar de baja ([ADR 0042](../decisions/0042-operadores-de-plataforma.md)).
   - **Organizaciones:** aprueba o rechaza las que esperan aprobación (rechazar la deja cerrada), y las suspende, reactiva y cierra.
   - Prende y apaga módulos por organización (plan, manual o prueba con vencimiento).
   - Ve el dominio de correo verificado de cada organización (§3.1), y puede verificarlo o quitarlo con motivo. Normalmente lo registra y lo verifica la propia organización, con `settings.manage`.

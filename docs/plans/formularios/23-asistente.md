@@ -1,6 +1,6 @@
 # E23 · El asistente, con Casos (resumen)
 
-**Estado:** resumen de la etapa 23 del bloque (decisiones 34, 39, 51, 52, 65 a 67 y 78). Junta la etapa 5 de ArquitecturaBase, cerrada y en piloto, con los Casos del asistente, decididos allá sin programar. Se planifica con `/plan-etapa` después de la E22 (decisión 19).
+**Estado:** pendiente · resumen de la etapa 23 del bloque (decisiones 34, 39, 51, 52, 65 a 67 y 78). Junta la etapa 5 de ArquitecturaBase, cerrada y en piloto, con los Casos del asistente, decididos allá sin programar. Se planifica con `/plan-etapa` después de la E22 (decisión 19).
 
 **Dónde está el detalle:**
 - en el traspaso del 17/10: [04 §5](../2026-10-17-formularios-traspaso/04-etapas.md), [05 · Etapa 5](../2026-10-17-formularios-traspaso/05-pantallas.md), anexo C §2 (etapa 5) y anexo D (H1–H7, s1–s4 y 03);

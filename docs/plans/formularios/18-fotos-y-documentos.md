@@ -1,6 +1,6 @@
 # E18 · Fotos y documentos (resumen)
 
-**Estado:** resumen de la etapa 18 del bloque (decisiones 34, 48 y 78), armado desde el [traspaso](../2026-10-17-formularios-traspaso/README.md). Corresponde a la etapa 2B de ArquitecturaBase, cerrada con Meta y Azure reales; el traspaso 2 no le cambia el alcance. Se planifica con `/plan-etapa` cuando le toque, después de la E17.
+**Estado:** pendiente · resumen de la etapa 18 del bloque (decisiones 34, 48 y 78), armado desde el [traspaso](../2026-10-17-formularios-traspaso/README.md). Corresponde a la etapa 2B de ArquitecturaBase, cerrada con Meta y Azure reales; el traspaso 2 no le cambia el alcance. Se planifica con `/plan-etapa` cuando le toque, después de la E17.
 
 **Dónde está el detalle:**
 - en el traspaso: [04 §2B](../2026-10-17-formularios-traspaso/04-etapas.md), anexo C §2 (etapa 2B), anexo B (E2B) y anexo D (F1–F5);

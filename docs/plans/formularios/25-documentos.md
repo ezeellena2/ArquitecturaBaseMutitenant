@@ -1,6 +1,6 @@
 # E25 · Documentos por WhatsApp (resumen)
 
-**Estado:** resumen de la etapa 25, la última del bloque (decisiones 34, 41 y 78). En ArquitecturaBase está decidido, con su ADR 0022 y sus tableros, y sin programar. **Antes de planificar** se prueba con Meta si un Flow acepta un archivo precargado en una pregunta de documento: es el mayor riesgo técnico, y el plan de la etapa parte de ese resultado.
+**Estado:** pendiente · resumen de la etapa 25, la última del bloque (decisiones 34, 41 y 78). En ArquitecturaBase está decidido, con su ADR 0022 y sus tableros, y sin programar. **Antes de planificar** se prueba con Meta si un Flow acepta un archivo precargado en una pregunta de documento: es el mayor riesgo técnico, y el plan de la etapa parte de ese resultado.
 
 **Dónde está el detalle:** en el traspaso 2 de ArquitecturaBase, el anexo F (F3), el anexo D (DOC1 a DOC7-A) y el capítulo 07 («E18» y «E22»); allá, la ADR 0022 (lectura de documentos con IA).
 

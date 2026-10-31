@@ -1,5 +1,7 @@
 # 02 · Forma de trabajo
 
+**Estado:** insumo · se retira cuando las etapas 15 a 25 tengan su spec completa.
+
 Así se trabajó cada etapa en ArquitecturaBase, después de corregir lo que al principio hacía todo lento. Acá mandan las guías propias de este proyecto (`docs/guides/etapa-en-paralelo.md`, skill `/plan-etapa`, `docs/rules/`). Esto sirve para conservar el mismo ritmo y las mismas garantías.
 
 ## Roles

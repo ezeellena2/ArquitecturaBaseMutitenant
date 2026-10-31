@@ -1,6 +1,6 @@
 # E21 · Reglas, aprobación, PDF y avisos (resumen)
 
-**Estado:** resumen de la etapa 21 del bloque (decisiones 34, 78, 80, 82 y 91 a 93). Corresponde a la etapa 4 de ArquitecturaBase, implementada y probada allá con un piloto real, y a la etapa 3 de su carga desde la app, corregir y anular, decidida allá y sin programar. Se planifica con `/plan-etapa` cuando le toque, después de la E20.
+**Estado:** pendiente · resumen de la etapa 21 del bloque (decisiones 34, 78, 80, 82 y 91 a 93). Corresponde a la etapa 4 de ArquitecturaBase, implementada y probada allá con un piloto real, y a la etapa 3 de su carga desde la app, corregir y anular, decidida allá y sin programar. Se planifica con `/plan-etapa` cuando le toque, después de la E20.
 
 **Dónde está el detalle:**
 - en el traspaso del 17/10: [04 §4](../2026-10-17-formularios-traspaso/04-etapas.md), anexo C §2 (etapa 4), anexo B (E4) y anexo D (G1–G6);

@@ -1,5 +1,7 @@
 # E22 · Texto para el chat de Diseño
 
+**Estado:** pendiente · Diseño lo toma en su turno.
+
 Se pega tal cual en el chat de Diseño, **después de cerrar los tableros de la E12, la E14 y la E21**: el editor de la plataforma reusa sus piezas.
 
 ---

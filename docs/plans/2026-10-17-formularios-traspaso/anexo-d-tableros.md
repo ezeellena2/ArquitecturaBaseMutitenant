@@ -1,5 +1,7 @@
 # Tableros del lienzo «Formularios por WhatsApp» (texto de sus notas)
 
+**Estado:** insumo · se retira cuando las etapas 15 a 25 tengan su spec completa.
+
 ## Formularios por WhatsApp, en una mirada — `FWA-Idea.dc.html`
 **Formularios por WhatsApp, en una mirada.** El administrador arma un formulario una vez. Los empleados lo completan desde WhatsApp, sin entrar a la web. Cada envío queda guardado como una fila, con su aprobación y su PDF.
 

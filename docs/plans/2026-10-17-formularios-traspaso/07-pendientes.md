@@ -1,5 +1,7 @@
 # 07 · Pendientes y decisiones posteriores
 
+**Estado:** insumo · se retira cuando las etapas 15 a 25 tengan su spec completa.
+
 Estado al 2026-10-17 en ArquitecturaBase.
 
 ## Estado de las etapas

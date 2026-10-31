@@ -1,5 +1,7 @@
 # Formularios por WhatsApp: traspaso desde ArquitecturaBase
 
+**Estado:** insumo · se retira cuando las etapas 15 a 25 tengan su spec completa.
+
 Fecha: 2026-10-17. Autor: el chat coordinador de ArquitecturaBase.
 
 Este paquete cuenta, con el máximo detalle, todo lo que se construyó en `../ArquitecturaBase` y `../ArquitecturaBaseFront` para los formularios por WhatsApp. Cubre las Etapas 1, 2, 2B, 3 y 4, y lo decidido de la 5. Es la base para que este proyecto arme **su** plan con el mismo producto, las mismas premisas y la misma disposición de pantallas, adaptado al modelo multitenant (organizaciones B2B, personas B2C y plataforma).

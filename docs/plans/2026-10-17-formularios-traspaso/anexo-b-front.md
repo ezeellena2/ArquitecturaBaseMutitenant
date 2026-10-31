@@ -1,5 +1,7 @@
 # Formularios por WhatsApp: inventario del front para replicar las pantallas
 
+**Estado:** insumo · se retira cuando las etapas 15 a 25 tengan su spec completa.
+
 **Repositorio relevado:** `C:\Users\ezequ\source\repos\ArquitecturaBaseFront`, rama `main`, último commit
 `f8212b2` (2026-10-17), más los cambios **sin commit** que estaba haciendo Codex al momento del relevamiento (ver
 «Trabajo en curso» abajo). Todo lo que sigue sale del código; cuando algo figura en el diseño pero no en el código, se

@@ -1,5 +1,7 @@
 # 05 · Pantallas
 
+**Estado:** insumo · se retira cuando las etapas 15 a 25 tengan su spec completa.
+
 Cómo replicar las pantallas: **la misma disposición** (qué hay en cada zona, en qué orden, qué se abre en un diálogo o en un panel, qué estados existen y qué vive en la URL) con **los componentes y estilos de este proyecto**.
 
 - **Lo implementado** (Etapas 1 a 4) está descripto zona por zona, con sus textos, en el [anexo B](anexo-b-front.md). Esta página da el mapa y agrega lo que todavía no existe en código: el detalle D2 y las pantallas de la Etapa 5.

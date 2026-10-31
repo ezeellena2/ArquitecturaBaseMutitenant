@@ -1,5 +1,7 @@
 # 04 · Etapas
 
+**Estado:** insumo · se retira cuando las etapas 15 a 25 tengan su spec completa.
+
 Una sección por etapa, con lo necesario para replicarla:
 - objetivo y tableros;
 - qué se construye en backend y front;

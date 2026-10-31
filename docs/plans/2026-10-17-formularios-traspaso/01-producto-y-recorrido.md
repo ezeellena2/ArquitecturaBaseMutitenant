@@ -1,5 +1,7 @@
 # 01 · Producto y recorrido
 
+**Estado:** insumo · se retira cuando las etapas 15 a 25 tengan su spec completa.
+
 ## Qué es
 
 Un administrador arma un formulario una vez, en la web. Los empleados lo completan desde WhatsApp, sin entrar a la web. Cada envío queda guardado como una fila numerada de una planilla. Según las reglas del formulario, se pide aprobación, se arma un PDF y se avisa por WhatsApp. Un asistente con IA puede reconocer lo que el empleado cuenta y ofrecerle el formulario ya completado, pero nunca guarda nada solo.

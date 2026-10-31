@@ -1,6 +1,6 @@
 # ADR 0052 · Caché compartida en Redis
 
-**Estado:** decisión técnica para implementar en E9, 2026-10-16. No declara la migración realizada. Ejecuta el alcance de Redis de la [hoja de ruta](../plans/2026-09-27-plan-de-desarrollo.md#etapa-9-endurecimiento).
+**Estado:** aceptada como decisión técnica, 2026-10-16; implementada en la E9. Ejecuta el alcance de Redis de la [hoja de ruta](../plans/2026-09-27-plan-de-desarrollo.md#etapa-9-endurecimiento).
 
 ## Contexto
 

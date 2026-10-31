@@ -2,6 +2,8 @@
 
 # Formularios por WhatsApp: reglas de negocio, decisiones, premisas de proceso y lecciones
 
+**Estado:** insumo · se retira cuando las etapas 15 a 25 tengan su spec completa.
+
 Traspaso para que otro equipo replique el desarrollo. Corte: **2026-10-17**. Backend `ArquitecturaBase` en `main`, HEAD `b43edf8f`; front `ArquitecturaBaseFront` en `main`, HEAD `f8212b2`. Los dos árboles tienen cambios sin commitear de las correcciones en curso del review de la Etapa 4; acá no se evalúan.
 
 ## Cómo leer este documento

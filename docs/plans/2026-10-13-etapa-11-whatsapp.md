@@ -1,5 +1,7 @@
 # Etapa 11: WhatsApp de atención — plan corto
 
+**Estado:** cerrado · la etapa cerró el 2026-10-21.
+
 | Parte | Tareas | Estado |
 |---|---|---|
 | 0 · Decisiones de producto | D1–D12 | Hechas por el usuario (2026-10-13 y 2026-10-14) |
