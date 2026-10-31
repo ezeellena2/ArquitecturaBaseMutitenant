@@ -32,7 +32,9 @@ Te paso los tableros de la E22, la biblioteca de plantillas, para el lienzo del 
 - `FRM-Editor-Reglas-Plantilla` y `M-FRM-Reglas-Plantilla`: las reglas que llegan de una plantilla, en la pestaña de reglas del formulario;
 - en `Plat-FRM-Categorias`, el nombre es un solo campo.
 
-**Qué se dibuja nuevo:** `DOC1` · La biblioteca, sin su sección de lectura de documentos. La disposición se copia sin mostrar alternativas, con nuestras piezas y criterios (decisión 18): `FRM-Biblioteca` como la biblioteca de formularios estándar, con en qué formularios propios se usó cada plantilla, a la que se llega desde «Desde una plantilla».
+**Qué se revisa:** `FRM-Formularios-22`, que parte de `FRM-Formularios-21`, con «Cargar», «Solo en la app», quien solo carga y «Borrar», y `FRM-Plantilla`, `FRM-Plantilla-Usar` y sus teléfonos.
+
+**También se redibuja** `FRM-Biblioteca`, con `DOC1` · La biblioteca, sin su sección de lectura de documentos. La disposición se copia sin mostrar alternativas, con nuestras piezas y criterios (decisión 18): `FRM-Biblioteca` como la biblioteca de formularios estándar, con en qué formularios propios se usó cada plantilla, a la que se llega desde «Desde una plantilla».
 
 **Datos de ejemplo:** las categorías Ventas, Logística y Mantenimiento; «Visita a cliente» (Ventas), publicada, con cambios guardados sin publicar, que la usaron 12 organizaciones; «Control de vehículo» (Logística), borrador; «Orden de trabajo» (Mantenimiento), retirada; y «Comprobante de transferencia», publicada.
 

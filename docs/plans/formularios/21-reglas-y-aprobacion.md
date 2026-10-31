@@ -1,6 +1,6 @@
 # E21 · Reglas, aprobación, PDF y avisos (spec)
 
-**Estado:** pendiente · spec de la etapa 21 del bloque (decisiones 34, 78, 80, 82 y 91 a 93), con el [formato](plantilla.md) de las etapas. Corresponde a la etapa 4 de ArquitecturaBase, probada allá con un piloto real, y a la etapa 3 de su carga desde la app, corregir y anular, decidida y sin programar. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E20.
+**Estado:** pendiente · spec de la etapa 21 del bloque (decisiones 34, 78, 80, 82 y 91 a 93), con el [formato](plantilla.md) de las etapas. Corresponde a la etapa 4 de ArquitecturaBase, con piloto real, y a la etapa 3 de su carga desde la app, decidida y sin programar. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E20.
 
 ## Qué leer
 
@@ -38,15 +38,16 @@ Antes de empezar, en este orden:
 **«Por aprobar» en «Formularios»,** con la misma fuente que «Para resolver» (ADR 0040):
 - la lista suma la columna «Por aprobar» y el filtro «Aprobación», y lo que espera decisión va primero. Cuenta solo lo que esa cuenta puede decidir, sin lo propio;
 - con solo `formapprovals.decide`, ve los formularios con tareas, sin respuestas ni última respuesta;
-- dentro de un formulario, «Por aprobar · N» va arriba de la planilla, de la más vieja a la más nueva. «Revisar» abre la vista rápida, y ↑ ↓ recorren esa cola, calculada en SQL, sin valores;
+- **la cola:** el aviso de la campana y «Para resolver» abren la más vieja en la vista rápida, y ↑ ↓ recorren esa cola, de la más vieja a la más nueva, calculada en SQL, sin valores. Sin cartel arriba de la planilla;
 - la campana avisa lo que espera y lo que no se pudo mandar.
 
-**La planilla** suma la columna «Estado» y su filtro, para los formularios que piden aprobación, compartidos por la lista, los conteos y el Excel, y la marca de la copia PDF confirmada. El tablero suma «Por estado».
+**La planilla** suma la columna «Estado», en los formularios que piden aprobación, y la marca de la copia PDF confirmada. El filtro «Estado» va en todos: con aprobación, Recibida, Por aprobar, Aprobada y Rechazada, y siempre, «Anulada». Lo comparten la lista, los conteos y el Excel. El tablero suma «Por estado».
 
 **Corregir y anular** (91 a 93). Una respuesta confirmada no se modifica: queda reemplazada por su corrección, o anulada. Vale para lo de WhatsApp y lo de la web:
 - **quién:** quien la cargó, mientras no esté aprobada, y siempre si el formulario no pide aprobación. Con `formrecords.correct`, cualquiera y en cualquier momento. Quien solo ve respuestas, no. Un cliente no corrige ni anula: lo hace la organización;
-- **corregir:** se abre lo cargado en la versión activa, con el formulario de la E20, lo de antes a la vista y un motivo de hasta 500 caracteres. Pasa por la misma captura, con sus cálculos y condiciones. Los archivos que no se tocan se conservan;
-- **el número** no cambia: es único entre las vigentes. La anterior queda en el historial tal como estaba, enlazada a su corrección y con su PDF. La nueva queda «Corregida»;
+- **corregir:** se abre lo cargado en la versión activa, con el formulario de la E20, lo de antes a la vista y un motivo de hasta 500 caracteres. Pasa por la misma captura, con sus cálculos y condiciones. Los archivos que no se tocan se conservan. Vale también en un formulario dado de baja o solo para clientes: `Forms.Entry.Unavailable` no aplica (93);
+- **quién queda:** la respuesta sigue siendo de quien la cargó. Conserva `Respondent*`, sus empresas, el canal y `SubmittedAtUtc`, así «Cargó» no cambia. `CorrectedByUserId` y `CorrectedAtUtc` dicen quién la corrigió, y se ven en el detalle y en Actividad. El `SourceKey` es `correction:<clave de idempotencia>`;
+- **el número** no cambia: es único entre las vigentes. La anterior queda en el historial tal como estaba, enlazada a su corrección y con su PDF. La nueva queda «Corregida». **Leer por id incluye las reemplazadas:** el historial abre la anterior, y la tarjeta del chat, que apunta a ella, la encuentra y suma la marca;
 - **las reglas de «Recibida» vuelven a correr,** como una respuesta nueva. Si pide aprobación, vuelve a «Por aprobar», aunque ya estuviera decidida;
 - **anular:** al final del ⋮, con motivo. Queda «Anulada», con quién, cuándo y por qué, y cierra la tarea abierta. No se borra ni se deshace;
 - **lo anulado sale de las lecturas:** la planilla, los conteos, la navegación, la lista y el Excel. Se ve con el filtro «Anulada», en todos los formularios, y con «Incluir las anuladas» en el Excel. «Respuestas» pasa a contar las vigentes. Una anulada sigue siendo una respuesta: el formulario no se puede borrar;
@@ -86,13 +87,16 @@ Diseño los revisa o los dibuja con el [texto de la etapa](21-texto-diseno.md). 
 | `FRM-Editor-Reglas`, `M-FRM-Reglas` | las reglas, como una pestaña más | Se redibujan |
 | `FRM-Pdf` | el diseño, con dos o tres estilos para elegir (59) | Se redibuja |
 | `M-FRM-Respuesta-Aprobacion` | la decisión en el teléfono | Se redibuja |
-| `FRM-Respuestas-21` y su teléfono | «Por aprobar · N» arriba, Estado, su filtro y «Anulada» | Por dibujar |
-| `FRM-Tablero-21` | la tarjeta «Por estado» | Por dibujar |
+| `FRM-Respuestas-21` y su teléfono | sobre `FRM-Respuestas-20`: Estado, su filtro, «Anulada» y la marca del PDF | Por dibujar |
+| `FRM-Tablero-21` y su teléfono | la tarjeta «Por estado» | Por dibujar |
 | `FRM-Respuesta-Corregir` y su teléfono (CW10-A) | lo de antes a la vista, el motivo y «Corregida» | Por dibujar |
 | `FRM-Respuesta-Anular` y su teléfono (CW11-A) | «Anular», el motivo y el Excel con las anuladas | Por dibujar |
 | `FRM-Respuestas-Propias-21` y su teléfono (CW6-C) | lo propio, con estado, PDF y motivo | Por dibujar |
+| `FRM-Editor-21` y `FRM-Cargar-Respuesta-21`, con sus teléfonos | la pregunta «Correo» | Por dibujar |
+| `Campana-21` y su teléfono | «N respuestas por aprobar» y «No se pudo mandar el aviso de …» | Por dibujar |
+| `FRM-Dar-De-Baja-21` y `FRM-Editor-Baja-21` | «Lo que se conserva» suma el PDF y las aprobaciones | Por dibujar |
 
-**Lo que se corrige:** salen «Cambios sin guardar», «Revisión N» junto a Guardar, «Vista previa en inglés» y «Falta el inglés». Las acciones nuevas se suman a `FRM-Editor-Reglas`: «Avisar a una persona», «Mandar por correo», «Mandar el PDF a un cliente» y la plantilla. `FRM-Por-Aprobar` y `M-FRM-Por-Aprobar` pasan al Archivo.
+**Lo que se corrige:** salen «Cambios sin guardar», «Revisión N» junto a Guardar, «Vista previa en inglés» y «Falta el inglés». Las acciones nuevas se suman a `FRM-Editor-Reglas`: «Avisar a una persona», «Mandar por correo», «Mandar el PDF a un cliente» y la plantilla. `FRM-Por-Aprobar` y `M-FRM-Por-Aprobar` pasan al Archivo. `FRM-Formularios-21` parte de `FRM-Formularios-20`. «No se pudo: pasaron más de 24 horas» pasa a «Sin plantilla aprobada» (61).
 
 **Mandan sobre esta spec en:** «Ver todos» de «Para resolver» abre la lista con «Con algo por aprobar». «Reglas de la revisión N» se queda en Actividad, porque es un historial. El diseño guarda aparte de las reglas, y su vista previa no guarda nada.
 
@@ -111,14 +115,15 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]` y `[Feat
 | `GET /{id}/approvals`, `…/{taskId}` y `…/{taskId}/continuation` | `formapprovals.decide` | `page`, `pageSize`; `direction` y `limit` | la cola, sin valores |
 | `POST /{id}/records/{recordId}/decision` | `formapprovals.decide` | `{decision, reason?, version}`, con `[Idempotent]` | 200 `{version, state}` |
 | `GET /{id}/records/{recordId}/workflow` | `formrecords.read` | — | `{ruleRevision?, approval?, activity[], pdf?, canCorrect, canVoid}` |
-| `POST …/executions/{executionId}/retry` | `formrules.manage` | — | 200 |
+| `POST …/executions/{executionId}/retry` | `formrules.manage` | —, con `[Idempotent]` | 200 |
 | `GET /{id}/records/{recordId}/pdf` | `formrecords.read` | — | 200 PDF, `no-store` |
+| `GET /{id}/records/{recordId}/history` | `formrecords.read` | `page`, `pageSize` | `PagedResult<{id, correctedAtUtc?, correctedBy?, reason?, superseded}>`, de la más nueva a la más vieja |
 | `GET /{id}/records/{recordId}/correction` | `formrecords.correct` | — | la versión activa, con lo cargado |
-| `POST /{id}/records/{recordId}/corrections` | `formrecords.correct` | multipart: el de la E20, más `reason`, `version` y `keepFileIds[]`, con `[Idempotent(Mode = IdempotencyMode.DurableReference)]` | 201, como la E20 |
+| `POST /{id}/records/{recordId}/corrections` | `formrecords.correct` | multipart: el de la E20, más `reason`, `version` y `keepFileIds[]`, con `[Idempotent(Mode = IdempotencyMode.DurableReference)]` y `[IdempotencyDurable(typeof(FormEntryDurableAdapter))]` | 200 `{recordId, displayNumber, submittedAtUtc, calculations[], version}`, con `[ResponseVersion("Version")]` |
 | `POST /{id}/records/{recordId}/void` | `formrecords.correct` | `{reason, version}` | 200 `{version}` |
-| `…/own-records/{recordId}/pdf`, `correction`, `corrections` y `void` | `formrecords.create` | lo mismo | lo mismo, solo con lo propio y mientras se pueda |
+| `…/own-records/{recordId}/pdf`, `history`, `correction`, `corrections` y `void` | `formrecords.create` | lo mismo | lo mismo, solo con lo propio y mientras se pueda |
 
-**Rutas que cambian:** `GET /` y `GET /overview` suman `pending?` (`null` sin `formapprovals.decide`), el filtro `approval` y el orden; `recordCount` cuenta las vigentes. `POST …/records/search`, `facets`, `navigation`, `export` y `dashboard` suman `state`, con `Voided`, y `includeVoided` en el Excel. El detalle suma `state`, `corrected`, `voided?` y `version`. `GET /{id}/records/columns` suma `approvals`.
+**Rutas que cambian:** `GET /` y `GET /overview` suman `pending?` (`null` sin `formapprovals.decide`), el filtro `approval` y el orden; `recordCount` cuenta las vigentes. `POST …/records/search`, `facets`, `navigation`, `export` y `dashboard` suman `state`, con `Voided`, y `includeVoided` en el Excel. El detalle suma `state`, `corrected`, `correctedBy?{name, atUtc}`, `supersededBy?`, `voided?` y `version`. `GET /{id}/records/columns` suma `approvals`.
 
 **Puertos neutrales:**
 
@@ -126,13 +131,16 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]` y `[Feat
 // Forms → WhatsApp (implementa WhatsApp)
 public interface IStructuredRecordActionChannel
 {
+    Task<PagedResult<StructuredActionTemplate>> ListTemplatesAsync(PagedRequest page, CancellationToken ct);
     Task<StructuredActionReach> GetReachAsync(StructuredRecipient recipient, CancellationToken ct);
     Task<Result<StructuredActionReceipt>> SendAsync(StructuredActionMessage message, CancellationToken ct);
     Task<IReadOnlyList<StructuredActionState>> ReadStatesAsync(IReadOnlyCollection<Guid> keys, CancellationToken ct);
 }
 ```
 
-`StructuredActionMessage(Key, Recipient, Text, Template?, Document?)`. `Key` es el id de ejecución y destinatario. Sin WhatsApp, `GetReachAsync` dice que no hay canal. El correo usa `IOutbox`, con el canal de correos.
+`StructuredActionMessage(Key, Recipient, Text, Template?, Document?)`. `Key` es el id de ejecución y destinatario. Sin WhatsApp, `GetReachAsync` dice que no hay canal y `ListTemplatesAsync` devuelve una lista vacía. El correo usa `IOutbox`, con el canal de correos. `IStructuredRecordSource.ReadAsync` lee por id, también las reemplazadas, y `StructuredRecordCard` suma `Corrected` y `Voided`.
+
+**La campana:** Forms aporta `formApprovals`, a quien puede decidir, y `ruleNoticeFailed`, a quien tiene `formrules.manage`, por `INotificationSource` (base de la 12).
 
 **Errores** (con sus textos en `FormsTexts.resx` y `.en.resx`):
 
@@ -173,7 +181,7 @@ Tres migraciones: `<fecha>_FormRules.cs`, `<fecha>_FormRecordCorrections.cs` y `
 
 **Columnas nuevas:**
 - `FormDefinitionStates`: `ActiveRuleSetId` y `ActivePdfDesignId`, por T7;
-- `FormRecords`: `RuleSetId?`, `State`, `Version` (`IVersioned`), `CorrectionOfRecordId?`, `CorrectionReason?`, `SupersededAtUtc?`, y `VoidedAtUtc?`, `VoidedByUserId?` y `VoidReason?`. **El índice único `(DefinitionId, Number)` pasa a filtrar `SupersededAtUtc IS NULL`,** y las lecturas de la E15 filtran las vigentes;
+- `FormRecords`: `RuleSetId?`, `State`, `Version` (`IVersioned`), `CorrectionOfRecordId?`, `CorrectionReason?`, `CorrectedByUserId?`, `CorrectedAtUtc?`, `SupersededAtUtc?`, y `VoidedAtUtc?`, `VoidedByUserId?` y `VoidReason?`. **El índice único `(DefinitionId, Number)` pasa a filtrar `SupersededAtUtc IS NULL`,** y la planilla, los conteos, la navegación, el Excel y el tablero filtran las vigentes;
 - en WhatsApp, las plantillas suman `HeaderFormat`, y el mensaje de chat, el origen «acción de formulario».
 
 ## Pasos
@@ -186,19 +194,20 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | --- | --- | --- | --- | --- |
 | B1 | Reglas: dominio, validación y revisiones | `D/Forms/FormRuleSet.cs`, `A/Modules/Forms/Services/FormRuleService.cs`, `FormRulesPolicy.cs` | `M/…/lib/rules.ts`; `FormDefinitionService.cs` [E14] | cada motivo; 409; lista vacía; no toca el borrador |
 | B2 | Permisos, tablas y migraciones | `Permissions.cs`, `Permissions{,.en}.resx`; `I/…/Configurations/`; las migraciones | `20261010203618_SystemRoleAssistantPermissions.cs` | aislamiento; hacia atrás; `PermissionTextsTests` |
-| B3 | El motor: crear ejecuciones en la captura, reservar, correr y confirmar | `IFormActionService.cs`, `FormActionService.cs`, `FormActionPlanner.cs`; suma a `FormRecordService.cs` [E14] | `AssistantTurnService.cs` | clave única; «No aplica»; orden dentro de la regla; un turno viejo no escribe; condición en memoria igual que en SQL |
-| B4 | El worker | `I/Modules/Forms/FormActionWorker.cs` | `AssistantTurnWorker.cs`, `TenantJobRunner.cs` | una vuelta de su bucle; una falla no frena a las demás |
+| B3 | El motor: crear ejecuciones en la captura, reservar, correr y confirmar | `IFormActionService.cs`, `FormActionService.cs`, `FormActionPlanBuilder.cs`; suma a `FormRecordService.cs` [E14] | `AssistantTurnService.cs` | clave única; «No aplica»; orden dentro de la regla; un turno viejo no escribe; condición en memoria igual que en SQL |
+| B4 | El worker | `I/Modules/Forms/FormActionWorker.cs` | `AssistantTurnWorker.cs`, `WhatsAppInboundProcessor.cs` | una vuelta de su bucle; una falla no frena a las demás; un aviso en un chat vinculado escribe la copia compartida; la lista de `TenantScopeUsageTests` |
 | B5 | Aprobación | `D/Forms/FormApprovalTask.cs`, `FormApprovalService.cs` | `AssistantConversationService.cs` | la propia; sin el rol; dos a la vez; un 403 de leer conserva la tarea |
 | B6 | «Por aprobar»: lista, cola, «Para resolver» y campana | suma a `IFormReader.cs` y `FormReader.cs` [E14]; `FormApprovalPendingItems.cs` | `OrganizationUserPendingItems.cs` | una sola fuente; `/pending`; la continuación en SQL; lo propio no cuenta |
 | B7 | Estado, anuladas y vigentes en lo que ya existe | suma a `FormRecordQueryFilters.cs`, `FormRecordSheetBuilder.cs` y `FormDashboardBuilder.cs` [E15] | esos mismos | el filtro en los cinco lugares; conteos; Excel con anuladas |
 | B8 | PDF: diseño, vista previa y copia fija | `FormPdfDesignService.cs`, `IFormPdfRenderer.cs`, `I/Modules/Forms/FormPdfRenderer.cs` | `AssistantExportRenderer.cs` | cada contenido; sin página pública; la copia no cambia; fuentes embebidas |
 | B9 | Avisos: el puerto y su lado WhatsApp | `A/Interfaces/Integrations/StructuredData/IStructuredRecordActionChannel.cs`, su apagado, `WhatsAppStructuredRecordActionChannel.cs`; suma a `WhatsAppOutboundMessage.cs` y `WhatsAppCloudClient.cs` | `WhatsAppReplyIssuer.cs` | ventana al aceptar y al despachar; plantilla; documento; un destinatario roto; sin duplicados |
 | B10 | Plantillas con documento y variables | suma a `WhatsAppTemplateBase.cs` y `WhatsAppTemplateClient.cs` | esos mismos | el encabezado que va a Meta; rechazo |
-| B11 | Correo con adjunto | suma a `EmailMessage.cs` y al canal de correos; `FormEmailActionHandler.cs` | `IChannelSender.cs` | adjunto por clave, leído al despachar; dirección enmascarada en logs |
+| B11 | Correo con adjunto | suma a `EmailMessage.cs` y al canal de correos; `FormEmailActionNotifier.cs` | `IChannelSender.cs` | adjunto por clave, leído al despachar; dirección enmascarada en logs |
 | B12 | Pregunta «Correo» | suma a `FormQuestionType.cs`, `WhatsAppFlowBuilder.cs`, el verificador y las lecturas | los mismos [E14 y E15] | válido e inválido; filtros; web |
-| B13 | Corregir y anular | `FormRecordCorrectionService.cs`, `FormRecordVoidService.cs`; suma a `FormEntrySubmitService.cs` [E20] | esos mismos | quién; el número se conserva; archivos conservados; reglas de nuevo; vuelve a «Por aprobar»; 409 entre dos; tarea cerrada |
-| B14 | Lo propio y copiar | suma a las lecturas `own-records` [E20] y `FormDefinitionCopier.cs` [E17] | esos mismos | motivo de rechazo; lo ajeno = 404; primera revisión |
+| B13 | Corregir y anular | `FormRecordCorrectionService.cs`, `FormRecordVoidService.cs`; suma a `FormEntrySubmitService.cs` [E20] | esos mismos | quién; «Cargó» no cambia, también con un cliente; el número se conserva; archivos conservados; reglas de nuevo; vuelve a «Por aprobar»; 409 entre dos; tarea cerrada; la anterior se abre por id |
+| B14 | Lo propio y copiar | suma a las lecturas `own-records` [E20] y `FormDefinitionCopyCreator.cs` [E17] | esos mismos | motivo de rechazo; lo ajeno = 404; primera revisión |
 | B15 | Rutas y contratos | `P/Modules/Forms/Controllers/BusinessFormRulesController.cs`, `BusinessFormApprovalsController.cs`, `Contracts/*`, `FormsContractContributor.cs` | los de la E15 | cada ruta con 401, 403, feature apagada = 404, 409; ejemplos exportados |
+| B16 | La baja de la cuenta | suma a `FormsAccountDeletionParticipant.cs` y a su cleanup [E14] | `AssistantAccountDeletionParticipant.cs` | la dirección y el texto armado de esa cuenta se borran; la ejecución queda |
 
 **Front:**
 
@@ -221,7 +230,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | [Meta] | Antes de programar: que una plantilla acepte un documento en el encabezado, y cómo se da de alta. | Sale con una carga previa de ejemplo. |
 | [E14] | La captura. | Las ejecuciones entran en su commit. |
 | [E15] | La función de filtros y `FormRecords`. | Filtrar las vigentes en un solo lugar alcanza. |
-| [E20] | La captura web y `sameOperation`. | Una corrección usa las dos. |
+| [E20] | La captura web y `sameOperation`. | Una corrección usa las dos, con quien cargó la original en lugar de la sesión. |
 | Núcleo | El canal de correos y `EmailMessage`. | Suma adjuntos por clave, sin bytes en el outbox. |
 | Núcleo | Cómo leer las identidades de rol de una cuenta. | Un lector del núcleo las da, sin que Forms lea `identity`. |
 | Base de la 12 | La campana. | Un módulo le aporta avisos. |
@@ -271,7 +280,7 @@ La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba r
 ## En el multitenant
 
 - **Datos de la organización:** todo con RLS, salvo `platform.FormActionWorks`.
-- **Workers:** el de acciones descubre las organizaciones con trabajo y entra con `TenantJobRunner`.
+- **Workers:** el de acciones abre un scope por organización con `SetFromAccess(tenantId, TenantKind.Business)`, como `WhatsAppInboundProcessor`, y suma a `TenantScopeUsageTests`: un aviso en un chat vinculado escribe la copia compartida, y con `Enter`, que usa `TenantJobRunner`, ese guardado falla ([multitenancy](../../rules/multitenancy.md)).
 - **Feature `forms`:** las rutas la llevan.
 - **WhatsApp:** los avisos salen por el número de la organización.
 - **Almacenamiento:** los PDF van en `IFileStore`, con la categoría `forms`.

@@ -71,11 +71,14 @@ Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](25-texto-d
 | --- | --- |
 | `WA-Chats-Documento` y su teléfono (`DOC2` y `DOC4`) | los tres casos, los otros formatos y los casos difíciles, con «Por qué lo propuso» |
 | `M-WA-Flow-Prellenado` (`DOC3`) | el formulario prellenado: «Revisá», «No se leyó» y el documento adjunto |
-| `FRM-Documentos` y su teléfono (`DOC5-A`) | la bandeja, con su panel, «Cargada automáticamente» y los permisos |
+| `FRM-Documentos` y su teléfono (`DOC5-A`) | en el panel de «Gestión de formularios», debajo de «Formularios»: la bandeja, con su panel, «Cargada automáticamente» y los permisos |
 | `FRM-Editor-Lectura` y su teléfono (`DOC1`) | la sección en el editor, con «Cargar solo si es seguro» y su precisión |
 | `Plat-FRM-Plantilla-Lectura` (`DOC1`) | la sección en la plantilla, con candado |
 | `FRM-Armar-Con-IA` y su teléfono (`DOC6`) | la propuesta, con los documentos a la vista, y «Crear borrador» |
-| `FRM-Respuesta-25` | de qué documento salió y quién la revisó |
+| `FRM-Respuesta-25` y `M-FRM-Respuesta-25` | de qué documento salió y quién la revisó |
+| `Campana-25` y su teléfono | los documentos por revisar y «Llegaron N documentos parecidos» |
+| `WA-Asistente-Casos-25` | el tipo de entrada «documento» |
+| `Asistente-Org-25` y su teléfono | en el chat del Inicio, el asistente recibe un PDF, arma un borrador y lleva al editor |
 
 **Mandan sobre esta spec en:** las fichas del front y la decisión 43. Los mensajes del sistema van en el idioma de la cuenta (42). «Dar de baja» no aplica: un documento se descarta.
 
@@ -89,14 +92,14 @@ Son rutas de `/api/organization/forms`, con `[FeatureGate("forms")]`.
 | `POST /documents/facets` | `formrecords.read` | los filtros | conteos por estado, formulario y empresa |
 | `GET /documents/{id}` y `…/content` | `formrecords.read` | — | los datos con su seguridad, las validaciones, el porqué y el original, `no-store` |
 | `PUT /documents/{id}` | `formrecords.read` y atender esa bandeja | `{values, version}` | 200 `{version}` |
-| `POST /documents/{id}/reading` | `formrecords.read` y atender esa bandeja | `{formId, version}` | 202 |
+| `POST /documents/{id}/reading` | `formrecords.read` y atender esa bandeja | `{formId, version}` | 200 `{version}`; la lectura sigue por su trabajo |
 | `POST /documents/{id}/discard` | `formrecords.read` y atender esa bandeja | `{version}` | 200 |
-| `POST /documents/{id}/record` | `formrecords.read` y atender esa bandeja | `{version}`, con `[Idempotent]` | 201 `{recordId, displayNumber}` |
+| `POST /documents/{id}/record` | `formrecords.read` y atender esa bandeja | `{version}`, con `[Idempotent(Mode = IdempotencyMode.DurableReference)]` y `[IdempotencyDurable(typeof(FormEntryDurableAdapter))]`, porque el número es privado | 200 `{recordId, displayNumber, version}`, con `[ResponseVersion("Version")]` |
 | `POST /documents/{id}/form-proposal` | `forms.manage` y `formrecords.read` | — | `{name, prefix, submitLabel, reading, questions[], similarTemplate?}` |
 | `POST /documents/{id}/form-drafts` | `forms.manage` y `formrecords.read` | la propuesta, con `[Idempotent]` | 201 `FormDetail` |
 | `GET /{id}/reading/stats` | `forms.read` | — | `{confirmedRun, precision[]}` |
 
-Atender esa bandeja se revisa en el servicio, con `IPermissionService`, porque depende de dónde llegó el documento.
+Atender esa bandeja se revisa en el servicio, con `IStructuredInboxAccess`, porque depende de dónde llegó el documento, y Forms no puede nombrar un permiso de WhatsApp: retirar ese módulo lo saca del catálogo.
 
 **Rutas que cambian:** `GET /{id}` y `PUT /{id}/draft` suman `reading?`, con `{enabled, howToRecognize, fields[], validations[], catalogCrossChecks[], duplicates, autoLoad}`. Las de la plantilla, en Plataforma, suman lo mismo. El detalle de una respuesta suma `sourceDocument?` y `reviewedBy?`. `GET /api/reference-data` suma las entidades del BCRA.
 
@@ -114,9 +117,21 @@ public interface IStructuredDocumentReader
     Task<Result<StructuredDocumentClassification>> ClassifyAsync(StructuredDocumentInput input, CancellationToken ct);
     Task<Result<StructuredDocumentExtraction>> ExtractAsync(StructuredDocumentInput input, CancellationToken ct);
 }
+// Forms → WhatsApp (implementa WhatsApp)
+public interface IStructuredInboxAccess
+{
+    Task<bool> CanAttendAsync(StructuredInbox inbox, CancellationToken ct);
+}
+// Asistente → Forms (implementa Forms)
+public interface IStructuredFormDrafts
+{
+    Task<Result<StructuredFormDraftCreated>> CreateAsync(StructuredFormDraftRequest request, CancellationToken ct);
+}
 ```
 
-`IStructuredFormChannel` suma mandar un mensaje con botones o una lista y un formulario prellenado. **Herramientas que escriben:** `create_form_draft` y `create_catalog_proposal`, con `forms.manage` y `formcatalogs.manage`.
+`IStructuredFormChannel` suma mandar un mensaje con botones o una lista y un formulario prellenado. **Herramientas que escriben:** `create_form_draft` y `create_catalog_proposal`, con `forms.manage` y `formcatalogs.manage`. Viven en el módulo Assistant, como las de la E23, y llaman a `IStructuredFormDrafts` y a `IStructuredCatalogProposals`.
+
+**La campana:** suma `documentsToReview` y `documentsSuggestion`, a quien tiene `formrecords.read`, por `INotificationSource` (base de la 12).
 
 **Errores:**
 
@@ -141,7 +156,7 @@ Dos migraciones. Todo es `ITenantOwned`, con RLS, salvo lo global. **Sin permiso
 | **platform.BankEntities** | prefijo y nombre | dato de referencia, con su seed |
 | **platform.FormDocumentWorks** | `TenantId`, `NextAtUtc` y reserva | registro técnico, sin datos de negocio |
 
-**Columnas nuevas:** `FormVersions` suma `Reading` jsonb. `FormRecords` suma `SourceDocumentId?`. El `SourceKey` es `document:<id>`. `FormTemplateDraft` suma `reading`. **Estados:** `Received`, `Proposed`, `Unclassified`, `Confirmed`, `AutoLoaded` y `Discarded`. **Topes:** `Forms:DocumentReadsPerPersonPerDay`, con `ValidateOnStart`.
+**Columnas nuevas:** `FormVersions` suma `Reading` jsonb. `FormRecords` suma `SourceDocumentId?`. `WhatsAppFlowSessions` suma `SourceRef?`, opaco: el id del documento, que se propuso con ese Flow, y `StructuredRecordCapture` suma `SourceDocumentId?`, así la respuesta del Flow vuelve a su documento. **El `SourceKey` es `document:<id>` en los tres caminos** (el Flow, «Pasar al formulario» y «Cargar solo si es seguro»), y por eso un documento no se carga dos veces. `FormTemplateDraft` suma `reading`. **Estados:** `Received`, `Proposed`, `Unclassified`, `Confirmed`, `AutoLoaded` y `Discarded`. **Topes:** `Forms:DocumentReadsPerPersonPerDay`, con `ValidateOnStart`.
 
 ## Pasos
 
@@ -155,11 +170,11 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | B2 | La lectura del formulario y de la plantilla | suma a `FormDraft.cs`, `FormVersionCreator.cs` [E14] y a la plantilla [E22]; `FormReadingPolicy.cs` | `FormLogicPolicy.cs` [E19] | identidad; dato sin pregunta; candado; se sella |
 | B3 | Recibir y preparar | `IStructuredDocumentSink.cs`, `FormDocumentReceiver.cs`, `IFormDocumentTextExtractor.cs`, `I/Modules/Forms/FormDocumentTextExtractor.cs` | `FileContentInspector.cs` [E18] | cada formato; macros, contraseña y viejos; topes |
 | B4 | Leer con la IA | `AssistantDocumentReader.cs`, su perfil y su propósito | `ConversationAgentService.cs` [E23] | lo que se manda; tope; instrucciones escondidas |
-| B5 | El circuito, por fases | `FormDocumentService.cs`, `FormDocumentWorker.cs`; suma a `WhatsAppAssistantTurnService.cs` | `FormActionWorker.cs` [E21] | los tres casos; duplicados; ráfaga; un trabado no frena a los demás |
-| B6 | Proponer y confirmar | suma a `WhatsAppFlowBuilder.cs`, `FormRecordService.cs` [E14] y al prellenado [E23] | esos mismos | el documento adjunto; revalidar; sin Meta real en el test |
+| B5 | El circuito, por fases | `FormDocumentService.cs`, `FormDocumentWorker.cs`; suma a `WhatsAppAssistantTurnService.cs` | `FormActionWorker.cs` [E21] | los tres casos; duplicados; ráfaga; un trabado no frena a los demás; la lista de `TenantScopeUsageTests` |
+| B6 | Proponer y confirmar | suma a `WhatsAppFlowBuilder.cs`, `FormRecordService.cs` [E14] y al prellenado [E23] | esos mismos | el documento adjunto; revalidar; la respuesta vuelve a su documento; dos veces el mismo documento no carga dos; sin Meta real en el test |
 | B7 | La bandeja | `FormDocumentQueryService.cs`, `FormDocumentReader.cs`; la excepción en `paginado-y-busqueda.md` y `SearchIndexTests` | `FormRecordReader.cs` [E15] | búsqueda con y sin puntos; lo privado fuera de la URL; aislamiento |
-| B8 | Revisar | suma a `FormDocumentService.cs` | `FormRecordCorrectionService.cs` [E21] | permisos; volver a leer; descartar; pasar al formulario |
-| B9 | Armar con la IA y desde el asistente | `FormProposalService.cs`, las dos herramientas | `FormDefinitionCopier.cs` [E17], `OrganizationUsersTool` | nada a medias; nada se publica; catálogos por aprobar |
+| B8 | Revisar | suma a `FormDocumentService.cs`; `IStructuredInboxAccess.cs`, su apagado y `WhatsAppStructuredInboxAccess.cs` | `FormRecordCorrectionService.cs` [E21] | permisos; sin WhatsApp no se revisa; volver a leer; descartar; pasar al formulario |
+| B9 | Armar con la IA y desde el asistente | `FormProposalService.cs`, `IStructuredFormDrafts.cs`, su apagado y las dos herramientas | `FormDefinitionCopyCreator.cs` [E17], `OrganizationUsersTool` | nada a medias; nada se publica; catálogos por aprobar |
 | B10 | Cargar solo si es seguro | `FormAutoLoadPolicy.cs` | `FormRecordCapture` [E14] | cada señal que falta; la seguridad del modelo no cuenta |
 | B11 | Precisión, retención y baja | suma a `FormsAccountDeletionParticipant.cs`; `FormDocumentRetentionWorker.cs` | `InvitationExpiryWorker.cs` | a los 90 días; lo usado sigue a la respuesta |
 | B12 | Rutas y contratos | `P/Modules/Forms/Controllers/BusinessFormDocumentsController.cs`, `Contracts/*`, `FormsContractContributor.cs` | los de la E15 | cada ruta con 401, 403, feature apagada = 404, 409; ejemplos exportados |
@@ -220,7 +235,7 @@ La puerta de la etapa, con la lista de control de `/puerta`. Antes, la calificac
 ## En el multitenant
 
 - **Datos de la organización:** documentos, lecturas y correcciones, con RLS. Cada ruta nueva lleva su test de aislamiento.
-- **Workers:** bajar y leer son operaciones durables, descubiertas en un registro técnico, y entran con `TenantJobRunner`, sin `ExecutionActor`, porque quien manda puede ser un cliente. El borrado de los 90 días recorre las organizaciones igual.
+- **Workers:** bajar y leer son operaciones durables, descubiertas en un registro técnico. Abren un scope por organización con `SetFromAccess(tenantId, TenantKind.Business)`, como la E21, sin `ExecutionActor`, porque quien manda puede ser un cliente, leen las features con `ITenantFeatureCache` y se suman a la lista de `TenantScopeUsageTests`. El borrado de los 90 días no toca la copia compartida, y recorre las organizaciones con `TenantJobRunner`.
 - **Feature `forms`:** las rutas la llevan.
 - **WhatsApp:** la bajada usa la WABA y el token de la organización.
 - **Almacenamiento:** copias privadas en `IFileStore`, y el antivirus de la lista de lanzamiento.

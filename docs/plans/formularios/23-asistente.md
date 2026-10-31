@@ -47,9 +47,13 @@ Antes de empezar, en este orden:
 6. **derivar** manda el mensaje fijo, pasa a atención manual y marca «Necesita una persona», en la cabecera, la lista y su filtro. La marca se quita cuando responde una persona;
 7. en atención manual, la respuesta redactada se le ofrece al operador como borrador.
 
-**Ofrecer formularios:** hasta el tope por conversación y día, en la zona de la organización; solo los publicados, activos y con «Cuándo lo ofrece», para ese destinatario (50), con el filtro de disponibilidad. Lo manda el asistente: la sesión lo guarda así, y no toma el chat. **El prellenado** propone texto, números, fechas, sí/no y una opción ofrecida, como valores iniciales de un perfil nuevo del Flow **[Meta]**. Uno publicado antes se manda sin prellenar. El asistente no ve los valores de las respuestas.
+**Ofrecer formularios:** hasta el tope por conversación y día, en la zona de la organización; solo los publicados, activos y con «Cuándo lo ofrece», para ese destinatario (50), con el filtro de disponibilidad y sin las versiones solo para la app. Lo manda el asistente: la sesión lo guarda así, y no toma el chat. **El prellenado** propone texto, números, fechas, sí/no y una opción ofrecida, como valores iniciales de un perfil nuevo del Flow **[Meta]**. Uno publicado antes se manda sin prellenar. El asistente no ve los valores de las respuestas.
 
 **Sugerencias entre formularios:** `formsuggestions.manage`, hasta 20 por formulario, hacia formularios para el mismo destinatario. «La IA decide» o «Preguntar siempre», por condición y sin IA, con mapeos entre preguntas del mismo tipo. Una hacia un dado de baja deja de ofrecerse y vuelve si se reactiva. La respuesta conserva su origen y la cadena.
+
+**Sin la feature `assistant`,** «Cuándo lo ofrece» y «Armar desde un texto» no aparecen, y una sugerencia queda en «Preguntar siempre», que no usa IA.
+
+**Copiar un formulario** suma «Cuándo lo ofrece» y las sugerencias vigentes, como su primera revisión.
 
 **Audios:** se bajan como los archivos del chat y se transcriben por un puerto del núcleo (27). La transcripción la ve también el operador.
 
@@ -57,7 +61,7 @@ Antes de empezar, en este orden:
 
 **Preguntas sin respuesta** (67) y **Formularios que faltan:** agrupadas por tema, sin nombres ni mensajes, con cantidades. Se completa el conocimiento, se crea el formulario o se descarta.
 
-**Catálogo propuesto:** se pide desde el asistente de la web, solo con filtros. El catálogo suma el estado «Por aprobar», hasta que una persona con `formcatalogs.manage` lo aprueba.
+**Catálogo propuesto:** se pide desde el asistente de la web, solo con filtros. El catálogo suma el estado «Por aprobar», hasta que una persona con `formcatalogs.manage` lo aprueba o lo descarta. Aprobado, queda activo.
 
 **Desde el primer día:**
 - **la espera:** el motor avisa con una señal local al confirmar, y la entrada sondea cada 2 s solo si hay algo pendiente. Una sola cola durable. Allá bajó de 35 s a 6,6 s;
@@ -77,10 +81,15 @@ Diseño los dibuja o los revisa con el [texto de la etapa](23-texto-diseno.md). 
 | `WA-Asistente-Probar` (`AS3`) | las acciones en orden, y «No se mandó nada» | Por dibujar |
 | `WA-Asistente-Limites` (`AS5`) | los límites por bandeja, el tope de ofrecimientos y el conocimiento | Por dibujar |
 | `WA-Chats-Casos` y su teléfono (`AS4`) | el porqué, derivar, «Necesita una persona», el texto exacto, los botones y el borrador | Por dibujar |
-| `WA-Modo-Atencion` y su teléfono | por bandeja; en el chat, cambiar el modo, fijarlo y «Resuelto» | Por dibujar |
-| `WA-Preguntas-Sin-Respuesta` y su teléfono | por tema, con «Completar el conocimiento» y «Descartar» | Por dibujar |
+| `WA-Modo-Atencion` y su teléfono | dentro de la pantalla «Asistente», por bandeja; en el chat, cambiar el modo, fijarlo y «Resuelto» | Por dibujar |
+| `WA-Preguntas-Sin-Respuesta` y su teléfono | en el panel de WhatsApp, por tema, con «Completar el conocimiento» y «Descartar» | Por dibujar |
+| `FRM-Catalogos-23` | el estado «Por aprobar» en la lista | Por dibujar |
+| `FRM-Editor-Reglas-23` y su teléfono | «Armar desde un texto», grisado con el tope agotado | Por dibujar |
+| `FRM-Dar-De-Baja-23` y `FRM-Editor-Baja-23` | «Qué deja de pasar» suma el asistente y las sugerencias | Por dibujar |
+| `Campana-23` y su teléfono | las preguntas sin respuesta | Por dibujar |
+| `Plat-Asistente-Config-23` y su teléfono | los máximos de la plataforma | Por dibujar |
 | `WA-Chats-Asistente`, `WA-Chats-Sugerencia`, `WA-Chats-Audio`, `FRM-Faltan` y `FRM-Respuesta-Cadena`, con sus teléfonos | lo aprobado en el lienzo v133 | A revisar |
-| `FRM-Editor-Asistente`, `FRM-Editor-Sugerencias` y `FRM-Catalogo-Propuesta` | como pestañas o secciones, sin «Textos en» ni «Cambios sin guardar», y `BA6` como estado | Se redibujan |
+| `FRM-Editor-Asistente`, `FRM-Editor-Sugerencias` y `FRM-Catalogo-Propuesta` | como pestañas o secciones, sin «Textos en» ni «Cambios sin guardar», y `BA6` como estado. El catálogo propuesto dice «Aprobar» y «Descartar», sin «Aprobar y activar» | Se redibujan |
 
 **Mandan sobre esta spec en:** una consulta ya no queda sin respuesta: `AS4` reemplaza «Sin respuesta del asistente» de `WA-Chats-Asistente`. «La IA decide» es `Assistant`, y «Preguntar siempre», `Always`. «No pudimos pasar este audio a texto» cubre también el tope agotado. Un audio sigue la retención del chat (D4).
 
@@ -88,20 +97,21 @@ Diseño los dibuja o los revisa con el [texto de la etapa](23-texto-diseno.md). 
 
 | Ruta | Permiso | Pide | Devuelve |
 | --- | --- | --- | --- |
-| `GET` y `PUT /api/organization/assistant/agent` | `whatsapp.manage` | `{profile, cases[], limits{customers, internal}, knowledge, version}` | el agente y 200 `{version}` |
-| `POST /api/organization/assistant/agent/test` | `whatsapp.manage` | `{text, inbox}` | `{actions[{caseId, why, used[], preview}]}`; no manda nada |
+| `GET` y `PUT /api/organization/whatsapp/assistant/agent` | `whatsapp.manage` | `{profile, cases[], limits{customers, internal}, version, knowledge?, knowledgeVersion?}`; el conocimiento viaja solo si cambió, con su propia versión | el agente y 200 `{version, knowledgeVersion}` |
+| `POST /api/organization/whatsapp/assistant/agent/test` | `whatsapp.manage` | `{text, inbox}` | `{actions[{caseId, why, used[], preview}]}`; no manda nada |
 | `GET` y `PUT /api/organization/whatsapp/attention` | `whatsapp.manage` | por bandeja, `{mode, returnRule, idleMinutes?, version}` | la configuración |
-| `POST …/conversations/{id}/assistant-mode` | `whatsapp.manage` | `{pinned, version}` | 200 |
-| `POST …/conversations/{id}/pin` y `resolve` | atender esa bandeja | `{version}` | 200 |
+| `POST …/conversations/{id}/assistant-mode` | atender esa bandeja y `whatsapp.manage` | `{pinned, version}` | 200 `{version}` |
+| `POST …/conversations/{id}/pin` y `resolve` | atender esa bandeja | `{version}` | 200 `{version}` |
 | `GET …/conversations/{id}/actions/{actionId}` | atender esa bandeja | — | el porqué |
-| `POST …/conversations/{id}/suggestions/{suggestionId}/send` y `dismiss` | atender esa bandeja | — | 202 o 204 |
+| `POST …/conversations/{id}/suggestions/{suggestionId}/send` y `dismiss` | atender esa bandeja | `send`, con `[Idempotent]` | 202 y 204 |
 | `GET /api/organization/whatsapp/unanswered-topics`, `POST …/{id}/dismiss` | `whatsapp.manage` | `page`, `pageSize`, `status` | `PagedResult<{id, topic, questions, people, lastAtUtc}>` |
 | `GET /api/organization/forms/missing`, `POST …/{id}/dismiss` | `forms.manage` | lo mismo | lo mismo |
 | `GET` y `PUT /api/organization/forms/{id}/suggestions` | `formsuggestions.manage` | `{revision, suggestions[]}` | `{revision}` |
 | `POST /api/organization/forms/{id}/rules/proposals` | `formrules.manage` | `{text}` | `{rule}`; no guarda |
-| `POST /api/organization/forms/catalogs/{id}/approval` | `formcatalogs.manage` | `{version}` | 200 |
+| `POST /api/organization/forms/catalogs/{id}/approval` | `formcatalogs.manage` | `{version}` | 200 `{version}` |
+| `DELETE /api/organization/forms/catalogs/{id}` | `formcatalogs.manage` | `version`, solo si está `proposed` | 204 |
 
-Las del agente llevan `[FeatureGate("assistant")]`. **Rutas que cambian:** `GET` y `PUT /forms/{id}/draft` suman `offerWhen?`; los catálogos, `status` `proposed`; los mensajes del chat, `assistantActionId?`, `transcript?` y el estado de la conversación: `attentionMode`, `pinned`, `needsPerson?`; la lista de chats, el filtro `needsPerson`.
+**Las del agente** llevan `[FeatureGate("assistant")]` y van en el módulo WhatsApp, en `OrganizationWhatsAppAssistantController.cs`: piden un permiso de WhatsApp (28), que el módulo Assistant no puede nombrar, porque retirar WhatsApp lo saca del catálogo. **Las del chat** van en una clase nueva, `OrganizationWhatsAppConversationsControllerBase`, entre `WhatsAppConversationsControllerBase` y los dos controllers de la organización, porque Plataforma no tiene modo de atención. **Rutas que cambian:** `GET` y `PUT /forms/{id}/draft` suman `offerWhen?`; los catálogos, `status` `proposed`; `GET` y `PUT /api/platform/assistant/settings` suman `{maxReplyLength, maxRepliesPerDay, maxFormOffersPerDay}`, los máximos de la plataforma; los mensajes del chat, `assistantActionId?`, `transcript?` y el estado de la conversación: `attentionMode`, `pinned`, `needsPerson?`; la lista de chats, el filtro `needsPerson`.
 
 **Puertos neutrales:**
 
@@ -112,6 +122,23 @@ public interface IConversationAgent
     Task<Result<ConversationProposal>> ProposeAsync(ConversationTurn turn, CancellationToken ct);
     Task<Result<string>> SuggestReplyAsync(ConversationTurn turn, CancellationToken ct);
 }
+// WhatsApp → Asistente (implementa el módulo Assistant): la configuración, para las rutas de WhatsApp
+public interface IConversationAgentSettings
+{
+    Task<Result<ConversationAgentConfig>> GetAsync(CancellationToken ct);
+    Task<Result<ConversationAgentVersions>> SaveAsync(ConversationAgentConfig config, CancellationToken ct);
+    Task<Result<ConversationAgentTestResult>> TestAsync(ConversationAgentTest test, CancellationToken ct);
+}
+// Asistente → Forms (implementa Forms)
+public interface IStructuredCatalogProposals
+{
+    Task<Result<StructuredCatalogProposal>> ProposeAsync(StructuredCatalogRequest request, CancellationToken ct);
+}
+// Forms → Asistente (implementa el módulo Assistant)
+public interface IStructuredRuleDrafter
+{
+    Task<Result<StructuredRuleDraft>> DraftAsync(StructuredRuleRequest request, CancellationToken ct);
+}
 // En el núcleo, con su proveedor
 public interface ISpeechTranscriber
 {
@@ -119,7 +146,9 @@ public interface ISpeechTranscriber
 }
 ```
 
-`IStructuredFormSource` suma los candidatos con su `OfferWhen`, sin valores. Forms y WhatsApp aportan herramientas que solo leen o proponen: ejecuta siempre el módulo dueño. **Herramientas nuevas:** `propose_form_offer`, `propose_catalog`, `propose_rule` y `report_unanswered`.
+`IStructuredFormSource` suma los candidatos con su `OfferWhen`, sin valores. **Las herramientas** viven en `A/Modules/Assistant/Tools`, como dice la guía, y solo leen o proponen: ejecuta siempre el módulo dueño. Ningún módulo implementa `IAssistantTool`, porque `ModuleIsolationTests` lo prohíbe: hablan por los puertos de arriba. `propose_form_offer` y `report_unanswered` son acciones de la propuesta de un turno, con los candidatos que WhatsApp pasa en `ConversationTurn`; `propose_catalog` usa `IStructuredCatalogProposals`, y `propose_rule`, que llama `FormRuleProposalService`, `IStructuredRuleDrafter`.
+
+**La campana:** suma `assistantUnanswered`, a quien tiene `whatsapp.manage`, por `INotificationSource` (base de la 12).
 
 **Errores:**
 
@@ -129,7 +158,7 @@ public interface ISpeechTranscriber
 | `Assistant.Agent.Unavailable` | ServiceUnavailable | tope de IA agotado o sin modelo calificado |
 | `WhatsApp.Chat.NotAssistantMode` | Conflict | una acción que pide ese modo |
 | `Forms.Suggestions.Invalid` | Validation (`suggestions[i]`) | más de 20, otro destinatario, bucle o mapeo de otro tipo |
-| `Forms.Catalog.NotProposed` | Conflict | aprobar uno que no espera aprobación |
+| `Forms.Catalog.NotProposed` | Conflict | aprobar o descartar uno que no espera aprobación |
 
 Un texto que no pasa el validador no es un error: se deriva, y queda en «Por qué respondió esto».
 
@@ -148,7 +177,7 @@ Dos migraciones, una por módulo. Todo es `ITenantOwned`, con RLS. Permiso nuevo
 | **FormMissingTopics** | lo mismo | sin nombres ni mensajes |
 | **FormSuggestionSets** | `DefinitionId`, `Revision`, `Suggestions` jsonb | inmutable, como las reglas |
 
-**Columnas nuevas:** `WhatsAppChats` suma `AttentionMode`, `Pinned`, `NeedsPersonAtUtc?`, `NeedsPersonReason?`, `ResolvedAtUtc?` y `TurnDueAtUtc?`. `WhatsAppChatMessages` suma `Transcript?`. `WhatsAppFlowSessions` suma `SentByAssistant`. `FormDefinitions` suma `OfferWhen`, que no se sella: cambiarlo no pide republicar. `FormDefinitionStates` suma `ActiveSuggestionSetId`. `FormRecords` suma `SuggestedByRecordId?`. `FormCatalogs` suma el estado `Proposed`. `AssistantPlatformSettings` suma los máximos. Asistente suma `ChannelId` y `ChannelConversationId`, con el índice `(TenantId, OwnerUserId, ChannelId, ChannelConversationId)`.
+**Columnas nuevas:** `WhatsAppChats` suma `AttentionMode`, `Pinned`, `NeedsPersonAtUtc?`, `NeedsPersonReason?`, `ResolvedAtUtc?` y `TurnDueAtUtc?`. `WhatsAppChatMessages` suma `Transcript?`. `WhatsAppFlowSessions` suma `SentByAssistant`, y `SentByUserId` pasa a admitir `null`. `FormDefinitions` suma `OfferWhen`, que no se sella: cambiarlo no pide republicar. `FormDefinitionStates` suma `ActiveSuggestionSetId`. `FormRecords` suma `SuggestedByRecordId?`. `FormCatalogs` suma el estado `Proposed`. `AssistantPlatformSettings` suma los máximos. Asistente suma `ChannelId` y `ChannelConversationId`, con el índice `(TenantId, OwnerUserId, ChannelId, ChannelConversationId)`.
 
 ## Pasos
 
@@ -159,16 +188,16 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
 | B1 | Las ADR: respuestas redactadas, acciones con confirmación y transcripción | `docs/decisions/` | ADR 0048 | — |
-| B2 | Modo de atención | suma a `D/WhatsApp/WhatsAppChat.cs`, `WhatsAppInboundGuard.cs` y `WhatsAppBotResolver.cs`; `WhatsAppAttentionService.cs` | `WhatsAppTeamService.cs` | chat nuevo; vuelve solo; fijado; tomar a mitad de un envío; el bot solo en manual |
-| B3 | El agente y el conocimiento | `D/Assistant/AssistantAgent.cs`, `AssistantKnowledge.cs`, `AssistantAgentService.cs`, `AssistantAgentPolicy.cs` | `AssistantOrganizationSettings.cs` | 409; máximos de la plataforma; «Cualquier otra cosa» |
+| B2 | Modo de atención | suma a `D/WhatsApp/WhatsAppChat.cs`, `WhatsAppInboundGuard.cs` y `WhatsAppAttentionBotWriter.cs`; `WhatsAppAttentionService.cs` | `WhatsAppTeamService.cs` | chat nuevo; vuelve solo; fijado; tomar a mitad de un envío; el bot solo en manual |
+| B3 | El agente y el conocimiento | `D/Assistant/AssistantAgent.cs`, `AssistantKnowledge.cs`, `AssistantAgentService.cs`, `AssistantAgentPolicy.cs`; suma a `PlatformAssistantSettingsController.cs` | `AssistantOrganizationSettings.cs` | 409 en cada versión; máximos de la plataforma; «Cualquier otra cosa» |
 | B4 | El motor para un chat | `A/Modules/Assistant/Services/ConversationAgentService.cs`, `AssistantChannelContext`; suma a `AssistantTurnBuilder.cs` | `AssistantTurnService.cs` | orden estable; 10 mensajes; dos conversaciones no se mezclan; sin `ExecutionActor` |
-| B5 | El turno en WhatsApp: ráfaga, validar, encolar y derivar | `WhatsAppAssistantTurnService.cs`, `WhatsAppAssistantWorker.cs`, `WhatsAppReplyValidator.cs` | `WhatsAppBroadcastWorker.cs`, `WhatsAppReplyIssuer.cs` | ráfaga de tres; 3 acciones; propuesta tardía; validador; topes; IA caída |
-| B6 | Ofrecer y prellenar | suma a `FormStructuredSource.cs` y `WhatsAppFlowBuilder.cs`; la sesión | esos mismos [E14] | candidatos; destinatario; sin prellenar en una versión vieja |
+| B5 | El turno en WhatsApp: ráfaga, validar, encolar y derivar | `WhatsAppAssistantTurnService.cs`, `WhatsAppAssistantWorker.cs`, `WhatsAppReplyPolicy.cs` | `WhatsAppInboundProcessor.cs`, `WhatsAppModulePolicy.cs`, `WhatsAppReplyIssuer.cs` | ráfaga de tres; 3 acciones; propuesta tardía; validador; topes; IA caída; en un chat vinculado se escribe la copia compartida; la lista de `TenantScopeUsageTests` |
+| B6 | Ofrecer y prellenar | suma a `FormStructuredSource.cs` y `WhatsAppFlowBuilder.cs`; la sesión | esos mismos [E14] | candidatos; destinatario; sin las versiones solo para la app; sin prellenar con un perfil anterior, que dice `WhatsAppFlowBindings.Profile` |
 | B7 | Probar | `AssistantAgentTestService.cs` | `ConversationAgentService.cs` | no manda; cuenta en el tope |
 | B8 | Audios | `A/Interfaces/Integrations/Speech/ISpeechTranscriber.cs`, su adaptador y su apagado | `WhatsAppChatFileService.cs` [E18] | con y sin tope; retención |
-| B9 | Sugerencias | `FormSuggestionService.cs`; `WhatsAppSuggestionService.cs` | `FormRuleService.cs` [E21] | bucle; hacia un dado de baja; mapeos; la cadena |
-| B10 | Regla desde un texto, catálogo propuesto y temas | `FormRuleProposalService.cs`, las herramientas, `FormMissingTopicService.cs`, `WhatsAppUnansweredTopicService.cs` | `OrganizationUsersTool` | nunca guarda; tope agotado; sin nombres |
-| B11 | Rutas, contratos y ejemplos | `P/Modules/Assistant/Controllers/*`, `P/Modules/WhatsApp/Controllers/WhatsAppConversationsControllerBase.cs`, `P/Modules/Forms/Controllers/*` | esos mismos | cada ruta con 401, 403, feature apagada = 404; aislamiento |
+| B9 | Sugerencias | `FormSuggestionService.cs`; `WhatsAppSuggestionService.cs`; suma a `FormDefinitionCopyCreator.cs` [E17] | `FormRuleService.cs` [E21] | bucle; hacia un dado de baja; mapeos; la cadena; copiar lleva la primera revisión |
+| B10 | Regla desde un texto, catálogo propuesto y temas | `FormRuleProposalService.cs`, las herramientas, los dos puertos y sus apagados, `FormMissingTopicService.cs`, `WhatsAppUnansweredTopicService.cs` | `OrganizationUsersTool` | nunca guarda; tope agotado; sin nombres; descartar un catálogo propuesto; `ModuleIsolationTests` |
+| B11 | Rutas, contratos y ejemplos | `P/Modules/WhatsApp/Controllers/OrganizationWhatsAppAssistantController.cs`, `OrganizationWhatsAppConversationsControllerBase.cs`, `P/Modules/Forms/Controllers/*` | esos mismos | cada ruta con 401, 403, feature apagada = 404; aislamiento |
 
 **Front:**
 
@@ -237,8 +266,8 @@ La puerta de la etapa, con la lista de control de `/puerta`, más:
 
 - **Tope de IA por organización (ADR 0051):** el modelo, la transcripción y Probar.
 - **Datos de la organización:** todo con RLS. El historial nunca es de otra conversación ni de otra organización, con su test.
-- **Workers:** los turnos entran con `TenantJobRunner`, sin `ExecutionActor`, porque un cliente no tiene cuenta.
-- **Features:** `forms` y `assistant`, prendidos en la organización.
-- **Permisos:** suma `formsuggestions.manage`. Lo demás pide `whatsapp.manage` o el permiso de atender.
+- **Workers:** los turnos abren un scope por organización con `SetFromAccess(tenantId, TenantKind.Business)`, como `WhatsAppInboundProcessor`, sin `ExecutionActor`, porque un cliente no tiene cuenta, y sin `TenantJobRunner`: lo que sale en un chat vinculado escribe la copia compartida. Se suman a la lista de `TenantScopeUsageTests`.
+- **Features:** `forms` y `assistant`, prendidos en la organización. En un worker, `IFeatureService` da `false`, porque no hay sesión: se lee `ITenantFeatureCache`, como `WhatsAppModulePolicy`.
+- **Permisos:** suma `formsuggestions.manage`, y `formcatalogs.manage` completa su texto. Lo demás pide `whatsapp.manage` o el permiso de atender.
 - **WhatsApp:** el asistente actúa en el número de la organización.
 - **Cuotas:** las rutas cuentan en las generales, y Probar, además, en la del Asistente.

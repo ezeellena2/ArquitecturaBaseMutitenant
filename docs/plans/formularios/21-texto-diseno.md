@@ -17,16 +17,17 @@ Te paso los tableros de la E21, reglas, aprobación, PDF y avisos, para el lienz
 2. **`FRM-Pdf`:** salen «Cambios sin guardar», «Vista previa en inglés» y «Falta el inglés». Con el logo y los datos de la página pública, el color elegido, secciones, firmas, los campos «Dato», las líneas y los cálculos. **Mostrale al usuario dos o tres estilos** para que elija (59).
 3. **`M-FRM-Respuesta-Aprobacion`:** sin lo que ya no va.
 
-**Qué se revisa:** `FRM-Formularios-21` y su teléfono, `FRM-Respuesta-Aprobacion`, `WA-Chats-Avisos` y `M-WA-Conversacion-Avisos`, contra las reglas del 25 y el 26/10. `FRM-Por-Aprobar` y `M-FRM-Por-Aprobar` pasan al Archivo.
+**Qué se revisa:** `FRM-Formularios-21` y su teléfono, `FRM-Respuesta-Aprobacion`, `WA-Chats-Avisos` y `M-WA-Conversacion-Avisos`, contra las reglas del 25 y el 26/10. `FRM-Formularios-21` y su teléfono parten de `FRM-Formularios-20`: «Cargar», «Solo en la app», quien solo carga y «Borrar». En `WA-Chats-Avisos`, `FRM-Respuesta-Aprobacion` y sus teléfonos sale «No se pudo: pasaron más de 24 horas»: fuera de las 24 horas va con plantilla (61), y el «No se pudo» es «Sin plantilla aprobada». `FRM-Por-Aprobar` y `M-FRM-Por-Aprobar` pasan al Archivo.
 
 **Qué se dibuja:**
-1. **`FRM-Respuestas-21` y su teléfono:** «Por aprobar · N» arriba de la planilla, con «Revisar»; la columna Estado y su filtro; la marca de la copia PDF, y el filtro «Anulada».
-2. **`FRM-Tablero-21`:** la tarjeta «Por estado».
+1. **`FRM-Respuestas-21` y su teléfono:** sobre `FRM-Respuestas-20`, sin ningún cartel arriba de la planilla: la columna Estado, el filtro «Estado», con «Anulada», y la marca de la copia PDF. Lo que espera aprobación se abre desde `Campana-21` y «Para resolver», y ↑ ↓ recorren esa cola.
+2. **`FRM-Tablero-21` y su teléfono:** la tarjeta «Por estado».
 3. **`FRM-Respuesta-Corregir` y su teléfono (CW10-A):** la corrección con lo de antes a la vista y el motivo, «Corregida» en la fila y el detalle, la versión anterior en Actividad, una aprobada que vuelve a «Por aprobar», y quien la cargó, que corrige mientras no esté aprobada.
 4. **`FRM-Respuesta-Anular` y su teléfono (CW11-A):** «Anular» al final del ⋮, el motivo, la fila que sale de la vista, el filtro «Anulada» y el Excel con «Incluir las anuladas».
 5. **`FRM-Respuestas-Propias-21` y su teléfono (CW6-C):** lo propio con el estado, el PDF y el motivo de rechazo.
-
-**También:** la pregunta «Correo» en el editor y en `FRM-Cargar-Respuesta`, y en `Campana`, «N respuestas por aprobar» y «No se pudo mandar el aviso de …».
+6. **`FRM-Editor-21` y `FRM-Cargar-Respuesta-21`, con sus teléfonos:** la pregunta «Correo».
+7. **`Campana-21` y su teléfono:** «N respuestas por aprobar» y «No se pudo mandar el aviso de …».
+8. **`FRM-Dar-De-Baja-21` y `FRM-Editor-Baja-21`:** «Lo que se conserva» suma el PDF y las aprobaciones, y lo que espera decisión se puede seguir decidiendo.
 
 **Recorrido guiado.** Armar una regla, llega una respuesta, aviso, aprobar desde «Para resolver», el PDF en el celular y corregirla.
 

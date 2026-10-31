@@ -15,13 +15,14 @@ Te paso los tableros de la E25, documentos por WhatsApp, para el lienzo del mult
 **Qué se dibuja:**
 1. **`WA-Chats-Documento` y su teléfono (`DOC2` y `DOC4`):** seguro, con duda (botones, o lista si un nombre no entra) y sin reconocer. PDF, Word, Excel con varias filas, ubicación y contacto. Los casos difíciles: foto movida, PDF con contraseña, repetido, CBU mal leído, formulario que no se le puede mandar, formatos viejos y un número que no es contacto. «Por qué lo propuso» debajo del documento.
 2. **`M-WA-Flow-Prellenado` (`DOC3`):** el formulario en el celular: lo dudoso con «Revisá», lo no leído vacío con «No se leyó» y el documento adjunto. Dibujá las dos variantes: con «Cambiar documento», y con «Adjuntamos tu documento», para el caso en que Meta no deje precargar un archivo.
-3. **`FRM-Documentos` y su teléfono (`DOC5-A`):** la bandeja, una planilla con panel: el documento con acercar, girar, páginas y descargar; sus datos; cambiar el formulario reconocido; descartar con confirmación; pasar al formulario; ↑ ↓. Filtros: formulario, quién lo mandó, cuándo llegó, estado y «Empresa ▾». Estados: propuesto, sin clasificar, confirmado, descartado y «Cargada automáticamente». Con solo `formrecords.read`, sin revisar.
+3. **`FRM-Documentos` y su teléfono (`DOC5-A`):** en el panel de «Gestión de formularios», debajo de «Formularios». La bandeja, una planilla con panel: el documento con acercar, girar, páginas y descargar; sus datos; cambiar el formulario reconocido; descartar con confirmación; pasar al formulario; ↑ ↓. Filtros: formulario, quién lo mandó, cuándo llegó, estado y «Empresa ▾». Estados: propuesto, sin clasificar, confirmado, descartado y «Cargada automáticamente». Con solo `formrecords.read`, sin revisar.
 4. **`FRM-Editor-Lectura` y su teléfono (`DOC1`):** la sección «Lectura de documentos» en el editor: «Cómo reconocerlo», qué pregunta recibe cada dato, las validaciones fijas, el cruce con catálogos, los duplicados, el interruptor «Cargar solo si es seguro» y cuántas cargas sin correcciones lleva.
 5. **`Plat-FRM-Plantilla-Lectura` (`DOC1`):** la misma sección en la pestaña «Plantilla» de Plataforma, con las validaciones con candado.
 6. **`FRM-Armar-Con-IA` y su teléfono (`DOC6`):** desde un sin clasificar o desde «Llegaron N documentos parecidos»: la propuesta, con los documentos a la vista, y «Crear borrador».
-7. **`FRM-Respuesta-25`:** sobre `FRM-Respuesta`, de qué documento salió y quién la revisó.
-
-**También:** en el chat del Inicio, el asistente que recibe un PDF y arma un borrador, con los catálogos por aprobar, y lleva al editor. En `WA-Asistente-Casos`, el tipo de entrada «documento».
+7. **`FRM-Respuesta-25` y `M-FRM-Respuesta-25`:** sobre `FRM-Respuesta`, de qué documento salió y quién la revisó.
+8. **`Campana-25` y su teléfono:** los documentos por revisar y «Llegaron N documentos parecidos».
+9. **`WA-Asistente-Casos-25`:** sobre `WA-Asistente-Casos`, el tipo de entrada «documento».
+10. **`Asistente-Org-25` y su teléfono:** en el chat del Inicio, el asistente recibe un PDF y arma un borrador, con los catálogos por aprobar, y lleva al editor.
 
 **Recorrido guiado.** Un comprobante de transferencia: llega, se reconoce, se propone, se confirma y queda en la planilla. Y otro que no se reconoce, que termina en «Armar formulario con la IA».
 

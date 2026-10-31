@@ -14,7 +14,7 @@ Antes de empezar, en este orden:
 
 ## Qué se construye
 
-**Varios asistentes por organización.** Cada uno tiene su nombre, su perfil, sus casos y sus límites por bandeja, como el de la E23. El conocimiento es de la organización y lo comparten todos (46). El principal no se borra.
+**Varios asistentes por organización.** Cada uno tiene su nombre, su perfil, sus casos y sus límites por bandeja, como el de la E23. El conocimiento es de la organización y lo comparten todos (46). El principal no se da de baja.
 
 **Quién contesta cada chat: por equipo** (68):
 - cada equipo de la bandeja puede tener un asistente, y un equipo tiene como mucho uno;
@@ -45,15 +45,16 @@ Diseño los dibuja con el [texto de la etapa](24-texto-diseno.md). Muestran solo
 
 | Ruta | Permiso | Pide | Devuelve |
 | --- | --- | --- | --- |
-| `GET /api/organization/assistant/agents` | `whatsapp.manage` | `page`, `pageSize`, `search`, `status` | `PagedResult<{id, name, isPrimary, isActive, teams}>` |
-| `POST /api/organization/assistant/agents` | `whatsapp.manage` | `{name}`, con `[Idempotent]` | 201 + Location |
-| `GET` y `PUT /api/organization/assistant/agents/{id}` | `whatsapp.manage` | lo de la E23 | el agente y 200 `{version}` |
-| `POST /api/organization/assistant/agents/{id}/test` | `whatsapp.manage` | `{text, inbox}` | lo de la E23 |
+| `GET /api/organization/whatsapp/assistant/agents` | `whatsapp.manage` | `page`, `pageSize`, `search`, `status` | `PagedResult<{id, name, isPrimary, isActive, teamCount, teams[]}>`, con hasta `MaxMemberPreview` equipos. La arma WhatsApp, con `IConversationAgentSettings.ListAsync` y sus equipos: el asistente no los conoce |
+| `POST /api/organization/whatsapp/assistant/agents` | `whatsapp.manage` | `{name}`, con `[Idempotent]` | 201 + Location |
+| `GET` y `PUT /api/organization/whatsapp/assistant/agents/{id}` | `whatsapp.manage` | lo de la E23 | el agente y 200 `{version, knowledgeVersion}` |
+| `POST …/agents/{id}/deactivation` y `reactivation` | `whatsapp.manage` | `{version}` | 200 `{version}` |
+| `POST /api/organization/whatsapp/assistant/agents/{id}/test` | `whatsapp.manage` | `{text, inbox}` | lo de la E23 |
 | `PUT /api/organization/whatsapp/teams/{id}/assistant` | `whatsapp.manage` | `{assistantId?, version}` | 200 `{version}` |
 
-Las rutas `/assistant/agent` de la E23 pasan a estas, y nombran al principal. El equipo suma `assistantId?` y `assistantName?`. Los mensajes del chat suman `assistantName?`.
+Las rutas `/whatsapp/assistant/agent` de la E23 pasan a estas, y nombran al principal. El equipo suma `assistantId?` y `assistantName?`. Los mensajes del chat suman `assistantName?`.
 
-**Puertos:** `ConversationTurn` suma `AgentId?`, que elige WhatsApp. `IConversationAgent` suma `ListAsync`, solo con id y nombre.
+**Puertos:** `ConversationTurn` suma `AgentId?`, que elige WhatsApp. `IConversationAgentSettings` suma `ListAsync`, con id, nombre, `IsPrimary` e `IsActive`, y sus otros métodos reciben el id del asistente.
 
 **Errores:**
 
@@ -84,11 +85,11 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| B1 | Varios agentes | suma a `D/Assistant/AssistantAgent.cs` y `AssistantAgentService.cs` [E23]; la migración | esos mismos | el principal no se borra; dar de baja; nombre repetido |
+| B1 | Varios agentes | suma a `D/Assistant/AssistantAgent.cs` y `AssistantAgentService.cs` [E23]; la migración | esos mismos | el principal no se da de baja; un asistente de baja; nombre repetido |
 | B2 | La asignación | suma a `D/WhatsApp/WhatsAppTeam.cs` y `WhatsAppTeamService.cs`; la migración | esos mismos | otro módulo opaco; un asistente de baja |
 | B3 | Elegir quién contesta | `A/Modules/WhatsApp/Services/WhatsAppAgentResolver.cs`; suma a `WhatsAppAssistantTurnService.cs` [E23] | `WhatsAppBotResolver.cs` | sin equipo; equipo sin asistente; cambiar de equipo con el mismo historial |
-| B4 | El menú al empezar | suma a `WhatsAppBotResolver.cs` y `WhatsAppInboundGuard.cs` | esos mismos | con uno y con varios; la persona elige |
-| B5 | Rutas y contratos | suma a `P/Modules/Assistant/Controllers/*` y a los equipos | esos mismos | cada ruta con 401, 403 y feature apagada = 404; segunda página; ejemplos exportados; aislamiento |
+| B4 | El menú al empezar | suma a `WhatsAppAttentionBotWriter.cs` y `WhatsAppInboundGuard.cs` | esos mismos | con uno y con varios; la persona elige |
+| B5 | Rutas y contratos | suma a `OrganizationWhatsAppAssistantController.cs` y a los equipos | esos mismos | cada ruta con 401, 403 y feature apagada = 404; segunda página; ejemplos exportados; aislamiento |
 
 **Front:**
 
@@ -106,7 +107,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | --- | --- | --- |
 | [E23] | `AssistantAgents` y las rutas del agente. | Sumar filas no rehace nada. |
 | [E23] | El historial por conversación. | No depende de qué asistente contestó. |
-| [E11] | Equipos y bot, en `WhatsAppTeam` y `WhatsAppBotResolver`. | El menú pasa a un equipo. |
+| [E11] | Equipos y bot, en `WhatsAppTeam` y `WhatsAppAttentionBotWriter`. | El menú pasa a un equipo. |
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 

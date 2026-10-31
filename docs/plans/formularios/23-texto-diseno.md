@@ -18,12 +18,17 @@ Te paso los tableros de la E23, el asistente con Casos, para el lienzo del multi
 3. **`WA-Asistente-Probar` (`AS3`):** las acciones en orden, hasta 3, cada una con su caso, su porqué y cómo la vería la persona, y «No se mandó nada».
 4. **`WA-Asistente-Limites` (`AS5`):** los límites por bandeja (65), el tope de ofrecimientos (66) y el conocimiento, sección por sección (46). Se edita ahí, sin salir.
 5. **`WA-Chats-Casos` y su teléfono (`AS4`):** el porqué debajo de cada acción, derivar y «Necesita una persona», el texto exacto, los botones, el tope del día y el borrador en atención manual.
-6. **`WA-Modo-Atencion` y su teléfono:** por bandeja, quién atiende los chats nuevos y cuándo vuelve un chat. En el chat: cambiar el modo, fijarlo y «Resuelto».
-7. **`WA-Preguntas-Sin-Respuesta` y su teléfono:** por tema, con la cantidad de preguntas y de personas, «Completar el conocimiento» y «Descartar». Sin nombres ni mensajes.
+6. **`WA-Modo-Atencion` y su teléfono:** dentro de la pantalla «Asistente», por bandeja, quién atiende los chats nuevos y cuándo vuelve un chat. En el chat: cambiar el modo, fijarlo y «Resuelto».
+7. **`WA-Preguntas-Sin-Respuesta` y su teléfono:** en el panel de WhatsApp, por tema, con la cantidad de preguntas y de personas, «Completar el conocimiento» y «Descartar». Sin nombres ni mensajes.
+8. **`FRM-Catalogos-23`:** el estado «Por aprobar» en la lista de catálogos.
+9. **`FRM-Editor-Reglas-23` y su teléfono:** «Armar desde un texto», grisado con el tope agotado, con el motivo en su tooltip.
+10. **`FRM-Dar-De-Baja-23` y `FRM-Editor-Baja-23`:** «Qué deja de pasar» suma el asistente y las sugerencias.
+11. **`Campana-23` y su teléfono:** las preguntas sin respuesta.
+12. **`Plat-Asistente-Config-23` y su teléfono:** los máximos de la plataforma para cada límite: largo de la respuesta, respuestas por conversación y día y ofrecimientos por conversación y día.
 
-**Qué se redibuja:** `FRM-Editor-Asistente`, `FRM-Editor-Sugerencias` y `FRM-Catalogo-Propuesta`, sin «Textos en» ni «Cambios sin guardar», como pestañas o secciones del formulario y del catálogo (79). En `FRM-Editor-Sugerencias`, `BA6` como estado: una sugerencia hacia un dado de baja.
+**Qué se redibuja:** `FRM-Editor-Asistente`, `FRM-Editor-Sugerencias` y `FRM-Catalogo-Propuesta`, sin «Textos en» ni «Cambios sin guardar», como pestañas o secciones del formulario y del catálogo (79). En `FRM-Editor-Sugerencias`, `BA6` como estado: una sugerencia hacia un dado de baja. `FRM-Catalogo-Propuesta` dice «Aprobar» y «Descartar», sin «Aprobar y activar».
 
-**Qué se revisa:** `WA-Chats-Asistente`, `WA-Chats-Sugerencia`, `WA-Chats-Audio`, `FRM-Faltan`, `FRM-Respuesta-Cadena` y sus teléfonos. `AS4` reemplaza «Sin respuesta del asistente» de `WA-Chats-Asistente`. En `Catálogos`, el estado «Por aprobar». En «Armar reglas», «Armar desde un texto», grisado con el tope agotado.
+**Qué se revisa:** `WA-Chats-Asistente`, `WA-Chats-Sugerencia`, `WA-Chats-Audio`, `FRM-Faltan`, `FRM-Respuesta-Cadena` y sus teléfonos. `AS4` reemplaza «Sin respuesta del asistente» de `WA-Chats-Asistente`.
 
 **Recorrido guiado.** `AS6`: los ejemplos en el celular y en el chat del operador, con lo que hacen la persona, el sistema y la IA, y una ráfaga con tres acciones.
 
