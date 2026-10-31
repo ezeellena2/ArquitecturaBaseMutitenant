@@ -34,8 +34,8 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 20 · Cargar desde la web | Pendiente. Spec lista; tableros por dibujar | [Spec](formularios/20-cargar-desde-la-web.md) |
 | 21 · Reglas, aprobación y PDF | Pendiente. Spec lista; tableros a revisar, 4 que se redibujan y otros por dibujar | [Spec](formularios/21-reglas-y-aprobacion.md) |
 | 22 · Biblioteca de plantillas | Pendiente. Spec lista; tableros a revisar, 12 que se redibujan y uno por dibujar | [Spec](formularios/22-biblioteca.md) |
-| 23 · Asistente con Casos | Pendiente. Resumen listo; tableros a revisar y por dibujar | [Resumen](formularios/23-asistente.md) |
-| 24 · Varios asistentes | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/24-varios-asistentes.md) |
+| 23 · Asistente con Casos | Pendiente. Spec lista; tableros a revisar y por dibujar | [Spec](formularios/23-asistente.md) |
+| 24 · Varios asistentes | Pendiente. Spec lista; tableros por dibujar | [Spec](formularios/24-varios-asistentes.md) |
 | 25 · Documentos por WhatsApp | Pendiente. Resumen listo; tableros por dibujar, y antes de planificar, la prueba con Meta del archivo precargado | [Resumen](formularios/25-documentos.md) |
 
 ## Etapa 11: WhatsApp de atención

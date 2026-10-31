@@ -298,7 +298,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Lo de la etapa 5 de allá:** sugerencias al operador y entre formularios, audios transcriptos (27), «Formularios que faltan» y el catálogo propuesto.
 - **Desde el primer día:** la espera corta, el aislamiento por conversación y la medición.
 - **Costos:** dentro del tope mensual de IA de la organización (ADR 0051).
-- **Resumen:** [formularios/23-asistente.md](formularios/23-asistente.md).
+- **Spec:** [formularios/23-asistente.md](formularios/23-asistente.md).
 - **Criterios:**
   - el modelo lee o propone, y ejecuta el módulo dueño;
   - un texto redactado que no pasa el validador no sale y deriva;
@@ -309,7 +309,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 
 - **Varios asistentes por organización,** cada uno con su perfil, sus casos y sus límites; el conocimiento lo comparten (46).
 - **Quién contesta: por equipo** (68). Cada equipo de la bandeja tiene su asistente, y un chat sin equipo lo contesta el principal.
-- **Resumen:** [formularios/24-varios-asistentes.md](formularios/24-varios-asistentes.md).
+- **Spec:** [formularios/24-varios-asistentes.md](formularios/24-varios-asistentes.md).
 - **Criterios:**
   - en cada chat se ve qué asistente contesta;
   - cambiar de equipo cambia el asistente desde el mensaje siguiente, con el mismo historial.
