@@ -220,7 +220,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Al responder:** se baja cada archivo con el token de la organización, se verifican hash, tamaño y tipo real, y se guarda con `IFileStore`. Completa o nada.
 - **Ver:** visor y descarga solo por la Api, con `formrecords.read`, también en la planilla y el detalle. El antivirus está en la lista de lanzamiento.
 - **Archivos en el chat** (48): el operador ve y baja lo que le mandan, y manda fotos y archivos desde el compositor, dentro de las 24 horas.
-- **Resumen:** [formularios/18-fotos-y-documentos.md](formularios/18-fotos-y-documentos.md).
+- **Spec:** [formularios/18-fotos-y-documentos.md](formularios/18-fotos-y-documentos.md).
 - **Criterios:**
   - las dimensiones de una foto se rechazan por el encabezado, antes de decodificar; el tipo sale del contenido, nunca de la extensión;
   - el nombre de descarga lleva la extensión del tipo verificado y sin caracteres de formato (U+202E);
