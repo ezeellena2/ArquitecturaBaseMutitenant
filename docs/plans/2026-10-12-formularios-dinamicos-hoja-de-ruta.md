@@ -248,7 +248,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **El armado:** hasta tres preguntas por renglón y zonas plegables; el ancho sale del tipo de pregunta (87).
 - **Listas dependientes,** solo en la web (94).
 - **Formularios solo para la app:** sin número conectado, con una lista dependiente o con un catálogo a mano de más de 200 opciones, se publica sin Meta y se carga desde la web (94, 96 y 98).
-- **Resumen:** [formularios/20-cargar-desde-la-web.md](formularios/20-cargar-desde-la-web.md).
+- **Spec:** [formularios/20-cargar-desde-la-web.md](formularios/20-cargar-desde-la-web.md).
 - **Criterios:**
   - un solo lugar valida y numera; los archivos que se suben se verifican igual que los de WhatsApp;
   - repetir el envío con las mismas respuestas devuelve el primer resultado, aunque después cambie la versión o se dé de baja el formulario;

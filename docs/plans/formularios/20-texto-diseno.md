@@ -10,7 +10,7 @@ Te paso los tableros de la carga desde la web para el lienzo del multitenant. No
 
 **Contexto.** Un empleado completa un formulario desde la web, a su nombre, con la misma captura que por WhatsApp. ArquitecturaBase ya lo decidió y programó su primera parte, y el usuario sumó decisiones propias para acá (83 a 98 de la hoja de ruta). **Los tableros muestran solo lo que existe hasta la E20** (78): nada de estado, «Por aprobar», PDF, corregir ni anular. Valen las fichas del front: un dato por celda, fechas completas, sin rótulos que expliquen y botones habilitados o grisados (43). Mandan nuestras piezas y nuestras reglas, también donde allá se vea otra cosa.
 
-**Leé primero,** en el repo del back `ArquitecturaBaseMutitenant`: el resumen `docs/plans/formularios/20-cargar-desde-la-web.md`, sobre todo «Cómo se arma cada pregunta» y «Tableros». En `ArquitecturaBaseFront`: `docs/design/carga-desde-la-app.md`.
+**Leé primero,** en el repo del back `ArquitecturaBaseMutitenant`: la spec `docs/plans/formularios/20-cargar-desde-la-web.md`, sobre todo «Cómo se arma cada pregunta» y «Pantallas». En `ArquitecturaBaseFront`: `docs/design/carga-desde-la-app.md`.
 
 **La referencia.** Los tableros elegidos del lienzo de ArquitecturaBase, <https://claude.ai/artifact/Kvbr5KFJrGT951JLiu8i4M>. Desde la cuenta de Claude Code no se abre. Si tampoco se te abre a vos, pedíle al usuario que te lo comparta antes de dibujar: CW7, CW10-A, CW11-A y CW15-B no están escritos con detalle en ningún documento. **La maqueta no sirve de base para esto:** tiene una versión anterior, con «Cargar respuesta» en el ⋮ y el canal «Web».
 
@@ -24,7 +24,7 @@ Te paso los tableros de la carga desde la web para el lienzo del multitenant. No
 3. **`FRM-Cargar-Respuesta` y su teléfono (CW2-A, CW12, CW13-A y CW16):**
    - «Nueva respuesta» en su propia página, con el formulario en las migas;
    - Cancelar y el botón del formulario en la banda; en el teléfono, ese botón fijo al pie;
-   - la grilla de hasta tres por renglón, con los anchos de la tabla del resumen, las zonas plegables con «N de M respondidas», y los títulos de sección;
+   - la grilla de hasta tres por renglón, con los anchos de la tabla de la spec, las zonas plegables con «N de M respondidas», y los títulos de sección;
    - lo de la E19, que allá no existe: la pregunta que aparece con los renglones recalculados, el grupo de líneas en el renglón entero, y sin cálculo a la vista;
    - los errores en su pregunta, la zona plegada que se abre sola y la confirmación al salir.
 4. **`FRM-Cargar-Panel` (CW2-B):** el panel junto a la planilla, en una columna, con «Mantener las respuestas para la siguiente» y «Pantalla completa». Solo en la compu.

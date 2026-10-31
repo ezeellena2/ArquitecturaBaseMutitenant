@@ -122,7 +122,7 @@ Una migración aditiva, `<fecha>_FormLogic.cs`. Lo de una pregunta vive en el js
 | Tabla | Columna | Tipo | Regla |
 | --- | --- | --- | --- |
 | `FormRecords` | `HiddenFieldIds` | uuid[], vacío por defecto | las preguntas que no se mostraron |
-| `FormRecordValues` | `Currency` | char(3)? | en un cálculo con moneda; CHECK que lo ata a `NumberValue` |
+| `FormRecordValues` | `Currency` | texto 3? | en un cálculo con moneda; CHECK que lo ata a `NumberValue` |
 
 **FormRecordLineValues** (`ITenantOwned`, esquema `tenant`, con RLS, sin auditoría: es parte de la respuesta)
 
