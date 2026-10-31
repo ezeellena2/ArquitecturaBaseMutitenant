@@ -233,7 +233,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Cálculos:** una pregunta «Cálculo» con las cuatro operaciones sobre números de la respuesta, campos del catálogo y la suma de una columna de líneas. Se calcula al llegar la respuesta (54).
 - **Líneas:** un grupo de renglones con sus columnas, con un tope de 1 a 10 (54).
 - **En las respuestas:** la planilla, el detalle y el Excel los muestran.
-- **Resumen:** [formularios/19-condiciones-calculos-y-lineas.md](formularios/19-condiciones-calculos-y-lineas.md).
+- **Spec:** [formularios/19-condiciones-calculos-y-lineas.md](formularios/19-condiciones-calculos-y-lineas.md).
 - **Criterios:**
   - antes de planificar, se prueban con Meta el componente `If`, los renglones y un archivo dentro de un `If`, en un celular;
   - el servidor nunca confía en lo que llega: vuelve a evaluar condiciones y cálculos;
