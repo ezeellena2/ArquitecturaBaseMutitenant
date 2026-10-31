@@ -209,7 +209,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Copiar un formulario** (74), con su borrador y un prefijo nuevo; las etapas siguientes suman lo suyo a la copia.
 - **Dar de baja** conserva la versión activa y los envíos abiertos; **reactivar** es publicar una versión nueva; **borrar** es lógico, sin respuestas ni envíos abiertos, y deja el prefijo reservado.
 - **Deprecar los Flows** por WABA de la organización, como operación durable, al vencer el último envío.
-- **Resumen:** [formularios/17-ciclo-de-vida.md](formularios/17-ciclo-de-vida.md).
+- **Spec:** [formularios/17-ciclo-de-vida.md](formularios/17-ciclo-de-vida.md).
 - **Criterios:**
   - un rechazo de Meta al deprecar se clasifica y tiene una salida: no se repite para siempre;
   - un solo filtro de disponibilidad para todo lo que ofrece formularios.
