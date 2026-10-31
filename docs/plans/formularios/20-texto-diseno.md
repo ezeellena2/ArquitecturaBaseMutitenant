@@ -19,7 +19,7 @@ Te paso los tableros de la carga desde la web para el lienzo del multitenant. No
 2. **`FRM-Formularios-20` y su teléfono (CW1-B):**
    - «Cargar» al final de cada fila; no aparece en los borradores ni en los dados de baja, y en uno solo para clientes queda grisado, con el motivo en su tooltip;
    - «Solo en la app» en la columna «En WhatsApp»;
-   - lo que ve quien solo carga: sus formularios y «Cargar», sin las columnas de respuestas;
+   - lo que ve quien solo carga: sus formularios y «Cargar», sin las columnas de respuestas, y el filtro «Estado», con «Dados de baja», donde ve lo suyo, sin «Cargar» (101);
    - en el teléfono, con nuestra forma de fila, no una tabla con desplazamiento.
 3. **`FRM-Cargar-Respuesta` y su teléfono (CW2-A, CW12, CW13-A y CW16):**
    - «Nueva respuesta» en su propia página, con el formulario en las migas;
@@ -34,7 +34,7 @@ Te paso los tableros de la carga desde la web para el lienzo del multitenant. No
 8. **`FRM-Respuestas-20` y `FRM-Respuesta-20`, con sus teléfonos (CW6-A):** «Agregar respuesta» en el encabezado, «App» en «Canal» y en su filtro, y en el detalle «Recibida · … · en la app, la cargó …», sin «Abrir conversación».
 9. **`FRM-Respuestas-Propias` y su teléfono (CW6-C):** la misma planilla con lo suyo, sin «Mis cargas» aparte.
 10. **`FRM-Editor-Listas` y su teléfono (CW7):** «Según otra respuesta» en «Qué opciones ve cada persona», con la pregunta de la que depende.
-11. **`FRM-Publicar-20` y su teléfono:** es nuevo, no tiene modelo allá: mostrale opciones al usuario. Publicar solo para la app en tres casos: sin número conectado, con una lista dependiente y con un catálogo de más de 200 opciones. Y un formulario solo para clientes, que no se puede publicar. Sin la vista oficial de Meta.
+11. **`FRM-Publicar-20` y su teléfono:** es nuevo, no tiene modelo allá: mostrale opciones al usuario. Publicar solo para la app en tres casos: sin número conectado, con una lista dependiente y con un catálogo a mano más grande de lo que admite WhatsApp: más de 200 opciones en «elegir una» o más de 20 en «elegir varias» (104). Y un formulario solo para clientes, que no se puede publicar. Sin la vista oficial de Meta.
 
 **Después, con la E21:**
 - `FRM-Respuesta-Corregir` (CW10-A): la corrección con lo de antes a la vista y el motivo, «Corregida» en la fila y el detalle, la versión anterior, una aprobada que vuelve a «Por aprobar», y quien la cargó;

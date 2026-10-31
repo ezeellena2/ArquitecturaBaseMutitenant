@@ -1,13 +1,13 @@
 # E25 · Documentos por WhatsApp (spec)
 
-**Estado:** pendiente · spec de la etapa 25, la última del bloque (decisiones 34, 41, 78 y 99), con el [formato](plantilla.md) de las etapas. En ArquitecturaBase está decidido, con su ADR 0022 y sus tableros, y sin programar. **Antes de programar** se prueba con Meta si un Flow acepta un archivo precargado: es el mayor riesgo técnico. `/plan-etapa` la contrasta con el código real después de la E24.
+**Estado:** pendiente · spec de la etapa 25, la última del bloque (decisiones 34, 41, 78, 99 y 102), con el [formato](plantilla.md) de las etapas. En ArquitecturaBase está decidido, con su ADR 0022 y sus tableros, y sin programar. **Antes de programar** se prueba con Meta si un Flow acepta un archivo precargado: es el mayor riesgo técnico. `/plan-etapa` la contrasta con el código real después de la E24.
 
 ## Qué leer
 
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E13](13-campos.md): el cruce por un campo; la [E14](14-formularios.md): la captura; la [E18](18-fotos-y-documentos.md): archivos; la [E21](21-reglas-y-aprobacion.md): corregir; la [E22](22-biblioteca.md): plantillas, y la [E23](23-asistente.md): turnos, herramientas y prellenado.
-2. **Decisiones** de la hoja de ruta: 23, 24, 35, 40 a 42, 49, 50, 70 a 72, 75 y 78.
+2. **Decisiones** de la hoja de ruta: 23, 24, 35, 40 a 42, 49, 50, 70 a 72, 75, 78 y 102.
 3. **Fichas y guías:** [datos-de-referencia](../../rules/datos-de-referencia.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [identificacion-fiscal](../../rules/identificacion-fiscal.md), [modulos](../../rules/modulos.md), [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [datos-personales](../../rules/datos-personales.md), [logs](../../rules/logs.md), [cuotas](../../rules/cuotas.md), [tests](../../rules/tests.md) y la [guía de herramientas](../../guides/agregar-una-herramienta-al-asistente.md).
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 5. **Referencia de producto,** solo para leer: en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`, el anexo F, F3, y el anexo D (`DOC1` a `DOC6`); allá, la ADR 0022.
@@ -51,7 +51,7 @@ No se leen `.doc`, `.xls`, los archivos con macros ni los que tienen contraseña
 
 **«Armar formulario con la IA»:** sobre un documento «Sin clasificar», o desde «Llegaron N documentos parecidos», con tres o más. La IA propone nombre, prefijo, botón, «Cómo reconocerlo» y una pregunta por dato; si se parece a un estándar, lo sugiere antes. Crea un borrador con la lectura prendida, y una persona lo revisa y lo publica. Si falla, no queda nada a medias.
 
-**Armar desde el asistente de la web** (75): desde el chat del Inicio, la persona le pasa un PDF, una planilla o una foto, o le escribe cómo lo quiere. Crea el formulario en borrador y los catálogos **por aprobar**, y lleva al editor. Nada se publica solo. Es una herramienta que escribe, con la ADR de la E23: el pedido de la persona es la confirmación.
+**Armar desde el asistente de la web** (75): desde el chat del Inicio, la persona le pasa un PDF, una planilla o una foto, o le escribe cómo lo quiere. Crea el formulario en borrador y los catálogos **por aprobar**, que además de los de filtros de la E23 pueden ser a mano, con lo que leyó (102), y lleva al editor. Nada se publica solo: un catálogo por aprobar frena la publicación, con `Forms.Draft.CatalogUnavailable`. Es una herramienta que escribe, con la ADR de la E23: el pedido de la persona es la confirmación.
 
 **Los Casos** suman el tipo de entrada «documento».
 
@@ -174,7 +174,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | B6 | Proponer y confirmar | suma a `WhatsAppFlowBuilder.cs`, `FormRecordService.cs` [E14] y al prellenado [E23] | esos mismos | el documento adjunto; revalidar; la respuesta vuelve a su documento; dos veces el mismo documento no carga dos; sin Meta real en el test |
 | B7 | La bandeja | `FormDocumentQueryService.cs`, `FormDocumentReader.cs`; la excepción en `paginado-y-busqueda.md` y `SearchIndexTests` | `FormRecordReader.cs` [E15] | búsqueda con y sin puntos; lo privado fuera de la URL; aislamiento |
 | B8 | Revisar | suma a `FormDocumentService.cs`; `IStructuredInboxAccess.cs`, su apagado y `WhatsAppStructuredInboxAccess.cs` | `FormRecordCorrectionService.cs` [E21] | permisos; sin WhatsApp no se revisa; volver a leer; descartar; pasar al formulario |
-| B9 | Armar con la IA y desde el asistente | `FormProposalService.cs`, `IStructuredFormDrafts.cs`, su apagado y las dos herramientas | `FormDefinitionCopyCreator.cs` [E17], `OrganizationUsersTool` | nada a medias; nada se publica; catálogos por aprobar |
+| B9 | Armar con la IA y desde el asistente | `FormProposalService.cs`, `IStructuredFormDrafts.cs`, su apagado y las dos herramientas | `FormDefinitionCopyCreator.cs` [E17], `OrganizationUsersTool` | nada a medias; nada se publica; catálogos por aprobar, a mano y con filtros; uno por aprobar frena publicar |
 | B10 | Cargar solo si es seguro | `FormAutoLoadPolicy.cs` | `FormRecordCapture` [E14] | cada señal que falta; la seguridad del modelo no cuenta |
 | B11 | Precisión, retención y baja | suma a `FormsAccountDeletionParticipant.cs`; `FormDocumentRetentionWorker.cs` | `InvitationExpiryWorker.cs` | a los 90 días; lo usado sigue a la respuesta |
 | B12 | Rutas y contratos | `P/Modules/Forms/Controllers/BusinessFormDocumentsController.cs`, `Contracts/*`, `FormsContractContributor.cs` | los de la E15 | cada ruta con 401, 403, feature apagada = 404, 409; ejemplos exportados |

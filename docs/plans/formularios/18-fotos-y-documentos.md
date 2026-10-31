@@ -68,7 +68,7 @@ Antes de empezar, en este orden:
 - **recibir:** las fotos, los audios, los documentos y los videos que llegan se bajan, se verifican igual y se ven y se descargan desde el chat. Es lo que la D7 de la E11 dejó para esta etapa. Un sticker o una ubicación siguen diciendo solo su tipo;
 - **un documento** se guarda si es de los que admite Meta: PDF, Word, Excel, PowerPoint o texto. Otro tipo queda como «Mandó un documento», sin descarga;
 - **mandar:** el operador adjunta una foto, un documento, un audio o un video desde el compositor, con los topes de Meta para cada tipo y un texto opcional. Se guarda, se sube a Meta y sale por la cola. Solo dentro de las 24 horas, como el texto libre; fuera, siguen las plantillas;
-- pide el mismo permiso que responder en esa bandeja. El archivo sigue la retención del chat (D4): se borra con el contacto y, en Plataforma, con la conversación;
+- pide el mismo permiso que responder en esa bandeja. El archivo sigue la retención del chat (D4);
 - **no se confunde con un formulario:** los archivos de una respuesta siguen a la respuesta (23), no al chat.
 
 ## Pantallas

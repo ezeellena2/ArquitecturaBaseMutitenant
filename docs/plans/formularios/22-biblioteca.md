@@ -103,7 +103,7 @@ Una categoría se borra solo si ninguna plantilla la usa (`Forms.TemplateCategor
 ### Reglas de ejemplo y diseño del PDF
 
 Se completó el 2026-10-18 con el [resumen](21-reglas-y-aprobacion.md) y los tableros de la E21 (v132). La regla: las reglas viajan en la plantilla sin destinatarios propios de una organización, y la copia las deja para completar.
-- **Al publicar la plantilla:** las reglas se validan con las reglas de la E21 (pedir aprobación es la última acción y solo al recibir, el PDF solo al aprobar, y adjuntarlo pide una acción anterior que lo genere), salvo el rol. Lo mismo vale para el diseño del PDF.
+- **Al publicar la plantilla:** las reglas se validan con las reglas de la E21 (pedir aprobación es la última acción y solo al recibir, el PDF al aprobar, o al recibir si ninguna regla pide aprobación, y adjuntarlo pide una acción anterior que lo genere), salvo el rol. Lo mismo vale para el diseño del PDF.
 - **Al usar la plantilla** (decisiones 30 a 33 de la [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md#5-decisiones-de-producto), del 2026-10-18):
   - **las reglas no se activan solas ni se copian.** No hay columna ni tabla de reglas sugeridas:
     - mientras el formulario no tenga ninguna revisión de reglas, la lectura de reglas de la E21 devuelve además las reglas de ejemplo de la versión de la que salió (B9). Se leen de `FormTemplateVersions.Snapshot`, que es inmutable y no se borra (B2), así que retirar la plantilla no las cambia;

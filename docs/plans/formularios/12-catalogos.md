@@ -155,7 +155,6 @@ Se define en el código, en `Application/Modules/Forms/Catalogs/MembersCatalogSo
 - **Lo que nunca sale:** el teléfono, ni en la vista previa ni en ninguna pantalla.
 - **Filtros:** por etiqueta del contacto (`hasAny`, `hasNone`), con la misma gramática que «Miembros» y los valores como textos de etiqueta, sin distinguir mayúsculas. Hasta 10 condiciones.
 - **Ejecución:** como «Miembros»: lee una fila más que el tope, con un timeout corto, sin traer todos los contactos a memoria.
-- **Un contacto borrado** deja de ofrecerse.
 - **El valor es siempre de texto.**
 
 ## 5. Dominio y errores

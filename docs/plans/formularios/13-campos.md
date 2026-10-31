@@ -1,13 +1,13 @@
 # E13 · Campos de los catálogos (spec)
 
-**Estado:** pendiente · spec de la etapa 13 del bloque (decisiones 34 y 78), con el [formato](plantilla.md) de las etapas. Es la parte de catálogo de lo que ArquitecturaBase llama E2, programado allá con un review de 39 puntos: los campos, sus valores, las columnas al importar y qué se ve en WhatsApp, con la vista previa del catálogo. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E12.
+**Estado:** pendiente · spec de la etapa 13 del bloque (decisiones 34, 78 y 105), con el [formato](plantilla.md) de las etapas. Es la parte de catálogo de lo que ArquitecturaBase llama E2, programado allá con un review de 39 puntos: los campos, sus valores, las columnas al importar y qué se ve en WhatsApp, con la vista previa del catálogo. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E12.
 
 ## Qué leer
 
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E12](12-catalogos.md): C3 (guardar), C6 (valores), C7 a C11 (carga de una vez) y sus secciones de datos, contrato, flujos y archivos. Esta etapa suma a esas piezas, no crea otras.
-2. **Decisiones** de la hoja de ruta: 35 (el contenido no tiene idioma), 36 (títulos de más de 30 caracteres), 42 (hasta 20 campos), 43 (botones y avisos) y 78 (el orden).
+2. **Decisiones** de la hoja de ruta: 35 (el contenido no tiene idioma), 36 (títulos de más de 30 caracteres), 42 (hasta 20 campos), 43 (botones y avisos), 78 (el orden) y 105 (los topes cuentan los activos).
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -29,7 +29,7 @@ Antes de empezar, en este orden:
 ## Qué se construye
 
 - **Campos por opción,** solo en los catálogos a mano:
-  - hasta 20 por catálogo, contando los quitados (42), con su versión y el 409;
+  - hasta 20 activos por catálogo (42 y 105): quitar uno libera su lugar. Con su versión y el 409;
   - cada campo tiene identidad estable, nombre (un solo texto, 35), tipo, reglas, posición y estado. Su clave se arma sola con el nombre, en minúsculas, queda fija después de guardar y no se muestra;
   - **tipos:** Texto, Número entero, Número con decimales, Fecha, Sí/No y «De un catálogo: …», que toma los valores de otro catálogo a mano activo de la misma organización;
   - **reglas:** obligatorio, único y un límite: el largo en un texto (de 1 a 300), y el mínimo y el máximo en un número o una fecha. Obligatorio y único se comprueban sobre las opciones activas.
@@ -91,7 +91,7 @@ Son las rutas de la E12, que suman lo siguiente. Permisos: `formcatalogs.read` p
 
 | Código | Tipo | Cuándo |
 | --- | --- | --- |
-| `Forms.Catalog.TooManyFields` | Validation (`fields`) | más de 20, contando los quitados |
+| `Forms.Catalog.TooManyFields` | Validation (`fields`) | más de 20 activos |
 | `Forms.Catalog.FieldKeyDuplicate` | Validation (`fields[i].name`) | dos campos activos con el mismo nombre |
 | `Forms.Catalog.FieldInvalid` | Validation (`fields[i]`) | tipo, regla o fuente fuera de lo permitido, o un campo en un catálogo que no es a mano |
 | `Forms.Catalog.FieldRemovalNotConfirmed` | Validation (`fields[i]`) | quitar un campo con valores sin confirmarlo |
@@ -170,7 +170,7 @@ Cada punto lleva su test, escrito durante la etapa:
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
-- **Hasta 20 campos por catálogo,** igual para todas las organizaciones (42).
+- **Hasta 20 campos activos por catálogo,** igual para todas las organizaciones (42 y 105).
 - **Títulos de más de 30 caracteres** (36): en un catálogo a mano, el título que arma la presentación se avisa al guardar y se marca en la vista previa.
 - **El contenido no tiene idioma** (35): un solo nombre por campo.
 - **Ningún nombre de campo va en el código:** cada organización arma los suyos.

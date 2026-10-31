@@ -248,7 +248,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Lo propio:** quien solo carga abre «Formularios» y ve la planilla con lo suyo (85).
 - **El armado:** hasta tres preguntas por renglón y zonas plegables; el ancho sale del tipo de pregunta (87).
 - **Listas dependientes,** solo en la web (94).
-- **Formularios solo para la app:** sin número conectado, con una lista dependiente o con un catálogo a mano de más de 200 opciones, se publica sin Meta y se carga desde la web (94, 96 y 98).
+- **Formularios solo para la app:** sin número conectado, con una lista dependiente o con un catálogo a mano más grande de lo que admite WhatsApp, se publica sin Meta y se carga desde la web (94, 96, 98 y 104).
 - **Spec:** [formularios/20-cargar-desde-la-web.md](formularios/20-cargar-desde-la-web.md).
 - **Criterios:**
   - un solo lugar valida y numera; los archivos que se suben se verifican igual que los de WhatsApp;
@@ -320,7 +320,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Lee con IA** lo que mandan los empleados y los clientes (foto, PDF, Word, Excel, ubicación y contacto) y propone el formulario prellenado (70). Confirma una persona, salvo con «Cargar solo si es seguro» y sus tres señales (71).
 - **La «Lectura de documentos»** de un formulario y de una plantilla de la biblioteca.
 - **Pantallas:** la bandeja «Documentos recibidos» y «Armar formulario con la IA».
-- **Armar formularios y catálogos desde el asistente de la web** (75): se le pasa un PDF o se le escribe cómo se quiere, y crea el borrador y los catálogos por aprobar.
+- **Armar formularios y catálogos desde el asistente de la web** (75): se le pasa un PDF o se le escribe cómo se quiere, y crea el borrador y los catálogos por aprobar (102).
 - **Validaciones fijas:** un conjunto cerrado en el código, y la tabla de entidades del BCRA como dato de referencia; lo descartado se borra a los 90 días; la lectura entra en el tope de la organización, con un tope por persona y por día (41).
 - **«Pasar al formulario»** desde la bandeja (99): la respuesta queda a nombre de quien mandó el documento, y dice quién la revisó.
 - **Spec:** [formularios/25-documentos.md](formularios/25-documentos.md).
@@ -460,7 +460,7 @@ Elegidas por el usuario el 2026-10-24, con la [evaluación del traspaso 2](2026-
 42. **Lo que es igual para todas las organizaciones:**
     - los idiomas: español e inglés, sin configurar;
     - los textos del sistema que recibe una persona, en el idioma de su cuenta;
-    - los topes de catálogos: 10.000 opciones, 20 campos y 20 datos de las personas.
+    - los topes de catálogos: 10.000 opciones, 20 campos y 20 datos de las personas, contando los activos (105).
 
     Los datos de las personas son por organización y por miembro. En la v1 no dependen de la empresa ni hay para B2C. El usuario lo reconfirmó el 2026-10-24 con la 49: los clientes no tienen datos de las personas.
 43. **Botones y avisos, en todo el sistema** (`pantallas-y-ui.md` y `formularios.md` del front):
@@ -576,6 +576,17 @@ Elegidas por el usuario el 2026-10-31, al evaluar el traspaso 3 contra este mode
 Elegida por el usuario el 2026-10-31, al escribir la spec de la E25, la recomendada:
 
 99. **«Pasar al formulario» desde la bandeja** (E25): un operador con `formrecords.read` y el permiso de atender esa bandeja carga, con lo que leyó la IA, la respuesta de quien mandó el documento. Queda a nombre de esa persona, por el canal `whatsapp`, igual que «Cargar solo si es seguro», y la respuesta dice quién la revisó. Es la única forma de cargar a nombre de otro: en la web, sigue siendo cada uno a su nombre (73).
+
+Elegidas por el usuario el 2026-10-31, con la lectura de punta a punta de las specs, todas las recomendadas:
+
+100. **Quien solo aprueba** (E21): con permiso para decidir y sin permiso para ver respuestas, ve la cola de lo que espera su aprobación, con el número, el formulario y la fecha, sin los valores, y decide ahí.
+101. **Quien solo carga, con un formulario dado de baja** (E20): su lista suma el filtro «Estado», con «Dados de baja»: ve lo suyo y no puede cargar más. Amplía la 83.
+102. **Los catálogos que arma el asistente desde un documento** (E25): además de los de filtros, puede armar catálogos a mano, con lo que leyó, siempre por aprobar. Mientras no se aprueben, el formulario no se publica.
+103. **Un número en otra cuenta de WhatsApp** (E14): si una cuenta conectada no tiene el formulario, publicar se habilita aunque no haya cambios, y en el chat el formulario aparece con el motivo.
+104. **«Elegir varias» con un catálogo a mano de más de 20 opciones** (E20): va como la 96: si es para empleados o para los dos, se publica solo para la app; si es solo para clientes, no se publica.
+105. **Los topes de 20 campos y de 20 datos de las personas cuentan solo los activos** (E13 y E16): quitar o dar de baja uno libera su lugar. Lo ya respondido queda igual.
+106. **El PDF de un formulario sin aprobación** (E21): si el formulario no pide aprobación, el PDF se arma al recibir la respuesta. Si la pide, solo al aprobar: lo que espera aprobación no tiene PDF.
+107. **Un contacto de WhatsApp no se borra:** hoy una organización no tiene cómo, y no entra al plan. Las specs no contemplan un contacto borrado. Si un cliente sin cuenta pide que borren sus datos, no hay cómo hacerlo desde la app.
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 

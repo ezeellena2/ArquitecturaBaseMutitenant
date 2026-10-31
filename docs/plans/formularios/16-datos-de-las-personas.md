@@ -1,13 +1,13 @@
 # E16 · Datos de las personas y filtros por destinatario (spec)
 
-**Estado:** pendiente · spec de la etapa 16 del bloque (decisiones 34 y 78), con el [formato](plantilla.md) de las etapas. Es la segunda mitad de lo que ArquitecturaBase llama E2, entera: los datos de las personas y los filtros que los usan, juntos en una etapa, así nada queda sin quién lo use. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E15.
+**Estado:** pendiente · spec de la etapa 16 del bloque (decisiones 34, 78 y 105), con el [formato](plantilla.md) de las etapas. Es la segunda mitad de lo que ArquitecturaBase llama E2, entera: los datos de las personas y los filtros que los usan, juntos en una etapa, así nada queda sin quién lo use. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E15.
 
 ## Qué leer
 
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E13](13-campos.md): datos, contrato y las lecciones; la [E14](14-formularios.md): T22, T23, la §6b y `publication-checks`; y la [E15](15-respuestas.md): «Columnas» y los campos sellados.
-2. **Decisiones** de la hoja de ruta: 35, 37, 42, 43, 50 y 78.
+2. **Decisiones** de la hoja de ruta: 35, 37, 42, 43, 50, 78 y 105.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -29,7 +29,7 @@ Antes de empezar, en este orden:
 ## Qué se construye
 
 **Los datos de las personas,** como «Zona»:
-- los define cada organización: nombre (un solo texto, 35), tipo (Texto o «De un catálogo», con una fuente a mano y activa), posición, estado y versión. Hasta 20, contando los dados de baja (42). Se dan de baja y se reactivan, sin borrarse;
+- los define cada organización: nombre (un solo texto, 35), tipo (Texto o «De un catálogo», con una fuente a mano y activa), posición, estado y versión. Hasta 20 activos (42 y 105): dar de baja uno libera su lugar. Se dan de baja y se reactivan, sin borrarse;
 - son de la organización y del miembro, nunca de la cuenta (42): una persona puede ser «Centro» en una organización y no tener el dato en otra;
 - un dato que usa un filtro del borrador o de la versión activa de un formulario no cambia de tipo ni de fuente, ni se da de baja. El error dice qué formulario y qué pregunta;
 - cambiar el tipo o la fuente de un dato con valores pide confirmar cuántos, y borra esos valores;
@@ -126,7 +126,7 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]` y `[Feat
 | --- | --- | --- |
 | `Forms.PersonData.NotFound` | NotFound | el dato es ajeno o no existe |
 | `Forms.PersonData.MemberNotFound` | NotFound | la persona no es miembro de la organización |
-| `Forms.PersonData.TooMany` | Conflict | más de 20, contando los dados de baja |
+| `Forms.PersonData.TooMany` | Conflict | más de 20 activos, también al reactivar |
 | `Forms.PersonData.NameDuplicate` | Validation (`name`) | dos datos con el mismo nombre |
 | `Forms.PersonData.SourceInvalid` | Validation (`catalogId`) | la fuente no es un catálogo a mano activo de la organización |
 | `Forms.PersonData.InUse` | Conflict | un dato en uso: trae `uses[{formId, formName, questionId, questionLabel, state}]` |
@@ -221,7 +221,7 @@ Cada punto lleva su test, escrito durante la etapa:
 ## Decisiones tomadas (no se vuelven a preguntar)
 
 - **Por organización y por miembro** (42). Un dato no depende de la empresa.
-- **Hasta 20 datos de las personas,** iguales para todas las organizaciones (42).
+- **Hasta 20 datos activos de las personas,** iguales para todas las organizaciones (42 y 105).
 - **Los avisos de publicar** no frenan (37).
 - **Un formulario para los dos** con un filtro según quien lo recibe se publica con un aviso, y se manda solo a empleados.
 - **La pestaña «Datos»** se ve con `users.manage`: quien solo lee las ve en la tabla, con los permisos de esa pantalla.

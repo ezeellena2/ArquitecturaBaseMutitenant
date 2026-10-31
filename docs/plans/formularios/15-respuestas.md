@@ -46,7 +46,7 @@ Antes de empezar, en este orden:
 - **los campos sellados** van en subcolumnas después de su pregunta, «pregunta · campo». Solo se muestran: no se ordenan, ni filtran, ni cuentan. «Columnas» las prende o las apaga;
 - se ordena por N°, Recibida y cada pregunta, menos «elegir varias». Una opción ordena por su texto sellado. Cargó no se ordena, porque el nombre no vive en Forms.
 
-**Los nombres:** Forms guarda ids. El de un empleado y sus empresas salen del lector de miembros; el de un cliente, de `IStructuredContactSource`, por lote y una vez por página. Un miembro que se fue conserva el nombre; sin dato, «Persona sin información»; un cliente sin WhatsApp o con el contacto borrado dice «Cliente». Forms nunca lee tablas de WhatsApp.
+**Los nombres:** Forms guarda ids. El de un empleado y sus empresas salen del lector de miembros; el de un cliente, de `IStructuredContactSource`, por lote y una vez por página. Un miembro que se fue conserva el nombre; sin dato, «Persona sin información»; un cliente sin WhatsApp dice «Cliente». Forms nunca lee tablas de WhatsApp.
 
 **Filtros:**
 - condiciones unidas con «y», con la gramática de la E12 (C5): texto `contains` y `equals`; número y fecha `equals`, `gte` y `lte`; elegir una y sí/no `in`; **elegir varias `anyOf`**; y en todos, `answered`, `unanswered` y `notAsked`;
