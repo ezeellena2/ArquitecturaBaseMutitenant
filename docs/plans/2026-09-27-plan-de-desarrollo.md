@@ -29,7 +29,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 17 · Ciclo de vida y copiar | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/17-ciclo-de-vida.md) |
 | 18 · Fotos y documentos | Pendiente. Resumen listo, con los archivos del chat; un tablero por dibujar | [Resumen](formularios/18-fotos-y-documentos.md) |
 | 19 · Condiciones, cálculos y líneas | Pendiente. Resumen listo; tableros por dibujar, y antes de planificar, la prueba con Meta | [Resumen](formularios/19-condiciones-calculos-y-lineas.md) |
-| 20 · Cargar desde la web | Pendiente. Resumen listo; un tablero por dibujar | [Resumen](formularios/20-cargar-desde-la-web.md) |
+| 20 · Cargar desde la web | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/20-cargar-desde-la-web.md) |
 | 21 · Reglas, aprobación y PDF | Pendiente. Resumen listo; se redibujan 4 tableros | [Resumen](formularios/21-reglas-y-aprobacion.md) |
 | 22 · Biblioteca de plantillas | Pendiente. Spec lista; se redibujan 12 tableros y hay uno nuevo por dibujar | [Spec](formularios/22-biblioteca.md) |
 | 23 · Asistente con Casos | Pendiente. Resumen listo; tableros por dibujar | [Resumen](formularios/23-asistente.md) |
