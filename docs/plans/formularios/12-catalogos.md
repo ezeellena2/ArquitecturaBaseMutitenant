@@ -117,7 +117,7 @@ Siguen las reglas del repo y, cuando hay más de una forma, la más simple. Las 
 
 Un catálogo a mano tiene hasta **10.000 opciones**, entre activas y dadas de baja, comprobado bajo el bloqueo del catálogo.
 
-**FormCatalogWorkLeases** (técnica, sin auditoría): `TenantId`, `UserId` (clave), `Kind` (`Preview`, `Apply` o `Export`) y `ExpiresAtUtc`. Es la barrera de C11: se toma con un `INSERT … ON CONFLICT` que pisa solo una vencida, y se suelta al terminar.
+**FormWorkLeases** (técnica, sin auditoría): `TenantId`, `UserId` (clave), `Kind` (`Preview`, `Apply` o `Export`) y `ExpiresAtUtc`. Es la barrera de C11: se toma con un `INSERT … ON CONFLICT` que pisa solo una vencida, y se suelta al terminar.
 
 ## 4. La fuente «Miembros»
 
@@ -265,8 +265,8 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 | WhatsApp: la entrada de mensajes completa el nombre de un contacto sin nombre con el de su perfil (C14) | `I/Modules/WhatsApp/WhatsAppInboundProcessor.cs` |
 | `A/Interfaces/Integrations/StructuredData/IStructuredContactSource.cs`, su modelo y `I/StructuredData/DisabledStructuredContactSource.cs`; en WhatsApp, `WhatsAppStructuredContactSource.cs` | `A/Interfaces/Integrations/Messaging/ILoginCodeChannel.cs`, `I/Messaging/Email/EmailLoginCodeChannel.cs` y `A/Modules/WhatsApp/Services/WhatsAppLoginCodeChannel.cs` |
 | `A/Modules/Forms/Catalogs/MembersCatalogSource.cs` (columnas, operadores y versión) | — (es una definición, sin servicios) |
-| `A/Modules/Forms/Interfaces/Persistence/IFormCatalogRepository.cs`, `IFormCatalogReader.cs`, `IFormCatalogWorkLease.cs`, `UniqueKeys.cs` | `A/Modules/Assistant/Interfaces/Persistence/` |
-| `I/Modules/Forms/Persistence/FormsModelContributor.cs`; `Configurations/FormCatalogConfiguration.cs`, `FormCatalogItemConfiguration.cs`, `FormCatalogWorkLeaseConfiguration.cs`; `Readers/FormCatalogReader.cs` | `I/Modules/Assistant/Persistence/` (`AssistantModelContributor.cs`) |
+| `A/Modules/Forms/Interfaces/Persistence/IFormCatalogRepository.cs`, `IFormCatalogReader.cs`, `IFormWorkLease.cs`, `UniqueKeys.cs` | `A/Modules/Assistant/Interfaces/Persistence/` |
+| `I/Modules/Forms/Persistence/FormsModelContributor.cs`; `Configurations/FormCatalogConfiguration.cs`, `FormCatalogItemConfiguration.cs`, `FormWorkLeaseConfiguration.cs`; `Readers/FormCatalogReader.cs` | `I/Modules/Assistant/Persistence/` (`AssistantModelContributor.cs`) |
 | `I/Persistence/Migrations/<fecha>_FormCatalogs.cs` (con las restricciones diferidas en `Sql`, en una línea y sin `\r`) y `<fecha>_SystemRoleFormCatalogPermissions.cs` | `20261010011328_AssistantModule.cs`, `20261010203618_SystemRoleAssistantPermissions.cs` |
 | `P/Modules/Forms/Controllers/BusinessFormCatalogsController.cs`, `Contracts/*HttpRequest.cs` | `P/Modules/Assistant/Controllers/BusinessAssistantController.cs` |
 | `IdentityAccessTests`: el `MemberDirectoryReader` en la lista cerrada del núcleo | las entradas del núcleo de esa guarda |

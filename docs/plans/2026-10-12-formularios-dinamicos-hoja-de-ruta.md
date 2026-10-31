@@ -159,7 +159,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 
 - **Campos por opción** (hasta 20, 42), con tipo y reglas, y valores en jsonb con índice GIN; columnas al pegar, importar y exportar.
 - **Qué se ve en WhatsApp:** qué campos van al título y a la descripción de cada opción, con la vista previa del catálogo (36).
-- **Resumen:** [formularios/13-campos.md](formularios/13-campos.md).
+- **Spec:** [formularios/13-campos.md](formularios/13-campos.md).
 - **Criterios:** las cuatro lecciones de gravedad alta del review E2 de allá, cada una con su test (están en el resumen).
 
 ### E14 · Formularios: crear, publicar, mandar y recibir (AB 1)
@@ -186,7 +186,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **El detalle:** la vista rápida al costado y la pantalla completa, con ↑ ↓ en el orden de la planilla.
 - **Excel** con los filtros aplicados; «elegir varias» unido con «; ».
 - **El tablero de cada formulario** (57): gráficos armados solos desde los tipos de las preguntas, ajustables por cada persona.
-- **Resumen:** [formularios/15-respuestas.md](formularios/15-respuestas.md).
+- **Spec:** [formularios/15-respuestas.md](formularios/15-respuestas.md).
 - **Criterios:**
   - para exportar, una consulta de ids ordenados e hidratación por lotes; una exportación a la vez por persona;
   - la misma regla en memoria y en SQL («sin respuesta» sobre una pregunta que no existía);
