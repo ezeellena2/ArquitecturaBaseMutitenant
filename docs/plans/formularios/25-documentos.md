@@ -54,7 +54,7 @@
     2. las validaciones fijas de los datos elegidos dan bien, y no es un duplicado;
     3. ese formulario tiene sus últimas 20 cargas confirmadas sin correcciones en esos datos.
 
-    **Nunca se usa la seguridad que declara el modelo.** Si falta una señal, se propone y confirma una persona, como siempre. A la persona le llega «Cargué tu transferencia de $150.000 (REC-000123). Si algo está mal, avisá», y en la bandeja queda «Cargada automáticamente». Si avisa un error, un operador corrige la respuesta (58) mientras no esté decidida. La respuesta sigue sus reglas, su aprobación y su PDF;
+    **Nunca se usa la seguridad que declara el modelo.** Si falta una señal, se propone y confirma una persona, como siempre. A la persona le llega «Cargué tu transferencia de $150.000 (REC-000123). Si algo está mal, avisá», y en la bandeja queda «Cargada automáticamente». Si avisa un error, un operador corrige la respuesta (91). La respuesta sigue sus reglas, su aprobación y su PDF;
   - **Cómo mejora con el uso:** cada corrección queda registrada (el dato propuesto, el confirmado y quién lo corrigió) y se suma como ejemplo a «Cómo reconocerlo». Se mide la precisión por formulario y por dato. No se entrena ningún modelo.
   - **Lo que va al proveedor de IA:** solo el documento preparado y las preguntas del formulario candidato. Se registra qué se mandó (hash y tamaño), sin el contenido. Lo leído es un dato, nunca una instrucción.
   - **Costos:** la lectura entra en el tope mensual de IA de la organización (ADR 0051), con un tope por persona y por día (41). Al llegar a un tope, el documento queda en la bandeja sin leerse.
