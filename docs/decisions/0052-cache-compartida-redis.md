@@ -1,6 +1,6 @@
 # ADR 0052 · Caché compartida en Redis
 
-**Estado:** aceptada como decisión técnica, 2026-10-16; implementada en la E9. Ejecuta el alcance de Redis de la [hoja de ruta](../plans/2026-09-27-plan-de-desarrollo.md#etapa-9-endurecimiento).
+**Estado:** aceptada como decisión técnica, 2026-10-16; implementada en la E9. Ejecuta el alcance de Redis de esa etapa.
 
 ## Contexto
 
@@ -44,7 +44,7 @@ Los permisos efectivos se obtienen con lecturas agrupadas. `HasPermissionAsync` 
 
 **Infraestructura:** recurso Redis en `AppHost.cs`, volumen persistente en desarrollo normal; recorrido aislado y tests con Redis efímero propio. Parámetro secreto `redis-password`, cargado por los mecanismos existentes, sin valor en el repo; conexión por `ConnectionStrings:cache`. En producción se exige Redis administrado con TLS y credenciales externas. Readiness (`/health`) incluye Redis y falla cuando no está disponible; liveness (`/alive`) no depende de él. Las rutas de negocio conservan su fallback de lectura. Las réplicas comparten también las claves de Data Protection necesarias para sus cookies; E9 documenta el requisito y lo verifica en el host de pruebas, sin adelantar el despliegue de E10.
 
-Los contadores de límites de pedidos usan el mismo Redis, con prefijo y expiración propios; son admisiones atómicas, no entradas HybridCache ni una fuente de autorización. Su contrato y comportamiento de degradación están en el [plan de E9](../plans/2026-10-16-etapa-9-endurecimiento.md).
+Los contadores de límites de pedidos usan el mismo Redis, con prefijo y expiración propios; son admisiones atómicas, no entradas HybridCache ni una fuente de autorización. Su contrato y comportamiento de degradación están en [cuotas](../rules/cuotas.md).
 
 ### Ajustes al implementarla (E9, B2, 2026-10-16)
 

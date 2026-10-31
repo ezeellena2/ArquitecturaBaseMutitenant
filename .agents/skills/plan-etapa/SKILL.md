@@ -18,7 +18,7 @@ El plan tiene que poder ejecutarse sin adivinar. Las decisiones de producto las 
    - las ADR de `docs/decisions/`, con su índice;
    - el lienzo vigente (`docs/design/lienzo/` del front) y sus recorridos guiados (`docs/design/recorridos/`);
    - la guía `docs/guides/etapa-en-paralelo.md`;
-   - como modelo de las tres partes, del largo (unas 4.000 palabras) y del texto para cada chat, el plan de la 11 (`docs/plans/2026-10-13-etapa-11-whatsapp.md`).
+   - como modelo de las tres partes, del largo (unas 4.000 palabras) y del texto para cada chat, el plan de la 11, que ya se retiró (`git show ed39e63e:docs/plans/2026-10-13-etapa-11-whatsapp.md`).
 3. **Si falta un tablero, pedilo antes de escribir el plan.** Lo dibuja «Multitenant · Diseño», la única que toca el lienzo. Si no le podés escribir, dale el texto al usuario.
 4. **Contrastá la spec con el código real.** Revisá cada fila de «Qué verificar al arrancar». Si la spec ya trae contrato, datos y pasos, el plan no los reescribe: los toma como están y anota solo lo que cambió.
 5. **Escribí el plan en `docs/plans/<fecha>-etapa-<n>-<tema>.md`, corto (unas 4.000 palabras como mucho, sin historial; `AGENTS.md`, «Velocidad y cierre liviano») y con estas secciones:**

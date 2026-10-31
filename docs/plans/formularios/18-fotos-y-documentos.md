@@ -7,7 +7,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T5, T21, la §6, puntos 6 a 8, la §14 y la §16; la [E15](15-respuestas.md): columnas, filtros, Excel y detalle; y la [E17](17-ciclo-de-vida.md): copiar.
-2. **Decisiones** de la hoja de ruta: 23, 35, 42, 43, 48 y 78. Del [plan de la E11](../2026-10-13-etapa-11-whatsapp.md): D4 y D7.
+2. **Decisiones** de la hoja de ruta: 23, 35, 42, 43, 48 y 78. De [WhatsApp](../../features/whatsapp.md#decisiones-del-usuario-e11): D4 y D7.
 3. **Fichas:**
 
    | Ficha | Por qué acá |

@@ -40,4 +40,4 @@
 - `PlatformRateLimitsTests` (E9)
 
 ## Detalle
-[Plan E9](../plans/2026-10-16-etapa-9-endurecimiento.md) · [ADR 0052](../decisions/0052-cache-compartida-redis.md) · [backend.md §17](../architecture/backend.md#17-logging-openapi-health-rate-limiting-caché)
+Valores iniciales: `PlatformRateLimits.Initial` · [ADR 0052](../decisions/0052-cache-compartida-redis.md) · [backend.md §17](../architecture/backend.md#17-logging-openapi-health-rate-limiting-caché)

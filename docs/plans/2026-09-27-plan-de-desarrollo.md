@@ -5,7 +5,7 @@
 Orden vigente: **8 → 8b → 11 → 9 → 10 → base → 12 → 13 → 14 → 15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25**. [AGENTS.md](../../AGENTS.md) define el modo rápido:
 contrato primero, programación por dueños y una sola puerta. Tras un arreglo se verifica sólo lo afectado.
 La tabla indica el estado; las reglas y conducta viven en fichas, ADR y features.
-El historial se recupera con git show historial-docs:<ruta>, sin cargar planes cerrados. Los planes y la revisión retirados el 2026-10-13 (E8, E8b, correctivos y limpieza) se encuentran con git log --diff-filter=D -- <ruta> y se leen con git show <commit>^:<ruta>.
+El historial se recupera con git show historial-docs:<ruta>, sin cargar planes cerrados. Los planes y la revisión retirados el 2026-10-13 (E8, E8b, correctivos y limpieza) y el 2026-10-31 (E9 y E11) se encuentran con git log --diff-filter=D -- <ruta> y se leen con git show <commit>^:<ruta>.
 
 | Etapa | Estado | Fuente vigente |
 |---|---|---|
@@ -19,8 +19,8 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 7 · Público/Personal | Cerrada | [Sitio público](../features/sitio-publico.md), [Personal](../features/personal.md) |
 | 8 · WhatsApp de plataforma | Cerrada | [WhatsApp](../features/whatsapp.md), [Identidad](../features/identidad.md) |
 | 8b · Asistente | Cerrada | [ADR 0048](../decisions/0048-asistente.md), [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md), [Asistente](../features/asistente.md) |
-| 11 · WhatsApp de atención | Cerrada el 2026-10-21. El alta de una organización con un número real pasó a la I1 de la 10 | [Plan](2026-10-13-etapa-11-whatsapp.md), [ADR 0038](../decisions/0038-whatsapp-de-atencion.md) |
-| 9 · Endurecimiento | Cerrada | [Plan](2026-10-16-etapa-9-endurecimiento.md), [ADR 0052](../decisions/0052-cache-compartida-redis.md) |
+| 11 · WhatsApp de atención | Cerrada el 2026-10-21. El alta de una organización con un número real pasó a la I1 de la 10 | [WhatsApp](../features/whatsapp.md), [ADR 0038](../decisions/0038-whatsapp-de-atencion.md) |
+| 9 · Endurecimiento | Cerrada | [Identidad](../features/identidad.md), [Plataforma](../features/plataforma.md), [cuotas](../rules/cuotas.md), [caché](../rules/cache.md), [ADR 0052](../decisions/0052-cache-compartida-redis.md) |
 | 10 · Operación | Pendiente. El plan corto está listo, con las decisiones del usuario; la F5 de botones pasó a la base de la 12 | [Plan](2026-10-16-etapa-10-despliegue.md), [manual de operación](../operations/runbook.md) |
 | Base de la 12 | Pendiente. Spec lista: lo que se copia de la maqueta, con los botones (la F5 de la 10), la campana en el núcleo y la letra al 85 %, que confirmó el usuario | [Spec](formularios/base-de-la-12.md) |
 | 12 · Catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v141 y al día en la v145 | [Spec](formularios/12-catalogos.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
@@ -37,45 +37,6 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 23 · Asistente con Casos | Pendiente. Spec lista; tableros a revisar y por dibujar | [Spec](formularios/23-asistente.md) |
 | 24 · Varios asistentes | Pendiente. Spec lista; tableros por dibujar | [Spec](formularios/24-varios-asistentes.md) |
 | 25 · Documentos por WhatsApp | Pendiente. Spec lista; tableros por dibujar, y antes de planificar, la prueba con Meta del archivo precargado | [Spec](formularios/25-documentos.md) |
-
-## Etapa 11: WhatsApp de atención
-
-La plataforma y cada organización atienden con el mismo módulo: alta de números por Meta, bot, equipos, bandejas de Clientes e Internos, contactos con consentimiento, plantillas y difusiones, y la fuente productiva de «Mis mensajes con empresas». El [plan corto](2026-10-13-etapa-11-whatsapp.md) tiene el contrato, las tareas, los datos de Meta verificados el 2026-10-13 y las decisiones del usuario.
-
-## Etapa 9: endurecimiento
-
-- **TOTP obligatorio para operadores** (lienzo v117, front `eb5626ea`). Hasta esta etapa, el operador del seed entra sin segundo factor.
-  - **Ingreso y M-Ingreso:** los estados «Operador: …». Son: segundo factor; código incorrecto; demasiados códigos incorrectos, con el mismo bloqueo de la cuenta (`Identity.Account.LockedOut`, 15 minutos); código de recuperación; recuperación incorrecta («Ese código no es válido o ya lo usaste.»); configurar el autenticador; su código incorrecto, y guardar los códigos. Nada menciona al operador antes del código (0043).
-  - **Reautenticación reciente** antes de las acciones sensibles de Plataforma: operadores, cuentas, recuperaciones, organizaciones, documentos legales y configuración.
-    - Se hace en «Confirmá que sos vos», con el código de la app o uno de recuperación.
-    - La ventana de «reciente» la fija el plan de la etapa.
-    - Las personas siguen sin código de confirmación en Mi cuenta (0045).
-    - Lo aprobó el usuario el 2026-10-10.
-  - **Restablecer el autenticador** de un operador, desde el ⋮ de Cuenta-Plat y con motivo.
-    - Cierra sus sesiones y anula sus códigos de recuperación.
-    - Al volver a entrar, el operador lo configura de nuevo.
-    - Lo aprobó el usuario el 2026-10-10.
-- **Caché en Redis.** Hasta esta etapa, `HybridCache` vive en la memoria de la API. Acá **toda la caché pasa a Redis**, pensada antes de programar en una ADR que fija qué se cachea, cuánto dura, quién invalida y cuándo:
-  - **Redis en el AppHost**, junto con PostgreSQL, la API y el front, con volumen persistente y contraseña en user-secrets; en producción, Redis administrado con TLS.
-  - **Ningún dato viejo después de una invalidación.** `HybridCache` usa Redis como caché compartida por todas las instancias de la API. La ADR decide si queda una capa local corta con su invalidación propagada por Redis o si se lee siempre de Redis. El estado de organizaciones, membresías y permisos se ve invalidado en todas las instancias al instante.
-  - **Claves e invalidación:** las claves siguen saliendo de `CacheKeys` (`t:`, `s:`, `u:`, `p:`), con un prefijo de aplicación y ambiente para compartir un Redis. Se invalida por etiquetas, después del commit.
-  - **Qué se guarda:** serialización explícita y versionada, para que un cambio de forma del dato no rompa al leer una entrada vieja. Nunca se cachean secretos, tokens ni correos o teléfonos completos.
-  - **Si Redis se cae:** la app sigue leyendo de PostgreSQL, con log y métrica, sin devolver errores. El health check de Redis entra en la preparación (readiness).
-  - **Rate limit compartido** entre instancias, sobre el mismo Redis.
-  - **Documentación:** la estrategia va en una tabla de `backend.md` §17 y en la ficha nueva `docs/rules/cache.md` con su test.
-  - **Tests con Testcontainers Redis:** dos instancias de la API contra el mismo Redis (se invalida en una y la otra lee el valor nuevo); Redis caído → la app responde; una clave `t:` de una organización nunca se lee desde otra.
-- Rate limit por tenant, por identidad y por IP (más estricto en las páginas públicas); cuotas en `PlatformSettings`.
-- Security headers, CSP estricta y revisión de cookies.
-- OpenTelemetry con `tenant.id` y `tenant.kind`.
-- `/security-review` y **fuzz de aislamiento**: IDs cruzados en todas las rutas, con los dos accesos, en datos privados, públicos y compartidos, y por subdominio.
-- **Heredado de los correctivos del 12/10 y de la revisión de la 8b** (se difirió a esta etapa):
-  - `PermissionService` hace una consulta por empresa en cada chequeo de Business (2 + N), aunque el permiso pedido no se proyecte desde las empresas. Proyectar solo los permisos de `Permissions.OrganizationProjectedFromCompany` y cachear junto con la caché de permisos.
-  - Los tiempos de seguridad fijos (tokens, cookie, idempotencia, enlace de ingreso, lote de la baja) y el límite del webhook de WhatsApp pasan a opciones con `ValidateOnStart`, sin cambiar sus valores.
-  - Un formateador en el CI, aplicado en un commit propio que reformatee todo el repo.
-  - Límites de pedidos en el asistente: consultas fijas, creación de conversaciones y el `PUT` de configuración con clave nueva (llama a Anthropic y no debe servir para probar claves).
-  - El cliente de Anthropic usa `IHttpClientFactory`, como WhatsApp, en vez de un `HttpClient` por llamada.
-  - Una guarda de arquitectura: toda acción con modo de idempotencia durable declara `[IdempotencyDurable]`; hoy el filtro la deja pasar sin reserva si falta.
-  - `AssistantOrganizationPolicy` conserva `DailyMessageLimit`, `MonthlyBudget` y `RetentionDays`, que nadie lee: se quitan con su migración.
 
 ## Etapa 10: despliegue y operación
 

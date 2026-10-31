@@ -27,6 +27,10 @@
 
 El [panorama vigente](architecture/backend.md) describe la arquitectura; los pendientes de esta sección se conservan acá.
 
+## Observaciones de E9 para etapas posteriores
+
+- La barra del teléfono se va con el scroll en las pantallas largas. Es anterior a la E9 y quedó afuera de esa etapa.
+
 ## Cuando una pantalla use la pieza
 
 - **2.** DateField, DateTimeField y TimeField no se pueden completar desde el teclado de un teléfono

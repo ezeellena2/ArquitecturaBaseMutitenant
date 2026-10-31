@@ -151,6 +151,23 @@ La reserva se confirma únicamente con un enqueue real en la UoW; rollback o aus
 
 Las mismas claves, como variables de entorno con doble guion bajo (`Email__Smtp__Password`, `DataProtection__Certificate__Base64`, `WhatsApp__AccessToken`…), en el gestor de secretos del proveedor. Nunca en `appsettings.Production.json`. `DataProtection:Certificate:Base64` es un PFX RSA distinto de los certificados OIDC: el proceso necesita su clave privada para leer el anillo persistido en `platform.DataProtectionKeys`; conservá el mismo certificado en todas las réplicas y en los reinicios. Perderlo impide leer cookies y payloads cifrados con esas claves. `ProtectKeysWithCertificate` cifra las claves **nuevas**; una instalación que ya haya escrito claves sin cifrar necesita tratar ese anillo antes de exponer sus backups. La lista completa de lo obligatorio fuera de Development estará en `runbook.md` (E10).
 
+## 7. Meta: la app y el alta embebida
+
+La app de desarrollo es «Plantilla Multitenant» (`WhatsApp:AppId` 1482265200631609), **publicada**, en live mode con acceso estándar: sin publicar solo recibe los webhooks de prueba del panel, y con acceso estándar conectan números solo quienes tienen rol en la app. La producción sigue el [manual de operación](runbook.md).
+
+- **Alta embebida:** caso de uso WhatsApp y Facebook Login for Business, con una configuración creada desde la plantilla de Embedded Signup. Su `config_id` va en `WhatsApp:EmbeddedSignupConfigId`; el de desarrollo es 2541931872886066, y su acceso vence a los 60 días.
+- **OAuth:** los seis interruptores, «Allowed domains» con `localtest.me` y «Valid OAuth redirect URIs» con `https://localtest.me:5174/`, porque la ventana la abre el front.
+- **Webhook:** `https://<túnel>/webhooks/whatsapp`, con `messages`, `account_update`, `message_template_status_update`, `template_category_update`, `phone_number_name_update`, `history`, `smb_app_state_sync` y `smb_message_echoes`.
+- **Para probar plantillas y difusiones:** un número real libre y un medio de pago en esa cuenta.
+
+Datos de la documentación oficial de Meta, verificados el 2026-10-13:
+- **Embedded Signup v4** (v2 y v3 se retiran el 15/10/2026): `extras` vacío y productos elegidos en la configuración de Facebook Login for Business. El evento `WA_EMBEDDED_SIGNUP` devuelve `FINISH` (con `phone_number_id` y `waba_id`), `CANCEL` (con `current_step`) o `ERROR` (con `error_id`); cerrar en la última pantalla no es cancelar. El `code` vive 30 segundos: se canjea en el servidor, y después van `POST /<WABA_ID>/subscribed_apps` y `POST /<PHONE_ID>/register` con un PIN de 6 dígitos.
+- **Coexistencia:** `featureType: whatsapp_business_app_onboarding`, app WhatsApp Business 2.24.17 o más nueva, sin `/register`, 20 mensajes por segundo.
+- **Precios desde el 01/10/2026,** por mensaje, según país y categoría. Argentina, en USD: marketing 0,0618; utility, authentication y service 0,0260. Cada número tiene 1.000 mensajes de servicio entregados gratis por mes, que no se acumulan y se reinician a las 00:00 de la zona de la cuenta. Sin medio de pago, Meta entrega los de servicio solo dentro de esos 1.000, y las plantillas siempre lo exigen (error 131042).
+- **Medio de pago:** `GET /<WABA_ID>?fields=primary_funding_id,timezone_id`; sin `primary_funding_id` no hay. `health_status` no lo informa.
+- **Alta de organizaciones:** 10 nuevas cada 7 días, y 200 con empresa verificada y App Review. Access Verification ya no se exige. Cada organización le paga a Meta con su tarjeta.
+- **Graph API:** vigente la v26.0; la v25.0 vence el 29/07/2028.
+
 ## Asistente
 
 La [configuración del asistente](../features/asistente.md) usa las claves y opciones siguientes. El asistente no usa plantillas de Meta ni cambia la URL del túnel o del webhook de WhatsApp.

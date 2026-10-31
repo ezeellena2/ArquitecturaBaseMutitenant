@@ -1,6 +1,6 @@
 # ADR 0038 · WhatsApp de atención: plataforma, organizaciones y personas
 
-Estado: aceptada el 2026-10-03, pantalla por pantalla con el dueño del producto. La fuente visual es la página «Organización · WhatsApp» del lienzo v69 (`../ArquitecturaBaseMutitenantFront/docs/design/lienzo`, tableros `WA-*` para la compu y `M-WA-*` para el teléfono), y el detalle de cada elección está en el tablero «Criterio · Decisiones por pantalla». El plan ejecutable es [la Etapa 11](../plans/2026-10-13-etapa-11-whatsapp.md).
+Estado: aceptada el 2026-10-03, pantalla por pantalla con el dueño del producto. La fuente visual es la página «Organización · WhatsApp» del lienzo v69 (`../ArquitecturaBaseMutitenantFront/docs/design/lienzo`, tableros `WA-*` para la compu y `M-WA-*` para el teléfono), y el detalle de cada elección está en el tablero «Criterio · Decisiones por pantalla». Lo construido está en [WhatsApp](../features/whatsapp.md).
 
 ## Contexto
 
@@ -75,7 +75,7 @@ Lo decidió el dueño del producto al repasar la etapa:
 
 ### Precisión del 2026-10-13 (plan de la Etapa 11)
 
-Lo decidió el dueño del producto con los datos de Meta verificados ese día ([plan](../plans/2026-10-13-etapa-11-whatsapp.md)):
+Lo decidió el dueño del producto con los datos de Meta verificados ese día ([datos de Meta](../operations/configuracion.md#7-meta-la-app-y-el-alta-embebida)):
 - **Pago:** desde el 01/10/2026 Meta cobra por mensaje y da 1.000 mensajes de servicio entregados gratis por número y por mes. Sin medio de pago, el número **responde hasta esos 1.000** y no manda plantillas ni difusiones (reemplaza «no puede ni responder»). La pantalla de números muestra siempre «N de 1.000 gratis este mes».
 - **Vínculo con la cuenta:** se confirma con un botón del bot, que solo se ofrece si el número es un teléfono verificado de una cuenta. «Mensajes» muestra la conversación desde que se vinculó; un número reciclado nunca muestra mensajes del dueño anterior.
 - **Permisos:** son de organización, no por empresa. Solo el Dueño los recibe de entrada. «Atender clientes» incluye ver, editar e importar contactos y cambiar el consentimiento a mano.
