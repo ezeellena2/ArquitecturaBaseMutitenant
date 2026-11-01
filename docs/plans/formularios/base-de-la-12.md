@@ -10,7 +10,7 @@ Antes de empezar, en este orden:
 2. **Fichas:** [textos-y-traducciones](../../rules/textos-y-traducciones.md), [api-http](../../rules/api-http.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [permisos](../../rules/permisos.md), [tests](../../rules/tests.md) y, del front, `pantallas-y-ui.md`, `formatos.md`, `formularios.md`, `paginado-y-listados.md` y `textos-y-traducciones.md`.
 3. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 4. **La maqueta,** en `../MaquetaMultitenant`: es la fuente de esta etapa, con sus commits del 25 y el 26/10. Se copia del código de pantalla y de las piezas compartidas; su back de mentira no es contrato.
-5. **El lienzo:** `Campana`, `M-Campana`, `M-Campana-Personal`, `Otro-Acceso` y `Otro-Acceso-Persona`, y los tableros de cada pantalla que cambia.
+5. **El lienzo:** `Campana`, `M-Campana`, `Campana-Plat`, `M-Campana-Plat`, `M-Campana-Personal`, `Otro-Acceso` y `Otro-Acceso-Persona`, y los tableros de cada pantalla que cambia.
 
 ## Qué se construye
 
@@ -52,7 +52,7 @@ Los tableros están en el lienzo v145 y al día, salvo lo que diga cada fila. **
 
 | Tablero | Qué muestra |
 | --- | --- |
-| `Campana`, `M-Campana` y `M-Campana-Personal` | la campana, con los avisos de esta etapa, y la pantalla «Avisos» del teléfono. Lo que hoy muestra de etapas posteriores sale: cada una dibuja su versión |
+| `Campana`, `M-Campana`, `Campana-Plat`, `M-Campana-Plat` y `M-Campana-Personal` | la campana de cada acceso, con los avisos de esta etapa, y la pantalla «Avisos» del teléfono. Cada etapa posterior dibuja su versión. El número es el de lo que lista esa campana |
 | `Otro-Acceso` y `Otro-Acceso-Persona`, con sus teléfonos | ofrecer entrar con el otro acceso |
 | Los de cada pantalla que cambia | los textos, las tablas y los filtros, según las fichas del front |
 

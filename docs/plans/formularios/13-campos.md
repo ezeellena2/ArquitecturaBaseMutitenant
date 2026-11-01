@@ -53,7 +53,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobadas en el lienzo v145. Los dibujos están en `docs/design/capturas/plan/etapa-13/` del front, y el recorrido guiado es `armar-un-catalogo`. Muestran solo el catálogo (78).
+Aprobadas en el lienzo v145. Los dibujos están en `docs/design/capturas/plan/etapa-13/` del front, y el recorrido guiado es `campos-de-un-catalogo`. Muestran solo el catálogo (78).
 
 | Tablero | Qué muestra |
 | --- | --- |

@@ -93,8 +93,8 @@ Antes de empezar:
 
 **Estados que se dibujan** (cada uno tiene que poder producirse; si no, es un bug):
 - **Editor:** con cambios, guardando (el botón grisado con su mismo texto), guardado, no se guardó (lo escrito se conserva), otra persona guardó (con «Qué cambió | Guardado actualmente | Mis cambios»), prefijo ocupado, para quién es, quitar una pregunta, cambiar el tipo, descartar, solo lectura, cargando y no existe.
-- **Publicar:** versión nueva, primera publicación, comprobando, con cambios sin guardar (publicar grisado, con el motivo en su tooltip), una pregunta que no se puede mostrar, un catálogo demasiado grande, cambió después de comprobar, ya se está publicando, sin número conectado y sin cambios, con una cuenta conectada que no tiene el formulario (103).
-- **Cómo termina:** publicando, publicado, rechazada con «Ir a la pregunta», sin confirmar con «Consultar ahora» (nunca «Reintentar»), necesita revisión, con «Salió» y «No salió», y la vista oficial.
+- **Publicar:** versión nueva, primera publicación, comprobando, con cambios sin guardar (publicar grisado, con el motivo en su tooltip), una pregunta que no se puede mostrar, un catálogo demasiado grande, cambió después de comprobar, ya se está publicando, sin número conectado, sin cambios, con una cuenta conectada que no tiene el formulario (103), y un título sin preguntas debajo, con «Ir al título» (T24).
+- **Cómo termina:** publicando, publicado, rechazada con «Ir a la pregunta», sin confirmar con «Consultar ahora» (nunca «Reintentar»), necesita revisión, con «Salió» y «No salió», y la vista oficial. En el teléfono, «Sin confirmar» y «Necesita revisión» abren su detalle en una hoja.
 - **Enviar:**
   - En cola, Leído, y No se pudo mandar (con ⓘ, sin reintento);
   - con el diálogo abierto, ventana cerrada, formulario que ya no está y formulario que no está publicado para este número (103).
