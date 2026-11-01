@@ -193,3 +193,24 @@ Upload verifica firma PNG/JPEG/WebP/PDF y tamaño real, conserva una referencia 
 La retención ordinaria usa el plazo global, también con gates apagados. Entra al scope antes de la UoW, toma el lock de Guardar/Borrar y relee IsSaved/LastActivityAtUtc. Leer no renueva actividad; guardar protege incluso después de seleccionar el candidato. La misma transacción elimina conversación, cancela turnos, purga replay y encola limpieza física; el worker borra y confirma después del commit, con reintentos. La baja incluye guardados y sus adjuntos.
 
 El título automático y la actividad viven en una fila privada separada: completar un turno no cambia el `xmin` de edición capturado al abrir Borrar; las escrituras de la persona conservan su control de versión y una edición ajena sigue respondiendo 409, sin rebase ni reintento automático.
+
+## Carpetas
+
+| Carpeta | Responsabilidad |
+|---|---|
+| `src/ArquitecturaBaseMultitenant.Domain/Assistant` | entidades, estados y errores |
+| `src/ArquitecturaBaseMultitenant.Application/Modules/Assistant` | servicios, herramientas, modelos, validación y textos |
+| `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant` | proveedor, worker de turnos, persistencia y retención |
+| `src/ArquitecturaBaseMultitenant.Api/Modules/Assistant` | controllers, contratos y transporte SSE |
+| `ArquitecturaBaseMutitenantFront/src/modules/assistant` | pantallas del asistente |
+| `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Assistant` | reglas puras |
+| `tests/ArquitecturaBaseMultitenant.Application.UnitTests/Modules/Assistant` | casos de uso |
+| `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Modules/Assistant` | HTTP, aislamiento y turnos durables |
+| `tests/ArquitecturaBaseMultitenant.ArchitectureTests/Modules/Assistant` | guardas del módulo |
+
+## Lo verifica
+
+- Domain: `AssistantStateTests`, `AssistantConversationActivityTests`, `AssistantSnapshotRetentionTests` y `AssistantSystemRoleTests`.
+- Application: `AssistantToolCatalogTests`, `AssistantCostTests`, `AssistantSnapshotPrivacyTests` y `AssistantSettingsTests`.
+- API (Docker/Testcontainers): `AssistantConversationIsolationTests`, `AssistantDurableAuthorizationTests`, `AssistantAuthorizationTests` y `AssistantAnthropicTransportTests`.
+- Arquitectura: `AssistantApprovedContractTests`, `AssistantQualityContractTests` e `InstalledAssistantPersistenceModelTests`.

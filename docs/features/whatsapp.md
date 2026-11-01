@@ -86,14 +86,6 @@ La protección es capacidad mínima disponible, no un techo para ingresar: sin n
 
 `WhatsApp.Phone.CountryNotAllowed` (400, campo `phone`) corresponde a altas/pending de un país no habilitado, según el E.164 real. `WhatsApp.LoginCode.DailyLimit` (429) devuelve `retryAfter` hasta el próximo día UTC; la reserva de cuota y el código pertenecen a la misma UoW. El webhook devuelve `WhatsApp.Webhook.InvalidSignature` (401), `WhatsApp.Webhook.InvalidPayload` (400) y `WhatsApp.Webhook.TooManyRequests` (429). `WhatsApp.Inbound.LeaseExpired` es un resultado interno de la cola, sin ruta HTTP nueva. Los textos es/en los aporta el módulo mediante `IErrorTextSource`, sin referencias del mapper del núcleo al módulo. Las respuestas de error conservan ProblemDetails con `code` y `traceId`.
 
-## Verificación
-
-`Etapa8ContractTests`, `OpenApiContractTests`, `AccessDeclarationTests`, `ModuleControllersTests`, `LoginLinkIssuerTests`, `LoginMethodsCapabilitiesTests` e `InvitationDeliveryDestinationTests` verifican la parte publicada. `WhatsAppWebhookTests` prueba firma, tamaño, commit, dedupe, callbacks y propietario original; `WhatsAppInboundProcessorTests`, cola, leases, rollback y backoff en PostgreSQL real. `WhatsAppSafeTextPolicyTests` cubre códigos de cuatro a diez dígitos y separadores; `WhatsAppBotTests` verifica además que el webhook firmado no conserve esos códigos ni produzca respuestas/enlaces. También recorre IDs públicos, operador, propietario original y bloqueo vencido por el reloj inyectado. `LoginLinkTests` verifica canje, cookies/gates y replay; `WhatsAppCloudClientTests`/`WhatsAppOutboxTests` cubren la ventana vencida al despachar. `WhatsAppPhoneLinkObserverTests`, `WhatsAppAccountLifecycleTests` y `WhatsAppRetentionTests` verifican vínculo, baja y retención. La operación real usa las [plantillas aprobadas](../operations/whatsapp-plantillas.md) y la [configuración del transporte](../operations/configuracion.md).
-
-### Datos del ledger de cuotas
-
-La cuota técnica WhatsApp no se atribuye a cuentas: `identity.WhatsAppCodeQuotaIps` contiene un HMAC pseudónimo por número de plataforma/día UTC y un contador, sin Phone, UserId ni IP en claro. La IP viene de `IRequestInfo` (RemoteIpAddress después de ForwardedHeaders confiables), nunca de X-Forwarded-For sin validar. IPv4 y su forma IPv6 mapped comparten bucket; sin IP se usa un bucket unknown estable. La clave HMAC OTP se reutiliza con dominio independiente y debe ser común a las réplicas. No se presenta como anonimización irreversible ni se exporta como dato de una persona. El mantenimiento instalado borra esas filas sólo cuando terminó su día UTC; conserva el ledger global total/nuevos/histórico desconocido, sin reembolso al purgar OTP o dar de baja. El histórico anterior carece de IP reconstruible y se descuenta conservadoramente de cada límite IP en su día.
-
 ## Decisiones del usuario (E11)
 
 | # | Decisión |
@@ -114,3 +106,25 @@ La cuota técnica WhatsApp no se atribuye a cuentas: `identity.WhatsAppCodeQuota
 Dos decisiones técnicas que no se deducen del código:
 - **Mes del cupo:** se corta en la zona de la organización (en Plataforma, UTC), porque Meta devuelve `timezone_id` numérico y no publica un catálogo por API.
 - **Tiempo real:** sondeo cada 10 s en las bandejas y cada 5 s en la conversación abierta, sin SignalR.
+
+## Carpetas
+
+| Carpeta | Responsabilidad |
+|---|---|
+| `src/ArquitecturaBaseMultitenant.Domain/WhatsApp` | mensajes, bot, plantillas y difusiones |
+| `src/ArquitecturaBaseMultitenant.Application/Modules/WhatsApp` | servicios, puertos, modelos, validación y textos |
+| `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/WhatsApp` | cliente de Meta, webhook, entrada, workers y persistencia |
+| `src/ArquitecturaBaseMultitenant.Api/Modules/WhatsApp` | controllers, contratos, filtros y cuotas |
+| `ArquitecturaBaseMutitenantFront/src/modules/whatsapp` | pantallas de WhatsApp |
+| `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/WhatsApp` | reglas puras |
+| `tests/ArquitecturaBaseMultitenant.Application.UnitTests/Modules/WhatsApp` | casos de uso |
+| `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Modules/WhatsApp` | HTTP, entrada real y aislamiento |
+| `tests/ArquitecturaBaseMultitenant.ArchitectureTests/Modules/WhatsApp` | guardas del módulo |
+
+## Lo verifica
+
+`Etapa8ContractTests`, `OpenApiContractTests`, `AccessDeclarationTests`, `ModuleControllersTests`, `LoginLinkIssuerTests`, `LoginMethodsCapabilitiesTests` e `InvitationDeliveryDestinationTests` verifican la parte publicada. `WhatsAppWebhookTests` prueba firma, tamaño, commit, dedupe, callbacks y propietario original; `WhatsAppInboundProcessorTests`, cola, leases, rollback y backoff en PostgreSQL real. `WhatsAppSafeTextPolicyTests` cubre códigos de cuatro a diez dígitos y separadores; `WhatsAppBotTests` verifica además que el webhook firmado no conserve esos códigos ni produzca respuestas/enlaces. También recorre IDs públicos, operador, propietario original y bloqueo vencido por el reloj inyectado. `LoginLinkTests` verifica canje, cookies/gates y replay; `WhatsAppCloudClientTests`/`WhatsAppOutboxTests` cubren la ventana vencida al despachar. `WhatsAppPhoneLinkObserverTests`, `WhatsAppAccountLifecycleTests` y `WhatsAppRetentionTests` verifican vínculo, baja y retención. La operación real usa las [plantillas aprobadas](../operations/whatsapp-plantillas.md) y la [configuración del transporte](../operations/configuracion.md).
+
+### Datos del ledger de cuotas
+
+La cuota técnica WhatsApp no se atribuye a cuentas: `identity.WhatsAppCodeQuotaIps` contiene un HMAC pseudónimo por número de plataforma/día UTC y un contador, sin Phone, UserId ni IP en claro. La IP viene de `IRequestInfo` (RemoteIpAddress después de ForwardedHeaders confiables), nunca de X-Forwarded-For sin validar. IPv4 y su forma IPv6 mapped comparten bucket; sin IP se usa un bucket unknown estable. La clave HMAC OTP se reutiliza con dominio independiente y debe ser común a las réplicas. No se presenta como anonimización irreversible ni se exporta como dato de una persona. El mantenimiento instalado borra esas filas sólo cuando terminó su día UTC; conserva el ledger global total/nuevos/histórico desconocido, sin reembolso al purgar OTP o dar de baja. El histórico anterior carece de IP reconstruible y se descuenta conservadoramente de cada límite IP en su día.

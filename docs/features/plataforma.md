@@ -228,3 +228,25 @@ El acceso privado pasa por `PlatformScopeAccessService`: valida acceso Platform,
 ### Confirmación con motivo
 
 - **Confirmación con motivo de Plataforma:** `shared/platform/ReasonDialog` se monta sólo abierto, usa `dialog size="sm"`, sin ✕ también en una acción principal. Pide motivo y opcionalmente fecha civil; una regla de negocio conocida va primero en la franja, oculta los campos y apaga la acción. El rechazo al enviar va encima de los botones. `mutationFn` pertenece al caller; `onSuccess` recibe la respuesta original antes del cierre, también en un reintento global. La versión respondida es la próxima base; una relectura no la sustituye.
+
+## Carpetas
+
+| Carpeta | Responsabilidad |
+|---|---|
+| `src/ArquitecturaBaseMultitenant.Domain/Platform` | operadores, permisos, organizaciones y recuperaciones |
+| `src/ArquitecturaBaseMultitenant.Domain/Settings` | configuración global |
+| `src/ArquitecturaBaseMultitenant.Application/Services/Platform` | casos de uso de Plataforma |
+| `src/ArquitecturaBaseMultitenant.Application/Validation/Platform` | validación de pedidos |
+| `src/ArquitecturaBaseMultitenant.Api/Controllers/Platform` | rutas HTTP finas |
+| `src/ArquitecturaBaseMultitenant.Api/Contracts/Platform` | entradas HTTP |
+| `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Configurations/Platform` | esquema global de Plataforma |
+| `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Platform` | reglas puras |
+| `tests/ArquitecturaBaseMultitenant.Application.UnitTests/Services/Platform` | casos de uso |
+| `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Platform` | HTTP, permisos y flujo real |
+
+## Lo verifica
+
+- Domain: `PlatformTenantTests`, `PlatformPermissionAssignmentTests`, `AccountRecoveryRequestTests` y `PlatformSettingsTests`.
+- Application: `PlatformScopeTests`, `PlatformSettingsServiceTests` y `PlatformTenantSlugTests`.
+- API (Docker/Testcontainers): `PlatformOperatorTests`, `PlatformProvisioningTests`, `PlatformAccountAdministrationTests`, `PlatformAccountDeletionTests`, `PlatformRecoveryTests`, `PlatformLegalPublicationTests` y `PlatformAuditOrganizationsTests`.
+- Front y detalle por flujo: [Verificación de accesos y flujos](#verificación-de-accesos-y-flujos).

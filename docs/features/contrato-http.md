@@ -6,4 +6,16 @@ El contrato HTTP es transversal: no representa un módulo de negocio ni una capa
 
 `General.Unexpected` representa una falla técnica no prevista y `General.ConcurrencyConflict`, una escritura sobre una versión vencida. Su traducción y el mapper de ProblemDetails pertenecen al núcleo; no habilitan operaciones ni reemplazan los errores funcionales del área. Los errores HTTP mantienen `code` y `traceId` y nunca incluyen códigos de ingreso, tokens o datos secretos.
 
+## Carpetas
+
+| Carpeta | Responsabilidad |
+|---|---|
+| `src/ArquitecturaBaseMultitenant.Domain/Results` | `ContractErrors` y los errores generales |
+| `src/ArquitecturaBaseMultitenant.Api/ErrorHandling` | la traducción a ProblemDetails |
+| `src/ArquitecturaBaseMultitenant.Api/OpenApi` | el exportado del contrato |
+| `src/ArquitecturaBaseMultitenant.Api/Contracts` | entradas y salidas HTTP |
+| `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Contracts` | el exportado y las formas del contrato |
+
+## Lo verifica
+
 La igualdad del exportado la comprueban `OpenApiContractTests` (E1); las formas de contacto, enlaces consumer, errores bilingües y ausencia de metadata temporal en E8, `Etapa8ContractTests` (E8).

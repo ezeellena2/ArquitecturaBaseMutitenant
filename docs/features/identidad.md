@@ -218,3 +218,31 @@ Pruebas `GoogleNamesTests` recorre el provider HTTP de integración y el adaptad
  - Cada módulo que guarda datos de una persona registra un `IAccountDeletionParticipant`.
  - **Asistente, ** el participante usa exclusivamente el scope y UoW de `AccountDeletionProcessor`; limpia por `OwnerUserId` exacto en cada organización, también si la cuenta dejó de ser miembro. Retira conversación/mensajes y bindings/snapshots/tombstones propios; el paso global limpia contenido del operador y aviso propio. Antes de retirar metadata de adjuntos deja una clave técnica de almacenamiento en el ledger de limpieza. Ese ledger no ejecuta ni afirma purga física: almacenamiento, worker y retención completa quedan para sus cortes. No intercambia datos ni depende del participante WhatsApp.
  - **Política WhatsApp de :** limpiar el texto sensible y `ContactId` por propietario original, borrar el contacto/vínculo de la cuenta y revocar sus enlaces. Quitar Phone retira físicamente sólo el contacto que aún pertenece al método y a la cuenta, después de bloquear/releer; no deja un `wa_id` huérfano ni borra el contacto reasignado a otra persona. Conservar los snapshots `OriginalUserId`/`OriginalMethodId` como IDs técnicos pseudónimos e inmutables junto con metadatos de deduplicación/entrega, sin recalcularlos por el vínculo posterior. La identidad se anonimiza y el método se borra; el snapshot de método no tiene FK que impida esa baja. El mantenimiento borra texto a los 90 días fijos desde `ReceivedAtUtc` del servidor, aunque el canal esté apagado; una fecha externa futura o callback no amplía el plazo. La limpieza de pendientes del outbox se hace con lock y relectura, preservando `Sent`; se completa antes de encolar el aviso final de eliminación, cuyo payload cifrado vigente se conserva.
+
+## Carpetas
+
+| Carpeta | Responsabilidad |
+|---|---|
+| `src/ArquitecturaBaseMultitenant.Domain/Users` | la cuenta y su ciclo de vida |
+| `src/ArquitecturaBaseMultitenant.Domain/Authentication` | métodos de ingreso, códigos y enlaces |
+| `src/ArquitecturaBaseMultitenant.Domain/Invitations` | invitaciones |
+| `src/ArquitecturaBaseMultitenant.Application/Services/Auth` | ingreso, registro, sesión y recuperación |
+| `src/ArquitecturaBaseMultitenant.Application/Services/Identity` | alta de cuentas, métodos de ingreso y Google |
+| `src/ArquitecturaBaseMultitenant.Application/Services/Invitations` | emitir y aceptar invitaciones |
+| `src/ArquitecturaBaseMultitenant.Application/Services/Profile` | Mi cuenta y el perfil que lee el front |
+| `src/ArquitecturaBaseMultitenant.Application/Validation/Auth` | validación del ingreso y del registro |
+| `src/ArquitecturaBaseMultitenant.Infrastructure/Identity` | la cuenta técnica, OpenIddict, la sesión y la baja |
+| `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Configurations/Identity` | esquema global de la cuenta |
+| `src/ArquitecturaBaseMultitenant.Api/Controllers/Auth` | rutas de ingreso, registro y recuperación |
+| `src/ArquitecturaBaseMultitenant.Api/Controllers/Account` | rutas de la cuenta con sesión |
+| `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Authentication` | reglas puras del ingreso |
+| `tests/ArquitecturaBaseMultitenant.Application.UnitTests/Services/Auth` | casos de uso del ingreso |
+| `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Auth` | HTTP y recorridos reales de ingreso |
+| `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Identity` | cuenta, métodos y persistencia |
+
+## Lo verifica
+
+- Domain: `LoginCodeTests`, `LoginLinkTests`, `LoginMethodTests`, `AccountLifecycleTests` e `InvitationTests`.
+- Application: `LoginCodeFlowTests`, `LoginLinkServiceTests`, `AccountRegistrarTests`, `InvitationServiceTests` y `ProfileServiceTests`.
+- API (Docker/Testcontainers): `AuthEndpointsTests`, `IngressJourneyTests`, `AccountRecoveryTests`, `GoogleLoginTests`, `BusinessSignupTests`, `LoginMethodsTests` y `AccountSessionActionsTests`.
+- Arquitectura: `IdentityAccessTests`, la lista cerrada de quién lee la cuenta global.

@@ -68,3 +68,27 @@ Los flujos de API, aislamiento, concurrencia e invitaciones se verifican en `tes
 ### Slug
 
 - **Slug de una organización:** el valor se normaliza con trim y minúsculas invariantes; admite solo ASCII alfanumérico y guion, empieza/termina con alfanumérico y sigue exactamente `Registro-Empresa` (1 o 3–63 caracteres; dos caracteres no son válidos). La reserva de nombres y la disponibilidad son reglas de aplicación con índice único como barrera ante carreras.
+
+## Carpetas
+
+| Carpeta | Responsabilidad |
+|---|---|
+| `src/ArquitecturaBaseMultitenant.Domain/Tenancy` | organización, miembros, slug y dominios |
+| `src/ArquitecturaBaseMultitenant.Domain/Companies` | empresas y membresías |
+| `src/ArquitecturaBaseMultitenant.Application/Services/OrganizationUsers` | usuarios de la organización y sus accesos |
+| `src/ArquitecturaBaseMultitenant.Application/Services/Companies` | empresas y membresías |
+| `src/ArquitecturaBaseMultitenant.Application/Services/OrganizationSettings` | configuración y dominios de correo |
+| `src/ArquitecturaBaseMultitenant.Application/Validation/OrganizationUsers` | validación de pedidos |
+| `src/ArquitecturaBaseMultitenant.Api/Controllers/Organization` | rutas HTTP finas |
+| `src/ArquitecturaBaseMultitenant.Api/Contracts/Organization` | entradas HTTP |
+| `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Configurations/Tenant` | esquema privado y RLS |
+| `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Tenancy` | reglas puras |
+| `tests/ArquitecturaBaseMultitenant.Application.UnitTests/Services/OrganizationUsers` | casos de uso de usuarios |
+| `tests/ArquitecturaBaseMultitenant.Application.UnitTests/Services/Companies` | casos de uso de empresas |
+| `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Organization` | HTTP, aislamiento y flujo real |
+
+## Lo verifica
+
+- Domain: `TenantTests`, `MemberTests`, `CompanyTests`, `TenantDomainTests` y `ReservedTenantSlugTests`.
+- Application: `CompanyServiceTests`, `LastCompanyAdminGuardTests` y `OrganizationUserStatePolicyTests`.
+- API (Docker/Testcontainers): `OrganizationUsersTests`, `CompaniesTests`, `CompanyAdminTests`, `MemberStateParityTests`, `OrganizationSettingsTests`, `OrganizationDomainsTests` y `OrganizationAuditTests`.
