@@ -590,7 +590,7 @@ Elegidas por el usuario el 2026-10-31, con la lectura de punta a punta de las sp
 
 Decidida por el usuario el 2026-11-01:
 
-108. **Reglas y diseños propios:** en ArquitecturaBase no se toca ni se pide nada, y ninguna etapa espera algo de allá. Las pantallas se dibujan con las specs, estas decisiones y las reglas y piezas de este proyecto, sin abrir el lienzo de ArquitecturaBase. Lo ya decidido no se vuelve a preguntar. Una pantalla nueva que no tiene modelo en nuestro lienzo se diseña acá, con opciones para el usuario. Acota la 18.
+108. **Reglas y diseños propios:** en ArquitecturaBase no se toca ni se pide nada, y ninguna etapa espera algo de allá. Las pantallas se dibujan con las specs, estas decisiones y las reglas y piezas de este proyecto. El lienzo de la carga desde la app de ArquitecturaBase (<https://claude.ai/artifact/Kvbr5KFJrGT951JLiu8i4M>) es solo un ejemplo: lo que sirva se adapta a nuestro sistema y no se copia tal cual. Lo ya decidido no se vuelve a preguntar. Una pantalla nueva que no tiene modelo en nuestro lienzo se diseña acá, con opciones para el usuario. Acota la 18.
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 

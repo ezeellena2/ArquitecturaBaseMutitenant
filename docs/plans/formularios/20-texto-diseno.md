@@ -12,7 +12,7 @@ Te paso los tableros de la carga desde la web para el lienzo del multitenant. No
 
 **Leé primero,** en el repo del back `ArquitecturaBaseMutitenant`: la spec `docs/plans/formularios/20-cargar-desde-la-web.md`, sobre todo «Cómo se arma cada pregunta» y «Pantallas».
 
-**Con qué se dibuja.** Con la spec, esas decisiones y nuestras reglas y piezas (108). Si una pantalla nueva no tiene modelo en nuestro lienzo y la spec no alcanza para dibujarla, mostrale opciones al usuario. **La maqueta no sirve de base para esto:** tiene una versión anterior, con «Cargar respuesta» en el ⋮ y el canal «Web».
+**Con qué se dibuja.** Con la spec, esas decisiones y nuestras reglas y piezas (108). De ejemplo está el lienzo de ArquitecturaBase, <https://claude.ai/artifact/Kvbr5KFJrGT951JLiu8i4M>: lo que sirva se adapta a nuestro sistema, no se copia tal cual, y si choca con nuestras reglas, mandan ellas. Si una pantalla nueva no tiene modelo en nuestro lienzo y la spec no alcanza para dibujarla, mostrale opciones al usuario. **La maqueta no sirve de base para esto:** tiene una versión anterior, con «Cargar respuesta» en el ⋮ y el canal «Web».
 
 **Qué se dibuja:**
 1. **`FRM-Editor` y `M-FRM-Editor` (E14):** «Agregar título» en el editor, el título entre las preguntas con su ⋮ (Editar, Subir, Bajar y Quitar) y el subtítulo en el teléfono al costado.
