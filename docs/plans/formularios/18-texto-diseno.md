@@ -12,7 +12,7 @@ Te paso los tableros de la E18, fotos y documentos, para el lienzo del multitena
 
 **Leé primero,** en el repo del back `ArquitecturaBaseMutitenant`: la spec `docs/plans/formularios/18-fotos-y-documentos.md`, sobre todo «Qué se construye» y «Pantallas».
 
-**Qué se revisa:** `FRM-Editor-18`, `M-FRM-Editor-18`, `FRM-Publicar-18`, `WA-Chats-Respuesta-18`, `M-WA-Conversacion-Respuesta-18`, `WA-Chats-Visor` y `M-WA-Chats-Visor`, contra las reglas del 25 y el 26/10. Se dibujaron en la v130.
+**Qué se revisa:** `FRM-Editor-18`, `M-FRM-Editor-18`, `FRM-Publicar-18`, `WA-Chats-Respuesta-18`, `M-WA-Conversacion-Respuesta-18`, `WA-Chats-Visor` y `M-WA-Chats-Visor`, contra las reglas del 25 y el 26/10. Se dibujaron en la v130. `WA-Chats-Respuesta-18` y `WA-Chats-Visor` llevan la barra de la bandeja y las fechas como `WA-Chats`, con el buscador y los filtros en una fila y las fechas completas, también en el separador de días.
 
 **Qué se dibuja:**
 1. **`FRM-Respuestas-18` y `M-FRM-Respuestas-18`:** sobre `FRM-Respuestas`, las columnas «Fotos de la visita» (la primera miniatura y la cantidad, que abre el visor) y «Remito firmado» (un ícono y cuántos, con sus tipos). En «Más filtros», su sección con «Con respuesta», «Sin respuesta» y «La pregunta no existía». En exportar, el ⓘ: las fotos y los documentos no van dentro del Excel, y cada celda dice cuántos hay y sus nombres.

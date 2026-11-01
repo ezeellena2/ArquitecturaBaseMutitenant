@@ -28,7 +28,7 @@ Te paso los tableros de la E23, el asistente con Casos, para el lienzo del multi
 
 **Qué se redibuja:** `FRM-Editor-Asistente`, `FRM-Editor-Sugerencias` y `FRM-Catalogo-Propuesta`, sin «Textos en» ni «Cambios sin guardar», como pestañas o secciones del formulario y del catálogo (79). En `FRM-Editor-Sugerencias`, un estado más: una sugerencia hacia un dado de baja. `FRM-Catalogo-Propuesta` dice «Aprobar» y «Descartar», sin «Aprobar y activar».
 
-**Qué se revisa:** `WA-Chats-Asistente`, `WA-Chats-Sugerencia`, `WA-Chats-Audio`, `FRM-Faltan`, `FRM-Respuesta-Cadena` y sus teléfonos. `WA-Chats-Casos` reemplaza «Sin respuesta del asistente» de `WA-Chats-Asistente`.
+**Qué se revisa:** `WA-Chats-Asistente`, `WA-Chats-Sugerencia`, `WA-Chats-Audio`, `FRM-Faltan`, `FRM-Respuesta-Cadena` y sus teléfonos. `WA-Chats-Casos` reemplaza «Sin respuesta del asistente» de `WA-Chats-Asistente`. Los tres chats llevan la barra de la bandeja y las fechas como `WA-Chats`, con el buscador y los filtros en una fila y las fechas completas, también en el separador de días.
 
 **Recorrido guiado.** Los ejemplos en el celular y en el chat del operador, con lo que hacen la persona, el sistema y la IA, y una ráfaga con tres acciones.
 

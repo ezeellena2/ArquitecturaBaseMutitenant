@@ -17,7 +17,7 @@ Te paso lo que falta en los tableros de la E12, la base y la E14, para el lienzo
 2. **`Campana`, `M-Campana` y `M-Campana-Personal`:** solo los avisos de la base: un método de ingreso, una organización pendiente, una recuperación pedida y la versión nueva. Salen «WhatsApp rechazó la versión 3», «respuestas por aprobar» y «No se pudo mandar el aviso»: cada etapa los dibuja en su versión.
 3. **`FRM-Publicar`:** «hace un momento» pasa a fecha y hora completas. Suma dos estados: «Sin número conectado», con «Publicar» grisado y el motivo en su tooltip, y sin cambios con una cuenta de WhatsApp conectada que no tiene el formulario, con «Publicar» habilitado (103).
 4. **`FRM-Publicando`:** en «Necesita revisión», los botones «Salió» y «No salió».
-5. **`WA-Chats-Formulario`, su teléfono y la versión de Clientes:** en el diálogo, un formulario que no está publicado para el número de ese chat aparece con el motivo y no se puede mandar (103).
+5. **`WA-Chats-Formulario`, su teléfono y la versión de Clientes:** en el diálogo, un formulario que no está publicado para el número de ese chat aparece con el motivo y no se puede mandar (103). Estos tableros, y `WA-Chats-Respuesta` con su teléfono, llevan la barra de la bandeja y las fechas como `WA-Chats`, con el buscador y los filtros en una fila y las fechas completas, también en el separador de días.
 
 **Qué se dibuja:**
 1. **`FRM-Catalogo-14` y `M-FRM-Catalogo-14`:** sobre `FRM-Catalogo-13`, la sección «Lo usan», «Quitar» apagado en un campo en uso, con el motivo en su tooltip, y la advertencia al darlo de baja: los formularios publicados que lo usan no se pueden mandar.
