@@ -533,16 +533,16 @@ El esqueleto del módulo lo deja la E12: `AddFormsModule` en las tres capas, la 
 
 **Aprobados y publicados en el lienzo v141** (2026-10-25, front `93cb7d01`), con sus teléfonos, sin idioma en el contenido y con los botones de la decisión 43. Reemplazan a los de la v139:
 - **`FRM-Formularios`:** la lista «Formularios» (79), una tabla con Formulario, Preguntas, En WhatsApp y Último cambio (fecha y hora completas), el filtro «Estado ▾» y «Nuevo formulario». El nombre abre el formulario con su pestaña «Diseño». Reemplaza a `FRM-Listado`;
-- **`FRM-Editor` (con `CA4`):** el editor en una sola pantalla:
+- **`FRM-Editor`:** el editor en una sola pantalla:
   - el formulario: nombre, «Para quién es» (empleados, clientes o los dos; 50), texto del botón final y prefijo, cada uno en su campo;
   - las preguntas, que se abren en el lugar, con ⋮ (Editar, Subir, Bajar y Quitar);
   - «elegir varias», con el mínimo y el máximo (en el ejemplo, «Fallas», de 1 a 3);
-  - la pregunta «De un catálogo» (`CA4`): el selector, «Permitir elegir varias» con mínimo y máximo, «varias, hasta N» en la lista de preguntas, un catálogo de más de 20 y la presentación de la pregunta (la del catálogo o la suya);
+  - la pregunta «De un catálogo»: el selector, «Permitir elegir varias» con mínimo y máximo, «varias, hasta N» en la lista de preguntas, un catálogo de más de 20 y la presentación de la pregunta (la del catálogo o la suya);
   - el teléfono al costado.
 
   En el teléfono, la pregunta se edita en una hoja y los botones van fijos abajo.
 
-  **Se redibuja con los títulos de sección (88):** «Agregar título» en el editor, el título entre las preguntas con su ⋮ (Editar, Subir, Bajar y Quitar) y el subtítulo en el teléfono al costado, en `FRM-Editor` y `M-FRM-Editor`. La referencia es CW15-B, del lienzo de ArquitecturaBase.
+  **Se redibuja con los títulos de sección (88):** «Agregar título» en el editor, el título entre las preguntas con su ⋮ (Editar, Subir, Bajar y Quitar) y el subtítulo en el teléfono al costado, en `FRM-Editor` y `M-FRM-Editor`.
 - **`FRM-Catalogos-14`:** el listado de catálogos de la E12 con la columna «Lo usan».
 - **`FRM-Catalogo-14` y `M-FRM-Catalogo-14`** (por dibujar): el catálogo, con la sección «Lo usan», «Quitar» apagado en un campo en uso, con el motivo en su tooltip, y la advertencia al darlo de baja.
 - **`Campana-14`** (por dibujar): «WhatsApp rechazó la versión N de …», que lleva al formulario.

@@ -58,14 +58,14 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Se dibujaron antes de las reglas del 25 y el 26/10, y Diseño los revisa con esta etapa, con el [texto de la etapa](17-texto-diseno.md). `BA5` va como recorrido de la guía. Muestran solo lo que existe hasta acá (78).
+Se dibujaron antes de las reglas del 25 y el 26/10, y Diseño los revisa con esta etapa, con el [texto de la etapa](17-texto-diseno.md). El ciclo completo va como recorrido de la guía. Muestran solo lo que existe hasta acá (78).
 
 | Tablero | Qué muestra |
 | --- | --- |
-| `FRM-Formularios-17` y `M-FRM-Formularios-17` | la lista, con «Dados de baja» y el ⋮ de cada fila (`BA1-A`) |
-| `FRM-Editor-Baja` y `M-FRM-Editor-Baja` | el formulario dado de baja: el aviso, lo que pasa en WhatsApp, «Reactivar» en el lugar de «Publicar» y el ⋮ (`BA2`) |
-| `FRM-Dar-De-Baja` | el diálogo: qué deja de pasar, los envíos abiertos, WhatsApp y lo que se conserva (`BA3`) |
-| `FRM-Reactivar-Eliminar` | reactivar, con o sin cambios o con algo que corregir, y borrar (`BA4`) |
+| `FRM-Formularios-17` y `M-FRM-Formularios-17` | la lista, con «Dados de baja» y el ⋮ de cada fila |
+| `FRM-Editor-Baja` y `M-FRM-Editor-Baja` | el formulario dado de baja: el aviso, lo que pasa en WhatsApp, «Reactivar» en el lugar de «Publicar» y el ⋮ |
+| `FRM-Dar-De-Baja` | el diálogo: qué deja de pasar, los envíos abiertos, WhatsApp y lo que se conserva |
+| `FRM-Reactivar-Eliminar` | reactivar, con o sin cambios o con algo que corregir, y borrar |
 | `FRM-Copiar` | el diálogo, con el nombre y el prefijo propuesto |
 
 **Lo que se corrige en lo dibujado:**

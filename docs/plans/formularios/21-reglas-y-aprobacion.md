@@ -10,7 +10,7 @@ Antes de empezar, en este orden:
 2. **Decisiones** de la hoja de ruta: 25, 35, 42, 43, 47, 49, 55, 59 a 62, 80, 82, 85, 89, 91 a 93, 100 y 106. Y la [ADR 0040](../../decisions/0040-para-resolver.md).
 3. **Fichas:** [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [idempotencia](../../rules/idempotencia.md), [modulos](../../rules/modulos.md), [multitenancy](../../rules/multitenancy.md), [permisos](../../rules/permisos.md), [persistencia-ef](../../rules/persistencia-ef.md), [auditoria](../../rules/auditoria.md), [emails](../../rules/emails.md), [textos-libres](../../rules/textos-libres.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [logs](../../rules/logs.md), [api-http](../../rules/api-http.md) y [tests](../../rules/tests.md).
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
-5. **Referencia de producto,** solo para leer: en [`../2026-10-17-formularios-traspaso/`](../2026-10-17-formularios-traspaso/README.md), el anexo C, «Etapa 4», el anexo B, «Etapa 4», y el anexo D (G1 a G6); en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`, el anexo C §5 y §6 (L-05 a L-08), y en ArquitecturaBase, `docs/plans/2026-10-29-cargar-formularios-desde-la-app.md`, «Corregir y anular», con CW10-A y CW11-A.
+5. **Referencia de producto,** solo para leer: en [`../2026-10-17-formularios-traspaso/`](../2026-10-17-formularios-traspaso/README.md), el anexo C, «Etapa 4», el anexo B, «Etapa 4», y el anexo D (G1 a G6); en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`, el anexo C §5 y §6 (L-05 a L-08), y en ArquitecturaBase, `docs/plans/2026-10-29-cargar-formularios-desde-la-app.md`, «Corregir y anular».
 6. **La maqueta,** en `../MaquetaMultitenant/src/areas/business/forms/`: `api/workflow.ts`, `lib/rules.ts`, `components/rules/`, `components/records/Workflow.tsx` y `CorrectionForm.tsx`, `components/pdf/PdfPage.tsx` y `pages/PdfDesignPage.tsx`. Su corrección es la de la decisión 58, ya reemplazada: manda esta spec.
 
 ## Qué se construye
@@ -88,9 +88,9 @@ Diseño los revisa o los dibuja con el [texto de la etapa](21-texto-diseno.md). 
 | `M-FRM-Respuesta-Aprobacion` | la decisión en el teléfono | Se redibuja |
 | `FRM-Respuestas-21` y su teléfono | sobre `FRM-Respuestas-20`: Estado, su filtro, «Anulada», la marca del PDF y «Quien solo aprueba» (100) | Por dibujar |
 | `FRM-Tablero-21` y su teléfono | la tarjeta «Por estado» | Por dibujar |
-| `FRM-Respuesta-Corregir` y su teléfono (CW10-A) | lo de antes a la vista, el motivo y «Corregida» | Por dibujar |
-| `FRM-Respuesta-Anular` y su teléfono (CW11-A) | «Anular», el motivo y el Excel con las anuladas | Por dibujar |
-| `FRM-Respuestas-Propias-21` y su teléfono (CW6-C) | lo propio, con estado, PDF y motivo | Por dibujar |
+| `FRM-Respuesta-Corregir` y su teléfono | lo de antes a la vista, el motivo y «Corregida» | Por dibujar |
+| `FRM-Respuesta-Anular` y su teléfono | «Anular», el motivo y el Excel con las anuladas | Por dibujar |
+| `FRM-Respuestas-Propias-21` y su teléfono | lo propio, con estado, PDF y motivo | Por dibujar |
 | `FRM-Editor-21` y `FRM-Cargar-Respuesta-21`, con sus teléfonos | la pregunta «Correo» | Por dibujar |
 | `Campana-21` y su teléfono | «N respuestas por aprobar» y «No se pudo mandar el aviso de …» | Por dibujar |
 | `FRM-Dar-De-Baja-21` y `FRM-Editor-Baja-21` | «Lo que se conserva» suma el PDF y las aprobaciones | Por dibujar |

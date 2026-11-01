@@ -288,9 +288,9 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 **Aprobados y publicados en el lienzo v141** (2026-10-25, front `93cb7d01`), con sus teléfonos, sin «Textos en» ni «Cambios sin guardar», y con el origen y el tipo de valor como la A11: en su campo, apagados y en gris, sin «No se cambia» (43):
 - `FRM-Catalogos`: el listado, sin la columna «Lo usan», que llega con los formularios;
 - `FRM-Catalogo-Nuevo`: el origen, con la tarjeta «De los contactos de WhatsApp», y el tipo de valor;
-- `FRM-Catalogo` (`CA1-A`): el editor de un catálogo a mano con la sección «Opciones»: en su banda, «+ Agregar opción» y un ⋮ con Pegar desde Excel, Importar, Exportar, Descargar la plantilla, Ordenar de la A a la Z y Generar los códigos que faltan; abajo, solo «Buscar opción» y el filtro de estado; la tabla editable en la compu, la selección de filas para dar de baja o reactivar, solo el ⋮ en cada fila (con «Editar» adentro, sin un ✎ aparte; lienzo v143), y el teléfono al costado. En el celular, el editor por opción;
-- `FRM-Catalogo-Importar` (`CA2`): archivo o filas pegadas, revisar (Errores, Altas, Cambios y Bajas, por fila y columna) y aplicar, con la confirmación de bajas, «Aplicar sin las N filas con errores» y el 409;
-- `FRM-Catalogo-Tipo` (`CA3`): el tipo de valor se elige al crear, con la columna «Valor» y el error en el campo;
+- `FRM-Catalogo`: el editor de un catálogo a mano con la sección «Opciones»: en su banda, «+ Agregar opción» y un ⋮ con Pegar desde Excel, Importar, Exportar, Descargar la plantilla, Ordenar de la A a la Z y Generar los códigos que faltan; abajo, solo «Buscar opción» y el filtro de estado; la tabla editable en la compu, la selección de filas para dar de baja o reactivar, solo el ⋮ en cada fila (con «Editar» adentro, sin un ✎ aparte; lienzo v143), y el teléfono al costado. En el celular, el editor por opción;
+- `FRM-Catalogo-Importar`: archivo o filas pegadas, revisar (Errores, Altas, Cambios y Bajas, por fila y columna) y aplicar, con la confirmación de bajas, «Aplicar sin las N filas con errores» y el 409;
+- `FRM-Catalogo-Tipo`: el tipo de valor se elige al crear, con la columna «Valor» y el error en el campo;
 - `FRM-Catalogo-Filtros`: un catálogo de los miembros, con sus filtros y la vista previa;
 - `FRM-Catalogo-Contactos`: un catálogo «De los contactos», con sus filtros por etiqueta y la vista previa (55).
 

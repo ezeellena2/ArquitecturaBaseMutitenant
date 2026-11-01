@@ -11,7 +11,7 @@ Lo que tiene que leer quien programa antes de empezar, en orden:
 2. **Decisiones:** las de la §5 de la hoja de ruta que aplican.
 3. **Fichas:** una fila por ficha de `docs/rules/` que aplica, con por qué.
 4. **Código para copiar:** el archivo real de este repo, por pieza.
-5. **Referencia de producto:** ArquitecturaBase y la maqueta. Se toman las pantallas y las reglas, nunca el código.
+5. **Referencia de producto:** la maqueta y, solo para leer, ArquitecturaBase, de donde nunca se toma código. Mandan esta spec y las reglas y los diseños de este proyecto (108).
 
 ## Qué se construye
 

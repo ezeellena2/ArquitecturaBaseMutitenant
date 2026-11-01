@@ -10,7 +10,7 @@ Te paso los tableros de la E16, datos de las personas y filtros por destinatario
 
 **Contexto.** Una organización define datos de sus empleados, como «Zona», y una pregunta de un catálogo muestra a cada persona solo lo que le corresponde. **Los tableros muestran solo lo que existe hasta acá** (78): nada de fotos, documentos, aprobación ni «Cargar». Valen las fichas del front: un dato por celda, en un renglón; sin cantidades en los encabezados de sección; sin rótulos que expliquen, y botones habilitados o grisados (43).
 
-**Leé primero,** en el repo del back `ArquitecturaBaseMutitenant`: la spec `docs/plans/formularios/16-datos-de-las-personas.md`, sobre todo «Qué se construye» y «Pantallas». La referencia de ArquitecturaBase es `CE4-A`.
+**Leé primero,** en el repo del back `ArquitecturaBaseMutitenant`: la spec `docs/plans/formularios/16-datos-de-las-personas.md`, sobre todo «Qué se construye» y «Pantallas».
 
 **Qué se dibuja:**
 1. **`FRM-Datos-Personas` y `M-FRM-Datos-Personas`:** «Datos de las personas», en Administración, con dos secciones.

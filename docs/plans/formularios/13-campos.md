@@ -57,7 +57,7 @@ Aprobadas en el lienzo v145. Los dibujos están en `docs/design/capturas/plan/et
 
 | Tablero | Qué muestra |
 | --- | --- |
-| `FRM-Catalogo-13` | el editor de un catálogo a mano: «Campos» en la forma B (`CE1`), la tabla de opciones con una columna por campo (`CE2`) y «En WhatsApp» en la forma C (`CE3-B`), con el teléfono al costado |
+| `FRM-Catalogo-13` | el editor de un catálogo a mano: «Campos» en la forma B, la tabla de opciones con una columna por campo y «En WhatsApp» en la forma C, con el teléfono al costado |
 | `M-FRM-Catalogo-13` | lo mismo en el teléfono |
 
 **«Campos»:** una tabla que se edita ahí mismo, sin diálogo, con Campo, Tipo, Obligatorio, Único, Límite y ⋮ (Subir, Bajar y Quitar). El encabezado no lleva cantidades. «Agregar campo» queda apagado al llegar al tope de 20, con el motivo en su tooltip. Los errores van debajo de su celda, al guardar. «Campo» va fijo a la izquierda y el ⋮ fijo a la derecha, como en la tabla de opciones.

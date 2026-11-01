@@ -69,12 +69,12 @@ Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](25-texto-d
 
 | Tablero | Qué muestra |
 | --- | --- |
-| `WA-Chats-Documento` y su teléfono (`DOC2` y `DOC4`) | los tres casos, los otros formatos y los casos difíciles, con «Por qué lo propuso» |
-| `M-WA-Flow-Prellenado` (`DOC3`) | el formulario prellenado: «Revisá», «No se leyó» y el documento adjunto |
-| `FRM-Documentos` y su teléfono (`DOC5-A`) | en el panel de «Gestión de formularios», debajo de «Formularios»: la bandeja, con su panel, «Cargada automáticamente» y los permisos |
-| `FRM-Editor-Lectura` y su teléfono (`DOC1`) | la sección en el editor, con «Cargar solo si es seguro» y su precisión |
-| `Plat-FRM-Plantilla-Lectura` (`DOC1`) | la sección en la plantilla, con candado |
-| `FRM-Armar-Con-IA` y su teléfono (`DOC6`) | la propuesta, con los documentos a la vista, y «Crear borrador» |
+| `WA-Chats-Documento` y su teléfono | los tres casos, los otros formatos y los casos difíciles, con «Por qué lo propuso» |
+| `M-WA-Flow-Prellenado` | el formulario prellenado: «Revisá», «No se leyó» y el documento adjunto |
+| `FRM-Documentos` y su teléfono | en el panel de «Gestión de formularios», debajo de «Formularios»: la bandeja, con su panel, «Cargada automáticamente» y los permisos |
+| `FRM-Editor-Lectura` y su teléfono | la sección en el editor, con «Cargar solo si es seguro» y su precisión |
+| `Plat-FRM-Plantilla-Lectura` | la sección en la plantilla, con candado |
+| `FRM-Armar-Con-IA` y su teléfono | la propuesta, con los documentos a la vista, y «Crear borrador» |
 | `FRM-Respuesta-25` y `M-FRM-Respuesta-25` | de qué documento salió y quién la revisó |
 | `Campana-25` y su teléfono | los documentos por revisar y «Llegaron N documentos parecidos» |
 | `WA-Asistente-Casos-25` | el tipo de entrada «documento» |

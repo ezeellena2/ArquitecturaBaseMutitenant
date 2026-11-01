@@ -24,7 +24,6 @@ Te paso los tableros de la E22, la biblioteca de plantillas, para el lienzo del 
 1. **La spec:** `docs/plans/formularios/22-biblioteca.md`, sobre todo la §8 (tableros, qué se redibuja y en qué mandan).
 2. **La hoja de ruta:** `docs/plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md`, §5, decisiones 34 a 82.
 3. **La evaluación:** `docs/plans/2026-10-24-formularios-evaluacion-traspaso-2.md`, §2.1, §2.2 y §5.
-4. **ArquitecturaBase, como referencia de contenido:** DOC1 en el anexo D del traspaso 2 (`../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/anexo-d-tableros-desde-17-10.md`). Hacé `git fetch` antes.
 
 **Qué se redibuja:**
 - `Plat-FRM-Plantilla`, `Plat-FRM-Publicar`, `Plat-FRM-Retirar`, `Plat-FRM-Plantilla-Reglas`, `Plat-FRM-Pdf`, `Plat-FRM-Categorias` y `M-FRM-Plantilla`, con las reglas de arriba;
@@ -34,7 +33,7 @@ Te paso los tableros de la E22, la biblioteca de plantillas, para el lienzo del 
 
 **Qué se revisa:** `FRM-Formularios-22`, que parte de `FRM-Formularios-21`, con «Cargar», «Solo en la app», quien solo carga y «Borrar», y `FRM-Plantilla`, `FRM-Plantilla-Usar` y sus teléfonos.
 
-**También se redibuja** `FRM-Biblioteca`, con `DOC1` · La biblioteca, sin su sección de lectura de documentos. La disposición se copia sin mostrar alternativas, con nuestras piezas y criterios (decisión 18): `FRM-Biblioteca` como la biblioteca de formularios estándar, con en qué formularios propios se usó cada plantilla, a la que se llega desde «Desde una plantilla».
+**También se redibuja** `FRM-Biblioteca`, sin su sección de lectura de documentos y sin mostrar alternativas, con nuestras piezas y criterios: la biblioteca de formularios estándar, con en qué formularios propios se usó cada plantilla, a la que se llega desde «Desde una plantilla».
 
 **Datos de ejemplo:** las categorías Ventas, Logística y Mantenimiento; «Visita a cliente» (Ventas), publicada, con cambios guardados sin publicar, que la usaron 12 organizaciones; «Control de vehículo» (Logística), borrador; «Orden de trabajo» (Mantenimiento), retirada; y «Comprobante de transferencia», publicada.
 

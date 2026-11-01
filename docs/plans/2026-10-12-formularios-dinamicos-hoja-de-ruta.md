@@ -389,7 +389,7 @@ Decididas el 2026-10-17, con el [traspaso de ArquitecturaBase](2026-10-17-formul
     - solo el idioma original es obligatorio para guardar y publicar, y la traducción es opcional;
     - si la traducción no está completa, el formulario, el PDF, los mensajes y las opciones de catálogo salen enteros en el idioma original, sin mezclar;
     - el idioma de las pantallas del sistema no cambia.
-18. **Pantallas.** Se copian de ArquitecturaBase:
+18. **Pantallas.** Acotada por la 108 (2026-11-01): de acá en adelante no se copian pantallas. Decía que se copian de ArquitecturaBase:
     - Diseño rehace los tableros de la 12 y la 13 con la disposición de su lienzo y del [05 del traspaso](2026-10-17-formularios-traspaso/05-pantallas.md), con las piezas y los criterios de nuestro lienzo y sin mostrar alternativas;
     - la 17 no existe allá: sus tableros se quedan y solo se ajustan al editor nuevo;
     - si la disposición choca con una regla escrita de este repo, manda la de acá.
@@ -588,13 +588,17 @@ Elegidas por el usuario el 2026-10-31, con la lectura de punta a punta de las sp
 106. **El PDF de un formulario sin aprobación** (E21): si el formulario no pide aprobación, el PDF se arma al recibir la respuesta. Si la pide, solo al aprobar: lo que espera aprobación no tiene PDF.
 107. **Un contacto de WhatsApp no se borra:** hoy una organización no tiene cómo, y no entra al plan. Las specs no contemplan un contacto borrado. Si un cliente sin cuenta pide que borren sus datos, no hay cómo hacerlo desde la app.
 
+Decidida por el usuario el 2026-11-01:
+
+108. **Reglas y diseños propios:** en ArquitecturaBase no se toca ni se pide nada, y ninguna etapa espera algo de allá. Las pantallas se dibujan con las specs, estas decisiones y las reglas y piezas de este proyecto, sin abrir el lienzo de ArquitecturaBase. Lo ya decidido no se vuelve a preguntar. Una pantalla nueva que no tiene modelo en nuestro lienzo se diseña acá, con opciones para el usuario. Acota la 18.
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase
 
 Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBaseFront`. **El código está en `origin/main`:** antes de leerlo, traé los cambios, porque la copia local puede estar atrasada. Se sigue desarrollando allá, así que cada etapa mira lo que haya al planificarse.
 
-**Qué se copia:** desde la decisión 18 (2026-10-17), las pantallas y las reglas de producto se copian de ArquitecturaBase. **El código no:** la estructura (módulos, entidades, servicios y rutas) sale de este repo, con su modelo de organizaciones, empresas y plataforma, sus fichas y sus módulos de ejemplo (Asistente y WhatsApp). De ArquitecturaBase se toma solo lo que no depende del modelo de negocio:
+**Qué se toma:** allá solo se lee y no se toca nada (108). Las reglas y los diseños son los de este proyecto, y las reglas de producto que sirvieron ya están en estas decisiones. **El código tampoco se copia:** la estructura (módulos, entidades, servicios y rutas) sale de este repo, con su modelo de organizaciones, empresas y plataforma, sus fichas y sus módulos de ejemplo (Asistente y WhatsApp). De ArquitecturaBase se toma solo lo que no depende del modelo de negocio:
 - cómo se arma y se publica un Flow;
 - los límites de Meta;
 - el formato de los valores;
@@ -617,10 +621,6 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
     - `src/*/Modules/BusinessForms/`: borrador, versiones, publicación durable, captura y numeración;
     - `src/*/Modules/WhatsApp/`: incluidos `WhatsAppFlowCompiler`, `WhatsAppFlowValueCodec`, la publicación y el despacho de Flows, el envío y la recepción de formularios.
   - **Front:** `src/features/business-forms/` y las partes de formularios de `src/features/whatsapp/`.
-- **Tableros:**
-  - página «Formularios por WhatsApp» del lienzo de ArquitecturaBase (<https://claude.ai/artifact/HPbmDPLnr8JZ9TxevtTqJJ>), con un recorrido guiado con Play;
-  - las capturas están en `ArquitecturaBaseFront/docs/design/evidence/formularios-whatsapp/`;
-  - se redibujan con el tema de este proyecto en su lienzo.
 
 **Lo que se toma se adapta a este repo:**
 - `BusinessForms` pasa a `Forms`, en `Domain\Forms\` en vez de `Domain/Modules/`;

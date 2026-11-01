@@ -20,6 +20,6 @@ Te paso los tableros de la E17, ciclo de vida y copiar, para el lienzo del multi
 5. **`FRM-Formularios-17`, estado «Quien solo ve respuestas»:** suma el filtro «Estado», con «Activos» y «Dados de baja». Sin él, esa persona no llega a las respuestas de un formulario dado de baja. Igual en `M-FRM-Formularios-17`.
 6. **`FRM-Reactivar-Eliminar`:** suma borrar un publicado sin respuestas, con el aviso de que sus Flows se deprecan y eso no se deshace, y borrar con error.
 
-**Recorrido guiado.** `BA5` va como recorrido de la guía: activo, dar de baja, un envío abierto que se responde, al vencer deprecados en WhatsApp y reactivar, con la numeración que sigue. Suma copiar un formulario.
+**Recorrido guiado.** Activo, dar de baja, un envío abierto que se responde, al vencer deprecados en WhatsApp y reactivar, con la numeración que sigue. Suma copiar un formulario.
 
 **Al decidir y al cerrar:** cada decisión suma su fila en «Criterio · Decisiones por pantalla». Al terminar, publicás la versión nueva del lienzo con el recorrido guiado (44) y avisás la versión, para anotarla en la spec.

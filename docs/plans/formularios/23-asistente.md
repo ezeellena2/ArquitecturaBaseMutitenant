@@ -72,15 +72,15 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Diseño los dibuja o los revisa con el [texto de la etapa](23-texto-diseno.md). `AS6` va como recorrido de la guía. Muestran solo lo que existe hasta acá (78).
+Diseño los dibuja o los revisa con el [texto de la etapa](23-texto-diseno.md). Los ejemplos del asistente van como recorrido de la guía. Muestran solo lo que existe hasta acá (78).
 
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
-| `WA-Asistente` y su teléfono (`AS1-A`) | la pantalla, con Perfil, Conocimiento, Casos y Límites, y un solo Guardar | Por dibujar |
-| `WA-Asistente-Casos` (`AS2`) | los casos, el bloque de formularios y «Cualquier otra cosa» | Por dibujar |
-| `WA-Asistente-Probar` (`AS3`) | las acciones en orden, y «No se mandó nada» | Por dibujar |
-| `WA-Asistente-Limites` (`AS5`) | los límites por bandeja, el tope de ofrecimientos y el conocimiento | Por dibujar |
-| `WA-Chats-Casos` y su teléfono (`AS4`) | el porqué, derivar, «Necesita una persona», el texto exacto, los botones y el borrador | Por dibujar |
+| `WA-Asistente` y su teléfono | la pantalla, con Perfil, Conocimiento, Casos y Límites, y un solo Guardar | Por dibujar |
+| `WA-Asistente-Casos` | los casos, el bloque de formularios y «Cualquier otra cosa» | Por dibujar |
+| `WA-Asistente-Probar` | las acciones en orden, y «No se mandó nada» | Por dibujar |
+| `WA-Asistente-Limites` | los límites por bandeja, el tope de ofrecimientos y el conocimiento | Por dibujar |
+| `WA-Chats-Casos` y su teléfono | el porqué, derivar, «Necesita una persona», el texto exacto, los botones y el borrador | Por dibujar |
 | `WA-Modo-Atencion` y su teléfono | dentro de la pantalla «Asistente», por bandeja; en el chat, cambiar el modo, fijarlo y «Resuelto» | Por dibujar |
 | `WA-Preguntas-Sin-Respuesta` y su teléfono | en el panel de WhatsApp, por tema, con «Completar el conocimiento» y «Descartar» | Por dibujar |
 | `FRM-Catalogos-23` | el estado «Por aprobar» en la lista | Por dibujar |
@@ -89,9 +89,9 @@ Diseño los dibuja o los revisa con el [texto de la etapa](23-texto-diseno.md). 
 | `Campana-23` y su teléfono | las preguntas sin respuesta | Por dibujar |
 | `Plat-Asistente-Config-23` y su teléfono | los máximos de la plataforma | Por dibujar |
 | `WA-Chats-Asistente`, `WA-Chats-Sugerencia`, `WA-Chats-Audio`, `FRM-Faltan` y `FRM-Respuesta-Cadena`, con sus teléfonos | lo aprobado en el lienzo v133 | A revisar |
-| `FRM-Editor-Asistente`, `FRM-Editor-Sugerencias` y `FRM-Catalogo-Propuesta` | como pestañas o secciones, sin «Textos en» ni «Cambios sin guardar», y `BA6` como estado. El catálogo propuesto dice «Aprobar» y «Descartar», sin «Aprobar y activar» | Se redibujan |
+| `FRM-Editor-Asistente`, `FRM-Editor-Sugerencias` y `FRM-Catalogo-Propuesta` | como pestañas o secciones, sin «Textos en» ni «Cambios sin guardar», y, como estado, una sugerencia hacia un dado de baja. El catálogo propuesto dice «Aprobar» y «Descartar», sin «Aprobar y activar» | Se redibujan |
 
-**Mandan sobre esta spec en:** una consulta ya no queda sin respuesta: `AS4` reemplaza «Sin respuesta del asistente» de `WA-Chats-Asistente`. «La IA decide» es `Assistant`, y «Preguntar siempre», `Always`. «No pudimos pasar este audio a texto» cubre también el tope agotado. Un audio sigue la retención del chat (D4).
+**Mandan sobre esta spec en:** una consulta ya no queda sin respuesta: `WA-Chats-Casos` reemplaza «Sin respuesta del asistente» de `WA-Chats-Asistente`. «La IA decide» es `Assistant`, y «Preguntar siempre», `Always`. «No pudimos pasar este audio a texto» cubre también el tope agotado. Un audio sigue la retención del chat (D4).
 
 ## Contrato
 

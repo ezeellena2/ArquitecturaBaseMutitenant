@@ -20,7 +20,7 @@ Antes de empezar, en este orden:
    | [textos-y-traducciones](../../rules/textos-y-traducciones.md) y [tests](../../rules/tests.md) | «App», y qué lleva test |
 
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
-5. **Referencia de producto,** solo para leer: en ArquitecturaBase, `docs/plans/2026-10-30-traspaso-multitenant-carga-desde-la-app.md`, `docs/plans/2026-10-29-cargar-formularios-desde-la-app.md` y `docs/features/formularios.md`, «Carga desde la app». En `ArquitecturaBaseFront`, `docs/design/carga-desde-la-app.md` y los tableros CW0 a CW16. Los commits están en la copia local. Se toman las pantallas y las reglas; el código sale de este repo (18).
+5. **Referencia de producto,** solo para leer: en ArquitecturaBase, `docs/plans/2026-10-30-traspaso-multitenant-carga-desde-la-app.md`, `docs/plans/2026-10-29-cargar-formularios-desde-la-app.md` y `docs/features/formularios.md`, «Carga desde la app». En `ArquitecturaBaseFront`, `docs/design/carga-desde-la-app.md`. Los commits están en la copia local. Mandan esta spec y las reglas y los diseños de este proyecto (108), y el código sale de este repo.
 6. **La maqueta no sirve de base:** tiene una versión anterior, con «Cargar respuesta» en el ⋮ y el canal «Web».
 
 ## Qué se construye
@@ -88,22 +88,22 @@ El autor decide el contenido. La app decide la forma, con una tabla fija por tip
 
 ## Pantallas
 
-Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](20-texto-diseno.md). Las referencias, entre paréntesis, son del lienzo de ArquitecturaBase.
+Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](20-texto-diseno.md).
 
 | Tablero | Qué muestra |
 | --- | --- |
-| `FRM-Formularios-20` y su teléfono (CW1-B) | «Cargar», «Solo en la app» y lo que ve quien solo carga |
-| `FRM-Cargar-Respuesta` y su teléfono (CW2-A, CW12, CW13-A y CW16) | la página, con zonas, grilla, títulos, lo condicional, líneas, errores y salir |
-| `FRM-Cargar-Panel` (CW2-B) | el panel junto a la planilla |
-| `FRM-Cargar-Lista` y su teléfono (CW3 y CW7) | la lista, una sola opción, sin el dato, elegir varias y la que espera otra respuesta |
-| `FRM-Cargar-Archivos` y su teléfono (CW4) | agregar, los límites, la barra de avance, el corte y la cámara |
-| `FRM-Cargar-Enviada` y su teléfono (CW5) | «Enviada», versión nueva, dado de baja, opción dada de baja y sin conexión |
-| `FRM-Respuestas-20` y `FRM-Respuesta-20`, con sus teléfonos (CW6-A) | «App», su filtro y el origen en el detalle |
-| `FRM-Respuestas-Propias` y su teléfono (CW6-C) | la misma planilla con lo suyo |
-| `FRM-Editor-Listas` y su teléfono (CW7) | «Según otra respuesta» |
+| `FRM-Formularios-20` y su teléfono | «Cargar», «Solo en la app» y lo que ve quien solo carga |
+| `FRM-Cargar-Respuesta` y su teléfono | la página, con zonas, grilla, títulos, lo condicional, líneas, errores y salir |
+| `FRM-Cargar-Panel` | el panel junto a la planilla |
+| `FRM-Cargar-Lista` y su teléfono | la lista, una sola opción, sin el dato, elegir varias y la que espera otra respuesta |
+| `FRM-Cargar-Archivos` y su teléfono | agregar, los límites, la barra de avance, el corte y la cámara |
+| `FRM-Cargar-Enviada` y su teléfono | «Enviada», versión nueva, dado de baja, opción dada de baja y sin conexión |
+| `FRM-Respuestas-20` y `FRM-Respuesta-20`, con sus teléfonos | «App», su filtro y el origen en el detalle |
+| `FRM-Respuestas-Propias` y su teléfono | la misma planilla con lo suyo |
+| `FRM-Editor-Listas` y su teléfono | «Según otra respuesta» |
 | `FRM-Publicar-20` y su teléfono | solo para la app, en los tres casos, y uno solo para clientes que no se publica |
 
-**Mandan sobre esta disposición:** el teléfono es una app: «Cargar» va en la lista con nuestra forma de fila. Valen las fichas del front y la decisión 43 en cada botón, incluso donde el lienzo de allá muestre otra cosa.
+**Valen** las fichas del front y la decisión 43 en cada botón. El teléfono es una app: «Cargar» va en la lista con nuestra forma de fila.
 
 ## Contrato
 
@@ -218,7 +218,7 @@ Cada punto lleva su test, escrito durante la etapa:
 ## Fuera de esta etapa
 
 - Cargar a nombre de otra persona desde la web (73), importar muchas respuestas desde un Excel, borradores guardados y carga sin conexión.
-- La carga en filas (CW2-C), y ofrecer en la web qué cargar después.
+- La carga en filas, y ofrecer en la web qué cargar después.
 - Las listas dependientes en WhatsApp, con el intercambio cifrado con Meta.
 - El estado, el PDF y el motivo de rechazo en lo propio, y corregir y anular, que suma la E21.
 

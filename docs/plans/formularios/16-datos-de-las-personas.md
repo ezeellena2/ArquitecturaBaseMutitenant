@@ -67,10 +67,10 @@ Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](16-texto-d
 
 | Tablero | Qué muestra |
 | --- | --- |
-| `FRM-Datos-Personas` y `M-FRM-Datos-Personas` | «Datos de las personas», en Administración: los datos, la tabla de personas y el diálogo para definir un dato, que allá no se dibujó |
+| `FRM-Datos-Personas` y `M-FRM-Datos-Personas` | «Datos de las personas», en Administración: los datos, la tabla de personas y el diálogo para definir un dato |
 | `FRM-Usuario-Datos` y `M-FRM-Usuario-Datos` | la ficha del usuario, con las pestañas «Acceso» y «Datos» |
 | `FRM-Catalogo-16` y `M-FRM-Catalogo-16` | la columna «Filtro» en «Campos» |
-| `FRM-Editor-16` y `M-FRM-Editor-16` | «Qué opciones ve cada persona» en la pregunta (`CE4-A`) |
+| `FRM-Editor-16` y `M-FRM-Editor-16` | «Qué opciones ve cada persona» en la pregunta |
 | `FRM-Publicar-16` | los avisos, aparte de lo que frena |
 | `WA-Chats-Formulario-16` y `M-WA-Chats-Formulario-16` | el formulario que no se puede mandar, con el motivo |
 | `FRM-Respuestas-16` y `M-FRM-Respuestas-16` | «Columnas», con las subcolumnas de los filtros apagadas |

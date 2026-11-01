@@ -31,7 +31,7 @@ Antes de empezar, en este orden:
 
 ## Qué se construye
 
-**La lista «Formularios» (79, `MF1`):**
+**La lista «Formularios» (79):**
 - con `formrecords.read`, Preguntas y Último cambio dan lugar a tres columnas, un dato en cada una: Respuestas (de `LastRecordNumber`), Última respuesta (su número, que la abre) y Recibida. Sin valores, en una sola consulta paginada. Sin ese permiso, la lista sigue como en la E14;
 - quien ve respuestas y no tiene `forms.read` usa otra ruta, porque `[HasPermission]` pide un solo permiso. Ve solo los formularios publicados, con el nombre de su versión activa y nunca el del borrador, sin «En WhatsApp»;
 - el nombre abre «Respuestas» si hay una versión publicada y se pueden ver; si no, «Diseño».
@@ -70,7 +70,7 @@ Antes de empezar, en este orden:
 - **todas las preguntas** trae todos los campos sellados, una columna por campo; **solo las visibles** sigue a «Columnas»;
 - la hoja se llama «Respuestas»: el nombre del formulario no siempre entra en una hoja. El archivo es `<formulario>-<aaaa-mm-dd>.xlsx`, en la zona de quien exporta.
 
-**El tablero (57, `DOC7-A`):** la pestaña «Tablero», armada sola desde los tipos de las preguntas de la versión activa, sin nada escrito en el código:
+**El tablero (57):** la pestaña «Tablero», armada sola desde los tipos de las preguntas de la versión activa, sin nada escrito en el código:
 - arriba, «Respuestas» y, de las tres primeras preguntas de número, el total, el promedio, el mínimo y el máximo;
 - abajo, una tarjeta por gráfico: cuántas llegaron por día, semana o mes, con los días vacíos en tono suave; el total de cada número por período; el reparto de cada pregunta de elegir o de sí/no; las fechas por período, y quién cargó. Las opciones y las personas muestran seis y «Otras»;
 - usa los filtros de la planilla, y todo se calcula en SQL en la zona de quien mira, hasta los últimos 366 períodos;
@@ -86,18 +86,18 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Se dibujaron antes de las reglas del 25 y el 26/10, y Diseño los revisa con esta etapa, con el [texto de la etapa](15-texto-diseno.md). El recorrido guiado suma los circuitos `CA6` y `CE6`. Muestran solo lo que existe hasta acá (78).
+Se dibujaron antes de las reglas del 25 y el 26/10, y Diseño los revisa con esta etapa, con el [texto de la etapa](15-texto-diseno.md). El recorrido guiado suma dos circuitos: de pegar los proveedores a verlos en la planilla y el Excel, y de armar los campos a ver el CUIT sellado en la planilla. Muestran solo lo que existe hasta acá (78).
 
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
-| `FRM-Formularios-15` | la lista, con las columnas de respuestas (`MF1`) y «Quien solo ve respuestas» | A revisar |
-| `FRM-Respuestas` | la planilla, con «Columnas», «Empresa» y sus estados; suma `CA5` y `CE5` | A revisar |
+| `FRM-Formularios-15` | la lista, con las columnas de respuestas y «Quien solo ve respuestas» | A revisar |
+| `FRM-Respuestas` | la planilla, con «Columnas», «Empresa» y sus estados; suma «Elegir varias» y los campos sellados | A revisar |
 | `FRM-Respuestas-Filtros` | «Más filtros», en un panel al costado | A revisar |
 | `FRM-Respuesta` | la vista rápida | A revisar |
 | `FRM-Respuestas-Exportar` | el diálogo de exportar | A revisar |
-| `FRM-Tablero` | el tablero (`DOC7-A`) | A revisar |
+| `FRM-Tablero` | el tablero | A revisar |
 | `M-FRM-Respuestas`, `M-FRM-Respuesta`, `M-FRM-Tablero` | los tres, en el teléfono. Tocar una fila abre `M-FRM-Respuesta`: no hay vista rápida | A revisar |
-| `FRM-Respuesta-Completa` | la pantalla completa (`DC0` y `DC1` ajustado), con sus dos secciones plegadas y abiertas | Por dibujar |
+| `FRM-Respuesta-Completa` | la pantalla completa, con sus dos secciones plegadas y abiertas | Por dibujar |
 | `M-FRM-Formularios-15` | la lista en el teléfono, con «N respuestas · estado» | Por dibujar |
 
 **Lo que se corrige en lo dibujado:**
@@ -106,8 +106,8 @@ Se dibujaron antes de las reglas del 25 y el 26/10, y Diseño los revisa con est
 
 **Estados que faltan dibujar:**
 - un cliente con la marca «Cliente», y «Persona sin información»;
-- `CA5`: «Fallas» con dos opciones, el filtro «alguna de» y su lugar en «Más filtros»;
-- `CE5`: las subcolumnas con «—» en una respuesta de antes de los campos, y los campos en el detalle;
+- «Elegir varias»: «Fallas» con dos opciones, el filtro «alguna de» y su lugar en «Más filtros»;
+- los campos sellados: las subcolumnas con «—» en una respuesta de antes de los campos, y los campos en el detalle;
 - con `forms.read` y sin `formrecords.read`: la lista sin las columnas de respuestas.
 
 **Mandan sobre esta spec en:**
