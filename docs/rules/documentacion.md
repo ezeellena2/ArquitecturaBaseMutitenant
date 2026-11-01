@@ -17,6 +17,7 @@
 | la spec de una etapa | de paso | `docs/plans/formularios/` | [plantilla](../plans/formularios/plantilla.md), 4.000 palabras como mucho |
 | material para escribir otra cosa | de paso | `docs/plans/` | libre, con su condición de salida |
 
+- **Spec que no entra en 4.000 palabras:** sigue en `NN-parte-<tema>.md`, con secciones enteras y sus mismos números, y la principal dice en una tabla qué hay en cada parte. Es la misma etapa: `alinear-etapas` cuenta las secciones de todas sus partes.
 - **De paso:** debajo del título va `**Estado:** <palabra> · <detalle>`. Hay cuatro palabras: `pendiente`, `en curso`, `cerrado` e `insumo`, que además dice `se retira cuando …`.
 - **Vivos:** no declaran estado: si están ahí, valen hoy. Cambian en el mismo commit que el código, y lo planeado lleva `(E#)`.
 - **Revisado:** si el detector marca una ficha funcional y sigue siendo cierta, se le agrega `**Revisado:** AAAA-MM-DD` debajo del título.

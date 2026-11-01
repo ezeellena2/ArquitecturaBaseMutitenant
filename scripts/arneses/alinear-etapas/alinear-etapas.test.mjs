@@ -69,6 +69,25 @@ test('secciones: acepta los títulos numerados de las specs detalladas', async (
   assert.match(hallazgo.real, /E14: falta Qué leer$/);
 });
 
+test('secciones: una spec partida cuenta las secciones de todas sus partes, en una sola fila', async () => {
+  const principal = '# E14\n## Qué leer\n## 9. Pantallas\n## 12. Puntos de contacto\n## 15. Cómo se cierra';
+  const parte = '# E14, parte\n## 3. Modelo de datos\n## 5. Contrato borrador';
+  const archivos = { ...spec(14, principal), 'docs/plans/formularios/14-parte-datos-y-contrato.md': parte };
+  const [hallazgo, ...resto] = await secciones.detectar(contexto({ archivos }));
+  assert.match(hallazgo.real, /^E14: falta Pasos$/);
+  assert.equal(hallazgo.archivo, 'docs/plans/formularios/14-algo.md');
+  assert.deepEqual(resto, []);
+  const completa14 = { ...archivos, 'docs/plans/formularios/14-parte-archivos.md': '# E14, parte\n## 8. Archivos' };
+  assert.deepEqual(await secciones.detectar(contexto({ archivos: completa14 })), []);
+});
+
+test('orden: una parte de la spec se controla como la spec', async () => {
+  const archivos = { 'docs/plans/formularios/14-parte-flujos.md': '# E14, parte\n## 6. Flujos\nEsto lo usa la E15.' };
+  const [hallazgo] = await orden.detectar(contexto({ archivos }));
+  assert.equal(hallazgo.tipo, 'nombra-etapa-posterior');
+  assert.equal(hallazgo.archivo, 'docs/plans/formularios/14-parte-flujos.md');
+});
+
 test('secciones: no mira las etapas cerradas, los textos para Diseño ni el índice', async () => {
   const archivos = { ...spec(12, '# nada'), 'docs/plans/formularios/13-texto-diseno.md': '# nada', [INDICE]: '# nada' };
   assert.deepEqual(await secciones.detectar(contexto({ archivos, cerradas: [12] })), []);

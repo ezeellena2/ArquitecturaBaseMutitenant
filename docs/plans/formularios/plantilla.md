@@ -1,6 +1,6 @@
 # E<N> · <Nombre> (spec)
 
-Copiá esta plantilla para escribir la spec de una etapa, y borrá estas dos líneas. Sirve para programar sin adivinar: quien la toma no tiene que preguntar qué leer, qué pantallas copiar ni qué hacer primero. Tiene unas 4.000 palabras como mucho. `alinear-etapas` controla que estén las siete secciones marcadas con ✓.
+Copiá esta plantilla para escribir la spec de una etapa, y borrá estas dos líneas. Sirve para programar sin adivinar: quien la toma no tiene que preguntar qué leer, qué pantallas copiar ni qué hacer primero. Tiene unas 4.000 palabras como mucho; si no entra, sigue en `NN-parte-<tema>.md` ([documentacion](../../rules/documentacion.md)). `alinear-etapas` controla que estén las siete secciones marcadas con ✓.
 
 **Estado:** pendiente · spec de la etapa N del bloque (decisiones …). Se contrasta con el código real con `/plan-etapa` cuando le toque, después de la E<N-1>.
 

@@ -11,6 +11,8 @@ const MIRA_ADELANTE = /Fuera de esta etapa|No entra|Requisitos|Puntos de contact
 const ESPEC = new RegExp(`^${CARPETA}/(\\d\\d)-(?!texto-diseno)[^/]+\\.md$`);
 const ETIQUETAS = /(Aprobados|A revisar|Se redibujan|Por dibujar):/g;
 
+/** Una spec que no entra en 4.000 palabras sigue en `NN-parte-<tema>.md`: es la misma etapa y se controla igual. */
+export const esParte = (archivo) => new RegExp(`^${CARPETA}/\\d\\d-parte-`).test(archivo);
 export const esTablero = (nombre) => /^(?:M-)?(?:Plat-)?(?:FRM|WA)-[A-Za-z0-9-]+$/.test(nombre);
 export const esCodigoDeAlla = (nombre) => /^[A-Z]{2,3}\d+(?:-[A-Z])?$/.test(nombre);
 

@@ -1,4 +1,4 @@
-import { enPalabras, leerEtapas } from '../etapas.mjs';
+import { enPalabras, esParte, leerEtapas } from '../etapas.mjs';
 
 export const nombre = 'secciones';
 
@@ -16,8 +16,10 @@ const FORMATO = [
 /** Una fila por etapa con lo que le falta para programarse sin adivinar. */
 export async function detectar(ctx) {
   const hallazgos = [];
-  for (const etapa of await leerEtapas(ctx)) {
-    const titulos = ctx.markdown.secciones(etapa.texto).map((s) => s.titulo.replace(/^\d+[a-z]?\.\s*/, ''));
+  const etapas = await leerEtapas(ctx);
+  for (const etapa of etapas.filter((e) => !esParte(e.archivo))) {
+    const propias = etapas.filter((e) => e.numero === etapa.numero);
+    const titulos = propias.flatMap((e) => ctx.markdown.secciones(e.texto)).map((s) => s.titulo.replace(/^\d+[a-z]?\.\s*/, ''));
     const faltan = FORMATO.filter(([, patron]) => !titulos.some((t) => patron.test(t))).map(([seccion]) => seccion);
     if (!faltan.length) continue;
     const real = `E${etapa.numero}: ${faltan.length === 1 ? 'falta' : 'faltan'} ${enPalabras(faltan)}`;

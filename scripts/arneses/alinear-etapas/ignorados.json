@@ -1,26 +1,26 @@
 [
   {
-    "id": "orden|back|docs/plans/formularios/12-catalogos.md|nombra-etapa-posterior|E14:| C13 | **El módulo nace acá,** como el Asistente: `AddForms",
+    "id": "orden|back|docs/plans/formularios/12-parte-datos-y-contrato.md|nombra-etapa-posterior|E14:| C13 | **El módulo nace acá,** como el Asistente: `AddForms",
     "motivo": "Aclara qué pasa después; la E12 no depende de la E14.",
     "fecha": "2026-10-31"
   },
   {
-    "id": "orden|back|docs/plans/formularios/12-catalogos.md|nombra-etapa-posterior|E14:- **«Sin incluir a quien lo recibe»:** `MemberId <> el miemb",
+    "id": "orden|back|docs/plans/formularios/12-parte-datos-y-contrato.md|nombra-etapa-posterior|E14:- **«Sin incluir a quien lo recibe»:** `MemberId <> el miemb",
     "motivo": "Aclara qué pasa después; la E12 no depende de la E14.",
     "fecha": "2026-10-31"
   },
   {
-    "id": "orden|back|docs/plans/formularios/12-catalogos.md|nombra-etapa-posterior|E14:- con más de 200 resultados para esa persona **se guarda**: ",
+    "id": "orden|back|docs/plans/formularios/12-parte-datos-y-contrato.md|nombra-etapa-posterior|E14:- con más de 200 resultados para esa persona **se guarda**: ",
     "motivo": "Aclara qué pasa después; la E12 no depende de la E14.",
     "fecha": "2026-10-31"
   },
   {
-    "id": "orden|back|docs/plans/formularios/12-catalogos.md|nombra-etapa-posterior|E14:6. **Vista previa:** corre el lector con los filtros sin gua",
+    "id": "orden|back|docs/plans/formularios/12-parte-datos-y-contrato.md|nombra-etapa-posterior|E14:6. **Vista previa:** corre el lector con los filtros sin gua",
     "motivo": "Aclara qué pasa después; la E12 no depende de la E14.",
     "fecha": "2026-10-31"
   },
   {
-    "id": "orden|back|docs/plans/formularios/12-catalogos.md|nombra-etapa-posterior|E14:**El primer puerto neutral del módulo, `IStructuredContactSo",
+    "id": "orden|back|docs/plans/formularios/12-parte-datos-y-contrato.md|nombra-etapa-posterior|E14:**El primer puerto neutral del módulo, `IStructuredContactSo",
     "motivo": "Aclara qué pasa después; la E12 no depende de la E14.",
     "fecha": "2026-10-31"
   },
