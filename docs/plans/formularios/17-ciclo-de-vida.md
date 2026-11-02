@@ -57,7 +57,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Redibujados en la v151 con el armado de ArquitecturaBase (131 y 132), para aprobar, con el [texto de la etapa](17-texto-diseno.md). El ciclo completo va como recorrido de la guía, `dar-de-baja-y-reactivar`. Muestran solo lo que existe hasta acá (78).
+Aprobados y publicados en el lienzo v151, con el armado de ArquitecturaBase (131 y 132). El ciclo completo va como recorrido de la guía, `dar-de-baja-y-reactivar`. Muestran solo lo que existe hasta acá (78).
 
 | Tablero | Qué muestra |
 | --- | --- |
