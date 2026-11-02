@@ -14,6 +14,7 @@ Te paso los tableros de la E22, la biblioteca de plantillas, para el lienzo del 
 - **82:** el logo y los datos del encabezado del PDF salen de la página pública de cada organización, y el color se elige en el diseño del PDF de cada formulario;
 - **35 y 45:** el contenido no tiene idioma. Las plantillas y las categorías son un solo texto, sin «Textos en», sin pares en inglés y sin el inglés obligatorio;
 - **43:** botones habilitados o grisados, sin textos al lado ni debajo, sin «Cambios sin guardar»; si falta un dato obligatorio, el botón sigue habilitado y al tocarlo se marca lo que falta;
+- **109, 115 y 116:** sin leyendas, con la ayuda que sirve en la (i), y toda espera a la vista;
 - **109, 115 y 116:** sin leyendas, con la ayuda que sirve en la (i), y toda espera a la vista: el botón con su aro y su gerundio;
 - **50:** cada plantilla dice para quién es su formulario: empleados, clientes o los dos;
 - **59:** el diseño del PDF tiene una base con secciones, mostrar u ocultar preguntas y firmas; el logo y el color los pone cada organización;

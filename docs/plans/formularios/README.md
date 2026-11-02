@@ -13,6 +13,7 @@ Cada etapa del bloque tiene acá su spec, y todas van hacia el mismo [formato](p
 
 **Sin la E10 y sin la maqueta** (123 y 124):
 - las etapas se programan y se cierran sin la E10. Lo que pide Meta con un número conectado, o la nube, queda pendiente en el plan de cada etapa, y se prueba junto cuando esté la I1;
+- las pruebas con Meta que van antes de programar la 19, la 21 y la 25 no esperan la I1: se hacen con la cuenta de desarrollo, la de la prueba de la 11 (`WhatsApp:BusinessAccountId` y su número, en [configuración](../../operations/configuracion.md));
 - lo que se ve sale del lienzo y cómo funciona, de las specs. Ninguna etapa copia de la maqueta.
 
 **Qué no va acá:**

@@ -8,7 +8,7 @@ Se pega tal cual en el chat de Diseño, que es el único que toca el lienzo.
 
 Te paso los tableros de la E15, respuestas, para el lienzo del multitenant. No hay que programar nada: solo tableros.
 
-**Contexto.** La E15 suma lo de las respuestas: la lista «Formularios» con sus columnas, las pestañas «Respuestas» y «Tablero» de cada formulario, la planilla, «Más filtros», la vista rápida, la pantalla completa, exportar y el tablero. **Los tableros muestran solo lo que existe hasta acá** (78): nada de fotos, documentos, aprobación, estado, PDF, corregir ni «Cargar». Valen las fichas del front: un dato por celda, en un renglón; fechas completas, con hora; sin cantidades en los encabezados de sección; sin leyendas (109); botones habilitados o grisados (43), y toda espera a la vista (115).
+**Contexto.** La E15 suma lo de las respuestas: la lista «Formularios» con sus columnas, las pestañas «Respuestas» y «Tablero» de cada formulario, la planilla, «Más filtros», la vista rápida, la pantalla completa, exportar y el tablero. **Los tableros muestran solo lo que existe hasta acá** (78): nada de fotos, documentos, aprobación, estado, PDF, corregir ni «Cargar». Valen las fichas del front: un dato por celda, en un renglón; fechas completas, con hora; sin cantidades en los encabezados de sección; sin leyendas (109), con la ayuda que sirve en la (i) (116); botones habilitados o grisados (43), y toda espera a la vista (115).
 
 **Leé primero,** en el repo del back `ArquitecturaBaseMutitenant`: la spec `docs/plans/formularios/15-respuestas.md`, sobre todo «Qué se construye» y «Pantallas».
 
