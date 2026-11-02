@@ -23,8 +23,8 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 9 · Endurecimiento | Cerrada | [Identidad](../features/identidad.md), [Plataforma](../features/plataforma.md), [cuotas](../rules/cuotas.md), [caché](../rules/cache.md), [ADR 0052](../decisions/0052-cache-compartida-redis.md) |
 | 10 · Operación | Pendiente. El plan corto está listo, con las decisiones del usuario; la F5 de botones pasó a la base de la 12 | [Plan](2026-10-16-etapa-10-despliegue.md), [manual de operación](../operations/runbook.md) |
 | Base de la 12 | Pendiente. Spec lista: lo que se copia de la maqueta, con los botones (la F5 de la 10), la campana en el núcleo y la letra al 85 %, que confirmó el usuario | [Spec](formularios/base-de-la-12.md) |
-| 12 · Catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v141 y al día en la v145; se redibuja `FRM-Catalogos`, con su filtro | [Spec](formularios/12-catalogos.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
-| 13 · Campos de los catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v145 (decisión del usuario del 27/10) | [Spec](formularios/13-campos.md) |
+| 12 · Catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v141 y al día en la v145; se redibujan `FRM-Catalogos`, con su filtro, `FRM-Catalogo` y `FRM-Catalogo-Importar`, y hay tableros por dibujar | [Spec](formularios/12-catalogos.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
+| 13 · Campos de los catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v145 (decisión del usuario del 27/10); se redibuja `FRM-Catalogo-13`, con el combo del catálogo, y hay tableros por dibujar | [Spec](formularios/13-campos.md) |
 | 14 · Formularios | Pendiente. Spec lista, con los tableros aprobados en el lienzo v141 y al día en la v145; se redibujan `FRM-Editor`, con los títulos de sección, y `FRM-Publicar`, y hay tableros por dibujar | [Spec](formularios/14-formularios.md) |
 | 15 · Respuestas, planilla y Excel | Pendiente. Spec lista; tableros a revisar y por dibujar | [Spec](formularios/15-respuestas.md) |
 | 16 · Datos de las personas y filtros | Pendiente. Spec lista; tableros por dibujar | [Spec](formularios/16-datos-de-las-personas.md) |
@@ -55,7 +55,7 @@ Una organización arma formularios, los manda por WhatsApp a sus empleados y a s
 - **Etapas y fuente:** son catorce, de la 12 a la 25, en el orden de la decisión 78: **el número es el orden**, con los catálogos primero. Cada una tiene su sección y las decisiones de producto tomadas en la [hoja de ruta](2026-10-12-formularios-dinamicos-hoja-de-ruta.md). El alcance de cada una sale de la [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md), que usa los números de antes, y de las decisiones 47 a 82. La equivalencia está en [`formularios/`](formularios/README.md).
 - **La regla del orden:** cada etapa usa solo lo de las anteriores, lo que suma se ve en las pantallas que ya existen, y nada nombra, prueba ni dibuja algo de una etapa posterior. La controla `/plan-etapa`.
 - **La base, al principio de la 12** ([spec](formularios/base-de-la-12.md)). Se copia de la maqueta (`MaquetaMultitenant`, commits del 25/10):
-  - los botones y avisos de la decisión 43, que eran la F5 de la 10;
+  - los botones y avisos de la decisión 43, que eran la F5 de la 10, con las leyendas, la (i), los motivos y las esperas de las decisiones 109, 110, 115 y 116;
   - la campana, en el núcleo, con las dos rutas de avisos;
   - «Más filtros» en `FilterBar`, con el buscador y hasta tres filtros en una fila;
   - un dato por celda, en un renglón: `DataTable` deja de dibujar `detail` en la computadora, y cada pantalla pasa a columnas lo que hace falta (decisión del usuario del 25/10);
