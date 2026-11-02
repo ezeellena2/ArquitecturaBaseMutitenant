@@ -77,11 +77,11 @@ Parte está aprobada en el lienzo v130, y Diseño la revisa con el [texto de la 
 
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
-| `FRM-Editor-18` y `M-FRM-Editor-18` | las preguntas de foto y documento, el tope en el ⓘ de «Cuántas» y «Sin almacenamiento» | A revisar |
+| `FRM-Editor-18` y `M-FRM-Editor-18` | las preguntas de foto y documento, el tope en la (i) de «Cuántas» y «Sin almacenamiento» | A revisar |
 | `FRM-Publicar-18` | «Más de 10 archivos» | A revisar |
 | `WA-Chats-Respuesta-18` y `M-WA-Conversacion-Respuesta-18` | la tarjeta: bajando, reintentando, con fotos y un documento, muchas fotos y los dos rechazos | A revisar |
 | `WA-Chats-Visor` y `M-WA-Chats-Visor` | el visor | A revisar |
-| `FRM-Respuestas-18` y `M-FRM-Respuestas-18` | la planilla con la columna de archivos, su filtro en «Más filtros» y el ⓘ de exportar | Por dibujar |
+| `FRM-Respuestas-18` y `M-FRM-Respuestas-18` | la planilla con la columna de archivos, su filtro en «Más filtros» y la (i) de exportar | Por dibujar |
 | `FRM-Respuesta-18` y `M-FRM-Respuesta-18` | el detalle, con «Fotos» y el visor | Por dibujar |
 | `FRM-Respuesta-Completa-18` | la pantalla completa, con «Descargar ▾» | Por dibujar |
 | `FRM-Dar-De-Baja-18` y `FRM-Editor-Baja-18` | «Lo que se conserva» suma las fotos y los documentos | Por dibujar |
@@ -202,7 +202,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
 | F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` y `F/src/modules/whatsapp/chats/` | `M/…/api/records.ts` | zod estricto con los ejemplos |
-| F2 | El editor | suma a `QuestionEditor.tsx` [E14] | `M/…/QuestionEditor.tsx` | el tope en el ⓘ de «Cuántas»; sin almacenamiento |
+| F2 | El editor | suma a `QuestionEditor.tsx` [E14] | `M/…/QuestionEditor.tsx` | el tope en la (i) de «Cuántas»; sin almacenamiento |
 | F3 | El visor común | `F/src/shared/ui/PhotoViewer.tsx` | `M/…/records/RecordValues.tsx` | teclado y foco; solo las miniaturas visibles; perder el permiso lo cierra; axe |
 | F4 | La tarjeta del chat | suma a la tarjeta [E14] | el tablero | los estados; «Mandar de nuevo» |
 | F5 | Planilla, detalle y Excel | suma a `FormRecordsPage.tsx`, `QuickView.tsx`, `RecordFullPage.tsx`, `RecordValues.tsx` y `ExportDialog.tsx` [E15] | `M/…` | columna, pestaña «Fotos» y «Descargar ▾» |

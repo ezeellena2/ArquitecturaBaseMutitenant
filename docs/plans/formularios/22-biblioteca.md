@@ -89,7 +89,7 @@ Valen los criterios de la E14 y la decisión 43. El texto para Diseño está en 
 - **Las reglas precargadas en la organización:** «Guardar reglas» queda habilitado; al tocarlo sin elegir los roles, se marcan las acciones que lo piden (43). El servidor valida con la regla de la E21, que pide el rol en esas acciones. Se ven y se guardan con `formrules.manage`; sin ese permiso, la sección muestra su estado «sin permiso».
 - **«Logo» y «Nombre de la organización»** van como marcadores, porque la plataforma no ve datos de ninguna organización.
 - **Usar una plantilla:**
-  - se pide el nombre y se propone el prefijo; si VIS está tomado, se propone VIS2, con ⓘ;
+  - se pide el nombre y se propone el prefijo; si VIS está tomado, se propone VIS2, y la (i) del prefijo dice por qué;
   - si la plantilla se retiró en el medio, avisa y vuelve a la biblioteca;
   - sin permiso de catálogos, «Usar esta plantilla» queda grisado, con el motivo en su tooltip (43).
 

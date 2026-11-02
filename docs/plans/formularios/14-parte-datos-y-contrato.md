@@ -228,6 +228,7 @@ Las rutas Business de Forms llevan `[Access(Access.Business)]` y `[FeatureGate("
 | POST `/api/organization/whatsapp/{customers\|internal}/conversations/{id}/forms` **[E11]** | «Atender internos» o «Atender clientes», según la bandeja | `{definitionId, versionId, text}` (≤1024) | 202 `{sessionId, messageId}` |
 
 **Otras piezas del contrato:**
+- **`changes[]` de `publication-checks`:** `{kind, fieldId, label}`, con `kind` `added`, `changed` o `removed`, comparando el borrador guardado con la versión activa. En la primera publicación viene vacío.
 - **La campana:** Forms aporta `formPublicationFailed` por `INotificationSource` (base de la 12), a quien tiene `forms.publish`.
 - **Tarjeta de respuesta [E11]:** los mensajes de la conversación suman un tipo `form`: `{sessionId, state, errorCode?, formName, displayNumber?, values?: [{fieldId, label, type, value, code?}], canReadValues}`. En «elegir varias», `value` es la lista de opciones en el orden recibido. El valor de catálogo muestra el texto que vio la persona y su código. Si la respuesta se rechazó con `OptionWithdrawn`, nombra la pregunta, no la opción.
 - **Webhook:** la misma ruta de la E8. Se agrega leer `interactive.nfm_reply`.

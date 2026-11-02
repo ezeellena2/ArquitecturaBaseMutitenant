@@ -37,7 +37,7 @@ El esqueleto del módulo lo deja la E12: `AddFormsModule` en las tres capas, la 
 | Archivo nuevo o cambiado | Modelo |
 | --- | --- |
 | `F/src/modules/forms/registration.ts` de la E12: suma las rutas `/org/formularios` (la lista «Formularios») y `/org/formularios/:id` (el formulario, con su pestaña «Diseño»), con `forms.read`, y «Formularios» en el panel de «Gestión de formularios» (79). Las pestañas del formulario son una pieza nueva del front, a la que cada etapa suma la suya | la misma registration |
-| `F/src/modules/forms/{api,components,hooks,pages}/`: la lista, el formulario con sus pestañas, el editor con el selector de catálogo y la presentación en la pregunta, publicar y «Lo usan» en los catálogos. Las preguntas que se abren en el lugar son una excepción a las filas que no se expanden: se escribe en la ficha de tablas del front | `F/src/modules/assistant/` |
+| `F/src/modules/forms/{api,components,hooks,pages}/`: la lista, el formulario con sus pestañas, el editor con el combo del catálogo (`CatalogCombo.tsx`, de la E13) y la presentación en la pregunta, publicar y «Lo usan» en los catálogos. Las preguntas que se abren en el lugar son una excepción a las filas que no se expanden: se escribe en la ficha de tablas del front | `F/src/modules/assistant/` |
 | `F/src/modules/forms/locales/{es,en}/forms.json` y `enums.json`: suman las claves, con paridad | los recursos de la E12 |
 | WhatsApp **[E11]**: el diálogo «Enviar formulario», con los avisos de la oferta, y la tarjeta de respuesta, con el rechazo y «Mandar de nuevo», en el módulo de WhatsApp del front que deje la E11; en «Mis mensajes», la tarjeta copiada (T16) | — |
 
