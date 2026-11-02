@@ -99,7 +99,7 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 - `FRM-Catalogo-Filtros`: un catálogo de los miembros, con sus filtros y la vista previa;
 - `FRM-Catalogo-Contactos`: un catálogo «De los contactos», con sus filtros por etiqueta y la vista previa (55).
 
-**Se redibujan** (117 y 120), con el [texto para Diseño](14-texto-diseno.md):
+**Se redibujan** (117 y 120), con el [texto para Diseño](12-texto-diseno.md):
 - `FRM-Catalogo` y `M-FRM-Catalogo`: el editor de un catálogo a mano con la sección «Opciones»: en su banda, «+ Agregar opción» y un ⋮ con Importar, Exportar, Descargar la plantilla, Ordenar de la A a la Z y Generar los códigos que faltan; abajo, solo «Buscar opción» y el filtro de estado; la tabla editable en la compu, la selección de filas para dar de baja o reactivar, solo el ⋮ en cada fila (con «Editar» adentro, que abre el modal, sin un ✎ aparte), y el teléfono al costado;
 - `FRM-Catalogo-Importar`: «Origen» y «Revisión» a la vista, sin pasos numerados.
 
