@@ -8,7 +8,7 @@ Se pega tal cual en el chat de Diseño, que es el único que toca el lienzo. Va 
 
 Te paso los tableros de la carga desde la web para el lienzo del multitenant. No hay que programar nada: solo tableros.
 
-**Contexto.** Un empleado completa un formulario desde la web, a su nombre, con la misma captura que por WhatsApp. El usuario ya decidió cómo funciona: son las decisiones 83 a 98 de la hoja de ruta, y no se vuelven a preguntar. **Los tableros muestran solo lo que existe hasta la E20** (78): nada de estado, «Por aprobar», PDF, corregir ni anular. Valen las fichas del front: un dato por celda, fechas completas, sin rótulos que expliquen y botones habilitados o grisados (43).
+**Contexto.** Un empleado completa un formulario desde la web, a su nombre, con la misma captura que por WhatsApp. El usuario ya decidió cómo funciona: son las decisiones 83 a 98 de la hoja de ruta, y no se vuelven a preguntar. **Los tableros muestran solo lo que existe hasta la E20** (78): nada de estado, «Por aprobar», PDF, corregir ni anular. Valen las fichas del front: un dato por celda, fechas completas, sin leyendas (109), con la ayuda que sirve en la (i) (116), botones habilitados o grisados (43) y toda espera a la vista (115).
 
 **Leé primero,** en el repo del back `ArquitecturaBaseMutitenant`: la spec `docs/plans/formularios/20-cargar-desde-la-web.md`, sobre todo «Cómo se arma cada pregunta» y «Pantallas».
 
@@ -29,7 +29,7 @@ Te paso los tableros de la carga desde la web para el lienzo del multitenant. No
    - los errores en su pregunta, la zona plegada que se abre sola y la confirmación al salir.
 4. **`FRM-Cargar-Panel`:** el panel junto a la planilla, en una columna, con «Mantener las respuestas para la siguiente» y «Pantalla completa». Solo en la compu.
 5. **`FRM-Cargar-Lista` y su teléfono:** la lista con búsqueda, el total, la descripción y «Mostrar 50 más»; una sola opción, ya elegida; sin el dato de la persona; elegir varias; la lista que espera otra respuesta y se limpia si esa respuesta cambia. En el teléfono ocupa la pantalla.
-6. **`FRM-Cargar-Archivos` y su teléfono:** arrastrar o elegir, el contador, los errores antes de enviar, el botón grisado con su texto y **una barra de avance sin palabras** (95, sin «Enviando… 64 %»), el corte de conexión y «Tomar foto» primero en el teléfono.
+6. **`FRM-Cargar-Archivos` y su teléfono:** arrastrar o elegir, el contador, los errores antes de enviar, el botón con «Enviando…» y su aro y **una barra de avance sin palabras** (95, sin «Enviando… 64 %»), el corte de conexión y «Tomar foto» primero en el teléfono.
 7. **`FRM-Cargar-Enviada` y su teléfono:** «Enviada» con lo que se mandó, los cálculos, el número y la hora, con «Cargar otra» y «Ver en la planilla». Y los casos: versión nueva, con «Pasar a la versión nueva»; dado de baja; una opción dada de baja, en su pregunta; sin conexión.
 8. **`FRM-Respuestas-20` y `FRM-Respuesta-20`, con sus teléfonos:** «Agregar respuesta» en el encabezado, «App» en «Canal» y en su filtro, y en el detalle «Recibida · … · en la app, la cargó …», sin «Abrir conversación».
 9. **`FRM-Respuestas-Propias` y su teléfono:** la misma planilla con lo suyo, sin «Mis cargas» aparte.

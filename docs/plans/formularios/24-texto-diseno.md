@@ -8,7 +8,7 @@ Se pega tal cual en el chat de Diseño, que es el único que toca el lienzo.
 
 Te paso los tableros de la E24, varios asistentes, para el lienzo del multitenant. No hay que programar nada: solo tableros.
 
-**Contexto.** Cada equipo de la bandeja puede tener su asistente, con su perfil, sus casos y sus límites. El conocimiento lo comparten. **Los tableros muestran solo lo que existe hasta acá** (78): nada de leer documentos. Valen las fichas del front: un dato por celda, sin rótulos que expliquen, y botones habilitados o grisados (43).
+**Contexto.** Cada equipo de la bandeja puede tener su asistente, con su perfil, sus casos y sus límites. El conocimiento lo comparten. **Los tableros muestran solo lo que existe hasta acá** (78): nada de leer documentos. Valen las fichas del front: un dato por celda, sin leyendas (109), con la ayuda que sirve en la (i) (116), botones habilitados o grisados (43) y toda espera a la vista (115).
 
 **Leé primero,** en el repo del back `ArquitecturaBaseMutitenant`: la spec `docs/plans/formularios/24-varios-asistentes.md`.
 

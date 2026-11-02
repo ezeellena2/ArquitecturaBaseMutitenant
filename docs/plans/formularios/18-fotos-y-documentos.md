@@ -34,7 +34,7 @@ Antes de empezar, en este orden:
 - **tope por archivo:** `Forms:MaxFileSizeMiB`, de 1 a 25, con `ValidateOnStart`, que se sella con la versión. Hasta 10 archivos y 100 MiB por respuesta, por el tope de Meta;
 - copiar un formulario copia estas preguntas como cualquier otra.
 
-**El Flow:** `PhotoPicker` y `DocumentPicker`, una pregunta de archivo por pantalla, con un perfil nuevo. Los IDs de pantalla son solo letras y guiones bajos. Las opciones de catálogo que viajan en `data` llegan a la pantalla que las usa, aunque el Flow tenga varias **[Meta]**.
+**El Flow:** `PhotoPicker` y `DocumentPicker`, una pregunta de archivo por pantalla, con un perfil nuevo. Su etiqueta admite 80 caracteres, y su ayuda, 300. Los IDs de pantalla son solo letras y guiones bajos. Las opciones de catálogo que viajan en `data` llegan a la pantalla que las usa, aunque el Flow tenga varias **[Meta]**.
 
 **Responder con archivos:**
 - WhatsApp baja cada archivo de la API de medios con el token de la organización, solo por HTTPS, desde hosts de Meta y sin redirecciones;

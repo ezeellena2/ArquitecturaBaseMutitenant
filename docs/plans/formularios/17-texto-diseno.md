@@ -8,7 +8,7 @@ Se pega tal cual en el chat de Diseño, que es el único que toca el lienzo.
 
 Te paso los tableros de la E17, ciclo de vida y copiar, para el lienzo del multitenant. No hay que programar nada ni dibujar tableros nuevos: solo revisar los que ya están.
 
-**Contexto.** La E17 suma dar de baja, reactivar, borrar y copiar un formulario. **Los tableros muestran solo lo que existe hasta acá** (78): todavía no hay fotos, documentos, PDF, aprobaciones, asistente ni sugerencias. Valen las fichas del front: un dato por celda, fechas completas, sin rótulos que expliquen, y botones habilitados o grisados (43).
+**Contexto.** La E17 suma dar de baja, reactivar, borrar y copiar un formulario. **Los tableros muestran solo lo que existe hasta acá** (78): todavía no hay fotos, documentos, PDF, aprobaciones, asistente ni sugerencias. Valen las fichas del front: un dato por celda, fechas completas, sin leyendas (109), con la ayuda que sirve en la (i) (116), botones habilitados o grisados (43) y toda espera a la vista (115).
 
 **Leé primero,** en el repo del back `ArquitecturaBaseMutitenant`: la spec `docs/plans/formularios/17-ciclo-de-vida.md`, sobre todo «Qué se construye» y «Pantallas».
 

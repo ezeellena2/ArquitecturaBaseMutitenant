@@ -8,7 +8,7 @@ Se pega tal cual en el chat de Diseño, que es el único que toca el lienzo.
 
 Te paso los tableros de la E19, condiciones, cálculos y líneas, para el lienzo del multitenant. No hay que programar nada: solo tableros.
 
-**Contexto.** La E19 suma tres cosas al editor: una pregunta que aparece según otra, una pregunta «Cálculo» que no se ve en WhatsApp y un grupo de renglones. Lo que suman se ve en la planilla, el detalle, el Excel, el tablero y la tarjeta del chat. **Los tableros muestran solo lo que existe hasta acá** (78): nada de «Cargar», aprobación, PDF ni asistente. Valen las fichas del front: un dato por celda, en un renglón; sin rótulos que expliquen, y botones habilitados o grisados (43).
+**Contexto.** La E19 suma tres cosas al editor: una pregunta que aparece según otra, una pregunta «Cálculo» que no se ve en WhatsApp y un grupo de renglones. Lo que suman se ve en la planilla, el detalle, el Excel, el tablero y la tarjeta del chat. **Los tableros muestran solo lo que existe hasta acá** (78): nada de «Cargar», aprobación, PDF ni asistente. Valen las fichas del front: un dato por celda, en un renglón; sin leyendas (109), con la ayuda que sirve en la (i) (116); botones habilitados o grisados (43), y toda espera a la vista (115).
 
 **Leé primero,** en el repo del back `ArquitecturaBaseMutitenant`: la spec `docs/plans/formularios/19-condiciones-calculos-y-lineas.md`, sobre todo «Qué se construye» y «Pantallas». La referencia es la maqueta, en `components/logic/`.
 

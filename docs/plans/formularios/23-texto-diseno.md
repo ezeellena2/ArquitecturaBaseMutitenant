@@ -8,7 +8,7 @@ Se pega tal cual en el chat de Diseño, que es el único que toca el lienzo.
 
 Te paso los tableros de la E23, el asistente con Casos, para el lienzo del multitenant. No hay que programar nada: solo tableros.
 
-**Contexto.** El asistente atiende empleados y clientes por WhatsApp, con lo que configura cada organización. **Los tableros muestran solo lo que existe hasta acá** (78): nada de varios asistentes ni de leer documentos. Valen las fichas del front: un dato por celda, sin rótulos que expliquen, y botones habilitados o grisados (43).
+**Contexto.** El asistente atiende empleados y clientes por WhatsApp, con lo que configura cada organización. **Los tableros muestran solo lo que existe hasta acá** (78): nada de varios asistentes ni de leer documentos. Valen las fichas del front: un dato por celda, sin leyendas (109), con la ayuda que sirve en la (i) (116), botones habilitados o grisados (43) y toda espera a la vista (115). Lo que espera a la IA también: «Probar» y «Armar desde un texto» dicen «Probando…» y «Armando…», con su aro.
 
 **Leé primero,** en el repo del back `ArquitecturaBaseMutitenant`: la spec `docs/plans/formularios/23-asistente.md`. La maqueta no tiene el asistente: los dibujos son tuyos, con nuestras reglas y piezas (108), y las pantallas nuevas sin modelo van con opciones para el usuario.
 

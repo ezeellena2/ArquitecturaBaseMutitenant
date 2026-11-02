@@ -56,7 +56,7 @@ Antes de empezar, en este orden:
 **La página «Nueva respuesta»** (84), en `/org/formularios/:id/cargar`, para la compu y el teléfono:
 - Cancelar y el botón del formulario van en la banda; en el teléfono, ese botón queda fijo al pie;
 - se valida al enviar: cada error en su pregunta y el foco en la primera. Después, en vivo. Salir con algo cargado pide confirmación;
-- mientras sube, el botón queda grisado con su mismo texto y una barra de avance, sin palabras, muestra cuánto falta (43 y 95);
+- mientras sube, el botón dice «Enviando…» con su aro, y una barra de avance, sin palabras, muestra cuánto falta (95 y 115);
 - lo cargado vive en la página: nunca va a la URL, al storage ni a la caché.
 
 **El panel** (84), al costado de la planilla, solo en la compu: «Mantener las respuestas para la siguiente» conserva todo menos los archivos, y «Pantalla completa» pasa lo cargado a la página. Al enviar, el aviso dice el número y la planilla se relee con la respuesta marcada.
