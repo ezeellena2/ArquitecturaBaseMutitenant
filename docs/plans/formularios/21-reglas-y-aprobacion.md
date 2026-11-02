@@ -1,13 +1,19 @@
 # E21 · Reglas, aprobación, PDF y avisos (spec)
 
-**Estado:** pendiente · spec de la etapa 21 del bloque (decisiones 34, 78, 80, 82, 91 a 93, 100 y 106), con el [formato](plantilla.md) de las etapas. Corresponde a la etapa 4 de ArquitecturaBase, con piloto real, y a la etapa 3 de su carga desde la app, decidida y sin programar. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E20.
+**Estado:** pendiente · spec de la etapa 21 del bloque (decisiones 34, 78, 80, 82, 91 a 93, 100, 106, 113 y 114), con el [formato](plantilla.md) de las etapas. Corresponde a la etapa 4 de ArquitecturaBase, con piloto real, y a la etapa 3 de su carga desde la app, decidida y sin programar. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E20.
+
+**Partes.** Esta spec no entra en un solo archivo, así que sigue en otro, con las mismas secciones. Lo que no está en la tabla está acá.
+
+| Secciones | Archivo |
+| --- | --- |
+| Contrato y Datos | [datos y contrato](21-parte-datos-y-contrato.md) |
 
 ## Qué leer
 
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T4, T5, T7 y la §6, punto 7; la [E15](15-respuestas.md): lista, planilla y detalle; la [E17](17-ciclo-de-vida.md): copiar y borrar; la [E18](18-fotos-y-documentos.md): archivos; la [E19](19-condiciones-calculos-y-lineas.md): condiciones, y la [E20](20-cargar-desde-la-web.md): la captura y lo propio.
-2. **Decisiones** de la hoja de ruta: 25, 35, 42, 43, 47, 49, 55, 59 a 62, 80, 82, 85, 89, 91 a 93, 100 y 106. Y la [ADR 0040](../../decisions/0040-para-resolver.md).
+2. **Decisiones** de la hoja de ruta: 25, 35, 42, 43, 47, 49, 55, 59 a 62, 80, 82, 85, 89, 91 a 93, 100, 106, 109, 113, 114, 115 y 116. Y la [ADR 0040](../../decisions/0040-para-resolver.md).
 3. **Fichas:** [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [idempotencia](../../rules/idempotencia.md), [modulos](../../rules/modulos.md), [multitenancy](../../rules/multitenancy.md), [permisos](../../rules/permisos.md), [persistencia-ef](../../rules/persistencia-ef.md), [auditoria](../../rules/auditoria.md), [emails](../../rules/emails.md), [textos-libres](../../rules/textos-libres.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [logs](../../rules/logs.md), [api-http](../../rules/api-http.md) y [tests](../../rules/tests.md).
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 5. **Referencia de producto,** solo para leer: en [`../2026-10-17-formularios-traspaso/`](../2026-10-17-formularios-traspaso/README.md), el anexo C, «Etapa 4», el anexo B, «Etapa 4», y el anexo D (G1 a G6); en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`, el anexo C §5 y §6 (L-05 a L-08), y en ArquitecturaBase, `docs/plans/2026-10-29-cargar-formularios-desde-la-app.md`, «Corregir y anular».
@@ -20,7 +26,15 @@ Antes de empezar, en este orden:
 - **cada regla:** un evento (Recibida, Aprobada o Rechazada), hasta 10 condiciones unidas con «y», con la gramática de la E15, y hasta 10 acciones en orden. Hasta 20 reglas;
 - **las acciones:** pedir aprobación a un rol, armar el PDF, mandarle un mensaje a quien la cargó, avisar a un rol, avisar a una persona (62), mandar por correo (62) y mandar el PDF a un cliente (47);
 - los textos usan `{número}`, `{motivo}` y `{pregunta}`, y son un solo texto (35). Una condición sobre una pregunta que no existía o no se mostró cuenta como «sin respuesta»;
-- **el orden:** pedir aprobación es la última acción de su regla, y solo al recibir. **El PDF** (106): si alguna regla pide aprobación, se arma solo al aprobar, y lo que espera aprobación no tiene PDF; si no, se arma al recibir. Adjuntarlo exige una acción anterior que lo arme en la misma regla.
+- **el orden:** pedir aprobación es la última acción de su regla, y solo al recibir. **El PDF** (106): si alguna regla pide aprobación, se arma solo al aprobar, y lo que espera aprobación no tiene PDF; si no, se arma al recibir. Adjuntarlo exige una acción anterior que lo arme en la misma regla;
+- las acciones se ordenan con su ⋮ (Subir, Bajar y Quitar).
+
+**«Adjuntar el PDF»** (113). Las acciones que mandan un mensaje o un correo llevan esa casilla, y «Mandar el PDF a un cliente» lo manda siempre:
+- **nada se desmarca solo:** ni al mover, quitar o cambiar una acción, ni al cambiar el evento;
+- **si «Armar el PDF» falta o está después,** debajo de la casilla aparece en el momento «Para adjuntarlo, «Armar el PDF» tiene que ir antes de este mensaje.». Debajo, un botón lo arregla: «Subir "Armar el PDF"» pone el primero que está después justo antes del mensaje; si no hay ninguno, «Agregar "Armar el PDF" antes» lo agrega ahí, y el foco vuelve a la casilla. Con 10 acciones, «Agregar» queda apagado, con el motivo en su tooltip;
+- **cuándo se puede** (106): si el formulario pide aprobación, el PDF existe solo al aprobar. En otro evento, la casilla sin marcar se apaga, con el motivo en su tooltip. Marcada no se apaga: dice lo mismo debajo, y la regla no se guarda hasta sacarla o cambiar el evento. Sin aprobación, vale al recibir;
+- **«Mandar el PDF a un cliente»** no tiene casilla: el aviso y el arreglo van debajo de la acción;
+- **cambiar el tipo de una acción conserva lo escrito:** el mensaje, el rol, la persona y el adjunto vuelven si se elige otra vez el tipo anterior. Al guardar, cada dato va solo con el tipo que lo usa.
 
 **Un solo motor de acciones:**
 - cada respuesta conserva la revisión con la que llegó, y la captura crea sus ejecuciones en el mismo commit;
@@ -33,7 +47,8 @@ Antes de empezar, en este orden:
 **Aprobación de un nivel** (60):
 - decide una cuenta activa con `formapprovals.decide` y el rol de la regla, **nunca quien cargó la respuesta** (25), ni quien la corrigió;
 - una sola tarea abierta por respuesta. Decidir es un solo commit; si otro decidió antes, 409. Rechazar exige un motivo de hasta 500 caracteres;
-- **leer y decidir son independientes:** con `formapprovals.decide` y sin `formrecords.read`, se ve la tarea en la vista rápida, sin valores ni pantalla completa (100). La planilla de ese formulario es su cola: el número y la fecha.
+- **leer y decidir son independientes:** con `formapprovals.decide` y sin `formrecords.read`, se ve la tarea en la vista rápida, sin valores ni pantalla completa (100). La planilla de ese formulario es su cola: el número y la fecha;
+- **«Aprobar» pide confirmar** (114): un diálogo como el de rechazar, «¿Aprobar VIS-000003?», con quién la cargó y cuándo; quien solo aprueba ve solo cuándo (100). El foco empieza en «Cancelar», así Enter no aprueba, y mientras manda espera abierto con «Aprobando…» (115).
 
 **«Por aprobar» en «Formularios»,** con la misma fuente que «Para resolver» (ADR 0040):
 - la lista suma la columna «Por aprobar» y el filtro «Aprobación», y lo que espera decisión va primero. Cuenta solo lo que esa cuenta puede decidir, sin lo propio;
@@ -82,10 +97,11 @@ Diseño los revisa o los dibuja con el [texto de la etapa](21-texto-diseno.md). 
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
 | `FRM-Formularios-21` y su teléfono | la lista, con «Por aprobar», y «Quien solo aprueba» | A revisar |
-| `FRM-Respuesta-Aprobacion` y `WA-Chats-Avisos` | la decisión, Actividad, el PDF y los avisos | A revisar |
-| `FRM-Editor-Reglas`, `M-FRM-Reglas` | las reglas, como una pestaña más | Se redibujan |
+| `WA-Chats-Avisos` y su teléfono | los avisos | A revisar |
+| `FRM-Respuesta-Aprobacion` | la decisión, con «Aprobar» que pide confirmar (114), Actividad y el PDF | Se redibuja |
+| `FRM-Editor-Reglas`, `M-FRM-Reglas` | las reglas, como una pestaña más, con «Adjuntar el PDF» (113) | Se redibujan |
 | `FRM-Pdf` | el diseño, con dos o tres estilos para elegir (59) | Se redibuja |
-| `M-FRM-Respuesta-Aprobacion` | la decisión en el teléfono | Se redibuja |
+| `M-FRM-Respuesta-Aprobacion` | la decisión en el teléfono, con la misma confirmación | Se redibuja |
 | `FRM-Respuestas-21` y su teléfono | sobre `FRM-Respuestas-20`: Estado, su filtro, «Anulada», la marca del PDF y «Quien solo aprueba» (100) | Por dibujar |
 | `FRM-Tablero-21` y su teléfono | la tarjeta «Por estado» | Por dibujar |
 | `FRM-Respuesta-Corregir` y su teléfono | lo de antes a la vista, el motivo y «Corregida» | Por dibujar |
@@ -97,91 +113,7 @@ Diseño los revisa o los dibuja con el [texto de la etapa](21-texto-diseno.md). 
 
 **Lo que se corrige** está en el [texto de la etapa](21-texto-diseno.md): «Cambios sin guardar», «Vista previa en inglés» y las acciones nuevas de `FRM-Editor-Reglas`. `FRM-Por-Aprobar` y `M-FRM-Por-Aprobar` pasan al Archivo. `FRM-Formularios-21` parte de `FRM-Formularios-20`. «No se pudo: pasaron más de 24 horas» pasa a «Sin plantilla aprobada» (61).
 
-**Mandan sobre esta spec en:** «Ver todos» de «Para resolver» abre la lista con «Con algo por aprobar». «Reglas de la revisión N» se queda en Actividad, porque es un historial. El diseño guarda aparte de las reglas, y su vista previa no guarda nada.
-
-## Contrato
-
-Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]` y `[FeatureGate("forms")]`.
-
-| Ruta | Permiso | Pide | Devuelve |
-| --- | --- | --- | --- |
-| `GET /{id}/rules` | `formrules.manage` | — | `{revision, rules[], questions[]}` |
-| `PUT /{id}/rules` | `formrules.manage` | `{revision, rules[]}` | 200 `{revision}`, 409 si otro guardó |
-| `GET /{id}/rules/revisions` y `…/{revision}` | `formrules.manage` | `page`, `pageSize` | la lista paginada y cada revisión |
-| `GET /{id}/rules/options/{roles\|members\|templates}` | `formrules.manage` | `page`, `pageSize`, `search` | `PagedResult` de cada una, sin correos |
-| `GET` y `PUT /{id}/pdf-design`, `POST /{id}/pdf-design/preview` | `formrules.manage` | `{design, revision}` | el diseño, su revisión, `organization` y un PDF de ejemplo, que no guarda |
-| `GET /pending` | `formapprovals.decide` | `page`, `pageSize`, `search` | `PagedResult<{id, name, pending}>` |
-| `GET /{id}/approvals`, `…/{taskId}` y `…/{taskId}/continuation` | `formapprovals.decide` | `page`, `pageSize`; `direction` y `limit` | la cola, sin valores |
-| `POST /{id}/records/{recordId}/decision` | `formapprovals.decide` | `{decision, reason?, version}`, con `[Idempotent]` | 200 `{version, state}` |
-| `GET /{id}/records/{recordId}/workflow` | `formrecords.read` | — | `{ruleRevision?, approval?, activity[], pdf?, canCorrect, canVoid}` |
-| `POST …/executions/{executionId}/retry` | `formrules.manage` | —, con `[Idempotent]` | 200 |
-| `GET /{id}/records/{recordId}/pdf` | `formrecords.read` | — | 200 PDF, `no-store` |
-| `GET /{id}/records/{recordId}/history` | `formrecords.read` | `page`, `pageSize` | `PagedResult<{id, correctedAtUtc?, correctedBy?, reason?, superseded}>`, de la más nueva a la más vieja |
-| `GET /{id}/records/{recordId}/correction` | `formrecords.correct` | — | la versión activa, con lo cargado |
-| `POST /{id}/records/{recordId}/corrections` | `formrecords.correct` | multipart: el de la E20, más `reason`, `version` y `keepFileIds[]`, con `[Idempotent(Mode = IdempotencyMode.DurableReference)]` y `[IdempotencyDurable(typeof(FormEntryDurableAdapter))]` | 200 `{recordId, displayNumber, submittedAtUtc, calculations[], version}`, con `[ResponseVersion("Version")]` |
-| `POST /{id}/records/{recordId}/void` | `formrecords.correct` | `{reason, version}` | 200 `{version}` |
-| `…/own-records/{recordId}/pdf`, `history`, `correction`, `corrections` y `void` | `formrecords.create` | lo mismo | lo mismo, solo con lo propio y mientras se pueda |
-
-**Rutas que cambian:** `GET /` y `GET /overview` suman `pending?` (`null` sin `formapprovals.decide`), el filtro `approval` y el orden; `recordCount` cuenta las vigentes. `POST …/records/search`, `facets`, `navigation`, `export` y `dashboard` suman `state`, con `Voided`, y `includeVoided` en el Excel. El detalle suma `state`, `corrected`, `correctedBy?{name, atUtc}`, `supersededBy?`, `voided?` y `version`. `GET /{id}/records/columns` suma `approvals`.
-
-**Puertos neutrales:**
-
-```csharp
-// Forms → WhatsApp (implementa WhatsApp)
-public interface IStructuredRecordActionChannel
-{
-    Task<PagedResult<StructuredActionTemplate>> ListTemplatesAsync(PagedRequest page, CancellationToken ct);
-    Task<StructuredActionReach> GetReachAsync(StructuredRecipient recipient, CancellationToken ct);
-    Task<Result<StructuredActionReceipt>> SendAsync(StructuredActionMessage message, CancellationToken ct);
-    Task<IReadOnlyList<StructuredActionState>> ReadStatesAsync(IReadOnlyCollection<Guid> keys, CancellationToken ct);
-}
-```
-
-`StructuredActionMessage(Key, Recipient, Text, Template?, Document?)`. `Key` es el id de ejecución y destinatario. Sin WhatsApp, `GetReachAsync` dice que no hay canal y `ListTemplatesAsync` devuelve una lista vacía. El correo usa `IOutbox`, con el canal de correos. `IStructuredRecordSource.ReadAsync` lee por id, también las reemplazadas, y `StructuredRecordCard` suma `Corrected` y `Voided`.
-
-**La campana:** Forms aporta `formApprovals`, a quien puede decidir, y `ruleNoticeFailed`, a quien tiene `formrules.manage`, por `INotificationSource` (base de la 12).
-
-**Errores** (con sus textos en `FormsTexts.resx` y `.en.resx`):
-
-| Código | Tipo | Cuándo |
-| --- | --- | --- |
-| `Forms.Rules.Invalid` | Validation (`rules[i]…`) | un evento, condición, acción, rol, persona, plantilla o pregunta fuera de regla, o el orden de las acciones |
-| `Forms.Rules.TooMany` | Validation (`rules`) | más de 20 reglas, 10 condiciones o 10 acciones |
-| `Forms.PdfDesign.Invalid` | Validation | nombre, pie, firmas o preguntas fuera de regla |
-| `Forms.Approval.NotFound` | NotFound | la tarea no existe o no se puede ver |
-| `Forms.Approval.AlreadyDecided` | Conflict | otro decidió antes |
-| `Forms.Approval.OwnRecord` | Forbidden | la cargó o la corrigió quien decide |
-| `Forms.Approval.RoleRequired` | Forbidden | no tiene el rol de la tarea |
-| `Forms.Approval.ReasonRequired` | Validation (`reason`) | rechazar sin motivo |
-| `Forms.Record.NotCorrectable` | Conflict | ya aprobada, para quien solo la cargó, o anulada |
-| `Forms.Record.Superseded` | Conflict | corregir o anular una que ya se reemplazó |
-| `Forms.Record.AlreadyVoided` | Conflict | ya está anulada |
-| `Forms.Record.ReasonRequired` | Validation (`reason`) | corregir o anular sin motivo |
-| `Forms.Record.PdfNotFound` | NotFound | no hay copia, o falta el archivo |
-| `Forms.Execution.NotRetryable` | Conflict | lo que no quedó en «No se pudo» |
-
-**Fallas de una ejecución,** que se ven en Actividad: `WindowClosed`, `TemplateUnavailable`, `NoConversation`, `NoContact`, `NotMember`, `RoleMissing`, `NoEmail`, `NoAnswer` y `NoPdf`.
-
-**Permisos nuevos:** `formrules.manage`, `formapprovals.decide` y `formrecords.correct`, con sus textos y la migración de los roles de sistema.
-
-## Datos
-
-Tres migraciones: `<fecha>_FormRules.cs`, `<fecha>_FormRecordCorrections.cs` y `<fecha>_SystemRoleFormRulesPermissions.cs`. Todo es `ITenantOwned`, esquema `tenant`, con RLS, salvo el registro de trabajo.
-
-| Tabla | Qué guarda | Regla |
-| --- | --- | --- |
-| **FormRuleSets** | `DefinitionId`, `Revision`, `Rules` jsonb, quién y cuándo | inmutable; único por los dos |
-| **FormPdfDesigns** | `DefinitionId`, `Revision`, `Design` jsonb, quién y cuándo | inmutable; único por los dos |
-| **FormApprovalTasks** (`IVersioned`) | `RecordId`, `DefinitionId`, `RoleId`, `State`, `RequestedAtUtc`, decisión, motivo | una abierta por respuesta, con índice único filtrado; índice por definición, rol, fecha e id |
-| **FormActionExecutions** | `RecordId`, `RuleSetId`, `Event`, `RuleId`, `ActionId`, `Position`, `Kind`, `State`, `FailureCode?`, `Fence`, `LeaseExpiresAtUtc`, `NextAttemptAtUtc` | único por respuesta, evento, regla y acción |
-| **FormActionRecipients** | `ExecutionId`, `Kind`, `UserId?`, `ContactId?`, `Address?` cifrada, `State`, `FailureCode?`, `RenderedText?` | uno por destinatario; el error de uno no toca a los otros |
-| **FormRecordDocuments** | `RecordId`, `ExecutionId`, `DesignId`, `StorageKey`, `FileName`, `ByteLength`, `Sha256`, `Culture` | único por ejecución; se escribe una vez |
-| **platform.FormActionWorks** | `TenantId`, `NextAtUtc`, `LeaseExpiresAtUtc` | registro técnico global, sin datos de negocio |
-
-**Columnas nuevas:**
-- `FormDefinitionStates`: `ActiveRuleSetId` y `ActivePdfDesignId`, por T7;
-- `FormRecords`: `RuleSetId?`, `State`, `Version` (`IVersioned`), `CorrectionOfRecordId?`, `CorrectionReason?`, `CorrectedByUserId?`, `CorrectedAtUtc?`, `SupersededAtUtc?`, y `VoidedAtUtc?`, `VoidedByUserId?` y `VoidReason?`. **El índice único `(DefinitionId, Number)` pasa a filtrar `SupersededAtUtc IS NULL`,** y la planilla, los conteos, la navegación, el Excel y el tablero filtran las vigentes;
-- en WhatsApp, las plantillas suman `HeaderFormat`, y el mensaje de chat, el origen «acción de formulario».
+**Mandan sobre esta spec en:** «Ver todos» de «Para resolver» abre la lista con «Con algo por aprobar». «Reglas de la revisión N» se queda en Actividad, porque es un historial. El diseño guarda aparte de las reglas, y su vista previa no guarda nada. Las reglas y el diseño valen sin publicar: lo dice la (i) de su título, sin leyendas (109 y 116).
 
 ## Pasos
 
@@ -213,10 +145,10 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
 | F1 | Tipos y llamadas | `api/workflow.ts` | `M/…` | zod estricto con los ejemplos |
-| F2 | La pestaña de reglas | `components/rules/`, `lib/rules.ts` | `M/…` | guardar, historial, 409 y salir |
+| F2 | La pestaña de reglas | `components/rules/`, `lib/rules.ts` | `M/…` | guardar, historial, 409 y salir; la casilla no se desmarca sola; subir y agregar «Armar el PDF»; cambiar el tipo conserva lo escrito y guarda solo lo que usa |
 | F3 | El diseño del PDF | `pages/PdfDesignPage.tsx`, `components/pdf/PdfPage.tsx` | `M/…` | estilos; vista previa sin guardar; `<object>` |
 | F4 | «Por aprobar» | suma a la lista y a `FormRecordsPage.tsx` [E15] | `M/…` | las tres combinaciones; la cola con ↑ ↓ |
-| F5 | La decisión y Actividad | `components/records/Workflow.tsx`; suma a `QuickView.tsx` y `RecordFullPage.tsx` | `M/…` | solo decide; Reintentar; se relee mientras sale |
+| F5 | La decisión y Actividad | `components/records/Workflow.tsx`; suma a `QuickView.tsx` y `RecordFullPage.tsx` | `M/…` | solo decide; «Aprobar» con el foco en «Cancelar», y Enter no aprueba; el diálogo abierto hasta la respuesta; Reintentar; se relee mientras sale |
 | F6 | Corregir y anular | `components/records/CorrectionForm.tsx`, con los componentes de la E20 | el tablero | lo de antes; motivo; 409; filtro «Anulada» |
 | F7 | Lo propio, tablero y tarjeta | suma a `FormRecordsPage.tsx`, `FormDashboard.tsx` y la tarjeta | `M/…` | estado, PDF y motivo |
 
@@ -243,6 +175,10 @@ Cada punto lleva su test, escrito durante la etapa:
 3. **El contrato de `origin` del recibo:** la web rechazó una respuesta correcta; cada campo nuevo se exporta con su ejemplo.
 4. **Un aviso a un rol se repetía** por una reserva vencida: la clave va por ejecución y destinatario.
 5. **Una copia entera de la respuesta por ejecución:** se lee por id.
+6. **Lo que va en la versión y lo que se guarda aparte.** En la prueba de allá, la versión salió sin filtros, y las reglas y el PDF no se habían guardado. Las reglas y el diseño tienen su propio Guardar y valen sin publicar, y salir con cambios pregunta antes.
+7. **Un error dice qué hacer en cada caso.** «Agregá Armar el PDF…» se leía igual si faltaba la acción o si estaba más abajo.
+8. **Nada se desmarca ni se borra sin avisar:** ni al cambiar el tipo, ni al mover o quitar una acción.
+9. **Una decisión que no se deshace pide confirmar:** allá se aprobó la siguiente sin querer, porque ↑ ↓ cambian de respuesta con el foco en el panel.
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
@@ -252,6 +188,7 @@ Cada punto lleva su test, escrito durante la etapa:
 - **PDF con PDFsharp-MigraDoc,** como el Asistente: no se suma otra biblioteca de PDF.
 - **Sin `ExecutionActor` en el worker:** quien respondió puede ser un cliente sin cuenta.
 - **Lo propio tiene sus rutas,** como en la E20.
+- **«Adjuntar el PDF»** (113) y **confirmar antes de aprobar** (114), con las esperas y la ayuda de las reglas de todo el sistema (109, 115 y 116).
 
 ## Fuera de esta etapa
 
