@@ -62,7 +62,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](16-texto-diseno.md), con el recorrido guiado. Muestran solo lo que existe hasta acá (78).
+Dibujados en la v150, para aprobar, con el [texto de la etapa](16-texto-diseno.md) y su recorrido guiado. Muestran solo lo que existe hasta acá (78).
 
 | Tablero | Qué muestra |
 | --- | --- |
