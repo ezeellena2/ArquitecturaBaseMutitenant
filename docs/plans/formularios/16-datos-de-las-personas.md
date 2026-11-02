@@ -68,29 +68,31 @@ Dibujados en la v150, para aprobar, con el [texto de la etapa](16-texto-diseno.m
 | --- | --- |
 | `FRM-Datos-Personas` y `M-FRM-Datos-Personas` | «Datos de las personas», en Administración: los datos, la tabla de personas y el diálogo para definir un dato |
 | `FRM-Usuario-Datos` y `M-FRM-Usuario-Datos` | la ficha del usuario, con las pestañas «Acceso» y «Datos» |
-| `FRM-Catalogo-16` y `M-FRM-Catalogo-16` | la columna «Filtro» en «Campos» |
+| `FRM-Catalogo-16` y `M-FRM-Catalogo-16` | el modal de campos de la E13, con «Papel» |
 | `FRM-Editor-16` y `M-FRM-Editor-16` | «Qué opciones ve cada persona» en la pregunta |
 | `FRM-Publicar-16` | la zona «Avisos», entre «Problemas» y «Qué se publica» (112) |
 | `WA-Chats-Formulario-16` y `M-WA-Chats-Formulario-16` | el formulario que no se puede mandar, con el motivo |
 | `FRM-Respuestas-16` y `M-FRM-Respuestas-16` | «Columnas», con las subcolumnas de los filtros apagadas |
 
-**«Datos de las personas»:** dos secciones. Los datos: nombre, tipo, quién lo usa, cuántos tienen valor, estado y ⋮ (Editar, Dar de baja o Reactivar). Las personas: una columna por dato activo, «—» si no tiene y ✎ con `users.manage`. Con el tope de 20, «Nuevo dato» queda grisado, con el motivo en su tooltip. Sin `users.read`, la segunda sección no aparece.
+**«Datos de las personas»:** dos secciones, como en ArquitecturaBase. «Datos», con su (i) y «+ Agregar dato» en el encabezado: Dato, Clave, Tipo, Lo usan y ✎, con «Dado de baja» debajo del nombre. Con el tope de 20, «Agregar dato» queda grisado, con el motivo en su tooltip. «Personas», con el resumen «6 personas · 2 sin Zona» y «Buscar personas»: Persona, una columna por dato activo, «—» si no tiene y ✎ con `users.manage`. Sin `users.read`, una línea lo dice.
 
-**El diálogo para definir un dato:** un solo campo de nombre, el tipo y, si es de un catálogo, cuál, en el combo de la E13 (111), sin descripción del catálogo elegido ni leyendas. La ayuda que sirve va en la (i). Si hay valores, confirmar dice cuántos se borran. Mientras guarda, «Guardando…», y la tabla que vuelve a leer atenúa sus filas (115).
+**El diálogo para definir un dato:** «Agregar dato» o «Editar dato», con Nombre, Clave con su (i), Tipo y, si es de un catálogo, Catálogo, en el combo de la E13 (111). Una clave guardada no cambia. Editando va «Dato activo». En uso, tipo, catálogo y «Dato activo» quedan grisados y se dice qué formularios lo usan. Si hay valores, cambiar el tipo pide marcar «Sí, cambiar el dato y borrar los valores de N personas». Mientras guarda, «Guardando…», y la tabla que vuelve a leer atenúa.
 
 **La ficha del usuario:** las pestañas aparecen solo si un módulo aporta una; si no, queda como hoy. «Datos» tiene sus botones y se guarda aparte del acceso, solo si cambió. Salir con cambios pregunta antes. Un error queda en la pestaña.
 
-**«Qué opciones ve cada persona»:** un renglón por filtro, «Campo es valor», con ✕; «Agregar un filtro según quien lo recibe» y «Agregar un filtro fijo»; «Como si lo recibiera», con la persona y el resultado; y debajo el máximo por persona y quién no tiene el dato, con «Cargar los datos» para quien tiene `formpersondata.manage` y `users.manage`. Sin campos de papel «Filtro», la sección no aparece. Con solo `forms.read`, se lee sin editar. La ayuda va en la (i) de su banda: el máximo y quién no tiene el dato son datos, y se quedan.
+**«Qué opciones ve cada persona»:** una caja en la pregunta, con su (i), «Agregar filtro según quien lo recibe» y «Agregar filtro fijo» en el encabezado. Cada filtro va en su recuadro: «Según quien lo recibe» (Campo y Dato de la persona) o «Filtro fijo» (Campo y Valor fijo), con ✕. Debajo, «Como si lo recibiera», con la persona y el resultado, el máximo por persona y quién no tiene el dato, con «Cargar los datos» para quien tiene `formpersondata.manage`. Sin campos de filtro, los dos «Agregar» quedan grisados, con el motivo en su tooltip.
 
-**La columna «Filtro»:** la ayuda va en la (i) de su encabezado, sin leyenda debajo.
+**Borrar una opción (129):** una que tiene una persona en sus datos no se borra: `Forms.Catalog.ItemInUse` suma `uses: people`, y se lee «No se puede borrar: la tiene una persona en sus datos. Podés darla de baja.».
+
+**«Papel»:** en el modal de campos, «Filtro | Dato», con la ayuda en la (i). La lista dice «De un catálogo · Filtro». Cambiarlo en un campo en uso se rechaza, con el motivo debajo.
 
 **Estados:** para cada tablero, cargando, vacío y error, más:
-- **Datos:** 20 datos, un dato en uso (dar de baja grisado, con quién lo usa en su tooltip), cambiar el tipo con valores, y solo `formpersondata.manage`;
+- **Datos:** 20 datos, un dato en uso, un dato dado de baja, cambiar el tipo con valores, buscar personas, ninguna coincide, sin `users.read` y sin `users.manage`;
 - **Filtros:** «Le falta el dato», «El filtro no funciona», más opciones que el tope y un catálogo sin campos de filtro;
 - **Publicar:** problemas y avisos juntos, y solo avisos;
 - **Enviar:** le falta el dato, el filtro no funciona y es un cliente.
 
-**Mandan sobre esta spec en:** las fichas del front (un dato por celda, sin leyendas, botones según la 43 y la 115). «Dar de baja» y «Reactivar» son las palabras de siempre, y lo dado de baja es una opción del filtro «Estado».
+**Mandan sobre esta spec en:** las fichas del front (un dato por celda, sin leyendas, botones según la 43 y la 115). «Dar de baja» y «Reactivar» son las palabras de siempre.
 
 ## Contrato
 

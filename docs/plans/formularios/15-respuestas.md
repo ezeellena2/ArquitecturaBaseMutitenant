@@ -47,6 +47,12 @@ Antes de empezar, en este orden:
 
 **Los nombres:** Forms guarda ids. El de un empleado y sus empresas salen del lector de miembros; el de un cliente, de `IStructuredContactSource`, por lote y una vez por página. Un miembro que se fue conserva el nombre; sin dato, «Persona sin información»; un cliente sin WhatsApp dice «Cliente». Forms nunca lee tablas de WhatsApp.
 
+**La barra (126):** «Exportar a Excel» en la banda; en la barra, «Buscar en textos largos», «Empresa», la primera pregunta de opciones como filtro rápido, «Recibida», «Más filtros», el total y «Columnas». «Más filtros» trae «Recibida desde» y «hasta» y, por pregunta, «Respuesta» («Todas», «Con respuesta», «Sin respuesta» o «No existía en esa versión») y lo que va con su tipo: «Desde» y «Hasta», «Contiene» o casillas con cuántas respuestas tiene cada una y «Buscar opciones»; al pie, «Limpiar todo», «Cancelar» y «Ver N respuestas». El canal suma su filtro cuando haya más de uno.
+
+**Exportar (126):** «Exportar respuestas a Excel» dice cuántas respuestas y cuántos filtros aplicados, «Columnas a exportar», con la cantidad de cada opción («Todas las preguntas (13 columnas)» y «Solo las visibles (12 columnas)»), y el nombre del archivo.
+
+**Borrar una opción (129):** una que eligió una respuesta no se borra: `Forms.Catalog.ItemInUse` suma `uses: records`, y se lee «No se puede borrar: la eligió una respuesta. Podés darla de baja.».
+
 **Filtros:**
 - condiciones unidas con «y», con la gramática de la E12 (C5): texto `contains` y `equals`; número y fecha `equals`, `gte` y `lte`; elegir una y sí/no `in`; **elegir varias `anyOf`**; y en todos, `answered`, `unanswered` y `notAsked`;
 - `unanswered` incluye la opcional vacía y la pregunta que no existía; `notAsked` distingue la segunda. Qué versiones tienen cada pregunta se decide en memoria, con las versiones selladas, y la consulta lo usa;
@@ -77,7 +83,7 @@ Antes de empezar, en este orden:
 - lo quitado y qué cuenta cada tarjeta se guardan por persona y formulario. Los filtros, no.
 
 **El detalle:**
-- **la vista rápida,** al costado de la planilla: el número, ↑ ↓ (también con el teclado), «Abrir en pantalla completa», ✕ y Esc. Muestra la versión, «Abrir conversación», quién la respondió y quién se la mandó, y la pestaña Respuesta, con las preguntas de su versión y los campos sellados de cada opción;
+- **la vista rápida,** al costado de la planilla: el número, ↑ ↓ (también con el teclado), ✕ y Esc; debajo, el botón «Abrir en pantalla completa» y «Abrir conversación». Muestra la versión, quién la respondió y quién se la mandó, y la pestaña Respuesta, con las preguntas de su versión y los campos sellados de cada opción; Al pie dice en qué respuesta va («2 de 4»).
 - **la pantalla completa,** en `/org/formularios/:id/respuestas/:recordId/completa`: «Respuesta» y «Actividad» a todo el ancho y plegables. Arriba, el número, ↑ ↓ y «Abrir conversación». Actividad cuenta quién la mandó y quién la respondió. El formulario queda en las migas;
 - **ubicar una respuesta:** la posición, la anterior y la siguiente salen de una sola consulta con ventanas de SQL, con el filtro y el orden de la planilla. Lo ausente, lo excluido y lo ajeno dan el mismo 404;
 - **la dirección compartible** lleva solo el orden, las versiones y las columnas. Una entrada directa arranca sin filtros privados. «Volver» regresa a la misma fila, página, filtros y orden;
@@ -90,10 +96,10 @@ Aprobados en el lienzo v149. El recorrido guiado suma dos circuitos: de pegar lo
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
 | `FRM-Formularios-15` | la lista, con las columnas de respuestas y «Quien solo ve respuestas» | Aprobado |
-| `FRM-Respuestas` | la planilla, con «Columnas», «Empresa» y sus estados; suma «Elegir varias» y los campos sellados | Aprobado |
-| `FRM-Respuestas-Filtros` | «Más filtros», en un panel al costado | Aprobado |
-| `FRM-Respuesta` | la vista rápida | Aprobado |
-| `FRM-Respuestas-Exportar` | el diálogo de exportar | Aprobado |
+| `FRM-Respuestas` | la planilla, con «Columnas», «Empresa» y sus estados; suma «Elegir varias» y los campos sellados | Redibujado en la v150 |
+| `FRM-Respuestas-Filtros` | «Más filtros», en un panel al costado | Redibujado en la v150 |
+| `FRM-Respuesta` | la vista rápida | Redibujado en la v150 |
+| `FRM-Respuestas-Exportar` | el diálogo de exportar | Redibujado en la v150 |
 | `FRM-Tablero` | el tablero | Aprobado |
 | `M-FRM-Respuestas`, `M-FRM-Respuesta`, `M-FRM-Tablero` | los tres, en el teléfono. Tocar una fila abre `M-FRM-Respuesta`: no hay vista rápida | Aprobado |
 | `FRM-Respuesta-Completa` | la pantalla completa, con sus dos secciones plegadas y abiertas | Aprobado |

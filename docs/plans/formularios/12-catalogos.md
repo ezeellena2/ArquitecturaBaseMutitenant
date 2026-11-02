@@ -33,7 +33,7 @@ Antes de empezar:
 - **A mano:**
   - **tipo de valor:** texto, entero, decimal o fecha, que se elige al crear y no cambia;
   - opciones con texto, detalle, código y, en un catálogo tipado, valor. Cada texto es uno solo, tal como lo escribe la persona (35). Se agregan y se editan en un modal y, en la compu, también en la tabla (117);
-  - las opciones se dan de baja sin borrarse; se reordenan con «subir» y «bajar», o de la A a la Z al guardar;
+  - una opción se da de baja con su Estado. Una guardada que nada usa también se puede borrar: se marca, se borra al guardar y hasta entonces se restaura (129). Se reordenan con ↑ y ↓, o de la A a la Z al guardar;
   - **la carga de una vez:** un solo «Importar», con dos orígenes: pegar desde Excel (agrega) o subir un XLSX o un CSV (reemplaza), con vista previa (120);
   - **exportar** y bajar la plantilla. El Excel se lee como en pantalla (119);
   - **hasta 10.000 opciones** por catálogo, contando las dadas de baja.
@@ -92,25 +92,25 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 
 **Navegación (34 y 78):** «Gestión de formularios» llega con esta etapa, y su panel tiene solo «Catálogos». Los tableros de la etapa muestran solo eso.
 
-**Aprobados y publicados en el lienzo v141** (2026-10-25, front `93cb7d01`), con sus teléfonos, sin «Textos en» ni «Cambios sin guardar», y con el origen y el tipo de valor como la A11: en su campo, apagados y en gris, sin «No se cambia» (43):
+**Aprobados y publicados en el lienzo v141** (2026-10-25, front `93cb7d01`), con sus teléfonos, sin «Textos en» ni «Cambios sin guardar»:
 - `FRM-Catalogos`: el listado, sin la columna «Lo usan», que llega con los formularios;
 - `FRM-Catalogo-Nuevo`: el origen, con la tarjeta «De los contactos de WhatsApp», y el tipo de valor;
 - `FRM-Catalogo-Tipo`: el tipo de valor se elige al crear, con la columna «Valor» y el error en el campo;
 - `FRM-Catalogo-Filtros`: un catálogo de los miembros, con sus filtros y la vista previa;
 - `FRM-Catalogo-Contactos`: un catálogo «De los contactos», con sus filtros por etiqueta y la vista previa (55).
 
-**Redibujados** (117 y 120; v148):
-- `FRM-Catalogo` y `M-FRM-Catalogo`: el editor de un catálogo a mano con la sección «Opciones»: en su banda, «+ Agregar opción» y un ⋮ con Importar, Exportar, Descargar la plantilla, Ordenar de la A a la Z y Generar los códigos que faltan; abajo, solo «Buscar opción» y el filtro de estado; la tabla editable en la compu, la selección de filas para dar de baja o reactivar, solo el ⋮ en cada fila (con «Editar» adentro, que abre el modal, sin un ✎ aparte), y el teléfono al costado;
+**Redibujados** (117, 120 y 125 a 129; v150):
+- `FRM-Catalogo` y `M-FRM-Catalogo`: el editor de un catálogo a mano, con el armado de ArquitecturaBase. «El catálogo» dice de dónde salen y el tipo, y debajo van Nombre y Descripción; al costado, «Así lo ve quien lo recibe», con «Una opción | Varias» y el teléfono. La banda trae «Dar de baja», «Descartar» y «Guardar cambios». «Opciones» va a todo el ancho: «+ Agregar opción», «Importar», «Exportar» y un ⋮ con Descargar la plantilla, Ordenar de la A a la Z y Generar los códigos que faltan; abajo, solo «Buscar opción»; la tabla editable en la compu, la selección de filas para dar de baja o reactivar, el Estado como casilla y ↑ ↓ ✎ 🗑 a la vista;
 - `FRM-Catalogo-Importar`: «Origen» y «Revisión» a la vista, sin pasos numerados.
 
 **Nuevos** (v148): `FRM-Catalogo-Opciones` y `M-FRM-Catalogo-Opciones`, el modal de opciones. Importar no va en el teléfono, como hasta ahora.
 
 **El modal de opciones (117):**
-- **Cómo se abre:** «Agregar opción» lo abre con las opciones agregadas en él, y «Editar» del ⋮, con las de la página. La lista va a la izquierda (número o «—», texto, «Nueva» y código o «Sin código») y la opción elegida, a la derecha, con su posición («Opción 2 de 5» o «Nueva opción»). «Agregar opción», al pie de la lista, suma otra.
+- **Cómo se abre:** «Agregar opción» lo abre con las opciones agregadas en él, y ✎, con las de la página. Cada lado va en su caja: la lista a la izquierda (número o «—», texto, «Nueva» y código o «Sin código») y la opción elegida a la derecha, con su posición («Opción 2 de 5» o «Nueva opción») y «Quitar opción» en su banda. «Agregar opción», al pie de la lista, suma otra.
 - **Las filas:** Texto con su contador, Código con «Generar desde el texto», Valor si el catálogo es tipado, Detalle y, solo en una guardada, Estado «Activa | De baja». La ayuda va en la (i) de cada una.
 - **Guardar:** escribe en el borrador, y se guarda con «Guardar cambios» de la página. «Cancelar» o Esc devuelven todo como estaba al abrirlo. «Listo» conserva todo, menos una opción nueva sin nada escrito.
 - **Errores:** si «Guardar cambios» encuentra uno, el modal se abre en la primera opción con problemas, y la lista las marca con un triángulo.
-- **Quitar:** «Quitar opción» va solo en una nueva, y no pregunta. Una guardada no se quita: se da de baja, porque las opciones no se borran.
+- **Quitar:** en una nueva, «Quitar opción» no pregunta. En una guardada pregunta y la marca: se borra al guardar, y hasta entonces se puede restaurar (129). Si algo la usa, al guardar se dice qué y se puede dar de baja (`Forms.Catalog.ItemInUse`).
 - **Celular:** ocupa la pantalla. Primero la lista y, al tocar una opción, la opción con «Volver a la lista».
 
 **Importar (120):** un solo diálogo, de arriba abajo.
@@ -126,8 +126,9 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
   - guardado, no se guardó y la revisión si otra persona guardó;
   - sin opciones, 1.200 opciones con búsqueda y páginas, 10.000 opciones, nuevo y cargando;
   - importar grisado en un catálogo nuevo o con cambios sin guardar, con el motivo en su tooltip;
+  - una opción nueva, borrar una guardada (pregunta), «Se borra al guardar» con «Restaurar», una dada de baja con «Reactivar», movimientos pendientes y orden de la A a la Z pendiente, con cómo descartarlos, y las dos formas de la vista previa;
   - con solo `formcatalogs.read`: la tabla de lectura, sin casillas, con Exportar y la plantilla.
-- **Modal de opciones:** una nueva, una guardada, una dada de baja, volver a la lista en el celular, y errores con el triángulo.
+- **Modal de opciones:** una nueva, una guardada, una dada de baja, una por borrar, volver a la lista en el celular, y errores con el triángulo.
 - **Importar:** la grilla vacía y con una columna ajena; «Revisar» sin archivo o sin filas, que marca el campo; revisando, aplicando, errores por fila y columna, muchas bajas que piden confirmar, muchas filas con error, un valor ambiguo, el 409 y otra importación en curso.
 - **Catálogo con filtros:**
   - con más de 200 opciones, se guarda y avisa con ⓘ (decisiones 22 y 37);
@@ -141,10 +142,9 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
   - un dato por celda, en un renglón;
   - las fechas, completas, con fecha y hora en la zona de quien mira; nunca «hoy», «ayer» ni «hace…»;
   - sin leyendas (109): la vista previa es el teléfono al costado, la ayuda que sirve va en la (i) (116), y lo que no ayuda a decidir no va;
-  - lo dado de baja es una opción del filtro «Estado», no una vista aparte, en plural y de acuerdo con lo que se lista: en la lista de catálogos, «Activos · Dados de baja»; en la tabla de opciones, «Todas · Activas · Dadas de baja»;
-  - el catálogo no tiene «Una opción | Varias»: lo decide la pregunta.
-- **La tabla de opciones no se aplasta:** cada columna tiene su ancho mínimo (Texto y Detalle 12rem, Código 6rem, el valor y cada campo 8rem). Si no entra, la tabla se desplaza a lo ancho dentro de su caja, con la casilla, el número y «Texto» fijos a la izquierda y el ⋮ de la fila fijo a la derecha, sin ningún «hay más columnas a la derecha».
-- **Guardado (C3):** todo se guarda junto en un `PUT` del catálogo, con su versión, y viaja solo lo que cambió.
+  - lo dado de baja es una opción del filtro «Estado», no una vista aparte, en plural y de acuerdo con lo que se lista: en la lista de catálogos, «Activos · Dados de baja». En la tabla de opciones no hay filtro: cada una muestra su casilla (126).
+- **La tabla de opciones no se aplasta:** cada columna tiene su ancho mínimo (Texto y Detalle 12rem, Código 6rem, el valor y cada campo 8rem). Si no entra, la tabla se desplaza a lo ancho dentro de su caja, con la casilla, el número y «Texto» fijos a la izquierda y las acciones fijas a la derecha, sin ningún «hay más columnas a la derecha».
+- **Guardado (C3):** todo se guarda junto en un `PUT` del catálogo, con su versión, y viaja solo lo que cambió. Suma `deleteItems[]`, las opciones por borrar. Una que algo usa responde 409 `Forms.Catalog.ItemInUse`, con qué la usa por opción, y no se borra ninguna; en esta etapa nada usa una opción, y cada etapa suma su motivo.
 - **Nuevo catálogo:** primero se elige el origen, y para los escritos a mano, el tipo de valor; el nombre se escribe en el editor y el `POST` sale de «Crear catálogo».
 - **Persona de ejemplo:** sin ella no se crea un catálogo de miembros con condiciones (`Forms.Catalog.SampleRequired`, «Elegí una persona.»).
 - **La vista previa de un catálogo de miembros o de contactos** es el teléfono, con solo el desplegable «Persona» arriba, y se actualiza sola; no hay «Probar». Se ve con `formcatalogs.read`, como el catálogo.

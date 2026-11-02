@@ -71,19 +71,20 @@ Antes de empezar:
 - **`FRM-Formularios`:** la lista «Formularios» (79), una tabla con Formulario, Preguntas, En WhatsApp y Último cambio (fecha y hora completas), el filtro «Estado ▾» y «Nuevo formulario». El nombre abre el formulario con su pestaña «Diseño». Reemplaza a `FRM-Listado`;
 - **`FRM-Editor`:** el editor en una sola pantalla:
   - el formulario: nombre, «Para quién es» (empleados, clientes o los dos; 50), texto del botón final y prefijo, cada uno en su campo;
-  - las preguntas, que se abren en el lugar, con ⋮ (Editar, Subir, Bajar y Quitar);
+  - las preguntas, que se abren en el lugar, con el número, el nombre y, debajo, el tipo y si es obligatoria (130), y ↑ ↓ ✎ 🗑 a la vista (127). Las opciones de una pregunta llevan ↑ ↓ 🗑;
   - «elegir varias», con el mínimo y el máximo (en el ejemplo, «Fallas», de 1 a 3);
   - la pregunta «De un catálogo»: el combo de la E13 (111), que ofrece los tres orígenes y muestra apagados, con su motivo, los dados de baja y los que no se pueden usar; «Las opciones se preparan al mandar el formulario.» va en la (i) de «Catálogo»; «Permitir elegir varias» con mínimo y máximo, «varias, hasta N» en la lista de preguntas, un catálogo de más de 20 y la presentación de la pregunta (la del catálogo o la suya);
   - el teléfono al costado.
 
   En el teléfono, la pregunta se edita en una hoja y los botones van fijos abajo.
 
-  **Con los títulos de sección (88):** «Agregar título» en el editor, el título entre las preguntas con su ⋮ (Editar, Subir, Bajar y Quitar) y el subtítulo en el teléfono al costado, en `FRM-Editor` y `M-FRM-Editor`.
+  **Con los títulos de sección (88):** «Agregar título» en el editor, el título entre las preguntas con las mismas acciones y el subtítulo en el teléfono al costado, en `FRM-Editor` y `M-FRM-Editor`.
 - **`FRM-Catalogos-14`:** el listado de catálogos de la E12 con la columna «Lo usan».
-- **`FRM-Catalogo-14` y `M-FRM-Catalogo-14`**: el catálogo, con la sección «Lo usan», «Quitar» apagado en un campo en uso, con el motivo en su tooltip, y la advertencia al darlo de baja.
+- **`FRM-Catalogo-14` y `M-FRM-Catalogo-14`**: el catálogo, con «Usado en 2 formularios» en la banda, la sección «Lo usan», un campo en uso (quitarlo dice dónde está, con «Ir a la pregunta», y no se quita), una opción que usa un formulario (no se elimina y se puede dar de baja) y la advertencia al darlo de baja.
 - **`Campana-14`**: «WhatsApp rechazó la versión N de …», que lleva al formulario.
 - **`WA-Mensajes-14`:** «Mis mensajes», con la tarjeta de una respuesta propia de un cliente que vinculó su cuenta.
-- **`FRM-Publicar`**: «Publicar la versión N en WhatsApp», por zonas (112 y T25): «Problemas», si hay alguno, y «Qué se publica», siempre, sin descripción ni párrafos.
+- **`FRM-Publicar`**: «Publicar la versión N en WhatsApp», por zonas (112 y T25), cada una en su caja y con la explicación en su (i): «Problemas», si hay alguno, con «Ir a la pregunta» en cada uno, y «Qué se publica», siempre: Borrador, Preguntas, lo agregado y lo cambiado y, la primera vez, el Prefijo con «Queda fijo al publicar».
+- **Borrar una opción (129):** una que usa un formulario no se borra: `Forms.Catalog.ItemInUse` suma `uses: forms`, y debajo de la fila se lee «No se puede borrar: la usa un formulario. Podés darla de baja.».
 - **`FRM-Publicando`:** cómo termina, arriba del editor, con los pasos Aceptada, Enviada a WhatsApp, WhatsApp la revisa y Lista para mandar. Al costado, la vista oficial con «Borrador | Versión N en WhatsApp».
 - **`WA-Chats-Formulario` y `M-WA-Chats-Formulario`:** «Enviar formulario» al lado de «Enviar» en Internos (en el teléfono, en el ⋮ del chat). El diálogo «Enviar un formulario a …» tiene una tarjeta por formulario, con la versión y la cantidad de preguntas cada una en su lugar (con buscador y paginado si son muchos), la cantidad de opciones por pregunta de catálogo y los problemas de la oferta, el mensaje prellenado de hasta 1024 caracteres y hasta cuándo se puede mandar, con fecha y hora. Sin «Ya lo revisé» ni «Resolver el envío» (80).
 - **`WA-Chats-Formulario-Cliente` y `M-WA-Chats-Formulario-Cliente`** (nuevos): «Enviar formulario» en un chat de Clientes, con solo los formularios para clientes o para los dos (49 y 50). En el ejemplo, «Entrega de pedido» es para los dos.
