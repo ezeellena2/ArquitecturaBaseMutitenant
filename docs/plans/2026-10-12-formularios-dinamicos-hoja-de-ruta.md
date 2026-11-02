@@ -625,6 +625,8 @@ Elegidas por el usuario el 2026-11-02, al comparar el lienzo con el front real d
 128. **Se mantiene una sola lista «Formularios», con sus pestañas (79),** aunque ArquitecturaBase tenga dos pantallas.
 129. **🗑 borra una opción guardada que nada usa, como en ArquitecturaBase.** Cambia la 117: se pide confirmar, se marca «Se borra al guardar» y se puede restaurar hasta guardar. Si un formulario, una respuesta, otra opción o el dato de una persona la usa, no se borra: se dice qué la usa y se puede dar de baja. Una opción nueva se quita sin preguntar. Allá dice «Eliminar»; acá, «Borrar», como en todo el sistema.
 130. **Lo que vuelve con el armado (126):** las filas con acciones a la vista llevan dos líneas, el nombre y su detalle, como excepción a «un dato por celda, en un renglón», que sigue valiendo en las tablas; la vista previa de un catálogo trae «Una opción | Varias»; y la clave de un campo o de un dato se muestra, con su (i), y queda con candado al guardar.
+131. **Reactivar se abre en el formulario, como en ArquitecturaBase (E17).** Es publicar: «Reactivar» de la lista lleva al formulario y abre ahí el diálogo, con las zonas de «Publicar» (112), «Próxima respuesta» en «Qué se publica» y el botón «Reactivar con la versión N».
+132. **Con respuestas, «Borrar» queda grisado, con el motivo (43).** Cambia lo que decía la E17: antes no aparecía. Allá se lee una línea en el menú; acá va en su tooltip y, en el teléfono, debajo de la acción.
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 

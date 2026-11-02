@@ -1,6 +1,6 @@
 # E17 · Texto para el chat de Diseño
 
-**Estado:** pendiente · Diseño lo toma en su turno.
+**Estado:** pendiente · dibujado en la v151, sin publicar: espera el OK del usuario.
 
 Se pega tal cual en el chat de Diseño, que es el único que toca el lienzo.
 
