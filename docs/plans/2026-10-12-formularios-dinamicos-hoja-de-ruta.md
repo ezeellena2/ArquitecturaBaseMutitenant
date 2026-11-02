@@ -464,7 +464,7 @@ Elegidas por el usuario el 2026-10-24, con la [evaluación del traspaso 2](2026-
 
     Los datos de las personas son por organización y por miembro. En la v1 no dependen de la empresa ni hay para B2C. El usuario lo reconfirmó el 2026-10-24 con la 49: los clientes no tienen datos de las personas.
 43. **Botones y avisos, en todo el sistema** (`pantallas-y-ui.md` y `formularios.md` del front):
-    - un botón está habilitado o grisado, sin textos al lado ni debajo. Mientras trabaja, queda grisado con su mismo texto;
+    - un botón está habilitado o grisado, sin textos al lado ni debajo. Mientras trabaja, pone el aro y su gerundio (la 115 cambia «grisado con su mismo texto»);
     - nunca aparece «Cambios sin guardar»;
     - si falta un dato obligatorio, el botón queda habilitado, y al tocarlo se marca el campo con el error de siempre;
     - una opción de menú que no se puede usar queda solo grisada, con el motivo en su tooltip. Reemplaza la decisión del 13/10;
@@ -568,7 +568,7 @@ Elegidas por el usuario el 2026-10-31, al evaluar el traspaso 3 contra este mode
 92. **Anular una respuesta** (E21): con motivo, queda «Anulada» con quién y cuándo, y cierra la aprobación pendiente. No se borra ni se deshace. Sale de la planilla, los conteos y el Excel, salvo que se pida.
 93. **Quién corrige y anula** (E21): quien la cargó, mientras no esté aprobada (siempre, si el formulario no pide aprobación), y con el permiso `formrecords.correct`, «Corregir y anular respuestas», cualquiera y en cualquier momento. Quien solo ve respuestas, no.
 94. **Listas dependientes** (E20): un filtro de catálogo «según otra respuesta», solo en la web. Va adentro de la E20, para formularios de empleados o para los dos. En WhatsApp, después del bloque, con el intercambio cifrado con Meta.
-95. **El avance al subir** (E20): el botón queda grisado con su texto, y una barra sin palabras muestra cuánto falta. Respeta la 43.
+95. **El avance al subir** (E20): el botón dice «Enviando…» con su aro (115), y una barra sin palabras muestra cuánto falta.
 96. **Un catálogo a mano de más de 200 opciones** (E20): si el formulario es para empleados o para los dos, se publica con un aviso y se carga solo desde la web. Si es solo para clientes, sigue sin publicarse.
 97. **Un cálculo no se ve mientras se carga** (E20): igual que por WhatsApp (54), y aparece en «Enviada».
 98. **Publicar solo para la app** (E20): es nueva, no viene de ArquitecturaBase. Una organización sin WhatsApp conectado publica igual, sin Meta, y sus empleados cargan desde la web. Si después conecta un número, vuelve a publicar para mandarlo por WhatsApp. Un formulario solo para clientes no se publica.
@@ -591,6 +591,28 @@ Elegidas por el usuario el 2026-10-31, con la lectura de punta a punta de las sp
 Decidida por el usuario el 2026-11-01:
 
 108. **Reglas y diseños propios:** en ArquitecturaBase no se toca ni se pide nada, y ninguna etapa espera algo de allá. Las pantallas se dibujan con las specs, estas decisiones y las reglas y piezas de este proyecto. El lienzo de la carga desde la app de ArquitecturaBase (<https://claude.ai/artifact/Kvbr5KFJrGT951JLiu8i4M>) es solo un ejemplo: lo que sirva se adapta a nuestro sistema y no se copia tal cual. Lo ya decidido no se vuelve a preguntar. Una pantalla nueva que no tiene modelo en nuestro lienzo se diseña acá, con opciones para el usuario. Acota la 18.
+
+Elegidas por el usuario el 2026-10-31 y el 2026-11-01 en ArquitecturaBase, probando la app de punta a punta, y adoptadas con el traspaso 4 de allá, del 2026-11-02, porque no chocan con este modelo:
+
+109. **Sin leyendas explicativas, en todo el sistema:** la información es etiqueta y valor o control. El renglón de abajo es solo para el error o para un dato. Una explicación que sirve va en la (i) (116), y lo que no ayuda a decidir se saca, sin pasarlo a la (i).
+110. **Lo apagado dice por qué, en todo el sistema:** el motivo de un botón, una casilla o la ✕ de un diálogo apagados va en su tooltip, si no es obvio. Amplía la 43, que lo decía de las opciones de un menú.
+111. **Un solo combo para elegir un catálogo** (E13, E14 y E16): al tocarlo muestra los primeros, con su cantidad de opciones, y al escribir los filtra. Es el mismo en un campo, en un dato de las personas y en una pregunta, sin buscador aparte, lista paginada ni descripción del catálogo elegido.
+112. **Publicar por zonas** (E14): «Problemas» y «Qué se publica», sin descripción ni párrafos. Un texto que pasa su límite lo dice en concreto: «Hasta 20 caracteres; tiene 26.». Salen «Qué queda fijo» y «Qué va a pasar», y queda el prefijo mientras está libre. La E16 suma la zona «Avisos».
+113. **«Adjuntar el PDF» no se desmarca solo** (E21): ni al mover, quitar o cambiar una acción, ni al cambiar el evento. Si «Armar el PDF» falta o está después, lo dice al lado, con un botón que lo arregla. Cambiar el tipo de una acción conserva lo escrito.
+114. **«Aprobar» pide confirmar** (E21), con el foco en «Cancelar», porque ↑ ↓ dejan la respuesta siguiente con «Aprobar» en el mismo lugar.
+
+Elegidas por el usuario el 2026-11-02, al evaluar ese traspaso contra este modelo, todas las recomendadas:
+
+115. **Toda acción que tarda muestra que trabaja, en todo el sistema.** Cambia la 43 y la 95:
+    - el botón pone el aro y su gerundio («Guardando…»), con su color, en su lugar y sin aceptar otro clic;
+    - una confirmación queda abierta hasta la respuesta;
+    - una tabla que vuelve a leer atenúa sus filas y corre una línea arriba.
+116. **La (i) y la ⓘ, cada una para lo suyo:** la ayuda de un campo o una sección va en una (i) con tooltip. Lo que no se puede hacer, y qué hacer para resolverlo, sigue en el aviso importante, que se abre desde su ⓘ.
+117. **Las opciones de un catálogo se agregan y se editan en un modal** (E12): la lista a la izquierda y la opción a la derecha. En la compu, la tabla sigue editable. Una opción guardada no se quita: se da de baja, porque acá no se borran.
+118. **Los campos de un catálogo siguen en su tabla** (E13), sin modal ni «Listo». La columna de un campo nuevo queda apagada hasta guardar, con el motivo en su tooltip.
+119. **El Excel de un catálogo se lee como en pantalla** (E12): números y fechas de Excel, con su formato, y se reimporta sin diferencias. Lo que Excel no guarda exacto va como texto canónico.
+120. **Un solo «Importar»** (E12): «Origen» y «Revisión» a la vista en un diálogo, sin pasos numerados, y lo pegado en una grilla con las columnas del catálogo. Pegar sigue agregando y el archivo, reemplazando.
+121. **El límite de un texto se avisa al publicar** (E14): el editor no tiene contador, tampoco para una etiqueta con su unidad (86). Se puede sumar después, sin rehacer nada.
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
@@ -632,4 +654,4 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 Ninguna.
 
-Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, y las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98.
+Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98, y las del traspaso 4, del 2026-11-02, como decisiones 109 a 121.
