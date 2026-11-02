@@ -1,13 +1,13 @@
 # E13 · Campos de los catálogos (spec)
 
-**Estado:** pendiente · spec de la etapa 13 del bloque (decisiones 34, 78 y 105), con el [formato](plantilla.md) de las etapas. Es la parte de catálogo de lo que ArquitecturaBase llama E2, programado allá con un review de 39 puntos: los campos, sus valores, las columnas al importar y qué se ve en WhatsApp, con la vista previa del catálogo. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E12.
+**Estado:** pendiente · spec de la etapa 13 del bloque (decisiones 34, 78, 105, 111 y 118), con el [formato](plantilla.md) de las etapas. Es la parte de catálogo de lo que ArquitecturaBase llama E2, programado allá con un review de 39 puntos: los campos, sus valores, las columnas al importar y qué se ve en WhatsApp, con la vista previa del catálogo. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E12.
 
 ## Qué leer
 
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E12](12-catalogos.md): C3 (guardar), C6 (valores), C7 a C11 (carga de una vez) y sus secciones de datos, contrato, flujos y archivos. Esta etapa suma a esas piezas, no crea otras.
-2. **Decisiones** de la hoja de ruta: 35 (el contenido no tiene idioma), 36 (títulos de más de 30 caracteres), 42 (hasta 20 campos), 43 (botones y avisos), 78 (el orden) y 105 (los topes cuentan los activos).
+2. **Decisiones** de la hoja de ruta: 35 (el contenido no tiene idioma), 36 (títulos de más de 30 caracteres), 42 (hasta 20 campos), 43 (botones y avisos), 78 (el orden), 105 (los topes cuentan los activos), 109, 110, 115 y 116 (leyendas, motivos, esperas y ayuda), 111 (el combo del catálogo), 118 (la tabla de campos) y 119 (el Excel legible).
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -31,7 +31,7 @@ Antes de empezar, en este orden:
 - **Campos por opción,** solo en los catálogos a mano:
   - hasta 20 activos por catálogo (42 y 105): quitar uno libera su lugar. Con su versión y el 409;
   - cada campo tiene identidad estable, nombre (un solo texto, 35), tipo, reglas, posición y estado. Su clave se arma sola con el nombre, en minúsculas, queda fija después de guardar y no se muestra;
-  - **tipos:** Texto, Número entero, Número con decimales, Fecha, Sí/No y «De un catálogo: …», que toma los valores de otro catálogo a mano activo de la misma organización;
+  - **tipos:** Texto, Número entero, Número con decimales, Fecha, Sí/No y «De un catálogo», que toma los valores de otro catálogo a mano activo de la misma organización, elegido en un combo (111);
   - **reglas:** obligatorio, único y un límite: el largo en un texto (de 1 a 300), y el mínimo y el máximo en un número o una fecha. Obligatorio y único se comprueban sobre las opciones activas.
 - **El ciclo de un campo:**
   - nace opcional, y se cargan valores después de guardarlo;
@@ -43,7 +43,8 @@ Antes de empezar, en este orden:
   - en el `PUT` del catálogo, `items[i].fields` es un delta: ausente conserva y `null` limpia. La importación manda todos los campos activos de la fila;
   - un valor de «De un catálogo» guarda la identidad de la opción fuente. Un valor nuevo exige una opción activa, y **el guardado que apunta a una opción dada de baja se conserva y no impide guardar**. Uno que no es opción de la fuente se rechaza;
   - un catálogo usado como fuente por campos activos no se da de baja.
-- **La tabla, pegar, importar y exportar:** una columna por campo después del código. Los encabezados se reconocen por el nombre o por la clave. La plantilla y la exportación suman las columnas, y en una fuente se acepta la identidad, el código o el texto único de la opción. Una celda que nombra la opción guardada dada de baja la conserva; si nombra una activa, pasa a esa.
+- **La tabla, el modal de opciones, pegar, importar y exportar:** una columna por campo después del código, y una fila por campo en el modal. Los encabezados se reconocen por el nombre o por la clave. La plantilla y la exportación suman las columnas, y en una fuente se acepta la identidad, el código o el texto único de la opción. Una celda que nombra la opción guardada dada de baja la conserva; si nombra una activa, pasa a esa.
+- **El Excel se lee como en pantalla** (119): cada columna lleva el nombre del campo; número y fecha, como la columna del valor de la E12 (C10); Sí/No, con su palabra, y una fuente, con el texto de la opción o, si ese texto llevaría a otra, con su código. Subirlo de vuelta no da diferencias.
 - **Qué se ve en WhatsApp (la presentación del catálogo):**
   - el catálogo elige qué arma el título (hasta 30, con contenido) y la descripción (hasta 300) de cada opción. El título sale de un solo lugar, que arranca en «Texto»; la descripción, de uno o más lugares, unidos con « · »;
   - cada lugar es el texto, el código, el valor (si el catálogo es tipado), el detalle o un campo. Todos pueden ir a WhatsApp;
@@ -53,23 +54,27 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobadas en el lienzo v145. Los dibujos están en `docs/design/capturas/plan/etapa-13/` del front, y el recorrido guiado es `campos-de-un-catalogo`. Muestran solo el catálogo (78).
+Aprobadas en el lienzo v145, y se retocan con el [texto de la etapa](13-texto-diseno.md). Los dibujos están en `docs/design/capturas/plan/etapa-13/` del front, y el recorrido guiado es `campos-de-un-catalogo`. Muestran solo el catálogo (78).
 
 | Tablero | Qué muestra |
 | --- | --- |
 | `FRM-Catalogo-13` | el editor de un catálogo a mano: «Campos» en la forma B, la tabla de opciones con una columna por campo y «En WhatsApp» en la forma C, con el teléfono al costado |
 | `M-FRM-Catalogo-13` | lo mismo en el teléfono |
+| `FRM-Catalogo-Opciones-13` y `M-FRM-Catalogo-Opciones-13` | el modal de opciones de la E12, con una fila por campo |
 
-**«Campos»:** una tabla que se edita ahí mismo, sin diálogo, con Campo, Tipo, Obligatorio, Único, Límite y ⋮ (Subir, Bajar y Quitar). El encabezado no lleva cantidades. «Agregar campo» queda apagado al llegar al tope de 20, con el motivo en su tooltip. Los errores van debajo de su celda, al guardar. «Campo» va fijo a la izquierda y el ⋮ fijo a la derecha, como en la tabla de opciones.
+**«Campos»:** una tabla que se edita ahí mismo, sin diálogo ni «Listo» (118), con Campo, Tipo, Obligatorio, Único, Límite y ⋮ (Subir, Bajar y Quitar). El encabezado no lleva cantidades. «Agregar campo» queda apagado al llegar al tope de 20, con el motivo en su tooltip. Los errores van debajo de su celda, al guardar. «Campo» va fijo a la izquierda y el ⋮ fijo a la derecha, como en la tabla de opciones.
+
+**El catálogo de un campo (111):** con el tipo «De un catálogo», un combo en la celda de «Límite», que ese tipo no usa. Al tocarlo muestra los primeros catálogos a mano activos («Zonas · 8 opciones»), y al escribir los filtra. Es el listado de la E12, con `source=manual`, `status=active` y `search`.
 
 **«En WhatsApp»:** dos renglones, «Título» y «Descripción». El título lleva un solo desplegable; la descripción, uno por lugar, con un ✕ para quitarlo y un «+» que suma otro. Cada desplegable lista lo que todavía no está en ese renglón, más lo que ya tiene elegido, y ninguno aparece apagado. Sin «Por ejemplo», sin la nota «No salen del sistema» y sin los largos en pantalla: el teléfono al costado muestra cómo queda.
 
-**Estados dibujados:** los campos, agregar un campo, elegir el tipo, las acciones de un campo, quitar un campo, cambiar el tipo con errores, 20 campos, «En WhatsApp», elegir qué muestra, un catálogo nuevo y guardado. La columna de un campo nuevo queda grisada hasta guardar, con el motivo en su tooltip (43).
+**Estados dibujados:** los campos, agregar un campo, elegir el tipo, las acciones de un campo, quitar un campo, cambiar el tipo con errores, 20 campos, «En WhatsApp», elegir qué muestra, un catálogo nuevo y guardado. La columna de un campo nuevo queda grisada hasta guardar, con el motivo en el tooltip de cada celda (118), y su fila del modal de opciones, igual.
 
 **Estados que faltan dibujar.** Se le piden a Diseño antes de programar, sin frenar lo demás:
 - un valor de una opción dada de baja: se ve con su texto y se puede guardar;
 - solo `formcatalogs.read`: la tabla de lectura, sin edición;
-- un título que no entra: se marca en esa opción y en el teléfono, y se puede guardar.
+- un título que no entra: se marca en esa opción y en el teléfono, y se puede guardar;
+- el combo del catálogo: abierto, filtrando y sin coincidencias.
 
 ## Contrato
 
@@ -82,7 +87,7 @@ Son las rutas de la E12, que suman lo siguiente. Permisos: `formcatalogs.read` p
 | `POST …/catalogs` | `fields?[]` y `presentation?` en uno a mano |
 | `PUT …/catalogs/{id}` | `fields?[]`: la lista entera, si cambió, con `id` o `localId`; el orden es el de la lista. `presentation?`. `items[i].fields`: delta por `id` de campo. `confirmedFieldRemovals?[]`: los campos con valores que se quitan. Responde también el mapa de ids de los campos |
 | `POST …/imports/previews` y `POST …/imports` | las columnas de los campos; los errores por fila y columna siguen la misma forma |
-| `GET …/export` | una columna por campo activo, con el valor canónico |
+| `GET …/export` | una columna por campo activo, como en pantalla (119) |
 | `GET …/template` | suma `catalogId?`: con él, trae las columnas de sus campos |
 
 **Valores en el JSON:** un número va como texto, para no perder precisión; la fecha, `yyyy-MM-dd`; sí/no, booleano; una fuente, la identidad de la opción. `""` no es `null`: se valida como texto vacío.
@@ -132,7 +137,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | B4 | Guardar campos, presentación y delta de valores, bajo el bloqueo del catálogo y de sus fuentes, siempre en el mismo orden | suma a `FormCatalogService.cs` [E12]; `FormCatalogFieldEditor.cs` | `FormCatalogItemEditor.cs` [E12] | delta; guardar sin cambios; una opción entre 10.000 escribe y audita solo esa; 409; dos personas a la vez sobre el catálogo y su fuente |
 | B5 | Cambiar tipo o reglas: valida todas las opciones por lotes, y un error revierte todo | `A/Modules/Forms/Services/FormCatalogFieldChangePolicy.cs` | `FormCatalogImportPolicy.cs` [E12] | conversiones, `invalidRows` con las primeras 50, obligatorio y único sobre activas |
 | B6 | Quitar un campo y proteger una fuente | suma a `FormCatalogFieldEditor.cs` y `FormCatalogService.cs` | `FormCatalogPositionGuard.cs` [E12] | confirmación con valores; `SourceInUse`; la lección 1 |
-| B7 | Pegar, importar, exportar y la plantilla, con las columnas de los campos | suma a `FormCatalogFileResolver.cs`, `FormCatalogImportPolicy.cs` y `FormCatalogExportBuilder.cs` [E12] | esos mismos | exportar y reimportar sin diferencias; encabezado por nombre o clave; columna ausente conserva y vacía limpia; una fuente por identidad, código o texto único |
+| B7 | Pegar, importar, exportar y la plantilla, con las columnas de los campos | suma a `FormCatalogFileResolver.cs`, `FormCatalogImportPolicy.cs` y `FormCatalogExportBuilder.cs` [E12] | esos mismos | exportar y reimportar sin diferencias, con número, fecha, Sí/No y fuente; dos opciones con el mismo texto; encabezado por nombre o clave; columna ausente conserva y vacía limpia; una fuente por identidad, código o texto único |
 | B8 | Armar título y descripción de cada opción, y `presentationIssue` | `A/Modules/Forms/Services/FormCatalogPresentationBuilder.cs` | `FormCatalogExportBuilder.cs` [E12] | 30 y 300 caracteres; contenido vacío; un campo quitado sale de la presentación |
 | B9 | Rutas, contratos y ejemplos | suma a `P/Modules/Forms/Controllers/BusinessFormCatalogsController.cs`, `Contracts/*HttpRequest.cs` y `FormsContractContributor.cs` [E12]; textos en `FormsTexts{,.en}.resx` | esos mismos | cada ruta con 401, 403, feature apagada = 404, validación, 409 y paginado; un código por cada 409; ejemplos exportados |
 | B10 | Medir el volumen | prueba de volumen del módulo | la de la E12 | 10.000 opciones por 20 campos: guardar, importar y exportar con EXPLAIN |
@@ -142,8 +147,8 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
 | F1 | Tipos y llamadas, validados con los ejemplos exportados | suma a `F/src/modules/forms/api/` | la API de catálogos [E12] | zod estricto con los ejemplos |
-| F2 | La sección «Campos», en la forma B | `F/src/modules/forms/components/catalog/FieldsSection.tsx` | `M/…/catalog/FieldsSection.tsx` y `fixedColumns.ts` | agregar, subir, bajar y quitar; tope de 20; errores por celda; axe; botones según la 43 |
-| F3 | Una columna por campo en la tabla de opciones, con el control de su tipo | suma a `OptionsSection.tsx` [E12] | `M/…/catalog/OptionsSection.tsx` | columna grisada hasta guardar; valor dado de baja; la lección 4 |
+| F2 | La sección «Campos», en la forma B, con el combo del catálogo | `F/src/modules/forms/components/catalog/FieldsSection.tsx`, `CatalogCombo.tsx` | `M/…/catalog/FieldsSection.tsx` y `fixedColumns.ts`; `SearchSelect.tsx` | agregar, subir, bajar y quitar; tope de 20; errores por celda; el combo abre con los primeros y filtra; axe; botones según la 43 |
+| F3 | Una columna por campo en la tabla de opciones, y una fila en el modal, con el control de su tipo | suma a `OptionsSection.tsx` y al modal de opciones [E12] | `M/…/catalog/OptionsSection.tsx` | columna y fila grisadas hasta guardar; valor dado de baja; la lección 4 |
 | F4 | «En WhatsApp», en la forma C, con el teléfono al costado | `F/src/modules/forms/components/PresentationEditor.tsx`, `CatalogPreviewPhone.tsx` | `M/…/components/PresentationEditor.tsx` | cada desplegable lista lo que corresponde; se arma como el servidor; un título que no entra |
 | F5 | El editor: conflicto, guardado y lectura | suma a `CatalogEditorPage.tsx` [E12] | `M/…/pages/CatalogEditorPage.tsx` | la lección 2; solo `formcatalogs.read`; textos en es y en |
 
@@ -167,6 +172,7 @@ Cada punto lleva su test, escrito durante la etapa:
 2. **Un 409 de una regla no es un conflicto de versión.** Solo `General.ConcurrencyConflict` pone el editor en conflicto; dar de baja un catálogo que es fuente de campos activos es un error que se corrige. Hay test en el back (el código de cada 409) y en el front (el editor queda editable).
 3. **Un texto vacío no rompe la lectura.** Se prueba con un nombre o un valor de texto `""`, con `null` y con una referencia a una opción dada de baja, guardando y releyendo.
 4. **El front no tapa al servidor al cambiar el tipo.** Cambiar el tipo de un campo con valores que no convierten muestra los errores del servidor por fila, y el front no bloquea antes de mandar.
+5. **Un solo selector de catálogo.** Allá hubo tres distintos, y costó unificarlos: el campo usa un combo que es una pieza aparte del módulo, sin nada propio de los campos.
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
@@ -174,7 +180,8 @@ Cada punto lleva su test, escrito durante la etapa:
 - **Títulos de más de 30 caracteres** (36): en un catálogo a mano, el título que arma la presentación se avisa al guardar y se marca en la vista previa.
 - **El contenido no tiene idioma** (35): un solo nombre por campo.
 - **Ningún nombre de campo va en el código:** cada organización arma los suyos.
-- **Una columna de un campo nuevo** queda grisada hasta guardar el catálogo (43).
+- **Una columna de un campo nuevo** queda grisada hasta guardar el catálogo, sin ningún aviso aparte (118).
+- **La tabla de campos se queda,** sin modal ni «Listo» (118). La clave sigue sin mostrarse.
 - **Un campo que usa la presentación** del catálogo se puede quitar: sale del título y de la descripción.
 
 ## Fuera de esta etapa
