@@ -11,6 +11,8 @@ Cada etapa del bloque tiene acá su spec, y todas van hacia el mismo [formato](p
 - lo que suma se ve en todas las pantallas que ya existen: un tipo de pregunta nuevo, en la planilla, el detalle, el Excel y el PDF, si ya están;
 - nada nombra, prueba ni dibuja algo de una etapa posterior: eso pasa a esa etapa.
 
+**Antes de dibujar o especificar una pantalla:** mirar cómo está en `../ArquitecturaBaseFront` (126). Sus escenas de `src/test/visual` muestran la pantalla real.
+
 **Sin la E10 y sin la maqueta** (123 y 124):
 - las etapas se programan y se cierran sin la E10. Lo que pide Meta con un número conectado, o la nube, queda pendiente en el plan de cada etapa, y se prueba junto cuando esté la I1;
 - las pruebas con Meta que van antes de programar la 19, la 21 y la 25 no esperan la I1: se hacen con la cuenta de desarrollo, la de la prueba de la 11 (`WhatsApp:BusinessAccountId` y su número, en [configuración](../../operations/configuracion.md));
@@ -22,7 +24,7 @@ Cada etapa del bloque tiene acá su spec, y todas van hacia el mismo [formato](p
 
 Esta carpeta está fuera de `realinear-docs` (`docs/plans/**`); la controla `alinear-etapas`.
 
-Las etapas van en el orden de la decisión 78, y **el número es el orden**. Antes de la 12 va [la base](base-de-la-12.md). Los tableros son los de la §5 de la [evaluación del traspaso 2](../2026-10-24-formularios-evaluacion-traspaso-2.md) y los que suman las decisiones 47 a 122, y los dibuja Diseño.
+Las etapas van en el orden de la decisión 78, y **el número es el orden**. Antes de la 12 va [la base](base-de-la-12.md). Los tableros son los de la §5 de la [evaluación del traspaso 2](../2026-10-24-formularios-evaluacion-traspaso-2.md) y los que suman las decisiones 47 a 128, y los dibuja Diseño.
 
 **En la columna «Tableros»** cada estado va con su etiqueta, y `alinear-etapas` la compara con el lienzo:
 - **Aprobados:** listos y al día.

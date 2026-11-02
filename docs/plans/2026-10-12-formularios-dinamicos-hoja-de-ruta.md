@@ -609,13 +609,20 @@ Elegidas por el usuario el 2026-11-02, al evaluar ese traspaso contra este model
     - una tabla que vuelve a leer atenúa sus filas y corre una línea arriba.
 116. **La (i) y la ⓘ, cada una para lo suyo:** la ayuda de un campo o una sección va en una (i) con tooltip. Lo que no se puede hacer, y qué hacer para resolverlo, sigue en el aviso importante, que se abre desde su ⓘ.
 117. **Las opciones de un catálogo se agregan y se editan en un modal** (E12): la lista a la izquierda y la opción a la derecha. En la compu, la tabla sigue editable. Una opción guardada no se quita: se da de baja, porque acá no se borran.
-118. **Los campos de un catálogo siguen en su tabla** (E13), sin modal ni «Listo». La columna de un campo nuevo queda apagada hasta guardar, con el motivo en su tooltip.
+118. ~~Reemplazada por la 125.~~ **Los campos de un catálogo siguen en su tabla** (E13), sin modal ni «Listo». La columna de un campo nuevo queda apagada hasta guardar, con el motivo en su tooltip.
 119. **El Excel de un catálogo se lee como en pantalla** (E12): números y fechas de Excel, con su formato, y se reimporta sin diferencias. Lo que Excel no guarda exacto va como texto canónico.
 120. **Un solo «Importar»** (E12): «Origen» y «Revisión» a la vista en un diálogo, sin pasos numerados, y lo pegado en una grilla con las columnas del catálogo. Pegar sigue agregando y el archivo, reemplazando.
 121. **El límite de un texto se avisa al publicar** (E14): el editor no tiene contador, tampoco para una etiqueta con su unidad (86). Se puede sumar después, sin rehacer nada.
 122. **La ayuda y los motivos en el teléfono:** sin mouse no hay tooltip. Tocar la (i) abre una hoja chica con el texto, que queda hasta cerrarla, y tocar algo apagado muestra el motivo en la franja oscura de abajo, que se va sola.
 123. **La E10 queda para después, y el bloque no la espera.** Cambia la 6. La base y las etapas se programan y se cierran sin ella, con `LocalFileStore`. Lo que pide Meta con un número conectado, o la nube, queda pendiente en el plan de cada etapa, y se prueba junto cuando esté la I1.
 124. **La maqueta no se usa.** Lo que se ve sale del lienzo y cómo funciona, de las specs. Ninguna etapa copia de ella.
+
+Elegidas por el usuario el 2026-11-02, al comparar el lienzo con el front real de ArquitecturaBase:
+
+125. **Los campos de un catálogo van en un modal, como en ArquitecturaBase.** Reemplaza la 118. No hay sección «Campos»: «Agregar campos · N», en el encabezado de «Opciones», abre «Campos de …», con la lista a la izquierda y el campo a la derecha, igual al modal de opciones (117).
+126. **Formularios sigue el armado real de ArquitecturaBase.** Cambia la 108. Donde allá hay una pantalla, acá se copia cómo está armada: sus zonas, su orden y sus controles. Antes de dibujar una etapa se mira su front, no solo el traspaso. Los colores y las piezas siguen siendo los nuestros, y mandan las decisiones que dicen otra cosa, como la 79 y la 35.
+127. **Las acciones van a la vista donde importa el orden:** opciones, preguntas y campos muestran ↑ ↓ ✎ 🗑. Las demás tablas siguen con el ⋮.
+128. **Se mantiene una sola lista «Formularios», con sus pestañas (79),** aunque ArquitecturaBase tenga dos pantallas.
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
