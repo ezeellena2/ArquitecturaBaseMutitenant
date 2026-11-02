@@ -1,6 +1,6 @@
 # E14 · Formularios: crear, publicar, mandar y recibir (spec)
 
-**Estado:** pendiente · spec de la etapa 14 del bloque (decisiones 34 y 78), con las decisiones 35, 38, 43, 79, 80 y 103. Nace con la pregunta «Elegir de un catálogo», sobre los catálogos de la E12 y sus campos de la E13. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E11]**, **[E12]**, **[E9]** y **[Meta]** contra el código real y la documentación vigente.
+**Estado:** pendiente · spec de la etapa 14 del bloque (decisiones 34 y 78), con las decisiones 35, 38, 43, 79, 80, 103, 111, 112 y 121. Nace con la pregunta «Elegir de un catálogo», sobre los catálogos de la E12 y sus campos de la E13. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E11]**, **[E12]**, **[E9]** y **[Meta]** contra el código real y la documentación vigente.
 
 **Fuentes:**
 - alcance y decisiones de producto: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E14 y §5;
@@ -73,7 +73,7 @@ Antes de empezar:
   - el formulario: nombre, «Para quién es» (empleados, clientes o los dos; 50), texto del botón final y prefijo, cada uno en su campo;
   - las preguntas, que se abren en el lugar, con ⋮ (Editar, Subir, Bajar y Quitar);
   - «elegir varias», con el mínimo y el máximo (en el ejemplo, «Fallas», de 1 a 3);
-  - la pregunta «De un catálogo»: el selector, «Permitir elegir varias» con mínimo y máximo, «varias, hasta N» en la lista de preguntas, un catálogo de más de 20 y la presentación de la pregunta (la del catálogo o la suya);
+  - la pregunta «De un catálogo»: el combo de la E13 (111), que ofrece los tres orígenes y muestra apagados, con su motivo, los dados de baja y los que no se pueden usar; «Las opciones se preparan al mandar el formulario.» va en la (i) de «Catálogo»; «Permitir elegir varias» con mínimo y máximo, «varias, hasta N» en la lista de preguntas, un catálogo de más de 20 y la presentación de la pregunta (la del catálogo o la suya);
   - el teléfono al costado.
 
   En el teléfono, la pregunta se edita en una hoja y los botones van fijos abajo.
@@ -83,7 +83,7 @@ Antes de empezar:
 - **`FRM-Catalogo-14` y `M-FRM-Catalogo-14`** (por dibujar): el catálogo, con la sección «Lo usan», «Quitar» apagado en un campo en uso, con el motivo en su tooltip, y la advertencia al darlo de baja.
 - **`Campana-14`** (por dibujar): «WhatsApp rechazó la versión N de …», que lleva al formulario.
 - **`WA-Mensajes-14`:** «Mis mensajes», con la tarjeta de una respuesta propia de un cliente que vinculó su cuenta.
-- **`FRM-Publicar`:** «Publicar la versión N en WhatsApp», con qué cambia y qué queda fijo.
+- **`FRM-Publicar`** (se redibuja): «Publicar la versión N en WhatsApp», por zonas (112 y T25): «Problemas», si hay alguno, y «Qué se publica», siempre, sin descripción ni párrafos.
 - **`FRM-Publicando`:** cómo termina, arriba del editor, con los pasos Aceptada, Enviada a WhatsApp, WhatsApp la revisa y Lista para mandar. Al costado, la vista oficial con «Borrador | Versión N en WhatsApp».
 - **`WA-Chats-Formulario` y `M-WA-Chats-Formulario`:** «Enviar formulario» al lado de «Enviar» en Internos (en el teléfono, en el ⋮ del chat). El diálogo «Enviar un formulario a …» tiene una tarjeta por formulario, con la versión y la cantidad de preguntas cada una en su lugar (con buscador y paginado si son muchos), la cantidad de opciones por pregunta de catálogo y los problemas de la oferta, el mensaje prellenado de hasta 1024 caracteres y hasta cuándo se puede mandar, con fecha y hora. Sin «Ya lo revisé» ni «Resolver el envío» (80).
 - **`WA-Chats-Formulario-Cliente` y `M-WA-Chats-Formulario-Cliente`** (nuevos): «Enviar formulario» en un chat de Clientes, con solo los formularios para clientes o para los dos (49 y 50). En el ejemplo, «Entrega de pedido» es para los dos.
@@ -92,9 +92,9 @@ Antes de empezar:
 **Sin rastro de etapas posteriores:** los tableros de la v141 no tienen «4 reglas · Revisión 3» ni «Más de 10 archivos». `Rol` suma los cinco permisos de formularios.
 
 **Estados que se dibujan** (cada uno tiene que poder producirse; si no, es un bug):
-- **Editor:** con cambios, guardando (el botón grisado con su mismo texto), guardado, no se guardó (lo escrito se conserva), otra persona guardó (con «Qué cambió | Guardado actualmente | Mis cambios»), prefijo ocupado, para quién es, quitar una pregunta, cambiar el tipo, descartar, solo lectura, cargando y no existe.
-- **Publicar:** versión nueva, primera publicación, comprobando, con cambios sin guardar (publicar grisado, con el motivo en su tooltip), una pregunta que no se puede mostrar, un catálogo demasiado grande, cambió después de comprobar, ya se está publicando, sin número conectado, sin cambios, con una cuenta conectada que no tiene el formulario (103), y un título sin preguntas debajo, con «Ir al título» (T24).
-- **Cómo termina:** publicando, publicado, rechazada con «Ir a la pregunta», sin confirmar con «Consultar ahora» (nunca «Reintentar»), necesita revisión, con «Salió» y «No salió», y la vista oficial. En el teléfono, «Sin confirmar» y «Necesita revisión» abren su detalle en una hoja.
+- **Editor:** con cambios, guardando («Guardando…», con su aro), guardado, no se guardó (lo escrito se conserva), otra persona guardó (con «Qué cambió | Guardado actualmente | Mis cambios»), prefijo ocupado, para quién es, quitar una pregunta, cambiar el tipo, descartar, solo lectura, cargando y no existe.
+- **Publicar:** versión nueva, primera publicación, comprobando (un esqueleto en «Qué se publica»), con cambios sin guardar (publicar grisado, con el motivo en su tooltip), una pregunta que no se puede mostrar, un texto más largo que su límite, un catálogo demasiado grande, cambió después de comprobar, ya se está publicando, sin número conectado, sin cambios, con una cuenta conectada que no tiene el formulario (103), y un título sin preguntas debajo, con «Ir al título» (T24).
+- **Cómo termina:** publicando, publicado, rechazada con «Ir a la pregunta», sin confirmar con «Consultar ahora», que dice «Consultando…» (nunca «Reintentar»), necesita revisión, con «Salió» y «No salió», y la vista oficial. En el teléfono, «Sin confirmar» y «Necesita revisión» abren su detalle en una hoja.
 - **Enviar:**
   - En cola, Leído, y No se pudo mandar (con ⓘ, sin reintento);
   - con el diálogo abierto, ventana cerrada, formulario que ya no está y formulario que no está publicado para este número (103).
@@ -107,9 +107,9 @@ Antes de empezar:
   - venció sin respuesta.
 
 **Mandan sobre esta spec en:**
-- **Las fichas del front** (pedido del usuario del 2026-10-25): un dato por celda, en un renglón; las fechas completas, con fecha y hora en la zona de quien mira, nunca «hoy», «ayer» ni «hace…»; sin rótulos que expliquen, así que la vista previa es el teléfono al costado; y «Dados de baja», cuando llegue, es una opción del filtro «Estado».
+- **Las fichas del front** (pedido del usuario del 2026-10-25): un dato por celda, en un renglón; las fechas completas, con fecha y hora en la zona de quien mira, nunca «hoy», «ayer» ni «hace…»; sin leyendas (109), así que la vista previa es el teléfono al costado; y «Dados de baja», cuando llegue, es una opción del filtro «Estado».
 - **Textos:** la lista se llama «Formularios», la pestaña del editor «Diseño», y la acción del chat es «Enviar formulario» (79).
-- **Botones (43):** «Guardar cambios» se habilita cuando hay cambios, sin «Cambios sin guardar». Mientras trabaja, queda grisado con su mismo texto. Si falta un dato obligatorio, el botón sigue habilitado y al tocarlo se marca el campo.
+- **Botones (43 y 115):** «Guardar cambios» se habilita cuando hay cambios, sin «Cambios sin guardar». Mientras trabaja, dice «Guardando…» con su aro. Si falta un dato obligatorio, el botón sigue habilitado y al tocarlo se marca el campo.
 - **Si no se sabe si algo salió (43):** ante un corte de red al guardar o al mandar, la pantalla vuelve a leer sola y muestra lo que quedó, sin pisar lo escrito:
   - **al guardar:** relee el borrador y compara **solo el contenido**, sin las identidades que emite el servidor. Si es igual a lo mandado, quedó guardado y el editor toma la versión y las identidades de esa relectura; si no, Guardar sigue habilitado con lo escrito y la versión de antes. Nunca reintenta solo. Tomar la versión de una relectura es una excepción a [concurrencia](../../rules/concurrencia.md), que se escribe en la ficha de formularios del front;
   - **al mandar:** relee el chat. Si la sesión existe, se ve el envío; si no, se puede mandar de nuevo con la misma `Idempotency-Key`, que devuelve el resultado guardado si el primero sí llegó.
@@ -159,7 +159,7 @@ Al planificar la E14 se verifican contra el código real.
 
 ## 13. Decisiones de producto de la etapa
 
-Están en la §5 de la hoja de ruta y no se vuelven a preguntar: 86 (la unidad va en la etiqueta, sin un dato «Unidad»), 88 (títulos de sección), 9 (la respuesta guarda todas las empresas activas de quien respondió), 10 (manda cualquiera con «Atender internos», y a un cliente, con «Atender clientes»), 11, 21 y 36 (un nombre de más de 30 caracteres se corta en 29 y se le agrega «…», y el completo va primero en el detalle), 12, 22 y 37 (un catálogo con filtros que da más de 200 opciones se guarda, y el tope frena al mandar), 49 y 50 (los clientes completan los formularios que son para clientes), 35 (el contenido no tiene idioma), 38 («elegir varias» va acá), 43 (botones y avisos), 78 (la E14 nace con la pregunta «Elegir de un catálogo»), 79 (una sola lista «Formularios», con la pestaña «Diseño») 80 (lo que sale por la cola de WhatsApp se reintenta solo, sin «sin confirmar») y 103 (un número en otra cuenta habilita publicar).
+Están en la §5 de la hoja de ruta y no se vuelven a preguntar: 86 (la unidad va en la etiqueta, sin un dato «Unidad»), 88 (títulos de sección), 9 (la respuesta guarda todas las empresas activas de quien respondió), 10 (manda cualquiera con «Atender internos», y a un cliente, con «Atender clientes»), 11, 21 y 36 (un nombre de más de 30 caracteres se corta en 29 y se le agrega «…», y el completo va primero en el detalle), 12, 22 y 37 (un catálogo con filtros que da más de 200 opciones se guarda, y el tope frena al mandar), 49 y 50 (los clientes completan los formularios que son para clientes), 35 (el contenido no tiene idioma), 38 («elegir varias» va acá), 43 (botones y avisos), 78 (la E14 nace con la pregunta «Elegir de un catálogo»), 79 (una sola lista «Formularios», con la pestaña «Diseño»), 80 (lo que sale por la cola de WhatsApp se reintenta solo, sin «sin confirmar»), 103 (un número en otra cuenta habilita publicar), 109, 110, 115 y 116 (leyendas, motivos, esperas y ayuda), 111 (el combo del catálogo), 112 (publicar por zonas) y 121 (el límite se avisa al publicar).
 
 ## 15. Cómo se cierra
 
@@ -203,7 +203,10 @@ Salen de los reviews y los pilotos de ArquitecturaBase. El plan los toma como li
 - **Pantalla:**
   - **errores:** un solo dueño por error (aviso común o junto al campo, nunca los dos), y «Reintentar» solo ante errores de red;
   - **navegación:** no desmonta el editor; se conserva el contenido con `aria-busy` y el foco nunca queda en `body`;
-  - **permisos:** un 403 en una acción no oculta la pantalla de lectura.
+  - **permisos:** un 403 en una acción no oculta la pantalla de lectura;
+  - **qué se publica:** el diálogo habla del borrador guardado, nunca de lo que está en pantalla sin guardar;
+  - **la unidad en la etiqueta** (86) gasta el límite: «Hectáreas aplicadas (ha)» tiene 24 caracteres, y una pregunta de número admite 20. Se prueba con ese caso (121);
+  - **un solo selector de catálogo:** la pregunta usa el combo de la E13.
 - **Privacidad:**
   - `ToString` redactado en todo modelo con valores o nombres;
   - sin `formrecords.read`, ningún valor en avisos, vistas previas, `aria-label` ni caché;

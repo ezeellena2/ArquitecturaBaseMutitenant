@@ -176,7 +176,7 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | `Forms.Draft.QuestionInvalid` | Validation (campo `questions[i]`) | tipo, opciones, decimales o rango de «elegir varias» fuera de regla |
 | `Forms.Draft.TooManyQuestions` / `TooManyOptions` | Validation | más de 40 preguntas, más de 50 opciones en «elegir una» o más de 20 en «elegir varias» |
 | `Forms.Publication.Incomplete` | Validation (campo por pregunta) | falta un texto obligatorio, o un título no tiene preguntas debajo (T24) |
-| `Forms.Publication.ChannelIssues` | Validation | el canal marcó problemas: lista de `{fieldId, choiceId?, path, code, limit?}` |
+| `Forms.Publication.ChannelIssues` | Validation | el canal marcó problemas: lista de `{fieldId, choiceId?, path, code, limit?, length?}` (T26) |
 | `Forms.Publication.InProgress` | Conflict | ya hay una publicación abierta |
 | `Forms.Publication.NothingToPublish` | Conflict | el borrador es igual a la versión activa, y todas las cuentas conectadas tienen su Flow |
 | `Forms.Publication.DraftChanged` | Conflict | el borrador cambió después de comprobar (T8) |
@@ -198,7 +198,7 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | `Forms.Record.OptionWithdrawn` | Conflict | eligió una opción a mano que se dio de baja después de mandar (T20) |
 | `WhatsApp.Flow.OptionNotOffered` | Validation | el id elegido no está en la oferta de la sesión |
 | `Forms.Catalog.FieldInUse` | Conflict | quitar un campo que usa la presentación de una pregunta: dice qué formulario y qué pregunta (T22) |
-| `WhatsApp.Flow.TextTooLong` / `TooManyComponents` / `ResponseTooLarge` | Validation | límites del perfil (§14) |
+| `WhatsApp.Flow.TextTooLong` / `TooManyComponents` / `ResponseTooLarge` / `UnsupportedConfiguration` | Validation | límites del perfil (§14) |
 | `WhatsApp.Flow.ProviderRejected` / `ValidationFailed` | Failure | rechazo definitivo de Meta |
 | `WhatsApp.Flow.AccountUnavailable` | ServiceUnavailable | la WABA sin medio de pago o sin salud [E11] |
 | `WhatsApp.Flow.NotPublishedForNumber` | Conflict | el número del chat está en una WABA sin Flow de esa versión |
@@ -218,7 +218,7 @@ Las rutas Business de Forms llevan `[Access(Access.Business)]` y `[FeatureGate("
 | POST `/api/organization/forms` | `forms.manage` | `{name}` | 201 `FormDetail` + Location, con el prefijo propuesto |
 | GET `/api/organization/forms/{id}` | `forms.read` | — | 200 `FormDetail`: `{id, name, prefix, prefixLocked, audience, submitLabel, questions[], titles[], activeVersion?{id, number, publishedAtUtc}, publication?{id, state, errorCode?, issues?}, canManage, canPublish, version}` |
 | PUT `/api/organization/forms/{id}/draft` | `forms.manage` | `{name, prefix, audience, submitLabel, questions[], titles[], version}` | 200 `{version, questions[], titles[]}`, con las identidades emitidas; 409 |
-| POST `/api/organization/forms/{id}/publication-checks` | `forms.publish` | — | 200 `{contentHash, canPublish, nextVersionNumber, issues[], changes[]}`; no escribe (T8) |
+| POST `/api/organization/forms/{id}/publication-checks` | `forms.publish` | — | 200 `{contentHash, canPublish, nextVersionNumber, issues[], changes[]}`, con lo que muestra el diálogo (T25); no escribe (T8) |
 | POST `/api/organization/forms/{id}/publications` | `forms.publish` | `{contentHash}` | 202 `{publicationId, state}` + Location; no llama a Meta; `DraftChanged` si el borrador cambió (T8) |
 | GET `/api/organization/forms/{id}/publications/{publicationId}` | `forms.read` | — | 200 `{state, errorCode?, issues?, versionNumber}` |
 | POST `/api/organization/forms/{id}/publications/{publicationId}/check` | `forms.publish` | — | 200 `{state, errorCode?, issues?, versionNumber}`: «Consultar ahora» le pregunta a Meta y nunca repite un POST |
@@ -233,7 +233,7 @@ Las rutas Business de Forms llevan `[Access(Access.Business)]` y `[FeatureGate("
 - **Webhook:** la misma ruta de la E8. Se agrega leer `interactive.nfm_reply`.
 
 **La pregunta de catálogo en las rutas:**
-- **`FormDetail` y `PUT …/draft`:** las preguntas `Choice` y `MultiChoice` llevan `catalogId?`. El selector de catálogo de la pregunta usa el listado de la E12, con `status=active`, y pide `formcatalogs.read`; sin ese permiso, «De un catálogo» queda grisado, con el motivo en su tooltip (43).
+- **`FormDetail` y `PUT …/draft`:** las preguntas `Choice` y `MultiChoice` llevan `catalogId?`. El combo de catálogo de la pregunta (111) usa el listado de la E12, con `status=all`: un dado de baja o uno que no se puede usar viene apagado, con su motivo. Pide `formcatalogs.read`; sin ese permiso, «De un catálogo» queda grisado, con el motivo en su tooltip (43).
 - **`FormDetail` y `PUT …/draft`:** la pregunta lleva también su `presentation?` propia (T22).
 - **`publication-checks`:** suma `Forms.Draft.CatalogUnavailable`, `CatalogTooLarge` y `CatalogPresentationInvalid`.
 - **`GET …/conversations/{id}/forms`:** cada formulario trae `offerProblems[{fieldId, code}]` (`TooManyOptions`, `TooFewOptions`, `NoOptions`, `CatalogUnavailable` y `PresentationInvalid`) y `optionCounts`, la cantidad de opciones de cada pregunta de catálogo, nunca sus nombres. WhatsApp suma `NotPublishedForNumber`, si el número del chat está en una cuenta sin el Flow de esa versión (103). Si hay algún problema, el formulario aparece pero no se puede mandar.
