@@ -128,7 +128,7 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
   - importar grisado en un catálogo nuevo o con cambios sin guardar, con el motivo en su tooltip;
   - con solo `formcatalogs.read`: la tabla de lectura, sin casillas, con Exportar y la plantilla.
 - **Modal de opciones:** una nueva, una guardada, una dada de baja, volver a la lista en el celular, y errores con el triángulo.
-- **Importar:** la grilla vacía y con una columna ajena, revisando, aplicando, errores por fila y columna, muchas bajas que piden confirmar, muchas filas con error, un valor ambiguo, el 409 y otra importación en curso.
+- **Importar:** la grilla vacía y con una columna ajena; «Revisar» sin archivo o sin filas, que marca el campo; revisando, aplicando, errores por fila y columna, muchas bajas que piden confirmar, muchas filas con error, un valor ambiguo, el 409 y otra importación en curso.
 - **Catálogo con filtros:**
   - con más de 200 opciones, se guarda y avisa con ⓘ (decisiones 22 y 37);
   - sin persona de ejemplo, no se crea;
