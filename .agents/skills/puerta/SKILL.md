@@ -60,7 +60,7 @@ Sale de los 142 problemas que encontraron los reviews de ArquitecturaBase: capí
 9. **Las migraciones son portables:**
    - el SQL va en una línea y sin `\r`;
    - el Down se niega antes de perder datos.
-10. **Botones y avisos** según `pantallas-y-ui.md` del front: sin textos al lado de un botón, sin «Cambios sin guardar» y sin textos de espera.
+10. **Botones y avisos** según `pantallas-y-ui.md` del front: sin textos al lado de un botón y sin «Cambios sin guardar». Toda acción que tarda muestra que trabaja, con el aro y su gerundio. Sin leyendas: la ayuda va en la (i), y lo apagado dice por qué, también en el teléfono.
 11. **Cada arreglo busca el mismo defecto** en los caminos hermanos y en las piezas compartidas, y cada `fix` dice qué pasaba.
 12. **Cada respuesta de un proveedor** se clasifica como definitiva, transitoria o desconocida, y cada estado tiene una salida. Cada variante de WhatsApp se abre en un celular.
 
