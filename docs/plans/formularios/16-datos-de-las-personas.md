@@ -175,7 +175,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| B1 | Dominio, errores y permiso | `D/Forms/FormPersonDataDefinition.cs`, `FormPersonDataValues.cs`, `FormRecipientFilter.cs`, `FormPersonDataErrors.cs`; suma a `Permissions.cs` y `Permissions{,.en}.resx` | `D/Forms/FormCatalog.cs` [E12] | 20 contando las bajas; `PermissionTextsTests` |
+| B1 | Dominio, errores y permiso | `D/Forms/FormPersonDataDefinition.cs`, `FormPersonDataValues.cs`, `FormRecipientFilter.cs`, `FormPersonDataErrors.cs`; suma a `Permissions.cs` y `Permissions{,.en}.resx` | `D/Forms/FormCatalog.cs` [E12] | 20 contando solo los activos (105); `PermissionTextsTests` |
 | B2 | Tablas y migraciones | `I/Modules/Forms/Persistence/Configurations/FormPersonData*Configuration.cs`; las dos migraciones | `FormCatalogConfiguration.cs` [E12], `20261010203618_SystemRoleAssistantPermissions.cs` | aislamiento y migración, también hacia atrás |
 | B3 | Definir: tope, en uso y confirmar el borrado. Bloquea definiciones, dato y fuente, en ese orden | `A/Modules/Forms/Interfaces/Services/IFormPersonDataService.cs`, `A/Modules/Forms/Services/FormPersonDataService.cs`, `FormPersonDataEditor.cs` | `FormCatalogService.cs` [E12] | dos personas crean el dato 20 a la vez; en uso por el borrador y por la versión activa; `count` exacto |
 | B4 | Valores por delta. Bloquea dato, persona y fuente, en ese orden | `FormPersonDataValueEditor.cs`, `I/Modules/Forms/Persistence/Readers/FormPersonDataReader.cs` | `FormCatalogFieldValuePolicy.cs` [E13] | delta y `null`; opción dada de baja conservada; dos guardados = 409; un miembro de dos organizaciones; la tabla paginada, sin correos |
