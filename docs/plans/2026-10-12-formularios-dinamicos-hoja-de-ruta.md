@@ -613,6 +613,7 @@ Elegidas por el usuario el 2026-11-02, al evaluar ese traspaso contra este model
 119. **El Excel de un catálogo se lee como en pantalla** (E12): números y fechas de Excel, con su formato, y se reimporta sin diferencias. Lo que Excel no guarda exacto va como texto canónico.
 120. **Un solo «Importar»** (E12): «Origen» y «Revisión» a la vista en un diálogo, sin pasos numerados, y lo pegado en una grilla con las columnas del catálogo. Pegar sigue agregando y el archivo, reemplazando.
 121. **El límite de un texto se avisa al publicar** (E14): el editor no tiene contador, tampoco para una etiqueta con su unidad (86). Se puede sumar después, sin rehacer nada.
+122. **La ayuda y los motivos en el teléfono:** sin mouse no hay tooltip. Tocar la (i) abre una hoja chica con el texto, que queda hasta cerrarla, y tocar algo apagado muestra el motivo en la franja oscura de abajo, que se va sola.
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
@@ -654,4 +655,4 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 Ninguna.
 
-Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98, y las del traspaso 4, del 2026-11-02, como decisiones 109 a 121.
+Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98, y las del traspaso 4, del 2026-11-02, como decisiones 109 a 122.

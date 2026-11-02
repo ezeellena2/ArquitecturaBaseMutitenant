@@ -6,7 +6,7 @@
 
 Antes de empezar, en este orden:
 
-1. **Decisiones** de la hoja de ruta: la 43 (botones y avisos), la 109, la 110, la 115 y la 116 (leyendas, ayuda, motivos y esperas), y los pedidos del usuario del 25 y el 26/10, en el [plan de desarrollo](../2026-09-27-plan-de-desarrollo.md#etapas-12-a-25-formularios-por-whatsapp).
+1. **Decisiones** de la hoja de ruta: la 43 (botones y avisos), la 109, la 110, la 115, la 116 y la 122 (leyendas, ayuda, motivos y esperas), y los pedidos del usuario del 25 y el 26/10, en el [plan de desarrollo](../2026-09-27-plan-de-desarrollo.md#etapas-12-a-25-formularios-por-whatsapp).
 2. **Fichas:** [textos-y-traducciones](../../rules/textos-y-traducciones.md), [api-http](../../rules/api-http.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [permisos](../../rules/permisos.md), [tests](../../rules/tests.md) y, del front, `pantallas-y-ui.md`, `formatos.md`, `formularios.md`, `paginado-y-listados.md` y `textos-y-traducciones.md`.
 3. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 4. **La maqueta,** en `../MaquetaMultitenant`: es la fuente de esta etapa, con sus commits del 25 y el 26/10. Se copia del código de pantalla y de las piezas compartidas; su back de mentira no es contrato.
@@ -14,15 +14,15 @@ Antes de empezar, en este orden:
 
 ## Qué se construye
 
-**Botones, esperas y ayuda** (43, 109, 110, 115 y 116), en todo el sistema:
+**Botones, esperas y ayuda** (43, 109, 110, 115, 116 y 122), en todo el sistema:
 - un botón está habilitado o grisado, sin textos al lado ni debajo;
 - **mientras trabaja,** pone el aro y su gerundio («Guardando…»), con su color, en su lugar y sin aceptar otro clic. Un botón de ícono cambia su dibujo por el aro;
 - **una confirmación** queda abierta hasta la respuesta, con su botón en gerundio;
 - **una tabla que vuelve a leer** atenúa sus filas, que no se pueden tocar, y corre una línea bajo el encabezado. La primera carga conserva su aro;
 - nunca aparece «Cambios sin guardar»;
 - si falta un dato obligatorio, el botón queda habilitado, y al tocarlo se marca el campo;
-- **lo apagado dice por qué:** el motivo de un botón, una casilla, la ✕ de un diálogo o una opción de menú va en su tooltip, si no es obvio;
-- **sin leyendas:** el renglón de abajo es solo para el error o para un dato. La ayuda que sirve va en una (i) con tooltip, y lo que no ayuda a decidir se saca. Lo que no se puede hacer sigue en el aviso importante, con su ⓘ.
+- **lo apagado dice por qué:** el motivo de un botón, una casilla, la ✕ de un diálogo o una opción de menú va en su tooltip, si no es obvio. En el teléfono, tocarlo lo muestra en la franja oscura de abajo;
+- **sin leyendas:** el renglón de abajo es solo para el error o para un dato. La ayuda que sirve va en una (i) con tooltip, y lo que no ayuda a decidir se saca. En el teléfono, tocar la (i) abre una hoja chica con el texto. Lo que no se puede hacer sigue en el aviso importante, con su ⓘ.
 
 **La campana,** en el núcleo:
 - lo que llegó, lo que falló en segundo plano y lo que espera a alguien, según los permisos de quien mira. Cada aviso lleva a donde se resuelve;
@@ -127,7 +127,7 @@ Abreviaturas: `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y `M/`, 
 | F7 | Otro acceso | `F/src/areas/public/errors/pages/OtherAccessPage.tsx`, rutas y `returnTo` | `M/…` | con cada acceso; un link ajeno |
 | F8 | El tamaño | `F/src/index.css` y las clases en px | el commit `4390599` de la maqueta | los menús no se corren; capturas de la galería |
 | F9 | Miembros de una empresa | `CompanyDetailPage` | `M/…` | sin el permiso, la pestaña no aparece |
-| F10 | Ayuda y motivos: la (i) con tooltip, el motivo de lo apagado y los usos de hoy de `hint` y `description`, que pasan a la (i) o se sacan | `F/src/shared/ui/InfoTip.tsx`, `help` en `FormField`, `Section`, `Page` y `CheckboxField`, y un tooltip común para lo apagado; una prueba de arquitectura | `InfoButton.tsx` y `RowAction.disabledReason` | la (i) es descripción accesible y no toma el foco al abrir un diálogo; la prueba frena un texto fijo en `hint` o `description`; axe |
+| F10 | Ayuda y motivos: la (i) con tooltip, el motivo de lo apagado y los usos de hoy de `hint` y `description`, que pasan a la (i) o se sacan | `F/src/shared/ui/InfoTip.tsx`, `help` en `FormField`, `Section`, `Page` y `CheckboxField`, y un tooltip común para lo apagado; una prueba de arquitectura | `InfoButton.tsx`, `Sheet.tsx` y `RowAction.disabledReason` | la (i) es descripción accesible y no toma el foco al abrir un diálogo; en el teléfono, la (i) abre la hoja y lo apagado avisa en la franja; la prueba frena un texto fijo en `hint` o `description`; axe |
 
 **Al cerrar:** las fichas del front y `docs/features/` quedan al día, y `docs/architecture/backend.md` suma la campana.
 
