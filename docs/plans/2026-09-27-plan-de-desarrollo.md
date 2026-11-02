@@ -26,7 +26,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 12 · Catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v148 | [Spec](formularios/12-catalogos.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
 | 13 · Campos de los catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v148 | [Spec](formularios/13-campos.md) |
 | 14 · Formularios | Pendiente. Spec lista, con los tableros aprobados en el lienzo v148 | [Spec](formularios/14-formularios.md) |
-| 15 · Respuestas, planilla y Excel | Pendiente. Spec lista; sus tableros se redibujan en la v149, sin publicar | [Spec](formularios/15-respuestas.md) |
+| 15 · Respuestas, planilla y Excel | Pendiente. Spec lista, con los tableros aprobados en el lienzo v149 | [Spec](formularios/15-respuestas.md) |
 | 16 · Datos de las personas y filtros | Pendiente. Spec lista; tableros por dibujar | [Spec](formularios/16-datos-de-las-personas.md) |
 | 17 · Ciclo de vida y copiar | Pendiente. Spec lista; tableros a revisar | [Spec](formularios/17-ciclo-de-vida.md) |
 | 18 · Fotos y documentos | Pendiente. Spec lista, con los archivos del chat; tableros a revisar y por dibujar | [Spec](formularios/18-fotos-y-documentos.md) |
