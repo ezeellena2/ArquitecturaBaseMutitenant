@@ -85,25 +85,25 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Se dibujaron antes de las reglas del 25 y el 26/10, y Diseño los revisa con esta etapa, con el [texto de la etapa](15-texto-diseno.md). El recorrido guiado suma dos circuitos: de pegar los proveedores a verlos en la planilla y el Excel, y de armar los campos a ver el CUIT sellado en la planilla. Muestran solo lo que existe hasta acá (78).
+Redibujados en la v149, con el [texto de la etapa](15-texto-diseno.md). El recorrido guiado suma dos circuitos: de pegar los proveedores a verlos en la planilla y el Excel, y de armar los campos a ver el CUIT sellado en la planilla. Muestran solo lo que existe hasta acá (78).
 
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
-| `FRM-Formularios-15` | la lista, con las columnas de respuestas y «Quien solo ve respuestas» | A revisar |
-| `FRM-Respuestas` | la planilla, con «Columnas», «Empresa» y sus estados; suma «Elegir varias» y los campos sellados | A revisar |
-| `FRM-Respuestas-Filtros` | «Más filtros», en un panel al costado | A revisar |
-| `FRM-Respuesta` | la vista rápida | A revisar |
-| `FRM-Respuestas-Exportar` | el diálogo de exportar | A revisar |
-| `FRM-Tablero` | el tablero | A revisar |
-| `M-FRM-Respuestas`, `M-FRM-Respuesta`, `M-FRM-Tablero` | los tres, en el teléfono. Tocar una fila abre `M-FRM-Respuesta`: no hay vista rápida | A revisar |
-| `FRM-Respuesta-Completa` | la pantalla completa, con sus dos secciones plegadas y abiertas | Por dibujar |
-| `M-FRM-Formularios-15` | la lista en el teléfono, con «N respuestas · estado» | Por dibujar |
+| `FRM-Formularios-15` | la lista, con las columnas de respuestas y «Quien solo ve respuestas» | Para aprobar |
+| `FRM-Respuestas` | la planilla, con «Columnas», «Empresa» y sus estados; suma «Elegir varias» y los campos sellados | Para aprobar |
+| `FRM-Respuestas-Filtros` | «Más filtros», en un panel al costado | Para aprobar |
+| `FRM-Respuesta` | la vista rápida | Para aprobar |
+| `FRM-Respuestas-Exportar` | el diálogo de exportar | Para aprobar |
+| `FRM-Tablero` | el tablero | Para aprobar |
+| `M-FRM-Respuestas`, `M-FRM-Respuesta`, `M-FRM-Tablero` | los tres, en el teléfono. Tocar una fila abre `M-FRM-Respuesta`: no hay vista rápida | Para aprobar |
+| `FRM-Respuesta-Completa` | la pantalla completa, con sus dos secciones plegadas y abiertas | Para aprobar |
+| `M-FRM-Formularios-15` | la lista en el teléfono, con «N respuestas · estado» | Para aprobar |
 
-**Lo que se corrige en lo dibujado:**
+**Lo que se corrigió en lo dibujado:**
 - **Sale lo de etapas posteriores:** las columnas Fotos y Remito, la pestaña Fotos y su visor, su sección en «Más filtros», «Por aprobar · 3» en el panel y la tarjeta «Por estado».
 - **Cambia:** Canal pasa a su columna (un dato por celda) y «Abrir en pantalla completa» se suma a la vista rápida. «Contando…» y «Exportando…» se quedan, con su aro y su color (115).
 
-**Estados que faltan dibujar:**
+**Estados que se sumaron:**
 - un cliente con la marca «Cliente», y «Persona sin información»;
 - «Elegir varias»: «Fallas» con dos opciones, el filtro «alguna de» y su lugar en «Más filtros»;
 - los campos sellados: las subcolumnas con «—» en una respuesta de antes de los campos, y los campos en el detalle;
