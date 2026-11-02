@@ -17,7 +17,6 @@ Antes de empezar, en este orden:
 3. **Fichas:** [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [idempotencia](../../rules/idempotencia.md), [modulos](../../rules/modulos.md), [multitenancy](../../rules/multitenancy.md), [permisos](../../rules/permisos.md), [persistencia-ef](../../rules/persistencia-ef.md), [auditoria](../../rules/auditoria.md), [emails](../../rules/emails.md), [textos-libres](../../rules/textos-libres.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [logs](../../rules/logs.md), [api-http](../../rules/api-http.md) y [tests](../../rules/tests.md).
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 5. **Referencia de producto,** solo para leer: en [`../2026-10-17-formularios-traspaso/`](../2026-10-17-formularios-traspaso/README.md), el anexo C, «Etapa 4», el anexo B, «Etapa 4», y el anexo D (G1 a G6); en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`, el anexo C §5 y §6 (L-05 a L-08), y en ArquitecturaBase, `docs/plans/2026-10-29-cargar-formularios-desde-la-app.md`, «Corregir y anular».
-6. **La maqueta,** en `../MaquetaMultitenant/src/areas/business/forms/`: `api/workflow.ts`, `lib/rules.ts`, `components/rules/`, `components/records/Workflow.tsx` y `CorrectionForm.tsx`, `components/pdf/PdfPage.tsx` y `pages/PdfDesignPage.tsx`. Su corrección es la de la decisión 58, ya reemplazada: manda esta spec.
 
 ## Qué se construye
 
@@ -117,13 +116,13 @@ Diseño los revisa o los dibuja con el [texto de la etapa](21-texto-diseno.md). 
 
 ## Pasos
 
-Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M/`, la maqueta, y `[E14]` a `[E20]`, un archivo que deja esa etapa.
+Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y `[E14]` a `[E20]`, un archivo que deja esa etapa.
 
 **Back:**
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| B1 | Reglas: dominio, validación y revisiones | `D/Forms/FormRuleSet.cs`, `A/Modules/Forms/Services/FormRuleService.cs`, `FormRulesPolicy.cs` | `M/…/lib/rules.ts`; `FormDefinitionService.cs` [E14] | cada motivo; el PDF al recibir, con y sin aprobación; 409; lista vacía; no toca el borrador |
+| B1 | Reglas: dominio, validación y revisiones | `D/Forms/FormRuleSet.cs`, `A/Modules/Forms/Services/FormRuleService.cs`, `FormRulesPolicy.cs` | `FormDefinitionService.cs` [E14] | cada motivo; el PDF al recibir, con y sin aprobación; 409; lista vacía; no toca el borrador |
 | B2 | Permisos, tablas y migraciones | `Permissions.cs`, `Permissions{,.en}.resx`; `I/…/Configurations/`; las migraciones | `20261010203618_SystemRoleAssistantPermissions.cs` | aislamiento; hacia atrás; `PermissionTextsTests` |
 | B3 | El motor: crear ejecuciones en la captura, reservar, correr y confirmar | `IFormActionService.cs`, `FormActionService.cs`, `FormActionPlanBuilder.cs`; suma a `FormRecordService.cs` [E14] | `AssistantTurnService.cs` | clave única; «No aplica»; orden dentro de la regla; un turno viejo no escribe; condición en memoria igual que en SQL |
 | B4 | El worker | `I/Modules/Forms/FormActionWorker.cs` | `AssistantTurnWorker.cs`, `WhatsAppInboundProcessor.cs` | una vuelta de su bucle; una falla no frena a las demás; un aviso en un chat vinculado escribe la copia compartida; la lista de `TenantScopeUsageTests` |
@@ -144,13 +143,13 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| F1 | Tipos y llamadas | `api/workflow.ts` | `M/…` | zod estricto con los ejemplos |
-| F2 | La pestaña de reglas | `components/rules/`, `lib/rules.ts` | `M/…` | guardar, historial, 409 y salir; la casilla no se desmarca sola; subir y agregar «Armar el PDF»; cambiar el tipo conserva lo escrito y guarda solo lo que usa |
-| F3 | El diseño del PDF | `pages/PdfDesignPage.tsx`, `components/pdf/PdfPage.tsx` | `M/…` | estilos; vista previa sin guardar; `<object>` |
-| F4 | «Por aprobar» | suma a la lista y a `FormRecordsPage.tsx` [E15] | `M/…` | las tres combinaciones; la cola con ↑ ↓ |
-| F5 | La decisión y Actividad | `components/records/Workflow.tsx`; suma a `QuickView.tsx` y `RecordFullPage.tsx` | `M/…` | solo decide; «Aprobar» con el foco en «Cancelar», y Enter no aprueba; el diálogo abierto hasta la respuesta; Reintentar; se relee mientras sale |
+| F1 | Tipos y llamadas | `api/workflow.ts` | la API de la E20 | zod estricto con los ejemplos |
+| F2 | La pestaña de reglas | `components/rules/`, `lib/rules.ts` | su tablero | guardar, historial, 409 y salir; la casilla no se desmarca sola; subir y agregar «Armar el PDF»; cambiar el tipo conserva lo escrito y guarda solo lo que usa |
+| F3 | El diseño del PDF | `pages/PdfDesignPage.tsx`, `components/pdf/PdfPage.tsx` | su tablero | estilos; vista previa sin guardar; `<object>` |
+| F4 | «Por aprobar» | suma a la lista y a `FormRecordsPage.tsx` [E15] | su tablero | las tres combinaciones; la cola con ↑ ↓ |
+| F5 | La decisión y Actividad | `components/records/Workflow.tsx`; suma a `QuickView.tsx` y `RecordFullPage.tsx` | su tablero | solo decide; «Aprobar» con el foco en «Cancelar», y Enter no aprueba; el diálogo abierto hasta la respuesta; Reintentar; se relee mientras sale |
 | F6 | Corregir y anular | `components/records/CorrectionForm.tsx`, con los componentes de la E20 | el tablero | lo de antes; motivo; 409; filtro «Anulada» |
-| F7 | Lo propio, tablero y tarjeta | suma a `FormRecordsPage.tsx`, `FormDashboard.tsx` y la tarjeta | `M/…` | estado, PDF y motivo |
+| F7 | Lo propio, tablero y tarjeta | suma a `FormRecordsPage.tsx`, `FormDashboard.tsx` y la tarjeta | su tablero | estado, PDF y motivo |
 
 **Al cerrar:** `docs/features/formularios.md` y `whatsapp.md` suman su sección, y la guía de correos, los adjuntos.
 
@@ -210,7 +209,7 @@ La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba r
 
 ## Requisitos previos
 
-- La E20 cerrada, y el almacenamiento de la E10.
+- La E20 cerrada. El almacenamiento de la E10 no frena: alcanza con `LocalFileStore`, y su prueba queda pendiente (123).
 - La prueba con Meta de una plantilla con documento en el encabezado (47 y 61).
 
 ## En el multitenant

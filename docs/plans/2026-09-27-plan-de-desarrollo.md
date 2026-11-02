@@ -2,7 +2,7 @@
 
 **Estado:** en curso · la tabla dice el estado de cada etapa. Lo que quedó para después está en el [backlog](../backlog.md).
 
-Orden vigente: **8 → 8b → 11 → 9 → 10 → base → 12 → 13 → 14 → 15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25**. [AGENTS.md](../../AGENTS.md) define el modo rápido:
+Orden vigente: **8 → 8b → 11 → 9 → base → 12 → 13 → 14 → 15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25**. [AGENTS.md](../../AGENTS.md) define el modo rápido:
 contrato primero, programación por dueños y una sola puerta. Tras un arreglo se verifica sólo lo afectado.
 La tabla indica el estado; las reglas y conducta viven en fichas, ADR y features.
 El historial se recupera con git show historial-docs:<ruta>, sin cargar planes cerrados. Los planes y la revisión retirados el 2026-10-13 (E8, E8b, correctivos y limpieza) y el 2026-10-31 (E9 y E11) se encuentran con git log --diff-filter=D -- <ruta> y se leen con git show <commit>^:<ruta>.
@@ -21,8 +21,8 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 8b · Asistente | Cerrada | [ADR 0048](../decisions/0048-asistente.md), [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md), [Asistente](../features/asistente.md) |
 | 11 · WhatsApp de atención | Cerrada el 2026-10-21. El alta de una organización con un número real pasó a la I1 de la 10 | [WhatsApp](../features/whatsapp.md), [ADR 0038](../decisions/0038-whatsapp-de-atencion.md) |
 | 9 · Endurecimiento | Cerrada | [Identidad](../features/identidad.md), [Plataforma](../features/plataforma.md), [cuotas](../rules/cuotas.md), [caché](../rules/cache.md), [ADR 0052](../decisions/0052-cache-compartida-redis.md) |
-| 10 · Operación | Pendiente. El plan corto está listo, con las decisiones del usuario; la F5 de botones pasó a la base de la 12 | [Plan](2026-10-16-etapa-10-despliegue.md), [manual de operación](../operations/runbook.md) |
-| Base de la 12 | Pendiente. Spec lista: lo que se copia de la maqueta, con los botones (la F5 de la 10), la campana en el núcleo y la letra al 85 %, que confirmó el usuario | [Spec](formularios/base-de-la-12.md) |
+| 10 · Operación | Pendiente, para después del bloque (decisión 123). El plan corto está listo, con las decisiones del usuario; la F5 de botones pasó a la base de la 12 | [Plan](2026-10-16-etapa-10-despliegue.md), [manual de operación](../operations/runbook.md) |
+| Base de la 12 | Pendiente. Spec lista: los botones (la F5 de la 10), la campana en el núcleo y la letra al 85 %, que confirmó el usuario | [Spec](formularios/base-de-la-12.md) |
 | 12 · Catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v141 y al día en la v145; se redibujan `FRM-Catalogos`, con su filtro, `FRM-Catalogo` y `FRM-Catalogo-Importar`, y hay tableros por dibujar | [Spec](formularios/12-catalogos.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
 | 13 · Campos de los catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v145 (decisión del usuario del 27/10); se redibuja `FRM-Catalogo-13`, con el combo del catálogo, y hay tableros por dibujar | [Spec](formularios/13-campos.md) |
 | 14 · Formularios | Pendiente. Spec lista, con los tableros aprobados en el lienzo v141 y al día en la v145; se redibujan `FRM-Editor`, con los títulos de sección, y `FRM-Publicar`, y hay tableros por dibujar | [Spec](formularios/14-formularios.md) |
@@ -54,7 +54,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 Una organización arma formularios, los manda por WhatsApp a sus empleados y a sus clientes (decisión 49) y ve las respuestas numeradas en una planilla.
 - **Etapas y fuente:** son catorce, de la 12 a la 25, en el orden de la decisión 78: **el número es el orden**, con los catálogos primero. Cada una tiene su sección y las decisiones de producto tomadas en la [hoja de ruta](2026-10-12-formularios-dinamicos-hoja-de-ruta.md). El alcance de cada una sale de la [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md), que usa los números de antes, y de las decisiones 47 a 82. La equivalencia está en [`formularios/`](formularios/README.md).
 - **La regla del orden:** cada etapa usa solo lo de las anteriores, lo que suma se ve en las pantallas que ya existen, y nada nombra, prueba ni dibuja algo de una etapa posterior. La controla `/plan-etapa`.
-- **La base, al principio de la 12** ([spec](formularios/base-de-la-12.md)). Se copia de la maqueta (`MaquetaMultitenant`, commits del 25/10):
+- **La base, al principio de la 12** ([spec](formularios/base-de-la-12.md)):
   - los botones y avisos de la decisión 43, que eran la F5 de la 10, con las leyendas, la (i), los motivos y las esperas de las decisiones 109, 110, 115 y 116;
   - la campana, en el núcleo, con las dos rutas de avisos;
   - «Más filtros» en `FilterBar`, con el buscador y hasta tres filtros en una fila;
@@ -68,8 +68,8 @@ Una organización arma formularios, los manda por WhatsApp a sus empleados y a s
   - «Dar de baja» y «Reactivar» en todo el sistema, con el estado «De baja»: Usuarios dejan «Deshabilitar», Roles y Empresas, «Inactivar», y los miembros de una empresa, «Quitar» y «Volver a sumar», en el front, en los textos del back y en sus tests (decisión del usuario del 25/10);
   - borrar la cuenta propia dice «Borrar mi cuenta» y su estado, «Por borrar», en lugar de «Baja pedida» (decisión del usuario del 26/10). Cambian también los textos de los correos y de las plantillas de WhatsApp de la cuenta: se actualiza `docs/operations/whatsapp-plantillas.md` y las plantillas se vuelven a aprobar en Meta, con el mismo nombre (eso lo hace el usuario);
   - un link del otro acceso abre «Otro acceso» (tableros `Otro-Acceso` y `Otro-Acceso-Persona` del lienzo v144), que ofrece entrar con ese acceso y después abre el link (decisión del usuario del 25/10).
-- **Para la prueba con Meta de la 14:** una organización con su número conectado, que prueba la I1 de la 10.
-- **Requisitos:** la E11 es requisito duro, porque sin número de la organización no hay formularios. Van después de la E10 para nacer con las guardas de la E9 y la nube de la E10.
+- **La prueba con Meta de la 14 en adelante** pide una organización con su número conectado, y queda para cuando esté la I1 de la 10 (decisión 123).
+- **Requisitos:** la E11 es requisito duro, porque sin número de la organización no hay formularios. No esperan a la E10 (decisión 123), y nacen con las guardas de la E9.
 - **Módulo:** `Forms` es un módulo quitable aparte de `WhatsApp`, unidos por puertos neutrales del núcleo.
 - **ArquitecturaBase:** es referencia, no fuente de código; la estructura sale de este repo.
 - **Specs:** cada etapa tiene su spec o su resumen en [`formularios/`](formularios/README.md).

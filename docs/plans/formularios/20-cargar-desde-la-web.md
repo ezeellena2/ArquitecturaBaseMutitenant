@@ -21,7 +21,6 @@ Antes de empezar, en este orden:
 
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 5. **Referencia de producto,** solo para leer: en ArquitecturaBase, `docs/plans/2026-10-30-traspaso-multitenant-carga-desde-la-app.md`, `docs/plans/2026-10-29-cargar-formularios-desde-la-app.md` y `docs/features/formularios.md`, «Carga desde la app». En `ArquitecturaBaseFront`, `docs/design/carga-desde-la-app.md`. Los commits están en la copia local. Mandan esta spec y las reglas y los diseños de este proyecto (108), y el código sale de este repo.
-6. **La maqueta no sirve de base:** tiene una versión anterior, con «Cargar respuesta» en el ⋮ y el canal «Web».
 
 ## Qué se construye
 

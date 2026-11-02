@@ -11,7 +11,6 @@ Antes de empezar, en este orden:
 3. **Fichas y guías:** [datos-de-referencia](../../rules/datos-de-referencia.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [identificacion-fiscal](../../rules/identificacion-fiscal.md), [modulos](../../rules/modulos.md), [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [datos-personales](../../rules/datos-personales.md), [logs](../../rules/logs.md), [cuotas](../../rules/cuotas.md), [tests](../../rules/tests.md) y la [guía de herramientas](../../guides/agregar-una-herramienta-al-asistente.md).
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 5. **Referencia de producto,** solo para leer: en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`, el anexo F, F3, y el anexo D (`DOC1` a `DOC6`); allá, la ADR 0022.
-6. **La maqueta,** en `../MaquetaMultitenant/src/areas/business/forms/documents/`: la bandeja, el panel, la lectura y `BuildFormPage.tsx`. Se copia lo que se ve; su contrato no vale.
 
 ## Qué se construye
 
@@ -160,7 +159,7 @@ Dos migraciones. Todo es `ITenantOwned`, con RLS, salvo lo global. **Sin permiso
 
 ## Pasos
 
-Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M/`, la maqueta, y `[E14]` a `[E23]`, un archivo que deja esa etapa.
+Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y `[E14]` a `[E23]`, un archivo que deja esa etapa.
 
 **Back:**
 
@@ -183,10 +182,10 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| F1 | Tipos y llamadas | `F/src/modules/forms/documents/api.ts`, `types.ts` | `M/…/documents/` | zod estricto |
-| F2 | La bandeja y su panel | `documents/pages/DocumentsPage.tsx`, `components/DocumentPanel.tsx`, `DocumentPreview.tsx` | `M/…` | filtros, panel, ↑ ↓ y permisos; axe |
-| F3 | La lectura | `documents/components/DocumentReadingSection.tsx`, `ReadingFields.tsx` | `M/…` | editor y plantilla; candado |
-| F4 | Armar con la IA | `documents/pages/BuildFormPage.tsx` | `M/…` | crear borrador; falla |
+| F1 | Tipos y llamadas | `F/src/modules/forms/documents/api.ts`, `types.ts` | la API de la E24 | zod estricto |
+| F2 | La bandeja y su panel | `documents/pages/DocumentsPage.tsx`, `components/DocumentPanel.tsx`, `DocumentPreview.tsx` | su tablero | filtros, panel, ↑ ↓ y permisos; axe |
+| F3 | La lectura | `documents/components/DocumentReadingSection.tsx`, `ReadingFields.tsx` | su tablero | editor y plantilla; candado |
+| F4 | Armar con la IA | `documents/pages/BuildFormPage.tsx` | su tablero | crear borrador; falla |
 | F5 | El chat y el detalle | suma a `MessageThread.tsx` y `RecordValues.tsx` | esos mismos | «Por qué lo propuso»; de qué documento salió |
 
 **Al cerrar:** `docs/features/formularios.md` suma la sección, y `datos-de-referencia.md`, la tabla.

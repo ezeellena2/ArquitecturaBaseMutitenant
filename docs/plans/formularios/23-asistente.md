@@ -11,7 +11,7 @@ Antes de empezar, en este orden:
 3. **Fichas y guías:** [modulos](../../rules/modulos.md), [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [multitenancy](../../rules/multitenancy.md), [cuotas](../../rules/cuotas.md), [logs](../../rules/logs.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [tests](../../rules/tests.md) y la [guía de herramientas](../../guides/agregar-una-herramienta-al-asistente.md).
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 5. **Referencia de producto,** solo para leer: en [`../2026-10-17-formularios-traspaso/`](../2026-10-17-formularios-traspaso/README.md), el anexo C, «Etapa 5», y el anexo D (H1 a H7 y s1 a s4); en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`, el anexo C §7 a §9 y el anexo F, F1, con su ADR 0021.
-6. **La maqueta:** no tiene el asistente. Los dibujos son de Diseño.
+6. **Los dibujos** son de Diseño.
 
 ## Qué se construye
 
@@ -207,7 +207,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | F2 | La pantalla «Asistente» | `F/src/modules/whatsapp/assistant/` | el tablero | pestañas; un solo Guardar; 409; Probar |
 | F3 | Modo y atención | suma a `ConversationView.tsx` y `ChatsWorkspace.tsx` | el tablero | cambiar, fijar y «Resuelto»; el filtro |
 | F4 | El chat | suma a `MessageThread.tsx` | el tablero | porqué, botones, borrador y sugerencia |
-| F5 | Temas | `UnansweredTopicsPage.tsx`, `MissingFormsPage.tsx` | `M/…/pages/MissingFormsPage.tsx` | descartar; sin nombres |
+| F5 | Temas | `UnansweredTopicsPage.tsx`, `MissingFormsPage.tsx` | su tablero | descartar; sin nombres |
 | F6 | El editor | suma a `FormEditorPage.tsx` y `RulesSection.tsx` | esos mismos | «Cuándo lo ofrece»; «Qué sugerir después»; «Armar desde un texto» |
 
 **Al cerrar:** las fichas del asistente, de WhatsApp y de formularios suman su sección, y la regla de WhatsApp pasa a «solo texto redactado con estos límites, o fijo».

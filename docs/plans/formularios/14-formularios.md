@@ -7,7 +7,7 @@
 - reglas: [AGENTS.md](../../../AGENTS.md) y las [fichas](../../rules/README.md);
 - conocimiento de Meta: ArquitecturaBase ([§14](14-parte-archivos-tests-y-meta.md#14-referencia-de-meta-tomada-de-arquitecturabase)). Es solo referencia, no código para copiar.
 
-**Requisitos:** la E13 cerrada (con ella, el módulo `Forms`, los catálogos y sus campos), la E11 (números por organización, bandejas, token por organización) y la E9 (Redis, límites y fuzz). Para la prueba con Meta, una organización con su número conectado (la I1 de la 10).
+**Requisitos:** la E13 cerrada (con ella, el módulo `Forms`, los catálogos y sus campos), la E11 (números por organización, bandejas, token por organización) y la E9 (Redis, límites y fuzz). La prueba con Meta pide una organización con su número conectado, y queda pendiente hasta la I1 de la 10 (123).
 
 **Partes.** Esta spec no entra en un solo archivo, así que sigue en otros, con los mismos números de sección. Lo que no está en la tabla está acá.
 

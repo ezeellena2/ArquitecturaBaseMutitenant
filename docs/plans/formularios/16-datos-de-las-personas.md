@@ -24,7 +24,6 @@ Antes de empezar, en este orden:
 
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 5. **Referencia de producto,** solo para leer: en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`, el anexo C §11 (C2-05, C2-06 y C2-09), el anexo D (`CE4-A`) y el anexo E §2.7 (review R1023, puntos 8 y 18 a 20).
-6. **La maqueta,** en `../MaquetaMultitenant/src/`: en `areas/business/forms/`, `pages/PersonDataPage.tsx`, `components/MemberDataTab.tsx`, `components/CatalogQuestionFields.tsx` y `components/PublishDialog.tsx`; y `shared/modules/types.ts`, `useModules.ts` y `areas/business/users/pages/UserDetailPage.tsx`. Se copia lo que se ve. Su contrato no vale: manda esta spec. Por ejemplo, allá un filtro nombra el campo por su clave, y acá, por su identidad.
 
 ## Qué se construye
 
@@ -169,7 +168,7 @@ Dos migraciones: `<fecha>_FormPersonData.cs` y `<fecha>_SystemRoleFormPersonData
 
 ## Pasos
 
-Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M/`, la maqueta, y `[E12]` a `[E15]`, un archivo que deja esa etapa.
+Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y `[E12]` a `[E15]`, un archivo que deja esa etapa.
 
 **Back:**
 
@@ -191,12 +190,12 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` | `M/…/api/catalogs.ts` | zod estricto con los ejemplos |
-| F2 | «Datos de las personas» | `F/src/modules/forms/pages/PersonDataPage.tsx`; suma a `registration.ts` y a sus recursos | `M/…/pages/PersonDataPage.tsx` y `CatalogCombo.tsx` [E13] | permisos, tope, en uso y confirmar; el mismo combo; axe |
-| F3 | La pestaña «Datos», con el registro neutral | `F/src/modules/forms/components/MemberDataTab.tsx`; suma a `F/src/shared/modules/types.ts`, `useModules.ts` y `UserDetailPage.tsx` | `M/…` | sin el módulo no hay pestañas; guarda aparte; salir con cambios; composición |
-| F4 | La columna «Filtro» | suma a `FieldsSection.tsx` [E13] | `M/…/catalog/FieldsSection.tsx` | apagada en uso, con el motivo |
-| F5 | «Qué opciones ve cada persona» | suma a `CatalogQuestionFields.tsx` [E14] | `M/…/CatalogQuestionFields.tsx` | fijo y según quien lo recibe; la vista previa se actualiza sola; sin `formcatalogs.read` |
-| F6 | Publicar, enviar y «Columnas» | suma a `PublishDialog.tsx`, al diálogo de enviar [E14] y a `FormRecordsPage.tsx` [E15] | `M/…/PublishDialog.tsx` | avisos que no frenan; motivo al mandar; subcolumnas apagadas |
+| F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` | la API de la E15 | zod estricto con los ejemplos |
+| F2 | «Datos de las personas» | `F/src/modules/forms/pages/PersonDataPage.tsx`; suma a `registration.ts` y a sus recursos | su tablero y `CatalogCombo.tsx` [E13] | permisos, tope, en uso y confirmar; el mismo combo; axe |
+| F3 | La pestaña «Datos», con el registro neutral | `F/src/modules/forms/components/MemberDataTab.tsx`; suma a `F/src/shared/modules/types.ts`, `useModules.ts` y `UserDetailPage.tsx` | su tablero | sin el módulo no hay pestañas; guarda aparte; salir con cambios; composición |
+| F4 | La columna «Filtro» | suma a `FieldsSection.tsx` [E13] | su tablero | apagada en uso, con el motivo |
+| F5 | «Qué opciones ve cada persona» | suma a `CatalogQuestionFields.tsx` [E14] | su tablero | fijo y según quien lo recibe; la vista previa se actualiza sola; sin `formcatalogs.read` |
+| F6 | Publicar, enviar y «Columnas» | suma a `PublishDialog.tsx`, al diálogo de enviar [E14] y a `FormRecordsPage.tsx` [E15] | su tablero | avisos que no frenan; motivo al mandar; subcolumnas apagadas |
 
 **Al cerrar:** `docs/features/formularios.md` suma la sección, y `docs/features/organizaciones.md`, el aviso de fin de membresía.
 
@@ -209,7 +208,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | [E13] | `FieldsJson`, el índice GIN y la columna de la tabla de campos. | `FieldValuesJson @> …` filtra por igualdad con ese índice. |
 | [E12] | `IMemberDirectoryReader`. | Suma las ids de los miembros activos con un permiso. |
 | [E15] | Cómo «Columnas» guarda lo oculto en la URL. | Admite columnas apagadas por defecto. |
-| Núcleo | La ficha del usuario del front, que hoy no tiene pestañas, y `OrganizationUserRemover`. | Si la base de la 12 no trae el registro de la maqueta, entra acá. |
+| Núcleo | La ficha del usuario del front, que hoy no tiene pestañas, y `OrganizationUserRemover`. | Si la base de la 12 no trae el registro de pestañas, entra acá. |
 | Núcleo | Otras formas de terminar una membresía. | Solo esos dos caminos llaman a `Member.Remove`. |
 
 ## Lo que ya se pagó allá (no repetir)

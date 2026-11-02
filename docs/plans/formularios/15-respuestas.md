@@ -27,7 +27,6 @@ Antes de empezar, en este orden:
 5. **Referencia de producto,** solo para leer:
    - en [`../2026-10-17-formularios-traspaso/`](../2026-10-17-formularios-traspaso/README.md): anexo C, «Etapa 3» y §3.5, y anexo B, «Etapa 3»;
    - en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`: anexo C §5 (G-01 a G-08), §6 (L-01 a L-04), C1-05 y C2-07, y anexo D (`MF1`, `DC0`, `DC1` ajustado, `CA5`, `CA6`, `CE5`, `CE6` y `DOC7-A`).
-6. **La maqueta,** en `../MaquetaMultitenant/src/areas/business/forms/`: `pages/FormsOverviewPage.tsx`, `FormRecordsPage.tsx` y `RecordFullPage.tsx`, `components/records/` y `lib/recordFilters.ts` y `values.ts`. Se copia lo que se ve, sin lo de etapas posteriores: fotos, aprobación, PDF, corregir y CSV. Sus rutas no son el contrato: manda esta spec.
 
 ## Qué se construye
 
@@ -176,7 +175,7 @@ Una migración, `<fecha>_FormRecordsRead.cs`, y otra de roles, `<fecha>_SystemRo
 
 ## Pasos
 
-Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M/`, la maqueta, y `[E12]` y `[E14]`, un archivo que deja esa etapa.
+Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y `[E12]` y `[E14]`, un archivo que deja esa etapa.
 
 **Back:**
 
@@ -199,14 +198,14 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` | `M/…/api/records.ts` | zod estricto con los ejemplos |
-| F2 | La lista y las pestañas | suma a `FormsPage.tsx` y a las pestañas [E14]; `registration.ts` | `M/…/pages/FormsOverviewPage.tsx` | las tres combinaciones de permisos; adónde abre el nombre |
-| F3 | La planilla | `pages/FormRecordsPage.tsx`, `lib/recordFilters.ts`, `lib/values.ts`, `components/records/CustomerTag.tsx` | `M/…` | «—», «Sin respuesta», cero y `false`; lo privado fuera de la URL; 403 retira todo; axe |
-| F4 | «Más filtros» | `components/records/MoreFiltersPanel.tsx` | `M/…` | borrador hasta aplicar; un conteo que falla no frena |
-| F5 | La vista rápida | `components/records/QuickView.tsx`, `RecordValues.tsx`; la excepción en la ficha de tablas | `M/…`, sin Workflow | teclado, Esc y foco útil; una respuesta tardía se descarta |
-| F6 | La pantalla completa | `pages/RecordFullPage.tsx` | `M/…`, sin Workflow | entrada directa sin filtros privados; «Volver» a la misma fila; el teléfono |
-| F7 | Exportar | `components/records/ExportDialog.tsx` | `M/…`, sin CSV | más de 10.000; `Busy`; «Exportando…» y el diálogo abierto hasta la respuesta |
-| F8 | El tablero | `components/records/FormDashboard.tsx`, sin biblioteca de gráficos | `M/…`, sin estados ni montos | quitar, agregar, contar y volver al automático; ver como tabla; axe |
+| F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` | la API de la E14 | zod estricto con los ejemplos |
+| F2 | La lista y las pestañas | suma a `FormsPage.tsx` y a las pestañas [E14]; `registration.ts` | su tablero | las tres combinaciones de permisos; adónde abre el nombre |
+| F3 | La planilla | `pages/FormRecordsPage.tsx`, `lib/recordFilters.ts`, `lib/values.ts`, `components/records/CustomerTag.tsx` | su tablero | «—», «Sin respuesta», cero y `false`; lo privado fuera de la URL; 403 retira todo; axe |
+| F4 | «Más filtros» | `components/records/MoreFiltersPanel.tsx` | su tablero | borrador hasta aplicar; un conteo que falla no frena |
+| F5 | La vista rápida | `components/records/QuickView.tsx`, `RecordValues.tsx`; la excepción en la ficha de tablas | su tablero | teclado, Esc y foco útil; una respuesta tardía se descarta |
+| F6 | La pantalla completa | `pages/RecordFullPage.tsx` | su tablero | entrada directa sin filtros privados; «Volver» a la misma fila; el teléfono |
+| F7 | Exportar | `components/records/ExportDialog.tsx` | su tablero | más de 10.000; `Busy`; «Exportando…» y el diálogo abierto hasta la respuesta |
+| F8 | El tablero | `components/records/FormDashboard.tsx`, sin biblioteca de gráficos | su tablero | quitar, agregar, contar y volver al automático; ver como tabla; axe |
 
 **Al cerrar:** `docs/features/formularios.md` suma la sección de las respuestas.
 
@@ -220,7 +219,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | [E12] | La barrera `IFormWorkLease` y `IMemberDirectoryReader`. | La barrera admite otro `Kind`; el lector suma nombres por id, también de quien ya no es miembro, y empresas. |
 | [E11] | `/org/whatsapp/chats/:conversationId`. | Abre las dos bandejas, y no hace falta decir cuál. |
 | [E9] | Las cuotas. | Las rutas cuentan en las generales, sin perfil propio. |
-| Base de la 12 | La tabla con columnas fijas, el panel al costado y las pestañas del front. | Están en el front, o entran copiados de la maqueta. |
+| Base de la 12 | La tabla con columnas fijas, el panel al costado y las pestañas del front. | Están en el front, o entran acá. |
 | EF | Agrupar en SQL en otra zona horaria. | Se puede con la versión de Npgsql del repo, sin SQL a mano. |
 
 ## Lo que ya se pagó allá (no repetir)

@@ -11,6 +11,10 @@ Cada etapa del bloque tiene acá su spec, y todas van hacia el mismo [formato](p
 - lo que suma se ve en todas las pantallas que ya existen: un tipo de pregunta nuevo, en la planilla, el detalle, el Excel y el PDF, si ya están;
 - nada nombra, prueba ni dibuja algo de una etapa posterior: eso pasa a esa etapa.
 
+**Sin la E10 y sin la maqueta** (123 y 124):
+- las etapas se programan y se cierran sin la E10. Lo que pide Meta con un número conectado, o la nube, queda pendiente en el plan de cada etapa, y se prueba junto cuando esté la I1;
+- lo que se ve sale del lienzo y cómo funciona, de las specs. Ninguna etapa copia de la maqueta.
+
 **Qué no va acá:**
 - **Código para copiar:** cada spec nombra el archivo real de este repo que sirve de modelo. ArquitecturaBase es referencia, no fuente de código.
 - **La ficha de `docs/features/` y los `AGENTS.md` de cada carpeta:** nacen al cerrar la etapa, del código real. El detector de documentación los controla y no puede haber punteros a carpetas que no existen.

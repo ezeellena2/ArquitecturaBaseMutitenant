@@ -1,6 +1,6 @@
 # Formularios dinámicos por WhatsApp: hoja de ruta
 
-**Estado:** en curso · aprobada el 2026-10-12, con las decisiones de producto tomadas ([sección 5](#5-decisiones-de-producto)). Está sumada al [plan de desarrollo](2026-09-27-plan-de-desarrollo.md) como **las catorce etapas de la E12 a la E25, en el orden de la decisión 78, después de la E10**. No es un plan de etapa: cada etapa se escribe en el formato de [etapa en paralelo](../guides/etapa-en-paralelo.md) cuando le toque, a partir de su sección de acá.
+**Estado:** en curso · aprobada el 2026-10-12, con las decisiones de producto tomadas ([sección 5](#5-decisiones-de-producto)). Está sumada al [plan de desarrollo](2026-09-27-plan-de-desarrollo.md) como **las catorce etapas de la E12 a la E25, en el orden de la decisión 78**, sin esperar a la E10 (123). No es un plan de etapa: cada etapa se escribe en el formato de [etapa en paralelo](../guides/etapa-en-paralelo.md) cuando le toque, a partir de su sección de acá.
 
 **Origen.** Es la misma funcionalidad que se está construyendo en `ArquitecturaBase`, adaptada a organizaciones, empresas, plataforma y personas. Allá la Etapa 1 está cerrada y probada con Meta real (envío, respuesta y número guardado), y las demás tienen diseño y decisiones elegidas.
 
@@ -140,7 +140,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - lo que suma se ve en todas las pantallas que ya existen: un tipo de pregunta nuevo, en la planilla, el detalle, el Excel y el PDF, si ya están;
 - nada nombra, prueba ni dibuja algo de una etapa posterior: eso pasa a esa etapa.
 
-**La base, antes de la E12:** lo que se copia de la maqueta, que lista el [plan de desarrollo](2026-09-27-plan-de-desarrollo.md#etapas-12-a-25-formularios-por-whatsapp): los botones (la F5 que sale de la 10), la campana en el núcleo, donde también se avisa la versión nueva, y la letra al 85 %, que confirmó el usuario. Para la prueba con Meta de la E14 hace falta una organización con su número conectado (la I1 de la 10).
+**La base, antes de la E12:** lo que lista el [plan de desarrollo](2026-09-27-plan-de-desarrollo.md#etapas-12-a-25-formularios-por-whatsapp): los botones (la F5 que sale de la 10), la campana en el núcleo, donde también se avisa la versión nueva, y la letra al 85 %, que confirmó el usuario. La prueba con Meta de la E14 en adelante pide una organización con su número conectado, y queda para cuando esté la I1 de la 10 (123).
 
 **Criterios.** En todas las etapas rige la lista de control de la skill `/puerta`: doce puntos que salen de los 142 problemas de los reviews de ArquitecturaBase ([§4](#4-lo-que-aprendimos-en-arquitecturabase)). Cada etapa suma los suyos. El plan de la etapa los toma como lista de control, y cada punto que aplica lleva su test.
 
@@ -331,7 +331,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 
 ### Después del bloque
 
-- **Integraciones, lo primero después del bloque** (76): un módulo `Integrations`, con conexiones y credenciales por organización. La API pública y el MCP necesitan una identidad por organización. Quedan abiertas las 13 decisiones de su estudio.
+- **Integraciones, lo primero después del bloque** (76): un módulo `Integrations`, con conexiones y credenciales por organización. La API pública y el MCP necesitan una identidad por organización. ArquitecturaBase cerró cinco de las 13 decisiones de su estudio el 2026-10-31: ARCA primero, con la factura, en un módulo `Arca` propio y no en uno genérico. Se evalúa acá cuando llegue su traspaso.
 - **Catálogos, fases 3 a 6:** la búsqueda en vivo (56), las listas dependientes en WhatsApp (94) y los orígenes externos.
 - **La conexión a la base de un cliente,** con una solución simple: un agente del lado del cliente o una réplica de solo lectura.
 - **Los tableros que cruzan formularios.**
@@ -371,7 +371,7 @@ Decididas por el usuario entre el 2026-10-12 y el 2026-10-24. No se vuelven a pr
 3. **B2C, después del bloque,** con la bandeja Clientes de E11 andando y el backlog #51 resuelto. Reemplazada por la 49 para los formularios: los clientes los completan desde el principio.
 4. **El número de la plataforma (E8) no manda formularios:** es para ingreso y avisos de cuenta.
 5. **Sin límites por plan en la v1** (formularios, respuestas, almacenamiento): solo se habilita el feature. Medir el uso real antes de poner topes.
-6. **El bloque va después de la E10:** 8b → 11 → 9 → 10 → 12 a 19 (12 a 17 cuando se decidió). Nace con Redis, límites y el fuzz de la E9, y con la nube de la E10.
+6. **El bloque va después de la E10:** cambiada por la 123, que la deja para después. Decía 8b → 11 → 9 → 10 → 12 a 19 (12 a 17 cuando se decidió). Nace con Redis, límites y el fuzz de la E9, y con la nube de la E10.
 7. **`Forms` es un módulo aparte de `WhatsApp`,** unidos por puertos neutrales del núcleo, como en ArquitecturaBase.
 8. **Alcance:** seis etapas, con la biblioteca al final. El asistente en WhatsApp (antes F7) se programa después; su diseño se adelanta (decisión 19). Reemplazada por la 34.
 9. **Varias empresas:** si quien responde es miembro de varias empresas, la respuesta guarda todas sus empresas activas, y el filtro por empresa la encuentra por cualquiera.
@@ -614,6 +614,8 @@ Elegidas por el usuario el 2026-11-02, al evaluar ese traspaso contra este model
 120. **Un solo «Importar»** (E12): «Origen» y «Revisión» a la vista en un diálogo, sin pasos numerados, y lo pegado en una grilla con las columnas del catálogo. Pegar sigue agregando y el archivo, reemplazando.
 121. **El límite de un texto se avisa al publicar** (E14): el editor no tiene contador, tampoco para una etiqueta con su unidad (86). Se puede sumar después, sin rehacer nada.
 122. **La ayuda y los motivos en el teléfono:** sin mouse no hay tooltip. Tocar la (i) abre una hoja chica con el texto, que queda hasta cerrarla, y tocar algo apagado muestra el motivo en la franja oscura de abajo, que se va sola.
+123. **La E10 queda para después, y el bloque no la espera.** Cambia la 6. La base y las etapas se programan y se cierran sin ella, con `LocalFileStore`. Lo que pide Meta con un número conectado, o la nube, queda pendiente en el plan de cada etapa, y se prueba junto cuando esté la I1.
+124. **La maqueta no se usa.** Lo que se ve sale del lienzo y cómo funciona, de las specs. Ninguna etapa copia de ella.
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 

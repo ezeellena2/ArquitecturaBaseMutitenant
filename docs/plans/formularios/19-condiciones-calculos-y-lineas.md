@@ -23,7 +23,6 @@ Antes de empezar, en este orden:
 
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 5. **Referencia de producto:** no hay: esta etapa es nueva. La de los Flows es la §14 de la E14.
-6. **La maqueta,** en `../MaquetaMultitenant/src/areas/business/forms/`: `components/logic/ConditionsEditor.tsx`, `CalculationEditor.tsx` y `LinesEditor.tsx`, `lib/conditions.ts`, `lib/formula.ts` y `lib/decimal.ts`, y `LinesTable` en `components/records/RecordValues.tsx`. Sus reglas de cálculo y condiciones son el modelo para escribir las del servidor, que son las que valen.
 
 ## Qué se construye
 
@@ -141,14 +140,14 @@ Una tabla aparte, y no una columna más en `FormRecordValues`: la clave de esa t
 
 ## Pasos
 
-Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M/`, la maqueta, y `[E14]` a `[E18]`, un archivo que deja esa etapa.
+Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y `[E14]` a `[E18]`, un archivo que deja esa etapa.
 
 **Back:**
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| B1 | Evaluar condiciones en memoria, con la regla de la E15 | `D/Forms/FormConditionEvaluator.cs`, junto a `FormRecordCondition.cs` [E15] | `M/…/lib/conditions.ts` | cada operador; en cadena; la tabla de verdad igual que en SQL |
-| B2 | Calcular una fórmula | `D/Forms/FormFormula.cs` y `FormFormulaEvaluator.cs` | `M/…/lib/formula.ts` | precedencia y paréntesis; división por cero; dato que falta; desborde; `AwayFromZero`; los decimales de la moneda; una suma de líneas con `times` |
+| B1 | Evaluar condiciones en memoria, con la regla de la E15 | `D/Forms/FormConditionEvaluator.cs`, junto a `FormRecordCondition.cs` [E15] | `FormRecordFiltersPolicy.cs` [E15] | cada operador; en cadena; la tabla de verdad igual que en SQL |
+| B2 | Calcular una fórmula | `D/Forms/FormFormula.cs` y `FormFormulaEvaluator.cs` | — | precedencia y paréntesis; división por cero; dato que falta; desborde; `AwayFromZero`; los decimales de la moneda; una suma de líneas con `times` |
 | B3 | Las preguntas en el borrador | suma a `FormQuestionType.cs`, `FormDraft.cs`, `FormDraftEditor.cs`, `FormVersionCreator.cs` y al control de `FieldInUse` [E14]; `A/Modules/Forms/Services/FormLogicPolicy.cs` | `FormRecipientFilterPolicy.cs` [E16] | cada motivo de los tres errores; referencia rota al quitar, mover y cambiar el tipo; guardar incompleto sigue andando; un campo que usa una fórmula no se quita; una columna de catálogo cuenta en «Lo usan» |
 | B4 | Publicar y el Flow con `If` y renglones, con un perfil nuevo | suma a `WhatsAppFlowBuilder.cs`, a `Check` y a `FormOfferBuilder.cs` [E14] | el mismo | la condición que no se puede mostrar; 50 componentes; 16 KiB; título oculto; lo sellado no se recompila; la oferta de una columna de catálogo y sus problemas |
 | B5 | La captura: visibilidad, descarte, renglones, sellado y cálculo, en ese orden | `A/Modules/Forms/Services/FormRecordLogicPolicy.cs`; suma a `FormRecordService.cs`, `FormRecordWriter.cs` [E14] y `WhatsAppFlowReplyVerifier.cs` | esos mismos | un valor en una oculta se descarta; obligatoria oculta; renglones vacíos en el medio; catálogo en un renglón; dos capturas iguales |
@@ -162,11 +161,11 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` | `M/…/api/types.ts` | zod estricto con los ejemplos |
-| F2 | «Mostrar si» | `components/logic/ConditionsEditor.tsx`, `lib/conditions.ts` | `M/…` | solo preguntas anteriores; referencia rota; hasta 10 |
-| F3 | La pregunta «Cálculo» | `components/logic/CalculationEditor.tsx`, `lib/formula.ts`, `lib/decimal.ts` | `M/…` | armar con piezas; el teléfono no la muestra; moneda de los datos de referencia |
-| F4 | El grupo de líneas | `components/logic/LinesEditor.tsx`; suma a `QuestionEditor.tsx` y al teléfono al costado [E14] | `M/…` | columnas, tope y contador; axe |
-| F5 | Planilla, detalle, tablero y tarjeta | suma a `FormRecordsPage.tsx`, `RecordValues.tsx`, `FormDashboard.tsx` y `lib/values.ts` [E15], y a la tarjeta [E14] | `M/…` | «No se mostró», «Sin respuesta» y «—»; `LinesTable`; un monto con su moneda |
+| F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` | la API de la E18 | zod estricto con los ejemplos |
+| F2 | «Mostrar si» | `components/logic/ConditionsEditor.tsx`, `lib/conditions.ts` | su tablero | solo preguntas anteriores; referencia rota; hasta 10 |
+| F3 | La pregunta «Cálculo» | `components/logic/CalculationEditor.tsx`, `lib/formula.ts`, `lib/decimal.ts` | su tablero | armar con piezas; el teléfono no la muestra; moneda de los datos de referencia |
+| F4 | El grupo de líneas | `components/logic/LinesEditor.tsx`; suma a `QuestionEditor.tsx` y al teléfono al costado [E14] | su tablero | columnas, tope y contador; axe |
+| F5 | Planilla, detalle, tablero y tarjeta | suma a `FormRecordsPage.tsx`, `RecordValues.tsx`, `FormDashboard.tsx` y `lib/values.ts` [E15], y a la tarjeta [E14] | su tablero | «No se mostró», «Sin respuesta» y «—»; `LinesTable`; un monto con su moneda |
 
 **Al cerrar:** `docs/features/formularios.md` suma la sección.
 

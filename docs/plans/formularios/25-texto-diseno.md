@@ -10,7 +10,7 @@ Te paso los tableros de la E25, documentos por WhatsApp, para el lienzo del mult
 
 **Contexto.** Cuando un empleado o un cliente manda un documento, la IA reconoce qué es, saca los datos y propone el formulario ya completo. La persona confirma. Valen las fichas del front: un dato por celda, fechas completas, sin leyendas (109), con la ayuda que sirve en la (i) (116), botones habilitados o grisados (43) y toda espera a la vista (115). Lo que espera a la IA también: «Crear borrador» dice «Creando…», con su aro, y el asistente muestra que trabaja mientras lee un PDF.
 
-**Leé primero,** en el repo del back `ArquitecturaBaseMutitenant`: la spec `docs/plans/formularios/25-documentos.md`. La referencia es la maqueta, en `areas/business/forms/documents/`.
+**Leé primero,** en el repo del back `ArquitecturaBaseMutitenant`: la spec `docs/plans/formularios/25-documentos.md`.
 
 **Qué se dibuja:**
 1. **`WA-Chats-Documento` y su teléfono:** seguro, con duda (botones, o lista si un nombre no entra) y sin reconocer. PDF, Word, Excel con varias filas, ubicación y contacto. Los casos difíciles: foto movida, PDF con contraseña, repetido, CBU mal leído, formulario que no se le puede mandar, formatos viejos y un número que no es contacto. «Por qué lo propuso» debajo del documento.

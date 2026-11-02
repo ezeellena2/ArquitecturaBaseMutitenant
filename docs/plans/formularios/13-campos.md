@@ -24,7 +24,6 @@ Antes de empezar, en este orden:
 
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 5. **Referencia de producto,** solo para leer: en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`, el anexo C §11 (C2-01 a C2-04, C2-06 y C2-08), el anexo D (CE1, CE2 y CE3-B, con el «Ajuste del review de E2») y el anexo E §2.7 (review R1023).
-6. **La maqueta,** en `../MaquetaMultitenant/src/areas/business/forms/`: `components/catalog/FieldsSection.tsx`, `OptionsSection.tsx`, `fixedColumns.ts` y `CatalogPreviewPhone.tsx`, y `components/PresentationEditor.tsx`. Se copia lo que se ve. Su back de mentira no es el contrato: manda esta spec. Por ejemplo, allá el título es una lista y el campo tiene un papel, que acá llega después.
 
 ## Qué se construye
 
@@ -125,7 +124,7 @@ Una migración aditiva, `<fecha>_FormCatalogFields.cs`, sobre las tablas de la E
 
 ## Pasos
 
-Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M/`, la maqueta, y `[E12]`, un archivo que deja esa etapa.
+Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y `[E12]`, un archivo que deja esa etapa.
 
 **Back:**
 
@@ -147,10 +146,10 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
 | F1 | Tipos y llamadas, validados con los ejemplos exportados | suma a `F/src/modules/forms/api/` | la API de catálogos [E12] | zod estricto con los ejemplos |
-| F2 | La sección «Campos», en la forma B, con el combo del catálogo | `F/src/modules/forms/components/catalog/FieldsSection.tsx`, `CatalogCombo.tsx` | `M/…/catalog/FieldsSection.tsx` y `fixedColumns.ts`; `SearchSelect.tsx` | agregar, subir, bajar y quitar; tope de 20; errores por celda; el combo abre con los primeros y filtra; axe; botones según la 43 |
-| F3 | Una columna por campo en la tabla de opciones, y una fila en el modal, con el control de su tipo | suma a `OptionsSection.tsx` y al modal de opciones [E12] | `M/…/catalog/OptionsSection.tsx` | columna y fila grisadas hasta guardar; valor dado de baja; la lección 4 |
-| F4 | «En WhatsApp», en la forma C, con el teléfono al costado | `F/src/modules/forms/components/PresentationEditor.tsx`, `CatalogPreviewPhone.tsx` | `M/…/components/PresentationEditor.tsx` | cada desplegable lista lo que corresponde; se arma como el servidor; un título que no entra |
-| F5 | El editor: conflicto, guardado y lectura | suma a `CatalogEditorPage.tsx` [E12] | `M/…/pages/CatalogEditorPage.tsx` | la lección 2; solo `formcatalogs.read`; textos en es y en |
+| F2 | La sección «Campos», en la forma B, con el combo del catálogo | `F/src/modules/forms/components/catalog/FieldsSection.tsx`, `CatalogCombo.tsx` | su tablero y `SearchSelect.tsx` | agregar, subir, bajar y quitar; tope de 20; errores por celda; el combo abre con los primeros y filtra; axe; botones según la 43 |
+| F3 | Una columna por campo en la tabla de opciones, y una fila en el modal, con el control de su tipo | suma a `OptionsSection.tsx` y al modal de opciones [E12] | su tablero | columna y fila grisadas hasta guardar; valor dado de baja; la lección 4 |
+| F4 | «En WhatsApp», en la forma C, con el teléfono al costado | `F/src/modules/forms/components/PresentationEditor.tsx`, `CatalogPreviewPhone.tsx` | su tablero | cada desplegable lista lo que corresponde; se arma como el servidor; un título que no entra |
+| F5 | El editor: conflicto, guardado y lectura | suma a `CatalogEditorPage.tsx` [E12] | `CatalogEditorPage.tsx` [E12] | la lección 2; solo `formcatalogs.read`; textos en es y en |
 
 **Al cerrar:** `docs/features/formularios.md` suma la sección de los campos.
 
@@ -163,7 +162,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | [E12] | Los lectores de archivos y el puerto `IFormCatalogSpreadsheet`. | Leen columnas por nombre y con la cultura del pedido. |
 | [E12] | La barrera de C11 y sus tiempos. | Cubre también los archivos con columnas de campos. |
 | [E12] | El bloqueo del catálogo. | Se pueden bloquear dos catálogos en un orden fijo, sin esperar un deadlock. |
-| Base de la 12 | Los botones y la tabla con columnas fijas del front. | `fixedColumns` ya está en el front, o entra acá copiado de la maqueta. |
+| Base de la 12 | Los botones y la tabla con columnas fijas del front. | `fixedColumns` ya está en el front, o entra acá. |
 
 ## Lo que ya se pagó allá (no repetir)
 

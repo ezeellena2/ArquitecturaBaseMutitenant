@@ -24,7 +24,6 @@ Antes de empezar, en este orden:
 
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 5. **Referencia de producto,** solo para leer: en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`, el anexo C §4 (V-01 a V-07), el anexo D (`BA1-A` a `BA5`) y el anexo E §2.4 (R1021a). Lo que dice de Meta está en `src/ArquitecturaBase.Domain/Modules/WhatsApp/WhatsAppFlowBinding.Deprecation.cs` y en `WhatsAppFlowClient.Deprecation.cs`, solo para leer.
-6. **La maqueta,** en `../MaquetaMultitenant/src/areas/business/forms/`: `components/LifecycleDialogs.tsx`, `CopyFormDialog.tsx` y `api/copies.ts`. Se copia lo que se ve; lo del asistente, las sugerencias, el PDF y las reglas llega después.
 
 ## Qué se construye
 
@@ -150,7 +149,7 @@ Una migración, `<fecha>_FormLifecycle.cs`, aditiva.
 
 ## Pasos
 
-Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M/`, la maqueta, y `[E14]`, un archivo que deja esa etapa.
+Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y `[E14]`, un archivo que deja esa etapa.
 
 **Back:**
 
@@ -173,11 +172,11 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` | `M/…/api/forms.ts` y `copies.ts` | zod estricto con los ejemplos |
-| F2 | La lista: filtro y ⋮ | suma a la lista [E14] | `M/…/pages/FormsOverviewPage.tsx` | las acciones por estado y permiso; Borrar no aparece con respuestas; quien solo ve respuestas |
-| F3 | Los diálogos | `components/LifecycleDialogs.tsx`, sin sugerencias ni reglas | `M/…` | releer si no se sabe si salió; error en el diálogo; botones según la 43 |
-| F4 | Copiar | `components/CopyFormDialog.tsx` | `M/…` | prefijo ocupado en su campo; abre el editor |
-| F5 | El formulario dado de baja | suma al editor [E14]: el aviso, «Reactivar» y el ⋮ | `M/…/pages/FormEditorPage.tsx` | los cuatro estados de WhatsApp; se edita y se guarda |
+| F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` | la API de la E16 | zod estricto con los ejemplos |
+| F2 | La lista: filtro y ⋮ | suma a la lista [E14] | su tablero | las acciones por estado y permiso; Borrar no aparece con respuestas; quien solo ve respuestas |
+| F3 | Los diálogos | `components/LifecycleDialogs.tsx`, sin sugerencias ni reglas | su tablero | releer si no se sabe si salió; error en el diálogo; botones según la 43 |
+| F4 | Copiar | `components/CopyFormDialog.tsx` | su tablero | prefijo ocupado en su campo; abre el editor |
+| F5 | El formulario dado de baja | suma al editor [E14]: el aviso, «Reactivar» y el ⋮ | su tablero | los cuatro estados de WhatsApp; se edita y se guarda |
 
 **Al cerrar:** `docs/features/formularios.md` suma la sección, y `docs/features/whatsapp.md`, la deprecación. `AGENTS.md` de la carpeta del módulo nombra el worker.
 

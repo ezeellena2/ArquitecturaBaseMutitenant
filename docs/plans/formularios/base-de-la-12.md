@@ -1,6 +1,6 @@
 # Base de la 12 (spec)
 
-**Estado:** pendiente · spec de lo que va antes de la E12, con el [formato](plantilla.md) de las etapas. Es lo que el usuario decidió el 25 y el 26/10 viendo la maqueta, y lo que era la F5 de la 10: reglas de todo el sistema, que el código de hoy todavía no cumple. Viene después de la E10, y `/plan-etapa` la contrasta con el código real.
+**Estado:** pendiente · spec de lo que va antes de la E12, con el [formato](plantilla.md) de las etapas. Es lo que el usuario decidió el 25 y el 26/10 viendo la maqueta, y lo que era la F5 de la 10: reglas de todo el sistema, que el código de hoy todavía no cumple. Es lo primero del bloque, sin esperar a la E10 (123), y `/plan-etapa` la contrasta con el código real.
 
 ## Qué leer
 
@@ -9,8 +9,7 @@ Antes de empezar, en este orden:
 1. **Decisiones** de la hoja de ruta: la 43 (botones y avisos), la 109, la 110, la 115, la 116 y la 122 (leyendas, ayuda, motivos y esperas), y los pedidos del usuario del 25 y el 26/10, en el [plan de desarrollo](../2026-09-27-plan-de-desarrollo.md#etapas-12-a-25-formularios-por-whatsapp).
 2. **Fichas:** [textos-y-traducciones](../../rules/textos-y-traducciones.md), [api-http](../../rules/api-http.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [permisos](../../rules/permisos.md), [tests](../../rules/tests.md) y, del front, `pantallas-y-ui.md`, `formatos.md`, `formularios.md`, `paginado-y-listados.md` y `textos-y-traducciones.md`.
 3. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
-4. **La maqueta,** en `../MaquetaMultitenant`: es la fuente de esta etapa, con sus commits del 25 y el 26/10. Se copia del código de pantalla y de las piezas compartidas; su back de mentira no es contrato.
-5. **El lienzo:** `Campana`, `M-Campana`, `Campana-Plat`, `M-Campana-Plat`, `M-Campana-Personal`, `Otro-Acceso` y `Otro-Acceso-Persona`, y los tableros de cada pantalla que cambia.
+4. **El lienzo:** `Campana`, `M-Campana`, `Campana-Plat`, `M-Campana-Plat`, `M-Campana-Personal`, `Otro-Acceso` y `Otro-Acceso-Persona`, y los tableros de cada pantalla que cambia.
 
 ## Qué se construye
 
@@ -102,7 +101,7 @@ Se limpian los de más de 90 días, y se borran con la cuenta. **Los textos** de
 
 ## Pasos
 
-Abreviaturas: `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y `M/`, la maqueta.
+Abreviaturas: `A/`, `I/` y `P/` son las capas del back, y `F/`, el front.
 
 **Back:**
 
@@ -118,15 +117,15 @@ Abreviaturas: `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y `M/`, 
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| F1 | Botones y esperas: `button.tsx` ya pone el aro y el gerundio, y solo pierde la atenuación; `ConfirmDialog` suma `pending` y `pendingLabel`, y `DataTable` y `Table`, `refreshing` con la línea | `F/src/shared/ui/button.tsx`, `ConfirmDialog.tsx`, `DataTable.tsx`, `useEditPage` y las pantallas que lo usan | el botón de hoy: el de `M/` todavía dice «mismo texto» | aro y gerundio sin atenuarse; la confirmación abierta hasta la respuesta, también si falla; la tabla que vuelve a leer; sin «Cambios sin guardar»; el campo se marca al tocar |
-| F2 | La campana | `F/src/layouts/notifications/`, `NotificationsPage.tsx` | `M/src/layouts/notifications/` | sin leer; marcar; la versión nueva; el teléfono; axe |
-| F3 | Tablas | `F/src/shared/ui/DataTable.tsx`, `FilterBar.tsx` y cada pantalla | `M/…/shared/ui/` | sin `detail` en la compu; ▲ ▼; «Más filtros» |
-| F4 | Fechas | `F/src/shared/format/` y sus usos | `M/…/shared/format/` | `format-usage.test.ts` prohíbe `relative` y `formatCalendar` |
-| F5 | Carteles | las seis pantallas | `M/…` | ninguna franja; el aviso en la banda o en la campana |
-| F6 | Palabras | `locales/` y `enums/` | `M/…/locales/` | ninguna de las viejas, con una guarda de textos |
-| F7 | Otro acceso | `F/src/areas/public/errors/pages/OtherAccessPage.tsx`, rutas y `returnTo` | `M/…` | con cada acceso; un link ajeno |
-| F8 | El tamaño | `F/src/index.css` y las clases en px | el commit `4390599` de la maqueta | los menús no se corren; capturas de la galería |
-| F9 | Miembros de una empresa | `CompanyDetailPage` | `M/…` | sin el permiso, la pestaña no aparece |
+| F1 | Botones y esperas: `button.tsx` ya pone el aro y el gerundio, y solo pierde la atenuación; `ConfirmDialog` suma `pending` y `pendingLabel`, y `DataTable` y `Table`, `refreshing` con la línea | `F/src/shared/ui/button.tsx`, `ConfirmDialog.tsx`, `DataTable.tsx`, `useEditPage` y las pantallas que lo usan | el botón de hoy | aro y gerundio sin atenuarse; la confirmación abierta hasta la respuesta, también si falla; la tabla que vuelve a leer; sin «Cambios sin guardar»; el campo se marca al tocar |
+| F2 | La campana | `F/src/layouts/notifications/`, `NotificationsPage.tsx` | los tableros de la campana | sin leer; marcar; la versión nueva; el teléfono; axe |
+| F3 | Tablas | `F/src/shared/ui/DataTable.tsx`, `FilterBar.tsx` y cada pantalla | los tableros «Criterio» | sin `detail` en la compu; ▲ ▼; «Más filtros» |
+| F4 | Fechas | `F/src/shared/format/` y sus usos | `formatos.md` del front | `format-usage.test.ts` prohíbe `relative` y `formatCalendar` |
+| F5 | Carteles | las seis pantallas | sus tableros | ninguna franja; el aviso en la banda o en la campana |
+| F6 | Palabras | `locales/` y `enums/` | — | ninguna de las viejas, con una guarda de textos |
+| F7 | Otro acceso | `F/src/areas/public/errors/pages/OtherAccessPage.tsx`, rutas y `returnTo` | `Otro-Acceso` | con cada acceso; un link ajeno |
+| F8 | El tamaño | `F/src/index.css` y las clases en px | — | los menús no se corren; capturas de la galería |
+| F9 | Miembros de una empresa | `CompanyDetailPage` | — | sin el permiso, la pestaña no aparece |
 | F10 | Ayuda y motivos: la (i) con tooltip, el motivo de lo apagado y los usos de hoy de `hint` y `description`, que pasan a la (i) o se sacan | `F/src/shared/ui/InfoTip.tsx`, `help` en `FormField`, `Section`, `Page` y `CheckboxField`, y un tooltip común para lo apagado; una prueba de arquitectura | `InfoButton.tsx`, `Sheet.tsx` y `RowAction.disabledReason` | la (i) es descripción accesible y no toma el foco al abrir un diálogo; en el teléfono, la (i) abre la hoja y lo apagado avisa en la franja; la prueba frena un texto fijo en `hint` o `description`; axe |
 
 **Al cerrar:** las fichas del front y `docs/features/` quedan al día, y `docs/architecture/backend.md` suma la campana.
@@ -136,7 +135,6 @@ Abreviaturas: `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y `M/`, 
 | Marca | Qué hay que confirmar | Qué asume esta spec |
 | --- | --- | --- |
 | [E10] | Si la F5 de la 10 quedó sin hacer. | Pasó entera a esta etapa. |
-| Maqueta | Qué cambió después del 26/10. | Lo que sigue en este texto. |
 | Usuario | Las plantillas de WhatsApp de la cuenta, con textos nuevos. | Las vuelve a aprobar en Meta, con el mismo nombre: **eso lo hace el usuario.** |
 | Front | Cuántas pantallas usan `detail`. | Se pasan todas a columnas. |
 | Front | Cuántos textos fijos quedan en `hint` y `description`. | Unos 30 usos, en 23 archivos, el 2026-11-02. |
@@ -161,7 +159,7 @@ La puerta de la etapa, con la lista de control de `/puerta`. No hay prueba con M
 
 ## Requisitos previos
 
-La E10 cerrada.
+Ninguno: la E10 queda para después (123).
 
 ## En el multitenant
 

@@ -23,7 +23,6 @@ Antes de empezar, en este orden:
 
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 5. **Referencia de producto,** solo para leer: en [`../2026-10-17-formularios-traspaso/`](../2026-10-17-formularios-traspaso/README.md), el anexo C, «Etapa 2B» y §3.6, el anexo B, «Etapa 2B», y el anexo D (F1 a F5).
-6. **La maqueta,** en `../MaquetaMultitenant/src/areas/business/forms/`: `components/QuestionEditor.tsx`, `components/records/RecordValues.tsx`, `QuickView.tsx` y `pages/RecordFullPage.tsx`. Allá no están los archivos del chat: los dibuja Diseño.
 
 ## Qué se construye
 
@@ -177,7 +176,7 @@ Tres migraciones: `<fecha>_FormRecordFiles.cs`, `<fecha>_WhatsAppChatFiles.cs` y
 
 ## Pasos
 
-Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M/`, la maqueta, y `[E14]` y `[E15]`, un archivo que deja esa etapa.
+Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y `[E14]` y `[E15]`, un archivo que deja esa etapa.
 
 **Back:**
 
@@ -201,11 +200,11 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` y `F/src/modules/whatsapp/chats/` | `M/…/api/records.ts` | zod estricto con los ejemplos |
-| F2 | El editor | suma a `QuestionEditor.tsx` [E14] | `M/…/QuestionEditor.tsx` | el tope en la (i) de «Cuántas»; sin almacenamiento |
-| F3 | El visor común | `F/src/shared/ui/PhotoViewer.tsx` | `M/…/records/RecordValues.tsx` | teclado y foco; solo las miniaturas visibles; perder el permiso lo cierra; axe |
+| F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` y `F/src/modules/whatsapp/chats/` | la API de la E17 | zod estricto con los ejemplos |
+| F2 | El editor | suma a `QuestionEditor.tsx` [E14] | su tablero | el tope en la (i) de «Cuántas»; sin almacenamiento |
+| F3 | El visor común | `F/src/shared/ui/PhotoViewer.tsx` | su tablero | teclado y foco; solo las miniaturas visibles; perder el permiso lo cierra; axe |
 | F4 | La tarjeta del chat | suma a la tarjeta [E14] | el tablero | los estados; «Mandar de nuevo» |
-| F5 | Planilla, detalle y Excel | suma a `FormRecordsPage.tsx`, `QuickView.tsx`, `RecordFullPage.tsx`, `RecordValues.tsx` y `ExportDialog.tsx` [E15] | `M/…` | columna, pestaña «Fotos» y «Descargar ▾» |
+| F5 | Planilla, detalle y Excel | suma a `FormRecordsPage.tsx`, `QuickView.tsx`, `RecordFullPage.tsx`, `RecordValues.tsx` y `ExportDialog.tsx` [E15] | su tablero | columna, pestaña «Fotos» y «Descargar ▾» |
 | F6 | Los archivos del chat | suma a `ChatComposer.tsx` y `MessageThread.tsx` | los tableros | adjuntar, grisado fuera de las 24 horas, subiendo y error; un archivo recibido se ve y se baja |
 
 **Al cerrar:** `docs/features/formularios.md` y `docs/features/whatsapp.md` suman su sección, y el núcleo, la de `IFileContentInspector`.
@@ -249,7 +248,7 @@ Cada punto lleva su test, escrito durante la etapa:
 
 ## Cómo se cierra
 
-La puerta de la etapa, más una **prueba real con Meta y el almacenamiento de la E10**:
+La puerta de la etapa, más una **prueba real con Meta y el almacenamiento de la E10**, que queda pendiente hasta la E10 (123):
 1. una respuesta con cámara, un PDF y una pregunta de archivo opcional vacía;
 2. las descargas íntegras, con el tamaño y el SHA-256 iguales a los guardados;
 3. un rechazo y el reenvío manual, sin saltos de numeración;
