@@ -8,17 +8,18 @@ Se pega tal cual en el chat de Diseño, que es el único que toca el lienzo.
 
 Te paso los tableros de la E15, respuestas, para el lienzo del multitenant. No hay que programar nada: solo tableros.
 
-**Contexto.** La E15 suma lo de las respuestas: la lista «Formularios» con sus columnas, las pestañas «Respuestas» y «Tablero» de cada formulario, la planilla, «Más filtros», la vista rápida, la pantalla completa, exportar y el tablero. **Los tableros muestran solo lo que existe hasta acá** (78): nada de fotos, documentos, aprobación, estado, PDF, corregir ni «Cargar». Valen las fichas del front: un dato por celda, en un renglón; fechas completas, con hora; sin cantidades en los encabezados de sección; sin rótulos que expliquen, y botones habilitados o grisados (43).
+**Contexto.** La E15 suma lo de las respuestas: la lista «Formularios» con sus columnas, las pestañas «Respuestas» y «Tablero» de cada formulario, la planilla, «Más filtros», la vista rápida, la pantalla completa, exportar y el tablero. **Los tableros muestran solo lo que existe hasta acá** (78): nada de fotos, documentos, aprobación, estado, PDF, corregir ni «Cargar». Valen las fichas del front: un dato por celda, en un renglón; fechas completas, con hora; sin cantidades en los encabezados de sección; sin leyendas (109); botones habilitados o grisados (43), y toda espera a la vista (115).
 
 **Leé primero,** en el repo del back `ArquitecturaBaseMutitenant`: la spec `docs/plans/formularios/15-respuestas.md`, sobre todo «Qué se construye» y «Pantallas».
 
 **Qué se corrige en lo que ya está dibujado:**
 1. **`FRM-Respuestas`, `M-FRM-Respuestas` y `FRM-Respuestas-Exportar`:** salen las columnas «Fotos de la visita» y «Remito firmado», y «Por aprobar · 3» del panel. Canal va en su propia columna, después de Cargó, y dice «WhatsApp»: hoy es un ícono dentro de Cargó.
-2. **`FRM-Respuestas-Filtros`:** sale la sección «Fotos de la visita». Mientras cuenta, el botón queda grisado con su mismo texto, sin «Contando…».
-3. **`FRM-Respuestas-Exportar`:** mientras exporta, el botón queda grisado con su mismo texto, sin «Exportando…» ni el círculo.
+2. **`FRM-Respuestas-Filtros`:** sale la sección «Fotos de la visita». Mientras cuenta, el botón dice «Contando…» con su aro y su color (115).
+3. **`FRM-Respuestas-Exportar`:** mientras exporta, el botón dice «Exportando…» con su aro y su color, y el diálogo queda abierto hasta la respuesta (115).
 4. **`FRM-Respuesta` y `M-FRM-Respuesta`:** salen la pestaña «Fotos» y «Ver una foto», y las fotos y el remito de la grilla. En `FRM-Respuesta` se suma «Abrir en pantalla completa» en la cabecera. `M-FRM-Respuesta` es la pantalla completa en el teléfono, con «Respuesta» y «Actividad» plegables.
 5. **`FRM-Tablero`:** sale la tarjeta «Por estado». «Fallas» es la tarjeta de una pregunta de elegir varias.
 6. **`FRM-Formularios-15`:** el estado «Solo lectura» es quien tiene `forms.read` sin `formrecords.read`: sin las columnas de respuestas.
+7. **`FRM-Respuestas`:** un estado más, la planilla que vuelve a leer, con las filas atenuadas y una línea que corre bajo el encabezado (115).
 
 **Qué se suma:**
 1. **Un cliente en la planilla:** una fila con la marca «Cliente» y Empresas en «—», y una con «Persona sin información». En el teléfono, igual.

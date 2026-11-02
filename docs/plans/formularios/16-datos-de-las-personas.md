@@ -7,7 +7,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E13](13-campos.md): datos, contrato y las lecciones; la [E14](14-formularios.md): T22, T23, la §6b y `publication-checks`; y la [E15](15-respuestas.md): «Columnas» y los campos sellados.
-2. **Decisiones** de la hoja de ruta: 35, 37, 42, 43, 50, 78 y 105.
+2. **Decisiones** de la hoja de ruta: 35, 37, 42, 43, 50, 78, 105, 109, 111, 112, 115 y 116.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -71,17 +71,19 @@ Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](16-texto-d
 | `FRM-Usuario-Datos` y `M-FRM-Usuario-Datos` | la ficha del usuario, con las pestañas «Acceso» y «Datos» |
 | `FRM-Catalogo-16` y `M-FRM-Catalogo-16` | la columna «Filtro» en «Campos» |
 | `FRM-Editor-16` y `M-FRM-Editor-16` | «Qué opciones ve cada persona» en la pregunta |
-| `FRM-Publicar-16` | los avisos, aparte de lo que frena |
+| `FRM-Publicar-16` | la zona «Avisos», entre «Problemas» y «Qué se publica» (112) |
 | `WA-Chats-Formulario-16` y `M-WA-Chats-Formulario-16` | el formulario que no se puede mandar, con el motivo |
 | `FRM-Respuestas-16` y `M-FRM-Respuestas-16` | «Columnas», con las subcolumnas de los filtros apagadas |
 
 **«Datos de las personas»:** dos secciones. Los datos: nombre, tipo, quién lo usa, cuántos tienen valor, estado y ⋮ (Editar, Dar de baja o Reactivar). Las personas: una columna por dato activo, «—» si no tiene y ✎ con `users.manage`. Con el tope de 20, «Nuevo dato» queda grisado, con el motivo en su tooltip. Sin `users.read`, la segunda sección no aparece.
 
-**El diálogo para definir un dato:** un solo campo de nombre, el tipo y, si es de un catálogo, cuál. Si hay valores, confirmar dice cuántos se borran.
+**El diálogo para definir un dato:** un solo campo de nombre, el tipo y, si es de un catálogo, cuál, en el combo de la E13 (111), sin descripción del catálogo elegido ni leyendas. La ayuda que sirve va en la (i). Si hay valores, confirmar dice cuántos se borran. Mientras guarda, «Guardando…», y la tabla que vuelve a leer atenúa sus filas (115).
 
 **La ficha del usuario:** las pestañas aparecen solo si un módulo aporta una; si no, queda como hoy. «Datos» tiene sus botones y se guarda aparte del acceso, solo si cambió. Salir con cambios pregunta antes. Un error queda en la pestaña.
 
-**«Qué opciones ve cada persona»:** un renglón por filtro, «Campo es valor», con ✕; «Agregar un filtro según quien lo recibe» y «Agregar un filtro fijo»; «Como si lo recibiera», con la persona y el resultado; y debajo el máximo por persona y quién no tiene el dato, con «Cargar los datos» para quien tiene `formpersondata.manage` y `users.manage`. Sin campos de papel «Filtro», la sección no aparece. Con solo `forms.read`, se lee sin editar.
+**«Qué opciones ve cada persona»:** un renglón por filtro, «Campo es valor», con ✕; «Agregar un filtro según quien lo recibe» y «Agregar un filtro fijo»; «Como si lo recibiera», con la persona y el resultado; y debajo el máximo por persona y quién no tiene el dato, con «Cargar los datos» para quien tiene `formpersondata.manage` y `users.manage`. Sin campos de papel «Filtro», la sección no aparece. Con solo `forms.read`, se lee sin editar. La ayuda va en la (i) de su banda: el máximo y quién no tiene el dato son datos, y se quedan.
+
+**La columna «Filtro»:** la ayuda va en la (i) de su encabezado, sin leyenda debajo.
 
 **Estados:** para cada tablero, cargando, vacío y error, más:
 - **Datos:** 20 datos, un dato en uso (dar de baja grisado, con quién lo usa en su tooltip), cambiar el tipo con valores, y solo `formpersondata.manage`;
@@ -89,7 +91,7 @@ Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](16-texto-d
 - **Publicar:** problemas y avisos juntos, y solo avisos;
 - **Enviar:** le falta el dato, el filtro no funciona y es un cliente.
 
-**Mandan sobre esta spec en:** las fichas del front (un dato por celda, sin rótulos que expliquen, botones según la 43). «Dar de baja» y «Reactivar» son las palabras de siempre, y lo dado de baja es una opción del filtro «Estado».
+**Mandan sobre esta spec en:** las fichas del front (un dato por celda, sin leyendas, botones según la 43 y la 115). «Dar de baja» y «Reactivar» son las palabras de siempre, y lo dado de baja es una opción del filtro «Estado».
 
 ## Contrato
 
@@ -190,7 +192,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
 | F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` | `M/…/api/catalogs.ts` | zod estricto con los ejemplos |
-| F2 | «Datos de las personas» | `F/src/modules/forms/pages/PersonDataPage.tsx`; suma a `registration.ts` y a sus recursos | `M/…/pages/PersonDataPage.tsx` | permisos, tope, en uso y confirmar; axe |
+| F2 | «Datos de las personas» | `F/src/modules/forms/pages/PersonDataPage.tsx`; suma a `registration.ts` y a sus recursos | `M/…/pages/PersonDataPage.tsx` y `CatalogCombo.tsx` [E13] | permisos, tope, en uso y confirmar; el mismo combo; axe |
 | F3 | La pestaña «Datos», con el registro neutral | `F/src/modules/forms/components/MemberDataTab.tsx`; suma a `F/src/shared/modules/types.ts`, `useModules.ts` y `UserDetailPage.tsx` | `M/…` | sin el módulo no hay pestañas; guarda aparte; salir con cambios; composición |
 | F4 | La columna «Filtro» | suma a `FieldsSection.tsx` [E13] | `M/…/catalog/FieldsSection.tsx` | apagada en uso, con el motivo |
 | F5 | «Qué opciones ve cada persona» | suma a `CatalogQuestionFields.tsx` [E14] | `M/…/CatalogQuestionFields.tsx` | fijo y según quien lo recibe; la vista previa se actualiza sola; sin `formcatalogs.read` |
@@ -217,12 +219,15 @@ Cada punto lleva su test, escrito durante la etapa:
 2. **Un filtro fijo que deja más de 20 opciones en «elegir varias»** frena al publicar (#18).
 3. **El valor fijo de un filtro** se valida contra su fuente (#19).
 4. **La vista previa** exige `formcatalogs.read`, y no nombra opciones de un catálogo que la persona no puede leer (#20).
+5. **Un solo selector de catálogo:** el dato usa el combo de la E13, sin buscador ni lista paginada aparte.
+6. **Los filtros van en la versión.** En la prueba de allá, una versión salió sin los filtros de una pregunta. Cambiar un filtro cuenta como una pregunta cambiada en «Qué se publica», y la versión activa sigue con los suyos hasta publicar.
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
 - **Por organización y por miembro** (42). Un dato no depende de la empresa.
 - **Hasta 20 datos activos de las personas,** iguales para todas las organizaciones (42 y 105).
-- **Los avisos de publicar** no frenan (37).
+- **Los avisos de publicar** no frenan (37), y van en su zona (112).
+- **Un dato no tiene clave:** sus valores van por la identidad del dato, así que lo de la clave de un campo no aplica.
 - **Un formulario para los dos** con un filtro según quien lo recibe se publica con un aviso, y se manda solo a empleados.
 - **La pestaña «Datos»** se ve con `users.manage`: quien solo lee las ve en la tabla, con los permisos de esa pantalla.
 

@@ -7,7 +7,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T7, T11 y T22, §3 (`FormVersions`, `FormRecords` y `FormRecordValues`) y §7 (puertos); y la [E12](12-catalogos.md): C5, C8, C11 y la §4.
-2. **Decisiones** de la hoja de ruta: 9, 23, 24, 35, 43, 49, 57, 78 y 79.
+2. **Decisiones** de la hoja de ruta: 9, 23, 24, 35, 43, 49, 57, 78, 79, 109 y 115.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -102,7 +102,7 @@ Se dibujaron antes de las reglas del 25 y el 26/10, y Diseño los revisa con est
 
 **Lo que se corrige en lo dibujado:**
 - **Sale lo de etapas posteriores:** las columnas Fotos y Remito, la pestaña Fotos y su visor, su sección en «Más filtros», «Por aprobar · 3» en el panel y la tarjeta «Por estado».
-- **Cambia:** Canal pasa a su columna (un dato por celda) y «Abrir en pantalla completa» se suma a la vista rápida. «Contando…» y «Exportando…» quedan grisados con su mismo texto (43).
+- **Cambia:** Canal pasa a su columna (un dato por celda) y «Abrir en pantalla completa» se suma a la vista rápida. «Contando…» y «Exportando…» se quedan, con su aro y su color (115).
 
 **Estados que faltan dibujar:**
 - un cliente con la marca «Cliente», y «Persona sin información»;
@@ -111,7 +111,8 @@ Se dibujaron antes de las reglas del 25 y el 26/10, y Diseño los revisa con est
 - con `forms.read` y sin `formrecords.read`: la lista sin las columnas de respuestas.
 
 **Mandan sobre esta spec en:**
-- **Las fichas del front:** un dato por celda, en un renglón; fechas completas, con hora, en la zona de quien mira; sin rótulos que expliquen. Un texto que no entra se corta, con el completo en su tooltip.
+- **Las fichas del front:** un dato por celda, en un renglón; fechas completas, con hora, en la zona de quien mira; sin leyendas (109). Un texto que no entra se corta, con el completo en su tooltip.
+- **La planilla que vuelve a leer** atenúa sus filas y corre una línea bajo el encabezado, y la lectura anterior no se puede tocar (115).
 - **La navegación (34 y 79):** el menú dice «Gestión de formularios», y su panel tiene Formularios y Catálogos, sin «Respuestas».
 - **La planilla** se desplaza a lo ancho dentro de su caja, con N° fijo a la izquierda. Es la tabla con columnas fijas de la E12.
 - **«Ya tenés una exportación en curso»** es la barrera. **«No pudimos actualizar»** conserva lo que se ve.
@@ -204,7 +205,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front; `M
 | F4 | «Más filtros» | `components/records/MoreFiltersPanel.tsx` | `M/…` | borrador hasta aplicar; un conteo que falla no frena |
 | F5 | La vista rápida | `components/records/QuickView.tsx`, `RecordValues.tsx`; la excepción en la ficha de tablas | `M/…`, sin Workflow | teclado, Esc y foco útil; una respuesta tardía se descarta |
 | F6 | La pantalla completa | `pages/RecordFullPage.tsx` | `M/…`, sin Workflow | entrada directa sin filtros privados; «Volver» a la misma fila; el teléfono |
-| F7 | Exportar | `components/records/ExportDialog.tsx` | `M/…`, sin CSV | más de 10.000; `Busy`; botón según la 43 |
+| F7 | Exportar | `components/records/ExportDialog.tsx` | `M/…`, sin CSV | más de 10.000; `Busy`; «Exportando…» y el diálogo abierto hasta la respuesta |
 | F8 | El tablero | `components/records/FormDashboard.tsx`, sin biblioteca de gráficos | `M/…`, sin estados ni montos | quitar, agregar, contar y volver al automático; ver como tabla; axe |
 
 **Al cerrar:** `docs/features/formularios.md` suma la sección de las respuestas.
