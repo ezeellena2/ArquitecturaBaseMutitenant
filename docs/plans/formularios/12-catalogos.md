@@ -99,11 +99,11 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 - `FRM-Catalogo-Filtros`: un catálogo de los miembros, con sus filtros y la vista previa;
 - `FRM-Catalogo-Contactos`: un catálogo «De los contactos», con sus filtros por etiqueta y la vista previa (55).
 
-**Redibujados, para aprobar** (117 y 120; v148), con el [texto para Diseño](12-texto-diseno.md):
+**Redibujados** (117 y 120; v148):
 - `FRM-Catalogo` y `M-FRM-Catalogo`: el editor de un catálogo a mano con la sección «Opciones»: en su banda, «+ Agregar opción» y un ⋮ con Importar, Exportar, Descargar la plantilla, Ordenar de la A a la Z y Generar los códigos que faltan; abajo, solo «Buscar opción» y el filtro de estado; la tabla editable en la compu, la selección de filas para dar de baja o reactivar, solo el ⋮ en cada fila (con «Editar» adentro, que abre el modal, sin un ✎ aparte), y el teléfono al costado;
 - `FRM-Catalogo-Importar`: «Origen» y «Revisión» a la vista, sin pasos numerados.
 
-**Nuevos, para aprobar** (v148): `FRM-Catalogo-Opciones` y `M-FRM-Catalogo-Opciones`, el modal de opciones. Importar no va en el teléfono, como hasta ahora.
+**Nuevos** (v148): `FRM-Catalogo-Opciones` y `M-FRM-Catalogo-Opciones`, el modal de opciones. Importar no va en el teléfono, como hasta ahora.
 
 **El modal de opciones (117):**
 - **Cómo se abre:** «Agregar opción» lo abre con las opciones agregadas en él, y «Editar» del ⋮, con las de la página. La lista va a la izquierda (número o «—», texto, «Nueva» y código o «Sin código») y la opción elegida, a la derecha, con su posición («Opción 2 de 5» o «Nueva opción»). «Agregar opción», al pie de la lista, suma otra.

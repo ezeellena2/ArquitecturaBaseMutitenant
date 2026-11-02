@@ -67,7 +67,7 @@ Antes de empezar:
 
 **Navegación (34, 78 y 79):** el menú principal dice «Gestión de formularios», y su panel ya tiene «Catálogos» (E12). Esta etapa suma «Formularios»: una sola lista, con «Nuevo formulario», y cada formulario se abre con su pestaña «Diseño». No existe «Diseñar formularios». Los tableros de la etapa muestran solo lo que existe hasta ella.
 
-**Aprobados y publicados en el lienzo v141** (2026-10-25, front `93cb7d01`), con sus teléfonos, sin idioma en el contenido y con los botones de la decisión 43. Reemplazan a los de la v139:
+**Aprobados y publicados en el lienzo v148** (2026-11-02), con sus teléfonos, sin idioma en el contenido y con los botones de la decisión 43. Reemplazan a los de la v139:
 - **`FRM-Formularios`:** la lista «Formularios» (79), una tabla con Formulario, Preguntas, En WhatsApp y Último cambio (fecha y hora completas), el filtro «Estado ▾» y «Nuevo formulario». El nombre abre el formulario con su pestaña «Diseño». Reemplaza a `FRM-Listado`;
 - **`FRM-Editor`:** el editor en una sola pantalla:
   - el formulario: nombre, «Para quién es» (empleados, clientes o los dos; 50), texto del botón final y prefijo, cada uno en su campo;
@@ -78,12 +78,12 @@ Antes de empezar:
 
   En el teléfono, la pregunta se edita en una hoja y los botones van fijos abajo.
 
-  **Se redibuja con los títulos de sección (88):** «Agregar título» en el editor, el título entre las preguntas con su ⋮ (Editar, Subir, Bajar y Quitar) y el subtítulo en el teléfono al costado, en `FRM-Editor` y `M-FRM-Editor`.
+  **Con los títulos de sección (88):** «Agregar título» en el editor, el título entre las preguntas con su ⋮ (Editar, Subir, Bajar y Quitar) y el subtítulo en el teléfono al costado, en `FRM-Editor` y `M-FRM-Editor`.
 - **`FRM-Catalogos-14`:** el listado de catálogos de la E12 con la columna «Lo usan».
-- **`FRM-Catalogo-14` y `M-FRM-Catalogo-14`** (por dibujar): el catálogo, con la sección «Lo usan», «Quitar» apagado en un campo en uso, con el motivo en su tooltip, y la advertencia al darlo de baja.
-- **`Campana-14`** (por dibujar): «WhatsApp rechazó la versión N de …», que lleva al formulario.
+- **`FRM-Catalogo-14` y `M-FRM-Catalogo-14`**: el catálogo, con la sección «Lo usan», «Quitar» apagado en un campo en uso, con el motivo en su tooltip, y la advertencia al darlo de baja.
+- **`Campana-14`**: «WhatsApp rechazó la versión N de …», que lleva al formulario.
 - **`WA-Mensajes-14`:** «Mis mensajes», con la tarjeta de una respuesta propia de un cliente que vinculó su cuenta.
-- **`FRM-Publicar`** (se redibuja): «Publicar la versión N en WhatsApp», por zonas (112 y T25): «Problemas», si hay alguno, y «Qué se publica», siempre, sin descripción ni párrafos.
+- **`FRM-Publicar`**: «Publicar la versión N en WhatsApp», por zonas (112 y T25): «Problemas», si hay alguno, y «Qué se publica», siempre, sin descripción ni párrafos.
 - **`FRM-Publicando`:** cómo termina, arriba del editor, con los pasos Aceptada, Enviada a WhatsApp, WhatsApp la revisa y Lista para mandar. Al costado, la vista oficial con «Borrador | Versión N en WhatsApp».
 - **`WA-Chats-Formulario` y `M-WA-Chats-Formulario`:** «Enviar formulario» al lado de «Enviar» en Internos (en el teléfono, en el ⋮ del chat). El diálogo «Enviar un formulario a …» tiene una tarjeta por formulario, con la versión y la cantidad de preguntas cada una en su lugar (con buscador y paginado si son muchos), la cantidad de opciones por pregunta de catálogo y los problemas de la oferta, el mensaje prellenado de hasta 1024 caracteres y hasta cuándo se puede mandar, con fecha y hora. Sin «Ya lo revisé» ni «Resolver el envío» (80).
 - **`WA-Chats-Formulario-Cliente` y `M-WA-Chats-Formulario-Cliente`** (nuevos): «Enviar formulario» en un chat de Clientes, con solo los formularios para clientes o para los dos (49 y 50). En el ejemplo, «Entrega de pedido» es para los dos.
