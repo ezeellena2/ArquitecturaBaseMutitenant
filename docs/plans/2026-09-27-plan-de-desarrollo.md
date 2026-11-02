@@ -23,11 +23,11 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 9 · Endurecimiento | Cerrada | [Identidad](../features/identidad.md), [Plataforma](../features/plataforma.md), [cuotas](../rules/cuotas.md), [caché](../rules/cache.md), [ADR 0052](../decisions/0052-cache-compartida-redis.md) |
 | 10 · Operación | Pendiente, para después del bloque (decisión 123). El plan corto está listo, con las decisiones del usuario; la F5 de botones pasó a la base de la 12 | [Plan](2026-10-16-etapa-10-despliegue.md), [manual de operación](../operations/runbook.md) |
 | Base de la 12 | Pendiente. Spec lista: los botones (la F5 de la 10), la campana en el núcleo y la letra al 85 %, que confirmó el usuario | [Spec](formularios/base-de-la-12.md) |
-| 12 · Catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v148 | [Spec](formularios/12-catalogos.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
-| 13 · Campos de los catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v148 | [Spec](formularios/13-campos.md) |
-| 14 · Formularios | Pendiente. Spec lista, con los tableros aprobados en el lienzo v148 | [Spec](formularios/14-formularios.md) |
-| 15 · Respuestas, planilla y Excel | Pendiente. Spec lista, con los tableros aprobados en el lienzo v149 | [Spec](formularios/15-respuestas.md) |
-| 16 · Datos de las personas y filtros | Pendiente. Spec lista; sus tableros se dibujaron en la v150, sin publicar | [Spec](formularios/16-datos-de-las-personas.md) |
+| 12 · Catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150 | [Spec](formularios/12-catalogos.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
+| 13 · Campos de los catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150 | [Spec](formularios/13-campos.md) |
+| 14 · Formularios | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150 | [Spec](formularios/14-formularios.md) |
+| 15 · Respuestas, planilla y Excel | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150 | [Spec](formularios/15-respuestas.md) |
+| 16 · Datos de las personas y filtros | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150 | [Spec](formularios/16-datos-de-las-personas.md) |
 | 17 · Ciclo de vida y copiar | Pendiente. Spec lista; tableros a revisar | [Spec](formularios/17-ciclo-de-vida.md) |
 | 18 · Fotos y documentos | Pendiente. Spec lista, con los archivos del chat; tableros a revisar y por dibujar | [Spec](formularios/18-fotos-y-documentos.md) |
 | 19 · Condiciones, cálculos y líneas | Pendiente. Spec lista; tableros por dibujar, y antes de planificar, la prueba con Meta | [Spec](formularios/19-condiciones-calculos-y-lineas.md) |

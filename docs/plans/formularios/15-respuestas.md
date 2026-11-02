@@ -91,15 +91,15 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobados en el lienzo v149. El recorrido guiado suma dos circuitos: de pegar los proveedores a verlos en la planilla y el Excel, y de armar los campos a ver el CUIT sellado en la planilla. Muestran solo lo que existe hasta acá (78).
+Aprobados en el lienzo v150. El recorrido guiado suma dos circuitos: de pegar los proveedores a verlos en la planilla y el Excel, y de armar los campos a ver el CUIT sellado en la planilla. Muestran solo lo que existe hasta acá (78).
 
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
 | `FRM-Formularios-15` | la lista, con las columnas de respuestas y «Quien solo ve respuestas» | Aprobado |
-| `FRM-Respuestas` | la planilla, con «Columnas», «Empresa» y sus estados; suma «Elegir varias» y los campos sellados | Redibujado en la v150 |
-| `FRM-Respuestas-Filtros` | «Más filtros», en un panel al costado | Redibujado en la v150 |
-| `FRM-Respuesta` | la vista rápida | Redibujado en la v150 |
-| `FRM-Respuestas-Exportar` | el diálogo de exportar | Redibujado en la v150 |
+| `FRM-Respuestas` | la planilla, con «Columnas», «Empresa» y sus estados; suma «Elegir varias» y los campos sellados | Aprobado |
+| `FRM-Respuestas-Filtros` | «Más filtros», en un panel al costado | Aprobado |
+| `FRM-Respuesta` | la vista rápida | Aprobado |
+| `FRM-Respuestas-Exportar` | el diálogo de exportar | Aprobado |
 | `FRM-Tablero` | el tablero | Aprobado |
 | `M-FRM-Respuestas`, `M-FRM-Respuesta`, `M-FRM-Tablero` | los tres, en el teléfono. Tocar una fila abre `M-FRM-Respuesta`: no hay vista rápida | Aprobado |
 | `FRM-Respuesta-Completa` | la pantalla completa, con sus dos secciones plegadas y abiertas | Aprobado |

@@ -53,7 +53,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Redibujadas en la v150 con el armado de ArquitecturaBase (125 a 130). Los dibujos están en `docs/design/capturas/plan/etapa-13/` del front, y el recorrido guiado es `campos-de-un-catalogo`. Muestran solo el catálogo (78).
+Aprobadas y publicadas en el lienzo v150, con el armado de ArquitecturaBase (125 a 130). Los dibujos están en `docs/design/capturas/plan/etapa-13/` del front, y el recorrido guiado es `campos-de-un-catalogo`. Muestran solo el catálogo (78).
 
 | Tablero | Qué muestra |
 | --- | --- |

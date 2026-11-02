@@ -92,14 +92,14 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 
 **Navegación (34 y 78):** «Gestión de formularios» llega con esta etapa, y su panel tiene solo «Catálogos». Los tableros de la etapa muestran solo eso.
 
-**Aprobados y publicados en el lienzo v141** (2026-10-25, front `93cb7d01`), con sus teléfonos, sin «Textos en» ni «Cambios sin guardar»:
+**Aprobados y publicados en el lienzo v150** (2026-11-02, front `b859fe70`), con sus teléfonos, sin «Textos en» ni «Cambios sin guardar»:
 - `FRM-Catalogos`: el listado, sin la columna «Lo usan», que llega con los formularios;
 - `FRM-Catalogo-Nuevo`: el origen, con la tarjeta «De los contactos de WhatsApp», y el tipo de valor;
 - `FRM-Catalogo-Tipo`: el tipo de valor se elige al crear, con la columna «Valor» y el error en el campo;
 - `FRM-Catalogo-Filtros`: un catálogo de los miembros, con sus filtros y la vista previa;
 - `FRM-Catalogo-Contactos`: un catálogo «De los contactos», con sus filtros por etiqueta y la vista previa (55).
 
-**Redibujados** (117, 120 y 125 a 129; v150):
+**Con el armado de ArquitecturaBase** (117, 120 y 125 a 129):
 - `FRM-Catalogo` y `M-FRM-Catalogo`: el editor de un catálogo a mano, con el armado de ArquitecturaBase. «El catálogo» dice de dónde salen y el tipo, y debajo van Nombre y Descripción; al costado, «Así lo ve quien lo recibe», con «Una opción | Varias» y el teléfono. La banda trae «Dar de baja», «Descartar» y «Guardar cambios». «Opciones» va a todo el ancho: «+ Agregar opción», «Importar», «Exportar» y un ⋮ con Descargar la plantilla, Ordenar de la A a la Z y Generar los códigos que faltan; abajo, solo «Buscar opción»; la tabla editable en la compu, la selección de filas para dar de baja o reactivar, el Estado como casilla y ↑ ↓ ✎ 🗑 a la vista;
 - `FRM-Catalogo-Importar`: «Origen» y «Revisión» a la vista, sin pasos numerados.
 
