@@ -1,6 +1,6 @@
 # E13 · Texto para el chat de Diseño
 
-**Estado:** pendiente · faltan los tres estados de `FRM-Catalogo-13` y lo que suma la evaluación del 2026-11-02; lo demás ya está dibujado.
+**Estado:** pendiente · dibujado en la v147 y la v148, sin publicar: espera el OK del usuario.
 
 Se pega tal cual en el chat de Diseño, que es el único que toca el lienzo.
 

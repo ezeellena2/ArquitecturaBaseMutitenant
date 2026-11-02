@@ -1,6 +1,6 @@
 # E14 · Texto para el chat de Diseño
 
-**Estado:** pendiente · Diseño lo toma en su turno. Junta lo que falta de la E12, la base de la 12 y la E14, que salió de la lectura de punta a punta del 2026-10-31 y de la evaluación del traspaso 4, del 2026-11-02.
+**Estado:** pendiente · dibujado en la v147 y la v148, sin publicar: espera el OK del usuario. Junta lo que falta de la E12, la base de la 12 y la E14, que salió de la lectura de punta a punta del 2026-10-31 y de la evaluación del traspaso 4, del 2026-11-02.
 
 Se pega tal cual en el chat de Diseño, que es el único que toca el lienzo.
 

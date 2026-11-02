@@ -1,6 +1,6 @@
 # E12 · Texto para el chat de Diseño
 
-**Estado:** pendiente · Diseño lo toma antes de seguir con las etapas siguientes. Sale de la evaluación del traspaso 4, del 2026-11-02, sobre la v147.
+**Estado:** pendiente · dibujado en la v148, sin publicar: espera el OK del usuario. Sale de la evaluación del traspaso 4, del 2026-11-02, sobre la v147.
 
 Se pega tal cual en el chat de Diseño, que es el único que toca el lienzo.
 
@@ -33,7 +33,6 @@ Te paso lo que cambia en el lienzo del multitenant por la evaluación del traspa
 
 **Qué se dibuja:**
 1. **`FRM-Catalogo-Opciones` y `M-FRM-Catalogo-Opciones`:** el modal, con la lista a la izquierda y la opción a la derecha; en el teléfono, primero la lista. Una opción guardada no se quita: su Estado dice «Activa | De baja». Estados: una nueva, una guardada, una dada de baja, errores con el triángulo y «Volver a la lista».
-2. **`M-FRM-Catalogo-Importar`:** importar en el teléfono, que ocupa la pantalla.
 
 **Datos de ejemplo:** Grupo Delta. «Proveedores», a mano.
 
