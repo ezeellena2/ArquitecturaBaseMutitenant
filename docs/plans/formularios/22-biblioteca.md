@@ -46,39 +46,34 @@ Antes de empezar:
 ## 8. Pantallas (tableros)
 
 Valen los criterios de la E14 y la decisión 43. El texto para Diseño está en [22-texto-diseno.md](22-texto-diseno.md). Datos de ejemplo:
-- **Categorías:** Ventas, Logística y Mantenimiento.
+- **Categorías:** Ventas, Logística y Mantenimiento, más Calidad, sin plantillas.
 - **Plantillas:**
-  - «Visita a cliente» (Ventas): publicada, con cambios guardados sin publicar, que la usaron 12 organizaciones;
+  - «Visita a cliente» (Ventas, para empleados): publicada, con cambios guardados sin publicar, que la usaron 12 organizaciones. Tiene 8 preguntas, dos catálogos (Clientes, de los contactos, y Motivos de visita, a mano) y cuatro reglas de ejemplo;
   - «Control de vehículo» (Logística): borrador;
-  - «Orden de trabajo» (Mantenimiento): retirada.
+  - «Orden de trabajo» (Mantenimiento): retirada;
+  - «Comprobante de transferencia» (Ventas, para clientes): publicada.
 
-**Aprobados** en el lienzo v126, ajustados al editor de una sola pantalla en la v130, y con las reglas de ejemplo y el PDF en la v134:
+**Dibujados** en el lienzo v156 (sin publicar: espera el OK del usuario), con las piezas de la 14 y la 21 ya alineadas a ArquitecturaBase, que no tiene biblioteca, y los recorridos guiados `armar-una-plantilla` y `usar-una-plantilla`:
 
 | Tablero | Qué muestra | Estados |
 | --- | --- | --- |
-| `Plat-FRM-Biblioteca` y `M-Plat-FRM-Biblioteca` | listado: nombre, categoría, estado (Borrador, Publicada o Retirada) y «La usaron N»; filtro por estado y categoría; «Nueva plantilla»; «Categorías» como otra sección del área, no como pestaña | vacío, sin resultados |
-| `FRM-Formularios-22` | la lista, sobre `FRM-Formularios-21`, con «Nuevo formulario ▾» (79) | — |
-| `Plat-FRM-Plantilla-Nueva` | diálogo con el nombre y la categoría | — |
-| `Plat-FRM-Plantilla` | ficha con pestañas **Plantilla**, **Catálogos** y **Publicación**. **Plantilla** es el editor de la E14: categoría, prefijo sugerido, descripción, para quién es (50), preguntas en el lugar y, debajo, las reglas de ejemplo y el diseño del PDF (33), con el teléfono al costado. Descartar, Guardar borrador y Publicar. **Catálogos:** una fila por catálogo, que se abre aparte. **Publicación:** estado, versiones con número, fecha, operador y motivo, «Retirar» en el ⋮ de la banda y «Volver a publicar» | cambios sin guardar, otra persona cambió, catálogos, un catálogo abierto, publicación (con su menú, borrador y retirada) |
-| `Plat-FRM-Plantilla-Reglas` | «Cuando llega una respuesta» de la E21 en la pestaña «Plantilla», sin botón propio ni historial. En una acción que pide un rol: «Rol: Lo elige cada organización», con candado, y «Rol sugerido» | reglas, editar una regla, una regla con errores, sin reglas y borrador guardado |
-| `Plat-FRM-Pdf` | el diseño del PDF de la E21, desde «Ver el diseño», con «Descartar» y «Guardar borrador». La vista previa muestra «Logo» y «Nombre de la organización» como marcadores | — |
-| `Plat-FRM-Publicar` y `Plat-FRM-Retirar` | diálogos con el motivo. Publicar muestra además la comprobación: problemas por pregunta, catálogo o regla | sin problemas, con problemas |
-| `Plat-FRM-Categorias` | lista con orden (⋮ con Editar, Subir, Bajar y Borrar), diálogo de alta y edición con motivo | una en uso: «Borrar» grisado, con el motivo en su tooltip |
-| `FRM-Biblioteca` y `M-FRM-Biblioteca` | para la organización: tarjetas por categoría, con un buscador | sin plantillas |
-| `FRM-Plantilla` y `M-FRM-Plantilla` | la vista de una plantilla: descripción, preguntas, catálogos que trae, «Reglas de ejemplo» en palabras (con «un rol que elegís al usarla» y el sugerido) y la vista del teléfono; «Usar esta plantilla» | sin permiso de catálogos |
-| `FRM-Plantilla-Usar` | diálogo con el nombre y el prefijo propuesto; al confirmar, abre el formulario nuevo | prefijo tomado: se propone otro |
-| `FRM-Editor-Reglas-Plantilla` y `M-FRM-Reglas-Plantilla` | el editor de la organización después de usar la plantilla: las reglas precargadas, con «De la plantilla» y «Sin guardar», «Elegí el rol» con «Rol sugerido» debajo, y una pregunta borrada marcada en la condición y en el texto que la nombra | — |
+| `Plat-FRM-Biblioteca` y `M-Plat-FRM-Biblioteca` | listado: nombre, categoría, estado (Borrador, Publicada o Retirada), «La usaron» y la última publicación; la caja de filtros de las listas, con Estado y Categoría; «Nueva plantilla». En el teléfono es solo para ver | menú de un filtro, borradores, sin resultados, cargando, vacía y error |
+| `FRM-Formularios-22` y `M-FRM-Formularios-22` | la lista de la 21, con «Cargar», y «Nuevo formulario ▾» con «Desde cero» y «Desde una plantilla» (79); en el teléfono, el «+» pregunta lo mismo | los de la 21 |
+| `Plat-FRM-Plantilla-Nueva` | diálogo con el nombre y la categoría | vacío, faltan los datos (se marcan al tocar «Crear plantilla») y creando |
+| `Plat-FRM-Plantilla` | ficha con pestañas **Plantilla**, **Catálogos** y **Publicación**. **Plantilla** es el editor de la 14: nombre, categoría, prefijo sugerido, para quién es (50), texto del botón y descripción; las preguntas con ↑ ↓ ✎ 🗑, que se abren en el lugar, y debajo las reglas de ejemplo (33), con el teléfono al costado. En la banda, Descartar, Guardar borrador, Publicar y el ⋮ con «Retirar», en rojo. **Catálogos:** una fila por catálogo, con su origen (64), y cada uno se abre aparte. **Publicación:** el estado en grilla y las versiones, con número, fecha, operador y motivo | con cambios, para quién es, guardando, borrador guardado, otra persona guardó, descartar, catálogos, un catálogo a mano, uno de los contactos, publicación (con su menú, borrador y retirada) |
+| `Plat-FRM-Plantilla-Reglas` | «Cuando llega una respuesta» de la 21 debajo de las preguntas, sin «Guardar reglas» ni historial: se guarda con el borrador. Lo de cada organización va con candado, «Lo elige cada organización»: el rol, con «Rol sugerido» como texto, la persona, la dirección y la plantilla de WhatsApp (61 y 62) | editar una regla, mandar por correo, avisar a un rol y a una persona, una regla con errores, guardando, borrador guardado y sin reglas |
+| `Plat-FRM-Pdf` | el diseño del PDF de la 21, desde «Ver el diseño», con «Descartar» y «Guardar borrador». El color va con candado, y el encabezado y la vista previa muestran «Logo» y «Nombre de la organización» como marcadores (82) | estilo moderno, armando la vista previa, guardando, borrador guardado y salir sin guardar |
+| `Plat-FRM-Publicar` y `Plat-FRM-Retirar` | diálogos con el motivo. Publicar suma la comprobación de la 14: «Problemas» por pregunta, catálogo o regla, con «Publicar versión 3» grisado, y «Qué se publica» | sin problemas, con problemas, falta el motivo, primera publicación, volver a publicar, comprobando, publicando, otra persona guardó; retirando |
+| `Plat-FRM-Categorias` | lista con orden y ↑ ↓ ✎ 🗑 a la vista (127); el alta, la edición, subir y borrar piden motivo | una en uso: «Borrar» grisado, con el motivo en su tooltip; nueva, faltan los datos, creando, editar, subir, borrar y vacía |
+| `FRM-Biblioteca` y `M-FRM-Biblioteca` | la biblioteca de formularios estándar (40): tarjetas por categoría, con un buscador, y en qué formulario propio se usó cada plantilla | sin resultados, sin plantillas, cargando y error |
+| `FRM-Plantilla` y `M-FRM-Plantilla` | la vista de una plantilla: la descripción y sus datos, las preguntas, los catálogos que trae, las reglas de ejemplo en palabras (con «el rol que elegís al usarla» y el sugerido) y el teléfono; «Usar esta plantilla» | sin permiso de catálogos, cargando y ya no está |
+| `FRM-Plantilla-Usar` | diálogo con el nombre y el prefijo propuesto; al confirmar, abre el formulario nuevo | prefijo tomado: se propone VIS2, con el porqué en la (i); falta el nombre, creando y se retiró |
+| `FRM-Editor-Reglas-Plantilla` y `M-FRM-Reglas-Plantilla` | el formulario nuevo, en borrador, y en su pestaña «Reglas» las reglas precargadas, sin guardar: «Elegí…» en el rol, la persona, la dirección y la plantilla de WhatsApp, con «Rol sugerido» debajo. El historial dice que todavía no se guardaron y que vienen de la plantilla | elegir el rol, guardar sin elegir (se marca lo que falta, 43), una pregunta borrada (marcada en la condición y en el texto), guardando y reglas guardadas |
 | `Cuenta-Plat` (ajuste) | los permisos del operador suman «Administrar la biblioteca de formularios» | — |
 
-**Diseño redibuja** (evaluación, §5.1, y ajuste de la Guía del 2026-10-24), sin «Textos en», sin el inglés obligatorio, sin «Cambios sin guardar» ni «Cambios sin publicar», sin el número de versión en la lista ni en la banda, y sin textos junto a los botones (35 y 43):
-- `Plat-FRM-Plantilla`, `Plat-FRM-Publicar`, `Plat-FRM-Retirar`, `Plat-FRM-Plantilla-Reglas` (con las acciones de la 61 y la 62, que quedan «Lo elige cada organización»), `Plat-FRM-Pdf` (con la base de la 59), `Plat-FRM-Categorias` y `M-FRM-Plantilla`;
-- `Plat-FRM-Biblioteca`, `M-Plat-FRM-Biblioteca` y `Plat-FRM-Plantilla-Nueva`, por el estado de la plantilla;
-- `FRM-Editor-Reglas-Plantilla` y `M-FRM-Reglas-Plantilla`: las reglas que llegan de una plantilla, en la pestaña de reglas de la E21.
-
-**Diseño redibuja** `FRM-Biblioteca` (evaluación, §5.2): la biblioteca de formularios estándar (40), con en qué formularios propios se usó cada plantilla. La sección «Lectura de documentos» no va en esta etapa.
+Sin «Textos en», sin el inglés obligatorio, sin «Cambios sin guardar» ni «Cambios sin publicar», sin el número de versión en la lista ni en la banda, y sin textos junto a los botones (35 y 43). La lectura de documentos no va en esta etapa.
 
 **Mandan sobre esta spec en:**
-- **Biblioteca de Plataforma:** filtros Estado y Categoría, y los estados vacía, sin resultados, cargando y error. En el teléfono es solo para ver.
 - **El estado de una plantilla** (ajuste de la Guía del 2026-10-24, con la decisión 43): la lista y la banda dicen solo «Borrador», «Publicada» o «Retirada». «Publicar» habilitado ya dice que hay cambios para publicar, y el número de versión va en el historial de versiones de «Publicación».
 - **Publicación de una plantilla:**
   - el estado va en grilla, con las versiones (número, fecha, operador y motivo);
@@ -86,7 +81,7 @@ Valen los criterios de la E14 y la decisión 43. El texto para Diseño está en 
   - una retirada muestra quién la retiró, el motivo y «Volver a publicar».
 - **Publicar:** el motivo y la comprobación. Muestra qué cambia, o los problemas por pregunta, catálogo o regla, con «Publicar» grisado. La primera publicación es la versión 1, y volver a publicar sin cambios repite la misma.
 - **Las reglas y el diseño del PDF en Plataforma** se guardan con el borrador: van en `FormTemplateDraft` (`rules[]` y `pdfDesign`), con el mismo `PUT …/draft`, su versión y el 409. «Guardar borrador» de `Plat-FRM-Pdf` es ese mismo guardado. Los problemas de las reglas al publicar son `Forms.Template.Invalid` con el campo `rules[i]…` (B8).
-- **Las reglas precargadas en la organización:** «Guardar reglas» queda habilitado; al tocarlo sin elegir los roles, se marcan las acciones que lo piden (43). El servidor valida con la regla de la E21, que pide el rol en esas acciones. Se ven y se guardan con `formrules.manage`; sin ese permiso, la sección muestra su estado «sin permiso».
+- **Las reglas precargadas en la organización:** «Guardar reglas» queda habilitado; al tocarlo sin elegir lo que pide cada acción, se marcan (43). El servidor valida con la regla de la E21. Se ven y se guardan con `formrules.manage`; sin ese permiso, la sección muestra su estado «sin permiso».
 - **«Logo» y «Nombre de la organización»** van como marcadores, porque la plataforma no ve datos de ninguna organización.
 - **Usar una plantilla:**
   - se pide el nombre y se propone el prefijo; si VIS está tomado, se propone VIS2, y la (i) del prefijo dice por qué;
@@ -95,9 +90,9 @@ Valen los criterios de la E14 y la decisión 43. El texto para Diseño está en 
 
 **Decisiones del usuario** sobre los tableros:
 - **Plataforma:** «Formularios» es un grupo de Administración, con Biblioteca y Categorías.
-- **Pestaña Catálogos de la plantilla:** una fila por catálogo, con sus opciones y la pregunta que lo usa. Cada catálogo se abre aparte.
+- **Pestaña Catálogos de la plantilla:** una fila por catálogo, con su origen y la pregunta que lo usa. Cada catálogo se abre aparte.
 - **Retirar:** va en el ⋮ de la banda, en rojo. El diálogo pide motivo y dice que las copias ya hechas no cambian.
-- **Categorías:** la lista con orden y ⋮ (Editar, Subir, Bajar y Borrar); crear, editar, mover y borrar piden motivo.
+- **Categorías:** la lista con orden y ↑ ↓ ✎ 🗑 a la vista, como las preguntas (127); crear, editar, mover y borrar piden motivo.
 - **Organización:** «Nuevo formulario» de la lista «Formularios» pasa a «Nuevo formulario ▾», con «Desde cero» y «Desde una plantilla», que abre la biblioteca (79); en el teléfono, el «+» pregunta lo mismo.
 
 ## 9. Tests

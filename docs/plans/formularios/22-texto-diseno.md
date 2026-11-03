@@ -1,6 +1,6 @@
 # E22 · Texto para el chat de Diseño
 
-**Estado:** pendiente · Diseño lo toma en su turno.
+**Estado:** pendiente · dibujado en la v156, sin publicar: espera el OK del usuario.
 
 Se pega tal cual en el chat de Diseño, **después de cerrar los tableros de la E12, la E14 y la E21**: el editor de la plataforma reusa sus piezas.
 
