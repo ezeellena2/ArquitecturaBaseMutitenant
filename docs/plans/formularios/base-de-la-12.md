@@ -129,7 +129,7 @@ Abreviaturas: `A/`, `I/` y `P/` son las capas del back, y `F/`, el front.
 | F8 | El tamaño | `F/src/index.css` y las clases en px | — | los menús no se corren; capturas de la galería |
 | F9 | Miembros de una empresa | `CompanyDetailPage` | — | sin el permiso, la pestaña no aparece |
 | F10 | Ayuda y motivos: la (i) con tooltip, el motivo de lo apagado y los usos de hoy de `hint` y `description`, que pasan a la (i) o se sacan | `F/src/shared/ui/InfoTip.tsx`, `help` en `FormField`, `Section`, `Page` y `CheckboxField`, y un tooltip común para lo apagado; una prueba de arquitectura | `InfoButton.tsx`, `Sheet.tsx` y `RowAction.disabledReason` | la (i) es descripción accesible y no toma el foco al abrir un diálogo; en el teléfono, la (i) abre la hoja y lo apagado avisa en la franja; la prueba frena un texto fijo en `hint` o `description`; axe |
-| F11 | Lo elegido (142) | `F/src/shared/ui/SegmentedControl.tsx`, `RadioGroupField`, los desplegables de filtro, `DataTable` y la lista de chats | «Criterio · Menús» | 3:1 contra lo no elegido y 4,5:1 el texto; 44 × 44 en el teléfono; la tarjeta con su borde; la tilde; la fila y la conversación abiertas con su barra |
+| F11 | Lo elegido (142); el lienzo lo dibuja en los botones agrupados de todos los tableros desde la v161 | `F/src/shared/ui/SegmentedControl.tsx`, `RadioGroupField`, los desplegables de filtro, `DataTable` y la lista de chats | «Criterio · Menús» | 3:1 contra lo no elegido y 4,5:1 el texto; 44 × 44 en el teléfono; la tarjeta con su borde; la tilde; la fila y la conversación abiertas con su barra |
 
 **Al cerrar:** las fichas del front y `docs/features/` quedan al día, y `docs/architecture/backend.md` suma la campana.
 
