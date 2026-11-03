@@ -26,7 +26,7 @@ Antes de empezar, en este orden:
 - **las acciones:** pedir aprobación a un rol, armar el PDF, mandarle un mensaje a quien la cargó, avisar a un rol, avisar a una persona (62), mandar por correo (62) y mandar el PDF a un cliente (47);
 - los textos usan `{número}`, `{motivo}` y `{pregunta}`, y son un solo texto (35). Una condición sobre una pregunta que no existía o no se mostró cuenta como «sin respuesta»;
 - **el orden:** pedir aprobación es la última acción de su regla, y solo al recibir. **El PDF** (106): si alguna regla pide aprobación, se arma solo al aprobar, y lo que espera aprobación no tiene PDF; si no, se arma al recibir. Adjuntarlo exige una acción anterior que lo arme en la misma regla;
-- las acciones se ordenan con su ⋮ (Subir, Bajar y Quitar).
+- cada acción se ordena con ↑ ↓ y se quita con 🗑, a la vista, como en ArquitecturaBase (135).
 
 **«Adjuntar el PDF»** (113). Las acciones que mandan un mensaje o un correo llevan esa casilla, y «Mandar el PDF a un cliente» lo manda siempre:
 - **nada se desmarca solo:** ni al mover, quitar o cambiar una acción, ni al cambiar el evento;
@@ -91,26 +91,25 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Diseño los revisa o los dibuja con el [texto de la etapa](21-texto-diseno.md). Muestran solo lo que existe hasta acá (78).
+Dibujados en la v155, para aprobar, con el armado del front real de ArquitecturaBase (126 y 135), el [texto de la etapa](21-texto-diseno.md) y los recorridos guiados `armar-las-reglas` y `aprobar-o-rechazar`. El ejemplo es «Visita a cliente», versión 4, que pide aprobación al rol Supervisor, con tres por aprobar. Muestran solo lo que existe hasta acá (78).
 
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
-| `FRM-Formularios-21` y su teléfono | la lista, con «Por aprobar», y «Quien solo aprueba» | A revisar |
-| `WA-Chats-Avisos` y su teléfono | los avisos | A revisar |
-| `FRM-Respuesta-Aprobacion` | la decisión, con «Aprobar» que pide confirmar (114), Actividad y el PDF | Se redibuja |
-| `FRM-Editor-Reglas`, `M-FRM-Reglas` | las reglas, como una pestaña más, con «Adjuntar el PDF» (113) | Se redibujan |
-| `FRM-Pdf` | el diseño, con dos o tres estilos para elegir (59) | Se redibuja |
-| `M-FRM-Respuesta-Aprobacion` | la decisión en el teléfono, con la misma confirmación | Se redibuja |
-| `FRM-Respuestas-21` y su teléfono | sobre `FRM-Respuestas-20`: Estado, su filtro, «Anulada», la marca del PDF y «Quien solo aprueba» (100) | Por dibujar |
-| `FRM-Tablero-21` y su teléfono | la tarjeta «Por estado» | Por dibujar |
-| `FRM-Respuesta-Corregir` y su teléfono | lo de antes a la vista, el motivo y «Corregida» | Por dibujar |
-| `FRM-Respuesta-Anular` y su teléfono | «Anular», el motivo y el Excel con las anuladas | Por dibujar |
-| `FRM-Respuestas-Propias-21` y su teléfono | lo propio, con estado, PDF y motivo | Por dibujar |
-| `FRM-Editor-21` y `FRM-Cargar-Respuesta-21`, con sus teléfonos | la pregunta «Correo» | Por dibujar |
-| `Campana-21` y su teléfono | «N respuestas por aprobar» y «No se pudo mandar el aviso de …» | Por dibujar |
-| `FRM-Dar-De-Baja-21` y `FRM-Editor-Baja-21` | «Lo que se conserva» suma el PDF y las aprobaciones | Por dibujar |
+| `FRM-Formularios-21` y su teléfono | la lista de la 20, con «Cargar», «Por aprobar» y «Quien solo aprueba» | Dibujado |
+| `FRM-Editor-Reglas`, `M-FRM-Reglas` | las reglas, como una pestaña más, con su historial, las siete acciones, «Adjuntar el PDF» (113) y la plantilla para fuera de las 24 horas | Dibujados |
+| `FRM-Pdf` | el diseño, con tres estilos: Clásico, Moderno y Compacto (59), el color, el encabezado de la página pública (82), secciones y firmas | Dibujado |
+| `FRM-Respuesta-Aprobacion` y su teléfono | la decisión, con «Aprobar» que pide confirmar (114), la actividad y el PDF | Dibujados |
+| `FRM-Respuestas-21` y su teléfono | sobre `FRM-Respuestas-20`: «Estado», su filtro con «Anulada», la marca del PDF, la cola desde la campana y «Quien solo aprueba» (100) | Dibujados |
+| `FRM-Tablero-21` y su teléfono | la tarjeta «Por estado» | Dibujados |
+| `FRM-Respuesta-Corregir` y su teléfono | lo de antes a la vista, el motivo, «Corregida» y la versión anterior | Dibujados |
+| `FRM-Respuesta-Anular` y su teléfono | «Anular» al final del ⋮, el motivo, el filtro «Anulada» y el Excel con las anuladas | Dibujados |
+| `FRM-Respuestas-Propias-21` y su teléfono | lo propio, con estado, PDF y motivo del rechazo, y corregir lo suyo mientras no esté aprobado | Dibujados |
+| `FRM-Editor-21` y `FRM-Cargar-Respuesta-21`, con sus teléfonos | la pregunta «Correo» | Dibujados |
+| `Campana-21` y su teléfono | «3 respuestas por aprobar» y «No se pudo mandar el aviso de …» | Dibujados |
+| `WA-Chats-Avisos` y su teléfono | los avisos, con «Sin plantilla aprobada» (61) | Dibujados |
+| `FRM-Dar-De-Baja-21` y `FRM-Editor-Baja-21` | «Lo que se conserva» suma el PDF y las aprobaciones, y lo que espera se sigue decidiendo | Dibujados |
 
-**Lo que se corrige** está en el [texto de la etapa](21-texto-diseno.md): «Cambios sin guardar», «Vista previa en inglés» y las acciones nuevas de `FRM-Editor-Reglas`. `FRM-Por-Aprobar` y `M-FRM-Por-Aprobar` pasan al Archivo. `FRM-Formularios-21` parte de `FRM-Formularios-20`. «No se pudo: pasaron más de 24 horas» pasa a «Sin plantilla aprobada» (61).
+`FRM-Por-Aprobar` y `M-FRM-Por-Aprobar` están en el Archivo.
 
 **Mandan sobre esta spec en:** «Ver todos» de «Para resolver» abre la lista con «Con algo por aprobar». «Reglas de la revisión N» se queda en Actividad, porque es un historial. El diseño guarda aparte de las reglas, y su vista previa no guarda nada. Las reglas y el diseño valen sin publicar: lo dice la (i) de su título, sin leyendas (109 y 116).
 
