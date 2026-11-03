@@ -91,23 +91,23 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Dibujados en la v155, para aprobar, con el armado del front real de ArquitecturaBase (126 y 135), el [texto de la etapa](21-texto-diseno.md) y los recorridos guiados `armar-las-reglas` y `aprobar-o-rechazar`. El ejemplo es «Visita a cliente», versión 4, que pide aprobación al rol Supervisor, con tres por aprobar. Muestran solo lo que existe hasta acá (78).
+Aprobados y publicados en el lienzo v155, con el armado del front real de ArquitecturaBase (126 y 135) y los recorridos guiados `armar-las-reglas` y `aprobar-o-rechazar`. El ejemplo es «Visita a cliente», versión 4, que pide aprobación al rol Supervisor, con tres por aprobar. Muestran solo lo que existe hasta acá (78).
 
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
-| `FRM-Formularios-21` y su teléfono | la lista de la 20, con «Cargar», «Por aprobar» y «Quien solo aprueba» | Dibujado |
-| `FRM-Editor-Reglas`, `M-FRM-Reglas` | las reglas, como una pestaña más, con su historial, las siete acciones, «Adjuntar el PDF» (113) y la plantilla para fuera de las 24 horas | Dibujados |
-| `FRM-Pdf` | el diseño, con tres estilos: Clásico, Moderno y Compacto (59), el color, el encabezado de la página pública (82), secciones y firmas | Dibujado |
-| `FRM-Respuesta-Aprobacion` y su teléfono | la decisión, con «Aprobar» que pide confirmar (114), la actividad y el PDF | Dibujados |
-| `FRM-Respuestas-21` y su teléfono | sobre `FRM-Respuestas-20`: «Estado», su filtro con «Anulada», la marca del PDF, la cola desde la campana y «Quien solo aprueba» (100) | Dibujados |
-| `FRM-Tablero-21` y su teléfono | la tarjeta «Por estado» | Dibujados |
-| `FRM-Respuesta-Corregir` y su teléfono | lo de antes a la vista, el motivo, «Corregida» y la versión anterior | Dibujados |
-| `FRM-Respuesta-Anular` y su teléfono | «Anular» al final del ⋮, el motivo, el filtro «Anulada» y el Excel con las anuladas | Dibujados |
-| `FRM-Respuestas-Propias-21` y su teléfono | lo propio, con estado, PDF y motivo del rechazo, y corregir lo suyo mientras no esté aprobado | Dibujados |
-| `FRM-Editor-21` y `FRM-Cargar-Respuesta-21`, con sus teléfonos | la pregunta «Correo» | Dibujados |
-| `Campana-21` y su teléfono | «3 respuestas por aprobar» y «No se pudo mandar el aviso de …» | Dibujados |
-| `WA-Chats-Avisos` y su teléfono | los avisos, con «Sin plantilla aprobada» (61) | Dibujados |
-| `FRM-Dar-De-Baja-21` y `FRM-Editor-Baja-21` | «Lo que se conserva» suma el PDF y las aprobaciones, y lo que espera se sigue decidiendo | Dibujados |
+| `FRM-Formularios-21` y su teléfono | la lista de la 20, con «Cargar», «Por aprobar» y «Quien solo aprueba» | Aprobado |
+| `FRM-Editor-Reglas`, `M-FRM-Reglas` | las reglas, como una pestaña más, con su historial, las siete acciones, «Adjuntar el PDF» (113) y la plantilla para fuera de las 24 horas | Aprobados |
+| `FRM-Pdf` | el diseño, con tres estilos: Clásico, Moderno y Compacto (59), el color, el encabezado de la página pública (82), secciones y firmas | Aprobado |
+| `FRM-Respuesta-Aprobacion` y su teléfono | la decisión, con «Aprobar» que pide confirmar (114), la actividad y el PDF | Aprobados |
+| `FRM-Respuestas-21` y su teléfono | sobre `FRM-Respuestas-20`: «Estado», su filtro con «Anulada», la marca del PDF, la cola desde la campana y «Quien solo aprueba» (100) | Aprobados |
+| `FRM-Tablero-21` y su teléfono | la tarjeta «Por estado» | Aprobados |
+| `FRM-Respuesta-Corregir` y su teléfono | lo de antes a la vista, el motivo, «Corregida» y la versión anterior | Aprobados |
+| `FRM-Respuesta-Anular` y su teléfono | «Anular» al final del ⋮, el motivo, el filtro «Anulada» y el Excel con las anuladas | Aprobados |
+| `FRM-Respuestas-Propias-21` y su teléfono | lo propio, con estado, PDF y motivo del rechazo, y corregir lo suyo mientras no esté aprobado | Aprobados |
+| `FRM-Editor-21` y `FRM-Cargar-Respuesta-21`, con sus teléfonos | la pregunta «Correo» | Aprobados |
+| `Campana-21` y su teléfono | «3 respuestas por aprobar» y «No se pudo mandar el aviso de …» | Aprobados |
+| `WA-Chats-Avisos` y su teléfono | los avisos, con «Sin plantilla aprobada» (61) | Aprobados |
+| `FRM-Dar-De-Baja-21` y `FRM-Editor-Baja-21` | «Lo que se conserva» suma el PDF y las aprobaciones, y lo que espera se sigue decidiendo | Aprobados |
 
 `FRM-Por-Aprobar` y `M-FRM-Por-Aprobar` están en el Archivo.
 
