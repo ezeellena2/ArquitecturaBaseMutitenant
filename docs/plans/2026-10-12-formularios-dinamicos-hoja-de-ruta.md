@@ -246,7 +246,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Un empleado completa un formulario desde la web,** a su nombre, con la misma captura que por WhatsApp: catálogos con sus filtros, archivos, condiciones, cálculos y líneas (73).
 - **Las entradas:** «Cargar» en cada fila de «Formularios» y «Agregar respuesta» en la planilla (83). Se carga en una página propia o en un panel al costado (84).
 - **Lo propio:** quien solo carga abre «Formularios» y ve la planilla con lo suyo (85).
-- **El armado:** hasta tres preguntas por renglón y zonas plegables; el ancho sale del tipo de pregunta (87).
+- **El armado:** hasta tres preguntas por renglón y zonas plegables; el ancho sale del tipo de pregunta, en dos anchos: una columna o el renglón entero (87 y 141).
 - **Listas dependientes,** solo en la web (94).
 - **Formularios solo para la app:** sin número conectado, con una lista dependiente o con un catálogo a mano más grande de lo que admite WhatsApp, se publica sin Meta y se carga desde la web (94, 96, 98 y 104).
 - **Spec:** [formularios/20-cargar-desde-la-web.md](formularios/20-cargar-desde-la-web.md).
@@ -332,6 +332,8 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 ### Después del bloque
 
 - **Integraciones, lo primero después del bloque** (76): un módulo `Integrations`, con conexiones y credenciales por organización. La API pública y el MCP necesitan una identidad por organización. ArquitecturaBase cerró cinco de las 13 decisiones de su estudio el 2026-10-31: ARCA primero, con la factura, en un módulo `Arca` propio y no en uno genérico. Se evalúa acá cuando llegue su traspaso.
+- **ARCA · etapa 1, la conexión:** ArquitecturaBase la diseñó el 2026-11-03, sin programar: conectar la instalación con el certificado de la empresa, probar la conexión, traer los datos del padrón y elegir el punto de venta, sin emitir ([su plan](../../../ArquitecturaBase/docs/plans/2026-11-03-arca-etapa-1-conexion.md)). Se evalúa al sumarla a esta hoja: acá hay que decidir de quién es la conexión, de la organización o de cada empresa.
+- **Carpetas para formularios y catálogos:** decididas allá el 2026-11-03, sin programar ([su plan](../../../ArquitecturaBase/docs/plans/2026-11-03-carpetas-de-formularios-y-catalogos.md)): un solo árbol por tema, que solo ordena y no da ni quita acceso, en un panel a la izquierda de cada listado. Se evalúa al sumarla a esta hoja; allá llega antes de su biblioteca de estándares.
 - **Catálogos, fases 3 a 6:** la búsqueda en vivo (56), las listas dependientes en WhatsApp (94) y los orígenes externos.
 - **La conexión a la base de un cliente,** con una solución simple: un agente del lado del cliente o una réplica de solo lectura.
 - **Los tableros que cruzan formularios.**
@@ -359,7 +361,8 @@ Aplicarlo desde el primer día evita lo que nos frenó la Etapa 1 durante días:
    - las respuestas pasados 30 minutos se perdían, y ahora la sesión dura 24 horas y vence según la hora de Meta;
    - las respuestas grandes se descartaban sin rastro, y ahora hay un presupuesto de 16 KiB al publicar y un rechazo visible;
    - errores definitivos de Meta quedaban «Sin confirmar» para siempre;
-   - en la Argentina, «125.500» puede leerse como 125,5, por eso la ayuda pide punto decimal y se valida la escala.
+   - en la Argentina, «125.500» puede leerse como 125,5, por eso la ayuda pide punto decimal y se valida la escala;
+   - en la prueba de punta a punta de allá, del 2026-11-02 y el 2026-11-03 (traspaso 5, §12): un rótulo chico al lado de una frase no ordena nada (138), y un historial vacío no ocupa lugar (140). Lo de cada etapa va en su «no repetir»: la E15, la E19, la E20 y la E21.
 7. **La lista de control de la puerta.** Los 142 problemas de los reviews de ArquitecturaBase quedaron en doce puntos, en la skill `/puerta` y en [tests](../rules/tests.md): números y fechas con la cultura del pedido, el front que no tapa al servidor, cambiar algo en uso, guardar sin cambios, lecturas con el volumen máximo, nada que nombre lo que no se puede leer, nada que exija un idioma, un test por cada lock, migraciones portables, botones y avisos (43), arreglos en los caminos hermanos y respuestas de proveedores clasificadas. Cada etapa del bloque la aplica, con un test por punto.
 
 ## 5. Decisiones de producto
@@ -631,6 +634,19 @@ Elegidas por el usuario el 2026-11-02, al comparar el lienzo con el front real d
 134. **La carga desde la web sigue el armado de ArquitecturaBase, y lo que allá no existe usa lo que ya está aprobado acá.** Publicar solo para la app va en la zona «Avisos» de la 16 y no necesita un diálogo propio; los filtros de una pregunta de catálogo se agregan con «Agregar filtro ▾», que suma «Según otra respuesta»; «Canal» entra en los filtros rápidos de la planilla.
 135. **Las reglas, el PDF y la decisión siguen el armado de ArquitecturaBase (E21), y lo que allá no existe usa lo que ya está aprobado acá.** Las reglas llevan «Agregar regla» y «Guardar reglas» en la cabecera de su caja y el historial al costado; una regla se edita en el lugar y se cierra con «Listo», y cada acción muestra ↑ ↓ 🗑, en lugar del ⋮. El diseño del PDF lleva «Guardar diseño» en «El comprobante» y la vista previa al costado, con tres estilos: Clásico, Moderno y Compacto. La decisión va en la vista rápida, con los momentos arriba de las pestañas. Corregir abre la carga de la 20, con lo de antes a la vista. La lista «Formularios» de la 21 parte de la de la 20, con «Cargar».
 
+Elegidas por el usuario el 2026-11-02 y el 2026-11-03 en ArquitecturaBase, probando la app de punta a punta, y adoptadas con el [traspaso 5](../../../ArquitecturaBase/docs/plans/2026-11-03-traspaso-multitenant-lecturas-y-filtros.md) de allá, del 2026-11-03, porque no chocan con este modelo:
+
+136. **Un cambio de diseño vale para toda la app.** Se busca en todas las pantallas que usan la misma pieza o el mismo patrón, se dibuja con casos de varias áreas y se escribe como regla en las fichas del front y en su tablero «Criterio», para que lo cumplan las pantallas nuevas.
+137. **Las tablas, en todo el sistema:** una línea fina entre columnas, del tono de la que separa las filas, en el encabezado y en el cuerpo; los números a la derecha, encabezado incluido, y la tabla cierra abajo con la línea de su última fila, salvo que el borde de su caja ya la cierre. En una celda que baja de renglón, como en una comparación, un código con guiones («30-71458236-9») no se parte, y una zona horaria se corta solo en sus barras.
+138. **Las lecturas, en todo el sistema:** lo guardado que se muestra sin editarlo no deja rótulos sueltos con texto al lado ni «Rótulo: valor» corrido en un renglón:
+    - lo que pasa en orden, como una regla o una sugerencia, va en pasos, uno debajo del otro, con su ícono en una columna fija. Las palabras que unen («Si», «y», «es») van en gris y los datos, en negrita; el dato aparte de una acción (el rol, «con el PDF»), en una etiqueta, y el mensaje, entero en su recuadro;
+    - los datos de un registro van en dos columnas, como en `DetailGrid`, y los que dependen de un valor, como los campos de la opción elegida, alineados debajo de él;
+    - dos versiones van lado a lado: qué cambió, el dato una sola vez y cada versión en su columna, solo lo distinto. En el teléfono, el dato va arriba y las dos versiones debajo;
+    - en una lista paginada para elegir, lo elegido que no está en la página va primero, marcado.
+139. **El detalle de una respuesta** (E15 y E21): el valor primero, y los campos de la opción elegida alineados debajo, en una tabla chica con una línea a la izquierda. Los momentos (la mandó, la respondió, la aprobó) van un renglón cada uno, con la fecha a la derecha y quién debajo. La actividad va en cuatro columnas fijas (Fecha, Qué pasó, Estado y Acciones), agrupada por momento, con cada persona de un aviso en su renglón, y nada se repite. En la vista rápida, «Abrir en pantalla completa» y «Abrir conversación» son íconos con su tooltip en el renglón del título, antes de ↑ ↓ ✕.
+140. **Los historiales, detrás de un botón** (E21, E22 y E23): «Historial», con su reloj, va primero en el encabezado de su sección y abre un panel al costado. Sin revisiones queda apagado, con el motivo en su tooltip. Tocar una revisión la muestra en pasos, sin editar, y la sección gana el ancho. Cambia la 135, que lo ponía al costado.
+141. **La carga desde la web, en dos anchos** (E20): lo que tiene un solo valor ocupa una columna (número, fecha, sí o no, texto corto de hasta 80, elegir una y elegir de un catálogo); lo que necesita espacio, el renglón entero. «Elegir varias» reparte sus casillas en columnas, elegir una con hasta cinco opciones las muestra en fila aunque sean largas, y el panel junto a la planilla tiene las mismas zonas que la página. Sigue la 87: el ancho sale del tipo.
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase
@@ -669,6 +685,14 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 ## 7. Decisiones pendientes
 
-Ninguna.
+Las del traspaso 5 que chocan con una decisión de acá o con una regla del front. Se le preguntan al usuario de a una, y cada respuesta pasa a la §5:
+1. **Lo elegido** (OE1-A): rellena con el color de la marca, contra la elegida blanca con sombra de `tema.md` del front.
+2. **Los filtros de opciones** (PL2-A y FO1-A): un desplegable simple, de una opción y sin cantidades, contra la cantidad por opción de las fichas del front, «alguna de» y el filtro «Respuesta» de la E15.
+3. **Los filtros de la planilla** (PL1-A): un solo «Filtros» que aplica cada cambio, con chips, contra «Más filtros» con borrador y sin chips.
+4. **Las zonas de una pregunta de catálogo** (ZP1-A): plegadas, con su resumen, contra «sin paneles plegables» del front.
+5. **Los renglones** (§11 del traspaso): una pantalla por renglón en WhatsApp, mínimo y máximo, y reglas y filtros con «Algún renglón con…», contra la 54. Entrarían en la E19, con su parte en la E20 (la tabla de la carga) y en la E21 (las reglas).
+6. **Mantener lo cargado en la página** (AR2-A), contra la 84.
+7. **«Por aprobar»** (PL1-A): dos solapas, contra la 79 y la regla del front que no deja filtrar con pestañas.
+8. **El mensaje con datos** (MD1-A): «Agregar dato», contra `{pregunta}` escrita a mano.
 
-Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98, y las del traspaso 4, del 2026-11-02, como decisiones 109 a 122.
+Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98, las del traspaso 4, del 2026-11-02, como decisiones 109 a 122, y las del traspaso 5 que no chocan, del 2026-11-03, como decisiones 136 a 141.
