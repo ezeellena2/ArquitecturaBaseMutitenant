@@ -72,7 +72,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-**Aprobados y publicados** en el lienzo v157. La pantalla «Asistente» no tiene modelo, ni en el lienzo ni en ArquitecturaBase: el usuario eligió armarla como el editor de un formulario. Lo demás sigue al front real de ArquitecturaBase, con nuestras piezas: el chat con su modo y «Por qué lo mandó», la sugerencia, los audios, «Qué sugerir después», «Cómo empezó» e «Información del negocio».
+**Aprobados y publicados** en el lienzo v157; «Por qué respondió esto» se ajustó en la v158. La pantalla «Asistente» no tiene modelo, ni en el lienzo ni en ArquitecturaBase: el usuario eligió armarla como el editor de un formulario. Lo demás sigue al front real de ArquitecturaBase, con nuestras piezas: el chat con su modo y «Por qué lo mandó», la sugerencia, los audios, «Qué sugerir después», «Cómo empezó» e «Información del negocio».
 
 Datos de ejemplo: Grupo Delta vende y repara heladeras. Martina López escribe por Clientes y Tomás Acosta, por Internos.
 
@@ -83,7 +83,7 @@ Datos de ejemplo: Grupo Delta vende y repara heladeras. Martina López escribe p
 | `WA-Asistente-Probar` | lo que haría, en orden y hasta tres acciones: cada una con su caso, su porqué, lo que usó y cómo la vería la persona. Al final, «No se mandó nada» | cuatro pruebas (envíos a Córdoba, la heladera, hablar con alguien, hola y la hora), probando, con cambios sin guardar y tope de IA agotado (grisado, con el motivo en su tooltip) |
 | `WA-Asistente-Limites` | Límites, por bandeja (65), con el tope de ofrecimientos (66) y el máximo de la plataforma debajo de cada número; Conocimiento, con las secciones de «Información del negocio» (46) | Internos, sobre el máximo, una sección vacía y editar una pregunta frecuente |
 | `WA-Modo-Atencion` y `M-WA-Modo-Atencion` | la pestaña Atención, por bandeja: quién atiende los chats nuevos y cuándo vuelve un chat (52). En el teléfono, el ⋮ del chat: pasar de modo, fijarlo y «Marcar como resuelta» | Internos, una persona atiende, al marcarlo «Resuelto», guardando y guardado; en el teléfono, atención manual, fijada y resuelta |
-| `WA-Chats-Casos` y `M-WA-Chats-Casos` | el chat de Clientes con los casos: «Por qué respondió esto» debajo de cada acción y derivar con «Necesita una persona» en la cabecera, la lista y su filtro. Muestra también el texto exacto, los botones, el tope del día y el borrador en atención manual | por qué respondió, sin la información (deriva), un formulario, botones, texto exacto, hablar con alguien, una ráfaga con tres acciones, el tope, el borrador, cambiar el modo, fijada, resuelta y el filtro |
+| `WA-Chats-Casos` y `M-WA-Chats-Casos` | el chat de Clientes con los casos: «Por qué respondió esto» en el pie de cada acción, que abre un globo, y derivar con «Necesita una persona» en la cabecera, la lista y su filtro. Muestra también el texto exacto, los botones, el tope del día y el borrador en atención manual | por qué respondió, sin la información (deriva), un formulario, botones, texto exacto, hablar con alguien, una ráfaga con tres acciones, el tope, el borrador, cambiar el modo, fijada, resuelta y el filtro |
 | `WA-Preguntas-Sin-Respuesta` y `M-WA-Preguntas-Sin-Respuesta` | en el panel de WhatsApp, por tema, con preguntas, personas y la última. El ⋮ tiene «Completar el conocimiento» y «Descartar». Sin nombres ni mensajes | acciones, descartar, el filtro de estado, descartados, vacío, cargando y error |
 | `WA-Chats-Asistente`, `WA-Chats-Sugerencia` y `WA-Chats-Audio`, con `M-WA-Conversacion-Asistente` | revisados: la barra de la bandeja y las fechas de WA-Chats, y el tope agotado. Sale «Sin respuesta del asistente», que pasa a `WA-Chats-Casos`. El audio, como allá: «Escuchar audio» y la transcripción debajo | los de antes, más escuchar el audio y «Ya no está» (D4) |
 | `FRM-Editor-Asistente` | redibujado: «Cuándo lo ofrece el asistente», con su (i), en «El formulario» de la pestaña Diseño | sin «Cuándo lo ofrece» y sin la función del asistente |
@@ -107,7 +107,9 @@ El recorrido guiado «Los casos del asistente» muestra a Lucía armando y proba
 - **El ⋮ del chat:** ahí van cambiar el modo, fijarlo y «Marcar como resuelta».
 - **El catálogo propuesto** no se edita: se aprueba o se descarta.
 
-**Decisión del usuario** (03/11): la pantalla «Asistente» se arma como el editor de un formulario. El contenido va a la izquierda y «Probar», siempre a la derecha, y los casos se editan en el lugar, con ↑ ↓ ✎ 🗑.
+**Decisiones del usuario** (03/11):
+- la pantalla «Asistente» se arma como el editor de un formulario: el contenido va a la izquierda y «Probar», siempre a la derecha, y los casos se editan en el lugar, con ↑ ↓ ✎ 🗑;
+- «Por qué respondió esto» se abre al tocarlo, en un globo junto al mensaje que no corre el chat; en el teléfono, en una hoja. Nunca aparece abierto solo.
 
 ## Contrato
 
