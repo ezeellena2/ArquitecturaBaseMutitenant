@@ -72,7 +72,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Redibujados en la v152 con el armado de ArquitecturaBase (133), para aprobar, con el [texto de la etapa](18-texto-diseno.md) y sus dos recorridos guiados, `fotos-y-documentos` y `archivos-en-el-chat`. Los archivos del chat no existen allá. Muestran solo lo que existe hasta acá (78).
+Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133) y sus dos recorridos guiados, `fotos-y-documentos` y `archivos-en-el-chat`. Los archivos del chat no existen allá. Muestran solo lo que existe hasta acá (78).
 
 | Tablero | Qué muestra |
 | --- | --- |
