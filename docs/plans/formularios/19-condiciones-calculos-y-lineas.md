@@ -1,6 +1,6 @@
 # E19 · Condiciones, cálculos y líneas (spec)
 
-**Estado:** pendiente · spec de la etapa 19 del bloque (decisiones 53, 54 y 78), con el [formato](plantilla.md) de las etapas. No tiene equivalente en ArquitecturaBase. **Antes de programar** se prueba con Meta cómo se ven en el celular una pregunta que aparece según otra, un grupo de renglones y una pregunta de archivo dentro de un `If`, y `/plan-etapa` parte de ese resultado, después de la E18.
+**Estado:** pendiente · spec de la etapa 19 del bloque (decisiones 53, 54 y 78), con el [formato](plantilla.md) de las etapas. No tiene equivalente en ArquitecturaBase, salvo el editor de condiciones de las reglas, del que sale «Mostrar si». **Antes de programar** se prueba con Meta cómo se ven en el celular una pregunta que aparece según otra, un grupo de renglones y una pregunta de archivo dentro de un `If`, y `/plan-etapa` parte de ese resultado, después de la E18.
 
 ## Qué leer
 
@@ -39,7 +39,7 @@ Antes de empezar, en este orden:
 - su fórmula usa un número fijo, un número o un cálculo anterior de la misma respuesta, un campo numérico de la opción elegida en un catálogo y la suma de una columna de líneas, que se puede multiplicar renglón por renglón por otra columna o por un campo del catálogo elegido en ese renglón (Cantidad × Precio);
 - **solo las cuatro operaciones** y paréntesis, armadas en el editor sin escribir código;
 - se calcula **al llegar la respuesta,** con los valores sellados, en `decimal` y con redondeo `AwayFromZero` a los decimales del cálculo. Si es un monto, el formulario fija su moneda, de los datos de referencia, con los decimales de esa moneda;
-- **una división por cero, un dato que falta o un número demasiado grande dejan el cálculo «Sin respuesta»,** nunca un error de la captura. En una suma de líneas, un renglón sin ese dato no cuenta, y en un monto, cada renglón se redondea antes de sumar, como manda la ficha;
+- **una división por cero, un dato que falta, también el de una pregunta que no se mostró, o un número demasiado grande dejan el cálculo «Sin respuesta»,** nunca un error de la captura. En una suma de líneas, un renglón sin ese dato no cuenta, y en un monto, cada renglón se redondea antes de sumar, como manda la ficha;
 - el resultado se guarda: editar el catálogo o el formulario después no lo cambia;
 - se ve en la tarjeta del chat, y en la planilla, el detalle, el Excel y el tablero, como un número que se filtra y se ordena. Un monto se ve con su moneda, y el tablero lo totaliza en ella.
 
@@ -60,7 +60,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](19-texto-diseno.md), con el recorrido guiado. Muestran solo lo que existe hasta acá (78).
+Dibujados en la v153, para aprobar, con el [texto de la etapa](19-texto-diseno.md) y el recorrido guiado `un-pedido-con-renglones`. El ejemplo es «Pedido de materiales». Muestran solo lo que existe hasta acá (78).
 
 | Tablero | Qué muestra |
 | --- | --- |
@@ -77,6 +77,12 @@ Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](19-texto-d
 - **Editor:** una condición con cada tipo de pregunta; una fórmula incompleta, con el motivo debajo de su pregunta; una referencia rota; el contador de componentes cerca de 50, y sin preguntas anteriores que sirvan;
 - **Publicar:** problemas por pregunta, con «Ir a la pregunta»;
 - **Planilla y detalle:** una respuesta con una pregunta oculta, y un cálculo que quedó «Sin respuesta».
+
+**«Mostrar si»:** va en la pregunta abierta, en su caja, como las condiciones de las reglas de ArquitecturaBase: Pregunta, Condición, Valor y el tacho, y «Agregar condición». Sin preguntas anteriores que sirvan, «Agregar condición» queda grisado, con el motivo en su tooltip. Una referencia rota queda en rojo, con el motivo debajo, y la pregunta dice «Corregir».
+
+**La fórmula:** piezas en una caja, con «Agregar dato ▾» (un número, una pregunta, un campo del catálogo o la suma de una columna) y + − × ÷ ( ). La suma de una columna se elige en un diálogo. «Es un monto» pide la moneda, y los decimales salen de ella.
+
+**Las columnas de un grupo:** una tabla con Nombre, Tipo, Obligatoria y ↑ ↓ 🗑, y «Agregar columna», grisado a las 6. Una columna de catálogo elige su catálogo debajo. Cerca de 50 componentes, se lee «46 de 50 componentes» al lado del tope de renglones.
 
 **Mandan sobre esta spec en:** las fichas del front. La fórmula se arma con piezas, sin un campo para escribirla. Un dato por celda, y un monto con su moneda.
 
