@@ -53,7 +53,7 @@ Antes de empezar, en este orden:
 - **un cliente no tiene datos** (42): una pregunta con un filtro según quien lo recibe no se le manda, y un filtro fijo sí;
 - al operador le llega el motivo y la cantidad, nunca los nombres de las opciones.
 
-**La vista previa «Como si lo recibiera»:** con una persona de ejemplo, pide `formcatalogs.read`, no guarda ni toma bloqueos, y distingue «Lista», «Le falta el dato» y «El filtro no funciona». No nombra opciones de un catálogo que quien mira no puede leer.
+**La vista previa «Como si lo recibiera»:** con una persona de ejemplo, pide `formcatalogs.read`, no guarda ni toma bloqueos, y distingue «Lista», «Le falta el dato» y «El filtro no funciona». No nombra opciones de un catálogo que quien mira no puede leer. Lo que tiene la persona probada se lee en dos columnas, el dato y su valor, nunca «Zona: Centro» corrido (138).
 
 **Al publicar** se separan los problemas, que frenan, de los avisos, que no (37):
 - **frenan:** un filtro inválido; un filtro fijo que deja más opciones que el tope, si la pregunta no tiene filtros según quien lo recibe; y uno según quien lo recibe en un formulario solo para clientes;
@@ -62,7 +62,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v150, con su recorrido guiado. Muestran solo lo que existe hasta acá (78).
+Aprobados y publicados en el lienzo v150, con su recorrido guiado. Muestran solo lo que existe hasta acá (78). Con el traspaso 5 se redibujan `FRM-Editor-16` y su teléfono: lo de la persona probada, en dos columnas (138).
 
 | Tablero | Qué muestra |
 | --- | --- |

@@ -72,7 +72,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133) y sus dos recorridos guiados, `fotos-y-documentos` y `archivos-en-el-chat`. Los archivos del chat no existen allá. Muestran solo lo que existe hasta acá (78).
+Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133) y sus dos recorridos guiados, `fotos-y-documentos` y `archivos-en-el-chat`. Los archivos del chat no existen allá. Muestran solo lo que existe hasta acá (78). Con el traspaso 5 se redibujan `FRM-Respuesta-18`, con su teléfono, y `FRM-Respuesta-Completa-18`: el detalle alineado y la actividad en columnas fijas (139).
 
 | Tablero | Qué muestra |
 | --- | --- |

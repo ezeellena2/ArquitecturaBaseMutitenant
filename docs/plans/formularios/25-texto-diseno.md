@@ -8,7 +8,7 @@ Se pega tal cual en el chat de Diseño, que es el único que toca el lienzo.
 
 Te paso los tableros de la E25, documentos por WhatsApp, para el lienzo del multitenant. No hay que programar nada: solo tableros.
 
-**Contexto.** Cuando un empleado o un cliente manda un documento, la IA reconoce qué es, saca los datos y propone el formulario ya completo. La persona confirma. Valen las fichas del front: un dato por celda, fechas completas, sin leyendas (109), con la ayuda que sirve en la (i) (116), botones habilitados o grisados (43) y toda espera a la vista (115). Lo que espera a la IA también: «Crear borrador» dice «Creando…», con su aro, y el asistente muestra que trabaja mientras lee un PDF.
+**Contexto.** Cuando un empleado o un cliente manda un documento, la IA reconoce qué es, saca los datos y propone el formulario ya completo. La persona confirma. Valen las fichas del front: un dato por celda, fechas completas, sin leyendas (109), con la ayuda que sirve en la (i) (116), botones habilitados o grisados (43) y toda espera a la vista (115). También valen las del traspaso 5 (136 a 141): las tablas con una línea entre columnas y los números a la derecha, y las lecturas sin rótulos sueltos: lo que pasa en orden, en pasos; los datos, en dos columnas, como «Por qué lo propuso» y lo leído de un documento, y dos versiones, lado a lado. Lo que espera a la IA también: «Crear borrador» dice «Creando…», con su aro, y el asistente muestra que trabaja mientras lee un PDF.
 
 **Leé primero,** en el repo del back `ArquitecturaBaseMutitenant`: la spec `docs/plans/formularios/25-documentos.md`.
 

@@ -60,7 +60,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v153, con el recorrido guiado `un-pedido-con-renglones`. El ejemplo es «Pedido de materiales». Muestran solo lo que existe hasta acá (78).
+Aprobados y publicados en el lienzo v153, con el recorrido guiado `un-pedido-con-renglones`. El ejemplo es «Pedido de materiales». Muestran solo lo que existe hasta acá (78). Con el traspaso 5 se redibuja `FRM-Respuesta-19`, con su teléfono: el detalle alineado (139). Los renglones esperan la decisión 5 de la §7 de la hoja de ruta.
 
 | Tablero | Qué muestra |
 | --- | --- |
@@ -195,6 +195,7 @@ No hay revisión de allá. Cada punto lleva su test:
 3. **Un cálculo que rompe la captura:** nada de una fórmula puede frenar una respuesta.
 4. **`double` en un paso intermedio:** todo en `decimal`, y sin `Math.Round` sin modo.
 5. **Un cálculo que cambia solo:** se guarda el resultado, no se recalcula al leer.
+6. **Un comprobante con varios ítems no entraba en una respuesta.** Allá, en la prueba del 2026-11-02, un remito de tres artículos fueron tres respuestas iguales salvo el artículo. Lo resuelven las líneas de esta etapa.
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 

@@ -26,7 +26,9 @@ Antes de empezar, en este orden:
 - **las acciones:** pedir aprobación a un rol, armar el PDF, mandarle un mensaje a quien la cargó, avisar a un rol, avisar a una persona (62), mandar por correo (62) y mandar el PDF a un cliente (47);
 - los textos usan `{número}`, `{motivo}` y `{pregunta}`, y son un solo texto (35). Una condición sobre una pregunta que no existía o no se mostró cuenta como «sin respuesta»;
 - **el orden:** pedir aprobación es la última acción de su regla, y solo al recibir. **El PDF** (106): si alguna regla pide aprobación, se arma solo al aprobar, y lo que espera aprobación no tiene PDF; si no, se arma al recibir. Adjuntarlo exige una acción anterior que lo arme en la misma regla;
-- cada acción se ordena con ↑ ↓ y se quita con 🗑, a la vista, como en ArquitecturaBase (135).
+- cada acción se ordena con ↑ ↓ y se quita con 🗑, a la vista, como en ArquitecturaBase (135);
+- **cómo se lee una regla guardada** (138): en pasos, cada uno con su ícono: el cuándo (una flecha al recibir, una tilde al aprobar, un círculo tachado al rechazar); «Si», con una condición por renglón, la pregunta y el valor en negrita, y cada acción, con su dato aparte en una etiqueta (el rol, «con el PDF») y el mensaje entero en su recuadro;
+- **el historial** (140): «Historial» abre un panel al costado con las revisiones, de la más nueva a la más vieja, y cada una se lee en pasos. Sin revisiones queda apagado, con «Todavía no hay revisiones.» en su tooltip.
 
 **«Adjuntar el PDF»** (113). Las acciones que mandan un mensaje o un correo llevan esa casilla, y «Mandar el PDF a un cliente» lo manda siempre:
 - **nada se desmarca solo:** ni al mover, quitar o cambiar una acción, ni al cambiar el evento;
@@ -35,19 +37,14 @@ Antes de empezar, en este orden:
 - **«Mandar el PDF a un cliente»** no tiene casilla: el aviso y el arreglo van debajo de la acción;
 - **cambiar el tipo de una acción conserva lo escrito:** el mensaje, el rol, la persona y el adjunto vuelven si se elige otra vez el tipo anterior. Al guardar, cada dato va solo con el tipo que lo usa.
 
-**Un solo motor de acciones:**
-- cada respuesta conserva la revisión con la que llegó, y la captura crea sus ejecuciones en el mismo commit;
-- cada acción es una ejecución, con clave respuesta + evento + regla + acción, reserva y número de turno. El efecto va fuera de la transacción;
-- lo confirmado nunca se repite. Cada acción espera solo a la anterior de su regla. Si la condición no se cumple, queda «No aplica», que no es un error;
-- la configuración se valida al reservar: un rol borrado o una persona que se fue dan «No se pudo», y no cuelgan nada;
-- un destinatario inalcanzable no tumba a los demás. Lo sellado manda: no se copia la respuesta en cada ejecución;
-- «Reintentar» retoma solo lo que no salió. Lo que la cola de WhatsApp no sabe si salió lo reintenta ella sola (80).
+**Un solo motor de acciones,** con ejecuciones idempotentes y el efecto fuera de la transacción: está en la [parte de datos y contrato](21-parte-datos-y-contrato.md#el-motor-de-acciones).
 
 **Aprobación de un nivel** (60):
 - decide una cuenta activa con `formapprovals.decide` y el rol de la regla, **nunca quien cargó la respuesta** (25), ni quien la corrigió;
 - una sola tarea abierta por respuesta. Decidir es un solo commit; si otro decidió antes, 409. Rechazar exige un motivo de hasta 500 caracteres;
 - **leer y decidir son independientes:** con `formapprovals.decide` y sin `formrecords.read`, se ve la tarea en la vista rápida, sin valores ni pantalla completa (100). La planilla de ese formulario es su cola: el número y la fecha;
-- **«Aprobar» pide confirmar** (114): un diálogo como el de rechazar, «¿Aprobar VIS-000003?», con quién la cargó y cuándo; quien solo aprueba ve solo cuándo (100). El foco empieza en «Cancelar», así Enter no aprueba, y mientras manda espera abierto con «Aprobando…» (115).
+- **«Aprobar» pide confirmar** (114): un diálogo como el de rechazar, «¿Aprobar VIS-000003?», con quién la cargó y cuándo; quien solo aprueba ve solo cuándo (100). El foco empieza en «Cancelar», así Enter no aprueba, y mientras manda espera abierto con «Aprobando…» (115);
+- **sin el rol de la tarea:** quien tiene el permiso y no el rol, como una cuenta administradora, ve el detalle sin error. `approval.canDecide` dice si puede decidir, y el detalle pide la tarea solo entonces; si no, la vista rápida muestra la decisión de solo lectura (el rol, quién decidió y cuándo), y la pantalla completa no reserva la barra de decisión.
 
 **«Por aprobar» en «Formularios»,** con la misma fuente que «Para resolver» (ADR 0040):
 - la lista suma la columna «Por aprobar» y el filtro «Aprobación», y lo que espera decisión va primero. Cuenta solo lo que esa cuenta puede decidir, sin lo propio;
@@ -55,6 +52,8 @@ Antes de empezar, en este orden:
 - **la cola:** el aviso de la campana y «Para resolver» abren la más vieja en la vista rápida, y ↑ ↓ recorren esa cola, de la más vieja a la más nueva, calculada en SQL, sin valores. Sin cartel arriba de la planilla.
 
 **La planilla** suma la columna «Estado», en los formularios que piden aprobación, y la marca de la copia PDF confirmada. El filtro «Estado» va en todos: con aprobación, Recibida, Por aprobar, Aprobada y Rechazada, y siempre, «Anulada». Lo comparten la lista, los conteos y el Excel. El tablero suma «Por estado».
+
+**La actividad de una respuesta** (139): cuatro columnas fijas, Fecha, Qué pasó, Estado y Acciones, en bandas por momento («Al recibirla», «Aprobación», «Al aprobarla» o «Al rechazarla»). Quién y el detalle van debajo de qué pasó, en gris, y el estado y las acciones («Ver PDF», «Reintentar»), siempre en su columna. El PDF va en su renglón, debajo de «Armar el PDF», y cada persona de un aviso a un rol, en el suyo, con sus acuses. En la vista rápida las acciones van debajo del texto; en el teléfono, también el estado.
 
 **Corregir y anular** (91 a 93). Una respuesta confirmada no se modifica: queda reemplazada por su corrección, o anulada. Vale para lo de WhatsApp y lo de la web:
 - **quién:** quien la cargó, mientras no esté aprobada, y siempre si el formulario no pide aprobación. Con `formrecords.correct`, cualquiera y en cualquier momento. Quien solo ve respuestas, no. Un cliente no corrige ni anula: lo hace la organización;
@@ -83,7 +82,7 @@ Antes de empezar, en este orden:
 
 **Mandar por correo** (62): a quien cargó, a un rol o a una persona, al correo de su cuenta; a una dirección fija, o al correo de una pregunta. Lleva el texto y, si se elige, el PDF. Sale por la cola de correos del núcleo, que suma los adjuntos. Un cliente sin correo queda «No se pudo». Las direcciones nunca van completas a los logs.
 
-**La pregunta «Correo»:** un tipo nuevo, validado con la ficha de correos. Suma a todo lo que existe: el editor, el Flow (un `TextInput` de correo), el verificador, la planilla, sus filtros (`contains` y `equals`), el detalle, el Excel, las condiciones, la carga desde la web, donde ocupa dos columnas, y el PDF.
+**La pregunta «Correo»:** un tipo nuevo, validado con la ficha de correos. Suma a todo lo que existe: el editor, el Flow (un `TextInput` de correo), el verificador, la planilla, sus filtros (`contains` y `equals`), el detalle, el Excel, las condiciones, la carga desde la web, donde ocupa una columna (141), y el PDF.
 
 **Lo propio** (85): la planilla de quien solo carga suma el estado, el PDF y el motivo de rechazo.
 
@@ -91,20 +90,20 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v155, con el armado del front real de ArquitecturaBase (126 y 135) y los recorridos guiados `armar-las-reglas` y `aprobar-o-rechazar`. El ejemplo es «Visita a cliente», versión 4, que pide aprobación al rol Supervisor, con tres por aprobar. Muestran solo lo que existe hasta acá (78).
+Aprobados y publicados en el lienzo v155, con el armado del front real de ArquitecturaBase (126 y 135) y los recorridos guiados `armar-las-reglas` y `aprobar-o-rechazar`. Con el traspaso 5 se redibujan las reglas, el detalle y la carga con «Correo» (138 a 141). El ejemplo es «Visita a cliente», versión 4, que pide aprobación al rol Supervisor, con tres por aprobar. Muestran solo lo que existe hasta acá (78).
 
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
 | `FRM-Formularios-21` y su teléfono | la lista de la 20, con «Cargar», «Por aprobar» y «Quien solo aprueba» | Aprobado |
-| `FRM-Editor-Reglas`, `M-FRM-Reglas` | las reglas, como una pestaña más, con su historial, las siete acciones, «Adjuntar el PDF» (113) y la plantilla para fuera de las 24 horas | Aprobados |
+| `FRM-Editor-Reglas`, `M-FRM-Reglas` | las reglas, como una pestaña más, con su historial, las siete acciones, «Adjuntar el PDF» (113) y la plantilla para fuera de las 24 horas | Se redibujan: en pasos y con el historial detrás de su botón (138 y 140) |
 | `FRM-Pdf` | el diseño, con tres estilos: Clásico, Moderno y Compacto (59), el color, el encabezado de la página pública (82), secciones y firmas | Aprobado |
-| `FRM-Respuesta-Aprobacion` y su teléfono | la decisión, con «Aprobar» que pide confirmar (114), la actividad y el PDF | Aprobados |
+| `FRM-Respuesta-Aprobacion` y su teléfono | la decisión, con «Aprobar» que pide confirmar (114), la actividad y el PDF | Se redibujan: la actividad en columnas fijas y la decisión de solo lectura (139) |
 | `FRM-Respuestas-21` y su teléfono | sobre `FRM-Respuestas-20`: «Estado», su filtro con «Anulada», la marca del PDF, la cola desde la campana y «Quien solo aprueba» (100) | Aprobados |
 | `FRM-Tablero-21` y su teléfono | la tarjeta «Por estado» | Aprobados |
 | `FRM-Respuesta-Corregir` y su teléfono | lo de antes a la vista, el motivo, «Corregida» y la versión anterior | Aprobados |
 | `FRM-Respuesta-Anular` y su teléfono | «Anular» al final del ⋮, el motivo, el filtro «Anulada» y el Excel con las anuladas | Aprobados |
 | `FRM-Respuestas-Propias-21` y su teléfono | lo propio, con estado, PDF y motivo del rechazo, y corregir lo suyo mientras no esté aprobado | Aprobados |
-| `FRM-Editor-21` y `FRM-Cargar-Respuesta-21`, con sus teléfonos | la pregunta «Correo» | Aprobados |
+| `FRM-Editor-21` y `FRM-Cargar-Respuesta-21`, con sus teléfonos | la pregunta «Correo» | Aprobados; `FRM-Cargar-Respuesta-21` se redibuja en dos anchos (141) |
 | `Campana-21` y su teléfono | «3 respuestas por aprobar» y «No se pudo mandar el aviso de …» | Aprobados |
 | `WA-Chats-Avisos` y su teléfono | los avisos, con «Sin plantilla aprobada» (61) | Aprobados |
 | `FRM-Dar-De-Baja-21` y `FRM-Editor-Baja-21` | «Lo que se conserva» suma el PDF y las aprobaciones, y lo que espera se sigue decidiendo | Aprobados |
@@ -143,10 +142,10 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
 | F1 | Tipos y llamadas | `api/workflow.ts` | la API de la E20 | zod estricto con los ejemplos |
-| F2 | La pestaña de reglas | `components/rules/`, `lib/rules.ts` | su tablero | guardar, historial, 409 y salir; la casilla no se desmarca sola; subir y agregar «Armar el PDF»; cambiar el tipo conserva lo escrito y guarda solo lo que usa |
+| F2 | La pestaña de reglas | `components/rules/`, `lib/rules.ts` | su tablero | guardar, el historial detrás de su botón, 409 y salir; las reglas guardadas en pasos; la casilla no se desmarca sola; subir y agregar «Armar el PDF»; cambiar el tipo conserva lo escrito y guarda solo lo que usa |
 | F3 | El diseño del PDF | `pages/PdfDesignPage.tsx`, `components/pdf/PdfPage.tsx` | su tablero | estilos; vista previa sin guardar; `<object>` |
 | F4 | «Por aprobar» | suma a la lista y a `FormRecordsPage.tsx` [E15] | su tablero | las tres combinaciones; la cola con ↑ ↓ |
-| F5 | La decisión y Actividad | `components/records/Workflow.tsx`; suma a `QuickView.tsx` y `RecordFullPage.tsx` | su tablero | solo decide; «Aprobar» con el foco en «Cancelar», y Enter no aprueba; el diálogo abierto hasta la respuesta; Reintentar; se relee mientras sale |
+| F5 | La decisión y Actividad | `components/records/Workflow.tsx`; suma a `QuickView.tsx` y `RecordFullPage.tsx` | su tablero | solo decide; «Aprobar» con el foco en «Cancelar», y Enter no aprueba; el diálogo abierto hasta la respuesta; Reintentar; se relee mientras sale; la actividad en columnas fijas, por momento; sin el rol, la decisión de solo lectura y ningún error |
 | F6 | Corregir y anular | `components/records/CorrectionForm.tsx`, con los componentes de la E20 | el tablero | lo de antes; motivo; 409; filtro «Anulada» |
 | F7 | Lo propio, tablero y tarjeta | suma a `FormRecordsPage.tsx`, `FormDashboard.tsx` y la tarjeta | su tablero | estado, PDF y motivo |
 
@@ -177,6 +176,9 @@ Cada punto lleva su test, escrito durante la etapa:
 7. **Un error dice qué hacer en cada caso.** «Agregá Armar el PDF…» se leía igual si faltaba la acción o si estaba más abajo.
 8. **Nada se desmarca ni se borra sin avisar:** ni al cambiar el tipo, ni al mover o quitar una acción.
 9. **Una decisión que no se deshace pide confirmar:** allá se aprobó la siguiente sin querer, porque ↑ ↓ cambian de respuesta con el foco en el panel.
+10. **Un aviso que no puede llegar se descubría recién en la actividad.** Allá sale solo por WhatsApp. Acá va con plantilla fuera de las 24 horas (61) o por correo (62), y lo que no salió se ve por persona en Actividad y en la campana.
+11. **El detalle no depende de lo que la persona no tiene.** Allá, con el permiso de aprobar y sin el rol de la tarea, el detalle fallaba al pedir la tarea.
+12. **Nada vacío a la vista.** Un historial sin revisiones ocupaba una columna fija: va detrás de su botón, apagado (140).
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 

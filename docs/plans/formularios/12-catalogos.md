@@ -101,7 +101,7 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 
 **Con el armado de ArquitecturaBase** (117, 120 y 125 a 129):
 - `FRM-Catalogo` y `M-FRM-Catalogo`: el editor de un catálogo a mano, con el armado de ArquitecturaBase. «El catálogo» dice de dónde salen y el tipo, y debajo van Nombre y Descripción; al costado, «Así lo ve quien lo recibe», con «Una opción | Varias» y el teléfono. La banda trae «Dar de baja», «Descartar» y «Guardar cambios». «Opciones» va a todo el ancho: «+ Agregar opción», «Importar», «Exportar» y un ⋮ con Descargar la plantilla, Ordenar de la A a la Z y Generar los códigos que faltan; abajo, solo «Buscar opción»; la tabla editable en la compu, la selección de filas para dar de baja o reactivar, el Estado como casilla y ↑ ↓ ✎ 🗑 a la vista;
-- `FRM-Catalogo-Importar`: «Origen» y «Revisión» a la vista, sin pasos numerados.
+- `FRM-Catalogo-Importar`: «Origen» y «Revisión» a la vista, sin pasos numerados. Se redibuja con el traspaso 5: «Cambios» se lee lado a lado (138).
 
 **Nuevos** (v148): `FRM-Catalogo-Opciones` y `M-FRM-Catalogo-Opciones`, el modal de opciones. Importar no va en el teléfono, como hasta ahora.
 
@@ -116,7 +116,7 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 **Importar (120):** un solo diálogo, de arriba abajo.
 - **«Origen»:** «Desde» («Subir un archivo | Pegar desde Excel») y, para un archivo, su nombre con «Elegir archivo» o «Cambiar». La plantilla va en la banda. Qué acepta el archivo y qué hace cada origen van en sus (i).
 - **La grilla:** lo pegado se ve con los encabezados del catálogo, en el orden de la plantilla. Sin encabezados, las filas van en ese orden. Si lo copiado los trae, por nombre, cada columna va a su lugar y esa fila no se importa. Una columna que no es del catálogo queda al final, en rojo, con su motivo, y no se manda. Pegar sobre la grilla llena la reemplaza.
-- **«Revisión»:** aparece debajo al tocar «Revisar», con el archivo, la hoja, las filas leídas y las que no cambian, y Errores, Altas, Cambios y Bajas con su cantidad, por fila y columna. «Antes de aplicar» aparece solo si hay algo para confirmar, con la confirmación de bajas y «Aplicar sin las N filas con errores».
+- **«Revisión»:** aparece debajo al tocar «Revisar», con el archivo, la hoja, las filas leídas y las que no cambian, y Errores, Altas, Cambios y Bajas con su cantidad, por fila y columna. «Cambios» se lee lado a lado (138): Fila, Código, Columna, Antes y Después, solo lo que cambió. «Antes de aplicar» aparece solo si hay algo para confirmar, con la confirmación de bajas y «Aplicar sin las N filas con errores».
 - **Las esperas:** «Revisando…» muestra la revisión como un esqueleto, y Cancelar sigue andando. «Aplicando…» deja la revisión atenuada, y Cancelar y la ✕ apagados, con «Esperá a que termine de aplicar.» en su tooltip.
 
 **Estados que se dibujan** (cada uno tiene que poder producirse; si no, es un bug):
@@ -142,6 +142,7 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
   - un dato por celda, en un renglón;
   - las fechas, completas, con fecha y hora en la zona de quien mira; nunca «hoy», «ayer» ni «hace…»;
   - sin leyendas (109): la vista previa es el teléfono al costado, la ayuda que sirve va en la (i) (116), y lo que no ayuda a decidir no va;
+  - toda tabla lleva una línea fina entre columnas y los números a la derecha, y cierra abajo (137);
   - lo dado de baja es una opción del filtro «Estado», no una vista aparte, en plural y de acuerdo con lo que se lista: en la lista de catálogos, «Activos · Dados de baja». En la tabla de opciones no hay filtro: cada una muestra su casilla (126).
 - **La tabla de opciones no se aplasta:** cada columna tiene su ancho mínimo (Texto y Detalle 12rem, Código 6rem, el valor y cada campo 8rem). Si no entra, la tabla se desplaza a lo ancho dentro de su caja, con la casilla, el número y «Texto» fijos a la izquierda y las acciones fijas a la derecha, sin ningún «hay más columnas a la derecha».
 - **Guardado (C3):** todo se guarda junto en un `PUT` del catálogo, con su versión, y viaja solo lo que cambió. Suma `deleteItems[]`, las opciones por borrar. Una que algo usa responde 409 `Forms.Catalog.ItemInUse`, con qué la usa por opción, y no se borra ninguna; en esta etapa nada usa una opción, y cada etapa suma su motivo.

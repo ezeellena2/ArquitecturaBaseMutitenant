@@ -72,7 +72,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-**Aprobados y publicados** en el lienzo v157; «Por qué respondió esto» se ajustó en la v158. La pantalla «Asistente» no tiene modelo, ni en el lienzo ni en ArquitecturaBase: el usuario eligió armarla como el editor de un formulario. Lo demás sigue al front real de ArquitecturaBase, con nuestras piezas: el chat con su modo y «Por qué lo mandó», la sugerencia, los audios, «Qué sugerir después», «Cómo empezó» e «Información del negocio».
+**Aprobados y publicados** en el lienzo v157; «Por qué respondió esto» se ajustó en la v158. La pantalla «Asistente» no tiene modelo, ni en el lienzo ni en ArquitecturaBase: el usuario eligió armarla como el editor de un formulario. Lo demás sigue al front real de ArquitecturaBase, con nuestras piezas: el chat con su modo y «Por qué lo mandó», la sugerencia, los audios, «Qué sugerir después», «Cómo empezó» e «Información del negocio». Con el traspaso 5 se redibujan las sugerencias, las reglas, el detalle y lo prellenado de las tarjetas (138 a 140).
 
 Datos de ejemplo: Grupo Delta vende y repara heladeras. Martina López escribe por Clientes y Tomás Acosta, por Internos.
 
@@ -87,7 +87,7 @@ Datos de ejemplo: Grupo Delta vende y repara heladeras. Martina López escribe p
 | `WA-Preguntas-Sin-Respuesta` y `M-WA-Preguntas-Sin-Respuesta` | en el panel de WhatsApp, por tema, con preguntas, personas y la última. El ⋮ tiene «Completar el conocimiento» y «Descartar». Sin nombres ni mensajes | acciones, descartar, el filtro de estado, descartados, vacío, cargando y error |
 | `WA-Chats-Asistente`, `WA-Chats-Sugerencia` y `WA-Chats-Audio`, con `M-WA-Conversacion-Asistente` | revisados: la barra de la bandeja y las fechas de WA-Chats, y el tope agotado. Sale «Sin respuesta del asistente», que pasa a `WA-Chats-Casos`. El audio, como allá: «Escuchar audio» y la transcripción debajo | los de antes, más escuchar el audio y «Ya no está» (D4) |
 | `FRM-Editor-Asistente` | redibujado: «Cuándo lo ofrece el asistente», con su (i), en «El formulario» de la pestaña Diseño | sin «Cuándo lo ofrece» y sin la función del asistente |
-| `FRM-Editor-Sugerencias` | redibujado: la pestaña «Sugerencias», como las reglas (79), con «Qué sugerir después», su historial al costado y ✎ 🗑 en cada una | editar, preguntar siempre, un dato de otro tipo, hacia un dado de baja, guardando, guardadas, sin sugerencias y sin el asistente |
+| `FRM-Editor-Sugerencias` | redibujado: la pestaña «Sugerencias», como las reglas (79), con «Qué sugerir después», su historial tras un botón (140), en pasos (138) y con ✎ 🗑 en cada una | editar, preguntar siempre, un dato de otro tipo, hacia un dado de baja, guardando, guardadas, sin sugerencias y sin el asistente |
 | `FRM-Editor-Reglas-23` y `M-FRM-Reglas-23` | «Armar desde un texto» junto a «Agregar regla» (63): la IA propone una regla normal, que queda abierta y sin guardar | armar, armando, la regla propuesta, no se pudo, tope agotado (grisado, con el motivo) y sin el asistente |
 | `FRM-Catalogos-23` y `FRM-Catalogo-Propuesta` | el estado «Por aprobar» en la lista y, redibujado, el catálogo propuesto, para leer, con quién lo pidió, «Descartar» y «Aprobar» | un filtro que no se pudo armar, descartar, aprobando, aprobado (queda activo) y sin permiso |
 | `FRM-Dar-De-Baja-23` y `FRM-Editor-Baja-23` | «Qué deja de pasar» suma que el asistente no lo ofrece y las sugerencias hacia el formulario, que vuelven si se reactiva | — |

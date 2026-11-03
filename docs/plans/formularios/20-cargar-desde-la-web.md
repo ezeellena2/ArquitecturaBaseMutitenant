@@ -58,7 +58,7 @@ Antes de empezar, en este orden:
 - mientras sube, el botón dice «Enviando…» con su aro, y una barra de avance, sin palabras, muestra cuánto falta (95 y 115);
 - lo cargado vive en la página: nunca va a la URL, al storage ni a la caché.
 
-**El panel** (84), al costado de la planilla, solo en la compu: «Mantener las respuestas para la siguiente» conserva todo menos los archivos, y «Pantalla completa» pasa lo cargado a la página. Al enviar, el aviso dice el número y la planilla se relee con la respuesta marcada.
+**El panel** (84), al costado de la planilla, solo en la compu, con las mismas zonas que la página (141): «Mantener las respuestas para la siguiente» conserva todo menos los archivos, y «Pantalla completa» pasa lo cargado a la página. Al enviar, el aviso dice el número y la planilla se relee con la respuesta marcada. **Cada envío es otra respuesta:** después de un envío que llegó, el front arma otra clave de idempotencia; solo un reintento después de un corte repite la anterior.
 
 **Las listas de catálogo:** una pregunta de catálogo es siempre una lista con búsqueda en el servidor, con el total, la descripción y «Mostrar 50 más». En el teléfono ocupa la pantalla, con «Listo» al pie al elegir varias. Una lista dependiente espera la respuesta de la que depende y se limpia si esa respuesta cambia.
 
@@ -68,26 +68,25 @@ Antes de empezar, en este orden:
 
 **En lo que ya existe:** «App» en «Canal» y en su filtro, en los conteos, la navegación y el Excel (90); en el detalle, «Recibida · … · en la app, la cargó …», sin «Abrir conversación»; en el editor, «Según otra respuesta»; al publicar, que queda solo para la app y por qué, y «Solo en la app» en «En WhatsApp» (98).
 
-### Cómo se arma cada pregunta (86 y 87)
+### Cómo se arma cada pregunta (86, 87 y 141)
 
 El autor decide el contenido. La app decide la forma, con una tabla fija por tipo:
 
 | Ocupa | Tipos de pregunta |
 | --- | --- |
-| Una columna | Número, fecha, sí o no, texto corto de hasta 30 caracteres y elegir una con lista desplegable |
-| Dos columnas | De un catálogo (una o varias), elegir una con opciones en fila (hasta cinco, de hasta 20 caracteres) y texto corto de hasta 80 |
+| Una columna | Número, fecha, sí o no, texto corto de hasta 80, elegir una, en fila o en lista, y elegir de un catálogo, una o varias |
 | El renglón entero | Texto largo, texto corto de más de 80 o sin largo máximo, elegir varias con opciones propias, foto, documento y grupo de líneas |
 
 - **Columnas:** tres en la compu, dos en la tableta y una en el teléfono y en el panel. Salen del ancho de la zona: tres desde 46 rem, dos desde 30 rem y una por debajo.
 - **Orden:** las preguntas no se reordenan, salvo las fotos y los documentos, que van al final. Una que no entra baja de renglón, con una línea entre cada renglón visible.
 - **Zonas** (88): cada título de sección arma una zona, y lo que va antes del primero queda en «Datos». Las fotos y los documentos van al final, en «Fotos y documentos». Todas se pliegan y arrancan abiertas, y su banda lleva solo el título, sin cantidades. Al enviar con errores, la zona plegada que los tiene se abre sola.
-- **Controles:** número y fecha son angostos; sí o no arranca sin nada marcado; hasta cinco opciones cortas van en fila, y con más, una lista; elegir varias muestra «Elegí hasta N»; el texto largo tiene de 2 a 6 renglones.
+- **Controles:** número y fecha son angostos; sí o no arranca sin nada marcado; elegir una con hasta cinco opciones las muestra en fila, aunque sean largas, y con más, una lista; elegir varias reparte sus casillas de arriba abajo en columnas, tres en la compu, dos en la tableta y en el panel y una en el teléfono, con «hasta N» en la etiqueta; el texto largo tiene de 2 a 6 renglones.
 - **La unidad** va en la etiqueta que escribe el autor (86).
 - **Lo condicional:** una pregunta aparece en su lugar y los renglones se recalculan. Lo oculto no se manda, y una zona sin preguntas visibles no se ve. **Un cálculo** no se ve al cargar, y aparece en «Enviada» (54 y 97).
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v154, con el armado del front real de ArquitecturaBase (126 y 134) y el recorrido guiado `cargar-una-respuesta`. El ejemplo es «Pedido de materiales», versión 4, que suma «Zona», «Proveedor» con su lista dependiente y «Foto del remito», y por eso queda solo para la app.
+Aprobados y publicados en el lienzo v154, con el armado del front real de ArquitecturaBase (126 y 134) y el recorrido guiado `cargar-una-respuesta`. Con el traspaso 5 se redibujan `FRM-Cargar-Respuesta` y su teléfono y `FRM-Cargar-Panel`, con los dos anchos, las casillas en columnas y el panel con zonas (141), y `FRM-Respuesta-20` y su teléfono, con el detalle alineado (139). El ejemplo es «Pedido de materiales», versión 4, que suma «Zona», «Proveedor» con su lista dependiente y «Foto del remito», y por eso queda solo para la app.
 
 | Tablero | Qué muestra |
 | --- | --- |
@@ -184,11 +183,11 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | --- | --- | --- | --- | --- |
 | F1 | Tipos, llamadas y subida con avance | suma a `F/src/modules/forms/api/` y `F/src/shared/api/httpClient.ts`, que hoy no tiene avance | `httpClient.ts` | zod estricto; avance y corte; `sameOperation` |
 | F2 | Entradas y lista | suma a la lista [E17] y a `FormRecordsPage.tsx` [E15] | esos mismos | quien solo carga; grisado; dados de baja |
-| F3 | El armado de una pregunta | `F/src/modules/forms/components/entry/EntryGrid.tsx`, `EntryZone.tsx` | el tablero | la tabla de anchos; `ResizeObserver`; lecciones 1 a 3 |
+| F3 | El armado de una pregunta | `F/src/modules/forms/components/entry/EntryGrid.tsx`, `EntryZone.tsx` | el tablero | la tabla de los dos anchos y las casillas en columnas (141); `ResizeObserver`; lecciones 1 a 3 |
 | F4 | Los controles y la lista de catálogo | `components/entry/EntryField.tsx`, `EntryCatalogList.tsx` | `QuestionEditor.tsx` [E14] | búsqueda, «Mostrar 50 más» y lista dependiente; axe |
 | F5 | Lo condicional | suma a `EntryGrid.tsx`, con `lib/conditions.ts` [E19] | el mismo | lo oculto no se manda; una zona sin preguntas visibles |
 | F6 | Los archivos | `components/entry/EntryFiles.tsx` | el tablero | límites antes de enviar; cámara; barra sin palabras |
-| F7 | La página, el panel y «Enviada» | `pages/LoadResponsePage.tsx`, `components/entry/EntryPanel.tsx`, `EntrySent.tsx`; `registration.ts` | `useEditForm` y `useUnsavedChangesGuard` | salir; versión nueva sin perder nada; mantener; lo cargado fuera del storage |
+| F7 | La página, el panel y «Enviada» | `pages/LoadResponsePage.tsx`, `components/entry/EntryPanel.tsx`, `EntrySent.tsx`; `registration.ts` | `useEditForm` y `useUnsavedChangesGuard` | salir; versión nueva sin perder nada; mantener, con otra clave en cada envío; el panel con zonas; lo cargado fuera del storage |
 | F8 | Publicar, editor y lo propio | suma a `PublishDialog.tsx` [E16], `CatalogQuestionFields.tsx` [E16] y `FormRecordsPage.tsx` | esos mismos | los tres casos; «Según otra respuesta»; una dirección ajena |
 
 **Al cerrar:** `docs/features/formularios.md` suma la sección.
@@ -211,6 +210,7 @@ Cada punto lleva su test, escrito durante la etapa:
 2. **Las columnas salen del ancho de la zona, no del de la pantalla.** Se mide con `ResizeObserver`.
 3. **En el panel, número y fecha siguen angostos.**
 4. **Las migas también miden su contenedor.**
+5. **Cada envío es otra respuesta.** Allá, con «Mantener las respuestas» y sin archivos, el segundo envío repetía la clave del primero y recibía su número. Después de un envío que llegó, el front arma otra clave; solo un reintento después de un corte repite la anterior.
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 

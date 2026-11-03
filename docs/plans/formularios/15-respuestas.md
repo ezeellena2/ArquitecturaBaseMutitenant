@@ -83,26 +83,26 @@ Antes de empezar, en este orden:
 - lo quitado y qué cuenta cada tarjeta se guardan por persona y formulario. Los filtros, no.
 
 **El detalle:**
-- **la vista rápida,** al costado de la planilla: el número, ↑ ↓ (también con el teclado), ✕ y Esc; debajo, el botón «Abrir en pantalla completa» y «Abrir conversación». Muestra la versión, quién la respondió y quién se la mandó, y la pestaña Respuesta, con las preguntas de su versión y los campos sellados de cada opción; Al pie dice en qué respuesta va («2 de 4»).
-- **la pantalla completa,** en `/org/formularios/:id/respuestas/:recordId/completa`: «Respuesta» y «Actividad» a todo el ancho y plegables. Arriba, el número, ↑ ↓ y «Abrir conversación». Actividad cuenta quién la mandó y quién la respondió. El formulario queda en las migas;
+- **la vista rápida,** al costado de la planilla (139): en el renglón del título, el número, «Abrir en pantalla completa» y «Abrir conversación» como íconos con su tooltip, ↑ ↓ (también con el teclado), ✕ y Esc. Debajo, los momentos, un renglón cada uno, con la fecha a la derecha y quién debajo, en gris: la mandó y la respondió. Después, la versión y la pestaña Respuesta, con las preguntas de su versión: la pregunta en gris y el valor en negro, y los campos sellados de cada opción alineados debajo de su valor, en una tabla chica con una línea a la izquierda, sin repetir el nombre del catálogo. Al pie dice en qué respuesta va («2 de 4»).
+- **la pantalla completa,** en `/org/formularios/:id/respuestas/:recordId/completa`: «Respuesta» y «Actividad» a todo el ancho y plegables; en «Respuesta», la pregunta tiene una columna fija, así el valor queda cerca. Arriba, el número, ↑ ↓ y «Abrir conversación». Actividad va en cuatro columnas fijas, Fecha, Qué pasó, Estado y Acciones (139): la mandó y la respondió. El formulario queda en las migas;
 - **ubicar una respuesta:** la posición, la anterior y la siguiente salen de una sola consulta con ventanas de SQL, con el filtro y el orden de la planilla. Lo ausente, lo excluido y lo ajeno dan el mismo 404;
 - **la dirección compartible** lleva solo el orden, las versiones y las columnas. Una entrada directa arranca sin filtros privados. «Volver» regresa a la misma fila, página, filtros y orden;
 - **«Abrir conversación»** aparece solo si quien mira puede atender esa bandeja, y no manda nada al abrir.
 
 ## Pantallas
 
-Aprobados en el lienzo v150. El recorrido guiado suma dos circuitos: de pegar los proveedores a verlos en la planilla y el Excel, y de armar los campos a ver el CUIT sellado en la planilla. Muestran solo lo que existe hasta acá (78).
+Aprobados en el lienzo v150; con el traspaso 5 se redibuja el detalle (139). El recorrido guiado suma dos circuitos: de pegar los proveedores a verlos en la planilla y el Excel, y de armar los campos a ver el CUIT sellado en la planilla. Muestran solo lo que existe hasta acá (78).
 
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
 | `FRM-Formularios-15` | la lista, con las columnas de respuestas y «Quien solo ve respuestas» | Aprobado |
 | `FRM-Respuestas` | la planilla, con «Columnas», «Empresa» y sus estados; suma «Elegir varias» y los campos sellados | Aprobado |
 | `FRM-Respuestas-Filtros` | «Más filtros», en un panel al costado | Aprobado |
-| `FRM-Respuesta` | la vista rápida | Aprobado |
+| `FRM-Respuesta` | la vista rápida | Se redibuja: el detalle alineado (139) |
 | `FRM-Respuestas-Exportar` | el diálogo de exportar | Aprobado |
 | `FRM-Tablero` | el tablero | Aprobado |
-| `M-FRM-Respuestas`, `M-FRM-Respuesta`, `M-FRM-Tablero` | los tres, en el teléfono. Tocar una fila abre `M-FRM-Respuesta`: no hay vista rápida | Aprobado |
-| `FRM-Respuesta-Completa` | la pantalla completa, con sus dos secciones plegadas y abiertas | Aprobado |
+| `M-FRM-Respuestas`, `M-FRM-Respuesta`, `M-FRM-Tablero` | los tres, en el teléfono. Tocar una fila abre `M-FRM-Respuesta`: no hay vista rápida | Aprobados; `M-FRM-Respuesta` se redibuja (139) |
+| `FRM-Respuesta-Completa` | la pantalla completa, con sus dos secciones plegadas y abiertas | Se redibuja: la actividad en columnas fijas (139) |
 | `M-FRM-Formularios-15` | la lista en el teléfono, con «N respuestas · estado» | Aprobado |
 
 **Lo que se corrigió en lo dibujado:**
@@ -116,7 +116,7 @@ Aprobados en el lienzo v150. El recorrido guiado suma dos circuitos: de pegar lo
 - con `forms.read` y sin `formrecords.read`: la lista sin las columnas de respuestas.
 
 **Mandan sobre esta spec en:**
-- **Las fichas del front:** un dato por celda, en un renglón; fechas completas, con hora, en la zona de quien mira; sin leyendas (109). Un texto que no entra se corta, con el completo en su tooltip.
+- **Las fichas del front:** un dato por celda, en un renglón; fechas completas, con hora, en la zona de quien mira; sin leyendas (109). Un texto que no entra se corta, con el completo en su tooltip. Toda tabla lleva una línea fina entre columnas, con los números a la derecha, y cierra abajo (137).
 - **La planilla que vuelve a leer** atenúa sus filas y corre una línea bajo el encabezado, y la lectura anterior no se puede tocar (115).
 - **La navegación (34 y 79):** el menú dice «Gestión de formularios», y su panel tiene Formularios y Catálogos, sin «Respuestas».
 - **La planilla** se desplaza a lo ancho dentro de su caja, con N° fijo a la izquierda. Es la tabla con columnas fijas de la E12.
@@ -208,8 +208,8 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | F2 | La lista y las pestañas | suma a `FormsPage.tsx` y a las pestañas [E14]; `registration.ts` | su tablero | las tres combinaciones de permisos; adónde abre el nombre |
 | F3 | La planilla | `pages/FormRecordsPage.tsx`, `lib/recordFilters.ts`, `lib/values.ts`, `components/records/CustomerTag.tsx` | su tablero | «—», «Sin respuesta», cero y `false`; lo privado fuera de la URL; 403 retira todo; axe |
 | F4 | «Más filtros» | `components/records/MoreFiltersPanel.tsx` | su tablero | borrador hasta aplicar; un conteo que falla no frena |
-| F5 | La vista rápida | `components/records/QuickView.tsx`, `RecordValues.tsx`; la excepción en la ficha de tablas | su tablero | teclado, Esc y foco útil; una respuesta tardía se descarta |
-| F6 | La pantalla completa | `pages/RecordFullPage.tsx` | su tablero | entrada directa sin filtros privados; «Volver» a la misma fila; el teléfono |
+| F5 | La vista rápida | `components/records/QuickView.tsx`, `RecordValues.tsx`; la excepción en la ficha de tablas | su tablero | teclado, Esc y foco útil; una respuesta tardía se descarta; los campos alineados debajo de su valor y las acciones como íconos (139) |
+| F6 | La pantalla completa | `pages/RecordFullPage.tsx` | su tablero | entrada directa sin filtros privados; «Volver» a la misma fila; el teléfono; la actividad en columnas fijas (139) |
 | F7 | Exportar | `components/records/ExportDialog.tsx` | su tablero | más de 10.000; `Busy`; «Exportando…» y el diálogo abierto hasta la respuesta |
 | F8 | El tablero | `components/records/FormDashboard.tsx`, sin biblioteca de gráficos | su tablero | quitar, agregar, contar y volver al automático; ver como tabla; axe |
 
@@ -237,6 +237,7 @@ Cada punto lleva su test, escrito durante la etapa:
 4. **Traer todos los ids para tres vecinos:** la navegación es una ventana de SQL.
 5. **El EXPLAIN corre sobre el SQL real de EF,** no sobre uno escrito a mano.
 6. **Un 404 antes de revisar el permiso:** el permiso se comprueba primero, y un 403 retira de la pantalla lo que había.
+7. **Lo elegido se nombra aunque no esté en la página.** Allá, el filtro de una pregunta de catálogo decía «Valor no disponible», porque la columna no trae sus opciones: el nombre de lo elegido viaja con el cambio y la planilla lo recuerda, como `knownItems` en el front.
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 

@@ -53,6 +53,8 @@ Valen los criterios de la E14 y la decisión 43. Datos de ejemplo:
   - «Orden de trabajo» (Mantenimiento): retirada;
   - «Comprobante de transferencia» (Ventas, para clientes): publicada.
 
+Con el traspaso 5 se redibujan `FRM-Editor-Reglas-Plantilla`, `M-FRM-Reglas-Plantilla` y `Plat-FRM-Plantilla-Reglas`: las reglas se leen en pasos (138) y el historial va detrás de su botón (140).
+
 **Aprobados y publicados** en el lienzo v156, con las piezas de la 14 y la 21 ya alineadas a ArquitecturaBase, que no tiene biblioteca, y los recorridos guiados `armar-una-plantilla` y `usar-una-plantilla`:
 
 | Tablero | Qué muestra | Estados |
@@ -68,7 +70,7 @@ Valen los criterios de la E14 y la decisión 43. Datos de ejemplo:
 | `FRM-Biblioteca` y `M-FRM-Biblioteca` | la biblioteca de formularios estándar (40): tarjetas por categoría, con un buscador, y en qué formulario propio se usó cada plantilla | sin resultados, sin plantillas, cargando y error |
 | `FRM-Plantilla` y `M-FRM-Plantilla` | la vista de una plantilla: la descripción y sus datos, las preguntas, los catálogos que trae, las reglas de ejemplo en palabras (con «el rol que elegís al usarla» y el sugerido) y el teléfono; «Usar esta plantilla» | sin permiso de catálogos, cargando y ya no está |
 | `FRM-Plantilla-Usar` | diálogo con el nombre y el prefijo propuesto; al confirmar, abre el formulario nuevo | prefijo tomado: se propone VIS2, con el porqué en la (i); falta el nombre, creando y se retiró |
-| `FRM-Editor-Reglas-Plantilla` y `M-FRM-Reglas-Plantilla` | el formulario nuevo, en borrador, y en su pestaña «Reglas» las reglas precargadas, sin guardar: «Elegí…» en el rol, la persona, la dirección y la plantilla de WhatsApp, con «Rol sugerido» debajo. El historial dice que todavía no se guardaron y que vienen de la plantilla | elegir el rol, guardar sin elegir (se marca lo que falta, 43), una pregunta borrada (marcada en la condición y en el texto), guardando y reglas guardadas |
+| `FRM-Editor-Reglas-Plantilla` y `M-FRM-Reglas-Plantilla` | el formulario nuevo, en borrador, y en su pestaña «Reglas» las reglas precargadas, sin guardar: «Elegí…» en el rol, la persona, la dirección y la plantilla de WhatsApp, con «Rol sugerido» debajo. «Historial» queda apagado, con «Todavía no se guardaron: vienen de la plantilla.» en su tooltip (140) | elegir el rol, guardar sin elegir (se marca lo que falta, 43), una pregunta borrada (marcada en la condición y en el texto), guardando y reglas guardadas |
 | `Cuenta-Plat` (ajuste) | los permisos del operador suman «Administrar la biblioteca de formularios» | — |
 
 Sin «Textos en», sin el inglés obligatorio, sin «Cambios sin guardar» ni «Cambios sin publicar», sin el número de versión en la lista ni en la banda, y sin textos junto a los botones (35 y 43). La lectura de documentos no va en esta etapa.
