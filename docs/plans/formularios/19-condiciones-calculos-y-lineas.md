@@ -60,7 +60,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Dibujados en la v153, para aprobar, con el [texto de la etapa](19-texto-diseno.md) y el recorrido guiado `un-pedido-con-renglones`. El ejemplo es «Pedido de materiales». Muestran solo lo que existe hasta acá (78).
+Aprobados y publicados en el lienzo v153, con el recorrido guiado `un-pedido-con-renglones`. El ejemplo es «Pedido de materiales». Muestran solo lo que existe hasta acá (78).
 
 | Tablero | Qué muestra |
 | --- | --- |
