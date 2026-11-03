@@ -22,14 +22,14 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 11 · WhatsApp de atención | Cerrada el 2026-10-21. El alta de una organización con un número real pasó a la I1 de la 10 | [WhatsApp](../features/whatsapp.md), [ADR 0038](../decisions/0038-whatsapp-de-atencion.md) |
 | 9 · Endurecimiento | Cerrada | [Identidad](../features/identidad.md), [Plataforma](../features/plataforma.md), [cuotas](../rules/cuotas.md), [caché](../rules/cache.md), [ADR 0052](../decisions/0052-cache-compartida-redis.md) |
 | 10 · Operación | Pendiente, para después del bloque (decisión 123). El plan corto está listo, con las decisiones del usuario; la F5 de botones pasó a la base de la 12 | [Plan](2026-10-16-etapa-10-despliegue.md), [manual de operación](../operations/runbook.md) |
-| Base de la 12 | Pendiente. Spec lista: los botones (la F5 de la 10), la campana en el núcleo y la letra al 85 %, que confirmó el usuario | [Spec](formularios/base-de-la-12.md) |
+| Base de la 12 | Pendiente. Spec lista: los botones (la F5 de la 10) y la campana en el núcleo; la raíz al 75 % en la compu ya está programada | [Spec](formularios/base-de-la-12.md) |
 | 12 · Catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150 | [Spec](formularios/12-catalogos.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
 | 13 · Campos de los catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150 | [Spec](formularios/13-campos.md) |
 | 14 · Formularios | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150 | [Spec](formularios/14-formularios.md) |
 | 15 · Respuestas, planilla y Excel | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150 | [Spec](formularios/15-respuestas.md) |
 | 16 · Datos de las personas y filtros | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150 | [Spec](formularios/16-datos-de-las-personas.md) |
 | 17 · Ciclo de vida y copiar | Pendiente. Spec lista, con los tableros aprobados en el lienzo v151 | [Spec](formularios/17-ciclo-de-vida.md) |
-| 18 · Fotos y documentos | Pendiente. Spec lista, con los archivos del chat; tableros a revisar y por dibujar | [Spec](formularios/18-fotos-y-documentos.md) |
+| 18 · Fotos y documentos | Pendiente. Spec lista, con los archivos del chat; sus tableros se dibujaron en la v152, sin publicar | [Spec](formularios/18-fotos-y-documentos.md) |
 | 19 · Condiciones, cálculos y líneas | Pendiente. Spec lista; tableros por dibujar, y antes de planificar, la prueba con Meta | [Spec](formularios/19-condiciones-calculos-y-lineas.md) |
 | 20 · Cargar desde la web | Pendiente. Spec lista; tableros por dibujar | [Spec](formularios/20-cargar-desde-la-web.md) |
 | 21 · Reglas, aprobación y PDF | Pendiente. Spec lista; tableros a revisar, 4 que se redibujan y otros por dibujar | [Spec](formularios/21-reglas-y-aprobacion.md) |
@@ -63,7 +63,7 @@ Una organización arma formularios, los manda por WhatsApp a sus empleados y a s
   - los carteles de las pantallas cerradas pasan a la banda o a la campana: Usuario, Cuenta y Organización de Plataforma, Legales, Recuperaciones, Inicio personal y Mi cuenta;
   - la pestaña «Miembros» de una empresa no se dibuja sin el permiso (es un error del sistema real);
   - los filtros de Chats en una fila;
-  - el tamaño general: la letra de la raíz al 85 %, con los tamaños de las clases en rem en lugar de px (sin `zoom`, que corre los menús); lo confirmó el usuario el 25/10;
+  - el tamaño general, ya programado: la raíz al 75 % en la compu, con las medidas en rem (sin `zoom`, que corre los menús); lo confirmó el usuario el 25/10;
   - la versión nueva se avisa en la campana, sin franja, y la columna ordenada muestra ▲ o ▼ (decisiones del usuario del 25/10);
   - «Dar de baja» y «Reactivar» en todo el sistema, con el estado «De baja»: Usuarios dejan «Deshabilitar», Roles y Empresas, «Inactivar», y los miembros de una empresa, «Quitar» y «Volver a sumar», en el front, en los textos del back y en sus tests (decisión del usuario del 25/10);
   - borrar la cuenta propia dice «Borrar mi cuenta» y su estado, «Por borrar», en lugar de «Baja pedida» (decisión del usuario del 26/10). Cambian también los textos de los correos y de las plantillas de WhatsApp de la cuenta: se actualiza `docs/operations/whatsapp-plantillas.md` y las plantillas se vuelven a aprobar en Meta, con el mismo nombre (eso lo hace el usuario);

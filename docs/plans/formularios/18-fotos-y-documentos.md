@@ -7,7 +7,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T5, T21, la §6, puntos 6 a 8, la §14 y la §16; la [E15](15-respuestas.md): columnas, filtros, Excel y detalle; y la [E17](17-ciclo-de-vida.md): copiar.
-2. **Decisiones** de la hoja de ruta: 23, 35, 42, 43, 48 y 78. De [WhatsApp](../../features/whatsapp.md#decisiones-del-usuario-e11): D4 y D7.
+2. **Decisiones** de la hoja de ruta: 23, 35, 42, 43, 48, 78 y 133. De [WhatsApp](../../features/whatsapp.md#decisiones-del-usuario-e11): D4 y D7.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -27,7 +27,7 @@ Antes de empezar, en este orden:
 ## Qué se construye
 
 **Las preguntas:**
-- **Foto:** «Cámara o galería» o «Solo cámara». **Documento:** PDF, Excel, Word, JPEG y PNG, los que se elijan;
+- **Foto:** «Cámara o galería» o «Solo cámara». **Documento:** PDF, Excel, Word, JPEG y PNG, sin elegir (133);
 - mínimo y máximo por pregunta. Obligatoria quiere decir mínimo 1;
 - el borrador se guarda igual, y no se publica si la suma de los máximos pasa de 10 o no hay almacenamiento. Sin almacenamiento, los tipos se ven grisados, con el motivo en su tooltip;
 - **tope por archivo:** `Forms:MaxFileSizeMiB`, de 1 a 25, con `ValidateOnStart`, que se sella con la versión. Hasta 10 archivos y 100 MiB por respuesta, por el tope de Meta;
@@ -72,19 +72,25 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Parte está aprobada en el lienzo v130, y Diseño la revisa con el [texto de la etapa](18-texto-diseno.md). Muestran solo lo que existe hasta acá (78).
+Redibujados en la v152 con el armado de ArquitecturaBase (133), para aprobar, con el [texto de la etapa](18-texto-diseno.md) y sus dos recorridos guiados, `fotos-y-documentos` y `archivos-en-el-chat`. Los archivos del chat no existen allá. Muestran solo lo que existe hasta acá (78).
 
-| Tablero | Qué muestra | Estado |
-| --- | --- | --- |
-| `FRM-Editor-18` y `M-FRM-Editor-18` | las preguntas de foto y documento, el tope en la (i) de «Cuántas» y «Sin almacenamiento» | A revisar |
-| `FRM-Publicar-18` | «Más de 10 archivos» | A revisar |
-| `WA-Chats-Respuesta-18` y `M-WA-Conversacion-Respuesta-18` | la tarjeta: bajando, reintentando, con fotos y un documento, muchas fotos y los dos rechazos | A revisar |
-| `WA-Chats-Visor` y `M-WA-Chats-Visor` | el visor | A revisar |
-| `FRM-Respuestas-18` y `M-FRM-Respuestas-18` | la planilla con la columna de archivos, su filtro en «Más filtros» y la (i) de exportar | Por dibujar |
-| `FRM-Respuesta-18` y `M-FRM-Respuesta-18` | el detalle, con «Fotos» y el visor | Por dibujar |
-| `FRM-Respuesta-Completa-18` | la pantalla completa, con «Descargar ▾» | Por dibujar |
-| `FRM-Dar-De-Baja-18` y `FRM-Editor-Baja-18` | «Lo que se conserva» suma las fotos y los documentos | Por dibujar |
-| `WA-Chats-Adjuntos` y `M-WA-Chats-Adjuntos` | los archivos del chat: adjuntar, subiendo, enviado, no se pudo, fuera de las 24 horas y un archivo recibido | Por dibujar |
+| Tablero | Qué muestra |
+| --- | --- |
+| `FRM-Editor-18` y `M-FRM-Editor-18` | las preguntas de foto y documento, «Cuántas fotos» o «Cuántos documentos» con su (i), y «Sin almacenamiento» |
+| `FRM-Publicar-18` | «Más de 10 archivos» |
+| `WA-Chats-Respuesta-18` y `M-WA-Conversacion-Respuesta-18` | la tarjeta: bajando, reintentando, con fotos y un documento, muchas fotos y los dos rechazos |
+| `WA-Chats-Visor` y `M-WA-Chats-Visor` | el visor: el título, en qué foto va, la tira de miniaturas y, al pie, el nombre, el tamaño y «Descargar» |
+| `FRM-Respuestas-18` y `M-FRM-Respuestas-18` | la planilla con la columna de archivos, el visor, su sección en «Más filtros» y la (i) de exportar |
+| `FRM-Respuesta-18` y `M-FRM-Respuesta-18` | el detalle, con la pestaña «Fotos» y el visor |
+| `FRM-Respuesta-Completa-18` | la pantalla completa, con «Descargar ▾» |
+| `FRM-Dar-De-Baja-18` | «Lo que se conserva» suma las fotos y los documentos |
+| `WA-Chats-Adjuntos` y `M-WA-Chats-Adjuntos` | los archivos del chat: lo que llega, antes de mandar, demasiado grande, enviando, enviado, no se pudo y fuera de las 24 horas |
+
+**La planilla:** la foto dice su miniatura y «2 fotos», y el documento, «1 PDF». «Sin respuesta» si no se respondió y «—» si la pregunta no existía en esa versión. En el teléfono, en la tercera línea de la fila.
+
+**«Más filtros»:** cada pregunta de archivo tiene su sección, solo con «Respuesta»: Todas, Con respuesta, Sin respuesta y La pregunta no existía, con cuántas tiene cada una.
+
+**El chat:** el clip va al lado de la nota interna. Abre «Mandar un archivo a …», con la vista del archivo, su nombre, su tamaño y «Texto», opcional. Si pasa el tope, lo dice debajo del archivo y «Enviar» queda grisado.
 
 **Mandan sobre esta spec en:**
 - **«Sin almacenamiento»:** Foto y Documento aparecen grisados, con el motivo en su tooltip (43), no ocultos, porque se resuelve conectando el almacenamiento.
@@ -107,7 +113,7 @@ Parte está aprobada en el lienzo v130, y Diseño la revisa con el [texto de la 
 
 | Ruta | Qué suma |
 | --- | --- |
-| `GET /{id}` y `PUT /{id}/draft` | `questions[]`: tipos `Photo` y `Document`, con `photoSource?`, `documentKinds?`, `minFiles?` y `maxFiles?` |
+| `GET /{id}` y `PUT /{id}/draft` | `questions[]`: tipos `Photo` y `Document`, con `photoSource?`, `minFiles?` y `maxFiles?` |
 | `POST /{id}/publication-checks` | `Forms.Draft.TooManyFiles` y `Forms.Publication.FilesUnavailable` |
 | `GET /{id}/records/columns` | columnas de tipo `Photo` y `Document` |
 | `POST …/records/search` y el detalle | el valor `{kind: "files", files[{id, fieldId, name, kind, mediaType, size, hasThumbnail}]}`. La planilla trae el primero y la cantidad |
@@ -135,7 +141,7 @@ Los mensajes de la conversación suman `file?{id, name, kind, mediaType, size, s
 | --- | --- | --- |
 | `Forms.Record.FileNotFound` | NotFound | ajeno, inexistente, o falta el archivo guardado |
 | `Forms.Draft.TooManyFiles` | Validation (`questions`) | la suma de los máximos pasa de 10 |
-| `Forms.Draft.QuestionInvalid` | Validation | suma mínimo y máximo de archivos, u origen o tipos fuera de regla |
+| `Forms.Draft.QuestionInvalid` | Validation | suma mínimo y máximo de archivos, u origen fuera de regla |
 | `Forms.Publication.FilesUnavailable` | ServiceUnavailable | una pregunta de archivo, sin almacenamiento |
 | `Forms.Record.FileRejected` | Validation (`fieldId`) | no coinciden hash, tamaño o tipo |
 | `Forms.Record.FileDownloadFailed` | Failure (`fieldId`) | no bajó tras los reintentos |
@@ -201,7 +207,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
 | F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` y `F/src/modules/whatsapp/chats/` | la API de la E17 | zod estricto con los ejemplos |
-| F2 | El editor | suma a `QuestionEditor.tsx` [E14] | su tablero | el tope en la (i) de «Cuántas»; sin almacenamiento |
+| F2 | El editor | suma a `QuestionEditor.tsx` [E14] | su tablero | el tope en la (i) de «Cuántas fotos» y «Cuántos documentos»; sin almacenamiento |
 | F3 | El visor común | `F/src/shared/ui/PhotoViewer.tsx` | su tablero | teclado y foco; solo las miniaturas visibles; perder el permiso lo cierra; axe |
 | F4 | La tarjeta del chat | suma a la tarjeta [E14] | el tablero | los estados; «Mandar de nuevo» |
 | F5 | Planilla, detalle y Excel | suma a `FormRecordsPage.tsx`, `QuickView.tsx`, `RecordFullPage.tsx`, `RecordValues.tsx` y `ExportDialog.tsx` [E15] | su tablero | columna, pestaña «Fotos» y «Descargar ▾» |

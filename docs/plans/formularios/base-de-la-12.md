@@ -45,7 +45,7 @@ Antes de empezar, en este orden:
 
 **Otro acceso:** un link del otro acceso abre esa pantalla, que ofrece entrar con ese acceso y después abre el link.
 
-**El tamaño general:** la letra de la raíz al 85 %, con los tamaños de las clases en rem en lugar de px, sin `zoom`, que corre los menús.
+**El tamaño general:** ya está en el front (2026-11-02): las medidas en rem y la raíz al 75 % en la compu, desde 1024 con puntero fino, sin `zoom`, que corre los menús. El teléfono y la tablet quedan igual.
 
 **Un error del sistema real:** la pestaña «Miembros» de una empresa no se dibuja sin el permiso.
 
@@ -142,7 +142,7 @@ Abreviaturas: `A/`, `I/` y `P/` son las capas del back, y `F/`, el front.
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
-- **La letra al 85 %,** confirmada por el usuario el 25/10.
+- **La raíz al 75 % en la compu,** decisión del usuario del 2026-11-02, como en ArquitecturaBase. Reemplaza el 85 % del 25/10.
 - **Los avisos no se guardan:** salen de las fuentes, como «Para resolver», y se guarda solo qué abrió cada persona.
 - **Ningún rótulo explica un botón** (43).
 - **El botón que trabaja dice qué hace** (115), y **la ayuda va en la (i)**, con el aviso importante para lo que no se puede hacer (116).

@@ -140,7 +140,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - lo que suma se ve en todas las pantallas que ya existen: un tipo de pregunta nuevo, en la planilla, el detalle, el Excel y el PDF, si ya están;
 - nada nombra, prueba ni dibuja algo de una etapa posterior: eso pasa a esa etapa.
 
-**La base, antes de la E12:** lo que lista el [plan de desarrollo](2026-09-27-plan-de-desarrollo.md#etapas-12-a-25-formularios-por-whatsapp): los botones (la F5 que sale de la 10), la campana en el núcleo, donde también se avisa la versión nueva, y la letra al 85 %, que confirmó el usuario. La prueba con Meta de la E14 en adelante pide una organización con su número conectado, y queda para cuando esté la I1 de la 10 (123).
+**La base, antes de la E12:** lo que lista el [plan de desarrollo](2026-09-27-plan-de-desarrollo.md#etapas-12-a-25-formularios-por-whatsapp): los botones (la F5 que sale de la 10), la campana en el núcleo, donde también se avisa la versión nueva,, que confirmó el usuario. La prueba con Meta de la E14 en adelante pide una organización con su número conectado, y queda para cuando esté la I1 de la 10 (123).
 
 **Criterios.** En todas las etapas rige la lista de control de la skill `/puerta`: doce puntos que salen de los 142 problemas de los reviews de ArquitecturaBase ([§4](#4-lo-que-aprendimos-en-arquitecturabase)). Cada etapa suma los suyos. El plan de la etapa los toma como lista de control, y cada punto que aplica lleva su test.
 
@@ -627,6 +627,7 @@ Elegidas por el usuario el 2026-11-02, al comparar el lienzo con el front real d
 130. **Lo que vuelve con el armado (126):** las filas con acciones a la vista llevan dos líneas, el nombre y su detalle, como excepción a «un dato por celda, en un renglón», que sigue valiendo en las tablas; la vista previa de un catálogo trae «Una opción | Varias»; y la clave de un campo o de un dato se muestra, con su (i), y queda con candado al guardar.
 131. **Reactivar se abre en el formulario, como en ArquitecturaBase (E17).** Es publicar: «Reactivar» de la lista lleva al formulario y abre ahí el diálogo, con las zonas de «Publicar» (112), «Próxima respuesta» en «Qué se publica» y el botón «Reactivar con la versión N».
 132. **Con respuestas, «Borrar» queda grisado, con el motivo (43).** Cambia lo que decía la E17: antes no aparecía. Allá se lee una línea en el menú; acá va en su tooltip y, en el teléfono, debajo de la acción.
+133. **Una pregunta de documento acepta siempre PDF, Excel, Word, JPEG y PNG, como en ArquitecturaBase (E18).** No se eligen por pregunta: lo dice la (i) de «Cuántos documentos». Cambia lo que decía la E18.
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
