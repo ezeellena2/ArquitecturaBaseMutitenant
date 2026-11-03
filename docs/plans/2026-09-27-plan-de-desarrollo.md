@@ -35,7 +35,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 21 · Reglas, aprobación y PDF | Pendiente. Spec lista y tableros aprobados en el lienzo v155; el traspaso 5 redibuja las reglas, la planilla y el detalle. Antes de planificar, la prueba con Meta | [Spec](formularios/21-reglas-y-aprobacion.md) |
 | 22 · Biblioteca de plantillas | Pendiente. Spec lista y tableros aprobados en el lienzo v156; el traspaso 5 redibuja las reglas | [Spec](formularios/22-biblioteca.md) |
 | 23 · Asistente con Casos | Pendiente. Spec lista y tableros aprobados en el lienzo v157; el traspaso 5 redibuja los chats, las sugerencias y el detalle | [Spec](formularios/23-asistente.md) |
-| 24 · Varios asistentes | Pendiente. Spec lista; sus tableros se dibujaron en la v158, sin publicar | [Spec](formularios/24-varios-asistentes.md) |
+| 24 · Varios asistentes | Pendiente. Spec lista y tableros aprobados en el lienzo v158 | [Spec](formularios/24-varios-asistentes.md) |
 | 25 · Documentos por WhatsApp | Pendiente. Spec lista; tableros por dibujar, y antes de planificar, la prueba con Meta del archivo precargado | [Spec](formularios/25-documentos.md) |
 
 ## Etapa 10: despliegue y operación

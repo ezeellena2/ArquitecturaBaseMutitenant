@@ -31,7 +31,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Diseño los dibujó con el [texto de la etapa](24-texto-diseno.md). **Dibujados** en el lienzo v158 (sin publicar: espera el OK del usuario). En ArquitecturaBase no existe: todo sale de piezas de este lienzo. Muestran solo lo que existe hasta acá (78).
+**Aprobados y publicados** en el lienzo v158. En ArquitecturaBase no existe: todo sale de piezas de este lienzo. Muestran solo lo que existe hasta acá (78).
 
 Datos de ejemplo: el principal, Delta; Delta Soporte y Delta Ventas, de esos equipos, y Delta Obras, de baja.
 
