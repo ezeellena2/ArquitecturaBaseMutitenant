@@ -72,26 +72,42 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Diseño los dibuja o los revisa con el [texto de la etapa](23-texto-diseno.md). Los ejemplos del asistente van como recorrido de la guía. Muestran solo lo que existe hasta acá (78).
+Diseño los dibujó con el [texto de la etapa](23-texto-diseno.md). **Dibujados** en el lienzo v157 (sin publicar: espera el OK del usuario). La pantalla «Asistente» no tiene modelo, ni en el lienzo ni en ArquitecturaBase: el usuario eligió armarla como el editor de un formulario. Lo demás sigue al front real de ArquitecturaBase, con nuestras piezas: el chat con su modo y «Por qué lo mandó», la sugerencia, los audios, «Qué sugerir después», «Cómo empezó» e «Información del negocio».
 
-| Tablero | Qué muestra | Estado |
+Datos de ejemplo: Grupo Delta vende y repara heladeras. Martina López escribe por Clientes y Tomás Acosta, por Internos.
+
+| Tablero | Qué muestra | Estados |
 | --- | --- | --- |
-| `WA-Asistente` y su teléfono | la pantalla, con Perfil, Conocimiento, Casos y Límites, y un solo Guardar | Por dibujar |
-| `WA-Asistente-Casos` | los casos, el bloque de formularios y «Cualquier otra cosa» | Por dibujar |
-| `WA-Asistente-Probar` | las acciones en orden, y «No se mandó nada» | Por dibujar |
-| `WA-Asistente-Limites` | los límites por bandeja, el tope de ofrecimientos y el conocimiento | Por dibujar |
-| `WA-Chats-Casos` y su teléfono | el porqué, derivar, «Necesita una persona», el texto exacto, los botones y el borrador | Por dibujar |
-| `WA-Modo-Atencion` y su teléfono | dentro de la pantalla «Asistente», por bandeja; en el chat, cambiar el modo, fijarlo y «Resuelto» | Por dibujar |
-| `WA-Preguntas-Sin-Respuesta` y su teléfono | en el panel de WhatsApp, por tema, con «Completar el conocimiento» y «Descartar» | Por dibujar |
-| `FRM-Catalogos-23` | el estado «Por aprobar» en la lista | Por dibujar |
-| `FRM-Editor-Reglas-23` y su teléfono | «Armar desde un texto», grisado con el tope agotado | Por dibujar |
-| `FRM-Dar-De-Baja-23` y `FRM-Editor-Baja-23` | «Qué deja de pasar» suma el asistente y las sugerencias | Por dibujar |
-| `Campana-23` y su teléfono | las preguntas sin respuesta | Por dibujar |
-| `Plat-Asistente-Config-23` y su teléfono | los máximos de la plataforma | Por dibujar |
-| `WA-Chats-Asistente`, `WA-Chats-Sugerencia`, `WA-Chats-Audio`, `FRM-Faltan` y `FRM-Respuesta-Cadena`, con sus teléfonos | lo aprobado en el lienzo v133 | A revisar |
-| `FRM-Editor-Asistente`, `FRM-Editor-Sugerencias` y `FRM-Catalogo-Propuesta` | como pestañas o secciones, sin «Textos en» ni «Cambios sin guardar», y, como estado, una sugerencia hacia un dado de baja. El catálogo propuesto dice «Aprobar» y «Descartar», sin «Aprobar y activar» | Se redibujan |
+| `WA-Asistente` y `M-WA-Asistente` | «Asistente» en el panel de WhatsApp: Perfil, Conocimiento, Casos, Límites y Atención, un solo Guardar en la banda y «Probar» siempre al costado. Se entra por Casos | perfil, sin perfil (abre en Perfil, con «Cualquier otra cosa» en «No responder»), faltan los datos, con cambios, guardando, guardado, otra persona guardó, descartar y cargando |
+| `WA-Asistente-Casos` | los casos propios con ↑ ↓ ✎ 🗑 (127), que se abren en el lugar: cuándo, para quién, el tipo de entrada, qué hacer y si está activo. Debajo, el bloque fijo de formularios y «Cualquier otra cosa» | editar, el menú de las seis acciones, preguntar con botones, texto exacto, mandar un formulario, derivar, caso nuevo, con errores, «Cualquier otra cosa» y sin perfil |
+| `WA-Asistente-Probar` | lo que haría, en orden y hasta tres acciones: cada una con su caso, su porqué, lo que usó y cómo la vería la persona. Al final, «No se mandó nada» | cuatro pruebas (envíos a Córdoba, la heladera, hablar con alguien, hola y la hora), probando, con cambios sin guardar y tope de IA agotado (grisado, con el motivo en su tooltip) |
+| `WA-Asistente-Limites` | Límites, por bandeja (65), con el tope de ofrecimientos (66) y el máximo de la plataforma debajo de cada número; Conocimiento, con las secciones de «Información del negocio» (46) | Internos, sobre el máximo, una sección vacía y editar una pregunta frecuente |
+| `WA-Modo-Atencion` y `M-WA-Modo-Atencion` | la pestaña Atención, por bandeja: quién atiende los chats nuevos y cuándo vuelve un chat (52). En el teléfono, el ⋮ del chat: pasar de modo, fijarlo y «Marcar como resuelta» | Internos, una persona atiende, al marcarlo «Resuelto», guardando y guardado; en el teléfono, atención manual, fijada y resuelta |
+| `WA-Chats-Casos` y `M-WA-Chats-Casos` | el chat de Clientes con los casos: «Por qué respondió esto» debajo de cada acción y derivar con «Necesita una persona» en la cabecera, la lista y su filtro. Muestra también el texto exacto, los botones, el tope del día y el borrador en atención manual | por qué respondió, sin la información (deriva), un formulario, botones, texto exacto, hablar con alguien, una ráfaga con tres acciones, el tope, el borrador, cambiar el modo, fijada, resuelta y el filtro |
+| `WA-Preguntas-Sin-Respuesta` y `M-WA-Preguntas-Sin-Respuesta` | en el panel de WhatsApp, por tema, con preguntas, personas y la última. El ⋮ tiene «Completar el conocimiento» y «Descartar». Sin nombres ni mensajes | acciones, descartar, el filtro de estado, descartados, vacío, cargando y error |
+| `WA-Chats-Asistente`, `WA-Chats-Sugerencia` y `WA-Chats-Audio`, con `M-WA-Conversacion-Asistente` | revisados: la barra de la bandeja y las fechas de WA-Chats, y el tope agotado. Sale «Sin respuesta del asistente», que pasa a `WA-Chats-Casos`. El audio, como allá: «Escuchar audio» y la transcripción debajo | los de antes, más escuchar el audio y «Ya no está» (D4) |
+| `FRM-Editor-Asistente` | redibujado: «Cuándo lo ofrece el asistente», con su (i), en «El formulario» de la pestaña Diseño | sin «Cuándo lo ofrece» y sin la función del asistente |
+| `FRM-Editor-Sugerencias` | redibujado: la pestaña «Sugerencias», como las reglas (79), con «Qué sugerir después», su historial al costado y ✎ 🗑 en cada una | editar, preguntar siempre, un dato de otro tipo, hacia un dado de baja, guardando, guardadas, sin sugerencias y sin el asistente |
+| `FRM-Editor-Reglas-23` y `M-FRM-Reglas-23` | «Armar desde un texto» junto a «Agregar regla» (63): la IA propone una regla normal, que queda abierta y sin guardar | armar, armando, la regla propuesta, no se pudo, tope agotado (grisado, con el motivo) y sin el asistente |
+| `FRM-Catalogos-23` y `FRM-Catalogo-Propuesta` | el estado «Por aprobar» en la lista y, redibujado, el catálogo propuesto, para leer, con quién lo pidió, «Descartar» y «Aprobar» | un filtro que no se pudo armar, descartar, aprobando, aprobado (queda activo) y sin permiso |
+| `FRM-Dar-De-Baja-23` y `FRM-Editor-Baja-23` | «Qué deja de pasar» suma que el asistente no lo ofrece y las sugerencias hacia el formulario, que vuelven si se reactiva | — |
+| `FRM-Faltan` y `M-FRM-Faltan` | revisados: la banda cuenta temas y pedidos, y las fechas van completas | los de antes |
+| `FRM-Respuesta-Cadena` | revisado, sobre la vista rápida de la 21: «Cómo empezó», con «Ver los datos propuestos», y la cadena de respuestas | los datos que propuso y la cadena |
+| `Campana-23` y `M-Campana-23` | la campana suma las preguntas sin respuesta, para quien administra WhatsApp | — |
+| `Plat-Asistente-Config-23` y `M-Plat-Asistente-Config-23` | «Máximos del asistente de WhatsApp»: el largo de la respuesta, y las respuestas y los formularios que ofrece por conversación y día | — |
 
-**Mandan sobre esta spec en:** una consulta ya no queda sin respuesta: `WA-Chats-Casos` reemplaza «Sin respuesta del asistente» de `WA-Chats-Asistente`. «La IA decide» es `Assistant`, y «Preguntar siempre», `Always`. «No pudimos pasar este audio a texto» cubre también el tope agotado. Un audio sigue la retención del chat (D4).
+El recorrido guiado «Los casos del asistente» muestra a Lucía armando y probando los casos, y a Martina escribiendo, hasta la ráfaga con tres acciones.
+
+**Mandan sobre esta spec en:**
+- **Una consulta ya no queda sin respuesta:** `WA-Chats-Casos` reemplaza «Sin respuesta del asistente» de `WA-Chats-Asistente`.
+- **Los nombres de la API:** «La IA decide» es `Assistant`, y «Preguntar siempre», `Always`.
+- **Los audios:** «No pudimos pasar este audio a texto» cubre también el tope agotado, y un audio sigue la retención del chat (D4).
+- **Probar** prueba lo guardado: con cambios sin guardar queda grisado, con el motivo en su tooltip.
+- **Atención** es la quinta pestaña de la pantalla. Tiene su ruta y su versión (`/whatsapp/attention`), pero se guarda con el mismo botón.
+- **El ⋮ del chat:** ahí van cambiar el modo, fijarlo y «Marcar como resuelta».
+- **El catálogo propuesto** no se edita: se aprueba o se descarta.
+
+**Decisión del usuario** (03/11): la pantalla «Asistente» se arma como el editor de un formulario. El contenido va a la izquierda y «Probar», siempre a la derecha, y los casos se editan en el lugar, con ↑ ↓ ✎ 🗑.
 
 ## Contrato
 
