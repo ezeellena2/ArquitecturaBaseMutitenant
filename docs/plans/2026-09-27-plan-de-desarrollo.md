@@ -33,7 +33,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 19 · Condiciones, cálculos y líneas | Pendiente. Spec lista y tableros aprobados en el lienzo v153; antes de planificar, la prueba con Meta | [Spec](formularios/19-condiciones-calculos-y-lineas.md) |
 | 20 · Cargar desde la web | Pendiente. Spec lista y tableros aprobados en el lienzo v154 | [Spec](formularios/20-cargar-desde-la-web.md) |
 | 21 · Reglas, aprobación y PDF | Pendiente. Spec lista y tableros aprobados en el lienzo v155; antes de planificar, la prueba con Meta | [Spec](formularios/21-reglas-y-aprobacion.md) |
-| 22 · Biblioteca de plantillas | Pendiente. Spec lista; sus tableros se dibujaron en la v156, sin publicar | [Spec](formularios/22-biblioteca.md) |
+| 22 · Biblioteca de plantillas | Pendiente. Spec lista y tableros aprobados en el lienzo v156 | [Spec](formularios/22-biblioteca.md) |
 | 23 · Asistente con Casos | Pendiente. Spec lista; tableros a revisar y por dibujar | [Spec](formularios/23-asistente.md) |
 | 24 · Varios asistentes | Pendiente. Spec lista; tableros por dibujar | [Spec](formularios/24-varios-asistentes.md) |
 | 25 · Documentos por WhatsApp | Pendiente. Spec lista; tableros por dibujar, y antes de planificar, la prueba con Meta del archivo precargado | [Spec](formularios/25-documentos.md) |

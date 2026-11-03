@@ -45,7 +45,7 @@ Antes de empezar:
 
 ## 8. Pantallas (tableros)
 
-Valen los criterios de la E14 y la decisión 43. El texto para Diseño está en [22-texto-diseno.md](22-texto-diseno.md). Datos de ejemplo:
+Valen los criterios de la E14 y la decisión 43. Datos de ejemplo:
 - **Categorías:** Ventas, Logística y Mantenimiento, más Calidad, sin plantillas.
 - **Plantillas:**
   - «Visita a cliente» (Ventas, para empleados): publicada, con cambios guardados sin publicar, que la usaron 12 organizaciones. Tiene 8 preguntas, dos catálogos (Clientes, de los contactos, y Motivos de visita, a mano) y cuatro reglas de ejemplo;
@@ -53,7 +53,7 @@ Valen los criterios de la E14 y la decisión 43. El texto para Diseño está en 
   - «Orden de trabajo» (Mantenimiento): retirada;
   - «Comprobante de transferencia» (Ventas, para clientes): publicada.
 
-**Dibujados** en el lienzo v156 (sin publicar: espera el OK del usuario), con las piezas de la 14 y la 21 ya alineadas a ArquitecturaBase, que no tiene biblioteca, y los recorridos guiados `armar-una-plantilla` y `usar-una-plantilla`:
+**Aprobados y publicados** en el lienzo v156, con las piezas de la 14 y la 21 ya alineadas a ArquitecturaBase, que no tiene biblioteca, y los recorridos guiados `armar-una-plantilla` y `usar-una-plantilla`:
 
 | Tablero | Qué muestra | Estados |
 | --- | --- | --- |
