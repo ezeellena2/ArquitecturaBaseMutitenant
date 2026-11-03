@@ -31,15 +31,17 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Diseño los dibuja con el [texto de la etapa](24-texto-diseno.md). Muestran solo lo que existe hasta acá (78).
+Diseño los dibujó con el [texto de la etapa](24-texto-diseno.md). **Dibujados** en el lienzo v158 (sin publicar: espera el OK del usuario). En ArquitecturaBase no existe: todo sale de piezas de este lienzo. Muestran solo lo que existe hasta acá (78).
 
-| Tablero | Qué muestra |
-| --- | --- |
-| `WA-Asistentes` y su teléfono | la lista, con el equipo de cada uno y «Nuevo asistente». Cada uno abre `WA-Asistente` |
-| `WA-Equipo-Asistente` y su teléfono | «Asistente de este equipo», en la configuración del equipo |
-| `WA-Chats-Casos-24` y su teléfono | en el chat, el nombre del asistente que contesta y el menú de equipos en un chat nuevo |
+Datos de ejemplo: el principal, Delta; Delta Soporte y Delta Ventas, de esos equipos, y Delta Obras, de baja.
 
-**Estados:** un solo asistente, varios, sin equipos, un asistente dado de baja y un equipo sin asistente.
+| Tablero | Qué muestra | Estados |
+| --- | --- | --- |
+| `WA-Asistentes` y `M-WA-Asistentes` | la lista, como las de WhatsApp: el asistente (el principal, con su marca), sus equipos y su estado. Tiene «Nuevo asistente» y el ⋮ con Editar y Dar de baja o Reactivar. Cada uno abre `WA-Asistente` | el menú, el del principal («Dar de baja» grisado, con el motivo), nuevo asistente, falta el nombre, creando, dar de baja, uno de baja, un solo asistente, sin equipos, cargando y error |
+| `WA-Equipo-Asistente` y `M-WA-Equipo-Asistente` | «Asistente de este equipo», un desplegable en «Editar equipo» de la 11. Sin elegir, contesta el principal | elegir el asistente (uno de baja no se elige), sin elegir, un asistente de baja y un solo asistente |
+| `WA-Chats-Casos-24` y `M-WA-Chats-Casos-24` | sobre `WA-Chats-Casos`: el nombre del asistente que contesta, en la cabecera, la lista, cada respuesta y «Por qué respondió esto». Un chat nuevo arranca con el menú del bot | eligió Soporte, por qué respondió, pasó a Ventas (con el mismo historial), un equipo sin asistente (contesta el principal) y un solo asistente, sin menú |
+
+El recorrido guiado «Dos equipos con su asistente» muestra a Lucía asignando el asistente de Ventas, a Martina eligiendo «Consultar un pedido» y el pase a Ventas, hasta el principal en un equipo sin asistente.
 
 ## Contrato
 
