@@ -183,7 +183,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 ### E15 · Respuestas: planilla, detalle, Excel y tablero (AB 3, MF1 y DC0)
 
 - **La lista «Formularios»** suma las respuestas, y cada formulario, sus pestañas «Respuestas» y «Tablero» (79).
-- **La planilla** de cada formulario, con las subcolumnas de los campos sellados, el filtro «alguna de» y la empresa (24).
+- **La planilla** de cada formulario, con las subcolumnas de los campos sellados, la empresa (24) y un solo «Filtros», con filtros de una opción y sin cantidades (143 y 144).
 - **El detalle:** la vista rápida al costado y la pantalla completa, con ↑ ↓ en el orden de la planilla.
 - **Excel** con los filtros aplicados; «elegir varias» unido con «; ».
 - **El tablero de cada formulario** (57): gráficos armados solos desde los tipos de las preguntas, ajustables por cada persona.
@@ -231,20 +231,20 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 ### E19 · Condiciones, cálculos y líneas (nueva)
 
 - **Preguntas condicionales:** «Mostrar si» otra respuesta cumple una condición. El servidor las vuelve a evaluar al capturar, y la planilla distingue «No se mostró».
-- **Cálculos:** una pregunta «Cálculo» con las cuatro operaciones sobre números de la respuesta, campos del catálogo y la suma de una columna de líneas. Se calcula al llegar la respuesta (54).
-- **Líneas:** un grupo de renglones con sus columnas, con un tope de 1 a 10 (54).
+- **Cálculos:** una pregunta «Cálculo» con las cuatro operaciones sobre números de la respuesta, campos del catálogo y la suma de una pregunta de los renglones. Se calcula al llegar la respuesta (54).
+- **Renglones** (146): un bloque de preguntas que se carga varias veces, con un mínimo y un máximo; en WhatsApp, una pantalla por renglón, hasta 10.
 - **En las respuestas:** la planilla, el detalle y el Excel los muestran.
 - **Spec:** [formularios/19-condiciones-calculos-y-lineas.md](formularios/19-condiciones-calculos-y-lineas.md).
 - **Criterios:**
-  - antes de planificar, se prueban con Meta el componente `If`, los renglones y un archivo dentro de un `If`, en un celular;
+  - antes de planificar, se prueban con Meta el componente `If`, una pantalla por renglón con «¿Agregás otro renglón?» y un archivo dentro de un `If`, en un celular;
   - el servidor nunca confía en lo que llega: vuelve a evaluar condiciones y cálculos;
   - un cálculo que no se puede hacer queda «Sin respuesta», nunca rompe la captura;
   - los montos van en `decimal`, con moneda y redondeo `AwayFromZero`.
 
 ### E20 · Cargar una respuesta desde la web (AB, carga desde la app)
 
-- **Un empleado completa un formulario desde la web,** a su nombre, con la misma captura que por WhatsApp: catálogos con sus filtros, archivos, condiciones, cálculos y líneas (73).
-- **Las entradas:** «Cargar» en cada fila de «Formularios» y «Agregar respuesta» en la planilla (83). Se carga en una página propia o en un panel al costado (84).
+- **Un empleado completa un formulario desde la web,** a su nombre, con la misma captura que por WhatsApp: catálogos con sus filtros, archivos, condiciones, cálculos y renglones (73).
+- **Las entradas:** «Cargar» en cada fila de «Formularios» y «Agregar respuesta» en la planilla (83). Se carga en una página propia o en un panel al costado, y los dos mantienen lo cargado para la siguiente (84 y 147).
 - **Lo propio:** quien solo carga abre «Formularios» y ve la planilla con lo suyo (85).
 - **El armado:** hasta tres preguntas por renglón y zonas plegables; el ancho sale del tipo de pregunta, en dos anchos: una columna o el renglón entero (87 y 141).
 - **Listas dependientes,** solo en la web (94).
@@ -261,8 +261,8 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 
 - **Reglas** «Cuando llega una respuesta», con guardado e historial propios, sin versión nueva ni republicar.
 - **Un solo motor de acciones,** con ejecuciones idempotentes y el efecto fuera de la transacción.
-- **Aprobación de un nivel:** nadie aprueba lo que cargó. «Por aprobar» va en la lista «Formularios» y en «Para resolver», con la misma fuente (ADR 0040).
-- **PDF** como copia fija, con los campos «Dato», las fotos, las líneas y los cálculos.
+- **Aprobación de un nivel:** nadie aprueba lo que cargó. «Por aprobar» va en la lista «Formularios», en «Para resolver», con la misma fuente (ADR 0040), y como una vista arriba de la planilla (148).
+- **PDF** como copia fija, con los campos «Dato», las fotos, los renglones y los cálculos.
 - **Corregir y anular una respuesta** (91 a 93), con el permiso nuevo «Corregir y anular respuestas». La corrección reemplaza a la anterior con el mismo número y vuelve a pasar por las reglas; anular deja la respuesta «Anulada», sin borrarla.
 - **Lo propio de quien solo carga** (85) suma el estado, el PDF y el motivo de rechazo.
 - **Avisos por WhatsApp** con el número de la organización. Fuera de las 24 horas, con una plantilla aprobada de la organización (61), que suma el encabezado con documento y el llenado de sus variables.
@@ -495,7 +495,7 @@ Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 1, quién pa
 
 Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 2, armar y mandar un formulario):
 
-54. **Condiciones, cálculos y líneas son una etapa propia, la E19,** después de la E16, porque un cálculo usa los campos de los catálogos. Los cálculos se hacen al llegar la respuesta: quien completa no ve el total en WhatsApp antes de enviar. Las líneas (un pedido con varios productos) llevan un tope de renglones, que se prueba antes con Meta. La 78 la pone después de la E18.
+54. **Condiciones, cálculos y líneas son una etapa propia, la E19,** después de la E16, porque un cálculo usa los campos de los catálogos. Los cálculos se hacen al llegar la respuesta: quien completa no ve el total en WhatsApp antes de enviar. Las líneas (un pedido con varios productos) llevan un tope de renglones, que se prueba antes con Meta. La 78 la pone después de la E18, y la 146 cambia las líneas por renglones.
 
 Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 3, catálogos):
 
@@ -557,7 +557,7 @@ Elegidas por el usuario el 2026-10-25, al revisar el orden del bloque con la Gu�
 Elegidas por el usuario el 2026-10-29 y el 2026-10-30 en ArquitecturaBase, viendo cada tablero, y adoptadas con el [traspaso 3](../../../ArquitecturaBase/docs/plans/2026-10-30-traspaso-multitenant-carga-desde-la-app.md), porque no chocan con este modelo:
 
 83. **Las entradas para cargar desde la web** (E20): «Cargar» en cada fila de «Formularios» y «Agregar respuesta» en la planilla, sin una entrada nueva en el menú. Quien solo tiene `formrecords.create` abre «Formularios» con sus formularios activos y «Cargar», sin conteos.
-84. **Página y panel** (E20): «Nueva respuesta» es una página propia, para la compu y el teléfono. Desde la planilla, en la compu, se abre un panel al costado, con «Mantener las respuestas para la siguiente».
+84. **Página y panel** (E20): «Nueva respuesta» es una página propia, para la compu y el teléfono. Desde la planilla, en la compu, se abre un panel al costado, con «Mantener las respuestas para la siguiente». La 147 la suma también a la página.
 85. **Lo propio** (E20 y E21): quien ve respuestas usa la planilla de siempre. Quien solo carga ve esa misma planilla con lo suyo; el estado, el PDF y el motivo de rechazo llegan con la E21. No hay «Mis cargas» aparte.
 86. **La unidad va en la etiqueta,** como «Densidad (kg/ha)». No hay un dato «Unidad».
 87. **Hasta tres preguntas por renglón** (E20): tres columnas en la compu, dos en la tableta y una en el teléfono y en el panel. El ancho sale del tipo de pregunta, el autor no lo elige, y las preguntas no se reordenan.
@@ -647,6 +647,17 @@ Elegidas por el usuario el 2026-11-02 y el 2026-11-03 en ArquitecturaBase, proba
 140. **Los historiales, detrás de un botón** (E21, E22 y E23): «Historial», con su reloj, va primero en el encabezado de su sección y abre un panel al costado. Sin revisiones queda apagado, con el motivo en su tooltip. Tocar una revisión la muestra en pasos, sin editar, y la sección gana el ancho. Cambia la 135, que lo ponía al costado.
 141. **La carga desde la web, en dos anchos** (E20): lo que tiene un solo valor ocupa una columna (número, fecha, sí o no, texto corto de hasta 80, elegir una y elegir de un catálogo); lo que necesita espacio, el renglón entero. «Elegir varias» reparte sus casillas en columnas, elegir una con hasta cinco opciones las muestra en fila aunque sean largas, y el panel junto a la planilla tiene las mismas zonas que la página. Sigue la 87: el ancho sale del tipo.
 
+Elegidas por el usuario el 2026-11-03, al evaluar el traspaso 5 contra este modelo, todas las recomendadas:
+
+142. **Lo elegido se distingue sin dudas, en todo el sistema** (OE1-A): nunca solo con un tinte, sino con un relleno, una tilde, un punto, un subrayado o una barra, con 3:1 contra lo no elegido y el texto a 4,5:1. En un segmentado, la elegida va rellena con el color de la marca y la letra blanca, y las otras, blancas; en el teléfono, cada opción mide 44 × 44. Una tarjeta elegida suma un borde de 2 px y el tinte de la marca; en un desplegable de un filtro, la elegida lleva una tilde a la izquierda, y la fila abierta de una tabla y la conversación abierta del chat, el tinte y una barra de 3 px al inicio. No se arman botones sueltos que hacen de segmentado. Cambia la elegida blanca con sombra de `tema.md` del front.
+143. **Un filtro de opciones es un desplegable simple, en todo el sistema** (PL2-A y FO1-A): cerrado dice «Todas» (o «Cualquier …») o la elegida; abierto, una opción por renglón, sin la cantidad ni texto debajo, con la elegida tildada y ninguna apagada. Si no hay coincidencias, el vacío lo dice y ofrece limpiar. Con muchas opciones o que vienen del servidor (un catálogo, las personas) es el combo con búsqueda, que muestra 20 y «Mostrar N más». Se elige una. Un segmentado de pocas opciones fijas conserva la cantidad de cada conjunto («Activos (8) · Dados de baja (2)»). En la planilla se va el filtro «Respuesta» (con respuesta, sin respuesta, no existía), y las fotos y los documentos no se filtran. El contrato no cambia: las facetas siguen trayendo sus cantidades, y `answered`, `unanswered` y `notAsked` quedan para las reglas y las sugerencias. No entran «Columnas» ni las condiciones de una regla, que eligen varias. Cambia las fichas del front, que pedían la cantidad por opción, y «alguna de» de la E15.
+144. **Los filtros de una planilla o un listado, con un solo «Filtros»** (PL1-A): a la vista, el buscador y hasta tres filtros, sin botón para aplicar; lo demás va en un solo «Filtros», con la cantidad de aplicados, que se despliega como «Columnas»: a la izquierda lo que se filtra y a la derecha lo que se elige en lo marcado. Cada cambio se aplica enseguida, y en el teléfono ocupa la pantalla. Lo aplicado va en chips con su × y «Limpiar todo», y no va «N respuestas»: el total está al pie. Reemplaza «Más filtros», con su borrador y «Ver N respuestas».
+145. **Las zonas de una pregunta de catálogo arrancan plegadas** (ZP1-A, E14 y E16): «En WhatsApp» y «Qué opciones ve cada persona» arrancan plegadas cada vez que se abre la pregunta, con la flecha en la banda y lo configurado en una línea («Rubro: Agroquímicos · Zona según quien lo recibe», «sin valor» si falta, «Sin filtros»; «Como en el catálogo · Texto · Detalle»). Abierta, «Agregar filtro ▾» vuelve a la banda y la (i) va junto al título. La que tiene un error o un aviso se abre sola, y solo un problema nuevo la vuelve a abrir. Es una excepción más a «sin paneles plegables» del front.
+146. **Renglones en los formularios** (E19, E20 y E21; cambia la 54): un tipo de pregunta «Renglones», con nombre, ayuda y un mínimo y un máximo de renglones (el mínimo de 0 al máximo y el máximo hasta 100; uno nuevo arranca con 1 y 20). Sus preguntas se eligen con la casilla «Se carga varias veces» y se juntan en un bloque; una que ya existía pasa como pregunta nueva, y publicar lo dice en «Pasan a renglones». Un bloque por formulario, sin bloques adentro, con texto corto y largo, número, fecha, sí o no y elegir una, propia o de catálogo. En WhatsApp, una pantalla por renglón, hasta 10, con «¿Agregás otro renglón?» desde el mínimo y sin intercambio con Meta; con un máximo mayor que 10, publicar avisa sin frenar. En la web, una tabla con «Agregar renglón», y en el panel y el teléfono, un recuadro por renglón. La planilla sigue con una fila por respuesta, el detalle muestra cada renglón como los campos de un catálogo (139) y el Excel suma una hoja por bloque. Las reglas y los filtros usan «Algún renglón con…», y en el mensaje el bloque es un dato con todos los renglones. Reemplaza el «Grupo de líneas» de hasta 6 columnas.
+147. **«Mantener las respuestas» también en la página** (AR2-A, E20; cambia la 84): la casilla va en la banda, antes de Cancelar y Enviar, y en el teléfono, en el pie fijo, arriba de Enviar. Marcada, al enviar el aviso dice el número y el formulario queda con lo cargado, sin los archivos y con el foco en la primera pregunta; sin marcar, se ve «Enviada». No se recuerda al volver a entrar.
+148. **«Por aprobar», una vista arriba de la planilla** (PL1-A con nuestra pieza, E21): en un formulario que pide aprobación, quien puede decidir ve «Por aprobar (N) | Todas», con el segmentado de dos vistas de lo mismo, y no con pestañas (79). «Por aprobar» es una tabla corta (N°, Cargó, Recibida, Rol y «Revisar»), de la más vieja a la más nueva y sin filtros; «Todas» es la planilla. Se abre en «Por aprobar» si hay algo para decidir. Quien solo ve respuestas tiene la planilla, y quien solo aprueba, solo «Por aprobar». Siguen la campana y «Para resolver».
+149. **El mensaje con datos** (MD1-A, E21 y E22): «Agregar dato», al final del renglón del mensaje, abre una lista con buscador: el número, el motivo del rechazo al rechazar y las preguntas en su orden, sin fotos ni documentos. El dato entra donde está el cursor, como una etiqueta con el nombre actual de su pregunta, que se borra entera; las llaves escritas o pegadas no entran. «Así llega», debajo, muestra el mensaje con datos de ejemplo. Se guarda la identidad de la pregunta, `{FieldId}`, y nunca su nombre: la etiqueta sigue a la pregunta renombrada, y una que ya no está se ve «Pregunta no disponible», en rojo, y no deja guardar. Las variables de una plantilla de WhatsApp (61) se llenan con la misma lista. Como el contrato no está publicado, no se acepta el nombre entre llaves.
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase
@@ -685,14 +696,6 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 ## 7. Decisiones pendientes
 
-Las del traspaso 5 que chocan con una decisión de acá o con una regla del front. Se le preguntan al usuario de a una, y cada respuesta pasa a la §5:
-1. **Lo elegido** (OE1-A): rellena con el color de la marca, contra la elegida blanca con sombra de `tema.md` del front.
-2. **Los filtros de opciones** (PL2-A y FO1-A): un desplegable simple, de una opción y sin cantidades, contra la cantidad por opción de las fichas del front, «alguna de» y el filtro «Respuesta» de la E15.
-3. **Los filtros de la planilla** (PL1-A): un solo «Filtros» que aplica cada cambio, con chips, contra «Más filtros» con borrador y sin chips.
-4. **Las zonas de una pregunta de catálogo** (ZP1-A): plegadas, con su resumen, contra «sin paneles plegables» del front.
-5. **Los renglones** (§11 del traspaso): una pantalla por renglón en WhatsApp, mínimo y máximo, y reglas y filtros con «Algún renglón con…», contra la 54. Entrarían en la E19, con su parte en la E20 (la tabla de la carga) y en la E21 (las reglas).
-6. **Mantener lo cargado en la página** (AR2-A), contra la 84.
-7. **«Por aprobar»** (PL1-A): dos solapas, contra la 79 y la regla del front que no deja filtrar con pestañas.
-8. **El mensaje con datos** (MD1-A): «Agregar dato», contra `{pregunta}` escrita a mano.
+Ninguna.
 
-Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98, las del traspaso 4, del 2026-11-02, como decisiones 109 a 122, y las del traspaso 5 que no chocan, del 2026-11-03, como decisiones 136 a 141.
+Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98, las del traspaso 4, del 2026-11-02, como decisiones 109 a 122, y las del traspaso 5, del 2026-11-03, como decisiones 136 a 149.
