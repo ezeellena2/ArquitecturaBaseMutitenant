@@ -92,18 +92,18 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobados en el lienzo v150; con el traspaso 5 se redibujan los filtros (143 y 144) y el detalle (139). El recorrido guiado suma dos circuitos: de pegar los proveedores a verlos en la planilla y el Excel, y de armar los campos a ver el CUIT sellado en la planilla. Muestran solo lo que existe hasta acá (78).
+Aprobados en el lienzo v150. Con el traspaso 5, los filtros (143 y 144) y el detalle (139) están redibujados en el lienzo v160, a la espera del OK. El recorrido guiado suma dos circuitos: de pegar los proveedores a verlos en la planilla y el Excel, y de armar los campos a ver el CUIT sellado en la planilla. Muestran solo lo que existe hasta acá (78).
 
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
 | `FRM-Formularios-15` | la lista, con las columnas de respuestas y «Quien solo ve respuestas» | Aprobado |
-| `FRM-Respuestas` | la planilla, con «Columnas», «Empresa» y sus estados; suma «Elegir varias» y los campos sellados | Se redibuja: «Filtros» y los chips (144) |
-| `FRM-Respuestas-Filtros` | «Filtros», que se despliega como «Columnas» | Se redibuja (143 y 144) |
-| `FRM-Respuesta` | la vista rápida | Se redibuja: el detalle alineado (139) |
+| `FRM-Respuestas` | la planilla, con «Columnas», «Empresa» y sus estados; suma «Elegir varias» y los campos sellados | Redibujado en la v160: «Filtros» y los chips (144) |
+| `FRM-Respuestas-Filtros` | «Filtros», que se despliega como «Columnas» | Redibujado en la v160 (143 y 144) |
+| `FRM-Respuesta` | la vista rápida | Redibujado en la v160: el detalle alineado (139) |
 | `FRM-Respuestas-Exportar` | el diálogo de exportar | Aprobado |
 | `FRM-Tablero` | el tablero | Aprobado |
-| `M-FRM-Respuestas`, `M-FRM-Respuesta`, `M-FRM-Tablero` | los tres, en el teléfono. Tocar una fila abre `M-FRM-Respuesta`: no hay vista rápida | `M-FRM-Respuestas` y `M-FRM-Respuesta` se redibujan (139 y 144); `M-FRM-Tablero`, aprobado |
-| `FRM-Respuesta-Completa` | la pantalla completa, con sus dos secciones plegadas y abiertas | Se redibuja: la actividad en columnas fijas (139) |
+| `M-FRM-Respuestas`, `M-FRM-Respuesta`, `M-FRM-Tablero` | los tres, en el teléfono. Tocar una fila abre `M-FRM-Respuesta`: no hay vista rápida | `M-FRM-Respuestas` y `M-FRM-Respuesta`, redibujados en la v160 (139 y 144); `M-FRM-Tablero`, aprobado |
+| `FRM-Respuesta-Completa` | la pantalla completa, con sus dos secciones plegadas y abiertas | Redibujado en la v160: la actividad en columnas fijas (139) |
 | `M-FRM-Formularios-15` | la lista en el teléfono, con «N respuestas · estado» | Aprobado |
 
 **Lo que se corrigió en lo dibujado:**

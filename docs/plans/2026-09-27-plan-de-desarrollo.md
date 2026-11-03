@@ -26,7 +26,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 12 · Catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150; el traspaso 5 redibuja la importación | [Spec](formularios/12-catalogos.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
 | 13 · Campos de los catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150 | [Spec](formularios/13-campos.md) |
 | 14 · Formularios | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150; el traspaso 5 redibuja el editor y el envío | [Spec](formularios/14-formularios.md) |
-| 15 · Respuestas, planilla y Excel | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150; el traspaso 5 redibuja la planilla y el detalle | [Spec](formularios/15-respuestas.md) |
+| 15 · Respuestas, planilla y Excel | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150; el traspaso 5 redibujó la planilla y el detalle en la v160, a la espera del OK | [Spec](formularios/15-respuestas.md) |
 | 16 · Datos de las personas y filtros | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150; el traspaso 5 redibuja la pregunta con filtros y la planilla | [Spec](formularios/16-datos-de-las-personas.md) |
 | 17 · Ciclo de vida y copiar | Pendiente. Spec lista, con los tableros aprobados en el lienzo v151 | [Spec](formularios/17-ciclo-de-vida.md) |
 | 18 · Fotos y documentos | Pendiente. Spec lista, con los archivos del chat y los tableros aprobados en el lienzo v152; el traspaso 5 redibuja la planilla y el detalle | [Spec](formularios/18-fotos-y-documentos.md) |
