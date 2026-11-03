@@ -27,7 +27,7 @@ Antes de empezar, en este orden:
 **Un canal más para responder:**
 - un empleado completa un formulario desde la web, a su nombre. Es un miembro activo con `formrecords.create`, sin teléfono verificado (89), y solo en los formularios activos que son para empleados o para los dos (50). Un cliente sigue respondiendo por WhatsApp;
 - la respuesta guarda el canal `web`, el `SourceKey` `web:<clave de idempotencia>` y las empresas activas de quien carga (9);
-- **la misma captura que WhatsApp:** un solo lugar valida y numera contra la versión sellada, con catálogos, archivos, condiciones, cálculos y líneas;
+- **la misma captura que WhatsApp:** un solo lugar valida y numera contra la versión sellada, con catálogos, archivos, condiciones, cálculos y renglones;
 - **solo la versión activa.** Si se publicó otra, el front ofrece pasar a la nueva sin perder lo cargado;
 - **la oferta sella solo lo elegido:** cada opción tiene que estar activa y pasar los filtros para esa persona, también en un catálogo de miembros o de contactos. La lista completa no se guarda;
 - **los filtros por persona:** si le falta el dato, la pregunta frena y lo nombra. Si los filtros dejan una sola opción, ya viene elegida. Las opciones no tienen el tope de 200: se piden de a 50, con búsqueda, y los filtros corren en SQL antes de paginar.
@@ -35,7 +35,7 @@ Antes de empezar, en este orden:
 **Las listas dependientes** (94): un tercer filtro, «según otra respuesta»:
 - la pregunta de la que depende va antes, es de elegir una y elige del mismo catálogo que el campo de papel «Filtro». No oculta la pregunta: achica sus opciones;
 - al guardar se comprueba que la opción corresponda a esa respuesta. Si la pregunta de la que depende quedó oculta, la lista también;
-- va en una pregunta suelta, no en una columna de un grupo. Copiar un formulario la copia.
+- va en una pregunta suelta, no en una del bloque de renglones. Copiar un formulario la copia.
 
 **Archivos:** viajan en el mismo `POST`, con los límites de la E18, y se verifican por contenido, igual que los de WhatsApp. Completa o nada.
 
@@ -56,13 +56,16 @@ Antes de empezar, en este orden:
 - Cancelar y el botón del formulario van en la banda; en el teléfono, ese botón queda fijo al pie;
 - se valida al enviar: cada error en su pregunta y el foco en la primera. Después, en vivo. Salir con algo cargado pide confirmación;
 - mientras sube, el botón dice «Enviando…» con su aro, y una barra de avance, sin palabras, muestra cuánto falta (95 y 115);
-- lo cargado vive en la página: nunca va a la URL, al storage ni a la caché.
+- lo cargado vive en la página: nunca va a la URL, al storage ni a la caché;
+- **«Mantener las respuestas para la siguiente»** (147) va en la banda, antes de Cancelar y Enviar, y en el teléfono, en el pie fijo, arriba de Enviar. Marcada, al enviar el aviso dice el número y el formulario queda con lo cargado, sin los archivos y con el foco en la primera pregunta; sin marcar, se ve «Enviada». No se recuerda al volver a entrar.
 
 **El panel** (84), al costado de la planilla, solo en la compu, con las mismas zonas que la página (141): «Mantener las respuestas para la siguiente» conserva todo menos los archivos, y «Pantalla completa» pasa lo cargado a la página. Al enviar, el aviso dice el número y la planilla se relee con la respuesta marcada. **Cada envío es otra respuesta:** después de un envío que llegó, el front arma otra clave de idempotencia; solo un reintento después de un corte repite la anterior.
 
 **Las listas de catálogo:** una pregunta de catálogo es siempre una lista con búsqueda en el servidor, con el total, la descripción y «Mostrar 50 más». En el teléfono ocupa la pantalla, con «Listo» al pie al elegir varias. Una lista dependiente espera la respuesta de la que depende y se limpia si esa respuesta cambia.
 
 **Las fotos y los documentos:** se arrastran o se eligen, con un contador. Tipo, tamaño y cantidad se revisan antes de enviar. En el teléfono, «Tomar foto» va primero, y «Solo cámara» no ofrece la galería.
+
+**Los renglones** (146): el bloque ocupa el renglón entero de su zona, en una tabla con una fila por renglón y una pregunta por columna, el número a la izquierda, «Agregar renglón» al pie y ↑ ↓ y 🗑 en cada fila; si no entra, se desplaza de costado en su caja. Arranca con el mínimo, y con el máximo «Agregar renglón» se apaga, con el motivo. Al enviar, la celda con un error se marca y el mensaje va debajo de su renglón, con el nombre de la pregunta. En el panel y en el teléfono, un recuadro por renglón, con ↑ ↓ y «Quitar» en su banda. «Mantener» conserva también los renglones.
 
 **«Enviada»:** lo que se mandó, los cálculos, el número y la hora, con «Cargar otra» y «Ver en la planilla». Se arma con lo enviado y con lo que devuelve el `POST`.
 
@@ -75,7 +78,7 @@ El autor decide el contenido. La app decide la forma, con una tabla fija por tip
 | Ocupa | Tipos de pregunta |
 | --- | --- |
 | Una columna | Número, fecha, sí o no, texto corto de hasta 80, elegir una, en fila o en lista, y elegir de un catálogo, una o varias |
-| El renglón entero | Texto largo, texto corto de más de 80 o sin largo máximo, elegir varias con opciones propias, foto, documento y grupo de líneas |
+| El renglón entero | Texto largo, texto corto de más de 80 o sin largo máximo, elegir varias con opciones propias, foto, documento y renglones |
 
 - **Columnas:** tres en la compu, dos en la tableta y una en el teléfono y en el panel. Salen del ancho de la zona: tres desde 46 rem, dos desde 30 rem y una por debajo.
 - **Orden:** las preguntas no se reordenan, salvo las fotos y los documentos, que van al final. Una que no entra baja de renglón, con una línea entre cada renglón visible.
@@ -86,12 +89,12 @@ El autor decide el contenido. La app decide la forma, con una tabla fija por tip
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v154, con el armado del front real de ArquitecturaBase (126 y 134) y el recorrido guiado `cargar-una-respuesta`. Con el traspaso 5 se redibujan `FRM-Cargar-Respuesta` y su teléfono y `FRM-Cargar-Panel`, con los dos anchos, las casillas en columnas y el panel con zonas (141), y `FRM-Respuesta-20` y su teléfono, con el detalle alineado (139). El ejemplo es «Pedido de materiales», versión 4, que suma «Zona», «Proveedor» con su lista dependiente y «Foto del remito», y por eso queda solo para la app.
+Aprobados y publicados en el lienzo v154, con el armado del front real de ArquitecturaBase (126 y 134) y el recorrido guiado `cargar-una-respuesta`. Con el traspaso 5 se redibujan `FRM-Cargar-Respuesta` y su teléfono, con los dos anchos, las casillas en columnas, «Mantener» y los renglones (141, 146 y 147); `FRM-Cargar-Panel`, con zonas (141); `FRM-Respuestas-20` y `FRM-Respuestas-Propias`, con sus teléfonos, con «Filtros» y los chips (144), y `FRM-Respuesta-20` y su teléfono, con el detalle alineado (139). El ejemplo es «Pedido de materiales», versión 4, que suma «Zona», «Proveedor» con su lista dependiente y «Foto del remito», y por eso queda solo para la app.
 
 | Tablero | Qué muestra |
 | --- | --- |
 | `FRM-Formularios-20` y su teléfono | «Cargar», «Solo en la app» y lo que ve quien solo carga |
-| `FRM-Cargar-Respuesta` y su teléfono | la página, con zonas, grilla, títulos, lo condicional, líneas, errores y salir |
+| `FRM-Cargar-Respuesta` y su teléfono | la página, con zonas, grilla, títulos, lo condicional, renglones, «Mantener», errores y salir |
 | `FRM-Cargar-Panel` | el panel junto a la planilla |
 | `FRM-Cargar-Lista` y su teléfono | la lista, una sola opción, sin el dato, elegir varias y la que espera otra respuesta |
 | `FRM-Cargar-Archivos` y su teléfono | agregar, los límites, la barra de avance, el corte y la cámara |
@@ -119,7 +122,7 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]`, `[Featu
 | --- | --- | --- |
 | `GET /entry` | `page`, `pageSize`, `search`, `status` (`active`, `deactivated`) | `PagedResult<{id, name, deactivatedAtUtc?}>`, sin conteos: lo que puede cargar, con el filtro de disponibilidad, o los dados de baja en los que cargó algo (101) |
 | `GET /{id}/entry` | — | `{versionId, versionNumber, name, submitLabel, maxFileBytes, questions[], titles[]}`. Cada pregunta de catálogo trae `options?{total, single?, missingData?}` |
-| `GET /{id}/entry/questions/{fieldId}/options` | `page`, `pageSize` (50), `search`, `dependsOn?`, `columnId?`, para una columna de catálogo de un grupo | `PagedResult<{id, text, detail?}>` |
+| `GET /{id}/entry/questions/{fieldId}/options` | `page`, `pageSize` (50), `search`, `dependsOn?`; sirve también para una pregunta de catálogo de los renglones | `PagedResult<{id, text, detail?}>` |
 | `POST /{id}/records` | multipart: `versionId`, `answers` y los archivos, con `[Idempotent(Mode = IdempotencyMode.DurableReference)]`, `[IdempotencyDurable]` y `[RequestSizeLimit]` de 101 MiB | 201 `{recordId, displayNumber, submittedAtUtc, calculations[]}` + Location |
 | `GET /{id}/own-records/columns`, `POST …/search`, `POST …/facets`, `GET …/{recordId}`, `POST …/{recordId}/navigation` y `GET …/{recordId}/files/{fileId}/{thumbnail\|content}` | los de la E15 y la E18 | lo mismo, solo con lo de esa persona |
 
@@ -183,11 +186,11 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | --- | --- | --- | --- | --- |
 | F1 | Tipos, llamadas y subida con avance | suma a `F/src/modules/forms/api/` y `F/src/shared/api/httpClient.ts`, que hoy no tiene avance | `httpClient.ts` | zod estricto; avance y corte; `sameOperation` |
 | F2 | Entradas y lista | suma a la lista [E17] y a `FormRecordsPage.tsx` [E15] | esos mismos | quien solo carga; grisado; dados de baja |
-| F3 | El armado de una pregunta | `F/src/modules/forms/components/entry/EntryGrid.tsx`, `EntryZone.tsx` | el tablero | la tabla de los dos anchos y las casillas en columnas (141); `ResizeObserver`; lecciones 1 a 3 |
+| F3 | El armado de una pregunta | `F/src/modules/forms/components/entry/EntryGrid.tsx`, `EntryZone.tsx` | el tablero | la tabla de los dos anchos y las casillas en columnas (141); los renglones, en tabla y en recuadros (146); `ResizeObserver`; lecciones 1 a 3 |
 | F4 | Los controles y la lista de catálogo | `components/entry/EntryField.tsx`, `EntryCatalogList.tsx` | `QuestionEditor.tsx` [E14] | búsqueda, «Mostrar 50 más» y lista dependiente; axe |
 | F5 | Lo condicional | suma a `EntryGrid.tsx`, con `lib/conditions.ts` [E19] | el mismo | lo oculto no se manda; una zona sin preguntas visibles |
 | F6 | Los archivos | `components/entry/EntryFiles.tsx` | el tablero | límites antes de enviar; cámara; barra sin palabras |
-| F7 | La página, el panel y «Enviada» | `pages/LoadResponsePage.tsx`, `components/entry/EntryPanel.tsx`, `EntrySent.tsx`; `registration.ts` | `useEditForm` y `useUnsavedChangesGuard` | salir; versión nueva sin perder nada; mantener, con otra clave en cada envío; el panel con zonas; lo cargado fuera del storage |
+| F7 | La página, el panel y «Enviada» | `pages/LoadResponsePage.tsx`, `components/entry/EntryPanel.tsx`, `EntrySent.tsx`; `registration.ts` | `useEditForm` y `useUnsavedChangesGuard` | salir; versión nueva sin perder nada; mantener en la página y en el panel, con otra clave en cada envío; el panel con zonas; lo cargado fuera del storage |
 | F8 | Publicar, editor y lo propio | suma a `PublishDialog.tsx` [E16], `CatalogQuestionFields.tsx` [E16] y `FormRecordsPage.tsx` | esos mismos | los tres casos; «Según otra respuesta»; una dirección ajena |
 
 **Al cerrar:** `docs/features/formularios.md` suma la sección.

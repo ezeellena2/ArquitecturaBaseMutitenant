@@ -56,7 +56,7 @@ Antes de empezar, en este orden:
 - si falta el archivo guardado, 404. Las miniaturas se piden solo si están a la vista.
 
 **Lo que suma a las pantallas que ya existen:**
-- **la planilla:** una columna por pregunta de archivo, con la primera miniatura y la cantidad, que abre el visor. Un documento dice su cantidad y sus tipos. Sus filtros son «Con respuesta», «Sin respuesta» y «La pregunta no existía»: `answered` también cuenta un archivo;
+- **la planilla:** una columna por pregunta de archivo, con la primera miniatura y la cantidad, que abre el visor. Un documento dice su cantidad y sus tipos. No tienen filtro en la planilla (143); para las condiciones de las reglas, `answered` también cuenta un archivo;
 - **el detalle:** la pestaña «Fotos» en la vista rápida, y en las dos vistas, las miniaturas y los documentos con su nombre, su tamaño y «Descargar»;
 - **la pantalla completa** suma «Descargar ▾», con los documentos;
 - **el Excel:** la cantidad y los nombres en la celda, sin los archivos;
@@ -72,7 +72,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133) y sus dos recorridos guiados, `fotos-y-documentos` y `archivos-en-el-chat`. Los archivos del chat no existen allá. Muestran solo lo que existe hasta acá (78). Con el traspaso 5 se redibujan `FRM-Respuesta-18`, con su teléfono, y `FRM-Respuesta-Completa-18`: el detalle alineado y la actividad en columnas fijas (139).
+Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133) y sus dos recorridos guiados, `fotos-y-documentos` y `archivos-en-el-chat`. Los archivos del chat no existen allá. Muestran solo lo que existe hasta acá (78). Con el traspaso 5 se redibujan `FRM-Respuestas-18`, con su teléfono, sin el filtro de archivos (143), y `FRM-Respuesta-18`, con su teléfono, y `FRM-Respuesta-Completa-18`, con el detalle alineado y la actividad en columnas fijas (139).
 
 | Tablero | Qué muestra |
 | --- | --- |
@@ -80,7 +80,7 @@ Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133
 | `FRM-Publicar-18` | «Más de 10 archivos» |
 | `WA-Chats-Respuesta-18` y `M-WA-Conversacion-Respuesta-18` | la tarjeta: bajando, reintentando, con fotos y un documento, muchas fotos y los dos rechazos |
 | `WA-Chats-Visor` y `M-WA-Chats-Visor` | el visor: el título, en qué foto va, la tira de miniaturas y, al pie, el nombre, el tamaño y «Descargar» |
-| `FRM-Respuestas-18` y `M-FRM-Respuestas-18` | la planilla con la columna de archivos, el visor, su sección en «Más filtros» y la (i) de exportar |
+| `FRM-Respuestas-18` y `M-FRM-Respuestas-18` | la planilla con la columna de archivos, el visor y la (i) de exportar, sin filtro de archivos (143) |
 | `FRM-Respuesta-18` y `M-FRM-Respuesta-18` | el detalle, con la pestaña «Fotos» y el visor |
 | `FRM-Respuesta-Completa-18` | la pantalla completa, con «Descargar ▾» |
 | `FRM-Dar-De-Baja-18` | «Lo que se conserva» suma las fotos y los documentos |
@@ -88,7 +88,7 @@ Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133
 
 **La planilla:** la foto dice su miniatura y «2 fotos», y el documento, «1 PDF». «Sin respuesta» si no se respondió y «—» si la pregunta no existía en esa versión. En el teléfono, en la tercera línea de la fila.
 
-**«Más filtros»:** cada pregunta de archivo tiene su sección, solo con «Respuesta»: Todas, Con respuesta, Sin respuesta y La pregunta no existía, con cuántas tiene cada una.
+**«Filtros»:** las preguntas de archivo no aparecen, porque solo tenían «Respuesta», que se fue (143).
 
 **El chat:** el clip va al lado de la nota interna. Abre «Mandar un archivo a …», con la vista del archivo, su nombre, su tamaño y «Texto», opcional. Si pasa el tope, lo dice debajo del archivo y «Enviar» queda grisado.
 
@@ -117,7 +117,7 @@ Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133
 | `POST /{id}/publication-checks` | `Forms.Draft.TooManyFiles` y `Forms.Publication.FilesUnavailable` |
 | `GET /{id}/records/columns` | columnas de tipo `Photo` y `Document` |
 | `POST …/records/search` y el detalle | el valor `{kind: "files", files[{id, fieldId, name, kind, mediaType, size, hasThumbnail}]}`. La planilla trae el primero y la cantidad |
-| `POST …/records/facets` | `answered`, `unanswered` y `notAsked` de las preguntas de archivo |
+| `POST …/records/search` | `answered`, `unanswered` y `notAsked` de las preguntas de archivo, para las condiciones; sin faceta, porque la planilla no las filtra (143) |
 
 `GET /api/me` suma la capacidad `form-files`, por `IModuleCapabilityContributor`: dice si hay almacenamiento.
 

@@ -57,7 +57,7 @@ Una categoría se borra solo si ninguna plantilla la usa (`Forms.TemplateCategor
 - `name`, `description` (≤300), `suggestedPrefix` y `submitLabel`, cada uno un solo texto (35), y `audience`: para quién es el formulario (50), que la copia conserva;
 - `questions[]`, en el formato del borrador de la E14;
 - en una pregunta de elegir con catálogo, `catalogRef` (id local de la plantilla) en lugar de `catalogId`;
-- en una columna de catálogo de un grupo de líneas (E19), lo mismo: `lines.columns[].catalogRef`;
+- en una pregunta de catálogo de los renglones (E19), lo mismo: su `catalogRef`;
 - `catalogs[]`: `{catalogRef, name, source, valueType, fields[], items[{code, text, detail?, value?, fields{}}]}`, donde `source` es `Manual`, `Members` o `Contacts`. Solo los `Manual` llevan opciones, **hasta 200 por catálogo,** porque el borrador viaja entero en cada `GET` y cada `PUT`: una lista más larga es de cada organización. Los otros dos llegan sin filtros (64). Lo demás sigue los límites de la E12 y la E13. Un campo «elegir de otro catálogo» apunta a otro `catalogRef` de la misma plantilla;
 - `rules[]`: las reglas de ejemplo, en el formato de la E21 (un evento, hasta 10 condiciones y hasta 10 acciones), con dos diferencias:
   - las condiciones apuntan a las preguntas y opciones de la plantilla (ids locales); en una pregunta de catálogo, a `catalogRef` más el código de la opción;
@@ -103,7 +103,7 @@ Se completó el 2026-10-18 con el [resumen](21-reglas-y-aprobacion.md) y los tab
 
 **Copiar** (`FormTemplateCopyCreator`, en Application) arma, desde la versión publicada:
 - los catálogos nuevos: los a mano con posiciones de 1 a n, su tipo de valor, sus campos y sus valores; los de los miembros y de los contactos, sin filtros. Sin WhatsApp, uno de los contactos queda «No se puede usar» hasta que se instale;
-- el borrador del formulario, con los `FieldId` y `ChoiceId` de la versión (B11) y los `catalogRef` traducidos a los ids de los catálogos nuevos, también los de las columnas de líneas;
+- el borrador del formulario, con los `FieldId` y `ChoiceId` de la versión (B11) y los `catalogRef` traducidos a los ids de los catálogos nuevos, también los de las preguntas de los renglones;
 - el nombre de la plantilla, el prefijo libre y la fuente;
 - el diseño del PDF, como primera revisión del diseño (decisión 31). Las reglas de ejemplo no se copian: se leen de la versión (decisión 30).
 

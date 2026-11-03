@@ -73,7 +73,7 @@ Antes de empezar:
   - el formulario: nombre, «Para quién es» (empleados, clientes o los dos; 50), texto del botón final y prefijo, cada uno en su campo;
   - las preguntas, que se abren en el lugar, con el número, el nombre y, debajo, el tipo y si es obligatoria (130), y ↑ ↓ ✎ 🗑 a la vista (127). Las opciones de una pregunta llevan ↑ ↓ 🗑;
   - «elegir varias», con el mínimo y el máximo (en el ejemplo, «Fallas», de 1 a 3);
-  - la pregunta «De un catálogo»: el combo de la E13 (111), que ofrece los tres orígenes y muestra apagados, con su motivo, los dados de baja y los que no se pueden usar; «Las opciones se preparan al mandar el formulario.» va en la (i) de «Catálogo»; «Permitir elegir varias» con mínimo y máximo, «varias, hasta N» en la lista de preguntas, un catálogo de más de 20 y la presentación de la pregunta (la del catálogo o la suya);
+  - la pregunta «De un catálogo»: el combo de la E13 (111), que ofrece los tres orígenes y muestra apagados, con su motivo, los dados de baja y los que no se pueden usar; «Las opciones se preparan al mandar el formulario.» va en la (i) de «Catálogo»; «Permitir elegir varias» con mínimo y máximo, «varias, hasta N» en la lista de preguntas, un catálogo de más de 20 y la presentación de la pregunta (la del catálogo o la suya), en la zona «En WhatsApp», que arranca plegada con lo configurado en su banda y se abre sola con un error o un aviso (145);
   - el teléfono al costado.
 
   En el teléfono, la pregunta se edita en una hoja y los botones van fijos abajo.
@@ -92,7 +92,7 @@ Antes de empezar:
 
 **Sin rastro de etapas posteriores:** los tableros de la v141 no tienen «4 reglas · Revisión 3» ni «Más de 10 archivos». `Rol` suma los cinco permisos de formularios.
 
-**Se redibujan con el traspaso 5** (138): la revisión de «otra persona guardó», en `FRM-Editor` y su teléfono, y el elegido de otra página primero, en `WA-Chats-Formulario` y su teléfono.
+**Se redibujan con el traspaso 5** (138, 142 y 145): `FRM-Editor` y su teléfono, con la revisión de «otra persona guardó» lado a lado y la zona «En WhatsApp» plegada, y `WA-Chats-Formulario` y su teléfono, con el elegido de otra página primero y la tarjeta elegida con su borde.
 
 **Estados que se dibujan** (cada uno tiene que poder producirse; si no, es un bug):
 - **Editor:** con cambios, guardando («Guardando…», con su aro), guardado, no se guardó (lo escrito se conserva), otra persona guardó (lado a lado, 138: Qué cambió, Dato, Guardado actualmente y Mis cambios, solo lo distinto y con los nombres del editor; una pregunta que una versión no tiene muestra sus datos y «Quitada»), prefijo ocupado, para quién es, quitar una pregunta, cambiar el tipo, descartar, solo lectura, cargando y no existe.

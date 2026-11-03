@@ -1,6 +1,6 @@
 # E15 · Respuestas: planilla, detalle, Excel y tablero (spec)
 
-**Estado:** pendiente · spec de la etapa 15 del bloque (decisiones 34, 57, 78 y 79), con el [formato](plantilla.md) de las etapas. Es lo que ArquitecturaBase llama etapa 3, con el menú `MF1`, el detalle completo (`DC0` y `DC1` ajustado) y el tablero `DOC7-A`. **Solo lee,** salvo los ajustes del tablero de cada persona. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E14.
+**Estado:** pendiente · spec de la etapa 15 del bloque (decisiones 34, 57, 78 y 79), con el [formato](plantilla.md) de las etapas. Es lo que ArquitecturaBase llama etapa 3, con el menú `MF1`, el detalle completo (`DC0` y `DC1` ajustado) y el tablero `DOC7-A`. **Solo lee,** salvo los ajustes del tablero de cada persona. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E14. El contrato y los datos están en su [parte de datos y contrato](15-parte-datos-y-contrato.md).
 
 ## Qué leer
 
@@ -47,7 +47,7 @@ Antes de empezar, en este orden:
 
 **Los nombres:** Forms guarda ids. El de un empleado y sus empresas salen del lector de miembros; el de un cliente, de `IStructuredContactSource`, por lote y una vez por página. Un miembro que se fue conserva el nombre; sin dato, «Persona sin información»; un cliente sin WhatsApp dice «Cliente». Forms nunca lee tablas de WhatsApp.
 
-**La barra (126):** «Exportar a Excel» en la banda; en la barra, «Buscar en textos largos», «Empresa», la primera pregunta de opciones como filtro rápido, «Recibida», «Más filtros», el total y «Columnas». «Más filtros» trae «Recibida desde» y «hasta» y, por pregunta, «Respuesta» («Todas», «Con respuesta», «Sin respuesta» o «No existía en esa versión») y lo que va con su tipo: «Desde» y «Hasta», «Contiene» o casillas con cuántas respuestas tiene cada una y «Buscar opciones»; al pie, «Limpiar todo», «Cancelar» y «Ver N respuestas». El canal suma su filtro cuando haya más de uno.
+**La barra (126, 143 y 144):** «Exportar a Excel» en la banda; en la barra, «Buscar en textos largos» (si el formulario los tiene), «Empresa», «Filtros», con la cantidad de aplicados, y «Columnas»; debajo, lo aplicado en chips con su × y «Limpiar todo». Sin «N respuestas»: el total está al pie. «Filtros» se despliega como «Columnas»: a la izquierda, Recibida, cada pregunta en orden, Cargó y Versión; a la derecha, lo que se elige en la marcada: «Desde» y «Hasta» para un número o una fecha, «Contiene» para un texto y, para una pregunta con opciones, sí o no, Cargó y Versión, un combo de una opción, que busca escribiendo, muestra 20 y «Mostrar N más», sin cantidades. Cada cambio se aplica enseguida, y en el teléfono ocupa la pantalla. El chip nombra lo elegido («Proveedor: Aceros Rosario»). El canal suma su filtro a la vista cuando haya más de uno.
 
 **Exportar (126):** «Exportar respuestas a Excel» dice cuántas respuestas y cuántos filtros aplicados, «Columnas a exportar», con la cantidad de cada opción («Todas las preguntas (13 columnas)» y «Solo las visibles (12 columnas)»), y el nombre del archivo.
 
@@ -56,6 +56,7 @@ Antes de empezar, en este orden:
 **Filtros:**
 - condiciones unidas con «y», con la gramática de la E12 (C5): texto `contains` y `equals`; número y fecha `equals`, `gte` y `lte`; elegir una y sí/no `in`; **elegir varias `anyOf`**; y en todos, `answered`, `unanswered` y `notAsked`;
 - `unanswered` incluye la opcional vacía y la pregunta que no existía; `notAsked` distingue la segunda. Qué versiones tienen cada pregunta se decide en memoria, con las versiones selladas, y la consulta lo usa;
+- **la planilla elige una opción por pregunta** (143) y no usa `answered`, `unanswered` ni `notAsked`, que quedan para las reglas y las sugerencias;
 - además: persona, versión, empresa (también «Sin empresa») y recibida, en UTC con fin exclusivo;
 - la búsqueda mira solo los textos largos;
 - **lo privado no sale de la memoria:** textos, personas y condiciones viajan en el cuerpo, nunca en la dirección, el storage ni los logs;
@@ -63,7 +64,7 @@ Antes de empezar, en este orden:
 
 **Una sola lectura:** cada pedido fija las versiones que existen, las deserializa una vez y consulta solo esas: una publicación a mitad no mezcla columnas. Listado, conteos, navegación, Excel y tablero usan la misma función de filtros.
 
-**Conteos:** cada dimensión ignora solo su propio filtro y conserva las opciones históricas, con la última etiqueta. En «elegir varias», una respuesta cuenta en cada opción. Se piden solo las secciones visibles, y su falla no impide aplicar un filtro válido.
+**Conteos:** las facetas ofrecen las opciones de cada filtro, y el front no muestra sus cantidades (143). Cada dimensión ignora solo su propio filtro y conserva las opciones históricas, con la última etiqueta. En «elegir varias», una respuesta cuenta en cada opción. Se piden solo las secciones visibles, y su falla no impide aplicar un filtro válido.
 
 **Excel (`.xlsx`):**
 - con los filtros aplicados y `formrecords.export`, hasta 10.000 respuestas (con más, el diálogo pide acotar) y sin trabajos de fondo;
@@ -91,27 +92,27 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobados en el lienzo v150; con el traspaso 5 se redibuja el detalle (139). El recorrido guiado suma dos circuitos: de pegar los proveedores a verlos en la planilla y el Excel, y de armar los campos a ver el CUIT sellado en la planilla. Muestran solo lo que existe hasta acá (78).
+Aprobados en el lienzo v150; con el traspaso 5 se redibujan los filtros (143 y 144) y el detalle (139). El recorrido guiado suma dos circuitos: de pegar los proveedores a verlos en la planilla y el Excel, y de armar los campos a ver el CUIT sellado en la planilla. Muestran solo lo que existe hasta acá (78).
 
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
 | `FRM-Formularios-15` | la lista, con las columnas de respuestas y «Quien solo ve respuestas» | Aprobado |
-| `FRM-Respuestas` | la planilla, con «Columnas», «Empresa» y sus estados; suma «Elegir varias» y los campos sellados | Aprobado |
-| `FRM-Respuestas-Filtros` | «Más filtros», en un panel al costado | Aprobado |
+| `FRM-Respuestas` | la planilla, con «Columnas», «Empresa» y sus estados; suma «Elegir varias» y los campos sellados | Se redibuja: «Filtros» y los chips (144) |
+| `FRM-Respuestas-Filtros` | «Filtros», que se despliega como «Columnas» | Se redibuja (143 y 144) |
 | `FRM-Respuesta` | la vista rápida | Se redibuja: el detalle alineado (139) |
 | `FRM-Respuestas-Exportar` | el diálogo de exportar | Aprobado |
 | `FRM-Tablero` | el tablero | Aprobado |
-| `M-FRM-Respuestas`, `M-FRM-Respuesta`, `M-FRM-Tablero` | los tres, en el teléfono. Tocar una fila abre `M-FRM-Respuesta`: no hay vista rápida | Aprobados; `M-FRM-Respuesta` se redibuja (139) |
+| `M-FRM-Respuestas`, `M-FRM-Respuesta`, `M-FRM-Tablero` | los tres, en el teléfono. Tocar una fila abre `M-FRM-Respuesta`: no hay vista rápida | `M-FRM-Respuestas` y `M-FRM-Respuesta` se redibujan (139 y 144); `M-FRM-Tablero`, aprobado |
 | `FRM-Respuesta-Completa` | la pantalla completa, con sus dos secciones plegadas y abiertas | Se redibuja: la actividad en columnas fijas (139) |
 | `M-FRM-Formularios-15` | la lista en el teléfono, con «N respuestas · estado» | Aprobado |
 
 **Lo que se corrigió en lo dibujado:**
 - **Sale lo de etapas posteriores:** las columnas Fotos y Remito, la pestaña Fotos y su visor, su sección en «Más filtros», «Por aprobar · 3» en el panel y la tarjeta «Por estado».
-- **Cambia:** Canal pasa a su columna (un dato por celda) y «Abrir en pantalla completa» se suma a la vista rápida. «Contando…» y «Exportando…» se quedan, con su aro y su color (115).
+- **Cambia:** Canal pasa a su columna (un dato por celda) y «Abrir en pantalla completa» se suma a la vista rápida. «Exportando…» se queda, con su aro y su color (115); «Contando…» se va con «Ver N respuestas» (144).
 
 **Estados que se sumaron:**
 - un cliente con la marca «Cliente», y «Persona sin información»;
-- «Elegir varias»: «Fallas» con dos opciones, el filtro «alguna de» y su lugar en «Más filtros»;
+- «Elegir varias»: «Fallas» con dos opciones y su filtro de una opción, en «Filtros» (143);
 - los campos sellados: las subcolumnas con «—» en una respuesta de antes de los campos, y los campos en el detalle;
 - con `forms.read` y sin `formrecords.read`: la lista sin las columnas de respuestas.
 
@@ -122,62 +123,6 @@ Aprobados en el lienzo v150; con el traspaso 5 se redibuja el detalle (139). El 
 - **La planilla** se desplaza a lo ancho dentro de su caja, con N° fijo a la izquierda. Es la tabla con columnas fijas de la E12.
 - **«Ya tenés una exportación en curso»** es la barrera. **«No pudimos actualizar»** conserva lo que se ve.
 - **Exportar** no aparece sin `formrecords.export`, y sin respuestas queda grisado, con el motivo en su tooltip (43).
-
-## Contrato
-
-Todas las rutas son de `/api/organization/forms`, con `[Access(Access.Business)]` y `[FeatureGate("forms")]`. Los `POST` de esta tabla solo leen: no llevan `[Idempotent]`. Van en `FormsContractContributor.cs`, con ejemplos exportados de una corrida real.
-
-`filtros` es `{search?, companies?[], respondents?[{kind, id}], versions?[], received?{preset? | fromUtc, toUtc}, conditions?[{fieldId, operator, values[]}]}`. `kind` es `member` o `contact`; `preset`, `today`, `last7Days` o `thisMonth`; `companies` admite `none`. Hasta 20 condiciones y 100 valores por lista; `search` hasta 100 caracteres.
-
-| Ruta | Permiso | Pide | Devuelve |
-| --- | --- | --- | --- |
-| `GET /` (cambia) | `forms.read` | suma `sort=lastRecordAtUtc` | cada fila suma `recordCount?` y `lastRecord?{id, displayNumber, submittedAtUtc}`: `null` sin `formrecords.read` |
-| `GET /overview` | `formrecords.read` | `page`, `pageSize`, `search`, `sort` (`name`, `lastRecordAtUtc`) | `PagedResult<{id, name, prefix, recordCount, lastRecord?}>` |
-| `GET /{id}/records/columns` | `formrecords.read` | — | `{formName, prefix, activeVersionNumber, columns[{key, fieldId, label, type, retired, decimals?, catalogField?{key, name}}], versions[], searchLabels[]}` |
-| `POST /{id}/records/search` | `formrecords.read` | `filtros`, `page`, `pageSize`, `sort` (`submittedAtUtc`, `number`, `field:<id>`) | `PagedResult<{id, displayNumber, versionNumber, submittedAtUtc, channel, respondent{kind, id?, name?}, companies[], values}>` |
-| `POST /{id}/records/facets` | `formrecords.read` | `filtros`, `dimensions[]` (`company`, `respondent`, `version`, `received`, `field:<id>`) | `{total, dimensions[{key, options[{value, label, count, retired}], hasMore, answered?, unanswered?, notAsked?}]}`, hasta 20 opciones por dimensión |
-| `POST /{id}/records/facet-options` | `formrecords.read` | `filtros`, `dimension`, `search?`, `page`, `pageSize` | `PagedResult<{value, label, count, retired}>` |
-| `GET /{id}/records/{recordId}` | `formrecords.read` | — | `{id, displayNumber, versionNumber, submittedAtUtc, channel, respondent, companies[], formName, questions[], titles[], values, sentBy?{name, atUtc}, conversationId?}` |
-| `POST /{id}/records/{recordId}/navigation` | `formrecords.read` | `filtros`, `sort` | `{previousId?, nextId?, position, total}` |
-| `POST /{id}/records/export` | `formrecords.export` | `filtros`, `sort`, `columns` (`all`, `visible`), `visibleKeys?[]` | 200 `.xlsx` |
-| `POST /{id}/records/dashboard` | `formrecords.read` | `filtros`, `period` (`day`, `week`, `month`) | `{period, total, buckets[{start, count}], numbers[{fieldId, label, decimals, sum, average?, min?, max?, buckets[{start, total}]}], choices[{fieldId, label, type, catalogName?, answered, options[], others?}], dates[{fieldId, label, buckets[]}], respondents[], respondentsOthers?}`; cada opción o persona lleva `{label, count, sums}` |
-| `GET /{id}/dashboard-settings` | `formrecords.read` | — | `{hiddenCards[], countBy}` |
-| `PUT /{id}/dashboard-settings` | `formrecords.read` | `{hiddenCards[], countBy}`, hasta 100 claves | 204. Sin versión: es de una sola persona |
-
-**Valores:** `values` es un mapa de `fieldId` a valor. Ausente es que la pregunta no existía; `null`, «Sin respuesta». El valor es `{kind: "text", text}`, `{kind: "number", number}`, con el número como texto, `{kind: "date", date}`, `{kind: "bool", bool}` o `{kind: "choices", choices[{id, label, code?, detail?, value?, catalogName?, fields}]}`, en el orden elegido.
-
-**Errores** (en `Domain/Forms/`, con sus textos en `FormsTexts.resx` y `.en.resx`):
-
-| Código | Tipo | Cuándo |
-| --- | --- | --- |
-| `Forms.Record.NotFound` | NotFound | ausente, ajena, excluida o de otro formulario |
-| `Forms.RecordFilter.Invalid` | Validation (`conditions[i]`) | pregunta, operador o valor fuera de la gramática, un orden que no se admite o un rango invertido |
-| `Forms.RecordExport.TooMany` | Conflict | más de 10.000 respuestas |
-| `Forms.RecordExport.Busy` | Conflict | esa persona ya tiene un trabajo en curso |
-| `Forms.RecordExport.TimedOut` | ServiceUnavailable | se pasó el presupuesto de 30 s |
-| `Forms.Dashboard.SettingsInvalid` | Validation (`hiddenCards`) | más de 100 claves |
-
-Lo ajeno sigue siendo `Forms.Definition.NotFound`. Un 403 o un permiso revocado no devuelven datos ni conteos.
-
-**Permiso nuevo:** `formrecords.export`, con sus textos y la migración de los roles de sistema.
-
-## Datos
-
-Una migración, `<fecha>_FormRecordsRead.cs`, y otra de roles, `<fecha>_SystemRoleFormRecordsExport.cs`. Las respuestas de antes aparecen tal cual, sin migrar.
-
-**FormDashboardSettings** (`ITenantOwned`, esquema `tenant`, con RLS, sin auditoría ni versión):
-
-| Columna | Tipo | Regla |
-| --- | --- | --- |
-| `TenantId`, `UserId`, `DefinitionId` | uuid | clave; FK compuesta a `FormDefinitions`; `UserId` sin FK, porque la cuenta es global |
-| `Settings` | jsonb | `{hiddenCards[], countBy}`; una clave que ya no existe se ignora al leer |
-| `UpdatedAtUtc` | timestamptz | — |
-
-**Índices nuevos:**
-- `FormRecords`: `(TenantId, DefinitionId, SubmittedAtUtc, Id)`; `(TenantId, DefinitionId, RespondentUserId)`; `(TenantId, DefinitionId, RespondentContactId)`, y GIN sobre `RespondentCompanyIds`;
-- `FormRecordValues`: `(TenantId, FieldId, ChoiceId)`, `(TenantId, FieldId, NumberValue)`, `(TenantId, FieldId, DateValue)`, y un GIN trigram `IX_FormRecordValues_Search_TextValue`, parcial en `LongText`, sobre `f_unaccent(lower("TextValue"))`.
-
-`FormWorkLeases.Kind` suma `RecordExport`.
 
 ## Pasos
 
@@ -207,7 +152,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` | la API de la E14 | zod estricto con los ejemplos |
 | F2 | La lista y las pestañas | suma a `FormsPage.tsx` y a las pestañas [E14]; `registration.ts` | su tablero | las tres combinaciones de permisos; adónde abre el nombre |
 | F3 | La planilla | `pages/FormRecordsPage.tsx`, `lib/recordFilters.ts`, `lib/values.ts`, `components/records/CustomerTag.tsx` | su tablero | «—», «Sin respuesta», cero y `false`; lo privado fuera de la URL; 403 retira todo; axe |
-| F4 | «Más filtros» | `components/records/MoreFiltersPanel.tsx` | su tablero | borrador hasta aplicar; un conteo que falla no frena |
+| F4 | «Filtros» y los chips | `components/records/RecordFiltersMenu.tsx`, `RecordFacetControl.tsx` | su tablero | cada cambio se aplica enseguida; el combo de una opción, sin cantidades, con «Mostrar N más»; el chip nombra lo elegido; «Limpiar todo»; una faceta que falla no frena |
 | F5 | La vista rápida | `components/records/QuickView.tsx`, `RecordValues.tsx`; la excepción en la ficha de tablas | su tablero | teclado, Esc y foco útil; una respuesta tardía se descarta; los campos alineados debajo de su valor y las acciones como íconos (139) |
 | F6 | La pantalla completa | `pages/RecordFullPage.tsx` | su tablero | entrada directa sin filtros privados; «Volver» a la misma fila; el teléfono; la actividad en columnas fijas (139) |
 | F7 | Exportar | `components/records/ExportDialog.tsx` | su tablero | más de 10.000; `Busy`; «Exportando…» y el diálogo abierto hasta la respuesta |

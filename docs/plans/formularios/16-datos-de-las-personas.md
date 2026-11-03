@@ -41,7 +41,7 @@ Antes de empezar, en este orden:
 
 **El papel de un campo:** los campos de la E13 suman su papel, «Dato» (el de siempre) o «Filtro». Los dos se sellan al responder. En la planilla, las subcolumnas de un campo «Filtro» salen apagadas y se prenden en «Columnas». Un campo que usa un filtro del borrador o de la versión activa no se quita ni cambia de papel, tipo o fuente.
 
-**Los filtros por destinatario,** en una pregunta de un catálogo a mano («Qué opciones ve cada persona»):
+**Los filtros por destinatario,** en una pregunta de un catálogo a mano («Qué opciones ve cada persona», una zona que arranca plegada, con los filtros en su banda, y se abre sola con un error o un aviso, 145):
 - filtros de igualdad, uno por campo de papel «Filtro», unidos con «y»;
 - **fijo:** un valor elegido, que se valida contra su fuente. Por ejemplo, «Rubro es Frío»;
 - **según quien lo recibe:** un dato de la persona, de tipo catálogo, con la misma fuente que el campo. Por ejemplo, «Zona es la zona de quien lo recibe»;
@@ -62,7 +62,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v150, con su recorrido guiado. Muestran solo lo que existe hasta acá (78). Con el traspaso 5 se redibujan `FRM-Editor-16` y su teléfono: lo de la persona probada, en dos columnas (138).
+Aprobados y publicados en el lienzo v150, con su recorrido guiado. Muestran solo lo que existe hasta acá (78). Con el traspaso 5 se redibujan `FRM-Editor-16` y su teléfono, con la zona plegada (145) y lo de la persona probada en dos columnas (138), y `FRM-Respuestas-16` y su teléfono, con «Filtros» (144).
 
 | Tablero | Qué muestra |
 | --- | --- |

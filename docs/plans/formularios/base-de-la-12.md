@@ -33,7 +33,8 @@ Antes de empezar, en este orden:
 - **un dato por celda, en un renglón:** `DataTable` deja de dibujar `detail` en la computadora, y cada pantalla pasa a columnas lo que hace falta, o lo saca. En el teléfono sigue el nombre y una línea;
 - la columna ordenada muestra ▲ o ▼;
 - **una línea fina entre columnas,** también en una columna fija al desplazar, los números a la derecha y la tabla que cierra abajo (137);
-- «Más filtros» en `FilterBar`, con el buscador y hasta tres filtros en una fila. Los filtros de Chats, en una fila.
+- **los filtros** (143 y 144): el buscador y hasta tres filtros en una fila, sin botón para aplicar, y lo demás en un solo «Filtros», que se despliega como «Columnas» y aplica cada cambio, con lo aplicado en chips y «Limpiar todo». Un filtro de opciones es un desplegable simple, sin cantidades y con la elegida tildada; un segmentado conserva su número. Los filtros de Chats, en una fila;
+- **lo elegido** (142): el segmentado rellena la elegida con la marca, una tarjeta elegida suma un borde de 2 px, un desplegable de filtro tilda la elegida, y la fila abierta y la conversación abierta llevan una barra de 3 px. En el teléfono, cada opción de un segmentado mide 44 × 44.
 
 **Las fechas,** siempre con fecha y hora completas, en la zona de la cuenta: salen `relative`, `formatCalendar` y las fechas cortas, también en Usuarios y en la tarjeta de Auditoría de Inicio.
 
@@ -59,7 +60,7 @@ Los tableros están en el lienzo v145 y al día, salvo lo que diga cada fila. **
 | `Campana`, `M-Campana`, `Campana-Plat`, `M-Campana-Plat` y `M-Campana-Personal` | la campana de cada acceso, con los avisos de esta etapa, y la pantalla «Avisos» del teléfono. Cada etapa posterior dibuja su versión. El número es el de lo que lista esa campana |
 | `Otro-Acceso` y `Otro-Acceso-Persona`, con sus teléfonos | ofrecer entrar con el otro acceso |
 | Los de cada pantalla que cambia | los textos, las tablas y los filtros, según las fichas del front |
-| `Criterio-Botones`, `Criterio-Formularios`, `Criterio-Tablas`, `Criterio-Dialogos` y `Criterio-Avisos` | el botón que trabaja, la (i), la tabla que vuelve a leer, la confirmación que espera y cuándo va la ⓘ. Ya están en el lienzo v148; `Criterio-Tablas` se redibuja con la línea entre columnas y el cierre (137) |
+| `Criterio-Botones`, `Criterio-Formularios`, `Criterio-Tablas`, `Criterio-Dialogos` y `Criterio-Avisos` | el botón que trabaja, la (i), la tabla que vuelve a leer, la confirmación que espera y cuándo va la ⓘ. Ya están en el lienzo v148; `Criterio-Tablas` se redibuja con la línea entre columnas y el cierre (137), y `Criterio-Menus`, con lo elegido y los filtros (142 a 144) |
 
 **La galería de esta etapa** son las pantallas que cambian, una vez al final.
 
@@ -120,7 +121,7 @@ Abreviaturas: `A/`, `I/` y `P/` son las capas del back, y `F/`, el front.
 | --- | --- | --- | --- | --- |
 | F1 | Botones y esperas: `button.tsx` ya pone el aro y el gerundio, y solo pierde la atenuación; `ConfirmDialog` suma `pending` y `pendingLabel`, y `DataTable` y `Table`, `refreshing` con la línea | `F/src/shared/ui/button.tsx`, `ConfirmDialog.tsx`, `DataTable.tsx`, `useEditPage` y las pantallas que lo usan | el botón de hoy | aro y gerundio sin atenuarse; la confirmación abierta hasta la respuesta, también si falla; la tabla que vuelve a leer; sin «Cambios sin guardar»; el campo se marca al tocar |
 | F2 | La campana | `F/src/layouts/notifications/`, `NotificationsPage.tsx` | los tableros de la campana | sin leer; marcar; la versión nueva; el teléfono; axe |
-| F3 | Tablas | `F/src/shared/ui/DataTable.tsx`, `FilterBar.tsx` y cada pantalla | los tableros «Criterio» | sin `detail` en la compu; ▲ ▼; «Más filtros»; la línea entre columnas, también fija al desplazar, y el cierre abajo (137) |
+| F3 | Tablas | `F/src/shared/ui/DataTable.tsx`, `FilterBar.tsx` y cada pantalla | los tableros «Criterio» | sin `detail` en la compu; ▲ ▼; la línea entre columnas, también fija al desplazar, y el cierre abajo (137); «Filtros» con chips y los desplegables sin cantidades, también en Usuarios y Roles (143 y 144) |
 | F4 | Fechas | `F/src/shared/format/` y sus usos | `formatos.md` del front | `format-usage.test.ts` prohíbe `relative` y `formatCalendar` |
 | F5 | Carteles | las seis pantallas | sus tableros | ninguna franja; el aviso en la banda o en la campana |
 | F6 | Palabras | `locales/` y `enums/` | — | ninguna de las viejas, con una guarda de textos |
@@ -128,6 +129,7 @@ Abreviaturas: `A/`, `I/` y `P/` son las capas del back, y `F/`, el front.
 | F8 | El tamaño | `F/src/index.css` y las clases en px | — | los menús no se corren; capturas de la galería |
 | F9 | Miembros de una empresa | `CompanyDetailPage` | — | sin el permiso, la pestaña no aparece |
 | F10 | Ayuda y motivos: la (i) con tooltip, el motivo de lo apagado y los usos de hoy de `hint` y `description`, que pasan a la (i) o se sacan | `F/src/shared/ui/InfoTip.tsx`, `help` en `FormField`, `Section`, `Page` y `CheckboxField`, y un tooltip común para lo apagado; una prueba de arquitectura | `InfoButton.tsx`, `Sheet.tsx` y `RowAction.disabledReason` | la (i) es descripción accesible y no toma el foco al abrir un diálogo; en el teléfono, la (i) abre la hoja y lo apagado avisa en la franja; la prueba frena un texto fijo en `hint` o `description`; axe |
+| F11 | Lo elegido (142) | `F/src/shared/ui/SegmentedControl.tsx`, `RadioGroupField`, los desplegables de filtro, `DataTable` y la lista de chats | «Criterio · Menús» | 3:1 contra lo no elegido y 4,5:1 el texto; 44 × 44 en el teléfono; la tarjeta con su borde; la tilde; la fila y la conversación abiertas con su barra |
 
 **Al cerrar:** las fichas del front y `docs/features/` quedan al día, y `docs/architecture/backend.md` suma la campana.
 
