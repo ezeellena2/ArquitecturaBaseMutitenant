@@ -87,7 +87,7 @@ El autor decide el contenido. La app decide la forma, con una tabla fija por tip
 
 ## Pantallas
 
-Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](20-texto-diseno.md).
+Dibujados en la v154, para aprobar, con el armado del front real de ArquitecturaBase (126 y 134), el [texto de la etapa](20-texto-diseno.md) y el recorrido guiado `cargar-una-respuesta`. El ejemplo es «Pedido de materiales», versión 4, que suma «Zona», «Proveedor» con su lista dependiente y «Foto del remito», y por eso queda solo para la app.
 
 | Tablero | Qué muestra |
 | --- | --- |
@@ -101,6 +101,14 @@ Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](20-texto-d
 | `FRM-Respuestas-Propias` y su teléfono | la misma planilla con lo suyo |
 | `FRM-Editor-Listas` y su teléfono | «Según otra respuesta» |
 | `FRM-Publicar-20` y su teléfono | solo para la app, en los tres casos, y uno solo para clientes que no se publica |
+
+**La página** sigue a la de allá: la banda con Cancelar y Enviar, y una zona por título, con la grilla de hasta tres por renglón. Lo que allá dice «Enviando… 64 %» acá es «Enviando…» con su aro y una barra sin palabras (95 y 115). Sin el dato de la persona, un cartel lo nombra, porque bloquea, y Enviar queda grisado con el motivo.
+
+**Publicar solo para la app** va en la zona «Avisos» de la E16, con «En WhatsApp: No» en «Qué se publica», sin «Ver vista oficial» y con el botón «Publicar» en la banda. Uno solo para clientes frena en «Problemas» (134).
+
+**«Agregar filtro ▾»** reúne los tres filtros de una pregunta en un menú, porque con «Según otra respuesta» los botones ya no entran en el encabezado de la caja (134).
+
+**«Canal»** se suma a los filtros rápidos de la planilla, y la cantidad sale de la barra: ya está en la pestaña «Respuestas».
 
 **Valen** las fichas del front y la decisión 43 en cada botón. El teléfono es una app: «Cargar» va en la lista con nuestra forma de fila.
 

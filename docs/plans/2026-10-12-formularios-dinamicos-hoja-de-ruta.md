@@ -628,6 +628,7 @@ Elegidas por el usuario el 2026-11-02, al comparar el lienzo con el front real d
 131. **Reactivar se abre en el formulario, como en ArquitecturaBase (E17).** Es publicar: «Reactivar» de la lista lleva al formulario y abre ahí el diálogo, con las zonas de «Publicar» (112), «Próxima respuesta» en «Qué se publica» y el botón «Reactivar con la versión N».
 132. **Con respuestas, «Borrar» queda grisado, con el motivo (43).** Cambia lo que decía la E17: antes no aparecía. Allá se lee una línea en el menú; acá va en su tooltip y, en el teléfono, debajo de la acción.
 133. **Una pregunta de documento acepta siempre PDF, Excel, Word, JPEG y PNG, como en ArquitecturaBase (E18).** No se eligen por pregunta: lo dice la (i) de «Cuántos documentos». Cambia lo que decía la E18.
+134. **La carga desde la web sigue el armado de ArquitecturaBase, y lo que allá no existe usa lo que ya está aprobado acá.** Publicar solo para la app va en la zona «Avisos» de la 16 y no necesita un diálogo propio; los filtros de una pregunta de catálogo se agregan con «Agregar filtro ▾», que suma «Según otra respuesta»; «Canal» entra en los filtros rápidos de la planilla.
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
