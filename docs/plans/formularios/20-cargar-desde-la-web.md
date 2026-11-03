@@ -87,7 +87,7 @@ El autor decide el contenido. La app decide la forma, con una tabla fija por tip
 
 ## Pantallas
 
-Dibujados en la v154, para aprobar, con el armado del front real de ArquitecturaBase (126 y 134), el [texto de la etapa](20-texto-diseno.md) y el recorrido guiado `cargar-una-respuesta`. El ejemplo es «Pedido de materiales», versión 4, que suma «Zona», «Proveedor» con su lista dependiente y «Foto del remito», y por eso queda solo para la app.
+Aprobados y publicados en el lienzo v154, con el armado del front real de ArquitecturaBase (126 y 134) y el recorrido guiado `cargar-una-respuesta`. El ejemplo es «Pedido de materiales», versión 4, que suma «Zona», «Proveedor» con su lista dependiente y «Foto del remito», y por eso queda solo para la app.
 
 | Tablero | Qué muestra |
 | --- | --- |
