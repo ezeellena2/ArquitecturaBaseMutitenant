@@ -60,7 +60,7 @@ Los tableros están en el lienzo v145 y al día, salvo lo que diga cada fila. **
 | `Campana`, `M-Campana`, `Campana-Plat`, `M-Campana-Plat` y `M-Campana-Personal` | la campana de cada acceso, con los avisos de esta etapa, y la pantalla «Avisos» del teléfono. Cada etapa posterior dibuja su versión. El número es el de lo que lista esa campana |
 | `Otro-Acceso` y `Otro-Acceso-Persona`, con sus teléfonos | ofrecer entrar con el otro acceso |
 | Los de cada pantalla que cambia | los textos, las tablas y los filtros, según las fichas del front |
-| `Criterio-Botones`, `Criterio-Formularios`, `Criterio-Tablas`, `Criterio-Dialogos` y `Criterio-Avisos` | el botón que trabaja, la (i), la tabla que vuelve a leer, la confirmación que espera y cuándo va la ⓘ. Ya están en el lienzo v148; `Criterio-Tablas` se redibuja con la línea entre columnas y el cierre (137), y `Criterio-Menus`, con lo elegido y los filtros (142 a 144) |
+| `Criterio-Botones`, `Criterio-Formularios`, `Criterio-Tablas`, `Criterio-Dialogos` y `Criterio-Avisos` | el botón que trabaja, la (i), la tabla que vuelve a leer, la confirmación que espera y cuándo va la ⓘ. Ya están en el lienzo v148; `Criterio-Tablas`, `Criterio-Menus` y `Criterio-Formularios` suman las reglas del traspaso 5 (137, 138 y 142 a 145), dibujadas en el lienzo v159 y a la espera del OK |
 
 **La galería de esta etapa** son las pantallas que cambian, una vez al final.
 
