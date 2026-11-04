@@ -62,7 +62,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v150, con su recorrido guiado. Muestran solo lo que existe hasta acá (78). Con el traspaso 5 se redibujan `FRM-Editor-16` y su teléfono, con la zona plegada (145) y lo de la persona probada en dos columnas (138), y `FRM-Respuestas-16` y su teléfono, con «Filtros» (144).
+Aprobados y publicados en el lienzo v150, con su recorrido guiado. Muestran solo lo que existe hasta acá (78). Con el traspaso 5, redibujados en el lienzo v162 y a la espera del OK: `FRM-Editor-16` y su teléfono, con las dos zonas plegadas en «Zonas plegadas» (145) y lo de la persona probada en dos columnas (138), y `FRM-Respuestas-16`, con «Filtros» (144); su teléfono lo tiene desde la v160.
 
 | Tablero | Qué muestra |
 | --- | --- |
