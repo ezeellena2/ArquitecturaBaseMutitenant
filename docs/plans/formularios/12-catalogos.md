@@ -101,7 +101,7 @@ Cada pieza nueva copia la **estructura** del archivo modelo de este repo; no se 
 
 **Con el armado de ArquitecturaBase** (117, 120 y 125 a 129):
 - `FRM-Catalogo` y `M-FRM-Catalogo`: el editor de un catálogo a mano, con el armado de ArquitecturaBase. «El catálogo» dice de dónde salen y el tipo, y debajo van Nombre y Descripción; al costado, «Así lo ve quien lo recibe», con «Una opción | Varias» y el teléfono. La banda trae «Dar de baja», «Descartar» y «Guardar cambios». «Opciones» va a todo el ancho: «+ Agregar opción», «Importar», «Exportar» y un ⋮ con Descargar la plantilla, Ordenar de la A a la Z y Generar los códigos que faltan; abajo, solo «Buscar opción»; la tabla editable en la compu, la selección de filas para dar de baja o reactivar, el Estado como casilla y ↑ ↓ ✎ 🗑 a la vista;
-- `FRM-Catalogo-Importar`: «Origen» y «Revisión» a la vista, sin pasos numerados. Redibujado con el traspaso 5 en el lienzo v162, a la espera del OK: «Cambios» se lee lado a lado (138), y las tablas llevan la línea entre columnas y la fila a la derecha (137).
+- `FRM-Catalogo-Importar`: «Origen» y «Revisión» a la vista, sin pasos numerados. Redibujado con el traspaso 5, aprobado y publicado en el lienzo v162: «Cambios» se lee lado a lado (138), y las tablas llevan la línea entre columnas y la fila a la derecha (137).
 
 **Nuevos** (v148): `FRM-Catalogo-Opciones` y `M-FRM-Catalogo-Opciones`, el modal de opciones. Importar no va en el teléfono, como hasta ahora.
 

@@ -92,7 +92,7 @@ Antes de empezar:
 
 **Sin rastro de etapas posteriores:** los tableros de la v141 no tienen «4 reglas · Revisión 3» ni «Más de 10 archivos». `Rol` suma los cinco permisos de formularios.
 
-**Redibujados con el traspaso 5 en el lienzo v162, a la espera del OK** (138, 142 y 145): `FRM-Editor` y su teléfono, con la revisión de «otra persona guardó» lado a lado (el teléfono suma «Revisar los cambios») y la zona «En WhatsApp» plegada en cada pregunta de catálogo, y `WA-Chats-Formulario` y su teléfono, con «Elegido en otra página»: el elegido de otra página primero y la tarjeta elegida con su borde.
+**Redibujados con el traspaso 5, aprobados y publicados en el lienzo v162** (138, 142 y 145): `FRM-Editor` y su teléfono, con la revisión de «otra persona guardó» lado a lado (el teléfono suma «Revisar los cambios») y la zona «En WhatsApp» plegada en cada pregunta de catálogo, y `WA-Chats-Formulario` y su teléfono, con «Elegido en otra página»: el elegido de otra página primero y la tarjeta elegida con su borde.
 
 **Estados que se dibujan** (cada uno tiene que poder producirse; si no, es un bug):
 - **Editor:** con cambios, guardando («Guardando…», con su aro), guardado, no se guardó (lo escrito se conserva), otra persona guardó (lado a lado, 138: Qué cambió, Dato, Guardado actualmente y Mis cambios, solo lo distinto y con los nombres del editor; una pregunta que una versión no tiene muestra sus datos y «Quitada»), prefijo ocupado, para quién es, quitar una pregunta, cambiar el tipo, descartar, solo lectura, cargando y no existe.
