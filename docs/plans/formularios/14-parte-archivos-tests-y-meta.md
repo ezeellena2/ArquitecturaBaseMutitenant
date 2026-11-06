@@ -57,7 +57,7 @@ El esqueleto del módulo lo deja la E12: `AddFormsModule` en las tres capas, la 
 | Front | Vitest con MSW y axe en las páginas y el diálogo; los ejemplos exportados validados con zod estricto; `registration`, `navigation` y `composition` del módulo; paridad de sus recursos `forms` y `enums` compuestos desde `registration.ts`, también al retirar Forms; los botones según la decisión 43 |
 | E2E real y recorrido | crear con los siete tipos, publicar contra el canal real o el de prueba, mandar a una cuenta en inglés (el formulario llega como está escrito y los textos del sistema, en inglés); responder y ver el número tras recargar; usar un catálogo en una pregunta de «elegir varias», mandar y responder; dar de baja una opción antes de responder y mandar de nuevo |
 | Prueba con Meta | con el número de una organización de prueba: §15 |
-| Retiro | una vez, con la base vacía: quitar `Forms` con sus catálogos (guía nueva, `docs/guides/quitar-formularios.md`, copiando `quitar-asistente.md`) y que el núcleo y WhatsApp sigan en verde |
+| Retiro | una vez, con la base vacía: quitar `Forms` con sus catálogos (guía nueva, `docs/guides/quitar-formularios.md`, copiando `quitar-asistente.md`) y que el núcleo y WhatsApp sigan en verde. Allá la prueba encontró que la vuelta atrás de la migración de retiro necesita a mano las dos claves diferibles de las opciones, y que los tests de WhatsApp, el inventario de rutas y los de migraciones del núcleo daban por instalado el módulo: se omiten solos sin él (traspaso 9) |
 
 ## 14. Referencia de Meta (tomada de ArquitecturaBase)
 

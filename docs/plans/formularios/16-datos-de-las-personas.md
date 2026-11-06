@@ -57,12 +57,12 @@ Antes de empezar, en este orden:
 
 **Al publicar** se separan los problemas, que frenan, de los avisos, que no (37):
 - **frenan:** un filtro inválido; un filtro fijo que deja más opciones que el tope, si la pregunta no tiene filtros según quien lo recibe; y uno según quien lo recibe en un formulario solo para clientes;
-- **avisan:** el máximo de opciones por combinación de datos, contra 200 o 20; cuántas personas activas con `formrecords.create` no tienen el dato; y uno según quien lo recibe en un formulario para los dos, que no se le va a poder mandar a un cliente;
+- **avisan:** el máximo de opciones por combinación de datos, solo cuando pasa el límite de WhatsApp, 200 en una elección o 20 en varias, o da cero: «Con estos filtros nadie ve ninguna opción.» (157); cuántas personas activas con `formrecords.create` no tienen el dato; y uno según quien lo recibe en un formulario para los dos, que no se le va a poder mandar a un cliente;
 - con un filtro según quien lo recibe, un catálogo de más de 200 opciones se publica: cambia lo que la E14 dice de `CatalogTooLarge`.
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v150, con su recorrido guiado. Muestran solo lo que existe hasta acá (78). Con el traspaso 5, redibujados, aprobados y publicados en el lienzo v162: `FRM-Editor-16` y su teléfono, con las dos zonas plegadas en «Zonas plegadas» (145) y lo de la persona probada en dos columnas (138), y `FRM-Respuestas-16`, con «Filtros» (144); su teléfono lo tiene desde la v160.
+Aprobados y publicados en el lienzo v150, con su recorrido guiado. Muestran solo lo que existe hasta acá (78). Con el traspaso 5, redibujados, aprobados y publicados en el lienzo v162: `FRM-Editor-16` y su teléfono, con las dos zonas plegadas en «Zonas plegadas» (145) y lo de la persona probada en dos columnas (138), y `FRM-Respuestas-16`, con «Filtros» (144); su teléfono lo tiene desde la v160. Con la 157 se ajusta `FRM-Publicar-16`: el aviso del máximo aparece solo cuando no entra, y el de cero es nuevo.
 
 | Tablero | Qué muestra |
 | --- | --- |
@@ -119,7 +119,7 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]` y `[Feat
 | --- | --- |
 | `GET` y `PUT /catalogs/{id}` | `fields[].role` (`Data` o `Filter`); ausente es `Data` |
 | `GET /{id}` y `PUT /{id}/draft` | `questions[].recipientFilters?[]`: `{fieldId, fieldName, mode, personDataId?, personDataName?, value?, valueLabel?}`, con `mode` `fixed` o `recipient`. Los nombres van en la lectura, porque con solo `forms.read` no se llega a `/person-data/options` |
-| `POST /{id}/publication-checks` | `warnings[]`: `{fieldId, code, max?, maxLabel?, limit?, people?}`, con `code` `MaxOptionsPerRecipient`, `PeopleWithoutData` o `NotForCustomers` |
+| `POST /{id}/publication-checks` | `warnings[]`: `{fieldId, code, max?, maxLabel?, limit?, people?}`, con `code` `MaxOptionsPerRecipient` (solo si pasa el límite), `NoOptionsForRecipients` (si da cero, 157), `PeopleWithoutData` o `NotForCustomers` |
 | `GET …/conversations/{id}/forms` | `offerProblems` suma `RecipientDataMissing`, con `dataName`, `FilterUnavailable` y `NotForCustomers`. `StructuredFormChoice.OfferProblems` suma `DataName?` |
 | `GET /{id}/records/columns` y el detalle | `catalogField.role` y `fields[].role`; ausente es `Data` |
 

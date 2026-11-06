@@ -1,6 +1,6 @@
 # E21 · Reglas, aprobación, PDF y avisos (spec)
 
-**Estado:** pendiente · spec de la etapa 21 del bloque (decisiones 34, 78, 80, 82, 91 a 93, 100, 106, 113 y 114), con el [formato](plantilla.md) de las etapas. Corresponde a la etapa 4 de ArquitecturaBase, con piloto real, y a la etapa 3 de su carga desde la app, decidida y sin programar. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E20.
+**Estado:** pendiente · spec de la etapa 21 del bloque (decisiones 34, 78, 80, 82, 91 a 93, 100, 106, 113, 114, 158 y 159), con el [formato](plantilla.md) de las etapas. Corresponde a la etapa 4 de ArquitecturaBase, con piloto real, y a la etapa 3 de su carga desde la app, decidida y sin programar. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E20.
 
 **Partes.** Esta spec no entra en un solo archivo, así que sigue en otro, con las mismas secciones. Lo que no está en la tabla está acá.
 
@@ -54,7 +54,7 @@ Antes de empezar, en este orden:
 
 **La planilla** suma la columna «Estado», en los formularios que piden aprobación, y la marca de la copia PDF confirmada. El filtro «Estado» va en todos: con aprobación, Recibida, Por aprobar, Aprobada y Rechazada, y siempre, «Anulada». Lo comparten la lista, los conteos y el Excel. El tablero suma «Por estado».
 
-**La actividad de una respuesta** (139): cuatro columnas fijas, Fecha, Qué pasó, Estado y Acciones, en bandas por momento («Al recibirla», «Aprobación», «Al aprobarla» o «Al rechazarla»). Quién y el detalle van debajo de qué pasó, en gris, y el estado y las acciones («Ver PDF», «Reintentar»), siempre en su columna. El PDF va en su renglón, debajo de «Armar el PDF», y cada persona de un aviso a un rol, en el suyo, con sus acuses. En la vista rápida las acciones van debajo del texto; en el teléfono, también el estado.
+**La actividad de una respuesta** (139): cuatro columnas fijas, Fecha, Qué pasó, Estado y Acciones, en bandas por momento («Al recibirla», «Aprobación», «Al aprobarla» o «Al rechazarla»). Quién y el detalle van debajo de qué pasó, en gris, y el estado y las acciones («Ver PDF», «Reintentar»), siempre en su columna. «Reintentar» va en el renglón de cada persona, solo con la falla confirmada: WhatsApp lo rechazó o alguien resolvió «No salió». Su (i) dice que manda el aviso solo a esa persona y qué revisar antes, el WhatsApp vinculado y la ventana de 24 horas; sin permiso de reglas se ve la falla, sin el botón (158). El PDF va en su renglón, debajo de «Armar el PDF», y cada persona de un aviso a un rol, en el suyo, con sus acuses. En la vista rápida las acciones van debajo del texto; en el teléfono, también el estado.
 
 **Corregir y anular** (91 a 93). Una respuesta confirmada no se modifica: queda reemplazada por su corrección, o anulada. Vale para lo de WhatsApp y lo de la web:
 - **quién:** quien la cargó, mientras no esté aprobada, y siempre si el formulario no pide aprobación. Con `formrecords.correct`, cualquiera y en cualquier momento; corregir lo ajeno pide también `formrecords.read`, porque no se corrige lo que no se ve. Quien solo ve respuestas, no. Un cliente no corrige ni anula: lo hace la organización;
@@ -79,6 +79,8 @@ Antes de empezar, en este orden:
 
 **Lo propio** (85): la planilla de quien solo carga suma el estado, el PDF y el motivo de rechazo, sin el rol ni quién decidió; su detalle no tiene Actividad.
 
+**El chat de WhatsApp en «Mi cuenta»** (159): debajo de los medios de ingreso, una zona «Chat de WhatsApp» con cada organización de la persona: «Vinculado», «Sin vincular» con «Vincular» o «Sin chat todavía» con «Abrir el chat», y los avisos: «Llegan hasta el …», «Pausados» o «No llegan». Vincular confirma el número con un código, como hoy, y «Verificado» sigue siendo entrar con el número. Lo da el módulo de WhatsApp; apagado, la zona no está.
+
 **Copiar un formulario** suma el diseño del PDF y las reglas vigentes, como su primera revisión.
 
 ## Pantallas
@@ -96,6 +98,7 @@ Aprobados y publicados en el lienzo v155, con el armado del front real de Arquit
 | `FRM-Respuesta-Corregir` y su teléfono | lo de antes a la vista, el motivo, «Corregida» y la versión anterior | Aprobados |
 | `FRM-Respuesta-Anular` y su teléfono | «Anular» al final del ⋮, el motivo, el filtro «Anulada» y el Excel con las anuladas | Aprobados |
 | `FRM-Respuestas-Propias-21` y su teléfono | lo propio, con estado, PDF y motivo del rechazo, y corregir lo suyo mientras no esté aprobado | Aprobados |
+| `Cuenta-21` y su teléfono | «Mi cuenta» con la zona «Chat de WhatsApp» y hasta cuándo llegan los avisos (159) | Por dibujar |
 | `FRM-Editor-21` y `FRM-Cargar-Respuesta-21`, con sus teléfonos | la pregunta «Correo» | Aprobados; `FRM-Cargar-Respuesta-21` se redibuja en dos anchos (141) |
 | `Campana-21` y su teléfono | «3 respuestas por aprobar» y «No se pudo mandar el aviso de …» | Aprobados |
 | `WA-Chats-Avisos` y su teléfono | los avisos, con «Sin plantilla aprobada» (61) | Aprobados |

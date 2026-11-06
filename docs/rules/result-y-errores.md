@@ -19,6 +19,7 @@ public const string HasUsersCode = "Roles.Role.HasUsers";
 public static Error HasUsers(int userCount) => Error.Conflict(HasUsersCode, "The role has users.",
     new Dictionary<string, object?> { ["userCount"] = userCount });
 ```
+- **Cada texto de error tiene su código y cada código, sus dos textos:** una clave de `Errors.resx` sin código declarado queda huérfana al quitar un módulo, y un código sin texto en es y en, también uno que arma una fábrica, falla. `ErrorCodeTests` controla hoy un solo sentido; la vuelta se suma al programar (traspaso 9).
 
 ## Prohibido
 - `throw` por una regla de negocio.

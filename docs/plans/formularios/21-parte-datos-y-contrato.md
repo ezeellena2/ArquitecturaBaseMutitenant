@@ -9,7 +9,7 @@
 - lo confirmado nunca se repite. Cada acción espera solo a la anterior de su regla. Si la condición no se cumple, queda «No aplica», que no es un error;
 - la configuración se valida al reservar: un rol borrado o una persona que se fue dan «No se pudo», y no cuelgan nada;
 - un destinatario inalcanzable no tumba a los demás. Lo sellado manda: no se copia la respuesta en cada ejecución;
-- «Reintentar» retoma solo lo que no salió. Lo que la cola de WhatsApp no sabe si salió lo reintenta ella sola (80).
+- «Reintentar» va por persona (158): reabre el aviso solo para ella, que vuelve a «En curso» y, al terminar, a «Hecho». No se repite a quienes lo recibieron ni vuelve a correr la acción siguiente de la regla. Lo que la cola de WhatsApp no sabe si salió lo reintenta ella sola (80).
 
 ## Los avisos y los correos
 
@@ -37,7 +37,8 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]` y `[Feat
 | `GET /{id}/approvals`, `…/{taskId}` y `…/{taskId}/continuation` | `formapprovals.decide` | `page`, `pageSize`; `direction` y `limit` | la cola, sin valores: `{taskId, recordId, displayNumber, submittedAtUtc, roleName, respondentName?}`, de la más vieja a la más nueva; `respondentName` es `null` sin `formrecords.read` |
 | `POST /{id}/records/{recordId}/decision` | `formapprovals.decide` | `{decision, reason?, version}`, con `[Idempotent]` | 200 `{version, state}` |
 | `GET /{id}/records/{recordId}/workflow` | `formrecords.read` | — | `{ruleRevision?, approval?, activity[], pdf?, canCorrect, canVoid}`; `approval.canDecide` dice si quien mira tiene el permiso y el rol de la tarea, y solo entonces el detalle la pide |
-| `POST …/executions/{executionId}/retry` | `formrules.manage` | —, con `[Idempotent]` | 200 |
+| `POST …/executions/{executionId}/recipients/{userId}/retry` | `formrules.manage` | `{version}`, la revisión del aviso, con `[Idempotent]`; si otra persona ya lo reintentó o lo resolvió, 409 | 200; la actividad suma `canRetry` en cada destinatario (158) |
+| `GET /api/me/whatsapp-chats` | la cuenta, con el módulo de WhatsApp | — | 200 `[{organizationId, organizationName, link, noticesUntilUtc?}]`, con `link` `Linked`, `Unlinked` o `NoChat` (159) |
 | `GET /{id}/records/{recordId}/pdf` | `formrecords.read` | — | 200 PDF, `no-store` |
 | `GET /{id}/records/{recordId}/history` | `formrecords.read` | `page`, `pageSize` | `PagedResult<{id, correctedAtUtc?, correctedBy?, reason?, superseded}>`, de la más nueva a la más vieja |
 | `GET /{id}/records/{recordId}/correction` | `formrecords.correct` | — | la versión activa, con lo cargado |
@@ -81,7 +82,7 @@ public interface IStructuredRecordActionChannel
 | `Forms.Record.AlreadyVoided` | Conflict | ya está anulada |
 | `Forms.Record.ReasonRequired` | Validation (`reason`) | corregir o anular sin motivo |
 | `Forms.Record.PdfNotFound` | NotFound | no hay copia, o falta el archivo |
-| `Forms.Execution.NotRetryable` | Conflict | lo que no quedó en «No se pudo» |
+| `Forms.Execution.NotRetryable` | Conflict | una persona sin la falla confirmada |
 
 **Fallas de una ejecución,** que se ven en Actividad: `WindowClosed`, `TemplateUnavailable`, `NoConversation`, `NoContact`, `NotMember`, `RoleMissing`, `NoEmail`, `NoAnswer` y `NoPdf`.
 

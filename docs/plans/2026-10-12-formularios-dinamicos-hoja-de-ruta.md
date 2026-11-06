@@ -449,7 +449,7 @@ Elegidas por el usuario el 2026-10-24, con la [evaluación del traspaso 2](2026-
     - No hay traducciones del contenido: no hay selector, pares «Nombre» / «Nombre en inglés», vista previa en dos idiomas ni avisos de traducción.
     - Un formulario se ve y se manda igual con el menú en cualquier idioma. Por WhatsApp sale como está escrito, y los textos del sistema que lo acompañan van en el idioma de la cuenta de quien recibe.
 36. **Nombres de más de 30 caracteres** (11 y 21): se mantiene el recorte con «…». Se suma la presentación de la E13, que elige qué campos van al título (30) y a la descripción (300).
-37. **Catálogos de más de 200 opciones** (12 y 22): se mantienen. Al publicar se suman dos avisos que no frenan, el máximo por persona y las personas sin el dato, y el tope de 20 en «elegir varias».
+37. **Catálogos de más de 200 opciones** (12 y 22): se mantienen. Al publicar se suman dos avisos que no frenan, el máximo por persona y las personas sin el dato, y el tope de 20 en «elegir varias». La 157 cambia el del máximo por persona: solo cuando no entra o da cero.
 38. **«Elegir varias»:** va en la E14, con los demás tipos de pregunta.
 39. **El asistente con Casos** (E23): contesta lo que configure cada organización (perfil, conocimiento, casos y límites), redacta dentro de esos límites y deriva lo demás. Reemplaza «lo que no es un formulario no se contesta».
     - En la primera versión, solo en Internos. Cambiada por la 51: también en Clientes.
@@ -669,6 +669,12 @@ Elegidas por el usuario el 2026-11-06, al evaluar el [traspaso 8](../../../Arqui
 155. **También por WhatsApp** (IA3-A, E25): una cuenta vinculada le pide al número de la organización, con un texto o un audio, que arme un formulario o un catálogo. El asistente contesta con un resumen y los botones «Crear borrador» o «Crear catálogo» y «Cambiar algo»; crear contesta con el enlace para revisarlo y publicarlo en la web.
 156. **El micrófono en el chat del Inicio** (E25): para cualquier consulta, con «Detener», «Descartar» y escuchar antes de mandar; el servidor transcribe y el costo entra en el tope mensual de IA de la organización.
 
+Elegidas por el usuario el 2026-11-06, al evaluar el [traspaso 9](../../../ArquitecturaBase/docs/plans/2026-11-06-traspaso-multitenant-ajustes-de-toda-la-app.md) contra este modelo, todas las recomendadas:
+
+157. **El aviso de opciones por persona, solo cuando no entra o da cero** (NI3-B, E16; cambia la 37): al publicar, el máximo por persona se avisa solo cuando pasa el límite de WhatsApp, 200 en una elección o 20 en varias, y, nuevo, cuando nadie ve ninguna opción: «Con estos filtros nadie ve ninguna opción.». Si entra, publicar no dice nada.
+158. **Reintentar un aviso por persona** (RT1-A, E21): «Reintentar» va en el renglón de la persona, en la actividad, solo con la falla confirmada, y le manda el aviso solo a ella. No se repite a quienes lo recibieron.
+159. **El chat de WhatsApp en «Mi cuenta»** (PF1-A, E21): debajo de los medios de ingreso, una zona con cada organización de la persona, que dice si su chat está vinculado, con «Vincular», y hasta cuándo le llegan los avisos. «Verificado» sigue siendo entrar con el número.
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase
@@ -709,4 +715,4 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 Ninguna.
 
-Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98, las del traspaso 4, del 2026-11-02, como decisiones 109 a 122, las del traspaso 5, del 2026-11-03, como decisiones 136 a 149, las del traspaso 6, del 2026-11-06, como decisiones 150 a 152, en la [hoja de ruta de ARCA](2026-11-06-arca-hoja-de-ruta.md), la del traspaso 7, del mismo día, como decisión 153, y las del traspaso 8, también del 2026-11-06, como decisiones 154 a 156.
+Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98, las del traspaso 4, del 2026-11-02, como decisiones 109 a 122, las del traspaso 5, del 2026-11-03, como decisiones 136 a 149, las del traspaso 6, del 2026-11-06, como decisiones 150 a 152, en la [hoja de ruta de ARCA](2026-11-06-arca-hoja-de-ruta.md), la del traspaso 7, del mismo día, como decisión 153, las del traspaso 8, también del 2026-11-06, como decisiones 154 a 156, y las del traspaso 9, del mismo día, como decisiones 157 a 159.

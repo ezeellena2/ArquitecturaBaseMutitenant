@@ -42,6 +42,7 @@ Scheduler/Canceller/Processor/Activator son los pasos nominales de baja y activa
 - ICurrentUser usa actor sólo sin HttpContext; sin ambos queda vacío. TenantContext conserva RLS y HTTP; ITenantScope.Enter(Guid) deja kind null y no sustituye al actor.
 - Cada fase/herramienta reautoriza estados, membresía sin caché, legales, feature y permisos. El aviso IA se exige antes/después de datos; aceptar el primer aviso usa autorización de acceso.
 - IdentityAccessTests fija los consumidores exactos de IUserTenantAccessReader, incluida la factory neutral y AssistantSessionPolicy; no exime namespaces.
+- **Lo que devuelve un lector** se llama `Row`, `Response` o `Counts`; una excepción de un módulo va con su motivo en su aporte. Lo controlará un test de arquitectura que se suma al programar (traspaso 9).
 
 ## Prohibido
 - CQRS/handlers/MediatR, repositorio genérico, Scrutor, AutoMapper o Minimal APIs de negocio.

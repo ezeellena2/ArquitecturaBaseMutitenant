@@ -94,6 +94,8 @@ Desde la E11 el webhook depende solo de `WhatsApp:AppSecret` y `WhatsApp:VerifyT
 
 La retención de texto es fija de **90 días desde `ReceivedAtUtc`** del servidor; no tiene clave para ampliarla. El worker corre al arrancar y una vez por día, con scopes/lotes propios, incluso sin `PhoneNumberId` ni secretos de Meta. Apagar el canal no desactiva esa limpieza. La exportación OpenAPI no inicia mantenimiento ni necesita base; retirar las fuentes del módulo sigue la receta de [quitar WhatsApp](../guides/quitar-whatsapp.md).
 
+**Con el depurador de Visual Studio,** el proveedor de log Debug manda cada línea a la ventana Salida y frena todo el proceso: allá bajó de unos 690 a unos 11 pedidos por segundo. Si se levanta la Api así, medir con un GET simple y diez en paralelo, y poner `Logging:Debug:LogLevel:Default` en Warning en el `appsettings.Development.json` de la Api; la consola y la telemetría no cambian (traspaso 9).
+
 ## 4. Lo que tenés que hacer vos, una sola vez, fuera del código
 
 **Google Cloud Console** › el mismo cliente OAuth › URIs de redireccionamiento autorizados. Agregar las del multitenant (las de ArquitecturaBase se quedan):
@@ -167,6 +169,8 @@ Datos de la documentación oficial de Meta, verificados el 2026-10-13:
 - **Medio de pago:** `GET /<WABA_ID>?fields=primary_funding_id,timezone_id`; sin `primary_funding_id` no hay. `health_status` no lo informa.
 - **Alta de organizaciones:** 10 nuevas cada 7 días, y 200 con empresa verificada y App Review. Access Verification ya no se exige. Cada organización le paga a Meta con su tarjeta.
 - **Graph API:** vigente la v26.0; la v25.0 vence el 29/07/2028.
+
+**El agente de IA de Meta, apagado** (traspaso 9): WhatsApp Manager ofrece un agente que responde solo. No se prende en el número de una organización: con él como primer respondedor, lo que escribe el cliente llega por el campo `standby` del webhook, que la app no lee, ni en la atención ni en el asistente, y un mensaje de la app le saca la conversación al agente sin liberarla. Que convivan sería otro desarrollo.
 
 ## Asistente
 
