@@ -37,6 +37,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 23 · Asistente con Casos | Pendiente. Spec lista y tableros aprobados en el lienzo v157; el traspaso 5 redibuja los chats, las sugerencias y el detalle | [Spec](formularios/23-asistente.md) |
 | 24 · Varios asistentes | Pendiente. Spec lista y tableros aprobados en el lienzo v158 | [Spec](formularios/24-varios-asistentes.md) |
 | 25 · Documentos por WhatsApp | Pendiente. Spec lista; tableros por dibujar, y antes de planificar, la prueba con Meta del archivo precargado | [Spec](formularios/25-documentos.md) |
+| ARCA · la conexión | Pendiente, después del bloque (76): hoja de ruta lista, con las decisiones 150 a 152 y sin spec | [Hoja de ruta de ARCA](2026-11-06-arca-hoja-de-ruta.md) |
 
 ## Etapa 10: despliegue y operación
 

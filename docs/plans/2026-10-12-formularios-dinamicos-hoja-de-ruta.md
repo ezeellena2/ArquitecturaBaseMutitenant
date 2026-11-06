@@ -331,8 +331,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 
 ### Después del bloque
 
-- **Integraciones, lo primero después del bloque** (76): un módulo `Integrations`, con conexiones y credenciales por organización. La API pública y el MCP necesitan una identidad por organización. ArquitecturaBase cerró cinco de las 13 decisiones de su estudio el 2026-10-31: ARCA primero, con la factura, en un módulo `Arca` propio y no en uno genérico. Se evalúa acá cuando llegue su traspaso.
-- **ARCA · etapa 1, la conexión:** ArquitecturaBase la diseñó el 2026-11-03, sin programar: conectar la instalación con el certificado de la empresa, probar la conexión, traer los datos del padrón y elegir el punto de venta, sin emitir ([su plan](../../../ArquitecturaBase/docs/plans/2026-11-03-arca-etapa-1-conexion.md)). Se evalúa al sumarla a esta hoja: acá hay que decidir de quién es la conexión, de la organización o de cada empresa.
+- **Integraciones, lo primero después del bloque** (76): ARCA es la primera, como módulo propio y con la conexión de cada empresa (150 a 152), y su [hoja de ruta](2026-11-06-arca-hoja-de-ruta.md) tiene las etapas, la adaptación y lo que no hay que repetir. Las que siguen (Mercado Libre, Mercado Pago y webhooks) se evalúan con su traspaso. La API pública y el MCP necesitan una identidad por organización.
 - **Carpetas para formularios y catálogos:** decididas allá el 2026-11-03, sin programar ([su plan](../../../ArquitecturaBase/docs/plans/2026-11-03-carpetas-de-formularios-y-catalogos.md)): un solo árbol por tema, que solo ordena y no da ni quita acceso, en un panel a la izquierda de cada listado. Se evalúa al sumarla a esta hoja; allá llega antes de su biblioteca de estándares.
 - **Catálogos, fases 3 a 6:** la búsqueda en vivo (56), las listas dependientes en WhatsApp (94) y los orígenes externos.
 - **La conexión a la base de un cliente,** con una solución simple: un agente del lado del cliente o una réplica de solo lectura.
@@ -698,4 +697,4 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 Ninguna.
 
-Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98, las del traspaso 4, del 2026-11-02, como decisiones 109 a 122, y las del traspaso 5, del 2026-11-03, como decisiones 136 a 149.
+Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98, las del traspaso 4, del 2026-11-02, como decisiones 109 a 122, las del traspaso 5, del 2026-11-03, como decisiones 136 a 149, y las del traspaso 6, del 2026-11-06, como decisiones 150 a 152, en la [hoja de ruta de ARCA](2026-11-06-arca-hoja-de-ruta.md).
