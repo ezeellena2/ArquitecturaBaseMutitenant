@@ -105,3 +105,25 @@ Tres migraciones: `<fecha>_FormRules.cs`, `<fecha>_FormRecordCorrections.cs` y `
 - `FormDefinitionStates`: `ActiveRuleSetId` y `ActivePdfDesignId`, por T7;
 - `FormRecords`: `RuleSetId?`, `State`, `Version` (`IVersioned`), `CorrectionOfRecordId?`, `CorrectionReason?`, `CorrectedByUserId?`, `CorrectedAtUtc?`, `SupersededAtUtc?`, y `VoidedAtUtc?`, `VoidedByUserId?` y `VoidReason?`. **El índice único `(DefinitionId, Number)` pasa a filtrar `SupersededAtUtc IS NULL`,** y la planilla, los conteos, la navegación, el Excel y el tablero filtran las vigentes;
 - en WhatsApp, las plantillas suman `HeaderFormat`, y el mensaje de chat, el origen «acción de formulario».
+
+## Lo que ya se pagó allá (no repetir)
+
+Cada punto lleva su test, escrito durante la etapa:
+1. **Un rol borrado colgaba una aprobación:** se valida al reservar.
+2. **Chrome bloqueó el visor del PDF** en un iframe con sandbox: va con `<object>`.
+3. **El contrato de `origin` del recibo:** la web rechazó una respuesta correcta; cada campo nuevo se exporta con su ejemplo.
+4. **Un aviso a un rol se repetía** por una reserva vencida: la clave va por ejecución y destinatario.
+5. **Una copia entera de la respuesta por ejecución:** se lee por id.
+6. **Lo que va en la versión y lo que se guarda aparte.** En la prueba de allá, la versión salió sin filtros, y las reglas y el PDF no se habían guardado. Las reglas y el diseño tienen su propio Guardar y valen sin publicar, y salir con cambios pregunta antes.
+7. **Un error dice qué hacer en cada caso.** «Agregá Armar el PDF…» se leía igual si faltaba la acción o si estaba más abajo.
+8. **Nada se desmarca ni se borra sin avisar:** ni al cambiar el tipo, ni al mover o quitar una acción.
+9. **Una decisión que no se deshace pide confirmar:** allá se aprobó la siguiente sin querer, porque ↑ ↓ cambian de respuesta con el foco en el panel.
+10. **Un aviso que no puede llegar se descubría recién en la actividad.** Allá sale solo por WhatsApp. Acá va con plantilla fuera de las 24 horas (61) o por correo (62), y lo que no salió se ve por persona en Actividad y en la campana.
+11. **El detalle no depende de lo que la persona no tiene.** Allá, con el permiso de aprobar y sin el rol de la tarea, el detalle fallaba al pedir la tarea.
+12. **Nada vacío a la vista.** Un historial sin revisiones ocupaba una columna fija: va detrás de su botón, apagado (140).
+13. **Un dato guardado por nombre se rompía al renombrar.** El mensaje guarda `{FieldId}`, como las condiciones (149).
+14. **Una corrección usa los filtros por persona de quien la cargó** (traspaso 7): con los de quien corrige, otra persona vería otras opciones y podría dejar una que el autor no tenía.
+15. **El conteo de respuestas no sale del último número:** con anuladas, se cuentan las vigentes.
+16. **Una migración que pierde datos al volver se niega a volver:** el `Down` de las correcciones frena si ya hay correcciones, anuladas o tareas cerradas.
+17. **Cerrar una corrección con cambios pregunta** («¿Descartar la corrección?», con «Seguir corrigiendo»); sin cambios, cierra.
+18. **Un texto de otro espacio de traducciones se declara en `useTranslation`.** Allá, anular desde la pantalla completa mostraba la clave del motivo, y lo encontró el recorrido, no los tests.

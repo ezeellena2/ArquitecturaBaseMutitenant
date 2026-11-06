@@ -6,7 +6,7 @@
 
 | Secciones | Archivo |
 | --- | --- |
-| Contrato y Datos | [datos y contrato](21-parte-datos-y-contrato.md) |
+| Contrato, Datos y «Lo que ya se pagó allá» | [datos y contrato](21-parte-datos-y-contrato.md) |
 
 ## Qué leer
 
@@ -57,13 +57,13 @@ Antes de empezar, en este orden:
 **La actividad de una respuesta** (139): cuatro columnas fijas, Fecha, Qué pasó, Estado y Acciones, en bandas por momento («Al recibirla», «Aprobación», «Al aprobarla» o «Al rechazarla»). Quién y el detalle van debajo de qué pasó, en gris, y el estado y las acciones («Ver PDF», «Reintentar»), siempre en su columna. El PDF va en su renglón, debajo de «Armar el PDF», y cada persona de un aviso a un rol, en el suyo, con sus acuses. En la vista rápida las acciones van debajo del texto; en el teléfono, también el estado.
 
 **Corregir y anular** (91 a 93). Una respuesta confirmada no se modifica: queda reemplazada por su corrección, o anulada. Vale para lo de WhatsApp y lo de la web:
-- **quién:** quien la cargó, mientras no esté aprobada, y siempre si el formulario no pide aprobación. Con `formrecords.correct`, cualquiera y en cualquier momento. Quien solo ve respuestas, no. Un cliente no corrige ni anula: lo hace la organización;
-- **corregir:** se abre lo cargado en la versión activa, con el formulario de la E20, lo de antes a la vista y un motivo de hasta 500 caracteres. Pasa por la misma captura, con sus cálculos y condiciones. Los archivos que no se tocan se conservan. Vale también en un formulario dado de baja o solo para clientes: `Forms.Entry.Unavailable` no aplica (93);
+- **quién:** quien la cargó, mientras no esté aprobada, y siempre si el formulario no pide aprobación. Con `formrecords.correct`, cualquiera y en cualquier momento; corregir lo ajeno pide también `formrecords.read`, porque no se corrige lo que no se ve. Quien solo ve respuestas, no. Un cliente no corrige ni anula: lo hace la organización;
+- **corregir:** se abre lo cargado en la versión activa, con el formulario de la E20, lo de antes a la vista y un motivo de hasta 500 caracteres. Pasa por la misma captura, con sus cálculos y condiciones. Los archivos que no se tocan se conservan. Las listas usan los filtros por persona de quien la cargó, no los de quien corrige. Vale también en un formulario dado de baja o solo para clientes: `Forms.Entry.Unavailable` no aplica (93);
 - **quién queda:** la respuesta sigue siendo de quien la cargó. Conserva `Respondent*`, sus empresas, el canal y `SubmittedAtUtc`, así «Cargó» no cambia. `CorrectedByUserId` y `CorrectedAtUtc` dicen quién la corrigió, y se ven en el detalle y en Actividad. El `SourceKey` es `correction:<clave de idempotencia>`;
 - **el número** no cambia: es único entre las vigentes. La anterior queda en el historial tal como estaba, enlazada a su corrección y con su PDF. La nueva queda «Corregida». **Leer por id incluye las reemplazadas:** el historial abre la anterior, y la tarjeta del chat la encuentra;
-- **las reglas de «Recibida» vuelven a correr,** como una respuesta nueva. Si pide aprobación, vuelve a «Por aprobar», aunque ya estuviera decidida;
+- **las reglas de «Recibida» vuelven a correr,** como una respuesta nueva. Si pide aprobación, vuelve a «Por aprobar», aunque ya estuviera decidida. Los avisos salen otra vez, lo ya avisado, aprobado o impreso queda en la historia, y la tarea abierta de la anterior se cierra sin decisión;
 - **anular:** al final del ⋮, con motivo. Queda «Anulada», con quién, cuándo y por qué, y cierra la tarea abierta. No se borra ni se deshace;
-- **lo anulado sale de las lecturas:** la planilla, los conteos, la navegación, la lista y el Excel. Se ve con el filtro «Anulada», en todos los formularios, y con «Incluir las anuladas» en el Excel. «Respuestas» pasa a contar las vigentes. Una anulada sigue siendo una respuesta: el formulario no se puede borrar;
+- **lo anulado sale de las lecturas:** la planilla, los conteos, la navegación, la lista y el Excel. Se ve con el filtro «Anulada», en todos los formularios, y con «Incluir las anuladas» en el Excel. «Respuestas» pasa a contar las vigentes, nunca desde el último número. Una anulada sigue siendo una respuesta: el formulario no se puede borrar;
 - **en el chat,** la tarjeta muestra la marca. La copia de «Mis mensajes» no cambia: es lo que el cliente mandó.
 
 **PDF:**
@@ -77,7 +77,7 @@ Antes de empezar, en este orden:
 
 **La pregunta «Correo»:** un tipo nuevo, validado con la ficha de correos. Suma a todo lo que existe: el editor, el Flow (un `TextInput` de correo), el verificador, la planilla, sus filtros (`contains` y `equals`), el detalle, el Excel, las condiciones, la carga desde la web, donde ocupa una columna (141), y el PDF.
 
-**Lo propio** (85): la planilla de quien solo carga suma el estado, el PDF y el motivo de rechazo.
+**Lo propio** (85): la planilla de quien solo carga suma el estado, el PDF y el motivo de rechazo, sin el rol ni quién decidió; su detalle no tiene Actividad.
 
 **Copiar un formulario** suma el diseño del PDF y las reglas vigentes, como su primera revisión.
 
@@ -156,23 +156,6 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | Núcleo | Cómo leer las identidades de rol de una cuenta. | Un lector del núcleo las da, sin que Forms lea `identity`. |
 | Base de la 12 | La campana. | Un módulo le aporta avisos. |
 | Página pública | El logo y los datos. | Se leen por un puerto del núcleo. |
-
-## Lo que ya se pagó allá (no repetir)
-
-Cada punto lleva su test, escrito durante la etapa:
-1. **Un rol borrado colgaba una aprobación:** se valida al reservar.
-2. **Chrome bloqueó el visor del PDF** en un iframe con sandbox: va con `<object>`.
-3. **El contrato de `origin` del recibo:** la web rechazó una respuesta correcta; cada campo nuevo se exporta con su ejemplo.
-4. **Un aviso a un rol se repetía** por una reserva vencida: la clave va por ejecución y destinatario.
-5. **Una copia entera de la respuesta por ejecución:** se lee por id.
-6. **Lo que va en la versión y lo que se guarda aparte.** En la prueba de allá, la versión salió sin filtros, y las reglas y el PDF no se habían guardado. Las reglas y el diseño tienen su propio Guardar y valen sin publicar, y salir con cambios pregunta antes.
-7. **Un error dice qué hacer en cada caso.** «Agregá Armar el PDF…» se leía igual si faltaba la acción o si estaba más abajo.
-8. **Nada se desmarca ni se borra sin avisar:** ni al cambiar el tipo, ni al mover o quitar una acción.
-9. **Una decisión que no se deshace pide confirmar:** allá se aprobó la siguiente sin querer, porque ↑ ↓ cambian de respuesta con el foco en el panel.
-10. **Un aviso que no puede llegar se descubría recién en la actividad.** Allá sale solo por WhatsApp. Acá va con plantilla fuera de las 24 horas (61) o por correo (62), y lo que no salió se ve por persona en Actividad y en la campana.
-11. **El detalle no depende de lo que la persona no tiene.** Allá, con el permiso de aprobar y sin el rol de la tarea, el detalle fallaba al pedir la tarea.
-12. **Nada vacío a la vista.** Un historial sin revisiones ocupaba una columna fija: va detrás de su botón, apagado (140).
-13. **Un dato guardado por nombre se rompía al renombrar.** El mensaje guarda `{FieldId}`, como las condiciones (149).
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
