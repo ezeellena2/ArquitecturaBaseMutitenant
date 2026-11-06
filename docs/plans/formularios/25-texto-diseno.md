@@ -22,7 +22,9 @@ Te paso los tableros de la E25, documentos por WhatsApp, para el lienzo del mult
 7. **`FRM-Respuesta-25` y `M-FRM-Respuesta-25`:** sobre `FRM-Respuesta`, de qué documento salió y quién la revisó.
 8. **`Campana-25` y su teléfono:** los documentos por revisar y «Llegaron N documentos parecidos».
 9. **`WA-Asistente-Casos-25`:** sobre `WA-Asistente-Casos`, el tipo de entrada «documento».
-10. **`Asistente-Org-25` y su teléfono:** en el chat del Inicio, el asistente recibe un PDF y arma un borrador, con los catálogos por aprobar, y lleva al editor.
+10. **`Asistente-Org-25` y su teléfono:** en el chat del Inicio, la tarjeta de la propuesta (154): la banda «Formulario» o «Catálogo», el nombre, el prefijo y cada pregunta, con «Ver cómo queda» y «Crear borrador». Un ajuste pliega la anterior en «Reemplazada», y después de crear queda «Borrador creado» con el enlace. El micrófono a la izquierda de la flecha (156): grabando, para escuchar y la transcripción en gris debajo del audio. Pedidos con un texto y con un PDF.
+11. **`M-WA-Armar-Con-IA`:** por WhatsApp (155): el pedido con un audio, el resumen con hasta 10 preguntas y los botones «Crear borrador» y «Cambiar algo», un cambio y el enlace al crear.
+12. **`FRM-Formularios-25`, `FRM-Catalogos-25` y `FRM-Faltan-25`:** «Armar con la IA» junto a «Nuevo formulario», junto a «Nuevo catálogo» y en cada tema; abre el Inicio con el pedido empezado, y el Inicio vacío sugiere «Armame un formulario para…».
 
 **Recorrido guiado.** Un comprobante de transferencia: llega, se reconoce, se propone, se confirma y queda en la planilla. Y otro que no se reconoce, que termina en «Armar formulario con la IA».
 

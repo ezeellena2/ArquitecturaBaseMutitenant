@@ -538,7 +538,7 @@ Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 9, lo que qu
 
 73. **Cargar una respuesta desde la web** entra al bloque: un empleado, a su nombre, con la misma captura que por WhatsApp. Es la etapa E20, después de la E18.
 74. **Copiar un formulario** entra al bloque, en la E17.
-75. **El asistente de la web arma formularios y catálogos:** se le pasa un PDF o se le escribe cómo se quiere, y crea el formulario en borrador y los catálogos por aprobar, y lleva al editor. Nada se publica solo. Va en la E25, con «Armar formulario con la IA».
+75. **El asistente de la web arma formularios y catálogos:** se le pasa un PDF o se le escribe cómo se quiere, y crea el formulario en borrador y los catálogos por aprobar, y lleva al editor. Nada se publica solo. Va en la E25, con «Armar formulario con la IA». La 154 cambia cómo se crea: con un botón de la persona, sobre una propuesta.
 76. **Después del bloque, lo primero son las integraciones:** ARCA, Mercado Libre, Mercado Pago y webhooks, con plantillas conectadas en la biblioteca.
 
 Elegida por el usuario el 2026-10-24, en la revisión completa del bloque:
@@ -663,6 +663,12 @@ Elegida por el usuario el 2026-11-06, al evaluar el [traspaso 7](../../../Arquit
 
 153. **«Mis cargas» y «Mi última carga»** (E20; cambia la 83): quien solo carga ve en «Formularios», al lado de «Cargar», cuántas respuestas cargó de cada formulario y la última, con su número y su fecha; sin cargas, «Todavía no cargaste». Nunca ve los totales de la organización. Son columnas de la lista, no la página «Mis cargas» aparte que descarta la 85.
 
+Elegidas por el usuario el 2026-11-06, al evaluar el [traspaso 8](../../../ArquitecturaBase/docs/plans/2026-11-06-traspaso-multitenant-ia-arma-formularios.md) contra este modelo, todas las recomendadas:
+
+154. **La IA propone y una persona crea** (IA1-A, E25; cambia la 75): en el chat del Inicio, la propuesta es una tarjeta en el hilo, con el nombre, el prefijo y las preguntas, «Ver cómo queda» y «Crear borrador» o «Crear catálogo». Nada se crea hasta que la persona toca el botón, y cada ajuste trae otra tarjeta, que reemplaza a la anterior. Las herramientas del chat no escriben: proponen.
+155. **También por WhatsApp** (IA3-A, E25): una cuenta vinculada le pide al número de la organización, con un texto o un audio, que arme un formulario o un catálogo. El asistente contesta con un resumen y los botones «Crear borrador» o «Crear catálogo» y «Cambiar algo»; crear contesta con el enlace para revisarlo y publicarlo en la web.
+156. **El micrófono en el chat del Inicio** (E25): para cualquier consulta, con «Detener», «Descartar» y escuchar antes de mandar; el servidor transcribe y el costo entra en el tope mensual de IA de la organización.
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase
@@ -703,4 +709,4 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 Ninguna.
 
-Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98, las del traspaso 4, del 2026-11-02, como decisiones 109 a 122, las del traspaso 5, del 2026-11-03, como decisiones 136 a 149, las del traspaso 6, del 2026-11-06, como decisiones 150 a 152, en la [hoja de ruta de ARCA](2026-11-06-arca-hoja-de-ruta.md), y la del traspaso 7, del mismo día, como decisión 153.
+Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98, las del traspaso 4, del 2026-11-02, como decisiones 109 a 122, las del traspaso 5, del 2026-11-03, como decisiones 136 a 149, las del traspaso 6, del 2026-11-06, como decisiones 150 a 152, en la [hoja de ruta de ARCA](2026-11-06-arca-hoja-de-ruta.md), la del traspaso 7, del mismo día, como decisión 153, y las del traspaso 8, también del 2026-11-06, como decisiones 154 a 156.

@@ -1,6 +1,12 @@
 # E25 · Documentos por WhatsApp (spec)
 
-**Estado:** pendiente · spec de la etapa 25, la última del bloque (decisiones 34, 41, 78, 99 y 102), con el [formato](plantilla.md) de las etapas. En ArquitecturaBase está decidido, con su ADR 0022 y sus tableros, y sin programar. **Antes de programar** se prueba con Meta si un Flow acepta un archivo precargado: es el mayor riesgo técnico. `/plan-etapa` la contrasta con el código real después de la E24.
+**Estado:** pendiente · spec de la etapa 25, la última del bloque (decisiones 34, 41, 78, 99, 102 y 154 a 156), con el [formato](plantilla.md) de las etapas. En ArquitecturaBase está decidido, con su ADR 0022 y sus tableros, y sin programar. **Antes de programar** se prueba con Meta si un Flow acepta un archivo precargado: es el mayor riesgo técnico. `/plan-etapa` la contrasta con el código real después de la E24.
+
+**Partes.** Esta spec no entra en un solo archivo, así que sigue en otro, con las mismas secciones. Lo que no está en la tabla está acá.
+
+| Secciones | Archivo |
+| --- | --- |
+| Contrato y Datos | [datos y contrato](25-parte-datos-y-contrato.md) |
 
 ## Qué leer
 
@@ -50,7 +56,14 @@ No se leen `.doc`, `.xls`, los archivos con macros ni los que tienen contraseña
 
 **«Armar formulario con la IA»:** sobre un documento «Sin clasificar», o desde «Llegaron N documentos parecidos», con tres o más. La IA propone nombre, prefijo, botón, «Cómo reconocerlo» y una pregunta por dato; si se parece a un estándar, lo sugiere antes. Crea un borrador con la lectura prendida, y una persona lo revisa y lo publica. Si falla, no queda nada a medias.
 
-**Armar desde el asistente de la web** (75): desde el chat del Inicio, la persona le pasa un PDF, una planilla o una foto, o le escribe cómo lo quiere. Crea el formulario en borrador y los catálogos **por aprobar**, que además de los de filtros de la E23 pueden ser a mano, con lo que leyó (102), y lleva al editor. Nada se publica solo: un catálogo por aprobar frena la publicación, con `Forms.Draft.CatalogUnavailable`. Es una herramienta que escribe, con la ADR de la E23: el pedido de la persona es la confirmación.
+**Armar con la IA, desde el asistente** (75, 102 y 154 a 156): en el chat del Inicio y por WhatsApp, con un texto, un audio o, en el Inicio, un PDF, una planilla o una foto, la IA **propone** un formulario o un catálogo y **una persona lo crea con un botón** (154). La IA nunca crea, publica, activa ni cambia nada sola, y crear es una sola vez por propuesta:
+- **en el chat del Inicio,** una tarjeta en el hilo, debajo de la respuesta: la banda «Formulario» o «Catálogo», el nombre, el prefijo y cada pregunta con su tipo, si es obligatoria y sus opciones o su catálogo. «Ver cómo queda» abre la vista previa del editor en un diálogo, y «Crear borrador» o «Crear catálogo» va en la banda y en el diálogo. Se ajusta conversando: cada cambio trae otra tarjeta, y la anterior se pliega en «Reemplazada», que ya no se crea. Después de crear queda plegada con «Borrador creado» y el enlace;
+- **por WhatsApp** (155), en la conversación de una cuenta vinculada con el número de la organización: un resumen con el nombre, el prefijo y hasta 10 preguntas con su tipo, y los botones «Crear borrador» o «Crear catálogo» y «Cambiar algo», que pide el cambio por escrito o con un audio y vuelve con otro resumen. Solo vale el botón del último resumen. Crear contesta con el enlace para revisarlo y publicarlo en la web. El resumen no gasta el cupo de ofertas. Desde acá, el catálogo de filtros que arma el asistente de la E23 también contesta con su resumen y sus botones;
+- **el micrófono del Inicio** (156), a la izquierda de la flecha y para cualquier consulta: graba con «Detener» y «Descartar», se escucha antes de mandarlo y la transcripción queda en gris debajo del audio. Sube WebM o MP4 de hasta 1.000.000 bytes como copia privada de la organización; el servidor lo transcribe con el puerto de la 27, el turno toma esa transcripción y nunca la del cliente, y el audio se guarda mientras dure el turno. Aparece si la organización puede transcribir y tiene almacenamiento privado;
+- **lo creado:** el formulario queda en borrador y abre el editor de siempre; el catálogo queda por aprobar, con la banda «Propuesta del asistente», que dice quién lo pidió y dónde, «Descartar propuesta» y «Aprobar y activar». Un catálogo por aprobar frena la publicación (`Forms.Draft.CatalogUnavailable`). Un formulario propuesto usa solo catálogos activos que la persona puede leer, y la edición común no activa una propuesta pendiente;
+- **antes de proponer,** la IA lee los nombres y los campos de lo que la persona puede ver en su organización y, con empresas, en las suyas, para no repetir un nombre y usar los catálogos que existen. Nunca lee respuestas, opciones cargadas ni datos de personas, y lo leído es un dato, nunca una instrucción. No cambia ni copia lo que existe: lo dice y da el enlace. Un nombre o un prefijo en uso lo dice la propuesta. Un pedido ambiguo pregunta qué hacer;
+- **las entradas:** «Armar con la IA», junto a «Nuevo formulario», junto a «Nuevo catálogo» y en cada tema de «Formularios que faltan», abre el Inicio con el pedido empezado, en el estado de la navegación y nunca en la dirección. El Inicio vacío suma la sugerencia «Armame un formulario para…». Arma formularios quien puede diseñarlos y catálogos quien puede administrarlos; sin esos permisos, el Inicio queda como antes;
+- **la procedencia** (el canal, quién lo pidió y cuándo, el perfil y lo que se le ofreció) queda guardada con lo creado.
 
 **Los Casos** suman el tipo de entrada «documento».
 
@@ -77,85 +90,11 @@ Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](25-texto-d
 | `FRM-Respuesta-25` y `M-FRM-Respuesta-25` | de qué documento salió y quién la revisó |
 | `Campana-25` y su teléfono | los documentos por revisar y «Llegaron N documentos parecidos» |
 | `WA-Asistente-Casos-25` | el tipo de entrada «documento» |
-| `Asistente-Org-25` y su teléfono | en el chat del Inicio, el asistente recibe un PDF, arma un borrador y lleva al editor |
+| `Asistente-Org-25` y su teléfono | en el chat del Inicio, la tarjeta de la propuesta, con «Ver cómo queda», «Crear borrador», «Reemplazada» y «Borrador creado», y el micrófono |
+| `M-WA-Armar-Con-IA` | por WhatsApp, el pedido con un audio, el resumen con «Crear borrador» y «Cambiar algo», y el enlace |
+| `FRM-Formularios-25`, `FRM-Catalogos-25` y `FRM-Faltan-25` | «Armar con la IA» junto a «Nuevo formulario», junto a «Nuevo catálogo» y en cada tema |
 
 **Mandan sobre esta spec en:** las fichas del front y la decisión 43. Los mensajes del sistema van en el idioma de la cuenta (42). «Dar de baja» no aplica: un documento se descarta.
-
-## Contrato
-
-Son rutas de `/api/organization/forms`, con `[FeatureGate("forms")]`.
-
-| Ruta | Permiso | Pide | Devuelve |
-| --- | --- | --- | --- |
-| `POST /documents/search` | `formrecords.read` | `{form?, senders?, received?, states?, companies?, search?, page, pageSize, sort}` | `PagedResult<{id, formName?, sender, receivedAtUtc, state, summary, deleteAtUtc?}>` |
-| `POST /documents/facets` | `formrecords.read` | los filtros | conteos por estado, formulario y empresa |
-| `GET /documents/{id}` y `…/content` | `formrecords.read` | — | los datos con su seguridad, las validaciones, el porqué y el original, `no-store` |
-| `PUT /documents/{id}` | `formrecords.read` y atender esa bandeja | `{values, version}` | 200 `{version}` |
-| `POST /documents/{id}/reading` | `formrecords.read` y atender esa bandeja | `{formId, version}` | 200 `{version}`; la lectura sigue por su trabajo |
-| `POST /documents/{id}/discard` | `formrecords.read` y atender esa bandeja | `{version}` | 200 |
-| `POST /documents/{id}/record` | `formrecords.read` y atender esa bandeja | `{version}`, con `[Idempotent(Mode = IdempotencyMode.DurableReference)]` y `[IdempotencyDurable(typeof(FormEntryDurableAdapter))]`, porque el número es privado | 200 `{recordId, displayNumber, version}`, con `[ResponseVersion("Version")]` |
-| `POST /documents/{id}/form-proposal` | `forms.manage` y `formrecords.read` | — | `{name, prefix, submitLabel, reading, questions[], similarTemplate?}` |
-| `POST /documents/{id}/form-drafts` | `forms.manage` y `formrecords.read` | la propuesta, con `[Idempotent]` | 201 `FormDetail` |
-| `GET /{id}/reading/stats` | `forms.read` | — | `{confirmedRun, precision[]}` |
-
-Atender esa bandeja se revisa en el servicio, con `IStructuredInboxAccess`, porque depende de dónde llegó el documento, y Forms no puede nombrar un permiso de WhatsApp: retirar ese módulo lo saca del catálogo.
-
-**Rutas que cambian:** `GET /{id}` y `PUT /{id}/draft` suman `reading?`, con `{enabled, howToRecognize, fields[], validations[], catalogCrossChecks[], duplicates, autoLoad}`. Las de la plantilla, en Plataforma, suman lo mismo. El detalle de una respuesta suma `sourceDocument?` y `reviewedBy?`. `GET /api/reference-data` suma las entidades del BCRA.
-
-**Puertos neutrales:**
-
-```csharp
-// WhatsApp → Forms (implementa Forms)
-public interface IStructuredDocumentSink
-{
-    Task<Result<StructuredDocumentReceipt>> ReceiveAsync(StructuredIncomingDocument document, CancellationToken ct);
-}
-// Forms → Asistente (implementa el módulo Assistant)
-public interface IStructuredDocumentReader
-{
-    Task<Result<StructuredDocumentClassification>> ClassifyAsync(StructuredDocumentInput input, CancellationToken ct);
-    Task<Result<StructuredDocumentExtraction>> ExtractAsync(StructuredDocumentInput input, CancellationToken ct);
-}
-// Forms → WhatsApp (implementa WhatsApp)
-public interface IStructuredInboxAccess
-{
-    Task<bool> CanAttendAsync(StructuredInbox inbox, CancellationToken ct);
-}
-// Asistente → Forms (implementa Forms)
-public interface IStructuredFormDrafts
-{
-    Task<Result<StructuredFormDraftCreated>> CreateAsync(StructuredFormDraftRequest request, CancellationToken ct);
-}
-```
-
-`IStructuredFormChannel` suma mandar un mensaje con botones o una lista y un formulario prellenado. **Herramientas que escriben:** `create_form_draft` y `create_catalog_proposal`, con `forms.manage` y `formcatalogs.manage`. Viven en el módulo Assistant, como las de la E23, y llaman a `IStructuredFormDrafts` y a `IStructuredCatalogProposals`.
-
-**La campana:** suma `documentsToReview` y `documentsSuggestion`, a quien tiene `formrecords.read`, por `INotificationSource` (base de la 12).
-
-**Errores:**
-
-| Código | Tipo | Cuándo |
-| --- | --- | --- |
-| `Forms.Document.NotFound` | NotFound | ajeno o inexistente |
-| `Forms.Document.AlreadyResolved` | Conflict | ya está confirmado o descartado |
-| `Forms.Document.ValidationFailed` | Validation (`values.<id>`) | no pasa una validación fija al confirmar |
-| `Forms.Document.Duplicate` | Conflict | dice en qué respuesta |
-| `Forms.Document.BudgetExhausted` | Conflict | tope de IA o por persona |
-| `Forms.Draft.ReadingInvalid` | Validation (`reading…`) | un dato sin pregunta de ese tipo, o una validación que no existe |
-
-## Datos
-
-Dos migraciones. Todo es `ITenantOwned`, con RLS, salvo lo global. **Sin permisos nuevos.**
-
-| Tabla | Qué guarda | Regla |
-| --- | --- | --- |
-| **FormDocuments** (`IVersioned`) | `Source`, quién lo mandó, `StorageKey`, `MediaType`, `ByteLength`, `Sha256`, `State`, `DefinitionId?`, `VersionId?`, `Extracted` jsonb, `Validation` jsonb, `DuplicateOfId?`, `RecordId?`, `ReviewedByUserId?`, `DeleteAtUtc?`, `Attempts`, `NextAttemptAtUtc` | GIN `jsonb_path_ops` en `Extracted`; índice por `Sha256` |
-| **FormDocumentCorrections** | `DocumentId`, `FieldId`, propuesto, confirmado, quién y cuándo | de ahí salen los ejemplos y la precisión |
-| **FormDocumentCounters** | quién, día y cantidad | clave por persona o contacto y día |
-| **platform.BankEntities** | prefijo y nombre | dato de referencia, con su seed |
-| **platform.FormDocumentWorks** | `TenantId`, `NextAtUtc` y reserva | registro técnico, sin datos de negocio |
-
-**Columnas nuevas:** `FormVersions` suma `Reading` jsonb. `FormRecords` suma `SourceDocumentId?`. `WhatsAppFlowSessions` suma `SourceRef?`, opaco: el id del documento, que se propuso con ese Flow, y `StructuredRecordCapture` suma `SourceDocumentId?`, así la respuesta del Flow vuelve a su documento. **El `SourceKey` es `document:<id>` en los tres caminos** (el Flow, «Pasar al formulario» y «Cargar solo si es seguro»), y por eso un documento no se carga dos veces. `FormTemplateDraft` suma `reading`. **Estados:** `Received`, `Proposed`, `Unclassified`, `Confirmed`, `AutoLoaded` y `Discarded`. **Topes:** `Forms:DocumentReadsPerPersonPerDay`, con `ValidateOnStart`.
 
 ## Pasos
 
@@ -173,7 +112,8 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | B6 | Proponer y confirmar | suma a `WhatsAppFlowBuilder.cs`, `FormRecordService.cs` [E14] y al prellenado [E23] | esos mismos | el documento adjunto; revalidar; la respuesta vuelve a su documento; dos veces el mismo documento no carga dos; sin Meta real en el test |
 | B7 | La bandeja | `FormDocumentQueryService.cs`, `FormDocumentReader.cs`; la excepción en `paginado-y-busqueda.md` y `SearchIndexTests` | `FormRecordReader.cs` [E15] | búsqueda con y sin puntos; lo privado fuera de la URL; aislamiento |
 | B8 | Revisar | suma a `FormDocumentService.cs`; `IStructuredInboxAccess.cs`, su apagado y `WhatsAppStructuredInboxAccess.cs` | `FormRecordCorrectionService.cs` [E21] | permisos; sin WhatsApp no se revisa; volver a leer; descartar; pasar al formulario |
-| B9 | Armar con la IA y desde el asistente | `FormProposalService.cs`, `IStructuredFormDrafts.cs`, su apagado y las dos herramientas | `FormDefinitionCopyCreator.cs` [E17], `OrganizationUsersTool` | nada a medias; nada se publica; catálogos por aprobar, a mano y con filtros; uno por aprobar frena publicar |
+| B9 | Armar con la IA y desde el asistente | `FormProposalService.cs`, `IStructuredFormDrafts.cs`, su apagado, las dos lecturas, las dos propuestas y las rutas de crear | `FormDefinitionCopyCreator.cs` [E17], `OrganizationUsersTool` | nada a medias; nada se publica; catálogos por aprobar, a mano y con filtros; uno por aprobar frena publicar; crear una sola vez; una reemplazada no se crea |
+| B13 | Armar por WhatsApp y el audio del Inicio | `IStructuredAuthoringProposalChannel.cs` y su implementación; la continuación de «Cambiar algo»; el audio en el asistente | la conversación de la E23 | solo vale el último botón; el resumen no gasta el cupo; la transcripción es la del servidor |
 | B10 | Cargar solo si es seguro | `FormAutoLoadPolicy.cs` | `FormRecordCapture` [E14] | cada señal que falta; la seguridad del modelo no cuenta |
 | B11 | Precisión, retención y baja | suma a `FormsAccountDeletionParticipant.cs`; `FormDocumentRetentionWorker.cs` | `InvitationExpiryWorker.cs` | a los 90 días; lo usado sigue a la respuesta |
 | B12 | Rutas y contratos | `P/Modules/Forms/Controllers/BusinessFormDocumentsController.cs`, `Contracts/*`, `FormsContractContributor.cs` | los de la E15 | cada ruta con 401, 403, feature apagada = 404, 409; ejemplos exportados |
@@ -186,6 +126,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | F2 | La bandeja y su panel | `documents/pages/DocumentsPage.tsx`, `components/DocumentPanel.tsx`, `DocumentPreview.tsx` | su tablero | filtros, panel, ↑ ↓ y permisos; axe |
 | F3 | La lectura | `documents/components/DocumentReadingSection.tsx`, `ReadingFields.tsx` | su tablero | editor y plantilla; candado |
 | F4 | Armar con la IA | `documents/pages/BuildFormPage.tsx` | su tablero | crear borrador; falla |
+| F6 | La tarjeta, el micrófono y las entradas | la tarjeta de la propuesta en el chat del Inicio, por un punto de extensión; el micrófono; «Armar con la IA» en tres pantallas | su tablero | «Reemplazada» y «Borrador creado»; grabar, escuchar y descartar; el pedido en el estado de la navegación |
 | F5 | El chat y el detalle | suma a `MessageThread.tsx` y `RecordValues.tsx` | esos mismos | «Por qué lo propuso»; de qué documento salió |
 
 **Al cerrar:** `docs/features/formularios.md` suma la sección, y `datos-de-referencia.md`, la tabla.
@@ -198,9 +139,25 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | [Meta] | Los botones y las listas: 3 y 10. | Lo de la API de hoy. |
 | [E18] | El archivo del chat. | Se lee por un puerto, y Forms guarda su copia. |
 | [E22] | `FormTemplateDraft` y la copia. | Una sección más se copia sola. |
-| [E23] | Las herramientas que escriben, la ráfaga y el prellenado. | La ADR ya está. |
+| [E23] | La ráfaga, el prellenado y la conversación de una cuenta vinculada. | La ADR del asistente ya está; las propuestas no escriben (154). |
+| Proveedor | Los topes del pedido al modelo con un formulario de 40 preguntas. | 16 definiciones y 4096 tokens de salida, como allá. |
 | Bibliotecas | Con qué se saca el texto de `.docx` y `.xlsx` y las páginas de un PDF. | `.xlsx` con ClosedXML; lo demás se elige al planificar, sin ejecutar nada. |
 | Parecidos | Cómo se mide que dos documentos se parecen. | Por la clasificación que devuelve la IA. |
+
+## Lo que ya se pagó allá (no repetir)
+
+Lo que allá se encontró al programar «la IA arma formularios y catálogos», según su traspaso 8. Cada punto lleva su test:
+1. **Una propuesta inválida vuelve al modelo,** con la ruta de cada argumento; no se arregla en silencio ni se recorta.
+2. **Crear busca primero lo ya creado por esa propuesta:** un segundo toque devuelve lo mismo, aunque la propuesta haya vencido.
+3. **El reemplazo es por capacidad:** un catálogo pedido después de un formulario no invalida el formulario.
+4. **Los topes del pedido al modelo cambian con cada capacidad nueva.** Allá el asistente de WhatsApp llegaba a 14 definiciones con un tope de 12, y con 1500 tokens de salida un formulario mediano se cortaba.
+5. **En WhatsApp, cada botón lleva su propuesta,** y solo vale el del último resumen: uno viejo contesta y no crea nada.
+6. **El audio que trae un cambio no es una oferta:** no consulta el cupo diario.
+7. **El navegador graba WebM o MP4,** y la normalización solo admitía Ogg y WAV: el formato se reconoce por sus bytes, no por lo que dice el cliente.
+8. **Un turno sin propuesta conserva la forma que lee el front,** y aprobar un catálogo propuesto devuelve mapas vacíos, no nulos.
+9. **Un CHECK de SQL va en una sola línea:** escrito en varias, un checkout con CRLF le mete un `\r`.
+
+Allá también la IA leía el nombre en otro idioma que el que comparaba crear. Acá no pasa: el contenido tiene un solo nombre (35).
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
@@ -228,7 +185,7 @@ La puerta de la etapa, con la lista de control de `/puerta`. Antes, la calificac
 
 ## Requisitos previos
 
-- La E24 cerrada, con la ADR de las herramientas que escriben.
+- La E24 cerrada, con la ADR del asistente, que suma las propuestas que crea una persona (154).
 - La prueba con Meta del archivo precargado en un Flow.
 
 ## En el multitenant
