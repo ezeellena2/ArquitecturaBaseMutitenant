@@ -1,13 +1,13 @@
 # E15 · Respuestas: planilla, detalle, Excel y tablero (spec)
 
-**Estado:** pendiente · spec de la etapa 15 del bloque (decisiones 34, 57, 78 y 79), con el [formato](plantilla.md) de las etapas. Es lo que ArquitecturaBase llama etapa 3, con el menú `MF1`, el detalle completo (`DC0` y `DC1` ajustado) y el tablero `DOC7-A`. **Solo lee,** salvo los ajustes del tablero de cada persona. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E14. El contrato y los datos están en su [parte de datos y contrato](15-parte-datos-y-contrato.md).
+**Estado:** pendiente · spec de la etapa 15 del bloque (decisiones 34, 57, 78 y 79), con el [formato](plantilla.md) de las etapas. Es lo que ArquitecturaBase llama etapa 3, con el menú `MF1`, el detalle completo (`DC0` y `DC1` ajustado) y el tablero `DOC7-A`. **Solo lee,** salvo los ajustes del tablero de cada persona. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E14. El contrato, los datos y lo que ya se pagó allá están en su [parte de datos y contrato](15-parte-datos-y-contrato.md).
 
 ## Qué leer
 
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T7, T11 y T22, §3 (`FormVersions`, `FormRecords` y `FormRecordValues`) y §7 (puertos); y la [E12](12-catalogos.md): C5, C8, C11 y la §4.
-2. **Decisiones** de la hoja de ruta: 9, 23, 24, 35, 43, 49, 57, 78, 79, 109, 115, 160 y 174.
+2. **Decisiones** de la hoja de ruta: 9, 23, 24, 35, 43, 49, 57, 78, 79, 109 y 115.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -117,12 +117,13 @@ Aprobados en el lienzo v150. Con el traspaso 5, los filtros (143 y 144) y el det
 - con `forms.read` y sin `formrecords.read`: la lista sin las columnas de respuestas.
 
 **Mandan sobre esta spec en:**
-- **Las fichas del front:** un dato por celda; fechas completas, con hora, en la zona de quien mira; sin leyendas (109). Un texto largo se ve entero: la celda baja de renglón, y un código con guiones no se parte (174). Toda tabla lleva una línea fina entre columnas, con los números a la derecha, y cierra abajo (137).
-- **La planilla que carga por primera vez** dibuja el encabezado y el aro, sin filas esqueleto (160); **la que vuelve a leer** atenúa sus filas y corre una línea bajo el encabezado, y la lectura anterior no se puede tocar (115).
+- **Las fichas del front:** un dato por celda; fechas completas, con hora, en la zona de quien mira; sin leyendas (109). Toda tabla lleva una línea fina entre columnas, con los números a la derecha, y cierra abajo (137).
+- **La planilla que vuelve a leer** atenúa sus filas y corre una línea bajo el encabezado, y la lectura anterior no se puede tocar (115).
 - **La navegación (34 y 79):** el menú dice «Gestión de formularios», y su panel tiene Formularios y Catálogos, sin «Respuestas».
 - **La planilla** se desplaza a lo ancho dentro de su caja, con N° fijo a la izquierda. Es la tabla con columnas fijas de la E12.
 - **«Ya tenés una exportación en curso»** es la barrera. **«No pudimos actualizar»** conserva lo que se ve.
 - **Exportar** no aparece sin `formrecords.export`, y sin respuestas queda grisado, con el motivo en su tooltip (43).
+- **Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
 
 ## Pasos
 
@@ -172,17 +173,6 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | [E9] | Las cuotas. | Las rutas cuentan en las generales, sin perfil propio. |
 | Base de la 12 | La tabla con columnas fijas, el panel al costado y las pestañas del front. | Están en el front, o entran acá. |
 | EF | Agrupar en SQL en otra zona horaria. | Se puede con la versión de Npgsql del repo, sin SQL a mano. |
-
-## Lo que ya se pagó allá (no repetir)
-
-Cada punto lleva su test, escrito durante la etapa:
-1. **El Excel no repite la lectura por página:** permisos, columnas y orden se leen una vez. Se prueba con 250 filas y con el borde de 10.000.
-2. **Los esquemas no viajan por fila** ni se deserializan por fila.
-3. **Un SQL por combinación:** ordenar por una opción usa el texto sellado, sin un `CASE` armado por versión.
-4. **Traer todos los ids para tres vecinos:** la navegación es una ventana de SQL.
-5. **El EXPLAIN corre sobre el SQL real de EF,** no sobre uno escrito a mano.
-6. **Un 404 antes de revisar el permiso:** el permiso se comprueba primero, y un 403 retira de la pantalla lo que había.
-7. **Lo elegido se nombra aunque no esté en la página.** Allá, el filtro de una pregunta de catálogo decía «Valor no disponible», porque la columna no trae sus opciones: el nombre de lo elegido viaja con el cambio y la planilla lo recuerda, como `knownItems` en el front.
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 

@@ -57,3 +57,14 @@ Una migración, `<fecha>_FormRecordsRead.cs`, y otra de roles, `<fecha>_SystemRo
 - `FormRecordValues`: `(TenantId, FieldId, ChoiceId)`, `(TenantId, FieldId, NumberValue)`, `(TenantId, FieldId, DateValue)`, y un GIN trigram `IX_FormRecordValues_Search_TextValue`, parcial en `LongText`, sobre `f_unaccent(lower("TextValue"))`.
 
 `FormWorkLeases.Kind` suma `RecordExport`.
+
+## Lo que ya se pagó allá (no repetir)
+
+Cada punto lleva su test, escrito durante la etapa:
+1. **El Excel no repite la lectura por página:** permisos, columnas y orden se leen una vez. Se prueba con 250 filas y con el borde de 10.000.
+2. **Los esquemas no viajan por fila** ni se deserializan por fila.
+3. **Un SQL por combinación:** ordenar por una opción usa el texto sellado, sin un `CASE` armado por versión.
+4. **Traer todos los ids para tres vecinos:** la navegación es una ventana de SQL.
+5. **El EXPLAIN corre sobre el SQL real de EF,** no sobre uno escrito a mano.
+6. **Un 404 antes de revisar el permiso:** el permiso se comprueba primero, y un 403 retira de la pantalla lo que había.
+7. **Lo elegido se nombra aunque no esté en la página.** Allá, el filtro de una pregunta de catálogo decía «Valor no disponible», porque la columna no trae sus opciones: el nombre de lo elegido viaja con el cambio y la planilla lo recuerda, como `knownItems` en el front.
