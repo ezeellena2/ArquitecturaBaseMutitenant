@@ -74,7 +74,7 @@ Antes de empezar, en este orden:
 
 **Lo propio** (85 y 166): la planilla de quien solo carga suma el estado y el PDF. Su detalle dice en qué quedó: si la rechazaron, el motivo va en los momentos, sin el rol ni quién decidió, y no en una columna de la planilla. No tiene Actividad, y «Corregir» está en la fila del título mientras pueda corregirla.
 
-**El chat de WhatsApp en «Mi cuenta»** (159 y 170): debajo de los medios de ingreso, una zona «Chat de WhatsApp» con cada organización de la persona: «Vinculado», «Sin vincular» con «Vincular» o «Sin chat todavía» con «Abrir el chat». Con el chat vinculado, los avisos dicen «Llegan hasta el …» y, pasadas las 24 horas, «Solo con plantilla», con su (i): fuera de esa ventana llega solo un aviso con una plantilla aprobada de la organización (61). Sin vincular, «No llegan». Vincular confirma el número con un código, como hoy, y «Verificado» sigue siendo entrar con el número. Lo da el módulo de WhatsApp; apagado, la zona no está.
+**El chat de WhatsApp en «Mi cuenta»** (159 y 170): debajo de los medios de ingreso, una zona «Chat de WhatsApp» con cada organización de la persona: «Vinculado», «Sin vincular» con «Vincular» o «Sin chat todavía» con «Abrir el chat». Con el chat vinculado, los avisos dicen «Llegan hasta el …» y, pasadas las 24 horas, «Solo con plantilla», con «Abrir el chat» y su (i): fuera de esa ventana llega solo un aviso con una plantilla aprobada de la organización (61), y escribir al chat la vuelve a abrir. Sin vincular, «No llegan». Vincular confirma el número con un código, como hoy, y «Verificado» sigue siendo entrar con el número. Lo da el módulo de WhatsApp; apagado, la zona no está.
 
 **Copiar un formulario** suma el diseño del PDF y las reglas vigentes, como su primera revisión.
 
@@ -101,7 +101,7 @@ Aprobados y publicados en el lienzo v155, con el armado del front real de Arquit
 | `WA-Chats-Respuesta-21` y `M-WA-Conversacion-Respuesta-21` | la tarjeta de una respuesta que después se corrigió o se anuló, con su marca al pie | Por dibujar (166) |
 | `FRM-Dar-De-Baja-21` y `FRM-Editor-Baja-21` | «Lo que se conserva» suma el PDF y las aprobaciones, y lo que espera se sigue decidiendo | `FRM-Dar-De-Baja-21`, aprobado; `FRM-Editor-Baja-21` se redibuja con la E17: «Agregar título» (88) y la baja en una frase (175) |
 
-`FRM-Por-Aprobar` y `M-FRM-Por-Aprobar` están en el Archivo.
+`FRM-Por-Aprobar` y `M-FRM-Por-Aprobar` están en el Archivo. Los tres por dibujar, con sus teléfonos, van en el [texto para Diseño](21-texto-diseno.md).
 
 **Mandan sobre esta spec en:** «Ver todos» de «Para resolver» abre la lista con «Con algo por aprobar». «Reglas de la revisión N» se queda en Actividad, porque es un historial. El diseño guarda aparte de las reglas, y su vista previa no guarda nada. Las reglas y el diseño valen sin publicar: lo dice la (i) de su título, sin leyendas (109 y 116). Donde un tablero dice «Ver la vigente», vale «Ver la actual».
 
