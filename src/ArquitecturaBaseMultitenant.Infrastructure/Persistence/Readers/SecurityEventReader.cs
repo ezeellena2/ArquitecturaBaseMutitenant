@@ -16,6 +16,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 /// </summary>
 internal sealed class SecurityEventReader(ApplicationDbContext context) : ISecurityEventReader
 {
+    private static readonly SortMap<Domain.Tenancy.Tenant> OrganizationSort = new() { ["name"] = tenant => tenant.Name };
+
     public async Task<CursorResult<PlatformAuditRow>> ListAsync(ListPlatformAuditRequest request, DateTime? sinceUtc,
         IReadOnlyCollection<SecurityEventType>? eventTypes, bool includeSignIns, CancellationToken ct)
     {
@@ -47,8 +49,7 @@ internal sealed class SecurityEventReader(ApplicationDbContext context) : ISecur
             .Where(item => item.TargetTenantId != null).Select(item => item.TargetTenantId!.Value).Distinct();
         return context.Tenants.AsNoTracking().Where(tenant => ids.Contains(tenant.Id))
             .ApplySearch(page.Search, tenant => tenant.Name)
-            .ApplySort(SortDescriptor.Parse(page.Sort), new SortMap<ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant> { ["name"] = tenant => tenant.Name },
-                new SortDescriptor("name", false), tenant => tenant.Id)
+            .ApplySort(SortDescriptor.Parse(page.Sort), OrganizationSort, new SortDescriptor("name", false), tenant => tenant.Id)
             .Select(tenant => new PlatformAuditOrganizationResponse(tenant.Id, tenant.Name)).ToPagedResultAsync(page, ct);
     }
 

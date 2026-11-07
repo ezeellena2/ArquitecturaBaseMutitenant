@@ -17,6 +17,8 @@ internal sealed class MemberConfiguration : IEntityTypeConfiguration<Member>
         builder.Property(member => member.Status).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(member => member.RemovalReason).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.HasIndex(member => new { member.TenantId, member.UserId }).IsUnique();
+        // El orden por fecha de alta de Usuarios (OrganizationUserReader).
+        builder.HasIndex(member => new { member.TenantId, member.CreatedAtUtc, member.Id });
         builder.HasOne<TenantEntity>().WithMany()
             .HasForeignKey(member => member.TenantId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<ApplicationUser>().WithMany()

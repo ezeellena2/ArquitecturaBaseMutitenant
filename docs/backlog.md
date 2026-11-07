@@ -45,7 +45,6 @@ El [panorama vigente](architecture/backend.md) describe la arquitectura; los pen
 - **8.** El diff de auditoría enmascara por nombre de propiedad, no por tipo
 - **9.** Los grants de mt_app solo cubren las tablas de E2 y dan DML completo sobre los catálogos globales
 - **11.** Runtime_role_validator_rejects_superuser es un falso verde
-- **12.** SortIndexTests solo revisa el Widget de prueba, no los SortMap reales
 - **13.** Ningún test verifica que las claves de HybridCache salgan de CacheKeys
 - **14.** El inventario de RLS solo mira los nombres de las políticas
 - **15.** Los archivos modelo de 25 punteros nunca se verifican (solo se mira "Copiá de:" con dos puntos)

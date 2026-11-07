@@ -20,7 +20,7 @@
   - Para buscar entre varios valores de una fila (todos los correos verificados de una persona), cada tabla filtra con `ApplySearch` y las partes se combinan con `Contains`: `MemberSearch` lo hace para Usuarios y Miembros de empresa. Una columna con conversor (un `Email`) se busca con `EF.Property<string>`.
   - **Lo que una lista muestra tapado no se busca:** a quién sumar a una empresa (`GET /api/companies/{companyId}/candidates/paged`) muestra el correo con `PersonalDataMask` y se busca solo por nombre; buscar por correo lo destaparía de a una letra.
   - **Única excepción, la auditoría de la organización:** `OrganizationAuditReader` busca con SQL en el texto de los cambios, porque `Changes` es jsonb y `ApplySearch` no lo pasa a texto. Usa la misma expresión (`public.f_unaccent(lower("Changes"::text))`, y la del tipo) y tiene sus índices (`IX_AuditEntries_Search_Changes` y `IX_AuditEntries_Search_EntityType`). A quien actuó lo busca por nombre con `ApplySearch`. Una búsqueda nueva en SQL entra en la lista de `SearchIndexTests` con su expresión e índice.
-- **Índices:** cada campo del `SortMap` tiene `(TenantId, campo, Id)`.
+- **Índices:** cada campo de un `SortMap` tiene su índice: `(TenantId, campo, Id)` en una tabla privada y uno que termina en `(campo, Id)` en una global. El `SortMap` es un campo estático del lector; si ordena una proyección, `SortIndexTests` declara la columna de cada campo, o ninguna si sale de la cuenta global (nombre o correo).
 - **Orden de textos:** lo da la collation ICU `es-AR` de la base ([persistencia-ef](persistencia-ef.md)), sin `ToLower` ni `COLLATE` a mano.
 - **Cursor:** `CursorRequest`, `CursorResult<T>` y `ToCursorResultAsync`. Orden fijo por instante UTC e Id, del más nuevo al más viejo; sin total. `CursorCodec` codifica ambos en base64url; un cursor inválido devuelve 400 `Validation.Failed` con `errors.after`.
 - **Contrato HTTP:** `<X>Query` con `page`, `pageSize`, `sort`, `search` y los filtros, mapeado a mano.
@@ -39,6 +39,7 @@
 
 ## Lo verifica
 - `HarnessTests` (E0): formato y referencias de la ficha.
+- `SortIndexTests` (E2): cada campo de cada `SortMap` de los lectores tiene su índice en la base.
 - `GrowingCollectionContractTests` (E0), correctivo C9: detecta arrays e interfaces de colección HTTP también dentro de respuestas anidadas, permite sólo catálogos cerrados o adaptadores legacy acotados con sucesora paginada y verifica los límites publicados; cada relación anidada permitida se declara por propiedad. `HomeResponse.Pending` es el adaptador vacío (`maxItems: 0`); los pendientes HTTP van en los grupos acotados.
 
 ## Detalle

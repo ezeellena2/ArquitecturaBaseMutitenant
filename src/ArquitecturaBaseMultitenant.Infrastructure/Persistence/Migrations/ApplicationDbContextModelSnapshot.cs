@@ -3128,6 +3128,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TimeZoneId");
 
+                    b.HasIndex("TenantId", "CreatedAtUtc", "Id");
+
                     b.HasIndex("TenantId", "Name", "Id");
 
                     b.HasIndex("TenantId", "TaxCountry", "TaxType", "TaxNumber")
@@ -3232,6 +3234,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId", "UserId")
                         .IsUnique();
+
+                    b.HasIndex("TenantId", "CreatedAtUtc", "Id");
 
                     b.ToTable("Members", "tenant");
                 });
