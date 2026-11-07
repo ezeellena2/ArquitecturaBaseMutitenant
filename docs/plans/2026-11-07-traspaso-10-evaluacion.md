@@ -289,6 +289,9 @@ Te las pregunto de a una, después de tu visto bueno al plan, con la captura o e
    - **C:** dejar las dos como están.
 
    **Elegida: A**, el 2026-11-07 (179).
+10. **La escala** (pedido del usuario después de las nueve: la de acá le parecía grande y redondeada). Vio la misma planilla en tres escalas: la de hoy, una intermedia y una como ArquitecturaBase.
+
+    **Elegida: como ArquitecturaBase**, el 2026-11-07 (180).
 
 ## 6. En curso allá
 
