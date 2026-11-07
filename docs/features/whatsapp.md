@@ -1,5 +1,7 @@
 # WhatsApp
 
+**Revisado:** 2026-11-07
+
 Módulo quitable para los números de WhatsApp de Plataforma y de las organizaciones. Se instala con la composición `AddWhatsAppModule` de cada capa; la disponibilidad del canal de Plataforma depende de su número conectado, y la del webhook, de sus dos secretos. Aporta webhook, recepción durable, bot, mensajes y transporte de códigos, invitaciones y avisos. El núcleo conserva la identidad y los accesos; el módulo no crea sesiones por recibir un mensaje.
 
 ## Contrato HTTP y disponibilidad
