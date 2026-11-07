@@ -231,6 +231,8 @@ Te las pregunto de a una, después de tu visto bueno al plan, con la captura o e
 2. **¿Un texto largo se ve entero o se corta con «…»?** Por ejemplo, «Observaciones» en la planilla: allá la celda baja de renglón; acá se corta con «…» y su tooltip.
    - **A (recomendada):** entero, bajando de renglón, en las celdas y en las lecturas; «un dato por celda» sigue valiendo. Es tu regla «sin plegar ni cortar», y es una sola pieza.
    - **B:** «…» en las tablas, y entero en las lecturas.
+
+   **Elegida: A**, el 2026-11-07.
 3. **¿Cómo se ve el estado de una publicación?** Por ejemplo, «Visita a cliente» quedó sin confirmar.
    - Hoy: «● Sin confirmar», con una ⓘ que abre los pasos y «Consultar ahora».
    - Allá: la etiqueta, «Consultar publicación» a la vista y el porqué en el motivo de «Publicar en WhatsApp».
