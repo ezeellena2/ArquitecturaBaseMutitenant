@@ -105,6 +105,8 @@ Aprobados y publicados en el lienzo v155, con el armado del front real de Arquit
 
 **Mandan sobre esta spec en:** «Ver todos» de «Para resolver» abre la lista con «Con algo por aprobar». «Reglas de la revisión N» se queda en Actividad, porque es un historial. El diseño guarda aparte de las reglas, y su vista previa no guarda nada. Las reglas y el diseño valen sin publicar: lo dice la (i) de su título, sin leyendas (109 y 116). Donde un tablero dice «Ver la vigente», vale «Ver la actual».
 
+**Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
+
 ## Decisiones tomadas (no se vuelven a preguntar)
 
 - **Un solo motor,** sin una segunda cola de salida.
