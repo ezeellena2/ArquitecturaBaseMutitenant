@@ -1,6 +1,6 @@
 # E19 · Condiciones, cálculos y líneas (spec)
 
-**Estado:** pendiente · spec de la etapa 19 del bloque (decisiones 53, 54, 78, 146, 168, 177 y 178), con el [formato](plantilla.md) de las etapas. Las condiciones y los cálculos no tienen equivalente en ArquitecturaBase, salvo el editor de condiciones de las reglas, del que sale «Mostrar si». El bloque es lo que allá llaman «Renglones en los formularios»: su etapa 1, el editor y publicar, está programada y probada con Meta, y la 2 y la 3, cargar y leer, estaban en curso el 2026-11-07. **Antes de programar** se prueba con Meta, en un celular, una pregunta que aparece según otra, una pantalla por ítem con «¿Agregás otro ítem?» y una pregunta de archivo dentro de un `If`, y `/plan-etapa` parte de ese resultado, después de la E18.
+**Estado:** pendiente · spec de la etapa 19 del bloque (decisiones 53, 54, 78, 146, 168, 177, 178 y 185), con el [formato](plantilla.md) de las etapas. Las condiciones y los cálculos no tienen equivalente en ArquitecturaBase, salvo el editor de condiciones de las reglas, del que sale «Mostrar si». El bloque es lo que allá llaman «Renglones en los formularios»: su etapa 1, el editor y publicar, está programada y probada con Meta, y la 2 y la 3, cargar y leer, estaban en curso el 2026-11-07. **Antes de programar** se prueba con Meta, en un celular, una pregunta que aparece según otra, una pantalla por ítem con «¿Agregás otro ítem?» y una pregunta de archivo dentro de un `If`, y `/plan-etapa` parte de ese resultado, después de la E18.
 
 **Partes.** Esta spec no entra en un solo archivo, así que sigue en otro, con las mismas secciones. Lo que no está en la tabla está acá.
 
@@ -13,7 +13,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T9, T11, T13, T24, la §3, la §6, punto 7, y la §14; la [E15](15-respuestas.md): filtros, valores, Excel y tablero; la [E16](16-datos-de-las-personas.md): los filtros por destinatario y sus avisos; la [E12](12-catalogos.md): C5, y la [E13](13-campos.md): los tipos de campo.
-2. **Decisiones** de la hoja de ruta: 35, 43, 53, 54, 78, 146, 157, 162, 168, 174, 177 y 178.
+2. **Decisiones** de la hoja de ruta: 35, 43, 53, 54, 78, 146, 157, 162, 168, 174, 177, 178 y 185.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -62,7 +62,7 @@ Antes de empezar, en este orden:
 - **lo que llega:** cada pregunta de un ítem llega como `field_<N>_r<n>`, y «¿Agregás otro ítem?», como `field_<bloque>_r<n>`; con mínimo 0, `_r0` es «¿Agregás un ítem?». De los ítems no visitados no llega ninguna clave, ni vacía ni con `${…}`, y lo que llegue de un ítem después de un «No» se ignora;
 - **la captura entiende el bloque desde el primer día.** Valida la cantidad contra el mínimo y el máximo, siempre, y por WhatsApp contra el tope, y cada ítem como preguntas sueltas: obligatorias, tipos, largos y opciones ofrecidas. Un ítem vacío cuenta como ítem. Cada ítem se guarda con su posición, y los catálogos se sellan como en una pregunta suelta. En la tarjeta del chat, una respuesta con ítems que no se pueden leer queda «no se pudo guardar», con su motivo, y «no reconocida» queda solo para lo que no corresponde a un envío;
 - **en la tarjeta del chat,** el nombre del bloque y un ítem por línea, numerado, con sus valores separados por « · » en el orden de las preguntas y sin los que quedaron sin respuesta: «1. Caño de 1/2 pulgada · 10»;
-- **en la planilla,** una fila por respuesta. La columna del bloque dice la cantidad de ítems, en gris, y los valores de su primera pregunta: «3 · Caño de 1/2 pulgada, Codo de 90°, Cinta de teflón», entera y bajando de renglón (174). No se ordena, y una respuesta de antes del bloque dice «—»;
+- **en la planilla,** una fila por respuesta. La columna del bloque dice la cantidad de ítems, en gris, y los valores de su primera pregunta: «3 · Caño de 1/2 pulgada, Codo de 90°, Cinta de teflón», entera y bajando de renglón, también con muchos ítems (174 y 185). No se ordena, y una respuesta de antes del bloque dice «—»;
 - **en «Filtros»,** el nombre del bloque encabeza sus preguntas, que van debajo, con sangría, y una pregunta del bloque lleva debajo de su título, en gris, «En algún ítem de Productos»: se cumple si algún ítem la cumple. Varias del mismo bloque buscan un mismo ítem que las cumpla todas, también en los conteos. La búsqueda mira también los textos largos de los ítems, y el total sigue contando respuestas;
 - **en el detalle** (139), cada ítem con su número y el valor de su primera pregunta en negro, y los demás datos alineados debajo; sin ítems, «Sin respuesta». La pantalla completa muestra una tabla, con el número sin encabezado, que en el teléfono se desplaza de costado en su caja;
 - **en el Excel,** «Respuestas» lleva la cantidad de ítems en la columna del bloque, y se suma una hoja con el nombre del bloque, de hasta 31 caracteres y sin los que Excel no admite («Ítems» si queda vacío o se llama «Respuestas»): una fila por ítem, con «Número», «Ítem» y sus preguntas, con los tipos y la precisión de «Respuestas».
@@ -132,7 +132,7 @@ Aprobados y publicados en el lienzo v153, con el recorrido guiado `un-pedido-con
 - **El bloque** (146, 177 y 178): se agrega con «Agregar bloque», con un mínimo y un máximo de hasta 100, y en WhatsApp una pantalla por ítem, hasta 10; un mínimo de más de 10 frena al publicar. Cambia el tope de 1 a 10 de la 54.
 - **«Ítem» en todo texto que ve el usuario** (177): el código y los documentos siguen diciendo `rows`.
 - **Un catálogo del bloque filtra por quien lo recibe** (168).
-- **La columna del bloque no se corta:** baja de renglón, como todo texto largo (174).
+- **La columna del bloque se ve entera:** baja de renglón, como todo texto largo (174 y 185).
 - **Genérico:** ninguna fórmula ni bloque va escrito en el código.
 
 ## Fuera de esta etapa
