@@ -83,8 +83,9 @@ Aprobados y publicados en el lienzo v151, con el armado de ArquitecturaBase (131
 - **Una acción que no se puede usar** queda grisada, con el motivo en su tooltip, también en el ⋮ (43). Sin el permiso, no se dibuja.
 - **Si no se sabe si la baja o el borrado salió,** la pantalla vuelve a leer sola, sin pisar lo escrito (43). Reactivar sigue lo de publicar de la E14, con «Repetir el mismo intento» (175).
 - **Lo dado de baja** es una opción del filtro «Estado», no una vista aparte.
-- **Las fichas del front:** quién y cuándo, cada uno en su lugar, con fecha y hora completas, y sin rótulos que expliquen.
+- **Las fichas del front:** la fecha y la hora completas, y sin rótulos que expliquen; quién dio de baja y cuándo van en una frase (175).
 - **Copiar** abre el editor del formulario nuevo.
+- **Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
 
 ## Contrato
 
