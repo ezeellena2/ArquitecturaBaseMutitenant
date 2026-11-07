@@ -22,17 +22,17 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 11 · WhatsApp de atención | Cerrada el 2026-10-21. El alta de una organización con un número real pasó a la I1 de la 10 | [WhatsApp](../features/whatsapp.md), [ADR 0038](../decisions/0038-whatsapp-de-atencion.md) |
 | 9 · Endurecimiento | Cerrada | [Identidad](../features/identidad.md), [Plataforma](../features/plataforma.md), [cuotas](../rules/cuotas.md), [caché](../rules/cache.md), [ADR 0052](../decisions/0052-cache-compartida-redis.md) |
 | 10 · Operación | Pendiente, para después del bloque (decisión 123). El plan corto está listo, con las decisiones del usuario; la F5 de botones pasó a la base de la 12 | [Plan](2026-10-16-etapa-10-despliegue.md), [manual de operación](../operations/runbook.md) |
-| Base de la 12 | Pendiente. Spec lista: los botones (la F5 de la 10) y la campana en el núcleo; la raíz al 75 % en la compu ya está programada | [Spec](formularios/base-de-la-12.md) |
+| Base de la 12 | Pendiente. Spec lista: los botones (la F5 de la 10) y la campana en el núcleo; la raíz al 75 % en la compu ya está programada; con el traspaso 10 suma la forma y la escala, el texto entero, la primera carga, los filtros sin cantidades del núcleo, el bot sin enlace y el consentimiento (decisiones 160 a 180) | [Spec](formularios/base-de-la-12.md) |
 | 12 · Catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150; el traspaso 5 redibujó la importación, aprobada en la v162 | [Spec](formularios/12-catalogos.md), [hoja de ruta de formularios](2026-10-12-formularios-dinamicos-hoja-de-ruta.md) |
 | 13 · Campos de los catálogos | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150 | [Spec](formularios/13-campos.md) |
-| 14 · Formularios | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150; el traspaso 5 redibujó el editor y el envío, aprobados en la v162 | [Spec](formularios/14-formularios.md) |
+| 14 · Formularios | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150; el traspaso 5 redibujó el editor y el envío, aprobados en la v162; el traspaso 10 redibuja tableros y suma otros por dibujar | [Spec](formularios/14-formularios.md) |
 | 15 · Respuestas, planilla y Excel | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150; el traspaso 5 redibujó la planilla y el detalle, aprobados en la v160 | [Spec](formularios/15-respuestas.md) |
 | 16 · Datos de las personas y filtros | Pendiente. Spec lista, con los tableros aprobados en el lienzo v150; el traspaso 5 redibujó la pregunta con filtros y la planilla, aprobadas en la v162 | [Spec](formularios/16-datos-de-las-personas.md) |
 | 17 · Ciclo de vida y copiar | Pendiente. Spec lista, con los tableros aprobados en el lienzo v151 | [Spec](formularios/17-ciclo-de-vida.md) |
 | 18 · Fotos y documentos | Pendiente. Spec lista, con los archivos del chat y los tableros aprobados en el lienzo v152; el traspaso 5 redibujó la planilla y el detalle, aprobados en la v163 | [Spec](formularios/18-fotos-y-documentos.md) |
 | 19 · Condiciones, cálculos y líneas | Pendiente. Spec lista y tableros aprobados en el lienzo v153; el traspaso 5 cambia las líneas por renglones (146) y redibuja el detalle. Antes de planificar, la prueba con Meta | [Spec](formularios/19-condiciones-calculos-y-lineas.md) |
-| 20 · Cargar desde la web | Pendiente. Spec lista y tableros aprobados en el lienzo v154; el traspaso 5 redibuja la carga, la planilla y el detalle | [Spec](formularios/20-cargar-desde-la-web.md) |
-| 21 · Reglas, aprobación y PDF | Pendiente. Spec lista y tableros aprobados en el lienzo v155; el traspaso 5 redibuja las reglas, la planilla y el detalle. Antes de planificar, la prueba con Meta | [Spec](formularios/21-reglas-y-aprobacion.md) |
+| 20 · Cargar desde la web | Pendiente. Spec lista y tableros aprobados en el lienzo v154; el traspaso 5 redibuja la carga, la planilla y el detalle; el traspaso 10 redibuja tableros y suma otros por dibujar | [Spec](formularios/20-cargar-desde-la-web.md) |
+| 21 · Reglas, aprobación y PDF | Pendiente. Spec lista y tableros aprobados en el lienzo v155; el traspaso 5 redibuja las reglas, la planilla y el detalle. Antes de planificar, la prueba con Meta; el traspaso 10 redibuja tableros y suma otros por dibujar | [Spec](formularios/21-reglas-y-aprobacion.md) |
 | 22 · Biblioteca de plantillas | Pendiente. Spec lista y tableros aprobados en el lienzo v156; el traspaso 5 redibuja las reglas | [Spec](formularios/22-biblioteca.md) |
 | 23 · Asistente con Casos | Pendiente. Spec lista y tableros aprobados en el lienzo v157; el traspaso 5 redibuja los chats, las sugerencias y el detalle | [Spec](formularios/23-asistente.md) |
 | 24 · Varios asistentes | Pendiente. Spec lista y tableros aprobados en el lienzo v158 | [Spec](formularios/24-varios-asistentes.md) |
@@ -58,7 +58,7 @@ Una organización arma formularios, los manda por WhatsApp a sus empleados y a s
 - **La base, al principio de la 12** ([spec](formularios/base-de-la-12.md)):
   - los botones y avisos de la decisión 43, que eran la F5 de la 10, con las leyendas, la (i), los motivos y las esperas de las decisiones 109, 110, 115 y 116;
   - la campana, en el núcleo, con las dos rutas de avisos;
-  - «Más filtros» en `FilterBar`, con el buscador y hasta tres filtros en una fila;
+  - un solo «Filtros» en `FilterBar`, con el buscador y hasta tres filtros en una fila (144);
   - un dato por celda, en un renglón: `DataTable` deja de dibujar `detail` en la computadora, y cada pantalla pasa a columnas lo que hace falta (decisión del usuario del 25/10);
   - las fechas siempre con fecha y hora completas en la zona de la cuenta: salen `relative`, `formatCalendar` y las fechas cortas, también en Usuarios y en la tarjeta de Auditoría de Inicio (decisión del usuario del 25/10);
   - los carteles de las pantallas cerradas pasan a la banda o a la campana: Usuario, Cuenta y Organización de Plataforma, Legales, Recuperaciones, Inicio personal y Mi cuenta;
