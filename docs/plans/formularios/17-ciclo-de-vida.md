@@ -7,7 +7,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T4, T7, T8, la §3 (`FormDefinitionStates`, `FormPublications` y `WhatsAppFlowBindings`), la §6, puntos 4 y 6, y la §14 (errores de Meta); la [E15](15-respuestas.md): las dos rutas de la lista, y la [E16](16-datos-de-las-personas.md): los filtros por destinatario, que se copian.
-2. **Decisiones** de la hoja de ruta: 23, 34, 35, 43, 74, 78, 79, 112, 131 y 132.
+2. **Decisiones** de la hoja de ruta: 23, 34, 35, 43, 74, 78, 79, 88, 112, 131, 132 y 175.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -34,7 +34,7 @@ Antes de empezar, en este orden:
 - **un solo filtro de disponibilidad** deja de ofrecer los dados de baja y los borrados. Hoy lo usa el envío desde el chat, y toda etapa que ofrezca formularios usa el mismo;
 - no borra nada, y se puede seguir editando el borrador.
 
-**Reactivar** es la publicación de siempre con el borrador actual: versión nueva y Flows nuevos. Usa las rutas de publicar, y `NothingToPublish` no aplica, porque los Flows viejos no se pueden recuperar. Sigue dado de baja hasta que se confirma la versión nueva, y si falla, sigue dado de baja. La numeración continúa. Pide `forms.publish`.
+**Reactivar** es la publicación de siempre con el borrador actual: versión nueva y Flows nuevos. Usa las rutas de publicar, y `NothingToPublish` no aplica, porque los Flows viejos no se pueden recuperar. Sigue dado de baja hasta que se confirma la versión nueva, y si falla, sigue dado de baja; mientras tanto, la etiqueta dice el estado de la publicación, como en la E14 (175). La numeración continúa. Pide `forms.publish`.
 
 **Borrar:**
 - dice «Borrar» en el ⋮, «¿Borrar «…»?» en el diálogo y «Borramos «…».» en el aviso. Nunca «Eliminar»;
@@ -62,22 +62,26 @@ Aprobados y publicados en el lienzo v151, con el armado de ArquitecturaBase (131
 | Tablero | Qué muestra |
 | --- | --- |
 | `FRM-Formularios-17` y `M-FRM-Formularios-17` | la lista, con «Dados de baja» en el filtro «Estado» y el ⋮ de cada fila |
-| `FRM-Editor-Baja` y `M-FRM-Editor-Baja` | el formulario dado de baja: el estado en la banda, con su ⓘ, lo que pasa en WhatsApp, «Reactivar» en el lugar de «Publicar» y el ⋮ |
+| `FRM-Editor-Baja` y `M-FRM-Editor-Baja` | el formulario dado de baja: el estado en la banda, con su ⓘ, lo que pasa en WhatsApp, «Reactivar» en el lugar de «Publicar», el ⋮ y «Agregar título» (88) |
 | `FRM-Dar-De-Baja` | el diálogo, en tres partes: «Qué deja de pasar», «Envíos abiertos y WhatsApp» y «Lo que se conserva» |
 | `FRM-Reactivar-Eliminar` | reactivar y borrar, sobre el formulario. El nombre del tablero queda |
 | `FRM-Copiar` | el diálogo, con el nombre y el prefijo propuesto |
 
-**El formulario dado de baja:** la banda dice «De baja · versión 2» y su ⓘ abre quién lo dio de baja, cuándo y qué pasa en WhatsApp. «Sin confirmar en WhatsApp» y «No se pudo deprecar en WhatsApp» van al lado, en la banda, y se lee la versión nueva en «Reactivando con la versión 3». Sin cartel en el cuerpo (avisos, 25/10).
+**Se redibujan** `FRM-Editor-Baja` y `M-FRM-Editor-Baja`, con la baja en una frase, la etiqueta de la publicación al reactivar (175) y «Agregar título» al lado de «Agregar pregunta» (88).
+
+**El formulario dado de baja:** la banda dice «De baja · versión 2», y su ⓘ dice la baja en una frase, «Lo dio de baja Ana Gómez el 09/10/2026 10:12.», y qué pasa en WhatsApp (175). «Sin confirmar en WhatsApp» y «No se pudo deprecar en WhatsApp» van al lado, en la banda. Sin cartel en el cuerpo (avisos, 25/10).
+
+**Al reactivar, la etiqueta dice el estado de la publicación** (175), como en la E14: «Publicando la versión 3», «Sin confirmar · versión 3», «Necesita revisión · versión 3» o «No se pudo publicar la versión 3», con «Consultar publicación», «Repetir el mismo intento», «Salió» y «No salió» en la banda solo cuando hacen falta. «Reactivar» apagado dice su motivo, como «Publicar en WhatsApp». La ⓘ sigue diciendo quién lo dio de baja, y con la versión confirmada la etiqueta pasa a «Publicado · versión 3». Sale «Reactivando con la versión 3».
 
 **Reactivar (131):** se abre en el formulario, también desde la lista. «Problemas», si hay alguno, con «Ir a la pregunta», y «Qué se publica»: Próxima respuesta, Borrador, Preguntas y lo que cambió. El botón dice «Reactivar con la versión 3» y queda grisado si hay problemas.
 
 **Borrar:** «¿Borrar «…»?», con «Deja de aparecer en la lista y no se puede volver a usar. El prefijo REC queda reservado.». Si llegó a publicarse suma «En WhatsApp no se deshace: sus Flows se deprecan cuando no queden envíos abiertos.». Si cambió la situación, lo dice en la franja y «Borrar» queda grisado. Con respuestas, en el ⋮ queda grisado con «Tiene respuestas y no se puede borrar.» (132).
 
-**Estados dibujados:** la lista con sus filtros y las acciones de un publicado, un borrador, un dado de baja y mientras se publica; «Solo puede publicar», «Solo lectura», «Quien solo ve respuestas» y sus dados de baja. El dado de baja, ya deprecado, sin confirmar, «No se pudo deprecar» y reactivando. Dar de baja con y sin envíos abiertos, consultando, mientras trabaja y con error. Reactivar con y sin cambios, comprobando, con algo que corregir y mientras trabaja. Borrar un borrador, un publicado, mientras trabaja y con error. Copiar, sin nombre, con el prefijo ocupado y mientras copia.
+**Estados dibujados:** la lista con sus filtros y las acciones de un publicado, un borrador, un dado de baja y mientras se publica; «Solo puede publicar», «Solo lectura», «Quien solo ve respuestas» y sus dados de baja. El dado de baja, ya deprecado, sin confirmar y «No se pudo deprecar»; reactivando: publicando, sin confirmar, en revisión y que no salió (175). Dar de baja con y sin envíos abiertos, consultando, mientras trabaja y con error. Reactivar con y sin cambios, comprobando, con algo que corregir y mientras trabaja. Borrar un borrador, un publicado, mientras trabaja y con error. Copiar, sin nombre, con el prefijo ocupado y mientras copia.
 
 **Mandan sobre esta spec en:**
 - **Una acción que no se puede usar** queda grisada, con el motivo en su tooltip, también en el ⋮ (43). Sin el permiso, no se dibuja.
-- **Si no se sabe si la baja o el borrado salió,** la pantalla vuelve a leer sola, sin pisar lo escrito (43).
+- **Si no se sabe si la baja o el borrado salió,** la pantalla vuelve a leer sola, sin pisar lo escrito (43). Reactivar sigue lo de publicar de la E14, con «Repetir el mismo intento» (175).
 - **Lo dado de baja** es una opción del filtro «Estado», no una vista aparte.
 - **Las fichas del front:** quién y cuándo, cada uno en su lugar, con fecha y hora completas, y sin rótulos que expliquen.
 - **Copiar** abre el editor del formulario nuevo.
@@ -175,7 +179,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | F2 | La lista: filtro y ⋮ | suma a la lista [E14] | su tablero | las acciones por estado y permiso; Borrar grisado con respuestas; «Reactivar» abre el formulario con su diálogo; quien solo ve respuestas |
 | F3 | Los diálogos | `components/LifecycleDialogs.tsx`, sin sugerencias ni reglas | su tablero | releer si no se sabe si salió; error en el diálogo; botones según la 43 |
 | F4 | Copiar | `components/CopyFormDialog.tsx` | su tablero | prefijo ocupado en su campo; abre el editor |
-| F5 | El formulario dado de baja | suma al editor [E14]: el aviso, «Reactivar» y el ⋮ | su tablero | los cuatro estados de WhatsApp; se edita y se guarda |
+| F5 | El formulario dado de baja | suma al editor [E14]: la ⓘ con la baja en una frase, «Reactivar» y el ⋮ | su tablero | los cuatro estados de WhatsApp; al reactivar, la etiqueta de cada estado de la publicación y el motivo de «Reactivar» apagado (175); se edita y se guarda |
 
 **Al cerrar:** `docs/features/formularios.md` suma la sección, y `docs/features/whatsapp.md`, la deprecación. `AGENTS.md` de la carpeta del módulo nombra el worker.
 
@@ -205,7 +209,8 @@ Cada punto lleva su test, escrito durante la etapa:
 - **Permisos:** dar de baja y reactivar piden `forms.publish`; borrar y copiar, `forms.manage`.
 - **La deprecación es por WABA de la organización,** con su token.
 - **No se borran respuestas desde un formulario.**
-- **Reactivar no tiene ruta propia:** es publicar.
+- **Reactivar no tiene ruta propia:** es publicar, y mientras avanza la etiqueta dice el estado de la publicación (175).
+- **La baja se dice en una frase** («Lo dio de baja Ana Gómez el …»), en la ⓘ de la banda (175).
 - **El worker no entra con `ExecutionActor`:** deprecar no depende de los permisos de una persona, que pueden cambiar antes de que venza el último envío.
 - **La cola es de WhatsApp,** sin un registro global: Forms contesta qué versiones ya no se usan.
 
