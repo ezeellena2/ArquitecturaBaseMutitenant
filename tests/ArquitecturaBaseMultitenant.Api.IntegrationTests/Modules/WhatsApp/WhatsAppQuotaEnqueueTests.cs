@@ -149,7 +149,8 @@ public sealed class WhatsAppQuotaEnqueueTests(ApiFactory factory) : IClassFixtur
     [Fact]
     public async Task Pending_resend_quota_rejection_under_OnAnyResult_preserves_old_code_and_pending_method()
     {
-        await using var host = Host(cap: 2); using var client = host.CreateClient(new WebApplicationFactoryClientOptions
+        // El reloj del host está fijo: la cookie de sesión vence con él, no con el real.
+        await using var host = Host(cap: 2); using var client = TestClockCookies.Client(host, new WebApplicationFactoryClientOptions
         { AllowAutoRedirect = false, BaseAddress = new Uri("https://localhost") });
         var account = await AccountJourney.RegisterAsync(host, client, Ct); var phone = NewPhone();
         using var add = await PostAsync(client, "/api/me/login-methods", Contact(phone)); Assert.Equal(HttpStatusCode.Accepted, add.StatusCode);

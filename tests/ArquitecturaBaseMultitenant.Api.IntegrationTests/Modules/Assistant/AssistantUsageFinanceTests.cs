@@ -446,7 +446,8 @@ public sealed class AssistantUsageFinanceTests
             services.Replace(ServiceDescriptor.Singleton<TimeProvider>(clock ?? new FakeTimeProvider(new DateTimeOffset(NowUtc))));
             if (sql is not null) services.AddDbContext<ApplicationDbContext>(options => options.AddInterceptors(sql));
         }));
-    private static HttpClient Client(WebApplicationFactory<Program> host) => host.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+    // El reloj del host está fijo: las cookies de sesión vencen con él, no con el real.
+    private static HttpClient Client(WebApplicationFactory<Program> host) => TestClockCookies.Client(host, new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
     private static async Task<Guid> OrganizationAsync(ApiFactory factory, HttpClient client, AccountJourney owner, string name)
     {
         var tenant = await OrganizationJourney.StageAsync(factory, owner, name, Ct);

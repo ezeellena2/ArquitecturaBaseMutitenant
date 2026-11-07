@@ -239,8 +239,9 @@ public sealed class AssistantStateBudgetTests
             services.AddSingleton<TimeProvider>(clock);
         }));
 
+    // El reloj del host está fijo: las cookies de sesión vencen con él, no con el real.
     private static HttpClient Client(WebApplicationFactory<Program> host) =>
-        host.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        TestClockCookies.Client(host, new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
 
     private static async Task<Guid> BusinessAsync(ApiFactory factory, HttpClient client, AccountJourney account)
     {

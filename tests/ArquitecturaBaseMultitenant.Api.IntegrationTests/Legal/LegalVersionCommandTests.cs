@@ -37,7 +37,7 @@ public sealed class LegalVersionCommandTests
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(clock);
         }));
-        using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        using var client = TestClockCookies.Client(factory, new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         await factory.Services.SeedDatabaseAsync(ct);
         // La revisión de partida es un dato del caso, independiente de los módulos instalados.
         await using (var seed = factory.Services.CreateAsyncScope())
