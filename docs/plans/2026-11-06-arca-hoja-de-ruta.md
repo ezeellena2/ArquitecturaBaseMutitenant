@@ -40,20 +40,22 @@ Son las de la [hoja de ruta de ARCA](../../../ArquitecturaBase/docs/plans/2026-1
 
 | Tema | Acá |
 |---|---|
-| Datos | `ITenantOwned` en el esquema `tenant`, con su helper RLS y su test de aislamiento por ruta. Las cinco tablas de allá cuelgan de la empresa: el índice único de la conexión es por empresa. Desconectar borra de verdad, porque hay secretos |
-| CUIT | La de la ficha de la empresa (`TaxId`, [identificacion-fiscal](../rules/identificacion-fiscal.md)), con su validador. Una empresa sin CUIT no se puede conectar, y la pantalla dice por qué |
-| Secretos | La clave privada y el ticket de acceso, cifrados con un anillo propio del módulo; el AAD suma la organización y la empresa a la clave, el propósito, la conexión y el certificado. La clave privada nunca sale del servidor ni llega a un lector |
+| Datos | `ITenantOwned` en el esquema `tenant`, con su helper RLS y su test de aislamiento por ruta. Las cinco tablas de allá cuelgan de la empresa: el índice único de la conexión es por empresa. Desconectar borra de verdad la conexión, los certificados, los tickets y los datos de cada familia, porque hay secretos: sin `ISoftDeletable` y en cascada desde la conexión |
+| CUIT | La de la ficha de la empresa (`TaxId`, [identificacion-fiscal](../rules/identificacion-fiscal.md)), con su validador. Una empresa sin CUIT no se puede conectar, y la pantalla dice por qué. Con ARCA conectado, la CUIT no cambia: primero se desconecta (172). El núcleo lo pregunta por un puerto neutral que el módulo implementa, como `IAccountDeletionParticipant` |
+| Secretos | La clave privada y el ticket de acceso, cifrados con un anillo propio del módulo; el AAD suma la organización y la empresa a la clave, el propósito, la conexión y el certificado. La clave privada nunca sale del servidor ni llega a un lector. El ticket va en PostgreSQL, no en Redis: es una credencial y no un dato de la [caché](../rules/cache.md), y si se perdiera ARCA no daría otro por unos minutos (ADR 0023 de ArquitecturaBase). Las columnas cifradas llevan `[NotAudited]` ([auditoria](../rules/auditoria.md)), así desconectar no deja copia |
+| Clientes SOAP | Propios: `HttpClient`, `System.Xml.Linq` y la firma con `SignedCms`, sin bibliotecas ni intermediarios que reciban la clave. Solo HTTPS, sin seguir redirecciones, con tope de tamaño de respuesta y sin los loggers del `HttpClient`. Las direcciones de cada ambiente son configuración |
+| Logs | Con `[LoggerMessage]`, sin la clave, el token, la firma, el pedido ni el certificado; la CUIT va enmascarada, como un teléfono, con `PersonalDataMask` ([logs](../rules/logs.md)) |
 | Permisos | `arca.read` y `arca.manage`, de alcance de empresa (`[HasCompanyPermission]`), en el catálogo, en `Permissions.resx` y `.en.resx`, y en el seed del Dueño y del Administrador de la empresa |
 | Módulo | Apagado, las rutas responden 404 y `/api/me` no lo lista; el núcleo no nombra al módulo ([modulos](../rules/modulos.md)) |
 | Límites | Los perfiles cerrados de [cuotas](../rules/cuotas.md): lectura, escritura y lo que llama a ARCA, cada uno con el suyo |
 | Pantalla | Una pestaña «ARCA» en la ficha de la empresa, con los botones de la decisión 43 |
-| Delegación (etapas 5 y 6) | El certificado y los tickets de la CUIT de la plataforma son globales, no de una organización: el bloqueo «ya posee un TA válido» afectaría a todas a la vez, y la reserva compartida del ticket importa más. Se decide al planificar la etapa 5 |
+| Delegación (etapas 5 y 6) | El certificado y los tickets de la CUIT de la plataforma son globales, no de una organización: el bloqueo «ya posee un TA válido» afectaría a todas a la vez, y la reserva compartida del ticket importa más. Se decide al planificar la etapa 5. El robot de la etapa 6, con la clave fiscal que maneja solo en memoria, pide su ADR antes de programarse |
 
 ## 4. No repetir
 
 Lo que allá se encontró al programar la conexión (§4 del traspaso):
 - **Ningún pedido a ARCA dentro de una transacción.** El ticket se reserva y se guarda en dos transacciones cortas, con el pedido al WSAA en el medio.
-- **Sin reintentos automáticos** en los clientes de ARCA: un pedido repetido a ciegas puede emitir dos veces o pedir un segundo ticket que ARCA rechaza y bloquea por minutos.
+- **Sin reintentos automáticos** en los clientes de ARCA, que no llevan la resiliencia común que `ServiceDefaults` le pone a todo `HttpClient`: un pedido repetido a ciegas puede emitir dos veces o pedir un segundo ticket que ARCA rechaza y bloquea por minutos.
 - **Un puerto con una implementación por familia** se registra como uno por familia, no como un servicio único.
 - **El resultado de una prueba lenta no pisa una renovación:** se guarda solo si el certificado probado sigue siendo el activo.
 - **Los detalles confirmados con los WSDL de homologación:** el error 602 de la facturación es una lista vacía, no una falla; el padrón va sin calificar y con el `SOAPAction` vacío; el pedido de ticket lleva el huso explícito y un `uniqueId` al azar; `cms.bad` no es un reloj desfasado.
@@ -68,6 +70,8 @@ En la ficha de la empresa, con sus teléfonos, tomando de ejemplo AC1-A, AC2-A y
 - **La conexión activa:** Empresa, Servicios (con «Lo usa esta empresa» y «Probar»), Certificado (con la renovación adentro) y Punto de venta, con el aviso a treinta días del vencimiento.
 - **Los estados:** sin conexión, solo lectura, cargando, no se pudo leer, probando, un servicio sin autorizar, un certificado que no corresponde, sin puntos de venta, otra persona guardó (con «Revisar») y desconectar con su confirmación.
 - **La empresa sin CUIT** en su ficha, nuevo de acá: la pestaña dice que falta y lleva a cargarla.
+
+Se dibujan cuando le toque, después del bloque. Con ellos se rehacen `Empresa`, con la pestaña «ARCA» y la CUIT que no se edita mientras está conectado (172); ARCA entre los módulos de `Organizacion`, y sus permisos en `Rol`.
 
 ## 6. Pendiente
 
