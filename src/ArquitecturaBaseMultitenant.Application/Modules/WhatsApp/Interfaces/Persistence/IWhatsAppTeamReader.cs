@@ -1,12 +1,11 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
-using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
 
 /// <summary>
 /// Lee los equipos de la organización del claim o los de Plataforma, y resuelve miembros de la organización con su cuenta.
-/// Los nombres de la organización salen del lector del núcleo; los operadores se identifican por nombre o correo.
+/// No lee las tablas de identidad: los nombres de las personas y de los operadores salen de los puertos del núcleo.
 /// </summary>
 public interface IWhatsAppTeamReader
 {
@@ -21,16 +20,9 @@ public interface IWhatsAppTeamReader
     Task<IReadOnlyList<WhatsAppTeamMemberRow>> ListActiveMembersAsync(IReadOnlyCollection<Guid> memberIds, CancellationToken ct);
     /// <summary>El miembro activo de cada cuenta en la organización del claim.</summary>
     Task<IReadOnlyList<WhatsAppTeamMemberRow>> ListMembersOfAsync(IReadOnlyCollection<Guid> userIds, CancellationToken ct);
-    /// <summary>La identidad de los operadores del equipo, con correo de respaldo si no informaron nombre.</summary>
-    Task<IReadOnlyList<WhatsAppTeamOperatorRow>> ListPlatformOperatorsAsync(IReadOnlyCollection<Guid> userIds, CancellationToken ct);
 }
 
 /// <summary>Un equipo; en Plataforma la bandeja es Customers (sus consultas) y los integrantes son cuentas de operadores.</summary>
 public sealed record WhatsAppTeamRow(Guid Id, string Name, WhatsAppInbox Inbox, IReadOnlyList<Guid> MemberIds, int? NotifyAfterMinutes, uint Version);
 
 public sealed record WhatsAppTeamMemberRow(Guid MemberId, Guid UserId);
-
-public sealed record WhatsAppTeamOperatorRow(Guid UserId, string? DisplayName, Email? Email)
-{
-    public override string ToString() => nameof(WhatsAppTeamOperatorRow);
-}

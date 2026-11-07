@@ -20,6 +20,9 @@ public sealed partial class IdentityStorageAccessTests
         Infrastructure + "Identity.UserStatusReader",
         // E11: si un teléfono es un método Phone verificado de un miembro activo de la organización actual (Internos).
         Infrastructure + "Identity.ActiveMemberPhoneReader",
+        // E11: nombre y correo principal de operadores de Plataforma, en lote, para una página autorizada (equipos de
+        // WhatsApp de Plataforma); nada de personas ni de cuentas cuya baja empezó. Los módulos no leen identidad.
+        Infrastructure + "Identity.PlatformOperatorDisplayReader",
         Infrastructure + "Persistence.Readers.LoginMethodReader",
         Infrastructure + "Persistence.Readers.LegalReader",
         Infrastructure + "Persistence.Readers.AccountDeletionTenantReader",

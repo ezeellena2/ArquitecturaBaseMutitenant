@@ -19,3 +19,9 @@ public sealed record ChangePlatformOperatorRequest(uint? Version, string? Reason
 {
     public override string ToString() => nameof(ChangePlatformOperatorRequest);
 }
+
+/// <summary>Cómo se muestra un operador en una página de Plataforma: su nombre y su correo principal, para quien no tiene nombre.</summary>
+public sealed record PlatformOperatorDisplayRow(Guid UserId, string? DisplayName, Email? PrimaryEmail)
+{
+    public override string ToString() => nameof(PlatformOperatorDisplayRow);
+}
