@@ -7,7 +7,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T7, T11 y T22, §3 (`FormVersions`, `FormRecords` y `FormRecordValues`) y §7 (puertos); y la [E12](12-catalogos.md): C5, C8, C11 y la §4.
-2. **Decisiones** de la hoja de ruta: 9, 23, 24, 35, 43, 49, 57, 78, 79, 109 y 115.
+2. **Decisiones** de la hoja de ruta: 9, 23, 24, 35, 43, 49, 57, 78, 79, 109, 115, 160 y 174.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -117,8 +117,8 @@ Aprobados en el lienzo v150. Con el traspaso 5, los filtros (143 y 144) y el det
 - con `forms.read` y sin `formrecords.read`: la lista sin las columnas de respuestas.
 
 **Mandan sobre esta spec en:**
-- **Las fichas del front:** un dato por celda, en un renglón; fechas completas, con hora, en la zona de quien mira; sin leyendas (109). Un texto que no entra se corta, con el completo en su tooltip. Toda tabla lleva una línea fina entre columnas, con los números a la derecha, y cierra abajo (137).
-- **La planilla que vuelve a leer** atenúa sus filas y corre una línea bajo el encabezado, y la lectura anterior no se puede tocar (115).
+- **Las fichas del front:** un dato por celda; fechas completas, con hora, en la zona de quien mira; sin leyendas (109). Un texto largo se ve entero: la celda baja de renglón, y un código con guiones no se parte (174). Toda tabla lleva una línea fina entre columnas, con los números a la derecha, y cierra abajo (137).
+- **La planilla que carga por primera vez** dibuja el encabezado y el aro, sin filas esqueleto (160); **la que vuelve a leer** atenúa sus filas y corre una línea bajo el encabezado, y la lectura anterior no se puede tocar (115).
 - **La navegación (34 y 79):** el menú dice «Gestión de formularios», y su panel tiene Formularios y Catálogos, sin «Respuestas».
 - **La planilla** se desplaza a lo ancho dentro de su caja, con N° fijo a la izquierda. Es la tabla con columnas fijas de la E12.
 - **«Ya tenés una exportación en curso»** es la barrera. **«No pudimos actualizar»** conserva lo que se ve.
