@@ -10,6 +10,13 @@ public interface IUserLookup
 
     Task<Guid?> FindVerifiedUserIdAsync(LoginMethodType type, string value, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// <see cref="FindVerifiedUserIdAsync"/> para varios valores en una sola consulta: la cuenta de cada valor verificado; un
+    /// valor sin cuenta no figura.
+    /// </summary>
+    Task<IReadOnlyDictionary<string, Guid>> FindVerifiedUserIdsAsync(LoginMethodType type, IReadOnlyCollection<string> values,
+        CancellationToken cancellationToken);
+
     Task<LoginMethodLookup?> FindMethodAsync(LoginMethodType type, string value,
         CancellationToken cancellationToken);
 

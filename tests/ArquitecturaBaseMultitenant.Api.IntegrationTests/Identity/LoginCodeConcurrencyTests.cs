@@ -196,6 +196,9 @@ public sealed class LoginCodeConcurrencyTests(ApiFactory factory)
             return userId;
         }
 
+        public Task<IReadOnlyDictionary<string, Guid>> FindVerifiedUserIdsAsync(LoginMethodType type,
+            IReadOnlyCollection<string> values, CancellationToken ct) => inner.FindVerifiedUserIdsAsync(type, values, ct);
+
         public Task<LoginMethodLookup?> FindMethodAsync(LoginMethodType type, string value, CancellationToken ct) =>
             inner.FindMethodAsync(type, value, ct);
 

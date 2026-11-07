@@ -104,11 +104,15 @@ internal sealed class WhatsAppConversationResponseBuilder(IWhatsAppConversationR
     {
         var people = await names.FindAsync([.. rows.SelectMany(row => new[] { row.AssigneeUserId, row.MemberUserId }).OfType<Guid>().Distinct()], ct);
         var showAccounts = rows.Any(row => row.Inbox is null) && await platformPermissions.HasPermissionAsync(Me, PlatformPermissions.Accounts.Read, ct);
+        // Las cuentas de todos los números de la página, en una sola consulta.
+        var owners = showAccounts
+            ? await accounts.FindVerifiedUserIdsAsync(LoginMethodType.Phone, [.. rows.Select(row => row.WaId)], ct)
+            : null;
         var nowUtc = clock.GetUtcNow().UtcDateTime;
         var result = new List<WhatsAppConversationRowResponse>(rows.Count);
         foreach (var row in rows)
         {
-            var accountId = showAccounts ? await accounts.FindVerifiedUserIdAsync(LoginMethodType.Phone, row.WaId, ct) : null;
+            Guid? accountId = owners is not null && owners.TryGetValue(row.WaId, out var owner) ? owner : null;
             var assignee = row.AssigneeUserId is { } taker
                 ? new WhatsAppReferenceResponse(row.Inbox is null ? taker : row.AssigneeMemberId ?? taker, people.GetValueOrDefault(taker) ?? string.Empty)
                 : null;

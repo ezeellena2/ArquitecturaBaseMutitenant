@@ -23,6 +23,18 @@ internal sealed class UserLookup(ApplicationDbContext context) : IUserLookup
             .Select(method => (Guid?)method.UserId)
             .SingleOrDefaultAsync(cancellationToken);
 
+    public async Task<IReadOnlyDictionary<string, Guid>> FindVerifiedUserIdsAsync(
+        LoginMethodType type, IReadOnlyCollection<string> values, CancellationToken cancellationToken)
+    {
+        if (values.Count == 0) return new Dictionary<string, Guid>(StringComparer.Ordinal);
+        string[] distinct = [.. values.Distinct(StringComparer.Ordinal)];
+        // Un valor verificado es único (tipo + valor): el diccionario falla, como SingleOrDefault, si la base no lo cumple.
+        return await context.LoginMethods.AsNoTracking()
+            .Where(method => method.Type == type && distinct.Contains(method.Value) && method.VerifiedAtUtc != null)
+            .Select(method => new { method.Value, method.UserId })
+            .ToDictionaryAsync(method => method.Value, method => method.UserId, StringComparer.Ordinal, cancellationToken);
+    }
+
     // El verificado, si lo hay (es único); si no, uno pendiente: un valor puede estar pendiente en varias cuentas.
     public Task<LoginMethodLookup?> FindMethodAsync(
         LoginMethodType type, string value, CancellationToken cancellationToken) =>

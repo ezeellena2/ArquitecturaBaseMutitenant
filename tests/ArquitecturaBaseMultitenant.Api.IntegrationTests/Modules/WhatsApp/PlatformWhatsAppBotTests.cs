@@ -2,15 +2,20 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
+using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Inbound;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
@@ -133,6 +138,64 @@ public sealed class PlatformWhatsAppBotTests(ApiFactory factory) : IClassFixture
         Assert.Contains(await OutboxAsync(host, person), message => message.Body == "Te ayudo");
     }
 
+    [Fact]
+    public async Task The_platform_inbox_finds_the_account_of_every_row_in_a_single_query()
+    {
+        var phoneNumberId = WhatsAppAttentionJourney.NewNumberId();
+        await using var host = WhatsAppAttentionJourney.Host(factory, new FakeGraph(), settings: new Dictionary<string, string>
+        {
+            ["WhatsApp:PhoneNumberId"] = phoneNumberId,
+            ["WhatsApp:AccessToken"] = "configured-token",
+        });
+        var (manager, managerId) = await OperatorAccountAsync(host,
+            PlatformPermissions.WhatsApp.Manage, PlatformPermissions.WhatsApp.Attend, PlatformPermissions.Accounts.Read);
+        using (manager)
+        {
+            var number = (await WhatsAppAttentionJourney.JsonAsync(await manager.GetAsync("/api/platform/whatsapp/number", Ct), Ct)).GetProperty("number");
+            using var on = await manager.PutAsJsonAsync("/api/platform/whatsapp/number",
+                new { consultationsEnabled = true, version = number.GetProperty("version").GetUInt32() }, Ct);
+            Assert.Equal(HttpStatusCode.OK, on.StatusCode);
+        }
+        using var anonymous = WhatsAppAttentionJourney.Client(host);
+        var first = WhatsAppAttentionJourney.NewPhone();
+        var firstAccount = await VerifiedPhoneAccountAsync(host, first);
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, first, "Necesito ayuda", Ct);
+
+        var sql = new QueryCounter();
+        await using var measured = host.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        {
+            services.AddDbContext<ApplicationDbContext>(options => options.AddInterceptors(sql));
+            services.Replace(ServiceDescriptor.Scoped<ICurrentUser>(_ => new PlatformOperator(managerId)));
+        }));
+        var (_, oneRowQueries) = await ListAsync();
+
+        // Dos filas más, una sin cuenta: la lectura hace las mismas consultas y cada fila conserva su cuenta.
+        var second = WhatsAppAttentionJourney.NewPhone();
+        var third = WhatsAppAttentionJourney.NewPhone();
+        var thirdAccount = await VerifiedPhoneAccountAsync(host, third);
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, second, "Hola", Ct);
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, third, "Buenas", Ct);
+        var (rows, threeRowQueries) = await ListAsync();
+
+        Assert.Equal(oneRowQueries, threeRowQueries);
+        Assert.Equal(firstAccount, Assert.Single(rows, row => row.DisplayNumber == first).AccountId);
+        Assert.Null(Assert.Single(rows, row => row.DisplayNumber == second).AccountId);
+        Assert.Equal(thirdAccount, Assert.Single(rows, row => row.DisplayNumber == third).AccountId);
+
+        async Task<(IReadOnlyList<WhatsAppConversationRowResponse> Rows, int Queries)> ListAsync()
+        {
+            await using var scope = measured.Services.CreateAsyncScope();
+            var service = scope.ServiceProvider.GetRequiredService<IPlatformWhatsAppConversationService>();
+            sql.Target = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            // Calienta los permisos en caché: el recorrido medido es el mismo con una fila y con tres.
+            Assert.True((await service.ListAsync(null, new WhatsAppConversationListRequest(), Ct)).IsSuccess);
+            sql.Reset();
+            var list = await service.ListAsync(null, new WhatsAppConversationListRequest(), Ct);
+            Assert.True(list.IsSuccess);
+            return (list.Value.Conversations.Items, sql.Count);
+        }
+    }
+
     private static JsonElement Consultation(JsonElement list, string waId) =>
         list.GetProperty("conversations").GetProperty("items").EnumerateArray().Single(row => row.GetProperty("displayNumber").GetString() == waId);
 
@@ -205,12 +268,21 @@ public sealed class PlatformWhatsAppBotTests(ApiFactory factory) : IClassFixture
         catch (System.Security.Cryptography.CryptographicException) { return null; }
     }
 
-    private static async Task<HttpClient> OperatorAsync(WebApplicationFactory<Program> host, params string[] permissions)
+    private static async Task<HttpClient> OperatorAsync(WebApplicationFactory<Program> host, params string[] permissions) =>
+        (await OperatorAccountAsync(host, permissions)).Client;
+
+    private static async Task<(HttpClient Client, Guid UserId)> OperatorAccountAsync(WebApplicationFactory<Program> host, params string[] permissions)
     {
         var client = WhatsAppAttentionJourney.Client(host);
         var account = await AccountJourney.RegisterAsync(host, client, Ct);
         await PlatformOperators.GrantAsync(host.Services, account.UserId, permissions.Length == 0 ? [PlatformPermissions.WhatsApp.Manage] : permissions, Ct);
         await AccountJourney.AuthorizeAsync(client, "platform", Ct);
-        return client;
+        return (client, account.UserId);
+    }
+
+    private sealed class PlatformOperator(Guid userId) : ICurrentUser
+    {
+        public Guid? UserId => userId;
+        public Access? Access => Domain.Users.Access.Platform;
     }
 }

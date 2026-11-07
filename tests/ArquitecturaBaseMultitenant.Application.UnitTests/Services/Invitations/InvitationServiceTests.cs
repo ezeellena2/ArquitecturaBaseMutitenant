@@ -187,6 +187,8 @@ public sealed class InvitationServiceTests
         public Task<bool> RestoreSessionAsync(Guid userId, CancellationToken ct) { SignIns++; UserId = userId; return Task.FromResult(true); }
         public Task<IReadOnlyList<Guid>> FindVerifiedUsersByEmailAsync(Email email, CancellationToken ct) => Task.FromResult(Owners);
         public Task<Guid?> FindVerifiedUserIdAsync(LoginMethodType type, string value, CancellationToken ct) => Task.FromResult<Guid?>(null);
+        public Task<IReadOnlyDictionary<string, Guid>> FindVerifiedUserIdsAsync(LoginMethodType type, IReadOnlyCollection<string> values,
+            CancellationToken ct) => Task.FromResult<IReadOnlyDictionary<string, Guid>>(new Dictionary<string, Guid>());
         public Task<LoginMethodLookup?> FindMethodAsync(LoginMethodType type, string value, CancellationToken ct) => Task.FromResult<LoginMethodLookup?>(null);
         public Task<IReadOnlyList<LoginMethodLookup>> FindPendingMethodsAsync(LoginMethodType type, string value, CancellationToken ct) => Task.FromResult<IReadOnlyList<LoginMethodLookup>>([]);
         public Task<string?> FindDisplayNameAsync(Guid userId, CancellationToken ct) => Task.FromResult(DisplayNames.GetValueOrDefault(userId));
