@@ -27,6 +27,10 @@
 
 El [panorama vigente](architecture/backend.md) describe la arquitectura; los pendientes de esta sección se conservan acá.
 
+## Cuando haya tráfico real
+
+- **74.** Nadie mide la velocidad de los usuarios reales. Con tráfico, medir Web Vitals (necesita una ruta sin sesión con su ADR, su perfil de cuota y el consentimiento) y, con esos datos, decidir la caché del sitio público y del directorio, una CDN por el proxy de Cloudflare y el tramo de Redis en las trazas.
+
 ## Cuando una pantalla use la pieza
 
 - **2.** DateField, DateTimeField y TimeField no se pueden completar desde el teclado de un teléfono
