@@ -1,6 +1,8 @@
 # Traspaso 10: evaluación de ArquitecturaBase entero
 
-**Estado:** insumo · del 2026-11-07, con el plan de §4 a la espera del visto bueno del usuario; se retira cuando sus decisiones estén en la hoja de ruta, las specs al día y los tableros de §4.3 aprobados en el lienzo.
+**Estado:** insumo · del 2026-11-07, con el plan de §4 aprobado ese día y las decisiones de §5 en curso, de a una; se retira cuando sus decisiones estén en la hoja de ruta, las specs al día y los tableros de §4.3 aprobados en el lienzo.
+
+Suma lo que encontró la revisión paralela de la sesión «Guia - Desarrollo», del mismo día, verificado acá antes de anotarlo.
 
 Fuente: el [traspaso 10](../../../ArquitecturaBase/docs/plans/2026-11-07-traspaso-multitenant/README.md) (README y capítulos 01 a 04) y las fuentes canónicas de los dos repos de allá: `docs/features`, `docs/architecture/backend.md` y `docs/decisions`, y del front, `docs/design` y las capturas de `src/test/visual/screenshots`, en el `main` del 2026-11-07 (`78c9eca2` y `6f440628`). El lienzo provisorio de allá no se puede abrir desde esta cuenta: lo que se ve sale de su registro de diseño, su código y sus capturas.
 
@@ -42,11 +44,11 @@ Rige la condición de la [hoja de ruta](2026-10-12-formularios-dinamicos-hoja-de
 - Primero la documentación.
 - Después, un pase de los generadores sobre las piezas compartidas del lienzo.
 - Por último, cinco tandas de tableros, sumadas a los unos 70 que ya estaban pendientes de los traspasos 5 a 9:
-  - rehacer unos 60 tableros;
-  - sumar 7;
+  - rehacer unos 80 tableros;
+  - sumar 8;
   - retirar 2.
 
-Antes, siete decisiones tuyas, de a una (§5).
+Antes, nueve decisiones tuyas, de a una (§5).
 
 ## 2. Tus reglas (el 03)
 
@@ -93,8 +95,10 @@ Cada tabla tiene solo lo que cambia; lo igual va en su última fila.
 
 | Tema | Allá | Acá | Qué cambia |
 | --- | --- | --- | --- |
-| Filtros sin cantidades | Un desplegable simple, sin cantidades (FO1-A) | La 143, pero los tableros Usuarios, Roles, Cuentas, Organizaciones, Empresas y Recuperaciones, y la app, muestran la cantidad de cada opción | Se aplica: en los tableros y, con la base de la 12, en el front |
-| El chat de WhatsApp en Mi cuenta (PF1-A) | Programado el 03/11 | La 159, con `Cuenta-21` por dibujar | Se dibuja |
+| Filtros sin cantidades | Un desplegable simple, sin cantidades (FO1-A) | La 143, pero los tableros Usuarios, Roles, Cuentas, Organizaciones, Empresas, Empresa, Recuperaciones, Campana y Campana-Plat, y la app, muestran la cantidad de cada opción | Se aplica: en los tableros y, con la base de la 12, en el front |
+| El chat de WhatsApp en Mi cuenta (PF1-A) | Programado el 03/11; fuera de las 24 horas, los avisos quedan «Pausados» | La 159, con `Cuenta-21` por dibujar. Acá un aviso con una plantilla aprobada llega igual (61) | Se dibuja con «Llegan hasta el …» y, después, «Solo con plantilla», con su (i) |
+| El ingreso por el bot y el consentimiento | Ningún mensaje lleva un enlace secreto: «Entrar a mi cuenta» lleva al ingreso, y el código se pide desde la web (ADR 0011). Invitar por WhatsApp pide marcar «La persona aceptó recibir mensajes por WhatsApp» | El bot de Plataforma manda un enlace de un solo uso para entrar (E8), y «Cargar teléfonos» invita sin preguntar (E11) | Pregunta 9 |
+| Lo demás de WhatsApp | Los envíos sin confirmar no se repiten, una bandeja de solo lectura, el texto se borra a los 90 días; además, el historial de accesos, el estado de una invitación y desvincular un teléfono robado | La 80, la D3 y la D4 de la E11 lo resolvieron distinto; lo demás no existe acá | Quedan la 80, la D3 y la D4. Lo demás es nuevo: no lo recomiendo ahora |
 | Altas | Dicen «Agregar …» | «Sumar empresa» en Usuario y en los datos de una persona | Se iguala |
 | Distinto a propósito | La apariencia con colores propios, el tamaño de listado por instalación, la ubicación con Google Places, el chat simple y editar un usuario con sus medios de ingreso | El tema fijo Pradera, el tamaño en cada tabla, la dirección escrita, la bandeja completa de la E11 y la cuenta global | No se trae. «Último ingreso» en Mi cuenta es nuevo: no lo recomiendo ahora |
 
@@ -118,6 +122,8 @@ Cada tabla tiene solo lo que cambia; lo igual va en su última fila.
 | --- | --- | --- | --- |
 | Cómo se agrega el bloque (RG10-D, 06/11) | Decidido: «Agregar bloque» al lado de «Agregar pregunta»; arranca abierto y con «Bloque» de nombre; con uno armado, el botón se apaga, y «Tipo de respuesta» deja de ofrecerlo | La 146: un tipo de pregunta «Renglones» | Pregunta 5 |
 | «Ítem» en lugar de «renglón» (RG12-A, 07/11) | Decidido para todo texto que ve el usuario: «Productos · ítem 2», «¿Agregás otro ítem?», «Agregar ítem» | La 146, cuatro specs y 31 tableros dicen «renglón» | Pregunta 5 |
+| Un mínimo de más de 10 ítems (RG13-A, 07/11) | Con WhatsApp, publicar frena: «En WhatsApp se cargan hasta 10 ítems; el mínimo es 15.» | La 146 solo trata el máximo de más de 10, que avisa sin frenar | Pregunta 8 |
+| Un catálogo dentro del bloque | Filtra por quien lo recibe | La spec 19 lo deja afuera; la 146 no lo excluye | Se adopta (126) |
 | «Grupo de líneas» | Reemplazado por el bloque | La 146 lo reemplazó, pero 11 tableros aprobados lo siguen dibujando | Se redibuja |
 | La prueba con Meta | Tres variantes aceptadas; hace falta el `routing_model` con las dos ramas; de lo no visitado no llega nada; hoy la respuesta cae en «no pudimos relacionar…» | Spec 19: todo por probar | Se anota; acá se prueba igual antes de planificar |
 | Corregir y anular | Programado. «Corregir», con su lápiz, va en la fila del título, y el ⋮ tiene solo «Anular», en rojo. «Motivo de la corrección» va al final, y el botón dice «Guardar corrección» | `FRM-Respuesta-Corregir` y `-Anular`: el ⋮ con Corregir, el PDF y Anular, y la zona «La corrección» arriba | Se redibuja (126) |
@@ -131,7 +137,8 @@ Cada tabla tiene solo lo que cambia; lo igual va en su última fila.
 
 | Tema | Allá | Acá | Qué cambia |
 | --- | --- | --- | --- |
-| El catálogo que propone el asistente (H4) | Repensado el 04/11 (IA3-A, ADR 0024): nunca se crea solo; «Crear catálogo» sale de la tarjeta del Inicio o del resumen de WhatsApp | E23: queda «Por aprobar» apenas la IA lo propone. Choca con la 154 | Pasa a la E25, con la tarjeta: es lo más simple que cumple la 154 |
+| El catálogo que propone el asistente (H4) | Repensado el 04/11 (IA3-A, ADR 0024): nunca se crea solo; «Crear catálogo» sale de la tarjeta del Inicio o del resumen de WhatsApp. Se edita como cualquier catálogo, con «Descartar propuesta» y «Aprobar y activar», y guardar no lo activa | E23: queda «Por aprobar» apenas la IA lo propone y no se edita; la E25 dice «Aprobar y activar». Choca con la 154 | Pasa a la E25, con la tarjeta y editable, como allá: es lo más simple que cumple la 154 (126) |
+| La información del negocio | Varias franjas por día, «24 horas», productos y servicios, políticas y condiciones, y «Aplicar de lunes a viernes» | El conocimiento de la E23 (`WA-Asistente-Limites`) tiene una franja por día | Se adopta (126) |
 | La oferta del asistente | «Te preparé el formulario «<nombre>» para que lo completes.» | Los tableros: «Te paso el formulario para pedir el service.» | Se adopta (126) |
 | El prellenado | Deja afuera «elegir varias» y las preguntas del bloque | La E23 no nombra el bloque | Se anota |
 | La tarjeta del Inicio (IA1-A) | «Nueva», «Catálogo creado», sin permiso y «ya existe» | La 154; `Asistente-Org-25`, por dibujar | Se suman al texto de la E25 |
@@ -146,11 +153,12 @@ Cada tabla tiene solo lo que cambia; lo igual va en su última fila.
 | Tema | Allá | Acá | Qué cambia |
 | --- | --- | --- | --- |
 | Decisiones sin ADR acá | 0019 (SQL acotado), 0021 (respuestas redactadas), 0022 (lectura de documentos), 0024 (la IA arma), y 0023 y 0025 (ARCA) | La 39, la 70, la 71, de la 154 a la 156, y de la 150 a la 152 | Cada ADR propio se escribe al planificar su etapa (E23, E25 y ARCA 1); la 0019, una fila del índice |
+| Convenciones de allá sin par acá | 0008 (`Lock…`, escrituras con transacción, `Find` sin colecciones, `Count` que devuelve un entero), 0018 (robustez proporcional) y 0012 (la Api entrega el archivo con el permiso del recurso, sin URL firmadas) | `persistencia-ef.md` y `guardado.md` no las nombran; `estandares.md` (P11) propone una URL firmada | Se anotan en esas fichas, y P11 se alinea con la 0012 |
 | Rendimiento | Brotli o gzip, `/assets` en caché por un año, una lectura de permisos por requisito, índices de registros y probes obligatorios | `SpaExtensions` solo pone `no-cache` en `index.html`, y el despliegue no exige los probes. Otra sesión está aplicando acá mejoras de rendimiento (los commits `perf` del 07/11) | A la E10 (B4), a la ficha de permisos y a la E14 y la E15; se coordina con esa sesión |
 | Probar en el celular | Una guía nueva | Sin guía, y con subdominios el reenvío USB no sirve tal cual | Se adapta en la E20 |
 | Advertencias del 03 | Cadenas de `AGENTS.md` por debajo de 30 KB, `core.autocrlf` en migraciones, `--artifacts-path` y `Logging:Debug` | La cadena más larga mide 16,6 KB; `core.autocrlf` está prendido; sin nota | Se anotan; el test de la cadena va con la próxima etapa |
 | WhatsApp Flows | `routing_model`, `update_data`, `required` atado a `visible`, `label` de 30, el doble escape y `frame-src` | Nada escrito; la política de la E9 ya permite `*.facebook.com` | Al «no repetir» de la E14, la E19 y la E20 |
-| ARCA | La etapa 1 programada, sin homologar | Hoja al día (de la 150 a la 152) y sin tableros | La hoja suma: el ticket va en PostgreSQL y no en Redis, los clientes SOAP propios y un ADR antes del robot de la etapa 6; cuatro tableros cuando le toque |
+| ARCA | La etapa 1 programada, sin homologar | Hoja al día (de la 150 a la 152) y sin tableros | La hoja suma: el ticket va en PostgreSQL y no en Redis, los clientes SOAP propios, un ADR antes del robot de la etapa 6, y que la CUIT de una empresa no cambia con ARCA conectado (antes se desconecta); los tableros, cuando le toque |
 
 ## 4. El plan
 
@@ -171,7 +179,14 @@ Cada tabla tiene solo lo que cambia; lo igual va en su última fila.
    3. las fichas del front: `pantallas-y-ui`, `datos-y-api`, `paginado-y-listados`, `formularios`, `formatos`, `responsive` y `tests`, y `tema.md`;
    4. el `AGENTS.md` de los dos repos: tus reglas del 03 y lo que respondas en la 6 y la 7;
    5. lo técnico: la E10, la hoja de ARCA, `migracion.md`, `tests.md` y el índice de decisiones;
-   6. retirar los insumos que ya cumplieron: el [traspaso del 17/10](2026-10-17-formularios-traspaso/README.md), que esperaba las specs de la 15 a la 25, y la [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md), que esperaba sus tableros. Antes, lo que sirva pasa a la hoja de ruta.
+   6. lo que no cierra entre los documentos de acá:
+      - en la spec 25, las rutas de las propuestas van bajo `/api/organization/…`, y suma `forms.authoring.decline`, la propuesta en el `Message` del SSE de la E8b, la vida del audio, los topes del turno de la E8b y el error de un nombre o un prefijo en uso;
+      - la spec 16 dibuja dos «Agregar filtro…», y la 134 pide uno con ▾;
+      - la base de la 12 todavía dice «Más filtros» (144);
+      - `features/whatsapp.md` conserva la D2, que la 159 supera;
+      - el README del lienzo dice «un cartel debajo de la banda», `Criterio-Marco` dice «campos de su medida» y `Criterio-Menus` nombra la pestaña «Inglés» (35);
+      - «Ver la vigente» pasa a «Ver la actual»;
+   7. retirar los insumos que ya cumplieron: el [traspaso del 17/10](2026-10-17-formularios-traspaso/README.md), que esperaba las specs de la 15 a la 25, y la [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md), que esperaba sus tableros. Antes, lo que sirva pasa a la hoja de ruta.
 2. **El lienzo**, en cinco tandas (§4.3).
 3. **Al final:** los índices y los recorridos del lienzo, las dos guías y la publicación en tandas. Te aviso para que allá se retiren los traspasos 2 a 10.
 
@@ -182,12 +197,12 @@ Cada tabla tiene solo lo que cambia; lo igual va en su última fila.
 | Tanda | Rehacer | Sumar | Retirar |
 | --- | --- | --- | --- |
 | **a · Piezas y criterio** | El pase de los generadores sobre los 410 tableros vivos: las formas de la pregunta 1, la línea entre columnas (137), los filtros sin cantidades (143 y 144) y la primera carga (ES1-A). Los ocho `Criterio-*` | — | — |
-| **b · Núcleo** | `Usuarios`, `Roles`, `Cuentas`, `Organizaciones`, `Empresas`, `Recuperaciones` y `Usuario`, con sus teléfonos, y `M-Usuario-Empresa` | `Cuenta-21`, pendiente | — |
-| **c · E12 a E18** | E14: `FRM-Publicando` y `M-FRM-Editor` (preguntas 3 y 4); `WA-Chats-Formulario`, `WA-Chats-Formulario-Cliente`, `WA-Chats-Respuesta` y `WA-Mensajes-14` (el mensaje). E15: `FRM-Respuestas-Exportar`. E16: `FRM-Publicar-16`, pendiente; `WA-Chats-Formulario-16` y `FRM-Usuario-Datos`. E17: `FRM-Editor-Baja`. E18: `WA-Chats-Respuesta-18` y `WA-Chats-Visor` | E14: `FRM-Vista-Oficial`, según la pregunta 4 | — |
-| **d · E19 a E21** | E19: `FRM-Editor-Calculo` y `FRM-Editor-Condiciones`, y los pendientes `FRM-Editor-Lineas`, `FRM-Publicar-19`, `FRM-Respuestas-19`, `FRM-Respuesta-19` y `WA-Chats-Respuesta-19`. E20: `FRM-Editor-Listas`, `FRM-Publicar-20`, `FRM-Cargar-Lista` y `FRM-Cargar-Enviada`, y los pendientes `FRM-Cargar-Respuesta`, `FRM-Cargar-Panel`, `FRM-Respuestas-20`, `FRM-Respuestas-Propias`, `FRM-Respuesta-20` y `FRM-Formularios-20`. E21: `FRM-Editor-21`, `FRM-Respuesta-Corregir`, `FRM-Respuesta-Anular`, `FRM-Formularios-21` y `WA-Chats-Avisos`, y los pendientes `FRM-Editor-Reglas`, `FRM-Respuestas-21`, `FRM-Respuesta-Aprobacion`, `FRM-Respuestas-Propias-21` y `FRM-Cargar-Respuesta-21` | E21: `FRM-Editor-Reglas-Bloque`, las reglas con «algún ítem de…» (146) | — |
-| **e · E22 a E25** | E22: los pendientes `FRM-Editor-Reglas-Plantilla` y `Plat-FRM-Plantilla-Reglas`. E23: los siete pendientes, con la oferta nueva | E25: los 21 pendientes, más `FRM-Catalogo-Propuesta-25` y `FRM-Plantilla-25` | E23: `FRM-Catalogo-Propuesta` y `FRM-Catalogos-23`, que pasan a la E25 |
+| **b · Núcleo** | `Usuarios`, `Roles`, `Cuentas`, `Organizaciones`, `Empresas`, `Empresa`, `Recuperaciones`, `Usuario`, `Campana` y `Campana-Plat`, con sus teléfonos, y `M-Usuario-Empresa` | `Cuenta-21`, pendiente | — |
+| **c · E12 a E18** | E14: `FRM-Publicando` y `M-FRM-Editor` (preguntas 3 y 4); `WA-Chats-Formulario`, `WA-Chats-Formulario-Cliente`, `WA-Chats-Respuesta` y `WA-Mensajes-14` (el mensaje). E15: `FRM-Respuestas-Exportar`. E16: `FRM-Publicar-16`, pendiente; `WA-Chats-Formulario-16`, `FRM-Usuario-Datos` y `FRM-Editor-16`, al que le falta «Agregar título» (88). E17: `FRM-Editor-Baja`, con «Agregar título» también en sus versiones de la 21 y la 23. E18: `WA-Chats-Respuesta-18`, `WA-Chats-Visor` y `FRM-Editor-18` («Agregar título») | E14: `FRM-Vista-Oficial`, según la pregunta 4 | — |
+| **d · E19 a E21** | E19: `FRM-Editor-Calculo` y `FRM-Editor-Condiciones`, y los pendientes `FRM-Editor-Lineas`, `FRM-Publicar-19`, `FRM-Respuestas-19`, `FRM-Respuesta-19` y `WA-Chats-Respuesta-19`. E20: `FRM-Editor-Listas`, `FRM-Publicar-20`, `FRM-Cargar-Lista` y `FRM-Cargar-Enviada`, y los pendientes `FRM-Cargar-Respuesta`, `FRM-Cargar-Panel`, `FRM-Respuestas-20`, `FRM-Respuestas-Propias`, `FRM-Respuesta-20` y `FRM-Formularios-20`. E21: `FRM-Editor-21`, `FRM-Respuesta-Corregir`, `FRM-Respuesta-Anular`, `FRM-Formularios-21` y `WA-Chats-Avisos`, y los pendientes `FRM-Editor-Reglas`, `FRM-Respuestas-21`, `FRM-Respuesta-Aprobacion`, `FRM-Respuestas-Propias-21` y `FRM-Cargar-Respuesta-21` | E21: `FRM-Editor-Reglas-Bloque`, las reglas con «algún ítem de…» (146), y `WA-Chats-Respuesta-21`, la tarjeta del chat con «Después se corrigió…» o «Después se anuló…», que la spec 21 pide | — |
+| **e · E22 a E25** | E22: `Plat-FRM-Publicar` y `Plat-FRM-Plantilla`, sin el renglón «Estado» que repite la banda (EP1-A) y con el bloque según la pregunta 5, y los pendientes `FRM-Editor-Reglas-Plantilla` y `Plat-FRM-Plantilla-Reglas`. E23: `WA-Asistente-Limites` (la información del negocio) y los siete pendientes, con la oferta nueva | E25: los 21 pendientes, más `FRM-Catalogo-Propuesta-25` y `FRM-Plantilla-25` | E23: `FRM-Catalogo-Propuesta` y `FRM-Catalogos-23`, que pasan a la E25 |
 
-ARCA suma sus cuatro tableros (el alta por pasos, la conexión activa, los estados y la empresa sin CUIT) cuando le toque, después del bloque.
+ARCA suma sus cuatro tableros (el alta por pasos, la conexión activa, los estados y la empresa sin CUIT) cuando le toque, después del bloque, y rehace la pestaña de `Empresa`, ARCA entre los módulos de `Organizacion` y sus permisos en `Rol`.
 
 ## 5. Decisiones para vos
 
@@ -211,6 +226,8 @@ Te las pregunto de a una, después de tu visto bueno al plan, con la captura o e
      Es tu regla más reciente, la 136 la lleva a toda la app y alcanza con un pase sobre las piezas del lienzo y seis piezas del front.
    - **B:** solo el marco (el logo, el avatar, el ícono y el activo); quedan las pastillas y las sombras.
    - **C:** dejarlo como está. Igual cambia el activo del menú, que no llega al contraste que pide la 142.
+
+   **Elegida: A**, el 2026-11-07.
 2. **¿Un texto largo se ve entero o se corta con «…»?** Por ejemplo, «Observaciones» en la planilla: allá la celda baja de renglón; acá se corta con «…» y su tooltip.
    - **A (recomendada):** entero, bajando de renglón, en las celdas y en las lecturas; «un dato por celda» sigue valiendo. Es tu regla «sin plegar ni cortar», y es una sola pieza.
    - **B:** «…» en las tablas, y entero en las lecturas.
@@ -245,11 +262,25 @@ Te las pregunto de a una, después de tu visto bueno al plan, con la captura o e
    - **A (recomendada):** lo de acá, más los tests rápidos enteros en cada corte. Cuestan poco, y allá un filtro dejó pasar un test que rompió `main`.
    - **B:** lo de acá, sin cambios.
    - **C:** lo de allá, entero.
+8. **Con WhatsApp, ¿qué pasa al publicar un bloque con un mínimo de más de 10 ítems?** Por ejemplo, «Inventario de equipos» pide al menos 15, y WhatsApp carga 10 como mucho. Allá publicar frena (RG13-A).
+   - **A (recomendada):** en la E19 frena, como allá. Desde la E20, si el formulario es para empleados o para los dos, se publica solo para la app, con su aviso, como un catálogo demasiado grande (96 y 104); si es solo para clientes, frena.
+   - **B:** frena siempre, como allá.
+9. **WhatsApp de la cuenta: ¿dos cosas como allá?** Están programadas acá desde la E8 y la E11:
+   - el bot de Plataforma le manda a una cuenta un enlace de un solo uso para entrar; allá ningún mensaje lleva un enlace secreto: «Entrar a mi cuenta» lleva al ingreso, y el código se pide desde la web;
+   - «Cargar teléfonos» invita por WhatsApp sin preguntar; allá hay que marcar «La persona aceptó recibir mensajes por WhatsApp».
+
+   Las opciones:
+   - **A (recomendada):** las dos, como allá, con la base de la 12. Un enlace reenviado o abierto por otra persona le da la cuenta, y Meta pide el consentimiento para escribirle primero a alguien.
+   - **B:** solo el consentimiento.
+   - **C:** dejar las dos como están.
 
 ## 6. En curso allá
 
 Se tiene en cuenta, pero no se arma nada con esto hasta que llegue su traspaso:
-- **Renglones, etapas 2 a 4:** la carga y las lecturas con los ítems, «algún ítem con…» y RG13-A, que frena publicar con un mínimo mayor que 10 si WhatsApp está instalado. Acá habrá que ver si eso publica solo para la app (96 y 104).
+- **Renglones, etapas 2 a 4:** la carga y las lecturas con los ítems, y «algún ítem con…». Cuando cierre la etapa 3, la spec 19 suma lo de allá:
+  - el Excel, con la columna «Ítem» y una hoja con el nombre del bloque, de hasta 31 caracteres;
+  - «En algún ítem de…», con todas las condiciones en el mismo ítem;
+  - el PDF, con el bloque entero.
 - **Elegir primero por un campo** (LD1-A a LD3-A), en programación. LD3-A choca con la E20, que hoy no admite una lista dependiente dentro del bloque.
 - **La IA arma, etapas 2 y 3:**
   - las planillas con «Importar opciones»;
