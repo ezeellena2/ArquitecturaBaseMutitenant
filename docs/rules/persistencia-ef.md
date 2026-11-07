@@ -15,9 +15,10 @@
   - esquema según la clase de dato.
   - un módulo aporta sus configuraciones mediante `Infrastructure.Persistence.IPersistenceModelContributor`, con su namespace de configuración y un diccionario **explícito** tipo → esquema global. No se exime un namespace completo de clasificación. El núcleo aplica sus configuraciones y cada contribuidor aplica exclusivamente las suyas, exactamente una vez.
   - runtime registra el contribuidor desde el módulo; DesignTime, bootstrap y fábricas sin DI lo descubren neutralmente con `PersistenceModelContributors.Discover()`, sin opciones, secretos ni red. `new ApplicationDbContext(..., modelContributors: [])` construye el núcleo sin módulos; la clave de caché EF distingue ambos conjuntos. Apagar un canal no quita tablas.
-- **Nombres:**
-  - en los repositorios, `Get…` devuelve la entidad seguida por EF o `null`, y además hay `Add` y `Remove`;
-  - en los readers, `Find…` devuelve una proyección, `List…` una colección o página, y `Exists…`/`Count…` escalares.
+- **Nombres** (la 0008 de ArquitecturaBase):
+  - en los repositorios, `Get…` devuelve la entidad seguida por EF o `null`, y además hay `Add` y `Remove`, que solo cambian el contexto. `Lock…` toma un lock de Postgres ([guardado](guardado.md)); él y todo método que escribe con SQL (`ExecuteUpdate`, `ExecuteSql`) llaman antes a `RequireTransaction()`, que lanza fuera del límite;
+  - en los readers, `Find…` devuelve una proyección, un registro o un escalar; `List…`, una colección o página; `Exists…`, un `bool`, y `Count…`, un `int` o un registro de conteos, contado en SQL;
+  - una colección nunca sale de un `Find…` ni un diccionario de un `Count…`, tampoco en un repositorio: es un `List…`. Los desvíos de hoy se renombran con la base de la 12.
 - **Readers:** `AsNoTracking` y proyección directa a `*Row` o `*Response`.
 - **Migración:** el comando de [`docs/guides/migracion.md`](../guides/migracion.md) (E2). Cada tabla nueva llama al helper RLS de su clase: `tenant` → `EnableTenantRls`, `public_site` → `EnablePublicRls`, `engagement` → `EnablePartiesRls` ([multitenancy](multitenancy.md)). Si la tabla es de `tenant`, además lleva un índice `(TenantId, campo, Id)` por cada campo de su `SortMap` ([paginado-y-busqueda](paginado-y-busqueda.md)). Se revisa el SQL generado antes de commitear.
 - **Orden alfabético en español (collation):** la base se crea con collation **ICU `es-AR`**: `CREATE DATABASE … LOCALE_PROVIDER icu ICU_LOCALE 'es-AR' TEMPLATE template0`. Así "Álvarez" queda antes que "Zapata" y "Ñandú" después de "Nuñez". En Development la crea `DatabaseBootstrapExtensions`; en producción, el DBA con el mismo comando. `RuntimeRoleValidator` **aborta** el arranque si la base no es ICU `es-AR`.
@@ -40,7 +41,7 @@
 - `Infrastructure/Persistence/Configurations/Tenant/RoleConfiguration.cs`, `Repositories/RoleRepository.cs` y `Readers/RoleReader.cs` (E4)
 
 ## Lo verifica
-- `EntityConfigurationTests` (E2), `DataClassificationTests` (E2), `DecimalPrecisionTests` (E1), `TextLimitsTests` (E1), `TransactionBoundaryTests` (E2), `UniqueKeysTests` (E6)
+- `EntityConfigurationTests` (E2), `DataClassificationTests` (E2), `DecimalPrecisionTests` (E1), `TextLimitsTests` (E1), `TransactionBoundaryTests` (E2), `UniqueKeysTests` (E6), `PersistenceNamingTests` (E12, con la base de la 12: el prefijo y lo que devuelve cada método de `Interfaces/Persistence`)
 
 ## Detalle
 [backend.md §9](../architecture/backend.md#9-persistencia)
