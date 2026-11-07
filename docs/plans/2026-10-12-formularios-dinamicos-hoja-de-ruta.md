@@ -294,8 +294,9 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Armar una regla desde un texto** (63): la IA propone la regla y la persona la revisa y la guarda.
 - **Sin información cargada** (67): ayuda con lo general, nunca inventa datos de la organización, pregunta y deriva, y anota la pregunta en «Preguntas sin respuesta».
 - **Límites por bandeja** (65), y el tope de ofrecimientos lo elige cada organización (66).
-- **Casos** (39): cada organización configura perfil, conocimiento, casos y límites. Seis acciones, respuestas redactadas dentro de los límites y «Cualquier otra cosa» al final. Pide su ADR de respuestas redactadas.
-- **Cómo trabaja:** historial de 24 horas de esa conversación, ráfagas de 4 s con tope de 15 s y hasta 3 acciones por turno. El asistente manda el formulario y lo prellena con un perfil nuevo del Flow.
+- **Casos** (39): cada organización configura perfil, conocimiento, casos y límites. Seis acciones, respuestas redactadas dentro de los límites y «Cualquier otra cosa» al final. Su ADR de respuestas redactadas se escribe al planificar la etapa.
+- **La información del negocio** (169), como en ArquitecturaBase: varias franjas por día, «24 horas», productos y servicios, políticas y condiciones, y «Aplicar de lunes a viernes»; la dirección, escrita.
+- **Cómo trabaja:** historial de 24 horas de esa conversación, ráfagas de 4 s con tope de 15 s y hasta 3 acciones por turno. El asistente manda el formulario con la oferta fija que lo nombra (165) y lo prellena con un perfil nuevo del Flow, sin «elegir varias» ni las preguntas del bloque.
 - **Lo de la etapa 5 de allá:** sugerencias al operador y entre formularios, audios transcriptos (27) y «Formularios que faltan». El catálogo que propone el asistente pasa a la E25 (167).
 - **Desde el primer día:** la espera corta, el aislamiento por conversación y la medición.
 - **Costos:** dentro del tope mensual de IA de la organización (ADR 0051).
@@ -320,12 +321,13 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Lee con IA** lo que mandan los empleados y los clientes (foto, PDF, Word, Excel, ubicación y contacto) y propone el formulario prellenado (70). Confirma una persona, salvo con «Cargar solo si es seguro» y sus tres señales (71).
 - **La «Lectura de documentos»** de un formulario y de una plantilla de la biblioteca.
 - **Pantallas:** la bandeja «Documentos recibidos» y «Armar formulario con la IA».
-- **Armar formularios y catálogos con la IA** (75, 102 y de la 154 a la 156): desde el chat del Inicio de la organización, con un texto, un archivo o un audio, o por WhatsApp. La IA propone y una persona crea el borrador o el catálogo, que queda por aprobar, también el catálogo que propone el asistente (167).
+- **Armar formularios y catálogos con la IA** (75, 102 y de la 154 a la 156): desde el chat del Inicio de la organización, con un texto, un archivo o un audio, o por WhatsApp. La IA propone y una persona crea el borrador o el catálogo, que queda por aprobar, también el catálogo que propone el asistente (167). El clip suma .xlsx, .csv y .docx, de a uno por mensaje; lo que se repite se arma como un bloque (177), y armar por WhatsApp se atiende antes de los casos (171). Al publicar, los documentos que originaron el formulario quedan propuestos.
 - **Validaciones fijas:** un conjunto cerrado en el código, y la tabla de entidades del BCRA como dato de referencia; lo descartado se borra a los 90 días; la lectura entra en el tope de la organización, con un tope por persona y por día (41).
 - **«Pasar al formulario»** desde la bandeja (99): la respuesta queda a nombre de quien mandó el documento, y dice quién la revisó.
 - **Spec:** [formularios/25-documentos.md](formularios/25-documentos.md).
 - **Criterios:**
   - precargar un archivo en un Flow se prueba con Meta antes de planificar;
+  - las ADR de la lectura de documentos y de la IA que arma se escriben al planificar;
   - la IA solo carga sola con las tres señales de la 71, nunca con la seguridad que declara el modelo; lo leído es un dato, nunca una instrucción;
   - las validaciones fijas corren en el servidor, sin IA, también al confirmar.
 
