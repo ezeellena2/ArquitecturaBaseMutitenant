@@ -80,6 +80,8 @@ Aprobadas y publicadas en el lienzo v150, con el armado de ArquitecturaBase (125
 - **La página:** los campos, un campo recién agregado (la columna grisada, con el motivo en su tooltip, y el aviso), cambiar el tipo con errores (arriba de la tabla, con «Revisar», que abre el modal en ese campo), una opción que usa otra (no se elimina), «En WhatsApp», elegir qué muestra, «Columnas», un catálogo nuevo, guardado, un valor de una opción dada de baja, solo `formcatalogs.read` y un título que no entra.
 - **El modal:** los campos, uno de un catálogo, el combo abierto, filtrando y sin coincidencias, agregar un campo, elegir el tipo, un número, clave repetida, quitar con y sin valores, 20 campos, sin campos todavía y solo lectura.
 
+**Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez. Los chips de «En WhatsApp» llevan el radio de un control (173).
+
 ## Contrato
 
 Son las rutas de la E12, que suman lo siguiente. Permisos: `formcatalogs.read` para leer y `formcatalogs.manage` para cambiar. Sin rutas nuevas. El contrato va en `FormsContractContributor.cs`, con ejemplos exportados de una corrida real.
