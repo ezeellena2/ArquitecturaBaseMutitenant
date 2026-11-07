@@ -246,6 +246,8 @@ Te las pregunto de a una, después de tu visto bueno al plan, con la captura o e
      Lo rechazado sigue marcado en su pregunta, sin la zona «Problemas» de allá, porque acá lo que falla se marca en su lugar.
    - **B:** como allá, con la zona «Problemas».
    - **C:** dejar la ⓘ con los pasos.
+
+   **Elegida: A**, el 2026-11-07.
 4. **¿Dónde va la vista oficial de WhatsApp?** Por ejemplo, la versión 4 de «Visita a cliente»: hoy va al costado, achicada y sin tocar; allá, «Ver vista oficial» abre un diálogo donde se recorre, con las primeras 20 opciones de «Motivo».
    - **A (recomendada):** el diálogo, como allá; al costado queda «Así lo ve quien lo recibe». La vista que se recorre pide 480 × 840 y al costado no entra.
    - **B:** al costado, achicada.
