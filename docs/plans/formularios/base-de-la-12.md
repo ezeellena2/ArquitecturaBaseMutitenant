@@ -55,7 +55,13 @@ Antes de empezar, en este orden:
 
 Las sombras quedan solo en menús, desplegables y tooltips: salen todas las demás, como las de las tarjetas, las superficies, los diálogos, los segmentados y los botones.
 
-**La escala** (180): la letra baja un 18 %, sin bajar de 10,5 px, y el cuerpo queda en unos 11 px; las filas, los controles y las bandas bajan un 26 % (una fila de tabla, unos 33 px; un botón o un filtro, de 24 a 27 px; la barra de arriba, unos 39 px); los rellenos y las separaciones, un 28 %, y las esquinas quedan en 3 px como mucho, también en las pastillas y los avatares. Sigue la raíz al 75 % en la compu, con las medidas en rem (2026-11-02), y en el teléfono lo que se toca sigue midiendo 44 × 44.
+**La escala** (180), sobre los tokens de tamaño y junto con la forma:
+- la letra, un 18 % más chica, sin bajar de 10,5 px en pantalla; el cuerpo queda en unos 11 px;
+- las filas, los controles y las bandas, un 26 % más bajos: una fila de tabla, unos 33 px; un botón o un filtro, de 24 a 27 px, y la barra de arriba, unos 39 px;
+- los rellenos y las separaciones, un 28 % más chicos;
+- las esquinas, de 3 px como mucho, también en las pastillas y los avatares, y sin sombras.
+
+Las medidas concretas las fija `tema.md` del front, que deja la sesión de las piezas del lienzo, y se comparan con los tableros publicados. La raíz sigue al 75 % en la compu, con las medidas en rem (2026-11-02): lo que se ve en pantalla tiene que dar lo que muestra el tablero. En el teléfono, lo que se toca sigue midiendo 44 × 44.
 
 **Las fechas,** siempre con fecha y hora completas, en la zona de la cuenta: salen `relative`, `formatCalendar` y las fechas cortas, también en Usuarios y en la tarjeta de Auditoría de Inicio.
 
@@ -145,6 +151,7 @@ Tres migraciones:
 | Front | Cuántas pantallas usan `detail`. | Se pasan todas a columnas. |
 | Front | Cuántos textos fijos quedan en `hint` y `description`. | Unos 30 usos, en 23 archivos, el 2026-11-02. |
 | Front | Las seis piezas de la forma, la escala de `index.css` y las sombras. | Las del 2026-11-07: `BrandMark` con degradé, `Avatar` redondo, `icon` en 38 pantallas, la pastilla de `menuRow.ts`, las cantidades de `FilterBar` y el degradé de `button.tsx`. |
+| Front | Las medidas de la escala en `tema.md`. | Las deja la sesión de las piezas del lienzo; la tarea las toma de ahí y las compara con los tableros publicados. |
 | Núcleo | Que el enlace de un solo uso lo use solo el bot. | `LoginLinkIssuer` exige un teléfono verificado y no lo usa nadie más (2026-11-07). |
 | Núcleo | La invitación que arma `InviteByPhoneAsync`. | Ahí se guarda el consentimiento. |
 | Front | «Desvincular» sin WhatsApp. | Como lo revisado el 2026-11-07 («Lo técnico»). |
