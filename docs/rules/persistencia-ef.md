@@ -41,7 +41,7 @@
 - `Infrastructure/Persistence/Configurations/Tenant/RoleConfiguration.cs`, `Repositories/RoleRepository.cs` y `Readers/RoleReader.cs` (E4)
 
 ## Lo verifica
-- `EntityConfigurationTests` (E2), `DataClassificationTests` (E2), `DecimalPrecisionTests` (E1), `TextLimitsTests` (E1), `TransactionBoundaryTests` (E2), `UniqueKeysTests` (E6), `PersistenceNamingTests` (E12, con la base de la 12: el prefijo y lo que devuelve cada método de `Interfaces/Persistence`)
+- `EntityConfigurationTests` (E2), `DataClassificationTests` (E2), `DecimalPrecisionTests` (E1), `TextLimitsTests` (E1), `TransactionBoundaryTests` (E2), `UniqueKeysTests` (E6), `PersistenceNamingTests` (E12), con la base de la 12: el prefijo y lo que devuelve cada método de `Interfaces/Persistence`
 
 ## Detalle
 [backend.md §9](../architecture/backend.md#9-persistencia)
