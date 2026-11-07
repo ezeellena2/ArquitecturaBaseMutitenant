@@ -2,8 +2,9 @@
 
 Esta tabla es el índice.
 - **Archivo propio:** una decisión que entra en una línea vive solo acá. La que tiene reglas que no entran en una línea lleva además su archivo `NNNN-titulo.md`, con contexto, decisión, alternativas descartadas y consecuencias (enmienda del 2026-10-03).
-- **Origen:** las decisiones 0001 a 0007 se heredan de `../ArquitecturaBase`. De la 0008 en adelante son propias del multitenant.
+- **Origen:** las decisiones 0001 a 0007 se heredan de `../ArquitecturaBase`. De la 0008 en adelante son propias del multitenant, salvo la 0053, que trae la 0019 de allá.
 - **Enmiendas:** se agregan al final de su fila, con la fecha.
+- **Número:** antes de numerar una decisión, mirá esta tabla y los archivos de la carpeta. En ArquitecturaBase, dos sesiones tomaron el mismo número el mismo día.
 
 | # | Decisión | Estado |
 |---|---|---|
@@ -59,6 +60,7 @@ Esta tabla es el índice.
 | 0050 | **Auditoría global de módulos:** `IGlobalSecurityAudited` conserva sello auditable y exige un `SecurityEvent` de tipo/destino coincidentes con motivo en la misma UoW, sin referencias del núcleo al módulo. Solo globales declarados por tipo exacto; incompatible con clases privadas, públicas o compartidas. Ver [0050](0050-auditoria-global-de-modulos.md) | Aceptada técnica 2026-10-09 |
 | 0051 | **Precisión técnica de IA:** tarifas `Money` por millón con seis decimales; costos y reservas `Money` con doce, conservando subcentavos para presupuesto y umbrales. Presupuestos y presentación siguen las unidades menores del catálogo. Sólo estimaciones IA, sin cambiar HTTP ni tipos Front. Ver [0051](0051-precision-tecnica-de-costos-ia.md) | Aceptada por el usuario 2026-10-10 |
 | 0052 | **Caché compartida en Redis (E9):** HybridCache sin L1, claves por aplicación/ambiente/alcance, generaciones durables y etiquetas invalidadas después del commit; inventario/TTL explícitos, sin secretos ni contactos completos, fallback PostgreSQL. Ver [0052](0052-cache-compartida-redis.md) | Aceptada técnica 2026-10-16 |
+| 0053 | **Sin SQL configurable** (la 0019 de ArquitecturaBase): nada que escriba una persona o un modelo se ejecuta como SQL. Los catálogos tienen sus orígenes fijos y filtran con columnas y operadores de una lista cerrada, con los valores como parámetros. Si alguna vez se retoma una consulta configurable, va solo sobre vistas inventariadas, validada como una sola lectura con un parser y su AST, con una credencial aparte y restringida y un permiso propio; acá, además, con RLS, porque una vista lo aplica solo con `security_invoker` | Heredada 2026-11-07 |
 
 **Descartado a propósito:**
 - un marketplace **de productos** con catálogo, carrito y compras como parte de la plantilla (el 27 de septiembre se lo sacó; después se reincorporó solo la mecánica genérica, en la 0032);
