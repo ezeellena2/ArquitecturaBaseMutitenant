@@ -103,6 +103,8 @@ Aprobados y publicados en el lienzo v150, con su recorrido guiado. Muestran solo
 
 **Mandan sobre esta spec en:** las fichas del front (un dato por celda, sin leyendas, botones según la 43 y la 115). «Dar de baja» y «Reactivar» son las palabras de siempre.
 
+**Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
+
 ## Pasos
 
 Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y `[E12]` a `[E15]`, un archivo que deja esa etapa.
