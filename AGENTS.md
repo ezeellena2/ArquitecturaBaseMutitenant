@@ -48,7 +48,9 @@ El inventario de todos los estándares transversales (los definidos y los propue
 
 ## Forma de trabajo
 - Commits chicos, en español, con conventional commits. **Commitear cada cambio coherente y verificado**; los pasos internos de una tarea no requieren commits separados. No acumular trabajo terminado sin commitear.
-- TDD donde hay lógica: test dirigido rojo → verde y build del proyecto afectado. Si la tarea cambia una ruta, persistencia, autenticación o aislamiento, **al terminarla** (no antes de cada commit) se corren los tests de integración y de seguridad de esa área. La solución completa (`dotnet build` sin advertencias y `dotnet test` con Docker) se corre una vez, en la puerta, y en CI. Apagar Aspire con `aspire stop` si se levantó.
+- **Todo en `main`, también la puerta** (pedido del usuario, «fundamental», traspaso 10, 2026-11-07): sin ramas ni worktrees, ni siquiera temporales, y sin push salvo que lo pida. Varias sesiones trabajan a la vez en el mismo checkout: cada una commitea solo lo suyo (`git commit -- <rutas>`, o su fragmento en el índice), y nunca hace stash, reset, cambio de rama ni revierte lo de otra. Si el checkout no compila por el trabajo a medias de otra sesión, se prueba en una copia de `HEAD` dentro de `.local/`. Con la app levantada, ninguna sesión edita el `src` del front: Vite le recarga la página al usuario y le borra lo que no guardó.
+- **Con el usuario** (traspaso 10): nada de manejar su PC (computer use o escritorio remoto), y se le avisa de cualquier efecto visible en su pantalla. Ninguna clave real pasa por un agente: la pega él en la pantalla de configuración. En una prueba de punta a punta, se le dan los pasos clic por clic, con la ruta del menú, sin cargar datos por él. Para decidir: pocas opciones, la recomendada primero y una captura o un tablero antes. Las corridas largas, con la PC despierta: Docker no se recupera de una suspensión.
+- TDD donde hay lógica: test dirigido rojo → verde y build del proyecto afectado. **Al terminar cada tarea, el build y los tests rápidos enteros, sin Docker y nunca filtrados por módulo** (traspaso 10: en ArquitecturaBase un filtro dejó pasar un test que rompió `main`). Si la tarea cambia una ruta, persistencia, autenticación o aislamiento, **al terminarla** (no antes de cada commit) se corren los tests de integración y de seguridad de esa área. La solución completa (`dotnet build` sin advertencias y `dotnet test` con Docker) se corre una vez, en la puerta, y en CI. Apagar Aspire con `aspire stop` si se levantó.
 - Una pantalla nueva del front se dibuja antes de programarse, y el usuario aprueba el tablero en el lienzo. **Desde la Etapa 7 se programa directo** (pedido del usuario, 2026-10-07):
   - tests donde importan;
   - sin visto bueno por pantalla ni capturas en cada avance;
@@ -66,7 +68,7 @@ El inventario de todos los estándares transversales (los definidos y los propue
     - guardar evidencia (recibos, hashes, logs de diagnóstico): las salidas quedan en `.local/` y en el plan va solo la tabla final;
     - recapturar pantallas de etapas anteriores: la galería es solo de las pantallas nuevas o cambiadas en la etapa;
     - probar el retiro de un módulo en varias variantes: va una vez, en la etapa de ese módulo, con la base vacía (build, tests e ingreso);
-    - worktrees o etiquetas fuera de la puerta.
+    - worktrees, ramas o etiquetas, tampoco en la puerta: la puerta trabaja sobre copias del corte (skill `/puerta`).
 
 ## Reglas que no se negocian
 1. **Capas:** Domain ← Application ← Infrastructure; Api compone. El recorrido es `Controllers → I<X>Service → <X>Service → I<X>Repository/I<X>Reader/Integrations → Infrastructure`. Sin handlers ni CQRS con `ICommand`, sin repositorio genérico, sin Minimal APIs de negocio, sin Scrutor ni AutoMapper.
@@ -107,7 +109,7 @@ El inventario de todos los estándares transversales (los definidos y los propue
 - `dotnet build ArquitecturaBaseMultitenant.slnx`
 - `dotnet test`, o `dotnet test --project tests/<P>/<P>.csproj -- --filter-class "<Clase>"`
 - `aspire run` / `aspire stop`
-- `node scripts/arneses/arnes.mjs realinear-docs --detectar` (0 tokens); sin `--detectar` corre el arnés completo en una rama aparte. Tests: `node --test "scripts/arneses/**/*.test.mjs"`.
+- `node scripts/arneses/arnes.mjs realinear-docs --detectar` (0 tokens). Sin `--detectar`, el arnés completo todavía trabaja en una rama aparte: hasta que pase a una copia de `HEAD` (base de la 12), se corre solo con `--detectar`. Tests: `node --test "scripts/arneses/**/*.test.mjs"`.
 - `node scripts/arneses/arnes.mjs alinear-etapas --detectar` (0 tokens): dice qué etapa que falta programar no está completa o no está alineada.
 - `node scripts/arneses/arnes.mjs estado-docs --detectar` (0 tokens): dice qué documentos quedaron viejos, terminaron o están fuera de formato.
 - Migración: ver [backend.md §9](docs/architecture/backend.md#9-persistencia).

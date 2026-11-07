@@ -1,6 +1,6 @@
 ---
 name: puerta
-description: Corre la puerta de una etapa (suites del back y del front, contrato, E2E real, detector de documentación, galería lado a lado y recorrido de usuario) en worktrees aparte, con cada paso completo una sola vez y después solo lo que toca cada arreglo, y muestra un resumen corto de qué pasó y qué no. Usala cuando pidan verificar o cerrar una etapa, «correr la puerta» o confirmar que todo está en verde.
+description: Corre la puerta de una etapa (suites del back y del front, contrato, E2E real, detector de documentación, galería lado a lado y recorrido de usuario) sobre una copia del corte, sin worktrees ni ramas, con cada paso completo una sola vez y después solo lo que toca cada arreglo, y muestra un resumen corto de qué pasó y qué no. Usala cuando pidan verificar o cerrar una etapa, «correr la puerta» o confirmar que todo está en verde.
 ---
 
 # /puerta <etapa> [corte del back] [corte del front]
@@ -9,9 +9,9 @@ La puerta se corre **una sola vez, al final de la etapa** (`AGENTS.md`, «Cierre
 
 ## Qué hacer
 
-1. **Elegí el punto de partida, una sola vez.** Usá los dos commits que te pasen o, si no te pasan ninguno, `HEAD` de `main` en cada repo. Los arreglos que lleguen después se traen a esos mismos worktrees, y se corre solo lo que tocan.
-2. **Armá dos worktrees hermanos**, de ruta corta y con el nombre exacto de cada repo, porque el E2E, `contracts:check` y el detector buscan el otro repo al lado.
-   - Por ejemplo, `C:\e2e\ArquitecturaBaseMutitenant` y `C:\e2e\ArquitecturaBaseMutitenantFront`, con `git worktree add <ruta> <corte>` desde cada repo.
+1. **Elegí el punto de partida, una sola vez.** Usá los dos commits que te pasen o, si no te pasan ninguno, `HEAD` de `main` en cada repo. Los arreglos que lleguen después se traen a esas mismas copias, y se corre solo lo que tocan.
+2. **Armá dos copias hermanas del corte, sin worktrees ni ramas** (`AGENTS.md`, «Todo en `main`, también la puerta»), de ruta corta y con el nombre exacto de cada repo, porque el E2E, `contracts:check` y el detector buscan el otro repo al lado.
+   - Por ejemplo, `C:\e2e\ArquitecturaBaseMutitenant` y `C:\e2e\ArquitecturaBaseMutitenantFront`, con `git clone --local <repo> <ruta>` y `git -C <ruta> checkout --detach <corte>` desde cada repo: la copia conserva la historia que leen los detectores y no suma ramas ni worktrees al repo de trabajo. Un arreglo se trae con `git -C <ruta> fetch` y otro `checkout --detach`.
    - En el front corré `npm ci`, porque un `node_modules` enlazado rompe la letra Inter en las capturas.
    - No uses la copia de trabajo: ahí trabajan otros chats.
 3. **Corré cada paso en segundo plano y esperá a que termine, sin consultar el avance.** Tardan minutos. Guardá cada salida en `.local/puerta-<etapa>/` de la copia principal del back, que no se versiona.
@@ -69,4 +69,4 @@ Sale de los 142 problemas que encontraron los reviews de ArquitecturaBase: capí
 - **Hacer push**, fusionar o cerrar la etapa si el usuario no lo pide.
 - **Mostrar secretos:** de user-secrets se leen solo los nombres.
 - **Matar procesos con un filtro amplio:** si hay que cortar algo, se corta por PID.
-- **Dejar algo levantado:** al final, `aspire stop` y `git worktree remove` de los dos worktrees.
+- **Dejar algo levantado:** al final, `aspire stop` y se borran las dos copias.
