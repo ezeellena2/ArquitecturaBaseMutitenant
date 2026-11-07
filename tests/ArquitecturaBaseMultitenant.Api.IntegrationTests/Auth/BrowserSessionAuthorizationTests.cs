@@ -1,10 +1,15 @@
+using System.Data.Common;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 using OpenIddict.Abstractions;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
@@ -97,27 +102,36 @@ public sealed class BrowserSessionAuthorizationTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Revoking_tenant_keeps_other_tenant_authorization_valid()
+    public async Task Revoking_tenant_revokes_only_its_authorizations_through_the_tenant_index()
     {
         var ct = TestContext.Current.CancellationToken;
-        using var client = factory.CreateClient();
-        await factory.Services.SeedDatabaseAsync(ct);
-        await using var scope = factory.Services.CreateAsyncScope();
+        var lookups = new TenantLookupCapture();
+        using var host = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+            services.AddDbContext<ApplicationDbContext>(options => options.AddInterceptors(lookups))));
+        using var client = host.CreateClient();
+        await host.Services.SeedDatabaseAsync(ct);
+        await using var scope = host.Services.CreateAsyncScope();
         var services = scope.ServiceProvider;
         var unitOfWork = services.GetRequiredService<IUnitOfWork>();
         var store = services.GetRequiredService<IConnectAuthorizationStore>();
         var revoker = services.GetRequiredService<ITokenRevoker>();
         var authorizations = services.GetRequiredService<IOpenIddictAuthorizationManager>();
         var tenantId = Guid.NewGuid();
-        string? targetId = null;
+        var userId = Guid.NewGuid();
+        string[] targetIds = [];
         string? otherId = null;
+        string? consumerId = null;
 
         await unitOfWork.ExecuteInTransactionAsync(async inner =>
         {
-            targetId = await store.CreateAsync(Guid.NewGuid(), Access.Business, tenantId,
-                "target-browser", "web", [Scopes.OpenId], inner);
+            targetIds =
+            [
+                await store.CreateAsync(userId, Access.Business, tenantId, "target-browser", "web", [Scopes.OpenId], inner),
+                await store.CreateAsync(Guid.NewGuid(), Access.Business, tenantId, "colleague-browser", "web", [Scopes.OpenId], inner),
+            ];
             otherId = await store.CreateAsync(Guid.NewGuid(), Access.Business, Guid.NewGuid(),
                 "other-browser", "web", [Scopes.OpenId], inner);
+            consumerId = await store.CreateAsync(userId, Access.Consumer, null, "target-browser", "web", [Scopes.OpenId], inner);
             return Result.Success();
         }, CommitPolicy.OnSuccess, ct);
 
@@ -127,11 +141,40 @@ public sealed class BrowserSessionAuthorizationTests(ApiFactory factory)
             return Result.Success();
         }, CommitPolicy.OnSuccess, ct);
 
-        var target = await authorizations.FindByIdAsync(targetId!, ct);
-        var other = await authorizations.FindByIdAsync(otherId!, ct);
-        Assert.NotNull(target);
-        Assert.NotNull(other);
-        Assert.Equal(Statuses.Revoked, await authorizations.GetStatusAsync(target, ct));
-        Assert.Equal(Statuses.Valid, await authorizations.GetStatusAsync(other, ct));
+        foreach (var targetId in targetIds)
+            Assert.Equal(Statuses.Revoked, await StatusAsync(targetId));
+        Assert.Equal(Statuses.Valid, await StatusAsync(otherId!));
+        Assert.Equal(Statuses.Valid, await StatusAsync(consumerId!));
+
+        // La búsqueda usa el índice por organización: con el recorrido secuencial apagado, el plan lo nombra.
+        var lookup = Assert.Single(lookups.Commands);
+        await using var connection = new NpgsqlConnection(factory.AdminConnectionString);
+        await connection.OpenAsync(ct);
+        await using (var noSequentialScan = new NpgsqlCommand("SET enable_seqscan = off", connection))
+            await noSequentialScan.ExecuteNonQueryAsync(ct);
+        await using var explain = new NpgsqlCommand("EXPLAIN " + lookup.Sql, connection);
+        foreach (var (name, value) in lookup.Parameters) explain.Parameters.AddWithValue(name, value);
+        await using var plan = await explain.ExecuteReaderAsync(ct);
+        var lines = new List<string>();
+        while (await plan.ReadAsync(ct)) lines.Add(plan.GetString(0));
+        Assert.Contains(lines, line => line.Contains("IX_OpenIddictAuthorizations_TenantId", StringComparison.Ordinal));
+
+        async Task<string?> StatusAsync(string id) =>
+            await authorizations.GetStatusAsync(await authorizations.FindByIdAsync(id, ct) ?? throw new InvalidOperationException(id), ct);
+    }
+
+    /// <summary>Guarda las lecturas de autorizaciones por organización para comprobar su plan.</summary>
+    private sealed class TenantLookupCapture : DbCommandInterceptor
+    {
+        public List<(string Sql, (string Name, object Value)[] Parameters)> Commands { get; } = [];
+
+        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command,
+            CommandEventData eventData, InterceptionResult<DbDataReader> result, CancellationToken cancellationToken = default)
+        {
+            if (command.CommandText.Contains("'tenant_id'", StringComparison.Ordinal))
+                Commands.Add((command.CommandText, [.. command.Parameters.Cast<DbParameter>()
+                    .Select(parameter => (parameter.ParameterName, parameter.Value ?? DBNull.Value))]));
+            return ValueTask.FromResult(result);
+        }
     }
 }

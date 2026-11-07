@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
+using Microsoft.EntityFrameworkCore;
 using OpenIddict.Abstractions;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Identity.OpenIddict;
@@ -60,11 +61,16 @@ internal sealed class TokenRevoker(
             properties => HasValue(properties, AccessProperty, value), cancellationToken);
     }
 
-    public Task RevokeTenantAsync(Guid tenantId, CancellationToken cancellationToken)
+    public async Task RevokeTenantAsync(Guid tenantId, CancellationToken cancellationToken)
     {
         context.RequireTransaction();
-        return RevokeMatchingAsync(authorizations.ListAsync(cancellationToken: cancellationToken),
-            properties => HasValue(properties, TenantIdProperty, tenantId.ToString("D")), cancellationToken);
+        // Por el índice IX_OpenIddictAuthorizations_TenantId, con su misma expresión: no recorre las autorizaciones de las
+        // demás organizaciones. ConnectAuthorizationStore guarda TenantIdProperty con el formato "D".
+        var ids = await context.Database.SqlQuery<Guid>($"""
+            SELECT "Id" AS "Value" FROM platform."OpenIddictAuthorizations"
+            WHERE ("Properties"::jsonb ->> 'tenant_id') = {tenantId.ToString("D")}
+            """).ToArrayAsync(cancellationToken);
+        await RevokeAsync([.. ids.Select(id => id.ToString("D"))], cancellationToken);
     }
 
     private async Task RevokeMatchingAsync(
@@ -87,9 +93,13 @@ internal sealed class TokenRevoker(
             }
         }
 
-        // Terminar de leer antes de actualizar: PostgreSQL no permite dos comandos
-        // simultáneos en la misma conexión de esta UoW.
-        foreach (var id in matchingIds)
+        await RevokeAsync(matchingIds, cancellationToken);
+    }
+
+    // Se llama con la lectura ya terminada: PostgreSQL no permite dos comandos simultáneos en la misma conexión de esta UoW.
+    private async Task RevokeAsync(IReadOnlyList<string> ids, CancellationToken cancellationToken)
+    {
+        foreach (var id in ids)
         {
             var authorization = await authorizations.FindByIdAsync(id, cancellationToken);
             if (authorization is null)
