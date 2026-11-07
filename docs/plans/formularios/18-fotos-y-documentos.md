@@ -72,7 +72,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133) y sus dos recorridos guiados, `fotos-y-documentos` y `archivos-en-el-chat`. Los archivos del chat no existen allá. Muestran solo lo que existe hasta acá (78). Con el traspaso 5, redibujados, aprobados y publicados en el lienzo v163: `FRM-Respuestas-18`, con su teléfono, con un solo «Filtros» en el que las fotos y los documentos no entran (143), y `FRM-Respuesta-18`, con su teléfono, y `FRM-Respuesta-Completa-18`, con el detalle alineado y la actividad en columnas fijas (139).
+Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133) y sus dos recorridos guiados, `fotos-y-documentos` y `archivos-en-el-chat`. Los archivos del chat no existen allá. Muestran solo lo que existe hasta acá (78). Con el traspaso 5, redibujados, aprobados y publicados en el lienzo v163: `FRM-Respuestas-18`, con su teléfono, con un solo «Filtros» en el que las fotos y los documentos no entran (143), y `FRM-Respuesta-18`, con su teléfono, y `FRM-Respuesta-Completa-18`, con el detalle alineado y la actividad en columnas fijas (139). Con el traspaso 10 se redibujan `FRM-Respuesta-Completa-18` y `M-FRM-Respuesta-18`, con «Respuesta» y «Actividad» abiertas, sin plegar (163 y 164).
 
 | Tablero | Qué muestra |
 | --- | --- |
