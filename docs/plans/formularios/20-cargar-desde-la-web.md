@@ -1,13 +1,19 @@
 # E20 · Cargar una respuesta desde la web (spec)
 
-**Estado:** pendiente · spec de la etapa 20 del bloque (decisiones 73, 78, 83 a 90, 94 a 98, 101, 104 y 153), con el [formato](plantilla.md) de las etapas. Corresponde a la Etapa 1 de «Cargar formularios desde la app» de ArquitecturaBase, programada y revisada allá el 2026-10-30, y a sus etapas 2 (lo propio), 4 (listas dependientes) y 5 (títulos de sección), decididas y sin programar. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E19.
+**Estado:** pendiente · spec de la etapa 20 del bloque (decisiones 73, 78, 83 a 90, 94 a 98, 101, 104, 153, 166, 177 y 178), con el [formato](plantilla.md) de las etapas. Corresponde a la Etapa 1 de «Cargar formularios desde la app» de ArquitecturaBase, programada y revisada allá el 2026-10-30, y a sus etapas 2 (lo propio), 4 (listas dependientes) y 5 (títulos de sección), programadas allá el 4 y el 5/11. La carga del bloque es la etapa 2 de sus renglones, en curso el 2026-11-07. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E19.
+
+**Partes.** Esta spec no entra en un solo archivo, así que sigue en otro, con las mismas secciones. Lo que no está en la tabla está acá.
+
+| Secciones | Archivo |
+| --- | --- |
+| «Cómo se arma cada pregunta», Contrato, Datos, Pasos y «Lo que ya se pagó allá» | [armado, contrato, datos y pasos](20-parte-contrato-datos-y-pasos.md) |
 
 ## Qué leer
 
 Antes de empezar, en este orden:
 
-1. **Lo anterior:** la [spec de la E14](14-formularios.md): T4, T22, T23, T24 y la §6, punto 7; la [E15](15-respuestas.md): rutas y filtros; la [E16](16-datos-de-las-personas.md): los filtros por destinatario; la [E17](17-ciclo-de-vida.md): la disponibilidad; la [E18](18-fotos-y-documentos.md): verificar y guardar archivos, y la [E19](19-condiciones-calculos-y-lineas.md): la captura.
-2. **Decisiones** de la hoja de ruta: 9, 35, 37, 43, 50, 54, 73, 78, 83 a 90, 94 a 98, 101 y 104.
+1. **Lo anterior:** la [spec de la E14](14-formularios.md): T4, T22, T23, T24 y la §6, punto 7; la [E15](15-respuestas.md): rutas y filtros; la [E16](16-datos-de-las-personas.md): los filtros por destinatario; la [E17](17-ciclo-de-vida.md): la disponibilidad; la [E18](18-fotos-y-documentos.md): verificar y guardar archivos, y la [E19](19-condiciones-calculos-y-lineas.md): la captura y el bloque.
+2. **Decisiones** de la hoja de ruta: 9, 35, 37, 43, 50, 54, 73, 78, 83 a 90, 94 a 98, 101, 104, 141, 147, 153, 166, 177 y 178.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -16,18 +22,18 @@ Antes de empezar, en este orden:
    | [guardado](../../rules/guardado.md) y [multitenancy](../../rules/multitenancy.md) | subir fuera de la UoW; quien carga sale de la sesión |
    | [permisos](../../rules/permisos.md) y [api-http](../../rules/api-http.md) | rutas aparte para cada permiso |
    | [paginado-y-busqueda](../../rules/paginado-y-busqueda.md) | las opciones, de a 50, y lo propio |
-   | [validacion](../../rules/validacion.md) y [result-y-errores](../../rules/result-y-errores.md) | cada error en su pregunta |
-   | [textos-y-traducciones](../../rules/textos-y-traducciones.md) y [tests](../../rules/tests.md) | «App», y qué lleva test |
+   | [validacion](../../rules/validacion.md) y [result-y-errores](../../rules/result-y-errores.md) | cada error en su pregunta, también el de un ítem |
+   | [textos-y-traducciones](../../rules/textos-y-traducciones.md) y [tests](../../rules/tests.md) | «App», «ítem» y qué lleva test |
 
-4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
-5. **Referencia de producto,** solo para leer: en ArquitecturaBase, `docs/plans/2026-10-30-traspaso-multitenant-carga-desde-la-app.md`, `docs/plans/2026-10-29-cargar-formularios-desde-la-app.md` y `docs/features/formularios.md`, «Carga desde la app». En `ArquitecturaBaseFront`, `docs/design/carga-desde-la-app.md`. Los commits están en la copia local. Mandan esta spec y las reglas y los diseños de este proyecto (108), y el código sale de este repo.
+4. **Código para copiar:** la columna «Copia de» de los [pasos](20-parte-contrato-datos-y-pasos.md#pasos).
+5. **Referencia de producto,** solo para leer: en ArquitecturaBase, `docs/plans/2026-10-30-traspaso-multitenant-carga-desde-la-app.md`, `docs/plans/2026-10-29-cargar-formularios-desde-la-app.md` y, en `docs/features/formularios.md`, «Carga desde la app», «Lo propio», «Listas dependientes» y «Títulos de sección»; para el bloque, `docs/plans/2026-11-07-renglones-etapa-2-implementacion.md`. En `ArquitecturaBaseFront`, `docs/design/carga-desde-la-app.md` y `renglones-en-formularios.md`. Los commits están en la copia local. Mandan esta spec y las reglas y los diseños de este proyecto (108), y el código sale de este repo.
 
 ## Qué se construye
 
 **Un canal más para responder:**
 - un empleado completa un formulario desde la web, a su nombre. Es un miembro activo con `formrecords.create`, sin teléfono verificado (89), y solo en los formularios activos que son para empleados o para los dos (50). Un cliente sigue respondiendo por WhatsApp;
 - la respuesta guarda el canal `web`, el `SourceKey` `web:<clave de idempotencia>` y las empresas activas de quien carga (9);
-- **la misma captura que WhatsApp:** un solo lugar valida y numera contra la versión sellada, con catálogos, archivos, condiciones, cálculos y renglones;
+- **la misma captura que WhatsApp:** un solo lugar valida y numera contra la versión sellada, con catálogos, archivos, condiciones, cálculos y el bloque;
 - **solo la versión activa.** Si se publicó otra, el front ofrece pasar a la nueva sin perder lo cargado;
 - **la oferta sella solo lo elegido:** cada opción tiene que estar activa y pasar los filtros para esa persona, también en un catálogo de miembros o de contactos. La lista completa no se guarda;
 - **los filtros por persona:** si le falta el dato, la pregunta frena y lo nombra. Si los filtros dejan una sola opción, ya viene elegida. Las opciones no tienen el tope de 200: se piden de a 50, con búsqueda, y los filtros corren en SQL antes de paginar.
@@ -35,18 +41,18 @@ Antes de empezar, en este orden:
 **Las listas dependientes** (94): un tercer filtro, «según otra respuesta»:
 - la pregunta de la que depende va antes, es de elegir una y elige del mismo catálogo que el campo de papel «Filtro». No oculta la pregunta: achica sus opciones;
 - al guardar se comprueba que la opción corresponda a esa respuesta. Si la pregunta de la que depende quedó oculta, la lista también;
-- va en una pregunta suelta, no en una del bloque de renglones. Copiar un formulario la copia;
+- va en una pregunta suelta, no en una del bloque. Copiar un formulario la copia;
 - no lleva los límites de WhatsApp: ni el aviso del máximo por persona ni el freno de «elegir varias» con más de 20.
 
 **Archivos:** viajan en el mismo `POST`, con los límites de la E18, y se verifican por contenido, igual que los de WhatsApp. Completa o nada.
 
 **Reintentos:** la misma clave con las mismas respuestas devuelve el primer resultado, aunque después se haya publicado otra versión o se haya dado de baja el formulario. El número y los cálculos son privados, por eso no va en `BufferedJson`. La misma clave con otras respuestas es 422; para el front, otras respuestas son otro envío.
 
-**Formularios solo para la app** (94, 96, 98 y 104). No se pueden mandar por WhatsApp en tres casos: la organización no tiene un número conectado, usa una lista dependiente, o usa un catálogo a mano más grande de lo que admite WhatsApp, de más de 200 opciones en «elegir una» o de más de 20 en «elegir varias». En los tres:
+**Formularios solo para la app** (94, 96, 98, 104 y 178). No se pueden mandar por WhatsApp en cuatro casos: la organización no tiene un número conectado; usa una lista dependiente; usa un catálogo a mano más grande de lo que admite WhatsApp, de más de 200 opciones en «elegir una» o de más de 20 en «elegir varias», o tiene un bloque con un mínimo de más de 10 ítems. En los cuatro:
 - si es para empleados o para los dos, se publica con un aviso que no frena (37). No pasa por Meta: sella la versión, la marca y la activa en la misma UoW, sin trabajo durable ni Flow;
 - **los frenos de WhatsApp no corren:** una versión solo para la app no va a Meta, así que no pasa por `Check` ni por el tope de opciones de un filtro fijo. Vuelven a correr al publicar con número;
-- si es solo para clientes, no se publica, porque ellos responden solo por WhatsApp;
-- el envío desde el chat no lo ofrece, y el asistente tampoco;
+- si es solo para clientes, no se publica, porque ellos responden solo por WhatsApp. El mínimo de más de 10 frena como en la E19;
+- **en el chat,** «Enviar formulario» lo muestra apagado, con su motivo en lugar de la versión y las preguntas: con una lista dependiente, ««Proveedor» depende de otra respuesta: se carga desde la app.» (166), y en los otros casos, el mismo motivo que dio al publicar. El asistente no lo ofrece;
 - para mandarlo cuando se pueda, hay que volver a publicar: `NothingToPublish` no aplica si la versión activa es solo para la app y ahora se puede mandar. Cambia lo que la E14 dice de `ChannelUnavailable` y `CatalogTooLarge`.
 
 **Lo propio** (85): quien tiene `formrecords.create` y no `formrecords.read` lee solo sus respuestas, en la planilla, el detalle y los archivos, también lo que respondió por WhatsApp. El servidor filtra por `RespondentUserId`, y lo ajeno responde 404, también en una dirección directa. Quien solo carga ve «Formularios» con sus formularios, «Cargar», «Mis cargas» y «Mi última carga», con su número y su fecha («Todavía no cargaste» si no hay), nunca los totales de la organización (153, que cambia la 83). El nombre abre «Respuestas» con lo suyo: la planilla de siempre sin la columna «Cargó», sin «Cargó» en «Filtros» y sin «Exportar a Excel», con «Agregar respuesta». Los conteos también se acotan: el de personas la nombra solo a ella, el de un catálogo trae solo las opciones que eligió y un filtro por otra persona no devuelve nada. **El filtro «Estado»** suma «Dados de baja», con los formularios dados de baja en los que cargó algo: ve lo suyo, sin «Cargar» (101).
@@ -62,48 +68,50 @@ Antes de empezar, en este orden:
 
 **El panel** (84), al costado de la planilla, solo en la compu, con las mismas zonas que la página (141): «Mantener las respuestas para la siguiente» conserva todo menos los archivos, y «Pantalla completa» pasa lo cargado a la página. Al enviar, el aviso dice el número y la planilla se relee con la respuesta marcada. **Cada envío es otra respuesta:** después de un envío que llegó, el front arma otra clave de idempotencia; solo un reintento después de un corte repite la anterior.
 
-**Las listas de catálogo:** una pregunta de catálogo es siempre una lista con búsqueda en el servidor, con el total, la descripción y «Mostrar 50 más». En el teléfono ocupa la pantalla, con «Listo» al pie al elegir varias. Una lista dependiente espera la respuesta de la que depende y se limpia si esa respuesta cambia.
+**Las listas de catálogo:** una pregunta de catálogo es siempre una lista con búsqueda en el servidor, con el total, la descripción y «Mostrar 50 más». En el teléfono ocupa la pantalla, con «Listo» al pie al elegir varias. **Una lista dependiente espera** apagada, con «Elegí primero «Zona»» en su campo, y en el teléfono, en su botón (166). Con la respuesta elegida trae solo lo suyo, y se limpia si esa respuesta cambia.
 
 **Las fotos y los documentos:** se arrastran o se eligen, con un contador. Tipo, tamaño y cantidad se revisan antes de enviar. En el teléfono, «Tomar foto» va primero, y «Solo cámara» no ofrece la galería.
 
-**Los renglones** (146): el bloque ocupa el renglón entero de su zona, en una tabla con una fila por renglón y una pregunta por columna, el número a la izquierda, «Agregar renglón» al pie y ↑ ↓ y 🗑 en cada fila; si no entra, se desplaza de costado en su caja. Arranca con el mínimo, y con el máximo «Agregar renglón» se apaga, con el motivo. Al enviar, la celda con un error se marca y el mensaje va debajo de su renglón, con el nombre de la pregunta. En el panel y en el teléfono, un recuadro por renglón, con ↑ ↓ y «Quitar» en su banda. «Mantener» conserva también los renglones.
+**El bloque** (146 y 177):
+- en la página, ocupa el renglón entero de su zona, donde lo puso el autor, con su nombre como etiqueta: una tabla con una fila por ítem y una columna por pregunta, con su etiqueta arriba. El número del ítem va en la primera columna, y ↑ ↓ y 🗑, en rojo, al final de cada fila; el tacho quita sin preguntar, como un archivo. Si no entra, la tabla se desplaza de costado en su caja, y el texto largo es una celda que crece;
+- arranca con el mínimo de ítems. «Agregar ítem», al pie y sin contador, suma uno vacío y lleva el foco a su primera pregunta. Con el máximo se apaga, con «Hasta 20 ítems.» en su tooltip, y con el mínimo, el tacho, con el suyo. ↑ ↓ dejan el foco en el mismo botón del ítem movido, y quitar lo lleva al ítem que queda en su lugar o a «Agregar ítem»;
+- al enviar, cada ítem se valida como preguntas sueltas: la celda con un error se marca, el mensaje va debajo de su fila con el nombre de la pregunta («Cantidad: completá esta respuesta.») y el foco va a la primera. Si faltan ítems, lo dice debajo de la tabla: «Agregá al menos 1 ítem.»;
+- **en el panel y en el teléfono,** un recuadro por ítem, con «Productos · ítem 2», ↑ ↓ y «Quitar» en su banda, y las preguntas una debajo de otra. En el teléfono, «Agregar ítem» va al pie de los recuadros, y Enviar sigue fijo abajo;
+- «Mantener» conserva también los ítems; una versión nueva los conserva si el bloque sigue, con las preguntas que siguen con el mismo tipo, y «Enviada» muestra el bloque en una línea, como su columna en la planilla;
+- **en el editor,** dos (i) suman la app: la del máximo dice «En WhatsApp se cargan hasta 10 ítems; en la app, hasta el máximo.», y la de «Se carga varias veces», «Se carga una vez por ítem, en la tabla del bloque.».
 
-**«Enviada»:** lo que se mandó, los cálculos, el número y la hora, con «Cargar otra» y «Ver en la planilla». Se arma con lo enviado y con lo que devuelve el `POST`.
+Los textos del bloque que suma esta etapa, con su inglés:
+
+| Dice | En inglés |
+| --- | --- |
+| «Agregar ítem» · «Hasta 20 ítems.» · «Agregá al menos 1 ítem.» | «Add item» · «Up to 20 items.» · «Add at least 1 item.» |
+| «Productos · ítem 2», en un recuadro | «Productos · item 2» |
+| «En WhatsApp se cargan hasta 10 ítems; en la app, hasta el máximo.» | «WhatsApp loads up to 10 items; the app, up to the maximum.» |
+| «Se carga una vez por ítem, en la tabla del bloque.» | «Loaded once per item, in the block's table.» |
+
+**«Enviada»:** lo que se mandó, los cálculos, el número y la hora, con «Cargar otra», «Volver a Formularios» y «Ver en la planilla» (166). Se arma con lo enviado y con lo que devuelve el `POST`.
 
 **En lo que ya existe:** «App» en «Canal» y en su filtro, en los conteos, la navegación y el Excel (90); en el detalle, «Recibida · … · en la app, la cargó …», sin «Abrir conversación»; en el editor, «Según otra respuesta»; al publicar, que queda solo para la app y por qué, y «Solo en la app» en «En WhatsApp» (98).
 
-### Cómo se arma cada pregunta (86, 87 y 141)
-
-El autor decide el contenido. La app decide la forma, con una tabla fija por tipo:
-
-| Ocupa | Tipos de pregunta |
-| --- | --- |
-| Una columna | Número, fecha, sí o no, texto corto de hasta 80, elegir una, en fila o en lista, y elegir de un catálogo, una o varias |
-| El renglón entero | Texto largo, texto corto de más de 80 o sin largo máximo, elegir varias con opciones propias, foto, documento y renglones |
-
-- **Columnas:** tres en la compu, dos en la tableta y una en el teléfono y en el panel. Salen del ancho de la zona: tres desde 46 rem, dos desde 30 rem y una por debajo.
-- **Orden:** las preguntas no se reordenan, salvo las fotos y los documentos, que van al final. Una que no entra baja de renglón, con una línea entre cada renglón visible.
-- **Zonas** (88): cada título de sección arma una zona, y lo que va antes del primero queda en «Datos». Las fotos y los documentos van al final, en «Fotos y documentos». Todas se pliegan y arrancan abiertas, y su banda lleva solo el título, sin cantidades. Al enviar con errores, la zona plegada que los tiene se abre sola.
-- **Controles:** número y fecha son angostos; sí o no arranca sin nada marcado; elegir una con hasta cinco opciones las muestra en fila, aunque sean largas, y con más, una lista; elegir varias reparte sus casillas de arriba abajo en columnas, tres en la compu, dos en la tableta y en el panel y una en el teléfono, con «hasta N» en la etiqueta; el texto largo tiene de 2 a 6 renglones.
-- **La unidad** va en la etiqueta que escribe el autor (86).
-- **Lo condicional:** una pregunta aparece en su lugar y los renglones se recalculan. Lo oculto no se manda, y una zona sin preguntas visibles no se ve. **Un cálculo** no se ve al cargar, y aparece en «Enviada» (54 y 97).
+**Cómo se arma cada pregunta,** con los dos anchos, las zonas y lo que dice una zona plegada («3 de 5 respondidas», 166), está en la [parte](20-parte-contrato-datos-y-pasos.md#cómo-se-arma-cada-pregunta-86-87-y-141).
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v154, con el armado del front real de ArquitecturaBase (126 y 134) y el recorrido guiado `cargar-una-respuesta`. Con el traspaso 5 se redibujan `FRM-Cargar-Respuesta` y su teléfono, con los dos anchos, las casillas en columnas, «Mantener» y los renglones (141, 146 y 147); `FRM-Cargar-Panel`, con zonas (141); `FRM-Respuestas-20` y `FRM-Respuestas-Propias`, con sus teléfonos, con «Filtros» y los chips (144), y `FRM-Respuesta-20` y su teléfono, con el detalle alineado (139). Con el traspaso 7 se ajusta `FRM-Formularios-20` y su teléfono: quien solo carga ve «Mis cargas» y «Mi última carga» (153). El ejemplo es «Pedido de materiales», versión 4, que suma «Zona», «Proveedor» con su lista dependiente y «Foto del remito», y por eso queda solo para la app.
+Aprobados y publicados en el lienzo v154, con el armado del front real de ArquitecturaBase (126 y 134) y el recorrido guiado `cargar-una-respuesta`. El ejemplo es «Pedido de materiales», versión 4, que suma «Zona», «Proveedor» con su lista dependiente, «Foto del remito» y el bloque «Productos», y por eso queda solo para la app. Con los traspasos 5, 7 y 10 se redibujan todos menos `FRM-Cargar-Archivos`, y se suma el chat.
 
-| Tablero | Qué muestra |
-| --- | --- |
-| `FRM-Formularios-20` y su teléfono | «Cargar», «Solo en la app» y lo que ve quien solo carga |
-| `FRM-Cargar-Respuesta` y su teléfono | la página, con zonas, grilla, títulos, lo condicional, renglones, «Mantener», errores y salir |
-| `FRM-Cargar-Panel` | el panel junto a la planilla |
-| `FRM-Cargar-Lista` y su teléfono | la lista, una sola opción, sin el dato, elegir varias y la que espera otra respuesta |
-| `FRM-Cargar-Archivos` y su teléfono | agregar, los límites, la barra de avance, el corte y la cámara |
-| `FRM-Cargar-Enviada` y su teléfono | «Enviada», versión nueva, dado de baja, opción dada de baja y sin conexión |
-| `FRM-Respuestas-20` y `FRM-Respuesta-20`, con sus teléfonos | «App», su filtro y el origen en el detalle |
-| `FRM-Respuestas-Propias` y su teléfono | la misma planilla con lo suyo |
-| `FRM-Editor-Listas` y su teléfono | «Según otra respuesta» |
-| `FRM-Publicar-20` y su teléfono | solo para la app, en los tres casos, y uno solo para clientes que no se publica |
+| Tablero | Qué muestra | Estado |
+| --- | --- | --- |
+| `FRM-Formularios-20` y su teléfono | «Cargar», «Solo en la app» y lo que ve quien solo carga | Se redibuja: «Mis cargas» y «Mi última carga» (153) |
+| `FRM-Cargar-Respuesta` y su teléfono | la página, con zonas, grilla, títulos, lo condicional, el bloque, «Mantener», errores y salir | Se redibuja: los dos anchos, las casillas en columnas y «Mantener» (141 y 147); el bloque, con «Agregar ítem» y sin contador, en tabla y, en el teléfono, en recuadros (177), y la zona plegada con «3 de 5 respondidas» (166) |
+| `FRM-Cargar-Panel` | el panel junto a la planilla | Se redibuja: con zonas (141), los recuadros del bloque y la zona plegada (166 y 177) |
+| `FRM-Cargar-Lista` y su teléfono | la lista, una sola opción, sin el dato, elegir varias y la que espera otra respuesta | Se redibuja: «Elegí primero «Zona»» (166) |
+| `FRM-Cargar-Archivos` y su teléfono | agregar, los límites, la barra de avance, el corte y la cámara | Aprobado |
+| `FRM-Cargar-Enviada` y su teléfono | «Enviada», versión nueva, dado de baja, opción dada de baja y sin conexión | Se redibuja: «Volver a Formularios» y el bloque en una línea (166 y 177) |
+| `FRM-Respuestas-20` y `FRM-Respuesta-20`, con sus teléfonos | «App», su filtro y el origen en el detalle | Se redibujan: «Filtros» y los chips (144) y el detalle alineado (139) |
+| `FRM-Respuestas-Propias` y su teléfono | la misma planilla con lo suyo | Se redibuja: «Filtros» y los chips (144) |
+| `FRM-Editor-Listas` y su teléfono | «Según otra respuesta» | Se redibuja: el bloque, sin el «Grupo de líneas» (177) |
+| `FRM-Publicar-20` y su teléfono | solo para la app, en los cuatro casos, y uno solo para clientes que no se publica | Se redibuja: el bloque y el mínimo de más de 10 (177 y 178) |
+| `WA-Chats-Formulario-20` y `M-WA-Chats-Formulario-20` | en «Enviar formulario», uno solo para la app, apagado con su motivo | Por dibujar (166) |
 
 **La página** sigue a la de allá: la banda con Cancelar y Enviar, y una zona por título, con la grilla de hasta tres por renglón. Lo que allá dice «Enviando… 64 %» acá es «Enviando…» con su aro y una barra sin palabras (95 y 115). Sin el dato de la persona, un cartel lo nombra, porque bloquea, y Enviar queda grisado con el motivo.
 
@@ -115,87 +123,6 @@ Aprobados y publicados en el lienzo v154, con el armado del front real de Arquit
 
 **Valen** las fichas del front y la decisión 43 en cada botón. El teléfono es una app: «Cargar» va en la lista con nuestra forma de fila.
 
-## Contrato
-
-Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]`, `[FeatureGate("forms")]` y `formrecords.create`. Son rutas aparte de las de `forms.read` y `formrecords.read`, porque `[HasPermission]` pide un solo permiso. La organización y quien carga salen de la sesión.
-
-| Ruta | Pide | Devuelve |
-| --- | --- | --- |
-| `GET /entry` | `page`, `pageSize`, `search`, `status` (`active`, `deactivated`) | `PagedResult<{id, name, deactivatedAtUtc?, ownCount, lastOwn?: {number, receivedAtUtc}}>`, con lo suyo y sin los totales de la organización (153): lo que puede cargar, con el filtro de disponibilidad, o los dados de baja en los que cargó algo (101) |
-| `GET /{id}/entry` | — | `{versionId, versionNumber, name, submitLabel, maxFileBytes, questions[], titles[]}`. Cada pregunta de catálogo trae `options?{total, single?, missingData?}` |
-| `GET /{id}/entry/questions/{fieldId}/options` | `page`, `pageSize` (50), `search`, `dependsOn?`; sirve también para una pregunta de catálogo de los renglones | `PagedResult<{id, text, detail?}>` |
-| `POST /{id}/records` | multipart: `versionId`, `answers` y los archivos, con `[Idempotent(Mode = IdempotencyMode.DurableReference)]`, `[IdempotencyDurable]` y `[RequestSizeLimit]` de 101 MiB | 201 `{recordId, displayNumber, submittedAtUtc, calculations[]}` + Location |
-| `GET /{id}/own-records/columns`, `POST …/search`, `POST …/facets`, `GET …/{recordId}`, `POST …/{recordId}/navigation` y `GET …/{recordId}/files/{fileId}/{thumbnail\|content}` | los de la E15 y la E18 | lo mismo, solo con lo de esa persona |
-
-**Rutas que cambian:**
-
-| Ruta | Qué suma |
-| --- | --- |
-| `GET /` y `GET /overview` | `canLoad` y `appOnly` |
-| `GET /{id}` y `PUT /{id}/draft` | `recipientFilters[].mode` suma `answer`, con `sourceFieldId` |
-| `POST /{id}/publication-checks` | `warnings[]` suma `AppOnly`, con `reason`: `NoNumber`, `DependentList` o `LargeCatalog` |
-| `POST /{id}/publications` | 200 si queda solo para la app, porque termina en la misma UoW; si no, 202, como siempre |
-| `POST …/records/facets` y `search` | la dimensión y el filtro `channel` |
-| `GET …/records/{recordId}` | `enteredBy?{name, atUtc}` |
-
-**Puerto:** «sin número» sale de `HasConnectedNumberAsync`, de la E14. `ListSendableAsync` deja afuera las versiones solo para la app.
-
-**Errores:**
-
-| Código | Tipo | Cuándo |
-| --- | --- | --- |
-| `Forms.Entry.VersionChanged` | Conflict | se publicó otra versión |
-| `Forms.Entry.Unavailable` | Conflict | el formulario se dio de baja o no es para empleados |
-| `Forms.Entry.QuestionNotFound` | NotFound | una pregunta que no es de la versión |
-| `Forms.Entry.AnswersInvalid` | Validation (`questions.<id>`) | cada error en su pregunta, con los códigos de la captura |
-| `Forms.Draft.DependentListInvalid` | Validation (`questions[i].recipientFilters[j]`) | la pregunta de la que depende no va antes, no es de elegir una o elige de otro catálogo |
-| `Forms.Draft.DependentListForCustomers` | Validation (`questions[i]`) | una lista dependiente en un formulario solo para clientes |
-
-Valen `Forms.Record.OptionWithdrawn`, en su pregunta, y `Forms.Offer.RecipientDataMissing`, con el nombre del dato.
-
-## Datos
-
-Una migración aditiva, `<fecha>_FormEntry.cs`. Sin tablas nuevas.
-
-| Tabla | Columna | Tipo | Regla |
-| --- | --- | --- | --- |
-| `FormVersions` | `AppOnly`, `AppOnlyReason` | bool, texto? | se sellan al publicar |
-| `FormRecords` | `Channel` | texto | admite `web` |
-
-No hace falta una columna como `EnteredInApp`: lo dice el canal. Quien cargó es `RespondentUserId`. `SourceKey` es `web:<clave>`, con el mismo índice único.
-
-## Pasos
-
-Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y `[E14]` a `[E19]`, un archivo que deja esa etapa.
-
-**Back:**
-
-| # | Qué hace | Archivos | Copia de | Test |
-| --- | --- | --- | --- | --- |
-| B1 | Una sola captura: separar lo común de WhatsApp | suma a `FormRecordService.cs` y `FormRecordWriter.cs` [E14] | esos mismos | WhatsApp sigue igual; numeración correlativa entre los dos canales |
-| B2 | Leer para cargar: versión, opciones y filtros en SQL | `A/Modules/Forms/Services/FormEntryService.cs`, `FormEntryOptionsResolver.cs`; suma a `FormOfferBuilder.cs` [E16] | `FormStructuredSource.cs` [E14] | una sola opción; sin el dato; 10.000 opciones con búsqueda; miembros y contactos; otra organización |
-| B3 | Listas dependientes | suma a `FormRecipientFilterPolicy.cs` [E16] y a `FormDraftEditor.cs` | esos mismos | cada motivo; opción que no corresponde; oculta; copiar |
-| B4 | Enviar: archivos fuera de la UoW, captura, confirmar o borrar | `FormEntrySubmitService.cs`; `P/Modules/Forms/Controllers/BusinessFormEntryController.cs`, `FormEntryDurableAdapter.cs` | `AssistantAttachmentService.cs`, `AssistantControllerBase.Upload` | versión nueva; dado de baja; opción dada de baja; reintento con otra versión; otra respuesta = 422; 101 MiB; archivo falso; sin permiso dentro de la UoW |
-| B5 | Publicar solo para la app | suma a `FormPublicationService.cs` [E14] y `WhatsAppStructuredFormChannel.cs` | esos mismos | los tres casos, también «elegir varias» de más de 20; solo clientes; sin Meta; volver a publicar con número; `ListSendableAsync` |
-| B6 | Lo propio | suma a `FormRecordQueryService.cs`, `FormRecordFileService.cs` y las lecturas [E15 y E18]; las rutas `own-records` | esos mismos | lo ajeno = 404 en cada ruta; también lo de WhatsApp; sin `formrecords.read`; dado de baja: se ve lo suyo y no se carga |
-| B7 | El canal en lo que ya existe | suma a `FormRecordQueryFilters.cs`, `FormRecordColumnsBuilder.cs` y `FormRecordSheetBuilder.cs` [E15] | esos mismos | filtro, conteos, navegación y Excel |
-| B8 | Contratos y ejemplos | suma a `Contracts/*` y `FormsContractContributor.cs` | esos mismos | cada ruta con 401, 403, feature apagada = 404; `RouteIsolationMatrixTests`; ejemplos exportados |
-
-**Front:**
-
-| # | Qué hace | Archivos | Copia de | Test |
-| --- | --- | --- | --- | --- |
-| F1 | Tipos, llamadas y subida con avance | suma a `F/src/modules/forms/api/` y `F/src/shared/api/httpClient.ts`, que hoy no tiene avance | `httpClient.ts` | zod estricto; avance y corte; `sameOperation` |
-| F2 | Entradas y lista | suma a la lista [E17] y a `FormRecordsPage.tsx` [E15] | esos mismos | quien solo carga; grisado; dados de baja |
-| F3 | El armado de una pregunta | `F/src/modules/forms/components/entry/EntryGrid.tsx`, `EntryZone.tsx` | el tablero | la tabla de los dos anchos y las casillas en columnas (141); los renglones, en tabla y en recuadros (146); `ResizeObserver`; lecciones 1 a 3 |
-| F4 | Los controles y la lista de catálogo | `components/entry/EntryField.tsx`, `EntryCatalogList.tsx` | `QuestionEditor.tsx` [E14] | búsqueda, «Mostrar 50 más» y lista dependiente; axe |
-| F5 | Lo condicional | suma a `EntryGrid.tsx`, con `lib/conditions.ts` [E19] | el mismo | lo oculto no se manda; una zona sin preguntas visibles |
-| F6 | Los archivos | `components/entry/EntryFiles.tsx` | el tablero | límites antes de enviar; cámara; barra sin palabras |
-| F7 | La página, el panel y «Enviada» | `pages/LoadResponsePage.tsx`, `components/entry/EntryPanel.tsx`, `EntrySent.tsx`; `registration.ts` | `useEditForm` y `useUnsavedChangesGuard` | salir; versión nueva sin perder nada; mantener en la página y en el panel, con otra clave en cada envío; el panel con zonas; lo cargado fuera del storage |
-| F8 | Publicar, editor y lo propio | suma a `PublishDialog.tsx` [E16], `CatalogQuestionFields.tsx` [E16] y `FormRecordsPage.tsx` | esos mismos | los tres casos; «Según otra respuesta»; una dirección ajena |
-
-**Al cerrar:** `docs/features/formularios.md` suma la sección.
-
 ## Qué verificar al arrancar
 
 | Marca | Qué hay que confirmar | Qué asume esta spec |
@@ -204,20 +131,10 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | [E15] | Las lecturas. | Admiten un alcance «solo lo mío», sin copiar las consultas. |
 | [E16] | La preparación de la oferta. | Sirve también paginada, sin el tope de 200. |
 | [E18] | `IFileContentInspector` y el diario. | Sirven igual para un archivo que llega por multipart. |
-| [E19] | `FormConditionEvaluator` y `lib/conditions.ts`. | El front y el servidor dan lo mismo. |
+| [E19] | `FormConditionEvaluator`, `lib/conditions.ts` y el bloque en la captura. | El front y el servidor dan lo mismo, y el bloque viaja en el mismo envío. |
+| Allá | La etapa 2 de renglones, en curso el 2026-11-07: la tabla, los recuadros, los errores por ítem y «Mantener». | Cierra como dice esta spec. Lo que allá cambie se adopta si no choca con las reglas de acá (126); LD3-A no entra. |
 | Front | `useIdempotentMutation`, `useUnsavedChangesGuard` y el panel al costado. | Están, o llegan con la base de la 12. |
-
-## Lo que ya se pagó allá (no repetir)
-
-Cada punto lleva su test, escrito durante la etapa:
-1. **Los renglones se arman con las columnas en uso.** Se armaban siempre de a tres, y en el teléfono dos preguntas quedaban sin línea entre ellas.
-2. **Las columnas salen del ancho de la zona, no del de la pantalla.** Se mide con `ResizeObserver`.
-3. **En el panel, número y fecha siguen angostos.**
-4. **Las migas también miden su contenedor.**
-5. **Cada envío es otra respuesta.** Allá, con «Mantener las respuestas» y sin archivos, el segundo envío repetía la clave del primero y recibía su número. Después de un envío que llegó, el front arma otra clave; solo un reintento después de un corte repite la anterior.
-6. **Un dato nuevo se omite cuando no aplica** (traspaso 7): la pregunta de la que depende una lista no viaja en null, así las versiones selladas, sus huellas y los cuerpos que ya lee el front no cambian.
-7. **Lo propio lo acota el servidor, también en los conteos:** el dueño va en el pedido interno, nunca desde el cliente.
-8. **Los tests con datos compartidos fallaban de a ratos:** allá, la purga de borradores de a 100 dejaba afuera la fila de un test, y una siembra con una foto sin fuente se colaba en otro. Cada test arma sus datos.
+| Celular | Que el reenvío por USB llegue a `localtest.me` (ver «Cómo se cierra»). | Anda sin cambiar la configuración. |
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
@@ -225,8 +142,9 @@ Cada punto lleva su test, escrito durante la etapa:
 - **La misma captura que WhatsApp.**
 - **Sin borradores guardados:** lo cargado no sobrevive a la página.
 - **El canal se llama «App»** (90); el valor técnico sigue siendo `web`.
-- **Se publica sin WhatsApp** (98).
+- **Se publica sin WhatsApp** (98), también con un mínimo de más de 10 en un formulario para empleados o para los dos (178).
 - **Las listas dependientes** van acá y solo en la web (94).
+- **El bloque se carga como allá** (177): una tabla en la página y un recuadro por ítem en el panel y en el teléfono, con «Agregar ítem» y sin contador.
 - **Lo propio tiene sus rutas:** `[HasPermission]` pide un solo permiso, y el mismo servicio les da el alcance.
 
 ## Fuera de esta etapa
@@ -234,18 +152,21 @@ Cada punto lleva su test, escrito durante la etapa:
 - Cargar a nombre de otra persona desde la web (73), importar muchas respuestas desde un Excel, borradores guardados y carga sin conexión.
 - La carga en filas, y ofrecer en la web qué cargar después.
 - Las listas dependientes en WhatsApp, con el intercambio cifrado con Meta.
-- El estado, el PDF y el motivo de rechazo en lo propio, y corregir y anular, que suma la E21.
+- Lo que allá se estaba programando: una lista dependiente dentro del bloque (LD3-A) y elegir primero por un campo (LD1-A y LD2-A).
+- El estado, el PDF y el motivo de rechazo en lo propio, y corregir y anular, también con ítems, que suma la E21.
 
 ## Cómo se cierra
 
 La puerta de la etapa, con la lista de control de `/puerta`, más un **recorrido real**:
-1. cargar una respuesta con una condición, dos renglones, un cálculo y una foto, y ver que queda igual que una por WhatsApp, con el canal «App»;
+1. cargar una respuesta con una condición, dos ítems, un cálculo y una foto, y ver que queda igual que una por WhatsApp, con el canal «App»;
 2. repetir el envío después de un corte: devuelve el primer número, sin saltos;
-3. publicar otra versión con la página abierta: pasa a la nueva sin perder lo cargado;
+3. publicar otra versión con la página abierta: pasa a la nueva sin perder lo cargado, ni los ítems;
 4. entrar con una cuenta que solo tiene `formrecords.create`: ve sus formularios, carga y ve solo lo suyo. Una dirección directa a una respuesta ajena da 404;
 5. en una organización sin número conectado, publicar, cargar desde la web y, al conectar un número, volver a publicar y mandarlo por WhatsApp;
-6. elegir en una lista dependiente, cambiar la respuesta de la que depende y ver que se limpia;
-7. sacar una foto con la cámara de un teléfono real.
+6. elegir en una lista dependiente, cambiar la respuesta de la que depende y ver que se limpia, y en el chat, ver ese formulario apagado con su motivo;
+7. en un teléfono real, sacar una foto con la cámara y cargar dos ítems en sus recuadros.
+
+**Desde el celular:** como allá, un Android entra por USB, con el reenvío de puertos de `chrome://inspect` (el 5174, a `localhost:5174`), y nada queda expuesto en internet. Allá abre `localhost`; acá el dominio de desarrollo es `https://localtest.me:5174`, con un subdominio por organización, y la carga va en el dominio principal. `localtest.me` y sus subdominios resuelven a 127.0.0.1 también en el teléfono, donde escucha el reenvío, y el proxy de Vite recibe el `Host` tal cual. Si el teléfono no resuelve `localtest.me`, porque su DNS filtra las direcciones privadas, se prueba con los datos móviles o con el DNS privado de Android apagado. El certificado de desarrollo no cubre `localtest.me`: Chrome avisa una vez por host, y se sigue con «Configuración avanzada». La primera prueba confirma que el ingreso anda así; si no, se anota en el plan de la etapa, sin cambiar la configuración para compensarlo. Con iPhone no hay reenvío desde Windows.
 
 ## Requisitos previos
 
