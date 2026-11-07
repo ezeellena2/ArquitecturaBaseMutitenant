@@ -108,6 +108,7 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | `PublicationId`, `VersionId` | uuid | ids opacos de Forms, sin FK |
 | `WabaId` | texto | **[E11]** la cuenta del número |
 | `MetaFlowId` | texto? | único |
+| `FlowName` | texto ≤80 | el nombre en Meta (165 y §14), fijado antes del Create; no entra en `FlowJsonHash` |
 | `Step` | texto | `Create`, `Upload`, `Validate`, `Publish`, `Verify` |
 | `State` | texto | `Accepted`, `InFlight`, `Uncertain`, `Published`, `Failed` |
 | `Profile` | texto | el perfil con que se publicó (§14) |
@@ -182,7 +183,7 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | `Forms.Publication.DraftChanged` | Conflict | el borrador cambió después de comprobar (T8) |
 | `Forms.Publication.ChannelUnavailable` | ServiceUnavailable | sin WhatsApp, o sin número conectado [E11] |
 | `Forms.Publication.NotFound` | NotFound | — |
-| `Forms.Publication.NotResolvable` | Conflict | decir qué pasó con una publicación que no está `Unconfirmed` ni `NeedsReview` |
+| `Forms.Publication.NotResolvable` | Conflict | decir qué pasó con una publicación que no está `NeedsReview` (175) |
 | `Forms.Preview.NotAvailable` | NotFound | la versión no tiene un Flow publicado |
 | `Forms.Record.InvalidResponse` | Validation | valor desconocido, falta uno obligatorio, se pasa del límite o queda fuera del rango de «elegir varias» |
 | `Forms.Record.ReplayConflict` | Conflict | la misma sesión llegó con otro contenido |
@@ -219,13 +220,13 @@ Las rutas Business de Forms llevan `[Access(Access.Business)]` y `[FeatureGate("
 | GET `/api/organization/forms/{id}` | `forms.read` | — | 200 `FormDetail`: `{id, name, prefix, prefixLocked, audience, submitLabel, questions[], titles[], activeVersion?{id, number, publishedAtUtc}, publication?{id, state, errorCode?, issues?}, canManage, canPublish, version}` |
 | PUT `/api/organization/forms/{id}/draft` | `forms.manage` | `{name, prefix, audience, submitLabel, questions[], titles[], version}` | 200 `{version, questions[], titles[]}`, con las identidades emitidas; 409 |
 | POST `/api/organization/forms/{id}/publication-checks` | `forms.publish` | — | 200 `{contentHash, canPublish, nextVersionNumber, issues[], changes[]}`, con lo que muestra el diálogo (T25); no escribe (T8) |
-| POST `/api/organization/forms/{id}/publications` | `forms.publish` | `{contentHash}` | 202 `{publicationId, state}` + Location; no llama a Meta; `DraftChanged` si el borrador cambió (T8) |
+| POST `/api/organization/forms/{id}/publications` | `forms.publish` | `{contentHash}`, con `[Idempotent]` | 202 `{publicationId, state}` + Location; no llama a Meta; `DraftChanged` si el borrador cambió (T8). La misma `Idempotency-Key` devuelve la misma publicación («Repetir el mismo intento») |
 | GET `/api/organization/forms/{id}/publications/{publicationId}` | `forms.read` | — | 200 `{state, errorCode?, issues?, versionNumber}` |
-| POST `/api/organization/forms/{id}/publications/{publicationId}/check` | `forms.publish` | — | 200 `{state, errorCode?, issues?, versionNumber}`: «Consultar ahora» le pregunta a Meta y nunca repite un POST |
-| POST `/api/organization/forms/{id}/publications/{publicationId}/resolution` | `forms.publish` | `{outcome}`, `Published` o `NotPublished` | 200 lo mismo: la persona dice qué pasó, solo en `Unconfirmed` o `NeedsReview` |
-| GET `/api/organization/forms/{id}/versions/{versionId}/preview` | `forms.read` | — | 200 `{url, expiresAtUtc}`, con `Cache-Control: no-store` |
+| POST `/api/organization/forms/{id}/publications/{publicationId}/check` | `forms.publish` | — | 200 `{state, errorCode?, issues?, versionNumber}`: «Consultar publicación» le pregunta a Meta y nunca repite un POST |
+| POST `/api/organization/forms/{id}/publications/{publicationId}/resolution` | `forms.publish` | `{outcome}`, `Published` o `NotPublished` | 200 lo mismo: la persona dice qué pasó, solo en `NeedsReview` (175) |
+| GET `/api/organization/forms/{id}/versions/{versionId}/preview` | `forms.read` | — | 200 `{url, expiresAtUtc}`: el enlace interactivo de la vista oficial ([§6, punto 5](14-parte-decisiones-y-flujos.md#6-flujos-con-sus-transacciones)), con `Cache-Control: no-store` |
 | GET `/api/organization/whatsapp/{customers\|internal}/conversations/{id}/forms` **[E11]** | «Atender internos» o «Atender clientes», según la bandeja | `page`, `search` | 200 `{available, reason?, culture, forms: PagedResult<{definitionId, versionId, versionNumber, name, prefix, questionCount, optionCounts[{fieldId, count}], offerProblems[]}>}`; `culture` es el idioma de los textos del sistema que acompañan |
-| POST `/api/organization/whatsapp/{customers\|internal}/conversations/{id}/forms` **[E11]** | «Atender internos» o «Atender clientes», según la bandeja | `{definitionId, versionId, text}` (≤1024) | 202 `{sessionId, messageId}` |
+| POST `/api/organization/whatsapp/{customers\|internal}/conversations/{id}/forms` **[E11]** | «Atender internos» o «Atender clientes», según la bandeja | `{definitionId, versionId, text?}`: `null` es el mensaje por defecto (T10), y si viene, ≤1024 | 202 `{sessionId, messageId}` |
 
 **Otras piezas del contrato:**
 - **`changes[]` de `publication-checks`:** `{kind, fieldId, label}`, con `kind` `added`, `changed` o `removed`, comparando el borrador guardado con la versión activa. En la primera publicación viene vacío.
@@ -267,7 +268,7 @@ public interface IStructuredFormChannel
     StructuredFormCheck Check(StructuredFormVersion version);                           // puro
     Task<StructuredPublicationResult> PublishAsync(StructuredPublicationRequest request, CancellationToken ct);
     Task<StructuredPublicationResult> GetPublicationAsync(Guid publicationId, CancellationToken ct);
-    Task<StructuredPreview?> GetPreviewAsync(Guid versionId, CancellationToken ct);
+    Task<StructuredPreview?> GetPreviewAsync(StructuredPreviewRequest request, CancellationToken ct);
 }
 // WhatsApp → Forms (implementa Forms)
 public interface IStructuredRecordSink
@@ -288,7 +289,8 @@ public interface IStructuredRecordSource
 - `StructuredRecordCapture(SourceKey, DefinitionId, VersionId, Respondent: StructuredRecipient, SubmittedAtUtc, Values[FieldId, Text?|Number?|Date?|Bool?|Choices[]?])`. Cada opción elegida es `StructuredChosenOption(ChoiceId, Label, CatalogId?, Code?, Detail?, Value?)`, y «elegir varias» manda una por opción, en el orden recibido;
 - `StructuredRecordReceipt(RecordId, Number, DisplayNumber, Card)`: la tarjeta, con el nombre del formulario y lo que mandó, para la copia de T16;
 - `StructuredRecordCard(RecordId, DisplayNumber, FormName, CanReadValues, Values?)`;
-- `StructuredPublicationResult(State: Published|Pending|Uncertain|Failed, Issues[], NextCheckAtUtc?)`.
+- `StructuredPublicationResult(State: Published|Pending|Uncertain|Failed, Issues[], NextCheckAtUtc?)`;
+- `StructuredPreviewRequest(VersionId, Culture, Samples[FieldId → Options[Text, Detail?]])` y `StructuredPreview(Url, ExpiresAtUtc)`: las opciones de ejemplo de la vista oficial, que viajan en memoria y no se guardan (176).
 
 **Implementaciones apagadas:**
 - **Sin WhatsApp:** `IsAvailable = false` y ningún número. Se puede diseñar, y publicar responde `ChannelUnavailable`.

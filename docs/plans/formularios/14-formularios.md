@@ -1,6 +1,6 @@
 # E14 · Formularios: crear, publicar, mandar y recibir (spec)
 
-**Estado:** pendiente · spec de la etapa 14 del bloque (decisiones 34 y 78), con las decisiones 35, 38, 43, 79, 80, 103, 111, 112 y 121. Nace con la pregunta «Elegir de un catálogo», sobre los catálogos de la E12 y sus campos de la E13. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E11]**, **[E12]**, **[E9]** y **[Meta]** contra el código real y la documentación vigente.
+**Estado:** pendiente · spec de la etapa 14 del bloque (decisiones 34 y 78), con las decisiones 35, 38, 43, 79, 80, 103, 111, 112, 121, 165, 175 y 176. Nace con la pregunta «Elegir de un catálogo», sobre los catálogos de la E12 y sus campos de la E13. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E11]**, **[E12]**, **[E9]** y **[Meta]** contra el código real y la documentación vigente.
 
 **Fuentes:**
 - alcance y decisiones de producto: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E14 y §5;
@@ -15,14 +15,14 @@
 | --- | --- |
 | §2, §6 y §6b | [decisiones técnicas y flujos](14-parte-decisiones-y-flujos.md) |
 | §3, §4, §5 y §7 | [datos y contrato](14-parte-datos-y-contrato.md) |
-| §8, §10 y §14 | [archivos, tests y Meta](14-parte-archivos-tests-y-meta.md) |
+| §8, §10, §11, §12, §14 y §16 | [archivos, tests y Meta](14-parte-archivos-tests-y-meta.md) |
 
 ## Qué leer
 
 Antes de empezar:
 1. **Lo anterior:** las specs de la [E12](12-catalogos.md) y la [E13](13-campos.md), sobre todo sus datos, su contrato y sus archivos.
 2. **Decisiones** de la hoja de ruta: las de la §13 de esta spec.
-3. **Fichas:** [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [idempotencia](../../rules/idempotencia.md), [multitenancy](../../rules/multitenancy.md), [persistencia-ef](../../rules/persistencia-ef.md), [auditoria](../../rules/auditoria.md), [api-http](../../rules/api-http.md), [permisos](../../rules/permisos.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [result-y-errores](../../rules/result-y-errores.md), [validacion](../../rules/validacion.md), [textos-libres](../../rules/textos-libres.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [numeros-y-moneda](../../rules/numeros-y-moneda.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [datos-personales](../../rules/datos-personales.md), [logs](../../rules/logs.md), [cuotas](../../rules/cuotas.md), [modulos](../../rules/modulos.md) y [tests](../../rules/tests.md). Además, cómo caen en este módulo: §11.
+3. **Fichas:** [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [idempotencia](../../rules/idempotencia.md), [multitenancy](../../rules/multitenancy.md), [persistencia-ef](../../rules/persistencia-ef.md), [auditoria](../../rules/auditoria.md), [api-http](../../rules/api-http.md), [permisos](../../rules/permisos.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [result-y-errores](../../rules/result-y-errores.md), [validacion](../../rules/validacion.md), [textos-libres](../../rules/textos-libres.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [numeros-y-moneda](../../rules/numeros-y-moneda.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [datos-personales](../../rules/datos-personales.md), [logs](../../rules/logs.md), [cuotas](../../rules/cuotas.md), [modulos](../../rules/modulos.md) y [tests](../../rules/tests.md). Además, cómo caen en este módulo: [§11](14-parte-archivos-tests-y-meta.md#11-premisas-aplicadas).
 4. **Código para copiar:** el módulo Asistente y lo que deje la E11, pieza por pieza, en la §8.
 5. **Pantallas:** los tableros de la §9.
 6. **Referencia de Meta:** la §14.
@@ -34,8 +34,8 @@ Antes de empezar:
 - **Editor:** formularios de la organización con siete tipos de pregunta, entre ellos «elegir varias» (38), títulos de sección entre las preguntas (88), prefijo de numeración y vista previa en el teléfono. El contenido es un solo texto por campo, tal como lo escribe la persona, en el idioma que quiera (35).
 - **Publicación en WhatsApp:**
   - un Flow por versión y por cuenta de WhatsApp Business (WABA);
-  - operación durable, con sus estados visibles y la vista previa oficial de Meta.
-- **Envío desde el chat:** «Enviar formulario» en un chat de Internos (a un empleado) o de Clientes (a un cliente), con la sesión de 24 horas. Cada formulario dice para quién es: solo empleados, solo clientes, o los dos (49 y 50). El mensaje sale por la cola de WhatsApp y, si no se sabe si salió, se reintenta solo, como los demás (80).
+  - operación durable: su estado lo dice la etiqueta del encabezado, sin pasos (175), y la vista oficial de Meta se recorre en un diálogo (176).
+- **Envío desde el chat:** «Enviar formulario» en un chat de Internos (a un empleado) o de Clientes (a un cliente), con la sesión de 24 horas. Cada formulario dice para quién es: solo empleados, solo clientes, o los dos (49 y 50). Sin texto del operador, el mensaje dice «Completá el formulario «Visita a cliente».» (165). Sale por la cola de WhatsApp y, si no se sabe si salió, se reintenta solo, como los demás (80).
 - **Recepción:**
   - el `nfm_reply` se convierte en una respuesta numerada (`VIS-000123`), sin duplicados;
   - en el chat aparece una tarjeta con los valores, o solo con el número si quien mira no puede ver respuestas.
@@ -74,7 +74,7 @@ Antes de empezar:
   - las preguntas, que se abren en el lugar, con el número, el nombre y, debajo, el tipo y si es obligatoria (130), y ↑ ↓ ✎ 🗑 a la vista (127). Las opciones de una pregunta llevan ↑ ↓ 🗑;
   - «elegir varias», con el mínimo y el máximo (en el ejemplo, «Fallas», de 1 a 3);
   - la pregunta «De un catálogo»: el combo de la E13 (111), que ofrece los tres orígenes y muestra apagados, con su motivo, los dados de baja y los que no se pueden usar; «Las opciones se preparan al mandar el formulario.» va en la (i) de «Catálogo»; «Permitir elegir varias» con mínimo y máximo, «varias, hasta N» en la lista de preguntas, un catálogo de más de 20 y la presentación de la pregunta (la del catálogo o la suya), en la zona «En WhatsApp», que arranca plegada con lo configurado en su banda y se abre sola con un error o un aviso (145);
-  - el teléfono al costado.
+  - «Así lo ve quien lo recibe»: el teléfono al costado, con el borrador (176).
 
   En el teléfono, la pregunta se edita en una hoja y los botones van fijos abajo.
 
@@ -85,8 +85,8 @@ Antes de empezar:
 - **`WA-Mensajes-14`:** «Mis mensajes», con la tarjeta de una respuesta propia de un cliente que vinculó su cuenta.
 - **`FRM-Publicar`**: «Publicar la versión N en WhatsApp», por zonas (112 y T25), cada una en su caja y con la explicación en su (i): «Problemas», si hay alguno, con «Ir a la pregunta» en cada uno, y «Qué se publica», siempre: Borrador, Preguntas, lo agregado y lo cambiado y, la primera vez, el Prefijo con «Queda fijo al publicar».
 - **Borrar una opción (129):** una que usa un formulario no se borra: `Forms.Catalog.ItemInUse` suma `uses: forms`, y debajo de la fila se lee «No se puede borrar: la usa un formulario. Podés darla de baja.».
-- **`FRM-Publicando`:** cómo termina, arriba del editor, con los pasos Aceptada, Enviada a WhatsApp, WhatsApp la revisa y Lista para mandar. Al costado, la vista oficial con «Borrador | Versión N en WhatsApp».
-- **`WA-Chats-Formulario` y `M-WA-Chats-Formulario`:** «Enviar formulario» al lado de «Enviar» en Internos (en el teléfono, en el ⋮ del chat). El diálogo «Enviar un formulario a …» tiene una tarjeta por formulario, con la versión y la cantidad de preguntas cada una en su lugar (con buscador y paginado si son muchos; el elegido de otra página va primero, marcado, 138), la cantidad de opciones por pregunta de catálogo y los problemas de la oferta, el mensaje prellenado de hasta 1024 caracteres y hasta cuándo se puede mandar, con fecha y hora. Sin «Ya lo revisé» ni «Resolver el envío» (80).
+- **`FRM-Publicando`:** cómo termina, en el encabezado del editor, sin zona ni pasos (175; «Cómo termina», abajo).
+- **`WA-Chats-Formulario` y `M-WA-Chats-Formulario`:** «Enviar formulario» al lado de «Enviar» en Internos (en el teléfono, en el ⋮ del chat). El diálogo «Enviar un formulario a …» tiene una tarjeta por formulario, con la versión y la cantidad de preguntas cada una en su lugar (con buscador y paginado si son muchos; el elegido de otra página va primero, marcado, 138), la cantidad de opciones por pregunta de catálogo y los problemas de la oferta, el mensaje de hasta 1024 caracteres (al elegir un formulario propone «Completá el formulario «Visita a cliente».», sin pisar lo escrito; 165) y hasta cuándo se puede mandar, con fecha y hora. Sin «Ya lo revisé» ni «Resolver el envío» (80).
 - **`WA-Chats-Formulario-Cliente` y `M-WA-Chats-Formulario-Cliente`** (nuevos): «Enviar formulario» en un chat de Clientes, con solo los formularios para clientes o para los dos (49 y 50). En el ejemplo, «Entrega de pedido» es para los dos.
 - **`WA-Chats-Respuesta` y su teléfono:** la tarjeta con las primeras 3 respuestas en grilla, «Ver las N respuestas» (en el teléfono, en una hoja) y «Guardada como VIS-000123»; el valor de catálogo con su código, y el rechazo de una opción dada de baja con «Mandar de nuevo».
 
@@ -94,10 +94,20 @@ Antes de empezar:
 
 **Redibujados con el traspaso 5, aprobados y publicados en el lienzo v162** (138, 142 y 145): `FRM-Editor` y su teléfono, con la revisión de «otra persona guardó» lado a lado (el teléfono suma «Revisar los cambios») y la zona «En WhatsApp» plegada en cada pregunta de catálogo, y `WA-Chats-Formulario` y su teléfono, con «Elegido en otra página»: el elegido de otra página primero y la tarjeta elegida con su borde.
 
+**Se redibujan con el traspaso 10** (165, 175 y 176): `FRM-Publicando` y `M-FRM-Editor`, con la publicación sin pasos, sin hojas en el teléfono y sin el segmentado «Borrador | Versión N en WhatsApp»; `WA-Chats-Formulario` y `WA-Chats-Formulario-Cliente`, con sus teléfonos, con el mensaje que se propone al elegir; y `WA-Chats-Respuesta`, `M-WA-Conversacion-Respuesta`, `WA-Mensajes-14` y `M-WA-Mensaje-14`, con «Completá el formulario «Visita a cliente».» en el chat.
+
+**Por dibujar:** `FRM-Vista-Oficial` y `M-FRM-Vista-Oficial` (176). «Ver vista oficial», en la banda cuando hay una versión publicada, abre el diálogo «Vista oficial · versión N»: el marco de Meta, de 480 × 840, achicado entero para entrar en la ventana, sin barras ni cortes, que arranca en la primera pantalla y se recorre como en el celular. Cada pregunta de catálogo trae sus primeras 20 opciones activas, en orden y con los filtros fijos del catálogo; sin `formcatalogs.read` la lista va vacía, y una de los miembros o de los contactos es la que vería quien mira si la recibiera. «Abrir en otra pestaña» abre la misma vista. En el teléfono ocupa la pantalla, también a 320.
+
 **Estados que se dibujan** (cada uno tiene que poder producirse; si no, es un bug):
 - **Editor:** con cambios, guardando («Guardando…», con su aro), guardado, no se guardó (lo escrito se conserva), otra persona guardó (lado a lado, 138: Qué cambió, Dato, Guardado actualmente y Mis cambios, solo lo distinto y con los nombres del editor; una pregunta que una versión no tiene muestra sus datos y «Quitada»), prefijo ocupado, para quién es, quitar una pregunta, cambiar el tipo, descartar, solo lectura, cargando y no existe.
 - **Publicar:** versión nueva, primera publicación, comprobando (un esqueleto en «Qué se publica»), con cambios sin guardar (publicar grisado, con el motivo en su tooltip), una pregunta que no se puede mostrar, un texto más largo que su límite, un catálogo demasiado grande, cambió después de comprobar, ya se está publicando, sin número conectado, sin cambios, con una cuenta conectada que no tiene el formulario (103), y un título sin preguntas debajo, con «Ir al título» (T24).
-- **Cómo termina:** publicando, publicado, rechazada con «Ir a la pregunta», sin confirmar con «Consultar ahora», que dice «Consultando…» (nunca «Reintentar»), necesita revisión, con «Salió» y «No salió», y la vista oficial. En el teléfono, «Sin confirmar» y «Necesita revisión» abren su detalle en una hoja.
+- **Cómo termina** (175): sin zona ni pasos. La etiqueta del encabezado dice el estado de la última publicación: «Publicando la versión 4», «Publicado · versión 4», «Sin confirmar · versión 4», «Necesita revisión · versión 4» o «No se pudo publicar la versión 4». Mientras se publica, la pantalla vuelve a leer sola. La banda suma, solo cuando hacen falta:
+  - «Consultar publicación», sin confirmar, en revisión o si la lectura sola se cortó: dice «Consultando…» con su aro, nunca «Reintentar»;
+  - «Repetir el mismo intento», si el pedido de publicar no tuvo respuesta y al volver a leer no aparece («Si no se sabe si algo salió», abajo);
+  - «Salió» y «No salió», solo con «Necesita revisión».
+
+  «Publicar en WhatsApp» apagado dice su motivo en el tooltip: una publicación en curso, sin confirmar o en revisión, un pedido sin respuesta, cambios sin guardar, sin número conectado o sin permiso. Lo rechazado queda marcado en su pregunta, sin una zona «Problemas»; un rechazo de la cuenta, que no es de ninguna pregunta (`AccountUnavailable`), va en el aviso importante, con su ⓘ. «Publicamos la versión 4.» y «No pudimos publicar la versión 4.» se avisan solo en el editor donde empezó la publicación. En el teléfono no hay hojas: las acciones van en el pie fijo y el motivo de lo apagado, en la franja oscura (122).
+- **Vista oficial** (176): cargando, lista, vencida («Cargarla de nuevo») y con error, con la medida del marco; sin versión publicada no hay «Ver vista oficial».
 - **Enviar:**
   - En cola, Leído, y No se pudo mandar (con ⓘ, sin reintento);
   - con el diálogo abierto, ventana cerrada, formulario que ya no está y formulario que no está publicado para este número (103).
@@ -110,65 +120,32 @@ Antes de empezar:
   - venció sin respuesta.
 
 **Mandan sobre esta spec en:**
-- **Las fichas del front** (pedido del usuario del 2026-10-25): un dato por celda, en un renglón; las fechas completas, con fecha y hora en la zona de quien mira, nunca «hoy», «ayer» ni «hace…»; sin leyendas (109), así que la vista previa es el teléfono al costado; y «Dados de baja», cuando llegue, es una opción del filtro «Estado».
+- **Las fichas del front** (pedido del usuario del 2026-10-25): un dato por celda, en un renglón; las fechas completas, con fecha y hora en la zona de quien mira, nunca «hoy», «ayer» ni «hace…»; sin leyendas (109), así que la vista previa es el teléfono al costado; y «Dados de baja», cuando llegue, es una opción del filtro «Estado». La primera carga (160), las formas sin aire de plantilla (173) y el texto entero (174) llegan con las piezas de la base de la 12.
 - **Textos:** la lista se llama «Formularios», la pestaña del editor «Diseño», y la acción del chat es «Enviar formulario» (79).
 - **Botones (43 y 115):** «Guardar cambios» se habilita cuando hay cambios, sin «Cambios sin guardar». Mientras trabaja, dice «Guardando…» con su aro. Si falta un dato obligatorio, el botón sigue habilitado y al tocarlo se marca el campo.
-- **Si no se sabe si algo salió (43):** ante un corte de red al guardar o al mandar, la pantalla vuelve a leer sola y muestra lo que quedó, sin pisar lo escrito:
+- **Si no se sabe si algo salió (43):** ante un corte de red al guardar, al mandar o al publicar, la pantalla vuelve a leer sola y muestra lo que quedó, sin pisar lo escrito:
   - **al guardar:** relee el borrador y compara **solo el contenido**, sin las identidades que emite el servidor. Si es igual a lo mandado, quedó guardado y el editor toma la versión y las identidades de esa relectura; si no, Guardar sigue habilitado con lo escrito y la versión de antes. Nunca reintenta solo. Tomar la versión de una relectura es una excepción a [concurrencia](../../rules/concurrencia.md), que se escribe en la ficha de formularios del front;
-  - **al mandar:** relee el chat. Si la sesión existe, se ve el envío; si no, se puede mandar de nuevo con la misma `Idempotency-Key`, que devuelve el resultado guardado si el primero sí llegó.
+  - **al mandar:** relee el chat. Si la sesión existe, se ve el envío; si no, se puede mandar de nuevo con la misma `Idempotency-Key`, que devuelve el resultado guardado si el primero sí llegó;
+  - **al publicar** (175): relee el formulario. Si aparece la publicación, la etiqueta dice su estado; si no, la banda trae «Repetir el mismo intento», que manda el mismo pedido, con la misma `Idempotency-Key` y el mismo `contentHash`: si el primero llegó, devuelve su resultado, y si está en curso, espera ([idempotencia](../../rules/idempotencia.md)). Mientras tanto, «Publicar en WhatsApp» queda apagado, para no empezar otro intento con otra clave.
 - **Envío pendiente:** un envío pendiente bloquea el chat (`WhatsApp.Chat.SendPending`). No bloquea que haya otro formulario sin responder.
 - **Un envío que no se sabe si salió** lo reintenta la cola sola, como a los demás mensajes; no hay «sin confirmar» ni «Ya lo revisé» (80).
 - **«Cambió después de comprobar»** es `Forms.Publication.DraftChanged` (T8).
-- **«Necesita revisión»:** `FormPublication` tiene el estado `NeedsReview`. Es para cuando Meta no confirmó la creación de un Flow y la consulta no puede saber si existe (un Create sin id no se adopta por nombre). Una persona con `forms.publish` lo mira en Meta y lo resuelve.
+- **«Necesita revisión»:** `FormPublication` tiene el estado `NeedsReview`. Es para cuando Meta no confirmó la creación de un Flow y la consulta no puede saber si existe (un Create sin id no se adopta por nombre). Una persona con `forms.publish` lo busca en Meta por el nombre del Flow y lo resuelve con «Salió» o «No salió», que van solo acá (175).
 - **«No reconocida»:** una respuesta de Flow que no corresponde a ninguna sesión se muestra en el chat como un mensaje sin valores y no crea nada en Forms.
 - **La banda de conflicto** («Otra persona cambió esto mientras lo editabas.») lleva ⚠.
 - **«Venció sin respuesta»:** se calcula al leer: la sesión sigue `Pending` y ya pasó `ExpiresAtUtc`. `Expired` queda para una respuesta que llegó tarde.
 - **El código de la opción de un catálogo se ve en la tarjeta de la respuesta,** debajo del valor (nunca en WhatsApp).
 - **Cualquier catálogo de la organización** sirve en cualquier formulario: el contenido no tiene idioma (35).
 
-## 11. Premisas aplicadas
-
-Rige la tabla de la [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md#premisas-del-repo-aplicadas-a-formularios). Lo propio de la E14:
-
-- **Servicios:** cada servicio tiene hasta 8 dependencias de negocio, y solo los servicios usan `IUnitOfWork`. Los helpers no abren transacciones.
-- **Lo externo, fuera de la transacción:** nada de Meta adentro de una UoW. El estado `InFlight` se commitea antes de cada llamada.
-- **Logs:**
-  - `[LoggerMessage]`, con códigos y ids;
-  - nunca el `flow_token`, los valores de una respuesta, el texto del mensaje ni teléfonos completos.
-- **Textos:**
-  - lo que ve una persona en WhatsApp por el sistema (el botón «Abrir formulario», la ayuda de los números y «Elegí hasta N») sale de resources es/en del módulo WhatsApp, en el idioma de su cuenta;
-  - los textos del formulario son de la organización, un solo texto sin idioma (35).
-- **Fechas:** `SubmittedAtUtc` y `ExpiresAtUtc` con `TimeProvider`, comparados con la hora firmada de Meta.
-- **Sin datos de ejemplo:** no hay formularios sembrados.
-
-## 12. Puntos de contacto con otras etapas
-
-Al planificar la E14 se verifican contra el código real.
-
-| Marca | Qué hay que confirmar | Qué asume esta spec |
-| --- | --- | --- |
-| [E11] | El modelo de números: `WhatsAppChannels`, la WABA de cada número y el token por organización. | Un Flow por versión y WABA. Se publica en todas las WABAs con números conectados. |
-| [E11] | Conversaciones y mensajes: ids, tipos de mensaje y el contrato de la lista de mensajes. | Se suman un mensaje saliente «Formulario» y la tarjeta `form`. |
-| [E11] | Reconocer al empleado y la bandeja Internos; «tomar» un chat. | Mandar cuenta como responder: toma el chat. |
-| [E11] | La entrada de mensajes por organización: el contexto con `SetFromAccess`, la transacción del procesador, el paso por el bot y `WhatsAppMessage.Fail`. | La captura es una fase aparte, fuera de esa transacción y sin bot (T5), con sus reintentos en la misma cola (§16). |
-| [E11] | El outbox con el número de la organización. | `WhatsAppOutboundMessage` suma la variante Flow con el `PhoneNumberId` de la organización. |
-| [E11] | Las rutas de WhatsApp por bandeja (`customers` e `internal`) y el módulo de WhatsApp del front. | Los nombres de esta spec son provisorios. |
-| [E11] | La copia compartida de la conversación para «Mis mensajes». | Guarda la tarjeta armada al capturar (T16). |
-| [E12] | El esqueleto del módulo, los catálogos, los lectores de las fuentes «Miembros» y «Contactos», y la presentación y los campos de la E13. | `FormOfferBuilder` reusa los lectores, con una fila más que el tope. |
-| [Meta] | Los límites del `Dropdown` y del `CheckboxGroup` dinámicos: cuántas opciones, el largo del título y del detalle, y el tamaño de `data` en el mensaje. | 200 opciones en `Dropdown` y 20 en `CheckboxGroup`, título ≤30 y detalle ≤300. El piloto de ArquitecturaBase confirmó 200 opciones con 136 caracteres de detalle cada una. |
-| [E9] | Las cuotas compartidas ([cuotas](../../rules/cuotas.md)). | Las rutas de Forms cuentan en las cuotas generales; no se definen perfiles propios. |
-| [E9] | Redis. | La E14 no cachea nada nuevo. |
-| #51 | `Enter` borra `TenantKind`. | El worker de publicación usa `ExecutionActor`, y la captura, `SetFromAccess` (T5). |
-
 ## 13. Decisiones de producto de la etapa
 
-Están en la §5 de la hoja de ruta y no se vuelven a preguntar: 86 (la unidad va en la etiqueta, sin un dato «Unidad»), 88 (títulos de sección), 9 (la respuesta guarda todas las empresas activas de quien respondió), 10 (manda cualquiera con «Atender internos», y a un cliente, con «Atender clientes»), 11, 21 y 36 (un nombre de más de 30 caracteres se corta en 29 y se le agrega «…», y el completo va primero en el detalle), 12, 22 y 37 (un catálogo con filtros que da más de 200 opciones se guarda, y el tope frena al mandar), 49 y 50 (los clientes completan los formularios que son para clientes), 35 (el contenido no tiene idioma), 38 («elegir varias» va acá), 43 (botones y avisos), 78 (la E14 nace con la pregunta «Elegir de un catálogo»), 79 (una sola lista «Formularios», con la pestaña «Diseño»), 80 (lo que sale por la cola de WhatsApp se reintenta solo, sin «sin confirmar»), 103 (un número en otra cuenta habilita publicar), 109, 110, 115 y 116 (leyendas, motivos, esperas y ayuda), 111 (el combo del catálogo), 112 (publicar por zonas) y 121 (el límite se avisa al publicar).
+Están en la §5 de la hoja de ruta y no se vuelven a preguntar: 86 (la unidad va en la etiqueta, sin un dato «Unidad»), 88 (títulos de sección), 9 (la respuesta guarda todas las empresas activas de quien respondió), 10 (manda cualquiera con «Atender internos», y a un cliente, con «Atender clientes»), 11, 21 y 36 (un nombre de más de 30 caracteres se corta en 29 y se le agrega «…», y el completo va primero en el detalle), 12, 22 y 37 (un catálogo con filtros que da más de 200 opciones se guarda, y el tope frena al mandar), 49 y 50 (los clientes completan los formularios que son para clientes), 35 (el contenido no tiene idioma), 38 («elegir varias» va acá), 43 (botones y avisos), 78 (la E14 nace con la pregunta «Elegir de un catálogo»), 79 (una sola lista «Formularios», con la pestaña «Diseño»), 80 (lo que sale por la cola de WhatsApp se reintenta solo, sin «sin confirmar»), 103 (un número en otra cuenta habilita publicar), 109, 110, 115 y 116 (leyendas, motivos, esperas y ayuda), 111 (el combo del catálogo), 112 (publicar por zonas), 121 (el límite se avisa al publicar), 165 (el mensaje nombra el formulario, y el nombre del Flow), 175 (el estado de la publicación, una vez y sin pasos) y 176 (la vista oficial, en un diálogo que se recorre).
 
 ## 15. Cómo se cierra
 
-La puerta de la etapa ([etapa en paralelo](../../guides/etapa-en-paralelo.md)) tiene las suites, el E2E real, la documentación en 0, la galería, el recorrido y la lista de control de `/puerta`. Además, hay una **prueba real con Meta** con el número de una organización de prueba, abriendo cada variante en un celular:
-1. **Formulario de prueba:** con los siete tipos de pregunta, entre ellos «elegir varias» con mínimo 1 y máximo 3, y con un título de sección, que se ve como subtítulo. Meta confirma `PUBLISHED`, con un solo Flow.
-2. **Mandar a una cuenta en inglés:** el formulario llega como está escrito, y el botón, la ayuda de los números y «Elegí hasta N» llegan en inglés. Se abre en Android y en iPhone.
+La puerta de la etapa ([etapa en paralelo](../../guides/etapa-en-paralelo.md)) tiene las suites, el E2E real, la documentación en 0, la galería, el recorrido y la lista de control de `/puerta`. Además, hay una **prueba real con Meta** con el número de una organización de prueba, abriendo cada variante en un celular. Lo que allá ya se probó con Meta, acá se prueba igual:
+1. **Formulario de prueba:** con los siete tipos de pregunta, entre ellos «elegir varias» con mínimo 1 y máximo 3, y con un título de sección, que se ve como subtítulo (`TextSubheading`, que allá Meta aceptó el 2026-11-06). Meta confirma `PUBLISHED`, con un solo Flow, que en el administrador de WhatsApp se llama «Visita a cliente · v1 · ab63a1f9» (165).
+2. **Mandar a una cuenta en inglés:** el formulario llega como está escrito, y el mensaje sin texto del operador («Complete the form “Visita a cliente”.»), el botón, la ayuda de los números y «Elegí hasta N» llegan en inglés. Se abre en Android y en iPhone.
 3. **Completar:** dejar vacía una opcional, poner `12.50` en el número y marcar dos opciones. En el chat aparece el número de la respuesta tras recargar, y las dos opciones quedan en su orden.
 4. **Mirar lo que llega de Meta:** qué manda para una opcional vacía y para «elegir varias» sin marcar, y que `12.50` y `12,50` se guardan iguales.
 5. **Una WABA sin medio de pago** (si se puede probar): queda `AccountUnavailable` visible, no «Sin confirmar» para siempre.
@@ -178,44 +155,8 @@ La puerta de la etapa ([etapa en paralelo](../../guides/etapa-en-paralelo.md)) t
 9. **Opción dada de baja después de mandar:** la respuesta se rechaza sin número. «Mandar de nuevo» da el número siguiente, sin saltos.
 10. **El tope:** un catálogo de 200 opciones con detalle viaja y vuelve con los ids intactos.
 11. **La presentación y el sellado:** «Proveedores» con el CUIT en la descripción (la del catálogo) y una pregunta con su presentación propia se ven así en el celular; al responder, los campos quedan sellados, y cambiar el CUIT en el catálogo no cambia lo respondido.
-12. **Lo que no se verificó en Meta:** el tope de `data` en el mensaje, el `flow_token` de 128, el cuerpo de 1024 y un `Dropdown` con `${data.x}` sin endpoint.
-13. **«Mis mensajes»:** un cliente que vinculó su cuenta ve la tarjeta de su respuesta.
+12. **Lo que allá anduvo:** un `Dropdown` con datos y sin endpoint (el de cada pregunta de catálogo, T21), y un mensaje de unos 35 KB con 331 opciones, en preguntas de catálogo de hasta 200 cada una. Allá salió uno de 34,7 KB y abrió en el celular.
+13. **Lo que no se verificó en Meta:** el `flow_token` de 128 y el cuerpo de 1024.
+14. **«Mis mensajes»:** un cliente que vinculó su cuenta ve la tarjeta de su respuesta.
+15. **La vista oficial** (176): «Ver vista oficial» abre la versión publicada en su diálogo, en la primera pantalla, y «Continuar» avanza con las primeras 20 opciones de cada catálogo. Una opción con `%` («2 4 D 100%») se ve bien, y el marco carga con la política de seguridad de la Api: allá, sin `frame-src`, solo se veía con el servidor de desarrollo.
 
-## 16. Criterios
-
-Salen de los reviews y los pilotos de ArquitecturaBase. El plan los toma como lista de control, junto con la de `/puerta`.
-
-- **Captura:**
-  - una falla técnica se reintenta hasta **5 veces y al menos 15 minutos** desde la primera, con intervalos 30, 90, 210, 450 y 930 s; recién ahí queda `Rejected` y visible. El intento vive en el mensaje entrante, en su `Attempts` y `NextAttemptAtUtc`, y lo corre la misma cola: para una respuesta de Flow, `IWhatsAppInboundService.FailAsync` usa estos intervalos en lugar de los 6·n s de hoy, que no llegan a 3 minutos;
-  - un mensaje trabado no frena a los demás.
-- **Catálogos al mandar:**
-  - al operador le llegan solo la cantidad y los problemas, nunca los nombres de las personas ofrecidas;
-  - las opciones vacías no viajan, y el texto de una opción sale de un campo que siempre tiene valor;
-  - una pregunta de catálogo sin selección manda `null` y recibe la validación en su campo.
-- **Estados inciertos:**
-  - un error definitivo de Meta termina en «No se pudo», visible;
-  - una publicación «Sin confirmar» se **consulta** y, si sigue incierta, una persona dice «salió» o «no salió»; nunca se ofrece «Reintentar» sobre lo incierto;
-  - un envío del chat sale por la cola de WhatsApp, que lo reintenta sola (80).
-- **Contratos:**
-  - cada campo nuevo de un DTO se exporta, con su ejemplo de una corrida real, y el front lo consume con zod estricto en el mismo corte;
-  - las rutas de error tienen la misma forma en los dos lados;
-  - `""` no es `null`: lo que falta va como `null`, y una propiedad vacía se omite en lo que va a Meta;
-  - una entrada inválida es 400, nunca 500;
-  - un campo omitido no apaga nada.
-- **Guardado:** ante un error de red o un 5xx, el editor relee y compara el contenido (§9); nunca reintenta solo. Solo el 409 de versión pide revisar.
-- **Pantalla:**
-  - **errores:** un solo dueño por error (aviso común o junto al campo, nunca los dos), y «Reintentar» solo ante errores de red;
-  - **navegación:** no desmonta el editor; se conserva el contenido con `aria-busy` y el foco nunca queda en `body`;
-  - **permisos:** un 403 en una acción no oculta la pantalla de lectura;
-  - **qué se publica:** el diálogo habla del borrador guardado, nunca de lo que está en pantalla sin guardar;
-  - **la unidad en la etiqueta** (86) gasta el límite: «Hectáreas aplicadas (ha)» tiene 24 caracteres, y una pregunta de número admite 20. Se prueba con ese caso (121);
-  - **un solo selector de catálogo:** la pregunta usa el combo de la E13.
-- **Privacidad:**
-  - `ToString` redactado en todo modelo con valores o nombres;
-  - sin `formrecords.read`, ningún valor en avisos, vistas previas, `aria-label` ni caché;
-  - lo sellado (payloads cifrados) entra en la retención.
-- **Meta:**
-  - el perfil se versiona, y lo sellado no se recompila;
-  - los IDs de pantalla son solo letras y guiones bajos;
-  - 141006 cuando la WABA no tiene medio de pago, que se suma al cliente de Meta;
-  - 131030 con el 9 argentino en un número de prueba.

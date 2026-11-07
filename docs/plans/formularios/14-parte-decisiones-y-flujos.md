@@ -17,7 +17,7 @@ Las de producto están en la hoja de ruta (§5). Estas siguen las reglas del rep
 | T7 | **Lo que cambia sin que nadie edite va en otra fila.** `FormDefinitionStates` (una por formulario) guarda la versión activa, el bloqueo del prefijo y `LastRecordNumber`, sumado bajo bloqueo de esa fila al capturar, con índice único (definición, número). La fila del borrador cambia solo al editar. El prefijo es único **dentro de la organización**. | Si el contador o la versión activa vivieran en la fila del borrador, cada respuesta o publicación cambiaría su `xmin` y quien edita recibiría un 409 falso. Sin bloqueos globales: cada organización numera aparte. |
 | T8 | **Sin ticket de comprobación:** `publication-checks` solo informa y devuelve el `contentHash` del borrador que comprobó; `publications` lo recibe, vuelve a comprobar todo adentro de su transacción y, si el borrador cambió, responde `Forms.Publication.DraftChanged`. Ninguna de las dos lleva `version`, y publicar no escribe la fila del borrador. | La comprobación final es la que vale. `VersionedContractTests` exige `VersionResponse` a todo pedido con `version`. |
 | T9 | **«Número con decimales»:** cada pregunta fija sus decimales (de 0 a 6) y admite hasta 15 dígitos enteros. Al responder se acepta punto o coma; más decimales que los permitidos se rechaza. | Evita que «125.500» se lea como 125,5: con 0 decimales, se rechaza. |
-| T10 | **Lo que recibe la persona:** el formulario sale como está escrito. El mensaje por defecto, el botón «Abrir formulario» y los textos del sistema del Flow van en el idioma de su cuenta, y si es un cliente sin cuenta, en el de la organización (35 y 42). La sesión guarda ese idioma. | Un formulario se ve y se manda igual con el menú en cualquier idioma. |
+| T10 | **Lo que recibe la persona:** el formulario sale como está escrito. El mensaje por defecto, «Completá el formulario «Visita a cliente».» (165), el botón «Abrir formulario» y los textos del sistema del Flow van en el idioma de su cuenta, y si es un cliente sin cuenta, en el de la organización (35 y 42); el nombre va como está escrito. La sesión guarda ese idioma. El diálogo propone el mensaje al elegir un formulario, y elegir otro cambia el nombre, pero nunca pisa lo que escribió el operador. Si no lo cambió, manda `text: null` y el servidor arma el mismo texto. | Un formulario se ve y se manda igual con el menú en cualquier idioma. |
 | T11 | Los valores viven en filas tipadas (`FormRecordValues`), sin un JSON paralelo. «Elegir varias» guarda una fila por opción, con su posición. | Una sola fuente, que se puede filtrar por columna. |
 | T12 | **Las capturas rechazadas no crean nada en Forms.** El rechazo queda en la sesión de WhatsApp, con su código. | La idempotencia la da el índice único `SourceKey`. |
 | T13 | **«Elegir varias» es un tipo propio** (`MultiChoice`), no una marca de la lista: de 1 a 20 opciones, con `0 ≤ mínimo ≤ máximo ≤ 20` y máximo mayor que cero. Es obligatoria si y solo si el mínimo es mayor que cero. Pasar de «elegir una» a «elegir varias» crea otra identidad; cambiar el rango la conserva. Sin ninguna marcada es «Sin respuesta». | Es la regla de ArquitecturaBase (C1-04), con el tope de WhatsApp. |
@@ -65,7 +65,7 @@ Las de producto están en la hoja de ruta (§5). Estas siguen las reglas del rep
      - se sella la `FormVersion` (número = última + 1);
      - se crean `FormPublication` (`Accepted`) y `FormPublicationWorks`;
      - se bloquea el prefijo en la fila de estado; la fila del borrador no se escribe.
-   - Responde 202.
+   - Responde 202. El pedido lleva `[Idempotent]`: repetirlo con la misma `Idempotency-Key` («Repetir el mismo intento», 175) devuelve la misma publicación.
    - **El worker** (`Infrastructure/Modules/Forms/FormPublicationWorker.cs`, modelo `AssistantTurnWorker`) hace tres pasos:
      1. busca trabajos listos y entra con `ExecutionActor` (el operador que publicó, revalidado: si perdió `forms.publish` antes de tocar Meta, la publicación termina `Failed`). Llama a `IFormPublicationService.ClaimAsync`, que reserva en su única UoW y pasa a `Preparing`;
      2. fuera de toda UoW llama a `IStructuredFormChannel.PublishAsync`:
@@ -78,10 +78,14 @@ Las de producto están en la hoja de ruta (§5). Estas siguen las reglas del rep
         - `Uncertain` → `Unconfirmed`, con `NextCheckAtUtc`;
         - rechazo definitivo → `Failed`, con sus `issues`. Una versión se publica en todas las WABAs o en ninguna: si una rechaza, queda `Failed`, y el Flow que haya quedado en otra no se usa.
    - **Cuando quedó `Publishing` o `Unconfirmed`,** el worker vuelve a consultar con `GetPublicationAsync`, que solo verifica y nunca repite un POST.
-   - **«Consultar ahora»** hace esa misma consulta, en `IFormPublicationService.CheckAsync`, y aplica el resultado con `CompleteAsync`.
-   - **«Salió» y «No salió»,** para una publicación `Unconfirmed` o `NeedsReview`: `IFormPublicationService.ResolveAsync` la lleva a `Published`, activando la versión, o a `Failed`, en su única UoW. Sin `version`: lo protege el estado, bajo el bloqueo de la fila de estado, y dos a la vez dan `NotResolvable`. Sin esto, una publicación trabada frenaría todas las que siguen.
+   - **«Consultar publicación»** hace esa misma consulta, en `IFormPublicationService.CheckAsync`, y aplica el resultado con `CompleteAsync`.
+   - **«Salió» y «No salió»,** solo para una publicación `NeedsReview` (175): `IFormPublicationService.ResolveAsync` la lleva a `Published`, activando la versión, o a `Failed`, en su única UoW. Sin `version`: lo protege el estado, bajo el bloqueo de la fila de estado, y dos a la vez dan `NotResolvable`. Sin esto, una publicación trabada frenaría todas las que siguen.
    - **Si se cae a mitad:** la reserva vuelve a tomar el trabajo, y el canal, al ver un `InFlight`, verifica en vez de repetir.
-5. **Vista previa:** `IStructuredFormChannel.GetPreviewAsync(versionId)` devuelve la URL de Meta con su vencimiento, sin guardar nada.
+5. **Vista oficial** (176). Solo lee y no guarda nada:
+   - Forms arma las opciones de ejemplo de la versión sellada con `FormOfferBuilder`: las primeras 20 activas de cada pregunta de catálogo, en orden y con los filtros fijos del catálogo; ninguna si quien mira no tiene `formcatalogs.read`, y de los miembros y los contactos, la lista que vería quien mira si la recibiera;
+   - `IStructuredFormChannel.GetPreviewAsync` le pide a Meta la URL de la vista (§14), y `WhatsAppFlowPreviewLinkBuilder` le suma `interactive=true`, `flow_action=navigate` y `flow_action_payload` con la primera pantalla y su `data`: las opciones de ejemplo y los textos del sistema, en el idioma de quien mira. Sin `debug`, que muestra nombres técnicos y JSON;
+   - el enlace escapado mide hasta 6000 caracteres: si no entra, cada lista lleva menos opciones. Meta decodifica `flow_action_payload` dos veces, así que en ese JSON cada `%` va como `\u0025`;
+   - devuelve el enlace con su vencimiento, y el front lo usa tal cual en el marco de 480 × 840.
 6. **Mandar desde el chat** (módulo WhatsApp).
    - **Ubicación:** en escritorio, el botón «Enviar formulario» al lado de «Enviar»; en el teléfono, la opción «Enviar formulario» en el ⋮ del chat. Ambos abren el mismo diálogo. Si la acción no aplica al acceso, bandeja o permiso, no se muestra.
    - **Cuándo se puede usar:**
@@ -93,7 +97,7 @@ Las de producto están en la hoja de ruta (§5). Estas siguen las reglas del rep
      - `IStructuredFormSource.ListSendableAsync(recipient)` devuelve al menos un formulario. Forms filtra los publicados para ese tipo de destinatario (50) y, a un empleado, los que puede responder (`formrecords.create`).
    - **Si no se puede usar:** el botón y la opción del ⋮ quedan grisados, con el motivo en su tooltip (43).
    - **Mandar:**
-     - afuera de la UoW se valida el texto (≤1024) y se lee el formulario elegido con `FindSendableAsync`. El idioma de los textos del sistema es el de la cuenta de quien recibe (T10);
+     - afuera de la UoW se valida el texto, que es opcional: `null` arma el mensaje por defecto (T10), y si viene, mide hasta 1024. Se lee el formulario elegido con `FindSendableAsync`. El idioma de los textos del sistema es el de la cuenta de quien recibe (T10);
      - en la UoW: bloqueo de la conversación, se revalidan ventana, empleado y envío pendiente, se toma el chat si no estaba tomado (regla de la E11), se crea la sesión (token aleatorio de 32 bytes; se guarda solo el hash) y se encola el mensaje interactivo de tipo Flow por el outbox (`WhatsAppOutboundMessage` con su variante nueva);
      - el outbox lo manda y, si no se sabe si salió, lo reintenta solo, como a los demás mensajes; no hay un estado «sin confirmar» (80).
    - **Si la WABA del número no tiene Flow de esa versión:** `WhatsApp.Flow.NotPublishedForNumber`.
