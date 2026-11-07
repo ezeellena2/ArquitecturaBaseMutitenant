@@ -10,6 +10,13 @@ public interface ICompanyMembershipReader
         CancellationToken cancellationToken);
     Task<CompanyMemberFilterCountsResponse> GetFilterCountsAsync(Guid companyId,
         ListCompanyMembersRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Los miembros activos de cada empresa en una sola consulta: el conteo «Activos» de <see cref="GetFilterCountsAsync"/>
+    /// sin filtros. Una empresa sin miembros activos no figura.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, int>> CountActiveMembersAsync(IReadOnlyCollection<Guid> companyIds,
+        CancellationToken cancellationToken);
     Task<IReadOnlyList<UserCompanyRow>> ListActiveForUserAsync(Guid userId, CancellationToken cancellationToken);
 
     /// <summary>Las personas activas de la organización sin membresía (en ningún estado) en esa empresa.</summary>

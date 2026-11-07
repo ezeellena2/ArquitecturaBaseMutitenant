@@ -36,6 +36,7 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
     internal static readonly Expression<Func<StateInput, StateRow>> WithState = input => new StateRow
     {
         MemberId = input.MemberId,
+        CompanyId = input.CompanyId,
         DisplayName = input.DisplayName,
         Email = input.Email,
         State = input.MemberStatus == MemberStatus.Invited
@@ -119,6 +120,21 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
         return new CompanyMemberFilterCountsResponse(counts.Values.Sum(), Count(CompanyMemberState.Active),
             Count(CompanyMemberState.PendingDeletion), Count(CompanyMemberState.Inactive),
             Count(CompanyMemberState.Invited));
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, int>> CountActiveMembersAsync(IReadOnlyCollection<Guid> companyIds,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(companyIds);
+        if (companyIds.Count == 0) return new Dictionary<Guid, int>();
+        var tenantId = tenantContext.RequiredTenantId;
+        Guid[] ids = [.. companyIds.Distinct()];
+        var memberships = context.CompanyMemberships.AsNoTracking()
+            .Where(membership => membership.TenantId == tenantId && ids.Contains(membership.CompanyId));
+        return await States(memberships, tenantId).Where(row => row.State == CompanyMemberState.Active)
+            .GroupBy(row => row.CompanyId)
+            .Select(group => new { CompanyId = group.Key, Count = group.Count() })
+            .ToDictionaryAsync(group => group.CompanyId, group => group.Count, cancellationToken);
     }
 
     public async Task<IReadOnlyList<UserCompanyRow>> ListActiveForUserAsync(Guid userId,
@@ -271,6 +287,7 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
          select new StateInput
          {
              MemberId = membership.MemberId,
+             CompanyId = membership.CompanyId,
              MemberStatus = member.Status,
              UserStatus = context.Users.Where(user => user.Id == member.UserId)
                  .Select(user => (UserStatus?)user.Status).FirstOrDefault(),
@@ -312,6 +329,7 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
     internal sealed class StateInput
     {
         public Guid MemberId { get; init; }
+        public Guid CompanyId { get; init; }
         public MemberStatus MemberStatus { get; init; }
         public UserStatus? UserStatus { get; init; }
         public CompanyMembershipStatus MembershipStatus { get; init; }
@@ -323,6 +341,7 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
     internal sealed class StateRow
     {
         public Guid MemberId { get; init; }
+        public Guid CompanyId { get; init; }
         public CompanyMemberState State { get; init; }
         public string? DisplayName { get; init; }
         public string? Email { get; init; }
