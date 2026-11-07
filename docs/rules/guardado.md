@@ -24,6 +24,7 @@ public Task<Result> UpdateAsync(UpdateRoleRequest request, CancellationToken ct)
 
 El outbox reclama un lease durable con `SKIP LOCKED` y lo confirma antes de descifrar y enviar, fuera de transacción. `OutboxDispatchService` abre una UoW para Claim y otra para Complete, con scopes separados; Sent, Cancelled y falla terminal purgan el payload y un lease abandonado consume intentos.
 - UnitOfWork usa READ COMMITTED, un solo SaveChanges y, ante excepción, rollback y ChangeTracker.Clear().
+- **La robustez es proporcional al efecto** (la 0018 de ArquitecturaBase). Comprobantes recuperables, estado incierto, leases, reconciliación y pruebas con varios hosts son solo para lo que tiene un efecto fuera del sistema o cuesta repetir: Meta, el correo, el almacenamiento, un LLM, un mensaje a una persona o lo que dispara una regla. Guardar algo interno usa la forma de esta ficha, con su versión y 409 si otro guardó antes ([concurrencia](concurrencia.md)). Más robustez para algo interno se justifica en el cambio con el riesgo concreto (qué se pierde o se duplica, y para quién); sin eso, la revisión la objeta.
 - **Un solo `ExecuteInTransactionAsync` por método público,** contando todo su recorrido: los métodos propios que llama, sus lambdas y sus máquinas async. `TransactionBoundaryTests` lo contará leyendo el IL, con un caso de control, al programar (traspaso 9).
 
 ## Prohibido
