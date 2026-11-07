@@ -1,6 +1,6 @@
 # Traspaso 10: evaluación de ArquitecturaBase entero
 
-**Estado:** insumo · del 2026-11-07, con el plan de §4 aprobado ese día y las decisiones de §5 en curso, de a una; se retira cuando sus decisiones estén en la hoja de ruta, las specs al día y los tableros de §4.3 aprobados en el lienzo.
+**Estado:** insumo · del 2026-11-07, con el plan de §4 aprobado ese día y las nueve decisiones de §5 tomadas, todas las recomendadas: son la 160 a la 179 de la hoja de ruta, y las dos de forma de trabajo pasaron a `AGENTS.md`. Se retira cuando las specs estén al día y los tableros de §4.3, aprobados en el lienzo. El trabajo se reparte en chats en paralelo, a pedido del usuario.
 
 Suma lo que encontró la revisión paralela de la sesión «Guia - Desarrollo», del mismo día, verificado acá antes de anotarlo.
 
@@ -251,13 +251,19 @@ Te las pregunto de a una, después de tu visto bueno al plan, con la captura o e
 4. **¿Dónde va la vista oficial de WhatsApp?** Por ejemplo, la versión 4 de «Visita a cliente»: hoy va al costado, achicada y sin tocar; allá, «Ver vista oficial» abre un diálogo donde se recorre, con las primeras 20 opciones de «Motivo».
    - **A (recomendada):** el diálogo, como allá; al costado queda «Así lo ve quien lo recibe». La vista que se recorre pide 480 × 840 y al costado no entra.
    - **B:** al costado, achicada.
+
+   **Elegida: A**, el 2026-11-07 (176).
 5. **¿El bloque se arma como allá?** Por ejemplo, en «Pedido de materiales», «Productos» se suma con «Agregar bloque», al lado de «Agregar pregunta». En el celular se ve «Productos · ítem 2» y «¿Agregás otro ítem?». Hoy la 146 lo hace un tipo de pregunta «Renglones» y dice «renglón».
    - **A (recomendada):** los dos cambios, RG10-D y RG12-A. Allá salieron de probarlo en el celular: en el desplegable nadie encontraba el tipo, e «ítem» se lee bien con cualquier nombre de bloque. Cambian la 146, cuatro specs y 31 tableros.
    - **B:** solo «Agregar bloque», y sigue «renglón».
    - **C:** dejar la 146 como está.
+
+   **Elegida: A**, el 2026-11-07 (177).
 6. **¿Todo en `main`, también la puerta?** Allá marcaste como fundamental trabajar sin ramas ni worktrees, ni siquiera temporales. Acá la puerta arma dos worktrees, y el arnés que realinea los documentos trabaja en una rama aparte.
    - **A (recomendada):** como allá: la puerta y el arnés trabajan sobre una copia de `HEAD` en una carpeta ignorada, sin worktrees ni ramas.
    - **B:** la puerta sigue como está, como única excepción.
+
+   **Elegida: A**, el 2026-11-07 (`AGENTS.md`).
 7. **¿Cómo se verifica cada cambio?**
    - Allá: el build y los tests rápidos enteros en cada corte, otra corrida completa después de un arreglo y una revisión por tarea.
    - Acá, por tu pedido del 11/10: el test dirigido, solo lo que toca el arreglo y una sola revisión al cerrar la etapa.
@@ -266,9 +272,13 @@ Te las pregunto de a una, después de tu visto bueno al plan, con la captura o e
    - **A (recomendada):** lo de acá, más los tests rápidos enteros en cada corte. Cuestan poco, y allá un filtro dejó pasar un test que rompió `main`.
    - **B:** lo de acá, sin cambios.
    - **C:** lo de allá, entero.
+
+   **Elegida: A**, el 2026-11-07 (`AGENTS.md`).
 8. **Con WhatsApp, ¿qué pasa al publicar un bloque con un mínimo de más de 10 ítems?** Por ejemplo, «Inventario de equipos» pide al menos 15, y WhatsApp carga 10 como mucho. Allá publicar frena (RG13-A).
    - **A (recomendada):** en la E19 frena, como allá. Desde la E20, si el formulario es para empleados o para los dos, se publica solo para la app, con su aviso, como un catálogo demasiado grande (96 y 104); si es solo para clientes, frena.
    - **B:** frena siempre, como allá.
+
+   **Elegida: A**, el 2026-11-07 (178).
 9. **WhatsApp de la cuenta: ¿dos cosas como allá?** Están programadas acá desde la E8 y la E11:
    - el bot de Plataforma le manda a una cuenta un enlace de un solo uso para entrar; allá ningún mensaje lleva un enlace secreto: «Entrar a mi cuenta» lleva al ingreso, y el código se pide desde la web;
    - «Cargar teléfonos» invita por WhatsApp sin preguntar; allá hay que marcar «La persona aceptó recibir mensajes por WhatsApp».
@@ -277,6 +287,8 @@ Te las pregunto de a una, después de tu visto bueno al plan, con la captura o e
    - **A (recomendada):** las dos, como allá, con la base de la 12. Un enlace reenviado o abierto por otra persona le da la cuenta, y Meta pide el consentimiento para escribirle primero a alguien.
    - **B:** solo el consentimiento.
    - **C:** dejar las dos como están.
+
+   **Elegida: A**, el 2026-11-07 (179).
 
 ## 6. En curso allá
 

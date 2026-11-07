@@ -231,19 +231,19 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 ### E19 · Condiciones, cálculos y líneas (nueva)
 
 - **Preguntas condicionales:** «Mostrar si» otra respuesta cumple una condición. El servidor las vuelve a evaluar al capturar, y la planilla distingue «No se mostró».
-- **Cálculos:** una pregunta «Cálculo» con las cuatro operaciones sobre números de la respuesta, campos del catálogo y la suma de una pregunta de los renglones. Se calcula al llegar la respuesta (54).
-- **Renglones** (146): un bloque de preguntas que se carga varias veces, con un mínimo y un máximo; en WhatsApp, una pantalla por renglón, hasta 10.
+- **Cálculos:** una pregunta «Cálculo» con las cuatro operaciones sobre números de la respuesta, campos del catálogo y la suma de una pregunta del bloque. Se calcula al llegar la respuesta (54).
+- **El bloque** (146, 177 y 178): preguntas que se cargan varias veces, con un mínimo y un máximo de ítems; se agrega con «Agregar bloque», y en WhatsApp va una pantalla por ítem, hasta 10.
 - **En las respuestas:** la planilla, el detalle y el Excel los muestran.
 - **Spec:** [formularios/19-condiciones-calculos-y-lineas.md](formularios/19-condiciones-calculos-y-lineas.md).
 - **Criterios:**
-  - antes de planificar, se prueban con Meta el componente `If`, una pantalla por renglón con «¿Agregás otro renglón?» y un archivo dentro de un `If`, en un celular;
+  - antes de planificar, se prueban con Meta el componente `If`, una pantalla por ítem con «¿Agregás otro ítem?» y un archivo dentro de un `If`, en un celular, con el `routing_model` declarado: allá, sin él, responder «No» cortaba el formulario;
   - el servidor nunca confía en lo que llega: vuelve a evaluar condiciones y cálculos;
   - un cálculo que no se puede hacer queda «Sin respuesta», nunca rompe la captura;
   - los montos van en `decimal`, con moneda y redondeo `AwayFromZero`.
 
 ### E20 · Cargar una respuesta desde la web (AB, carga desde la app)
 
-- **Un empleado completa un formulario desde la web,** a su nombre, con la misma captura que por WhatsApp: catálogos con sus filtros, archivos, condiciones, cálculos y renglones (73).
+- **Un empleado completa un formulario desde la web,** a su nombre, con la misma captura que por WhatsApp: catálogos con sus filtros, archivos, condiciones, cálculos y el bloque (73).
 - **Las entradas:** «Cargar» en cada fila de «Formularios» y «Agregar respuesta» en la planilla (83). Se carga en una página propia o en un panel al costado, y los dos mantienen lo cargado para la siguiente (84 y 147).
 - **Lo propio:** quien solo carga abre «Formularios» y ve la planilla con lo suyo (85).
 - **El armado:** hasta tres preguntas por renglón y zonas plegables; el ancho sale del tipo de pregunta, en dos anchos: una columna o el renglón entero (87 y 141).
@@ -262,7 +262,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Reglas** «Cuando llega una respuesta», con guardado e historial propios, sin versión nueva ni republicar.
 - **Un solo motor de acciones,** con ejecuciones idempotentes y el efecto fuera de la transacción.
 - **Aprobación de un nivel:** nadie aprueba lo que cargó. «Por aprobar» va en la lista «Formularios», en «Para resolver», con la misma fuente (ADR 0040), y como una vista arriba de la planilla (148).
-- **PDF** como copia fija, con los campos «Dato», las fotos, los renglones y los cálculos.
+- **PDF** como copia fija, con los campos «Dato», las fotos, el bloque y los cálculos.
 - **Corregir y anular una respuesta** (91 a 93), con el permiso nuevo «Corregir y anular respuestas». La corrección reemplaza a la anterior con el mismo número y vuelve a pasar por las reglas; anular deja la respuesta «Anulada», sin borrarla.
 - **Lo propio de quien solo carga** (85) suma el estado, el PDF y el motivo de rechazo.
 - **Avisos por WhatsApp** con el número de la organización. Fuera de las 24 horas, con una plantilla aprobada de la organización (61), que suma el encabezado con documento y el llenado de sus variables.
@@ -296,7 +296,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Límites por bandeja** (65), y el tope de ofrecimientos lo elige cada organización (66).
 - **Casos** (39): cada organización configura perfil, conocimiento, casos y límites. Seis acciones, respuestas redactadas dentro de los límites y «Cualquier otra cosa» al final. Pide su ADR de respuestas redactadas.
 - **Cómo trabaja:** historial de 24 horas de esa conversación, ráfagas de 4 s con tope de 15 s y hasta 3 acciones por turno. El asistente manda el formulario y lo prellena con un perfil nuevo del Flow.
-- **Lo de la etapa 5 de allá:** sugerencias al operador y entre formularios, audios transcriptos (27), «Formularios que faltan» y el catálogo propuesto.
+- **Lo de la etapa 5 de allá:** sugerencias al operador y entre formularios, audios transcriptos (27) y «Formularios que faltan». El catálogo que propone el asistente pasa a la E25 (167).
 - **Desde el primer día:** la espera corta, el aislamiento por conversación y la medición.
 - **Costos:** dentro del tope mensual de IA de la organización (ADR 0051).
 - **Spec:** [formularios/23-asistente.md](formularios/23-asistente.md).
@@ -320,7 +320,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Lee con IA** lo que mandan los empleados y los clientes (foto, PDF, Word, Excel, ubicación y contacto) y propone el formulario prellenado (70). Confirma una persona, salvo con «Cargar solo si es seguro» y sus tres señales (71).
 - **La «Lectura de documentos»** de un formulario y de una plantilla de la biblioteca.
 - **Pantallas:** la bandeja «Documentos recibidos» y «Armar formulario con la IA».
-- **Armar formularios y catálogos desde el asistente de la web** (75): se le pasa un PDF o se le escribe cómo se quiere, y crea el borrador y los catálogos por aprobar (102).
+- **Armar formularios y catálogos con la IA** (75, 102 y de la 154 a la 156): desde el chat del Inicio de la organización, con un texto, un archivo o un audio, o por WhatsApp. La IA propone y una persona crea el borrador o el catálogo, que queda por aprobar, también el catálogo que propone el asistente (167).
 - **Validaciones fijas:** un conjunto cerrado en el código, y la tabla de entidades del BCRA como dato de referencia; lo descartado se borra a los 90 días; la lectura entra en el tope de la organización, con un tope por persona y por día (41).
 - **«Pasar al formulario»** desde la bandeja (99): la respuesta queda a nombre de quien mandó el documento, y dice quién la revisó.
 - **Spec:** [formularios/25-documentos.md](formularios/25-documentos.md).
@@ -696,6 +696,10 @@ Elegidas por el usuario el 2026-11-07, al evaluar el traspaso 10 contra este mod
 173. **Que no parezca plantilla, en todo el sistema** (cambia el tema del 04/10): salen el cuadrado del logo, el ícono de sección en su cuadradito, el avatar redondo con degradé, la pastilla del menú activo, las pastillas de filtros, etiquetas y contadores, y las sombras fuera de menús, desplegables y tooltips. Quedan la paleta Pradera y la densidad: el nombre sin cuadrado, la banda sin ícono, el avatar como un cuadrado chico con la inicial, el activo con una barra, los filtros y las etiquetas con el radio de un control, y el botón principal sólido. En la app entra con la base de la 12.
 174. **El texto largo se ve entero, en todo el sistema:** una celda baja de renglón en lugar de cortar con «…»; un código con guiones no se parte y una zona horaria se corta solo en sus barras (137). «Un dato por celda» sigue valiendo.
 175. **El estado, una vez, en todo el sistema** (EP1-A): lo que dice el encabezado no se repite debajo, la acción que destraba va en la banda y el porqué de un botón apagado, en su tooltip. En la publicación (E14 y E17) no hay pasos: la etiqueta dice el estado y, solo cuando hacen falta, la banda trae «Consultar publicación», «Repetir el mismo intento» (cuando WhatsApp no recibió el pedido) y, con «Necesita revisión», «Salió» y «No salió»; lo rechazado sigue marcado en su pregunta, sin una zona «Problemas». La baja se dice en una frase («Lo dio de baja Ana Gómez el …»), y al reactivar, la etiqueta dice el estado de la publicación. Cambia `Criterio-Decisiones`, que mandaba los pasos a la ⓘ.
+176. **La vista oficial se recorre en un diálogo** (VO1-A, E14): «Ver vista oficial» abre un diálogo con el marco de 480 × 840, achicado para entrar en la ventana, que arranca en la primera pantalla y se recorre como en el celular. Cada pregunta de catálogo trae sus primeras 20 opciones activas, en orden, con los filtros fijos y sin los filtros por destinatario; de los miembros y los contactos, solo lo que quien mira puede leer. El enlace lo arma el backend, de hasta 6000 caracteres: si no entra, cada lista lleva menos. Al costado queda «Así lo ve quien lo recibe», del borrador. Cambia `Criterio-Decisiones`, que la ponía al costado con «Borrador | Versión N en WhatsApp».
+177. **El bloque se agrega con «Agregar bloque», y lo que se repite se llama «ítem»** (RG10-D y RG12-A, de la E19 a la E21; cambia la 146): «Agregar bloque» va al lado de «Agregar pregunta», y el bloque arranca abierto y con «Bloque» de nombre, también cuando lo crea «Se carga varias veces»; con un bloque armado, el botón se apaga con su motivo, y «Tipo de respuesta» deja de ofrecerlo. Todo texto que ve el usuario dice «ítem» («item» en inglés) donde decía «renglón»: «Bloque · de 1 a 10 ítems · 3 preguntas», «Preguntas de cada ítem», «¿Agregás otro ítem?», «Productos · ítem 2», «Agregar ítem», «Algún ítem de Productos con…» y la columna «Ítem» del Excel. El código y los documentos siguen diciendo `rows`, y «renglón» queda donde es una línea.
+178. **Un bloque con un mínimo de más de 10 ítems** (RG13-A, E19 y E20; suma a la 146): con WhatsApp, en la E19, publicar frena con «En WhatsApp se cargan hasta 10 ítems; el mínimo es 15.» e «Ir a la pregunta». Desde la E20, si el formulario es para empleados o para los dos, se publica solo para la app, con su aviso en «Avisos», como un catálogo demasiado grande (96 y 104); si es solo para clientes, frena. La captura valida siempre el mínimo y el máximo, y un máximo de más de 10 sigue avisando sin frenar.
+179. **El ingreso y el consentimiento por WhatsApp, como en ArquitecturaBase** (E8 y E11; entra con la base de la 12): ningún mensaje lleva un enlace secreto. El bot de Plataforma lleva al ingreso con «Entrar a mi cuenta», y el código se pide desde la web. Invitar por WhatsApp desde «Cargar teléfonos» pide marcar «La persona aceptó recibir mensajes por WhatsApp».
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
@@ -735,6 +739,8 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 ## 7. Decisiones pendientes
 
-Del traspaso 10 de ArquitecturaBase, en su [evaluación](2026-11-07-traspaso-10-evaluacion.md) (§5): la vista oficial, el bloque, el mínimo de ítems con WhatsApp, y el ingreso y el consentimiento por WhatsApp, más las dos de forma de trabajo. Su plan (§4) quedó aprobado el 2026-11-07 y las tres primeras respuestas son la 173, la 174 y la 175.
+Ninguna.
+
+Las del traspaso 10, del 2026-11-07, pasaron a la §5 como decisiones 160 a 179 (su [evaluación](2026-11-07-traspaso-10-evaluacion.md)); las dos de forma de trabajo, a `AGENTS.md`.
 
 Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98, las del traspaso 4, del 2026-11-02, como decisiones 109 a 122, las del traspaso 5, del 2026-11-03, como decisiones 136 a 149, las del traspaso 6, del 2026-11-06, como decisiones 150 a 152, en la [hoja de ruta de ARCA](2026-11-06-arca-hoja-de-ruta.md), la del traspaso 7, del mismo día, como decisión 153, las del traspaso 8, también del 2026-11-06, como decisiones 154 a 156, y las del traspaso 9, del mismo día, como decisiones 157 a 159.
