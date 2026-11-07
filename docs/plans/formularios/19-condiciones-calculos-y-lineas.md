@@ -1,13 +1,19 @@
 # E19 · Condiciones, cálculos y líneas (spec)
 
-**Estado:** pendiente · spec de la etapa 19 del bloque (decisiones 53, 54 y 78), con el [formato](plantilla.md) de las etapas. No tiene equivalente en ArquitecturaBase, salvo el editor de condiciones de las reglas, del que sale «Mostrar si». **Antes de programar** se prueba con Meta cómo se ven en el celular una pregunta que aparece según otra, una pantalla por renglón con «¿Agregás otro renglón?» y una pregunta de archivo dentro de un `If`, y `/plan-etapa` parte de ese resultado, después de la E18.
+**Estado:** pendiente · spec de la etapa 19 del bloque (decisiones 53, 54, 78, 146, 168, 177 y 178), con el [formato](plantilla.md) de las etapas. Las condiciones y los cálculos no tienen equivalente en ArquitecturaBase, salvo el editor de condiciones de las reglas, del que sale «Mostrar si». El bloque es lo que allá llaman «Renglones en los formularios»: su etapa 1, el editor y publicar, está programada y probada con Meta, y la 2 y la 3, cargar y leer, estaban en curso el 2026-11-07. **Antes de programar** se prueba con Meta, en un celular, una pregunta que aparece según otra, una pantalla por ítem con «¿Agregás otro ítem?» y una pregunta de archivo dentro de un `If`, y `/plan-etapa` parte de ese resultado, después de la E18.
+
+**Partes.** Esta spec no entra en un solo archivo, así que sigue en otro, con las mismas secciones. Lo que no está en la tabla está acá.
+
+| Secciones | Archivo |
+| --- | --- |
+| Contrato, Datos, Pasos, los textos del bloque y «Lo que puede salir mal» | [contrato, datos y pasos](19-parte-contrato-datos-y-pasos.md) |
 
 ## Qué leer
 
 Antes de empezar, en este orden:
 
-1. **Lo anterior:** la [spec de la E14](14-formularios.md): T9, T11, T13, T24, la §3, la §6, punto 7, y la §14; la [E15](15-respuestas.md): filtros, valores, Excel y tablero; la [E12](12-catalogos.md): C5, y la [E13](13-campos.md): los tipos de campo.
-2. **Decisiones** de la hoja de ruta: 35, 43, 53, 54 y 78.
+1. **Lo anterior:** la [spec de la E14](14-formularios.md): T9, T11, T13, T24, la §3, la §6, punto 7, y la §14; la [E15](15-respuestas.md): filtros, valores, Excel y tablero; la [E16](16-datos-de-las-personas.md): los filtros por destinatario y sus avisos; la [E12](12-catalogos.md): C5, y la [E13](13-campos.md): los tipos de campo.
+2. **Decisiones** de la hoja de ruta: 35, 43, 53, 54, 78, 146, 157, 162, 168, 174, 177 y 178.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -18,11 +24,11 @@ Antes de empezar, en este orden:
    | [persistencia-ef](../../rules/persistencia-ef.md) y [multitenancy](../../rules/multitenancy.md) | la tabla nueva y las columnas |
    | [api-http](../../rules/api-http.md) | las rutas que cambian y sus ejemplos |
    | [logs](../../rules/logs.md) | ni fórmulas con datos ni valores en los logs |
-   | [textos-y-traducciones](../../rules/textos-y-traducciones.md) | «No se mostró» y las palabras del editor, en es y en |
+   | [textos-y-traducciones](../../rules/textos-y-traducciones.md) | «No se mostró», «ítem» y las palabras del editor, en es y en |
    | [tests](../../rules/tests.md) | qué lleva test y dónde va |
 
-4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
-5. **Referencia de producto:** no hay: esta etapa es nueva. La de los Flows es la §14 de la E14.
+4. **Código para copiar:** la columna «Copia de» de los [pasos](19-parte-contrato-datos-y-pasos.md#pasos).
+5. **Referencia de producto,** solo para leer: para el bloque, en ArquitecturaBase, `docs/plans/2026-11-03-renglones-en-formularios.md` y los planes de sus etapas 1, 2 y 3 (`2026-11-04-renglones-etapa-1-implementacion.md` y los dos `2026-11-07-renglones-etapa-*`), solo por sus decisiones y textos, y en `ArquitecturaBaseFront`, `docs/design/renglones-en-formularios.md`. Mandan esta spec y las reglas y los diseños de este proyecto (108). Las condiciones y los cálculos no tienen referencia; la de los Flows es la §14 de la E14.
 
 ## Qué se construye
 
@@ -36,23 +42,32 @@ Antes de empezar, en este orden:
 
 **Cálculos:**
 - un tipo de pregunta «Cálculo», que no se ve en WhatsApp ni cuenta en sus topes;
-- su fórmula usa un número fijo, un número o un cálculo anterior de la misma respuesta, un campo numérico de la opción elegida en un catálogo y la suma de una pregunta de los renglones, que se puede multiplicar renglón por renglón por otra pregunta de los renglones o por un campo del catálogo elegido en ese renglón (Cantidad × Precio);
+- su fórmula usa un número fijo, un número o un cálculo anterior de la misma respuesta, un campo numérico de la opción elegida en un catálogo y la suma de una pregunta del bloque, que se puede multiplicar ítem por ítem por otra pregunta del bloque o por un campo del catálogo elegido en ese ítem (Cantidad × Precio);
 - **solo las cuatro operaciones** y paréntesis, armadas en el editor sin escribir código;
 - se calcula **al llegar la respuesta,** con los valores sellados, en `decimal` y con redondeo `AwayFromZero` a los decimales del cálculo. Si es un monto, el formulario fija su moneda, de los datos de referencia, con los decimales de esa moneda;
-- **una división por cero, un dato que falta, también el de una pregunta que no se mostró, o un número demasiado grande dejan el cálculo «Sin respuesta»,** nunca un error de la captura. En una suma de renglones, un renglón sin ese dato no cuenta, y en un monto, cada renglón se redondea antes de sumar, como manda la ficha;
+- **una división por cero, un dato que falta, también el de una pregunta que no se mostró, o un número demasiado grande dejan el cálculo «Sin respuesta»,** nunca un error de la captura. En una suma del bloque, un ítem sin ese dato no cuenta, y en un monto, cada ítem se redondea antes de sumar, como manda la ficha;
 - el resultado se guarda: editar el catálogo o el formulario después no lo cambia;
 - se ve en la tarjeta del chat, y en la planilla, el detalle, el Excel y el tablero, como un número que se filtra y se ordena. Un monto se ve con su moneda, y el tablero lo totaliza en ella.
 
-**Renglones** (146, que cambia la 54):
-- un tipo de pregunta «Renglones»: un recuadro con sus preguntas adentro (5.1, 5.2…), con nombre, ayuda y un mínimo y un máximo de renglones. El mínimo va de 0 al máximo y el máximo llega hasta 100; uno nuevo arranca con 1 y 20, y con mínimo 0 es opcional. La (i) del máximo dice el tope de WhatsApp;
-- **las preguntas se eligen con «Se carga varias veces»,** una casilla debajo de «Obligatoria», con su (i). Las marcadas se juntan en el bloque; si no hay uno, se crea en el lugar de la primera, llamado «Renglones» hasta que el autor le ponga otro nombre. Desmarcar una la saca, y queda justo después del bloque. Una pregunta que ya existía pasa como pregunta nueva, con otra identidad: lo cargado antes conserva su columna, y publicar lo dice en «Pasan a renglones»;
-- un bloque por formulario, sin bloques adentro. Entran texto corto y largo, número, fecha, sí o no y elegir una, propia o de un catálogo; elegir varias, las fotos y los documentos quedan afuera. Sus preguntas cuentan para el tope de preguntas del formulario, y un bloque sin preguntas se guarda pero no se publica;
-- **en WhatsApp, una pantalla por renglón,** hasta 10 o el máximo si es menor, con el número en el título («Artículos · renglón 2»). Con un mínimo de 0, el bloque abre con una pantalla con su nombre y «¿Agregás un renglón?» antes del primero; con un mínimo de 1 o más, esa pantalla no aparece (RG8-A). Desde el mínimo, cada renglón termina con «¿Agregás otro renglón?», sí o no; el último no pregunta, y la flecha vuelve al anterior. Es el Flow estático con más pantallas, sin intercambio con Meta **[Meta]**. Con un máximo mayor que 10, publicar avisa sin frenar;
-- **el tope de la respuesta:** al publicar se suma lo más largo que podría mandar cada pregunta, una vez por renglón de WhatsApp. Un formulario con bloque tiene el tope de uno con archivos, 64 KiB en lugar de 16 KiB; si igual no entra, publicar frena como hoy (RG7-A). Falta confirmar con Meta que una respuesta de unos 40 KB llega entera **[Meta]**;
-- **el servidor valida la cantidad** contra el mínimo y el máximo, y por WhatsApp contra el tope, y cada renglón como preguntas sueltas: obligatorias, tipos, largos y opciones ofrecidas. Un renglón vacío cuenta como renglón. Cada renglón se guarda con su posición, y los catálogos se sellan como en una pregunta suelta;
-- en la tarjeta del chat, un renglón por línea. La planilla sigue con una fila por respuesta: la columna del bloque dice cuántos renglones tiene y los valores de su primera pregunta, cortados con «…», y no se ordena. En «Filtros», las preguntas del bloque van debajo de su nombre y filtran por algún renglón. El detalle muestra cada renglón con su número y su primer valor, y los demás datos alineados debajo (139); la pantalla completa, una tabla. El Excel suma una hoja con el nombre del bloque y una fila por renglón: N°, Renglón y sus preguntas.
+**El bloque** (146, 177 y 178, que cambian la 54). Los textos, con su inglés, están en la [parte](19-parte-contrato-datos-y-pasos.md#los-textos-del-bloque):
+- **«Agregar bloque»** va en la banda «Preguntas», al lado de «Agregar pregunta». Suma el bloque al final de la lista, abierto y con «Bloque» de nombre, con su ayuda, el mínimo y el máximo de ítems y su propio «Agregar pregunta». El mínimo va de 0 al máximo y el máximo llega hasta 100; uno nuevo arranca con 1 y 20, y con mínimo 0 es opcional. Con un bloque armado, el botón se apaga con «Ya hay un bloque.» en su tooltip, y «Tipo de respuesta» no lo ofrece;
+- **en la lista,** el bloque es una pregunta más, con ↑ ↓ ✎ 🗑, que dice «Bloque · de 1 a 10 ítems · 3 preguntas», y debajo va el recuadro «Preguntas de cada ítem», con las suyas numeradas 5.1, 5.2… Quitarlo pide confirmar, porque se lleva sus preguntas: «¿Quitar el bloque?» (162);
+- **«Se carga varias veces»,** una casilla debajo de «Obligatoria», con su (i), junta las preguntas marcadas en el bloque; si no hay uno, lo crea en el lugar de la primera, con «Bloque» de nombre. Desmarcar una la saca, y queda justo después del bloque. Una pregunta que ya existía pasa como pregunta nueva, con otra identidad: lo cargado antes conserva su columna, y publicar lo dice en «Pasan al bloque»;
+- **qué entra:** un bloque por formulario, sin bloques adentro, con texto corto y largo, número, fecha, sí o no y elegir una, propia o de un catálogo. En una pregunta del bloque, «Foto» y «Documento» aparecen apagadas en «Tipo de respuesta», con su motivo después de «·», y «Permitir elegir varias», con el suyo en su tooltip. Sus preguntas cuentan para el tope del formulario, y un bloque sin preguntas se guarda pero no se publica;
+- **un catálogo del bloque filtra por quien lo recibe** (168), como una pregunta suelta de la E16: lleva sus filtros fijos y por destinatario, los avisos al publicar (157) y su oferta, una sola para todos los ítems y con el mismo tope;
+- **en WhatsApp, una pantalla por ítem,** hasta 10 o el máximo si es menor, con el número en el título («Productos · ítem 2»). Con mínimo 0, el bloque abre con una pantalla con su nombre y «¿Agregás un ítem?»; con 1 o más, esa pantalla no está. Desde el mínimo, cada ítem termina con «¿Agregás otro ítem?», sí o no; el último no pregunta, y la flecha vuelve al anterior. Es el Flow estático con más pantallas, sin intercambio con Meta **[Meta]**;
+- **el `routing_model`:** el Flow con bloque declara cada `navigate` de cada pantalla, con las dos ramas de cada `If`. Allá, sin él, Meta lo dedujo de los `navigate`, dejó afuera la rama «No», y responder «No» cortaba el formulario. Sin bloque, el Flow sale como en la E18;
+- **los topes de WhatsApp** (178): un mínimo de más de 10 frena al publicar, con «En WhatsApp se cargan hasta 10 ítems; el mínimo es 15.» e «Ir a la pregunta». Un máximo de más de 10 avisa sin frenar, y la (i) del máximo dice el tope;
+- **el tope de la respuesta:** al publicar se suma lo más largo que podría mandar cada pregunta, una vez por ítem de WhatsApp. Un formulario con bloque tiene el tope de uno con archivos, 64 KiB en lugar de 16 KiB; si igual no entra, publicar frena como hoy. Falta confirmar con Meta que una respuesta de unos 40 KB llega entera **[Meta]**;
+- **lo que llega:** cada pregunta de un ítem llega como `field_<N>_r<n>`, y «¿Agregás otro ítem?», como `field_<bloque>_r<n>`; con mínimo 0, `_r0` es «¿Agregás un ítem?». De los ítems no visitados no llega ninguna clave, ni vacía ni con `${…}`, y lo que llegue de un ítem después de un «No» se ignora;
+- **la captura entiende el bloque desde el primer día.** Valida la cantidad contra el mínimo y el máximo, siempre, y por WhatsApp contra el tope, y cada ítem como preguntas sueltas: obligatorias, tipos, largos y opciones ofrecidas. Un ítem vacío cuenta como ítem. Cada ítem se guarda con su posición, y los catálogos se sellan como en una pregunta suelta. En la tarjeta del chat, una respuesta con ítems que no se pueden leer queda «no se pudo guardar», con su motivo, y «no reconocida» queda solo para lo que no corresponde a un envío;
+- **en la tarjeta del chat,** el nombre del bloque y un ítem por línea, numerado, con sus valores separados por « · » en el orden de las preguntas y sin los que quedaron sin respuesta: «1. Caño de 1/2 pulgada · 10»;
+- **en la planilla,** una fila por respuesta. La columna del bloque dice la cantidad de ítems, en gris, y los valores de su primera pregunta: «3 · Caño de 1/2 pulgada, Codo de 90°, Cinta de teflón», entera y bajando de renglón (174). No se ordena, y una respuesta de antes del bloque dice «—»;
+- **en «Filtros»,** el nombre del bloque encabeza sus preguntas, que van debajo, con sangría, y una pregunta del bloque lleva debajo de su título, en gris, «En algún ítem de Productos»: se cumple si algún ítem la cumple. Varias del mismo bloque buscan un mismo ítem que las cumpla todas, también en los conteos. La búsqueda mira también los textos largos de los ítems, y el total sigue contando respuestas;
+- **en el detalle** (139), cada ítem con su número y el valor de su primera pregunta en negro, y los demás datos alineados debajo; sin ítems, «Sin respuesta». La pantalla completa muestra una tabla, con el número sin encabezado, que en el teléfono se desplaza de costado en su caja;
+- **en el Excel,** «Respuestas» lleva la cantidad de ítems en la columna del bloque, y se suma una hoja con el nombre del bloque, de hasta 31 caracteres y sin los que Excel no admite («Ítems» si queda vacío o se llama «Respuestas»): una fila por ítem, con «Número», «Ítem» y sus preguntas, con los tipos y la precisión de «Respuestas».
 
-**Copiar un formulario** copia las condiciones, los cálculos y los renglones: el borrador se copia con sus identidades, así que no hay nada que traducir.
+**Copiar un formulario** copia las condiciones, los cálculos y el bloque: el borrador se copia con sus identidades, así que no hay nada que traducir.
 
 **Al editar:**
 - el borrador se guarda incompleto, como siempre. **Una referencia rota,** a una pregunta quitada, que ahora va después o que cambió de tipo, se guarda y frena al publicar, con «Ir a la pregunta»;
@@ -61,120 +76,37 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v153, con el recorrido guiado `un-pedido-con-renglones`. El ejemplo es «Pedido de materiales». Muestran solo lo que existe hasta acá (78). Con el traspaso 5 se redibujan, con sus teléfonos, `FRM-Editor-Lineas`, `FRM-Respuestas-19`, `FRM-Respuesta-19` y `WA-Chats-Respuesta-19`, y también `FRM-Publicar-19`: los renglones (146) y el detalle alineado (139).
+Aprobados y publicados en el lienzo v153, con el recorrido guiado `un-pedido-con-renglones`. El ejemplo es «Pedido de materiales», con el bloque «Productos». Muestran solo lo que existe hasta acá (78).
+- **Siguen aprobados** `FRM-Tablero-19` y su teléfono.
+- **Se redibujan,** con sus teléfonos:
+  - `FRM-Editor-Condiciones` y `FRM-Editor-Calculo`, que todavía dibujan el «Grupo de líneas» (146 y 177);
+  - `FRM-Editor-Lineas`, con «Agregar bloque», los textos con «ítem» (177) y un catálogo del bloque con sus filtros (168);
+  - `FRM-Respuestas-19`, `FRM-Respuesta-19` y `WA-Chats-Respuesta-19`, con los ítems, «Filtros» (144) y el detalle alineado (139);
+  - `FRM-Publicar-19`, sin teléfono, con «Pasan al bloque» y el mínimo que frena (178).
 
 | Tablero | Qué muestra |
 | --- | --- |
 | `FRM-Editor-Condiciones` y `M-FRM-Editor-Condiciones` | «Mostrar si» en una pregunta, y el teléfono al costado, con la pregunta que aparece |
 | `FRM-Editor-Calculo` y `M-FRM-Editor-Calculo` | la pregunta «Cálculo»: las piezas de la fórmula, la moneda y los decimales |
-| `FRM-Editor-Lineas` y `M-FRM-Editor-Lineas` | el bloque «Renglones», con «Se carga varias veces», el mínimo y el máximo, y una pantalla por renglón en el teléfono |
+| `FRM-Editor-Lineas` y `M-FRM-Editor-Lineas` | el bloque: «Agregar bloque», «Se carga varias veces», el mínimo y el máximo, un catálogo con sus filtros, quitarlo y una pantalla por ítem en el teléfono |
 | `FRM-Respuestas-19` y `M-FRM-Respuestas-19` | la planilla, con «No se mostró», el cálculo y la columna del bloque, y en «Filtros» las preguntas del bloque |
-| `FRM-Respuesta-19` y `M-FRM-Respuesta-19` | el detalle, con cada renglón y sus datos alineados y los cálculos, y la tabla en la pantalla completa |
-| `WA-Chats-Respuesta-19` y `M-WA-Conversacion-Respuesta-19` | la tarjeta, con los renglones y el total |
+| `FRM-Respuesta-19` y `M-FRM-Respuesta-19` | el detalle, con cada ítem y sus datos alineados y los cálculos, y la tabla en la pantalla completa |
+| `WA-Chats-Respuesta-19` y `M-WA-Conversacion-Respuesta-19` | la tarjeta, con un ítem por línea y el total |
 | `FRM-Tablero-19` y `M-FRM-Tablero-19` | el tablero, con un monto y su moneda |
-| `FRM-Publicar-19` | una condición que WhatsApp no puede mostrar, más de 50 componentes, «Pasan a renglones» y un máximo de más de 10 |
+| `FRM-Publicar-19` | una condición que WhatsApp no puede mostrar, más de 50 componentes, «Pasan al bloque», el bloque sin preguntas, un máximo de más de 10 que avisa y un mínimo de más de 10 que frena |
 
 **Estados que se dibujan:**
-- **Editor:** una condición con cada tipo de pregunta; una fórmula incompleta, con el motivo debajo de su pregunta; una referencia rota; el contador de componentes cerca de 50, y sin preguntas anteriores que sirvan;
+- **Editor:** una condición con cada tipo de pregunta; una fórmula incompleta, con el motivo debajo de su pregunta; una referencia rota; el contador de componentes cerca de 50; sin preguntas anteriores que sirvan; el bloque recién agregado, uno con mínimo 0 («hasta 10 ítems») y «Agregar bloque» apagado;
 - **Publicar:** problemas por pregunta, con «Ir a la pregunta»;
-- **Planilla y detalle:** una respuesta con una pregunta oculta, y un cálculo que quedó «Sin respuesta».
+- **Planilla y detalle:** una respuesta con una pregunta oculta, un cálculo que quedó «Sin respuesta» y una respuesta de antes del bloque.
 
 **«Mostrar si»:** va en la pregunta abierta, en su caja, como las condiciones de las reglas de ArquitecturaBase: Pregunta, Condición, Valor y el tacho, y «Agregar condición». Sin preguntas anteriores que sirvan, «Agregar condición» queda grisado, con el motivo en su tooltip. Una referencia rota queda en rojo, con el motivo debajo, y la pregunta dice «Corregir».
 
-**La fórmula:** piezas en una caja, con «Agregar dato ▾» (un número, una pregunta, un campo del catálogo o la suma de una columna) y + − × ÷ ( ). La suma de una columna se elige en un diálogo. «Es un monto» pide la moneda, y los decimales salen de ella.
+**La fórmula:** piezas en una caja, con «Agregar dato ▾» (un número, una pregunta, un campo del catálogo o la suma de una pregunta del bloque) y + − × ÷ ( ). La suma se elige en un diálogo. «Es un monto» pide la moneda, y los decimales salen de ella.
 
-**El bloque en el editor:** un recuadro en la lista de preguntas, con las suyas adentro, ↑ ↓ ✎ 🗑 en cada una y su propio «Agregar pregunta» en la banda «Preguntas de cada renglón». El ✎ del bloque edita el nombre, la ayuda, el mínimo y el máximo, y con el bloque abierto el teléfono al costado muestra la pantalla de un renglón. Con un bloque, «Renglones» queda apagado en «Agregar pregunta», con el motivo en su tooltip. Cerca de 50 componentes en una pantalla, se lee «46 de 50 componentes».
+**El bloque en el editor:** un recuadro en la lista de preguntas, con las suyas adentro, ↑ ↓ ✎ 🗑 en cada una y su propio «Agregar pregunta» en la banda «Preguntas de cada ítem». El ✎ del bloque edita el nombre, la ayuda y, bajo «Ítems», el mínimo y el máximo, y con el bloque abierto el teléfono al costado muestra la pantalla de un ítem. Cerca de 50 componentes en una pantalla, se lee «46 de 50 componentes».
 
-**Mandan sobre esta spec en:** las fichas del front. La fórmula se arma con piezas, sin un campo para escribirla. Un dato por celda, y un monto con su moneda.
-
-## Contrato
-
-**Sin rutas nuevas.** Son las de la E14 y la E15, que suman lo siguiente. Van en `FormsContractContributor.cs`, con ejemplos exportados de una corrida real.
-
-| Ruta | Qué suma |
-| --- | --- |
-| `GET /{id}` y `PUT /{id}/draft` | tipos `Calculation` y `Rows`. `questions[]` suma `visibleIf?[]`, con `{fieldId, operator, values[]}`; `calculation?`, con `{tokens[], currency?, decimals}`, y `rows?`, con `{minRows, maxRows}`; las preguntas del bloque llevan `rowsOf`, el `fieldId` del bloque |
-| `POST /{id}/publication-checks` | suma los errores de abajo, `componentCount`, «Pasan a renglones», el bloque sin preguntas y el aviso de más de 10 renglones |
-| `GET /{id}/records/columns` | tipos nuevos, y `currency?` |
-| `POST …/records/search` y el detalle | los valores de abajo. `sort` admite `field:<id>` de un cálculo, no de un grupo |
-| `POST …/records/search` y `facets` | las preguntas del bloque filtran por algún renglón: un `EXISTS` sobre sus valores, sin multiplicar la respuesta |
-| `POST …/records/export` | la hoja de cada bloque; una celda «No se mostró» |
-| `POST …/records/dashboard` | `numbers[]` suma los cálculos y `currency?` |
-| `GET …/conversations/{id}/forms` | `optionCounts` y `offerProblems` cuentan también las preguntas de catálogo del bloque |
-
-**Un dato de la fórmula** es `{kind: "number", value}`, `{kind: "question", fieldId}`, `{kind: "catalogField", fieldId, catalogFieldId}` o `{kind: "rowSum", fieldId, times?}`, con el `fieldId` de una pregunta del bloque, y `times` es `{kind: "question", fieldId}` o `{kind: "catalogField", fieldId, catalogFieldId}`. Las otras piezas son `{kind: "op", op}`, `{kind: "open"}` y `{kind: "close"}`.
-
-`catalogFieldId` es la identidad del campo, la misma del contrato de la E13: la clave queda adentro. **Lo que usa un campo o un catálogo cuenta:** `Forms.Catalog.FieldInUse` y «Lo usan» suman las fórmulas y las preguntas de catálogo del bloque, así quitar un campo no deja los totales en «Sin respuesta» sin avisar.
-
-**Valores nuevos,** en el mapa de la E15:
-- `{kind: "hidden"}`: no se mostró;
-- `{kind: "money", amount, currency}`, para un cálculo con moneda, con el monto como en `Money`;
-- `{kind: "rows", count, preview, rows?[{position, values}]}`: `preview` son los valores de su primera pregunta, para la planilla, y `rows` va solo en el detalle.
-
-**Puertos:** `StructuredFormVersion.Questions` suma `VisibleIf`, `Calculation` y `Rows`. `StructuredRecordCapture` suma `Rows[BlockFieldId, RowPosition, FieldId, Text?|Number?|Date?|Bool?|Choice?]`, con la opción como en la E14. **Una pregunta de catálogo del bloque tiene su oferta,** con el mismo tope que una suelta, y todos los renglones usan la misma lista. `StructuredRecordCard` suma los renglones y los cálculos. `IStructuredFormChannel.Check` valida el perfil nuevo.
-
-**Errores** (con sus textos en `FormsTexts.resx` y `.en.resx`):
-
-| Código | Tipo | Cuándo |
-| --- | --- | --- |
-| `Forms.Draft.ConditionInvalid` | Validation (`questions[i].visibleIf[j]`) | más de 10, una pregunta que no está antes o no sirve, o un operador o valor fuera de la gramática |
-| `Forms.Draft.FormulaInvalid` | Validation (`questions[i].calculation`) | vacía, mal armada, un dato que no es numérico o no está antes, o una moneda fuera de los datos de referencia |
-| `Forms.Draft.RowsInvalid` | Validation (`questions[i].rows`) | un mínimo o un máximo fuera de rango, un segundo bloque, un tipo que no entra o un catálogo que no se puede usar |
-| `WhatsApp.Flow.ConditionNotSupported` | Validation (`questions[i].visibleIf[j]`) | el canal no la puede mostrar |
-| `Forms.Record.RowsInvalid` | Validation | menos renglones que el mínimo, más que el máximo o que el tope de WhatsApp, o un renglón sin una obligatoria |
-
-`WhatsApp.Flow.TooManyComponents` y `ResponseTooLarge` (E14) cuentan cada pantalla de renglón. Al capturar, una respuesta con un valor en una pregunta oculta no da error: el valor se descarta.
-
-## Datos
-
-Una migración aditiva, `<fecha>_FormLogic.cs`. Lo de una pregunta vive en el jsonb del borrador y de la versión, sin columnas nuevas.
-
-| Tabla | Columna | Tipo | Regla |
-| --- | --- | --- | --- |
-| `FormRecords` | `HiddenFieldIds` | uuid[], vacío por defecto | las preguntas que no se mostraron |
-| `FormRecordValues` | `Currency` | texto 3? | en un cálculo con moneda; CHECK que lo ata a `NumberValue`. Se valida con `ValidCurrency()`, sin FK |
-
-**FormRecordRowValues** (`ITenantOwned`, esquema `tenant`, con RLS, sin auditoría: es parte de la respuesta)
-
-| Columna | Tipo | Regla |
-| --- | --- | --- |
-| `TenantId`, `RecordId`, `BlockFieldId`, `RowPosition`, `FieldId` | uuid y smallint | PK; FK compuesta a `FormRecords`. `RowPosition` va de 0 a 99 |
-| `Type` | texto | el tipo de la pregunta |
-| `TextValue`, `NumberValue`, `DateValue`, `BoolValue` | los de `FormRecordValues` | CHECK: exactamente un valor |
-| `ChoiceId`, `ChoiceLabel`, `CatalogId`, `ChoiceCode`, `ChoiceDetail`, `ChoiceValue`, `ChoiceFields` | los de `FormRecordValues` | sellados, como en una pregunta suelta |
-
-Una tabla aparte, y no una columna más en `FormRecordValues`: la clave de esa tabla cambiaría para todas las respuestas, y lo de la E15 lee esa fila por `FieldId` y `Position`.
-
-## Pasos
-
-Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y `[E14]` a `[E18]`, un archivo que deja esa etapa.
-
-**Back:**
-
-| # | Qué hace | Archivos | Copia de | Test |
-| --- | --- | --- | --- | --- |
-| B1 | Evaluar condiciones en memoria, con la regla de la E15 | `D/Forms/FormConditionEvaluator.cs`, junto a `FormRecordCondition.cs` [E15] | `FormRecordFiltersPolicy.cs` [E15] | cada operador; en cadena; la tabla de verdad igual que en SQL |
-| B2 | Calcular una fórmula | `D/Forms/FormFormula.cs` y `FormFormulaEvaluator.cs` | — | precedencia y paréntesis; división por cero; dato que falta; desborde; `AwayFromZero`; los decimales de la moneda; una suma de renglones con `times` |
-| B3 | Las preguntas en el borrador | suma a `FormQuestionType.cs`, `FormDraft.cs`, `FormDraftEditor.cs`, `FormVersionCreator.cs` y al control de `FieldInUse` [E14]; `A/Modules/Forms/Services/FormLogicPolicy.cs` | `FormRecipientFilterPolicy.cs` [E16] | cada motivo de los tres errores; referencia rota al quitar, mover y cambiar el tipo; guardar incompleto sigue andando; un campo que usa una fórmula no se quita; una pregunta de catálogo del bloque cuenta en «Lo usan»; pasar una pregunta al bloque y sacarla, con otra identidad |
-| B4 | Publicar y el Flow con `If` y una pantalla por renglón, con un perfil nuevo | suma a `WhatsAppFlowBuilder.cs`, a `Check` y a `FormOfferBuilder.cs` [E14] | el mismo | la condición que no se puede mostrar; 50 componentes; 16 KiB; título oculto; lo sellado no se recompila; «¿Agregás otro renglón?» desde el mínimo; el aviso de más de 10; el bloque sin preguntas frena; la oferta de una pregunta de catálogo del bloque |
-| B5 | La captura: visibilidad, descarte, renglones, sellado y cálculo, en ese orden | `A/Modules/Forms/Services/FormRecordLogicPolicy.cs`; suma a `FormRecordService.cs`, `FormRecordWriter.cs` [E14] y `WhatsAppFlowReplyVerifier.cs` | esos mismos | un valor en una oculta se descarta; obligatoria oculta; la cantidad contra el mínimo, el máximo y el tope; un renglón vacío cuenta; catálogo en un renglón; dos capturas iguales |
-| B6 | Tabla, columnas y migración | `D/Forms/FormRecordRowValue.cs`; `I/…/Configurations/FormRecordRowValueConfiguration.cs`; la migración | `FormRecordValueConfiguration.cs` [E14] | aislamiento y migración, también hacia atrás |
-| B7 | Lo que se lee: planilla, conteos, detalle y navegación | suma a `FormRecordColumnsBuilder.cs`, `FormRecordReader.cs`, `FormRecordQueryFilters.cs` [E15] | esos mismos | `notShown` y `unanswered`; un cálculo se filtra y se ordena; algún renglón con un `EXISTS`; renglones sin consultas por fila |
-| B8 | Excel y tablero | suma a `FormRecordSheetBuilder.cs`, `FormRecordSpreadsheet.cs` y `FormDashboardBuilder.cs` [E15] | esos mismos | una hoja por bloque; el monto como número con su moneda en el encabezado; el total en su moneda |
-| B9 | La tarjeta del chat y «Mis mensajes» | suma a `FormRecordSource.cs` y a la copia de la tarjeta [E14] | esos mismos | los renglones y el total; sin `formrecords.read`, solo el número |
-| B10 | Contratos y ejemplos | suma a `Contracts/*`, `FormsContractContributor.cs` y los modelos de `StructuredData` | esos mismos [E14] | ejemplos exportados de los tipos nuevos; copiar conserva todo |
-
-**Front:**
-
-| # | Qué hace | Archivos | Copia de | Test |
-| --- | --- | --- | --- | --- |
-| F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` | la API de la E18 | zod estricto con los ejemplos |
-| F2 | «Mostrar si» | `components/logic/ConditionsEditor.tsx`, `lib/conditions.ts` | su tablero | solo preguntas anteriores; referencia rota; hasta 10 |
-| F3 | La pregunta «Cálculo» | `components/logic/CalculationEditor.tsx`, `lib/formula.ts`, `lib/decimal.ts` | su tablero | armar con piezas; el teléfono no la muestra; moneda de los datos de referencia |
-| F4 | Los renglones | `components/logic/RowsBlockEditor.tsx`; suma «Se carga varias veces» a `QuestionEditor.tsx` y la pantalla de un renglón al teléfono al costado [E14] | su tablero | marcar y desmarcar; mínimo y máximo; un solo bloque; axe |
-| F5 | Planilla, detalle, tablero y tarjeta | suma a `FormRecordsPage.tsx`, `RecordValues.tsx`, `FormDashboard.tsx` y `lib/values.ts` [E15], y a la tarjeta [E14] | su tablero | «No se mostró», «Sin respuesta» y «—»; los renglones alineados y su tabla; un monto con su moneda |
-
-**Al cerrar:** `docs/features/formularios.md` suma la sección.
+**Mandan sobre esta spec en:** las fichas del front. La fórmula se arma con piezas, sin un campo para escribirla. Un dato por celda, y un monto con su moneda. Todo texto que ve el usuario dice «ítem», también en inglés («item»), donde los tableros de antes decían «renglón».
 
 ## Qué verificar al arrancar
 
@@ -182,48 +114,46 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | --- | --- | --- |
 | [Meta] | `If` y su expresión, antes de programar: comparar un `Dropdown`, una casilla de `CheckboxGroup`, un número escrito en `TextInput` y una fecha, entre pantallas, con cuánta anidación, y dónde se admite. | Lo que no se pueda, `Check` lo frena al publicar. Los números hoy son texto (§14 de la E14), y puede no haber comparación numérica. |
 | [Meta] | Una pregunta de archivo dentro de un `If`, en su pantalla. | Si no se puede saltear, se la frena al publicar con `ConditionNotSupported`. |
-| [Meta] | Una pantalla por renglón: el límite de ramas, cómo llega lo de las pantallas que no se visitaron, que la cantidad de renglones viaje en el envío final y que las opciones de un catálogo sirvan en cada pantalla. | Alcanzan 10 renglones sin intercambio; si no, el tope baja. |
+| [Meta] | Una pantalla por ítem. Allá, el 6 y el 7/11, Meta aceptó tres variantes con el `routing_model`: preguntas después del bloque, con dos títulos de sección; el bloque al final, y el mínimo 0, con «¿Agregás un ítem?». Un ítem y «No» mandaron 7 claves y 415 bytes, y «Sí», «Sí» y «No», 15 claves y 886 bytes. Falta la respuesta de unos 40 KB. | Se prueba igual acá antes de planificar. Alcanzan 10 ítems sin intercambio; Meta acepta el `If` con un `Footer` en cada rama dentro del `Form`, el mismo `name` en las diez pantallas y las pantallas que navegan en una rama y terminan en la otra. Si los 40 KB no llegan enteros, un formulario con bloque se queda con 16 KiB. |
+| Allá | La etapa 3 de renglones, en curso el 2026-11-07: el Excel, con la columna «Ítem» y la hoja con el nombre del bloque; «En algún ítem de…», con todas las condiciones en el mismo ítem, y el PDF, con el bloque entero, que suma la E21. | Cierra como dice esta spec. Lo que allá cambie se adopta si no choca con las reglas de acá (126). |
 | [E14] | El orden de la captura y `FormRecordValues`. | Se pueden sumar los pasos, y el texto sellado existe. |
 | [E15] | La función de filtros, la lectura en memoria de qué versiones tienen cada pregunta y `Number`. | `notShown` entra en la misma función. |
+| [E16] | Los filtros por destinatario y sus avisos. | Sirven igual para una pregunta del bloque (168). |
 | [E18] | El perfil del Flow. | Este suma el siguiente. |
 | Datos de referencia | Cómo se valida una moneda y sus decimales. | `ICurrencyCatalog` da los decimales. |
-
-## Lo que puede salir mal (no repetir)
-
-No hay revisión de allá. Cada punto lleva su test:
-1. **Confiar en lo que llega:** un cliente puede mandar el valor de una pregunta oculta o saltear una obligatoria.
-2. **Una regla en memoria y otra en SQL:** `unanswered` da lo mismo en las dos.
-3. **Un cálculo que rompe la captura:** nada de una fórmula puede frenar una respuesta.
-4. **`double` en un paso intermedio:** todo en `decimal`, y sin `Math.Round` sin modo.
-5. **Un cálculo que cambia solo:** se guarda el resultado, no se recalcula al leer.
-6. **Un comprobante con varios ítems no entraba en una respuesta.** Allá, en la prueba del 2026-11-02, un remito de tres artículos fueron tres respuestas iguales salvo el artículo. Lo resuelven los renglones de esta etapa (146).
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
 - **Un monto calculado se guarda en `NumberValue`,** con su `Currency`, y se lee como `Money`: es la columna de todos los números, y así se filtra y se ordena con la misma regla. Se redondea a los decimales de la moneda, y un monto de más de 13 dígitos enteros, el tope de un importe, cuenta como demasiado grande.
 - **Una etapa propia** (54), después de las respuestas, así lo que suma se ve en lo que ya existe (78).
 - **Los cálculos se hacen al llegar la respuesta:** quien completa no ve el total en WhatsApp antes de enviar (54).
-- **Los renglones** (146): un mínimo y un máximo de hasta 100, y en WhatsApp una pantalla por renglón, hasta 10. Cambia el tope de 1 a 10 de la 54.
+- **El bloque** (146, 177 y 178): se agrega con «Agregar bloque», con un mínimo y un máximo de hasta 100, y en WhatsApp una pantalla por ítem, hasta 10; un mínimo de más de 10 frena al publicar. Cambia el tope de 1 a 10 de la 54.
+- **«Ítem» en todo texto que ve el usuario** (177): el código y los documentos siguen diciendo `rows`.
+- **Un catálogo del bloque filtra por quien lo recibe** (168).
+- **La columna del bloque no se corta:** baja de renglón, como todo texto largo (174).
 - **Genérico:** ninguna fórmula ni bloque va escrito en el código.
 
 ## Fuera de esta etapa
 
 - Más de un bloque, bloques dentro de un bloque y condiciones dentro de un bloque.
+- Fotos o documentos en un ítem, ordenar por el bloque, condiciones sobre todos los ítems o su cantidad, duplicar un ítem, importar ítems desde un Excel y la lista de lo cargado antes de enviar por WhatsApp.
 - Mostrar el total en WhatsApp antes de enviar.
-- Funciones más allá de las cuatro operaciones y la suma de una pregunta de los renglones.
-- Un filtro por destinatario en una pregunta de catálogo del bloque.
+- Funciones más allá de las cuatro operaciones y la suma de una pregunta del bloque.
+- Lo que suman las etapas siguientes: la carga del bloque desde la web, con «Agregar ítem»; la (i) del máximo y la de «Se carga varias veces» con lo que hace la app, y un mínimo de más de 10 que deja solo para la app un formulario para empleados o para los dos (E20 y 178); el PDF con el bloque entero y «Algún ítem de…» en las reglas (E21).
+- Una lista dependiente dentro del bloque: allá es LD3-A, que se estaba programando.
 
 ## Cómo se cierra
 
 La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba real con Meta** con el número de una organización de prueba, abriendo cada variante en un celular:
 1. «Monto» aparece solo si «¿Se concretó la venta?» es Sí; con No, la respuesta llega sin monto.
-2. Un pedido con 3 renglones (producto del catálogo y cantidad), con su total calculado con el precio del catálogo, en la tarjeta del chat.
-3. Las dos respuestas en la planilla, el detalle y el Excel: «No se mostró», los renglones y el total.
+2. Un pedido con 3 ítems (producto del catálogo y cantidad), con su total calculado con el precio del catálogo, en la tarjeta del chat.
+3. Un pedido con un ítem y «No» en «¿Agregás otro ítem?», y un bloque con mínimo 0 y «No» en «¿Agregás un ítem?»: los dos llegan enteros, sin cortar el formulario.
+4. Las respuestas en la planilla, el detalle y el Excel: «No se mostró», los ítems, la hoja del bloque y el total.
 
 ## Requisitos previos
 
 - La E18 cerrada.
-- La prueba con Meta del componente `If`, de una pantalla por renglón y de una pregunta de archivo dentro de un `If`.
+- La prueba con Meta del componente `If`, de una pantalla por ítem, de una pregunta de archivo dentro de un `If` y de una respuesta de unos 40 KB.
 
 ## En el multitenant
 
