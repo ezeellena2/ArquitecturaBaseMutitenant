@@ -78,7 +78,7 @@ Antes de empezar, en este orden:
 
 **Aprobados y publicados** en el lienzo v157; «Por qué respondió esto» se ajustó en la v158. La pantalla «Asistente» no tiene modelo, ni en el lienzo ni en ArquitecturaBase: el usuario eligió armarla como el editor de un formulario. Lo demás sigue al front real de ArquitecturaBase, con nuestras piezas: el chat con su modo y «Por qué lo mandó», la sugerencia, los audios, «Qué sugerir después», «Cómo empezó» e «Información del negocio». Con el traspaso 5 se redibujan las sugerencias, las reglas, el detalle y lo prellenado de las tarjetas (138 a 140). **Con el traspaso 10** se redibuja `WA-Asistente-Limites`, con la información del negocio (169); los tableros que muestran una oferta la dicen con el nombre del formulario (165), y el catálogo propuesto sale de esta etapa (167): se retiran `FRM-Catalogo-Propuesta` y `FRM-Catalogos-23`.
 
-**Valen las de toda la app** (160 a 164 y 173 a 175): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla, el texto largo entero y el estado dicho una vez.
+**Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
 
 Datos de ejemplo: Grupo Delta vende y repara heladeras. Martina López escribe por Clientes y Tomás Acosta, por Internos.
 
