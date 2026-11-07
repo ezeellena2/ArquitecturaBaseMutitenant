@@ -104,7 +104,7 @@ Antes de empezar:
 - **Cómo termina** (175): sin zona ni pasos. La etiqueta del encabezado dice el estado de la última publicación: «Publicando la versión 4», «Publicado · versión 4», «Sin confirmar · versión 4», «Necesita revisión · versión 4» o «No se pudo publicar la versión 4». Mientras se publica, la pantalla vuelve a leer sola. La banda suma, solo cuando hacen falta:
   - «Consultar publicación», sin confirmar, en revisión o si la lectura sola se cortó: dice «Consultando…» con su aro, nunca «Reintentar»;
   - «Repetir el mismo intento», si el pedido de publicar no tuvo respuesta y al volver a leer no aparece («Si no se sabe si algo salió», abajo);
-  - «Salió» y «No salió», solo con «Necesita revisión».
+  - «Salió» y «No salió», solo con «Necesita revisión». Cada uno pide confirmar con el número, «¿La versión 4 salió en WhatsApp?», con la principal y el foco en «Cancelar» (186).
 
   «Publicar en WhatsApp» apagado dice su motivo en el tooltip: una publicación en curso, sin confirmar o en revisión, un pedido sin respuesta, cambios sin guardar, sin número conectado o sin permiso. Lo rechazado queda marcado en su pregunta, sin una zona «Problemas»; un rechazo de la cuenta, que no es de ninguna pregunta (`AccountUnavailable`), va en el aviso importante, con su ⓘ. «Publicamos la versión 4.» y «No pudimos publicar la versión 4.» se avisan solo en el editor donde empezó la publicación. En el teléfono no hay hojas: las acciones van en el pie fijo y el motivo de lo apagado, en la franja oscura (122).
 - **Vista oficial** (176): cargando, lista, vencida («Cargarla de nuevo») y con error, con la medida del marco; sin versión publicada no hay «Ver vista oficial».

@@ -708,6 +708,7 @@ Elegidas por el usuario el 2026-11-07, al evaluar el traspaso 10 contra este mod
 183. **La banda de cada ítem dice «Ítem 2»** (E20, en el panel y en el teléfono): el nombre del bloque ya va arriba, como etiqueta, y la banda entra en 320 aunque el bloque se llame «Materiales de construcción». Los títulos de las pantallas de WhatsApp siguen diciendo «Productos · ítem 2» (177).
 184. **En «Enviar formulario», todo formulario que se carga solo desde la app aparece apagado, con su motivo** (E20): el que tiene una lista dependiente dice ««Proveedor» depende de otra respuesta: se carga desde la app.», y el que pide más ítems de los que admite WhatsApp, el mismo motivo que dio al publicar (110 y 178).
 185. **La columna del bloque se ve entera en la planilla** (E19), bajando de renglón como todo texto largo (174): «12 · Caño de 1/2 pulgada, Codo de 90°, …» con todos los nombres. El detalle muestra cada ítem.
+186. **«Salió» y «No salió» piden confirmar** (E14; la 161 en la 175): «¿La versión 4 salió en WhatsApp?», con la principal y el foco en «Cancelar», porque ninguno de los dos se deshace. Un «Salió» por error deja mandar una versión que en Meta no existe, y un «No salió» por error obliga a publicar otra.
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
