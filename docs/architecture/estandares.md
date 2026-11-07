@@ -64,7 +64,7 @@ Un P# sale de esta tabla cuando se adopta: pasa al §1 con el mismo número.
 
 | # | Estándar | Qué fijaría | Librería |
 |---|---|---|---|
-| P11 | **Archivos y adjuntos** | subida con límite de tamaño, tipo verificado por contenido (no por extensión), ruta `{tenantId}/…`, URL firmada con vencimiento, miniaturas | Azure Blob o S3 SDK · `react-dropzone` |
+| P11 | **Archivos y adjuntos** | subida con límite de tamaño, tipo verificado por contenido (no por extensión), claves opacas en un solo contenedor privado, sin prefijo por organización (E10); la Api entrega el archivo con el permiso del recurso, nunca una URL firmada ni pública (la 0012 de ArquitecturaBase); miniaturas | Azure Blob (P4 de la E10) · `react-dropzone` |
 | P12 | **Exportar a Excel, CSV y PDF** | CSV con `;` y BOM (lo que abre bien Excel en es-AR), XLSX con los formatos de la cultura, PDF con el mismo `DisplayFormatter`, nombre `<recurso>-<fecha>.xlsx`, límite de filas y generación en segundo plano si es grande | ClosedXML (MIT) · QuestPDF (licencia comunitaria gratis hasta USD 1 M de facturación anual: verificar) |
 | P13 | **Direcciones** | país ISO 3166-1, provincia ISO 3166-2, localidad y código postal; en Argentina, normalizadas contra el servicio Georef | Georef (datos.gob.ar, gratis) · `Intl.DisplayNames` |
 | P14 | **Rangos de fechas y filtros predefinidos** | "Hoy", "Últimos 7 días", "Este mes", calculados en la zona efectiva con `GetDayRangeUtc`, y un `DateRangeField` | propio |
