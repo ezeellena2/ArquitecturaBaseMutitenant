@@ -82,7 +82,7 @@ No se leen `.doc`, `.xls`, los archivos con macros ni los que tienen contraseña
 
 Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](25-texto-diseno.md), con el recorrido guiado. Muestran lo que existe hasta acá. Las del catálogo propuesto vienen de la E23, que las retiró (167).
 
-**Valen las de toda la app** (160 a 164 y 173 a 175): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla, el texto largo entero y el estado dicho una vez.
+**Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
 
 | Tablero | Qué muestra |
 | --- | --- |
