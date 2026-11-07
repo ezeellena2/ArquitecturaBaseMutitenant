@@ -28,7 +28,7 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]` y `[Feat
 
 | Ruta | Permiso | Pide | Devuelve |
 | --- | --- | --- | --- |
-| `GET /{id}/rules` | `formrules.manage` | — | `{revision, rules[], questions[]}`: un mensaje guarda cada dato como `{FieldId}`, `{number}` o `{reason}`, y `questions[]` trae los nombres de hoy para las etiquetas |
+| `GET /{id}/rules` | `formrules.manage` | — | `{revision, rules[], questions[]}`: un mensaje guarda cada dato como `{FieldId}`, `{number}` o `{reason}`, y `questions[]` trae los nombres de hoy para las etiquetas. Las preguntas del bloque van debajo de él, con `rowsOf`: una condición sobre ellas es «algún ítem», y en el mensaje el bloque es un solo dato, su `{FieldId}` |
 | `PUT /{id}/rules` | `formrules.manage` | `{revision, rules[]}` | 200 `{revision}`, 409 si otro guardó |
 | `GET /{id}/rules/revisions` y `…/{revision}` | `formrules.manage` | `page`, `pageSize` | la lista paginada y cada revisión |
 | `GET /{id}/rules/options/{roles\|members\|templates}` | `formrules.manage` | `page`, `pageSize`, `search` | `PagedResult` de cada una, sin correos |
@@ -38,10 +38,10 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]` y `[Feat
 | `POST /{id}/records/{recordId}/decision` | `formapprovals.decide` | `{decision, reason?, version}`, con `[Idempotent]` | 200 `{version, state}` |
 | `GET /{id}/records/{recordId}/workflow` | `formrecords.read` | — | `{ruleRevision?, approval?, activity[], pdf?, canCorrect, canVoid}`; `approval.canDecide` dice si quien mira tiene el permiso y el rol de la tarea, y solo entonces el detalle la pide |
 | `POST …/executions/{executionId}/recipients/{userId}/retry` | `formrules.manage` | `{version}`, la revisión del aviso, con `[Idempotent]`; si otra persona ya lo reintentó o lo resolvió, 409 | 200; la actividad suma `canRetry` en cada destinatario (158) |
-| `GET /api/me/whatsapp-chats` | la cuenta, con el módulo de WhatsApp | — | 200 `[{organizationId, organizationName, link, noticesUntilUtc?}]`, con `link` `Linked`, `Unlinked` o `NoChat` (159) |
+| `GET /api/me/whatsapp-chats` | la cuenta, con el módulo de WhatsApp | — | 200 `[{organizationId, organizationName, link, noticesUntilUtc?}]`, con `link` `Linked`, `Unlinked` o `NoChat` (159). Pasado `noticesUntilUtc`, la zona dice «Solo con plantilla» (170) |
 | `GET /{id}/records/{recordId}/pdf` | `formrecords.read` | — | 200 PDF, `no-store` |
 | `GET /{id}/records/{recordId}/history` | `formrecords.read` | `page`, `pageSize` | `PagedResult<{id, correctedAtUtc?, correctedBy?, reason?, superseded}>`, de la más nueva a la más vieja |
-| `GET /{id}/records/{recordId}/correction` | `formrecords.correct` | — | la versión activa, con lo cargado |
+| `GET /{id}/records/{recordId}/correction` | `formrecords.correct` | — | la versión activa, con lo cargado, los ítems y los archivos que ya estaban, `{fileId, name, byteLength}`, para «Ya cargado · 86 KB» |
 | `POST /{id}/records/{recordId}/corrections` | `formrecords.correct` | multipart: el de la E20, más `reason`, `version` y `keepFileIds[]`, con `[Idempotent(Mode = IdempotencyMode.DurableReference)]` y `[IdempotencyDurable(typeof(FormEntryDurableAdapter))]` | 200 `{recordId, displayNumber, submittedAtUtc, calculations[], version}`, con `[ResponseVersion("Version")]` |
 | `POST /{id}/records/{recordId}/void` | `formrecords.correct` | `{reason, version}` | 200 `{version}` |
 | `…/own-records/{recordId}/pdf`, `history`, `correction`, `corrections` y `void` | `formrecords.create` | lo mismo | lo mismo, solo con lo propio y mientras se pueda |
@@ -61,7 +61,7 @@ public interface IStructuredRecordActionChannel
 }
 ```
 
-`StructuredActionMessage(Key, Recipient, Text, Template?, Document?)`. `Key` es el id de ejecución y destinatario. Sin WhatsApp, `GetReachAsync` dice que no hay canal y `ListTemplatesAsync` devuelve una lista vacía. El correo usa `IOutbox`, con el canal de correos. `IStructuredRecordSource.ReadAsync` lee por id, también las reemplazadas, y `StructuredRecordCard` suma `Corrected` y `Voided`.
+`StructuredActionMessage(Key, Recipient, Text, Template?, Document?)`. `Key` es el id de ejecución y destinatario. Sin WhatsApp, `GetReachAsync` dice que no hay canal y `ListTemplatesAsync` devuelve una lista vacía. El correo usa `IOutbox`, con el canal de correos. `IStructuredRecordSource.ReadAsync` lee por id, también las reemplazadas, y `StructuredRecordCard` suma `Corrected` y `Voided`, con el número, para la marca al pie de la tarjeta (166).
 
 **La campana:** Forms aporta `formApprovals`, a quien puede decidir, y `ruleNoticeFailed`, a quien tiene `formrules.manage`, por `INotificationSource` (base de la 12).
 
@@ -81,6 +81,7 @@ public interface IStructuredRecordActionChannel
 | `Forms.Record.Superseded` | Conflict | corregir o anular una que ya se reemplazó |
 | `Forms.Record.AlreadyVoided` | Conflict | ya está anulada |
 | `Forms.Record.ReasonRequired` | Validation (`reason`) | corregir o anular sin motivo |
+| `Forms.Record.ReasonTooLong` | Validation (`reason`) | un motivo de más de 500 caracteres |
 | `Forms.Record.PdfNotFound` | NotFound | no hay copia, o falta el archivo |
 | `Forms.Execution.NotRetryable` | Conflict | una persona sin la falla confirmada |
 
@@ -128,3 +129,4 @@ Cada punto lleva su test, escrito durante la etapa:
 16. **Una migración que pierde datos al volver se niega a volver:** el `Down` de las correcciones frena si ya hay correcciones, anuladas o tareas cerradas.
 17. **Cerrar una corrección con cambios pregunta** («¿Descartar la corrección?», con «Seguir corrigiendo»); sin cambios, cierra.
 18. **Un texto de otro espacio de traducciones se declara en `useTranslation`.** Allá, anular desde la pantalla completa mostraba la clave del motivo, y lo encontró el recorrido, no los tests.
+19. **Corregir una respuesta con ítems los perdía:** allá la corrección abría solo las preguntas sueltas. Abre y guarda los ítems, que vuelven si el bloque sigue.
