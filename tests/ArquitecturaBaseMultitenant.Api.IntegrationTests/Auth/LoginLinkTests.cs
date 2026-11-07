@@ -144,7 +144,9 @@ public sealed partial class LoginLinkTests(ApiFactory factory) : IClassFixture<A
     [Fact]
     public async Task Redeem_cookie_allows_current_terms_acceptance_before_protected_API()
     {
-        await using var app = Host(); using var client = app.CreateClient(new() { AllowAutoRedirect = false, BaseAddress = new Uri("https://localhost") });
+        // El reloj de la prueba está fijo en el pasado: un CookieContainer descartaría, con el reloj real, la cookie de 30 días
+        // que el servidor emite con el reloj de la prueba. La cookie del canje viaja a mano.
+        await using var app = Host(); using var client = app.CreateClient(new() { AllowAutoRedirect = false, HandleCookies = false, BaseAddress = new Uri("https://localhost") });
         await app.Services.SeedDatabaseAsync(Ct);
         await using (var read = app.Services.CreateAsyncScope())
         {
@@ -156,6 +158,7 @@ public sealed partial class LoginLinkTests(ApiFactory factory) : IClassFixture<A
         var (_, _, token) = await PrepareAsync(app, client);
         using var redeem = await PostAsync(client, "redeem", new { token, access = "consumer" });
         Assert.Equal(HttpStatusCode.OK, redeem.StatusCode);
+        client.DefaultRequestHeaders.Add("Cookie", string.Join("; ", redeem.Headers.GetValues("Set-Cookie").Select(cookie => cookie.Split(';')[0])));
         await AccountJourney.AuthorizeAsync(client, "consumer", Ct);
         await TransactionAsync(app.Services, async (provider, ct) =>
         {
