@@ -1,6 +1,6 @@
 # E20 · Cargar una respuesta desde la web (spec)
 
-**Estado:** pendiente · spec de la etapa 20 del bloque (decisiones 73, 78, 83 a 90, 94 a 98, 101, 104, 153, 166, 177 y 178), con el [formato](plantilla.md) de las etapas. Corresponde a la Etapa 1 de «Cargar formularios desde la app» de ArquitecturaBase, programada y revisada allá el 2026-10-30, y a sus etapas 2 (lo propio), 4 (listas dependientes) y 5 (títulos de sección), programadas allá el 4 y el 5/11. La carga del bloque es la etapa 2 de sus renglones, en curso el 2026-11-07. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E19.
+**Estado:** pendiente · spec de la etapa 20 del bloque (decisiones 73, 78, 83 a 90, 94 a 98, 101, 104, 153, 166, 177, 178, 183 y 184), con el [formato](plantilla.md) de las etapas. Corresponde a la Etapa 1 de «Cargar formularios desde la app» de ArquitecturaBase, programada y revisada allá el 2026-10-30, y a sus etapas 2 (lo propio), 4 (listas dependientes) y 5 (títulos de sección), programadas allá el 4 y el 5/11. La carga del bloque es la etapa 2 de sus renglones, en curso el 2026-11-07. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E19.
 
 **Partes.** Esta spec no entra en un solo archivo, así que sigue en otro, con las mismas secciones. Lo que no está en la tabla está acá.
 
@@ -13,7 +13,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T4, T22, T23, T24 y la §6, punto 7; la [E15](15-respuestas.md): rutas y filtros; la [E16](16-datos-de-las-personas.md): los filtros por destinatario; la [E17](17-ciclo-de-vida.md): la disponibilidad; la [E18](18-fotos-y-documentos.md): verificar y guardar archivos, y la [E19](19-condiciones-calculos-y-lineas.md): la captura y el bloque.
-2. **Decisiones** de la hoja de ruta: 9, 35, 37, 43, 50, 54, 73, 78, 83 a 90, 94 a 98, 101, 104, 141, 147, 153, 166, 177 y 178.
+2. **Decisiones** de la hoja de ruta: 9, 35, 37, 43, 50, 54, 73, 78, 83 a 90, 94 a 98, 101, 104, 141, 147, 153, 166, 177, 178, 183 y 184.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -52,7 +52,7 @@ Antes de empezar, en este orden:
 - si es para empleados o para los dos, se publica con un aviso que no frena (37). No pasa por Meta: sella la versión, la marca y la activa en la misma UoW, sin trabajo durable ni Flow;
 - **los frenos de WhatsApp no corren:** una versión solo para la app no va a Meta, así que no pasa por `Check` ni por el tope de opciones de un filtro fijo. Vuelven a correr al publicar con número;
 - si es solo para clientes, no se publica, porque ellos responden solo por WhatsApp. El mínimo de más de 10 frena como en la E19;
-- **en el chat,** «Enviar formulario» lo muestra apagado, con su motivo en lugar de la versión y las preguntas: con una lista dependiente, ««Proveedor» depende de otra respuesta: se carga desde la app.» (166), y en los otros casos, el mismo motivo que dio al publicar. El asistente no lo ofrece;
+- **en el chat,** «Enviar formulario» lo muestra apagado, con su motivo en lugar de la versión y las preguntas (166 y 184): con una lista dependiente, ««Proveedor» depende de otra respuesta: se carga desde la app.», y en los otros casos, el mismo motivo que dio al publicar. El asistente no lo ofrece;
 - para mandarlo cuando se pueda, hay que volver a publicar: `NothingToPublish` no aplica si la versión activa es solo para la app y ahora se puede mandar. Cambia lo que la E14 dice de `ChannelUnavailable` y `CatalogTooLarge`.
 
 **Lo propio** (85): quien tiene `formrecords.create` y no `formrecords.read` lee solo sus respuestas, en la planilla, el detalle y los archivos, también lo que respondió por WhatsApp. El servidor filtra por `RespondentUserId`, y lo ajeno responde 404, también en una dirección directa. Quien solo carga ve «Formularios» con sus formularios, «Cargar», «Mis cargas» y «Mi última carga», con su número y su fecha («Todavía no cargaste» si no hay), nunca los totales de la organización (153, que cambia la 83). El nombre abre «Respuestas» con lo suyo: la planilla de siempre sin la columna «Cargó», sin «Cargó» en «Filtros» y sin «Exportar a Excel», con «Agregar respuesta». Los conteos también se acotan: el de personas la nombra solo a ella, el de un catálogo trae solo las opciones que eligió y un filtro por otra persona no devuelve nada. **El filtro «Estado»** suma «Dados de baja», con los formularios dados de baja en los que cargó algo: ve lo suyo, sin «Cargar» (101).
@@ -76,7 +76,7 @@ Antes de empezar, en este orden:
 - en la página, ocupa el renglón entero de su zona, donde lo puso el autor, con su nombre como etiqueta: una tabla con una fila por ítem y una columna por pregunta, con su etiqueta arriba. El número del ítem va en la primera columna, y ↑ ↓ y 🗑, en rojo, al final de cada fila; el tacho quita sin preguntar, como un archivo. Si no entra, la tabla se desplaza de costado en su caja, y el texto largo es una celda que crece;
 - arranca con el mínimo de ítems. «Agregar ítem», al pie y sin contador, suma uno vacío y lleva el foco a su primera pregunta. Con el máximo se apaga, con «Hasta 20 ítems.» en su tooltip, y con el mínimo, el tacho, con el suyo. ↑ ↓ dejan el foco en el mismo botón del ítem movido, y quitar lo lleva al ítem que queda en su lugar o a «Agregar ítem»;
 - al enviar, cada ítem se valida como preguntas sueltas: la celda con un error se marca, el mensaje va debajo de su fila con el nombre de la pregunta («Cantidad: completá esta respuesta.») y el foco va a la primera. Si faltan ítems, lo dice debajo de la tabla: «Agregá al menos 1 ítem.»;
-- **en el panel y en el teléfono,** un recuadro por ítem, con «Productos · ítem 2», ↑ ↓ y «Quitar» en su banda, y las preguntas una debajo de otra. En el teléfono, «Agregar ítem» va al pie de los recuadros, y Enviar sigue fijo abajo;
+- **en el panel y en el teléfono,** un recuadro por ítem, con «Ítem 2», ↑ ↓ y «Quitar» en su banda (183), y las preguntas una debajo de otra. El nombre del bloque va arriba, como etiqueta, así la banda entra en 320 aunque el bloque se llame «Materiales de construcción». En el teléfono, «Agregar ítem» va al pie de los recuadros, y Enviar sigue fijo abajo;
 - «Mantener» conserva también los ítems; una versión nueva los conserva si el bloque sigue, con las preguntas que siguen con el mismo tipo, y «Enviada» muestra el bloque en una línea, como su columna en la planilla;
 - **en el editor,** dos (i) suman la app: la del máximo dice «En WhatsApp se cargan hasta 10 ítems; en la app, hasta el máximo.», y la de «Se carga varias veces», «Se carga una vez por ítem, en la tabla del bloque.».
 
@@ -85,7 +85,7 @@ Los textos del bloque que suma esta etapa, con su inglés:
 | Dice | En inglés |
 | --- | --- |
 | «Agregar ítem» · «Hasta 20 ítems.» · «Agregá al menos 1 ítem.» | «Add item» · «Up to 20 items.» · «Add at least 1 item.» |
-| «Productos · ítem 2», en un recuadro | «Productos · item 2» |
+| «Ítem 2», en la banda de un recuadro | «Item 2» |
 | «En WhatsApp se cargan hasta 10 ítems; en la app, hasta el máximo.» | «WhatsApp loads up to 10 items; the app, up to the maximum.» |
 | «Se carga una vez por ítem, en la tabla del bloque.» | «Loaded once per item, in the block's table.» |
 
@@ -102,7 +102,7 @@ Aprobados y publicados en el lienzo v154, con el armado del front real de Arquit
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
 | `FRM-Formularios-20` y su teléfono | «Cargar», «Solo en la app» y lo que ve quien solo carga | Se redibuja: «Mis cargas» y «Mi última carga» (153) |
-| `FRM-Cargar-Respuesta` y su teléfono | la página, con zonas, grilla, títulos, lo condicional, el bloque, «Mantener», errores y salir | Se redibuja: los dos anchos, las casillas en columnas y «Mantener» (141 y 147); el bloque, con «Agregar ítem» y sin contador, en tabla y, en el teléfono, en recuadros (177), y la zona plegada con «3 de 5 respondidas» (166) |
+| `FRM-Cargar-Respuesta` y su teléfono | la página, con zonas, grilla, títulos, lo condicional, el bloque, «Mantener», errores y salir | Se redibuja: los dos anchos, las casillas en columnas y «Mantener» (141 y 147); el bloque, con «Agregar ítem» y sin contador, en tabla y, en el teléfono, en recuadros con «Ítem 2» (177 y 183), y la zona plegada con «3 de 5 respondidas» (166) |
 | `FRM-Cargar-Panel` | el panel junto a la planilla | Se redibuja: con zonas (141), los recuadros del bloque y la zona plegada (166 y 177) |
 | `FRM-Cargar-Lista` y su teléfono | la lista, una sola opción, sin el dato, elegir varias y la que espera otra respuesta | Se redibuja: «Elegí primero «Zona»» (166) |
 | `FRM-Cargar-Archivos` y su teléfono | agregar, los límites, la barra de avance, el corte y la cámara | Aprobado |
@@ -111,11 +111,11 @@ Aprobados y publicados en el lienzo v154, con el armado del front real de Arquit
 | `FRM-Respuestas-Propias` y su teléfono | la misma planilla con lo suyo | Se redibuja: «Filtros» y los chips (144) |
 | `FRM-Editor-Listas` y su teléfono | «Según otra respuesta» | Se redibuja: el bloque, sin el «Grupo de líneas» (177) |
 | `FRM-Publicar-20` y su teléfono | solo para la app, en los cuatro casos, y uno solo para clientes que no se publica | Se redibuja: el bloque y el mínimo de más de 10 (177 y 178) |
-| `WA-Chats-Formulario-20` y `M-WA-Chats-Formulario-20` | en «Enviar formulario», uno solo para la app, apagado con su motivo | Por dibujar (166) |
+| `WA-Chats-Formulario-20` y `M-WA-Chats-Formulario-20` | en «Enviar formulario», los formularios solo para la app, apagados con su motivo | Por dibujar (166 y 184), con su [texto para Diseño](20-texto-diseno.md) |
 
 **La página** sigue a la de allá: la banda con Cancelar y Enviar, y una zona por título, con la grilla de hasta tres por renglón. Lo que allá dice «Enviando… 64 %» acá es «Enviando…» con su aro y una barra sin palabras (95 y 115). Sin el dato de la persona, un cartel lo nombra, porque bloquea, y Enviar queda grisado con el motivo.
 
-**Publicar solo para la app** va en la zona «Avisos» de la E16, con «En WhatsApp: No» en «Qué se publica», sin «Ver vista oficial» y con el botón «Publicar» en la banda. Uno solo para clientes frena en «Problemas» (134).
+**Publicar solo para la app** va en la zona «Avisos» de la E16, con «En WhatsApp: No» en «Qué se publica», sin «Ver vista oficial» y con el botón «Publicar» en la banda. Cada motivo nombra su pregunta y dice que se carga «desde la app», como el canal (90), y no «desde la web»: el chat repite el del catálogo y el del mínimo (184). Uno solo para clientes frena en «Problemas» (134).
 
 **«Agregar filtro ▾»** reúne los tres filtros de una pregunta en un menú, porque con «Según otra respuesta» los botones ya no entran en el encabezado de la caja (134).
 
@@ -146,7 +146,8 @@ Aprobados y publicados en el lienzo v154, con el armado del front real de Arquit
 - **El canal se llama «App»** (90); el valor técnico sigue siendo `web`.
 - **Se publica sin WhatsApp** (98), también con un mínimo de más de 10 en un formulario para empleados o para los dos (178).
 - **Las listas dependientes** van acá y solo en la web (94).
-- **El bloque se carga como allá** (177): una tabla en la página y un recuadro por ítem en el panel y en el teléfono, con «Agregar ítem» y sin contador.
+- **El bloque se carga como allá** (177): una tabla en la página y un recuadro por ítem en el panel y en el teléfono, con «Agregar ítem» y sin contador, y «Ítem 2» en la banda de cada recuadro (183).
+- **Un formulario solo para la app aparece apagado en el chat, con su motivo** (184), en los tres casos en que hay chat.
 - **Lo propio tiene sus rutas:** `[HasPermission]` pide un solo permiso, y el mismo servicio les da el alcance.
 
 ## Fuera de esta etapa
