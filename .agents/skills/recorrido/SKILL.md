@@ -9,7 +9,7 @@ El recorrido hace lo que haría una persona, en el mismo navegador y sin borrar 
 
 ## Qué hacer
 
-1. **Corrélo en el front.** En `../ArquitecturaBaseMutitenantFront`, o en el worktree de la puerta, corré en segundo plano `node scripts/recorrido-usuario.mjs` y esperá a que termine.
+1. **Corrélo en el front.** En `../ArquitecturaBaseMutitenantFront`, o en la copia del front de la puerta, corré en segundo plano `node scripts/recorrido-usuario.mjs` y esperá a que termine.
    - Si el build ya está hecho, agregá `--no-build`.
    - El script levanta su propio entorno y lo apaga al final.
 2. **Los pasos están en el script.** Los recorridos guiados del lienzo (`docs/design/recorridos/*.json` del front) dicen qué tiene que poder hacer una persona. Si la etapa suma un recorrido, se agrega al script junto con su test (`scripts/recorrido-usuario.test.mjs`).
