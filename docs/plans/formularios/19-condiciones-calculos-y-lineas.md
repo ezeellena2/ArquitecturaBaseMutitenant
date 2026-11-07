@@ -108,6 +108,8 @@ Aprobados y publicados en el lienzo v153, con el recorrido guiado `un-pedido-con
 
 **Mandan sobre esta spec en:** las fichas del front. La fórmula se arma con piezas, sin un campo para escribirla. Un dato por celda, y un monto con su moneda. Todo texto que ve el usuario dice «ítem», también en inglés («item»), donde los tableros de antes decían «renglón».
 
+**Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
+
 ## Qué verificar al arrancar
 
 | Marca | Qué hay que confirmar | Qué asume esta spec |
