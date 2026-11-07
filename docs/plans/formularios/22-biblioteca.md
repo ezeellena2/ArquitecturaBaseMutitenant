@@ -1,6 +1,6 @@
 # E22 · Biblioteca de plantillas de la plataforma (spec)
 
-**Estado:** pendiente · spec de la etapa 22 del bloque (decisiones 34, 40, 78 y 79). **Es también la biblioteca de formularios estándar** (40). Se arma con las piezas de este repo y las de las etapas anteriores. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E14]**, **[E12]** y **[E21]** contra el código.
+**Estado:** pendiente · spec de la etapa 22 del bloque (decisiones 34, 40, 78, 79, 175 y 177). **Es también la biblioteca de formularios estándar** (40). Se arma con las piezas de este repo y las de las etapas anteriores. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E14]**, **[E12]** y **[E21]** contra el código.
 
 **Fuentes:**
 - alcance y decisiones: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E22 y decisiones 2, 13 a 16, 30 a 33, 35, 40, 45, 50, 59, 61, 62 y 64;
@@ -17,7 +17,7 @@
 
 Antes de empezar:
 1. **Lo anterior:** las specs de la [E12](12-catalogos.md), la [E14](14-formularios.md) y la [E21](21-reglas-y-aprobacion.md), sobre todo el borrador, los catálogos, las reglas y el diseño del PDF que se copian.
-2. **Decisiones** de la hoja de ruta: 2, 13 a 16, 30 a 33, 35, 40, 45, 50, 59, 61, 62 y 64.
+2. **Decisiones** de la hoja de ruta: 2, 13 a 16, 30 a 33, 35, 40, 45, 50, 59, 61, 62, 64, 175 y 177.
 3. **Fichas:** [persistencia-ef](../../rules/persistencia-ef.md), [multitenancy](../../rules/multitenancy.md), [auditoria](../../rules/auditoria.md), [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [idempotencia](../../rules/idempotencia.md), [api-http](../../rules/api-http.md), [permisos](../../rules/permisos.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [result-y-errores](../../rules/result-y-errores.md), [validacion](../../rules/validacion.md), [textos-libres](../../rules/textos-libres.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [logs](../../rules/logs.md), [modulos](../../rules/modulos.md) y [tests](../../rules/tests.md). Además, la [ADR 0050](../../decisions/0050-auditoria-global-de-modulos.md).
 4. **Código para copiar:** pieza por pieza, en la §7.
 5. **Pantallas:** los tableros de la §8.
@@ -53,7 +53,9 @@ Valen los criterios de la E14 y la decisión 43. Datos de ejemplo:
   - «Orden de trabajo» (Mantenimiento): retirada;
   - «Comprobante de transferencia» (Ventas, para clientes): publicada.
 
-Con el traspaso 5 se redibujan `FRM-Editor-Reglas-Plantilla`, `M-FRM-Reglas-Plantilla` y `Plat-FRM-Plantilla-Reglas`: las reglas se leen en pasos (138), el historial va detrás de su botón (140) y el mensaje se arma con «Agregar dato» (149).
+Con el traspaso 5 se redibujan `FRM-Editor-Reglas-Plantilla`, `M-FRM-Reglas-Plantilla` y `Plat-FRM-Plantilla-Reglas`: las reglas se leen en pasos (138), el historial va detrás de su botón (140) y el mensaje se arma con «Agregar dato» (149). Con el traspaso 10 se redibujan `Plat-FRM-Plantilla` y `Plat-FRM-Publicar`: la pestaña «Publicación» pierde el renglón «Estado», que repite la banda (175), y las preguntas de la plantilla suman «Agregar bloque», como en el editor de la 19 (177).
+
+**Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
 
 **Aprobados y publicados** en el lienzo v156, con las piezas de la 14 y la 21 ya alineadas a ArquitecturaBase, que no tiene biblioteca, y los recorridos guiados `armar-una-plantilla` y `usar-una-plantilla`:
 
@@ -62,10 +64,10 @@ Con el traspaso 5 se redibujan `FRM-Editor-Reglas-Plantilla`, `M-FRM-Reglas-Plan
 | `Plat-FRM-Biblioteca` y `M-Plat-FRM-Biblioteca` | listado: nombre, categoría, estado (Borrador, Publicada o Retirada), «La usaron» y la última publicación; la caja de filtros de las listas, con Estado y Categoría; «Nueva plantilla». En el teléfono es solo para ver | menú de un filtro, borradores, sin resultados, cargando, vacía y error |
 | `FRM-Formularios-22` y `M-FRM-Formularios-22` | la lista de la 21, con «Cargar», y «Nuevo formulario ▾» con «Desde cero» y «Desde una plantilla» (79); en el teléfono, el «+» pregunta lo mismo | los de la 21 |
 | `Plat-FRM-Plantilla-Nueva` | diálogo con el nombre y la categoría | vacío, faltan los datos (se marcan al tocar «Crear plantilla») y creando |
-| `Plat-FRM-Plantilla` | ficha con pestañas **Plantilla**, **Catálogos** y **Publicación**. **Plantilla** es el editor de la 14: nombre, categoría, prefijo sugerido, para quién es (50), texto del botón y descripción; las preguntas con ↑ ↓ ✎ 🗑, que se abren en el lugar, y debajo las reglas de ejemplo (33), con el teléfono al costado. En la banda, Descartar, Guardar borrador, Publicar y el ⋮ con «Retirar», en rojo. **Catálogos:** una fila por catálogo, con su origen (64), y cada uno se abre aparte. **Publicación:** el estado en grilla y las versiones, con número, fecha, operador y motivo | con cambios, para quién es, guardando, borrador guardado, otra persona guardó, descartar, catálogos, un catálogo a mano, uno de los contactos, publicación (con su menú, borrador y retirada) |
+| `Plat-FRM-Plantilla` | ficha con pestañas **Plantilla**, **Catálogos** y **Publicación**. **Plantilla** es el editor de la 14: nombre, categoría, prefijo sugerido, para quién es (50), texto del botón y descripción; las preguntas con ↑ ↓ ✎ 🗑, que se abren en el lugar, con «Agregar pregunta» y «Agregar bloque» (177), y debajo las reglas de ejemplo (33), con el teléfono al costado. En la banda, Descartar, Guardar borrador, Publicar y el ⋮ con «Retirar», en rojo. **Catálogos:** una fila por catálogo, con su origen (64), y cada uno se abre aparte. **Publicación:** en grilla, «La usaron» y la última publicación, o quién la retiró y el motivo, sin el renglón «Estado», que ya dice la banda (175); debajo, las versiones, con número, fecha, operador y motivo | con cambios, para quién es, guardando, borrador guardado, otra persona guardó, descartar, catálogos, un catálogo a mano, uno de los contactos, publicación (con su menú, borrador y retirada) |
 | `Plat-FRM-Plantilla-Reglas` | «Cuando llega una respuesta» de la 21 debajo de las preguntas, sin «Guardar reglas» ni historial: se guarda con el borrador. Lo de cada organización va con candado, «Lo elige cada organización»: el rol, con «Rol sugerido» como texto, la persona, la dirección y la plantilla de WhatsApp (61 y 62) | editar una regla, mandar por correo, avisar a un rol y a una persona, una regla con errores, guardando, borrador guardado y sin reglas |
 | `Plat-FRM-Pdf` | el diseño del PDF de la 21, desde «Ver el diseño», con «Descartar» y «Guardar borrador». El color va con candado, y el encabezado y la vista previa muestran «Logo» y «Nombre de la organización» como marcadores (82) | estilo moderno, armando la vista previa, guardando, borrador guardado y salir sin guardar |
-| `Plat-FRM-Publicar` y `Plat-FRM-Retirar` | diálogos con el motivo. Publicar suma la comprobación de la 14: «Problemas» por pregunta, catálogo o regla, con «Publicar versión 3» grisado, y «Qué se publica» | sin problemas, con problemas, falta el motivo, primera publicación, volver a publicar, comprobando, publicando, otra persona guardó; retirando |
+| `Plat-FRM-Publicar` y `Plat-FRM-Retirar` | diálogos con el motivo. Publicar suma la comprobación de la 14: «Problemas» por pregunta, catálogo o regla, con «Publicar versión 3» grisado, y «Qué se publica». Detrás, la pestaña «Publicación», sin el renglón «Estado» (175) | sin problemas, con problemas, falta el motivo, primera publicación, volver a publicar, comprobando, publicando, otra persona guardó; retirando |
 | `Plat-FRM-Categorias` | lista con orden y ↑ ↓ ✎ 🗑 a la vista (127); el alta, la edición, subir y borrar piden motivo | una en uso: «Borrar» grisado, con el motivo en su tooltip; nueva, faltan los datos, creando, editar, subir, borrar y vacía |
 | `FRM-Biblioteca` y `M-FRM-Biblioteca` | la biblioteca de formularios estándar (40): tarjetas por categoría, con un buscador, y en qué formulario propio se usó cada plantilla | sin resultados, sin plantillas, cargando y error |
 | `FRM-Plantilla` y `M-FRM-Plantilla` | la vista de una plantilla: la descripción y sus datos, las preguntas, los catálogos que trae, las reglas de ejemplo en palabras (con «el rol que elegís al usarla» y el sugerido) y el teléfono; «Usar esta plantilla» | sin permiso de catálogos, cargando y ya no está |
@@ -78,7 +80,7 @@ Sin «Textos en», sin el inglés obligatorio, sin «Cambios sin guardar» ni «
 **Mandan sobre esta spec en:**
 - **El estado de una plantilla** (ajuste de la Guía del 2026-10-24, con la decisión 43): la lista y la banda dicen solo «Borrador», «Publicada» o «Retirada». «Publicar» habilitado ya dice que hay cambios para publicar, y el número de versión va en el historial de versiones de «Publicación».
 - **Publicación de una plantilla:**
-  - el estado va en grilla, con las versiones (número, fecha, operador y motivo);
+  - la grilla dice cuántas organizaciones la usaron y la última publicación, sin repetir el estado, que ya dice la banda (175), y debajo van las versiones (número, fecha, operador y motivo);
   - en borrador dice «Todavía no se publicó.»;
   - una retirada muestra quién la retiró, el motivo y «Volver a publicar».
 - **Publicar:** el motivo y la comprobación. Muestra qué cambia, o los problemas por pregunta, catálogo o regla, con «Publicar» grisado. La primera publicación es la versión 1, y volver a publicar sin cambios repite la misma.
