@@ -713,6 +713,6 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 ## 7. Decisiones pendientes
 
-Ninguna.
+Las siete del traspaso 10 de ArquitecturaBase, en su [evaluación](2026-11-07-traspaso-10-evaluacion.md) (§5), que se responden de a una después del visto bueno a su plan (§4).
 
 Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98, las del traspaso 4, del 2026-11-02, como decisiones 109 a 122, las del traspaso 5, del 2026-11-03, como decisiones 136 a 149, las del traspaso 6, del 2026-11-06, como decisiones 150 a 152, en la [hoja de ruta de ARCA](2026-11-06-arca-hoja-de-ruta.md), la del traspaso 7, del mismo día, como decisión 153, las del traspaso 8, también del 2026-11-06, como decisiones 154 a 156, y las del traspaso 9, del mismo día, como decisiones 157 a 159.
