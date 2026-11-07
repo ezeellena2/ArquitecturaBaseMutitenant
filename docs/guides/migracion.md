@@ -22,6 +22,7 @@ Las migraciones productivas viven solo en `src/ArquitecturaBaseMultitenant.Infra
    ```
 
    El segundo comando debe indicar que el modelo coincide con la última migración. `MigrationsTests` comprueba lo mismo sin abrir conexión.
+6. **Con `core.autocrlf`,** que Git para Windows trae prendido, el snapshot puede salir con `\r\n` escapado dentro de un CHECK. Volvelo a LF antes de commitear, y escribí cada CHECK en una sola línea: así no depende del fin de línea de quien genera la migración.
 
 ## Aplicación y controles
 
