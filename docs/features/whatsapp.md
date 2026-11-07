@@ -93,7 +93,7 @@ La protección es capacidad mínima disponible, no un techo para ingresar: sin n
 | # | Decisión |
 |---|---|
 | D1 | Cada número muestra siempre «N de 1.000 gratis este mes». Sin medio de pago, el aviso dice «Responde hasta 1.000 mensajes por mes. Sin medio de pago no manda plantillas ni difusiones». |
-| D2 | La persona vincula su conversación con un botón del bot, que solo se ofrece si el número es un Phone verificado de una cuenta. Sin pantalla nueva. |
+| D2 | La persona vincula su conversación con un botón del bot, que solo se ofrece si el número es un Phone verificado de una cuenta. Sin pantalla nueva. **(E21)** La decisión 159 de la [hoja de ruta](../plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md#5-decisiones-de-producto) suma en «Mi cuenta» una zona con el chat de cada organización, con «Vincular». |
 | D3 | Solo el Dueño recibe los cuatro permisos de entrada. Son permisos de organización, no por empresa. Ver, editar e importar contactos y cambiar el consentimiento a mano: «Atender clientes». |
 | D4 | El texto de los chats se guarda mientras exista el contacto (en Plataforma, la conversación) y se borra con él. Apagar el módulo no borra. |
 | D5 | «Mensajes» muestra la conversación desde que se vinculó. Un número reciclado nunca muestra mensajes del dueño anterior. |
