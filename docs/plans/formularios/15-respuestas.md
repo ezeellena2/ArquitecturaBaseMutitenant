@@ -85,7 +85,7 @@ Antes de empezar, en este orden:
 
 **El detalle:**
 - **la vista rápida,** al costado de la planilla (139): en el renglón del título, el número, «Abrir en pantalla completa» y «Abrir conversación» como íconos con su tooltip, ↑ ↓ (también con el teclado), ✕ y Esc. Debajo, los momentos, un renglón cada uno, con la fecha a la derecha y quién debajo, en gris: la mandó y la respondió. Después, la versión y la pestaña Respuesta, con las preguntas de su versión: la pregunta en gris y el valor en negro, y los campos sellados de cada opción alineados debajo de su valor, en una tabla chica con una línea a la izquierda, sin repetir el nombre del catálogo. Al pie dice en qué respuesta va («2 de 4»).
-- **la pantalla completa,** en `/org/formularios/:id/respuestas/:recordId/completa`: «Respuesta» y «Actividad» a todo el ancho y plegables; en «Respuesta», la pregunta tiene una columna fija, así el valor queda cerca. Arriba, el número, ↑ ↓ y «Abrir conversación». Actividad va en cuatro columnas fijas, Fecha, Qué pasó, Estado y Acciones (139): la mandó y la respondió. El formulario queda en las migas;
+- **la pantalla completa,** en `/org/formularios/:id/respuestas/:recordId/completa`: «Respuesta» y «Actividad» a todo el ancho, las dos abiertas y sin plegar (163 y 164); en «Respuesta», la pregunta tiene una columna fija, así el valor queda cerca. Arriba, el número, ↑ ↓ y «Abrir conversación». Actividad va en cuatro columnas fijas, Fecha, Qué pasó, Estado y Acciones (139): la mandó y la respondió. El formulario queda en las migas;
 - **ubicar una respuesta:** la posición, la anterior y la siguiente salen de una sola consulta con ventanas de SQL, con el filtro y el orden de la planilla. Lo ausente, lo excluido y lo ajeno dan el mismo 404;
 - **la dirección compartible** lleva solo el orden, las versiones y las columnas. Una entrada directa arranca sin filtros privados. «Volver» regresa a la misma fila, página, filtros y orden;
 - **«Abrir conversación»** aparece solo si quien mira puede atender esa bandeja, y no manda nada al abrir.
@@ -102,8 +102,8 @@ Aprobados en el lienzo v150. Con el traspaso 5, los filtros (143 y 144) y el det
 | `FRM-Respuesta` | la vista rápida | Aprobado en la v160: el detalle alineado (139) |
 | `FRM-Respuestas-Exportar` | el diálogo de exportar | Aprobado |
 | `FRM-Tablero` | el tablero | Aprobado |
-| `M-FRM-Respuestas`, `M-FRM-Respuesta`, `M-FRM-Tablero` | los tres, en el teléfono. Tocar una fila abre `M-FRM-Respuesta`: no hay vista rápida | `M-FRM-Respuestas` y `M-FRM-Respuesta`, aprobados en la v160 (139 y 144); `M-FRM-Tablero`, aprobado |
-| `FRM-Respuesta-Completa` | la pantalla completa, con sus dos secciones plegadas y abiertas | Aprobado en la v160: la actividad en columnas fijas (139) |
+| `M-FRM-Respuestas`, `M-FRM-Respuesta`, `M-FRM-Tablero` | los tres, en el teléfono. Tocar una fila abre `M-FRM-Respuesta`: no hay vista rápida | `M-FRM-Respuestas` y `M-FRM-Respuesta`, aprobados en la v160 (139 y 144), y `M-FRM-Respuesta` se redibuja sin «Las dos plegadas» (163); `M-FRM-Tablero`, aprobado |
+| `FRM-Respuesta-Completa` | la pantalla completa, con sus dos secciones abiertas | Se redibuja: sin plegar, también en `M-FRM-Respuesta` (163 y 164); la actividad en columnas fijas se aprobó en la v160 (139) |
 | `M-FRM-Formularios-15` | la lista en el teléfono, con «N respuestas · estado» | Aprobado |
 
 **Lo que se corrigió en lo dibujado:**
@@ -155,7 +155,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | F3 | La planilla | `pages/FormRecordsPage.tsx`, `lib/recordFilters.ts`, `lib/values.ts`, `components/records/CustomerTag.tsx` | su tablero | «—», «Sin respuesta», cero y `false`; lo privado fuera de la URL; 403 retira todo; axe |
 | F4 | «Filtros» y los chips | `components/records/RecordFiltersMenu.tsx`, `RecordFacetControl.tsx` | su tablero | cada cambio se aplica enseguida; el combo de una opción, sin cantidades, con «Mostrar N más»; el chip nombra lo elegido; «Limpiar todo»; una faceta que falla no frena |
 | F5 | La vista rápida | `components/records/QuickView.tsx`, `RecordValues.tsx`; la excepción en la ficha de tablas | su tablero | teclado, Esc y foco útil; una respuesta tardía se descarta; los campos alineados debajo de su valor y las acciones como íconos (139) |
-| F6 | La pantalla completa | `pages/RecordFullPage.tsx` | su tablero | entrada directa sin filtros privados; «Volver» a la misma fila; el teléfono; la actividad en columnas fijas (139) |
+| F6 | La pantalla completa | `pages/RecordFullPage.tsx` | su tablero | entrada directa sin filtros privados; «Volver» a la misma fila; el teléfono; la actividad en columnas fijas (139); las dos secciones abiertas, sin plegar |
 | F7 | Exportar | `components/records/ExportDialog.tsx` | su tablero | más de 10.000; `Busy`; «Exportando…» y el diálogo abierto hasta la respuesta |
 | F8 | El tablero | `components/records/FormDashboard.tsx`, sin biblioteca de gráficos | su tablero | quitar, agregar, contar y volver al automático; ver como tabla; axe |
 
