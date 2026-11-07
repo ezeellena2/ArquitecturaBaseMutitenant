@@ -88,17 +88,15 @@ internal sealed class AssistantFinanceReader(ApplicationDbContext db, ITenantCon
                                    Write = rows.Sum(row => row.call.CacheWrite5MinutesTokens + row.call.CacheWrite1HourTokens + row.call.CacheWriteUnknownTokens),
                                    Cost = rows.Sum(row => row.call.Cost.Amount)
                                }).ToArrayAsync(ct);
-        var result = new List<AssistantFinancialAggregateRow>();
-        foreach (var row in aggregate)
+        var months = await MonthBudgetsAsync(operations, db.Set<AssistantBudgetMonth>().AsNoTracking(),
+            aggregate.Select(row => row.BudgetMonthId), ct);
+        return [.. aggregate.Select(row =>
         {
-            var month = row.BudgetMonthId is { } id ? await db.Set<AssistantBudgetMonth>().AsNoTracking()
-                .Where(value => value.Id == id).Select(value => new { value.Month, value.TimeZoneId, value.StartUtc, value.EndUtc }).SingleAsync(ct) : null;
-            var budget = row.BudgetMonthId is { } monthId ? await operations.Where(value => value.BudgetMonthId == monthId && value.Funding == row.Funding)
-                .OrderByDescending(value => value.CreatedAtUtc).ThenByDescending(value => value.Id).Select(value => value.MonthlyBudget).FirstAsync(ct) : null;
-            result.Add(new(row.Access, row.OrganizationId, row.Funding, row.Queries, row.Input, row.Output, row.Read, row.Write,
-                row.People, new Money(row.Cost, row.Currency), budget, month?.Month, month?.TimeZoneId, month?.StartUtc, month?.EndUtc));
-        }
-        return result;
+            var month = row.BudgetMonthId is { } id ? months[(id, row.Funding)] : null;
+            return new AssistantFinancialAggregateRow(row.Access, row.OrganizationId, row.Funding, row.Queries, row.Input, row.Output,
+                row.Read, row.Write, row.People, new Money(row.Cost, row.Currency), month?.Budget, month?.Month, month?.TimeZoneId,
+                month?.StartUtc, month?.EndUtc);
+        })];
     }
     public async Task<IReadOnlyList<AssistantFinancialAggregateRow>> ListBusinessAsync(DateTime startUtc, DateTime endUtc, CancellationToken ct)
     {
@@ -122,17 +120,43 @@ internal sealed class AssistantFinanceReader(ApplicationDbContext db, ITenantCon
                 Write = group.Sum(row => row.CacheWriteTokens),
                 Cost = group.Sum(row => row.Cost.Amount)
             }).ToArrayAsync(ct);
-        var result = new List<AssistantFinancialAggregateRow>();
-        foreach (var row in rows)
+        var months = await MonthBudgetsAsync(scopedOperations,
+            db.Set<AssistantBudgetMonth>().AsNoTracking().Where(value => value.OrganizationId == id), rows.Select(row => row.BudgetMonthId), ct);
+        return [.. rows.Select(row =>
         {
-            var month = row.BudgetMonthId is { } monthId ? await db.Set<AssistantBudgetMonth>().AsNoTracking().Where(value => value.Id == monthId && value.OrganizationId == id)
-                .Select(value => new { value.Month, value.TimeZoneId, value.StartUtc, value.EndUtc }).SingleAsync(ct) : null;
-            var budget = row.BudgetMonthId is { } budgetId ? await scopedOperations
-                .Where(value => value.BudgetMonthId == budgetId && value.Funding == row.Funding)
-                .OrderByDescending(value => value.CreatedAtUtc).ThenByDescending(value => value.Id).Select(value => value.MonthlyBudget).FirstAsync(ct) : null;
-            result.Add(new(Access.Business, id, row.Funding, row.Queries, row.Input, row.Output, row.Read, row.Write, row.People,
-                new Money(row.Cost, row.Currency), budget, month?.Month, month?.TimeZoneId, month?.StartUtc, month?.EndUtc));
-        }
-        return result;
+            var month = row.BudgetMonthId is { } monthId ? months[(monthId, row.Funding)] : null;
+            return new AssistantFinancialAggregateRow(Access.Business, id, row.Funding, row.Queries, row.Input, row.Output, row.Read,
+                row.Write, row.People, new Money(row.Cost, row.Currency), month?.Budget, month?.Month, month?.TimeZoneId,
+                month?.StartUtc, month?.EndUtc);
+        })];
     }
+
+    /// <summary>
+    /// El mes de cada fila y el presupuesto de la última operación de ese mes y esa forma de pago, en una sola consulta para
+    /// todas las filas. Una fila sin el suyo es un bug: el indexador falla, como fallaba la lectura de a una.
+    /// </summary>
+    private static async Task<Dictionary<(Guid MonthId, AssistantKeyFunding Funding), MonthBudget>> MonthBudgetsAsync(
+        IQueryable<AssistantFinancialOperation> operations, IQueryable<AssistantBudgetMonth> months, IEnumerable<Guid?> monthIds,
+        CancellationToken ct)
+    {
+        Guid[] ids = [.. monthIds.OfType<Guid>().Distinct()];
+        if (ids.Length == 0) return new();
+        // De la última operación, solo las columnas del presupuesto: EF no trae entera la primera de cada grupo.
+        var rows = await (from operation in operations.Where(value => value.BudgetMonthId != null && ids.Contains(value.BudgetMonthId.Value))
+                          join month in months on operation.BudgetMonthId equals (Guid?)month.Id
+                          group operation by new { MonthId = month.Id, operation.Funding, month.Month, month.TimeZoneId, month.StartUtc, month.EndUtc }
+                          into grouped
+                          select new
+                          {
+                              grouped.Key,
+                              Latest = grouped.OrderByDescending(value => value.CreatedAtUtc).ThenByDescending(value => value.Id)
+                                  .Select(value => new { Amount = (decimal?)value.MonthlyBudget!.Amount, value.MonthlyBudget!.Currency })
+                                  .FirstOrDefault(),
+                          }).ToArrayAsync(ct);
+        return rows.ToDictionary(row => (row.Key.MonthId, row.Key.Funding), row => new MonthBudget(
+            row.Latest?.Amount is { } amount ? new Money(amount, row.Latest.Currency) : null,
+            row.Key.Month, row.Key.TimeZoneId, row.Key.StartUtc, row.Key.EndUtc));
+    }
+
+    private sealed record MonthBudget(Money? Budget, DateOnly Month, string TimeZoneId, DateTime StartUtc, DateTime EndUtc);
 }

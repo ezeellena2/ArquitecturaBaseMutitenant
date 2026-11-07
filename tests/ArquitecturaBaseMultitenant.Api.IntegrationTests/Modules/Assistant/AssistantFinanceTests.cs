@@ -12,6 +12,7 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -489,6 +490,76 @@ public sealed class AssistantFinanceTests(ApiFactory factory)
             Assert.Equal(platform.MonthEndUtc, business.MonthEndUtc);
             Assert.Equal(platform.MonthlyBudget, business.MonthlyBudget);
         }
+    }
+
+    [Fact]
+    public async Task Listings_read_the_month_and_budget_of_every_row_in_a_single_query()
+    {
+        // Marzo y abril de 2031, lejos de las fechas de las demás pruebas: los listados ven solo estas operaciones.
+        var march = new DateTime(2031, 3, 10, 12, 0, 0, DateTimeKind.Utc);
+        var first = await BusinessAsync();
+        var second = await BusinessAsync();
+        await CompleteAtAsync(first, march, AssistantMode.PlatformKey, 100m);
+        await CompleteAtAsync(first, march.AddMinutes(5), AssistantMode.PlatformKey, 150m);
+        await CompleteAtAsync(first, march, AssistantMode.OwnKey, 300m);
+        await CompleteAtAsync(first, march.AddMonths(1), AssistantMode.PlatformKey, 400m);
+        await CompleteAtAsync(second, march.AddDays(1), AssistantMode.PlatformKey, 500m);
+        var (marchStart, aprilStart, mayStart) = (Utc(2031, 3), Utc(2031, 4), Utc(2031, 5));
+
+        var sql = new QueryCounter();
+        using var host = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+            services.AddDbContext<ApplicationDbContext>(options => options.AddInterceptors(sql))));
+        var (platformOne, platformOneQueries) = await ListAsync(null, aprilStart, mayStart);
+        var (platform, platformQueries) = await ListAsync(null, marchStart, mayStart);
+        var (businessOne, businessOneQueries) = await ListAsync(first, aprilStart, mayStart);
+        var (business, businessQueries) = await ListAsync(first, marchStart, mayStart);
+
+        Assert.Equal(platformOneQueries, platformQueries);
+        Assert.Equal(businessOneQueries, businessQueries);
+        // Cada fila con su mes y el presupuesto de la última operación de ese mes y esa forma de pago.
+        (Guid?, AssistantKeyFunding, DateOnly?, string?, DateTime?, DateTime?, decimal?)[] expected =
+        [
+            (first.ScopeTenantId, AssistantKeyFunding.PlatformKey, new(2031, 3, 1), "UTC", marchStart, aprilStart, 150m),
+            (first.ScopeTenantId, AssistantKeyFunding.OwnKey, new(2031, 3, 1), "UTC", marchStart, aprilStart, 300m),
+            (first.ScopeTenantId, AssistantKeyFunding.PlatformKey, new(2031, 4, 1), "UTC", aprilStart, mayStart, 400m),
+            (second.ScopeTenantId, AssistantKeyFunding.PlatformKey, new(2031, 3, 1), "UTC", marchStart, aprilStart, 500m),
+        ];
+        Assert.Equal(Sorted(expected), Sorted(Shape(platform)));
+        Assert.Equal(Sorted(expected.Where(row => row.Item1 == first.ScopeTenantId)), Sorted(Shape(business)));
+        Assert.Equal([expected[2]], Shape(platformOne));
+        Assert.Equal([expected[2]], Shape(businessOne));
+
+        async Task<(IReadOnlyList<AssistantFinancialAggregateRow> Rows, int Queries)> ListAsync(AssistantFinancialBinding? binding,
+            DateTime startUtc, DateTime endUtc)
+        {
+            using var scope = host.Services.CreateScope();
+            var services = scope.ServiceProvider;
+            using var tenant = binding?.ScopeTenantId is { } id ? services.GetRequiredService<ITenantScope>().Enter(id) : null;
+            var reader = services.GetRequiredService<IAssistantFinanceReader>();
+            sql.Target = services.GetRequiredService<ApplicationDbContext>();
+            sql.Reset();
+            var rows = binding is null ? await reader.ListPlatformAsync(startUtc, endUtc, Ct) : await reader.ListBusinessAsync(startUtc, endUtc, Ct);
+            return (rows, sql.Count);
+        }
+        async Task CompleteAtAsync(AssistantFinancialBinding binding, DateTime admittedAtUtc, AssistantMode mode, decimal budget)
+        {
+            var admitted = await ReserveAsync(factory, binding, Guid.CreateVersion7(), admittedAtUtc, mode, budget);
+            Assert.True(admitted.IsSuccess, admitted.Error.Code);
+            Assert.True((await WriteAsync(factory, binding, async services =>
+            {
+                var writer = new AssistantUsageWriter(services.GetRequiredService<IAssistantFinanceRepository>(), Clock(admittedAtUtc.AddMinutes(1)));
+                Assert.True((await writer.BeginCallAsync(binding, admitted.Value.Id, 1, false, Ct)).IsSuccess);
+                Assert.True((await writer.RecordUsageAsync(binding, admitted.Value.Id, 1, new(1000, 100, 0, 0, 0, 0, 30, true), Ct)).IsSuccess);
+                return await writer.CompleteAsync(binding, admitted.Value.Id, Ct);
+            })).IsSuccess);
+        }
+        static DateTime Utc(int year, int month) => new(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
+        static (Guid?, AssistantKeyFunding, DateOnly?, string?, DateTime?, DateTime?, decimal?)[] Shape(
+            IEnumerable<AssistantFinancialAggregateRow> rows) => [.. rows.Select(row => (row.OrganizationId, row.Funding, row.Month,
+                row.TimeZoneId, row.MonthStartUtc, row.MonthEndUtc, row.MonthlyBudget?.Amount))];
+        static (Guid?, AssistantKeyFunding, DateOnly?, string?, DateTime?, DateTime?, decimal?)[] Sorted(
+            IEnumerable<(Guid?, AssistantKeyFunding, DateOnly?, string?, DateTime?, DateTime?, decimal?)> rows) =>
+            [.. rows.OrderBy(row => row.Item1).ThenBy(row => row.Item3).ThenBy(row => row.Item2)];
     }
 
     [Fact]
