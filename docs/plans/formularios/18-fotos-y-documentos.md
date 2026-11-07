@@ -99,6 +99,7 @@ Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133
 - **«Reintentando»** se ve mientras corren los reintentos, sin acción del operador.
 - **Fuera de las 24 horas,** adjuntar queda grisado, con el motivo en su tooltip.
 - **Un archivo de un mensaje enviado** que no salió queda «No se pudo», sin reintento.
+- **Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
 
 ## Contrato
 
