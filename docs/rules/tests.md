@@ -6,6 +6,7 @@
 - Para un cambio de lógica, observar rojo por la conducta ausente, implementar, repetir el test focal en verde y commitear el cambio coherente. Los pasos internos no necesitan un commit ni una suite completa cada uno.
 - Si la tarea cambia una ruta, persistencia, autenticación o aislamiento, al terminarla (no antes de cada commit) se corren los tests de integración y de seguridad de esa área. Las pruebas con Testcontainers usan Docker. La suite completa corre una vez, en la puerta.
 - Para documentación, capturas o configuración sin lógica, usar la comprobación pertinente; no escribir un test que solo repita el cambio.
+- **Con la app abierta en el IDE,** `dotnet build` y `dotnet test` llevan `--artifacts-path .local/artifacts`, una carpeta ignorada del repo, para no chocar con los ensamblados que la app tiene tomados. Nunca en el temporal del sistema: los ArchitectureTests buscan `ArquitecturaBaseMultitenant.slnx` subiendo desde su ensamblado (`SolutionRoot`) y fallan. Con más de un origen de NuGet en la PC, el primer restore de esa carpeta corta con NU1507: se restaura con `--source https://api.nuget.org/v3/index.json` y se sigue con `--no-restore`.
 - **Lista de control de cada etapa (2026-10-24):** los doce puntos de la skill `/puerta` («Lista de control»). Cada punto que aplica a la etapa lleva su test, escrito durante la etapa, y la revisión de código del cierre lo comprueba.
 | Qué | Dónde | Con qué |
 |---|---|---|
