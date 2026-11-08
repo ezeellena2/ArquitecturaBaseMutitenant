@@ -39,7 +39,7 @@ Todo ocurre en `main`, sin ramas, worktrees, stash, reset ni push. Cada chat com
 
 ### K1 · Publicar antes de programar las pantallas
 
-No cambia una ruta existente salvo la importación de teléfonos, el cambio de acceso y el retiro del canje. El Back publica, genera `docs/contracts/openapi.json` y exporta ejemplos reales estrictos de todas las respuestas nuevas o cambiadas, incluidos 400 y los estados vacíos. El Front regenera `src/shared/api/generated/schema.d.ts` con `npm run contracts`; no escribe tipos a mano.
+No cambia una ruta existente salvo la importación de teléfonos, el cambio de acceso y el retiro del canje. El Back publica y genera `docs/contracts/openapi.json`. Los ejemplos de una corrida real nacen en la E12, con su guarda ([api-http](../rules/api-http.md)). El Front regenera `src/shared/api/generated/schema.d.ts` con `npm run contracts`; no escribe tipos a mano.
 
 | Ruta | Acceso y permiso | Entrada / salida | Resultado |
 | --- | --- | --- | --- |
@@ -49,12 +49,12 @@ No cambia una ruta existente salvo la importación de teléfonos, el cambio de a
 | `POST /api/auth/login-link/preview` y `/redeem` | — | se retiran con sus contratos y ejemplos | 404 por ruta inexistente |
 | Cambiar de acceso (`ConnectController`) | el de siempre | suma `returnTo`, que se valida con los destinos de `ReturnUrls.cs` y no amplía los retornos autorizados | un destino ajeno no se usa, como hoy |
 
-`INotificationSource.ListAsync(NotificationContext, ct)` vive en `Application/Interfaces/Services/`, copia el alcance de `IPendingItemSource` y devuelve solo lo autorizable. `kind` queda abierto; los textos salen de resources según la cultura del pedido. `occurredAtUtc` es UTC. Las rutas cuentan en las cuotas generales. No hay permiso nuevo ni idempotencia para marcar leído.
+`INotificationSource.ListAsync(NotificationContext, ct)` vive en `Application/Interfaces/Services/`, copia el alcance de `IPendingItemSource` y devuelve solo lo autorizable. `kind` queda abierto. El front arma el texto de cada aviso con su `kind` y sus `params`, en el idioma de quien mira: los del núcleo, con sus locales; los de un módulo, con `notifications` de su `registration.ts` (`{kind, describe}`, como `businessHome.pending`). `occurredAtUtc` es UTC. Las rutas cuentan en las cuotas generales. No hay permiso nuevo ni idempotencia para marcar leído.
 
 **Texto para el chat de Contrato**
 
 ```text
-Leé AGENTS.md, este plan y la spec de Base de la 12. Hacé K1 primero, sin adelantar formularios. Publicá exactamente las rutas, cuerpos, accesos, ProblemDetails y ejemplos de esta sección; generá openapi.json y avisá al coordinador para que el front corra npm run contracts. Todo en main, sin push, rama ni worktree; commiteá solo tus rutas con pathspec. Aplicá api-http, permisos, textos, fechas y tests. Al terminar, build y tests rápidos enteros del back, nunca filtrados por módulo.
+Leé AGENTS.md, este plan y la spec de Base de la 12. Hacé K1 primero, sin adelantar formularios. Publicá exactamente las rutas, cuerpos, accesos y ProblemDetails de esta sección; generá openapi.json y avisá al coordinador para que el front corra npm run contracts. Todo en main, sin push, rama ni worktree; commiteá solo tus rutas con pathspec. Aplicá api-http, permisos, textos, fechas y tests. Al terminar, build y tests rápidos enteros del back, nunca filtrados por módulo.
 ```
 
 ## Back
@@ -62,15 +62,15 @@ Leé AGENTS.md, este plan y la spec de Base de la 12. Hacé K1 primero, sin adel
 Las tareas copian los moldes indicados en la spec. Aplican Result/ProblemDetails, `OperationLog.RunAsync`, `LoggerMessage`, `TimeProvider`, resources es/en, UoW única por escritura, RLS y auditoría. Los cambios de módulo permanecen en `Modules/WhatsApp`; el núcleo no lo referencia.
 
 1. **B1 · Campana.** En `INotificationSource`, modelos, `NotificationService`, controller de Cuenta, entidad/configuración/repositorio y migración de `NotificationRead` global en `identity`; copiar `IPendingItemSource`, `HomeService`, `HomeController` y `MeController`. Junta fuentes aisladas y marca leído con UoW y clave `UserId + NotificationId`. Probar tres accesos, permiso, orden, 50, fuente fallida y aislamiento.
-2. **B2 · Fuentes del núcleo.** En `Services/Notifications/*Source.cs`, sumar `personalLoginMethod`, `organizationPending` y `recoveryRequested`; copiar `OrganizationUserPendingItems`. Probar cada fuente con y sin el permiso.
+2. **B2 · Fuentes del núcleo.** En `Services/Notifications/`, sumar `PersonalLoginMethodNotificationSource`, `OrganizationPendingNotificationSource` y `RecoveryRequestedNotificationSource`, con `kind` `personalLoginMethod`, `organizationPending` y `recoveryRequested`. El sufijo `NotificationSource` entra en la lista cerrada de [capas-y-flujo](../rules/capas-y-flujo.md) y en `ApplicationServicesTests`, como `PendingItems`; copiar `OrganizationUserPendingItems`. Probar cada fuente con y sin el permiso.
 3. **B3 · Baja y limpieza.** Sumar participante de baja y worker de 90 días; copiar `AccountDeletionWorker`. Probar eliminación con la cuenta y limpieza vencida.
 4. **B4 · Textos.** En resources es/en, `Permissions`, plantillas de correo/WhatsApp y `docs/operations/whatsapp-plantillas.md`, cambiar el vocabulario de la spec; copiar los recursos actuales. Probar `ResourceParityTests` y una guarda sin las palabras retiradas.
 5. **B5 · Otro acceso.** Sumar `returnTo` al cambio de acceso, solo desde `ReturnUrls.cs`; copiar ese archivo. Probar `FrontendReturnUrlTests`, incluidos destinos ajenos.
 6. **B6 · Bot sin enlace.** Retirar controller, contratos, entidad, repositorio, opciones, servicios, replay, DI, migración y pruebas de `LoginLink`; borrar `LoginLinks` con un `Down` que se niega a perder datos. En los escritores y `WhatsAppCloudClient`, copiar el botón existente y responder `Entrar a mi cuenta` con `cta_url` a `/login`, aun sin consultas. Probar que no sale token/enlace y actualizar inventarios de rutas, seguridad, clasificación y documentación.
-7. **B7 · Consentimiento por teléfono.** En contratos/validador/importador WhatsApp, `OrganizationUserInvitationWriter`, invitación y migración, agregar `consentConfirmed`, actor y fecha; copiar el importador actual. Probar 400 sin casilla/nada enviado, sellado con casilla y ejemplos/OpenAPI.
+7. **B7 · Consentimiento por teléfono.** En contratos/validador/importador WhatsApp, `OrganizationUserInvitationWriter`, invitación y migración, agregar `consentConfirmed`, actor y fecha; copiar el importador actual. Probar 400 sin casilla/nada enviado, sellado con casilla y OpenAPI.
 8. **B8 · Configuración y arnés corto.** En `appsettings.Development.json` y `HarnessTests`, llevar Debug a Warning y limitar a 30 KB cada cadena de `AGENTS.md`; copiar `Agent_files_are_short_and_their_links_work`. Probar configuración y límite.
 9. **B9 · Arnés sin ramas.** En `scripts/arneses/comun/worktree.mjs`, `corrida.mjs`, `programar.ps1`, README e instrucciones/skills, reemplazar worktree/rama por copia local detached de `HEAD`, como `/puerta`; `--fusionar` solo hace `--ff-only`. Probar que no crea rama/worktree y que un `main` adelantado no fusiona.
-10. **B10 · Una lectura por requisito y cierre.** Corregir `PermissionAuthorizationHandler` para que lea cada proyección una sola vez por requisito, como pide `docs/rules/permisos.md` para la base de la 12, con un contador de lecturas en `PermissionAuthorizationTests`. Actualizar `docs/features/whatsapp.md`, Identidad, `backend.md`, ADR 0038/0049 y plantillas. La decisión técnica es incluir esta corrección y los ejemplos exportados de K1 porque las fichas vigentes los fijan para la base de la 12.
+10. **B10 · Una lectura por requisito y cierre.** Corregir `PermissionAuthorizationHandler` para que lea cada proyección una sola vez por requisito, como pide `docs/rules/permisos.md` para la base de la 12, con un contador de lecturas en `PermissionAuthorizationTests`. Actualizar `docs/features/whatsapp.md`, Identidad, `backend.md`, ADR 0038/0049 y plantillas. La decisión técnica es incluir esta corrección porque la ficha la fija para la base de la 12. Los ejemplos exportados y `PersistenceNamingTests` son de la E12.
 
 **Texto para el chat del Back**
 
@@ -83,8 +83,8 @@ Leé AGENTS.md, este plan, la spec Base de la 12, api-http, permisos, guardado, 
 Las tareas siguen los tableros v169 y las fichas de UI, formatos, formularios, listados, accesibilidad y tema. Todas usan i18n, tipos generados, formatos compartidos y pruebas axe donde cambia una pantalla.
 
 1. **F1 · Botones y esperas.** En `button`, `ConfirmDialog`, `DataTable`, `Table` y `useEditPage`, aro/gerundio sin atenuar, confirmación hasta respuesta y refresco con línea. Copiar las piezas actuales; probar éxito, fallo y campo requerido.
-2. **F2 · Campana.** Crear `layouts/notifications/`, `NotificationsPage` y API contra K1, con navegación de tres accesos, teléfono y versión nueva. Copiar los tableros; probar no leído, marcar, filtros sin conteos y axe.
-3. **F3 · Tablas.** En `DataTable`, `FilterBar`, siete pantallas núcleo, WhatsApp y `ChatsWorkspace`, quitar detail de la compu en los 12 `columns.tsx`, no solo ocho. Retirar los 20 `truncate` de 10 archivos, `title` y el corte compartido, salvo preview de Chats. Probar texto largo, CUIT, zonas, ▲/▼, líneas y alto de ocho filas.
+2. **F2 · Campana.** Crear `layouts/notifications/`, `NotificationsPage` y API contra K1, con navegación de tres accesos, teléfono y versión nueva. `ModuleRegistration` suma `notifications` (`ModuleNotificationKind {kind, describe}`), para que cada módulo arme el texto de sus avisos. Copiar los tableros; probar no leído, marcar, filtros sin conteos y axe.
+3. **F3 · Tablas.** En `DataTable`, `FilterBar`, siete pantallas núcleo, WhatsApp y `ChatsWorkspace`, quitar detail de la compu en los 12 `columns.tsx`, no solo ocho. En `FilterBar`, el buscador y hasta tres filtros en una fila, y lo demás en un solo «Filtros», nunca «Más filtros», que aplica cada cambio, con lo aplicado en chips y «Limpiar todo»; un filtro de opciones es un desplegable simple, sin cantidades y con la elegida tildada, y un segmentado conserva su número (143, 144 y 164). Retirar los 20 `truncate` de 10 archivos, `title` y el corte compartido, salvo preview de Chats. Probar texto largo, CUIT, zonas, ▲/▼, líneas y alto de ocho filas.
 4. **F4 · Fechas.** En `shared/format` y sus usos, reemplazar `relative`/`formatCalendar` por fecha y hora completas; copiar `formatos.md`. Probar la guarda que prohíbe ambos.
 5. **F5 · Carteles y estado.** En las siete pantallas listadas por la spec, llevar carteles a banda/campana y una sola etiqueta con ⓘ; sacar renglón Estado del teléfono. Copiar tableros; probar cada pantalla.
 6. **F6 · Palabras.** En locales/enums, `UserDetailPage` y `UserCompanyDialog`, aplicar el vocabulario y `Agregar empresa`; probar una guarda de textos.
@@ -107,7 +107,7 @@ Leé AGENTS.md del front, este plan y la spec Base de la 12. Esperá K1, corré 
 
 ## Integración y puerta
 
-1. **I1 · Integrar.** Front consume K1 real; cualquier diferencia se devuelve a su dueño y se anota abajo. Regenerar tipos y validar los ejemplos estrictos.
+1. **I1 · Integrar.** Front consume K1 real; cualquier diferencia se devuelve a su dueño y se anota abajo. Regenerar los tipos.
 2. **I2 · Meta.** El usuario vuelve a aprobar en Meta las plantillas de cuenta con el mismo nombre y textos nuevos. No se carga ningún secreto ni se maneja su cuenta. La prueba manual usa el número de Plataforma: enviar un mensaje, verificar el botón `Entrar a mi cuenta` y que abre `/login` en el celular.
 3. **I3 · Puerta.** Correr `/puerta` una vez sobre copias del corte: build y `dotnet test --no-build`; front build, lint, test y `contracts:check`; E2E real; `realinear-docs --detectar` y `estado-docs --detectar`; galería solo de pantallas cambiadas a 1440/390/320; `/recorrido`; y revisión de la lista de control. La retirada del módulo no corresponde: ya se verificó en la E11 y esta base no cambia su composición.
 4. **I4 · Recorrido.** Campana de los tres accesos; una tabla, fecha y botón por área; otro acceso; baja/reactivación y borrar cuenta; cargar teléfonos sin/con casilla; y una pantalla de cada área a 320. El resultado queda en la tabla breve de esta sección.
@@ -125,6 +125,18 @@ Leé AGENTS.md de ambos repos, este plan y /puerta. Integrá contra K1, resolvé
 ## Relación con otras etapas
 
 La F5 de la E10 entra completa acá; E10 sigue después del bloque. E12–E25 agregan sus propias fuentes a la campana, sin cambiar esta base. No se implementa ningún catálogo, formulario, aviso de formularios ni funcionalidad posterior. E14 prueba la CSP de la vista oficial; esta etapa no cambia `frame-src`.
+
+**Deja para las siguientes:**
+- en el back, `INotificationSource` y `GET /api/notifications`: la E14, la E21, la E23 y la E25 suman sus fuentes con el sufijo `NotificationSource`, y en el front, sus textos con `notifications` de su `registration.ts`;
+- en el front:
+  - `layouts/notifications/`;
+  - los botones con su espera y `ConfirmDialog` con `pending` (F1);
+  - `FilterBar` con un solo «Filtros», chips y «Limpiar todo», sin cantidades (F3);
+  - las fechas completas (F4);
+  - la escala y las piezas de forma (F8);
+  - `InfoTip` (F10) y lo elegido (F11);
+  - `PageLoading` y `FormSkeleton` (F12);
+  - la galería a 320 (F15).
 
 ## Cambios al contrato
 
