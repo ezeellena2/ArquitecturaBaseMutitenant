@@ -8,7 +8,7 @@
 
 Antes de empezar, en este orden:
 
-1. **Decisiones** de la hoja de ruta: la 43 (botones y avisos), la 109, la 110, la 115, la 116 y la 122 (leyendas, ayuda, motivos y esperas), y del traspaso 10, la 137, la 143 y la 144 (tablas y filtros), la 160 (lo que carga), la 161 (decidir a propósito), la 164 (lo nuevo vale para lo que ya existe), la 173 (que no parezca plantilla), la 174 (el texto largo, entero), la 175 (el estado, una vez), la 179 (el ingreso y el consentimiento por WhatsApp), la 180 (la escala), la 187 (el teléfono no se achica), la 188 (la vista previa de Chats, con «…»), la 189 (el ingreso, liso) y la 190 (la ficha de un usuario, sin «Estado»). Los pedidos del usuario del 25 y el 26/10 están en el [plan de desarrollo](../2026-09-27-plan-de-desarrollo.md#etapas-12-a-25-formularios-por-whatsapp).
+1. **Decisiones** de la hoja de ruta: la 43 (botones y avisos), la 109, la 110, la 115, la 116 y la 122 (leyendas, ayuda, motivos y esperas); del traspaso 5, la 137, la 142, la 143 y la 144 (tablas, lo elegido y filtros), y del traspaso 10, la 160 (lo que carga), la 161 (decidir a propósito), la 162 (ninguna elección se descarta en silencio), la 163 (mucho texto, sin plegar), la 164 (lo nuevo vale para lo que ya existe), la 173 (que no parezca plantilla), la 174 (el texto largo, entero), la 175 (el estado, una vez), la 179 (el ingreso y el consentimiento por WhatsApp), la 180 (la escala), la 187 (el teléfono no se achica), la 188 (la vista previa de Chats, con «…»), la 189 (los paneles verdes, lisos) y la 190 (la ficha de un usuario, sin «Estado»). Los pedidos del usuario del 25 y el 26/10 están en el [plan de desarrollo](../2026-09-27-plan-de-desarrollo.md#etapas-12-a-25-formularios-por-whatsapp).
 2. **Fichas:** [textos-y-traducciones](../../rules/textos-y-traducciones.md), [api-http](../../rules/api-http.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [permisos](../../rules/permisos.md), [datos-personales](../../rules/datos-personales.md), [tests](../../rules/tests.md) y, del front, `pantallas-y-ui.md`, `formatos.md`, `formularios.md`, `paginado-y-listados.md`, `textos-y-traducciones.md` y `tema.md`.
 3. **Código para copiar:** la columna «Copia de» de los [pasos](base-de-la-12-parte-pasos.md).
 4. **El lienzo:** `Campana`, `M-Campana`, `Campana-Plat`, `M-Campana-Plat`, `M-Campana-Personal`, `Otro-Acceso` y `Otro-Acceso-Persona`, los ocho `Criterio-*` y los tableros de cada pantalla que cambia (abajo, «Pantallas»).
@@ -26,9 +26,13 @@ Antes de empezar, en este orden:
 - si falta un dato obligatorio, el botón queda habilitado, y al tocarlo se marca el campo;
 - **lo apagado dice por qué:** el motivo de un botón, una casilla, la ✕ de un diálogo o una opción de menú va en su tooltip, si no es obvio. En el teléfono, tocarlo lo muestra en la franja oscura de abajo;
 - **sin leyendas:** el renglón de abajo es solo para el error o para un dato. La ayuda que sirve va en una (i) con tooltip, y lo que no ayuda a decidir se saca. En el teléfono, tocar la (i) abre una hoja chica con el texto. Lo que no se puede hacer sigue en el aviso importante, con su ⓘ;
-- **decidir a propósito** (161): una acción que no se deshace y dispara avisos pide confirmar nombrando lo que se decide («¿Aprobar Grupo Delta?»), con la principal y el foco en «Cancelar»; el rojo lleno queda para lo que destruye. En el núcleo son aprobar o rechazar una organización o un pedido de recuperación, bloquear una página pública, dar de baja una cuenta desde Plataforma, y dar de baja o quitar a un usuario.
+- **decidir a propósito** (161): una acción que no se deshace y dispara avisos pide confirmar nombrando lo que se decide («¿Aprobar Grupo Delta?»), con la principal y el foco en «Cancelar»; el rojo lleno queda para lo que destruye. En el núcleo son aprobar o rechazar una organización o un pedido de recuperación, despublicar una página pública, borrar una cuenta desde Plataforma («¿Borrar la cuenta de …?») y dar de baja o quitar a un usuario. Rechazar una organización, despublicar, borrar una cuenta y quitar a un usuario destruyen, y van en rojo lleno, como en sus tableros.
 
 **El estado, una vez** (175): lo que dice la etiqueta del encabezado no se repite debajo. En Usuario y en la Cuenta y la Organización de Plataforma sale el cartel que repite el estado («Pidió la baja de su cuenta…», «Suspendida el …»): la etiqueta lo dice una vez, cuándo y por qué van en una frase en su ⓘ («El 03/11/2026. Motivo: falta de pago.»), y en el teléfono se va el renglón «Estado» que lo repetía. En la ficha de un usuario sale también el campo gris «Estado», que no se podía editar (190).
+
+**Lo que se elige y lo que se lee** (162 y 163), en lo que ya existe:
+- **ninguna elección se descarta en silencio** (162): cambiar un tipo, una acción o una opción conserva lo escrito que sigue sirviendo, y lo que se pierde se avisa antes de cambiar, como en `formularios.md` del front. En el núcleo, la opción del bot de WhatsApp: con un texto escrito, pasar a «Pasa a un equipo» pregunta «¿Cambiar a «Pasa a un equipo»? Se quita el texto.», y con un equipo elegido, pasar a «Contesta un texto» pregunta «¿Cambiar a «Contesta un texto»? Se quita el equipo.»;
+- **mucho texto, con jerarquía** (163): una lectura va entera y sin plegar, con las fechas a la derecha, una vez por momento, y lo que se consulta poco, detrás de un botón en el encabezado de su sección. Lo plegado que queda en el núcleo es de edición y está aprobado en `Criterio-Decisiones`: las áreas de permisos de un rol y «Avanzado: datos técnicos» de un modelo del asistente.
 
 **La campana,** en el núcleo:
 - lo que llegó, lo que falló en segundo plano y lo que espera a alguien, según los permisos de quien mira. Cada aviso lleva a donde se resuelve;
@@ -53,15 +57,15 @@ Antes de empezar, en este orden:
 - **`FilterBar`:** los filtros, las etiquetas y los contadores, con el radio de un control, sin pastillas;
 - **el botón principal** es sólido, sin degradé ni sombra.
 
-Las sombras quedan solo en menús, desplegables y tooltips: salen todas las demás, como las de las tarjetas, las superficies, los diálogos, los segmentados y los botones. El panel verde del ingreso queda liso, sin el degradé ni la cuadrícula (189).
+Las sombras quedan solo en menús, desplegables y tooltips: salen todas las demás, como las de las tarjetas, las superficies, los diálogos, los segmentados y los botones. Los paneles verdes quedan lisos, sin degradé ni cuadrícula: el del ingreso (189) y, como él, el cierre de la portada y la cabecera del Inicio del teléfono (136). Salen también los degradés que quedan fuera de las seis piezas: el «Ingresar» del sitio público, que es un principal, y el cuadrado con las iniciales de la organización en una invitación, que es un avatar.
 
-**La escala** (180), sobre los tokens de tamaño y junto con la forma:
-- la letra, un 18 % más chica, sin bajar de 10,5 px en pantalla; el cuerpo queda en unos 11 px;
-- las filas, los controles y las bandas, un 26 % más bajos: una fila de tabla, unos 33 px; un botón o un filtro, de 24 a 27 px, y la barra de arriba, unos 39 px;
-- los rellenos y las separaciones, un 28 % más chicos;
+**La escala** (180), junto con la forma. Manda lo que se ve en la compu, con las medidas de «Forma» en `tema.md` del front, que se comparan con los tableros publicados:
+- la letra, en unos 11 px el cuerpo, y nunca menos de 10,5 px;
+- un botón o un filtro, de 24 a 27 px; una fila de tabla, de 30 a 33 px, y la barra de arriba, unos 39 px;
+- los rellenos y las separaciones, más chicos;
 - las esquinas, de 3 px como mucho, también en las pastillas y los avatares, y sin sombras.
 
-Las medidas concretas las fija `tema.md` del front, que deja la sesión de las piezas del lienzo, y se comparan con los tableros publicados. La raíz sigue al 75 % en la compu, con las medidas en rem (2026-11-02): lo que se ve en pantalla tiene que dar lo que muestra el tablero. En el teléfono, lo que se toca sigue midiendo 44 × 44 (187).
+Esas medidas salen de las nominales con la letra un 18 % más chica, los altos un 26 % más bajos y los rellenos un 28 % más chicos, y así las dibuja el lienzo. En la app, la raíz sigue al 75 % en la compu, con las medidas en rem (2026-11-02), y ya da casi todos los altos (un botón de 36 mide 27): los tokens de tamaño se ajustan para que en pantalla dé lo de `tema.md`, y las dos escalas no se aplican una encima de la otra. Así, la letra sube (hoy el cuerpo de 13 se lee 9,75) y las esquinas bajan. En el teléfono no se achica nada: debajo de 768 px, lo que se toca sigue midiendo 44 × 44 (187).
 
 **Las fechas,** siempre con fecha y hora completas, en la zona de la cuenta: salen `relative`, `formatCalendar` y las fechas cortas, también en Usuarios y en la tarjeta de Auditoría de Inicio.
 
@@ -103,6 +107,12 @@ Los tableros del 25 y el 26/10 están en el lienzo v145; la campana y «Otro acc
 | `Mensajes`, `Mapa-Ingreso` e `Indice-entra` | redibujados en la v168: el bot contesta con «Entrar a mi cuenta», que abre el ingreso, y ninguno nombra el enlace de un solo uso (179) |
 | `WA-Telefonos` y `M-WA-Telefonos` | redibujados en la v168: «Cargar teléfonos» con la casilla del consentimiento (179) |
 | `Enlace` y `M-Enlace` | en el Archivo desde la v168: la página del enlace de un solo uso (179) |
+| `Ingreso`, `Registro`, `Registro-Empresa`, `Recuperar`, `Aceptar-Terminos` e `Invitacion`, con sus teléfonos | el panel verde, liso (189), y en la invitación, el cuadrado con las iniciales de la organización como un avatar, sin degradé (173) |
+| `Landing` y `Landing-Movil`, y `M-Inicio-Org` y `M-Inicio-Miembro` | el cierre de la portada y la cabecera del Inicio del teléfono, lisos como el panel del ingreso (136), y el «Ingresar» de la portada, sólido |
+| `WA-Chats` y `Plat-WA-Chats`, con sus teléfonos | la vista previa del último mensaje en un renglón, con «…» (188), y en Chats, los filtros en una fila |
+| `Legales`, `Inicio-Personal`, `Cuenta` y `Cuenta-Baja`, con sus teléfonos | sin carteles: lo de Legales va en la banda y el aviso de Inicio personal, en la campana; «Borrar mi cuenta», con el estado «Por borrar» |
+| `Inicio-Org`, con su teléfono | la tarjeta de Auditoría, con fecha y hora completas |
+| `WA-Admin-Editar` y `M-WA-Editar` | la opción del bot: cambiar la acción conserva lo escrito y pregunta antes de quitar el texto o el equipo (162) |
 | `Criterio-Botones`, `Criterio-Formularios`, `Criterio-Tablas`, `Criterio-Dialogos`, `Criterio-Avisos`, `Criterio-Marco`, `Criterio-Menus` y `Criterio-Decisiones` | el botón que trabaja, la (i), la tabla que vuelve a leer, la confirmación que espera y cuándo va la ⓘ, en el lienzo v148, con las reglas del traspaso 5 en la v159. Redibujados en la v168 con las del traspaso 10: la forma, la escala, la primera carga, decidir a propósito, el estado una vez y el texto entero |
 
 **La galería de esta etapa** son las pantallas que cambian, una vez al final, a 1440, 390 y 320.
@@ -153,7 +163,10 @@ Tres migraciones:
 | Front | Cuántas pantallas usan `detail`. | Se pasan todas a columnas. |
 | Front | Cuántos textos fijos quedan en `hint` y `description`. | Unos 30 usos, en 23 archivos, el 2026-11-02. |
 | Front | Las seis piezas de la forma, la escala de `index.css` y las sombras. | Las del 2026-11-07: `BrandMark` con degradé, `Avatar` redondo, `icon` en 38 pantallas, la pastilla de `menuRow.ts`, las cantidades de `FilterBar` y el degradé de `button.tsx`. |
-| Front | Las medidas de la escala en `tema.md`. | Las deja la sesión de las piezas del lienzo; la tarea las toma de ahí y las compara con los tableros publicados. |
+| Front | Las medidas de la escala en `tema.md`. | Están en «Forma» (2026-11-07): las que se ven en la compu y cómo salen de las nominales. La tarea las toma de ahí y las compara con los tableros publicados. |
+| Front | Cuántas columnas cortan el texto con `truncate`. | Diez `columns.tsx` el 2026-11-08: las de empresas, roles y usuarios, las de cuentas, recuperaciones y organizaciones de Plataforma, y cuatro de WhatsApp (difusiones, contactos, números y equipos). Se sacan todas. |
+| Front | Los degradés fuera de las seis piezas. | Los del 2026-11-08: el panel del ingreso (`index.css`, `--auth-panel-*` y su cuadrícula), `SiteLayout.tsx` («Ingresar»), `InvitationPage.tsx` (las iniciales), `PhoneHome.tsx` (la cabecera) y `LandingPage.tsx` (el cierre). |
+| Front | Qué pantallas del núcleo cambian un tipo o una acción y pierden lo escrito, o pliegan una lectura. | El 2026-11-08: la opción del bot (`OptionDialog.tsx`) conserva el equipo y el texto mientras el diálogo está abierto, y al guardar se queda solo con el de la acción elegida. No hay lecturas plegadas. |
 | Núcleo | Que el enlace de un solo uso lo use solo el bot. | `LoginLinkIssuer` exige un teléfono verificado y no lo usa nadie más (2026-11-07). |
 | Núcleo | La invitación que arma `InviteByPhoneAsync`. | Ahí se guarda el consentimiento. |
 | Front | «Desvincular» sin WhatsApp. | Como lo revisado el 2026-11-07 («Lo técnico»). |
@@ -180,7 +193,7 @@ Tres migraciones:
 
 ## Cómo se cierra
 
-La puerta de la etapa, con la lista de control de `/puerta`. No hay prueba con Meta, salvo que las plantillas de la cuenta estén aprobadas antes de cerrar; el botón «Entrar a mi cuenta» del bot se abre igual en un celular. El recorrido prueba: la campana con los tres accesos; una tabla, una fecha y un botón en cada área; un link del otro acceso; dar de baja y reactivar un usuario, y borrar la cuenta propia; «Cargar teléfonos» sin la casilla y con ella; y una pantalla de cada área a 320.
+La puerta de la etapa, con la lista de control de `/puerta`. La prueba con Meta es corta y usa el número de la plataforma (E8): el bot contesta con «Entrar a mi cuenta» y el botón abre el ingreso en un celular. Las plantillas de la cuenta con sus textos nuevos entran en esa prueba solo si el usuario ya las aprobó en Meta. El recorrido prueba: la campana con los tres accesos; una tabla, una fecha y un botón en cada área; un link del otro acceso; dar de baja y reactivar un usuario, y borrar la cuenta propia; «Cargar teléfonos» sin la casilla y con ella; y una pantalla de cada área a 320.
 
 ## Requisitos previos
 

@@ -9,13 +9,13 @@
 - lo confirmado nunca se repite. Cada acción espera solo a la anterior de su regla. Si la condición no se cumple, queda «No aplica», que no es un error;
 - la configuración se valida al reservar: un rol borrado o una persona que se fue dan «No se pudo», y no cuelgan nada;
 - un destinatario inalcanzable no tumba a los demás. Lo sellado manda: no se copia la respuesta en cada ejecución;
-- «Reintentar» va por persona (158): reabre el aviso solo para ella, que vuelve a «En curso» y, al terminar, a «Hecho». No se repite a quienes lo recibieron ni vuelve a correr la acción siguiente de la regla. Lo que la cola de WhatsApp no sabe si salió lo reintenta ella sola (80).
+- «Reintentar» va por persona (158), solo si WhatsApp rechazó su aviso o no lo pudo mandar: reabre el aviso solo para ella, que vuelve a «En curso» y, al terminar, a «Hecho». No se repite a quienes lo recibieron ni vuelve a correr la acción siguiente de la regla. Lo que la cola de WhatsApp no sabe si salió lo reintenta ella sola (80), sin que nadie lo resuelva a mano.
 
 ## Los avisos y los correos
 
 - Forms los pide por un puerto neutral, y WhatsApp los encola en su misma cola, sin duplicados por ejecución y destinatario;
 - la ventana de 24 horas se mira al aceptar y al despachar. **Fuera, todos van con una plantilla aprobada de la organización,** que elige la regla (61). Sin plantilla, queda «No se pudo», a la vista;
-- las plantillas suman **un encabezado con documento,** para mandar el PDF, y la regla llena cada variable con `{número}`, el nombre del formulario o una pregunta;
+- las plantillas suman **un encabezado con documento,** para mandar el PDF, y la regla llena cada variable con la lista de «Agregar dato» (149): `{number}`, `{reason}` al rechazar o una pregunta, sin el bloque, porque una variable no admite saltos de línea (197);
 - **el PDF a un cliente** (47 y 55) va al chat del contacto elegido en una pregunta de un catálogo «De los contactos». Sin contacto, «No se pudo»;
 - **avisar a una persona:** la regla elige un miembro por id, y se valida al reservar;
 - **quien cargó puede ser un cliente:** sigue la misma regla. **Quien cargó desde la web puede no tener dónde recibir** (89): queda «No aplica», y lo decide el canal.
@@ -28,7 +28,7 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]` y `[Feat
 
 | Ruta | Permiso | Pide | Devuelve |
 | --- | --- | --- | --- |
-| `GET /{id}/rules` | `formrules.manage` | — | `{revision, rules[], questions[]}`: un mensaje guarda cada dato como `{FieldId}`, `{number}` o `{reason}`, y `questions[]` trae los nombres de hoy para las etiquetas. Las preguntas del bloque van debajo de él, con `rowsOf`: una condición sobre ellas es «algún ítem», y en el mensaje el bloque es un solo dato, su `{FieldId}` |
+| `GET /{id}/rules` | `formrules.manage` | — | `{revision, rules[], questions[]}`: un mensaje guarda cada dato como `{FieldId}`, `{number}` o `{reason}`, y `questions[]` trae los nombres de hoy para las etiquetas. Las preguntas del bloque van debajo de él, con `rowsOf`: las condiciones con valor sobre ellas las cumple un mismo ítem, y en el mensaje el bloque es un solo dato, su `{FieldId}`; una de sus preguntas no es un dato |
 | `PUT /{id}/rules` | `formrules.manage` | `{revision, rules[]}` | 200 `{revision}`, 409 si otro guardó |
 | `GET /{id}/rules/revisions` y `…/{revision}` | `formrules.manage` | `page`, `pageSize` | la lista paginada y cada revisión |
 | `GET /{id}/rules/options/{roles\|members\|templates}` | `formrules.manage` | `page`, `pageSize`, `search` | `PagedResult` de cada una, sin correos |
@@ -36,17 +36,17 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]` y `[Feat
 | `GET /pending` | `formapprovals.decide` | `page`, `pageSize`, `search` | `PagedResult<{id, name, pending}>` |
 | `GET /{id}/approvals`, `…/{taskId}` y `…/{taskId}/continuation` | `formapprovals.decide` | `page`, `pageSize`; `direction` y `limit` | la cola, sin valores: `{taskId, recordId, displayNumber, submittedAtUtc, roleName, respondentName?}`, de la más vieja a la más nueva; `respondentName` es `null` sin `formrecords.read` |
 | `POST /{id}/records/{recordId}/decision` | `formapprovals.decide` | `{decision, reason?, version}`, con `[Idempotent]` | 200 `{version, state}` |
-| `GET /{id}/records/{recordId}/workflow` | `formrecords.read` | — | `{ruleRevision?, approval?, activity[], pdf?, canCorrect, canVoid}`; `approval.canDecide` dice si quien mira tiene el permiso y el rol de la tarea, y solo entonces el detalle la pide |
-| `POST …/executions/{executionId}/recipients/{userId}/retry` | `formrules.manage` | `{version}`, la revisión del aviso, con `[Idempotent]`; si otra persona ya lo reintentó o lo resolvió, 409 | 200; la actividad suma `canRetry` en cada destinatario (158) |
-| `GET /api/me/whatsapp-chats` | la cuenta, con el módulo de WhatsApp | — | 200 `[{organizationId, organizationName, link, noticesUntilUtc?}]`, con `link` `Linked`, `Unlinked` o `NoChat` (159). Pasado `noticesUntilUtc`, la zona dice «Solo con plantilla» (170) |
-| `GET /{id}/records/{recordId}/pdf` | `formrecords.read` | — | 200 PDF, `no-store` |
+| `GET /{id}/records/{recordId}/workflow` | `formrecords.read` | — | `{ruleRevision?, approval?, activity[], pdf?}`; `approval.canDecide` dice si quien mira tiene el permiso y el rol de la tarea, y solo entonces el detalle la pide |
+| `POST …/executions/{executionId}/recipients/{recipientId}/retry` | `formrules.manage` | `{version}`, la revisión del aviso, con `[Idempotent]`; si otra persona ya lo reintentó, 409 | 200; la actividad suma `canRetry` en cada destinatario, sea una cuenta, un contacto o una dirección (158) |
+| `GET /api/me/whatsapp/chats` | la cuenta, con el módulo de WhatsApp | `page`, `pageSize` | 200 `PagedResult<{organizationId, organizationName, organizationStatus, link, noticesUntilUtc?}>`, como `GET /api/me/whatsapp/conversations`: `organizationStatus` es `Active` o `Suspended`, y `link`, `Linked`, `Unlinked` o `NoChat` (159). Pasado `noticesUntilUtc`, la zona dice «Solo con plantilla» (170) |
+| `GET /{id}/records/{recordId}/pdf` | `formrecords.read` | — | 200 PDF en el idioma de la cuenta de quien lo pide, `no-store` |
 | `GET /{id}/records/{recordId}/history` | `formrecords.read` | `page`, `pageSize` | `PagedResult<{id, correctedAtUtc?, correctedBy?, reason?, superseded}>`, de la más nueva a la más vieja |
 | `GET /{id}/records/{recordId}/correction` | `formrecords.correct` | — | la versión activa, con lo cargado, los ítems y los archivos que ya estaban, `{fileId, name, byteLength}`, para «Ya cargado · 86 KB» |
 | `POST /{id}/records/{recordId}/corrections` | `formrecords.correct` | multipart: el de la E20, más `reason`, `version` y `keepFileIds[]`, con `[Idempotent(Mode = IdempotencyMode.DurableReference)]` y `[IdempotencyDurable(typeof(FormEntryDurableAdapter))]` | 200 `{recordId, displayNumber, submittedAtUtc, calculations[], version}`, con `[ResponseVersion("Version")]` |
 | `POST /{id}/records/{recordId}/void` | `formrecords.correct` | `{reason, version}` | 200 `{version}` |
 | `…/own-records/{recordId}/pdf`, `history`, `correction`, `corrections` y `void` | `formrecords.create` | lo mismo | lo mismo, solo con lo propio y mientras se pueda |
 
-**Rutas que cambian:** `GET /` y `GET /overview` suman `pending?` (`null` sin `formapprovals.decide`), el filtro `approval` y el orden; `recordCount` cuenta las vigentes. `POST …/records/search`, `facets`, `navigation`, `export` y `dashboard` suman `state`, con `Voided`, y `includeVoided` en el Excel. El detalle suma `state`, `corrected`, `correctedBy?{name, atUtc}`, `supersededBy?`, `voided?` y `version`. `GET /{id}/records/columns` suma `approvals`.
+**Rutas que cambian:** `GET /` y `GET /overview` suman `pending?` (`null` sin `formapprovals.decide`), el filtro `approval` y el orden; `recordCount` cuenta las vigentes sin anular. `POST …/records/search`, `facets`, `navigation`, `export` y `dashboard` suman el filtro `state`, con `Voided`, y `includeVoided` en el Excel, y cada fila de `search` suma `state`, `corrected` y `hasPdf`, la marca de la copia PDF confirmada, también en lo propio. El detalle suma `state`, `corrected`, `correctedBy?{name, atUtc}`, `supersededBy?`, `voided?`, `canCorrect`, `canVoid` y `version`, y el de lo propio, `rejection?{reason, atUtc}`, sin quién decidió, porque lo propio no tiene `workflow`. `GET /{id}/records/columns` suma `approvals`.
 
 **Puertos neutrales:**
 
@@ -71,6 +71,7 @@ public interface IStructuredRecordActionChannel
 | --- | --- | --- |
 | `Forms.Rules.Invalid` | Validation (`rules[i]…`) | un evento, condición, acción, rol, persona, plantilla o pregunta fuera de regla, o el orden de las acciones |
 | `Forms.Rules.TooMany` | Validation (`rules`) | más de 20 reglas, 10 condiciones o 10 acciones |
+| `Forms.Rules.PlaceholderInvalid` | Validation (`rules[i].actions[j]…`) | un dato del mensaje o de una variable que no es el número, el motivo al rechazar, una pregunta de la versión o el bloque: una pregunta que ya no está o una del bloque |
 | `Forms.PdfDesign.Invalid` | Validation | nombre, pie, firmas o preguntas fuera de regla |
 | `Forms.Approval.NotFound` | NotFound | la tarea no existe o no se puede ver |
 | `Forms.Approval.AlreadyDecided` | Conflict | otro decidió antes |
@@ -100,7 +101,7 @@ Tres migraciones: `<fecha>_FormRules.cs`, `<fecha>_FormRecordCorrections.cs` y `
 | **FormApprovalTasks** (`IVersioned`) | `RecordId`, `DefinitionId`, `RoleId`, `State`, `RequestedAtUtc`, decisión, motivo | una abierta por respuesta, con índice único filtrado; índice por definición, rol, fecha e id |
 | **FormActionExecutions** | `RecordId`, `RuleSetId`, `Event`, `RuleId`, `ActionId`, `Position`, `Kind`, `State`, `FailureCode?`, `Fence`, `LeaseExpiresAtUtc`, `NextAttemptAtUtc` | único por respuesta, evento, regla y acción |
 | **FormActionRecipients** | `ExecutionId`, `Kind`, `UserId?`, `ContactId?`, `Address?` cifrada, `State`, `FailureCode?`, `RenderedText?` | uno por destinatario; el error de uno no toca a los otros |
-| **FormRecordDocuments** | `RecordId`, `ExecutionId`, `DesignId`, `StorageKey`, `FileName`, `ByteLength`, `Sha256`, `Culture` | único por ejecución; se escribe una vez |
+| **FormRecordDocuments** | `RecordId`, `ExecutionId`, `DesignId`, `StorageKey`, `FileName`, `ByteLength`, `Sha256`, `Culture` | único por ejecución e idioma; cada uno se escribe una vez |
 | **platform.FormActionWorks** | `TenantId`, `NextAtUtc`, `LeaseExpiresAtUtc` | registro técnico global, sin datos de negocio |
 
 **Columnas nuevas:**

@@ -58,7 +58,9 @@
 | `Id`, `TenantId`, `DefinitionId`, `VersionId` | uuid | `VersionId` es único |
 | `State` | texto | `Accepted`, `Preparing`, `Publishing`, `Unconfirmed`, `NeedsReview`, `ActivationPending`, `Published`, `Failed` |
 | `ErrorCode`, `Issues` | texto?, jsonb? | lo que devolvió el canal |
+| `FlowName` | texto? ≤80 | el nombre del Flow que fijó el canal (165), para buscarlo en Meta con «Necesita revisión» |
 | `RequestedByUserId`, `RequestedAtUtc`, `CompletedAtUtc?` | — | — |
+| `ResolvedByUserId?`, `ResolvedAtUtc?` | — | quién dijo «Salió» o «No salió», y cuándo (175) |
 | — | índice único filtrado | una sola publicación abierta por definición (`UniqueKeys.FormPublicationOpen`) |
 
 **FormRecords**
@@ -90,6 +92,7 @@
 | `CatalogId`, `ChoiceCode`, `ChoiceDetail`, `ChoiceValue` | uuid?, texto? | en una pregunta de catálogo, sellados tal como estaban al responder; `ChoiceValue` es el texto canónico del valor, si el catálogo es tipado |
 | `ChoiceFields` | jsonb? | los campos de la opción, sellados (T22) |
 | — | CHECK | exactamente un valor |
+| — | índice | `(TenantId, CatalogId, ChoiceId)`: si una respuesta eligió una opción, que entonces no se borra (129) |
 
 Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca se confunde con `false` ni con `0`.
 
@@ -107,7 +110,7 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | `Id`, `TenantId` | uuid | — |
 | `PublicationId`, `VersionId` | uuid | ids opacos de Forms, sin FK |
 | `WabaId` | texto | **[E11]** la cuenta del número |
-| `MetaFlowId` | texto? | único |
+| `MetaFlowId` | texto? | único; puede faltar en uno que una persona dio por publicado con «Salió» (§6, punto 4) |
 | `FlowName` | texto ≤80 | el nombre en Meta (165 y §14), fijado antes del Create; no entra en `FlowJsonHash` |
 | `Step` | texto | `Create`, `Upload`, `Validate`, `Publish`, `Verify` |
 | `State` | texto | `Accepted`, `InFlight`, `Uncertain`, `Published`, `Failed` |
@@ -184,7 +187,7 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | `Forms.Publication.ChannelUnavailable` | ServiceUnavailable | sin WhatsApp, o sin número conectado [E11] |
 | `Forms.Publication.NotFound` | NotFound | — |
 | `Forms.Publication.NotResolvable` | Conflict | decir qué pasó con una publicación que no está `NeedsReview` (175) |
-| `Forms.Preview.NotAvailable` | NotFound | la versión no tiene un Flow publicado |
+| `Forms.Preview.NotAvailable` | NotFound | la versión no tiene un Flow publicado con su id |
 | `Forms.Record.InvalidResponse` | Validation | valor desconocido, falta uno obligatorio, se pasa del límite o queda fuera del rango de «elegir varias» |
 | `Forms.Record.ReplayConflict` | Conflict | la misma sesión llegó con otro contenido |
 | `Forms.Record.NotAllowed` | Forbidden | quien responde ya no tiene `formrecords.create` o dejó de ser miembro |
@@ -199,47 +202,49 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | `Forms.Record.OptionWithdrawn` | Conflict | eligió una opción a mano que se dio de baja después de mandar (T20) |
 | `WhatsApp.Flow.OptionNotOffered` | Validation | el id elegido no está en la oferta de la sesión |
 | `Forms.Catalog.FieldInUse` | Conflict | quitar un campo que usa la presentación de una pregunta: dice qué formulario y qué pregunta (T22) |
+| `Forms.Catalog.ItemInUse` (el de la E12) | Conflict | suma `uses: records`: borrar una opción que eligió una respuesta (129) |
 | `WhatsApp.Flow.TextTooLong` / `TooManyComponents` / `ResponseTooLarge` / `UnsupportedConfiguration` | Validation | límites del perfil (§14) |
 | `WhatsApp.Flow.ProviderRejected` / `ValidationFailed` | Failure | rechazo definitivo de Meta |
 | `WhatsApp.Flow.AccountUnavailable` | ServiceUnavailable | la WABA sin medio de pago o sin salud [E11] |
+| `WhatsApp.Flow.PreviewUnavailable` | ServiceUnavailable | Meta no contestó la vista oficial en 30 s (§6, punto 5) |
 | `WhatsApp.Flow.NotPublishedForNumber` | Conflict | el número del chat está en una WABA sin Flow de esa versión |
 | `WhatsApp.Flow.SessionExpired` | Conflict | la respuesta llegó pasada la sesión (hora de Meta) |
-| `WhatsApp.Conversation.WindowClosed` (el de la E11), `WhatsApp.Chat.NotEmployee` / `FormUnavailable` / `SendPending` | Conflict | reglas del botón (§6.6) |
+| `WhatsApp.Conversation.WindowClosed`, `TakenByOther` y `PaymentRequired` (los de la E11), `WhatsApp.Chat.NotEmployee` / `FormUnavailable` / `SendPending` | Conflict | reglas del botón (§6.6) |
 
 Los códigos siguen `^[A-Z][A-Za-z]+(\.[A-Z][A-Za-z0-9]+){2,}$` (`ErrorCodeTests`). El 409 de edición es el común, `General.ConcurrencyConflict`, y es el único que pone el editor en conflicto: los otros 409 son errores que se corrigen.
 
 ## 5. Contrato borrador
 
-Las rutas Business de Forms llevan `[Access(Access.Business)]` y `[FeatureGate("forms")]`. Las del chat son de WhatsApp, van bajo el prefijo de su bandeja **[E11]** y no llevan la feature de formularios: con `forms` apagada, `IStructuredFormSource` no devuelve formularios y el botón no aparece. Las escrituras que crean o envían llevan `[Idempotent]`. Los listados, `PagedRequest` (10 por defecto) y `filter-counts`. Toda respuesta que consume el front tiene ejemplos exportados de una corrida real, con sus estados y sus errores de negocio. El modelo es `Api/Modules/Assistant/Controllers/BusinessAssistantController.cs`.
+Las rutas Business de Forms llevan `[Access(Access.Business)]` y `[FeatureGate("forms")]`. Las del chat son de WhatsApp, van bajo el prefijo de su bandeja **[E11]** y no llevan la feature de formularios: sin Forms, o con `forms` apagada, `IStructuredFormSource.IsAvailableAsync` da `false` y el botón no aparece. Las escrituras que crean o envían llevan `[Idempotent]`. Los listados, `PagedRequest` (10 por defecto) y `filter-counts`. Toda respuesta que consume el front tiene ejemplos exportados de una corrida real, con sus estados y sus errores de negocio. El modelo es `Api/Modules/Assistant/Controllers/BusinessAssistantController.cs`.
 
 | Método y ruta | Permiso | Pide | Devuelve |
 | --- | --- | --- | --- |
-| GET `/api/organization/forms` | `forms.read` | `page`, `pageSize`, `sort` (`name`, `updatedAtUtc`), `search`, `status` (`all`, `published`, `drafts`) | 200 `PagedResult<FormSummary>`: `{id, name, prefix, audience, status, activeVersionNumber?, publishedAtUtc?, publicationState?}`; es la lista «Formularios» (79) |
+| GET `/api/organization/forms` | `forms.read` | `page`, `pageSize`, `sort` (`name`, `updatedAtUtc`), `search`, `status` (`all`, `published`, `drafts`) | 200 `PagedResult<FormSummary>`: `{id, name, prefix, audience, status, questionCount, updatedAtUtc, activeVersionNumber?, publishedAtUtc?, publication?{state, versionNumber}}`; es la lista «Formularios» (79), con las preguntas del borrador y el último cambio |
 | GET `/api/organization/forms/filter-counts` | `forms.read` | `search` | 200 `{all, published, drafts}` |
 | POST `/api/organization/forms` | `forms.manage` | `{name}` | 201 `FormDetail` + Location, con el prefijo propuesto |
-| GET `/api/organization/forms/{id}` | `forms.read` | — | 200 `FormDetail`: `{id, name, prefix, prefixLocked, audience, submitLabel, questions[], titles[], activeVersion?{id, number, publishedAtUtc}, publication?{id, state, errorCode?, issues?}, canManage, canPublish, version}` |
+| GET `/api/organization/forms/{id}` | `forms.read` | — | 200 `FormDetail`: `{id, name, prefix, prefixLocked, audience, submitLabel, questions[], titles[], activeVersion?{id, number, publishedAtUtc}, publication?{id, state, versionNumber, flowName?, errorCode?, issues?}, canManage, canPublish, version}` |
 | PUT `/api/organization/forms/{id}/draft` | `forms.manage` | `{name, prefix, audience, submitLabel, questions[], titles[], version}` | 200 `{version, questions[], titles[]}`, con las identidades emitidas; 409 |
 | POST `/api/organization/forms/{id}/publication-checks` | `forms.publish` | — | 200 `{contentHash, canPublish, nextVersionNumber, issues[], changes[]}`, con lo que muestra el diálogo (T25); no escribe (T8) |
 | POST `/api/organization/forms/{id}/publications` | `forms.publish` | `{contentHash}`, con `[Idempotent]` | 202 `{publicationId, state}` + Location; no llama a Meta; `DraftChanged` si el borrador cambió (T8). La misma `Idempotency-Key` devuelve la misma publicación («Repetir el mismo intento») |
-| GET `/api/organization/forms/{id}/publications/{publicationId}` | `forms.read` | — | 200 `{state, errorCode?, issues?, versionNumber}` |
-| POST `/api/organization/forms/{id}/publications/{publicationId}/check` | `forms.publish` | — | 200 `{state, errorCode?, issues?, versionNumber}`: «Consultar publicación» le pregunta a Meta y nunca repite un POST |
+| GET `/api/organization/forms/{id}/publications/{publicationId}` | `forms.read` | — | 200 `{state, versionNumber, flowName?, errorCode?, issues?}` |
+| POST `/api/organization/forms/{id}/publications/{publicationId}/check` | `forms.publish` | — | 200 `{state, versionNumber, flowName?, errorCode?, issues?}`: «Consultar publicación» le pregunta a Meta y nunca repite un POST |
 | POST `/api/organization/forms/{id}/publications/{publicationId}/resolution` | `forms.publish` | `{outcome}`, `Published` o `NotPublished` | 200 lo mismo: la persona dice qué pasó, solo en `NeedsReview` (175) |
-| GET `/api/organization/forms/{id}/versions/{versionId}/preview` | `forms.read` | — | 200 `{url, expiresAtUtc}`: el enlace interactivo de la vista oficial ([§6, punto 5](14-parte-decisiones-y-flujos.md#6-flujos-con-sus-transacciones)), con `Cache-Control: no-store` |
-| GET `/api/organization/whatsapp/{customers\|internal}/conversations/{id}/forms` **[E11]** | «Atender internos» o «Atender clientes», según la bandeja | `page`, `search` | 200 `{available, reason?, culture, forms: PagedResult<{definitionId, versionId, versionNumber, name, prefix, questionCount, optionCounts[{fieldId, count}], offerProblems[]}>}`; `culture` es el idioma de los textos del sistema que acompañan |
+| GET `/api/organization/forms/{id}/versions/{versionId}/preview` | `forms.read` | — | 200 `{url, expiresAtUtc}`: el enlace interactivo de la vista oficial ([§6, punto 5](14-parte-decisiones-y-flujos.md#6-flujos-con-sus-transacciones)), con `Cache-Control: no-store`; 503 `WhatsApp.Flow.PreviewUnavailable` si Meta no contesta en 30 s |
+| GET `/api/organization/whatsapp/{customers\|internal}/conversations/{id}/forms` **[E11]** | «Atender internos» o «Atender clientes», según la bandeja | `page`, `search` | 200 `{available, reason?, culture, forms: PagedResult<{definitionId, versionId, versionNumber, name, prefix, questionCount, optionCounts[{fieldId, label, count}], offerProblems[]}>}`. `available: false` sin `reason` esconde el botón (Forms no está disponible), y con `reason` lo grisa con su motivo; `culture` es el idioma de los textos del sistema que acompañan |
 | POST `/api/organization/whatsapp/{customers\|internal}/conversations/{id}/forms` **[E11]** | «Atender internos» o «Atender clientes», según la bandeja | `{definitionId, versionId, text?}`: `null` es el mensaje por defecto (T10), y si viene, ≤1024 | 202 `{sessionId, messageId}` |
 
 **Otras piezas del contrato:**
 - **`changes[]` de `publication-checks`:** `{kind, fieldId, label}`, con `kind` `added`, `changed` o `removed`, comparando el borrador guardado con la versión activa. En la primera publicación viene vacío.
 - **La campana:** Forms aporta `formPublicationFailed` por `INotificationSource` (base de la 12), a quien tiene `forms.publish`.
-- **Tarjeta de respuesta [E11]:** los mensajes de la conversación suman un tipo `form`: `{sessionId, state, errorCode?, formName, displayNumber?, values?: [{fieldId, label, type, value, code?}], canReadValues}`. En «elegir varias», `value` es la lista de opciones en el orden recibido. El valor de catálogo muestra el texto que vio la persona y su código. Si la respuesta se rechazó con `OptionWithdrawn`, nombra la pregunta, no la opción.
+- **Tarjeta de respuesta [E11]:** los mensajes de la conversación suman un tipo `form`: `{sessionId, state, errorCode?, formName, displayNumber?, values?: [{fieldId, label, type, value, catalogName?, code?, detail?}], canReadValues}`. En «elegir varias», `value` es la lista de opciones en el orden recibido. El valor de catálogo muestra el texto que vio la persona y, debajo, el nombre actual del catálogo y el código o el detalle sellados, unidos con « · » («Motivos de visita · SEG», «Supervisores · Delta S.A.»). Si la respuesta se rechazó con `OptionWithdrawn`, nombra la pregunta, no la opción.
 - **Webhook:** la misma ruta de la E8. Se agrega leer `interactive.nfm_reply`.
 
 **La pregunta de catálogo en las rutas:**
 - **`FormDetail` y `PUT …/draft`:** las preguntas `Choice` y `MultiChoice` llevan `catalogId?`. El combo de catálogo de la pregunta (111) usa el listado de la E12, con `status=all`: un dado de baja o uno que no se puede usar viene apagado, con su motivo. Pide `formcatalogs.read`; sin ese permiso, «De un catálogo» queda grisado, con el motivo en su tooltip (43).
 - **`FormDetail` y `PUT …/draft`:** la pregunta lleva también su `presentation?` propia (T22).
 - **`publication-checks`:** suma `Forms.Draft.CatalogUnavailable`, `CatalogTooLarge` y `CatalogPresentationInvalid`.
-- **`GET …/conversations/{id}/forms`:** cada formulario trae `offerProblems[{fieldId, code}]` (`TooManyOptions`, `TooFewOptions`, `NoOptions`, `CatalogUnavailable` y `PresentationInvalid`) y `optionCounts`, la cantidad de opciones de cada pregunta de catálogo, nunca sus nombres. WhatsApp suma `NotPublishedForNumber`, si el número del chat está en una cuenta sin el Flow de esa versión (103). Si hay algún problema, el formulario aparece pero no se puede mandar.
-- **Las rutas de catálogos de la E12:** el listado y el detalle suman `usedByCount` (`null` sin `forms.read`), y `fields[]` suma `inUse`, que apaga «Quitar», y `usedIn` (`null` sin `forms.read`): hasta 3 `{formName, questionLabel}`, para decir en el tooltip qué formulario y qué pregunta lo usan. Sin `forms.read`, el tooltip dice que está en uso, sin nombrarlos. Se suma GET `/api/organization/forms/catalogs/{id}/used-by` (`forms.read`, porque da nombres de formularios; `page`, `pageSize`, `search`, `sort` (`name`) → 200 `PagedResult<{formId, name}>`), con su segunda página en las pruebas de integración.
+- **`GET …/conversations/{id}/forms`:** cada formulario trae `offerProblems[{fieldId?, label?, code, minSelections?}]` (`TooManyOptions`, `TooFewOptions`, `NoOptions`, `CatalogUnavailable` y `PresentationInvalid`) y `optionCounts`, la cantidad de opciones de cada pregunta de catálogo con el nombre de la pregunta, nunca los de las opciones. `minSelections` va con `TooFewOptions` («se piden al menos 2»). WhatsApp suma `NotPublishedForNumber`, sin `fieldId`, si el número del chat está en una cuenta sin el Flow de esa versión (103). Si hay algún problema, el formulario aparece pero no se puede mandar.
+- **Las rutas de catálogos de la E12:** el listado y el detalle suman `usedByCount` (`null` sin `forms.read`), y `fields[]` suma `inUse` y `usedIn` (`null` sin `forms.read`): hasta 3 `{formId, formName, fieldId, questionLabel, version}`, con `version` en `draft` o `active`, para que «Quitar «…»» diga qué formulario y qué pregunta lo usan («en la versión activa») y adónde lleva «Ir a la pregunta». Sin `forms.read`, el diálogo dice que está en uso, sin nombrarlos. Se suma GET `/api/organization/forms/catalogs/{id}/used-by` (`forms.read`, porque da nombres de formularios; `page`, `pageSize`, `search`, `sort` (`name`) → 200 `PagedResult<{formId, name}>`), con su segunda página en las pruebas de integración.
 
 **Contrato y errores en OpenAPI:** se suman al `FormsContractContributor.cs` de la E12.
 
@@ -256,6 +261,7 @@ Los nombres no mencionan formularios ni WhatsApp.
 // WhatsApp → Forms (implementa Forms)
 public interface IStructuredFormSource
 {
+    Task<bool> IsAvailableAsync(CancellationToken ct);                                   // el módulo y `forms` encendida
     Task<PagedResult<StructuredFormChoice>> ListSendableAsync(StructuredRecipient recipient, PagedRequest page, CancellationToken ct);
     Task<StructuredSendableForm?> FindSendableAsync(StructuredRecipient recipient, Guid definitionId, Guid versionId, CancellationToken ct);
 }
@@ -268,7 +274,8 @@ public interface IStructuredFormChannel
     StructuredFormCheck Check(StructuredFormVersion version);                           // puro
     Task<StructuredPublicationResult> PublishAsync(StructuredPublicationRequest request, CancellationToken ct);
     Task<StructuredPublicationResult> GetPublicationAsync(Guid publicationId, CancellationToken ct);
-    Task<StructuredPreview?> GetPreviewAsync(StructuredPreviewRequest request, CancellationToken ct);
+    Task<Result> ResolvePublicationAsync(Guid publicationId, bool published, CancellationToken ct); // «Salió» o «No salió», sin Meta
+    Task<Result<StructuredPreview>> GetPreviewAsync(StructuredPreviewRequest request, CancellationToken ct);
 }
 // WhatsApp → Forms (implementa Forms)
 public interface IStructuredRecordSink
@@ -284,14 +291,14 @@ public interface IStructuredRecordSource
 **Modelos:**
 - `StructuredFormVersion(DefinitionId, VersionId, Number, Prefix, Name, Audience, SubmitLabel, Questions[FieldId, Type, Label, Help, Required, MaxLength?, Decimals?, MinSelections?, MaxSelections?, CatalogId?, Presentation?, Options[ChoiceId, Label]], Titles[TitleId, Text, BeforeFieldId], ContentHash)`;
 - `StructuredSendableForm(Version, Offers[FieldId → Options[ItemRef(CatalogId, ItemId), Text, Detail?, Code?, Value?]], Problems[FieldId, Code])`: lo que se manda, con la oferta de cada pregunta de catálogo (§6b);
-- `StructuredFormChoice(DefinitionId, VersionId, VersionNumber, Name, Prefix, QuestionCount, OptionCounts[FieldId, Count], OfferProblems[FieldId, Code])`, de `ListSendableAsync`, con lo que muestra el diálogo;
+- `StructuredFormChoice(DefinitionId, VersionId, VersionNumber, Name, Prefix, QuestionCount, OptionCounts[FieldId, Label, Count], OfferProblems[FieldId?, Label?, Code, MinSelections?])`, de `ListSendableAsync`, con lo que muestra el diálogo;
 - `StructuredRecipient(Kind: Member|Contact, UserId?, ContactId?)`: quien recibe (T15). `ContactId` es el id del `WhatsAppCustomer` de la organización;
 - `StructuredRecordCapture(SourceKey, DefinitionId, VersionId, Respondent: StructuredRecipient, SubmittedAtUtc, Values[FieldId, Text?|Number?|Date?|Bool?|Choices[]?])`. Cada opción elegida es `StructuredChosenOption(ChoiceId, Label, CatalogId?, Code?, Detail?, Value?)`, y «elegir varias» manda una por opción, en el orden recibido;
 - `StructuredRecordReceipt(RecordId, Number, DisplayNumber, Card)`: la tarjeta, con el nombre del formulario y lo que mandó, para la copia de T16;
-- `StructuredRecordCard(RecordId, DisplayNumber, FormName, CanReadValues, Values?)`;
-- `StructuredPublicationResult(State: Published|Pending|Uncertain|Failed, Issues[], NextCheckAtUtc?)`;
+- `StructuredRecordCard(RecordId, DisplayNumber, FormName, CanReadValues, Values?)`, con el catálogo, el código y el detalle de cada valor de catálogo;
+- `StructuredPublicationResult(State: Published|Pending|Uncertain|Failed, RequiresReview, FlowName, Issues[], NextCheckAtUtc?)`: `RequiresReview` va con `Uncertain` cuando la verificación no puede decidir (§6, punto 4);
 - `StructuredPreviewRequest(VersionId, Culture, Samples[FieldId → Options[Text, Detail?]])` y `StructuredPreview(Url, ExpiresAtUtc)`: las opciones de ejemplo de la vista oficial, que viajan en memoria y no se guardan (176).
 
 **Implementaciones apagadas:**
 - **Sin WhatsApp:** `IsAvailable = false` y ningún número. Se puede diseñar, y publicar responde `ChannelUnavailable`.
-- **Sin Forms:** la fuente devuelve una lista vacía, el botón no aparece y la captura devuelve un error que deja la sesión `Rejected`.
+- **Sin Forms:** la fuente da `IsAvailableAsync` en `false` y una lista vacía, el botón no aparece y la captura devuelve un error que deja la sesión `Rejected`.

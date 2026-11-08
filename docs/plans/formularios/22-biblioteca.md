@@ -3,9 +3,9 @@
 **Estado:** pendiente · spec de la etapa 22 del bloque (decisiones 34, 40, 78, 79, 175 y 177). **Es también la biblioteca de formularios estándar** (40). Se arma con las piezas de este repo y las de las etapas anteriores. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E14]**, **[E12]** y **[E21]** contra el código.
 
 **Fuentes:**
-- alcance y decisiones: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E22 y decisiones 2, 13 a 16, 30 a 33, 35, 40, 45, 50, 59, 61, 62 y 64;
+- alcance y decisiones: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E22 y decisiones 2, 13 a 16, 30 a 33, 35, 40, 45, 50, 59, 61, 62, 64, 138, 149, 175 y 177;
 - reglas: [AGENTS.md](../../../AGENTS.md), las [fichas](../../rules/README.md) y la [ADR 0050](../../decisions/0050-auditoria-global-de-modulos.md) (auditoría de lo global);
-- las specs de la [E14](14-formularios.md) y la [E12](12-catalogos.md).
+- las specs de la [E12](12-catalogos.md), la [E14](14-formularios.md), la [E17](17-ciclo-de-vida.md), la [E19](19-condiciones-calculos-y-lineas.md), la [E20](20-cargar-desde-la-web.md) y la [E21](21-reglas-y-aprobacion.md).
 
 **Partes.** Esta spec no entra en un solo archivo, así que sigue en otros, con los mismos números de sección. Lo que no está en la tabla está acá.
 
@@ -16,8 +16,8 @@
 ## Qué leer
 
 Antes de empezar:
-1. **Lo anterior:** las specs de la [E12](12-catalogos.md), la [E14](14-formularios.md) y la [E21](21-reglas-y-aprobacion.md), sobre todo el borrador, los catálogos, las reglas y el diseño del PDF que se copian.
-2. **Decisiones** de la hoja de ruta: 2, 13 a 16, 30 a 33, 35, 40, 45, 50, 59, 61, 62, 64, 175 y 177.
+1. **Lo anterior:** las specs de la [E12](12-catalogos.md), la [E14](14-formularios.md) y la [E21](21-reglas-y-aprobacion.md), sobre todo el borrador, los catálogos, las reglas y el diseño del PDF que se copian; la [E17](17-ciclo-de-vida.md), copiar; la [E19](19-condiciones-calculos-y-lineas.md), las fórmulas y el bloque, y la [E20](20-cargar-desde-la-web.md), lo que deja un formulario solo para la app.
+2. **Decisiones** de la hoja de ruta: 2, 13 a 16, 30 a 33, 35, 40, 45, 50, 59, 61, 62, 64, 138, 149, 175 y 177.
 3. **Fichas:** [persistencia-ef](../../rules/persistencia-ef.md), [multitenancy](../../rules/multitenancy.md), [auditoria](../../rules/auditoria.md), [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [idempotencia](../../rules/idempotencia.md), [api-http](../../rules/api-http.md), [permisos](../../rules/permisos.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [result-y-errores](../../rules/result-y-errores.md), [validacion](../../rules/validacion.md), [textos-libres](../../rules/textos-libres.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [logs](../../rules/logs.md), [modulos](../../rules/modulos.md) y [tests](../../rules/tests.md). Además, la [ADR 0050](../../decisions/0050-auditoria-global-de-modulos.md).
 4. **Código para copiar:** pieza por pieza, en la §7.
 5. **Pantallas:** los tableros de la §8.
@@ -38,6 +38,7 @@ Antes de empezar:
 **No entra:**
 - avisar «hay una versión nueva» o actualizar una copia: queda para después, si se pide;
 - filtros en los catálogos de una plantilla: los de los miembros y de los contactos llegan sin filtros, y la organización los ajusta (64). Tampoco los filtros por destinatario de la E16, que dependen de los datos de las personas de cada organización;
+- lo que en la E20 deja un formulario solo para la app: con WhatsApp instalado, publicar la plantilla frena una lista dependiente, «elegir varias» de más de 20 opciones o un bloque con un mínimo de más de 10 ítems (B8);
 - plantillas de una organización para otra;
 - la «Lectura de documentos» de una plantilla, que llega con los documentos (E25);
 - saber qué organizaciones usaron una plantilla (decisión 16);
@@ -53,7 +54,7 @@ Valen los criterios de la E14 y la decisión 43. Datos de ejemplo:
   - «Orden de trabajo» (Mantenimiento): retirada;
   - «Comprobante de transferencia» (Ventas, para clientes): publicada.
 
-Con el traspaso 5 se redibujaron `FRM-Editor-Reglas-Plantilla`, `M-FRM-Reglas-Plantilla` y `Plat-FRM-Plantilla-Reglas`: las reglas se leen en pasos (138), el historial va detrás de su botón (140) y el mensaje se arma con «Agregar dato» (149). Con el traspaso 10 se redibujaron `Plat-FRM-Plantilla` y `Plat-FRM-Publicar`: la pestaña «Publicación» pierde el renglón «Estado», que repite la banda (175), y las preguntas de la plantilla suman «Agregar bloque», como en el editor de la 19 (177). Todos están aprobados y publicados en el lienzo v168.
+Con el traspaso 5 se redibujaron `FRM-Editor-Reglas-Plantilla`, `M-FRM-Reglas-Plantilla` y `Plat-FRM-Plantilla-Reglas`: las reglas se leen en pasos (138) y el mensaje se arma con «Agregar dato» (149); en la organización, el historial va detrás de su botón (140), y en Plataforma no hay, porque las reglas se guardan con el borrador. Con el traspaso 10 se redibujaron `Plat-FRM-Plantilla` y `Plat-FRM-Publicar`: la pestaña «Publicación» pierde el renglón «Estado», que repite la banda (175), y las preguntas de la plantilla suman «Agregar bloque», como en el editor de la 19 (177). Todos están aprobados y publicados en el lienzo v168.
 
 **Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
 
@@ -69,11 +70,17 @@ Con el traspaso 5 se redibujaron `FRM-Editor-Reglas-Plantilla`, `M-FRM-Reglas-Pl
 | `Plat-FRM-Pdf` | el diseño del PDF de la 21, desde «Ver el diseño», con «Descartar» y «Guardar borrador». El color va con candado, y el encabezado y la vista previa muestran «Logo» y «Nombre de la organización» como marcadores (82) | estilo moderno, armando la vista previa, guardando, borrador guardado y salir sin guardar |
 | `Plat-FRM-Publicar` y `Plat-FRM-Retirar` | diálogos con el motivo. Publicar suma la comprobación de la 14: «Problemas» por pregunta, catálogo o regla, con «Publicar versión 3» grisado, y «Qué se publica». Detrás, la pestaña «Publicación», sin el renglón «Estado» (175) | sin problemas, con problemas, falta el motivo, primera publicación, volver a publicar, comprobando, publicando, otra persona guardó; retirando |
 | `Plat-FRM-Categorias` | lista con orden y ↑ ↓ ✎ 🗑 a la vista (127); el alta, la edición, subir y borrar piden motivo | una en uso: «Borrar» grisado, con el motivo en su tooltip; nueva, faltan los datos, creando, editar, subir, borrar y vacía |
-| `FRM-Biblioteca` y `M-FRM-Biblioteca` | la biblioteca de formularios estándar (40): tarjetas por categoría, con un buscador, y en qué formulario propio se usó cada plantilla | sin resultados, sin plantillas, cargando y error |
-| `FRM-Plantilla` y `M-FRM-Plantilla` | la vista de una plantilla: la descripción y sus datos, las preguntas, los catálogos que trae, las reglas de ejemplo en palabras (con «el rol que elegís al usarla» y el sugerido) y el teléfono; «Usar esta plantilla» | sin permiso de catálogos, cargando y ya no está |
+| `FRM-Biblioteca` y `M-FRM-Biblioteca` | la biblioteca de formularios estándar (40): tarjetas por categoría, con un buscador, y en qué formulario propio se usó cada plantilla: «La usaste en «Visita a cliente» y 1 más» (198) | sin resultados, sin plantillas, cargando y error |
+| `FRM-Plantilla` y `M-FRM-Plantilla` | la vista de una plantilla: la descripción y sus datos, las preguntas, los catálogos que trae, las reglas de ejemplo en pasos, como en la E21, con los datos como etiquetas (138 y 149), «el rol que elegís al usarla» y el sugerido, y el teléfono; «Usar esta plantilla» | sin permiso de catálogos, cargando y ya no está |
 | `FRM-Plantilla-Usar` | diálogo con el nombre y el prefijo propuesto; al confirmar, abre el formulario nuevo | prefijo tomado: se propone VIS2, con el porqué en la (i); falta el nombre, creando y se retiró |
 | `FRM-Editor-Reglas-Plantilla` y `M-FRM-Reglas-Plantilla` | el formulario nuevo, en borrador, y en su pestaña «Reglas» las reglas precargadas, sin guardar: «Elegí…» en el rol, la persona, la dirección y la plantilla de WhatsApp, con «Rol sugerido» debajo. «Historial» queda apagado, con «Todavía no se guardaron: vienen de la plantilla.» en su tooltip (140) | elegir el rol, guardar sin elegir (se marca lo que falta, 43), una pregunta borrada (marcada en la condición, y en el mensaje como «Pregunta no disponible», 149), guardando y reglas guardadas |
 | `Cuenta-Plat` (ajuste) | los permisos del operador suman «Administrar la biblioteca de formularios» | — |
+
+**Se corrigen,** porque contradicen una decisión:
+- `FRM-Plantilla` y `M-FRM-Plantilla` leen las reglas de ejemplo en palabras, con llaves («Recibimos {número}…»): van en pasos, con los datos como etiquetas, como en `FRM-Editor-Reglas-Plantilla` (138 y 149);
+- `Plat-FRM-Plantilla` pone «Agregar pregunta» antes de «Agregar bloque»: van como en el editor de la 19, que es el mismo (B7);
+- `M-FRM-Formularios-22`: «Filtros» cierra con «Limpiar todo» y «Listo», sin «Ver 4 formularios» (144);
+- `Cuenta-Plat` y `M-Cuenta-Plat`, de la base de la 12, ya muestran «Administrar la biblioteca de formularios», que nace en esta etapa (78): la fila sale de ellos y se dibuja en un tablero de esta etapa.
 
 Sin «Textos en», sin el inglés obligatorio, sin «Cambios sin guardar» ni «Cambios sin publicar», sin el número de versión en la lista ni en la banda, y sin textos junto a los botones (35 y 43). La lectura de documentos no va en esta etapa.
 
@@ -103,7 +110,7 @@ Sin «Textos en», sin el inglés obligatorio, sin «Cambios sin guardar» ni «
 
 | Dónde | Qué |
 | --- | --- |
-| `Domain.UnitTests/Forms/` | estados de la plantilla; publicar sin cambios; volver a publicar sin versión nueva; copia que conserva los ids de preguntas y opciones, con catálogos nuevos (tipo, campos y valores) y `catalogRef` traducidos |
+| `Domain.UnitTests/Forms/` | estados de la plantilla; publicar sin cambios; volver a publicar sin versión nueva; copia que conserva los ids de preguntas, opciones y campos de catálogo, con catálogos nuevos (tipo, campos y valores) y `catalogRef` traducidos; una fórmula con un campo del catálogo y la presentación propia de una pregunta siguen andando en la copia |
 | `Api.IntegrationTests/Modules/Forms/` | rutas de Plataforma: 403 sin el permiso, motivo obligatorio, evento de auditoría en la misma transacción, 409; rutas de organización: solo publicadas, retirada = 404, usar sin `formcatalogs.manage` = 403, el prefijo tomado se reemplaza, idempotencia; conteo: dos usos de la misma organización suman 1, y dos organizaciones suman 2; reglas de ejemplo: se leen de la versión aunque la plantilla se retire, y dejan de venir al guardar la primera revisión, también vacía; el diseño del PDF llega como primera revisión |
 | Aislamiento | la plataforma no tiene ninguna ruta que lea formularios o respuestas de una organización; usar una plantilla escribe solo en la organización activa y en la fila de uso |
 | Guardas | `ExplicitRouteInventoryTests`, `PermissionTextsTests` (de plataforma), `AuditTrail` de lo global (ADR 0050) |
@@ -116,7 +123,8 @@ Sin «Textos en», sin el inglés obligatorio, sin «Cambios sin guardar» ni «
 | --- | --- | --- |
 | [E14] | El formato del borrador y el editor del front, para reusarlo en Plataforma. | El mismo formato, con `catalogRef`. |
 | [E12] | El modelo de catálogos a mano, sus campos y sus límites. | Una plantilla trae catálogos con los mismos límites, salvo las opciones, hasta 200 (§3), con su tipo de valor y sus campos. |
-| [E21] | El formato de las reglas y del diseño del PDF que deje la E21. | **Resuelto el 2026-10-18** con su resumen, sus tableros (v132) y las decisiones 30 a 33: ver «Reglas de ejemplo y diseño del PDF» en la §3. |
+| [E19] | Que la fórmula y la presentación propia de una pregunta apunten a los campos del catálogo por su id. | La copia conserva el id de cada campo (B11). |
+| [E21] | El formato de las reglas y del diseño del PDF que deje la E21. | El de su spec, con las decisiones 30 a 33: los datos del mensaje por `{FieldId}` (149) y el bloque como un dato (177). Lo que cambia en una plantilla está en «Reglas de ejemplo y diseño del PDF», en la §3. |
 | ADR 0050 | El tipo de evento para lo global del módulo. | `PlatformSettingsChanged` con destino global. |
 
 ## 11. Cómo se cierra

@@ -7,7 +7,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T4, T7, T8, la §3 (`FormDefinitionStates`, `FormPublications` y `WhatsAppFlowBindings`), la §6, puntos 4 y 6, y la §14 (errores de Meta); la [E15](15-respuestas.md): las dos rutas de la lista, y la [E16](16-datos-de-las-personas.md): los filtros por destinatario, que se copian.
-2. **Decisiones** de la hoja de ruta: 23, 34, 35, 43, 74, 78, 79, 88, 112, 131, 132 y 175.
+2. **Decisiones** de la hoja de ruta: 23, 34, 35, 43, 74, 78, 79, 88, 112, 131, 132, 175 y 186.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -41,16 +41,16 @@ Antes de empezar, en este orden:
 - es lógico, y solo se puede sin respuestas, sin envíos abiertos ni respuestas en proceso, y sin publicación en curso. Pide `forms.manage`;
 - no borra versiones ni evidencias del canal. Si llegó a publicarse, sus Flows se deprecan;
 - el prefijo queda reservado dentro de la organización. Con respuestas, Borrar queda grisado, con el motivo (132);
-- un formulario borrado no frena quitar un campo ni dar de baja un catálogo, y sale de «Lo usan». Uno dado de baja sigue contando.
+- un formulario borrado no frena quitar un campo, borrar una opción, dar de baja un catálogo ni cambiar o dar de baja un dato de las personas, y sale de «Lo usan», también del de un dato. Uno dado de baja sigue contando.
 
-**Copiar** (74): crea uno nuevo en borrador con el borrador del original, nombre y prefijo propuestos, que se pueden cambiar. Pide `forms.manage`, y sirve también con uno dado de baja. **Copia el borrador tal cual, con sus identidades:** un `FieldId` vale solo dentro de su formulario, así todo lo que apunta a una pregunta sigue apuntando bien. Las preguntas de catálogo apuntan a los mismos catálogos, sin duplicarlos, con su presentación propia y sus filtros. No copia versiones, respuestas ni publicaciones. Las etapas siguientes suman lo suyo a la copia. Copiar no exige que el borrador esté completo: eso se comprueba al publicar.
+**Copiar** (74): crea uno nuevo en borrador con el borrador del original, nombre y prefijo propuestos, que se pueden cambiar. Pide `forms.manage`, y sirve también con uno dado de baja. **Copia el borrador tal cual, con sus identidades:** un `FieldId` vale solo dentro de su formulario, así todo lo que apunta a una pregunta sigue apuntando bien. Las preguntas de catálogo apuntan a los mismos catálogos, sin duplicarlos, con su presentación propia y sus filtros. No copia versiones, respuestas ni publicaciones. Copiar no exige que el borrador esté completo: eso se comprueba al publicar.
 
 **Deprecar los Flows en Meta:**
 - **es de WhatsApp,** por cada WABA de la organización y con su token. Forms no llama a Meta ni escribe en WhatsApp;
 - **Forms dice qué versiones ya no se usan:** las reemplazadas, las de una publicación `Failed`, que pudo dejar un Flow publicado en otra WABA, y las de un formulario dado de baja o borrado. Una publicación abierta del formulario suspende esa respuesta: si falla, la versión activa sigue en uso;
 - WhatsApp espera a que no queden sesiones vigentes ni respuestas recibidas a tiempo sin capturar. Nunca lo deduce porque no ve sesiones: lo comprueba bajo el bloqueo del binding;
 - cada binding se deprecia con su reserva, su número de turno y su estado. Lo incierto queda «Sin confirmar» y se consulta por id, nombre técnico y WABA antes de repetir. Todo 4xx también se consulta;
-- cada respuesta de Meta se clasifica en definitiva, transitoria o desconocida. Un rechazo no se repite para siempre: después de esperar 5, 15, 30 y 60 minutos queda «No se pudo», a la vista, y no frena nada del formulario;
+- cada respuesta de Meta se clasifica en definitiva, transitoria o desconocida. Un rechazo no se repite para siempre: se intenta cuatro veces, con esperas de 5, 15 y 30 minutos entre una y otra, y después del cuarto rechazo queda «No se pudo», a la vista, y no frena nada del formulario;
 - corre por organización, como las difusiones, sin una persona detrás: el último envío puede vencer días después de la baja, cuando quien la hizo ya no tiene permisos.
 
 **La lista «Formularios»** (79): el filtro «Estado» suma «Dados de baja», junto a Activos (publicados y borradores), Publicados y Borradores. No es una vista aparte. Quien solo ve respuestas también lo tiene, porque si no, no llegaría a las respuestas de un dado de baja.
@@ -69,9 +69,11 @@ Aprobados y publicados en el lienzo v151, con el armado de ArquitecturaBase (131
 
 **Redibujados con el traspaso 10, aprobados y publicados en el lienzo v168:** `FRM-Editor-Baja` y `M-FRM-Editor-Baja`, con la baja en una frase, la etiqueta de la publicación al reactivar (175) y «Agregar título» al lado de «Agregar pregunta» (88).
 
+**Se corrige en el lienzo** `M-FRM-Formularios-17`, porque choca con dos decisiones, que mandan: su estado «Reactivar» abre la hoja sobre la lista, y va en el formulario, como en `M-FRM-Editor-Baja` (131); y su hoja «Filtros», con cantidades y «Ver 4 formularios», pasa a «Filtros» a pantalla completa, sin cantidades y sin botón para aplicar (144 y 164).
+
 **El formulario dado de baja:** la banda dice «De baja · versión 2», y su ⓘ dice la baja en una frase, «Lo dio de baja Ana Gómez el 09/10/2026 10:12.», y qué pasa en WhatsApp (175). «Sin confirmar en WhatsApp» y «No se pudo deprecar en WhatsApp» van al lado, en la banda. Sin cartel en el cuerpo (avisos, 25/10).
 
-**Al reactivar, la etiqueta dice el estado de la publicación** (175), como en la E14: «Publicando la versión 3», «Sin confirmar · versión 3», «Necesita revisión · versión 3» o «No se pudo publicar la versión 3», con «Consultar publicación», «Repetir el mismo intento», «Salió» y «No salió» en la banda solo cuando hacen falta. «Reactivar» apagado dice su motivo, como «Publicar en WhatsApp». La ⓘ sigue diciendo quién lo dio de baja, y con la versión confirmada la etiqueta pasa a «Publicado · versión 3». Sale «Reactivando con la versión 3».
+**Al reactivar, la etiqueta dice el estado de la publicación** (175), como en la E14: «Publicando la versión 3», «Sin confirmar · versión 3», «Necesita revisión · versión 3» o «No se pudo publicar la versión 3», con «Consultar publicación», «Repetir el mismo intento», «Salió» y «No salió» en la banda solo cuando hacen falta; «Salió» y «No salió» piden confirmar, como en la E14 (186). «Reactivar» apagado dice su motivo, como «Publicar en WhatsApp». La ⓘ sigue diciendo quién lo dio de baja, y con la versión confirmada, por la consulta o por «Salió», la etiqueta pasa a «Publicado · versión 3».
 
 **Reactivar (131):** se abre en el formulario, también desde la lista. «Problemas», si hay alguno, con «Ir a la pregunta», y «Qué se publica»: Próxima respuesta, Borrador, Preguntas y lo que cambió. El botón dice «Reactivar con la versión 3» y queda grisado si hay problemas.
 
@@ -147,7 +149,7 @@ Una migración, `<fecha>_FormLifecycle.cs`, aditiva.
 | `WhatsAppFlowBindings` | `DeprecationInFlight` | bool | se commitea antes de llamar a Meta |
 | `WhatsAppFlowBindings` | `DeprecationFence` | bigint | el número de turno de cada reserva |
 | `WhatsAppFlowBindings` | `DeprecationLeaseExpiresAtUtc`, `DeprecationNextCheckAtUtc`, `DeprecatedAtUtc` | timestamptz? | — |
-| `WhatsAppFlowBindings` | `DeprecationFailureCount` | int | elige la espera: 5, 15, 30 y 60 minutos |
+| `WhatsAppFlowBindings` | `DeprecationFailureCount` | int | cuenta los rechazos: espera 5, 15 y 30 minutos, y con el cuarto queda `NeedsAttention` |
 
 Índice parcial en `WhatsAppFlowBindings` sobre `(TenantId, DeprecationNextCheckAtUtc)`, solo lo publicado y sin deprecar, para que el worker no recorra lo que ya terminó. La baja no pasa por el interceptor de auditoría, así que el servicio la registra con `IAuditLog`.
 
@@ -159,14 +161,14 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| B1 | Columnas, dominio y errores | suma a `D/Forms/FormDefinition.cs`, `FormDefinitionState.cs` y `FormDefinitionErrors.cs` [E14]; `I/…/Configurations/`; la migración | `D/Assistant/AssistantOrganizationSettings.cs` | transiciones; prefijo reservado después de borrar; hacia atrás |
+| B1 | Columnas, dominio, errores y los textos de los permisos | suma a `D/Forms/FormDefinition.cs`, `FormDefinitionState.cs` y `FormDefinitionErrors.cs` [E14]; `I/…/Configurations/`; la migración; en `Permissions{,.en}.resx`, `forms.manage` suma «copiarlos y borrarlos» y `forms.publish`, «darlo de baja y reactivarlo» | `D/Assistant/AssistantOrganizationSettings.cs` | transiciones; prefijo reservado después de borrar; hacia atrás; `PermissionTextsTests` |
 | B2 | El filtro de disponibilidad, uno solo | `A/Modules/Forms/Services/FormAvailabilityPolicy.cs`; suma a `FormStructuredSource.cs` y `IFormReader.cs` [E14] | `FormCatalogFiltersPolicy.cs` [E12] | dado de baja y borrado no se ofrecen; la captura de un envío abierto se guarda |
 | B3 | Dar de baja, bajo el bloqueo de la fila de estado, con `IAuditLog` | suma a `FormDefinitionService.cs` [E14] | `FormPublicationService.cs` [E14] | publicación abierta; dos a la vez; un editor abierto no recibe 409 |
-| B4 | Reactivar | suma a `FormPublicationService.cs` y `FormVersionCreator.cs` [E14] | esos mismos | sin cambios publica igual; sigue de baja hasta confirmar; si falla, sigue de baja; numeración continua |
-| B5 | Borrar: lo del canal se lee antes de la UoW, y lo de Forms se comprueba bajo el bloqueo | suma a `FormDefinitionService.cs` | esos mismos | con respuestas, con envíos, con publicación; borrador y publicado; `usedByCount` y `FieldInUse` no cuentan lo borrado; un envío que se cruza queda `Rejected`, a la vista |
+| B4 | Reactivar | suma a `FormPublicationService.cs` y `FormVersionCreator.cs` [E14] | esos mismos | sin cambios publica igual; sigue de baja hasta confirmar; «Salió» también la confirma; si falla, sigue de baja; numeración continua |
+| B5 | Borrar: lo del canal se lee antes de la UoW, y lo de Forms se comprueba bajo el bloqueo | suma a `FormDefinitionService.cs` | esos mismos | con respuestas, con envíos, con publicación; borrador y publicado; `usedByCount`, `FieldInUse`, `ItemInUse` con `uses: forms`, `Forms.PersonData.InUse` y el «Lo usan» de un dato no cuentan lo borrado; un envío que se cruza queda `Rejected`, a la vista |
 | B6 | Copiar | `A/Modules/Forms/Services/FormDefinitionCopyCreator.cs`; suma a `FormPrefixResolver.cs` [E14] | `FormVersionCreator.cs` [E14] | identidades, catálogos, presentación y filtros iguales; prefijo ocupado; idempotencia; de un dado de baja; sin versiones ni respuestas |
 | B7 | Decir qué versiones ya no se usan | suma a `FormStructuredSource.cs` e `IFormReader.cs` | `FormStructuredSource.cs` [E14] | reemplazada, `Failed`, de baja y borrada; la activa no; una publicación abierta suspende |
-| B8 | Binding: reservar, marcar, registrar y verificar | suma a `D/WhatsApp/WhatsAppFlowBinding.cs` [E14]; `WhatsAppFlowBindingErrors.cs` | las transiciones de publicación del binding [E14] | un turno viejo no escribe; `InFlight` se vuelve «Sin confirmar»; las cuatro esperas |
+| B8 | Binding: reservar, marcar, registrar y verificar | suma a `D/WhatsApp/WhatsAppFlowBinding.cs` [E14]; `WhatsAppFlowBindingErrors.cs` | las transiciones de publicación del binding [E14] | un turno viejo no escribe; `InFlight` se vuelve «Sin confirmar»; los cuatro intentos y sus tres esperas |
 | B9 | La deprecación en sus fases, cada una con una UoW | `A/Modules/WhatsApp/Interfaces/Services/IWhatsAppFlowDeprecationService.cs`, `WhatsAppFlowDeprecationService.cs` | `IWhatsAppFlowPublicationService.cs` [E14] | sesión vigente; respuesta a tiempo sin capturar; otra WABA; sin token; el token no entra en la identidad |
 | B10 | Hablar con Meta | suma a `I/Modules/WhatsApp/WhatsAppFlowClient.cs` [E14] | el mismo | 2xx, 4xx, 5xx, 429, timeout y cuerpo ilegible; clasificación; ya deprecado |
 | B11 | El worker, por organización | `I/Modules/WhatsApp/WhatsAppFlowDeprecationWorker.cs` | `WhatsAppBroadcastWorker.cs` y `TenantJobRunner.cs` | una organización con falla no frena a las demás; con el reloj de prueba al vencer |
@@ -178,7 +180,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | --- | --- | --- | --- | --- |
 | F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` | la API de la E16 | zod estricto con los ejemplos |
 | F2 | La lista: filtro y ⋮ | suma a la lista [E14] | su tablero | las acciones por estado y permiso; Borrar grisado con respuestas; «Reactivar» abre el formulario con su diálogo; quien solo ve respuestas |
-| F3 | Los diálogos | `components/LifecycleDialogs.tsx`, sin sugerencias ni reglas | su tablero | releer si no se sabe si salió; error en el diálogo; botones según la 43 |
+| F3 | Los diálogos | `components/LifecycleDialogs.tsx` | su tablero | releer si no se sabe si salió; error en el diálogo; botones según la 43 |
 | F4 | Copiar | `components/CopyFormDialog.tsx` | su tablero | prefijo ocupado en su campo; abre el editor |
 | F5 | El formulario dado de baja | suma al editor [E14]: la ⓘ con la baja en una frase, «Reactivar» y el ⋮ | su tablero | los cuatro estados de WhatsApp; al reactivar, la etiqueta de cada estado de la publicación y el motivo de «Reactivar» apagado (175); se edita y se guarda |
 
@@ -188,7 +190,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 
 | Marca | Qué hay que confirmar | Qué asume esta spec |
 | --- | --- | --- |
-| [E14] | La fila de estado y el flujo de publicar. | `CompleteAsync` activa la versión en una UoW, y ahí se limpia la baja. |
+| [E14] | La fila de estado y el flujo de publicar. | `CompleteAsync` y «Salió» (`ResolveAsync`) activan la versión en una UoW, y ahí se limpia la baja. |
 | [E14] | Las transiciones de `WhatsAppFlowBinding` y las rutas de sesión. | Se puede saber si hay sesiones `Pending` vigentes y respuestas sin capturar. |
 | [E14] | Cómo se lee una sesión al capturar. | Un formulario dado de baja se captura, y uno borrado se rechaza. |
 | [E15] | Las dos rutas de la lista. | `GET /` y `GET /overview`, con sus filtros en una sola función. |
@@ -223,7 +225,7 @@ Cada punto lleva su test, escrito durante la etapa:
 
 ## Cómo se cierra
 
-La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba real con Meta** con el número de una organización de prueba y `WhatsApp:FlowSessionHours` en 1:
+La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba real con Meta**, que queda pendiente hasta la I1 de la 10 (123), con el número de una organización de prueba y `WhatsApp:FlowSessionHours` en 1:
 1. dar de baja un formulario con un envío abierto, y responder ese envío;
 2. al vencer, ver los Flows deprecados en el administrador de Meta;
 3. reactivar: versión nueva, Flow nuevo y el número de respuesta siguiente;

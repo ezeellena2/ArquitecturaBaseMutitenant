@@ -1,12 +1,12 @@
 # E23 · El asistente, con Casos (spec)
 
-**Estado:** pendiente · spec de la etapa 23 del bloque (decisiones 34, 39, 51, 52, 63, 65 a 67, 78, 165 y 169), con el [formato](plantilla.md) de las etapas. Junta la etapa 5 de ArquitecturaBase, cerrada y en piloto, con sus Casos del asistente, decididos y sin programar. El catálogo que propone el asistente pasa a la E25 (167). `/plan-etapa` la contrasta con el código real después de la E22, y al planificarla escribe la ADR de respuestas redactadas.
+**Estado:** pendiente · spec de la etapa 23 del bloque (decisiones 34, 39, 51, 52, 63, 65 a 67, 78, 165 y 169), con el [formato](plantilla.md) de las etapas. Junta la etapa 5 de ArquitecturaBase, cerrada y en piloto, con sus Casos del asistente, decididos y sin programar. El catálogo que propone el asistente pasa a la E25 (167). `/plan-etapa` la contrasta con el código real después de la E22, y al planificarla escribe las ADR de respuestas redactadas y de transcripción (27).
 
 **Partes.** Esta spec no entra en un solo archivo, así que sigue en otro, con las mismas secciones. Lo que no está en la tabla está acá.
 
 | Secciones | Archivo |
 | --- | --- |
-| Contrato, Datos y En el multitenant | [datos y contrato](23-parte-datos-y-contrato.md) |
+| Contrato, Datos, En el multitenant y Lo que ya se pagó allá | [datos y contrato](23-parte-datos-y-contrato.md) |
 
 ## Qué leer
 
@@ -27,9 +27,9 @@ Antes de empezar, en este orden:
 - **cada chat** se cambia a mano y se puede fijar. Pasarlo a Asistente pide `whatsapp.manage`. **Tomar la atención manual** pide solo el permiso de atender, siempre se puede, y deja sin efecto una propuesta que llegue tarde;
 - el bot del menú aparece solo en los chats de Clientes en atención manual.
 
-**Los Casos** (39), en una pantalla con un solo Guardar, con versión y 409. Se guardan como **el agente principal**, una fila, así la etapa siguiente suma filas:
+**Los Casos** (39), en una pantalla con un solo Guardar, con versión y 409. Se guardan como **el agente principal**, una fila por organización:
 - **Perfil:** nombre, presentación, tono, qué hace y qué no, qué hacer cuando no sabe y el mensaje fijo al derivar;
-- **Conocimiento** (46 y 169): la información del negocio, una por organización, como en ArquitecturaBase: los datos del negocio (nombre y qué hace), la ubicación y la zona de atención, con la dirección escrita y sin buscarla en Google, el horario, los productos y servicios, las políticas y condiciones, y las preguntas frecuentes. **El horario:** cada día dice «Sin definir», «Abierto», «Cerrado» o «24 horas»; abierto, lleva hasta cuatro franjas, de 15 en 15 minutos, y una que termina después de la medianoche lo dice. «Aplicar de lunes a viernes» copia un día a los demás días hábiles, y una fecha especial reemplaza su día. Una pregunta frecuente cuenta solo con su respuesta, y una sección vacía no se usa;
+- **Conocimiento** (46 y 169): la información del negocio, una por organización, como en ArquitecturaBase: los datos del negocio (nombre y qué hace), la ubicación y la zona de atención, con la dirección escrita y sin buscarla en Google, el horario, los productos y servicios, las políticas y condiciones, y las preguntas frecuentes. **El horario:** cada día dice «Sin definir», «Abierto», «Cerrado» o «24 horas»; abierto, lleva hasta cuatro franjas, de 15 en 15 minutos, y una que termina después de la medianoche lo dice. «Aplicar de lunes a viernes» copia un día a los demás días hábiles, y una fecha especial reemplaza su día. Una pregunta frecuente lleva su pregunta y su respuesta, y una sección vacía no se usa;
 - **Casos:** cuándo (un texto), para quién (50), tipo de entrada, qué hacer, orden y si está activo. Los formularios van en un bloque fijo, y «Cualquier otra cosa» va al final y no se borra. Sin perfil, empieza en «No responder»;
 - **Límites, uno por bandeja** (65): temas que no responde, lo que no puede prometer, largo máximo, tope de respuestas por conversación y día, tope de ofrecimientos (66) y acciones permitidas. La plataforma fija un máximo para cada uno.
 
@@ -124,7 +124,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| B1 | Las ADR de acciones con confirmación y de transcripción | `docs/decisions/` | ADR 0048 | — |
+| B1 | Actualizar las ADR 0048 (D8) y 0038, que dejaban esto para después | `docs/decisions/` | esas mismas | — |
 | B2 | Modo de atención | suma a `D/WhatsApp/WhatsAppChat.cs`, `WhatsAppInboundGuard.cs` y `WhatsAppAttentionBotWriter.cs`; `WhatsAppAttentionService.cs` | `WhatsAppTeamService.cs` | chat nuevo; vuelve solo; fijado; tomar a mitad de un envío; el bot solo en manual |
 | B3 | El agente y el conocimiento | `D/Assistant/AssistantAgent.cs`, `AssistantKnowledge.cs`, `AssistantAgentService.cs`, `AssistantAgentPolicy.cs`; suma a `PlatformAssistantSettingsController.cs` | `AssistantOrganizationSettings.cs` | 409 en cada versión; máximos de la plataforma; «Cualquier otra cosa»; franjas que se pisan, la quinta de un día y la que pasa la medianoche |
 | B4 | El motor para un chat | `A/Modules/Assistant/Services/ConversationAgentService.cs`, `AssistantChannelContext`; suma a `AssistantTurnBuilder.cs` | `AssistantTurnService.cs` | orden estable; 10 mensajes; dos conversaciones no se mezclan; sin `ExecutionActor` |
@@ -133,7 +133,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | B7 | Probar | `AssistantAgentTestService.cs` | `ConversationAgentService.cs` | no manda; cuenta en el tope |
 | B8 | Audios | `A/Interfaces/Integrations/Speech/ISpeechTranscriber.cs`, su adaptador y su apagado | `WhatsAppChatFileService.cs` [E18] | con y sin tope; retención |
 | B9 | Sugerencias | `FormSuggestionService.cs`; `WhatsAppSuggestionService.cs`; suma a `FormDefinitionCopyCreator.cs` [E17] | `FormRuleService.cs` [E21] | bucle; hacia un dado de baja; mapeos; la cadena; copiar lleva la primera revisión |
-| B10 | Regla desde un texto y temas | `FormRuleProposalService.cs`, las herramientas, el puerto y su apagado, `FormMissingTopicService.cs`, `WhatsAppUnansweredTopicService.cs` | `OrganizationUsersTool` | nunca guarda; tope agotado; sin nombres; `ModuleIsolationTests` |
+| B10 | Regla desde un texto, temas y campana | `FormRuleProposalService.cs`, las herramientas, el puerto y su apagado, `FormMissingTopicService.cs`, `WhatsAppUnansweredTopicService.cs` y la fuente `assistantUnanswered` de la campana | `OrganizationUsersTool` | nunca guarda; tope agotado; sin nombres; buscar por tema y los conteos; la campana con y sin `whatsapp.manage`; `ModuleIsolationTests` |
 | B11 | Rutas, contratos y ejemplos | `P/Modules/WhatsApp/Controllers/OrganizationWhatsAppAssistantController.cs`, `OrganizationWhatsAppConversationsControllerBase.cs`, `P/Modules/Forms/Controllers/*` | esos mismos | cada ruta con 401, 403, feature apagada = 404; aislamiento |
 
 **Front:**
@@ -146,6 +146,9 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | F4 | El chat | suma a `MessageThread.tsx` | el tablero | porqué, botones, borrador y sugerencia |
 | F5 | Temas | `UnansweredTopicsPage.tsx`, `MissingFormsPage.tsx` | su tablero | descartar; sin nombres |
 | F6 | El editor | suma a `FormEditorPage.tsx` y `RulesSection.tsx` | esos mismos | «Cuándo lo ofrece»; «Qué sugerir después»; «Armar desde un texto» |
+| F7 | Los máximos de la plataforma | suma a `PlatformAssistantSettingsPage.tsx` | su tablero | los tres máximos; 409 |
+| F8 | «Cómo empezó» y la cadena | suma a `QuickView.tsx` y `RecordFullPage.tsx` [E15] | su tablero | los datos propuestos; la cadena de respuestas |
+| F9 | Dar de baja | suma a `LifecycleDialogs.tsx` y al editor dado de baja [E17] | su tablero | el asistente y las sugerencias en lo que deja de pasar; vuelven al reactivar |
 
 **Al cerrar:** las fichas del asistente, de WhatsApp y de formularios suman su sección, y la regla de WhatsApp pasa a «solo texto redactado con estos límites, o fijo».
 
@@ -160,16 +163,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | [E18] | El audio del chat. | Está guardado cuando se transcribe. |
 | [E19] | Cómo queda el bloque en la versión sellada y en el Flow. | El prellenado lo saltea sin leerlo. |
 | [E21] | La cola con su origen. | El asistente sale por la misma cola. |
-| Proveedor | Quién transcribe. | Se elige con su ADR. |
-
-## Lo que ya se pagó allá (no repetir)
-
-Cada punto lleva su test, escrito durante la etapa:
-1. **Con un índice por dueño y canal,** un operador tenía una sola operación de IA para todos sus chats: tres chats, y los dos últimos terminan.
-2. **La espera de 35 s,** por un cierre que no avisaba.
-3. **Un audio «Transcribiendo…» para siempre,** porque una falla del GET abortaba el POST.
-4. **Una respuesta tardía** después de tomar el chat no sale.
-5. **`business.information`** incluía textos sin revisar como si fueran hechos: lo vacío no se usa.
+| Proveedor | Quién transcribe. | Se elige con su ADR, al planificar (27). |
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
@@ -186,7 +180,7 @@ Cada punto lleva su test, escrito durante la etapa:
 
 - Varios asistentes y quién contesta cada chat (E24).
 - El catálogo que propone el asistente y armar formularios y catálogos con la IA: son propuestas que una persona crea con un botón (154 y 167), y llegan con la E25, como leer fotos y documentos.
-- El acceso Personal: un cliente con cuenta ve la copia de la conversación.
+- Algo nuevo en el acceso Personal: lo que manda el asistente se ve en la copia de la conversación de la E11.
 
 ## Cómo se cierra
 
@@ -199,4 +193,4 @@ La puerta de la etapa, con la lista de control de `/puerta`, más:
 ## Requisitos previos
 
 - La E22 cerrada.
-- Las dos piezas de la ADR 0048 (D8) y la 0038. La ADR de respuestas redactadas se escribe al planificar.
+- Las ADR de respuestas redactadas y de transcripción, que se escriben al planificar (27).

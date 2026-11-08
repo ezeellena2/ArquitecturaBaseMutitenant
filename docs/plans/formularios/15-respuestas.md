@@ -7,7 +7,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T7, T11 y T22, §3 (`FormVersions`, `FormRecords` y `FormRecordValues`) y §7 (puertos); y la [E12](12-catalogos.md): C5, C8, C11 y la §4.
-2. **Decisiones** de la hoja de ruta: 9, 23, 24, 35, 43, 49, 57, 78, 79, 109 y 115.
+2. **Decisiones** de la hoja de ruta: 9, 23, 24, 35, 43, 49, 57, 78, 79, 109, 115, 139, 143, 144 y 163.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -47,16 +47,14 @@ Antes de empezar, en este orden:
 
 **Los nombres:** Forms guarda ids. El de un empleado y sus empresas salen del lector de miembros; el de un cliente, de `IStructuredContactSource`, por lote y una vez por página. Un miembro que se fue conserva el nombre; sin dato, «Persona sin información»; un cliente sin WhatsApp dice «Cliente». Forms nunca lee tablas de WhatsApp.
 
-**La barra (126, 143 y 144):** «Exportar a Excel» en la banda; en la barra, «Buscar en textos largos» (si el formulario los tiene), «Empresa», «Filtros», con la cantidad de aplicados, y «Columnas»; debajo, lo aplicado en chips con su × y «Limpiar todo». Sin «N respuestas»: el total está al pie. «Filtros» se despliega como «Columnas»: a la izquierda, Recibida, cada pregunta en orden, Cargó y Versión; a la derecha, lo que se elige en la marcada: «Desde» y «Hasta» para un número o una fecha, «Contiene» para un texto y, para una pregunta con opciones, sí o no, Cargó y Versión, un combo de una opción, que busca escribiendo, muestra 20 y «Mostrar N más», sin cantidades. Cada cambio se aplica enseguida, y en el teléfono ocupa la pantalla. El chip nombra lo elegido («Proveedor: Aceros Rosario»). El canal suma su filtro a la vista cuando haya más de uno.
+**La barra (126, 143 y 144):** «Exportar a Excel» en la banda; en la barra, «Buscar en textos largos» (si el formulario los tiene), «Empresa», «Filtros», con la cantidad de aplicados, y «Columnas»; debajo, lo aplicado en chips con su × y «Limpiar todo». Sin «N respuestas»: el total está al pie. «Filtros» se despliega como «Columnas»: a la izquierda, Recibida, cada pregunta en orden, Cargó y Versión; a la derecha, lo que se elige en la marcada: «Desde» y «Hasta» para un número o una fecha, «Contiene» para un texto y, para una pregunta de elegir, sí o no y Versión, un desplegable de una opción, sin cantidades; con muchas opciones o las que vienen del servidor (un catálogo, Cargó), el combo de una opción, que busca escribiendo, muestra 20 y ofrece «Mostrar N más» (143). Cada cambio se aplica enseguida, y en el teléfono ocupa la pantalla. El chip nombra lo elegido («Proveedor: Aceros Rosario»). El canal suma su filtro a la vista cuando haya más de uno.
 
-**Exportar (126):** «Exportar respuestas a Excel» dice cuántas respuestas y cuántos filtros aplicados, «Columnas a exportar», con la cantidad de cada opción («Todas las preguntas (13 columnas)» y «Solo las visibles (12 columnas)»), y el nombre del archivo.
-
-**Borrar una opción (129):** una que eligió una respuesta no se borra: `Forms.Catalog.ItemInUse` suma `uses: records`, y se lee «No se puede borrar: la eligió una respuesta. Podés darla de baja.».
+**Exportar (126):** «Exportar respuestas a Excel» dice cuántas respuestas y cuántos filtros aplicados, «Columnas a exportar», con la cantidad de cada opción («Todas las preguntas (13 columnas)» y «Solo las visibles (12 columnas)»), y el nombre del archivo. En el teléfono no hay «Columnas»: exporta todas las preguntas.
 
 **Filtros:**
 - condiciones unidas con «y», con la gramática de la E12 (C5): texto `contains` y `equals`; número y fecha `equals`, `gte` y `lte`; elegir una y sí/no `in`; **elegir varias `anyOf`**; y en todos, `answered`, `unanswered` y `notAsked`;
 - `unanswered` incluye la opcional vacía y la pregunta que no existía; `notAsked` distingue la segunda. Qué versiones tienen cada pregunta se decide en memoria, con las versiones selladas, y la consulta lo usa;
-- **la planilla elige una opción por pregunta** (143) y no usa `answered`, `unanswered` ni `notAsked`, que quedan para las reglas y las sugerencias;
+- **la planilla elige una opción por pregunta** (143) y no usa `answered`, `unanswered` ni `notAsked`, que el contrato trae igual (143);
 - además: persona, versión, empresa (también «Sin empresa») y recibida, en UTC con fin exclusivo;
 - la búsqueda mira solo los textos largos;
 - **lo privado no sale de la memoria:** textos, personas y condiciones viajan en el cuerpo, nunca en la dirección, el storage ni los logs;
@@ -69,7 +67,7 @@ Antes de empezar, en este orden:
 **Excel (`.xlsx`):**
 - con los filtros aplicados y `formrecords.export`, hasta 10.000 respuestas (con más, el diálogo pide acotar) y sin trabajos de fondo;
 - una consulta de ids ordenados, hasta 10.001, e hidratación en lotes de 100, con un presupuesto de 30 s;
-- una exportación a la vez por persona, con la barrera que no espera (C11). Comparte la barrera con la carga de catálogos: un trabajo pesado por persona;
+- una exportación a la vez por persona, con la barrera que no espera (C11), en su propio carril: la carga de catálogos no la frena, así «Ya tenés una exportación en curso» siempre es cierto;
 - números, fechas y sí/no van como tipos de Excel, y los textos, literales. **Un número de más de 15 dígitos significativos va como texto,** porque Excel lo redondearía;
 - una opcional vacía es una celda vacía; una pregunta que no existía, «—»;
 - **«elegir varias»** va en una celda, unida con «; ». En un catálogo tipado se suma la columna «pregunta · valor», con los valores canónicos;
@@ -78,7 +76,7 @@ Antes de empezar, en este orden:
 
 **El tablero (57):** la pestaña «Tablero», armada sola desde los tipos de las preguntas de la versión activa, sin nada escrito en el código:
 - arriba, «Respuestas» y, de las tres primeras preguntas de número, el total, el promedio, el mínimo y el máximo;
-- abajo, una tarjeta por gráfico: cuántas llegaron por día, semana o mes, con los días vacíos en tono suave; el total de cada número por período; el reparto de cada pregunta de elegir o de sí/no; las fechas por período, y quién cargó. Las opciones y las personas muestran seis y «Otras»;
+- abajo, una tarjeta por gráfico: cuántas llegaron por día, semana o mes, con los días vacíos en tono suave; el total de cada número por período; el reparto de cada pregunta de elegir o de sí/no, y quién cargó. Una pregunta de fecha no tiene tarjeta. Las opciones y las personas ocupan hasta seis filas: con más, las cinco primeras y «Otras»;
 - usa los filtros de la planilla, y todo se calcula en SQL en la zona de quien mira, hasta los últimos 366 períodos;
 - cada tarjeta se ve como tabla o se quita, y las de opciones y personas cuentan cantidad o el total de un número. «Agregar gráfico» devuelve lo quitado, y «Volver al automático» lo deja como al principio;
 - lo quitado y qué cuenta cada tarjeta se guardan por persona y formulario. Los filtros, no.
@@ -106,11 +104,11 @@ Aprobados en el lienzo v150. Con el traspaso 5, los filtros (143 y 144) y el det
 | `FRM-Respuesta-Completa` | la pantalla completa, con sus dos secciones abiertas | Redibujado y aprobado en la v168: sin plegar, también en `M-FRM-Respuesta` (163 y 164); la actividad en columnas fijas se aprobó en la v160 (139) |
 | `M-FRM-Formularios-15` | la lista en el teléfono, con «N respuestas · estado» | Aprobado |
 
-**Lo que se corrigió en lo dibujado:**
-- **Sale lo de etapas posteriores:** las columnas Fotos y Remito, la pestaña Fotos y su visor, su sección en «Más filtros», «Por aprobar · 3» en el panel y la tarjeta «Por estado».
-- **Cambia:** Canal pasa a su columna (un dato por celda) y «Abrir en pantalla completa» se suma a la vista rápida. «Exportando…» se queda, con su aro y su color (115); «Contando…» se va con «Ver N respuestas» (144).
+**Se corrigen en el lienzo,** porque chocan con una decisión; manda la decisión:
+- `M-FRM-Formularios-15`: su hoja «Filtros», con cantidades y «Ver 4 formularios», pasa a «Filtros» a pantalla completa, sin cantidades y sin botón para aplicar (144 y 164);
+- `M-FRM-Respuestas`: «Florencia Fernández de l…» se ve entero (174), y «Exportar a Excel» deja la frase «Se exportan las 24 respuestas…» por los datos del diálogo de la compu, sin «Columnas a exportar» (109).
 
-**Estados que se sumaron:**
+**Estados que se dibujan:**
 - un cliente con la marca «Cliente», y «Persona sin información»;
 - «Elegir varias»: «Fallas» con dos opciones y su filtro de una opción, en «Filtros» (143);
 - los campos sellados: las subcolumnas con «—» en una respuesta de antes de los campos, y los campos en el detalle;
@@ -121,7 +119,7 @@ Aprobados en el lienzo v150. Con el traspaso 5, los filtros (143 y 144) y el det
 - **La planilla que vuelve a leer** atenúa sus filas y corre una línea bajo el encabezado, y la lectura anterior no se puede tocar (115).
 - **La navegación (34 y 79):** el menú dice «Gestión de formularios», y su panel tiene Formularios y Catálogos, sin «Respuestas».
 - **La planilla** se desplaza a lo ancho dentro de su caja, con N° fijo a la izquierda. Es la tabla con columnas fijas de la E12.
-- **«Ya tenés una exportación en curso»** es la barrera. **«No pudimos actualizar»** conserva lo que se ve.
+- **«Ya tenés una exportación en curso»** es la barrera de exportar. **«No pudimos actualizar»** conserva lo que se ve.
 - **Exportar** no aparece sin `formrecords.export`, y sin respuestas queda grisado, con el motivo en su tooltip (43).
 - **Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
 
@@ -140,8 +138,8 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | B5 | Nombres por lote | suma a `IMemberDirectoryReader.cs`, `MemberDirectoryReader.cs`, `IStructuredContactSource.cs`, su apagado y el de WhatsApp | esos mismos [E12] | un solo pedido por página; ex miembro, sin dato y sin WhatsApp; `IdentityAccessTests` |
 | B6 | Conteos | suma a `FormRecordReader.cs` y `FormRecordQueryService.cs` | `CompanyReader.cs` | cada dimensión ignora la suya; históricas en cero; una respuesta en dos opciones |
 | B7 | Detalle, origen y navegación | `A/Interfaces/Integrations/StructuredData/IStructuredRecordOriginSource.cs`, su modelo, `I/StructuredData/DisabledStructuredRecordOriginSource.cs`, `A/Modules/WhatsApp/Services/WhatsAppStructuredRecordOriginSource.cs`; suma al reader | `IStructuredContactSource.cs` [E12] | sin permiso de la bandeja no hay `conversationId`; sin WhatsApp; `ROW_NUMBER`, `LAG` y `LEAD`; los tres 404 iguales |
-| B8 | Excel | `A/Modules/Forms/Interfaces/Integrations/IFormRecordSpreadsheet.cs`, `I/Modules/Forms/FormRecordSpreadsheet.cs`, `A/Modules/Forms/Services/FormRecordExportService.cs`, `FormRecordSheetBuilder.cs` | `IWhatsAppContactSpreadsheet.cs`, `WhatsAppContactSpreadsheet.cs` | 10.000 y 10.001; `Busy` entre dos pedidos; presupuesto; tipos de celda; 16 dígitos como texto; un texto con `=`; «; »; bytes abiertos con ClosedXML |
-| B9 | Tablero y ajustes | `A/Modules/Forms/Services/FormDashboardService.cs`, `FormDashboardBuilder.cs`; repositorio de los ajustes; suma a `FormsAccountDeletionParticipant.cs` y a su cleanup | `AssistantAccountDeletionParticipant.cs` | agrupar en otra zona; días vacíos; seis y «Otras»; sumas sin redondeo; la baja de la cuenta borra los ajustes |
+| B8 | Excel | `A/Modules/Forms/Interfaces/Integrations/IFormRecordSpreadsheet.cs`, `I/Modules/Forms/FormRecordSpreadsheet.cs`, `A/Modules/Forms/Services/FormRecordExportService.cs`, `FormRecordSheetBuilder.cs` | `IWhatsAppContactSpreadsheet.cs`, `WhatsAppContactSpreadsheet.cs` | 10.000 y 10.001; `Busy` entre dos exportaciones, y una carga de catálogo no la frena; presupuesto; tipos de celda; 16 dígitos como texto; un texto con `=`; «; »; bytes abiertos con ClosedXML |
+| B9 | Tablero y ajustes | `A/Modules/Forms/Services/FormDashboardService.cs`, `FormDashboardBuilder.cs`; repositorio de los ajustes; suma a `FormsAccountDeletionParticipant.cs` y a su cleanup | `AssistantAccountDeletionParticipant.cs` | agrupar en otra zona; días vacíos; hasta seis filas, con «Otras»; sin tarjeta para una fecha; un `countBy` por tarjeta; sumas sin redondeo; la baja de la cuenta borra los ajustes |
 | B10 | La lista | suma a `IFormReader.cs` y `FormReader.cs` [E14] | esos mismos | sin consultas por fila; `overview` con el nombre de la versión activa; borrador cambiado |
 | B11 | Rutas y ficha | `P/Modules/Forms/Controllers/BusinessFormRecordsController.cs`, `FormRecordFileResults.cs`, `Contracts/*`, `FormsContractContributor.cs`; suma la variante a `paginado-y-busqueda.md`; suma las relaciones a `GrowingCollectionContractTests` | `BusinessAssistantController.cs`, `WhatsAppFileResults.cs` | cada ruta con 401, 403, feature apagada = 404, 400 y paginado; `ToString` sin filtros; los filtros privados nunca por query; ejemplos exportados |
 | B12 | Medir el volumen | prueba de volumen del módulo | la de la E12 | EXPLAIN sobre el SQL real de EF con 10.000 respuestas |
@@ -153,7 +151,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` | la API de la E14 | zod estricto con los ejemplos |
 | F2 | La lista y las pestañas | suma a `FormsPage.tsx` y a las pestañas [E14]; `registration.ts` | su tablero | las tres combinaciones de permisos; adónde abre el nombre |
 | F3 | La planilla | `pages/FormRecordsPage.tsx`, `lib/recordFilters.ts`, `lib/values.ts`, `components/records/CustomerTag.tsx` | su tablero | «—», «Sin respuesta», cero y `false`; lo privado fuera de la URL; 403 retira todo; axe |
-| F4 | «Filtros» y los chips | `components/records/RecordFiltersMenu.tsx`, `RecordFacetControl.tsx` | su tablero | cada cambio se aplica enseguida; el combo de una opción, sin cantidades, con «Mostrar N más»; el chip nombra lo elegido; «Limpiar todo»; una faceta que falla no frena |
+| F4 | «Filtros» y los chips | `components/records/RecordFiltersMenu.tsx`, `RecordFacetControl.tsx` | su tablero | cada cambio se aplica enseguida; el desplegable y el combo de una opción, sin cantidades, y «Mostrar N más» en el combo (143); el chip nombra lo elegido; «Limpiar todo»; una faceta que falla no frena |
 | F5 | La vista rápida | `components/records/QuickView.tsx`, `RecordValues.tsx`; la excepción en la ficha de tablas | su tablero | teclado, Esc y foco útil; una respuesta tardía se descarta; los campos alineados debajo de su valor y las acciones como íconos (139) |
 | F6 | La pantalla completa | `pages/RecordFullPage.tsx` | su tablero | entrada directa sin filtros privados; «Volver» a la misma fila; el teléfono; la actividad en columnas fijas (139); las dos secciones abiertas, sin plegar |
 | F7 | Exportar | `components/records/ExportDialog.tsx` | su tablero | más de 10.000; `Busy`; «Exportando…» y el diálogo abierto hasta la respuesta |
@@ -168,10 +166,11 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | [E14] | `FormRecordValues`, `FormVersions.Questions` y `ChoiceFields`. | Tal como dicen la §3 y T22: filas tipadas y el texto sellado también en las opciones propias. |
 | [E14] | Los nombres de la lista, las pestañas y el participante de la baja. | Los de la columna «Archivos». La cuenta dada de baja deja `RespondentUserId` en `null`. |
 | [E14] | La sesión de WhatsApp a partir del `SourceKey`. | `whatsapp:<sessionId>` llega a la conversación, a quien mandó y a cuándo. |
-| [E12] | La barrera `IFormWorkLease` y `IMemberDirectoryReader`. | La barrera admite otro `Kind`; el lector suma nombres por id, también de quien ya no es miembro, y empresas. |
+| [E12] | La barrera `IFormWorkLease` y `IMemberDirectoryReader`. | La barrera admite otro carril; el lector suma nombres por id, también de quien ya no es miembro, y empresas. |
+| [E12] | La tabla con columnas fijas. | Es la de las opciones, que la planilla usa con N° fijo. |
 | [E11] | `/org/whatsapp/chats/:conversationId`. | Abre las dos bandejas, y no hace falta decir cuál. |
 | [E9] | Las cuotas. | Las rutas cuentan en las generales, sin perfil propio. |
-| Base de la 12 | La tabla con columnas fijas, el panel al costado y las pestañas del front. | Están en el front, o entran acá. |
+| Front | El panel al costado. | Si ninguna etapa anterior lo trajo, entra acá. |
 | EF | Agrupar en SQL en otra zona horaria. | Se puede con la versión de Npgsql del repo, sin SQL a mano. |
 
 ## Decisiones tomadas (no se vuelven a preguntar)
@@ -187,6 +186,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 ## Fuera de esta etapa
 
 - Importar respuestas desde Excel, exportar los archivos, exportar en segundo plano y los permisos por formulario.
+- Quién usa `answered`, `unanswered` y `notAsked`, que el contrato ya trae: las reglas (E21) y las sugerencias (E23).
 - Lo que suman las etapas siguientes: el papel «Filtro» de un campo (E16); las fotos, los documentos y «Descargar ▾» (E18); las líneas, los cálculos, «no se mostró» y los montos por moneda del tablero (E19); «Cargar», «Agregar respuesta», el canal «App», su filtro y lo propio de quien solo carga (E20); y el estado, «Por aprobar», la aprobación, la tarjeta «Por estado», el PDF, los avisos, corregir y anular (E21).
 
 ## Cómo se cierra

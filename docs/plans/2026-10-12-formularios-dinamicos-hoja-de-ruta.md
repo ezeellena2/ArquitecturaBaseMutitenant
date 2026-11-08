@@ -33,13 +33,13 @@
 | **Organización (B2B)** | Dueña de sus formularios, catálogos, reglas, respuestas y archivos. Los diseña quien tiene permiso; los responden sus empleados y sus clientes (49). |
 | **Empresa** | En la v1 los formularios son de la organización; la respuesta guarda las empresas de quien respondió, para filtrar ([decisiones 1 y 9](#5-decisiones-de-producto)). |
 | **Empleado** | Miembro activo con permiso `formrecords.create`. Por WhatsApp, además, con teléfono verificado: lo reconoce la bandeja «Internos» de E11. Desde la web (E20) alcanza con su sesión (89). |
-| **Cliente de la organización** | Cualquier contacto de la bandeja «Clientes» de E11, tenga o no cuenta. Completa los formularios que son para clientes (decisiones 49 y 50). Si vinculó su cuenta personal, ve la copia en «Mis mensajes». |
+| **Cliente de la organización** | Cualquier contacto de la bandeja «Clientes» de E11, tenga o no cuenta. Completa los formularios que son para clientes (decisiones 49 y 50). Si vinculó su cuenta personal, ve la copia en «Mensajes». |
 
 ### Clasificación de los datos
 
 - **Privado de la organización (`ITenantOwned`, esquema `tenant`, RLS):** definiciones, versiones, catálogos e ítems, respuestas y valores, recibos, reglas, ejecuciones, tareas, documentos y metadatos de archivos.
 - **Global de plataforma (esquema `platform`, ADR 0050):** la biblioteca de plantillas y sus versiones.
-- **La respuesta de un cliente** es dato de la organización (`ITenantOwned`), como la de un empleado. La copia de quien vinculó su cuenta va por la copia de la conversación de la E11 (que ya es `IConsumerBusinessShared`): Forms no suma tablas compartidas. En «Mis mensajes», la persona ve la tarjeta del formulario con sus propias respuestas.
+- **La respuesta de un cliente** es dato de la organización (`ITenantOwned`), como la de un empleado. La copia de quien vinculó su cuenta va por la copia de la conversación de la E11 (que ya es `IConsumerBusinessShared`): Forms no suma tablas compartidas. En «Mensajes», la persona ve la tarjeta del formulario con sus propias respuestas.
 - **Entrada de WhatsApp:** el webhook sigue global (`identity`). El procesador de entrada resuelve la organización por el número de E11 (`WhatsAppChannels`), arma su contexto con `SetFromAccess` y consulta `IFeatureService` antes de actuar. La captura de una respuesta es una fase aparte, fuera de su transacción y sin `ExecutionActor`, porque un cliente no tiene cuenta (T5 de la E14).
 - Un recurso de otra organización responde 404. Cada ruta nueva lleva su test de aislamiento.
 
@@ -94,10 +94,10 @@
   | `formrecords.export` | E15 | Exportar respuestas | Export responses | Bajar en Excel las respuestas, con los filtros aplicados. | Download the responses to Excel, with the filters applied. |
   | `formpersondata.manage` | E16 | Administrar los datos de las personas | Manage people data | Definir los datos de las personas, como «Zona». | Define people data, such as Zone. |
   | `formrules.manage` | E21 | Administrar reglas y PDF | Manage rules and PDF | Armar las reglas de un formulario y el diseño de su PDF. | Build a form's rules and its PDF design. |
-  | `formapprovals.decide` | E21 | Aprobar o rechazar respuestas | Approve or reject responses | Decidir las respuestas que piden aprobación, según el rol de la regla, menos las que cargó la misma persona (25). | Decide the responses that need approval, according to the rule's role, except the ones the same person submitted. |
+  | `formapprovals.decide` | E21 | Aprobar o rechazar respuestas | Approve or reject responses | Decidir las respuestas que piden aprobación, según el rol de la regla, menos las que cargó o corrigió la misma persona (25). | Decide the responses that need approval, according to the rule's role, except the ones the same person submitted or corrected. |
   | `formrecords.correct` | E21 | Corregir y anular respuestas | Correct and void responses | Corregir o anular cualquier respuesta, en cualquier momento (93). | Correct or void any response at any time. |
   | `formsuggestions.manage` | E23 | Administrar sugerencias entre formularios | Manage suggestions between forms | Elegir qué formulario se sugiere después de otro. | Choose which form is suggested after another. |
-- **El texto de un permiso dice solo lo que ya existe** (78). La tabla tiene el texto final, y cada etapa lo completa cuando llega: `forms.manage` y `forms.publish` suman lo suyo en la E17; `formrecords.create` suma «o desde la web» y `forms.publish` deja «en WhatsApp» en la E20 (98), y `formcatalogs.manage` suma el asistente en la E23.
+- **El texto de un permiso dice solo lo que ya existe** (78). La tabla tiene el texto final, y cada etapa lo completa cuando llega: `forms.manage` y `forms.publish` suman lo suyo en la E17; `formrecords.create` suma «o desde la web» y `forms.publish` deja «en WhatsApp» en la E20 (98), y `formcatalogs.manage` suma el asistente en la E25, que trae el catálogo que propone (167).
 - Cada permiso nuevo trae su migración que actualiza los roles de sistema de las organizaciones existentes (modelo: `20261010203618_SystemRoleAssistantPermissions.cs`).
 - **Permiso de plataforma:** uno para mantener la biblioteca (E22), con `[HasPlatformPermission]`.
 - **«Para resolver»:** las respuestas por aprobar (E21) aportan un `IPendingItemSource` (ADR 0040), en lugar de un contador propio.
@@ -169,7 +169,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Editor:** siete tipos de pregunta, entre ellos «elegir varias» (38), un `CheckboxGroup` de 1 a 20 opciones con mínimo y máximo, y la pregunta «Elegir de un catálogo», con la presentación del catálogo o la suya (78). Títulos de sección entre las preguntas, que en WhatsApp salen como subtítulo (88). Cada texto es uno solo, sin idioma (35). Prefijo propio, versiones y vista previa en el teléfono.
 - **Publicar:** operación durable en Meta, con un Flow por versión y por WABA de la organización.
 - **Mandar** desde el chat, a un empleado (Internos) o a un cliente (Clientes), según para quién es el formulario (49 y 50), con una sesión de 24 horas. Las opciones de catálogo viajan en el mensaje, con ids locales a la oferta. Lo que sale por la cola de WhatsApp se reintenta solo (80).
-- **Recibir:** la respuesta numerada, idempotente, con los campos de catálogo sellados, y su tarjeta en el chat y en «Mis mensajes». La captura va sin `ExecutionActor`, porque un cliente no tiene cuenta.
+- **Recibir:** la respuesta numerada, idempotente, con los campos de catálogo sellados, y su tarjeta en el chat y en «Mensajes». La captura va sin `ExecutionActor`, porque un cliente no tiene cuenta.
 - **Módulo:** los puertos neutrales de los formularios y el retiro probado.
 - **Spec:** [formularios/14-formularios.md](formularios/14-formularios.md).
 - **Criterios:**
@@ -248,7 +248,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Lo propio:** quien solo carga abre «Formularios» y ve la planilla con lo suyo (85).
 - **El armado:** hasta tres preguntas por renglón y zonas plegables; el ancho sale del tipo de pregunta, en dos anchos: una columna o el renglón entero (87 y 141).
 - **Listas dependientes,** solo en la web (94).
-- **Formularios solo para la app:** sin número conectado, con una lista dependiente o con un catálogo a mano más grande de lo que admite WhatsApp, se publica sin Meta y se carga desde la web (94, 96, 98 y 104).
+- **Formularios solo para la app:** sin número conectado, con una lista dependiente, con un catálogo a mano más grande de lo que admite WhatsApp o con un bloque de un mínimo de más de 10 ítems, se publica sin Meta y se carga desde la web (94, 96, 98, 104 y 178).
 - **Spec:** [formularios/20-cargar-desde-la-web.md](formularios/20-cargar-desde-la-web.md).
 - **Criterios:**
   - un solo lugar valida y numera; los archivos que se suben se verifican igual que los de WhatsApp;
@@ -335,7 +335,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 
 - **Integraciones, lo primero después del bloque** (76): ARCA es la primera, como módulo propio y con la conexión de cada empresa (150 a 152), y su [hoja de ruta](2026-11-06-arca-hoja-de-ruta.md) tiene las etapas, la adaptación y lo que no hay que repetir. Las que siguen (Mercado Libre, Mercado Pago y webhooks) se evalúan con su traspaso. La API pública y el MCP necesitan una identidad por organización.
 - **Carpetas para formularios y catálogos:** decididas allá el 2026-11-03, sin programar ([su plan](../../../ArquitecturaBase/docs/plans/2026-11-03-carpetas-de-formularios-y-catalogos.md)): un solo árbol por tema, que solo ordena y no da ni quita acceso, en un panel a la izquierda de cada listado. Se evalúa al sumarla a esta hoja; allá llega antes de su biblioteca de estándares.
-- **Catálogos, fases 3 a 6:** la búsqueda en vivo (56), las listas dependientes en WhatsApp (94) y los orígenes externos.
+- **Catálogos, fases 3 a 6:** la búsqueda en vivo (56), las listas dependientes en WhatsApp (94), elegir primero por un campo (191) y los orígenes externos.
 - **La conexión a la base de un cliente,** con una solución simple: un agente del lado del cliente o una réplica de solo lectura.
 - **Los tableros que cruzan formularios.**
 - **Importar respuestas desde Excel, y cargar a nombre de otra persona.**
@@ -350,7 +350,7 @@ Aplicarlo desde el primer día evita lo que nos frenó la Etapa 1 durante días:
 
    | Efecto | Cómo se hace acá |
    | --- | --- |
-   | **Fuera del sistema:** Meta, descarga de medios, almacenamiento, IA y mensajes a personas | Operación durable: un trabajo con lease y fence en un registro técnico (como `AssistantTurnWorks`). Antes de cada llamada se commitea `InFlight`, y la llamada va fuera de la UoW. Lo incierto queda «Sin confirmar» y se consulta antes de repetir, salvo lo que sale por la cola de WhatsApp, que se reintenta sola (80). Idempotencia por el id del trabajo o de la sesión, y `[Idempotent]` en el `POST` que lo pide. Pruebas de varios hosts. |
+   | **Fuera del sistema:** Meta, IA y mensajes a personas. Bajar un archivo de Meta y subirlo al almacenamiento se pueden repetir sin efecto, y van con reintentos simples (E18) | Operación durable: un trabajo con lease y fence en un registro técnico (como `AssistantTurnWorks`). Antes de cada llamada se commitea `InFlight`, y la llamada va fuera de la UoW. Lo incierto queda «Sin confirmar» y se consulta antes de repetir, salvo lo que sale por la cola de WhatsApp, que se reintenta sola (80). Idempotencia por el id del trabajo o de la sesión, y `[Idempotent]` en el `POST` que lo pide. Pruebas de varios hosts. |
    | **Lectura:** planilla, filtros, Excel | Sin recibos ni leases: presupuesto de tiempo y topes. |
    | **Configuración interna:** borradores, catálogos, reglas, diseño del PDF, plantillas | Una sola `ExecuteInTransactionAsync`, `IVersioned` y 409 `General.ConcurrencyConflict`. `[Idempotent]` solo en las altas, y sin recibos de 30 días. |
 2. **El contrato es el código:** DTO, OpenAPI y ejemplos exportados, no un documento de contrato de 60 KB. Los ejemplos salen de una corrida real, con sus estados y sus errores de negocio, y el front los valida con zod estricto (2026-10-24: en ArquitecturaBase, el back mandaba `pending` y el front esperaba `Pending`).
@@ -484,7 +484,7 @@ Elegidas por el usuario el 2026-10-24, al actualizar las specs:
 
 Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 1, quién participa):
 
-49. **Los clientes completan formularios desde el principio.** Cualquier contacto de la bandeja Clientes, tenga o no cuenta: se lo reconoce por su número. Si vinculó su cuenta personal, ve la copia en «Mis mensajes». Reemplaza la 3 para los formularios.
+49. **Los clientes completan formularios desde el principio.** Cualquier contacto de la bandeja Clientes, tenga o no cuenta: se lo reconoce por su número. Si vinculó su cuenta personal, ve la copia en «Mensajes». Reemplaza la 3 para los formularios.
 50. **Cada formulario dice para quién es:** solo empleados, solo clientes, o los dos. El envío, el asistente y las sugerencias ofrecen solo los que corresponden a quien recibe.
 51. **El asistente atiende también a los clientes,** en la bandeja Clientes, con los mismos límites configurables. Reemplaza la 29.
 52. **El modo de atención es configurable** (la 77 lo precisa con varios asistentes):
@@ -492,7 +492,7 @@ Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 1, quién pa
     - y cuándo vuelve un chat al modo configurado después de que lo tomó una persona: cuando pasa un tiempo sin mensajes (que elige la organización), cuando la persona lo marca «Resuelto», o nunca;
     - cada chat se cambia a mano en cualquier momento, en los dos sentidos, y se puede fijar para que no vuelva solo;
     - el bot del menú de la E11 aparece solo en los chats de Clientes que están en atención manual.
-53. **Las preguntas condicionales y los cálculos van dentro del bloque.**
+53. **Las preguntas condicionales y los cálculos van dentro del bloque de etapas** (de la E12 a la E25), no después.
 
 Elegidas por el usuario el 2026-10-24, al revalidar el bloque (paso 2, armar y mandar un formulario):
 
@@ -699,7 +699,7 @@ Elegidas por el usuario el 2026-11-07, al evaluar el traspaso 10 contra este mod
 174. **El texto largo se ve entero, en todo el sistema:** una celda baja de renglón en lugar de cortar con «…»; un código con guiones no se parte y una zona horaria se corta solo en sus barras (137). «Un dato por celda» sigue valiendo.
 175. **El estado, una vez, en todo el sistema** (EP1-A): lo que dice el encabezado no se repite debajo, la acción que destraba va en la banda y el porqué de un botón apagado, en su tooltip. En la publicación (E14 y E17) no hay pasos: la etiqueta dice el estado y, solo cuando hacen falta, la banda trae «Consultar publicación», «Repetir el mismo intento» (cuando WhatsApp no recibió el pedido) y, con «Necesita revisión», «Salió» y «No salió»; lo rechazado sigue marcado en su pregunta, sin una zona «Problemas». La baja se dice en una frase («Lo dio de baja Ana Gómez el …»), y al reactivar, la etiqueta dice el estado de la publicación. Cambia `Criterio-Decisiones`, que mandaba los pasos a la ⓘ.
 176. **La vista oficial se recorre en un diálogo** (VO1-A, E14): «Ver vista oficial» abre un diálogo con el marco de 480 × 840, achicado para entrar en la ventana, que arranca en la primera pantalla y se recorre como en el celular. Cada pregunta de catálogo trae sus primeras 20 opciones activas, en orden, con los filtros fijos y sin los filtros por destinatario; de los miembros y los contactos, solo lo que quien mira puede leer. El enlace lo arma el backend, de hasta 6000 caracteres: si no entra, cada lista lleva menos. Al costado queda «Así lo ve quien lo recibe», del borrador. Cambia `Criterio-Decisiones`, que la ponía al costado con «Borrador | Versión N en WhatsApp».
-177. **El bloque se agrega con «Agregar bloque», y lo que se repite se llama «ítem»** (RG10-D y RG12-A, de la E19 a la E21; cambia la 146): «Agregar bloque» va al lado de «Agregar pregunta», y el bloque arranca abierto y con «Bloque» de nombre, también cuando lo crea «Se carga varias veces»; con un bloque armado, el botón se apaga con su motivo, y «Tipo de respuesta» deja de ofrecerlo. Todo texto que ve el usuario dice «ítem» («item» en inglés) donde decía «renglón»: «Bloque · de 1 a 10 ítems · 3 preguntas», «Preguntas de cada ítem», «¿Agregás otro ítem?», «Productos · ítem 2», «Agregar ítem», «Algún ítem de Productos con…» y la columna «Ítem» del Excel. El código y los documentos siguen diciendo `rows`, y «renglón» queda donde es una línea.
+177. **El bloque se agrega con «Agregar bloque», y lo que se repite se llama «ítem»** (RG10-D y RG12-A, de la E19 a la E21; cambia la 146): «Agregar bloque» va al lado de «Agregar pregunta», y el bloque arranca abierto y con «Bloque» de nombre, también cuando lo crea «Se carga varias veces»; con un bloque armado, el botón se apaga con su motivo, y «Tipo de respuesta» deja de ofrecerlo. Todo texto que ve el usuario dice «ítem» («item» en inglés) donde decía «renglón»: «Bloque · de 1 a 10 ítems · 3 preguntas», «Preguntas de cada ítem», «¿Agregás otro ítem?», «Productos · ítem 2», «Agregar ítem», «Algún ítem de Productos con…», «En algún ítem de Productos» en «Filtros» y la columna «Ítem» del Excel. El código y los documentos siguen diciendo `rows`, y «renglón» queda donde es una línea.
 178. **Un bloque con un mínimo de más de 10 ítems** (RG13-A, E19 y E20; suma a la 146): con WhatsApp, en la E19, publicar frena con «En WhatsApp se cargan hasta 10 ítems; el mínimo es 15.» e «Ir a la pregunta». Desde la E20, si el formulario es para empleados o para los dos, se publica solo para la app, con su aviso en «Avisos», como un catálogo demasiado grande (96 y 104); si es solo para clientes, frena. La captura valida siempre el mínimo y el máximo, y un máximo de más de 10 sigue avisando sin frenar.
 179. **El ingreso y el consentimiento por WhatsApp, como en ArquitecturaBase** (E8 y E11; entra con la base de la 12): ningún mensaje lleva un enlace secreto. El bot de Plataforma lleva al ingreso con «Entrar a mi cuenta», y el código se pide desde la web. Invitar por WhatsApp desde «Cargar teléfonos» pide marcar «La persona aceptó recibir mensajes por WhatsApp».
 180. **La escala, como ArquitecturaBase, en todo el sistema** (cambia el tema del 04/10 junto con la 173): el usuario la eligió viendo la misma planilla en tres escalas; la de hoy le parecía grande y redondeada. La letra baja un 18 %, sin bajar de 10,5 px, y el cuerpo queda en unos 11 px; las filas, los controles y las bandas bajan un 26 % (una fila de tabla, unos 33 px; un botón o un filtro, de 24 a 27 px; la barra de arriba, unos 39 px); los rellenos y las separaciones, un 28 %; las esquinas quedan en 3 px como mucho, también en las pastillas y los avatares, y sin sombras (173). Los colores siguen siendo la paleta Pradera. En el lienzo entra con el pase de las piezas compartidas, y en la app, con la base de la 12.
@@ -713,6 +713,15 @@ Elegidas por el usuario el 2026-11-07, al evaluar el traspaso 10 contra este mod
 188. **En la lista de chats, la vista previa del último mensaje se corta con «…»** (excepción a la 174): va en un renglón, como en WhatsApp, para que las filas tengan la misma altura, y el mensaje entero se ve al abrir el chat.
 189. **El panel verde del ingreso queda liso** (la 173): sin degradé ni cuadrícula, porque era lo que más parecía plantilla de lo que quedaba. La paleta Pradera no cambia.
 190. **La ficha de un usuario no repite su estado** (la 175): sale el campo gris «Estado», que no se podía editar, porque la banda ya lo dice («● Invitación pendiente»).
+191. **Elegir primero por un campo va después del bloque** (LD1-A a LD3-A de ArquitecturaBase, programado allá el 2026-11-07 y el 2026-11-08): una pregunta de catálogo pide primero el valor de un campo, como «Rubro», y lista solo las opciones con ese valor, también por WhatsApp. Va con las listas dependientes en WhatsApp, y de la E12 a la E25 no cambia nada: la E20 sigue sin listas dependientes dentro del bloque.
+192. **Ante un pedido vago, la IA propone enseguida** (E25; precisa la 155): con «Armame un formulario nuevo para el taller», arma su mejor versión, como una orden de trabajo con el cliente, el vehículo, qué hay que hacer y la fecha, y la persona la ajusta con «Cambiar algo» o escribiéndole. Pregunta una sola vez, con sus palabras, solo si no puede saber ni qué armar, y si sigue sin poder, deriva a una persona. Allá, el 2026-11-07, pregunta y espera con un texto fijo. Acá no hay un texto fijo para cada caso: la IA contesta con sus palabras, dentro de los límites de las respuestas redactadas (39), y es fijo solo lo que tiene que ser exacto: los botones, el resumen de lo que va a crear, la oferta de un formulario (165) y el mensaje al derivar.
+193. **Una sola pestaña no lleva barra** (E14): el formulario muestra la barra de pestañas cuando tiene dos. En la E14 solo está «Diseño», y la barra aparece en la E15, con «Respuestas» y «Tablero».
+194. **El visor de una foto dice el nombre, el tamaño y «Descargar»** (E18): igual en la planilla y en el chat. Quién la mandó y cuándo ya están en la tarjeta del chat.
+195. **Pasar una pregunta al bloque pide confirmar** (E19; la 162): en una pregunta con «Mostrar si» o con «Permitir elegir varias», «Se carga varias veces» sigue activa, y marcarla pregunta antes: «Se quitan sus condiciones.» o «Pasa a elegir una sola opción.».
+196. **«Correo» no entra en el bloque** (E21): en una pregunta del bloque aparece apagada en «Tipo de respuesta», con su motivo, como Foto y Documento, y «Mandar por correo» ofrece solo las preguntas de afuera del bloque.
+197. **El bloque no es una variable de una plantilla de WhatsApp** (E21): una variable no admite saltos de línea, y eso se confirma en la prueba con Meta. El bloque va solo en los avisos dentro de las 24 horas.
+198. **La tarjeta de una plantilla dice dónde se usó** (E22): «La usaste en «Visita a cliente» y 1 más».
+199. **Un documento que llega en atención manual se lee igual** (E25): queda en «Documentos recibidos», y al operador le aparece la sugerencia de mandar el formulario prellenado, con «Revisar y enviar», como en la E23.
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
@@ -750,17 +759,17 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 - permisos en el catálogo del núcleo, tres clases de datos con RLS, `[Access]`, `[FeatureGate]`, `[Idempotent]`, `OperationLog.RunAsync` e `IVersioned`;
 - la lista cerrada de sufijos de helpers: `Compiler` y `Codec` no están. Se renombran a uno de la lista (por ejemplo, `WhatsAppFlowBuilder`), o se suma el sufijo a la ficha con su test.
 
-**En curso allá al 2026-11-07,** sin traspasar (traspaso 10). No se arma nada con esto hasta que llegue su traspaso, y lo que allá no se probó a mano no se toma como probado acá: EP1-A, los esqueletos, importar y exportar opciones, las listas dependientes y el menú sin saltos.
-- **Renglones, etapas 2 a 4:** cuando allá cierre la 3, la spec 19 suma el Excel con la columna «Ítem» y una hoja con el nombre del bloque, de hasta 31 caracteres; «En algún ítem de…», con todas las condiciones en el mismo ítem; y el PDF con el bloque entero.
-- **Elegir primero por un campo** (LD1-A a LD3-A): LD3-A choca con la E20, que no admite una lista dependiente dentro del bloque.
-- **La IA arma, etapas 2 y 3:** las planillas con «Importar opciones», los documentos y qué hace WhatsApp ante un pedido ambiguo.
+**En curso allá al 2026-11-08,** sin traspasar (lo que siguió al traspaso 10, hasta `ae60b950`). No se arma nada con esto hasta que llegue su traspaso, y lo que allá no se probó a mano no se toma como probado acá: EP1-A, los esqueletos, importar y exportar opciones, las listas dependientes, el menú sin saltos y las etapas 2 y 3 de renglones.
+- **Renglones:** allá quedaron programadas el 2026-11-07 la etapa 2 (cargar) y la 3 (ver), con la prueba física en la prueba integral final, y la 4 (las reglas) se programa desde el 2026-11-08. Lo suyo ya está acá: la planilla, «Filtros» y el Excel en la spec 19, la carga en la 20, y el PDF y las reglas en la 21. Cada una lo contrasta con el código de allá al planificar.
+- **Elegir primero por un campo** (LD1-A a LD3-A): programado allá; acá va después del bloque (191).
+- **La IA arma, etapas 2 y 3:** las planillas con «Importar opciones» y los documentos. Ante un pedido vago, allá pregunta y espera, y acá propone enseguida (192).
 - **Carpetas** (CP1-A a CP5-A): acá van después del bloque, con dos listados y no tres (79).
-- **Lo que falta decidir allá:** el rendimiento para producción, la homologación de ARCA, Azure, el teclado de Roles y «Desvincular» sin el módulo de WhatsApp.
+- **Lo que falta decidir allá:** el rendimiento para producción, la homologación de ARCA, Azure y el teclado de Roles. «Desvincular» sin el módulo de WhatsApp se decidió allá el 2026-11-07 (la ruta pasa al núcleo), y acá ya está en el núcleo (`api/me/login-methods`).
 
 ## 7. Decisiones pendientes
 
 Ninguna.
 
-Las del traspaso 10, del 2026-11-07, pasaron a la §5 como decisiones 160 a 179 (su evaluación, retirada el 2026-11-08: `git show 4626f5ba:docs/plans/2026-11-07-traspaso-10-evaluacion.md`), y lo que se decidió después, al escribir las specs y al dibujar, como 180 a 190; las dos de forma de trabajo, a `AGENTS.md`.
+Las del traspaso 10, del 2026-11-07, pasaron a la §5 como decisiones 160 a 179 (su evaluación, retirada el 2026-11-08: `git show 4626f5ba:docs/plans/2026-11-07-traspaso-10-evaluacion.md`), y lo que se decidió después, al escribir las specs y al dibujar, como 180 a 190; las dos de forma de trabajo, a `AGENTS.md`. Las de los commits de allá del 2026-11-07 y el 2026-11-08, revisados el 2026-11-08, como 191 y 192, y las de la revisión de las specs de ese mismo día, como 193 a 199.
 
 Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98, las del traspaso 4, del 2026-11-02, como decisiones 109 a 122, las del traspaso 5, del 2026-11-03, como decisiones 136 a 149, las del traspaso 6, del 2026-11-06, como decisiones 150 a 152, en la [hoja de ruta de ARCA](2026-11-06-arca-hoja-de-ruta.md), la del traspaso 7, del mismo día, como decisión 153, las del traspaso 8, también del 2026-11-06, como decisiones 154 a 156, y las del traspaso 9, del mismo día, como decisiones 157 a 159.

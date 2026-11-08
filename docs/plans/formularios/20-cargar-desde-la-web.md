@@ -1,6 +1,6 @@
 # E20 · Cargar una respuesta desde la web (spec)
 
-**Estado:** pendiente · spec de la etapa 20 del bloque (decisiones 73, 78, 83 a 90, 94 a 98, 101, 104, 153, 166, 177, 178, 183 y 184), con el [formato](plantilla.md) de las etapas. Corresponde a la Etapa 1 de «Cargar formularios desde la app» de ArquitecturaBase, programada y revisada allá el 2026-10-30, y a sus etapas 2 (lo propio), 4 (listas dependientes) y 5 (títulos de sección), programadas allá el 4 y el 5/11. La carga del bloque es la etapa 2 de sus renglones, en curso el 2026-11-07. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E19.
+**Estado:** pendiente · spec de la etapa 20 del bloque (decisiones 73, 78, 83 a 90, 94 a 98, 101, 104, 153, 166, 177, 178, 183 y 184), con el [formato](plantilla.md) de las etapas. Corresponde a la Etapa 1 de «Cargar formularios desde la app» de ArquitecturaBase, programada y revisada allá el 2026-10-30, y a sus etapas 2 (lo propio), 4 (listas dependientes) y 5 (títulos de sección), programadas allá el 4 y el 5/11. La carga del bloque es la etapa 2 de sus renglones, programada allá el 2026-11-07. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E19.
 
 **Partes.** Esta spec no entra en un solo archivo, así que sigue en otro, con las mismas secciones. Lo que no está en la tabla está acá.
 
@@ -52,10 +52,10 @@ Antes de empezar, en este orden:
 - si es para empleados o para los dos, se publica con un aviso que no frena (37). No pasa por Meta: sella la versión, la marca y la activa en la misma UoW, sin trabajo durable ni Flow;
 - **los frenos de WhatsApp no corren:** una versión solo para la app no va a Meta, así que no pasa por `Check` ni por el tope de opciones de un filtro fijo. Vuelven a correr al publicar con número;
 - si es solo para clientes, no se publica, porque ellos responden solo por WhatsApp. El mínimo de más de 10 frena como en la E19;
-- **en el chat,** «Enviar formulario» lo muestra apagado, con su motivo en lugar de la versión y las preguntas (166 y 184): con una lista dependiente, ««Proveedor» depende de otra respuesta: se carga desde la app.», y en los otros casos, el mismo motivo que dio al publicar. El asistente no lo ofrece;
+- **en el chat,** «Enviar formulario» lo muestra apagado, con su motivo en lugar de la versión y las preguntas (166 y 184): con una lista dependiente, ««Proveedor» depende de otra respuesta: se carga desde la app.», y con un catálogo demasiado grande o un mínimo de más de 10, el mismo motivo que dio al publicar; con más de un motivo, el de la primera pregunta. Uno publicado sin número, cuando después se conecta uno, aparece como en un número sin el Flow de su versión (103), hasta volver a publicar;
 - para mandarlo cuando se pueda, hay que volver a publicar: `NothingToPublish` no aplica si la versión activa es solo para la app y ahora se puede mandar. Cambia lo que la E14 dice de `ChannelUnavailable` y `CatalogTooLarge`.
 
-**Lo propio** (85): quien tiene `formrecords.create` y no `formrecords.read` lee solo sus respuestas, en la planilla, el detalle y los archivos, también lo que respondió por WhatsApp. El servidor filtra por `RespondentUserId`, y lo ajeno responde 404, también en una dirección directa. Quien solo carga ve «Formularios» con sus formularios, «Cargar», «Mis cargas» y «Mi última carga», con su número y su fecha («Todavía no cargaste» si no hay), nunca los totales de la organización (153, que cambia la 83). El nombre abre «Respuestas» con lo suyo: la planilla de siempre sin la columna «Cargó», sin «Cargó» en «Filtros» y sin «Exportar a Excel», con «Agregar respuesta». Los conteos también se acotan: el de personas la nombra solo a ella, el de un catálogo trae solo las opciones que eligió y un filtro por otra persona no devuelve nada. **El filtro «Estado»** suma «Dados de baja», con los formularios dados de baja en los que cargó algo: ve lo suyo, sin «Cargar» (101).
+**Lo propio** (85): quien tiene `formrecords.create` y no `formrecords.read` lee solo sus respuestas, en la planilla, el detalle y los archivos, también lo que respondió por WhatsApp. El servidor filtra por `RespondentUserId`, y lo ajeno responde 404, también en una dirección directa. Quien solo carga ve «Formularios» con sus formularios, «Cargar», «Mis cargas» y «Mi última carga», con su número y su fecha («Todavía no cargaste» si no hay), nunca los totales de la organización (153, que cambia la 83). El nombre abre «Respuestas» con lo suyo: la planilla de siempre, con «Empresa» (24), sin la columna «Cargó», sin «Cargó» en «Filtros» y sin «Exportar a Excel», con «Agregar respuesta». Los conteos también se acotan: el de personas la nombra solo a ella, el de un catálogo trae solo las opciones que eligió y un filtro por otra persona no devuelve nada. **El filtro «Estado»** suma «Dados de baja», con los formularios dados de baja en los que cargó algo: ve lo suyo, sin «Cargar» (101).
 
 **Las entradas** (83): «Cargar» al final de cada fila de «Formularios» y «Agregar respuesta» en el encabezado de la planilla, que en la compu abre el panel, y en el teléfono, la página. Las dos siguen la misma regla: no aparecen en un borrador ni en un dado de baja, y en uno solo para clientes quedan grisadas, con el motivo en su tooltip (43).
 
@@ -117,7 +117,7 @@ Aprobados y publicados en el lienzo v154, con el armado del front real de Arquit
 
 **Publicar solo para la app** va en la zona «Avisos» de la E16, con «En WhatsApp: No» en «Qué se publica», sin «Ver vista oficial» y con el botón «Publicar» en la banda. Cada motivo nombra su pregunta y dice que se carga «desde la app», como el canal (90), y no «desde la web»: el chat repite el del catálogo y el del mínimo (184). Uno solo para clientes frena en «Problemas» (134).
 
-**«Agregar filtro ▾»** reúne los tres filtros de una pregunta en un menú, porque con «Según otra respuesta» los botones ya no entran en el encabezado de la caja (134).
+**«Agregar filtro ▾»,** el de la E16, suma «Según otra respuesta»: ofrece «Según quien lo recibe», «Filtro fijo» y «Según otra respuesta» (134).
 
 **«Canal»** se suma a los filtros rápidos de la planilla, y la cantidad sale de la barra: ya está en la pestaña «Respuestas».
 
@@ -134,7 +134,7 @@ Aprobados y publicados en el lienzo v154, con el armado del front real de Arquit
 | [E16] | La preparación de la oferta. | Sirve también paginada, sin el tope de 200. |
 | [E18] | `IFileContentInspector` y el diario. | Sirven igual para un archivo que llega por multipart. |
 | [E19] | `FormConditionEvaluator`, `lib/conditions.ts` y el bloque en la captura. | El front y el servidor dan lo mismo, y el bloque viaja en el mismo envío. |
-| Allá | La etapa 2 de renglones, en curso el 2026-11-07: la tabla, los recuadros, los errores por ítem y «Mantener». | Cierra como dice esta spec. Lo que allá cambie se adopta si no choca con las reglas de acá (126); LD3-A no entra. |
+| Allá | La etapa 2 de renglones, programada el 2026-11-07 y sin probar a mano: la tabla, los recuadros, los errores por ítem y «Mantener». | Se contrasta con el código de allá al planificar, y lo que allá cambió se adopta si no choca con las reglas de acá (126). LD1-A a LD3-A no entran (191). |
 | Front | `useIdempotentMutation`, `useUnsavedChangesGuard` y el panel al costado. | Están, o llegan con la base de la 12. |
 | Celular | Que el reenvío por USB llegue a `localtest.me` (ver «Cómo se cierra»). | Anda sin cambiar la configuración. |
 
@@ -155,7 +155,7 @@ Aprobados y publicados en el lienzo v154, con el armado del front real de Arquit
 - Cargar a nombre de otra persona desde la web (73), importar muchas respuestas desde un Excel, borradores guardados y carga sin conexión.
 - La carga en filas, y ofrecer en la web qué cargar después.
 - Las listas dependientes en WhatsApp, con el intercambio cifrado con Meta.
-- Lo que allá se estaba programando: una lista dependiente dentro del bloque (LD3-A) y elegir primero por un campo (LD1-A y LD2-A).
+- Elegir primero por un campo y una lista dependiente dentro del bloque, que allá son LD1-A a LD3-A: quedan para después de la E25, con las listas dependientes en WhatsApp (191).
 - El estado, el PDF y el motivo de rechazo en lo propio, y corregir y anular, también con ítems, que suma la E21.
 
 ## Cómo se cierra

@@ -4,17 +4,17 @@
 
 ## Contrato
 
-**Los documentos** son rutas de `/api/organization/forms`, con `[FeatureGate("forms")]`.
+**Los documentos** son rutas de `/api/organization/forms`, con `[FeatureGate("forms")]`; `form-proposal` y `form-drafts`, que usan la IA, suman `[FeatureGate("assistant")]`.
 
 | Ruta | Permiso | Pide | Devuelve |
 | --- | --- | --- | --- |
-| `POST /documents/search` | `formrecords.read` | `{form?, senders?, received?, states?, companies?, search?, page, pageSize, sort}` | `PagedResult<{id, formName?, sender, receivedAtUtc, state, summary, deleteAtUtc?}>` |
+| `POST /documents/search` | `formrecords.read` | `{form?, senders?, received?, states?, companies?, search?, page, pageSize, sort}` | `PagedResult<{id, fileName, mediaType, formName?, sender, receivedAtUtc, state, summary, record?{id, displayNumber}, deleteAtUtc?}>` |
 | `POST /documents/facets` | `formrecords.read` | los filtros | conteos por estado, formulario y empresa |
 | `GET /documents/{id}` y `…/content` | `formrecords.read` | — | los datos con su seguridad, las validaciones, el porqué y el original, `no-store` |
 | `PUT /documents/{id}` | `formrecords.read` y atender esa bandeja | `{values, version}` | 200 `{version}` |
 | `POST /documents/{id}/reading` | `formrecords.read` y atender esa bandeja | `{formId, version}` | 200 `{version}`; la lectura sigue por su trabajo |
 | `POST /documents/{id}/discard` | `formrecords.read` y atender esa bandeja | `{version}` | 200 |
-| `POST /documents/{id}/record` | `formrecords.read` y atender esa bandeja | `{version}`, con `[Idempotent(Mode = IdempotencyMode.DurableReference)]` y `[IdempotencyDurable(typeof(FormEntryDurableAdapter))]`, porque el número es privado | 200 `{recordId, displayNumber, version}`, con `[ResponseVersion("Version")]` |
+| `POST /documents/{id}/record` | `formrecords.read` y atender esa bandeja | `{version}`; desde la carga de la web, en multipart, además `answers` y los archivos, como el `POST /{id}/records` de la E20. Con `[Idempotent(Mode = IdempotencyMode.DurableReference)]` y `[IdempotencyDurable(typeof(FormEntryDurableAdapter))]`, porque el número es privado | 200 `{recordId, displayNumber, version}`, con `[ResponseVersion("Version")]` |
 | `POST /documents/{id}/form-proposal` | `forms.manage` y `formrecords.read` | — | la propuesta de un formulario, la misma del asistente, con `reading` y `similarTemplate?` |
 | `POST /documents/{id}/form-drafts` | `forms.manage` y `formrecords.read` | la propuesta, con `[Idempotent]` | 201 `FormDetail` |
 | `GET /{id}/reading/stats` | `forms.read` | — | `{confirmedRun, precision[]}` |
@@ -109,11 +109,11 @@ public interface IStructuredAuthoringCreator
 
 ## Datos
 
-Una migración por módulo, Forms y Asistente. Todo es `ITenantOwned`, con RLS, salvo lo global. **Sin permisos nuevos:** `formcatalogs.manage` completa su texto, con aprobar los catálogos que propone el asistente.
+Tres migraciones, una por módulo: Forms, Asistente y WhatsApp. Todo es `ITenantOwned`, con RLS, salvo lo global. **Sin permisos nuevos:** `formcatalogs.manage` completa su texto, con aprobar los catálogos que propone el asistente.
 
 | Tabla | Qué guarda | Regla |
 | --- | --- | --- |
-| **FormDocuments** (`IVersioned`) | `Source`, quién lo mandó, `StorageKey`, `MediaType`, `ByteLength`, `Sha256`, `State`, `DefinitionId?`, `VersionId?`, `BuiltDefinitionId?`, `Extracted` jsonb, `Validation` jsonb, `DuplicateOfId?`, `RecordId?`, `ReviewedByUserId?`, `DeleteAtUtc?`, `Attempts`, `NextAttemptAtUtc` | GIN `jsonb_path_ops` en `Extracted`; índice por `Sha256`. `BuiltDefinitionId` es el formulario que se armó con ese documento: al publicarlo, sus documentos sin clasificar vuelven a leerse para él y quedan propuestos |
+| **FormDocuments** (`IVersioned`) | `Source`, quién lo mandó, `FileName`, `StorageKey`, `MediaType`, `ByteLength`, `Sha256`, `State`, `DefinitionId?`, `VersionId?`, `BuiltDefinitionId?`, `Extracted` jsonb, `Validation` jsonb, `DuplicateOfId?`, `RecordId?`, `ReviewedByUserId?`, `DeleteAtUtc?`, `Attempts`, `NextAttemptAtUtc` | GIN `jsonb_path_ops` en `Extracted`; índice por `Sha256`. `BuiltDefinitionId` es el formulario que se armó con ese documento: al publicarlo, sus documentos sin clasificar vuelven a leerse para él y quedan propuestos |
 | **FormDocumentCorrections** | `DocumentId`, `FieldId`, propuesto, confirmado, quién y cuándo | de ahí salen los ejemplos y la precisión |
 | **FormDocumentCounters** | quién, día y cantidad | clave por persona o contacto y día |
 | **FormAuthoringOutcomes** | `ProposalId`, `Kind`, `CreatedId` y `Provenance` jsonb: el canal, quién lo pidió y cuándo, el perfil y lo que se le ofreció | único por `ProposalId`: crear una sola vez y devolver lo mismo |
@@ -122,3 +122,14 @@ Una migración por módulo, Forms y Asistente. Todo es `ITenantOwned`, con RLS, 
 | **platform.FormDocumentWorks** | `TenantId`, `NextAtUtc` y reserva | registro técnico, sin datos de negocio |
 
 **Columnas nuevas:** `FormVersions` suma `Reading` jsonb. `FormRecords` suma `SourceDocumentId?`. `WhatsAppFlowSessions` suma `SourceRef?`, opaco: el id del documento, que se propuso con ese Flow, y `StructuredRecordCapture` suma `SourceDocumentId?`, así la respuesta del Flow vuelve a su documento. **El `SourceKey` es `document:<id>` en los tres caminos** (el Flow, «Pasar al formulario» y «Cargar solo si es seguro»), y por eso un documento no se carga dos veces. `FormTemplateDraft` suma `reading`. `FormCatalogs` suma `ProposalState?` (`Pending` o `Approved`) y `Proposal` jsonb, con quién lo pidió, dónde y cuándo, que se conservan después de aprobar. Los mensajes del asistente de la E8b suman `Proposal` jsonb y `AudioRequestId?`. **Estados de un documento:** `Received`, `Proposed`, `Unclassified`, `Confirmed`, `AutoLoaded` y `Discarded`. **Topes:** `Forms:DocumentReadsPerPersonPerDay`, con `ValidateOnStart`.
+
+## En el multitenant
+
+- **Datos de la organización:** documentos, lecturas, correcciones, lo creado desde una propuesta y los audios del Inicio, con RLS. Cada ruta nueva lleva su test de aislamiento.
+- **Workers:** leer es una operación durable, descubierta en un registro técnico; el archivo ya lo bajó el chat, con los reintentos simples de la E18. Abren un scope por organización con `SetFromAccess(tenantId, TenantKind.Business)`, como la E21, sin `ExecutionActor`, porque quien manda puede ser un cliente, leen las features con `ITenantFeatureCache` y se suman a la lista de `TenantScopeUsageTests`. El borrado de los 90 días no toca la copia compartida, y recorre las organizaciones con `TenantJobRunner`.
+- **Features:** las rutas llevan `forms`; leer y armar piden además `assistant`. Sin ella no se lee ningún documento, y la «Lectura de documentos» y «Armar con la IA» no aparecen, como «Cuándo lo ofrece» en la E23.
+- **Accesos:** armar y el micrófono son solo del acceso de la organización; el asistente personal y el de Plataforma quedan como en la E8b (171).
+- **WhatsApp:** la bajada de la E18 usa la WABA y el token de la organización.
+- **Almacenamiento:** copias privadas en `IFileStore`, y el antivirus de la lista de lanzamiento.
+- **Baja de la cuenta:** el participante borra los documentos sin usar de esa persona.
+- **Cuotas:** las rutas cuentan en las generales; la lectura, armar y el audio del Inicio, en el tope de IA de la organización.

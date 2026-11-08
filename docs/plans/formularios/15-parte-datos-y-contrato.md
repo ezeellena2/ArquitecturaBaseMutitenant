@@ -19,9 +19,11 @@ Todas las rutas son de `/api/organization/forms`, con `[Access(Access.Business)]
 | `GET /{id}/records/{recordId}` | `formrecords.read` | — | `{id, displayNumber, versionNumber, submittedAtUtc, channel, respondent, companies[], formName, questions[], titles[], values, sentBy?{name, atUtc}, conversationId?}` |
 | `POST /{id}/records/{recordId}/navigation` | `formrecords.read` | `filtros`, `sort` | `{previousId?, nextId?, position, total}` |
 | `POST /{id}/records/export` | `formrecords.export` | `filtros`, `sort`, `columns` (`all`, `visible`), `visibleKeys?[]` | 200 `.xlsx` |
-| `POST /{id}/records/dashboard` | `formrecords.read` | `filtros`, `period` (`day`, `week`, `month`) | `{period, total, buckets[{start, count}], numbers[{fieldId, label, decimals, sum, average?, min?, max?, buckets[{start, total}]}], choices[{fieldId, label, type, catalogName?, answered, options[], others?}], dates[{fieldId, label, buckets[]}], respondents[], respondentsOthers?}`; cada opción o persona lleva `{label, count, sums}` |
+| `POST /{id}/records/dashboard` | `formrecords.read` | `filtros`, `period` (`day`, `week`, `month`) | `{period, total, buckets[{start, count}], numbers[{fieldId, label, decimals, sum, average?, min?, max?, buckets[{start, total}]}], choices[{fieldId, label, type, catalogName?, answered, options[], others?}], respondents[], respondentsOthers?}`; cada opción o persona lleva `{label, count, sums}` |
 | `GET /{id}/dashboard-settings` | `formrecords.read` | — | `{hiddenCards[], countBy}` |
-| `PUT /{id}/dashboard-settings` | `formrecords.read` | `{hiddenCards[], countBy}`, hasta 100 claves | 204. Sin versión: es de una sola persona |
+| `PUT /{id}/dashboard-settings` | `formrecords.read` | `{hiddenCards[], countBy}`, hasta 100 claves entre los dos | 204. Sin versión: es de una sola persona |
+
+`countBy` es un mapa de la clave de cada tarjeta de opciones o personas a lo que cuenta: `count` o `sum:<fieldId>`. Sin su clave, cuenta la cantidad.
 
 **Valores:** `values` es un mapa de `fieldId` a valor. Ausente es que la pregunta no existía; `null`, «Sin respuesta». El valor es `{kind: "text", text}`, `{kind: "number", number}`, con el número como texto, `{kind: "date", date}`, `{kind: "bool", bool}` o `{kind: "choices", choices[{id, label, code?, detail?, value?, catalogName?, fields}]}`, en el orden elegido.
 
@@ -32,9 +34,9 @@ Todas las rutas son de `/api/organization/forms`, con `[Access(Access.Business)]
 | `Forms.Record.NotFound` | NotFound | ausente, ajena, excluida o de otro formulario |
 | `Forms.RecordFilter.Invalid` | Validation (`conditions[i]`) | pregunta, operador o valor fuera de la gramática, un orden que no se admite o un rango invertido |
 | `Forms.RecordExport.TooMany` | Conflict | más de 10.000 respuestas |
-| `Forms.RecordExport.Busy` | Conflict | esa persona ya tiene un trabajo en curso |
+| `Forms.RecordExport.Busy` | Conflict | esa persona ya tiene una exportación de respuestas en curso |
 | `Forms.RecordExport.TimedOut` | ServiceUnavailable | se pasó el presupuesto de 30 s |
-| `Forms.Dashboard.SettingsInvalid` | Validation (`hiddenCards`) | más de 100 claves |
+| `Forms.Dashboard.SettingsInvalid` | Validation (`hiddenCards` o `countBy`) | más de 100 claves entre los dos, o algo que no es `count` ni `sum:<fieldId>` |
 
 Lo ajeno sigue siendo `Forms.Definition.NotFound`. Un 403 o un permiso revocado no devuelven datos ni conteos.
 
@@ -49,14 +51,14 @@ Una migración, `<fecha>_FormRecordsRead.cs`, y otra de roles, `<fecha>_SystemRo
 | Columna | Tipo | Regla |
 | --- | --- | --- |
 | `TenantId`, `UserId`, `DefinitionId` | uuid | clave; FK compuesta a `FormDefinitions`; `UserId` sin FK, porque la cuenta es global |
-| `Settings` | jsonb | `{hiddenCards[], countBy}`; una clave que ya no existe se ignora al leer |
+| `Settings` | jsonb | `{hiddenCards[], countBy{}}`; una clave que ya no existe se ignora al leer |
 | `UpdatedAtUtc` | timestamptz | — |
 
 **Índices nuevos:**
 - `FormRecords`: `(TenantId, DefinitionId, SubmittedAtUtc, Id)`; `(TenantId, DefinitionId, RespondentUserId)`; `(TenantId, DefinitionId, RespondentContactId)`, y GIN sobre `RespondentCompanyIds`;
 - `FormRecordValues`: `(TenantId, FieldId, ChoiceId)`, `(TenantId, FieldId, NumberValue)`, `(TenantId, FieldId, DateValue)`, y un GIN trigram `IX_FormRecordValues_Search_TextValue`, parcial en `LongText`, sobre `f_unaccent(lower("TextValue"))`.
 
-`FormWorkLeases.Kind` suma `RecordExport`.
+`FormWorkLeases` suma `Lane` a su clave, que pasa a ser `(TenantId, UserId, Lane)`: `Catalogs` para la vista previa, aplicar y exportar de la E12, que siguen de a uno por persona, y `Records` para exportar respuestas, con `Kind` `RecordExport`. Lo que ya existe queda en `Catalogs`.
 
 ## Lo que ya se pagó allá (no repetir)
 

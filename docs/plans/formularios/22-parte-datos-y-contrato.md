@@ -21,10 +21,10 @@
 | B5 | **El conteo de uso:** una fila técnica `platform.FormTemplateUsages(TemplateId, UsedByCount)` suma 1 la primera vez que una organización usa la plantilla. Para saber si es la primera, se mira si esa organización ya tiene un formulario con ese `SourceTemplateId`, en sus propios datos, también los borrados (`IgnoreQueryFilters(["SoftDelete"])`): usar, borrar y volver a usar suma una sola vez. | Cuenta organizaciones sin guardar cuáles fueron. La plataforma nunca lee datos de una organización. |
 | B6 | Las plantillas, sus versiones y las categorías son globales, en `platform`, con `IGlobalSecurityAudited` y `PlatformSettingsChanged` con destino global (ADR 0050). Guardar el borrador registra un motivo fijo; publicar, retirar y cambiar categorías usan el motivo que escribe el operador. | La regla vigente de auditoría de lo global. |
 | B7 | **El editor de la plataforma es el mismo de la E14,** montado en la ruta de Plataforma, y suma la pestaña «Catálogos». Sin Meta: la vista previa es solo la orientativa del teléfono. | Un solo editor. Una plantilla no se publica en WhatsApp. |
-| B8 | **Publicar comprueba:** las reglas de Forms, los textos obligatorios, los catálogos de la plantilla, las reglas de ejemplo y `IStructuredFormChannel.Check` (es puro, no llama a Meta). Si WhatsApp no está instalado, la comprobación del canal no corre. | La copia nace lista para publicar. |
+| B8 | **Publicar comprueba:** las reglas de Forms, los textos obligatorios, los catálogos de la plantilla, las reglas de ejemplo y `IStructuredFormChannel.Check` (es puro, no llama a Meta). Si WhatsApp no está instalado, la comprobación del canal no corre; si está, frena también lo que en la E20 deja un formulario solo para la app: una lista dependiente, «elegir varias» de más de 20 opciones o un bloque con un mínimo de más de 10 ítems. | La copia nace lista para publicar y mandar. |
 | B9 | La copia guarda `SourceTemplateId` y `SourceTemplateVersion` en la definición. | Sirve para el conteo (B5), para leer las reglas de ejemplo (decisión 30) y para el futuro aviso de versión nueva. |
 | B10 | La plataforma no tiene formularios propios ni manda formularios. | Decisión 4 de la hoja de ruta: el número de la plataforma no manda formularios. |
-| B11 | **La copia conserva los `FieldId` y `ChoiceId` de la versión de la plantilla.** Los catálogos y sus ítems sí son nuevos (B3). | Son únicos dentro de cada formulario, y nada los cruza entre formularios: las respuestas, la planilla y la publicación se unen siempre por formulario. Así las reglas de ejemplo y el diseño del PDF apuntan a las mismas preguntas sin guardar una tabla de equivalencias. |
+| B11 | **La copia conserva los `FieldId` y `ChoiceId` de la versión de la plantilla, y el id de cada campo de sus catálogos.** Los catálogos y sus ítems sí son nuevos (B3). | Son únicos dentro de cada formulario o catálogo, y nada los cruza: las respuestas, la planilla y la publicación se unen siempre por formulario, y un campo se busca siempre en el catálogo de su pregunta. Así las reglas de ejemplo, el diseño del PDF, la fórmula de la E19 (`catalogFieldId`) y la presentación propia de una pregunta apuntan a lo mismo sin guardar una tabla de equivalencias. |
 | B12 | **Copiar el diseño del PDF no pide `formrules.manage`.** Verlo y cambiarlo sí lo piden. | Es parte del formulario nuevo y no hace nada hasta que alguien con ese permiso guarda reglas que lo usan. Si se pidiera el permiso, «Usar esta plantilla» se apagaría para quien diseña formularios sin armar reglas. |
 
 ## 3. Modelo de datos
@@ -58,16 +58,16 @@ Una categoría se borra solo si ninguna plantilla la usa (`Forms.TemplateCategor
 - `questions[]`, en el formato del borrador de la E14;
 - en una pregunta de elegir con catálogo, `catalogRef` (id local de la plantilla) en lugar de `catalogId`;
 - en una pregunta de catálogo del bloque (E19), lo mismo: su `catalogRef`;
-- `catalogs[]`: `{catalogRef, name, source, valueType, fields[], items[{code, text, detail?, value?, fields{}}]}`, donde `source` es `Manual`, `Members` o `Contacts`. Solo los `Manual` llevan opciones, **hasta 200 por catálogo,** porque el borrador viaja entero en cada `GET` y cada `PUT`: una lista más larga es de cada organización. Los otros dos llegan sin filtros (64). Lo demás sigue los límites de la E12 y la E13. Un campo «elegir de otro catálogo» apunta a otro `catalogRef` de la misma plantilla;
-- `rules[]`: las reglas de ejemplo, en el formato de la E21 (un evento, hasta 10 condiciones y hasta 10 acciones), con dos diferencias:
+- `catalogs[]`: `{catalogRef, name, source, valueType, fields[{id, key, …}], items[{code, text, detail?, value?, fields{}}]}`, donde `source` es `Manual`, `Members` o `Contacts`, y el `id` de cada campo es local a la plantilla y la copia lo conserva (B11). Solo los `Manual` llevan opciones, **hasta 200 por catálogo,** porque el borrador viaja entero en cada `GET` y cada `PUT`: una lista más larga es de cada organización. Los otros dos llegan sin filtros (64). Lo demás sigue los límites de la E12 y la E13. Un campo «elegir de otro catálogo» apunta a otro `catalogRef` de la misma plantilla;
+- `rules[]`: las reglas de ejemplo, en el formato de la E21 (un evento, hasta 10 condiciones y hasta 10 acciones), con tres diferencias:
   - las condiciones apuntan a las preguntas y opciones de la plantilla (ids locales); en una pregunta de catálogo, a `catalogRef` más el código de la opción;
-  - las acciones que piden un rol (pedir aprobación y avisar a un rol) **no llevan rol**. Llevan un `roleHint` opcional: un texto que solo se muestra, como «Supervisor»;
-  - **lo que es de cada organización tampoco viaja,** y se trata como el rol: «Lo elige cada organización». Son la persona de «Avisar a una persona», la dirección fija de «Mandar por correo» (62) y la plantilla de WhatsApp para fuera de las 24 horas (61). Al usar la plantilla, el editor las pide como pide el rol;
+  - las acciones que piden un rol (pedir aprobación, avisar a un rol y mandar por correo a un rol) **no llevan rol**. Llevan un `roleHint` opcional: un texto que solo se muestra, como «Supervisor»;
+  - **lo que es de cada organización tampoco viaja,** y se trata como el rol: «Lo elige cada organización». Son la persona de «Avisar a una persona» y de «Mandar por correo», la dirección fija de «Mandar por correo» (62) y la plantilla de WhatsApp para fuera de las 24 horas (61). Al usar la plantilla, el editor las pide como pide el rol;
 - `pdfDesign?`: el diseño del PDF de la E21 (nombre, estilo, preguntas, quién aprobó, pie, «Incluir las fotos», secciones con título y orden, mostrar u ocultar y firmas; 59), con las preguntas por id local. El logo, el color y los datos del encabezado son de cada organización (82): la plantilla no los trae;
 
 ### Reglas de ejemplo y diseño del PDF
 
-Se completó el 2026-10-18 con el [resumen](21-reglas-y-aprobacion.md) y los tableros de la E21 (v132). La regla: las reglas viajan en la plantilla sin destinatarios propios de una organización, y la copia las deja para completar.
+Sigue la [spec de la E21](21-reglas-y-aprobacion.md). La regla: las reglas viajan en la plantilla sin destinatarios propios de una organización, y la copia las deja para completar.
 - **Al publicar la plantilla:** las reglas se validan con las reglas de la E21 (pedir aprobación es la última acción y solo al recibir, el PDF al aprobar, o al recibir si ninguna regla pide aprobación, y adjuntarlo pide una acción anterior que lo genere), salvo el rol. Lo mismo vale para el diseño del PDF.
 - **Al usar la plantilla** (decisiones 30 a 33 de la [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md#5-decisiones-de-producto), del 2026-10-18):
   - **las reglas no se activan solas ni se copian.** No hay columna ni tabla de reglas sugeridas:
@@ -102,7 +102,7 @@ Se completó el 2026-10-18 con el [resumen](21-reglas-y-aprobacion.md) y los tab
 - **`FormTemplateCategory`:** `Rename` y `SwapPosition`.
 
 **Copiar** (`FormTemplateCopyCreator`, en Application) arma, desde la versión publicada:
-- los catálogos nuevos: los a mano con posiciones de 1 a n, su tipo de valor, sus campos y sus valores; los de los miembros y de los contactos, sin filtros. Sin WhatsApp, uno de los contactos queda «No se puede usar» hasta que se instale;
+- los catálogos nuevos: los a mano con posiciones de 1 a n, su tipo de valor, sus campos, con el id de cada uno (B11), y sus valores; los de los miembros y de los contactos, sin filtros. Sin WhatsApp, uno de los contactos queda «No se puede usar» hasta que se instale;
 - el borrador del formulario, con los `FieldId` y `ChoiceId` de la versión (B11) y los `catalogRef` traducidos a los ids de los catálogos nuevos, también los de las preguntas del bloque;
 - el nombre de la plantilla, el prefijo libre y la fuente;
 - el diseño del PDF, como primera revisión del diseño (decisión 31). Las reglas de ejemplo no se copian: se leen de la versión (decisión 30).
@@ -126,10 +126,10 @@ Se completó el 2026-10-18 con el [resumen](21-reglas-y-aprobacion.md) y los tab
 
 | Método y ruta | Pide | Devuelve |
 | --- | --- | --- |
-| GET `/api/platform/forms/templates` | `page`, `pageSize`, `sort`, `search`, `state` (`all`, `draft`, `published`, `retired`), `categoryId?` | 200 `PagedResult<{id, name, category, state, usedByCount}>` |
+| GET `/api/platform/forms/templates` | `page`, `pageSize`, `sort`, `search`, `state` (`all`, `draft`, `published`, `retired`), `categoryId?` | 200 `PagedResult<{id, name, category, state, usedByCount, lastPublishedAtUtc?}>` |
 | GET `/api/platform/forms/templates/filter-counts` | `search`, `categoryId?` | 200 `{all, draft, published, retired}` |
 | POST `/api/platform/forms/templates` | `{name, categoryId}` | 201 detalle |
-| GET `/api/platform/forms/templates/{id}` | — | 200 `{id, state, category, draft, hasUnpublishedChanges, publishedVersion?{number, publishedAtUtc}, usedByCount, version}` |
+| GET `/api/platform/forms/templates/{id}` | — | 200 `{id, state, category, draft, hasUnpublishedChanges, publishedVersion?{number, publishedAtUtc, publishedBy}, retired?{atUtc, by, reason}, usedByCount, version}` |
 | GET `/api/platform/forms/templates/{id}/versions` | `after?`, `limit?` (`CursorRequest`) | 200 `CursorResult<{number, publishedAtUtc, publishedBy, reason}>`, por fecha e Id descendentes, sin total |
 | PUT `/api/platform/forms/templates/{id}/draft` | `{draft, categoryId, version}` | 200 `VersionResponse` |
 | POST `/api/platform/forms/templates/{id}/publication-checks` | — | 200 `{canPublish, issues[], nextVersionNumber}`; no escribe ni lleva `version`, como en la E14 (T8): la comprobación que vale es la de publicar |
@@ -145,9 +145,9 @@ Se completó el 2026-10-18 con el [resumen](21-reglas-y-aprobacion.md) y los tab
 
 | Método y ruta | Pide | Devuelve |
 | --- | --- | --- |
-| GET `/api/organization/forms/templates` | `page`, `pageSize`, `search`, `categoryId?` | 200 `PagedResult<{id, name, description, category, questionCount, catalogCount}>`, solo las publicadas |
+| GET `/api/organization/forms/templates` | `page`, `pageSize`, `search`, `categoryId?` | 200 `PagedResult<{id, name, description, category, audience, questionCount, catalogCount, usedIn?{id, name, count}}>`, solo las publicadas; `usedIn` es el último formulario propio que salió de ella, y `count`, en cuántos se usó (198) |
 | GET `/api/organization/forms/template-categories` | `page`, `pageSize`, `search` | 200 `PagedResult<{id, name, position}>`, solo categorías con al menos una plantilla publicada, por posición e Id |
-| GET `/api/organization/forms/templates/{id}` | — | 200 la versión publicada, para ver: preguntas, catálogos con sus opciones, reglas de ejemplo en palabras (con «Rol a elegir») y si trae diseño del PDF |
+| GET `/api/organization/forms/templates/{id}` | — | 200 la versión publicada, para ver: preguntas, catálogos con sus opciones, las reglas de ejemplo con `roleHint` y sin rol, que se leen en pasos como en la E21, `usedIn?{id, name, count}` y si trae diseño del PDF |
 | GET `/api/organization/forms/templates/{id}/use-proposal` | — | 200 `{name, prefix}`, con el prefijo libre, como `copy-proposal` de la E17 |
 | POST `/api/organization/forms/templates/{id}/use` | `{name, prefix}` y `[Idempotent]` | 201 `FormDetail` de la E14 + Location al formulario nuevo; valen `PrefixTaken` y `PrefixInvalid` |
 

@@ -14,11 +14,11 @@ Antes de empezar, en este orden:
 
 ## Qué se construye
 
-**Varios asistentes por organización.** Cada uno tiene su nombre, su perfil, sus casos y sus límites por bandeja, como el de la E23. El conocimiento es de la organización y lo comparten todos (46). El principal no se da de baja.
+**Varios asistentes por organización.** Cada uno tiene su nombre, su perfil, sus casos y sus límites por bandeja, como el de la E23. El conocimiento es de la organización y lo comparten todos (46). El principal no se da de baja. **Uno nuevo** arranca con una copia del perfil, los casos y los límites del principal, con el nombre que se le dio, para cambiarlos.
 
 **Quién contesta cada chat: por equipo** (68):
 - cada equipo de la bandeja puede tener un asistente, y un equipo tiene como mucho uno;
-- **un chat nuevo** (77): con varios asistentes, arranca con el menú del bot, aunque la bandeja esté en modo Asistente. La persona elige el equipo, y desde ahí le contesta el asistente de ese equipo. Con uno solo, el menú sigue apareciendo solo en atención manual;
+- **un chat nuevo de Clientes** (77): con varios asistentes, arranca con el menú del bot, aunque la bandeja esté en modo Asistente. La persona elige el equipo, y desde ahí le contesta el asistente de ese equipo. Con uno solo, el menú sigue apareciendo solo en atención manual. En Internos no hay menú: el bot pasa al empleado al equipo elegido, como en la E11, y le contesta el asistente de ese equipo;
 - un chat en modo Asistente lo contesta el asistente de su equipo. Un chat sin equipo, o de un equipo sin asistente, lo contesta el principal;
 - **si el chat cambia de equipo,** por el menú o porque un operador lo pasa, desde el mensaje siguiente contesta el asistente del equipo nuevo, con el mismo historial;
 - el chat muestra qué asistente contesta, y «Por qué respondió esto» lo nombra.
@@ -32,6 +32,8 @@ Antes de empezar, en este orden:
 ## Pantallas
 
 **Aprobados y publicados** en el lienzo v158. En ArquitecturaBase no existe: todo sale de piezas de este lienzo. Muestran solo lo que existe hasta acá (78).
+
+**Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
 
 Datos de ejemplo: el principal, Delta; Delta Soporte y Delta Ventas, de esos equipos, y Delta Obras, de baja.
 
@@ -48,7 +50,7 @@ El recorrido guiado «Dos equipos con su asistente» muestra a Lucía asignando 
 | Ruta | Permiso | Pide | Devuelve |
 | --- | --- | --- | --- |
 | `GET /api/organization/whatsapp/assistant/agents` | `whatsapp.manage` | `page`, `pageSize`, `search`, `status` | `PagedResult<{id, name, isPrimary, isActive, teamCount, teams[]}>`, con hasta `MaxMemberPreview` equipos. La arma WhatsApp, con `IConversationAgentSettings.ListAsync` y sus equipos: el asistente no los conoce |
-| `POST /api/organization/whatsapp/assistant/agents` | `whatsapp.manage` | `{name}`, con `[Idempotent]` | 201 + Location |
+| `POST /api/organization/whatsapp/assistant/agents` | `whatsapp.manage` | `{name}`, con `[Idempotent]` | 201 + Location; arranca con la copia del perfil, los casos y los límites del principal |
 | `GET` y `PUT /api/organization/whatsapp/assistant/agents/{id}` | `whatsapp.manage` | lo de la E23 | el agente y 200 `{version, knowledgeVersion}` |
 | `POST …/agents/{id}/deactivation` y `reactivation` | `whatsapp.manage` | `{version}` | 200 `{version}` |
 | `POST /api/organization/whatsapp/assistant/agents/{id}/test` | `whatsapp.manage` | `{text, inbox}` | lo de la E23 |
@@ -87,7 +89,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| B1 | Varios agentes | suma a `D/Assistant/AssistantAgent.cs` y `AssistantAgentService.cs` [E23]; la migración | esos mismos | el principal no se da de baja; un asistente de baja; nombre repetido |
+| B1 | Varios agentes | suma a `D/Assistant/AssistantAgent.cs` y `AssistantAgentService.cs` [E23]; la migración | esos mismos | el principal no se da de baja; un asistente de baja; nombre repetido; el nuevo arranca con la copia del principal, con su nombre |
 | B2 | La asignación | suma a `D/WhatsApp/WhatsAppTeam.cs` y `WhatsAppTeamService.cs`; la migración | esos mismos | otro módulo opaco; un asistente de baja |
 | B3 | Elegir quién contesta | `A/Modules/WhatsApp/Services/WhatsAppAgentResolver.cs`; suma a `WhatsAppAssistantTurnService.cs` [E23] | `WhatsAppBotResolver.cs` | sin equipo; equipo sin asistente; cambiar de equipo con el mismo historial |
 | B4 | El menú al empezar | suma a `WhatsAppAttentionBotWriter.cs` y `WhatsAppInboundGuard.cs` | esos mismos | con uno y con varios; la persona elige |

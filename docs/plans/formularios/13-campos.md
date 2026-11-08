@@ -7,7 +7,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E12](12-catalogos.md): C3 (guardar), C6 (valores), C7 a C11 (carga de una vez) y sus secciones de datos, contrato, flujos y archivos. Esta etapa suma a esas piezas, no crea otras.
-2. **Decisiones** de la hoja de ruta: 35 (el contenido no tiene idioma), 36 (títulos de más de 30 caracteres), 42 (hasta 20 campos), 43 (botones y avisos), 78 (el orden), 105 (los topes cuentan los activos), 109, 110, 115 y 116 (leyendas, motivos, esperas y ayuda), 111 (el combo del catálogo), 118 (la tabla de campos) y 119 (el Excel legible).
+2. **Decisiones** de la hoja de ruta: 35 (el contenido no tiene idioma), 36 (títulos de más de 30 caracteres), 42 (hasta 20 campos), 43 (botones y avisos), 78 (el orden), 105 (los topes cuentan los activos), 109, 110, 115 y 116 (leyendas, motivos, esperas y ayuda), 111 (el combo del catálogo), 119 (el Excel legible), 125 (los campos en un modal), 127 (las acciones a la vista), 129 (borrar una opción que nada usa) y 130 (la clave a la vista, con su candado).
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -53,7 +53,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobadas y publicadas en el lienzo v150, con el armado de ArquitecturaBase (125 a 130). Los dibujos están en `docs/design/capturas/plan/etapa-13/` del front, y el recorrido guiado es `campos-de-un-catalogo`. Muestran solo el catálogo (78).
+Aprobadas y publicadas en el lienzo v150, con el armado de ArquitecturaBase (125 a 130). El recorrido guiado es `campos-de-un-catalogo`. Muestran solo el catálogo (78).
 
 | Tablero | Qué muestra |
 | --- | --- |
@@ -77,7 +77,7 @@ Aprobadas y publicadas en el lienzo v150, con el armado de ArquitecturaBase (125
 **«En WhatsApp»:** va debajo de «El catálogo». «Título · hasta 30 caracteres» y «Descripción · hasta 300», cada uno con un chip por lugar, con ✕, y un desplegable «Agregar campo» con lo que falta. Con un solo lugar en el título, su ✕ va apagado. «Por ejemplo» muestra la primera opción activa. Lo que no entra se avisa debajo, con cuántas son y hasta tres ejemplos, y en el teléfono.
 
 **Estados dibujados:**
-- **La página:** los campos, un campo recién agregado (la columna grisada, con el motivo en su tooltip, y el aviso), cambiar el tipo con errores (arriba de la tabla, con «Revisar», que abre el modal en ese campo), una opción que usa otra (no se elimina), «En WhatsApp», elegir qué muestra, «Columnas», un catálogo nuevo, guardado, un valor de una opción dada de baja, solo `formcatalogs.read` y un título que no entra.
+- **La página:** los campos, un campo recién agregado (la columna grisada, con el motivo en su tooltip, y el aviso), cambiar el tipo con errores (arriba de la tabla, con «Revisar», que abre el modal en ese campo), una opción que usa otra (no se borra), «En WhatsApp», elegir qué muestra, «Columnas», un catálogo nuevo, guardado, un valor de una opción dada de baja, solo `formcatalogs.read` y un título que no entra.
 - **El modal:** los campos, uno de un catálogo, el combo abierto, filtrando y sin coincidencias, agregar un campo, elegir el tipo, un número, clave repetida, quitar con y sin valores, 20 campos, sin campos todavía y solo lectura.
 
 **Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez. Los chips de «En WhatsApp» llevan el radio de un control (173).
@@ -88,7 +88,7 @@ Son las rutas de la E12, que suman lo siguiente. Permisos: `formcatalogs.read` p
 
 | Ruta | Qué suma |
 | --- | --- |
-| `GET /api/organization/forms/catalogs/{id}` | `fields[]`: `{id, key, name, type, sourceCatalogId?, sourceCatalogName?, required, unique, maxLength?, min?, max?, isActive}`, en orden; y `presentation`: `{title, description[]}`, donde un lugar es `text`, `code`, `value`, `detail` o `field:<id>` |
+| `GET /api/organization/forms/catalogs/{id}` | `fields[]`: `{id, key, name, type, sourceCatalogId?, sourceCatalogName?, required, unique, maxLength?, min?, max?, isActive}`, en orden; y `presentation`: `{title[], description[]}`, donde cada uno es una lista de lugares y un lugar es `text`, `code`, `value`, `detail` o `field:<id>` |
 | `GET …/catalogs/{id}/items` | cada opción suma `fields`, un mapa de `id` del campo a valor canónico, y `presentationIssue?` (`TitleEmpty`, `TitleTooLong` o `DescriptionTooLong`). Suma el filtro `ids`, repetido, hasta 100 y sin vacíos, para nombrar las opciones de una fuente; si no, 400 |
 | `POST …/catalogs` | `fields?[]` y `presentation?` en uno a mano |
 | `PUT …/catalogs/{id}` | `fields?[]`: la lista entera, si cambió, con `id` o `localId`; el orden es el de la lista. `presentation?`. `items[i].fields`: delta por `id` de campo. `confirmedFieldRemovals?[]`: los campos con valores que se quitan. Responde también el mapa de ids de los campos |
@@ -103,7 +103,7 @@ Son las rutas de la E12, que suman lo siguiente. Permisos: `formcatalogs.read` p
 | Código | Tipo | Cuándo |
 | --- | --- | --- |
 | `Forms.Catalog.TooManyFields` | Validation (`fields`) | más de 20 activos |
-| `Forms.Catalog.FieldKeyDuplicate` | Validation (`fields[i].name`) | dos campos activos con el mismo nombre |
+| `Forms.Catalog.FieldKeyDuplicate` | Validation (`fields[i].key`) | dos campos activos con la misma clave, como «Cuit» y «CUIT»; el modal lo dice debajo de la clave: «Ya la usa «CUIT».» |
 | `Forms.Catalog.FieldInvalid` | Validation (`fields[i]`) | tipo, regla o fuente fuera de lo permitido, o un campo en un catálogo que no es a mano |
 | `Forms.Catalog.FieldRemovalNotConfirmed` | Validation (`fields[i]`) | quitar un campo con valores sin confirmarlo |
 | `Forms.Catalog.FieldTypeNotConvertible` | Validation (`fields[i].type`) | valores que no convierten al tipo nuevo; trae `invalidRows`, las primeras 50 en orden de fila, con su motivo |
@@ -124,7 +124,7 @@ Una migración aditiva, `<fecha>_FormCatalogFields.cs`, sobre las tablas de la E
 | Tabla | Columna | Tipo | Regla |
 | --- | --- | --- | --- |
 | `FormCatalogs` | `FieldsJson` | jsonb, `[]` por defecto | la lista de campos, también los quitados; `{id, key, name, type, sourceCatalogId?, required, unique, maxLength?, min?, max?, position, isActive}`. Vacía si no es a mano |
-| `FormCatalogs` | `Presentation` | jsonb | `{title, description[]}`; arranca en `text` y `detail` |
+| `FormCatalogs` | `Presentation` | jsonb | `{title[], description[]}`; el título arranca en `text`, y la descripción, en `detail` |
 | `FormCatalogItems` | `FieldValuesJson` | jsonb, `{}` por defecto | mapa de `key` a valor canónico, con índice GIN `jsonb_path_ops` |
 
 **La clave:** se arma con el nombre, en minúsculas y sin acentos, con `^[a-z][a-z0-9_]{0,39}$`, y queda fija. Si choca con `text`, `code`, `value`, `detail` o con un campo quitado, suma un número. En el JSON del contrato se usa la identidad del campo, y la clave queda adentro.
@@ -169,7 +169,8 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | [E12] | Los lectores de archivos y el puerto `IFormCatalogSpreadsheet`. | Leen columnas por nombre y con la cultura del pedido. |
 | [E12] | La barrera de C11 y sus tiempos. | Cubre también los archivos con columnas de campos. |
 | [E12] | El bloqueo del catálogo. | Se pueden bloquear dos catálogos en un orden fijo, sin esperar un deadlock. |
-| Base de la 12 | Los botones y la tabla con columnas fijas del front. | `fixedColumns` ya está en el front, o entra acá. |
+| Base de la 12 | Los botones del front. | Ponen el aro y su gerundio, y lo apagado dice por qué en su tooltip. |
+| [E12] | La tabla de opciones con columnas fijas. | La dejó la E12: la casilla, el número y «Texto» a la izquierda y las acciones a la derecha; las columnas de los campos se desplazan entre ellas. |
 
 ## Lo que ya se pagó allá (no repetir)
 

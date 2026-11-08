@@ -2,14 +2,14 @@
 
 **Estado:** pendiente · spec de la etapa 16 del bloque (decisiones 34, 78 y 105), con el [formato](plantilla.md) de las etapas. Es la segunda mitad de lo que ArquitecturaBase llama E2, entera: los datos de las personas y los filtros que los usan, juntos en una etapa, así nada queda sin quién lo use. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E15.
 
-**Partes.** El contrato y los datos siguen en la [parte de datos y contrato](16-parte-datos-y-contrato.md); lo demás está acá.
+**Partes.** El contrato, los datos y lo que ya se pagó allá siguen en la [parte de datos y contrato](16-parte-datos-y-contrato.md); lo demás está acá.
 
 ## Qué leer
 
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E13](13-campos.md): datos, contrato y las lecciones; la [E14](14-formularios.md): T22, T23, la §6b y `publication-checks`; y la [E15](15-respuestas.md): «Columnas» y los campos sellados.
-2. **Decisiones** de la hoja de ruta: 35, 37, 42, 43, 50, 78, 88, 105, 109, 111, 112, 115, 116, 134, 145, 157 y 176.
+2. **Decisiones** de la hoja de ruta: 35, 37, 42, 43, 50, 78, 88, 105, 109, 111, 112, 115, 116, 129, 130, 134, 138, 145, 157, 165 y 176.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -30,7 +30,8 @@ Antes de empezar, en este orden:
 ## Qué se construye
 
 **Los datos de las personas,** como «Zona»:
-- los define cada organización: nombre (un solo texto, 35), tipo (Texto o «De un catálogo», con una fuente a mano y activa), posición, estado y versión. Hasta 20 activos (42 y 105): dar de baja uno libera su lugar. Se dan de baja y se reactivan, sin borrarse;
+- los define cada organización: nombre (un solo texto, 35), clave, tipo (Texto o «De un catálogo», con una fuente a mano y activa), posición, estado y versión. Hasta 20 activos (42 y 105): dar de baja uno libera su lugar. Se dan de baja y se reactivan, sin borrarse;
+- **la clave se muestra, con su (i), y queda con candado al guardar** (130): nace del nombre, como la de un campo de la E13, se puede escribir hasta guardar y no se repite en la organización, tampoco con un dato dado de baja. Los valores van por la identidad del dato, no por la clave;
 - son de la organización y del miembro, nunca de la cuenta (42): una persona puede ser «Centro» en una organización y no tener el dato en otra;
 - un dato que usa un filtro del borrador o de la versión activa de un formulario no cambia de tipo ni de fuente, ni se da de baja. El error dice qué formulario y qué pregunta;
 - cambiar el tipo o la fuente de un dato con valores pide confirmar cuántos, y borra esos valores;
@@ -39,9 +40,9 @@ Antes de empezar, en este orden:
 **Los valores:**
 - una fila por miembro, con su propia versión y un `PUT` delta: ausente conserva y `null` limpia;
 - un texto tiene hasta 300 caracteres. Uno de catálogo guarda la identidad de la opción y exige una opción activa de la fuente. **Un valor guardado que apunta a una opción dada de baja se conserva y sigue filtrando;**
-- no van en «Exportar mis datos», porque son de la organización. **Al terminar una membresía, sus valores se borran con ella:** al sacar a alguien de la organización y en la baja de la cuenta. El núcleo suma para eso un punto de aviso neutral, que hoy no existe.
+- no van en «Exportar mis datos», porque son de la organización. **Al terminar una membresía, sus valores se borran con ella:** al sacar a alguien de la organización, al revocar la invitación de quien todavía no entró y en la baja de la cuenta. El núcleo suma para eso un punto de aviso neutral, que hoy no existe.
 
-**El papel de un campo:** los campos de la E13 suman su papel, «Dato» (el de siempre) o «Filtro». Los dos se sellan al responder. En la planilla, las subcolumnas de un campo «Filtro» salen apagadas y se prenden en «Columnas». Un campo que usa un filtro del borrador o de la versión activa no se quita ni cambia de papel, tipo o fuente.
+**El papel de un campo:** los campos de la E13 suman su papel, «Dato» (el de siempre) o «Filtro». Los dos se sellan al responder. En la planilla, las subcolumnas de un campo «Filtro» salen apagadas y se prenden en «Columnas»; el teléfono no tiene columnas, como en la E15. El detalle y el Excel los tratan como a cualquier campo sellado: el detalle los muestra debajo de su valor, «Todas las preguntas» los trae y «Solo las visibles» sigue a «Columnas». Un campo que usa un filtro del borrador o de la versión activa no se quita ni cambia de papel, tipo o fuente.
 
 **Los filtros por destinatario,** en una pregunta de un catálogo a mano («Qué opciones ve cada persona», una zona que arranca plegada, con los filtros en su banda, y se abre sola con un error o un aviso, 145):
 - filtros de igualdad, uno por campo de papel «Filtro», unidos con «y»;
@@ -55,7 +56,7 @@ Antes de empezar, en este orden:
 - **un cliente no tiene datos** (42): una pregunta con un filtro según quien lo recibe no se le manda, y un filtro fijo sí;
 - al operador le llega el motivo y la cantidad, nunca los nombres de las opciones.
 
-**La vista previa «Como si lo recibiera»:** con una persona de ejemplo, pide `formcatalogs.read`, no guarda ni toma bloqueos, y distingue «Lista», «Le falta el dato» y «El filtro no funciona». No nombra opciones de un catálogo que quien mira no puede leer. Lo que tiene la persona probada se lee en dos columnas, el dato y su valor, nunca «Zona: Centro» corrido (138).
+**La vista previa «Como si lo recibiera»:** con una persona de ejemplo, pide `formcatalogs.read`, no guarda ni toma bloqueos, y distingue «Lista», «Le falta el dato» y «El filtro no funciona». No nombra opciones de un catálogo que quien mira no puede leer. Lo que tiene la persona probada se lee en dos columnas, el dato y su valor, nunca «Zona: Centro» corrido (138). Debajo, sobre los filtros sin guardar, el máximo por persona y cuántas personas no tienen el dato, con la misma cuenta que los avisos de publicar.
 
 **La vista oficial** de la E14 no usa los filtros según quien lo recibe: cada lista trae sus primeras 20 opciones activas con los filtros fijos de la pregunta (176).
 
@@ -69,9 +70,10 @@ Antes de empezar, en este orden:
 Aprobados y publicados en el lienzo v150, con su recorrido guiado. Muestran solo lo que existe hasta acá (78). Con el traspaso 5, redibujados, aprobados y publicados en el lienzo v162: `FRM-Editor-16` y su teléfono, con las dos zonas plegadas en «Zonas plegadas» (145) y lo de la persona probada en dos columnas (138), y `FRM-Respuestas-16`, con «Filtros» (144); su teléfono lo tiene desde la v160.
 
 **Redibujados con el traspaso 10, aprobados y publicados en el lienzo v168:**
-- `FRM-Publicar-16`, con el aviso de opciones por persona solo cuando no entra o da cero (157): «Como mucho 240 opciones por persona (Centro), de un límite de 200.» o «Con estos filtros nadie ve ninguna opción.». Si entra, no dice nada, así que sale «Como mucho 18 opciones por persona, de un límite de 200.»;
+- `FRM-Publicar-16`, con el aviso de opciones por persona solo cuando no entra o da cero (157): «Como mucho 240 opciones por persona (Centro), de un límite de 200.» o «Con estos filtros nadie ve ninguna opción.». Si entra, no dice nada;
 - `FRM-Editor-16` y `M-FRM-Editor-16`, con «Agregar título» al lado de «Agregar pregunta» (88) y un solo «Agregar filtro ▾» (134);
-- `FRM-Usuario-Datos` y `M-FRM-Usuario-Datos`, con «Agregar empresa» en lugar de «Sumar empresa», como las demás altas.
+- `FRM-Usuario-Datos` y `M-FRM-Usuario-Datos`, con «Agregar empresa», como las demás altas;
+- `WA-Chats-Formulario-16` y `M-WA-Chats-Formulario-16`, con «Completá el formulario «Visita a cliente».» propuesto al elegir el formulario (165).
 
 | Tablero | Qué muestra |
 | --- | --- |
@@ -81,17 +83,26 @@ Aprobados y publicados en el lienzo v150, con su recorrido guiado. Muestran solo
 | `FRM-Editor-16` y `M-FRM-Editor-16` | «Qué opciones ve cada persona» en la pregunta |
 | `FRM-Publicar-16` | la zona «Avisos», entre «Problemas» y «Qué se publica» (112) |
 | `WA-Chats-Formulario-16` y `M-WA-Chats-Formulario-16` | el formulario que no se puede mandar, con el motivo |
-| `FRM-Respuestas-16` y `M-FRM-Respuestas-16` | «Columnas», con las subcolumnas de los filtros apagadas |
+| `FRM-Respuestas-16` y `M-FRM-Respuestas-16` | «Columnas», con las subcolumnas de los filtros apagadas; el teléfono no tiene columnas |
 
-**«Datos de las personas»:** dos secciones, como en ArquitecturaBase. «Datos», con su (i) y «+ Agregar dato» en el encabezado: Dato, Clave, Tipo, Lo usan y ✎, con «Dado de baja» debajo del nombre. Con el tope de 20, «Agregar dato» queda grisado, con el motivo en su tooltip. «Personas», con el resumen «6 personas · 2 sin Zona» y «Buscar personas»: Persona, una columna por dato activo, «—» si no tiene y ✎ con `users.manage`. Sin `users.read`, una línea lo dice.
+**Se corrigen en el lienzo,** porque chocan con una decisión, una ficha del front o esta spec:
+- `FRM-Datos-Personas` y `M-FRM-Datos-Personas`: la (i) de «Clave» copia la de un campo, «La usan la plantilla, la importación y lo guardado.», y un dato no tiene plantilla ni importación; queda «No cambia después de guardar.». En el teléfono, las filas dicen «Zona: Centro · Sucursal: Casa central», un «Rótulo: valor» corrido (138);
+- `FRM-Catalogo-16`: la (i) de «Papel» dice «Dato: se guarda con la opción y viaja con la respuesta.», y los dos papeles se sellan al responder;
+- `M-FRM-Respuestas-16`: sale «Columnas» del menú, porque el teléfono no tiene columnas (`responsive.md` del front), y «Florencia Fernández de l…» se ve entero (174);
+- `FRM-Publicar-16`: el editor de atrás no tiene «Proveedores a consultar», la pregunta de los avisos, y en «Para los dos: un cliente» dice «Para quién es: Empleados»;
+- `WA-Chats-Formulario-16`: «A un cliente» se ve en Internos, con Tomás Acosta, que es empleado.
 
-**El diálogo para definir un dato:** «Agregar dato» o «Editar dato», con Nombre, Clave con su (i), Tipo y, si es de un catálogo, Catálogo, en el combo de la E13 (111). Una clave guardada no cambia. Editando va «Dato activo». En uso, tipo, catálogo y «Dato activo» quedan grisados y se dice qué formularios lo usan. Si hay valores, cambiar el tipo pide marcar «Sí, cambiar el dato y borrar los valores de N personas». Mientras guarda, «Guardando…», y la tabla que vuelve a leer atenúa.
+**«Datos de las personas»:** dos secciones, como en ArquitecturaBase. «Datos», con su (i) y «+ Agregar dato» en el encabezado: Dato, Clave, Tipo, Lo usan y ✎, con «De baja» debajo del nombre. Con el tope de 20, «Agregar dato» queda grisado, con el motivo en su tooltip. «Personas», con el resumen «6 personas · 2 sin Zona» y «Buscar personas»: Persona, una columna por dato activo, «—» si no tiene y ✎ con `users.manage`. Sin `users.read`, una línea lo dice.
+
+**El diálogo para definir un dato:** «Agregar dato» o «Editar dato», con Nombre, Clave con su (i), Tipo y, si es de un catálogo, Catálogo, en el combo de la E13 (111). La clave sigue al nombre hasta que se escribe a mano, y una guardada no cambia, con su candado (130). Editando va «Dato activo». En uso, tipo, catálogo y «Dato activo» quedan grisados y se dice qué formularios lo usan. Si hay valores, cambiar el tipo pide marcar «Sí, cambiar el dato y borrar los valores de N personas». Mientras guarda, «Guardando…», y la tabla que vuelve a leer atenúa.
 
 **La ficha del usuario:** las pestañas aparecen solo si un módulo aporta una; si no, queda como hoy. «Datos» tiene sus botones y se guarda aparte del acceso, solo si cambió. Salir con cambios pregunta antes. Un error queda en la pestaña.
 
-**«Qué opciones ve cada persona»:** una zona de la pregunta que arranca plegada, con lo configurado en su banda (145). Abierta, la banda trae «Agregar filtro ▾», con «Según quien lo recibe» y «Filtro fijo» (134), y la (i) va junto al título. Cada filtro va en su recuadro: «Según quien lo recibe» (Campo y Dato de la persona) o «Filtro fijo» (Campo y Valor fijo), con ✕. Debajo, «Como si lo recibiera», con la persona y el resultado, el máximo por persona y quién no tiene el dato, con «Cargar los datos» para quien tiene `formpersondata.manage`. Sin campos de filtro, «Agregar filtro ▾» queda grisado, con el motivo en su tooltip; «Según quien lo recibe» queda apagada, con el suyo, si ningún dato de las personas elige del catálogo de esos campos.
+**«Qué opciones ve cada persona»:** una zona de la pregunta que arranca plegada, con lo configurado en su banda (145). Abierta, la banda trae «Agregar filtro ▾», con «Según quien lo recibe» y «Filtro fijo» (134), y la (i) va junto al título. Cada filtro va en su recuadro: «Según quien lo recibe» (Campo y Dato de la persona) o «Filtro fijo» (Campo y Valor fijo), con ✕. Debajo, «Como si lo recibiera», con la persona y el resultado, el máximo por persona («Como mucho 18 por persona (Centro, la más grande): entra en el desplegable (200).») y cuántas personas no tienen el dato («2 personas sin Zona»), con «Cargar los datos» para quien tiene `formpersondata.manage`. Sin campos de filtro, «Agregar filtro ▾» queda grisado, con el motivo en su tooltip; «Según quien lo recibe» queda apagada, con el suyo, si ningún dato de las personas elige del catálogo de esos campos.
 
-**Borrar una opción (129):** una que tiene una persona en sus datos no se borra: `Forms.Catalog.ItemInUse` suma `uses: people`, y se lee «No se puede borrar: la tiene una persona en sus datos. Podés darla de baja.».
+**Borrar una opción (129):** `Forms.Catalog.ItemInUse` suma dos motivos, y la opción se puede dar de baja:
+- `uses: forms`, si la nombra un filtro fijo del borrador o de la versión activa de un formulario: «No se puede borrar: la usa un formulario. Podés darla de baja.»;
+- `uses: people`, si la tiene una persona en sus datos: «No se puede borrar: la tiene una persona en sus datos. Podés darla de baja.».
 
 **«Papel»:** en el modal de campos, «Filtro | Dato», con la ayuda en la (i). La lista dice «De un catálogo · Filtro». Cambiarlo en un campo en uso se rechaza, con el motivo debajo.
 
@@ -113,17 +124,18 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| B1 | Dominio, errores y permiso | `D/Forms/FormPersonDataDefinition.cs`, `FormPersonDataValues.cs`, `FormRecipientFilter.cs`, `FormPersonDataErrors.cs`; suma a `Permissions.cs` y `Permissions{,.en}.resx` | `D/Forms/FormCatalog.cs` [E12] | 20 contando solo los activos (105); `PermissionTextsTests` |
+| B1 | Dominio, errores y permiso | `D/Forms/FormPersonDataDefinition.cs`, `FormPersonDataValues.cs`, `FormRecipientFilter.cs`, `FormPersonDataErrors.cs`; suma a `Permissions.cs` y `Permissions{,.en}.resx` | `D/Forms/FormCatalog.cs` [E12] | 20 contando solo los activos (105); la clave: su formato, repetida y fija al guardar (130); `PermissionTextsTests` |
 | B2 | Tablas y migraciones | `I/Modules/Forms/Persistence/Configurations/FormPersonData*Configuration.cs`; las dos migraciones | `FormCatalogConfiguration.cs` [E12], `20261010203618_SystemRoleAssistantPermissions.cs` | aislamiento y migración, también hacia atrás |
 | B3 | Definir: tope, en uso y confirmar el borrado. Bloquea definiciones, dato y fuente, en ese orden | `A/Modules/Forms/Interfaces/Services/IFormPersonDataService.cs`, `A/Modules/Forms/Services/FormPersonDataService.cs`, `FormPersonDataEditor.cs` | `FormCatalogService.cs` [E12] | dos personas crean el dato 20 a la vez; en uso por el borrador y por la versión activa; `count` exacto |
 | B4 | Valores por delta. Bloquea dato, persona y fuente, en ese orden | `FormPersonDataValueEditor.cs`, `I/Modules/Forms/Persistence/Readers/FormPersonDataReader.cs` | `FormCatalogFieldValuePolicy.cs` [E13] | delta y `null`; opción dada de baja conservada; dos guardados = 409; un miembro de dos organizaciones; la tabla paginada, sin correos |
-| B5 | El aviso de fin de membresía | `A/Interfaces/Integrations/Legal/IMembershipEndParticipant.cs`; suma a `OrganizationUserRemover.cs` y `MembershipDeletionParticipant.cs`; `A/Modules/Forms/Services/FormsMembershipEndParticipant.cs` | `IAccountDeletionParticipant.cs` | sacar a alguien y la baja de la cuenta borran los valores, en la misma UoW; sin el módulo, nada |
+| B5 | El aviso de fin de membresía | `A/Interfaces/Integrations/Legal/IMembershipEndParticipant.cs`; suma a `OrganizationUserRemover.cs`, `OrganizationUserAccessRemover.cs` (revocar la invitación de quien todavía no entró) y `MembershipDeletionParticipant.cs`; `A/Modules/Forms/Services/FormsMembershipEndParticipant.cs` | `IAccountDeletionParticipant.cs` | sacar a alguien, revocar la invitación de quien no entró y la baja de la cuenta borran los valores, en la misma UoW; sin el módulo, nada |
 | B6 | El papel de un campo, sellado y columnas | suma a `FormCatalogField.cs`, `FormCatalogFieldEditor.cs` [E13], `FormRecordWriter.cs` [E14] y `FormRecordColumnsBuilder.cs` [E15] | esos mismos | no cambia en uso (lección 1); una respuesta vieja se lee como `Data` |
 | B7 | Filtros en el borrador | `A/Modules/Forms/Services/FormRecipientFilterPolicy.cs`; suma a `FormDraft.cs` y `FormDraftEditor.cs` [E14] | `FormCatalogFiltersPolicy.cs` [E12] | cada motivo de `RecipientFilterInvalid`; lección 3; conserva el `FieldId` |
 | B8 | La oferta filtrada, en SQL | suma a `FormOfferBuilder.cs` [E14] y `FormCatalogReader.cs` [E12] | esos mismos | las dos zonas; sin el dato; valor de otra fuente; filtro roto; cliente; nunca la lista entera; con 201 opciones; 10.000 opciones con EXPLAIN; la vista oficial, con los filtros fijos y sin los según quien lo recibe (176) |
-| B9 | La vista previa | suma a `FormCatalogService.cs` | `POST …/previews` [E12] | los tres estados; sin escribir; lección 4; persona de otra organización |
-| B10 | Publicar: problemas y avisos | suma a `FormPublicationService.cs` [E14] y a `IMemberDirectoryReader.cs` | esos mismos | lección 2; el máximo por combinación; personas sin el dato; para clientes y para los dos |
-| B11 | Rutas y contratos | `P/Modules/Forms/Controllers/BusinessFormPersonDataController.cs`, `Contracts/*`, `FormsContractContributor.cs`; `AuditSummary` en `Audit{,.en}.resx`; `GrowingCollectionContractTests` | `BusinessFormCatalogsController.cs` [E12] | cada ruta con 401, 403, feature apagada = 404, validación, 409 y paginado; los dos permisos de `values`; ejemplos exportados |
+| B9 | La vista previa y el máximo por persona | suma a `FormCatalogService.cs` y a `FormPersonDataReader.cs`, que cuenta el máximo por combinación y las personas sin el dato | `POST …/previews` [E12] | los tres estados; sin escribir; lección 4; persona de otra organización; el máximo y las personas sin el dato, con los filtros sin guardar, iguales a los avisos de publicar |
+| B10 | Publicar: problemas y avisos | suma a `FormPublicationService.cs` [E14] y a `IMemberDirectoryReader.cs`, con la cuenta de B9 | esos mismos | lección 2; el máximo por combinación, también el que da cero (157); personas sin el dato; para clientes y para los dos |
+| B11 | Una opción en uso no se borra | suma al guardado de un catálogo, `FormCatalogService.cs` [E12], leído con `IFormReader.cs` [E14] y `FormPersonDataReader.cs` | `uses: records`, que suma la E14 | `uses: forms` con un filtro fijo del borrador y con uno de la versión activa; `uses: people`; las dos se dan de baja |
+| B12 | Rutas y contratos | `P/Modules/Forms/Controllers/BusinessFormPersonDataController.cs`, `Contracts/*`, `FormsContractContributor.cs`; `AuditSummary` en `Audit{,.en}.resx`; `GrowingCollectionContractTests` | `BusinessFormCatalogsController.cs` [E12] | cada ruta con 401, 403, feature apagada = 404, validación, 409 y paginado; los dos permisos de `values`; ejemplos exportados |
 
 **Front:**
 
@@ -132,9 +144,9 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` | la API de la E15 | zod estricto con los ejemplos |
 | F2 | «Datos de las personas» | `F/src/modules/forms/pages/PersonDataPage.tsx`; suma a `registration.ts` y a sus recursos | su tablero y `CatalogCombo.tsx` [E13] | permisos, tope, en uso y confirmar; el mismo combo; axe |
 | F3 | La pestaña «Datos», con el registro neutral | `F/src/modules/forms/components/MemberDataTab.tsx`; suma a `F/src/shared/modules/types.ts`, `useModules.ts` y `UserDetailPage.tsx` | su tablero | sin el módulo no hay pestañas; guarda aparte; salir con cambios; composición |
-| F4 | La columna «Filtro» | suma a `FieldsSection.tsx` [E13] | su tablero | apagada en uso, con el motivo |
-| F5 | «Qué opciones ve cada persona» | suma a `CatalogQuestionFields.tsx` [E14] | su tablero | un solo «Agregar filtro ▾», con sus dos opciones y sus motivos; fijo y según quien lo recibe; la vista previa se actualiza sola; sin `formcatalogs.read` |
-| F6 | Publicar, enviar y «Columnas» | suma a `PublishDialog.tsx`, al diálogo de enviar [E14] y a `FormRecordsPage.tsx` [E15] | su tablero | avisos que no frenan; el máximo, solo si no entra o da cero (157); motivo al mandar; subcolumnas apagadas |
+| F4 | «Papel» en el modal de campos | suma a `CatalogFieldsDialog.tsx` [E13] | su tablero | en uso, el motivo debajo; «De un catálogo · Filtro» en la lista |
+| F5 | «Qué opciones ve cada persona» | suma a `CatalogQuestionFields.tsx` [E14] | su tablero | un solo «Agregar filtro ▾», con sus dos opciones y sus motivos; fijo y según quien lo recibe; la vista previa, el máximo y las personas sin el dato se actualizan solos; sin `formcatalogs.read` |
+| F6 | Publicar, enviar y «Columnas» | suma a `PublishDialog.tsx`, al diálogo de enviar [E14] y a `FormRecordsPage.tsx` [E15] | su tablero | avisos que no frenan; el máximo, solo si no entra o da cero (157); motivo al mandar; subcolumnas apagadas; el teléfono sin «Columnas» |
 
 **Al cerrar:** `docs/features/formularios.md` suma la sección, y `docs/features/organizaciones.md`, el aviso de fin de membresía.
 
@@ -144,28 +156,18 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | --- | --- | --- |
 | [E14] | La forma de las preguntas en el borrador, `FormOfferBuilder` y el armado de `offerProblems`. | Una pregunta suma una lista, y la oferta filtra antes del tope, con una fila más. |
 | [E14] | Cómo quedó `publication-checks`. | Hoy no tiene `warnings`: nacen acá. |
-| [E13] | `FieldsJson`, el índice GIN y la columna de la tabla de campos. | `FieldValuesJson @> …` filtra por igualdad con ese índice. |
+| [E13] | `FieldsJson`, el índice GIN y el modal de campos. | `FieldValuesJson @> …` filtra por igualdad con ese índice. |
 | [E12] | `IMemberDirectoryReader`. | Suma las ids de los miembros activos con un permiso. |
 | [E15] | Cómo «Columnas» guarda lo oculto en la URL. | Admite columnas apagadas por defecto. |
 | Núcleo | La ficha del usuario del front, que hoy no tiene pestañas, y `OrganizationUserRemover`. | Si la base de la 12 no trae el registro de pestañas, entra acá. |
-| Núcleo | Otras formas de terminar una membresía. | Solo esos dos caminos llaman a `Member.Remove`. |
-
-## Lo que ya se pagó allá (no repetir)
-
-Cada punto lleva su test, escrito durante la etapa:
-1. **Cambiarle el papel a un campo en uso** dejaba sin envío a todo un formulario publicado, sin aviso. `FieldInUse` frena cualquier cambio de papel, tipo o fuente (R1023 #8).
-2. **Un filtro fijo que deja más de 20 opciones en «elegir varias»** frena al publicar (#18).
-3. **El valor fijo de un filtro** se valida contra su fuente (#19).
-4. **La vista previa** exige `formcatalogs.read`, y no nombra opciones de un catálogo que la persona no puede leer (#20).
-5. **Un solo selector de catálogo:** el dato usa el combo de la E13, sin buscador ni lista paginada aparte.
-6. **Los filtros van en la versión.** En la prueba de allá, una versión salió sin los filtros de una pregunta. Cambiar un filtro cuenta como una pregunta cambiada en «Qué se publica», y la versión activa sigue con los suyos hasta publicar.
+| Núcleo | Otras formas de terminar una membresía. | Solo los tres caminos de B5 llaman a `Member.Remove`. |
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
 - **Por organización y por miembro** (42). Un dato no depende de la empresa.
 - **Hasta 20 datos activos de las personas,** iguales para todas las organizaciones (42 y 105).
 - **Los avisos de publicar** no frenan (37), y van en su zona (112).
-- **Un dato no tiene clave:** sus valores van por la identidad del dato, así que lo de la clave de un campo no aplica.
+- **El dato tiene clave** (130), como un campo: nace del nombre y queda fija al guardar. Los valores van por la identidad del dato, no por la clave.
 - **Un formulario para los dos** con un filtro según quien lo recibe se publica con un aviso, y se manda solo a empleados.
 - **La pestaña «Datos»** se ve con `users.manage`: quien solo lee las ve en la tabla, con los permisos de esa pantalla.
 - **Un solo «Agregar filtro ▾»** en la banda de la zona (134 y 145).
@@ -180,12 +182,12 @@ Cada punto lleva su test, escrito durante la etapa:
 
 ## Cómo se cierra
 
-La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba real con Meta** con el número de una organización de prueba:
+La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba real con Meta**, que queda pendiente hasta la I1 de la 10 (123), con el número de una organización de prueba:
 1. dos personas con distinta «Zona» reciben el mismo formulario, cada una con los proveedores de su zona;
 2. una persona sin «Zona» no lo recibe, y el operador ve el motivo;
 3. una persona que es miembro de dos organizaciones, con «Zona» en una sola, recibe según cada organización.
 
-El recorrido suma: definir «Zona», cargarla en la ficha de dos personas, armar el filtro, verlo con «Como si lo recibiera» y publicar con el aviso de quién no tiene el dato; y sacar a una persona de la organización, con sus valores borrados.
+El recorrido suma: definir «Zona», cargarla en la ficha de dos personas, armar el filtro, verlo con «Como si lo recibiera» y publicar con el aviso de quién no tiene el dato; y sacar a una persona de la organización, y revocar la invitación de otra a la que se le cargó «Zona», con sus valores borrados.
 
 ## Requisitos previos
 

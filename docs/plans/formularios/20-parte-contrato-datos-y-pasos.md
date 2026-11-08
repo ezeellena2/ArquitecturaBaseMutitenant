@@ -27,7 +27,7 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]`, `[Featu
 | `GET /entry` | `page`, `pageSize`, `search`, `status` (`active`, `deactivated`) | `PagedResult<{id, name, deactivatedAtUtc?, ownCount, lastOwn?: {number, receivedAtUtc}}>`, con lo suyo y sin los totales de la organización (153): lo que puede cargar, con el filtro de disponibilidad, o los dados de baja en los que cargó algo (101) |
 | `GET /{id}/entry` | — | `{versionId, versionNumber, name, submitLabel, maxFileBytes, questions[], titles[]}`. Cada pregunta de catálogo trae `options?{total, single?, missingData?}`, y una lista dependiente, de qué pregunta depende. El bloque trae `rows{minRows, maxRows}` y sus preguntas, `rowsOf`, como en la E19 |
 | `GET /{id}/entry/questions/{fieldId}/options` | `page`, `pageSize` (50), `search`, `dependsOn?`; sirve también para una pregunta de catálogo del bloque | `PagedResult<{id, text, detail?}>` |
-| `POST /{id}/records` | multipart: `versionId`, `answers` y los archivos, con `[Idempotent(Mode = IdempotencyMode.DurableReference)]`, `[IdempotencyDurable]` y `[RequestSizeLimit]` de 101 MiB. El bloque va en `answers` como `{fieldId, rows: [[{fieldId, value}, …], …]}`, un arreglo por ítem, en orden | 201 `{recordId, displayNumber, submittedAtUtc, calculations[]}` + Location |
+| `POST /{id}/records` | multipart: `versionId`, `answers` y los archivos, con `[Idempotent(Mode = IdempotencyMode.DurableReference)]`, `[IdempotencyDurable]` y `[RequestSizeLimit]` de 101 MiB. El bloque va en `answers` como `{fieldId, rows: [[{fieldId, value}, …], …]}`, un arreglo por ítem, en orden, y un ítem vacío es `[]` | 201 `{recordId, displayNumber, submittedAtUtc, calculations[]}` + Location |
 | `GET /{id}/own-records/columns`, `POST …/search`, `POST …/facets`, `GET …/{recordId}`, `POST …/{recordId}/navigation` y `GET …/{recordId}/files/{fileId}/{thumbnail\|content}` | los de la E15 y la E18 | lo mismo, solo con lo de esa persona |
 
 **Rutas que cambian:**
@@ -38,11 +38,11 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]`, `[Featu
 | `GET /{id}` y `PUT /{id}/draft` | `recipientFilters[].mode` suma `answer`, con `sourceFieldId` |
 | `POST /{id}/publication-checks` | `warnings[]` suma `AppOnly`, con `reason`: `NoNumber`, `DependentList`, `LargeCatalog` o `RowsMinimum`. `RowsMinimumOverLimit` (E19) frena solo en un formulario solo para clientes |
 | `POST /{id}/publications` | 200 si queda solo para la app, porque termina en la misma UoW; si no, 202, como siempre |
-| `GET …/conversations/{id}/forms` | los formularios solo para la app, con `appOnly{reason, fieldId?}` y sin versión, preguntas ni `optionCounts`, para mostrarlos apagados (166) |
+| `GET …/conversations/{id}/forms` | los formularios solo para la app, con `appOnly{reason, fieldId?}`, el motivo que se muestra, y sin versión, preguntas ni `optionCounts`, para mostrarlos apagados (166). Uno que solo tiene `NoNumber` va con `NotPublishedForNumber` (103) |
 | `POST …/records/facets` y `search` | la dimensión y el filtro `channel` |
 | `GET …/records/{recordId}` | `enteredBy?{name, atUtc}` |
 
-**Puerto:** «sin número» sale de `HasConnectedNumberAsync`, de la E14. `ListSendableAsync` trae las versiones solo para la app marcadas, y el asistente las deja afuera.
+**Puerto:** «sin número» sale de `HasConnectedNumberAsync`, de la E14. `ListSendableAsync` trae las versiones solo para la app marcadas, con sus motivos.
 
 **Errores:**
 
@@ -63,7 +63,7 @@ Una migración aditiva, `<fecha>_FormEntry.cs`. Sin tablas nuevas.
 
 | Tabla | Columna | Tipo | Regla |
 | --- | --- | --- | --- |
-| `FormVersions` | `AppOnly`, `AppOnlyReason` | bool, texto? | se sellan al publicar; el motivo es uno de los cuatro de `AppOnly` |
+| `FormVersions` | `AppOnly`, `AppOnlyReasons` | bool, texto[] | se sellan al publicar: los motivos de `AppOnly` que se dieron, sin repetir; vacío si se manda por WhatsApp |
 | `FormRecords` | `Channel` | texto | admite `web` |
 
 No hace falta una columna como `EnteredInApp`: lo dice el canal. Quien cargó es `RespondentUserId`. `SourceKey` es `web:<clave>`, con el mismo índice único.
@@ -80,7 +80,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | B2 | Leer para cargar: versión, opciones y filtros en SQL | `A/Modules/Forms/Services/FormEntryService.cs`, `FormEntryOptionsResolver.cs`; suma a `FormOfferBuilder.cs` [E16] | `FormStructuredSource.cs` [E14] | una sola opción; sin el dato; 10.000 opciones con búsqueda; miembros y contactos; un catálogo del bloque, con sus filtros; otra organización |
 | B3 | Listas dependientes | suma a `FormRecipientFilterPolicy.cs` [E16] y a `FormDraftEditor.cs` | esos mismos | cada motivo, también una pregunta del bloque; opción que no corresponde; oculta; copiar |
 | B4 | Enviar: archivos fuera de la UoW, captura, confirmar o borrar | `FormEntrySubmitService.cs`; `P/Modules/Forms/Controllers/BusinessFormEntryController.cs`, `FormEntryDurableAdapter.cs` | `AssistantAttachmentService.cs`, `AssistantControllerBase.Upload` | versión nueva; dado de baja; opción dada de baja; reintento con otra versión; otra respuesta = 422; 101 MiB; archivo falso; sin permiso dentro de la UoW; los ítems, con el mínimo, el máximo y el error de un ítem en su lugar |
-| B5 | Publicar solo para la app, y el chat | suma a `FormPublicationService.cs` [E14] y `WhatsAppStructuredFormChannel.cs` | esos mismos | los cuatro casos, también «elegir varias» de más de 20 y el mínimo de más de 10; solo clientes; sin Meta; volver a publicar con número; `ListSendableAsync` con las solo para la app marcadas, y el asistente sin ellas |
+| B5 | Publicar solo para la app, y el chat | suma a `FormPublicationService.cs` [E14] y `WhatsAppStructuredFormChannel.cs` | esos mismos | los cuatro casos, también «elegir varias» de más de 20 y el mínimo de más de 10; solo clientes; sin Meta; volver a publicar con número; `ListSendableAsync` con las solo para la app marcadas; el motivo del chat con más de uno; una publicada sin número, al conectar uno, con `NotPublishedForNumber` |
 | B6 | Lo propio | suma a `FormRecordQueryService.cs`, `FormRecordFileService.cs` y las lecturas [E15 y E18]; las rutas `own-records` | esos mismos | lo ajeno = 404 en cada ruta; también lo de WhatsApp; sin `formrecords.read`; dado de baja: se ve lo suyo y no se carga |
 | B7 | El canal en lo que ya existe | suma a `FormRecordQueryFilters.cs`, `FormRecordColumnsBuilder.cs` y `FormRecordSheetBuilder.cs` [E15] | esos mismos | filtro, conteos, navegación y Excel |
 | B8 | Contratos y ejemplos | suma a `Contracts/*` y `FormsContractContributor.cs` | esos mismos | cada ruta con 401, 403, feature apagada = 404; `RouteIsolationMatrixTests`; ejemplos exportados, también con ítems |
@@ -95,7 +95,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | F4 | Los controles y la lista de catálogo | `components/entry/EntryField.tsx`, `EntryCatalogList.tsx` | `QuestionEditor.tsx` [E14] | búsqueda, «Mostrar 50 más» y la lista dependiente que espera con «Elegí primero «Zona»»; axe |
 | F5 | Lo condicional | suma a `EntryGrid.tsx`, con `lib/conditions.ts` [E19] | el mismo | lo oculto no se manda; una zona sin preguntas visibles |
 | F6 | Los archivos | `components/entry/EntryFiles.tsx` | el tablero | límites antes de enviar; cámara; barra sin palabras |
-| F7 | El bloque | `F/src/shared/ui/EntryRowsTable.tsx` y `EntryRowsCards.tsx`, dos piezas nuevas con su ficha, sobre `Table` y `WideTable`; suma a `EntryGrid.tsx` | el tablero | la tabla en la página y los recuadros en el panel y el teléfono; agregar, mover y quitar, con su foco; con el máximo y el mínimo; el error de cada ítem; «Mantener» y una versión nueva conservan los ítems; axe |
+| F7 | El bloque | `F/src/shared/ui/EntryRowsTable.tsx` y `EntryRowsCards.tsx`, dos piezas nuevas con su ficha, sobre `Table` de `table.tsx`, en una caja que se desplaza de costado si no entra; suma a `EntryGrid.tsx` | el tablero | la tabla en la página y los recuadros en el panel y el teléfono; agregar, mover y quitar, con su foco; con el máximo y el mínimo; el error de cada ítem; «Mantener» y una versión nueva conservan los ítems; axe |
 | F8 | La página, el panel y «Enviada» | `pages/LoadResponsePage.tsx`, `components/entry/EntryPanel.tsx`, `EntrySent.tsx`; `registration.ts` | `useEditForm` y `useUnsavedChangesGuard` | salir; versión nueva sin perder nada; mantener en la página y en el panel, con otra clave en cada envío; el panel con zonas; «Volver a Formularios»; lo cargado fuera del storage |
 | F9 | Publicar, editor, lo propio y el chat | suma a `PublishDialog.tsx` [E16], `CatalogQuestionFields.tsx` [E16], `FormRecordsPage.tsx` y la lista de «Enviar formulario» [E14] | esos mismos | los cuatro casos; «Según otra respuesta»; las dos (i) del bloque con la app; una dirección ajena; el formulario solo para la app, apagado con su motivo |
 
