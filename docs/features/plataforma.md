@@ -1,5 +1,7 @@
 # Plataforma
 
+**Revisado:** 2026-11-08
+
 Administración global con access=platform, separada de Business. Los [operadores exclusivos](../decisions/0042-operadores-de-plataforma.md) tienen permisos individuales y no entran a organizaciones.
 
 ## Pantallas, rutas y estados 
