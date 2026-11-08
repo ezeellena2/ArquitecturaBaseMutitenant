@@ -74,6 +74,7 @@ internal static class TenantIsolationModelValidator
         type == typeof(PlatformFactorChallenge) ||
         type == typeof(PlatformSession) ||
         type == typeof(PlatformFactorOperation) ||
+        type == typeof(Domain.Users.NotificationRead) ||
         type == typeof(UserTenantAccess) ||
         type == typeof(LoginInvitation) ||
         type == typeof(MemberAccessRole) ||

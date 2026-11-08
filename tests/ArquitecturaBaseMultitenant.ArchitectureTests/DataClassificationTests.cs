@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.ReferenceData;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
@@ -44,6 +45,7 @@ public sealed class DataClassificationTests
         typeof(PlatformFactorChallenge).FullName!, // Desafío pendiente ligado al navegador, anterior a cualquier sesión.
         typeof(PlatformSession).FullName!, // Evidencia del segundo factor de una sesión de Plataforma.
         typeof(PlatformFactorOperation).FullName!, // Vínculo durable de idempotencia de las operaciones del factor.
+        typeof(NotificationRead).FullName!, // Qué avisos de la campana abrió cada cuenta: global y por cuenta, como sus métodos.
         typeof(Tenant).FullName!,
         "ArquitecturaBaseMultitenant.Infrastructure.Persistence.TenantCounters", // Agregados globales técnicos mantenidos por triggers; no contiene filas privadas.
         "ArquitecturaBaseMultitenant.Infrastructure.Persistence.PendingTenantOwner", // Contacto global del Dueño invitado por Plataforma; un trigger lo borra cuando la invitación deja de estar pendiente.
@@ -154,7 +156,7 @@ public sealed class DataClassificationTests
         || type == typeof(LoginMethod) || type == typeof(LoginCode) || type == typeof(LoginLink) || type == typeof(LoginAudit) || type == typeof(AccountDeletionCancelTicket)
         || type == typeof(PlatformAuthenticator) || type == typeof(PlatformRecoveryCode) || type == typeof(PlatformFactorChallenge)
         || type == typeof(PlatformSession) || type == typeof(PlatformFactorOperation)
-        || type == typeof(ConsumerDataRetention)
+        || type == typeof(ConsumerDataRetention) || type == typeof(NotificationRead)
         || type == typeof(IdentityUserClaim<Guid>) || type == typeof(IdentityUserLogin<Guid>)
         || type == typeof(IdentityUserToken<Guid>) || type == typeof(LegalAcceptance);
 

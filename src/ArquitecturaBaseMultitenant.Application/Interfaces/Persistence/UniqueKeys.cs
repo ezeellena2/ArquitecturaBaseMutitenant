@@ -31,4 +31,7 @@ public static class UniqueKeys
 
     /// <summary>Una organización tiene una sola página pública.</summary>
     public const string PublicPage = "IX_PublicPages_BusinessTenantId";
+
+    /// <summary>Una cuenta abre cada aviso de la campana una sola vez: dos «leído» a la vez guardan uno.</summary>
+    public const string NotificationRead = "IX_NotificationReads_UserId_NotificationId";
 }

@@ -66,6 +66,7 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     public DbSet<PlatformFactorChallenge> PlatformFactorChallenges => Set<PlatformFactorChallenge>();
     public DbSet<PlatformSession> PlatformSessions => Set<PlatformSession>();
     public DbSet<PlatformFactorOperation> PlatformFactorOperations => Set<PlatformFactorOperation>();
+    public DbSet<Domain.Users.NotificationRead> NotificationReads => Set<Domain.Users.NotificationRead>();
     internal DbSet<UserTenantAccess> UserTenantAccesses => Set<UserTenantAccess>();
     internal DbSet<LoginInvitation> LoginInvitations => Set<LoginInvitation>();
     public DbSet<Tenant> Tenants => Set<Tenant>();

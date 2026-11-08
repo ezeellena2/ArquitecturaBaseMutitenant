@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Models.Notifications;
@@ -23,7 +24,7 @@ public sealed record NotificationListResponse(
 public sealed record NotificationItem([property: MaxLength(NotificationItem.IdMaxLength)] string Id, string Kind,
     IReadOnlyDictionary<string, string> Params, DateTime OccurredAtUtc, string Link, bool Read)
 {
-    public const int IdMaxLength = 160;
+    public const int IdMaxLength = TextLimits.NotificationId;
 }
 
 /// <summary>

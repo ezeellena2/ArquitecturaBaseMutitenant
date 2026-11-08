@@ -22,4 +22,6 @@ public static class TextLimits
     public const int WebAddress = 2048;
     public const int ShortCode = 20;
     public const int IpAddress = 45;
+    /// <summary>El id de un aviso de la campana, estable y armado por su fuente (base de la 12).</summary>
+    public const int NotificationId = 160;
 }

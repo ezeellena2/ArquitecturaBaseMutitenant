@@ -162,6 +162,8 @@ internal static class PersistenceRegistration
         services.AddScoped<ILoginMethodMembershipReader, LoginMethodMembershipReader>();
         services.AddScoped<ILoginCodeRepository, LoginCodeRepository>();
         services.AddScoped<ILoginLinkRepository, LoginLinkRepository>();
+        services.AddScoped<INotificationReadRepository, NotificationReadRepository>();
+        services.AddScoped<INotificationReadReader, NotificationReadReader>();
         services.AddScoped<IAccountDeletionCancelTicketRepository, AccountDeletionCancelTicketRepository>();
         services.AddScoped<ILoginAuditRepository, LoginAuditRepository>();
         services.AddSingleton<JsonReferenceDataCatalog>();
