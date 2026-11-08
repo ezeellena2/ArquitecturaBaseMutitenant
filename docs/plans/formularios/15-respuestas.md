@@ -25,7 +25,7 @@ Antes de empezar, en este orden:
 
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 5. **Referencia de producto,** solo para leer:
-   - en [`../2026-10-17-formularios-traspaso/`](../2026-10-17-formularios-traspaso/README.md): anexo C, «Etapa 3» y §3.5, y anexo B, «Etapa 3»;
+   - en el traspaso del 17/10, retirado el 2026-11-08 (`git show e9f1a599:docs/plans/2026-10-17-formularios-traspaso/`): anexo C, «Etapa 3» y §3.5, y anexo B, «Etapa 3»;
    - en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`: anexo C §5 (G-01 a G-08), §6 (L-01 a L-04), C1-05 y C2-07, y anexo D (`MF1`, `DC0`, `DC1` ajustado, `CA5`, `CA6`, `CE5`, `CE6` y `DOC7-A`).
 
 ## Qué se construye

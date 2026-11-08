@@ -53,7 +53,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 ## Etapas 12 a 25: formularios por WhatsApp
 
 Una organización arma formularios, los manda por WhatsApp a sus empleados y a sus clientes (decisión 49) y ve las respuestas numeradas en una planilla.
-- **Etapas y fuente:** son catorce, de la 12 a la 25, en el orden de la decisión 78: **el número es el orden**, con los catálogos primero. Cada una tiene su sección y las decisiones de producto tomadas en la [hoja de ruta](2026-10-12-formularios-dinamicos-hoja-de-ruta.md). El alcance de cada una sale de la [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md), que usa los números de antes, y de las decisiones 47 a 82. La equivalencia está en [`formularios/`](formularios/README.md).
+- **Etapas y fuente:** son catorce, de la 12 a la 25, en el orden de la decisión 78: **el número es el orden**, con los catálogos primero. Cada una tiene su sección y las decisiones de producto tomadas en la [hoja de ruta](2026-10-12-formularios-dinamicos-hoja-de-ruta.md). El alcance de cada una está en su spec, en [`formularios/`](formularios/README.md), con la equivalencia con los números de antes.
 - **La regla del orden:** cada etapa usa solo lo de las anteriores, lo que suma se ve en las pantallas que ya existen, y nada nombra, prueba ni dibuja algo de una etapa posterior. La controla `/plan-etapa`.
 - **La base, al principio de la 12** ([spec](formularios/base-de-la-12.md)):
   - los botones y avisos de la decisión 43, que eran la F5 de la 10, con las leyendas, la (i), los motivos y las esperas de las decisiones 109, 110, 115 y 116;

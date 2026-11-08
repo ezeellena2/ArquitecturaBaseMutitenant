@@ -24,7 +24,7 @@ Cada etapa del bloque tiene acá su spec, y todas van hacia el mismo [formato](p
 
 Esta carpeta está fuera de `realinear-docs` (`docs/plans/**`); la controla `alinear-etapas`.
 
-Las etapas van en el orden de la decisión 78, y **el número es el orden**. Antes de la 12 va [la base](base-de-la-12.md), con su [parte de pasos](base-de-la-12-parte-pasos.md): redibuja los tableros del núcleo (`Usuarios`, `Roles`, `Cuentas`, `Organizaciones`, `Empresas`, `Empresa`, `Recuperaciones`, `Usuario`, `Campana` y `Campana-Plat`, con sus teléfonos, y `M-Usuario-Empresa`), los del bot (`Plat-WA-Bot`, `Plat-WA-Bot-Recorrido` y `M-Plat-WA-Bot`), `WA-Telefonos` con su teléfono y los ocho `Criterio-*`, y `Enlace` y `M-Enlace` pasan al Archivo (179). Los tableros son los de la §5 de la [evaluación del traspaso 2](../2026-10-24-formularios-evaluacion-traspaso-2.md) y los que suman las decisiones 47 a 135, y los dibuja Diseño.
+Las etapas van en el orden de la decisión 78, y **el número es el orden**. Antes de la 12 va [la base](base-de-la-12.md), con su [parte de pasos](base-de-la-12-parte-pasos.md): redibuja los tableros del núcleo (`Usuarios`, `Roles`, `Cuentas`, `Organizaciones`, `Empresas`, `Empresa`, `Recuperaciones`, `Usuario`, `Campana` y `Campana-Plat`, con sus teléfonos, y `M-Usuario-Empresa`), los del bot (`Plat-WA-Bot`, `Plat-WA-Bot-Recorrido` y `M-Plat-WA-Bot`), `WA-Telefonos` con su teléfono y los ocho `Criterio-*`, y `Enlace` y `M-Enlace` pasan al Archivo (179). Los tableros de cada etapa están en su fila, y los dibuja Diseño.
 
 **En la columna «Tableros»** cada estado va con su etiqueta, y `alinear-etapas` la compara con el lienzo:
 - **Aprobados:** listos y al día.
@@ -51,7 +51,7 @@ Las etapas van en el orden de la decisión 78, y **el número es el orden**. Ant
 
 ## Equivalencia con los números de antes
 
-Hasta el 2026-10-25 los números de las etapas eran nombres, no orden. Los documentos anteriores, como la [evaluación del traspaso 2](../2026-10-24-formularios-evaluacion-traspaso-2.md), usan los de antes.
+Hasta el 2026-10-25 los números de las etapas eran nombres, no orden, y los documentos anteriores usan los de antes.
 
 | Antes | Ahora | Cambió el alcance |
 | --- | --- | --- |

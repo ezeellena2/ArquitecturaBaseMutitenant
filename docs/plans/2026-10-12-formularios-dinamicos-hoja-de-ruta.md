@@ -387,14 +387,14 @@ Decididas por el usuario entre el 2026-10-12 y el 2026-10-24. No se vuelven a pr
 15. **Biblioteca, categorías:** las arma la plataforma (nombre y orden), sin listas fijas en el código. El nombre es un solo texto desde la 45.
 16. **Biblioteca, uso:** la plataforma ve solo cuántas organizaciones usaron cada plantilla, nunca cuáles.
 
-Decididas el 2026-10-17, con el [traspaso de ArquitecturaBase](2026-10-17-formularios-traspaso/README.md):
+Decididas el 2026-10-17, con el traspaso de ArquitecturaBase de ese día, retirado el 2026-11-08:
 
 17. **Idioma.** Reemplazada por la 35 (2026-10-24), que saca el idioma y las traducciones del contenido. Decía, con la regla que ArquitecturaBase adoptó el 2026-10-16:
     - solo el idioma original es obligatorio para guardar y publicar, y la traducción es opcional;
     - si la traducción no está completa, el formulario, el PDF, los mensajes y las opciones de catálogo salen enteros en el idioma original, sin mezclar;
     - el idioma de las pantallas del sistema no cambia.
 18. **Pantallas.** Acotada por la 108 (2026-11-01): de acá en adelante no se copian pantallas. Decía que se copian de ArquitecturaBase:
-    - Diseño rehace los tableros de la 12 y la 13 con la disposición de su lienzo y del [05 del traspaso](2026-10-17-formularios-traspaso/05-pantallas.md), con las piezas y los criterios de nuestro lienzo y sin mostrar alternativas;
+    - Diseño rehace los tableros de la 12 y la 13 con la disposición de su lienzo y del capítulo 05 del traspaso, con las piezas y los criterios de nuestro lienzo y sin mostrar alternativas;
     - la 17 no existe allá: sus tableros se quedan y solo se ajustan al editor nuevo;
     - si la disposición choca con una regla escrita de este repo, manda la de acá.
 19. **Asistente** (antes F7, la etapa 5 de ArquitecturaBase). Se diseña ahora, después de los tableros de la 16. Se sigue programando después del bloque. Desde la 34, es la E23, después de la E22, con Casos (39).
@@ -424,7 +424,7 @@ Elegidas por el usuario el 2026-10-18, sobre las reglas de ejemplo de la bibliot
 32. **Rol sugerido:** la plantilla puede mostrar un «Rol sugerido» (por ejemplo, «Supervisor») como ayuda, sin elegir ningún rol sola: las referencias van por id, nunca por nombre.
 33. **Dónde edita la plataforma las reglas y el PDF de una plantilla:** en la pestaña «Plantilla», debajo de las preguntas, con la misma sección de la E21 que en el editor de la organización.
 
-Elegidas por el usuario el 2026-10-24, con la [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md), todas las recomendadas:
+Elegidas por el usuario el 2026-10-24, con la evaluación del traspaso 2, retirada el 2026-11-08, todas las recomendadas:
 
 34. **Once etapas, en este orden** (cambiada por la 54, la 69 y la 73, que suman la E19, la E24 y la E20, y por la 78, que fija el orden y los números):
     1. E14, formularios;

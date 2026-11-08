@@ -186,7 +186,7 @@ Cada tabla tiene solo lo que cambia; lo igual va en su última fila.
       - `features/whatsapp.md` conserva la D2, que la 159 supera;
       - el README del lienzo dice «un cartel debajo de la banda», `Criterio-Marco` dice «campos de su medida» y `Criterio-Menus` nombra la pestaña «Inglés» (35);
       - «Ver la vigente» pasa a «Ver la actual»;
-   7. retirar los insumos que ya cumplieron: el [traspaso del 17/10](2026-10-17-formularios-traspaso/README.md), que esperaba las specs de la 15 a la 25, y la [evaluación del traspaso 2](2026-10-24-formularios-evaluacion-traspaso-2.md), que esperaba sus tableros. Antes, lo que sirva pasa a la hoja de ruta.
+   7. retirar los insumos que ya cumplieron: el traspaso del 17/10, que esperaba las specs de la 15 a la 25, y la evaluación del traspaso 2, que esperaba sus tableros. Se retiraron el 2026-11-08. Antes, lo que sirva pasa a la hoja de ruta.
 2. **El lienzo**, en cinco tandas (§4.3).
 3. **Al final:** los índices y los recorridos del lienzo, las dos guías y la publicación en tandas. Te aviso para que allá se retiren los traspasos 2 a 10.
 

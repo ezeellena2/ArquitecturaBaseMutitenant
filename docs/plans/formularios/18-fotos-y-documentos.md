@@ -22,7 +22,7 @@ Antes de empezar, en este orden:
    | [tests](../../rules/tests.md) | qué lleva test y dónde va |
 
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
-5. **Referencia de producto,** solo para leer: en [`../2026-10-17-formularios-traspaso/`](../2026-10-17-formularios-traspaso/README.md), el anexo C, «Etapa 2B» y §3.6, el anexo B, «Etapa 2B», y el anexo D (F1 a F5).
+5. **Referencia de producto,** solo para leer: en el traspaso del 17/10, retirado el 2026-11-08 (`git show e9f1a599:docs/plans/2026-10-17-formularios-traspaso/`), el anexo C, «Etapa 2B» y §3.6, el anexo B, «Etapa 2B», y el anexo D (F1 a F5).
 
 ## Qué se construye
 

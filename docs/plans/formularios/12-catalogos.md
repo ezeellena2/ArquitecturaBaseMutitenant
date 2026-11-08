@@ -3,7 +3,7 @@
 **Estado:** pendiente · spec de la primera etapa del bloque (decisiones 34, 78, 117, 119 y 120). Es el ABM de catálogos completo, sin formularios: lo que ArquitecturaBase llama E1 (tipo de valor, carga de una vez y hasta 10.000 opciones), sobre los catálogos a mano, de los miembros y de los contactos. Acá nace el módulo `Forms`; la E14 le suma los formularios y la pregunta «Elegir de un catálogo». `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E11]** y **[E9]** contra el código real.
 
 **Fuentes:**
-- alcance: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E12, y la [evaluación del traspaso 2](../2026-10-24-formularios-evaluacion-traspaso-2.md), §3;
+- alcance: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E12;
 - reglas: [AGENTS.md](../../../AGENTS.md) y las [fichas](../../rules/README.md);
 - referencia de producto: el traspaso 2 de ArquitecturaBase, anexo C §10 y anexo D (CA1-A a CA3). Es solo referencia, no código para copiar.
 
