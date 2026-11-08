@@ -99,6 +99,7 @@ Aprobados y publicados en el lienzo v155, con el armado del front real de Arquit
 | `FRM-Editor-21` y `FRM-Cargar-Respuesta-21`, con sus teléfonos | la pregunta «Correo» | Aprobados en la v168: el editor con el bloque, sin el «Grupo de líneas» (177), y la carga en dos anchos (141) |
 | `Campana-21` y su teléfono | «3 respuestas por aprobar» y «No se pudo mandar el aviso de …» | Aprobados |
 | `WA-Chats-Avisos` y su teléfono | los avisos, con «Sin plantilla aprobada» (61) | Aprobados en la v168: un aviso con el bloque, un ítem por línea (177) |
+| `WA-Plantilla-Nueva-21` y su teléfono | «Nueva plantilla» con «Encabezado»: «Sin encabezado» o «Documento (el PDF)», y «Así llega» con el documento arriba (201) | Aprobados, nuevos en la v170 |
 | `WA-Chats-Respuesta-21` y `M-WA-Conversacion-Respuesta-21` | la tarjeta de una respuesta que después se corrigió o se anuló, con su marca al pie | Aprobados, nuevos en la v168 (166) |
 | `FRM-Dar-De-Baja-21` y `FRM-Editor-Baja-21` | «Lo que se conserva» suma el PDF y las aprobaciones, y lo que espera se sigue decidiendo | `FRM-Dar-De-Baja-21`, aprobado; `FRM-Editor-Baja-21`, aprobado en la v168 con lo de la E17: «Agregar título» (88) y la baja en una frase (175). Corregido en la v169 `FRM-Editor-Baja-21`, con «Agregar bloque» (177) |
 
