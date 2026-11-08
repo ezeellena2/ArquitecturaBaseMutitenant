@@ -9,6 +9,9 @@ internal static class NotificationsRegistration
     internal static IServiceCollection AddNotifications(this IServiceCollection services)
     {
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<INotificationSource, PersonalLoginMethodNotificationSource>();
+        services.AddScoped<INotificationSource, OrganizationPendingNotificationSource>();
+        services.AddScoped<INotificationSource, RecoveryRequestedNotificationSource>();
         return services;
     }
 }

@@ -17,6 +17,8 @@ public static class ReturnUrls
     public const string SignupPath = "/registro";
     public const string BusinessSignupPath = "/registro/empresa";
     public const string PlatformPath = "/plataforma";
+    public const string PlatformOrganizationsPath = "/plataforma/organizaciones";
+    public const string PlatformRecoveriesPath = "/plataforma/recuperaciones";
     public const string CallbackPath = "/auth/callback";
     public const string SilentRenewPath = "/silent-renew.html";
 

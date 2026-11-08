@@ -34,6 +34,7 @@
 | `Processor` | Ejecuta la baja vencida de una cuenta. |
 | `Activator` | Activa una organización pendiente: la aprueba y prepara a su Dueña. |
 | `PendingItems` | Aporta los pendientes de un área a «Para resolver» (`IPendingItemSource`, ADR 0040). |
+| `NotificationSource` | Aporta los avisos de un área a la campana (`INotificationSource`, base de la 12). |
 Scheduler/Canceller/Processor/Activator son los pasos nominales de baja y activación; no se amplían sin actualizar esta ficha.
 - El actor background usa IExecutionActorContext/Scope/Factory neutrales y ExecutionActor (binding, cultura, zona, TenantKind y SessionStartedAtUtc opcionales).
 - Capture toma identidad firmada; RevalidateAsync relee cuenta/membresía real antes del scope, servicios privados y UoW. Consumer exige Personal activo; Business, organización/membresía activas; Platform, operador exclusivo.

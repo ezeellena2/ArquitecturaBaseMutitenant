@@ -2,8 +2,13 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Notifications;
+using ArquitecturaBaseMultitenant.Application.Services.Auth;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Domain.Settings;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -35,7 +40,8 @@ public sealed class NotificationsTests(ApiFactory factory)
         await AccountJourney.AuthorizeAsync(business, "business", Ct, tenantId);
         using var platform = Client(host);
         var operatorAccount = await AccountJourney.RegisterAsync(host, platform, Ct);
-        await PlatformOperators.GrantAsync(host.Services, operatorAccount.UserId, PlatformOperators.Reduced, Ct);
+        // Sin los permisos de las fuentes de Plataforma: así la campana trae solo los avisos de la fuente de prueba.
+        await PlatformOperators.GrantAsync(host.Services, operatorAccount.UserId, [PlatformPermissions.Audit.Read], Ct);
         await AccountJourney.AuthorizeAsync(platform, "platform", Ct);
 
         foreach (var (client, userId, access) in new[]
@@ -73,6 +79,58 @@ public sealed class NotificationsTests(ApiFactory factory)
             .Where(read => read.UserId == person.UserId || read.UserId == owner.UserId).ToListAsync(Ct);
         var row = Assert.Single(saved);
         Assert.Equal((person.UserId, Shared), (row.UserId, row.NotificationId));
+    }
+
+    [Fact]
+    public async Task The_platform_bell_names_each_pending_organization_and_recovery_only_for_who_resolves_them()
+    {
+        using var reviewer = Client(factory);
+        var reviewerAccount = await AccountJourney.RegisterAsync(factory, reviewer, Ct);
+        await PlatformOperators.GrantAsync(factory.Services, reviewerAccount.UserId, PlatformOperators.Reduced, Ct);
+        await AccountJourney.AuthorizeAsync(reviewer, "platform", Ct);
+        using var auditor = Client(factory);
+        var auditorAccount = await AccountJourney.RegisterAsync(factory, auditor, Ct);
+        await PlatformOperators.GrantAsync(factory.Services, auditorAccount.UserId, [PlatformPermissions.Audit.Read], Ct);
+        await AccountJourney.AuthorizeAsync(auditor, "platform", Ct);
+        using var person = Client(factory);
+        var account = await AccountJourney.RegisterAsync(factory, person, Ct);
+        var name = "Pendiente " + Guid.NewGuid().ToString("N")[..8];
+        var tenant = Tenant.CreateBusiness(name, requiresApproval: true);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            Assert.True(tenant.RecordRegistration(account.UserId, TenantRegistrationSource.SelfService,
+                services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime).IsSuccess);
+            using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenant.Id);
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+                services.GetRequiredService<TenantProvisioner>().StageAsync(tenant,
+                    TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [account.UserId], account.UserId,
+                    ct), CommitPolicy.OnSuccess, Ct);
+        }
+        using var anonymous = Client(factory);
+        var newEmail = $"campana-{Guid.NewGuid():N}@example.test";
+        await RecoveryJourney.SubmitAsync(factory, anonymous, newEmail, account.Email.Value, Ct);
+        Guid recoveryId;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            recoveryId = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().AccountRecoveryRequests
+                .AsNoTracking().Where(request => request.NewMethodValue == newEmail).Select(request => request.Id).SingleAsync(Ct);
+        }
+
+        var bell = (await BellAsync(reviewer)).GetProperty("items").EnumerateArray().ToArray();
+        var organization = Assert.Single(bell, item => item.GetProperty("id").GetString() == "organizationPending:" + tenant.Id.ToString("N"));
+        Assert.Equal("organizationPending", organization.GetProperty("kind").GetString());
+        Assert.Equal(name, organization.GetProperty("params").GetProperty("name").GetString());
+        Assert.Equal("/plataforma/organizaciones/" + tenant.Id.ToString("D"), organization.GetProperty("link").GetString());
+        var recovery = Assert.Single(bell, item => item.GetProperty("id").GetString() == "recoveryRequested:" + recoveryId.ToString("N"));
+        Assert.Equal("Email", recovery.GetProperty("params").GetProperty("methodType").GetString());
+        Assert.DoesNotContain(account.Email.Value, recovery.GetProperty("params").GetRawText(), StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("/plataforma/recuperaciones?status=Pending", recovery.GetProperty("link").GetString());
+
+        var hidden = (await BellAsync(auditor)).GetProperty("items").EnumerateArray()
+            .Select(item => item.GetProperty("kind").GetString()).ToArray();
+        Assert.DoesNotContain("organizationPending", hidden);
+        Assert.DoesNotContain("recoveryRequested", hidden);
     }
 
     private static HttpClient Client(Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> host) =>
