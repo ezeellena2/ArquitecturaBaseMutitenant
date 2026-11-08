@@ -144,7 +144,7 @@ La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba r
 ## Requisitos previos
 
 - La E20 cerrada. El almacenamiento de la E10 no frena: alcanza con `LocalFileStore`, y su prueba queda pendiente (123).
-- La prueba con Meta de una plantilla con documento en el encabezado (47 y 61).
+- La prueba con Meta de una plantilla con documento en el encabezado (47 y 61). La organización lo marca en «Nueva plantilla», con «Encabezado» (201).
 
 ## En el multitenant
 

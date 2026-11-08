@@ -21,7 +21,7 @@ Antes de empezar, en este orden:
 
 ## Qué se construye
 
-**Qué se lee** (70): lo que manda un empleado activo, con teléfono verificado y `formrecords.create`, en Internos, y lo que manda un cliente, cualquier contacto de Clientes (49). A cada uno se le proponen solo los formularios que son para él (50). En un chat en atención manual también se lee: queda en «Documentos recibidos», y al operador le aparece la sugerencia de mandar el formulario prellenado, con «Revisar y enviar», como en la E23 (199).
+**Qué se lee** (70): lo que manda un empleado activo, con teléfono verificado y `formrecords.create`, en Internos, y lo que manda un cliente, cualquier contacto de Clientes (49). A cada uno se le proponen solo los formularios que son para él (50). Un documento que se reconoce como un formulario solo para la app queda en «Documentos recibidos», para pasarlo al formulario desde la web, y no se ofrece por WhatsApp (203). En un chat en atención manual también se lee: queda en «Documentos recibidos», y al operador le aparece la sugerencia de mandar el formulario prellenado, con «Revisar y enviar», como en la E23 (199).
 
 | Lo que llega | Cómo se lee |
 | --- | --- |
