@@ -157,6 +157,8 @@ Tres migraciones:
 | Núcleo | Que el enlace de un solo uso lo use solo el bot. | `LoginLinkIssuer` exige un teléfono verificado y no lo usa nadie más (2026-11-07). |
 | Núcleo | La invitación que arma `InviteByPhoneAsync`. | Ahí se guarda el consentimiento. |
 | Front | «Desvincular» sin WhatsApp. | Como lo revisado el 2026-11-07 («Lo técnico»). |
+| Front | Si `src/shared/ui/format/StatusBadge.test.tsx` sigue fallando. | Fallaba el 2026-11-08, antes de esta etapa: espera el punto de «pendiente» con `--marca`, y el componente usa `--punto-pendiente`. Se arregla primero, según el lienzo v168. |
+| Front | El mensaje de `src/test/harness.test.ts:136`. | Dice «de 3 a 8 líneas» y controla de 1 a 3: se corrige el texto. |
 | Otro chat | Lo que tenga sin commitear en el front. | Se mira `git status` antes de tocar. |
 
 ## Decisiones tomadas (no se vuelven a preguntar)
