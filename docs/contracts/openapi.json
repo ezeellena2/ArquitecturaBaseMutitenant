@@ -13126,17 +13126,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/WhatsAppPhoneImportHttpRequest"
+                "$ref": "#/components/schemas/WhatsAppPhoneImportPreviewHttpRequest"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/WhatsAppPhoneImportHttpRequest"
+                "$ref": "#/components/schemas/WhatsAppPhoneImportPreviewHttpRequest"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/WhatsAppPhoneImportHttpRequest"
+                "$ref": "#/components/schemas/WhatsAppPhoneImportPreviewHttpRequest"
               }
             }
           },
@@ -13337,11 +13337,43 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "Bad Request; WhatsApp.PhoneImport.ConsentRequired",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "WhatsApp.PhoneImport.ConsentRequired.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Confirmá que la persona aceptó recibir mensajes por WhatsApp.",
+                      "code": "WhatsApp.PhoneImport.ConsentRequired",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "consentConfirmed": [
+                          "Confirmá que la persona aceptó recibir mensajes por WhatsApp."
+                        ]
+                      }
+                    }
+                  },
+                  "WhatsApp.PhoneImport.ConsentRequired.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "Confirm that the person agreed to receive WhatsApp messages.",
+                      "code": "WhatsApp.PhoneImport.ConsentRequired",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "consentConfirmed": [
+                          "Confirm that the person agreed to receive WhatsApp messages."
+                        ]
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -13487,6 +13519,13 @@
           }
         ],
         "x-error-codes": [
+          {
+            "status": 400,
+            "code": "WhatsApp.PhoneImport.ConsentRequired",
+            "field": "consentConfirmed",
+            "es": "Confirmá que la persona aceptó recibir mensajes por WhatsApp.",
+            "en": "Confirm that the person agreed to receive WhatsApp messages."
+          },
           {
             "status": 503,
             "code": "Invitations.Invitation.ChannelUnavailable",
@@ -76407,746 +76446,6 @@
         ]
       }
     },
-    "/api/auth/login-link/preview": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "description": "Enlace opaco 256 bits (43 base64url), hash, 10 minutos, un uso y ligado a MethodId Phone verificado. Uno nuevo invalida los previos de ese método. Operador actual devuelve Invalid incluso en replay, sin cookie, datos o motivo revelador. Token via /login/enlace#t=… y solo memoria; jamás query/storage/log. Invalid reúne enlace inexistente, usado, vencido, invalidado, método retirado y cuenta operadora. Preview hace dos lecturas coherentes del enlace y su cuenta, sin UoW ni lock; revalida dueño, método, canal, estado, operador y vigencia antes de responder. No consume ni crea cookie. displayName y maskedPhone nullable. Una baja pendiente permite preview mientras el enlace sea vigente; no emite cancelTicket.",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PreviewLoginLinkHttpRequest"
-              },
-              "examples": {
-                "enlace": {
-                  "value": {
-                    "token": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-                  }
-                }
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PreviewLoginLinkHttpRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/PreviewLoginLinkHttpRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoginLinkPreviewResponse"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoginLinkPreviewResponse"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoginLinkPreviewResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request; Validation.Failed; Auth.LoginLink.Invalid",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "Validation.Failed.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 400,
-                      "detail": "Revisá los campos marcados.",
-                      "code": "Validation.Failed",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Validation.Failed.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 400,
-                      "detail": "Check the highlighted fields.",
-                      "code": "Validation.Failed",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Auth.LoginLink.Invalid.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 400,
-                      "detail": "Este enlace ya no sirve.",
-                      "code": "Auth.LoginLink.Invalid",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Auth.LoginLink.Invalid.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 400,
-                      "detail": "This link no longer works.",
-                      "code": "Auth.LoginLink.Invalid",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden; Identity.Account.Suspended",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "Identity.Account.Suspended.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 403,
-                      "detail": "Tu cuenta está suspendida.",
-                      "code": "Identity.Account.Suspended",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Identity.Account.Suspended.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 403,
-                      "detail": "Your account is suspended.",
-                      "code": "Identity.Account.Suspended",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too Many Requests; Identity.Account.LockedOut; Security.RateLimit.Exceeded",
-            "headers": {
-              "Retry-After": {
-                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
-                "schema": {
-                  "type": "integer"
-                }
-              }
-            },
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "Identity.Account.LockedOut.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 429,
-                      "detail": "Tu cuenta está bloqueada por unos minutos.",
-                      "code": "Identity.Account.LockedOut",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Identity.Account.LockedOut.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 429,
-                      "detail": "Your account is temporarily locked.",
-                      "code": "Identity.Account.LockedOut",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Security.RateLimit.Exceeded.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 429,
-                      "detail": "Hiciste muchos pedidos seguidos. Esperá un momento y volvé a intentar.",
-                      "code": "Security.RateLimit.Exceeded",
-                      "traceId": "example-trace-id",
-                      "retryAfter": 60
-                    }
-                  },
-                  "Security.RateLimit.Exceeded.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 429,
-                      "detail": "You made too many requests in a row. Wait a moment and try again.",
-                      "code": "Security.RateLimit.Exceeded",
-                      "traceId": "example-trace-id",
-                      "retryAfter": 60
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error; General.Unexpected",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Unexpected.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 500,
-                      "detail": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
-                      "code": "General.Unexpected",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Unexpected.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 500,
-                      "detail": "An unexpected error occurred. If the problem persists, report the trace id.",
-                      "code": "General.Unexpected",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [ ],
-        "x-error-codes": [
-          {
-            "status": 400,
-            "code": "Validation.Failed",
-            "field": null,
-            "es": "Revisá los campos marcados.",
-            "en": "Check the highlighted fields."
-          },
-          {
-            "status": 400,
-            "code": "Auth.LoginLink.Invalid",
-            "field": null,
-            "es": "Este enlace ya no sirve.",
-            "en": "This link no longer works."
-          },
-          {
-            "status": 403,
-            "code": "Identity.Account.Suspended",
-            "field": null,
-            "es": "Tu cuenta está suspendida.",
-            "en": "Your account is suspended."
-          },
-          {
-            "status": 429,
-            "code": "Identity.Account.LockedOut",
-            "field": null,
-            "es": "Tu cuenta está bloqueada por unos minutos.",
-            "en": "Your account is temporarily locked."
-          },
-          {
-            "status": 500,
-            "code": "General.Unexpected",
-            "field": null,
-            "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
-            "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 429,
-            "code": "Security.RateLimit.Exceeded",
-            "field": null,
-            "es": "Hiciste muchos pedidos seguidos. Esperá un momento y volvé a intentar.",
-            "en": "You made too many requests in a row. Wait a moment and try again."
-          }
-        ]
-      }
-    },
-    "/api/auth/login-link/redeem": {
-      "post": {
-        "tags": [
-          "Auth"
-        ],
-        "description": "Enlace opaco 256 bits (43 base64url), hash, 10 minutos, un uso y ligado a MethodId Phone verificado. Uno nuevo invalida los previos de ese método. Operador actual devuelve Invalid incluso en replay, sin cookie, datos o motivo revelador. Token via /login/enlace#t=… y solo memoria; jamás query/storage/log. Invalid reúne enlace inexistente, usado, vencido, invalidado, método retirado y cuenta operadora. Revalida dueño, método, canal, estado y operador bajo lock dentro de la UoW. Solo access=consumer. 200 {access:consumer} y cookie pública, sin tokens OIDC. Replay misma key no crea otra sesión; otra key devuelve Invalid si ya fue usado. Baja pendiente: prueba válida y gracia vigente emiten cancelTicket con retorno fijo /login/enlace; gracia vencida devuelve Legal.AccountDeletion.GraceExpired sin ticket. Front ejecuta después signinRedirect con su state y PKCE. Un operador nunca recibe sesión por enlace: sigue devolviendo Invalid (E9).",
-        "parameters": [
-          {
-            "name": "Idempotency-Key",
-            "in": "header",
-            "description": "UUID por operación. Reusar la misma key y cuerpo para reintentar; otra key representa otra operación.",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RedeemLoginLinkHttpRequest"
-              },
-              "examples": {
-                "enlace": {
-                  "value": {
-                    "token": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-                    "access": "consumer"
-                  }
-                }
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RedeemLoginLinkHttpRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/RedeemLoginLinkHttpRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "headers": {
-              "Set-Cookie": {
-                "description": "Cookie HttpOnly tras prueba válida; nunca se emite desde webhook ni desde preview.",
-                "schema": {
-                  "type": "string"
-                }
-              }
-            },
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoginLinkRedeemResponse"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoginLinkRedeemResponse"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoginLinkRedeemResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request; Validation.Failed; Auth.LoginLink.Invalid; Request.IdempotencyKeyRequired",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "Validation.Failed.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 400,
-                      "detail": "Revisá los campos marcados.",
-                      "code": "Validation.Failed",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Validation.Failed.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 400,
-                      "detail": "Check the highlighted fields.",
-                      "code": "Validation.Failed",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Auth.LoginLink.Invalid.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 400,
-                      "detail": "Este enlace ya no sirve.",
-                      "code": "Auth.LoginLink.Invalid",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Auth.LoginLink.Invalid.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 400,
-                      "detail": "This link no longer works.",
-                      "code": "Auth.LoginLink.Invalid",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Request.IdempotencyKeyRequired.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 400,
-                      "detail": "Falta la clave para identificar esta solicitud.",
-                      "code": "Request.IdempotencyKeyRequired",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Request.IdempotencyKeyRequired.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 400,
-                      "detail": "A key identifying this request is required.",
-                      "code": "Request.IdempotencyKeyRequired",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden; Identity.Account.Suspended; Identity.Account.PendingDeletion",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "Identity.Account.Suspended.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 403,
-                      "detail": "Tu cuenta está suspendida.",
-                      "code": "Identity.Account.Suspended",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Identity.Account.Suspended.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 403,
-                      "detail": "Your account is suspended.",
-                      "code": "Identity.Account.Suspended",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Identity.Account.PendingDeletion.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 403,
-                      "detail": "Tu cuenta tiene la baja pedida.",
-                      "code": "Identity.Account.PendingDeletion",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Identity.Account.PendingDeletion.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 403,
-                      "detail": "Your account is pending deletion.",
-                      "code": "Identity.Account.PendingDeletion",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Too Many Requests; Identity.Account.LockedOut; Security.RateLimit.Exceeded",
-            "headers": {
-              "Retry-After": {
-                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
-                "schema": {
-                  "type": "integer"
-                }
-              }
-            },
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "Identity.Account.LockedOut.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 429,
-                      "detail": "Tu cuenta está bloqueada por unos minutos.",
-                      "code": "Identity.Account.LockedOut",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Identity.Account.LockedOut.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 429,
-                      "detail": "Your account is temporarily locked.",
-                      "code": "Identity.Account.LockedOut",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Security.RateLimit.Exceeded.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 429,
-                      "detail": "Hiciste muchos pedidos seguidos. Esperá un momento y volvé a intentar.",
-                      "code": "Security.RateLimit.Exceeded",
-                      "traceId": "example-trace-id",
-                      "retryAfter": 60
-                    }
-                  },
-                  "Security.RateLimit.Exceeded.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 429,
-                      "detail": "You made too many requests in a row. Wait a moment and try again.",
-                      "code": "Security.RateLimit.Exceeded",
-                      "traceId": "example-trace-id",
-                      "retryAfter": 60
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error; General.Unexpected",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Unexpected.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 500,
-                      "detail": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
-                      "code": "General.Unexpected",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Unexpected.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 500,
-                      "detail": "An unexpected error occurred. If the problem persists, report the trace id.",
-                      "code": "General.Unexpected",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Legal.AccountDeletion.GraceExpired; Request.InProgress",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "Legal.AccountDeletion.GraceExpired.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 409,
-                      "detail": "El plazo para cancelar la baja venció.",
-                      "code": "Legal.AccountDeletion.GraceExpired",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Legal.AccountDeletion.GraceExpired.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 409,
-                      "detail": "The period to cancel deletion has expired.",
-                      "code": "Legal.AccountDeletion.GraceExpired",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Request.InProgress.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 409,
-                      "detail": "La solicitud todavía se está procesando.",
-                      "code": "Request.InProgress",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Request.InProgress.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 409,
-                      "detail": "The request is still being processed.",
-                      "code": "Request.InProgress",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Request.IdempotencyKeyReused",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "Request.IdempotencyKeyReused.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 422,
-                      "detail": "Esta clave ya se usó para otra solicitud.",
-                      "code": "Request.IdempotencyKeyReused",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Request.IdempotencyKeyReused.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 422,
-                      "detail": "This key was already used for another request.",
-                      "code": "Request.IdempotencyKeyReused",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [ ],
-        "x-error-codes": [
-          {
-            "status": 400,
-            "code": "Validation.Failed",
-            "field": null,
-            "es": "Revisá los campos marcados.",
-            "en": "Check the highlighted fields."
-          },
-          {
-            "status": 400,
-            "code": "Auth.LoginLink.Invalid",
-            "field": null,
-            "es": "Este enlace ya no sirve.",
-            "en": "This link no longer works."
-          },
-          {
-            "status": 403,
-            "code": "Identity.Account.Suspended",
-            "field": null,
-            "es": "Tu cuenta está suspendida.",
-            "en": "Your account is suspended."
-          },
-          {
-            "status": 429,
-            "code": "Identity.Account.LockedOut",
-            "field": null,
-            "es": "Tu cuenta está bloqueada por unos minutos.",
-            "en": "Your account is temporarily locked."
-          },
-          {
-            "status": 403,
-            "code": "Identity.Account.PendingDeletion",
-            "field": null,
-            "es": "Tu cuenta tiene la baja pedida.",
-            "en": "Your account is pending deletion."
-          },
-          {
-            "status": 409,
-            "code": "Legal.AccountDeletion.GraceExpired",
-            "field": null,
-            "es": "El plazo para cancelar la baja venció.",
-            "en": "The period to cancel deletion has expired."
-          },
-          {
-            "status": 500,
-            "code": "General.Unexpected",
-            "field": null,
-            "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
-            "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 400,
-            "code": "Request.IdempotencyKeyRequired",
-            "field": null,
-            "es": "Falta la clave para identificar esta solicitud.",
-            "en": "A key identifying this request is required."
-          },
-          {
-            "status": 422,
-            "code": "Request.IdempotencyKeyReused",
-            "field": null,
-            "es": "Esta clave ya se usó para otra solicitud.",
-            "en": "This key was already used for another request."
-          },
-          {
-            "status": 409,
-            "code": "Request.InProgress",
-            "field": null,
-            "es": "La solicitud todavía se está procesando.",
-            "en": "The request is still being processed."
-          },
-          {
-            "status": 429,
-            "code": "Security.RateLimit.Exceeded",
-            "field": null,
-            "es": "Hiciste muchos pedidos seguidos. Esperá un momento y volvé a intentar.",
-            "en": "You made too many requests in a row. Wait a moment and try again."
-          }
-        ]
-      }
-    },
     "/api/auth/methods": {
       "get": {
         "tags": [
@@ -83690,6 +82989,231 @@
           }
         ]
       }
+    },
+    "/api/notifications": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Los avisos de quien mira, hasta 50 y del más nuevo al más viejo, con cuántos están sin leer.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationListResponse"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationListResponse"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Security.RateLimit.Exceeded",
+            "headers": {
+              "Retry-After": {
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Security.RateLimit.Exceeded.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 429,
+                      "detail": "Hiciste muchos pedidos seguidos. Esperá un momento y volvé a intentar.",
+                      "code": "Security.RateLimit.Exceeded",
+                      "traceId": "example-trace-id",
+                      "retryAfter": 60
+                    }
+                  },
+                  "Security.RateLimit.Exceeded.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 429,
+                      "detail": "You made too many requests in a row. Wait a moment and try again.",
+                      "code": "Security.RateLimit.Exceeded",
+                      "traceId": "example-trace-id",
+                      "retryAfter": 60
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-error-codes": [
+          {
+            "status": 429,
+            "code": "Security.RateLimit.Exceeded",
+            "field": null,
+            "es": "Hiciste muchos pedidos seguidos. Esperá un momento y volvé a intentar.",
+            "en": "You made too many requests in a row. Wait a moment and try again."
+          }
+        ]
+      }
+    },
+    "/api/notifications/{id}/read": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Marca leído un aviso visible de quien mira, sin cuerpo. Un id que no corresponde a uno se ignora y responde 204 igual.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Security.RateLimit.Exceeded",
+            "headers": {
+              "Retry-After": {
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Security.RateLimit.Exceeded.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 429,
+                      "detail": "Hiciste muchos pedidos seguidos. Esperá un momento y volvé a intentar.",
+                      "code": "Security.RateLimit.Exceeded",
+                      "traceId": "example-trace-id",
+                      "retryAfter": 60
+                    }
+                  },
+                  "Security.RateLimit.Exceeded.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 429,
+                      "detail": "You made too many requests in a row. Wait a moment and try again.",
+                      "code": "Security.RateLimit.Exceeded",
+                      "traceId": "example-trace-id",
+                      "retryAfter": 60
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-error-codes": [
+          {
+            "status": 429,
+            "code": "Security.RateLimit.Exceeded",
+            "field": null,
+            "es": "Hiciste muchos pedidos seguidos. Esperá un momento y volvé a intentar.",
+            "en": "You made too many requests in a row. Wait a moment and try again."
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -87969,37 +87493,6 @@
         "type": "string",
         "description": "authorize: abrir returnUrl como antes. platformFactor: operador con el primer factor probado; consultar /api/auth/platform-factor."
       },
-      "LoginLinkPreviewResponse": {
-        "type": "object",
-        "properties": {
-          "displayName": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "maskedPhone": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      },
-      "LoginLinkRedeemResponse": {
-        "required": [
-          "access"
-        ],
-        "type": "object",
-        "properties": {
-          "access": {
-            "enum": [
-              "consumer"
-            ],
-            "type": "string"
-          }
-        }
-      },
       "LoginMethodCodeResponse": {
         "required": [
           "methodId",
@@ -88228,6 +87721,64 @@
         },
         "additionalProperties": false,
         "description": "Importe decimal con moneda explícita, sin consultar un catálogo."
+      },
+      "NotificationItem": {
+        "required": [
+          "id",
+          "kind",
+          "params",
+          "occurredAtUtc",
+          "link",
+          "read"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "maxLength": 160,
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "occurredAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "link": {
+            "type": "string"
+          },
+          "read": {
+            "type": "boolean"
+          }
+        },
+        "description": "Un aviso. `Id` es estable y sale de la fuente: si el aviso cambia («3 por aprobar» pasa a 4), cambia de id y vuelve a\r\ncontar. `Kind` es una clave abierta que suma cada área; el front arma el texto con `Kind` y `Params`, en el\r\nidioma de quien mira. `Link` es la ruta del front donde se resuelve. La fuente lo entrega sin leer; el servicio marca\r\n`Read`."
+      },
+      "NotificationListResponse": {
+        "required": [
+          "items",
+          "unread"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationItem"
+            }
+          },
+          "unread": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "La campana de quien mira, en los tres accesos: hasta 50 avisos, del más nuevo al más viejo. Los avisos se arman al leer,\r\ndesde las fuentes de cada área; solo se guarda cuáles abrió cada persona. `Unread` es el número de la campana:\r\ncuántos de `Items` están sin leer."
       },
       "OrganizationAssistantSettingsResponse": {
         "required": [
@@ -92184,19 +91735,6 @@
         },
         "description": "Token opaco recibido en el cuerpo; nunca se expone en la ruta, la query ni el diagnóstico."
       },
-      "PreviewLoginLinkHttpRequest": {
-        "type": "object",
-        "properties": {
-          "token": {
-            "pattern": "^[A-Za-z0-9_-]{43}$",
-            "type": [
-              "null",
-              "string"
-            ],
-            "description": "Secreto de 32 bytes, base64url sin padding. Solo cuerpo/memoria; sin logs."
-          }
-        }
-      },
       "ProblemDetails": {
         "required": [
           "code",
@@ -92504,28 +92042,6 @@
         },
         "additionalProperties": false,
         "description": "Una cuota (E9): pedidos admitidos por cada ventana fija UTC de int RateLimitQuotaResponse.WindowSeconds segundos."
-      },
-      "RedeemLoginLinkHttpRequest": {
-        "type": "object",
-        "properties": {
-          "token": {
-            "pattern": "^[A-Za-z0-9_-]{43}$",
-            "type": [
-              "null",
-              "string"
-            ],
-            "description": "Secreto de 32 bytes, base64url sin padding. Solo cuerpo/memoria; sin logs."
-          },
-          "access": {
-            "enum": [
-              "consumer"
-            ],
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
       },
       "ReferenceDataHttpResponse": {
         "required": [
@@ -95856,9 +95372,16 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          "consentConfirmed": {
+            "type": [
+              "null",
+              "boolean"
+            ],
+            "description": "Obligatorio en true: quien carga confirma que la persona aceptó recibir mensajes por WhatsApp (decisión 179). Si falta o es false responde 400 WhatsApp.PhoneImport.ConsentRequired en consentConfirmed y no manda nada. La vista previa no lo pide."
           }
         },
-        "description": "Cada teléfono con el país elegido; el back lo interpreta y no revela si tiene cuenta."
+        "description": "«Vincular y mandar»: cada teléfono con el país elegido, y la casilla «La persona aceptó recibir mensajes por WhatsApp»\r\n(decisión 179). El back interpreta cada número y no revela si tiene cuenta."
       },
       "WhatsAppPhoneImportOutcome": {
         "enum": [
@@ -95867,6 +95390,39 @@
           "Invalid"
         ],
         "type": "string"
+      },
+      "WhatsAppPhoneImportPreviewHttpRequest": {
+        "type": "object",
+        "properties": {
+          "phones": {
+            "maxItems": 200,
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/PhoneInputHttpRequest"
+            }
+          },
+          "companyId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "roleIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "description": "La vista previa: cada teléfono con el país elegido. No guarda ni manda nada, así que no pide la casilla."
       },
       "WhatsAppPhoneImportPreviewResponse": {
         "required": [

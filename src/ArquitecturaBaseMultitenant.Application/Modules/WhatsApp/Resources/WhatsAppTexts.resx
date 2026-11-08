@@ -300,6 +300,9 @@
   <data name="WhatsApp.Link.NotFound" xml:space="preserve">
     <value>No encontramos esa conversación vinculada.</value>
   </data>
+  <data name="WhatsApp.PhoneImport.ConsentRequired" xml:space="preserve">
+    <value>Confirmá que la persona aceptó recibir mensajes por WhatsApp.</value>
+  </data>
   <data name="WhatsApp.Validation.Required" xml:space="preserve">
     <value>Completá este dato.</value>
   </data>

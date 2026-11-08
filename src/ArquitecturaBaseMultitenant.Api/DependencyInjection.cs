@@ -60,7 +60,6 @@ public static class DependencyInjection
         services.AddScoped<IdempotentRequestContext>();
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Idempotency.IIdempotentRequestContext>(
             provider => provider.GetRequiredService<IdempotentRequestContext>());
-        services.AddScoped<LoginLinkReplayVerifier>();
         services.AddScoped<IPlatformFactorBrowser, PlatformFactorCookie>();
         services.AddScoped<RecentPlatformProofFilter>();
         services.AddScoped<PlatformFactorDurableAdapter>();

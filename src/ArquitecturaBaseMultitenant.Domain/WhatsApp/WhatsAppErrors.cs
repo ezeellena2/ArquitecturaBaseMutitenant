@@ -35,6 +35,7 @@ public static class WhatsAppErrors
     public const string ImportInvalidFileCode = "WhatsApp.Import.InvalidFile";
     public const string ImportTooManyRowsCode = "WhatsApp.Import.TooManyRows";
     public const string LinkNotFoundCode = "WhatsApp.Link.NotFound";
+    public const string PhoneImportConsentRequiredCode = "WhatsApp.PhoneImport.ConsentRequired";
 
     public static readonly Error NumberNotFound = Error.NotFound(NumberNotFoundCode, "Number not found.");
     public static readonly Error NumberAlreadyConnected = Error.Conflict(NumberAlreadyConnectedCode, "That number is already connected.");
@@ -62,6 +63,9 @@ public static class WhatsAppErrors
     public static readonly Error ImportInvalidFile = Field(ImportInvalidFileCode, "Upload an .xlsx or .csv file like the sample.", "file", ErrorType.Validation);
     public static readonly Error ImportTooManyRows = Field(ImportTooManyRowsCode, "The file has more than 5,000 rows.", "file", ErrorType.Validation);
     public static readonly Error LinkNotFound = Error.NotFound(LinkNotFoundCode, "Link not found.");
+    /// <summary>«Cargar teléfonos» invita solo si quien carga confirma que la persona aceptó los mensajes (decisión 179).</summary>
+    public static readonly Error PhoneImportConsentRequired = Field(PhoneImportConsentRequiredCode,
+        "Confirm that the person agreed to receive WhatsApp messages.", "consentConfirmed", ErrorType.Validation);
 
     private static ValidationError Field(string code, string description, string field, ErrorType type) =>
         new(code, description, new Dictionary<string, string[]> { [field] = [code] }, type);

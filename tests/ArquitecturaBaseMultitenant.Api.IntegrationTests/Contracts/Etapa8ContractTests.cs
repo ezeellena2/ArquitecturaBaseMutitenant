@@ -43,22 +43,6 @@ public sealed partial class Etapa8ContractTests(ApiFactory factory)
         Assert.Equal("Auth.LoginMethod.ChannelUnavailable", problem?["code"]?.GetValue<string>());
     }
 
-    [Theory]
-    [InlineData("preview")]
-    [InlineData("redeem")]
-    public async Task Unknown_login_link_never_creates_a_session(string action)
-    {
-        using var client = factory.CreateClient(new() { AllowAutoRedirect = false });
-        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login-link/" + action)
-        {
-            Content = JsonContent.Create(new { token = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", access = "consumer" }),
-        };
-        request.Headers.Add("Idempotency-Key", Guid.CreateVersion7().ToString());
-        using var response = await client.SendAsync(request, Ct);
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.False(response.Headers.Contains("Set-Cookie"));
-    }
-
     [Fact]
     public async Task Email_and_phone_together_are_rejected_before_sending()
     {
@@ -76,7 +60,7 @@ public sealed partial class Etapa8ContractTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task OpenApi_freezes_contact_shapes_consumer_links_and_bilingual_errors()
+    public async Task OpenApi_freezes_contact_shapes_and_bilingual_errors()
     {
         await using var development = factory.WithWebHostBuilder(builder => builder.UseDevelopmentTestOwner());
         using var client = development.CreateClient();
@@ -85,8 +69,6 @@ public sealed partial class Etapa8ContractTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var schemas = doc!["components"]!["schemas"]!;
         Assert.Equal(2, schemas["RequestLoginCodeHttpRequest"]!["oneOf"]!.AsArray().Count);
-        Assert.Equal("^[A-Za-z0-9_-]{43}$", schemas["RedeemLoginLinkHttpRequest"]!["properties"]!["token"]!["pattern"]!.GetValue<string>());
-        Assert.Equal("consumer", schemas["LoginLinkRedeemResponse"]!["properties"]!["access"]!["enum"]![0]!.GetValue<string>());
         Assert.NotNull(schemas["LoginChannelAvailability"]!["properties"]!["contactPhone"]);
         Assert.NotNull(schemas["ProblemDetails"]!["properties"]!["attemptsLeft"]);
         Assert.Equal("string", schemas["PermissionItem"]!["properties"]!["code"]!["type"]!.GetValue<string>());
@@ -226,8 +208,6 @@ public sealed partial class Etapa8ContractTests(ApiFactory factory)
         ("/api/invitations/accept", "post"),
         ("/api/auth/login-code", "post"),
         ("/api/auth/login-code/verify", "post"),
-        ("/api/auth/login-link/preview", "post"),
-        ("/api/auth/login-link/redeem", "post"),
         ("/api/auth/methods", "get"),
         ("/api/auth/signup", "post"),
         ("/api/auth/signup/verify", "post"),

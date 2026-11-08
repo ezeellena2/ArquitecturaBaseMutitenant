@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Api.Authorization;
+using ArquitecturaBaseMultitenant.Api.Contracts.Common;
 using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.Idempotency;
 using ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.Contracts;
@@ -31,8 +32,8 @@ public sealed class OrganizationWhatsAppPhoneImportsController(IWhatsAppPhoneImp
     [ProducesProblem(403)]
     [ProducesProblem(404)]
     [ProducesProblem(500)]
-    public async Task<IActionResult> Preview([FromBody] WhatsAppPhoneImportHttpRequest request, CancellationToken cancellationToken) =>
-        (await service.PreviewAsync(ToModel(request), cancellationToken)).ToActionResult(this);
+    public async Task<IActionResult> Preview([FromBody] WhatsAppPhoneImportPreviewHttpRequest request, CancellationToken cancellationToken) =>
+        (await service.PreviewAsync(ToModel(request.Phones, request.CompanyId, request.RoleIds), cancellationToken)).ToActionResult(this);
 
     [HttpPost]
     [Idempotent]
@@ -46,8 +47,8 @@ public sealed class OrganizationWhatsAppPhoneImportsController(IWhatsAppPhoneImp
     [ProducesProblem(500)]
     [ProducesProblem(503)]
     public async Task<IActionResult> Import([FromBody] WhatsAppPhoneImportHttpRequest request, CancellationToken cancellationToken) =>
-        (await service.ImportAsync(ToModel(request), cancellationToken)).ToActionResult(this);
+        (await service.ImportAsync(ToModel(request.Phones, request.CompanyId, request.RoleIds), cancellationToken)).ToActionResult(this);
 
-    private static WhatsAppPhoneImportRequest ToModel(WhatsAppPhoneImportHttpRequest request) =>
-        new(request.Phones?.Select(phone => phone is null ? null! : new PhoneInputRequest(phone.Country, phone.Number)).ToArray(), request.CompanyId, request.RoleIds);
+    private static WhatsAppPhoneImportRequest ToModel(IReadOnlyList<PhoneInputHttpRequest>? phones, Guid? companyId, IReadOnlyList<Guid>? roleIds) =>
+        new(phones?.Select(phone => phone is null ? null! : new PhoneInputRequest(phone.Country, phone.Number)).ToArray(), companyId, roleIds);
 }

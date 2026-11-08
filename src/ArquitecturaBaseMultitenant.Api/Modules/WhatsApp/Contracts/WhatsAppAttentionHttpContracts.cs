@@ -96,8 +96,18 @@ public sealed record CreateWhatsAppBroadcastHttpRequest(string? Name, Guid? Temp
 
 public sealed record CancelWhatsAppBroadcastHttpRequest(uint? Version);
 
-/// <summary>Cada teléfono con el país elegido; el back lo interpreta y no revela si tiene cuenta.</summary>
-public sealed record WhatsAppPhoneImportHttpRequest(IReadOnlyList<PhoneInputHttpRequest>? Phones, Guid? CompanyId, IReadOnlyList<Guid>? RoleIds)
+/// <summary>
+/// «Vincular y mandar»: cada teléfono con el país elegido, y la casilla «La persona aceptó recibir mensajes por WhatsApp»
+/// (decisión 179). El back interpreta cada número y no revela si tiene cuenta.
+/// </summary>
+public sealed record WhatsAppPhoneImportHttpRequest(IReadOnlyList<PhoneInputHttpRequest>? Phones, Guid? CompanyId, IReadOnlyList<Guid>? RoleIds,
+    bool? ConsentConfirmed)
 {
     public override string ToString() => nameof(WhatsAppPhoneImportHttpRequest);
+}
+
+/// <summary>La vista previa: cada teléfono con el país elegido. No guarda ni manda nada, así que no pide la casilla.</summary>
+public sealed record WhatsAppPhoneImportPreviewHttpRequest(IReadOnlyList<PhoneInputHttpRequest>? Phones, Guid? CompanyId, IReadOnlyList<Guid>? RoleIds)
+{
+    public override string ToString() => nameof(WhatsAppPhoneImportPreviewHttpRequest);
 }

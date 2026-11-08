@@ -9,10 +9,10 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
 {
     private const string Destination = "Exactamente uno de email/phone. Sin channel se conserva correo; email exige channel=email o ausente. Phone exige canal registrado de tipo Phone. País ISO desde referencias; número se interpreta como celular y se normaliza a E.164.";
     private const string Proof = "Código como string de dígitos ASCII, longitud Authentication:LoginCode (6 por defecto). Invalid informa attemptsLeft sólo ante una prueba activa; sin prueba activa no informa intentos restantes. Los errores del código no incluyen errors.code. Intentos y topes actuales; cuando el error incluye retryAfter, son segundos y coincide con Retry-After. El bloqueo de cuenta no informa un plazo ni ese encabezado. No guardar códigos ni enlaces en logs.";
-    private static readonly string[] SecretProperties = ["token", "nonce"];
+    private static readonly string[] SecretProperties = ["nonce"];
     private static readonly HashSet<string> DestinationRequests = ["RequestLoginCodeHttpRequest", "VerifyLoginCodeHttpRequest", "SignupHttpRequest", "VerifySignupHttpRequest", "AddLoginMethodHttpRequest", "RequestRecoveryCodeHttpRequest", "VerifyRecoveryCodeHttpRequest", "SubmitAccountRecoveryHttpRequest"];
     private static readonly HashSet<string> CodeRequests = ["VerifyLoginCodeHttpRequest", "VerifySignupHttpRequest", "VerifyRecoveryCodeHttpRequest", "VerifyLoginMethodHttpRequest"];
-    private static readonly HashSet<string> SecretRequests = ["PreviewLoginLinkHttpRequest", "RedeemLoginLinkHttpRequest", "RequestRecoveryCodeHttpRequest", "VerifyRecoveryCodeHttpRequest", "SubmitAccountRecoveryHttpRequest"];
+    private static readonly HashSet<string> SecretRequests = ["RequestRecoveryCodeHttpRequest", "VerifyRecoveryCodeHttpRequest", "SubmitAccountRecoveryHttpRequest"];
 
     public void Describe(OpenApiDocument document)
     {
@@ -84,14 +84,6 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
                 + " Nonce opaco base64url de 43 caracteres, ligado a este pedido. Sin sesión. Nuevo destino no se agrega a la cuenta. Submit: 202 sin body, prueba previa vigente y previousEmail o previousPhone; resolución asistida de Plataforma conserva reason/version/permiso/SecurityEvent.",
                 [E(400, "Platform.AccountRecovery.PhoneMethodInUse", "phone"), E(400, "Platform.AccountRecovery.MethodInUse", "email"), E(400, "Platform.AccountRecovery.VerificationRequired"), .. (verify ? VerifyErrors() : SendErrors())], true,
                 examples: Destinations(code: verify, nonce: true, previous: path == "/api/account-recovery"));
-        foreach (var (path, redeem) in new[] { ("/api/auth/login-link/preview", false), ("/api/auth/login-link/redeem", true) })
-            Describe(document, path, HttpMethod.Post,
-                "Enlace opaco 256 bits (43 base64url), hash, 10 minutos, un uso y ligado a MethodId Phone verificado. Uno nuevo invalida los previos de ese método. Operador actual devuelve Invalid incluso en replay, sin cookie, datos o motivo revelador. Token via /login/enlace#t=… y solo memoria; jamás query/storage/log. "
-                + "Invalid reúne enlace inexistente, usado, vencido, invalidado, método retirado y cuenta operadora. "
-                + (redeem ? "Revalida dueño, método, canal, estado y operador bajo lock dentro de la UoW. Solo access=consumer. 200 {access:consumer} y cookie pública, sin tokens OIDC. Replay misma key no crea otra sesión; otra key devuelve Invalid si ya fue usado. Baja pendiente: prueba válida y gracia vigente emiten cancelTicket con retorno fijo /login/enlace; gracia vencida devuelve Legal.AccountDeletion.GraceExpired sin ticket. Front ejecuta después signinRedirect con su state y PKCE."
-                    : "Preview hace dos lecturas coherentes del enlace y su cuenta, sin UoW ni lock; revalida dueño, método, canal, estado, operador y vigencia antes de responder. No consume ni crea cookie. displayName y maskedPhone nullable. Una baja pendiente permite preview mientras el enlace sea vigente; no emite cancelTicket."),
-                [E(400, "Validation.Failed"), E(400, "Auth.LoginLink.Invalid"), E(403, "Identity.Account.Suspended"), E(429, "Identity.Account.LockedOut"), .. (redeem ? new[] { E(403, "Identity.Account.PendingDeletion"), E(409, "Legal.AccountDeletion.GraceExpired") } : Array.Empty<HttpContractError>())], redeem,
-                examples: new Dictionary<string, JsonNode> { ["enlace"] = redeem ? new JsonObject { ["token"] = ExampleToken, ["access"] = "consumer" } : new JsonObject { ["token"] = ExampleToken } });
         Describe(document, "/api/auth/business-signup", HttpMethod.Post,
             "Contrato vigente de Tu organización. Requiere cookie pública probada y antiforgery; no recibe phone ni selecciona consumer. Valida BusinessSignup y límite/estado de organización; 200 BusinessSignupResponse existente.",
             [E(400, "Validation.Failed"), E(401, "Auth.BusinessSignup.IdentityRequired"), E(403, "Auth.BusinessSignup.Closed"), E(403, "Tenancy.Access.PlatformOnly")], true);
@@ -105,7 +97,7 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
                 "Access platform y permiso " + ArquitecturaBaseMultitenant.Domain.Authorization.PlatformPermissions.Recoveries.Manage
                 + " vigente. Body reason/version existente, decisión humana con SecurityEvent; conserva VersionResponse y concurrencia. Phone es un tipo de método, nunca se convierte en Email.",
                 [E(400, "Validation.Failed"), E(404, "Platform.AccountRecovery.NotFound"), E(409, "Platform.AccountRecovery.AlreadyResolved"), E(409, "General.ConcurrencyConflict"), .. (action == "approve" ? new[] { E(409, "Platform.AccountRecovery.NoAccount"), E(409, "Platform.AccountRecovery.MethodInUse"), E(409, "Platform.AccountRecovery.MethodAlreadyOnAccount"), E(409, "Platform.AccountRecovery.OperatorAccount") } : Array.Empty<HttpContractError>())], true, true);
-        foreach (var path in new[] { "/api/auth/login-code/verify", "/api/auth/business-signup/verify", "/api/auth/login-link/redeem" })
+        foreach (var path in new[] { "/api/auth/login-code/verify", "/api/auth/business-signup/verify" })
         {
             var operation = document.Paths[path].Operations![HttpMethod.Post];
             var status = path.EndsWith("signup/verify", StringComparison.Ordinal) ? "204" : "200";
@@ -217,11 +209,6 @@ internal sealed class IdentityContractContributor : IHttpContractContributor
             {
                 Type = JsonSchemaType.String | JsonSchemaType.Null,
                 Description = "Opcional: consumer exacto sólo con returnUrl=/; business exacto sólo con returnUrl=/org. Para OIDC o /invitacion debe omitirse o ser null. Se conserva literal, sin normalizar.",
-            };
-            if (name == "RedeemLoginLinkHttpRequest" || name == "LoginLinkRedeemResponse") schema.Properties["access"] = new OpenApiSchema
-            {
-                Type = name == "LoginLinkRedeemResponse" ? JsonSchemaType.String : JsonSchemaType.String | JsonSchemaType.Null,
-                Enum = [JsonValue.Create("consumer")!],
             };
             if (name == "LoginChannelAvailability") schema.Properties["contactPhone"] = new OpenApiSchema
             {

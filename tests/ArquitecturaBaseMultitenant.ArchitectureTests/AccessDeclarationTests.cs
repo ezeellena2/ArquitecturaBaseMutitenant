@@ -28,7 +28,6 @@ public sealed partial class AccessDeclarationTests
         typeof(LoginCodeController),
         // E9: el segundo factor de un operador; cada acción exige la cookie del desafío pendiente, no una sesión.
         typeof(PlatformFactorController),
-        typeof(LoginLinkController),
         typeof(AccountRecoveryController),
         typeof(ContactController),
         typeof(SignupController),

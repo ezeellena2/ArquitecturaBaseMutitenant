@@ -26,7 +26,8 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
         ("WhatsAppTemplateResponse", "variables", WhatsAppFeature.MaxTemplateVariables), ("WhatsAppTemplateOptionResponse", "variables", WhatsAppFeature.MaxTemplateVariables),
         ("SendWhatsAppTemplateHttpRequest", "variables", WhatsAppFeature.MaxTemplateVariables), ("CreateWhatsAppTemplateHttpRequest", "variables", WhatsAppFeature.MaxTemplateVariables),
         ("CreateWhatsAppBroadcastHttpRequest", "variables", WhatsAppFeature.MaxTemplateVariables), ("WhatsAppBroadcastResponse", "variables", WhatsAppFeature.MaxTemplateVariables),
-        ("WhatsAppPhoneImportHttpRequest", "phones", WhatsAppFeature.MaxPhoneImport), ("WhatsAppPhoneImportPreviewResponse", "rows", WhatsAppFeature.MaxPhoneImport),
+        ("WhatsAppPhoneImportHttpRequest", "phones", WhatsAppFeature.MaxPhoneImport), ("WhatsAppPhoneImportPreviewHttpRequest", "phones", WhatsAppFeature.MaxPhoneImport),
+        ("WhatsAppPhoneImportPreviewResponse", "rows", WhatsAppFeature.MaxPhoneImport),
         ("CreateWhatsAppTeamHttpRequest", "memberIds", WhatsAppFeature.MaxTeamMembers), ("UpdateWhatsAppTeamHttpRequest", "memberIds", WhatsAppFeature.MaxTeamMembers),
         ("WhatsAppTeamDetailResponse", "members", WhatsAppFeature.MaxTeamMembers), ("WhatsAppTeamResponse", "memberPreview", WhatsAppFeature.MaxMemberPreview),
         ("WhatsAppTemplateResponse", "languages", WhatsAppFeature.MaxTemplateLanguages),
@@ -52,6 +53,9 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
                 if (Property(schemas, schema, property)?.Items is OpenApiSchema item) item.MaxLength = WhatsAppTextLimits.Tag;
             foreach (var schema in new[] { "SendWhatsAppTemplateHttpRequest", "CreateWhatsAppBroadcastHttpRequest", "WhatsAppBroadcastResponse" })
                 if (Property(schemas, schema, "variables")?.Items is OpenApiSchema item) item.MaxLength = WhatsAppTextLimits.TemplateVariable;
+            if (Property(schemas, "WhatsAppPhoneImportHttpRequest", "consentConfirmed") is { } consent)
+                consent.Description = "Obligatorio en true: quien carga confirma que la persona aceptó recibir mensajes por WhatsApp (decisión 179). "
+                    + "Si falta o es false responde 400 WhatsApp.PhoneImport.ConsentRequired en consentConfirmed y no manda nada. La vista previa no lo pide.";
             DescribeMoney(schemas);
         }
 
@@ -162,7 +166,10 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
             if (path.EndsWith("/cancel", StringComparison.Ordinal)) Add(409, WhatsAppErrors.BroadcastNotCancellableCode);
         }
         if (path.EndsWith("/phone-imports", StringComparison.Ordinal) && method == HttpMethod.Post)
+        {
+            Add(400, WhatsAppErrors.PhoneImportConsentRequiredCode, "consentConfirmed");
             errors.Add(HttpContractDocumentation.CoreError(503, InvitationErrors.ChannelUnavailableCode));
+        }
         return errors;
     }
 

@@ -27,16 +27,6 @@ public sealed class IdentityHttpDocumentationTests(ApiFactory factory)
         AssertError(doc, "/api/me/login-methods/{methodId}/verify", "Identity.LoginMethod.AlreadyVerified", 409);
         AssertMissing(doc, "/api/me/login-methods/{methodId}/verify", "Identity.Account.LockedOut", "Tenancy.Access.PlatformOnly");
         AssertMissing(doc, "/api/account-recovery/verify", "Identity.Account.Suspended", "Identity.Account.LockedOut", "Identity.Account.PendingDeletion", "Tenancy.Access.PlatformOnly");
-        foreach (var action in new[] { "preview", "redeem" })
-        {
-            var path = "/api/auth/login-link/" + action;
-            AssertError(doc, path, "Auth.LoginLink.Invalid", 400);
-            AssertError(doc, path, "Identity.Account.Suspended", 403);
-            AssertError(doc, path, "Identity.Account.LockedOut", 429);
-            AssertMissing(doc, path, "Auth.LoginLink.Expired", "Auth.LoginLink.AlreadyUsed", "Auth.LoginLink.TooManyRequests");
-        }
-        AssertMissing(doc, "/api/auth/login-link/preview", "Identity.Account.PendingDeletion");
-        AssertError(doc, "/api/auth/login-link/redeem", "Identity.Account.PendingDeletion", 403);
         AssertError(doc, "/api/platform/recoveries/{id}/approve", "Platform.AccountRecovery.MethodAlreadyOnAccount", 409);
         AssertError(doc, "/api/platform/recoveries/{id}/approve", "Platform.AccountRecovery.MethodInUse", 409);
         AssertMissing(doc, "/api/platform/recoveries/{id}/approve", "Platform.AccountRecovery.PhoneMethodInUse");
@@ -62,18 +52,18 @@ public sealed class IdentityHttpDocumentationTests(ApiFactory factory)
     [Theory]
     [InlineData("es")]
     [InlineData("en")]
-    public async Task Reused_link_key_error_matches_the_documented_status_and_localized_example(string language)
+    public async Task Reused_key_error_matches_the_documented_status_and_localized_example(string language)
     {
         var doc = await DocumentAsync();
         using var client = factory.CreateClient();
         client.DefaultRequestHeaders.AcceptLanguage.ParseAdd(language);
         var key = Guid.NewGuid().ToString();
-        using var first = await SendAsync("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+        using var first = await SendAsync("123456");
         Assert.Equal(HttpStatusCode.BadRequest, first.StatusCode);
-        using var reused = await SendAsync("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB");
+        using var reused = await SendAsync("654321");
         Assert.Equal(HttpStatusCode.UnprocessableEntity, reused.StatusCode);
         var problem = await reused.Content.ReadFromJsonAsync<JsonObject>(Ct);
-        var documented = doc["paths"]!["/api/auth/login-link/redeem"]!["post"]!["responses"]!["422"];
+        var documented = doc["paths"]!["/api/account-recovery/verify"]!["post"]!["responses"]!["422"];
         Assert.NotNull(documented);
         var example = documented["content"]!["application/problem+json"]!["examples"]!["Request.IdempotencyKeyReused." + language]!["value"]!;
         Assert.Equal(problem!["status"]!.GetValue<int>(), example["status"]!.GetValue<int>());
@@ -81,9 +71,12 @@ public sealed class IdentityHttpDocumentationTests(ApiFactory factory)
         Assert.Equal(problem["detail"]!.GetValue<string>(), example["detail"]!.GetValue<string>());
         Assert.False(reused.Headers.Contains("Set-Cookie"));
 
-        async Task<HttpResponseMessage> SendAsync(string token)
+        async Task<HttpResponseMessage> SendAsync(string code)
         {
-            using var request = new HttpRequestMessage(HttpMethod.Post, "/api/auth/login-link/redeem") { Content = JsonContent.Create(new { token, access = "consumer" }) };
+            using var request = new HttpRequestMessage(HttpMethod.Post, "/api/account-recovery/verify")
+            {
+                Content = JsonContent.Create(new { email = "reused-" + key + "@example.test", code, nonce = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" }),
+            };
             request.Headers.Add("Idempotency-Key", key);
             return await client.SendAsync(request, Ct);
         }
@@ -139,6 +132,6 @@ public sealed class IdentityHttpDocumentationTests(ApiFactory factory)
         "/api/me/login-methods", "/api/me/login-methods/{methodId}/code", "/api/me/login-methods/{methodId}/verify",
         "/api/me/login-methods/{methodId}/primary", "/api/me/login-methods/{methodId}",
         "/api/account-recovery/preview", "/api/account-recovery/code", "/api/account-recovery/verify", "/api/account-recovery",
-        "/api/auth/login-link/preview", "/api/auth/login-link/redeem", "/api/platform/recoveries/{id}/approve", "/api/platform/recoveries/{id}/reject",
+        "/api/platform/recoveries/{id}/approve", "/api/platform/recoveries/{id}/reject",
     ];
 }

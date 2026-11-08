@@ -173,6 +173,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   ├── Invitations/
 │   │   │   ├── Legal/
 │   │   │   ├── Messaging/
+│   │   │   ├── Notifications/  la campana (base de la 12)
 │   │   │   ├── OrganizationSettings/
 │   │   │   ├── OrganizationUsers/
 │   │   │   ├── Personal/
@@ -461,6 +462,7 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `src/ArquitecturaBaseMultitenant.Application/Services/Invitations/` | Servicios de aplicación y sus helpers de invitaciones. | [docs/features/organizaciones.md](../features/organizaciones.md) | `src/ArquitecturaBaseMultitenant.Application/Services/Invitations/InvitationAcceptanceGuard.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Services/Invitations/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Services/Legal/` | Servicios de aplicación y sus helpers de documentos legales. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Application/Services/Legal/AccountDeletionCancelIssuer.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Services/Legal/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Services/Messaging/` | Servicios de aplicación y sus helpers de Messaging. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Application/Services/Messaging/MessagingRegistration.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Services/Messaging/AGENTS.md) |
+| `src/ArquitecturaBaseMultitenant.Application/Services/Notifications/` | Servicios de aplicación y sus helpers de la campana. | [docs/features/identidad.md](../features/identidad.md) | `src/ArquitecturaBaseMultitenant.Application/Services/Notifications/NotificationsRegistration.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Services/Notifications/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Services/OrganizationSettings/` | Servicios de aplicación y sus helpers de Organization Settings. | [docs/features/organizaciones.md](../features/organizaciones.md) | `src/ArquitecturaBaseMultitenant.Application/Services/OrganizationSettings/LoginMethodDomainLinker.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Services/OrganizationSettings/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Services/OrganizationUsers/` | Servicios de aplicación y sus helpers de Organization Users. | [docs/features/organizaciones.md](../features/organizaciones.md) | `src/ArquitecturaBaseMultitenant.Application/Services/OrganizationUsers/CompanyInvitationPolicy.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Services/OrganizationUsers/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Services/Personal/` | Servicios de aplicación y sus helpers de acceso personal. | [docs/features/personal.md](../features/personal.md) | `src/ArquitecturaBaseMultitenant.Application/Services/Roles/RoleService.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Services/Personal/AGENTS.md) |

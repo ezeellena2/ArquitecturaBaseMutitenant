@@ -97,6 +97,32 @@ public sealed class WhatsAppAttentionContractTests(ApiFactory factory)
     }
 
     [Fact]
+    public void Phone_import_asks_for_consent_and_its_preview_does_not()
+    {
+        // Base de la 12 (decisión 179): «Vincular y mandar» pide la casilla; la vista previa no guarda ni manda nada.
+        var document = JsonNode.Parse(File.ReadAllText(Path.Combine(FindRepositoryRoot(), "docs", "contracts", "openapi.json")))!;
+        var schemas = document["components"]!["schemas"]!;
+        Assert.Equal(["boolean", "null"], schemas["WhatsAppPhoneImportHttpRequest"]!["properties"]!["consentConfirmed"]!["type"]!.AsArray()
+            .Select(value => value!.GetValue<string>()).Order(StringComparer.Ordinal));
+        Assert.Null(schemas["WhatsAppPhoneImportPreviewHttpRequest"]!["properties"]!["consentConfirmed"]);
+        Assert.Equal(WhatsAppFeature.MaxPhoneImport, schemas["WhatsAppPhoneImportPreviewHttpRequest"]!["properties"]!["phones"]!["maxItems"]!.GetValue<int>());
+
+        var import = document["paths"]!["/api/organization/whatsapp/phone-imports"]!["post"]!;
+        var preview = document["paths"]!["/api/organization/whatsapp/phone-imports/preview"]!["post"]!;
+        Assert.Equal("#/components/schemas/WhatsAppPhoneImportHttpRequest", Body(import));
+        Assert.Equal("#/components/schemas/WhatsAppPhoneImportPreviewHttpRequest", Body(preview));
+        var consent = Assert.Single(import["x-error-codes"]!.AsArray(), error => error!["code"]!.GetValue<string>() == WhatsAppErrors.PhoneImportConsentRequiredCode);
+        Assert.Equal(400, consent!["status"]!.GetValue<int>());
+        Assert.Equal("consentConfirmed", consent["field"]!.GetValue<string>());
+        Assert.Equal("Confirmá que la persona aceptó recibir mensajes por WhatsApp.", consent["es"]!.GetValue<string>());
+        Assert.Equal("Confirm that the person agreed to receive WhatsApp messages.", consent["en"]!.GetValue<string>());
+        Assert.DoesNotContain(preview["x-error-codes"]!.AsArray(), error => error!["code"]!.GetValue<string>() == WhatsAppErrors.PhoneImportConsentRequiredCode);
+
+        static string Body(JsonNode operation) =>
+            operation["requestBody"]!["content"]!["application/json"]!["schema"]!["$ref"]!.GetValue<string>();
+    }
+
+    [Fact]
     public async Task Routes_answer_behind_the_module_and_404_without_it()
     {
         using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });

@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.Invitations;
 using ArquitecturaBaseMultitenant.Application.Services.Legal;
 using ArquitecturaBaseMultitenant.Application.Services.Messaging;
+using ArquitecturaBaseMultitenant.Application.Services.Notifications;
 using ArquitecturaBaseMultitenant.Application.Services.OrganizationSettings;
 using ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Application.Services.Platform;
@@ -37,6 +38,7 @@ public static class DependencyInjection
             .AddReferenceData()
             .AddRoles()
             .AddHome()
+            .AddNotifications()
             .AddOrganizationUsers()
             .AddOrganizationSettings()
             .AddPublicSite()

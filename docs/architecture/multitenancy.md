@@ -168,7 +168,7 @@ El seed inicial de `PlatformSettings` deja `ConsumerSignup = Open`, `BusinessSig
 4. La empresa lo ve en su bandeja; la persona, en su espacio personal. Cada cambio de estado lo hace la parte autorizada (`PartyPolicy`) y queda auditado de los dos lados.
 5. Avisos por correo o WhatsApp a las dos partes (outbox).
 
-**Cambio de acceso o de organización:** `/connect/authorize?prompt=none&access=business&tenant=<id>` (o `access=consumer`). El servidor valida la membresía y emite tokens nuevos.
+**Cambio de acceso o de organización:** `/connect/authorize?prompt=none&access=business&tenant=<id>` (o `access=consumer`). El servidor valida la membresía y emite tokens nuevos. Desde «Otro acceso» suma `returnTo`, la ruta del front del link que se abrió (base de la 12): se valida con los destinos de `ReturnUrls.cs` y no amplía los retornos autorizados, porque el callback, el `state` del SPA y el `returnUrl` del ingreso no cambian. Un destino ajeno no se usa y el cambio termina en el inicio de ese acceso, como hoy.
 
 ## 11. Plataforma
 

@@ -82,8 +82,6 @@ internal sealed class SecurityContractContributor : IHttpContractContributor
             "next=authorize conserva la conducta anterior. next=platformFactor (access=platform, E9): el código quedó probado pero no hay cookie de Plataforma ni tokens; nace la cookie del desafío pendiente y el SPA lo consulta en /api/auth/platform-factor. Una invitación de operador queda aceptada recién al completar ese ingreso.");
         Append(document, "/api/auth/external/callback", HttpMethod.Get,
             "Operador (E9): después de probar Google redirige al ingreso con factor=pending, sin identidad ni prueba en la URL; el indicador sólo hace que el SPA consulte el desafío pendiente. Sin cookie de Plataforma ni tokens hasta completar el segundo factor.");
-        Append(document, "/api/auth/login-link/redeem", HttpMethod.Post,
-            "Un operador nunca recibe sesión por enlace: sigue devolviendo Invalid (E9).");
     }
 
     private static void DescribeSettings(OpenApiDocument document)

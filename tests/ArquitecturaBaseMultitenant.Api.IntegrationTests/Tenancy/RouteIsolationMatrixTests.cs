@@ -38,6 +38,7 @@ public sealed partial class RouteIsolationMatrixTests(ApiFactory factory)
 {
     private const string PlatformWide = "Plataforma opera sobre todas las organizaciones y cuentas";
     private const string NotAnIdentifier = "El parámetro no identifica datos de nadie";
+    private const string ViewerNotification = "El id sale de los avisos de quien mira: uno ajeno no es un aviso visible y se ignora (204), sin guardar nada";
     private static readonly string[] Technical = ["OutboxMessages", "AssistantTurnWorks", "RateLimitCounters", "CacheTagVersions",
         "IdempotencyKeys", "DataProtectionKeys", "OpenIddictTokens", "OpenIddictAuthorizations"];
     private static readonly IReadOnlyDictionary<string, RouteCase> Cases = CreateCases();
@@ -116,6 +117,7 @@ public sealed partial class RouteIsolationMatrixTests(ApiFactory factory)
             "POST /api/platform/tenants/{id:guid}/retry-provisioning", "POST /api/platform/tenants/{id:guid}/suspend",
         })
             cases[route] = Shared(PlatformWide);
+        cases["POST /api/notifications/{id}/read"] = Shared(ViewerNotification);
         AddAssistantCases(cases);
         AddWhatsAppCases(cases);
         return cases;
