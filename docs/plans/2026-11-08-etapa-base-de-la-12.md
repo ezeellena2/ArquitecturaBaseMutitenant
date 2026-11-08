@@ -1,6 +1,6 @@
 # Base de la 12 · plan ejecutable
 
-**Estado:** pendiente · Spec: `docs/plans/formularios/base-de-la-12.md` y `base-de-la-12-parte-pasos.md`. Tableros aprobados: lienzo v169. No hay decisión de producto pendiente. Lo escribió Codex y lo revisó la Guía el 2026-11-08.
+**Estado:** pendiente · Spec: `docs/plans/formularios/base-de-la-12.md` y `base-de-la-12-parte-pasos.md`. Tableros aprobados: lienzo v169. No hay decisión de producto pendiente.
 
 | Parte | Tareas | Estado |
 | --- | --- | --- |

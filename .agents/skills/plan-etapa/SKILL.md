@@ -1,6 +1,6 @@
 ---
 name: plan-etapa
-description: Arma el plan ejecutable de una etapa en tres partes (contrato; back y front en paralelo; integración y puerta) con el texto listo para cada chat que programa, y resuelve con el usuario lo que queda abierto en tandas de preguntas, cada una con opciones y una recomendada. Usala cuando pidan planificar una etapa o una funcionalidad nueva, o pasarle una etapa a Codex.
+description: Arma el plan ejecutable de una etapa en tres partes (contrato; back y front en paralelo; integración y puerta) con el texto listo para cada chat que programa, y resuelve con el usuario lo que queda abierto en tandas de preguntas, cada una con opciones y una recomendada. Usala cuando pidan planificar una etapa o una funcionalidad nueva.
 ---
 
 # /plan-etapa <etapa o tema>
@@ -21,16 +21,17 @@ El plan tiene que poder ejecutarse sin adivinar. Las decisiones de producto las 
    - como modelo de las tres partes, del largo (unas 4.000 palabras) y del texto para cada chat, el plan de la 11, que ya se retiró (`git show ed39e63e:docs/plans/2026-10-13-etapa-11-whatsapp.md`).
 3. **Si falta un tablero, pedilo antes de escribir el plan.** Lo dibuja «Multitenant · Diseño», la única que toca el lienzo. Si no le podés escribir, dale el texto al usuario.
 4. **Contrastá la spec con el código real.** Revisá cada fila de «Qué verificar al arrancar». Si la spec ya trae contrato, datos y pasos, el plan no los reescribe: los toma como están y anota solo lo que cambió.
+   **Los planes del bloque de formularios se escriben todos antes de programar** (pedido del usuario, 2026-11-08). Lo que deja una etapa anterior todavía no existe: sale de su spec y de su plan, y va a la tarea **K0 · Lo que dejó la etapa anterior**, una lista cerrada que el chat del contrato confirma al arrancar. Lo que difiera se anota en «Cambios al contrato» antes de programar.
 5. **Escribí el plan en `docs/plans/<fecha>-etapa-<n>-<tema>.md`, corto (unas 4.000 palabras como mucho, sin historial; `AGENTS.md`, «Velocidad y cierre liviano») y con estas secciones:**
    - **Forma de trabajo:** modo rápido y una sola puerta al final.
    - **Contrato:** rutas, cuerpos, códigos de error y permisos. Va primero y completo.
    - **Back** y **Front:** tareas con sus archivos, el archivo real del que se copia y sus tests. Cada parte lleva el texto listo para pegar en su chat.
    - **Integración y puerta:** lo que corre la skill `/puerta`.
-   - **Relación con otras etapas.**
+   - **Relación con otras etapas:** «Usa de las anteriores» y «Deja para las siguientes», con nombres concretos, para cruzar los planes.
    - **Cambios al contrato:** vacía; la usan los chats si algo cambia.
    - **Para decidir:** cada punto con opciones y una recomendada.
 
-   Si planifica la Guía (Claude), el plan lo escribe un chat de Codex, así no se gasta el uso de Claude. La Guía le pasa este punto como texto y después lo revisa.
+   El plan lo escribe Claude, porque no hay Codex desde el 2026-11-08: la Guía, o los chats que ella abre por grupo de etapas. La Guía revisa los planes juntos antes de commitearlos.
 6. **Revisá el plan antes de dárselo al usuario.** Tiene que aplicar las ADR nuevas, el contrato tiene que estar completo y nada puede quedar condicional.
    - **La etapa usa solo lo que dejaron las anteriores** (pedido del usuario, 2026-10-25). Lo que usa, prueba o dibuja tiene que estar hecho antes. Lo que necesita una etapa posterior pasa a esa etapa.
    - **Lo que suma la etapa aparece en todas las pantallas que ya existen.** Por ejemplo, un tipo de pregunta nuevo se ve en la planilla, el detalle y el PDF, si ya están.
@@ -39,7 +40,7 @@ El plan tiene que poder ejecutarse sin adivinar. Las decisiones de producto las 
    - al usuario se le preguntan solo las decisiones de producto: lo que ve o puede hacer una persona. Las técnicas las decide quien planifica y las anota en una línea del plan. Si una de producto tiene una parte técnica, primero explicá qué es, para qué sirve y un ejemplo real del repo;
    - anotá cada respuesta en el plan, y también en una ADR si cambia una regla;
    - commiteá solo esos archivos.
-8. **Entregá el orden de los chats y sus textos:** primero el Contrato; después Back y Front a la vez; al final, Integración y puerta. Si el usuario trabaja con un chat coordinador de Codex, todos los textos van a ese coordinador.
+8. **Entregá el orden de los chats y sus textos:** primero el Contrato; después Back y Front a la vez; al final, Integración y puerta. Los chats son sesiones de Claude Code: la Guía las abre con esos textos y archiva las que terminaron.
 
 ## Nunca
 

@@ -4,7 +4,7 @@ Cada etapa del bloque tiene acá su spec, y todas van hacia el mismo [formato](p
 
 **Cómo se sabe qué falta.** `node scripts/arneses/arnes.mjs alinear-etapas --detectar` no gasta tokens y dice qué etapa no está lista: secciones que le faltan, tableros que no coinciden con el lienzo, y permisos, decisiones, enlaces y estados que no cierran. No reemplaza leer las specs de punta a punta: una contradicción de sentido no la ve ningún script.
 
-**Cómo se usa.** Cuando le toca a una etapa, [`/plan-etapa`](../../../.agents/skills/plan-etapa/SKILL.md) toma su spec y contrasta «Qué verificar al arrancar» con el código real. El contrato, los datos y los pasos ya están escritos: el plan corto anota solo lo que cambió, y suma el texto para cada chat.
+**Cómo se usa.** Antes de programar la base, [`/plan-etapa`](../../../.agents/skills/plan-etapa/SKILL.md) arma el plan de cada etapa (pedido del usuario, 2026-11-08). Toma su spec y contrasta «Qué verificar al arrancar» con el código real, y lo que deja una etapa anterior, con su spec y su plan. El contrato, los datos y los pasos ya están escritos: el plan corto anota solo lo que cambió, y suma el texto para cada chat. Al arrancar cada etapa, su chat del contrato confirma lo que dejó la anterior.
 
 **La regla del orden** (decisión 78, que controla `/plan-etapa`):
 - cada etapa usa solo lo que dejaron las anteriores;

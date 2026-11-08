@@ -36,11 +36,11 @@ Cada paso necesita una corrida completa en verde con el código de la etapa. Si 
 
 ## Cómo se arma el plan de una etapa
 
-El plan parte de la spec de la etapa, con el formato de [`docs/plans/formularios/plantilla.md`](../plans/formularios/plantilla.md): toma su contrato, sus datos y sus pasos, los contrasta con el código real y anota solo lo que cambió. Antes de planificar, `node scripts/arneses/arnes.mjs alinear-etapas --detectar` no puede dar hallazgos de esa etapa.
+El plan parte de la spec de la etapa, con el formato de [`docs/plans/formularios/plantilla.md`](../plans/formularios/plantilla.md): toma su contrato, sus datos y sus pasos, los contrasta con el código real y anota solo lo que cambió. Antes de planificar, `node scripts/arneses/arnes.mjs alinear-etapas --detectar` no puede dar hallazgos de esa etapa. En el bloque de formularios, los planes de la base a la E25 se escriben todos antes de programar: lo que deja una etapa anterior va a la tarea K0 del contrato, que lo confirma al arrancar ([`/plan-etapa`](../../.agents/skills/plan-etapa/SKILL.md)).
 
 El plan ejecutable de cada etapa trae tres secciones, una por parte:
 - «Contrato», con la tabla de rutas;
 - «Back» y «Front», con sus tareas;
 - «Integración y puerta».
 
-Además trae un texto listo para pegar en cada chat de Codex, y la sección «Cambios al contrato», vacía al empezar. Tiene unas 4.000 palabras como mucho y no lleva historial: el estado es una tabla de tareas.
+Además trae el texto con que la Guía abre cada chat, y la sección «Cambios al contrato», vacía al empezar. Tiene unas 4.000 palabras como mucho y no lleva historial: el estado es una tabla de tareas.
