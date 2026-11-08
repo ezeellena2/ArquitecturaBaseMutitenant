@@ -69,7 +69,7 @@ Aprobados y publicados en el lienzo v151, con el armado de ArquitecturaBase (131
 
 **Redibujados con el traspaso 10, aprobados y publicados en el lienzo v168:** `FRM-Editor-Baja` y `M-FRM-Editor-Baja`, con la baja en una frase, la etiqueta de la publicación al reactivar (175) y «Agregar título» al lado de «Agregar pregunta» (88).
 
-**Se corrige en el lienzo** `M-FRM-Formularios-17`, porque choca con dos decisiones, que mandan: su estado «Reactivar» abre la hoja sobre la lista, y va en el formulario, como en `M-FRM-Editor-Baja` (131); y su hoja «Filtros», con cantidades y «Ver 4 formularios», pasa a «Filtros» a pantalla completa, sin cantidades y sin botón para aplicar (144 y 164).
+**Corregido en el lienzo v169:** en `M-FRM-Formularios-17`, «Reactivar» se abre sobre el formulario, como en `M-FRM-Editor-Baja` (131), y la hoja «Filtros» va a pantalla completa y sin cantidades (144 y 164).
 
 **El formulario dado de baja:** la banda dice «De baja · versión 2», y su ⓘ dice la baja en una frase, «Lo dio de baja Ana Gómez el 09/10/2026 10:12.», y qué pasa en WhatsApp (175). «Sin confirmar en WhatsApp» y «No se pudo deprecar en WhatsApp» van al lado, en la banda. Sin cartel en el cuerpo (avisos, 25/10).
 

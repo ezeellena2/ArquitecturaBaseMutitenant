@@ -47,7 +47,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 
 | Marca | Qué hay que confirmar | Qué asume esta spec |
 | --- | --- | --- |
-| [Meta] | Antes de programar: que una plantilla acepte un documento en el encabezado, cómo se da de alta y que una variable no admite saltos de línea (197). | Sale con una carga previa de ejemplo. |
+| [Meta] | Antes de planificar: que una plantilla acepte un documento en el encabezado, cómo se da de alta y que una variable no admite saltos de línea (197). | Sale con una carga previa de ejemplo. |
 | [E14] | La captura. | Las ejecuciones entran en su commit. |
 | [E15] | La función de filtros y `FormRecords`. | Filtrar las vigentes en un solo lugar alcanza. |
 | [E19] | El bloque en las condiciones y en `FormRecordRowValues`. | Las condiciones con valor buscan un mismo ítem y la presencia mira la respuesta entera, igual en memoria y en SQL, con la regla de «Filtros». |

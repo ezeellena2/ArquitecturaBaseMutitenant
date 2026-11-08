@@ -85,12 +85,7 @@ Aprobados y publicados en el lienzo v150, con su recorrido guiado. Muestran solo
 | `WA-Chats-Formulario-16` y `M-WA-Chats-Formulario-16` | el formulario que no se puede mandar, con el motivo |
 | `FRM-Respuestas-16` y `M-FRM-Respuestas-16` | «Columnas», con las subcolumnas de los filtros apagadas; el teléfono no tiene columnas |
 
-**Se corrigen en el lienzo,** porque chocan con una decisión, una ficha del front o esta spec:
-- `FRM-Datos-Personas` y `M-FRM-Datos-Personas`: la (i) de «Clave» copia la de un campo, «La usan la plantilla, la importación y lo guardado.», y un dato no tiene plantilla ni importación; queda «No cambia después de guardar.». En el teléfono, las filas dicen «Zona: Centro · Sucursal: Casa central», un «Rótulo: valor» corrido (138);
-- `FRM-Catalogo-16`: la (i) de «Papel» dice «Dato: se guarda con la opción y viaja con la respuesta.», y los dos papeles se sellan al responder;
-- `M-FRM-Respuestas-16`: sale «Columnas» del menú, porque el teléfono no tiene columnas (`responsive.md` del front), y «Florencia Fernández de l…» se ve entero (174);
-- `FRM-Publicar-16`: el editor de atrás no tiene «Proveedores a consultar», la pregunta de los avisos, y en «Para los dos: un cliente» dice «Para quién es: Empleados»;
-- `WA-Chats-Formulario-16`: «A un cliente» se ve en Internos, con Tomás Acosta, que es empleado.
+**Corregidos en el lienzo v169,** porque chocaban con una decisión, una ficha del front o esta spec: la (i) de «Clave» de `FRM-Datos-Personas` y su teléfono, con las filas sin rótulos (138); la (i) de «Papel» de `FRM-Catalogo-16`; `M-FRM-Respuestas-16`, sin «Columnas» y con el nombre entero (174); el editor de atrás de `FRM-Publicar-16`, y «A un cliente» de `WA-Chats-Formulario-16`, en Clientes.
 
 **«Datos de las personas»:** dos secciones, como en ArquitecturaBase. «Datos», con su (i) y «+ Agregar dato» en el encabezado: Dato, Clave, Tipo, Lo usan y ✎, con «De baja» debajo del nombre. Con el tope de 20, «Agregar dato» queda grisado, con el motivo en su tooltip. «Personas», con el resumen «6 personas · 2 sin Zona» y «Buscar personas»: Persona, una columna por dato activo, «—» si no tiene y ✎ con `users.manage`. Sin `users.read`, una línea lo dice.
 

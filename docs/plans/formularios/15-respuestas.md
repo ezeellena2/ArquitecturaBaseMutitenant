@@ -104,9 +104,7 @@ Aprobados en el lienzo v150. Con el traspaso 5, los filtros (143 y 144) y el det
 | `FRM-Respuesta-Completa` | la pantalla completa, con sus dos secciones abiertas | Redibujado y aprobado en la v168: sin plegar, también en `M-FRM-Respuesta` (163 y 164); la actividad en columnas fijas se aprobó en la v160 (139) |
 | `M-FRM-Formularios-15` | la lista en el teléfono, con «N respuestas · estado» | Aprobado |
 
-**Se corrigen en el lienzo,** porque chocan con una decisión; manda la decisión:
-- `M-FRM-Formularios-15`: su hoja «Filtros», con cantidades y «Ver 4 formularios», pasa a «Filtros» a pantalla completa, sin cantidades y sin botón para aplicar (144 y 164);
-- `M-FRM-Respuestas`: «Florencia Fernández de l…» se ve entero (174), y «Exportar a Excel» deja la frase «Se exportan las 24 respuestas…» por los datos del diálogo de la compu, sin «Columnas a exportar» (109).
+**Corregidos en el lienzo v169,** porque chocaban con una decisión: la hoja «Filtros» de `M-FRM-Formularios-15` va a pantalla completa y sin cantidades (144 y 164), y `M-FRM-Respuestas` muestra el nombre entero (174) y exporta sin leyenda (109).
 
 **Estados que se dibujan:**
 - un cliente con la marca «Cliente», y «Persona sin información»;

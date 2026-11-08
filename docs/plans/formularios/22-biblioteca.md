@@ -76,11 +76,7 @@ Con el traspaso 5 se redibujaron `FRM-Editor-Reglas-Plantilla`, `M-FRM-Reglas-Pl
 | `FRM-Editor-Reglas-Plantilla` y `M-FRM-Reglas-Plantilla` | el formulario nuevo, en borrador, y en su pestaña «Reglas» las reglas precargadas, sin guardar: «Elegí…» en el rol, la persona, la dirección y la plantilla de WhatsApp, con «Rol sugerido» debajo. «Historial» queda apagado, con «Todavía no se guardaron: vienen de la plantilla.» en su tooltip (140) | elegir el rol, guardar sin elegir (se marca lo que falta, 43), una pregunta borrada (marcada en la condición, y en el mensaje como «Pregunta no disponible», 149), guardando y reglas guardadas |
 | `Cuenta-Plat` (ajuste) | los permisos del operador suman «Administrar la biblioteca de formularios» | — |
 
-**Se corrigen,** porque contradicen una decisión:
-- `FRM-Plantilla` y `M-FRM-Plantilla` leen las reglas de ejemplo en palabras, con llaves («Recibimos {número}…»): van en pasos, con los datos como etiquetas, como en `FRM-Editor-Reglas-Plantilla` (138 y 149);
-- `Plat-FRM-Plantilla` pone «Agregar pregunta» antes de «Agregar bloque»: van como en el editor de la 19, que es el mismo (B7);
-- `M-FRM-Formularios-22`: «Filtros» cierra con «Limpiar todo» y «Listo», sin «Ver 4 formularios» (144);
-- `Cuenta-Plat` y `M-Cuenta-Plat`, de la base de la 12, ya muestran «Administrar la biblioteca de formularios», que nace en esta etapa (78): la fila sale de ellos y se dibuja en un tablero de esta etapa.
+**Corregidos en el lienzo v169,** porque contradecían una decisión: las reglas de ejemplo de `FRM-Plantilla` y su teléfono, en pasos y con los datos como etiquetas (138 y 149); el orden de «Agregar bloque» y «Agregar pregunta» en `Plat-FRM-Plantilla`; los filtros sin cantidades de `M-FRM-Formularios-22` (144), y `Cuenta-Plat` y su teléfono, sin «Administrar la biblioteca de formularios» (78). Esa fila la suma esta etapa en la cuenta del operador, sin tablero propio.
 
 Sin «Textos en», sin el inglés obligatorio, sin «Cambios sin guardar» ni «Cambios sin publicar», sin el número de versión en la lista ni en la banda, y sin textos junto a los botones (35 y 43). La lectura de documentos no va en esta etapa.
 
