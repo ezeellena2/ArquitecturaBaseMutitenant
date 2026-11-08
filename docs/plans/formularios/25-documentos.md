@@ -80,7 +80,7 @@ No se leen `.doc`, `.xls`, los archivos con macros ni los que tienen contraseña
 
 ## Pantallas
 
-Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](25-texto-diseno.md), con el recorrido guiado. Muestran lo que existe hasta acá. Las del catálogo propuesto vienen de la E23, que las retiró (167).
+Aprobados y publicados en el lienzo v168, con sus tres recorridos guiados: el comprobante que se reconoce y queda en la planilla, el que no se reconoce y termina en «Armar formulario con la IA», y el catálogo «Proveedores de obra», pedido con un Excel («Proveedores» ya existe desde la 12). Muestran lo que existe hasta acá. Las del catálogo propuesto vienen de la E23, que las retiró (167).
 
 **Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
 
@@ -119,7 +119,7 @@ Ninguno está dibujado. Diseño los dibuja con el [texto de la etapa](25-texto-d
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
-- **«Pasar al formulario»** (99): queda a nombre de quien mandó el documento, por el canal `whatsapp`, con `SourceKey` `document:<id>`, igual que «Cargar solo si es seguro», y la respuesta dice quién la revisó. Pide el permiso de atender esa bandeja. Pasa por la misma captura, que le revisa a un empleado la membresía y `formrecords.create`.
+- **«Pasar al formulario»** (99): queda a nombre de quien mandó el documento, por el canal `whatsapp`, con `SourceKey` `document:<id>`, igual que «Cargar solo si es seguro», y la respuesta dice quién la revisó. Pide confirmar, porque dispara las reglas del formulario (161), y el permiso de atender esa bandeja. Pasa por la misma captura, que le revisa a un empleado la membresía y `formrecords.create`.
 - **Retención** (41): un documento usado sigue a su respuesta (23). Uno descartado o sin clasificar se borra a los 90 días, con su lectura.
 - **Costos** (41): el proveedor de la plataforma, dentro del tope mensual, con un tope por persona y por día.
 - **Permisos:** ver la bandeja pide `formrecords.read`; revisar, además, atender la bandeja de donde llegó, y armar desde un documento, además, `forms.manage`. Con el asistente, arma formularios quien tiene `forms.manage`, y catálogos y su aprobación, quien tiene `formcatalogs.manage`.

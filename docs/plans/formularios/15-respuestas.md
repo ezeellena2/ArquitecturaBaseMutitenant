@@ -102,8 +102,8 @@ Aprobados en el lienzo v150. Con el traspaso 5, los filtros (143 y 144) y el det
 | `FRM-Respuesta` | la vista rápida | Aprobado en la v160: el detalle alineado (139) |
 | `FRM-Respuestas-Exportar` | el diálogo de exportar | Aprobado |
 | `FRM-Tablero` | el tablero | Aprobado |
-| `M-FRM-Respuestas`, `M-FRM-Respuesta`, `M-FRM-Tablero` | los tres, en el teléfono. Tocar una fila abre `M-FRM-Respuesta`: no hay vista rápida | `M-FRM-Respuestas` y `M-FRM-Respuesta`, aprobados en la v160 (139 y 144), y `M-FRM-Respuesta` se redibuja sin «Las dos plegadas» (163); `M-FRM-Tablero`, aprobado |
-| `FRM-Respuesta-Completa` | la pantalla completa, con sus dos secciones abiertas | Se redibuja: sin plegar, también en `M-FRM-Respuesta` (163 y 164); la actividad en columnas fijas se aprobó en la v160 (139) |
+| `M-FRM-Respuestas`, `M-FRM-Respuesta`, `M-FRM-Tablero` | los tres, en el teléfono. Tocar una fila abre `M-FRM-Respuesta`: no hay vista rápida | `M-FRM-Respuestas` y `M-FRM-Respuesta`, aprobados en la v160 (139 y 144), y `M-FRM-Respuesta`, redibujado sin «Las dos plegadas» y aprobado en la v168 (163); `M-FRM-Tablero`, aprobado |
+| `FRM-Respuesta-Completa` | la pantalla completa, con sus dos secciones abiertas | Redibujado y aprobado en la v168: sin plegar, también en `M-FRM-Respuesta` (163 y 164); la actividad en columnas fijas se aprobó en la v160 (139) |
 | `M-FRM-Formularios-15` | la lista en el teléfono, con «N respuestas · estado» | Aprobado |
 
 **Lo que se corrigió en lo dibujado:**

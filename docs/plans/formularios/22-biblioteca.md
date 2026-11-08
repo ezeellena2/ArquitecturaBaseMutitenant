@@ -53,7 +53,7 @@ Valen los criterios de la E14 y la decisión 43. Datos de ejemplo:
   - «Orden de trabajo» (Mantenimiento): retirada;
   - «Comprobante de transferencia» (Ventas, para clientes): publicada.
 
-Con el traspaso 5 se redibujan `FRM-Editor-Reglas-Plantilla`, `M-FRM-Reglas-Plantilla` y `Plat-FRM-Plantilla-Reglas`: las reglas se leen en pasos (138), el historial va detrás de su botón (140) y el mensaje se arma con «Agregar dato» (149). Con el traspaso 10 se redibujan `Plat-FRM-Plantilla` y `Plat-FRM-Publicar`: la pestaña «Publicación» pierde el renglón «Estado», que repite la banda (175), y las preguntas de la plantilla suman «Agregar bloque», como en el editor de la 19 (177).
+Con el traspaso 5 se redibujaron `FRM-Editor-Reglas-Plantilla`, `M-FRM-Reglas-Plantilla` y `Plat-FRM-Plantilla-Reglas`: las reglas se leen en pasos (138), el historial va detrás de su botón (140) y el mensaje se arma con «Agregar dato» (149). Con el traspaso 10 se redibujaron `Plat-FRM-Plantilla` y `Plat-FRM-Publicar`: la pestaña «Publicación» pierde el renglón «Estado», que repite la banda (175), y las preguntas de la plantilla suman «Agregar bloque», como en el editor de la 19 (177). Todos están aprobados y publicados en el lienzo v168.
 
 **Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
 

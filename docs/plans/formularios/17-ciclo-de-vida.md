@@ -67,7 +67,7 @@ Aprobados y publicados en el lienzo v151, con el armado de ArquitecturaBase (131
 | `FRM-Reactivar-Eliminar` | reactivar y borrar, sobre el formulario. El nombre del tablero queda |
 | `FRM-Copiar` | el diálogo, con el nombre y el prefijo propuesto |
 
-**Se redibujan** `FRM-Editor-Baja` y `M-FRM-Editor-Baja`, con la baja en una frase, la etiqueta de la publicación al reactivar (175) y «Agregar título» al lado de «Agregar pregunta» (88).
+**Redibujados con el traspaso 10, aprobados y publicados en el lienzo v168:** `FRM-Editor-Baja` y `M-FRM-Editor-Baja`, con la baja en una frase, la etiqueta de la publicación al reactivar (175) y «Agregar título» al lado de «Agregar pregunta» (88).
 
 **El formulario dado de baja:** la banda dice «De baja · versión 2», y su ⓘ dice la baja en una frase, «Lo dio de baja Ana Gómez el 09/10/2026 10:12.», y qué pasa en WhatsApp (175). «Sin confirmar en WhatsApp» y «No se pudo deprecar en WhatsApp» van al lado, en la banda. Sin cartel en el cuerpo (avisos, 25/10).
 

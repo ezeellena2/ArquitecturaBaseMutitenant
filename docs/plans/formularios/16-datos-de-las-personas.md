@@ -68,7 +68,7 @@ Antes de empezar, en este orden:
 
 Aprobados y publicados en el lienzo v150, con su recorrido guiado. Muestran solo lo que existe hasta acá (78). Con el traspaso 5, redibujados, aprobados y publicados en el lienzo v162: `FRM-Editor-16` y su teléfono, con las dos zonas plegadas en «Zonas plegadas» (145) y lo de la persona probada en dos columnas (138), y `FRM-Respuestas-16`, con «Filtros» (144); su teléfono lo tiene desde la v160.
 
-**Se redibujan:**
+**Redibujados con el traspaso 10, aprobados y publicados en el lienzo v168:**
 - `FRM-Publicar-16`, con el aviso de opciones por persona solo cuando no entra o da cero (157): «Como mucho 240 opciones por persona (Centro), de un límite de 200.» o «Con estos filtros nadie ve ninguna opción.». Si entra, no dice nada, así que sale «Como mucho 18 opciones por persona, de un límite de 200.»;
 - `FRM-Editor-16` y `M-FRM-Editor-16`, con «Agregar título» al lado de «Agregar pregunta» (88) y un solo «Agregar filtro ▾» (134);
 - `FRM-Usuario-Datos` y `M-FRM-Usuario-Datos`, con «Agregar empresa» en lugar de «Sumar empresa», como las demás altas.

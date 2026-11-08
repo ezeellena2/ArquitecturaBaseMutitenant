@@ -80,28 +80,28 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v155, con el armado del front real de ArquitecturaBase (126 y 135) y los recorridos guiados `armar-las-reglas` y `aprobar-o-rechazar`. El ejemplo es «Visita a cliente», versión 4, que pide aprobación al rol Supervisor, con tres por aprobar; las reglas con el bloque usan «Pedido de materiales». Muestran solo lo que existe hasta acá (78). Con los traspasos 5, 9 y 10 se redibujan casi todos, y se suman tres.
+Aprobados y publicados en el lienzo v155, con el armado del front real de ArquitecturaBase (126 y 135) y los recorridos guiados `armar-las-reglas` y `aprobar-o-rechazar`. El ejemplo es «Visita a cliente», versión 4, que pide aprobación al rol Supervisor, con tres por aprobar; las reglas con el bloque usan «Pedido de materiales». Muestran solo lo que existe hasta acá (78). Con los traspasos 5, 9 y 10 se redibujaron casi todos y se sumaron tres, aprobados y publicados en el lienzo v168.
 
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
-| `FRM-Formularios-21` y su teléfono | la lista de la 20, con «Cargar», «Por aprobar» y «Quien solo aprueba» | Se redibuja: «Mis cargas» y «Mi última carga» (153) |
-| `FRM-Editor-Reglas`, `M-FRM-Reglas` | las reglas, como una pestaña más, con su historial, las siete acciones, «Adjuntar el PDF» (113) y la plantilla para fuera de las 24 horas | Se redibujan: en pasos, con el historial detrás de su botón y «Agregar dato» (138, 140 y 149) |
-| `FRM-Editor-Reglas-Bloque` y `M-FRM-Reglas-Bloque` | las reglas de «Pedido de materiales»: «Algún ítem de Productos con…», el bloque en «Agregar dato» y en «Así llega» | Por dibujar (177) |
+| `FRM-Formularios-21` y su teléfono | la lista de la 20, con «Cargar», «Por aprobar» y «Quien solo aprueba» | Aprobados en la v168: «Mis cargas» y «Mi última carga» (153) |
+| `FRM-Editor-Reglas`, `M-FRM-Reglas` | las reglas, como una pestaña más, con su historial, las siete acciones, «Adjuntar el PDF» (113) y la plantilla para fuera de las 24 horas | Aprobados en la v168: en pasos, con el historial detrás de su botón y «Agregar dato» (138, 140 y 149) |
+| `FRM-Editor-Reglas-Bloque` y `M-FRM-Reglas-Bloque` | las reglas de «Pedido de materiales»: «Algún ítem de Productos con…», el bloque en «Agregar dato» y en «Así llega» | Aprobados, nuevos en la v168 (177) |
 | `FRM-Pdf` | el diseño, con tres estilos: Clásico, Moderno y Compacto (59), el color, el encabezado de la página pública (82), secciones y firmas | Aprobado |
-| `FRM-Respuesta-Aprobacion` y su teléfono | la decisión, con «¿Aprobar VIS-000003?» (114 y 161), la actividad y el PDF | Se redibujan: la actividad en columnas fijas, «Reintentar» por persona y la decisión de solo lectura (139 y 158), y «Corregir» en la fila del título (166) |
-| `FRM-Respuestas-21` y su teléfono | sobre `FRM-Respuestas-20`: «Estado», su filtro con «Anulada», la marca del PDF, la cola desde la campana y «Quien solo aprueba» (100) | Se redibujan: la vista «Por aprobar» y «Filtros» (144 y 148) |
+| `FRM-Respuesta-Aprobacion` y su teléfono | la decisión, con «¿Aprobar VIS-000003?» (114 y 161), la actividad y el PDF | Aprobados en la v168: la actividad en columnas fijas, «Reintentar» por persona y la decisión de solo lectura (139 y 158), y «Corregir» en la fila del título (166) |
+| `FRM-Respuestas-21` y su teléfono | sobre `FRM-Respuestas-20`: «Estado», su filtro con «Anulada», la marca del PDF, la cola desde la campana y «Quien solo aprueba» (100) | Aprobados en la v168: la vista «Por aprobar» y «Filtros» (144 y 148) |
 | `FRM-Tablero-21` y su teléfono | la tarjeta «Por estado» | Aprobados |
-| `FRM-Respuesta-Corregir` y su teléfono | el panel y la página de corregir, lo de antes, «Corregida», la versión anterior y «Ver la actual» | Se redibujan: «Corregir» en la fila del título, el motivo al final, «Guardar corrección» y «Ya cargado · 86 KB» (166) |
-| `FRM-Respuesta-Anular` y su teléfono | el ⋮ con «Anular», «¿Anular VIS-000127?», el filtro «Anulada» y el Excel con las anuladas | Se redibujan: el ⋮ solo con «Anular», en rojo, y «Filtros» (144 y 166) |
-| `FRM-Respuestas-Propias-21` y su teléfono | lo propio, con estado y PDF, y corregir lo suyo mientras se pueda | Se redibujan: el motivo del rechazo en los momentos, sin columna, y «Filtros» (144 y 166) |
-| `Cuenta-21` y su teléfono | «Mi cuenta» con la zona «Chat de WhatsApp», con «Llegan hasta el …» y «Solo con plantilla» | Por dibujar (159 y 170) |
-| `FRM-Editor-21` y `FRM-Cargar-Respuesta-21`, con sus teléfonos | la pregunta «Correo» | Se redibujan: el editor con el bloque, sin el «Grupo de líneas» (177), y la carga en dos anchos (141) |
+| `FRM-Respuesta-Corregir` y su teléfono | el panel y la página de corregir, lo de antes, «Corregida», la versión anterior y «Ver la actual» | Aprobados en la v168: «Corregir» en la fila del título, el motivo al final, «Guardar corrección» y «Ya cargado · 86 KB» (166) |
+| `FRM-Respuesta-Anular` y su teléfono | el ⋮ con «Anular», «¿Anular VIS-000127?», el filtro «Anulada» y el Excel con las anuladas | Aprobados en la v168: el ⋮ solo con «Anular», en rojo, y «Filtros» (144 y 166) |
+| `FRM-Respuestas-Propias-21` y su teléfono | lo propio, con estado y PDF, y corregir lo suyo mientras se pueda | Aprobados en la v168: el motivo del rechazo en los momentos, sin columna, y «Filtros» (144 y 166) |
+| `Cuenta-21` y su teléfono | «Mi cuenta» con la zona «Chat de WhatsApp», con «Llegan hasta el …» y «Solo con plantilla» | Aprobados, nuevos en la v168 (159 y 170) |
+| `FRM-Editor-21` y `FRM-Cargar-Respuesta-21`, con sus teléfonos | la pregunta «Correo» | Aprobados en la v168: el editor con el bloque, sin el «Grupo de líneas» (177), y la carga en dos anchos (141) |
 | `Campana-21` y su teléfono | «3 respuestas por aprobar» y «No se pudo mandar el aviso de …» | Aprobados |
-| `WA-Chats-Avisos` y su teléfono | los avisos, con «Sin plantilla aprobada» (61) | Se redibujan: un aviso con el bloque, un ítem por línea (177) |
-| `WA-Chats-Respuesta-21` y `M-WA-Conversacion-Respuesta-21` | la tarjeta de una respuesta que después se corrigió o se anuló, con su marca al pie | Por dibujar (166) |
-| `FRM-Dar-De-Baja-21` y `FRM-Editor-Baja-21` | «Lo que se conserva» suma el PDF y las aprobaciones, y lo que espera se sigue decidiendo | `FRM-Dar-De-Baja-21`, aprobado; `FRM-Editor-Baja-21` se redibuja con la E17: «Agregar título» (88) y la baja en una frase (175) |
+| `WA-Chats-Avisos` y su teléfono | los avisos, con «Sin plantilla aprobada» (61) | Aprobados en la v168: un aviso con el bloque, un ítem por línea (177) |
+| `WA-Chats-Respuesta-21` y `M-WA-Conversacion-Respuesta-21` | la tarjeta de una respuesta que después se corrigió o se anuló, con su marca al pie | Aprobados, nuevos en la v168 (166) |
+| `FRM-Dar-De-Baja-21` y `FRM-Editor-Baja-21` | «Lo que se conserva» suma el PDF y las aprobaciones, y lo que espera se sigue decidiendo | `FRM-Dar-De-Baja-21`, aprobado; `FRM-Editor-Baja-21`, aprobado en la v168 con lo de la E17: «Agregar título» (88) y la baja en una frase (175) |
 
-`FRM-Por-Aprobar` y `M-FRM-Por-Aprobar` están en el Archivo. Los tres por dibujar, con sus teléfonos, van en el [texto para Diseño](21-texto-diseno.md).
+`FRM-Por-Aprobar` y `M-FRM-Por-Aprobar` están en el Archivo.
 
 **Mandan sobre esta spec en:** «Ver todos» de «Para resolver» abre la lista con «Con algo por aprobar». «Reglas de la revisión N» se queda en Actividad, porque es un historial. El diseño guarda aparte de las reglas, y su vista previa no guarda nada. Las reglas y el diseño valen sin publicar: lo dice la (i) de su título, sin leyendas (109 y 116). Donde un tablero dice «Ver la vigente», vale «Ver la actual».
 

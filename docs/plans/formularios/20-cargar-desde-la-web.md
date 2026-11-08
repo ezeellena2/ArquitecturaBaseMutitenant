@@ -97,21 +97,21 @@ Los textos del bloque que suma esta etapa, con su inglés:
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v154, con el armado del front real de ArquitecturaBase (126 y 134) y el recorrido guiado `cargar-una-respuesta`. El ejemplo es «Pedido de materiales», versión 4, que suma «Zona», «Proveedor» con su lista dependiente, «Foto del remito» y el bloque «Productos», y por eso queda solo para la app. Con los traspasos 5, 7 y 10 se redibujan todos menos `FRM-Cargar-Archivos`, y se suma el chat.
+Aprobados y publicados en el lienzo v154, con el armado del front real de ArquitecturaBase (126 y 134) y el recorrido guiado `cargar-una-respuesta`. El ejemplo es «Pedido de materiales», versión 4, que suma «Zona», «Proveedor» con su lista dependiente, «Foto del remito» y el bloque «Productos», y por eso queda solo para la app. Con los traspasos 5, 7 y 10 se redibujaron todos menos `FRM-Cargar-Archivos` y se sumó el chat, aprobados y publicados en el lienzo v168.
 
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
-| `FRM-Formularios-20` y su teléfono | «Cargar», «Solo en la app» y lo que ve quien solo carga | Se redibuja: «Mis cargas» y «Mi última carga» (153) |
-| `FRM-Cargar-Respuesta` y su teléfono | la página, con zonas, grilla, títulos, lo condicional, el bloque, «Mantener», errores y salir | Se redibuja: los dos anchos, las casillas en columnas y «Mantener» (141 y 147); el bloque, con «Agregar ítem» y sin contador, en tabla y, en el teléfono, en recuadros con «Ítem 2» (177 y 183), y la zona plegada con «3 de 5 respondidas» (166) |
-| `FRM-Cargar-Panel` | el panel junto a la planilla | Se redibuja: con zonas (141), los recuadros del bloque y la zona plegada (166 y 177) |
-| `FRM-Cargar-Lista` y su teléfono | la lista, una sola opción, sin el dato, elegir varias y la que espera otra respuesta | Se redibuja: «Elegí primero «Zona»» (166) |
+| `FRM-Formularios-20` y su teléfono | «Cargar», «Solo en la app» y lo que ve quien solo carga | Aprobados en la v168: «Mis cargas» y «Mi última carga» (153) |
+| `FRM-Cargar-Respuesta` y su teléfono | la página, con zonas, grilla, títulos, lo condicional, el bloque, «Mantener», errores y salir | Aprobados en la v168: los dos anchos, las casillas en columnas y «Mantener» (141 y 147); el bloque, con «Agregar ítem» y sin contador, en tabla y, en el teléfono, en recuadros con «Ítem 2» (177 y 183), y la zona plegada con «3 de 5 respondidas» (166) |
+| `FRM-Cargar-Panel` | el panel junto a la planilla | Aprobado en la v168: con zonas (141), los recuadros del bloque y la zona plegada (166 y 177) |
+| `FRM-Cargar-Lista` y su teléfono | la lista, una sola opción, sin el dato, elegir varias y la que espera otra respuesta | Aprobados en la v168: «Elegí primero «Zona»» (166) |
 | `FRM-Cargar-Archivos` y su teléfono | agregar, los límites, la barra de avance, el corte y la cámara | Aprobado |
-| `FRM-Cargar-Enviada` y su teléfono | «Enviada», versión nueva, dado de baja, opción dada de baja y sin conexión | Se redibuja: «Volver a Formularios» y el bloque en una línea (166 y 177) |
-| `FRM-Respuestas-20` y `FRM-Respuesta-20`, con sus teléfonos | «App», su filtro y el origen en el detalle | Se redibujan: «Filtros» y los chips (144) y el detalle alineado (139) |
-| `FRM-Respuestas-Propias` y su teléfono | la misma planilla con lo suyo | Se redibuja: «Filtros» y los chips (144) |
-| `FRM-Editor-Listas` y su teléfono | «Según otra respuesta» | Se redibuja: el bloque, sin el «Grupo de líneas» (177) |
-| `FRM-Publicar-20` y su teléfono | solo para la app, en los cuatro casos, y uno solo para clientes que no se publica | Se redibuja: el bloque y el mínimo de más de 10 (177 y 178) |
-| `WA-Chats-Formulario-20` y `M-WA-Chats-Formulario-20` | en «Enviar formulario», los formularios solo para la app, apagados con su motivo | Por dibujar (166 y 184), con su [texto para Diseño](20-texto-diseno.md) |
+| `FRM-Cargar-Enviada` y su teléfono | «Enviada», versión nueva, dado de baja, opción dada de baja y sin conexión | Aprobados en la v168: «Volver a Formularios» y el bloque en una línea (166 y 177) |
+| `FRM-Respuestas-20` y `FRM-Respuesta-20`, con sus teléfonos | «App», su filtro y el origen en el detalle | Aprobados en la v168: «Filtros» y los chips (144) y el detalle alineado (139) |
+| `FRM-Respuestas-Propias` y su teléfono | la misma planilla con lo suyo | Aprobados en la v168: «Filtros» y los chips (144) |
+| `FRM-Editor-Listas` y su teléfono | «Según otra respuesta» | Aprobados en la v168: el bloque, sin el «Grupo de líneas» (177) |
+| `FRM-Publicar-20` y su teléfono | solo para la app, en los cuatro casos, y uno solo para clientes que no se publica | Aprobados en la v168: el bloque y el mínimo de más de 10 (177 y 178) |
+| `WA-Chats-Formulario-20` y `M-WA-Chats-Formulario-20` | en «Enviar formulario», los formularios solo para la app, apagados con su motivo | Aprobados, nuevos en la v168 (166 y 184) |
 
 **La página** sigue a la de allá: la banda con Cancelar y Enviar, y una zona por título, con la grilla de hasta tres por renglón. Lo que allá dice «Enviando… 64 %» acá es «Enviando…» con su aro y una barra sin palabras (95 y 115). Sin el dato de la persona, un cartel lo nombra, porque bloquea, y Enviar queda grisado con el motivo.
 

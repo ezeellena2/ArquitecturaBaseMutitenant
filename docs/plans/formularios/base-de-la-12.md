@@ -91,17 +91,19 @@ Las medidas concretas las fija `tema.md` del front, que deja la sesión de las p
 
 ## Pantallas
 
-Los tableros del 25 y el 26/10 están en el lienzo v145 y al día, salvo lo que diga cada fila; la campana y «Otro acceso» ya están aprobados. **Los del traspaso 10 se redibujan antes de programar,** con el pase de las piezas compartidas del lienzo, y se aprueban en el lienzo.
+Los tableros del 25 y el 26/10 están en el lienzo v145; la campana y «Otro acceso» ya estaban aprobados. **Los del traspaso 10 están redibujados y aprobados en el lienzo v168,** con el pase de las piezas compartidas: lo que se programa sale de esa versión.
 
 | Tablero | Qué muestra |
 | --- | --- |
-| `Campana`, `M-Campana`, `Campana-Plat`, `M-Campana-Plat` y `M-Campana-Personal` | la campana de cada acceso, con los avisos de esta etapa, y la pantalla «Avisos» del teléfono. Cada etapa posterior dibuja su versión. El número es el de lo que lista esa campana. Se redibujan sin cantidades en sus filtros (164) |
+| `Campana`, `M-Campana`, `Campana-Plat`, `M-Campana-Plat` y `M-Campana-Personal` | la campana de cada acceso, con los avisos de esta etapa, y la pantalla «Avisos» del teléfono. Cada etapa posterior dibuja su versión. El número es el de lo que lista esa campana. Redibujados en la v168 sin cantidades en sus filtros (164) |
 | `Otro-Acceso` y `Otro-Acceso-Persona`, con sus teléfonos | ofrecer entrar con el otro acceso |
-| `Usuarios`, `Roles`, `Cuentas`, `Organizaciones`, `Empresas`, `Empresa`, `Recuperaciones` y `Usuario`, con sus teléfonos, y `M-Usuario-Empresa` | se redibujan: los filtros sin cantidades, el estado una vez, «Agregar empresa», la forma y la escala |
-| `Plat-WA-Bot`, `Plat-WA-Bot-Recorrido` y `M-Plat-WA-Bot` | se redibujan: el bot sin enlace, con «Entrar a mi cuenta» (179) |
-| `WA-Telefonos` y `M-WA-Telefonos` | se redibujan: «Cargar teléfonos» con la casilla del consentimiento (179) |
-| `Enlace` y `M-Enlace` | se retiran: la página del enlace de un solo uso (179) |
-| `Criterio-Botones`, `Criterio-Formularios`, `Criterio-Tablas`, `Criterio-Dialogos`, `Criterio-Avisos`, `Criterio-Marco`, `Criterio-Menus` y `Criterio-Decisiones` | el botón que trabaja, la (i), la tabla que vuelve a leer, la confirmación que espera y cuándo va la ⓘ, en el lienzo v148, con las reglas del traspaso 5 en la v159. Se redibujan con las del traspaso 10: la forma, la escala, la primera carga, decidir a propósito, el estado una vez y el texto entero |
+| `Usuarios`, `Roles`, `Cuentas`, `Organizaciones`, `Empresas`, `Empresa`, `Recuperaciones` y `Usuario`, con sus teléfonos, y `M-Usuario-Empresa` | redibujados en la v168: los filtros sin cantidades, el estado una vez, «Agregar empresa», la forma y la escala |
+| `Cuenta-Plat` y `Organizacion`, con sus teléfonos | redibujados en la v168: el estado una vez, con cuándo y por qué en la ⓘ de su etiqueta (175) |
+| `Plat-WA-Bot`, `Plat-WA-Bot-Recorrido` y `M-Plat-WA-Bot` | redibujados en la v168: el bot sin enlace, con «Entrar a mi cuenta» (179) |
+| `Mensajes`, `Mapa-Ingreso` e `Indice-entra` | redibujados en la v168: el bot contesta con «Entrar a mi cuenta», que abre el ingreso, y ninguno nombra el enlace de un solo uso (179) |
+| `WA-Telefonos` y `M-WA-Telefonos` | redibujados en la v168: «Cargar teléfonos» con la casilla del consentimiento (179) |
+| `Enlace` y `M-Enlace` | en el Archivo desde la v168: la página del enlace de un solo uso (179) |
+| `Criterio-Botones`, `Criterio-Formularios`, `Criterio-Tablas`, `Criterio-Dialogos`, `Criterio-Avisos`, `Criterio-Marco`, `Criterio-Menus` y `Criterio-Decisiones` | el botón que trabaja, la (i), la tabla que vuelve a leer, la confirmación que espera y cuándo va la ⓘ, en el lienzo v148, con las reglas del traspaso 5 en la v159. Redibujados en la v168 con las del traspaso 10: la forma, la escala, la primera carga, decidir a propósito, el estado una vez y el texto entero |
 
 **La galería de esta etapa** son las pantallas que cambian, una vez al final, a 1440, 390 y 320.
 

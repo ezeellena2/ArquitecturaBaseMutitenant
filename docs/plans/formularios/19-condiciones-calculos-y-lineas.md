@@ -78,8 +78,8 @@ Antes de empezar, en este orden:
 
 Aprobados y publicados en el lienzo v153, con el recorrido guiado `un-pedido-con-renglones`. El ejemplo es «Pedido de materiales», con el bloque «Productos». Muestran solo lo que existe hasta acá (78).
 - **Siguen aprobados** `FRM-Tablero-19` y su teléfono.
-- **Se redibujan,** con sus teléfonos:
-  - `FRM-Editor-Condiciones` y `FRM-Editor-Calculo`, que todavía dibujan el «Grupo de líneas» (146 y 177);
+- **Redibujados con el traspaso 10, aprobados y publicados en el lienzo v168,** con sus teléfonos:
+  - `FRM-Editor-Condiciones` y `FRM-Editor-Calculo`, sin el «Grupo de líneas» (146 y 177);
   - `FRM-Editor-Lineas`, con «Agregar bloque», los textos con «ítem» (177) y un catálogo del bloque con sus filtros (168);
   - `FRM-Respuestas-19`, `FRM-Respuesta-19` y `WA-Chats-Respuesta-19`, con los ítems, «Filtros» (144) y el detalle alineado (139);
   - `FRM-Publicar-19`, sin teléfono, con «Pasan al bloque» y el mínimo que frena (178).
