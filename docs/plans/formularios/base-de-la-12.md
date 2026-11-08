@@ -8,7 +8,7 @@
 
 Antes de empezar, en este orden:
 
-1. **Decisiones** de la hoja de ruta: la 43 (botones y avisos), la 109, la 110, la 115, la 116 y la 122 (leyendas, ayuda, motivos y esperas), y del traspaso 10, la 137, la 143 y la 144 (tablas y filtros), la 160 (lo que carga), la 161 (decidir a propósito), la 164 (lo nuevo vale para lo que ya existe), la 173 (que no parezca plantilla), la 174 (el texto largo, entero), la 175 (el estado, una vez), la 179 (el ingreso y el consentimiento por WhatsApp) y la 180 (la escala). Los pedidos del usuario del 25 y el 26/10 están en el [plan de desarrollo](../2026-09-27-plan-de-desarrollo.md#etapas-12-a-25-formularios-por-whatsapp).
+1. **Decisiones** de la hoja de ruta: la 43 (botones y avisos), la 109, la 110, la 115, la 116 y la 122 (leyendas, ayuda, motivos y esperas), y del traspaso 10, la 137, la 143 y la 144 (tablas y filtros), la 160 (lo que carga), la 161 (decidir a propósito), la 164 (lo nuevo vale para lo que ya existe), la 173 (que no parezca plantilla), la 174 (el texto largo, entero), la 175 (el estado, una vez), la 179 (el ingreso y el consentimiento por WhatsApp), la 180 (la escala), la 187 (el teléfono no se achica), la 188 (la vista previa de Chats, con «…»), la 189 (el ingreso, liso) y la 190 (la ficha de un usuario, sin «Estado»). Los pedidos del usuario del 25 y el 26/10 están en el [plan de desarrollo](../2026-09-27-plan-de-desarrollo.md#etapas-12-a-25-formularios-por-whatsapp).
 2. **Fichas:** [textos-y-traducciones](../../rules/textos-y-traducciones.md), [api-http](../../rules/api-http.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [permisos](../../rules/permisos.md), [datos-personales](../../rules/datos-personales.md), [tests](../../rules/tests.md) y, del front, `pantallas-y-ui.md`, `formatos.md`, `formularios.md`, `paginado-y-listados.md`, `textos-y-traducciones.md` y `tema.md`.
 3. **Código para copiar:** la columna «Copia de» de los [pasos](base-de-la-12-parte-pasos.md).
 4. **El lienzo:** `Campana`, `M-Campana`, `Campana-Plat`, `M-Campana-Plat`, `M-Campana-Personal`, `Otro-Acceso` y `Otro-Acceso-Persona`, los ocho `Criterio-*` y los tableros de cada pantalla que cambia (abajo, «Pantallas»).
@@ -28,7 +28,7 @@ Antes de empezar, en este orden:
 - **sin leyendas:** el renglón de abajo es solo para el error o para un dato. La ayuda que sirve va en una (i) con tooltip, y lo que no ayuda a decidir se saca. En el teléfono, tocar la (i) abre una hoja chica con el texto. Lo que no se puede hacer sigue en el aviso importante, con su ⓘ;
 - **decidir a propósito** (161): una acción que no se deshace y dispara avisos pide confirmar nombrando lo que se decide («¿Aprobar Grupo Delta?»), con la principal y el foco en «Cancelar»; el rojo lleno queda para lo que destruye. En el núcleo son aprobar o rechazar una organización o un pedido de recuperación, bloquear una página pública, dar de baja una cuenta desde Plataforma, y dar de baja o quitar a un usuario.
 
-**El estado, una vez** (175): lo que dice la etiqueta del encabezado no se repite debajo. En Usuario y en la Cuenta y la Organización de Plataforma sale el cartel que repite el estado («Pidió la baja de su cuenta…», «Suspendida el …»): la etiqueta lo dice una vez, cuándo y por qué van en una frase en su ⓘ («El 03/11/2026. Motivo: falta de pago.»), y en el teléfono se va el renglón «Estado» que lo repetía.
+**El estado, una vez** (175): lo que dice la etiqueta del encabezado no se repite debajo. En Usuario y en la Cuenta y la Organización de Plataforma sale el cartel que repite el estado («Pidió la baja de su cuenta…», «Suspendida el …»): la etiqueta lo dice una vez, cuándo y por qué van en una frase en su ⓘ («El 03/11/2026. Motivo: falta de pago.»), y en el teléfono se va el renglón «Estado» que lo repetía. En la ficha de un usuario sale también el campo gris «Estado», que no se podía editar (190).
 
 **La campana,** en el núcleo:
 - lo que llegó, lo que falló en segundo plano y lo que espera a alguien, según los permisos de quien mira. Cada aviso lleva a donde se resuelve;
@@ -39,7 +39,7 @@ Antes de empezar, en este orden:
 
 **Las tablas:**
 - **un dato por celda:** `DataTable` deja de dibujar `detail` en la computadora, y cada pantalla pasa a columnas lo que hace falta, o lo saca. En el teléfono sigue el nombre y una línea;
-- **el texto largo se ve entero** (174): la celda baja de renglón en lugar de cortar con «…» y su `title`. Un código con guiones («30-71458236-9») no se parte, y una zona horaria se corta solo en sus barras;
+- **el texto largo se ve entero** (174): la celda baja de renglón en lugar de cortar con «…» y su `title`. Un código con guiones («30-71458236-9») no se parte, y una zona horaria se corta solo en sus barras. La excepción es la vista previa del último mensaje en la lista de Chats, que va en un renglón y se corta con «…», como en WhatsApp (188);
 - la columna ordenada muestra ▲ o ▼;
 - **una línea fina entre columnas,** también en una columna fija al desplazar, los números a la derecha y la tabla que cierra abajo (137);
 - **los filtros** (143, 144 y 164): el buscador y hasta tres filtros en una fila, sin botón para aplicar, y lo demás en un solo «Filtros», nunca «Más filtros», que se despliega como «Columnas» y aplica cada cambio, con lo aplicado en chips y «Limpiar todo». Un filtro de opciones es un desplegable simple, sin cantidades y con la elegida tildada; un segmentado conserva su número. Hoy muestran la cantidad Usuarios, Roles, Cuentas, Organizaciones, Empresas, los miembros de una empresa y Recuperaciones, en la compu y en el teléfono. Los filtros de Chats, en una fila;
@@ -53,7 +53,7 @@ Antes de empezar, en este orden:
 - **`FilterBar`:** los filtros, las etiquetas y los contadores, con el radio de un control, sin pastillas;
 - **el botón principal** es sólido, sin degradé ni sombra.
 
-Las sombras quedan solo en menús, desplegables y tooltips: salen todas las demás, como las de las tarjetas, las superficies, los diálogos, los segmentados y los botones.
+Las sombras quedan solo en menús, desplegables y tooltips: salen todas las demás, como las de las tarjetas, las superficies, los diálogos, los segmentados y los botones. El panel verde del ingreso queda liso, sin el degradé ni la cuadrícula (189).
 
 **La escala** (180), sobre los tokens de tamaño y junto con la forma:
 - la letra, un 18 % más chica, sin bajar de 10,5 px en pantalla; el cuerpo queda en unos 11 px;
@@ -61,7 +61,7 @@ Las sombras quedan solo en menús, desplegables y tooltips: salen todas las dem�
 - los rellenos y las separaciones, un 28 % más chicos;
 - las esquinas, de 3 px como mucho, también en las pastillas y los avatares, y sin sombras.
 
-Las medidas concretas las fija `tema.md` del front, que deja la sesión de las piezas del lienzo, y se comparan con los tableros publicados. La raíz sigue al 75 % en la compu, con las medidas en rem (2026-11-02): lo que se ve en pantalla tiene que dar lo que muestra el tablero. En el teléfono, lo que se toca sigue midiendo 44 × 44.
+Las medidas concretas las fija `tema.md` del front, que deja la sesión de las piezas del lienzo, y se comparan con los tableros publicados. La raíz sigue al 75 % en la compu, con las medidas en rem (2026-11-02): lo que se ve en pantalla tiene que dar lo que muestra el tablero. En el teléfono, lo que se toca sigue midiendo 44 × 44 (187).
 
 **Las fechas,** siempre con fecha y hora completas, en la zona de la cuenta: salen `relative`, `formatCalendar` y las fechas cortas, también en Usuarios y en la tarjeta de Auditoría de Inicio.
 

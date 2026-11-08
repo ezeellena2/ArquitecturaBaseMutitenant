@@ -1,6 +1,6 @@
 # Traspaso 10: evaluación de ArquitecturaBase entero
 
-**Estado:** insumo · del 2026-11-07, con el plan de §4 aprobado ese día y las nueve decisiones de §5 tomadas, todas las recomendadas: son la 160 a la 179 de la hoja de ruta, y las dos de forma de trabajo pasaron a `AGENTS.md`. Se retira cuando las specs estén al día y los tableros de §4.3, aprobados en el lienzo. El trabajo se reparte en chats en paralelo, a pedido del usuario.
+**Estado:** insumo · del 2026-11-07, con el plan de §4 aprobado ese día y las decisiones de §5 tomadas, todas las recomendadas: son la 160 a la 190 de la hoja de ruta, y las dos de forma de trabajo pasaron a `AGENTS.md`. Las cinco tandas de §4.3 quedaron aprobadas el 2026-11-08. Se retira cuando el lienzo se publique con todas y las specs digan esa versión. El trabajo se reparte en chats en paralelo, a pedido del usuario.
 
 Suma lo que encontró la revisión paralela de la sesión «Guia - Desarrollo», del mismo día, verificado acá antes de anotarlo.
 
@@ -292,6 +292,13 @@ Te las pregunto de a una, después de tu visto bueno al plan, con la captura o e
 10. **La escala** (pedido del usuario después de las nueve: la de acá le parecía grande y redondeada). Vio la misma planilla en tres escalas: la de hoy, una intermedia y una como ArquitecturaBase.
 
     **Elegida: como ArquitecturaBase**, el 2026-11-07 (180).
+11. **Lo que preguntaron las tandas al redibujar:**
+    - si el teléfono también se achica;
+    - si la vista previa de la lista de chats se corta con «…»;
+    - si el panel verde del ingreso pierde el degradé y la cuadrícula;
+    - si sale de la ficha de un usuario el campo gris «Estado».
+
+    **Elegidas: las cuatro recomendadas**, el 2026-11-08. No se achica (187), se corta (188), queda liso (189) y sale (190).
 
 ## 6. En curso allá
 

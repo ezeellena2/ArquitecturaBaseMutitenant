@@ -709,6 +709,10 @@ Elegidas por el usuario el 2026-11-07, al evaluar el traspaso 10 contra este mod
 184. **En «Enviar formulario», todo formulario que se carga solo desde la app aparece apagado, con su motivo** (E20): el que tiene una lista dependiente dice ««Proveedor» depende de otra respuesta: se carga desde la app.», y el que pide más ítems de los que admite WhatsApp, el mismo motivo que dio al publicar (110 y 178).
 185. **La columna del bloque se ve entera en la planilla** (E19), bajando de renglón como todo texto largo (174): «12 · Caño de 1/2 pulgada, Codo de 90°, …» con todos los nombres. El detalle muestra cada ítem.
 186. **«Salió» y «No salió» piden confirmar** (E14; la 161 en la 175): «¿La versión 4 salió en WhatsApp?», con la principal y el foco en «Cancelar», porque ninguno de los dos se deshace. Un «Salió» por error deja mandar una versión que en Meta no existe, y un «No salió» por error obliga a publicar otra.
+187. **En el teléfono no se achica** (la 180, en el lienzo y en la app): la escala de la 180 es para la compu; debajo de 768 px, todo lo que se toca sigue midiendo 44 × 44, porque el dedo lo necesita.
+188. **En la lista de chats, la vista previa del último mensaje se corta con «…»** (excepción a la 174): va en un renglón, como en WhatsApp, para que las filas tengan la misma altura, y el mensaje entero se ve al abrir el chat.
+189. **El panel verde del ingreso queda liso** (la 173): sin degradé ni cuadrícula, porque era lo que más parecía plantilla de lo que quedaba. La paleta Pradera no cambia.
+190. **La ficha de un usuario no repite su estado** (la 175): sale el campo gris «Estado», que no se podía editar, porque la banda ya lo dice («● Invitación pendiente»).
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
@@ -750,6 +754,6 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 Ninguna.
 
-Las del traspaso 10, del 2026-11-07, pasaron a la §5 como decisiones 160 a 179 (su [evaluación](2026-11-07-traspaso-10-evaluacion.md)); las dos de forma de trabajo, a `AGENTS.md`.
+Las del traspaso 10, del 2026-11-07, pasaron a la §5 como decisiones 160 a 179 (su [evaluación](2026-11-07-traspaso-10-evaluacion.md)), y lo que se decidió después, al escribir las specs y al dibujar, como 180 a 190; las dos de forma de trabajo, a `AGENTS.md`.
 
 Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98, las del traspaso 4, del 2026-11-02, como decisiones 109 a 122, las del traspaso 5, del 2026-11-03, como decisiones 136 a 149, las del traspaso 6, del 2026-11-06, como decisiones 150 a 152, en la [hoja de ruta de ARCA](2026-11-06-arca-hoja-de-ruta.md), la del traspaso 7, del mismo día, como decisión 153, las del traspaso 8, también del 2026-11-06, como decisiones 154 a 156, y las del traspaso 9, del mismo día, como decisiones 157 a 159.
