@@ -677,7 +677,7 @@ Elegidas por el usuario el 2026-11-06, al evaluar el [traspaso 9](../../../Arqui
 158. **Reintentar un aviso por persona** (RT1-A, E21): «Reintentar» va en el renglón de la persona, en la actividad, solo con la falla confirmada, y le manda el aviso solo a ella. No se repite a quienes lo recibieron.
 159. **El chat de WhatsApp en «Mi cuenta»** (PF1-A, E21): debajo de los medios de ingreso, una zona con cada organización de la persona, que dice si su chat está vinculado, con «Vincular», y hasta cuándo le llegan los avisos. «Verificado» sigue siendo entrar con el número.
 
-Programadas o elegidas por el usuario en ArquitecturaBase hasta el 2026-11-07, y adoptadas con el traspaso 10 ([su evaluación](2026-11-07-traspaso-10-evaluacion.md)) porque no chocan con este modelo (126):
+Programadas o elegidas por el usuario en ArquitecturaBase hasta el 2026-11-07, y adoptadas con el traspaso 10 (su evaluación, retirada el 2026-11-08) porque no chocan con este modelo (126):
 
 160. **Lo que carga no salta, en todo el sistema** (ES1-A, ES2 y ES3): un listado que carga por primera vez dibuja su encabezado y el aro en el alto de ocho filas, sin filas esqueleto; una página que espera su ruta o sus permisos muestra su banda con el título como bloque de carga y tres barras, y un ajuste, sus zonas. Cambia «la primera carga conserva su aro» de las fichas del front y el «Cargando» de `Criterio-Tablas`.
 161. **Decidir a propósito, en todo el sistema:** una acción que no se deshace y dispara avisos, como aprobar, pide confirmar con el número («¿Aprobar VIS-000003?»), con la principal y el foco en «Cancelar». Generaliza la 114; el rojo lleno queda para lo que destruye.
@@ -750,10 +750,17 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 - permisos en el catálogo del núcleo, tres clases de datos con RLS, `[Access]`, `[FeatureGate]`, `[Idempotent]`, `OperationLog.RunAsync` e `IVersioned`;
 - la lista cerrada de sufijos de helpers: `Compiler` y `Codec` no están. Se renombran a uno de la lista (por ejemplo, `WhatsAppFlowBuilder`), o se suma el sufijo a la ficha con su test.
 
+**En curso allá al 2026-11-07,** sin traspasar (traspaso 10). No se arma nada con esto hasta que llegue su traspaso, y lo que allá no se probó a mano no se toma como probado acá: EP1-A, los esqueletos, importar y exportar opciones, las listas dependientes y el menú sin saltos.
+- **Renglones, etapas 2 a 4:** cuando allá cierre la 3, la spec 19 suma el Excel con la columna «Ítem» y una hoja con el nombre del bloque, de hasta 31 caracteres; «En algún ítem de…», con todas las condiciones en el mismo ítem; y el PDF con el bloque entero.
+- **Elegir primero por un campo** (LD1-A a LD3-A): LD3-A choca con la E20, que no admite una lista dependiente dentro del bloque.
+- **La IA arma, etapas 2 y 3:** las planillas con «Importar opciones», los documentos y qué hace WhatsApp ante un pedido ambiguo.
+- **Carpetas** (CP1-A a CP5-A): acá van después del bloque, con dos listados y no tres (79).
+- **Lo que falta decidir allá:** el rendimiento para producción, la homologación de ARCA, Azure, el teclado de Roles y «Desvincular» sin el módulo de WhatsApp.
+
 ## 7. Decisiones pendientes
 
 Ninguna.
 
-Las del traspaso 10, del 2026-11-07, pasaron a la §5 como decisiones 160 a 179 (su [evaluación](2026-11-07-traspaso-10-evaluacion.md)), y lo que se decidió después, al escribir las specs y al dibujar, como 180 a 190; las dos de forma de trabajo, a `AGENTS.md`.
+Las del traspaso 10, del 2026-11-07, pasaron a la §5 como decisiones 160 a 179 (su evaluación, retirada el 2026-11-08: `git show 4626f5ba:docs/plans/2026-11-07-traspaso-10-evaluacion.md`), y lo que se decidió después, al escribir las specs y al dibujar, como 180 a 190; las dos de forma de trabajo, a `AGENTS.md`.
 
 Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98, las del traspaso 4, del 2026-11-02, como decisiones 109 a 122, las del traspaso 5, del 2026-11-03, como decisiones 136 a 149, las del traspaso 6, del 2026-11-06, como decisiones 150 a 152, en la [hoja de ruta de ARCA](2026-11-06-arca-hoja-de-ruta.md), la del traspaso 7, del mismo día, como decisión 153, las del traspaso 8, también del 2026-11-06, como decisiones 154 a 156, y las del traspaso 9, del mismo día, como decisiones 157 a 159.
