@@ -12,6 +12,7 @@ using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -85,15 +86,21 @@ public sealed class AccountDeletionParticipantsTests(ApiFactory factory)
             account.Email.Value, newEmail, account.UserId, nowUtc);
         var otherRecovery = AccountRecoveryRequest.Submit(Guid.CreateVersion7(), LoginMethodType.Email,
             "otra@example.test", newEmail, Guid.CreateVersion7(), nowUtc);
-        await work.ExecuteInTransactionAsync(ct =>
+        // Lo que abrió en la campana (base de la 12), y lo mismo abierto por otra cuenta.
+        var otherUserId = Guid.Empty;
+        await work.ExecuteInTransactionAsync(async ct =>
         {
             context.OutboxMessages.AddRange(ownedMessage, otherMessage);
             context.AccountRecoveryRequests.AddRange(ownedRecovery, otherRecovery);
-            return Task.FromResult(Result.Success());
+            otherUserId = (await services.GetRequiredService<IUserRepository>().CreateAsync(null, "es-AR", "UTC", ct)).Id;
+            context.NotificationReads.AddRange(NotificationRead.Mark(account.UserId, "probe:baja", nowUtc),
+                NotificationRead.Mark(otherUserId, "probe:baja", nowUtc));
+            return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
         var participants = services.GetServices<IAccountDeletionParticipant>().ToArray();
         string[] core = ["MembershipDeletionParticipant", "PersonalSpaceDeletionParticipant", "LegalAcceptanceDeletionParticipant",
-            "OutboxDeletionParticipant", "RecoveryDeletionParticipant", "EngagementDeletionParticipant"];
+            "OutboxDeletionParticipant", "RecoveryDeletionParticipant", "NotificationReadDeletionParticipant",
+            "EngagementDeletionParticipant"];
         var expected = new List<string>(core);
         var application = typeof(TenantSpaceProvisioner).Assembly;
         foreach (var module in new[] { "WhatsApp", "Assistant" })
@@ -169,11 +176,16 @@ public sealed class AccountDeletionParticipantsTests(ApiFactory factory)
                 }
             }
         }
-        await work.ExecuteInTransactionAsync(async ct =>
-        {
-            foreach (var participant in participants) await participant.ExecuteAsync(global, ct);
-            return Result.Success();
-        }, CommitPolicy.OnSuccess, Ct);
+        // El tramo global también se repite sin fallar ni ampliar el alcance.
+        for (var repeat = 0; repeat < 2; repeat++)
+            await work.ExecuteInTransactionAsync(async ct =>
+            {
+                foreach (var participant in participants) await participant.ExecuteAsync(global, ct);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        // Lo que abrió en la campana se borra con la cuenta; lo de otra cuenta queda.
+        Assert.False(await context.NotificationReads.AnyAsync(row => row.UserId == account.UserId, Ct));
+        Assert.True(await context.NotificationReads.AnyAsync(row => row.UserId == otherUserId, Ct));
         // Los pedidos de «Recuperar mi cuenta» de la cuenta se cierran y sus datos personales se borran.
         Assert.False(await context.AccountRecoveryRequests.AnyAsync(row => row.Id == ownedRecovery.Id, Ct));
         Assert.True(await context.AccountRecoveryRequests.AnyAsync(row => row.Id == otherRecovery.Id, Ct));
