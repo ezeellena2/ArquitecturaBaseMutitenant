@@ -114,6 +114,9 @@ public sealed class ConnectController(IConnectService service, IConnectLogoutSer
         {
             parameters = parameters.Where(parameter => parameter.Key != Parameters.Prompt).ToList();
         }
+        // «Otro acceso» (base de la 12): el destino del link sigue al ingreso solo si es del acceso elegido; uno ajeno no se usa.
+        parameters = parameters.Where(parameter => parameter.Key != ReturnUrls.AccessReturnParameter
+            || parameter.Value.Count == 1 && ReturnUrls.IsAccessReturn(parameter.Value.ToString(), access)).ToList();
         var loginPath = access == Access.Business ? ReturnUrls.BusinessLoginPath : ReturnUrls.LoginPath;
         return Redirect(loginPath + QueryString.Create("returnUrl",
             ReturnUrls.AuthorizePath + QueryString.Create(parameters)));

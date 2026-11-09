@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Models.Auth;
@@ -22,10 +23,39 @@ public static class ReturnUrls
     public const string CallbackPath = "/auth/callback";
     public const string SilentRenewPath = "/silent-renew.html";
 
+    /// <summary>El parámetro de «Otro acceso» en el cambio de acceso (base de la 12).</summary>
+    public const string AccessReturnParameter = "returnTo";
+
     public static bool IsLocalAppPath([NotNullWhen(true)] string? path) =>
         !string.IsNullOrEmpty(path) && path[0] == '/'
         && !path.StartsWith("//", StringComparison.Ordinal)
         && !path.Contains('\\') && !path.Any(char.IsControl);
+
+    /// <summary>
+    /// El destino de «Otro acceso» (base de la 12): la ruta del front del link que se abrió, dentro del acceso elegido. No
+    /// amplía los retornos autorizados, porque el callback, el <c>state</c> del SPA y el <c>returnUrl</c> del ingreso no
+    /// cambian. Un destino ajeno (otro origen, el área de otro acceso o un paso del ingreso) no se usa, y el cambio termina
+    /// en el inicio de ese acceso, como siempre.
+    /// </summary>
+    public static bool IsAccessReturn([NotNullWhen(true)] string? returnTo, Access access)
+    {
+        if (!IsLocalAppPath(returnTo) || returnTo.Length > TextLimits.WebAddress) return false;
+        var path = returnTo.Split('?', '#')[0];
+        return access switch
+        {
+            Access.Business => IsUnder(path, BusinessHomePath),
+            Access.Platform => IsUnder(path, PlatformPath),
+            _ => !IsUnder(path, BusinessHomePath) && !IsUnder(path, PlatformPath)
+                && !AccessFlowPaths.Any(flow => IsUnder(path, flow)),
+        };
+    }
+
+    /// <summary>Los pasos del ingreso y del protocolo: nunca son el destino de un link.</summary>
+    private static readonly string[] AccessFlowPaths =
+        [LoginPath, SignupPath, InvitationPath, CallbackPath, SilentRenewPath, "/connect", "/api"];
+
+    private static bool IsUnder(string path, string root) =>
+        path == root || path.StartsWith(root + "/", StringComparison.Ordinal);
 
     /// <summary>Sólo OTP: los retornos fijos exigen el acceso literal correspondiente; los anteriores no lo reciben.</summary>
     public static bool TryReadLoginCodeSelection(string? returnUrl, string? access,

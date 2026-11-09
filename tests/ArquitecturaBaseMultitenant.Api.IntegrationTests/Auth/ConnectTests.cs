@@ -261,6 +261,36 @@ public sealed class ConnectTests(ApiFactory factory)
     private static Task<string> ReadPickupCodeAsync(IServiceProvider provider, string email) =>
         PickupCodeReader.ReadAsync(provider, email, Ct);
 
+    /// <summary>«Otro acceso» (base de la 12): el destino del link sigue al ingreso solo si es del acceso elegido.</summary>
+    [Theory]
+    [InlineData("business", "/org/usuarios?estado=Inactive", true)]
+    [InlineData("consumer", "/cuenta", true)]
+    [InlineData("business", "/cuenta", false)]
+    [InlineData("consumer", "/org/usuarios", false)]
+    [InlineData("business", "https://evil.example/org", false)]
+    [InlineData("business", "//evil.example/org", false)]
+    public async Task Authorize_without_cookie_carries_only_a_return_of_the_chosen_access(string access, string returnTo,
+        bool carried)
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+        });
+
+        using var response = await client.GetAsync(AuthorizePath(access) + "&returnTo=" + Uri.EscapeDataString(returnTo), Ct);
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        var location = response.Headers.Location!.OriginalString;
+        Assert.StartsWith((access == "business" ? "/login/empresa" : "/login") + "?returnUrl=", location, StringComparison.Ordinal);
+        var resumed = QueryHelpers.ParseQuery(new Uri(new Uri("https://localhost"),
+            QueryHelpers.ParseQuery(new Uri(new Uri("https://localhost"), location).Query)["returnUrl"].ToString()).Query);
+        Assert.Equal(access, resumed["access"].ToString());
+        Assert.Equal(carried, resumed.ContainsKey("returnTo"));
+        if (carried) Assert.Equal(returnTo, resumed["returnTo"].ToString());
+    }
+
     private static string AuthorizePath(string access) =>
         "/connect/authorize?client_id=web&response_type=code" +
         "&redirect_uri=https%3A%2F%2Flocalhost%3A5174%2Fauth%2Fcallback" +
