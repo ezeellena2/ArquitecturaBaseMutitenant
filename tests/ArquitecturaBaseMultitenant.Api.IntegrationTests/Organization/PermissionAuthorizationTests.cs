@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Companies;
+using ArquitecturaBaseMultitenant.Application.Models.Roles;
 using ArquitecturaBaseMultitenant.Application.Services.Roles;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -177,6 +178,8 @@ public sealed class PermissionAuthorizationTests
         public Task<bool> HasCompanyPermissionAsync(Guid userId, Guid companyId, string permission, CancellationToken ct) => Task.FromResult(companyGrant);
         public Task<bool> HasCompanyRequirementAsync(Guid userId, Guid companyId, string permission, string? organizationPermission,
             CancellationToken ct) => Task.FromResult(companyGrant || organizationPermission is not null && organizationGrant);
+        public Task<BusinessPermissions> GetBusinessPermissionsAsync(Guid userId, CancellationToken ct) =>
+            throw new NotSupportedException();
     }
 
     /// <summary>Las proyecciones cacheadas de la persona, contando cada lectura.</summary>

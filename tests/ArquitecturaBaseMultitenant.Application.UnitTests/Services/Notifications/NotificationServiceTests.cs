@@ -1,14 +1,20 @@
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
+using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Companies;
 using ArquitecturaBaseMultitenant.Application.Models.Notifications;
+using ArquitecturaBaseMultitenant.Application.Models.Roles;
 using ArquitecturaBaseMultitenant.Application.Services.Notifications;
+using ArquitecturaBaseMultitenant.Application.Services.Roles;
 using ArquitecturaBaseMultitenant.Application.UnitTests.TestDoubles;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Notifications;
 
@@ -178,6 +184,32 @@ public sealed class NotificationServiceTests
         Assert.Equal(["n:49"], reads.Added.Select(read => read.NotificationId));
     }
 
+    // Revisión de la base de la 12 (punto 11): una lectura de cada proyección por pedido, como la autorización (B10).
+    [Fact]
+    public async Task Business_reads_each_permission_projection_once_per_request()
+    {
+        using var fixture = new ServiceFixture<NotificationService>();
+        var cache = new CountingCache([Permissions.Users.Manage],
+            new Dictionary<Guid, IReadOnlyList<string>> { [CompanyId] = [Permissions.Company.Members.Manage] });
+        var tenant = new FakeTenantContext { TenantId = Guid.NewGuid(), TenantKind = TenantKind.Business };
+        var source = new ProbeSource([Item("a", fixture.TimeProvider.GetUtcNow().UtcDateTime)]);
+        var service = Service(fixture, [source], Access.Business, permissions: new PermissionService(cache, tenant,
+            new UnusedCompanies(), fixture.TimeProvider, NullLogger<PermissionService>.Instance));
+
+        Assert.True((await service.ListAsync(Ct)).IsSuccess);
+        Assert.Equal((1, 1), (cache.OrganizationReads, cache.CompanyReads));
+        Assert.True((await service.MarkReadAsync("a", Ct)).IsSuccess);
+        Assert.Equal((2, 2), (cache.OrganizationReads, cache.CompanyReads));
+
+        // Las dos vistas no cambian: la organización con lo suyo y cada empresa con lo de la organización incluido.
+        Assert.All(source.Contexts, context =>
+        {
+            Assert.Equal([Permissions.Users.Manage], context.Permissions);
+            Assert.Equal([CompanyId], context.CompaniesWhere(Permissions.Company.Members.Manage));
+            Assert.Equal([CompanyId], context.CompaniesWhere(Permissions.Users.Manage));
+        });
+    }
+
     [Fact]
     public async Task Two_marks_at_once_save_one_and_both_answer_success()
     {
@@ -248,10 +280,11 @@ public sealed class NotificationServiceTests
     private static readonly Guid UserId = Guid.NewGuid();
 
     private static NotificationService Service(ServiceFixture<NotificationService> fixture,
-        IEnumerable<INotificationSource> sources, Access access, FakeReads? reads = null, FakeUnitOfWork? unitOfWork = null)
+        IEnumerable<INotificationSource> sources, Access access, FakeReads? reads = null, FakeUnitOfWork? unitOfWork = null,
+        IPermissionService? permissions = null)
     {
         reads ??= new FakeReads();
-        return new NotificationService(sources, reads, reads, new FakePermissions(), new FakePlatformPermissions(),
+        return new NotificationService(sources, reads, reads, permissions ?? new FakePermissions(), new FakePlatformPermissions(),
             new CurrentUser(UserId, access), unitOfWork ?? new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
     }
 
@@ -318,18 +351,57 @@ public sealed class NotificationServiceTests
         public Task<IReadOnlyList<string>> GetAssignedOrganizationPermissionsAsync(Guid userId, CancellationToken ct) =>
             Task.FromResult<IReadOnlyList<string>>([Permissions.Users.Manage]);
         public Task<IReadOnlyList<string>> GetOrganizationPermissionsAsync(Guid userId, CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<string>>([Permissions.Users.Manage]);
+            throw new InvalidOperationException("The bell reads the projections once.");
         public Task<IReadOnlyList<string>> GetCompanyPermissionsAsync(Guid userId, Guid companyId, CancellationToken ct) =>
             Task.FromResult<IReadOnlyList<string>>([]);
         public Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> GetPermissionsByCompanyAsync(Guid userId,
-            CancellationToken ct) => Task.FromResult<IReadOnlyDictionary<Guid, IReadOnlyList<string>>>(
-            new Dictionary<Guid, IReadOnlyList<string>> { [CompanyId] = [Permissions.Company.Members.Manage] });
+            CancellationToken ct) => throw new InvalidOperationException("The bell reads the projections once.");
+        public Task<BusinessPermissions> GetBusinessPermissionsAsync(Guid userId, CancellationToken ct) =>
+            Task.FromResult(new BusinessPermissions([Permissions.Users.Manage],
+                new Dictionary<Guid, IReadOnlyList<string>> { [CompanyId] = [Permissions.Company.Members.Manage] }));
         public Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken ct) =>
             throw new InvalidOperationException("The bell reads the projections once.");
         public Task<bool> HasCompanyPermissionAsync(Guid userId, Guid companyId, string permission, CancellationToken ct) =>
             throw new InvalidOperationException("The bell reads the projections once.");
         public Task<bool> HasCompanyRequirementAsync(Guid userId, Guid companyId, string permission,
             string? organizationPermission, CancellationToken ct) => throw new NotSupportedException();
+    }
+
+    /// <summary>La caché de permisos con lo dado, que cuenta cuántas veces se lee cada proyección.</summary>
+    private sealed class CountingCache(IReadOnlyList<string> organization,
+        IReadOnlyDictionary<Guid, IReadOnlyList<string>> companies) : IRolePermissionCache
+    {
+        public int OrganizationReads { get; private set; }
+        public int CompanyReads { get; private set; }
+
+        public Task<IReadOnlyList<string>> GetOrganizationPermissionsAsync(Guid tenantId, Guid userId,
+            CancellationToken cancellationToken)
+        {
+            OrganizationReads++;
+            return Task.FromResult(organization);
+        }
+
+        public Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> GetCompanyPermissionsAsync(Guid tenantId, Guid userId,
+            CancellationToken cancellationToken)
+        {
+            CompanyReads++;
+            return Task.FromResult(companies);
+        }
+    }
+
+    /// <summary>La campana no pregunta por una empresa suelta: lee las empresas desde la proyección.</summary>
+    private sealed class UnusedCompanies : ICompanyReader
+    {
+        public Task<PagedResult<CompanyRow>> ListAsync(ListCompaniesRequest request, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<CompanyRow?> FindByIdAsync(Guid companyId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<CompanyFilterCountsResponse> GetFilterCountsAsync(ListCompaniesRequest request,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<bool> ExistsTaxIdAsync(string country, string type, string number, Guid? excludedCompanyId,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<bool> IsActiveAsync(Guid companyId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
     }
 
     private sealed class FakePlatformPermissions : IPlatformPermissionService

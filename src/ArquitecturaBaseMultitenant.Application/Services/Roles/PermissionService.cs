@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Roles;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using Microsoft.Extensions.Logging;
@@ -25,12 +26,7 @@ internal sealed class PermissionService(IRolePermissionCache cache, ITenantConte
     public Task<IReadOnlyList<string>> GetOrganizationPermissionsAsync(Guid userId,
         CancellationToken cancellationToken) =>
         OperationLog.RunValueAsync(logger, timeProvider, "GetOrganizationPermissions", async () =>
-        {
-            var granted = new SortedSet<string>(await OrganizationAsync(userId, cancellationToken), StringComparer.Ordinal);
-            foreach (var own in (await ByCompanyAsync(userId, cancellationToken)).Values)
-                granted.UnionWith(own.Intersect(Permissions.OrganizationProjectedFromCompany, StringComparer.Ordinal));
-            return (IReadOnlyList<string>)[.. granted];
-        });
+            WithProjections(await OrganizationAsync(userId, cancellationToken), await ByCompanyAsync(userId, cancellationToken)));
 
     public Task<IReadOnlyList<string>> GetCompanyPermissionsAsync(Guid userId, Guid companyId,
         CancellationToken cancellationToken) =>
@@ -41,16 +37,16 @@ internal sealed class PermissionService(IRolePermissionCache cache, ITenantConte
     public Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> GetPermissionsByCompanyAsync(Guid userId,
         CancellationToken cancellationToken) =>
         OperationLog.RunValueAsync(logger, timeProvider, "GetPermissionsByCompany", async () =>
+            (IReadOnlyDictionary<Guid, IReadOnlyList<string>>)PerCompany(await OrganizationAsync(userId, cancellationToken),
+                await ByCompanyAsync(userId, cancellationToken)));
+
+    // Una lectura por proyección (base de la 12): las dos vistas salen de lo mismo leído.
+    public Task<BusinessPermissions> GetBusinessPermissionsAsync(Guid userId, CancellationToken cancellationToken) =>
+        OperationLog.RunValueAsync(logger, timeProvider, "GetBusinessPermissions", async () =>
         {
             var organization = await OrganizationAsync(userId, cancellationToken);
-            var byCompany = new Dictionary<Guid, IReadOnlyList<string>>();
-            foreach (var (companyId, own) in await ByCompanyAsync(userId, cancellationToken))
-            {
-                var granted = Union(organization, own);
-                if (granted.Count > 0) byCompany[companyId] = granted;
-            }
-
-            return (IReadOnlyDictionary<Guid, IReadOnlyList<string>>)byCompany;
+            var byCompany = await ByCompanyAsync(userId, cancellationToken);
+            return new BusinessPermissions(WithProjections(organization, byCompany), PerCompany(organization, byCompany));
         });
 
     public Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken cancellationToken) =>
@@ -113,6 +109,30 @@ internal sealed class PermissionService(IRolePermissionCache cache, ITenantConte
         if (byCompany.TryGetValue(companyId, out var own)) return Union(organization, own);
         // Sin membresía en esa empresa sólo valen los roles de organización, y sólo si la empresa está activa.
         return organization.Count > 0 && await companies.IsActiveAsync(companyId, cancellationToken) ? organization : [];
+    }
+
+    // Los de la organización más los que se proyectan desde alguna empresa.
+    private static IReadOnlyList<string> WithProjections(IReadOnlyList<string> organization,
+        IReadOnlyDictionary<Guid, IReadOnlyList<string>> byCompany)
+    {
+        var granted = new SortedSet<string>(organization, StringComparer.Ordinal);
+        foreach (var own in byCompany.Values)
+            granted.UnionWith(own.Intersect(Permissions.OrganizationProjectedFromCompany, StringComparer.Ordinal));
+        return [.. granted];
+    }
+
+    // Cada empresa con alguno, con los de la organización incluidos.
+    private static Dictionary<Guid, IReadOnlyList<string>> PerCompany(IReadOnlyList<string> organization,
+        IReadOnlyDictionary<Guid, IReadOnlyList<string>> byCompany)
+    {
+        var granted = new Dictionary<Guid, IReadOnlyList<string>>();
+        foreach (var (companyId, own) in byCompany)
+        {
+            var union = Union(organization, own);
+            if (union.Count > 0) granted[companyId] = union;
+        }
+
+        return granted;
     }
 
     private Guid? ActiveBusinessTenant() =>

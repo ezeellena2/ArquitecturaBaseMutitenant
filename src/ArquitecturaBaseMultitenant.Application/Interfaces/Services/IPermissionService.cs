@@ -1,3 +1,5 @@
+using ArquitecturaBaseMultitenant.Application.Models.Roles;
+
 namespace ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 
 /// <summary>
@@ -20,6 +22,12 @@ public interface IPermissionService
     /// </summary>
     Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> GetPermissionsByCompanyAsync(Guid userId,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Lo de <see cref="GetOrganizationPermissionsAsync"/> y <see cref="GetPermissionsByCompanyAsync"/> juntos, leyendo cada
+    /// proyección cacheada una sola vez (base de la 12, <c>permisos.md</c>), para quien usa las dos en un mismo pedido.
+    /// </summary>
+    Task<BusinessPermissions> GetBusinessPermissionsAsync(Guid userId, CancellationToken cancellationToken);
 
     Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken cancellationToken);
 

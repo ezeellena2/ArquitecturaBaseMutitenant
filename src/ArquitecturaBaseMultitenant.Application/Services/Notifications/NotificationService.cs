@@ -71,13 +71,18 @@ internal sealed partial class NotificationService(IEnumerable<INotificationSourc
         return currentUser.Access switch
         {
             Access.Consumer => new NotificationContext(userId, Access.Consumer, []),
-            Access.Business => new NotificationContext(userId, Access.Business,
-                await permissions.GetOrganizationPermissionsAsync(userId, cancellationToken),
-                await permissions.GetPermissionsByCompanyAsync(userId, cancellationToken)),
+            Access.Business => await BusinessContextAsync(userId, cancellationToken),
             Access.Platform => new NotificationContext(userId, Access.Platform,
                 await platformPermissions.GetPermissionsAsync(userId, cancellationToken)),
             _ => null,
         };
+    }
+
+    // Cada proyección cacheada se lee una vez (base de la 12): de ahí salen la vista de la organización y la de cada empresa.
+    private async Task<NotificationContext> BusinessContextAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var granted = await permissions.GetBusinessPermissionsAsync(userId, cancellationToken);
+        return new NotificationContext(userId, Access.Business, granted.Organization, granted.ByCompany);
     }
 
     /// <summary>Los avisos de todas las fuentes, hasta 50 y del más nuevo al más viejo, todavía sin marcar leídos.</summary>

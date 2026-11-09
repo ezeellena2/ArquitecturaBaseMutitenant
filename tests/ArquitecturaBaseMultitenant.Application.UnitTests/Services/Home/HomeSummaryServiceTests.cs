@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Roles;
 using ArquitecturaBaseMultitenant.Application.Models.Home;
 using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Application.Services.Home;
@@ -162,5 +163,7 @@ public sealed class HomeSummaryServiceTests
         }
         public Task<bool> HasCompanyRequirementAsync(Guid userId, Guid companyId, string permission,
             string? organizationPermission, CancellationToken ct) => throw new NotSupportedException();
+        public Task<BusinessPermissions> GetBusinessPermissionsAsync(Guid userId, CancellationToken ct) =>
+            throw new NotSupportedException();
     }
 }
