@@ -140,6 +140,10 @@ La F5 de la E10 entra completa acá; E10 sigue después del bloque. E12–E25 ag
 
 ## Cambios al contrato
 
+Del front (2026-11-09): el contrato de la API no cambió; los tipos salen de `npm run contracts` sobre K1.
+- `docs/contracts/frontend-routes.json`: sin `/login/enlace` y con `/avisos` y `/plataforma/avisos` (B6, `75fe6a93`). «Otro acceso» (F7) no suma rutas: se muestra en la ruta del link.
+- La campana lee `params.name` en `organizationPending` y `recoveryRequested`; sin él, el aviso va sin nombre. `personalLoginMethod` no lleva `params`.
+- La ficha de una cuenta de Plataforma no trae el motivo de la baja que pidió la plataforma (`deletion` no tiene `reason`): la ⓘ de su estado usa `lastStateChange.reason` si llega y, si no, «—».
 
 ## Para decidir
 
