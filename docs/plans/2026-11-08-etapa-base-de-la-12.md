@@ -1,12 +1,12 @@
 # Base de la 12 · plan ejecutable
 
-**Estado:** pendiente · Spec: `docs/plans/formularios/base-de-la-12.md` y `base-de-la-12-parte-pasos.md`. Tableros aprobados: lienzo v169. No hay decisión de producto pendiente.
+**Estado:** en curso · Spec: `docs/plans/formularios/base-de-la-12.md` y `base-de-la-12-parte-pasos.md`. Tableros aprobados: lienzo v169. No hay decisión de producto pendiente.
 
 | Parte | Tareas | Estado |
 | --- | --- | --- |
-| Contrato | K1 | Pendiente |
-| Back | B1–B10 | Pendiente |
-| Front | F1–F16 | Pendiente |
+| Contrato | K1 | Hecha (`8b23501c`, `534f4308`) |
+| Back | B1–B10 | Hecha (`28652183` a `e1de70c9`, y `75fe6a93`) |
+| Front | F1–F16 | Hechas F1–F4 y F8–F16; faltan F5, F6 y F7 |
 | Integración y puerta | I1–I4 | Pendiente |
 
 ## Forma de trabajo
@@ -89,7 +89,7 @@ Las tareas siguen los tableros v169 y las fichas de UI, formatos, formularios, l
 5. **F5 · Carteles y estado.** En las siete pantallas listadas por la spec, llevar carteles a banda/campana y una sola etiqueta con ⓘ; sacar renglón Estado del teléfono. Copiar tableros; probar cada pantalla.
 6. **F6 · Palabras.** En locales/enums, `UserDetailPage` y `UserCompanyDialog`, aplicar el vocabulario y `Agregar empresa`; probar una guarda de textos.
 7. **F7 · Otro acceso.** En `OtherAccessPage`, rutas y `returnTo`, copiar el tablero y probar ambos accesos/destino ajeno.
-8. **F8 · Forma y escala.** En `index.css`, `BrandMark`, `Avatar`, `Page`, 38 usos de `icon`, `menuRow`, `FilterBar`, `button`, `Surface` y los cinco paneles publicados, aplicar seis piezas, sombras, panel liso y escala. Retirar también el degradé adicional de `PublicPageCard.tsx`. Probar tokens, 44×44 y sombras.
+8. **F8 · Forma y escala.** En `index.css`, `BrandMark`, `Avatar`, `Page`, 38 usos de `icon`, `menuRow`, `FilterBar`, `button`, `Surface` y los cinco paneles publicados, aplicar seis piezas, sombras, panel liso y escala. Retirar también el degradé adicional de `PublicPageCard.tsx`. Probar tokens, 44×44 y sombras. Al programarla, el brillo de fondo de la página pública y de la portada (`--fondo-brillo`) se quedó: lo dibujan los tableros y lo pide `tema.md`. No es un panel verde ni una de las seis piezas, y ninguna decisión lo saca.
 9. **F9 · Miembros de empresa.** En `CompanyDetailPage`, ocultar la pestaña sin permiso; probarla con y sin permiso.
 10. **F10 · Ayuda y motivos.** En `InfoTip`, `FormField`, `Section`, `Page`, `CheckboxField` y controles apagados, mover solo ayuda útil a (i). Inventariar 43 `hint`/`description` en 35 archivos, sin tocar descripciones técnicas. Copiar `InfoButton`, `Sheet` y `RowAction.disabledReason`; probar teclado, teléfono y axe.
 11. **F11 · Lo elegido.** En `SegmentedControl`, `RadioGroupField`, filtros, `DataTable` y chats, aplicar tilde, borde/barra y contraste; copiar Criterio Menús. Probar 3:1, 4,5:1 y 44×44.
