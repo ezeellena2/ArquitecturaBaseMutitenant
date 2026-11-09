@@ -212,6 +212,39 @@ public sealed class NotificationServiceTests
         Assert.Empty(source.Contexts);
     }
 
+    [Fact]
+    public async Task The_cleanup_removes_a_batch_of_reads_older_than_ninety_days_in_one_transaction()
+    {
+        using var fixture = new ServiceFixture<NotificationService>();
+        var reads = new FakeReads();
+        var unitOfWork = new FakeUnitOfWork();
+        var service = new NotificationService([], reads, reads, new FakePermissions(), new FakePlatformPermissions(),
+            new CurrentUser(null, null), unitOfWork, fixture.TimeProvider, fixture.Logger);
+
+        var result = await service.CleanupExpiredReadsAsync(Ct);
+
+        Assert.Equal(7, result.Value);
+        Assert.Equal((fixture.TimeProvider.GetUtcNow().UtcDateTime.AddDays(-90), NotificationService.CleanupBatchSize),
+            Assert.Single(reads.Expirations));
+        Assert.Equal((1, 1), (unitOfWork.Transactions, unitOfWork.Commits));
+    }
+
+    [Fact]
+    public async Task The_account_deletion_removes_its_reads_only_in_the_global_step()
+    {
+        var reads = new FakeReads();
+        var participant = new NotificationReadDeletionParticipant(reads);
+        var userId = Guid.NewGuid();
+        var nowUtc = new DateTime(2026, 11, 8, 12, 0, 0, DateTimeKind.Utc);
+
+        await participant.ExecuteAsync(new(userId, nowUtc, Guid.NewGuid(), TenantKind.Business), Ct);
+        await participant.ExecuteAsync(new(userId, nowUtc, Guid.NewGuid(), TenantKind.Personal), Ct);
+        Assert.Empty(reads.RemovedAccounts);
+
+        await participant.ExecuteAsync(new(userId, nowUtc), Ct);
+        Assert.Equal([userId], reads.RemovedAccounts);
+    }
+
     private static readonly Guid UserId = Guid.NewGuid();
 
     private static NotificationService Service(ServiceFixture<NotificationService> fixture,
@@ -261,6 +294,22 @@ public sealed class NotificationServiceTests
         {
             Added.Add(read);
             _read.Add((read.UserId, read.NotificationId));
+        }
+
+        public List<Guid> RemovedAccounts { get; } = [];
+
+        public List<(DateTime BeforeUtc, int BatchSize)> Expirations { get; } = [];
+
+        public Task RemoveForAccountAsync(Guid userId, CancellationToken cancellationToken)
+        {
+            RemovedAccounts.Add(userId);
+            return Task.CompletedTask;
+        }
+
+        public Task<int> DeleteExpiredAsync(DateTime beforeUtc, int batchSize, CancellationToken cancellationToken)
+        {
+            Expirations.Add((beforeUtc, batchSize));
+            return Task.FromResult(7);
         }
     }
 

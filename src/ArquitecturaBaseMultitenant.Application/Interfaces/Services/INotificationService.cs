@@ -10,4 +10,10 @@ public interface INotificationService
 
     /// <summary>Marca leído un aviso visible de quien mira; un id que no corresponde a uno se ignora, sin error.</summary>
     Task<Result> MarkReadAsync(string id, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Borra una tanda de los avisos abiertos hace más de 90 días. La llama la limpieza en segundo plano y devuelve cuántos
+    /// borró; 0 cuando no queda ninguno.
+    /// </summary>
+    Task<Result<int>> CleanupExpiredReadsAsync(CancellationToken cancellationToken);
 }

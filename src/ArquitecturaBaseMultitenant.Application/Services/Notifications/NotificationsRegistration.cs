@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Legal;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,6 +13,7 @@ internal static class NotificationsRegistration
         services.AddScoped<INotificationSource, PersonalLoginMethodNotificationSource>();
         services.AddScoped<INotificationSource, OrganizationPendingNotificationSource>();
         services.AddScoped<INotificationSource, RecoveryRequestedNotificationSource>();
+        services.AddScoped<IAccountDeletionParticipant, NotificationReadDeletionParticipant>();
         return services;
     }
 }

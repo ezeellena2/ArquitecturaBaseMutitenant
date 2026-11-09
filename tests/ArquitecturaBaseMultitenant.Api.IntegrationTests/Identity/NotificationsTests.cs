@@ -7,9 +7,13 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Notifications;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -131,6 +135,60 @@ public sealed class NotificationsTests(ApiFactory factory)
             .Select(item => item.GetProperty("kind").GetString()).ToArray();
         Assert.DoesNotContain("organizationPending", hidden);
         Assert.DoesNotContain("recoveryRequested", hidden);
+    }
+
+    [Fact]
+    public async Task Reads_expire_after_ninety_days_and_go_with_the_deleted_account()
+    {
+        // Base propia: el worker de la baja procesa todas las cuentas vencidas de su base.
+        await using var isolated = new ApiFactory();
+        await isolated.InitializeAsync();
+        await isolated.Services.SeedDatabaseAsync(Ct);
+        using var leavingClient = Client(isolated);
+        var leaving = await AccountJourney.RegisterAsync(isolated, leavingClient, Ct);
+        using var stayingClient = Client(isolated);
+        var staying = await AccountJourney.RegisterAsync(isolated, stayingClient, Ct);
+        var nowUtc = isolated.Services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        await InTransactionAsync(isolated, (database, _) =>
+        {
+            database.NotificationReads.AddRange(
+                NotificationRead.Mark(leaving.UserId, "probe:old", nowUtc.AddDays(-91)),
+                NotificationRead.Mark(leaving.UserId, "probe:recent", nowUtc.AddDays(-1)),
+                NotificationRead.Mark(staying.UserId, "probe:old", nowUtc.AddDays(-89)));
+            return Task.CompletedTask;
+        });
+
+        await ActivatorUtilities.CreateInstance<NotificationReadCleanupWorker>(isolated.Services).RunOnceAsync(Ct);
+
+        Assert.Equal([(leaving.UserId, "probe:recent"), (staying.UserId, "probe:old")], await ReadsAsync(isolated));
+
+        await InTransactionAsync(isolated, async (database, ct) =>
+        {
+            var user = await database.Users.SingleAsync(row => row.Id == leaving.UserId, ct);
+            Assert.True(user.RequestDeletion("Prueba de baja", nowUtc.AddDays(-31), 30).IsSuccess);
+        });
+        await ActivatorUtilities.CreateInstance<AccountDeletionWorker>(isolated.Services).RunOnceAsync(Ct);
+
+        Assert.Equal([(staying.UserId, "probe:old")], await ReadsAsync(isolated));
+    }
+
+    private static async Task InTransactionAsync(ApiFactory database, Func<ApplicationDbContext, CancellationToken, Task> work)
+    {
+        await using var scope = database.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+        {
+            await work(services.GetRequiredService<ApplicationDbContext>(), ct);
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
+    }
+
+    private static async Task<(Guid, string)[]> ReadsAsync(ApiFactory database)
+    {
+        await using var scope = database.Services.CreateAsyncScope();
+        var rows = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().NotificationReads.AsNoTracking()
+            .Select(read => new { read.UserId, read.NotificationId }).ToListAsync(Ct);
+        return [.. rows.Select(row => (row.UserId, row.NotificationId)).Order()];
     }
 
     private static HttpClient Client(Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> host) =>

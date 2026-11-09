@@ -22,6 +22,8 @@ internal sealed partial class NotificationService(IEnumerable<INotificationSourc
     ICurrentUser currentUser, IUnitOfWork unitOfWork, TimeProvider timeProvider, ILogger<NotificationService> logger)
     : INotificationService
 {
+    internal const int CleanupBatchSize = 1000;
+
     public Task<Result<NotificationListResponse>> ListAsync(CancellationToken cancellationToken) =>
         OperationLog.RunAsync<NotificationListResponse>(logger, timeProvider, "ListNotifications", async () =>
         {
@@ -55,6 +57,12 @@ internal sealed partial class NotificationService(IEnumerable<INotificationSourc
                 return Result.Success();
             }
         });
+
+    public Task<Result<int>> CleanupExpiredReadsAsync(CancellationToken cancellationToken) =>
+        OperationLog.RunAsync(logger, timeProvider, "CleanupNotificationReads", () =>
+            unitOfWork.ExecuteInTransactionAsync(async ct => Result.Success(await readWrites.DeleteExpiredAsync(
+                timeProvider.GetUtcNow().UtcDateTime.AddDays(-NotificationRead.RetentionDays), CleanupBatchSize, ct)),
+                CommitPolicy.OnSuccess, cancellationToken));
 
     /// <summary>Quién mira y los permisos de su acceso, leídos una sola vez: cada fuente decide con ellos.</summary>
     private async Task<NotificationContext?> ContextAsync(CancellationToken cancellationToken)
