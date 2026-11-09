@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | Contrato | K1 | Hecha (`8b23501c`, `534f4308`) |
 | Back | B1–B10 | Hecha (`28652183` a `e1de70c9`, y `75fe6a93`) |
-| Front | F1–F16 | Hechas F1–F4 y F8–F16; faltan F5, F6 y F7 |
+| Front | F1–F16 | Hecha (`8ace5c06` a `ac7de89b`, en el front) |
 | Integración y puerta | I1–I4 | Pendiente |
 
 ## Forma de trabajo
