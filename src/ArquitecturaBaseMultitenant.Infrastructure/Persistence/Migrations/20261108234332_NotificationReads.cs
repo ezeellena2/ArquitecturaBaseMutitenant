@@ -55,6 +55,12 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            // El esquema anterior no tiene dónde guardar lo que abrió cada cuenta: se niega antes que borrarlo, como
+            // AddFormRecordCorrections de ArquitecturaBase. El SQL va en una línea: no lleva \r aunque el archivo tenga CRLF.
+            migrationBuilder.Sql("""
+                LOCK TABLE identity."NotificationReads" IN ACCESS EXCLUSIVE MODE; DO $$ BEGIN IF EXISTS (SELECT 1 FROM identity."NotificationReads") THEN RAISE EXCEPTION 'Read notifications cannot be represented by the previous schema.'; END IF; END $$;
+                """);
+
             migrationBuilder.DropTable(
                 name: "NotificationReads",
                 schema: "identity");

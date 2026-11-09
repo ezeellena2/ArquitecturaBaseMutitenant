@@ -31,6 +31,14 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            // Quién confirmó el consentimiento y cuándo es la prueba de la decisión 179: se niega antes que borrarlo. La
+            // tabla fuerza la RLS también para su dueño, que corre la migración sin organización: sin NO FORCE la guarda no
+            // vería ninguna invitación. Va en la transacción de la migración: si se niega, la RLS sigue forzada. El SQL va en
+            // una línea: no lleva \r aunque el archivo tenga CRLF.
+            migrationBuilder.Sql("""
+                LOCK TABLE tenant."Invitations" IN ACCESS EXCLUSIVE MODE; ALTER TABLE tenant."Invitations" NO FORCE ROW LEVEL SECURITY; DO $$ BEGIN IF EXISTS (SELECT 1 FROM tenant."Invitations" WHERE "ConsentConfirmedByUserId" IS NOT NULL OR "ConsentConfirmedAtUtc" IS NOT NULL) THEN RAISE EXCEPTION 'A confirmed WhatsApp consent cannot be represented by the previous schema.'; END IF; END $$; ALTER TABLE tenant."Invitations" FORCE ROW LEVEL SECURITY;
+                """);
+
             migrationBuilder.DropColumn(
                 name: "ConsentConfirmedAtUtc",
                 schema: "tenant",
