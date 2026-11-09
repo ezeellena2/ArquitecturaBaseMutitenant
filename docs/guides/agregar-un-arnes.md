@@ -1,6 +1,6 @@
 # Agregar un arnés ejecutable
 
-> Receta para sumar una rutina como `realinear-docs`. El CLI, el worktree, los motores, la guardia, el informe y los parches **no se tocan**: un arnés nuevo es una carpeta con su manifiesto, sus detectores y sus instrucciones. Cómo funciona todo: [`scripts/arneses/README.md`](../../scripts/arneses/README.md) y el [ADR 0037](../decisions/0037-arneses-ejecutables.md).
+> Receta para sumar una rutina como `realinear-docs`. El CLI, la copia de `HEAD`, los motores, la guardia, el informe y los parches **no se tocan**: un arnés nuevo es una carpeta con su manifiesto, sus detectores y sus instrucciones. Cómo funciona todo: [`scripts/arneses/README.md`](../../scripts/arneses/README.md) y el [ADR 0037](../decisions/0037-arneses-ejecutables.md).
 
 ## Pasos
 

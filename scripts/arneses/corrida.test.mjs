@@ -29,7 +29,7 @@ async function entorno({ verificacion = ['node -e "process.exit(0)"'] } = {}) {
   temporales.push(madre);
   const back = join(madre, 'repo');
   await cp(join(fixtures, 'back'), back, { recursive: true });
-  // Un repo hermano que no es el par back/front: mencionarlo no es un desvío, tampoco desde el worktree (`../.arneses/`).
+  // Un repo hermano que no es el par back/front: mencionarlo no es un desvío, tampoco desde la copia (`.local/arneses/copias/`).
   await mkdir(join(madre, 'OtroRepo'));
   await appendFile(join(back, 'docs', 'features', 'roles.md'), '- Otro repo: `OtroRepo/src/Foo.cs`.\n');
   await git(back, ['init', '-q', '-b', 'main']);
@@ -67,7 +67,14 @@ async function correr(e, extra = [], bins = { claude: claudeFalso, codex: codexF
 }
 
 const leerInforme = async (e) => JSON.parse(await readFile(join(e.dirInformes, 'realinear-docs', `20261002-2300-${e.repo ?? 'back'}.json`), 'utf8'));
-const enRama = (e, ruta) => git(e.back, ['show', `arnes/realinear-docs/20261002-2300:${ruta}`]);
+/** Lo que quedó commiteado en la copia de la corrida, que queda en `.local/` porque no hay rama. */
+const copia = (repo) => join(repo, '.local', 'arneses', 'copias', 'realinear-docs-20261002-2300');
+const enCopia = (e, ruta) => git(copia(e.back), ['show', `HEAD:${ruta}`]);
+/** Ninguna corrida suma ramas ni worktrees al repo de trabajo. */
+async function sinRamasNiWorktrees(repo) {
+  assert.equal((await git(repo, ['branch', '--list'])).trim(), '* main');
+  assert.equal((await git(repo, ['worktree', 'list'])).trim().split('\n').length, 1);
+}
 
 const escenarioFeliz = {
   ediciones: [{ archivo: 'docs/features/roles.md', reemplazar: ['[una ficha rota](../rules/no-existe.md) que no tiene reemplazo', 'una ficha que ya no existe'] }],
@@ -78,34 +85,37 @@ const escenarioFeliz = {
   ],
 };
 
-test('corrida con Claude: autos, modelo, guardia, verificación y commit en la rama del arnés', async () => {
+test('corrida con Claude: autos, modelo, guardia, verificación y commit en la copia, sin rama', async () => {
   const e = await entorno();
   const { codigo, salida } = await correr(e, [], undefined, escenarioFeliz);
   assert.equal(codigo, 0, salida);
   const info = await leerInforme(e);
   assert.equal(info.estado, 'commiteado');
-  assert.equal(info.rama, 'arnes/realinear-docs/20261002-2300');
+  assert.equal(info.copia, copia(e.back));
+  assert.ok(info.copiaConservada);
+  assert.equal(info.corte, (await git(e.back, ['rev-parse', 'main'])).trim());
   assert.equal(info.motor, 'claude');
   assert.ok(info.autosAplicados >= 7);
   assert.ok(info.enviados >= 3);
   assert.equal(info.consumo.costoUsd, 0.0123);
   assert.equal(info.verificacion[0].codigo, 0);
   assert.ok(!info.hallazgos.some((h) => h.id.endsWith('OtroRepo/src/Foo.cs')), 'un repo hermano no es un desvío');
-  // Los autos y la corrección del modelo quedaron en el commit de la rama; main no se tocó.
-  assert.equal((await enRama(e, 'src/Demo.Domain/CLAUDE.md')).trim(), '@AGENTS.md');
-  assert.match(await enRama(e, 'docs/features/roles.md'), /una ficha que ya no existe/);
-  assert.match(await enRama(e, 'src/Demo.Application/Services/AGENTS.md'), /Servicio y helpers/);
-  assert.equal((await git(e.back, ['branch', '--show-current'])).trim(), 'main');
+  // Los autos y la corrección del modelo quedaron en el commit de la copia; main no se tocó ni ganó ramas.
+  assert.equal((await enCopia(e, 'src/Demo.Domain/CLAUDE.md')).trim(), '@AGENTS.md');
+  assert.match(await enCopia(e, 'docs/features/roles.md'), /una ficha que ya no existe/);
+  assert.match(await enCopia(e, 'src/Demo.Application/Services/AGENTS.md'), /Servicio y helpers/);
+  await sinRamasNiWorktrees(e.back);
   assert.equal((await git(e.back, ['rev-list', '--count', 'main'])).trim(), '1');
-  assert.equal((await git(e.back, ['rev-list', '--count', 'arnes/realinear-docs/20261002-2300'])).trim(), '2');
-  const mensaje = await git(e.back, ['log', '-1', '--format=%B', 'arnes/realinear-docs/20261002-2300']);
+  assert.equal((await git(copia(e.back), ['rev-list', '--count', 'HEAD'])).trim(), '2');
+  assert.equal((await git(copia(e.back), ['rev-parse', 'HEAD'])).trim(), info.commit);
+  const mensaje = await git(copia(e.back), ['log', '-1', '--format=%B', 'HEAD']);
   assert.match(mensaje, /^docs: realinear documentación con el código/);
   // Lo descartado quedó en ignorados.json (lo escribe el script) y lo escalado va a la lista humano.
-  assert.match(await enRama(e, 'scripts/arneses/realinear-docs/ignorados.json').catch(() => ''), /^$|carpeta planeada/);
+  assert.match(await enCopia(e, 'scripts/arneses/realinear-docs/ignorados.json').catch(() => ''), /^$|carpeta planeada/);
   const ignorados = JSON.parse(await readFile(join(e.dirArneses, 'realinear-docs', 'ignorados.json'), 'utf8'));
   assert.deepEqual(ignorados.map((i) => i.id), [ID_FUTURO]);
   assert.ok(info.hallazgos.some((h) => h.id === ID_CATALOGO && h.accion === 'humano' && h.pregunta === '¿roles.view o roles.manage?'));
-  assert.ok(!existsSync(info.worktree ?? join(e.madre, '.arneses', 'repo-realinear-docs-20261002-2300')));
+  assert.match(await readFile(join(e.dirInformes, 'realinear-docs', '20261002-2300-back.md'), 'utf8'), /git merge --ff-only FETCH_HEAD/);
   const registro = (await readFile(e.log, 'utf8')).trim().split('\n').map((l) => JSON.parse(l));
   assert.equal(registro.length, 1);
   assert.ok(registro[0].args.includes('--strict-mcp-config'));
@@ -120,7 +130,7 @@ test('corrida con Codex: mismo informe, instrucciones por stdin y consumo sin co
   assert.equal(info.estado, 'commiteado');
   assert.equal(info.motor, 'codex');
   assert.deepEqual(info.consumo, { tokensEntrada: 150, cacheLectura: 100, tokensSalida: 20, tokensRazonamiento: 5, costoUsd: null });
-  assert.match(await enRama(e, 'docs/features/roles.md'), /una ficha que ya no existe/);
+  assert.match(await enCopia(e, 'docs/features/roles.md'), /una ficha que ya no existe/);
   const registro = JSON.parse((await readFile(e.log, 'utf8')).trim());
   assert.match(registro.stdin, /^# Instrucciones: realinear/);
   assert.ok(registro.args.includes('--ignore-user-config'));
@@ -135,12 +145,13 @@ test('guardia: si el modelo toca código, se revierte, la corrida falla y no se 
   const info = await leerInforme(e);
   assert.match(info.estado, /^falló: la guardia revirtió 1 archivo/);
   assert.deepEqual(info.revertidos.map((r) => r.archivo), ['src/Demo.Domain/Authorization/Permissions.cs']);
-  assert.equal((await git(e.back, ['rev-list', '--count', 'arnes/realinear-docs/20261002-2300'])).trim(), '1');
-  assert.ok(info.worktreeConservado);
-  assert.doesNotMatch(await readFile(join(info.worktree, 'src/Demo.Domain/Authorization/Permissions.cs'), 'utf8'), /tocado/);
+  assert.equal((await git(copia(e.back), ['rev-list', '--count', 'HEAD'])).trim(), '1');
+  await sinRamasNiWorktrees(e.back);
+  assert.ok(info.copiaConservada);
+  assert.doesNotMatch(await readFile(join(info.copia, 'src/Demo.Domain/Authorization/Permissions.cs'), 'utf8'), /tocado/);
 });
 
-test('verificación: si falla un comando no se commitea y el worktree queda para mirar', async () => {
+test('verificación: si falla un comando no se commitea y la copia queda para mirar', async () => {
   const e = await entorno({ verificacion: ['node -e "process.exit(0)"', 'node -e "console.error(\'rojo\'); process.exit(3)"'] });
   const { codigo } = await correr(e, ['--sin-modelo']);
   assert.equal(codigo, 1);
@@ -148,7 +159,8 @@ test('verificación: si falla un comando no se commitea y el worktree queda para
   assert.match(info.estado, /^falló: la verificación falló: node -e/);
   assert.deepEqual(info.verificacion.map((v) => v.codigo), [0, 3]);
   assert.match(info.verificacion[1].salida, /rojo/);
-  assert.ok(existsSync(info.worktree));
+  assert.ok(existsSync(info.copia));
+  await sinRamasNiWorktrees(e.back);
 });
 
 test('--sin-modelo: arregla lo mecánico y no llama al motor', async () => {
@@ -179,9 +191,31 @@ test('--fusionar: con la verificación en verde, main avanza solo con --ff-only'
   assert.equal(info.estado, 'fusionado');
   assert.equal((await git(e.back, ['rev-list', '--count', 'main'])).trim(), '2');
   assert.equal((await readFile(join(e.back, 'src/Demo.Domain/CLAUDE.md'), 'utf8')).trim(), '@AGENTS.md');
+  await sinRamasNiWorktrees(e.back);
+  assert.equal(info.copia, null);
+  assert.ok(!existsSync(copia(e.back)));
 });
 
-test('sin cambios: no deja rama ni worktree', async () => {
+test('--fusionar con main adelantado: no fusiona, lo dice y el commit queda en la copia', async () => {
+  // La verificación corre en la copia y, mientras tanto, alguien commitea en main: ya no hay avance rápido.
+  const e = await entorno();
+  const adelantar = `git -C "${e.back}" commit -q --allow-empty -m "main adelantado"`;
+  const m = JSON.parse(await readFile(join(e.dirArneses, 'realinear-docs', 'arnes.json'), 'utf8'));
+  m.verificacion = { back: [adelantar] };
+  await writeFile(join(e.dirArneses, 'realinear-docs', 'arnes.json'), JSON.stringify(m));
+  const { codigo, salida } = await correr(e, ['--sin-modelo', '--fusionar']);
+  assert.equal(codigo, 0, salida);
+  const info = await leerInforme(e);
+  assert.match(info.estado, /^commiteado \(no se pudo fusionar con --ff-only/);
+  assert.equal((await git(e.back, ['log', '-1', '--format=%s', 'main'])).trim(), 'main adelantado');
+  assert.equal((await git(e.back, ['rev-list', '--count', 'main'])).trim(), '2');
+  await sinRamasNiWorktrees(e.back);
+  assert.ok(info.copiaConservada);
+  assert.equal((await git(copia(e.back), ['rev-parse', 'HEAD'])).trim(), info.commit);
+  assert.match(salida, /copia /);
+});
+
+test('sin cambios: no deja rama, worktree ni copia', async () => {
   const e = await entorno();
   const manifiestoRuta = join(e.dirArneses, 'realinear-docs', 'arnes.json');
   const m = JSON.parse(await readFile(manifiestoRuta, 'utf8'));
@@ -191,7 +225,8 @@ test('sin cambios: no deja rama ni worktree', async () => {
   assert.equal(codigo, 0);
   const info = await leerInforme(e);
   assert.equal(info.estado, 'sin cambios');
-  assert.equal((await git(e.back, ['branch', '--list', 'arnes/*'])).trim(), '');
+  await sinRamasNiWorktrees(e.back);
+  assert.ok(!existsSync(copia(e.back)));
   await mkdir(join(e.madre, 'x'), { recursive: true });
 });
 
@@ -215,13 +250,14 @@ test('front: una corrida sobre el repo del front termina con commit y verifica c
   assert.equal(codigo, 0, salida);
   const info = await leerInforme(e);
   assert.equal(info.estado, 'commiteado');
-  const mostrar = (ruta) => git(front, ['show', `arnes/realinear-docs/20261002-2300:${ruta}`]);
+  const mostrar = (ruta) => git(copia(front), ['show', `HEAD:${ruta}`]);
   assert.match(await mostrar('src/shared/AGENTS.md'), /Lo común a todas las áreas/);
   assert.equal((await mostrar('src/shared/CLAUDE.md')).trim(), '@AGENTS.md');
   assert.doesNotMatch(await mostrar('docs/architecture/arbol.md'), /useAccess\.ts|Money\.test\.ts/, 'archivos nuevos en una carpeta existente no amplían el árbol');
   assert.match(await mostrar('docs/rules/formatos.md'), /`useAccess`\)? \(el real es `useAccess`\)/);
   assert.doesNotMatch(await mostrar('docs/rules/README.md'), /viejo/);
   assert.equal((await git(front, ['rev-list', '--count', 'main'])).trim(), '1');
+  await sinRamasNiWorktrees(front);
 });
 
 test('la verificación puede regenerar archivos (openapi.json): no se commitean y el hermano se enlaza mientras dura', async () => {
@@ -237,7 +273,7 @@ test('la verificación puede regenerar archivos (openapi.json): no se commitean 
   const info = await leerInforme(e);
   assert.equal(info.estado, 'commiteado');
   assert.deepEqual(info.revertidosPostVerificacion.map((r) => r.archivo), ['docs/contracts/openapi.json']);
-  assert.match(await enRama(e, 'docs/contracts/openapi.json'), /"\/api\/roles"/);
+  assert.match(await enCopia(e, 'docs/contracts/openapi.json'), /"\/api\/roles"/);
   assert.ok(existsSync(join(e.madre, 'front')), 'soltar el enlace no borra el destino');
-  assert.ok(!existsSync(join(e.madre, '.arneses', 'front')));
+  assert.ok(!existsSync(join(e.back, '.local', 'arneses', 'copias', 'front')));
 });

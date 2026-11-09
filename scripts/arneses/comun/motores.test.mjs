@@ -11,7 +11,7 @@ import { resolverEjecutable } from './proceso.mjs';
 import * as claude from './motores/claude.mjs';
 import * as codex from './motores/codex.mjs';
 import { extraerResultado, validar } from './resultado.mjs';
-import { carpetaDelWorktree, crearWorktree, nombreDeRama, quitarWorktree } from './worktree.mjs';
+import { carpetaDeLaCopia, crearCopia, fusionarCopia, quitarCopia } from './copia.mjs';
 
 const aqui = dirname(fileURLToPath(import.meta.url));
 const fakes = join(aqui, 'fakes');
@@ -19,7 +19,7 @@ const temporales = [];
 after(() => Promise.all(temporales.map((t) => rm(t, { recursive: true, force: true }))));
 
 async function repoTemporal(archivos) {
-  // Cada test tiene su propia carpeta madre, así `../.arneses` (el worktree) no se comparte entre tests.
+  // Cada test tiene su propia carpeta madre: la copia vive en `.local/` de su repo y no se comparte entre tests.
   const madre = await mkdtemp(join(tmpdir(), 'repo-arnes-'));
   temporales.push(madre);
   const dir = join(madre, 'repo');
@@ -39,19 +39,53 @@ async function repoTemporal(archivos) {
 
 const permisos = { puedeCrear: ['docs/**/*.md', '**/AGENTS.md'], puedeBorrar: ['**/AGENTS.md'], nuncaToca: ['**/*.cs', 'tests/**'] };
 
-test('worktree: rama y carpeta fuera del repo, desde HEAD, y se quita limpio', async () => {
+test('copia: de HEAD en .local, sin ramas ni worktrees en el repo, commitea en la copia y se quita limpia', async () => {
   const raiz = await repoTemporal({ 'docs/a.md': 'uno\n' });
   await writeFile(join(raiz, 'docs/a.md'), 'a medio hacer\n');
-  const carpeta = carpetaDelWorktree(raiz, 'realinear-docs', '20261002-2100');
-  assert.match(carpeta.replaceAll('\\', '/'), /\/\.arneses\/repo-realinear-docs-20261002-2100$/);
-  await crearWorktree(raiz, { rama: nombreDeRama('realinear-docs', '20261002-2100'), carpeta });
+  const carpeta = carpetaDeLaCopia(raiz, 'realinear-docs', '20261002-2100');
+  assert.match(carpeta.replaceAll('\\', '/'), /\/repo\/\.local\/arneses\/copias\/realinear-docs-20261002-2100$/);
+  const { corte } = await crearCopia(raiz, carpeta);
+  assert.equal(corte, (await git(raiz, ['rev-parse', 'HEAD'])).trim());
   assert.equal(await readFile(join(carpeta, 'docs/a.md'), 'utf8'), 'uno\n');
-  assert.equal((await git(carpeta, ['branch', '--show-current'])).trim(), 'arnes/realinear-docs/20261002-2100');
+  assert.equal((await git(carpeta, ['branch', '--show-current'])).trim(), '', 'la copia queda en HEAD desprendido');
   await mkdir(join(carpeta, '.local'), { recursive: true });
   await writeFile(join(carpeta, '.local', 'tarea.json'), '{}');
   assert.equal((await git(carpeta, ['status', '--porcelain'])).trim(), '');
-  await quitarWorktree(raiz, carpeta);
+  await writeFile(join(carpeta, 'docs/a.md'), 'dos\n');
+  await git(carpeta, ['commit', '-q', '-am', 'en la copia']);
+  // El repo de trabajo no gana ramas, worktrees ni commits; lo que tenía a medio hacer sigue igual y la copia no se ve.
+  assert.equal((await git(raiz, ['branch', '--list'])).trim(), '* main');
+  assert.equal((await git(raiz, ['worktree', 'list'])).trim().split('\n').length, 1);
+  assert.equal((await git(raiz, ['rev-list', '--count', 'main'])).trim(), '1');
+  assert.equal(await readFile(join(raiz, 'docs/a.md'), 'utf8'), 'a medio hacer\n');
+  assert.equal((await git(raiz, ['status', '--porcelain'])).trim(), 'M docs/a.md');
+  await quitarCopia(carpeta);
   assert.ok(!existsSync(carpeta));
+});
+
+test('copia: fusionar trae su commit con --ff-only y, si el repo avanzó, no fusiona ni crea ramas', async () => {
+  const raiz = await repoTemporal({ 'docs/a.md': 'uno\n' });
+  const quieta = carpetaDeLaCopia(raiz, 'realinear-docs', '20261002-2200');
+  await crearCopia(raiz, quieta);
+  await writeFile(join(quieta, 'docs/a.md'), 'dos\n');
+  await git(quieta, ['commit', '-q', '-am', 'desde la copia']);
+  await fusionarCopia(raiz, quieta);
+  assert.equal((await git(raiz, ['log', '-1', '--format=%s'])).trim(), 'desde la copia');
+  assert.equal(await readFile(join(raiz, 'docs/a.md'), 'utf8'), 'dos\n');
+
+  const atrasada = carpetaDeLaCopia(raiz, 'realinear-docs', '20261002-2300');
+  await crearCopia(raiz, atrasada);
+  await writeFile(join(atrasada, 'docs/a.md'), 'tres\n');
+  await git(atrasada, ['commit', '-q', '-am', 'desde la copia atrasada']);
+  await writeFile(join(raiz, 'docs/b.md'), 'otro\n');
+  await git(raiz, ['add', 'docs/b.md']);
+  await git(raiz, ['commit', '-q', '-m', 'main avanzó']);
+  await assert.rejects(fusionarCopia(raiz, atrasada));
+  assert.equal((await git(raiz, ['log', '-1', '--format=%s'])).trim(), 'main avanzó');
+  assert.equal(await readFile(join(raiz, 'docs/a.md'), 'utf8'), 'dos\n');
+  assert.equal((await git(raiz, ['branch', '--list'])).trim(), '* main');
+  await quitarCopia(quieta);
+  await quitarCopia(atrasada);
 });
 
 test('guardia: revierte lo tocado fuera de permisos y deja pasar lo permitido', async () => {

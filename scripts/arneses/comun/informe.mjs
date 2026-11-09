@@ -23,8 +23,11 @@ export function resumenMarkdown(info) {
   const inicial = info.contadores ?? contar(info.hallazgos ?? []);
   const l = [`# Informe de ${info.arnes}${info.repo ? ` (${info.repo})` : ''} · ${info.fecha}`, ''];
   if (info.estado) l.push(`- Estado: ${info.estado}`);
-  if (info.rama) l.push(`- Rama: \`${info.rama}\``);
-  if (info.worktreeConservado && info.worktree) l.push(`- Worktree conservado: \`${info.worktree}\``);
+  if (info.commit) l.push(`- Commit: \`${info.commit}\`${info.corte ? ` sobre \`${info.corte}\`` : ''}`);
+  if (info.copiaConservada && info.copia) {
+    l.push(`- Copia conservada: \`${info.copia}\``);
+    if (info.commit) l.push(`- Para traerlo a la rama actual: \`git fetch "${info.copia}" HEAD\` y \`git merge --ff-only FETCH_HEAD\``);
+  }
   if (info.motor && info.enviados) l.push(`- Motor: ${info.motor}${info.modelo ? ` (${info.modelo})` : ''} · ${info.enviados} hallazgo(s) enviados`);
   l.push(`- Hallazgos al empezar: ${formato(inicial)}`);
   if (info.contadoresFinales) l.push(`- Hallazgos al terminar: ${formato(info.contadoresFinales)}`);

@@ -109,7 +109,7 @@ El inventario de todos los estándares transversales (los definidos y los propue
 - `dotnet build ArquitecturaBaseMultitenant.slnx`
 - `dotnet test`, o `dotnet test --project tests/<P>/<P>.csproj -- --filter-class "<Clase>"`
 - `aspire run` / `aspire stop`
-- `node scripts/arneses/arnes.mjs realinear-docs --detectar` (0 tokens). Sin `--detectar`, el arnés completo todavía trabaja en una rama aparte: hasta que pase a una copia de `HEAD` (base de la 12), se corre solo con `--detectar`. Tests: `node --test "scripts/arneses/**/*.test.mjs"`.
+- `node scripts/arneses/arnes.mjs realinear-docs --detectar` (0 tokens). Sin `--detectar`, el arnés completo trabaja en una copia de `HEAD` en `.local/arneses/copias/`, sin ramas ni worktrees, y `--fusionar` trae su commit con `--ff-only`. Tests: `node --test "scripts/arneses/**/*.test.mjs"`.
 - `node scripts/arneses/arnes.mjs alinear-etapas --detectar` (0 tokens): dice qué etapa que falta programar no está completa o no está alineada.
 - `node scripts/arneses/arnes.mjs estado-docs --detectar` (0 tokens): dice qué documentos quedaron viejos, terminaron o están fuera de formato.
 - Migración: ver [backend.md §9](docs/architecture/backend.md#9-persistencia).

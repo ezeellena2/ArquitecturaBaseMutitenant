@@ -2,7 +2,7 @@
 .SYNOPSIS
   Alta, baja y consulta de la tarea programada de un arnés ejecutable (Programador de tareas de Windows).
 .DESCRIPTION
-  La tarea corre con tu usuario, solo con la sesión iniciada, y deja el resultado en una rama arnes/<arnés>/<fecha>.
+  La tarea corre con tu usuario, solo con la sesión iniciada, y deja el resultado commiteado en una copia de HEAD en .local/arneses/copias/, sin ramas ni worktrees.
   Nunca hace push. El informe queda en .local/arneses/<arnés>/.
 .EXAMPLE
   pwsh scripts/arneses/programar.ps1 -Arnes realinear-docs -Motor claude -Hora 03:00 -Dias Lun,Jue
@@ -64,6 +64,6 @@ $ajustes = New-ScheduledTaskSettingsSet -StartWhenAvailable -ExecutionTimeLimit 
 $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive
 
 if ($PSCmdlet.ShouldProcess($nombreTarea, "Dar de alta: $($Dias -join ', ') a las $Hora con el motor $Motor")) {
-  Register-ScheduledTask -TaskName $nombreTarea -Action $accion -Trigger $disparador -Settings $ajustes -Principal $principal -Description "Arnés ejecutable $Arnes ($Motor). Deja una rama arnes/$Arnes/<fecha>; no hace push." -Force | Out-Null
+  Register-ScheduledTask -TaskName $nombreTarea -Action $accion -Trigger $disparador -Settings $ajustes -Principal $principal -Description "Arnés ejecutable $Arnes ($Motor). Deja un commit en una copia de HEAD en .local/arneses/copias/; no crea ramas ni hace push." -Force | Out-Null
   Write-Output "Tarea '$nombreTarea' dada de alta: $($Dias -join ', ') a las $Hora con el motor $Motor."
 }

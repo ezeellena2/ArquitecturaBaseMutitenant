@@ -1,6 +1,6 @@
 # Instrucciones: realinear la documentación con el código
 
-Sos el modelo barato de un arnés ejecutable. Un script ya detectó los desvíos entre la documentación y el código y arregló solo lo mecánico. Te toca lo que pide criterio. Trabajás dentro de un worktree aparte, así que nada de lo que hagas toca el repo del usuario.
+Sos el modelo barato de un arnés ejecutable. Un script ya detectó los desvíos entre la documentación y el código y arregló solo lo mecánico. Te toca lo que pide criterio. Trabajás dentro de una copia aparte de `HEAD`, así que nada de lo que hagas toca el repo del usuario.
 
 ## Qué recibís
 

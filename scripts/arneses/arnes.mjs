@@ -59,7 +59,7 @@ export async function leerJson(ruta, porDefecto = null) {
 }
 
 /** Corre los detectores del arnés sobre cada repo y devuelve los hallazgos sin ignorados, ordenados. */
-// `raicesReales` son los repos de verdad cuando `raices` apunta a un worktree: los hermanos (`../ArquitecturaBase`) se buscan desde ahí.
+// `raicesReales` son los repos de verdad cuando `raices` apunta a la copia de la corrida: los hermanos (`../ArquitecturaBase`) se buscan desde ahí.
 export async function detectar({ dirArneses, arnes, raices, soloRepo, historial, raicesReales }) {
   const reales = raicesReales ?? raices;
   const { manifiesto } = arnes;
@@ -183,7 +183,7 @@ export async function ejecutar(argv, opts = {}) {
         detectar, arnes, repo: nombre, dirArneses, raices, opciones, dirInformes, historial: opts.historial,
         bins: opts.bins, escribir, raizBackArneses: back,
       });
-      escribir(`${nombre}: ${info.estado}${info.rama ? ` · rama ${info.rama}` : ''}`);
+      escribir(`${nombre}: ${info.estado}${info.copiaConservada && info.copia ? ` · copia ${info.copia}` : ''}`);
       if (info.consumo) escribir(`${nombre}: consumo ${JSON.stringify(info.consumo)}`);
       escribir(`${nombre}: informe ${info.informe}`);
       if (info.estado.startsWith('falló')) fallo = true;

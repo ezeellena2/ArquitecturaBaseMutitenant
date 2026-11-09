@@ -8,7 +8,7 @@ import { escribirInforme, fechaCorrida } from './informe.mjs';
 import { aplicarParches } from './parches.mjs';
 import { ejecutarProceso } from './proceso.mjs';
 import { validar } from './resultado.mjs';
-import { carpetaDelWorktree, crearWorktree, enlazarHermanos, enlazarNodeModules, nombreDeRama, quitarWorktree, soltarEnlaces } from './worktree.mjs';
+import { carpetaDeLaCopia, crearCopia, enlazarHermanos, enlazarNodeModules, fusionarCopia, quitarCopia, soltarEnlaces } from './copia.mjs';
 import * as claude from './motores/claude.mjs';
 import * as codex from './motores/codex.mjs';
 
@@ -25,20 +25,20 @@ async function leerJson(ruta, porDefecto) {
 const pocos = (texto, n = 600) => (texto.length > n ? `…${texto.slice(-n)}` : texto);
 
 /**
- * Corrida completa de un arnés sobre un repo (plan §6, paso 3): worktree → detectar → auto → modelo → guardia →
- * volver a detectar → verificar → commitear → informe. `detectar` se inyecta para no depender de arnes.mjs.
+ * Corrida completa de un arnés sobre un repo (plan §6, paso 3): copia de HEAD → detectar → auto → modelo → guardia →
+ * volver a detectar → verificar → commitear en la copia → informe. Sin worktrees ni ramas (AGENTS.md, «Todo en `main`»):
+ * la copia es un `git clone --local` en `.local/`, como `/puerta`. `detectar` se inyecta para no depender de arnes.mjs.
  */
 export async function corridaDeRepo({ detectar, arnes, repo, dirArneses, raices, opciones, dirInformes, historial, bins, escribir, raizBackArneses }) {
   const { manifiesto } = arnes;
   const raiz = raices[repo];
   const fecha = opciones.fecha ?? fechaCorrida();
-  const rama = nombreDeRama(arnes.carpeta, fecha);
-  const carpeta = carpetaDelWorktree(raiz, arnes.carpeta, fecha);
-  const info = { arnes: arnes.carpeta, repo, fecha: `${fecha}-${repo}`, modo: 'corrida', rama, worktree: carpeta, estado: 'en curso', hallazgos: [] };
+  const carpeta = carpetaDeLaCopia(raiz, arnes.carpeta, fecha);
+  const info = { arnes: arnes.carpeta, repo, fecha: `${fecha}-${repo}`, modo: 'corrida', copia: carpeta, estado: 'en curso', hallazgos: [] };
   const dirTareas = join(carpeta, '.local', 'arneses', arnes.carpeta);
 
-  await crearWorktree(raiz, { rama, carpeta });
-  // El código del arnés y su `ignorados.json` se leen del worktree cuando el arnés vive en este mismo repo.
+  info.corte = (await crearCopia(raiz, carpeta)).corte;
+  // El código del arnés y su `ignorados.json` se leen de la copia cuando el arnés vive en este mismo repo.
   const rel = relative(raizBackArneses ?? raiz, dirArneses);
   const dirDet = !rel.startsWith('..') && !isAbsolute(rel) && raiz === (raizBackArneses ?? raiz) ? join(carpeta, rel) : dirArneses;
   const raicesWt = { ...raices, [repo]: carpeta };
@@ -130,7 +130,7 @@ export async function corridaDeRepo({ detectar, arnes, repo, dirArneses, raices,
   info.verificacion = [];
   if (!fallo) {
     if (repo === 'front') await enlazarNodeModules(raiz, carpeta);
-    // Los tests de arquitectura miran el repo hermano en `../<Repo>`: se lo enlaza al lado del worktree mientras dura la verificación.
+    // Los tests de arquitectura miran el repo hermano en `../<Repo>`: se lo enlaza al lado de la copia mientras dura la verificación.
     const enlaces = await enlazarHermanos(carpeta, Object.entries(raices).filter(([n]) => n !== repo).map(([, r]) => r));
     try {
       for (const comando of manifiesto.verificacion?.[repo] ?? []) {
@@ -149,17 +149,16 @@ export async function corridaDeRepo({ detectar, arnes, repo, dirArneses, raices,
     info.revertidosPostVerificacion = posterior.revertidos;
   }
 
-  // 7. Commit en la rama del arnés (nunca push).
+  // 7. Commit en la copia (nunca push ni rama). Sin cambios, la copia se borra; con un fallo, queda para mirar.
   if (fallo) {
     info.estado = `falló: ${fallo}`;
-    info.worktreeConservado = true;
+    info.copiaConservada = true;
   } else {
     const cambios = await cambiosDelWorktree(carpeta);
     if (!cambios.length) {
       info.estado = 'sin cambios';
-      await quitarWorktree(raiz, carpeta);
-      await git(raiz, ['branch', '-D', rama]).catch(() => {});
-      info.rama = null;
+      await quitarCopia(carpeta);
+      info.copia = null;
     } else {
       const c = info.contadores;
       const cuerpo = [`Arnés: ${arnes.carpeta} (${repo}).`, `Hallazgos: auto ${c.auto} · modelo ${c.modelo} · humano ${c.humano}.`, info.enviados ? `Modelo: ${motorNombre}${modeloNombre ? ` (${modeloNombre})` : ''}, ${info.enviados} hallazgo(s).` : 'Sin llamada al modelo.']
@@ -168,16 +167,21 @@ export async function corridaDeRepo({ detectar, arnes, repo, dirArneses, raices,
       await git(carpeta, ['commit', '-q', '-m', `${manifiesto.commit}\n\n${cuerpo}`]);
       info.commit = (await git(carpeta, ['rev-parse', 'HEAD'])).trim();
       info.estado = 'commiteado';
+      info.copiaConservada = true;
       if (opciones.fusionar) {
         try {
-          await git(raiz, ['merge', '--ff-only', rama]);
+          await fusionarCopia(raiz, carpeta);
           info.estado = 'fusionado';
+          info.copiaConservada = false;
         } catch (e) {
+          // Si el repo avanzó desde el corte no hay avance rápido: no se fusiona y el commit queda en la copia.
           info.estado = `commiteado (no se pudo fusionar con --ff-only: ${String(e.message).split('\n')[0]})`;
         }
       }
-      await quitarWorktree(raiz, carpeta);
-      info.worktree = null;
+      if (!info.copiaConservada) {
+        await quitarCopia(carpeta);
+        info.copia = null;
+      }
     }
   }
 

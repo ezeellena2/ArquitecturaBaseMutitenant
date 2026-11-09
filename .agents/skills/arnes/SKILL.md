@@ -1,6 +1,6 @@
 ---
 name: arnes
-description: Corre un arnés ejecutable del repo (por ejemplo `realinear-docs`) y muestra solo el resumen del informe: rama, contadores, consumo y la lista para revisar a mano. Usalo cuando pidan realinear la documentación con el código o correr, programar o crear un arnés.
+description: Corre un arnés ejecutable del repo (por ejemplo `realinear-docs`) y muestra solo el resumen del informe: estado, copia y commit, contadores, consumo y la lista para revisar a mano. Usalo cuando pidan realinear la documentación con el código o correr, programar o crear un arnés.
 ---
 
 # /arnes <nombre> [opciones]
@@ -12,21 +12,21 @@ Un arnés ejecutable detecta con un script (0 tokens), arregla solo lo mecánico
 1. Sin nombre, listá los arneses: `node scripts/arneses/arnes.mjs`.
 2. Corré `node scripts/arneses/arnes.mjs <nombre> <opciones>` **en segundo plano** (puede tardar minutos) y esperá a que termine, sin consultar el avance.
 3. Leé **solo** el `.md` del informe que imprime el comando (`.local/arneses/<nombre>/<fecha>-<repo>.md`).
-4. Mostrá: estado, rama, contadores (auto, modelo y humano, al empezar y al terminar), consumo (tokens y costo cuando el motor lo informa) y la lista «Para vos».
+4. Mostrá: estado, la copia y el commit (si quedaron), contadores (auto, modelo y humano, al empezar y al terminar), consumo (tokens y costo cuando el motor lo informa) y la lista «Para vos».
 5. No rehagas lo que el arnés ya hizo: no vuelvas a revisar ni a corregir sus cambios. Lo que queda en «Para vos» o lo que hace fallar la verificación posterior se resuelve así:
-   - **Si es mecánico**, resolvelo vos sin preguntar, en la misma rama del arnés, y volvé a correr el detector y los tests que fallaban. Por ejemplo: una ruta o un símbolo que cambió de lugar, un enlace o un puntero roto, una fila del árbol o una línea de más en un `AGENTS.md`.
+   - **Si es mecánico**, resolvelo vos sin preguntar, en la misma copia del arnés (`.local/arneses/copias/<arnés>-<fecha>`), y volvé a correr el detector y los tests que fallaban. Por ejemplo: una ruta o un símbolo que cambió de lugar, un enlace o un puntero roto, una fila del árbol o una línea de más en un `AGENTS.md`.
    - **Si es una decisión**, mostrásela a la persona y esperá su respuesta. Por ejemplo: qué dice una regla, una conducta o algo que ve el usuario.
-6. Si el estado es `falló`, decí qué falló y dónde quedó el worktree.
+6. Si el estado es `falló`, decí qué falló y dónde quedó la copia.
 
 ## Opciones
 
 | Opción | Qué hace |
 |---|---|
-| `--detectar` | solo detecta y escribe el informe: 0 tokens, sin worktree |
+| `--detectar` | solo detecta y escribe el informe: 0 tokens, sin copia |
 | `--sin-modelo` | arregla lo mecánico y no llama al modelo |
 | `--motor claude\|codex` | elige el motor; desde Codex pasá `--motor codex` |
 | `--modelo <nombre>` · `--presupuesto <USD>` | pisan el modelo y el tope de gasto del manifiesto |
 | `--repo back\|front` | procesa un solo repo |
-| `--fusionar` | si todo verificó, avanza la rama actual con `--ff-only` |
+| `--fusionar` | si todo verificó, trae el commit de la copia con `--ff-only`, sin crear una rama |
 
-Nunca hagas push. Si la corrida verificó y solo tocó documentación, fusioná su rama con `--fusionar` sin preguntar y avisá después. Si toca código, preguntá antes.
+Nunca hagas push ni crees ramas o worktrees. Si la corrida verificó y solo tocó documentación, traé su commit con `--fusionar` sin preguntar y avisá después. Si toca código, preguntá antes.

@@ -1,6 +1,6 @@
 # Arneses ejecutables
 
-Un **arnés ejecutable** es una rutina que se corre a mano o programada: **detecta** con un script (0 tokens), **arregla solo** lo mecánico (0 tokens), le pasa a un modelo barato **solo** lo que pide criterio y **deja anotado para vos** lo que es una decisión de producto o un cambio de código. Termina con un commit en una rama aparte (`arnes/<arnés>/<AAAAMMDD-HHmm>`), sin push. Las decisiones están en el [ADR 0037](../../docs/decisions/0037-arneses-ejecutables.md); el plan, en [docs/plans/2026-10-02-arneses-ejecutables.md](../../docs/decisions/0037-arneses-ejecutables.md).
+Un **arnés ejecutable** es una rutina que se corre a mano o programada: **detecta** con un script (0 tokens), **arregla solo** lo mecánico (0 tokens), le pasa a un modelo barato **solo** lo que pide criterio y **deja anotado para vos** lo que es una decisión de producto o un cambio de código. Termina con un commit en una copia de `HEAD` (`.local/arneses/copias/<arnés>-<fecha>`), sin ramas, worktrees ni push. Las decisiones están en el [ADR 0037](../../docs/decisions/0037-arneses-ejecutables.md); el plan, en [docs/plans/2026-10-02-arneses-ejecutables.md](../../docs/decisions/0037-arneses-ejecutables.md).
 
 No es lo mismo que [el arnés estático](../../docs/architecture/arnes.md) (fichas, punteros y `HarnessTests`), que **frena** el build cuando algo se rompe pero no arregla nada.
 
@@ -25,25 +25,25 @@ node scripts/arneses/arnes.mjs --instalar                       # copia las skil
 
 | Opción | Qué hace |
 |---|---|
-| `--detectar` | solo detecta; sin worktree, sin modelo |
+| `--detectar` | solo detecta; sin copia, sin modelo |
 | `--sin-modelo` | arregla lo mecánico y no llama al modelo |
 | `--motor claude\|codex` · `--modelo <nombre>` · `--presupuesto <USD>` | pisan lo que dice `arnes.json` |
 | `--repo back\|front` | un solo repo |
-| `--fusionar` | si todo verificó, avanza la rama actual con `git merge --ff-only` |
+| `--fusionar` | si todo verificó, trae el commit de la copia a la rama actual con `git fetch` y `git merge --ff-only FETCH_HEAD`, sin crear una rama; si la rama avanzó desde el corte, no fusiona y lo dice |
 | `--sin-aislar` | no evita la config del usuario (para medir cuántos tokens cuesta cargarla) |
 
 Los tests (`node --test "scripts/arneses/**/*.test.mjs"`) usan solo `realinear-docs/fixtures/` y ejecutables falsos de `claude` y `codex`: no leen el repo real ni llaman a un modelo.
 
 ### Una corrida
 
-1. Crea un worktree y la rama, fuera del repo: `../.arneses/<repo>-<arnés>-<fecha>`.
-2. Detecta **dentro** del worktree (lo commiteado, no lo que tenés a medio hacer).
+1. Arma una copia de `HEAD` en `.local/arneses/copias/<arnés>-<fecha>`, como `/puerta`: `git clone --local` y `checkout --detach`. No suma ramas ni worktrees al repo, y el repo no la ve (`.local/` va a su `info/exclude`).
+2. Detecta **dentro** de la copia (lo commiteado, no lo que tenés a medio hacer).
 3. Aplica los hallazgos `auto` (parches con verificación del texto y de los permisos).
 4. Si quedan hallazgos `modelo` (hasta `maxHallazgos`), llama al motor con la tarea en `.local/arneses/<arnés>/<fecha>.modelo.json`.
 5. **Guardia:** todo archivo tocado fuera de `permisos` se revierte y la corrida falla.
 6. Vuelve a detectar: no puede quedar ningún `auto`.
-7. Corre `verificacion` del repo. Si algo falla, no commitea y deja el worktree para mirar.
-8. Commitea con el mensaje del manifiesto y escribe el informe en `.local/arneses/<arnés>/<fecha>-<repo>.md`.
+7. Corre `verificacion` del repo. Si algo falla, no commitea y deja la copia para mirar.
+8. Commitea **en la copia** con el mensaje del manifiesto y escribe el informe en `.local/arneses/<arnés>/<fecha>-<repo>.md`, con el commit y cómo traerlo: `git fetch "<copia>" HEAD` y `git merge --ff-only FETCH_HEAD`. Con `--fusionar` lo trae solo y borra la copia; sin cambios, también la borra.
 
 ## Motores
 
