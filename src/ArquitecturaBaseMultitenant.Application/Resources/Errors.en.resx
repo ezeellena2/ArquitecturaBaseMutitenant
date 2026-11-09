@@ -37,7 +37,7 @@
   <data name="Auth.LoginCode.TooManyAttempts" xml:space="preserve"><value>Too many attempts for this code. Request a new one.</value></data>
   <data name="Auth.LoginCode.ResendTooSoon" xml:space="preserve"><value>Wait a moment before requesting another code.</value></data>
   <data name="Auth.LoginCode.TooManyRequests" xml:space="preserve"><value>You requested too many codes. Try again later.</value></data>
-  <data name="Auth.Account.Disabled" xml:space="preserve"><value>Your account is disabled. Contact an administrator.</value></data>
+  <data name="Auth.Account.Disabled" xml:space="preserve"><value>Your account is suspended. Contact an administrator.</value></data>
   <data name="Auth.Account.LockedOut" xml:space="preserve"><value>Your account is locked for a few minutes after too many failed attempts.</value></data>
   <data name="Auth.Account.NotInvited" xml:space="preserve"><value>You don't have access to this system yet. Ask an administrator to create your account.</value></data>
   <data name="Auth.ExternalLogin.Failed" xml:space="preserve"><value>We couldn't complete the sign-in with Google.</value></data>
@@ -58,7 +58,7 @@
   <data name="Features.Module.ExpiryRequired" xml:space="preserve"><value>Enter when the trial ends.</value></data>
   <data name="Features.Module.NotFound" xml:space="preserve"><value>We couldn't find the module.</value></data>
   <data name="Features.Module.InvalidScope" xml:space="preserve"><value>The module is not available for this profile.</value></data>
-  <data name="Tenancy.Member.CannotDisableSelf" xml:space="preserve"><value>You can't disable your own organization access.</value></data>
+  <data name="Tenancy.Member.CannotDisableSelf" xml:space="preserve"><value>You can't deactivate yourself.</value></data>
   <data name="Users.User.LastAdmin" xml:space="preserve"><value>The system must keep at least one active administrator.</value></data>
   <data name="Settings.System.NotFound" xml:space="preserve"><value>We couldn't find the system settings.</value></data>
   <data name="Users.User.AlreadyExists" xml:space="preserve"><value>An account with that email already exists.</value></data>
@@ -77,7 +77,7 @@
   <data name="Users.Invitation.ConsentRequired" xml:space="preserve"><value>Confirm that the person agreed to receive WhatsApp messages.</value></data>
   <data name="Users.Invitation.NameRequired" xml:space="preserve"><value>To invite by WhatsApp, enter the name of the person.</value></data>
   <data name="Users.Invitation.TooManyRequests" xml:space="preserve"><value>Wait a minute before inviting this person again.</value></data>
-  <data name="Users.Invitation.UserInactive" xml:space="preserve"><value>The account is disabled: enable it before inviting it.</value></data>
+  <data name="Users.Invitation.UserInactive" xml:space="preserve"><value>The person is deactivated: reactivate them before inviting them.</value></data>
   <data name="Roles.Role.NameRequired" xml:space="preserve"><value>Enter a name for the role.</value></data>
   <data name="Roles.Role.NameTooLong" xml:space="preserve"><value>The role name is longer than allowed.</value></data>
   <data name="Roles.Role.DescriptionTooLong" xml:space="preserve"><value>The description is longer than allowed.</value></data>
@@ -118,14 +118,14 @@
   <data name="Tenancy.Company.TimeZoneUnavailable" xml:space="preserve"><value>Choose an available time zone.</value></data>
   <data name="Tenancy.Company.TaxIdAlreadyUsed" xml:space="preserve"><value>A company already has this tax identification number.</value></data>
   <data name="Tenancy.Company.NotFound" xml:space="preserve"><value>We could not find this company.</value></data>
-  <data name="Tenancy.Company.Inactive" xml:space="preserve"><value>Activate the company before managing its members.</value></data>
+  <data name="Tenancy.Company.Inactive" xml:space="preserve"><value>Reactivate the company before managing its members.</value></data>
   <data name="Companies.Membership.NotFound" xml:space="preserve"><value>We could not find this company membership.</value></data>
   <data name="Companies.Membership.AlreadyExists" xml:space="preserve"><value>This person already belongs to the company.</value></data>
   <data name="Companies.Membership.MemberInactive" xml:space="preserve"><value>Only a person with active access to the organization can be added.</value></data>
   <data name="Companies.Membership.LastCompanyAdmin" xml:space="preserve"><value>The company must keep at least one administrator.</value></data>
   <data name="Tenancy.Tenant.InvalidTransition" xml:space="preserve"><value>The organization cannot change to that state.</value></data>
   <data name="Tenancy.Tenant.ProvisioningConflict" xml:space="preserve"><value>The organization already exists with different configuration data.</value></data>
-  <data name="Tenancy.Member.Inactive" xml:space="preserve"><value>Your access to this organization is disabled.</value></data>
+  <data name="Tenancy.Member.Inactive" xml:space="preserve"><value>You are deactivated in this organization.</value></data>
   <data name="Tenancy.Member.InvalidTransition" xml:space="preserve"><value>The membership cannot change to that state.</value></data>
   <data name="Tenancy.Member.NotFound" xml:space="preserve"><value>We couldn't find this person in the organization.</value></data>
   <data name="Tenancy.Access.Wrong" xml:space="preserve"><value>This access cannot perform the action.</value></data>

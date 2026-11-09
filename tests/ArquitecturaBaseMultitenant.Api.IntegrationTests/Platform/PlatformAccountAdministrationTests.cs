@@ -180,7 +180,7 @@ public sealed class PlatformAccountAdministrationTests(ApiFactory factory)
 
         var deleted = await GetAsync(client, seeded.Deleted.ToString("D"));
         Assert.Equal("Deleted", deleted.GetProperty("state").GetString());
-        Assert.Equal("Cuenta eliminada", deleted.GetProperty("displayName").GetString());
+        Assert.Equal("Cuenta borrada", deleted.GetProperty("displayName").GetString());
         Assert.Equal(JsonValueKind.Null, deleted.GetProperty("primaryEmail").ValueKind);
         Assert.Empty(deleted.GetProperty("loginMethods").EnumerateArray());
         Assert.Equal(JsonValueKind.Null, deleted.GetProperty("lastStateChange").ValueKind);
@@ -384,7 +384,7 @@ public sealed class PlatformAccountAdministrationTests(ApiFactory factory)
         Assert.Equal(JsonValueKind.Null, deleted.GetProperty("deletedAtUtc").ValueKind);
         var last = (await GetAsync(client, cancelled.Id.ToString("D"))).GetProperty("lastStateChange");
         Assert.Equal(nowUtc, last.GetProperty("atUtc").GetDateTime());
-        Assert.Equal("Canceló la baja de la cuenta", last.GetProperty("action").GetString());
+        Assert.Equal("Canceló el borrado de la cuenta", last.GetProperty("action").GetString());
         Assert.Equal(JsonValueKind.Null, last.GetProperty("reason").ValueKind);
     }
 

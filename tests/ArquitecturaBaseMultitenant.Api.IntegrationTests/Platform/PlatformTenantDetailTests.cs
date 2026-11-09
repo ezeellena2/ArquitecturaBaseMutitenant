@@ -104,7 +104,7 @@ public sealed class PlatformTenantDetailTests(ApiFactory factory)
         var deleted = Assert.Single(deletedJson.RootElement.GetProperty("owners").EnumerateArray(),
             owner => owner.GetProperty("id").GetGuid() == unnamed.Id);
         Assert.Equal("Deleted", deleted.GetProperty("identityStatus").GetString());
-        Assert.Equal("Cuenta eliminada", deleted.GetProperty("displayName").GetString());
+        Assert.Equal("Cuenta borrada", deleted.GetProperty("displayName").GetString());
         Assert.Equal(JsonValueKind.Null, deleted.GetProperty("email").ValueKind);
         Assert.Equal(version, deletedJson.RootElement.GetProperty("version").GetUInt32());
     }

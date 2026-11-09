@@ -28,24 +28,24 @@
   <data name="LoginMethodPrimaryEmail.Subject" xml:space="preserve"><value>Cambiaste el método principal de tu cuenta</value></data>
   <data name="LoginMethodPrimaryEmail.Title" xml:space="preserve"><value>Cambiaste tu método principal</value></data>
   <data name="LoginMethodPrimaryEmail.Body" xml:space="preserve"><value>{0} El {1} a las {2} elegiste {3} como método principal de tu cuenta de {4}. Desde ahora, los avisos llegan ahí.</value></data>
-  <data name="DeletionRequested.Subject" xml:space="preserve"><value>Pediste la baja de tu cuenta</value></data>
-  <data name="DeletionRequested.Title" xml:space="preserve"><value>Pediste la baja de tu cuenta</value></data>
-  <data name="DeletionRequested.Body" xml:space="preserve"><value>{0} El {1} a las {2} pediste la baja de tu cuenta de {3} y cerramos todas tus sesiones.</value></data>
-  <data name="DeletionRequested.Scheduled" xml:space="preserve"><value>Tu cuenta se elimina el {0}.</value></data>
-  <data name="DeletionRequested.Note" xml:space="preserve"><value>Si no fuiste vos o te arrepentiste, ingresá antes de esa fecha para cancelarla.</value></data>
-  <data name="DeletionRequestedByPlatform.Subject" xml:space="preserve"><value>La plataforma inició la baja de tu cuenta</value></data>
-  <data name="DeletionRequestedByPlatform.Title" xml:space="preserve"><value>La plataforma inició la baja de tu cuenta</value></data>
-  <data name="DeletionRequestedByPlatform.Body" xml:space="preserve"><value>{0} El {1} a las {2} la plataforma inició la baja de tu cuenta de {3} y cerramos todas tus sesiones.</value></data>
-  <data name="DeletionRequestedByPlatform.Note" xml:space="preserve"><value>Si creés que es un error, ingresá antes de esa fecha para cancelarla.</value></data>
-  <data name="DeletionRequestedByPlatform.NoteSuspended" xml:space="preserve"><value>Tu cuenta está suspendida, así que no podés cancelar la baja.</value></data>
-  <data name="DeletionRequestedByPlatform.BodySuspended" xml:space="preserve"><value>{0} El {1} a las {2} la plataforma inició la baja de tu cuenta de {3}.</value></data>
+  <data name="DeletionRequested.Subject" xml:space="preserve"><value>Pediste borrar tu cuenta</value></data>
+  <data name="DeletionRequested.Title" xml:space="preserve"><value>Pediste borrar tu cuenta</value></data>
+  <data name="DeletionRequested.Body" xml:space="preserve"><value>{0} El {1} a las {2} pediste borrar tu cuenta de {3} y cerramos todas tus sesiones.</value></data>
+  <data name="DeletionRequested.Scheduled" xml:space="preserve"><value>Tu cuenta se borra el {0}.</value></data>
+  <data name="DeletionRequested.Note" xml:space="preserve"><value>Si no fuiste vos o te arrepentiste, ingresá antes de esa fecha para cancelar el borrado.</value></data>
+  <data name="DeletionRequestedByPlatform.Subject" xml:space="preserve"><value>La plataforma inició el borrado de tu cuenta</value></data>
+  <data name="DeletionRequestedByPlatform.Title" xml:space="preserve"><value>La plataforma inició el borrado de tu cuenta</value></data>
+  <data name="DeletionRequestedByPlatform.Body" xml:space="preserve"><value>{0} El {1} a las {2} la plataforma inició el borrado de tu cuenta de {3} y cerramos todas tus sesiones.</value></data>
+  <data name="DeletionRequestedByPlatform.Note" xml:space="preserve"><value>Si creés que es un error, ingresá antes de esa fecha para cancelar el borrado.</value></data>
+  <data name="DeletionRequestedByPlatform.NoteSuspended" xml:space="preserve"><value>Tu cuenta está suspendida, así que no podés cancelar el borrado.</value></data>
+  <data name="DeletionRequestedByPlatform.BodySuspended" xml:space="preserve"><value>{0} El {1} a las {2} la plataforma inició el borrado de tu cuenta de {3}.</value></data>
   <data name="DeletionRequestedByPlatform.SupportContact" xml:space="preserve"><value>Si creés que es un error, escribí a {0}.</value></data>
-  <data name="DeletionCancelled.Subject" xml:space="preserve"><value>Cancelaste la baja de tu cuenta</value></data>
-  <data name="DeletionCancelled.Title" xml:space="preserve"><value>Cancelaste la baja de tu cuenta</value></data>
-  <data name="DeletionCancelled.Body" xml:space="preserve"><value>{0} El {1} a las {2} cancelaste la baja de tu cuenta de {3}. Tu cuenta sigue activa.</value></data>
-  <data name="AccountDeleted.Subject" xml:space="preserve"><value>Tu cuenta fue eliminada</value></data>
-  <data name="AccountDeleted.Title" xml:space="preserve"><value>Tu cuenta fue eliminada</value></data>
-  <data name="AccountDeleted.Body" xml:space="preserve"><value>{0} Eliminamos tu cuenta de {1}, con sus métodos de ingreso y tu espacio personal.</value></data>
+  <data name="DeletionCancelled.Subject" xml:space="preserve"><value>Cancelaste el borrado de tu cuenta</value></data>
+  <data name="DeletionCancelled.Title" xml:space="preserve"><value>Cancelaste el borrado de tu cuenta</value></data>
+  <data name="DeletionCancelled.Body" xml:space="preserve"><value>{0} El {1} a las {2} cancelaste el borrado de tu cuenta de {3}. Tu cuenta sigue activa.</value></data>
+  <data name="AccountDeleted.Subject" xml:space="preserve"><value>Tu cuenta fue borrada</value></data>
+  <data name="AccountDeleted.Title" xml:space="preserve"><value>Tu cuenta fue borrada</value></data>
+  <data name="AccountDeleted.Body" xml:space="preserve"><value>{0} Borramos tu cuenta de {1}, con sus métodos de ingreso y tu espacio personal.</value></data>
   <data name="AccountDeleted.After" xml:space="preserve"><value>Este correo ya no está asociado a ninguna cuenta.</value></data>
   <data name="VerifyEmail.Subject" xml:space="preserve"><value>{0} es tu código para agregar este correo a {1}</value></data>
   <data name="VerifyEmail.Title" xml:space="preserve"><value>Confirmá tu correo</value></data>

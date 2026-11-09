@@ -226,11 +226,11 @@ public sealed class EmailTemplateTests
         Assert.Contains("Hola, Lucía. El 27/09/2026 a las 14:35 agregaste el WhatsApp", changed.TextBody);
         Assert.Contains("+54 9 11 •••• 4521", changed.TextBody);
         Assert.Contains(url, changed.HtmlBody);
-        Assert.Equal("Pediste la baja de tu cuenta", requested.Subject);
-        Assert.Contains("Tu cuenta se elimina el 27/10/2026.", requested.TextBody);
-        Assert.Contains("Cancelaste la baja de tu cuenta", cancelled.Subject);
-        Assert.Contains("El 27/09/2026 a las 14:35 cancelaste la baja", cancelled.TextBody);
-        Assert.Equal("Tu cuenta fue eliminada", deleted.Subject);
+        Assert.Equal("Pediste borrar tu cuenta", requested.Subject);
+        Assert.Contains("Tu cuenta se borra el 27/10/2026.", requested.TextBody);
+        Assert.Contains("Cancelaste el borrado de tu cuenta", cancelled.Subject);
+        Assert.Contains("El 27/09/2026 a las 14:35 cancelaste el borrado", cancelled.TextBody);
+        Assert.Equal("Tu cuenta fue borrada", deleted.Subject);
         Assert.Contains("Este correo ya no está asociado a ninguna cuenta.", deleted.TextBody);
     }
 

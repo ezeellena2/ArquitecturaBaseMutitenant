@@ -52,13 +52,13 @@
     <value>soporte de la plataforma</value>
   </data>
   <data name="Template.AccountDeleted.Body" xml:space="preserve">
-    <value>Tu cuenta de ArquitecturaBase fue eliminada, con sus métodos de ingreso y tu espacio personal. Este número ya no está asociado a ninguna cuenta.</value>
+    <value>Tu cuenta de ArquitecturaBase fue borrada, con sus métodos de ingreso y tu espacio personal. Este número ya no está asociado a ninguna cuenta.</value>
   </data>
   <data name="Template.DeletionCancelled.Body" xml:space="preserve">
-    <value>Cancelaste la baja de tu cuenta de ArquitecturaBase. Tu cuenta sigue activa. Si no fuiste vos, entrá a tu cuenta y revisá tus métodos de ingreso. Si no podés entrar, usá «Recuperá tu cuenta».</value>
+    <value>Cancelaste el borrado de tu cuenta de ArquitecturaBase. Tu cuenta sigue activa. Si no fuiste vos, entrá a tu cuenta y revisá tus métodos de ingreso. Si no podés entrar, usá «Recuperá tu cuenta».</value>
   </data>
   <data name="Template.DeletionRequested.Body" xml:space="preserve">
-    <value>Pediste la baja de tu cuenta de ArquitecturaBase. Se elimina el {{1}}. Si no fuiste vos o te arrepentiste, ingresá antes de esa fecha para cancelarla.</value>
+    <value>Pediste borrar tu cuenta de ArquitecturaBase. Se borra el {{1}}. Si no fuiste vos o te arrepentiste, ingresá antes de esa fecha para cancelar el borrado.</value>
   </data>
   <data name="Template.Invitation.Body" xml:space="preserve">
     <value>Hola. {{1}} te invitó a sumarte a {{2}} en ArquitecturaBase. La invitación vence el {{3}}. Podés revisarla con el botón.</value>
@@ -76,7 +76,7 @@
     <value>No aprobamos la solicitud de alta de {{1}}. Tu cuenta y tu espacio personal siguen funcionando.</value>
   </data>
   <data name="Template.DeletionRequestedByPlatform.Body" xml:space="preserve">
-    <value>La plataforma inició la baja de tu cuenta de ArquitecturaBase y cerramos todas tus sesiones. Se elimina el {{1}}. Si creés que es un error, ingresá antes de esa fecha para cancelarla.</value>
+    <value>La plataforma inició el borrado de tu cuenta de ArquitecturaBase y cerramos todas tus sesiones. Se borra el {{1}}. Si creés que es un error, ingresá antes de esa fecha para cancelar el borrado.</value>
   </data>
   <data name="Template.PublicPageModerated.Body" xml:space="preserve">
     <value>La página pública de {{1}}: {{2}}. Tu organización y sus accesos siguen funcionando.</value>
@@ -97,7 +97,7 @@
     <value>Ya no sos miembro de {{1}}. Tu cuenta de ArquitecturaBase sigue activa. Si entrabas con un correo de esa organización, puede que ya no te sirva: revisá tus métodos de ingreso desde Mi cuenta.</value>
   </data>
   <data name="Template.DeletionRequestedSuspended.Body" xml:space="preserve">
-    <value>La plataforma inició la baja de tu cuenta de ArquitecturaBase. Se elimina el {{1}}. Tu cuenta está suspendida, así que no podés cancelar la baja. Si creés que es un error, escribí a {{2}} para pedir ayuda.</value>
+    <value>La plataforma inició el borrado de tu cuenta de ArquitecturaBase. Se borra el {{1}}. Tu cuenta está suspendida, así que no podés cancelar el borrado. Si creés que es un error, escribí a {{2}} para pedir ayuda.</value>
   </data>
   <data name="Notice.OccurredAt" xml:space="preserve">
     <value>{0} a las {1}</value>
@@ -355,19 +355,19 @@
     <value>Revisá tus métodos de ingreso</value>
   </data>
   <data name="Template.DeletionRequested.Title" xml:space="preserve">
-    <value>Baja de cuenta pedida</value>
+    <value>Borrado de cuenta pedido</value>
   </data>
   <data name="Template.DeletionCancelled.Title" xml:space="preserve">
-    <value>Baja de cuenta cancelada</value>
+    <value>Borrado de cuenta cancelado</value>
   </data>
   <data name="Template.AccountDeleted.Title" xml:space="preserve">
-    <value>Cuenta eliminada</value>
+    <value>Cuenta borrada</value>
   </data>
   <data name="Template.DeletionRequestedByPlatform.Title" xml:space="preserve">
-    <value>Baja pedida por la plataforma</value>
+    <value>Borrado iniciado por la plataforma</value>
   </data>
   <data name="Template.DeletionRequestedSuspended.Title" xml:space="preserve">
-    <value>Baja de una cuenta suspendida</value>
+    <value>Borrado de una cuenta suspendida</value>
   </data>
   <data name="Template.RecoveryReceived.Title" xml:space="preserve">
     <value>Pedido de recuperación recibido</value>
@@ -433,7 +433,7 @@
     <value>27/09/2026 a las 14:35</value>
   </data>
   <data name="Template.Variable.DeletionDate.Label" xml:space="preserve">
-    <value>Fecha de eliminación</value>
+    <value>Fecha de borrado</value>
   </data>
   <data name="Template.Variable.DeletionDate.Example" xml:space="preserve">
     <value>27/10/2026</value>

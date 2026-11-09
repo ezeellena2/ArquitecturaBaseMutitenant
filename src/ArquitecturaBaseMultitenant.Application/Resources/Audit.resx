@@ -12,8 +12,8 @@
   <data name="AuditSummary.RoleAssignment" xml:space="preserve"><value>Cambió los roles de {0}</value></data>
   <data name="AuditSummary.CompanyMembership" xml:space="preserve"><value>Cambió el acceso de {0}</value></data>
   <data name="AuditSummary.CompanyMembership.Created" xml:space="preserve"><value>Agregó a {0}</value></data>
-  <data name="AuditSummary.Member.Disabled" xml:space="preserve"><value>Deshabilitó a {0}</value></data>
-  <data name="AuditSummary.Member.Enabled" xml:space="preserve"><value>Habilitó a {0}</value></data>
+  <data name="AuditSummary.Member.Disabled" xml:space="preserve"><value>Dio de baja a {0}</value></data>
+  <data name="AuditSummary.Member.Enabled" xml:space="preserve"><value>Reactivó a {0}</value></data>
   <data name="AuditSummary.Member.Created" xml:space="preserve"><value>Invitó a {0}</value></data>
   <data name="AuditSummary.Member.Updated" xml:space="preserve"><value>Cambió los datos de {0}</value></data>
   <data name="AuditSummary.Member.Deleted" xml:space="preserve"><value>Quitó a {0}</value></data>
@@ -72,11 +72,11 @@
   <data name="Field.TaxNumber" xml:space="preserve"><value>Identificación fiscal</value></data>
   <data name="Value.Member.Status.Invited" xml:space="preserve"><value>Invitación pendiente</value></data>
   <data name="Value.Member.Status.Active" xml:space="preserve"><value>Activo</value></data>
-  <data name="Value.Member.Status.Inactive" xml:space="preserve"><value>Deshabilitado</value></data>
+  <data name="Value.Member.Status.Inactive" xml:space="preserve"><value>De baja</value></data>
   <data name="Value.CompanyMembership.Status.Active" xml:space="preserve"><value>Activo</value></data>
-  <data name="Value.CompanyMembership.Status.Inactive" xml:space="preserve"><value>Inactivo</value></data>
+  <data name="Value.CompanyMembership.Status.Inactive" xml:space="preserve"><value>De baja</value></data>
   <data name="Value.Company.Status.Active" xml:space="preserve"><value>Activa</value></data>
-  <data name="Value.Company.Status.Inactive" xml:space="preserve"><value>Inactiva</value></data>
+  <data name="Value.Company.Status.Inactive" xml:space="preserve"><value>De baja</value></data>
   <data name="Value.Invitation.Status.Pending" xml:space="preserve"><value>Invitación pendiente</value></data>
   <data name="Value.Invitation.Status.Accepted" xml:space="preserve"><value>Invitación aceptada</value></data>
   <data name="Value.Invitation.Status.Revoked" xml:space="preserve"><value>Invitación revocada</value></data>
@@ -99,9 +99,9 @@
   <data name="Platform.OperatorInvitationResendReason" xml:space="preserve"><value>Reenvío de la invitación de operador.</value></data>
   <data name="Platform.OperatorInvitationRevokeReason" xml:space="preserve"><value>Revocación de la invitación de operador.</value></data>
   <data name="SecurityEvent.LoginMethodChanged" xml:space="preserve"><value>Cambió un método de ingreso</value></data>
-  <data name="SecurityEvent.AccountDeletionRequested" xml:space="preserve"><value>Pidió la baja de la cuenta</value></data>
-  <data name="SecurityEvent.AccountDeletionCancelled" xml:space="preserve"><value>Canceló la baja de la cuenta</value></data>
-  <data name="SecurityEvent.AccountDeleted" xml:space="preserve"><value>Eliminó la cuenta</value></data>
+  <data name="SecurityEvent.AccountDeletionRequested" xml:space="preserve"><value>Pidió borrar la cuenta</value></data>
+  <data name="SecurityEvent.AccountDeletionCancelled" xml:space="preserve"><value>Canceló el borrado de la cuenta</value></data>
+  <data name="SecurityEvent.AccountDeleted" xml:space="preserve"><value>Borró la cuenta</value></data>
   <data name="SecurityEvent.OrganizationMembershipEnded" xml:space="preserve"><value>Terminó la membresía en la organización</value></data>
   <data name="SecurityEvent.PlatformSettingsChanged" xml:space="preserve"><value>Cambió la configuración de la plataforma</value></data>
   <data name="SecurityEvent.PlatformOperatorGranted" xml:space="preserve"><value>Habilitó al operador inicial</value></data>

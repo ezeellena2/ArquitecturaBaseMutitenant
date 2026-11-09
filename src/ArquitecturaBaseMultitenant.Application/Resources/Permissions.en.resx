@@ -37,7 +37,7 @@
   <data name="Permission.platform.settings.manage" xml:space="preserve"><value>Manage platform settings</value></data>
   <data name="PermissionDescription.users.read" xml:space="preserve"><value>View the organization member list and each member's details.</value></data>
   <data name="PermissionDescription.users.invite" xml:space="preserve"><value>Send an invitation to join the organization.</value></data>
-  <data name="PermissionDescription.users.manage" xml:space="preserve"><value>Edit, deactivate, enable and remove organization members.</value></data>
+  <data name="PermissionDescription.users.manage" xml:space="preserve"><value>Edit, deactivate, reactivate and remove organization members.</value></data>
   <data name="PermissionDescription.roles.read" xml:space="preserve"><value>View roles and the permissions they include.</value></data>
   <data name="PermissionDescription.roles.manage" xml:space="preserve"><value>Create, edit and delete roles.</value></data>
   <data name="PermissionDescription.roles.assign" xml:space="preserve"><value>Assign or remove roles from members.</value></data>
@@ -52,7 +52,7 @@
   <data name="PermissionDescription.platform.tenants.read" xml:space="preserve"><value>View organizations and their administrative data.</value></data>
   <data name="PermissionDescription.platform.tenants.manage" xml:space="preserve"><value>Approve, suspend, reactivate and close organizations and manage their modules.</value></data>
   <data name="PermissionDescription.platform.accounts.read" xml:space="preserve"><value>Search and view platform accounts.</value></data>
-  <data name="PermissionDescription.platform.accounts.manage" xml:space="preserve"><value>Suspend accounts, close their sessions and start account deletion.</value></data>
+  <data name="PermissionDescription.platform.accounts.manage" xml:space="preserve"><value>Suspend accounts, close their sessions and delete them.</value></data>
   <data name="PermissionDescription.platform.recoveries.manage" xml:space="preserve"><value>Approve or reject account recovery requests.</value></data>
   <data name="PermissionDescription.platform.legal.manage" xml:space="preserve"><value>Publish new versions of legal documents.</value></data>
   <data name="PermissionDescription.platform.operators.manage" xml:space="preserve"><value>Grant or remove platform operator access.</value></data>

@@ -78,10 +78,10 @@ public sealed class PlatformAccountDeletionTests(ApiFactory factory)
             Assert.Equal("Pedido legal recibido por correo.", platformEvent.Reason);
             Assert.Equal(platformEvent.OccurredAtUtc, detail.GetProperty("lastStateChange").GetProperty("atUtc").GetDateTime());
             var notice = await NoticeAsync(services, account.UserId, outboxBefore);
-            Assert.Equal("La plataforma inició la baja de tu cuenta", notice.Subject);
+            Assert.Equal("La plataforma inició el borrado de tu cuenta", notice.Subject);
             Assert.Contains("y cerramos todas tus sesiones.", notice.TextBody);
             Assert.Contains("Ingresar:", notice.TextBody);
-            Assert.Contains("Si creés que es un error, ingresá antes de esa fecha para cancelarla.", notice.TextBody);
+            Assert.Contains("Si creés que es un error, ingresá antes de esa fecha para cancelar el borrado.", notice.TextBody);
             Assert.DoesNotContain("Pedido legal", notice.TextBody);
         }
 
@@ -120,11 +120,11 @@ public sealed class PlatformAccountDeletionTests(ApiFactory factory)
         await using (var scope = factory.Services.CreateAsyncScope())
         {
             var notice = await NoticeAsync(scope.ServiceProvider, account.UserId, outboxBefore);
-            Assert.Equal("La plataforma inició la baja de tu cuenta", notice.Subject);
+            Assert.Equal("La plataforma inició el borrado de tu cuenta", notice.Subject);
             // Las sesiones ya se cerraron al suspenderla y una cuenta suspendida no puede entrar: sin botón.
             Assert.DoesNotContain("cerramos todas tus sesiones", notice.TextBody);
             Assert.DoesNotContain("Ingresar:", notice.TextBody);
-            Assert.Contains("Tu cuenta está suspendida, así que no podés cancelar la baja. Si creés que es un error, escribí a "
+            Assert.Contains("Tu cuenta está suspendida, así que no podés cancelar el borrado. Si creés que es un error, escribí a "
                 + support + ".", notice.TextBody);
         }
         await AgeLoginCodesAsync(account.Email.Value);

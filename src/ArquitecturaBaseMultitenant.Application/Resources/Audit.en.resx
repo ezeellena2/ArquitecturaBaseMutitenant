@@ -12,8 +12,8 @@
   <data name="AuditSummary.RoleAssignment" xml:space="preserve"><value>Changed the roles of {0}</value></data>
   <data name="AuditSummary.CompanyMembership" xml:space="preserve"><value>Changed the access for {0}</value></data>
   <data name="AuditSummary.CompanyMembership.Created" xml:space="preserve"><value>Added {0}</value></data>
-  <data name="AuditSummary.Member.Disabled" xml:space="preserve"><value>Disabled {0}</value></data>
-  <data name="AuditSummary.Member.Enabled" xml:space="preserve"><value>Enabled {0}</value></data>
+  <data name="AuditSummary.Member.Disabled" xml:space="preserve"><value>Deactivated {0}</value></data>
+  <data name="AuditSummary.Member.Enabled" xml:space="preserve"><value>Reactivated {0}</value></data>
   <data name="AuditSummary.Member.Created" xml:space="preserve"><value>Invited {0}</value></data>
   <data name="AuditSummary.Member.Updated" xml:space="preserve"><value>Changed the details for {0}</value></data>
   <data name="AuditSummary.Member.Deleted" xml:space="preserve"><value>Removed {0}</value></data>
@@ -72,11 +72,11 @@
   <data name="Field.TaxNumber" xml:space="preserve"><value>Tax ID</value></data>
   <data name="Value.Member.Status.Invited" xml:space="preserve"><value>Invitation pending</value></data>
   <data name="Value.Member.Status.Active" xml:space="preserve"><value>Active</value></data>
-  <data name="Value.Member.Status.Inactive" xml:space="preserve"><value>Disabled</value></data>
+  <data name="Value.Member.Status.Inactive" xml:space="preserve"><value>Deactivated</value></data>
   <data name="Value.CompanyMembership.Status.Active" xml:space="preserve"><value>Active</value></data>
-  <data name="Value.CompanyMembership.Status.Inactive" xml:space="preserve"><value>Inactive</value></data>
+  <data name="Value.CompanyMembership.Status.Inactive" xml:space="preserve"><value>Deactivated</value></data>
   <data name="Value.Company.Status.Active" xml:space="preserve"><value>Active</value></data>
-  <data name="Value.Company.Status.Inactive" xml:space="preserve"><value>Inactive</value></data>
+  <data name="Value.Company.Status.Inactive" xml:space="preserve"><value>Deactivated</value></data>
   <data name="Value.Invitation.Status.Pending" xml:space="preserve"><value>Invitation pending</value></data>
   <data name="Value.Invitation.Status.Accepted" xml:space="preserve"><value>Invitation accepted</value></data>
   <data name="Value.Invitation.Status.Revoked" xml:space="preserve"><value>Invitation revoked</value></data>

@@ -76,7 +76,7 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
     }
 
     [Theory]
-    [InlineData("es-AR", "Cuenta eliminada")]
+    [InlineData("es-AR", "Cuenta borrada")]
     [InlineData("en-US", "Deleted account")]
     public async Task Deleted_actor_and_affected_member_are_translated_on_read_without_storing_the_label(string culture, string label)
     {
@@ -291,7 +291,7 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
         var entry = Assert.Single(await NewEntriesAsync(client, before));
         Assert.Equal("Cambió el acceso de Tomás Acosta", entry.GetProperty("actionText").GetString());
         Assert.Equal("Delta S.A.", entry.GetProperty("whereText").GetString());
-        Assert.Equal(["Estado: Activo → Inactivo", "Roles en la empresa: Solo lectura, Ventas → "], Rows(entry));
+        Assert.Equal(["Estado: Activo → De baja", "Roles en la empresa: Solo lectura, Ventas → "], Rows(entry));
     }
 
     [Fact]
@@ -577,7 +577,7 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
         // en inglés.
         var spanish = await DetailsAsync(client, "es-AR");
         Assert.DoesNotContain(spanish.Values.SelectMany(rows => rows), row => row.StartsWith("un registro:", StringComparison.Ordinal));
-        Assert.Equal(["Estado: Activo → Deshabilitado"], spanish["Deshabilitó a Tomás Acosta"]);
+        Assert.Equal(["Estado: Activo → De baja"], spanish["Dio de baja a Tomás Acosta"]);
         // Un cambio de un solo campo dice cuál, como el tablero: «Cambió el idioma y la región predeterminados» y
         // «Cambió la zona de …». El idioma, en su propio idioma, como el selector de idioma y región.
         Assert.Equal(["Idioma y región: Español (Argentina) → English (United States)"],
@@ -590,7 +590,7 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
 
         var english = await DetailsAsync(client, "en-US");
         Assert.DoesNotContain(english.Values.SelectMany(rows => rows), row => row.StartsWith("a record:", StringComparison.Ordinal));
-        Assert.Equal(["Status: Active → Disabled"], english["Disabled Tomás Acosta"]);
+        Assert.Equal(["Status: Active → Deactivated"], english["Deactivated Tomás Acosta"]);
         Assert.Equal(["Language and region: Español (Argentina) → English (United States)"],
             english["Changed the default language and region"]);
         Assert.Equal(["Business time zone: Buenos Aires (GMT−3) → Córdoba (GMT−3)"],

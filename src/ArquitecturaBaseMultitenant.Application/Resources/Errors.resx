@@ -37,7 +37,7 @@
   <data name="Auth.LoginCode.TooManyAttempts" xml:space="preserve"><value>Superaste los intentos para este código. Pedí uno nuevo.</value></data>
   <data name="Auth.LoginCode.ResendTooSoon" xml:space="preserve"><value>Esperá un momento antes de pedir otro código.</value></data>
   <data name="Auth.LoginCode.TooManyRequests" xml:space="preserve"><value>Pediste demasiados códigos. Probá de nuevo más tarde.</value></data>
-  <data name="Auth.Account.Disabled" xml:space="preserve"><value>Tu cuenta está deshabilitada. Contactá a un administrador.</value></data>
+  <data name="Auth.Account.Disabled" xml:space="preserve"><value>Tu cuenta está suspendida. Contactá a un administrador.</value></data>
   <data name="Auth.Account.LockedOut" xml:space="preserve"><value>Tu cuenta está bloqueada por unos minutos por demasiados intentos fallidos.</value></data>
   <data name="Auth.Account.NotInvited" xml:space="preserve"><value>Todavía no tenés acceso al sistema. Pedile a un administrador que te dé de alta.</value></data>
   <data name="Auth.ExternalLogin.Failed" xml:space="preserve"><value>No pudimos completar el ingreso con Google.</value></data>
@@ -58,7 +58,7 @@
   <data name="Features.Module.ExpiryRequired" xml:space="preserve"><value>Escribí cuándo termina la prueba.</value></data>
   <data name="Features.Module.NotFound" xml:space="preserve"><value>No encontramos el módulo.</value></data>
   <data name="Features.Module.InvalidScope" xml:space="preserve"><value>El módulo no está disponible para este perfil.</value></data>
-  <data name="Tenancy.Member.CannotDisableSelf" xml:space="preserve"><value>No podés deshabilitarte a vos misma.</value></data>
+  <data name="Tenancy.Member.CannotDisableSelf" xml:space="preserve"><value>No podés darte de baja a vos misma.</value></data>
   <data name="Users.User.LastAdmin" xml:space="preserve"><value>Tiene que quedar al menos un administrador activo en el sistema.</value></data>
   <data name="Settings.System.NotFound" xml:space="preserve"><value>No encontramos la configuración del sistema.</value></data>
   <data name="Users.User.AlreadyExists" xml:space="preserve"><value>Ya existe una cuenta con ese correo.</value></data>
@@ -72,12 +72,12 @@
   <data name="Auth.BusinessSignup.ActiveSpace" xml:space="preserve"><value>Para crear una organización, usá la sesión de la cuenta sin un espacio activo.</value></data>
   <data name="Identity.Account.LockedOut" xml:space="preserve"><value>Tu cuenta está bloqueada por unos minutos.</value></data>
   <data name="Identity.Account.Suspended" xml:space="preserve"><value>Tu cuenta está suspendida.</value></data>
-  <data name="Identity.Account.PendingDeletion" xml:space="preserve"><value>Tu cuenta tiene la baja pedida.</value></data>
+  <data name="Identity.Account.PendingDeletion" xml:space="preserve"><value>Tu cuenta está por borrarse.</value></data>
   <data name="Users.Identity.Required" xml:space="preserve"><value>Cargá un correo o un número de WhatsApp.</value></data>
   <data name="Users.Invitation.ConsentRequired" xml:space="preserve"><value>Confirmá que la persona aceptó recibir mensajes por WhatsApp.</value></data>
   <data name="Users.Invitation.NameRequired" xml:space="preserve"><value>Para invitar por WhatsApp, cargá el nombre de la persona.</value></data>
   <data name="Users.Invitation.TooManyRequests" xml:space="preserve"><value>Esperá un minuto antes de volver a invitar a esta persona.</value></data>
-  <data name="Users.Invitation.UserInactive" xml:space="preserve"><value>La cuenta está deshabilitada: habilitala antes de invitarla.</value></data>
+  <data name="Users.Invitation.UserInactive" xml:space="preserve"><value>La persona está de baja: reactivala antes de invitarla.</value></data>
   <data name="Roles.Role.NameRequired" xml:space="preserve"><value>Escribí el nombre del rol.</value></data>
   <data name="Roles.Role.NameTooLong" xml:space="preserve"><value>El nombre del rol supera el límite permitido.</value></data>
   <data name="Roles.Role.DescriptionTooLong" xml:space="preserve"><value>La descripción supera el límite permitido.</value></data>
@@ -118,14 +118,14 @@
   <data name="Tenancy.Company.TimeZoneUnavailable" xml:space="preserve"><value>Elegí una zona horaria disponible.</value></data>
   <data name="Tenancy.Company.TaxIdAlreadyUsed" xml:space="preserve"><value>Ya hay una empresa con esa identificación fiscal.</value></data>
   <data name="Tenancy.Company.NotFound" xml:space="preserve"><value>No encontramos esta empresa.</value></data>
-  <data name="Tenancy.Company.Inactive" xml:space="preserve"><value>Activá la empresa antes de administrar sus miembros.</value></data>
+  <data name="Tenancy.Company.Inactive" xml:space="preserve"><value>Reactivá la empresa antes de administrar sus miembros.</value></data>
   <data name="Companies.Membership.NotFound" xml:space="preserve"><value>No encontramos esta membresía de empresa.</value></data>
   <data name="Companies.Membership.AlreadyExists" xml:space="preserve"><value>Esta persona ya pertenece a la empresa.</value></data>
-  <data name="Companies.Membership.MemberInactive" xml:space="preserve"><value>Solo podés sumar a una persona con acceso activo a la organización.</value></data>
+  <data name="Companies.Membership.MemberInactive" xml:space="preserve"><value>Solo podés agregar a una persona con acceso activo a la organización.</value></data>
   <data name="Companies.Membership.LastCompanyAdmin" xml:space="preserve"><value>Tiene que quedar al menos un administrador en la empresa.</value></data>
   <data name="Tenancy.Tenant.InvalidTransition" xml:space="preserve"><value>La organización no puede pasar a ese estado.</value></data>
   <data name="Tenancy.Tenant.ProvisioningConflict" xml:space="preserve"><value>La organización ya existe con otros datos de configuración.</value></data>
-  <data name="Tenancy.Member.Inactive" xml:space="preserve"><value>Tu acceso a esta organización está deshabilitado.</value></data>
+  <data name="Tenancy.Member.Inactive" xml:space="preserve"><value>Estás de baja en esta organización.</value></data>
   <data name="Tenancy.Member.InvalidTransition" xml:space="preserve"><value>La membresía no puede pasar a ese estado.</value></data>
   <data name="Tenancy.Member.NotFound" xml:space="preserve"><value>No encontramos a esta persona en la organización.</value></data>
   <data name="Tenancy.Access.Wrong" xml:space="preserve"><value>Este acceso no permite realizar la acción.</value></data>
@@ -137,13 +137,13 @@
   <data name="Identity.LoginMethod.LastPersonalMethod" xml:space="preserve"><value>Agregá y verificá otro método personal antes de quitar este.</value></data>
   <data name="Identity.Google.AlreadyUsed" xml:space="preserve"><value>Esta cuenta de Google ya está asociada a otra cuenta.</value></data>
   <data name="Legal.Document.VersionChanged" xml:space="preserve"><value>Los términos cambiaron. Volvé a leerlos y aceptá la versión vigente.</value></data>
-  <data name="Legal.AccountDeletion.AlreadyPending" xml:space="preserve"><value>Ya pediste la baja de tu cuenta.</value></data>
-  <data name="Legal.AccountDeletion.Blocked" xml:space="preserve"><value>Hay pendientes que impiden dar de baja tu cuenta.</value></data>
-  <data name="Legal.AccountDeletion.GraceExpired" xml:space="preserve"><value>El plazo para cancelar la baja venció.</value></data>
+  <data name="Legal.AccountDeletion.AlreadyPending" xml:space="preserve"><value>Ya pediste borrar tu cuenta.</value></data>
+  <data name="Legal.AccountDeletion.Blocked" xml:space="preserve"><value>Hay pendientes que impiden borrar tu cuenta.</value></data>
+  <data name="Legal.AccountDeletion.GraceExpired" xml:space="preserve"><value>El plazo para cancelar el borrado venció.</value></data>
   <data name="Legal.AccountDeletion.InvalidReason" xml:space="preserve"><value>Escribí un motivo de hasta 500 caracteres.</value></data>
-  <data name="Legal.AccountDeletion.LastAdmin" xml:space="preserve"><value>Antes de pedir la baja, cada Organización activa debe tener otra persona con el rol Dueño.</value></data>
-  <data name="Legal.AccountDeletion.PlatformOperator" xml:space="preserve"><value>Tu cuenta de operador no puede darse de baja desde acá.</value></data>
-  <data name="Legal.AccountDeletion.CancelProofInvalid" xml:space="preserve"><value>El comprobante para cancelar la baja no es válido o venció.</value></data>
+  <data name="Legal.AccountDeletion.LastAdmin" xml:space="preserve"><value>Antes de borrar tu cuenta, cada Organización activa debe tener otra persona con el rol Dueño.</value></data>
+  <data name="Legal.AccountDeletion.PlatformOperator" xml:space="preserve"><value>Tu cuenta de operador no se puede borrar desde acá.</value></data>
+  <data name="Legal.AccountDeletion.CancelProofInvalid" xml:space="preserve"><value>El comprobante para cancelar el borrado no es válido o venció.</value></data>
   <data name="Tenancy.Member.IdentityRequired" xml:space="preserve"><value>La membresía necesita una cuenta antes de activarse.</value></data>
   <data name="Invitations.Invitation.Invalid" xml:space="preserve"><value>Esta invitación ya no sirve.</value></data>
   <data name="Invitations.Invitation.NotFound" xml:space="preserve"><value>No encontramos esta invitación.</value></data>
@@ -196,7 +196,7 @@
   <data name="Platform.AccountRecovery.MethodAlreadyOnAccount" xml:space="preserve"><value>Ese método de ingreso ya pertenece a esa cuenta.</value></data>
   <data name="Platform.AccountRecovery.OperatorAccount" xml:space="preserve"><value>La cuenta es de un operador de la plataforma: no se recupera desde acá.</value></data>
   <data name="Features.Module.InvalidExpiry" xml:space="preserve"><value>Elegí una fecha cuyo día completo pueda representarse.</value></data>
-  <data name="Legal.AccountDeletion.LeaseInvalid" xml:space="preserve"><value>La autorización para procesar la baja ya no es válida.</value></data>
+  <data name="Legal.AccountDeletion.LeaseInvalid" xml:space="preserve"><value>La autorización para procesar el borrado ya no es válida.</value></data>
   <data name="Auth.LoginCode.AccountNotFound" xml:space="preserve"><value>No hay una cuenta con ese correo.</value></data>
   <data name="Auth.Signup.EmailTaken" xml:space="preserve"><value>Ya tenés una cuenta con ese correo.</value></data>
   <data name="Platform.AccountRecovery.AccountNotFound" xml:space="preserve"><value>No hay una cuenta con ese correo.</value></data>

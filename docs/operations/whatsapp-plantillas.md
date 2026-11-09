@@ -14,11 +14,11 @@ Meta exige plantilla aprobada para iniciar una conversación. Un mensaje libre s
 | `invitacion_organizacion` | Marketing (es), Utility (en) | Quien invita, organización y vencimiento; botón del enlace Email de invitación existente. Reemplaza invitacion_acceso. |
 | `aviso_metodo_ingreso` | Utility | Cambio localizado, método enmascarado, fecha; LoginMethodChanged. |
 | `revisa_metodos_ingreso` | Utility | Organización; ReviewLoginMethods. |
-| `baja_cuenta_pedida` | Utility | Fecha de eliminación; DeletionRequested por la persona. |
+| `baja_cuenta_pedida` | Utility | Fecha de borrado; DeletionRequested por la persona. |
 | `baja_cuenta_cancelada` | Utility | Sin variables; DeletionCancelled. |
 | `cuenta_eliminada` | Utility | Sin variables; AccountDeleted. |
-| `baja_cuenta_plataforma` | Utility | Fecha de eliminación; DeletionRequested por Plataforma, cuenta activa y cancelable. |
-| `baja_cuenta_plataforma_suspendida` | Utility | Fecha de eliminación y soporte; DeletionRequested por Plataforma, suspendida y no cancelable. |
+| `baja_cuenta_plataforma` | Utility | Fecha de borrado; DeletionRequested por Plataforma, cuenta activa y cancelable. |
+| `baja_cuenta_plataforma_suspendida` | Utility | Fecha de borrado y soporte; DeletionRequested por Plataforma, suspendida y no cancelable. |
 | `recuperacion_recibida` | Utility | RecoveryReceived al método nuevo, pedido efectivamente registrado. |
 | `recuperacion_aprobada` | Utility | RecoveryApproved al método nuevo; botón del ActionUrl vigente. |
 | `recuperacion_rechazada` | Utility | RecoveryRejected al método nuevo; no revela datos de la cuenta. |
@@ -60,15 +60,15 @@ Los trece nombres originales se completan con este paquete, cotejado con Mensaje
 | aviso_metodo_ingreso / en | Your ArquitecturaBase account's sign-in methods changed: you {{1}} {{2}} on {{3}}. If this was not you, sign in and review your sign-in methods. If you cannot sign in, use “Recover your account”. | {{1}}: added; {{2}}: •••• 4521; {{3}}: 09/27/2026 at 2:35 PM | None |
 | revisa_metodos_ingreso / es | Ya no sos miembro de {{1}}. Tu cuenta de ArquitecturaBase sigue activa. Si entrabas con un correo de esa organización, puede que ya no te sirva: revisá tus métodos de ingreso desde Mi cuenta. | {{1}}: Grupo Delta | Ninguno |
 | revisa_metodos_ingreso / en | You are no longer a member of {{1}}. Your ArquitecturaBase account is still active. If you used that organization's email to sign in, it may no longer work: review your sign-in methods in My account. | {{1}}: Delta Group | None |
-| baja_cuenta_pedida / es | Pediste la baja de tu cuenta de ArquitecturaBase. Se elimina el {{1}}. Si no fuiste vos o te arrepentiste, ingresá antes de esa fecha para cancelarla. | {{1}}: 27/10/2026 | Ninguno |
+| baja_cuenta_pedida / es | Pediste borrar tu cuenta de ArquitecturaBase. Se borra el {{1}}. Si no fuiste vos o te arrepentiste, ingresá antes de esa fecha para cancelar el borrado. | {{1}}: 27/10/2026 | Ninguno |
 | baja_cuenta_pedida / en | You requested deletion of your ArquitecturaBase account. It will be deleted on {{1}}. If this was not you or you changed your mind, sign in before that date to cancel it. | {{1}}: 10/27/2026 | None |
-| baja_cuenta_plataforma / es | La plataforma inició la baja de tu cuenta de ArquitecturaBase y cerramos todas tus sesiones. Se elimina el {{1}}. Si creés que es un error, ingresá antes de esa fecha para cancelarla. | {{1}}: 27/10/2026 | Ninguno |
+| baja_cuenta_plataforma / es | La plataforma inició el borrado de tu cuenta de ArquitecturaBase y cerramos todas tus sesiones. Se borra el {{1}}. Si creés que es un error, ingresá antes de esa fecha para cancelar el borrado. | {{1}}: 27/10/2026 | Ninguno |
 | baja_cuenta_plataforma / en | The platform started deletion of your ArquitecturaBase account and closed all your sessions. It will be deleted on {{1}}. If you believe this is a mistake, sign in before that date to cancel it. | {{1}}: 10/27/2026 | None |
-| baja_cuenta_plataforma_suspendida / es | La plataforma inició la baja de tu cuenta de ArquitecturaBase. Se elimina el {{1}}. Tu cuenta está suspendida, así que no podés cancelar la baja. Si creés que es un error, escribí a {{2}} para pedir ayuda. | {{1}}: 27/10/2026; {{2}}: soporte@ejemplo.com | Ninguno |
+| baja_cuenta_plataforma_suspendida / es | La plataforma inició el borrado de tu cuenta de ArquitecturaBase. Se borra el {{1}}. Tu cuenta está suspendida, así que no podés cancelar el borrado. Si creés que es un error, escribí a {{2}} para pedir ayuda. | {{1}}: 27/10/2026; {{2}}: soporte@ejemplo.com | Ninguno |
 | baja_cuenta_plataforma_suspendida / en | The platform started deletion of your ArquitecturaBase account. It will be deleted on {{1}}. Your account is suspended, so you cannot cancel deletion. If you believe this is a mistake, contact {{2}} for help. | {{1}}: 10/27/2026; {{2}}: support@example.com | None |
-| baja_cuenta_cancelada / es | Cancelaste la baja de tu cuenta de ArquitecturaBase. Tu cuenta sigue activa. Si no fuiste vos, entrá a tu cuenta y revisá tus métodos de ingreso. Si no podés entrar, usá «Recuperá tu cuenta». | Sin variables | Ninguno |
+| baja_cuenta_cancelada / es | Cancelaste el borrado de tu cuenta de ArquitecturaBase. Tu cuenta sigue activa. Si no fuiste vos, entrá a tu cuenta y revisá tus métodos de ingreso. Si no podés entrar, usá «Recuperá tu cuenta». | Sin variables | Ninguno |
 | baja_cuenta_cancelada / en | You canceled deletion of your ArquitecturaBase account. Your account is still active. If this was not you, sign in and review your sign-in methods. If you cannot sign in, use “Recover your account”. | No variables | None |
-| cuenta_eliminada / es | Tu cuenta de ArquitecturaBase fue eliminada, con sus métodos de ingreso y tu espacio personal. Este número ya no está asociado a ninguna cuenta. | Sin variables | Ninguno |
+| cuenta_eliminada / es | Tu cuenta de ArquitecturaBase fue borrada, con sus métodos de ingreso y tu espacio personal. Este número ya no está asociado a ninguna cuenta. | Sin variables | Ninguno |
 | cuenta_eliminada / en | Your ArquitecturaBase account was deleted, including its sign-in methods and your personal space. This number is no longer associated with any account. | No variables | None |
 | recuperacion_recibida / es | Recibimos tu pedido para recuperar tu cuenta de ArquitecturaBase. Lo revisa una persona de la plataforma y te avisamos por acá. Si no pediste esto, ignorá este mensaje. | Sin variables | Ninguno |
 | recuperacion_recibida / en | We received your request to recover your ArquitecturaBase account. A person from the platform will review it and we will notify you here. If you did not request this, ignore this message. | No variables | None |
@@ -78,6 +78,8 @@ Los trece nombres originales se completan con este paquete, cotejado con Mensaje
 | recuperacion_rechazada / en | We reviewed your request to recover your ArquitecturaBase account and could not confirm that it belongs to you. You can submit a new request from the sign-in page. | No variables | None |
 | recuperacion_aviso_cuenta / es | Alguien pidió recuperar tu cuenta de ArquitecturaBase. Una persona de la plataforma revisa el pedido antes de cambiar algo. Si fuiste vos, no tenés que hacer nada. Si no fuiste vos, escribí a {{1}} para pedir ayuda. | {{1}}: soporte@ejemplo.com | Ninguno |
 | recuperacion_aviso_cuenta / en | Someone requested recovery of your ArquitecturaBase account. A person from the platform will review the request before changing anything. If this was you, you do not need to do anything. If it was not you, contact {{1}} for help. | {{1}}: support@example.com | None |
+
+**Base de la 12 (2026-11-08):** las cinco plantillas de la cuenta (`baja_cuenta_pedida`, `baja_cuenta_plataforma`, `baja_cuenta_plataforma_suspendida`, `baja_cuenta_cancelada` y `cuenta_eliminada`) dicen «borrar» en lugar de «baja» y «eliminar» en español, como «Borrar mi cuenta». Conservan el nombre, las variables, la categoría y el inglés; el usuario las vuelve a aprobar en Meta con el mismo nombre y los textos de la tabla (I2 del plan). Los nombres de Meta no cambian.
 
 Authentication utiliza los componentes oficiales de Meta: recomendación de seguridad activada, footer de vencimiento **10 minutos** y botón OTP de tipo Copiar código. La consulta real del 2026-10-08 confirmó `codigo_ingreso` **APPROVED / AUTHENTICATION**, es/en, con esos componentes; el texto generado por Meta puede diferir del orden del ejemplo visual y no se modifica la plantilla activa. Su único parámetro se envía igual en body y botón; el código nunca se copia a la tabla de mensajes. La vigencia del código configurada debe corresponder al footer aprobado; un cambio de vigencia exige revisar esa plantilla.
 
