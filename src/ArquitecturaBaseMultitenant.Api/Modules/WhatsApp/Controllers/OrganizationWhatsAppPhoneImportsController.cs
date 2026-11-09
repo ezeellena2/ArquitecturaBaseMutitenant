@@ -47,7 +47,8 @@ public sealed class OrganizationWhatsAppPhoneImportsController(IWhatsAppPhoneImp
     [ProducesProblem(500)]
     [ProducesProblem(503)]
     public async Task<IActionResult> Import([FromBody] WhatsAppPhoneImportHttpRequest request, CancellationToken cancellationToken) =>
-        (await service.ImportAsync(ToModel(request.Phones, request.CompanyId, request.RoleIds), cancellationToken)).ToActionResult(this);
+        (await service.ImportAsync(ToModel(request.Phones, request.CompanyId, request.RoleIds) with
+            { ConsentConfirmed = request.ConsentConfirmed }, cancellationToken)).ToActionResult(this);
 
     private static WhatsAppPhoneImportRequest ToModel(IReadOnlyList<PhoneInputHttpRequest>? phones, Guid? companyId, IReadOnlyList<Guid>? roleIds) =>
         new(phones?.Select(phone => phone is null ? null! : new PhoneInputRequest(phone.Country, phone.Number)).ToArray(), companyId, roleIds);

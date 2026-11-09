@@ -124,6 +124,28 @@ public sealed class InvitationTests
         Email.Create("ANA@example.test").Value, InvitationChannel.Email, "hash", IssuedAtUtc, TimeSpan.FromDays(7));
 
     [Fact]
+    public void A_phone_invitation_keeps_who_confirmed_the_whatsapp_consent_and_when()
+    {
+        var confirmedBy = Guid.CreateVersion7();
+        var phone = InvitationIdentity.ForPhone(PhoneNumber.Create("+5491134567890").Value);
+
+        var invitation = Invitation.Issue(Guid.CreateVersion7(), confirmedBy, phone, "whatsapp", "hash", IssuedAtUtc,
+            TimeSpan.FromDays(7), new InvitationConsent(confirmedBy, IssuedAtUtc.AddSeconds(-1)));
+
+        Assert.Equal((confirmedBy, IssuedAtUtc.AddSeconds(-1)), (invitation.ConsentConfirmedByUserId, invitation.ConsentConfirmedAtUtc));
+        Assert.Null(Issue().ConsentConfirmedByUserId);
+        Assert.Null(Issue().ConsentConfirmedAtUtc);
+    }
+
+    [Fact]
+    public void A_consent_without_who_or_with_a_local_instant_is_a_bug()
+    {
+        Assert.Throws<ArgumentException>(() => new InvitationConsent(Guid.Empty, IssuedAtUtc));
+        Assert.Throws<ArgumentException>(() => new InvitationConsent(Guid.CreateVersion7(),
+            DateTime.SpecifyKind(IssuedAtUtc, DateTimeKind.Local)));
+    }
+
+    [Fact]
     public void Verified_email_acceptance_requires_the_destination_and_does_not_grant_link_bootstrap()
     {
         var invitation = Issue();

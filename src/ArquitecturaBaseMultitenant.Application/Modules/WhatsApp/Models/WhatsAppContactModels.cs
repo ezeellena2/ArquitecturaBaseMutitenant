@@ -118,7 +118,9 @@ public sealed record CreateWhatsAppBroadcastRequest(string? Name, Guid? Template
 public sealed record CancelWhatsAppBroadcastRequest(uint? Version);
 
 /// <summary>Teléfonos a cargar como empleados: cada uno con el país elegido, interpretado por el back.</summary>
-public sealed record WhatsAppPhoneImportRequest(IReadOnlyList<PhoneInputRequest>? Phones, Guid? CompanyId, IReadOnlyList<Guid>? RoleIds)
+/// <summary>«Cargar teléfonos»; <c>ConsentConfirmed</c> es la casilla de la importación (179) y la vista previa no la pide.</summary>
+public sealed record WhatsAppPhoneImportRequest(IReadOnlyList<PhoneInputRequest>? Phones, Guid? CompanyId, IReadOnlyList<Guid>? RoleIds,
+    bool? ConsentConfirmed = null)
 {
     public override string ToString() => nameof(WhatsAppPhoneImportRequest);
 }

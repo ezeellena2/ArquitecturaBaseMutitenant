@@ -57,7 +57,8 @@ internal sealed class InvitationIssuer(IInvitationRepository invitations, IMembe
         }
         var secret = tokens.GenerateSecret();
         var invitation = Invitation.Issue(member.Id, request.InviterUserId, request.Destination, request.Channel,
-            tokens.Hash(secret), timeProvider.GetUtcNow().UtcDateTime, TimeSpan.FromDays(options.Value.LifetimeDays));
+            tokens.Hash(secret), timeProvider.GetUtcNow().UtcDateTime, TimeSpan.FromDays(options.Value.LifetimeDays),
+            request.Consent);
         invitations.Add(invitation);
         var token = tokens.Protect(new InvitationTokenData(tenantId, invitation.Id, secret));
         await delivery.EnqueueAsync(invitation, organization, token, userId, destination.Value, cancellationToken, preparedSettings, grant);

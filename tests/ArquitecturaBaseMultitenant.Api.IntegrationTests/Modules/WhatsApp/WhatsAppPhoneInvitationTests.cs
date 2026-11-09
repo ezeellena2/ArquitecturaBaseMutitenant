@@ -75,6 +75,63 @@ public sealed class WhatsAppPhoneInvitationTests(ApiFactory factory) : IClassFix
         Assert.Equal("Invited", invited.GetProperty("state").GetString());
     }
 
+    /// <summary>Decisión 179: sin «La persona aceptó recibir mensajes por WhatsApp» no sale ninguna invitación.</summary>
+    [Theory]
+    [InlineData(null)]
+    [InlineData(false)]
+    public async Task Without_the_consent_checkbox_nothing_is_saved_or_sent(bool? consent)
+    {
+        await using var host = Host();
+        using var client = WhatsAppAttentionJourney.Client(host);
+        var (_, tenantId) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, client, Ct);
+        var fresh = WhatsAppAttentionJourney.NewPhone();
+        var body = new { phones = new[] { Input(fresh) }, companyId = (Guid?)null, roleIds = Array.Empty<Guid>(), consentConfirmed = consent };
+
+        using var previewed = await WhatsAppAttentionJourney.PostAsync(client, Imports + "/preview", body, Ct);
+        Assert.Equal(HttpStatusCode.OK, previewed.StatusCode);
+        using var refused = await WhatsAppAttentionJourney.PostAsync(client, Imports, body, Ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+        var problem = await WhatsAppAttentionJourney.JsonAsync(refused, Ct);
+        Assert.Equal("WhatsApp.PhoneImport.ConsentRequired", problem.GetProperty("code").GetString());
+        Assert.Equal("Confirmá que la persona aceptó recibir mensajes por WhatsApp.",
+            Assert.Single(problem.GetProperty("errors").GetProperty("consentConfirmed").EnumerateArray()).GetString());
+        Assert.Empty(await InvitationMessagesAsync(host.Services, [fresh]));
+        Assert.Empty(await InvitationsAsync(host.Services, tenantId));
+    }
+
+    [Fact]
+    public async Task Each_invitation_keeps_who_confirmed_the_consent_and_when_also_when_resent()
+    {
+        await using var host = Host();
+        using var client = WhatsAppAttentionJourney.Client(host);
+        var (owner, tenantId) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, client, Ct);
+        var before = host.Services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        var phones = new[] { WhatsAppAttentionJourney.NewPhone(), WhatsAppAttentionJourney.NewPhone() };
+
+        using (var imported = await WhatsAppAttentionJourney.PostAsync(client, Imports, Body([.. phones.Select(Input)]), Ct))
+            Assert.Equal(HttpStatusCode.OK, imported.StatusCode);
+
+        var invitations = await InvitationsAsync(host.Services, tenantId);
+        Assert.Equal(2, invitations.Count);
+        Assert.All(invitations, invitation =>
+        {
+            Assert.Equal(owner.UserId, invitation.ConsentConfirmedByUserId);
+            Assert.InRange(invitation.ConsentConfirmedAtUtc!.Value, before, invitation.IssuedAtUtc);
+        });
+        Assert.Single(invitations.Select(invitation => invitation.ConsentConfirmedAtUtc).Distinct());
+
+        // Reenviar no vuelve a preguntar: la invitación nueva conserva el consentimiento de la que reemplaza.
+        var first = invitations[0];
+        using (var resent = await WhatsAppAttentionJourney.PostAsync(client, $"/api/users/invitations/{first.Id:D}/resend", new { }, Ct))
+            Assert.Equal(HttpStatusCode.OK, resent.StatusCode);
+        var replacement = Assert.Single(await InvitationsAsync(host.Services, tenantId),
+            invitation => invitation.MemberId == first.MemberId && invitation.Status == InvitationStatus.Pending);
+        Assert.NotEqual(first.Id, replacement.Id);
+        Assert.Equal((first.ConsentConfirmedByUserId, first.ConsentConfirmedAtUtc),
+            (replacement.ConsentConfirmedByUserId, replacement.ConsentConfirmedAtUtc));
+    }
+
     [Fact]
     public async Task A_phone_invitation_is_accepted_only_with_that_phone_verified()
     {
@@ -152,7 +209,8 @@ public sealed class WhatsAppPhoneInvitationTests(ApiFactory factory) : IClassFix
     }).WithWebHostBuilder(builder => builder.ConfigureTestServices(WhatsAppIdentityTestTransport.BlockExternalSender));
 
     private static object Input(string phone) => new { country = "AR", number = phone };
-    private static object Body(params object[] phones) => new { phones, companyId = (Guid?)null, roleIds = Array.Empty<Guid>() };
+    private static object Body(params object[] phones) =>
+        new { phones, companyId = (Guid?)null, roleIds = Array.Empty<Guid>(), consentConfirmed = true };
     private static object Contact(string phone) => new { phone = new { country = "AR", number = phone }, channel = "whatsapp" };
 
     private async Task<Guid> StagePhoneAsync(string phone, string name)
@@ -188,6 +246,14 @@ public sealed class WhatsAppPhoneInvitationTests(ApiFactory factory) : IClassFix
                 messages.Add((root.GetProperty("To").GetString()!, root.GetProperty("ButtonParameter").GetString()!));
         }
         return messages;
+    }
+
+    private static async Task<IReadOnlyList<Invitation>> InvitationsAsync(IServiceProvider services, Guid tenantId)
+    {
+        await using var scope = services.CreateAsyncScope();
+        using var tenant = scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(tenantId);
+        return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Invitations.AsNoTracking()
+            .OrderBy(invitation => invitation.IssuedAtUtc).ThenBy(invitation => invitation.Id).ToListAsync(Ct);
     }
 
     private static async Task<string> TokenAsync(IServiceProvider services, string phone)

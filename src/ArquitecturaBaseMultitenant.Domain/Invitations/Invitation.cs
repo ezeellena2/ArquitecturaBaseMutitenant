@@ -36,13 +36,19 @@ public sealed class Invitation : Entity, ITenantOwned, IAuditable
     /// <summary>Cuándo quedó en la auditoría que venció sin aceptarse. Es técnico: la entrada lleva su propia fecha.</summary>
     [NotAudited]
     public DateTime? ExpiryRecordedAtUtc { get; private set; }
+    /// <summary>
+    /// Quién confirmó que la persona aceptó recibir mensajes por WhatsApp, al cargar su teléfono (179); nulo en las de correo
+    /// y en las anteriores.
+    /// </summary>
+    public Guid? ConsentConfirmedByUserId { get; private set; }
+    public DateTime? ConsentConfirmedAtUtc { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public Guid? CreatedBy { get; private set; }
     public DateTime? ModifiedAtUtc { get; private set; }
     public Guid? ModifiedBy { get; private set; }
 
     public static Invitation Issue(Guid memberId, Guid inviterUserId, InvitationIdentity destination, string channel,
-        string tokenHash, DateTime nowUtc, TimeSpan lifetime)
+        string tokenHash, DateTime nowUtc, TimeSpan lifetime, InvitationConsent? consent = null)
     {
         if (memberId == Guid.Empty) throw new ArgumentException("A member ID is required.", nameof(memberId));
         if (inviterUserId == Guid.Empty) throw new ArgumentException("An inviter ID is required.", nameof(inviterUserId));
@@ -62,8 +68,14 @@ public sealed class Invitation : Entity, ITenantOwned, IAuditable
             Status = InvitationStatus.Pending,
             IssuedAtUtc = nowUtc,
             ExpiresAtUtc = nowUtc + lifetime,
+            ConsentConfirmedByUserId = consent?.ConfirmedByUserId,
+            ConsentConfirmedAtUtc = consent?.ConfirmedAtUtc,
         };
     }
+
+    /// <summary>El consentimiento que guarda, para conservarlo en la invitación que la reemplaza al reenviarla.</summary>
+    public InvitationConsent? GetConsent() => ConsentConfirmedByUserId is { } confirmedBy && ConsentConfirmedAtUtc is { } confirmedAt
+        ? new InvitationConsent(confirmedBy, confirmedAt) : null;
 
     public Result CheckToken(string tokenHash, DateTime nowUtc)
     {

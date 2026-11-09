@@ -19,7 +19,8 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// <summary>
 /// «Cargar teléfonos de empleados» en Usuarios (ADR 0038 y decisión 11 de la E11): a cada número que se invita le llega la
 /// invitación por WhatsApp, con la empresa y los roles elegidos, y se acepta con ese teléfono verificado. Todo o nada: una
-/// sola transacción para la lista.
+/// sola transacción para la lista. Sin la casilla «La persona aceptó recibir mensajes por WhatsApp» no sale ninguna, y cada
+/// invitación guarda quién la marcó y cuándo (179).
 /// </summary>
 internal sealed class WhatsAppPhoneImportService(IRequestValidator validator, ICurrentUser currentUser,
     WhatsAppPhoneImportResolver resolver, OrganizationUserAssignmentWriter assignments,
@@ -45,12 +46,14 @@ internal sealed class WhatsAppPhoneImportService(IRequestValidator validator, IC
         return OperationLog.RunAsync(logger, clock, "WhatsAppPhoneImport", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+            if (request.ConsentConfirmed is not true) return WhatsAppErrors.PhoneImportConsentRequired;
             if (currentUser.UserId is not { } inviterId || inviterId == Guid.Empty) return AccessErrors.NotMember;
             if (!resolver.CanInvite) return InvitationErrors.ChannelUnavailableForNow();
             var desired = await assignments.ValidateAsync([],
                 request.CompanyId is { } companyId ? [new InviteCompanyRolesRequest(companyId, request.RoleIds)] : [], cancellationToken);
             if (desired.IsFailure) return desired.Error;
             var rows = await resolver.ResolveAsync(request.Phones!, cancellationToken);
+            var consent = new InvitationConsent(inviterId, clock.GetUtcNow().UtcDateTime);
             try
             {
                 return await unitOfWork.ExecuteInTransactionAsync(async ct =>
@@ -58,7 +61,7 @@ internal sealed class WhatsAppPhoneImportService(IRequestValidator validator, IC
                     foreach (var row in rows.Where(row => row.Response.Outcome == WhatsAppPhoneImportOutcome.Invite))
                     {
                         var issued = await invitations.InviteByPhoneAsync(row.Phone!, WhatsAppInvitationChannel.ChannelKey,
-                            desired.Value, inviterId, ct);
+                            desired.Value, inviterId, consent, ct);
                         if (issued.IsFailure) return Result.Failure<WhatsAppPhoneImportResponse>(
                             issued.Error.Code == InvitationErrors.ChannelUnavailableCode ? InvitationErrors.ChannelUnavailableForNow() : issued.Error);
                     }

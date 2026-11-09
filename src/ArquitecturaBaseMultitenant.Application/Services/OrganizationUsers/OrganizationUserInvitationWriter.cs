@@ -42,8 +42,9 @@ internal sealed class OrganizationUserInvitationWriter(
     /// ya tiene una invitación pendiente en la organización, la reemplaza, como Reenviar, con la empresa y los roles de ahora.
     /// </summary>
     internal async Task<Result<Guid>> InviteByPhoneAsync(PhoneNumber phone, string channel,
-        DesiredOrganizationUserAssignments desired, Guid inviterId, CancellationToken ct)
+        DesiredOrganizationUserAssignments desired, Guid inviterId, InvitationConsent consent, CancellationToken ct)
     {
+        ArgumentNullException.ThrowIfNull(consent);
         var destination = InvitationIdentity.ForPhone(phone);
         await externalLoginLock.LockIdentityAsync(destination, ct);
         await invitations.LockDestinationAsync(destination, ct);
@@ -55,7 +56,7 @@ internal sealed class OrganizationUserInvitationWriter(
             if (revoked.IsFailure) return revoked.Error;
         }
         var issued = await issuer.IssueWithMemberAsync(new IssueInvitationRequest(destination, inviterId, channel,
-            pending?.MemberId, pending?.Id), ct, grant: Grant(desired));
+            pending?.MemberId, pending?.Id, consent), ct, grant: Grant(desired));
         if (issued.IsFailure) return issued.Error;
         var assigned = await assignmentManager.SetAsync(issued.Value.MemberId, desired, ct,
             memberInUnitOfWork: issued.Value.Member);
@@ -80,8 +81,9 @@ internal sealed class OrganizationUserInvitationWriter(
         var revoked = invitation.Revoke(timeProvider.GetUtcNow().UtcDateTime);
         if (revoked.IsFailure) return revoked.Error;
         if (currentUser.UserId is not { } inviterId || inviterId == Guid.Empty) return AccessErrors.NotMember;
+        // Reenviar no vuelve a preguntar: la invitación nueva conserva el consentimiento de la que reemplaza (179).
         return await issuer.IssueAsync(new IssueInvitationRequest(invitation.Destination, inviterId,
-            invitation.Channel, invitation.MemberId, invitation.Id), ct);
+            invitation.Channel, invitation.MemberId, invitation.Id, invitation.GetConsent()), ct);
     }
 
     internal async Task<Result> RevokeAsync(Guid invitationId, CompanyInvitationScope? company, CancellationToken ct)
