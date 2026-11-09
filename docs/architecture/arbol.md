@@ -339,6 +339,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   ├── Home/
 │   │   │   ├── Identity/
 │   │   │   ├── Invitations/
+│   │   │   ├── Notifications/  la campana (base de la 12)
 │   │   │   ├── OrganizationUsers/
 │   │   │   ├── Platform/
 │   │   │   ├── Profile/
