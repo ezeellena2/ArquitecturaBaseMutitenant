@@ -73474,7 +73474,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 403,
-                      "detail": "Tu cuenta tiene la baja pedida.",
+                      "detail": "Tu cuenta está por borrarse.",
                       "code": "Identity.Account.PendingDeletion",
                       "traceId": "example-trace-id"
                     }
@@ -73798,7 +73798,7 @@
             "status": 403,
             "code": "Identity.Account.PendingDeletion",
             "field": null,
-            "es": "Tu cuenta tiene la baja pedida.",
+            "es": "Tu cuenta está por borrarse.",
             "en": "Your account is pending deletion."
           },
           {
@@ -75929,7 +75929,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 403,
-                      "detail": "Tu cuenta tiene la baja pedida.",
+                      "detail": "Tu cuenta está por borrarse.",
                       "code": "Identity.Account.PendingDeletion",
                       "traceId": "example-trace-id"
                     }
@@ -75989,7 +75989,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 403,
-                      "detail": "Tu acceso a esta organización está deshabilitado.",
+                      "detail": "Estás de baja en esta organización.",
                       "code": "Tenancy.Member.Inactive",
                       "traceId": "example-trace-id",
                       "organizationName": "Organización de ejemplo",
@@ -76001,7 +76001,7 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 403,
-                      "detail": "Your access to this organization is disabled.",
+                      "detail": "You are deactivated in this organization.",
                       "code": "Tenancy.Member.Inactive",
                       "traceId": "example-trace-id",
                       "organizationName": "Example organization",
@@ -76215,7 +76215,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 409,
-                      "detail": "El plazo para cancelar la baja venció.",
+                      "detail": "El plazo para cancelar el borrado venció.",
                       "code": "Legal.AccountDeletion.GraceExpired",
                       "traceId": "example-trace-id"
                     }
@@ -76349,7 +76349,7 @@
             "status": 403,
             "code": "Identity.Account.PendingDeletion",
             "field": null,
-            "es": "Tu cuenta tiene la baja pedida.",
+            "es": "Tu cuenta está por borrarse.",
             "en": "Your account is pending deletion."
           },
           {
@@ -76370,8 +76370,8 @@
             "status": 403,
             "code": "Tenancy.Member.Inactive",
             "field": null,
-            "es": "Tu acceso a esta organización está deshabilitado.",
-            "en": "Your access to this organization is disabled."
+            "es": "Estás de baja en esta organización.",
+            "en": "You are deactivated in this organization."
           },
           {
             "status": 403,
@@ -76405,7 +76405,7 @@
             "status": 409,
             "code": "Legal.AccountDeletion.GraceExpired",
             "field": null,
-            "es": "El plazo para cancelar la baja venció.",
+            "es": "El plazo para cancelar el borrado venció.",
             "en": "The period to cancel deletion has expired."
           },
           {
@@ -78703,7 +78703,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 403,
-                      "detail": "Tu cuenta tiene la baja pedida.",
+                      "detail": "Tu cuenta está por borrarse.",
                       "code": "Identity.Account.PendingDeletion",
                       "traceId": "example-trace-id"
                     }
@@ -79027,7 +79027,7 @@
             "status": 403,
             "code": "Identity.Account.PendingDeletion",
             "field": null,
-            "es": "Tu cuenta tiene la baja pedida.",
+            "es": "Tu cuenta está por borrarse.",
             "en": "Your account is pending deletion."
           },
           {
@@ -81426,7 +81426,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 403,
-                      "detail": "Tu cuenta tiene la baja pedida.",
+                      "detail": "Tu cuenta está por borrarse.",
                       "code": "Identity.Account.PendingDeletion",
                       "traceId": "example-trace-id"
                     }
@@ -81610,7 +81610,7 @@
             "status": 403,
             "code": "Identity.Account.PendingDeletion",
             "field": null,
-            "es": "Tu cuenta tiene la baja pedida.",
+            "es": "Tu cuenta está por borrarse.",
             "en": "Your account is pending deletion."
           },
           {
