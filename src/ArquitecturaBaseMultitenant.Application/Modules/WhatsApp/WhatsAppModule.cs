@@ -18,7 +18,7 @@ public static class WhatsAppModule
         services.AddScoped<Interfaces.Integrations.IWhatsAppInboundConsumer, WhatsAppBotWriter>();
         services.AddScoped<Interfaces.Integrations.IWhatsAppInboundConsumer, WhatsAppOrganizationInboundWriter>();
         services.AddScoped<Interfaces.Integrations.IWhatsAppInboundConsumer, PlatformWhatsAppInboundWriter>();
-        services.AddScoped<WhatsAppSignInLinkIssuer>();
+        services.AddScoped<WhatsAppSignInReplyIssuer>();
         services.AddScoped<WhatsAppAttentionBotWriter>();
         services.AddScoped<PlatformWhatsAppBotWriter>();
         services.AddScoped<WhatsAppBotResolver>();

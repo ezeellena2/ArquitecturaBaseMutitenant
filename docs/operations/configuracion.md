@@ -80,7 +80,7 @@ Mismos valores que `../ArquitecturaBase/src/ArquitecturaBase.Api/appsettings.Dev
 
 `WhatsApp:AllowedCountries` reemplaza la lista predeterminada; no se suma a ella. Configurar solo `US` no conserva `AR`. La política se aplica al registro y a los métodos nuevos o pendientes, también al reenviar y verificar; un Phone ya verificado conserva ingreso y avisos aunque su país deje de admitirse. El país real se obtiene del E.164, no del campo `country` recibido.
 
-`Authentication:LoginLink` usa por defecto `ResendCooldownSeconds = 60`, `RequestWindowMinutes = 15`, `MaxRequestsPerWindow = 5` y `LifetimeMinutes = 10`, la vida del enlace. Los textos del bot dicen «10 minutos»: cambiarla exige revisarlos. El bot lleva el token en el fragmento, pero el canje por HTTP ya no existe (base de la 12): estas opciones salen con el bot sin enlace (decisión 179). Un reply libre pendiente vence al cerrar la ventana de 24 horas, comprobada también antes de enviar a Cloud API.
+El bot de ingreso ya no emite enlaces (base de la 12, decisión 179): «Entrar a mi cuenta» abre el ingreso, donde el código se pide desde la web, y no quedan opciones `Authentication:LoginLink`. Un reply libre pendiente vence al cerrar la ventana de 24 horas, comprobada también antes de enviar a Cloud API.
 
 Las opciones de seguridad (E9) están en `appsettings.json` con los valores de siempre y se validan al arrancar:
 - `RateLimiting:<Perfil>:PermitLimit` y `WindowSeconds` son las cuotas de arranque de los doce perfiles ([cuotas](../rules/cuotas.md)). El seed las guarda solo al crear la configuración de Plataforma; después se editan desde Plataforma.

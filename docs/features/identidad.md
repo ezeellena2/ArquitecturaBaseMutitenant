@@ -10,7 +10,7 @@ Los servicios comparten `AccountRegistrar` para crear la identidad global, `Logi
 
 Los escritores toman primero el lock de identidad externa (correo/subject o Phone E.164), luego el de cuenta y después el destino del código, antes de releer propiedad: también Mi cuenta, invitación de operador y aprobación de recuperación. `AccountLifecycle` en Domain decide estado y fechas; `ApplicationUser` aplica el resultado y la anonimización técnica. Los repositorios leen la cuenta preparada en la UoW antes de consultar la base.
 
-El contrato [OpenAPI](../contracts/openapi.json) admite phone/channel y capacidades neutrales de método, disponibilidad, países, ContactPhone y validación de alta. IPhoneLinkObserver e ILoginLinkIssuer separan el núcleo del canal. La identidad de una invitación (`InvitationIdentity`) es un correo o, desde «Cargar teléfonos», un teléfono E.164 (decisión 11 de la E11); se guarda como su valor en la misma columna. Una invitación por correo puede entregarse a un Phone verificado de la misma cuenta, seleccionado antes del guardado; una por teléfono va a ese teléfono.
+El contrato [OpenAPI](../contracts/openapi.json) admite phone/channel y capacidades neutrales de método, disponibilidad, países, ContactPhone y validación de alta. IPhoneLinkObserver separa el núcleo del canal. La identidad de una invitación (`InvitationIdentity`) es un correo o, desde «Cargar teléfonos», un teléfono E.164 (decisión 11 de la E11); se guarda como su valor en la misma columna. Una invitación por correo puede entregarse a un Phone verificado de la misma cuenta, seleccionado antes del guardado; una por teléfono va a ese teléfono.
 
 El ingreso sigue [ADR 0047](../decisions/0047-el-ingreso-acepta-la-invitacion.md): un correo o un teléfono sin cuenta pero con una invitación de organización pendiente y vigente para ese mismo destino puede pedir el código por Persona o Empresa. Al verificarlo se crea la cuenta si falta (con ese teléfono verificado, si fue por teléfono) y se aceptan todas las invitaciones vigentes de ese destino en la misma UoW. Vencidas y revocadas no cuentan. Persona continúa a Personal; Empresa usa la selección habitual de última organización usada o membresía más antigua, con las demás en Perfiles. La prueba del correo no registra consentimiento: los términos pendientes se aceptan en el gate existente antes de usar la app. Las invitaciones de operador conservan el camino exclusivo de Plataforma.
 
@@ -127,13 +127,11 @@ El aviso diferido a la cuenta conserva la versión pública del pedido. `Account
 
 `RecoverAccountPage.tsx` se carga lazy sin `AccessRoute`; el código es un paso del mismo formulario, sin ruta propia. Llama a `POST /api/account-recovery/code` (202 con espera), `POST /api/account-recovery/verify` (204) y `POST /api/account-recovery` (202). Conserva la prueba verificada si se pierde la respuesta del pedido final y reintenta sólo ese pedido. Los errores se ubican por `code` y por campo; el correo repetido vuelve al paso del correo nuevo. Incluye espera/reenvío, código incompleto o incorrecto, errores de red y confirmación «Recibimos tu pedido»; volver, cancelar o cambiar de recorrido abandona sus respuestas anteriores. El teléfono usa las piezas del ingreso a 390. `RecoverAccountPage.test.tsx`, `LoginPage.test.tsx` y `useIdempotentMutation.test.ts` del front, junto con `AccountRecoveryTests` del back, cubren esos recorridos. La [comparación visual de ](../decisions/README.md) registra las piezas comunes y la variante autorizada.
 
-## Enlaces de ingreso
+## Sin enlaces de ingreso
 
-`LoginLinkIssuer` emite dentro de la UoW del bot para un método Phone verificado de una cuenta común; nunca crea cuenta, consentimiento ni sesión. Guarda sólo el hash del token aleatorio, vence a los diez minutos e invalida el enlace anterior al emitir otro. `Authentication:LoginLink` limita el reenvío a 60 segundos y cinco emisiones en quince minutos por defecto. El enlace lleva el token en el fragmento de `/login/enlace`, sin teléfono ni acceso empresarial.
+**Ningún mensaje lleva un enlace secreto** (base de la 12, decisión 179). El bot de WhatsApp contesta con «Entrar a mi cuenta», un botón que lleva al ingreso (`/login`), donde el código se pide desde la web; un mensaje entrante nunca abre una sesión. Salieron el enlace de un solo uso de la E8 con su canje (sus dos rutas responden 404, sin cookie), su emisor, sus opciones `Authentication:LoginLink`, la tabla `LoginLinks` (la migración `RetireLoginLinks` la borra y su vuelta atrás la recrea vacía) y `/login/enlace` como retorno de la baja.
 
-**El canje ya no está en la API** (base de la 12): sus dos rutas, la vista previa y el canje del enlace, salieron del contrato con sus ejemplos y responden 404, sin cookie. Con la decisión 179 ningún mensaje lleva un enlace secreto: el bot pasa a contestar con «Entrar a mi cuenta», un botón que lleva al ingreso (`/login`), donde el código se pide desde la web, y salen el emisor, el servicio del canje, la tabla `LoginLinks`, sus opciones y `/login/enlace` como retorno de la baja.
-
-`LoginLinkTests` de Domain, `LoginLinkServiceTests` y `LoginLinkIssuerTests` de Application cubren lo que queda del emisor y del servicio hasta que salgan; `Base12ContractTests` prueba que el canje no está en el contrato ni en la API.
+`Base12ContractTests` prueba que el canje no está en el contrato ni en la API, y `WhatsAppBotTests`, que ninguna respuesta lleva un token y que el botón abre `/login`.
 
 ## Continuación fija del ingreso con código
 
@@ -244,7 +242,7 @@ Pruebas `GoogleNamesTests` recorre el provider HTTP de integración y el adaptad
 
 ## Lo verifica
 
-- Domain: `LoginCodeTests`, `LoginLinkTests`, `LoginMethodTests`, `AccountLifecycleTests` e `InvitationTests`.
-- Application: `LoginCodeFlowTests`, `LoginLinkServiceTests`, `AccountRegistrarTests`, `InvitationServiceTests` y `ProfileServiceTests`.
+- Domain: `LoginCodeTests`, `LoginMethodTests`, `AccountLifecycleTests` e `InvitationTests`.
+- Application: `LoginCodeFlowTests`, `AccountRegistrarTests`, `InvitationServiceTests` y `ProfileServiceTests`.
 - API (Docker/Testcontainers): `AuthEndpointsTests`, `IngressJourneyTests`, `AccountRecoveryTests`, `GoogleLoginTests`, `BusinessSignupTests`, `LoginMethodsTests` y `AccountSessionActionsTests`.
 - Arquitectura: `IdentityAccessTests`, la lista cerrada de quién lee la cuenta global.

@@ -4,7 +4,7 @@
 
 La E8 usa **16 nombres: una Authentication y quince solicitadas como Utility**, en español e inglés. La invitación española está aprobada como Marketing y el usuario aceptó esa categoría ([ADR 0038](../decisions/0038-whatsapp-de-atencion.md)). Esto es inventario funcional, no una afirmación de que estén creadas o aprobadas en Meta. `codigo_ingreso` existe en la configuración de ArquitecturaBase; comprobar su estado e idiomas en la WABA de prueba antes de reutilizarlo. [ADR 0043](../decisions/0043-las-pantallas-dicen-si-hay-cuenta.md), [0045](../decisions/0045-mi-cuenta-sin-codigo-de-confirmacion.md) y [0049](../decisions/0049-precisiones-whatsapp-y-asistente.md) mandan sobre ejemplos viejos del lienzo.
 
-Meta exige plantilla aprobada para iniciar una conversación. Un mensaje libre solo se envía dentro de las 24 horas posteriores a una entrada real de la persona. El bot de ingreso responde en esa ventana: no necesita plantilla para el enlace, el registro ni la respuesta neutra al operador.
+Meta exige plantilla aprobada para iniciar una conversación. Un mensaje libre solo se envía dentro de las 24 horas posteriores a una entrada real de la persona. El bot de ingreso responde en esa ventana: no necesita plantilla para el botón «Entrar a mi cuenta», el registro ni la respuesta neutra al operador.
 
 ## Inventario de E8
 

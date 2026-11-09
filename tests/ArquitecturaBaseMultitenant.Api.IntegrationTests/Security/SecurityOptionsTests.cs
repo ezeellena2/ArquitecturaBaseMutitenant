@@ -30,7 +30,6 @@ public sealed class SecurityOptionsTests(ApiFactory factory)
             lifetimes.RefreshTokenDays, lifetimes.BrowserCookieDays));
         Assert.Equal((24, 60), (idempotency.ValidityHours, idempotency.CleanupIntervalMinutes));
         Assert.Equal((100, 60), (deletion.BatchSize, deletion.IntervalMinutes));
-        Assert.Equal(10, new LoginLinkOptions().LifetimeMinutes);
         Assert.Equal(PlatformRateLimits.Initial, new RateLimitOptions().ToLimits());
         Assert.Equal(new RateLimitQuota(120, 60), new RateLimitOptions().ToLimits().WhatsAppWebhook);
     }
@@ -53,7 +52,6 @@ public sealed class SecurityOptionsTests(ApiFactory factory)
     [InlineData("Authentication:Lifetimes:AccessTokenMinutes", "0", "AccessTokenMinutes")]
     [InlineData("Authentication:Lifetimes:RefreshTokenDays", "91", "RefreshTokenDays")]
     [InlineData("Authentication:Lifetimes:BrowserCookieDays", "0", "BrowserCookieDays")]
-    [InlineData("Authentication:LoginLink:LifetimeMinutes", "61", "LifetimeMinutes")]
     [InlineData("Idempotency:ValidityHours", "0", "ValidityHours")]
     [InlineData("Idempotency:CleanupIntervalMinutes", "1441", "CleanupIntervalMinutes")]
     [InlineData("AccountDeletion:BatchSize", "0", "BatchSize")]

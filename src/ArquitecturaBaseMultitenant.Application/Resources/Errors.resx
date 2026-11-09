@@ -44,8 +44,6 @@
   <data name="Auth.ExternalLogin.EmailNotVerified" xml:space="preserve"><value>Tu cuenta de Google no tiene el email verificado.</value></data>
   <data name="Auth.Google.AccountNotFound" xml:space="preserve"><value>No pudimos completar el ingreso con Google.</value></data>
   <data name="Auth.WhatsApp.CountryNotSupported" xml:space="preserve"><value>Todavía no mandamos códigos a números de ese país.</value></data>
-  <data name="Auth.LoginLink.Invalid" xml:space="preserve"><value>Este enlace ya no sirve.</value></data>
-  <data name="Auth.LoginLink.TooManyRequests" xml:space="preserve"><value>Esperá un momento antes de pedir otro enlace.</value></data>
   <data name="Users.Email.Invalid" xml:space="preserve"><value>El email no es válido.</value></data>
   <data name="Users.Phone.Invalid" xml:space="preserve"><value>Ingresá un número de teléfono válido.</value></data>
   <data name="Users.Phone.NotMobile" xml:space="preserve"><value>Ingresá un número de celular.</value></data>
@@ -217,7 +215,5 @@
   <data name="Identity.LoginMethod.PhoneAlreadyUsed" xml:space="preserve"><value>Ese número ya está asociado a otra cuenta.</value></data>
   <data name="Platform.AccountRecovery.PhoneAccountNotFound" xml:space="preserve"><value>No hay una cuenta con ese número.</value></data>
   <data name="Platform.AccountRecovery.PhoneMethodInUse" xml:space="preserve"><value>Ese número ya es de otra cuenta.</value></data>
-  <data name="Auth.LoginLink.Expired" xml:space="preserve"><value>Este enlace ya no sirve.</value></data>
-  <data name="Auth.LoginLink.AlreadyUsed" xml:space="preserve"><value>Este enlace ya no sirve.</value></data>
   <data name="Title.PayloadTooLarge" xml:space="preserve"><value>Archivo demasiado grande</value></data>
 </root>

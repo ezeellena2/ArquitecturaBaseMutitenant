@@ -47,8 +47,6 @@ public static class ValidationTexts
 
     public static string TaxIdTypeInvalid => Get(nameof(TaxIdTypeInvalid));
 
-    public static string LoginLinkTokenFormat => Get(nameof(LoginLinkTokenFormat));
-
     public static string RegistrationModeInvalid => Get(nameof(RegistrationModeInvalid));
     public static string FilterInvalid => Get(nameof(FilterInvalid));
     public static string NonceFormat => Get(nameof(NonceFormat));

@@ -31,7 +31,6 @@
   <data name="CountryInvalid" xml:space="preserve"><value>Elegí un país de la lista.</value></data>
   <data name="CurrencyInvalid" xml:space="preserve"><value>Elegí una moneda disponible.</value></data>
   <data name="TaxIdTypeInvalid" xml:space="preserve"><value>Elegí un tipo de identificación disponible.</value></data>
-  <data name="LoginLinkTokenFormat" xml:space="preserve"><value>El enlace está incompleto. Abrilo de nuevo desde WhatsApp.</value></data>
   <data name="RegistrationModeInvalid" xml:space="preserve"><value>El modo de registro no es válido.</value></data>
   <data name="PermissionUnknown" xml:space="preserve"><value>Ese permiso no existe.</value></data>
   <data name="CultureInvalid" xml:space="preserve"><value>Elegí un idioma disponible.</value></data>

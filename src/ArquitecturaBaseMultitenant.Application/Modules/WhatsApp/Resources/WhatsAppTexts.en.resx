@@ -105,9 +105,6 @@
   <data name="WhatsApp.Inbound.LeaseExpired" xml:space="preserve">
     <value>The inbound message lease expired.</value>
   </data>
-  <data name="Bot.LinkWithoutName" xml:space="preserve">
-    <value>Hi. To sign in to {0}, tap Sign in. The link works once and expires in 10 minutes.</value>
-  </data>
   <data name="Bot.Unknown" xml:space="preserve">
     <value>Hi. This number does not have a {0} account. To create yours, tap Create my account: you will accept the terms and confirm the number with a code.</value>
   </data>
@@ -117,23 +114,11 @@
   <data name="Bot.Create" xml:space="preserve">
     <value>Create my account</value>
   </data>
-  <data name="Bot.Disabled" xml:space="preserve">
-    <value>We cannot give you a sign-in link. Use the website to check your account.</value>
-  </data>
   <data name="Bot.SignIn" xml:space="preserve">
     <value>Sign in</value>
   </data>
   <data name="Bot.Recover" xml:space="preserve">
     <value>Recover my account</value>
-  </data>
-  <data name="Bot.Link" xml:space="preserve">
-    <value>Hi, {0}. To sign in to {1}, tap Sign in. The link works once and expires in 10 minutes.</value>
-  </data>
-  <data name="Bot.Limit" xml:space="preserve">
-    <value>Wait a moment before requesting another sign-in link.</value>
-  </data>
-  <data name="Bot.Enter" xml:space="preserve">
-    <value>Sign in</value>
   </data>
   <data name="Bot.Footer" xml:space="preserve">
     <value>For now, this chat is only for signing in.</value>
@@ -518,5 +503,14 @@
   </data>
   <data name="Send.Failure.Other" xml:space="preserve">
     <value>It couldn't be sent for a reason we don't know.</value>
+  </data>
+  <data name="Bot.EnterAccount" xml:space="preserve">
+    <value>Hi, {0}. To sign in to {1}, tap “Go to my account” and request the code on the page.</value>
+  </data>
+  <data name="Bot.EnterAccountWithoutName" xml:space="preserve">
+    <value>Hi. To sign in to {0}, tap “Go to my account” and request the code on the page.</value>
+  </data>
+  <data name="Bot.EnterAccountButton" xml:space="preserve">
+    <value>Go to my account</value>
   </data>
 </root>

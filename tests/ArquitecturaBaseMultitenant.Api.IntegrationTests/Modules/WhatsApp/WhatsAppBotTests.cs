@@ -62,7 +62,7 @@ public sealed class WhatsAppBotTests(ApiFactory factory) : IClassFixture<ApiFact
             new { changes = new[] { new { field = "messages", value = new { metadata = new { phone_number_id = "fixture-number" }, messages } } } } }
         });
         await using var read = app.Services.CreateAsyncScope(); var db = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var notices = await db.OutboxMessages.CountAsync(Ct); var links = await db.Set<LoginLink>().CountAsync(Ct);
+        var notices = await db.OutboxMessages.CountAsync(Ct);
         using var request = new HttpRequestMessage(HttpMethod.Post, "/webhooks/whatsapp") { Content = new ByteArrayContent(bytes) };
         request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
         request.Headers.Add("X-Hub-Signature-256", "sha256=" + Convert.ToHexString(HMACSHA256.HashData(Encoding.UTF8.GetBytes(Secret), bytes)));
@@ -80,7 +80,6 @@ public sealed class WhatsAppBotTests(ApiFactory factory) : IClassFixture<ApiFact
         var processed = await db.Set<WhatsAppMessage>().AsNoTracking().Where(value => value.Wamid.StartsWith(prefix)).ToArrayAsync(Ct);
         Assert.All(processed, row => Assert.NotNull(row.ProcessedAtUtc));
         Assert.Equal(notices, await db.OutboxMessages.CountAsync(Ct));
-        Assert.Equal(links, await db.Set<LoginLink>().CountAsync(Ct));
     }
     [Theory]
     [InlineData(BotButtons.SignIn, "/login", "5491134567892", ConsumerSignupMode.Closed)]
@@ -104,12 +103,12 @@ public sealed class WhatsAppBotTests(ApiFactory factory) : IClassFixture<ApiFact
         await using var app = Host(); using var client = app.CreateClient(); await app.Services.SeedDatabaseAsync(Ct);
         await SetSignupAsync(app.Services, ConsumerSignupMode.Open);
         await using var scope = app.Services.CreateAsyncScope(); var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var users = await db.Users.CountAsync(Ct); var links = await db.Set<LoginLink>().CountAsync(Ct);
+        var users = await db.Users.CountAsync(Ct);
         var codes = await db.LoginCodes.CountAsync(Ct);
         var reply = await ReceiveProcessAsync(app, client, "59899123456");
         Assert.Null(reply.LinkUrl); Assert.Null(reply.LinkLabel); Assert.Contains("por ahora no se pueden crear cuentas nuevas", reply.Body);
         Assert.Equal(new[] { BotButtons.SignIn, BotButtons.Recover }, reply.ReplyButtons!.Select(value => value.Id));
-        Assert.Equal(users, await db.Users.CountAsync(Ct)); Assert.Equal(links, await db.Set<LoginLink>().CountAsync(Ct));
+        Assert.Equal(users, await db.Users.CountAsync(Ct));
         Assert.Equal(codes, await db.LoginCodes.CountAsync(Ct));
     }
     [Fact]
@@ -118,18 +117,18 @@ public sealed class WhatsAppBotTests(ApiFactory factory) : IClassFixture<ApiFact
         await using var app = Host(); using var client = app.CreateClient(); await app.Services.SeedDatabaseAsync(Ct);
         await SetSignupAsync(app.Services, ConsumerSignupMode.Open);
         await using var scope = app.Services.CreateAsyncScope(); var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var users = await db.Users.CountAsync(Ct); var links = await db.Set<LoginLink>().CountAsync(Ct);
+        var users = await db.Users.CountAsync(Ct);
         var codes = await db.LoginCodes.CountAsync(Ct);
         var reply = await ReceiveProcessAsync(app, client, "5491134567893");
         Assert.Contains("Mi plataforma", reply.Body); Assert.Equal("/registro", new Uri(reply.LinkUrl!).AbsolutePath);
         Assert.Equal("?channel=whatsapp", new Uri(reply.LinkUrl!).Query); Assert.Empty(new Uri(reply.LinkUrl!).Fragment);
-        Assert.Equal(users, await db.Users.CountAsync(Ct)); Assert.Equal(links, await db.Set<LoginLink>().CountAsync(Ct));
+        Assert.Equal(users, await db.Users.CountAsync(Ct));
         Assert.Equal(codes, await db.LoginCodes.CountAsync(Ct));
     }
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public async Task Delayed_anonymous_or_former_owner_message_never_issues_for_new_phone_owner(bool hadOwner)
+    public async Task Delayed_anonymous_or_former_owner_message_never_greets_or_signs_in_the_new_phone_owner(bool hadOwner)
     {
         await using var app = Host(); using var client = app.CreateClient(); await app.Services.SeedDatabaseAsync(Ct);
         await SetSignupAsync(app.Services, ConsumerSignupMode.Open);
@@ -143,10 +142,9 @@ public sealed class WhatsAppBotTests(ApiFactory factory) : IClassFixture<ApiFact
         var reply = await ReceiveProcessAsync(app, client, "5491134567895", beforeProcess: async () =>
         { next = await CreatePhoneAsync(app.Services, "+5491134567895", false); });
         await using var read = app.Services.CreateAsyncScope(); var db = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        Assert.Equal(0, await db.Set<LoginLink>().CountAsync(value => value.UserId == next || value.UserId == original, Ct));
         var message = await db.Set<WhatsAppMessage>().AsNoTracking().SingleAsync(value => value.Wamid == _lastWamid, Ct);
         Assert.Equal(original, message.OriginalUserId); Assert.NotEqual(next, message.OriginalUserId);
-        if (hadOwner) Assert.Null(reply.LinkUrl);
+        if (hadOwner) { AssertSignInButton(reply); Assert.StartsWith("Hola. Para entrar a ", reply.Body, StringComparison.Ordinal); }
         else { Assert.Equal("/registro", new Uri(reply.LinkUrl!).AbsolutePath); Assert.Empty(new Uri(reply.LinkUrl!).Fragment); }
     }
     [Theory]
@@ -154,40 +152,36 @@ public sealed class WhatsAppBotTests(ApiFactory factory) : IClassFixture<ApiFact
     [InlineData(true, "5491134567894")]
     [InlineData(false, "59899123458")]
     [InlineData(true, "59899123458")]
-    public async Task Verified_owner_gets_consumer_proof_while_operator_gets_only_exact_neutral_text(bool platform, string from)
+    public async Task Verified_owner_gets_the_sign_in_button_while_operator_gets_only_exact_neutral_text(bool platform, string from)
     {
         await using var app = Host(); using var client = app.CreateClient(); await app.Services.SeedDatabaseAsync(Ct);
-        var user = await CreatePhoneAsync(app.Services, "+" + from, platform);
+        var user = await CreatePhoneAsync(app.Services, "+" + from, platform, "Lucía");
         var reply = await ReceiveProcessAsync(app, client, from);
-        await using var scope = app.Services.CreateAsyncScope(); var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var proofs = await db.Set<LoginLink>().AsNoTracking().Where(value => value.UserId == user).ToArrayAsync(Ct);
         if (platform)
-        { Assert.Equal("Para entrar, usá la web.", reply.Body); Assert.Null(reply.Footer); Assert.Null(reply.LinkLabel); Assert.Null(reply.LinkUrl); Assert.Null(reply.ReplyButtons); Assert.Empty(proofs); }
+        { Assert.Equal("Para entrar, usá la web.", reply.Body); Assert.Null(reply.Footer); Assert.Null(reply.LinkLabel); Assert.Null(reply.LinkUrl); Assert.Null(reply.ReplyButtons); }
         else
         {
-            Assert.Equal("/login/enlace", new Uri(reply.LinkUrl!).AbsolutePath); Assert.StartsWith("#t=", new Uri(reply.LinkUrl!).Fragment);
-            Assert.Contains("Mi plataforma", reply.Body); Assert.Single(proofs);
-            Assert.DoesNotContain(new Uri(reply.LinkUrl!).Fragment[3..], proofs[0].TokenHash);
+            AssertSignInButton(reply);
+            Assert.Equal("Hola, Lucía. Para entrar a Mi plataforma, tocá «Entrar a mi cuenta» y pedí el código en la página.", reply.Body);
+            await using var scope = app.Services.CreateAsyncScope(); var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var message = await db.Set<WhatsAppMessage>().AsNoTracking().SingleAsync(value => value.OriginalUserId == user && value.Direction == WhatsAppMessageDirection.Inbound, Ct);
-            Assert.Null(message.ReplyId); Assert.DoesNotContain("#t=", scope.ServiceProvider.GetRequiredService<IPayloadProtector>().Unprotect(message.EncryptedText!));
+            Assert.Null(message.ReplyId);
         }
     }
     [Fact]
-    public async Task Original_owner_suspended_before_processing_gets_no_proof_even_from_excluded_country()
+    public async Task Original_owner_suspended_before_processing_gets_the_button_without_a_name_even_from_excluded_country()
     {
         await using var app = Host(); using var client = app.CreateClient(); await app.Services.SeedDatabaseAsync(Ct);
-        var user = await CreatePhoneAsync(app.Services, "+59899123459", false);
+        var user = await CreatePhoneAsync(app.Services, "+59899123459", false, "Lucía");
         var reply = await ReceiveProcessAsync(app, client, "59899123459", beforeProcess: () => TransactionAsync(app.Services, async (provider, ct) =>
         {
             await provider.GetRequiredService<ILoginMethodRepository>().LockUserAsync(user, ct);
             Assert.True((await provider.GetRequiredService<IUserRepository>().SuspendAsync(user, ct)).IsSuccess);
         }));
-        Assert.Null(reply.LinkUrl); Assert.Null(reply.ReplyButtons);
-        await using var read = app.Services.CreateAsyncScope();
-        Assert.False(await read.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<LoginLink>().AnyAsync(value => value.UserId == user, Ct));
+        AssertSignInButton(reply); Assert.Null(reply.ReplyButtons); Assert.DoesNotContain("Lucía", reply.Body);
     }
     [Fact]
-    public async Task Verified_owner_receives_new_proof_after_lockout_expires_on_injected_clock()
+    public async Task Locked_out_owner_gets_the_same_button_and_the_web_decides_on_the_injected_clock()
     {
         _clock.SetUtcNow(new DateTimeOffset(2100, 1, 1, 12, 0, 0, TimeSpan.Zero));
         await using var app = Host(); using var client = app.CreateClient(); await app.Services.SeedDatabaseAsync(Ct);
@@ -198,12 +192,17 @@ public sealed class WhatsAppBotTests(ApiFactory factory) : IClassFixture<ApiFact
             var account = await provider.GetRequiredService<ApplicationDbContext>().Users.SingleAsync(value => value.Id == user, ct);
             account.LockoutEnabled = true; account.LockoutEnd = _clock.GetUtcNow().AddMinutes(5);
         });
-        var blocked = await ReceiveProcessAsync(app, client, "5491134567896"); Assert.Null(blocked.LinkUrl);
+        AssertSignInButton(await ReceiveProcessAsync(app, client, "5491134567896"));
         _clock.Advance(TimeSpan.FromMinutes(6));
-        var allowed = await ReceiveProcessAsync(app, client, "5491134567896");
-        Assert.NotNull(allowed.LinkUrl); Assert.Equal("/login/enlace", new Uri(allowed.LinkUrl).AbsolutePath);
-        await using var read = app.Services.CreateAsyncScope();
-        Assert.Equal(1, await read.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<LoginLink>().CountAsync(value => value.UserId == user, Ct));
+        AssertSignInButton(await ReceiveProcessAsync(app, client, "5491134567896"));
+    }
+    /// <summary>«Entrar a mi cuenta» abre el ingreso (179): sin token, sin enlace de un solo uso y sin datos del número.</summary>
+    private static void AssertSignInButton(WhatsAppOutboundMessage reply)
+    {
+        Assert.Equal("Entrar a mi cuenta", reply.LinkLabel);
+        var url = new Uri(reply.LinkUrl!);
+        Assert.Equal("/login", url.AbsolutePath); Assert.Empty(url.Query); Assert.Empty(url.Fragment);
+        Assert.DoesNotContain("enlace", reply.LinkUrl!, StringComparison.Ordinal); Assert.DoesNotContain("#t=", reply.LinkUrl!, StringComparison.Ordinal);
     }
     private string? _lastWamid;
     private async Task<WhatsAppOutboundMessage> ReceiveProcessAsync(WebApplicationFactory<Program> app, HttpClient client, string from, string? replyId = null, Func<Task>? beforeProcess = null)
@@ -241,7 +240,7 @@ public sealed class WhatsAppBotTests(ApiFactory factory) : IClassFixture<ApiFact
         Assert.DoesNotContain("Hola", row.EncryptedPayload); Assert.DoesNotContain(from, row.EncryptedPayload);
         return JsonSerializer.Deserialize<WhatsAppOutboundMessage>(payload)!;
     }
-    private async Task<Guid> CreatePhoneAsync(IServiceProvider services, string number, bool platform)
+    private async Task<Guid> CreatePhoneAsync(IServiceProvider services, string number, bool platform, string? name = null)
     {
         var user = Guid.Empty;
         await TransactionAsync(services, async (provider, ct) =>
@@ -251,7 +250,7 @@ public sealed class WhatsAppBotTests(ApiFactory factory) : IClassFixture<ApiFact
         });
         await TransactionAsync(services, async (provider, ct) =>
         {
-            user = (await provider.GetRequiredService<IUserRepository>().CreateAsync(null, "es-AR", "UTC", ct)).Id;
+            user = (await provider.GetRequiredService<IUserRepository>().CreateAsync(name, "es-AR", "UTC", ct)).Id;
             var method = LoginMethod.CreatePhone(user, PhoneNumber.Create(number).Value); method.Verify(_clock.GetUtcNow().UtcDateTime);
             provider.GetRequiredService<ILoginMethodRepository>().Add(method);
             if (platform) await provider.GetRequiredService<IUserRepository>().SetPlatformOperatorAsync(user, true, ct);

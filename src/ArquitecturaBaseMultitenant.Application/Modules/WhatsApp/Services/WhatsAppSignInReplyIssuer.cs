@@ -1,5 +1,4 @@
 using System.Text.Json;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -11,12 +10,15 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// <summary>
-/// La respuesta de ingreso de la Etapa 8 por el número de Plataforma: el enlace para entrar, el registro o la recuperación,
-/// y la respuesta neutra a un operador (ADR 0049). Es el bot entero con las consultas apagadas y la opción del sistema
-/// «Entrar a mi cuenta» con las consultas prendidas; nunca atribuye una entrada al dueño posterior del número.
+/// La respuesta de ingreso por el número de Plataforma (E8; desde la base de la 12, sin enlace secreto, 179). Una cuenta
+/// vinculada recibe el botón «Entrar a mi cuenta», que abre el ingreso, donde el código se pide desde la web; un operador, la
+/// respuesta neutra, sin enlace ni mención a Plataforma (ADR 0049); un número sin cuenta, el registro web o, con el registro
+/// cerrado, ingresar o recuperar la cuenta. Es el bot entero con las consultas apagadas y la opción del sistema «Entrar a mi
+/// cuenta» con las consultas prendidas. Ningún mensaje lleva un token ni abre una sesión, y nunca atribuye una entrada al
+/// dueño posterior del número.
 /// </summary>
-internal sealed class WhatsAppSignInLinkIssuer(IWhatsAppChannelSettings settings, ILoginLinkIssuer links, IOutbox outbox,
-    IPublicOrigin origin, IPlatformSettingsReader platform, WhatsAppBotReplyBuilder replies)
+internal sealed class WhatsAppSignInReplyIssuer(IWhatsAppChannelSettings settings, IOutbox outbox, IPublicOrigin origin,
+    IPlatformSettingsReader platform, WhatsAppBotReplyBuilder replies)
 {
     internal async Task IssueAsync(WhatsAppInboundContext context, string destination, DateTime expiresAtUtc, bool consultations, CancellationToken ct)
     {
@@ -26,20 +28,16 @@ internal sealed class WhatsAppSignInLinkIssuer(IWhatsAppChannelSettings settings
         if (context.Message.OriginalUserId is not null)
         {
             if (account?.IsPlatformOperator == true) body = "Bot.OperatorNeutralReply";
-            else if (!context.OriginalMethodAvailable || account is null || context.OriginalMethod is null)
-                body = "Bot.Disabled";
-            else if (account.Status is UserStatus.Suspended or UserStatus.Deleted)
-                body = "Bot.Disabled";
             else
             {
-                var issued = await links.IssueAsync(account.Id, context.OriginalMethod.Id, ct);
-                if (issued.IsFailure) body = issued.Error.Code == LoginLinkErrors.TooManyRequestsCode ? "Bot.Limit" : "Bot.Disabled";
-                else
-                {
-                    body = account.DisplayName is null ? "Bot.LinkWithoutName" : "Bot.Link"; name = account.DisplayName;
-                    label = "Bot.Enter";
-                    url = Url("login/enlace") + "#t=" + issued.Value.Token;
-                }
+                // La web decide si puede entrar, sin decirlo en el chat. El nombre va solo si el número sigue siendo de esa
+                // cuenta y la cuenta está activa: nunca se le muestra al dueño posterior del número.
+                var greets = context.OriginalMethodAvailable && context.OriginalMethod is not null
+                    && account is { Status: not (UserStatus.Suspended or UserStatus.Deleted), DisplayName: not null };
+                body = greets ? "Bot.EnterAccount" : "Bot.EnterAccountWithoutName";
+                name = greets ? account!.DisplayName : null;
+                label = "Bot.EnterAccountButton";
+                url = Url("login");
             }
         }
         else if (context.Message.ReplyId is BotButtons.SignIn or BotButtons.Recover)

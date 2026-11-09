@@ -14,8 +14,8 @@ internal sealed class WhatsAppBotReplyBuilder(ICultureCatalog cultures)
         var profile = await new CultureProfiles(cultures).LoadAsync(culture, ct);
         var body = bodyKey switch
         {
-            "Bot.Link" => WhatsAppTexts.Format(bodyKey, profile, name!, appName),
-            "Bot.LinkWithoutName" or "Bot.Unknown" or "Bot.Closed" => WhatsAppTexts.Format(bodyKey, profile, appName),
+            "Bot.EnterAccount" => WhatsAppTexts.Format(bodyKey, profile, name!, appName),
+            "Bot.EnterAccountWithoutName" or "Bot.Unknown" or "Bot.Closed" => WhatsAppTexts.Format(bodyKey, profile, appName),
             _ => WhatsAppTexts.Get(bodyKey, profile),
         };
         var neutral = bodyKey == "Bot.OperatorNeutralReply";

@@ -23,7 +23,8 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 /// <summary>
 /// B3 de la E11, bot de Plataforma: «Entrar a mi cuenta» va primero, ocupa un lugar de los 10 y se conserva aunque el
 /// pedido no la mande. Con las consultas prendidas la entrada queda en su conversación, el bot manda el menú y esa opción
-/// responde con el ingreso de la Etapa 8, sin el pie de «solo sirve para entrar» y sin dejar el enlace en la conversación.
+/// responde con el ingreso de la Etapa 8, sin el pie de «solo sirve para entrar» y sin quedar en la conversación: a una
+/// cuenta vinculada, el botón «Entrar a mi cuenta», que abre el ingreso, sin enlace secreto (base de la 12, 179).
 /// Base propia: el número de Plataforma es global.
 /// </summary>
 public sealed class PlatformWhatsAppBotTests(ApiFactory factory) : IClassFixture<ApiFactory>
@@ -96,6 +97,28 @@ public sealed class PlatformWhatsAppBotTests(ApiFactory factory) : IClassFixture
             .OrderBy(value => value.CreatedAtUtc).ThenBy(value => value.Id).Select(value => new { value.Direction, value.Text }).ToArrayAsync(Ct);
         Assert.Equal(["Hola", "Entrar a mi cuenta"], messages.Where(message => message.Direction == WhatsAppMessageDirection.Inbound).Select(message => message.Text));
         Assert.Equal(["Bienvenidos"], messages.Where(message => message.Direction == WhatsAppMessageDirection.Outbound).Select(message => message.Text));
+
+        // Una cuenta vinculada recibe el botón «Entrar a mi cuenta», que abre el ingreso: ningún token ni enlace secreto.
+        var linked = "+54911" + System.Security.Cryptography.RandomNumberGenerator.GetInt32(60_000_000, 89_999_999)
+            .ToString(System.Globalization.CultureInfo.InvariantCulture);
+        await VerifiedPhoneAccountAsync(host, linked);
+        await InboundAsync(host, anonymous, phoneNumberId, linked, new { type = "text", text = new { body = "Hola" } });
+        await InboundAsync(host, anonymous, phoneNumberId, linked, new
+        {
+            type = "interactive",
+            interactive = new
+            {
+                type = "list_reply",
+                list_reply = new { id = BotButtons.Option(PlatformWhatsAppBot.SignInOptionId), title = "Entrar a mi cuenta" }
+            }
+        });
+        var signIn = (await OutboxAsync(host, linked))[^1];
+        Assert.Equal("/login", new Uri(signIn.LinkUrl!).AbsolutePath);
+        Assert.Empty(new Uri(signIn.LinkUrl!).Query);
+        Assert.Empty(new Uri(signIn.LinkUrl!).Fragment);
+        Assert.Equal("Entrar a mi cuenta", signIn.LinkLabel);
+        Assert.StartsWith("Hola, Persona. Para entrar a ", signIn.Body, StringComparison.Ordinal);
+        Assert.Null(signIn.Footer);
     }
 
     [Fact]

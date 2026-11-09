@@ -41,7 +41,7 @@ public sealed class FrontendReturnUrlTests
     [InlineData("\"/registro/empresa\"", true)]
     [InlineData("\"/org\"", true)]
     [InlineData("\"/plataforma/cuentas\"", true)]
-    [InlineData("\"/login/enlace#token\"", true)]
+    [InlineData("\"/invitacion#token\"", true)]
     [InlineData("\"/auth/callback\"", true)]
     [InlineData("\"/silent-renew.html\"", true)]
     [InlineData("\"/empresas\"", true)]

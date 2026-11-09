@@ -37,7 +37,6 @@ public sealed class DataClassificationTests
         typeof(LoginMethod).FullName!,
         typeof(LoginCode).FullName!,
         typeof(AccountDeletionCancelTicket).FullName!, // Comprobante global de cuenta, ligado a usuario y acción.
-        typeof(LoginLink).FullName!, // Prueba global de posesión de un método de identidad.
         typeof(ConsumerDataRetention).FullName!, // Sólo claves de fila/partes, motivo técnico, vencimiento y finalización; sin copia personal.
         typeof(LoginAudit).FullName!,
         typeof(PlatformAuthenticator).FullName!, // Segundo factor del operador (E9): clave protegida, global como su cuenta.
@@ -153,7 +152,7 @@ public sealed class DataClassificationTests
         || type.FullName == "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.UserTenantAccess"
         || type.FullName == "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.LoginInvitation"
         || type.FullName == "ArquitecturaBaseMultitenant.Infrastructure.Persistence.AccessIndex.MemberAccessRole"
-        || type == typeof(LoginMethod) || type == typeof(LoginCode) || type == typeof(LoginLink) || type == typeof(LoginAudit) || type == typeof(AccountDeletionCancelTicket)
+        || type == typeof(LoginMethod) || type == typeof(LoginCode) || type == typeof(LoginAudit) || type == typeof(AccountDeletionCancelTicket)
         || type == typeof(PlatformAuthenticator) || type == typeof(PlatformRecoveryCode) || type == typeof(PlatformFactorChallenge)
         || type == typeof(PlatformSession) || type == typeof(PlatformFactorOperation)
         || type == typeof(ConsumerDataRetention) || type == typeof(NotificationRead)

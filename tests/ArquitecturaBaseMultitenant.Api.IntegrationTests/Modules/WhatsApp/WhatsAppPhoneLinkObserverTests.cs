@@ -54,7 +54,7 @@ public sealed class WhatsAppPhoneLinkObserverTests(ApiFactory factory) : IClassF
         }
     }
     [Fact]
-    public async Task Removal_rolls_back_contact_text_and_links_then_commits_without_transferring_anonymous_history()
+    public async Task Removal_rolls_back_contact_and_text_then_commits_without_transferring_anonymous_history()
     {
         await using var host = WhatsAppPrivacyFixture.Host(factory);
         var seed = await WhatsAppPrivacyFixture.SeedAsync(host.Services, Ct);
@@ -75,7 +75,6 @@ public sealed class WhatsAppPhoneLinkObserverTests(ApiFactory factory) : IClassF
             var db = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             Assert.True(await db.Set<WhatsAppContact>().AnyAsync(row => row.Id == seed.ContactId, Ct));
             Assert.NotNull((await db.Set<WhatsAppMessage>().SingleAsync(row => row.Id == seed.MessageId, Ct)).EncryptedText);
-            Assert.Null((await db.Set<LoginLink>().SingleAsync(row => row.Id == seed.LinkId, Ct)).InvalidatedAtUtc);
         }
         await WhatsAppPrivacyFixture.TransactionAsync(host.Services, async (services, ct) =>
         {
@@ -90,7 +89,6 @@ public sealed class WhatsAppPhoneLinkObserverTests(ApiFactory factory) : IClassF
         Assert.Equal(seed.UserId, owned.OriginalUserId); Assert.Equal(seed.MethodId, owned.OriginalMethodId);
         var anonymous = await database.Set<WhatsAppMessage>().SingleAsync(row => row.Id == seed.AnonymousId, Ct);
         Assert.Null(anonymous.OriginalUserId); Assert.Null(anonymous.OriginalMethodId); Assert.NotNull(anonymous.EncryptedText);
-        Assert.NotNull((await database.Set<LoginLink>().SingleAsync(row => row.Id == seed.LinkId, Ct)).InvalidatedAtUtc);
     }
 
     [Fact]
@@ -148,7 +146,7 @@ internal static class WhatsAppPrivacyFixture
                 services.AddSingleton<TimeProvider>(clock ?? new FakeTimeProvider(new DateTimeOffset(NowUtc)));
             });
         });
-    internal sealed record Seed(Guid UserId, Guid MethodId, PhoneNumber Phone, Guid ContactId, Guid MessageId, Guid AnonymousId, Guid LinkId);
+    internal sealed record Seed(Guid UserId, Guid MethodId, PhoneNumber Phone, Guid ContactId, Guid MessageId, Guid AnonymousId);
     internal static async Task<Seed> SeedAsync(IServiceProvider provider, CancellationToken ct)
     {
         Seed? seed = null;
@@ -164,8 +162,7 @@ internal static class WhatsAppPrivacyFixture
             var anonymous = WhatsAppMessage.Create("privacy-number", Guid.NewGuid().ToString("N"), "inbound", WhatsAppMessageDirection.Inbound,
                 WhatsAppMessageKind.Text, WhatsAppMessageStatus.Pending, NowUtc, NowUtc, contact.Id, "encrypted-anonymous");
             db.Set<WhatsAppMessage>().AddRange(message, anonymous);
-            var link = LoginLink.Issue(user, method.Id, Guid.NewGuid().ToString("N"), NowUtc); db.Set<LoginLink>().Add(link);
-            seed = new(user, method.Id, phone, contact.Id, message.Id, anonymous.Id, link.Id);
+            seed = new(user, method.Id, phone, contact.Id, message.Id, anonymous.Id);
         }, ct);
         return seed!;
     }

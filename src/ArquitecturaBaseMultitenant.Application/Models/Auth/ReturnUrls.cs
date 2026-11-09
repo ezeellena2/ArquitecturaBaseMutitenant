@@ -10,7 +10,6 @@ public static class ReturnUrls
     public const string AuthorizePath = "/connect/authorize";
     public const string LoginPath = "/login";
     public const string InvitationPath = "/invitacion";
-    public const string LoginLinkPath = "/login/enlace";
     public const string ConsumerHomePath = "/";
     public const string BusinessHomePath = "/org";
     public const string AccountPath = "/cuenta";
@@ -84,9 +83,8 @@ public static class ReturnUrls
     public static bool IsLoginCodeDeletionReturn([NotNullWhen(true)] string? returnUrl) =>
         IsDeletionReturn(returnUrl) || TryReadFixedLoginCodeSelection(returnUrl, out _);
 
-    /// <summary>La baja conserva los retornos probados y admite la continuación fija de un enlace personal.</summary>
-    public static bool IsDeletionReturn([NotNullWhen(true)] string? returnUrl) =>
-        returnUrl == LoginLinkPath || IsLoginReturn(returnUrl);
+    /// <summary>La baja conserva los retornos probados del ingreso.</summary>
+    public static bool IsDeletionReturn([NotNullWhen(true)] string? returnUrl) => IsLoginReturn(returnUrl);
 
     public static bool IsLoginReturn([NotNullWhen(true)] string? returnUrl) =>
         returnUrl == InvitationPath || TryReadAccessSelection(returnUrl, out _);

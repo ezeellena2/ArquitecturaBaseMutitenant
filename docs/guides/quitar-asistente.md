@@ -48,7 +48,7 @@ La caché de permisos por persona y su prueba neutral (`RolePermissionCacheIsola
 
 ## Núcleo y verificación
 
-Conservá Phone, LoginLink, outbox, Data Protection, `platform.IdempotencyKeys` con `ReferenceKind`, `ReferenceId`, `ResponseLocation` y los puertos neutrales de replay/proyección. No retires documentos legales v2 publicados ni sus aceptaciones: esa historia es núcleo. Retirar el seed futuro del módulo no borra una versión publicada.
+Conservá Phone, outbox, Data Protection, `platform.IdempotencyKeys` con `ReferenceKind`, `ReferenceId`, `ResponseLocation` y los puertos neutrales de replay/proyección. No retires documentos legales v2 publicados ni sus aceptaciones: esa historia es núcleo. Retirar el seed futuro del módulo no borra una versión publicada.
 
 Los perfiles de cuota `assistantQuickQuery`, `assistantConversation` y `assistantNewKey` permanecen sin uso en `PlatformRateLimits`, en las opciones `RateLimiting` y en el contrato de la configuración de Plataforma: los doce perfiles son cerrados (E9). Con el módulo salen sus atributos `[RateLimit]`, `AssistantNewKeyRateLimitFilter` y `AssistantRateLimitTests`.
 

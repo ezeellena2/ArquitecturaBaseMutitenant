@@ -19,8 +19,22 @@ public sealed class WhatsAppBotTests
             "Bot.OperatorNeutralReply", new DateTime(2026, 10, 9, 12, 0, 0, DateTimeKind.Utc), Ct);
         Assert.Equal(expected, reply.Body); Assert.Null(reply.Footer); Assert.Null(reply.LinkLabel); Assert.Null(reply.LinkUrl); Assert.Null(reply.ReplyButtons);
     }
+    [Theory]
+    [InlineData("es-AR", "Lucía", "Hola, Lucía. Para entrar a Mi sitio, tocá «Entrar a mi cuenta» y pedí el código en la página.", "Entrar a mi cuenta")]
+    [InlineData("es-AR", null, "Hola. Para entrar a Mi sitio, tocá «Entrar a mi cuenta» y pedí el código en la página.", "Entrar a mi cuenta")]
+    [InlineData("en-US", "Lucy", "Hi, Lucy. To sign in to Mi sitio, tap “Go to my account” and request the code on the page.", "Go to my account")]
+    public async Task Sign_in_reply_says_where_to_ask_for_the_code_and_its_button_fits_whatsapp(string culture, string? name,
+        string expected, string label)
+    {
+        var reply = await new WhatsAppBotReplyBuilder(new JsonReferenceDataCatalog()).BuildAsync("number", "+5491134567890", "Mi sitio",
+            culture, name is null ? "Bot.EnterAccountWithoutName" : "Bot.EnterAccount", new DateTime(2026, 10, 9, 12, 0, 0, DateTimeKind.Utc), Ct,
+            name, "https://app.example/login", "Bot.EnterAccountButton", footer: false);
+        Assert.Equal(expected, reply.Body); Assert.Equal(label, reply.LinkLabel); Assert.Null(reply.Footer);
+        // Meta corta el texto de un botón cta_url a los 20 caracteres.
+        Assert.InRange(reply.LinkLabel!.Length, 1, 20);
+    }
     [Fact]
-    public async Task Disabled_channel_consumes_no_reply_and_issues_no_proof()
+    public async Task Disabled_channel_consumes_no_reply()
     {
         var settings = new WhatsAppCodeQuotaTests.Settings { IsEnabled = false };
         var outbox = new Outbox();
@@ -30,7 +44,7 @@ public sealed class WhatsAppBotTests
         contact.RecordInbound(now);
         var message = WhatsAppMessage.Create("fixture-number", "fixture-message", "inbound", WhatsAppMessageDirection.Inbound,
             WhatsAppMessageKind.Text, WhatsAppMessageStatus.Pending, now, now, contact.Id);
-        await new WhatsAppBotWriter(settings, new WhatsAppSignInLinkIssuer(settings, null!, outbox, null!, null!, null!), clock)
+        await new WhatsAppBotWriter(settings, new WhatsAppSignInReplyIssuer(settings, outbox, null!, null!, null!), clock)
             .ConsumeAsync(new(message, contact, null, null, false), Ct);
         Assert.Equal(0, outbox.Calls);
     }

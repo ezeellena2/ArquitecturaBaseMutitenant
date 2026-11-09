@@ -105,9 +105,6 @@
   <data name="WhatsApp.Inbound.LeaseExpired" xml:space="preserve">
     <value>Venció la reserva del mensaje entrante.</value>
   </data>
-  <data name="Bot.LinkWithoutName" xml:space="preserve">
-    <value>Hola. Para entrar a {0}, tocá Entrar. El enlace sirve una vez y vence en 10 minutos.</value>
-  </data>
   <data name="Bot.Unknown" xml:space="preserve">
     <value>Hola. Este número no tiene una cuenta de {0}. Para crear la tuya, tocá Crear mi cuenta: vas a aceptar los términos y confirmar el número con un código.</value>
   </data>
@@ -117,23 +114,11 @@
   <data name="Bot.Create" xml:space="preserve">
     <value>Crear mi cuenta</value>
   </data>
-  <data name="Bot.Disabled" xml:space="preserve">
-    <value>No podemos darte un enlace para entrar. Usá la web para revisar tu cuenta.</value>
-  </data>
   <data name="Bot.SignIn" xml:space="preserve">
     <value>Ingresar</value>
   </data>
   <data name="Bot.Recover" xml:space="preserve">
     <value>Recuperar mi cuenta</value>
-  </data>
-  <data name="Bot.Link" xml:space="preserve">
-    <value>Hola, {0}. Para entrar a {1}, tocá Entrar. El enlace sirve una vez y vence en 10 minutos.</value>
-  </data>
-  <data name="Bot.Limit" xml:space="preserve">
-    <value>Esperá un momento antes de pedir otro enlace para entrar.</value>
-  </data>
-  <data name="Bot.Enter" xml:space="preserve">
-    <value>Entrar</value>
   </data>
   <data name="Bot.Footer" xml:space="preserve">
     <value>Por ahora este chat solo sirve para entrar.</value>
@@ -518,5 +503,14 @@
   </data>
   <data name="Send.Failure.Other" xml:space="preserve">
     <value>No se pudo mandar por un motivo que no conocemos.</value>
+  </data>
+  <data name="Bot.EnterAccount" xml:space="preserve">
+    <value>Hola, {0}. Para entrar a {1}, tocá «Entrar a mi cuenta» y pedí el código en la página.</value>
+  </data>
+  <data name="Bot.EnterAccountWithoutName" xml:space="preserve">
+    <value>Hola. Para entrar a {0}, tocá «Entrar a mi cuenta» y pedí el código en la página.</value>
+  </data>
+  <data name="Bot.EnterAccountButton" xml:space="preserve">
+    <value>Entrar a mi cuenta</value>
   </data>
 </root>

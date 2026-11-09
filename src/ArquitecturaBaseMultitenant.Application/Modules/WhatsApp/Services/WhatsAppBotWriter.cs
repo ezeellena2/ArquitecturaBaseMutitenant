@@ -3,10 +3,11 @@ using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// <summary>
-/// El bot de ingreso de la Etapa 8 en el número de Plataforma, en la UoW preparada por T06. Con las consultas prendidas
-/// lo reemplaza el bot de atención, que manda este mismo enlace desde la opción del sistema «Entrar a mi cuenta».
+/// El bot de ingreso de la Etapa 8 en el número de Plataforma, en la UoW preparada por T06: con las consultas apagadas,
+/// cualquier mensaje recibe la respuesta de ingreso, sin enlace secreto (179). Con las consultas prendidas lo reemplaza el
+/// bot de atención, que manda esta misma respuesta desde la opción del sistema «Entrar a mi cuenta».
 /// </summary>
-internal sealed class WhatsAppBotWriter(IWhatsAppChannelSettings settings, WhatsAppSignInLinkIssuer signIn,
+internal sealed class WhatsAppBotWriter(IWhatsAppChannelSettings settings, WhatsAppSignInReplyIssuer signIn,
     TimeProvider clock) : IWhatsAppInboundConsumer
 {
     public async Task ConsumeAsync(WhatsAppInboundContext context, CancellationToken ct)

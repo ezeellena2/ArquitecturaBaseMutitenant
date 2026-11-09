@@ -10,11 +10,11 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 
 /// <summary>
 /// El bot del número de Plataforma con las consultas prendidas (ADR 0038, precisión del 03/10), sin «Además». El menú
-/// empieza por «Entrar a mi cuenta», que manda la respuesta de ingreso de la Etapa 8 con sus ramas (ADR 0049); esa
-/// respuesta no queda en la conversación, porque puede llevar un enlace para entrar.
+/// empieza por «Entrar a mi cuenta», que manda la respuesta de ingreso de la Etapa 8 con sus ramas (ADR 0049): el botón
+/// que abre el ingreso, sin enlace secreto (179). Esa respuesta sale como el bot de ingreso, sin quedar en la conversación.
 /// </summary>
 internal sealed class PlatformWhatsAppBotWriter(IPlatformWhatsAppBotRepository bots, WhatsAppBotResolver resolver,
-    IPlatformWhatsAppChatRepository chats, WhatsAppSignInLinkIssuer signIn, ITimeZoneService zones, WhatsAppBotReplyBuilder replies,
+    IPlatformWhatsAppChatRepository chats, WhatsAppSignInReplyIssuer signIn, ITimeZoneService zones, WhatsAppBotReplyBuilder replies,
     IOutbox outbox, TimeProvider clock)
 {
     internal async Task RespondAsync(WhatsAppInboundContext context, PlatformWhatsAppChat chat, bool newConversation, CancellationToken ct)
