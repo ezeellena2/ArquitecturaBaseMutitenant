@@ -328,6 +328,8 @@ public sealed class NotificationServiceTests
             throw new InvalidOperationException("The bell reads the projections once.");
         public Task<bool> HasCompanyPermissionAsync(Guid userId, Guid companyId, string permission, CancellationToken ct) =>
             throw new InvalidOperationException("The bell reads the projections once.");
+        public Task<bool> HasCompanyRequirementAsync(Guid userId, Guid companyId, string permission,
+            string? organizationPermission, CancellationToken ct) => throw new NotSupportedException();
     }
 
     private sealed class FakePlatformPermissions : IPlatformPermissionService

@@ -1,15 +1,19 @@
 using System.Security.Claims;
 using ArquitecturaBaseMultitenant.Api.Authorization;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Models.Companies;
+using ArquitecturaBaseMultitenant.Application.Services.Roles;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Organization;
@@ -63,6 +67,32 @@ public sealed class PermissionAuthorizationTests
             organizationGrant: true, companyGrant: true, companyId: company));
     }
 
+    /// <summary>
+    /// Una lectura por requisito (base de la 12, `permisos.md`): con el servicio real, cada proyección cacheada (la de la
+    /// organización y la de las empresas) se lee a lo sumo una vez, y la alternativa de organización se compara contra lo
+    /// ya leído.
+    /// </summary>
+    [Theory]
+    [InlineData("companies.read", "company.members.read", true, 1, 0)]
+    [InlineData("users.read", "company.members.read", true, 1, 1)]
+    [InlineData("users.read", "company.members.manage", false, 1, 1)]
+    public async Task A_company_requirement_reads_each_projection_at_most_once(string organizationRole, string companyRole,
+        bool granted, int organizationReads, int companyReads)
+    {
+        var tenant = Guid.CreateVersion7();
+        var company = Guid.CreateVersion7();
+        var cache = new CountingCache([organizationRole], new Dictionary<Guid, IReadOnlyList<string>> { [company] = [companyRole] });
+        var permissions = new PermissionService(cache, new TestTenantContext(tenant, TenantKind.Business), new ActiveCompanies(),
+            TimeProvider.System, NullLogger<PermissionService>.Instance);
+        var policy = new HasCompanyPermissionAttribute("company.members.read", organizationPermission: "companies.read").Policy!;
+
+        var context = await HandleAsync(policy, Access.Business, tenant, TenantKind.Business, companyId: company,
+            permissions: permissions);
+
+        Assert.Equal(granted, context.HasSucceeded);
+        Assert.Equal((organizationReads, companyReads), (cache.OrganizationReads, cache.CompanyReads));
+    }
+
     [Fact]
     public async Task Platform_permission_requires_platform_access()
     {
@@ -100,14 +130,15 @@ public sealed class PermissionAuthorizationTests
 
     private static async Task<AuthorizationHandlerContext> HandleAsync(string policyName, Access access, Guid? tenantId,
         TenantKind? tenantKind, bool organizationGrant = false, bool companyGrant = false,
-        bool platformGrant = false, Guid? companyId = null, bool companyInOrganization = true)
+        bool platformGrant = false, Guid? companyId = null, bool companyInOrganization = true,
+        IPermissionService? permissions = null)
     {
         var provider = new PermissionPolicyProvider(Options.Create(new AuthorizationOptions()));
         var policy = await provider.GetPolicyAsync(policyName);
         Assert.NotNull(policy);
         var current = new TestCurrentUser(access);
         var tenant = new TestTenantContext(tenantId, tenantKind);
-        var permissions = new TestPermissions(organizationGrant, companyGrant);
+        permissions ??= new TestPermissions(organizationGrant, companyGrant);
         var platformPermissions = new TestPlatformPermissions(platformGrant);
         var handler = new PermissionAuthorizationHandler(current, tenant, permissions, platformPermissions,
             new TestCompanies(companyInOrganization));
@@ -144,6 +175,41 @@ public sealed class PermissionAuthorizationTests
             Task.FromResult<IReadOnlyDictionary<Guid, IReadOnlyList<string>>>(new Dictionary<Guid, IReadOnlyList<string>>());
         public Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken ct) => Task.FromResult(organizationGrant);
         public Task<bool> HasCompanyPermissionAsync(Guid userId, Guid companyId, string permission, CancellationToken ct) => Task.FromResult(companyGrant);
+        public Task<bool> HasCompanyRequirementAsync(Guid userId, Guid companyId, string permission, string? organizationPermission,
+            CancellationToken ct) => Task.FromResult(companyGrant || organizationPermission is not null && organizationGrant);
+    }
+
+    /// <summary>Las proyecciones cacheadas de la persona, contando cada lectura.</summary>
+    private sealed class CountingCache(IReadOnlyList<string> organization, IReadOnlyDictionary<Guid, IReadOnlyList<string>> companies)
+        : IRolePermissionCache
+    {
+        public int OrganizationReads { get; private set; }
+        public int CompanyReads { get; private set; }
+
+        public Task<IReadOnlyList<string>> GetOrganizationPermissionsAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken)
+        {
+            OrganizationReads++;
+            return Task.FromResult(organization);
+        }
+
+        public Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> GetCompanyPermissionsAsync(Guid tenantId, Guid userId,
+            CancellationToken cancellationToken)
+        {
+            CompanyReads++;
+            return Task.FromResult(companies);
+        }
+    }
+
+    private sealed class ActiveCompanies : ICompanyReader
+    {
+        public Task<bool> IsActiveAsync(Guid companyId, CancellationToken cancellationToken) => Task.FromResult(true);
+        public Task<PagedResult<CompanyRow>> ListAsync(ListCompaniesRequest request, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<CompanyRow?> FindByIdAsync(Guid companyId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<CompanyFilterCountsResponse> GetFilterCountsAsync(ListCompaniesRequest request, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<bool> ExistsTaxIdAsync(string country, string type, string number, Guid? excludedCompanyId,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 
     private sealed class TestCompanies(bool inOrganization) : ICompanyService

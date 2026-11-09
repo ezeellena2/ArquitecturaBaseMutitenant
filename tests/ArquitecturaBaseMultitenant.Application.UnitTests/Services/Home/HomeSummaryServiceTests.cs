@@ -160,5 +160,7 @@ public sealed class HomeSummaryServiceTests
             PerItemChecks++;
             return Task.FromResult(true);
         }
+        public Task<bool> HasCompanyRequirementAsync(Guid userId, Guid companyId, string permission,
+            string? organizationPermission, CancellationToken ct) => throw new NotSupportedException();
     }
 }

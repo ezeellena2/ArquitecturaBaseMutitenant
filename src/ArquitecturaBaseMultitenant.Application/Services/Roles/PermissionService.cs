@@ -66,6 +66,25 @@ internal sealed class PermissionService(IRolePermissionCache cache, ITenantConte
         OperationLog.RunValueAsync(logger, timeProvider, "HasCompanyPermission", async () =>
             (await CompanyAsync(userId, companyId, cancellationToken)).Contains(permission, StringComparer.Ordinal));
 
+    // Una lectura por requisito (base de la 12): la proyección de la organización se lee una vez y sirve a la alternativa y
+    // a la empresa; la de las empresas, solo si hace falta y también una vez.
+    public Task<bool> HasCompanyRequirementAsync(Guid userId, Guid companyId, string permission,
+        string? organizationPermission, CancellationToken cancellationToken) =>
+        OperationLog.RunValueAsync(logger, timeProvider, "HasCompanyRequirement", async () =>
+        {
+            if (companyId == Guid.Empty) throw new ArgumentException("The company id cannot be empty.", nameof(companyId));
+            var organization = await OrganizationAsync(userId, cancellationToken);
+            if (organizationPermission is not null && organization.Contains(organizationPermission, StringComparer.Ordinal))
+                return true;
+            var byCompany = await ByCompanyAsync(userId, cancellationToken);
+            if (organizationPermission is not null
+                && Permissions.OrganizationProjectedFromCompany.Contains(organizationPermission, StringComparer.Ordinal)
+                && byCompany.Values.Any(own => own.Contains(organizationPermission, StringComparer.Ordinal)))
+                return true;
+            return (await CompanyFromAsync(companyId, organization, byCompany, cancellationToken))
+                .Contains(permission, StringComparer.Ordinal);
+        });
+
     private Task<IReadOnlyList<string>> OrganizationAsync(Guid userId, CancellationToken cancellationToken)
     {
         if (userId == Guid.Empty) throw new ArgumentException("The user id cannot be empty.", nameof(userId));
@@ -84,9 +103,14 @@ internal sealed class PermissionService(IRolePermissionCache cache, ITenantConte
         CancellationToken cancellationToken)
     {
         if (companyId == Guid.Empty) throw new ArgumentException("The company id cannot be empty.", nameof(companyId));
-        var organization = await OrganizationAsync(userId, cancellationToken);
-        if ((await ByCompanyAsync(userId, cancellationToken)).TryGetValue(companyId, out var own))
-            return Union(organization, own);
+        return await CompanyFromAsync(companyId, await OrganizationAsync(userId, cancellationToken),
+            await ByCompanyAsync(userId, cancellationToken), cancellationToken);
+    }
+
+    private async Task<IReadOnlyList<string>> CompanyFromAsync(Guid companyId, IReadOnlyList<string> organization,
+        IReadOnlyDictionary<Guid, IReadOnlyList<string>> byCompany, CancellationToken cancellationToken)
+    {
+        if (byCompany.TryGetValue(companyId, out var own)) return Union(organization, own);
         // Sin membresía en esa empresa sólo valen los roles de organización, y sólo si la empresa está activa.
         return organization.Count > 0 && await companies.IsActiveAsync(companyId, cancellationToken) ? organization : [];
     }

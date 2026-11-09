@@ -34,10 +34,9 @@ internal sealed class PermissionAuthorizationHandler(ICurrentUser currentUser, I
                 && tenantContext.TenantId is not null
                 && context.Resource is HttpContext companyContext
                 && TryCompanyId(companyContext, out var companyId)
-                && ((requirement.OrganizationPermission is { } organizationPermission
-                        && await permissions.HasPermissionAsync(userId, organizationPermission, cancellationToken))
-                    || await permissions.HasCompanyPermissionAsync(userId, companyId, requirement.Permission,
-                        cancellationToken)),
+                // Una lectura por requisito (base de la 12): la alternativa de organización se compara contra lo ya leído.
+                && await permissions.HasCompanyRequirementAsync(userId, companyId, requirement.Permission,
+                    requirement.OrganizationPermission, cancellationToken),
             PermissionKind.Platform => currentUser.Access == Access.Platform
                 && await platformPermissions.HasPermissionAsync(userId, requirement.Permission, cancellationToken),
             _ => false,

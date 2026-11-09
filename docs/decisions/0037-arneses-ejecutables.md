@@ -17,7 +17,7 @@ Un **arnés ejecutable** (`scripts/arneses/<nombre>/`) es una rutina que se corr
 - **D5** Nunca toca `*.cs`, `*.ts(x)`, tests, `*.resx`, migraciones, contratos generados ni secretos.
 - **D6** La historia no se reescribe: `docs/plans/`, `docs/reviews/`, `docs/history/`, el cuerpo de los ADR, `docs/backlog.md` y `docs/design/` quedan fuera. Del ADR solo se mira el índice.
 - **D7** Nunca inventa: si el dato no está en el código ni en otro documento, el hallazgo pasa a `humano`.
-- **D8** Trabaja aparte: cada corrida arma una copia de `HEAD` en `.local/arneses/copias/<arnés>-<fecha>` (`git clone --local` y `checkout --detach`, como `/puerta`), verifica, commitea ahí y no hace push. No crea ramas ni worktrees (enmienda de la base de la 12, por el pedido del usuario del 2026-11-07; antes usaba un `git worktree` en una rama `arnes/<arnés>/<AAAAMMDD-HHmm>`). Fusionar es de la persona (o `--fusionar`: trae el commit con `git fetch` y `--ff-only`, sin rama; si `main` avanzó desde el corte, no fusiona y lo dice).
+- **D8** Trabaja aparte: cada corrida crea un `git worktree` en una rama `arnes/<arnés>/<AAAAMMDD-HHmm>`, verifica, commitea ahí y no hace push. Fusionar es de la persona (o `--fusionar`, solo `--ff-only`).
 - **D9** Tope de gasto: cada arnés declara modelo, esfuerzo, presupuesto y máximo de hallazgos por corrida. Sin hallazgos para el modelo, el modelo no se llama.
 - **D10** Dos motores, Claude Code y Codex: los mismos detectores, el mismo informe, las mismas instrucciones y la misma guardia. Lo que un motor no puede limitar por sí mismo lo controla el script después: la guardia revierte lo tocado fuera de `permisos`.
 
@@ -31,4 +31,4 @@ Un **arnés ejecutable** (`scripts/arneses/<nombre>/`) es una rutina que se corr
 
 ## Consecuencias
 
-La documentación se realinea con un costo acotado (solo los hallazgos `modelo`, con tope por corrida) y cada corrida deja un commit revisable en su copia. Los detectores son código que hay que mantener con sus fixtures; cada falso positivo se paga en tokens, así que se calibran sobre el repo real con `--detectar`. Un arnés nuevo es una carpeta ([receta](../guides/agregar-un-arnes.md)).
+La documentación se realinea con un costo acotado (solo los hallazgos `modelo`, con tope por corrida) y cada corrida deja una rama revisable. Los detectores son código que hay que mantener con sus fixtures; cada falso positivo se paga en tokens, así que se calibran sobre el repo real con `--detectar`. Un arnés nuevo es una carpeta ([receta](../guides/agregar-un-arnes.md)).

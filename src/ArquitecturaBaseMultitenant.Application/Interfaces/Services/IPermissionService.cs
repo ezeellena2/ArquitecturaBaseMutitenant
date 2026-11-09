@@ -25,4 +25,12 @@ public interface IPermissionService
 
     Task<bool> HasCompanyPermissionAsync(Guid userId, Guid companyId, string permission,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Un requisito de empresa (<c>[HasCompanyPermission]</c>): el permiso en esa empresa o, si la ruta la declara, la
+    /// alternativa de organización. Lee cada proyección cacheada a lo sumo una vez y compara la alternativa contra lo ya
+    /// leído (base de la 12, <c>permisos.md</c>).
+    /// </summary>
+    Task<bool> HasCompanyRequirementAsync(Guid userId, Guid companyId, string permission, string? organizationPermission,
+        CancellationToken cancellationToken);
 }
