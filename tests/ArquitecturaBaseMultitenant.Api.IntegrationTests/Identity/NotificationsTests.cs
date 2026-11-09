@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using System.Data.Common;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -16,7 +18,9 @@ using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Identity;
 
@@ -83,6 +87,33 @@ public sealed class NotificationsTests(ApiFactory factory)
             .Where(read => read.UserId == person.UserId || read.UserId == owner.UserId).ToListAsync(Ct);
         var row = Assert.Single(saved);
         Assert.Equal((person.UserId, Shared), (row.UserId, row.NotificationId));
+    }
+
+    /// <summary>
+    /// Revisión de la base de la 12 (punto 8): dos «leído» del mismo aviso a la vez pasan los dos la comprobación antes de
+    /// que alguno guarde. Uno choca con el índice único de la base, la violación se traduce y los dos responden 204.
+    /// </summary>
+    [Fact]
+    public async Task Two_marks_at_once_both_answer_no_content_and_save_one_row()
+    {
+        var race = new ReadRace();
+        using var host = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        {
+            services.AddScoped<INotificationSource, ProbeSource>();
+            services.AddDbContext<ApplicationDbContext>(options => options.AddInterceptors(race));
+        }));
+        using var client = Client(host);
+        var person = await AccountJourney.RegisterAsync(host, client, Ct);
+        race.Arm(person.UserId);
+
+        var marks = await Task.WhenAll(MarkAsync(client, Shared), MarkAsync(client, Shared));
+
+        Assert.Equal([HttpStatusCode.NoContent, HttpStatusCode.NoContent], marks);
+        Assert.Equal(2, race.Checks);
+        Assert.Equal(UniqueKeys.NotificationRead, Assert.Single(race.Violations));
+        await using var scope = factory.Services.CreateAsyncScope();
+        Assert.Equal(1, await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().NotificationReads.AsNoTracking()
+            .CountAsync(read => read.UserId == person.UserId && read.NotificationId == Shared, Ct));
     }
 
     [Fact]
@@ -210,6 +241,50 @@ public sealed class NotificationsTests(ApiFactory factory)
     {
         using var response = await client.PostAsync("/api/notifications/" + Uri.EscapeDataString(id) + "/read", null, Ct);
         return response.StatusCode;
+    }
+
+    /// <summary>
+    /// Frena la comprobación de «ya lo leyó» de la cuenta armada hasta que llegan las dos marcas, y anota cada violación de
+    /// unicidad que devuelve la base al guardar lo leído.
+    /// </summary>
+    private sealed class ReadRace : DbCommandInterceptor
+    {
+        private readonly TaskCompletionSource _bothChecked = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private Guid? _userId;
+        private int _checks;
+
+        public int Checks => Volatile.Read(ref _checks);
+
+        public ConcurrentQueue<string?> Violations { get; } = new();
+
+        public void Arm(Guid userId) => _userId = userId;
+
+        public override async ValueTask<DbDataReader> ReaderExecutedAsync(DbCommand command, CommandExecutedEventData eventData,
+            DbDataReader result, CancellationToken cancellationToken = default)
+        {
+            if (IsCheck(command))
+            {
+                if (Interlocked.Increment(ref _checks) == 2) _bothChecked.TrySetResult();
+                await _bothChecked.Task.WaitAsync(TimeSpan.FromSeconds(10), cancellationToken);
+            }
+
+            return result;
+        }
+
+        public override Task CommandFailedAsync(DbCommand command, CommandErrorEventData eventData,
+            CancellationToken cancellationToken = default)
+        {
+            if (eventData.Exception is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } violation
+                && command.CommandText.Contains("\"NotificationReads\"", StringComparison.Ordinal))
+                Violations.Enqueue(violation.ConstraintName);
+            return Task.CompletedTask;
+        }
+
+        // La comprobación de la marca (un EXISTS con la cuenta), no la lista de la campana.
+        private bool IsCheck(DbCommand command) => _userId is { } userId
+            && command.CommandText.Contains("EXISTS", StringComparison.Ordinal)
+            && command.CommandText.Contains("\"NotificationReads\"", StringComparison.Ordinal)
+            && command.Parameters.Cast<DbParameter>().Any(parameter => parameter.Value is Guid value && value == userId);
     }
 
     /// <summary>Un aviso común a todas las cuentas y uno propio de cada una, más nuevo, con el acceso de quien mira.</summary>
