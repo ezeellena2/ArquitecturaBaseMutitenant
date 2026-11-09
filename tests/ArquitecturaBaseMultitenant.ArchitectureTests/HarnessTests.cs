@@ -330,6 +330,64 @@ public sealed class HarnessTests
         AssertNoFailures(failures);
     }
 
+    /// <summary>
+    /// Base de la 12: un agente carga cada AGENTS.md desde la raíz hasta la carpeta donde trabaja. Ninguna de esas cadenas
+    /// pasa de 30 KB, para que las reglas entren enteras al empezar.
+    /// </summary>
+    [Fact]
+    public void Agent_file_chains_from_the_root_stay_under_thirty_kilobytes()
+    {
+        var chains = ChainedAgentFiles().Select(file => (File: file, Bytes: AgentChainBytes(Root, Path.GetDirectoryName(file)!))).ToArray();
+
+        Assert.Contains(chains, chain => chain.File == Path.Combine(Root, "AGENTS.md"));
+        AssertNoFailures(chains.Where(chain => chain.Bytes > AgentChainLimit)
+            .Select(chain => $"{Relative(chain.File)}: su cadena de AGENTS.md mide {chain.Bytes} bytes; máximo {AgentChainLimit}."));
+    }
+
+    [Fact]
+    public void Agent_chain_detector_adds_every_file_from_the_root_down_to_the_folder()
+    {
+        var root = Directory.CreateTempSubdirectory("agent-chain-");
+        try
+        {
+            var leaf = Directory.CreateDirectory(Path.Combine(root.FullName, "src", "Area"));
+            File.WriteAllText(Path.Combine(root.FullName, "AGENTS.md"), new string('a', 20_000));
+            File.WriteAllText(Path.Combine(root.FullName, "src", "AGENTS.md"), new string('b', 9_000));
+            File.WriteAllText(Path.Combine(leaf.FullName, "AGENTS.md"), new string('c', 2_000));
+            File.WriteAllText(Path.Combine(root.FullName, "AGENTS.md.bak"), new string('d', 50_000));
+
+            Assert.Equal(31_000, AgentChainBytes(root.FullName, leaf.FullName));
+            Assert.True(AgentChainBytes(root.FullName, leaf.FullName) > AgentChainLimit);
+            Assert.Equal(20_000, AgentChainBytes(root.FullName, root.FullName));
+        }
+        finally
+        {
+            root.Delete(recursive: true);
+        }
+    }
+
+    private const int AgentChainLimit = 30 * 1024;
+
+    /// <summary>Cada AGENTS.md del repositorio, fuera de compilados, dependencias y copias locales.</summary>
+    private static IEnumerable<string> ChainedAgentFiles() =>
+        Directory.EnumerateFiles(Root, "AGENTS.md", SearchOption.AllDirectories)
+            .Where(file => !Path.GetRelativePath(Root, file).Split(Path.DirectorySeparatorChar)
+                .Any(segment => segment is "bin" or "obj" or "node_modules" or ".git" or ".local"));
+
+    /// <summary>La suma de los AGENTS.md de la raíz y de cada carpeta intermedia hasta la carpeta dada.</summary>
+    private static long AgentChainBytes(string root, string folder)
+    {
+        var top = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar);
+        long bytes = 0;
+        for (var current = new DirectoryInfo(Path.GetFullPath(folder)); current is not null; current = current.Parent)
+        {
+            var agents = Path.Combine(current.FullName, "AGENTS.md");
+            if (File.Exists(agents)) bytes += new FileInfo(agents).Length;
+            if (string.Equals(current.FullName.TrimEnd(Path.DirectorySeparatorChar), top, StringComparison.OrdinalIgnoreCase)) break;
+        }
+        return bytes;
+    }
+
     [Fact]
     public void Rule_cards_follow_the_template_and_their_links_work()
     {

@@ -62,6 +62,7 @@ La tabla está solo en el [`AGENTS.md` raíz](../../AGENTS.md#antes-de-escribir-
 2. un `AGENTS.md` o una ficha tiene un enlace roto, sea a una ficha, a un archivo "Copiá de" o a una sección (salvo los marcados `(E#)` de una etapa que todavía no cerró);
 3. una ficha no tiene las secciones del formato (§2), o su "Lo verifica" nombra una clase C# `*Tests` sin método `[Fact]`/`[Theory]` o un archivo `.test.mjs`, `.test.ts` o `.test.tsx` que no existe, salvo que lleve `(E#)` de una etapa que todavía no cerró o diga `Pendiente:`; revisa el repo hermano cuando está presente;
 4. el `AGENTS.md` raíz pasa las 140 líneas, o un puntero pasa las 3.
+5. la cadena de `AGENTS.md` que carga un agente, desde la raíz hasta una carpeta, suma más de 30 KB (base de la 12): las reglas tienen que entrar enteras al empezar. La más larga mide hoy unos 17 KB.
 
 Las etapas cerradas viven en una lista explícita de `HarnessStage`, que usan `HarnessTests` y se actualiza en la puerta de cada etapa (plan, puerta 7). Las etapas pueden cerrarse fuera de orden; una referencia o test se exige solo cuando su etapa está en la lista. En particular, cerrar E6 después de E4 no cierra E5.
 

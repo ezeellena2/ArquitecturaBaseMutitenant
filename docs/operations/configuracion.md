@@ -94,7 +94,7 @@ Desde la E11 el webhook depende solo de `WhatsApp:AppSecret` y `WhatsApp:VerifyT
 
 La retención de texto es fija de **90 días desde `ReceivedAtUtc`** del servidor; no tiene clave para ampliarla. El worker corre al arrancar y una vez por día, con scopes/lotes propios, incluso sin `PhoneNumberId` ni secretos de Meta. Apagar el canal no desactiva esa limpieza. La exportación OpenAPI no inicia mantenimiento ni necesita base; retirar las fuentes del módulo sigue la receta de [quitar WhatsApp](../guides/quitar-whatsapp.md).
 
-**Con el depurador de Visual Studio,** el proveedor de log Debug manda cada línea a la ventana Salida y frena todo el proceso: allá bajó de unos 690 a unos 11 pedidos por segundo. Si se levanta la Api así, medir con un GET simple y diez en paralelo, y poner `Logging:Debug:LogLevel:Default` en Warning en el `appsettings.Development.json` de la Api; la consola y la telemetría no cambian (traspaso 9).
+**Con el depurador de Visual Studio,** el proveedor de log Debug manda cada línea a la ventana Salida y frena todo el proceso: allá bajó de unos 690 a unos 11 pedidos por segundo. Por eso `Logging:Debug:LogLevel:Default` está en Warning en el `appsettings.Development.json` de la Api desde la base de la 12, y `BuildConfigurationTests` lo controla; la consola y la telemetría no cambian (traspaso 9).
 
 ## 4. Lo que tenés que hacer vos, una sola vez, fuera del código
 

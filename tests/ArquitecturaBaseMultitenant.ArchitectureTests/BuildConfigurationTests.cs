@@ -70,6 +70,20 @@ public sealed partial class BuildConfigurationTests
         AssertActionPins(File.ReadAllText(workflowPath), ["checkout", "setup-node"]);
     }
 
+    /// <summary>
+    /// Base de la 12: con el depurador enganchado, el proveedor Debug escribe cada línea en la ventana de salida y frena la
+    /// Api; en Development queda en Warning.
+    /// </summary>
+    [Fact]
+    public void Development_keeps_the_debug_logging_provider_at_warning()
+    {
+        var developmentSettings = Path.Combine(SolutionRoot.FullPath, "src", "ArquitecturaBaseMultitenant.Api", "appsettings.Development.json");
+        using var document = JsonDocument.Parse(File.ReadAllText(developmentSettings));
+
+        Assert.Equal("Warning", document.RootElement.GetProperty("Logging").GetProperty("Debug").GetProperty("LogLevel")
+            .GetProperty("Default").GetString());
+    }
+
     [Fact]
     public void Development_web_callback_matches_the_front_route_when_the_sibling_checkout_is_present()
     {
