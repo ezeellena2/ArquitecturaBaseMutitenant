@@ -44,8 +44,6 @@
     <!-- Nombre fijo: "EmailTemplates.<archivo>", sin depender de cómo MSBuild arma el nombre desde la carpeta. -->
     <EmbeddedResource Include="Messaging\Email\Templates\*.html" LogicalName="EmailTemplates.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Persistence\Seed\ReferenceData\*.json" LogicalName="ReferenceData.%(Filename)%(Extension)" />
-    <EmbeddedResource Include="Modules\Assistant\Email\Templates\*.html" LogicalName="AssistantEmail.%(Filename)%(Extension)" />
-    <EmbeddedResource Include="Modules\WhatsApp\Email\Templates\*.html" LogicalName="WhatsAppEmail.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Modules\WhatsApp\ReferenceData\*.json" LogicalName="WhatsAppReferenceData.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Modules\Assistant\ReferenceData\*.json" LogicalName="AssistantReferenceData.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Modules\Assistant\Export\Fonts\NotoSans-Regular.ttf" LogicalName="AssistantExport.NotoSans.ttf" />

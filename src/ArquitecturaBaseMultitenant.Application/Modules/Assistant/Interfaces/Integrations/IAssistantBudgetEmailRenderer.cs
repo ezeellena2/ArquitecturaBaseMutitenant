@@ -1,9 +1,10 @@
 using ArquitecturaBaseMultitenant.Application.Models.Messaging;
-using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
 
+/// <summary>Los cuatro avisos del tope del tablero Mensajes, en la cultura de quien lo recibe.</summary>
 public interface IAssistantBudgetEmailRenderer
 {
-    Task<EmailMessage> RenderAsync(string recipient, int threshold, Money used, Money budget, string culture, string zone, CancellationToken ct);
+    Task<EmailMessage> RenderAsync(AssistantBudgetAlertNotice notice, CancellationToken ct);
 }

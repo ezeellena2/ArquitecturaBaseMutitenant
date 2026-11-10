@@ -1,5 +1,8 @@
+using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -22,13 +25,15 @@ public sealed class AssistantBudgetOutboxTests(ApiFactory factory)
         using var client = AssistantTestData.Client(factory);
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
         var organizationId = await OrganizationJourney.StageAsync(factory, account, "Budget owner", Ct);
-        var alert = AssistantBudgetAlert.Create(organizationId, Guid.NewGuid(), AssistantKeyFunding.OwnKey, 80, Usd(80), Usd(100));
+        var month = AssistantBudgetMonth.Create(organizationId, new DateOnly(2026, 10, 1), "America/Argentina/Buenos_Aires",
+            new DateTime(2026, 10, 1, 3, 0, 0, DateTimeKind.Utc), new DateTime(2026, 11, 1, 3, 0, 0, DateTimeKind.Utc));
+        var alert = AssistantBudgetAlert.Create(organizationId, month.Id, AssistantKeyFunding.OwnKey, 80, Usd(80), Usd(100));
         using (var scope = factory.Services.CreateScope())
         {
             var services = scope.ServiceProvider;
             Assert.True((await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
             {
-                services.GetRequiredService<ApplicationDbContext>().Add(alert);
+                services.GetRequiredService<ApplicationDbContext>().AddRange(month, alert);
                 return Task.FromResult(Result.Success());
             }, CommitPolicy.OnSuccess, Ct)).IsSuccess);
         }
@@ -45,6 +50,19 @@ public sealed class AssistantBudgetOutboxTests(ApiFactory factory)
         Assert.Equal(before + 1, await db.OutboxMessages.CountAsync(row => row.UserId == account.UserId, Ct));
         Assert.True((await RetryAsync(factory.Services, alert.Id)).IsSuccess);
         Assert.Equal(before + 1, await db.OutboxMessages.CountAsync(row => row.UserId == account.UserId, Ct));
+
+        // Tablero Mensajes, «Asistente: 80 % del tope (su clave)»: la organización, el mes del tope y el enlace al uso.
+        var protector = read.ServiceProvider.GetRequiredService<IPayloadProtector>();
+        var email = Assert.Single((await db.OutboxMessages.AsNoTracking()
+                .Where(row => row.UserId == account.UserId && row.Channel == "email" && row.EncryptedPayload != "").ToArrayAsync(Ct))
+            .Select(row => JsonSerializer.Deserialize<EmailMessage>(protector.Unprotect(row.EncryptedPayload))!),
+            message => message.Subject.Contains("Budget owner", StringComparison.Ordinal));
+        Assert.Equal(account.Email.Value, email.To);
+        Assert.Equal("El asistente de Budget owner usó el 80 % del tope del mes", email.Subject);
+        Assert.Contains("Si llega al tope, el asistente deja de responder hasta el 01/11/2026.", email.TextBody, StringComparison.Ordinal);
+        Assert.Contains("Mes: Octubre de 2026", email.TextBody, StringComparison.Ordinal);
+        Assert.Contains("Ver el uso: ", email.TextBody, StringComparison.Ordinal);
+        Assert.Contains("/org/asistente/uso", email.TextBody, StringComparison.Ordinal);
     }
 
     [Fact]

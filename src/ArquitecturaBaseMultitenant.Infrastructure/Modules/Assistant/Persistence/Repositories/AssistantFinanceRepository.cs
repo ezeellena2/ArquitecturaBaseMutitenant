@@ -52,6 +52,12 @@ internal sealed class AssistantFinanceRepository(ApplicationDbContext db, ITenan
             .OrderByDescending(row => row.StartUtc).FirstOrDefaultAsync(ct);
         return local is not null && (persisted is null || local.StartUtc >= persisted.StartUtc) ? local : persisted;
     }
+    public async Task<AssistantBudgetMonth?> GetMonthAsync(Guid monthId, CancellationToken ct)
+    {
+        db.RequireTransaction();
+        return db.Set<AssistantBudgetMonth>().Local.SingleOrDefault(row => row.Id == monthId)
+            ?? await db.Set<AssistantBudgetMonth>().AsNoTracking().SingleOrDefaultAsync(row => row.Id == monthId, ct);
+    }
     public async Task<decimal> GetCommittedAndReservedAmountAsync(Guid monthId, AssistantKeyFunding funding, CancellationToken ct)
     {
         db.RequireTransaction();

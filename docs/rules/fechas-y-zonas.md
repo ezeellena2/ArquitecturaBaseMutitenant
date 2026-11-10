@@ -12,6 +12,7 @@
 - **Catálogo:** `GET /api/reference-data` o `/api/reference-data/time-zones` devuelve los IDs y ciudades traducidas desde JSON E1 / tablas E2. Reemplaza `GET /api/time-zones`. El offset se calcula con el reloj al mostrar, nunca se almacena.
 - **Offset:** `ITimeZoneService.GetUtcOffset(id, instantUtc)` calcula el desfase de un instante UTC explícito (incluido un instante histórico); la sobrecarga sin instante usa el `TimeProvider` inyectado para «ahora». No se reutiliza el offset de hoy para otra fecha.
 - **Perfil de cultura:** `Cultures` contiene los patrones y `AmDesignator`/`PmDesignator`. `CultureProfiles` clona la cultura .NET y fija calendario gregoriano, separadores de fecha `/` y hora `:`, designadores del catálogo y signo negativo `-`; `DisplayFormatter` no hereda esos valores del ICU del host.
+- **En un correo o WhatsApp:** un instante con `FormatDate`/`FormatTime`/`FormatInstant` en la zona del contexto; una fecha civil con `FormatDate(DateOnly)` y un mes con `FormatMonth` («octubre de 2026», dentro de una oración) o `FormatMonthLabel` («Octubre de 2026», como `formatMonth` del front), sin zona; cuánto pasó, con `FormatElapsed` («25 minutos»). Lo verifica `DisplayFormatterTests`.
 - En los tests, `FakeTimeProvider`.
 
 ## Prohibido

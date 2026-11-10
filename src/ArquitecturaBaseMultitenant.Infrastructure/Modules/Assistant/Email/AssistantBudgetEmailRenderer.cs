@@ -1,32 +1,64 @@
-using System.Net;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
+using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Resources;
-using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Application.Resources;
+using ArquitecturaBaseMultitenant.Domain.Assistant;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Email;
 
-internal sealed class AssistantBudgetEmailRenderer(DisplayFormatter formatter) : IAssistantBudgetEmailRenderer
+/// <summary>
+/// Tablero Mensajes, «Asistente: 80 % del tope» y «… tope alcanzado», con su clave o la de la plataforma: los textos en la
+/// cultura de quien lo recibe, los montos, el mes y el día en que vuelve a responder formateados por DisplayFormatter, y
+/// el armado común de avisos del núcleo.
+/// </summary>
+internal sealed class AssistantBudgetEmailRenderer(DisplayFormatter formatter, ICultureCatalog cultures, IEmailTemplateRenderer emails)
+    : IAssistantBudgetEmailRenderer
 {
-    private static readonly string Template = ReadTemplate();
-    public async Task<EmailMessage> RenderAsync(string recipient, int threshold, Money used, Money budget, string culture, string zone, CancellationToken ct)
+    public async Task<EmailMessage> RenderAsync(AssistantBudgetAlertNotice notice, CancellationToken ct)
     {
-        var context = await formatter.CreateAsync(culture, zone, ct);
-        var subject = AssistantTexts.GetForCulture("Budget.AlertSubject", System.Globalization.CultureInfo.GetCultureInfo(context.Culture));
-        var template = AssistantTexts.GetForCulture("Budget.AlertBody", System.Globalization.CultureInfo.GetCultureInfo(context.Culture));
-        var body = template.Replace("{0}", formatter.FormatDecimal(threshold, 0, context), StringComparison.Ordinal)
-            .Replace("{1}", await formatter.FormatMoneyAsync(used, context, ct), StringComparison.Ordinal)
-            .Replace("{2}", await formatter.FormatMoneyAsync(budget, context, ct), StringComparison.Ordinal);
-        return new(recipient, subject, Template.Replace("{{Language}}", WebUtility.HtmlEncode(System.Globalization.CultureInfo.GetCultureInfo(context.Culture).TwoLetterISOLanguageName), StringComparison.Ordinal)
-            .Replace("{{Subject}}", WebUtility.HtmlEncode(subject), StringComparison.Ordinal)
-            .Replace("{{Body}}", WebUtility.HtmlEncode(body), StringComparison.Ordinal), body);
-    }
-    private static string ReadTemplate()
-    {
-        using var stream = typeof(AssistantBudgetEmailRenderer).Assembly.GetManifestResourceStream("AssistantEmail.BudgetAlert.html")
-            ?? throw new InvalidOperationException("The installed assistant email template is missing.");
-        using var reader = new StreamReader(stream);
-        return reader.ReadToEnd();
+        ArgumentNullException.ThrowIfNull(notice);
+        var context = await formatter.CreateAsync(notice.Culture, notice.TimeZoneId, ct);
+        var profile = await new CultureProfiles(cultures).LoadAsync(context.Culture, ct);
+        var used = await formatter.FormatMoneyAsync(notice.Used, context, ct);
+        var budget = await formatter.FormatMoneyAsync(notice.Budget, context, ct);
+        var month = formatter.FormatMonth(notice.Month, context);
+        // El mes es civil y el tope vuelve a cero el primer día del siguiente.
+        var resumes = formatter.FormatDate(notice.Month.AddMonths(1), context);
+        var percent = formatter.FormatPercent(notice.Threshold / 100m, context);
+        var organization = notice.OrganizationName;
+        var ownKey = notice.Funding == AssistantKeyFunding.OwnKey;
+        var reached = notice.Threshold >= AssistantBudgetAlert.ReachedThreshold;
+        var key = "Budget.Alert." + (ownKey ? "OwnKey" : "PlatformKey") + (reached ? ".Reached" : ".Near");
+        var greeting = string.IsNullOrWhiteSpace(notice.RecipientName)
+            ? NotificationTexts.Get("Greeting.Unnamed", profile)
+            : NotificationTexts.Format("Greeting.Named", profile, notice.RecipientName);
+        // El de la plataforma va al correo de soporte, sin saludo; el tope alcanzado de la plataforma cabe en un párrafo.
+        string[] paragraphs = (ownKey, reached) switch
+        {
+            (true, false) => [AssistantTexts.Format(key + ".Body", profile, greeting, organization, used, budget, month),
+                AssistantTexts.Format(key + ".After", profile, resumes)],
+            (true, true) => [AssistantTexts.Format(key + ".Body", profile, greeting, organization, budget, month),
+                AssistantTexts.Format(key + ".After", profile, resumes)],
+            (false, false) => [AssistantTexts.Format(key + ".Body", profile, organization, used, budget, month),
+                AssistantTexts.Format(key + ".After", profile, resumes)],
+            (false, true) => [AssistantTexts.Format(key + ".Body", profile, organization, budget, month, resumes)],
+        };
+        var action = AssistantBudgetAlertNotice.LeadsToSettings(notice.Funding, notice.Threshold)
+            ? "Budget.Alert.ReviewSettings" : "Budget.Alert.ViewUsage";
+        return emails.RenderNotice(notice.Recipient, new EmailNotice(AssistantTexts.Format(key + ".Subject", profile, organization, percent),
+            AssistantTexts.Format(key + ".Title", profile, organization, percent), paragraphs)
+        {
+            Details =
+            [
+                new(AssistantTexts.Get("Budget.Alert.Organization", profile), organization),
+                new(AssistantTexts.Get("Budget.Alert.Used", profile), AssistantTexts.Format("Budget.Alert.UsedOf", profile, used, budget)),
+                new(AssistantTexts.Get("Budget.Alert.Month", profile), formatter.FormatMonthLabel(notice.Month, context)),
+            ],
+            Action = new(AssistantTexts.Get(action, profile), notice.ActionUrl),
+        }, profile);
     }
 }

@@ -153,23 +153,53 @@
   <data name="Bot.PromotionsDeclined" xml:space="preserve">
     <value>Listo, no te vamos a mandar promociones.</value>
   </data>
-  <data name="Notice.ChatsWaiting.Subject" xml:space="preserve">
-    <value>Chats esperando en {0}</value>
+  <data name="Notice.ChatsWaiting.SubjectSingular" xml:space="preserve">
+    <value>Tenés {0} chat esperando en {1}</value>
   </data>
-  <data name="Notice.ChatsWaiting.Body" xml:space="preserve">
-    <value>Chats sin tomar en {0}: {1}.</value>
+  <data name="Notice.ChatsWaiting.SubjectPlural" xml:space="preserve">
+    <value>Tenés {0} chats esperando en {1}</value>
+  </data>
+  <data name="Notice.ChatsWaiting.TitleSingular" xml:space="preserve">
+    <value>{0} chat esperando en {1}</value>
+  </data>
+  <data name="Notice.ChatsWaiting.TitlePlural" xml:space="preserve">
+    <value>{0} chats esperando en {1}</value>
+  </data>
+  <data name="Notice.ChatsWaiting.BodySingular" xml:space="preserve">
+    <value>{0} Hay {1} chat de WhatsApp sin tomar en {2}, de {3}. Espera hace {4}.</value>
+  </data>
+  <data name="Notice.ChatsWaiting.BodyPlural" xml:space="preserve">
+    <value>{0} Hay {1} chats de WhatsApp sin tomar en {2}, de {3}. El más viejo espera hace {4}.</value>
   </data>
   <data name="Notice.ChatsWaiting.Action" xml:space="preserve">
     <value>Ver los chats</value>
   </data>
-  <data name="Notice.ConsultationsWaiting.Subject" xml:space="preserve">
-    <value>Consultas esperando en {0}</value>
+  <data name="Notice.ChatsWaiting.Footer" xml:space="preserve">
+    <value>Te llega porque estás en el equipo {0}. Quien administra WhatsApp elige cuándo se manda este aviso.</value>
   </data>
-  <data name="Notice.ConsultationsWaiting.Body" xml:space="preserve">
-    <value>Consultas sin tomar en {0}: {1}.</value>
+  <data name="Notice.ConsultationsWaiting.SubjectSingular" xml:space="preserve">
+    <value>Tenés {0} consulta esperando en {1}</value>
+  </data>
+  <data name="Notice.ConsultationsWaiting.SubjectPlural" xml:space="preserve">
+    <value>Tenés {0} consultas esperando en {1}</value>
+  </data>
+  <data name="Notice.ConsultationsWaiting.TitleSingular" xml:space="preserve">
+    <value>{0} consulta esperando en {1}</value>
+  </data>
+  <data name="Notice.ConsultationsWaiting.TitlePlural" xml:space="preserve">
+    <value>{0} consultas esperando en {1}</value>
+  </data>
+  <data name="Notice.ConsultationsWaiting.BodySingular" xml:space="preserve">
+    <value>{0} Hay {1} consulta de WhatsApp sin tomar en {2}, de {3}. Espera hace {4}.</value>
+  </data>
+  <data name="Notice.ConsultationsWaiting.BodyPlural" xml:space="preserve">
+    <value>{0} Hay {1} consultas de WhatsApp sin tomar en {2}, de {3}. La más vieja espera hace {4}.</value>
   </data>
   <data name="Notice.ConsultationsWaiting.Action" xml:space="preserve">
     <value>Ver las consultas</value>
+  </data>
+  <data name="Notice.ConsultationsWaiting.Footer" xml:space="preserve">
+    <value>Te llega porque estás en el equipo {0}. Quien administra el WhatsApp de Plataforma elige cuándo se manda este aviso.</value>
   </data>
   <data name="Import.Header.Name" xml:space="preserve">
     <value>Nombre</value>

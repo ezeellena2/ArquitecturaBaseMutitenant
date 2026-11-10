@@ -232,8 +232,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │       └── Templates/
 │   │   ├── Modules/
 │   │   │   ├── Assistant/
-│   │   │   │   ├── Email/  renderizado de alertas desde plantillas del módulo
-│   │   │   │   │   └── Templates/
+│   │   │   │   ├── Email/  los avisos del tope, con el armado común de avisos del núcleo
 │   │   │   │   ├── Export/  exportación Markdown/PDF del chat
 │   │   │   │   │   └── Fonts/  fuente y licencia del PDF
 │   │   │   │   ├── Help/  lector y artículos bilingües aportados por el módulo
@@ -252,8 +251,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   │   └── Retention/
 │   │   │   └── WhatsApp/  módulo opcional instalado por composición; canal de Plataforma con número conectado, webhook con sus dos secretos
 │   │   │       ├── Disabled/
-│   │   │       ├── Email/  el correo «Chats esperando» (D6)
-│   │   │       │   └── Templates/
+│   │   │       ├── Email/  el correo «Chats esperando» (D6), con el armado común de avisos del núcleo
 │   │   │       ├── Inbound/
 │   │   │       ├── Persistence/
 │   │   │       ├── ReferenceData/  tarifas oficiales de Meta por vigencia
@@ -599,7 +597,7 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/WhatsApp/` | Pruebas de unidad: WhatsApp. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/WhatsApp/WhatsAppMessageTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Domain.UnitTests/WhatsApp/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Files/` | Almacenamiento privado local y journal de compensación. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Files/LocalFileStore.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Files/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Export/` | Exportación Markdown/PDF de chats del asistente. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Export/AssistantExportRenderer.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Export/AGENTS.md) |
-| `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Email/` | Plantillas y renderizado de alertas del asistente. | [docs/rules/textos-y-traducciones.md](../rules/textos-y-traducciones.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Email/AssistantBudgetEmailRenderer.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Email/AGENTS.md) |
+| `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Email/` | Renderizado de los avisos del tope del asistente (tablero Mensajes), sobre el armado común de avisos del núcleo. | [docs/rules/textos-y-traducciones.md](../rules/textos-y-traducciones.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Email/AssistantBudgetEmailRenderer.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Email/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Help/` | Lector y artículos bilingües de ayuda del asistente. | [docs/features/asistente.md](../features/asistente.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Help/RepositoryHelpArticleReader.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/Help/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Files/` | Pruebas del almacenamiento privado y sus compensaciones. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Files/LocalFileStoreTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Files/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/AssistantBrowser/` | Fixture privada del recorrido del asistente en Testing aislado. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/AssistantBrowser/AssistantFileBridge.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/TestFeatures/AssistantBrowser/AGENTS.md) |

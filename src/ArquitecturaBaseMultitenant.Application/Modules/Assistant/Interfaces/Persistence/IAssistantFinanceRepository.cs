@@ -10,6 +10,8 @@ public interface IAssistantFinanceRepository
     Task<AssistantPlatformKeyDailyQuota?> GetPlatformQuotaAsync(Guid userId, DateOnly dayUtc, CancellationToken ct);
     Task<AssistantOwnKeyDailyQuota?> GetOwnQuotaAsync(Guid userId, DateOnly dayUtc, CancellationToken ct);
     Task<AssistantBudgetMonth?> GetLatestMonthAsync(Guid organizationId, DateTime nowUtc, CancellationToken ct);
+    /// <summary>El mes de un aviso del tope, también si se creó en esta UOW; los meses no cambian.</summary>
+    Task<AssistantBudgetMonth?> GetMonthAsync(Guid monthId, CancellationToken ct);
     Task<decimal> GetCommittedAndReservedAmountAsync(Guid monthId, AssistantKeyFunding funding, CancellationToken ct);
     Task<decimal> GetCommittedCostAsync(Guid monthId, AssistantKeyFunding funding, CancellationToken ct);
     Task<IReadOnlyList<AssistantFinancialCall>> ListCallsAsync(Guid operationId, CancellationToken ct);

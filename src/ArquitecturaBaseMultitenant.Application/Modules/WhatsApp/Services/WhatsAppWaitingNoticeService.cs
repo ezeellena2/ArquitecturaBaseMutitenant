@@ -38,7 +38,7 @@ internal sealed class WhatsAppWaitingNoticeService(IWhatsAppTeamNoticeRepository
             {
                 if (!waiting.TryGetValue(team.Id, out var row) || sent.ContainsKey(team.Id)
                     || row.OldestWaitingSinceUtc.AddMinutes(team.NotifyAfterMinutes!.Value) > nowUtc) continue;
-                await notifier.EnqueueAsync(team, row.Count, platform, ct);
+                await notifier.EnqueueAsync(team, row.Count, nowUtc - row.OldestWaitingSinceUtc, platform, ct);
                 notices.Add(platform ? PlatformWhatsAppTeamNotice.Create(team.Id, nowUtc) : WhatsAppTeamNotice.Create(team.Id, nowUtc));
             }
             return Result.Success();

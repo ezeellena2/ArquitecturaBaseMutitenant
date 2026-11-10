@@ -153,23 +153,53 @@
   <data name="Bot.PromotionsDeclined" xml:space="preserve">
     <value>Done, we will not send you promotions.</value>
   </data>
-  <data name="Notice.ChatsWaiting.Subject" xml:space="preserve">
-    <value>Chats waiting in {0}</value>
+  <data name="Notice.ChatsWaiting.SubjectSingular" xml:space="preserve">
+    <value>You have {0} chat waiting in {1}</value>
   </data>
-  <data name="Notice.ChatsWaiting.Body" xml:space="preserve">
-    <value>Chats nobody took in {0}: {1}.</value>
+  <data name="Notice.ChatsWaiting.SubjectPlural" xml:space="preserve">
+    <value>You have {0} chats waiting in {1}</value>
+  </data>
+  <data name="Notice.ChatsWaiting.TitleSingular" xml:space="preserve">
+    <value>{0} chat waiting in {1}</value>
+  </data>
+  <data name="Notice.ChatsWaiting.TitlePlural" xml:space="preserve">
+    <value>{0} chats waiting in {1}</value>
+  </data>
+  <data name="Notice.ChatsWaiting.BodySingular" xml:space="preserve">
+    <value>{0} There is {1} unassigned WhatsApp chat in {2}, at {3}. It has been waiting for {4}.</value>
+  </data>
+  <data name="Notice.ChatsWaiting.BodyPlural" xml:space="preserve">
+    <value>{0} There are {1} unassigned WhatsApp chats in {2}, at {3}. The oldest one has been waiting for {4}.</value>
   </data>
   <data name="Notice.ChatsWaiting.Action" xml:space="preserve">
     <value>See the chats</value>
   </data>
-  <data name="Notice.ConsultationsWaiting.Subject" xml:space="preserve">
-    <value>Inquiries waiting in {0}</value>
+  <data name="Notice.ChatsWaiting.Footer" xml:space="preserve">
+    <value>You're getting this because you're on the {0} team. Whoever manages WhatsApp chooses when this alert is sent.</value>
   </data>
-  <data name="Notice.ConsultationsWaiting.Body" xml:space="preserve">
-    <value>Inquiries nobody took in {0}: {1}.</value>
+  <data name="Notice.ConsultationsWaiting.SubjectSingular" xml:space="preserve">
+    <value>You have {0} inquiry waiting in {1}</value>
+  </data>
+  <data name="Notice.ConsultationsWaiting.SubjectPlural" xml:space="preserve">
+    <value>You have {0} inquiries waiting in {1}</value>
+  </data>
+  <data name="Notice.ConsultationsWaiting.TitleSingular" xml:space="preserve">
+    <value>{0} inquiry waiting in {1}</value>
+  </data>
+  <data name="Notice.ConsultationsWaiting.TitlePlural" xml:space="preserve">
+    <value>{0} inquiries waiting in {1}</value>
+  </data>
+  <data name="Notice.ConsultationsWaiting.BodySingular" xml:space="preserve">
+    <value>{0} There is {1} unassigned WhatsApp inquiry in {2}, at {3}. It has been waiting for {4}.</value>
+  </data>
+  <data name="Notice.ConsultationsWaiting.BodyPlural" xml:space="preserve">
+    <value>{0} There are {1} unassigned WhatsApp inquiries in {2}, at {3}. The oldest one has been waiting for {4}.</value>
   </data>
   <data name="Notice.ConsultationsWaiting.Action" xml:space="preserve">
     <value>See the inquiries</value>
+  </data>
+  <data name="Notice.ConsultationsWaiting.Footer" xml:space="preserve">
+    <value>You're getting this because you're on the {0} team. Whoever manages the Platform WhatsApp chooses when this alert is sent.</value>
   </data>
   <data name="Import.Header.Name" xml:space="preserve">
     <value>Name</value>

@@ -79,6 +79,7 @@ public static class AssistantModule
         services.AddScoped<AssistantModelWriter>();
         services.AddScoped<AssistantLimitGuard>();
         services.AddScoped<AssistantUsageWriter>();
+        services.AddScoped<AssistantBudgetAlertNoticeBuilder>();
         services.AddScoped<AssistantBudgetNotifier>();
         services.AddScoped<IAssistantBudgetAlertService, AssistantBudgetAlertService>();
         services.AddScoped<IAssistantUsageFinalizer>(provider => provider.GetRequiredService<AssistantUsageWriter>());

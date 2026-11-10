@@ -48,7 +48,13 @@ public sealed class WhatsAppWaitingNoticeTests(ApiFactory factory)
 
         await RunAsync(host);
         var email = Assert.Single(await EmailsAsync(host, account.Email.Value));
-        Assert.Contains(teamName, email.Subject, StringComparison.Ordinal);
+        // Tablero Mensajes, «Chats esperando»: el resumen con la organización, la espera, el botón a la bandeja y el pie.
+        Assert.Equal($"Tenés 1 chat esperando en {teamName}", email.Subject);
+        Assert.Contains($"Hay 1 chat de WhatsApp sin tomar en {teamName}, de WhatsApp ", email.TextBody, StringComparison.Ordinal);
+        Assert.Matches(@"Espera hace 1\d minutos\.", email.TextBody);
+        Assert.Contains("Ver los chats: ", email.TextBody, StringComparison.Ordinal);
+        Assert.Contains("/org/whatsapp/chats", email.TextBody, StringComparison.Ordinal);
+        Assert.Contains($"Te llega porque estás en el equipo {teamName}.", email.TextBody, StringComparison.Ordinal);
         Assert.DoesNotContain(customer.TrimStart('+'), email.TextBody, StringComparison.Ordinal);
         Assert.DoesNotContain("Texto privado", email.HtmlBody, StringComparison.Ordinal);
         await RunAsync(host);
