@@ -630,6 +630,6 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 ## 7. Decisiones pendientes
 
-Ninguna.
+Las 24 de los traspasos 4 a 11 de ArquitecturaBase, con la recomendada primero, en la §4 de su [evaluación](2026-11-10-evaluacion-traspasos-4-a-11.md).
 
 Las del 2026-10-17 pasaron a la §5 como decisiones 20 a 29, las del 2026-10-18 como decisiones 30 a 33, las del 2026-10-24 como decisiones 34 a 77, las del 2026-10-25 como decisiones 78 a 82, y las del traspaso 3, del 2026-10-30 y el 2026-10-31, como decisiones 83 a 98.
