@@ -77,6 +77,7 @@ Antes de empezar, en este orden:
 **El tablero (57):** la pestaña «Tablero», armada sola desde los tipos de las preguntas de la versión activa, sin nada escrito en el código:
 - arriba, «Respuestas» y, de las tres primeras preguntas de número, el total, el promedio, el mínimo y el máximo;
 - abajo, una tarjeta por gráfico: cuántas llegaron por día, semana o mes, con los días vacíos en tono suave; el total de cada número por período; el reparto de cada pregunta de elegir o de sí/no, y quién cargó. Una pregunta de fecha no tiene tarjeta. Las opciones y las personas ocupan hasta seis filas: con más, las cinco primeras y «Otras»;
+- el eje por día lleva la fecha completa (27/09/2026) en cada marca y en el cartel de cada barra, con menos marcas para que entren, como dicen los [formatos del front](../../../../ArquitecturaBaseMutitenantFront/docs/rules/formatos.md) (decisión del usuario del 2026-11-10);
 - usa los filtros de la planilla, y todo se calcula en SQL en la zona de quien mira, hasta los últimos 366 períodos;
 - cada tarjeta se ve como tabla o se quita, y las de opciones y personas cuentan cantidad o el total de un número. «Agregar gráfico» devuelve lo quitado, y «Volver al automático» lo deja como al principio;
 - lo quitado y qué cuenta cada tarjeta se guardan por persona y formulario. Los filtros, no.
