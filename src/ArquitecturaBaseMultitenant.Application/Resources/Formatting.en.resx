@@ -11,6 +11,12 @@
   <data name="Relative.HoursAgoPlural" xml:space="preserve"><value>{0} hours ago</value></data>
   <data name="Relative.DaysAgoSingular" xml:space="preserve"><value>{0} day ago</value></data>
   <data name="Relative.DaysAgoPlural" xml:space="preserve"><value>{0} days ago</value></data>
+  <data name="Elapsed.MinutesSingular" xml:space="preserve"><value>{0} minute</value></data>
+  <data name="Elapsed.MinutesPlural" xml:space="preserve"><value>{0} minutes</value></data>
+  <data name="Elapsed.HoursSingular" xml:space="preserve"><value>{0} hour</value></data>
+  <data name="Elapsed.HoursPlural" xml:space="preserve"><value>{0} hours</value></data>
+  <data name="Elapsed.DaysSingular" xml:space="preserve"><value>{0} day</value></data>
+  <data name="Elapsed.DaysPlural" xml:space="preserve"><value>{0} days</value></data>
   <data name="Compact.Thousand" xml:space="preserve"><value>K</value></data>
   <data name="Compact.Million" xml:space="preserve"><value>M</value></data>
   <data name="Compact.Billion" xml:space="preserve"><value>B</value></data>

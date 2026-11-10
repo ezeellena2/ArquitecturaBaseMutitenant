@@ -82,5 +82,8 @@ public sealed class LoginCodeEnumerationTests(ApiFactory factory)
 
         public Task<EmailMessage> RenderAccountNoticeAsync(string to, AccountNotice notice,
             CultureProfile culture, CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public EmailMessage RenderNotice(string to, EmailNotice notice, CultureProfile culture) =>
+            throw new NotSupportedException();
     }
 }

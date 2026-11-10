@@ -11,6 +11,12 @@
   <data name="Relative.HoursAgoPlural" xml:space="preserve"><value>hace {0} horas</value></data>
   <data name="Relative.DaysAgoSingular" xml:space="preserve"><value>hace {0} día</value></data>
   <data name="Relative.DaysAgoPlural" xml:space="preserve"><value>hace {0} días</value></data>
+  <data name="Elapsed.MinutesSingular" xml:space="preserve"><value>{0} minuto</value></data>
+  <data name="Elapsed.MinutesPlural" xml:space="preserve"><value>{0} minutos</value></data>
+  <data name="Elapsed.HoursSingular" xml:space="preserve"><value>{0} hora</value></data>
+  <data name="Elapsed.HoursPlural" xml:space="preserve"><value>{0} horas</value></data>
+  <data name="Elapsed.DaysSingular" xml:space="preserve"><value>{0} día</value></data>
+  <data name="Elapsed.DaysPlural" xml:space="preserve"><value>{0} días</value></data>
   <data name="Compact.Thousand" xml:space="preserve"><value> mil</value></data>
   <data name="Compact.Million" xml:space="preserve"><value> M</value></data>
   <data name="Compact.Billion" xml:space="preserve"><value> mil M</value></data>

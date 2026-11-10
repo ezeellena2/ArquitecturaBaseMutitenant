@@ -63,6 +63,41 @@ public sealed class DisplayFormatterTests
             DateTimeKind.Unspecified), spanish));
     }
 
+    [Fact]
+    public async Task Civil_dates_months_and_elapsed_times_follow_the_culture_without_a_zone()
+    {
+        var catalog = new JsonReferenceDataCatalog();
+        var clock = new FakeTimeProvider(DateTimeOffset.Parse("2026-09-27T15:00:00Z", CultureInfo.InvariantCulture));
+        var formatter = new DisplayFormatter(catalog, catalog, catalog, catalog, catalog,
+            new LibPhoneNumberDisplayFormatter(), new TimeZoneService(clock), clock);
+        // Una zona muy adelantada no corre una fecha civil: no hay instante que convertir.
+        var spanish = await formatter.CreateAsync("es-AR", "Pacific/Kiritimati", TestContext.Current.CancellationToken);
+        var english = await formatter.CreateAsync("en-US", "Pacific/Kiritimati", TestContext.Current.CancellationToken);
+        var october = new DateOnly(2026, 10, 1);
+
+        Assert.Equal("01/11/2026", formatter.FormatDate(new DateOnly(2026, 11, 1), spanish));
+        Assert.Equal("11/01/2026", formatter.FormatDate(new DateOnly(2026, 11, 1), english));
+        // El mes dentro de una oración y como rótulo, igual que `formatMonth` del front.
+        Assert.Equal("octubre de 2026", formatter.FormatMonth(october, spanish));
+        Assert.Equal("octubre de 2026", formatter.FormatMonth(new DateOnly(2026, 10, 31), spanish));
+        Assert.Equal("Octubre de 2026", formatter.FormatMonthLabel(october, spanish));
+        Assert.Equal("October 2026", formatter.FormatMonth(october, english));
+        Assert.Equal("October 2026", formatter.FormatMonthLabel(october, english));
+
+        // Cuánto pasó, en la unidad entera más grande y sin redondear para arriba.
+        Assert.Equal("1 minuto", formatter.FormatElapsed(TimeSpan.FromSeconds(20), spanish));
+        Assert.Equal("25 minutos", formatter.FormatElapsed(TimeSpan.FromMinutes(25.9), spanish));
+        Assert.Equal("1 hora", formatter.FormatElapsed(TimeSpan.FromMinutes(119), spanish));
+        Assert.Equal("23 horas", formatter.FormatElapsed(TimeSpan.FromHours(23.9), spanish));
+        Assert.Equal("1 día", formatter.FormatElapsed(TimeSpan.FromHours(47), spanish));
+        Assert.Equal("1.500 días", formatter.FormatElapsed(TimeSpan.FromDays(1500), spanish));
+        Assert.Equal("1 minute", formatter.FormatElapsed(TimeSpan.FromMinutes(1), english));
+        Assert.Equal("15 minutes", formatter.FormatElapsed(TimeSpan.FromMinutes(15), english));
+        Assert.Equal("1 hour", formatter.FormatElapsed(TimeSpan.FromHours(1), english));
+        Assert.Equal("2 days", formatter.FormatElapsed(TimeSpan.FromDays(2), english));
+        Assert.Throws<ArgumentOutOfRangeException>(() => formatter.FormatElapsed(TimeSpan.FromMinutes(-1), spanish));
+    }
+
     [Theory]
     [MemberData(nameof(Cases))]
     public async Task Matches_shared_format_contract(

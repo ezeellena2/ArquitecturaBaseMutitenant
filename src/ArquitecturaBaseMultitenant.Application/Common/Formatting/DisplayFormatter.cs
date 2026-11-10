@@ -127,6 +127,29 @@ public sealed class DisplayFormatter(
         LocalInstant(instantUtc, context)
             .ToString(context.Profile.Entry.TimePattern, context.Profile.Culture);
 
+#pragma warning disable CA1822 // Una sola API de instancia, como el resto de los formatos.
+    /// <summary>«01/11/2026»: una fecha civil con el patrón de la cultura. No hay instante, así que la zona no la mueve.</summary>
+    public string FormatDate(DateOnly date, DisplayFormatContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        return date.ToString(context.Profile.Entry.DatePattern, context.Profile.Culture);
+    }
+
+    /// <summary>«octubre de 2026» / «October 2026»: un mes civil como va dentro de una oración, sin conversión por zona.</summary>
+    public string FormatMonth(DateOnly month, DisplayFormatContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        return month.ToString(context.Profile.Culture.DateTimeFormat.YearMonthPattern, context.Profile.Culture);
+    }
+#pragma warning restore CA1822
+
+    /// <summary>«Octubre de 2026»: el mes como rótulo, con mayúscula inicial, igual que <c>formatMonth</c> del front.</summary>
+    public string FormatMonthLabel(DateOnly month, DisplayFormatContext context)
+    {
+        var text = FormatMonth(month, context);
+        return text.Length == 0 ? text : char.ToUpper(text[0], context.Profile.Culture) + text[1..];
+    }
+
     private DateTime LocalInstant(DateTime instantUtc, DisplayFormatContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -156,6 +179,21 @@ public sealed class DisplayFormatter(
         ArgumentNullException.ThrowIfNull(context);
         var number = FormatNumber(fraction * 100m, 0, 2, context.Profile);
         return context.Profile.Entry.PercentPattern.Replace("{number}", number, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// «25 minutos», «1 hora», «3 días»: cuánto pasó, en la unidad entera más grande y sin redondear para arriba. Menos de
+    /// un minuto se dice «1 minuto»; para «hace un momento» está el formato relativo.
+    /// </summary>
+    public string FormatElapsed(TimeSpan elapsed, DisplayFormatContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        ArgumentOutOfRangeException.ThrowIfLessThan(elapsed, TimeSpan.Zero);
+        var (count, unit) = elapsed.TotalDays >= 1 ? ((long)elapsed.TotalDays, "Days")
+            : elapsed.TotalHours >= 1 ? ((long)elapsed.TotalHours, "Hours")
+            : (Math.Max(1L, (long)elapsed.TotalMinutes), "Minutes");
+        var template = FormattingTexts.Get($"Elapsed.{unit}{(count == 1 ? "Singular" : "Plural")}", context.Profile);
+        return FormatResource(template, context.Profile, FormatNumber(count, 0, 0, context.Profile));
     }
 #pragma warning restore CA1822
 

@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
+using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Application.Models.Notifications;
 using ArquitecturaBaseMultitenant.Application.Models.Invitations;
 using ArquitecturaBaseMultitenant.Application.Resources;
@@ -125,6 +126,54 @@ public sealed class EmailTemplateTests
 
         Assert.Equal(subject, message.Subject);
         Assert.Contains(body, message.TextBody);
+    }
+
+    // Tablero Mensajes: el armado que usan los avisos de los módulos (título, párrafos, datos, botón, notas y su pie
+    // arriba del de todos los correos), con sus textos escapados.
+    [Theory]
+    [InlineData("es-AR", "es", "Este correo lo envió Mi App automáticamente. No lo respondas.")]
+    [InlineData("en-US", "en", "This email was sent automatically by Mi App. Please don't reply.")]
+    public async Task Notice_places_its_texts_in_the_board_order_and_escapes_them(string cultureCode, string language,
+        string layoutFooter)
+    {
+        var profile = await new CultureProfiles(new JsonReferenceDataCatalog()).LoadAsync(cultureCode, Ct);
+        var renderer = new EmailTemplateRenderer(Options.Create(new EmailOptions { AppName = "Mi App" }), CreateFormatter());
+        var notice = new EmailNotice("Asunto <1>", "Título & <b>", ["Primero <p>", "Segundo"])
+        {
+            Details = [new("Organización", "Delta & <Norte>"), new("Mes", "Octubre de 2026")],
+            Action = new("Ver el uso", "https://example.test/org/asistente/uso?a=1&b=2"),
+            Notes = ["Una nota"],
+            Footer = "Te llega porque estás en el equipo <Ventas>.",
+        };
+
+        var message = renderer.RenderNotice("recipient@example.test", notice, profile);
+
+        Assert.Equal("recipient@example.test", message.To);
+        Assert.Equal("Asunto <1>", message.Subject);
+        Assert.Equal(string.Join(Environment.NewLine + Environment.NewLine, "Título & <b>", "Primero <p>", "Segundo",
+            "Organización: Delta & <Norte>", "Mes: Octubre de 2026", "Ver el uso: https://example.test/org/asistente/uso?a=1&b=2",
+            "Una nota", "Te llega porque estás en el equipo <Ventas>.", layoutFooter), message.TextBody);
+        var html = message.HtmlBody;
+        Assert.Contains($"<html lang=\"{language}\">", html);
+        Assert.Contains("T&#237;tulo &amp; &lt;b&gt;</h1>", html);
+        Assert.Contains("Delta &amp; &lt;Norte&gt;", html);
+        Assert.Contains("href=\"https://example.test/org/asistente/uso?a=1&amp;b=2\"", html);
+        Assert.DoesNotContain("<Norte>", html);
+        Assert.DoesNotContain("<Ventas>", html);
+        Assert.DoesNotContain("{{", html);
+        int At(string value) => html.IndexOf(value, StringComparison.Ordinal);
+        Assert.True(At("Segundo") < At("Octubre de 2026") && At("Octubre de 2026") < At(">Ver el uso</a>")
+            && At(">Ver el uso</a>") < At("Una nota") && At("Una nota") < At("&lt;Ventas&gt;.<br>")
+            && At("&lt;Ventas&gt;.<br>") < At(System.Net.WebUtility.HtmlEncode(layoutFooter)));
+
+        // Sin datos, botón, notas ni pie propio no quedan la grilla, el enlace ni el salto del pie.
+        var bare = renderer.RenderNotice("recipient@example.test", new EmailNotice("S", "T", ["P"]), profile);
+        Assert.Equal(string.Join(Environment.NewLine + Environment.NewLine, "T", "P", layoutFooter), bare.TextBody);
+        Assert.DoesNotContain("<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin:0 0 20px",
+            bare.HtmlBody);
+        Assert.DoesNotContain("<a href", bare.HtmlBody);
+        Assert.DoesNotContain("<br>", bare.HtmlBody);
+        Assert.Equal("EmailNotice [redacted]", notice.ToString());
     }
 
     [Theory]
