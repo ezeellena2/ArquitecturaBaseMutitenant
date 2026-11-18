@@ -9,7 +9,7 @@
 | 1 | **Fechas, horas y zonas** | UTC con `Z`, `DateOnly`, `TimeOnly`, zona IANA efectiva, `TimeProvider`, formato fijo por cultura (24 h en es-AR) | BCL `TimeZoneInfo`; `Intl` en el front | fechas-y-zonas · formatos |
 | 2 | **Números y decimales** | `decimal` con precisión explícita, separadores por cultura, alineación a la derecha | BCL; `Intl.NumberFormat` | numeros-y-moneda |
 | 3 | **Moneda** | `Money` (monto + ISO 4217), redondeo `AwayFromZero` en el back, el front no calcula | propio | numeros-y-moneda |
-| 4 | **Porcentajes** | fracción (`0.125`) en la API, `12,5 %` en pantalla | propio | numeros-y-moneda |
+| 4 | **Porcentajes** | fracción (`0.125`) en la API, `12,5%` en pantalla, pegado al número (decisión 208) | propio | numeros-y-moneda |
 | 5 | **Teléfonos** | E.164, país con bandera, formato al escribir, el 9 argentino, `PhoneUsage` (`Any` o `Mobile`; los países de WhatsApp los controla el módulo) | libphonenumber-csharp · libphonenumber-js · country-flag-icons | telefonos |
 | 6 | **Idioma, región y traducciones** | cultura `es-AR`/`en-US`, resx + i18next con paridad, voseo, enums traducidos | .NET resx · i18next | textos-y-traducciones |
 | 7 | **Paginado, orden y búsqueda** | 10 por defecto, cursor para tablas que solo crecen, búsqueda sin acentos, índices con tenant | Npgsql `unaccent` + `pg_trgm` | paginado-y-busqueda |
