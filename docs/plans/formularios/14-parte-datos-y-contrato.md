@@ -181,7 +181,9 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | `Forms.Draft.TooManyQuestions` / `TooManyOptions` | Validation | más de 40 preguntas, más de 50 opciones en «elegir una» o más de 20 en «elegir varias» |
 | `Forms.Publication.Incomplete` | Validation (campo por pregunta) | falta un texto obligatorio, o un título no tiene preguntas debajo (T24) |
 | `Forms.Publication.ChannelIssues` | Validation | el canal marcó problemas: lista de `{fieldId, choiceId?, path, code, limit?, length?}` (T26) |
-| `Forms.Publication.InProgress` | Conflict | ya hay una publicación abierta |
+| `Forms.Publication.InProgress` | Conflict | ya hay una publicación abierta; trae su `publicationId` (225) |
+| `Forms.Publication.NotDiscardable` | Conflict | descartar una publicación que no está `Unconfirmed` (225) |
+| `Forms.Meta.TooManyCalls` | TooManyRequests, con `Retry-After` | la organización pasó su tope de consultas a Meta (vista oficial y «Consultar publicación») |
 | `Forms.Publication.NothingToPublish` | Conflict | el borrador es igual a la versión activa, y todas las cuentas conectadas tienen su Flow |
 | `Forms.Publication.DraftChanged` | Conflict | el borrador cambió después de comprobar (T8) |
 | `Forms.Publication.ChannelUnavailable` | ServiceUnavailable | sin WhatsApp, o sin número conectado [E11] |
@@ -229,6 +231,7 @@ Las rutas Business de Forms llevan `[Access(Access.Business)]` y `[FeatureGate("
 | GET `/api/organization/forms/{id}/publications/{publicationId}` | `forms.read` | — | 200 `{state, versionNumber, flowName?, errorCode?, issues?}` |
 | POST `/api/organization/forms/{id}/publications/{publicationId}/check` | `forms.publish` | — | 200 `{state, versionNumber, flowName?, errorCode?, issues?}`: «Consultar publicación» le pregunta a Meta y nunca repite un POST |
 | POST `/api/organization/forms/{id}/publications/{publicationId}/resolution` | `forms.publish` | `{outcome}`, `Published` o `NotPublished` | 200 lo mismo: la persona dice qué pasó, solo en `NeedsReview` (175) |
+| POST `/api/organization/forms/{id}/publications/{publicationId}/discard` | `forms.publish` | `{version}` | 204: «Descartar esta publicación», solo en `Unconfirmed` (225) |
 | GET `/api/organization/forms/{id}/versions/{versionId}/preview` | `forms.read` | — | 200 `{url, expiresAtUtc}`: el enlace interactivo de la vista oficial ([§6, punto 5](14-parte-decisiones-y-flujos.md#6-flujos-con-sus-transacciones)), con `Cache-Control: no-store`; 503 `WhatsApp.Flow.PreviewUnavailable` si Meta no contesta en 30 s |
 | GET `/api/organization/whatsapp/{customers\|internal}/conversations/{id}/forms` **[E11]** | «Atender internos» o «Atender clientes», según la bandeja | `page`, `search` | 200 `{available, reason?, culture, forms: PagedResult<{definitionId, versionId, versionNumber, name, prefix, questionCount, optionCounts[{fieldId, label, count}], offerProblems[]}>}`. `available: false` sin `reason` esconde el botón (Forms no está disponible), y con `reason` lo grisa con su motivo; `culture` es el idioma de los textos del sistema que acompañan |
 | POST `/api/organization/whatsapp/{customers\|internal}/conversations/{id}/forms` **[E11]** | «Atender internos» o «Atender clientes», según la bandeja | `{definitionId, versionId, text?}`: `null` es el mensaje por defecto (T10), y si viene, ≤1024 | 202 `{sessionId, messageId}` |

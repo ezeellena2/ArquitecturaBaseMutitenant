@@ -78,7 +78,7 @@ Las de producto están en la hoja de ruta (§5). Estas siguen las reglas del rep
         - `Uncertain` → `Unconfirmed`, con `NextCheckAtUtc`;
         - `Uncertain` con `RequiresReview` → `NeedsReview`, sin `NextCheckAtUtc`. El canal lo marca, como en ArquitecturaBase, cuando su verificación no puede decidir: un Create incierto que no dejó `MetaFlowId` (nunca se adopta por nombre) o un Flow que no coincide con lo publicado (dueño o asset);
         - rechazo definitivo → `Failed`, con sus `issues`. Una versión se publica en todas las WABAs o en ninguna: si una rechaza, queda `Failed`, y el Flow que haya quedado en otra no se usa.
-   - **Cuando quedó `Publishing` o `Unconfirmed`,** el worker vuelve a consultar con `GetPublicationAsync`, que solo verifica y nunca repite un POST. Una consulta que vuelve con `RequiresReview` la deja `NeedsReview`.
+   - **Cuando quedó `Publishing` o `Unconfirmed`,** el worker vuelve a consultar con `GetPublicationAsync`, que solo verifica y nunca repite un POST, con una espera que crece: 15 s, el doble cada vez, hasta 15 minutos (F3 de ArquitecturaBase). Una consulta que vuelve con `RequiresReview` la deja `NeedsReview`.
    - **«Consultar publicación»** hace esa misma consulta, en `IFormPublicationService.CheckAsync`, y aplica el resultado con `CompleteAsync`.
    - **«Salió» y «No salió»,** solo para una publicación `NeedsReview` (175), en `IFormPublicationService.ResolveAsync`:
      1. comprueba `forms.publish` y que siga `NeedsReview`;
@@ -86,6 +86,7 @@ Las de producto están en la hoja de ruta (§5). Estas siguen las reglas del rep
      3. en su única UoW, bajo el bloqueo de la fila de estado, la lleva a `Published`, activando la versión, o a `Failed`, y guarda quién lo dijo.
 
      Sin `version`: lo protege el estado. Lo que no está `NeedsReview` da `NotResolvable`, también la segunda de dos a la vez. Si se cae entre los pasos 2 y 3, repetir lo mismo termina el trabajo, y lo contrario da `NotResolvable`. Sin esto, una publicación trabada frenaría todas las que siguen.
+   - **«Descartar esta publicación»** (225), solo para una `Unconfirmed`, en `IFormPublicationService.DiscardAsync`: comprueba `forms.publish` y la versión esperada de la publicación y, en una UoW bajo el bloqueo de la fila de estado, la lleva a `Failed` con quién la descartó, sin llamar a Meta. Los Flows que hayan quedado no se usan, como con una WABA que rechaza; los retira la E17. Lo que no está `Unconfirmed` da `NotDiscardable`. `InProgress` trae el `publicationId` de la abierta, así otra persona llega al descarte.
    - **Si se cae a mitad:** la reserva vuelve a tomar el trabajo, y el canal, al ver un `InFlight`, verifica en vez de repetir.
 5. **Vista oficial** (176). Solo lee y no guarda nada:
    - Forms arma las opciones de ejemplo de la versión sellada con `FormOfferBuilder`: las primeras 20 activas de cada pregunta de catálogo, en orden y con los filtros fijos del catálogo; ninguna si quien mira no tiene `formcatalogs.read`, y de los miembros y los contactos, la lista que vería quien mira si la recibiera;
