@@ -7,7 +7,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T4, T7, T8, la §3 (`FormDefinitionStates`, `FormPublications` y `WhatsAppFlowBindings`), la §6, puntos 4 y 6, y la §14 (errores de Meta); la [E15](15-respuestas.md): las dos rutas de la lista, y la [E16](16-datos-de-las-personas.md): los filtros por destinatario, que se copian.
-2. **Decisiones** de la hoja de ruta: 23, 34, 35, 43, 74, 78, 79, 88, 112, 131, 132, 175 y 186.
+2. **Decisiones** de la hoja de ruta: 23, 34, 35, 43, 74, 78, 79, 88, 112, 131, 132, 175, 186 y 225.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -47,7 +47,7 @@ Antes de empezar, en este orden:
 
 **Deprecar los Flows en Meta:**
 - **es de WhatsApp,** por cada WABA de la organización y con su token. Forms no llama a Meta ni escribe en WhatsApp;
-- **Forms dice qué versiones ya no se usan:** las reemplazadas, las de una publicación `Failed`, que pudo dejar un Flow publicado en otra WABA, y las de un formulario dado de baja o borrado. Una publicación abierta del formulario suspende esa respuesta: si falla, la versión activa sigue en uso;
+- **Forms dice qué versiones ya no se usan:** las reemplazadas, las de una publicación `Failed`, que pudo dejar un Flow publicado en otra WABA, también una descartada a mano (225), que pudo dejarlos publicados en todas, y las de un formulario dado de baja o borrado. Una publicación abierta del formulario suspende esa respuesta: si falla, la versión activa sigue en uso;
 - WhatsApp espera a que no queden sesiones vigentes ni respuestas recibidas a tiempo sin capturar. Nunca lo deduce porque no ve sesiones: lo comprueba bajo el bloqueo del binding;
 - cada binding se deprecia con su reserva, su número de turno y su estado. Lo incierto queda «Sin confirmar» y se consulta por id, nombre técnico y WABA antes de repetir. Todo 4xx también se consulta;
 - cada respuesta de Meta se clasifica en definitiva, transitoria o desconocida. Un rechazo no se repite para siempre: se intenta cuatro veces, con esperas de 5, 15 y 30 minutos entre una y otra, y después del cuarto rechazo queda «No se pudo», a la vista, y no frena nada del formulario;
@@ -69,11 +69,13 @@ Aprobados y publicados en el lienzo v151, con el armado de ArquitecturaBase (131
 
 **Redibujados con el traspaso 10, aprobados y publicados en el lienzo v168:** `FRM-Editor-Baja` y `M-FRM-Editor-Baja`, con la baja en una frase, la etiqueta de la publicación al reactivar (175) y «Agregar título» al lado de «Agregar pregunta» (88).
 
+**Del traspaso 15** (v175, sin publicar): `FRM-Editor-Baja` y `M-FRM-Editor-Baja`, con «Descartar esta publicación» al reactivar (225).
+
 **Corregido en el lienzo v169:** en `M-FRM-Formularios-17`, «Reactivar» se abre sobre el formulario, como en `M-FRM-Editor-Baja` (131), y la hoja «Filtros» va a pantalla completa y sin cantidades (144 y 164).
 
 **El formulario dado de baja:** la banda dice «De baja · versión 2», y su ⓘ dice la baja en una frase, «Lo dio de baja Ana Gómez el 09/10/2026, 10:12.», y qué pasa en WhatsApp (175). «Sin confirmar en WhatsApp» y «No se pudo deprecar en WhatsApp» van al lado, en la banda. Sin cartel en el cuerpo (avisos, 25/10).
 
-**Al reactivar, la etiqueta dice el estado de la publicación** (175), como en la E14: «Publicando la versión 3», «Sin confirmar · versión 3», «Necesita revisión · versión 3» o «No se pudo publicar la versión 3», con «Consultar publicación», «Repetir el mismo intento», «Salió» y «No salió» en la banda solo cuando hacen falta; «Salió» y «No salió» piden confirmar, como en la E14 (186). «Reactivar» apagado dice su motivo, como «Publicar en WhatsApp». La ⓘ sigue diciendo quién lo dio de baja, y con la versión confirmada, por la consulta o por «Salió», la etiqueta pasa a «Publicado · versión 3».
+**Al reactivar, la etiqueta dice el estado de la publicación** (175), como en la E14: «Publicando la versión 3», «Sin confirmar · versión 3», «Necesita revisión · versión 3» o «No se pudo publicar la versión 3», con «Consultar publicación», «Repetir el mismo intento», «Salió», «No salió» y, con «Sin confirmar», «Descartar esta publicación» (225) en la banda solo cuando hacen falta; descartar la deja dada de baja, y sus Flows se retiran como los de una versión que ya no se usa; «Salió» y «No salió» piden confirmar, como en la E14 (186). «Reactivar» apagado dice su motivo, como «Publicar en WhatsApp». La ⓘ sigue diciendo quién lo dio de baja, y con la versión confirmada, por la consulta o por «Salió», la etiqueta pasa a «Publicado · versión 3».
 
 **Reactivar (131):** se abre en el formulario, también desde la lista. «Problemas», si hay alguno, con «Ir a la pregunta», y «Qué se publica»: Próxima respuesta, Borrador, Preguntas y lo que cambió. El botón dice «Reactivar con la versión 3» y queda grisado si hay problemas.
 
