@@ -67,7 +67,7 @@ Antes de empezar:
 - `FRM-Catalogo-Contactos`: un catálogo «De los contactos», con sus filtros por etiqueta y la vista previa (55).
 
 **Con el armado de ArquitecturaBase** (117, 120 y 125 a 129):
-- `FRM-Catalogo` y `M-FRM-Catalogo`: el editor de un catálogo a mano, con el armado de ArquitecturaBase. «El catálogo» dice de dónde salen y el tipo, y debajo van Nombre y Descripción; al costado, «Así lo ve quien lo recibe», con «Una opción | Varias» y el teléfono. La banda trae «Dar de baja», «Descartar» y «Guardar cambios». «Opciones» va a todo el ancho: «+ Agregar opción», «Importar», «Exportar» y un ⋮ con Descargar la plantilla, Ordenar de la A a la Z y Generar los códigos que faltan; abajo, solo «Buscar opción»; la tabla editable en la compu, la selección de filas para dar de baja o reactivar, el Estado como casilla y ↑ ↓ ✎ 🗑 a la vista;
+- `FRM-Catalogo` y `M-FRM-Catalogo`: el editor de un catálogo a mano, con el armado de ArquitecturaBase. «El catálogo» dice de dónde salen y el tipo, y debajo van Nombre y Descripción; al costado, «Así lo ve quien lo recibe», con «Una opción | Varias» y el teléfono. La banda trae «Descartar» y «Guardar cambios», y un ⋮ con «Dar de baja» o «Reactivar», como el editor de formularios (209). «Opciones» va a todo el ancho: «+ Agregar opción», «Importar», «Exportar» y un ⋮ con Descargar la plantilla, Ordenar de la A a la Z y Generar los códigos que faltan; abajo, solo «Buscar opción»; la tabla editable en la compu, la selección de filas para dar de baja o reactivar, el Estado como casilla y ↑ ↓ ✎ 🗑 a la vista;
 - `FRM-Catalogo-Importar`: «Origen» y «Revisión» a la vista, sin pasos numerados. Redibujado con el traspaso 5, aprobado y publicado en el lienzo v162: «Cambios» se lee lado a lado (138), y las tablas llevan la línea entre columnas y la fila a la derecha (137).
 
 **Nuevos** (v148): `FRM-Catalogo-Opciones` y `M-FRM-Catalogo-Opciones`, el modal de opciones. Importar no va en el teléfono, como hasta ahora.
@@ -106,7 +106,7 @@ Antes de empezar:
 **Mandan sobre esta spec en:**
 - **Las fichas del front** (pedidos del usuario del 2026-10-25 y del 2026-10-26):
   - ninguna sección lleva cantidades en su encabezado: nada de «N opciones · N activas»;
-  - un dato por celda; el texto largo se ve entero, bajando de renglón (174);
+  - un dato por columna (206); el texto largo se ve entero, bajando de renglón (174);
   - las fechas, completas, con fecha y hora en la zona de quien mira; nunca «hoy», «ayer» ni «hace…»;
   - sin leyendas (109): la vista previa es el teléfono al costado, la ayuda que sirve va en la (i) (116), y lo que no ayuda a decidir no va;
   - toda tabla lleva una línea fina entre columnas y los números a la derecha, y cierra abajo (137);

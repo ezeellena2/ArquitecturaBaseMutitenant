@@ -77,7 +77,7 @@ Antes de empezar, en este orden:
 **El tablero (57):** la pestaña «Tablero», armada sola desde los tipos de las preguntas de la versión activa, sin nada escrito en el código:
 - arriba, «Respuestas» y, de las tres primeras preguntas de número, el total, el promedio, el mínimo y el máximo;
 - abajo, una tarjeta por gráfico: cuántas llegaron por día, semana o mes, con los días vacíos en tono suave; el total de cada número por período; el reparto de cada pregunta de elegir o de sí/no, y quién cargó. Una pregunta de fecha no tiene tarjeta. Las opciones y las personas ocupan hasta seis filas: con más, las cinco primeras y «Otras»;
-- el eje por día lleva la fecha completa (27/09/2026) en cada marca y en el cartel de cada barra, con menos marcas para que entren, como dicen los [formatos del front](../../../../ArquitecturaBaseMutitenantFront/docs/rules/formatos.md) (decisión del usuario del 2026-11-10);
+- el eje por día lleva la fecha completa (27/09/2026) en cada marca y en el cartel de cada barra, con menos marcas para que entren, como dicen los [formatos del front](../../../../ArquitecturaBaseMutitenantFront/docs/rules/formatos.md) (decisión del usuario del 2026-11-10). Por semana y por mes, la marca lleva el primer día y el cartel, el rango («01/09/2026 – 30/09/2026»): el mes nunca va en letras (205);
 - usa los filtros de la planilla, y todo se calcula en SQL en la zona de quien mira, hasta los últimos 366 períodos;
 - cada tarjeta se ve como tabla o se quita, y las de opciones y personas cuentan cantidad o el total de un número. «Agregar gráfico» devuelve lo quitado, y «Volver al automático» lo deja como al principio;
 - lo quitado y qué cuenta cada tarjeta se guardan por persona y formulario. Los filtros, no.
@@ -114,7 +114,7 @@ Aprobados en el lienzo v150. Con el traspaso 5, los filtros (143 y 144) y el det
 - con `forms.read` y sin `formrecords.read`: la lista sin las columnas de respuestas.
 
 **Mandan sobre esta spec en:**
-- **Las fichas del front:** un dato por celda; fechas completas, con hora, en la zona de quien mira; sin leyendas (109). Toda tabla lleva una línea fina entre columnas, con los números a la derecha, y cierra abajo (137).
+- **Las fichas del front:** un dato por columna (206); fechas completas, con la hora después de una coma (205), en la zona de quien mira; porcentajes pegados (208); sin leyendas (109). Toda tabla lleva una línea fina entre columnas, con los números a la derecha, y cierra abajo (137).
 - **La planilla que vuelve a leer** atenúa sus filas y corre una línea bajo el encabezado, y la lectura anterior no se puede tocar (115).
 - **La navegación (34 y 79):** el menú dice «Gestión de formularios», y su panel tiene Formularios y Catálogos, sin «Respuestas».
 - **La planilla** se desplaza a lo ancho dentro de su caja, con N° fijo a la izquierda. Es la tabla con columnas fijas de la E12.

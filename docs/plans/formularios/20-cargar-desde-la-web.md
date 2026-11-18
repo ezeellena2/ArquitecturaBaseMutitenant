@@ -34,6 +34,7 @@ Antes de empezar, en este orden:
 - un empleado completa un formulario desde la web, a su nombre. Es un miembro activo con `formrecords.create`, sin teléfono verificado (89), y solo en los formularios activos que son para empleados o para los dos (50). Un cliente sigue respondiendo por WhatsApp;
 - la respuesta guarda el canal `web`, el `SourceKey` `web:<clave de idempotencia>` y las empresas activas de quien carga (9);
 - **la misma captura que WhatsApp:** un solo lugar valida y numera contra la versión sellada, con catálogos, archivos, condiciones, cálculos y el bloque;
+- **un número escrito** se lee con la región del idioma de quien carga: en español, coma decimal y punto de miles. Lo que se lee distinto con y sin los miles («1.500») es un error de su pregunta, `numberAmbiguous`, que pide escribirlo sin separador de miles, y al servidor llega el número con punto (207);
 - **solo la versión activa.** Si se publicó otra, el front ofrece pasar a la nueva sin perder lo cargado;
 - **la oferta sella solo lo elegido:** cada opción tiene que estar activa y pasar los filtros para esa persona, también en un catálogo de miembros o de contactos. La lista completa no se guarda;
 - **los filtros por persona:** si le falta el dato, la pregunta frena y lo nombra. Si los filtros dejan una sola opción, ya viene elegida. Las opciones no tienen el tope de 200: se piden de a 50, con búsqueda, y los filtros corren en SQL antes de paginar.

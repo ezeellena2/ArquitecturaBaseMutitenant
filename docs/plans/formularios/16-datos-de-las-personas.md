@@ -107,7 +107,7 @@ Aprobados y publicados en el lienzo v150, con su recorrido guiado. Muestran solo
 - **Publicar:** problemas y avisos juntos, solo avisos, y el máximo que no entra y el que da cero (157);
 - **Enviar:** le falta el dato, el filtro no funciona y es un cliente.
 
-**Mandan sobre esta spec en:** las fichas del front (un dato por celda, sin leyendas, botones según la 43 y la 115). «Dar de baja» y «Reactivar» son las palabras de siempre.
+**Mandan sobre esta spec en:** las fichas del front (un dato por columna, 206; sin leyendas; botones según la 43 y la 115). «Dar de baja» y «Reactivar» son las palabras de siempre.
 
 **Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
 

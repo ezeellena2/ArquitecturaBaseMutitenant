@@ -58,7 +58,7 @@ Antes de empezar, en este orden:
 - si falta el archivo guardado, 404. Las miniaturas se piden solo si están a la vista.
 
 **Lo que suma a las pantallas que ya existen:**
-- **la planilla:** una columna por pregunta de archivo, con la primera miniatura y la cantidad, que abre el visor. Un documento dice su cantidad y sus tipos. No tienen filtro en la planilla (143); para las condiciones de las reglas, `answered` también cuenta un archivo;
+- **la planilla:** una columna por pregunta de archivo, con la primera miniatura y la cantidad, que abre el visor. Un documento dice su cantidad, «2 documentos», sin los tipos: una celda no resume (206). No tienen filtro en la planilla (143); para las condiciones de las reglas, `answered` también cuenta un archivo;
 - **el detalle:** la pestaña «Fotos» en la vista rápida, y en las dos vistas, las miniaturas y los documentos con su nombre, su tamaño y «Descargar»;
 - **la pantalla completa** suma «Descargar ▾», con los documentos;
 - **el Excel:** la cantidad y los nombres en la celda, sin los archivos;
@@ -88,7 +88,7 @@ Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133
 | `FRM-Dar-De-Baja-18` | «Lo que se conserva» suma las fotos y los documentos |
 | `WA-Chats-Adjuntos` y `M-WA-Chats-Adjuntos` | los archivos del chat: lo que llega, antes de mandar, demasiado grande, enviando, enviado, no se pudo y fuera de las 24 horas |
 
-**La planilla:** la foto dice su miniatura y «2 fotos», y el documento, «1 PDF». «Sin respuesta» si no se respondió y «—» si la pregunta no existía en esa versión. En el teléfono, en la tercera línea de la fila.
+**La planilla:** la foto dice su miniatura y «2 fotos», y el documento, «1 documento» (206). «Sin respuesta» si no se respondió y «—» si la pregunta no existía en esa versión. En el teléfono, en la tercera línea de la fila.
 
 **«Filtros»:** las preguntas de archivo no aparecen, porque solo tenían «Respuesta», que se fue (143).
 

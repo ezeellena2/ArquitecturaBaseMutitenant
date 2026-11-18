@@ -71,7 +71,7 @@ Aprobados y publicados en el lienzo v151, con el armado de ArquitecturaBase (131
 
 **Corregido en el lienzo v169:** en `M-FRM-Formularios-17`, «Reactivar» se abre sobre el formulario, como en `M-FRM-Editor-Baja` (131), y la hoja «Filtros» va a pantalla completa y sin cantidades (144 y 164).
 
-**El formulario dado de baja:** la banda dice «De baja · versión 2», y su ⓘ dice la baja en una frase, «Lo dio de baja Ana Gómez el 09/10/2026 10:12.», y qué pasa en WhatsApp (175). «Sin confirmar en WhatsApp» y «No se pudo deprecar en WhatsApp» van al lado, en la banda. Sin cartel en el cuerpo (avisos, 25/10).
+**El formulario dado de baja:** la banda dice «De baja · versión 2», y su ⓘ dice la baja en una frase, «Lo dio de baja Ana Gómez el 09/10/2026, 10:12.», y qué pasa en WhatsApp (175). «Sin confirmar en WhatsApp» y «No se pudo deprecar en WhatsApp» van al lado, en la banda. Sin cartel en el cuerpo (avisos, 25/10).
 
 **Al reactivar, la etiqueta dice el estado de la publicación** (175), como en la E14: «Publicando la versión 3», «Sin confirmar · versión 3», «Necesita revisión · versión 3» o «No se pudo publicar la versión 3», con «Consultar publicación», «Repetir el mismo intento», «Salió» y «No salió» en la banda solo cuando hacen falta; «Salió» y «No salió» piden confirmar, como en la E14 (186). «Reactivar» apagado dice su motivo, como «Publicar en WhatsApp». La ⓘ sigue diciendo quién lo dio de baja, y con la versión confirmada, por la consulta o por «Salió», la etiqueta pasa a «Publicado · versión 3».
 
