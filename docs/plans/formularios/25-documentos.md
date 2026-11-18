@@ -1,6 +1,6 @@
 # E25 · Documentos por WhatsApp (spec)
 
-**Estado:** pendiente · spec de la etapa 25, la última del bloque (decisiones 34, 41, 78, 99, 102, 146, 154 a 156, 165, 167, 171, 177, 181, 182, 192, 215 a 218, 221, 222 y 223), con el [formato](plantilla.md) de las etapas. En ArquitecturaBase, los documentos están decididos, con su ADR 0022 y sus tableros, y sin programar; la IA que arma formularios y catálogos tiene programada su etapa 1, con texto y audio (ADR 0024). **Antes de planificar** se prueba con Meta si un Flow acepta un archivo precargado: es el mayor riesgo técnico. `/plan-etapa` la contrasta con el código real después de la E24, y al planificarla escribe las ADR de la lectura de documentos y de la IA que arma.
+**Estado:** pendiente · spec de la etapa 25, la última del bloque (decisiones 34, 41, 78, 99, 102, 146, 154 a 156, 165, 167, 171, 177, 181, 182, 192, 215 a 218, 221 a 223 y 238), con el [formato](plantilla.md) de las etapas. En ArquitecturaBase, los documentos están decididos, con su ADR 0022 y sus tableros, y sin programar; la IA que arma formularios y catálogos tiene programada su etapa 1, con texto y audio (ADR 0024). **Antes de planificar** se prueba con Meta si un Flow acepta un archivo precargado: es el mayor riesgo técnico. `/plan-etapa` la contrasta con el código real después de la E24, y al planificarla escribe las ADR de la lectura de documentos y de la IA que arma.
 
 **Partes.** Esta spec no entra en un solo archivo, así que sigue en otros, con las mismas secciones. Lo que no está en la tabla está acá.
 
@@ -83,7 +83,7 @@ No se leen `.doc`, `.xls`, los archivos con macros ni los que tienen contraseña
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
-- **«Pasar al formulario»** (99): queda a nombre de quien mandó el documento, por el canal `whatsapp`, con `SourceKey` `document:<id>`, igual que «Cargar solo si es seguro», y la respuesta dice quién la revisó. Pide confirmar, porque dispara las reglas del formulario (161), y el permiso de atender esa bandeja. Pasa por la misma captura, que le revisa a un empleado la membresía y `formrecords.create`.
+- **«Pasar al formulario»** (99): queda a nombre de quien mandó el documento, por el canal `whatsapp`, con `SourceKey` `document:<id>`, igual que «Cargar solo si es seguro», y la respuesta dice quién la revisó. Pide confirmar, porque dispara las reglas del formulario (161), y el permiso de atender esa bandeja. Pasa por la misma captura, que le revisa a un empleado la membresía y `formrecords.create`. **Quien la pasó no la aprueba** (238): como quien la cargó y quien la corrigió, no la ve en «Por aprobar» ni en su conteo, y decidir da 403 `Forms.Approval.OwnRecord`.
 - **Retención** (41 y 215): un documento usado sigue a su respuesta (23). Uno descartado o sin clasificar se borra a los 90 días, con su lectura, y uno propuesto que nadie revisa vence a los 90 días.
 - **Costos** (41 y 217): el proveedor de la plataforma, dentro del tope mensual, con un tope por persona o contacto y otro por organización, por día UTC.
 - **Los ejemplos** (216) los ve una persona y no van a la IA.
