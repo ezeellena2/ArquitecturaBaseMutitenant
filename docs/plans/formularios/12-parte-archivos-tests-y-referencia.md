@@ -60,6 +60,6 @@ Se toma solo como referencia, del traspaso 2 (anexo C §10 y anexo D). Las rutas
 | Carga de una vez | Pegar agrega e importar reemplaza; vista previa sin transacción; SHA-256 bajo los locks; confirmación con más del 25 % de bajas y del 10 % de errores; los topes de archivo, incluidas las celdas vacías con formato; CSV UTF-8 estricto; exportar sin diferencias al reimportar. |
 | Tipo de valor | Se elige al crear y no cambia; canónico; Excel y PDF muestran el valor junto al texto. |
 | Filtros | Valores siempre como parámetros, columnas de una lista cerrada, timeout de 3 s y una fila más que el tope. La vista previa no toma la identidad de la persona de ejemplo. |
-| Errores pagados | Posiciones del cliente; una página tardía de otro catálogo cargada en el editor; cada guardado reescribía las 10.000 opciones; los números leídos en la cultura equivocada al importar. |
+| Errores pagados (no repetir) | Posiciones del cliente; una página tardía de otro catálogo cargada en el editor; cada guardado reescribía las 10.000 opciones; los números leídos en la cultura equivocada al importar; guardar las opciones llevaba la pantalla arriba (F7 del traspaso 15): al guardar se conserva el lugar (160). |
 | Pantallas | CA1-A a CA3, CO1-B e IM1-A a IM3-A. Sirven para el contenido; el dibujo es de nuestro lienzo, con la decisión 43 y las piezas de acá (108). |
 | No se toma | La vista SQL sobre `AspNetUsers` y roles globales; los permisos y el bloqueo globales; el idioma original y las traducciones; la política `forms-export` por proceso. |

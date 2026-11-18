@@ -34,7 +34,7 @@ Antes de empezar:
 - **A mano:**
   - **tipo de valor:** texto, entero, decimal o fecha, que se elige al crear y no cambia;
   - opciones con texto, detalle, código y, en un catálogo tipado, valor. Cada texto es uno solo, tal como lo escribe la persona (35). Se agregan y se editan en un modal y, en la compu, también en la tabla (117);
-  - una opción se da de baja con su Estado. Una guardada que nada usa también se puede borrar: se marca, se borra al guardar y hasta entonces se restaura (129). Se reordenan con ↑ y ↓, o de la A a la Z al guardar;
+  - una opción se da de baja con su Estado. Una guardada que nada usa también se puede borrar: se marca, se borra al guardar y hasta entonces se restaura (129). Se reordenan con ↑ y ↓, o con «Ordenar por…» Texto o Código, que se aplica al guardar (224);
   - **la carga de una vez:** un solo «Importar», con dos orígenes: pegar desde Excel (agrega) o subir un XLSX o un CSV (reemplaza), con vista previa (120);
   - **exportar** y descargar la plantilla. El Excel se lee como en pantalla (119);
   - **hasta 10.000 opciones** por catálogo, contando las dadas de baja.
@@ -67,10 +67,14 @@ Antes de empezar:
 - `FRM-Catalogo-Contactos`: un catálogo «De los contactos», con sus filtros por etiqueta y la vista previa (55).
 
 **Con el armado de ArquitecturaBase** (117, 120 y 125 a 129):
-- `FRM-Catalogo` y `M-FRM-Catalogo`: el editor de un catálogo a mano, con el armado de ArquitecturaBase. «El catálogo» dice de dónde salen y el tipo, y debajo van Nombre y Descripción; al costado, «Así lo ve quien lo recibe», con «Una opción | Varias» y el teléfono. La banda trae «Descartar» y «Guardar cambios», y un ⋮ con «Dar de baja» o «Reactivar», como el editor de formularios (209). «Opciones» va a todo el ancho: «+ Agregar opción», «Importar», «Exportar» y un ⋮ con Descargar la plantilla, Ordenar de la A a la Z y Generar los códigos que faltan; abajo, solo «Buscar opción»; la tabla editable en la compu, la selección de filas para dar de baja o reactivar, el Estado como casilla y ↑ ↓ ✎ 🗑 a la vista;
+- `FRM-Catalogo` y `M-FRM-Catalogo`: el editor de un catálogo a mano, con el armado de ArquitecturaBase. «El catálogo» dice de dónde salen y el tipo, y debajo van Nombre y Descripción; al costado, «Así lo ve quien lo recibe», con «Una opción | Varias» y el teléfono. La banda trae «Descartar» y «Guardar cambios», y un ⋮ con «Dar de baja» o «Reactivar», como el editor de formularios (209). «Opciones» va a todo el ancho: «+ Agregar opción», «Importar», «Exportar» y un ⋮ con Descargar la plantilla, «Ordenar por…» y Generar los códigos que faltan; abajo, solo «Buscar opción»; la tabla editable en la compu, la selección de filas para dar de baja o reactivar, el Estado como casilla y ↑ ↓ ✎ 🗑 a la vista;
 - `FRM-Catalogo-Importar`: «Origen» y «Revisión» a la vista, sin pasos numerados. Redibujado con el traspaso 5, aprobado y publicado en el lienzo v162: «Cambios» se lee lado a lado (138), y las tablas llevan la línea entre columnas y la fila a la derecha (137).
 
 **Nuevos** (v148): `FRM-Catalogo-Opciones` y `M-FRM-Catalogo-Opciones`, el modal de opciones. Importar no va en el teléfono, como hasta ahora.
+
+**Del traspaso 15** (v175, sin publicar): `FRM-Catalogo-Ordenar` y su teléfono, nuevos, y `FRM-Catalogo` y su teléfono, redibujados.
+
+**«Ordenar por…» (224):** el diálogo «Ordenar las opciones» elige la columna (Texto o Código) y el sentido dicho con palabras, «De la A a la Z» o «De la Z a la A». El orden queda pendiente hasta guardar: arriba de las opciones, «Se ordenará por «Texto», de la A a la Z, al guardar.» con «Cancelar orden». Al guardar ordena todas, también las de otras páginas y las dadas de baja: los empates conservan su orden, lo vacío va al final y los números dentro de un texto se comparan por su valor («117» antes que «10030»). En el ⋮ queda apagado con su motivo en un catálogo sin guardar («Guardá el catálogo antes.») o con movimientos pendientes. No se ordena tocando el encabezado.
 
 **El modal de opciones (117):**
 - **Cómo se abre:** «Agregar opción» lo abre con las opciones agregadas en él, y ✎, con las de la página. Cada lado va en su caja: la lista a la izquierda (número o «—», texto, «Nueva» y código o «Sin código») y la opción elegida a la derecha, con su posición («Opción 2 de 5» o «Nueva opción») y «Quitar opción» en su banda. «Agregar opción», al pie de la lista, suma otra.
@@ -93,7 +97,7 @@ Antes de empezar:
   - guardado, no se guardó y la revisión si otra persona guardó;
   - sin opciones, 1.200 opciones con búsqueda y páginas, 10.000 opciones, nuevo y cargando;
   - importar grisado en un catálogo nuevo o con cambios sin guardar, con el motivo en su tooltip;
-  - una opción nueva, borrar una guardada (pregunta), «Se borra al guardar» con «Restaurar», una dada de baja con «Reactivar», movimientos pendientes y orden de la A a la Z pendiente, con cómo descartarlos, y las dos formas de la vista previa. Con movimientos o con el orden pendientes, el 🗑 de una guardada queda apagado, con «Guardá o descartá el orden pendiente para borrar opciones.» en su tooltip; con una opción por borrar, ↑ ↓ quedan apagados, con «Guardá o descartá el borrado pendiente para mover opciones.»;
+  - una opción nueva, borrar una guardada (pregunta), «Se borra al guardar» con «Restaurar», una dada de baja con «Reactivar», movimientos pendientes y el orden pendiente, con cómo descartarlos, y las dos formas de la vista previa. Con movimientos o con el orden pendientes, el 🗑 de una guardada queda apagado, con «Guardá o descartá el orden pendiente para borrar opciones.» en su tooltip; con una opción por borrar, ↑ ↓ quedan apagados, con «Guardá o descartá el borrado pendiente para mover opciones.»;
   - con solo `formcatalogs.read`: la tabla de lectura, sin casillas, con Exportar y la plantilla.
 - **Modal de opciones:** una nueva, una guardada, una dada de baja, una por borrar, volver a la lista en el celular, y errores con el triángulo.
 - **Importar:** la grilla vacía y con una columna ajena; «Revisar» sin archivo o sin filas, que marca el campo; revisando, aplicando, errores por fila y columna, muchas bajas que piden confirmar, muchas filas con error, un valor ambiguo, el 409 y otra importación en curso.
@@ -146,6 +150,7 @@ Están en la §5 de la hoja de ruta y no se vuelven a preguntar:
 - **117 y 129:** las opciones en un modal; una guardada se da de baja, y una que nada usa también se borra.
 - **119:** el Excel se lee como en pantalla, y se reimporta sin diferencias.
 - **120:** un solo «Importar», con la grilla.
+- **224:** «Ordenar por…» reemplaza «Ordenar de la A a la Z».
 
 ## 15. Cómo se cierra
 
@@ -168,6 +173,7 @@ Salen de los reviews de ArquitecturaBase (E1) y del traspaso del 17/10. El plan 
 - **Contratos:** `""` no es `null`; una entrada inválida es 400, nunca 500; un campo omitido no apaga nada.
 - **En el front:**
   - la búsqueda espera 300 ms y conserva el editor y el foco;
+  - guardar las opciones conserva el lugar: la pantalla no sube (160);
   - una página tardía de otro catálogo se descarta;
   - el archivo vive solo en el diálogo y se descarta al salir;
   - el front no tapa la validación del servidor;
