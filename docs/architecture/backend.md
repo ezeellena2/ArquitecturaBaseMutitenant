@@ -150,6 +150,8 @@ AppHost orquesta el entorno; ServiceDefaults reúne observabilidad y health.
 
 Un ApplicationDbContext compone el núcleo y los contribuidores instalados. Los esquemas y barreras están en [multitenancy](multitenancy.md#9-barreras); entidades, índices y convenciones en [persistencia EF](../rules/persistencia-ef.md). La guía de [migración](../guides/migracion.md) contiene el comando y la revisión del SQL. DesignTime construye el mismo modelo sin arrancar la Api ni conectar una base. Development aplica migraciones con la conexión administrativa; producción usa un migration bundle antes del tráfico.
 
+**Dos versiones conviven en cada despliegue** ([ADR 0060](../decisions/0060-dos-versiones-conviven.md)): la migración corre antes que la imagen nueva y la vieja atiende hasta que la nueva pasa readiness, y al volver a la imagen anterior la vieja lee lo que escribió la nueva. Por eso se agrega antes de borrar, un valor nuevo de un enum guardado como texto se lee un despliegue antes de escribirse y las colas devuelven, con espera, lo que una copia no entiende. Las reglas del esquema están en [migración](../guides/migracion.md#convivencia-de-versiones).
+
 ### Paginado, orden y búsqueda
 
 [Paginado y búsqueda](../rules/paginado-y-busqueda.md) define páginas, cursores, orden estable e índices. Los readers proyectan; los repositorios conservan entidades tracked para escribir.
@@ -216,6 +218,7 @@ Antes del pipeline, `Program.cs` prepara la base: en Development, el bootstrap (
 - **Logging:** `[LoggerMessage]` obligatorio (`CA1848` como warning, que rompe el build). Nunca se registran códigos, tokens, enlaces, emails completos ni teléfonos. Cada log de negocio lleva un scope con `TenantId`.
 - **OpenAPI:** `/openapi/v1.json` y Swagger UI solo en Development. El build exporta `docs/contracts/openapi.json` con `Microsoft.Extensions.ApiDescription.Server`, como en ArquitecturaBase; el front lo usa para generar sus tipos. El CI falla si el archivo commiteado no coincide con el generado.
 - **Health:** `/health` (readiness: base de datos, rol de runtime y WhatsApp) y `/alive`.
+- **Varias copias (E10):** la Api corre en dos o más copias para todas las organizaciones. `/health` guarda su resultado dos segundos, así un sondeo frecuente no agota la base, y el pool de cada copia queda por debajo del límite del servidor. Fuera de Development y Testing, la Api no arranca sin los proxies declarados (`KnownProxies` o `KnownNetworks`, nunca `TrustAll`): con uno mal configurado, todas las organizaciones comparten la cuota de una sola dirección. El apagado da 25 s, y el envío de un correo tiene su plazo dentro de ese margen. Cada trabajo de fondo que borra o avisa corre una vez entre copias ([concurrencia](../rules/concurrencia.md)).
 - **Rate limiting (cuotas, E9):** [ficha](../rules/cuotas.md).
   - `RateLimitMiddleware` corre después de autenticar y de resolver la organización. Toda petición a `/api` cuenta a la vez en `ip` (`publicIp` en el sitio público), `identity` y `tenant`; cada ruta suma su perfil (`loginCode`, `loginVerify`, `invitationPreview`, `invitationAccept` y los de los módulos). Quedan afuera los assets, los probes y `/connect`.
   - Las doce cuotas las guarda la configuración de Plataforma. Redis admite cada pedido con un script, en ventanas fijas UTC; sin Redis cuenta PostgreSQL, con continuidad en los dos sentidos.

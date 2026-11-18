@@ -4,7 +4,7 @@
 
 ## Cómo se hace
 - **Pedido:** `record ListXRequest : PagedRequest` con `SortableFields = ["name", "createdAtUtc"]`. `PagedRequest.AllowedPageSizes` es la colección inmutable única de tamaños: 10 (por defecto), 20, 50 o 100.
-- **Validador y contrato:** `PagedRequestValidator<ListXRequest>` valida contra esa colección; OpenAPI publica el mismo enum numérico en `PagedRequest.pageSize` y en el parámetro `pageSize` de cada ruta paginada.
+- **Validador y contrato:** `PagedRequestValidator<ListXRequest>` valida contra esa colección; OpenAPI publica el mismo enum numérico en `PagedRequest.pageSize` y en el parámetro `pageSize` de cada ruta paginada. Una lectura que trae menos filas por vez (las opciones de una pregunta, E14) le pasa al validador su tope, un subconjunto de esos tamaños, y el error lo dice («entre 1 y 50»).
 - **Reader:**
   ```csharp
   private static readonly SortMap<Role> Sort = new() { ["name"] = r => r.Name, ["createdAtUtc"] = r => r.CreatedAtUtc };

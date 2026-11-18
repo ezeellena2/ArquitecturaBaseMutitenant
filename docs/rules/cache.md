@@ -33,6 +33,7 @@
 - Invalidar a mano después del commit, o una copia local en memoria (L1).
 - Una etiqueta por persona para datos que cambian por organización.
 - Cachear entidades, datos personales o una clave privada leída desde otra organización.
+- Guardar la falla de un proveedor externo: si la carga puede devolver la falla de un tercero (un padrón caído, por ejemplo), ese resultado no se guarda y el próximo pedido vuelve a probar.
 - Leer las generaciones con el contexto de quien llama: vería lo que todavía no se confirmó.
 
 ## Copiá de
