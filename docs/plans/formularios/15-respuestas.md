@@ -65,7 +65,7 @@ Antes de empezar, en este orden:
 **Conteos:** las facetas ofrecen las opciones de cada filtro, y el front no muestra sus cantidades (143). Cada dimensión ignora solo su propio filtro y conserva las opciones históricas, con la última etiqueta. En «elegir varias», una respuesta cuenta en cada opción. Se piden solo las secciones visibles, y su falla no impide aplicar un filtro válido.
 
 **Excel (`.xlsx`):**
-- con los filtros aplicados y `formrecords.export`, hasta 10.000 respuestas (con más, el diálogo pide acotar) y sin trabajos de fondo;
+- con los filtros aplicados y `formrecords.export`, hasta 10.000 respuestas (con más, «Exportar» del diálogo queda apagado con su motivo, que pide acotar los filtros, 211) y sin trabajos de fondo;
 - una consulta de ids ordenados, hasta 10.001, e hidratación en lotes de 100, con un presupuesto de 30 s;
 - una exportación a la vez por persona, con la barrera que no espera (C11), en su propio carril: la carga de catálogos no la frena, así «Ya tenés una exportación en curso» siempre es cierto;
 - números, fechas y sí/no van como tipos de Excel, y los textos, literales. **Un número de más de 15 dígitos significativos va como texto,** porque Excel lo redondearía;
