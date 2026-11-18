@@ -13,12 +13,15 @@
 - La copia compartida y su retención legal se definen en [Personal](../features/personal.md); nunca se atribuye historia al dueño actual de un contacto.
 - La exportación personal prevista usa solo datos de la cuenta, su espacio y su lado compartido; [WhatsApp](../features/whatsapp.md) mantiene su inventario.
 - Rechazos por destino ocupado/inexistente no emiten códigos ficticios ni avisos al dueño; el resultado privado del operador exige probar su identidad.
+- **Retención de los datos del ingreso** ([ADR 0062](../decisions/0062-retencion-de-los-datos-del-ingreso.md), sin programar): códigos a los 30 días; ingresos a los 12 meses, salvo el último de cada cuenta; autorizaciones y tokens de OpenIddict a los 14 días de vencidos o revocados; invitaciones cerradas a los 30 días, salvo la última de cada destino en cada organización. Se purga por lotes, sin un rol que saltee RLS: lo global de `identity` en su scope y lo de una organización con `TenantJobRunner`.
+- **Cada tabla con datos personales nombra quién la purga,** o por qué se conserva (la auditoría, la prueba legal, la identidad anonimizada). Un test lo exige (ADR 0062).
 
 ## Prohibido
 - Aceptación booleana sin versión/fecha; editar legales publicados; borrar auditoría o identidad física.
 - Saltear la gracia de baja; exportar datos empresariales como personales.
 - Contactos de ingreso fuera de LoginMethods o escribir las copias de AspNetUsers a mano.
 - Activar métodos sin probar posesión; vincular Google sin OAuth/sesión; dejar la cuenta sin respaldo propio o activo.
+- Una tabla nueva con datos personales sin purga declarada, o una purga con un rol que saltee RLS.
 
 ## Copiá de
 - `Domain/Legal/LegalDocument.cs` y `LegalAcceptance.cs` (E3).
@@ -28,4 +31,4 @@
 - `IdentityStorageAccessTests` (E2), `SensitiveToStringLoggingTests` (E0).
 
 ## Detalle
-[Identidad](../features/identidad.md), [Personal](../features/personal.md) y [ADR 0035](../decisions/0035-baja-de-cuenta.md).
+[Identidad](../features/identidad.md), [Personal](../features/personal.md), [ADR 0035](../decisions/0035-baja-de-cuenta.md) y [ADR 0062](../decisions/0062-retencion-de-los-datos-del-ingreso.md).

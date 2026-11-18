@@ -16,18 +16,20 @@
 4. **La admisión.** `IRateLimitService.AdmitAsync` lee las cuotas guardadas desde la caché compartida; mientras no hay configuración, usa las de arranque. Un solo script de Redis admite el pedido y suma únicamente si todas sus cuotas tienen lugar, así un rechazo no gasta las demás.
    - Las ventanas son fijas UTC.
    - La clave es `<prefijo>{rl}:<perfil>:<ventana>:<inicio>:<partición>`.
-   - La IP entra como HMAC, nunca completa.
+   - La IP entra como HMAC, nunca completa. Una IPv6 se agrupa por su /64 antes del HMAC (N20 de ArquitecturaBase, sin programar): hoy `RateLimitIpHasher` y `WhatsAppQuotaIpHasher` hashean la dirección entera, y quien tiene un /64 cambia de dirección para saltear la cuota.
 5. **Sin Redis.** Cuenta en `platform."RateLimitCounters"`, con la unidad de trabajo del servicio de cuotas, antes del negocio y sin anidar su transacción.
    - Al caer Redis, el contador sigue desde lo último que la instancia vio en Redis.
    - Al volver, Redis sigue desde lo que contó PostgreSQL. Ninguna caída reinicia una cuota.
 6. **Cuotas de arranque.** Son `RateLimiting:<Perfil>:PermitLimit` y `WindowSeconds`, con `ValidateOnStart`. El seed las guarda solo al crear la configuración. Los tests arrancan con el tope (`TestRateLimits`) y fijan las suyas en una base y un ambiente de Redis propios.
 - Quedan afuera los assets, los probes (`/health`, `/alive`) y `/connect` (la autorización OIDC). El límite de esas rutas en la capa de red queda para la E10.
 - Las cuotas de negocio del Asistente (ADR 0048, 0049 y 0051) siguen aparte. Las compartidas frenan antes de llamar al proveedor.
+- Los topes diarios de correo también son cuotas de negocio y van aparte, sin sumar un perfil a los doce ([ADR 0063](../decisions/0063-topes-de-correo-de-la-plataforma.md), sin programar): uno global de la plataforma por debajo del cupo de la cuenta, con una reserva para invitaciones y aviso al 80 %; uno de invitaciones por persona y otro por organización; uno de códigos por dirección y otro por cuenta para Mi cuenta. Cuentan en 24 horas móviles, en una tabla global y durable, y sus valores van en `Email:*`.
 
 ## Prohibido
 - `UseRateLimiter`, `[EnableRateLimiting]` o un limitador por proceso, que no se comparten entre réplicas.
 - Un perfil fuera de los doce del contrato.
 - Partir por algo que elige el cliente (un header o el subdominio), o guardar la IP completa.
+- Un tope de correo por proceso, o uno por organización sin el global: el cupo es de la cuenta que manda, no de cada organización (ADR 0063).
 - Llamar al proveedor antes de admitir la cuota de la ruta.
 
 ## Copiá de
@@ -40,4 +42,4 @@
 - `PlatformRateLimitsTests` (E9)
 
 ## Detalle
-Valores iniciales: `PlatformRateLimits.Initial` · [ADR 0052](../decisions/0052-cache-compartida-redis.md) · [backend.md §17](../architecture/backend.md#17-logging-openapi-health-rate-limiting-caché)
+Valores iniciales: `PlatformRateLimits.Initial` · topes de correo: [ADR 0063](../decisions/0063-topes-de-correo-de-la-plataforma.md) · [ADR 0052](../decisions/0052-cache-compartida-redis.md) · [backend.md §17](../architecture/backend.md#17-logging-openapi-health-rate-limiting-caché)

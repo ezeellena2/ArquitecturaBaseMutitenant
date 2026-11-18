@@ -9,6 +9,7 @@
 - **Empresa** (con `{companyId}` en la ruta): `[HasCompanyPermission(Permissions.Company.Members.Manage)]`. Si un permiso de la organización también alcanza, va como segundo argumento: la ficha de una empresa lleva `[HasCompanyPermission(Permissions.Company.Members.Read, organizationPermission: Permissions.Companies.Read)]`. Una empresa que no es de la organización activa, o que no existe, responde 404 `Tenancy.Company.NotFound`; 403 queda para una empresa propia sin el permiso (E9).
 - **Plataforma:** `[HasPlatformPermission(PlatformPermissions.Tenants.Manage)]`.
 - **Una lectura por requisito:** `PermissionAuthorizationHandler` lee cada proyección cacheada (la de la organización y la de las empresas) a lo sumo una vez por requisito, y una alternativa como `organizationPermission` se compara contra lo ya leído, sin otra lectura: un requisito de empresa pasa entero por `IPermissionService.HasCompanyRequirementAsync` (base de la 12). `PermissionAuthorizationTests` cuenta las lecturas con el servicio real. Quien necesita la vista de la organización y la de cada empresa en un mismo pedido, como la campana, las pide juntas con `IPermissionService.GetBusinessPermissionsAsync`, que también lee cada proyección una sola vez (`NotificationServiceTests` lo cuenta).
+- **Nadie da lo que no tiene** ([ADR 0061](../decisions/0061-nadie-da-lo-que-no-tiene.md), sin programar). Quien administra roles, personas u operadores solo da o quita permisos y roles que tiene en ese alcance: la organización, cada empresa o Plataforma. Solo actúa sobre alguien cuyos permisos tiene todos. Lo que tiene se lee de la base dentro del límite del caso de uso, y cuentan solo los permisos del catálogo vigente. Dar el Dueño pide tenerlo todo. Los rechazos son 403 propios, con los códigos que propone la ADR, y los decide un solo `*Guard` por alcance.
 - **Persona (B2C):** `[Access(Consumer)]` sin permiso, porque la persona los tiene todos sobre su espacio personal. Sobre un dato compartido, lo que puede hacer cada parte lo decide `PartyPolicy`, no un permiso.
 - **Catálogo de la organización, sin prefijo** (como ArquitecturaBase): `users.read`, `users.invite`, `users.manage`, `roles.read`, `roles.manage`, `roles.assign`, `companies.read`, `companies.manage`, `settings.read`, `settings.manage` (incluye verificar el dominio de correo), `audit.read`, `publicpage.manage` y, del Asistente, `assistant.use` y `assistant.configure`; por empresa, `company.members.read` y `company.members.manage` ([backend.md §14](../architecture/backend.md#14-autorización)). Nunca `tenant.users.read`.
 - **Catálogo de plataforma:**
@@ -31,6 +32,7 @@
 - Un permiso que no está en su catálogo.
 - Prefijar los permisos de la organización (`tenant.users.read`) o sumar al catálogo uno que ninguna ruta usa todavía.
 - Decidir el acceso en el front.
+- Dar o quitar un permiso o un rol que quien pide no tiene en ese alcance, o actuar sobre alguien que tiene más permisos (ADR 0061).
 
 ## Copiá de
 - `Api/Controllers/Organization/RolesController.cs` (E4) · la guía [`permiso-nuevo.md`](../guides/permiso-nuevo.md) (E4)
@@ -39,6 +41,7 @@
 - `HarnessTests` (E0): formato y referencias de la ficha.
 - `RouteIsolationMatrixTests` (E9): toda ruta con el acceso que no declara, y con una empresa de otra organización.
 - `PermissionAuthorizationTests` (E9): los tres atributos, la empresa de la ruta y una lectura por requisito.
+- Nadie da lo que no tiene: tests con cuentas que tienen solo cada permiso, en los tres alcances, cuando se programe la ADR 0061.
 
 ## Detalle
 [backend.md §14](../architecture/backend.md#14-autorización)
