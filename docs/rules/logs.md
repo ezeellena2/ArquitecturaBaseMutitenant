@@ -8,6 +8,7 @@
 - Mensajes en inglés, con parámetros estructurados (`{RoleId}`), no concatenados.
 - Correos y teléfonos, siempre con `PersonalDataMask` (`Application/Common/Text`): el correo con dos letras y el dominio (`lu•••@gmail.com`), y el teléfono con sus últimos cuatro dígitos (`•••• 6789`). Es el mismo formato de las pantallas, los avisos y la auditoría.
 - La organización va en el span del pedido, no en un scope del log: ningún middleware abre uno (verificado el 2026-11-18). El span lleva `tenant.id` y `tenant.kind` del acceso ya validado (`TenantTelemetryMiddleware`, E9), nunca del Host; Plataforma, un pedido anónimo y el sitio público quedan sin organización. El id nunca es una dimensión de una métrica.
+- **Una métrica no lleva la organización ni la empresa** como etiqueta, tampoco un número, un cuerpo o un id de mensaje (traspaso 15: ArquitecturaBase etiqueta por empresa la cola de ARCA y pide métricas de WhatsApp por organización; acá no). El detalle de cada organización o empresa va a su pantalla («Números», «Para resolver», la conexión de ARCA) y a los logs, con el id del objeto: el comprobante, el envío o la conexión.
 - No repetir (N10 de ArquitecturaBase): un 500 se tiene que poder rastrear. Allá, fuera de desarrollo, la consola escribe JSON con el id de la persona en el scope, y la guía documenta el exportador OTLP y una alerta de 5xx. Acá los logs no tienen un scope con la persona ni con la organización (solo el span), y la consola no es JSON. Tarea en el [backlog](../backlog.md#traspaso-15-el-núcleo-para-programar); el exportador va con la E10.
 - **Excepciones inesperadas:** HTTP, `OperationLog` y mantenimiento usan `ExceptionLog.Write`: tipo y stack de cada excepción interna, nunca `Message`, `Data`, `ToString()` ni el objeto Exception. Los identificadores técnicos van en un scope. Los workers periódicos heredan de `PeriodicWorker`: la cancelación termina el servicio, cualquier otro fallo se registra y permite la siguiente vuelta; las señales de entrada conservan su espera propia.
 - OpenIddict emite parámetros OIDC y claims personales en sus trazas internas. Su categoría se limita a `Warning` mediante `LoggerFilterOptions` después de cargar la configuración; una captura de pruebas en `Trace` sigue observando los logs de la aplicación sin exponer esos valores.
@@ -15,6 +16,7 @@
 ## Prohibido
 - `logger.LogInformation(...)` directo.
 - Loguear el request entero, códigos, tokens, enlaces de ingreso, contraseñas, emails o teléfonos completos.
+- Una métrica etiquetada por organización, por empresa o por un dato de un mensaje.
 - `Include Error Detail` en la cadena de conexión.
 - Entregar una excepción al proveedor de logs o registrar su mensaje; copiar bucles periódicos con catches parciales que puedan detener el host.
 

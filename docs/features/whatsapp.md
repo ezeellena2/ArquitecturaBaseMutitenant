@@ -1,6 +1,6 @@
 # WhatsApp
 
-**Revisado:** 2026-11-07
+**Revisado:** 2026-11-18
 
 Módulo quitable para los números de WhatsApp de Plataforma y de las organizaciones. Se instala con la composición `AddWhatsAppModule` de cada capa; la disponibilidad del canal de Plataforma depende de su número conectado, y la del webhook, de sus dos secretos. Aporta webhook, recepción durable, bot, mensajes y transporte de códigos, invitaciones y avisos. El núcleo conserva la identidad y los accesos; el módulo no crea sesiones por recibir un mensaje.
 
@@ -58,6 +58,14 @@ Los replies libres conservan en su payload cifrado el cierre de ventana `LastInb
 
 El outbox cifra destino/payload, reclama con lease en una transacción, envía a Cloud API fuera de ella y confirma por token en otra; `Sent` significa aceptación, no delivered. Las plantillas y adaptadores de códigos, invitaciones y avisos usan perfil explícito, resources es/en y DisplayFormatter. El catálogo tiene 16 nombres (1 Authentication, 15 Utility), 32 variantes es/en; el lienzo no implica aprobación en Meta. Usar [plantillas](../operations/whatsapp-plantillas.md) y [configuración/túnel](../operations/configuracion.md) antes de la puerta real. La prueba de retirada completa pertenece a Integración; la receta y los tests de modelo no la sustituyen.
 
+**Lo que no se sabe si salió** ([ADR 0066](../decisions/0066-lo-que-no-se-sabe-si-salio.md), decisión 240, sin programar; cambia la 80). Hoy toda falla se reintenta hasta `MaxAttempts`, y el cliente puede recibir dos veces el mismo mensaje. Así va a quedar:
+- **No salió** (no se conectó, Meta limitó o respondió un error con código): se reintenta a los 30 s, dos veces como mucho, y ese chat espera.
+- **No se sabe** (se venció la espera, la respuesta llegó cortada o hubo un error del servidor sin código): queda «Sin confirmar», no se repite y lo revisa cualquiera que puede enviar en esa bandeja, con quién y cuándo. Revisar no reenvía.
+- **Lo definitivo** falla con un código estable debajo de «No se pudo enviar»: `WhatsApp.Send.NotAllowed`, `WindowClosed`, `Undeliverable`, `RateLimited`, `TokenInvalid`, `PermissionMissing`, `Unavailable` o `Rejected`, en `FailureReason`.
+- **Lo demás:** una invitación dudosa dice «Sin confirmar» en Usuarios. Apagar la Api devuelve a la cola lo que no llamó a Meta y deja «Sin confirmar» lo que se cortó después. Lo que contesta (el operador, el asistente, la confirmación de un toque) sale antes que los avisos de las reglas y las difusiones, y dentro de un chat se respeta el orden.
+
+**Dos versiones a la vez** ([ADR 0060](../decisions/0060-dos-versiones-conviven.md), sin programar): un mensaje recibido de un tipo que esta versión no conoce se guarda como «Otro»; una salida que no entiende vuelve a pendiente para otra copia, hasta 10 minutos; una respuesta de Flow que no puede procesar se deja para otra copia hasta cinco fallas y un día. Lo que se deja para otra copia sigue en la misma organización, porque la entrada se procesa en el alcance del número. Las métricas de la salida y de la entrada van sin la organización ni el número ([logs](../rules/logs.md)): el estado de cada número está en «Números» y en «Para resolver».
+
 ## Vínculos y privacidad
 
 `WhatsAppPhoneLinkObserver` recibe la posesión ya verificada por el núcleo dentro de su UoW, también durante un alta antes de agregar el método a EF. Relee el contacto bajo su lock: sólo vincula uno libre o el vínculo propio compatible; no toma el de otra cuenta ni cambia snapshots históricos. Quitar Phone revoca sus enlaces, limpia texto/`ContactId` por propietario y método originales y elimina físicamente el contacto si todavía pertenece a ese vínculo. Un contacto reasignado a B se conserva.
@@ -66,7 +74,9 @@ El outbox cifra destino/payload, reclama con lease en una transacción, envía a
 
 Desde la E11 (B7) también participa en los otros dos pasos de la baja. En cada organización de la cuenta, sus respuestas y notas quedan sin su nombre (`ForgetAuthor`) y las conversaciones que tenía tomadas quedan sin tomar; el texto es de la organización y se queda. En su espacio personal se borran sus vínculos con sus copias, así que la organización ve otra vez la conversación sin vincular. En el paso global, además, su nombre sale de las consultas de Plataforma que atendió como operadora.
 
-**Retención de la atención (D4):** el texto de los chats de una organización se guarda mientras exista el contacto y se borra con él; en Plataforma, mientras exista la conversación. No hay plazo: la retención de 90 días de abajo es solo de la copia global de la entrada, que además se purga al pasar a la organización. Apagar el módulo de una organización no borra nada; lo deja sin acceso.
+**El contenido, cifrado** ([ADR 0065](../decisions/0065-contenido-del-chat-cifrado.md), sin programar). Hoy el texto de los chats, la vista previa del último mensaje, sus gemelas de Plataforma y la copia vinculada se guardan en claro. Va a quedar cifrado todo lo que se escribe en el chat, también las notas, lo que dijo el bot y los valores de una plantilla, con Data Protection y la clave de la instalación atada a cada organización. Plataforma lleva su propio subpropósito, y la copia vinculada, uno del esquema `engagement`. Quedan en claro el nombre y el número del contacto, para que la bandeja y Contactos busquen; también `AuthorName`, las etiquetas y el consentimiento. El contenido no se busca en SQL, y lo que el anillo ya no abre se lee vacío. Lo que sumen la E14 a la E25 nace cifrado. Los chats de prueba de hoy se vacían al migrar.
+
+**Retención de la atención (D4, reconfirmada el 2026-11-18):** el texto de los chats de una organización se guarda mientras exista el contacto y se borra con él; en Plataforma, mientras exista la conversación. No hay plazo: el usuario no quiso los 90 días de ArquitecturaBase. La retención de 90 días de abajo es solo de la copia global de la entrada, que además se purga al pasar a la organización. Lo único que se vacía antes es la ubicación y el texto de un envío de formulario, al cerrar la captura o al vencer el envío (H13 de ArquitecturaBase, con la E14). Apagar el módulo de una organización no borra nada; lo deja sin acceso.
 
 **Inventario para exportar (E10):** de una persona, WhatsApp exporta su contacto del ingreso (número y fecha de verificación), sus vínculos (organización, número que la atendió y desde cuándo) y las copias de esos vínculos (lo que escribió, lo que le respondieron y lo que dijo el bot desde que vinculó; nunca las notas ni quién respondió). No exporta los contactos, chats, notas, plantillas ni difusiones de una organización: son datos de la organización, aunque la mencionen. De un miembro, tampoco lo que escribió en nombre de la organización.
 
@@ -76,7 +86,7 @@ El servicio Application de retención borra texto a los **90 días fijos desde `
 
 El único total es `WhatsApp:DailyAuthCodeLimit` (100 por día UTC). Los envíos nuevos pueden gastar hasta 80 de esos 100 y hasta `DailyNewAuthCodeIpLimit` (20) por IP/día; cambiar propósito o IP no reinicia la bolsa global. `ProtectedAuthCodeFraction` (0,2) protege una fracción del total: se redondea la protección hacia arriba y se resta del total, sin sumar otra bolsa. Con total 1 quedan 0 nuevos y 1 ingreso verificado. La fracción admite 0–1, el total y el tope por IP 1–10000.
 
-La protección es capacidad mínima disponible, no un techo para ingresar: sin nuevos, los ingresos pueden usar los 100. Sólo `Login` a un método Phone verificado y utilizable del dueño real se clasifica protegido. La relectura ocurre bajo identidad → cuenta → destino, antes del lock global de cuota. Tener UserId, estar autenticado, un método pendiente, VerifyDestination, recuperación o BusinessSignup no concede protección; un operador legítimo sí puede usar su Phone verificado. Retirar un país de alta no invalida un Phone verificado. Siguen los topes de 20 pedidos/IP/15 minutos, 5 por destino/15 minutos y reenvío de 60 segundos.
+La protección es capacidad mínima disponible, no un techo para ingresar: sin nuevos, los ingresos pueden usar los 100. Sólo `Login` a un método Phone verificado y utilizable del dueño real se clasifica protegido. La relectura ocurre bajo identidad → cuenta → destino, antes del lock global de cuota. Tener UserId, estar autenticado, un método pendiente, VerifyDestination, recuperación o BusinessSignup no concede protección; un operador legítimo sí puede usar su Phone verificado. Retirar un país de alta no invalida un Phone verificado. Siguen los topes de 20 pedidos/IP/15 minutos, 5 por destino/15 minutos y reenvío de 60 segundos. **Sin programar** (H10 de ArquitecturaBase, como los de correo de la [ADR 0063](../decisions/0063-topes-de-correo-de-la-plataforma.md)): 10 códigos por cuenta y por día para sumar o verificar un número desde Mi cuenta, y una IPv6 que cuenta por su /64 (hoy solo se junta la IPv4 con su IPv6 mapeada). Son de la plataforma, porque un código de ingreso no es de una organización.
 
 `LoginCodeIssuer` prepara sin modificar filas. Cada caller admite únicamente después de decidir el enqueue; después invalida/agrega el código y encola dentro de su única UoW. Una solicitud legítima de ingreso sin entrega conserva el historial de emisión y los límites por destino, con `SentAtUtc` null y sin cuota. Un rechazo de admisión no deja código nuevo, invalidaciones, outbox ni ledger vacío, incluso con OnAnyResult. Rollback gasta 0, replay gasta 1; un fallo posterior del dispatcher/Meta no devuelve capacidad.
 
@@ -95,7 +105,7 @@ La protección es capacidad mínima disponible, no un techo para ingresar: sin n
 | D1 | Cada número muestra siempre «N de 1.000 gratis este mes». Sin medio de pago, el aviso dice «Responde hasta 1.000 mensajes por mes. Sin medio de pago no manda plantillas ni difusiones». |
 | D2 | La persona vincula su conversación con un botón del bot, que solo se ofrece si el número es un Phone verificado de una cuenta. Sin pantalla nueva. **(E21)** La decisión 159 de la [hoja de ruta](../plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md#5-decisiones-de-producto) suma en «Mi cuenta» una zona con el chat de cada organización, con «Vincular». |
 | D3 | Solo el Dueño recibe los cuatro permisos de entrada. Son permisos de organización, no por empresa. Ver, editar e importar contactos y cambiar el consentimiento a mano: «Atender clientes». |
-| D4 | El texto de los chats se guarda mientras exista el contacto (en Plataforma, la conversación) y se borra con él. Apagar el módulo no borra. |
+| D4 | El texto de los chats se guarda mientras exista el contacto (en Plataforma, la conversación) y se borra con él. Apagar el módulo no borra. **Reconfirmada el 2026-11-18** frente a los 90 días de ArquitecturaBase; el contenido va cifrado ([ADR 0065](../decisions/0065-contenido-del-chat-cifrado.md)). |
 | D5 | «Mensajes» muestra la conversación desde que se vinculó. Un número reciclado nunca muestra mensajes del dueño anterior. |
 | D6 | Un correo «Chats esperando» por equipo cuando el chat más viejo sin tomar pasa el tiempo elegido; no se repite hasta que la bandeja se vacía y vuelve a llenarse. «No avisar» es una opción. |
 | D7 | Fotos, audios y documentos se ven como «Mandó una foto/audio/documento», sin descarga (llega con la E18). Desconectar un número deja sus chats para leer, sin responder. |
@@ -108,6 +118,13 @@ La protección es capacidad mínima disponible, no un techo para ingresar: sin n
 Dos decisiones técnicas que no se deducen del código:
 - **Mes del cupo:** se corta en la zona de la organización (en Plataforma, UTC), porque Meta devuelve `timezone_id` numérico y no publica un catálogo por API.
 - **Tiempo real:** sondeo cada 10 s en las bandejas y cada 5 s en la conversación abierta, sin SignalR.
+
+## Pendiente de ArquitecturaBase (traspaso 15)
+
+Lo que allá quedó para más adelante, o que acá se decide al planificar:
+- **Gran escala** (H27 a H34 de su revisión): se trae con el volumen real. Lo que allá esperaba a pasar de una copia (H23, H24 y H26) acá vale desde el principio, porque las organizaciones comparten copias ([ADR 0060](../decisions/0060-dos-versiones-conviven.md) y la B6 de la E10).
+- **Una pausa de 6 s entre mensajes de un chat** (H12): antes de traerla, ver si la salida de acá ya ordena por chat.
+- **Quitar WhatsApp y el respaldo** (H22 y H15): la [guía de quitar](../guides/quitar-whatsapp.md) cuenta otra vez las tablas cuando la E14 a la E25 sumen las suyas, y el [runbook](../operations/runbook.md) dice que una base restaurada sin el certificado lee vacío el contenido de los chats.
 
 ## Carpetas
 
