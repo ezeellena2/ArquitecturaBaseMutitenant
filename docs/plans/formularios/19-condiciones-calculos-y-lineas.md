@@ -1,6 +1,6 @@
 # E19 · Condiciones, cálculos y líneas (spec)
 
-**Estado:** pendiente · spec de la etapa 19 del bloque (decisiones 53, 54, 78, 146, 168, 177, 178 y 185), con el [formato](plantilla.md) de las etapas. Las condiciones y los cálculos no tienen equivalente en ArquitecturaBase, salvo el editor de condiciones de las reglas, del que sale «Mostrar si». El bloque es lo que allá llaman «Renglones en los formularios»: su etapa 1, el editor y publicar, está programada y probada con Meta; la 2 y la 3, cargar y leer, quedaron programadas el 2026-11-07, sin la prueba física, y la 4, las reglas, se programa desde el 2026-11-08. **Antes de programar** se prueba con Meta, en un celular, una pregunta que aparece según otra, una pantalla por ítem con «¿Agregás otro ítem?», una pregunta de archivo dentro de un `If` y una respuesta de unos 40 KB, y `/plan-etapa` parte de ese resultado, después de la E18.
+**Estado:** pendiente · spec de la etapa 19 del bloque (decisiones 53, 54, 78, 146, 168, 177, 178, 185 y 204), con el [formato](plantilla.md) de las etapas. Las condiciones y los cálculos no tienen equivalente en ArquitecturaBase, salvo el editor de condiciones de las reglas, del que sale «Mostrar si». El bloque es lo que allá llaman «Renglones en los formularios»: su etapa 1, el editor y publicar, está programada y probada con Meta; la 2 y la 3, cargar y leer, quedaron programadas el 2026-11-07, sin la prueba física, y la 4, las reglas, se programa desde el 2026-11-08. **Antes de programar** se prueba con Meta, en un celular, una pregunta que aparece según otra, una pantalla por ítem con «¿Agregás otro ítem?», el bloque al final con su pantalla de cierre, una pregunta de archivo dentro de un `If` y una respuesta de unos 40 KB, y `/plan-etapa` parte de ese resultado, después de la E18.
 
 **Partes.** Esta spec no entra en un solo archivo, así que sigue en otro, con las mismas secciones. Lo que no está en la tabla está acá.
 
@@ -13,7 +13,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T9, T11, T13, T24, la §3, la §6, punto 7, y la §14; la [E15](15-respuestas.md): filtros, valores, Excel y tablero; la [E16](16-datos-de-las-personas.md): los filtros por destinatario y sus avisos; la [E12](12-catalogos.md): C5, y la [E13](13-campos.md): los tipos de campo.
-2. **Decisiones** de la hoja de ruta: 35, 43, 53, 54, 78, 146, 157, 162, 168, 174, 177, 178 y 185.
+2. **Decisiones** de la hoja de ruta: 35, 43, 53, 54, 78, 146, 157, 162, 168, 174, 177, 178, 185 y 204.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -34,8 +34,8 @@ Antes de empezar, en este orden:
 
 **Preguntas condicionales:**
 - una pregunta puede tener «Mostrar si», con hasta 10 condiciones unidas con «y», sobre preguntas anteriores: sí/no y elegir una (`in`), elegir varias (`anyOf`), número y fecha (`equals`, `gte`, `lte`), y respondida o no (`answered`, `unanswered`). Es la gramática de la E12 (C5), con la misma regla de la E15;
-- en WhatsApp, la pregunta aparece o se oculta mientras la persona completa el formulario, con el componente `If` **[Meta]**. Un título de sección cuyas preguntas quedan todas ocultas tampoco se ve;
-- **lo que el canal no pueda mostrar no se publica:** la comprobación lo marca en su pregunta, y nunca se manda sin la condición;
+- en WhatsApp, la pregunta aparece o se oculta mientras la persona completa el formulario, con el componente `If` **[Meta]**, armado como dice la [parte](19-parte-contrato-datos-y-pasos.md#contrato): Meta no acepta «y» ni «o» dentro de un `If` y anida hasta tres. Un título de sección se oculta con sus preguntas si todas tienen la misma condición; si no, se ve siempre;
+- **lo que el canal no pueda mostrar no se publica:** la comprobación lo marca en su pregunta, y nunca se manda sin la condición. Entre eso están un número, elegir varias, varias respuestas de una pregunta de catálogo y más de tres condiciones en cadena;
 - **el servidor vuelve a evaluar al capturar y nunca confía en lo que llega.** Evalúa en orden, y una pregunta oculta cuenta como sin respuesta para las que dependen de ella: una condición sobre ella se cumple solo con `unanswered`, y con los demás operadores las que dependen se ocultan en cadena. Una pregunta oculta no guarda valor, y «obligatoria» vale solo si se mostró;
 - **«No se mostró»:** la respuesta guarda qué preguntas quedaron ocultas. En la planilla se ve como «No se mostró», distinto de «Sin respuesta» y de «—». Las condiciones suman `notShown`, y `unanswered` también lo incluye; la planilla no lo filtra (143);
 - una pregunta condicional de catálogo con un problema de oferta frena el envío igual: no se sabe de antemano si se va a ver.
@@ -55,7 +55,7 @@ Antes de empezar, en este orden:
 - **«Se carga varias veces»,** una casilla debajo de «Obligatoria», con su (i), junta las preguntas marcadas en el bloque; si no hay uno, lo crea en el lugar de la primera, con «Bloque» de nombre. Desmarcar una la saca, y queda justo después del bloque. Una pregunta que ya existía pasa como pregunta nueva, con otra identidad: lo cargado antes conserva su columna, y publicar lo dice en «Pasan al bloque». En Foto, Documento, Elegir varias y Cálculo, que no entran, la casilla no aparece. En una pregunta con «Mostrar si» o con «Permitir elegir varias», sigue activa, y marcarla pregunta antes «¿Pasar «Monto» al bloque?», con «Se quitan sus condiciones.» o «Pasa a elegir una sola opción.», «Cancelar» y «Pasar al bloque» (162 y 195);
 - **qué entra:** un bloque por formulario, sin bloques adentro, con texto corto y largo, número, fecha, sí o no y elegir una, propia o de un catálogo. En una pregunta del bloque, «Elegir varias», «Foto», «Documento» y «Cálculo» aparecen apagadas en «Tipo de respuesta», y «Permitir elegir varias», en su casilla, cada una con su motivo en su tooltip (43). Sus preguntas cuentan para el tope del formulario, y un bloque sin preguntas se guarda pero no se publica;
 - **un catálogo del bloque filtra por quien lo recibe** (168), como una pregunta suelta de la E16: lleva sus filtros fijos y por destinatario, los avisos al publicar (157) y su oferta, una sola para todos los ítems y con el mismo tope;
-- **en WhatsApp, una pantalla por ítem,** hasta 10 o el máximo si es menor, con el número en el título («Productos · ítem 2»). Con mínimo 0, el bloque abre con una pantalla con su nombre y «¿Agregás un ítem?»; con 1 o más, esa pantalla no está. Desde el mínimo, cada ítem termina con «¿Agregás otro ítem?», sí o no; el último no pregunta, y la flecha vuelve al anterior. Es el Flow estático con más pantallas, sin intercambio con Meta **[Meta]**;
+- **en WhatsApp, una pantalla por ítem,** hasta 10 o el máximo si es menor, con el número en el título («Productos · ítem 2»). Con mínimo 0, el bloque abre con una pantalla con su nombre y «¿Agregás un ítem?»; con 1 o más, esa pantalla no está. Desde el mínimo, cada ítem termina con «¿Agregás otro ítem?», sí o no; el último no pregunta, y la flecha vuelve al anterior. El «No» y el último ítem llevan a lo de después del bloque. **Si el bloque es lo último, llevan a una pantalla de cierre** (204), con el nombre del formulario, «Tocá «Enviar» para mandar el formulario.» (con el texto de su botón final) y ese botón: Meta no acepta mandar desde la pantalla de un ítem. Es el Flow estático con más pantallas, sin intercambio con Meta **[Meta]**;
 - **el `routing_model`:** el Flow con bloque declara cada `navigate` de cada pantalla, con las dos ramas de cada `If`. Allá, sin él, Meta lo dedujo de los `navigate`, dejó afuera la rama «No», y responder «No» cortaba el formulario. Sin bloque, el Flow sale como en la E18;
 - **los topes de WhatsApp** (178): un mínimo de más de 10 frena al publicar, con «En WhatsApp se cargan hasta 10 ítems; el mínimo es 15.» e «Ir a la pregunta». Un máximo de más de 10 avisa sin frenar, y la (i) del máximo dice el tope;
 - **el tope de la respuesta:** al publicar se suma lo más largo que podría mandar cada pregunta, una vez por ítem de WhatsApp, con su clave `_r<n>`, de hasta 4 bytes más. Un formulario con bloque tiene el tope de uno con archivos (E18): 64 KiB al publicar y al recibir; si igual no entra, publicar frena como hoy. Que una respuesta de unos 40 KB llega entera se prueba con Meta antes de planificar **[Meta]**;
@@ -83,6 +83,7 @@ Aprobados y publicados en el lienzo v153, con el recorrido guiado `un-pedido-con
   - `FRM-Editor-Lineas`, con «Agregar bloque», los textos con «ítem» (177) y un catálogo del bloque con sus filtros (168);
   - `FRM-Respuestas-19`, `FRM-Respuesta-19` y `WA-Chats-Respuesta-19`, con los ítems, «Filtros» (144) y el detalle alineado (139);
   - `FRM-Publicar-19`, sin teléfono, con «Pasan al bloque» y el mínimo que frena (178).
+- **Falta dibujar** la pantalla de cierre (204) en los teléfonos de `FRM-Editor-Lineas`. Lo que queda por redibujar está al final del [plan de la etapa](../2026-11-08-etapa-19-condiciones-calculos-y-lineas.md).
 
 | Tablero | Qué muestra |
 | --- | --- |
@@ -114,9 +115,9 @@ Aprobados y publicados en el lienzo v153, con el recorrido guiado `un-pedido-con
 
 | Marca | Qué hay que confirmar | Qué asume esta spec |
 | --- | --- | --- |
-| [Meta] | `If` y su expresión, antes de programar: comparar un `Dropdown`, una casilla de `CheckboxGroup`, un número escrito en `TextInput` y una fecha, entre pantallas, con cuánta anidación, y dónde se admite. | Lo que no se pueda, `Check` lo frena al publicar. Los números hoy son texto (§14 de la E14), y puede no haber comparación numérica. |
+| [Meta] | `If` y su expresión, antes de programar: comparar un `Dropdown`, una casilla de `CheckboxGroup`, un número escrito en `TextInput` y una fecha, entre pantallas, y dónde se admite. Allá, el 2026-11-11: una sola comparación por `If`, sin `&&` ni `\|\|`, aun con paréntesis; hasta tres `If` anidados, y un control nunca en dos ramas. | Lo que no se pueda, `Check` lo frena al publicar. Los números hoy son texto (§14 de la E14), y puede no haber comparación numérica. |
 | [Meta] | Una pregunta de archivo dentro de un `If`, en su pantalla. | Si no se puede saltear, se la frena al publicar con `ConditionNotSupported`. |
-| [Meta] | Una pantalla por ítem. Allá, el 6 y el 7/11, Meta aceptó tres variantes con el `routing_model`: preguntas después del bloque, con dos títulos de sección; el bloque al final, y el mínimo 0, con «¿Agregás un ítem?». Un ítem y «No» mandaron 7 claves y 415 bytes, y «Sí», «Sí» y «No», 15 claves y 886 bytes. Falta la respuesta de unos 40 KB. | Se prueba igual acá antes de planificar. Alcanzan 10 ítems sin intercambio; Meta acepta el `If` con un `Footer` en cada rama dentro del `Form`, el mismo `name` en las diez pantallas y las pantallas que navegan en una rama y terminan en la otra. Si los 40 KB no llegan enteros, un formulario con bloque se queda con 16 KiB. |
+| [Meta] | Una pantalla por ítem. Allá, el 6 y el 7/11, Meta aceptó con el `routing_model` el bloque con preguntas después, con mínimo 0 y sin él; «Sí», «Sí» y «No» mandaron 15 claves y 886 bytes. **El bloque al final no estaba probado,** aunque allá se escribió que sí: Meta lo rechazó (`INVALID_PROPERTY_VALUE`) y pasó el 9/11 con la pantalla de cierre (traspaso 12, §4), con una respuesta de 34,6 KB entera. | Se prueba igual acá antes de planificar. Alcanzan 10 ítems sin intercambio, con un `Footer` en cada rama del `If` dentro del `Form` y el mismo `name` en las diez pantallas; **una pantalla que manda no navega en otra rama** (204). Si los 40 KB no llegan enteros, un formulario con bloque se queda con 16 KiB. |
 | Allá | Las etapas 2 y 3 de renglones, programadas el 2026-11-07 y sin probar a mano, y la 4, las reglas, que se programa desde el 2026-11-08: el Excel, con la columna «Ítem» y la hoja con el nombre del bloque; «En algún ítem de…», con todas las condiciones en el mismo ítem, y el PDF, con el bloque entero, que suma la E21. | Se contrasta con el código de allá al planificar, y lo que allá cambió se adopta si no choca con las reglas de acá (126). |
 | [E14] | El orden de la captura y `FormRecordValues`. | Se pueden sumar los pasos, y el texto sellado existe. |
 | [E15] | La función de filtros, la lectura en memoria de qué versiones tienen cada pregunta y `Number`. | `notShown` entra en la misma función. |
@@ -130,6 +131,7 @@ Aprobados y publicados en el lienzo v153, con el recorrido guiado `un-pedido-con
 - **Una etapa propia** (54), después de las respuestas, así lo que suma se ve en lo que ya existe (78).
 - **Los cálculos se hacen al llegar la respuesta:** quien completa no ve el total en WhatsApp antes de enviar (54).
 - **El bloque** (146, 177 y 178): se agrega con «Agregar bloque», con un mínimo y un máximo de hasta 100, y en WhatsApp una pantalla por ítem, hasta 10; un mínimo de más de 10 frena al publicar. Cambia el tope de 1 a 10 de la 54.
+- **Con el bloque al final, una pantalla de cierre** en WhatsApp (204).
 - **«Ítem» en todo texto que ve el usuario** (177): el código y los documentos siguen diciendo `rows`.
 - **Un catálogo del bloque filtra por quien lo recibe** (168).
 - **La columna del bloque se ve entera:** baja de renglón, como todo texto largo (174 y 185).
@@ -150,12 +152,13 @@ La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba r
 1. «Monto» aparece solo si «¿Se concretó la venta?» es Sí; con No, la respuesta llega sin monto.
 2. Un pedido con 3 ítems (producto del catálogo y cantidad), con su total calculado con el precio del catálogo, en la tarjeta del chat.
 3. Un pedido con un ítem y «No» en «¿Agregás otro ítem?», y un bloque con mínimo 0 y «No» en «¿Agregás un ítem?»: los dos llegan enteros, sin cortar el formulario.
-4. Las respuestas en la planilla, el detalle y el Excel: «No se mostró», los ítems, la hoja del bloque y el total.
+4. Un formulario con el bloque al final se publica sin `validation_errors`, y con «No» y con el último ítem pasa a la pantalla de cierre y llega entero.
+5. Las respuestas en la planilla, el detalle y el Excel: «No se mostró», los ítems, la hoja del bloque y el total.
 
 ## Requisitos previos
 
 - La E18 cerrada.
-- La prueba con Meta del componente `If`, de una pantalla por ítem, de una pregunta de archivo dentro de un `If` y de una respuesta de unos 40 KB.
+- La prueba con Meta del componente `If`, de una pantalla por ítem, del bloque al final con su pantalla de cierre, de una pregunta de archivo dentro de un `If` y de una respuesta de unos 40 KB.
 
 ## En el multitenant
 
