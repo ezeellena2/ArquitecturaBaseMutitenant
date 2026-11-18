@@ -726,6 +726,7 @@ Elegidas por el usuario el 2026-11-07, al evaluar el traspaso 10 contra este mod
 201. **Una plantilla de WhatsApp puede llevar el PDF arriba** (E21): «Nueva plantilla» suma «Encabezado», con «Sin encabezado» o «Documento (el PDF)», debajo de «Tipo», y la app arma el PDF de ejemplo que pide Meta. Se dibuja en el lienzo, con su teléfono, antes de programar la E21.
 202. **Un tema descartado vuelve si alguien lo pregunta de nuevo** (E23): pasa a «Abiertos», con la pregunta nueva sumada, en «Preguntas sin respuesta» y en «Formularios que faltan».
 203. **Un documento de un formulario solo para la app no se ofrece por WhatsApp** (E25): queda en «Documentos recibidos», para pasarlo al formulario desde la web.
+204. **Con el bloque al final, WhatsApp termina en una pantalla de cierre** (E19; como la r12 de ArquitecturaBase, 2026-11-18): si no hay preguntas después del bloque, el «No» de «¿Agregás otro ítem?» y el último ítem llevan a una pantalla con el nombre del formulario, «Tocá «Enviar» para mandar el formulario.» y el botón final. Meta no acepta mandar desde la pantalla de un ítem: allá lo rechazó el 9/11. Con preguntas después, el «No» lleva a ellas, como antes. Descartada: frenar al publicar y pedir una pregunta después del bloque.
 
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
