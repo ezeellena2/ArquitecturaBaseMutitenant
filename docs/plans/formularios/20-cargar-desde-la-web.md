@@ -1,19 +1,19 @@
 # E20 · Cargar una respuesta desde la web (spec)
 
-**Estado:** pendiente · spec de la etapa 20 del bloque (decisiones 73, 78, 83 a 90, 94 a 98, 101, 104, 153, 166, 177, 178, 183 y 184), con el [formato](plantilla.md) de las etapas. Corresponde a la Etapa 1 de «Cargar formularios desde la app» de ArquitecturaBase, programada y revisada allá el 2026-10-30, y a sus etapas 2 (lo propio), 4 (listas dependientes) y 5 (títulos de sección), programadas allá el 4 y el 5/11. La carga del bloque es la etapa 2 de sus renglones, programada allá el 2026-11-07. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E19.
+**Estado:** pendiente · spec de la etapa 20 del bloque (decisiones 73, 78, 83 a 90, 94, 95, 98, 101, 153, 166, 177, 183, 184, 229, 230 y 232 a 235; la 229 reemplaza la 96, la 104, la 178 y la 200, y la 234 cambia la 97), con el [formato](plantilla.md) de las etapas. Corresponde a la Etapa 1 de «Cargar formularios desde la app» de ArquitecturaBase, programada y revisada allá el 2026-10-30, y a sus etapas 2 (lo propio), 4 (listas dependientes) y 5 (títulos de sección), programadas allá el 4 y el 5/11. La carga del bloque es la etapa 2 de sus renglones, probada allá de punta a punta con Meta el 9/11 (T12). «Dónde se completa» es SA1-A a SA5 de allá (9/11), y «Ubicación», UB1-A a UB4-A y W1-A (11/11). `/plan-etapa` la contrasta con el código real cuando le toque, después de la E19.
 
 **Partes.** Esta spec no entra en un solo archivo, así que sigue en otro, con las mismas secciones. Lo que no está en la tabla está acá.
 
 | Secciones | Archivo |
 | --- | --- |
-| «Cómo se arma cada pregunta», Contrato, Datos, Pasos y «Lo que ya se pagó allá» | [armado, contrato, datos y pasos](20-parte-contrato-datos-y-pasos.md) |
+| «Cómo se arma cada pregunta», «El bloque en la carga», «Los textos», «Desde el celular», Contrato, Datos, Pasos y «Lo que ya se pagó allá» | [armado, contrato, datos y pasos](20-parte-contrato-datos-y-pasos.md) |
 
 ## Qué leer
 
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T4, T22, T23, T24 y la §6, punto 7; la [E15](15-respuestas.md): rutas y filtros; la [E16](16-datos-de-las-personas.md): los filtros por destinatario; la [E17](17-ciclo-de-vida.md): la disponibilidad; la [E18](18-fotos-y-documentos.md): verificar y guardar archivos, y la [E19](19-condiciones-calculos-y-lineas.md): la captura y el bloque.
-2. **Decisiones** de la hoja de ruta: 9, 35, 37, 43, 50, 54, 73, 78, 83 a 90, 94 a 98, 101, 104, 141, 147, 153, 166, 177, 178, 183 y 184.
+2. **Decisiones** de la hoja de ruta: 9, 23, 35, 37, 43, 50, 54, 73, 78, 83 a 90, 94, 95, 98, 101, 141, 147, 153, 166, 177, 183, 184, 229, 230 y 232 a 235.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -26,14 +26,14 @@ Antes de empezar, en este orden:
    | [textos-y-traducciones](../../rules/textos-y-traducciones.md) y [tests](../../rules/tests.md) | «App», «ítem» y qué lleva test |
 
 4. **Código para copiar:** la columna «Copia de» de los [pasos](20-parte-contrato-datos-y-pasos.md#pasos).
-5. **Referencia de producto,** solo para leer: en ArquitecturaBase, `docs/plans/2026-10-30-traspaso-multitenant-carga-desde-la-app.md`, `docs/plans/2026-10-29-cargar-formularios-desde-la-app.md` y, en `docs/features/formularios.md`, «Carga desde la app», «Lo propio», «Listas dependientes» y «Títulos de sección»; para el bloque, `docs/plans/2026-11-07-renglones-etapa-2-implementacion.md`. En `ArquitecturaBaseFront`, `docs/design/carga-desde-la-app.md` y `renglones-en-formularios.md`. Los commits están en la copia local. Mandan esta spec y las reglas y los diseños de este proyecto (108), y el código sale de este repo.
+5. **Referencia de producto,** solo para leer: en ArquitecturaBase, `docs/plans/2026-10-30-traspaso-multitenant-carga-desde-la-app.md`, `docs/plans/2026-10-29-cargar-formularios-desde-la-app.md` y, en `docs/features/formularios.md`, «Carga desde la app», «Lo propio», «Listas dependientes», «Títulos de sección», «Cálculos», «Formularios sólo en la app» y «La pregunta «Ubicación»», y en `whatsapp.md`, «La ubicación antes del Flow»; para el bloque, el traspaso 12 (`docs/plans/2026-11-11-traspaso-multitenant-renglones.md`) y «El bloque de renglones en la carga». En `ArquitecturaBaseFront`, `docs/design/carga-desde-la-app.md`, `renglones-en-formularios.md`, `formularios-solo-en-la-app.md` y `ubicacion-en-formularios.md`. El código está en `origin/main`. Mandan esta spec y las reglas y los diseños de este proyecto (108), y el código sale de este repo.
 
 ## Qué se construye
 
 **Un canal más para responder:**
 - un empleado completa un formulario desde la web, a su nombre. Es un miembro activo con `formrecords.create`, sin teléfono verificado (89), y solo en los formularios activos que son para empleados o para los dos (50). Un cliente sigue respondiendo por WhatsApp;
 - la respuesta guarda el canal `web`, el `SourceKey` `web:<clave de idempotencia>` y las empresas activas de quien carga (9);
-- **la misma captura que WhatsApp:** un solo lugar valida y numera contra la versión sellada, con catálogos, archivos, condiciones, cálculos y el bloque;
+- **la misma captura que WhatsApp:** un solo lugar valida y numera contra la versión sellada, con catálogos, archivos, condiciones, cálculos, la ubicación y el bloque, y revisa las opciones elegidas por lote, no de a una;
 - **un número escrito** se lee con la región del idioma de quien carga: en español, coma decimal y punto de miles. Lo que se lee distinto con y sin los miles («1.500») es un error de su pregunta, `numberAmbiguous`, que pide escribirlo sin separador de miles, y al servidor llega el número con punto (207);
 - **solo la versión activa.** Si se publicó otra, el front ofrece pasar a la nueva sin perder lo cargado;
 - **la oferta sella solo lo elegido:** cada opción tiene que estar activa y pasar los filtros para esa persona, también en un catálogo de miembros o de contactos. La lista completa no se guarda;
@@ -47,14 +47,21 @@ Antes de empezar, en este orden:
 
 **Archivos:** viajan en el mismo `POST`, con los límites de la E18, y se verifican por contenido, igual que los de WhatsApp. Completa o nada.
 
-**Reintentos:** la misma clave con las mismas respuestas devuelve el primer resultado, aunque después se haya publicado otra versión o se haya dado de baja el formulario. El número y los cálculos son privados, por eso no va en `BufferedJson`. La misma clave con otras respuestas es 422; para el front, otras respuestas son otro envío.
+**Reintentos:** la misma clave con las mismas respuestas devuelve el primer resultado, aunque después se haya publicado otra versión o se haya dado de baja el formulario. El número y los cálculos son privados, por eso no va en `BufferedJson`. La misma clave con otras respuestas es 422; para el front, otras respuestas son otro envío. **Un rechazo pasajero no deja recibo:** si el permiso o la membresía se perdieron en carrera (`Forms.Record.NotAllowed`, 403), repetir se vuelve a decidir. Después de un 400 sin errores por pregunta, el front arma otra clave. Ningún texto habla de «la sesión».
 
-**Formularios solo para la app** (94, 96, 98, 104, 178 y 200). No se pueden mandar por WhatsApp en cinco casos: la organización no tiene un número conectado; usa una lista dependiente; usa un catálogo a mano más grande de lo que admite WhatsApp, de más de 200 opciones en «elegir una» o de más de 20 en «elegir varias», tiene un bloque con un mínimo de más de 10 ítems, o tiene otra cosa que WhatsApp no puede mostrar, como una condición que compara números o fechas, demasiadas preguntas en una pantalla o una respuesta demasiado grande (200). En los cinco:
-- si es para empleados o para los dos, se publica con un aviso que no frena (37). No pasa por Meta: sella la versión, la marca y la activa en la misma UoW, sin trabajo durable ni Flow;
-- **los frenos de WhatsApp no corren:** una versión solo para la app no va a Meta, así que no pasa por `Check` ni por el tope de opciones de un filtro fijo. Vuelven a correr al publicar con número;
-- si es solo para clientes, no se publica, porque ellos responden solo por WhatsApp. El mínimo de más de 10 frena como en la E19;
-- **en el chat,** «Enviar formulario» lo muestra apagado, con su motivo en lugar de la versión y las preguntas (166 y 184): con una lista dependiente, ««Proveedor» depende de otra respuesta: se carga desde la app.», y con un catálogo demasiado grande o un mínimo de más de 10, el mismo motivo que dio al publicar; con más de un motivo, el de la primera pregunta. Uno publicado sin número, cuando después se conecta uno, aparece como en un número sin el Flow de su versión (103), hasta volver a publicar;
-- para mandarlo cuando se pueda, hay que volver a publicar: `NothingToPublish` no aplica si la versión activa es solo para la app y ahora se puede mandar. Cambia lo que la E14 dice de `ChannelUnavailable` y `CatalogTooLarge`.
+**«Dónde se completa»** (229; precisa la 98 y la 184):
+- **un ajuste del formulario,** en «El formulario», al lado del prefijo: «En la app y por WhatsApp», el de uno nuevo, o «Solo en la app». Va con el borrador y cada versión lo sella. Aparece solo en una organización con WhatsApp conectado: sin número, todo se carga en la app (98) y se publica sin Meta. En uno solo para clientes, «Solo en la app» está apagada, con «Los clientes responden solo por WhatsApp.»;
+- **con «En la app y por WhatsApp»,** lo que WhatsApp no puede mostrar frena al publicar, en «Problemas», con «Ir a la pregunta» y, si no es solo para clientes, «Pasar a «Solo en la app»»: una lista dependiente, un catálogo a mano de más de 200 opciones en «elegir una» o de más de 20 en «elegir varias», un bloque con un mínimo de más de 10 ítems, una condición que compara números o fechas, demasiadas preguntas en una pantalla, una respuesta demasiado grande o una segunda «Ubicación». Ya no pasa solo a la app. En el editor, el aviso de la E19 debajo de una condición que WhatsApp no puede mostrar suma la misma salida (235);
+- **con «Solo en la app»** se va todo lo de WhatsApp: no pasa por Meta, `Check` ni el tope de opciones de un filtro fijo; valen los límites de la app, y publicar es al instante: sella la versión y la activa en la misma UoW, sin trabajo durable ni Flow. El editor no muestra «En WhatsApp» en las preguntas de catálogo, la (i) de WhatsApp del máximo del bloque ni «Ver vista oficial»;
+- **pasar de un lado al otro** es publicar con el otro valor: hacia la app, al instante; hacia WhatsApp, espera a Meta, y mientras tanto, o si Meta la rechaza, sigue la versión anterior. Uno publicado sin número se manda por WhatsApp al volver a publicar con un número: `NothingToPublish` no aplica. Cambia lo que la E14 dice de `ChannelUnavailable` y `CatalogTooLarge`;
+- **en el chat,** «Enviar formulario» muestra apagado (184) el formulario cuya versión activa se completa solo en la app, con «Se completa solo en la app.» en lugar de la versión y las preguntas. Uno publicado sin número, cuando después se conecta uno, aparece como en un número sin el Flow de su versión (103), hasta volver a publicar.
+
+**La pregunta «Ubicación»** (230): un punto al completar, con latitud, longitud y precisión, que no prueba presencia:
+- **en el editor,** es el último tipo y solo lleva «Obligatoria». No entra en el bloque, donde aparece apagada como Foto y Documento, y ninguna condición ni cálculo se apoya en ella;
+- **en la carga,** va en «Datos», en una columna. «Usar mi ubicación» la pide al tocar, con alta precisión y hasta 20 segundos, y la muestra en un recuadro como un archivo, con la precisión en gris, la ✕, «Ver en el mapa» y «Volver a pedirla». Con más de 100 m, la precisión va en ámbar con su (i), y se puede enviar igual. Si el navegador no la da, dice por qué;
+- **en la planilla,** el punto es un enlace al mapa, sin ordenar; su filtro es solo «con respuesta» o «sin respuesta». En el detalle va con «Ver en el mapa» y la precisión en gris, y en el Excel, en tres columnas numéricas: «· Latitud», «· Longitud» y «· Precisión (m)»;
+- **por WhatsApp,** antes del Flow sale por el número de la organización, dentro de las 24 horas, el pedido de ubicación de Meta: «Para completar «Visita a cliente», mandanos tu ubicación.», con «Seguir sin ubicación» si es opcional. Al llegar sale el Flow, y todo se guarda en una sola captura. Si no llega, el envío vence a las 24 horas. El detalle suma «Se pidió la ubicación» y «Llegó la ubicación» o «Siguió sin la ubicación». La ubicación que llegó se vacía al cerrar la captura o al vencer el envío;
+- **es un dato personal** (23): se borra con la baja de la cuenta de quien la mandó, aunque la respuesta queda, y «Ver en el mapa» manda el punto a Google solo al tocarlo.
 
 **Lo propio** (85): quien tiene `formrecords.create` y no `formrecords.read` lee solo sus respuestas, en la planilla, el detalle y los archivos, también lo que respondió por WhatsApp. El servidor filtra por `RespondentUserId`, y lo ajeno responde 404, también en una dirección directa. Quien solo carga ve «Formularios» con sus formularios, «Cargar», «Mis cargas» y «Mi última carga», con su número y su fecha («Todavía no cargaste» si no hay), nunca los totales de la organización (153, que cambia la 83). El nombre abre «Respuestas» con lo suyo: la planilla de siempre, con «Empresa» (24), sin la columna «Cargó», sin «Cargó» en «Filtros» y sin «Exportar a Excel», con «Agregar respuesta». Los conteos también se acotan: el de personas la nombra solo a ella, el de un catálogo trae solo las opciones que eligió y un filtro por otra persona no devuelve nada. **El filtro «Estado»** suma «Dados de baja», con los formularios dados de baja en los que cargó algo: ve lo suyo, sin «Cargar» (101).
 
@@ -73,50 +80,40 @@ Antes de empezar, en este orden:
 
 **Las fotos y los documentos:** se arrastran o se eligen, con un contador. Tipo, tamaño y cantidad se revisan antes de enviar. En el teléfono, «Tomar foto» va primero, y «Solo cámara» no ofrece la galería.
 
-**El bloque** (146 y 177):
-- en la página, ocupa el renglón entero de su zona, donde lo puso el autor, con su nombre como etiqueta: una tabla con una fila por ítem y una columna por pregunta, con su etiqueta arriba. El número del ítem va en la primera columna, y ↑ ↓ y 🗑, en rojo, al final de cada fila; el tacho quita sin preguntar, como un archivo. Si no entra, la tabla se desplaza de costado en su caja, y el texto largo es una celda que crece;
-- arranca con el mínimo de ítems. «Agregar ítem», al pie y sin contador, suma uno vacío y lleva el foco a su primera pregunta. Con el máximo se apaga, con «Hasta 20 ítems.» en su tooltip, y con el mínimo, el tacho, con el suyo. ↑ ↓ dejan el foco en el mismo botón del ítem movido, y quitar lo lleva al ítem que queda en su lugar o a «Agregar ítem»;
-- al enviar, cada ítem se valida como preguntas sueltas: la celda con un error se marca, el mensaje va debajo de su fila con el nombre de la pregunta («Cantidad: completá esta respuesta.») y el foco va a la primera. Si faltan ítems, lo dice debajo de la tabla: «Agregá al menos 1 ítem.»;
-- **en el panel y en el teléfono,** un recuadro por ítem, con «Ítem 2», ↑ ↓ y «Quitar» en su banda (183), y las preguntas una debajo de otra. El nombre del bloque va arriba, como etiqueta, así la banda entra en 320 aunque el bloque se llame «Materiales de construcción». En el teléfono, «Agregar ítem» va al pie de los recuadros, y Enviar sigue fijo abajo;
-- «Mantener» conserva también los ítems; una versión nueva los conserva si el bloque sigue, con las preguntas que siguen con el mismo tipo, y «Enviada» muestra el bloque en una línea, como su columna en la planilla;
-- **en el editor,** dos (i) suman la app: la del máximo dice «En WhatsApp se cargan hasta 10 ítems; en la app, hasta el máximo.», y la de «Se carga varias veces», «Se carga una vez por ítem, en la tabla del bloque.».
+**Los cálculos, en gris** (234, que cambia la 97): cada cálculo se ve sin poder editarse y cambia al escribir, también el de un ítem, que es una columna más de la tabla del bloque (233), y en los recuadros. Es una vista previa: la carga trae la fórmula y el front la evalúa con la regla y el redondeo al par de la E19 (232). Al enviar, el servidor la vuelve a calcular y vale lo suyo. Por WhatsApp sigue sin verse (54).
 
-Los textos del bloque que suma esta etapa, con su inglés:
-
-| Dice | En inglés |
-| --- | --- |
-| «Agregar ítem» · «Hasta 20 ítems.» · «Agregá al menos 1 ítem.» | «Add item» · «Up to 20 items.» · «Add at least 1 item.» |
-| «Ítem 2», en la banda de un recuadro | «Item 2» |
-| «En WhatsApp se cargan hasta 10 ítems; en la app, hasta el máximo.» | «WhatsApp loads up to 10 items; the app, up to the maximum.» |
-| «Se carga una vez por ítem, en la tabla del bloque.» | «Loaded once per item, in the block's table.» |
+**El bloque** (146 y 177): una tabla en la página y un recuadro por ítem en el panel y en el teléfono, con «Agregar ítem», sus errores y sus textos, en la [parte](20-parte-contrato-datos-y-pasos.md#el-bloque-en-la-carga-146-177-y-183).
 
 **«Enviada»:** lo que se mandó, los cálculos, el número y la hora, con «Cargar otra», «Volver a Formularios» y «Ver en la planilla» (166). Se arma con lo enviado y con lo que devuelve el `POST`.
 
-**En lo que ya existe:** «App» en «Canal» y en su filtro, en los conteos, la navegación y el Excel (90); en el detalle, «Recibida · … · en la app, la cargó …», sin «Abrir conversación»; en el editor, «Según otra respuesta»; al publicar, que queda solo para la app y por qué, y «Solo en la app» en «En WhatsApp» (98).
+**En lo que ya existe:** «App» en «Canal» y en su filtro, en los conteos, la navegación y el Excel (90); en el detalle, «Recibida · … · en la app, la cargó …», sin «Abrir conversación»; en el editor, «Según otra respuesta». **En «Formularios»** (229), con WhatsApp conectado, la columna «En WhatsApp» pasa a «Estado» y se suma «Dónde se completa», con lo de la versión activa o, en un borrador, dónde se va a publicar. «Qué se publica» suma la fila «Dónde se completa», y «Dar de baja» uno que se carga en la app dice «App · No se carga más».
 
 **Cómo se arma cada pregunta,** con los dos anchos, las zonas y lo que dice una zona plegada («3 de 5 respondidas», 166), está en la [parte](20-parte-contrato-datos-y-pasos.md#cómo-se-arma-cada-pregunta-86-87-y-141).
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v154, con el armado del front real de ArquitecturaBase (126 y 134) y el recorrido guiado `cargar-una-respuesta`. El ejemplo es «Pedido de materiales», versión 4, que suma «Zona», «Proveedor» con su lista dependiente, «Foto del remito» y el bloque «Productos», y por eso queda solo para la app. Con los traspasos 5, 7 y 10 se redibujaron todos menos `FRM-Cargar-Archivos` y se sumó el chat, aprobados y publicados en el lienzo v168.
+Aprobados y publicados en el lienzo v154, con el armado del front real de ArquitecturaBase (126 y 134) y el recorrido guiado `cargar-una-respuesta`. El ejemplo es «Pedido de materiales», versión 4, que suma «Zona», «Proveedor» con su lista dependiente, «Foto del remito» y el bloque «Productos», y por eso se completa «Solo en la app». Con los traspasos 5, 7 y 10 se redibujaron todos menos `FRM-Cargar-Archivos` y se sumó el chat, aprobados y publicados en el lienzo v168. **Con el traspaso 15** se redibujan ocho y se suman dos, por la 229, la 230 y la 234; el ejemplo de la ubicación es «Visita a cliente».
 
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
-| `FRM-Formularios-20` y su teléfono | «Cargar», «Solo en la app» y lo que ve quien solo carga | Aprobados en la v168: «Mis cargas» y «Mi última carga» (153) |
-| `FRM-Cargar-Respuesta` y su teléfono | la página, con zonas, grilla, títulos, lo condicional, el bloque, «Mantener», errores y salir | Aprobados en la v168: los dos anchos, las casillas en columnas y «Mantener» (141 y 147); el bloque, con «Agregar ítem» y sin contador, en tabla y, en el teléfono, en recuadros con «Ítem 2» (177 y 183), y la zona plegada con «3 de 5 respondidas» (166) |
-| `FRM-Cargar-Panel` | el panel junto a la planilla | Aprobado en la v168: con zonas (141), los recuadros del bloque y la zona plegada (166 y 177) |
+| `FRM-Formularios-20` y su teléfono | «Cargar», «Estado», «Dónde se completa» y lo que ve quien solo carga | Se redibujan (229) |
+| `FRM-Editor-20` | «Dónde se completa» al lado del prefijo, apagado en uno solo para clientes, y el aviso de una condición con «Pasar a «Solo en la app»» | Por dibujar (229 y 235) |
+| `FRM-Editor-Ubicacion` y su teléfono | el tipo «Ubicación», último, solo con «Obligatoria», y apagado en el bloque | Por dibujar (230) |
+| `FRM-Cargar-Respuesta` y su teléfono | la página, con zonas, grilla, títulos, lo condicional, el bloque, «Mantener», errores y salir | Se redibujan: «Usar mi ubicación» con sus estados (pidiendo, el punto, más de 100 m, sin permiso y sin señal) y los cálculos en gris, también en el bloque (230, 233 y 234) |
+| `FRM-Cargar-Panel` | el panel junto a la planilla | Se redibuja (230 y 234) |
 | `FRM-Cargar-Lista` y su teléfono | la lista, una sola opción, sin el dato, elegir varias y la que espera otra respuesta | Aprobados en la v168: «Elegí primero «Zona»» (166) |
 | `FRM-Cargar-Archivos` y su teléfono | agregar, los límites, la barra de avance, el corte y la cámara | Aprobado |
 | `FRM-Cargar-Enviada` y su teléfono | «Enviada», versión nueva, dado de baja, opción dada de baja y sin conexión | Aprobados en la v168: «Volver a Formularios» y el bloque en una línea (166 y 177) |
-| `FRM-Respuestas-20` y `FRM-Respuesta-20`, con sus teléfonos | «App», su filtro y el origen en el detalle | Aprobados en la v168: «Filtros» y los chips (144) y el detalle alineado (139) |
+| `FRM-Respuestas-20` y `FRM-Respuesta-20`, con sus teléfonos | «App», su filtro y el origen en el detalle | Se redibujan: el punto como enlace al mapa, y en el detalle, con la precisión y los momentos del pedido (230) |
 | `FRM-Respuestas-Propias` y su teléfono | la misma planilla con lo suyo | Aprobados en la v168: «Filtros» y los chips (144) |
 | `FRM-Editor-Listas` y su teléfono | «Según otra respuesta» | Aprobados en la v168: el bloque, sin el «Grupo de líneas» (177) |
-| `FRM-Publicar-20` y su teléfono | solo para la app, en los cuatro casos, y uno solo para clientes que no se publica | Aprobados en la v168: el bloque y el mínimo de más de 10 (177 y 178) |
-| `WA-Chats-Formulario-20` y `M-WA-Chats-Formulario-20` | en «Enviar formulario», los formularios solo para la app, apagados con su motivo | Aprobados, nuevos en la v168 (166 y 184) |
+| `FRM-Publicar-20` y su teléfono | publicar «Solo en la app», al instante, y lo que WhatsApp no puede mostrar en «Problemas» | Se redibujan: «Problemas» con «Pasar a «Solo en la app»», sin esa salida en uno solo para clientes, y la fila «Dónde se completa» (229) |
+| `WA-Chats-Formulario-20` y `M-WA-Chats-Formulario-20` | en «Enviar formulario», los formularios de la app apagados, y el pedido de ubicación antes del Flow | Se redibujan: «Se completa solo en la app.» (229) y el pedido con «Seguir sin ubicación» (230) |
+| `WA-Chats-Respuesta` y `M-WA-Conversacion-Respuesta` | la ubicación que llega, el Flow que sale después y la tarjeta con el punto | Se redibujan (230) |
 
 **La página** sigue a la de allá: la banda con Cancelar y Enviar, y una zona por título, con la grilla de hasta tres por renglón. Lo que allá dice «Enviando… 64 %» acá es «Enviando…» con su aro y una barra sin palabras (95 y 115). Sin el dato de la persona, un cartel lo nombra, porque bloquea, y Enviar queda grisado con el motivo.
 
-**Publicar solo para la app** va en la zona «Avisos» de la E16, con «En WhatsApp: No» en «Qué se publica», sin «Ver vista oficial» y con el botón «Publicar» en la banda. Cada motivo nombra su pregunta y dice que se carga «desde la app», como el canal (90), y no «desde la web»: el chat repite el del catálogo y el del mínimo (184). Uno solo para clientes frena en «Problemas» (134).
+**Publicar «Solo en la app»** va como en la E16, con la fila «Dónde se completa» en «Qué se publica», sin «Ver vista oficial» ni «Publicando». Con «En la app y por WhatsApp», cada cosa que WhatsApp no puede mostrar es una fila de «Problemas», que dice el problema como la E14 (T26). «Pasar a «Solo en la app»» cierra el diálogo y cambia el ajuste en el borrador, sin guardarlo, con el foco en «Dónde se completa»; en uno solo para clientes no está (134).
 
 **«Agregar filtro ▾»,** el de la E16, suma «Según otra respuesta»: ofrece «Según quien lo recibe», «Filtro fijo» y «Según otra respuesta» (134).
 
@@ -134,8 +131,9 @@ Aprobados y publicados en el lienzo v154, con el armado del front real de Arquit
 | [E15] | Las lecturas. | Admiten un alcance «solo lo mío», sin copiar las consultas. |
 | [E16] | La preparación de la oferta. | Sirve también paginada, sin el tope de 200. |
 | [E18] | `IFileContentInspector` y el diario. | Sirven igual para un archivo que llega por multipart. |
-| [E19] | `FormConditionEvaluator`, `lib/conditions.ts` y el bloque en la captura. | El front y el servidor dan lo mismo, y el bloque viaja en el mismo envío. |
-| Allá | La etapa 2 de renglones, programada el 2026-11-07 y sin probar a mano: la tabla, los recuadros, los errores por ítem y «Mantener». | Se contrasta con el código de allá al planificar, y lo que allá cambió se adopta si no choca con las reglas de acá (126). LD1-A a LD3-A no entran (191). |
+| [E19] | `FormConditionEvaluator`, `lib/conditions.ts`, la fórmula (`FormFormulaEvaluator`, `lib/formula.ts`) y el bloque en la captura. | El front y el servidor dan lo mismo, también el cálculo con el redondeo al par, y el bloque viaja en el mismo envío. |
+| Allá | La etapa 2 de renglones, probada con Meta el 9/11 (T12); `draft.appOnly`, `FormQuestionType.Location`, `WhatsAppFlowLocationService` y `calculation` en la carga, en `origin/main`. | Se contrasta con el código de allá al planificar, y lo que allá cambió se adopta si no choca con las reglas de acá (126). LD1-A a LD3-A no entran (191). |
+| [Meta] | El pedido de ubicación (`location_request_message`) y la ubicación que llega, con el número de una organización. | Se prueban con la I1 de la E10 (123). |
 | Front | `useIdempotentMutation`, `useUnsavedChangesGuard` y el panel al costado. | Están, o llegan con la base de la 12. |
 | Celular | Que el reenvío por USB llegue a `localtest.me` (ver «Cómo se cierra»). | Anda sin cambiar la configuración. |
 
@@ -145,10 +143,11 @@ Aprobados y publicados en el lienzo v154, con el armado del front real de Arquit
 - **La misma captura que WhatsApp.**
 - **Sin borradores guardados:** lo cargado no sobrevive a la página.
 - **El canal se llama «App»** (90); el valor técnico sigue siendo `web`.
-- **Se publica sin WhatsApp** (98), también con un mínimo de más de 10 en un formulario para empleados o para los dos (178).
+- **«Dónde se completa» es un ajuste** (229): sin número, todo es de la app (98); con número, lo que WhatsApp no puede mostrar frena al publicar y no pasa solo a la app.
 - **Las listas dependientes** van acá y solo en la web (94).
 - **El bloque se carga como allá** (177): una tabla en la página y un recuadro por ítem en el panel y en el teléfono, con «Agregar ítem» y sin contador, y «Ítem 2» en la banda de cada recuadro (183).
-- **Un formulario solo para la app aparece apagado en el chat, con su motivo** (184), en los tres casos en que hay chat.
+- **Un formulario de la app aparece apagado en el chat,** con «Se completa solo en la app.» (184 y 229).
+- **«Ubicación» entra acá** (230), en la app y por WhatsApp, y **el cálculo se ve en gris al cargar** (234).
 - **Lo propio tiene sus rutas:** `[HasPermission]` pide un solo permiso, y el mismo servicio les da el alcance.
 
 ## Fuera de esta etapa
@@ -158,6 +157,7 @@ Aprobados y publicados en el lienzo v154, con el armado del front real de Arquit
 - Las listas dependientes en WhatsApp, con el intercambio cifrado con Meta.
 - Elegir primero por un campo y una lista dependiente dentro del bloque, que allá son LD1-A a LD3-A: quedan para después de la E25, con las listas dependientes en WhatsApp (191).
 - El estado, el PDF y el motivo de rechazo en lo propio, y corregir y anular, también con ítems, que suma la E21.
+- La ubicación en el PDF, en los avisos y en las condiciones de una regla (E21), en el asistente (E23) y en los documentos (E25).
 
 ## Cómo se cierra
 
@@ -167,10 +167,11 @@ La puerta de la etapa, con la lista de control de `/puerta`, más un **recorrido
 3. publicar otra versión con la página abierta: pasa a la nueva sin perder lo cargado, ni los ítems;
 4. entrar con una cuenta que solo tiene `formrecords.create`: ve sus formularios, carga y ve solo lo suyo. Una dirección directa a una respuesta ajena da 404;
 5. en una organización sin número conectado, publicar, cargar desde la web y, al conectar un número, volver a publicar y mandarlo por WhatsApp;
-6. elegir en una lista dependiente, cambiar la respuesta de la que depende y ver que se limpia, y en el chat, ver ese formulario apagado con su motivo;
-7. en un teléfono real, sacar una foto con la cámara y cargar dos ítems en sus recuadros.
+6. elegir en una lista dependiente, cambiar la respuesta de la que depende y ver que se limpia; con WhatsApp, ver que frena al publicar, pasar a «Solo en la app», publicar al instante y, en el chat, verlo apagado con «Se completa solo en la app.»;
+7. en un teléfono real, sacar una foto con la cámara, cargar dos ítems en sus recuadros y usar la ubicación;
+8. en «Visita a cliente», cargar la ubicación y ver el punto en la planilla, el detalle y el Excel, y en un pedido, ver el cálculo en gris cambiar al escribir y quedar igual al del servidor.
 
-**Desde el celular:** como allá, un Android entra por USB, con el reenvío de puertos de `chrome://inspect` (el 5174, a `localhost:5174`), y nada queda expuesto en internet. Allá abre `localhost`; acá el dominio de desarrollo es `https://localtest.me:5174`, con un subdominio por organización, y la carga va en el dominio principal. `localtest.me` y sus subdominios resuelven a 127.0.0.1 también en el teléfono, donde escucha el reenvío, y el proxy de Vite recibe el `Host` tal cual. Si el teléfono no resuelve `localtest.me`, porque su DNS filtra las direcciones privadas, se prueba con los datos móviles o con el DNS privado de Android apagado. El certificado de desarrollo no cubre `localtest.me`: Chrome avisa una vez por host, y se sigue con «Configuración avanzada». La primera prueba confirma que el ingreso anda así; si no, se anota en el plan de la etapa, sin cambiar la configuración para compensarlo. Con iPhone no hay reenvío desde Windows.
+**Desde el celular:** un Android por USB, como allá; los pasos están en la [parte](20-parte-contrato-datos-y-pasos.md#desde-el-celular).
 
 ## Requisitos previos
 
@@ -180,7 +181,7 @@ La E19 cerrada.
 
 - **Datos de la organización:** las tablas de la E14, con RLS. Cada ruta nueva lleva su test de aislamiento, y lo propio, el suyo: otra persona de la misma organización recibe 404.
 - **Idioma:** el contenido no tiene idioma (35), así que `PresentationCulture` de allá no se toma.
-- **Datos de las personas:** los de esa persona en esa organización (42).
+- **Datos de las personas:** los de esa persona en esa organización (42). La ubicación sigue la 23 y la sacan el participante de la baja y la retención de WhatsApp.
 - **Feature `forms`:** las rutas la llevan.
 - **Permisos:** `formrecords.create`, sin permisos nuevos. `formrecords.create` y `forms.publish` completan su texto.
 - **Almacenamiento:** los archivos van en `IFileStore`, como los de la E18.
