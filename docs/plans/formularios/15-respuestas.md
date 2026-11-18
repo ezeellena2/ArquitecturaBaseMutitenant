@@ -38,7 +38,7 @@ Antes de empezar, en este orden:
 **Las pestañas:** «Respuestas», con su cantidad, y «Tablero» van antes de «Diseño» (79). Se ven con `formrecords.read` y una versión publicada.
 
 **La planilla:**
-- columnas fijas: N°, Recibida, Cargó, Canal y Empresas. Cargó es un empleado o un cliente (49); si alguna fila es de un cliente, la columna «Cliente», después de Cargó, dice «Sí» o «—», como «Corregida», sin una marca al lado del nombre (206). Canal dice «WhatsApp». Empresas son las de quien respondió (24): un cliente no tiene;
+- columnas fijas: N°, Recibida, Cargó, Canal y Empresas. Cargó es un empleado o un cliente (49); si alguna fila es de un cliente, la columna «Es cliente», después de Cargó, dice «Sí» o «—», como «Corregida» (no «Cliente», que puede ser una pregunta del formulario), sin una marca al lado del nombre (206). Canal dice «WhatsApp». Empresas son las de quien respondió (24): un cliente no tiene;
 - una columna por pregunta, unidas por `FieldId` entre versiones: primero el orden de la versión activa y después las retiradas;
 - «—» si la pregunta no existía en esa versión, y «Sin respuesta» si quedó vacía. Cero y `false` se distinguen;
 - **«elegir varias»** muestra las opciones en el orden en que se eligieron, separadas por coma;
@@ -108,7 +108,7 @@ Aprobados en el lienzo v150. Con el traspaso 5, los filtros (143 y 144) y el det
 **Corregidos en el lienzo v169,** porque chocaban con una decisión: la hoja «Filtros» de `M-FRM-Formularios-15` va a pantalla completa y sin cantidades (144 y 164), y `M-FRM-Respuestas` muestra el nombre entero (174) y exporta sin leyenda (109).
 
 **Estados que se dibujan:**
-- un cliente, con «Sí» en «Cliente», y «Persona sin información»;
+- un cliente, con «Sí» en «Es cliente», y «Persona sin información»;
 - «Elegir varias»: «Fallas» con dos opciones y su filtro de una opción, en «Filtros» (143);
 - los campos sellados: las subcolumnas con «—» en una respuesta de antes de los campos, y los campos en el detalle;
 - con `forms.read` y sin `formrecords.read`: la lista sin las columnas de respuestas.
