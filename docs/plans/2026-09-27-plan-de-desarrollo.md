@@ -77,4 +77,4 @@ Una organización arma formularios, los manda por WhatsApp a sus empleados y a s
 - **Cómo se trabaja cada etapa:**
   - se escribe en el formato de [etapa en paralelo](../guides/etapa-en-paralelo.md) cuando le toca;
   - sus tableros se dibujan en el lienzo antes de programar.
-- **Después:** primero las integraciones (decisión 76), y los catálogos con orígenes externos. Los clientes completan formularios desde el principio (decisión 49).
+- **Después:** la 26, las carpetas de formularios y catálogos (decisión 231), cuya spec se escribe después del traspaso 16; después, las integraciones (decisión 76), y los catálogos con orígenes externos. Los clientes completan formularios desde el principio (decisión 49).
