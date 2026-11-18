@@ -113,7 +113,7 @@ Aprobados y publicados en el lienzo v154, con el armado del front real de Arquit
 
 **La página** sigue a la de allá: la banda con Cancelar y Enviar, y una zona por título, con la grilla de hasta tres por renglón. Lo que allá dice «Enviando… 64 %» acá es «Enviando…» con su aro y una barra sin palabras (95 y 115). Sin el dato de la persona, un cartel lo nombra, porque bloquea, y Enviar queda grisado con el motivo.
 
-**Publicar «Solo en la app»** va como en la E16, con la fila «Dónde se completa» en «Qué se publica», sin «Ver vista oficial» ni «Publicando». Con «En la app y por WhatsApp», cada cosa que WhatsApp no puede mostrar es una fila de «Problemas», que dice el problema como la E14 (T26). «Pasar a «Solo en la app»» cierra el diálogo y cambia el ajuste en el borrador, sin guardarlo, con el foco en «Dónde se completa»; en uno solo para clientes no está (134).
+**Publicar «Solo en la app»** va como en la E16, con la fila «Dónde se completa» en «Qué se publica», sin «Ver vista oficial» ni «Publicando». Con «En la app y por WhatsApp», cada cosa que WhatsApp no puede mostrar es una fila de «Problemas», que dice el problema como la E14 (T26). «Pasar a «Solo en la app»» guarda el borrador con ese ajuste y su versión, y vuelve a comprobar en el mismo diálogo, que queda listo para publicar al instante; debajo de una condición, en el editor, solo cambia el ajuste, que se guarda con lo demás. En uno solo para clientes no está (134).
 
 **«Agregar filtro ▾»,** el de la E16, suma «Según otra respuesta»: ofrece «Según quien lo recibe», «Filtro fijo» y «Según otra respuesta» (134).
 
