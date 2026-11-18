@@ -11,7 +11,7 @@
 | 2. Punteros por carpeta | Responsabilidad y enlace a su ficha o feature | `AGENTS.md` + `CLAUDE.md` (`@AGENTS.md`) en cada carpeta del mapa (§3) | 1 a 3 líneas en las carpetas de capa; una línea, a `docs/features/<área>.md`, en las carpetas de un área |
 | 3. Verificación | Tests de arquitectura, analizadores, `BannedSymbols.txt`, `TreatWarningsAsErrors` | `tests/*.ArchitectureTests`, `.editorconfig` | una verificación por regla |
 
-Además hay **recetas** (`docs/guides/`: prefijo de backend (E1), migración (E2), agregar un área y permiso nuevo (E4), quitar WhatsApp (E8)) y un **área de referencia** (Roles): código real para copiar, no ejemplos inventados.
+Además hay **recetas** (`docs/guides/`: prefijo de backend (E1), migración (E2), agregar un área y permiso nuevo (E4), quitar WhatsApp (E8), revisar la arquitectura de un desarrollo ([ADR 0059](../decisions/0059-revision-de-arquitectura.md))) y un **área de referencia** (Roles): código real para copiar, no ejemplos inventados.
 
 **Cómo llega cada nivel al agente:**
 - **Claude Code** carga el `CLAUDE.md` de la raíz al empezar y el de cada subcarpeta cuando lee archivos de ella.
@@ -62,7 +62,7 @@ La tabla está solo en el [`AGENTS.md` raíz](../../AGENTS.md#antes-de-escribir-
 2. un `AGENTS.md` o una ficha tiene un enlace roto, sea a una ficha, a un archivo "Copiá de" o a una sección (salvo los marcados `(E#)` de una etapa que todavía no cerró);
 3. una ficha no tiene las secciones del formato (§2), o su "Lo verifica" nombra una clase C# `*Tests` sin método `[Fact]`/`[Theory]` o un archivo `.test.mjs`, `.test.ts` o `.test.tsx` que no existe, salvo que lleve `(E#)` de una etapa que todavía no cerró o diga `Pendiente:`; revisa el repo hermano cuando está presente;
 4. el `AGENTS.md` raíz pasa las 140 líneas, o un puntero pasa las 3.
-5. la cadena de `AGENTS.md` que carga un agente, desde la raíz hasta una carpeta, suma más de 30 KB (base de la 12): las reglas tienen que entrar enteras al empezar. La más larga mide hoy unos 17 KB.
+5. la cadena de `AGENTS.md` que carga un agente, desde la raíz hasta una carpeta, suma más de 30 KB (base de la 12): las reglas tienen que entrar enteras al empezar. La más larga mide hoy unos 22 KB.
 
 Las etapas cerradas viven en una lista explícita de `HarnessStage`, que usan `HarnessTests` y se actualiza en la puerta de cada etapa (plan, puerta 7). Las etapas pueden cerrarse fuera de orden; una referencia o test se exige solo cuando su etapa está en la lista. En particular, cerrar E6 después de E4 no cierra E5.
 
@@ -74,6 +74,7 @@ Hasta que ambos repos estén en GitHub, cada CI usa solo su propio checkout. Los
 
 - **Convención transversal nueva o modificada** → ficha (o sección de una ficha existente) + verificación pertinente, mediante un test existente o nuevo cuando haga falta, y fila en la tabla "si vas a tocar X, leé Y" del `AGENTS.md` raíz si corresponde, **en el mismo commit** que el código que la introduce. Una decisión local se registra en la feature o en una línea del plan de la etapa y, si agrega lógica, se cubre con su test de conducta; no crea una ficha ni una guarda de arquitectura por sí sola.
 - **Carpeta nueva del mapa** → sus dos punteros en la misma tarea.
+- **Un desarrollo terminado** → su revisión de arquitectura, una vez ([revisar-arquitectura](../guides/revisar-arquitectura.md)); lo que encuentre que se pueda controlar con código se propone como test de arquitectura.
 - **Un agente inventó algo** → se corrige el código. Si el error se puede repetir, conviene aclarar la ficha o el puntero que no lo guió, pero no es un paso del cierre.
 - Al cerrar la etapa alcanza con el detector en 0 dentro de la puerta (`node scripts/arneses/arnes.mjs realinear-docs --detectar`). El arnés completo ([arneses ejecutables](../../scripts/arneses/README.md), [ADR 0037](../decisions/0037-arneses-ejecutables.md)), que arregla lo mecánico y deja en una copia aparte de `HEAD`, sin ramas, lo que hace falta mirar, se corre solo si el detector encuentra algo. `HarnessTests` sigue siendo la red final.
 
