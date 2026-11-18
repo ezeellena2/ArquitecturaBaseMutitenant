@@ -24,7 +24,7 @@ Antes de empezar, en este orden:
 **Quién atiende** (51 y 52), con «Administrar WhatsApp» (28):
 - el asistente atiende empleados en Internos y clientes en Clientes;
 - **por bandeja,** quién atiende los chats nuevos, y cuándo vuelve un chat al modo configurado después de que lo tomó una persona: pasado un tiempo sin mensajes, al marcarlo «Resuelto» o nunca. Se mira al llegar un mensaje, sin worker;
-- **cada chat** se cambia a mano y se puede fijar. Pasarlo a Asistente pide `whatsapp.manage`. **Tomar la atención manual** pide solo el permiso de atender, siempre se puede, y deja sin efecto una propuesta que llegue tarde;
+- **cada chat** se cambia a mano y se puede fijar, y cada cambio de modo queda con quién y cuándo (al derivar, el asistente, sin persona). Pasarlo a Asistente pide `whatsapp.manage`. **Tomar la atención manual** pide solo el permiso de atender, siempre se puede, y deja sin efecto una propuesta que llegue tarde;
 - el bot del menú aparece solo en los chats de Clientes en atención manual.
 
 **Los Casos** (39), en una pantalla con un solo Guardar, con versión y 409. Se guardan como **el agente principal**, una fila por organización:
@@ -46,14 +46,14 @@ Antes de empezar, en este orden:
 
 **Un turno:**
 1. llega un texto o un audio transcripto, en un chat en modo Asistente y dentro de las 24 horas;
-2. espera 4 s sin mensajes nuevos, con un tope de 15 s, y procesa todo junto;
+2. espera 4 s sin mensajes nuevos, con un tope de 15 s, y procesa todo junto. Un sticker no reemplaza el pedido en curso, y el mismo toque de un botón recibe la misma respuesta;
 3. arma el pedido en orden estable: perfil, casos, formularios candidatos, **hasta 10 mensajes de las últimas 24 horas de esa conversación** y lo que ya hizo;
 4. el modelo elige el caso y propone hasta 3 acciones, una por cada cosa que pidió la persona, y el sistema valida cada una: que el caso exista, esté activo y su acción esté permitida en esa bandeja. Manda el texto actual del caso, no el que vio el modelo, las acciones salen en su orden y un formulario va solo;
 5. encola en la salida y guarda el porqué;
 6. **derivar** manda el mensaje fijo, pasa a atención manual y marca «Necesita una persona», en la cabecera, la lista y su filtro. La marca se quita cuando responde una persona;
 7. en atención manual, la respuesta redactada se le ofrece al operador como borrador.
 
-**Cuando la IA no contesta** un mensaje (falló, venció o quedó incierta), el chat pasa a atención manual con «Necesita una persona» y el motivo «El asistente no pudo responder», y sale el mensaje fijo al derivar si la ventana de 24 horas sigue abierta. No deriva lo que todavía puede reintentarse ni un chat que ya tomó una persona. Lo que venció sin llegar al proveedor devuelve el cupo, y cada falla del proveedor lleva su código ([0064](../../decisions/0064-reglas-de-toda-la-ia.md)).
+**Cuando la IA no contesta** un mensaje (falló, venció o quedó incierta), o lo que mandó queda «Sin confirmar» (240), el chat pasa a atención manual con «Necesita una persona» y el motivo «El asistente no pudo responder», y sale el mensaje fijo al derivar si la ventana de 24 horas sigue abierta. No deriva lo que todavía puede reintentarse ni un chat que ya tomó una persona. Lo que venció sin llegar al proveedor devuelve el cupo, y cada falla del proveedor lleva su código ([0064](../../decisions/0064-reglas-de-toda-la-ia.md)).
 
 **Ofrecer formularios:** hasta el tope por conversación y día, en la zona de la organización; solo los publicados, activos y con «Cuándo lo ofrece», para ese destinatario (50), con el filtro de disponibilidad y sin las versiones solo para la app, ordenados por nombre antes de cortar en 100. Lo manda el asistente: la sesión lo guarda así, y no toma el chat. **La oferta** dice siempre «Te preparé el formulario «Pedido de service» para que lo completes.», con el nombre del formulario (165): es un texto fijo, que el modelo no redacta, también cuando un operador manda una sugerencia en atención manual. **El prellenado** propone texto, números, fechas, sí/no y una opción ofrecida, como valores iniciales de un perfil nuevo del Flow **[Meta]**. Deja afuera «elegir varias», las fotos, los documentos y las preguntas del bloque (146). Uno publicado antes se manda sin prellenar. El asistente no ve los valores de las respuestas.
 

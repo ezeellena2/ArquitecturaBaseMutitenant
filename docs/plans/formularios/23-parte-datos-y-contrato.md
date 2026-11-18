@@ -75,13 +75,14 @@ Tres migraciones, una por módulo: Assistant, WhatsApp y Forms. Todo es `ITenant
 | **AssistantAgents** (`IAuditable`, `IVersioned`) | `Name`, `IsPrimary`, `Profile`, `Cases` y `Limits` jsonb | una principal por organización, con índice único filtrado |
 | **AssistantKnowledge** (`IAuditable`, `IVersioned`) | `Sections` jsonb, con la forma de `knowledge` | una por organización; los topes de allá: nombre 120, qué hace 1000, dirección, referencia y zona 500 cada una, productos y servicios 2000, políticas y condiciones 2000, hasta 4 franjas por día, 32 fechas especiales y 20 preguntas frecuentes de 200, con su respuesta de 1000 |
 | **WhatsAppInboxAttention** (`IVersioned`) | `Inbox`, `Mode`, `ReturnRule`, `IdleMinutes?` | una por bandeja |
+| **WhatsAppChatModeChanges** | `ChatId`, `Mode`, `ChangedByUserId?`, `ChangedAtUtc` y `Reason` (a mano, derivó, volvió solo) | el historial del modo (H19 de ArquitecturaBase); al derivar el asistente, sin persona; sigue la retención del chat |
 | **WhatsAppAssistantActions** | `ChatId`, `TurnId`, `MessageId?`, `CaseId`, `Kind`, `State`, `Why` jsonb | sigue la retención del chat |
 | **WhatsAppAssistantCounters** | `ChatId`, `Day`, `Offers`, `Replies` | clave por chat y día, en la zona de la organización |
 | **WhatsAppUnansweredTopics** (`IVersioned`) | `Topic`, `Description`, `Questions`, `People`, `LastAtUtc`, `State` (`Unreviewed`, `Open` o `Dismissed`), `ReviewedByUserId?`, `ReviewedAtUtc?`, `DismissedByUserId?` y `DismissedAtUtc?` | sin nombres ni mensajes de quien preguntó; `Topic`, con su índice de búsqueda; al asistente va solo el `Topic` de los revisados, y los que ya existen quedan `Unreviewed` (219) |
 | **FormMissingTopics** | lo mismo | lo mismo |
 | **FormSuggestionSets** | `DefinitionId`, `Revision`, `Suggestions` jsonb | inmutable, como las reglas |
 
-**Columnas nuevas:** `WhatsAppChats` suma `AttentionMode`, `Pinned`, `NeedsPersonAtUtc?`, `NeedsPersonReason?` (el caso que derivó, `AssistantFailed` o el tope agotado), `ResolvedAtUtc?` y `TurnDueAtUtc?`. `WhatsAppChatMessages` suma `Transcript?`. `WhatsAppFlowSessions` suma `SentByAssistant`, y `SentByUserId` pasa a admitir `null`. `FormDefinitions` suma `OfferWhen`, que no se sella: cambiarlo no pide republicar. `FormDefinitionStates` suma `ActiveSuggestionSetId`. `FormRecords` suma `SuggestedByRecordId?`. `AssistantPlatformSettings` suma los máximos. Asistente suma `ChannelId` y `ChannelConversationId`, con el índice `(TenantId, OwnerUserId, ChannelId, ChannelConversationId)`.
+**Columnas nuevas:** `WhatsAppChats` suma `AttentionMode`, `Pinned`, `NeedsPersonAtUtc?`, `NeedsPersonReason?` (el caso que derivó, `AssistantFailed` o el tope agotado), `ResolvedAtUtc?` y `TurnDueAtUtc?`. `WhatsAppChatMessages` suma `Transcript?`, que nace cifrado, como el texto redactado y el `Why` de `WhatsAppAssistantActions` ([0065](../../decisions/0065-contenido-del-chat-cifrado.md)). El dueño de un toque guarda su id con la decisión: el mismo toque recibe la misma respuesta, y otro sobre el mismo mensaje no decide otra vez (H21). `WhatsAppFlowSessions` suma `SentByAssistant`, y `SentByUserId` pasa a admitir `null`. `FormDefinitions` suma `OfferWhen`, que no se sella: cambiarlo no pide republicar. `FormDefinitionStates` suma `ActiveSuggestionSetId`. `FormRecords` suma `SuggestedByRecordId?`. `AssistantPlatformSettings` suma los máximos. Asistente suma `ChannelId` y `ChannelConversationId`, con el índice `(TenantId, OwnerUserId, ChannelId, ChannelConversationId)`.
 
 ## En el multitenant
 
@@ -90,7 +91,8 @@ Tres migraciones, una por módulo: Assistant, WhatsApp y Forms. Todo es `ITenant
 - **Workers:** los turnos abren un scope por organización con `SetFromAccess(tenantId, TenantKind.Business)`, como `WhatsAppInboundProcessor`, sin `ExecutionActor`, porque un cliente no tiene cuenta, y sin `TenantJobRunner`: lo que sale en un chat vinculado escribe la copia compartida. Se suman a la lista de `TenantScopeUsageTests`.
 - **Features:** `forms` y `assistant`, prendidos en la organización. En un worker, `IFeatureService` da `false`, porque no hay sesión: se lee `ITenantFeatureCache`, como `WhatsAppModulePolicy`.
 - **Permisos:** suma `formsuggestions.manage`. Lo demás pide `whatsapp.manage` o el permiso de atender.
-- **WhatsApp:** el asistente actúa en el número de la organización.
+- **WhatsApp:** el asistente actúa en el número de la organización. Lo que manda y queda «Sin confirmar» no se repite solo y deriva (240, [0066](../../decisions/0066-lo-que-no-se-sabe-si-salio.md)).
+- **La traza:** una sola, del webhook a Meta y al motor de IA, con `tenant.id` en el span y nunca en una métrica, ni números, cuerpos o ids de mensajes (H19; [logs](../../rules/logs.md)).
 - **Cuotas:** las rutas cuentan en las generales, y Probar, además, en la del Asistente, con el cupo de quien prueba. El cupo vuelve solo si el turno no llegó al proveedor, y el tope de turnos pendientes es de la copia ([0064](../../decisions/0064-reglas-de-toda-la-ia.md) §1 y §12).
 - **Las fallas del proveedor:** con la clave de la plataforma las arregla el operador, y la organización ve «no disponible» (0064 §7).
 
