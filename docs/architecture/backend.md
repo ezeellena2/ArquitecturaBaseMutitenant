@@ -12,7 +12,7 @@ Panorama de la plantilla B2B + B2C. Una persona tiene una cuenta y elige Persona
 | Identidad | ASP.NET Core Identity (solo usuarios, sin roles de Identity) + OpenIddict 7 (servidor y validación en la misma Api) |
 | Validación | FluentValidation 12 |
 | Caché | Redis como única caché compartida entre instancias, detrás de `HybridCache` sin copia local y con generaciones durables (Etapa 9, [ADR 0052](../decisions/0052-cache-compartida-redis.md)) |
-| Orquestación local | Aspire 13.5 (AppHost + ServiceDefaults) |
+| Orquestación local | Aspire 13.6 (AppHost + ServiceDefaults) |
 | Observabilidad | `Microsoft.Extensions.Logging` + OpenTelemetry (sin Serilog) |
 | Tests | xUnit v3, Testcontainers (`postgres:18.x`), NetArchTest + Mono.Cecil, `FakeTimeProvider`, dobles a mano (sin Moq ni FluentAssertions) |
 | Build | `TreatWarningsAsErrors`, `AnalysisLevel=10.0-recommended`, `EnforceCodeStyleInBuild`, BannedApiAnalyzers, Central Package Management; el CI verifica el formato con `dotnet format --verify-no-changes` antes de compilar (E9) |
