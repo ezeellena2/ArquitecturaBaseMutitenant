@@ -1,6 +1,6 @@
 # ADR 0052 · Caché compartida en Redis
 
-**Estado:** aceptada como decisión técnica, 2026-10-16; implementada en la E9. Ejecuta el alcance de Redis de esa etapa.
+**Estado:** aceptada como decisión técnica, 2026-10-16; implementada en la E9. Ejecuta el alcance de Redis de esa etapa. La [0058](0058-sin-redis-la-copia-sigue-en-el-trafico.md) la enmienda el 2026-11-18: sin Redis, `/health` queda en Degraded, que responde 200, y la copia sigue en el tráfico. El cuerpo conserva la decisión original.
 
 ## Contexto
 
