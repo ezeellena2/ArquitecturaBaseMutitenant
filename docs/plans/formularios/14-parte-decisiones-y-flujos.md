@@ -108,7 +108,7 @@ Las de producto están en la hoja de ruta (§5). Estas siguen las reglas del rep
    - **Mandar:**
      - afuera de la UoW se valida el texto, que es opcional: `null` arma el mensaje por defecto (T10), y si viene, mide hasta 1024. Se lee el formulario elegido con `FindSendableAsync`. El idioma de los textos del sistema es el de la cuenta de quien recibe (T10);
      - en la UoW: bloqueo de la conversación, se revalidan ventana, empleado, envío pendiente y que el chat no sea de otra persona, se toma el chat si no estaba tomado (regla de la E11), se crea la sesión (token aleatorio de 32 bytes; se guarda solo el hash) y se encola el mensaje interactivo de tipo Flow por el outbox (`WhatsAppOutboundMessage` con su variante nueva);
-     - el outbox lo manda y, si no se sabe si salió, lo reintenta solo, como a los demás mensajes; no hay un estado «sin confirmar» (80).
+     - el outbox lo manda: lo que seguro no salió se reintenta solo, y lo que no se sabe si salió queda «Sin confirmar» para una persona, como los demás mensajes (240, ADR 0066). La sesión sigue abierta hasta que vence. La cuenta de Meta la verifica solo el worker, antes de mandar, nunca el pedido de «Enviar» (H33).
    - **Si la WABA del número no tiene Flow de esa versión:** `WhatsApp.Flow.NotPublishedForNumber`.
 7. **Recibir y capturar** (worker de WhatsApp, siguiendo la entrada de la E11 **[E11]**).
    - **Webhook:** guarda el mensaje con `ProtectedFlowResponse`, sin duplicados por `wamid`.

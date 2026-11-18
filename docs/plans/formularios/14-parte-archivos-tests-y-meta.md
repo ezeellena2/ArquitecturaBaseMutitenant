@@ -130,7 +130,7 @@ Salen de los reviews y los pilotos de ArquitecturaBase. El plan los toma como li
 - **Estados inciertos:**
   - un error definitivo de Meta termina en «No se pudo», visible;
   - una publicación «Sin confirmar» se **consulta**; si la consulta no puede decidir (`RequiresReview`), pasa a «Necesita revisión» y una persona dice «Salió» o «No salió» (175). Nunca se ofrece «Reintentar» sobre lo incierto, y un pedido de publicar sin respuesta se repite solo con la misma `Idempotency-Key`;
-  - un envío del chat sale por la cola de WhatsApp, que lo reintenta sola (80).
+  - un envío del chat sale por la cola de WhatsApp: lo que no se sabe si salió queda «Sin confirmar» y lo revisa una persona, sin reenviar (240).
 - **Contratos:**
   - cada campo nuevo de un DTO se exporta, con su ejemplo de una corrida real, y el front lo consume con zod estricto en el mismo corte;
   - las rutas de error tienen la misma forma en los dos lados;
