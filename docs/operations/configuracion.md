@@ -98,6 +98,8 @@ La retención de texto es fija de **90 días desde `ReceivedAtUtc`** del servido
 
 **Con el depurador de Visual Studio,** el proveedor de log Debug manda cada línea a la ventana Salida y frena todo el proceso: allá bajó de unos 690 a unos 11 pedidos por segundo. Por eso `Logging:Debug:LogLevel:Default` está en Warning en el `appsettings.Development.json` de la Api desde la base de la 12, y `BuildConfigurationTests` lo controla; la consola y la telemetría no cambian (traspaso 9).
 
+**Redis en desarrollo tiene 5 segundos para conectar** (`Cache:ConnectTimeoutMilliseconds` en el `appsettings.Development.json` de la Api; en los demás ambientes queda el segundo de la [ADR 0052](../decisions/0052-cache-compartida-redis.md)). Aspire le pasa a la Api `localhost:<puerto>,ssl=true`, y Docker publica Redis solo en IPv4: en Windows el cliente prueba primero `::1` y pierde unos dos segundos antes de ir a `127.0.0.1`. Con un segundo no llegaba nunca, y la Api quedaba con la caché en Degraded, leyendo todo de la base (2026-11-18).
+
 ## 4. Lo que tenés que hacer vos, una sola vez, fuera del código
 
 **Google Cloud Console** › el mismo cliente OAuth › URIs de redireccionamiento autorizados. Agregar las del multitenant (las de ArquitecturaBase se quedan):
