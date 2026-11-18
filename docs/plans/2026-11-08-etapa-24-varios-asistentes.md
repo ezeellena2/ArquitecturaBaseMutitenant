@@ -135,7 +135,7 @@ Leé AGENTS.md de los dos repos, este plan (docs/plans/2026-11-08-etapa-24-vario
 
 **Usa de las anteriores:**
 - **E11:** `WhatsAppTeam`, `WhatsAppTeamService`, `WhatsAppTeamResponseBuilder`, `WhatsAppBot` con `employeesTeamId`, `WhatsAppBotResolver`, `WhatsAppAttentionBotWriter`, `WhatsAppInboundGuard`, `OrganizationWhatsAppTeamsController`, `TeamDialog.tsx` y `TeamsPage.tsx`.
-- **E15 y E23:** lo que lista K0.
+- **E15 y E23:** lo que lista K0, con lo que la E23 suma del traspaso 15: los controles antes de encolar, «El asistente no pudo responder», Probar con cinco mensajes y los temas que se revisan (219). Cada asistente los hereda, sin nada propio.
 
 **Deja para las siguientes:**
 - **Datos:** `AssistantAgents.IsActive` y su índice por nombre, `WhatsAppTeams.AssistantId`, `WhatsAppAssistantActions.AgentId` y `WhatsAppFlowSessions.SentByAgentId`.
