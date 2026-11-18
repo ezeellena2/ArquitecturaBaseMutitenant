@@ -49,6 +49,12 @@ Las etapas van en el orden de la decisión 78, y **el número es el orden**. Ant
 | E24 · Varios asistentes, uno por equipo | [24-varios-asistentes.md](24-varios-asistentes.md) | Aprobados: `WA-Asistentes`, `WA-Equipo-Asistente` y `WA-Chats-Casos-24`, con sus teléfonos, en el lienzo v158 |
 | E25 · Documentos por WhatsApp | [25-documentos.md](25-documentos.md), con sus partes de [datos y contrato](25-parte-datos-y-contrato.md) y de [pasos](25-parte-pasos.md) | Aprobados: `WA-Chats-Documento`, `FRM-Documentos`, `FRM-Editor-Lectura`, `FRM-Armar-Con-IA`, `FRM-Respuesta-25`, `Campana-25` y `Asistente-Org-25`, con sus teléfonos, `M-WA-Flow-Prellenado`, `M-WA-Armar-Con-IA`, `Plat-FRM-Plantilla-Lectura`, `WA-Asistente-Casos-25`, y `FRM-Formularios-25`, `FRM-Catalogos-25` y `FRM-Faltan-25` (154 a 156), y `FRM-Catalogo-Propuesta-25` (167) y `FRM-Plantilla-25`, con su teléfono (traspaso 10), en el lienzo v168, con sus tres recorridos guiados. Corregidos y aprobados en la v169: `M-WA-Armar-Con-IA`, con un pedido escrito o con audio y los enlaces de la app (155); `WA-Chats-Documento` y su teléfono, con la oferta que nombra el formulario (165) y el aviso de «Cargar solo si es seguro», y `FRM-Editor-Lectura`, con «Volver a Formularios» (79) |
 
+La E26, carpetas de formularios y catálogos (231), todavía no tiene spec ni tableros: se escriben después del traspaso 16.
+
+**Del traspaso 15, tandas 2 y 3** (lienzo v175, sin publicar; decisiones 224 a 240):
+- **Nuevos:** `FRM-Catalogo-Ordenar` y `FRM-Catalogo-Ordenar-13`, con sus teléfonos (E12 y E13); `FRM-Respuestas-Exportar-19` (E19); `FRM-Editor-20` y `FRM-Editor-Ubicacion`, con sus teléfonos (E20).
+- **Redibujados:** en la E12 y la E13, el editor, las opciones y los campos con «Ordenar por…»; en la E14 y la E17, `FRM-Publicando`, `M-FRM-Editor` y `FRM-Editor-Baja` con «Descartar esta publicación»; en la E15, la E18 y la E21, el diálogo de exportar; en la E19, las líneas, el cálculo, las condiciones, publicar, la planilla, el detalle y la tarjeta; en la E20, la lista, publicar, la carga, la planilla, el detalle y el chat; en la E21, la planilla con «Por resolver», lo propio, la aprobación, las reglas, el PDF, los avisos y el editor con «Ubicación».
+
 ## Equivalencia con los números de antes
 
 Hasta el 2026-10-25 los números de las etapas eran nombres, no orden, y los documentos anteriores usan los de antes.
