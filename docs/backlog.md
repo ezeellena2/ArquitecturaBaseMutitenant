@@ -131,3 +131,22 @@ Lo que trajo el traspaso 15 para toda la app (decisiones 205 a 213 de la [hoja d
 - **Un dato por columna** (206): `DataTable` vuelve a dibujar un texto secundario en gris debajo del dato, que no se ordena ni se filtra, y se revisan con la regla las columnas del núcleo que juntan dos datos.
 - **Roles como matriz** (212): `PermissionPicker` y `RoleEditorPage`, también en los roles de una empresa y en los permisos de un operador de Plataforma: la matriz desde 768 px y una banda por área más angosto, con `PermissionPicker.test.tsx` en las dos formas.
 - **Las piezas** (213): el título de un grupo de opciones con su (i); un chip de solo lectura sin ✕; las teclas que mueven la pantalla, con el foco en el menú; el desplegable de 48 en el teléfono; las confirmaciones del núcleo en una frase, repasadas con la [lista de chequeo](../../ArquitecturaBaseMutitenantFront/docs/design/lienzo/README.md#lista-de-chequeo-de-diseño).
+
+## Traspaso 15, WhatsApp y ARCA: para programar
+
+Lo que trajo el traspaso 15 para WhatsApp como canal y para ARCA (tanda 5) y pide código. Lo de WhatsApp cae sobre lo ya programado de la E11: va con la **segunda parte de la base** (214) y, a más tardar, antes de la E14, que suma contenido cifrado y el envío de formularios. Nada de ArquitecturaBase pasó todavía su prueba integral, y un detalle puede cambiar con el traspaso 16.
+
+- **El chat cifrado** ([ADR 0065](decisions/0065-contenido-del-chat-cifrado.md)). Pasan a `bytea` el `Text` de los mensajes de la organización y de Plataforma, el `LastMessagePreview` de cada chat y el `Text` de `engagement.WhatsAppLinkedMessages`. Un conversor de EF toma la organización del mismo contexto que fija `app.tenant_id`, con un subpropósito de Plataforma y uno propio de `engagement`; sin organización en `tenant.*`, falla. La migración vacía los chats de prueba, siempre que entre antes de la I1 de la E10. Tests: dos organizaciones no leen el contenido de la otra (un cifrado copiado a otra fila se lee vacío), lo que no se abre se lee vacío y la bandeja sigue buscando por nombre y número.
+- **«Sin confirmar»** ([ADR 0066](decisions/0066-lo-que-no-se-sabe-si-salio.md), decisión 240). El outbox suma el estado como capacidad neutral, junto con la tarea del correo del núcleo (N5, N8 y O3), y el transporte de WhatsApp clasifica sus fallas: lo que no salió se reintenta a los 30 s, dos veces, con el chat esperando; lo que no se sabe no se repite. Además:
+  - la revisión, con quién y cuándo, por el id del envío;
+  - los ocho códigos de falla, con sus textos en `Errors.resx` y `.en.resx`;
+  - la invitación «Sin confirmar» en Usuarios, con la tarea de su estado de entrega;
+  - el apagado (H8) y la prioridad de lo que contesta sobre los avisos (H31).
+
+  La revisión en la conversación y en Usuarios es un cambio de pantalla y se dibuja antes.
+- **Los topes de códigos por WhatsApp** (H10): 10 por cuenta y por día para sumar o verificar un número desde Mi cuenta, como el de correo de la [ADR 0063](decisions/0063-topes-de-correo-de-la-plataforma.md). La IPv6 por su /64 ya está en las tareas del núcleo.
+- **Dos versiones en WhatsApp** ([ADR 0060](decisions/0060-dos-versiones-conviven.md), con la B6 de la E10): un mensaje recibido de un tipo desconocido se guarda como «Otro», y una salida que esta versión no entiende vuelve a pendiente para otra copia, hasta 10 minutos. Lo de la respuesta de Flow (cinco fallas y un día) va con la E14.
+- **Las métricas sin organización ni empresa** ([logs](rules/logs.md)): un test que recorra los instrumentos y rechace una etiqueta de organización, de empresa o de un dato de un mensaje, junto a `TenantTelemetryTests`.
+- **Quitar WhatsApp y el respaldo** (H22 y H15): al sumar sus tablas en la E14 a la E25, la [guía de quitar](guides/quitar-whatsapp.md) las cuenta otra vez, y el [runbook](operations/runbook.md) suma, con el cifrado, que una base restaurada sin el certificado lee vacío el contenido de los chats.
+- **La CUIT nunca once ceros** (ARCA, A3 de la tanda 5): `TaxId` rechaza `00000000000` en el dominio, y `TaxIdField` en el front, con su test de cada lado. Hoy el verificador lo da por válido (suma 0, dígito 0). La línea de [identificación fiscal](rules/identificacion-fiscal.md) se suma con el código.
+- **Para decidir antes de producción: la retención de las respuestas de formularios.** ArquitecturaBase la dejó para decidir antes de producción, y acá no está en ninguna hoja.
