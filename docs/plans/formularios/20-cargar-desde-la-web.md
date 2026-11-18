@@ -97,8 +97,8 @@ Aprobados y publicados en el lienzo v154, con el armado del front real de Arquit
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
 | `FRM-Formularios-20` y su teléfono | «Cargar», «Estado», «Dónde se completa» y lo que ve quien solo carga | Se redibujan (229) |
-| `FRM-Editor-20` | «Dónde se completa» al lado del prefijo, apagado en uno solo para clientes, y el aviso de una condición con «Pasar a «Solo en la app»» | Por dibujar (229 y 235) |
-| `FRM-Editor-Ubicacion` y su teléfono | el tipo «Ubicación», último, solo con «Obligatoria», y apagado en el bloque | Por dibujar (230) |
+| `FRM-Editor-20` y su teléfono | «Dónde se completa» al lado del prefijo, apagado en uno solo para clientes, y el aviso de una condición con «Pasar a «Solo en la app»» | Nuevos en la v175, sin publicar (229 y 235) |
+| `FRM-Editor-Ubicacion` y su teléfono | el tipo «Ubicación», último, solo con «Obligatoria», y apagado en el bloque | Nuevos en la v175, sin publicar (230) |
 | `FRM-Cargar-Respuesta` y su teléfono | la página, con zonas, grilla, títulos, lo condicional, el bloque, «Mantener», errores y salir | Se redibujan: «Usar mi ubicación» con sus estados (pidiendo, el punto, más de 100 m, sin permiso y sin señal) y los cálculos en gris, también en el bloque (230, 233 y 234) |
 | `FRM-Cargar-Panel` | el panel junto a la planilla | Se redibuja (230 y 234) |
 | `FRM-Cargar-Lista` y su teléfono | la lista, una sola opción, sin el dato, elegir varias y la que espera otra respuesta | Aprobados en la v168: «Elegí primero «Zona»» (166) |
@@ -109,7 +109,7 @@ Aprobados y publicados en el lienzo v154, con el armado del front real de Arquit
 | `FRM-Editor-Listas` y su teléfono | «Según otra respuesta» | Aprobados en la v168: el bloque, sin el «Grupo de líneas» (177) |
 | `FRM-Publicar-20` y su teléfono | publicar «Solo en la app», al instante, y lo que WhatsApp no puede mostrar en «Problemas» | Se redibujan: «Problemas» con «Pasar a «Solo en la app»», sin esa salida en uno solo para clientes, y la fila «Dónde se completa» (229) |
 | `WA-Chats-Formulario-20` y `M-WA-Chats-Formulario-20` | en «Enviar formulario», los formularios de la app apagados, y el pedido de ubicación antes del Flow | Se redibujan: «Se completa solo en la app.» (229) y el pedido con «Seguir sin ubicación» (230) |
-| `WA-Chats-Respuesta` y `M-WA-Conversacion-Respuesta` | la ubicación que llega, el Flow que sale después y la tarjeta con el punto | Se redibujan (230) |
+| `WA-Chats-Respuesta` y `M-WA-Conversacion-Respuesta` | la tarjeta de la E14 | No cambian: la ubicación que llega y el Flow que sale después se dibujan en `WA-Chats-Formulario-20` (78) |
 
 **La página** sigue a la de allá: la banda con Cancelar y Enviar, y una zona por título, con la grilla de hasta tres por renglón. Lo que allá dice «Enviando… 64 %» acá es «Enviando…» con su aro y una barra sin palabras (95 y 115). Sin el dato de la persona, un cartel lo nombra, porque bloquea, y Enviar queda grisado con el motivo.
 
