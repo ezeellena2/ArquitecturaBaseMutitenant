@@ -133,7 +133,7 @@ Valen todas las de [AGENTS.md](../../AGENTS.md) y las [fichas](../rules/README.m
 
 ## 3. Etapas
 
-Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es el orden.** Entre paréntesis va la etapa de ArquitecturaBase que sirve de referencia. Cada etapa tiene su spec o su resumen en [`formularios/`](formularios/README.md), con la equivalencia con los números de antes, y sus tableros se dibujan en el lienzo antes de programar (decisiones 18 y 44).
+Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es el orden.** La E26, de carpetas, va después, antes de las integraciones (231). Entre paréntesis va la etapa de ArquitecturaBase que sirve de referencia. Cada etapa tiene su spec o su resumen en [`formularios/`](formularios/README.md), con la equivalencia con los números de antes, y sus tableros se dibujan en el lienzo antes de programar (decisiones 18 y 44).
 
 **La regla del orden** (78, que controla `/plan-etapa`):
 - cada etapa usa solo lo que dejaron las anteriores;
@@ -148,18 +148,20 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 
 - **Nace el módulo `Forms`,** con su feature, sus permisos de catálogos y «Gestión de formularios» con solo «Catálogos».
 - **A mano, de los miembros o de los contactos de WhatsApp** (55), con tipo de valor, carga de una vez (XLSX, CSV o pegar), exportar y la plantilla. Hasta 10.000 opciones (42). Un contacto sin nombre toma el de su perfil (81).
-- **Guardar todo junto,** mandando y escribiendo solo lo que cambió.
+- **Guardar todo junto,** mandando y escribiendo solo lo que cambió. «Ordenar por…» Texto o Código se aplica al guardar (224).
 - **Spec:** [formularios/12-catalogos.md](formularios/12-catalogos.md).
 - **Criterios:**
   - los números y las fechas de un archivo se leen con la cultura del pedido, y lo ambiguo se rechaza;
   - ninguna lectura trae las 10.000 opciones para quedarse con pocas;
   - guardar sin cambios no toca las opciones, y guardar una opción no reescribe las demás;
-  - los límites del canal se validan al guardar; las referencias van por id.
+  - los límites del canal se validan al guardar; las referencias van por id;
+  - importar y exportar van de a uno por persona, con un tope por organización y otro de la instalación, compartidos entre las copias.
 
 ### E13 · Campos de los catálogos (AB E2, la parte del catálogo)
 
 - **Campos por opción** (hasta 20, 42), con tipo y reglas, y valores en jsonb con índice GIN; columnas al pegar, importar y exportar.
 - **Qué se ve en WhatsApp:** qué campos van al título y a la descripción de cada opción, con la vista previa del catálogo (36).
+- **Ordenar por un campo,** como «Rubro», con el sentido de su tipo (224).
 - **Spec:** [formularios/13-campos.md](formularios/13-campos.md).
 - **Criterios:** las cuatro lecciones de gravedad alta del review E2 de allá, cada una con su test (están en el resumen).
 
@@ -167,8 +169,8 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 
 - **«Formularios»** (79): una sola lista, con «Nuevo formulario»; cada formulario se abre con su pestaña «Diseño».
 - **Editor:** siete tipos de pregunta, entre ellos «elegir varias» (38), un `CheckboxGroup` de 1 a 20 opciones con mínimo y máximo, y la pregunta «Elegir de un catálogo», con la presentación del catálogo o la suya (78). Títulos de sección entre las preguntas, que en WhatsApp salen como subtítulo (88). Cada texto es uno solo, sin idioma (35). Prefijo propio, versiones y vista previa en el teléfono.
-- **Publicar:** operación durable en Meta, con un Flow por versión y por WABA de la organización.
-- **Mandar** desde el chat, a un empleado (Internos) o a un cliente (Clientes), según para quién es el formulario (49 y 50), con una sesión de 24 horas. Las opciones de catálogo viajan en el mensaje, con ids locales a la oferta. Lo que sale por la cola de WhatsApp se reintenta solo (80).
+- **Publicar:** operación durable en Meta, con un Flow por versión y por WABA de la organización. Una publicación sin confirmar se puede descartar (225).
+- **Mandar** desde el chat, a un empleado (Internos) o a un cliente (Clientes), según para quién es el formulario (49 y 50), con una sesión de 24 horas. Las opciones de catálogo viajan en el mensaje, con ids locales a la oferta. Lo que seguro no salió por la cola de WhatsApp se reintenta solo, y lo que no se sabe si salió queda «Sin confirmar» para una persona (240).
 - **Recibir:** la respuesta numerada, idempotente, con los campos de catálogo sellados, y su tarjeta en el chat y en «Mensajes». La captura va sin `ExecutionActor`, porque un cliente no tiene cuenta.
 - **Módulo:** los puertos neutrales de los formularios y el retiro probado.
 - **Spec:** [formularios/14-formularios.md](formularios/14-formularios.md).
@@ -185,7 +187,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **La lista «Formularios»** suma las respuestas, y cada formulario, sus pestañas «Respuestas» y «Tablero» (79).
 - **La planilla** de cada formulario, con las subcolumnas de los campos sellados, la empresa (24) y un solo «Filtros», con filtros de una opción y sin cantidades (143 y 144).
 - **El detalle:** la vista rápida al costado y la pantalla completa, con ↑ ↓ en el orden de la planilla.
-- **Excel** con los filtros aplicados; «elegir varias» unido con «; ».
+- **Excel** con los filtros aplicados; «elegir varias» unido con «; ». El diálogo dice qué exporta con los chips de la planilla (226).
 - **El tablero de cada formulario** (57): gráficos armados solos desde los tipos de las preguntas, ajustables por cada persona.
 - **Spec:** [formularios/15-respuestas.md](formularios/15-respuestas.md).
 - **Criterios:**
@@ -209,7 +211,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 
 - **Copiar un formulario** (74), con su borrador y un prefijo nuevo; las etapas siguientes suman lo suyo a la copia.
 - **Dar de baja** conserva la versión activa y los envíos abiertos; **reactivar** es publicar una versión nueva; **borrar** es lógico, sin respuestas ni envíos abiertos, y deja el prefijo reservado.
-- **Deprecar los Flows** por WABA de la organización, como operación durable, al vencer el último envío.
+- **Deprecar los Flows** por WABA de la organización, como operación durable, al vencer el último envío, también los de una publicación descartada (225).
 - **Spec:** [formularios/17-ciclo-de-vida.md](formularios/17-ciclo-de-vida.md).
 - **Criterios:**
   - un rechazo de Meta al deprecar se clasifica y tiene una salida: no se repite para siempre;
@@ -218,7 +220,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 ### E18 · Fotos y documentos (AB 2B)
 
 - **Preguntas «Foto» y «Documento»,** con mínimo y máximo, una por pantalla del Flow.
-- **Al responder:** se baja cada archivo con el token de la organización, se verifican hash, tamaño y tipo real, y se guarda con `IFileStore`. Completa o nada.
+- **Al responder:** se baja cada archivo con el token de la organización, se verifican hash, tamaño y tipo real, y se guarda con `IFileStore`. Completa o nada, y aguanta un día de caída de Meta (H11 de ArquitecturaBase).
 - **Ver:** visor y descarga solo por la Api, con `formrecords.read`, también en la planilla y el detalle. El antivirus está en la lista de lanzamiento.
 - **Archivos en el chat** (48): el operador ve y baja lo que le mandan, y manda fotos y archivos desde el compositor, dentro de las 24 horas.
 - **Spec:** [formularios/18-fotos-y-documentos.md](formularios/18-fotos-y-documentos.md).
@@ -230,16 +232,16 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 
 ### E19 · Condiciones, cálculos y líneas (nueva)
 
-- **Preguntas condicionales:** «Mostrar si» otra respuesta cumple una condición. El servidor las vuelve a evaluar al capturar, y la planilla distingue «No se mostró».
-- **Cálculos:** una pregunta «Cálculo» con las cuatro operaciones sobre números de la respuesta, campos del catálogo y la suma de una pregunta del bloque. Se calcula al llegar la respuesta (54).
+- **Preguntas condicionales:** «Mostrar si» otra respuesta cumple una condición. El servidor las vuelve a evaluar al capturar, y la planilla distingue «No se mostró». Lo que WhatsApp no puede mostrar, el editor lo avisa debajo de la condición (235).
+- **Cálculos:** una pregunta «Cálculo» con las cuatro operaciones sobre números de la respuesta, campos del catálogo y la suma de una pregunta del bloque, que también va dentro del bloque, por ítem (233). Se calcula al llegar la respuesta (54) y redondea al par (232).
 - **El bloque** (146, 177 y 178): preguntas que se cargan varias veces, con un mínimo y un máximo de ítems; se agrega con «Agregar bloque», y en WhatsApp va una pantalla por ítem, hasta 10.
-- **En las respuestas:** la planilla, el detalle y el Excel los muestran.
+- **En las respuestas:** la planilla, el detalle y el Excel los muestran; el Excel, con una fila por ítem y hasta 100.000 filas (227).
 - **Spec:** [formularios/19-condiciones-calculos-y-lineas.md](formularios/19-condiciones-calculos-y-lineas.md).
 - **Criterios:**
   - antes de planificar, se prueban con Meta el componente `If`, una pantalla por ítem con «¿Agregás otro ítem?» y un archivo dentro de un `If`, en un celular, con el `routing_model` declarado: allá, sin él, responder «No» cortaba el formulario;
   - el servidor nunca confía en lo que llega: vuelve a evaluar condiciones y cálculos;
   - un cálculo que no se puede hacer queda «Sin respuesta», nunca rompe la captura;
-  - los montos van en `decimal`, con moneda y redondeo `AwayFromZero`.
+  - los montos van en `decimal`, con moneda, y los cálculos redondean al par, como lo recalcula ARCA (232).
 
 ### E20 · Cargar una respuesta desde la web (AB, carga desde la app)
 
@@ -248,7 +250,9 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Lo propio:** quien solo carga abre «Formularios» y ve la planilla con lo suyo (85).
 - **El armado:** hasta tres preguntas por renglón y zonas plegables; el ancho sale del tipo de pregunta, en dos anchos: una columna o el renglón entero (87 y 141).
 - **Listas dependientes,** solo en la web (94).
-- **Formularios solo para la app:** sin número conectado, con una lista dependiente, con un catálogo a mano más grande de lo que admite WhatsApp o con un bloque de un mínimo de más de 10 ítems, se publica sin Meta y se carga desde la web (94, 96, 98, 104 y 178).
+- **«Dónde se completa»** (229): cada formulario elige «En la app y por WhatsApp» o «Solo en la app». Sin número conectado, todo se carga en la app (98). Lo que WhatsApp no puede mostrar, como una lista dependiente, un catálogo a mano demasiado grande o un mínimo de más de 10 ítems, frena al publicar, con «Pasar a «Solo en la app»».
+- **La pregunta «Ubicación»** (230): «Usar mi ubicación» en la web y, por WhatsApp, el pedido de Meta antes del Flow.
+- **El cálculo se ve en gris** mientras se carga, y vale el del servidor (234).
 - **Spec:** [formularios/20-cargar-desde-la-web.md](formularios/20-cargar-desde-la-web.md).
 - **Criterios:**
   - un solo lugar valida y numera; los archivos que se suben se verifican igual que los de WhatsApp;
@@ -261,11 +265,11 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 
 - **Reglas** «Cuando llega una respuesta», con guardado e historial propios, sin versión nueva ni republicar.
 - **Un solo motor de acciones,** con ejecuciones idempotentes y el efecto fuera de la transacción.
-- **Aprobación de un nivel:** nadie aprueba lo que cargó. «Por aprobar» va en la lista «Formularios», en «Para resolver», con la misma fuente (ADR 0040), y como una vista arriba de la planilla (148).
-- **PDF** como copia fija, con los campos «Dato», las fotos, el bloque y los cálculos.
+- **Aprobación de un nivel:** nadie aprueba lo que cargó. «Por aprobar» va en la lista «Formularios», en «Para resolver», con la misma fuente (ADR 0040), y como una vista arriba de la planilla (148). Al lado, «Por resolver (N)» junta lo que una regla dejó esperando a una persona, y la columna «Reglas» lo marca en cada fila (228).
+- **PDF** como copia fija, con los campos «Dato», las fotos, el bloque y los cálculos, y las horas en la zona de quien cargó (236).
 - **Corregir y anular una respuesta** (91 a 93), con el permiso nuevo «Corregir y anular respuestas». La corrección reemplaza a la anterior con el mismo número y vuelve a pasar por las reglas; anular deja la respuesta «Anulada», sin borrarla.
 - **Lo propio de quien solo carga** (85) suma el estado, el PDF y el motivo de rechazo.
-- **Avisos por WhatsApp** con el número de la organización. Fuera de las 24 horas, con una plantilla aprobada de la organización (61), que suma el encabezado con documento y el llenado de sus variables.
+- **Avisos por WhatsApp** con el número de la organización; a quien cargó le llega uno si su regla se frena (237), y lo que no se sabe si salió queda «Sin confirmar» (240). Fuera de las 24 horas, con una plantilla aprobada de la organización (61), que suma el encabezado con documento y el llenado de sus variables.
 - **Avisar a una persona y mandar por correo** (62), con el PDF adjunto si se elige, y la pregunta «Correo».
 - **El diseño del PDF:** una base bien hecha con logo, color, encabezado, secciones, mostrar u ocultar preguntas y firmas (59). El logo y los datos salen de la página pública, y el color se elige en cada formulario (82).
 - **Mandar el PDF a un cliente** de la organización (47), al chat del contacto elegido en el formulario (55).
@@ -334,10 +338,17 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
   - la IA solo carga sola con las tres señales de la 71, nunca con la seguridad que declara el modelo; lo leído es un dato, nunca una instrucción;
   - las validaciones fijas corren en el servidor, sin IA, también al confirmar.
 
+### E26 · Carpetas de formularios y catálogos (AB, CP1-A a CP5-A)
+
+- **Un árbol por organización** para ordenar formularios y catálogos, con subcarpetas y un elemento en varias, en un panel a la izquierda de «Formularios» y de «Catálogos» (79), con «Todos» y «Sin carpeta». Solo ordenan y no dan ni quitan acceso: las administran `forms.manage` y `formcatalogs.manage`, sin permisos nuevos (231).
+- **El menú lateral:** cada carpeta elige si va al menú, como menú propio o dentro de «Gestión de formularios», y muestra solo los formularios activos que la persona puede abrir, que abren la planilla o la carga.
+- **Datos:** `ITenantOwned`, con RLS, el bloqueo, hasta cinco niveles y 500 carpetas, e índices por organización; carpetas del sistema por clave, para lo que sumen los módulos.
+- **Con la biblioteca** (E22): «Usar esta plantilla» pide la carpeta, y la copia de un estándar va a una carpeta del sistema; un doble toque devuelve el mismo borrador, y con otra carpeta es un conflicto (F21 y F47 de ArquitecturaBase).
+- **Spec:** se escribe después del traspaso 16, porque allá todavía no pasaron su prueba integral.
+
 ### Después del bloque
 
 - **Integraciones, lo primero después del bloque** (76): ARCA es la primera, como módulo propio y con la conexión de cada empresa (150 a 152), y su [hoja de ruta](2026-11-06-arca-hoja-de-ruta.md) tiene las etapas, la adaptación y lo que no hay que repetir. Las que siguen (Mercado Libre, Mercado Pago y webhooks) se evalúan con su traspaso. La API pública y el MCP necesitan una identidad por organización.
-- **Carpetas para formularios y catálogos:** decididas allá el 2026-11-03, sin programar ([su plan](../../../ArquitecturaBase/docs/plans/2026-11-03-carpetas-de-formularios-y-catalogos.md)): un solo árbol por tema, que solo ordena y no da ni quita acceso, en un panel a la izquierda de cada listado. Se evalúa al sumarla a esta hoja; allá llega antes de su biblioteca de estándares. Con ellas, «Usar esta plantilla» pide la carpeta, y la copia de un estándar va a una carpeta del sistema; un doble toque devuelve el mismo borrador, y con otra carpeta es un conflicto (F21 y F47 de allá, con un tope de 500 carpetas).
 - **Catálogos, fases 3 a 6:** la búsqueda en vivo (56), las listas dependientes en WhatsApp (94), elegir primero por un campo (191) y los orígenes externos.
 - **La conexión a la base de un cliente,** con una solución simple: un agente del lado del cliente o una réplica de solo lectura.
 - **Los tableros que cruzan formularios.**
@@ -823,10 +834,10 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 - la lista cerrada de sufijos de helpers: `Compiler` y `Codec` no están. Se renombran a uno de la lista (por ejemplo, `WhatsAppFlowBuilder`), o se suma el sufijo a la ficha con su test.
 
 **En curso allá al 2026-11-08,** sin traspasar (lo que siguió al traspaso 10, hasta `ae60b950`). No se arma nada con esto hasta que llegue su traspaso, y lo que allá no se probó a mano no se toma como probado acá: EP1-A, los esqueletos, importar y exportar opciones, las listas dependientes, el menú sin saltos y las etapas 2 y 3 de renglones.
-- **Renglones:** allá quedaron programadas el 2026-11-07 la etapa 2 (cargar) y la 3 (ver), con la prueba física en la prueba integral final, y la 4 (las reglas) se programa desde el 2026-11-08. Lo suyo ya está acá: la planilla, «Filtros» y el Excel en la spec 19, la carga en la 20, y el PDF y las reglas en la 21. Cada una lo contrasta con el código de allá al planificar.
+- **Renglones:** allá se probaron de punta a punta con Meta el 2026-11-09, y sus planes se retiraron (traspaso 15). Lo suyo ya está acá: la planilla, «Filtros» y el Excel en la spec 19, la carga en la 20, y el PDF y las reglas en la 21.
 - **Elegir primero por un campo** (LD1-A a LD3-A): programado allá; acá va después del bloque (191).
 - **La IA arma, etapas 2 y 3:** las planillas con «Importar opciones» y los documentos. Ante un pedido vago, allá pregunta y espera, y acá propone enseguida (192).
-- **Carpetas** (CP1-A a CP5-A): acá van después del bloque, con dos listados y no tres (79).
+- **Carpetas** (CP1-A a CP5-A): programadas allá el 9 y el 11/11; acá son la E26, con dos listados y no tres (79 y 231).
 - **Lo que falta decidir allá:** el rendimiento para producción, la homologación de ARCA, Azure y el teclado de Roles. «Desvincular» sin el módulo de WhatsApp se decidió allá el 2026-11-07 (la ruta pasa al núcleo), y acá ya está en el núcleo (`api/me/login-methods`).
 
 ## 7. Decisiones pendientes
