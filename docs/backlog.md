@@ -97,3 +97,22 @@ El [panorama vigente](architecture/backend.md) describe la arquitectura; los pen
 - **70.** TaxIdField oculta y da por inválido un tipo fiscal guardado que después se deshabilitó
 - **71.** El halo de foco de los controles no usa --foco-halo, como piden tema.md y accesibilidad.md
 - **72.** renderWithProviders usa un QueryClient sin el manejo global de errores de producción
+
+## Traspaso 15, el núcleo: para programar
+
+Lo que trajo el traspaso 15 de ArquitecturaBase para el núcleo (su traspaso 14, `02-nucleo.md`) y pide código. Nada de allá pasó todavía su prueba integral: se anota sin armar etapas, y un detalle puede cambiar con el traspaso 16.
+
+- **Nadie da lo que no tiene** ([ADR 0061](decisions/0061-nadie-da-lo-que-no-tiene.md)). Un `*Guard` por alcance, usado dentro del límite: en la organización, por `RoleService` y los casos de uso de `OrganizationUsers` (editar, estado, quitar, invitar); en cada empresa, por `CompanyMembershipService`; en Plataforma, por `PlatformOperatorService`. Errores en `Errors.resx` y `.en.resx`, y tests con cuentas que tienen solo cada permiso.
+- **Retención de los datos del ingreso** ([ADR 0062](decisions/0062-retencion-de-los-datos-del-ingreso.md)). Purga por lotes de `identity.LoginCodes`, `identity.LoginAudits` y OpenIddict en un scope global, y de las invitaciones cerradas con `TenantJobRunner`; sus índices; el test de que cada tabla con datos personales nombra quién la purga; y el texto de la auditoría de Plataforma que dice que los ingresos se guardan doce meses.
+- **Topes de correo** ([ADR 0063](decisions/0063-topes-de-correo-de-la-plataforma.md)). Opciones `Email:*` validadas al arrancar, contadores en una tabla global, el 429 con `retryAfter`, la espera en horas y minutos en el front, el aviso en el log al 80 % y al llegar, y las claves en `docs/operations/configuracion.md`.
+- **IPv6 por su /64** (N20) en `RateLimitIpHasher` y `WhatsAppQuotaIpHasher`, antes del HMAC ([cuotas](rules/cuotas.md)).
+- **El bloqueo no se usa contra otro** (N3): que no frene a Google (`GoogleAccountGuard`, `ExternalLoginService`) y que `LoginCodeAttemptVerifier` sume solo contra un código activo y diga `LockedOut` después de un código correcto ([identidad](features/identidad.md)).
+- **El correo no se pierde ni sale dos veces** (N5, N8 y O3): en `OutboxDispatcher`, clasificar las fallas de SMTP, volver a pendiente lo que falló antes del cuerpo, no repetir lo incierto, plazo propio dentro del apagado y el código que vence en la cola.
+- **Estado de entrega de la invitación** (`Pending`, `Sent`, `Uncertain` y `Failed`), con un chequeo `email` en Degraded ante un 535 y contadores de enviados y descartados ([organizaciones](features/organizaciones.md)). Mostrarlo en Usuarios es un cambio de pantalla y se dibuja antes.
+- **La resiliencia por defecto no reintenta un POST** (N18): `ServiceDefaults/Extensions.cs` usa `AddStandardResilienceHandler()` sin `DisableForUnsafeHttpMethods`. WhatsApp y Anthropic ya lo hacen por su cuenta.
+- **El 500 se puede rastrear** (N10): la persona y la organización en el scope del log, y la consola en JSON fuera de desarrollo ([logs](rules/logs.md)). El exportador OTLP y la alerta de 5xx van con la E10.
+- **Salir cierra las demás pestañas de ese lado** (N12), en el front, con `BroadcastChannel`: la pública o la de Plataforma, nunca las dos ([ADR 0044](decisions/0044-sesion-de-plataforma-aparte.md)).
+- **Cada pantalla pide solo los conteos que muestra** (N30): revisar los `filter-counts` que pide el front (Roles, Usuarios, Empresas, Cuentas, Recuperaciones y Organizaciones).
+- **Textos neutrales en el núcleo** (N22): que ningún texto del núcleo nombre un módulo.
+- **Sin Formularios, el asistente de WhatsApp anda** (B5): al programar la E23 y la E25, pedir las capacidades `forms.*` solo si un dueño instalado las declara.
+- **Borrar con el ETag del listado** (resto de N28): hoy no aplica, porque las claves son al azar. Va en el adaptador de Azure (E10) y en la E18 si alguna clave fuera determinística.
