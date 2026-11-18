@@ -97,7 +97,9 @@ public sealed partial class BuildConfigurationTests
             return;
         }
 
-        Assert.Contains($"redirect_uri: `${{origin}}{callbackPath}`", File.ReadAllText(authConfigPath), StringComparison.Ordinal);
+        var authConfig = File.ReadAllText(authConfigPath);
+        Assert.Contains($"export const authCallbackPath = \"{callbackPath}\";", authConfig, StringComparison.Ordinal);
+        Assert.Contains("redirect_uri: `${origin}${authCallbackPath}`", authConfig, StringComparison.Ordinal);
         Assert.Contains($"path: \"{callbackPath}\"", File.ReadAllText(routesPath), StringComparison.Ordinal);
 
         var developmentSettings = Path.Combine(SolutionRoot.FullPath, "src", "ArquitecturaBaseMultitenant.Api", "appsettings.Development.json");
