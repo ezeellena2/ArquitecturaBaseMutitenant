@@ -7,14 +7,14 @@
 | Ruta | Permiso | Pide | Devuelve |
 | --- | --- | --- | --- |
 | `GET` y `PUT /api/organization/whatsapp/assistant/agent` | `whatsapp.manage` | `{profile, cases[], limits{customers, internal}, version, knowledge?, knowledgeVersion?}`; el conocimiento viaja solo si cambió, con su propia versión | el agente y 200 `{version, knowledgeVersion}` |
-| `POST /api/organization/whatsapp/assistant/agent/test` | `whatsapp.manage` | `{text, inbox}` | `{actions[{caseId, why, used[], preview}]}`; no manda nada |
+| `POST /api/organization/whatsapp/assistant/agent/test` | `whatsapp.manage` y atender esa bandeja | `{messages[], inbox}`, de 1 a 5 mensajes, uno por renglón, como una ráfaga | `{actions[{caseId, why?, used[]?, preview}]}`; no manda nada ni gasta los topes de WhatsApp; sin `formrecords.read`, sin `why`, `used` ni lo prellenado de un formulario |
 | `GET` y `PUT /api/organization/whatsapp/attention` | `whatsapp.manage` | por bandeja, `{mode, returnRule, idleMinutes?, version}` | la configuración |
 | `POST …/conversations/{id}/assistant-mode` | atender esa bandeja y `whatsapp.manage` | `{pinned, version}` | 200 `{version}` |
 | `POST …/conversations/{id}/pin` y `resolve` | atender esa bandeja | `{version}` | 200 `{version}` |
 | `GET …/conversations/{id}/actions/{actionId}` | atender esa bandeja | — | el porqué |
 | `POST …/conversations/{id}/suggestions/{suggestionId}/send` y `dismiss` | atender esa bandeja | `send`, con `[Idempotent]` | 202 y 204 |
-| `GET /api/organization/whatsapp/unanswered-topics`, `…/filter-counts` y `POST …/{id}/dismiss` | `whatsapp.manage` | `page`, `pageSize`, `sort`, `search` y `status` | `PagedResult<{id, topic, description, questions, people, lastAtUtc, dismissedBy?, dismissedAtUtc?}>`; los conteos dan temas y preguntas por estado, para la banda y el filtro |
-| `GET /api/organization/forms/missing`, `…/filter-counts` y `POST …/{id}/dismiss` | `forms.manage` | lo mismo | lo mismo |
+| `GET /api/organization/whatsapp/unanswered-topics`, `…/filter-counts`, `POST …/{id}/dismiss` y `POST …/{id}/review` | `whatsapp.manage` | `page`, `pageSize`, `sort`, `search` y `status` (`unreviewed`, `open` o `dismissed`); `review` y `dismiss`, con `{version}` | `PagedResult<{id, topic, description, questions, people, lastAtUtc, state, reviewedBy?, reviewedAtUtc?, dismissedBy?, dismissedAtUtc?, version}>`; los conteos dan temas y preguntas por estado, para la banda y el filtro; `review` da 200 `{version}` o el 409 (219) |
+| `GET /api/organization/forms/missing`, `…/filter-counts`, `POST …/{id}/dismiss` y `POST …/{id}/review` | `forms.manage` | lo mismo | lo mismo |
 | `GET` y `PUT /api/organization/forms/{id}/suggestions` | `formsuggestions.manage` | `{revision, suggestions[]}` | `{revision}` |
 | `POST /api/organization/forms/{id}/rules/proposals` | `formrules.manage` | `{text}` | `{rule}`; no guarda |
 
@@ -64,7 +64,7 @@ public interface ISpeechTranscriber
 | `WhatsApp.Chat.NotAssistantMode` | Conflict | una acción que pide ese modo |
 | `Forms.Suggestions.Invalid` | Validation (`suggestions[i]`) | más de 20, otro destinatario, bucle o mapeo de otro tipo |
 
-Un texto que no pasa el validador no es un error: se deriva, y queda en «Por qué respondió esto».
+Un texto que no pasa el validador no es un error: se deriva, y queda en «Por qué respondió esto» con su motivo: `replyNotAllowed`, `replyTooLong`, `dailyReplyLimit`, `assistantFailed` o `button` (0054 §6).
 
 ## Datos
 
@@ -77,11 +77,11 @@ Tres migraciones, una por módulo: Assistant, WhatsApp y Forms. Todo es `ITenant
 | **WhatsAppInboxAttention** (`IVersioned`) | `Inbox`, `Mode`, `ReturnRule`, `IdleMinutes?` | una por bandeja |
 | **WhatsAppAssistantActions** | `ChatId`, `TurnId`, `MessageId?`, `CaseId`, `Kind`, `State`, `Why` jsonb | sigue la retención del chat |
 | **WhatsAppAssistantCounters** | `ChatId`, `Day`, `Offers`, `Replies` | clave por chat y día, en la zona de la organización |
-| **WhatsAppUnansweredTopics** | `Topic`, `Description`, `Questions`, `People`, `LastAtUtc`, `State`, `DismissedByUserId?` y `DismissedAtUtc?` | sin nombres ni mensajes de quien preguntó; `Topic`, con su índice de búsqueda |
+| **WhatsAppUnansweredTopics** (`IVersioned`) | `Topic`, `Description`, `Questions`, `People`, `LastAtUtc`, `State` (`Unreviewed`, `Open` o `Dismissed`), `ReviewedByUserId?`, `ReviewedAtUtc?`, `DismissedByUserId?` y `DismissedAtUtc?` | sin nombres ni mensajes de quien preguntó; `Topic`, con su índice de búsqueda; al asistente va solo el `Topic` de los revisados, y los que ya existen quedan `Unreviewed` (219) |
 | **FormMissingTopics** | lo mismo | lo mismo |
 | **FormSuggestionSets** | `DefinitionId`, `Revision`, `Suggestions` jsonb | inmutable, como las reglas |
 
-**Columnas nuevas:** `WhatsAppChats` suma `AttentionMode`, `Pinned`, `NeedsPersonAtUtc?`, `NeedsPersonReason?`, `ResolvedAtUtc?` y `TurnDueAtUtc?`. `WhatsAppChatMessages` suma `Transcript?`. `WhatsAppFlowSessions` suma `SentByAssistant`, y `SentByUserId` pasa a admitir `null`. `FormDefinitions` suma `OfferWhen`, que no se sella: cambiarlo no pide republicar. `FormDefinitionStates` suma `ActiveSuggestionSetId`. `FormRecords` suma `SuggestedByRecordId?`. `AssistantPlatformSettings` suma los máximos. Asistente suma `ChannelId` y `ChannelConversationId`, con el índice `(TenantId, OwnerUserId, ChannelId, ChannelConversationId)`.
+**Columnas nuevas:** `WhatsAppChats` suma `AttentionMode`, `Pinned`, `NeedsPersonAtUtc?`, `NeedsPersonReason?` (el caso que derivó, `AssistantFailed` o el tope agotado), `ResolvedAtUtc?` y `TurnDueAtUtc?`. `WhatsAppChatMessages` suma `Transcript?`. `WhatsAppFlowSessions` suma `SentByAssistant`, y `SentByUserId` pasa a admitir `null`. `FormDefinitions` suma `OfferWhen`, que no se sella: cambiarlo no pide republicar. `FormDefinitionStates` suma `ActiveSuggestionSetId`. `FormRecords` suma `SuggestedByRecordId?`. `AssistantPlatformSettings` suma los máximos. Asistente suma `ChannelId` y `ChannelConversationId`, con el índice `(TenantId, OwnerUserId, ChannelId, ChannelConversationId)`.
 
 ## En el multitenant
 
@@ -91,7 +91,8 @@ Tres migraciones, una por módulo: Assistant, WhatsApp y Forms. Todo es `ITenant
 - **Features:** `forms` y `assistant`, prendidos en la organización. En un worker, `IFeatureService` da `false`, porque no hay sesión: se lee `ITenantFeatureCache`, como `WhatsAppModulePolicy`.
 - **Permisos:** suma `formsuggestions.manage`. Lo demás pide `whatsapp.manage` o el permiso de atender.
 - **WhatsApp:** el asistente actúa en el número de la organización.
-- **Cuotas:** las rutas cuentan en las generales, y Probar, además, en la del Asistente.
+- **Cuotas:** las rutas cuentan en las generales, y Probar, además, en la del Asistente, con el cupo de quien prueba. El cupo vuelve solo si el turno no llegó al proveedor, y el tope de turnos pendientes es de la copia ([0064](../../decisions/0064-reglas-de-toda-la-ia.md) §1 y §12).
+- **Las fallas del proveedor:** con la clave de la plataforma las arregla el operador, y la organización ve «no disponible» (0064 §7).
 
 ## Lo que ya se pagó allá (no repetir)
 
@@ -100,4 +101,6 @@ Cada punto lleva su test, escrito durante la etapa:
 2. **La espera de 35 s,** por un cierre que no avisaba.
 3. **Un audio «Transcribiendo…» para siempre,** porque una falla del GET abortaba el POST.
 4. **Una respuesta tardía** después de tomar el chat no sale.
-5. **`business.information`** incluía textos sin revisar como si fueran hechos: lo vacío no se usa.
+5. **`business.information`** incluía textos sin revisar como si fueran hechos: lo vacío no se usa, y solo van los hechos confirmados.
+6. **La lista de formularios se cortaba en 100 sin orden,** y el corte cambiaba entre turnos: se ordena por nombre antes de cortar.
+7. **Un tema que escribió un cliente llegaba al asistente de los demás chats:** nace «Sin revisar» (219), y la lectura de los candidatos no se marca parcial por los temas.
