@@ -84,6 +84,12 @@ Lo decidió el dueño del producto con los datos de Meta verificados ese día ([
 - **Bot:** no se apaga; con un número conectado siempre responde.
 - **Archivos de los clientes:** en la Etapa 11 se ve «Mandó una foto/audio/documento», sin descarga, que llega con la Etapa 14. Desconectar un número deja sus chats para leer, sin responder.
 
+### Precisión del 2026-11-18 (traspaso 15)
+
+- **Contenido cifrado:** todo lo que se escribe en el chat se guarda cifrado, con la clave de la instalación atada a cada organización; quedan en claro el nombre y el número del contacto ([0065](0065-contenido-del-chat-cifrado.md)).
+- **Retención:** sigue la de 2026-10-13. El usuario la reconfirmó frente a los 90 días de ArquitecturaBase; solo se vacían antes la ubicación y el texto de un envío de formulario.
+- **Lo que no se sabe si salió** queda «Sin confirmar» y lo revisa una persona ([0066](0066-lo-que-no-se-sabe-si-salio.md); decisión 240, que cambia la 80).
+
 ## Alternativas descartadas
 
 - Un bot por persona B2C: Meta no da la API a personas, y no tiene un caso de uso.
