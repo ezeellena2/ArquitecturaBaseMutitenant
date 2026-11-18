@@ -1,6 +1,6 @@
 # E22 · Biblioteca de plantillas de la plataforma (spec)
 
-**Estado:** pendiente · spec de la etapa 22 del bloque (decisiones 34, 40, 78, 79, 175 y 177). **Es también la biblioteca de formularios estándar** (40). Se arma con las piezas de este repo y las de las etapas anteriores. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E14]**, **[E12]** y **[E21]** contra el código.
+**Estado:** pendiente · spec de la etapa 22 del bloque (decisiones 34, 40, 78, 79, 175, 177 y 220). **Es también la biblioteca de formularios estándar** (40). Se arma con las piezas de este repo y las de las etapas anteriores. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E14]**, **[E12]** y **[E21]** contra el código.
 
 **Fuentes:**
 - alcance y decisiones: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E22 y decisiones 2, 13 a 16, 30 a 33, 35, 40, 45, 50, 59, 61, 62, 64, 138, 149, 175 y 177;
@@ -41,6 +41,7 @@ Antes de empezar:
 - lo que en la E20 deja un formulario solo para la app: con WhatsApp instalado, publicar la plantilla frena una lista dependiente, «elegir varias» de más de 20 opciones o un bloque con un mínimo de más de 10 ítems (B8);
 - plantillas de una organización para otra;
 - la «Lectura de documentos» de una plantilla, que llega con los documentos (E25);
+- los estándares que aporta un módulo, como la «Factura» de ARCA, con sus preguntas atadas con candado y sus reglas activas (220): conviven con estas plantillas, los trae el módulo ARCA en su segunda parte, y esta etapa no cambia por eso;
 - saber qué organizaciones usaron una plantilla (decisión 16);
 - borrar plantillas: se retiran.
 
@@ -88,7 +89,7 @@ Sin «Textos en», sin el inglés obligatorio, sin «Cambios sin guardar» ni «
   - una retirada muestra quién la retiró, el motivo y «Volver a publicar».
 - **Publicar:** el motivo y la comprobación. Muestra qué cambia, o los problemas por pregunta, catálogo o regla, con «Publicar» grisado. La primera publicación es la versión 1, y volver a publicar sin cambios repite la misma.
 - **Las reglas y el diseño del PDF en Plataforma** se guardan con el borrador: van en `FormTemplateDraft` (`rules[]` y `pdfDesign`), con el mismo `PUT …/draft`, su versión y el 409. «Guardar borrador» de `Plat-FRM-Pdf` es ese mismo guardado. Los problemas de las reglas al publicar son `Forms.Template.Invalid` con el campo `rules[i]…` (B8).
-- **Las reglas precargadas en la organización:** «Guardar reglas» queda habilitado; al tocarlo sin elegir lo que pide cada acción, se marcan (43). El servidor valida con la regla de la E21. Se ven y se guardan con `formrules.manage`; sin ese permiso, la sección muestra su estado «sin permiso».
+- **Las reglas precargadas en la organización:** «Guardar reglas» queda habilitado; al tocarlo sin elegir lo que pide cada acción, se marcan (43). El servidor valida con la regla de la E21. Se ven y se guardan con `formrules.manage`; sin ese permiso, la sección muestra su estado «sin permiso». Una que cita respuestas, adjunta el PDF o manda una copia pide además `formrecords.read` al guardarla, con la regla de la E21 (F5 de ArquitecturaBase): «Usar esta plantilla» no guarda reglas (30), así que el control cae en «Guardar reglas».
 - **«Logo» y «Nombre de la organización»** van como marcadores, porque la plataforma no ve datos de ninguna organización.
 - **Usar una plantilla:**
   - se pide el nombre y se propone el prefijo; si VIS está tomado, se propone VIS2, y la (i) del prefijo dice por qué;
