@@ -137,7 +137,7 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 **Lo que se suma a las tablas de la E11 [E11]:**
 - **mensaje saliente:** un tipo «Formulario» que apunta a la sesión;
 - **mensaje entrante:** `ProtectedFlowResponse`, cifrado con `IPayloadProtector` y de hasta 24 KiB. Se borra con la retención de WhatsApp, solo cuando ya se procesó;
-- **copia compartida:** `WhatsAppLinkedMessage` suma `FormCard` jsonb, la tarjeta de T16.
+- **copia compartida:** `WhatsAppLinkedMessage` suma `FormCard`, la tarjeta de T16. Es contenido del chat y se guarda cifrado, con el propósito de la copia vinculada ([ADR 0065](../../decisions/0065-contenido-del-chat-cifrado.md)): un JSON en `bytea`, no jsonb. El mensaje «Formulario» de la conversación también va cifrado, como todo texto del chat.
 
 ## 4. Dominio y errores
 
