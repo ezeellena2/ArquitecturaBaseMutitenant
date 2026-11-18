@@ -6,7 +6,7 @@
 
 El cupo de correo es de la cuenta que manda, no de cada organización. El Gmail de producción da unos 500 correos por día, y **los comparte con ArquitecturaBase** ([configuración](../operations/configuracion.md), [runbook](../operations/runbook.md)). Si el Dueño de una organización manda 400 invitaciones en una mañana, ese día no les llegan los códigos de ingreso a los demás, ni en las otras organizaciones ni en ArquitecturaBase.
 
-Hoy hay topes por destino, por cuenta y por dirección ([0043](0043-las-pantallas-dicen-si-hay-cuenta.md); perfiles `LoginCode` y `LoginVerify` de [cuotas](../rules/cuotas.md)). No hay ninguno global ni ninguno de invitaciones: invitar cuenta solo en las cuotas generales de pedidos.
+Hoy hay topes por destino y por dirección ([0043](0043-las-pantallas-dicen-si-hay-cuenta.md); `LoginCode:MaxRequestsPerWindow` y los perfiles `LoginCode` y `LoginVerify` de [cuotas](../rules/cuotas.md)), por ventanas cortas y no por día. No hay ninguno global ni ninguno de invitaciones: invitar cuenta solo en las cuotas generales de pedidos.
 
 ## Decisión
 
