@@ -6,6 +6,7 @@ using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -79,7 +80,8 @@ internal static class CachingRegistration
         services.AddSingleton<IDistributedCache>(provider => new ResilientDistributedCache(
             provider.GetRequiredService<RedisCache>(), provider.GetRequiredService<CacheMetrics>(),
             provider.GetRequiredService<ILogger<ResilientDistributedCache>>()));
-        // Sin la etiqueta de /alive: la caché es readiness, no vida del proceso.
-        services.AddHealthChecks().AddCheck<RedisHealthCheck>("cache");
+        // Sin la etiqueta de /alive: la caché es readiness, no vida del proceso. Falla en Degraded, que responde 200: sin
+        // Redis la copia sigue en el tráfico (ADR 0058).
+        services.AddHealthChecks().AddCheck<RedisHealthCheck>("cache", failureStatus: HealthStatus.Degraded);
     }
 }

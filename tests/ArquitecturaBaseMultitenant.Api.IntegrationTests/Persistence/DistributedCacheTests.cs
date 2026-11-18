@@ -131,8 +131,12 @@ public sealed class DistributedCacheTests(ApiFactory factory)
         Assert.Equal(2, reads.Count);
     }
 
+    /// <summary>
+    /// ADR 0058: sin Redis la copia sigue en el tráfico. El negocio lee de PostgreSQL y la readiness queda en Degraded, que
+    /// responde 200: un corte de Redis no saca del tráfico a todas las copias.
+    /// </summary>
     [Fact]
-    public async Task Without_redis_the_business_answers_and_only_readiness_fails()
+    public async Task Without_redis_the_business_answers_and_readiness_is_degraded()
     {
         await using var host = Host(redis: DeadRedis);
         using var client = host.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
@@ -150,7 +154,10 @@ public sealed class DistributedCacheTests(ApiFactory factory)
         using (var alive = await client.GetAsync("/alive", Ct))
             Assert.Equal(HttpStatusCode.OK, alive.StatusCode);
         using (var ready = await client.GetAsync("/health", Ct))
-            Assert.Equal(HttpStatusCode.ServiceUnavailable, ready.StatusCode);
+        {
+            Assert.Equal(HttpStatusCode.OK, ready.StatusCode);
+            Assert.Equal("Degraded", await ready.Content.ReadAsStringAsync(Ct));
+        }
     }
 
     [Fact]

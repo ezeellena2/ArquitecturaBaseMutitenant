@@ -272,8 +272,9 @@ public sealed class DistributedRateLimitTests(ApiFactory factory) : IClassFixtur
     {
         for (var attempt = 0; attempt < 50; attempt++)
         {
+            // Sin Redis la readiness responde 200 en Degraded (ADR 0058): vuelve cuando dice Healthy.
             using var health = await client.GetAsync("/health", Ct);
-            if (health.IsSuccessStatusCode) return;
+            if (await health.Content.ReadAsStringAsync(Ct) == "Healthy") return;
             await Task.Delay(TimeSpan.FromMilliseconds(200), Ct);
         }
 
