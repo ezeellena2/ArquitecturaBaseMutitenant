@@ -1,6 +1,6 @@
 # ADR 0048 · El asistente: un LLM en el inicio, como módulo quitable
 
-Estado: aceptada el 2026-10-07 por el dueño del producto. Las decisiones D1–D26 están en la tabla de esta ADR; D6 se resuelve en esta ADR. La [0049](0049-precisiones-whatsapp-y-asistente.md) precisa mensajes personales, destinatarios de alertas y alcance diario el 2026-10-08.
+Estado: aceptada el 2026-10-07 por el dueño del producto. Las decisiones D1–D26 están en la tabla de esta ADR; D6 se resuelve en esta ADR. La [0049](0049-precisiones-whatsapp-y-asistente.md) precisa mensajes personales, destinatarios de alertas y alcance diario el 2026-10-08. **Precisión 2026-11-18 (traspaso 15):** la [0064](0064-reglas-de-toda-la-ia.md) fija para toda la IA cuándo vuelve el cupo, las subidas, lo que se borra con una conversación (también sus audios y lecturas, que suma a la D14), las fallas del proveedor, el apagado y el control del anillo de claves (D2 y D19); sin programar.
 
 ## Contexto
 

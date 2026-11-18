@@ -18,6 +18,7 @@ El asistente de WhatsApp atiende audios, que llegan en OGG con Opus. El proveedo
 ## Consecuencias
 
 - Un tope agotado, una falla o la falta de clave dejan el audio sin transcripción, con «No pudimos pasar este audio a texto», y el chat sigue. El asistente no contesta un audio que no pudo leer.
+- **Precisión 2026-11-18 ([0064](0064-reglas-de-toda-la-ia.md)):** una transcripción que venció sin llegar al proveedor devuelve el cupo, y la que llegó cuenta aunque termine incierta; sin cupo no se transcribe, y en el Inicio el audio ni se guarda. El mismo audio dos veces con el mismo pedido da una sola transcripción. Las fallas del proveedor llevan su código (0064 §7); con la clave de la plataforma, las arregla el operador.
 - La transcripción la ve también el operador, debajo del audio.
 - Sumar otro proveedor es otro adaptador del mismo puerto, sin tocar WhatsApp.
 
