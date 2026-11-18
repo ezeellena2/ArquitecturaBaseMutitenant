@@ -146,6 +146,7 @@ Lo que trajo el traspaso 15 para toda la IA (la revisión de la IA de Arquitectu
 - **La fecha** (§9): la hora del pedido y la zona del perfil al final del mensaje del Inicio.
 - **El anillo y la traza** (§11): `platform.AiKeyRingControls` con su HMAC, la readiness que falla con otro anillo y la traza de quien pidió cada turno.
 - **Los tests** de la «Verificación» de la 0064 que tocan al Inicio.
+- **El diálogo de un modelo, en pasos** (decisión 254): en `PlatformAssistantSettingsPage`, agregar un modelo pide los datos técnicos en un segundo paso, y editarlo los muestra como lectura, con «Cambiar datos técnicos»; sale el plegado «Avanzado: datos técnicos». Tableros: `Plat-Asistente-Config` y `-23`, con sus teléfonos.
 
 ## Traspaso 15, WhatsApp y ARCA: para programar
 

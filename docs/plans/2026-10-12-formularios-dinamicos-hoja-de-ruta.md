@@ -797,6 +797,8 @@ Del traspaso 15, WhatsApp y ARCA (tanda 5, 2026-11-18). El usuario eligió la re
 241. **Una respuesta con una factura emitida no se corrige** (ARCA; excepción a la 93): con la emisión hecha o en camino, nadie la corrige, tampoco con `formrecords.correct`. Se anula, lo que emite la nota de crédito, y se carga otra.
 242. **Los nombres fiscales van siempre en español** (ARCA; H28 de ArquitecturaBase; excepción a la 42): el tipo de comprobante, el de documento y la condición frente al IVA («Factura C», «Nota de crédito», «Responsable inscripto») se ven en español en todos lados, también en la vista previa y con la cuenta en inglés, porque son los nombres legales. Lo demás de la pantalla sigue el idioma de la cuenta.
 
+254. **El diálogo de un modelo del asistente, en pasos** (Plataforma › Asistente; la 212 y la 213 en el núcleo; 2026-11-18): al agregar un modelo, los datos técnicos son el segundo paso del diálogo, después de «Siguiente»; al editarlo, se ven como lectura, en una grilla, y «Cambiar datos técnicos» abre ese paso. Sale «Avanzado: datos técnicos», que se plegaba y se desplazaba adentro del diálogo. ArquitecturaBase no tiene ese diálogo, porque allá no se cargan. Se programa en la segunda parte de la base (214).
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase
