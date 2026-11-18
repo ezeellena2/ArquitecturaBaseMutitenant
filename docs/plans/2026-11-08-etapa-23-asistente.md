@@ -56,7 +56,7 @@ El Back publica las rutas con `501`, el permiso, los códigos con sus textos, lo
 | GET y PUT `assistant/agent` | `whatsapp.manage` | `version`, y `knowledgeVersion` solo si viaja `knowledge` | 400 `Assistant.Agent.Invalid` y `Assistant.Knowledge.Invalid`; 409 |
 | POST `assistant/agent/test` | `whatsapp.manage` y atender esa bandeja | `assistantConversation`; `{messages[], inbox}`, de 1 a 5 | 400; 503 `Assistant.Agent.Unavailable` |
 | GET y PUT `attention` | `whatsapp.manage` | `{customers, internal}`, cada una `{mode: Assistant\|Person, returnRule: Idle\|Resolved\|Never, idleMinutes?, version}` | 400; 409 |
-| GET `unanswered-topics` y `…/filter-counts`; POST `…/{id}/dismiss` y `…/{id}/review` | `whatsapp.manage` | `status`: `unreviewed`, `open` o `dismissed`; `{version}` | 404 `WhatsApp.UnansweredTopic.NotFound`; 409 |
+| GET `unanswered-topics` y `…/filter-counts`; POST `…/{id}/dismiss` y `…/{id}/review` | `whatsapp.manage` | `status`: `pending` (de entrada), `unreviewed`, `open` o `dismissed`; `{version}` | 404 `WhatsApp.UnansweredTopic.NotFound`; 409 |
 | POST `…/conversations/{id}/assistant-mode` | atender y `whatsapp.manage` | `{pinned, version}`; feature `assistant` | 404; 409; 503 `Assistant.Agent.Unavailable` |
 | POST `…/conversations/{id}/pin` | atender | `{pinned, version}` | 404; 409 |
 | POST `…/conversations/{id}/resolve` | atender | `{version}` | 404; 409 |
