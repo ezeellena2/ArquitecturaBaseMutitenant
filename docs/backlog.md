@@ -132,6 +132,21 @@ Lo que trajo el traspaso 15 para toda la app (decisiones 205 a 213 de la [hoja d
 - **Roles como matriz** (212): `PermissionPicker` y `RoleEditorPage`, también en los roles de una empresa y en los permisos de un operador de Plataforma: la matriz desde 768 px y una banda por área más angosto, con `PermissionPicker.test.tsx` en las dos formas.
 - **Las piezas** (213): el título de un grupo de opciones con su (i); un chip de solo lectura sin ✕; las teclas que mueven la pantalla, con el foco en el menú; el desplegable de 48 en el teléfono; las confirmaciones del núcleo en una frase, repasadas con la [lista de chequeo](../../ArquitecturaBaseMutitenantFront/docs/design/lienzo/README.md#lista-de-chequeo-de-diseño).
 
+## Traspaso 15, la IA: para la segunda parte de la base
+
+Lo que trajo el traspaso 15 para toda la IA (la revisión de la IA de ArquitecturaBase, su traspaso 14, `05-ia.md`) y cae sobre el chat del Inicio ya programado: va en la **segunda parte de la base, antes de la E12**, con una sola puerta (214). Las reglas están en la [ADR 0064](decisions/0064-reglas-de-toda-la-ia.md) y en la [ficha del asistente](features/asistente.md#reglas-de-toda-la-ia-traspaso-15-sin-programar); los tableros, en el lienzo v175. Lo del canal, la transcripción, los documentos y armar va con la E23 y la E25. Nada de allá pasó todavía su prueba integral: un detalle puede cambiar con el traspaso 16.
+
+- **El cupo vuelve solo si no se intentó** (0064 §1): revisar que la recuperación y el vencimiento de un turno sin `BeginCall` devuelvan el cupo diario y la reserva del mes, y que lo intentado no; el tope de turnos pendientes, 4 por copia.
+- **Sin cupo no se guarda el archivo** (§2): `AssistantAttachmentService` mira el cupo diario y el tope mensual antes de leer el cuerpo, y responde el 429 de siempre.
+- **Las subidas** (§4): un lugar por persona, sin cola, y la cola de la copia con dos lugares por organización como mucho; el plazo de 120 s del cuerpo y el 429 con `retryAfter`; el mismo archivo dos veces con el mismo pedido.
+- **Lo que se borra** (§5): la confirmación de borrar dice «Se borran también sus archivos.» (front); la purga con índices parciales, y abrir el Inicio y el claim cuentan solo lo pendiente.
+- **Las versiones** (§6): lo sellado se escribe un despliegue después; un turno con algo desconocido queda pendiente; `unsupportedProvider` en la configuración, con la conexión «Pausada»; la conversación ilegible, «no disponible» y borrable; la pestaña que descarta lo desconocido.
+- **Las fallas del proveedor** (§7): los seis códigos por el estado HTTP, sin leer el cuerpo, con sus textos en `Errors.resx` y `.en.resx`; la clave que no se descifra no gasta cupo; quién ve cada falla según quién paga, en `Asistente-Config-Org` y `Plat-Asistente-Config`.
+- **El apagado** (§8): el plazo de vaciado, lo no reservado de vuelta a pendiente y `Assistant.Turn.Interrupted`, con su texto en el chat. Va con el apagado de la B6 de la E10.
+- **La fecha** (§9): la hora del pedido y la zona del perfil al final del mensaje del Inicio.
+- **El anillo y la traza** (§11): `platform.AiKeyRingControls` con su HMAC, la readiness que falla con otro anillo y la traza de quien pidió cada turno.
+- **Los tests** de la «Verificación» de la 0064 que tocan al Inicio.
+
 ## Traspaso 15, WhatsApp y ARCA: para programar
 
 Lo que trajo el traspaso 15 para WhatsApp como canal y para ARCA (tanda 5) y pide código. Lo de WhatsApp cae sobre lo ya programado de la E11: va con la **segunda parte de la base** (214) y, a más tardar, antes de la E14, que suma contenido cifrado y el envío de formularios. Nada de ArquitecturaBase pasó todavía su prueba integral, y un detalle puede cambiar con el traspaso 16.
