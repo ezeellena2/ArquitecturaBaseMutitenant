@@ -41,7 +41,7 @@ Antes de empezar, en este orden:
 - WhatsApp baja cada archivo de la API de medios con el token de la organización, solo por HTTPS, desde hosts de Meta y sin redirecciones;
 - verifica hash, tamaño y tipo real, con las dimensiones antes de decodificar, y arma la miniatura de una foto;
 - guarda en `IFileStore`, y le pasa a Forms las claves en la captura. Forms confirma los archivos junto con la respuesta. **Nada queda a medias:** si algo falla, no hay respuesta ni número;
-- tiene 90 s por captura, y reintenta a los 30, 90, 210, 450 y 930 s. Si sigue fallando, o si no coinciden hash, tamaño o tipo, queda rechazada y visible, nombrando la pregunta, y se puede mandar de nuevo;
+- tiene 90 s por captura y aguanta un día de caída de Meta (H11 de ArquitecturaBase): reintenta con esperas que crecen, desde 30 s y el doble cada vez, hasta una hora, y abandona solo con cinco fallas y el día cumplido. Igual lo que llega al chat con un archivo. Si sigue fallando, o si no coinciden hash, tamaño o tipo, queda rechazada y visible, nombrando la pregunta, y se puede mandar de nuevo;
 - cada intento sube de nuevo: lo que no quedó confirmado se borra enseguida o lo limpia el worker.
 
 **Verificar un archivo** es una pieza del núcleo, que usan los dos módulos:
@@ -181,7 +181,7 @@ Tres migraciones: `<fecha>_FormRecordFiles.cs`, `<fecha>_WhatsAppChatFiles.cs` y
 | `StorageKey`, `ThumbnailKey`, `FileName`, `MediaType`, `ByteLength`, `Sha256` | — | como `FormRecordFiles` |
 | `IdempotencyKey` | texto? | la clave del envío de un operador, única por chat: es el vínculo del modo durable, y se confirma en la misma UoW que el mensaje |
 
-**Otras columnas:** `FormVersions` suma `MaxFileBytes`. `WhatsAppFlowSessions` suma el estado `Receiving` y `Attempts`, que muestra la tarjeta. `ProtectedFlowResponse`, del mensaje entrante, guarda hasta 96 KiB, por la respuesta de 64 KiB. Los reintentos los corre la cola de entrada, con el intento en el mensaje, como en la E14. Las categorías de `IFileStore` son `forms` y `whatsapp`. **Las claves no llevan la organización** (decisión de la E10): el aislamiento lo dan estas tablas y la Api.
+**Otras columnas:** `FormVersions` suma `MaxFileBytes`. `WhatsAppFlowSessions` suma el estado `Receiving` y `Attempts`, que muestra la tarjeta. `ProtectedFlowResponse`, del mensaje entrante, guarda hasta 96 KiB, por la respuesta de 64 KiB. Los reintentos los corre la cola de entrada, con el intento en el mensaje, como en la E14, con las esperas de un día de H11. Las categorías de `IFileStore` son `forms` y `whatsapp`. **Las claves no llevan la organización** (decisión de la E10): el aislamiento lo dan estas tablas y la Api.
 
 ## Pasos
 
