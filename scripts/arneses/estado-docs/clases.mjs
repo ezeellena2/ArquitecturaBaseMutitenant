@@ -9,15 +9,18 @@ const INDICE = /^docs\/(?:.+\/)?(?:README|plantilla)\.md$/;
 const VIVO = /^docs\/(?:rules|architecture|features|guides|operations)\/[^/]+\.md$/;
 const DECISION = /^docs\/decisions\/\d{4}-[^/]+\.md$/;
 const DE_PASO = /^docs\/(?:plans\/.+|backlog)\.md$/;
+// El resultado de una revisión de arquitectura (ADR 0059): vale para los commits que nombra y no se reescribe.
+const REGISTRO = /^docs\/reviews\/\d{4}-\d\d-\d\d-[^/]+\.md$/;
 const SPEC = /^docs\/plans\/formularios\/(\d\d)-(?!texto-diseno)/;
 const PLAN_DE_ETAPA = /^docs\/plans\/\d{4}-\d\d-\d\d-etapa-(\d+)-/;
 
-/** La clase sale de la carpeta: `indice`, `vivo`, `decision`, `de-paso`, o null si no tiene lugar. */
+/** La clase sale de la carpeta: `indice`, `vivo`, `decision`, `de-paso`, `registro`, o null si no tiene lugar. */
 export function clase(archivo) {
   if (INDICE.test(archivo)) return 'indice';
   if (VIVO.test(archivo)) return 'vivo';
   if (DECISION.test(archivo)) return 'decision';
   if (DE_PASO.test(archivo)) return 'de-paso';
+  if (REGISTRO.test(archivo)) return 'registro';
   return null;
 }
 

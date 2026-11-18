@@ -76,6 +76,14 @@ test('formato: una decisión lleva estado, contexto y decisión, en las dos form
   assert.match(mala[0].real, /falta Estado y Decisión/);
 });
 
+test('formato: una revisión de arquitectura tiene su carpeta y no pide secciones, pero sí que alguien la enlace', async () => {
+  const revision = { 'docs/reviews/2026-11-20-arquitectura-nucleo.md': '# Revisión del núcleo\n\nCommits: abc.' };
+  assert.deepEqual(await formato.detectar(contexto({ archivos: revision })), []);
+  const suelta = await formato.detectar(contexto({ archivos: { 'docs/reviews/notas.md': '# Notas' } }));
+  assert.deepEqual(tipos(suelta), ['fuera-de-lugar']);
+  assert.deepEqual(tipos(await huerfanos.detectar(contexto({ archivos: revision }))), ['huerfano']);
+});
+
 test('formato: una spec o un plan de etapa largos se marcan, y el plan general no', async () => {
   const largo = Array(4600).fill('palabra').join(' ');
   const archivos = {

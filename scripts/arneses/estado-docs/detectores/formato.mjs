@@ -51,7 +51,7 @@ export async function detectar(ctx) {
       out.push(ctx.crear({ archivo, linea: 1, tipo: 'fuera-de-lugar', clave: 'carpeta', real: `${archivo}: no es ninguna de las clases de docs/rules/documentacion.md`, accion: 'humano' }));
       continue;
     }
-    if (tipo === 'indice') continue;
+    if (tipo === 'indice' || tipo === 'registro') continue;
     const texto = await ctx.leer(archivo);
     const estado = lineaDeEstado(texto);
     const hallazgos = tipo === 'de-paso'

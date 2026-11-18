@@ -17,6 +17,11 @@
   Es la **única** excepción que llega al mapper como respuesta de negocio, porque siempre se responde igual.
 - Las acciones de un solo clic que no dependen de lo que el usuario vio (activar, desactivar) también mandan `version`, así una fila vieja en pantalla no revierte un cambio.
 - **Front:** el guardado de una pantalla manda la versión de lo que la persona está editando: la de la lectura con la que arrancó o se reinició el formulario (al cargar, con «Ver lo nuevo» y al descartar) y, después de guardar, la que respondió el guardado; nunca la de una relectura. Si otra persona guardó mientras la ficha estaba quieta, el back responde 409 y sale el cartel con «Ver lo nuevo». Lo lleva `useEditForm` (front: `docs/rules/formularios.md`, "Ediciones simultáneas").
+- **Varias copias.** La Api corre en dos o más copias que atienden a todas las organizaciones (E10). Lo que hace una copia en segundo plano no se repite en otra:
+  - **cada trabajo de fondo que borra o avisa corre una vez entre copias,** con un lease compartido en la base o con una reserva por fila (`FOR UPDATE SKIP LOCKED` y un lease que vence), como el outbox y el procesador de entrada de WhatsApp. Un worker idempotente que recorre todas las organizaciones también lo necesita: si no, cada copia repite el trabajo de todas. `PeriodicWorker` suma el lease en la E10;
+  - **la limpieza de archivos borra solo sus categorías declaradas** (`IFileStoreMaintenance.ListUnconfirmedAsync(categoría, …)`). Un tipo nuevo de archivo lleva una categoría nueva: si comparte la de otro, una copia vieja no conoce su tabla y lo borra;
+  - **lo que sale para una misma persona respeta su orden:** la reserva toma lo siguiente de un destinatario solo si no tiene otra salida en curso (`NOT EXISTS`). Así un texto no llega antes que el aviso con un PDF que otra copia todavía está subiendo;
+  - **un Guid v7 no ordena lo creado en el mismo milisegundo:** lo que se crea en una misma unidad de trabajo se ordena por un dato propio (la posición, la hora del pedido) y el `Id` va solo como último desempate.
 
 ## Prohibido
 - Una columna `Version` o `RowVersion` manual incrementada a mano, salvo `ProfileVersion` de «Tus datos» (la excepción de arriba).

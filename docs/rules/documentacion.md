@@ -13,6 +13,7 @@
 | una receta paso a paso | vivo | `docs/guides/` | para qué sirve y los pasos |
 | cómo configurar u operar | vivo | `docs/operations/` | una sección por tarea |
 | por qué se eligió algo | decisión | `docs/decisions/` | `Estado`, `Contexto`, `Decisión` y `Consecuencias`; si entra en una línea, solo la fila del índice |
+| qué encontró una revisión de arquitectura | decisión | `docs/reviews/` | `AAAA-MM-DD-arquitectura-<desarrollo>.md`, según su [guía](../guides/revisar-arquitectura.md); vale para los commits que nombra: no se reescribe, la reemplaza la revisión siguiente |
 | qué se va a hacer en una etapa | de paso | `docs/plans/` | [etapa en paralelo](../guides/etapa-en-paralelo.md), 4.000 palabras como mucho |
 | la spec de una etapa | de paso | `docs/plans/formularios/` | [plantilla](../plans/formularios/plantilla.md), 4.000 palabras como mucho |
 | material para escribir otra cosa | de paso | `docs/plans/` | libre, con su condición de salida |
