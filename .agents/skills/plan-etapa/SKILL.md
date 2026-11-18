@@ -25,8 +25,8 @@ El plan tiene que poder ejecutarse sin adivinar. Las decisiones de producto las 
 5. **Escribí el plan en `docs/plans/<fecha>-etapa-<n>-<tema>.md`, corto (unas 4.000 palabras como mucho, sin historial; `AGENTS.md`, «Velocidad y cierre liviano») y con estas secciones:**
    - **Forma de trabajo:** modo rápido y una sola puerta al final.
    - **Contrato:** rutas, cuerpos, códigos de error y permisos. Va primero y completo.
-   - **Back** y **Front:** tareas con sus archivos, el archivo real del que se copia y sus tests. Cada parte lleva el texto listo para pegar en su chat.
-   - **Integración y puerta:** lo que corre la skill `/puerta`.
+   - **Back** y **Front:** tareas con sus archivos, el archivo real del que se copia y sus tests. Cada parte lleva el texto listo para pegar en su chat. Marcá las tareas que llevan revisión adversarial: las que tocan datos, permisos, efectos fuera del sistema o el aislamiento entre organizaciones (`AGENTS.md`, «Forma de trabajo»). Una tarea de más de unos 150 pasos se parte en dos.
+   - **Integración y puerta:** lo que corre la skill `/puerta`. La última etapa del bloque E12–E25 suma la revisión de arquitectura de Formularios y la prueba integral con el usuario.
    - **Relación con otras etapas:** «Usa de las anteriores» y «Deja para las siguientes», con nombres concretos, para cruzar los planes.
    - **Cambios al contrato:** vacía; la usan los chats si algo cambia.
    - **Para decidir:** cada punto con opciones y una recomendada.
@@ -40,7 +40,7 @@ El plan tiene que poder ejecutarse sin adivinar. Las decisiones de producto las 
    - al usuario se le preguntan solo las decisiones de producto: lo que ve o puede hacer una persona. Las técnicas las decide quien planifica y las anota en una línea del plan. Si una de producto tiene una parte técnica, primero explicá qué es, para qué sirve y un ejemplo real del repo;
    - anotá cada respuesta en el plan, y también en una ADR si cambia una regla;
    - commiteá solo esos archivos.
-8. **Entregá el orden de los chats y sus textos:** primero el Contrato; después Back y Front a la vez; al final, Integración y puerta. Los chats son sesiones de Claude Code: la Guía las abre con esos textos y archiva las que terminaron.
+8. **Entregá el orden de los chats y sus textos:** primero el Contrato; después Back y Front a la vez; al final, Integración y puerta. Los chats son sesiones de Claude Code: la Guía las abre con esos textos, con tres o cuatro programando a la vez, y archiva las que terminaron solo con el visto bueno del usuario. Antes de abrirlas mira el cupo de la semana (`AGENTS.md`, «Sesiones y cupo»).
 
 ## Nunca
 
