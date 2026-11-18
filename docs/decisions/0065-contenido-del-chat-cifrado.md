@@ -14,7 +14,9 @@ Ya se cifran la entrada global (`EncryptedText`), la salida del outbox (destino 
    - el texto de cada mensaje, con las notas internas, lo que dijo el bot y los valores de una plantilla en la conversación;
    - la vista previa del último mensaje de cada chat;
    - lo mismo en Plataforma y en la copia vinculada de «Mensajes»;
-   - lo que sumen la E14 a la E25 nace cifrado: la ubicación y el texto de un envío, lo que transcribe o propone el asistente, las filas de una planilla y lo leído de un documento.
+   - lo que sumen la E14 a la E25 a las tablas de WhatsApp nace cifrado: la ubicación y el texto de un envío, lo que transcribe, redacta o explica el asistente, las filas de una planilla y lo leído de un documento mientras lo guarda el chat.
+
+   No alcanza a las tablas de Formularios: las respuestas y `FormDocuments` (E25) son datos de la organización, con RLS, como las respuestas, y la bandeja de documentos busca en SQL en lo leído y en sus dígitos.
 2. **Quedan en claro** (pregunta 57):
    - el nombre y el número del contacto, porque la bandeja y Contactos buscan por ellos;
    - quién escribió (`AuthorName`), las etiquetas y el consentimiento, que son de la organización;
