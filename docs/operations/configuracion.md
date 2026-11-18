@@ -63,6 +63,8 @@ El importador de ArquitecturaBase no conoce al operador ni al certificado Data P
 
 Mismos valores que `../ArquitecturaBase/src/ArquitecturaBase.Api/appsettings.Development.json` y `appsettings.json`, salvo las plantillas de WhatsApp nuevas del multitenant (ver la tabla). Se copian en la Etapa 3 (Google y Gmail) y en la Etapa 8 (WhatsApp).
 
+No repetir (B1 de ArquitecturaBase): la plantilla no trae datos de una instalación en la configuración versionada. Allá, desde el 2026-11-16, el correo personal, el administrador inicial y el id de Google van a user-secrets. Acá siguen en el repo (`Authentication:Google:ClientId`, `Email:Smtp:UserName`/`FromAddress` y los ids de Meta de la §7), y `StartupConfigurationTests.Development_settings_enable_Google_and_Gmail_without_committing_credentials` exige que estén. Pasarlos a user-secrets, invertir ese test y poner al día esta sección y la §7 queda en el [backlog](../backlog.md#traspaso-15-el-núcleo-para-programar).
+
 | Clave | Valor |
 |---|---|
 | `Authentication:Google:ClientId` | el mismo `ClientId` de ArquitecturaBase |
@@ -118,7 +120,7 @@ El túnel se prende igual que en ArquitecturaBase:
 dotnet user-secrets set "DevTunnel:Enabled" "true" --project src/ArquitecturaBaseMultitenant.AppHost
 ```
 
-**Gmail:** la misma contraseña de aplicación sirve para los dos proyectos. El límite de unos 500 correos por día es **compartido**.
+**Gmail:** la misma contraseña de aplicación sirve para los dos proyectos. El límite de unos 500 correos por día es **compartido**: los topes diarios de los dos proyectos se reparten ese cupo ([topes de correo](#topes-diarios-de-correo-adr-0063-sin-programar)).
 
 ## 5. Qué pasa si falta algo (fallo claro, nunca a medias)
 
@@ -148,6 +150,21 @@ La entrada usa `WhatsApp:ProcessInboundInBackground` (true), `InboundPollSeconds
 `WhatsApp:DailyAuthCodeLimit=100` es el único total diario. `WhatsApp:ProtectedAuthCodeFraction=0.2` protege capacidad para ingreso a Phone previamente verificado/utilizable; se redondea hacia arriba y los nuevos pueden usar total menos protección (80 por defecto). No limita los ingresos a 20: pueden usar todo el total si no hubo nuevos. `WhatsApp:DailyNewAuthCodeIpLimit=20` limita nuevos por IP/día UTC. Total y tope IP admiten 1–10000; fracción, 0–1. Total 1 con la fracción predeterminada sólo admite ingresos verificados. Los topes de ventana/destino/cooldown existentes se conservan. Todos los agotamientos diarios usan `WhatsApp.LoginCode.DailyLimit` con Retry-After hasta medianoche UTC.
 
 La reserva se confirma únicamente con un enqueue real en la UoW; rollback o ausencia de envío no gastan, replay gasta una vez y fallar luego en Meta no devuelve cupo. El ledger IP usa la clave existente `Authentication:LoginCode:HashKey` con dominio HMAC separado: compartila entre réplicas y conservála estable durante el día UTC. Una rotación debe hacerse al cambiar de día para conservar los buckets diarios; no se genera una clave local por réplica. El mantenimiento instalado retira identificadores IP de días terminados, también con el canal apagado; conserva los contadores globales. La migración trata el gasto anterior desconocido como nuevo y lo descuenta de cada límite IP en ese día; no reconstruye IP históricas.
+
+### Topes diarios de correo (ADR 0063, sin programar)
+
+Lo que sale por correo con un código o una invitación cuenta en 24 horas móviles, en contadores de la base compartidos entre copias ([ADR 0063](../decisions/0063-topes-de-correo-de-la-plataforma.md)). Las claves, con los nombres y valores de arranque de ArquitecturaBase, más la de cada organización, se validan al arrancar:
+
+| Clave | Arranque | Qué limita |
+|---|---|---|
+| `Email:DailyLimit` | 400 | todo lo que sale con un código o una invitación, por debajo del cupo de la cuenta. Al 80 % y al llegar queda un aviso en el log |
+| `Email:DailyInvitationReserve` | 50 | la parte del tope que queda solo para invitaciones: los códigos frenan antes. Menor que `DailyLimit` |
+| `Email:DailyCodeLimitPerAddress` | 50 | códigos pedidos desde una dirección (una IPv6, por su /64) |
+| `Email:DailyProfileCodeLimitPerAccount` | 10 | códigos que pide una cuenta desde Mi cuenta |
+| `Email:DailyInvitationLimitPerAdministrator` | 100 | invitaciones que manda una persona, sume las organizaciones que sume |
+| `Email:DailyInvitationLimitPerOrganization` | 100 | invitaciones que manda una organización |
+
+**Con la cuenta compartida con ArquitecturaBase,** la suma de los `Email:DailyLimit` de los dos proyectos queda por debajo del cupo, con lugar para los avisos. Con 400 en cada uno pasan los 500: mientras compartan la cuenta, se reparte (por ejemplo, 200 y 200), o se separan las cuentas antes de producción ([runbook](runbook.md)).
 
 ## 6. Producción
 
