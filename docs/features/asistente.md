@@ -1,6 +1,6 @@
 # Asistente: contrato E8b
 
-**Revisado:** 2026-11-07
+**Revisado:** 2026-11-18
 
 Freeze T01: 56 operaciones nuevas (45 chat, 11 gestión), 40 rutas. Los controllers llaman interfaces y servicios de Application. T02 implementa instalación, persistencia privada, gates, lectura de conversaciones propias y configuración global sin clave; las formas HTTP congeladas se conservan. T03 implementa configuración, políticas y catálogo técnico editable; T05c implementa State en los tres accesos y T06b las lecturas de Uso. Turnos de proveedor, archivos y workers restantes se completan según sus tareas.
 
@@ -197,6 +197,20 @@ Upload verifica firma PNG/JPEG/WebP/PDF y tamaño real, conserva una referencia 
 La retención ordinaria usa el plazo global, también con gates apagados. Entra al scope antes de la UoW, toma el lock de Guardar/Borrar y relee IsSaved/LastActivityAtUtc. Leer no renueva actividad; guardar protege incluso después de seleccionar el candidato. La misma transacción elimina conversación, cancela turnos, purga replay y encola limpieza física; el worker borra y confirma después del commit, con reintentos. La baja incluye guardados y sus adjuntos.
 
 El título automático y la actividad viven en una fila privada separada: completar un turno no cambia el `xmin` de edición capturado al abrir Borrar; las escrituras de la persona conservan su control de versión y una edición ajena sigue respondiendo 409, sin rebase ni reintento automático.
+
+## Reglas de toda la IA (traspaso 15, sin programar)
+
+La [ADR 0064](../decisions/0064-reglas-de-toda-la-ia.md) fija para el Inicio, el canal, la transcripción, los documentos y armar lo que la revisión de la IA de ArquitecturaBase encontró al correr en varias copias (decisiones 216, 217 y 223 de formularios). Sobre el Inicio ya programado va en la segunda parte de la base (214), con sus tareas en [`docs/backlog.md`](../backlog.md); lo demás, con la E23 y la E25.
+
+- **El cupo:** vuelve solo si el pedido venció sin reservar un paso con el proveedor; lo intentado cuenta aunque termine incierto, y «borrar no libera» vale solo para eso. Antes de leer el cuerpo de una subida se miran el cupo diario y el tope mensual: sin cupo, el 429 de siempre y no se guarda nada. Todos los contadores de IA cortan en el día UTC.
+- **Las subidas:** un lugar por persona, sin cola, y una cola corta por copia en la que una organización ocupa como mucho dos lugares; el cuerpo tiene 120 s. El mismo archivo dos veces con el mismo pedido da un solo resultado.
+- **Lo que se borra:** borrar una conversación purga en la misma operación sus transcripciones y lecturas, y el aviso lo dice («Se borran también sus archivos.»; en el Inicio de la organización, «…sus archivos y audios.»). La purga usa índices parciales, y abrir el Inicio cuenta solo lo pendiente.
+- **Las versiones:** lo que el motor sella se escribe un despliegue después de la versión que lo lee; un turno con algo que la copia no conoce queda pendiente; un proveedor desconocido deja la conexión «Pausada» (`unsupportedProvider`), y una conversación ilegible se ve «no disponible» y se puede borrar.
+- **Las fallas del proveedor:** el único `Assistant.Provider.Unavailable` de hoy se separa por el estado HTTP en `CredentialRejected`, `Limited`, `ModelRejected`, `Rejected`, `Uncertain` y `Unavailable`, y una clave que no se puede descifrar no quema cupo. Con la clave de la plataforma las arregla el operador, y la organización ve «no disponible»; con la propia, el Dueño.
+- **El apagado:** la copia deja de tomar turnos, el paso en curso termina en unos 18 s y lo no reservado vuelve a pendiente; si no alcanza, `Assistant.Turn.Interrupted`, «La consulta se cortó porque el servicio se reinició antes de terminarla.».
+- **La fecha y los hechos:** la hora del pedido y la zona del perfil van al final del mensaje, como en el canal; los hechos del negocio son solo los confirmados; la última propuesta nunca queda afuera (`Assistant.Turn.ProposalTooLarge`, E25).
+- **El anillo y la traza:** un valor de control por clave del anillo (`platform.AiKeyRingControls`); una copia que no coincide no queda lista. Cada turno guarda la traza de quien lo pidió.
+- **Lo de otra persona:** ningún pedido al proveedor lleva respuestas, correcciones, documentos ni mensajes de otras personas (216).
 
 ## Carpetas
 
