@@ -7,7 +7,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T7, T11 y T22, §3 (`FormVersions`, `FormRecords` y `FormRecordValues`) y §7 (puertos); y la [E12](12-catalogos.md): C5, C8, C11 y la §4.
-2. **Decisiones** de la hoja de ruta: 9, 23, 24, 35, 43, 49, 57, 78, 79, 109, 115, 139, 143, 144 y 163.
+2. **Decisiones** de la hoja de ruta: 9, 23, 24, 35, 43, 49, 57, 78, 79, 109, 115, 139, 143, 144, 163 y 226.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -49,7 +49,7 @@ Antes de empezar, en este orden:
 
 **La barra (126, 143 y 144):** «Exportar a Excel» en la banda; en la barra, «Buscar en textos largos» (si el formulario los tiene), «Empresa», «Filtros», con la cantidad de aplicados, y «Columnas»; debajo, lo aplicado en chips con su × y «Limpiar todo». Sin «N respuestas»: el total está al pie. «Filtros» se despliega como «Columnas»: a la izquierda, Recibida, cada pregunta en orden, Cargó y Versión; a la derecha, lo que se elige en la marcada: «Desde» y «Hasta» para un número o una fecha, «Contiene» para un texto y, para una pregunta de elegir, sí o no y Versión, un desplegable de una opción, sin cantidades; con muchas opciones o las que vienen del servidor (un catálogo, Cargó), el combo de una opción, que busca escribiendo, muestra 20 y ofrece «Mostrar N más» (143). Cada cambio se aplica enseguida, y en el teléfono ocupa la pantalla. El chip nombra lo elegido («Proveedor: Aceros Rosario»). El canal suma su filtro a la vista cuando haya más de uno.
 
-**Exportar (126):** «Exportar respuestas a Excel» dice cuántas respuestas y cuántos filtros aplicados, «Columnas a exportar», con la cantidad de cada opción («Todas las preguntas (13 columnas)» y «Solo las visibles (12 columnas)»), y el nombre del archivo. En el teléfono no hay «Columnas»: exporta todas las preguntas.
+**Exportar (126 y 226):** «Exportar respuestas a Excel» dice qué exporta en `DetailGrid`: «Respuestas», con la cantidad, y «Filtros», con los mismos chips de la planilla sin la ✕, o «Ninguno». Debajo, «Columnas», título de un grupo con su (i), con «Todas las preguntas» y «Solo las visibles»; sin columnas ocultas, «Solo las visibles» queda apagada con «Se ven todas las columnas.». Al pie, «Archivo», con el nombre. Sin la frase con las cantidades ni «(13 columnas)». En el teléfono no hay «Columnas»: exporta todas las preguntas.
 
 **Filtros:**
 - condiciones unidas con «y», con la gramática de la E12 (C5): texto `contains` y `equals`; número y fecha `equals`, `gte` y `lte`; elegir una y sí/no `in`; **elegir varias `anyOf`**; y en todos, `answered`, `unanswered` y `notAsked`;
@@ -99,7 +99,7 @@ Aprobados en el lienzo v150. Con el traspaso 5, los filtros (143 y 144) y el det
 | `FRM-Respuestas` | la planilla, con «Columnas», «Empresa» y sus estados; suma «Elegir varias» y los campos sellados | Aprobado en la v160: «Filtros» y los chips (144) |
 | `FRM-Respuestas-Filtros` | «Filtros», que se despliega como «Columnas» | Aprobado en la v160 (143 y 144) |
 | `FRM-Respuesta` | la vista rápida | Aprobado en la v160: el detalle alineado (139) |
-| `FRM-Respuestas-Exportar` | el diálogo de exportar | Aprobado |
+| `FRM-Respuestas-Exportar` | el diálogo de exportar | Redibujado con la 226 en la v175, sin publicar |
 | `FRM-Tablero` | el tablero | Aprobado |
 | `M-FRM-Respuestas`, `M-FRM-Respuesta`, `M-FRM-Tablero` | los tres, en el teléfono. Tocar una fila abre `M-FRM-Respuesta`: no hay vista rápida | `M-FRM-Respuestas` y `M-FRM-Respuesta`, aprobados en la v160 (139 y 144), y `M-FRM-Respuesta`, redibujado sin «Las dos plegadas» y aprobado en la v168 (163); `M-FRM-Tablero`, aprobado |
 | `FRM-Respuesta-Completa` | la pantalla completa, con sus dos secciones abiertas | Redibujado y aprobado en la v168: sin plegar, también en `M-FRM-Respuesta` (163 y 164); la actividad en columnas fijas se aprobó en la v160 (139) |

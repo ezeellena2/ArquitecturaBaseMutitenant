@@ -58,7 +58,9 @@ Una migración, `<fecha>_FormRecordsRead.cs`, y otra de roles, `<fecha>_SystemRo
 - `FormRecords`: `(TenantId, DefinitionId, SubmittedAtUtc, Id)`; `(TenantId, DefinitionId, RespondentUserId)`; `(TenantId, DefinitionId, RespondentContactId)`, y GIN sobre `RespondentCompanyIds`;
 - `FormRecordValues`: `(TenantId, FieldId, ChoiceId)`, `(TenantId, FieldId, NumberValue)`, `(TenantId, FieldId, DateValue)`, y un GIN trigram `IX_FormRecordValues_Search_TextValue`, parcial en `LongText`, sobre `f_unaccent(lower("TextValue"))`.
 
-`FormWorkLeases` suma `Lane` a su clave, que pasa a ser `(TenantId, UserId, Lane)`: `Catalogs` para la vista previa, aplicar y exportar de la E12, que siguen de a uno por persona, y `Records` para exportar respuestas, con `Kind` `RecordExport`. Lo que ya existe queda en `Catalogs`.
+`FormWorkLeases` suma `Lane` a su clave, que pasa a ser `(TenantId, UserId, Lane)`: `Catalogs` para la vista previa, aplicar y exportar de la E12, que siguen de a uno por persona, y `Records` para exportar respuestas, con `Kind` `RecordExport`. Lo que ya existe queda en `Catalogs`. Exportar respuestas cuenta también en los topes por organización y de la instalación de la E12 (C11): una planilla pesada no frena a las demás organizaciones.
+
+**FormRecordCatalogFields** (`ITenantOwned`, esquema `tenant`, con RLS; F15 de ArquitecturaBase): `(DefinitionId, FieldId, CatalogFieldId)`, única, con los campos de catálogo que selló alguna respuesta de cada pregunta. Las subcolumnas «pregunta · campo» salen de acá y no de recorrer las respuestas, porque los campos sellados dependen de la captura (E14) y no solo de la versión. La escribe la captura, en su UoW y sin repetir, nunca una lectura; la planilla la lee por su índice. La misma migración la llena con las respuestas que ya existen.
 
 ## Lo que ya se pagó allá (no repetir)
 
