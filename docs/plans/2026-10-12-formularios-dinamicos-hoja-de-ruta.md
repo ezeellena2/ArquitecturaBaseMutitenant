@@ -283,6 +283,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Es la biblioteca de formularios estándar** (40).
 - **Organización:** «Desde una plantilla», en «Nuevo formulario ▾» (79), crea una copia independiente en borrador, con sus catálogos y el diseño del PDF. Las reglas de ejemplo se muestran precargadas hasta que guarda las suyas (30 a 33). Nunca se publica sola.
 - **Privacidad:** la plataforma solo ve cuántas organizaciones usaron cada plantilla.
+- **Los estándares de un módulo** conviven con estas plantillas, con preguntas atadas y sus reglas activas (220): llegan con la segunda parte de ARCA, y esta etapa no cambia.
 - **Spec:** [formularios/22-biblioteca.md](formularios/22-biblioteca.md).
 - **Criterios:**
   - la plataforma no tiene ninguna ruta que lea datos de una organización;
@@ -300,6 +301,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Lo de la etapa 5 de allá:** sugerencias al operador y entre formularios, audios transcriptos (27) y «Formularios que faltan». El catálogo que propone el asistente pasa a la E25 (167).
 - **Desde el primer día:** la espera corta, el aislamiento por conversación y la medición.
 - **Costos:** dentro del tope mensual de IA de la organización (ADR 0051).
+- **Del traspaso 15:** los temas de «Preguntas sin respuesta» y «Formularios que faltan» se revisan antes de usarse con otros (219); Probar con hasta cinco mensajes; el servidor revisa cada acción antes de encolarla, y si la IA no contesta, deriva con «El asistente no pudo responder». El cupo, las fallas y el apagado, como toda la IA ([ADR 0064](../decisions/0064-reglas-de-toda-la-ia.md), 223).
 - **Spec:** [formularios/23-asistente.md](formularios/23-asistente.md).
 - **Criterios:**
   - el modelo lee o propone, y ejecuta el módulo dueño;
@@ -324,6 +326,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Armar formularios y catálogos con la IA** (75, 102 y de la 154 a la 156): desde el chat del Inicio de la organización, con un texto, un archivo o un audio, o por WhatsApp. La IA propone y una persona crea el borrador o el catálogo, que queda por aprobar, también el catálogo que propone el asistente (167). El clip suma .xlsx, .csv y .docx, de a uno por mensaje; lo que se repite se arma como un bloque (177), y armar por WhatsApp se atiende antes de los casos (171). Al publicar, los documentos que originaron el formulario quedan propuestos.
 - **Validaciones fijas:** un conjunto cerrado en el código, y la tabla de entidades del BCRA como dato de referencia; lo descartado se borra a los 90 días; la lectura entra en el tope de la organización, con un tope por persona y por día (41).
 - **«Pasar al formulario»** desde la bandeja (99): la respuesta queda a nombre de quien mandó el documento, y dice quién la revisó.
+- **Del traspaso 15:** lo propuesto sin revisar vence a los 90 días (215); las correcciones las ve una persona y no van a la IA (216); un tope diario de lecturas por organización (217); arma siempre un modelo calificado (218); por WhatsApp, una planilla con un pedido va a armar (221), y la IA puede proponer importar en un catálogo que existe (222).
 - **Spec:** [formularios/25-documentos.md](formularios/25-documentos.md).
 - **Criterios:**
   - precargar un archivo en un Flow se prueba con Meta antes de planificar;
