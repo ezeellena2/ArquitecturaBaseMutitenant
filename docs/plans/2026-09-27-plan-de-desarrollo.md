@@ -37,7 +37,7 @@ El historial se recupera con git show historial-docs:<ruta>, sin cargar planes c
 | 23 · Asistente con Casos | Pendiente. Spec lista y tableros aprobados en el lienzo v157; los traspasos 5 y 10 redibujaron los chats, las sugerencias y el detalle, aprobados en la v168 | [Spec](formularios/23-asistente.md), [plan](2026-11-08-etapa-23-asistente.md) |
 | 24 · Varios asistentes | Pendiente. Spec lista y tableros aprobados en el lienzo v158 | [Spec](formularios/24-varios-asistentes.md), [plan](2026-11-08-etapa-24-varios-asistentes.md) |
 | 25 · Documentos por WhatsApp | Pendiente. Spec lista y tableros aprobados en el lienzo v168, con sus recorridos guiados; antes de planificar, la prueba con Meta del archivo precargado. La revisión del 2026-11-08 corrigió algunos tableros, aprobados en la v169 | [Spec](formularios/25-documentos.md), [plan](2026-11-08-etapa-25-documentos.md) |
-| ARCA · la conexión | Pendiente, después del bloque (76): hoja de ruta lista, con las decisiones 150 a 152 y sin spec | [Hoja de ruta de ARCA](2026-11-06-arca-hoja-de-ruta.md) |
+| ARCA, en siete etapas | Pendiente, después del bloque (76): la hoja de ruta tiene las siete etapas anotadas con lo de ArquitecturaBase, sin armar, y las decisiones 150 a 152 y 243 a 253. Sin spec: cada etapa se arma después del traspaso 16 | [Hoja de ruta de ARCA](2026-11-06-arca-hoja-de-ruta.md) |
 
 ## Etapa 10: despliegue y operación
 
