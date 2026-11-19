@@ -180,6 +180,8 @@ public sealed class PermissionAuthorizationTests
             CancellationToken ct) => Task.FromResult(companyGrant || organizationPermission is not null && organizationGrant);
         public Task<BusinessPermissions> GetBusinessPermissionsAsync(Guid userId, CancellationToken ct) =>
             throw new NotSupportedException();
+        public Task<bool> HasCompanyPermissionAsync(BusinessPermissions granted, Guid companyId, string permission,
+            CancellationToken ct) => throw new NotSupportedException();
     }
 
     /// <summary>Las proyecciones cacheadas de la persona, contando cada lectura.</summary>

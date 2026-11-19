@@ -24,14 +24,23 @@ public interface IPermissionService
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// Lo de <see cref="GetOrganizationPermissionsAsync"/> y <see cref="GetPermissionsByCompanyAsync"/> juntos, leyendo cada
-    /// proyección cacheada una sola vez (base de la 12, <c>permisos.md</c>), para quien usa las dos en un mismo pedido.
+    /// Lo de <see cref="GetOrganizationPermissionsAsync"/>, <see cref="GetPermissionsByCompanyAsync"/> y
+    /// <see cref="GetAssignedOrganizationPermissionsAsync"/> juntos, leyendo cada proyección cacheada una sola vez (base de
+    /// la 12, <c>permisos.md</c>), para quien usa más de una en un mismo pedido.
     /// </summary>
     Task<BusinessPermissions> GetBusinessPermissionsAsync(Guid userId, CancellationToken cancellationToken);
 
     Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken cancellationToken);
 
     Task<bool> HasCompanyPermissionAsync(Guid userId, Guid companyId, string permission,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Lo de <see cref="HasCompanyPermissionAsync(Guid, Guid, string, CancellationToken)"/> sobre lo ya leído con
+    /// <see cref="GetBusinessPermissionsAsync"/>, sin volver a leer las proyecciones: para quien comprueba varios permisos en
+    /// un mismo pedido, como el Asistente. Sin membresía en esa empresa valen los roles de organización, si está activa.
+    /// </summary>
+    Task<bool> HasCompanyPermissionAsync(BusinessPermissions granted, Guid companyId, string permission,
         CancellationToken cancellationToken);
 
     /// <summary>

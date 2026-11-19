@@ -1,10 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
-using ArquitecturaBaseMultitenant.Application.Common.Pagination;
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
-using ArquitecturaBaseMultitenant.Application.Models.Companies;
 using ArquitecturaBaseMultitenant.Application.Models.Notifications;
 using ArquitecturaBaseMultitenant.Application.Models.Roles;
 using ArquitecturaBaseMultitenant.Application.Services.Notifications;
@@ -189,17 +186,20 @@ public sealed class NotificationServiceTests
     public async Task Business_reads_each_permission_projection_once_per_request()
     {
         using var fixture = new ServiceFixture<NotificationService>();
-        var cache = new CountingCache([Permissions.Users.Manage],
+        var cache = new CountingPermissionCache([Permissions.Users.Manage],
             new Dictionary<Guid, IReadOnlyList<string>> { [CompanyId] = [Permissions.Company.Members.Manage] });
         var tenant = new FakeTenantContext { TenantId = Guid.NewGuid(), TenantKind = TenantKind.Business };
         var source = new ProbeSource([Item("a", fixture.TimeProvider.GetUtcNow().UtcDateTime)]);
+        var companies = new CompanyActivityReader();
         var service = Service(fixture, [source], Access.Business, permissions: new PermissionService(cache, tenant,
-            new UnusedCompanies(), fixture.TimeProvider, NullLogger<PermissionService>.Instance));
+            companies, fixture.TimeProvider, NullLogger<PermissionService>.Instance));
 
         Assert.True((await service.ListAsync(Ct)).IsSuccess);
         Assert.Equal((1, 1), (cache.OrganizationReads, cache.CompanyReads));
         Assert.True((await service.MarkReadAsync("a", Ct)).IsSuccess);
         Assert.Equal((2, 2), (cache.OrganizationReads, cache.CompanyReads));
+        // La campana no pregunta por una empresa suelta: lee las empresas desde la proyección.
+        Assert.Equal(0, companies.Checks);
 
         // Las dos vistas no cambian: la organización con lo suyo y cada empresa con lo de la organización incluido.
         Assert.All(source.Contexts, context =>
@@ -358,50 +358,16 @@ public sealed class NotificationServiceTests
             CancellationToken ct) => throw new InvalidOperationException("The bell reads the projections once.");
         public Task<BusinessPermissions> GetBusinessPermissionsAsync(Guid userId, CancellationToken ct) =>
             Task.FromResult(new BusinessPermissions([Permissions.Users.Manage],
-                new Dictionary<Guid, IReadOnlyList<string>> { [CompanyId] = [Permissions.Company.Members.Manage] }));
+                new Dictionary<Guid, IReadOnlyList<string>> { [CompanyId] = [Permissions.Company.Members.Manage] },
+                [Permissions.Users.Manage]));
         public Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken ct) =>
             throw new InvalidOperationException("The bell reads the projections once.");
         public Task<bool> HasCompanyPermissionAsync(Guid userId, Guid companyId, string permission, CancellationToken ct) =>
             throw new InvalidOperationException("The bell reads the projections once.");
+        public Task<bool> HasCompanyPermissionAsync(BusinessPermissions granted, Guid companyId, string permission,
+            CancellationToken ct) => throw new InvalidOperationException("The bell reads the projections once.");
         public Task<bool> HasCompanyRequirementAsync(Guid userId, Guid companyId, string permission,
             string? organizationPermission, CancellationToken ct) => throw new NotSupportedException();
-    }
-
-    /// <summary>La caché de permisos con lo dado, que cuenta cuántas veces se lee cada proyección.</summary>
-    private sealed class CountingCache(IReadOnlyList<string> organization,
-        IReadOnlyDictionary<Guid, IReadOnlyList<string>> companies) : IRolePermissionCache
-    {
-        public int OrganizationReads { get; private set; }
-        public int CompanyReads { get; private set; }
-
-        public Task<IReadOnlyList<string>> GetOrganizationPermissionsAsync(Guid tenantId, Guid userId,
-            CancellationToken cancellationToken)
-        {
-            OrganizationReads++;
-            return Task.FromResult(organization);
-        }
-
-        public Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> GetCompanyPermissionsAsync(Guid tenantId, Guid userId,
-            CancellationToken cancellationToken)
-        {
-            CompanyReads++;
-            return Task.FromResult(companies);
-        }
-    }
-
-    /// <summary>La campana no pregunta por una empresa suelta: lee las empresas desde la proyección.</summary>
-    private sealed class UnusedCompanies : ICompanyReader
-    {
-        public Task<PagedResult<CompanyRow>> ListAsync(ListCompaniesRequest request, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<CompanyRow?> FindByIdAsync(Guid companyId, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
-        public Task<CompanyFilterCountsResponse> GetFilterCountsAsync(ListCompaniesRequest request,
-            CancellationToken cancellationToken) => throw new NotSupportedException();
-        public Task<bool> ExistsTaxIdAsync(string country, string type, string number, Guid? excludedCompanyId,
-            CancellationToken cancellationToken) => throw new NotSupportedException();
-        public Task<bool> IsActiveAsync(Guid companyId, CancellationToken cancellationToken) =>
-            throw new NotSupportedException();
     }
 
     private sealed class FakePlatformPermissions : IPlatformPermissionService

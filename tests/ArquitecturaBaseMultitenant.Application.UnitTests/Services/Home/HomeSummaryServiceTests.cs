@@ -4,13 +4,16 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Roles;
 using ArquitecturaBaseMultitenant.Application.Models.Home;
+using ArquitecturaBaseMultitenant.Application.Models.Companies;
 using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Application.Services.Home;
 using ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
+using ArquitecturaBaseMultitenant.Application.Services.Roles;
 using ArquitecturaBaseMultitenant.Application.UnitTests.TestDoubles;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Home;
 
@@ -83,6 +86,55 @@ public sealed class HomeSummaryServiceTests
         }
     }
 
+    /// <summary>
+    /// Revisión de la base de la 12: el inicio lee cada proyección de permisos una vez para armar el contexto y otra para
+    /// revalidar lo que trajeron las fuentes, y el inicio plano (el del Asistente) una sola vez. Las pedía por separado y
+    /// leía la de la organización hasta cinco veces por pedido.
+    /// </summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Home_reads_each_permission_projection_once_per_phase(bool organizationRole)
+    {
+        using var fixture = new ServiceFixture<HomeService>();
+        IReadOnlyList<string> organization = organizationRole ? [Permissions.Users.Invite] : [];
+        var companies = new Dictionary<Guid, IReadOnlyList<string>> { [Guid.NewGuid()] = [Permissions.Company.Members.Manage] };
+        var summaryCache = new CountingPermissionCache(organization, companies);
+        var homeCache = new CountingPermissionCache(organization, companies);
+
+        var summary = await Home(fixture, summaryCache).GetSummaryAsync(Ct);
+        var home = await Home(fixture, homeCache).GetAsync(Ct);
+
+        Assert.True(summary.IsSuccess);
+        Assert.True(home.IsSuccess);
+        Assert.Equal((2, 2), (summaryCache.OrganizationReads, summaryCache.CompanyReads));
+        Assert.Equal((1, 1), (homeCache.OrganizationReads, homeCache.CompanyReads));
+        // Lo que ve no cambia: con un rol de organización, Inicio-Org con su pendiente; sin él, Inicio-Miembro sin ese pendiente.
+        Assert.Equal(organizationRole, summary.Value.Organization is not null);
+        Assert.Equal(organizationRole ? 1 : 0, summary.Value.PendingGroups!.Count);
+    }
+
+    private static HomeService Home(ServiceFixture<HomeService> fixture, CountingPermissionCache cache) => new(
+        new(null!, null!, null!, null!, null!, null!, fixture.TimeProvider), new(new NoMemberships()), [new GroupSource()], [],
+        new PermissionService(cache, new FakeTenantContext { TenantId = Guid.NewGuid(), TenantKind = TenantKind.Business },
+            new CompanyActivityReader(), fixture.TimeProvider, NullLogger<PermissionService>.Instance),
+        new CurrentUser(), fixture.TimeProvider, fixture.Logger);
+
+    /// <summary>Inicio-Miembro sin empresas propias: «Tus empresas» queda vacía.</summary>
+    private sealed class NoMemberships : ICompanyMembershipReader
+    {
+        public Task<IReadOnlyList<UserCompanyRow>> ListActiveForUserAsync(Guid userId, CancellationToken ct) =>
+            Task.FromResult<IReadOnlyList<UserCompanyRow>>([]);
+        public Task<PagedResult<CompanyMemberRow>> ListAsync(Guid companyId, ListCompanyMembersRequest request,
+            CancellationToken ct) => throw new NotSupportedException();
+        public Task<CompanyMemberFilterCountsResponse> GetFilterCountsAsync(Guid companyId, ListCompanyMembersRequest request,
+            CancellationToken ct) => throw new NotSupportedException();
+        public Task<IReadOnlyDictionary<Guid, int>> CountActiveMembersAsync(IReadOnlyCollection<Guid> companyIds,
+            CancellationToken ct) => throw new NotSupportedException();
+        public Task<PagedResult<CompanyCandidateRow>> ListCandidatesAsync(Guid companyId, ListCompanyCandidatesRequest request,
+            CancellationToken ct) => throw new NotSupportedException();
+    }
+
     private sealed class CurrentUser : ICurrentUser
     {
         public Guid? UserId { get; } = Guid.NewGuid();
@@ -141,14 +193,17 @@ public sealed class HomeSummaryServiceTests
         public int OrganizationReads { get; private set; }
         public int PerItemChecks { get; private set; }
         public Task<IReadOnlyList<string>> GetAssignedOrganizationPermissionsAsync(Guid userId, CancellationToken ct) =>
-            Task.FromResult<IReadOnlyList<string>>([Permissions.Users.Invite]);
-        public Task<IReadOnlyList<string>> GetOrganizationPermissionsAsync(Guid userId, CancellationToken ct)
+            throw new InvalidOperationException("Home reads the permission projections together.");
+        public Task<IReadOnlyList<string>> GetOrganizationPermissionsAsync(Guid userId, CancellationToken ct) =>
+            throw new InvalidOperationException("Home reads the permission projections together.");
+        public Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> GetPermissionsByCompanyAsync(Guid userId,
+            CancellationToken ct) => throw new InvalidOperationException("Home reads the permission projections together.");
+        public Task<BusinessPermissions> GetBusinessPermissionsAsync(Guid userId, CancellationToken ct)
         {
             OrganizationReads++;
-            return Task.FromResult<IReadOnlyList<string>>(revoked && OrganizationReads > 1 ? [] : [Permissions.Users.Invite]);
+            IReadOnlyList<string> granted = revoked && OrganizationReads > 1 ? [] : [Permissions.Users.Invite];
+            return Task.FromResult(new BusinessPermissions(granted, new Dictionary<Guid, IReadOnlyList<string>>(), granted));
         }
-        public Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> GetPermissionsByCompanyAsync(Guid userId,
-            CancellationToken ct) => Task.FromResult<IReadOnlyDictionary<Guid, IReadOnlyList<string>>>(new Dictionary<Guid, IReadOnlyList<string>>());
         public Task<IReadOnlyList<string>> GetCompanyPermissionsAsync(Guid userId, Guid companyId, CancellationToken ct) =>
             Task.FromResult<IReadOnlyList<string>>([]);
         public Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken ct)
@@ -163,7 +218,11 @@ public sealed class HomeSummaryServiceTests
         }
         public Task<bool> HasCompanyRequirementAsync(Guid userId, Guid companyId, string permission,
             string? organizationPermission, CancellationToken ct) => throw new NotSupportedException();
-        public Task<BusinessPermissions> GetBusinessPermissionsAsync(Guid userId, CancellationToken ct) =>
-            throw new NotSupportedException();
+        public Task<bool> HasCompanyPermissionAsync(BusinessPermissions granted, Guid companyId, string permission,
+            CancellationToken ct)
+        {
+            PerItemChecks++;
+            return Task.FromResult(true);
+        }
     }
 }

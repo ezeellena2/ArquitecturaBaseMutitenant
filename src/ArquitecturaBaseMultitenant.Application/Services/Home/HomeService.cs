@@ -22,13 +22,8 @@ internal sealed class HomeService(OrganizationHomeAreasBuilder areas, MemberHome
         OperationLog.RunAsync<HomeResponse>(logger, timeProvider, "GetHomeSummary", async () =>
         {
             if (currentUser.UserId is not { } userId || userId == Guid.Empty) return AccessErrors.NotMember;
-            var assigned = await permissions.GetAssignedOrganizationPermissionsAsync(userId, cancellationToken);
-            var granted = await permissions.GetOrganizationPermissionsAsync(userId, cancellationToken);
-            var byCompany = assigned.Count > 0
-                ? new Dictionary<Guid, IReadOnlyList<string>>()
-                : await permissions.GetPermissionsByCompanyAsync(userId, cancellationToken);
-            var context = new PendingItemContext(userId, granted, byCompany);
-            var organization = assigned.Count > 0 ? await areas.SummarizeAsync(context, cancellationToken) : null;
+            var (context, byCompany, assigned) = await ContextAsync(userId, cancellationToken);
+            var organization = assigned ? await areas.SummarizeAsync(context, cancellationToken) : null;
             var cards = organization is null ? await companies.ListAsync(userId, byCompany, cancellationToken) : [];
             var contributions = new List<(IPendingItemSource Source, IReadOnlyList<PendingGroup> Groups)>();
             foreach (var source in sources)
@@ -39,10 +34,10 @@ internal sealed class HomeService(OrganizationHomeAreasBuilder areas, MemberHome
                     contributions.Add((source, Group(await source.ListAsync(context, cancellationToken), preview: false)));
             }
 
-            // Una relectura por ámbito después de todas las fuentes, sin autorizar cada fila por separado.
-            var fresh = new PendingItemContext(userId,
-                await permissions.GetOrganizationPermissionsAsync(userId, cancellationToken),
-                assigned.Count > 0 ? null : await permissions.GetPermissionsByCompanyAsync(userId, cancellationToken));
+            // Una relectura por ámbito después de todas las fuentes, sin autorizar cada fila por separado: otra lectura de
+            // cada proyección, juntas (base de la 12).
+            var current = await permissions.GetBusinessPermissionsAsync(userId, cancellationToken);
+            var fresh = new PendingItemContext(userId, current.Organization, assigned ? null : current.ByCompany);
             var pending = new List<PendingGroup>();
             foreach (var (source, groups) in contributions)
             {
@@ -74,6 +69,17 @@ internal sealed class HomeService(OrganizationHomeAreasBuilder areas, MemberHome
                 modules.Count == 0 ? null : [.. modules.OrderBy(card => card.Key, StringComparer.Ordinal).Take(HomeResponse.ModuleCardLimit)]);
         });
 
+    // Inicio-Org con permisos asignados en la organización; si no, Inicio-Miembro con los de cada empresa. Las tres vistas
+    // salen de una lectura de cada proyección (base de la 12, permisos.md).
+    private async Task<(PendingItemContext Context, IReadOnlyDictionary<Guid, IReadOnlyList<string>> ByCompany,
+        bool Assigned)> ContextAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var granted = await permissions.GetBusinessPermissionsAsync(userId, cancellationToken);
+        var assigned = granted.Assigned.Count > 0;
+        var byCompany = assigned ? new Dictionary<Guid, IReadOnlyList<string>>() : granted.ByCompany;
+        return (new PendingItemContext(userId, granted.Organization, byCompany), byCompany, assigned);
+    }
+
     private static IReadOnlyList<PendingGroup> Group(IReadOnlyList<PendingItem> items, bool preview = true) =>
         [.. items.GroupBy(item => (item.Area, item.Kind, item.CompanyId, item.CompanyName))
             .Select(group => new PendingGroup(group.Key.Area, group.Key.Kind, group.Count(),
@@ -84,13 +90,8 @@ internal sealed class HomeService(OrganizationHomeAreasBuilder areas, MemberHome
         OperationLog.RunAsync<HomeResponse>(logger, timeProvider, "GetHome", async () =>
         {
             if (currentUser.UserId is not { } userId || userId == Guid.Empty) return AccessErrors.NotMember;
-            var assigned = await permissions.GetAssignedOrganizationPermissionsAsync(userId, cancellationToken);
-            var granted = await permissions.GetOrganizationPermissionsAsync(userId, cancellationToken);
-            var byCompany = assigned.Count > 0
-                ? new Dictionary<Guid, IReadOnlyList<string>>()
-                : await permissions.GetPermissionsByCompanyAsync(userId, cancellationToken);
-            var context = new PendingItemContext(userId, granted, byCompany);
-            var organization = assigned.Count > 0 ? await areas.SummarizeAsync(context, cancellationToken) : null;
+            var (context, byCompany, assigned) = await ContextAsync(userId, cancellationToken);
+            var organization = assigned ? await areas.SummarizeAsync(context, cancellationToken) : null;
             var cards = organization is null ? await companies.ListAsync(userId, byCompany, cancellationToken) : [];
 
             // Cada fuente lee con el mismo contexto de datos: van de a una, nunca en paralelo.

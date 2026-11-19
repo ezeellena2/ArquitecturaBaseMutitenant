@@ -46,7 +46,8 @@ internal sealed class PermissionService(IRolePermissionCache cache, ITenantConte
         {
             var organization = await OrganizationAsync(userId, cancellationToken);
             var byCompany = await ByCompanyAsync(userId, cancellationToken);
-            return new BusinessPermissions(WithProjections(organization, byCompany), PerCompany(organization, byCompany));
+            return new BusinessPermissions(WithProjections(organization, byCompany), PerCompany(organization, byCompany),
+                organization) { TenantId = ActiveBusinessTenant() };
         });
 
     public Task<bool> HasPermissionAsync(Guid userId, string permission, CancellationToken cancellationToken) =>
@@ -61,6 +62,23 @@ internal sealed class PermissionService(IRolePermissionCache cache, ITenantConte
         CancellationToken cancellationToken) =>
         OperationLog.RunValueAsync(logger, timeProvider, "HasCompanyPermission", async () =>
             (await CompanyAsync(userId, companyId, cancellationToken)).Contains(permission, StringComparer.Ordinal));
+
+    // Lo mismo que CompanyFromAsync sin releer: ByCompany ya trae la unión de cada empresa donde es miembro con alguno, y
+    // una empresa sin ninguno ahí tampoco tiene roles de organización que sumar.
+    public Task<bool> HasCompanyPermissionAsync(BusinessPermissions granted, Guid companyId, string permission,
+        CancellationToken cancellationToken) =>
+        OperationLog.RunValueAsync(logger, timeProvider, "HasCompanyPermissionFromGranted", async () =>
+        {
+            ArgumentNullException.ThrowIfNull(granted);
+            if (companyId == Guid.Empty) throw new ArgumentException("The company id cannot be empty.", nameof(companyId));
+            // Lo leído en una organización nunca decide en otra: sería un bug de quien lo guardó.
+            if (granted.TenantId != ActiveBusinessTenant())
+                throw new InvalidOperationException("The permissions were read in another organization.");
+            return granted.ByCompany.TryGetValue(companyId, out var own)
+                ? own.Contains(permission, StringComparer.Ordinal)
+                : granted.Assigned.Contains(permission, StringComparer.Ordinal)
+                    && await companies.IsActiveAsync(companyId, cancellationToken);
+        });
 
     // Una lectura por requisito (base de la 12): la proyección de la organización se lee una vez y sirve a la alternativa y
     // a la empresa; la de las empresas, solo si hace falta y también una vez.

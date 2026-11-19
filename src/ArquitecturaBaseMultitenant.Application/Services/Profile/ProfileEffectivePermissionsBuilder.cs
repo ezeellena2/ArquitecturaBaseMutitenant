@@ -17,8 +17,8 @@ internal sealed class ProfileEffectivePermissionsBuilder(IPermissionService perm
 
         if (access != Access.Business || !hasActiveMembership) return EffectivePermissions.Empty;
 
-        return new EffectivePermissions(
-            await permissions.GetOrganizationPermissionsAsync(userId, cancellationToken),
-            await permissions.GetPermissionsByCompanyAsync(userId, cancellationToken), []);
+        // Las dos vistas juntas, con una lectura de cada proyección (base de la 12, permisos.md).
+        var granted = await permissions.GetBusinessPermissionsAsync(userId, cancellationToken);
+        return new EffectivePermissions(granted.Organization, granted.ByCompany, []);
     }
 }

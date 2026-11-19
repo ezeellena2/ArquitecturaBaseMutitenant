@@ -29,21 +29,29 @@ internal sealed class AssistantAccessPolicy(ICurrentUser user, AssistantSessionP
             return false;
         if (!await session.IsActiveAsync(ct)) return false;
         if (!await features.IsEnabledAsync("assistant", ct)) return false;
-        if (current == Access.Business && !await organization.HasPermissionAsync(id, Permissions.Assistant.Use, ct)) return false;
+        if (current == Access.Business) return await CanUseInBusinessAsync(id, permissions, companyId, ct);
         if (current == Access.Platform && !await platform.HasPermissionAsync(id, PlatformPermissions.Assistant.Use, ct)) return false;
+        // En Personal ningún permiso de herramienta alcanza; en Plataforma, cada uno se pregunta a sus permisos.
+        foreach (var permission in permissions)
+            if (current != Access.Platform || !await platform.HasPermissionAsync(id, permission, ct)) return false;
+        return true;
+    }
+
+    // La puerta y cada permiso se comparan contra una sola lectura de cada proyección (base de la 12, permisos.md), con las
+    // mismas respuestas que HasPermissionAsync y HasCompanyPermissionAsync.
+    private async Task<bool> CanUseInBusinessAsync(Guid id, IReadOnlyList<string> permissions, Guid? companyId,
+        CancellationToken ct)
+    {
+        var granted = await organization.GetBusinessPermissionsAsync(id, ct);
+        if (!granted.Organization.Contains(Permissions.Assistant.Use, StringComparer.Ordinal)) return false;
         foreach (var permission in permissions)
         {
-            var allowed = current switch
-            {
-                Access.Platform => await platform.HasPermissionAsync(id, permission, ct),
-                Access.Business when permission.StartsWith("company.", StringComparison.Ordinal) && companyId is { } company =>
-                    await organization.HasCompanyPermissionAsync(id, company, permission, ct),
-                Access.Business when permission.StartsWith("company.", StringComparison.Ordinal) =>
-                    await organization.HasPermissionAsync(id, permission, ct)
-                    || (await organization.GetPermissionsByCompanyAsync(id, ct)).Values.Any(values => values.Contains(permission, StringComparer.Ordinal)),
-                Access.Business => await organization.HasPermissionAsync(id, permission, ct),
-                _ => false,
-            };
+            var allowed = !permission.StartsWith("company.", StringComparison.Ordinal)
+                ? granted.Organization.Contains(permission, StringComparer.Ordinal)
+                : companyId is { } company
+                    ? await organization.HasCompanyPermissionAsync(granted, company, permission, ct)
+                    : granted.Organization.Contains(permission, StringComparer.Ordinal)
+                        || granted.ByCompany.Values.Any(values => values.Contains(permission, StringComparer.Ordinal));
             if (!allowed) return false;
         }
         return true;

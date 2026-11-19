@@ -470,6 +470,35 @@ public sealed class ProfileServiceTests
         else Assert.Empty(result.Value.EffectivePermissions.Companies);
     }
 
+    // Revisión de la base de la 12: el perfil pide las dos vistas juntas y lee cada proyección una vez, como la campana.
+    [Fact]
+    public async Task Business_profile_reads_each_permission_projection_once()
+    {
+        using var fixture = new ServiceFixture<ProfileService>();
+        var userId = Guid.CreateVersion7();
+        var tenantId = Guid.CreateVersion7();
+        var companyId = Guid.CreateVersion7();
+        var accesses = new StubAccesses([
+            new(tenantId, TenantKind.Business, "Empresa A", "empresa-a", TenantStatus.Active,
+                MemberStatus.Active, null),
+        ]);
+        var cache = new CountingPermissionCache([Permissions.Users.Read],
+            new Dictionary<Guid, IReadOnlyList<string>> { [companyId] = [Permissions.Company.Members.Read] });
+        var permissions = new PermissionService(cache,
+            new FakeTenantContext { TenantId = tenantId, TenantKind = TenantKind.Business }, new CompanyActivityReader(),
+            fixture.TimeProvider, NullLogger<PermissionService>.Instance);
+        var service = CreateService(new StubCurrentUser(userId, Access.Business), new FakeTenantContext { TenantId = tenantId },
+            new StubUsers(Account(userId)), accesses, new StubSettings(null), fixture, permissions: permissions);
+
+        var result = await service.GetAsync(Ct);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal((1, 1), (cache.OrganizationReads, cache.CompanyReads));
+        Assert.Equal([Permissions.Users.Read], result.Value.EffectivePermissions.Organization);
+        Assert.Equal([Permissions.Company.Members.Read, Permissions.Users.Read],
+            result.Value.EffectivePermissions.Companies[companyId]);
+    }
+
     [Fact]
     public async Task Update_validates_before_transaction_then_writes_once()
     {
@@ -627,7 +656,10 @@ public sealed class ProfileServiceTests
         public Task<bool> HasCompanyRequirementAsync(Guid userId, Guid companyId, string permission,
             string? organizationPermission, CancellationToken ct) => throw new NotSupportedException();
         public Task<BusinessPermissions> GetBusinessPermissionsAsync(Guid userId, CancellationToken ct) =>
-            throw new NotSupportedException();
+            Task.FromResult(new BusinessPermissions(organization ?? [],
+                companies ?? new Dictionary<Guid, IReadOnlyList<string>>(), organization ?? []));
+        public Task<bool> HasCompanyPermissionAsync(BusinessPermissions granted, Guid companyId, string permission,
+            CancellationToken ct) => Task.FromResult(false);
     }
 
     private sealed class StubPlatformAssignments(string[]? permissions) : IPlatformPermissionAssignmentReader
