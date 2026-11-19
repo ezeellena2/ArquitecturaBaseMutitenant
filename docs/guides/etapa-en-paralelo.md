@@ -13,7 +13,7 @@ Los dos repos son separados, así que los dos agentes no se pisan. Lo único que
 | **2b. Front** | Agente del front | Programa las pantallas contra el contrato, copiando su tablero, con las respuestas de la API simuladas en los tests, como hoy. **No cambia el contrato.** | Build del alcance afectado, lint de los archivos cambiados, tests focales del área (Vitest con paths o filtro) y `contracts:check` en verde. `npm run test` ejecuta la suite completa: se reserva para la puerta. |
 | **3. Integración y puerta** | Un solo agente, con los dos repos | Conecta el front a la API real y corrige lo que no encaja. | Pasa la puerta (abajo). |
 
-Las partes 2a y 2b corren al mismo tiempo.
+Las partes 2a y 2b corren al mismo tiempo. El [conductor](conducir-una-etapa.md) corre las tres solo, con un agente por tarea.
 
 ## Reglas
 

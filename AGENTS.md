@@ -42,6 +42,7 @@ Las decisiones están en [`docs/decisions/README.md`](docs/decisions/README.md) 
 | agregar un área completa | [agregar-un-area](docs/guides/agregar-un-area.md) |
 | entender cómo funciona un área o un caso | skill [`/explicar`](.agents/skills/explicar/SKILL.md) (lee la ficha y el código en el momento) |
 | planificar o programar una etapa (back y front en paralelo, desde la E8) | [etapa-en-paralelo](docs/guides/etapa-en-paralelo.md), skill [`/plan-etapa`](.agents/skills/plan-etapa/SKILL.md) |
+| programar una etapa entera con agentes, de punta a punta | [conducir-una-etapa](docs/guides/conducir-una-etapa.md) (el workflow `etapa`, primero con `modo: planificar`) |
 | verificar o cerrar una etapa | skills [`/puerta`](.agents/skills/puerta/SKILL.md) y [`/recorrido`](.agents/skills/recorrido/SKILL.md) |
 | revisar la arquitectura de un desarrollo terminado | [revisar-arquitectura](docs/guides/revisar-arquitectura.md) ([ADR 0059](docs/decisions/0059-revision-de-arquitectura.md)) |
 | crear un documento o saber si uno quedó viejo | [documentacion](docs/rules/documentacion.md) |
