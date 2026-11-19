@@ -52,10 +52,12 @@ public sealed class TimeZoneServiceTests
     [Fact]
     public void Repeated_midnight_starts_at_the_first_occurrence()
     {
-        var range = CreateService().GetDayRangeUtc(new DateOnly(2026, 11, 1), "America/Havana");
+        // Una fecha pasada: las reglas futuras de un país cambian con las actualizaciones del sistema
+        // (Windows, en noviembre de 2026, sacó el cambio de hora de Cuba de ese año).
+        var range = CreateService().GetDayRangeUtc(new DateOnly(2024, 11, 3), "America/Havana");
 
-        Assert.Equal(new DateTime(2026, 11, 1, 4, 0, 0, DateTimeKind.Utc), range.StartUtc);
-        Assert.Equal(new DateTime(2026, 11, 2, 5, 0, 0, DateTimeKind.Utc), range.EndUtc);
+        Assert.Equal(new DateTime(2024, 11, 3, 4, 0, 0, DateTimeKind.Utc), range.StartUtc);
+        Assert.Equal(new DateTime(2024, 11, 4, 5, 0, 0, DateTimeKind.Utc), range.EndUtc);
     }
 
     [Fact]
