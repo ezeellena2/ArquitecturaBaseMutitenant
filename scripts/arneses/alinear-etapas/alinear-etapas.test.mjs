@@ -11,6 +11,7 @@ import * as orden from './detectores/orden.mjs';
 import * as permisos from './detectores/permisos.mjs';
 import * as secciones from './detectores/secciones.mjs';
 import * as tableros from './detectores/tableros.mjs';
+import * as backlog from './detectores/backlog.mjs';
 
 const aqui = dirname(fileURLToPath(import.meta.url));
 const HOJA = 'docs/plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md';
@@ -227,4 +228,47 @@ test('el manifiesto nombra exactamente los detectores de la carpeta y no toca na
   const archivos = (await readdir(join(aqui, 'detectores'))).map((a) => a.replace('.mjs', '')).sort();
   assert.deepEqual([...manifiesto.detectores].sort(), archivos);
   assert.deepEqual(manifiesto.permisos.nuncaToca, ['**/*']);
+});
+
+const BACKLOG = 'docs/backlog.md';
+const pendiente = [
+  '# Backlog',
+  '## Lo de allá: para la segunda parte de la base',
+  '',
+  '- Algo.',
+  '## Lo de acá: para programar',
+  '',
+  'Va con la segunda parte de la base, a más tardar antes de la E14.',
+  '',
+  '- Otra cosa.',
+  '## Para después',
+  '',
+  '- Nada, antes de la E14 tampoco.',
+].join('\n');
+
+test('backlog: lo que va antes de una etapa pendiente y ningún plan toma es un hallazgo', async () => {
+  const hallazgos = await backlog.detectar(contexto({ archivos: { [BACKLOG]: pendiente } }));
+  assert.deepEqual(tipos(hallazgos), ['backlog-sin-plan', 'backlog-sin-plan']);
+  assert.match(hallazgos[0].real, /«Lo de allá: para la segunda parte de la base» va en la segunda parte de la base/);
+  assert.equal(hallazgos[1].linea, 5);
+});
+
+test('backlog: la toma un plan de etapa que la enlaza o una spec que la nombra', async () => {
+  const archivos = {
+    [BACKLOG]: pendiente,
+    'docs/plans/2026-11-19-etapa-base.md': 'Fuente: [backlog](../backlog.md#lo-de-allá-para-la-segunda-parte-de-la-base).',
+    'docs/plans/formularios/base-algo.md': 'Toma «Lo de acá: para programar» de docs/backlog.md.',
+  };
+  assert.deepEqual(await backlog.detectar(contexto({ archivos })), []);
+});
+
+test('backlog: la hoja de ruta y el plan de desarrollo no la toman', async () => {
+  const archivos = { [BACKLOG]: pendiente, [PLAN]: '«Lo de allá: para la segunda parte de la base»', [HOJA]: `${hoja}\n«Lo de acá: para programar»` };
+  assert.equal((await backlog.detectar(contexto({ archivos }))).length, 2);
+});
+
+test('backlog: lo que va antes de una etapa cerrada ya no se controla', async () => {
+  const archivos = { [BACKLOG]: '## Lo de acá\n\nVa antes de la E14.\n\n- Algo.' };
+  assert.deepEqual(await backlog.detectar(contexto({ archivos, cerradas: [14] })), []);
+  assert.equal((await backlog.detectar(contexto({ archivos }))).length, 1);
 });
