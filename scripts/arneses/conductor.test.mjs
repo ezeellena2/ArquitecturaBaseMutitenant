@@ -197,11 +197,14 @@ test('conductor: lo hecho antes no se repite, y solo corre lo pedido', async () 
 });
 
 test('conductor: con la etapa completa integra, revisa los dos repos, corre la puerta una vez y cierra', async () => {
-  const lect = lectura([tarea('K1', 'contrato'), tarea('B1', 'back'), tarea('F1', 'front'), tarea('I1', 'integracion')]);
-  const { resultado, etiquetas } = await correr(respondedor(lect), { plan: PLAN });
+  const lect = lectura([tarea('K1', 'contrato'), tarea('B1', 'back'), tarea('F1', 'front'), tarea('I1', 'integracion'), tarea('I3', 'integracion', { texto: 'el recorrido cubre un rol con un permiso ajeno' })]);
+  const { resultado, etiquetas, llamadas } = await correr(respondedor(lect), { plan: PLAN });
   assert.deepEqual(etiquetas.slice(-5), ['integrar', 'revisión del cierre · back', 'revisión del cierre · front', 'puerta', 'cierre del plan']);
   assert.equal(resultado.resultado, 'puerta corrida');
   assert.ok(!etiquetas.includes('I1 · programa'), 'la integración la hacen sus fases, no un carril');
+  const integra = llamadas.find((l) => l.label === 'integrar').prompt;
+  assert.match(integra, /I3 · tarea I3: el recorrido cubre un rol con un permiso ajeno/, 'el integrador deja listos los pasos del recorrido antes de la puerta');
+  assert.match(integra, /recorrido-usuario\.mjs/);
 });
 
 test('conductor: con pasos del usuario antes de la puerta, frena antes y los devuelve', async () => {

@@ -307,7 +307,12 @@ El texto con que el plan abre el chat de Integración:
 ${ctx.TEXTOS.integracion}
 """
 
-De ese texto hacés solo la integración: el front consume el contrato real (npm run contracts y npm run contracts:check en ${FRONT}) y lo que no encaja se corrige.
+Las tareas de integración del plan:
+${ctx.INTEGRACION.map((t) => `- ${t.id} · ${t.titulo}: ${t.texto}`).join('\n')}
+
+De todo eso hacés lo que no es correr la puerta ni lo que hace el usuario:
+- El front consume el contrato real (npm run contracts y npm run contracts:check en ${FRONT}), y lo que no encaja se corrige.
+- Dejás listo lo que la puerta corre después: los pasos nuevos del recorrido de usuario (scripts/recorrido-usuario.mjs), los casos de la galería de lo que cambió (scripts/capturas/etapa-<etapa>.json) y los E2E reales que pida el plan, si las tareas del front no los dejaron.
 - Cambios al contrato que anotaron las tareas: ${ctx.CAMBIOS.length ? ctx.CAMBIOS.join('; ') : 'ninguno'}.
 - Cada diferencia real se arregla en el repo de su dueño, con su test. Corré solo lo que el arreglo toca, y commiteá con la línea «Tarea: ${CLAVE}/integracion».
 - La puerta no la corrés vos: la corre el conductor después.
@@ -482,6 +487,7 @@ for (const t of tareas) if (t.carril !== 'integracion' && t.estado !== 'pendient
 const ctx = {
   ETAPA: L.etapa,
   TEXTOS: L.textos,
+  INTEGRACION: tareas.filter((t) => t.carril === 'integracion'),
   CAMBIOS: [],
   corrieron: 0,
   hechas() {

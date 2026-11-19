@@ -32,7 +32,7 @@ Para retomar una corrida cortada, se lanza otra vez con el mismo plan: lo que ya
 | Leer | Lee el plan y la spec, y arma la lista de tareas. Marca como hecha la que tiene su commit y su código, como del usuario la que es suya (secretos, Meta), y como bloqueada la que espera un tablero o una decisión. Frena si la etapa anterior no cerró, si hay una decisión abierta, si la app está levantada, si el cupo llegó al 85 % o si las esperas forman un ciclo |
 | Contrato | Las tareas K, en orden. Si una no queda hecha, no corre nada más |
 | Programar | El back y el front a la vez. Cada repo tiene un solo agente escribiendo |
-| Integrar | El front contra el contrato real. Cada diferencia se arregla en el repo de su dueño |
+| Integrar | El front contra el contrato real. Cada diferencia se arregla en el repo de su dueño. Deja listo lo que corre la puerta: los pasos del recorrido, los casos de la galería y los E2E de la etapa |
 | Revisión | La lista de control de `/puerta`, una vez por repo y sobre todos los commits de la etapa, con sus arreglos |
 | Puerta | `/puerta` una sola vez. Cada fallo vuelve a su dueño, y con el arreglo se corre solo lo que toca |
 | Cierre | Actualiza en el plan la tabla de estado, la de la puerta y «Cambios al contrato», y borra las copias |
