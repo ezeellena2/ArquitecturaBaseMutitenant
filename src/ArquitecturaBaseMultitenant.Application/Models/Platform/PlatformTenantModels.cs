@@ -12,6 +12,11 @@ public sealed record ListPlatformTenantsRequest : PagedRequest
     public static readonly IReadOnlyCollection<string> SortableFields = ["name", "createdAtUtc"];
     public TenantStatus? Status { get; init; }
     public TenantRegistrationSource? Source { get; init; }
+    /// <summary>
+    /// Solo las que tienen fecha de alta: así una página por <c>-createdAtUtc</c> no se llena con las que no la tienen, que
+    /// PostgreSQL pone primero en el orden descendente. Interno de la campana; no se expone por HTTP.
+    /// </summary>
+    public bool OnlyWithCreationDate { get; init; }
 }
 
 public sealed record PlatformTenantResponse(Guid Id, string Name, string? Slug, TenantStatus Status,

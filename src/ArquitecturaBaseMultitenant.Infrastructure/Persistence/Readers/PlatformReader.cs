@@ -85,6 +85,7 @@ internal sealed class PlatformReader(ApplicationDbContext context) : IPlatformRe
         var query = context.Tenants.AsNoTracking().Where(t => t.Kind == TenantKind.Business);
         if (request.Status is { } status) query = query.Where(t => t.Status == status);
         if (request.Source is { } source) query = query.Where(t => t.RegistrationSource == source);
+        if (request.OnlyWithCreationDate) query = query.Where(t => t.CreatedAtUtc != null);
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
             query = query.ApplySearch(request.Search, t => t.Name, t => t.Slug,

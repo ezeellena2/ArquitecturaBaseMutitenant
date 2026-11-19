@@ -130,18 +130,7 @@ public sealed class NotificationsTests(ApiFactory factory)
         using var person = Client(factory);
         var account = await AccountJourney.RegisterAsync(factory, person, Ct);
         var name = "Pendiente " + Guid.NewGuid().ToString("N")[..8];
-        var tenant = Tenant.CreateBusiness(name, requiresApproval: true);
-        await using (var scope = factory.Services.CreateAsyncScope())
-        {
-            var services = scope.ServiceProvider;
-            Assert.True(tenant.RecordRegistration(account.UserId, TenantRegistrationSource.SelfService,
-                services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime).IsSuccess);
-            using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenant.Id);
-            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
-                services.GetRequiredService<TenantProvisioner>().StageAsync(tenant,
-                    TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [account.UserId], account.UserId,
-                    ct), CommitPolicy.OnSuccess, Ct);
-        }
+        var tenant = await StagePendingAsync(factory, account.UserId, name, dated: true);
         using var anonymous = Client(factory);
         var newEmail = $"campana-{Guid.NewGuid():N}@example.test";
         await RecoveryJourney.SubmitAsync(factory, anonymous, newEmail, account.Email.Value, Ct);
@@ -153,10 +142,10 @@ public sealed class NotificationsTests(ApiFactory factory)
         }
 
         var bell = (await BellAsync(reviewer)).GetProperty("items").EnumerateArray().ToArray();
-        var organization = Assert.Single(bell, item => item.GetProperty("id").GetString() == "organizationPending:" + tenant.Id.ToString("N"));
+        var organization = Assert.Single(bell, item => item.GetProperty("id").GetString() == "organizationPending:" + tenant.ToString("N"));
         Assert.Equal("organizationPending", organization.GetProperty("kind").GetString());
         Assert.Equal(name, organization.GetProperty("params").GetProperty("name").GetString());
-        Assert.Equal("/plataforma/organizaciones/" + tenant.Id.ToString("D"), organization.GetProperty("link").GetString());
+        Assert.Equal("/plataforma/organizaciones/" + tenant.ToString("D"), organization.GetProperty("link").GetString());
         var recovery = Assert.Single(bell, item => item.GetProperty("id").GetString() == "recoveryRequested:" + recoveryId.ToString("N"));
         Assert.Equal("Email", recovery.GetProperty("params").GetProperty("methodType").GetString());
         Assert.DoesNotContain(account.Email.Value, recovery.GetProperty("params").GetRawText(), StringComparison.OrdinalIgnoreCase);
@@ -166,6 +155,34 @@ public sealed class NotificationsTests(ApiFactory factory)
             .Select(item => item.GetProperty("kind").GetString()).ToArray();
         Assert.DoesNotContain("organizationPending", hidden);
         Assert.DoesNotContain("recoveryRequested", hidden);
+    }
+
+    /// <summary>
+    /// Revisión de la base de la 12: una organización pendiente sin fecha de alta (de antes de registrarla) no se avisa, y
+    /// tampoco le quita lugar a las demás. La campana pide 50 del alta más nueva a la más vieja, y en PostgreSQL el orden
+    /// descendente pone primero los nulos: 50 sin fecha llenaban la página y tapaban a la que sí tiene.
+    /// </summary>
+    [Fact]
+    public async Task Pending_organizations_without_a_creation_date_do_not_hide_a_dated_one_from_the_bell()
+    {
+        // Base propia: la campana de Plataforma lista las pendientes de toda la base.
+        await using var isolated = new ApiFactory();
+        await isolated.InitializeAsync();
+        await isolated.Services.SeedDatabaseAsync(Ct);
+        using var reviewer = Client(isolated);
+        var reviewerAccount = await AccountJourney.RegisterAsync(isolated, reviewer, Ct);
+        await PlatformOperators.GrantAsync(isolated.Services, reviewerAccount.UserId, PlatformOperators.Reduced, Ct);
+        await AccountJourney.AuthorizeAsync(reviewer, "platform", Ct);
+        using var person = Client(isolated);
+        var account = await AccountJourney.RegisterAsync(isolated, person, Ct);
+        for (var index = 0; index < NotificationListResponse.Limit; index++)
+            await StagePendingAsync(isolated, account.UserId, "Sin fecha " + index, dated: false);
+        var dated = await StagePendingAsync(isolated, account.UserId, "Con fecha", dated: true);
+
+        var organizations = Ids(await BellAsync(reviewer))
+            .Where(id => id.StartsWith("organizationPending:", StringComparison.Ordinal)).ToArray();
+
+        Assert.Equal(["organizationPending:" + dated.ToString("N")], organizations);
     }
 
     [Fact]
@@ -201,6 +218,23 @@ public sealed class NotificationsTests(ApiFactory factory)
         await ActivatorUtilities.CreateInstance<AccountDeletionWorker>(isolated.Services).RunOnceAsync(Ct);
 
         Assert.Equal([(staying.UserId, "probe:old")], await ReadsAsync(isolated));
+    }
+
+    /// <summary>Una organización pendiente de aprobación, con la fecha de su alta o sin ella, como las de antes de registrarla.</summary>
+    private static async Task<Guid> StagePendingAsync(ApiFactory database, Guid ownerId, string name, bool dated)
+    {
+        var tenant = Tenant.CreateBusiness(name, requiresApproval: true);
+        await using var scope = database.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        if (dated)
+            Assert.True(tenant.RecordRegistration(ownerId, TenantRegistrationSource.SelfService,
+                services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime).IsSuccess);
+        using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenant.Id);
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+            services.GetRequiredService<TenantProvisioner>().StageAsync(tenant,
+                TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [ownerId], ownerId, ct),
+            CommitPolicy.OnSuccess, Ct);
+        return tenant.Id;
     }
 
     private static async Task InTransactionAsync(ApiFactory database, Func<ApplicationDbContext, CancellationToken, Task> work)

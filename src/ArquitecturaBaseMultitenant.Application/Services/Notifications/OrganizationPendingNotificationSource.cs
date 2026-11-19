@@ -12,7 +12,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Notifications;
 /// <summary>
 /// «Gamma S.A. espera aprobación», en la campana de Plataforma: una por organización pendiente, para quien puede verlas
 /// (<c>platform.tenants.read</c>, como «Para resolver» del inicio). Las 50 más nuevas, con la fecha del alta; cada una
-/// lleva a su ficha. Una organización sin fecha de alta registrada no se avisa.
+/// lleva a su ficha. Una organización sin fecha de alta registrada no se avisa ni ocupa lugar en esas 50.
 /// </summary>
 internal sealed class OrganizationPendingNotificationSource(IPlatformReader platform) : INotificationSource
 {
@@ -28,6 +28,8 @@ internal sealed class OrganizationPendingNotificationSource(IPlatformReader plat
             Status = TenantStatus.PendingApproval,
             PageSize = NotificationListResponse.Limit,
             Sort = "-createdAtUtc",
+            // Sin esto, las que no tienen fecha (primeras en el orden descendente) llenaban la página y tapaban a las demás.
+            OnlyWithCreationDate = true,
         }, cancellationToken);
         return
         [

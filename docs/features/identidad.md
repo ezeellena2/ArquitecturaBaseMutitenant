@@ -108,7 +108,7 @@ Las fuentes del núcleo:
 | `kind` | Para quién | `params` | `link` |
 |---|---|---|---|
 | `personalLoginMethod` | la persona y su organización, sin un método propio disponible (la regla de `needsPersonalLoginMethod`); nace con el último método verificado | — | `/cuenta` |
-| `organizationPending` | Plataforma con `platform.tenants.read`: una por organización pendiente, las 50 más nuevas | `name` | `/plataforma/organizaciones/{id}` |
+| `organizationPending` | Plataforma con `platform.tenants.read`: una por organización pendiente, las 50 de alta más nueva; las que no tienen fecha de alta no se avisan ni ocupan lugar | `name` | `/plataforma/organizaciones/{id}` |
 | `recoveryRequested` | Plataforma con `platform.recoveries.manage`: uno por pedido pendiente, los 50 más nuevos | `name` (si se encontró la cuenta), `methodType` y `method` (enmascarado) | `/plataforma/recuperaciones?status=Pending` |
 
 `NotificationServiceTests`, `NotificationSourceTests` y `NotificationsTests` (por HTTP, con los tres accesos, el aislamiento entre cuentas, las fuentes de Plataforma, dos «leído» a la vez contra la base real, la baja y la limpieza) la verifican. El `Down` de su migración se niega si alguien ya leyó un aviso.
