@@ -100,7 +100,7 @@ El [panorama vigente](architecture/backend.md) describe la arquitectura; los pen
 
 ## Traspaso 15, el núcleo: para programar
 
-Lo que trajo el traspaso 15 de ArquitecturaBase para el núcleo (su traspaso 14, `02-nucleo.md`) y pide código. Nada de allá pasó todavía su prueba integral: se anota sin armar etapas, y un detalle puede cambiar con el traspaso 16.
+Lo que trajo el traspaso 15 de ArquitecturaBase para el núcleo (su traspaso 14, `02-nucleo.md`) y pide código. Va en la [segunda parte de la base](plans/2026-11-19-etapa-base-de-la-12-segunda-parte.md), antes de la E12 (214), salvo lo que nombra otra etapa. Nada de allá pasó todavía su prueba integral, y un detalle puede cambiar con el traspaso 16.
 
 - **Nadie da lo que no tiene** ([ADR 0061](decisions/0061-nadie-da-lo-que-no-tiene.md)). Un `*Guard` por alcance, usado dentro del límite: en la organización, por `RoleService` y los casos de uso de `OrganizationUsers` (editar, estado, quitar, invitar); en cada empresa, por `CompanyMembershipService`; en Plataforma, por `PlatformOperatorService`. Errores en `Errors.resx` y `.en.resx`, y tests con cuentas que tienen solo cada permiso.
 - **Retención de los datos del ingreso** ([ADR 0062](decisions/0062-retencion-de-los-datos-del-ingreso.md)). Purga por lotes de `identity.LoginCodes`, `identity.LoginAudits` y OpenIddict en un scope global, y de las invitaciones cerradas con `TenantJobRunner`; sus índices; el test de que cada tabla con datos personales nombra quién la purga; y el texto de la auditoría de Plataforma que dice que los ingresos se guardan doce meses.
