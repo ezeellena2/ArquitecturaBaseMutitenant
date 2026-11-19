@@ -7,8 +7,8 @@ public interface INotificationReadRepository
 {
     void Add(NotificationRead read);
 
-    /// <summary>Los de una cuenta que se borra, en el tramo global de su baja.</summary>
-    Task RemoveForAccountAsync(Guid userId, CancellationToken cancellationToken);
+    /// <summary>Borra los de una cuenta que se da de baja, por condición, en el tramo global de su baja.</summary>
+    Task DeleteForAccountAsync(Guid userId, CancellationToken cancellationToken);
 
     /// <summary>Una tanda de los abiertos antes de ese instante, los más viejos primero; devuelve cuántos borró.</summary>
     Task<int> DeleteExpiredAsync(DateTime beforeUtc, int batchSize, CancellationToken cancellationToken);

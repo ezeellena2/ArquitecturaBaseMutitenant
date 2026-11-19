@@ -220,6 +220,48 @@ public sealed class NotificationsTests(ApiFactory factory)
         Assert.Equal([(staying.UserId, "probe:old")], await ReadsAsync(isolated));
     }
 
+    /// <summary>
+    /// Revisión de la base de la 12: la limpieza de 90 días borra una lectura de la cuenta que se está dando de baja en el
+    /// medio de la baja, después de que esta la leyó para borrarla. La baja tiene que terminar igual, sin chocar.
+    /// </summary>
+    [Fact]
+    public async Task An_account_deletion_finishes_when_the_cleanup_removes_its_reads_in_the_middle()
+    {
+        // Base propia: el worker de la baja procesa todas las cuentas vencidas de su base.
+        await using var isolated = new ApiFactory();
+        await isolated.InitializeAsync();
+        await isolated.Services.SeedDatabaseAsync(Ct);
+        var race = new CleanupRace();
+        using var host = isolated.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+            services.AddDbContext<ApplicationDbContext>(options => options.AddInterceptors(race))));
+        using var leavingClient = Client(host);
+        var leaving = await AccountJourney.RegisterAsync(host, leavingClient, Ct);
+        var nowUtc = isolated.Services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        await InTransactionAsync(isolated, async (database, ct) =>
+        {
+            database.NotificationReads.AddRange(
+                NotificationRead.Mark(leaving.UserId, "probe:old", nowUtc.AddDays(-91)),
+                NotificationRead.Mark(leaving.UserId, "probe:recent", nowUtc.AddDays(-1)));
+            var user = await database.Users.SingleAsync(row => row.Id == leaving.UserId, ct);
+            Assert.True(user.RequestDeletion("Prueba de baja", nowUtc.AddDays(-31), 30).IsSuccess);
+        });
+        var cleaned = -1;
+        race.Arm(leaving.UserId, async () =>
+        {
+            await using var scope = host.Services.CreateAsyncScope();
+            var cleanup = await scope.ServiceProvider.GetRequiredService<INotificationService>().CleanupExpiredReadsAsync(Ct);
+            cleaned = cleanup.Value;
+        });
+
+        await ActivatorUtilities.CreateInstance<AccountDeletionWorker>(host.Services).RunOnceAsync(Ct);
+
+        Assert.Equal(1, cleaned);
+        Assert.Empty(await ReadsAsync(isolated));
+        await using var check = isolated.Services.CreateAsyncScope();
+        Assert.Equal(UserStatus.Deleted, (await check.ServiceProvider.GetRequiredService<ApplicationDbContext>().Users
+            .AsNoTracking().SingleAsync(row => row.Id == leaving.UserId, Ct)).Status);
+    }
+
     /// <summary>Una organización pendiente de aprobación, con la fecha de su alta o sin ella, como las de antes de registrarla.</summary>
     private static async Task<Guid> StagePendingAsync(ApiFactory database, Guid ownerId, string name, bool dated)
     {
@@ -317,6 +359,47 @@ public sealed class NotificationsTests(ApiFactory factory)
         // La comprobación de la marca (un EXISTS con la cuenta), no la lista de la campana.
         private bool IsCheck(DbCommand command) => _userId is { } userId
             && command.CommandText.Contains("EXISTS", StringComparison.Ordinal)
+            && command.CommandText.Contains("\"NotificationReads\"", StringComparison.Ordinal)
+            && command.Parameters.Cast<DbParameter>().Any(parameter => parameter.Value is Guid value && value == userId);
+    }
+
+    /// <summary>
+    /// Corre la limpieza una vez en el medio de la baja de la cuenta armada: después de que la baja lee sus lecturas para
+    /// borrarlas, o justo antes de que las borre por condición, lo que haga primero.
+    /// </summary>
+    private sealed class CleanupRace : DbCommandInterceptor
+    {
+        private Guid? _userId;
+        private Func<Task>? _during;
+
+        public void Arm(Guid userId, Func<Task> during)
+        {
+            _userId = userId;
+            _during = during;
+        }
+
+        public override async ValueTask<DbDataReader> ReaderExecutedAsync(DbCommand command, CommandExecutedEventData eventData,
+            DbDataReader result, CancellationToken cancellationToken = default)
+        {
+            if (command.CommandText.TrimStart().StartsWith("SELECT", StringComparison.OrdinalIgnoreCase) && IsDeletion(command))
+                await RunOnceAsync();
+            return result;
+        }
+
+        public override async ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(DbCommand command,
+            CommandEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+        {
+            if (IsDeletion(command)) await RunOnceAsync();
+            return result;
+        }
+
+        private async Task RunOnceAsync()
+        {
+            if (Interlocked.Exchange(ref _during, null) is { } during) await during();
+        }
+
+        // Lo que hace la baja con las lecturas de la cuenta; la limpieza filtra por fecha, sin la cuenta.
+        private bool IsDeletion(DbCommand command) => _userId is { } userId
             && command.CommandText.Contains("\"NotificationReads\"", StringComparison.Ordinal)
             && command.Parameters.Cast<DbParameter>().Any(parameter => parameter.Value is Guid value && value == userId);
     }

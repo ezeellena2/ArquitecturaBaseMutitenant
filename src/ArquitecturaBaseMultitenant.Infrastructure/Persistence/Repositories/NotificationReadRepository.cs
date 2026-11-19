@@ -13,11 +13,17 @@ internal sealed class NotificationReadRepository(ApplicationDbContext context) :
         context.NotificationReads.Add(read);
     }
 
-    public async Task RemoveForAccountAsync(Guid userId, CancellationToken cancellationToken)
+    /// <summary>
+    /// Un borrado por condición, en la transacción de la baja: si la limpieza de 90 días borra a la vez alguna de estas
+    /// filas, la baja la saltea. Cargarlas y borrarlas al guardar chocaba (<c>DbUpdateConcurrencyException</c>) con una que
+    /// ya no estaba. Sin auditoría ni soft delete, como <see cref="DeleteExpiredAsync"/>.
+    /// </summary>
+    public async Task DeleteForAccountAsync(Guid userId, CancellationToken cancellationToken)
     {
         context.RequireTransaction();
-        context.NotificationReads.RemoveRange(await context.NotificationReads
-            .Where(read => read.UserId == userId).ToArrayAsync(cancellationToken));
+        await context.Database.ExecuteSqlAsync($"""
+            DELETE FROM identity."NotificationReads" WHERE "UserId" = {userId}
+            """, cancellationToken);
     }
 
     /// <summary>

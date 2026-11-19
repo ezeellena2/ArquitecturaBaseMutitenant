@@ -333,7 +333,7 @@ public sealed class NotificationServiceTests
 
         public List<(DateTime BeforeUtc, int BatchSize)> Expirations { get; } = [];
 
-        public Task RemoveForAccountAsync(Guid userId, CancellationToken cancellationToken)
+        public Task DeleteForAccountAsync(Guid userId, CancellationToken cancellationToken)
         {
             RemovedAccounts.Add(userId);
             return Task.CompletedTask;

@@ -20,6 +20,6 @@ internal sealed class NotificationReadDeletionParticipant(INotificationReadRepos
     {
         ArgumentNullException.ThrowIfNull(context);
         if (context.TenantId is not null) return;
-        await reads.RemoveForAccountAsync(context.UserId, ct);
+        await reads.DeleteForAccountAsync(context.UserId, ct);
     }
 }
