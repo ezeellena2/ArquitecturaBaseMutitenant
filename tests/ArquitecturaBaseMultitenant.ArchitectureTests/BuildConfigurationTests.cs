@@ -84,6 +84,23 @@ public sealed partial class BuildConfigurationTests
             .GetProperty("Default").GetString());
     }
 
+    /// <summary>
+    /// Base de la 12: en Windows el cliente de Redis prueba primero <c>::1</c> y pierde unos dos segundos antes de ir a
+    /// 127.0.0.1, donde Docker publica Redis; con el segundo de la ADR 0052 no conectaba nunca y la caché quedaba Degraded.
+    /// En Development tiene 5 s; los demás ambientes siguen con el segundo, porque <c>appsettings.json</c> no lo cambia.
+    /// </summary>
+    [Fact]
+    public void Development_gives_redis_five_seconds_to_connect()
+    {
+        var api = Path.Combine(SolutionRoot.FullPath, "src", "ArquitecturaBaseMultitenant.Api");
+        using var development = JsonDocument.Parse(File.ReadAllText(Path.Combine(api, "appsettings.Development.json")));
+        using var shared = JsonDocument.Parse(File.ReadAllText(Path.Combine(api, "appsettings.json")));
+
+        Assert.Equal(5000, development.RootElement.GetProperty("Cache").GetProperty("ConnectTimeoutMilliseconds").GetInt32());
+        Assert.False(shared.RootElement.TryGetProperty("Cache", out var cache)
+            && cache.TryGetProperty("ConnectTimeoutMilliseconds", out _));
+    }
+
     [Fact]
     public void Development_web_callback_matches_the_front_route_when_the_sibling_checkout_is_present()
     {
