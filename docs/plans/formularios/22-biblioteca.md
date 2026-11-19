@@ -3,7 +3,7 @@
 **Estado:** pendiente · spec de la etapa 22 del bloque (decisiones 34, 40, 78, 79, 175, 177 y 220). **Es también la biblioteca de formularios estándar** (40). Se arma con las piezas de este repo y las de las etapas anteriores. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E14]**, **[E12]** y **[E21]** contra el código.
 
 **Fuentes:**
-- alcance y decisiones: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E22 y decisiones 2, 13 a 16, 30 a 33, 35, 40, 45, 50, 59, 61, 62, 64, 138, 149, 175 y 177;
+- alcance y decisiones: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E22 y decisiones 2, 13 a 16, 30 a 33, 35, 40, 45, 50, 59, 61, 62, 64, 138, 149, 175, 177, 212, 229 y 230;
 - reglas: [AGENTS.md](../../../AGENTS.md), las [fichas](../../rules/README.md) y la [ADR 0050](../../decisions/0050-auditoria-global-de-modulos.md) (auditoría de lo global);
 - las specs de la [E12](12-catalogos.md), la [E14](14-formularios.md), la [E17](17-ciclo-de-vida.md), la [E19](19-condiciones-calculos-y-lineas.md), la [E20](20-cargar-desde-la-web.md) y la [E21](21-reglas-y-aprobacion.md).
 
@@ -16,8 +16,8 @@
 ## Qué leer
 
 Antes de empezar:
-1. **Lo anterior:** las specs de la [E12](12-catalogos.md), la [E14](14-formularios.md) y la [E21](21-reglas-y-aprobacion.md), sobre todo el borrador, los catálogos, las reglas y el diseño del PDF que se copian; la [E17](17-ciclo-de-vida.md), copiar; la [E19](19-condiciones-calculos-y-lineas.md), las fórmulas y el bloque, y la [E20](20-cargar-desde-la-web.md), lo que deja un formulario solo para la app.
-2. **Decisiones** de la hoja de ruta: 2, 13 a 16, 30 a 33, 35, 40, 45, 50, 59, 61, 62, 64, 138, 149, 175 y 177.
+1. **Lo anterior:** las specs de la [E12](12-catalogos.md), la [E14](14-formularios.md) y la [E21](21-reglas-y-aprobacion.md), sobre todo el borrador, los catálogos, las reglas y el diseño del PDF que se copian; la [E17](17-ciclo-de-vida.md), copiar; la [E19](19-condiciones-calculos-y-lineas.md), las fórmulas y el bloque, y la [E20](20-cargar-desde-la-web.md), «Dónde se completa» y la Ubicación (229 y 230).
+2. **Decisiones** de la hoja de ruta: 2, 13 a 16, 30 a 33, 35, 40, 45, 50, 59, 61, 62, 64, 138, 149, 175, 177, 212, 229 y 230.
 3. **Fichas:** [persistencia-ef](../../rules/persistencia-ef.md), [multitenancy](../../rules/multitenancy.md), [auditoria](../../rules/auditoria.md), [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [idempotencia](../../rules/idempotencia.md), [api-http](../../rules/api-http.md), [permisos](../../rules/permisos.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [result-y-errores](../../rules/result-y-errores.md), [validacion](../../rules/validacion.md), [textos-libres](../../rules/textos-libres.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [logs](../../rules/logs.md), [modulos](../../rules/modulos.md) y [tests](../../rules/tests.md). Además, la [ADR 0050](../../decisions/0050-auditoria-global-de-modulos.md).
 4. **Código para copiar:** pieza por pieza, en la §7.
 5. **Pantallas:** los tableros de la §8.
@@ -38,7 +38,7 @@ Antes de empezar:
 **No entra:**
 - avisar «hay una versión nueva» o actualizar una copia: queda para después, si se pide;
 - filtros en los catálogos de una plantilla: los de los miembros y de los contactos llegan sin filtros, y la organización los ajusta (64). Tampoco los filtros por destinatario de la E16, que dependen de los datos de las personas de cada organización;
-- lo que en la E20 deja un formulario solo para la app: con WhatsApp instalado, publicar la plantilla frena una lista dependiente, «elegir varias» de más de 20 opciones o un bloque con un mínimo de más de 10 ítems (B8);
+- «Solo en la app» (229): una plantilla no lleva «Dónde se completa», y su copia nace «En la app y por WhatsApp». Con WhatsApp instalado, publicarla frena todo lo que WhatsApp no puede mostrar, también una lista dependiente y una segunda Ubicación (B8);
 - plantillas de una organización para otra;
 - la «Lectura de documentos» de una plantilla, que llega con los documentos (E25);
 - los estándares que aporta un módulo, como la «Factura» de ARCA, con sus preguntas atadas con candado y sus reglas activas (220): conviven con estas plantillas, los trae el módulo ARCA en su segunda parte, y esta etapa no cambia por eso;
@@ -64,7 +64,7 @@ Con el traspaso 5 se redibujaron `FRM-Editor-Reglas-Plantilla`, `M-FRM-Reglas-Pl
 | Tablero | Qué muestra | Estados |
 | --- | --- | --- |
 | `Plat-FRM-Biblioteca` y `M-Plat-FRM-Biblioteca` | listado: nombre, categoría, estado (Borrador, Publicada o Retirada), «La usaron» y la última publicación; la caja de filtros de las listas, con Estado y Categoría; «Nueva plantilla». En el teléfono es solo para ver | menú de un filtro, borradores, sin resultados, cargando, vacía y error |
-| `FRM-Formularios-22` y `M-FRM-Formularios-22` | la lista de la 21, con «Cargar», y «Nuevo formulario ▾» con «Desde cero» y «Desde una plantilla» (79); en el teléfono, el «+» pregunta lo mismo | los de la 21 |
+| `FRM-Formularios-22` y `M-FRM-Formularios-22` | la lista de la 21, con «Cargar» y las columnas «Estado» y «Dónde se completa» de la E20 (229), y «Nuevo formulario ▾» con «Desde cero» y «Desde una plantilla» (79); en el teléfono, el «+» pregunta lo mismo | los de la 21 |
 | `Plat-FRM-Plantilla-Nueva` | diálogo con el nombre y la categoría | vacío, faltan los datos (se marcan al tocar «Crear plantilla») y creando |
 | `Plat-FRM-Plantilla` | ficha con pestañas **Plantilla**, **Catálogos** y **Publicación**. **Plantilla** es el editor de la 14: nombre, categoría, prefijo sugerido, para quién es (50), texto del botón y descripción; las preguntas con ↑ ↓ ✎ 🗑, que se abren en el lugar, con «Agregar pregunta» y «Agregar bloque» (177), y debajo las reglas de ejemplo (33), con el teléfono al costado. En la banda, Descartar, Guardar borrador, Publicar y el ⋮ con «Retirar», en rojo. **Catálogos:** una fila por catálogo, con su origen (64), y cada uno se abre aparte. **Publicación:** en grilla, «La usaron» y la última publicación, o quién la retiró y el motivo, sin el renglón «Estado», que ya dice la banda (175); debajo, las versiones, con número, fecha, operador y motivo | con cambios, para quién es, guardando, borrador guardado, otra persona guardó, descartar, catálogos, un catálogo a mano, uno de los contactos, publicación (con su menú, borrador y retirada) |
 | `Plat-FRM-Plantilla-Reglas` | «Cuando llega una respuesta» de la 21 debajo de las preguntas, sin «Guardar reglas» ni historial: se guarda con el borrador. Lo de cada organización va con candado, «Lo elige cada organización»: el rol, con «Rol sugerido» como texto, la persona, la dirección y la plantilla de WhatsApp (61 y 62) | editar una regla, mandar por correo, avisar a un rol y a una persona, una regla con errores, guardando, borrador guardado y sin reglas |
@@ -75,7 +75,7 @@ Con el traspaso 5 se redibujaron `FRM-Editor-Reglas-Plantilla`, `M-FRM-Reglas-Pl
 | `FRM-Plantilla` y `M-FRM-Plantilla` | la vista de una plantilla: la descripción y sus datos, las preguntas, los catálogos que trae, las reglas de ejemplo en pasos, como en la E21, con los datos como etiquetas (138 y 149), «el rol que elegís al usarla» y el sugerido, y el teléfono; «Usar esta plantilla» | sin permiso de catálogos, cargando y ya no está |
 | `FRM-Plantilla-Usar` | diálogo con el nombre y el prefijo propuesto; al confirmar, abre el formulario nuevo | prefijo tomado: se propone VIS2, con el porqué en la (i); falta el nombre, creando y se retiró |
 | `FRM-Editor-Reglas-Plantilla` y `M-FRM-Reglas-Plantilla` | el formulario nuevo, en borrador, y en su pestaña «Reglas» las reglas precargadas, sin guardar: «Elegí…» en el rol, la persona, la dirección y la plantilla de WhatsApp, con «Rol sugerido» debajo. «Historial» queda apagado, con «Todavía no se guardaron: vienen de la plantilla.» en su tooltip (140) | elegir el rol, guardar sin elegir (se marca lo que falta, 43), una pregunta borrada (marcada en la condición, y en el mensaje como «Pregunta no disponible», 149), guardando y reglas guardadas |
-| `Cuenta-Plat` (ajuste) | los permisos del operador suman «Administrar la biblioteca de formularios» | — |
+| `Cuenta-Plat` (ajuste) | los permisos del operador suman «Administrar la biblioteca de formularios»: en la matriz (212), la fila de su área, con «Administrar» | — |
 
 **Corregidos en el lienzo v169,** porque contradecían una decisión: las reglas de ejemplo de `FRM-Plantilla` y su teléfono, en pasos y con los datos como etiquetas (138 y 149); el orden de «Agregar bloque» y «Agregar pregunta» en `Plat-FRM-Plantilla`; los filtros sin cantidades de `M-FRM-Formularios-22` (144), y `Cuenta-Plat` y su teléfono, sin «Administrar la biblioteca de formularios» (78). Esa fila la suma esta etapa en la cuenta del operador, sin tablero propio.
 

@@ -38,7 +38,7 @@ Antes de empezar, en este orden:
   - cambiar el tipo o las reglas valida todas las opciones bajo el bloqueo del catálogo, y un error revierte todo;
   - al convertir a número o a fecha se lee con la cultura del pedido, y lo ambiguo («1.500», «12.345») no convierte. A texto, queda el texto que se ve: el de la opción fuente, aunque esté dada de baja, o «Sí» o «No».
 - **Valores:**
-  - el valor se guarda canónico, con la precisión de los números de la E12 (C6): enteros y decimales exactos, fecha ISO, sí/no y la identidad de la opción fuente;
+  - el valor se guarda canónico, con la precisión de los números de la E12 (C6): enteros y decimales exactos, fecha ISO, sí/no y la identidad de la opción fuente. En la app, un número se lee como el valor de la E12: con la región del idioma, «1.500» en español es `numberAmbiguous` (207) y llega con todos sus dígitos;
   - en el `PUT` del catálogo, `items[i].fields` es un delta: ausente conserva y `null` limpia. La importación manda todos los campos activos de la fila;
   - un valor de «De un catálogo» guarda la identidad de la opción fuente. Un valor nuevo exige una opción activa, y **el guardado que apunta a una opción dada de baja se conserva y no impide guardar**. Uno que no es opción de la fuente se rechaza;
   - un catálogo usado como fuente por campos activos no se da de baja.
@@ -62,7 +62,7 @@ Aprobadas y publicadas en el lienzo v150, con el armado de ArquitecturaBase (125
 | `FRM-Catalogo-Campos` y `M-FRM-Catalogo-Campos` | el modal «Campos de …» |
 | `FRM-Catalogo-Opciones-13` y `M-FRM-Catalogo-Opciones-13` | el modal de opciones de la E12, con una fila por campo |
 
-Del traspaso 15 (v175, sin publicar): «Ordenar por…» en el ⋮ de estos tableros y ordenar por un campo, como «Rubro» (224).
+Del traspaso 15 (v175, sin publicar): «Ordenar por…» en el ⋮ de estos tableros y ordenar por un campo, como «Rubro» (224), y, nuevos, `FRM-Catalogo-Ordenar-13` y `M-FRM-Catalogo-Ordenar-13`: «Ordenar las opciones» por un número, una fecha, sí o no o un campo de otro catálogo.
 
 **«Agregar campos · N»:** va en el encabezado de «Opciones», al lado de «Agregar opción», y cuenta los activos; se pone en rojo si el servidor rechazó uno. Quien solo lee ve «Campos», si hay. Sin campos, abre en uno nuevo.
 

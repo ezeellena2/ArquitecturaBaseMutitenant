@@ -1,8 +1,8 @@
 # E20 · Cargar una respuesta desde la web (spec)
 
-**Estado:** pendiente · spec de la etapa 20 del bloque (decisiones 73, 78, 83 a 90, 94, 95, 98, 101, 153, 166, 177, 183, 184, 229, 230 y 232 a 235; la 229 reemplaza la 96, la 104, la 178 y la 200, y la 234 cambia la 97), con el [formato](plantilla.md) de las etapas. Corresponde a la Etapa 1 de «Cargar formularios desde la app» de ArquitecturaBase, programada y revisada allá el 2026-10-30, y a sus etapas 2 (lo propio), 4 (listas dependientes) y 5 (títulos de sección), programadas allá el 4 y el 5/11. La carga del bloque es la etapa 2 de sus renglones, probada allá de punta a punta con Meta el 9/11 (T12). «Dónde se completa» es SA1-A a SA5 de allá (9/11), y «Ubicación», UB1-A a UB4-A y W1-A (11/11). `/plan-etapa` la contrasta con el código real cuando le toque, después de la E19.
+**Estado:** pendiente · spec de la etapa 20 del bloque (decisiones 73, 78, 83 a 90, 94, 95, 98, 101, 153, 166, 177, 183, 184, 229, 230 y 232 a 235; la 229 reemplaza la 96, la 104, la 178 y la 200, y la 234 cambia la 97), con el [formato](plantilla.md) de las etapas. Corresponde, en ArquitecturaBase, a las etapas 1, 2 (lo propio), 4 (listas dependientes) y 5 (títulos de sección) de «Cargar formularios desde la app», a la etapa 2 de sus renglones (T12), a SA1-A a SA5 («Dónde se completa») y a UB1-A a UB4-A y W1-A («Ubicación»). `/plan-etapa` la contrasta con el código real cuando le toque, después de la E19.
 
-**Partes.** Esta spec no entra en un solo archivo, así que sigue en otro, con las mismas secciones. Lo que no está en la tabla está acá.
+**Partes.** Lo que no figura en esta tabla está acá.
 
 | Secciones | Archivo |
 | --- | --- |
@@ -13,7 +13,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T4, T22, T23, T24 y la §6, punto 7; la [E15](15-respuestas.md): rutas y filtros; la [E16](16-datos-de-las-personas.md): los filtros por destinatario; la [E17](17-ciclo-de-vida.md): la disponibilidad; la [E18](18-fotos-y-documentos.md): verificar y guardar archivos, y la [E19](19-condiciones-calculos-y-lineas.md): la captura y el bloque.
-2. **Decisiones** de la hoja de ruta: 9, 23, 35, 37, 43, 50, 54, 73, 78, 83 a 90, 94, 95, 98, 101, 141, 147, 153, 166, 177, 183, 184, 229, 230 y 232 a 235.
+2. **Decisiones** de la hoja de ruta: 9, 23, 35, 37, 43, 50, 54, 73, 78, 83 a 90, 94, 95, 98, 101, 141, 147, 153, 166, 177, 183, 184, 207, 229, 230 y 232 a 235.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -50,8 +50,8 @@ Antes de empezar, en este orden:
 **Reintentos:** la misma clave con las mismas respuestas devuelve el primer resultado, aunque después se haya publicado otra versión o se haya dado de baja el formulario. El número y los cálculos son privados, por eso no va en `BufferedJson`. La misma clave con otras respuestas es 422; para el front, otras respuestas son otro envío. **Un rechazo pasajero no deja recibo:** si el permiso o la membresía se perdieron en carrera (`Forms.Record.NotAllowed`, 403), repetir se vuelve a decidir. Después de un 400 sin errores por pregunta, el front arma otra clave. Ningún texto habla de «la sesión».
 
 **«Dónde se completa»** (229; precisa la 98 y la 184):
-- **un ajuste del formulario,** en «El formulario», al lado del prefijo: «En la app y por WhatsApp», el de uno nuevo, o «Solo en la app». Va con el borrador y cada versión lo sella. Aparece solo en una organización con WhatsApp conectado: sin número, todo se carga en la app (98) y se publica sin Meta. En uno solo para clientes, «Solo en la app» está apagada, con «Los clientes responden solo por WhatsApp.»;
-- **con «En la app y por WhatsApp»,** lo que WhatsApp no puede mostrar frena al publicar, en «Problemas», con «Ir a la pregunta» y, si no es solo para clientes, «Pasar a «Solo en la app»»: una lista dependiente, un catálogo a mano de más de 200 opciones en «elegir una» o de más de 20 en «elegir varias», un bloque con un mínimo de más de 10 ítems, una condición que compara números o fechas, demasiadas preguntas en una pantalla, una respuesta demasiado grande o una segunda «Ubicación». Ya no pasa solo a la app. En el editor, el aviso de la E19 debajo de una condición que WhatsApp no puede mostrar suma la misma salida (235);
+- **un ajuste del formulario,** en «El formulario», al lado del prefijo: «En la app y por WhatsApp», el de uno nuevo, o «Solo en la app». Va con el borrador y cada versión lo sella. Aparece solo en una organización con WhatsApp conectado: sin número, todo se carga en la app (98) y se publica sin Meta, con el aviso «Queda solo para la app», y uno solo para clientes no se publica, con «Ir a «Para quién es»». En uno solo para clientes, «Solo en la app» está apagada, con «Los clientes responden solo por WhatsApp.»;
+- **con «En la app y por WhatsApp»,** lo que WhatsApp no puede mostrar frena al publicar, en «Problemas», con «Ir a la pregunta» y, si no es solo para clientes, «Pasar a «Solo en la app»»: una lista dependiente, un catálogo a mano de más de 200 opciones en «elegir una» o de más de 20 en «elegir varias», un bloque con un mínimo de más de 10 ítems, una condición que compara números o fechas, demasiadas preguntas en una pantalla, una respuesta demasiado grande o una segunda «Ubicación». En el editor, el aviso de la E19 debajo de una condición que WhatsApp no puede mostrar suma la misma salida (235);
 - **con «Solo en la app»** se va todo lo de WhatsApp: no pasa por Meta, `Check` ni el tope de opciones de un filtro fijo; valen los límites de la app, y publicar es al instante: sella la versión y la activa en la misma UoW, sin trabajo durable ni Flow. El editor no muestra «En WhatsApp» en las preguntas de catálogo, la (i) de WhatsApp del máximo del bloque ni «Ver vista oficial»;
 - **pasar de un lado al otro** es publicar con el otro valor: hacia la app, al instante; hacia WhatsApp, espera a Meta, y mientras tanto, o si Meta la rechaza, sigue la versión anterior. Uno publicado sin número se manda por WhatsApp al volver a publicar con un número: `NothingToPublish` no aplica. Cambia lo que la E14 dice de `ChannelUnavailable` y `CatalogTooLarge`;
 - **en el chat,** «Enviar formulario» muestra apagado (184) el formulario cuya versión activa se completa solo en la app, con «Se completa solo en la app.» en lugar de la versión y las preguntas. Uno publicado sin número, cuando después se conecta uno, aparece como en un número sin el Flow de su versión (103), hasta volver a publicar.
@@ -92,26 +92,26 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v154, con el armado del front real de ArquitecturaBase (126 y 134) y el recorrido guiado `cargar-una-respuesta`. El ejemplo es «Pedido de materiales», versión 4, que suma «Zona», «Proveedor» con su lista dependiente, «Foto del remito» y el bloque «Productos», y por eso se completa «Solo en la app». Con los traspasos 5, 7 y 10 se redibujaron todos menos `FRM-Cargar-Archivos` y se sumó el chat, aprobados y publicados en el lienzo v168. **Con el traspaso 15** se redibujan ocho y se suman dos, por la 229, la 230 y la 234; el ejemplo de la ubicación es «Visita a cliente».
+Aprobados en el lienzo como dice la tabla, con el armado del front real de ArquitecturaBase (126 y 134) y el recorrido guiado `cargar-una-respuesta`; `FRM-Editor-Listas` se redibuja. El ejemplo es «Pedido de materiales», versión 4, que suma «Zona», «Proveedor» con su lista dependiente, «Foto del remito» y el bloque «Productos», y por eso se completa «Solo en la app»; el de la ubicación es «Visita a cliente».
 
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
-| `FRM-Formularios-20` y su teléfono | «Cargar», «Estado», «Dónde se completa» y lo que ve quien solo carga | Se redibujan (229) |
-| `FRM-Editor-20` y su teléfono | «Dónde se completa» al lado del prefijo, apagado en uno solo para clientes, y el aviso de una condición con «Pasar a «Solo en la app»» | Nuevos en la v175, sin publicar (229 y 235) |
-| `FRM-Editor-Ubicacion` y su teléfono | el tipo «Ubicación», último, solo con «Obligatoria», y apagado en el bloque | Nuevos en la v175, sin publicar (230) |
-| `FRM-Cargar-Respuesta` y su teléfono | la página, con zonas, grilla, títulos, lo condicional, el bloque, «Mantener», errores y salir | Se redibujan: «Usar mi ubicación» con sus estados (pidiendo, el punto, más de 100 m, sin permiso y sin señal) y los cálculos en gris, también en el bloque (230, 233 y 234) |
-| `FRM-Cargar-Panel` | el panel junto a la planilla | Se redibuja (230 y 234) |
+| `FRM-Formularios-20` y su teléfono | «Cargar», «Estado», «Dónde se completa» y lo que ve quien solo carga | Redibujados en la v175 (229) |
+| `FRM-Editor-20` y su teléfono | «Dónde se completa» al lado del prefijo, apagado en uno solo para clientes, y el aviso de una condición con «Pasar a «Solo en la app»» | Nuevos en la v175 (229 y 235); se redibujan: el aviso también debajo de una fecha anterior o posterior (229) |
+| `FRM-Editor-Ubicacion` y su teléfono | el tipo «Ubicación», último, solo con «Obligatoria», y apagado en el bloque | Nuevos en la v175 (230) |
+| `FRM-Cargar-Respuesta` y su teléfono | la página, con zonas, grilla, títulos, lo condicional, el bloque, «Mantener», errores y salir | Redibujados en la v175: «Usar mi ubicación» con sus estados (pidiendo, el punto, más de 100 m, sin permiso y sin señal) y los cálculos en gris, también en el bloque (230, 233 y 234) |
+| `FRM-Cargar-Panel` | el panel junto a la planilla | Redibujado en la v175 (230 y 234) |
 | `FRM-Cargar-Lista` y su teléfono | la lista, una sola opción, sin el dato, elegir varias y la que espera otra respuesta | Aprobados en la v168: «Elegí primero «Zona»» (166) |
 | `FRM-Cargar-Archivos` y su teléfono | agregar, los límites, la barra de avance, el corte y la cámara | Aprobado |
 | `FRM-Cargar-Enviada` y su teléfono | «Enviada», versión nueva, dado de baja, opción dada de baja y sin conexión | Aprobados en la v168: «Volver a Formularios» y el bloque en una línea (166 y 177) |
-| `FRM-Respuestas-20` y `FRM-Respuesta-20`, con sus teléfonos | «App», su filtro y el origen en el detalle | Se redibujan: el punto como enlace al mapa, y en el detalle, con la precisión y los momentos del pedido (230) |
+| `FRM-Respuestas-20` y `FRM-Respuesta-20`, con sus teléfonos | «App», su filtro y el origen en el detalle | Redibujados en la v175: el punto como enlace al mapa, y en el detalle, con la precisión y los momentos del pedido (230) |
 | `FRM-Respuestas-Propias` y su teléfono | la misma planilla con lo suyo | Aprobados en la v168: «Filtros» y los chips (144) |
-| `FRM-Editor-Listas` y su teléfono | «Según otra respuesta» | Aprobados en la v168: el bloque, sin el «Grupo de líneas» (177) |
-| `FRM-Publicar-20` y su teléfono | publicar «Solo en la app», al instante, y lo que WhatsApp no puede mostrar en «Problemas» | Se redibujan: «Problemas» con «Pasar a «Solo en la app»», sin esa salida en uno solo para clientes, y la fila «Dónde se completa» (229) |
-| `WA-Chats-Formulario-20` y `M-WA-Chats-Formulario-20` | en «Enviar formulario», los formularios de la app apagados, y el pedido de ubicación antes del Flow | Se redibujan: «Se completa solo en la app.» (229) y el pedido con «Seguir sin ubicación» (230) |
+| `FRM-Editor-Listas` y su teléfono | «Según otra respuesta» | Se redibujan: «Dónde se completa» en «Solo en la app», «Publicar» y sin «Ver vista oficial» (229) |
+| `FRM-Publicar-20` y su teléfono | publicar «Solo en la app», al instante, y lo que WhatsApp no puede mostrar en «Problemas» | Redibujados en la v175: «Problemas» con «Pasar a «Solo en la app»», sin esa salida en uno solo para clientes, la fila «Dónde se completa», el aviso sin número y el freno de uno solo para clientes (98 y 229) |
+| `WA-Chats-Formulario-20` y `M-WA-Chats-Formulario-20` | en «Enviar formulario», los formularios de la app apagados, y el pedido de ubicación antes del Flow | Redibujados en la v175: «Se completa solo en la app.» (229) y el pedido, con sus estados, «Seguir sin ubicación» y la ubicación que llega (230) |
 | `WA-Chats-Respuesta` y `M-WA-Conversacion-Respuesta` | la tarjeta de la E14 | No cambian: la ubicación que llega y el Flow que sale después se dibujan en `WA-Chats-Formulario-20` (78) |
 
-**La página** sigue a la de allá: la banda con Cancelar y Enviar, y una zona por título, con la grilla de hasta tres por renglón. Lo que allá dice «Enviando… 64 %» acá es «Enviando…» con su aro y una barra sin palabras (95 y 115). Sin el dato de la persona, un cartel lo nombra, porque bloquea, y Enviar queda grisado con el motivo.
+**La página** sigue a la de allá: la banda con Cancelar y Enviar, y una zona por título, con la grilla de hasta tres por renglón. Sin el dato de la persona, un cartel lo nombra, porque bloquea, y Enviar queda grisado con el motivo.
 
 **Publicar «Solo en la app»** va como en la E16, con la fila «Dónde se completa» en «Qué se publica», sin «Ver vista oficial» ni «Publicando». Con «En la app y por WhatsApp», cada cosa que WhatsApp no puede mostrar es una fila de «Problemas», que dice el problema como la E14 (T26). «Pasar a «Solo en la app»» guarda el borrador con ese ajuste y su versión, y vuelve a comprobar en el mismo diálogo, que queda listo para publicar al instante; debajo de una condición, en el editor, solo cambia el ajuste, que se guarda con lo demás. En uno solo para clientes no está (134).
 
@@ -132,7 +132,7 @@ Aprobados y publicados en el lienzo v154, con el armado del front real de Arquit
 | [E16] | La preparación de la oferta. | Sirve también paginada, sin el tope de 200. |
 | [E18] | `IFileContentInspector` y el diario. | Sirven igual para un archivo que llega por multipart. |
 | [E19] | `FormConditionEvaluator`, `lib/conditions.ts`, la fórmula (`FormFormulaEvaluator`, `lib/formula.ts`) y el bloque en la captura. | El front y el servidor dan lo mismo, también el cálculo con el redondeo al par, y el bloque viaja en el mismo envío. |
-| Allá | La etapa 2 de renglones, probada con Meta el 9/11 (T12); `draft.appOnly`, `FormQuestionType.Location`, `WhatsAppFlowLocationService` y `calculation` en la carga, en `origin/main`. | Se contrasta con el código de allá al planificar, y lo que allá cambió se adopta si no choca con las reglas de acá (126). LD1-A a LD3-A no entran (191). |
+| Allá | La etapa 2 de renglones, probada con Meta el 9/11 (T12); `draft.appOnly`, `FormQuestionType.Location`, `WhatsAppFlowLocationService` y `calculation` en la carga, en `origin/main`. | Se contrasta con el código de allá al planificar, y lo que allá cambió se adopta si no choca con las reglas de acá (126). |
 | [Meta] | El pedido de ubicación (`location_request_message`) y la ubicación que llega, con el número de una organización. | Se prueban con la I1 de la E10 (123). |
 | Front | `useIdempotentMutation`, `useUnsavedChangesGuard` y el panel al costado. | Están, o llegan con la base de la 12. |
 | Celular | Que el reenvío por USB llegue a `localtest.me` (ver «Cómo se cierra»). | Anda sin cambiar la configuración. |
@@ -145,7 +145,7 @@ Aprobados y publicados en el lienzo v154, con el armado del front real de Arquit
 - **El canal se llama «App»** (90); el valor técnico sigue siendo `web`.
 - **«Dónde se completa» es un ajuste** (229): sin número, todo es de la app (98); con número, lo que WhatsApp no puede mostrar frena al publicar y no pasa solo a la app.
 - **Las listas dependientes** van acá y solo en la web (94).
-- **El bloque se carga como allá** (177): una tabla en la página y un recuadro por ítem en el panel y en el teléfono, con «Agregar ítem» y sin contador, y «Ítem 2» en la banda de cada recuadro (183).
+- **El bloque se carga como allá** (177), sin contador y con «Ítem 2» en la banda de cada recuadro (183).
 - **Un formulario de la app aparece apagado en el chat,** con «Se completa solo en la app.» (184 y 229).
 - **«Ubicación» entra acá** (230), en la app y por WhatsApp, y **el cálculo se ve en gris al cargar** (234).
 - **Lo propio tiene sus rutas:** `[HasPermission]` pide un solo permiso, y el mismo servicio les da el alcance.

@@ -19,11 +19,13 @@ Todas las rutas son de `/api/organization/forms`, con `[Access(Access.Business)]
 | `GET /{id}/records/{recordId}` | `formrecords.read` | — | `{id, displayNumber, versionNumber, submittedAtUtc, channel, respondent, companies[], formName, questions[], titles[], values, sentBy?{name, atUtc}, conversationId?}` |
 | `POST /{id}/records/{recordId}/navigation` | `formrecords.read` | `filtros`, `sort` | `{previousId?, nextId?, position, total}` |
 | `POST /{id}/records/export` | `formrecords.export` | `filtros`, `sort`, `columns` (`all`, `visible`), `visibleKeys?[]` | 200 `.xlsx` |
-| `POST /{id}/records/dashboard` | `formrecords.read` | `filtros`, `period` (`day`, `week`, `month`) | `{period, total, buckets[{start, count}], numbers[{fieldId, label, decimals, sum, average?, min?, max?, buckets[{start, total}]}], choices[{fieldId, label, type, catalogName?, answered, options[], others?}], respondents[], respondentsOthers?}`; cada opción o persona lleva `{label, count, sums}` |
+| `POST /{id}/records/dashboard` | `formrecords.read` | `filtros`, `period` (`day`, `week`, `month`) | `{period, total, buckets[{start, count}], numbers[{fieldId, label, decimals, sum, average?, min?, max?, buckets[{start, total}]}], choices[{fieldId, label, type, catalogName?, answered, options[], others?}], respondents[], respondentsOthers?}`; cada opción o persona lleva `{label, count, share, sums, sumShares}` |
 | `GET /{id}/dashboard-settings` | `formrecords.read` | — | `{hiddenCards[], countBy}` |
 | `PUT /{id}/dashboard-settings` | `formrecords.read` | `{hiddenCards[], countBy}`, hasta 100 claves entre los dos | 204. Sin versión: es de una sola persona |
 
 `countBy` es un mapa de la clave de cada tarjeta de opciones o personas a lo que cuenta: `count` o `sum:<fieldId>`. Sin su clave, cuenta la cantidad.
+
+**Porcentajes del tablero** («Sí 14 · 64%»): los calcula y redondea el back, y el front los muestra con `PercentText` (208), sin calcularlos ([numeros-y-moneda](../../rules/numeros-y-moneda.md)). `share` es la fracción de `count` sobre las respuestas que contestaron esa pregunta (en «Quién cargó», sobre el total), y `sumShares`, con las mismas claves que `sums`, la de cada suma sobre el total de esa pregunta de número. Van redondeadas a dos decimales, `AwayFromZero`, como el porcentaje entero del tablero; sin base, `null`.
 
 **Valores:** `values` es un mapa de `fieldId` a valor. Ausente es que la pregunta no existía; `null`, «Sin respuesta». El valor es `{kind: "text", text}`, `{kind: "number", number}`, con el número como texto, `{kind: "date", date}`, `{kind: "bool", bool}` o `{kind: "choices", choices[{id, label, code?, detail?, value?, catalogName?, fields}]}`, en el orden elegido.
 
@@ -44,7 +46,7 @@ Lo ajeno sigue siendo `Forms.Definition.NotFound`. Un 403 o un permiso revocado 
 
 ## Datos
 
-Una migración, `<fecha>_FormRecordsRead.cs`, y otra de roles, `<fecha>_SystemRoleFormRecordsExport.cs`. Las respuestas de antes aparecen tal cual, sin migrar.
+Una migración, `<fecha>_FormRecordsRead.cs`, y otra de roles, `<fecha>_SystemRoleFormRecordsExport.cs`. Las respuestas de antes aparecen tal cual, sin migrar. La clave nueva de `FormWorkLeases`, `Records` y `RecordExport` se agregan y se escriben en el mismo despliegue: es la excepción de la [0060](../../decisions/0060-dos-versiones-conviven.md), anotada en la migración, porque todavía no hay despliegue (la E10 va después del bloque, 123) y volver a la imagen anterior no aplica.
 
 **FormDashboardSettings** (`ITenantOwned`, esquema `tenant`, con RLS, sin auditoría ni versión):
 

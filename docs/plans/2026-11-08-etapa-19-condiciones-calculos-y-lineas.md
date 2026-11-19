@@ -1,6 +1,6 @@
 # E19 · Condiciones, cálculos y líneas · plan ejecutable
 
-**Estado:** pendiente · Spec: `docs/plans/formularios/19-condiciones-calculos-y-lineas.md` y su parte `19-parte-contrato-datos-y-pasos.md`. Tableros aprobados en el lienzo v169, con el recorrido guiado `un-pedido-con-renglones`; los del final se redibujan en la v175. Sin decisiones de producto pendientes.
+**Estado:** pendiente · Spec: `docs/plans/formularios/19-condiciones-calculos-y-lineas.md` y su parte `19-parte-contrato-datos-y-pasos.md`. Tableros aprobados en el lienzo v175, con el recorrido guiado `un-pedido-con-renglones`, salvo el aviso de una fecha anterior o posterior, que falta en `FRM-Editor-Condiciones` y `FRM-Publicar-19` y se dibuja antes de F2.
 
 | Parte | Tareas | Estado |
 | --- | --- | --- |
@@ -11,9 +11,9 @@
 
 ## Forma de trabajo
 
-Modo rápido, como la base: contrato primero; después Back y Front a la vez, un chat por repo; una sola puerta al final. K0 confirma lo que dejaron la E14 a la E18, y K2, la prueba con Meta que falta, termina antes de B4.
+Modo rápido: contrato primero; después Back y Front a la vez, un chat por repo; una sola puerta al final.
 
-TDD donde hay lógica: el evaluador, la fórmula, la captura y el Flow arrancan con su test en rojo. Una sola revisión de código, en la puerta. La tabla de estado la actualiza la Guía.
+El evaluador, la fórmula, la captura y el Flow arrancan con su test en rojo. Una sola revisión de código, en la puerta. La tabla de estado la actualiza la Guía.
 
 **Las reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commiteá solo lo tuyo (git commit -- <rutas>, en español, conventional commits); con la app levantada, nadie edita el src del front; TDD donde hay lógica; al terminar cada tarea o arreglo, build y tests rápidos enteros de tu repo (en el front, npx tsc -b y npm test), sin Docker ni filtro por módulo, más los de integración y seguridad del área si tocó rutas, persistencia, autenticación o aislamiento; el contrato no cambia sin anotarlo en «Cambios al contrato» y avisar a la Guía; ninguna clave real pasa por vos; al usuario, solo lo de producto.
 
@@ -21,12 +21,12 @@ TDD donde hay lógica: el evaluador, la fórmula, la captura y el Flow arrancan 
 
 | Fila de la spec | Qué se encontró | Qué cambia |
 | --- | --- | --- |
-| [Meta] Una pantalla por ítem | Probado allá el 6 y el 7/11, con el `routing_model`: el bloque con preguntas después, con mínimo 0 y sin él. **El bloque al final no pasaba,** aunque allá se escribió que sí: la pantalla del ítem mandaba y navegaba, y Meta lo rechazó (`INVALID_PROPERTY_VALUE`). Pasó el 9/11 con la pantalla de cierre, y 10 ítems de 600 caracteres con eñes, 34,6 KB, llegaron enteros (traspaso 12, §4). | B4 suma la pantalla de cierre (204). K2 la prueba. La respuesta grande, con número propio, va a la I3 (123); mientras, rige el tope de 64 KiB. |
-| [Meta] `If` y su expresión | Allá, «Mostrar si» sobre una sola pregunta (CO1-A), probado el 2026-11-11: una comparación por `If`, sin `&&` ni `\|\|`, y hasta tres anidados. Según Meta (2026-11-08), `>`, `>=`, `<` y `<=` comparan solo números, `==` pide el mismo tipo y `${screen.<pantalla>.form.<campo>}` existe desde Flow JSON 4.0; los números y las fechas del Flow son texto. | B4 arma el Flow como dice la parte de la spec («Cómo se arma el Flow»); lo demás frena, como dibuja `FRM-Publicar-19`. K2 lo prueba. |
-| [Meta] Archivo dentro de un `If` | Meta no admite `PhotoPicker` ni `DocumentPicker` en un `If`; allá aceptó un `If` con un `Footer` por rama. | La pantalla anterior saltea la del archivo (B4); si era la última, la rama que la saltea va a la pantalla de cierre. K2. |
+| [Meta] Una pantalla por ítem | Probado allá el 6 y el 7/11, con el `routing_model`: el bloque con preguntas después, con mínimo 0 y sin él. **El bloque al final no pasaba:** la pantalla del ítem mandaba y navegaba, y Meta lo rechazó (`INVALID_PROPERTY_VALUE`). Pasó el 9/11 con la pantalla de cierre, y 10 ítems de 600 caracteres con eñes, 34,6 KB, llegaron enteros (traspaso 12, §4). | B4 suma la pantalla de cierre (204). K2 la prueba. La respuesta grande, con número propio, va a la I3 (123). |
+| [Meta] `If` y su expresión | Allá, «Mostrar si» sobre una sola pregunta (CO1-A), probado el 2026-11-11: una comparación por `If`, sin `&&` ni `\|\|`, y hasta tres anidados. Según Meta (2026-11-08), `>`, `>=`, `<` y `<=` comparan solo números, `==` pide el mismo tipo y `${screen.<pantalla>.form.<campo>}` existe desde Flow JSON 4.0; los números y las fechas del Flow son texto. | B4 («Cómo se arma el Flow» de la parte); lo demás frena, como dibuja `FRM-Publicar-19`. K2 lo prueba. |
+| [Meta] Archivo dentro de un `If` | Meta no admite `PhotoPicker` ni `DocumentPicker` en un `If`; allá aceptó un `If` con un `Footer` por rama. | B4 y K2. |
 | Allá: renglones | Probado de punta a punta con Meta el 9/11; sus planes se retiraron, y valen las fuentes de «Qué leer» de la spec. Los ítems van en una columna `Row`; acá, en `FormRecordRowValues`. Sirven 450 campos, cómo empareja «Pasan al bloque», el mismo ítem para varias condiciones, el Excel por ítem (227) y el cálculo del ítem (233). | B3, B4, B7 y B8 los toman. |
 | [E14] a [E18] | Todavía no existen. | Lista cerrada en K0. |
-| Datos de referencia | `ICurrencyCatalog.FindAsync` da `MinorUnits` (`int?`); `ValidCurrency()` está en `ValidationRules.cs`; `Money.Round` usa `AwayFromZero`. | B2 redondea los cálculos al par (232), sin tocar `Money.Round`. |
+| Datos de referencia | `ICurrencyCatalog.FindAsync` da `MinorUnits` (`int?`); `ValidCurrency()` está en `ValidationRules.cs`; `Money.Round` usa `AwayFromZero`. | B2 (232). |
 
 ## Contrato
 
@@ -75,12 +75,12 @@ El chat del contrato confirma cada nombre en el código; lo que difiera va a «C
 
 ### K1 · Publicar el contrato
 
-El chat del contrato publica lo que cambia, genera `docs/contracts/openapi.json` y exporta ejemplos reales de cada cuerpo nuevo de esta sección, con cada problema y cada aviso. El front corre `npm run contracts`.
+El chat del contrato publica lo que cambia, genera `docs/contracts/openapi.json` y exporta ejemplos reales de cada cuerpo nuevo, con cada problema y cada aviso. El front corre `npm run contracts`.
 
 ### K2 · Lo que falta probar con Meta
 
 En el Flow Builder de la cuenta de desarrollo de la E11, sin la app ni claves: el chat escribe los Flow JSON en `.local/` y el usuario los sube y recorre la vista previa, con pasos clic por clic. B4 da por hecho:
-1. `==` de un `Dropdown` y de un `RadioButtonsGroup` contra un texto fijo y contra un `${data.…}`;
+1. `==` de un `Dropdown`, de un `RadioButtonsGroup` y de un `CalendarPicker` contra un texto fijo y contra un `${data.…}`;
 2. `!= ''` y `== ''` en un `TextInput`, un `Dropdown` y un `CalendarPicker` opcionales vacíos;
 3. `${screen.<pantalla>.form.<campo>}` desde una pantalla posterior;
 4. un `CalendarPicker` dentro de un `If`, y tres `If` anidados, sin `else`;
@@ -88,7 +88,7 @@ En el Flow Builder de la cuenta de desarrollo de la E11, sin la app ni claves: e
 6. un `If` con un `Footer` por rama que saltea una pantalla con `PhotoPicker`, con su `routing_model`, también con la foto al final, donde la rama que la saltea va a la pantalla de cierre;
 7. el bloque al final: el «No» y el último ítem navegan a la pantalla de cierre, y ninguna pantalla de ítem manda.
 
-Cada Flow se publica en la cuenta de desarrollo y vale solo sin `validation_errors`: allá se dio por aceptado el bloque al final sin publicarlo, y no lo estaba. Lo que no dé así va a «Cambios al contrato» antes de B4, y esa combinación frena con `ConditionNotSupported`.
+Cada Flow se publica en la cuenta de desarrollo y vale solo sin `validation_errors`. Lo que no dé así va a «Cambios al contrato» antes de B4, y esa combinación frena con `ConditionNotSupported`.
 
 **Texto para el chat del Contrato**
 
@@ -110,21 +110,21 @@ Cada tarea copia su molde, con `Result` y ProblemDetails, `OperationLog.RunAsync
    - el `start` de un título cuenta el bloque como una pregunta, sin las suyas, así un título nunca cae adentro; pasar una pregunta al bloque o sacarla corre los `start` siguientes.
 
    Tests: cada motivo de los tres errores; borrar una opción mientras se guarda una condición que la nombra, con dos actores; la referencia rota se guarda y frena al publicar; un campo de una fórmula no se quita; «Lo usan» con la fórmula y el catálogo del bloque; pasar una pregunta al bloque y sacarla, con otra identidad y los títulos en su lugar.
-4. **B4 · Publicar y el Flow, con `flow-static-7.3-r11`.** Suma a `WhatsAppFlowBuilder.cs`, a `Check` de `WhatsAppStructuredFormChannel.cs`, a los topes de `WhatsAppFlowReplyVerifier.cs`, a `FormOfferBuilder.cs` y a `FormPublicationService.cs` [E14]. Copia esos mismos.
+4. **B4 · Publicar y el Flow, con `flow-static-7.3-r11`.** Suma a `WhatsAppFlowBuilder.cs`, `Check` de `WhatsAppStructuredFormChannel.cs`, los topes de `WhatsAppFlowReplyVerifier.cs`, `FormOfferBuilder.cs` y `FormPublicationService.cs` [E14]. Copia esos mismos.
    - Sin condiciones ni bloque, el Flow sale con los bytes de `r10` (E18); con alguno, con `r11`.
-   - «Mostrar si» y los títulos siguen «Cómo se arma el Flow» de la parte de la spec, sin copiar el código de allá (18): **una comparación por `If`, nunca `&&` ni `||`, y hasta tres `If` anidados**. Lo que no entra es `ConditionNotSupported`, con los casos de la parte.
+   - «Mostrar si» y los títulos siguen «Cómo se arma el Flow» de la parte, sin copiar el código de allá (18): **una comparación por `If`, nunca `&&` ni `||`, y hasta tres `If` anidados**. Lo que no entra es `ConditionNotSupported`, con los casos de la parte.
    - Una pregunta de archivo con «Mostrar si» va sola en su pantalla, y la anterior la saltea con un `If` de un `Footer` por rama; si la anterior ya ramifica (un ítem u otra pantalla que se saltea), es `ConditionNotSupported`.
    - El bloque: una pantalla por ítem hasta 10 o el máximo, con el mismo `name`; «¿Agregás otro ítem?» desde el mínimo, con un `Footer` por rama; el último no pregunta; con mínimo 0, «¿Agregás un ítem?». El «No» y el último ítem van a lo de después del bloque. El `routing_model` declara cada `navigate`, con las dos ramas. Los títulos de los ítems, «¿Agregás…?» y el texto de la pantalla de cierre viajan en `data`, en el idioma de quien recibe (T6).
-   - **Ninguna pantalla que manda navega en otra rama** (Meta lo rechaza): si el bloque o una pregunta de archivo salteada es lo último, esa rama va a la **pantalla de cierre** (204), como dice la parte. Ninguna pantalla de ítem manda.
+   - **Ninguna pantalla que manda navega en otra rama** (Meta lo rechaza): si el bloque o una pregunta de archivo salteada es lo último, esa rama va a la **pantalla de cierre** (204). Ninguna pantalla de ítem manda.
    - Topes: 50 componentes por pantalla, contando cada `If`; 64 KiB con bloque, con cada pregunta una vez por ítem y su clave `_r<n>`; 450 campos en la respuesta.
-   - Un `validation_errors` que no cae en una pregunta es `ValidationUnlocated`, y la verificación lee los dos `GET` de la parte de la spec con el token de la organización.
+   - Un `validation_errors` que no cae en una pregunta es `ValidationUnlocated`, y la verificación lee los dos `GET` de la parte con el token de la organización.
    - El Meta simulado [E14] arma respuestas con ítems, con «No», con el bloque al final y con ocultas, para el E2E. No prueba a Meta: eso es K2 e I3.
 
-   Tests: cada combinación de condiciones y cada caso de `ConditionNotSupported`; ningún Flow compilado tiene `&&`, `||`, un control en dos ramas ni una pantalla que manda y navega; el cuarto `If` en cadena frena; la marca y su paso por cada `navigate`; el título; el bloque y el archivo salteado al final terminan en la pantalla de cierre; cada tope; lo sellado no se recompila; los bytes sin condiciones ni bloque; la pantalla salteada; el aviso del máximo, el freno del mínimo y el bloque vacío; «Pasan al bloque»; el catálogo del bloque; un error de Meta sin pregunta.
+   Tests: cada combinación de condiciones y cada caso de `ConditionNotSupported`, con su `reason`, también una fecha con `gte` o `lte`; ningún Flow compilado tiene `&&`, `||`, un control en dos ramas ni una pantalla que manda y navega; el cuarto `If` en cadena frena; la marca y su paso por cada `navigate`; el título; el bloque y el archivo salteado al final terminan en la pantalla de cierre; cada tope; lo sellado no se recompila; los bytes sin condiciones ni bloque; la pantalla salteada; el aviso del máximo, el freno del mínimo y el bloque vacío; «Pasan al bloque»; el catálogo del bloque; un error de Meta sin pregunta.
 5. **B5 · Tabla, columnas y migración.** `D/Forms/FormRecordRowValue.cs`, `I/Modules/Forms/Persistence/Configurations/FormRecordRowValueConfiguration.cs` y `<fecha>_FormLogic.cs`, con los datos de la spec. Copia `FormRecordValueConfiguration.cs` [E14]. `Currency` es `char(3)`, con el CHECK `Currency IS NULL OR NumberValue IS NOT NULL`, también en `FormRecordRowValues`, que lleva los índices de `FormRecordValues`, con `(TenantId, CatalogId, ChoiceId)` y el trigram de los textos largos. El `Down` se niega si hay ítems, ocultas o montos. Tests: aislamiento y RLS; ida y vuelta, y el `Down` que se niega; la cantidad en la fila del bloque; `SearchIndexTests`; `DecimalPrecisionTests`.
 6. **B6 · La captura.** `A/Modules/Forms/Services/FormRecordLogicPolicy.cs`; suma a `FormRecordService.cs`, `FormRecordWriter.cs`, `WhatsAppFlowReplyVerifier.cs` y `FormsAccountDeletionParticipant.cs` con su cleanup [E14]. Copia esos mismos. Orden: visibilidad, descarte, ítems, sellado y cálculo, primero los de cada ítem. Tests: los de la captura en la spec, más un cálculo imposible que queda «Sin respuesta» sin frenar la respuesta, `HiddenFieldIds` y la baja de una cuenta, también en `ChoiceLabel` de los ítems.
-7. **B7 · Lo que se lee.** Suma a `FormRecordColumnsBuilder.cs`, `FormRecordReader.cs`, `FormRecordQueryFilters.cs` y `FormRecordQueryService.cs` [E15]; los ítems se leen desde la definición, como manda la E17. Copia esos mismos. Tests: los de B7 de la spec, con la tabla de B1; ordenar por el bloque es `Forms.RecordFilter.Invalid`; una copia del formulario, con los mismos `FieldId`, no mezcla sus ítems; EXPLAIN con 10.000 respuestas de 10 ítems.
-8. **B8 · Excel y tablero.** Suma a `FormRecordExportService.cs`, `FormRecordSheetBuilder.cs`, `FormRecordSpreadsheet.cs` y `FormDashboardBuilder.cs` [E15]. Copia esos mismos. Una sola hoja, como dice la spec (227); con `rowsPer` `record`, o sin el bloque entre las columnas, una fila por respuesta, sin las del ítem. Las filas se cuentan con una consulta antes de escribir: más de 100.000 es `TooManyRows`. Tests: cada forma de la fila; 100.000 y 100.001 filas, sin escribir; la memoria con 100.000 (allá, 11 s y 0,4 GB); el monto; «No se mostró»; el total en su moneda; los bytes abiertos con ClosedXML.
+7. **B7 · Lo que se lee.** Suma a `FormRecordColumnsBuilder.cs`, `FormRecordReader.cs`, `FormRecordQueryFilters.cs` y `FormRecordQueryService.cs` [E15]; los ítems se leen desde la definición (E17). Copia esos mismos. Tests: los de B7 de la spec, con la tabla de B1; ordenar por el bloque es `Forms.RecordFilter.Invalid`; una copia del formulario, con los mismos `FieldId`, no mezcla sus ítems; EXPLAIN con 10.000 respuestas de 10 ítems.
+8. **B8 · Excel y tablero.** Suma a `FormRecordExportService.cs`, `FormRecordSheetBuilder.cs`, `FormRecordSpreadsheet.cs` y `FormDashboardBuilder.cs` [E15]. Copia esos mismos. Una sola hoja (227); con `rowsPer` `record`, o sin el bloque entre las columnas, una fila por respuesta, sin las del ítem. Las filas se cuentan con una consulta antes de escribir: más de 100.000 es `TooManyRows`. Tests: cada forma de la fila; 100.000 y 100.001 filas, sin escribir; la memoria con 100.000 (allá, 11 s y 0,4 GB); el monto; «No se mostró»; el total en su moneda; los bytes abiertos con ClosedXML.
 9. **B9 · La tarjeta y «Mensajes».** Suma a `FormRecordSource.cs` y a `FormCard` [E14]. Copia esos mismos. Tests: un ítem por línea, numerado, con « · » y sin las vacías; un ítem vacío, solo con su número; los cálculos; sin `formrecords.read`, solo el número.
 10. **B10 · Contratos y ejemplos.** Suma a `Contracts/*`, `FormsContractContributor.cs` y los modelos de `StructuredData` [E14]. Tests: los ejemplos de K1; copiar conserva las condiciones, los cálculos y el bloque, con sus identidades; `ResourceParityTests`.
 
@@ -136,20 +136,20 @@ Leé AGENTS.md, este plan, la spec de la E19 con su parte y las fichas de su «Q
 
 ## Front
 
-Las pantallas copian los tableros v169, con i18n en es y en, tipos generados, `shared/format` y TanStack Query; el front no calcula, muestra. Todo texto dice «ítem» («item»). Tests con MSW, los ejemplos exportados, zod estricto y axe.
+Las pantallas copian los tableros v175, con i18n en es y en, tipos generados, `shared/format` y TanStack Query; el front no calcula, muestra. Todo texto dice «ítem» («item»). Tests con MSW, los ejemplos exportados, zod estricto y axe.
 
 1. **F1 · Tipos y llamadas.** Suma a `F/src/modules/forms/api/`. Copia la API de la E18. Tests: zod estricto con los ejemplos de K1, también la columna del bloque y los valores `hidden`, `money` y `rows`.
-2. **F2 · «Mostrar si».** `components/logic/ConditionsEditor.tsx` y `lib/conditions.ts`, que evalúa como B1. Tableros `FRM-Editor-Condiciones` y su teléfono. Tests: solo las anteriores que sirven; el aviso de WhatsApp debajo de la condición, con los casos de `ConditionNotSupported` que se ven en el borrador (235); «Agregar condición» grisado con «No hay preguntas anteriores que sirvan.»; la referencia rota, con «Corregir»; hasta 10; `FormPreviewPhone.tsx` muestra y oculta; la tabla de casos de B1.
+2. **F2 · «Mostrar si».** `components/logic/ConditionsEditor.tsx` y `lib/conditions.ts`, que evalúa como B1. Tableros `FRM-Editor-Condiciones` y su teléfono. Tests: solo las anteriores que sirven; el aviso de WhatsApp debajo de la condición, con los casos de `ConditionNotSupported` que se ven en el borrador y el texto de su `reason`, también una fecha anterior o posterior (235); «Agregar condición» grisado con «No hay preguntas anteriores que sirvan.»; la referencia rota, con «Corregir»; hasta 10; `FormPreviewPhone.tsx` muestra y oculta; la tabla de casos de B1.
 3. **F3 · La pregunta «Cálculo».** `components/logic/CalculationEditor.tsx`, `lib/formula.ts` y `lib/decimal.ts`, que valida como texto el número escrito. Tableros `FRM-Editor-Calculo` y su teléfono. Tests: piezas y «Agregar dato ▾»; en el bloque, solo lo de su ítem; el diálogo de la suma, también con un cálculo del ítem; «Falta un dato después de «+».» y el dato quitado; «Es un monto», con la moneda de los datos de referencia; el teléfono no la muestra.
 4. **F4 · El bloque.** `components/logic/RowsBlockEditor.tsx`; suma «Agregar bloque» a la banda, «Se carga varias veces» a `QuestionEditor.tsx` y la pantalla de un ítem a `FormPreviewPhone.tsx` [E14]. Tableros `FRM-Editor-Lineas` y su teléfono, y «Pasar al bloque» en `FRM-Editor-Condiciones`. «46 de 50 componentes» sale de `componentCount` del último `publication-checks`, desde 45: el front no cuenta. Tests: los de F4 de la spec, con «Ya hay un bloque.» y «¿Pasar «Monto» al bloque?».
-5. **F5 · Publicar.** Suma a `PublishDialog.tsx` [E14 y E16]. Tablero `FRM-Publicar-19`. Tests: cada problema con su texto e «Ir a la pregunta»; «Pasan al bloque»; el aviso del máximo y el freno del mínimo.
+5. **F5 · Publicar.** Suma a `PublishDialog.tsx` [E14 y E16]. Tablero `FRM-Publicar-19`. Tests: cada problema con su texto, también cada `reason` de `ConditionNotSupported`, e «Ir a la pregunta»; «Pasan al bloque»; el aviso del máximo y el freno del mínimo.
 6. **F6 · Planilla, detalle, tablero y tarjeta.** Suma a `FormRecordsPage.tsx`, `RecordFiltersMenu.tsx`, `QuickView.tsx`, `RecordFullPage.tsx`, `RecordValues.tsx`, `FormDashboard.tsx` y `lib/values.ts` [E15], y a `FormMessageCard.tsx` [E14]. Tableros `FRM-Respuestas-19`, `FRM-Respuesta-19`, `FRM-Tablero-19` y `WA-Chats-Respuesta-19`, con sus teléfonos. Tests: «No se mostró», «Sin respuesta» y «—»; «3 ítems» y «1 ítem»; «En algún ítem de Productos»; el detalle, la pantalla completa (el número sin encabezado, «Ítem» para el lector de pantalla) y el teléfono sin desplazarse de costado; un monto; la tarjeta.
 7. **F7 · Exportar.** Suma «Filas» a `ExportDialog.tsx` [E15]. Tablero `FRM-Respuestas-Exportar-19`. Tests: «Una por ítem de Productos» y «Una por respuesta»; el chip «Estado: Dañado (en algún ítem de Productos)»; `TooManyRows` con su texto.
 
 **Texto para el chat del Front**
 
 ```text
-Leé AGENTS.md del front, ../ArquitecturaBaseMutitenant/docs/plans/2026-11-08-etapa-19-condiciones-calculos-y-lineas.md y la spec de la E19 con su parte. Esperá K1 y corré npm run contracts. Hacé F1 a F7 contra los tipos generados, copiando los tableros v169; no toques el lienzo, las specs, el back ni la tabla de estado del plan. Al cerrar la parte, npm run build, lint y contracts:check. Reglas: las de «Forma de trabajo» de este plan.
+Leé AGENTS.md del front, ../ArquitecturaBaseMutitenant/docs/plans/2026-11-08-etapa-19-condiciones-calculos-y-lineas.md y la spec de la E19 con su parte. Esperá K1 y corré npm run contracts. Hacé F1 a F7 contra los tipos generados, copiando los tableros v175; no toques el lienzo, las specs, el back ni la tabla de estado del plan. Al cerrar la parte, npm run build, lint y contracts:check. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
 ## Integración y puerta
@@ -196,11 +196,10 @@ Leé AGENTS.md de los dos repos, este plan y la skill /puerta. Integrá el front
 
 ## Para decidir
 
-Nada. La 32, la 33 y la S2 del traspaso 15 se decidieron: el redondeo al par (232), la fórmula también en el bloque (233) y «Mostrar si» entero, con el aviso (235).
+Nada: la 32, la 33 y la S2 del traspaso 15 son las decisiones 232, 233 y 235.
 
-## Tableros que se redibujan en la v175
+## Tableros redibujados en la v175
 
-Los redibujan otros chats:
 - `FRM-Editor-Lineas` y `FRM-Editor-Calculo`, con sus teléfonos: el cálculo en el bloque (233) y, en el primero, la pantalla de cierre (204);
 - `FRM-Editor-Condiciones` y su teléfono: el aviso de lo que WhatsApp no muestra (235) y el título que se ve siempre;
 - `FRM-Publicar-19`: lo que WhatsApp no puede mostrar;

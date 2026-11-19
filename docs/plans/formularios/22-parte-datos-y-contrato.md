@@ -21,7 +21,7 @@
 | B5 | **El conteo de uso:** una fila técnica `platform.FormTemplateUsages(TemplateId, UsedByCount)` suma 1 la primera vez que una organización usa la plantilla. Para saber si es la primera, se mira si esa organización ya tiene un formulario con ese `SourceTemplateId`, en sus propios datos, también los borrados (`IgnoreQueryFilters(["SoftDelete"])`): usar, borrar y volver a usar suma una sola vez. | Cuenta organizaciones sin guardar cuáles fueron. La plataforma nunca lee datos de una organización. |
 | B6 | Las plantillas, sus versiones y las categorías son globales, en `platform`, con `IGlobalSecurityAudited` y `PlatformSettingsChanged` con destino global (ADR 0050). Guardar el borrador registra un motivo fijo; publicar, retirar y cambiar categorías usan el motivo que escribe el operador. | La regla vigente de auditoría de lo global. |
 | B7 | **El editor de la plataforma es el mismo de la E14,** montado en la ruta de Plataforma, y suma la pestaña «Catálogos». Sin Meta: la vista previa es solo la orientativa del teléfono. | Un solo editor. Una plantilla no se publica en WhatsApp. |
-| B8 | **Publicar comprueba:** las reglas de Forms, los textos obligatorios, los catálogos de la plantilla, las reglas de ejemplo y `IStructuredFormChannel.Check` (es puro, no llama a Meta). Si WhatsApp no está instalado, la comprobación del canal no corre; si está, frena también lo que en la E20 deja un formulario solo para la app: una lista dependiente, «elegir varias» de más de 20 opciones o un bloque con un mínimo de más de 10 ítems. | La copia nace lista para publicar y mandar. |
+| B8 | **Publicar comprueba:** las reglas de Forms, los textos obligatorios, los catálogos de la plantilla, las reglas de ejemplo y `IStructuredFormChannel.Check` (es puro, no llama a Meta). Si WhatsApp no está instalado, la comprobación del canal no corre; si está, frena todo lo que la E20 marca con `whatsApp: true`, lo que WhatsApp no puede mostrar (229): también una lista dependiente y una segunda Ubicación (230). | La copia nace «En la app y por WhatsApp», lista para publicar y mandar. |
 | B9 | La copia guarda `SourceTemplateId` y `SourceTemplateVersion` en la definición. | Sirve para el conteo (B5), para leer las reglas de ejemplo (decisión 30) y para el futuro aviso de versión nueva. |
 | B10 | La plataforma no tiene formularios propios ni manda formularios. | Decisión 4 de la hoja de ruta: el número de la plataforma no manda formularios. |
 | B11 | **La copia conserva los `FieldId` y `ChoiceId` de la versión de la plantilla, y el id de cada campo de sus catálogos.** Los catálogos y sus ítems sí son nuevos (B3). | Son únicos dentro de cada formulario o catálogo, y nada los cruza: las respuestas, la planilla y la publicación se unen siempre por formulario, y un campo se busca siempre en el catálogo de su pregunta. Así las reglas de ejemplo, el diseño del PDF, la fórmula de la E19 (`catalogFieldId`) y la presentación propia de una pregunta apuntan a lo mismo sin guardar una tabla de equivalencias. |
@@ -174,9 +174,10 @@ Las categorías son editables y pueden crecer: tanto su administración como los
 7. **Usar esta plantilla:**
    - afuera se comprueban los permisos (B1);
    - en una UoW de Forms, dentro de la organización:
+     - primero, el lock de esta organización y esta plantilla ([guardado](../../rules/guardado.md));
      - se lee la versión publicada (si se retiró en el medio, `NotFound`);
      - se crean los catálogos y el formulario (B3, B4, B9);
-     - si es la primera vez de esta organización, se suma 1 en `FormTemplateUsages` (B5).
+     - si es la primera vez de esta organización, se suma 1 en `FormTemplateUsages`, con un incremento atómico (B5).
    - Responde 201 y el front abre la ficha del formulario nuevo, en borrador.
 
 ## 7. Archivos

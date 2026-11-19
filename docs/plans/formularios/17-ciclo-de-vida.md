@@ -63,7 +63,7 @@ Aprobados y publicados en el lienzo v151, con el armado de ArquitecturaBase (131
 | --- | --- |
 | `FRM-Formularios-17` y `M-FRM-Formularios-17` | la lista, con «Dados de baja» en el filtro «Estado» y el ⋮ de cada fila |
 | `FRM-Editor-Baja` y `M-FRM-Editor-Baja` | el formulario dado de baja: el estado en la banda, con su ⓘ, lo que pasa en WhatsApp, «Reactivar» en el lugar de «Publicar», el ⋮ y «Agregar título» (88) |
-| `FRM-Dar-De-Baja` | el diálogo, en tres partes: «Qué deja de pasar», «Envíos abiertos y WhatsApp» y «Lo que se conserva» |
+| `FRM-Dar-De-Baja` | el diálogo, en dos columnas, «Deja de pasar» y «Se conserva» (con los envíos abiertos, que se pueden responder hasta que vencen), y debajo, lo que pasa en WhatsApp (213) |
 | `FRM-Reactivar-Eliminar` | reactivar y borrar, sobre el formulario. El nombre del tablero queda |
 | `FRM-Copiar` | el diálogo, con el nombre y el prefijo propuesto |
 
@@ -79,7 +79,7 @@ Aprobados y publicados en el lienzo v151, con el armado de ArquitecturaBase (131
 
 **Reactivar (131):** se abre en el formulario, también desde la lista. «Problemas», si hay alguno, con «Ir a la pregunta», y «Qué se publica»: Próxima respuesta, Borrador, Preguntas y lo que cambió. El botón dice «Reactivar con la versión 3» y queda grisado si hay problemas.
 
-**Borrar:** «¿Borrar «…»?», con «Deja de aparecer en la lista y no se puede volver a usar. El prefijo REC queda reservado.». Si llegó a publicarse suma «En WhatsApp no se deshace: sus Flows se deprecan cuando no queden envíos abiertos.». Si cambió la situación, lo dice en la franja y «Borrar» queda grisado. Con respuestas, en el ⋮ queda grisado con «Tiene respuestas y no se puede borrar.» (132).
+**Borrar:** «¿Borrar «…»?», con una frase (213): «Deja de aparecer en la lista, no se puede volver a usar y el prefijo REC queda reservado.». Si llegó a publicarse suma «En WhatsApp no se deshace: sus Flows se deprecan cuando no queden envíos abiertos.». Si cambió la situación, lo dice en la franja y «Borrar» queda grisado. Con respuestas, en el ⋮ queda grisado con «Tiene respuestas y no se puede borrar.» (132).
 
 **Estados dibujados:** la lista con sus filtros y las acciones de un publicado, un borrador, un dado de baja y mientras se publica; «Solo puede publicar», «Solo lectura», «Quien solo ve respuestas» y sus dados de baja. El dado de baja, ya deprecado, sin confirmar y «No se pudo deprecar»; reactivando: publicando, sin confirmar, en revisión y que no salió (175). Dar de baja con y sin envíos abiertos, consultando, mientras trabaja y con error. Reactivar con y sin cambios, comprobando, con algo que corregir y mientras trabaja. Borrar un borrador, un publicado, mientras trabaja y con error. Copiar, sin nombre, con el prefijo ocupado y mientras copia.
 

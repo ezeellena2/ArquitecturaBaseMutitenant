@@ -93,7 +93,7 @@ Al planificar la E14 se verifican contra el código real.
 | [Meta] | Los límites del `Dropdown` y del `CheckboxGroup` dinámicos: cuántas opciones, el largo del título y del detalle, y el tamaño de `data` en el mensaje. | 200 opciones en `Dropdown` y 20 en `CheckboxGroup`, título ≤30 y detalle ≤300. El piloto de ArquitecturaBase confirmó 200 opciones con 136 caracteres de detalle cada una, y allá anduvo un mensaje de 34,7 KB con 331 opciones. |
 | [Meta] | Que el mensaje de un Flow acepte `flow_name` en lugar de `flow_id`. Allá no se usó. | Lo acepta: lo usa un binding que una persona dio por publicado sin id (§6, punto 4), y se prueba en la §15. |
 | Base de la 12 | La campana (`INotificationSource`), los botones que trabajan (43 y 115), `PageLoading` y `FormSkeleton` (160) y la escala (180). | Están en el núcleo y en el front. Forms suma `formPublicationFailed` a la campana. |
-| [E9] | Las cuotas compartidas ([cuotas](../../rules/cuotas.md)). | Las rutas de Forms cuentan en las cuotas generales; no se definen perfiles propios. La vista oficial y «Consultar publicación», que llaman a Meta, llevan además un tope de negocio por organización (F17 de ArquitecturaBase), como los topes de correo, sin sumar un perfil a los doce: `Forms:MetaCalls:PerOrganizationPerMinute`, que da `Forms.Meta.TooManyCalls`. Cada organización tiene su WABA y su cupo con Meta; las consultas del worker no cuentan. |
+| [E9] | Las cuotas compartidas ([cuotas](../../rules/cuotas.md)). | Las rutas de Forms cuentan en las cuotas generales; no se definen perfiles propios. La vista oficial y «Consultar publicación», que llaman a Meta, llevan además un tope de negocio por organización (F17 de ArquitecturaBase), como los topes de correo, sin sumar un perfil a los doce: `Forms:MetaCalls:PerOrganizationPerMinute`, 20 por defecto hasta que se mida otra cosa, mayor que cero y validado al arrancar, que da `Forms.Meta.TooManyCalls` (429 con `Retry-After`). Se cuenta en la base, compartido entre copias, nunca en un proceso. Cada organización tiene su WABA y su cupo con Meta; las consultas del worker no cuentan. |
 | [E9] | Redis. | La E14 no cachea nada nuevo. |
 | #51 | `Enter` borra `TenantKind`. | El worker de publicación usa `ExecutionActor`, y la captura, `SetFromAccess` (T5). |
 
@@ -122,6 +122,7 @@ Salen de los reviews y los pilotos de ArquitecturaBase. El plan los toma como li
 
 - **Captura:**
   - una falla técnica se reintenta hasta **5 veces y al menos 15 minutos** desde la primera, con intervalos 30, 90, 210, 450 y 930 s; recién ahí queda `Rejected` y visible. El intento vive en el mensaje entrante, en su `Attempts` y `NextAttemptAtUtc`, y lo corre la misma cola: para una respuesta de Flow, `IWhatsAppInboundService.FailAsync` usa estos intervalos en lugar de los 6·n s de hoy, que no llegan a 3 minutos;
+  - una respuesta que esta versión no entiende se deja para otra copia hasta cinco fallas y un día, sin `Rejected` antes (§6.7, ADR 0060);
   - un mensaje trabado no frena a los demás.
 - **Catálogos al mandar:**
   - al operador le llegan solo la cantidad y los problemas, nunca los nombres de las personas ofrecidas;

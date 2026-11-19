@@ -36,7 +36,7 @@ El chat del contrato confirma esta lista antes de publicar; lo que difiera va a 
 
 ### K1 · Publicar antes de programar las pantallas
 
-El Back publica las rutas con `501`, los errores con sus textos y los ejemplos exportados de cada respuesta nueva o cambiada, incluidos 400, 404, 409 y los vacíos. El Front corre `npm run contracts`. No hay permiso nuevo: todo pide `whatsapp.manage` (28).
+El Back publica las rutas con `501`, los errores con sus textos y los ejemplos exportados de cada respuesta nueva o cambiada, incluidos 400, 404, 409 y los vacíos. El Front corre `npm run contracts`. No hay permiso nuevo: todo pide `whatsapp.manage` (28), y probar, además, atender esa bandeja, como la E23.
 
 **Rutas** (`/api/organization/whatsapp`, `[Access(Business)]`, `[FeatureGate(WhatsAppFeature.Key)]`, `[FeatureGate("assistant")]` y `whatsapp.manage`). Los cuerpos son los de la spec; acá van los cambios. Las rutas `assistant/agent` y `assistant/agent/test` de la E23 se retiran: las reemplazan estas, y el principal es un asistente más de la lista.
 
@@ -47,7 +47,7 @@ El Back publica las rutas con `501`, los errores con sus textos y los ejemplos e
 | POST `assistant/agents` | `{name}`, `[Idempotent]`; 201 + Location | 400 `Assistant.Agent.NameDuplicate` |
 | GET y PUT `assistant/agents/{id}` | `version` y `knowledgeVersion`, como la E23 | 400; 404 `Assistant.Agent.NotFound`; 409 |
 | POST `assistant/agents/{id}/deactivation` y `reactivation` | `{version}` | 404; 409 `Assistant.Agent.PrimaryRequired` |
-| POST `assistant/agents/{id}/test` | `assistantConversation` | 400; 404; 503 `Assistant.Agent.Unavailable` |
+| POST `assistant/agents/{id}/test` | `assistantConversation`; `{messages[], inbox}`, de 1 a 5, como la E23 | 400; 404; 503 `Assistant.Agent.Unavailable` |
 | PUT `teams/{id}/assistant` | `{assistantId?, version}` | 400 `WhatsApp.Team.AssistantUnavailable`; 404 `WhatsApp.Team.NotFound`; 409 |
 
 `GET assistant/agents/filter-counts` no está en la spec: lo pide la banda de `WA-Asistentes`. Con `status=all`, la lista trae primero al principal y después por nombre e id.
@@ -101,7 +101,7 @@ Leé AGENTS.md, este plan (docs/plans/2026-11-08-etapa-24-varios-asistentes.md),
 Siguen los tableros v169 y las fichas de UI y de toda la app (160 a 164, 173 a 175 y 180); i18n, tipos generados y axe en cada pantalla.
 
 1. **F1 · Tipos y llamadas.** Suma a `F/src/modules/whatsapp/assistant/api/` y a la API de equipos, con zod estricto contra los ejemplos.
-2. **F2 · La lista.** `AssistantsPage.tsx` en `/org/whatsapp/asistentes` (`WA-Asistentes` y su teléfono): el principal con su marca, sus equipos y su estado; la banda con «3 asistentes» o «4 asistentes · 1 de baja» y «Nuevo asistente»; el ⋮ con Editar y Dar de baja o Reactivar, con «Dar de baja» grisado en el principal y su motivo. Cada uno abre la pantalla de la E23 en `/org/whatsapp/asistentes/:assistantId`, con su «Probar». La entrada «Asistente» del panel pasa a «Asistentes», y `/org/whatsapp/asistente` lleva a la lista. Copiá `TeamsPage.tsx`. Tests: nuevo asistente, falta el nombre, nombre repetido, dar de baja, reactivar, un solo asistente, sin equipos, cargando y error.
+2. **F2 · La lista.** `AssistantsPage.tsx` en `/org/whatsapp/asistentes` (`WA-Asistentes` y su teléfono): si es el principal, en su columna (206), sus equipos y su estado; la banda con «3 asistentes» o «4 asistentes · 1 de baja» y «Nuevo asistente»; el ⋮ con Editar y Dar de baja o Reactivar, con «Dar de baja» grisado en el principal y su motivo. Cada uno abre la pantalla de la E23 en `/org/whatsapp/asistentes/:assistantId`, con su «Probar». La entrada «Asistente» del panel pasa a «Asistentes», y `/org/whatsapp/asistente` lleva a la lista. Copiá `TeamsPage.tsx`. Tests: nuevo asistente, falta el nombre, nombre repetido, dar de baja, reactivar, un solo asistente, sin equipos, cargando y error.
 3. **F3 · El equipo y el chat.** «Asistente de este equipo» en `TeamDialog.tsx` (`WA-Equipo-Asistente` y su teléfono): sin elegir contesta el principal, y uno de baja no se elige. El nombre del que contesta en la cabecera (`ConversationView.tsx`), la lista (`ChatsWorkspace.tsx`), cada respuesta y «Por qué respondió esto» (`MessageThread.tsx`), según `WA-Chats-Casos-24` y su teléfono. «La mandó» de `QuickView.tsx` y `RecordFullPage.tsx` [E15] dice el nombre del asistente. Tests: el nombre en el chat y en el porqué; pasó a Ventas con el mismo historial; un equipo sin asistente; un solo asistente, sin menú.
 
 **Texto para el chat del Front**
@@ -148,4 +148,4 @@ Leé AGENTS.md de los dos repos, este plan (docs/plans/2026-11-08-etapa-24-vario
 
 ## Para decidir
 
-Nada: los tableros v158 a v169 y las decisiones 28, 35, 43, 46, 52, 68, 69, 77 y 78 resuelven el producto.
+Nada: los tableros v158 a v169 y las decisiones 28, 35, 43, 46, 52, 68, 69, 77, 78 y 206 resuelven el producto.

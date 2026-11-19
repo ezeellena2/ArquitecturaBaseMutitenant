@@ -210,6 +210,7 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | `WhatsApp.Flow.AccountUnavailable` | ServiceUnavailable | la WABA sin medio de pago o sin salud [E11] |
 | `WhatsApp.Flow.PreviewUnavailable` | ServiceUnavailable | Meta no contestó la vista oficial en 30 s (§6, punto 5) |
 | `WhatsApp.Flow.NotPublishedForNumber` | Conflict | el número del chat está en una WABA sin Flow de esa versión |
+| `WhatsApp.Flow.NumberAmbiguous` | Validation | un número que se lee distinto con y sin los miles en el idioma de la sesión, como «1.500» en español (T9, 207) |
 | `WhatsApp.Flow.SessionExpired` | Conflict | la respuesta llegó pasada la sesión (hora de Meta) |
 | `WhatsApp.Conversation.WindowClosed`, `TakenByOther` y `PaymentRequired` (los de la E11), `WhatsApp.Chat.NotEmployee` / `FormUnavailable` / `SendPending` | Conflict | reglas del botón (§6.6) |
 
@@ -231,7 +232,7 @@ Las rutas Business de Forms llevan `[Access(Access.Business)]` y `[FeatureGate("
 | GET `/api/organization/forms/{id}/publications/{publicationId}` | `forms.read` | — | 200 `{state, versionNumber, flowName?, errorCode?, issues?}` |
 | POST `/api/organization/forms/{id}/publications/{publicationId}/check` | `forms.publish` | — | 200 `{state, versionNumber, flowName?, errorCode?, issues?}`: «Consultar publicación» le pregunta a Meta y nunca repite un POST |
 | POST `/api/organization/forms/{id}/publications/{publicationId}/resolution` | `forms.publish` | `{outcome}`, `Published` o `NotPublished` | 200 lo mismo: la persona dice qué pasó, solo en `NeedsReview` (175) |
-| POST `/api/organization/forms/{id}/publications/{publicationId}/discard` | `forms.publish` | `{version}` | 204: «Descartar esta publicación», solo en `Unconfirmed` (225) |
+| POST `/api/organization/forms/{id}/publications/{publicationId}/discard` | `forms.publish` | — | 200 lo mismo: «Descartar esta publicación», solo en `Unconfirmed` (225). Sin `version`, como `resolution`: lo protege el estado, porque el worker escribe la fila en cada consulta |
 | GET `/api/organization/forms/{id}/versions/{versionId}/preview` | `forms.read` | — | 200 `{url, expiresAtUtc}`: el enlace interactivo de la vista oficial ([§6, punto 5](14-parte-decisiones-y-flujos.md#6-flujos-con-sus-transacciones)), con `Cache-Control: no-store`; 503 `WhatsApp.Flow.PreviewUnavailable` si Meta no contesta en 30 s |
 | GET `/api/organization/whatsapp/{customers\|internal}/conversations/{id}/forms` **[E11]** | «Atender internos» o «Atender clientes», según la bandeja | `page`, `search` | 200 `{available, reason?, culture, forms: PagedResult<{definitionId, versionId, versionNumber, name, prefix, questionCount, optionCounts[{fieldId, label, count}], offerProblems[]}>}`. `available: false` sin `reason` esconde el botón (Forms no está disponible), y con `reason` lo grisa con su motivo; `culture` es el idioma de los textos del sistema que acompañan |
 | POST `/api/organization/whatsapp/{customers\|internal}/conversations/{id}/forms` **[E11]** | «Atender internos» o «Atender clientes», según la bandeja | `{definitionId, versionId, text?}`: `null` es el mensaje por defecto (T10), y si viene, ≤1024 | 202 `{sessionId, messageId}` |

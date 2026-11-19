@@ -54,7 +54,7 @@ Sale de los 142 problemas que encontraron los reviews de ArquitecturaBase (capí
 3. **Cambiar algo en uso** (tipo, fuente, papel, obligatorio, activo o eliminado):
    - se frena por el uso, o pide confirmación y limpia;
    - lo guardado que apunta a algo dado de baja sigue valiendo.
-4. **Guardar sin cambios no escribe.** No cambian `ModifiedAtUtc`, la versión ni la auditoría.
+4. **Guardar sin cambios no reescribe nada.** Escribe solo la fila de la entidad (`ModifiedAtUtc`), así EF compara la versión ([concurrencia](../../../docs/rules/concurrencia.md)), y no toca ni audita lo que cuelga de ella (opciones, preguntas, valores).
 5. **Ninguna lectura trae todo para quedarse con poco.** Se prueba con el volumen máximo de la etapa.
 6. **Nada nombra otro recurso sin permiso de leerlo** (ni un 409, ni un aviso, ni una vista previa), **y nada mezcla organizaciones:** un id de otra devuelve 404, los trabajos de fondo entran con su organización, y la caché y las cuotas llevan su alcance.
 7. **Nada exige un idioma fijo.** Se guarda y se relee con una traducción vacía, con `null` y con una referencia inactiva.

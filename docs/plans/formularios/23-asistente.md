@@ -1,8 +1,8 @@
 # E23 · El asistente, con Casos (spec)
 
-**Estado:** pendiente · spec de la etapa 23 del bloque (decisiones 34, 39, 51, 52, 63, 65 a 67, 78, 165, 169, 202 y 219), con el [formato](plantilla.md) de las etapas. Junta la etapa 5 de ArquitecturaBase, cerrada y en piloto, con sus Casos del asistente, decididos y sin programar. El catálogo que propone el asistente pasa a la E25 (167). `/plan-etapa` la contrasta con el código real después de la E22, y al planificarla escribe las ADR de respuestas redactadas y de transcripción (27).
+**Estado:** pendiente · spec de la etapa 23 del bloque (decisiones 34, 39, 51, 52, 63, 65 a 67, 78, 165, 169, 202, 219 y 230), con el [formato](plantilla.md) de las etapas. Junta la etapa 5 de ArquitecturaBase, en piloto, con sus Casos del asistente, decididos y sin programar. El catálogo que propone el asistente pasa a la E25 (167). `/plan-etapa` la contrasta con el código real después de la E22.
 
-**Partes.** Esta spec no entra en un solo archivo, así que sigue en otro, con las mismas secciones. Lo que no está en la tabla está acá.
+**Partes.** Lo que no figura en esta tabla está acá.
 
 | Secciones | Archivo |
 | --- | --- |
@@ -13,7 +13,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T5, T6 y los puertos; la [E16](16-datos-de-las-personas.md): los filtros; la [E17](17-ciclo-de-vida.md): la disponibilidad; la [E18](18-fotos-y-documentos.md): bajar medios; la [E19](19-condiciones-calculos-y-lineas.md): el bloque; la [E21](21-reglas-y-aprobacion.md): reglas y cola, y la ficha [Asistente](../../features/asistente.md).
-2. **Decisiones** de la hoja de ruta: 19, 27, 28, 35, 39, 46, 50 a 52, 63, 65 a 67, 78, 146, 165, 169, 177, 202, 219 y 223. ADR [0048](../../decisions/0048-asistente.md), [0051](../../decisions/0051-precision-tecnica-de-costos-ia.md), [0038](../../decisions/0038-whatsapp-de-atencion.md), [0054](../../decisions/0054-respuestas-redactadas-por-el-asistente.md), [0055](../../decisions/0055-transcripcion-de-audios.md) y [0064](../../decisions/0064-reglas-de-toda-la-ia.md), las reglas de toda la IA.
+2. **Decisiones** de la hoja de ruta: 19, 27, 28, 35, 39, 46, 50 a 52, 63, 65 a 67, 78, 146, 165, 169, 177, 202, 219, 223 y 230. ADR [0048](../../decisions/0048-asistente.md), [0051](../../decisions/0051-precision-tecnica-de-costos-ia.md), [0038](../../decisions/0038-whatsapp-de-atencion.md), [0054](../../decisions/0054-respuestas-redactadas-por-el-asistente.md), [0055](../../decisions/0055-transcripcion-de-audios.md) y [0064](../../decisions/0064-reglas-de-toda-la-ia.md), las reglas de toda la IA.
 3. **Fichas y guías:** [modulos](../../rules/modulos.md), [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [multitenancy](../../rules/multitenancy.md), [cuotas](../../rules/cuotas.md), [logs](../../rules/logs.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [tests](../../rules/tests.md) y la [guía de herramientas](../../guides/agregar-una-herramienta-al-asistente.md).
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 5. **Referencia de producto,** solo para leer: en el traspaso del 17/10, retirado el 2026-11-08 (`git show e9f1a599:docs/plans/2026-10-17-formularios-traspaso/`), el anexo C, «Etapa 5», y el anexo D (H1 a H3, H5 a H7 y s1 a s4); en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`, el anexo C §7 a §9 y el anexo F, F1, con su ADR 0021. Allá también: `docs/features/inteligencia-artificial.md`, «Información del negocio», y en el front, `docs/design/asistente-casos.md` e `informacion-del-negocio-guiada.md`.
@@ -37,7 +37,7 @@ Antes de empezar, en este orden:
 
 **Probar** acepta hasta cinco mensajes, uno por renglón, como una ráfaga, y muestra qué caso elige, por qué y qué respondería, con lo guardado y sin mandar nada ni gastar los topes de WhatsApp. Cuenta en el tope de IA, con el cupo de quien prueba, y sigue sus permisos: pide atender la bandeja que prueba, y sin `formrecords.read` no muestra el porqué ni lo que llenaría un formulario.
 
-**Respuestas redactadas** (39), con su ADR, que se escribe al planificar:
+**Respuestas redactadas** (39), con su ADR:
 - **fuentes** (67): lo de la organización, solo los hechos confirmados: nunca una pregunta sin respuesta ni un texto sin revisar, con la misma regla en el Inicio (0064 §9). Lo general, lo que sabe el modelo. Además, el historial de esa conversación y la hora. Lo leído es un dato, nunca una instrucción;
 - corta, en el idioma de la conversación, sin enlaces, teléfonos, correos, precios ni compromisos que no estén cargados;
 - **si es de la organización y no está cargado:** pregunta para entender, dice que lo consulta y deriva. Nunca contesta algo genérico;
@@ -55,9 +55,9 @@ Antes de empezar, en este orden:
 
 **Cuando la IA no contesta** un mensaje (falló, venció o quedó incierta), o lo que mandó queda «Sin confirmar» (240), el chat pasa a atención manual con «Necesita una persona» y el motivo «El asistente no pudo responder», y sale el mensaje fijo al derivar si la ventana de 24 horas sigue abierta. No deriva lo que todavía puede reintentarse ni un chat que ya tomó una persona. Lo que venció sin llegar al proveedor devuelve el cupo, y cada falla del proveedor lleva su código ([0064](../../decisions/0064-reglas-de-toda-la-ia.md)).
 
-**Ofrecer formularios:** hasta el tope por conversación y día, en la zona de la organización; solo los publicados, activos y con «Cuándo lo ofrece», para ese destinatario (50), con el filtro de disponibilidad y sin las versiones solo para la app, ordenados por nombre antes de cortar en 100. Lo manda el asistente: la sesión lo guarda así, y no toma el chat. **La oferta** dice siempre «Te preparé el formulario «Pedido de service» para que lo completes.», con el nombre del formulario (165): es un texto fijo, que el modelo no redacta, también cuando un operador manda una sugerencia en atención manual. **El prellenado** propone texto, números, fechas, sí/no y una opción ofrecida, como valores iniciales de un perfil nuevo del Flow **[Meta]**. Deja afuera «elegir varias», las fotos, los documentos y las preguntas del bloque (146). Uno publicado antes se manda sin prellenar. El asistente no ve los valores de las respuestas.
+**Ofrecer formularios:** hasta el tope por conversación y día, en la zona de la organización; solo los publicados, activos y con «Cuándo lo ofrece», para ese destinatario (50), con el filtro de disponibilidad y sin las versiones solo para la app, ordenados por nombre antes de cortar en 100. Lo manda el asistente: la sesión lo guarda así, y no toma el chat. **La oferta** dice siempre «Te preparé el formulario «Pedido de service» para que lo completes.», con el nombre del formulario (165): es un texto fijo, que el modelo no redacta, también cuando un operador manda una sugerencia en atención manual. **El prellenado** propone texto, números, fechas, sí/no y una opción ofrecida, como valores iniciales de un perfil nuevo del Flow **[Meta]**. Deja afuera «elegir varias», las fotos, los documentos, la Ubicación y las preguntas del bloque (146), y tampoco prellena una pregunta con «Mostrar si» ni la que fija una marca de varios valores, que arranca en `false` y un valor prellenado no cambia (E19). Uno publicado antes se manda sin prellenar. **Con una Ubicación** (230), la oferta sale como en la E20: antes del Flow, el pedido de ubicación de Meta, y la ubicación que llega lo contesta sin abrir un turno. El asistente no ve los valores de las respuestas.
 
-**Sugerencias entre formularios:** `formsuggestions.manage`, hasta 20 por formulario, hacia formularios para el mismo destinatario. «La IA decide» o «Preguntar siempre», por condición y sin IA, con mapeos entre preguntas del mismo tipo. Una hacia un dado de baja deja de ofrecerse y vuelve si se reactiva. La respuesta conserva su origen y la cadena.
+**Sugerencias entre formularios:** `formsuggestions.manage`, hasta 20 por formulario, hacia formularios para el mismo destinatario. «La IA decide» o «Preguntar siempre», por condición y sin IA, con mapeos entre preguntas del mismo tipo. Una hacia un dado de baja o «Solo en la app» deja de ofrecerse y vuelve si se reactiva o vuelve a WhatsApp. En uno «Solo en la app», «Cuándo lo ofrece» y «Sugerencias» van apagados con «Se completa solo en la app.» y conservan lo cargado (258). La respuesta conserva su origen y la cadena.
 
 **Sin la feature `assistant`,** «Cuándo lo ofrece» y «Armar desde un texto» no aparecen, y una sugerencia queda en «Preguntar siempre», que no usa IA.
 
@@ -65,12 +65,12 @@ Antes de empezar, en este orden:
 
 **Audios:** se bajan como los archivos del chat y se transcriben por un puerto del núcleo (27). La transcripción la ve también el operador.
 
-**Armar una regla desde un texto** (63): la IA propone una regla normal, y la persona la revisa y la guarda. Después corre sin IA. Con el tope agotado, queda grisado, con el motivo en su tooltip.
+**Armar una regla desde un texto** (63): la IA propone una regla normal, con el modelo calificado del canal, como Probar (218), y la persona la revisa y la guarda. Después corre sin IA. Con el tope agotado, queda grisado, con el motivo en su tooltip.
 
 **Preguntas sin respuesta** (67) y **Formularios que faltan:** agrupadas por tema, sin nombres ni mensajes, con cantidades. Se completa el conocimiento, se crea el formulario o se descarta. **Un tema nuevo se revisa antes de usarse con otros** (219): nace «Sin revisar», y el asistente no lo usa en otros chats hasta que alguien con `whatsapp.manage` (preguntas) o `forms.manage` (formularios) lo marca «Revisado», con su versión y el 409; al asistente va solo el nombre. Un tema descartado vuelve, con la pregunta sumada, si alguien lo pregunta de nuevo (202), y vuelve «Sin revisar».
 
 **Desde el primer día:**
-- **la espera:** el motor avisa con una señal local al confirmar, y la entrada sondea cada 2 s solo si hay algo pendiente. Una sola cola durable. Allá bajó de 35 s a 6,6 s;
+- **la espera:** el motor avisa con una señal local al confirmar, y la entrada sondea cada 2 s solo si hay algo pendiente. Una sola cola durable;
 - **el aislamiento por conversación:** `ChannelConversationId` en el contexto, la recuperación y la cancelación. Se prueba con tres personas a la vez;
 - **la medición** de texto a envío y de audio a envío, desde la primera corrida.
 
@@ -78,7 +78,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-**Aprobados y publicados** en el lienzo v157; «Por qué respondió esto» se ajustó en la v158. La pantalla «Asistente» no tiene modelo, ni en el lienzo ni en ArquitecturaBase: el usuario eligió armarla como el editor de un formulario. Lo demás sigue al front real de ArquitecturaBase, con nuestras piezas: el chat con su modo y «Por qué lo mandó», la sugerencia, los audios, «Qué sugerir después», «Cómo empezó» e «Información del negocio». Con el traspaso 5 se redibujaron las sugerencias, las reglas, el detalle y lo prellenado de las tarjetas (138 a 140). **Con el traspaso 10** se redibujó `WA-Asistente-Limites`, con la información del negocio (169); los tableros que muestran una oferta la dicen con el nombre del formulario (165), y el catálogo propuesto sale de esta etapa (167): `FRM-Catalogo-Propuesta` y `FRM-Catalogos-23` pasaron al Archivo. Todo eso está aprobado y publicado en el lienzo v168. **Con el traspaso 15** (v175, sin publicar): Probar con cinco mensajes y sin «Ver respuestas»; «El asistente no pudo responder» y el motivo de una derivación; «Sin revisar» y «Marcar como revisado» en los temas (219).
+**Aprobados** en el lienzo v175. La pantalla «Asistente» no tiene modelo, ni en el lienzo ni en ArquitecturaBase. Lo demás sigue al front real de ArquitecturaBase, con nuestras piezas: el chat con su modo y «Por qué lo mandó», la sugerencia, los audios, «Qué sugerir después», «Cómo empezó» e «Información del negocio». El catálogo propuesto sale de esta etapa (167): `FRM-Catalogo-Propuesta` y `FRM-Catalogos-23` pasaron al Archivo. Los tableros muestran Probar con cinco mensajes y sin «Ver respuestas», «El asistente no pudo responder» con el motivo de una derivación, y «Sin revisar» y «Marcar como revisado» en los temas (219).
 
 **Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
 
@@ -95,9 +95,9 @@ Datos de ejemplo: Grupo Delta vende y repara heladeras. Martina López escribe p
 | `WA-Preguntas-Sin-Respuesta` y `M-WA-Preguntas-Sin-Respuesta` | en el panel de WhatsApp, por tema, con preguntas, personas y la última. El ⋮ tiene «Completar el conocimiento» y «Descartar». Sin nombres ni mensajes | acciones, descartar, el filtro de estado, descartados, vacío, cargando y error |
 | `WA-Chats-Asistente`, `WA-Chats-Sugerencia` y `WA-Chats-Audio`, con `M-WA-Conversacion-Asistente` | revisados: la barra de la bandeja y las fechas de WA-Chats, y el tope agotado. Sale «Sin respuesta del asistente», que pasa a `WA-Chats-Casos`. El audio, como allá: «Escuchar audio» y la transcripción debajo | los de antes, más escuchar el audio y «Ya no está» (D4) |
 | `FRM-Editor-Asistente` | redibujado: «Cuándo lo ofrece el asistente», con su (i), en «El formulario» de la pestaña Diseño | sin «Cuándo lo ofrece» y sin la función del asistente |
-| `FRM-Editor-Sugerencias` | redibujado: la pestaña «Sugerencias», como las reglas (79), con «Qué sugerir después», su historial tras un botón (140), en pasos (138) y con ✎ 🗑 en cada una | editar, preguntar siempre, un dato de otro tipo, hacia un dado de baja, guardando, guardadas, sin sugerencias y sin el asistente |
+| `FRM-Editor-Sugerencias` | redibujado: la pestaña «Sugerencias», como las reglas (79), con «Qué sugerir después», su historial tras un botón (140), en pasos (138) y con ✎ 🗑 en cada una | editar, preguntar siempre, un dato de otro tipo, hacia un dado de baja, hacia uno de la app (258), guardando, guardadas, sin sugerencias y sin el asistente |
 | `FRM-Editor-Reglas-23` y `M-FRM-Reglas-23` | «Armar desde un texto» junto a «Agregar regla» (63): la IA propone una regla normal, que queda abierta y sin guardar | armar, armando, la regla propuesta, no se pudo, tope agotado (grisado, con el motivo) y sin el asistente |
-| `FRM-Dar-De-Baja-23` y `FRM-Editor-Baja-23` | «Qué deja de pasar» suma que el asistente no lo ofrece y las sugerencias hacia el formulario, que vuelven si se reactiva | — |
+| `FRM-Dar-De-Baja-23` y `FRM-Editor-Baja-23` | «Deja de pasar» suma que el asistente no lo ofrece y las sugerencias hacia el formulario, que vuelven si se reactiva | — |
 | `FRM-Faltan` y `M-FRM-Faltan` | revisados: la banda cuenta temas y pedidos, y las fechas van completas | los de antes |
 | `FRM-Respuesta-Cadena` | revisado, sobre la vista rápida de la 21: «Cómo empezó», con «Ver los datos propuestos», y la cadena de respuestas | los datos que propuso y la cadena |
 | `Campana-23` y `M-Campana-23` | la campana suma las preguntas sin respuesta, para quien administra WhatsApp | — |
@@ -106,13 +106,12 @@ Datos de ejemplo: Grupo Delta vende y repara heladeras. Martina López escribe p
 El recorrido guiado «Los casos del asistente» muestra a Lucía armando y probando los casos, y a Martina escribiendo, hasta la ráfaga con tres acciones.
 
 **Mandan sobre esta spec en:**
-- **Una consulta ya no queda sin respuesta:** `WA-Chats-Casos` reemplaza «Sin respuesta del asistente» de `WA-Chats-Asistente`.
 - **Los nombres de la API:** «La IA decide» es `Assistant`, y «Preguntar siempre», `Always`.
-- **Los audios:** «No pudimos pasar este audio a texto» cubre también el tope agotado, y un audio sigue la retención del chat (D4).
+- **Los audios:** «No pudimos pasar este audio a texto» cubre también el tope agotado; un audio sigue la retención del chat (D4).
 - **Probar** prueba lo guardado: con cambios sin guardar queda grisado, con el motivo en su tooltip.
 - **Atención** es la quinta pestaña de la pantalla. Tiene su ruta y su versión (`/whatsapp/attention`), pero se guarda con el mismo botón.
 - **El ⋮ del chat:** ahí van cambiar el modo, fijarlo y «Marcar como resuelta».
-- **La oferta** (165): todo tablero que muestra un formulario que manda el asistente dice «Te preparé el formulario «Pedido de service» para que lo completes.», también en Probar.
+- **La oferta** (165): todo tablero que muestra un formulario que manda el asistente usa el texto fijo de «Ofrecer formularios», también en Probar.
 
 **Decisiones del usuario** (03/11):
 - la pantalla «Asistente» se arma como el editor de un formulario: el contenido va a la izquierda y «Probar», siempre a la derecha, y los casos se editan en el lugar, con ↑ ↓ ✎ 🗑;
@@ -131,7 +130,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | B3 | El agente y el conocimiento | `D/Assistant/AssistantAgent.cs`, `AssistantKnowledge.cs`, `AssistantAgentService.cs`, `AssistantAgentPolicy.cs`; suma a `PlatformAssistantSettingsController.cs` | `AssistantOrganizationSettings.cs` | 409 en cada versión; máximos de la plataforma; «Cualquier otra cosa»; franjas que se pisan, la quinta de un día y la que pasa la medianoche |
 | B4 | El motor para un chat | `A/Modules/Assistant/Services/ConversationAgentService.cs`, `AssistantChannelContext`; suma a `AssistantTurnBuilder.cs` | `AssistantTurnService.cs` | orden estable; 10 mensajes; dos conversaciones no se mezclan; sin `ExecutionActor` |
 | B5 | El turno en WhatsApp: ráfaga, validar, encolar y derivar | `WhatsAppAssistantTurnService.cs`, `WhatsAppAssistantWorker.cs`, `WhatsAppReplyPolicy.cs` | `WhatsAppInboundProcessor.cs`, `WhatsAppModulePolicy.cs`, `WhatsAppReplyIssuer.cs` | ráfaga de tres; 3 acciones; propuesta tardía; validador; topes; IA caída; en un chat vinculado se escribe la copia compartida; la lista de `TenantScopeUsageTests` |
-| B6 | Ofrecer y prellenar | suma a `FormStructuredSource.cs` y `WhatsAppFlowBuilder.cs`; la sesión; el texto de la oferta en los recursos de WhatsApp | esos mismos [E14] | candidatos; destinatario; sin las versiones solo para la app; sin prellenar con un perfil anterior, que dice `WhatsAppFlowBindings.Profile`; la oferta nombra el formulario; «elegir varias» y el bloque quedan sin prellenar |
+| B6 | Ofrecer y prellenar | suma a `FormStructuredSource.cs` y `WhatsAppFlowBuilder.cs`; la sesión; el texto de la oferta en los recursos de WhatsApp | esos mismos [E14] | candidatos; destinatario; sin las versiones solo para la app; sin prellenar con un perfil anterior, que dice `WhatsAppFlowBindings.Profile`; la oferta nombra el formulario; «elegir varias», el bloque, la Ubicación, «Mostrar si» y la marca quedan sin prellenar; con Ubicación, el pedido antes del Flow |
 | B7 | Probar | `AssistantAgentTestService.cs` | `ConversationAgentService.cs` | no manda; cuenta en el tope |
 | B8 | Audios | `A/Interfaces/Integrations/Speech/ISpeechTranscriber.cs`, su adaptador y su apagado | `WhatsAppChatFileService.cs` [E18] | con y sin tope; retención |
 | B9 | Sugerencias | `FormSuggestionService.cs`; `WhatsAppSuggestionService.cs`; suma a `FormDefinitionCopyCreator.cs` [E17] | `FormRuleService.cs` [E21] | bucle; hacia un dado de baja; mapeos; la cadena; copiar lleva la primera revisión |
@@ -159,7 +158,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | Marca | Qué hay que confirmar | Qué asume esta spec |
 | --- | --- | --- |
 | [Meta] | Valores iniciales en un Flow con datos, sin endpoint. | Un perfil nuevo los admite por `data`. |
-| ADR | La de respuestas redactadas (39), que `/plan-etapa` escribe al planificar, desde la 0021 de allá. | Rige lo de «Respuestas redactadas»: las fuentes, la forma, el validador y derivar. |
+| ADR | La de respuestas redactadas (39), que escribe `/plan-etapa` desde la 0021 de allá. | Rige lo de «Respuestas redactadas»: las fuentes, la forma, el validador y derivar. |
 | ADR | La ADR 0048, D8, y la 0038, que dejaban esto para después. | Se actualizan con esta etapa. |
 | Asistente | Cómo se separa el motor de la sesión de una persona. | Un turno de canal no necesita cuenta. |
 | [E18] | El audio del chat. | Está guardado cuando se transcribe. |

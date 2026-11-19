@@ -25,7 +25,7 @@ El autor decide el contenido. La app decide la forma, con una tabla fija por tip
 - al enviar, cada ítem se valida como preguntas sueltas: la celda con un error se marca, el mensaje va debajo de su fila con el nombre de la pregunta («Cantidad: completá esta respuesta.») y el foco va a la primera. Si faltan ítems, lo dice debajo de la tabla: «Agregá al menos 1 ítem.»;
 - **en el panel y en el teléfono,** un recuadro por ítem, con «Ítem 2», ↑ ↓ y «Quitar» en su banda (183), y las preguntas una debajo de otra. El nombre del bloque va arriba, como etiqueta, así la banda entra en 320 aunque el bloque se llame «Materiales de construcción». En el teléfono, «Agregar ítem» va al pie de los recuadros, y Enviar sigue fijo abajo;
 - «Mantener» conserva también los ítems; una versión nueva los conserva si el bloque sigue, con las preguntas que siguen con el mismo tipo, y «Enviada» muestra el bloque en una línea, como su columna en la planilla;
-- **en el editor,** dos (i) suman la app: la del máximo dice «En WhatsApp se cargan hasta 10 ítems; en la app, hasta el máximo.», y la de «Se carga varias veces», «Se carga una vez por ítem, en la tabla del bloque.».
+- **en el editor,** la (i) del máximo suma la app: «En WhatsApp se cargan hasta 10 ítems; en la app, hasta el máximo.». La de «Se carga varias veces» sigue con el texto de la E19, como en `FRM-Editor-20`.
 
 ## Los textos
 
@@ -36,7 +36,6 @@ Los del bloque:
 | «Agregar ítem» · «Hasta 20 ítems.» · «Agregá al menos 1 ítem.» | «Add item» · «Up to 20 items.» · «Add at least 1 item.» |
 | «Ítem 2», en la banda de un recuadro | «Item 2» |
 | «En WhatsApp se cargan hasta 10 ítems; en la app, hasta el máximo.» | «WhatsApp loads up to 10 items; the app, up to the maximum.» |
-| «Se carga una vez por ítem, en la tabla del bloque.» | «Loaded once per item, in the block's table.» |
 
 Los de «Dónde se completa» (229):
 
@@ -47,7 +46,9 @@ Los de «Dónde se completa» (229):
 | «Pasar a «Solo en la app»», en «Problemas» y debajo de una condición | «Switch to “Only in the app”» |
 | «Se completa solo en la app.», en «Enviar formulario» | «It's completed only in the app.» |
 | «App · No se carga más», en «Dar de baja» | «App · No longer filled in» |
-| ««Proveedor» depende de otra respuesta: WhatsApp no lo puede mostrar.» · «Por WhatsApp se pide una sola ubicación.», en «Problemas» | «“Proveedor” depends on another answer: WhatsApp can't show it.» · «Only one location can be requested on WhatsApp.» |
+| «Usa una lista dependiente, y WhatsApp no las muestra.» · «Por WhatsApp se pide una sola ubicación.», en «Problemas», debajo del nombre de la pregunta | «It uses a dependent list, and WhatsApp doesn't show them.» · «Only one location can be requested on WhatsApp.» |
+| sin número, en «Avisos»: «Queda solo para la app» · «La organización no tiene un número de WhatsApp conectado. Para mandarlo cuando se conecte, hay que volver a publicar.» | «Only for the app» · «The organization has no WhatsApp number connected. To send it once one is connected, publish again.» |
+| sin número, uno solo para clientes, en «Problemas»: «No se puede publicar» · «Este formulario es solo para clientes, y ellos responden por WhatsApp. Conectá un número o cambiá «Para quién es».» · «Ir a «Para quién es»» | «It can't be published» · «This form is for customers only, and they answer on WhatsApp. Connect a number or change “Who it's for”.» · «Go to “Who it's for”» |
 
 Los de «Ubicación» (230). El punto se escribe igual en los dos idiomas, con punto decimal y seis decimales: «-34.603722, -58.381592»; la precisión sigue el idioma.
 
@@ -64,6 +65,7 @@ Los de «Ubicación» (230). El punto se escribe igual en los dos idiomas, con p
 | el Excel: «Visita · Latitud», «Visita · Longitud» y «Visita · Precisión (m)» | «Visita · Latitude», «Visita · Longitude» and «Visita · Accuracy (m)» |
 | por WhatsApp: «Para completar «Visita a cliente», mandanos tu ubicación.» · «La ubicación es opcional.» · «Seguir sin ubicación», que Meta corta en 20 caracteres | «To fill in “Visita a cliente”, send us your location.» · «The location is optional.» · «Continue without it» |
 | en el detalle: «Se pidió la ubicación» · «Llegó la ubicación» · «Siguió sin la ubicación» | «Location requested» · «Location received» · «Continued without the location» |
+| en el chat: «Pedido de ubicación» · «Esperando la ubicación» · «Ubicación recibida» · «Siguió sin la ubicación» · «Venció sin la ubicación» · «El pedido de ubicación venció.» | «Location request» · «Waiting for the location» · «Location received» · «Continued without the location» · «Expired without the location» · «The location request expired.» |
 
 ## Desde el celular
 
@@ -75,7 +77,7 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]`, `[Featu
 
 | Ruta | Pide | Devuelve |
 | --- | --- | --- |
-| `GET /entry` | `page`, `pageSize`, `search`, `status` (`active`, `deactivated`) | `PagedResult<{id, name, deactivatedAtUtc?, ownCount, lastOwn?: {number, receivedAtUtc}}>`, con lo suyo y sin los totales de la organización (153): lo que puede cargar, con el filtro de disponibilidad, o los dados de baja en los que cargó algo (101) |
+| `GET /entry` | `page`, `pageSize`, `search`, `status` (`active`, `deactivated`) | `PagedResult<{id, name, deactivatedAtUtc?, canLoad, ownCount, lastOwn?: {id, displayNumber, submittedAtUtc}}>`, con lo suyo y sin los totales de la organización (153): lo que puede cargar, con el filtro de disponibilidad; los activos solo para clientes, con `canLoad: false`, para mostrarlos apagados con su motivo (83), o los dados de baja en los que cargó algo (101) |
 | `GET /{id}/entry` | — | `{versionId, versionNumber, name, submitLabel, maxFileBytes, questions[], titles[]}`. Cada pregunta de catálogo trae `options?{total, single?, missingData?}`, y una lista dependiente, de qué pregunta depende. El bloque trae `rows{minRows, maxRows}` y sus preguntas, `rowsOf`, como en la E19. Un cálculo trae su `calculation`, con la forma de la E19, para la vista previa en gris (234), y una ubicación, el tipo `location` |
 | `GET /{id}/entry/questions/{fieldId}/options` | `page`, `pageSize` (50), `search`, `dependsOn?`; sirve también para una pregunta de catálogo del bloque | `PagedResult<{id, text, detail?, fields?}>`; `fields` trae el valor de cada campo numérico que usa una fórmula, para la vista previa |
 | `POST /{id}/records` | multipart: `versionId`, `answers` y los archivos, con `[Idempotent(Mode = IdempotencyMode.DurableReference)]`, `[IdempotencyDurable]` y `[RequestSizeLimit]` de 101 MiB. El bloque va en `answers` como `{fieldId, rows: [[{fieldId, value}, …], …]}`, un arreglo por ítem, en orden, y un ítem vacío es `[]`. Una ubicación es `{latitude, longitude, accuracyMeters?}`, y un cálculo no se manda | 201 `{recordId, displayNumber, submittedAtUtc, calculations[]}` + Location |
@@ -87,9 +89,10 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]`, `[Featu
 | --- | --- |
 | `GET /` y `GET /overview` | `canLoad` y `appOnly`, el de la versión activa o, sin versión, el del borrador; `overview` suma `whatsAppConnected`, que muestra las columnas de la 229 |
 | `GET /{id}` y `PUT /{id}/draft` | `draft.appOnly`, omitido si es false; `whatsAppConnected`; el tipo `location`; `recipientFilters[].mode` suma `answer`, con `sourceFieldId` |
-| `POST /{id}/publication-checks` | `appOnly`, dónde se publica: lo del borrador o, sin número, la app. Con «En la app y por WhatsApp», cada problema que WhatsApp no puede mostrar suma `whatsApp: true`, que el front ofrece pasar a «Solo en la app»: los del canal (`ChannelIssues`, `CatalogTooLarge`, `RowsMinimumOverLimit`, `ConditionNotSupported`) y los nuevos `DependentListNotSupported` y `TooManyLocations`. Con «Solo en la app», sin ellos |
+| `POST /{id}/publication-checks` | `appOnly`, dónde se publica: lo del borrador o, sin número, la app. Con «En la app y por WhatsApp», cada problema que WhatsApp no puede mostrar suma `whatsApp: true`, que el front ofrece pasar a «Solo en la app»: los del canal (`ChannelIssues`, `CatalogTooLarge`, `RowsMinimumOverLimit`, `ConditionNotSupported`) y los nuevos `DependentListNotSupported` y `TooManyLocations`. Con «Solo en la app», sin ellos. Sin número, sin ellos y con el aviso `NoConnectedNumber` en `warnings[]`, sin `fieldId`; uno solo para clientes frena con `ChannelUnavailable` (98) |
 | `POST /{id}/publications` | 200 si se publica en la app, porque termina en la misma UoW; si no, 202, como siempre |
 | `GET …/conversations/{id}/forms` | los formularios de la app, con `appOnly: true` y sin versión, preguntas ni `optionCounts`, para mostrarlos apagados (184). Uno publicado sin número, con un número conectado, va con `NotPublishedForNumber` (103) |
+| Los mensajes del chat [E11 y E14] | un mensaje saliente «Pedido de ubicación», `{formName, state}`, con `state` `Waiting`, `Received`, `Skipped` o `Expired`, y al vencer, la línea «El pedido de ubicación venció.»; uno entrante `location`, `{latitude, longitude}`, con «Ver en el mapa». Son contenido del chat y se guardan cifrados ([ADR 0065](../../decisions/0065-contenido-del-chat-cifrado.md)) |
 | `POST …/records/facets` y `search` | la dimensión y el filtro `channel`; una ubicación filtra solo `answered` y `unanswered`, y no ordena |
 | `GET …/records/{recordId}` | `enteredBy?{name, atUtc}`; la ubicación, `{latitude, longitude, accuracyMeters?}`, y los momentos `locationRequested`, `locationReceived` y `locationSkipped` |
 | `POST …/records/export` | «App» en «Canal» y las tres columnas de una ubicación, vacías sin respuesta y «—» si la pregunta no existía |
@@ -101,7 +104,8 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]`, `[Featu
 | Código | Tipo | Cuándo |
 | --- | --- | --- |
 | `Forms.Entry.VersionChanged` | Conflict | se publicó otra versión |
-| `Forms.Entry.Unavailable` | Conflict | el formulario se dio de baja o no es para empleados |
+| `Forms.Entry.Deactivated` | Conflict | el formulario se dio de baja |
+| `Forms.Entry.NotForEmployees` | Conflict | el formulario es solo para clientes |
 | `Forms.Entry.QuestionNotFound` | NotFound | una pregunta que no es de la versión |
 | `Forms.Entry.AnswersInvalid` | Validation (`questions.<id>`) | cada error en su pregunta, con los códigos de la captura. El de un ítem va en `questions.<bloque>.<n>.<pregunta>`, con `n` desde 0 |
 | `Forms.Draft.DependentListInvalid` | Validation (`questions[i].recipientFilters[j]`) | la pregunta de la que depende no va antes, no es de elegir una, elige de otro catálogo o es del bloque, o la lista está en el bloque |
@@ -139,10 +143,10 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | B2 | Leer para cargar: versión, opciones y filtros en SQL | `A/Modules/Forms/Services/FormEntryService.cs`, `FormEntryOptionsResolver.cs`; suma a `FormOfferBuilder.cs` [E16] | `FormStructuredSource.cs` [E14] | una sola opción; sin el dato; 10.000 opciones con búsqueda; miembros y contactos; un catálogo del bloque, con sus filtros; otra organización; la fórmula y los `fields` de la vista previa |
 | B3 | Listas dependientes | suma a `FormRecipientFilterPolicy.cs` [E16] y a `FormDraftEditor.cs` | esos mismos | cada motivo, también una pregunta del bloque; opción que no corresponde; oculta; copiar |
 | B4 | Enviar: archivos fuera de la UoW, captura, confirmar o borrar | `FormEntrySubmitService.cs`; `P/Modules/Forms/Controllers/BusinessFormEntryController.cs`, `FormEntryDurableAdapter.cs` | `AssistantAttachmentService.cs`, `AssistantControllerBase.Upload` | versión nueva; dado de baja; opción dada de baja; reintento con otra versión; otra respuesta = 422; 101 MiB; archivo falso; sin permiso dentro de la UoW, sin recibo, y repetir con el permiso de vuelta; los ítems, con el mínimo, el máximo y el error de un ítem en su lugar |
-| B5 | «Dónde se completa»: el ajuste, publicar y el chat | suma a `FormDefinition.cs`, `FormDraftEditor.cs`, `FormPublicationService.cs` y `FormVersionCreator.cs` [E14], y `WhatsAppStructuredFormChannel.cs` | esos mismos | el ajuste guardado y sellado; `AppOnlyForCustomers`; con WhatsApp, cada cosa que no puede mostrar frena con `whatsApp: true`; con «Solo en la app», sin Meta ni `Check`; sin número, en la app; pasar de un lado al otro, y hacia WhatsApp sigue la anterior; volver a publicar con número; `ListSendableAsync` con las de la app marcadas; `NotPublishedForNumber` |
-| B6 | Lo propio | suma a `FormRecordQueryService.cs`, `FormRecordFileService.cs` y las lecturas [E15 y E18]; las rutas `own-records` | esos mismos | lo ajeno = 404 en cada ruta; también lo de WhatsApp; sin `formrecords.read`; dado de baja: se ve lo suyo y no se carga |
+| B5 | «Dónde se completa»: el ajuste, publicar y el chat | suma a `FormDefinition.cs`, `FormDraftEditor.cs`, `FormPublicationService.cs` y `FormVersionCreator.cs` [E14], y `WhatsAppStructuredFormChannel.cs` | esos mismos | el ajuste guardado y sellado; `AppOnlyForCustomers`; con WhatsApp, cada cosa que no puede mostrar frena con `whatsApp: true`; con «Solo en la app», sin Meta ni `Check`; sin número, en la app, con `NoConnectedNumber`, y uno solo para clientes frena; pasar de un lado al otro, y hacia WhatsApp sigue la anterior; volver a publicar con número; `ListSendableAsync` con las de la app marcadas; `NotPublishedForNumber` |
+| B6 | Lo propio | suma a `FormRecordQueryService.cs`, `FormRecordFileService.cs` y las lecturas [E15 y E18]; las rutas `own-records` | esos mismos | lo ajeno = 404 en cada ruta; también lo de WhatsApp; sin `formrecords.read`; dado de baja: se ve lo suyo y no se carga; uno solo para clientes, en `/entry` con `canLoad: false` |
 | B7 | El canal en lo que ya existe | suma a `FormRecordQueryFilters.cs`, `FormRecordColumnsBuilder.cs` y `FormRecordSheetBuilder.cs` [E15] | esos mismos | filtro, conteos, navegación y Excel |
-| B9 | La ubicación | suma a `FormQuestionType.cs`, la captura, las lecturas y el Excel [E14 y E15], al participante de la baja, a `WhatsAppFlowSessions`, a la entrada de WhatsApp y a `WhatsAppFormSendService.cs` | `FormRecordFile` [E18] | rangos y redondeo; obligatoria; fuera del bloque, de las condiciones y de las fórmulas; el pedido antes del Flow, «Seguir sin ubicación» y una sola captura; vence a las 24 horas; se vacía al cerrar; la baja de la cuenta |
+| B9 | La ubicación | suma a `FormQuestionType.cs`, la captura, las lecturas y el Excel [E14 y E15], al participante de la baja, a `WhatsAppFlowSessions`, a la entrada de WhatsApp y a `WhatsAppFormSendService.cs` | `FormRecordFile` [E18] | rangos y redondeo; obligatoria; fuera del bloque, de las condiciones y de las fórmulas; el pedido antes del Flow, «Seguir sin ubicación» y una sola captura; el pedido y la ubicación en los mensajes del chat, cifrados; vence a las 24 horas; se vacía al cerrar; la baja de la cuenta |
 | B8 | Contratos y ejemplos | suma a `Contracts/*` y `FormsContractContributor.cs` | esos mismos | cada ruta con 401, 403, feature apagada = 404; `RouteIsolationMatrixTests`; ejemplos exportados, también con ítems |
 
 **Front:**
@@ -150,14 +154,14 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
 | F1 | Tipos, llamadas y subida con avance | suma a `F/src/modules/forms/api/` y `F/src/shared/api/httpClient.ts`, que hoy no tiene avance | `httpClient.ts` | zod estricto; avance y corte; `sameOperation`; otra clave después de un 400 sin errores por pregunta |
-| F2 | Entradas y lista | suma a la lista [E17] y a `FormRecordsPage.tsx` [E15] | esos mismos | quien solo carga; grisado; dados de baja |
+| F2 | Entradas y lista | suma a la lista [E17] y a `FormRecordsPage.tsx` [E15] | esos mismos | quien solo carga, con uno solo para clientes apagado y su motivo; grisado; dados de baja |
 | F3 | El armado de una pregunta | `F/src/modules/forms/components/entry/EntryGrid.tsx`, `EntryZone.tsx` | el tablero | la tabla de los dos anchos y las casillas en columnas (141); «3 de 5 respondidas» en la zona plegada (166); `ResizeObserver`; lecciones 1 a 3 |
-| F4 | Los controles y la lista de catálogo | `components/entry/EntryField.tsx`, `EntryCatalogList.tsx` | `QuestionEditor.tsx` [E14] | búsqueda, «Mostrar 50 más» y la lista dependiente que espera con «Elegí primero «Zona»»; axe |
+| F4 | Los controles y la lista de catálogo | `components/entry/EntryField.tsx`, `EntryCatalogList.tsx` | `QuestionEditor.tsx` [E14] | búsqueda, «Mostrar 50 más» y la lista dependiente que espera con «Elegí primero «Zona»»; «1.500» marca `numberAmbiguous` en su pregunta, y «1,5» llega con punto (207); axe |
 | F5 | Lo condicional y los cálculos | suma a `EntryGrid.tsx`, con `lib/conditions.ts` y `lib/formula.ts` [E19] | los mismos | lo oculto no se manda; una zona sin preguntas visibles; el cálculo en gris, que da lo mismo que el servidor con los ejemplos del redondeo al par |
 | F6 | Los archivos | `components/entry/EntryFiles.tsx` | el tablero | límites antes de enviar; cámara; barra sin palabras |
 | F7 | El bloque | `F/src/shared/ui/EntryRowsTable.tsx` y `EntryRowsCards.tsx`, dos piezas nuevas con su ficha, sobre `Table` de `table.tsx`, en una caja que se desplaza de costado si no entra; suma a `EntryGrid.tsx` | el tablero | la tabla en la página y los recuadros en el panel y el teléfono; el cálculo del ítem, una columna en gris; agregar, mover y quitar, con su foco; con el máximo y el mínimo; el error de cada ítem; «Mantener» y una versión nueva conservan los ítems; axe |
 | F8 | La página, el panel y «Enviada» | `pages/LoadResponsePage.tsx`, `components/entry/EntryPanel.tsx`, `EntrySent.tsx`; `registration.ts` | `useEditForm` y `useUnsavedChangesGuard` | salir; versión nueva sin perder nada; mantener en la página y en el panel, con otra clave en cada envío; el panel con zonas; «Volver a Formularios»; lo cargado fuera del storage |
-| F9 | «Dónde se completa», publicar, editor, lo propio y el chat | suma al editor y a `PublishDialog.tsx` [E14 y E16], `CatalogQuestionFields.tsx` [E16], `ConditionsEditor.tsx` [E19], `FormsPage.tsx`, `FormRecordsPage.tsx` y la lista de «Enviar formulario» [E14] | esos mismos | el ajuste, apagado en uno solo para clientes; «Pasar a «Solo en la app»» en «Problemas» y bajo una condición; «Estado» y «Dónde se completa» en la lista; «Según otra respuesta»; las dos (i) del bloque con la app; una dirección ajena; «Se completa solo en la app.» |
+| F9 | «Dónde se completa», publicar, editor, lo propio y el chat | suma al editor y a `PublishDialog.tsx` [E14 y E16], `CatalogQuestionFields.tsx` [E16], `ConditionsEditor.tsx` [E19], `FormsPage.tsx`, `FormRecordsPage.tsx` y la lista de «Enviar formulario» [E14] | esos mismos | el ajuste, apagado en uno solo para clientes; «Pasar a «Solo en la app»» en «Problemas» y bajo una condición; «Estado» y «Dónde se completa» en la lista; «Según otra respuesta»; la (i) del máximo con la app; una dirección ajena; «Se completa solo en la app.»; el aviso sin número y el freno de uno solo para clientes; el pedido de ubicación y la ubicación en el chat |
 | F10 | La ubicación | `components/entry/EntryLocation.tsx`; suma al editor, a `RecordValues.tsx` y a la planilla [E15] | `EntryFiles.tsx` | los estados de «Usar mi ubicación»; más de 100 m; sin permiso, sin señal y sin la función; la ✕; el enlace al mapa en la planilla y el detalle; apagado en el bloque; axe |
 
 **Al cerrar:** `docs/features/formularios.md` suma la sección, y nace `docs/guides/probar-en-el-celular.md` con lo que dio la prueba del teléfono.

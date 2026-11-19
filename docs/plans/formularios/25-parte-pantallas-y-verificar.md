@@ -6,7 +6,7 @@
 
 Aprobados y publicados en el lienzo v168, con sus tres recorridos guiados: el comprobante que se reconoce y queda en la planilla, el que no se reconoce y termina en «Armar formulario con la IA», y el catálogo «Proveedores de obra», pedido con un Excel («Proveedores» ya existe desde la 12). Muestran lo que existe hasta acá. Las del catálogo propuesto vienen de la E23, que las retiró (167).
 
-**Con el traspaso 15** (lienzo v175, sin publicar) suman sus estados: en la bandeja, «Venció», «Protegido», el tope del día y pasar un repetido; en la lectura, «Lo escribió la IA» y los ejemplos solo para personas; en el chat, el tope del día, el PDF protegido y las planillas; en el Inicio, armar desde un documento, el prefijo corregido, importar en un catálogo que existe, la propuesta que no entra y borrar con sus audios, y por WhatsApp, el motivo cuando no crea y la planilla con un pedido.
+**Con el traspaso 15** (lienzo v175) suman sus estados: en la bandeja, «Venció», «Protegido», el tope del día y pasar un repetido; en la lectura, «Lo escribió la IA» y los ejemplos solo para personas; en el chat, el tope del día, el PDF protegido y las planillas; en el Inicio, armar desde un documento, el prefijo corregido, importar en un catálogo que existe, la propuesta que no entra y borrar con sus audios, y por WhatsApp, el motivo cuando no crea y la planilla con un pedido.
 
 **Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
 
@@ -25,9 +25,9 @@ Aprobados y publicados en el lienzo v168, con sus tres recorridos guiados: el co
 | `Asistente-Org-25` y su teléfono | en el chat del Inicio de la organización, la tarjeta de un formulario y la de un catálogo, «Ver cómo queda», «Nueva», «Reemplazada», «Borrador creado» y «Catálogo creado», sin permiso y «ya existe», el clip y el micrófono |
 | `M-WA-Armar-Con-IA` | por WhatsApp, el pedido con un audio, el resumen de un formulario y el párrafo de un catálogo, sin permiso, «ya existe», un botón viejo y el enlace |
 | `FRM-Catalogo-Propuesta-25` | el catálogo que deja «Crear catálogo», que se edita como cualquiera, con «Propuesta del asistente», quién lo pidió, «Descartar propuesta» y «Aprobar y activar» |
-| `FRM-Formularios-25`, `FRM-Catalogos-25` y `FRM-Faltan-25` | «Armar con la IA» junto a «Nuevo formulario», junto a «Nuevo catálogo» y en cada tema; en la lista de catálogos, «Propuesta del asistente» |
+| `FRM-Formularios-25`, `FRM-Catalogos-25` y `FRM-Faltan-25` | «Armar con la IA» junto a «Nuevo formulario», junto a «Nuevo catálogo» y en cada tema. La lista de formularios conserva «Estado» y «Dónde se completa» de la E20 (229), y la de catálogos dice «Por aprobar» solo en «Estado», sin etiqueta junto al nombre (175 y 206) |
 
-**Mandan sobre esta spec en:** las fichas del front y la decisión 43. Los mensajes del sistema van en el idioma de la cuenta (42). «Dar de baja» no aplica: un documento se descarta.
+**Mandan sobre esta spec en:** las fichas del front y la decisión 43. Los mensajes del sistema van en el idioma de la cuenta (42). «Dar de baja» no aplica: un documento se descarta. El panel de WhatsApp dice «Asistentes», y los casos se suman en la pantalla de cada asistente de la E24.
 
 ## Qué verificar al arrancar
 
@@ -38,7 +38,7 @@ Aprobados y publicados en el lienzo v168, con sus tres recorridos guiados: el co
 | [E18] | El archivo del chat. | Se lee por un puerto, y Forms guarda su copia. |
 | [E20] | La carga de la web. | «Pasar al formulario» la usa a nombre de quien mandó el documento. |
 | [E22] | `FormTemplateDraft` y la copia. | Una sección más se copia sola. |
-| [E23] | La ráfaga, el prellenado y la conversación de una cuenta vinculada. | Están, y el prellenado deja afuera «elegir varias» y las preguntas del bloque. |
+| [E23] | La ráfaga, el prellenado y la conversación de una cuenta vinculada. | Están, y el prellenado deja afuera «elegir varias», las preguntas del bloque, las que tienen «Mostrar si» y la que fija una marca. |
 | ADR | Las de la lectura de documentos y de la IA que arma, que `/plan-etapa` escribe al planificar, desde la 0022 y la 0024 de allá. | Siguen esas dos: la IA propone y una persona crea (154). |
 | Asistente | El `Message` y el `done` del SSE de la E8b, su clip y los topes del turno: 5 llamadas, contando el título, y 2048 tokens de salida. | `Message` suma `proposal?` y `audio?` sin romper lo que lee el front, y una propuesta de 40 preguntas entra en 2048 tokens; si no entra, se sube solo el tope del turno que arma. |
 | Bibliotecas | Con qué se saca el texto de `.docx` y `.xlsx` y las páginas de un PDF. | `.xlsx` con ClosedXML; lo demás se elige al planificar, sin ejecutar nada. |

@@ -1,6 +1,6 @@
 # E15 · Respuestas: planilla, detalle, Excel y tablero (spec)
 
-**Estado:** pendiente · spec de la etapa 15 del bloque (decisiones 34, 57, 78 y 79), con el [formato](plantilla.md) de las etapas. Es lo que ArquitecturaBase llama etapa 3, con el menú `MF1`, el detalle completo (`DC0` y `DC1` ajustado) y el tablero `DOC7-A`. **Solo lee,** salvo los ajustes del tablero de cada persona. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E14. El contrato, los datos y lo que ya se pagó allá están en su [parte de datos y contrato](15-parte-datos-y-contrato.md).
+**Estado:** pendiente · spec de la etapa 15 del bloque (decisiones 34, 57, 78 y 79), con el [formato](plantilla.md) de las etapas. Es lo que ArquitecturaBase llama etapa 3, con el menú `MF1`, el detalle completo (`DC0` y `DC1` ajustado) y el tablero `DOC7-A`. **Solo lee,** salvo los ajustes del tablero de cada persona y los campos sellados de cada pregunta, que la captura de la E14 suma a `FormRecordCatalogFields`. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E14. El contrato, los datos y lo que ya se pagó allá están en su [parte de datos y contrato](15-parte-datos-y-contrato.md).
 
 ## Qué leer
 
@@ -38,7 +38,7 @@ Antes de empezar, en este orden:
 **Las pestañas:** «Respuestas», con su cantidad, y «Tablero» van antes de «Diseño» (79). Se ven con `formrecords.read` y una versión publicada.
 
 **La planilla:**
-- columnas fijas: N°, Recibida, Cargó, Canal y Empresas. Cargó es un empleado o un cliente (49); si alguna fila es de un cliente, la columna «Es cliente», después de Cargó, dice «Sí» o «—», como «Corregida» (no «Cliente», que puede ser una pregunta del formulario), sin una marca al lado del nombre (206). Canal dice «WhatsApp». Empresas son las de quien respondió (24): un cliente no tiene;
+- columnas fijas: N°, Recibida, Cargó, Canal y Empresas. Cargó es un empleado o un cliente (49); si alguna fila es de un cliente, la columna «Es cliente», después de Cargó, dice «Sí» o «—» (no «Cliente», que puede ser una pregunta del formulario), sin una marca al lado del nombre (206). Canal dice «WhatsApp». Empresas son las de quien respondió (24): un cliente no tiene;
 - una columna por pregunta, unidas por `FieldId` entre versiones: primero el orden de la versión activa y después las retiradas;
 - «—» si la pregunta no existía en esa versión, y «Sin respuesta» si quedó vacía. Cero y `false` se distinguen;
 - **«elegir varias»** muestra las opciones en el orden en que se eligieron, separadas por coma;
@@ -131,8 +131,8 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
 | B1 | La condición, sus operadores por tipo, los errores y el permiso | `D/Forms/FormRecordCondition.cs`, `FormRecordFilterErrors.cs`, `FormRecordExportErrors.cs`; suma a `Permissions.cs`, `Permissions{,.en}.resx` y `FormRecordErrors.cs` | `D/Forms/FormCatalogErrors.cs` [E12] | operadores por tipo; `PermissionTextsTests` |
-| B2 | Tabla, índices y migraciones | `I/Modules/Forms/Persistence/Configurations/FormDashboardSettingsConfiguration.cs`; las dos migraciones | `AssistantOrganizationSettingsConfiguration.cs`, `20261010203618_SystemRoleAssistantPermissions.cs` | aislamiento; `SearchIndexTests`; hacia atrás |
-| B3 | Las columnas de todas las versiones, deserializadas una vez | `A/Modules/Forms/Services/FormRecordColumnsBuilder.cs` | `FormCatalogExportBuilder.cs` [E12] | orden activo y retiradas; subcolumnas; publicación concurrente |
+| B2 | Tablas, índices y migraciones | `I/Modules/Forms/Persistence/Configurations/FormDashboardSettingsConfiguration.cs` y `FormRecordCatalogFieldConfiguration.cs`; las dos migraciones | `AssistantOrganizationSettingsConfiguration.cs`, `20261010203618_SystemRoleAssistantPermissions.cs` | aislamiento; `SearchIndexTests`; hacia atrás |
+| B3 | Las columnas de todas las versiones, deserializadas una vez | `A/Modules/Forms/Services/FormRecordColumnsBuilder.cs`; suma a `FormRecordWriter.cs` [E14] | `FormCatalogExportBuilder.cs` [E12] | orden activo y retiradas; subcolumnas; publicación concurrente; una captura repetida no duplica |
 | B4 | Filtros y orden en una sola función, con la planilla | `A/Modules/Forms/Interfaces/Persistence/IFormRecordReader.cs`, `I/Modules/Forms/Persistence/Readers/FormRecordReader.cs`, `FormRecordQueryFilters.cs`; `A/Modules/Forms/Services/FormRecordFiltersPolicy.cs`, `FormRecordQueryService.cs` | `I/Persistence/Readers/CompanyReader.cs`, `FormCatalogFiltersPolicy.cs` [E12] | la tabla de verdad de `unanswered` y `notAsked`; cero y `false`; `anyOf`; opción retirada; orden por opción; una segunda página |
 | B5 | Nombres por lote | suma a `IMemberDirectoryReader.cs`, `MemberDirectoryReader.cs`, `IStructuredContactSource.cs`, su apagado y el de WhatsApp | esos mismos [E12] | un solo pedido por página; ex miembro, sin dato y sin WhatsApp; `IdentityAccessTests` |
 | B6 | Conteos | suma a `FormRecordReader.cs` y `FormRecordQueryService.cs` | `CompanyReader.cs` | cada dimensión ignora la suya; históricas en cero; una respuesta en dos opciones |
@@ -149,7 +149,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | --- | --- | --- | --- | --- |
 | F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` | la API de la E14 | zod estricto con los ejemplos |
 | F2 | La lista y las pestañas | suma a `FormsPage.tsx` y a las pestañas [E14]; `registration.ts` | su tablero | las tres combinaciones de permisos; adónde abre el nombre |
-| F3 | La planilla | `pages/FormRecordsPage.tsx`, `lib/recordFilters.ts`, `lib/values.ts`, `components/records/CustomerTag.tsx` | su tablero | «—», «Sin respuesta», cero y `false`; lo privado fuera de la URL; 403 retira todo; axe |
+| F3 | La planilla | `pages/FormRecordsPage.tsx`, `lib/recordFilters.ts`, `lib/values.ts` | su tablero | «—», «Sin respuesta», cero y `false`; «Es cliente» solo si alguna fila de la página es de un cliente, sin marca al lado del nombre (206); lo privado fuera de la URL; 403 retira todo; axe |
 | F4 | «Filtros» y los chips | `components/records/RecordFiltersMenu.tsx`, `RecordFacetControl.tsx` | su tablero | cada cambio se aplica enseguida; el desplegable y el combo de una opción, sin cantidades, y «Mostrar N más» en el combo (143); el chip nombra lo elegido; «Limpiar todo»; una faceta que falla no frena |
 | F5 | La vista rápida | `components/records/QuickView.tsx`, `RecordValues.tsx`; la excepción en la ficha de tablas | su tablero | teclado, Esc y foco útil; una respuesta tardía se descarta; los campos alineados debajo de su valor y las acciones como íconos (139) |
 | F6 | La pantalla completa | `pages/RecordFullPage.tsx` | su tablero | entrada directa sin filtros privados; «Volver» a la misma fila; el teléfono; la actividad en columnas fijas (139); las dos secciones abiertas, sin plegar |
@@ -203,7 +203,7 @@ La E14 cerrada.
 
 ## En el multitenant
 
-- **Datos de la organización:** todo se lee dentro de RLS. `FormDashboardSettings` es la única tabla nueva.
+- **Datos de la organización:** todo se lee dentro de RLS. Las tablas nuevas son `FormDashboardSettings` y `FormRecordCatalogFields`, que escribe la captura de la E14.
 - **Workers:** no hay.
 - **Feature `forms`:** las rutas llevan `[FeatureGate("forms")]`.
 - **Permisos de organización:** suma `formrecords.export`; `formrecords.read` es de la E14.

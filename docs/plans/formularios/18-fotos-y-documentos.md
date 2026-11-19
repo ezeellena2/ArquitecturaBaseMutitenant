@@ -85,7 +85,7 @@ Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133
 | `FRM-Respuestas-18` y `M-FRM-Respuestas-18` | la planilla con la columna de archivos, el visor y la (i) de exportar, sin filtro de archivos (143) |
 | `FRM-Respuesta-18` y `M-FRM-Respuesta-18` | el detalle, con la pestaña «Fotos» y el visor |
 | `FRM-Respuesta-Completa-18` | la pantalla completa, con «Descargar ▾» |
-| `FRM-Dar-De-Baja-18` | «Lo que se conserva» suma las fotos y los documentos |
+| `FRM-Dar-De-Baja-18` | «Se conserva» suma las fotos y los documentos |
 | `WA-Chats-Adjuntos` y `M-WA-Chats-Adjuntos` | los archivos del chat: lo que llega, antes de mandar, demasiado grande, enviando, enviado, no se pudo y fuera de las 24 horas |
 
 **La planilla:** la foto dice su miniatura y «2 fotos», y el documento, «1 documento» (206). «Sin respuesta» si no se respondió y «—» si la pregunta no existía en esa versión. En el teléfono, en la tercera línea de la fila.
@@ -100,7 +100,7 @@ Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133
 - **«Un archivo no es lo que dice»** es el rechazo por tipo real, y «No se pudo bajar un archivo», el rechazo después de los reintentos. Los dos nombran la pregunta y ofrecen «Mandar de nuevo».
 - **«Reintentando»** se ve mientras corren los reintentos, sin acción del operador.
 - **Fuera de las 24 horas,** adjuntar queda grisado, con el motivo en su tooltip.
-- **Un archivo de un mensaje enviado** que no salió queda «No se pudo», sin reintento.
+- **Un archivo que manda el operador** sigue la [0066](../../decisions/0066-lo-que-no-se-sabe-si-salio.md), como el texto: lo que no salió se reintenta solo, lo dudoso queda «Sin confirmar» hasta que lo revisa alguien que puede enviar en esa bandeja, y lo definitivo queda «No se pudo mandar», con su motivo debajo. Una falla al subirlo a Meta no llega al cliente: se reintenta como lo que no salió.
 - **Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
 
 ## Contrato
@@ -119,7 +119,7 @@ Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133
 | `GET /{id}` y `PUT /{id}/draft` | `questions[]`: tipos `Photo` y `Document`, con `photoSource?`, `minFiles?` y `maxFiles?` |
 | `POST /{id}/publication-checks` | `Forms.Draft.TooManyFiles` y `Forms.Publication.FilesUnavailable`; `ResponseTooLarge` (E14) mide contra 64 KiB si hay una pregunta de archivo |
 | `GET /{id}/records/columns` | columnas de tipo `Photo` y `Document` |
-| `POST …/records/search` y el detalle | el valor `{kind: "files", files[{id, fieldId, name, kind, mediaType, size, hasThumbnail}]}`, con todos los archivos de la pregunta, en orden: la planilla muestra la miniatura del primero, la cantidad y los tipos |
+| `POST …/records/search` y el detalle | el valor `{kind: "files", files[{id, fieldId, name, kind, mediaType, size, hasThumbnail}]}`, con todos los archivos de la pregunta, en orden: la planilla muestra la miniatura del primero y la cantidad |
 | `POST …/records/search` | `answered`, `unanswered` y `notAsked` de las preguntas de archivo, para las condiciones; sin faceta, porque la planilla no las filtra (143) |
 
 `GET /api/me` suma la capacidad `form-files`, por `IModuleCapabilityContributor`: dice si hay almacenamiento.
@@ -157,7 +157,7 @@ Al adjuntar valen los del envío: `WhatsApp.Conversation.WindowClosed` y los dem
 
 ## Datos
 
-Tres migraciones: `<fecha>_FormRecordFiles.cs`, `<fecha>_WhatsAppChatFiles.cs` y la de la sesión. Los paquetes nuevos, `SkiaSharp`, sus nativos de Linux y `OpenMcdf`, van en `Directory.Packages.props`, y solo los usa Infrastructure.
+Tres migraciones: `<fecha>_FormRecordFiles.cs`, `<fecha>_WhatsAppChatFiles.cs` y la de la sesión. Los paquetes nuevos, `SkiaSharp`, sus nativos de Linux y `OpenMcdf`, van en `Directory.Packages.props`, y solo los usa Infrastructure. Cada migración agrega y escribe en el mismo despliegue (`Photo`, `Document` y `Receiving`): es la excepción de la [0060](../../decisions/0060-dos-versiones-conviven.md), anotada en cada una, porque todavía no hay despliegue (la E10 va después del bloque, 123) y volver a la imagen anterior no aplica.
 
 **FormRecordFiles** (`ITenantOwned`, esquema `tenant`, con RLS, sin auditoría: es parte de la respuesta)
 
@@ -178,7 +178,8 @@ Tres migraciones: `<fecha>_FormRecordFiles.cs`, `<fecha>_WhatsAppChatFiles.cs` y
 | `State` | texto | `Pending`, `Stored`, `Failed` o `Skipped` |
 | `MetaMediaId` | texto? | el de entrada, como texto |
 | `Attempts`, `NextAttemptAtUtc` | int, timestamptz? | los mismos intervalos; índice parcial en `Pending` |
-| `StorageKey`, `ThumbnailKey`, `FileName`, `MediaType`, `ByteLength`, `Sha256` | — | como `FormRecordFiles` |
+| `StorageKey`, `ThumbnailKey`, `MediaType`, `ByteLength`, `Sha256` | — | como `FormRecordFiles` |
+| `FileName` | bytea | cifrado con el conversor del contenido del chat ([0065](../../decisions/0065-contenido-del-chat-cifrado.md)): con el propósito de la organización o el de Plataforma |
 | `IdempotencyKey` | texto? | la clave del envío de un operador, única por chat: es el vínculo del modo durable, y se confirma en la misma UoW que el mensaje |
 
 **Otras columnas:** `FormVersions` suma `MaxFileBytes`. `WhatsAppFlowSessions` suma el estado `Receiving` y `Attempts`, que muestra la tarjeta. `ProtectedFlowResponse`, del mensaje entrante, guarda hasta 96 KiB, por la respuesta de 64 KiB. Los reintentos los corre la cola de entrada, con el intento en el mensaje, como en la E14, con las esperas de un día de H11. Las categorías de `IFileStore` son `forms` y `whatsapp`. **Las claves no llevan la organización** (decisión de la E10): el aislamiento lo dan estas tablas y la Api.
@@ -200,8 +201,8 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | B7 | Ver y descargar | `A/Modules/Forms/Services/FormRecordFileService.cs`; suma a `BusinessFormRecordsController.cs` y `FormRecordFileResults.cs` [E15] | `AssistantAttachmentService.DownloadAsync` y `AssistantFileResults.cs` | permiso antes y después de abrir; falta el archivo = 404; `no-store`, `nosniff` y adjunto; de otra organización |
 | B8 | Planilla, conteos, detalle y Excel | suma a `FormRecordColumnsBuilder.cs`, `FormRecordReader.cs` y `FormRecordSheetBuilder.cs` [E15] | esos mismos | `answered` con un archivo; cantidad y nombres en el Excel; sin consultas por fila |
 | B9 | Limpiar lo no confirmado, cada hora | `I/Modules/Forms/FormFileCleanupWorker.cs` y su parte en WhatsApp; `IsStorageReferencedAsync` | `AssistantRetentionWorker.cs` | a las 24 horas; un archivo referenciado se confirma |
-| B10 | Los archivos que llegan al chat | `D/WhatsApp/WhatsAppChatFile*.cs`; suma a `WhatsAppOrganizationInboundWriter.cs` y `PlatformWhatsAppInboundWriter.cs`; `A/Modules/WhatsApp/Services/WhatsAppChatFileService.cs`, `I/Modules/WhatsApp/WhatsAppChatFileWorker.cs` | `WhatsAppBroadcastWorker.cs`, `WhatsAppChatMessageBase.cs` | cada tipo; lo que no se guarda; reintentos; un mensaje trabado no frena a los demás; organización y Plataforma |
-| B11 | Mandar un archivo | suma a `WhatsAppReplyIssuer.cs`, `WhatsAppOutboundMessage.cs` y `WhatsAppCloudClient.cs`; la ruta en `WhatsAppConversationsControllerBase.cs`; `P/Modules/WhatsApp/WhatsAppChatFileDurableAdapter.cs` | `AssistantControllerBase.Upload`, `AssistantDurableAdapter.cs` y `WhatsAppReplyIssuer.IssueAsync` | ventana cerrada; topes por tipo; idempotencia; falla al subir a Meta; un archivo por mensaje |
+| B10 | Los archivos que llegan al chat | `D/WhatsApp/WhatsAppChatFile*.cs`; suma a `WhatsAppOrganizationInboundWriter.cs` y `PlatformWhatsAppInboundWriter.cs`; `A/Modules/WhatsApp/Services/WhatsAppChatFileService.cs`, `I/Modules/WhatsApp/WhatsAppChatFileWorker.cs` | `WhatsAppBroadcastWorker.cs`, `WhatsAppChatMessageBase.cs` | cada tipo; lo que no se guarda; reintentos; un mensaje trabado no frena a los demás; organización y Plataforma; el nombre cifrado, que otra organización lee vacío |
+| B11 | Mandar un archivo | suma a `WhatsAppReplyIssuer.cs`, `WhatsAppOutboundMessage.cs` y `WhatsAppCloudClient.cs`; la ruta en `WhatsAppConversationsControllerBase.cs`; `P/Modules/WhatsApp/WhatsAppChatFileDurableAdapter.cs` | `AssistantControllerBase.Upload`, `AssistantDurableAdapter.cs` y `WhatsAppReplyIssuer.IssueAsync` | ventana cerrada; topes por tipo; idempotencia; falla al subir a Meta; lo dudoso queda «Sin confirmar» (0066); un archivo por mensaje |
 | B12 | Ver | suma a la lectura de mensajes; rutas de archivos | `AssistantAttachmentService.DownloadAsync` | sin permiso de la bandeja; la lista de chats no trae nombres |
 | B13 | Capacidad, contratos y ejemplos | `FormsCapabilityContributor.cs`; suma a `FormsContractContributor.cs` y al de WhatsApp | `AssistantCapabilityContributor.cs` | cada ruta con 401, 403, feature apagada = 404; `RouteIsolationMatrixTests`; ejemplos exportados |
 

@@ -7,7 +7,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E23](23-asistente.md): el agente, un turno y sus tablas; y la ficha [WhatsApp](../../features/whatsapp.md): equipos y bot.
-2. **Decisiones** de la hoja de ruta: 28, 35, 43, 46, 52, 68, 69, 77 y 78. ADR [0051](../../decisions/0051-precision-tecnica-de-costos-ia.md).
+2. **Decisiones** de la hoja de ruta: 28, 35, 43, 46, 52, 68, 69, 77, 78 y 206. ADR [0051](../../decisions/0051-precision-tecnica-de-costos-ia.md).
 3. **Fichas:** [modulos](../../rules/modulos.md), [concurrencia](../../rules/concurrencia.md), [multitenancy](../../rules/multitenancy.md), [guardado](../../rules/guardado.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md) y [tests](../../rules/tests.md).
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 5. **Referencia de producto,** solo para leer: en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`, el anexo F, F2.
@@ -39,7 +39,7 @@ Datos de ejemplo: el principal, Delta; Delta Soporte y Delta Ventas, de esos equ
 
 | Tablero | Qué muestra | Estados |
 | --- | --- | --- |
-| `WA-Asistentes` y `M-WA-Asistentes` | la lista, como las de WhatsApp: el asistente (el principal, con su marca), sus equipos y su estado. Tiene «Nuevo asistente» y el ⋮ con Editar y Dar de baja o Reactivar. Cada uno abre `WA-Asistente` | el menú, el del principal («Dar de baja» grisado, con el motivo), nuevo asistente, falta el nombre, creando, dar de baja, uno de baja, un solo asistente, sin equipos, cargando y error |
+| `WA-Asistentes` y `M-WA-Asistentes` | la lista, como las de WhatsApp: el asistente, si es el principal, en su columna (206), sus equipos y su estado. Tiene «Nuevo asistente» y el ⋮ con Editar y Dar de baja o Reactivar. Cada uno abre `WA-Asistente` | el menú, el del principal («Dar de baja» grisado, con el motivo), nuevo asistente, falta el nombre, creando, dar de baja, uno de baja, un solo asistente, sin equipos, cargando y error |
 | `WA-Equipo-Asistente` y `M-WA-Equipo-Asistente` | «Asistente de este equipo», un desplegable en «Editar equipo» de la 11. Sin elegir, contesta el principal | elegir el asistente (uno de baja no se elige), sin elegir, un asistente de baja y un solo asistente |
 | `WA-Chats-Casos-24` y `M-WA-Chats-Casos-24` | sobre `WA-Chats-Casos`: el nombre del asistente que contesta, en la cabecera, la lista, cada respuesta y «Por qué respondió esto». Un chat nuevo arranca con el menú del bot | eligió Soporte, por qué respondió, pasó a Ventas (con el mismo historial), un equipo sin asistente (contesta el principal) y un solo asistente, sin menú |
 
@@ -53,7 +53,7 @@ El recorrido guiado «Dos equipos con su asistente» muestra a Lucía asignando 
 | `POST /api/organization/whatsapp/assistant/agents` | `whatsapp.manage` | `{name}`, con `[Idempotent]` | 201 + Location; arranca con la copia del perfil, los casos y los límites del principal |
 | `GET` y `PUT /api/organization/whatsapp/assistant/agents/{id}` | `whatsapp.manage` | lo de la E23 | el agente y 200 `{version, knowledgeVersion}` |
 | `POST …/agents/{id}/deactivation` y `reactivation` | `whatsapp.manage` | `{version}` | 200 `{version}` |
-| `POST /api/organization/whatsapp/assistant/agents/{id}/test` | `whatsapp.manage` | `{text, inbox}` | lo de la E23 |
+| `POST /api/organization/whatsapp/assistant/agents/{id}/test` | `whatsapp.manage` y atender esa bandeja | `{messages[], inbox}`, de 1 a 5, como la E23 | lo de la E23: sin `formrecords.read`, sin el porqué |
 | `PUT /api/organization/whatsapp/teams/{id}/assistant` | `whatsapp.manage` | `{assistantId?, version}` | 200 `{version}` |
 
 Las rutas `/whatsapp/assistant/agent` de la E23 pasan a estas, y nombran al principal. El equipo suma `assistantId?` y `assistantName?`. Los mensajes del chat suman `assistantName?`.

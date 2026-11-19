@@ -13,7 +13,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T9, T11, T13, T24, la §3, la §6, punto 7, y la §14; la [E15](15-respuestas.md): filtros, valores, Excel y tablero; la [E16](16-datos-de-las-personas.md): los filtros por destinatario y sus avisos; la [E12](12-catalogos.md): C5, y la [E13](13-campos.md): los tipos de campo.
-2. **Decisiones** de la hoja de ruta: 35, 43, 53, 54, 78, 146, 157, 162, 168, 174, 177, 178, 204, 206, 226, 227, 232, 233 y 235.
+2. **Decisiones** de la hoja de ruta: 35, 43, 53, 54, 78, 146, 157, 162, 168, 174, 177, 178, 204, 206, 226, 227, 229, 232, 233 y 235.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -35,7 +35,7 @@ Antes de empezar, en este orden:
 **Preguntas condicionales:**
 - una pregunta puede tener «Mostrar si», con hasta 10 condiciones unidas con «y», sobre preguntas anteriores: sí/no y elegir una (`in`), elegir varias (`anyOf`), número y fecha (`equals`, `gte`, `lte`), y respondida o no (`answered`, `unanswered`). Es la gramática de la E12 (C5), con la misma regla de la E15;
 - en WhatsApp, la pregunta aparece o se oculta mientras la persona completa el formulario, con el componente `If` **[Meta]**, armado como dice la [parte](19-parte-contrato-datos-y-pasos.md#contrato): Meta no acepta «y» ni «o» dentro de un `If` y anida hasta tres. Un título de sección se oculta con sus preguntas si todas tienen la misma condición; si no, se ve siempre;
-- **lo que el canal no pueda mostrar no se publica:** la comprobación lo marca en su pregunta, y nunca se manda sin la condición. Entre eso están un número, elegir varias, varias respuestas de una pregunta de catálogo y más de tres condiciones en cadena. **«Mostrar si» no se achica por eso** (235): en un formulario que va por WhatsApp, el editor lo avisa debajo de la condición, con su motivo («WhatsApp no muestra una condición con números.»), y publicar frena igual;
+- **lo que el canal no pueda mostrar no se publica:** la comprobación lo marca en su pregunta, y nunca se manda sin la condición. Entre eso están un número, una fecha anterior o posterior a otra, elegir varias, varias respuestas de una pregunta de catálogo y más de tres condiciones en cadena. **«Mostrar si» no se achica por eso** (235): en un formulario que va por WhatsApp, el editor lo avisa debajo de la condición, con su motivo («WhatsApp no muestra una condición con números.»), y publicar frena igual;
 - **el servidor vuelve a evaluar al capturar y nunca confía en lo que llega.** Evalúa en orden, y una pregunta oculta cuenta como sin respuesta para las que dependen de ella: una condición sobre ella se cumple solo con `unanswered`, y con los demás operadores las que dependen se ocultan en cadena. Una pregunta oculta no guarda valor, y «obligatoria» vale solo si se mostró;
 - **«No se mostró»:** la respuesta guarda qué preguntas quedaron ocultas. En la planilla se ve como «No se mostró», distinto de «Sin respuesta» y de «—». Las condiciones suman `notShown`, y `unanswered` también lo incluye; la planilla no lo filtra (143);
 - una pregunta condicional de catálogo con un problema de oferta frena el envío igual: no se sabe de antemano si se va a ver.
@@ -86,7 +86,7 @@ Aprobados y publicados en el lienzo v153, con el recorrido guiado `un-pedido-con
   - `FRM-Editor-Lineas`, con «Agregar bloque», los textos con «ítem» (177) y un catálogo del bloque con sus filtros (168);
   - `FRM-Respuestas-19`, `FRM-Respuesta-19` y `WA-Chats-Respuesta-19`, con los ítems, «Filtros» (144) y el detalle alineado (139);
   - `FRM-Publicar-19`, sin teléfono, con «Pasan al bloque» y el mínimo que frena (178).
-- **Se redibujan en la v175** la pantalla de cierre (204), el cálculo en el bloque (233), el aviso de «Mostrar si» (235), «3 ítems» (206) y el diálogo de exportar con «Filas» (227), nuevo; la lista está al final del [plan de la etapa](../2026-11-08-etapa-19-condiciones-calculos-y-lineas.md).
+- **Redibujados y aprobados en la v175** la pantalla de cierre (204), el cálculo en el bloque (233), el aviso de «Mostrar si» (235), «3 ítems» (206) y el diálogo de exportar con «Filas» (227), nuevo; la lista está al final del [plan de la etapa](../2026-11-08-etapa-19-condiciones-calculos-y-lineas.md). **Se redibujan** `FRM-Editor-Condiciones` y `FRM-Publicar-19`: el aviso también debajo de una fecha anterior o posterior (229 y 235).
 
 | Tablero | Qué muestra |
 | --- | --- |
@@ -148,7 +148,7 @@ Aprobados y publicados en el lienzo v153, con el recorrido guiado `un-pedido-con
 - Fotos o documentos en un ítem, ordenar por el bloque, condiciones sobre todos los ítems o su cantidad, duplicar un ítem, importar ítems desde un Excel y la lista de lo cargado antes de enviar por WhatsApp.
 - Mostrar el total en WhatsApp antes de enviar.
 - Funciones más allá de las cuatro operaciones y la suma de una pregunta del bloque.
-- Lo que suman las etapas siguientes: la carga del bloque desde la web, con «Agregar ítem»; la (i) del máximo y la de «Se carga varias veces» con lo que hace la app, y un mínimo de más de 10 que deja solo para la app un formulario para empleados o para los dos (E20 y 178); el PDF con el bloque entero y «Algún ítem de…» en las reglas (E21).
+- Lo que suman las etapas siguientes: la carga del bloque desde la web, con «Agregar ítem»; la (i) del máximo con lo que hace la app, y «Pasar a «Solo en la app»» como salida del freno de un mínimo de más de 10 en un formulario para empleados o para los dos (E20 y 229); el PDF con el bloque entero y «Algún ítem de…» en las reglas (E21).
 - Una lista dependiente dentro del bloque y elegir primero por un campo: quedan para después de la E25 (191).
 
 ## Cómo se cierra
