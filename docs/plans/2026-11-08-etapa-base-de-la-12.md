@@ -7,7 +7,7 @@
 | Contrato | K1 | Hecha (`8b23501c`, `534f4308`) |
 | Back | B1–B10 | Hecha (`28652183` a `e1de70c9`, y `75fe6a93`) |
 | Front | F1–F16 | Hecha (`8ace5c06` a `ac7de89b`, en el front) |
-| Integración y puerta | I1–I4 | Pendiente |
+| Integración y puerta | I1–I4 | I1, I3 e I4 hechas (puerta en verde el 2026-11-19). Falta la I2, que hace el usuario en Meta |
 
 ## Forma de trabajo
 
@@ -112,9 +112,18 @@ Leé AGENTS.md del front, este plan y la spec Base de la 12. Esperá K1, corré 
 3. **I3 · Puerta.** Correr `/puerta` una vez sobre copias del corte: build y `dotnet test --no-build`; front build, lint, test y `contracts:check`; E2E real; `realinear-docs --detectar` y `estado-docs --detectar`; galería solo de pantallas cambiadas a 1440/390/320; `/recorrido`; y revisión de la lista de control. La retirada del módulo no corresponde: ya se verificó en la E11 y esta base no cambia su composición.
 4. **I4 · Recorrido.** Campana de los tres accesos; una tabla, fecha y botón por área; otro acceso; baja/reactivación y borrar cuenta; cargar teléfonos sin/con casilla; y una pantalla de cada área a 320. El resultado queda en la tabla breve de esta sección.
 
-| Puerta | Resultado |
+| Puerta | Resultado (2026-11-19; corte: back `eb3912a9`, front `bec09846`) |
 | --- | --- |
-| Back / Front / Contrato / E2E / Documentación / Galería / Recorrido | Pendiente |
+| Back | Build con 0 advertencias; tests 3465/3465 |
+| Front | Build y lint con 0 errores; tests 3596/3596 |
+| Contrato | `contracts:check` en verde |
+| E2E real | 47/47 |
+| Documentación | `realinear-docs` y `estado-docs` en 0 |
+| Galería | 103 casos a 1440, 390 y 320; la mira el usuario |
+| Recorrido | 224/224 a 1440 y 390 (`8f4796d0` y `bec09846` arreglan dos esperas del script) |
+| Lista de control | Back: A, B, C y E arreglados (`f605f49d`, `a1fc8ed1`, `42ab50b8`, `c02a0209`); la D va abajo. Front: los cinco arreglados (`b63fe9fa` a `a9b50dc1`) |
+
+**Excepción de la 0060 (D de la lista de control):** `RetireLoginLinks` borra `identity.LoginLinks` en el mismo despliegue que el código que la usa. Vale porque todavía no hubo un despliegue (E10): no hay una versión vieja que conviva con la nueva.
 
 **Texto para el chat de Integración**
 
@@ -143,7 +152,7 @@ La F5 de la E10 entra completa acá; E10 sigue después del bloque. E12–E25 ag
 Del front (2026-11-09): el contrato de la API no cambió; los tipos salen de `npm run contracts` sobre K1.
 - `docs/contracts/frontend-routes.json`: sin `/login/enlace` y con `/avisos` y `/plataforma/avisos` (B6, `75fe6a93`). «Otro acceso» (F7) no suma rutas: se muestra en la ruta del link.
 - La campana lee `params.name` en `organizationPending` y `recoveryRequested`; sin él, el aviso va sin nombre. `personalLoginMethod` no lleva `params`.
-- La ficha de una cuenta de Plataforma no trae el motivo de la baja que pidió la plataforma (`deletion` no tiene `reason`): la ⓘ de su estado usa `lastStateChange.reason` si llega y, si no, «—».
+- La ficha de una cuenta de Plataforma no trae el motivo de la baja que pidió la plataforma (`deletion` no tiene `reason`): la ⓘ de su estado usa `lastStateChange.reason` si llega y, si no, «—». En la I1 se confirmó que llega: la baja que pide Plataforma registra `AccountDeletionRequested` con el motivo, y `PlatformAccountReader` lo devuelve como último cambio de estado. El contrato no cambia.
 
 ## Para decidir
 

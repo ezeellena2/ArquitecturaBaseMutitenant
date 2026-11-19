@@ -1,6 +1,6 @@
 # Asistente: contrato E8b
 
-**Revisado:** 2026-11-18
+**Revisado:** 2026-11-19
 
 Freeze T01: 56 operaciones nuevas (45 chat, 11 gestión), 40 rutas. Los controllers llaman interfaces y servicios de Application. T02 implementa instalación, persistencia privada, gates, lectura de conversaciones propias y configuración global sin clave; las formas HTTP congeladas se conservan. T03 implementa configuración, políticas y catálogo técnico editable; T05c implementa State en los tres accesos y T06b las lecturas de Uso. Turnos de proveedor, archivos y workers restantes se completan según sus tareas.
 

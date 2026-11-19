@@ -1,6 +1,6 @@
 # Inicio de la organización
 
-**Revisado:** 2026-11-07
+**Revisado:** 2026-11-19
 
 Lo primero que ve un miembro al entrar a `/org`. Arriba, una tarjeta por área con un dato real; abajo, «Para resolver»: lo que pide una acción y quien mira puede resolver. El lienzo v120 (front `74141645`, aprobado el 12/10) agrega los grupos de pendientes a Inicio-Org, M-Inicio-Org, Inicio-Miembro, Asistente-Org y Asistente-Plat; `Criterio-Tablas` fija su presentación. La decisión está en la [ADR 0040](../decisions/0040-para-resolver.md).
 
@@ -10,7 +10,7 @@ Lo primero que ve un miembro al entrar a `/org`. Arriba, una tarjeta por área c
 - **Quién ve qué:**
   - con algún permiso asignado por roles de la organización, Inicio-Org: una tarjeta por área solo si tiene su permiso (`users.read`, `roles.read`, `companies.read`, `publicpage.manage`, `settings.read`, `audit.read`);
   - sin permisos asignados por roles de la organización, Inicio-Miembro: «Tus empresas», las empresas donde tiene algún permiso según `IPermissionService.GetPermissionsByCompanyAsync`, con sus roles y los miembros activos si tiene `company.members.read`.
-  El modo usa `GetAssignedOrganizationPermissionsAsync`; las tarjetas y pendientes reciben los permisos efectivos de `GetOrganizationPermissionsAsync`. Una proyección desde empresa no cambia el modo, aunque habilite una ruta de organización. Un rol organizacional explícito que solo concede `assistant.use` conserva Inicio-Org. `HomeTests` comprueba ambos casos y al Administrador de empresa con la feature apagada y encendida.
+  El modo usa los permisos de los roles organizacionales asignados (`BusinessPermissions.Assigned`); las tarjetas y pendientes reciben los efectivos. Las dos vistas y las de cada empresa salen de una sola lectura, con `GetBusinessPermissionsAsync`. Una proyección desde empresa no cambia el modo, aunque habilite una ruta de organización. Un rol organizacional explícito que solo concede `assistant.use` conserva Inicio-Org. `HomeTests` comprueba ambos casos y al Administrador de empresa con la feature apagada y encendida.
 - **Los datos de cada tarjeta** salen del reader de su área, así el número es el mismo que muestra el área: usuarios y empresas, el total de sus filtros; roles, el total del listado; la página, Publicada, Borrador o Despublicada por la plataforma; el dominio verificado o, si no hay, el que espera verificación; la fecha del último cambio de la auditoría.
 - **«Para resolver»** junta lo que aporta cada `IPendingItemSource`, con el tenant del claim y los permisos de quien mira:
   - `OrganizationUserPendingItems`: invitación vencida con `users.invite`; baja pedida con `users.manage`; sin permisos de la organización, la invitación vencida de cada empresa donde tiene `company.members.manage` y que es únicamente de esa empresa (membresía activa en ella, sin roles de la organización ni otra membresía activa: la que puede reenviar desde la ficha, `CompanyInvitationPolicy`), una fila por empresa, con `companyId` y `companyName`;

@@ -2,6 +2,11 @@
 
 **Estado:** en curso · lo que las revisiones dejaron para una etapa posterior.
 
+## Observaciones de la puerta de la base de la 12
+
+- **Un cuelgue que no se repitió.** En el recorrido del 2026-11-19, `/api/reference-data` y `/api/directory` quedaron colgados una vez en el E8-02: el país del teléfono se quedó en «Cargando…» y el idioma, vacío. No se repitió en cuatro corridas, con el corte de antes de los arreglos y con el de después. Lo que respondió no toca la base ni la caché; lo que se colgó sí. Si vuelve a pasar, mirar Redis y la conexión a la base en el entorno del recorrido. El informe está en `.local/puerta-base-12/2026-11-19/recorrido-fallo-original/`.
+- **Los listados paginados no guardan caché.** En el front, `usePagedQuery` pasa `staleTime: undefined` y eso pisa los 30 s de la app: cada listado vuelve a pedirse siempre. Hay que corregirlo con un test que cuente los pedidos al volver a una lista.
+
 ## Observaciones de 3c para etapas posteriores
 
 - `InvitationPage` sincroniza el fragmento de invitación a estado local después de retirarlo de la barra de direcciones; oxlint informa `react(set-state-in-effect)`. Refactorizar ese paso manteniendo que el token no llegue a la primera consulta mientras siga en la URL. El lint termina con código 0 y el E2E real cubre el flujo; no bloquea 3c.
