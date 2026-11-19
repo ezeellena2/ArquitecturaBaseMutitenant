@@ -26,7 +26,7 @@ Lienzo v176. Lo que ya está dibujado:
 **Faltan** (se dibujan antes de la F10; la tarea queda escrita):
 - el estado de entrega de una invitación (`Pending`, `Sent`, `Uncertain`, `Failed`) en `Usuarios`, `Usuario`, `Empresa` (miembros invitados), `Cuentas` y `Cuenta-Plat` (la invitación de un operador), con «Reenviar» que pide revisar con la persona si quedó «Sin confirmar» (0066 §4);
 - «Sin confirmar» en un mensaje de `WA-Chats` y `Plat-WA-Chats`, con «Marcar como revisado» y «Lo revisó Ana Gómez · 19/11/2026, 14:35», y los ocho motivos de «No se pudo enviar»;
-- «Sin confirmar» en `WA-Difusion-Resultados` (para decidir 1 del plan);
+- «Sin confirmar» en `WA-Difusion-Resultados` (255);
 - la (i) de `Auditoria-Plat`: «Los ingresos se guardan doce meses.» (0062 §6);
 - sus teléfonos.
 

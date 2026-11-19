@@ -1,6 +1,6 @@
 # Base de la 12, segunda parte · plan ejecutable
 
-**Estado:** pendiente · Spec: `docs/plans/formularios/base-de-la-12-segunda-parte.md` (contrato completo, datos y pasos con sus tests). Va después de la puerta de la base de la 12 y antes de la E12 (decisión 214). Tableros: lienzo v176; faltan los de la F10, que se dibujan antes de programarla. Quedan dos puntos de producto en «Para decidir»; el plan sigue con la recomendada de cada uno.
+**Estado:** pendiente · Spec: `docs/plans/formularios/base-de-la-12-segunda-parte.md` (contrato completo, datos y pasos con sus tests). Va después de la puerta de la base de la 12 y antes de la E12 (decisión 214). Tableros: lienzo v176; faltan los de la F10, que se dibujan antes de programarla. Sin decisiones pendientes: las dos de producto las tomó el usuario (255 y 256).
 
 **Fuente:** las secciones del [backlog](../backlog.md) «Traspaso 15, el núcleo: para programar», «Traspaso 15, diseño, fechas y números: para la segunda parte de la base», «Traspaso 15, la IA: para la segunda parte de la base» y, de «Traspaso 15, WhatsApp y ARCA: para programar», lo de WhatsApp y la CUIT. Lo que esas secciones mandan a otra etapa está en «Queda afuera».
 
@@ -207,5 +207,5 @@ Leé AGENTS.md de los dos repos, este plan, la spec y la skill /puerta. Integrá
 
 ## Para decidir
 
-1. **Una difusión con un destinatario dudoso.** Si no se sabe si le salió, la fila del destinatario dice «Sin confirmar», sin revisión, y no cuenta como enviado ni como «No llegó» (recomendada: la misma palabra en todo el sistema, y la revisión de la 0066 es de los chats). La otra opción es contarlo en «No llegó», con el motivo «No sabemos si salió». El plan sigue con la recomendada, y el tablero `WA-Difusion-Resultados` la dibuja.
-2. **La parte del Gmail compartido con ArquitecturaBase** (0063 §2). Se propone un tope global de 80 correos por día, con una reserva de 20 para invitaciones, hasta separar la cuenta antes de producción. Los demás topes quedan con los valores de la 0063 (recomendada: no le pide nada a ArquitecturaBase, 108). La otra opción es crear ahora una cuenta propia y usar 400 y 50. El plan sigue con la recomendada, como valores de la configuración.
+1. **Una difusión con un destinatario dudoso:** «Sin confirmar», sin revisión, y no cuenta como enviado ni como «No llegó» (255, decidida por el usuario el 2026-11-19). La dibuja `WA-Difusion-Resultados`.
+2. **La parte del Gmail compartido con ArquitecturaBase** (0063 §2): un tope global de 80 correos por día, con 20 reservados para invitaciones, hasta separar la cuenta antes de producción; los demás topes, con los valores de la 0063 (256, decidida por el usuario el 2026-11-19). Van como valores de la configuración.
