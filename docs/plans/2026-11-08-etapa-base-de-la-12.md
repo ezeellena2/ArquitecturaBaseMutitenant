@@ -7,7 +7,7 @@
 | Contrato | K1 | Hecha (`8b23501c`, `534f4308`) |
 | Back | B1–B10 | Hecha (`28652183` a `e1de70c9`, y `75fe6a93`) |
 | Front | F1–F16 | Hecha (`8ace5c06` a `ac7de89b`, en el front) |
-| Integración y puerta | I1–I4 | I1, I3 e I4 hechas (puerta en verde el 2026-11-19). Falta la I2, que hace el usuario en Meta |
+| Integración y puerta | I1–I4 | I1, I3 e I4 hechas (puerta en verde el 2026-11-19). I2: las cinco plantillas de la cuenta, aprobadas en Meta el 2026-11-20; falta la prueba del botón `Entrar a mi cuenta` desde el celular |
 
 ## Forma de trabajo
 
