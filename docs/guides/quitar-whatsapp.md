@@ -44,6 +44,8 @@ Después del scaffolding, quitá sólo en la copia:
 - `Api.IntegrationTests/TestFeatures/WhatsAppBrowser` y sus pruebas exclusivas `WhatsAppBrowserFixtureTests`/`WhatsAppBrowserControlTests`; exclusivamente la rama `--whatsapp-browser` y sus referencias CLR en `tools/ArquitecturaBaseMultitenant.RealE2ESetup/Program.cs`.
 - En `tools/ArquitecturaBaseMultitenant.RealE2ESetup/RecorridoHost.cs`, retirás el `using` de `TestFeatures.WhatsAppBrowser`, la llamada `RecorridoWhatsAppModule.Configure(builder)`, la construcción `new WhatsAppFileBridge(...)` y `bridge.TryExecuteAsync(...)`. Conservá `RecorridoHost`, `RecorridoApiHost`, `TestFeatures/Recorrido`, `ApiFactory.ForIsolatedDatabase`, la preparación E7, el certificado efímero, el bombeo de correo y todos los comandos núcleo. Compilá también RealE2ESetup en la copia para comprobar estos bindings.
 
+En la raíz, `.mcp.json` y `.codex/config.toml` registran solo el MCP de Meta (`whatsapp_business_tools`): borrá los dos archivos, o solo esa entrada si les sumaste otros servidores.
+
 **Conservá el ProjectReference de RealE2ESetup a Api.IntegrationTests.** `RecorridoHost`, `ApiFactory` con base externa y `E7Preparation` sostienen el recorrido núcleo Email/Google. Quitá la exclusión temporal del descubrimiento EF: el contribuidor ya no existe y el modelo debe seguir coincidiendo con el snapshot nuevo.
 
 ## Guardas que permanecen

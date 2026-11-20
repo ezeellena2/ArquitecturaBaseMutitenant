@@ -5,6 +5,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 ## Raíz
 
 ```text
+├── .codex/  el MCP de Meta para Codex (config.toml); el de Claude va en .mcp.json, en la raíz
 ├── .github/
 │   └── workflows/
 ├── docs/

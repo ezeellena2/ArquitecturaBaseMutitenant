@@ -122,6 +122,8 @@ El túnel se prende igual que en ArquitecturaBase:
 dotnet user-secrets set "DevTunnel:Enabled" "true" --project src/ArquitecturaBaseMultitenant.AppHost
 ```
 
+**El MCP de Meta.** `.mcp.json` (Claude) y `.codex/config.toml` (Codex) registran el servidor oficial [WhatsApp Business Tools](https://developers.facebook.com/documentation/mcp/whatsapp-business-tools-mcp), igual que en ArquitecturaBase. El repo guarda solo su dirección pública. Para usarlo, abrí en Claude `/mcp` › `whatsapp_business_tools` › **Authenticate** (en Codex, *Settings › MCP servers*) y entrá con una cuenta de Meta que administre el negocio y la app. La autorización queda en tu sesión, y ninguna clave pasa por el agente. Antes de cambiar números, plantillas o webhooks, el agente lista los negocios y te pide el visto bueno. Si Meta todavía no lo habilitó para tu cuenta, dice *Not yet available for your account*.
+
 **Gmail:** la misma contraseña de aplicación sirve para los dos proyectos. El límite de unos 500 correos por día es **compartido**: los topes diarios de los dos proyectos se reparten ese cupo ([topes de correo](#topes-diarios-de-correo-adr-0063-sin-programar)).
 
 ## 5. Qué pasa si falta algo (fallo claro, nunca a medias)
