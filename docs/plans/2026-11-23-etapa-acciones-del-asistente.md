@@ -1,6 +1,6 @@
 # Acciones del asistente · plan ejecutable
 
-**Estado:** pendiente · Spec: `docs/plans/formularios/acciones-del-asistente.md` (contrato, datos y pasos con sus tests). Va después de la puerta de la segunda parte de la base y antes de la E12 ([ADR 0068](../decisions/0068-acciones-del-asistente.md); decisión 268). Las decisiones de producto las tomó el usuario el 2026-11-23: el lugar, el alcance (Usuarios y Roles enteros) y que se ofrezcan calificadas antes de la prueba integral. Los diez tableros de la spec («Pantallas») están dibujados en el lienzo v177; F2 a F4 esperan que el usuario los apruebe.
+**Estado:** pendiente · Spec: `docs/plans/formularios/acciones-del-asistente.md` (contrato, datos y pasos con sus tests). Va después de la puerta de la segunda parte de la base y antes de la E12 ([ADR 0068](../decisions/0068-acciones-del-asistente.md); decisión 268). Las decisiones de producto las tomó el usuario el 2026-11-23: el lugar, el alcance (Usuarios y Roles enteros) y que se ofrezcan calificadas antes de la prueba integral. Los diez tableros de la spec («Pantallas») están dibujados en el lienzo v178; F2 a F4 esperan que el usuario los apruebe.
 
 **Fuente:** la ADR 0068, sus dos revisiones adversariales del 2026-11-23 y la sección «Acciones del asistente» de ArquitecturaBase (`docs/plans/2026-11-19-procesos-del-campo.md`, solo para leer).
 
