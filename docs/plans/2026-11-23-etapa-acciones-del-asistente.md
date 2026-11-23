@@ -117,6 +117,7 @@ Los pasos, con sus archivos, lo que copian y sus tests, están en la spec (§Pas
    - **El turno:** sella la lista en `AssistantTurns.OfferedActions` (jsonb, nulo), con su migración. La lista precargada va en `AssistantTurnPreparationBuilder` como dato, con las áreas si son más de 40.
    - **Las herramientas:** `read_action` y `propose_action` corren en el alcance de B2. `AssistantActionToolData` entra en el `switch` cerrado, con sujetos vacíos probados.
    - **El rechazo** vuelve como dato y no corta el turno; también una segunda propuesta.
+   - **Lo armado como dato:** una acción puede declarar que sus campos salen de la definición de su destino (las opciones de un catálogo, E12); `read_action` con el destino los da con su tipo y sus límites. La batería lo prueba con una declaración de ejemplo.
    - **Tests:**
      - sin calificación no se ofrece;
      - con la de prueba del modelo falso sí;

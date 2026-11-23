@@ -120,7 +120,8 @@ Cada uno lleva su teléfono (`M-`). Manda el tablero aprobado, salvo lo que cont
 
 **El contrato de las acciones:**
 - el build publica `docs/contracts/assistant-actions.json`, con cada acción: id, versión, clase, requisito, `SaveRoute`, confirmación, pantalla, efecto, campos (tipo, obligatorio, límites, `DependsOn`) y destino;
-- el front genera sus tipos con `npm run contracts`.
+- el front genera sus tipos con `npm run contracts`;
+- **lo armado como dato** (0068, «Consecuencias»): una acción puede declarar que sus campos salen de la definición de su destino, como las opciones de un catálogo (E12). `read_action` con el destino da esos campos, con su tipo y sus límites, y `assistant-actions.json` publica la acción con esa marca y sin campos fijos.
 
 **Las herramientas** (no son HTTP; su forma va en `docs/features/asistente.md`):
 - `assistant_actions`, precargada: `[{action, name}]`, o las áreas si son más de 40;
