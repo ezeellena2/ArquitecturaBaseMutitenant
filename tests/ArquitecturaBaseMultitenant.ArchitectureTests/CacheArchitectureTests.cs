@@ -1,4 +1,5 @@
 using System.Reflection;
+using ArquitecturaBaseMultitenant.ArchitectureTests.Support;
 using Mono.Cecil;
 using NetArchTest.Rules;
 
@@ -41,6 +42,14 @@ public sealed class CacheArchitectureTests
         "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers.TenantSettingsReader",
         "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers.PlatformSettingsReader",
         "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers.ReferenceDataReader",
+    };
+
+    // Solo CacheKeys arma una clave con su alcance (t:, s:, u:, p:). AdvisoryLockKeys arma las de los locks con los mismos
+    // alcances, por diseño (docs/rules/multitenancy.md). Un literal que empieza así en otro tipo es una clave armada a mano.
+    private static readonly HashSet<string> ScopePrefixOwners = new(StringComparer.Ordinal)
+    {
+        Caching + ".CacheKeys",
+        "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions.AdvisoryLockKeys",
     };
 
     [Fact]
@@ -107,6 +116,57 @@ public sealed class CacheArchitectureTests
             "ArquitecturaBaseMultitenant.Infrastructure/Persistence/Rls/TenantIsolationModelValidator.cs",
         ], consumers);
     }
+
+    /// <summary>
+    /// Se lee el IL (<c>ldstr</c>), que ve también el texto de un <c>$"t:{id}:status"</c>, y las constantes: una
+    /// <c>const</c> se copia en el IL de quien la usa, así que el valor de una constante de CacheKeys o de AdvisoryLockKeys
+    /// vale donde aparezca (ReferenceDataSeeder toma <c>AdvisoryLockKeys.ReferenceDataSeed</c>).
+    /// </summary>
+    [Fact]
+    public void Only_cache_keys_and_lock_keys_write_a_scope_prefix()
+    {
+        var literals = Production.SelectMany(CallSites.Literals).ToArray();
+        var constants = Production.SelectMany(assembly => assembly.GetTypes())
+            .SelectMany(type => type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)
+                .Where(field => field.IsLiteral && field.FieldType == typeof(string))
+                .Select(field => (Owner: Outer(type).FullName!, Value: (string)field.GetRawConstantValue()!)))
+            .ToArray();
+        var ownConstants = constants.Where(constant => ScopePrefixOwners.Contains(constant.Owner))
+            .Select(constant => constant.Value)
+            .ToHashSet(StringComparer.Ordinal);
+
+        Assert.Contains(literals, literal => literal.Owner == Caching + ".CacheKeys" && literal.Value == "p:");
+        Assert.Contains("p:ref:seed", ownConstants);
+
+        var offenders = literals.Select(literal => (literal.Owner, literal.Value))
+            .Concat(constants)
+            .Where(entry => HasScopePrefix(entry.Value) && !ScopePrefixOwners.Contains(entry.Owner)
+                && !ownConstants.Contains(entry.Value))
+            .Select(entry => $"{entry.Owner}: \"{entry.Value}\"")
+            .Distinct(StringComparer.Ordinal);
+
+        Assert.Empty(offenders);
+    }
+
+    [Theory]
+    [InlineData("t:", true)]
+    [InlineData("s:", true)]
+    [InlineData("u:", true)]
+    [InlineData("p:", true)]
+    [InlineData("t:{0}:status", true)]
+    [InlineData("p:settings", true)]
+    [InlineData("t", false)]
+    [InlineData("T:System.DateTime", false)]
+    [InlineData("status", false)]
+    [InlineData("https://example.com", false)]
+    [InlineData("{rl}:login", false)]
+    [InlineData("arquitecturabasemt:", false)]
+    public void Scope_prefix_detector_finds_a_hand_built_key(string literal, bool prefix) =>
+        Assert.Equal(prefix, HasScopePrefix(literal));
+
+    private static bool HasScopePrefix(string value) => value is [('t' or 's' or 'u' or 'p'), ':', ..];
+
+    private static Type Outer(Type type) => type.DeclaringType is { } outer ? Outer(outer) : type;
 
     private static (string Owner, GenericInstanceMethod Method)[] Calls(string declaringType, string method) =>
     [

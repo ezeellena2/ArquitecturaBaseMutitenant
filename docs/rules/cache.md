@@ -41,7 +41,8 @@
 - `Infrastructure/Caching/RolePermissionCache.cs` para una clave privada y una carga con RLS (E9).
 
 ## Lo verifica
-- `CacheArchitectureTests` (E9)
+- `CacheArchitectureTests` (E9); desde la E12, también una clave armada a mano: un literal o una constante que empieza con `t:`, `s:`, `u:` o `p:` fuera de `CacheKeys` y de `AdvisoryLockKeys`, que arma las de los locks con los mismos alcances ([multitenancy](multitenancy.md))
+- `BannedSymbols.txt` (E12): `IMemoryCache`, `MemoryCache`, sus extensiones, `MemoryDistributedCache` y `AddMemoryCache` rompen el build (RS0030)
 - `DistributedCacheTests` (E9)
 - `PermissionProjectionTests` (E9)
 - `CacheKeyScopeTests` (E2)

@@ -3,3 +3,8 @@ P:System.DateTime.Today;Usá TimeProvider inyectado: timeProvider.GetUtcNow().Ut
 P:System.DateTime.UtcNow;Usá TimeProvider inyectado para poder testear el tiempo: timeProvider.GetUtcNow().UtcDateTime
 P:System.DateTimeOffset.Now;Usá TimeProvider inyectado: timeProvider.GetUtcNow()
 P:System.DateTimeOffset.UtcNow;Usá TimeProvider inyectado para poder testear el tiempo: timeProvider.GetUtcNow()
+T:Microsoft.Extensions.Caching.Memory.IMemoryCache;Redis es la única caché, sin copia local en memoria: leé por SharedCache desde una caché del inventario (docs/rules/cache.md)
+T:Microsoft.Extensions.Caching.Memory.MemoryCache;Redis es la única caché, sin copia local en memoria: leé por SharedCache desde una caché del inventario (docs/rules/cache.md)
+T:Microsoft.Extensions.Caching.Memory.CacheExtensions;Redis es la única caché, sin copia local en memoria: leé por SharedCache desde una caché del inventario (docs/rules/cache.md)
+T:Microsoft.Extensions.Caching.Distributed.MemoryDistributedCache;Redis es la única caché, sin copia local en memoria: leé por SharedCache desde una caché del inventario (docs/rules/cache.md)
+T:Microsoft.Extensions.DependencyInjection.MemoryCacheServiceCollectionExtensions;Redis es la única caché, sin copia local en memoria: leé por SharedCache desde una caché del inventario (docs/rules/cache.md)
