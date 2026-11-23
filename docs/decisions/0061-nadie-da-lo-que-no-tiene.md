@@ -12,7 +12,7 @@ Lo mismo pasa en los otros dos catálogos con delegación ([permisos](../rules/p
 
 ## Decisión
 
-1. **Lo que tiene quien pide** son sus permisos efectivos en ese alcance, los mismos que mira el atributo de la ruta. Se leen de la base dentro del límite del caso de uso, después de sus locks, y no de lo que el pedido ya memorizó. Cuentan solo los permisos del catálogo vigente: los de un módulo quitado no se comparan (B3 de ArquitecturaBase).
+1. **Lo que tiene quien pide** son sus permisos efectivos en ese alcance, los mismos que mira el atributo de la ruta: los de sus roles más lo que esos incluyen (decisión 260 de la [hoja de ruta de formularios](../plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md), traspaso 16). Se leen de la base dentro del límite del caso de uso, después de sus locks, y no de lo que el pedido ya memorizó. Cuentan solo los permisos del catálogo vigente: los de un módulo quitado no se comparan (B3 de ArquitecturaBase).
 2. **En la organización:**
    - crear o editar un rol: cada permiso que se agrega o se quita tiene que tenerlo quien pide. Si no, 403 `Roles.Role.PermissionsNotHeld`. El nombre y la descripción no cuentan. Borrar no pide nada, porque solo se borra un rol sin personas;
    - dar o quitar roles, desde Usuarios, una invitación o una empresa: cada rol que se agrega o se quita tiene que tener solo permisos que quien pide tiene en ese lugar. Si no, 403 `Tenancy.Member.RolesNotHeld`;
