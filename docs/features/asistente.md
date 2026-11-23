@@ -225,7 +225,7 @@ Hoy el asistente solo lee. La [ADR 0068](../decisions/0068-acciones-del-asistent
   - los campos de la pantalla, de una lista cerrada de tipos;
   - cómo se confirma.
 - **La fuente solo lee:** resuelve y valida sin guardar, en un alcance de solo lectura.
-- **El registro** (`AssistantActionCatalog`) filtra por acceso, módulo, permisos efectivos y calificación, y sella la lista en el turno.
+- **El registro de acciones** del módulo filtra por acceso, módulo, permisos efectivos y calificación, y sella la lista en el turno.
 - **Tres piezas de IA, fijas para todas las áreas:**
   - la lista precargada `assistant_actions`;
   - `read_action`;
@@ -257,4 +257,4 @@ Hoy el asistente solo lee. La [ADR 0068](../decisions/0068-acciones-del-asistent
 - Application: `AssistantToolCatalogTests`, `AssistantCostTests`, `AssistantSnapshotPrivacyTests`, `AssistantSettingsTests` y `AssistantBudgetEmailRendererTests` (los cuatro correos del tope).
 - API (Docker/Testcontainers): `AssistantConversationIsolationTests`, `AssistantDurableAuthorizationTests`, `AssistantAuthorizationTests`, `AssistantAnthropicTransportTests` y `AssistantBudgetOutboxTests`.
 - Arquitectura: `AssistantApprovedContractTests`, `AssistantQualityContractTests` e `InstalledAssistantPersistenceModelTests`.
-- Acciones (etapa «Acciones del asistente»): `AssistantActionDeclarationTests`, sin Docker, y la batería genérica `AssistantActionContractTests`, una teoría por acción registrada.
+- Acciones (etapa «Acciones del asistente»): los tests de arquitectura de las acciones, sin Docker, y la batería genérica, una teoría por acción registrada. Sus nombres están en la [0068](../decisions/0068-acciones-del-asistente.md).

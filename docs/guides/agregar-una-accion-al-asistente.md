@@ -73,13 +73,13 @@ La mecánica (el puerto, el registro, las tres piezas de IA, la tarjeta y la bat
 
 **Si es un catálogo a mano** de la E12, no hay que programar nada: lo cubren las acciones de las opciones de un catálogo.
 
-**Si es un área programada** ([agregar un área](agregar-un-area.md)), con su diálogo «Nuevo proveedor», `POST api/suppliers` con `[HasPermission(Permissions.Suppliers.Manage)]` e `[Idempotent]`, y su `CreateSupplierRequest`:
+**Si es un área programada** ([agregar un área](agregar-un-area.md)), con su diálogo «Nuevo proveedor», `POST api/suppliers` con `[HasPermission(Permissions.Suppliers.Manage)]` e `[Idempotent]`, y su pedido de alta:
 - **`SupplierActionSource`** declara tres acciones:
   - `suppliers.create@1`: `Dialog`, con nombre (`Text`, 80), CUIT (`TaxId`), correo (`Email`), teléfono (`Phone`) y rubro (`Choice` de un catálogo);
   - `suppliers.edit@1`: los mismos campos, con su `Target`;
   - `suppliers.remove@1`: `RemoveConfirmation`.
 
-  Las resuelve con `ISupplierReader` y valida con el validador de `CreateSupplierRequest`.
+  Las resuelve con el reader de proveedores y valida con el validador del pedido de alta.
 - **Los textos** `Action.suppliers.*`, en es y en.
 - **El adaptador** del diálogo «Nuevo proveedor» y el de la confirmación de borrar.
 - **Los casos y el escenario.**
@@ -88,14 +88,14 @@ No hace falta una herramienta, un prompt, una tarjeta ni tests a mano para la IA
 
 ## Lo verifica
 
-- **`AssistantActionDeclarationTests`:**
+- **Los tests de arquitectura de las acciones** (sin Docker):
   - el id con versión es único;
   - el requisito es el de la ruta, y la ruta existe, escribe y, si crea, es idempotente;
   - una acción de empresa nombra su campo de empresa;
   - los campos son de la lista cerrada y sin nombres prohibidos;
   - están los textos y los casos;
   - el árbol de dependencias de la fuente cumple la lista de lo permitido.
-- **`AssistantActionContractTests`:** la batería genérica, una teoría por acción.
+- **La batería genérica** (con Docker): una teoría por acción.
 - **En el front:** el adaptador dibuja todo lo propuesto y manda lo que se ve.
 
 Al terminar la tarea van el build y los tests rápidos enteros, nunca filtrados ([AGENTS.md](../../AGENTS.md)), y la batería de integración y los tests del front de esa pantalla. La suite completa va en la puerta.
