@@ -1,6 +1,6 @@
 # Acciones del asistente · plan ejecutable
 
-**Estado:** pendiente · Spec: `docs/plans/formularios/acciones-del-asistente.md` (contrato, datos y pasos con sus tests). Va después de la puerta de la segunda parte de la base y antes de la E12 ([ADR 0068](../decisions/0068-acciones-del-asistente.md); decisión 268). Las decisiones de producto las tomó el usuario el 2026-11-23: el lugar, el alcance (Usuarios y Roles enteros) y que se ofrezcan calificadas antes de la prueba integral. Los diez tableros de la spec («Pantallas») están dibujados en el lienzo v178; F2 a F4 esperan que el usuario los apruebe.
+**Estado:** pendiente · Spec: `docs/plans/formularios/acciones-del-asistente.md` (contrato, datos y pasos con sus tests). Va después de la puerta de la segunda parte de la base y antes de la E12 ([ADR 0068](../decisions/0068-acciones-del-asistente.md); decisión 268). Las decisiones de producto las tomó el usuario el 2026-11-23: el lugar, el alcance (Usuarios y Roles enteros) y que se ofrezcan calificadas antes de la prueba integral. Los diez tableros de la spec («Pantallas») están en el lienzo v178, aprobados por el usuario el 2026-11-23.
 
 **Fuente:** la ADR 0068, sus dos revisiones adversariales del 2026-11-23 y la sección «Acciones del asistente» de ArquitecturaBase (`docs/plans/2026-11-19-procesos-del-campo.md`, solo para leer).
 
@@ -24,7 +24,7 @@ Todo va en `main`, sin ramas, worktrees, stash, reset ni push. Cada chat commite
 **Reglas de orden:**
 - K0 y K1 van antes que todo, y nada corre si K1 no quedó hecha.
 - B1 → B8, en ese orden. B6 y B7 esperan a B5.
-- F1 arranca con K1. F2, F3 y F4 esperan sus tableros aprobados; F3 y F4 esperan además a F1. F5 va al final del front.
+- F1 arranca con K1. F2, F3 y F4 siguen sus tableros, aprobados en el lienzo v178; F3 y F4 esperan además a F1. F5 va al final del front.
 - I1 espera a B8 y a F5; I2, a I1; I3, a I2.
 
 ## Qué se verificó al arrancar
@@ -159,20 +159,20 @@ Las tareas siguen las fichas del front (`formatos.md`, `pantallas-y-ui.md`, `tem
    - **El hook:** lee la propuesta por id, pone «Propuesta del asistente» y «Revisá», y aplica las operaciones sobre lo leído.
    - **Al crear:** pide la clave de cada intento a `attempts`, muestra el 422 con una clave de la propuesta como «Ya se guardó» y, después de un 2xx, llama a `applied`.
    - **Tests:** del hook, de los límites del módulo y de la clave que no se renueva ante un 422 de la propuesta.
-2. **F2 · La tarjeta.** `AssistantActionCard` en el hilo, con sus seis estados y el botón rojo contorneado para quitar y dar de baja. Abre la pantalla de la acción con `?proposal=<id>`, y el diálogo, sobre el Inicio. Espera su tablero. **Tests:** cada estado, teclado y axe.
+2. **F2 · La tarjeta.** `AssistantActionCard` en el hilo, con sus seis estados y el botón rojo contorneado para quitar y dar de baja. Abre la pantalla de la acción con `?proposal=<id>`, y el diálogo, sobre el Inicio. Su tablero está aprobado (v178). **Tests:** cada estado, teclado y axe.
 3. **F3 · Los adaptadores de Usuarios.**
    - **Las pantallas:** `InviteUserDialog`, con el aviso de que manda la invitación; `UserDetailPage`, con «Lo que cambia» y el aviso si cambió; y la confirmación de quitar.
    - **Los selectores** buscan por id lo elegido.
    - **Si un valor no entra,** la pantalla no abre la propuesta.
-   - Espera sus tableros.
+   - Sus tableros están aprobados (v178).
    - **Tests:** todo lo propuesto se ve, y lo que se manda es lo que se ve.
-4. **F4 · Los adaptadores de Roles.** `RoleEditorPage`, para crear y para cambiar, con lo incluido apagado y «Lo que cambia», y la confirmación de dar de baja de `RolesPage`. Espera sus tableros. **Tests:** como F3.
+4. **F4 · Los adaptadores de Roles.** `RoleEditorPage`, para crear y para cambiar, con lo incluido apagado y «Lo que cambia», y la confirmación de dar de baja de `RolesPage`. Sus tableros están aprobados (v178). **Tests:** como F3.
 5. **F5 · La cobertura.** Un test que lee los tipos generados de `assistant-actions.json` y falla si una acción no tiene adaptador.
 
 **Texto para el chat del Front**
 
 ```text
-Leé AGENTS.md del front, la ADR 0068 del back, este plan y la spec docs/plans/formularios/acciones-del-asistente.md, con las fichas del front y los tableros que nombra la spec. Esperá K1, corré npm run contracts y hacé F1. F2, F3 y F4 arrancan cuando la Guía confirma sus tableros aprobados en el lienzo; nunca dibujes ni inventes esas pantallas. F5 va al final. El módulo del asistente y las áreas se hablan solo por src/shared/assistant-actions. No toques el lienzo, las specs ni el back, ni el src si Vite está levantado. Usá i18n, shared/ui (Picker), TanStack Query y las reglas de accesibilidad; no escribas tipos generados. Todo en main, sin push, ramas, worktrees, stash ni reset; commiteá solo lo tuyo con git commit -- <rutas> y la línea Tarea: acciones-del-asistente/<id>. Por tarea: tests focales, npx tsc -b y npm test completos, sin filtrar por módulo; al cerrar la parte, build, lint y contracts:check.
+Leé AGENTS.md del front, la ADR 0068 del back, este plan y la spec docs/plans/formularios/acciones-del-asistente.md, con las fichas del front y los tableros que nombra la spec. Esperá K1, corré npm run contracts y hacé F1. F2, F3 y F4 siguen sus tableros, aprobados en el lienzo v178; nunca dibujes ni inventes esas pantallas. F5 va al final. El módulo del asistente y las áreas se hablan solo por src/shared/assistant-actions. No toques el lienzo, las specs ni el back, ni el src si Vite está levantado. Usá i18n, shared/ui (Picker), TanStack Query y las reglas de accesibilidad; no escribas tipos generados. Todo en main, sin push, ramas, worktrees, stash ni reset; commiteá solo lo tuyo con git commit -- <rutas> y la línea Tarea: acciones-del-asistente/<id>. Por tarea: tests focales, npx tsc -b y npm test completos, sin filtrar por módulo; al cerrar la parte, build, lint y contracts:check.
 ```
 
 ## Integración y puerta
@@ -236,4 +236,4 @@ Leé AGENTS.md de los dos repos, la ADR 0068, este plan, la spec y la skill /pue
 
 ## Para decidir
 
-Nada abierto. Las de producto las tomó el usuario el 2026-11-23 (el lugar, el alcance y cuándo se ofrecen). Lo demás es técnico y está anotado en la ADR 0068 y en «Decisiones técnicas del contrato». Los tableros de la spec los aprueba el usuario en el lienzo antes de F2 a F4.
+Nada abierto. Las de producto las tomó el usuario el 2026-11-23 (el lugar, el alcance y cuándo se ofrecen). Lo demás es técnico y está anotado en la ADR 0068 y en «Decisiones técnicas del contrato». Los diez tableros de la spec los aprobó el usuario en el lienzo v178, el 2026-11-23.

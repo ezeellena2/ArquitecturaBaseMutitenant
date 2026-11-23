@@ -78,7 +78,7 @@
 
 ## Pantallas ✓
 
-**A revisar:** `Asistente-Org-Acciones`, `M-Asistente-Org-Acciones`, `Usuarios-Invitar-Propuesta`, `M-Usuarios-Invitar-Propuesta`, `Usuario-Propuesta`, `M-Usuario-Propuesta`, `Rol-Propuesta`, `M-Rol-Propuesta`, `Confirmar-Propuesta` y `M-Confirmar-Propuesta`, en el lienzo v178 (página «Propuesta · Acciones del asistente»). El usuario los aprueba antes de las tareas del front que los usan.
+**Aprobados:** `Asistente-Org-Acciones`, `M-Asistente-Org-Acciones`, `Usuarios-Invitar-Propuesta`, `M-Usuarios-Invitar-Propuesta`, `Usuario-Propuesta`, `M-Usuario-Propuesta`, `Rol-Propuesta`, `M-Rol-Propuesta`, `Confirmar-Propuesta` y `M-Confirmar-Propuesta`, en el lienzo v178 (página «Propuesta · Acciones del asistente»), aprobados por el usuario el 2026-11-23.
 
 | Tablero | Qué muestra |
 | --- | --- |
@@ -233,4 +233,4 @@ No hay prueba con Meta ni con un proveedor real.
 ## Requisitos previos
 
 - La segunda parte de la base, cerrada.
-- Los tableros de «Pantallas», aprobados en el lienzo.
+- Los tableros de «Pantallas», aprobados en el lienzo v178 el 2026-11-23.
