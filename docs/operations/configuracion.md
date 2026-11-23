@@ -72,8 +72,8 @@ No repetir (B1 de ArquitecturaBase): la plantilla no trae datos de una instalaci
 | `Email:Delivery` | `Smtp`; `PickupDirectory` escribe `.eml` sin enviar solo en Development o Testing |
 | `Email:Smtp:Host` / `Port` | `smtp.gmail.com` / `587` (STARTTLS) |
 | `Email:Smtp:UserName` / `FromAddress` | tu cuenta de Gmail, la misma de ArquitecturaBase |
-| `Email:Smtp:FromName` | el nombre del producto |
-| `Email:AppName` | nombre de plataforma usado también por los replies del bot; no altera la frase neutra del operador |
+| `Email:Smtp:FromName` | el nombre del producto; con la decisión 273 pasa a Plataforma › Configuración |
+| `Email:AppName` | nombre de plataforma usado también por los replies del bot; no altera la frase neutra del operador; con la decisión 273 pasa a Plataforma › Configuración |
 | `WhatsApp:PhoneNumberId` | el mismo de ArquitecturaBase. Desde la E11 **solo sirve para el arranque**: si no hay número de Plataforma, se crea uno con este valor y `WhatsApp:AccessToken`; mientras nadie lo reemplace desde Plataforma › WhatsApp › Número, sigue a la configuración. Sin número conectado, WhatsApp queda apagado y la app arranca igual |
 | `WhatsApp:BusinessAccountId`, `DisplayPhoneNumber`, `SendArgentineMobilesWithoutNine` | los mismos de ArquitecturaBase (el último, solo con el número de prueba) |
 | `WhatsApp:GraphApiVersion`, `Templates:LoginCode`, `AllowedCountries`, `DailyAuthCodeLimit` | `v26.0` desde la E11 (Embedded Signup v4); los demás, los de `appsettings.json` de ArquitecturaBase (`codigo_ingreso`, `["AR"]`, `100`) |
@@ -99,6 +99,10 @@ La retención de texto es fija de **90 días desde `ReceivedAtUtc`** del servido
 **Con el depurador de Visual Studio,** el proveedor de log Debug manda cada línea a la ventana Salida y frena todo el proceso: allá bajó de unos 690 a unos 11 pedidos por segundo. Por eso `Logging:Debug:LogLevel:Default` está en Warning en el `appsettings.Development.json` de la Api desde la base de la 12, y `BuildConfigurationTests` lo controla; la consola y la telemetría no cambian (traspaso 9).
 
 **Redis en desarrollo tiene 5 segundos para conectar** (`Cache:ConnectTimeoutMilliseconds` en el `appsettings.Development.json` de la Api; en los demás ambientes queda el segundo de la [ADR 0052](../decisions/0052-cache-compartida-redis.md)). Aspire le pasa a la Api `localhost:<puerto>,ssl=true`, y Docker publica Redis solo en IPv4: en Windows el cliente prueba primero `::1` y pierde unos dos segundos antes de ir a `127.0.0.1`. Con un segundo no llegaba nunca, y la Api quedaba con la caché en Degraded, leyendo todo de la base (2026-11-18).
+
+### Reglas de negocio en pantalla (270)
+
+Un tope, un plazo, un cupo, una espera o un valor por defecto de una regla de negocio no va en `appsettings` ni fijo en el código: va en la configuración de su dueño, con su valor por defecto, su mínimo, su máximo, revisión y 409, y se lee de la base en cada uso (decisión 270 de la [hoja de ruta de formularios](../plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md)). Cada organización ajusta lo suyo dentro del máximo que fija la plataforma, y lo que no es de ninguna organización lo fija la plataforma. Quedan acá solo los secretos, lo que fija un proveedor, lo técnico y lo de seguridad, costo o abuso (los cupos de códigos, de invitaciones y de pedidos). Sacar una clave de este archivo sigue la regla de las dos versiones ([0060](../decisions/0060-dos-versiones-conviven.md)): la versión nueva lee la base antes de que se borre la clave, y la clave se borra con la reconstrucción que ya la lee.
 
 ## 4. Lo que tenés que hacer vos, una sola vez, fuera del código
 

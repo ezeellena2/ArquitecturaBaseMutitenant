@@ -180,9 +180,19 @@ Lo que trajeron los traspasos 16 y 17 para toda la app (decisiones 261 a 264 y 2
 - **Ordenar por las columnas** (264). En el back, una regla común de orden para los listados paginados: el `sort` con su campo y su sentido, lo vacío al final, el desempate por el orden de siempre y la clave, y un estado por su circuito, aplicada a los listados del núcleo, con su test. En el front, el encabezado de `DataTable` con ↑ ↓ y ↕, y «Ordenar por» al final de `FilterBar`, con el orden en la dirección; las tablas que llegan enteras ordenan en el navegador con la misma pieza.
 - **Lo apagado en Roles y Usuarios** (269 y 0061; O10 de allá): el selector de roles de una persona y las casillas de un rol muestran apagado, con su motivo, lo que quien edita no puede dar, en lugar de esperar el 403 al guardar.
 
+## Traspaso 18, tanda 1: para la segunda parte de la base
+
+Lo que trajo la tanda 1 del traspaso 18 (decisiones 270 a 273 de la [hoja de ruta](plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md)) y cae sobre lo ya programado. Va en la **segunda parte de la base, antes de la E12**, con su única puerta (214): la B18 y la F13, con sus tableros.
+
+- **El inventario de las reglas de negocio** (270): los valores del núcleo, de WhatsApp y del asistente que siguen en `appsettings` o fijos pasan a la configuración de su dueño, con su mínimo, su máximo y su revisión; lo de seguridad, costo o abuso y lo técnico se quedan, con su motivo.
+- **La retención en pantalla** (272): «Privacidad y retención» en la configuración de Plataforma, el plazo de los chats en la de cada organización (90 días por defecto) y la purga de esos chats por organización, que hoy no existe.
+- **El cupo de la IA por organización** (271): el contador diario de la persona en cada organización, también con la clave de la plataforma, que corta a la medianoche de la organización.
+- **El nombre y los correos** (273): «Nombre y correos» en la configuración de Plataforma, con `Email:AppName` y `FromName` como respaldo un despliegue.
+- **El test del snapshot de EF** (traspaso 18, 04): falla si el modelo tiene cambios que no están en una migración. Va en la B9.
+
 ## Lo que vio la prueba integral de ArquitecturaBase
 
-Las observaciones de su prueba integral, del 19 al 22/11 (traspaso 16, `05-prueba-integral.md`, en `docs/plans/2026-11-21-traspaso-multitenant/` de ArquitecturaBase), anotadas como riesgos para cuando se programe cada etapa: nada de esto es una decisión. El plan de cada etapa las nombra en su lista de control.
+Las observaciones de su prueba integral, del 19 al 23/11 (traspaso 16, `05-prueba-integral.md`, y traspaso 18, `03-prueba-integral.md`, en `docs/plans/` de ArquitecturaBase), anotadas como riesgos para cuando se programe cada etapa: nada de esto es una decisión. El plan de cada etapa las nombra en su lista de control.
 
 - **E12 y E13, catálogos:** el tope de un campo de texto es el mismo en la pantalla y en el servidor, y al llegar se ve (O13); la plantilla y la exportación nombran los campos igual (O14); la comparación de una revisión lista los cambios de las opciones antes de «Usar la revisión actual» (O15).
 - **E14, el Flow:** la ayuda de un número pide la coma en español, con el patrón que nombra primero la coma y sin una coma antes de `]` o `}` en ningún texto fijo (O29, 207); un número ambiguo vuelve con su pregunta marcada y nombrada en el mensaje (O30).
@@ -193,5 +203,5 @@ Las observaciones de su prueba integral, del 19 al 22/11 (traspaso 16, `05-prueb
 - **E21:** el panel de revisar y la pantalla completa cuentan y recorren lo mismo («1 de 2 por aprobar») (O22); «Enviada» dice el estado que quedó después de las reglas, también «Por resolver» (O23).
 - **E23:** una sugerencia hacia un formulario que publicó otra versión lo nombra y dice qué hacer (O20).
 - **E25:** después de importar en un catálogo que propuso la IA, la cabecera muestra su estado sin recargar (O24).
-- **Toda la app:** después de cerrar un diálogo, el primer clic en otra fila o en el menú funciona (O2); al llegar al tope de caracteres, el campo lo dice (O26); un dato que falta dice «—», nunca «?» (O9). En el ingreso, después de un código equivocado, escribir encima reemplaza lo de las casillas (O5, a confirmar con el teclado). A 320 px, el nombre largo de un área de un rol baja de renglón sin tapar su (i) (O11).
+- **Toda la app:** después de cerrar un diálogo, el primer clic en otra fila o en el menú funciona (O2); al llegar al tope de caracteres, el campo lo dice (O26); un dato que falta dice «—», nunca «?» (O9); con la Api caída, recargar no deja «Cargando…» para siempre: a los segundos dice qué pasa y ofrece «Reintentar» (O40); en desarrollo, StrictMode lee dos veces y puede chocar con una cuota (O33), así que un «Hiciste demasiadas solicitudes» ahí se mira antes de culpar al código. En el ingreso, después de un código equivocado, escribir encima reemplaza lo de las casillas (O5, a confirmar con el teclado). A 320 px, el nombre largo de un área de un rol baja de renglón sin tapar su (i) (O11).
 - **No aplican acá:** O4 (allá tampoco un administrador corrige el correo de otra cuenta; si se decide, llega en el traspaso 18), O6 («Arquitectura Base» se lee bien en el asunto), O8 y O12 (eran del panel de carpetas, que se fue), O25 (el front no valida con esquemas estrictos: los tipos salen del OpenAPI y `contracts:check` los compara), O27 (ya está en [configuración](operations/configuracion.md), §4) y O28 (la [ADR 0043](decisions/0043-las-pantallas-dicen-si-hay-cuenta.md) ya lo resuelve así).
