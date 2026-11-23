@@ -3,7 +3,7 @@
 **Estado:** pendiente · spec de la etapa 22 del bloque (decisiones 34, 40, 78, 79, 175, 177 y 220). **Es también la biblioteca de formularios estándar** (40). Se arma con las piezas de este repo y las de las etapas anteriores. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E14]**, **[E12]** y **[E21]** contra el código.
 
 **Fuentes:**
-- alcance y decisiones: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E22 y decisiones 2, 13 a 16, 30 a 33, 35, 40, 45, 50, 59, 61, 62, 64, 138, 149, 175, 177, 212, 229 y 230;
+- alcance y decisiones: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E22 y decisiones 2, 13 a 16, 30 a 33, 35, 40, 45, 50, 59, 61, 62, 64, 138, 149, 175, 177, 229, 230 y 260;
 - reglas: [AGENTS.md](../../../AGENTS.md), las [fichas](../../rules/README.md) y la [ADR 0050](../../decisions/0050-auditoria-global-de-modulos.md) (auditoría de lo global);
 - las specs de la [E12](12-catalogos.md), la [E14](14-formularios.md), la [E17](17-ciclo-de-vida.md), la [E19](19-condiciones-calculos-y-lineas.md), la [E20](20-cargar-desde-la-web.md) y la [E21](21-reglas-y-aprobacion.md).
 
@@ -17,7 +17,7 @@
 
 Antes de empezar:
 1. **Lo anterior:** las specs de la [E12](12-catalogos.md), la [E14](14-formularios.md) y la [E21](21-reglas-y-aprobacion.md), sobre todo el borrador, los catálogos, las reglas y el diseño del PDF que se copian; la [E17](17-ciclo-de-vida.md), copiar; la [E19](19-condiciones-calculos-y-lineas.md), las fórmulas y el bloque, y la [E20](20-cargar-desde-la-web.md), «Dónde se completa» y la Ubicación (229 y 230).
-2. **Decisiones** de la hoja de ruta: 2, 13 a 16, 30 a 33, 35, 40, 45, 50, 59, 61, 62, 64, 138, 149, 175, 177, 212, 229 y 230.
+2. **Decisiones** de la hoja de ruta: 2, 13 a 16, 30 a 33, 35, 40, 45, 50, 59, 61, 62, 64, 138, 149, 175, 177, 229, 230 y 260.
 3. **Fichas:** [persistencia-ef](../../rules/persistencia-ef.md), [multitenancy](../../rules/multitenancy.md), [auditoria](../../rules/auditoria.md), [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [idempotencia](../../rules/idempotencia.md), [api-http](../../rules/api-http.md), [permisos](../../rules/permisos.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [result-y-errores](../../rules/result-y-errores.md), [validacion](../../rules/validacion.md), [textos-libres](../../rules/textos-libres.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [logs](../../rules/logs.md), [modulos](../../rules/modulos.md) y [tests](../../rules/tests.md). Además, la [ADR 0050](../../decisions/0050-auditoria-global-de-modulos.md).
 4. **Código para copiar:** pieza por pieza, en la §7.
 5. **Pantallas:** los tableros de la §8.
@@ -75,7 +75,7 @@ Con el traspaso 5 se redibujaron `FRM-Editor-Reglas-Plantilla`, `M-FRM-Reglas-Pl
 | `FRM-Plantilla` y `M-FRM-Plantilla` | la vista de una plantilla: la descripción y sus datos, las preguntas, los catálogos que trae, las reglas de ejemplo en pasos, como en la E21, con los datos como etiquetas (138 y 149), «el rol que elegís al usarla» y el sugerido, y el teléfono; «Usar esta plantilla» | sin permiso de catálogos, cargando y ya no está |
 | `FRM-Plantilla-Usar` | diálogo con el nombre y el prefijo propuesto; al confirmar, abre el formulario nuevo | prefijo tomado: se propone VIS2, con el porqué en la (i); falta el nombre, creando y se retiró |
 | `FRM-Editor-Reglas-Plantilla` y `M-FRM-Reglas-Plantilla` | el formulario nuevo, en borrador, y en su pestaña «Reglas» las reglas precargadas, sin guardar: «Elegí…» en el rol, la persona, la dirección y la plantilla de WhatsApp, con «Rol sugerido» debajo. «Historial» queda apagado, con «Todavía no se guardaron: vienen de la plantilla.» en su tooltip (140) | elegir el rol, guardar sin elegir (se marca lo que falta, 43), una pregunta borrada (marcada en la condición, y en el mensaje como «Pregunta no disponible», 149), guardando y reglas guardadas |
-| `Cuenta-Plat` (ajuste) | los permisos del operador suman «Administrar la biblioteca de formularios»: en la matriz (212), la fila de su área, con «Administrar» | — |
+| `Cuenta-Plat` (ajuste) | los permisos del operador suman «Administrar la biblioteca de formularios»: en áreas plegables (260), su área, sin nada incluido | — |
 
 **Corregidos en el lienzo v169,** porque contradecían una decisión: las reglas de ejemplo de `FRM-Plantilla` y su teléfono, en pasos y con los datos como etiquetas (138 y 149); el orden de «Agregar bloque» y «Agregar pregunta» en `Plat-FRM-Plantilla`; los filtros sin cantidades de `M-FRM-Formularios-22` (144), y `Cuenta-Plat` y su teléfono, sin «Administrar la biblioteca de formularios» (78). Esa fila la suma esta etapa en la cuenta del operador, sin tablero propio.
 

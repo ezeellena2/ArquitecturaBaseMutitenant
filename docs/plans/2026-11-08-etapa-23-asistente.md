@@ -98,7 +98,7 @@ Lo común: 401, 403, 404 con una feature apagada, 409 `General.ConcurrencyConfli
 - una sugerencia es una fila de `WhatsAppAssistantActions` con `State` `Suggested`;
 - las migraciones: `<fecha>_AssistantAgents.cs`, `<fecha>_WhatsAppAssistant.cs` (aparte de `…_WhatsAppFormActions.cs` de la E21), `<fecha>_FormAssistant.cs` y `<fecha>_SystemRoleFormSuggestionPermissions.cs`.
 
-**Permiso:** `formsuggestions.manage`, «Administrar sugerencias entre formularios» / «Manage suggestions between forms», con el texto de la §2 de la hoja de ruta; su fila de la matriz, `Area.formsuggestions`, «Sugerencias» (*Suggestions*, 257).
+**Permiso:** `formsuggestions.manage`, «Administrar sugerencias entre formularios» / «Manage suggestions between forms», con el texto de la §2 de la hoja de ruta; su área en los permisos de un rol (260), `Area.formsuggestions`, «Sugerencias» (*Suggestions*, 257), sin nada incluido.
 
 **Textos de error** (es / en):
 - `Assistant.Agent.Invalid`: «Revisá este dato del asistente.» / "Check this assistant setting."

@@ -22,7 +22,7 @@ Todo en `main`, sin ramas, worktrees, stash, reset ni push. Cada chat commitea s
 | ADR 0050 | `IGlobalSecurityAudited` (`Domain/Common`) exige un `SecurityEvent` del mismo tipo y destino, con motivo, en la misma UoW; `AssistantPlatformSettings` lo usa con `PlatformSettingsChanged` y destino nulo, y `AssistantPersistenceTests` lo prueba | se copia tal cual; `FormTemplateUsages` queda técnica, sin la marca |
 | Permiso de plataforma | `PlatformPermissions` tiene 14 claves. Las escrituras de Plataforma con un permiso de `RequiringRecentProof` piden la prueba reciente del segundo factor (`RecentPlatformProof`) | `FormTemplates.Manage` entra en `All` y en `RequiringRecentProof`, como `Assistant.Configure` y `WhatsApp.Manage` |
 | Textos del permiso | van en `Application/Resources/Permissions.resx` y `.en.resx`; `PermissionTextsTests` recorre `Permissions.All` y `PlatformPermissions.All` | B2 los suma |
-| `Cuenta-Plat` (78) | la lista sale de `usePlatformPermissionCatalog`: junta `permissions.platform` del `registration.ts` de cada módulo y sus locales (`AccountPermissionsTab.tsx`) | la segunda parte de la base la pasa a la matriz (212); F7 lo declara en el módulo Forms, y `src/areas/platform/accounts` no se toca |
+| `Cuenta-Plat` (78) | la lista sale de `usePlatformPermissionCatalog`: junta `permissions.platform` del `registration.ts` de cada módulo y sus locales (`AccountPermissionsTab.tsx`) | la segunda parte de la base la pasa a áreas plegables con `includes` (260); F7 lo declara en el módulo Forms, y `src/areas/platform/accounts` no se toca |
 | Migración de operadores | `20261010214712_PlatformOperatorAssistantPermissions.cs` suma las claves a quien tiene `platform.operators.manage`, con un `SecurityEvent` `PlatformOperatorPermissionsChanged` por cuenta | B2 la copia |
 | Rutas de Plataforma de un módulo | llevan `[InstalledModuleRoute(<Módulo>ApiModule.ManagementRoute, InstalledModuleRouteCategory.PlatformManagement)]`, y el módulo registra su disponibilidad (`AssistantApiModule`) | `FormsApiModule` suma `ManagementRoute = "Forms.Management"` |
 | Historial con cursor | `CursorRequest` (`After`, `Limit` de 10 a 100) y `CursorResult<T>(Items, NextCursor, HasMore)`; modelo: `PlatformTenantHistoryQuery.cs` | `versions` los usa |
@@ -140,7 +140,7 @@ Siguen los tableros v175 y las fichas de UI, formularios, listados, accesibilida
 4. **F4 · Reglas y PDF en Plataforma.** `Plat-FRM-Plantilla-Reglas`: la sección de reglas de la E21 en modo plantilla, debajo de las preguntas, sin historial ni «Guardar reglas»; el rol, la persona, la dirección y la plantilla de WhatsApp con candado y «Lo elige cada organización», y «Rol sugerido» como texto. `Plat-FRM-Pdf`: el diseño de la E21 desde «Ver el diseño», con el color con candado y «Logo» y «Nombre de la organización» como marcadores; «Guardar borrador» es el mismo `PUT …/draft`. Copiá `components/rules/` y `pages/PdfDesignPage.tsx` [E21]. Tests: una regla con errores, guardar con el borrador, salir sin guardar.
 5. **F5 · La organización: lista y biblioteca.** `FRM-Formularios-22` y su teléfono, con «Estado» y «Dónde se completa» de la E20 (229): «Nuevo formulario ▾» con «Desde cero» y «Desde una plantilla», y el «+» del teléfono pregunta lo mismo. `/org/formularios/biblioteca` con `FRM-Biblioteca` y su teléfono (tarjetas por categoría, buscador y «La usaste en «Visita a cliente» y 1 más»), `FRM-Plantilla` y su teléfono (las reglas de ejemplo en pasos, con los datos como etiquetas, 138 y 149) y `FRM-Plantilla-Usar` (el prefijo propuesto con su (i); se retiró: avisa y vuelve). Sin `formcatalogs.manage`, «Usar esta plantilla» grisado con su motivo. Tests: los estados de cada tablero, idempotencia al repetir y axe.
 6. **F6 · Las reglas precargadas.** `FRM-Editor-Reglas-Plantilla` y su teléfono: con `suggestedRules`, la sección de la E21 las muestra sin guardar, con «Elegí…» y «Rol sugerido» debajo; «Historial» apagado con «Todavía no se guardaron: vienen de la plantilla.» (140); «Guardar reglas» habilitado, y al tocarlo sin elegir se marca lo que falta (43); una pregunta borrada, marcada en la condición y como «Pregunta no disponible» en el mensaje (149). Sin `formrules.manage`, su estado «sin permiso»; una regla que cita respuestas, adjunta el PDF o manda una copia pide además `formrecords.read` al guardarla, con el texto del servidor (la regla de la E21). Tests: los cuatro casos, y guardar sin «Ver respuestas».
-7. **F7 · El permiso en la cuenta del operador.** `registration.ts` de Forms declara `platform.formtemplates.manage` con su área, y `forms.json` es/en, su nombre y su descripción: en la matriz de la base (212) de `Cuenta-Plat` y su teléfono, una fila con «Administrar» y su (i). Test: la fila en la matriz y en la banda del teléfono, y desaparece al retirar Forms.
+7. **F7 · El permiso en la cuenta del operador.** `registration.ts` de Forms declara `platform.formtemplates.manage` con su área, y `forms.json` es/en, su nombre y su descripción: en los permisos de un operador (260), en `Cuenta-Plat` y su teléfono, su área con «Administrar la biblioteca de formularios» y su (i), sin nada incluido. Test: el área en la compu y en el teléfono, y desaparece al retirar Forms.
 
 **Texto para el chat del Front**
 
@@ -172,7 +172,7 @@ Leé AGENTS.md de los dos repos, este plan (docs/plans/2026-11-08-etapa-22-bibli
 ## Relación con otras etapas
 
 **Usa de las anteriores:**
-- **Base:** `ReasonDialog`, `PageLoading`, `FormSkeleton` y la confirmación de la 161; de su segunda parte (214), la matriz de permisos de un operador (`PermissionPicker`, 212).
+- **Base:** `ReasonDialog`, `PageLoading`, `FormSkeleton` y la confirmación de la 161; de su segunda parte (214), los permisos de un operador en áreas plegables (`AccountPermissionsTab`, 260).
 - **E12 a E21:** lo que lista K0.
 
 **Deja para las siguientes:**
@@ -188,4 +188,4 @@ Leé AGENTS.md de los dos repos, este plan (docs/plans/2026-11-08-etapa-22-bibli
 
 ## Para decidir
 
-Nada: los tableros v175 y las decisiones 2, 13 a 16, 30 a 33, 35, 40, 43, 45, 50, 59, 61, 62, 64, 79, 82, 138, 149, 175, 177, 198, 212, 229 y 230 resuelven el producto.
+Nada: los tableros v175 y las decisiones 2, 13 a 16, 30 a 33, 35, 40, 43, 45, 50, 59, 61, 62, 64, 79, 82, 138, 149, 175, 177, 198, 229, 230 y 260 resuelven el producto.

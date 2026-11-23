@@ -1,13 +1,13 @@
 # Base de la 12, segunda parte · plan ejecutable
 
-**Estado:** pendiente · Spec: `docs/plans/formularios/base-de-la-12-segunda-parte.md` (contrato completo, datos y pasos con sus tests). Va después de la puerta de la base de la 12 y antes de la E12 (decisión 214). Tableros: lienzo v176; faltan los de la F10, que se dibujan antes de programarla. Sin decisiones pendientes: las dos de producto las tomó el usuario (255 y 256).
+**Estado:** pendiente · Spec: `docs/plans/formularios/base-de-la-12-segunda-parte.md` (contrato completo, datos y pasos con sus tests). Va después de la puerta de la base de la 12 y antes de la E12 (decisión 214). Tableros: lienzo v176; faltan los de la F10 y los de roles en áreas plegables (260), que se dibujan antes de programarlas. Sin decisiones pendientes: las de producto las tomó el usuario (255, 256 y 260).
 
-**Fuente:** las secciones del [backlog](../backlog.md) «Traspaso 15, el núcleo: para programar», «Traspaso 15, diseño, fechas y números: para la segunda parte de la base», «Traspaso 15, la IA: para la segunda parte de la base» y, de «Traspaso 15, WhatsApp y ARCA: para programar», lo de WhatsApp y la CUIT. Lo que esas secciones mandan a otra etapa está en «Queda afuera».
+**Fuente:** la 260 sale del traspaso 16, 01, de ArquitecturaBase (RO3-D y «un permiso incluye a otro»). Lo demás, de las secciones del [backlog](../backlog.md) «Traspaso 15, el núcleo: para programar», «Traspaso 15, diseño, fechas y números: para la segunda parte de la base», «Traspaso 15, la IA: para la segunda parte de la base» y, de «Traspaso 15, WhatsApp y ARCA: para programar», lo de WhatsApp y la CUIT. Lo que esas secciones mandan a otra etapa está en «Queda afuera».
 
 | Parte | Tareas | Estado |
 | --- | --- | --- |
 | Contrato | K0–K1 | Pendiente |
-| Back A · núcleo y WhatsApp | B1–B9 | Pendiente |
+| Back A · núcleo y WhatsApp | B16 y B1–B9 | Pendiente |
 | Back B · formatos e IA | B10–B15 | Pendiente |
 | Front | F1–F10 | Pendiente |
 | Integración y puerta | I1–I3 | Pendiente |
@@ -18,7 +18,7 @@ Modo rápido: primero el contrato; después, a la vez, dos chats del back (A y B
 
 Todo va en `main`, sin ramas, worktrees, stash, reset ni push. Cada chat commitea solo sus rutas con `git commit -- <rutas>`. Con Vite levantado nadie edita el `src` del front. La tabla de estado la actualiza la Guía.
 
-**Migraciones en paralelo.** Back A y Back B comparten el checkout y el `ApplicationDbContextModelSnapshot`, así que una migración tomaría el modelo a medias del otro. Back A hace sus seis migraciones (B2, B3, B5, B6, B7 y B8). Back B no toca entidades, configuraciones de EF ni migraciones hasta que Back A commitee la B8: hace antes B10 a B12, que no cambian el modelo. Después de la B8, Back A sigue con B4 y B9, que tampoco lo cambian.
+**Migraciones en paralelo.** Back A y Back B comparten el checkout y el `ApplicationDbContextModelSnapshot`, así que una migración tomaría el modelo a medias del otro. Back A hace sus seis migraciones (B2, B3, B5, B6, B7 y B8), más la de la B16 si completa los roles con una. Back B no toca entidades, configuraciones de EF ni migraciones hasta que Back A commitee la B8: hace antes B10 a B12, que no cambian el modelo. Después de la B8, Back A sigue con B4 y B9, que tampoco lo cambian.
 
 **Revisión adversarial** ([AGENTS.md](../../AGENTS.md), «Forma de trabajo»). La llevan las tareas marcadas con **(R)**, completa y antes del commit: un subagente nuevo recibe el código y los escenarios, sin la conclusión de quien programó.
 
@@ -27,6 +27,7 @@ Todo va en `main`, sin ramas, worktrees, stash, reset ni push. Cada chat commite
 | Fila | Qué se encontró | Qué cambia |
 | --- | --- | --- |
 | Base de la 12 | Contrato, back y front hechos; faltan I1 a I4. La 214 la cierra como está | K0 |
+| Lo incluido (260) | Cada permiso es independiente; `PermissionItem` no trae `includes`; Plataforma no tiene catálogo en la API (lo arma `permissionCatalog.ts`), y `RolePermissionCache` guarda lo asignado | K1 y B16, antes de la B1 |
 | Delegación (0061) | `RoleService` cuida solo los roles de sistema; `OrganizationUserAdministratorGuard` y `LastCompanyAdminGuard`, solo al último; Plataforma no tiene nada | B1, tres guardas |
 | Retención (0062) | Nada purga códigos, ingresos, OpenIddict ni invitaciones. `PeriodicWorker` no tiene lease: llega con la B6 de la E10 | B2, purgas idempotentes por lotes |
 | Topes de correo (0063) | `EmailOptions` no tiene topes; `WhatsAppCodeQuota` cuenta por número que manda, no por cuenta | B3, con una tabla global por horas |
@@ -50,7 +51,7 @@ Todo va en `main`, sin ramas, worktrees, stash, reset ni push. Cada chat commite
 | Borrar (§5) | El borrado ya limpia los archivos en la misma operación; el front dice «con sus adjuntos» | F8 y los índices de B14 |
 | Anillo (§11) | No hay control del anillo ni traza en el turno | B15 |
 | Front | `toastError` no vence; `ModelEditorDialog` pliega «Avanzado»; `PermissionPicker` usa áreas plegables; no hay `BroadcastChannel`; `parseDecimal` no detecta lo ambiguo | F1 a F8 |
-| Lienzo v176 | Están el diseño, la IA y la matriz. Faltan la entrega y «Sin confirmar» (Usuarios, Empresa, Cuentas, chats y difusiones) y la (i) de Auditoría de Plataforma | F10, al final; se dibujan antes |
+| Lienzo v176 | Están el diseño y la IA. Los tableros de roles que la v175 cambió se redibujan en áreas plegables (260). Faltan la entrega y «Sin confirmar» (Usuarios, Empresa, Cuentas, chats y difusiones) y la (i) de Auditoría de Plataforma | F5 y F10, al final; se dibujan antes |
 
 ## Contrato
 
@@ -69,11 +70,12 @@ El contrato completo está en la spec (§Contrato): las rutas que cambian, la ru
   - `Uncertain` en los destinatarios de una difusión;
   - `available` en las conversaciones del asistente;
   - `providerIssue` y `unsupportedProvider` en las dos configuraciones del asistente;
+- **`includes` (260):** cada permiso del catálogo trae los códigos que incluye, en los tres catálogos: organización y empresa en `GET /api/permissions`, y Plataforma en `GET /api/platform/permissions`, nueva. Va vacío hasta la B16. El back entra antes que el front o junto con él: un front nuevo con un back viejo falla al leer `includes`;
 - **ruta nueva:** `POST {base}/conversations/{id}/messages/{messageId}/review` en las tres bases de WhatsApp;
 - **subidas del asistente:** sus 429 y 400 antes de leer el cuerpo, y `Assistant.Conversation.Unavailable`;
 - **datos de referencia:** valores nuevos en los patrones y en `format-cases.json`.
 
-El back publica los DTO, los atributos, los códigos con sus textos y la ruta nueva, que responde 501 hasta la B7, y genera `docs/contracts/openapi.json`. El front corre `npm run contracts` y no escribe tipos a mano. No hay permiso nuevo.
+El back publica los DTO, los atributos, los códigos con sus textos y las dos rutas nuevas (la de revisión responde 501 hasta la B7), y genera `docs/contracts/openapi.json`. El front corre `npm run contracts` y no escribe tipos a mano. No hay permiso nuevo.
 
 ### Decisiones técnicas del contrato
 
@@ -96,20 +98,21 @@ Los pasos, con sus archivos, lo que copian y sus tests, están en la spec (§Pas
 
 ### Back A · núcleo y WhatsApp
 
-1. **B1 · Nadie da lo que no tiene (R: permisos).** Tres guardas por alcance, usadas dentro del límite por roles, usuarios, miembros de empresa y operadores. `DelegatedAdministrationTests` en los tres alcances.
-2. **B2 · Retención del ingreso (R: datos y aislamiento).** `IdentityRetentionWorker` (global) e `InvitationRetentionWorker` (con `TenantJobRunner`), por lotes y con sus índices. `PersonalDataPurgeTests` exige la purga o el motivo de cada tabla.
-3. **B3 · Topes de correo y de códigos (R: datos y cuotas por alcance).** `EmailQuotaOptions`, `EmailQuotaGuard` y `identity.MessageQuotaBuckets`, más los 10 diarios por cuenta de WhatsApp y la IPv6 por su /64. El E2E y el recorrido corren con topes altos en su configuración.
-4. **B5 · La cola no repite lo dudoso (R: datos y efectos fuera).** Suma `Uncertain`, la reserva por destino, la prioridad y lo que vence en la cola. El SMTP clasifica sus fallas, un lease vencido queda «Sin confirmar» y la entrega cabe en el apagado. Hay chequeo `email` y contadores sin organización.
-5. **B6 · Estado de entrega de la invitación (R, con B5).** El `OutboxMessageId` va en cada invitación, también la de un operador, y los tres readers derivan `invitationDelivery`.
-6. **B7 · WhatsApp «Sin confirmar» (R: efectos fuera y permisos).** El transporte clasifica sus fallas y reintenta dos veces a los 30 s. Van también los ocho códigos, el orden por chat, la prioridad sobre las difusiones, `Uncertain` al leer y la revisión con su ruta en las tres bases.
-7. **B8 · El chat cifrado (R: cifrado y aislamiento).** Va con un conversor de EF por organización, la migración que vacía el contenido, la lectura vacía de lo que no abre y los tests de aislamiento. Suma también las líneas del runbook.
-8. **B4 · El bloqueo no se usa contra otro.** Google no frena por códigos fallidos, y con la cuenta bloqueada un código correcto dice `LockedOut`.
-9. **B9 · Lo transversal.** Lleva la resiliencia sin POST y el scope del log con la consola en JSON. Suma las guardas de textos neutrales y de etiquetas de métricas. Los datos de la instalación salen del repo, con `StartupConfigurationTests` invertido y la configuración al día.
+1. **B16 · Un permiso incluye a otro (R: permisos y datos).** Va primera, porque la B1 compara con lo efectivo. `Includes` en Domain, en cada catálogo, que el catálogo valida al componerse, y `includes` en el catálogo de la API. Una sola función de lo efectivo (los roles más lo que incluyen) para `PermissionService`, `PlatformPermissionService` y las guardas de la B1; la caché guarda lo efectivo. Al guardar un rol o un operador se guarda lo pedido más lo incluido. Los roles que ya creó cada organización se completan una vez, recorriendo las organizaciones, y lo efectivo queda como red durante un despliegue. Tests de lo efectivo, guardar y completar un rol viejo; se corrigen los 403 que pedían «Administrar» sin «Ver».
+2. **B1 · Nadie da lo que no tiene (R: permisos).** Tres guardas por alcance, usadas dentro del límite por roles, usuarios, miembros de empresa y operadores. `DelegatedAdministrationTests` en los tres alcances.
+3. **B2 · Retención del ingreso (R: datos y aislamiento).** `IdentityRetentionWorker` (global) e `InvitationRetentionWorker` (con `TenantJobRunner`), por lotes y con sus índices. `PersonalDataPurgeTests` exige la purga o el motivo de cada tabla.
+4. **B3 · Topes de correo y de códigos (R: datos y cuotas por alcance).** `EmailQuotaOptions`, `EmailQuotaGuard` y `identity.MessageQuotaBuckets`, más los 10 diarios por cuenta de WhatsApp y la IPv6 por su /64. El E2E y el recorrido corren con topes altos en su configuración.
+5. **B5 · La cola no repite lo dudoso (R: datos y efectos fuera).** Suma `Uncertain`, la reserva por destino, la prioridad y lo que vence en la cola. El SMTP clasifica sus fallas, un lease vencido queda «Sin confirmar» y la entrega cabe en el apagado. Hay chequeo `email` y contadores sin organización.
+6. **B6 · Estado de entrega de la invitación (R, con B5).** El `OutboxMessageId` va en cada invitación, también la de un operador, y los tres readers derivan `invitationDelivery`.
+7. **B7 · WhatsApp «Sin confirmar» (R: efectos fuera y permisos).** El transporte clasifica sus fallas y reintenta dos veces a los 30 s. Van también los ocho códigos, el orden por chat, la prioridad sobre las difusiones, `Uncertain` al leer y la revisión con su ruta en las tres bases.
+8. **B8 · El chat cifrado (R: cifrado y aislamiento).** Va con un conversor de EF por organización, la migración que vacía el contenido, la lectura vacía de lo que no abre y los tests de aislamiento. Suma también las líneas del runbook.
+9. **B4 · El bloqueo no se usa contra otro.** Google no frena por códigos fallidos, y con la cuenta bloqueada un código correcto dice `LockedOut`.
+10. **B9 · Lo transversal.** Lleva la resiliencia sin POST y el scope del log con la consola en JSON. Suma las guardas de textos neutrales y de etiquetas de métricas. Los datos de la instalación salen del repo, con `StartupConfigurationTests` invertido y la configuración al día.
 
 **Texto para el chat del Back A**
 
 ```text
-Leé AGENTS.md, este plan, la spec docs/plans/formularios/base-de-la-12-segunda-parte.md y las ADR 0060 a 0063, 0065 y 0066; las fichas permisos, multitenancy, concurrencia, cuotas, guardado, persistencia-ef, datos-personales, logs, api-http, result-y-errores, textos y tests, y las features identidad, organizaciones y whatsapp. Después de K1, hacé en este orden B1, B2, B3, B5, B6, B7, B8, B4 y B9, con los pasos de la spec. Avisale a la Guía cuando commitees la B8: desde ahí Back B toca el modelo, y vos no hacés más migraciones. Las tareas marcadas (R) llevan la revisión adversarial completa antes del commit: un subagente nuevo recibe el código y los escenarios, sin tu conclusión, e intenta romperla. No toques el front ni las tareas de Back B. Cualquier cambio de contrato imprescindible va a «Cambios al contrato» del plan. Todo en main, sin push, ramas, worktrees, stash ni reset; commiteá solo lo tuyo con git commit -- <rutas>. Por tarea: test dirigido rojo y verde, build y tests rápidos enteros del back sin Docker y sin filtrar por módulo; si tocó rutas, persistencia, autenticación o aislamiento, sus tests de integración y de seguridad. Nunca pegues ni copies claves: los datos de la instalación los carga el usuario en I1. Ninguna corrida contra Meta real.
+Leé AGENTS.md, este plan, la spec docs/plans/formularios/base-de-la-12-segunda-parte.md y las ADR 0060 a 0063, 0065 y 0066; las fichas permisos, multitenancy, concurrencia, cuotas, guardado, persistencia-ef, datos-personales, logs, api-http, result-y-errores, textos y tests, y las features identidad, organizaciones, roles y whatsapp; para la B16, la decisión 260 y el traspaso 16, 01, de ArquitecturaBase (git show origin/main:docs/plans/2026-11-21-traspaso-multitenant/01-roles-y-permisos.md). Después de K1, hacé en este orden B16, B1, B2, B3, B5, B6, B7, B8, B4 y B9, con los pasos de la spec. Avisale a la Guía cuando commitees la B8: desde ahí Back B toca el modelo, y vos no hacés más migraciones. Las tareas marcadas (R) llevan la revisión adversarial completa antes del commit: un subagente nuevo recibe el código y los escenarios, sin tu conclusión, e intenta romperla. No toques el front ni las tareas de Back B. Cualquier cambio de contrato imprescindible va a «Cambios al contrato» del plan. Todo en main, sin push, ramas, worktrees, stash ni reset; commiteá solo lo tuyo con git commit -- <rutas>. Por tarea: test dirigido rojo y verde, build y tests rápidos enteros del back sin Docker y sin filtrar por módulo; si tocó rutas, persistencia, autenticación o aislamiento, sus tests de integración y de seguridad. Nunca pegues ni copies claves: los datos de la instalación los carga el usuario en I1. Ninguna corrida contra Meta real.
 ```
 
 ### Back B · formatos e IA
@@ -135,7 +138,7 @@ Las tareas siguen el lienzo v176 y las fichas del front (`formatos.md`, `pantall
 2. **F2 · Avisos (210):** el `Toaster`, `FormError`, el cartel que bloquea y las franjas, con el filo y el ícono. El error se va a los 10 s y uno con acción queda.
 3. **F3 · Lo apagado y la (i) (211):** clic, toque, Enter y Espacio sin hacer la acción, y el control entero responde. En el teléfono, el tooltip.
 4. **F4 · Un dato por columna y el ⋮ (206 y 209):** el texto secundario de `DataTable` y la revisión de las columnas y los encabezados del núcleo.
-5. **F5 · Roles como matriz (212):** en la organización, con alcance de empresa, y en los permisos de un operador, en sus dos formas.
+5. **F5 · Roles en áreas plegables (260):** `PermissionPicker` y `RoleEditorPage` conservan su forma, con los detalles de la RO3-D: toda área con su casilla, se abren las que tienen algo, sin cuentas ni buscador, el Dueño leído con tildes y filas de 44 px en el teléfono. Lo incluido se ve marcado y apagado, con su motivo. Va en la organización, con alcance de empresa, y en los permisos de un operador (`OperatorPermissionsDialog`, `InviteOperatorDialog` y `AccountPermissionsTab`). Espera sus tableros.
 6. **F6 · Las piezas (213):** el título de grupo con (i), el chip de solo lectura, las teclas con el menú enfocado, el desplegable de 48 y las confirmaciones en una frase.
 7. **F7 · Sesión, conteos, topes y CUIT:** `BroadcastChannel` (N12), los conteos que se muestran (N30), la espera en horas y minutos, los textos de los 403 y 429 nuevos y los once ceros.
 8. **F8 · El asistente (0064 y 254):** borrar con sus archivos, las subidas, la conversación no disponible, descartar lo desconocido, las fallas en las dos configuraciones y el diálogo del modelo en dos pasos.
@@ -145,7 +148,7 @@ Las tareas siguen el lienzo v176 y las fichas del front (`formatos.md`, `pantall
 **Texto para el chat del Front**
 
 ```text
-Leé AGENTS.md del front, este plan y la spec docs/plans/formularios/base-de-la-12-segunda-parte.md, con las decisiones 205 a 213 y 254 de la hoja de ruta, las fichas del front y los tableros del lienzo v176 que nombra la spec. Esperá K1, corré npm run contracts y hacé F1 a F9 en orden, contra los tipos generados. F10 va al final y arranca cuando la Guía confirma sus tableros aprobados en el lienzo; nunca dibujes ni inventes esa pantalla. No toques el lienzo, las specs ni el back, ni el src si Vite está levantado. Usá i18n, shared/format, shared/ui, TanStack Query y las reglas de accesibilidad; no escribas tipos generados. Todo en main, sin push, ramas, worktrees, stash ni reset; commiteá solo lo tuyo con git commit -- <rutas>. Por tarea: tests focales, npx tsc -b y npm test completos, sin filtrar por módulo; al cerrar la parte, build, lint y contracts:check.
+Leé AGENTS.md del front, este plan y la spec docs/plans/formularios/base-de-la-12-segunda-parte.md, con las decisiones 205 a 211, 213, 254 y 260 de la hoja de ruta, las fichas del front y los tableros del lienzo v176 que nombra la spec. Esperá K1, corré npm run contracts y hacé F1 a F4 y F6 a F9 en orden, contra los tipos generados. F5 y F10 van al final y arrancan cuando la Guía confirma sus tableros aprobados en el lienzo; nunca dibujes ni inventes esas pantallas. No toques el lienzo, las specs ni el back, ni el src si Vite está levantado. Usá i18n, shared/format, shared/ui, TanStack Query y las reglas de accesibilidad; no escribas tipos generados. Todo en main, sin push, ramas, worktrees, stash ni reset; commiteá solo lo tuyo con git commit -- <rutas>. Por tarea: tests focales, npx tsc -b y npm test completos, sin filtrar por módulo; al cerrar la parte, build, lint y contracts:check.
 ```
 
 ## Integración y puerta
@@ -170,7 +173,7 @@ Leé AGENTS.md del front, este plan y la spec docs/plans/formularios/base-de-la-
    - un modelo nuevo en dos pasos;
    - una fecha, un porcentaje y un mes como rango;
    - un aviso de cada tipo;
-   - la matriz de un rol en la compu y en el teléfono;
+   - un rol en áreas plegables, con lo incluido apagado y su motivo, en la compu y en el teléfono;
    - salir con dos pestañas abiertas.
 
 | Puerta | Resultado |
@@ -188,7 +191,7 @@ Leé AGENTS.md de los dos repos, este plan, la spec y la skill /puerta. Integrá
 **Usa de las anteriores:** de la base de la 12, la campana, `InfoTip`, `RowAction.disabledReason`, `FilterBar`, `PageLoading`, `ConfirmDialog` con `pending`, las fechas completas y la galería a 320 (K0). De la E11, `WhatsAppCloudClient`, `WhatsAppConversationReader`, `WhatsAppBroadcastReader` y los chats de las tres bases. De la E8b, el asistente del Inicio, `AssistantChatClient` y `AssistantTurnWorker`.
 
 **Deja para las siguientes:**
-- **la E12 y todo el bloque:** las fechas con coma, `FormatMonthRange`, el porcentaje pegado y `numberAmbiguous`, para importar un catálogo (C9) y para el Excel. También los avisos, la (i) y lo apagado, la matriz, `DataTable` con texto secundario y las piezas de la 213;
+- **la E12 y todo el bloque:** las fechas con coma, `FormatMonthRange`, el porcentaje pegado y `numberAmbiguous`, para importar un catálogo (C9) y para el Excel. También los avisos, la (i) y lo apagado, `DataTable` con texto secundario y las piezas de la 213. Y los roles en áreas plegables con `Includes`, donde cada etapa declara lo que incluyen sus permisos (260);
 - **la E14 y la E21:** `OutboxStatus.Uncertain`, `OrderingKey`, `Priority`, la revisión por id del envío, los ocho códigos y el conversor del contenido del chat, para que su contenido nazca cifrado (0065 §1);
 - **la E23 y la E25:** el clasificador de fallas del proveedor, `providerIssue`, el lugar de subida, `EngineVersion`, el anillo controlado y la traza, que aplican al canal, la transcripción, los documentos y armar;
 - **la E10:** la reserva por destino ya hecha, y su B6 la prueba con dos hosts. También el chequeo `ai-keyring` y los workers de purga, que reciben el lease de `PeriodicWorker`.

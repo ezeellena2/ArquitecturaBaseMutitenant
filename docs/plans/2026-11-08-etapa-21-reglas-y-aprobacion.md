@@ -95,7 +95,7 @@ El chat del contrato publica las rutas con 501, los permisos, los errores con su
 
 **Campana**, como `formPublicationFailed` (E14): `formApprovals`, a quien puede decidir, con `{formName, count}`, `link` `/org/formularios/{id}/respuestas?vista=por-aprobar&respuesta={la más vieja}` e `id` `formApprovals:{definitionId}:{count}:{tarea más nueva}`; `ruleNoticeFailed`, a quien tiene `formrules.manage`, con `{displayNumber}`, `link` `…/respuestas/{recordId}/completa` e `id` `ruleNoticeFailed:{recipientId}:{intento}`. Sus textos los arma el front (F4).
 
-**Permisos:** los tres de la spec, con los textos de la §2 de la hoja de ruta y sus filas de la matriz: `Area.formrules`, «Reglas y PDF» (*Rules and PDF*), y `Area.formapprovals`, «Aprobaciones» (*Approvals*) (257); `<fecha>_SystemRoleFormRulesPermissions.cs` se los da al Dueño (`TenantAdmin`).
+**Permisos:** los tres de la spec, con los textos de la §2 de la hoja de ruta y sus áreas en los permisos de un rol (260): `Area.formrules`, «Reglas y PDF» (*Rules and PDF*), y `Area.formapprovals`, «Aprobaciones» (*Approvals*) (257); `formrecords.correct` incluye `formrecords.read`; `<fecha>_SystemRoleFormRulesPermissions.cs` se los da al Dueño (`TenantAdmin`).
 
 **Textos** (`FormsTexts` y los del módulo WhatsApp, es / en):
 - `Forms.Rules.Invalid`, Validation (`rules[i]…`): «Revisá esta parte de la regla.» / "Check this part of the rule."

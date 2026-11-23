@@ -118,13 +118,13 @@ Van en `Domain/Forms/FormCatalogErrors.cs` y `FormCatalogImportErrors.cs`, con s
 El chat del contrato confirma esta lista al arrancar. Lo que difiera se anota en «Cambios al contrato» antes de programar:
 1. Front: el aro y su gerundio, y `ConfirmDialog` con `pending` y el foco en «Cancelar» (F1 y F13); `DataTable` con su primera carga y `refreshing`, y `FilterBar` con un solo «Filtros», chips y «Limpiar todo» (F3); las fechas completas (F4); la forma y la escala (F8); `InfoTip` y el motivo de lo apagado (F10); lo elegido (F11); `PageLoading` y `FormSkeleton` (F12); las capturas a 320 (F15).
 2. Back: `PermissionAuthorizationHandler` con una lectura por requisito (B10).
-3. La segunda parte de la base (214): `parseDecimal` con `numberAmbiguous` (207), `PercentText` pegado (208), los avisos (210), el tooltip que se abre con un clic o un toque, también en el teléfono (211), la matriz de roles (212) y las piezas de la 213.
+3. La segunda parte de la base (214): `parseDecimal` con `numberAmbiguous` (207), `PercentText` pegado (208), los avisos (210), el tooltip que se abre con un clic o un toque, también en el teléfono (211), los roles en áreas plegables con lo incluido (260) y las piezas de la 213.
 
 ### K1 · Publicar el contrato
 
 Un solo chat, en el back:
 - el esqueleto del módulo: `AddFormsModule` en las tres capas (`FormsModule` y `FormsApiModule`) y `Program.cs`, `FormsFeatureDefinitionContributor` (`new("forms", FeatureScope.Business, false)`) y los recursos con `FormsErrorTextSource`;
-- la clase `Forms` de `Permissions.cs`, con sus textos en `Permissions.resx` y `.en.resx` solo con lo que existe en esta etapa: «Ver catálogos», «Ver los catálogos y sus opciones.» («View catalogs», "View catalogs and their options."), y «Administrar catálogos», «Crear y editar catálogos, importarlos y darlos de baja.» («Manage catalogs», "Create and edit catalogs, import them and deactivate them."), y su fila en la matriz de roles (212), `Area.formcatalogs`, «Catálogos» («Catalogs»); `<fecha>_SystemRoleFormCatalogPermissions.cs`, que copia `20261010203618_SystemRoleAssistantPermissions.cs`, solo para el Dueño;
+- la clase `Forms` de `Permissions.cs`, con sus textos en `Permissions.resx` y `.en.resx` solo con lo que existe en esta etapa: «Ver catálogos», «Ver los catálogos y sus opciones.» («View catalogs», "View catalogs and their options."), y «Administrar catálogos», «Crear y editar catálogos, importarlos y darlos de baja.» («Manage catalogs», "Create and edit catalogs, import them and deactivate them."), y su área en los permisos de un rol (260), `Area.formcatalogs`, «Catálogos» («Catalogs»), donde «Administrar catálogos» incluye «Ver catálogos» (`Includes`); `<fecha>_SystemRoleFormCatalogPermissions.cs`, que copia `20261010203618_SystemRoleAssistantPermissions.cs`, solo para el Dueño;
 - las rutas con 501 en `BusinessFormCatalogsController`, sus `*HttpRequest`, los errores con sus textos y `FormsContractContributor.cs`;
 - `openapi.json` regenerado y las guardas de rutas en verde.
 
