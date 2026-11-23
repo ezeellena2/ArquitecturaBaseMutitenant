@@ -869,6 +869,11 @@ Del traspaso 18, tanda 3 (lo que se carga y lo que se decide, de la E18 a la E21
 
 276. **«Pedir aprobación» con dos casillas** (pregunta 84 del traspaso 18; RC4-A de ArquitecturaBase; cambia la 25 y la 238 en que son fijas, y la regla del motivo de la E21): cada acción «Pedir aprobación» suma, debajo del rol, «Puede decidir quien cargó» (sin marcar) y «Exigir motivo al rechazar» (marcada), cada una con su (i). Por defecto queda como hasta ahora. Se guardan con la revisión de las reglas, y cada respuesta las sella al llegar: lo que ya espera aprobación sigue con lo que tenía. Con la primera marcada, quien cargó la respuesta, quien la corrigió y quien la pasó desde un documento (238) también la deciden, la ven en «Por aprobar» y en sus conteos, y cuentan como personas del rol para pedir aprobación (239). Sin la segunda, rechazar sin motivo vale y la actividad lo dice. Un motivo que falta cuando se exige es 400 `Forms.Approval.ReasonRequired`. Sirve para un rol con una sola persona, que hasta ahora trababa todo lo que esa persona cargaba.
 
+Del traspaso 18, tanda 4 (biblioteca, asistente y documentos, de la E22 a la E25), el 2026-11-23. El usuario aprobó el plan de la tanda, con la 277 y la 278; no tenía preguntas numeradas. Las decisiones 261 a 272 que caen en estas etapas están en sus specs:
+
+277. **Un dato leído que no tiene la forma de su validación queda sin leer** (O44 de ArquitecturaBase, opción A que eligió allá el usuario; E25, precisa la 41 y las validaciones fijas): si lo que la IA leyó de un documento o de una fila de una planilla ni siquiera tiene la forma que pide su validación (22 dígitos o un alias para una cuenta, once dígitos para una CUIT), la pregunta queda vacía, como lo que no se leyó, y no se propone marcada como inválida. Lo que tiene la forma y no pasa la validación (un CBU con el dígito verificador mal) sigue marcado. Por ejemplo, el número interno de una cuenta de débito, que no es CBU, CVU ni alias, queda sin leer.
+278. **El tope de ofrecimientos del asistente, como allá** (TO1-A, con O36 y O39 de ArquitecturaBase; E23; precisa la 66 con la 270): cada organización lo elige por bandeja, de 1 a 50 y 2 por defecto, dentro del máximo de la plataforma; sin un asistente guardado vale 2. Con el tope lleno, el pedido deriva a una persona con el motivo «Llegó al tope de ofrecimientos del día», a la vista en la franja del chat y en el porqué: la persona nunca queda sin respuesta. Elegir una opción de una pregunta ya ofrecida no gasta otra oferta, una carga desde una planilla tampoco, y los textos no nombran «dos». Un audio se transcribe siempre y sigue como un texto, también con el tope lleno: si lo contesta un caso, lo contesta.
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase
@@ -922,7 +927,7 @@ Repo `C:\Users\ezequ\source\repos\ArquitecturaBase` y su front `ArquitecturaBase
 
 Ninguna.
 
-Las de los traspasos 16 y 17, del 2026-11-23, pasaron a la §5 como decisiones 260 a 269, las de la tanda 1 del traspaso 18, del mismo día, como 270 a 273, las de su tanda 2 como 274 y 275, y la de su tanda 3 como 276.
+Las de los traspasos 16 y 17, del 2026-11-23, pasaron a la §5 como decisiones 260 a 269, las de la tanda 1 del traspaso 18, del mismo día, como 270 a 273, las de su tanda 2 como 274 y 275, la de su tanda 3 como 276, y las de su tanda 4 como 277 y 278.
 
 Las del traspaso 10, del 2026-11-07, pasaron a la §5 como decisiones 160 a 179 (su evaluación, retirada el 2026-11-08: `git show 4626f5ba:docs/plans/2026-11-07-traspaso-10-evaluacion.md`), y lo que se decidió después, al escribir las specs y al dibujar, como 180 a 190; las dos de forma de trabajo, a `AGENTS.md`. Las de los commits de allá del 2026-11-07 y el 2026-11-08, revisados el 2026-11-08, como 191 y 192, y las de la revisión de las specs de ese mismo día, como 193 a 199. Las que salieron al escribir los planes ejecutables, el mismo día, son la 200 a la 203.
 
