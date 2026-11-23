@@ -79,7 +79,7 @@ Las revisiones de sugerencias las pide el historial de `FRM-Editor-Sugerencias` 
 - `…/conversations/{id}/take` y responder sin tomar pasan el chat a «Persona», quitan «Necesita una persona» y dejan sin efecto la propuesta que llegue tarde.
 - `GET …/conversations` suma el filtro `needsPerson` y, por fila, `attentionMode`, `pinned` y `needsPerson?`; `GET …/conversations/{id}` suma ese estado, y cada mensaje, `assistantActionId?` y `transcript?`.
 - `GET /forms/{id}` y `PUT /forms/{id}/draft` suman `offerWhen?` (no se sella).
-- `GET` y `PUT /api/platform/assistant/settings` suman `{maxReplyLength, maxRepliesPerDay, maxFormOffersPerDay}`, con los valores iniciales de `Plat-Asistente-Config-23` y `WA-Asistente-Limites`; el de ofrecimientos, de 1 a 50 (278).
+- `GET` y `PUT /api/platform/assistant/settings` suman `{maxReplyLength, maxRepliesPerDay, maxFormOffersPerDay}`, con los valores iniciales de `Plat-Asistente-Config-23` y `WA-Asistente-Limites`; el de ofrecimientos, de 1 a 50 y 50 de entrada (278).
 - `GET /forms/{id}/records/{recordId}` suma `sentBy.byAssistant`, `origin?{proposed[{fieldId, value, corrected}]}` y `chain[]{recordId, definitionId, displayNumber, formName, relation: Previous|Next}`. Lo del envío llega por el puerto de origen de la E15: `StructuredRecordOrigin` suma `ByAssistant` y `Proposed[]`, que arma `WhatsAppStructuredRecordOriginSource.cs`; la cadena la lee `FormRecordReader.cs` de `SuggestedByRecordId`.
 
 Lo común: 401, 403, 404 con una feature apagada, 409 `General.ConcurrencyConflict`, idempotencia y paginado común.

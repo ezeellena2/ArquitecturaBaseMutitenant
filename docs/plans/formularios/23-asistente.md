@@ -99,7 +99,7 @@ Datos de ejemplo: Grupo Delta vende y repara heladeras. Martina López escribe p
 - `FRM-Editor-Sugerencias`: «La IA decide» o «Preguntar siempre», el formulario y cada pregunta de un mapeo, en la pieza (262);
 - `FRM-Editor-Reglas-23` y `M-FRM-Reglas-23`: «Armar desde un texto» grisado con el cupo del día agotado, distinto del tope del mes (271);
 - `FRM-Respuesta-Cadena`: sobre la vista rápida de la E21 redibujada (266 y 267), y la cadena con cada dato en su columna, no debajo del número (263);
-- `Plat-Asistente-Config-23` y su teléfono: el máximo de ofrecimientos, de 1 a 50 (278).
+- `Plat-Asistente-Config-23` y su teléfono: el máximo de ofrecimientos, de 1 a 50 y 50 de entrada (278); hoy dice 3.
 
 El recorrido guiado «Los casos del asistente» muestra a Lucía armando y probando los casos, y a Martina escribiendo, hasta la ráfaga con tres acciones.
 
