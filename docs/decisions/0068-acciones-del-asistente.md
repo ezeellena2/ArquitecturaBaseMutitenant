@@ -86,7 +86,7 @@ El usuario pidió, con sus palabras, que cuando la IA pueda crear, editar o elim
      - lecturas por la caché: llenarla no es escribir un dato, pero nunca se invalida ni se avanza una generación.
 
      Nada de `Interfaces/Integrations` (salvo el contexto de la petición), `IServiceProvider`, `IUnitOfWork`, repositorios, `Writer`, `Guard` ni servicios.
-   - **Dónde corre:** en un alcance de DI propio. Ese alcance entra con el mismo actor revalidado (en el worker) o con la organización del claim (en una petición), nunca con `ITenantScope.Enter`. Abre una transacción de PostgreSQL `READ ONLY` y se descarta al terminar: nada que quede en memoria llega a otra transacción.
+   - **Dónde corre:** en un alcance de DI propio. Ese alcance entra con el mismo actor revalidado (en el worker), con la organización del claim (en una petición) o, desde la E23, con la organización de un turno de canal, sin persona y sin acciones, nunca con `ITenantScope.Enter`. Abre una transacción de PostgreSQL `READ ONLY` y se descarta al terminar: nada que quede en memoria llega a otra transacción.
 
    **Las 19 lecturas de hoy** reciben servicios enteros, así que a ellas las cubre la segunda barrera: pasan a correr en ese mismo alcance.
 
