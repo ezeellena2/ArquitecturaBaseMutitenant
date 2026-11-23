@@ -58,9 +58,13 @@ public interface IConversationAgent
 // WhatsApp → Asistente (implementa el módulo Assistant): la configuración, para las rutas de WhatsApp
 public interface IConversationAgentSettings
 {
-    Task<Result<ConversationAgentConfig>> GetAsync(CancellationToken ct);
     Task<Result<ConversationAgentVersions>> SaveAsync(ConversationAgentConfig config, CancellationToken ct);
     Task<Result<ConversationAgentTestResult>> TestAsync(ConversationAgentTest test, CancellationToken ct);
+}
+// Lo mismo, solo para leer: lo usan también las fuentes de acciones (0068 §5)
+public interface IConversationAgentReader
+{
+    Task<Result<ConversationAgentConfig>> GetAsync(CancellationToken ct);
 }
 // Forms → Asistente (implementa el módulo Assistant)
 public interface IStructuredRuleDrafter
@@ -176,7 +180,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | B9 | Sugerencias | `FormSuggestionService.cs`; `WhatsAppSuggestionService.cs`; suma a `FormDefinitionCopyCreator.cs` [E17] | `FormRuleService.cs` [E21] | bucle; hacia un dado de baja; mapeos; la cadena; copiar lleva la primera revisión |
 | B10 | Regla desde un texto, temas y campana | `FormRuleProposalService.cs`, las herramientas, el puerto y su apagado, `FormMissingTopicService.cs`, `WhatsAppUnansweredTopicService.cs` y la fuente `assistantUnanswered` de la campana | `OrganizationUsersTool` | nunca guarda; tope agotado; sin nombres; buscar por tema, ordenar por cada columna (264) y los conteos; la campana con y sin `whatsapp.manage`; `ModuleIsolationTests` |
 | B11 | Rutas, contratos y ejemplos | `P/Modules/WhatsApp/Controllers/OrganizationWhatsAppAssistantController.cs`, `OrganizationWhatsAppConversationsControllerBase.cs`, `P/Modules/Forms/Controllers/*`; los contratos de WhatsApp, en `P/Modules/WhatsApp/Contracts/WhatsAppAttentionHttpContracts.cs`, y los de Forms, `SaveFormSuggestionsHttpRequest` y `ProposeFormRuleHttpRequest`, un archivo cada uno | esos mismos | cada ruta con 401, 403, feature apagada = 404; aislamiento |
-| B12 | Acciones del asistente: las tres de la spec | `A/Modules/WhatsApp/Services/WhatsAppAttentionActionSource.cs` y `A/Modules/Forms/Services/FormMissingTopicActionSource.cs`, registradas como `IAssistantActionSource`, con sus pantallas en `AssistantActionScreen` y su traducción a `AssistantRouteKey`; sus textos `Action.*` en `WhatsAppTexts` y `FormsTexts`, es y en; sus escenarios en `TestFeatures/AssistantActions/` | `RoleActionSource.cs` | `AssistantActionDeclarationTests` y la batería genérica (`AssistantActionContractTests`) |
+| B12 | Acciones del asistente: las cuatro de la spec | `A/Modules/WhatsApp/Services/WhatsAppAgentActionSource.cs`, `WhatsAppAttentionActionSource.cs` y `A/Modules/Forms/Services/FormMissingTopicActionSource.cs`, registradas como `IAssistantActionSource`, con sus pantallas en `AssistantActionScreen` y su traducción a `AssistantRouteKey`; sus textos `Action.*` en `WhatsAppTexts` y `FormsTexts`, es y en; sus escenarios en `TestFeatures/AssistantActions/` | `RoleActionSource.cs` | `AssistantActionDeclarationTests` y la batería genérica (`AssistantActionContractTests`) |
 
 **Front:**
 

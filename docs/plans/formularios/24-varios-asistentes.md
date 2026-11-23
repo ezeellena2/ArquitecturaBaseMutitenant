@@ -64,7 +64,7 @@ El recorrido guiado «Dos equipos con su asistente» muestra a Lucía asignando 
 
 Las rutas `/whatsapp/assistant/agent` de la E23 pasan a estas, y nombran al principal. Se retiran en el mismo despliegue: es la excepción de la [0060](../../decisions/0060-dos-versiones-conviven.md), porque todavía no hay despliegue (la E10 va después del bloque, 123). El equipo suma `assistantId?` y `assistantName?`. Los mensajes del chat suman `assistantName?`.
 
-**Puertos:** `ConversationTurn` suma `AgentId?`, que elige WhatsApp. `IConversationAgentSettings` suma `ListAsync(search, status, sort, page)`, con id, nombre, `IsPrimary` e `IsActive`, y sus otros métodos reciben el id del asistente.
+**Puertos:** `ConversationTurn` suma `AgentId?`, que elige WhatsApp. `IConversationAgentReader` suma `ListAsync(search, status, sort, page)`, con id, nombre, `IsPrimary` e `IsActive`. Los métodos de los dos puertos reciben el id del asistente.
 
 **Errores:**
 
@@ -115,7 +115,15 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 
 Con la [receta](../../guides/agregar-una-accion-al-asistente.md) (268 y [0068](../../decisions/0068-acciones-del-asistente.md)), registrada y sin ofrecer hasta la calificación: `assistants.create@1` · Nuevo asistente, en su diálogo sobre el Inicio (`Dialog`), con el nombre (`Text`), `whatsapp.manage` y `POST api/organization/whatsapp/assistant/agents`, sin efecto fuera del sistema. La declara `A/Modules/WhatsApp/Services/WhatsAppAssistantActionSource.cs`, con su pantalla en `AssistantActionScreen` y su traducción a `AssistantRouteKey`, y valida con el validador del pedido; el nombre repetido lo decide la ruta.
 
-**No se declaran** dar de baja, reactivar ni editar un asistente, ni el asistente de un equipo: encontrar el asistente o listar los que se pueden elegir pide `IConversationAgentSettings`, un puerto del Assistant que una fuente no puede usar (0068 §5).
+Las declara la misma fuente, que lee los asistentes por `IConversationAgentReader`, el lector del núcleo que implementa el Assistant (0068 §5):
+
+| Acción | Dónde se confirma | Ruta que guarda |
+| --- | --- | --- |
+| `assistant.agent.edit@2` · El asistente | lo de la `@1` de la E23, con el asistente elegido (`Record`, el `Target`) | `PUT …/assistant/agents/{id}` |
+| `assistants.remove@1` · Dar de baja | la confirmación de dar de baja de la lista (`RemoveConfirmation`); el principal no se ofrece | `POST …/agents/{id}/deactivation` |
+| `whatsappteams.assistant.edit@1` · El asistente de un equipo | «Editar equipo» (`Dialog`), con el equipo (`Record`) y el asistente (`Choice` de los activos) | `PUT …/teams/{id}/assistant` |
+
+Todas piden `whatsapp.manage`. La `@1` de la E23 se sigue leyendo un despliegue más (0060). **Reactivar no se declara:** es de un clic, sin confirmación (§9).
 
 ## Qué verificar al arrancar
 

@@ -136,16 +136,19 @@ Con la [receta](../../guides/agregar-una-accion-al-asistente.md) (268 y [0068](.
 
 | Acción | Dónde se confirma | Permiso | Ruta que guarda |
 | --- | --- | --- | --- |
+| `assistant.agent.edit@1` · El asistente | su pantalla, con un solo Guardar (`Page`): el perfil (`Text` y `LongText`), cada sección del conocimiento (`LongText`), las preguntas frecuentes y los casos (`Items`) y los límites de cada bandeja (`Integer` y `Choice`) | `whatsapp.manage` | `PUT …/whatsapp/assistant/agent` |
 | `whatsappattention.edit@1` · Atención | la pestaña «Atención» de «Asistente», sin guardar (`Page`): por bandeja, quién atiende y cuándo vuelve (`Choice`) y los minutos (`Integer`) | `whatsapp.manage` | `PUT api/organization/whatsapp/attention` |
 | `unansweredtopics.dismiss@1` · Descartar un tema | la confirmación de descartar de «Preguntas sin respuesta» (`RemoveConfirmation`) | `whatsapp.manage` | `POST …/unanswered-topics/{id}/dismiss` |
 | `missingforms.dismiss@1` · Descartar un tema | la de «Formularios que faltan» (`RemoveConfirmation`) | `forms.manage` | `POST …/forms/missing/{id}/dismiss` |
 
 **No se declaran:**
-- **Perfil, Conocimiento, Casos y Límites** (`PUT assistant/agent`): la ruta es de WhatsApp y guarda en el Assistant por `IConversationAgentSettings`, un puerto que una fuente no puede usar (0068 §5), y los casos, las franjas y las preguntas frecuentes son listas de objetos, sin tipo (§4);
+- **el horario del conocimiento:** son días con franjas, dos niveles, y `Items` tiene uno (§4); se carga en la pantalla;
 - **las sugerencias entre formularios:** listas de condiciones y mapeos, sin tipo;
 - **«Marcar como revisado» y el modo, fijar o resolver un chat:** son de un clic, sin confirmación ni formulario donde confirmar (§9);
 - **mandar una sugerencia, armar una regla desde un texto y «Crear formulario» de un tema:** ya los propone la IA, o nacen en borrador (0057);
 - **los máximos de Plataforma:** piden la prueba reciente, que no se declara (§4).
+
+**El asistente lo declara WhatsApp,** que tiene la ruta, y lo lee por `IConversationAgentReader`, el lector del núcleo que implementa el Assistant (0068 §5).
 
 **El turno de canal no ofrece las tres piezas de acciones** (0068 §11): se suman por WhatsApp cuando el canal tenga lugar.
 
