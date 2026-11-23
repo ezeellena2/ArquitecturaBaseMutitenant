@@ -34,6 +34,19 @@ La vista rápida y la pantalla completa leen la respuesta con la forma de su for
 
 **Conteos:** las facetas ofrecen las opciones de cada filtro, y el front no muestra sus cantidades (143). Cada dimensión ignora solo su propio filtro y conserva las opciones históricas, con la última etiqueta. En «elegir varias», una respuesta cuenta en cada opción. Se piden solo las secciones visibles, y su falla no impide aplicar un filtro válido.
 
+## El Excel
+
+- con los filtros aplicados y `formrecords.export`, hasta 10.000 respuestas (con más, «Exportar a Excel» del diálogo queda apagado con su motivo, que pide acotar los filtros, 211) y sin trabajos de fondo;
+- una consulta de ids ordenados, hasta 10.001, e hidratación en lotes de 100, con un presupuesto de 30 s;
+- una exportación a la vez por persona, con la barrera que no espera (C11), en su propio carril: la carga de catálogos no la frena, así «Ya tenés una exportación en curso» siempre es cierto;
+- números, fechas y sí/no van como tipos de Excel, y los textos, literales. **Un número de más de 15 dígitos significativos va como texto,** porque Excel lo redondearía;
+- una opcional vacía es una celda vacía; una pregunta que no existía, «—»;
+- **«elegir varias»** va en una celda, unida con «; ». En un catálogo tipado se suma la columna «pregunta · valor», con los valores canónicos;
+- **todas las preguntas** trae todos los campos sellados, una columna por campo; **solo las visibles** sigue a «Columnas»;
+- la hoja se llama «Respuestas»: el nombre del formulario no siempre entra en una hoja. El archivo es `<formulario>-<aaaa-mm-dd>.xlsx`, en la zona de quien exporta.
+
+**El archivo:** `Content-Disposition` adjunto con `<formulario>-<aaaa-mm-dd>.xlsx` en UTF-8, `no-store` y `nosniff`. La hoja («Respuestas», en inglés «Responses») y los encabezados fijos (N°, Recibida, Cargó, Canal, Empresas) salen de los recursos, en el idioma del pedido. Cargó lleva el nombre, como la planilla, y si alguna fila exportada es de un cliente, los encabezados fijos suman «Es cliente», con «Sí» o «—» (206).
+
 ## Contrato
 
 Todas las rutas son de `/api/organization/forms`, con `[Access(Access.Business)]` y `[FeatureGate("forms")]`. Los `POST` de esta tabla solo leen: no llevan `[Idempotent]`. Van en `FormsContractContributor.cs`, con ejemplos exportados de una corrida real.
@@ -67,8 +80,6 @@ Todas las rutas son de `/api/organization/forms`, con `[Access(Access.Business)]
 
 **Claves y números del tablero:** las claves de tarjeta son `received`, `number:<fieldId>`, `choice:<fieldId>` y `respondents`. `buckets[].start` es la fecha civil (`yyyy-MM-dd`) del período en la zona de quien mira; las semanas van de lunes a domingo, con todos los períodos del rango, también los vacíos, hasta 366. `sum`, `average`, `min`, `max` y `sums` viajan como texto decimal canónico; el promedio se redondea a los decimales de la pregunta, `AwayFromZero`. El `PUT` de los ajustes reemplaza todo, sin versión.
 
-**El Excel:** `Content-Disposition` adjunto con `<formulario>-<aaaa-mm-dd>.xlsx` en UTF-8, `no-store` y `nosniff`. La hoja («Respuestas», en inglés «Responses») y los encabezados fijos (N°, Recibida, Cargó, Canal, Empresas) salen de los recursos, en el idioma del pedido. Cargó lleva el nombre, como la planilla, y si alguna fila exportada es de un cliente, los encabezados fijos suman «Es cliente», con «Sí» o «—» (206).
-
 **Valores:** `values` es un mapa de `fieldId` a valor. Ausente es que la pregunta no existía; `null`, «Sin respuesta». El valor es `{kind: "text", text}`, `{kind: "number", number}`, con el número como texto, `{kind: "date", date}`, `{kind: "bool", bool}` o `{kind: "choices", choices[{id, label, code?, detail?, value?, catalogName?, fields}]}`, en el orden elegido.
 
 **Errores** (en `Domain/Forms/`, con sus textos en `FormsTexts.resx` y `.en.resx`):
@@ -80,11 +91,12 @@ Todas las rutas son de `/api/organization/forms`, con `[Access(Access.Business)]
 | `Forms.RecordExport.TooMany` | Conflict | más de 10.000 respuestas |
 | `Forms.RecordExport.Busy` | Conflict | esa persona ya tiene una exportación de respuestas en curso |
 | `Forms.RecordExport.TimedOut` | ServiceUnavailable | se pasó el presupuesto de 30 s |
+| `Forms.RecordExport.TooManyAtOnce` | TooManyRequests, con `Retry-After` | la organización o la instalación ya tienen sus operaciones de archivo a la vez (C11 de la E12) |
 | `Forms.Dashboard.SettingsInvalid` | Validation (`hiddenCards` o `countBy`) | más de 100 claves entre los dos, o algo que no es `count` ni `sum:<fieldId>` |
 
 Lo ajeno sigue siendo `Forms.Definition.NotFound`. Un 403 o un permiso revocado no devuelven datos ni conteos.
 
-**Permiso nuevo:** `formrecords.export`, con sus textos y la migración de los roles de sistema.
+**Permiso nuevo:** `formrecords.export`, con sus textos y la migración de los roles de sistema. Va en `Area.formrecords` («Respuestas», 257) e incluye `formrecords.read` (`Includes`, 260), porque se exporta desde la planilla.
 
 ## Datos
 
@@ -116,3 +128,14 @@ Cada punto lleva su test, escrito durante la etapa:
 5. **El EXPLAIN corre sobre el SQL real de EF,** no sobre uno escrito a mano.
 6. **Un 404 antes de revisar el permiso:** el permiso se comprueba primero, y un 403 retira de la pantalla lo que había.
 7. **Lo elegido se nombra aunque no esté en la página.** Allá, el filtro de una pregunta de catálogo decía «Valor no disponible», porque la columna no trae sus opciones: el nombre de lo elegido viaja con el cambio y la planilla lo recuerda, como `knownItems` en el front.
+
+## Archivos que los pasos no nombran
+
+- **Contratos,** en `Api/Modules/Forms/Contracts/`: `FormRecordFiltersHttpRequest.cs`, `SearchFormRecordsHttpRequest.cs`, `FormRecordFacetsHttpRequest.cs`, `FormRecordFacetOptionsHttpRequest.cs`, `FormRecordNavigationHttpRequest.cs`, `ExportFormRecordsHttpRequest.cs`, `FormDashboardHttpRequest.cs` y `UpdateFormDashboardSettingsHttpRequest.cs`.
+- **Validadores,** en `Application/Modules/Forms/Validation/`: `FormRecordFiltersValidator.cs` y `UpdateFormDashboardSettingsRequestValidator.cs`.
+- **Tests:**
+  - `Domain.UnitTests/Forms/FormRecordConditionTests.cs`;
+  - en `Application.UnitTests/Modules/Forms/`: `FormRecordColumnsBuilderTests.cs`, `FormRecordFiltersPolicyTests.cs`, `FormRecordSheetBuilderTests.cs` y `FormDashboardBuilderTests.cs`;
+  - en `Api.IntegrationTests/Modules/Forms/`: `FormRecordsTests.cs`, `FormRecordExportTests.cs`, `FormDashboardTests.cs` y `FormRecordsVolumeTests.cs`, y el aislamiento, en el `RouteIsolationMatrixTests.cs` del módulo, que crea la E12;
+  - `FormDashboardSettings` se inscribe en `tests/ArquitecturaBaseMultitenant.ArchitectureTests/PersonalDataPurgeTests.cs`, que crea la B2 de la base 2.
+- **Front,** en `src/modules/forms/`: `api/records.ts`, con las columnas, la búsqueda, las facetas, la navegación, el detalle, el Excel, el tablero y sus ajustes; `recordCount`, `lastRecord` y `overview` suman a `api/forms.ts` [E14], y las pestañas, a `lib/formTabs.ts` [E14].

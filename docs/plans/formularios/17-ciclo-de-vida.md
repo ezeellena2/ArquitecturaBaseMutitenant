@@ -21,6 +21,7 @@ Antes de empezar, en este orden:
    | [api-http](../../rules/api-http.md), [permisos](../../rules/permisos.md) y [result-y-errores](../../rules/result-y-errores.md) | rutas y errores |
    | [textos-y-traducciones](../../rules/textos-y-traducciones.md) | «Dar de baja», «Reactivar» y «Borrar», nunca «Eliminar» |
    | [logs](../../rules/logs.md) y [tests](../../rules/tests.md) | el worker y qué lleva test |
+   | [0068](../../decisions/0068-acciones-del-asistente.md) y su [receta](../../guides/agregar-una-accion-al-asistente.md) | las acciones del asistente de dar de baja y borrar |
 
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 5. **Referencia de producto,** solo para leer: en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`, el anexo C §4 (V-01 a V-07), el anexo D (`BA1-A` a `BA5`) y el anexo E §2.4 (R1021a). Lo que dice de Meta está en `src/ArquitecturaBase.Domain/Modules/WhatsApp/WhatsAppFlowBinding.Deprecation.cs` y en `WhatsAppFlowClient.Deprecation.cs`, solo para leer.
@@ -69,12 +70,13 @@ Aprobados y publicados en el lienzo v151, con el armado de ArquitecturaBase (131
 
 **Redibujados con el traspaso 10, aprobados y publicados en el lienzo v168:** `FRM-Editor-Baja` y `M-FRM-Editor-Baja`, con la baja en una frase, la etiqueta de la publicación al reactivar (175) y «Agregar título» al lado de «Agregar pregunta» (88).
 
-**Del traspaso 15** (v175, sin publicar): `FRM-Editor-Baja` y `M-FRM-Editor-Baja`, con «Descartar esta publicación» al reactivar (225).
+**Del traspaso 15** (v175): `FRM-Editor-Baja` y `M-FRM-Editor-Baja`, con «Descartar esta publicación» al reactivar (225).
 
 **Se redibujan con el traspaso 18, tanda 2** (262 a 264 y 275):
 - `FRM-Formularios-17` y su teléfono: el filtro «Estado», con su botón y sin cantidades (262), y el orden de las columnas (264);
 - `FRM-Editor-Baja` y su teléfono: las preguntas, con el tipo y «Obligatoria» en sus columnas, como el editor de la E14 (263);
-- los dos, con el panel de «Gestión de formularios» en dos grupos (275).
+- los dos, con el panel de «Gestión de formularios» en dos grupos (275);
+- `M-FRM-Formularios-17` y `M-FRM-Editor-Baja`: el motivo de «Borrar» apagado, en el tooltip que abre el toque, sin texto debajo (211).
 
 **Corregido en el lienzo v169:** en `M-FRM-Formularios-17`, «Reactivar» se abre sobre el formulario, como en `M-FRM-Editor-Baja` (131), y la hoja «Filtros» va a pantalla completa y sin cantidades (144 y 164).
 
@@ -84,7 +86,7 @@ Aprobados y publicados en el lienzo v151, con el armado de ArquitecturaBase (131
 
 **Reactivar (131):** se abre en el formulario, también desde la lista. «Problemas», si hay alguno, con «Ir a la pregunta», y «Qué se publica»: Próxima respuesta, Borrador, Preguntas y lo que cambió. El botón dice «Reactivar con la versión 3» y queda grisado si hay problemas.
 
-**Borrar:** «¿Borrar «…»?», con una frase (213): «Deja de aparecer en la lista, no se puede volver a usar y el prefijo REC queda reservado.». Si llegó a publicarse suma «En WhatsApp no se deshace: sus Flows se deprecan cuando no queden envíos abiertos.». Si cambió la situación, lo dice en la franja y «Borrar» queda grisado. Con respuestas, en el ⋮ queda grisado con «Tiene respuestas y no se puede borrar.» (132).
+**Borrar:** «¿Borrar «…»?», con una frase (213): «Deja de aparecer en la lista, no se puede volver a usar y el prefijo REC queda reservado.». Si llegó a publicarse suma «En WhatsApp no se deshace: sus Flows se deprecan cuando no queden envíos abiertos.». Si cambió la situación, lo dice en la franja y «Borrar» queda grisado. Con respuestas, en el ⋮ queda grisado con «Tiene respuestas y no se puede borrar.» (132), y con envíos abiertos, con «Tiene envíos abiertos y no se puede borrar.» (43 y 132).
 
 **Estados dibujados:** la lista con sus filtros y las acciones de un publicado, un borrador, un dado de baja y mientras se publica; «Solo puede publicar», «Solo lectura», «Quien solo ve respuestas» y sus dados de baja. El dado de baja, ya deprecado, sin confirmar y «No se pudo deprecar»; reactivando: publicando, sin confirmar, en revisión y que no salió (175). Dar de baja con y sin envíos abiertos, consultando, mientras trabaja y con error. Reactivar con y sin cambios, comprobando, con algo que corregir y mientras trabaja. Borrar un borrador, un publicado, mientras trabaja y con error. Copiar, sin nombre, con el prefijo ocupado y mientras copia.
 
@@ -102,11 +104,11 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]` y `[Feat
 
 | Ruta | Permiso | Pide | Devuelve |
 | --- | --- | --- | --- |
-| `GET /{id}/lifecycle` | `forms.read` | — | `{openSends, lastExpiresAtUtc?, retirement?{state, deprecatedAtUtc?}}`: lo que muestran los diálogos, leído al abrirlos |
+| `GET /{id}/lifecycle` | `forms.read` | — | `{openSends, lastExpiresAtUtc?, recordCount?, retirement?{state, deprecatedAtUtc?}}`: lo que muestran los diálogos, leído al abrirlos; `recordCount` es `null` sin `formrecords.read` |
 | `POST /{id}/deactivation` | `forms.publish` | — | 200 `{deactivatedAtUtc}` |
 | `DELETE /{id}` | `forms.manage` | `version` | 204 |
 | `GET /{id}/copy-proposal` | `forms.manage` | — | 200 `{name, prefix}` |
-| `POST /{id}/copies` | `forms.manage` | `{name, prefix}`, con `[Idempotent]` | 201 `FormDetail` + Location |
+| `POST /{id}/copies` | `forms.manage` | `{name, prefix}`, con `[Idempotent]` | 201 `FormDetailResponse` + Location |
 
 `retirement.state` es `Pending`, `Uncertain`, `Deprecated` o `NeedsAttention`; `null` si nunca hubo un Flow. Entre varias versiones prima `NeedsAttention`, después `Uncertain` y después `Pending`.
 
@@ -116,9 +118,9 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]` y `[Feat
 
 | Ruta | Qué suma |
 | --- | --- |
-| `GET /` y `GET /filter-counts` | `status` suma `deactivated`, y `all` son los activos; `filter-counts` suma `deactivated`, para el resumen («4 activos · 1 dado de baja»). `sort=status` pone los dados de baja al final (264). Cada fila suma `deactivatedAtUtc?`, y si está dado de baja, `openSends` y `retirement?` |
+| `GET /` y `GET /filter-counts` | `status` suma `deactivated`, y `all` son los activos; `filter-counts` suma `deactivated`, para el resumen («4 activos · 1 dado de baja»). `sort=status` pone los dados de baja al final (264). Cada fila suma `deactivatedAtUtc?` y `hasRecords` (`LastRecordNumber > 0`); una publicada o dada de baja, `openSends`, para el motivo de «Borrar», y una dada de baja, `retirement?` |
 | `GET /overview` | suma `status` (`active`, `deactivated`), y cada fila, `deactivatedAtUtc?` |
-| `GET /{id}` | suma `deactivated?{byName, atUtc}` y `retirement?` |
+| `GET /{id}` | suma `deactivated?{byName, atUtc}`, `hasRecords` y `retirement?` |
 | `POST /{id}/publication-checks` y `POST /{id}/publications` | sobre un dado de baja, `NothingToPublish` no aplica. Publicar sobre un dado de baja es reactivar. `publication-checks` suma `nextRecordNumber`, la próxima respuesta |
 | `GET /{id}/publications/{publicationId}` | sin cambios: reactivar se sigue igual |
 
@@ -146,7 +148,7 @@ Task<IReadOnlyList<StructuredRetirementState>> GetRetirementAsync(IReadOnlyColle
 
 ## Datos
 
-Una migración, `<fecha>_FormLifecycle.cs`, aditiva.
+Una migración, `<fecha>_FormLifecycle.cs`, aditiva. Sus columnas se agregan y se escriben en el mismo despliegue: es la excepción de la [0060](../../decisions/0060-dos-versiones-conviven.md), anotada en la migración, porque todavía no hay despliegue (la E10 va después del bloque, 123) y volver a la imagen anterior no aplica.
 
 | Tabla | Columna | Tipo | Regla |
 | --- | --- | --- | --- |
@@ -169,29 +171,33 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
 | B1 | Columnas, dominio, errores y los textos de los permisos | suma a `D/Forms/FormDefinition.cs`, `FormDefinitionState.cs` y `FormDefinitionErrors.cs` [E14]; `I/…/Configurations/`; la migración; en `Permissions{,.en}.resx`, `forms.manage` suma «copiarlos y borrarlos» y `forms.publish`, «darlo de baja y reactivarlo» | `D/Assistant/AssistantOrganizationSettings.cs` | transiciones; prefijo reservado después de borrar; hacia atrás; `PermissionTextsTests` |
-| B2 | El filtro de disponibilidad, uno solo | `A/Modules/Forms/Services/FormAvailabilityPolicy.cs`; suma a `FormStructuredSource.cs` y `IFormReader.cs` [E14] | `FormCatalogFiltersPolicy.cs` [E12] | dado de baja y borrado no se ofrecen; la captura de un envío abierto se guarda |
+| B2 | El filtro de disponibilidad, uno solo: decide en memoria, y el mismo filtro en SQL es privado del reader, porque Application no expone expresiones ([capas-y-flujo](../../rules/capas-y-flujo.md)) | `A/Modules/Forms/Services/FormAvailabilityPolicy.cs`, `I/Modules/Forms/Persistence/Readers/FormAvailabilityQueryFilters.cs`; suma a `FormStructuredSource.cs`, `IFormReader.cs` y `FormReader.cs` [E14] | `FormCatalogFiltersPolicy.cs` [E12], `FormRecordQueryFilters.cs` [E15] | dado de baja y borrado no se ofrecen; la captura de un envío abierto se guarda; la política y el filtro dan lo mismo |
 | B3 | Dar de baja, bajo el bloqueo de la fila de estado, con `IAuditLog` | suma a `FormDefinitionService.cs` [E14] | `FormPublicationService.cs` [E14] | publicación abierta; dos a la vez; un editor abierto no recibe 409 |
 | B4 | Reactivar | suma a `FormPublicationService.cs` y `FormVersionCreator.cs` [E14] | esos mismos | sin cambios publica igual; sigue de baja hasta confirmar; «Salió» también la confirma; si falla, sigue de baja; numeración continua |
 | B5 | Borrar: lo del canal se lee antes de la UoW, y lo de Forms se comprueba bajo el bloqueo | suma a `FormDefinitionService.cs` | esos mismos | con respuestas, con envíos, con publicación; borrador y publicado; `usedByCount`, `FieldInUse`, `ItemInUse` con `uses: forms`, `Forms.PersonData.InUse` y el «Lo usan» de un dato no cuentan lo borrado; un envío que se cruza queda `Rejected`, a la vista |
 | B6 | Copiar | `A/Modules/Forms/Services/FormDefinitionCopyCreator.cs`; suma a `FormPrefixResolver.cs` [E14] | `FormVersionCreator.cs` [E14] | identidades, catálogos, presentación y filtros iguales; prefijo ocupado; idempotencia; de un dado de baja; sin versiones ni respuestas |
 | B7 | Decir qué versiones ya no se usan | suma a `FormStructuredSource.cs` e `IFormReader.cs` | `FormStructuredSource.cs` [E14] | reemplazada, `Failed`, de baja y borrada; la activa no; una publicación abierta suspende |
-| B8 | Binding: reservar, marcar, registrar y verificar | suma a `D/WhatsApp/WhatsAppFlowBinding.cs` [E14]; `WhatsAppFlowBindingErrors.cs` | las transiciones de publicación del binding [E14] | un turno viejo no escribe; `InFlight` se vuelve «Sin confirmar»; los cuatro intentos y sus tres esperas |
+| B8 | Binding: reservar, marcar, registrar y verificar | suma a `D/WhatsApp/WhatsAppFlowBinding.cs` [E14] y a `D/WhatsApp/WhatsAppErrors.cs` | las transiciones de publicación del binding [E14] | un turno viejo no escribe; `InFlight` se vuelve «Sin confirmar»; los cuatro intentos y sus tres esperas |
 | B9 | La deprecación en sus fases, cada una con una UoW | `A/Modules/WhatsApp/Interfaces/Services/IWhatsAppFlowDeprecationService.cs`, `WhatsAppFlowDeprecationService.cs` | `IWhatsAppFlowPublicationService.cs` [E14] | sesión vigente; respuesta a tiempo sin capturar; otra WABA; sin token; el token no entra en la identidad |
 | B10 | Hablar con Meta | suma a `I/Modules/WhatsApp/WhatsAppFlowClient.cs` [E14] | el mismo | 2xx, 4xx, 5xx, 429, timeout y cuerpo ilegible; clasificación; ya deprecado |
 | B11 | El worker, por organización | `I/Modules/WhatsApp/WhatsAppFlowDeprecationWorker.cs` | `WhatsAppBroadcastWorker.cs` y `TenantJobRunner.cs` | una organización con falla no frena a las demás; con el reloj de prueba al vencer |
-| B12 | Rutas y puertos | suma a `P/Modules/Forms/Controllers/BusinessFormsController.cs`, `Contracts/*`, `FormsContractContributor.cs`, los apagados de `I/StructuredData/` y `WhatsAppStructuredFormChannel.cs` | esos mismos [E14] | cada ruta con 401, 403, feature apagada = 404, 409; dos permisos distintos; ejemplos exportados; aislamiento |
+| B12 | Rutas y puertos | suma a `P/Modules/Forms/Controllers/BusinessFormsController.cs`, `Contracts/CopyFormHttpRequest.cs`, `FormsContractContributor.cs`, los apagados `I/StructuredData/DisabledStructuredFormSource.cs` y `DisabledStructuredFormChannel.cs` y `WhatsAppStructuredFormChannel.cs` | esos mismos [E14] | cada ruta con 401, 403, feature apagada = 404, 409; dos permisos distintos; ejemplos exportados; aislamiento, en `Modules/Forms/RouteIsolationMatrixTests.cs` |
+| B13 | Acciones del asistente: `forms.deactivate@1` (`Dialog`, `FRM-Dar-De-Baja`, con `forms.publish`) y `forms.remove@1` (`RemoveConfirmation`, con `forms.manage`), con su efecto en WhatsApp declarado | suma a `A/Modules/Forms/Services/FormDefinitionActionSource.cs`, que crea si la E14 no la trae; sus textos `Action.*` en `FormsTexts{,.en}.resx`; su escenario | `RoleActionSource.cs` | los de arquitectura de las acciones y la batería genérica |
 
 **Front:**
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` | la API de la E16 | zod estricto con los ejemplos |
+| F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/forms.ts` [E14] | la API de la E16 | zod estricto con los ejemplos |
 | F2 | La lista: filtro y ⋮ | suma a la lista [E14] | su tablero | las acciones por estado y permiso; Borrar grisado con respuestas; «Reactivar» abre el formulario con su diálogo; quien solo ve respuestas |
 | F3 | Los diálogos | `components/LifecycleDialogs.tsx` | su tablero | releer si no se sabe si salió; error en el diálogo; botones según la 43 |
 | F4 | Copiar | `components/CopyFormDialog.tsx` | su tablero | prefijo ocupado en su campo; abre el editor |
 | F5 | El formulario dado de baja | suma al editor [E14]: la ⓘ con la baja en una frase, «Reactivar» y el ⋮ | su tablero | los cuatro estados de WhatsApp; al reactivar, la etiqueta de cada estado de la publicación y el motivo de «Reactivar» apagado (175); se edita y se guarda |
+| F6 | Las propuestas del asistente (B13) | `useAssistantProposal` en `LifecycleDialogs.tsx` | el adaptador de Roles | todo lo propuesto se ve, y se manda lo que se ve |
 
-**Al cerrar:** `docs/features/formularios.md` suma la sección, y `docs/features/whatsapp.md`, la deprecación. `AGENTS.md` de la carpeta del módulo nombra el worker.
+**Al cerrar:** `docs/features/formularios.md` suma la sección, y `docs/features/whatsapp.md`, la deprecación. `AGENTS.md` de la carpeta del módulo nombra el worker. La galería va en `../ArquitecturaBaseMutitenantFront/scripts/capturas/etapa-17.json`.
+
+**Archivos que los pasos no nombran:** las configuraciones `I/Modules/Forms/Persistence/Configurations/FormDefinitionConfiguration.cs` y `FormDefinitionStateConfiguration.cs` [E14]; los tests `Domain.UnitTests/Forms/FormDefinitionStateTests.cs` y `Domain.UnitTests/WhatsApp/WhatsAppFlowBindingDeprecationTests.cs`, y en `Api.IntegrationTests/Modules/`, `Forms/FormLifecycleTests.cs`, `Forms/FormCopyTests.cs` y `WhatsApp/WhatsAppFlowDeprecationTests.cs`; el escenario de las acciones, en `Api.IntegrationTests/TestFeatures/AssistantActions/`.
 
 ## Qué verificar al arrancar
 
@@ -225,6 +231,7 @@ Cada punto lleva su test, escrito durante la etapa:
 - **La cola es de WhatsApp,** sin un registro global: Forms contesta qué versiones ya no se usan.
 - **Los intentos de deprecar y sus esperas** son técnicos y quedan en el código (270).
 - **Lo que se hace con un formulario** va en el ⋮ de su fila (261), y su nombre abre el editor (275); el filtro es la pieza, sin cantidades (262), y toda columna ordena (264).
+- **Las acciones del asistente** son las dos de B13 (0068). Copiar no es una acción, porque nace en borrador (0057), y reactivar es publicar: sigue lo que la E14 declare para publicar.
 
 ## Fuera de esta etapa
 

@@ -7,7 +7,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T7, T11 y T22, §3 (`FormVersions`, `FormRecords` y `FormRecordValues`) y §7 (puertos); y la [E12](12-catalogos.md): C5, C8, C11 y la §4.
-2. **Decisiones** de la hoja de ruta: 9, 23, 24, 35, 43, 49, 57, 78, 79, 109, 115, 139, 143, 144, 163, 226, 261, 262, 263, 264, 266, 267, 269 y 275.
+2. **Decisiones** de la hoja de ruta: 9, 23, 24, 35, 43, 49, 57, 78, 79, 109, 115, 139, 143, 144, 163, 226, 260, 261, 262, 263, 264, 266, 267, 269 y 275.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -52,15 +52,7 @@ Antes de empezar, en este orden:
 
 **Los nombres, los filtros, los conteos y una sola lectura** van en su [parte](15-parte-datos-y-contrato.md#nombres-filtros-y-conteos).
 
-**Excel (`.xlsx`):**
-- con los filtros aplicados y `formrecords.export`, hasta 10.000 respuestas (con más, «Exportar» del diálogo queda apagado con su motivo, que pide acotar los filtros, 211) y sin trabajos de fondo;
-- una consulta de ids ordenados, hasta 10.001, e hidratación en lotes de 100, con un presupuesto de 30 s;
-- una exportación a la vez por persona, con la barrera que no espera (C11), en su propio carril: la carga de catálogos no la frena, así «Ya tenés una exportación en curso» siempre es cierto;
-- números, fechas y sí/no van como tipos de Excel, y los textos, literales. **Un número de más de 15 dígitos significativos va como texto,** porque Excel lo redondearía;
-- una opcional vacía es una celda vacía; una pregunta que no existía, «—»;
-- **«elegir varias»** va en una celda, unida con «; ». En un catálogo tipado se suma la columna «pregunta · valor», con los valores canónicos;
-- **todas las preguntas** trae todos los campos sellados, una columna por campo; **solo las visibles** sigue a «Columnas»;
-- la hoja se llama «Respuestas»: el nombre del formulario no siempre entra en una hoja. El archivo es `<formulario>-<aaaa-mm-dd>.xlsx`, en la zona de quien exporta.
+**El Excel (`.xlsx`)** va en su [parte](15-parte-datos-y-contrato.md#el-excel): hasta 10.000 respuestas, con los filtros aplicados y `formrecords.export`, sin trabajos de fondo.
 
 **El tablero (57):** la pestaña «Tablero», armada sola desde los tipos de las preguntas de la versión activa, sin nada escrito en el código:
 - arriba, «Respuestas» y, de las tres primeras preguntas de número, el total, el promedio, el mínimo y el máximo, cada uno con su nombre y ninguno debajo de otro (263);
@@ -89,7 +81,7 @@ Aprobados en el lienzo v150. Con el traspaso 5, los filtros (143 y 144) y el det
 | `FRM-Respuestas` | la planilla, con «Columnas», «Empresa» y sus estados; suma «Elegir varias» y los campos sellados | Aprobado en la v160: «Filtros» y los chips (144). **Se redibuja:** «Ordenar por» y el encabezado que ordena, también en las subcolumnas (264), y «Empresa» en la pieza (262) |
 | `FRM-Respuestas-Filtros` | «Filtros», que se despliega como «Columnas» | Aprobado en la v160 (143 y 144). **Se redibuja:** la pieza de una opción, con el buscador adentro (262) |
 | `FRM-Respuesta` | la vista rápida | Aprobado en la v160 (139). **Se redibuja:** la respuesta como el formulario, con cada dato del catálogo en su campo (263 y 266), y la pestaña «Actividad» en recuadros (267) |
-| `FRM-Respuestas-Exportar` | el diálogo de exportar | Redibujado con la 226 en la v175, sin publicar. **Se redibuja:** «Columnas» en la pieza (262) |
+| `FRM-Respuestas-Exportar` | el diálogo de exportar | Redibujado con la 226 en la v175. **Se redibuja:** «Columnas» en la pieza (262) |
 | `FRM-Tablero` | el tablero | Aprobado. **Se redibuja:** el total, el promedio, el mínimo y el máximo, ninguno debajo de otro (263), y la tabla de una tarjeta, que ordena (264) |
 | `M-FRM-Respuestas`, `M-FRM-Respuesta`, `M-FRM-Tablero` | los tres, en el teléfono. Tocar una fila abre `M-FRM-Respuesta`: no hay vista rápida | `M-FRM-Respuestas` y `M-FRM-Respuesta`, aprobados en la v160 (139 y 144), y `M-FRM-Respuesta`, redibujado sin «Las dos plegadas» y aprobado en la v168 (163); `M-FRM-Tablero`, aprobado. **Se redibujan:** `M-FRM-Respuestas`, con «Ordenar por» a todo el ancho (264); `M-FRM-Respuesta`, como el formulario en una columna y la actividad en recuadros (266 y 267), y `M-FRM-Tablero`, como `FRM-Tablero` (263) |
 | `FRM-Respuesta-Completa` | la pantalla completa: la respuesta y su actividad | Redibujado y aprobado en la v168 (163 y 164). **Se redibuja:** las zonas del formulario (266) y la actividad en ocho columnas, con su banda (267) |
@@ -121,7 +113,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| B1 | La condición, sus operadores por tipo, los errores y el permiso | `D/Forms/FormRecordCondition.cs`, `FormRecordFilterErrors.cs`, `FormRecordExportErrors.cs`; suma a `Permissions.cs`, `Permissions{,.en}.resx` y `FormRecordErrors.cs` | `D/Forms/FormCatalogErrors.cs` [E12] | operadores por tipo; `PermissionTextsTests` |
+| B1 | La condición, sus operadores por tipo, los errores y el permiso | `D/Forms/FormRecordCondition.cs`, `FormRecordFilterErrors.cs`, `FormRecordExportErrors.cs`, `FormDashboardErrors.cs`; suma a `Permissions.cs`, `Permissions{,.en}.resx` y `FormRecordErrors.cs` | `D/Forms/FormCatalogErrors.cs` [E12] | operadores por tipo; `PermissionTextsTests`; un rol con solo `formrecords.export` ve la planilla (260) |
 | B2 | Tablas, índices y migraciones | `I/Modules/Forms/Persistence/Configurations/FormDashboardSettingsConfiguration.cs` y `FormRecordCatalogFieldConfiguration.cs`; las dos migraciones | `AssistantOrganizationSettingsConfiguration.cs`, `20261010203618_SystemRoleAssistantPermissions.cs` | aislamiento; `SearchIndexTests`; hacia atrás |
 | B3 | Las columnas de todas las versiones, deserializadas una vez | `A/Modules/Forms/Services/FormRecordColumnsBuilder.cs`; suma a `FormRecordWriter.cs` [E14] | `FormCatalogExportBuilder.cs` [E12] | orden activo y retiradas; subcolumnas; publicación concurrente; una captura repetida no duplica |
 | B4 | Filtros y orden en una sola función, con la planilla | `A/Modules/Forms/Interfaces/Persistence/IFormRecordReader.cs`, `I/Modules/Forms/Persistence/Readers/FormRecordReader.cs`, `FormRecordQueryFilters.cs`; `A/Modules/Forms/Services/FormRecordFiltersPolicy.cs`, `FormRecordQueryService.cs` | `I/Persistence/Readers/CompanyReader.cs`, `FormCatalogFiltersPolicy.cs` [E12] | la tabla de verdad de `unanswered` y `notAsked`; cero y `false`; `anyOf`; opción retirada; orden por opción y por un dato sellado, con lo vacío al final (264); una segunda página |
@@ -142,7 +134,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | F2 | La lista y las pestañas | suma a `FormsPage.tsx` y a las pestañas [E14]; `registration.ts` | su tablero | las tres combinaciones de permisos; adónde abren el nombre y el número (275); el orden (264) |
 | F3 | La planilla | `pages/FormRecordsPage.tsx`, `lib/recordFilters.ts`, `lib/values.ts` | su tablero | «—», «Sin respuesta», cero y `false`; «Es cliente» solo si alguna fila de la página es de un cliente, sin marca al lado del nombre (206); el encabezado y «Ordenar por», el primer toque en el sentido útil y la página 1 (264); lo privado fuera de la URL; 403 retira todo; axe |
 | F4 | «Filtros» y los chips | `components/records/RecordFiltersMenu.tsx`, `RecordFacetControl.tsx` | su tablero | cada cambio se aplica enseguida; la pieza de una opción, sin cantidades, con el buscador adentro y «Mostrar N más» (262); el chip nombra lo elegido; «Limpiar todo»; una faceta que falla no frena |
-| F5 | La respuesta como el formulario y la vista rápida | `components/records/RecordForm.tsx`, `RecordValues.tsx`, `lib/recordForm.ts`, `QuickView.tsx`, `RecordActivity.tsx`; la excepción en la ficha de tablas | su tablero | los dos anchos, las columnas según el ancho de la zona, una pregunta con sus datos en un renglón, «N de M respondidas» y lo que no aporta (266); teclado, Esc y foco útil; una respuesta tardía se descarta; la actividad en recuadros (267) |
+| F5 | La respuesta como el formulario y la vista rápida | `components/records/RecordForm.tsx`, `RecordValues.tsx`, `lib/recordForm.ts`, `QuickView.tsx`, `RecordActivity.tsx`; la lectura de `Picker` (varias enteras, sin «y N más» ni «…», y el campo baja de renglón, 174 y 266), excepción escrita en `pantallas-y-ui.md` y `formatos.md` del front | su tablero | los dos anchos, las columnas según el ancho de la zona, una pregunta con sus datos en un renglón, «N de M respondidas» y lo que no aporta (266); teclado, Esc y foco útil; una respuesta tardía se descarta; la actividad en recuadros (267) |
 | F6 | La pantalla completa | `pages/RecordFullPage.tsx` | su tablero | entrada directa sin filtros privados; «Volver» a la misma fila; el teléfono; la actividad en ocho columnas, con «—» y su banda (267) |
 | F7 | Exportar | `components/records/ExportDialog.tsx` | su tablero | más de 10.000; `Busy`; «Exportando…» y el diálogo abierto hasta la respuesta; «Columnas» en la pieza (262) |
 | F8 | El tablero | `components/records/FormDashboard.tsx`, sin biblioteca de gráficos | su tablero | quitar, agregar, contar y volver al automático; ver como tabla, que ordena (264); ningún número debajo de otro (263); axe |
@@ -172,10 +164,12 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 - **«Columnas»** vive en la URL y no se guarda en el servidor; los ajustes del tablero, sí.
 - **El tablero no compara** con el período anterior, porque el tablero aprobado no lo tiene.
 - **Cargó no se ordena:** el nombre vive en la cuenta o en WhatsApp, y Forms no los lee.
+- **Los topes de esta etapa** (10.000 respuestas, 30 s, 366 períodos, 20 condiciones, 100 valores y 100 claves) son técnicos o de capacidad y quedan en el código (270).
 
 ## Fuera de esta etapa
 
 - Importar respuestas desde Excel, exportar los archivos, exportar en segundo plano y los permisos por formulario.
+- Acciones del asistente ([0068](../../decisions/0068-acciones-del-asistente.md)): ninguna, porque la etapa solo lee, y los ajustes del tablero son la vista de cada persona.
 - Quién usa `answered`, `unanswered` y `notAsked`, que el contrato ya trae: las reglas (E21) y las sugerencias (E23).
 - Lo que suman las etapas siguientes: el papel «Filtro» de un campo (E16); las fotos, los documentos y «Descargar ▾» (E18); las líneas, los cálculos, «no se mostró» y los montos por moneda del tablero (E19); «Cargar», «Agregar respuesta», el canal «App», su filtro y lo propio de quien solo carga (E20); y el estado, «Por aprobar», la aprobación, la tarjeta «Por estado», el PDF, los avisos, corregir y anular (E21).
 - En la lectura (266 y 267), cada etapa suma lo suyo a la forma y renglones a la actividad: la E20 vuelve editable la forma que arma esta, y la E21 corrige en el lugar.

@@ -56,11 +56,11 @@ Un `sortAttributeId` que no es un dato activo de la organización, o `attribute`
 
 `Forms.Catalog.FieldInUse` suma los filtros: cambiar el papel, el tipo o la fuente de un campo que usa un filtro, con `uses`. `Forms.Catalog.SourceInUse` suma los datos activos. `Forms.Catalog.ItemInUse` suma `uses: forms`, si un filtro fijo del borrador o de la versión activa nombra la opción, y `uses: people`, si la tiene una persona en sus datos.
 
-**Permiso nuevo:** `formpersondata.manage`, con sus textos y la migración de los roles de sistema. La entrada «Datos de las personas» va en Administración, con ese permiso y la feature.
+**Permiso nuevo:** `formpersondata.manage`, con sus textos y la migración de los roles de sistema, en `Area.formpersondata` («Datos de las personas», 257), sin nada incluido (260): su área no tiene un «Ver». La entrada «Datos de las personas» va en Administración, con ese permiso y la feature.
 
 ## Datos
 
-Dos migraciones: `<fecha>_FormPersonData.cs` y `<fecha>_SystemRoleFormPersonDataPermissions.cs`. Las dos tablas son `ITenantOwned`, esquema `tenant`, con RLS. `role` y `recipientFilters` viven en el jsonb de la E13 y de la E14: lo que no los tiene sigue igual, sin migrar.
+Dos migraciones: `<fecha>_FormPersonData.cs` y `<fecha>_SystemRoleFormPersonDataPermissions.cs`. Las dos tablas son `ITenantOwned`, esquema `tenant`, con RLS. `role` y `recipientFilters` viven en el jsonb de la E13 y de la E14: lo que no los tiene sigue igual, sin migrar. Se agregan y se escriben en el mismo despliegue: es la excepción de la [0060](../../decisions/0060-dos-versiones-conviven.md), anotada en la migración, porque todavía no hay despliegue (la E10 va después del bloque, 123) y volver a la imagen anterior no aplica.
 
 **FormPersonDataDefinitions** (`IAuditable`, `IVersioned`)
 
@@ -91,3 +91,17 @@ Cada punto lleva su test, escrito durante la etapa, y los pasos los llaman «lec
 4. **La vista previa** exige `formcatalogs.read`, y no nombra opciones de un catálogo que la persona no puede leer (#20).
 5. **Un solo selector de catálogo:** el dato usa el combo de la E13, sin buscador ni lista paginada aparte.
 6. **Los filtros van en la versión.** En la prueba de allá, una versión salió sin los filtros de una pregunta. Cambiar un filtro cuenta como una pregunta cambiada en «Qué se publica», y la versión activa sigue con los suyos hasta publicar.
+
+## Archivos que los pasos no nombran
+
+- **Repositorio:** `Application/Modules/Forms/Interfaces/Persistence/IFormPersonDataRepository.cs` e `Infrastructure/Modules/Forms/Persistence/Repositories/FormPersonDataRepository.cs`.
+- **El contexto del aviso:** `Application/Models/Legal/MembershipEndContext.cs`, como `AccountDeletionContext.cs`.
+- **Contratos,** en `Api/Modules/Forms/Contracts/`: `CreateFormPersonDataHttpRequest.cs`, `UpdateFormPersonDataHttpRequest.cs`, `UpdateMemberPersonDataHttpRequest.cs`, `FormCatalogOfferPreviewHttpRequest.cs` y `FormCatalogOfferMaximumsHttpRequest.cs`.
+- **Errores:** `Forms.PersonData.*` en `Domain/Forms/FormPersonDataErrors.cs`; los del borrador, en `FormDraftErrors.cs` [E14], y los de la oferta, en `FormOfferErrors.cs` [E14].
+- **Tests:**
+  - `Domain.UnitTests/Forms/FormPersonDataDefinitionTests.cs`;
+  - en `Application.UnitTests/Modules/Forms/`: `FormRecipientFilterPolicyTests.cs` y `FormPersonDataValueEditorTests.cs`;
+  - en `Api.IntegrationTests/Modules/Forms/`: `FormPersonDataTests.cs`, `FormRecipientFilterOfferTests.cs` y `FormsMembershipEndTests.cs`;
+  - el escenario de las acciones, en `Api.IntegrationTests/TestFeatures/AssistantActions/`;
+  - `FormPersonDataValues` se inscribe en `tests/ArquitecturaBaseMultitenant.ArchitectureTests/PersonalDataPurgeTests.cs`, que crea la B2 de la base 2.
+- **Front,** en `src/modules/forms/`: `api/personData.ts`; las dos rutas de catálogos suman a `api/catalogs.ts` [E12], y la pestaña va en `tabs/MemberDataTab.tsx`, con `useMemberData.ts`, como pide `estructura-y-features.md` del front.
