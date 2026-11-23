@@ -30,6 +30,7 @@ export function resumenMarkdown(info) {
   }
   if (info.motor && info.enviados) l.push(`- Motor: ${info.motor}${info.modelo ? ` (${info.modelo})` : ''} · ${info.enviados} hallazgo(s) enviados`);
   l.push(`- Hallazgos al empezar: ${formato(inicial)}`);
+  for (const aviso of info.avisos ?? []) l.push(`- Aviso: ${aviso}`);
   if (info.contadoresFinales) l.push(`- Hallazgos al terminar: ${formato(info.contadoresFinales)}`);
   if (info.sinEnviar) l.push(`- Quedaron sin enviar al modelo (tope por corrida): ${info.sinEnviar}`);
   const consumo = textoDeConsumo(info.consumo);

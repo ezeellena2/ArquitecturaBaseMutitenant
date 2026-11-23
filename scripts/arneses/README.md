@@ -11,12 +11,14 @@ No es lo mismo que [el arnés estático](../../docs/architecture/arnes.md) (fich
 | `realinear-docs` | alinea docs y punteros con el código: corrige rutas, símbolos, `arbol.md`, punteros e índices; crea y borra lo que quedó viejo | back y front |
 | `estado-docs` | dice qué documentos quedaron viejos, terminaron o están fuera de formato: el código de una ficha funcional que cambió después, los planes de etapas cerradas, lo que anuncia una etapa que ya cerró y lo que nadie enlaza. Solo informa, con `--detectar` | back |
 | `alinear-etapas` | controla que las etapas que faltan programar estén completas y alineadas: secciones de cada spec, tableros contra el lienzo, permisos, decisiones, enlaces, orden de las etapas y estados, y que lo que el backlog pone antes de una etapa pendiente lo tome un plan. Solo informa, con `--detectar` | back (lee el lienzo del front) |
+| `conformidad` | lo que no está en la spec no entra: de los commits con `Tarea: <clave>/`, marca las tablas y columnas de las migraciones nuevas, los códigos de error, los permisos, las funcionalidades, las rutas del contrato exportado (o de los controllers), los caminos del router y los componentes nuevos de `src/shared/ui/` que el plan, su spec y sus partes no nombran. Solo informa, con `--detectar --plan <ruta del plan>` | back y front |
 
 ## Cómo se corre
 
 ```bash
 node scripts/arneses/arnes.mjs                                  # lista los arneses
-node scripts/arneses/arnes.mjs realinear-docs --detectar        # 0 tokens: detecta y escribe el informe (sale 0 si no hay nada, 2 si hay, 1 si falló)
+node scripts/arneses/arnes.mjs realinear-docs --detectar        # 0 tokens: una línea por hallazgo, la cuenta y el informe (sale 0 si no hay nada, 2 si hay, 1 si falló)
+node scripts/arneses/arnes.mjs conformidad --detectar --plan docs/plans/2026-11-08-etapa-12-catalogos.md
 node scripts/arneses/arnes.mjs realinear-docs                   # corrida completa con el motor del manifiesto
 node scripts/arneses/arnes.mjs realinear-docs --motor codex     # con Codex
 node scripts/arneses/arnes.mjs realinear-docs --repo front --sin-modelo
@@ -29,10 +31,11 @@ node scripts/arneses/arnes.mjs --instalar                       # copia las skil
 | `--sin-modelo` | arregla lo mecánico y no llama al modelo |
 | `--motor claude\|codex` · `--modelo <nombre>` · `--presupuesto <USD>` | pisan lo que dice `arnes.json` |
 | `--repo back\|front` | un solo repo |
+| `--plan <ruta>` | el plan de la etapa, para `conformidad`: su clave sale del nombre, sin la fecha ni `etapa-` |
 | `--fusionar` | si todo verificó, trae el commit de la copia a la rama actual con `git fetch` y `git merge --ff-only FETCH_HEAD`, sin crear una rama; si la rama avanzó desde el corte, no fusiona y lo dice |
 | `--sin-aislar` | no evita la config del usuario (para medir cuántos tokens cuesta cargarla) |
 
-Los tests (`node --test "scripts/arneses/**/*.test.mjs"`) usan solo `realinear-docs/fixtures/` y ejecutables falsos de `claude` y `codex`: no leen el repo real ni llaman a un modelo. Ahí corre también `conductor.test.mjs`, que prueba el [conductor de etapas](../../docs/guides/conducir-una-etapa.md) con agentes falsos.
+Los tests (`node --test "scripts/arneses/**/*.test.mjs"`) usan solo `realinear-docs/fixtures/`, repos de git temporales y ejecutables falsos de `claude` y `codex`: no leen el repo real ni llaman a un modelo. Ahí corre también `conductor.test.mjs`, que prueba el [conductor de etapas](../../docs/guides/conducir-una-etapa.md) con agentes falsos.
 
 ### Una corrida
 

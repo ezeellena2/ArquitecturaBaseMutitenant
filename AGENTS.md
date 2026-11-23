@@ -130,4 +130,5 @@ El inventario de todos los estándares transversales (los definidos y los propue
 - `node scripts/arneses/arnes.mjs realinear-docs --detectar` (0 tokens). Sin `--detectar`, el arnés completo trabaja en una copia de `HEAD` en `.local/arneses/copias/`, sin ramas ni worktrees, y `--fusionar` trae su commit con `--ff-only`. Tests: `node --test "scripts/arneses/**/*.test.mjs"`.
 - `node scripts/arneses/arnes.mjs alinear-etapas --detectar` (0 tokens): dice qué etapa que falta programar no está completa o no está alineada.
 - `node scripts/arneses/arnes.mjs estado-docs --detectar` (0 tokens): dice qué documentos quedaron viejos, terminaron o están fuera de formato.
+- `node scripts/arneses/arnes.mjs conformidad --detectar --plan <plan>` (0 tokens): dice qué sumaron los commits de la etapa que su spec no nombra.
 - Migración: ver [backend.md §9](docs/architecture/backend.md#9-persistencia).

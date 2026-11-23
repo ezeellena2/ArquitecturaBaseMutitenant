@@ -26,6 +26,8 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   ├── comun/  piezas compartidas por todos los arneses
 │   │   │   ├── fakes/  ejecutables falsos de claude y codex para los tests
 │   │   │   └── motores/  misma interfaz para los dos motores
+│   │   ├── conformidad/  dice qué sumaron los commits de una etapa que su spec no nombra; solo informa
+│   │   │   └── detectores/
 │   │   ├── estado-docs/  dice qué documentos quedaron viejos, terminaron o están fuera de formato; solo informa
 │   │   │   └── detectores/
 │   │   └── realinear-docs/  el primer arnés: alinea docs y punteros con el código

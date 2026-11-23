@@ -1,0 +1,16 @@
+{
+  "nombre": "conformidad",
+  "descripcion": "Dice qué sumaron los commits de una etapa que su spec no nombra: tablas, columnas, rutas, permisos, errores, funcionalidades, rutas y componentes del front. Solo informa, con --plan.",
+  "repos": ["back", "front"],
+  "detectores": ["tablas", "errores", "permisos", "funcionalidades", "rutas", "rutas-front", "componentes"],
+  "excluir": [],
+  "permisos": {
+    "puedeCrear": [],
+    "puedeBorrar": [],
+    "nuncaToca": ["**/*"]
+  },
+  "verificacion": {
+    "back": ["node --test \"scripts/arneses/**/*.test.mjs\""]
+  },
+  "commit": "docs: conformidad de la etapa con su spec"
+}

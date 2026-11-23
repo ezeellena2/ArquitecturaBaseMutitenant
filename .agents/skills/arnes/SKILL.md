@@ -27,6 +27,7 @@ Un arnés ejecutable detecta con un script (0 tokens), arregla solo lo mecánico
 | `--motor claude\|codex` | elige el motor; desde Codex pasá `--motor codex` |
 | `--modelo <nombre>` · `--presupuesto <USD>` | pisan el modelo y el tope de gasto del manifiesto |
 | `--repo back\|front` | procesa un solo repo |
+| `--plan <ruta>` | el plan de la etapa; lo pide `conformidad` |
 | `--fusionar` | si todo verificó, trae el commit de la copia con `--ff-only`, sin crear una rama |
 
 Nunca hagas push ni crees ramas o worktrees. Si la corrida verificó y solo tocó documentación, traé su commit con `--fusionar` sin preguntar y avisá después. Si toca código, preguntá antes.

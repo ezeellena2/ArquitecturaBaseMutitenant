@@ -28,7 +28,7 @@ const aqui = dirname(fileURLToPath(import.meta.url));
 
 export function parsearArgumentos(argv) {
   const opciones = { _: [] };
-  const conValor = new Set(['repo', 'motor', 'modelo', 'presupuesto', 'back', 'front']);
+  const conValor = new Set(['repo', 'motor', 'modelo', 'presupuesto', 'back', 'front', 'plan']);
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     if (a.startsWith('--')) {
@@ -60,7 +60,8 @@ export async function leerJson(ruta, porDefecto = null) {
 
 /** Corre los detectores del arnés sobre cada repo y devuelve los hallazgos sin ignorados, ordenados. */
 // `raicesReales` son los repos de verdad cuando `raices` apunta a la copia de la corrida: los hermanos (`../ArquitecturaBase`) se buscan desde ahí.
-export async function detectar({ dirArneses, arnes, raices, soloRepo, historial, raicesReales }) {
+// `opciones` son las del CLI (por ejemplo `--plan`), y en `avisos` un detector deja lo que no es un hallazgo («no hay commits»).
+export async function detectar({ dirArneses, arnes, raices, soloRepo, historial, raicesReales, opciones = {}, avisos = [] }) {
   const reales = raicesReales ?? raices;
   const { manifiesto } = arnes;
   const ignorados = (await leerJson(join(dirArneses, arnes.carpeta, 'ignorados.json'), [])) ?? [];
@@ -86,6 +87,8 @@ export async function detectar({ dirArneses, arnes, raices, soloRepo, historial,
       etapasCerradas: repo.etapasCerradas,
       manifiesto,
       raices,
+      opciones,
+      avisar: (texto) => avisos.push(`${nombre}: ${texto}`),
       excluido,
       leer: (rel) => readFile(join(raiz, rel), 'utf8'),
       // ¿existió y se borró? Se puede reemplazar desde afuera (tests) con `historial(repo, ruta)`.
@@ -103,6 +106,11 @@ export async function detectar({ dirArneses, arnes, raices, soloRepo, historial,
     }
   }
   return ordenar(filtrarIgnorados(sinLineasQueSeBorran(todos), ignorados));
+}
+
+/** Una línea por hallazgo en la consola: `repo · archivo:línea (tipo): qué pasa`. */
+export function lineaDeHallazgo(h) {
+  return `${h.repo} · ${h.archivo}${h.linea ? `:${h.linea}` : ''} (${h.tipo}): ${h.real}`;
 }
 
 /** Si un detector borra una fila (auto), los hallazgos de otros detectores sobre esa misma línea sobran. */
@@ -160,9 +168,12 @@ export async function ejecutar(argv, opts = {}) {
     const raices = { back, front: args.front ?? raizFrontPorDefecto(back) };
     const dirInformes = opts.dirInformes ?? join(back, '.local', 'arneses');
     if (args.detectar) {
-      const hallazgos = await detectar({ dirArneses, arnes, raices, soloRepo: args.repo });
-      const info = { arnes: arnes.carpeta, fecha: fechaCorrida(), modo: 'detectar', hallazgos, contadores: contar(hallazgos) };
+      const avisos = [];
+      const hallazgos = await detectar({ dirArneses, arnes, raices, soloRepo: args.repo, opciones: args, avisos });
+      const info = { arnes: arnes.carpeta, fecha: fechaCorrida(), modo: 'detectar', hallazgos, avisos, contadores: contar(hallazgos) };
       const rutas = await escribirInforme(dirInformes, info);
+      for (const h of hallazgos) escribir(lineaDeHallazgo(h));
+      for (const aviso of avisos) escribir(aviso);
       const c = info.contadores;
       escribir(`auto: ${c.auto} · modelo: ${c.modelo} · humano: ${c.humano}`);
       escribir(`Informe: ${rutas.md}`);
@@ -180,7 +191,7 @@ export async function ejecutar(argv, opts = {}) {
         continue;
       }
       const info = await corridaDeRepo({
-        detectar, arnes, repo: nombre, dirArneses, raices, opciones, dirInformes, historial: opts.historial,
+        detectar: (p) => detectar({ ...p, opciones: args }), arnes, repo: nombre, dirArneses, raices, opciones, dirInformes, historial: opts.historial,
         bins: opts.bins, escribir, raizBackArneses: back,
       });
       escribir(`${nombre}: ${info.estado}${info.copiaConservada && info.copia ? ` · copia ${info.copia}` : ''}`);
