@@ -97,7 +97,7 @@ Con la [receta](../../guides/agregar-una-accion-al-asistente.md) (268 y [0068](.
 | `formdocuments.discard@1` · Descartar un documento | la confirmación de descartar de la bandeja (`RemoveConfirmation`) | `formrecords.read` | `POST …/documents/{id}/discard` |
 | `formdocuments.record@1` · Pasar al formulario | la bandeja con el documento en su panel y su confirmación, sin guardar (`Page`). Su efecto fuera del sistema son las reglas del formulario (correo y WhatsApp), y se avisa antes de guardar | `formrecords.read` | `POST …/documents/{id}/record` |
 | `formcatalogs.discard@1` · Descartar propuesta | la confirmación de «Descartar propuesta» del catálogo (`RemoveConfirmation`) | `formcatalogs.manage` | `DELETE …/catalogs/{id}` |
-| `forms.settings.edit@2` y `forms.platformsettings.edit@2` | las dos configuraciones de la E18, que suman los seis valores de «Documentos recibidos» (`Integer`): una versión nueva (0068 §12) | los de la E18 | los de la E18 |
+| `forms.settings.edit@2` | la Configuración de Formularios de la organización (E18), que suma los seis valores de «Documentos recibidos» (`Integer`): una versión nueva (0068 §12) | los de la E18 | los de la E18 |
 
 Atender la bandeja de donde llegó un documento lo decide la ruta (403), porque la fuente no puede usar `IStructuredInboxAccess` (0068 §5).
 
