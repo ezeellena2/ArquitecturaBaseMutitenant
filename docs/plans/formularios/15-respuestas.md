@@ -166,10 +166,13 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 - **Cargó no se ordena:** el nombre vive en la cuenta o en WhatsApp, y Forms no los lee.
 - **Los topes de esta etapa** (10.000 respuestas, 30 s, 366 períodos, 20 condiciones, 100 valores y 100 claves) son técnicos o de capacidad y quedan en el código (270).
 
+## Acciones del asistente
+
+Ninguna ([0068](../../decisions/0068-acciones-del-asistente.md)): la etapa solo lee, y los ajustes del tablero son la vista de cada persona.
+
 ## Fuera de esta etapa
 
 - Importar respuestas desde Excel, exportar los archivos, exportar en segundo plano y los permisos por formulario.
-- Acciones del asistente ([0068](../../decisions/0068-acciones-del-asistente.md)): ninguna, porque la etapa solo lee, y los ajustes del tablero son la vista de cada persona.
 - Quién usa `answered`, `unanswered` y `notAsked`, que el contrato ya trae: las reglas (E21) y las sugerencias (E23).
 - Lo que suman las etapas siguientes: el papel «Filtro» de un campo (E16); las fotos, los documentos y «Descargar ▾» (E18); las líneas, los cálculos, «no se mostró» y los montos por moneda del tablero (E19); «Cargar», «Agregar respuesta», el canal «App», su filtro y lo propio de quien solo carga (E20); y el estado, «Por aprobar», la aprobación, la tarjeta «Por estado», el PDF, los avisos, corregir y anular (E21).
 - En la lectura (266 y 267), cada etapa suma lo suyo a la forma y renglones a la actividad: la E20 vuelve editable la forma que arma esta, y la E21 corrige en el lugar.

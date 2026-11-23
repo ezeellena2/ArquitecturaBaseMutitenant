@@ -179,7 +179,10 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 - **La vista oficial** usa los filtros fijos y no los según quien lo recibe (176).
 - **Las filas, la pieza, nada debajo y el orden** (261 a 264): lo que se hace con una fila va en su ⋮; todo lo que se elige es la pieza `Picker`; cada dato va en su columna, y toda columna con un dato ordena.
 - **Los 20 datos y los 300 caracteres** son topes de capacidad, como los 20 campos de un catálogo, y quedan en el código (270).
-- **Las acciones del asistente** son las tres de B13 (0068). «Papel» y los filtros por destinatario son parte de un catálogo y de un formulario, que siguen con su propuesta (0057).
+
+## Acciones del asistente
+
+Las tres de B13 ([0068](../../decisions/0068-acciones-del-asistente.md)): `formpersondata.create@1`, `formpersondata.edit@1` y `formpersondata.values.edit@1`. «Papel» y los filtros por destinatario son parte de un catálogo y de un formulario, que siguen con su propuesta (0057).
 
 ## Fuera de esta etapa
 

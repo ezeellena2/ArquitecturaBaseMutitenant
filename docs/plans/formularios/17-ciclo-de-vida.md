@@ -231,7 +231,10 @@ Cada punto lleva su test, escrito durante la etapa:
 - **La cola es de WhatsApp,** sin un registro global: Forms contesta qué versiones ya no se usan.
 - **Los intentos de deprecar y sus esperas** son técnicos y quedan en el código (270).
 - **Lo que se hace con un formulario** va en el ⋮ de su fila (261), y su nombre abre el editor (275); el filtro es la pieza, sin cantidades (262), y toda columna ordena (264).
-- **Las acciones del asistente** son las dos de B13 (0068). Copiar no es una acción, porque nace en borrador (0057), y reactivar es publicar: sigue lo que la E14 declare para publicar.
+
+## Acciones del asistente
+
+Las dos de B13 ([0068](../../decisions/0068-acciones-del-asistente.md)): `forms.deactivate@1` y `forms.remove@1`. Copiar no es una acción, porque nace en borrador (0057), y reactivar es publicar, que la E14 no declara: la IA nunca publica (0057).
 
 ## Fuera de esta etapa
 

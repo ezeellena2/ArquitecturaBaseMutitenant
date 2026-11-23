@@ -9,6 +9,7 @@ const FORMATO = [
   ['Contrato', /^Contrato/],
   ['Datos', /^(?:Datos|Modelo de datos)/],
   ['Pasos', /^(?:Pasos|Archivos)/],
+  ['Acciones del asistente', /^Acciones del asistente/],
   ['Qué verificar al arrancar', /^(?:Qué verificar|Puntos de contacto)/],
   ['Cómo se cierra', /^Cómo se cierra/],
 ];

@@ -51,13 +51,13 @@ function contexto({ archivos = {}, lienzo = [], sinFront = false, cerradas = [] 
 
 const spec = (numero, texto) => ({ [`docs/plans/formularios/${numero}-algo.md`]: texto });
 const tipos = (hallazgos) => hallazgos.map((h) => h.tipo);
-const completa = ['Qué leer', 'Pantallas', 'Contrato', 'Datos', 'Pasos', 'Qué verificar al arrancar', 'Cómo se cierra'].map((s) => `## ${s}`).join('\n');
+const completa = ['Qué leer', 'Pantallas', 'Contrato', 'Datos', 'Pasos', 'Acciones del asistente', 'Qué verificar al arrancar', 'Cómo se cierra'].map((s) => `## ${s}`).join('\n');
 
 test('secciones: una sola fila por etapa, con lo que le falta en el orden del formato', async () => {
   const hallazgos = await secciones.detectar(contexto({ archivos: spec(15, '# E15\n## Pantallas\n## Cómo se cierra') }));
   assert.equal(hallazgos.length, 1);
   assert.equal(hallazgos[0].tipo, 'faltan-secciones');
-  assert.match(hallazgos[0].real, /E15: faltan Qué leer, Contrato, Datos, Pasos y Qué verificar al arrancar/);
+  assert.match(hallazgos[0].real, /E15: faltan Qué leer, Contrato, Datos, Pasos, Acciones del asistente y Qué verificar al arrancar/);
 });
 
 test('secciones: una etapa con el formato completo no da nada', async () => {
@@ -67,7 +67,7 @@ test('secciones: una etapa con el formato completo no da nada', async () => {
 test('secciones: acepta los títulos numerados de las specs detalladas', async () => {
   const vieja = ['## 3. Modelo de datos', '## 5. Contrato borrador', '## 9. Archivos', '## 10. Pantallas (tableros)', '## 12. Puntos de contacto', '## 15. Cómo se cierra'].join('\n');
   const [hallazgo] = await secciones.detectar(contexto({ archivos: spec(14, vieja) }));
-  assert.match(hallazgo.real, /E14: falta Qué leer$/);
+  assert.match(hallazgo.real, /E14: faltan Qué leer y Acciones del asistente$/);
 });
 
 test('secciones: una spec partida cuenta las secciones de todas sus partes, en una sola fila', async () => {
@@ -75,10 +75,10 @@ test('secciones: una spec partida cuenta las secciones de todas sus partes, en u
   const parte = '# E14, parte\n## 3. Modelo de datos\n## 5. Contrato borrador';
   const archivos = { ...spec(14, principal), 'docs/plans/formularios/14-parte-datos-y-contrato.md': parte };
   const [hallazgo, ...resto] = await secciones.detectar(contexto({ archivos }));
-  assert.match(hallazgo.real, /^E14: falta Pasos$/);
+  assert.match(hallazgo.real, /^E14: faltan Pasos y Acciones del asistente$/);
   assert.equal(hallazgo.archivo, 'docs/plans/formularios/14-algo.md');
   assert.deepEqual(resto, []);
-  const completa14 = { ...archivos, 'docs/plans/formularios/14-parte-archivos.md': '# E14, parte\n## 8. Archivos' };
+  const completa14 = { ...archivos, 'docs/plans/formularios/14-parte-archivos.md': '# E14, parte\n## 8. Archivos\n## 17. Acciones del asistente' };
   assert.deepEqual(await secciones.detectar(contexto({ archivos: completa14 })), []);
 });
 
@@ -87,6 +87,12 @@ test('orden: una parte de la spec se controla como la spec', async () => {
   const [hallazgo] = await orden.detectar(contexto({ archivos }));
   assert.equal(hallazgo.tipo, 'nombra-etapa-posterior');
   assert.equal(hallazgo.archivo, 'docs/plans/formularios/14-parte-flujos.md');
+});
+
+test('secciones: cada etapa dice qué acciones del asistente declara, o por qué ninguna (268)', async () => {
+  const sinAcciones = completa.replace('## Acciones del asistente\n', '');
+  const [hallazgo] = await secciones.detectar(contexto({ archivos: spec(16, sinAcciones) }));
+  assert.match(hallazgo.real, /^E16: falta Acciones del asistente$/);
 });
 
 test('secciones: no mira las etapas cerradas, los textos para Diseño ni el índice', async () => {
