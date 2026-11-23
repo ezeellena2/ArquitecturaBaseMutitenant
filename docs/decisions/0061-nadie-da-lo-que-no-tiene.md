@@ -20,7 +20,7 @@ Lo mismo pasa en los otros dos catálogos con delegación ([permisos](../rules/p
    - el Dueño (`TenantAdmin`) tiene todo el catálogo de la organización: darlo o quitarlo pide tenerlo todo.
 3. **En cada empresa:** quien tiene `company.members.manage` en ella solo suma a alguien con roles, o le cambia los roles, si esos roles tienen solo permisos que quien pide tiene en esa empresa, contando los de la organización como los cuenta `[HasCompanyPermission]`. Desactivar o quitar a alguien de la empresa pide tener todos sus permisos ahí. Los 403 son `Companies.Membership.RolesNotHeld` y `Companies.Membership.HasMorePermissions`. Vale igual para `CompanyAdmin`.
 4. **En Plataforma:** quien tiene `platform.operators.manage` solo invita a un operador, o le cambia los permisos, con permisos que tiene. Si no, 403 `Platform.Operator.PermissionsNotHeld`. Suspender, reactivar o dar de baja a un operador pide tener todos sus permisos. Si no, 403 `Platform.Operator.HasMorePermissions`.
-5. **Una sola regla.** Un solo helper por alcance la decide (un `*Guard`, de la lista cerrada de [capas-y-flujo](../rules/capas-y-flujo.md)), y lo usan todos los casos de uso que dan, quitan o actúan sobre una cuenta. Los roles se comparan por id. Los códigos de error son una propuesta: los fija quien programa, en el `<Entidad>Errors` de cada área.
+5. **Una sola regla.** Un solo helper por alcance la decide (un `*Guard`, de la lista cerrada de [capas-y-flujo](../rules/capas-y-flujo.md), que decide con su `*Policy` pura), y lo usan todos los casos de uso que dan, quitan o actúan sobre una cuenta. La misma `Policy` calcula `grantable` para la pantalla, y la reusan las acciones del asistente ([0068](0068-acciones-del-asistente.md)). Los roles se comparan por id. Los códigos de error son una propuesta: los fija quien programa, en el `<Entidad>Errors` de cada área.
 
 ## Lo que no cambia
 
@@ -32,7 +32,7 @@ Lo mismo pasa en los otros dos catálogos con delegación ([permisos](../rules/p
 ## Consecuencias
 
 - Los errores nuevos van en `Errors.resx` y `.en.resx`, y el front los traduce.
-- La pantalla muestra el 403 con su texto. Esconder o deshabilitar lo que no se puede dar sería un cambio de pantalla, y se dibuja antes.
+- La pantalla muestra el 403 con su texto. Desde la decisión 269 de la [hoja de ruta de formularios](../plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md), además apaga con su motivo lo que no se puede dar, según `grantable` (segunda parte de la base, B1 y F5).
 - Los tests que cambian roles con una cuenta que no es Dueña se ponen al día.
 
 ## Alternativas descartadas
