@@ -877,6 +877,10 @@ Del traspaso 18, tanda 4 (biblioteca, asistente y documentos, de la E22 a la E25
 
 Del traspaso 18, tanda 5 (WhatsApp y ARCA), el 2026-11-23. El usuario aprobó el plan de la tanda; no tenía preguntas numeradas. Los países que reciben códigos pasan a la configuración de Plataforma con la segunda parte de la base (270), y **la 279, el aviso de vencimiento del certificado, es de ARCA** y está en su [hoja de ruta](2026-11-06-arca-hoja-de-ruta.md#2-lo-que-se-decidió), como la 243 a la 253.
 
+De la revisión de alineación del 2026-11-23. El usuario eligió la recomendada:
+
+280. **Un documento repetido por WhatsApp dice si solo se propuso o si ya se cargó** (O37 y O46 de ArquitecturaBase, que allá siguen sin decidir; E25): si el primero solo se propuso, el asistente contesta «Ya me lo mandaste el {fecha}: completá el formulario que te mandé.»; si ya se cargó, el de `Forms.Document.Duplicate`, «Ya se cargó en {number} el {date}.». Nunca dice que se cargó lo que solo se propuso.
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase

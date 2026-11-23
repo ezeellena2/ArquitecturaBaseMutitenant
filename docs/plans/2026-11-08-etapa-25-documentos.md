@@ -161,5 +161,4 @@ Leé AGENTS.md de los dos repos, este plan y /puerta. Integrá contra K1, devolv
 
 ## Para decidir
 
-- **El texto de un documento repetido** (O37 y O46 de allá, que siguen sin decidir: allá dice siempre «Este comprobante ya se cargó el {fecha} en {número}. No lo cargo de nuevo.»). Recomendada: si solo se propuso, «Ya me lo mandaste el {fecha}: completá el formulario que te mandé.», y si ya se cargó, el de `Forms.Document.Duplicate`, «Ya se cargó en {number} el {date}.». La otra: un solo texto para los dos casos, «Ya me mandaste este documento el {fecha}.».
 - **El monto negativo de un débito** (O47 de allá, importante): un comprobante de débito muestra el importe con signo menos, y en una transferencia el monto es siempre positivo; un negativo resta en el tablero. Recomendada: la validación fija `Amount` pide un monto positivo, así un negativo queda marcado y no se carga solo.
