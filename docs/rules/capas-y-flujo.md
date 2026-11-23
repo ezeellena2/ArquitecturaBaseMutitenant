@@ -53,7 +53,7 @@ Scheduler/Canceller/Processor/Activator son los pasos nominales de baja y activa
 - `Application/Services/Roles/RoleService.cs` y `Api/Controllers/Organization/RolesController.cs` (E4).
 
 ## Lo verifica
-- `LayerDependencyTests` (E0), `ProjectReferencesTests` (E0), `ApplicationPackagesTests` (E0), `ControllerServiceRepositoryTests` (E1), `ApplicationPublicApiTests` (E1), `ApplicationServicesTests` (E0), `ServiceDependencyCountTests` (E1), `MinimalApiRoutesTests` (E0), `IdentityAccessTests` (E0)
+- `LayerDependencyTests` (E0), `ProjectReferencesTests` (E0), `ApplicationPackagesTests` (E0), `ControllerServiceRepositoryTests` (E1), `ApplicationPublicApiTests` (E1), `ApplicationServicesTests` (E0), `ServiceDependencyCountTests` (E1), `MinimalApiRoutesTests` (E0), `IdentityAccessTests` (E0), `ForbiddenPackagesTests` (E12): ningún proyecto ni `Directory.Packages.props` trae AutoMapper, MediatR o Scrutor, `GenericRepositoryTests` (E12): ningún `IRepository<T>`, `Repository<T>` o `RepositoryBase`, ni una interfaz de repositorio con métodos genéricos
 
 ## Detalle
 [Backend](../architecture/backend.md#3-capas-y-dependencias) y [ADR 0039](../decisions/0039-tope-de-dependencias-de-negocio.md).
