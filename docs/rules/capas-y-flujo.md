@@ -1,6 +1,6 @@
 # Capas y flujo de un caso de uso
 
-**Regla:** Domain ← Application ← Infrastructure; Api compone. Controller → I<X>Service → servicio → repositorio/reader o puerto. Helpers con sufijos de la lista cerrada y hasta ocho dependencias de negocio.
+**Regla:** Domain ← Application ← Infrastructure; Api compone. Controller → I<X>Service → servicio → repositorio/reader o puerto. Helpers con sufijos de la lista cerrada y hasta ocho dependencias de negocio. Ningún método de producción pasa la complejidad ciclomática de `CodeMetricsConfig.txt`, que solo baja.
 
 ## Cómo se hace
 - Domain: entidades/errores sin paquetes; Application: servicios/puertos/modelos/validadores; Infrastructure: EF/adaptadores; Api: HTTP.
@@ -53,7 +53,7 @@ Scheduler/Canceller/Processor/Activator son los pasos nominales de baja y activa
 - `Application/Services/Roles/RoleService.cs` y `Api/Controllers/Organization/RolesController.cs` (E4).
 
 ## Lo verifica
-- `LayerDependencyTests` (E0), `ProjectReferencesTests` (E0), `ApplicationPackagesTests` (E0), `ControllerServiceRepositoryTests` (E1), `ApplicationPublicApiTests` (E1), `ApplicationServicesTests` (E0), `ServiceDependencyCountTests` (E1), `MinimalApiRoutesTests` (E0), `IdentityAccessTests` (E0), `ForbiddenPackagesTests` (E12): ningún proyecto ni `Directory.Packages.props` trae AutoMapper, MediatR o Scrutor, `GenericRepositoryTests` (E12): ningún `IRepository<T>`, `Repository<T>` o `RepositoryBase`, ni una interfaz de repositorio con métodos genéricos
+- `LayerDependencyTests` (E0), `ProjectReferencesTests` (E0), `ApplicationPackagesTests` (E0), `ControllerServiceRepositoryTests` (E1), `ApplicationPublicApiTests` (E1), `ApplicationServicesTests` (E0), `ServiceDependencyCountTests` (E1), `MinimalApiRoutesTests` (E0), `IdentityAccessTests` (E0), `ForbiddenPackagesTests` (E12): ningún proyecto ni `Directory.Packages.props` trae AutoMapper, MediatR o Scrutor, `GenericRepositoryTests` (E12): ningún `IRepository<T>`, `Repository<T>` o `RepositoryBase`, ni una interfaz de repositorio con métodos genéricos, `CA1502` (E12): un método de `src` más complejo que el umbral de `CodeMetricsConfig.txt` rompe el build; `BuildConfigurationTests` (E12) frena que el umbral suba o que la regla se apague o se suprima
 
 ## Detalle
 [Backend](../architecture/backend.md#3-capas-y-dependencias) y [ADR 0039](../decisions/0039-tope-de-dependencias-de-negocio.md).

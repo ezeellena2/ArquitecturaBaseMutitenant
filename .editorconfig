@@ -43,6 +43,10 @@ dotnet_code_quality.CA1711.allowed_suffixes = Queue
 # CA1848: los logs se escriben con [LoggerMessage]; un logger.LogX directo rompe el build.
 dotnet_diagnostic.CA1848.severity = warning
 
+# CA1502: un método más complejo que el umbral de CodeMetricsConfig.txt rompe el build. El umbral es la complejidad
+# ciclomática del método más complejo del código de producción al encenderlo, y solo baja (BuildConfigurationTests).
+dotnet_diagnostic.CA1502.severity = warning
+
 [src/ArquitecturaBaseMultitenant.AppHost/*.cs]
 # ASPIRECERTIFICATES001: WithHttpsDeveloperCertificate está marcada como experimental en Aspire 13.5. Es lo que
 # hace que Vite sirva HTTPS con el certificado de desarrollo; sin eso habría que exportarlo a mano en el front.
@@ -59,6 +63,9 @@ dotnet_diagnostic.EXTEXP0001.severity = none
 dotnet_diagnostic.CA1707.severity = none
 # Arrays literales en datos de prueba y asserts.
 dotnet_diagnostic.CA1861.severity = none
+# CA1502 mide el código de producción: los puentes de prueba (WhatsAppBrowserControl, AssistantFileBridge) despachan
+# muchos comandos en un switch.
+dotnet_diagnostic.CA1502.severity = none
 
 [**/Migrations/*.cs]
 # Código que genera dotnet ef: no se le exige el estilo del repo (IDE0005, IDE0161 y los analizadores).

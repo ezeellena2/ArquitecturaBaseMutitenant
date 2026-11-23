@@ -13,5 +13,7 @@
 
   <ItemGroup>
     <AdditionalFiles Include="$(MSBuildThisFileDirectory)BannedSymbols.txt" Link="BannedSymbols.txt" />
+    <!-- El umbral de CA1502 (complejidad ciclomática); la severidad está en .editorconfig. -->
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)CodeMetricsConfig.txt" Link="CodeMetricsConfig.txt" />
   </ItemGroup>
 </Project>

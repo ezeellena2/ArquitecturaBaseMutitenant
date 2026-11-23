@@ -133,6 +133,68 @@ public sealed partial class BuildConfigurationTests
         Assert.Contains(issuer, File.ReadAllText(frontIssuerPath), StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// capas-y-flujo.md: CA1502 rompe el build con un método de producción más complejo que el umbral de
+    /// <c>CodeMetricsConfig.txt</c>. El umbral nació en 50, el del método más complejo de ese día
+    /// (<c>AssistantContractContributor.Describe</c>), y solo baja: subirlo, apagar la regla en otra sección del
+    /// <c>.editorconfig</c> o suprimirla en el código es una decisión de arquitectura, no un arreglo.
+    /// </summary>
+    [Fact]
+    public void Cyclomatic_complexity_ratchet_is_on_for_production_code_and_never_rises()
+    {
+        const int ceiling = 50;
+        var thresholds = File.ReadAllLines(Path.Combine(SolutionRoot.FullPath, "CodeMetricsConfig.txt"))
+            .Select(line => ComplexityThreshold().Match(line))
+            .Where(match => match.Success)
+            .Select(match => int.Parse(match.Groups["value"].Value, System.Globalization.CultureInfo.InvariantCulture));
+        Assert.InRange(Assert.Single(thresholds), 1, ceiling);
+
+        var props = XDocument.Load(Path.Combine(SolutionRoot.FullPath, "Directory.Build.props"));
+        Assert.Contains(props.Descendants("AdditionalFiles"),
+            file => file.Attribute("Include")?.Value == "$(MSBuildThisFileDirectory)CodeMetricsConfig.txt");
+
+        var sections = EditorConfigSections(File.ReadAllLines(Path.Combine(SolutionRoot.FullPath, ".editorconfig")));
+        Assert.Contains("dotnet_diagnostic.CA1502.severity = warning", sections["[*.cs]"]);
+        Assert.Equal(["[*.cs]", "[tests/**.cs]"],
+            sections.Where(section => section.Value.Any(line => line.StartsWith("dotnet_diagnostic.CA1502", StringComparison.Ordinal)))
+                .Select(section => section.Key).Order(StringComparer.Ordinal));
+
+        var suppressed = new[] { "src", "tools" }
+            .Select(folder => Path.Combine(SolutionRoot.FullPath, folder))
+            .Where(Directory.Exists)
+            .SelectMany(folder => Directory.EnumerateFiles(folder, "*.cs", SearchOption.AllDirectories))
+            .Where(file => !file.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                && !file.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .Where(file => File.ReadAllText(file).Contains("CA1502", StringComparison.Ordinal))
+            .Select(file => Path.GetRelativePath(SolutionRoot.FullPath, file));
+        Assert.Empty(suppressed);
+    }
+
+    private static Dictionary<string, List<string>> EditorConfigSections(IEnumerable<string> lines)
+    {
+        var sections = new Dictionary<string, List<string>>(StringComparer.Ordinal) { [""] = [] };
+        var current = sections[""];
+        foreach (var line in lines.Select(line => line.Trim()))
+        {
+            if (line.StartsWith('['))
+            {
+                if (!sections.TryGetValue(line, out var existing))
+                {
+                    existing = [];
+                    sections[line] = existing;
+                }
+
+                current = existing;
+            }
+            else if (line.Length > 0 && !line.StartsWith('#'))
+            {
+                current.Add(line);
+            }
+        }
+
+        return sections;
+    }
+
     private static void AssertActionPins(string workflow, IReadOnlyCollection<string> expectedActions)
     {
         var matches = ActionReference().Matches(workflow);
@@ -149,4 +211,7 @@ public sealed partial class BuildConfigurationTests
 
     [GeneratedRegex(@"\buses:\s+actions/(?<action>[\w-]+)@(?<sha>[^\s#]+)(?:\s+#\s+(?<version>v[\d.]+))?", RegexOptions.CultureInvariant)]
     private static partial Regex ActionReference();
+
+    [GeneratedRegex(@"^\s*CA1502\s*:\s*(?<value>\d+)\s*$", RegexOptions.CultureInvariant)]
+    private static partial Regex ComplexityThreshold();
 }

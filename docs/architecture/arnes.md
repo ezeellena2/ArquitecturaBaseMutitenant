@@ -9,7 +9,7 @@
 | 0. Índice | Reglas que no se negocian, "dónde va cada cosa" y la tabla "si vas a tocar X, leé Y" | `AGENTS.md` de la raíz (`CLAUDE.md` = `@AGENTS.md`) | ≤ 140 líneas |
 | 1. Fichas | Una por tema, con formato fijo (§2) | `docs/rules/<tema>.md` | 20 a 60 líneas cada una |
 | 2. Punteros por carpeta | Responsabilidad y enlace a su ficha o feature | `AGENTS.md` + `CLAUDE.md` (`@AGENTS.md`) en cada carpeta del mapa (§3) | 1 a 3 líneas en las carpetas de capa; una línea, a `docs/features/<área>.md`, en las carpetas de un área |
-| 3. Verificación | Tests de arquitectura, analizadores, `BannedSymbols.txt`, `TreatWarningsAsErrors` | `tests/*.ArchitectureTests`, `.editorconfig` | una verificación por regla |
+| 3. Verificación | Tests de arquitectura, analizadores, `BannedSymbols.txt`, `CodeMetricsConfig.txt` (el umbral de CA1502), `TreatWarningsAsErrors` | `tests/*.ArchitectureTests`, `.editorconfig` | una verificación por regla |
 
 Además hay **recetas** (`docs/guides/`: prefijo de backend (E1), migración (E2), agregar un área y permiso nuevo (E4), quitar WhatsApp (E8), revisar la arquitectura de un desarrollo ([ADR 0059](../decisions/0059-revision-de-arquitectura.md))) y un **área de referencia** (Roles): código real para copiar, no ejemplos inventados.
 
