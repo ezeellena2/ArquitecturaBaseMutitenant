@@ -119,7 +119,7 @@ Todo texto que ve el usuario dice «ítem» («item» en inglés) donde allá de
 | --- | --- | --- |
 | El botón, y apagado | «Agregar bloque» · «Ya hay un bloque.» | «Add block» · «There is already a block.» |
 | El nombre con que arranca | «Bloque» | «Block» |
-| La lista del editor | «Bloque · de 1 a 10 ítems · 3 preguntas»; con el mínimo igual al máximo, «Bloque · 1 ítem · 2 preguntas», y con mínimo 0, «Bloque · hasta 10 ítems · 3 preguntas» | «Block · 1 to 10 items · 3 questions», «Block · 1 item · 2 questions», «Block · up to 10 items · 3 questions» |
+| La lista del editor (263) | Tipo «Bloque»; en su ✎, el rango: «De 1 a 10 ítems», «1 ítem» con el mínimo igual al máximo y «Hasta 10 ítems» con mínimo 0 | «Block»; «1 to 10 items», «1 item», «Up to 10 items» |
 | El recuadro, y sobre «Mínimo» y «Máximo» | «Preguntas de cada ítem» · «Ítems» | «Questions for each item» · «Items» |
 | La (i) del máximo | «En WhatsApp se cargan hasta 10 ítems.» | «WhatsApp loads up to 10 items.» |
 | La casilla y su (i) | «Se carga varias veces» · «Se carga una vez por ítem.» | «Loaded several times» · «Loaded once per item.» |

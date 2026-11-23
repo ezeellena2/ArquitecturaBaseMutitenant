@@ -72,7 +72,7 @@ Antes de empezar, en este orden:
 - **la pantalla completa** suma «Descargar ▾», con los documentos;
 - **el Excel:** la cantidad y los nombres en la celda, sin los archivos;
 - **la tarjeta del chat:** «Bajando los archivos» o «Reintentando», guardada, con miniaturas y «+N», o rechazada, con «Mandar de nuevo»;
-- **el visor:** anterior, siguiente, tira de miniaturas y Descargar.
+- **el visor:** anterior, siguiente, tira de miniaturas y Descargar, y al pie la fecha de cada foto: la del mensaje en el chat y la de la respuesta en Formularios (O21 de ArquitecturaBase).
 
 **Los archivos del chat** (48), en todos los chats de atención, de una organización y de Plataforma:
 - **recibir:** las fotos, los audios, los documentos y los videos que llegan se bajan, se verifican igual y se ven y se descargan desde el chat. Es lo que la D7 de la E11 dejó para esta etapa. Un sticker o una ubicación siguen diciendo solo su tipo;
@@ -91,7 +91,7 @@ Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133
 | `FRM-Config-Org`, `M-FRM-Config-Org` y `FRM-Config-Plat`, nuevos | la Configuración de Formularios de la organización, con «Tamaño máximo de un archivo», su (i) y el máximo de la plataforma, y la de la plataforma, con ese máximo (270) |
 | `FRM-Publicar-18` | «Más de 10 archivos» |
 | `WA-Chats-Respuesta-18` y `M-WA-Conversacion-Respuesta-18` | la tarjeta: bajando, reintentando, con fotos y un documento, muchas fotos y los dos rechazos |
-| `WA-Chats-Visor` y `M-WA-Chats-Visor` | el visor: el título, en qué foto va, la tira de miniaturas y, al pie, el nombre, el tamaño y «Descargar», igual que en la planilla (194) |
+| `WA-Chats-Visor` y `M-WA-Chats-Visor` | el visor: el título, en qué foto va, la tira de miniaturas y, al pie, el nombre, el tamaño y «Descargar», igual que en la planilla (194). Se redibuja: suma la fecha de la foto al pie (O21) |
 | `FRM-Respuestas-18` y `M-FRM-Respuestas-18` | la planilla con la columna de archivos, que no ordena (264), el visor y la (i) de exportar, sin filtro de archivos (143) |
 | `FRM-Respuesta-18` y `M-FRM-Respuesta-18` | la respuesta, con la zona «Fotos y documentos» al final y el visor (266) |
 | `FRM-Respuesta-Completa-18` | la pantalla completa, con la zona «Fotos y documentos» y «Descargar ▾» |
