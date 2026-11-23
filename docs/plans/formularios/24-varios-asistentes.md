@@ -1,13 +1,13 @@
 # E24 · Varios asistentes, uno por equipo (spec)
 
-**Estado:** pendiente · spec de la etapa 24 del bloque (decisiones 68, 69, 77 y 78), con el [formato](plantilla.md) de las etapas. No tiene equivalente programado en ArquitecturaBase, que lo dejó para una tercera etapa del asistente (anexo F, F2). `/plan-etapa` la contrasta con el código real después de la E23.
+**Estado:** pendiente · spec de la etapa 24 del bloque (decisiones 68, 69, 77, 78, 261 a 264, 270 y 278), con el [formato](plantilla.md) de las etapas. No tiene equivalente programado en ArquitecturaBase, que lo dejó para una tercera etapa del asistente (anexo F, F2). `/plan-etapa` la contrasta con el código real después de la E23.
 
 ## Qué leer
 
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E23](23-asistente.md): el agente, un turno y sus tablas; y la ficha [WhatsApp](../../features/whatsapp.md): equipos y bot.
-2. **Decisiones** de la hoja de ruta: 28, 35, 43, 46, 52, 68, 69, 77, 78 y 206. ADR [0051](../../decisions/0051-precision-tecnica-de-costos-ia.md).
+2. **Decisiones** de la hoja de ruta: 28, 35, 43, 46, 52, 68, 69, 77, 78, 206, 261 a 264, 269 a 271 y 278. ADR [0051](../../decisions/0051-precision-tecnica-de-costos-ia.md).
 3. **Fichas:** [modulos](../../rules/modulos.md), [concurrencia](../../rules/concurrencia.md), [multitenancy](../../rules/multitenancy.md), [guardado](../../rules/guardado.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md) y [tests](../../rules/tests.md).
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 5. **Referencia de producto,** solo para leer: en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`, el anexo F, F2.
@@ -27,13 +27,15 @@ Antes de empezar, en este orden:
 
 **El modo de atención** y los topes siguen siendo por bandeja y por chat. El tope mensual de IA es uno para toda la organización. **Probar** se elige por asistente.
 
+**El tope de ofrecimientos** (278) es el de los límites del asistente que contesta, en su bandeja: de 1 a 50 y 2 de entrada, dentro del máximo de la plataforma, como en la E23, igual que «Volver a ofrecer un formulario rechazado» (270). El contador y los rechazos siguen siendo del chat: cambiar de equipo no los vuelve a cero. Con el tope lleno, el chat deriva con «Llegó al tope de ofrecimientos del día», y el porqué nombra al asistente.
+
 **Dar de baja un asistente:** deja de contestar, y sus equipos pasan al principal. Se reactiva, y sus asignaciones se conservan.
 
 ## Pantallas
 
 **Aprobados y publicados** en el lienzo v158. En ArquitecturaBase no existe: todo sale de piezas de este lienzo. Muestran solo lo que existe hasta acá (78).
 
-**Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
+**Valen las de toda la app** (160 a 164, 173 a 175, 180, 261 a 264 y 269): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
 
 Datos de ejemplo: el principal, Delta; Delta Soporte y Delta Ventas, de esos equipos, y Delta Obras, de baja.
 
@@ -43,14 +45,18 @@ Datos de ejemplo: el principal, Delta; Delta Soporte y Delta Ventas, de esos equ
 | `WA-Equipo-Asistente` y `M-WA-Equipo-Asistente` | «Asistente de este equipo», un desplegable en «Editar equipo» de la 11. Sin elegir, contesta el principal | elegir el asistente (uno de baja no se elige), sin elegir, un asistente de baja y un solo asistente |
 | `WA-Chats-Casos-24` y `M-WA-Chats-Casos-24` | sobre `WA-Chats-Casos`: el nombre del asistente que contesta, en la cabecera, la lista, cada respuesta y «Por qué respondió esto». Un chat nuevo arranca con el menú del bot | eligió Soporte, por qué respondió, pasó a Ventas (con el mismo historial), un equipo sin asistente (contesta el principal) y un solo asistente, sin menú |
 
+**Se redibujan con el traspaso 18, tanda 4** (262 a 264):
+- `WA-Asistentes` y `M-WA-Asistentes`: el encabezado y «Ordenar por» ordenan «Asistente» y «Estado», y «Equipos» no, porque son varios; sin orden elegido va el principal primero y después por nombre, sin flecha (264). En el teléfono, sin datos juntos con «·», como «Delta · principal» (263);
+- `WA-Equipo-Asistente` y `M-WA-Equipo-Asistente`: «Asistente de este equipo», en la pieza: sin elegir, el campo dice en gris que contesta el principal, y uno de baja va apagado con su motivo (262).
+
 El recorrido guiado «Dos equipos con su asistente» muestra a Lucía asignando el asistente de Ventas, a Martina eligiendo «Consultar un pedido» y el pase a Ventas, hasta el principal en un equipo sin asistente.
 
 ## Contrato
 
 | Ruta | Permiso | Pide | Devuelve |
 | --- | --- | --- | --- |
-| `GET /api/organization/whatsapp/assistant/agents` | `whatsapp.manage` | `page`, `pageSize`, `search`, `status` | `PagedResult<{id, name, isPrimary, isActive, teamCount, teams[]}>`, con hasta `MaxMemberPreview` equipos. La arma WhatsApp, con `IConversationAgentSettings.ListAsync` y sus equipos: el asistente no los conoce |
-| `POST /api/organization/whatsapp/assistant/agents` | `whatsapp.manage` | `{name}`, con `[Idempotent]` | 201 + Location; arranca con la copia del perfil, los casos y los límites del principal |
+| `GET /api/organization/whatsapp/assistant/agents` | `whatsapp.manage` | `page`, `pageSize`, `search`, `status` y `sort` por `name` o `status` (264) | `PagedResult<{id, name, isPrimary, isActive, teamCount, teams[]}>`, con hasta `MaxMemberPreview` equipos. La arma WhatsApp, con `IConversationAgentSettings.ListAsync` y sus equipos: el asistente no los conoce |
+| `POST /api/organization/whatsapp/assistant/agents` | `whatsapp.manage` | `{name}`, con `[Idempotent]` | 201 + Location; arranca con la copia del perfil, los casos y los límites del principal, también los de la 270 y la 278 |
 | `GET` y `PUT /api/organization/whatsapp/assistant/agents/{id}` | `whatsapp.manage` | lo de la E23 | el agente y 200 `{version, knowledgeVersion}` |
 | `POST …/agents/{id}/deactivation` y `reactivation` | `whatsapp.manage` | `{version}` | 200 `{version}` |
 | `POST /api/organization/whatsapp/assistant/agents/{id}/test` | `whatsapp.manage` y atender esa bandeja | `{messages[], inbox}`, de 1 a 5, como la E23 | lo de la E23: sin `formrecords.read`, sin el porqué |
@@ -91,7 +97,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | --- | --- | --- | --- | --- |
 | B1 | Varios agentes | suma a `D/Assistant/AssistantAgent.cs` y `AssistantAgentService.cs` [E23]; la migración | esos mismos | el principal no se da de baja; un asistente de baja; nombre repetido; el nuevo arranca con la copia del principal, con su nombre |
 | B2 | La asignación | suma a `D/WhatsApp/WhatsAppTeam.cs` y `WhatsAppTeamService.cs`; la migración | esos mismos | otro módulo opaco; un asistente de baja |
-| B3 | Elegir quién contesta | `A/Modules/WhatsApp/Services/WhatsAppAgentResolver.cs`; suma a `WhatsAppAssistantTurnService.cs` [E23] | `WhatsAppBotResolver.cs` | sin equipo; equipo sin asistente; cambiar de equipo con el mismo historial |
+| B3 | Elegir quién contesta | `A/Modules/WhatsApp/Services/WhatsAppAgentResolver.cs`; suma a `WhatsAppAssistantTurnService.cs` [E23] | `WhatsAppBotResolver.cs` | sin equipo; equipo sin asistente; cambiar de equipo con el mismo historial; el tope de ofrecimientos del que contesta, con el contador del chat, y con el tope lleno deriva (278) |
 | B4 | El menú al empezar | suma a `WhatsAppAttentionBotWriter.cs` y `WhatsAppInboundGuard.cs` | esos mismos | con uno y con varios; la persona elige |
 | B5 | Rutas y contratos | suma a `OrganizationWhatsAppAssistantController.cs` y a los equipos | esos mismos | cada ruta con 401, 403 y feature apagada = 404; segunda página; ejemplos exportados; aislamiento |
 
@@ -100,8 +106,8 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
 | F1 | Tipos y llamadas | suma a `F/src/modules/whatsapp/assistant/` | esos mismos | zod estricto |
-| F2 | La lista | `AssistantsPage.tsx`, y la pantalla de la E23 por id | la lista de equipos | «Nuevo asistente»; dar de baja |
-| F3 | El equipo y el chat | suma al equipo y a `MessageThread.tsx` | esos mismos | el nombre en el chat y en el porqué |
+| F2 | La lista | `AssistantsPage.tsx`, y la pantalla de la E23 por id | la lista de equipos | «Nuevo asistente»; dar de baja; ordenar (264) |
+| F3 | El equipo y el chat | suma al equipo y a `MessageThread.tsx` | esos mismos | el nombre en el chat y en el porqué; el asistente del equipo, en la pieza (262) |
 
 **Al cerrar:** `docs/features/asistente.md` y `whatsapp.md` suman su sección.
 

@@ -77,7 +77,7 @@ Sigue la [spec de la E21](21-reglas-y-aprobacion.md). La regla: las reglas viaja
     - lo que apunta a una pregunta u opción que ya no está en el borrador se precarga marcado, y la persona lo corrige o lo borra antes de guardar;
   - cuando la persona elige los roles y toca «Guardar reglas», se crea la revisión 1, con la regla de guardado de la E21. Desde la primera revisión, aunque esté vacía, las reglas de ejemplo dejan de mostrarse. Hasta entonces, el formulario se puede publicar sin reglas;
   - el diseño del PDF se copia como primera revisión del diseño, porque no tiene datos de la organización (decisión 31);
-  - el `roleHint` se muestra como «Rol sugerido», sin elegir ningún rol solo: las referencias van por id, nunca por nombre (decisión 32 y lección del 06 del traspaso).
+  - el `roleHint` se muestra en gris en el rol vacío («Sugerido: Supervisor») y, si hay un rol con ese nombre, como «Sugerido» en su opción (263), sin elegir ningún rol solo: las referencias van por id, nunca por nombre (decisión 32 y lección del 06 del traspaso).
 - **En Plataforma,** las reglas y el diseño del PDF se editan en la pestaña «Plantilla», debajo de las preguntas, con la misma sección de la E21 (decisión 33).
 
 **FormTemplateVersions** (inmutable)
@@ -126,8 +126,8 @@ Sigue la [spec de la E21](21-reglas-y-aprobacion.md). La regla: las reglas viaja
 
 | Método y ruta | Pide | Devuelve |
 | --- | --- | --- |
-| GET `/api/platform/forms/templates` | `page`, `pageSize`, `sort`, `search`, `state` (`all`, `draft`, `published`, `retired`), `categoryId?` | 200 `PagedResult<{id, name, category, state, usedByCount, lastPublishedAtUtc?}>` |
-| GET `/api/platform/forms/templates/filter-counts` | `search`, `categoryId?` | 200 `{all, draft, published, retired}` |
+| GET `/api/platform/forms/templates` | `page`, `pageSize`, `sort`, `search`, `state` (`all`, `draft`, `published`, `retired`), `categoryId?` | 200 `PagedResult<{id, name, category, state, usedByCount, lastPublishedAtUtc?}>`; `sort` por `name` (el de entrada), `category`, `state` por el circuito (borrador, publicada, retirada), `usedByCount` o `lastPublishedAtUtc`, con lo vacío al final y el desempate por Id (264) |
+| GET `/api/platform/forms/templates/filter-counts` | `search`, `categoryId?` | 200 `{all, draft, published, retired}`, solo para el resumen («4 plantillas · 2 publicadas»): los filtros no llevan cantidades (262) |
 | POST `/api/platform/forms/templates` | `{name, categoryId}` | 201 detalle |
 | GET `/api/platform/forms/templates/{id}` | — | 200 `{id, state, category, draft, hasUnpublishedChanges, publishedVersion?{number, publishedAtUtc, publishedBy}, retired?{atUtc, by, reason}, usedByCount, version}` |
 | GET `/api/platform/forms/templates/{id}/versions` | `after?`, `limit?` (`CursorRequest`) | 200 `CursorResult<{number, publishedAtUtc, publishedBy, reason}>`, por fecha e Id descendentes, sin total |
