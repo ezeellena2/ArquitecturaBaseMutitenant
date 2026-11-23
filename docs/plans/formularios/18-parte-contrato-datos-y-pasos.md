@@ -41,21 +41,21 @@ Los mensajes de la conversación suman `file?{id, name, kind, mediaType, size, s
 - `StructuredRecordCapture` suma `Files[FieldId, Position, StorageKey, ThumbnailKey?, FileName, MediaType, ByteLength, Sha256]`, ya verificados, y `StructuredRecordCard`, los archivos;
 - `IFileContentInspector`, en `Application/Interfaces/Integrations/Files/`: `Inspect(stream, declaredKind)` devuelve el tipo real y, si es una foto, sus dimensiones; `CreateThumbnailAsync` arma la miniatura.
 
-**Errores** (con sus textos en `FormsTexts` y en los del módulo WhatsApp):
+**Errores.** Los de Forms van en `Domain/Forms/`: `Forms.Record.File*` en `FormRecordErrors.cs`, `Forms.Draft.*` en `FormDraftErrors.cs` y `Forms.Publication.FilesUnavailable` en `FormPublicationErrors.cs`, de la E14, y `Forms.Settings.Invalid` en `FormSettingsErrors.cs`, nuevo, con sus textos en `FormsTexts{,.en}.resx`. Los `WhatsApp.*` van en `Domain/WhatsApp/WhatsAppErrors.cs`, con sus textos en `WhatsAppTexts{,.en}.resx`.
 
-| Código | Tipo | Cuándo |
-| --- | --- | --- |
-| `Forms.Record.FileNotFound` | NotFound | ajeno, inexistente, o falta el archivo guardado |
-| `Forms.Draft.TooManyFiles` | Validation (`questions`) | la suma de los máximos pasa de 10 |
-| `Forms.Draft.QuestionInvalid` | Validation | suma mínimo y máximo de archivos, u origen fuera de regla |
-| `Forms.Publication.FilesUnavailable` | ServiceUnavailable | una pregunta de archivo, sin almacenamiento |
-| `Forms.Record.FileRejected` | Validation (`fieldId`) | no coinciden hash, tamaño o tipo |
-| `Forms.Record.FileDownloadFailed` | Failure (`fieldId`) | no bajó tras los reintentos |
-| `Forms.Settings.Invalid` | Validation (`maxFileMiB`) | un tamaño fuera de 1 y el máximo de la plataforma, o en la de la plataforma, fuera de 1 a 25; el texto recibe el máximo como parámetro (270) |
-| `WhatsApp.Flow.TooManyFiles` | Validation | más archivos o más de 100 MiB en una respuesta |
-| `WhatsApp.Chat.FileNotFound` | NotFound | ajeno, inexistente, o falta el archivo guardado |
-| `WhatsApp.Chat.FileTooLarge` | Validation (`file`) | pasa el tope de Meta para su tipo |
-| `WhatsApp.Chat.FileUnsupported` | Validation (`file`) | un tipo que Meta no admite o que no es lo que dice |
+| Código | Tipo | Cuándo | es | en |
+| --- | --- | --- | --- | --- |
+| `Forms.Record.FileNotFound` | NotFound | ajeno, inexistente, o falta el archivo guardado | No encontramos el archivo. | We couldn't find the file. |
+| `Forms.Draft.TooManyFiles` | Validation (`questions`, con `limit` 10 y `length`, la suma de los máximos) | la suma de los máximos pasa de 10 | WhatsApp acepta 10 archivos por respuesta. | WhatsApp accepts 10 files per response. |
+| `Forms.Draft.QuestionInvalid` (E14) | Validation | suma mínimo y máximo de archivos, u origen fuera de regla | el de la E14 | — |
+| `Forms.Publication.FilesUnavailable` | ServiceUnavailable | una pregunta de archivo, sin almacenamiento | Falta configurar dónde se guardan los archivos. | File storage isn't set up yet. |
+| `Forms.Record.FileRejected` | Validation (`fieldId`) | no coinciden hash, tamaño o tipo | Un archivo no es lo que dice. | A file isn't what it claims to be. |
+| `Forms.Record.FileDownloadFailed` | Failure (`fieldId`) | no bajó tras los reintentos | No se pudo bajar un archivo de WhatsApp. | A file couldn't be downloaded from WhatsApp. |
+| `Forms.Settings.Invalid` | Validation (`maxFileMiB`) | un tamaño fuera de 1 y el tope de la organización (0069), o en la de la plataforma, fuera de 1 a 25; el texto recibe el máximo como parámetro (270) | Elegí un tamaño entre 1 y {0} MB. | Choose a size between 1 and {0} MB. |
+| `WhatsApp.Flow.TooManyFiles` | Validation | más archivos o más de 100 MiB en una respuesta | La respuesta trae más de 10 archivos o más de 100 MiB. | The response has more than 10 files or more than 100 MiB. |
+| `WhatsApp.Chat.FileNotFound` | NotFound | ajeno, inexistente, o falta el archivo guardado | No encontramos el archivo. | We couldn't find the file. |
+| `WhatsApp.Chat.FileTooLarge` | Validation (`file`, con `limit`) | pasa el tope de Meta para su tipo | El archivo pasa el tope de WhatsApp para su tipo. | The file is over WhatsApp's limit for its type. |
+| `WhatsApp.Chat.FileUnsupported` | Validation (`file`) | un tipo que Meta no admite o que no es lo que dice | WhatsApp no acepta este tipo de archivo. | WhatsApp doesn't accept this file type. |
 
 Al adjuntar valen los del envío: `WhatsApp.Conversation.WindowClosed` y los demás de la E11.
 
@@ -106,11 +106,12 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | B6 | Guardar en Forms | `D/Forms/FormRecordFile.cs`; suma a `FormRecordWriter.cs` y `FormRecordService.cs` [E14]; la configuración y la migración | `FormRecordWriter.cs` | todo o nada; aislamiento |
 | B7 | Ver y descargar | `A/Modules/Forms/Services/FormRecordFileService.cs`; suma a `BusinessFormRecordsController.cs` y `FormRecordFileResults.cs` [E15] | `AssistantAttachmentService.DownloadAsync` y `AssistantFileResults.cs` | permiso antes y después de abrir; falta el archivo = 404; `no-store`, `nosniff` y adjunto; de otra organización |
 | B8 | Planilla, conteos, detalle y Excel | suma a `FormRecordColumnsBuilder.cs`, `FormRecordReader.cs` y `FormRecordSheetBuilder.cs` [E15] | esos mismos | `answered` con un archivo; cantidad y nombres en el Excel; la columna no ordena (264); sin consultas por fila |
-| B9 | Limpiar lo no confirmado, cada hora | `I/Modules/Forms/FormFileCleanupWorker.cs` y su parte en WhatsApp; `IsStorageReferencedAsync` | `AssistantRetentionWorker.cs` | a las 24 horas; un archivo referenciado se confirma |
-| B10 | Los archivos que llegan al chat | `D/WhatsApp/WhatsAppChatFile*.cs`; suma a `WhatsAppOrganizationInboundWriter.cs` y `PlatformWhatsAppInboundWriter.cs`; `A/Modules/WhatsApp/Services/WhatsAppChatFileService.cs`, `I/Modules/WhatsApp/WhatsAppChatFileWorker.cs` | `WhatsAppBroadcastWorker.cs`, `WhatsAppChatMessageBase.cs` | cada tipo; lo que no se guarda; reintentos; un mensaje trabado no frena a los demás; organización y Plataforma; el nombre cifrado, que otra organización lee vacío |
+| B9 | Limpiar lo no confirmado, cada hora | `I/Modules/Forms/FormFileCleanupWorker.cs` e `I/Modules/WhatsApp/WhatsAppFileCleanupWorker.cs`; `ListReferencedStorageKeysAsync` | `AssistantRetentionWorker.cs` | a las 24 horas; un archivo referenciado se confirma |
+| B10 | Los archivos que llegan al chat, y su purga con los mensajes (272) | `D/WhatsApp/WhatsAppChatFile*.cs`; suma a `WhatsAppOrganizationInboundWriter.cs` y `PlatformWhatsAppInboundWriter.cs`; `A/Modules/WhatsApp/Services/WhatsAppChatFileService.cs`, `I/Modules/WhatsApp/WhatsAppChatFileWorker.cs`; suma al worker que purga los chats (B18 de la base 2) la fila del archivo y, después del commit, su original y su miniatura | `WhatsAppBroadcastWorker.cs`, `WhatsAppChatMessageBase.cs` | cada tipo; lo que no se guarda; reintentos; un mensaje trabado no frena a los demás; organización y Plataforma; el nombre cifrado, que otra organización lee vacío; un mensaje vencido no deja fila ni archivo guardado, y uno vigente no se toca |
 | B11 | Mandar un archivo | suma a `WhatsAppReplyIssuer.cs`, `WhatsAppOutboundMessage.cs` y `WhatsAppCloudClient.cs`; la ruta en `WhatsAppConversationsControllerBase.cs`; `P/Modules/WhatsApp/WhatsAppChatFileDurableAdapter.cs` | `AssistantControllerBase.Upload`, `AssistantDurableAdapter.cs` y `WhatsAppReplyIssuer.IssueAsync` | ventana cerrada; topes por tipo; idempotencia; falla al subir a Meta; lo dudoso queda «Sin confirmar» (0066); un archivo por mensaje |
 | B12 | Ver | suma a la lectura de mensajes; rutas de archivos | `AssistantAttachmentService.DownloadAsync` | sin permiso de la bandeja; la lista de chats no trae nombres |
 | B13 | Capacidad, contratos y ejemplos | `FormsCapabilityContributor.cs`; suma a `FormsContractContributor.cs` y al de WhatsApp | `AssistantCapabilityContributor.cs` | cada ruta con 401, 403, feature apagada = 404; `RouteIsolationMatrixTests`; ejemplos exportados |
+| B14 | Acciones del asistente: `forms.settings.edit@1` (`Page`, la Configuración de Formularios de la organización, con `forms.manage`) y `forms.platformsettings.edit@1` (`Page`, la de la plataforma, con `platform.settings.manage`), con `maxFileMiB` (`Integer`, de 1 al máximo) | `A/Modules/Forms/Services/FormSettingsActionSource.cs`, registrada en `FormsModule.cs`; sus textos `Action.*` en `FormsTexts{,.en}.resx`; su escenario | `RoleActionSource.cs` | los de arquitectura de las acciones y la batería genérica |
 
 **Front:**
 
@@ -122,5 +123,6 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | F4 | La tarjeta del chat | suma a la tarjeta [E14] | el tablero | los estados; «Mandar de nuevo» |
 | F5 | Planilla, respuesta y Excel | suma a `FormRecordsPage.tsx`, `lib/recordForm.ts`, `RecordForm.tsx`, `RecordValues.tsx`, `RecordFullPage.tsx` y `ExportDialog.tsx` [E15] | su tablero | la columna, que no ordena (264); la zona «Fotos y documentos» al final, con cada archivo en su control (266); «Descargar ▾» |
 | F6 | Los archivos del chat | suma a `ChatComposer.tsx` y `MessageThread.tsx` | los tableros | adjuntar, grisado fuera de las 24 horas, subiendo y error; un archivo recibido se ve y se baja |
+| F7 | Las propuestas del asistente (B14) | `useAssistantProposal` en las dos páginas de la configuración | el adaptador de Roles | todo lo propuesto se ve, y se manda lo que se ve |
 
 **Al cerrar:** `docs/features/formularios.md` y `docs/features/whatsapp.md` suman su sección, y el núcleo, la de `IFileContentInspector`.

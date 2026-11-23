@@ -13,7 +13,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T5, T21, la §6, puntos 6 a 8, la §14 y la §16; la [E15](15-respuestas.md): columnas, filtros, Excel y detalle, y [cómo se lee una respuesta](15-parte-datos-y-contrato.md#cómo-se-lee-una-respuesta-263-266-y-269); y la [E17](17-ciclo-de-vida.md): copiar.
-2. **Decisiones** de la hoja de ruta: 23, 35, 42, 43, 48, 78, 133, 262 (una sola pieza para elegir), 263 (nada debajo de otro dato), 264 (el orden de las tablas), 266 (la respuesta se lee como el formulario), 269 (los principios del traspaso 17) y 270 (ninguna regla de negocio fija en el código). De [WhatsApp](../../features/whatsapp.md#decisiones-del-usuario-e11): D4 y D7.
+2. **Decisiones** de la hoja de ruta: 23, 35, 42, 43, 48, 78, 133, 262 (una sola pieza para elegir), 263 (nada debajo de otro dato), 264 (el orden de las tablas), 266 (la respuesta se lee como el formulario), 269 (los principios del traspaso 17), 270 (ninguna regla de negocio fija en el código) y 272 (los chats de WhatsApp, a 90 días). De [WhatsApp](../../features/whatsapp.md#decisiones-del-usuario-e11): D7.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -27,6 +27,7 @@ Antes de empezar, en este orden:
    | [logs](../../rules/logs.md) y [datos-personales](../../rules/datos-personales.md) | nombres y contenidos nunca van a logs, a la lista de chats ni a los avisos |
    | [textos-libres](../../rules/textos-libres.md) y [textos-y-traducciones](../../rules/textos-y-traducciones.md) | los nombres se guardan como llegan |
    | [tests](../../rules/tests.md) | qué lleva test y dónde va |
+   | [0068](../../decisions/0068-acciones-del-asistente.md) y su [receta](../../guides/agregar-una-accion-al-asistente.md) | las acciones del asistente de la Configuración de Formularios |
 
 4. **Código para copiar:** la columna «Copia de» de los [pasos](18-parte-contrato-datos-y-pasos.md#pasos).
 5. **Referencia de producto,** solo para leer: en el traspaso del 17/10, retirado el 2026-11-08 (`git show e9f1a599:docs/plans/2026-10-17-formularios-traspaso/`), el anexo C, «Etapa 2B» y §3.6, el anexo B, «Etapa 2B», y el anexo D (F1 a F5).
@@ -40,7 +41,7 @@ Antes de empezar, en este orden:
 - **tope por archivo** (270): «Tamaño máximo de un archivo», de la Configuración de Formularios (abajo). Publicar lo sella en la versión, y la versión publicada conserva el suyo aunque la configuración cambie. La (i) de «Cuántas fotos» y «Cuántos documentos» dice el vigente, con el número como parámetro. Hasta 10 archivos y 100 MiB por respuesta, por el tope de Meta, que queda en el código;
 - copiar un formulario copia estas preguntas como cualquier otra.
 
-**La Configuración de Formularios** (270) nace acá, como la del Asistente: una página del módulo para la organización, con `forms.manage`, y otra para la plataforma, con `platform.settings.manage`. Por ahora tiene un solo valor, «Tamaño máximo de un archivo», en MB, con su (i): en la organización, de 1 a 25 y 25 por defecto, nunca más que el máximo que fija la plataforma en la suya (de 1 a 25, 25 por defecto), que la página dice. Cada una con su revisión y el 409, y se lee de la base en cada uso. Si la plataforma baja su máximo, vale el menor de los dos, sin tocar lo guardado.
+**La Configuración de Formularios** (270) nace acá, como la del Asistente: una página del módulo para la organización, con `forms.manage`, y otra para la plataforma, con `platform.settings.manage`. Por ahora tiene un solo valor, «Tamaño máximo de un archivo», en MB, con su (i): en la organización, de 1 a 25 y 25 por defecto, nunca más que el tope de la organización, que la página dice. Ese tope lo da el resolvedor de topes de las Costuras de módulos ([0069](../../decisions/0069-modulos-y-suscripciones.md)): Formularios lo declara con su máximo de la plataforma (de 1 a 25, 25 por defecto) y lo lee por él. Cada una con su revisión y el 409, y se lee de la base en cada uso. Si la plataforma baja su máximo, vale el menor de los dos, sin tocar lo guardado.
 
 **El Flow:** `PhotoPicker` y `DocumentPicker`, una pregunta de archivo por pantalla, con un perfil nuevo. Su etiqueta admite 80 caracteres, y su ayuda, 300. Los IDs de pantalla son solo letras y guiones bajos. Cada selector lleva el tope por archivo sellado en la versión (`max-file-size-kb`), así el celular lo dice al elegir (270). Las opciones de catálogo que viajan en `data` llegan a la pantalla que las usa, aunque el Flow tenga varias **[Meta]**.
 
@@ -78,7 +79,7 @@ Antes de empezar, en este orden:
 - **recibir:** las fotos, los audios, los documentos y los videos que llegan se bajan, se verifican igual y se ven y se descargan desde el chat. Es lo que la D7 de la E11 dejó para esta etapa. Un sticker o una ubicación siguen diciendo solo su tipo;
 - **un documento** se guarda si es de los que admite Meta: PDF, Word, Excel, PowerPoint o texto. Otro tipo queda como «Mandó un documento», sin descarga;
 - **mandar:** el operador adjunta una foto, un documento, un audio o un video desde el compositor, con los topes de Meta para cada tipo y un texto opcional. Se guarda, se sube a Meta y sale por la cola. Solo dentro de las 24 horas, como el texto libre; fuera, siguen las plantillas;
-- pide el mismo permiso que responder en esa bandeja. El archivo sigue la retención del chat (D4);
+- pide el mismo permiso que responder en esa bandeja. El archivo sigue la retención de los mensajes del chat (272): se purga con su mensaje;
 - **no se confunde con un formulario:** los archivos de una respuesta siguen a la respuesta (23), no al chat.
 
 ## Pantallas
@@ -88,7 +89,7 @@ Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133
 | Tablero | Qué muestra |
 | --- | --- |
 | `FRM-Editor-18` y `M-FRM-Editor-18` | las preguntas de foto y documento, «Cuántas fotos» o «Cuántos documentos» con su (i), y «Sin almacenamiento» |
-| `FRM-Config-Org`, `M-FRM-Config-Org` y `FRM-Config-Plat`, nuevos | la Configuración de Formularios de la organización, con «Tamaño máximo de un archivo», su (i) y el máximo de la plataforma, y la de la plataforma, con ese máximo (270) |
+| `FRM-Config-Org`, `M-FRM-Config-Org` y `FRM-Config-Plat`, nuevos y por dibujar antes del front | la Configuración de Formularios de la organización, con «Tamaño máximo de un archivo», su (i) y el máximo de la plataforma, y la de la plataforma, con ese máximo (270) |
 | `FRM-Publicar-18` | «Más de 10 archivos» |
 | `WA-Chats-Respuesta-18` y `M-WA-Conversacion-Respuesta-18` | la tarjeta: bajando, reintentando, con fotos y un documento, muchas fotos y los dos rechazos |
 | `WA-Chats-Visor` y `M-WA-Chats-Visor` | el visor: el título, en qué foto va, la tira de miniaturas y, al pie, el nombre, el tamaño y «Descargar», igual que en la planilla (194). Se redibuja: suma la fecha de la foto al pie (O21) |
@@ -102,7 +103,8 @@ Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133
 - `FRM-Respuesta-18`, `M-FRM-Respuesta-18` y `FRM-Respuesta-Completa-18`: la respuesta como el formulario, con la zona «Fotos y documentos» al final y sin la pestaña «Fotos»; cada foto y cada documento en su control de solo lectura, el documento con su nombre y su tamaño al lado (263 y 266);
 - `FRM-Respuestas-18` y `M-FRM-Respuestas-18`: la columna de archivos no ordena (264), y en el teléfono las fotos no van debajo de otro dato (263);
 - `FRM-Editor-18` y `M-FRM-Editor-18`: el origen de la foto en la pieza (262), y la (i) de «Cuántas fotos» con el tope de la configuración (270);
-- `FRM-Config-Org`, su teléfono y `FRM-Config-Plat`, nuevos (270).
+- `WA-Chats-Visor` y `M-WA-Chats-Visor`: la fecha de cada foto al pie (O21);
+- `FRM-Config-Org`, su teléfono y `FRM-Config-Plat`, nuevos y por dibujar antes del front (270).
 
 **La planilla:** la foto dice su miniatura y «2 fotos», y el documento, «1 documento» (206). «Sin respuesta» si no se respondió y «—» si la pregunta no existía en esa versión. En el teléfono, la fila no la junta con otros datos: las fotos y los documentos se ven al abrir la respuesta (263). Las preguntas de archivo no aparecen en «Filtros» (143).
 
@@ -147,6 +149,7 @@ Cada punto lleva su test, escrito durante la etapa:
 - **Sin clave determinística:** el almacenamiento elige la clave, y el diario de `IFileStoreMaintenance` cierra lo que quedó sin confirmar.
 - **Un solo archivo por mensaje** en el chat, como en Meta.
 - **Del traspaso 18:** la respuesta se lee como el formulario, con «Fotos y documentos» al final (266), y el tope por archivo sale de la Configuración de Formularios (270).
+- **Las acciones del asistente** (0068) son las dos de la Configuración de Formularios (B14 de la parte). Mandar un archivo no es una acción, porque la lista cerrada de campos no tiene archivos, y las preguntas de Foto y Documento son parte del formulario, que sigue con su propuesta (0057).
 
 ## Fuera de esta etapa
 
