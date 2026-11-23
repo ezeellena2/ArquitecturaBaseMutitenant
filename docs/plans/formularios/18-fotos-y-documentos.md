@@ -130,6 +130,7 @@ Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133
 | [E11] | El mensaje `Media` del chat y el payload de `WhatsAppOutboundMessage`. | La entrada guarda el id de medio de Meta, que hoy descarta; el outbox lleva la clave del archivo. |
 | [Meta] | `PhotoPicker`, `DocumentPicker` y varias pantallas con `data`, sin endpoint. | Lo de la §14 de la E14, `${data.x}` llega a cada pantalla y `max-file-size-kb` admite de 1 a 25 MB. |
 | [Meta] | Los topes de cada tipo y `POST {número}/media`, contra la documentación vigente. | Foto 5 MB, audio y video 16 MB, documento 100 MB. |
+| Costuras | El resolvedor de topes ([0069](../../decisions/0069-modulos-y-suscripciones.md) §4): cada módulo declara sus topes y el resolvedor da el de cada organización. | El tamaño máximo de un archivo (`MaxFileMiB`) se declaran en su módulo y se leen por el resolvedor, nunca directo de la configuración de Plataforma; el valor de la organización se valida contra el tope que da. |
 
 ## Lo que ya se pagó allá (no repetir)
 

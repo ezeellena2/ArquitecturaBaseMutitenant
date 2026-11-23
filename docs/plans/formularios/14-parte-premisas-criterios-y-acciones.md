@@ -37,6 +37,7 @@ Al planificar la E14 se verifican contra el código real.
 | [E9] | Las cuotas compartidas ([cuotas](../../rules/cuotas.md)). | Las rutas de Forms cuentan en las cuotas generales; no se definen perfiles propios. La vista oficial y «Consultar publicación», que llaman a Meta, llevan además un tope de negocio por organización (F17 de ArquitecturaBase), como los topes de correo, sin sumar un perfil a los doce: `Forms:MetaCalls:PerOrganizationPerMinute`, 20 por defecto hasta que se mida otra cosa, mayor que cero y validado al arrancar (es de costo, así que queda en `appsettings`, 270), que da `Forms.Meta.TooManyCalls` (429 con `Retry-After`). Se cuenta en la base, compartido entre copias, nunca en un proceso. Cada organización tiene su WABA y su cupo con Meta; las consultas del worker no cuentan. |
 | [E9] | Redis. | La E14 no cachea nada nuevo. |
 | #51 | `Enter` borra `TenantKind`. | El worker de publicación usa `ExecutionActor`, y la captura, `SetFromAccess` (T5). |
+| Costuras | El resolvedor de topes ([0069](../../decisions/0069-modulos-y-suscripciones.md) §4): cada módulo declara sus topes y el resolvedor da el de cada organización. | El tiempo para contestar (`FlowSessionHours`, con `MaxFlowSessionHours`) se declaran en su módulo y se leen por el resolvedor, nunca directo de la configuración de Plataforma; el valor de la organización se valida contra el tope que da. |
 
 ## 16. Criterios
 

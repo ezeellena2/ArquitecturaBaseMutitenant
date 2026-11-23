@@ -22,7 +22,7 @@
 
 Atender esa bandeja se revisa en el servicio, con `IStructuredInboxAccess`, porque depende de dónde llegó el documento, y Forms no puede nombrar un permiso de WhatsApp: retirar ese módulo lo saca del catálogo. `search` ordena por sus columnas con `sort`, con lo vacío al final y el estado por el circuito (264); no ordenan las de varios valores.
 
-**La Configuración de Formularios** (270 y 272) es la de la E18, que suma la zona «Documentos recibidos». Cada valor tiene su valor por defecto, su mínimo y su máximo; la organización lo elige dentro del máximo que fija la plataforma en la suya, y en cada uso vale el menor de los dos:
+**La Configuración de Formularios** (270 y 272) es la de la E18, que suma la zona «Documentos recibidos». Cada valor tiene su valor por defecto, su mínimo y su máximo; la organización lo elige dentro de su tope, que da el resolvedor de topes ([0069](../../decisions/0069-modulos-y-suscripciones.md)): Formularios declara cada valor con el máximo que fija la plataforma en la suya y lo lee por él, y en cada uso vale el menor de los dos:
 
 | Valor | Campo | Por defecto | Rango | Qué hace |
 | --- | --- | --- | --- | --- |
@@ -33,7 +33,7 @@ Atender esa bandeja se revisa en el servicio, con `IStructuredInboxAccess`, porq
 | «Vencer los propuestos sin revisar» | `proposedExpiryDays` | 90 | 1 a 3650 | días desde el último cambio o el fin del envío (215) |
 | «Borrar los descartados» | `discardedRetentionDays` | 90 | 1 a 3650 | días desde el descarte, con su lectura (41) |
 
-`GET` y `PUT /settings` (E18) los suman, y el `GET`, el máximo de la plataforma de cada uno, como `platformMaxFileMiB`; `/api/platform/forms/settings` suma los seis máximos. Revisión y 409, como en la E18. Los textos que nombran un número lo reciben como parámetro («Nadie lo revisó en {n} días: venció.», «más de {n} páginas»), y la (i) de los dos plazos avisa que la política de privacidad tiene que prometer lo mismo (272). Los dos topes de lecturas por día siguen en `appsettings`, porque son de costo (217).
+`GET` y `PUT /settings` (E18) los suman, y el `GET`, el tope de la organización de cada uno, que da el resolvedor, como `platformMaxFileMiB`; `/api/platform/forms/settings` suma los seis máximos. Revisión y 409, como en la E18. Los textos que nombran un número lo reciben como parámetro («Nadie lo revisó en {n} días: venció.», «más de {n} páginas»), y la (i) de los dos plazos avisa que la política de privacidad tiene que prometer lo mismo (272). Los dos topes de lecturas por día siguen en `appsettings`, porque son de costo (217).
 
 **Armar con la IA** (154, 155 y 167): crear y el catálogo propuesto van en `/api/organization/forms`, con `[FeatureGate("forms")]`; el audio, en `/api/organization/assistant`, con `[FeatureGate("assistant")]`. Todas llevan `[Access(Business)]`.
 

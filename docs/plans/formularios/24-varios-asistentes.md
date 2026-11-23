@@ -27,7 +27,7 @@ Antes de empezar, en este orden:
 
 **El modo de atención** y los topes siguen siendo por bandeja y por chat. El tope mensual de IA es uno para toda la organización. **Probar** se elige por asistente.
 
-**El tope de ofrecimientos** (278) es el de los límites del asistente que contesta, en su bandeja: de 1 a 50 y 2 de entrada, dentro del máximo de la plataforma, como en la E23, igual que «Volver a ofrecer un formulario rechazado» (270). El contador y los rechazos siguen siendo del chat: cambiar de equipo no los vuelve a cero. Con el tope lleno, el chat deriva con «Llegó al tope de ofrecimientos del día», y el porqué nombra al asistente.
+**El tope de ofrecimientos** (278) es el de los límites del asistente que contesta, en su bandeja: de 1 a 50 y 2 de entrada, dentro del tope de la organización que da el resolvedor ([0069](../../decisions/0069-modulos-y-suscripciones.md)), como en la E23, igual que «Volver a ofrecer un formulario rechazado» (270). El contador y los rechazos siguen siendo del chat: cambiar de equipo no los vuelve a cero. Con el tope lleno, el chat deriva con «Llegó al tope de ofrecimientos del día», y el porqué nombra al asistente.
 
 **Dar de baja un asistente:** deja de contestar, y sus equipos pasan al principal. Se reactiva, y sus asignaciones se conservan.
 
@@ -124,6 +124,7 @@ Con la [receta](../../guides/agregar-una-accion-al-asistente.md) (268 y [0068](.
 | [E23] | `AssistantAgents` y las rutas del agente. | Sumar filas no rehace nada. |
 | [E23] | El historial por conversación. | No depende de qué asistente contestó. |
 | [E11] | Equipos y bot, en `WhatsAppTeam` y `WhatsAppAttentionBotWriter`. | El menú pasa a un equipo. |
+| Costuras | El resolvedor de topes ([0069](../../decisions/0069-modulos-y-suscripciones.md) §4): cada módulo declara sus topes y el resolvedor da el de cada organización. | Los límites de cada asistente con máximo de la plataforma (`maxReplyLength`, `repliesPerDay` y `formOffersPerDay`, E23) se declaran en su módulo y se leen por el resolvedor, nunca directo de la configuración de Plataforma; el valor de la organización se valida contra el tope que da. |
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 

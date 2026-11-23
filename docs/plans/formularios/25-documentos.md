@@ -76,7 +76,7 @@ No se leen `.doc`, `.xls`, los archivos con macros ni los que tienen contraseña
 - **Retención** (41, 215 y 272): un documento usado sigue a su respuesta (23). Uno descartado o sin clasificar se borra, con su lectura, y uno propuesto que nadie revisa vence, a los días que elige la organización en su configuración (90, de 1 a 3650, dentro del máximo de la plataforma); la (i) avisa que la política de privacidad tiene que prometer lo mismo.
 - **Costos** (41, 217 y 271): el proveedor de la plataforma, dentro del tope mensual, con un tope por persona o contacto y otro por organización, en `appsettings`, por día de la organización.
 - **Lo que no tiene la forma** de su validación queda sin leer; lo que la tiene y no pasa, marcado (277).
-- **Los topes y plazos de esta etapa** van en la Configuración de Formularios, con su mínimo, su máximo y el de la plataforma, leídos en cada uso (270 y 272).
+- **Los topes y plazos de esta etapa** van en la Configuración de Formularios, con su mínimo, su máximo y el tope de la organización que da el resolvedor ([0069](../../decisions/0069-modulos-y-suscripciones.md)), leídos en cada uso (270 y 272).
 - **La propuesta de armar** es una clase más de la de «Acciones del asistente», con sus estados; la tarjeta sigue creando lo que nace en borrador o por aprobar (154 y 268).
 - **Los ejemplos** (216) los ve una persona y no van a la IA.
 - **El modelo que arma** (218) es siempre uno calificado para armar.
