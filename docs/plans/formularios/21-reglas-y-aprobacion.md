@@ -1,21 +1,21 @@
 # E21 · Reglas, aprobación, PDF y avisos (spec)
 
-**Estado:** pendiente · spec de la etapa 21 del bloque (decisiones 34, 78, 82, 91 a 93, 100, 106, 113, 114, 158, 159, 161, 166, 170, 177, 228, 230, 236, 237, 239, 240, 261 a 264, 266, 267, 275 y 276; la 240 cambia la 80, y la 266, la 267 y la 276, la 25, la 139, la 166 y la 209), con el [formato](plantilla.md) de las etapas. Corresponde a la etapa 4 de ArquitecturaBase, con piloto real; a la etapa 3 de su carga desde la app, corregir y anular, programada allá el 2026-11-05, y a las etapas 3 y 4 de sus renglones: el PDF con el bloque, programado allá el 2026-11-07, y las reglas con el bloque, probadas allá de punta a punta con Meta el 9/11 (T12). «Por resolver», el aviso a quien cargó y lo demás del motor son de allá, del 15 al 17/11 (T14). `/plan-etapa` la contrasta con el código real cuando le toque, después de la E20.
+**Estado:** pendiente · spec de la etapa 21 del bloque (decisiones 34, 78, 82, 91 a 93, 100, 106, 113, 114, 158, 159, 161, 166, 170, 177, 228, 230, 236, 237, 239, 240, 261 a 264, 266, 267, 275 y 276; la 240 cambia la 80, y la 266, la 267 y la 276, la 25, la 139, la 166 y la 209), con el [formato](plantilla.md) de las etapas. Corresponde a la etapa 4 de ArquitecturaBase, con piloto real; a la etapa 3 de su carga desde la app, corregir y anular, programada allá el 2026-11-05, y a las etapas 3 y 4 de sus renglones: el PDF con el bloque, programado allá el 2026-11-07, y las reglas con el bloque, probadas allá de punta a punta con Meta el 9/11 (T12). «Por resolver», el aviso a quien cargó y lo demás del motor son de allá, del 15 al 17/11 (T14).
 
 **Partes.** Esta spec no entra en un solo archivo, así que sigue en otros tres, con las mismas secciones. Lo que no está en la tabla está acá.
 
 | Secciones | Archivo |
 | --- | --- |
-| «Adjuntar el PDF», el bloque en las reglas, el motor de acciones, los avisos y los correos, el chat en «Mi cuenta», Contrato, Datos y «Lo que ya se pagó allá» | [datos y contrato](21-parte-datos-y-contrato.md) |
+| «Adjuntar el PDF», el bloque en las reglas, el motor de acciones, los avisos y los correos, el chat en «Mi cuenta», Contrato y Datos | [datos y contrato](21-parte-datos-y-contrato.md) |
 | «Corregir y anular» | [corregir y anular](21-parte-corregir-y-anular.md) |
-| La pregunta «Correo», Pasos y «Qué verificar al arrancar» | [pasos y qué verificar](21-parte-pasos-y-verificar.md) |
+| La pregunta «Correo», Pasos, el detalle de «Acciones del asistente», «Qué verificar al arrancar» y «Lo que ya se pagó allá» | [pasos y qué verificar](21-parte-pasos-y-verificar.md) |
 
 ## Qué leer
 
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T4, T5, T7 y la §6, punto 7; la [E15](15-respuestas.md): lista, planilla, detalle y actividad (266 y 267); la [E17](17-ciclo-de-vida.md): copiar y borrar; la [E18](18-fotos-y-documentos.md): archivos; la [E19](19-condiciones-calculos-y-lineas.md): condiciones y el bloque, y la [E20](20-cargar-desde-la-web.md): la captura, la forma editable y lo propio.
-2. **Decisiones** de la hoja de ruta: 25, 35, 42, 43, 47, 49, 55, 59 a 62, 82, 85, 89, 91 a 93, 100, 106, 109, 113 a 116, 138 a 140, 146, 148, 149, 158, 159, 161, 162, 166, 170, 177, 206, 209, 226, 228 a 230, 236, 237, 239, 240, 261 a 264, 266, 267, 269, 270, 275 y 276. Y las ADR [0040](../../decisions/0040-para-resolver.md) y [0066](../../decisions/0066-lo-que-no-se-sabe-si-salio.md).
+2. **Decisiones** de la hoja de ruta: 25, 35, 42, 43, 47, 49, 55, 59 a 62, 82, 85, 89, 91 a 93, 100, 106, 109, 113 a 116, 138 a 140, 146, 148, 149, 158, 159, 161, 162, 166, 170, 177, 206, 209, 226, 228 a 230, 236, 237, 239, 240, 257, 260 a 264, 266 a 270, 273, 275 y 276. Y las ADR [0040](../../decisions/0040-para-resolver.md), [0063](../../decisions/0063-topes-de-correo-de-la-plataforma.md), [0066](../../decisions/0066-lo-que-no-se-sabe-si-salio.md) y [0068](../../decisions/0068-acciones-del-asistente.md), con su [receta](../../guides/agregar-una-accion-al-asistente.md).
 3. **Fichas:** [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [idempotencia](../../rules/idempotencia.md), [modulos](../../rules/modulos.md), [multitenancy](../../rules/multitenancy.md), [permisos](../../rules/permisos.md), [persistencia-ef](../../rules/persistencia-ef.md), [auditoria](../../rules/auditoria.md), [emails](../../rules/emails.md), [textos-libres](../../rules/textos-libres.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [logs](../../rules/logs.md), [api-http](../../rules/api-http.md) y [tests](../../rules/tests.md).
 4. **Código para copiar:** la columna «Copia de» de los [pasos](21-parte-pasos-y-verificar.md#pasos).
 5. **Referencia de producto,** solo para leer: en el traspaso del 17/10, retirado el 2026-11-08 (`git show e9f1a599:docs/plans/2026-10-17-formularios-traspaso/`), el anexo C, «Etapa 4», el anexo B, «Etapa 4», y el anexo D (G1 a G6); en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`, el anexo C §5 y §6 (L-05 a L-08); en ArquitecturaBase, `docs/features/formularios.md`, «Motor de acciones y aprobación», con «Acciones por resolver», «Corregir y anular» y, en «El bloque de renglones en la lectura», el PDF y las reglas, y el traspaso 12 (`docs/plans/2026-11-11-traspaso-multitenant-renglones.md`); y en `ArquitecturaBaseFront`, `docs/design/carga-desde-la-app.md`, «Corregir y anular», y `renglones-en-formularios.md`, RG5-A.
@@ -47,7 +47,7 @@ Antes de empezar, en este orden:
 - **sin el rol de la tarea:** quien tiene el permiso y no el rol, como una cuenta administradora, ve el detalle sin error. `approval.canDecide` dice si puede decidir, y el detalle pide la tarea solo entonces; si no, la vista rápida muestra la decisión de solo lectura (el rol, quién decidió y cuándo), y la pantalla completa no reserva la barra de decisión.
 
 **«Por aprobar» en «Formularios»,** con la misma fuente que «Para resolver» (ADR 0040):
-- **la lista** (275) suma la columna «Por aprobar», solo para quien aprueba, cuyo número abre la planilla en «Por aprobar», y el filtro «Estado» suma «Con algo por aprobar». La columna ordena (264), y es el orden con que la lista le abre a quien aprueba, de mayor a menor. Cuenta solo lo que esa cuenta puede decidir, sin lo propio salvo con «Puede decidir quien cargó» (276);
+- **la lista** (275) suma la columna «Por aprobar», solo para quien aprueba, cuyo número abre la planilla en «Por aprobar», y el filtro «Estado» suma «Con algo por aprobar». La columna ordena (264), y es el orden con que la lista le abre a quien aprueba, de mayor a menor. Cuenta solo lo que esa cuenta puede decidir, sin lo propio salvo con «Puede decidir quien cargó» (276). Sin `formapprovals.decide`, ese filtro y ese orden dan 403. El filtro trae los formularios activos y los dados de baja, y un solo predicado cuenta para la lista, `GET /overview`, «Para resolver» y la campana, así los números no se separan (como allá);
 - con solo `formapprovals.decide`, ve los formularios con tareas, sin respuestas ni última respuesta;
 - **la vista «Por aprobar»** (148): arriba de la planilla, quien puede decidir ve «Por aprobar (N) | Todas». «Por aprobar» es una tabla corta (N°, Cargó, «Es cliente» como en la E15, Recibida y Rol), de la más vieja a la más nueva, sin filtros ni valores, y no ordena por columnas, porque es una cola (264). «Revisar», en el ⋮ de la fila (261), abre la vista rápida; ↑ ↓ recorren esa cola, y la vista rápida y la pantalla completa la cuentan igual, «1 de 2 por aprobar». Se abre ahí si hay algo para decidir, y la vista va en la dirección. Quien solo aprueba ve solo esta tabla, sin Cargó ni «Es cliente», sin el total de respuestas y sin las pestañas que su permiso no abre (79, 100 y 148). La campana y «Para resolver» abren la más vieja.
 
@@ -83,7 +83,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v155, con el armado del front real de ArquitecturaBase (126 y 135) y los recorridos guiados `armar-las-reglas` y `aprobar-o-rechazar`. El ejemplo es «Visita a cliente», versión 4, que pide aprobación al rol Supervisor, con tres por aprobar; las reglas con el bloque usan «Pedido de materiales». Muestran solo lo que existe hasta acá (78). Con los traspasos 5, 9 y 10 se redibujaron casi todos y se sumaron tres, aprobados y publicados en el lienzo v168. **Con el traspaso 15** se redibujaron en la v175 los que lo dicen, por la 206, la 209, la 228, la 230, la 236, la 237 y la 239; lo que todavía falta, por la 229, la 230, la 239 y la 240, y por los traspasos 17 y 18, dice «Se redibujan», con su decisión.
+Aprobados en el lienzo v175, con el armado del front real de ArquitecturaBase (126 y 135) y los recorridos guiados `armar-las-reglas` y `aprobar-o-rechazar`. El ejemplo es «Visita a cliente», versión 4, que pide aprobación al rol Supervisor, con tres por aprobar; las reglas con el bloque usan «Pedido de materiales». Muestran solo lo que existe hasta acá (78). Lo que falta dice «Se redibujan», con su decisión.
 
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
@@ -109,7 +109,7 @@ Aprobados y publicados en el lienzo v155, con el armado del front real de Arquit
 
 **Mandan sobre esta spec en:** «Ver todos» de «Para resolver» abre la lista con «Con algo por aprobar». «Reglas de la revisión N» se queda en Actividad, porque es un historial. El diseño guarda aparte de las reglas, y su vista previa no guarda nada. Las reglas y el diseño valen sin publicar: lo dice la (i) de su título, sin leyendas (109 y 116).
 
-**Valen las de toda la app** (160 a 164, 173 a 175, 180, 261 a 264 y 269): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
+**Valen las de toda la app** (160 a 164, 173 a 175, 180, 261 a 264 y 269).
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
@@ -124,6 +124,10 @@ Aprobados y publicados en el lienzo v155, con el armado del front real de Arquit
 - **«Adjuntar el PDF»** (113) y **confirmar antes de aprobar,** con el número (114 y 161), con las esperas y la ayuda de las reglas de todo el sistema (109, 115 y 116).
 - **Corregir en el lugar** (266) **y anular, como allá** (166), con quién corrige de la 93: quien la cargó también corrige una rechazada, que allá no se corrige.
 - **«Por resolver», el aviso a quien cargó y las acciones, como allá** (228, 237 y 239), con el segmentado de la 148 en lugar de una pestaña y «Sin confirmar» de la 240.
+
+## Acciones del asistente
+
+Anular una respuesta, `formrecords.void@1`, con «¿Anular VIS-000127?» (268 y [ADR 0068](../../decisions/0068-acciones-del-asistente.md)). Lo demás no se declara, y por qué, en la [parte de pasos](21-parte-pasos-y-verificar.md#acciones-del-asistente).
 
 ## Fuera de esta etapa
 

@@ -42,13 +42,13 @@ Las acciones que mandan un mensaje o un correo llevan esa casilla, y «Mandar el
 
 **Quien cargó se entera si su regla se frena** (237): cuando una acción queda por resolver, a quien cargó le llega un aviso, una vez por acción, por WhatsApp con el número de la organización, en el idioma de su cuenta o en el de la organización si no tiene, con el número y el formulario y sin valores: «Tu respuesta PED-000012 de «Pedido de materiales» quedó frenada. Ya le avisamos a quien la administra.» («Your response PED-000012 to “Pedido de materiales” is on hold. We've already told whoever manages it.»). No usa plantillas: con la ventana de 24 horas cerrada, o si cargó desde la web sin chat (89), queda «No aplica» y la acción se marca sin avisar. La clave del mensaje sale de la ejecución, así reintentar, consultar o dos workers no lo repiten; si el envío falla, la ejecución sigue sin marca y vuelve en la vuelta siguiente del worker.
 
-**Mandar por correo** (62): a quien cargó, a un rol o a una persona, al correo de su cuenta; a una dirección fija, o al correo de una pregunta. Lleva el texto y, si se elige, el PDF. Sale por la cola de correos del núcleo, que suma los adjuntos. Un cliente sin correo queda «No se pudo». Las direcciones nunca van completas a los logs.
+**Mandar por correo** (62): a quien cargó, a un rol o a una persona, al correo de su cuenta; a una dirección fija, o al correo de una pregunta. Lleva el texto y, si se elige, el PDF. El asunto lo arma la app, «{formulario} · {número}» («Visita a cliente · VIS-000001»), sin campo en la regla: allá también lo arma la app (`FormIssueCopyService`). Se arma con la plantilla de correos del núcleo (`IEmailTemplateRenderer.RenderNotice`), con el nombre y el logo de la página pública de la organización, como la invitación, y el nombre de la aplicación y el remitente de Plataforma › Configuración (273); sin página pública, va con el nombre. Sale por la cola de correos del núcleo, que suma los adjuntos. Como los demás avisos, no cuenta en los topes de correo pero gasta el cupo, que el tope deja con margen (0063 y 256; allá, igual). Un cliente sin correo queda «No se pudo». Las direcciones nunca van completas a los logs.
 
 ## El PDF (59, 82, 106, 236 y 263)
 
 - un diseño con revisiones propias, con «Guardar diseño»: nombre, tres estilos, que se eligen con la pieza (262), color, encabezado, secciones con título y orden, mostrar u ocultar preguntas, «Incluir las fotos», quién aprobó, hasta 3 firmas y pie. Sin editor libre (59);
 - el logo y los datos salen de la página pública, y el color arranca con el del sistema (82). Sin página pública, va sin logo y con el nombre;
-- muestra los campos «Dato», el valor de un catálogo tipado, las fotos, los cálculos y «No se mostró». Cada dato de la opción de un catálogo va en su renglón, «Pregunta · Dato», y en el bloque, en su columna (263). «Incluir las fotos» sin marcar dice cuántas hay;
+- muestra los campos «Dato», el valor de un catálogo tipado, las fotos y los cálculos. Lo que una condición ocultó no va, como en la respuesta (266 y 269). Cada dato de la opción de un catálogo va en su renglón, «Pregunta · Dato», y en el bloque, en su columna (263). «Incluir las fotos» sin marcar dice cuántas hay;
 - **el bloque entero:** el diseño lo elige con su nombre, no sus preguntas, y el PDF lo pone como título de una tabla, con el número del ítem y una columna por pregunta, que sigue en la página siguiente con su encabezado si no entra. Sin ítems, «Sin respuesta». La vista previa suma dos ítems de ejemplo;
 - al armarlo se fija una **copia fija** A4 en cada idioma del sistema, español e inglés, y cada una se escribe una sola vez. Cambiar reglas, catálogos o el diseño no la altera. A cada persona le llega, y la ve, en el idioma de su cuenta (42); a quien no tiene cuenta, como un cliente o una dirección de correo, en el de la organización;
 - **las horas** van en la zona de la cuenta de quien cargó, con su ciudad: «17/11/2026, 18:30 (Madrid)»; a un cliente sin cuenta le va la de la organización, y una corrección conserva la de quien cargó (236);
@@ -77,6 +77,7 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]` y `[Feat
 | `POST …/executions/{executionId}/recipients/{recipientId}/retry` | `formrules.manage` | `{version}`, la revisión del aviso, con `[Idempotent]`; si otra persona ya lo reintentó, 409 | 200; la actividad suma `canRetry` en cada destinatario, sea una cuenta, un contacto o una dirección (158) |
 | `POST …/executions/{executionId}/retry` | `formrules.manage` | `{version}`, con `[Idempotent]`: un pedido de aprobación con `RoleWithoutMembers` o una acción «En duda»; si no se puede, 409 `Forms.Execution.NotRetryable` | 200 `{version}` (239) |
 | `GET /api/me/whatsapp/chats` | la cuenta, con el módulo de WhatsApp | `page`, `pageSize` | 200 `PagedResult<{organizationId, organizationName, organizationStatus, link, noticesUntilUtc?}>`, como `GET /api/me/whatsapp/conversations`: `organizationStatus` es `Active` o `Suspended`, y `link`, `Linked`, `Unlinked` o `NoChat` (159). Pasado `noticesUntilUtc`, la zona dice «Solo con plantilla» (170) |
+| `POST /api/me/whatsapp/chats/{linkId}/code` y `…/link` | lo mismo | `[Idempotent]`; como `…/login-methods/{id}/code` y `/verify`; el código cuenta en el tope diario por cuenta (H10) | 202 `{resendAfterSeconds}`; `link` devuelve la fila |
 | `GET /{id}/records/{recordId}/pdf` | `formrecords.read` | — | 200 PDF en el idioma de la cuenta de quien lo pide, `no-store`; con `documentId?`, el de ese renglón de la actividad (267) |
 | `GET /{id}/records/{recordId}/history` | `formrecords.read` | `page`, `pageSize` | `PagedResult<{id, correctedAtUtc?, correctedBy?, reason?, superseded}>`, de la más nueva a la más vieja |
 | `GET /{id}/records/{recordId}/correction` | `formrecords.correct` | — | la versión activa, con lo cargado, los ítems y los archivos que ya estaban, `{fileId, name, byteLength}`, para «Ya cargado · 86 KB»; la pide la misma pantalla al empezar a corregir en el lugar (266) |
@@ -84,7 +85,7 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]` y `[Feat
 | `POST /{id}/records/{recordId}/void` | `formrecords.correct` | `{reason, version}` | 200 `{version}` |
 | `…/own-records/{recordId}/pdf`, `history`, `correction`, `corrections` y `void` | `formrecords.create` | lo mismo | lo mismo, solo con lo propio y mientras se pueda |
 
-**Rutas que cambian:** `GET /` y `GET /overview` suman `pending?` (`null` sin `formapprovals.decide`), `status=pendingApproval`, «Con algo por aprobar» (275), y `sort=pending` (264); `recordCount` cuenta las vigentes sin anular. `POST …/records/search`, `facets`, `navigation`, `export` y `dashboard` suman el filtro `state`, con `Voided`, y `includeVoided` en el Excel, y cada fila de `search` suma `state`, `corrected` y `hasPdf`, la marca de la copia PDF confirmada, también en lo propio; `sort` suma `state`, por el circuito, `corrected` y `unresolvedActions` (264). **Por resolver** (228): las mismas suman el filtro `unresolvedActions` (`true`, solo esas; `false`, las otras), cada fila suma `hasUnresolvedActions`, omitido en falso, también en lo propio, y `GET /{id}/records/columns` suma `unresolvedActionCount?`, solo para quien tiene `formrules.manage` y ve todas las respuestas, y solo si alguna ya corrió una acción. El Excel lleva «Estado» entre sus columnas fijas. El detalle suma `state`, `corrected`, `correctedBy?{name, atUtc}`, `supersededBy?`, `voided?`, `canCorrect`, `canVoid` y `version`, y el de lo propio, `rejection?{reason?, atUtc}`, sin quién decidió, porque lo propio no tiene `workflow`. `GET /{id}/records/columns` suma `approvals`.
+**Rutas que cambian:** `GET /` y `GET /overview` suman `pending?` (`null` sin `formapprovals.decide`), `status=pendingApproval`, «Con algo por aprobar» (275), y `sort=pending` (264). Sin `formapprovals.decide`, ese filtro y ese orden dan 403; el filtro trae los activos y los dados de baja, y su predicado, uno solo, cuenta también `pending`, `GET /overview`, «Para resolver» y la campana. `recordCount` cuenta las vigentes sin anular. `POST …/records/search`, `facets`, `navigation`, `export` y `dashboard` suman el filtro `state`, con `Voided`, y `includeVoided` en el Excel, y cada fila de `search` suma `state`, `corrected` y `hasPdf`, la marca de la copia PDF confirmada, también en lo propio; `sort` suma `state`, por el circuito, `corrected` y `unresolvedActions` (264). **Por resolver** (228): las mismas suman el filtro `unresolvedActions` (`true`, solo esas; `false`, las otras), cada fila suma `hasUnresolvedActions`, omitido en falso, también en lo propio, y `GET /{id}/records/columns` suma `unresolvedActionCount?`, solo para quien tiene `formrules.manage` y ve todas las respuestas, y solo si alguna ya corrió una acción. El Excel lleva «Estado» entre sus columnas fijas. El detalle suma `state`, `corrected`, `correctedBy?{name, atUtc}`, `supersededBy?`, `voided?`, `canCorrect`, `canVoid` y `version`, y el de lo propio, `rejection?{reason?, atUtc}`, sin quién decidió, porque lo propio no tiene `workflow`. `GET /{id}/records/columns` suma `approvals`.
 
 **Puertos neutrales:**
 
@@ -103,7 +104,7 @@ public interface IStructuredRecordActionChannel
 
 **La campana:** Forms aporta `formApprovals`, a quien puede decidir, y `ruleNoticeFailed`, a quien tiene `formrules.manage`, por `INotificationSource` (base de la 12).
 
-**Errores** (con sus textos en `FormsTexts.resx` y `.en.resx`):
+**Errores**, en `FormRuleErrors.cs`, `FormPdfDesignErrors.cs`, `FormApprovalErrors.cs` y `FormActionExecutionErrors.cs`, nuevos, y `FormRecordErrors.cs` [E14], con sus textos en `FormsTexts.resx` y `.en.resx`; `WhatsApp.ChatLink.NotFound`, en `D/WhatsApp/WhatsAppErrors.cs` y `WhatsAppTexts.resx`:
 
 | Código | Tipo | Cuándo |
 | --- | --- | --- |
@@ -112,6 +113,7 @@ public interface IStructuredRecordActionChannel
 | `Forms.Rules.OptionUnavailable` | Validation (`rules[i].conditions[j]`) | una condición nombra una opción que ya no está en la versión ni en su catálogo; el texto la nombra |
 | `Forms.Rules.RecordsReadRequired` | Forbidden | guardar una regla cuyo aviso cita preguntas, adjunta el PDF o manda el PDF a un cliente, sin «Ver respuestas» |
 | `Forms.Rules.PlaceholderInvalid` | Validation (`rules[i].actions[j]…`) | un dato del mensaje o de una variable que no es el número, el motivo al rechazar, una pregunta de la versión o el bloque: una pregunta que ya no está o una del bloque |
+| `Forms.Rules.RevisionNotFound` | NotFound | una revisión de las reglas que no existe |
 | `Forms.PdfDesign.Invalid` | Validation | nombre, pie, firmas o preguntas fuera de regla |
 | `Forms.Approval.NotFound` | NotFound | la tarea no existe o no se puede ver |
 | `Forms.Approval.AlreadyDecided` | Conflict | otro decidió antes |
@@ -125,14 +127,15 @@ public interface IStructuredRecordActionChannel
 | `Forms.Record.ReasonTooLong` | Validation (`reason`) | un motivo de más de 500 caracteres |
 | `Forms.Record.PdfNotFound` | NotFound | no hay copia, o falta el archivo |
 | `Forms.Execution.NotRetryable` | Conflict | una persona sin la falla confirmada, o una acción que todavía no se puede reintentar |
+| `WhatsApp.ChatLink.NotFound` | NotFound | un chat de «Mi cuenta» que no es de la persona |
 
 **Fallas de una ejecución,** que se ven en Actividad, con sus textos (es / en): `WindowClosed` «Pasaron 24 horas y no hay plantilla.» / "24 hours passed and there is no template."; `TemplateUnavailable` «La plantilla no está aprobada o no lleva el PDF.» / "The template isn't approved or doesn't carry the PDF."; `NoConversation` «WhatsApp no aceptó el mensaje: no tiene el WhatsApp vinculado.» / "WhatsApp didn't accept the message: their WhatsApp isn't linked."; `NoContact` «No se eligió un contacto.» / "No contact was chosen."; `NotMember` «Ya no es miembro.» / "No longer a member."; `RoleMissing` «El rol ya no existe.» / "The role no longer exists."; `RoleWithoutMembers` «Nadie del rol {0} puede decidirla.» / "Nobody in the {0} role can decide it."; `NoLongerInRole` «Ya no tiene el rol {0}.» / "No longer has the {0} role."; `NoEmail` «No tiene correo.» / "No email."; `NoAnswer` «La pregunta no tiene respuesta.» / "The question has no answer."; `NoPdf` «No hay PDF para adjuntar.» / "There's no PDF to attach.". `NoLongerInRole` es el motivo de «No aplica» de quien dejó el rol.
 
-**Permisos nuevos:** `formrules.manage`, `formapprovals.decide` y `formrecords.correct`, con sus textos y la migración de los roles de sistema.
+**Permisos nuevos:** `formrules.manage`, `formapprovals.decide` y `formrecords.correct`, con sus textos, sus áreas «Reglas y PDF» y «Aprobaciones» en los permisos de un rol (257) y la migración de los roles de sistema. `formrecords.correct` incluye `formrecords.read` (260); los otros dos no incluyen nada.
 
 ## Datos
 
-Tres migraciones: `<fecha>_FormRules.cs`, `<fecha>_FormRecordCorrections.cs` y `<fecha>_SystemRoleFormRulesPermissions.cs`. Todo es `ITenantOwned`, esquema `tenant`, con RLS, salvo el registro de trabajo.
+Cuatro migraciones: `<fecha>_FormRules.cs`, `<fecha>_FormRecordCorrections.cs`, `<fecha>_SystemRoleFormRulesPermissions.cs` y, en WhatsApp, `<fecha>_WhatsAppFormActions.cs` (B17). Todo es `ITenantOwned`, esquema `tenant`, con RLS, salvo el registro de trabajo.
 
 | Tabla | Qué guarda | Regla |
 | --- | --- | --- |
@@ -148,28 +151,3 @@ Tres migraciones: `<fecha>_FormRules.cs`, `<fecha>_FormRecordCorrections.cs` y `
 - `FormDefinitionStates`: `ActiveRuleSetId` y `ActivePdfDesignId`, por T7;
 - `FormRecords`: `RuleSetId?`, `State`, `Version` (`IVersioned`), `CorrectionOfRecordId?`, `CorrectionReason?`, `CorrectedByUserId?`, `CorrectedAtUtc?`, `SupersededAtUtc?`, y `VoidedAtUtc?`, `VoidedByUserId?` y `VoidReason?`. **El índice único `(DefinitionId, Number)` pasa a filtrar `SupersededAtUtc IS NULL`,** y la planilla, los conteos, la navegación, el Excel y el tablero filtran las vigentes;
 - en WhatsApp, las plantillas suman `HeaderFormat`, y el mensaje de chat, el origen «acción de formulario».
-
-## Lo que ya se pagó allá (no repetir)
-
-Cada punto lleva su test, escrito durante la etapa:
-1. **Un rol borrado colgaba una aprobación:** se valida al reservar.
-2. **Chrome bloqueó el visor del PDF** en un iframe con sandbox: va con `<object>`.
-3. **El contrato de `origin` del recibo:** la web rechazó una respuesta correcta; cada campo nuevo se exporta con su ejemplo.
-4. **Un aviso a un rol se repetía** por una reserva vencida: la clave va por ejecución y destinatario.
-5. **Una copia entera de la respuesta por ejecución:** se lee por id.
-6. **Lo que va en la versión y lo que se guarda aparte.** En la prueba de allá, la versión salió sin filtros, y las reglas y el PDF no se habían guardado. Las reglas y el diseño tienen su propio Guardar y valen sin publicar, y salir con cambios pregunta antes.
-7. **Un error dice qué hacer en cada caso.** «Agregá Armar el PDF…» se leía igual si faltaba la acción o si estaba más abajo.
-8. **Nada se desmarca ni se borra sin avisar:** ni al cambiar el tipo, ni al mover o quitar una acción.
-9. **Una decisión que no se deshace pide confirmar:** allá se aprobó la siguiente sin querer, porque ↑ ↓ cambian de respuesta con el foco en el panel.
-10. **Un aviso que no puede llegar se descubría recién en la actividad.** Allá sale solo por WhatsApp. Acá va con plantilla fuera de las 24 horas (61) o por correo (62), y lo que no salió se ve por persona en Actividad y en la campana.
-11. **El detalle no depende de lo que la persona no tiene.** Allá, con el permiso de aprobar y sin el rol de la tarea, el detalle fallaba al pedir la tarea.
-12. **Nada vacío a la vista.** Un historial sin revisiones ocupaba una columna fija: va detrás de su botón, apagado (140).
-13. **Un dato guardado por nombre se rompía al renombrar.** El mensaje guarda `{FieldId}`, como las condiciones (149).
-14. **Una corrección usa los filtros por persona de quien la cargó** (traspaso 7): con los de quien corrige, otra persona vería otras opciones y podría dejar una que el autor no tenía.
-15. **El conteo de respuestas no sale del último número:** con anuladas, se cuentan las vigentes.
-16. **Una migración que pierde datos al volver se niega a volver:** el `Down` de las correcciones frena si ya hay correcciones, anuladas o tareas cerradas.
-17. **Cancelar una corrección con cambios pregunta** («¿Descartar la corrección?», con «Seguir corrigiendo»); sin cambios, vuelve a la lectura.
-18. **Un texto de otro espacio de traducciones se declara en `useTranslation`.** Allá, anular desde la pantalla completa mostraba la clave del motivo, y lo encontró el recorrido, no los tests.
-19. **Corregir una respuesta con ítems los perdía:** allá la corrección abría solo las preguntas sueltas. Abre y guarda los ítems, que vuelven si el bloque sigue.
-20. **Un rol sin personas abría una tarea que nadie podía decidir** (B3 de allá), y un aviso a un rol le llegaba a quien ya se había ido: los dos se miran al reservar y al mandar.
-21. **Una acción frenada se descubría abriendo la respuesta** (F2 de allá): la marca «Por resolver», su vista y el aviso a quien cargó salen de la misma regla.

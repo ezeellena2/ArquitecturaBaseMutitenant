@@ -13,7 +13,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T9, T11, T13, T24, la §3, la §6, punto 7, y la §14; la [E15](15-respuestas.md): filtros, valores, Excel, tablero y [cómo se lee una respuesta](15-parte-datos-y-contrato.md#cómo-se-lee-una-respuesta-263-266-y-269); la [E16](16-datos-de-las-personas.md): los filtros por destinatario y sus avisos; la [E12](12-catalogos.md): C5, y la [E13](13-campos.md): los tipos de campo.
-2. **Decisiones** de la hoja de ruta: 35, 43, 53, 54, 78, 146, 157, 162, 168, 174, 177, 178, 204, 206, 226, 227, 229, 232, 233, 235, 262 (una sola pieza para elegir), 263 (nada debajo de otro dato), 264 (el orden de las tablas), 266 (la respuesta se lee como el formulario) y 269 (los principios del traspaso 17).
+2. **Decisiones** de la hoja de ruta: 35, 43, 53, 54, 78, 146, 157, 162, 168, 174, 177, 178, 204, 206, 207 (el número que se escribe), 226, 227, 229, 232, 233, 235, 262 (una sola pieza para elegir), 263 (nada debajo de otro dato), 264 (el orden de las tablas), 266 (la respuesta se lee como el formulario) y 269 (los principios del traspaso 17).
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -79,7 +79,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v153, con el recorrido guiado `un-pedido-con-renglones`. El ejemplo es «Pedido de materiales», con el bloque «Productos». Muestran solo lo que existe hasta acá (78). Redibujados con sus teléfonos y aprobados en la v168 (139, 144, 146, 168, 177 y 178) y en la v175: la pantalla de cierre (204), el cálculo en el bloque (233), el aviso de «Mostrar si» (235), «3 ítems» (206) y el diálogo de exportar con «Filas» (227), nuevo. **Falta dibujar** en `FRM-Editor-Condiciones` y `FRM-Publicar-19` el aviso también debajo de una fecha anterior o posterior (229 y 235). Con el traspaso 18 se redibujan los de la lista de abajo.
+Aprobados en el lienzo v175, con el recorrido guiado `un-pedido-con-renglones`. El ejemplo es «Pedido de materiales», con el bloque «Productos». Muestran solo lo que existe hasta acá (78). **Falta dibujar** en `FRM-Editor-Condiciones` y `FRM-Publicar-19` el aviso también debajo de una fecha anterior o posterior (229 y 235). Con el traspaso 18 se redibujan los de la lista de abajo.
 
 | Tablero | Qué muestra |
 | --- | --- |
@@ -107,13 +107,13 @@ Aprobados y publicados en el lienzo v153, con el recorrido guiado `un-pedido-con
 
 **«Mostrar si»:** va en la pregunta abierta, en su caja, como las condiciones de las reglas de ArquitecturaBase: Pregunta, Condición y Valor, en la pieza (262) salvo un número o una fecha, que se escriben; el tacho, y «Agregar condición». Sin preguntas anteriores que sirvan, «Agregar condición» queda grisado, con el motivo en su tooltip. Una referencia rota queda en rojo, con el motivo debajo, y la pregunta dice «Corregir».
 
-**La fórmula:** piezas en una caja, con «Agregar dato ▾» (un número, una pregunta, un campo del catálogo o la suma de una pregunta del bloque) y + − × ÷ ( ). La pregunta, el campo, la suma y la moneda se eligen en la pieza (262), sin diálogo. En un cálculo del bloque, «Agregar dato ▾» ofrece solo lo de su ítem, sin la suma. «Es un monto», una casilla, pide la moneda, y los decimales salen de ella.
+**La fórmula:** piezas en una caja, con «Agregar dato ▾» (un número, una pregunta, un campo del catálogo o la suma de una pregunta del bloque) y + − × ÷ ( ). La pregunta, el campo, la suma y la moneda se eligen en la pieza (262), sin diálogo. En un cálculo del bloque, «Agregar dato ▾» ofrece solo lo de su ítem, sin la suma. «Es un monto», una casilla, pide la moneda, y los decimales salen de ella. Un número que se escribe, acá o en una condición, se lee con `parseDecimal` (207): «1.500» marca `numberAmbiguous` en su campo.
 
 **El bloque en el editor:** un recuadro en la lista de preguntas, con las suyas adentro, ↑ ↓ ✎ 🗑 en cada una y su propio «Agregar pregunta» en la banda «Preguntas de cada ítem». El ✎ del bloque edita el nombre, la ayuda y, bajo «Ítems», el mínimo y el máximo, y con el bloque abierto el teléfono al costado muestra la pantalla de un ítem. Cerca de 50 componentes en una pantalla, se lee «46 de 50 componentes».
 
 **Mandan sobre esta spec en:** las fichas del front: un dato por celda, y un monto con su moneda.
 
-**Valen las de toda la app** (160 a 164, 173 a 175, 180, 261 a 264 y 269): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero, el estado dicho una vez, lo que se elige en la pieza, toda columna con un dato ordena y ninguna fila lleva un botón con texto.
+**Valen las de toda la app** (160 a 164, 173 a 175, 180, 261 a 264 y 269).
 
 ## Qué verificar al arrancar
 
@@ -135,6 +135,10 @@ Aprobados y publicados en el lienzo v153, con el recorrido guiado `un-pedido-con
 - **Las de la hoja de ruta que esta spec desarrolla:** una etapa propia, y los cálculos al llegar la respuesta, sin el total en WhatsApp (54); el bloque (146, 177 y 178) y su pantalla de cierre (204); su catálogo, por quien lo recibe (168); «3 ítems» (206); las de los traspasos 15 (227, 232, 233 y 235) y 17 (262 a 264 y 266).
 - **«Ítem» en todo texto que ve el usuario** (177): el código y los documentos siguen diciendo `rows`.
 - **Genérico:** ninguna fórmula ni bloque va escrito en el código.
+
+## Acciones del asistente
+
+**Ninguna** (268 y [ADR 0068](../../decisions/0068-acciones-del-asistente.md)): el editor arma una definición entera, que sigue con su propuesta ([0057](../../decisions/0057-la-ia-propone-y-una-persona-crea.md)), y lo demás solo lee.
 
 ## Fuera de esta etapa
 

@@ -1,6 +1,6 @@
 # E20 · Cargar una respuesta desde la web (spec)
 
-**Estado:** pendiente · spec de la etapa 20 del bloque (decisiones 73, 78, 83 a 90, 94, 95, 98, 101, 153, 166, 177, 183, 184, 229, 230, 232 a 235, 261 a 264, 266 y 269; la 229 reemplaza la 96, la 104, la 178 y la 200, la 234 cambia la 97, la 261 cambia la 83 en «Cargar» y la 262, la 141), con el [formato](plantilla.md) de las etapas. Corresponde, en ArquitecturaBase, a las etapas 1, 2 (lo propio), 4 (listas dependientes) y 5 (títulos de sección) de «Cargar formularios desde la app», a la etapa 2 de sus renglones (T12), a SA1-A a SA5 («Dónde se completa») y a UB1-A a UB4-A y W1-A («Ubicación»). `/plan-etapa` la contrasta con el código real cuando le toque, después de la E19.
+**Estado:** pendiente · spec de la etapa 20 del bloque (decisiones 73, 78, 83 a 90, 94, 95, 98, 101, 153, 166, 177, 183, 184, 229, 230, 232 a 235, 261 a 264, 266 y 269; la 229 reemplaza la 96, la 104, la 178 y la 200, la 234 cambia la 97, la 261 cambia la 83 en «Cargar» y la 262, la 141), con el [formato](plantilla.md) de las etapas. Corresponde, en ArquitecturaBase, a las etapas 1, 2 (lo propio), 4 (listas dependientes) y 5 (títulos de sección) de «Cargar formularios desde la app», a la etapa 2 de sus renglones (T12), a SA1-A a SA5 («Dónde se completa») y a UB1-A a UB4-A y W1-A («Ubicación»).
 
 **Partes.** Lo que no figura en esta tabla está acá.
 
@@ -13,7 +13,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T4, T22, T23, T24 y la §6, punto 7; la [E15](15-respuestas.md): rutas, filtros y [«Cómo se lee una respuesta»](15-parte-datos-y-contrato.md#cómo-se-lee-una-respuesta-263-266-y-269); la [E16](16-datos-de-las-personas.md): los filtros por destinatario; la [E17](17-ciclo-de-vida.md): la disponibilidad; la [E18](18-fotos-y-documentos.md): verificar y guardar archivos, y la [E19](19-condiciones-calculos-y-lineas.md): la captura y el bloque.
-2. **Decisiones** de la hoja de ruta: 9, 23, 35, 37, 43, 50, 54, 73, 78, 83 a 90, 94, 95, 98, 101, 141, 147, 153, 166, 177, 183, 184, 207, 229, 230, 232 a 235, 261 a 264, 266, 267 y 269.
+2. **Decisiones** de la hoja de ruta: 9, 23, 35, 37, 43, 50, 54, 73, 78, 83 a 90, 94, 95, 98, 101, 141, 147, 153, 166, 177, 183, 184, 207, 229, 230, 232 a 235, 261 a 264, 266, 267, 269 y 270.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -26,7 +26,7 @@ Antes de empezar, en este orden:
    | [textos-y-traducciones](../../rules/textos-y-traducciones.md) y [tests](../../rules/tests.md) | «App», «ítem» y qué lleva test |
 
 4. **Código para copiar:** la columna «Copia de» de los [pasos](20-parte-contrato-datos-y-pasos.md#pasos).
-5. **Referencia de producto,** solo para leer: en ArquitecturaBase, `docs/plans/2026-10-30-traspaso-multitenant-carga-desde-la-app.md`, `docs/plans/2026-10-29-cargar-formularios-desde-la-app.md` y, en `docs/features/formularios.md`, «Carga desde la app», «Lo propio», «Listas dependientes», «Títulos de sección», «Cálculos», «Formularios sólo en la app» y «La pregunta «Ubicación»», y en `whatsapp.md`, «La ubicación antes del Flow»; para el bloque, el traspaso 12 (`docs/plans/2026-11-11-traspaso-multitenant-renglones.md`) y «El bloque de renglones en la carga». En `ArquitecturaBaseFront`, `docs/design/carga-desde-la-app.md`, `renglones-en-formularios.md`, `formularios-solo-en-la-app.md` y `ubicacion-en-formularios.md`. El código está en `origin/main`. Mandan esta spec y las reglas y los diseños de este proyecto (108), y el código sale de este repo.
+5. **Referencia de producto,** solo para leer: en ArquitecturaBase, `docs/plans/2026-10-30-traspaso-multitenant-carga-desde-la-app.md`, `docs/plans/2026-10-29-cargar-formularios-desde-la-app.md` y, en `docs/features/formularios.md`, «Carga desde la app», «Lo propio», «Listas dependientes», «Títulos de sección», «Cálculos», «Formularios sólo en la app» y «La pregunta «Ubicación»», y en `whatsapp.md`, «La ubicación antes del Flow»; para el bloque, el traspaso 12 (`docs/plans/2026-11-11-traspaso-multitenant-renglones.md`) y «El bloque de renglones en la carga». En `ArquitecturaBaseFront`, `docs/design/carga-desde-la-app.md`, `renglones-en-formularios.md`, `formularios-solo-en-la-app.md` y `ubicacion-en-formularios.md`. El código está en `origin/main`. Mandan esta spec y las reglas y los diseños de este proyecto (108).
 
 ## Qué se construye
 
@@ -59,15 +59,15 @@ Antes de empezar, en este orden:
 **La pregunta «Ubicación»** (230): un punto al completar, con latitud, longitud y precisión, que no prueba presencia:
 - **en el editor,** es el último tipo y solo lleva «Obligatoria». No entra en el bloque, donde aparece apagada como Foto y Documento, y ninguna condición ni cálculo se apoya en ella;
 - **en la carga,** va en «Datos», en una columna. «Usar mi ubicación» la pide al tocar, con alta precisión y hasta 20 segundos, y la muestra en un recuadro como un archivo, con la precisión en gris, la ✕, «Ver en el mapa» y «Volver a pedirla». Con más de 100 m, la precisión va en ámbar con su (i), y se puede enviar igual. Si el navegador no la da, dice por qué;
-- **en la planilla,** el punto es un enlace al mapa, sin ordenar (264); su filtro es solo «con respuesta» o «sin respuesta». En el detalle es su control, en un renglón con su precisión y «Ver en el mapa» (266), y en el Excel, en tres columnas numéricas, las de los textos de la parte;
-- **por WhatsApp,** antes del Flow sale por el número de la organización, dentro de las 24 horas, el pedido de ubicación de Meta, con «Seguir sin ubicación» si es opcional. Al llegar sale el Flow, y todo se guarda en una sola captura. Si no llega, el envío vence a las 24 horas. La actividad suma sus renglones, «Se pidió la ubicación» y «Llegó la ubicación» o «Siguió sin la ubicación» (267). La ubicación que llegó se vacía al cerrar la captura o al vencer el envío;
+- **en la planilla,** el punto es un enlace al mapa, sin ordenar (264) ni filtrar, como las fotos y los documentos (143); el contrato la acepta solo con `answered`, `unanswered` y `notAsked`. En el detalle es su control, en un renglón con su precisión y «Ver en el mapa» (266), y en el Excel, en tres columnas numéricas, las de los textos de la parte;
+- **por WhatsApp,** antes del Flow sale por el número de la organización, dentro de las 24 horas, el pedido de ubicación de Meta, con «Seguir sin ubicación» si es opcional. Al llegar sale el Flow, y todo se guarda en una sola captura. Si no llega, el envío vence con su sesión, en el tiempo para contestar de la Configuración de WhatsApp de la organización (270, E14). La actividad suma sus renglones, «Se pidió la ubicación» y «Llegó la ubicación» o «Siguió sin la ubicación» (267). La ubicación que llegó se vacía al cerrar la captura o al vencer el envío;
 - **es un dato personal** (23): se borra con la baja de la cuenta de quien la mandó, aunque la respuesta queda, y «Ver en el mapa» manda el punto a Google solo al tocarlo.
 
 **Lo propio** (85): quien tiene `formrecords.create` y no `formrecords.read` lee solo sus respuestas, en la planilla, el detalle y los archivos, también lo que respondió por WhatsApp. El servidor filtra por `RespondentUserId`, y lo ajeno responde 404, también en una dirección directa. Quien solo carga ve «Formularios» con sus formularios, «Cargar» en el ⋮ (261) y tres columnas, un dato en cada una (263), que ordenan (264): «Mis cargas», «Mi última carga» (su número, que la abre, o «Todavía no cargaste») y «Recibida», su fecha; nunca los totales de la organización (153, que cambia la 83). El nombre abre «Respuestas» con lo suyo: la planilla de siempre, con «Empresa» (24), sin la columna «Cargó», sin «Cargó» en «Filtros» y sin «Exportar a Excel», con «Agregar respuesta». Los conteos también se acotan a lo suyo (lección 7 de la parte). **El filtro «Estado»** suma «Dados de baja», con los formularios dados de baja en los que cargó algo: ve lo suyo, sin «Cargar» (101).
 
 **Las entradas** (83 y 261): «Cargar», la primera opción del ⋮ de cada fila de «Formularios», y en el teléfono, en la fila, con nuestra forma; «Agregar respuesta», en el encabezado de la planilla, abre en la compu el panel y en el teléfono la página. Ninguna aparece en un borrador ni en un dado de baja, y en uno solo para clientes quedan apagadas, con su motivo (43).
 
-**La forma** (266): la carga es la forma con que la E15 lee una respuesta (zonas, grilla y anchos), vuelta editable. El Sí o No, que sigue arrancando sin nada marcado, elegir una y elegir varias van en la pieza `Picker` y ocupan una columna (262, que cambia la 141). El detalle, en la [parte](20-parte-contrato-datos-y-pasos.md#cómo-se-arma-cada-pregunta-86-87-141-262-y-266).
+**La forma** (266): la carga es la forma con que la E15 lee una respuesta (zonas, grilla y anchos), vuelta editable. El detalle, con lo que se elige en la pieza (262), en la [parte](20-parte-contrato-datos-y-pasos.md#cómo-se-arma-cada-pregunta-86-87-141-262-y-266).
 
 **La página «Nueva respuesta»** (84), en `/org/formularios/:id/cargar`, para la compu y el teléfono:
 - Cancelar y el botón del formulario van en la banda; en el teléfono, ese botón queda fijo al pie;
@@ -92,7 +92,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobados en el lienzo como dice la tabla, con el armado del front real de ArquitecturaBase (126 y 134) y el recorrido guiado `cargar-una-respuesta`; se redibujan los que la tabla dice, con su decisión. El ejemplo es «Pedido de materiales», versión 4, que suma «Zona», «Proveedor» con su lista dependiente, «Foto del remito» y el bloque «Productos», y por eso se completa «Solo en la app»; el de la ubicación es «Visita a cliente».
+Aprobados en el lienzo como dice la tabla, con el armado del front real de ArquitecturaBase (126 y 134) y el recorrido guiado `cargar-una-respuesta`. El ejemplo es «Pedido de materiales», versión 4, que suma «Zona», «Proveedor» con su lista dependiente, «Foto del remito» y el bloque «Productos», y por eso se completa «Solo en la app»; el de la ubicación es «Visita a cliente».
 
 | Tablero | Qué muestra | Estado |
 | --- | --- | --- |
@@ -119,7 +119,7 @@ Aprobados en el lienzo como dice la tabla, con el armado del front real de Arqui
 
 **«Canal»** se suma a los filtros de la barra, en la pieza y sin cantidades (262).
 
-**Valen** las fichas del front, la 43 en cada botón y las de toda la app (160 a 164, 173 a 175, 180, 261 a 264 y 269): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
+**Valen** las fichas del front, la 43 en cada botón y las de toda la app (160 a 164, 173 a 175, 180, 261 a 264 y 269).
 
 ## Qué verificar al arrancar
 
@@ -148,6 +148,10 @@ Aprobados en el lienzo como dice la tabla, con el armado del front real de Arqui
 - **Un formulario de la app aparece apagado en el chat,** con «Se completa solo en la app.» (184 y 229).
 - **«Ubicación» entra acá** (230), en la app y por WhatsApp, y **el cálculo se ve en gris al cargar** (234).
 - **Lo propio tiene sus rutas:** `[HasPermission]` pide un solo permiso, y el mismo servicio les da el alcance.
+
+## Acciones del asistente
+
+**Ninguna** (268 y [ADR 0068](../../decisions/0068-acciones-del-asistente.md)). Una respuesta no entra en los tipos cerrados de una acción: sus preguntas salen de cada versión, y no de una declaración fija, y trae fotos, documentos, la ubicación y el bloque.
 
 ## Fuera de esta etapa
 
