@@ -7,7 +7,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E12](12-catalogos.md): C3 (guardar), C6 (valores), C7 a C11 (carga de una vez) y sus secciones de datos, contrato, flujos y archivos. Esta etapa suma a esas piezas, no crea otras.
-2. **Decisiones** de la hoja de ruta: 35 (el contenido no tiene idioma), 36 (títulos de más de 30 caracteres), 42 (hasta 20 campos), 43 (botones y avisos), 78 (el orden), 105 (los topes cuentan los activos), 109, 110, 115 y 116 (leyendas, motivos, esperas y ayuda), 111 (el combo del catálogo), 119 (el Excel legible), 125 (los campos en un modal), 127 (las acciones a la vista), 129 (borrar una opción que nada usa), 130 (la clave a la vista, con su candado), 261 (lo que se hace con una fila, en su ⋮), 262 (una sola pieza para elegir), 263 (nada debajo de otro dato), 264 (el orden de las tablas) y 269 (el tope de un texto, el mismo en la pantalla y en el servidor).
+2. **Decisiones** de la hoja de ruta: 35, 36, 42, 43, 78, 105, 109 a 111, 115, 116, 119, 125, 127, 129, 130, 261 a 264 y 269, que aplican «Decisiones tomadas» y el texto, y 268, las acciones del asistente, con la [ADR 0068](../../decisions/0068-acciones-del-asistente.md).
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -62,7 +62,7 @@ Aprobadas y publicadas en el lienzo v150, con el armado de ArquitecturaBase (125
 | `FRM-Catalogo-Campos` y `M-FRM-Catalogo-Campos` | el modal «Campos de …» |
 | `FRM-Catalogo-Opciones-13` y `M-FRM-Catalogo-Opciones-13` | el modal de opciones de la E12, con una fila por campo |
 
-Del traspaso 15 (v175, sin publicar): «Ordenar por…» en el ⋮ de estos tableros y ordenar por un campo, como «Rubro» (224), y, nuevos, `FRM-Catalogo-Ordenar-13` y `M-FRM-Catalogo-Ordenar-13`: «Ordenar las opciones» por un número, una fecha, sí o no o un campo de otro catálogo.
+Del traspaso 15 (v175): «Ordenar por…» en el ⋮ de estos tableros y ordenar por un campo, como «Rubro» (224), y, nuevos, `FRM-Catalogo-Ordenar-13` y `M-FRM-Catalogo-Ordenar-13`: «Ordenar las opciones» por un número, una fecha, sí o no o un campo de otro catálogo.
 
 **Se redibujan con el traspaso 18, tanda 2** (261 a 263):
 - `FRM-Catalogo-13` y su teléfono: «Reactivar» una opción, en el ⋮ de su fila (261), y «Columnas», en la pieza múltiple (262);
@@ -89,7 +89,7 @@ Del traspaso 15 (v175, sin publicar): «Ordenar por…» en el ⋮ de estos tabl
 - **La página:** los campos, un campo recién agregado (la columna grisada, con el motivo en su tooltip, y el aviso), cambiar el tipo con errores (arriba de la tabla, con «Revisar», que abre el modal en ese campo), una opción que usa otra (no se borra), «En WhatsApp», elegir qué muestra, «Columnas», un catálogo nuevo, guardado, un valor de una opción dada de baja, solo `formcatalogs.read` y un título que no entra.
 - **El modal:** los campos, uno de un catálogo, el combo abierto, filtrando y sin coincidencias, agregar un campo, elegir el tipo, un número, clave repetida, quitar con y sin valores, 20 campos, sin campos todavía y solo lectura.
 
-**Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez. Los chips de «En WhatsApp» llevan el radio de un control (173).
+**Valen las de toda la app** (160 a 164, 173 a 175 y 180), que llegan con las piezas de la base de la 12. Los chips de «En WhatsApp» llevan el radio de un control (173).
 
 ## Contrato
 
@@ -133,7 +133,7 @@ Una migración aditiva, `<fecha>_FormCatalogFields.cs`, sobre las tablas de la E
 | Tabla | Columna | Tipo | Regla |
 | --- | --- | --- | --- |
 | `FormCatalogs` | `FieldsJson` | jsonb, `[]` por defecto | la lista de campos, también los quitados; `{id, key, name, type, sourceCatalogId?, required, unique, maxLength?, min?, max?, position, isActive}`. Vacía si no es a mano |
-| `FormCatalogs` | `Presentation` | jsonb | `{title[], description[]}`; el título arranca en `text`, y la descripción, en `detail` |
+| `FormCatalogs` | `Presentation` | jsonb, `{"title":["text"],"description":["detail"]}` por defecto | `{title[], description[]}`; así la tiene también un alta de la versión anterior (0060) |
 | `FormCatalogItems` | `FieldValuesJson` | jsonb, `{}` por defecto | mapa de `key` a valor canónico, con índice GIN `jsonb_path_ops` |
 
 **La clave:** se arma con el nombre, en minúsculas y sin acentos, con `^[a-z][a-z0-9_]{0,39}$`, y queda fija. Si choca con `text`, `code`, `value`, `detail` o con un campo quitado, suma un número. En el JSON del contrato se usa la identidad del campo, y la clave queda adentro.
@@ -147,14 +147,14 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
 | B1 | Campo, tipos, clave y reglas en el dominio; `ChangeFields`, `ChangePresentation` y `SetFieldValues` | `D/Forms/FormCatalogField.cs`, `FormCatalogFieldType.cs`, `FormCatalogPresentation.cs`; suma a `FormCatalog.cs`, `FormCatalogItem.cs` y `FormCatalogErrors.cs` | `D/Forms/FormCatalog.cs` [E12] | `Domain.UnitTests/Forms/`: clave fija, reservadas y repetidas; 20 contando solo los activos (105); reglas por tipo |
-| B2 | Columnas, índice y migración | `I/Modules/Forms/Persistence/Configurations/FormCatalogConfiguration.cs`, `FormCatalogItemConfiguration.cs`, `I/Persistence/Migrations/<fecha>_FormCatalogFields.cs` | `AssistantMessageConfiguration.cs` (jsonb) y `AssistantDurableOperationConfiguration.cs` (GIN) | aislamiento y migración, también hacia atrás |
+| B2 | Columnas, índice y migración | `I/Modules/Forms/Persistence/Configurations/FormCatalogConfiguration.cs`, `FormCatalogItemConfiguration.cs`, `I/Persistence/Migrations/<fecha>_FormCatalogFields.cs` | `AssistantMessageConfiguration.cs` (jsonb) y `AssistantDurableOperationConfiguration.cs` (GIN) | aislamiento y migración, también hacia atrás; un alta de la versión anterior toma los valores por defecto |
 | B3 | Leer y validar el valor de un campo, con la cultura del pedido | `A/Modules/Forms/Services/FormCatalogFieldValuePolicy.cs` | `FormCatalogFiltersPolicy.cs` [E12] | «1.500», «12.345», `""`, `null` y una fuente dada de baja, en es y en |
 | B4 | Guardar campos, presentación y delta de valores, bajo el bloqueo del catálogo y de sus fuentes, siempre en el mismo orden | suma a `FormCatalogService.cs` [E12]; `FormCatalogFieldEditor.cs` | `FormCatalogItemEditor.cs` [E12] | delta; guardar sin cambios; una opción entre 10.000 escribe y audita solo esa; 409; dos personas a la vez sobre el catálogo y su fuente; ordenar por un campo de cada tipo (número, fecha, sí o no, de otro catálogo), con lo vacío al final |
 | B5 | Cambiar tipo o reglas: valida todas las opciones por lotes, y un error revierte todo | `A/Modules/Forms/Services/FormCatalogFieldChangePolicy.cs` | `FormCatalogImportPolicy.cs` [E12] | conversiones, `invalidRows` con las primeras 50, obligatorio y único sobre activas |
 | B6 | Quitar un campo y proteger una fuente | suma a `FormCatalogFieldEditor.cs` y `FormCatalogService.cs` | `FormCatalogPositionGuard.cs` [E12] | confirmación con valores; `SourceInUse`; la lección 1 |
 | B7 | Pegar, importar, exportar y la plantilla, con las columnas de los campos | suma a `FormCatalogFileResolver.cs`, `FormCatalogImportPolicy.cs` y `FormCatalogExportBuilder.cs` [E12] | esos mismos | exportar y reimportar sin diferencias, con número, fecha, Sí/No y fuente; dos opciones con el mismo texto; encabezado por nombre o clave; columna ausente conserva y vacía limpia; una fuente por identidad, código o texto único |
 | B8 | Armar título y descripción de cada opción, y `presentationIssue` | `A/Modules/Forms/Services/FormCatalogPresentationBuilder.cs` | `FormCatalogExportBuilder.cs` [E12] | 30 y 300 caracteres; contenido vacío; un campo quitado sale de la presentación |
-| B9 | Rutas, contratos y ejemplos | suma a `P/Modules/Forms/Controllers/BusinessFormCatalogsController.cs`, `Contracts/*HttpRequest.cs` y `FormsContractContributor.cs` [E12]; textos en `FormsTexts{,.en}.resx` | esos mismos | cada ruta con 401, 403, feature apagada = 404, validación, 409 y paginado; un código por cada 409; ejemplos exportados |
+| B9 | Rutas, contratos y ejemplos | suma a `P/Modules/Forms/Controllers/BusinessFormCatalogsController.cs`, a los contratos, `Models` y `Validation` de la E12, sin contratos nuevos, y a `FormsContractContributor.cs` [E12]; textos en `FormsTexts{,.en}.resx` | esos mismos | cada ruta con 401, 403, feature apagada = 404, validación, 409 y paginado; un código por cada 409; ejemplos exportados |
 | B10 | Medir el volumen | prueba de volumen del módulo | la de la E12 | 10.000 opciones por 20 campos: guardar, importar y exportar con EXPLAIN |
 
 **Front:**
@@ -164,10 +164,14 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | F1 | Tipos y llamadas, validados con los ejemplos exportados | suma a `F/src/modules/forms/api/` | la API de catálogos [E12] | zod estricto con los ejemplos |
 | F2 | El modal «Campos de …», con el combo del catálogo | `F/src/modules/forms/components/catalog/CatalogFieldsDialog.tsx`, `CatalogCombo.tsx` | su tablero, el modal de opciones [E12] y `Picker` (262) | agregar, subir, bajar y quitar; una copia hasta «Listo»; tope de 20; la clave y su candado; el combo abre con los primeros y filtra; celular; axe |
 | F3 | Una columna por campo en la tabla de opciones, y una fila en el modal, con el control de su tipo | suma a `OptionsSection.tsx` y al modal de opciones [E12] | su tablero | columna y fila grisadas hasta guardar; valor dado de baja; la lección 4 |
-| F4 | «En WhatsApp», con sus chips y «Por ejemplo», y el teléfono al costado | `F/src/modules/forms/components/PresentationEditor.tsx`, `CatalogPreviewPhone.tsx` | su tablero | cada desplegable lista lo que falta; se arma como el servidor; un título que no entra |
+| F4 | «En WhatsApp», con sus chips y «Por ejemplo», y el teléfono al costado | `F/src/modules/forms/components/catalog/PresentationEditor.tsx`, `CatalogPreviewPhone.tsx` | su tablero | cada desplegable lista lo que falta; se arma como el servidor; un título que no entra |
 | F5 | El editor: conflicto, guardado y lectura | suma a `CatalogEditorPage.tsx` [E12] | `CatalogEditorPage.tsx` [E12] | la lección 2; solo `formcatalogs.read`; textos en es y en |
 
 **Al cerrar:** `docs/features/formularios.md` suma la sección de los campos.
+
+## Acciones del asistente
+
+No declara acciones nuevas: `catalogoptions.edit@1` de la E12 (§17 de su spec) toma los campos activos del catálogo destino como dato, sin versión nueva (0068, «Consecuencias»). Cada tipo cae en la lista cerrada (0068 §4): Texto → `Text`, Número entero → `Integer`, Número con decimales → `Decimal`, Fecha → `Date`, Sí/No → `Boolean` y «De un catálogo» → `Record`, que resuelve el servidor. Sus reglas son los límites. El adaptador dibuja la columna de cada campo, y los casos de la acción suman uno con un campo. Los campos de un catálogo se arman en «Campos de …», que no es una acción.
 
 ## Qué verificar al arrancar
 
@@ -188,7 +192,7 @@ Cada punto lleva su test, escrito durante la etapa:
 2. **Un 409 de una regla no es un conflicto de versión.** Solo `General.ConcurrencyConflict` pone el editor en conflicto; dar de baja un catálogo que es fuente de campos activos es un error que se corrige. Hay test en el back (el código de cada 409) y en el front (el editor queda editable).
 3. **Un texto vacío no rompe la lectura.** Se prueba con un nombre o un valor de texto `""`, con `null` y con una referencia a una opción dada de baja, guardando y releyendo.
 4. **El front no tapa al servidor al cambiar el tipo.** Cambiar el tipo de un campo con valores que no convierten muestra los errores del servidor por fila, y el front no bloquea antes de mandar.
-5. **Un solo selector de catálogo.** Allá hubo tres distintos, y costó unificarlos: el campo usa un combo que es una pieza aparte del módulo, sin nada propio de los campos.
+5. **Un solo selector de catálogo.** El campo usa un combo que es una pieza aparte del módulo, sin nada propio de los campos.
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 

@@ -7,7 +7,7 @@
 - reglas: [AGENTS.md](../../../AGENTS.md) y las [fichas](../../rules/README.md);
 - referencia de producto: el traspaso 2 de ArquitecturaBase, anexo C §10 y anexo D (CA1-A a CA3). Es solo referencia, no código para copiar.
 
-**Requisitos:** la E11 (los contactos de la bandeja Clientes y sus etiquetas) y la E9 (cuotas y fuzz). La E10 no frena (123). Antes de esta etapa va [la base](base-de-la-12.md), con las piezas del front que esta usa: los botones y las esperas, la (i) y lo apagado con su motivo, los filtros sin cantidades, la primera carga, la confirmación que espera, la forma y la escala.
+**Requisitos:** la E11 (los contactos de la bandeja Clientes y sus etiquetas) y la E9 (cuotas y fuzz). La E10 no frena (123). Antes de esta etapa va [la base](base-de-la-12.md), con las piezas del front que esta usa: los botones y las esperas, la (i) y lo apagado con su motivo, los filtros sin cantidades, la primera carga, la confirmación que espera, la forma y la escala. Y la etapa [«Acciones del asistente»](acciones-del-asistente.md), con el puerto `IAssistantActionSource`, el sufijo `ActionSource`, la batería genérica y, en el front, `src/shared/assistant-actions/`.
 
 **Partes.** Esta spec no entra en un solo archivo, así que sigue en otros, con los mismos números de sección. Lo que no está en la tabla está acá.
 
@@ -24,6 +24,7 @@ Antes de empezar:
 3. **Código para copiar:** el módulo Asistente, pieza por pieza, en la §9.
 4. **Pantallas:** los tableros de la §10, con el recorrido `armar-un-catalogo` del front.
 5. **Referencia de producto:** la §14.
+6. **Acciones del asistente:** la [ADR 0068](../../decisions/0068-acciones-del-asistente.md) y la [receta](../../guides/agregar-una-accion-al-asistente.md), para la §17.
 
 ## 1. Alcance
 
@@ -45,6 +46,7 @@ Antes de empezar:
   - vista previa con una persona de ejemplo, elegida a propósito: el teléfono, con solo el desplegable «Persona» arriba, que se actualiza sola;
   - el valor es siempre de texto.
 - **Permisos:** `formcatalogs.read` y `formcatalogs.manage`.
+- **Acciones del asistente (268):** las opciones de un catálogo a mano, declaradas una vez por tipo (§17).
 
 **No entra:**
 - los formularios y la pregunta «Elegir de un catálogo»: elegir un catálogo en una pregunta, mandar, responder y «Lo usan» (E14);
@@ -59,7 +61,7 @@ Antes de empezar:
 
 **Navegación (34 y 78):** «Gestión de formularios» llega con esta etapa, y su panel tiene solo «Catálogos». Los tableros de la etapa muestran solo eso.
 
-**Aprobados y publicados en el lienzo v150** (2026-11-02, front `b859fe70`), sin «Textos en» ni «Cambios sin guardar». Tienen teléfono todos menos `FRM-Catalogo-Tipo` y `FRM-Catalogo-Nuevo`, que en el teléfono es la hoja «Nuevo catálogo» de `M-FRM-Catalogos`:
+**Aprobados y publicados en el lienzo v150** (2026-11-02, front `b859fe70`), sin «Textos en» ni «Cambios sin guardar». Tienen teléfono todos menos `FRM-Catalogo-Tipo` y `FRM-Catalogo-Nuevo`:
 - `FRM-Catalogos`: el listado, sin la columna «Lo usan», que llega con los formularios;
 - `FRM-Catalogo-Nuevo`: el origen, con la tarjeta «De los contactos de WhatsApp», y el tipo de valor;
 - `FRM-Catalogo-Tipo`: el tipo de valor se elige al crear, con la columna «Valor» y el error en el campo;
@@ -72,16 +74,18 @@ Antes de empezar:
 
 **Nuevos** (v148): `FRM-Catalogo-Opciones` y `M-FRM-Catalogo-Opciones`, el modal de opciones. Importar no va en el teléfono, como hasta ahora.
 
-**Del traspaso 15** (v175, sin publicar): `FRM-Catalogo-Ordenar` y su teléfono, nuevos, y `FRM-Catalogo` y su teléfono, redibujados.
+**Del traspaso 15** (v175): `FRM-Catalogo-Ordenar` y su teléfono, nuevos, y `FRM-Catalogo` y su teléfono, redibujados.
 
 **Se redibujan con el traspaso 18, tanda 2** (261 a 264):
-- `FRM-Catalogos` y `M-FRM-Catalogos`: «Origen» y «Estado», filtros con su botón y sin cantidades (262); el encabezado y «Ordenar por» ordenan cada columna (264); en el teléfono, la hoja «Nuevo catálogo» con la pieza;
+- `FRM-Catalogos` y `M-FRM-Catalogos`: «Origen» y «Estado», filtros con su botón y sin cantidades (262); el encabezado y «Ordenar por» ordenan cada columna (264); en el teléfono, «Nuevo catálogo» abre el editor, como en la compu, sin la hoja de elegir (262);
 - `FRM-Catalogo-Nuevo` y `FRM-Catalogo-Tipo`: se van como diálogos, porque solo servían para elegir (262); el origen y el tipo de valor se eligen en la pieza, en «El catálogo» del editor;
 - `FRM-Catalogo` y `M-FRM-Catalogo`: «Restaurar» y «Reactivar», en el ⋮ de la fila (261);
 - `FRM-Catalogo-Opciones` y su teléfono: el Estado, en la pieza (262), y en la lista, el código en su columna, no debajo del texto (263);
 - `FRM-Catalogo-Ordenar` y su teléfono: la columna y el orden, en la pieza (262);
 - `FRM-Catalogo-Importar`: «Desde», en la pieza (262);
 - `FRM-Catalogo-Filtros`, `FRM-Catalogo-Contactos` y sus teléfonos: los valores de una condición, varios por su nombre, separados por coma y sin chips, y la persona o el cliente de ejemplo, en la pieza, que dice solo el elegido (262).
+
+**Se dibujan antes del front** (268): `FRM-Catalogo-Opciones-Propuesta` y su teléfono, el editor abierto desde una propuesta del asistente (§17), con «Propuesta del asistente» junto al título, lo propuesto cargado sin guardar, «Lo que cambia» con lo que se suma, cambia y quita, «Revisá» en lo dudoso y el aviso si el catálogo cambió desde la propuesta.
 
 **«Ordenar por…» (224):** el diálogo «Ordenar las opciones» elige con la pieza (262) la columna (Texto o Código) y el sentido dicho con palabras, «De la A a la Z» o «De la Z a la A». El orden queda pendiente hasta guardar: arriba de las opciones, «Se ordenará por «Texto», de la A a la Z, al guardar.» con «Cancelar orden». Al guardar ordena todas, también las de otras páginas y las dadas de baja: los empates conservan su orden, lo vacío va al final y los números dentro de un texto se comparan por su valor («117» antes que «10030»). En el ⋮ queda apagado con su motivo en un catálogo sin guardar («Guardá el catálogo antes.») o con movimientos pendientes. No se ordena tocando el encabezado: el orden de las opciones es un dato (264).
 
@@ -167,6 +171,7 @@ Están en la §5 de la hoja de ruta y no se vuelven a preguntar:
 - **262:** una sola pieza para elegir, y los filtros sin cantidades.
 - **263:** nada debajo de otro dato.
 - **264:** toda columna con un dato ordena, salvo las tablas cuyo orden es un dato, como las opciones.
+- **268:** la IA prepara y la pantalla de siempre confirma; las opciones de un catálogo se declaran una vez por tipo (§17).
 - **269:** los principios del traspaso 17: el tope de un texto es el mismo en la pantalla y en el servidor, y al llegar se ve.
 - **270:** ninguna regla de negocio fija en el código. Los topes de las operaciones de archivo (C11) son técnicos y quedan en `appsettings`.
 
@@ -196,3 +201,12 @@ Salen de los reviews de ArquitecturaBase (E1) y del traspaso del 17/10. El plan 
   - el archivo vive solo en el diálogo y se descarta al salir;
   - el front no tapa la validación del servidor;
   - un 403 en una acción no oculta la pantalla de lectura.
+
+## 17. Acciones del asistente
+
+Lo que la IA puede preparar en esta etapa (268, [ADR 0068](../../decisions/0068-acciones-del-asistente.md)), con la [receta](../../guides/agregar-una-accion-al-asistente.md):
+- **`catalogoptions.edit@1` · Cambiar las opciones de un catálogo:** editar, con `formcatalogs.manage` (el de la ruta), el módulo `forms` y `SaveRoute` `PUT api/organization/forms/catalogs/{id}`, sin `[Idempotent]` porque no crea. Se confirma en el editor (`Page`), sin guardar, con «Propuesta del asistente» y «Lo que cambia», y el editor suma su valor a `AssistantActionScreen`, con su traducción a `AssistantRouteKey`. No tiene efecto fuera del sistema. El destino es un catálogo a mano activo, que encuentra `IFormCatalogReader` por su nombre.
+- **Una vez por tipo** (0068, «Consecuencias»): sirve para todo catálogo a mano, y uno nuevo no pide nada. Sus campos salen del catálogo destino. Las opciones se suman, se cambian y se quitan como operaciones (0068 §4), cada una con Texto (`Text`, 30), Código (`Text`, 40), Detalle (`LongText`, 300), Estado (`Boolean`) y, en uno tipado, Valor (`Integer`, `Decimal` o `Date`). Una opción guardada es un `Record`: la resuelve el servidor por su texto o su código, y nunca va al proveedor. Quitar la marca como en la pantalla: se borra al guardar, y una que algo usa da `ItemInUse`. No propone el orden ni importar.
+- **Lo que no se declara:** crear un catálogo o cambiar su nombre, su descripción o sus filtros es armar la definición, que sigue con la 0057 (`propose_catalog`). Dar de baja o reactivar el catálogo tampoco: el editor lo guarda al tocarlo, sin un estado pendiente donde confirmarlo, y sin pantalla donde confirmar no hay acción.
+
+Queda registrada y sin ofrecer hasta que se califique, antes de la prueba integral del bloque.

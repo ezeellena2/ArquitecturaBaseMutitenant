@@ -1,6 +1,6 @@
 # E14 · Formularios: crear, publicar, mandar y recibir (spec)
 
-**Estado:** pendiente · spec de la etapa 14 del bloque (decisiones 34 y 78), con las decisiones 35, 38, 43, 79, 80, 103, 111, 112, 121, 129, 145, 165, 175, 176 y 186. Nace con la pregunta «Elegir de un catálogo», sobre los catálogos de la E12 y sus campos de la E13. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E11]**, **[E12]**, **[E9]** y **[Meta]** contra el código real y la documentación vigente.
+**Estado:** pendiente · spec de la etapa 14 del bloque (decisiones 34 y 78), con las de la §13. Nace con la pregunta «Elegir de un catálogo», sobre los catálogos de la E12 y sus campos de la E13. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E11]**, **[E12]**, **[E9]** y **[Meta]** contra el código real y la documentación vigente.
 
 **Fuentes:**
 - alcance y decisiones de producto: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E14 y §5;
@@ -15,14 +15,15 @@
 | --- | --- |
 | §2, §6 y §6b | [decisiones técnicas y flujos](14-parte-decisiones-y-flujos.md) |
 | §3, §4, §5 y §7 | [datos y contrato](14-parte-datos-y-contrato.md) |
-| §8, §10, §11, §12, §14 y §16 | [archivos, tests y Meta](14-parte-archivos-tests-y-meta.md) |
+| §8, §10 y §14 | [archivos, tests y Meta](14-parte-archivos-tests-y-meta.md) |
+| §11, §12, §16 y §17 | [premisas, contactos, criterios y acciones](14-parte-premisas-criterios-y-acciones.md) |
 
 ## Qué leer
 
 Antes de empezar:
 1. **Lo anterior:** las specs de la [E12](12-catalogos.md) y la [E13](13-campos.md), sobre todo sus datos, su contrato y sus archivos.
 2. **Decisiones** de la hoja de ruta: las de la §13 de esta spec.
-3. **Fichas:** [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [idempotencia](../../rules/idempotencia.md), [multitenancy](../../rules/multitenancy.md), [persistencia-ef](../../rules/persistencia-ef.md), [auditoria](../../rules/auditoria.md), [api-http](../../rules/api-http.md), [permisos](../../rules/permisos.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [result-y-errores](../../rules/result-y-errores.md), [validacion](../../rules/validacion.md), [textos-libres](../../rules/textos-libres.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [numeros-y-moneda](../../rules/numeros-y-moneda.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [datos-personales](../../rules/datos-personales.md), [logs](../../rules/logs.md), [cuotas](../../rules/cuotas.md), [modulos](../../rules/modulos.md) y [tests](../../rules/tests.md). Además, cómo caen en este módulo: [§11](14-parte-archivos-tests-y-meta.md#11-premisas-aplicadas).
+3. **Fichas:** [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [idempotencia](../../rules/idempotencia.md), [multitenancy](../../rules/multitenancy.md), [persistencia-ef](../../rules/persistencia-ef.md), [auditoria](../../rules/auditoria.md), [api-http](../../rules/api-http.md), [permisos](../../rules/permisos.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [result-y-errores](../../rules/result-y-errores.md), [validacion](../../rules/validacion.md), [textos-libres](../../rules/textos-libres.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [numeros-y-moneda](../../rules/numeros-y-moneda.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [datos-personales](../../rules/datos-personales.md), [logs](../../rules/logs.md), [cuotas](../../rules/cuotas.md), [modulos](../../rules/modulos.md) y [tests](../../rules/tests.md). Además, cómo caen en este módulo: [§11](14-parte-premisas-criterios-y-acciones.md#11-premisas-aplicadas).
 4. **Código para copiar:** el módulo Asistente y lo que deje la E11, pieza por pieza, en la §8.
 5. **Pantallas:** los tableros de la §9.
 6. **Referencia de Meta:** la §14.
@@ -61,7 +62,8 @@ Antes de empezar:
 - copiar formularios (E17);
 - condiciones, cálculos y líneas (E19);
 - cargar desde la web (E20);
-- límites por plan.
+- límites por plan;
+- acciones del asistente: la E14 no declara ninguna ([§17](14-parte-premisas-criterios-y-acciones.md#17-acciones-del-asistente)).
 
 ## 9. Pantallas (tableros)
 
@@ -96,7 +98,7 @@ Antes de empezar:
 
 **Redibujados con el traspaso 10, aprobados y publicados en el lienzo v168** (165, 175 y 176): `FRM-Publicando` y `M-FRM-Editor`, con la publicación sin pasos, sin una hoja con su estado en el teléfono y sin el segmentado «Borrador | Versión N en WhatsApp»; `WA-Chats-Formulario` y `WA-Chats-Formulario-Cliente`, con sus teléfonos, con el mensaje que se propone al elegir; y `WA-Chats-Respuesta`, `M-WA-Conversacion-Respuesta`, `WA-Mensajes-14` y `M-WA-Mensaje-14`, con «Completá el formulario «Visita a cliente».» en el chat.
 
-**Del traspaso 15** (v175, sin publicar): `FRM-Publicando` y `M-FRM-Editor`, con «Descartar esta publicación» y su confirmación (225).
+**Del traspaso 15** (v175): `FRM-Publicando` y `M-FRM-Editor`, con «Descartar esta publicación» y su confirmación (225).
 
 **Se redibujan con el traspaso 18, tanda 2** (261 a 264, 270 y 275):
 - todos los que muestran el panel de «Gestión de formularios»: en dos grupos (275);
@@ -134,7 +136,8 @@ Antes de empezar:
 
 **Mandan sobre esta spec en:**
 - **Las fichas del front** (pedido del usuario del 2026-10-25): un dato por columna y nada debajo de otro (206 y 263); las fechas completas, con la hora después de una coma (205) y en la zona de quien mira, nunca «hoy», «ayer» ni «hace…»; sin leyendas (109), así que la vista previa es el teléfono al costado; y «Dados de baja», cuando llegue, es una opción del filtro «Estado».
-- **Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez. Llegan con las piezas de la base de la 12.
+- **Valen las de toda la app** (160 a 164, 173 a 175 y 180), que llegan con las piezas de la base de la 12.
+- **El tope de un texto (269):** los de Forms (el nombre, 80; el prefijo, 12; un título de sección, 80, y el mensaje del chat, 1024) son los mismos en la pantalla y en el servidor, y al llegar se ven. Los del canal se miden al publicar, sin contador (121 y T26).
 - **Botones (43 y 115):** «Guardar cambios» se habilita cuando hay cambios, sin «Cambios sin guardar». Mientras trabaja, dice «Guardando…» con su aro. Si falta un dato obligatorio, el botón sigue habilitado y al tocarlo se marca el campo.
 - **Si no se sabe si algo salió (43):** ante un corte de red al guardar, al mandar o al publicar, la pantalla vuelve a leer sola y muestra lo que quedó, sin pisar lo escrito:
   - **al guardar:** relee el borrador y compara **solo el contenido**, sin las identidades que emite el servidor. Si es igual a lo mandado, quedó guardado y el editor toma la versión y las identidades de esa relectura; si no, Guardar sigue habilitado con lo escrito y la versión de antes. Nunca reintenta solo. Tomar la versión de una relectura es una excepción a [concurrencia](../../rules/concurrencia.md), que se escribe en la ficha de formularios del front;

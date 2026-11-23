@@ -96,6 +96,8 @@
 
 Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca se confunde con `false` ni con `0`.
 
+**Índices de búsqueda y de orden** ([paginado-y-busqueda](../../rules/paginado-y-busqueda.md)): `IX_FormDefinitions_Search_Name`, GIN trigram en SQL, que usan la lista y `used-by`, y `(TenantId, campo, Id)` por cada campo del `SortMap` de la lista que es una columna (`name` y `updatedAtUtc`). `questionCount` y `status` de la lista, y `usedByCount` del listado de catálogos, son proyecciones: `SortIndexTests` declara su columna, como manda la ficha.
+
 **platform.FormPublicationWorks** (registro técnico global, declarado en el contribuidor):
 - columnas: `Id` (el de la publicación), `TenantId`, `ActorUserId`, `Culture`, `TimeZoneId`, `Status`, `LeaseExpiresAtUtc`, `NextCheckAtUtc` y `Attempts`;
 - no guarda datos de negocio;
@@ -223,10 +225,10 @@ Las rutas Business de Forms llevan `[Access(Access.Business)]` y `[FeatureGate("
 
 | Método y ruta | Permiso | Pide | Devuelve |
 | --- | --- | --- | --- |
-| GET `/api/organization/forms` | `forms.read` | `page`, `pageSize`, `sort` (`name`, `questionCount`, `status` o `updatedAtUtc`, y con `-` delante el otro sentido; el estado, por el orden de su circuito, 264), `search`, `status` (`all`, `published`, `drafts`) | 200 `PagedResult<FormSummary>`: `{id, name, prefix, audience, status, questionCount, updatedAtUtc, activeVersionNumber?, publishedAtUtc?, publication?{state, versionNumber}}`; es la lista «Formularios» (79), con las preguntas del borrador y el último cambio |
+| GET `/api/organization/forms` | `forms.read` | `page`, `pageSize`, `sort` (`name`, `questionCount`, `status` o `updatedAtUtc`, y con `-` delante el otro sentido; el estado, por el orden de su circuito, 264), `search`, `status` (`all`, `published`, `drafts`) | 200 `PagedResult<FormSummaryRow>`: `{id, name, prefix, audience, status, questionCount, updatedAtUtc, activeVersionNumber?, publishedAtUtc?, publication?{state, versionNumber}}`; es la lista «Formularios» (79), con las preguntas del borrador y el último cambio |
 | GET `/api/organization/forms/filter-counts` | `forms.read` | — | 200 `{all}`: solo lo que dice el resumen («4 formularios»), porque el filtro «Estado» no lleva cantidades (262) |
-| POST `/api/organization/forms` | `forms.manage` | `{name}` | 201 `FormDetail` + Location, con el prefijo propuesto |
-| GET `/api/organization/forms/{id}` | `forms.read` | — | 200 `FormDetail`: `{id, name, prefix, prefixLocked, audience, submitLabel, questions[], titles[], activeVersion?{id, number, publishedAtUtc}, publication?{id, state, versionNumber, flowName?, errorCode?, issues?}, canManage, canPublish, version}` |
+| POST `/api/organization/forms` | `forms.manage` | `{name}` | 201 `FormDetailResponse` + Location, con el prefijo propuesto |
+| GET `/api/organization/forms/{id}` | `forms.read` | — | 200 `FormDetailResponse`: `{id, name, prefix, prefixLocked, audience, submitLabel, questions[], titles[], activeVersion?{id, number, publishedAtUtc}, publication?{id, state, versionNumber, flowName?, errorCode?, issues?}, canManage, canPublish, version}` |
 | PUT `/api/organization/forms/{id}/draft` | `forms.manage` | `{name, prefix, audience, submitLabel, questions[], titles[], version}` | 200 `{version, questions[], titles[]}`, con las identidades emitidas; 409 |
 | POST `/api/organization/forms/{id}/publication-checks` | `forms.publish` | — | 200 `{contentHash, canPublish, nextVersionNumber, issues[], changes[]}`, con lo que muestra el diálogo (T25); no escribe (T8) |
 | POST `/api/organization/forms/{id}/publications` | `forms.publish` | `{contentHash}`, con `[Idempotent]` | 202 `{publicationId, state}` + Location; no llama a Meta; `DraftChanged` si el borrador cambió (T8). La misma `Idempotency-Key` devuelve la misma publicación («Repetir el mismo intento») |
@@ -245,8 +247,8 @@ Las rutas Business de Forms llevan `[Access(Access.Business)]` y `[FeatureGate("
 - **Webhook:** la misma ruta de la E8. Se agrega leer `interactive.nfm_reply`.
 
 **La pregunta de catálogo en las rutas:**
-- **`FormDetail` y `PUT …/draft`:** las preguntas `Choice` y `MultiChoice` llevan `catalogId?`. El combo de catálogo de la pregunta (111) usa el listado de la E12, con `status=all`: un dado de baja o uno que no se puede usar viene apagado, con su motivo. Pide `formcatalogs.read`; sin ese permiso, «De un catálogo» queda grisado, con el motivo en su tooltip (43).
-- **`FormDetail` y `PUT …/draft`:** la pregunta lleva también su `presentation?` propia (T22).
+- **`FormDetailResponse` y `PUT …/draft`:** las preguntas `Choice` y `MultiChoice` llevan `catalogId?`. El combo de catálogo de la pregunta (111) usa el listado de la E12, con `status=all`: un dado de baja o uno que no se puede usar viene apagado, con su motivo. Pide `formcatalogs.read`; sin ese permiso, «De un catálogo» queda grisado, con el motivo en su tooltip (43).
+- **`FormDetailResponse` y `PUT …/draft`:** la pregunta lleva también su `presentation?` propia (T22).
 - **`publication-checks`:** suma `Forms.Draft.CatalogUnavailable`, `CatalogTooLarge` y `CatalogPresentationInvalid`.
 - **`GET …/conversations/{id}/forms`:** cada formulario trae `offerProblems[{fieldId?, label?, code, minSelections?}]` (`TooManyOptions`, `TooFewOptions`, `NoOptions`, `CatalogUnavailable` y `PresentationInvalid`) y `optionCounts`, la cantidad de opciones de cada pregunta de catálogo con el nombre de la pregunta, nunca los de las opciones. `minSelections` va con `TooFewOptions` («se piden al menos 2»). WhatsApp suma `NotPublishedForNumber`, sin `fieldId`, si el número del chat está en una cuenta sin el Flow de esa versión (103). Si hay algún problema, el formulario aparece pero no se puede mandar.
 - **La configuración de WhatsApp de la organización** suma `flowSessionHours`, y la de la plataforma, `maxFlowSessionHours`, cada una en la ruta que ya tiene, con su revisión y el 409 (270).
