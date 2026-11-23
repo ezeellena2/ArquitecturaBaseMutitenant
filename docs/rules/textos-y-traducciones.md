@@ -29,6 +29,7 @@ Los nombres de monedas, países, ciudades horarias y tipos fiscales son **datos 
 
 ## Lo verifica
 - `ErrorCodeTests` (E0)
+- `VoseoTests` (E12): ningún tuteo en los resources en español, del núcleo y de los módulos («puedes», «tú», «para ti», «Revisa tu correo», «Intenta de nuevo»: va «podés», «vos», «Revisá», «Intentá»), con la regla de `vocabulary.test.ts` del front, y ningún «tenant» en español ni en inglés; `RetiredWordsTests` (E12): ninguna palabra vieja («Deshabilitar», «Eliminar»)
 
 ## Detalle
 [backend.md §12](../architecture/backend.md#12-idioma-traducciones-y-resources)
