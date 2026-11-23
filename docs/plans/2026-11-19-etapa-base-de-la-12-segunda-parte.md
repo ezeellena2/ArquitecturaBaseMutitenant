@@ -1,15 +1,15 @@
 # Base de la 12, segunda parte · plan ejecutable
 
-**Estado:** pendiente · Spec: `docs/plans/formularios/base-de-la-12-segunda-parte.md` (contrato completo, datos y pasos con sus tests). Va después de la puerta de la base de la 12 y antes de la E12 (decisión 214). Tableros: lienzo v176; faltan los de la F10 y los de roles en áreas plegables (260), que se dibujan antes de programarlas. Sin decisiones pendientes: las de producto las tomó el usuario (255, 256 y 260).
+**Estado:** pendiente · Spec: `docs/plans/formularios/base-de-la-12-segunda-parte.md` (contrato completo, datos y pasos con sus tests). Va después de la puerta de la base de la 12 y antes de la E12 (decisión 214). Tableros: lienzo v176; faltan los de la F10, los de roles en áreas plegables (260) y los de la pieza para elegir y el orden de las tablas (262 y 264), que se dibujan antes de programarlas. Sin decisiones pendientes: las de producto las tomó el usuario (255, 256 y 260 a 264), y la 269 se adoptó sin pregunta.
 
-**Fuente:** la 260 sale del traspaso 16, 01, de ArquitecturaBase (RO3-D y «un permiso incluye a otro»). Lo demás, de las secciones del [backlog](../backlog.md) «Traspaso 15, el núcleo: para programar», «Traspaso 15, diseño, fechas y números: para la segunda parte de la base», «Traspaso 15, la IA: para la segunda parte de la base» y, de «Traspaso 15, WhatsApp y ARCA: para programar», lo de WhatsApp y la CUIT. Lo que esas secciones mandan a otra etapa está en «Queda afuera».
+**Fuente:** la 260 sale del traspaso 16, 01, de ArquitecturaBase (RO3-D y «un permiso incluye a otro»), y la 261 a la 264 y la 269, de los traspasos 16 y 17, con la sección del [backlog](../backlog.md#traspasos-16-y-17-para-la-segunda-parte-de-la-base) «Traspasos 16 y 17: para la segunda parte de la base». Lo demás, de las secciones del [backlog](../backlog.md) «Traspaso 15, el núcleo: para programar», «Traspaso 15, diseño, fechas y números: para la segunda parte de la base», «Traspaso 15, la IA: para la segunda parte de la base» y, de «Traspaso 15, WhatsApp y ARCA: para programar», lo de WhatsApp y la CUIT. Lo que esas secciones mandan a otra etapa está en «Queda afuera».
 
 | Parte | Tareas | Estado |
 | --- | --- | --- |
 | Contrato | K0–K1 | Pendiente |
 | Back A · núcleo y WhatsApp | B16 y B1–B9 | Pendiente |
-| Back B · formatos e IA | B10–B15 | Pendiente |
-| Front | F1–F10 | Pendiente |
+| Back B · formatos e IA | B10–B15 y B17 | Pendiente |
+| Front | F1–F12 | Pendiente |
 | Integración y puerta | I1–I3 | Pendiente |
 
 ## Forma de trabajo
@@ -73,7 +73,8 @@ El contrato completo está en la spec (§Contrato): las rutas que cambian, la ru
 - **`includes` (260):** cada permiso del catálogo trae los códigos que incluye, en los tres catálogos: organización y empresa en `GET /api/permissions`, y Plataforma en `GET /api/platform/permissions`, nueva. Va vacío hasta la B16. El back entra antes que el front o junto con él: un front nuevo con un back viejo falla al leer `includes`;
 - **ruta nueva:** `POST {base}/conversations/{id}/messages/{messageId}/review` en las tres bases de WhatsApp;
 - **subidas del asistente:** sus 429 y 400 antes de leer el cuerpo, y `Assistant.Conversation.Unavailable`;
-- **datos de referencia:** valores nuevos en los patrones y en `format-cases.json`.
+- **datos de referencia:** valores nuevos en los patrones y en `format-cases.json`, y la hora de cada país para la zona horaria (262);
+- **el orden (264):** el `sort` de cada listado paginado del núcleo suma a `SortableFields` toda columna con un dato que muestra la pantalla; uno desconocido sigue con el 400 de siempre.
 
 El back publica los DTO, los atributos, los códigos con sus textos y las dos rutas nuevas (la de revisión responde 501 hasta la B7), y genera `docs/contracts/openapi.json`. El front corre `npm run contracts` y no escribe tipos a mano. No hay permiso nuevo.
 
@@ -123,11 +124,12 @@ Leé AGENTS.md, este plan, la spec docs/plans/formularios/base-de-la-12-segunda-
 4. **B13 · Las fallas del proveedor (R: efectos fuera, IA).** Lleva el clasificador por estado HTTP, la clave ilegible sin gastar cupo y `providerIssue` según quién paga. Un proveedor desconocido deja la conexión en pausa. *Después del commit de la B8.*
 5. **B14 · Versiones, borrado y fecha (R: datos, migración).** Lleva `EngineVersion`, la conversación ilegible, los índices parciales y la zona del perfil con la hora al final del mensaje. Suma el test de que un pedido no lleva nada de otra persona (216).
 6. **B15 · El anillo y la traza (R: cifrado).** Lleva `platform.AiKeyRingControls` y el chequeo `ai-keyring`: una copia que no coincide no toma turnos ni entradas de WhatsApp. El turno guarda `TraceParent`.
+7. **B17 · El orden de los listados (264).** `ApplySort` deja lo vacío al final en los dos sentidos y ordena un estado por su circuito, nunca por su texto; cada `SortMap` del núcleo suma las columnas con un dato que muestra su pantalla, con su índice (`SortIndexTests`). Los listados de cursor (Auditoría y los chats) conservan su orden. Sus índices van en una migración después del commit de la B8. Test por listado: cada columna, lo vacío al final y el desempate.
 
 **Texto para el chat del Back B**
 
 ```text
-Leé AGENTS.md, este plan, la spec docs/plans/formularios/base-de-la-12-segunda-parte.md, la ADR 0064, la feature asistente y las fichas fechas-y-zonas, numeros-y-moneda, datos-de-referencia, identificacion-fiscal, cuotas, cache, concurrencia, persistencia-ef, logs, textos y tests. Después de K1, hacé B10, B11 y B12, que no tocan entidades, configuraciones de EF ni migraciones. B13, B14 y B15 van recién cuando la Guía confirme el commit de la B8 de Back A: los dos comparten el ModelSnapshot. Las tareas marcadas (R) llevan la revisión adversarial completa antes del commit, con un subagente nuevo que no recibe tu conclusión. Los datos de referencia se cambian en la fuente y se regeneran, nunca a mano en el JSON generado. No toques el front ni las tareas de Back A. Todo en main, sin push, ramas, worktrees, stash ni reset; commiteá solo lo tuyo con git commit -- <rutas>. Por tarea: test dirigido, build y tests rápidos enteros del back sin Docker y sin filtrar por módulo; si tocó rutas, persistencia o aislamiento, sus tests de integración y de seguridad. Ninguna corrida contra un proveedor de IA real: usá el cliente falso.
+Leé AGENTS.md, este plan, la spec docs/plans/formularios/base-de-la-12-segunda-parte.md, la ADR 0064, la feature asistente y las fichas fechas-y-zonas, numeros-y-moneda, datos-de-referencia, identificacion-fiscal, cuotas, cache, concurrencia, persistencia-ef, logs, textos y tests, y para la B17 paginado-y-busqueda y la decisión 264. Después de K1, hacé B10, B11 y B12, que no tocan entidades, configuraciones de EF ni migraciones. B13, B14, B15 y B17 van recién cuando la Guía confirme el commit de la B8 de Back A: los dos comparten el ModelSnapshot. Las tareas marcadas (R) llevan la revisión adversarial completa antes del commit, con un subagente nuevo que no recibe tu conclusión. Los datos de referencia se cambian en la fuente y se regeneran, nunca a mano en el JSON generado. No toques el front ni las tareas de Back A. Todo en main, sin push, ramas, worktrees, stash ni reset; commiteá solo lo tuyo con git commit -- <rutas>. Por tarea: test dirigido, build y tests rápidos enteros del back sin Docker y sin filtrar por módulo; si tocó rutas, persistencia o aislamiento, sus tests de integración y de seguridad. Ninguna corrida contra un proveedor de IA real: usá el cliente falso.
 ```
 
 ## Front
@@ -137,18 +139,20 @@ Las tareas siguen el lienzo v176 y las fichas del front (`formatos.md`, `pantall
 1. **F1 · Fechas y números (205, 207 y 208):** la coma, el mes como rango, el porcentaje pegado, `numberAmbiguous` y `MonthField`.
 2. **F2 · Avisos (210):** el `Toaster`, `FormError`, el cartel que bloquea y las franjas, con el filo y el ícono. El error se va a los 10 s y uno con acción queda.
 3. **F3 · Lo apagado y la (i) (211):** clic, toque, Enter y Espacio sin hacer la acción, y el control entero responde. En el teléfono, el tooltip.
-4. **F4 · Un dato por columna y el ⋮ (206 y 209):** el texto secundario de `DataTable` y la revisión de las columnas y los encabezados del núcleo.
-5. **F5 · Roles en áreas plegables (260):** `PermissionPicker` y `RoleEditorPage` conservan su forma, con los detalles de la RO3-D: toda área con su casilla, se abren las que tienen algo, sin cuentas ni buscador, el Dueño leído con tildes y filas de 44 px en el teléfono. Lo incluido se ve marcado y apagado, con su motivo. Va en la organización, con alcance de empresa, y en los permisos de un operador (`OperatorPermissionsDialog`, `InviteOperatorDialog` y `AccountPermissionsTab`). Espera sus tableros.
+4. **F4 · Un dato por columna, nada debajo y el ⋮ (206, 209, 261 y 263):** la revisión de las columnas, las filas del teléfono y los encabezados del núcleo, sin el texto secundario de `DataTable`, que la 263 sacó; ninguna fila con un botón con texto.
+5. **F5 · Roles en áreas plegables (260):** `PermissionPicker` y `RoleEditorPage` conservan su forma, con los detalles de la RO3-D: toda área con su casilla, se abren las que tienen algo, sin cuentas ni buscador, el Dueño leído con tildes y filas de 44 px en el teléfono. Lo incluido se ve marcado y apagado, con su motivo. Va en la organización, con alcance de empresa, y en los permisos de un operador (`OperatorPermissionsDialog`, `InviteOperatorDialog` y `AccountPermissionsTab`). El selector de roles de una persona apaga, con su motivo, lo que quien edita no puede dar (269 y 0061). Espera sus tableros.
 6. **F6 · Las piezas (213):** el título de grupo con (i), el chip de solo lectura, las teclas con el menú enfocado, el desplegable de 48 y las confirmaciones en una frase.
 7. **F7 · Sesión, conteos, topes y CUIT:** `BroadcastChannel` (N12), los conteos que se muestran (N30), la espera en horas y minutos, los textos de los 403 y 429 nuevos y los once ceros.
 8. **F8 · El asistente (0064 y 254):** borrar con sus archivos, las subidas, la conversación no disponible, descartar lo desconocido, las fallas en las dos configuraciones y el diálogo del modelo en dos pasos.
 9. **F9 · Los motivos de WhatsApp:** los ocho códigos en la conversación y en las difusiones.
 10. **F10 · «Sin confirmar» y la entrega.** Va al final y espera sus tableros. Lleva `invitationDelivery` en Usuarios, Usuario, Empresa y Cuentas; la revisión en la conversación de la organización y de Plataforma; «Sin confirmar» en una difusión, y la (i) de Auditoría de Plataforma.
+11. **F11 · Una sola pieza para elegir (262).** `Picker` en `shared/ui`, que reemplaza a `SearchSelect`, `MultiSelect`, `CountrySelect`, `TimeZoneSelect`, `CultureSelect`, los radios y el segmentado de `RadioGroupField` y los desplegables de `FilterBar`, en todas las pantallas; los segmentados de filtro pasan a un filtro sin cantidad, y la zona horaria dice la hora de su país. Suma la regla del arnés que impide otra pieza para elegir. Espera su tablero.
+12. **F12 · Ordenar por las columnas (264).** El encabezado de `DataTable` con ↑ ↓ y ↕, y «Ordenar por» al final de `FilterBar`, con el orden en la dirección; contra la B17. Espera su tablero.
 
 **Texto para el chat del Front**
 
 ```text
-Leé AGENTS.md del front, este plan y la spec docs/plans/formularios/base-de-la-12-segunda-parte.md, con las decisiones 205 a 211, 213, 254 y 260 de la hoja de ruta, las fichas del front y los tableros del lienzo v176 que nombra la spec. Esperá K1, corré npm run contracts y hacé F1 a F4 y F6 a F9 en orden, contra los tipos generados. F5 y F10 van al final y arrancan cuando la Guía confirma sus tableros aprobados en el lienzo; nunca dibujes ni inventes esas pantallas. No toques el lienzo, las specs ni el back, ni el src si Vite está levantado. Usá i18n, shared/format, shared/ui, TanStack Query y las reglas de accesibilidad; no escribas tipos generados. Todo en main, sin push, ramas, worktrees, stash ni reset; commiteá solo lo tuyo con git commit -- <rutas>. Por tarea: tests focales, npx tsc -b y npm test completos, sin filtrar por módulo; al cerrar la parte, build, lint y contracts:check.
+Leé AGENTS.md del front, este plan y la spec docs/plans/formularios/base-de-la-12-segunda-parte.md, con las decisiones 205 a 211, 213, 254, 260 a 264 y 269 de la hoja de ruta, las fichas del front y los tableros del lienzo v176 que nombra la spec. Esperá K1, corré npm run contracts y hacé F1 a F4 y F6 a F9 en orden, contra los tipos generados. F5, F10, F11 y F12 van al final y arrancan cuando la Guía confirma sus tableros aprobados en el lienzo; nunca dibujes ni inventes esas pantallas. No toques el lienzo, las specs ni el back, ni el src si Vite está levantado. Usá i18n, shared/format, shared/ui, TanStack Query y las reglas de accesibilidad; no escribas tipos generados. Todo en main, sin push, ramas, worktrees, stash ni reset; commiteá solo lo tuyo con git commit -- <rutas>. Por tarea: tests focales, npx tsc -b y npm test completos, sin filtrar por módulo; al cerrar la parte, build, lint y contracts:check.
 ```
 
 ## Integración y puerta
@@ -174,6 +178,8 @@ Leé AGENTS.md del front, este plan y la spec docs/plans/formularios/base-de-la-
    - una fecha, un porcentaje y un mes como rango;
    - un aviso de cada tipo;
    - un rol en áreas plegables, con lo incluido apagado y su motivo, en la compu y en el teléfono;
+   - elegir con la pieza una opción, varias y la zona horaria, y un filtro que era un segmentado;
+   - ordenar una tabla desde su encabezado y desde «Ordenar por», con lo vacío al final;
    - salir con dos pestañas abiertas.
 
 | Puerta | Resultado |
@@ -191,7 +197,7 @@ Leé AGENTS.md de los dos repos, este plan, la spec y la skill /puerta. Integrá
 **Usa de las anteriores:** de la base de la 12, la campana, `InfoTip`, `RowAction.disabledReason`, `FilterBar`, `PageLoading`, `ConfirmDialog` con `pending`, las fechas completas y la galería a 320 (K0). De la E11, `WhatsAppCloudClient`, `WhatsAppConversationReader`, `WhatsAppBroadcastReader` y los chats de las tres bases. De la E8b, el asistente del Inicio, `AssistantChatClient` y `AssistantTurnWorker`.
 
 **Deja para las siguientes:**
-- **la E12 y todo el bloque:** las fechas con coma, `FormatMonthRange`, el porcentaje pegado y `numberAmbiguous`, para importar un catálogo (C9) y para el Excel. También los avisos, la (i) y lo apagado, `DataTable` con texto secundario y las piezas de la 213. Y los roles en áreas plegables con `Includes`, donde cada etapa declara lo que incluyen sus permisos (260);
+- **la E12 y todo el bloque:** `Picker`, el orden de `DataTable` con «Ordenar por» y nada debajo de otro dato (262 a 264); las fechas con coma, `FormatMonthRange`, el porcentaje pegado y `numberAmbiguous`, para importar un catálogo (C9) y para el Excel. También los avisos, la (i) y lo apagado, `DataTable` con texto secundario y las piezas de la 213. Y los roles en áreas plegables con `Includes`, donde cada etapa declara lo que incluyen sus permisos (260);
 - **la E14 y la E21:** `OutboxStatus.Uncertain`, `OrderingKey`, `Priority`, la revisión por id del envío, los ocho códigos y el conversor del contenido del chat, para que su contenido nazca cifrado (0065 §1);
 - **la E23 y la E25:** el clasificador de fallas del proveedor, `providerIssue`, el lugar de subida, `EngineVersion`, el anillo controlado y la traza, que aplican al canal, la transcripción, los documentos y armar;
 - **la E10:** la reserva por destino ya hecha, y su B6 la prueba con dos hosts. También el chequeo `ai-keyring` y los workers de purga, que reciben el lease de `PeriodicWorker`.
