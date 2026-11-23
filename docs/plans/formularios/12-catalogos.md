@@ -76,7 +76,7 @@ Antes de empezar:
 
 **Se redibujan con el traspaso 18, tanda 2** (261 a 264):
 - `FRM-Catalogos` y `M-FRM-Catalogos`: «Origen» y «Estado», filtros con su botón y sin cantidades (262); el encabezado y «Ordenar por» ordenan cada columna (264); en el teléfono, la hoja «Nuevo catálogo» con la pieza;
-- `FRM-Catalogo-Nuevo` y `FRM-Catalogo-Tipo`: el origen y el tipo de valor, en la pieza, sin tarjetas para elegir (262);
+- `FRM-Catalogo-Nuevo` y `FRM-Catalogo-Tipo`: se van como diálogos, porque solo servían para elegir (262); el origen y el tipo de valor se eligen en la pieza, en «El catálogo» del editor;
 - `FRM-Catalogo` y `M-FRM-Catalogo`: «Restaurar» y «Reactivar», en el ⋮ de la fila (261);
 - `FRM-Catalogo-Opciones` y su teléfono: el Estado, en la pieza (262), y en la lista, el código en su columna, no debajo del texto (263);
 - `FRM-Catalogo-Ordenar` y su teléfono: la columna y el orden, en la pieza (262);
@@ -130,7 +130,7 @@ Antes de empezar:
 - **Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez. Llegan con las piezas de la base de la 12.
 - **La tabla de opciones no se aplasta:** cada columna tiene su ancho mínimo (Texto y Detalle 12rem, Código 6rem y el valor 8rem). Si no entra, la tabla se desplaza a lo ancho dentro de su caja, con la casilla, el número y «Texto» fijos a la izquierda y las acciones fijas a la derecha, con la línea entre columnas también en las fijas (137) y sin ningún «hay más columnas a la derecha». Es la primera tabla con columnas fijas, y las trae esta etapa.
 - **Guardado (C3):** todo se guarda junto en un `PUT` del catálogo, con su versión, y viaja solo lo que cambió. Suma `deleteItems[]`, las opciones por borrar. Una que algo usa responde 409 `Forms.Catalog.ItemInUse`, con qué la usa por opción, y no se borra ninguna; en esta etapa nada usa una opción, y cada etapa suma su motivo.
-- **Nuevo catálogo:** primero se elige el origen, y para los escritos a mano, el tipo de valor, los dos en la pieza (262); el nombre se escribe en el editor y el `POST` sale de «Crear catálogo».
+- **Nuevo catálogo:** abre el editor, y en «El catálogo» se elige primero el origen y, para los escritos a mano, el tipo de valor, los dos en la pieza, sin un diálogo que solo sirve para elegir (262); después el nombre, y el `POST` sale de «Crear catálogo».
 - **Persona de ejemplo:** sin ella no se crea un catálogo de miembros con condiciones (`Forms.Catalog.SampleRequired`, «Elegí una persona.»).
 - **La vista previa de un catálogo de miembros o de contactos** es el teléfono, con solo el desplegable «Persona» arriba, y se actualiza sola; no hay «Probar». Se ve con `formcatalogs.read`, como el catálogo.
 
