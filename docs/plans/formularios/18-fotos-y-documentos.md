@@ -2,17 +2,24 @@
 
 **Estado:** pendiente · spec de la etapa 18 del bloque (decisiones 34, 48 y 78), con el [formato](plantilla.md) de las etapas. Corresponde a la etapa 2B de ArquitecturaBase, cerrada con Meta y Azure reales, más los archivos del chat, que allá no existen. `/plan-etapa` la contrasta con el código real cuando le toque, después de la E17.
 
+**Partes.** Esta spec no entra en un solo archivo, así que sigue en otro, con las mismas secciones. Lo que no está en la tabla está acá.
+
+| Secciones | Archivo |
+| --- | --- |
+| Contrato, Datos y Pasos | [contrato, datos y pasos](18-parte-contrato-datos-y-pasos.md) |
+
 ## Qué leer
 
 Antes de empezar, en este orden:
 
-1. **Lo anterior:** la [spec de la E14](14-formularios.md): T5, T21, la §6, puntos 6 a 8, la §14 y la §16; la [E15](15-respuestas.md): columnas, filtros, Excel y detalle; y la [E17](17-ciclo-de-vida.md): copiar.
-2. **Decisiones** de la hoja de ruta: 23, 35, 42, 43, 48, 78 y 133. De [WhatsApp](../../features/whatsapp.md#decisiones-del-usuario-e11): D4 y D7.
+1. **Lo anterior:** la [spec de la E14](14-formularios.md): T5, T21, la §6, puntos 6 a 8, la §14 y la §16; la [E15](15-respuestas.md): columnas, filtros, Excel y detalle, y [cómo se lee una respuesta](15-parte-datos-y-contrato.md#cómo-se-lee-una-respuesta-263-266-y-269); y la [E17](17-ciclo-de-vida.md): copiar.
+2. **Decisiones** de la hoja de ruta: 23, 35, 42, 43, 48, 78, 133, 262 (una sola pieza para elegir), 263 (nada debajo de otro dato), 264 (el orden de las tablas), 266 (la respuesta se lee como el formulario), 269 (los principios del traspaso 17) y 270 (ninguna regla de negocio fija en el código). De [WhatsApp](../../features/whatsapp.md#decisiones-del-usuario-e11): D4 y D7.
 3. **Fichas:**
 
    | Ficha | Por qué acá |
    | --- | --- |
    | [guardado](../../rules/guardado.md) | subir y bajar van fuera de la UoW; confirmar, después del commit |
+   | [concurrencia](../../rules/concurrencia.md) | la Configuración de Formularios, con su revisión y el 409 (270) |
    | [modulos](../../rules/modulos.md) | Forms y WhatsApp, por puertos neutrales |
    | [idempotencia](../../rules/idempotencia.md) | adjuntar es un archivo: modo durable |
    | [persistencia-ef](../../rules/persistencia-ef.md) y [multitenancy](../../rules/multitenancy.md) | las tablas nuevas, y las claves de los archivos sin organización |
@@ -21,19 +28,21 @@ Antes de empezar, en este orden:
    | [textos-libres](../../rules/textos-libres.md) y [textos-y-traducciones](../../rules/textos-y-traducciones.md) | los nombres se guardan como llegan |
    | [tests](../../rules/tests.md) | qué lleva test y dónde va |
 
-4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
+4. **Código para copiar:** la columna «Copia de» de los [pasos](18-parte-contrato-datos-y-pasos.md#pasos).
 5. **Referencia de producto,** solo para leer: en el traspaso del 17/10, retirado el 2026-11-08 (`git show e9f1a599:docs/plans/2026-10-17-formularios-traspaso/`), el anexo C, «Etapa 2B» y §3.6, el anexo B, «Etapa 2B», y el anexo D (F1 a F5).
 
 ## Qué se construye
 
 **Las preguntas:**
-- **Foto:** «Cámara o galería» o «Solo cámara». **Documento:** PDF, Excel, Word, JPEG y PNG, sin elegir (133);
+- **Foto:** «Cámara o galería» o «Solo cámara», en la pieza (262). **Documento:** PDF, Excel, Word, JPEG y PNG, sin elegir (133);
 - mínimo y máximo por pregunta. Obligatoria quiere decir mínimo 1;
 - el borrador se guarda igual, y no se publica si la suma de los máximos pasa de 10 o no hay almacenamiento. Sin almacenamiento, los tipos se ven grisados, con el motivo en su tooltip;
-- **tope por archivo:** `Forms:MaxFileSizeMiB`, de 1 a 25, con `ValidateOnStart`, que se sella con la versión. Hasta 10 archivos y 100 MiB por respuesta, por el tope de Meta;
+- **tope por archivo** (270): «Tamaño máximo de un archivo», de la Configuración de Formularios (abajo). Publicar lo sella en la versión, y la versión publicada conserva el suyo aunque la configuración cambie. La (i) de «Cuántas fotos» y «Cuántos documentos» dice el vigente, con el número como parámetro. Hasta 10 archivos y 100 MiB por respuesta, por el tope de Meta, que queda en el código;
 - copiar un formulario copia estas preguntas como cualquier otra.
 
-**El Flow:** `PhotoPicker` y `DocumentPicker`, una pregunta de archivo por pantalla, con un perfil nuevo. Su etiqueta admite 80 caracteres, y su ayuda, 300. Los IDs de pantalla son solo letras y guiones bajos. Las opciones de catálogo que viajan en `data` llegan a la pantalla que las usa, aunque el Flow tenga varias **[Meta]**.
+**La Configuración de Formularios** (270) nace acá, como la del Asistente: una página del módulo para la organización, con `forms.manage`, y otra para la plataforma, con `platform.settings.manage`. Por ahora tiene un solo valor, «Tamaño máximo de un archivo», en MB, con su (i): en la organización, de 1 a 25 y 25 por defecto, nunca más que el máximo que fija la plataforma en la suya (de 1 a 25, 25 por defecto), que la página dice. Cada una con su revisión y el 409, y se lee de la base en cada uso. Si la plataforma baja su máximo, vale el menor de los dos, sin tocar lo guardado.
+
+**El Flow:** `PhotoPicker` y `DocumentPicker`, una pregunta de archivo por pantalla, con un perfil nuevo. Su etiqueta admite 80 caracteres, y su ayuda, 300. Los IDs de pantalla son solo letras y guiones bajos. Cada selector lleva el tope por archivo sellado en la versión (`max-file-size-kb`), así el celular lo dice al elegir (270). Las opciones de catálogo que viajan en `data` llegan a la pantalla que las usa, aunque el Flow tenga varias **[Meta]**.
 
 **El tope de la respuesta** sube de 16 a 64 KiB en un formulario con una pregunta de archivo, como `MaxMediaResponseJsonBytes` de allá. Al publicar, cada pregunta de archivo suma al peor caso 2 bytes más 2048 por archivo de su máximo; al recibir, una respuesta que trae archivos se acepta hasta 64 KiB, y el mensaje entrante la guarda cifrada hasta 96 KiB. Sin archivos, todo sigue como en la E14.
 
@@ -58,8 +67,8 @@ Antes de empezar, en este orden:
 - si falta el archivo guardado, 404. Las miniaturas se piden solo si están a la vista.
 
 **Lo que suma a las pantallas que ya existen:**
-- **la planilla:** una columna por pregunta de archivo, con la primera miniatura y la cantidad, que abre el visor. Un documento dice su cantidad, «2 documentos», sin los tipos: una celda no resume (206). No tienen filtro en la planilla (143); para las condiciones de las reglas, `answered` también cuenta un archivo;
-- **el detalle:** la pestaña «Fotos» en la vista rápida, y en las dos vistas, las miniaturas y los documentos con su nombre, su tamaño y «Descargar»;
+- **la planilla:** una columna por pregunta de archivo, con la primera miniatura y la cantidad, que abre el visor. Un documento dice su cantidad, «2 documentos», sin los tipos: una celda no resume (206). No ordena, porque tiene varios valores (264). No tienen filtro en la planilla (143); para las condiciones de las reglas, `answered` también cuenta un archivo;
+- **la respuesta, como el formulario** (266): la vista rápida y la pantalla completa suman al final la zona «Fotos y documentos», sin una pestaña aparte. Cada pregunta de archivo es su control de solo lectura, a todo el renglón y con su etiqueta arriba: las miniaturas, que abren el visor, y cada documento con su nombre, que lo descarga, y su tamaño al lado, nunca debajo (263). Plegada, su banda dice cuántas se respondieron, como las demás. La actividad no suma renglones: los archivos llegan con la respuesta (267);
 - **la pantalla completa** suma «Descargar ▾», con los documentos;
 - **el Excel:** la cantidad y los nombres en la celda, sin los archivos;
 - **la tarjeta del chat:** «Bajando los archivos» o «Reintentando», guardada, con miniaturas y «+N», o rechazada, con «Mandar de nuevo»;
@@ -74,23 +83,28 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133) y sus dos recorridos guiados, `fotos-y-documentos` y `archivos-en-el-chat`. Los archivos del chat no existen allá. Muestran solo lo que existe hasta acá (78). Con el traspaso 5, redibujados, aprobados y publicados en el lienzo v163: `FRM-Respuestas-18`, con su teléfono, con un solo «Filtros» en el que las fotos y los documentos no entran (143), y `FRM-Respuesta-18`, con su teléfono, y `FRM-Respuesta-Completa-18`, con el detalle alineado y la actividad en columnas fijas (139). Con el traspaso 10, redibujados, aprobados y publicados en el lienzo v168: `FRM-Respuesta-Completa-18` y `M-FRM-Respuesta-18`, con «Respuesta» y «Actividad» abiertas, sin plegar (163 y 164).
+Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133) y sus dos recorridos guiados, `fotos-y-documentos` y `archivos-en-el-chat`. Los archivos del chat no existen allá. Muestran solo lo que existe hasta acá (78). Con el traspaso 5, redibujados, aprobados y publicados en el lienzo v163: `FRM-Respuestas-18`, con su teléfono, con un solo «Filtros» en el que las fotos y los documentos no entran (143), y `FRM-Respuesta-18`, con su teléfono, y `FRM-Respuesta-Completa-18`, con el detalle alineado y la actividad en columnas fijas (139). Con el traspaso 10, redibujados, aprobados y publicados en el lienzo v168: `FRM-Respuesta-Completa-18` y `M-FRM-Respuesta-18`, con «Respuesta» y «Actividad» abiertas, sin plegar (163 y 164). Con el traspaso 18 se redibujan los de la lista de abajo de la tabla, con su decisión.
 
 | Tablero | Qué muestra |
 | --- | --- |
 | `FRM-Editor-18` y `M-FRM-Editor-18` | las preguntas de foto y documento, «Cuántas fotos» o «Cuántos documentos» con su (i), y «Sin almacenamiento» |
+| `FRM-Config-Org`, `M-FRM-Config-Org` y `FRM-Config-Plat`, nuevos | la Configuración de Formularios de la organización, con «Tamaño máximo de un archivo», su (i) y el máximo de la plataforma, y la de la plataforma, con ese máximo (270) |
 | `FRM-Publicar-18` | «Más de 10 archivos» |
 | `WA-Chats-Respuesta-18` y `M-WA-Conversacion-Respuesta-18` | la tarjeta: bajando, reintentando, con fotos y un documento, muchas fotos y los dos rechazos |
 | `WA-Chats-Visor` y `M-WA-Chats-Visor` | el visor: el título, en qué foto va, la tira de miniaturas y, al pie, el nombre, el tamaño y «Descargar», igual que en la planilla (194) |
-| `FRM-Respuestas-18` y `M-FRM-Respuestas-18` | la planilla con la columna de archivos, el visor y la (i) de exportar, sin filtro de archivos (143) |
-| `FRM-Respuesta-18` y `M-FRM-Respuesta-18` | el detalle, con la pestaña «Fotos» y el visor |
-| `FRM-Respuesta-Completa-18` | la pantalla completa, con «Descargar ▾» |
+| `FRM-Respuestas-18` y `M-FRM-Respuestas-18` | la planilla con la columna de archivos, que no ordena (264), el visor y la (i) de exportar, sin filtro de archivos (143) |
+| `FRM-Respuesta-18` y `M-FRM-Respuesta-18` | la respuesta, con la zona «Fotos y documentos» al final y el visor (266) |
+| `FRM-Respuesta-Completa-18` | la pantalla completa, con la zona «Fotos y documentos» y «Descargar ▾» |
 | `FRM-Dar-De-Baja-18` | «Se conserva» suma las fotos y los documentos |
 | `WA-Chats-Adjuntos` y `M-WA-Chats-Adjuntos` | los archivos del chat: lo que llega, antes de mandar, demasiado grande, enviando, enviado, no se pudo y fuera de las 24 horas |
 
-**La planilla:** la foto dice su miniatura y «2 fotos», y el documento, «1 documento» (206). «Sin respuesta» si no se respondió y «—» si la pregunta no existía en esa versión. En el teléfono, en la tercera línea de la fila.
+**Se redibujan con el traspaso 18, tanda 3** (262 a 264, 266 y 270):
+- `FRM-Respuesta-18`, `M-FRM-Respuesta-18` y `FRM-Respuesta-Completa-18`: la respuesta como el formulario, con la zona «Fotos y documentos» al final y sin la pestaña «Fotos»; cada foto y cada documento en su control de solo lectura, el documento con su nombre y su tamaño al lado (263 y 266);
+- `FRM-Respuestas-18` y `M-FRM-Respuestas-18`: la columna de archivos no ordena (264), y en el teléfono las fotos no van debajo de otro dato (263);
+- `FRM-Editor-18` y `M-FRM-Editor-18`: el origen de la foto en la pieza (262), y la (i) de «Cuántas fotos» con el tope de la configuración (270);
+- `FRM-Config-Org`, su teléfono y `FRM-Config-Plat`, nuevos (270).
 
-**«Filtros»:** las preguntas de archivo no aparecen, porque solo tenían «Respuesta», que se fue (143).
+**La planilla:** la foto dice su miniatura y «2 fotos», y el documento, «1 documento» (206). «Sin respuesta» si no se respondió y «—» si la pregunta no existía en esa versión. En el teléfono, la fila no la junta con otros datos: las fotos y los documentos se ven al abrir la respuesta (263). Las preguntas de archivo no aparecen en «Filtros» (143).
 
 **El chat:** el clip va al lado de la nota interna. Abre «Mandar un archivo a …», con la vista del archivo, su nombre, su tamaño y «Texto», opcional. Si pasa el tope, lo dice debajo del archivo y «Enviar» queda grisado.
 
@@ -101,123 +115,7 @@ Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133
 - **«Reintentando»** se ve mientras corren los reintentos, sin acción del operador.
 - **Fuera de las 24 horas,** adjuntar queda grisado, con el motivo en su tooltip.
 - **Un archivo que manda el operador** sigue la [0066](../../decisions/0066-lo-que-no-se-sabe-si-salio.md), como el texto: lo que no salió se reintenta solo, lo dudoso queda «Sin confirmar» hasta que lo revisa alguien que puede enviar en esa bandeja, y lo definitivo queda «No se pudo mandar», con su motivo debajo. Una falla al subirlo a Meta no llega al cliente: se reintenta como lo que no salió.
-- **Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez.
-
-## Contrato
-
-**Formularios,** en `/api/organization/forms`, con `[FeatureGate("forms")]`:
-
-| Ruta | Permiso | Pide | Devuelve |
-| --- | --- | --- | --- |
-| `GET /{id}/records/{recordId}/files/{fileId}/thumbnail` | `formrecords.read` | — | 200 JPEG, en línea |
-| `GET /{id}/records/{recordId}/files/{fileId}/content` | `formrecords.read` | — | 200 el original: en línea si es una foto; si no, adjunto |
-
-**Rutas que cambian:**
-
-| Ruta | Qué suma |
-| --- | --- |
-| `GET /{id}` y `PUT /{id}/draft` | `questions[]`: tipos `Photo` y `Document`, con `photoSource?`, `minFiles?` y `maxFiles?` |
-| `POST /{id}/publication-checks` | `Forms.Draft.TooManyFiles` y `Forms.Publication.FilesUnavailable`; `ResponseTooLarge` (E14) mide contra 64 KiB si hay una pregunta de archivo |
-| `GET /{id}/records/columns` | columnas de tipo `Photo` y `Document` |
-| `POST …/records/search` y el detalle | el valor `{kind: "files", files[{id, fieldId, name, kind, mediaType, size, hasThumbnail}]}`, con todos los archivos de la pregunta, en orden: la planilla muestra la miniatura del primero y la cantidad |
-| `POST …/records/search` | `answered`, `unanswered` y `notAsked` de las preguntas de archivo, para las condiciones; sin faceta, porque la planilla no las filtra (143) |
-
-`GET /api/me` suma la capacidad `form-files`, por `IModuleCapabilityContributor`: dice si hay almacenamiento.
-
-**Chat,** en `WhatsAppConversationsControllerBase`: valen para `customers`, `internal` y Plataforma, con el permiso de cada bandeja, sin la feature de formularios:
-
-| Ruta | Pide | Devuelve |
-| --- | --- | --- |
-| `POST conversations/{id}/attachments` | multipart: el archivo y `text?`, con `[Idempotent(Mode = IdempotencyMode.DurableReference)]` y `[IdempotencyDurable(typeof(WhatsAppChatFileDurableAdapter))]` | 202 `{messageId}` |
-| `GET conversations/{id}/files/{fileId}/thumbnail` | — | 200 JPEG, en línea |
-| `GET conversations/{id}/files/{fileId}/content` | — | 200 el original |
-
-Los mensajes de la conversación suman `file?{id, name, kind, mediaType, size, state, hasThumbnail}`, con `state` `Pending`, `Stored`, `Failed` o `Skipped`, el documento de un tipo que no se guarda («Mandó un documento», sin descarga). La tarjeta `form` suma `files[]`, `attemptsLeft?` y `state: Receiving`.
-
-**Puertos:**
-- `StructuredRecordCapture` suma `Files[FieldId, Position, StorageKey, ThumbnailKey?, FileName, MediaType, ByteLength, Sha256]`, ya verificados, y `StructuredRecordCard`, los archivos;
-- `IFileContentInspector`, en `Application/Interfaces/Integrations/Files/`: `Inspect(stream, declaredKind)` devuelve el tipo real y, si es una foto, sus dimensiones; `CreateThumbnailAsync` arma la miniatura.
-
-**Errores** (con sus textos en `FormsTexts` y en los del módulo WhatsApp):
-
-| Código | Tipo | Cuándo |
-| --- | --- | --- |
-| `Forms.Record.FileNotFound` | NotFound | ajeno, inexistente, o falta el archivo guardado |
-| `Forms.Draft.TooManyFiles` | Validation (`questions`) | la suma de los máximos pasa de 10 |
-| `Forms.Draft.QuestionInvalid` | Validation | suma mínimo y máximo de archivos, u origen fuera de regla |
-| `Forms.Publication.FilesUnavailable` | ServiceUnavailable | una pregunta de archivo, sin almacenamiento |
-| `Forms.Record.FileRejected` | Validation (`fieldId`) | no coinciden hash, tamaño o tipo |
-| `Forms.Record.FileDownloadFailed` | Failure (`fieldId`) | no bajó tras los reintentos |
-| `WhatsApp.Flow.TooManyFiles` | Validation | más archivos o más de 100 MiB en una respuesta |
-| `WhatsApp.Chat.FileNotFound` | NotFound | ajeno, inexistente, o falta el archivo guardado |
-| `WhatsApp.Chat.FileTooLarge` | Validation (`file`) | pasa el tope de Meta para su tipo |
-| `WhatsApp.Chat.FileUnsupported` | Validation (`file`) | un tipo que Meta no admite o que no es lo que dice |
-
-Al adjuntar valen los del envío: `WhatsApp.Conversation.WindowClosed` y los demás de la E11.
-
-## Datos
-
-Tres migraciones: `<fecha>_FormRecordFiles.cs`, `<fecha>_WhatsAppChatFiles.cs` y la de la sesión. Los paquetes nuevos, `SkiaSharp`, sus nativos de Linux y `OpenMcdf`, van en `Directory.Packages.props`, y solo los usa Infrastructure. Cada migración agrega y escribe en el mismo despliegue (`Photo`, `Document` y `Receiving`): es la excepción de la [0060](../../decisions/0060-dos-versiones-conviven.md), anotada en cada una, porque todavía no hay despliegue (la E10 va después del bloque, 123) y volver a la imagen anterior no aplica.
-
-**FormRecordFiles** (`ITenantOwned`, esquema `tenant`, con RLS, sin auditoría: es parte de la respuesta)
-
-| Columna | Tipo | Regla |
-| --- | --- | --- |
-| `TenantId`, `Id` | uuid | — |
-| `RecordId`, `FieldId`, `Position` | uuid, uuid, smallint | FK compuesta a `FormRecords`; único por los tres |
-| `Kind` | texto | `Photo` o `Document` |
-| `StorageKey`, `ThumbnailKey` | texto, texto? | opacas, con índice para la limpieza |
-| `FileName` | texto ≤255 | como llegó |
-| `MediaType`, `ByteLength`, `Sha256` | texto, bigint, texto 64 | los verificados |
-
-**WhatsAppChatFiles** (`ITenantOwned`) y **PlatformWhatsAppChatFiles** (esquema `platform`), con una base común, como los mensajes:
-
-| Columna | Tipo | Regla |
-| --- | --- | --- |
-| `Id`, `ChatId`, `MessageId` | uuid | FK al chat y al mensaje; uno por mensaje |
-| `State` | texto | `Pending`, `Stored`, `Failed` o `Skipped` |
-| `MetaMediaId` | texto? | el de entrada, como texto |
-| `Attempts`, `NextAttemptAtUtc` | int, timestamptz? | los mismos intervalos; índice parcial en `Pending` |
-| `StorageKey`, `ThumbnailKey`, `MediaType`, `ByteLength`, `Sha256` | — | como `FormRecordFiles` |
-| `FileName` | bytea | cifrado con el conversor del contenido del chat ([0065](../../decisions/0065-contenido-del-chat-cifrado.md)): con el propósito de la organización o el de Plataforma |
-| `IdempotencyKey` | texto? | la clave del envío de un operador, única por chat: es el vínculo del modo durable, y se confirma en la misma UoW que el mensaje |
-
-**Otras columnas:** `FormVersions` suma `MaxFileBytes`. `WhatsAppFlowSessions` suma el estado `Receiving` y `Attempts`, que muestra la tarjeta. `ProtectedFlowResponse`, del mensaje entrante, guarda hasta 96 KiB, por la respuesta de 64 KiB. Los reintentos los corre la cola de entrada, con el intento en el mensaje, como en la E14, con las esperas de un día de H11. Las categorías de `IFileStore` son `forms` y `whatsapp`. **Las claves no llevan la organización** (decisión de la E10): el aislamiento lo dan estas tablas y la Api.
-
-## Pasos
-
-Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y `[E14]` y `[E15]`, un archivo que deja esa etapa.
-
-**Back:**
-
-| # | Qué hace | Archivos | Copia de | Test |
-| --- | --- | --- | --- | --- |
-| B1 | Verificar: tipo, dimensiones, nombre y miniatura | `A/Interfaces/Integrations/Files/IFileContentInspector.cs`, `I/Files/FileContentInspector.cs`; suma a `D/Common/FileSignaturePolicy.cs` | `AssistantAttachmentPolicy.cs` | un archivo de cada tipo, también PowerPoint y texto plano; dañado, cifrado y con la extensión cambiada; bomba de píxeles rechazada sin decodificar; U+202E; arquitectura: Application no usa SkiaSharp |
-| B2 | Preguntas, opción y sellado | suma a `FormQuestionType.cs`, `FormDraft.cs`, `FormDraftEditor.cs` y `FormVersionCreator.cs` [E14]; `A/Configuration/Forms/FormsFilesOptions.cs` | los mismos; `WhatsAppOptions.cs` | mínimo y máximo; suma de 10; sin almacenamiento |
-| B3 | El Flow con pantallas | suma a `WhatsAppFlowBuilder.cs` [E14] | el mismo | una pantalla por pregunta; IDs; catálogo en otra pantalla; el tope de 64 KiB con archivos y de 16 KiB sin ellos |
-| B4 | Bajar de Meta | `A/Modules/WhatsApp/Interfaces/Integrations/IWhatsAppMediaClient.cs`, `I/Modules/WhatsApp/WhatsAppMediaClient.cs` | `WhatsAppGraphClient.cs` | hosts, HTTPS, sin redirecciones; 90 s; id como número; token de la organización |
-| B5 | La captura con archivos, fuera de la UoW | suma a `WhatsAppFlowReplyVerifier.cs`, a la fase de captura, a `IWhatsAppFlowReplyService` y al tope de la entrada [E14] | `AssistantAttachmentService.cs`: guardar, UoW, confirmar o borrar | opcional omitida; hash distinto; reintentos y rechazo; sin número ni valores en un rechazo; la misma sesión dos veces no duplica; una respuesta con archivos de más de 64 KiB, rechazada y visible |
-| B6 | Guardar en Forms | `D/Forms/FormRecordFile.cs`; suma a `FormRecordWriter.cs` y `FormRecordService.cs` [E14]; la configuración y la migración | `FormRecordWriter.cs` | todo o nada; aislamiento |
-| B7 | Ver y descargar | `A/Modules/Forms/Services/FormRecordFileService.cs`; suma a `BusinessFormRecordsController.cs` y `FormRecordFileResults.cs` [E15] | `AssistantAttachmentService.DownloadAsync` y `AssistantFileResults.cs` | permiso antes y después de abrir; falta el archivo = 404; `no-store`, `nosniff` y adjunto; de otra organización |
-| B8 | Planilla, conteos, detalle y Excel | suma a `FormRecordColumnsBuilder.cs`, `FormRecordReader.cs` y `FormRecordSheetBuilder.cs` [E15] | esos mismos | `answered` con un archivo; cantidad y nombres en el Excel; sin consultas por fila |
-| B9 | Limpiar lo no confirmado, cada hora | `I/Modules/Forms/FormFileCleanupWorker.cs` y su parte en WhatsApp; `IsStorageReferencedAsync` | `AssistantRetentionWorker.cs` | a las 24 horas; un archivo referenciado se confirma |
-| B10 | Los archivos que llegan al chat | `D/WhatsApp/WhatsAppChatFile*.cs`; suma a `WhatsAppOrganizationInboundWriter.cs` y `PlatformWhatsAppInboundWriter.cs`; `A/Modules/WhatsApp/Services/WhatsAppChatFileService.cs`, `I/Modules/WhatsApp/WhatsAppChatFileWorker.cs` | `WhatsAppBroadcastWorker.cs`, `WhatsAppChatMessageBase.cs` | cada tipo; lo que no se guarda; reintentos; un mensaje trabado no frena a los demás; organización y Plataforma; el nombre cifrado, que otra organización lee vacío |
-| B11 | Mandar un archivo | suma a `WhatsAppReplyIssuer.cs`, `WhatsAppOutboundMessage.cs` y `WhatsAppCloudClient.cs`; la ruta en `WhatsAppConversationsControllerBase.cs`; `P/Modules/WhatsApp/WhatsAppChatFileDurableAdapter.cs` | `AssistantControllerBase.Upload`, `AssistantDurableAdapter.cs` y `WhatsAppReplyIssuer.IssueAsync` | ventana cerrada; topes por tipo; idempotencia; falla al subir a Meta; lo dudoso queda «Sin confirmar» (0066); un archivo por mensaje |
-| B12 | Ver | suma a la lectura de mensajes; rutas de archivos | `AssistantAttachmentService.DownloadAsync` | sin permiso de la bandeja; la lista de chats no trae nombres |
-| B13 | Capacidad, contratos y ejemplos | `FormsCapabilityContributor.cs`; suma a `FormsContractContributor.cs` y al de WhatsApp | `AssistantCapabilityContributor.cs` | cada ruta con 401, 403, feature apagada = 404; `RouteIsolationMatrixTests`; ejemplos exportados |
-
-**Front:**
-
-| # | Qué hace | Archivos | Copia de | Test |
-| --- | --- | --- | --- | --- |
-| F1 | Tipos y llamadas | suma a `F/src/modules/forms/api/` y `F/src/modules/whatsapp/chats/` | la API de la E17 | zod estricto con los ejemplos |
-| F2 | El editor | suma a `QuestionEditor.tsx` [E14] | su tablero | el tope en la (i) de «Cuántas fotos» y «Cuántos documentos»; sin almacenamiento |
-| F3 | El visor común | `F/src/shared/ui/PhotoViewer.tsx` | su tablero | teclado y foco; solo las miniaturas visibles; perder el permiso lo cierra; axe |
-| F4 | La tarjeta del chat | suma a la tarjeta [E14] | el tablero | los estados; «Mandar de nuevo» |
-| F5 | Planilla, detalle y Excel | suma a `FormRecordsPage.tsx`, `QuickView.tsx`, `RecordFullPage.tsx`, `RecordValues.tsx` y `ExportDialog.tsx` [E15] | su tablero | columna, pestaña «Fotos» y «Descargar ▾» |
-| F6 | Los archivos del chat | suma a `ChatComposer.tsx` y `MessageThread.tsx` | los tableros | adjuntar, grisado fuera de las 24 horas, subiendo y error; un archivo recibido se ve y se baja |
-
-**Al cerrar:** `docs/features/formularios.md` y `docs/features/whatsapp.md` suman su sección, y el núcleo, la de `IFileContentInspector`.
+- **Valen las de toda la app** (160 a 164, 173 a 175, 180, 261 a 264 y 269): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero, el estado dicho una vez, lo que se elige en la pieza, toda columna con un dato ordena y ninguna fila lleva un botón con texto.
 
 ## Qué verificar al arrancar
 
@@ -226,9 +124,9 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | [E10] | El adaptador de nube de `IFileStore` y de `IFileStoreMaintenance`. | En desarrollo alcanza `LocalFileStore`; las claves son del almacenamiento y opacas. |
 | [E10] | Cómo se sabe que no hay almacenamiento. | La capacidad `form-files` se apaga sin adaptador configurado. |
 | [E14] | La fase de captura, la sesión, el presupuesto de 16 KiB y lo que guarda el mensaje entrante. | Se pueden sumar `Receiving` y el tope de 64 KiB con archivos, al publicar y al recibir, y la reserva de la cola, de 120 s, alcanza para los 90 s de una captura. |
-| [E15] | Los nombres de las piezas de lectura. | Los de la columna «Archivos». |
+| [E15] | Los nombres de las piezas de lectura y de la forma de solo lectura de una respuesta. | Los de la columna «Archivos», y `lib/recordForm.ts` admite una zona al final, después de las del autor. |
 | [E11] | El mensaje `Media` del chat y el payload de `WhatsAppOutboundMessage`. | La entrada guarda el id de medio de Meta, que hoy descarta; el outbox lleva la clave del archivo. |
-| [Meta] | `PhotoPicker`, `DocumentPicker` y varias pantallas con `data`, sin endpoint. | Lo de la §14 de la E14, y `${data.x}` llega a cada pantalla. |
+| [Meta] | `PhotoPicker`, `DocumentPicker` y varias pantallas con `data`, sin endpoint. | Lo de la §14 de la E14, `${data.x}` llega a cada pantalla y `max-file-size-kb` admite de 1 a 25 MB. |
 | [Meta] | Los topes de cada tipo y `POST {número}/media`, contra la documentación vigente. | Foto 5 MB, audio y video 16 MB, documento 100 MB. |
 
 ## Lo que ya se pagó allá (no repetir)
@@ -248,6 +146,7 @@ Cada punto lleva su test, escrito durante la etapa:
 - **Los archivos siguen a la respuesta,** sin plazo mientras exista la organización (23).
 - **Sin clave determinística:** el almacenamiento elige la clave, y el diario de `IFileStoreMaintenance` cierra lo que quedó sin confirmar.
 - **Un solo archivo por mensaje** en el chat, como en Meta.
+- **Del traspaso 18:** la respuesta se lee como el formulario, con «Fotos y documentos» al final (266), y el tope por archivo sale de la Configuración de Formularios (270).
 
 ## Fuera de esta etapa
 
@@ -272,7 +171,7 @@ La puerta de la etapa, más una **prueba real con Meta y el almacenamiento de la
 
 ## En el multitenant
 
-- **Datos de la organización:** `FormRecordFiles` y `WhatsAppChatFiles` son `ITenantOwned`, con RLS. Plataforma, en su esquema global.
+- **Datos de la organización:** `FormRecordFiles`, `WhatsAppChatFiles` y `FormOrganizationSettings` son `ITenantOwned`, con RLS. Plataforma, en su esquema global, con `FormPlatformSettings`.
 - **Almacenamiento:** un solo contenedor privado, sin prefijo por organización: de quién es cada archivo lo dice su metadata.
 - **Workers:** la captura con archivos es la fase de la E14, sin `ExecutionActor`; la limpieza y los archivos del chat recorren las organizaciones con `TenantJobRunner`.
 - **Feature `forms`:** las rutas de los archivos de las respuestas la llevan. Las del chat son de WhatsApp: van sin ella y valen también en Plataforma.
