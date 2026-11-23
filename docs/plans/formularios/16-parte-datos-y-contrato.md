@@ -8,11 +8,11 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]` y `[Feat
 
 | Ruta | Permiso | Pide | Devuelve |
 | --- | --- | --- | --- |
-| `GET /person-data` | `formpersondata.manage` | `page`, `pageSize`, `search`, `status` | `PagedResult<{id, key, name, type, catalogId?, catalogName?, isActive, usedBy[], usedByCount, valueCount, version}>`, en orden. `usedBy` trae hasta 5 nombres |
+| `GET /person-data` | `formpersondata.manage` | `page`, `pageSize`, `search`, `status`, `sort` (`name`, `key`, `type`, `catalogName` o `status`, y con `-` delante el otro sentido; 264) | `PagedResult<{id, key, name, type, catalogId?, catalogName?, isActive, usedBy[], usedByCount, valueCount, version}>`, en su orden si no se pide otro. `usedBy` trae hasta 5 nombres |
 | `POST /person-data` | `formpersondata.manage` | `{name, key, type, catalogId?}`, con `[Idempotent]` | 201 + Location |
 | `PUT /person-data/{id}` | `formpersondata.manage` | `{name, type, catalogId?, isActive, version, confirmValueRemoval?}`: la clave no viaja, porque no cambia | 200 `{version}` |
 | `GET /person-data/catalogs` | `formpersondata.manage` | `page`, `pageSize`, `search` | `PagedResult<{id, name}>`, los catálogos a mano activos |
-| `GET /person-data/values` | `formpersondata.manage` y `users.read` | `page`, `pageSize`, `search`, `status` | `PagedResult<{memberId, name, roles[], status, values, version?}>`, sin correos ni miembros quitados |
+| `GET /person-data/values` | `formpersondata.manage` y `users.read` | `page`, `pageSize`, `search`, `status`, `sort` (`name` o `attribute`, con `-` para el otro sentido) y `sortAttributeId`, el dato que ordena con `attribute`: un texto por su valor y uno de catálogo por el texto de su opción, con lo vacío al final (264) | `PagedResult<{memberId, name, roles[], status, values, version?}>`, sin correos ni miembros quitados |
 | `GET /person-data/options` | `forms.manage` | `page`, `pageSize`, `search` | `PagedResult<{id, name, catalogId?}>`, los datos activos de tipo catálogo |
 | `GET /person-data/{id}/options` | `users.manage` | `page`, `pageSize`, `search` | `PagedResult<{id, text}>`, las opciones activas de su fuente. No concede `formcatalogs.read` |
 | `GET /person-data/members/{memberId}` | `users.manage` | — | `{definitions[{id, name, type}], values, version?}` |
@@ -31,6 +31,8 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]` y `[Feat
 | `POST /{id}/publication-checks` | `warnings[]`: `{fieldId, code, max?, maxLabel?, limit?, people?}`, con `code` `MaxOptionsPerRecipient` (solo si pasa el límite), `NoOptionsForRecipients` (si da cero, 157), `PeopleWithoutData` o `NotForCustomers` |
 | `GET …/conversations/{id}/forms` | `offerProblems` suma `RecipientDataMissing`, con `dataName`, `FilterUnavailable` y `NotForCustomers`. `StructuredFormChoice.OfferProblems` suma `DataName?` |
 | `GET /{id}/records/columns` y el detalle | `catalogField.role` y `fields[].role`; ausente es `Data` |
+
+Un `sortAttributeId` que no es un dato activo de la organización, o `attribute` sin él, da 400 en `sortAttributeId`.
 
 **Errores** (en `Domain/Forms/`, con sus textos en `FormsTexts.resx` y `.en.resx`):
 

@@ -29,7 +29,7 @@ Antes de empezar:
 
 **Entra:**
 - **El módulo `Forms`:** quitable, con su feature `forms`, sus permisos de catálogos y la entrada «Gestión de formularios» del menú, que en esta etapa tiene solo «Catálogos» (34 y 78).
-- **Catálogos de la organización:** listado, alta con el origen fijo (a mano, de los miembros o de los contactos), datos y estado «Activo», «De baja» o «No se puede usar».
+- **Catálogos de la organización:** listado, que ordena por cada columna (264), alta con el origen fijo (a mano, de los miembros o de los contactos), datos y estado «Activo», «De baja» o «No se puede usar».
 - **Dar de baja y reactivar un catálogo** desde su pantalla, con su versión, sin borrarlo. Dar de baja uno con filtros no necesita vista previa, y reactivarlo sí.
 - **A mano:**
   - **tipo de valor:** texto, entero, decimal o fecha, que se elige al crear y no cambia;
@@ -67,25 +67,34 @@ Antes de empezar:
 - `FRM-Catalogo-Contactos`: un catálogo «De los contactos», con sus filtros por etiqueta y la vista previa (55).
 
 **Con el armado de ArquitecturaBase** (117, 120 y 125 a 129):
-- `FRM-Catalogo` y `M-FRM-Catalogo`: el editor de un catálogo a mano, con el armado de ArquitecturaBase. «El catálogo» dice de dónde salen y el tipo, y debajo van Nombre y Descripción; al costado, «Así lo ve quien lo recibe», con «Una opción | Varias» y el teléfono. La banda trae «Descartar» y «Guardar cambios», y un ⋮ con «Dar de baja» o «Reactivar», como el editor de formularios (209). «Opciones» va a todo el ancho: «+ Agregar opción», «Importar», «Exportar» y un ⋮ con Descargar la plantilla, «Ordenar por…» y Generar los códigos que faltan; abajo, solo «Buscar opción»; la tabla editable en la compu, la selección de filas para dar de baja o reactivar, el Estado como casilla y ↑ ↓ ✎ 🗑 a la vista;
+- `FRM-Catalogo` y `M-FRM-Catalogo`: el editor de un catálogo a mano, con el armado de ArquitecturaBase. «El catálogo» dice de dónde salen y el tipo, y debajo van Nombre y Descripción; al costado, «Así lo ve quien lo recibe», con «Una opción | Varias» y el teléfono. La banda trae «Descartar» y «Guardar cambios», y un ⋮ con «Dar de baja» o «Reactivar», como el editor de formularios (209). «Opciones» va a todo el ancho: «+ Agregar opción», «Importar», «Exportar» y un ⋮ con Descargar la plantilla, «Ordenar por…» y Generar los códigos que faltan; abajo, solo «Buscar opción»; la tabla editable en la compu, la selección de filas para dar de baja o reactivar, el Estado como casilla y ↑ ↓ ✎ 🗑 a la vista. «Restaurar» una por borrar y «Reactivar» una dada de baja son opciones del ⋮ de su fila, con su ícono, nunca un botón con texto (261);
 - `FRM-Catalogo-Importar`: «Origen» y «Revisión» a la vista, sin pasos numerados. Redibujado con el traspaso 5, aprobado y publicado en el lienzo v162: «Cambios» se lee lado a lado (138), y las tablas llevan la línea entre columnas y la fila a la derecha (137).
 
 **Nuevos** (v148): `FRM-Catalogo-Opciones` y `M-FRM-Catalogo-Opciones`, el modal de opciones. Importar no va en el teléfono, como hasta ahora.
 
 **Del traspaso 15** (v175, sin publicar): `FRM-Catalogo-Ordenar` y su teléfono, nuevos, y `FRM-Catalogo` y su teléfono, redibujados.
 
-**«Ordenar por…» (224):** el diálogo «Ordenar las opciones» elige la columna (Texto o Código) y el sentido dicho con palabras, «De la A a la Z» o «De la Z a la A». El orden queda pendiente hasta guardar: arriba de las opciones, «Se ordenará por «Texto», de la A a la Z, al guardar.» con «Cancelar orden». Al guardar ordena todas, también las de otras páginas y las dadas de baja: los empates conservan su orden, lo vacío va al final y los números dentro de un texto se comparan por su valor («117» antes que «10030»). En el ⋮ queda apagado con su motivo en un catálogo sin guardar («Guardá el catálogo antes.») o con movimientos pendientes. No se ordena tocando el encabezado.
+**Se redibujan con el traspaso 18, tanda 2** (261 a 264):
+- `FRM-Catalogos` y `M-FRM-Catalogos`: «Origen» y «Estado», filtros con su botón y sin cantidades (262); el encabezado y «Ordenar por» ordenan cada columna (264); en el teléfono, la hoja «Nuevo catálogo» con la pieza;
+- `FRM-Catalogo-Nuevo` y `FRM-Catalogo-Tipo`: el origen y el tipo de valor, en la pieza, sin tarjetas para elegir (262);
+- `FRM-Catalogo` y `M-FRM-Catalogo`: «Restaurar» y «Reactivar», en el ⋮ de la fila (261);
+- `FRM-Catalogo-Opciones` y su teléfono: el Estado, en la pieza (262), y en la lista, el código en su columna, no debajo del texto (263);
+- `FRM-Catalogo-Ordenar` y su teléfono: la columna y el orden, en la pieza (262);
+- `FRM-Catalogo-Importar`: «Desde», en la pieza (262);
+- `FRM-Catalogo-Filtros`, `FRM-Catalogo-Contactos` y sus teléfonos: los valores de una condición, varios por su nombre, separados por coma y sin chips, y la persona o el cliente de ejemplo, en la pieza, que dice solo el elegido (262).
+
+**«Ordenar por…» (224):** el diálogo «Ordenar las opciones» elige con la pieza (262) la columna (Texto o Código) y el sentido dicho con palabras, «De la A a la Z» o «De la Z a la A». El orden queda pendiente hasta guardar: arriba de las opciones, «Se ordenará por «Texto», de la A a la Z, al guardar.» con «Cancelar orden». Al guardar ordena todas, también las de otras páginas y las dadas de baja: los empates conservan su orden, lo vacío va al final y los números dentro de un texto se comparan por su valor («117» antes que «10030»). En el ⋮ queda apagado con su motivo en un catálogo sin guardar («Guardá el catálogo antes.») o con movimientos pendientes. No se ordena tocando el encabezado: el orden de las opciones es un dato (264).
 
 **El modal de opciones (117):**
-- **Cómo se abre:** «Agregar opción» lo abre con las opciones agregadas en él, y ✎, con las de la página. Cada lado va en su caja: la lista a la izquierda (número o «—», texto, «Nueva» y código o «Sin código») y la opción elegida a la derecha, con su posición («Opción 2 de 5» o «Nueva opción») y «Quitar opción» en su banda. «Agregar opción», al pie de la lista, suma otra.
-- **Las filas:** Texto con su contador, Código con «Generar desde el texto», Valor si el catálogo es tipado, Detalle y, solo en una guardada, Estado «Activa | De baja». La ayuda va en la (i) de cada una.
+- **Cómo se abre:** «Agregar opción» lo abre con las opciones agregadas en él, y ✎, con las de la página. Cada lado va en su caja: la lista a la izquierda (número o «—», texto, «Nueva» y código o «Sin código», cada dato en su columna, 263) y la opción elegida a la derecha, con su posición («Opción 2 de 5» o «Nueva opción») y «Quitar opción» en su banda. «Agregar opción», al pie de la lista, suma otra.
+- **Las filas:** Texto con su contador, Código con «Generar desde el texto», Valor si el catálogo es tipado, Detalle y, solo en una guardada, Estado, en la pieza (262), con «Activa» y «De baja». La ayuda va en la (i) de cada una.
 - **Guardar:** escribe en el borrador, y se guarda con «Guardar cambios» de la página. «Cancelar» o Esc devuelven todo como estaba al abrirlo. «Listo» conserva todo, menos una opción nueva sin nada escrito.
 - **Errores:** si «Guardar cambios» encuentra uno, el modal se abre en la primera opción con problemas, y la lista las marca con un triángulo.
 - **Quitar:** en una nueva, «Quitar opción» no pregunta. En una guardada pregunta y la marca: se borra al guardar, y hasta entonces se puede restaurar (129). Si algo la usa, al guardar se dice qué y se puede dar de baja (`Forms.Catalog.ItemInUse`).
 - **Celular:** ocupa la pantalla. Primero la lista y, al tocar una opción, la opción con «Volver a la lista».
 
 **Importar (120):** un solo diálogo, de arriba abajo.
-- **«Origen»:** «Desde» («Subir un archivo | Pegar desde Excel») y, para un archivo, su nombre con «Elegir archivo» o «Cambiar». «Descargar la plantilla» va en la banda. Qué acepta el archivo y qué hace cada origen van en sus (i).
+- **«Origen»:** «Desde», en la pieza (262), con «Subir un archivo» y «Pegar desde Excel», y, para un archivo, su nombre con «Elegir archivo» o «Cambiar». «Descargar la plantilla» va en la banda. Qué acepta el archivo y qué hace cada origen van en sus (i).
 - **La grilla:** lo pegado se ve con los encabezados del catálogo, en el orden de la plantilla. Sin encabezados, las filas van en ese orden. Si lo copiado los trae, por nombre, cada columna va a su lugar y esa fila no se importa. Una columna que no es del catálogo queda al final, en rojo, con su motivo, y no se manda. Pegar sobre la grilla llena la reemplaza.
 - **«Revisión»:** aparece debajo al tocar «Revisar», con el archivo, la hoja, las filas leídas y las que no cambian, y Errores, Altas, Cambios y Bajas con su cantidad, por fila y columna. «Cambios» se lee lado a lado (138): Fila, Código, Columna, Antes y Después, solo lo que cambió. «Antes de aplicar» aparece solo si hay algo para confirmar, con la confirmación de bajas y «Aplicar sin las N filas con errores».
 - **Las esperas:** «Revisando…» muestra la revisión como un esqueleto, y Cancelar sigue andando. «Aplicando…» deja la revisión atenuada, y Cancelar y la ✕ apagados, con «Esperá a que termine de aplicar.» en su tooltip.
@@ -114,11 +123,14 @@ Antes de empezar:
   - las fechas, completas, con fecha y hora en la zona de quien mira; nunca «hoy», «ayer» ni «hace…»;
   - sin leyendas (109): la vista previa es el teléfono al costado, la ayuda que sirve va en la (i) (116), y lo que no ayuda a decidir no va;
   - toda tabla lleva una línea fina entre columnas y los números a la derecha, y cierra abajo (137);
-  - lo dado de baja es una opción del filtro «Estado», no una vista aparte, en plural y de acuerdo con lo que se lista: en la lista de catálogos, «Activos · Dados de baja». En la tabla de opciones no hay filtro: cada una muestra su casilla (126).
+  - lo dado de baja es una opción del filtro «Estado», no una vista aparte, en plural y de acuerdo con lo que se lista: en la lista de catálogos, «Activos» y «Dados de baja», en la pieza con su botón y sin cantidades (262). En la tabla de opciones no hay filtro: cada una muestra su casilla (126).
+- **Una sola pieza para elegir (262):** todo lo que se elige es la pieza `Picker` de la base: los filtros del listado, el origen y el tipo de un catálogo nuevo, el Estado del modal, «Desde», la columna y el orden de «Ordenar por…», las condiciones de un catálogo con filtros (varias por su nombre, separadas por coma, sin chips) y la persona o el cliente de ejemplo, que vienen del servidor y se buscan adentro de la lista. Queda «Una opción | Varias» de la vista previa, que imita WhatsApp. Una casilla queda solo para un sí o no suelto, como el Estado de una fila o «Sin incluir a quien lo recibe».
+- **Nada debajo de otro dato (263):** cada dato va en su columna, también en la lista del modal; debajo de una fila va solo su error.
+- **Ordenar el listado (264):** Catálogo, De dónde salen, Tipo de valor, Opciones y Estado ordenan desde el encabezado y desde «Ordenar por», último en la barra. Lo vacío («—» en Opciones) va al final en los dos sentidos, el origen, el tipo y el estado van por su orden, y el primer toque ordena el texto de la A a la Z y los números de mayor a menor. Sin orden elegido, abre por nombre.
 - **Valen las de toda la app** (160 a 164, 173 a 175 y 180): lo que carga no salta, decidir a propósito, ninguna elección se descarta en silencio, mucho texto con jerarquía, sin parecer plantilla y con la escala de ArquitecturaBase, el texto largo entero y el estado dicho una vez. Llegan con las piezas de la base de la 12.
 - **La tabla de opciones no se aplasta:** cada columna tiene su ancho mínimo (Texto y Detalle 12rem, Código 6rem y el valor 8rem). Si no entra, la tabla se desplaza a lo ancho dentro de su caja, con la casilla, el número y «Texto» fijos a la izquierda y las acciones fijas a la derecha, con la línea entre columnas también en las fijas (137) y sin ningún «hay más columnas a la derecha». Es la primera tabla con columnas fijas, y las trae esta etapa.
 - **Guardado (C3):** todo se guarda junto en un `PUT` del catálogo, con su versión, y viaja solo lo que cambió. Suma `deleteItems[]`, las opciones por borrar. Una que algo usa responde 409 `Forms.Catalog.ItemInUse`, con qué la usa por opción, y no se borra ninguna; en esta etapa nada usa una opción, y cada etapa suma su motivo.
-- **Nuevo catálogo:** primero se elige el origen, y para los escritos a mano, el tipo de valor; el nombre se escribe en el editor y el `POST` sale de «Crear catálogo».
+- **Nuevo catálogo:** primero se elige el origen, y para los escritos a mano, el tipo de valor, los dos en la pieza (262); el nombre se escribe en el editor y el `POST` sale de «Crear catálogo».
 - **Persona de ejemplo:** sin ella no se crea un catálogo de miembros con condiciones (`Forms.Catalog.SampleRequired`, «Elegí una persona.»).
 - **La vista previa de un catálogo de miembros o de contactos** es el teléfono, con solo el desplegable «Persona» arriba, y se actualiza sola; no hay «Probar». Se ve con `formcatalogs.read`, como el catálogo.
 
@@ -151,6 +163,12 @@ Están en la §5 de la hoja de ruta y no se vuelven a preguntar:
 - **119:** el Excel se lee como en pantalla, y se reimporta sin diferencias.
 - **120:** un solo «Importar», con la grilla.
 - **224:** «Ordenar por…» reemplaza «Ordenar de la A a la Z».
+- **261:** lo que se hace con una fila va en su ⋮; ↑ ↓ ✎ 🗑 siguen a la vista donde importa el orden (127).
+- **262:** una sola pieza para elegir, y los filtros sin cantidades.
+- **263:** nada debajo de otro dato.
+- **264:** toda columna con un dato ordena, salvo las tablas cuyo orden es un dato, como las opciones.
+- **269:** los principios del traspaso 17: el tope de un texto es el mismo en la pantalla y en el servidor, y al llegar se ve.
+- **270:** ninguna regla de negocio fija en el código. Los topes de las operaciones de archivo (C11) son técnicos y quedan en `appsettings`.
 
 ## 15. Cómo se cierra
 

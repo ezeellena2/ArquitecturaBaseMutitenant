@@ -7,7 +7,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E14](14-formularios.md): T4, T7, T8, la §3 (`FormDefinitionStates`, `FormPublications` y `WhatsAppFlowBindings`), la §6, puntos 4 y 6, y la §14 (errores de Meta); la [E15](15-respuestas.md): las dos rutas de la lista, y la [E16](16-datos-de-las-personas.md): los filtros por destinatario, que se copian.
-2. **Decisiones** de la hoja de ruta: 23, 34, 35, 43, 74, 78, 79, 88, 112, 131, 132, 175, 186 y 225.
+2. **Decisiones** de la hoja de ruta: 23, 34, 35, 43, 74, 78, 79, 88, 112, 131, 132, 175, 186, 225, 261 (lo que se hace con una fila, en su ⋮), 262 (una sola pieza para elegir), 263 (nada debajo de otro dato), 264 (el orden de las tablas), 269 (los principios del traspaso 17), 270 (ninguna regla de negocio fija en el código) y 275 (el panel en dos grupos, y el nombre abre el editor).
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -53,7 +53,7 @@ Antes de empezar, en este orden:
 - cada respuesta de Meta se clasifica en definitiva, transitoria o desconocida. Un rechazo no se repite para siempre: se intenta cuatro veces, con esperas de 5, 15 y 30 minutos entre una y otra, y después del cuarto rechazo queda «No se pudo», a la vista, y no frena nada del formulario;
 - corre por organización, como las difusiones, sin una persona detrás: el último envío puede vencer días después de la baja, cuando quien la hizo ya no tiene permisos.
 
-**La lista «Formularios»** (79): el filtro «Estado» suma «Dados de baja», junto a Activos (publicados y borradores), Publicados y Borradores. No es una vista aparte. Quien solo ve respuestas también lo tiene, porque si no, no llegaría a las respuestas de un dado de baja.
+**La lista «Formularios»** (79): el filtro «Estado», la pieza con su botón y sin cantidades (262), suma «Dados de baja», junto a Activos (publicados y borradores), Publicados y Borradores. No es una vista aparte. Al ordenar por el estado, los dados de baja van después de los activos, al final de su circuito (264). Quien solo ve respuestas también lo tiene, porque si no, no llegaría a las respuestas de un dado de baja.
 
 ## Pantallas
 
@@ -70,6 +70,11 @@ Aprobados y publicados en el lienzo v151, con el armado de ArquitecturaBase (131
 **Redibujados con el traspaso 10, aprobados y publicados en el lienzo v168:** `FRM-Editor-Baja` y `M-FRM-Editor-Baja`, con la baja en una frase, la etiqueta de la publicación al reactivar (175) y «Agregar título» al lado de «Agregar pregunta» (88).
 
 **Del traspaso 15** (v175, sin publicar): `FRM-Editor-Baja` y `M-FRM-Editor-Baja`, con «Descartar esta publicación» al reactivar (225).
+
+**Se redibujan con el traspaso 18, tanda 2** (262 a 264 y 275):
+- `FRM-Formularios-17` y su teléfono: el filtro «Estado», con su botón y sin cantidades (262), y el orden de las columnas (264);
+- `FRM-Editor-Baja` y su teléfono: las preguntas, con el tipo y «Obligatoria» en sus columnas, como el editor de la E14 (263);
+- los dos, con el panel de «Gestión de formularios» en dos grupos (275).
 
 **Corregido en el lienzo v169:** en `M-FRM-Formularios-17`, «Reactivar» se abre sobre el formulario, como en `M-FRM-Editor-Baja` (131), y la hoja «Filtros» va a pantalla completa y sin cantidades (144 y 164).
 
@@ -111,7 +116,7 @@ Son rutas de `/api/organization/forms`, con `[Access(Access.Business)]` y `[Feat
 
 | Ruta | Qué suma |
 | --- | --- |
-| `GET /` y `GET /filter-counts` | `status` suma `deactivated`, y `all` son los activos. Cada fila suma `deactivatedAtUtc?`, y si está dado de baja, `openSends` y `retirement?` |
+| `GET /` y `GET /filter-counts` | `status` suma `deactivated`, y `all` son los activos; `filter-counts` suma `deactivated`, para el resumen («4 activos · 1 dado de baja»). `sort=status` pone los dados de baja al final (264). Cada fila suma `deactivatedAtUtc?`, y si está dado de baja, `openSends` y `retirement?` |
 | `GET /overview` | suma `status` (`active`, `deactivated`), y cada fila, `deactivatedAtUtc?` |
 | `GET /{id}` | suma `deactivated?{byName, atUtc}` y `retirement?` |
 | `POST /{id}/publication-checks` y `POST /{id}/publications` | sobre un dado de baja, `NothingToPublish` no aplica. Publicar sobre un dado de baja es reactivar. `publication-checks` suma `nextRecordNumber`, la próxima respuesta |
@@ -218,6 +223,8 @@ Cada punto lleva su test, escrito durante la etapa:
 - **La baja se dice en una frase** («Lo dio de baja Ana Gómez el …»), en la ⓘ de la banda (175).
 - **El worker no entra con `ExecutionActor`:** deprecar no depende de los permisos de una persona, que pueden cambiar antes de que venza el último envío.
 - **La cola es de WhatsApp,** sin un registro global: Forms contesta qué versiones ya no se usan.
+- **Los intentos de deprecar y sus esperas** son técnicos y quedan en el código (270).
+- **Lo que se hace con un formulario** va en el ⋮ de su fila (261), y su nombre abre el editor (275); el filtro es la pieza, sin cantidades (262), y toda columna ordena (264).
 
 ## Fuera de esta etapa
 
@@ -227,7 +234,7 @@ Cada punto lleva su test, escrito durante la etapa:
 
 ## Cómo se cierra
 
-La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba real con Meta**, que queda pendiente hasta la I1 de la 10 (123), con el número de una organización de prueba y `WhatsApp:FlowSessionHours` en 1:
+La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba real con Meta**, que queda pendiente hasta la I1 de la 10 (123), con el número de una organización de prueba y el tiempo para contestar en 1 hora, en su Configuración de WhatsApp (270):
 1. dar de baja un formulario con un envío abierto, y responder ese envío;
 2. al vencer, ver los Flows deprecados en el administrador de Meta;
 3. reactivar: versión nueva, Flow nuevo y el número de respuesta siguiente;

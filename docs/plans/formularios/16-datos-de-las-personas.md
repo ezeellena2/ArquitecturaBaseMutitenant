@@ -9,7 +9,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E13](13-campos.md): datos, contrato y las lecciones; la [E14](14-formularios.md): T22, T23, la §6b y `publication-checks`; y la [E15](15-respuestas.md): «Columnas» y los campos sellados.
-2. **Decisiones** de la hoja de ruta: 35, 37, 42, 43, 50, 78, 88, 105, 109, 111, 112, 115, 116, 129, 130, 134, 138, 145, 157, 165 y 176.
+2. **Decisiones** de la hoja de ruta: 35, 37, 42, 43, 50, 78, 88, 105, 109, 111, 112, 115, 116, 129, 130, 134, 138, 145, 157, 165, 176, 261 (lo que se hace con una fila, en su ⋮), 262 (una sola pieza para elegir), 263 (nada debajo de otro dato), 264 (el orden de las tablas) y 269 (lo que el servidor rechaza, la pantalla lo frena antes).
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -42,7 +42,7 @@ Antes de empezar, en este orden:
 - un texto tiene hasta 300 caracteres. Uno de catálogo guarda la identidad de la opción y exige una opción activa de la fuente. **Un valor guardado que apunta a una opción dada de baja se conserva y sigue filtrando;**
 - no van en «Exportar mis datos», porque son de la organización. **Al terminar una membresía, sus valores se borran con ella:** al sacar a alguien de la organización, al revocar la invitación de quien todavía no entró y en la baja de la cuenta. El núcleo suma para eso un punto de aviso neutral, que hoy no existe.
 
-**El papel de un campo:** los campos de la E13 suman su papel, «Dato» (el de siempre) o «Filtro». Los dos se sellan al responder. En la planilla, las subcolumnas de un campo «Filtro» salen apagadas y se prenden en «Columnas»; el teléfono no tiene columnas, como en la E15. El detalle y el Excel los tratan como a cualquier campo sellado: el detalle los muestra debajo de su valor, «Todas las preguntas» los trae y «Solo las visibles» sigue a «Columnas». Un campo que usa un filtro del borrador o de la versión activa no se quita ni cambia de papel, tipo o fuente.
+**El papel de un campo:** los campos de la E13 suman su papel, «Dato» (el de siempre) o «Filtro». Los dos se sellan al responder. En la planilla, las subcolumnas de un campo «Filtro» salen apagadas y se prenden en «Columnas»; el teléfono no tiene columnas, como en la E15. El detalle y el Excel los tratan como a cualquier campo sellado: el detalle los muestra cada uno en su campo, nunca debajo del valor (263), «Todas las preguntas» los trae y «Solo las visibles» sigue a «Columnas». Un campo que usa un filtro del borrador o de la versión activa no se quita ni cambia de papel, tipo o fuente.
 
 **Los filtros por destinatario,** en una pregunta de un catálogo a mano («Qué opciones ve cada persona», una zona que arranca plegada, con los filtros en su banda, y se abre sola con un error o un aviso, 145):
 - filtros de igualdad, uno por campo de papel «Filtro», unidos con «y»;
@@ -85,21 +85,28 @@ Aprobados y publicados en el lienzo v150, con su recorrido guiado. Muestran solo
 | `WA-Chats-Formulario-16` y `M-WA-Chats-Formulario-16` | el formulario que no se puede mandar, con el motivo |
 | `FRM-Respuestas-16` y `M-FRM-Respuestas-16` | «Columnas», con las subcolumnas de los filtros apagadas; el teléfono no tiene columnas |
 
+**Se redibujan con el traspaso 18, tanda 2** (261 a 264):
+- `FRM-Datos-Personas` y su teléfono: el tipo y el catálogo de un dato, cada uno en su columna; en el teléfono, ningún dato junto a otro con «·» debajo del nombre (263); las dos tablas ordenan por sus columnas (264); el tipo del diálogo, en la pieza (262);
+- `FRM-Catalogo-16` y su teléfono: «Papel», en la pieza (262), y en la lista, el tipo y el papel en sus columnas (263);
+- `FRM-Editor-16` y su teléfono: el campo, el dato y el valor de cada filtro y la persona de «Como si lo recibiera», en la pieza (262), y las preguntas con el tipo y «Obligatoria» en sus columnas (263), como el editor de la E14;
+- `WA-Chats-Formulario-16` y su teléfono: el formulario, en la pieza, como en la E14 (262);
+- `FRM-Respuestas-16` y su teléfono siguen lo que la E15 redibuja de la planilla.
+
 **Corregidos en el lienzo v169,** porque chocaban con una decisión, una ficha del front o esta spec: la (i) de «Clave» de `FRM-Datos-Personas` y su teléfono, con las filas sin rótulos (138); la (i) de «Papel» de `FRM-Catalogo-16`; `M-FRM-Respuestas-16`, sin «Columnas» y con el nombre entero (174); el editor de atrás de `FRM-Publicar-16`, y «A un cliente» de `WA-Chats-Formulario-16`, en Clientes.
 
-**«Datos de las personas»:** dos secciones, como en ArquitecturaBase. «Datos», con su (i) y «+ Agregar dato» en el encabezado: Dato, Clave, Tipo, Lo usan, Estado («Activo» o «De baja», con su punto, en su columna y nunca debajo del nombre, 206) y ✎. Con el tope de 20, «Agregar dato» queda grisado, con el motivo en su tooltip. «Personas», con el resumen «6 personas · 2 sin Zona» y «Buscar personas»: Persona, una columna por dato activo, «—» si no tiene y ✎ con `users.manage`. Sin `users.read`, una línea lo dice.
+**«Datos de las personas»:** dos secciones, como en ArquitecturaBase. «Datos», con su (i) y «+ Agregar dato» en el encabezado: Dato, Clave, Tipo, Catálogo («—» en uno de texto), Lo usan, Estado («Activo» o «De baja», con su punto, en su columna y nunca debajo del nombre, 206) y ✎: cada dato en su columna, nunca «De un catálogo · Zonas» (263). Con el tope de 20, «Agregar dato» queda grisado, con el motivo en su tooltip. «Personas», con el resumen «6 personas · 2 sin Zona» y «Buscar personas»: Persona, una columna por dato activo, «—» si no tiene y ✎ con `users.manage`. Sin `users.read`, una línea lo dice. Las dos tablas ordenan desde el encabezado y desde «Ordenar por», salvo «Lo usan», que tiene varios valores; en «Personas», un dato ordena por su valor (el texto de su opción, en uno de catálogo), con lo vacío al final en los dos sentidos (264). En el teléfono, una persona no junta sus datos con «·» debajo del nombre: lleva menos datos o es una tarjeta con cada dato nombrado (263).
 
-**El diálogo para definir un dato:** «Agregar dato» o «Editar dato», con Nombre, Clave con su (i), Tipo y, si es de un catálogo, Catálogo, en el combo de la E13 (111). La clave sigue al nombre hasta que se escribe a mano, y una guardada no cambia, con su candado (130). Editando va «Dato activo». En uso, tipo, catálogo y «Dato activo» quedan grisados y se dice qué formularios lo usan. Si hay valores, cambiar el tipo pide marcar «Sí, cambiar el dato y borrar los valores de N personas». Mientras guarda, «Guardando…», y la tabla que vuelve a leer atenúa.
+**El diálogo para definir un dato:** «Agregar dato» o «Editar dato», con Nombre, Clave con su (i), Tipo, en la pieza (262), y, si es de un catálogo, Catálogo, en el combo de la E13 (111). La clave sigue al nombre hasta que se escribe a mano, y una guardada no cambia, con su candado (130). Editando va «Dato activo». En uso, tipo, catálogo y «Dato activo» quedan grisados y se dice qué formularios lo usan. Si hay valores, cambiar el tipo pide marcar «Sí, cambiar el dato y borrar los valores de N personas». Mientras guarda, «Guardando…», y la tabla que vuelve a leer atenúa.
 
 **La ficha del usuario:** las pestañas aparecen solo si un módulo aporta una; si no, queda como hoy. «Datos» tiene sus botones y se guarda aparte del acceso, solo si cambió. Salir con cambios pregunta antes. Un error queda en la pestaña.
 
-**«Qué opciones ve cada persona»:** una zona de la pregunta que arranca plegada, con lo configurado en su banda (145). Abierta, la banda trae «Agregar filtro ▾», con «Según quien lo recibe» y «Filtro fijo» (134), y la (i) va junto al título. Cada filtro va en su recuadro: «Según quien lo recibe» (Campo y Dato de la persona) o «Filtro fijo» (Campo y Valor fijo), con ✕. Debajo, «Como si lo recibiera», con la persona y el resultado, el máximo por persona («Como mucho 18 por persona (Centro, la más grande): entra en el desplegable (200).») y cuántas personas no tienen el dato («2 personas sin Zona»), con «Cargar los datos» para quien tiene `formpersondata.manage`. Sin campos de filtro, «Agregar filtro ▾» queda grisado, con el motivo en su tooltip; «Según quien lo recibe» queda apagada, con el suyo, si ningún dato de las personas elige del catálogo de esos campos.
+**«Qué opciones ve cada persona»:** una zona de la pregunta que arranca plegada, con lo configurado en su banda (145). Abierta, la banda trae «Agregar filtro ▾», con «Según quien lo recibe» y «Filtro fijo» (134), y la (i) va junto al título. Cada filtro va en su recuadro: «Según quien lo recibe» (Campo y Dato de la persona) o «Filtro fijo» (Campo y Valor fijo), con ✕; cada uno se elige con la pieza (262), y guardar un filtro sin completar se frena en la pantalla, marcando solo lo que falta (269). Debajo, «Como si lo recibiera», con la persona y el resultado, el máximo por persona («Como mucho 18 por persona (Centro, la más grande): entra en el desplegable (200).») y cuántas personas no tienen el dato («2 personas sin Zona»), con «Cargar los datos» para quien tiene `formpersondata.manage`. Sin campos de filtro, «Agregar filtro ▾» queda grisado, con el motivo en su tooltip; «Según quien lo recibe» queda apagada, con el suyo, si ningún dato de las personas elige del catálogo de esos campos.
 
 **Borrar una opción (129):** `Forms.Catalog.ItemInUse` suma dos motivos, y la opción se puede dar de baja:
 - `uses: forms`, si la nombra un filtro fijo del borrador o de la versión activa de un formulario: «No se puede borrar: la usa un formulario. Podés darla de baja.»;
 - `uses: people`, si la tiene una persona en sus datos: «No se puede borrar: la tiene una persona en sus datos. Podés darla de baja.».
 
-**«Papel»:** en el modal de campos, «Filtro | Dato», con la ayuda en la (i). La lista dice «De un catálogo · Filtro». Cambiarlo en un campo en uso se rechaza, con el motivo debajo.
+**«Papel»:** en el modal de campos, en la pieza, con «Dato» y «Filtro» (262), y la ayuda en la (i). En la lista, el tipo y el papel van cada uno en su columna, nunca «De un catálogo · Filtro» (263). Cambiarlo en un campo en uso se rechaza, con el motivo debajo.
 
 **Estados:** para cada tablero, cargando, vacío y error, más:
 - **Datos:** 20 datos, un dato en uso, un dato dado de baja, cambiar el tipo con valores, buscar personas, ninguna coincide, sin `users.read` y sin `users.manage`;
@@ -167,6 +174,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 - **La pestaña «Datos»** se ve con `users.manage`: quien solo lee las ve en la tabla, con los permisos de esa pantalla.
 - **Un solo «Agregar filtro ▾»** en la banda de la zona (134 y 145).
 - **La vista oficial** usa los filtros fijos y no los según quien lo recibe (176).
+- **Las filas, la pieza, nada debajo y el orden** (261 a 264): lo que se hace con una fila va en su ⋮; todo lo que se elige es la pieza `Picker`; cada dato va en su columna, y toda columna con un dato ordena.
 
 ## Fuera de esta etapa
 

@@ -7,7 +7,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E12](12-catalogos.md): C3 (guardar), C6 (valores), C7 a C11 (carga de una vez) y sus secciones de datos, contrato, flujos y archivos. Esta etapa suma a esas piezas, no crea otras.
-2. **Decisiones** de la hoja de ruta: 35 (el contenido no tiene idioma), 36 (títulos de más de 30 caracteres), 42 (hasta 20 campos), 43 (botones y avisos), 78 (el orden), 105 (los topes cuentan los activos), 109, 110, 115 y 116 (leyendas, motivos, esperas y ayuda), 111 (el combo del catálogo), 119 (el Excel legible), 125 (los campos en un modal), 127 (las acciones a la vista), 129 (borrar una opción que nada usa) y 130 (la clave a la vista, con su candado).
+2. **Decisiones** de la hoja de ruta: 35 (el contenido no tiene idioma), 36 (títulos de más de 30 caracteres), 42 (hasta 20 campos), 43 (botones y avisos), 78 (el orden), 105 (los topes cuentan los activos), 109, 110, 115 y 116 (leyendas, motivos, esperas y ayuda), 111 (el combo del catálogo), 119 (el Excel legible), 125 (los campos en un modal), 127 (las acciones a la vista), 129 (borrar una opción que nada usa), 130 (la clave a la vista, con su candado), 261 (lo que se hace con una fila, en su ⋮), 262 (una sola pieza para elegir), 263 (nada debajo de otro dato), 264 (el orden de las tablas) y 269 (el tope de un texto, el mismo en la pantalla y en el servidor).
 3. **Fichas:**
 
    | Ficha | Por qué acá |
@@ -43,7 +43,7 @@ Antes de empezar, en este orden:
   - un valor de «De un catálogo» guarda la identidad de la opción fuente. Un valor nuevo exige una opción activa, y **el guardado que apunta a una opción dada de baja se conserva y no impide guardar**. Uno que no es opción de la fuente se rechaza;
   - un catálogo usado como fuente por campos activos no se da de baja.
 - **Ordenar por un campo** (224): «Ordenar por…» de la E12 suma cada campo activo ya guardado. Cada tipo compara en el suyo, con el sentido dicho en palabras: un número, «De menor a mayor»; una fecha, «De la más antigua a la más reciente»; sí o no, «Primero «No»»; uno de otro catálogo, por el texto de su opción. Si se quita el campo elegido, el orden pendiente se cancela con él.
-- **La tabla, el modal de opciones, pegar, importar y exportar:** una columna por campo después del código y antes del detalle, con «Columnas» para ocultarlas, y una fila por campo en el modal. Los encabezados se reconocen por el nombre o por la clave. La plantilla y la exportación suman las columnas, y en una fuente se acepta la identidad, el código o el texto único de la opción. Una celda que nombra la opción guardada dada de baja la conserva; si nombra una activa, pasa a esa.
+- **La tabla, el modal de opciones, pegar, importar y exportar:** una columna por campo después del código y antes del detalle, con «Columnas», la pieza múltiple (262), para ocultarlas, y una fila por campo en el modal. Los encabezados se reconocen por el nombre o por la clave. La plantilla y la exportación suman las columnas, y en una fuente se acepta la identidad, el código o el texto único de la opción. Una celda que nombra la opción guardada dada de baja la conserva; si nombra una activa, pasa a esa.
 - **El Excel se lee como en pantalla** (119): cada columna lleva el nombre del campo; número y fecha, como la columna del valor de la E12 (C10); Sí/No, con su palabra, y una fuente, con el texto de la opción o, si ese texto llevaría a otra, con su código. Subirlo de vuelta no da diferencias.
 - **Qué se ve en WhatsApp (la presentación del catálogo):**
   - el catálogo elige qué arma el título (hasta 30, con contenido) y la descripción (hasta 300) de cada opción. Cada uno sale de uno o más lugares, unidos con « · »: el título arranca en «Texto» y no se queda sin ninguno;
@@ -64,10 +64,16 @@ Aprobadas y publicadas en el lienzo v150, con el armado de ArquitecturaBase (125
 
 Del traspaso 15 (v175, sin publicar): «Ordenar por…» en el ⋮ de estos tableros y ordenar por un campo, como «Rubro» (224), y, nuevos, `FRM-Catalogo-Ordenar-13` y `M-FRM-Catalogo-Ordenar-13`: «Ordenar las opciones» por un número, una fecha, sí o no o un campo de otro catálogo.
 
+**Se redibujan con el traspaso 18, tanda 2** (261 a 263):
+- `FRM-Catalogo-13` y su teléfono: «Reactivar» una opción, en el ⋮ de su fila (261), y «Columnas», en la pieza múltiple (262);
+- `FRM-Catalogo-Campos` y su teléfono: en la lista, el número, el nombre y el tipo, cada uno en su columna (263); el tipo y el catálogo de un campo, en la pieza (262), como dice «El catálogo de un campo»;
+- `FRM-Catalogo-Opciones-13` y su teléfono: el Estado, en la pieza, y el código en su columna, como en la E12;
+- `FRM-Catalogo-Ordenar-13` y su teléfono: la columna y el orden, en la pieza (262).
+
 **«Agregar campos · N»:** va en el encabezado de «Opciones», al lado de «Agregar opción», y cuenta los activos; se pone en rojo si el servidor rechazó uno. Quien solo lee ve «Campos», si hay. Sin campos, abre en uno nuevo.
 
 **El modal «Campos de …» (125):** igual al de opciones, cada lado en su caja.
-- **La lista:** «Campos · N de 20», número, nombre y tipo; ↑ ↓ en el elegido; «+ Agregar campo» al pie, grisado con el motivo en su tooltip al llegar a 20.
+- **La lista:** «Campos · N de 20», con el número, el nombre y el tipo, cada uno en su columna, nunca el tipo debajo del nombre (263); ↑ ↓ en el elegido; «+ Agregar campo» al pie, grisado con el motivo en su tooltip al llegar a 20.
 - **El campo:** «Campo 1 de 2» o «Nuevo campo» con «Quitar campo» en su banda, y las filas Nombre, Clave con su (i) y su candado, Tipo con su largo, rango o catálogo debajo, y Reglas (Obligatorio y Único). Uno nuevo nace opcional: «Obligatorio» grisado, con el motivo en su tooltip.
 - **Guardar:** escribe en una copia. «Listo» la deja en el catálogo y, si hay un campo nuevo, avisa «Guardá el catálogo para cargar los valores de los campos nuevos.». «Cancelar» o Esc la descartan. Se guarda con «Guardar cambios» de la página.
 - **Quitar:** pregunta; con valores, pide marcar «Sí, quitar el campo y sus N valores». Si está en «En WhatsApp», lo dice.
@@ -75,7 +81,7 @@ Del traspaso 15 (v175, sin publicar): «Ordenar por…» en el ⋮ de estos tabl
 
 **Borrar una opción (129):** una opción que es valor de un campo de otro catálogo no se borra: `Forms.Catalog.ItemInUse` suma `uses: options`, y debajo de la fila se lee «No se puede borrar: la usa otra opción. Podés darla de baja.».
 
-**El catálogo de un campo (111):** con el tipo «De un catálogo», un combo debajo del tipo. Al tocarlo muestra los primeros catálogos a mano activos («Zonas · 8 opciones»), y al escribir los filtra. Es el listado de la E12, con `source=manual`, `status=active` y `search`.
+**El catálogo de un campo (111):** con el tipo «De un catálogo», un combo debajo del tipo, que es la pieza (262). Cerrado dice el catálogo elegido («Zonas»). Abierto muestra los primeros catálogos a mano activos, cada uno con su cantidad de opciones en gris debajo del nombre («8 opciones»), y como vienen del servidor, el buscador va adentro de la lista, con el foco puesto: no se escribe en el campo. Es el listado de la E12, con `source=manual`, `status=active` y `search`.
 
 **«En WhatsApp»:** va debajo de «El catálogo». «Título · hasta 30 caracteres» y «Descripción · hasta 300», cada uno con un chip por lugar, con ✕, y un desplegable «Agregar campo» con lo que falta. Con un solo lugar en el título, su ✕ va apagado. «Por ejemplo» muestra la primera opción activa. Lo que no entra se avisa debajo, con cuántas son y hasta tres ejemplos, y en el teléfono.
 
@@ -156,7 +162,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
 | F1 | Tipos y llamadas, validados con los ejemplos exportados | suma a `F/src/modules/forms/api/` | la API de catálogos [E12] | zod estricto con los ejemplos |
-| F2 | El modal «Campos de …», con el combo del catálogo | `F/src/modules/forms/components/catalog/CatalogFieldsDialog.tsx`, `CatalogCombo.tsx` | su tablero, el modal de opciones [E12] y `SearchSelect.tsx` | agregar, subir, bajar y quitar; una copia hasta «Listo»; tope de 20; la clave y su candado; el combo abre con los primeros y filtra; celular; axe |
+| F2 | El modal «Campos de …», con el combo del catálogo | `F/src/modules/forms/components/catalog/CatalogFieldsDialog.tsx`, `CatalogCombo.tsx` | su tablero, el modal de opciones [E12] y `Picker` (262) | agregar, subir, bajar y quitar; una copia hasta «Listo»; tope de 20; la clave y su candado; el combo abre con los primeros y filtra; celular; axe |
 | F3 | Una columna por campo en la tabla de opciones, y una fila en el modal, con el control de su tipo | suma a `OptionsSection.tsx` y al modal de opciones [E12] | su tablero | columna y fila grisadas hasta guardar; valor dado de baja; la lección 4 |
 | F4 | «En WhatsApp», con sus chips y «Por ejemplo», y el teléfono al costado | `F/src/modules/forms/components/PresentationEditor.tsx`, `CatalogPreviewPhone.tsx` | su tablero | cada desplegable lista lo que falta; se arma como el servidor; un título que no entra |
 | F5 | El editor: conflicto, guardado y lectura | suma a `CatalogEditorPage.tsx` [E12] | `CatalogEditorPage.tsx` [E12] | la lección 2; solo `formcatalogs.read`; textos en es y en |
@@ -193,6 +199,8 @@ Cada punto lleva su test, escrito durante la etapa:
 - **Una columna de un campo nuevo** queda grisada hasta guardar el catálogo, con su motivo, y «Listo» lo avisa.
 - **Los campos van en un modal, como en ArquitecturaBase** (125, que reemplaza la 118). La clave se muestra, con su candado (130).
 - **Un campo que usa la presentación** del catálogo se puede quitar: sale del título y de la descripción.
+- **Lo que se hace con una opción** va en el ⋮ de su fila, con ↑ ↓ ✎ 🗑 a la vista (261); todo lo que se elige, también «Columnas», es la pieza `Picker` (262); nada va debajo de otro dato (263), y la tabla de opciones y la lista de campos no ordenan por columnas, porque su orden es un dato (264).
+- **El tope de un texto** (el nombre, la clave y el largo de un valor de texto) es el mismo en la pantalla y en el servidor, y al llegar se ve (269).
 
 ## Fuera de esta etapa
 
