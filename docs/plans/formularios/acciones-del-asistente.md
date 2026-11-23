@@ -5,7 +5,7 @@
 ## Qué leer ✓
 
 1. **Lo anterior:**
-   - de la [segunda parte de la base](base-de-la-12-segunda-parte.md), «Nadie da lo que no tiene» (B1), «Lo incluido» (B16), «Roles en áreas plegables» (F5) y «Una sola pieza para elegir» (F11);
+   - de la [segunda parte de la base](base-de-la-12-segunda-parte.md), «Nadie da lo que no tiene» (B1, con sus `Policy` y `grantable`), «Lo incluido» (B16), «Roles en áreas plegables» (F5) y «Una sola pieza para elegir» (F11);
    - de la [base](base-de-la-12.md), el `Inicio` de la organización y los diálogos de Usuarios.
 2. **Decisiones:**
    - de la hoja de ruta: la 268, la 260 (lo incluido) y la 269;
@@ -88,7 +88,7 @@
 | `Rol-Propuesta` | el editor de roles con un rol nuevo propuesto (áreas plegables, 260) y con un cambio de permisos, en «Lo que cambia» |
 | `Confirmar-Propuesta` | la confirmación de quitar a una persona y la de dar de baja un rol, abiertas desde la tarjeta |
 
-Cada uno lleva su teléfono (`M-`). Manda sobre el dibujo esta spec: el tablero muestra solo lo que existe hasta esta etapa.
+Cada uno lleva su teléfono (`M-`). Manda el tablero aprobado, salvo lo que contradiga una decisión o un `Criterio-*`; el tablero muestra solo lo que existe hasta esta etapa (78).
 
 ## Contrato ✓
 
@@ -110,7 +110,7 @@ Cada uno lleva su teléfono (`M-`). Manda sobre el dibujo esta spec: el tablero 
 **Cómo se calcula el estado:** se calcula en cada lectura, con los permisos de ese momento y en la empresa de la acción. El `GET` vuelve a resolver con la fuente el destino y cada `Record`.
 
 **Las otras dos rutas:**
-- **`attempts`:** devuelve la misma clave mientras ese intento no termine en 4xx. Es idempotente por naturaleza, sin `[Idempotent]`, y va en la lista de excepciones de `IdempotentActionsTests` con su motivo.
+- **`attempts`:** devuelve la misma clave mientras ese intento no termine en 4xx. Si una clave de la propuesta ya terminó en 2xx, la marca aplicada y responde `AlreadyApplied`. Es idempotente por naturaleza y responde 200, así que `IdempotentActionsTests` no le exige `[Idempotent]`; el motivo va en un comentario de la acción.
 - **`applied`:** lo comprueba el servidor:
   - al crear, que una clave de la propuesta terminó en 2xx para esa persona y esa `SaveRoute`;
   - al quitar o dar de baja, que el destino ya no se resuelve;
@@ -129,17 +129,17 @@ Cada uno lleva su teléfono (`M-`). Manda sobre el dibujo esta spec: el tablero 
   - `accepted` con el id de la propuesta;
   - o `rejected`, con `[{path, code}]`, o con `OnePerTurn`, `NotAvailable` o `Invalid`.
 
-**Errores** (textos en `Assistant.resx` y `.en.resx`):
+**Errores** (textos en `AssistantTexts.resx` y `.en.resx`):
 
 | Código | Tipo | Cuándo |
 | --- | --- | --- |
 | `Assistant.Proposal.NotFound` | NotFound | no existe, o es de otra persona u organización |
 | `Assistant.Proposal.Unavailable` | Conflict | `attempts` o `applied` sobre una reemplazada, no disponible o sin confirmar; con el motivo |
-| `Assistant.Proposal.AlreadyApplied` | Conflict | `attempts` sobre una aplicada, con `location` |
+| `Assistant.Proposal.AlreadyApplied` | Conflict | `attempts` sobre una aplicada o con una clave que terminó en 2xx, con `location` |
 | `Assistant.Proposal.NotApplied` | Conflict | `applied` sin poder comprobarlo |
 | `Assistant.Action.NotAvailable`, `.Invalid` y `.OnePerTurn` | — | solo dentro de `AssistantActionToolData`, nunca como HTTP |
 
-**Las rutas de Usuarios y Roles no cambian.** Si un 422 `Request.IdempotencyKeyReused` llega con una clave de la propuesta, el front lo muestra como «Ya se guardó».
+**Las rutas de Usuarios y Roles no cambian.** Un 422 `Request.IdempotencyKeyReused` no prueba que se guardó: la clave guarda también un 4xx, y el 422 dice «misma clave con otro cuerpo». Ante un 422 con una clave de la propuesta, el front vuelve a llamar a `attempts`: un 409 `Assistant.Proposal.AlreadyApplied` con `location` es «Ya se guardó», y una clave nueva es otro intento.
 
 **Concurrencia:** editar manda la versión leída al abrir, y vale el 409 de siempre. Sin permiso nuevo.
 
@@ -154,15 +154,18 @@ Cada uno lleva su teléfono (`M-`). Manda sobre el dibujo esta spec: el tablero 
 | `ActionId`, `ActionVersion` | texto ≤80, int | sellados |
 | `Values` | jsonb | por campo: lo que escribió el modelo, el id resuelto y la duda; nunca nombres resueltos |
 | `TargetId?`, `BaseVersion?` | uuid, int | Edit y Remove |
-| `State` | texto | `New`, `Replaced`, `Applied` o `Unconfirmed`; «no disponible» se calcula |
+| `State` | texto | `New`, `Replaced` o `Applied`; «no disponible» y «Sin confirmar» se calculan al leer |
 | `AttemptKeys` | jsonb | hasta 10 claves con su fecha |
 | `AppliedAtUtc?`, `AppliedLocation?` | timestamptz, texto ≤2048 | — |
 | `CreatedAtUtc` y versión (`xmin`) | — | — |
 
+- **«Sin confirmar»** sale al leer, como «no disponible»: hay claves en `AttemptKeys`, ninguna terminó en 2xx y pasaron 24 h desde la última. No lo escribe ningún worker.
 - **Índice** parcial por `ConversationId` con `State = 'New'`, para reemplazar.
 - **La migración** es aditiva, y la tabla se suma al inventario del módulo, que la quita si se quita el asistente.
 - **Las personas que nombra una propuesta** (el destino y los `Record` de una persona) se suman a los `SubjectUserIds` de su mensaje.
-- **Se borra** con su conversación, en la retención de 30 días (salvo las guardadas), y con la baja de la cuenta. El inventario de datos personales del módulo la suma.
+- **Se borra** con su conversación, con la retención de las conversaciones del Inicio (`retentionDays`, 30 por defecto; 272), salvo las guardadas, y con la baja de la cuenta. Se inscribe en `PersonalDataPurgeTests` (B2 de la base 2): la purga su conversación.
+
+**`tenant.AssistantTurns`** suma `OfferedActions` (jsonb, nulo): la lista de acciones que se ofreció en el turno, sellada (0068 §6). Su migración va con la B4, y se escribe en el mismo despliegue como excepción de la 0060: todavía no hay despliegue.
 
 **`platform.IdempotencyKeys`** no cambia: `IIdempotencyStore` suma una lectura, `FindAsync(scope, userId, key)`, con el estado, el código y la ruta.
 
@@ -174,20 +177,20 @@ Cada uno lleva su teléfono (`M-`). Manda sobre el dibujo esta spec: el tablero 
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| B1 | Los tests de arquitectura de las acciones y los endurecimientos de la 0068. Los modelos, el puerto, las declaraciones y la fila `ActionSource` de capas-y-flujo entran antes, con el contrato | `Application/Models/AssistantActions/*`, `Application/Interfaces/Services/IAssistantActionSource.cs`, `BannedSymbols.txt`, `RuntimeRoleTests` | `IPendingItemSource` | `AssistantActionDeclarationTests`: id, ruta y requisito por reflexión de atributos, campos, textos, casos, el árbol de dependencias con su lista de lo permitido y `Company` con su campo |
-| B2 | El alcance de solo lectura: un alcance de DI propio. Entra con el actor revalidado (worker) o con el tenant del claim (petición), abre `READ ONLY` y se descarta. Corren ahí las fuentes y las 19 lecturas | `Application/Modules/Assistant/Services/AssistantReadOnlyScope*.cs` y su adaptador en Infrastructure | `ExecutionActorScope`, `TenantContext` | una fuente de prueba que escribe falla sin dejar filas; tenant correcto en los dos caminos; las lecturas de hoy siguen verdes |
-| B3 | La `Policy` de la 0061, separada de su `Guard`, que la sigue usando | `Services/Roles/OrganizationDelegationPolicy.cs` | `OrganizationDelegationGuard` | `DelegatedAdministrationTests` sin cambios, más la `Policy` pura |
-| B4 | El registro y las tres piezas: el filtro por llamada, el sello en el turno, la lista precargada en la preparación del turno, `read_action`, `propose_action`, `AssistantActionToolData` en el `switch` cerrado y la calificación | `Application/Modules/Assistant/Actions/*`, `AssistantTurnPreparationBuilder`, `AssistantTurnToolBuilder` | `AssistantToolCatalog`, `AssistantTool` | catálogo, sello, una por turno, rechazo sin cortar el turno, sin calificación no se ofrece |
-| B5 | La propuesta: entidad, migración, reemplazo, sujetos, retención y baja. Las tres rutas, `FindAsync` del almacén y «Sin confirmar» a las 24 h | `Domain/Assistant/AssistantProposal.cs`, configuración, migración, `AssistantProposalService`, controller | `AssistantMessage`, `AssistantConversationService` | aislamiento entre personas y organizaciones, estados, re-resolución, aplicada comprobada |
+| B1 | Los tests de arquitectura de las acciones y los endurecimientos de la 0068. Los modelos, el puerto, las declaraciones, la lista cerrada de pantallas del núcleo (`AssistantActionScreen`, que el módulo traduce a su `AssistantRouteKey`) y la fila `ActionSource` de capas-y-flujo entran antes, con el contrato. Los cuatro tests que usan `ExecuteSqlRaw` pasan a `ExecuteSqlAsync` interpolado | `Application/Models/AssistantActions/*`, `Application/Interfaces/Services/IAssistantActionSource.cs`, `BannedSymbols.txt`, `RuntimeRoleTests` y los cuatro tests | `IPendingItemSource` | `AssistantActionDeclarationTests`: id, ruta y requisito por reflexión de atributos, campos, textos, casos, el árbol de dependencias con su lista de lo permitido, `Company` con su campo, `Remove` con `RemoveConfirmation`, ninguna ruta de la lista de lo que no se declara y cada pantalla con su traducción |
+| B2 | El alcance de solo lectura: un alcance de DI propio. Entra con el actor revalidado (worker) o con el tenant del claim (petición), abre `READ ONLY` y se descarta. Corren ahí las fuentes y las 19 lecturas | el puerto `IAssistantReadOnlyScope` en `Application/Modules/Assistant/Interfaces/Integrations/`, implementado en `Infrastructure/Modules/Assistant/` | `ExecutionActorContext` (`IExecutionActorScope`), `TenantContext` | una fuente de prueba que escribe falla sin dejar filas; tenant correcto en los dos caminos; las lecturas de hoy siguen verdes |
+| B3 | Las `Policy` de la 0061: `OrganizationDelegationPolicy` y `CompanyDelegationPolicy`, que la B1 de la base 2 separó de sus `Guard`, las usan las fuentes sin cambiar la conducta de la ruta | las fuentes de B6 y B7 | las dos `Policy` | `DelegatedAdministrationTests` sin cambios; la `Policy` y su `Guard` deciden igual en la organización y en una empresa |
+| B4 | El registro y las tres piezas: el filtro por llamada, el sello en `AssistantTurns.OfferedActions` con su migración, la lista precargada en la preparación del turno, `read_action`, `propose_action`, `AssistantActionToolData` en el `switch` cerrado y la calificación | `Application/Modules/Assistant/Actions/*`, `AssistantTurnPreparationBuilder`, `AssistantTurnToolBuilder` | `AssistantToolCatalog`, `AssistantTool` | catálogo, sello, una por turno, rechazo sin cortar el turno, sin calificación no se ofrece |
+| B5 | La propuesta: entidad, migración, reemplazo, sujetos, retención y baja. Las tres rutas, `FindAsync` del almacén y «Sin confirmar» calculado al leer | `Domain/Assistant/AssistantProposal.cs`, configuración, migración, `AssistantProposalService`, controller | `AssistantMessage`, `AssistantConversationService` | aislamiento entre personas y organizaciones, estados, re-resolución, aplicada comprobada, `attempts` después de un 2xx |
 | B6 | `OrganizationUserActionSource`, con las tres de Usuarios, la empresa por su permiso y el aviso de la invitación | `Application/Services/OrganizationUsers/OrganizationUserActionSource.cs` | `OrganizationDomainPendingItems` | escenarios de la batería |
-| B7 | `RoleActionSource`, con las tres de Roles y los permisos del alcance que quien pide tiene | `Application/Services/Roles/RoleActionSource.cs` | B6 | escenarios de la batería |
+| B7 | `RoleActionSource`, con las tres de Roles y los permisos del alcance que quien pide tiene. Quitar un permiso que sigue incluido por otro que queda (260) se rechaza con su ruta (`Invalid`) | `Application/Services/Roles/RoleActionSource.cs` | B6 | escenarios de la batería |
 | B8 | La batería genérica, los escenarios y el contrato publicado | `Api.IntegrationTests/Modules/Assistant/AssistantActionContractTests.cs`, `TestFeatures/AssistantActions/*`, el generador de `assistant-actions.json` | `RouteIsolationMatrixTests` | la batería de la 0068 para las seis |
 
 **Front:**
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| F1 | El registro de adaptadores y `useAssistantProposal`: leer por id, marcas, operaciones, la clave de cada intento, «Ya se guardó» y `applied` | `src/shared/assistant-actions/*` | `ModuleRegistry.tsx`, `useIdempotentMutation.ts` | hook y límites del módulo |
+| F1 | El registro de adaptadores y `useAssistantProposal`: leer por id, marcas, operaciones, la clave de cada intento, el 422 que vuelve a preguntar a `attempts`, «Ya se guardó» y `applied` | `src/shared/assistant-actions/*` | `ModuleRegistry.tsx`, `useIdempotentMutation.ts` | hook, el 422 que se guardó y el que no, y límites del módulo |
 | F2 | La tarjeta en el hilo, con sus seis estados | `src/modules/assistant/components/AssistantActionCard.tsx` | `ToolStatus.tsx` | estados, teclado y axe |
 | F3 | Los adaptadores de Usuarios: el diálogo sobre el Inicio, la ficha con «Lo que cambia» y quitar | `InviteUserDialog.tsx`, `UserDetailPage.tsx` | — | todo lo propuesto se ve, y lo enviado es lo que se ve |
 | F4 | Los adaptadores de Roles: crear, cambiar y dar de baja | `RoleEditorPage.tsx`, `RolesPage.tsx` | F3 | ídem |
@@ -197,9 +200,9 @@ Cada uno lleva su teléfono (`M-`). Manda sobre el dibujo esta spec: el tablero 
 
 | Marca | Qué hay que confirmar | Qué asume esta spec |
 | --- | --- | --- |
-| Base 2 · B1 | `OrganizationDelegationGuard` y los 403 de la 0061 en invitar, editar y roles | existen; B3 separa la `Policy` |
+| Base 2 · B1 | `OrganizationDelegationGuard`, `CompanyDelegationGuard`, sus `Policy` y los 403 de la 0061 en invitar, editar y roles | existen; B3 reusa las `Policy` |
 | Base 2 · B16 | lo incluido en la proyección efectiva | los permisos de quien pide ya lo incluyen |
-| Base 2 · F5 | cómo sabe el front qué roles y permisos puede dar quien pide | lo dice el servidor al leer los roles y el catálogo (269), y las fuentes usan la misma `Policy`; lo que difiera va a «Cambios al contrato» en K0 |
+| Base 2 · F5 | cómo sabe el front qué roles y permisos puede dar quien pide | `grantable` en los roles y en el catálogo (269), que calcula la misma `Policy` que usan las fuentes; lo que difiera va a «Cambios al contrato» en K0 |
 | Base 2 · F11 | `Picker` y su búsqueda por id | existe; F3 y F4 lo usan |
 | Tools | las 19 lecturas no usan `IUnitOfWork` en su camino | corren en `READ ONLY` sin cambios |
 | `UpdateOrganizationUserRequest` | reemplaza las listas enteras | la ficha aplica las operaciones sobre lo leído y manda las listas completas |

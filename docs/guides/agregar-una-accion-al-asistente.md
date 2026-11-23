@@ -21,7 +21,7 @@ La mecánica (el puerto, el registro, las tres piezas de IA, la tarjeta y la bat
      - el requisito, **copiado del atributo de la ruta** que guarda. Si es de empresa, nombrá el campo de la empresa: el permiso se mira en esa;
      - el módulo, si es de un módulo, y la `SaveRoute` (`"POST api/suppliers"`);
      - cómo se confirma: `Dialog`, `Page` o `RemoveConfirmation`. Lo que nace en borrador no es una acción: sigue con su propuesta (0057);
-     - la pantalla (`ScreenKey`), de la lista cerrada de enlaces, y el efecto fuera del sistema;
+     - la pantalla, de la lista cerrada del núcleo (`AssistantActionScreen`), y el efecto fuera del sistema. Una pantalla nueva suma su valor y su traducción a `AssistantRouteKey` en el módulo;
      - los campos;
      - para editar o eliminar, qué lectura de la pantalla encuentra el registro.
    - **Registrala** en `<Área>Registration.cs` como `IAssistantActionSource`.
@@ -46,14 +46,14 @@ La mecánica (el puerto, el registro, las tres piezas de IA, la tarjeta y la bat
 
      Nunca puertos de `Interfaces/Integrations`, `IServiceProvider`, `IUnitOfWork`, repositorios, `Writer`, `Guard` ni servicios. El test de arquitectura recorre todo el árbol de dependencias, y además la fuente corre en una transacción de solo lectura.
 4. **Los textos:**
-   - `Action.<id>@<versión>.Name`, `.Description` y `.Field.<campo>`, en es y en, en los resources del área;
+   - `Action.<id>@<versión>.Name`, `.Description` y `.Field.<campo>`, en es y en: los del núcleo, en el recurso «Actions» de `Application/Resources/`, y los de un módulo, en los suyos. No nombran al asistente: lo frena la guarda de textos neutrales del núcleo;
    - la descripción le dice al modelo para qué sirve la acción, sin ejemplos de datos reales;
    - nada de prompts escritos a mano.
 5. **La pantalla acepta una propuesta** (front). Sumale el adaptador `useAssistantProposal('<id>@<versión>', toFormValues)`. **Todo valor propuesto se dibuja:** si uno no entra en la pantalla, el adaptador rechaza la propuesta. Lo demás lo hace el hook:
    - lee la propuesta por id;
    - marca «Propuesta del asistente» y «Revisá»;
    - en editar, muestra «Lo que cambia», también lo que se quita;
-   - al crear, pide la clave de cada intento a la propuesta, y un 422 de clave repetida lo muestra como «ya se guardó».
+   - al crear, pide la clave de cada intento a la propuesta. Ante un 422 de clave repetida le vuelve a preguntar: si ya se guardó, lo dice y lleva a lo creado; si no, es otro intento.
 
    Los selectores buscan por id lo elegido que no cargaron. Si guardar sale del sistema, la pantalla lo avisa antes de guardar, en un diálogo o en una página. Al pasar a `@2`, el adaptador de `@1` se queda un despliegue más.
 6. **Sus casos y su escenario:**
@@ -91,8 +91,9 @@ No hace falta una herramienta, un prompt, una tarjeta ni tests a mano para la IA
 - **Los tests de arquitectura de las acciones** (sin Docker):
   - el id con versión es único;
   - el requisito es el de la ruta, y la ruta existe, escribe y, si crea, es idempotente;
-  - una acción de empresa nombra su campo de empresa;
-  - los campos son de la lista cerrada y sin nombres prohibidos;
+  - una acción de empresa nombra su campo de empresa, y una que elimina se confirma con `RemoveConfirmation`;
+  - los campos son de la lista cerrada y sin nombres prohibidos, y ninguna acción guarda por una ruta de lo que no se declara;
+  - cada pantalla tiene su traducción a `AssistantRouteKey`;
   - están los textos y los casos;
   - el árbol de dependencias de la fuente cumple la lista de lo permitido.
 - **La batería genérica** (con Docker): una teoría por acción.

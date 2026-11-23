@@ -41,7 +41,7 @@ El usuario pidió, con sus palabras, que cuando la IA pueda crear, editar o elim
    - **su id con versión,** sellado (`users.invite@1`);
    - **su clase:** crear, editar, eliminar u otra, como dar de baja o reactivar;
    - **su requisito y su ruta:** el requisito, el módulo que la prende (si es de un módulo) y la ruta que guarda (`SaveRoute`);
-   - **cómo se confirma y en qué pantalla:** `Dialog`, `Page` o `RemoveConfirmation`, y la pantalla, de la lista cerrada de `AssistantLink.routeKey`;
+   - **cómo se confirma y en qué pantalla:** `Dialog`, `Page` o `RemoveConfirmation`, y la pantalla, de una lista cerrada del núcleo (`AssistantActionScreen`) que el módulo traduce a su `AssistantRouteKey`;
    - **su efecto fuera del sistema,** de una lista cerrada;
    - **sus campos;**
    - **para editar o eliminar,** qué lectura de la pantalla encuentra el registro;
@@ -93,7 +93,7 @@ El usuario pidió, con sus palabras, que cuando la IA pueda crear, editar o elim
    **La regla queda en un solo lugar.** Lo que decide un `Guard` de la ruta queda en una `Policy` pura que usan el `Guard` y la fuente; por ejemplo, qué roles puede dar quien pide ([0061](0061-nadie-da-lo-que-no-tiene.md)).
 6. **El registro filtra y sella.** `AssistantActionCatalog`, en el módulo Assistant, junta las fuentes por DI y comprueba al arrancar que cada id con versión sea único.
    - **Filtra en cada llamada:** por acceso, módulo prendido para la organización, requisito, que la acción esté ofrecida y que el modelo del turno sea uno con el que pasó la calificación. Lee los permisos una sola vez por llamada.
-   - **Sella en el turno** la lista que ofreció ([0064](0064-reglas-de-toda-la-ia.md) §6). Solo se proponen esas acciones, y cada llamada vuelve a autorizar.
+   - **Sella en el turno** la lista que ofreció (`AssistantTurns.OfferedActions`; [0064](0064-reglas-de-toda-la-ia.md) §6). Solo se proponen esas acciones, y cada llamada vuelve a autorizar.
    - **No nombra a nadie:** el núcleo no nombra al asistente ni a ningún módulo.
 7. **Tres piezas de IA, fijas para todas las áreas:**
    - **la lista precargada** `assistant_actions`: el id y el nombre corto de las acciones, como dato del turno. Con más de 40, la lista trae las áreas, y el modelo pide las de una;
@@ -127,9 +127,9 @@ El usuario pidió, con sus palabras, que cuando la IA pueda crear, editar o elim
     **Al crear, la propuesta da la clave:**
     - cada intento de guardar desde una propuesta usa una `Idempotency-Key` que entrega el servidor y que queda con la propuesta;
     - **la clave se repite** mientras ese intento no termine en 4xx, así que dos pestañas usan la misma;
-    - **un 422 de clave repetida** quiere decir «ya se guardó»: el front no renueva la clave y lleva a lo creado;
+    - **un 422 de clave repetida** no prueba que se guardó, porque la clave guarda también un 4xx: el front vuelve a pedir la clave a la propuesta, y si una ya terminó en 2xx, la respuesta es «ya se guardó», con el enlace a lo creado;
     - **«Aplicada»** la marca el servidor, cuando el almacén de idempotencia confirma que una clave de la propuesta terminó en 2xx para esa persona y esa ruta (el almacén suma esa lectura);
-    - **si pasan 24 h** sin saberlo, la propuesta no se vuelve a abrir y queda «Sin confirmar», con el enlace al listado, como la [0066](0066-lo-que-no-se-sabe-si-salio.md).
+    - **si pasan 24 h** sin saberlo, la propuesta no se vuelve a abrir y queda «Sin confirmar», con el enlace al listado, como la [0066](0066-lo-que-no-se-sabe-si-salio.md). Ese estado se calcula al leer, con las claves de la propuesta.
 
     **Al editar o eliminar, la versión** impide aplicar dos veces; «Aplicada» se marca con la versión nueva.
 11. **Los tres lados y WhatsApp:**
@@ -156,7 +156,7 @@ El usuario pidió, con sus palabras, que cuando la IA pueda crear, editar o elim
 | Editar de más | Listas con «sumar» y «quitar», «Lo que cambia» con lo que se quita, el aviso si cambió y el 409 |
 | SQL | Valores tipados que van a un `*Request` y a EF con parámetros; ningún tipo de campo es texto ejecutable; sin `FromSqlRaw`, `ExecuteSqlRaw` ni `SqlQueryRaw` |
 | Cambiar el esquema | No hay camino: las acciones son rutas que existen, los catálogos son filas y `mt_app` no crea ni altera tablas |
-| Duplicar | La clave de cada intento la da el servidor, un 422 quiere decir «ya se guardó», y pasadas las 24 h queda «Sin confirmar» |
+| Duplicar | La clave de cada intento la da el servidor, ante un 422 se le vuelve a preguntar a la propuesta si ya se guardó, y pasadas las 24 h queda «Sin confirmar» |
 | Abrir la propuesta de otro | Solo la lee su dueño (0048, D5) |
 | Datos de terceros al proveedor | Van tipos, campos y nombres de definiciones; nunca registros ni personas, tampoco en la historia (0064 §10) |
 | Cantidades y costos | Los límites de la regla 12, y el costo de cada acción medido al calificarla |
@@ -176,12 +176,12 @@ El usuario pidió, con sus palabras, que cuando la IA pueda crear, editar o elim
 - **El almacén de idempotencia** suma la lectura del estado de una clave.
 - **El front** suma la tarjeta genérica, la apertura por id y el adaptador de cada pantalla.
 - **Sumar un área** son cuatro piezas, sin código de IA, herramientas ni prompts: su fuente con las declaraciones, sus textos, el adaptador de su pantalla y su escenario con sus casos. Lo armado como dato, como las opciones de un catálogo, se declara una vez por tipo y no pide nada más. La receta es [agregar-una-accion-al-asistente](../guides/agregar-una-accion-al-asistente.md).
-- **Lo que necesita antes:** dar roles necesita la 0061 y la 260, que se programan en la segunda parte de la base. Sus `Guard` se escriben con la `Policy` separada.
+- **Lo que necesita antes:** dar roles necesita la 0061 y la 260, que se programan en la segunda parte de la base. Ahí sus `Guard` nacen con su `Policy` pura (`OrganizationDelegationPolicy` y `CompanyDelegationPolicy`), que las fuentes reusan.
 - **El primer ejemplo** es «Invitar usuario» (`users.invite@1`): el correo, los roles de la organización, la empresa y sus roles.
 - **Desde la E12,** cada etapa que suma una pantalla que crea, edita o elimina declara sus acciones. Se ofrecen juntas, calificadas, antes de la prueba integral del bloque.
 - **Revisión adversarial:** toda acción que da permisos o sale del sistema la pide, como manda [AGENTS.md](../../AGENTS.md).
 - **Endurecimientos que entran con la etapa:**
-  - `BannedSymbols.txt` prohíbe `FromSqlRaw`, `ExecuteSqlRaw` y `SqlQueryRaw`;
+  - `BannedSymbols.txt` prohíbe `FromSqlRaw`, `ExecuteSqlRaw` y `SqlQueryRaw`, también en los tests, que pasan a `ExecuteSqlAsync` interpolado;
   - `RuntimeRoleTests` mira todos los esquemas;
   - las lecturas de hoy corren en el alcance de solo lectura.
 - **Quitar el asistente** deja las declaraciones de las áreas sin uso, y el núcleo no cambia.
@@ -203,6 +203,7 @@ El usuario pidió, con sus palabras, que cuando la IA pueda crear, editar o elim
     - el id con versión es único y tiene formato;
     - `Remove` se confirma con `RemoveConfirmation`;
     - una acción `Company` nombra su campo de empresa;
+    - cada pantalla de `AssistantActionScreen` tiene su traducción en el módulo;
   - **la ruta:** el requisito es igual al atributo de su `SaveRoute`, que existe, escribe y, si crea, lleva `[Idempotent]`;
   - **los campos:** son de la lista cerrada, con límites y sin nombres prohibidos, y ninguna acción guarda por una ruta de la lista de lo que no se declara;
   - **los textos y los casos:** cada acción tiene sus textos en es y en y sus casos;
@@ -217,7 +218,7 @@ El usuario pidió, con sus palabras, que cuando la IA pueda crear, editar o elim
   - **la revocación:** si se quita el permiso en el medio, la ruta da 403;
   - **la fuente:** una fuente que intenta escribir falla y no deja nada;
   - **versiones y turnos:** una versión desconocida no se abre, y una segunda propuesta en el turno se rechaza;
-  - **el guardado único:** dos guardados desde una propuesta crean uno, y el segundo dice «ya se guardó».
+  - **el guardado único:** dos guardados desde una propuesta crean uno, y el segundo dice «ya se guardó»; un 422 con otro cuerpo no se toma como guardado.
 - **En el front:** el adaptador de cada acción dibuja todos los campos de una propuesta completa y manda lo que se ve, y el E2E corre «Invitar usuario» con una propuesta.
 - **La calificación,** con el modelo real y el visto bueno del usuario, contra cada modelo con el que se ofrece. Comprueba tres cosas:
   - que se elija la acción correcta;
