@@ -206,7 +206,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | ADR | La de respuestas redactadas (39). | Rige la [0054](../../decisions/0054-respuestas-redactadas-por-el-asistente.md): las fuentes, la forma, el validador y derivar. |
 | ADR | La 0048 y la 0038. | La 0048 suma una precisión (B1), sin tocar su D8, que remite a la 0068; la 0038 se actualiza. |
 | Acciones | El alcance de solo lectura y sus entradas. | Suma la del turno de canal, con la organización y sin persona. |
-| Costuras | El resolvedor de topes ([0069](../../decisions/0069-modulos-y-suscripciones.md) §4): cada módulo declara sus topes y el resolvedor da el de cada organización. | `maxReplyLength`, `repliesPerDay` y `formOffersPerDay` se declaran en su módulo y se leen por el resolvedor, nunca directo de la configuración de Plataforma; el valor de la organización se valida contra el tope que da. |
+| Costuras | `ModuleLimitResolver` e `IModuleLimitContributor` ([0069](../../decisions/0069-modulos-y-suscripciones.md) §4): cada módulo declara sus topes y el resolvedor da el de cada organización. | `assistant.maxReplyLength`, `assistant.repliesPerDay` y `assistant.formOffersPerDay` se declaran en `AssistantModuleLimitContributor` y se leen por el resolvedor, nunca directo de la configuración de Plataforma; el valor de la organización se valida contra el tope que da. |
 | Asistente | Cómo se separa el motor de la sesión de una persona. | Un turno de canal no necesita cuenta. |
 | [E18] | El audio del chat. | Está guardado cuando se transcribe. |
 | [E19] | Cómo queda el bloque en la versión sellada y en el Flow. | El prellenado lo saltea sin leerlo. |

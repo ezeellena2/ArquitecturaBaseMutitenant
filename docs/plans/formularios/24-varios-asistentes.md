@@ -132,7 +132,7 @@ Todas piden `whatsapp.manage`. La `@1` de la E23 se sigue leyendo un despliegue 
 | [E23] | `AssistantAgents` y las rutas del agente. | Sumar filas no rehace nada. |
 | [E23] | El historial por conversación. | No depende de qué asistente contestó. |
 | [E11] | Equipos y bot, en `WhatsAppTeam` y `WhatsAppAttentionBotWriter`. | El menú pasa a un equipo. |
-| Costuras | El resolvedor de topes ([0069](../../decisions/0069-modulos-y-suscripciones.md) §4): cada módulo declara sus topes y el resolvedor da el de cada organización. | Los límites de cada asistente con máximo de la plataforma (`maxReplyLength`, `repliesPerDay` y `formOffersPerDay`, E23) se declaran en su módulo y se leen por el resolvedor, nunca directo de la configuración de Plataforma; el valor de la organización se valida contra el tope que da. |
+| Costuras | `ModuleLimitResolver` e `IModuleLimitContributor` ([0069](../../decisions/0069-modulos-y-suscripciones.md) §4): cada módulo declara sus topes y el resolvedor da el de cada organización. | Los límites de cada asistente con máximo de la plataforma (las claves `assistant.*` de la E23) siguen en `AssistantModuleLimitContributor` y se leen por el resolvedor, nunca directo de la configuración de Plataforma; el valor de la organización se valida contra el tope que da. |
 
 ## Decisiones tomadas (no se vuelven a preguntar)
 
