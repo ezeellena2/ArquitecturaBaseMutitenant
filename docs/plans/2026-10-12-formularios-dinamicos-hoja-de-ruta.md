@@ -88,13 +88,13 @@
   | `formcatalogs.manage` | E12 | Administrar catálogos | Manage catalogs | Crear y editar catálogos, importarlos, darlos de baja y aprobar los que propone el asistente. | Create and edit catalogs, import them, deactivate them and approve the ones the assistant proposes. |
   | `forms.read` | E14 | Ver formularios | View forms | Ver la lista «Formularios» y cada formulario, sin cambiarlo. | View the Forms list and each form, without changing it. |
   | `forms.manage` | E14 | Diseñar formularios | Design forms | Crear y editar formularios en la pestaña «Diseño», copiarlos y borrarlos. | Create and edit forms in the Design tab, copy them and delete them. |
-  | `forms.publish` | E14 | Publicar formularios | Publish forms | Publicar un formulario en WhatsApp, darlo de baja y reactivarlo. | Publish a form on WhatsApp, deactivate it and reactivate it. |
+  | `forms.publish` | E14 | Publicar formularios | Publish forms | Publicar un formulario, darlo de baja y reactivarlo. | Publish a form, deactivate it and reactivate it. |
   | `formrecords.create` | E14 | Responder formularios | Answer forms | Completar formularios por WhatsApp o desde la web. | Fill in forms on WhatsApp or on the web. |
   | `formrecords.read` | E14 | Ver respuestas | View responses | Ver las respuestas y sus valores. | View responses and their values. |
   | `formrecords.export` | E15 | Exportar respuestas | Export responses | Bajar en Excel las respuestas, con los filtros aplicados. | Download the responses to Excel, with the filters applied. |
   | `formpersondata.manage` | E16 | Administrar los datos de las personas | Manage people data | Definir los datos de las personas, como «Zona». | Define people data, such as Zone. |
   | `formrules.manage` | E21 | Administrar reglas y PDF | Manage rules and PDF | Armar las reglas de un formulario y el diseño de su PDF. | Build a form's rules and its PDF design. |
-  | `formapprovals.decide` | E21 | Aprobar o rechazar respuestas | Approve or reject responses | Decidir las respuestas que piden aprobación, según el rol de la regla, menos las que cargó o corrigió la misma persona (25). | Decide the responses that need approval, according to the rule's role, except the ones the same person submitted or corrected. |
+  | `formapprovals.decide` | E21 | Aprobar o rechazar respuestas | Approve or reject responses | Decidir las respuestas que piden aprobación, según el rol de la regla; las que cargó o corrigió la misma persona, solo si la regla lo deja (25 y 276). | Decide the responses that need approval, according to the rule's role; the ones the same person submitted or corrected, only if the rule allows it. |
   | `formrecords.correct` | E21 | Corregir y anular respuestas | Correct and void responses | Corregir o anular cualquier respuesta, en cualquier momento (93). | Correct or void any response at any time. |
   | `formsuggestions.manage` | E23 | Administrar sugerencias entre formularios | Manage suggestions between forms | Elegir qué formulario se sugiere después de otro. | Choose which form is suggested after another. |
 - **El texto de un permiso dice solo lo que ya existe** (78). La tabla tiene el texto final, y cada etapa lo completa cuando llega: `forms.manage` y `forms.publish` suman lo suyo en la E17; `formrecords.create` suma «o desde la web» y `forms.publish` deja «en WhatsApp» en la E20 (98), y `formcatalogs.manage` suma el asistente en la E25, que trae el catálogo que propone (167).
@@ -140,7 +140,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - lo que suma se ve en todas las pantallas que ya existen: un tipo de pregunta nuevo, en la planilla, el detalle, el Excel y el PDF, si ya están;
 - nada nombra, prueba ni dibuja algo de una etapa posterior: eso pasa a esa etapa.
 
-**La base, antes de la E12:** lo que lista el [plan de desarrollo](2026-09-27-plan-de-desarrollo.md#etapas-12-a-25-formularios-por-whatsapp): los botones (la F5 que sale de la 10) y la campana en el núcleo, donde también se avisa la versión nueva. La prueba con Meta de la E14 en adelante pide una organización con su número conectado, y queda para cuando esté la I1 de la 10 (123).
+**La base, antes de la E12:** lo que lista el [plan de desarrollo](2026-09-27-plan-de-desarrollo.md#etapas-12-a-25-formularios-por-whatsapp): los botones (la F5 que sale de la 10) y la campana en el núcleo, donde también se avisa la versión nueva. La prueba con Meta de la E14 en adelante pide una organización con su número conectado, y queda para cuando esté la I1 de la 10 (123). Después van la [segunda parte de la base](formularios/base-de-la-12-segunda-parte.md) (214) y [Acciones del asistente](formularios/acciones-del-asistente.md) (268).
 
 **Criterios.** En todas las etapas rige la lista de control de la skill `/puerta`: doce puntos que salen de los 142 problemas de los reviews de ArquitecturaBase ([§4](#4-lo-que-aprendimos-en-arquitecturabase)). Cada etapa suma los suyos. El plan de la etapa los toma como lista de control, y cada punto que aplica lleva su test.
 
@@ -170,7 +170,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **«Formularios»** (79): una sola lista, con «Nuevo formulario»; cada formulario se abre con su pestaña «Diseño».
 - **Editor:** siete tipos de pregunta, entre ellos «elegir varias» (38), un `CheckboxGroup` de 1 a 20 opciones con mínimo y máximo, y la pregunta «Elegir de un catálogo», con la presentación del catálogo o la suya (78). Títulos de sección entre las preguntas, que en WhatsApp salen como subtítulo (88). Cada texto es uno solo, sin idioma (35). Prefijo propio, versiones y vista previa en el teléfono.
 - **Publicar:** operación durable en Meta, con un Flow por versión y por WABA de la organización. Una publicación sin confirmar se puede descartar (225).
-- **Mandar** desde el chat, a un empleado (Internos) o a un cliente (Clientes), según para quién es el formulario (49 y 50), con una sesión de 24 horas. Las opciones de catálogo viajan en el mensaje, con ids locales a la oferta. Lo que seguro no salió por la cola de WhatsApp se reintenta solo, y lo que no se sabe si salió queda «Sin confirmar» para una persona (240).
+- **Mandar** desde el chat, a un empleado (Internos) o a un cliente (Clientes), según para quién es el formulario (49 y 50), con una sesión que dura el tiempo para contestar que elige la organización (24 horas por defecto, de 1 a 168; 270). Las opciones de catálogo viajan en el mensaje, con ids locales a la oferta. Lo que seguro no salió por la cola de WhatsApp se reintenta solo, y lo que no se sabe si salió queda «Sin confirmar» para una persona (240).
 - **Recibir:** la respuesta numerada, idempotente, con los campos de catálogo sellados, y su tarjeta en el chat y en «Mensajes». La captura va sin `ExecutionActor`, porque un cliente no tiene cuenta.
 - **Módulo:** los puertos neutrales de los formularios y el retiro probado.
 - **Spec:** [formularios/14-formularios.md](formularios/14-formularios.md).
@@ -223,6 +223,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Al responder:** se baja cada archivo con el token de la organización, se verifican hash, tamaño y tipo real, y se guarda con `IFileStore`. Completa o nada, y aguanta un día de caída de Meta (H11 de ArquitecturaBase).
 - **Ver:** visor y descarga solo por la Api, con `formrecords.read`, también en la planilla y el detalle. El antivirus está en la lista de lanzamiento.
 - **Archivos en el chat** (48): el operador ve y baja lo que le mandan, y manda fotos y archivos desde el compositor, dentro de las 24 horas.
+- **La Configuración de Formularios** (270), de la organización y de Plataforma, con «Tamaño máximo de un archivo»; las etapas siguientes suman ahí sus valores.
 - **Spec:** [formularios/18-fotos-y-documentos.md](formularios/18-fotos-y-documentos.md).
 - **Criterios:**
   - las dimensiones de una foto se rechazan por el encabezado, antes de decodificar; el tipo sale del contenido, nunca de la extensión;
@@ -238,7 +239,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **En las respuestas:** la planilla, el detalle y el Excel los muestran; el Excel, con una fila por ítem y hasta 100.000 filas (227).
 - **Spec:** [formularios/19-condiciones-calculos-y-lineas.md](formularios/19-condiciones-calculos-y-lineas.md).
 - **Criterios:**
-  - antes de planificar, se prueban con Meta el componente `If`, una pantalla por ítem con «¿Agregás otro ítem?» y un archivo dentro de un `If`, en un celular, con el `routing_model` declarado: allá, sin él, responder «No» cortaba el formulario;
+  - antes de programar, se prueban con Meta el componente `If`, una pantalla por ítem con «¿Agregás otro ítem?» y un archivo dentro de un `If`, en un celular, con el `routing_model` declarado: allá, sin él, responder «No» cortaba el formulario;
   - el servidor nunca confía en lo que llega: vuelve a evaluar condiciones y cálculos;
   - un cálculo que no se puede hacer queda «Sin respuesta», nunca rompe la captura;
   - los montos van en `decimal`, con moneda, y los cálculos redondean al par, como lo recalcula ARCA (232).
@@ -265,7 +266,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 
 - **Reglas** «Cuando llega una respuesta», con guardado e historial propios, sin versión nueva ni republicar.
 - **Un solo motor de acciones,** con ejecuciones idempotentes y el efecto fuera de la transacción.
-- **Aprobación de un nivel:** nadie aprueba lo que cargó. «Por aprobar» va en la lista «Formularios», en «Para resolver», con la misma fuente (ADR 0040), y como una vista arriba de la planilla (148). Al lado, «Por resolver (N)» junta lo que una regla dejó esperando a una persona, y la columna «Reglas» lo marca en cada fila (228).
+- **Aprobación de un nivel:** quien cargó no aprueba lo suyo, salvo que la regla lo deje (276). «Por aprobar» va en la lista «Formularios», en «Para resolver», con la misma fuente (ADR 0040), y como una vista arriba de la planilla (148). Al lado, «Por resolver (N)» junta lo que una regla dejó esperando a una persona, y la columna «Reglas» lo marca en cada fila (228).
 - **PDF** como copia fija, con los campos «Dato», las fotos, el bloque y los cálculos, y las horas en la zona de quien cargó (236).
 - **Corregir y anular una respuesta** (91 a 93), con el permiso nuevo «Corregir y anular respuestas». La corrección reemplaza a la anterior con el mismo número y vuelve a pasar por las reglas; anular deja la respuesta «Anulada», sin borrarla.
 - **Lo propio de quien solo carga** (85) suma el estado, el PDF y el motivo de rechazo.
@@ -299,7 +300,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Armar una regla desde un texto** (63): la IA propone la regla y la persona la revisa y la guarda.
 - **Sin información cargada** (67): ayuda con lo general, nunca inventa datos de la organización, pregunta y deriva, y anota la pregunta en «Preguntas sin respuesta».
 - **Límites por bandeja** (65), y el tope de ofrecimientos lo elige cada organización (66).
-- **Casos** (39): cada organización configura perfil, conocimiento, casos y límites. Seis acciones, respuestas redactadas dentro de los límites y «Cualquier otra cosa» al final. Su ADR de respuestas redactadas se escribe al planificar la etapa.
+- **Casos** (39): cada organización configura perfil, conocimiento, casos y límites. Seis acciones, respuestas redactadas dentro de los límites y «Cualquier otra cosa» al final. Las respuestas redactadas siguen la [ADR 0054](../decisions/0054-respuestas-redactadas-por-el-asistente.md).
 - **La información del negocio** (169), como en ArquitecturaBase: varias franjas por día, «24 horas», productos y servicios, políticas y condiciones, y «Aplicar de lunes a viernes»; la dirección, escrita.
 - **Cómo trabaja:** historial de 24 horas de esa conversación, ráfagas de 4 s con tope de 15 s y hasta 3 acciones por turno. El asistente manda el formulario con la oferta fija que lo nombra (165) y lo prellena con un perfil nuevo del Flow, sin «elegir varias» ni las preguntas del bloque.
 - **Lo de la etapa 5 de allá:** sugerencias al operador y entre formularios, audios transcriptos (27) y «Formularios que faltan». El catálogo que propone el asistente pasa a la E25 (167).
@@ -328,13 +329,13 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **La «Lectura de documentos»** de un formulario y de una plantilla de la biblioteca.
 - **Pantallas:** la bandeja «Documentos recibidos» y «Armar formulario con la IA».
 - **Armar formularios y catálogos con la IA** (75, 102 y de la 154 a la 156): desde el chat del Inicio de la organización, con un texto, un archivo o un audio, o por WhatsApp. La IA propone y una persona crea el borrador o el catálogo, que queda por aprobar, también el catálogo que propone el asistente (167). El clip suma .xlsx, .csv y .docx, de a uno por mensaje; lo que se repite se arma como un bloque (177), y armar por WhatsApp se atiende antes de los casos (171). Al publicar, los documentos que originaron el formulario quedan propuestos.
-- **Validaciones fijas:** un conjunto cerrado en el código, y la tabla de entidades del BCRA como dato de referencia; lo descartado se borra a los 90 días; la lectura entra en el tope de la organización, con un tope por persona y por día (41).
+- **Validaciones fijas:** un conjunto cerrado en el código, y la tabla de entidades del BCRA como dato de referencia; lo descartado se borra a los días de la Configuración, 90 de entrada (272); la lectura entra en el tope de la organización, con un tope por persona y por día (41).
 - **«Pasar al formulario»** desde la bandeja (99): la respuesta queda a nombre de quien mandó el documento, y dice quién la revisó.
-- **Del traspaso 15:** lo propuesto sin revisar vence a los 90 días (215); las correcciones las ve una persona y no van a la IA (216); un tope diario de lecturas por organización (217); arma siempre un modelo calificado (218); por WhatsApp, una planilla con un pedido va a armar (221), y la IA puede proponer importar en un catálogo que existe (222).
+- **Del traspaso 15:** lo propuesto sin revisar vence a los días de la Configuración, 90 de entrada (215 y 272); las correcciones las ve una persona y no van a la IA (216); un tope diario de lecturas por organización (217); arma siempre un modelo calificado (218); por WhatsApp, una planilla con un pedido va a armar (221), y la IA puede proponer importar en un catálogo que existe (222).
 - **Spec:** [formularios/25-documentos.md](formularios/25-documentos.md).
 - **Criterios:**
   - precargar un archivo en un Flow se prueba con Meta antes de planificar;
-  - las ADR de la lectura de documentos y de la IA que arma se escriben al planificar;
+  - rigen las ADR [0056](../decisions/0056-lectura-de-documentos-con-ia.md) y [0057](../decisions/0057-la-ia-propone-y-una-persona-crea.md), de la lectura de documentos y de la IA que arma;
   - la IA solo carga sola con las tres señales de la 71, nunca con la seguridad que declara el modelo; lo leído es un dato, nunca una instrucción;
   - las validaciones fijas corren en el servidor, sin IA, también al confirmar.
 

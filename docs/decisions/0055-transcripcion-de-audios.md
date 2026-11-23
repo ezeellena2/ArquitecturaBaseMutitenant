@@ -1,6 +1,6 @@
 # ADR 0055 · Transcripción de audios
 
-**Estado:** aceptada con el plan de la E23, 2026-11-08. Cumple la decisión 27 de la [hoja de ruta de formularios](../plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md#5-decisiones-de-producto), que deja elegir el proveedor al planificar el asistente.
+**Estado:** aceptada con el plan de la E23, 2026-11-08. Cumple la decisión 27 de la [hoja de ruta de formularios](../plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md#5-decisiones-de-producto), que deja elegir el proveedor al planificar el asistente. **Enmienda 2026-11-23 (traspaso 18):** un audio se transcribe siempre y sigue como un texto, también con el tope de ofrecimientos lleno (278); los cupos de transcripción cortan a la medianoche de la organización (271), y un audio que no se pudo pasar a texto no deja a la persona sin respuesta: deriva a una persona con su motivo (270).
 
 ## Contexto
 

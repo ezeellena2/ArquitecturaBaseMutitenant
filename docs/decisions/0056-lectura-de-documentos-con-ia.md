@@ -1,6 +1,6 @@
 # ADR 0056 · Lectura de documentos con IA
 
-**Estado:** aceptada el 2026-11-08, con el [plan de la E25](../plans/2026-11-08-etapa-25-documentos.md); se implementa en esa etapa. Toma la 0022 de ArquitecturaBase («Lectura de documentos con IA»), adaptada a este repo. **Enmienda 2026-11-18 (traspaso 15):** los ejemplos no van al proveedor (216), un tope diario por organización (217), el vencimiento de lo propuesto (215), cuándo se lee, el PDF protegido y volver a extraer sin releer; las reglas de toda la IA, en la [0064](0064-reglas-de-toda-la-ia.md).
+**Estado:** aceptada el 2026-11-08, con el [plan de la E25](../plans/2026-11-08-etapa-25-documentos.md); se implementa en esa etapa. Toma la 0022 de ArquitecturaBase («Lectura de documentos con IA»), adaptada a este repo. **Enmienda 2026-11-18 (traspaso 15):** los ejemplos no van al proveedor (216), un tope diario por organización (217), el vencimiento de lo propuesto (215), cuándo se lee, el PDF protegido y volver a extraer sin releer; las reglas de toda la IA, en la [0064](0064-reglas-de-toda-la-ia.md). **Enmienda 2026-11-23 (traspaso 18):** las páginas de un PDF salen de la configuración de la organización (10 por defecto, de 1 a 10), y uno más largo no se lee y lo dice con el número (270); los topes de lectura cortan a la medianoche de la organización (271); vencer lo propuesto sin revisar y borrar lo descartado siguen los días de la configuración, 90 cada uno (272), y un dato leído que no tiene la forma de su validación queda sin leer, en lugar de marcado (277).
 
 ## Contexto
 

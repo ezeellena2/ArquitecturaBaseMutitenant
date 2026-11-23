@@ -188,6 +188,7 @@ Lo que trajo la tanda 1 del traspaso 18 (decisiones 270 a 273 de la [hoja de rut
 - **La retención en pantalla** (272): «Privacidad y retención» en la configuración de Plataforma, el plazo de los chats en la de cada organización (90 días por defecto) y la purga de esos chats por organización, que hoy no existe.
 - **El cupo de la IA por organización** (271): el contador diario de la persona en cada organización, también con la clave de la plataforma, que corta a la medianoche de la organización.
 - **El nombre y los correos** (273): «Nombre y correos» en la configuración de Plataforma, con `Email:AppName` y `FromName` como respaldo un despliegue.
+- **Los países que reciben códigos** (270, tanda 5): `WhatsApp:AllowedCountries` pasa a la configuración de WhatsApp de la plataforma, con la B18.
 - **El test del snapshot de EF** (traspaso 18, 04): falla si el modelo tiene cambios que no están en una migración. Va en la B9.
 
 ## Lo que vio la prueba integral de ArquitecturaBase
