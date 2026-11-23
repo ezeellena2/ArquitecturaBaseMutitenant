@@ -26,10 +26,11 @@ La mecánica (el puerto, el registro, las tres piezas de IA, la tarjeta y la bat
      - para editar o eliminar, qué lectura de la pantalla encuentra el registro.
    - **Registrala** en `<Área>Registration.cs` como `IAssistantActionSource`.
 2. **Los campos son los de la pantalla,** no los del pedido HTTP: lo que la persona ve, y nada más.
-   - **El tipo sale de la lista cerrada:** `Text`, `LongText`, `Integer`, `Decimal`, `Money`, `Date`, `Boolean`, `Email`, `Phone`, `TaxId`, `Choice`, `Choices`, `Record` o `Consent`, y cada campo lleva su límite.
+   - **El tipo sale de la lista cerrada:** `Text`, `LongText`, `Integer`, `Decimal`, `Money`, `Date`, `Boolean`, `Email`, `Phone`, `TaxId`, `Choice`, `Choices`, `Record`, `Consent` o `Items`, y cada campo lleva su límite.
    - **Un campo puede depender de otro** (`DependsOn`), como los roles de la empresa elegida.
    - **Las listas, al editar,** se cambian con «sumar» y «quitar».
    - **Un consentimiento** es `Consent`: llega sin tildar.
+   - **Una lista de filas,** como los casos o las preguntas frecuentes, es `Items`: tiene un solo nivel, un tope de filas y una clave por fila. Al editar, suma, quita o cambia una fila por su clave.
    - **No declares** claves, conexiones, URL ni campos de tenant o de usuario. No existen como tipo, y el test los rechaza por nombre.
    - **Tampoco son acciones** los métodos de ingreso, la baja de una cuenta, aceptar una invitación o un documento legal, ni lo que pide una prueba reciente o un segundo factor.
 3. **Resolvé y validá sin guardar.**
@@ -42,7 +43,8 @@ La mecánica (el puerto, el registro, las tres piezas de IA, la tarjeta y la bat
    - **Las dependencias:** solo lo de la lista de lo permitido de la [0068](../decisions/0068-acciones-del-asistente.md):
      - readers, validadores y `Policy`, y un `Resolver` solo si su propio árbol también la cumple;
      - `ICurrentUser`, las lecturas de permisos, `TimeProvider` y los catálogos de referencia;
-     - lecturas por la caché.
+     - lecturas por la caché;
+     - si los datos viven en otro módulo que el de tu ruta, un puerto lector del núcleo (`I<X>Reader`) que implementa el módulo dueño. Si el puerto también escribe, separá su parte que lee en un lector propio. La fuente queda con la ruta que guarda.
 
      Nunca puertos de `Interfaces/Integrations`, `IServiceProvider`, `IUnitOfWork`, repositorios, `Writer`, `Guard` ni servicios. El test de arquitectura recorre todo el árbol de dependencias, y además la fuente corre en una transacción de solo lectura.
 4. **Los textos:**

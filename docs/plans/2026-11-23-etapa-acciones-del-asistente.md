@@ -97,12 +97,12 @@ Los pasos, con sus archivos, lo que copian y sus tests, están en la spec (§Pas
      - el id con versión, único;
      - el requisito igual al atributo de la `SaveRoute`, leído por reflexión, con `[Access]` y `organizationPermission`;
      - la ruta escribe y, si crea, es `[Idempotent]`;
-     - los campos de la lista cerrada, sin nombres prohibidos;
+     - los campos de la lista cerrada, sin nombres prohibidos, y un `Items` con un solo nivel, su tope de filas y su clave;
      - `Company` con su campo, y `Remove` con `RemoveConfirmation`;
      - ninguna acción guarda por una ruta de la lista de lo que no se declara;
      - cada `AssistantActionScreen` con su traducción a `AssistantRouteKey`;
      - los textos y los casos;
-     - el árbol de dependencias de cada fuente, contra la lista de lo permitido, con un detector probado con una clase de prueba.
+     - el árbol de dependencias de cada fuente, contra la lista de lo permitido, también a través de la implementación de cada puerto lector del núcleo (`I<X>Reader`), con un detector probado con una clase de prueba.
 2. **B2 · El alcance de solo lectura (R: aislamiento y datos).**
    - **Qué hace:** el puerto `IAssistantReadOnlyScope` (`Application/Modules/Assistant/Interfaces/Integrations/`, implementado en `Infrastructure/Modules/Assistant/`) abre un alcance de DI propio. Entra con el actor revalidado (en el worker) o con el tenant y el usuario del claim (en la petición), nunca con `ITenantScope.Enter`. Abre la transacción `READ ONLY` y descarta el alcance al terminar.
    - **Dónde corre:** el ejecutor de herramientas y las fuentes corren adentro; las 19 lecturas, sin cambios de código.
@@ -158,7 +158,7 @@ Leé AGENTS.md, la ADR docs/decisions/0068-acciones-del-asistente.md, este plan 
 
 Las tareas siguen las fichas del front (`formatos.md`, `pantallas-y-ui.md`, `docs/architecture/tema.md`, `accesibilidad.md` y `formularios.md`), con i18n, tipos generados y axe donde cambia una pantalla. Los pasos están en la spec. El módulo del asistente no importa áreas, y las áreas no importan el módulo: se hablan por `src/shared/assistant-actions/`.
 
-1. **F1 · El registro y el hook.** `src/shared/assistant-actions/`: el registro de adaptadores por acción y `useAssistantProposal`.
+1. **F1 · El registro y el hook.** `src/shared/assistant-actions/`: el registro de adaptadores por acción y `useAssistantProposal`. «Lo que cambia» muestra también las filas de un `Items` que se suman, se quitan o cambian.
    - **El hook:** lee la propuesta por id, pone «Propuesta del asistente» y «Revisá», y aplica las operaciones sobre lo leído.
    - **Al crear:** pide la clave de cada intento a `attempts`. Ante un 422 con una clave de la propuesta vuelve a llamar a `attempts`: un 409 `AlreadyApplied` con `location` es «Ya se guardó», y una clave nueva es otro intento. Después de un 2xx, llama a `applied`.
    - **Tests:** del hook, de los límites del módulo y del 422 que se guardó y el que no.

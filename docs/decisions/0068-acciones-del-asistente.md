@@ -3,6 +3,7 @@
 **Estado:** aceptada por el usuario el 2026-11-23. Ese día aprobó el diseño y eligió dónde programarlo: en la etapa «Acciones del asistente», después de la segunda parte de la base y antes de la E12.
 - **Lo que toma:** el diseño técnico de la decisión 268 de la [hoja de ruta de formularios](../plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md#5-decisiones-de-producto), que es la v2 de la D8 de la [0048](0048-asistente.md). Toma la ADR 0034 de ArquitecturaBase («la IA prepara y la pantalla de siempre confirma») y la adapta a organizaciones, empresas y Plataforma. El «Nuevo usuario» de la 268 es, acá, «Invitar usuario».
 - **Lo que deja igual:** la [0057](0057-la-ia-propone-y-una-persona-crea.md).
+- **La enmienda del mismo día** (la revisión de alineación de la E12 a la E25): la E23 y la E24 dejaban afuera editar el agente y dar de baja, reactivar, editar o asignar un asistente. Las suma con dos cosas: el tipo `Items` (§4) y el puerto lector entre módulos (§5).
 - **Las revisiones:** pasó por dos revisiones adversariales, cada una con un revisor nuevo. La primera fue sobre el diseño, antes de aprobarlo; la segunda, el mismo día, sobre este texto. Los arreglos de las dos ya están acá.
 
 ## Contexto
@@ -62,10 +63,11 @@ El usuario pidió, con sus palabras, que cuando la IA pueda crear, editar o elim
      - `Text`, `LongText`, `Integer`, `Decimal`, `Money`, `Date`, `Boolean`, `Email`, `Phone` y `TaxId`;
      - `Choice` y `Choices`, de una definición (un rol, un formulario, un catálogo);
      - `Record`, un registro (una empresa, una persona, una opción de un catálogo);
-     - `Consent`, que nunca se propone y llega sin tildar.
+     - `Consent`, que nunca se propone y llega sin tildar;
+     - `Items`, una lista de filas con sus campos. Cada campo es de esta misma lista, pero nunca otro `Items`: tiene un solo nivel. Cada lista tiene un tope de filas y una clave por fila, por ejemplo los casos o las preguntas frecuentes del asistente.
    - **Lo que no existe:** no hay tipo para claves, conexiones, SQL, expresiones ni URL, y ningún campo se llama como un tenant, un usuario o un secreto.
    - **Un campo puede depender de otro** (`DependsOn`): por ejemplo, los roles de la empresa elegida.
-   - **Editar son operaciones:** un campo simple se cambia, y una lista se edita con «sumar» y «quitar», nunca se reemplaza entera. «Agregale Vendedora a Kevin» no le saca los otros roles.
+   - **Editar son operaciones:** un campo simple se cambia, y una lista se edita con «sumar» y «quitar», nunca se reemplaza entera. «Agregale Vendedora a Kevin» no le saca los otros roles. Un `Items` suma, quita o cambia una fila por su clave.
    - **Lo que no se declara como acción:**
      - claves y conexiones;
      - métodos de ingreso;
@@ -83,7 +85,10 @@ El usuario pidió, con sus palabras, que cuando la IA pueda crear, editar o elim
      - readers, validadores y `Policy`;
      - un `Resolver` solo si su propio árbol también la cumple;
      - `ICurrentUser`, las lecturas de permisos, `TimeProvider` y los catálogos de referencia;
-     - lecturas por la caché: llenarla no es escribir un dato, pero nunca se invalida ni se avanza una generación.
+     - lecturas por la caché: llenarla no es escribir un dato, pero nunca se invalida ni se avanza una generación;
+     - un **puerto lector del núcleo** (`I<X>Reader`), cuando los datos viven en otro módulo que el de la ruta. El puerto solo devuelve datos, y su implementación en el módulo dueño cumple también esta lista. Un puerto que lee y escribe, como `IConversationAgentSettings`, se separa, y su parte que lee va en un lector propio. Con el módulo dueño quitado, el apagado del núcleo responde «no disponible», y la acción no se ofrece.
+
+     La fuente vive siempre con la ruta que guarda, en su área o su módulo.
 
      Nada de `Interfaces/Integrations` (salvo el contexto de la petición), `IServiceProvider`, `IUnitOfWork`, repositorios, `Writer`, `Guard` ni servicios.
    - **Dónde corre:** en un alcance de DI propio. Ese alcance entra con el mismo actor revalidado (en el worker), con la organización del claim (en una petición) o, desde la E23, con la organización de un turno de canal, sin persona y sin acciones, nunca con `ITenantScope.Enter`. Abre una transacción de PostgreSQL `READ ONLY` y se descarta al terminar: nada que quede en memoria llega a otra transacción.
@@ -205,9 +210,9 @@ El usuario pidió, con sus palabras, que cuando la IA pueda crear, editar o elim
     - una acción `Company` nombra su campo de empresa;
     - cada pantalla de `AssistantActionScreen` tiene su traducción en el módulo;
   - **la ruta:** el requisito es igual al atributo de su `SaveRoute`, que existe, escribe y, si crea, lleva `[Idempotent]`;
-  - **los campos:** son de la lista cerrada, con límites y sin nombres prohibidos, y ninguna acción guarda por una ruta de la lista de lo que no se declara;
+  - **los campos:** son de la lista cerrada, con límites y sin nombres prohibidos; un `Items` tiene un solo nivel, su tope de filas y su clave, y ninguna acción guarda por una ruta de la lista de lo que no se declara;
   - **los textos y los casos:** cada acción tiene sus textos en es y en y sus casos;
-  - **sin escritura:** el árbol de dependencias de las fuentes cumple la lista de lo permitido, y el ejecutor corre cada fuente y cada herramienta en el alcance de solo lectura;
+  - **sin escritura:** el árbol de dependencias de las fuentes cumple la lista de lo permitido, también a través de la implementación de cada puerto lector, y el ejecutor corre cada fuente y cada herramienta en el alcance de solo lectura;
   - **el contrato:** el build publica `docs/contracts/assistant-actions.json`, y el front comprueba un adaptador por acción.
 - **La batería genérica, con Docker** (`AssistantActionContractTests`): una teoría por acción registrada, con un escenario en `TestFeatures` que da también el cuerpo HTTP de su caso válido. No lleva tests por acción. Prueba:
   - **cuándo aparece:** sin permiso, con el módulo apagado o desde otro acceso, la acción no aparece;
