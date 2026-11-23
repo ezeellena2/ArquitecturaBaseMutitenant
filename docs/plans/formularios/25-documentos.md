@@ -1,6 +1,6 @@
 # E25 · Documentos por WhatsApp (spec)
 
-**Estado:** pendiente · spec de la etapa 25, la última del bloque (decisiones 34, 41, 78, 99, 102, 146, 154 a 156, 165, 167, 171, 177, 181, 182, 192, 215 a 218, 221 a 223, 230 y 238, y de los traspasos 16 a 18, 261 a 264, 266 a 272 y 275 a 278), con el [formato](plantilla.md) de las etapas. En ArquitecturaBase, los documentos están decididos, con su ADR 0022 y sus tableros, y sin programar; la IA que arma formularios y catálogos tiene programada su etapa 1, con texto y audio (ADR 0024). **Antes de planificar** se prueba con Meta si un Flow acepta un archivo precargado: es el mayor riesgo técnico. Allá se precarga, pero Meta no devuelve ese archivo en la respuesta (O38, en [Qué verificar](25-parte-pantallas-y-verificar.md#qué-verificar-al-arrancar)). `/plan-etapa` la contrasta con el código real después de la E24, y al planificarla escribe las ADR de la lectura de documentos y de la IA que arma.
+**Estado:** pendiente · spec de la etapa 25, la última del bloque (decisiones 34, 41, 78, 99, 102, 146, 154 a 156, 165, 167, 171, 177, 181, 182, 192, 215 a 218, 221 a 223, 230 y 238, y de los traspasos 16 a 18, 261 a 264, 266 a 272 y 275 a 278), con el [formato](plantilla.md) de las etapas. En ArquitecturaBase, los documentos están decididos, con su ADR 0022 y sus tableros, y sin programar; la IA que arma formularios y catálogos tiene programada su etapa 1, con texto y audio (ADR 0024). **Antes de programar,** en la K0 del plan, se prueba con Meta si un Flow acepta un archivo precargado: es el mayor riesgo técnico. Allá se precarga, pero Meta no devuelve ese archivo en la respuesta (O38, en [Qué verificar](25-parte-pantallas-y-verificar.md#qué-verificar-al-arrancar)). `/plan-etapa` la contrasta con el código real después de la E24. Rigen las ADR [0056](../../decisions/0056-lectura-de-documentos-con-ia.md), la lectura de documentos, y [0057](../../decisions/0057-la-ia-propone-y-una-persona-crea.md), la IA que arma.
 
 **Partes.** Esta spec no entra en un solo archivo, así que sigue en otros, con las mismas secciones. Lo que no está en la tabla está acá.
 
@@ -16,7 +16,7 @@ Antes de empezar, en este orden:
 
 1. **Lo anterior:** la etapa [«Acciones del asistente»](acciones-del-asistente.md): la propuesta en el `Message`, sus estados y su tarjeta; la [spec de la E12](12-catalogos.md): importar; la [E13](13-campos.md): el cruce por un campo; la [E14](14-formularios.md): la captura; la [E15](15-respuestas.md): la respuesta como el formulario y su actividad; la [E18](18-fotos-y-documentos.md): archivos y la Configuración de Formularios; la [E19](19-condiciones-calculos-y-lineas.md): el bloque; la [E20](20-cargar-desde-la-web.md): la carga de la web; la [E21](21-reglas-y-aprobacion.md): corregir y las dos casillas de aprobar; la [E22](22-biblioteca.md): plantillas, y la [E23](23-asistente.md): turnos, herramientas y prellenado. Del chat del Inicio, la ficha [Asistente](../../features/asistente.md): el SSE, los adjuntos y los topes del turno.
 2. **Decisiones** de la hoja de ruta: 23, 24, 35, 39, 40 a 42, 49, 50, 70 a 72, 75, 78, 99, 102, 110, 146, 154 a 156, 161, 165, 167, 171, 177, 178, 181, 182, 192, 206, de la 215 a la 223, 229, 230, 238, 239, de la 261 a la 264, de la 266 a la 272 y de la 275 a la 278. ADR [0056](../../decisions/0056-lectura-de-documentos-con-ia.md), [0057](../../decisions/0057-la-ia-propone-y-una-persona-crea.md), [0064](../../decisions/0064-reglas-de-toda-la-ia.md), las reglas de toda la IA, y [0068](../../decisions/0068-acciones-del-asistente.md), las acciones del asistente.
-3. **Fichas y guías:** [datos-de-referencia](../../rules/datos-de-referencia.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [identificacion-fiscal](../../rules/identificacion-fiscal.md), [modulos](../../rules/modulos.md), [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [datos-personales](../../rules/datos-personales.md), [logs](../../rules/logs.md), [cuotas](../../rules/cuotas.md), [tests](../../rules/tests.md) y la [guía de herramientas](../../guides/agregar-una-herramienta-al-asistente.md).
+3. **Fichas y guías:** [datos-de-referencia](../../rules/datos-de-referencia.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [identificacion-fiscal](../../rules/identificacion-fiscal.md), [modulos](../../rules/modulos.md), [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [datos-personales](../../rules/datos-personales.md), [logs](../../rules/logs.md), [cuotas](../../rules/cuotas.md), [tests](../../rules/tests.md), la [guía de herramientas](../../guides/agregar-una-herramienta-al-asistente.md) y la [receta de acciones](../../guides/agregar-una-accion-al-asistente.md).
 4. **Código para copiar:** la columna «Copia de» de los [pasos](25-parte-pasos.md#pasos).
 5. **Referencia de producto,** solo para leer: en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`, el anexo F, F3, y el anexo D (`DOC1` a `DOC6`). Allá también: `docs/features/formularios.md`, «Catálogos propuestos» y «La IA arma formularios y catálogos»; `docs/features/inteligencia-artificial.md`, «Audio en Inicio», y las ADR 0022 y 0024. En su front, `docs/design/documentos.md` e `ia-arma-formularios.md`, y las capturas `assistant-proposal`, `assistant-audio` y `catalog-manual-proposal` de `src/test/visual/screenshots/`.
 
@@ -88,6 +88,26 @@ No se leen `.doc`, `.xls`, los archivos con macros ni los que tienen contraseña
 - **La biblioteca** es la de la E22 (40).
 - **Genérico:** ningún tipo de documento va en el código. Un estándar nuevo es una plantilla.
 
+## Acciones del asistente
+
+Con la [receta](../../guides/agregar-una-accion-al-asistente.md) (268 y [0068](../../decisions/0068-acciones-del-asistente.md)), registradas y sin ofrecer hasta la calificación:
+
+| Acción | Dónde se confirma | Permiso | Ruta que guarda |
+| --- | --- | --- | --- |
+| `formdocuments.discard@1` · Descartar un documento | la confirmación de descartar de la bandeja (`RemoveConfirmation`) | `formrecords.read` | `POST …/documents/{id}/discard` |
+| `formdocuments.record@1` · Pasar al formulario | la bandeja con el documento en su panel y su confirmación, sin guardar (`Page`). Su efecto fuera del sistema son las reglas del formulario (correo y WhatsApp), y se avisa antes de guardar | `formrecords.read` | `POST …/documents/{id}/record` |
+| `formcatalogs.discard@1` · Descartar propuesta | la confirmación de «Descartar propuesta» del catálogo (`RemoveConfirmation`) | `formcatalogs.manage` | `DELETE …/catalogs/{id}` |
+| `forms.settings.edit@2` y `forms.platformsettings.edit@2` | las dos configuraciones de la E18, que suman los seis valores de «Documentos recibidos» (`Integer`): una versión nueva (0068 §12) | los de la E18 | los de la E18 |
+
+Atender la bandeja de donde llegó un documento lo decide la ruta (403), porque la fuente no puede usar `IStructuredInboxAccess` (0068 §5).
+
+**No se declaran:**
+- **«Volver a abrir» un documento:** es de un clic, sin confirmación (§9);
+- **corregir lo leído:** ya lo propone la IA al leer, y lo corrige la persona;
+- **«Aprobar y activar» un catálogo propuesto:** la IA nunca activa lo que propuso (0057 §2 y 167);
+- **armar, crear desde la tarjeta e importar:** siguen con la propuesta de la 0057;
+- **la «Lectura de documentos», «Cargar solo si es seguro» y los casos «Documento»:** son del formulario, que sigue con la 0057, y de la configuración del asistente (E23).
+
 ## Fuera de esta etapa
 
 - Varias fotos de un mismo documento, o varios documentos en un mensaje.
@@ -111,4 +131,4 @@ La puerta de la etapa, con la lista de control de `/puerta`. Antes, la calificac
 ## Requisitos previos
 
 - La E24 cerrada.
-- La prueba con Meta del archivo precargado en un Flow, antes de planificar; que su respuesta llega sin el archivo (O38) lo confirma la prueba real.
+- La prueba con Meta del archivo precargado en un Flow, antes de programar, en la K0 del plan; que su respuesta llega sin el archivo (O38) lo confirma la prueba real.

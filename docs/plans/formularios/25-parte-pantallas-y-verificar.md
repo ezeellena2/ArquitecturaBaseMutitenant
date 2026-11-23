@@ -52,14 +52,21 @@ Aprobados y publicados en el lienzo v168, con sus tres recorridos guiados: el co
 
 | Marca | Qué hay que confirmar | Qué asume esta spec |
 | --- | --- | --- |
-| [Meta] | Antes de planificar: si un Flow acepta un archivo precargado. Allá se precarga, pero Meta no devuelve ese archivo en la respuesta (O38, el mayor riesgo técnico): se confirma acá con Meta. | **Si no se puede,** el Flow saltea esa pregunta, y al capturar la respuesta toma el documento guardado. La persona ve «Adjuntamos tu documento», sin «Cambiar documento». **Se pueda o no,** la respuesta llega sin el archivo: la captura cuenta la copia guardada antes de exigir el mínimo de la pregunta (una de archivo obligatoria pide uno), o la respuesta queda rechazada y a la persona no le llega nada (O38). |
+| [Meta] | Antes de programar, en la K0 del plan: si un Flow acepta un archivo precargado. Allá se precarga, pero Meta no devuelve ese archivo en la respuesta (O38, el mayor riesgo técnico): se confirma acá con Meta. | **Si no se puede,** el Flow saltea esa pregunta, y al capturar la respuesta toma el documento guardado. La persona ve «Adjuntamos tu documento», sin «Cambiar documento». **Se pueda o no,** la respuesta llega sin el archivo: la captura cuenta la copia guardada antes de exigir el mínimo de la pregunta (una de archivo obligatoria pide uno), o la respuesta queda rechazada y a la persona no le llega nada (O38). |
 | [Meta] | Los botones y las listas: 3 y 10. | Lo de la API de hoy. |
 | [E18] | El archivo del chat. | Se lee por un puerto, y Forms guarda su copia. |
 | [E20] | La carga de la web. | «Pasar al formulario» la usa a nombre de quien mandó el documento. |
 | [E22] | `FormTemplateDraft` y la copia. | Una sección más se copia sola. |
 | [E23] | La ráfaga, el prellenado y la conversación de una cuenta vinculada. | Están, y el prellenado deja afuera «elegir varias», las preguntas del bloque, las que tienen «Mostrar si» y la que fija una marca. |
-| ADR | Las de la lectura de documentos y de la IA que arma, que `/plan-etapa` escribe al planificar, desde la 0022 y la 0024 de allá. | Siguen esas dos: la IA propone y una persona crea (154). |
+| ADR | Las de la lectura de documentos y de la IA que arma. | Rigen la [0056](../../decisions/0056-lectura-de-documentos-con-ia.md) y la [0057](../../decisions/0057-la-ia-propone-y-una-persona-crea.md): la IA propone y una persona crea (154). |
 | Asistente | El `Message` y el `done` del SSE de la E8b, su clip y los topes del turno: 5 llamadas, contando el título, y 2048 tokens de salida. | `Message` ya trae `proposal?` de «Acciones del asistente», al que esta etapa suma sus clases, y suma `audio?`, sin romper lo que lee el front, y una propuesta de 40 preguntas entra en 2048 tokens; si no entra, se sube solo el tope del turno que arma. |
 | Bibliotecas | Con qué se saca el texto de `.docx` y `.xlsx` y las páginas de un PDF. | `.xlsx` con ClosedXML; lo demás se elige al planificar, sin ejecutar nada. |
 | Parecidos | Cómo se mide que dos documentos se parecen. | Por la clasificación que devuelve la IA. |
 | Allá | «La IA arma, etapas 2 y 3» y la revisión de la IA, que llegaron con el traspaso 15 sin la prueba integral de allá. | Están en esta spec (215 a 223 y la 0064); al planificar se contrasta con `origin/main`, por si el traspaso 16 cambió algo. El pedido vago ya está decidido acá (192). |
+
+**La prueba con Meta del archivo precargado** (K0 del plan), del usuario, con la cuenta de desarrollo de la 11 (`WhatsApp:BusinessAccountId`). El chat deja en `.local/` un Flow JSON de `r13` con un `DocumentPicker` obligatorio, visible por `${data.mostrar_selector}`, y un `TextBody` «Adjuntamos tu documento», visible por `${data.adjunto}`:
+1. En «WhatsApp Manager» de esa cuenta: «Herramientas de la cuenta» › «Flows» › «Crear Flow», nombre «Prueba documento adjunto», categoría «Otro», plantilla predeterminada › «Crear».
+2. Reemplazá el JSON del editor por el de prueba y tocá «Guardar»: sin errores.
+3. Sumale al `Form` un `init-values` para el selector y guardá: da «"init-values" property should not contain a value…». Deshacelo.
+4. En la vista previa interactiva, con `adjunto: true` y `mostrar_selector: false` en el `__example__`, se ve «Adjuntamos tu documento» sin selector y el botón final termina; al revés, el selector pide un archivo.
+5. Sin publicarlo, borrá el borrador desde el ⋮ y mandá una captura de cada caso.

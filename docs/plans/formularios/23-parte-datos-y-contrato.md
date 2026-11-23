@@ -42,7 +42,7 @@
 
 **Las del agente** llevan `[FeatureGate("assistant")]` y van en el módulo WhatsApp, en `OrganizationWhatsAppAssistantController.cs`: piden un permiso de WhatsApp (28), que el módulo Assistant no puede nombrar, porque retirar WhatsApp lo saca del catálogo. **Las del chat** van en una clase nueva, `OrganizationWhatsAppConversationsControllerBase`, entre `WhatsAppConversationsControllerBase` y los dos controllers de la organización, porque Plataforma no tiene modo de atención. **Rutas que cambian:** `POST …/conversations/{id}/take` de la E11, y responder sin tomar, que ya toma, pasan el chat a atención manual y dejan sin efecto una propuesta que llegue tarde, y siguen pidiendo solo atender esa bandeja; `GET` y `PUT /forms/{id}/draft` suman `offerWhen?`; `GET` y `PUT /api/platform/assistant/settings` suman `{maxReplyLength, maxRepliesPerDay, maxFormOffersPerDay}`, los máximos de la plataforma, el último de 1 a 50 (278); los mensajes del chat, `assistantActionId?`, `transcript?` y el estado de la conversación: `attentionMode`, `pinned`, `needsPerson?`; la lista de chats, el filtro `needsPerson`.
 
-**Los límites** (270 y 278): cada bandeja de `limits` lleva, con el largo y las respuestas del día, `formOffersPerDay` (de 1 a 50, 2 de entrada) y `reofferDeclinedAfterDays` (`null` es «Nunca», el de entrada, o de 1 a 365). Los tres topes van hasta el máximo de la plataforma, o `Assistant.Agent.Invalid`; lo guardado antes de un valor lo lee con el de entrada.
+**Los límites** (270 y 278): cada bandeja de `limits` lleva `maxReplyLength` (de 100 a 1000 caracteres, 400 de entrada), `repliesPerDay` (de 1 a 50, 20 de entrada), `formOffersPerDay` (de 1 a 50, 2 de entrada) y `reofferDeclinedAfterDays` (`null` es «Nunca», el de entrada, o de 1 a 365). Los tres topes van hasta el máximo de la plataforma, o `Assistant.Agent.Invalid`, y esos máximos van en los mismos rangos, con 600, 30 y 50 de entrada. `idleMinutes` de la atención va de 5 a 1440, con 30 de entrada. Los valores de entrada salen de `WA-Asistente-Limites`, `WA-Modo-Atencion` y la 278; los rangos del largo y de las respuestas, de ArquitecturaBase, y el de `idleMinutes`, de esta spec. Lo guardado antes de un valor lo lee con el de entrada.
 
 **El conocimiento** (169) viaja en `knowledge`: `{business{name, description}, location{kind, address?, reference?, area?}, hours{days[7]{state, slots[]{from, to, nextDay}}, specialDates[]{date, state, slots[]}}, products?, policies?, faq[]{id, question, answer}}`. `state` es `Unknown`, `Open`, `Closed` o `AllDay`; las horas van en `HH:mm`, de 15 en 15 y en la zona horaria de la organización, y una franja que termina después de la medianoche lleva `nextDay`. «Aplicar de lunes a viernes» lo hace la pantalla: el contrato recibe siempre los siete días. La dirección es un texto: no se busca ni se guarda un lugar de Google.
 
@@ -74,7 +74,9 @@ public interface ISpeechTranscriber
 }
 ```
 
-`IStructuredFormSource` suma los candidatos con su `OfferWhen`, sin valores. **Las herramientas** viven en `A/Modules/Assistant/Tools`, como dice la guía, y solo leen o proponen: ejecuta siempre el módulo dueño. Ningún módulo implementa `IAssistantTool`, porque `ModuleIsolationTests` lo prohíbe: hablan por los puertos de arriba. `propose_form_offer` y `report_unanswered` son acciones de la propuesta de un turno, con los candidatos que WhatsApp pasa en `ConversationTurn`, y `propose_rule`, que llama `FormRuleProposalService`, usa `IStructuredRuleDrafter`. **El texto de la oferta** (165) no es parte de la propuesta: lo pone WhatsApp desde sus recursos, con el nombre del formulario, también al mandar una sugerencia.
+Van en `A/Interfaces/Integrations/Conversations/`, `StructuredData/` y `Speech/`, con sus modelos en `A/Models/Conversations/` y `A/Models/StructuredData/`, y sus apagados en `I/Conversations/`, `I/StructuredData/` e `I/Speech/`. `IStructuredRuleDrafter` lo implementa `A/Modules/Assistant/Services/AssistantStructuredRuleDrafter.cs`.
+
+`IStructuredFormSource` suma los candidatos con su `OfferWhen`, sin valores. **Las herramientas** viven en `A/Modules/Assistant/Tools`, como dice la guía, y solo leen o proponen: ejecuta siempre el módulo dueño. **Corren en el alcance de solo lectura** de «Acciones del asistente» (B2; 0068 §5), que en un turno de canal entra con la organización del turno, sin persona y nunca con `ITenantScope.Enter`; ese turno no ofrece las tres piezas de acciones (0068 §11). Ningún módulo implementa `IAssistantTool`, porque `ModuleIsolationTests` lo prohíbe: hablan por los puertos de arriba. `propose_form_offer` y `report_unanswered` son acciones de la propuesta de un turno, con los candidatos que WhatsApp pasa en `ConversationTurn`, y `propose_rule`, que llama `FormRuleProposalService`, usa `IStructuredRuleDrafter`. **El texto de la oferta** (165) no es parte de la propuesta: lo pone WhatsApp desde sus recursos, con el nombre del formulario, también al mandar una sugerencia.
 
 **La campana:** suma `assistantUnanswered`, a quien tiene `whatsapp.manage`, por `INotificationSource` (base de la 12).
 
@@ -119,6 +121,10 @@ Tres migraciones, una por módulo: Assistant, WhatsApp y Forms. Todo es `ITenant
 
 **Columnas nuevas:** `WhatsAppChats` suma `AttentionMode`, `Pinned`, `NeedsPersonAtUtc?`, `NeedsPersonReason?` (el caso que derivó, `AssistantFailed`, `DailyReplyLimit`, `DailyOfferLimit` o `MonthlyLimit`), `ResolvedAtUtc?` y `TurnDueAtUtc?`. `WhatsAppChatMessages` suma `Transcript?`, que nace cifrado, como el texto redactado y el `Why` de `WhatsAppAssistantActions` ([0065](../../decisions/0065-contenido-del-chat-cifrado.md)). El dueño de un toque guarda su id con la decisión: el mismo toque recibe la misma respuesta, y otro sobre el mismo mensaje no decide otra vez (H21). `WhatsAppFlowSessions` suma `SentByAssistant`, y `SentByUserId` pasa a admitir `null`. `FormDefinitions` suma `OfferWhen`, que no se sella: cambiarlo no pide republicar. `FormDefinitionStates` suma `ActiveSuggestionSetId`. `FormRecords` suma `SuggestedByRecordId?`. `AssistantPlatformSettings` suma los máximos. Asistente suma `ChannelId` y `ChannelConversationId`, con el índice `(TenantId, OwnerUserId, ChannelId, ChannelConversationId)`.
 
+**Entidades:** `D/Assistant/AssistantAgent.cs` y `AssistantKnowledge.cs`, con su `<Entidad>Configuration.cs` en `I/Modules/Assistant/Persistence/Configurations/`; `D/WhatsApp/WhatsAppInboxAttention.cs`, `WhatsAppChatModeChange.cs`, `WhatsAppAssistantAction.cs`, `WhatsAppAssistantCounter.cs` y `WhatsAppUnansweredTopic.cs`, con la suya en `I/Modules/WhatsApp/Persistence/`, y `D/Forms/FormMissingTopic.cs` y `FormSuggestionSet.cs`, con la suya en `I/Modules/Forms/Persistence/Configurations/`.
+
+**Dos versiones:** cada migración agrega y escribe en el mismo despliegue (las columnas que pasan a admitir nulos, sus CHECK y los valores nuevos): es la excepción de la [0060](../../decisions/0060-dos-versiones-conviven.md), anotada en cada una, porque todavía no hay despliegue (la E10 va después del bloque, 123) y volver a la imagen anterior no aplica.
+
 ## En el multitenant
 
 - **Tope de IA por organización (ADR 0051):** el modelo, la transcripción y Probar.
@@ -145,6 +151,12 @@ Cada punto lleva su test, escrito durante la etapa:
 9. **Con el tope lleno, un audio no se transcribía** y quedaba sin respuesta, aunque pidiera algo que contesta un caso (O39): se transcribe siempre (278).
 10. **Un cupo diario agotado derivaba con «El asistente no pudo responder»,** sin que la persona ni el operador supieran que fue el cupo (O35): cada tope dice el suyo (271).
 
+Y lo que vio la [prueba integral de allá](../../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase), que va también en la lista de control de la puerta:
+11. **Una sugerencia hacia un formulario que publicó otra versión** lo nombra y dice qué hacer (O20).
+12. **Una sugerencia armada antes de tomar la conversación y mandada después:** el servidor la rechaza con un 409 claro, y la pantalla no la muestra como un resultado incierto (O32).
+13. **Un audio que el proveedor devuelve vacío** contesta o deriva, y dice por qué (270). Allá el chat decía «No pudimos pasar este audio a texto», a la persona no le llegaba nada y no se derivaba.
+14. **Ante «quiero cargar el registro de lluvia y además decime a qué hora abren»,** el motor propone solo el formulario (154).
+
 ## Pasos
 
 Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y `[E14]` a `[E21]`, un archivo que deja esa etapa.
@@ -153,7 +165,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| B1 | Actualizar las ADR 0048 (D8) y 0038, que dejaban esto para después | `docs/decisions/` | esas mismas | — |
+| B1 | Sumar a la 0048 una precisión con fecha: en WhatsApp, el asistente propone una de las seis acciones del menú (0054) y la ejecuta WhatsApp. La D8 queda como la dejó la 0068. Actualizar la 0038, que dejaba la IA para después | `docs/decisions/` | esas mismas | — |
 | B2 | Modo de atención | suma a `D/WhatsApp/WhatsAppChat.cs`, `WhatsAppInboundGuard.cs` y `WhatsAppAttentionBotWriter.cs`; `WhatsAppAttentionService.cs` | `WhatsAppTeamService.cs` | chat nuevo; vuelve solo; fijado; tomar a mitad de un envío; el bot solo en manual |
 | B3 | El agente y el conocimiento | `D/Assistant/AssistantAgent.cs`, `AssistantKnowledge.cs`, `AssistantAgentService.cs`, `AssistantAgentPolicy.cs`; suma a `PlatformAssistantSettingsController.cs` | `AssistantOrganizationSettings.cs` | 409 en cada versión; máximos de la plataforma; los límites con sus rangos, y sin asistente guardado, 2 y «Nunca» (270 y 278); «Cualquier otra cosa»; franjas que se pisan, la quinta de un día y la que pasa la medianoche |
 | B4 | El motor para un chat | `A/Modules/Assistant/Services/ConversationAgentService.cs`, `AssistantChannelContext`; suma a `AssistantTurnBuilder.cs` | `AssistantTurnService.cs` | orden estable; 10 mensajes; dos conversaciones no se mezclan; sin `ExecutionActor` |
@@ -163,20 +175,21 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | B8 | Audios | `A/Interfaces/Integrations/Speech/ISpeechTranscriber.cs`, su adaptador y su apagado | `WhatsAppChatFileService.cs` [E18] | con el tope de ofrecimientos lleno se transcribe (278); con el del mes, deriva (270); el plazo de los chats (272) |
 | B9 | Sugerencias | `FormSuggestionService.cs`; `WhatsAppSuggestionService.cs`; suma a `FormDefinitionCopyCreator.cs` [E17] | `FormRuleService.cs` [E21] | bucle; hacia un dado de baja; mapeos; la cadena; copiar lleva la primera revisión |
 | B10 | Regla desde un texto, temas y campana | `FormRuleProposalService.cs`, las herramientas, el puerto y su apagado, `FormMissingTopicService.cs`, `WhatsAppUnansweredTopicService.cs` y la fuente `assistantUnanswered` de la campana | `OrganizationUsersTool` | nunca guarda; tope agotado; sin nombres; buscar por tema, ordenar por cada columna (264) y los conteos; la campana con y sin `whatsapp.manage`; `ModuleIsolationTests` |
-| B11 | Rutas, contratos y ejemplos | `P/Modules/WhatsApp/Controllers/OrganizationWhatsAppAssistantController.cs`, `OrganizationWhatsAppConversationsControllerBase.cs`, `P/Modules/Forms/Controllers/*` | esos mismos | cada ruta con 401, 403, feature apagada = 404; aislamiento |
+| B11 | Rutas, contratos y ejemplos | `P/Modules/WhatsApp/Controllers/OrganizationWhatsAppAssistantController.cs`, `OrganizationWhatsAppConversationsControllerBase.cs`, `P/Modules/Forms/Controllers/*`; los contratos de WhatsApp, en `P/Modules/WhatsApp/Contracts/WhatsAppAttentionHttpContracts.cs`, y los de Forms, `SaveFormSuggestionsHttpRequest` y `ProposeFormRuleHttpRequest`, un archivo cada uno | esos mismos | cada ruta con 401, 403, feature apagada = 404; aislamiento |
+| B12 | Acciones del asistente: las tres de la spec | `A/Modules/WhatsApp/Services/WhatsAppAttentionActionSource.cs` y `A/Modules/Forms/Services/FormMissingTopicActionSource.cs`, registradas como `IAssistantActionSource`, con sus pantallas en `AssistantActionScreen` y su traducción a `AssistantRouteKey`; sus textos `Action.*` en `WhatsAppTexts` y `FormsTexts`, es y en; sus escenarios en `TestFeatures/AssistantActions/` | `RoleActionSource.cs` | `AssistantActionDeclarationTests` y la batería genérica (`AssistantActionContractTests`) |
 
 **Front:**
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
 | F1 | Tipos y llamadas | suma a `F/src/modules/assistant/`, `whatsapp/` y `forms/` | esos mismos | zod estricto |
-| F2 | La pantalla «Asistente» | `F/src/modules/whatsapp/assistant/` | el tablero | pestañas; un solo Guardar; 409; Probar; el horario, con «Aplicar de lunes a viernes»; los límites de la 270 y la 278, y lo que se elige, en la pieza (262) |
+| F2 | La pantalla «Asistente» | `F/src/modules/whatsapp/assistant/pages/AssistantPage.tsx` (`/org/whatsapp/asistente`) | el tablero | pestañas; un solo Guardar; 409; Probar; el horario, con «Aplicar de lunes a viernes»; los límites de la 270 y la 278, y lo que se elige, en la pieza (262) |
 | F3 | Modo y atención | suma a `ConversationView.tsx` y `ChatsWorkspace.tsx` | el tablero | cambiar, fijar y «Resuelto»; el filtro; el motivo de cada tope (270 y 278) |
 | F4 | El chat | suma a `MessageThread.tsx` | el tablero | porqué, botones, borrador y sugerencia |
-| F5 | Temas | `UnansweredTopicsPage.tsx`, `MissingFormsPage.tsx` | su tablero | descartar; sin nombres; la descripción en su columna (263); ordenar (264) |
-| F6 | El editor | suma a `FormEditorPage.tsx` y `RulesSection.tsx` | esos mismos | «Cuándo lo ofrece»; «Qué sugerir después»; «Armar desde un texto», también con el cupo del día agotado (271) |
+| F5 | Temas | `F/src/modules/whatsapp/assistant/pages/UnansweredTopicsPage.tsx` (`/org/whatsapp/preguntas`) y `F/src/modules/forms/pages/MissingFormsPage.tsx` (`/org/formularios/faltan`) | su tablero | descartar; sin nombres; la descripción en su columna (263); ordenar (264) |
+| F6 | El editor | suma a `FormEditorPage.tsx` y `components/rules/` [E21] | esos mismos | «Cuándo lo ofrece»; «Qué sugerir después»; «Armar desde un texto», también con el cupo del día agotado (271) |
 | F7 | Los máximos de la plataforma | suma a `PlatformAssistantSettingsPage.tsx` | su tablero | los tres máximos, el de ofrecimientos de 1 a 50 (278); 409 |
-| F8 | «Cómo empezó» y la cadena | suma a `QuickView.tsx` y `RecordFullPage.tsx` [E15] | su tablero | los datos propuestos; la cadena de respuestas |
+| F8 | «Cómo empezó» y la cadena | suma a `RecordActivity.tsx` [E15] el renglón «La mandó», con «El asistente» en «Quién» (267), y a `QuickView.tsx` y `RecordFullPage.tsx` | su tablero | «La mandó»; los datos propuestos; la cadena de respuestas |
 | F9 | Dar de baja | suma a `LifecycleDialogs.tsx` y al editor dado de baja [E17] | su tablero | el asistente y las sugerencias en lo que deja de pasar; vuelven al reactivar |
 
 **Al cerrar:** las fichas del asistente, de WhatsApp y de formularios suman su sección, y la regla de WhatsApp pasa a «solo texto redactado con estos límites, o fijo».
@@ -186,10 +199,11 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | Marca | Qué hay que confirmar | Qué asume esta spec |
 | --- | --- | --- |
 | [Meta] | Valores iniciales en un Flow con datos, sin endpoint. | Un perfil nuevo los admite por `data`. |
-| ADR | La de respuestas redactadas (39), que escribe `/plan-etapa` desde la 0021 de allá. | Rige lo de «Respuestas redactadas»: las fuentes, la forma, el validador y derivar. |
-| ADR | La ADR 0048, D8, y la 0038, que dejaban esto para después. | Se actualizan con esta etapa. |
+| ADR | La de respuestas redactadas (39). | Rige la [0054](../../decisions/0054-respuestas-redactadas-por-el-asistente.md): las fuentes, la forma, el validador y derivar. |
+| ADR | La 0048 y la 0038. | La 0048 suma una precisión (B1), sin tocar su D8, que remite a la 0068; la 0038 se actualiza. |
+| Acciones | El alcance de solo lectura y sus entradas. | Suma la del turno de canal, con la organización y sin persona. |
 | Asistente | Cómo se separa el motor de la sesión de una persona. | Un turno de canal no necesita cuenta. |
 | [E18] | El audio del chat. | Está guardado cuando se transcribe. |
 | [E19] | Cómo queda el bloque en la versión sellada y en el Flow. | El prellenado lo saltea sin leerlo. |
 | [E21] | La cola con su origen. | El asistente sale por la misma cola. |
-| Proveedor | Quién transcribe. | Se elige con su ADR, al planificar (27). |
+| Proveedor | Quién transcribe. | OpenAI, con la [0055](../../decisions/0055-transcripcion-de-audios.md) (27). |

@@ -102,6 +102,7 @@ Sin «Textos en», sin el inglés obligatorio, sin «Cambios sin guardar» ni «
 - **Las reglas y el diseño del PDF en Plataforma** se guardan con el borrador: van en `FormTemplateDraft` (`rules[]` y `pdfDesign`), con el mismo `PUT …/draft`, su versión y el 409. «Guardar borrador» de `Plat-FRM-Pdf` es ese mismo guardado. Los problemas de las reglas al publicar son `Forms.Template.Invalid` con el campo `rules[i]…` (B8).
 - **Las reglas precargadas en la organización:** «Guardar reglas» queda habilitado; al tocarlo sin elegir lo que pide cada acción, se marcan (43). El servidor valida con la regla de la E21. Se ven y se guardan con `formrules.manage`; sin ese permiso, la sección muestra su estado «sin permiso». Una que cita respuestas, adjunta el PDF o manda una copia pide además `formrecords.read` al guardarla, con la regla de la E21 (F5 de ArquitecturaBase): «Usar esta plantilla» no guarda reglas (30), así que el control cae en «Guardar reglas».
 - **«Logo» y «Nombre de la organización»** van como marcadores, porque la plataforma no ve datos de ninguna organización.
+- **El panel de «Gestión de formularios»** (275): «Biblioteca» suma su entrada debajo de la línea, después de «Catálogos», con `forms.manage`.
 - **Usar una plantilla:**
   - se pide el nombre y se propone el prefijo; si VIS está tomado, se propone VIS2, y la (i) del prefijo dice por qué;
   - si la plantilla se retiró en el medio, avisa y vuelve a la biblioteca;
@@ -124,6 +125,10 @@ Sin «Textos en», sin el inglés obligatorio, sin «Cambios sin guardar» ni «
 | Guardas | `ExplicitRouteInventoryTests`, `PermissionTextsTests` (de plataforma), `AuditTrail` de lo global (ADR 0050) |
 | Front | biblioteca, vista, uso y editor de plataforma con MSW y axe |
 | E2E y recorrido | el operador crea, completa y publica una plantilla; una organización la usa, completa el borrador y lo publica (con el canal de prueba) |
+
+## Acciones del asistente
+
+**Ninguna** (268 y [ADR 0068](../../decisions/0068-acciones-del-asistente.md)). Las escrituras de Plataforma de esta etapa piden la prueba reciente, que no se declara (0068 §4). «Usar esta plantilla» crea un formulario en borrador, que sigue con su propuesta ([0057](../../decisions/0057-la-ia-propone-y-una-persona-crea.md); 0068 §9). Las reglas precargadas se guardan con la ruta de la E21.
 
 ## 10. Puntos de contacto
 

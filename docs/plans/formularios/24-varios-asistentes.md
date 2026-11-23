@@ -7,8 +7,8 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E23](23-asistente.md): el agente, un turno y sus tablas; y la ficha [WhatsApp](../../features/whatsapp.md): equipos y bot.
-2. **Decisiones** de la hoja de ruta: 28, 35, 43, 46, 52, 68, 69, 77, 78, 206, 261 a 264, 269 a 271 y 278. ADR [0051](../../decisions/0051-precision-tecnica-de-costos-ia.md).
-3. **Fichas:** [modulos](../../rules/modulos.md), [concurrencia](../../rules/concurrencia.md), [multitenancy](../../rules/multitenancy.md), [guardado](../../rules/guardado.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md) y [tests](../../rules/tests.md).
+2. **Decisiones** de la hoja de ruta: 28, 35, 43, 46, 52, 68, 69, 77, 78, 206, 261 a 264, 268 a 271 y 278. ADR [0051](../../decisions/0051-precision-tecnica-de-costos-ia.md) y [0068](../../decisions/0068-acciones-del-asistente.md).
+3. **Fichas y guías:** [modulos](../../rules/modulos.md), [concurrencia](../../rules/concurrencia.md), [multitenancy](../../rules/multitenancy.md), [guardado](../../rules/guardado.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [tests](../../rules/tests.md) y la [receta de acciones](../../guides/agregar-una-accion-al-asistente.md).
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 5. **Referencia de producto,** solo para leer: en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`, el anexo F, F2.
 
@@ -62,9 +62,9 @@ El recorrido guiado «Dos equipos con su asistente» muestra a Lucía asignando 
 | `POST /api/organization/whatsapp/assistant/agents/{id}/test` | `whatsapp.manage` y atender esa bandeja | `{messages[], inbox}`, de 1 a 5, como la E23 | lo de la E23: sin `formrecords.read`, sin el porqué |
 | `PUT /api/organization/whatsapp/teams/{id}/assistant` | `whatsapp.manage` | `{assistantId?, version}` | 200 `{version}` |
 
-Las rutas `/whatsapp/assistant/agent` de la E23 pasan a estas, y nombran al principal. El equipo suma `assistantId?` y `assistantName?`. Los mensajes del chat suman `assistantName?`.
+Las rutas `/whatsapp/assistant/agent` de la E23 pasan a estas, y nombran al principal. Se retiran en el mismo despliegue: es la excepción de la [0060](../../decisions/0060-dos-versiones-conviven.md), porque todavía no hay despliegue (la E10 va después del bloque, 123). El equipo suma `assistantId?` y `assistantName?`. Los mensajes del chat suman `assistantName?`.
 
-**Puertos:** `ConversationTurn` suma `AgentId?`, que elige WhatsApp. `IConversationAgentSettings` suma `ListAsync`, con id, nombre, `IsPrimary` e `IsActive`, y sus otros métodos reciben el id del asistente.
+**Puertos:** `ConversationTurn` suma `AgentId?`, que elige WhatsApp. `IConversationAgentSettings` suma `ListAsync(search, status, sort, page)`, con id, nombre, `IsPrimary` e `IsActive`, y sus otros métodos reciben el id del asistente.
 
 **Errores:**
 
@@ -85,7 +85,7 @@ Una migración por módulo. Sin tablas nuevas de asistentes: `AssistantAgents` s
 | `WhatsAppTeams` | `AssistantId` | uuid? | opaco, sin FK: es de otro módulo |
 | `WhatsAppAssistantActions` | `AgentId` | uuid? | el que contestó |
 
-Un equipo tiene como mucho un asistente por definición: la columna es del equipo.
+Un equipo tiene como mucho un asistente por definición: la columna es del equipo. Cada migración agrega y escribe en el mismo despliegue, con el índice por nombre: es la excepción de la 0060, anotada en cada una, porque todavía no hay despliegue (123).
 
 ## Pasos
 
@@ -99,17 +99,23 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | B2 | La asignación | suma a `D/WhatsApp/WhatsAppTeam.cs` y `WhatsAppTeamService.cs`; la migración | esos mismos | otro módulo opaco; un asistente de baja |
 | B3 | Elegir quién contesta | `A/Modules/WhatsApp/Services/WhatsAppAgentResolver.cs`; suma a `WhatsAppAssistantTurnService.cs` [E23] | `WhatsAppBotResolver.cs` | sin equipo; equipo sin asistente; cambiar de equipo con el mismo historial; el tope de ofrecimientos del que contesta, con el contador del chat, y con el tope lleno deriva (278) |
 | B4 | El menú al empezar | suma a `WhatsAppAttentionBotWriter.cs` y `WhatsAppInboundGuard.cs` | esos mismos | con uno y con varios; la persona elige |
-| B5 | Rutas y contratos | suma a `OrganizationWhatsAppAssistantController.cs` y a los equipos | esos mismos | cada ruta con 401, 403 y feature apagada = 404; segunda página; ejemplos exportados; aislamiento |
+| B5 | Rutas y contratos | suma a `OrganizationWhatsAppAssistantController.cs` y a los equipos, con sus contratos en `P/Modules/WhatsApp/Contracts/WhatsAppAttentionHttpContracts.cs` | esos mismos | cada ruta con 401, 403 y feature apagada = 404; segunda página; ejemplos exportados; aislamiento |
 
 **Front:**
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
 | F1 | Tipos y llamadas | suma a `F/src/modules/whatsapp/assistant/` | esos mismos | zod estricto |
-| F2 | La lista | `AssistantsPage.tsx`, y la pantalla de la E23 por id | la lista de equipos | «Nuevo asistente»; dar de baja; ordenar (264) |
-| F3 | El equipo y el chat | suma al equipo y a `MessageThread.tsx` | esos mismos | el nombre en el chat y en el porqué; el asistente del equipo, en la pieza (262) |
+| F2 | La lista | `F/src/modules/whatsapp/assistant/pages/AssistantsPage.tsx` (`/org/whatsapp/asistentes`) y `components/NewAssistantDialog.tsx`, y `AssistantPage.tsx` de la E23 en `/org/whatsapp/asistentes/:assistantId` | `whatsapp/teams/pages/TeamsPage.tsx` | «Nuevo asistente»; dar de baja; ordenar (264) |
+| F3 | El equipo y el chat | suma a `TeamDialog.tsx`, a `MessageThread.tsx` y a `RecordActivity.tsx` [E15], con el asistente en «Quién» de «La mandó» | esos mismos | el nombre en el chat, en el porqué y en «La mandó»; el asistente del equipo, en la pieza (262) |
 
 **Al cerrar:** `docs/features/asistente.md` y `whatsapp.md` suman su sección.
+
+## Acciones del asistente
+
+Con la [receta](../../guides/agregar-una-accion-al-asistente.md) (268 y [0068](../../decisions/0068-acciones-del-asistente.md)), registrada y sin ofrecer hasta la calificación: `assistants.create@1` · Nuevo asistente, en su diálogo sobre el Inicio (`Dialog`), con el nombre (`Text`), `whatsapp.manage` y `POST api/organization/whatsapp/assistant/agents`, sin efecto fuera del sistema. La declara `A/Modules/WhatsApp/Services/WhatsAppAssistantActionSource.cs`, con su pantalla en `AssistantActionScreen` y su traducción a `AssistantRouteKey`, y valida con el validador del pedido; el nombre repetido lo decide la ruta.
+
+**No se declaran** dar de baja, reactivar ni editar un asistente, ni el asistente de un equipo: encontrar el asistente o listar los que se pueden elegir pide `IConversationAgentSettings`, un puerto del Assistant que una fuente no puede usar (0068 §5).
 
 ## Qué verificar al arrancar
 

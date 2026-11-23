@@ -12,9 +12,9 @@
 
 Antes de empezar, en este orden:
 
-1. **Lo anterior:** la [spec de la E14](14-formularios.md): T5, T6 y los puertos; la [E16](16-datos-de-las-personas.md): los filtros; la [E17](17-ciclo-de-vida.md): la disponibilidad; la [E18](18-fotos-y-documentos.md): bajar medios; la [E19](19-condiciones-calculos-y-lineas.md): el bloque; la [E21](21-reglas-y-aprobacion.md): reglas y cola, y la ficha [Asistente](../../features/asistente.md).
-2. **Decisiones** de la hoja de ruta: 19, 27, 28, 35, 39, 46, 50 a 52, 63, 65 a 67, 78, 146, 165, 169, 177, 202, 219, 223, 230, 261 a 264, 269 a 272 y 278. ADR [0048](../../decisions/0048-asistente.md), [0051](../../decisions/0051-precision-tecnica-de-costos-ia.md), [0038](../../decisions/0038-whatsapp-de-atencion.md), [0054](../../decisions/0054-respuestas-redactadas-por-el-asistente.md), [0055](../../decisions/0055-transcripcion-de-audios.md) y [0064](../../decisions/0064-reglas-de-toda-la-ia.md), las reglas de toda la IA.
-3. **Fichas y guías:** [modulos](../../rules/modulos.md), [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [multitenancy](../../rules/multitenancy.md), [cuotas](../../rules/cuotas.md), [logs](../../rules/logs.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [tests](../../rules/tests.md) y la [guía de herramientas](../../guides/agregar-una-herramienta-al-asistente.md).
+1. **Lo anterior:** la [spec de la E14](14-formularios.md): T5, T6 y los puertos; la [E16](16-datos-de-las-personas.md): los filtros; la [E17](17-ciclo-de-vida.md): la disponibilidad; la [E18](18-fotos-y-documentos.md): bajar medios; la [E19](19-condiciones-calculos-y-lineas.md): el bloque; la [E21](21-reglas-y-aprobacion.md): reglas y cola; la etapa [«Acciones del asistente»](acciones-del-asistente.md): el alcance de solo lectura (B2), y la ficha [Asistente](../../features/asistente.md).
+2. **Decisiones** de la hoja de ruta: 19, 27, 28, 35, 39, 46, 50 a 52, 63, 65 a 67, 78, 146, 165, 169, 177, 202, 219, 223, 230, 261 a 264, 268 a 272 y 278. ADR [0048](../../decisions/0048-asistente.md), [0051](../../decisions/0051-precision-tecnica-de-costos-ia.md), [0038](../../decisions/0038-whatsapp-de-atencion.md), [0054](../../decisions/0054-respuestas-redactadas-por-el-asistente.md), [0055](../../decisions/0055-transcripcion-de-audios.md), [0064](../../decisions/0064-reglas-de-toda-la-ia.md), las reglas de toda la IA, y [0068](../../decisions/0068-acciones-del-asistente.md), las acciones.
+3. **Fichas y guías:** [modulos](../../rules/modulos.md), [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [multitenancy](../../rules/multitenancy.md), [cuotas](../../rules/cuotas.md), [logs](../../rules/logs.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [tests](../../rules/tests.md), la [guía de herramientas](../../guides/agregar-una-herramienta-al-asistente.md) y la [receta de acciones](../../guides/agregar-una-accion-al-asistente.md).
 4. **Código para copiar:** la columna «Copia de» de los [pasos](23-parte-datos-y-contrato.md#pasos).
 5. **Referencia de producto,** solo para leer: en el traspaso del 17/10, retirado el 2026-11-08 (`git show e9f1a599:docs/plans/2026-10-17-formularios-traspaso/`), el anexo C, «Etapa 5», y el anexo D (H1 a H3, H5 a H7 y s1 a s4); en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`, el anexo C §7 a §9 y el anexo F, F1, con su ADR 0021. Allá también: `docs/features/inteligencia-artificial.md`, «Información del negocio», y en el front, `docs/design/asistente-casos.md` e `informacion-del-negocio-guiada.md`.
 6. **Los dibujos** son de Diseño.
@@ -110,6 +110,7 @@ El recorrido guiado «Los casos del asistente» muestra a Lucía armando y proba
 - **Atención** es la quinta pestaña de la pantalla. Tiene su ruta y su versión (`/whatsapp/attention`), pero se guarda con el mismo botón.
 - **El ⋮ del chat:** ahí van cambiar el modo, fijarlo y «Marcar como resuelta».
 - **La oferta** (165): todo tablero que muestra un formulario que manda el asistente usa el texto fijo de «Ofrecer formularios», también en Probar.
+- **El panel de «Gestión de formularios»** (275): «Formularios que faltan» suma su entrada después de «Biblioteca», con `forms.manage` y la feature `assistant`.
 
 **Decisiones del usuario** (03/11):
 - la pantalla «Asistente» se arma como el editor de un formulario: el contenido va a la izquierda y «Probar», siempre a la derecha, y los casos se editan en el lugar, con ↑ ↓ ✎ 🗑;
@@ -129,6 +130,25 @@ El recorrido guiado «Los casos del asistente» muestra a Lucía armando y proba
 - **El cupo, las fallas del proveedor y el apagado** siguen la [0064](../../decisions/0064-reglas-de-toda-la-ia.md), como en el Inicio, y el cupo diario de una persona es de cada organización (271).
 - **Un tope que corta contesta o deriva, y dice por qué** (270 y 278): ninguno deja a la persona sin respuesta ni al operador sin pista.
 
+## Acciones del asistente
+
+Con la [receta](../../guides/agregar-una-accion-al-asistente.md) (268 y [0068](../../decisions/0068-acciones-del-asistente.md)), registradas y sin ofrecer hasta la calificación. Ninguna tiene efecto fuera del sistema.
+
+| Acción | Dónde se confirma | Permiso | Ruta que guarda |
+| --- | --- | --- | --- |
+| `whatsappattention.edit@1` · Atención | la pestaña «Atención» de «Asistente», sin guardar (`Page`): por bandeja, quién atiende y cuándo vuelve (`Choice`) y los minutos (`Integer`) | `whatsapp.manage` | `PUT api/organization/whatsapp/attention` |
+| `unansweredtopics.dismiss@1` · Descartar un tema | la confirmación de descartar de «Preguntas sin respuesta» (`RemoveConfirmation`) | `whatsapp.manage` | `POST …/unanswered-topics/{id}/dismiss` |
+| `missingforms.dismiss@1` · Descartar un tema | la de «Formularios que faltan» (`RemoveConfirmation`) | `forms.manage` | `POST …/forms/missing/{id}/dismiss` |
+
+**No se declaran:**
+- **Perfil, Conocimiento, Casos y Límites** (`PUT assistant/agent`): la ruta es de WhatsApp y guarda en el Assistant por `IConversationAgentSettings`, un puerto que una fuente no puede usar (0068 §5), y los casos, las franjas y las preguntas frecuentes son listas de objetos, sin tipo (§4);
+- **las sugerencias entre formularios:** listas de condiciones y mapeos, sin tipo;
+- **«Marcar como revisado» y el modo, fijar o resolver un chat:** son de un clic, sin confirmación ni formulario donde confirmar (§9);
+- **mandar una sugerencia, armar una regla desde un texto y «Crear formulario» de un tema:** ya los propone la IA, o nacen en borrador (0057);
+- **los máximos de Plataforma:** piden la prueba reciente, que no se declara (§4).
+
+**El turno de canal no ofrece las tres piezas de acciones** (0068 §11): se suman por WhatsApp cuando el canal tenga lugar.
+
 ## Fuera de esta etapa
 
 - Varios asistentes y quién contesta cada chat (E24).
@@ -147,4 +167,4 @@ La puerta de la etapa, con la lista de control de `/puerta`, más:
 ## Requisitos previos
 
 - La E22 cerrada.
-- Las ADR de respuestas redactadas y de transcripción, que se escriben al planificar (27).
+- Rigen las ADR [0054](../../decisions/0054-respuestas-redactadas-por-el-asistente.md), las respuestas redactadas, y [0055](../../decisions/0055-transcripcion-de-audios.md), la transcripción (27).
