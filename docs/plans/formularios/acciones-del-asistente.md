@@ -47,24 +47,24 @@
 | `users.remove@1` · Quitar de la organización | a quién | la confirmación de quitar, de esa ficha | `DELETE api/users/{memberId}` |
 | `roles.create@1` · Nuevo rol | nombre, descripción, alcance, empresa (si es de empresa) y permisos | el editor de roles (`RoleEditorPage`), sin guardar | `POST api/roles` |
 | `roles.edit@1` · Cambiar un rol | nombre, descripción y sumar o quitar permisos | el editor de ese rol | `PUT api/roles/{id}` |
-| `roles.remove@1` · Borrar un rol | cuál | la confirmación de borrar de Roles | `DELETE api/roles/{id}` |
+| `roles.remove@1` · Dar de baja un rol | cuál | la confirmación de dar de baja de Roles | `DELETE api/roles/{id}` |
 
 **Qué se puede proponer:**
 - **Roles y permisos:** solo los roles y permisos que quien pide puede dar, con lo incluido (0061, 260). Lo demás no se resuelve y vuelve al modelo.
-- **Quitar o borrar:** a una persona o un rol que la ruta dejaría quitar. Lo que esa ruta frena (el último Dueño, un rol con personas) lo dice su confirmación, como siempre.
+- **Quitar o dar de baja:** a una persona o un rol que la ruta dejaría quitar o dar de baja. Lo que esa ruta frena (el último Dueño, un rol con personas) lo dice su confirmación, como siempre.
 
 **Cuándo se ofrecen:** las seis quedan registradas y **no se ofrecen**. Se ofrecen recién cuando pasan la calificación con un modelo real, antes de la prueba integral del bloque, con el visto bueno del usuario. Hasta entonces, la lista de calificadas está vacía en todos los ambientes. Los tests y el recorrido usan un modelo falso con su propia calificación de prueba.
 
 **La tarjeta** va en el hilo, después del texto de la IA:
-- se nombra con un sustantivo («Invitación de usuario», «Cambio de roles», «Quitar de la organización», «Rol nuevo», «Cambio de rol» y «Borrar rol»);
+- se nombra con un sustantivo («Invitación de usuario», «Cambio de roles», «Quitar de la organización», «Rol nuevo», «Cambio de rol» y «Baja de rol», con el verbo de la pantalla de Roles, como eligió el usuario el 2026-11-23);
 - muestra cada dato propuesto con su nombre, leído del servidor, y «Revisá» con el motivo en lo dudoso;
-- trae un botón: «Revisar e invitar», «Revisar cambios», «Revisar y crear» o, en rojo contorneado, «Revisar y quitar» / «Revisar y borrar».
+- trae un botón: «Revisar e invitar», «Revisar cambios», «Revisar y crear» o, en rojo contorneado, «Revisar y quitar» / «Revisar y dar de baja».
 
 **Los estados de la tarjeta:**
 - **nueva;**
 - **«Reemplazada»:** otra propuesta posterior de esa conversación la reemplazó;
 - **«Ya no disponible»,** con el motivo: sin el permiso, sin el módulo, de otra versión, ya no está a quién se refiere, o la cuenta se dio de baja;
-- **aplicada:** se pliega en «Invitación enviada», «Roles cambiados», «Quitado», «Rol creado», «Rol cambiado» o «Rol borrado», con el enlace a lo hecho si se puede ver;
+- **aplicada:** se pliega en «Invitación enviada», «Roles cambiados», «Quitado», «Rol creado», «Rol cambiado» o «Rol dado de baja», con el enlace a lo hecho si se puede ver;
 - **«Sin confirmar»:** pasaron 24 h sin saber si se guardó, con el enlace al listado para revisarlo.
 
 **Abrir:** el botón abre la pantalla de la acción con `?proposal=<id>`, que lee la propuesta del servidor.
@@ -78,7 +78,7 @@
 
 ## Pantallas ✓
 
-**Por dibujar:** `Asistente-Org-Acciones`, `M-Asistente-Org-Acciones`, `Usuarios-Invitar-Propuesta`, `M-Usuarios-Invitar-Propuesta`, `Usuario-Propuesta`, `M-Usuario-Propuesta`, `Rol-Propuesta`, `M-Rol-Propuesta`, `Confirmar-Propuesta` y `M-Confirmar-Propuesta`. Los dibuja la sesión de diseño, y el usuario los aprueba antes de las tareas del front que los usan.
+**A revisar:** `Asistente-Org-Acciones`, `M-Asistente-Org-Acciones`, `Usuarios-Invitar-Propuesta`, `M-Usuarios-Invitar-Propuesta`, `Usuario-Propuesta`, `M-Usuario-Propuesta`, `Rol-Propuesta`, `M-Rol-Propuesta`, `Confirmar-Propuesta` y `M-Confirmar-Propuesta`, en el lienzo v177 (página «Propuesta · Acciones del asistente»). El usuario los aprueba antes de las tareas del front que los usan.
 
 | Tablero | Qué muestra |
 | --- | --- |
@@ -86,7 +86,7 @@
 | `Usuarios-Invitar-Propuesta` | el diálogo «Invitar usuario» sobre el Inicio, con «Propuesta del asistente», un rol con «Revisá», lo que no se puede dar apagado con su motivo, el aviso de que manda la invitación y «Ya se guardó» |
 | `Usuario-Propuesta` | la ficha de una persona con «Lo que cambia» (un rol que se suma y otro que se quita) y el aviso de que cambió desde la propuesta |
 | `Rol-Propuesta` | el editor de roles con un rol nuevo propuesto (áreas plegables, 260) y con un cambio de permisos, en «Lo que cambia» |
-| `Confirmar-Propuesta` | la confirmación de quitar a una persona y la de borrar un rol, abiertas desde la tarjeta |
+| `Confirmar-Propuesta` | la confirmación de quitar a una persona y la de dar de baja un rol, abiertas desde la tarjeta |
 
 Cada uno lleva su teléfono (`M-`). Manda sobre el dibujo esta spec: el tablero muestra solo lo que existe hasta esta etapa.
 
@@ -113,7 +113,7 @@ Cada uno lleva su teléfono (`M-`). Manda sobre el dibujo esta spec: el tablero 
 - **`attempts`:** devuelve la misma clave mientras ese intento no termine en 4xx. Es idempotente por naturaleza, sin `[Idempotent]`, y va en la lista de excepciones de `IdempotentActionsTests` con su motivo.
 - **`applied`:** lo comprueba el servidor:
   - al crear, que una clave de la propuesta terminó en 2xx para esa persona y esa `SaveRoute`;
-  - al quitar o borrar, que el destino ya no se resuelve;
+  - al quitar o dar de baja, que el destino ya no se resuelve;
   - al editar, que la versión de ahora es la del cuerpo y distinta de la de la propuesta.
 
 **`Message`** (historial y SSE) suma `proposal?` `{id, kind, action, version, state}`. Lo demás lo trae el `GET`.
@@ -190,7 +190,7 @@ Cada uno lleva su teléfono (`M-`). Manda sobre el dibujo esta spec: el tablero 
 | F1 | El registro de adaptadores y `useAssistantProposal`: leer por id, marcas, operaciones, la clave de cada intento, «Ya se guardó» y `applied` | `src/shared/assistant-actions/*` | `ModuleRegistry.tsx`, `useIdempotentMutation.ts` | hook y límites del módulo |
 | F2 | La tarjeta en el hilo, con sus seis estados | `src/modules/assistant/components/AssistantActionCard.tsx` | `ToolStatus.tsx` | estados, teclado y axe |
 | F3 | Los adaptadores de Usuarios: el diálogo sobre el Inicio, la ficha con «Lo que cambia» y quitar | `InviteUserDialog.tsx`, `UserDetailPage.tsx` | — | todo lo propuesto se ve, y lo enviado es lo que se ve |
-| F4 | Los adaptadores de Roles: crear, cambiar y borrar | `RoleEditorPage.tsx`, `RolesPage.tsx` | F3 | ídem |
+| F4 | Los adaptadores de Roles: crear, cambiar y dar de baja | `RoleEditorPage.tsx`, `RolesPage.tsx` | F3 | ídem |
 | F5 | Un adaptador por acción del contrato | `src/shared/assistant-actions/coverage.test.ts` | — | falla si falta uno |
 
 ## Qué verificar al arrancar ✓
@@ -208,6 +208,7 @@ Cada uno lleva su teléfono (`M-`). Manda sobre el dibujo esta spec: el tablero 
 ## Decisiones tomadas
 
 - **El alcance:** las seis acciones de Usuarios y Roles; elegido por el usuario el 2026-11-23.
+- **«Dar de baja» un rol:** la tarjeta usa el verbo de la pantalla de Roles («Baja de rol», «Revisar y dar de baja», «Rol dado de baja»), y no «borrar»; elegido por el usuario el 2026-11-23.
 - **Cuándo se ofrecen:** juntas, calificadas, antes de la prueba integral del bloque, como eligió el usuario.
 - **Lo demás** lo fija la 0068: dónde se confirma, lo que nunca se propone, al proveedor lo mínimo y una por turno.
 

@@ -1,6 +1,6 @@
 # Acciones del asistente · plan ejecutable
 
-**Estado:** pendiente · Spec: `docs/plans/formularios/acciones-del-asistente.md` (contrato, datos y pasos con sus tests). Va después de la puerta de la segunda parte de la base y antes de la E12 ([ADR 0068](../decisions/0068-acciones-del-asistente.md); decisión 268). Las decisiones de producto las tomó el usuario el 2026-11-23: el lugar, el alcance (Usuarios y Roles enteros) y que se ofrezcan calificadas antes de la prueba integral. Faltan los tableros de la spec («Pantallas»), que se dibujan y se aprueban antes de F2 a F4.
+**Estado:** pendiente · Spec: `docs/plans/formularios/acciones-del-asistente.md` (contrato, datos y pasos con sus tests). Va después de la puerta de la segunda parte de la base y antes de la E12 ([ADR 0068](../decisions/0068-acciones-del-asistente.md); decisión 268). Las decisiones de producto las tomó el usuario el 2026-11-23: el lugar, el alcance (Usuarios y Roles enteros) y que se ofrezcan calificadas antes de la prueba integral. Los diez tableros de la spec («Pantallas») están dibujados en el lienzo v177; F2 a F4 esperan que el usuario los apruebe.
 
 **Fuente:** la ADR 0068, sus dos revisiones adversariales del 2026-11-23 y la sección «Acciones del asistente» de ArquitecturaBase (`docs/plans/2026-11-19-procesos-del-campo.md`, solo para leer).
 
@@ -39,7 +39,7 @@ La segunda parte de la base todavía no está programada: lo que esta etapa usa 
 | RLS público | `EnablePublicRls` deja ver lo publicado de todas las organizaciones | B6 y B7: lo público, filtrado por el claim |
 | `Resolver` | Hay `Resolver` con repositorios y escritores (`GoogleAccountResolver`) | B1: la lista de lo permitido se mira en todo el árbol |
 | Usuarios | Invitar es `POST` con `[Idempotent]`; editar y quitar son `PUT` y `DELETE` con versión, y `UpdateOrganizationUserRequest` reemplaza listas enteras | B6 y F3: operaciones sobre lo leído |
-| Roles | Crear es `POST` con `[Idempotent]`; editar y borrar, con versión. Alcance y empresa no cambian al editar | B7 y F4 |
+| Roles | Crear es `POST` con `[Idempotent]`; editar y dar de baja, con versión. Alcance y empresa no cambian al editar | B7 y F4 |
 | La 0061 | Sin programar: la programa la B1 de la segunda parte, con su `Guard` | K0 la confirma; B3 separa la `Policy` |
 | Lienzo | No hay tableros de acciones; `Asistente-Org-25` tiene la tarjeta de armar de la E25 | Se dibujan los de la spec |
 
@@ -159,14 +159,14 @@ Las tareas siguen las fichas del front (`formatos.md`, `pantallas-y-ui.md`, `tem
    - **El hook:** lee la propuesta por id, pone «Propuesta del asistente» y «Revisá», y aplica las operaciones sobre lo leído.
    - **Al crear:** pide la clave de cada intento a `attempts`, muestra el 422 con una clave de la propuesta como «Ya se guardó» y, después de un 2xx, llama a `applied`.
    - **Tests:** del hook, de los límites del módulo y de la clave que no se renueva ante un 422 de la propuesta.
-2. **F2 · La tarjeta.** `AssistantActionCard` en el hilo, con sus seis estados y el botón rojo contorneado para quitar y borrar. Abre la pantalla de la acción con `?proposal=<id>`, y el diálogo, sobre el Inicio. Espera su tablero. **Tests:** cada estado, teclado y axe.
+2. **F2 · La tarjeta.** `AssistantActionCard` en el hilo, con sus seis estados y el botón rojo contorneado para quitar y dar de baja. Abre la pantalla de la acción con `?proposal=<id>`, y el diálogo, sobre el Inicio. Espera su tablero. **Tests:** cada estado, teclado y axe.
 3. **F3 · Los adaptadores de Usuarios.**
    - **Las pantallas:** `InviteUserDialog`, con el aviso de que manda la invitación; `UserDetailPage`, con «Lo que cambia» y el aviso si cambió; y la confirmación de quitar.
    - **Los selectores** buscan por id lo elegido.
    - **Si un valor no entra,** la pantalla no abre la propuesta.
    - Espera sus tableros.
    - **Tests:** todo lo propuesto se ve, y lo que se manda es lo que se ve.
-4. **F4 · Los adaptadores de Roles.** `RoleEditorPage`, para crear y para cambiar, con lo incluido apagado y «Lo que cambia», y la confirmación de borrar de `RolesPage`. Espera sus tableros. **Tests:** como F3.
+4. **F4 · Los adaptadores de Roles.** `RoleEditorPage`, para crear y para cambiar, con lo incluido apagado y «Lo que cambia», y la confirmación de dar de baja de `RolesPage`. Espera sus tableros. **Tests:** como F3.
 5. **F5 · La cobertura.** Un test que lee los tipos generados de `assistant-actions.json` y falla si una acción no tiene adaptador.
 
 **Texto para el chat del Front**
@@ -193,7 +193,7 @@ Leé AGENTS.md del front, la ADR 0068 del back, este plan y la spec docs/plans/f
    - quitar a una persona;
    - crear un rol de empresa;
    - cambiar los permisos de un rol;
-   - borrar un rol con personas, que la confirmación frena;
+   - dar de baja un rol con personas, que la confirmación frena;
    - una tarjeta reemplazada;
    - una tarjeta sin el permiso, que se ve «Ya no disponible»;
    - en el teléfono, la tarjeta y el diálogo.
