@@ -1004,5 +1004,5 @@ if (MODO === 'planificar') resultadoDeLaCadena = 'planificados'
 else if (frenoEn) resultadoDeLaCadena = 'frenó'
 
 const cadena = { modo: MODO, resultado: resultadoDeLaCadena, planes: corridos, frenoEn, sinCorrer: PLANES.slice(corridos.length) }
-if (MODO === 'planificar') cadena.agentesEstimados = corridos.reduce((n, r) => n + r.agentesEstimados, 0)
+if (MODO === 'planificar') cadena.agentesEstimados = corridos.reduce((n, r) => n + (r.agentesEstimados || 0), 0)
 return cadena
