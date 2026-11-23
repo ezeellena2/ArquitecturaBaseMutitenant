@@ -120,7 +120,7 @@ Cada servicio público va en `OperationLog.RunAsync`, sin valores ni opciones en
 10. **B10 · Publicar: problemas y avisos.** Suma a `FormPublicationService.cs` [E14] los `warnings` y los problemas nuevos, y a `IMemberDirectoryReader.cs` y `MemberDirectoryReader.cs` [E12] los miembros activos con un permiso, con la cuenta de B9. Copia esos. Tests: un filtro fijo que deja más de 20 en «elegir varias» frena (lección 2); con un filtro según quien lo recibe, un catálogo de más de 200 se publica; el máximo, solo si pasa el límite o da cero (157); personas sin el dato; para clientes frena y para los dos avisa.
 11. **B11 · Una opción en uso no se borra.** Suma `forms` y `people` a la lista `uses` de `ItemInUse`, en el guardado de `FormCatalogService.cs` [E12], leídos con `IFormReader` [E14] y `FormPersonDataReader`. Copia `uses: records` de la E14. Tests: un filtro fijo del borrador y uno de la versión activa; una persona que la tiene; las dos se dan de baja.
 12. **B12 · Rutas y contratos (R: permisos).** `P/Modules/Forms/Controllers/BusinessFormPersonDataController.cs`, los contratos de la parte, las dos rutas en `BusinessFormCatalogsController.cs` [E12] y los ejemplos en `FormsContractContributor.cs`; `AuditSummary` de las dos tablas en `Audit{,.en}.resx`, con su línea en `quitar-formularios.md`; las relaciones en `GrowingCollectionContractTests`. Copia `BusinessFormCatalogsController.cs` [E12]. Tests: cada ruta con 401, 403, feature apagada, validación, 409 y paginado; `values` sin uno de los dos permisos da 403; ejemplos exportados.
-13. **B13 · Acciones del asistente (R: permisos)** ([0068](../decisions/0068-acciones-del-asistente.md) y su [receta](../guides/agregar-una-accion-al-asistente.md)). `A/Modules/Forms/Services/FormPersonDataActionSource.cs`, registrada en `FormsModule.cs` como `IAssistantActionSource`: `formpersondata.create@1` y `formpersondata.edit@1` (`Dialog`, el diálogo del dato, con `formpersondata.manage`) y `formpersondata.values.edit@1` (`Page`, la pestaña «Datos», con `users.manage`); sus textos `Action.*` en `FormsTexts{,.en}.resx` y su escenario en `TestFeatures/AssistantActions/`. Copia `RoleActionSource.cs`. Tests: los de arquitectura de las acciones y la batería genérica.
+13. **B13 · Acciones del asistente (R: permisos)** ([0068](../decisions/0068-acciones-del-asistente.md) y su [receta](../guides/agregar-una-accion-al-asistente.md)). `A/Modules/Forms/Services/FormPersonDataActionSource.cs`, registrada en `FormsModule.cs`: `formpersondata.create@1` y `formpersondata.edit@1` (`Dialog`, el diálogo del dato, con `formpersondata.manage`) y `formpersondata.values.edit@1` (`Page`, la pestaña «Datos», con `users.manage`), con sus pantallas en `AssistantActionScreen` y `AssistantRouteKey`; sus textos `Action.*` en `FormsTexts{,.en}.resx` y su escenario en `TestFeatures/AssistantActions/`. Copia `RoleActionSource.cs`. Tests: los de arquitectura de las acciones y la batería genérica.
 
 **Texto para el chat del Back**
 
@@ -165,10 +165,10 @@ Leé AGENTS.md de los dos repos, docs/plans/2026-11-08-etapa-16-datos-de-las-per
 
 ## Relación con otras etapas
 
-**Usa de las anteriores:** la lista de K0, con `forms.read`, `forms.manage`, `formcatalogs.read`, `formrecords.create`, `users.read` y `users.manage`; y del núcleo, lo que nombran B5 y F3, `AdvisoryLockExtensions` y el registro de las acciones del asistente.
+**Usa de las anteriores:** la lista de K0, con sus permisos, y del núcleo, lo que nombran B5, F3 y B13, y `AdvisoryLockExtensions`.
 
 **Deja para las siguientes:**
-- **Back:** lo de B1 a B13, en especial `FormRecipientFilterPolicy`, `recipientFilters` en el borrador y la versión, `FormOfferBuilder` con los filtros en SQL, `warnings[]` en `publication-checks`, `IFormPersonDataReader` con «Lo usan» de un dato, `IMembershipEndParticipant`, el papel `Filter` de un campo y los errores `Forms.Offer.*`.
+- **Back:** lo de B1 a B13, en especial `FormRecipientFilterPolicy`, `recipientFilters` en el borrador y la versión, `FormOfferBuilder` con los filtros en SQL, `IFormPersonDataReader` con «Lo usan» de un dato, `IMembershipEndParticipant` y el papel `Filter` de un campo.
 - **Front:** lo de F1 a F7, en especial `userDetailTabs`, la zona «Avisos» de `PublishDialog.tsx` y «Qué opciones ve cada persona» en `CatalogQuestionFields.tsx`.
 
 ## Cambios al contrato

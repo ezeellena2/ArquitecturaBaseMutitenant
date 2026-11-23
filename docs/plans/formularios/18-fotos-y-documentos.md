@@ -149,7 +149,7 @@ Cada punto lleva su test, escrito durante la etapa:
 - **Sin clave determinística:** el almacenamiento elige la clave, y el diario de `IFileStoreMaintenance` cierra lo que quedó sin confirmar.
 - **Un solo archivo por mensaje** en el chat, como en Meta.
 - **Del traspaso 18:** la respuesta se lee como el formulario, con «Fotos y documentos» al final (266), y el tope por archivo sale de la Configuración de Formularios (270).
-- **Las acciones del asistente** (0068) son las dos de la Configuración de Formularios (B14 de la parte). Mandar un archivo no es una acción, porque la lista cerrada de campos no tiene archivos, y las preguntas de Foto y Documento son parte del formulario, que sigue con su propuesta (0057).
+- **Las acciones del asistente** (0068) son las dos de la Configuración de Formularios (B15 de la parte). Mandar un archivo no es una acción, porque la lista cerrada de campos no tiene archivos, y las preguntas de Foto y Documento son parte del formulario, que sigue con su propuesta (0057).
 
 ## Fuera de esta etapa
 

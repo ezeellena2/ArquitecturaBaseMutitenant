@@ -11,7 +11,7 @@
 
 ## Forma de trabajo
 
-Modo rápido: primero el contrato (K0 y K1); después Back y Front en paralelo, y una sola puerta al final. La etapa solo lee, salvo los ajustes del tablero y los campos sellados que suma la captura, y no pide prueba con Meta.
+Modo rápido: primero el contrato (K0 y K1); después Back y Front en paralelo, y una sola puerta al final, sin prueba con Meta.
 
 Cada tarea lleva sus pruebas, y un arreglo corre solo lo que toca. La tabla de estado la actualiza la Guía.
 
@@ -23,7 +23,6 @@ Cada tarea lleva sus pruebas, y un arreglo corre solo lo que toca. La tabla de e
 | --- | --- | --- |
 | [E14] Los valores, las versiones, la lista, las pestañas, el participante y la sesión. [E12] La barrera, `IMemberDirectoryReader` y las columnas fijas | no existen | K0 |
 | [E11] `/org/whatsapp/chats/:conversationId` | existe, pero toma la bandeja de `?inbox=`: sin ella, abre Clientes | precisión 11 |
-| [E9] Las cuotas | todo `/api` cuenta en las generales | nada |
 | Front: el panel al costado | no hay: `Sheet.tsx` es una hoja desde abajo | F5 crea `src/shared/ui/SidePanel.tsx` |
 | EF: agrupar en otra zona | Npgsql 10.0.3 traduce `TimeZoneInfo.ConvertTimeBySystemTimeZoneId` en un `GroupBy`, como `AssistantUsageReader.cs` | B9 copia esa forma |
 | Nombres por cuenta | `IUserDisplayNameReader.FindAsync(userIds)` da el nombre de cada cuenta, sea o no miembro | B5 lo usa |
@@ -127,7 +126,7 @@ Todo va en `src/modules/forms`, con i18n es/en, los tipos generados, `shared/for
 2. **F2 · La lista y las pestañas.** Suma a `FormsPage.tsx`, `FormPage.tsx` y `lib/formTabs.ts` [E14], y a `registration.ts`, `formrecords.export` en sus permisos y las rutas `/org/formularios/:id/respuestas`, `/org/formularios/:id/respuestas/:recordId/completa` y `/org/formularios/:id/tablero`; «Respuestas», con su cantidad, y «Tablero» van antes de «Diseño», y la barra aparece con dos pestañas (193). El nombre abre «Diseño» y el número de respuestas, la planilla (275); el encabezado ordena (264). Tableros `FRM-Formularios-15` y `M-FRM-Formularios-15`. Tests: las tres combinaciones de permisos; adónde abren el nombre y el número; los órdenes; sin `forms.read`, la lista sale de `overview`.
 3. **F3 · La planilla.** `pages/FormRecordsPage.tsx`, `lib/recordFilters.ts` y `lib/values.ts`, con N° fijo por `pinned` [E12]; `ColumnsMenu.tsx` [E13] suma el valor por defecto de cada columna; «Ordenar por» y el encabezado que ordena (264). Lo privado no pasa por `useFilters` ni `usePagedQuery`. Tableros `FRM-Respuestas` y `M-FRM-Respuestas`. Tests: «—», «Sin respuesta», cero y `false`; «elegir varias» en su orden; las subcolumnas; «Es cliente», después de Cargó, solo si alguna fila de la página es de un cliente, sin marca al lado del nombre (206); el orden: el primer toque, la página 1 y «Limpiar todo»; lo privado fuera de la URL y del storage; un 403 retira todo; la relectura atenúa; axe.
 4. **F4 · «Filtros» y los chips.** `components/records/RecordFiltersMenu.tsx` y `RecordFacetControl.tsx`, sobre el `FilterBar` y el `Picker` de la base (262). Tableros `FRM-Respuestas-Filtros` y la pantalla «Filtros» de `M-FRM-Respuestas`. Tests: cada cambio se aplica enseguida; la pieza de una opción, sin cantidades, con el buscador adentro y «Mostrar N más»; el chip nombra lo elegido aunque no esté en la página (`knownItems`); «Limpiar todo»; una faceta que falla no frena el filtro.
-5. **F5 · La respuesta como el formulario y la vista rápida.** `src/shared/ui/SidePanel.tsx`, el panel al costado; `components/records/RecordForm.tsx`, `RecordValues.tsx` y `lib/recordForm.ts`, la forma de solo lectura de la parte de la spec (266); `QuickView.tsx`; `RecordActivity.tsx`, la actividad (267). La lectura de `Picker` (varias enteras, sin «y N más» ni «…», y el campo baja de renglón, 174 y 266) es la excepción escrita en `pantallas-y-ui.md` y `formatos.md` del front. Tablero `FRM-Respuesta`. Tests: los dos anchos; tres, dos y una columna según el ancho de la zona; una pregunta con sus datos en un renglón; «N de M respondidas»; lo que no aporta no va; la actividad en recuadros; ↑ ↓ con el teclado, Esc y foco útil; una respuesta tardía se descarta; las acciones como íconos con tooltip; «Abrir conversación» lleva `?inbox=` y aparece solo con la conversación.
+5. **F5 · La respuesta como el formulario y la vista rápida.** `src/shared/ui/SidePanel.tsx`, el panel al costado; `components/records/RecordForm.tsx`, `RecordValues.tsx` y `lib/recordForm.ts`, la forma de solo lectura de la parte de la spec (266); `QuickView.tsx`; `RecordActivity.tsx`, la actividad (267). La lectura de `Picker` deja varias enteras, sin «y N más» ni «…», y el campo baja de renglón (174 y 266): es la excepción escrita en las fichas de pantallas y de formatos del front. Tablero `FRM-Respuesta`. Tests: los dos anchos; tres, dos y una columna según el ancho de la zona; una pregunta con sus datos en un renglón; «N de M respondidas»; lo que no aporta no va; la actividad en recuadros; ↑ ↓ con el teclado, Esc y foco útil; una respuesta tardía se descarta; las acciones como íconos con tooltip; «Abrir conversación» lleva `?inbox=` y aparece solo con la conversación.
 6. **F6 · La pantalla completa.** `pages/RecordFullPage.tsx`. Tableros `FRM-Respuesta-Completa` y `M-FRM-Respuesta`. Tests: una entrada directa arranca sin filtros privados; «Volver» a la misma fila, página, filtros y orden; la actividad en ocho columnas, con «—» y su banda (267); el teléfono.
 7. **F7 · Exportar.** `components/records/ExportDialog.tsx`, con «Respuestas» y «Filtros» en `DetailGrid` y los chips de la planilla sin la ✕ (226), y «Columnas» en la pieza (262). Tableros `FRM-Respuestas-Exportar` y su estado en `M-FRM-Respuestas`. Tests: los chips y «Ninguno»; «Solo las visibles» apagada sin columnas ocultas; con más de 10.000, «Exportar a Excel» apagado con su motivo en el tooltip (211), sin esperar el 409; `Busy`; «Exportando…» con el diálogo abierto hasta la respuesta; sin `formrecords.export` no aparece, y sin respuestas queda grisado con su motivo; el teléfono exporta todas las preguntas.
 8. **F8 · El tablero.** `components/records/FormDashboard.tsx`, sin biblioteca de gráficos; los porcentajes, con `PercentText` sobre `share`, sin calcularlos. Tableros `FRM-Tablero` y `M-FRM-Tablero`. Tests: quitar, agregar, contar, ver como tabla, que ordena (264), y volver al automático; ningún número de arriba debajo de otro (263); los filtros de la planilla; los vacíos; el eje por día con la fecha completa en cada marca y en el cartel, con menos marcas, y por semana y por mes, el primer día en la marca y el rango en el cartel (205); axe.
@@ -156,11 +155,11 @@ Leé AGENTS.md de los dos repos, docs/plans/2026-11-08-etapa-15-respuestas.md y 
 
 ## Relación con otras etapas
 
-**Usa de las anteriores:** la lista de K0, con `forms.read` y `formrecords.read`; de la E11, `WhatsAppCustomer`, `WhatsAppChat` y su `Inbox`, `whatsapp.customers`, `whatsapp.internal` y `/org/whatsapp/chats/:conversationId?inbox=`; y del núcleo, `IUserDisplayNameReader` e `IProfileService`.
+**Usa de las anteriores:** la lista de K0; de la E11, las bandejas, con `whatsapp.customers` y `whatsapp.internal`, y `/org/whatsapp/chats/:conversationId?inbox=`; del núcleo, `IUserDisplayNameReader` e `IProfileService`.
 
 **Deja para las siguientes:**
-- **Back:** lo de B1 a B11, en especial `FormRecordQueryFilters`, `IStructuredRecordOriginSource`, las dos tablas con su escritura en la captura, el carril `Records`, el mapa `values`, las claves de columna, de orden y de tarjeta, y `answered`, `unanswered` y `notAsked`.
-- **Front:** lo de F1 a F8, en especial la forma de solo lectura (`lib/recordForm.ts`, `RecordForm.tsx` y `RecordValues.tsx`), `RecordActivity.tsx`, `SidePanel.tsx` y el valor por defecto de cada columna en `ColumnsMenu.tsx`.
+- **Back:** lo de B1 a B11, en especial `FormRecordQueryFilters`, `IStructuredRecordOriginSource`, el carril `Records` y las claves de columna, de orden y de tarjeta.
+- **Front:** lo de F1 a F8, en especial la forma de solo lectura (`lib/recordForm.ts`, `RecordForm.tsx` y `RecordValues.tsx`), `RecordActivity.tsx` y `SidePanel.tsx`.
 
 ## Cambios al contrato
 

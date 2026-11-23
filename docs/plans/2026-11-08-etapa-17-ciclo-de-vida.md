@@ -13,7 +13,7 @@
 
 Modo rápido: el contrato primero; después Back y Front en paralelo; una sola puerta al final. Cada chat sigue las reglas de su texto, y un arreglo corre solo lo que toca. La prueba con Meta queda para la I1 de la 10 (123).
 
-**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): la llevan las tareas **(R)**, completa y antes de su commit; un subagente nuevo recibe el código y los escenarios, sin la conclusión de quien programó.
+**Revisión adversarial:** la llevan las tareas **(R)**, completa y antes de su commit, como dice [AGENTS.md](../../AGENTS.md).
 
 ## Qué se verificó al arrancar
 
@@ -117,7 +117,7 @@ Todas aplican Result y ProblemDetails, `OperationLog.RunAsync`, `[LoggerMessage]
 10. **B10 · Meta (R: Meta).** Suma a `I/Modules/WhatsApp/WhatsAppFlowClient.cs` `DeprecateAsync` (`POST /{flow-id}/deprecate`) y `GetFlowStatusAsync` (`GET /{flow-id}?fields=id,name,status,whatsapp_business_account`). Un 2xx con `success` es definitivo; todo 4xx se consulta, y `DEPRECATED` es éxito y otro estado, un rechazo; 5xx, 429, timeout y cuerpo ilegible son inciertos. Copiá el mismo cliente. Tests: 2xx, 4xx, 5xx, 429, timeout, cuerpo ilegible y «ya deprecado»; un 4xx nunca se repite sin consultar (lección 1).
 11. **B11 · El worker (R: aislamiento, trabajo de fondo por organización).** `I/Modules/WhatsApp/WhatsAppFlowDeprecationWorker.cs`, cada minuto: lista las organizaciones con un número, también desconectado (`ListOrganizationIdsWithNumbersAsync`, en `IWhatsAppChannelReader`), y en cada una corre las fases con `TenantJobRunner`, sin `ExecutionActor` y en su `try/catch`. Copiá `WhatsAppBroadcastWorker.cs` y `TenantJobRunner.cs`. Tests: una organización con falla no frena a las demás; con el reloj de prueba, al vencer el último envío se depreca; dos workers a la vez llaman una sola vez.
 12. **B12 · Rutas, puertos y ejemplos.** Suma a `P/Modules/Forms/Controllers/BusinessFormsController.cs`, `Contracts/CopyFormHttpRequest.cs`, `FormsContractContributor.cs`, `I/StructuredData/DisabledStructuredFormSource.cs` y `DisabledStructuredFormChannel.cs` y `GetRetirementAsync` en `WhatsAppStructuredFormChannel.cs`. Copiá esos mismos [E14]. Tests: cada ruta con 401, 403, feature apagada = 404, 400 y 409; los dos permisos; `sort=status` con los dados de baja al final (264); aislamiento en `Modules/Forms/RouteIsolationMatrixTests.cs`; `ExplicitRouteInventoryTests` y `VersionedContractTests`; un formulario borrado no rompe ninguna lectura (lección 2); los ejemplos exportados de una corrida real, con cada estado de `retirement`.
-13. **B13 · Acciones del asistente (R: permisos)** ([0068](../decisions/0068-acciones-del-asistente.md) y su [receta](../guides/agregar-una-accion-al-asistente.md)). Suma a `A/Modules/Forms/Services/FormDefinitionActionSource.cs`, registrada en `FormsModule.cs` (la crea si la E14 no la trae), `forms.deactivate@1` (`Dialog`, `FRM-Dar-De-Baja`, con `forms.publish`) y `forms.remove@1` (`RemoveConfirmation`, con `forms.manage`), con su efecto en WhatsApp declarado; sus textos `Action.*` en `FormsTexts{,.en}.resx` y su escenario en `TestFeatures/AssistantActions/`. Copiar no es una acción (nace en borrador, 0057), y reactivar sigue lo que la E14 declare para publicar. Copiá `RoleActionSource.cs`. Tests: los de arquitectura de las acciones y la batería genérica.
+13. **B13 · Acciones del asistente (R: permisos)** ([0068](../decisions/0068-acciones-del-asistente.md) y su [receta](../guides/agregar-una-accion-al-asistente.md)). Suma a `A/Modules/Forms/Services/FormDefinitionActionSource.cs`, registrada en `FormsModule.cs` (la crea si la E14 no la trae), `forms.deactivate@1` (`Dialog`, `FRM-Dar-De-Baja`, con `forms.publish`) y `forms.remove@1` (`RemoveConfirmation`, con `forms.manage`), con su efecto en WhatsApp declarado y sus pantallas en `AssistantActionScreen` y `AssistantRouteKey`; sus textos `Action.*` en `FormsTexts{,.en}.resx` y su escenario en `TestFeatures/AssistantActions/`. Copiar no es una acción (nace en borrador, 0057), y reactivar sigue lo que la E14 declare para publicar. Copiá `RoleActionSource.cs`. Tests: los de arquitectura de las acciones y la batería genérica.
 
 **Texto para el chat del Back**
 
@@ -170,7 +170,6 @@ Leé AGENTS.md de los dos repos, este plan y /puerta. Integrá el front contra l
 ## Relación con otras etapas
 
 **Usa de las anteriores:**
-- **Base de la 12:** `ConfirmDialog`, `RowAction.disabledReason`, los botones que trabajan y `PageLoading`.
 - **E11:** `WhatsAppChannels` (`WabaId`, `EncryptedToken`), `IWhatsAppChannelReader`, `TenantJobRunner`, `PeriodicWorker` y `WhatsAppBroadcastWorker`.
 - **E12 a E16:** los nombres de K0.
 
@@ -179,7 +178,6 @@ Leé AGENTS.md de los dos repos, este plan y /puerta. Integrá el front contra l
 - `FilterRetiredAsync`, `GetRetirementAsync` y `StructuredRetirementState`; `IWhatsAppFlowDeprecationService` y `WhatsAppFlowDeprecationWorker`.
 - `FormDefinitionStates.DeactivatedAtUtc` y `DeactivatedByUserId`, `FormDefinitions.IsDeleted` y las columnas `Deprecation*` de `WhatsAppFlowBindings`.
 - Las rutas `lifecycle`, `deactivation`, `copy-proposal` y `copies`, el `DELETE`, el estado `deactivated` y los campos `hasRecords`, `openSends`, `retirement`, `deactivated` y `nextRecordNumber`.
-- Los errores `AlreadyDeactivated`, `NotPublished`, `HasRecords` y `HasOpenSends`.
 - `LifecycleDialogs.tsx`, con el diálogo de dar de baja en dos columnas, «Deja de pasar» y «Se conserva», cada una una lista de líneas a la que las etapas siguientes suman las suyas. Y `CopyFormDialog.tsx`.
 
 ## Cambios al contrato
@@ -187,4 +185,4 @@ Leé AGENTS.md de los dos repos, este plan y /puerta. Integrá el front contra l
 
 ## Para decidir
 
-Nada. «Borrar» en un formulario publicado con envíos abiertos lo decidió la Guía (2026-11-08): queda grisado en el ⋮, con su motivo, como con respuestas (43 y 132). Por eso cada fila publicada trae `openSends`.
+Nada.
