@@ -41,6 +41,7 @@ Las decisiones están en [`docs/decisions/README.md`](docs/decisions/README.md) 
 | escribir tests | [tests](docs/rules/tests.md) |
 | crear un servicio, un helper, un puerto o un controller | [capas-y-flujo](docs/rules/capas-y-flujo.md) (la lista cerrada de sufijos de los helpers) |
 | agregar un área completa | [agregar-un-area](docs/guides/agregar-un-area.md) |
+| que la IA pueda crear, editar o eliminar algo | [agregar-una-accion-al-asistente](docs/guides/agregar-una-accion-al-asistente.md) ([ADR 0068](docs/decisions/0068-acciones-del-asistente.md)): la IA prepara, la persona confirma en la pantalla de siempre y guarda la ruta de siempre |
 | entender cómo funciona un área o un caso | skill [`/explicar`](.agents/skills/explicar/SKILL.md) (lee la ficha y el código en el momento) |
 | planificar o programar una etapa (back y front en paralelo, desde la E8) | [etapa-en-paralelo](docs/guides/etapa-en-paralelo.md), skill [`/plan-etapa`](.agents/skills/plan-etapa/SKILL.md) |
 | programar una etapa entera con agentes, de punta a punta | [conducir-una-etapa](docs/guides/conducir-una-etapa.md) (el workflow `etapa`, primero con `modo: planificar`) |

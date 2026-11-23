@@ -212,6 +212,31 @@ La [ADR 0064](../decisions/0064-reglas-de-toda-la-ia.md) fija para el Inicio, el
 - **El anillo y la traza:** un valor de control por clave del anillo (`platform.AiKeyRingControls`); una copia que no coincide no queda lista. Cada turno guarda la traza de quien lo pidió.
 - **Lo de otra persona:** ningún pedido al proveedor lleva respuestas, correcciones, documentos ni mensajes de otras personas (216).
 
+## Acciones: crear, editar y eliminar (etapa «Acciones del asistente», sin programar)
+
+Hoy el asistente solo lee. La [ADR 0068](../decisions/0068-acciones-del-asistente.md) fija cómo va a crear, editar y eliminar. Se programa en su propia etapa, después de la segunda parte de la base y antes de la E12, y desde la E12 cada pantalla nueva declara sus acciones.
+
+**La regla:** la IA prepara, la persona confirma en la pantalla de siempre y guarda la ruta de siempre. El asistente no tiene un camino propio para escribir.
+
+**Las piezas:**
+- **Cada área declara sus acciones** en su `<Área>ActionSource` (`IAssistantActionSource`, del núcleo). Cada acción lleva:
+  - su id con versión (`users.invite@1`);
+  - el mismo requisito que la ruta que guarda;
+  - los campos de la pantalla, de una lista cerrada de tipos;
+  - cómo se confirma.
+- **La fuente solo lee:** resuelve y valida sin guardar, en un alcance de solo lectura.
+- **El registro** (`AssistantActionCatalog`) filtra por acceso, módulo, permisos efectivos y calificación, y sella la lista en el turno.
+- **Tres piezas de IA, fijas para todas las áreas:**
+  - la lista precargada `assistant_actions`;
+  - `read_action`;
+  - `propose_action`, con una propuesta por turno, guardada en el mensaje.
+- **El front** suma la tarjeta genérica y abre la pantalla de la acción con lo propuesto, que la pantalla lee por id. Guardar es la ruta de siempre, con la clave de idempotencia sacada de la propuesta.
+- **Desde esa etapa, las 19 lecturas** también corren en el alcance de solo lectura.
+
+**Al proveedor** van lo que dijo la persona, los tipos de acción, los campos y los nombres de las definiciones, nunca registros ni personas. Plataforma solo propone sobre lo de Plataforma. Por WhatsApp, un resumen con «Revisar en la app» llega cuando el canal tenga lugar.
+
+**Para sumar un área,** está la receta [agregar una acción](../guides/agregar-una-accion-al-asistente.md). La 0057 (armar formularios y catálogos) no cambia.
+
 ## Carpetas
 
 | Carpeta | Responsabilidad |
@@ -232,3 +257,4 @@ La [ADR 0064](../decisions/0064-reglas-de-toda-la-ia.md) fija para el Inicio, el
 - Application: `AssistantToolCatalogTests`, `AssistantCostTests`, `AssistantSnapshotPrivacyTests`, `AssistantSettingsTests` y `AssistantBudgetEmailRendererTests` (los cuatro correos del tope).
 - API (Docker/Testcontainers): `AssistantConversationIsolationTests`, `AssistantDurableAuthorizationTests`, `AssistantAuthorizationTests`, `AssistantAnthropicTransportTests` y `AssistantBudgetOutboxTests`.
 - Arquitectura: `AssistantApprovedContractTests`, `AssistantQualityContractTests` e `InstalledAssistantPersistenceModelTests`.
+- Acciones (etapa «Acciones del asistente»): `AssistantActionDeclarationTests`, sin Docker, y la batería genérica `AssistantActionContractTests`, una teoría por acción registrada.

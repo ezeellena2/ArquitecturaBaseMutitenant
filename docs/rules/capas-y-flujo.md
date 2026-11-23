@@ -35,10 +35,10 @@
 | `Activator` | Activa una organización pendiente: la aprueba y prepara a su Dueña. |
 | `PendingItems` | Aporta los pendientes de un área a «Para resolver» (`IPendingItemSource`, ADR 0040). |
 | `NotificationSource` | Aporta los avisos de un área a la campana (`INotificationSource`, base de la 12). |
+| `ActionSource` | Declara las acciones del asistente de un área y las resuelve y valida sin escribir: solo readers, validadores y `Policy` (`IAssistantActionSource`, [0068](../decisions/0068-acciones-del-asistente.md); etapa «Acciones del asistente»). |
 Scheduler/Canceller/Processor/Activator son los pasos nominales de baja y activación; no se amplían sin actualizar esta ficha.
 - El actor background usa IExecutionActorContext/Scope/Factory neutrales y ExecutionActor (binding, cultura, zona, TenantKind y SessionStartedAtUtc opcionales).
-- Capture toma identidad firmada; RevalidateAsync relee cuenta/membresía real antes del scope, servicios privados y UoW. Consumer exige Personal activo; Business, organización/membresía activas; Platform, operador exclusivo.
-- Preferencias históricas deshabilitadas son legibles; no se cambia CultureInfo.CurrentCulture. El actor no acepta body, header, prompt ni argumentos de herramienta.
+- Capture toma identidad firmada; RevalidateAsync relee cuenta/membresía real antes del scope, servicios privados y UoW. Consumer exige Personal activo; Business, organización/membresía activas; Platform, operador exclusivo. Preferencias históricas deshabilitadas son legibles; no se cambia CultureInfo.CurrentCulture. El actor no acepta body, header, prompt ni argumentos de herramienta.
 - Enter es síncrono y técnico: using, sin HTTP, tenant previo ni transacción. AsyncLocal anida/restaura; Dispose revoca también flujos heredados y el contenedor.
 - ICurrentUser usa actor sólo sin HttpContext; sin ambos queda vacío. TenantContext conserva RLS y HTTP; ITenantScope.Enter(Guid) deja kind null y no sustituye al actor.
 - Cada fase/herramienta reautoriza estados, membresía sin caché, legales, feature y permisos. El aviso IA se exige antes/después de datos; aceptar el primer aviso usa autorización de acceso.
@@ -48,7 +48,7 @@ Scheduler/Canceller/Processor/Activator son los pasos nominales de baja y activa
 ## Prohibido
 - CQRS/handlers/MediatR, repositorio genérico, Scrutor, AutoMapper o Minimal APIs de negocio.
 - EF/HttpContext en Application, IQueryable/Expression públicos o repositorios/readers en controllers.
-- Servicios que escriben mediante otro servicio; helpers con UoW o sufijo ajeno a la tabla.
+- Servicios que escriben mediante otro servicio; helpers con UoW o sufijo ajeno a la tabla; una `ActionSource` o una herramienta del asistente que escriba: la IA prepara y guarda la ruta de siempre ([0068](../decisions/0068-acciones-del-asistente.md)).
 
 ## Copiá de
 - `Application/Services/Roles/RoleService.cs` y `Api/Controllers/Organization/RolesController.cs` (E4).
