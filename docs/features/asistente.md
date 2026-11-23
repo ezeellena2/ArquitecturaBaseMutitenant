@@ -230,7 +230,7 @@ Hoy el asistente solo lee. La [ADR 0068](../decisions/0068-acciones-del-asistent
   - la lista precargada `assistant_actions`;
   - `read_action`;
   - `propose_action`, con una propuesta por turno, guardada en el mensaje.
-- **El front** suma la tarjeta genérica y abre la pantalla de la acción con lo propuesto, que la pantalla lee por id. Guardar es la ruta de siempre, con la clave de idempotencia sacada de la propuesta.
+- **El front** suma la tarjeta genérica y abre la pantalla de la acción con lo propuesto, que la pantalla lee por id. Guardar es la ruta de siempre, con la clave que la propuesta da para cada intento. Lo que nace en borrador sigue con la 0057.
 - **Desde esa etapa, las 19 lecturas** también corren en el alcance de solo lectura.
 
 **Al proveedor** van lo que dijo la persona, los tipos de acción, los campos y los nombres de las definiciones, nunca registros ni personas. Plataforma solo propone sobre lo de Plataforma. Por WhatsApp, un resumen con «Revisar en la app» llega cuando el canal tenga lugar.

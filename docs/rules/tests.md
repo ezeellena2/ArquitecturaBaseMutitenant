@@ -16,7 +16,7 @@
 | Regla de arquitectura | `ArchitectureTests/` | NetArchTest + Mono.Cecil |
 - **Nombres:** en inglés y como frase: `Deleted_rows_are_hidden_from_queries_and_endpoints`.
 - **Ruta nueva:** fila en `ExplicitRouteInventoryTests`, test de éxito, errores, 401/403 y **un test de aislamiento** (el id de otro tenant da 404).
-- **Acción nueva del asistente** ([0068](../decisions/0068-acciones-del-asistente.md); etapa «Acciones del asistente»): sus casos y su escenario en `TestFeatures`. La batería genérica `AssistantActionContractTests` la prueba sola: permisos, aislamiento, validación, que no escriba, revocación en el medio, versión y guardado único. No se repite a mano ([receta](../guides/agregar-una-accion-al-asistente.md)).
+- **Acción nueva del asistente** ([0068](../decisions/0068-acciones-del-asistente.md); etapa «Acciones del asistente»): sus casos y su escenario en `TestFeatures`. La batería genérica `AssistantActionContractTests` la prueba sola: permisos, otra organización y otra empresa, validación, que no escriba, efectos, revocación en el medio, versión y guardado único. No se repite a mano ([receta](../guides/agregar-una-accion-al-asistente.md)).
 - **Datos de prueba:** se preparan dentro de un límite real (`factory.InTransactionAsync`).
 - Lo que existe solo para probar va en `TestFeatures/`, nunca en `src/`.
 - `ApiFactory` arranca con `ValidateOnBuild`, como Development: una clase que pide algo sin registrar rompe el arranque de toda la suite. `ValidateScopes` queda apagado porque hay pruebas que leen servicios scoped desde la raíz.
