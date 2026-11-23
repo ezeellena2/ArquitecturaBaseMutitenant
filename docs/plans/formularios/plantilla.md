@@ -41,6 +41,10 @@ Back y front, por separado y en orden. Cada paso dice qué hace, sus archivos, e
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
 
+## Acciones del asistente ✓
+
+Lo que la IA puede preparar en las pantallas de esta etapa que crean, editan o eliminan (268 y [ADR 0068](../../decisions/0068-acciones-del-asistente.md)): cada acción con su id (`<área>.<verbo>@1`), su pantalla, su permiso y la ruta que guarda, según la [receta](../../guides/agregar-una-accion-al-asistente.md). Si la etapa no declara ninguna, se dice por qué: solo lee, nace en borrador (0057) o pide la prueba reciente.
+
 ## Qué verificar al arrancar ✓
 
 Lo que esta spec supone de etapas anteriores que todavía no existen en el código. Al arrancar, `/plan-etapa` lo contrasta y anota solo lo que cambió.
