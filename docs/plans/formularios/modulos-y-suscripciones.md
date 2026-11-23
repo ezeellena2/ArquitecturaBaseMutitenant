@@ -191,7 +191,7 @@ Van a cada persona activa con `modules.manage` en la organización y con el corr
 ## Decisiones tomadas
 
 - **Las de la ADR 0069** (§1 a §8), aprobadas por el usuario el 2026-11-23.
-- **Las de esta spec,** técnicas o menores, que se le avisan al usuario:
+- **Las de esta spec,** técnicas o menores. El usuario aprobó el 2026-11-23 las seis de producto: los dos plazos, el pedido sin mensaje, que la baja no se deshace, cerrar y suspender, el motivo del rechazo y que la IA solo pida:
   - **los permisos:**
     - `modules.manage` para ver y operar «Módulos». De entrada lo tiene solo el rol de sistema TenantAdmin (el Dueño);
     - `platform.modules.read` y `platform.modules.manage`, este último con la prueba reciente;
