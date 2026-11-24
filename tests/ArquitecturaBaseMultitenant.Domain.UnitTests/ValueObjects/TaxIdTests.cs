@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Domain.ReferenceData;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects.TaxIdValidators;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.ValueObjects;
 
@@ -40,6 +41,18 @@ public sealed class TaxIdTests
         var catalogType = type == "AR-CUIT" ? TaxIdTestData.Cuit : TaxIdTestData.Dni;
         var result = TaxId.Create(country, catalogType, input);
 
+        Assert.True(result.IsFailure);
+        Assert.Equal(TaxIdErrors.InvalidCode, result.Error.Code);
+    }
+
+    [Theory]
+    [InlineData("00000000000")]
+    [InlineData("00-00000000-0")]
+    public void Eleven_zeros_are_never_a_valid_cuit(string input)
+    {
+        var result = TaxId.Create("AR", TaxIdTestData.Cuit, input);
+
+        Assert.False(ArgentineCuitValidator.IsValid("00000000000"));
         Assert.True(result.IsFailure);
         Assert.Equal(TaxIdErrors.InvalidCode, result.Error.Code);
     }
