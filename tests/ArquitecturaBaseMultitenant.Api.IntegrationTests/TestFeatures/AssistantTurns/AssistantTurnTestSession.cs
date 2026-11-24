@@ -18,6 +18,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -55,7 +56,7 @@ internal sealed class AssistantTurnTestSession : IAsyncDisposable
     }
 
     internal static async Task<AssistantTurnTestSession> CreateAsync(string access = "consumer", bool acceptNotice = true,
-        bool workerEnabled = true, DbCommandInterceptor? databaseObserver = null)
+        bool workerEnabled = true, DbCommandInterceptor? databaseObserver = null, Action<IWebHostBuilder>? configure = null)
     {
         var factory = new ApiFactory();
         var provider = new AssistantTurnTestProvider { DatabaseObserver = databaseObserver };
@@ -64,7 +65,7 @@ internal sealed class AssistantTurnTestSession : IAsyncDisposable
         try
         {
             await factory.InitializeAsync();
-            host = CreateHost(factory, provider, workerEnabled);
+            host = CreateHost(factory, provider, workerEnabled, configure);
             client = NewClient(host);
             var session = new AssistantTurnTestSession(factory, provider, host, client) { Access = access };
             await session.PrepareAsync(acceptNotice);
@@ -114,9 +115,11 @@ internal sealed class AssistantTurnTestSession : IAsyncDisposable
         catch { client.Dispose(); throw; }
     }
 
-    private static WebApplicationFactory<Program> CreateHost(ApiFactory factory, AssistantTurnTestProvider provider, bool workerEnabled = true) =>
+    private static WebApplicationFactory<Program> CreateHost(ApiFactory factory, AssistantTurnTestProvider provider, bool workerEnabled = true,
+        Action<IWebHostBuilder>? configure = null) =>
         factory.WithWebHostBuilder(builder =>
         {
+            configure?.Invoke(builder);
             builder.UseSetting("Assistant:Platform:ApiKey", "isolated-turn-provider-key");
             builder.UseSetting("Assistant:TurnWorkerEnabled", workerEnabled ? "true" : "false");
             builder.ConfigureTestServices(services =>

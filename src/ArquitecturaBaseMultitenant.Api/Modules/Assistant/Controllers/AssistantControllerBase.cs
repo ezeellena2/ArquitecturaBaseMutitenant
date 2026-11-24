@@ -156,6 +156,7 @@ public abstract class AssistantControllerBase(IAssistantConversationService serv
         (await service.FeedbackAsync(id, messageId, new AssistantFeedbackRequest(request.Rating, request.Version), cancellationToken)).ToActionResult(this);
 
     [HttpPost("conversations/{id:guid}/attachments")]
+    [AssistantUploadSlot]
     [IdempotencyDurable(typeof(AssistantDurableAdapter))]
     [Idempotent(Mode = IdempotencyMode.DurableReference)]
     [ProducesResponseType<AssistantAttachmentSummaryResponse>(201)]

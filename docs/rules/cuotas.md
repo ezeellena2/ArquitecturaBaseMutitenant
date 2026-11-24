@@ -27,7 +27,7 @@
 - El tope de consultas a Meta de Formularios (la vista oficial y «Consultar publicación») también es una cuota de negocio y va aparte, sin sumar un perfil a los doce: `Forms:MetaCalls:PerOrganizationPerMinute`, por organización, contado en la base y compartido entre copias (E14).
 
 ## Prohibido
-- `UseRateLimiter`, `[EnableRateLimiting]` o un limitador por proceso, que no se comparten entre réplicas.
+- `UseRateLimiter`, `[EnableRateLimiting]` o un limitador por proceso, que no se comparten entre réplicas. La única excepción es el lugar de la copia de las subidas del asistente (`AssistantUploadLimiter`, ADR 0064 §4): no cuenta pedidos, cuida la memoria de esa copia; el lugar de cada persona sí se comparte, en Redis.
 - Un perfil fuera de los doce del contrato.
 - Partir por algo que elige el cliente (un header o el subdominio), o guardar la IP completa.
 - Un tope de correo por proceso, o uno por organización sin el global: el cupo es de la cuenta que manda, no de cada organización (ADR 0063).

@@ -15,6 +15,8 @@ public static class AssistantApiModule
         services.AddScoped<AssistantNoticeReplayVerifier>();
         services.AddScoped<AssistantDurableAdapter>();
         services.AddScoped<AssistantNewKeyRateLimitFilter>();
+        // ADR 0064 §4: los lugares de las subidas, uno por copia, que toma AssistantUploadSlot antes de leer el cuerpo.
+        services.AddSingleton<AssistantUploadLimiter>();
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Idempotency.IIdempotentReplayResolver>(provider =>
             new AssistantReplayAdapter(provider.GetRequiredService<ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services.IAssistantDurableService>(), "assistant.conversation"));
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Idempotency.IIdempotentReplayResolver>(provider =>

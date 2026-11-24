@@ -16,9 +16,19 @@ using Microsoft.Extensions.Logging;
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantAttachmentService(AssistantAttachmentWriter writer, IAssistantAttachmentRepository repository,
-    ICurrentUser user, AssistantConversationPolicy policy, IFileStore files, IFileStoreMaintenance maintenance, IUnitOfWork unitOfWork, IRequestValidator validator,
-    TimeProvider clock, ILogger<AssistantAttachmentService> logger) : IAssistantAttachmentService
+    ICurrentUser user, AssistantConversationPolicy policy, AssistantUploadPolicy uploads, IFileStore files, IFileStoreMaintenance maintenance,
+    IUnitOfWork unitOfWork, IRequestValidator validator, TimeProvider clock, ILogger<AssistantAttachmentService> logger)
+    : IAssistantAttachmentService, IAssistantUploadAdmission
 {
+    // ADR 0064 §2: lo llama el lugar de la subida antes de leer el cuerpo; no reserva ni escribe.
+    public Task<Result> AdmitAsync(CancellationToken cancellationToken) =>
+        OperationLog.RunAsync(logger, clock, "AssistantAttachmentAdmit", async () =>
+        {
+            var admission = await uploads.PrepareAsync(cancellationToken);
+            if (admission is null) return Result.Success();
+            return await unitOfWork.ExecuteInTransactionAsync(ct => uploads.CheckAsync(admission, ct), CommitPolicy.OnSuccess, cancellationToken);
+        });
+
     public Task<Result<IdempotentReplayResponse<AssistantAttachmentSummaryResponse>>> UploadAsync(Guid id, AssistantUploadRequest input, CancellationToken ct) =>
         OperationLog.RunAsync<IdempotentReplayResponse<AssistantAttachmentSummaryResponse>>(logger, clock, "AssistantAttachmentUpload", async () =>
         {

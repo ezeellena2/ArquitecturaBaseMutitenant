@@ -55,6 +55,9 @@ internal static class CachingRegistration
         services.AddScoped<IRolePermissionCache, RolePermissionCache>();
         // Sin Redis, cada admisión de cuotas cuenta en PostgreSQL (E9).
         services.TryAddSingleton<IRateLimitCounter, DurableOnlyRateLimitCounter>();
+        // Sin Redis, un lugar exclusivo es de la copia (ADR 0058); con Redis, es el respaldo si no responde.
+        services.TryAddSingleton<LocalExclusiveSlots>();
+        services.TryAddSingleton<IExclusiveSlots>(provider => provider.GetRequiredService<LocalExclusiveSlots>());
         return services;
     }
 
@@ -72,6 +75,7 @@ internal static class CachingRegistration
             .ValidateOnStart();
         services.AddSingleton<RedisConnection>();
         services.AddSingleton<IRateLimitCounter, RedisRateLimitCounter>();
+        services.AddSingleton<IExclusiveSlots, RedisExclusiveSlots>();
         services.AddSingleton(provider => new RedisCache(Options.Create(new RedisCacheOptions
         {
             InstanceName = provider.GetRequiredService<IOptions<CacheOptions>>().Value.KeyPrefix,

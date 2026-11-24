@@ -22,7 +22,7 @@ internal sealed class AssistantTurnRepository(ApplicationDbContext db, IEnumerab
     public async Task<IReadOnlyList<AssistantTurnDiscovery>> ListReadyAsync(DateTime nowUtc, CancellationToken ct) =>
         await db.Set<AssistantTurnWork>().AsNoTracking()
             .Where(row => row.Status == AssistantTurnStatus.Pending || row.Status == AssistantTurnStatus.Running && row.LeaseExpiresAtUtc <= nowUtc)
-            .OrderBy(row => row.CreatedAtUtc).Take(32)
+            .OrderBy(row => row.CreatedAtUtc).Take(AssistantTechnicalLimits.TurnsPerCopy)
             .Select(row => new AssistantTurnDiscovery(row.Id, new ExecutionActor(row.OwnerUserId, row.Access, row.ScopeTenantId, row.Culture, row.TimeZoneId)
             { TenantKind = row.TenantKind, SessionStartedAtUtc = row.SessionStartedAtUtc })).ToArrayAsync(ct);
 

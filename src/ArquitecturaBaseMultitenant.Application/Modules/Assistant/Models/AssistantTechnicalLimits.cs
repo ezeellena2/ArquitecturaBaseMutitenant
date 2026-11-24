@@ -17,4 +17,6 @@ public static class AssistantTechnicalLimits
     public const int TitleMaxOutputTokens = 64;
     // Includes the title call. Admission/reservations and the provider loop are supplied by T05/T06.
     public const int MaxCallsPerTurn = 5;
+    // ADR 0064 §12: the pending turns a copy takes per pass, as many as its four lanes start before a turn expires.
+    public const int TurnsPerCopy = 4;
 }

@@ -15,6 +15,8 @@ public static class AssistantModule
     {
         services.AddScoped<IAssistantConversationService, AssistantConversationService>();
         services.AddScoped<IAssistantAttachmentService, AssistantAttachmentService>();
+        services.AddScoped<IAssistantUploadAdmission>(provider => (IAssistantUploadAdmission)provider.GetRequiredService<IAssistantAttachmentService>());
+        services.AddScoped<AssistantUploadPolicy>();
         services.AddScoped<AssistantAttachmentWriter>();
         services.AddScoped<IAssistantExportService, AssistantExportService>();
         services.AddScoped<IAssistantRetentionService, AssistantRetentionService>();

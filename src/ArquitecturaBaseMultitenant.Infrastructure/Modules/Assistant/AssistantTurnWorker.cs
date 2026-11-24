@@ -25,7 +25,7 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
         IReadOnlyList<AssistantTurnDiscovery> ready;
         await using (var discovery = scopes.CreateAsyncScope())
             ready = await discovery.ServiceProvider.GetRequiredService<IAssistantTurnRepository>().ListReadyAsync(Clock.GetUtcNow().UtcDateTime, stoppingToken);
-        await Parallel.ForEachAsync(ready, new ParallelOptions { MaxDegreeOfParallelism = 4, CancellationToken = stoppingToken },
+        await Parallel.ForEachAsync(ready, new ParallelOptions { MaxDegreeOfParallelism = AssistantTechnicalLimits.TurnsPerCopy, CancellationToken = stoppingToken },
             async (candidate, ct) => await ProcessAsync(candidate, ct));
     }
 
