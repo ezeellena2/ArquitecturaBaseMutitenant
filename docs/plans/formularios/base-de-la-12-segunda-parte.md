@@ -22,7 +22,7 @@ Lienzo v176. Lo que ya está dibujado:
 | `Asistente-Uso-Org` | el mes como rango y `MonthField` |
 | todos | fechas con coma, porcentaje pegado y avisos blancos con filo |
 
-**Faltan** (se dibujan antes de la tarea del front que los usa):
+**Los de la F4, la F5 y la F10 a la F13**, aprobados en el lienzo v181, en la página «Segunda parte de la base», con «-Base2» en el nombre: cada uno manda sobre su tablero de siempre en lo que dibuja, y `Criterio-Elegir` es nuevo. La configuración de WhatsApp de la organización es una entrada nueva, «Configuración», en Administración › WhatsApp (`WA-Config-Base2`). Cubren:
 - **los permisos de un rol en áreas plegables (260),** con los detalles de la RO3-D y lo incluido apagado con su motivo: `Rol`, `M-Rol` y los de rol con alcance de empresa; `Cuenta-Plat`, la invitación de `Cuentas` y sus teléfonos; el ejemplo de permisos de `Criterio-Tablas`;
 - **lo que no se puede dar (269):** en `Rol`, `Usuario`, la invitación de `Usuarios` y sus teléfonos, los permisos y los roles que quien edita no puede dar, apagados con su motivo;
 - el estado de entrega de una invitación (`Pending`, `Sent`, `Uncertain`, `Failed`) en `Usuarios`, `Usuario`, `Empresa` (miembros invitados), `Cuentas` y `Cuenta-Plat` (la invitación de un operador), con «Reenviar» que pide revisar con la persona si quedó «Sin confirmar» (0066 §4);

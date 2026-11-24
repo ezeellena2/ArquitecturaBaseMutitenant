@@ -182,7 +182,7 @@ Lo que trajeron los traspasos 16 y 17 para toda la app (decisiones 261 a 264 y 2
 
 ## Traspaso 18, tanda 1: para la segunda parte de la base
 
-Lo que trajo la tanda 1 del traspaso 18 (decisiones 270 a 273 de la [hoja de ruta](plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md)) y cae sobre lo ya programado. Va en la **segunda parte de la base, antes de la E12**, con su única puerta (214): la B18 y la F13, con sus tableros.
+Lo que trajo la tanda 1 del traspaso 18 (decisiones 270 a 273 de la [hoja de ruta](plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md)) y cae sobre lo ya programado. Va en la **segunda parte de la base, antes de la E12**, con su única puerta (214): la B18 y la F13, con sus tableros, aprobados en el lienzo v181.
 
 - **El inventario de las reglas de negocio** (270): los valores del núcleo, de WhatsApp y del asistente que siguen en `appsettings` o fijos pasan a la configuración de su dueño, con su mínimo, su máximo y su revisión; lo de seguridad, costo o abuso y lo técnico se quedan, con su motivo.
 - **La retención en pantalla** (272): «Privacidad y retención» en la configuración de Plataforma, el plazo de los chats en la de cada organización (90 días por defecto) y la purga de esos chats por organización, que hoy no existe.
