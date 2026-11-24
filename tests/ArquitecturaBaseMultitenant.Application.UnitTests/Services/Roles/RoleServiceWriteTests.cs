@@ -92,13 +92,45 @@ public sealed class RoleServiceWriteTests
         Assert.Null(role.CompanyId);
     }
 
+    // 260: guardar un rol guarda lo pedido más lo que incluye, en la organización y en una empresa.
+    [Fact]
+    public async Task Saving_a_role_keeps_what_was_asked_plus_what_it_includes()
+    {
+        var role = Role.Create("Equipo", null, RoleScope.Organization, null, [Permissions.Audit.Read]).Value;
+        var repository = new RecordingRoleRepository(role);
+        using var createFixture = new ServiceFixture<RoleService>(new CreateRoleRequestValidator());
+        var creating = new RoleService(new RoleServiceTests.FakeRoleReader(), repository,
+            new CompanyServiceTests.FakeCompanyReader(), createFixture.Validator, new FakeUnitOfWork(),
+            createFixture.TimeProvider, createFixture.Logger);
+        using var updateFixture = new ServiceFixture<RoleService>(new UpdateRoleRequestValidator());
+        var updating = new RoleService(new RoleServiceTests.FakeRoleReader(), repository,
+            new CompanyServiceTests.FakeCompanyReader(), updateFixture.Validator, new FakeUnitOfWork(),
+            updateFixture.TimeProvider, updateFixture.Logger);
+
+        var created = await creating.CreateAsync(new CreateRoleRequest("Personas", null, RoleScope.Organization, null,
+            [Permissions.Users.Manage, Permissions.Roles.Assign]), Ct);
+        Assert.True(created.IsSuccess);
+        Assert.Equal([Permissions.Roles.Assign, Permissions.Roles.Read, Permissions.Users.Manage, Permissions.Users.Read],
+            repository.Added!.Permissions);
+        var company = await creating.CreateAsync(new CreateRoleRequest("Miembros", null, RoleScope.AnyCompany, null,
+            [Permissions.Company.Members.Manage]), Ct);
+        Assert.True(company.IsSuccess);
+        Assert.Equal([Permissions.Company.Members.Manage, Permissions.Company.Members.Read], repository.Added!.Permissions);
+
+        var updated = await updating.UpdateAsync(new UpdateRoleRequest(role.Id, "Equipo", null, RoleScope.Organization,
+            null, [Permissions.Settings.Manage], 0), Ct);
+        Assert.True(updated.IsSuccess);
+        Assert.Equal([Permissions.Settings.Manage, Permissions.Settings.Read], role.Permissions);
+    }
+
     private sealed class RecordingRoleRepository(Role role) : IRoleRepository
     {
         public bool WasRemoved { get; private set; }
+        public Role? Added { get; private set; }
         public Task<Role?> GetByIdAsync(Guid roleId, uint expectedVersion, CancellationToken cancellationToken) =>
             Task.FromResult<Role?>(roleId == role.Id ? role : null);
         public Task<Role?> GetByNameAsync(string name, CancellationToken cancellationToken) => Task.FromResult<Role?>(null);
-        public void Add(Role item) { }
+        public void Add(Role item) => Added = item;
         public void MarkUpdated(Role item) { }
         public void Remove(Role item) => WasRemoved = true;
     }

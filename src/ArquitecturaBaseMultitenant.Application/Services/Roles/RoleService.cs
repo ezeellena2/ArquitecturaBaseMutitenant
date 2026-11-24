@@ -14,7 +14,10 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Roles;
 
-/// <summary>Administra roles tenant-scoped; cada escritura valida antes y usa una única transacción.</summary>
+/// <summary>
+/// Administra roles tenant-scoped; cada escritura valida antes y usa una única transacción. Un rol se guarda con lo que
+/// incluye cada permiso pedido (decisión 260): lo guardado es lo que permite.
+/// </summary>
 internal sealed class RoleService(IRoleReader roles, IRoleRepository repository, ICompanyReader companies,
     IRequestValidator validator, IUnitOfWork unitOfWork, TimeProvider timeProvider,
     ILogger<RoleService> logger) : IRoleService
@@ -70,9 +73,10 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
                 .. Permissions.All
                     .GroupBy(AreaOf, StringComparer.Ordinal)
                     .Select(group => new PermissionGroupResponse(group.Key, PermissionTexts.Area(group.Key),
-                        // Contrato de la segunda parte de la base de la 12 (K1): includes vacío hasta la B16 y grantable en true hasta la B1.
+                        // Lo que incluye cada permiso (260); grantable sigue en true hasta la B1.
                         [.. group.Select(permission => new PermissionItem(permission,
-                            PermissionTexts.Permission(permission), PermissionTexts.Description(permission), [], true))])),
+                            PermissionTexts.Permission(permission), PermissionTexts.Description(permission),
+                            Permissions.Inclusions.Of(permission), true))])),
             ];
             return Task.FromResult(Result.Success(groups));
         });
@@ -84,7 +88,7 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var roleResult = Role.Create(request.Name, request.Description, request.Scope!.Value, request.CompanyId,
-                NormalizePermissions(request.Permissions!));
+                WithIncluded(request.Permissions!));
             if (roleResult.IsFailure) return roleResult.Error;
 
             try
@@ -160,7 +164,7 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
             && await roles.CountUsersAsync(role.Id, cancellationToken) is var userCount and > 0)
             return RoleErrors.ScopeChangeHasUsers(userCount);
         var updated = role.Update(request.Name, request.Description, request.Scope!.Value, request.CompanyId,
-            NormalizePermissions(request.Permissions!));
+            WithIncluded(request.Permissions!));
         if (updated.IsFailure) return updated.Error;
         if (await roles.ExistsByNameAsync(role.Name, role.CompanyId, role.Id, cancellationToken))
             return RoleErrors.AlreadyExists;
@@ -179,8 +183,10 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
         return Result.Success();
     }
 
-    private static string[] NormalizePermissions(IEnumerable<string> permissions) =>
-        permissions.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
+    // Lo pedido más lo que incluye (260): «Administrar usuarios» se guarda con «Ver usuarios», así lo guardado es lo que el
+    // rol permite. Un código que no es del catálogo llega al dominio, que lo rechaza.
+    private static string[] WithIncluded(IEnumerable<string> permissions) =>
+        Permissions.Inclusions.WithIncluded(permissions).Order(StringComparer.Ordinal).ToArray();
 
     private static string AreaOf(string permission) =>
         permission[..permission.IndexOf('.', StringComparison.Ordinal)];

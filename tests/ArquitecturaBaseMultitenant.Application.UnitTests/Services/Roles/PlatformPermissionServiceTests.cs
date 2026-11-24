@@ -32,6 +32,20 @@ public sealed class PlatformPermissionServiceTests
         Assert.True(await service.HasPermissionAsync(user.Id, PlatformPermissions.Recoveries.Manage, Ct));
     }
 
+    // 260: una asignación guardada con «Administrar cuentas» y sin «Ver cuentas» igual permite verlas.
+    [Fact]
+    public async Task An_operator_holds_what_its_permissions_include()
+    {
+        var user = Account(UserStatus.Active, true);
+        var service = Create(user, [PlatformPermissions.Accounts.Manage, PlatformPermissions.Assistant.Configure, "platform.removed"]);
+
+        Assert.Equal([PlatformPermissions.Accounts.Read, PlatformPermissions.Accounts.Manage,
+            PlatformPermissions.Assistant.Configure, PlatformPermissions.Assistant.Read], await service.GetPermissionsAsync(user.Id, Ct));
+        Assert.True(await service.HasPermissionAsync(user.Id, PlatformPermissions.Accounts.Read, Ct));
+        Assert.False(await service.HasPermissionAsync(user.Id, PlatformPermissions.Tenants.Read, Ct));
+        Assert.False(await service.HasPermissionAsync(user.Id, "platform.removed", Ct));
+    }
+
     [Theory]
     [InlineData(UserStatus.Suspended)]
     [InlineData(UserStatus.PendingDeletion)]

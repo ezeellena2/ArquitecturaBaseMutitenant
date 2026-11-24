@@ -178,8 +178,9 @@ public sealed class AssistantContractTests(ApiFactory factory)
         Assert.Equal(JsonValueKind.Null, configuration.RootElement.GetProperty("maskedKeySuffix").ValueKind);
         using var chat = await client.GetAsync("/api/platform/assistant", Ct);
         Assert.Equal(HttpStatusCode.Forbidden, chat.StatusCode);
+        // 260: «Configurar el asistente de Plataforma» incluye «Ver el uso del asistente».
         using var usage = await client.GetAsync("/api/platform/assistant/usage?month=2026-10&page=1&pageSize=20", Ct);
-        Assert.Equal(HttpStatusCode.Forbidden, usage.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, usage.StatusCode);
         using var profile = await client.GetFromJsonAsync<JsonDocument>("/api/me", Ct);
         var capabilities = profile!.RootElement.GetProperty("moduleCapabilities").EnumerateArray();
         var assistant = Assert.Single(capabilities, value => value.GetProperty("key").GetString() == "assistant");

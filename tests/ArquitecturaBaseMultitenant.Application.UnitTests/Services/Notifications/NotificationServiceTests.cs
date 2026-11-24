@@ -201,10 +201,11 @@ public sealed class NotificationServiceTests
         // La campana no pregunta por una empresa suelta: lee las empresas desde la proyección.
         Assert.Equal(0, companies.Checks);
 
-        // Las dos vistas no cambian: la organización con lo suyo y cada empresa con lo de la organización incluido.
+        // Las dos vistas no cambian: la organización con lo suyo y cada empresa con lo de la organización incluido. Lo suyo
+        // es lo efectivo (260): «Administrar usuarios» trae «Ver usuarios».
         Assert.All(source.Contexts, context =>
         {
-            Assert.Equal([Permissions.Users.Manage], context.Permissions);
+            Assert.Equal([Permissions.Users.Manage, Permissions.Users.Read], context.Permissions);
             Assert.Equal([CompanyId], context.CompaniesWhere(Permissions.Company.Members.Manage));
             Assert.Equal([CompanyId], context.CompaniesWhere(Permissions.Users.Manage));
         });

@@ -13,7 +13,10 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Roles;
 /// <summary>
 /// Combina los permisos efectivos de la persona desde su proyección cacheada (ADR 0052): la de sus roles de
 /// organización y, sólo cuando hace falta, la de sus roles por empresa. Los roles de organización valen en toda empresa
-/// activa; los de empresa, sólo donde tiene la membresía activa.
+/// activa; los de empresa, sólo donde tiene la membresía activa. Cada proyección es lo efectivo (decisión 260): los
+/// permisos del catálogo de esta versión más lo que incluyen, en cadena. Se calcula acá, al leer: la caché guarda lo
+/// asignado más lo incluido sin descartar lo que esta versión no conoce, y la puede haber llenado la versión con la que
+/// convive (ADR 0060).
 /// </summary>
 internal sealed class PermissionService(IRolePermissionCache cache, ITenantContext tenantContext,
     ICompanyReader companies, TimeProvider timeProvider, ILogger<PermissionService> logger) : IPermissionService
@@ -99,19 +102,23 @@ internal sealed class PermissionService(IRolePermissionCache cache, ITenantConte
                 .Contains(permission, StringComparer.Ordinal);
         });
 
-    private Task<IReadOnlyList<string>> OrganizationAsync(Guid userId, CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<string>> OrganizationAsync(Guid userId, CancellationToken cancellationToken)
     {
         if (userId == Guid.Empty) throw new ArgumentException("The user id cannot be empty.", nameof(userId));
         return ActiveBusinessTenant() is { } tenantId
-            ? cache.GetOrganizationPermissionsAsync(tenantId, userId, cancellationToken)
-            : Task.FromResult<IReadOnlyList<string>>([]);
+            ? Effective(await cache.GetOrganizationPermissionsAsync(tenantId, userId, cancellationToken))
+            : [];
     }
 
     private async Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> ByCompanyAsync(Guid userId,
         CancellationToken cancellationToken) =>
         ActiveBusinessTenant() is { } tenantId
-            ? await cache.GetCompanyPermissionsAsync(tenantId, userId, cancellationToken)
+            ? (await cache.GetCompanyPermissionsAsync(tenantId, userId, cancellationToken))
+                .ToDictionary(company => company.Key, company => Effective(company.Value))
             : new Dictionary<Guid, IReadOnlyList<string>>();
+
+    private static IReadOnlyList<string> Effective(IEnumerable<string> granted) =>
+        [.. Permissions.Inclusions.Effective(granted).Order(StringComparer.Ordinal)];
 
     private async Task<IReadOnlyList<string>> CompanyAsync(Guid userId, Guid companyId,
         CancellationToken cancellationToken)

@@ -42,6 +42,8 @@ internal sealed class PlatformOperatorInvitationService(
             if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
             var permissions = PlatformPermissionAssignment.Validate(request.Permissions);
             if (permissions.IsFailure) return permissions.Error;
+            // Lo pedido más lo que incluye (260): la invitación guarda lo que el operador va a poder hacer.
+            var granted = Domain.Authorization.PlatformPermissions.Inclusions.WithIncluded(request.Permissions!);
             var email = request.Email!;
             return await unitOfWork.ExecuteInTransactionAsync<Result<PlatformOperatorInvitationResponse>>(async work =>
             {
@@ -54,10 +56,10 @@ internal sealed class PlatformOperatorInvitationService(
                         : PlatformOperatorErrors.AccountExists;
                 if ((await lookup.FindVerifiedUsersByEmailAsync(email, work)).Count > 0)
                     return PlatformOperatorErrors.AccountExists;
-                var invited = await provisioner.CreateAsync(email, request.Permissions!, clock.GetUtcNow().UtcDateTime, work);
+                var invited = await provisioner.CreateAsync(email, granted, clock.GetUtcNow().UtcDateTime, work);
                 if (invited.IsFailure) return invited.Error;
                 audit.RecordOperator(invited.Value.Id, SecurityEventType.PlatformOperatorInvited,
-                    AuditTexts.OperatorInvitationReason(), PlatformOperatorChanges.Between([], request.Permissions!));
+                    AuditTexts.OperatorInvitationReason(), PlatformOperatorChanges.Between([], granted));
                 await notifier.EnqueueAsync(invited.Value, audit.CurrentOperatorId(), work);
                 return new PlatformOperatorInvitationResponse(invited.Value.Id, invited.Value.ExpiresAtUtc);
             }, CommitPolicy.OnSuccess, ct);

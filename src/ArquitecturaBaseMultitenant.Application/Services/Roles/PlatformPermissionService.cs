@@ -1,13 +1,17 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Roles;
 
-/// <summary>Resuelve los permisos persistidos de operadores activos, sin conceder permisos por el indicador de acceso.</summary>
+/// <summary>
+/// Resuelve los permisos persistidos de operadores activos, sin conceder permisos por el indicador de acceso. Son lo
+/// efectivo (decisión 260): los del catálogo más lo que incluyen, también para una asignación guardada sin lo incluido.
+/// </summary>
 internal sealed class PlatformPermissionService(IUserRepository users, IPlatformPermissionAssignmentReader assignments,
     TimeProvider timeProvider, ILogger<PlatformPermissionService> logger) : IPlatformPermissionService
 {
@@ -35,6 +39,6 @@ internal sealed class PlatformPermissionService(IUserRepository users, IPlatform
         if (user is not { Status: UserStatus.Active, IsPlatformOperator: true, HasPendingOperatorInvitation: false })
             return Result.Success<IReadOnlyList<string>>([]);
         var permissions = await assignments.FindPermissionsAsync(userId, cancellationToken);
-        return Result.Success(permissions ?? []);
+        return Result.Success(PlatformPermissions.Inclusions.Effective(permissions ?? []));
     }
 }

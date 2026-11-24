@@ -28,4 +28,25 @@ public sealed class PermissionServiceTests
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             service.HasCompanyPermissionAsync(granted, otherCompany, Permissions.Company.Members.Read, Ct));
     }
+
+    // 260: una entrada que guardó la versión anterior, con «Administrar» y sin «Ver», igual permite ver; lo que no es del
+    // catálogo no permite nada.
+    [Fact]
+    public async Task What_a_projection_allows_includes_what_its_permissions_include()
+    {
+        var tenant = new FakeTenantContext { TenantId = Guid.NewGuid(), TenantKind = TenantKind.Business };
+        var company = Guid.NewGuid();
+        var service = new PermissionService(new CountingPermissionCache([Permissions.Users.Manage, "removed.module"],
+                new Dictionary<Guid, IReadOnlyList<string>> { [company] = [Permissions.Company.Members.Manage] }),
+            tenant, new CompanyActivityReader(company), new FakeTimeProvider(), NullLogger<PermissionService>.Instance);
+        var user = Guid.NewGuid();
+
+        Assert.True(await service.HasPermissionAsync(user, Permissions.Users.Read, Ct));
+        Assert.False(await service.HasPermissionAsync(user, "removed.module", Ct));
+        Assert.True(await service.HasCompanyPermissionAsync(user, company, Permissions.Company.Members.Read, Ct));
+        Assert.Equal([Permissions.Users.Manage, Permissions.Users.Read],
+            await service.GetAssignedOrganizationPermissionsAsync(user, Ct));
+        Assert.Equal([Permissions.Company.Members.Manage, Permissions.Company.Members.Read, Permissions.Users.Manage,
+            Permissions.Users.Read], (await service.GetPermissionsByCompanyAsync(user, Ct))[company]);
+    }
 }

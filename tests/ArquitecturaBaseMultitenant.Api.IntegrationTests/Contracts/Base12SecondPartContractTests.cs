@@ -128,7 +128,7 @@ public sealed class Base12SecondPartContractTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Permissions_answer_includes_empty_and_grantable_until_their_tasks()
+    public async Task Permissions_answer_what_they_include_and_grantable_until_its_task()
     {
         using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
@@ -137,11 +137,15 @@ public sealed class Base12SecondPartContractTests(ApiFactory factory)
         var groups = await client.GetFromJsonAsync<JsonArray>("/api/permissions", Ct);
         var items = groups!.SelectMany(group => group!["permissions"]!.AsArray()).ToArray();
         Assert.Equal(Permissions.All.Count, items.Length);
+        // 260: lo que incluye cada permiso, del catálogo; grantable sigue en true hasta la B1.
         Assert.All(items, item =>
         {
-            Assert.Empty(item!["includes"]!.AsArray());
+            Assert.Equal(Permissions.Inclusions.Of(item!["code"]!.GetValue<string>()),
+                item["includes"]!.AsArray().Select(code => code!.GetValue<string>()));
             Assert.True(item["grantable"]!.GetValue<bool>());
         });
+        Assert.Equal(["users.read"], items.Single(item => item!["code"]!.GetValue<string>() == "users.manage")!
+            ["includes"]!.AsArray().Select(code => code!.GetValue<string>()));
         var roles = await client.GetFromJsonAsync<JsonObject>("/api/roles/paged", Ct);
         Assert.All(roles!["items"]!.AsArray(), role => Assert.True(role!["grantable"]!.GetValue<bool>()));
     }
@@ -154,9 +158,12 @@ public sealed class Base12SecondPartContractTests(ApiFactory factory)
         Assert.Equal(PlatformPermissions.All, catalog.Select(item => item!["code"]!.GetValue<string>()));
         Assert.All(catalog, item =>
         {
-            Assert.Empty(item!["includes"]!.AsArray());
+            Assert.Equal(PlatformPermissions.Inclusions.Of(item!["code"]!.GetValue<string>()),
+                item["includes"]!.AsArray().Select(code => code!.GetValue<string>()));
             Assert.True(item["grantable"]!.GetValue<bool>());
         });
+        Assert.Equal(["platform.accounts.read"], catalog.Single(item => item!["code"]!.GetValue<string>() ==
+            "platform.accounts.manage")!["includes"]!.AsArray().Select(code => code!.GetValue<string>()));
 
         using var other = await OperatorAsync([PlatformPermissions.Audit.Read]);
         using var forbidden = await other.GetAsync("/api/platform/permissions", Ct);

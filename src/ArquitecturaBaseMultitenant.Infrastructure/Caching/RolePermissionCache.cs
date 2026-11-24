@@ -2,6 +2,7 @@ using System.Globalization;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,7 +11,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Caching;
 /// <summary>
 /// Los permisos que dan los roles de una persona en la caché compartida (ADR 0052), 60 s: los de organización y, en otra
 /// entrada, los de cada empresa. Cada carga lee con RLS en un scope propio de esa organización y en consultas agrupadas,
-/// sin importar cuántas empresas haya. Una clave privada se usa sólo desde un pedido de esa misma organización.
+/// sin importar cuántas empresas haya. Una clave privada se usa sólo desde un pedido de esa misma organización. Guarda lo
+/// asignado más lo que incluye (decisión 260), así un rol viejo con «Administrar usuarios» y sin «Ver usuarios» igual ve
+/// usuarios, y nunca descarta un código que esta versión no conoce: la versión con la que convive comparte la entrada
+/// (ADR 0060) y lo necesita. Lo efectivo lo calcula cada versión al leer, con su catálogo (<c>PermissionService</c>).
 /// </summary>
 internal sealed class RolePermissionCache(SharedCache cache, ITenantContext tenantContext) : IRolePermissionCache
 {
@@ -72,5 +76,5 @@ internal sealed class RolePermissionCache(SharedCache cache, ITenantContext tena
         "permissions:" + userId.ToString("N", CultureInfo.InvariantCulture) + ":" + part);
 
     private static string[] Union(IEnumerable<IEnumerable<string>> permissions) =>
-        [.. permissions.SelectMany(granted => granted).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal)];
+        [.. Permissions.Inclusions.WithIncluded(permissions.SelectMany(granted => granted)).Order(StringComparer.Ordinal)];
 }

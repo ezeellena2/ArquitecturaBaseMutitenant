@@ -35,6 +35,7 @@
 - Cachear entidades, datos personales o una clave privada leída desde otra organización.
 - Guardar la falla de un proveedor externo: si la carga puede devolver la falla de un tercero (un padrón caído, por ejemplo), ese resultado no se guarda y el próximo pedido vuelve a probar.
 - Leer las generaciones con el contexto de quien llama: vería lo que todavía no se confirmó.
+- Filtrar lo que se guarda en una entrada por el catálogo que conoce esta versión: en cada despliegue la comparte la versión con la que convive ([ADR 0060](../decisions/0060-dos-versiones-conviven.md)), que perdería lo que solo ella conoce hasta que la entrada venza. Se guarda lo leído y cada versión filtra al usarlo, como `RolePermissionCache` y `PermissionService` con los permisos.
 
 ## Copiá de
 - `Infrastructure/Caching/TenantStatusCache.cs` para una entrada con una etiqueta (E9).
@@ -46,6 +47,7 @@
 - `DistributedCacheTests` (E9)
 - `PermissionProjectionTests` (E9)
 - `CacheKeyScopeTests` (E2)
+- `PermissionInclusionAdversarialTests` (E12): la caché de permisos conserva un código que solo conoce la versión siguiente
 
 ## Detalle
 [ADR 0052](../decisions/0052-cache-compartida-redis.md) · [backend.md §17](../architecture/backend.md#17-logging-openapi-health-rate-limiting-caché)

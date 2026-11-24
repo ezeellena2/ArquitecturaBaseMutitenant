@@ -76,7 +76,9 @@ public sealed class PermissionAuthorizationTests
     [Theory]
     [InlineData("companies.read", "company.members.read", true, 1, 0)]
     [InlineData("users.read", "company.members.read", true, 1, 1)]
-    [InlineData("users.read", "company.members.manage", false, 1, 1)]
+    // 260: «Administrar miembros» incluye «Ver miembros»; sin ninguno de los dos, la empresa no lo da.
+    [InlineData("users.read", "company.members.manage", true, 1, 1)]
+    [InlineData("users.read", "assistant.use", false, 1, 1)]
     public async Task A_company_requirement_reads_each_projection_at_most_once(string organizationRole, string companyRole,
         bool granted, int organizationReads, int companyReads)
     {

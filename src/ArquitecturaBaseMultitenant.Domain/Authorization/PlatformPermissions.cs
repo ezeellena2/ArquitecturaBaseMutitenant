@@ -81,4 +81,20 @@ public static class PlatformPermissions
         WhatsApp.Manage,
         WhatsApp.Attend,
     ];
+
+    /// <summary>
+    /// Lo que incluye cada permiso de un operador que no sirve sin el «Ver» de su misma área (decisión 260): se administra
+    /// desde el listado y la ficha, y los topes del asistente se fijan mirando su uso, como «Configurar el asistente» de la
+    /// organización, que también lo consulta. Nunca de otra área.
+    /// </summary>
+    public static IReadOnlyDictionary<string, IReadOnlyCollection<string>> Includes { get; } =
+        new Dictionary<string, IReadOnlyCollection<string>>(StringComparer.Ordinal)
+        {
+            [Tenants.Manage] = [Tenants.Read],
+            [Accounts.Manage] = [Accounts.Read],
+            [Assistant.Configure] = [Assistant.Read],
+        }.AsReadOnly();
+
+    /// <summary>El catálogo de Plataforma con lo que incluye cada permiso; lo efectivo es <see cref="PermissionInclusions.Effective"/>.</summary>
+    public static PermissionInclusions Inclusions { get; } = PermissionInclusions.Compose([All], Includes);
 }

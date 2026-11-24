@@ -16,7 +16,8 @@ using Microsoft.Extensions.Logging;
 namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 /// <summary>
-/// Cambia o quita los permisos de un operador con la versión de su asignación y motivo. Nadie actúa sobre sí mismo y
+/// Cambia o quita los permisos de un operador con la versión de su asignación y motivo, y guarda lo pedido más lo que
+/// incluye (decisión 260). Nadie actúa sobre sí mismo y
 /// siempre queda un operador activo con <c>platform.operators.manage</c> (lock global de <see cref="PlatformOperatorGuard"/>).
 /// Quitar el acceso cierra todas sus sesiones; la cuenta queda sin operador ni permisos. Una invitación sin aceptar
 /// no se cambia ni se quita: se reenvía o se revoca (ADR 0042).
@@ -40,19 +41,21 @@ internal sealed class PlatformOperatorService(
             if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
             var permissions = PlatformPermissionAssignment.Validate(request.Permissions);
             if (permissions.IsFailure) return permissions.Error;
+            // Lo pedido más lo que incluye (260): «Administrar cuentas» se guarda con «Ver cuentas».
+            var granted = PlatformPermissions.Inclusions.WithIncluded(request.Permissions!);
             if (audit.CurrentOperatorId() == accountId) return UserErrors.CannotModifySelf;
             var saved = await unitOfWork.ExecuteInTransactionAsync<Result<PlatformPermissionAssignment>>(async work =>
             {
                 var assignment = await LoadAsync(accountId, request.Version!.Value, work);
                 if (assignment.IsFailure) return assignment.Error;
-                if (!request.Permissions!.Contains(PlatformPermissions.Operators.Manage, StringComparer.Ordinal)
+                if (!granted.Contains(PlatformPermissions.Operators.Manage, StringComparer.Ordinal)
                     && (await operators.CheckAnotherManagerRemainsAsync(accountId, work)) is { IsFailure: true } last)
                     return last.Error;
                 var before = assignment.Value.Permissions.ToArray();
-                var changed = assignment.Value.ChangePermissions(request.Permissions);
+                var changed = assignment.Value.ChangePermissions(granted);
                 if (changed.IsFailure) return changed.Error;
                 audit.RecordOperator(accountId, SecurityEventType.PlatformOperatorPermissionsChanged, request.Reason!,
-                    PlatformOperatorChanges.Between(before, request.Permissions!));
+                    PlatformOperatorChanges.Between(before, granted));
                 return assignment.Value;
             }, CommitPolicy.OnSuccess, ct);
             return VersionResponse.Of(saved);
@@ -95,8 +98,9 @@ internal sealed class PlatformOperatorService(
     public Task<Result<IReadOnlyList<PlatformPermissionItem>>> GetPermissionCatalogAsync(CancellationToken ct) =>
         OperationLog.RunAsync(logger, clock, "GetPlatformPermissionCatalog", () =>
         {
-            // Contrato de la segunda parte de la base de la 12 (K1): includes vacío hasta la B16 y grantable en true hasta la B1.
-            IReadOnlyList<PlatformPermissionItem> catalog = [.. PlatformPermissions.All.Select(code => new PlatformPermissionItem(code, [], true))];
+            // Lo que incluye cada permiso (260); grantable sigue en true hasta la B1.
+            IReadOnlyList<PlatformPermissionItem> catalog =
+                [.. PlatformPermissions.All.Select(code => new PlatformPermissionItem(code, PlatformPermissions.Inclusions.Of(code), true))];
             return Task.FromResult(Result.Success(catalog));
         });
 }

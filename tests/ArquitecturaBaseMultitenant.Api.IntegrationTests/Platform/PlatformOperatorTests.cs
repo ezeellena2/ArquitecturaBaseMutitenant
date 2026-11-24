@@ -492,6 +492,62 @@ public sealed class PlatformOperatorTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, (await ResetAsync(manager, targetId, version, key)).Status);
     }
 
+    // 260: invitar y cambiar los permisos de un operador guardan lo pedido más lo que incluye, y la historia lo nombra.
+    [Fact]
+    public async Task Inviting_and_changing_an_operator_save_what_was_asked_plus_what_it_includes()
+    {
+        var (manager, _) = await OperatorAsync(PlatformOperators.All);
+        var (id, email) = await InviteAsync(manager, [PlatformPermissions.Tenants.Manage]);
+        Assert.Equal([PlatformPermissions.Tenants.Read, PlatformPermissions.Tenants.Manage],
+            (await DetailAsync(manager, id)).GetProperty("operatorPermissions").EnumerateArray().Select(item => item.GetString()));
+        using (var invitedClient = Client())
+        {
+            using (var accepted = await SignInAsync(invitedClient, email, PlatformReturn))
+                Assert.Equal(HttpStatusCode.OK, accepted.StatusCode);
+            await PlatformFactorJourney.CompleteAsync(factory.Services, invitedClient, id, Ct);
+        }
+
+        using var changed = await SendAsync(manager, HttpMethod.Put, $"/api/platform/accounts/{id:D}/operator", new
+        {
+            version = (await DetailAsync(manager, id)).GetProperty("operatorVersion").GetUInt32(),
+            reason = "Administra cuentas",
+            permissions = new[] { PlatformPermissions.Accounts.Manage },
+        }, Guid.NewGuid().ToString("D"));
+        Assert.True(changed.StatusCode == HttpStatusCode.OK, await changed.Content.ReadAsStringAsync(Ct));
+        Assert.Equal([PlatformPermissions.Accounts.Read, PlatformPermissions.Accounts.Manage],
+            (await DetailAsync(manager, id)).GetProperty("operatorPermissions").EnumerateArray().Select(item => item.GetString()));
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var invited = await db.SecurityEvents.AsNoTracking()
+            .SingleAsync(item => item.Type == SecurityEventType.PlatformOperatorInvited && item.TargetAccountId == id, Ct);
+        using (var diff = JsonDocument.Parse(invited.Changes))
+            Assert.True(diff.RootElement.GetProperty(PlatformPermissions.Tenants.Read).GetProperty("after").GetBoolean());
+        var changes = await db.SecurityEvents.AsNoTracking()
+            .SingleAsync(item => item.Type == SecurityEventType.PlatformOperatorPermissionsChanged && item.TargetAccountId == id, Ct);
+        using (var diff = JsonDocument.Parse(changes.Changes))
+        {
+            Assert.True(diff.RootElement.GetProperty(PlatformPermissions.Accounts.Read).GetProperty("after").GetBoolean());
+            Assert.False(diff.RootElement.GetProperty(PlatformPermissions.Tenants.Read).GetProperty("after").GetBoolean());
+        }
+    }
+
+    // 260: una asignación guardada con «Administrar cuentas» y sin «Ver cuentas» igual lista y abre las cuentas.
+    [Fact]
+    public async Task An_old_assignment_with_manage_accounts_still_reads_them()
+    {
+        var (manager, managerId) = await OperatorAsync([PlatformPermissions.Accounts.Manage]);
+
+        using var list = await manager.GetAsync("/api/platform/accounts/paged", Ct);
+        Assert.Equal(HttpStatusCode.OK, list.StatusCode);
+        using var catalog = await manager.GetAsync("/api/platform/permissions", Ct);
+        Assert.Equal(HttpStatusCode.OK, catalog.StatusCode);
+        using var detail = await manager.GetAsync($"/api/platform/accounts/{managerId:D}", Ct);
+        Assert.Equal(HttpStatusCode.OK, detail.StatusCode);
+        using var organizations = await manager.GetAsync("/api/platform/tenants/paged", Ct);
+        Assert.Equal(HttpStatusCode.Forbidden, organizations.StatusCode);
+    }
+
     private HttpClient Client() =>
         factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
 

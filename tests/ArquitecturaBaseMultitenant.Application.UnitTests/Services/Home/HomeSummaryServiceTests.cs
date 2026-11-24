@@ -114,8 +114,9 @@ public sealed class HomeSummaryServiceTests
         Assert.Equal(organizationRole ? 1 : 0, summary.Value.PendingGroups!.Count);
     }
 
+    // «Invitar usuarios» incluye «Ver usuarios» (260): el inicio de quien invita cuenta también a los usuarios.
     private static HomeService Home(ServiceFixture<HomeService> fixture, CountingPermissionCache cache) => new(
-        new(null!, null!, null!, null!, null!, null!, fixture.TimeProvider), new(new NoMemberships()), [new GroupSource()], [],
+        new(new CountedUsers(), null!, null!, null!, null!, null!, fixture.TimeProvider), new(new NoMemberships()), [new GroupSource()], [],
         new PermissionService(cache, new FakeTenantContext { TenantId = Guid.NewGuid(), TenantKind = TenantKind.Business },
             new CompanyActivityReader(), fixture.TimeProvider, NullLogger<PermissionService>.Instance),
         new CurrentUser(), fixture.TimeProvider, fixture.Logger);
@@ -153,6 +154,16 @@ public sealed class HomeSummaryServiceTests
         }
         public Task<OrganizationUserFilterCountsResponse> GetFilterCountsAsync(ListOrganizationUsersRequest request,
             DateTime nowUtc, CancellationToken ct) => throw new InvalidOperationException("Unexpected counts read");
+        public Task<OrganizationUserRow?> FindByIdAsync(Guid memberId, DateTime nowUtc, CancellationToken ct) =>
+            throw new InvalidOperationException("Unexpected per-item read");
+    }
+
+    private sealed class CountedUsers : IOrganizationUserReader
+    {
+        public Task<PagedResult<OrganizationUserRow>> ListAsync(ListOrganizationUsersRequest request, DateTime nowUtc,
+            CancellationToken ct) => throw new InvalidOperationException("Unexpected list read");
+        public Task<OrganizationUserFilterCountsResponse> GetFilterCountsAsync(ListOrganizationUsersRequest request,
+            DateTime nowUtc, CancellationToken ct) => Task.FromResult(new OrganizationUserFilterCountsResponse(1, 1, 0, 0, 0, 0));
         public Task<OrganizationUserRow?> FindByIdAsync(Guid memberId, DateTime nowUtc, CancellationToken ct) =>
             throw new InvalidOperationException("Unexpected per-item read");
     }

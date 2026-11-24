@@ -61,6 +61,11 @@ public sealed class RoleServiceTests
         Assert.Equal("Usuarios", result.Value[0].Name);
         Assert.Contains(result.Value.SelectMany(group => group.Permissions),
             permission => permission.Code == Permissions.Roles.Manage && permission.Name == "Administrar roles");
+        // 260: cada permiso trae lo que incluye, de su misma área.
+        var items = result.Value.SelectMany(group => group.Permissions).ToArray();
+        Assert.All(items, item => Assert.Equal(Permissions.Inclusions.Of(item.Code), item.Includes));
+        Assert.Equal([Permissions.Users.Read], items.Single(item => item.Code == Permissions.Users.Manage).Includes);
+        Assert.Empty(items.Single(item => item.Code == Permissions.Users.Read).Includes);
     }
 
     private static RoleService Create(FakeRoleReader reader, ServiceFixture<RoleService> fixture) =>

@@ -95,4 +95,28 @@ public static class Permissions
 
     public static IReadOnlyCollection<string> All { get; } =
     [.. OrganizationScoped, .. CompanyScoped];
+
+    /// <summary>
+    /// Lo que incluye cada permiso que no sirve sin el «Ver» de su misma área (decisión 260): quien lo tiene tiene también
+    /// lo incluido, y guardar un rol lo guarda. Nunca de otra área ni del otro catálogo: <see cref="Inclusions"/> lo valida
+    /// al componerse. Se invita y se administra desde Usuarios, y se asignan roles eligiéndolos del listado de roles.
+    /// </summary>
+    public static IReadOnlyDictionary<string, IReadOnlyCollection<string>> Includes { get; } =
+        new Dictionary<string, IReadOnlyCollection<string>>(StringComparer.Ordinal)
+        {
+            [Users.Invite] = [Users.Read],
+            [Users.Manage] = [Users.Read],
+            [Roles.Manage] = [Roles.Read],
+            [Roles.Assign] = [Roles.Read],
+            [Companies.Manage] = [Companies.Read],
+            [Settings.Manage] = [Settings.Read],
+            [Company.Members.Manage] = [Company.Members.Read],
+        }.AsReadOnly();
+
+    /// <summary>
+    /// Los dos catálogos, el de la organización y el de la empresa, con lo que incluye cada permiso: lo efectivo de unos
+    /// permisos es <see cref="PermissionInclusions.Effective"/>.
+    /// </summary>
+    public static PermissionInclusions Inclusions { get; } =
+        PermissionInclusions.Compose([OrganizationScoped, CompanyScoped], Includes);
 }
