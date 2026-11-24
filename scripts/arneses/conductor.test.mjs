@@ -13,7 +13,7 @@ const PREMISAS = ['Textos y errores', 'Arquitectura, clean code y SOLID', 'Cach�
 const PANTALLAS = 'Pantallas contra el tablero';
 
 function tarea(id, carril, extra = {}) {
-  return { id, titulo: `tarea ${id}`, carril, subcarril: carril, riesgo: [], espera: [], estado: 'pendiente', motivo: '', texto: `texto de ${id}`, ...extra };
+  return { id, titulo: `tarea ${id}`, carril, subcarril: carril, riesgo: [], espera: [], estado: 'pendiente', motivo: '', texto: `texto de ${id}`, area: '', migracion: false, archivos: [], ...extra };
 }
 
 function lectura(tareas, extra = {}) {
@@ -46,6 +46,7 @@ function respondedor(lect, propias = {}) {
     const cierra = label.match(/^(\S+) · (corrige|commitea)/);
     if (cierra) return commit(cierra[1]);
     if (label === 'integrar') return integrar;
+    if (/^back(-\d+)? · integración$/.test(label)) return commit('carril');
     if (label === 'puerta' || label === 'puerta · lo que tocan los arreglos') return puerta();
     if (label.startsWith('arreglos de')) return commit('arreglo');
     if (label === 'cierre del plan') return { commit: 'c-cierre', motivo: '' };
@@ -56,7 +57,7 @@ function respondedor(lect, propias = {}) {
 async function correr(responder, args) {
   const llamadas = [];
   const agent = async (prompt, opts = {}) => {
-    llamadas.push({ label: opts.label, phase: opts.phase, effort: opts.effort, prompt });
+    llamadas.push({ label: opts.label, phase: opts.phase, effort: opts.effort, model: opts.model, prompt });
     return responder(opts.label ?? '', prompt, opts);
   };
   const parallel = (thunks) => Promise.all(thunks.map((t) => Promise.resolve().then(t).catch(() => null)));
@@ -87,8 +88,9 @@ test('conductor: planificar solo lee, con un agente, y devuelve los carriles y l
   assert.deepEqual(etiquetas, ['leer el plan']);
   assert.equal(resultado.clave, 'prueba');
   assert.deepEqual(resultado.carriles, { contrato: ['K1'], back: ['B1', 'B2'], front: ['F1'] });
-  // Cierre: integrar, 5 revisores, 5 verificadores, 2 arreglos, la puerta, pantallas y su verificador, 2 arreglos, lo que tocan y el cierre.
-  assert.equal(resultado.agentesEstimados, 1 + 1 + 3 + 1 + 1 + 20);
+  assert.deepEqual(resultado.carrilesBack.map((c) => c.tareas), [['B1'], ['B2']], 'sin área en común, cada una en su carril');
+  // La integración de cada carril (2) y el cierre: integrar, 5 revisores, 5 verificadores, 2 arreglos, la puerta, pantallas y su verificador, 2 arreglos, lo que tocan y el cierre.
+  assert.equal(resultado.agentesEstimados, 1 + 1 + 3 + 1 + 1 + 2 + 20);
 });
 
 test('conductor: el cupo en 85 % o un bloqueo del plan frenan antes de programar', async () => {
@@ -108,7 +110,7 @@ test('conductor: una espera del contrato hacia el back es un ciclo y no empieza'
 });
 
 test('conductor: una tarea con riesgo pasa por programa, revisión adversarial y commit; sin riesgo, solo programa', async () => {
-  const lect = lectura([tarea('B1', 'back', { riesgo: ['datos', 'aislamiento'] }), tarea('B2', 'back')]);
+  const lect = lectura([tarea('B1', 'back', { riesgo: ['datos', 'aislamiento'], area: 'roles' }), tarea('B2', 'back', { area: 'roles' })]);
   const { llamadas, etiquetas } = await correr(respondedor(lect), { plan: PLAN, modo: 'programar' });
   assert.deepEqual(etiquetas.filter((e) => /^B/.test(e)), ['B1 · programa', 'B1 · revisión adversarial', 'B1 · commitea', 'B2 · programa']);
   const prog = llamadas.find((l) => l.label === 'B1 · programa');
@@ -163,7 +165,7 @@ test('conductor: lo que espera a una tarea bloqueada no corre, y el resto del ca
 });
 
 test('conductor: una tarea que deja cambios sin commitear frena su carril', async () => {
-  const lect = lectura([tarea('B1', 'back'), tarea('B2', 'back'), tarea('F1', 'front')]);
+  const lect = lectura([tarea('B1', 'back', { area: 'roles' }), tarea('B2', 'back', { area: 'roles' }), tarea('F1', 'front')]);
   const sucia = programa('B1', { estado: 'bloqueada', commits: [], archivosSinCommit: ['B1.cs'] });
   const { resultado } = await correr(respondedor(lect, { 'B1 · programa': sucia }), { plan: PLAN, modo: 'programar' });
   assert.match(estadoDe(resultado, 'B2').motivo, /sin commitear/);
@@ -171,13 +173,13 @@ test('conductor: una tarea que deja cambios sin commitear frena su carril', asyn
 });
 
 test('conductor: sin cupo no empieza ninguna tarea nueva', async () => {
-  const lect = lectura([tarea('B1', 'back'), tarea('B2', 'back')]);
+  const lect = lectura([tarea('B1', 'back', { area: 'roles' }), tarea('B2', 'back', { area: 'roles' })]);
   const { resultado } = await correr(respondedor(lect, { 'B1 · programa': programa('B1', { estado: 'sin-cupo', commits: [] }) }), { plan: PLAN, modo: 'programar' });
   assert.equal(estadoDe(resultado, 'B2').estado, 'sin-correr');
   assert.match(resultado.detenido, /cupo/);
 });
 
-test('conductor: una tarea a medias sigue con otro agente, hasta tres', async () => {
+test('conductor: una tarea a medias sigue con otro agente, hasta cuatro', async () => {
   const lect = lectura([tarea('B1', 'back')]);
   let vuelta = 0;
   const resp = respondedor(lect, {});
@@ -185,7 +187,7 @@ test('conductor: una tarea a medias sigue con otro agente, hasta tres', async ()
     if (/^B1 · programa/.test(label)) return programa('B1', { estado: 'parcial', falta: `falta el paso ${++vuelta}` });
     return resp(label, prompt);
   }, { plan: PLAN, modo: 'programar' });
-  assert.deepEqual(llamadas.filter((l) => /^B1/.test(l.label)).map((l) => l.label), ['B1 · programa', 'B1 · programa (2)', 'B1 · programa (3)']);
+  assert.deepEqual(llamadas.filter((l) => /^B1/.test(l.label)).map((l) => l.label), ['B1 · programa', 'B1 · programa (2)', 'B1 · programa (3)', 'B1 · programa (4)']);
   assert.match(llamadas[2].prompt, /falta el paso 1/);
   assert.equal(estadoDe(resultado, 'B1').estado, 'parcial');
 });
@@ -237,6 +239,96 @@ test('conductor: cerrar con tareas pendientes no corre la puerta ni gasta un cie
   assert.deepEqual(etiquetas, ['leer el plan']);
   assert.equal(resultado.resultado, 'faltan tareas');
   assert.match(resultado.faltan[0], /F1: bloqueada, faltan sus tableros/);
+});
+
+// ---------- Carriles del back (ADR 0071) ----------
+
+test('conductor: el back va en carriles por área, con las migraciones juntas, y cada carril trabaja en su copia', async () => {
+  const lect = lectura([
+    tarea('B1', 'back', { area: 'permisos', riesgo: ['permisos'] }),
+    tarea('B2', 'back', { area: 'asistente', migracion: true, riesgo: ['datos'] }),
+    tarea('B3', 'back', { area: 'permisos' }),
+    tarea('B4', 'back', { area: 'identidad', migracion: true }),
+    tarea('B5', 'back', { area: 'whatsapp' }),
+  ]);
+  const { resultado } = await correr(respondedor(lect), { plan: PLAN, modo: 'planificar' });
+  assert.deepEqual(resultado.carrilesBack, [
+    { nombre: 'back-1', copia: '.local/copias/prueba-back-1', tareas: ['B1', 'B3', 'B5'] },
+    { nombre: 'back-2', copia: '.local/copias/prueba-back-2', tareas: ['B2', 'B4'] },
+  ]);
+  const uno = await correr(respondedor(lect), { plan: PLAN, modo: 'planificar', carrilesBack: 1 });
+  assert.deepEqual(uno.resultado.carrilesBack, [{ nombre: 'back', copia: null, tareas: ['B1', 'B2', 'B3', 'B4', 'B5'] }]);
+  await assert.rejects(correr(respondedor(lect), { plan: PLAN, carrilesBack: 5 }), /carrilesBack va de 1 a 4/);
+});
+
+test('conductor: en una copia se prepara, se entrega y se lee poco; en main, como siempre', async () => {
+  const lect = lectura([
+    tarea('B1', 'back', { area: 'permisos', archivos: ['src/Domain/Authorization/Permissions.cs', 'tests/X/PermissionTests.cs (nuevo)'] }),
+    tarea('B2', 'back', { area: 'asistente', riesgo: ['aislamiento'] }),
+    tarea('F1', 'front'),
+  ]);
+  const { llamadas } = await correr(respondedor(lect), { plan: PLAN, modo: 'programar' });
+  const prompt = (label) => llamadas.find((l) => l.label === label).prompt;
+  const b1 = prompt('B1 · programa');
+  assert.match(b1, /carril\.mjs preparar \.local\/copias\/prueba-back-\d/);
+  assert.match(b1, /carril\.mjs entregar \.local\/copias\/prueba-back-\d/);
+  assert.match(b1, /El mapa de la tarea .*Permissions\.cs, tests\/X\/PermissionTests\.cs \(nuevo\)/);
+  assert.match(b1, /unos 80 pasos/);
+  assert.match(b1, /node scripts\/arneses\/verificar\.mjs/);
+  assert.match(b1, /Leé por partes/);
+  assert.doesNotMatch(b1, /también los tests de integración y de seguridad de esa área/, 'la integración corre al cerrar el carril');
+  assert.match(prompt('B2 · programa'), /NO commitees\. Dejá todo en el árbol de la copia/, 'con revisión adversarial no commitea ni entrega');
+  assert.match(prompt('B2 · revisión adversarial'), /la copia \.local\/copias\/prueba-back-\d del back/);
+  assert.match(prompt('B2 · commitea'), /carril\.mjs entregar/);
+  const f1 = prompt('F1 · programa');
+  assert.match(f1, /Trabajás en main/);
+  assert.match(f1, /node scripts\/verificar\.mjs en el front/);
+  assert.doesNotMatch(f1, /carril\.mjs/);
+  assert.match(prompt('integrar'), /carril\.mjs limpiar prueba-back/);
+  const solo = await correr(respondedor(lect), { plan: PLAN, modo: 'programar', carrilesBack: 1 });
+  assert.match(solo.llamadas.find((l) => l.label === 'B1 · programa').prompt, /Trabajás en main/);
+});
+
+test('conductor: un carril espera a otro cuando el plan lo pide, y la integración corre una vez por carril', async () => {
+  const orden = [];
+  const lect = lectura([tarea('B1', 'back', { area: 'permisos' }), tarea('B2', 'back', { area: 'asistente', espera: ['B1'] }), tarea('F1', 'front')]);
+  const resp = respondedor(lect, {
+    'B1 · programa': async () => { await new Promise((r) => setTimeout(r, 30)); orden.push('B1'); return programa('B1'); },
+    'B2 · programa': () => { orden.push('B2'); return programa('B2'); },
+  });
+  const { resultado, etiquetas, llamadas } = await correr(resp, { plan: PLAN, modo: 'programar' });
+  assert.deepEqual(orden, ['B1', 'B2']);
+  assert.deepEqual(etiquetas.filter((e) => / · integración$/.test(e)).sort(), ['back-1 · integración', 'back-2 · integración']);
+  const integra = llamadas.find((l) => l.label === 'back-1 · integración').prompt;
+  assert.match(integra, /verificar\.mjs --integracion --espacio/);
+  assert.match(integra, /Tarea: prueba\/back-1/);
+  assert.equal(resultado.integracionDeCarriles.length, 2);
+  assert.ok(etiquetas.includes('integrar'));
+});
+
+test('conductor: si la integración de un carril queda en rojo, no se integra ni se cierra', async () => {
+  const lect = lectura([tarea('B1', 'back', { area: 'permisos' }), tarea('F1', 'front')]);
+  const mal = { ...commit('carril'), estado: 'bloqueada', motivo: 'RoleTests.Ajeno sigue en rojo' };
+  const { resultado, etiquetas } = await correr(respondedor(lect, { 'back · integración': mal }), { plan: PLAN });
+  assert.ok(!etiquetas.includes('integrar'));
+  assert.ok(!etiquetas.includes('puerta'));
+  assert.equal(resultado.resultado, 'faltan tareas');
+  assert.match(resultado.faltan.join(' · '), /integración del carril back: bloqueada, RoleTests\.Ajeno sigue en rojo/);
+});
+
+test('conductor: modelos elige el modelo de cada rol, y sin modelos todos van con el de la sesión', async () => {
+  const lect = lectura([tarea('B1', 'back'), tarea('F1', 'front')]);
+  const { llamadas } = await correr(respondedor(lect), { plan: PLAN, modo: 'programar', modelos: { front: 'sonnet' } });
+  assert.equal(llamadas.find((l) => l.label === 'F1 · programa').model, 'sonnet');
+  assert.equal(llamadas.find((l) => l.label === 'B1 · programa').model, undefined);
+  const base = respondedor(lectura([tarea('B1', 'back', { estado: 'hecha' })]));
+  const cierre = await correr(async (label, prompt) => {
+    if (label === 'revisión · Textos y errores') return { hallazgos: [hallazgoDe('TXT')], resumen: '' };
+    if (label.startsWith('verifica · ')) return { veredictos: [{ numero: 1, confirmado: true, motivo: 'se ve' }] };
+    return base(label, prompt);
+  }, { plan: PLAN, modo: 'cerrar', modelos: { verifica: 'haiku' } });
+  assert.equal(cierre.llamadas.find((l) => l.label === 'verifica · Textos y errores').model, 'haiku');
+  assert.equal(cierre.llamadas.find((l) => l.label === 'revisión · Textos y errores').model, undefined);
 });
 
 // ---------- Revisión por premisa ----------
@@ -410,7 +502,7 @@ test('conductor: plan solo sigue como antes, y los argumentos de planes se valid
   const plan = await correr(respondedorDePlanes({ a: respondedor(lect), b: respondedor(lect) }), { planes: [PA, PB], modo: 'planificar' });
   assert.deepEqual(plan.etiquetas, ['a · leer el plan', 'b · leer el plan']);
   assert.equal(plan.resultado.resultado, 'planificados');
-  assert.equal(plan.resultado.agentesEstimados, 2 * (1 + 1 + 20));
+  assert.equal(plan.resultado.agentesEstimados, 2 * (1 + 1 + 1 + 20));
 });
 
 test('conductor: las fases de meta son exactamente las que usa el script', () => {
