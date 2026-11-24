@@ -35,7 +35,7 @@ node scripts/arneses/arnes.mjs --instalar                       # copia las skil
 | `--fusionar` | si todo verificó, trae el commit de la copia a la rama actual con `git fetch` y `git merge --ff-only FETCH_HEAD`, sin crear una rama; si la rama avanzó desde el corte, no fusiona y lo dice |
 | `--sin-aislar` | no evita la config del usuario (para medir cuántos tokens cuesta cargarla) |
 
-Los tests (`node --test "scripts/arneses/**/*.test.mjs"`) usan solo `realinear-docs/fixtures/`, repos de git temporales y ejecutables falsos de `claude` y `codex`: no leen el repo real ni llaman a un modelo. Ahí corre también `conductor.test.mjs`, que prueba el [conductor de etapas](../../docs/guides/conducir-una-etapa.md) con agentes falsos.
+Los tests (`node --test "scripts/arneses/**/*.test.mjs"`) usan solo `realinear-docs/fixtures/`, repos de git temporales y ejecutables falsos de `claude` y `codex`: no leen el repo real ni llaman a un modelo. Ahí corre también `conductor.test.mjs`, que prueba el [conductor de etapas](../../docs/guides/conducir-una-etapa.md) con agentes falsos. Al lado del conductor viven dos herramientas suyas ([ADR 0071](../../docs/decisions/0071-conductor-en-carriles.md)): `carril.mjs` crea las copias de los carriles del back, entrega sus commits encima de main y ordena la fila pesada, y `verificar.mjs` corre el build y los tests del back mostrando solo lo que falla.
 
 ### Una corrida
 
