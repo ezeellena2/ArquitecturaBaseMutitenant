@@ -210,8 +210,4 @@ Las observaciones de su prueba integral, del 19 al 23/11 (traspaso 16, `05-prueb
 
 ## Para después de la etapa base-de-la-12-segunda-parte
 
-- **Borrar los textos viejos `Send.Failure.RecipientNotAllowed`, `WindowExpired`, `Credentials` y `Permissions` cuando la migración pase los códigos guardados a los nuevos.** Conviven con los nuevos solo mientras haya `FailureReason` guardados con los códigos viejos. Dónde: `src/ArquitecturaBaseMultitenant.Application/Modules/WhatsApp/Resources/WhatsAppTexts.resx` y `.en.resx` (B7) (K1).
-- **Guardar y leer los plazos y el nombre de los correos de Plataforma; hoy se validan y se ignoran, y el GET devuelve los valores por defecto.** K1 no toca entidades ni migraciones. Dónde: `PlatformSettingsService` y `PlatformAuditService.ListAsync` (B18) (K1).
-- **Derivar `invitationDelivery` (`Sent` sin fila en la cola o sin id) en los lectores de usuarios, miembros y cuentas.** K1 lo deja siempre en `null`. Dónde: `OrganizationUserReader`, `CompanyMembershipReader` y los lectores de cuentas de Plataforma (B6) (K1).
 - **Borrar `LongDatePattern` de `Cultures`, del generador y de la respuesta de reference-data.** Queda sin uso desde la B10, y según la 0060 se borra en un despliegue posterior. Dónde: `scripts/datos-de-referencia/cultures.source.json`, `generar.mjs`, `Domain/ReferenceData/Culture.cs`, `CultureConfiguration.cs`, `ReferenceDataHttpResponse.cs` (spec, sección Datos) (B10).
-- **Que la prueba de paridad del front espere el tipo `month` en lugar de `dateLong`.** `format-cases.json` ya no trae `dateLong` y suma `month`; hoy `formatters.test.ts` exige `dateLong` y no conoce `month`. Dónde: `../ArquitecturaBaseMutitenantFront/src/shared/format/formatters.test.ts` (F1) (B10).

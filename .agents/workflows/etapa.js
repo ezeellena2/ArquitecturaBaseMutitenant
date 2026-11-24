@@ -56,6 +56,7 @@ const CUPO = `Antes de tocar nada: si tenés la herramienta mcp__ccd_session_mgm
 const SIN_AGREGAR = `Lo que no está en la spec no se agrega:
 - Hacés solo lo que piden la spec, el contrato y el tablero. Nunca agregás una tabla, una columna, un filtro, un combo, una ventana emergente, una ruta ni un permiso que no estén ahí.
 - Si te parece que falta algo, no lo agregues: anotalo en paraDespues (que, porQue y donde: el archivo, la pantalla o la sección de la spec) y seguí con lo tuyo.
+- Lo que ya es de otra tarea de este plan no va en paraDespues: esa tarea lo hace. Si le deja algo que tiene que saber, va en cambiosAlContrato o en motivo.
 - Solo si la pantalla no funciona sin eso, devolvé estado bloqueada con la pregunta de producto y, si tenés una captura que lo muestra, su ruta en captura.`
 
 const ESCENARIOS = {
