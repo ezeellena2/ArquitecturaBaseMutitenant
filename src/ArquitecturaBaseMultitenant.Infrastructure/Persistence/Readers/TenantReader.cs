@@ -20,4 +20,11 @@ internal sealed class TenantReader(ApplicationDbContext context) : ITenantReader
             .OrderBy(tenant => tenant.Id)
             .Select(tenant => new TenantRow(tenant.Id, tenant.Kind, tenant.Status, tenant.Name, tenant.Slug))
             .ToArrayAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<TenantRow>> ListBusinessesAsync(CancellationToken cancellationToken) =>
+        await context.Tenants.AsNoTracking()
+            .Where(tenant => tenant.Kind == TenantKind.Business)
+            .OrderBy(tenant => tenant.Id)
+            .Select(tenant => new TenantRow(tenant.Id, tenant.Kind, tenant.Status, tenant.Name, tenant.Slug))
+            .ToArrayAsync(cancellationToken);
 }

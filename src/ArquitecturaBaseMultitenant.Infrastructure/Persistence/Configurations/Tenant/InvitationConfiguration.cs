@@ -22,6 +22,9 @@ internal sealed class InvitationConfiguration : IEntityTypeConfiguration<Invitat
         builder.HasIndex(invitation => new { invitation.TenantId, invitation.Destination }).IsUnique()
             .HasFilter("\"Status\" = 'Pending'");
         builder.HasIndex(invitation => new { invitation.TenantId, invitation.TokenHash }).IsUnique();
+        // ADR 0062: la retención recorre las cerradas de cada organización por la fecha en que se mandaron.
+        builder.HasIndex(invitation => new { invitation.TenantId, invitation.IssuedAtUtc, invitation.Id })
+            .HasDatabaseName("IX_Invitations_Closed").HasFilter("\"Status\" <> 'Pending'");
         builder.HasOne<Member>().WithMany()
             .HasForeignKey(invitation => new { invitation.TenantId, invitation.MemberId }).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<TenantEntity>().WithMany()

@@ -104,6 +104,8 @@ public static class DependencyInjection
                 services.AddHostedService<AccountRecoveryNoticeWorker>();
                 services.AddHostedService<InvitationExpiryWorker>();
                 services.AddHostedService<NotificationReadCleanupWorker>();
+                services.AddHostedService<IdentityRetentionWorker>();
+                services.AddHostedService<InvitationRetentionWorker>();
             }
         }
 

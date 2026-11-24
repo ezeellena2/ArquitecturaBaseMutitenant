@@ -1506,6 +1506,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasKey("TenantId", "Id");
 
+                    b.HasIndex("TenantId", "EntityId")
+                        .HasDatabaseName("IX_AuditEntries_InvitationCreated")
+                        .HasFilter("\"EntityType\" = 'Invitation' AND \"Action\" = 'Created'");
+
                     b.HasIndex("TenantId", "OccurredAtUtc", "Id");
 
                     b.ToTable("AuditEntries", "tenant");
@@ -1656,6 +1660,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("RequestedByUserId");
+
+                    b.HasIndex("CreatedAtUtc", "Id");
 
                     b.HasIndex("Destination", "Channel", "Purpose", "ExpiresAtUtc");
 
@@ -2198,6 +2204,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId", "TokenHash")
                         .IsUnique();
+
+                    b.HasIndex("TenantId", "IssuedAtUtc", "Id")
+                        .HasDatabaseName("IX_Invitations_Closed")
+                        .HasFilter("\"Status\" <> 'Pending'");
 
                     b.ToTable("Invitations", "tenant");
                 });

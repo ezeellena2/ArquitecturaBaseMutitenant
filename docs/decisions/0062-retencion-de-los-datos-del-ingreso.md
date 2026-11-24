@@ -1,6 +1,6 @@
 # ADR 0062 · Retención de los datos del ingreso
 
-**Estado:** aceptada por el usuario el 2026-11-18 (pregunta 17 del traspaso 15), con los plazos de ArquitecturaBase. Toma la N16 y la N31 de allá (traspaso 14, `02-nucleo.md` §5), sin su rol que saltea el aislamiento. Todavía no está programada: la tarea está en el [backlog](../backlog.md#traspaso-15-el-núcleo-para-programar). Nada de ArquitecturaBase pasó todavía su prueba integral.
+**Estado:** aceptada por el usuario el 2026-11-18 (pregunta 17 del traspaso 15), con los plazos de ArquitecturaBase. Toma la N16 y la N31 de allá (traspaso 14, `02-nucleo.md` §5), sin su rol que saltea el aislamiento. Programada en la base de la 12, segunda parte (B2): `IdentityRetentionWorker` e `InvitationRetentionWorker`, con `PersonalDataPurgeTests`; los plazos pasan a la configuración con la B18. Nada de ArquitecturaBase pasó todavía su prueba integral.
 
 **Enmienda del 2026-11-23** (decisión 272 de la [hoja de ruta de formularios](../plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md)): los plazos de los ingresos, los códigos y las invitaciones pasan a la configuración de Plataforma, en «Privacidad y retención», con estos valores por defecto y su mínimo y su máximo (ingresos de 1 a 120 meses, códigos de 1 a 3650 días, invitaciones de 7 a 3650 días), y se leen en cada pasada. Los de OpenIddict quedan en el código.
 
@@ -35,7 +35,7 @@ En ArquitecturaBase el worker de retención corre sin una organización y con un
 ## Consecuencias
 
 - Un worker nuevo, o dos (uno global y otro por organización), heredado de `PeriodicWorker`.
-- Antes de borrar invitaciones, quien programa revisa que la auditoría de la organización siga nombrando bien a quien no tiene nombre: hoy lo nombra por el correo de su invitación ([organizaciones](../features/organizaciones.md#presentación-de-auditoría-de-organización)). La proyección `identity.LoginInvitations` sigue a su invitación.
+- Antes de borrar invitaciones, quien programa revisa que la auditoría de la organización siga nombrando bien a quien no tiene nombre: hoy lo nombra por el correo de su invitación ([organizaciones](../features/organizaciones.md#presentación-de-auditoría-de-organización)). La proyección `identity.LoginInvitations` sigue a su invitación. **Cómo quedó (B2):** se conserva también la última de cada persona invitada (se borra la que tiene otra más nueva de la misma persona al mismo destino), y la revocación o el vencimiento de una invitación ya purgada toman a la persona del alta de esa invitación en la auditoría (`IX_AuditEntries_InvitationCreated`). Una revocada que ya estaba vencida espera a que su vencimiento quede registrado. La purga recorre todas las organizaciones, también las suspendidas y las cerradas (`TenantJobRunner.RunBusinessesAsync`): la retención no depende de que estén activas.
 - La auditoría de Plataforma muestra como mucho un año de ingresos.
 
 ## Alternativas descartadas

@@ -19,6 +19,8 @@ internal sealed class LoginCodeConfiguration : IEntityTypeConfiguration<LoginCod
         builder.Property(code => code.Purpose).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(code => code.NonceHash).HasMaxLength(TextLimits.Description);
         builder.HasIndex(code => new { code.Destination, code.Channel, code.Purpose, code.ExpiresAtUtc });
+        // ADR 0062: la retención borra por fecha de creación, de la más vieja a la más nueva.
+        builder.HasIndex(code => new { code.CreatedAtUtc, code.Id });
         builder.HasOne<Infrastructure.Identity.ApplicationUser>().WithMany()
             .HasForeignKey(code => code.RequestedByUserId).OnDelete(DeleteBehavior.Restrict);
     }

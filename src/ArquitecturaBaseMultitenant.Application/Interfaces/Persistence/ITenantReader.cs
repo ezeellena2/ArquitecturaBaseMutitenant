@@ -8,4 +8,7 @@ public interface ITenantReader
     Task<TenantRow?> FindByIdAsync(Guid tenantId, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<TenantRow>> ListActiveBusinessesAsync(CancellationToken cancellationToken);
+
+    /// <summary>Todas las organizaciones, en cualquier estado: para la retención, que no depende de que estén activas.</summary>
+    Task<IReadOnlyList<TenantRow>> ListBusinessesAsync(CancellationToken cancellationToken);
 }

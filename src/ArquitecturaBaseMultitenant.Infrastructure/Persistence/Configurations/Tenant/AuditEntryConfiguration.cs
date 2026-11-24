@@ -17,5 +17,9 @@ internal sealed class AuditEntryConfiguration : IEntityTypeConfiguration<AuditEn
         builder.Property(entry => entry.EntityType).HasMaxLength(TextLimits.OrganizationName).IsRequired();
         builder.Property(entry => entry.Changes).HasColumnType("jsonb").IsRequired();
         builder.HasIndex(entry => new { entry.TenantId, entry.OccurredAtUtc, entry.Id });
+        // ADR 0062: el alta de una invitación nombra a la persona de las entradas de una invitación que ya se purgó.
+        builder.HasIndex(entry => new { entry.TenantId, entry.EntityId })
+            .HasDatabaseName("IX_AuditEntries_InvitationCreated")
+            .HasFilter("\"EntityType\" = 'Invitation' AND \"Action\" = 'Created'");
     }
 }

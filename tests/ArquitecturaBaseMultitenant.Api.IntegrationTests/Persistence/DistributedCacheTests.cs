@@ -388,5 +388,8 @@ public sealed class DistributedCacheTests(ApiFactory factory)
 
         public Task<IReadOnlyList<TenantRow>> ListActiveBusinessesAsync(CancellationToken cancellationToken) =>
             inner.ListActiveBusinessesAsync(cancellationToken);
+
+        public Task<IReadOnlyList<TenantRow>> ListBusinessesAsync(CancellationToken cancellationToken) =>
+            inner.ListBusinessesAsync(cancellationToken);
     }
 }

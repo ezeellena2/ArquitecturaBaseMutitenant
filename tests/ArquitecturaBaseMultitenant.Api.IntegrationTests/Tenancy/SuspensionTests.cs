@@ -293,6 +293,9 @@ public sealed class SuspensionTests
 
         public Task<IReadOnlyList<TenantRow>> ListActiveBusinessesAsync(CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<TenantRow>>([]);
+
+        public Task<IReadOnlyList<TenantRow>> ListBusinessesAsync(CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<TenantRow>>([]);
     }
 
     private sealed class StubAccessStatusCache(

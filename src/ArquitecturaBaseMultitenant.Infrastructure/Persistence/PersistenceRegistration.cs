@@ -116,6 +116,7 @@ internal static class PersistenceRegistration
         services.AddScoped<ICompanyAdminLock, CompanyAdminLock>();
         services.AddScoped<IMemberReader, MemberReader>();
         services.AddScoped<IInvitationRepository, InvitationRepository>();
+        services.AddScoped<IInvitationRetentionRepository, InvitationRetentionRepository>();
         services.AddScoped<IInvitationReader, InvitationReader>();
         services.AddScoped<ILoginInvitationReader, LoginInvitationReader>();
         services.AddScoped<ILoginInvitationRepository, LoginInvitationRepository>();
@@ -165,6 +166,7 @@ internal static class PersistenceRegistration
         services.AddScoped<INotificationReadReader, NotificationReadReader>();
         services.AddScoped<IAccountDeletionCancelTicketRepository, AccountDeletionCancelTicketRepository>();
         services.AddScoped<ILoginAuditRepository, LoginAuditRepository>();
+        services.AddScoped<IIdentityRetentionRepository, IdentityRetentionRepository>();
         services.AddSingleton<JsonReferenceDataCatalog>();
         services.AddScoped<ReferenceDataSeeder>();
         services.AddScoped<DatabaseSeeder>();

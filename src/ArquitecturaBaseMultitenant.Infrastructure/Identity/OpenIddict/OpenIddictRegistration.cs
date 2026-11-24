@@ -107,6 +107,7 @@ internal static class OpenIddictRegistration
             server.RefreshTokenLifetime = TimeSpan.FromDays(lifetimes.Value.RefreshTokenDays);
         });
         services.AddScoped<ITokenRevoker, TokenRevoker>();
+        services.AddScoped<IOpenIddictPruner, OpenIddictPruner>();
         services.AddScoped<IConnectAuthorizationStore, ConnectAuthorizationStore>();
 
         return services;

@@ -167,13 +167,16 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
             ? new Dictionary<Guid, Invitation>()
             : await context.Invitations.AsNoTracking().Where(invitation => invitationIds.Contains(invitation.Id))
                 .ToDictionaryAsync(invitation => invitation.Id, cancellationToken);
+        var purgedInvitations = await PurgedInvitationMembersAsync(entries, invitations, cancellationToken);
+        Guid? InvitedMember(AuditEntry entry) => invitations.GetValueOrDefault(entry.EntityId)?.MemberId
+            ?? ReadGuid(entry.Changes, "MemberId")
+            ?? (purgedInvitations.TryGetValue(entry.EntityId, out var purgedMember) ? purgedMember : null);
 
         var memberIds = entries.Select(entry => entry.EntityType switch
             {
                 nameof(Member) => entry.EntityId,
                 nameof(CompanyMembership) or nameof(RoleAssignment) => ReadGuid(entry.Changes, "MemberId"),
-                nameof(Invitation) => invitations.GetValueOrDefault(entry.EntityId)?.MemberId ??
-                                      ReadGuid(entry.Changes, "MemberId"),
+                nameof(Invitation) => InvitedMember(entry),
                 _ => null,
             })
             .Where(id => id.HasValue).Select(id => id!.Value).Distinct().ToArray();
@@ -261,8 +264,7 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
             {
                 nameof(Member) => entry.EntityId,
                 nameof(CompanyMembership) or nameof(RoleAssignment) => ReadGuid(entry.Changes, "MemberId"),
-                nameof(Invitation) => invitations.GetValueOrDefault(entry.EntityId)?.MemberId ??
-                                      ReadGuid(entry.Changes, "MemberId"),
+                nameof(Invitation) => InvitedMember(entry),
                 _ => null,
             };
             var role = entry.EntityType == nameof(Role)
@@ -295,6 +297,29 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// ADR 0062: una invitación cerrada se purga a los 30 días, y su revocación o su vencimiento no guardan de quién era.
+    /// Su alta en la auditoría sí: de ahí sale la persona, para seguir nombrándola como antes de la purga.
+    /// </summary>
+    private async Task<Dictionary<Guid, Guid>> PurgedInvitationMembersAsync(AuditEntry[] entries,
+        Dictionary<Guid, Invitation> invitations, CancellationToken cancellationToken)
+    {
+        var purged = entries.Where(entry => entry.EntityType == nameof(Invitation)
+                && !invitations.ContainsKey(entry.EntityId) && ReadGuid(entry.Changes, "MemberId") is null)
+            .Select(entry => entry.EntityId).Distinct().ToArray();
+        if (purged.Length == 0) return [];
+        var tenantId = tenantContext.RequiredTenantId;
+        var created = await context.Set<AuditEntry>().AsNoTracking()
+            .Where(entry => entry.TenantId == tenantId && entry.EntityType == nameof(Invitation)
+                && entry.Action == AuditAction.Created && purged.Contains(entry.EntityId))
+            .Select(entry => new { entry.EntityId, entry.Changes })
+            .ToArrayAsync(cancellationToken);
+        var members = new Dictionary<Guid, Guid>();
+        foreach (var entry in created)
+            if (ReadGuid(entry.Changes, "MemberId") is { } memberId) members.TryAdd(entry.EntityId, memberId);
+        return members;
     }
 
     public async Task<IReadOnlyList<OrganizationAuditActorRow>> ListActorsAsync(ListOrganizationAuditRequest request,

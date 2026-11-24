@@ -23,6 +23,25 @@ public sealed class TenantJobRunner(IServiceScopeFactory scopeFactory)
         await RunAsync(active.Select(tenant => tenant.Id), job, cancellationToken);
     }
 
+    /// <summary>
+    /// Recorre todas las organizaciones, también las suspendidas y las cerradas: para la retención de datos personales,
+    /// que no depende de que la organización esté activa (ADR 0062).
+    /// </summary>
+    public async Task RunBusinessesAsync(
+        Func<IServiceProvider, CancellationToken, Task> job,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(job);
+        IReadOnlyList<TenantRow> businesses;
+        await using (var listingScope = scopeFactory.CreateAsyncScope())
+        {
+            businesses = await listingScope.ServiceProvider.GetRequiredService<ITenantReader>()
+                .ListBusinessesAsync(cancellationToken);
+        }
+
+        await RunAsync(businesses.Select(tenant => tenant.Id), job, cancellationToken);
+    }
+
     public async Task RunAsync(
         IEnumerable<Guid> tenantIds,
         Func<IServiceProvider, CancellationToken, Task> job,
