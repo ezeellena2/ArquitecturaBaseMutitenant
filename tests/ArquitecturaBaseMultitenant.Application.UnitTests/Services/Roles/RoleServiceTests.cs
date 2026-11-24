@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Roles;
 using ArquitecturaBaseMultitenant.Application.Services.Roles;
@@ -6,6 +7,7 @@ using ArquitecturaBaseMultitenant.Application.UnitTests.Services.Companies;
 using ArquitecturaBaseMultitenant.Application.UnitTests.TestDoubles;
 using ArquitecturaBaseMultitenant.Application.Validation.Roles;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Roles;
 
@@ -66,11 +68,56 @@ public sealed class RoleServiceTests
         Assert.All(items, item => Assert.Equal(Permissions.Inclusions.Of(item.Code), item.Includes));
         Assert.Equal([Permissions.Users.Read], items.Single(item => item.Code == Permissions.Users.Manage).Includes);
         Assert.Empty(items.Single(item => item.Code == Permissions.Users.Read).Includes);
+        // El Dueño puede dar todo el catálogo.
+        Assert.All(items, item => Assert.True(item.Grantable));
+    }
+
+    // 269 y ADR 0061: grantable dice si quien pide lo tiene, con lo que incluye; un rol, si lo puede dar ahí.
+    [Fact]
+    public async Task Grantable_says_what_the_requester_holds_in_permissions_and_roles()
+    {
+        var companyId = Guid.CreateVersion7();
+        var created = new DateTime(2026, 11, 24, 0, 0, 0, DateTimeKind.Utc);
+        var reader = new FakeRoleReader
+        {
+            Held = [Permissions.Users.Manage, Permissions.Roles.Assign],
+            Page = new PagedResult<RoleRow>(
+            [
+                new(Guid.CreateVersion7(), "Lectores", null, RoleScope.Organization, null, false, 0,
+                    [Permissions.Users.Read, Permissions.Roles.Read], 1, created),
+                new(Guid.CreateVersion7(), "Configuración", null, RoleScope.Organization, null, false, 0,
+                    [Permissions.Settings.Manage, Permissions.Settings.Read], 1, created),
+                new(Guid.CreateVersion7(), "Miembros", null, RoleScope.SpecificCompany, companyId, false, 0,
+                    [Permissions.Company.Members.Read], 1, created),
+            ], 1, 10, 3),
+        };
+        using var fixture = new ServiceFixture<RoleService>(new ListRolesRequestValidator());
+        var service = new RoleService(reader, new FakeRoleRepository(), new CompanyServiceTests.FakeCompanyReader(),
+            new OrganizationDelegationGuard(new SignedInUser(), reader), fixture.Validator, new FakeUnitOfWork(),
+            fixture.TimeProvider, fixture.Logger);
+
+        var permissions = (await service.GetPermissionsAsync(Ct)).Value.SelectMany(group => group.Permissions)
+            .ToDictionary(item => item.Code, item => item.Grantable);
+        var roles = (await service.ListAsync(new ListRolesRequest(), Ct)).Value.Items;
+
+        Assert.Equal([Permissions.Users.Read, Permissions.Users.Manage, Permissions.Roles.Read, Permissions.Roles.Assign],
+            permissions.Where(item => item.Value).Select(item => item.Key));
+        Assert.Equal([true, false, false], roles.Select(role => role.Grantable));
     }
 
     private static RoleService Create(FakeRoleReader reader, ServiceFixture<RoleService> fixture) =>
-        new(reader, new FakeRoleRepository(), new CompanyServiceTests.FakeCompanyReader(),
+        new(reader, new FakeRoleRepository(), new CompanyServiceTests.FakeCompanyReader(), RoleServiceTests.OwnerDelegation(),
             fixture.Validator, new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
+
+    /// <summary>Una guarda con quien pide como Dueño: tiene todo el catálogo de la organización.</summary>
+    internal static OrganizationDelegationGuard OwnerDelegation() =>
+        new(new SignedInUser(), new FakeRoleReader());
+
+    internal sealed class SignedInUser : ICurrentUser
+    {
+        public Guid? UserId { get; } = Guid.CreateVersion7();
+        public Access? Access => Domain.Users.Access.Business;
+    }
 
     internal sealed class FakeRoleReader : IRoleReader
     {
@@ -82,6 +129,11 @@ public sealed class RoleServiceTests
         public RoleRow? Role { get; init; }
         public bool NameExists { get; init; }
         public int UserCount { get; init; }
+
+        /// <summary>Lo que dan a quien pide sus roles de organización; por defecto, todo el catálogo, como el Dueño.</summary>
+        public IReadOnlyList<string> Held { get; init; } = [.. Permissions.All];
+
+        private readonly Guid heldRoleId = Guid.CreateVersion7();
 
         public Task<IReadOnlyList<RoleRow>> ListAllAsync(CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<RoleRow>>([]);
         public Task<PagedResult<RoleRow>> ListAsync(ListRolesRequest request, CancellationToken cancellationToken)
@@ -95,13 +147,16 @@ public sealed class RoleServiceTests
             Task.FromResult(NameExists);
         public Task<int> CountUsersAsync(Guid roleId, CancellationToken cancellationToken) => Task.FromResult(UserCount);
         public Task<IReadOnlyList<Guid>> ListOrganizationRoleIdsAsync(Guid userId, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<Guid>>([]);
+            Task.FromResult<IReadOnlyList<Guid>>([heldRoleId]);
         public Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> ListCompanyRoleIdsAsync(Guid userId,
             CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>>(new Dictionary<Guid, IReadOnlyList<Guid>>());
         public Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> ListPermissionsByRoleAsync(
             IReadOnlyCollection<Guid> roleIds, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyDictionary<Guid, IReadOnlyList<string>>>(new Dictionary<Guid, IReadOnlyList<string>>());
+            Task.FromResult<IReadOnlyDictionary<Guid, IReadOnlyList<string>>>(
+                roleIds.Contains(heldRoleId)
+                    ? new Dictionary<Guid, IReadOnlyList<string>> { [heldRoleId] = Held }
+                    : new Dictionary<Guid, IReadOnlyList<string>>());
     }
 
     internal sealed class FakeRoleRepository : IRoleRepository

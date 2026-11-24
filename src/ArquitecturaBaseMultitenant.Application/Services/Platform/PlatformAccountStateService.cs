@@ -23,8 +23,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// commit. No hay avisos previstos para estas acciones.
 /// </summary>
 internal sealed class PlatformAccountStateService(IUserRepository users, ISignInService sessions,
-    ILoginMethodRepository accounts, PlatformOperatorGuard operators, PlatformAuditWriter audit,
-    ICurrentUser currentUser, IUnitOfWork unitOfWork, IRequestValidator validator,
+    ILoginMethodRepository accounts, PlatformOperatorGuard operators, PlatformDelegationGuard delegation,
+    PlatformAuditWriter audit, ICurrentUser currentUser, IUnitOfWork unitOfWork, IRequestValidator validator,
     TimeProvider clock, ILogger<PlatformAccountStateService> logger) : IPlatformAccountStateService
 {
     private enum Change { Suspend, Reactivate, RevokeSessions }
@@ -67,6 +67,10 @@ internal sealed class PlatformAccountStateService(IUserRepository users, ISignIn
         if (account.Status == UserStatus.Deleted) return UserErrors.InvalidTransition;
         // ADR 0042: una invitación de operador sin aceptar solo se reenvía o se revoca.
         if (account.HasPendingOperatorInvitation) return PlatformOperatorErrors.InvitationPending;
+        // ADR 0061: suspender o reactivar a un operador pide tener todos sus permisos; cerrar sesiones, no.
+        if (change != Change.RevokeSessions
+            && await delegation.CheckActOnAsync(accountId, ct) is { IsFailure: true } denied)
+            return denied;
 
         var after = account.Status;
         switch (change)

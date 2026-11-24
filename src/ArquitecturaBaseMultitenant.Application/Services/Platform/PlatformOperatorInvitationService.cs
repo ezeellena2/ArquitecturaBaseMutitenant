@@ -22,6 +22,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// aceptar, vigente o vencida, el motivo pide reenviarla desde la lista (lienzo v99). La invitación figura en Cuentas
 /// como pendiente hasta el primer ingreso con código a Plataforma y vence a los 7 días. Reenviar renueva el plazo y
 /// manda el correo de nuevo; revocar la borra y libera el correo. Cada acción deja su SecurityEvent con un motivo fijo.
+/// Quien invita da solo permisos que tiene (ADR 0061, <see cref="PlatformDelegationGuard"/>); reenviar y revocar no piden
+/// nada.
 /// </summary>
 internal sealed class PlatformOperatorInvitationService(
     PlatformOperatorProvisioner provisioner,
@@ -29,6 +31,7 @@ internal sealed class PlatformOperatorInvitationService(
     IUserLookup lookup,
     LoginCodeIssuer codes, LoginMethodLinker linker,
     PlatformAuditWriter audit,
+    PlatformDelegationGuard delegation,
     IRequestValidator validator,
     IUnitOfWork unitOfWork,
     TimeProvider clock,
@@ -56,6 +59,9 @@ internal sealed class PlatformOperatorInvitationService(
                         : PlatformOperatorErrors.AccountExists;
                 if ((await lookup.FindVerifiedUsersByEmailAsync(email, work)).Count > 0)
                     return PlatformOperatorErrors.AccountExists;
+                // ADR 0061: quien invita tiene cada permiso que da.
+                var delegated = await delegation.CheckPermissionsChangeAsync([], granted, work);
+                if (delegated.IsFailure) return delegated.Error;
                 var invited = await provisioner.CreateAsync(email, granted, clock.GetUtcNow().UtcDateTime, work);
                 if (invited.IsFailure) return invited.Error;
                 audit.RecordOperator(invited.Value.Id, SecurityEventType.PlatformOperatorInvited,

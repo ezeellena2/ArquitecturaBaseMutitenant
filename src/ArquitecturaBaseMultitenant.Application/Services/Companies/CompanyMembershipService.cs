@@ -16,11 +16,16 @@ using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Companies;
 
-/// <summary>Administra los miembros y roles de una empresa sin alterar sus membresías en otras empresas.</summary>
+/// <summary>
+/// Administra los miembros y roles de una empresa sin alterar sus membresías en otras empresas. Adentro de cada
+/// escritura, antes del writer, nadie da lo que no tiene en la empresa ni actúa sobre quien tiene más (ADR 0061,
+/// <see cref="CompanyDelegationGuard"/>).
+/// </summary>
 internal sealed class CompanyMembershipService(
     ICompanyMembershipReader reader,
     ICompanyReader companies,
     CompanyMembershipWriter writer,
+    CompanyDelegationGuard delegation,
     IRequestValidator validator,
     ICurrentUser currentUser,
     IPermissionService permissions,
@@ -83,7 +88,10 @@ internal sealed class CompanyMembershipService(
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             try
             {
-                return await unitOfWork.ExecuteInTransactionAsync(ct => writer.AddAsync(request, ct),
+                return await unitOfWork.ExecuteInTransactionAsync(async ct =>
+                        await delegation.CheckAddAsync(request.CompanyId, request.RoleIds!, ct) is { IsFailure: true } denied
+                            ? denied
+                            : await writer.AddAsync(request, ct),
                     CommitPolicy.OnSuccess, cancellationToken);
             }
             catch (ForeignKeyViolationException exception)
@@ -104,8 +112,13 @@ internal sealed class CompanyMembershipService(
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             try
             {
-                return VersionResponse.Of(await unitOfWork.ExecuteInTransactionAsync(
-                    ct => writer.UpdateRolesAsync(request, ct), CommitPolicy.OnSuccess, cancellationToken));
+                return VersionResponse.Of(await unitOfWork.ExecuteInTransactionAsync<Result<CompanyMembership>>(
+                    async ct =>
+                    {
+                        var delegated = await delegation.CheckRolesChangeAsync(request.CompanyId, request.MemberId,
+                            request.RoleIds!, ct);
+                        return delegated.IsFailure ? delegated.Error : await writer.UpdateRolesAsync(request, ct);
+                    }, CommitPolicy.OnSuccess, cancellationToken));
             }
             catch (ForeignKeyViolationException exception)
                 when (exception.ConstraintName == ForeignKeys.RoleAssignmentRole)
@@ -122,8 +135,12 @@ internal sealed class CompanyMembershipService(
         return OperationLog.RunAsync<VersionResponse>(logger, timeProvider, "ChangeCompanyMemberStatus", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            return VersionResponse.Of(await unitOfWork.ExecuteInTransactionAsync(
-                ct => writer.ChangeStatusAsync(request, ct), CommitPolicy.OnSuccess, cancellationToken));
+            return VersionResponse.Of(await unitOfWork.ExecuteInTransactionAsync<Result<CompanyMembership>>(
+                async ct =>
+                {
+                    var delegated = await delegation.CheckActOnAsync(request.CompanyId, request.MemberId, ct);
+                    return delegated.IsFailure ? delegated.Error : await writer.ChangeStatusAsync(request, ct);
+                }, CommitPolicy.OnSuccess, cancellationToken));
         });
     }
 

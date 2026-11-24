@@ -174,10 +174,17 @@ public sealed class PlatformAccountStateTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.Forbidden, self.StatusCode);
         Assert.Equal(UserErrors.CannotModifySelfCode, await CodeAsync(self));
 
+        // Con otro administrador de operadores ya no es el último, pero quien no tiene todos sus permisos no lo suspende
+        // (ADR 0061); el otro, que los tiene, sí.
         using var second = Client(isolated);
         var secondManager = await AccountJourney.RegisterAsync(isolated, second, Ct);
-        await PlatformOperators.GrantAsync(isolated.Services, secondManager.UserId, [PlatformPermissions.Operators.Manage], Ct);
-        using var allowed = await PlatformJourney.PostAsync(support, path,
+        await PlatformOperators.GrantAsync(isolated.Services, secondManager.UserId, PlatformOperators.All, Ct);
+        await AccountJourney.AuthorizeAsync(second, "platform", Ct);
+        using var lesser = await PlatformJourney.PostAsync(support, path,
+            new { reason = "Revisión" }, Ct);
+        Assert.Equal(HttpStatusCode.Forbidden, lesser.StatusCode);
+        Assert.Equal(PlatformOperatorErrors.HasMorePermissionsCode, await CodeAsync(lesser));
+        using var allowed = await PlatformJourney.PostAsync(second, path,
             new { reason = "Revisión" }, Ct);
         Assert.Equal(HttpStatusCode.NoContent, allowed.StatusCode);
     }

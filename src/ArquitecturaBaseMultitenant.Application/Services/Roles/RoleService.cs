@@ -16,11 +16,13 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Roles;
 
 /// <summary>
 /// Administra roles tenant-scoped; cada escritura valida antes y usa una única transacción. Un rol se guarda con lo que
-/// incluye cada permiso pedido (decisión 260): lo guardado es lo que permite.
+/// incluye cada permiso pedido (decisión 260): lo guardado es lo que permite. Nadie da ni quita un permiso que no tiene
+/// (ADR 0061, <see cref="OrganizationDelegationGuard"/>), y los listados dicen qué puede dar quien pide (<c>grantable</c>,
+/// decisión 269) con la misma <see cref="OrganizationDelegationPolicy"/>.
 /// </summary>
 internal sealed class RoleService(IRoleReader roles, IRoleRepository repository, ICompanyReader companies,
-    IRequestValidator validator, IUnitOfWork unitOfWork, TimeProvider timeProvider,
-    ILogger<RoleService> logger) : IRoleService
+    OrganizationDelegationGuard delegation, IRequestValidator validator, IUnitOfWork unitOfWork,
+    TimeProvider timeProvider, ILogger<RoleService> logger) : IRoleService
 {
     public Task<Result<RoleFilterCountsResponse>> GetFilterCountsAsync(string? search, CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, timeProvider, "GetRoleFilterCounts", async () =>
@@ -37,7 +39,9 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var page = await roles.ListAsync(request, cancellationToken);
-            return Result.Success(new PagedResult<RoleResponse>([.. page.Items.Select(ToResponse)],
+            var held = await delegation.ReadHeldAsync(cancellationToken);
+            return Result.Success(new PagedResult<RoleResponse>(
+                [.. page.Items.Select(role => ToResponse(role, held, request.CompanyId))],
                 page.Page, page.PageSize, page.TotalCount));
         });
     }
@@ -52,7 +56,9 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
             if (await validator.ValidateAsync(filtered, cancellationToken) is { } invalid) return invalid;
             if (await companies.FindByIdAsync(companyId, cancellationToken) is null) return CompanyErrors.NotFound;
             var page = await roles.ListAsync(filtered, cancellationToken);
-            return Result.Success(new PagedResult<RoleResponse>([.. page.Items.Select(ToResponse)],
+            var held = await delegation.ReadHeldAsync(cancellationToken);
+            return Result.Success(new PagedResult<RoleResponse>(
+                [.. page.Items.Select(role => ToResponse(role, held, companyId))],
                 page.Page, page.PageSize, page.TotalCount));
         });
     }
@@ -62,23 +68,25 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
         {
             var role = await roles.FindByIdAsync(roleId, cancellationToken);
             if (role is null) return RoleErrors.NotFound;
-            return ToResponse(role);
+            return ToResponse(role, await delegation.ReadHeldAsync(cancellationToken), companyId: null);
         });
 
     public Task<Result<IReadOnlyList<PermissionGroupResponse>>> GetPermissionsAsync(CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, timeProvider, "GetPermissions", () =>
+        OperationLog.RunAsync(logger, timeProvider, "GetPermissions", async () =>
         {
+            var held = await delegation.ReadHeldAsync(cancellationToken);
             IReadOnlyList<PermissionGroupResponse> groups =
             [
                 .. Permissions.All
                     .GroupBy(AreaOf, StringComparer.Ordinal)
                     .Select(group => new PermissionGroupResponse(group.Key, PermissionTexts.Area(group.Key),
-                        // Lo que incluye cada permiso (260); grantable sigue en true hasta la B1.
+                        // Lo que incluye cada permiso (260) y si quien pide lo puede dar (269 y ADR 0061).
                         [.. group.Select(permission => new PermissionItem(permission,
                             PermissionTexts.Permission(permission), PermissionTexts.Description(permission),
-                            Permissions.Inclusions.Of(permission), true))])),
+                            Permissions.Inclusions.Of(permission),
+                            OrganizationDelegationPolicy.CanGrantPermission(held, permission)))])),
             ];
-            return Task.FromResult(Result.Success(groups));
+            return Result.Success(groups);
         });
 
     public Task<Result<Guid>> CreateAsync(CreateRoleRequest request, CancellationToken cancellationToken)
@@ -150,6 +158,8 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
 
     private async Task<Result<Guid>> CreateCoreAsync(Role role, CancellationToken cancellationToken)
     {
+        var delegated = await delegation.CheckPermissionsChangeAsync([], role.Permissions, cancellationToken);
+        if (delegated.IsFailure) return delegated.Error;
         if (await roles.ExistsByNameAsync(role.Name, role.CompanyId, excludedRoleId: null, cancellationToken))
             return RoleErrors.AlreadyExists;
         repository.Add(role);
@@ -163,8 +173,14 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
         if (!role.IsSystemRole && role.ChangesScope(request.Scope!.Value, request.CompanyId)
             && await roles.CountUsersAsync(role.Id, cancellationToken) is var userCount and > 0)
             return RoleErrors.ScopeChangeHasUsers(userCount);
+        var permissions = WithIncluded(request.Permissions!);
+        // Un rol de sistema no cambia: lo responde Update, sin pedir sus permisos.
+        if (!role.IsSystemRole
+            && await delegation.CheckPermissionsChangeAsync(role.Permissions, permissions, cancellationToken)
+                is { IsFailure: true } denied)
+            return denied.Error;
         var updated = role.Update(request.Name, request.Description, request.Scope!.Value, request.CompanyId,
-            WithIncluded(request.Permissions!));
+            permissions);
         if (updated.IsFailure) return updated.Error;
         if (await roles.ExistsByNameAsync(role.Name, role.CompanyId, role.Id, cancellationToken))
             return RoleErrors.AlreadyExists;
@@ -191,7 +207,11 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
     private static string AreaOf(string permission) =>
         permission[..permission.IndexOf('.', StringComparison.Ordinal)];
 
-    private static RoleResponse ToResponse(RoleRow role) => new(role.Id, RoleTexts.Name(role.Name), RoleTexts.Description(role.Name, role.Description),
+    // grantable (269): si quien pide lo puede dar ahí, con la regla de la guarda; un rol de cualquier empresa, en la del
+    // listado, o en todas si no hay.
+    private static RoleResponse ToResponse(RoleRow role, PermissionsByPlace held, Guid? companyId) => new(role.Id,
+        RoleTexts.Name(role.Name), RoleTexts.Description(role.Name, role.Description),
         role.Scope, role.CompanyId, role.IsSystemRole, role.UserCount, role.Permissions,
-        role.Version, role.CreatedAtUtc, role.CompanyName);
+        role.Version, role.CreatedAtUtc, role.CompanyName,
+        OrganizationDelegationPolicy.CanGrantListedRole(held, role.Scope, role.CompanyId, role.Permissions, companyId));
 }

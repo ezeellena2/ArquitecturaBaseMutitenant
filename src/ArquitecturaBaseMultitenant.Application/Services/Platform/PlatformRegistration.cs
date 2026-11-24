@@ -40,6 +40,7 @@ internal static class PlatformRegistration
         services.AddScoped<IPlatformAuditService, PlatformAuditService>();
         services.AddScoped<IPlatformLegalService, PlatformLegalService>();
         services.AddScoped<PlatformOperatorGuard>();
+        services.AddScoped<PlatformDelegationGuard>();
         services.AddScoped<PlatformActionGuard>();
         services.AddScoped<PlatformTenantSlugResolver>();
         services.AddScoped<PlatformTenantCreator>();

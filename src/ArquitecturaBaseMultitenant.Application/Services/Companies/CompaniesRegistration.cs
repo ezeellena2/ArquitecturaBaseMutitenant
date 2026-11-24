@@ -13,6 +13,7 @@ internal static class CompaniesRegistration
         services.AddScoped<CompanyCreator>();
         services.AddScoped<CompanyReferenceDataResolver>();
         services.AddScoped<CompanyMembershipWriter>();
+        services.AddScoped<CompanyDelegationGuard>();
         services.AddScoped<ILastCompanyAdminGuard, LastCompanyAdminGuard>();
         return services;
     }

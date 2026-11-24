@@ -30,9 +30,14 @@ public sealed class UniqueKeyRaceTests(ApiFactory factory)
     public async Task Two_simultaneous_roles_with_the_same_name_create_one_and_answer_the_other_with_a_conflict()
     {
         var gate = new BothArrived();
+        var owner = new Owner();
         using var host = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
-            Decorate<IRoleReader>(services, inner => new GatedRoleReader(inner, gate))));
-        var tenantId = await StageOrganizationAsync(host.Services, "Roles simultáneos", "roles-simultaneos");
+        {
+            Decorate<IRoleReader>(services, inner => new GatedRoleReader(inner, gate));
+            // ADR 0061: crea el rol la Dueña, que tiene todo el catálogo.
+            services.AddScoped<ICurrentUser>(_ => owner);
+        }));
+        (var tenantId, owner.UserId) = await StageOrganizationAsync(host.Services, "Roles simultáneos", "roles-simultaneos");
 
         // B10: los dos pasan «¿ya existe ese nombre?» antes de que el otro guarde; la base deja entrar a uno solo.
         var results = await Task.WhenAll(CreateRoleAsync(host.Services, tenantId),
@@ -51,7 +56,7 @@ public sealed class UniqueKeyRaceTests(ApiFactory factory)
         var gate = new BothArrived();
         using var host = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
             Decorate<IPublicPageRepository>(services, inner => new GatedPublicPageRepository(inner, gate))));
-        var tenantId = await StageOrganizationAsync(host.Services, "Página simultánea", "pagina-simultanea");
+        var (tenantId, _) = await StageOrganizationAsync(host.Services, "Página simultánea", "pagina-simultanea");
 
         // Los dos ven «sin página guardada» con la versión 0: el segundo choca con «una página por organización».
         var outcomes = await Task.WhenAll(SavePageAsync(host.Services, tenantId),
@@ -89,7 +94,8 @@ public sealed class UniqueKeyRaceTests(ApiFactory factory)
         }
     }
 
-    private static async Task<Guid> StageOrganizationAsync(IServiceProvider provider, string name, string slug)
+    private static async Task<(Guid TenantId, Guid OwnerId)> StageOrganizationAsync(IServiceProvider provider,
+        string name, string slug)
     {
         await using var scope = provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
@@ -111,7 +117,14 @@ public sealed class UniqueKeyRaceTests(ApiFactory factory)
                 TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [ownerId], ownerId);
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
-        return tenant.Id;
+        return (tenant.Id, ownerId);
+    }
+
+    /// <summary>Quien pide en los servicios del host de prueba: nadie hasta que se arma la organización.</summary>
+    private sealed class Owner : ICurrentUser
+    {
+        public Guid? UserId { get; set; }
+        public Domain.Users.Access? Access => Domain.Users.Access.Business;
     }
 
     private static void Decorate<T>(IServiceCollection services, Func<T, T> decorate)

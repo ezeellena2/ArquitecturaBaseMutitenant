@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
+using ArquitecturaBaseMultitenant.Application.Services.Roles;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -7,7 +8,11 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 
-/// <summary>Activa o desactiva miembros respetando bajas pendientes y la protección del último administrador.</summary>
+/// <summary>
+/// Activa o desactiva miembros respetando bajas pendientes y la protección del último administrador. Desde la fila, quien
+/// lo hace tiene todos los permisos de la persona (ADR 0061, <see cref="OrganizationDelegationGuard"/>); desde «Guardar
+/// cambios» lo controla <see cref="OrganizationUserEditor"/>.
+/// </summary>
 internal sealed class OrganizationUserStatusEditor(
     IMemberRepository members,
     IMemberReader memberReader,
@@ -15,6 +20,7 @@ internal sealed class OrganizationUserStatusEditor(
     OrganizationUserAssignmentWriter assignments,
     OrganizationUserAdministratorGuard administrators,
     OrganizationMembershipEndNotifier membershipEndNotifier,
+    OrganizationDelegationGuard delegation,
     TimeProvider timeProvider)
 {
     internal async Task<Result<Member>> ChangeStatusAsync(ChangeOrganizationUserStatusRequest request,
@@ -22,6 +28,9 @@ internal sealed class OrganizationUserStatusEditor(
     {
         var member = await members.GetByIdAsync(request.MemberId, request.Version!.Value, ct);
         if (member is null) return MemberErrors.NotFound;
+        var actedOn = await delegation.CheckActOnAsync(member,
+            (await assignments.GetSnapshotAsync(member.Id, ct)).Assignments, ct);
+        if (actedOn.IsFailure) return actedOn.Error;
         var applied = await ApplyAsync(member, request.IsActive!.Value, currentUserId, ct);
         if (applied.IsFailure) return applied.Error;
         return member;

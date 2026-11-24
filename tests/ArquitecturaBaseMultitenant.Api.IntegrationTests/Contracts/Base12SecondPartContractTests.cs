@@ -128,7 +128,7 @@ public sealed class Base12SecondPartContractTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Permissions_answer_what_they_include_and_grantable_until_its_task()
+    public async Task Permissions_answer_what_they_include_and_what_the_owner_can_give()
     {
         using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
@@ -137,7 +137,7 @@ public sealed class Base12SecondPartContractTests(ApiFactory factory)
         var groups = await client.GetFromJsonAsync<JsonArray>("/api/permissions", Ct);
         var items = groups!.SelectMany(group => group!["permissions"]!.AsArray()).ToArray();
         Assert.Equal(Permissions.All.Count, items.Length);
-        // 260: lo que incluye cada permiso, del catálogo; grantable sigue en true hasta la B1.
+        // 260: lo que incluye cada permiso, del catálogo; el Dueño puede dar todo (269 y ADR 0061, B1).
         Assert.All(items, item =>
         {
             Assert.Equal(Permissions.Inclusions.Of(item!["code"]!.GetValue<string>()),
@@ -160,7 +160,9 @@ public sealed class Base12SecondPartContractTests(ApiFactory factory)
         {
             Assert.Equal(PlatformPermissions.Inclusions.Of(item!["code"]!.GetValue<string>()),
                 item["includes"]!.AsArray().Select(code => code!.GetValue<string>()));
-            Assert.True(item["grantable"]!.GetValue<bool>());
+            // 269 y ADR 0061: puede dar solo lo que tiene.
+            Assert.Equal(item["code"]!.GetValue<string>() == PlatformPermissions.Accounts.Read,
+                item["grantable"]!.GetValue<bool>());
         });
         Assert.Equal(["platform.accounts.read"], catalog.Single(item => item!["code"]!.GetValue<string>() ==
             "platform.accounts.manage")!["includes"]!.AsArray().Select(code => code!.GetValue<string>()));

@@ -28,9 +28,13 @@ public sealed class ForeignKeyRaceTests(ApiFactory factory)
     public async Task Deleting_a_role_that_another_request_just_assigned_answers_that_it_has_people()
     {
         var afterCount = new Hold();
+        var owner = new Owner();
         using var host = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
-            Decorate<IRoleReader>(services, inner => new HeldRoleReader(inner, afterFind: null, afterCount))));
-        var staged = await StageAsync(host.Services, "Rol asignado al borrar", "rol-asignado-al-borrar");
+        {
+            Decorate<IRoleReader>(services, inner => new HeldRoleReader(inner, afterFind: null, afterCount));
+            services.AddScoped<ICurrentUser>(_ => owner);
+        }));
+        var staged = await StageAsync(host.Services, owner, "Rol asignado al borrar", "rol-asignado-al-borrar");
 
         // El borrado contó cero personas; antes de su commit, otro pedido asigna el rol y guarda.
         afterCount.Arm();
@@ -50,9 +54,13 @@ public sealed class ForeignKeyRaceTests(ApiFactory factory)
     public async Task Assigning_a_role_that_another_request_just_deleted_answers_that_the_role_does_not_exist()
     {
         var afterFind = new Hold();
+        var owner = new Owner();
         using var host = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
-            Decorate<IRoleReader>(services, inner => new HeldRoleReader(inner, afterFind, afterCount: null))));
-        var staged = await StageAsync(host.Services, "Rol borrado al asignar", "rol-borrado-al-asignar");
+        {
+            Decorate<IRoleReader>(services, inner => new HeldRoleReader(inner, afterFind, afterCount: null));
+            services.AddScoped<ICurrentUser>(_ => owner);
+        }));
+        var staged = await StageAsync(host.Services, owner, "Rol borrado al asignar", "rol-borrado-al-asignar");
 
         // La asignación leyó el rol; antes de su commit, otro pedido lo borra y guarda.
         afterFind.Arm();
@@ -86,8 +94,9 @@ public sealed class ForeignKeyRaceTests(ApiFactory factory)
             .AddAsync(new AddCompanyMemberRequest(staged.CompanyId, staged.MemberId, [staged.RoleId]), Ct);
     }
 
-    // Una organización con su Dueña, una segunda persona sin empresa, una empresa y un rol que vale solo en ella.
-    private static async Task<Staged> StageAsync(IServiceProvider provider, string name, string slug)
+    // Una organización con su Dueña, una segunda persona sin empresa, una empresa y un rol que vale solo en ella. Desde que
+    // existe, la Dueña es quien pide (ADR 0061: da lo que tiene).
+    private static async Task<Staged> StageAsync(IServiceProvider provider, Owner owner, string name, string slug)
     {
         await using var scope = provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
@@ -123,6 +132,7 @@ public sealed class ForeignKeyRaceTests(ApiFactory factory)
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
 
+        owner.UserId = ownerId;
         var roles = services.GetRequiredService<IRoleService>();
         var roleId = await roles.CreateAsync(new CreateRoleRequest("Lectura en Norte", null, RoleScope.SpecificCompany,
             company.Id, [Permissions.Company.Members.Read]), Ct);
@@ -141,6 +151,13 @@ public sealed class ForeignKeyRaceTests(ApiFactory factory)
     }
 
     private sealed record Staged(Guid TenantId, Guid CompanyId, Guid MemberId, Guid RoleId, uint RoleVersion);
+
+    /// <summary>Quien pide en los servicios del host de prueba: nadie hasta que se arma la organización.</summary>
+    private sealed class Owner : ICurrentUser
+    {
+        public Guid? UserId { get; set; }
+        public Domain.Users.Access? Access => Domain.Users.Access.Business;
+    }
 
     /// <summary>Retiene al primer pedido que pasa después de armarla, hasta que el otro pedido termina.</summary>
     private sealed class Hold

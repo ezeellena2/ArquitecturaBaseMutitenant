@@ -20,11 +20,13 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// incluye (decisión 260). Nadie actúa sobre sí mismo y
 /// siempre queda un operador activo con <c>platform.operators.manage</c> (lock global de <see cref="PlatformOperatorGuard"/>).
 /// Quitar el acceso cierra todas sus sesiones; la cuenta queda sin operador ni permisos. Una invitación sin aceptar
-/// no se cambia ni se quita: se reenvía o se revoca (ADR 0042).
+/// no se cambia ni se quita: se reenvía o se revoca (ADR 0042). Nadie da ni quita un permiso que no tiene, ni quita a
+/// un operador con permisos que no tiene, y el catálogo dice qué puede dar (ADR 0061, <see cref="PlatformDelegationGuard"/>).
 /// </summary>
 internal sealed class PlatformOperatorService(
     IPlatformPermissionAssignmentRepository assignments,
     PlatformOperatorGuard operators,
+    PlatformDelegationGuard delegation,
     IUserRepository users,
     ISignInService sessions,
     PlatformAuditWriter audit,
@@ -52,6 +54,8 @@ internal sealed class PlatformOperatorService(
                     && (await operators.CheckAnotherManagerRemainsAsync(accountId, work)) is { IsFailure: true } last)
                     return last.Error;
                 var before = assignment.Value.Permissions.ToArray();
+                var delegated = await delegation.CheckPermissionsChangeAsync(before, granted, work);
+                if (delegated.IsFailure) return delegated.Error;
                 var changed = assignment.Value.ChangePermissions(granted);
                 if (changed.IsFailure) return changed.Error;
                 audit.RecordOperator(accountId, SecurityEventType.PlatformOperatorPermissionsChanged, request.Reason!,
@@ -73,6 +77,7 @@ internal sealed class PlatformOperatorService(
                 if (assignment.IsFailure) return assignment.Error;
                 if ((await operators.CheckAnotherManagerRemainsAsync(accountId, work)) is { IsFailure: true } last)
                     return last;
+                if (await delegation.CheckActOnAsync(accountId, work) is { IsFailure: true } denied) return denied;
                 var before = assignment.Value.Permissions.ToArray();
                 assignments.Remove(assignment.Value);
                 await users.SetPlatformOperatorAsync(accountId, false, work);
@@ -96,11 +101,15 @@ internal sealed class PlatformOperatorService(
     }
 
     public Task<Result<IReadOnlyList<PlatformPermissionItem>>> GetPermissionCatalogAsync(CancellationToken ct) =>
-        OperationLog.RunAsync(logger, clock, "GetPlatformPermissionCatalog", () =>
+        OperationLog.RunAsync(logger, clock, "GetPlatformPermissionCatalog", async () =>
         {
-            // Lo que incluye cada permiso (260); grantable sigue en true hasta la B1.
+            // Lo que incluye cada permiso (260) y si quien pide lo puede dar (269 y ADR 0061).
+            var held = await delegation.ReadHeldAsync(ct);
             IReadOnlyList<PlatformPermissionItem> catalog =
-                [.. PlatformPermissions.All.Select(code => new PlatformPermissionItem(code, PlatformPermissions.Inclusions.Of(code), true))];
-            return Task.FromResult(Result.Success(catalog));
+            [
+                .. PlatformPermissions.All.Select(code => new PlatformPermissionItem(code,
+                    PlatformPermissions.Inclusions.Of(code), PlatformDelegationPolicy.CanGrant(held, code))),
+            ];
+            return Result.Success(catalog);
         });
 }

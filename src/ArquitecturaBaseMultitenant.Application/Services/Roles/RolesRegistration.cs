@@ -10,6 +10,7 @@ internal static class RolesRegistration
     {
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<RoleAssignmentGuard>();
+        services.AddScoped<OrganizationDelegationGuard>();
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IPlatformPermissionService, PlatformPermissionService>();
         return services;

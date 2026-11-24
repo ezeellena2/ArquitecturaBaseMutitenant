@@ -24,7 +24,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// programada recibe <c>AlreadyPending</c> y una cuenta que no está activa ni suspendida, el error de estado.
 /// </summary>
 internal sealed class PlatformAccountDeletionService(IUserRepository users, ILoginMethodRepository accounts,
-    PlatformOperatorGuard operators, AccountDeletionScheduler scheduler,
+    PlatformOperatorGuard operators, PlatformDelegationGuard delegation, AccountDeletionScheduler scheduler,
     PlatformAuditWriter audit, ICurrentUser currentUser, IUnitOfWork unitOfWork,
     IRequestValidator validator, TimeProvider clock, ILogger<PlatformAccountDeletionService> logger)
     : IPlatformAccountDeletionService
@@ -50,6 +50,8 @@ internal sealed class PlatformAccountDeletionService(IUserRepository users, ILog
         if (account is null) return UserErrors.NotFound;
         // ADR 0042: una invitación de operador sin aceptar solo se reenvía o se revoca.
         if (account.HasPendingOperatorInvitation) return PlatformOperatorErrors.InvitationPending;
+        // ADR 0061: dar de baja a un operador pide tener todos sus permisos.
+        if (await delegation.CheckActOnAsync(accountId, ct) is { IsFailure: true } denied) return denied;
         if (account.DeletionScheduledForUtc is not null || account.Status == UserStatus.PendingDeletion)
             return AccountDeletionErrors.AlreadyPending;
         if (account.Status is not (UserStatus.Active or UserStatus.Suspended)) return UserErrors.InvalidTransition;

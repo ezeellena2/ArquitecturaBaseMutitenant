@@ -283,7 +283,9 @@ public sealed class PlatformOperatorTests(ApiFactory factory)
     [Fact]
     public async Task Inviting_an_email_with_a_pending_or_expired_invitation_asks_to_resend_it()
     {
-        var (manager, _) = await OperatorAsync([PlatformPermissions.Operators.Manage, PlatformPermissions.Accounts.Read]);
+        // Da «Ver auditoría», que tiene (ADR 0061).
+        var (manager, _) = await OperatorAsync(
+            [PlatformPermissions.Operators.Manage, PlatformPermissions.Accounts.Read, PlatformPermissions.Audit.Read]);
         var (id, email) = await InviteAsync(manager, [PlatformPermissions.Audit.Read]);
 
         await AssertInvitationExistsAsync();
