@@ -21,6 +21,8 @@ public interface IWhatsAppChannelSettings
     decimal ProtectedAuthCodeFraction => 0.2m;
     int DailyNewAuthCodeIpLimit => 20;
     int DailyNewAuthCodeLimit => DailyAuthCodeLimit - (int)Math.Ceiling(DailyAuthCodeLimit * ProtectedAuthCodeFraction);
+    /// <summary>Los códigos por WhatsApp que una cuenta pide desde Mi cuenta en las últimas 24 horas (ADR 0063).</summary>
+    int DailyAccountCodeLimit => 10;
     /// <summary>El número de Plataforma recibe y responde dentro del cupo gratis, aunque le falte el medio de pago.</summary>
     bool IsAttending => IsEnabled;
     Guid? PlatformChannelId => null;

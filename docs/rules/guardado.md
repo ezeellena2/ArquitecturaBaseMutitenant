@@ -24,6 +24,7 @@ public Task<Result> UpdateAsync(UpdateRoleRequest request, CancellationToken ct)
 
 El outbox reclama un lease durable con `SKIP LOCKED` y lo confirma antes de descifrar y enviar, fuera de transacción. `OutboxDispatchService` abre una UoW para Claim y otra para Complete, con scopes separados; Sent, Cancelled y falla terminal purgan el payload y un lease abandonado consume intentos. Una copia reserva solo los canales que tiene registrados, y lo que su versión no puede leer vuelve a la cola con espera y tope, sin borrarse ([ADR 0060](../decisions/0060-dos-versiones-conviven.md)). Con varias copias, cada trabajo de fondo que borra o avisa corre una vez entre ellas ([concurrencia](concurrencia.md)).
 - UnitOfWork usa READ COMMITTED, un solo SaveChanges y, ante excepción, rollback y ChangeTracker.Clear().
+- **Un aviso en el log que depende de lo que se guardó,** desde un helper que corre adentro, va con `IAfterCommit.Add(() => Log…)`: corre recién con el commit y un rollback lo descarta (`AfterCommitInterceptor`). Así un caso que reserva y falla después no avisa lo que no pasó, como el tope de correo de `EmailQuotaGuard` ([ADR 0063](../decisions/0063-topes-de-correo-de-la-plataforma.md)). Solo para lo que no escribe ni falla.
 - **La robustez es proporcional al efecto** (la 0018 de ArquitecturaBase). Comprobantes recuperables, estado incierto, leases, reconciliación y pruebas con varios hosts son solo para lo que tiene un efecto fuera del sistema o cuesta repetir: Meta, el correo, el almacenamiento, un LLM, un mensaje a una persona o lo que dispara una regla. Guardar algo interno usa la forma de esta ficha, con su versión y 409 si otro guardó antes ([concurrencia](concurrencia.md)). Más robustez para algo interno se justifica en el cambio con el riesgo concreto (qué se pierde o se duplica, y para quién); sin eso, la revisión la objeta.
 - **Un solo `ExecuteInTransactionAsync` por método público,** contando todo su recorrido: los métodos propios que llama, sus lambdas y sus máquinas async. `TransactionBoundaryTests` lo contará leyendo el IL, con un caso de control, al programar (traspaso 9).
 
@@ -39,6 +40,7 @@ El outbox reclama un lease durable con `SKIP LOCKED` y lo confirma antes de desc
 
 ## Lo verifica
 - `TransactionBoundaryTests` (E0)
+- `EmailQuotaAdversarialTests` (E12): el aviso del tope de correo va después del commit, con la base real, y una reserva que se deshace no avisa
 
 ## Detalle
 [backend.md §5, "Repositorio, reader y UnitOfWork"](../architecture/backend.md#repositorio-reader-y-unitofwork) · ADR 0001

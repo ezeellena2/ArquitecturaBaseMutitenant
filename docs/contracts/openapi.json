@@ -63650,6 +63650,7 @@
         "tags": [
           "Organizaciones de Plataforma"
         ],
+        "description": "Por correo (ADR 0063 y 256): un tope global y los de cada código o invitación cuentan las últimas 24 horas, por horas; al llegar, 429 Messaging.Email.DailyLimit con retryAfter (segundos, con una hora de precisión) y Retry-After, sin mandar ni guardar nada. Lo que va por WhatsApp tiene los límites de Meta.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -63764,7 +63765,7 @@
             }
           },
           "429": {
-            "description": "Security.RateLimit.Exceeded",
+            "description": "Messaging.Email.DailyLimit; Security.RateLimit.Exceeded",
             "headers": {
               "Retry-After": {
                 "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
@@ -63779,6 +63780,28 @@
                   "$ref": "#/components/schemas/ProblemDetails"
                 },
                 "examples": {
+                  "Messaging.Email.DailyLimit.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 429,
+                      "detail": "Por ahora no se pueden mandar más correos, y no se guardó nada. Probá de nuevo más tarde.",
+                      "code": "Messaging.Email.DailyLimit",
+                      "traceId": "example-trace-id",
+                      "retryAfter": 60
+                    }
+                  },
+                  "Messaging.Email.DailyLimit.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 429,
+                      "detail": "No more emails can be sent for now, and nothing was saved. Try again later.",
+                      "code": "Messaging.Email.DailyLimit",
+                      "traceId": "example-trace-id",
+                      "retryAfter": 60
+                    }
+                  },
                   "Security.RateLimit.Exceeded.es": {
                     "value": {
                       "type": "about:blank",
@@ -63807,6 +63830,13 @@
           }
         },
         "x-error-codes": [
+          {
+            "status": 429,
+            "code": "Messaging.Email.DailyLimit",
+            "field": null,
+            "es": "Por ahora no se pueden mandar más correos, y no se guardó nada. Probá de nuevo más tarde.",
+            "en": "No more emails can be sent for now, and nothing was saved. Try again later."
+          },
           {
             "status": 429,
             "code": "Security.RateLimit.Exceeded",

@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
+using ArquitecturaBaseMultitenant.Application.Services.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Platform;
@@ -23,7 +24,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// como pendiente hasta el primer ingreso con código a Plataforma y vence a los 7 días. Reenviar renueva el plazo y
 /// manda el correo de nuevo; revocar la borra y libera el correo. Cada acción deja su SecurityEvent con un motivo fijo.
 /// Quien invita da solo permisos que tiene (ADR 0061, <see cref="PlatformDelegationGuard"/>); reenviar y revocar no piden
-/// nada.
+/// nada. Invitar y reenviar mandan un correo: pasan por los topes de correo de quien invita y el global (ADR 0063).
 /// </summary>
 internal sealed class PlatformOperatorInvitationService(
     PlatformOperatorProvisioner provisioner,
@@ -32,6 +33,7 @@ internal sealed class PlatformOperatorInvitationService(
     LoginCodeIssuer codes, LoginMethodLinker linker,
     PlatformAuditWriter audit,
     PlatformDelegationGuard delegation,
+    EmailQuotaGuard emailQuota,
     IRequestValidator validator,
     IUnitOfWork unitOfWork,
     TimeProvider clock,
@@ -62,6 +64,9 @@ internal sealed class PlatformOperatorInvitationService(
                 // ADR 0061: quien invita tiene cada permiso que da.
                 var delegated = await delegation.CheckPermissionsChangeAsync([], granted, work);
                 if (delegated.IsFailure) return delegated.Error;
+                // ADR 0063: el correo de la invitación, después de los demás locks.
+                var allowed = await emailQuota.ReserveInvitationAsync(audit.CurrentOperatorId(), null, work);
+                if (allowed.IsFailure) return allowed.Error;
                 var invited = await provisioner.CreateAsync(email, granted, clock.GetUtcNow().UtcDateTime, work);
                 if (invited.IsFailure) return invited.Error;
                 audit.RecordOperator(invited.Value.Id, SecurityEventType.PlatformOperatorInvited,
@@ -79,6 +84,8 @@ internal sealed class PlatformOperatorInvitationService(
                 if (renewed.IsFailure) return renewed.Error;
                 var changes = new SecurityEventChanges();
                 changes.AddUtc("invitation.expiresAtUtc", renewed.Value.PreviousExpiresAtUtc, renewed.Value.ExpiresAtUtc);
+                var allowed = await emailQuota.ReserveInvitationAsync(audit.CurrentOperatorId(), null, work);
+                if (allowed.IsFailure) return allowed.Error;
                 audit.RecordOperator(accountId, SecurityEventType.PlatformOperatorInvitationResent,
                     AuditTexts.OperatorInvitationResendReason(), changes);
                 await notifier.EnqueueAsync(renewed.Value, audit.CurrentOperatorId(), work);

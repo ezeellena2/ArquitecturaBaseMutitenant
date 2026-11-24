@@ -98,8 +98,25 @@ internal sealed class LoginCodeIssuer(
         return Result.Success();
     }
 
+    /// <summary>
+    /// Un código que no sale: el canal cuenta y rechaza lo que haga falta para no decir por qué (en el correo, suma en el tope
+    /// de la dirección y mira sin sumar los demás topes de los códigos, ADR 0063), y se conserva su emisión con sus límites,
+    /// sin admitir capacidad del canal.
+    /// </summary>
+    internal async Task<Result> WithholdAsync(LoginCodeDestination destination, IssuedLoginCode issued, CancellationToken ct)
+    {
+        var row = issued.LoginCode;
+        foreach (var admission in admissions?.Where(value => value.Channel == destination.Channel) ?? [])
+        {
+            var reserved = await admission.ReserveWithheldAsync(destination, row.Purpose, row.RequestedByUserId, ct);
+            if (reserved.IsFailure) return reserved.Error;
+        }
+        await PersistAsync(destination, issued, ct);
+        return Result.Success();
+    }
+
     /// <summary>Conserva emisión y límites de un ingreso legítimo sin entrega, sin admitir capacidad del canal.</summary>
-    internal async Task PersistAsync(LoginCodeDestination destination, IssuedLoginCode issued, CancellationToken ct)
+    private async Task PersistAsync(LoginCodeDestination destination, IssuedLoginCode issued, CancellationToken ct)
     {
         var row = issued.LoginCode;
         if (issued.IsAdmitted) throw new InvalidOperationException("The prepared code is already persisted.");

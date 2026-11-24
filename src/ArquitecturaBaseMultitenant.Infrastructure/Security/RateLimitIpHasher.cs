@@ -1,4 +1,3 @@
-using System.Net;
 using System.Security.Cryptography;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
@@ -16,9 +15,8 @@ internal sealed class RateLimitIpHasher(IOptions<LoginCodeHashOptions> options) 
 
     public string Hash(string? ipAddress)
     {
-        var canonical = IPAddress.TryParse(ipAddress, out var address)
-            ? (address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address).ToString() : "unknown";
-        var message = JsonSerializer.SerializeToUtf8Bytes(new object[] { "rate-limit-ip:v1", canonical });
+        // Una IPv6 cuenta por su /64 (N20).
+        var message = JsonSerializer.SerializeToUtf8Bytes(new object[] { "rate-limit-ip:v1", IpAddressKey.Normalize(ipAddress) });
         return Convert.ToHexStringLower(HMACSHA256.HashData(_key, message).AsSpan(0, 16));
     }
 }

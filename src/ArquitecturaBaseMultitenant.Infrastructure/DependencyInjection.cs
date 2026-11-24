@@ -56,6 +56,7 @@ public static class DependencyInjection
         services.AddSingleton<ILoginCodeGenerator, LoginCodeGenerator>();
         services.AddSingleton<ILoginCodeHasher, LoginCodeHasher>();
         services.AddSingleton<IRateLimitIpHasher, RateLimitIpHasher>();
+        services.AddSingleton<IMessageQuotaKeyHasher, MessageQuotaKeyHasher>();
         services.AddSingleton<ISecureTokenGenerator, SecureTokenGenerator>();
         services.AddSingleton<IPayloadProtector, PayloadProtector>();
         services.AddSingleton<IInvitationTokenProtector, InvitationTokenProtector>();

@@ -3,6 +3,8 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Invitations;
+using ArquitecturaBaseMultitenant.Application.Services.Messaging;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -11,10 +13,14 @@ using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 
-/// <summary>Emite dentro de la transacción del llamador y encola el correo en su outbox; no tiene ruta propia.</summary>
+/// <summary>
+/// Emite dentro de la transacción del llamador y encola el correo en su outbox; no tiene ruta propia. Una invitación que
+/// sale por correo pasa antes por los topes de correo (ADR 0063): el de quien invita, el de la organización y el global.
+/// </summary>
 internal sealed class InvitationIssuer(IInvitationRepository invitations, IMemberRepository members,
     ITenantContext tenantContext, IInvitationTokenProtector tokens, InvitationIssuingGuard guard,
-    InvitationDeliveryIssuer delivery, IOptions<InvitationOptions> options, TimeProvider timeProvider)
+    InvitationDeliveryIssuer delivery, EmailQuotaGuard emailQuota, IOptions<InvitationOptions> options,
+    TimeProvider timeProvider)
 {
     public async Task<Result<Guid>> IssueAsync(IssueInvitationRequest request, CancellationToken cancellationToken)
     {
@@ -46,6 +52,12 @@ internal sealed class InvitationIssuer(IInvitationRepository invitations, IMembe
                 ? await members.GetByUserIdAsync(recipientId, cancellationToken) : null;
         if (request.MemberId is not null && member is null) return MemberErrors.NotFound;
         if (member?.UserId is { } boundUserId && userId != boundUserId) return InvitationErrors.WrongAccount;
+        // Lo que va por WhatsApp tiene los límites de Meta; por correo, los topes van después de los demás locks.
+        if (destination.Value.Type == LoginMethodType.Email)
+        {
+            var allowed = await emailQuota.ReserveInvitationAsync(request.InviterUserId, tenantId, cancellationToken);
+            if (allowed.IsFailure) return allowed.Error;
+        }
         if (member is null)
         {
             member = userId is { } existingId ? Member.Invite(existingId) : Member.Invite();

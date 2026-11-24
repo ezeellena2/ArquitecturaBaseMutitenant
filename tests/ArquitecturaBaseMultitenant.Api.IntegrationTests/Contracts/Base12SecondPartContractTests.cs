@@ -68,7 +68,7 @@ public sealed class Base12SecondPartContractTests(ApiFactory factory)
             "/api/me/login-methods", "/api/me/login-methods/{methodId}/code", "/api/users/invitations",
             "/api/users/invitations/{invitationId}/resend", "/api/companies/{companyId}/members",
             "/api/companies/{companyId}/invitations/{invitationId}/resend", "/api/platform/operators/invitations",
-            "/api/platform/operators/{id}/invitation/resend",
+            "/api/platform/operators/{id}/invitation/resend", "/api/platform/tenants",
         ];
         foreach (var path in routes)
         {

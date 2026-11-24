@@ -70,6 +70,7 @@ public sealed class DataClassificationTests
         "ArquitecturaBaseMultitenant.Infrastructure.Idempotency.IdempotencyKey",
         "ArquitecturaBaseMultitenant.Infrastructure.Caching.CacheTagVersion", // Generación de cada etiqueta de caché (ADR 0052): alcance y versión, sin datos de negocio.
         "ArquitecturaBaseMultitenant.Infrastructure.Persistence.RateLimitCounter", // Contador durable de una cuota (E9): clave técnica y número, sin IP completa.
+        "ArquitecturaBaseMultitenant.Infrastructure.Persistence.MessageQuotaBucket", // Contador por hora de un tope de correo o de códigos (ADR 0063): HMAC y número, sin nadie en claro.
         typeof(Currency).FullName!,
         typeof(CurrencyTranslation).FullName!,
         typeof(Country).FullName!,
@@ -157,7 +158,8 @@ public sealed class DataClassificationTests
         || type == typeof(PlatformSession) || type == typeof(PlatformFactorOperation)
         || type == typeof(ConsumerDataRetention) || type == typeof(NotificationRead)
         || type == typeof(IdentityUserClaim<Guid>) || type == typeof(IdentityUserLogin<Guid>)
-        || type == typeof(IdentityUserToken<Guid>) || type == typeof(LegalAcceptance);
+        || type == typeof(IdentityUserToken<Guid>) || type == typeof(LegalAcceptance)
+        || type.FullName == "ArquitecturaBaseMultitenant.Infrastructure.Persistence.MessageQuotaBucket";
 
 #pragma warning disable CA1812 // Casos de control que solo se inspeccionan por tipo.
     private sealed class UnclassifiedProbe;

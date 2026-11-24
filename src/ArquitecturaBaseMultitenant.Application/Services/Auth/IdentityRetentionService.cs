@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Models.Retention;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using Microsoft.Extensions.Logging;
@@ -41,6 +42,12 @@ internal sealed class IdentityRetentionService(
         OperationLog.RunAsync(logger, timeProvider, "PruneSessions", () =>
             unitOfWork.ExecuteInTransactionAsync(async ct => Result.Success(await sessions.PruneTrancheAsync(
                     IdentityRetentionPolicy.SessionsExpiredBeforeUtc(NowUtc()), fromUtc, ct)),
+                CommitPolicy.OnSuccess, cancellationToken));
+
+    public Task<Result<int>> PurgeMessageQuotaBucketsAsync(CancellationToken cancellationToken) =>
+        OperationLog.RunAsync(logger, timeProvider, "PurgeMessageQuotaBuckets", () =>
+            unitOfWork.ExecuteInTransactionAsync(async ct => Result.Success(await retention.DeleteMessageQuotaBucketsAsync(
+                    MessageQuotaWindow.PurgeBefore(NowUtc()), IdentityRetentionPolicy.BatchSize, ct)),
                 CommitPolicy.OnSuccess, cancellationToken));
 
     private DateTime NowUtc() => timeProvider.GetUtcNow().UtcDateTime;

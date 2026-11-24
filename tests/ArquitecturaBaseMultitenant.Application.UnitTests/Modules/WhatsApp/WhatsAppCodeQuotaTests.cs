@@ -8,6 +8,9 @@ using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integr
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
+using ArquitecturaBaseMultitenant.Application.Services.Messaging;
+using ArquitecturaBaseMultitenant.Application.UnitTests.TestDoubles;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -96,6 +99,56 @@ public sealed class WhatsAppCodeQuotaTests
         f.Settings.IsEnabled = false;
         Assert.Equal(LoginChannelErrors.Unavailable.Code, (await f.Reserve()).Error.Code);
     }
+    [Fact]
+    public async Task From_my_account_each_account_asks_up_to_its_limit_in_24_hours_and_a_full_day_does_not_spend_it()
+    {
+        var f = new Fixture(); f.Settings.DailyAccountCodeLimit = 2;
+        f.Clock.SetUtcNow(new DateTimeOffset(2026, 10, 9, 12, 30, 0, TimeSpan.Zero));
+        var other = Guid.NewGuid();
+        Assert.True((await f.Reserve(LoginCodePurpose.VerifyDestination, Owner)).IsSuccess);
+        Assert.True((await f.Reserve(LoginCodePurpose.VerifyDestination, Owner)).IsSuccess);
+        var denied = await f.Reserve(LoginCodePurpose.VerifyDestination, Owner);
+        Assert.Equal(WhatsAppCodeErrors.AccountDailyLimitCode, denied.Error.Code);
+        // La hora de las 12 sale de la ventana mañana a las 13: 24 h 30 min.
+        Assert.Equal((24 * 60 + 30) * 60, denied.Error.Metadata!["retryAfter"]);
+        Assert.Equal(2, f.Quotas.Rows.Values.Single().ReservedCount);
+        // Otra cuenta tiene el suyo, y lo que no es de Mi cuenta no cuenta.
+        Assert.True((await f.Reserve(LoginCodePurpose.VerifyDestination, other)).IsSuccess);
+        Assert.True((await f.Reserve()).IsSuccess);
+        Assert.Equal(3, f.Accounts.Total(MessageQuotaScope.WhatsAppCodeAccount));
+        // Con el día lleno, el pedido no gasta el tope de la cuenta.
+        f.Settings.DailyAuthCodeLimit = 4;
+        Assert.Equal(WhatsAppCodeErrors.DailyLimitCode, (await f.Reserve(LoginCodePurpose.VerifyDestination, Guid.NewGuid())).Error.Code);
+        Assert.Equal(3, f.Accounts.Total(MessageQuotaScope.WhatsAppCodeAccount));
+        // A las 13:00 de mañana la cuenta vuelve a tener lugar.
+        f.Settings.DailyAuthCodeLimit = 100;
+        f.Clock.SetUtcNow(new DateTimeOffset(2026, 10, 10, 13, 0, 1, TimeSpan.Zero));
+        Assert.True((await f.Reserve(LoginCodePurpose.VerifyDestination, Owner)).IsSuccess);
+    }
+    [Fact]
+    public async Task From_my_account_with_the_day_also_full_the_wait_is_the_one_that_frees_a_place_later()
+    {
+        var f = new Fixture(); f.Settings.DailyAccountCodeLimit = 1;
+        var other = Guid.NewGuid();
+        // Una cuenta pide a las 21:10 (libera mañana a las 22) y la otra mañana a la 1 (libera pasado a las 2).
+        f.Clock.SetUtcNow(new DateTimeOffset(2026, 10, 9, 21, 10, 0, TimeSpan.Zero));
+        Assert.True((await f.Reserve(LoginCodePurpose.VerifyDestination, Owner)).IsSuccess);
+        f.Clock.SetUtcNow(new DateTimeOffset(2026, 10, 10, 1, 0, 0, TimeSpan.Zero));
+        Assert.True((await f.Reserve(LoginCodePurpose.VerifyDestination, other)).IsSuccess);
+        // A las 12 el día también está lleno, y renueva a medianoche: en 12 h.
+        f.Clock.SetUtcNow(new DateTimeOffset(2026, 10, 10, 12, 0, 0, TimeSpan.Zero));
+        f.Settings.DailyAuthCodeLimit = 1;
+        var day = await f.Reserve(LoginCodePurpose.VerifyDestination, Owner);
+        Assert.Equal(WhatsAppCodeErrors.DailyLimitCode, day.Error.Code);
+        Assert.Equal(12 * 60 * 60, day.Error.Metadata!["retryAfter"]);
+        var account = await f.Reserve(LoginCodePurpose.VerifyDestination, other);
+        Assert.Equal(WhatsAppCodeErrors.AccountDailyLimitCode, account.Error.Code);
+        Assert.Equal(14 * 60 * 60, account.Error.Metadata!["retryAfter"]);
+        // Ningún rechazo suma.
+        Assert.Equal(2, f.Accounts.Total(MessageQuotaScope.WhatsAppCodeAccount));
+        Assert.All(f.Quotas.Rows.Values, row => Assert.Equal(1, row.ReservedCount));
+    }
+
     private static FixtureHasher Hasher() => new();
     private sealed class FixtureHasher : IWhatsAppQuotaIpHasher
     {
@@ -106,10 +159,12 @@ public sealed class WhatsAppCodeQuotaTests
         public FakeTimeProvider Clock { get; } = new(new DateTimeOffset(2026, 10, 8, 23, 59, 58, TimeSpan.Zero));
         public Quotas Quotas { get; } = new(); public Settings Settings { get; } = new();
         public Methods Methods { get; } = new(); public Memberships Memberships { get; } = new(); public Request Request { get; } = new();
+        public FakeMessageQuotaRepository Accounts { get; } = new();
         public Task<Result> Reserve(LoginCodePurpose purpose = LoginCodePurpose.Signup, Guid? owner = null)
         {
             var availability = new LoginMethodAvailabilityPolicy([new Channel()], new Google(), Memberships);
-            return new WhatsAppCodeQuotaIssuer(Quotas, Settings, Clock, Methods, availability, Request, Hasher()).ReserveAsync(Destination, purpose, owner, Ct);
+            return new WhatsAppCodeQuotaIssuer(Quotas, Settings, Clock, Methods, availability, Request, Hasher(),
+                new MessageQuotaGuard(Accounts, Clock), new FakeMessageQuotaKeyHasher()).ReserveAsync(Destination, purpose, owner, Ct);
         }
     }
     internal sealed class Settings : IWhatsAppChannelSettings
@@ -118,6 +173,7 @@ public sealed class WhatsAppCodeQuotaTests
         public string PhoneNumberId => "quota-fixture"; public string? ContactPhone => null;
         public IReadOnlyList<string> Countries => []; public int DailyAuthCodeLimit { get; set; } = 100;
         public int DailyNewAuthCodeIpLimit { get; set; } = 20;
+        public int DailyAccountCodeLimit { get; set; } = 10;
         public Result ValidateNewDestination(LoginCodeDestination destination) => Result.Success();
     }
     private sealed class Request : IRequestInfo { public string? IpAddress { get; set; } public string? UserAgent => null; }

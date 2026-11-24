@@ -18,6 +18,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
+using ArquitecturaBaseMultitenant.Application.Services.Messaging;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 
 /// <summary>La reserva concurrente, rollback y purga no dependen del historial de OTP.</summary>
@@ -81,7 +82,7 @@ public sealed class WhatsAppCodeQuotaPersistenceTests(ApiFactory factory) : IAsy
         Assert.Equal(WhatsAppCodeErrors.DailyLimitCode, (await ReserveAsync()).Error.Code);
         Assert.Equal(1, (await context.Set<WhatsAppCodeQuota>().AsNoTracking().SingleAsync(value => value.PhoneNumberId == _settings.PhoneNumberId, Ct)).ReservedCount);
     }
-    private WhatsAppCodeQuotaIssuer Admission(IServiceProvider provider) => new(provider.GetRequiredService<IWhatsAppCodeQuotaRepository>(), _settings, _clock, provider.GetRequiredService<ILoginMethodReader>(), provider.GetRequiredService<LoginMethodAvailabilityPolicy>(), provider.GetRequiredService<IRequestInfo>(), provider.GetRequiredService<IWhatsAppQuotaIpHasher>());
+    private WhatsAppCodeQuotaIssuer Admission(IServiceProvider provider) => new(provider.GetRequiredService<IWhatsAppCodeQuotaRepository>(), _settings, _clock, provider.GetRequiredService<ILoginMethodReader>(), provider.GetRequiredService<LoginMethodAvailabilityPolicy>(), provider.GetRequiredService<IRequestInfo>(), provider.GetRequiredService<IWhatsAppQuotaIpHasher>(), provider.GetRequiredService<MessageQuotaGuard>(), provider.GetRequiredService<IMessageQuotaKeyHasher>());
 
     [Fact]
     public async Task HTTP_idempotent_replay_returns_original_success_without_reserving_again()

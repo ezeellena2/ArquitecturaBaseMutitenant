@@ -94,6 +94,7 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     public DbSet<LegalAcceptance> LegalAcceptances => Set<LegalAcceptance>();
     internal DbSet<CacheTagVersion> CacheTagVersions => Set<CacheTagVersion>();
     internal DbSet<RateLimitCounter> RateLimitCounters => Set<RateLimitCounter>();
+    internal DbSet<MessageQuotaBucket> MessageQuotaBuckets => Set<MessageQuotaBucket>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {

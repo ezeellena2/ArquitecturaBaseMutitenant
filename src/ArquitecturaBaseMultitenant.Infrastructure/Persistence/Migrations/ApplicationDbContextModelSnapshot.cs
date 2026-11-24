@@ -5123,6 +5123,29 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.ToTable("UserTenantAccesses", "identity");
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Infrastructure.Persistence.MessageQuotaBucket", b =>
+                {
+                    b.Property<string>("Scope")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.Property<string>("KeyHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("HourUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Count")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Scope", "KeyHash", "HourUtc");
+
+                    b.HasIndex("HourUtc");
+
+                    b.ToTable("MessageQuotaBuckets", "identity");
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Infrastructure.Persistence.PendingTenantOwner", b =>
                 {
                     b.Property<Guid>("InvitationId")

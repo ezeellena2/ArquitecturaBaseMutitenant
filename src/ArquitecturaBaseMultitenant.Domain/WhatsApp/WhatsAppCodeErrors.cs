@@ -11,10 +11,14 @@ public static class WhatsAppCodeErrors
         "The WhatsApp code limit of this account for the last 24 hours was reached.",
         new Dictionary<string, object?> { ["retryAfter"] = Math.Max(1, retryAfterSeconds) });
 
-    public static Error DailyLimit(DateTime nowUtc)
+    public static Error DailyLimit(DateTime nowUtc) => Error.TooManyRequests(DailyLimitCode,
+        "The daily WhatsApp code quota is exhausted.",
+        new Dictionary<string, object?> { ["retryAfter"] = SecondsUntilNextDay(nowUtc) });
+
+    /// <summary>Los segundos hasta que empieza el día UTC siguiente, con el ledger nuevo (al menos 1).</summary>
+    public static int SecondsUntilNextDay(DateTime nowUtc)
     {
         var renewalUtc = DateOnly.FromDateTime(nowUtc).AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-        return Error.TooManyRequests(DailyLimitCode, "The daily WhatsApp code quota is exhausted.",
-            new Dictionary<string, object?> { ["retryAfter"] = Math.Max(1, (int)Math.Ceiling((renewalUtc - nowUtc).TotalSeconds)) });
+        return Math.Max(1, (int)Math.Ceiling((renewalUtc - nowUtc).TotalSeconds));
     }
 }

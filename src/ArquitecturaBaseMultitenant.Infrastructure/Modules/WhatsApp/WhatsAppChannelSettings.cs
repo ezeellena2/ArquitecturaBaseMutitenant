@@ -25,6 +25,7 @@ internal sealed class WhatsAppChannelSettings(IOptions<WhatsAppOptions> options,
     public int DailyAuthCodeLimit => options.Value.DailyAuthCodeLimit;
     public decimal ProtectedAuthCodeFraction => options.Value.ProtectedAuthCodeFraction;
     public int DailyNewAuthCodeIpLimit => options.Value.DailyNewAuthCodeIpLimit;
+    public int DailyAccountCodeLimit => options.Value.DailyAccountCodeLimit;
     public string? CountryOf(string e164)
     {
         try

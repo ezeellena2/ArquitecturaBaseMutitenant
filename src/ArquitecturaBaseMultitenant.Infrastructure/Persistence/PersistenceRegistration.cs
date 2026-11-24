@@ -74,6 +74,8 @@ internal static class PersistenceRegistration
         services.AddScoped<SoftDeleteInterceptor>();
         services.AddScoped<AuditableEntityInterceptor>();
         services.AddScoped<AuditTrailInterceptor>();
+        services.AddScoped<AfterCommitInterceptor>();
+        services.AddScoped<IAfterCommit>(provider => provider.GetRequiredService<AfterCommitInterceptor>());
         // Los dos interceptores de la caché compartida van en el DbContext (ADR 0052).
         services.AddCacheGenerations();
         services.AddScoped<LoginInvitationScope>();
@@ -92,7 +94,9 @@ internal static class PersistenceRegistration
                     provider.GetRequiredService<AuditTrailInterceptor>(),
                     // Últimos: ven las filas ya selladas y avanzan sus generaciones en la transacción (ADR 0052).
                     provider.GetRequiredService<CacheTagCollector>(),
-                    provider.GetRequiredService<CacheGenerationInterceptor>()));
+                    provider.GetRequiredService<CacheGenerationInterceptor>(),
+                    // Lo que un helper dejó para después del commit (AGENTS.md, regla 2).
+                    provider.GetRequiredService<AfterCommitInterceptor>()));
         services.AddScoped<RecentPlatformProofContext>();
         services.AddScoped<IRecentPlatformProofContext>(provider => provider.GetRequiredService<RecentPlatformProofContext>());
         services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -167,6 +171,7 @@ internal static class PersistenceRegistration
         services.AddScoped<IAccountDeletionCancelTicketRepository, AccountDeletionCancelTicketRepository>();
         services.AddScoped<ILoginAuditRepository, LoginAuditRepository>();
         services.AddScoped<IIdentityRetentionRepository, IdentityRetentionRepository>();
+        services.AddScoped<IMessageQuotaRepository, MessageQuotaRepository>();
         services.AddSingleton<JsonReferenceDataCatalog>();
         services.AddScoped<ReferenceDataSeeder>();
         services.AddScoped<DatabaseSeeder>();

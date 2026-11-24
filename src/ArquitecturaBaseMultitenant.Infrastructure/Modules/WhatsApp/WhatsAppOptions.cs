@@ -19,6 +19,8 @@ internal sealed class WhatsAppOptions
     [Range(1, 10000)] public int DailyAuthCodeLimit { get; init; } = 100;
     [Range(typeof(decimal), "0", "1")] public decimal ProtectedAuthCodeFraction { get; init; } = 0.2m;
     [Range(1, 10000)] public int DailyNewAuthCodeIpLimit { get; init; } = 20;
+    /// <summary>Los códigos que una cuenta pide desde Mi cuenta en las últimas 24 horas (ADR 0063).</summary>
+    [Range(1, 10000)] public int DailyAccountCodeLimit { get; init; } = 10;
     [Range(6, 300)] public int RetryDelaySeconds { get; init; } = 6;
     [Range(1, 3600)] public int InboundPollSeconds { get; init; } = 30;
     [Range(1, 3600)] public int InboundLeaseSeconds { get; init; } = 120;

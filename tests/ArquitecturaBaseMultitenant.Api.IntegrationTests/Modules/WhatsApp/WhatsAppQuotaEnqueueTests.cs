@@ -31,6 +31,8 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Time.Testing;
 using RetentionWorker = ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Retention.WhatsAppMessageRetentionWorker;
+using ArquitecturaBaseMultitenant.Application.Services.Messaging;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 
 /// <summary>HTTP productivo y pruebas transaccionales de dos conexiones; transporte Meta no se ejecuta.</summary>
@@ -213,7 +215,7 @@ public sealed class WhatsAppQuotaEnqueueTests(ApiFactory factory) : IClassFixtur
                 if (protectedLogin) await p.GetRequiredService<ILoginMethodRepository>().LockUserAsync(owner, ct);
                 await p.GetRequiredService<ILoginCodeRepository>().LockDestinationAsync(destination, ct);
                 var admission = new WhatsAppCodeQuotaIssuer(p.GetRequiredService<IWhatsAppCodeQuotaRepository>(), p.GetRequiredService<IWhatsAppChannelSettings>(), _clock,
-                    p.GetRequiredService<ILoginMethodReader>(), p.GetRequiredService<LoginMethodAvailabilityPolicy>(), new Request("192.0.2." + (index / 20 + 1)), p.GetRequiredService<IWhatsAppQuotaIpHasher>());
+                    p.GetRequiredService<ILoginMethodReader>(), p.GetRequiredService<LoginMethodAvailabilityPolicy>(), new Request("192.0.2." + (index / 20 + 1)), p.GetRequiredService<IWhatsAppQuotaIpHasher>(), p.GetRequiredService<MessageQuotaGuard>(), p.GetRequiredService<IMessageQuotaKeyHasher>());
                 var result = await admission.ReserveAsync(destination, protectedLogin ? LoginCodePurpose.Login : LoginCodePurpose.BusinessSignup, owner, ct);
                 if (result.IsFailure) return result;
                 // Real rendering/encrypted enqueue in a technical transaction fixture; no Meta send or proof claim.

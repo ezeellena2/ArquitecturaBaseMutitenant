@@ -57,6 +57,21 @@ internal sealed class IdentityRetentionRepository(ApplicationDbContext context) 
         return new RetentionBatch(removed, Next(page, limit));
     }
 
+    /// <summary>
+    /// Los contadores de los topes de mensajes que ya salieron de su ventana. Con <c>FOR UPDATE SKIP LOCKED</c>: dos copias se
+    /// reparten las filas, y una hora vieja ya no la suma nadie.
+    /// </summary>
+    public Task<int> DeleteMessageQuotaBucketsAsync(DateTime hourBeforeUtc, int limit, CancellationToken cancellationToken)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(limit, 1);
+        context.RequireTransaction();
+        return context.Database.ExecuteSqlAsync($"""
+            DELETE FROM identity."MessageQuotaBuckets" WHERE ("Scope", "KeyHash", "HourUtc") IN (
+                SELECT "Scope", "KeyHash", "HourUtc" FROM identity."MessageQuotaBuckets" WHERE "HourUtc" < {hourBeforeUtc}
+                ORDER BY "HourUtc" LIMIT {limit} FOR UPDATE SKIP LOCKED)
+            """, cancellationToken);
+    }
+
     internal static (DateTime AtUtc, Guid Id) Start(RetentionCursor? after) =>
         after is { } cursor ? (cursor.AtUtc, cursor.Id) : (DateTime.SpecifyKind(DateTime.MinValue, DateTimeKind.Utc), Guid.Empty);
 

@@ -17,4 +17,7 @@ public interface IIdentityRetentionRepository
     /// </summary>
     Task<RetentionBatch> DeleteLoginAuditsAsync(DateTime occurredBeforeUtc, RetentionCursor? after, int limit,
         CancellationToken cancellationToken);
+
+    /// <summary>Hasta <paramref name="limit"/> contadores de los topes de mensajes de horas anteriores a <paramref name="hourBeforeUtc"/>.</summary>
+    Task<int> DeleteMessageQuotaBucketsAsync(DateTime hourBeforeUtc, int limit, CancellationToken cancellationToken);
 }

@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using ArquitecturaBaseMultitenant.Application.Services.Messaging;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures;
 /// <summary>Probe del filtro HTTP real alrededor de una reserva durable, sin ruta productiva extra.</summary>
 [ApiController, Route("test/whatsapp-quota"), AllowAnonymous]
@@ -23,7 +25,7 @@ public sealed class WhatsAppQuotaProbeController(IUnitOfWork unit, IWhatsAppCode
     public async Task<IActionResult> Post(string numberId, CancellationToken ct)
     {
         var issuer = new WhatsAppCodeQuotaIssuer(quotas, new Settings(numberId), clock, methods,
-            provider.GetRequiredService<LoginMethodAvailabilityPolicy>(), requestInfo, hasher);
+            provider.GetRequiredService<LoginMethodAvailabilityPolicy>(), requestInfo, hasher, provider.GetRequiredService<MessageQuotaGuard>(), provider.GetRequiredService<IMessageQuotaKeyHasher>());
         var result = await unit.ExecuteInTransactionAsync(c => issuer.ReserveAsync(
             LoginCodeDestination.ForPhone(PhoneNumber.Create("+5491134567890").Value, "whatsapp"), LoginCodePurpose.Signup, null, c), CommitPolicy.OnSuccess, ct);
         if (result.IsFailure)

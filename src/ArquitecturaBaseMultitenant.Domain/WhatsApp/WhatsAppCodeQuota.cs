@@ -19,6 +19,16 @@ public sealed class WhatsAppCodeQuota : Entity
     }
     public Result Reserve(int limit, int newLimit, bool protectedLogin, int ipNewCount, int ipLimit, DateTime nowUtc)
     {
+        var room = CheckRoom(limit, newLimit, protectedLogin, ipNewCount, ipLimit, nowUtc);
+        if (room.IsFailure) return room;
+        ReservedCount++;
+        if (!protectedLogin) NewReservedCount++;
+        return Result.Success();
+    }
+
+    /// <summary>Lo que respondería <see cref="Reserve"/>, sin reservar.</summary>
+    public Result CheckRoom(int limit, int newLimit, bool protectedLogin, int ipNewCount, int ipLimit, DateTime nowUtc)
+    {
         ArgumentOutOfRangeException.ThrowIfLessThan(limit, 1);
         ArgumentOutOfRangeException.ThrowIfNegative(newLimit);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(newLimit, limit);
@@ -27,8 +37,6 @@ public sealed class WhatsAppCodeQuota : Entity
             throw new ArgumentException("The quota requires its UTC day.", nameof(nowUtc));
         if (ReservedCount >= limit || !protectedLogin && (NewReservedCount >= newLimit
             || (long)ipNewCount + LegacyReservedCount >= ipLimit)) return WhatsAppCodeErrors.DailyLimit(nowUtc);
-        ReservedCount++;
-        if (!protectedLogin) NewReservedCount++;
         return Result.Success();
     }
 }

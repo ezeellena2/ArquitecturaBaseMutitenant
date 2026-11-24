@@ -21,4 +21,10 @@ public interface IIdentityRetentionService
     /// si terminó.
     /// </summary>
     Task<Result<OpenIddictPruneTranche>> PruneSessionsAsync(DateTime? fromUtc, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Borra un lote de contadores de los topes de mensajes (ADR 0063) que ya salieron de su ventana de 24 horas móviles y
+    /// devuelve cuántos; menos que el lote, ya no quedan.
+    /// </summary>
+    Task<Result<int>> PurgeMessageQuotaBucketsAsync(CancellationToken cancellationToken);
 }

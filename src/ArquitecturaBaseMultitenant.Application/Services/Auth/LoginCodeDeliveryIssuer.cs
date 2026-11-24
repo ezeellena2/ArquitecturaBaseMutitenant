@@ -26,19 +26,13 @@ internal sealed class LoginCodeDeliveryIssuer(IUserRepository users, ILoginMetho
             var expired = account?.OperatorInvitationExpiresAtUtc is { } expires && expires <= issued.IssuedAtUtc;
             if (expired || account is not { Status: UserStatus.Active or UserStatus.Suspended or UserStatus.PendingDeletion }
                 || await signIn.IsLockedOutAsync(knownUserId, ct))
-            {
-                await issuer.PersistAsync(destination, issued, ct);
-                return Result.Success();
-            }
+                return await issuer.WithholdAsync(destination, issued, ct);
             var ownMethods = await methods.ListByUserIdAsync(knownUserId, ct);
             var method = ownMethods.SingleOrDefault(value => value.Type == LoginDestinationResolver.Type(destination) && value.Value == destination.Value)
                 ?? ownMethods.FirstOrDefault(value => value.Type == LoginMethodType.Google && value.VerifiedAtUtc is not null
                     && value.ContactEmail?.Value == destination.Value);
             if (method is null || !await availability.CanReceiveCodeAsync(knownUserId, method, invitedTenantIds, ct))
-            {
-                await issuer.PersistAsync(destination, issued, ct);
-                return Result.Success();
-            }
+                return await issuer.WithholdAsync(destination, issued, ct);
         }
         var admitted = await issuer.AdmitAsync(destination, issued, ct);
         if (admitted.IsFailure) return admitted;

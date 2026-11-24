@@ -8,8 +8,9 @@ using Microsoft.Extensions.Logging;
 namespace ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 
 /// <summary>
-/// ADR 0062: una vez por día borra los códigos de ingreso, los ingresos y las sesiones de OpenIddict vencidos de plazo,
-/// en el scope global, sin una organización. Cada lote o tramo va en su scope y su transacción, hasta que no queda nada.
+/// ADR 0062: una vez por día borra los códigos de ingreso, los ingresos y las sesiones de OpenIddict vencidos de plazo, y
+/// los contadores de los topes de mensajes que ya salieron de su ventana (ADR 0063), en el scope global, sin una
+/// organización. Cada lote o tramo va en su scope y su transacción, hasta que no queda nada.
 /// Sin lease todavía (llega con la B6 de la E10): cada purga es idempotente y dos copias borran a lo sumo lo mismo. Un
 /// error deja solo su tipo en el log, y la corrida siguiente sigue desde donde quedó.
 /// </summary>
@@ -21,6 +22,7 @@ internal sealed partial class IdentityRetentionWorker(IServiceScopeFactory scope
         await RunStepAsync(PurgeLoginCodesAsync, ct);
         await RunStepAsync(PurgeLoginAuditsAsync, ct);
         await RunStepAsync(PruneSessionsAsync, ct);
+        await RunStepAsync(PurgeMessageQuotaBucketsAsync, ct);
     }
 
     protected override Task RunIterationAsync(CancellationToken ct) => RunOnceAsync(ct);
@@ -44,6 +46,19 @@ internal sealed partial class IdentityRetentionWorker(IServiceScopeFactory scope
             if (removed.Value == 0) break;
         }
         if (total > 0) LogRemoved(Logger, total, "login codes");
+    }
+
+    private async Task PurgeMessageQuotaBucketsAsync(CancellationToken ct)
+    {
+        var total = 0;
+        while (!ct.IsCancellationRequested)
+        {
+            var removed = await InScopeAsync(service => service.PurgeMessageQuotaBucketsAsync(ct));
+            if (removed.IsFailure) { LogFailed(Logger, removed.Error.Code); break; }
+            total += removed.Value;
+            if (removed.Value == 0) break;
+        }
+        if (total > 0) LogRemoved(Logger, total, "message quota counters");
     }
 
     private async Task PurgeLoginAuditsAsync(CancellationToken ct)

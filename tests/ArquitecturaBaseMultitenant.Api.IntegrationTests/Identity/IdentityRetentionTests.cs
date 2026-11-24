@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
@@ -91,6 +92,33 @@ public sealed class IdentityRetentionTests(ApiFactory factory)
         Assert.True(await ExistsAsync<OpenIddictEntityFrameworkCoreToken<Guid>>(stillValid));
         Assert.False(await ExistsAsync<OpenIddictEntityFrameworkCoreAuthorization<Guid>>(revoked));
         Assert.True(await ExistsAsync<OpenIddictEntityFrameworkCoreAuthorization<Guid>>(current));
+    }
+
+    [Fact]
+    public async Task Message_quota_counters_are_removed_once_they_left_their_24_hour_window()
+    {
+        using var client = factory.CreateClient();
+        var nowUtc = Now();
+        var key = "retention-" + Guid.NewGuid().ToString("N");
+        var old = nowUtc.AddHours(-26);
+        var counting = MessageQuotaWindow.FirstHour(nowUtc);
+        old = new DateTime(old.Year, old.Month, old.Day, old.Hour, 0, 0, DateTimeKind.Utc);
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var database = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database;
+            foreach (var hour in new[] { old, counting })
+                await database.ExecuteSqlAsync($"""
+                    INSERT INTO identity."MessageQuotaBuckets" ("Scope", "KeyHash", "HourUtc", "Count")
+                    VALUES ('Global', {key}, {hour}, 3)
+                    """, Ct);
+        }
+
+        await RunAsync();
+
+        await using var read = factory.Services.CreateAsyncScope();
+        var left = await read.ServiceProvider.GetRequiredService<ApplicationDbContext>().MessageQuotaBuckets.AsNoTracking()
+            .Where(bucket => bucket.KeyHash == key).Select(bucket => bucket.HourUtc).ToListAsync(Ct);
+        Assert.Equal([counting], left);
     }
 
     private async Task RunAsync() =>

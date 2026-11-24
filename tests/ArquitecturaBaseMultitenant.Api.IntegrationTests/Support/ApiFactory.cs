@@ -126,6 +126,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         // La suite comparte la IP del TestServer entre casos; las pruebas de cuotas fijan las suyas en una base y un
         // ambiente de Redis propios (E9).
         foreach (var (key, value) in TestRateLimits.Settings) builder.UseSetting(key, value);
+        foreach (var (key, value) in TestMessageQuotas.Settings) builder.UseSetting(key, value);
         builder.UseSetting("Email:PickupDirectory", _pickupDirectory);
         builder.UseSetting("Files:RootPath", Path.Combine(_pickupDirectory, "private-files"));
         builder.UseSetting("Authentication:Clients:Web:RedirectUris:0", "https://localhost:5174/auth/callback");

@@ -128,7 +128,7 @@ dotnet user-secrets set "DevTunnel:Enabled" "true" --project src/ArquitecturaBas
 
 **El MCP de Meta.** `.mcp.json` (Claude) y `.codex/config.toml` (Codex) registran el servidor oficial [WhatsApp Business Tools](https://developers.facebook.com/documentation/mcp/whatsapp-business-tools-mcp), igual que en ArquitecturaBase. El repo guarda solo su dirección pública. Para usarlo, abrí en Claude `/mcp` › `whatsapp_business_tools` › **Authenticate** (en Codex, *Settings › MCP servers*) y entrá con una cuenta de Meta que administre el negocio y la app. La autorización queda en tu sesión, y ninguna clave pasa por el agente. Antes de cambiar números, plantillas o webhooks, el agente lista los negocios y te pide el visto bueno. Si Meta todavía no lo habilitó para tu cuenta, dice *Not yet available for your account*.
 
-**Gmail:** la misma contraseña de aplicación sirve para los dos proyectos. El límite de unos 500 correos por día es **compartido**: los topes diarios de los dos proyectos se reparten ese cupo ([topes de correo](#topes-diarios-de-correo-adr-0063-sin-programar)).
+**Gmail:** la misma contraseña de aplicación sirve para los dos proyectos. El límite de unos 500 correos por día es **compartido**: los topes diarios de los dos proyectos se reparten ese cupo ([topes de correo](#topes-diarios-de-correo-adr-0063-y-256)).
 
 ## 5. Qué pasa si falta algo (fallo claro, nunca a medias)
 
@@ -159,20 +159,23 @@ La entrada usa `WhatsApp:ProcessInboundInBackground` (true), `InboundPollSeconds
 
 La reserva se confirma únicamente con un enqueue real en la UoW; rollback o ausencia de envío no gastan, replay gasta una vez y fallar luego en Meta no devuelve cupo. El ledger IP usa la clave existente `Authentication:LoginCode:HashKey` con dominio HMAC separado: compartila entre réplicas y conservála estable durante el día UTC. Una rotación debe hacerse al cambiar de día para conservar los buckets diarios; no se genera una clave local por réplica. El mantenimiento instalado retira identificadores IP de días terminados, también con el canal apagado; conserva los contadores globales. La migración trata el gasto anterior desconocido como nuevo y lo descuenta de cada límite IP en ese día; no reconstruye IP históricas.
 
-### Topes diarios de correo (ADR 0063, sin programar)
+### Topes diarios de correo (ADR 0063 y 256)
 
-Lo que sale por correo con un código o una invitación cuenta en 24 horas móviles, en contadores de la base compartidos entre copias ([ADR 0063](../decisions/0063-topes-de-correo-de-la-plataforma.md)). Las claves, con los nombres y valores de arranque de ArquitecturaBase, más la de cada organización, se validan al arrancar:
+Lo que sale por correo con un código o una invitación cuenta en 24 horas móviles, por horas (las 24 cerradas y la actual), en `identity.MessageQuotaBuckets`: contadores de la base, compartidos entre copias, con la clave en un HMAC ([ADR 0063](../decisions/0063-topes-de-correo-de-la-plataforma.md)). Las claves se validan al arrancar; los valores son los de la decisión 256 y, los demás, los de la 0063:
 
 | Clave | Arranque | Qué limita |
 |---|---|---|
-| `Email:DailyLimit` | 400 | todo lo que sale con un código o una invitación, por debajo del cupo de la cuenta. Al 80 % y al llegar queda un aviso en el log |
-| `Email:DailyInvitationReserve` | 50 | la parte del tope que queda solo para invitaciones: los códigos frenan antes. Menor que `DailyLimit` |
-| `Email:DailyCodeLimitPerAddress` | 50 | códigos pedidos desde una dirección (una IPv6, por su /64) |
-| `Email:DailyProfileCodeLimitPerAccount` | 10 | códigos que pide una cuenta desde Mi cuenta |
-| `Email:DailyInvitationLimitPerAdministrator` | 100 | invitaciones que manda una persona, sume las organizaciones que sume |
-| `Email:DailyInvitationLimitPerOrganization` | 100 | invitaciones que manda una organización |
+| `Email:Quotas:DailyLimit` | 80 | todo lo que sale con un código o una invitación, por debajo del cupo de la cuenta. Al 80 %, al frenar los códigos y al llegar queda un aviso en el log |
+| `Email:Quotas:DailyInvitationReserve` | 20 | la parte del tope que queda solo para invitaciones: los códigos frenan en 60. Menor que `DailyLimit` |
+| `Email:Quotas:DailyCodeLimitPerAddress` | 50 | códigos pedidos desde una dirección (una IPv6, por su /64), hayan salido o no |
+| `Email:Quotas:DailyCodeLimitPerAccount` | 10 | códigos que pide una cuenta desde Mi cuenta |
+| `Email:Quotas:DailyInvitationLimitPerInviter` | 100 | invitaciones que manda una persona, sume las organizaciones que sume; también un operador |
+| `Email:Quotas:DailyInvitationLimitPerOrganization` | 100 | invitaciones que manda una organización |
+| `WhatsApp:DailyAccountCodeLimit` | 10 | códigos por WhatsApp que pide una cuenta desde Mi cuenta (`WhatsApp.LoginCode.AccountDailyLimit`) |
 
-**Con la cuenta compartida con ArquitecturaBase,** la suma de los `Email:DailyLimit` de los dos proyectos queda por debajo del cupo, con lugar para los avisos. Con 400 en cada uno pasan los 500: mientras compartan la cuenta, se reparte (por ejemplo, 200 y 200), o se separan las cuentas antes de producción ([runbook](runbook.md)).
+Al llegar, la ruta responde 429 `Messaging.Email.DailyLimit` con `retryAfter` y `Retry-After`, sin mandar ni guardar nada. Las invitaciones por WhatsApp no cuentan: tienen los límites de Meta. La invitación del Dueño al crear una organización desde Plataforma cuenta como cualquier otra. El E2E y el recorrido corren con topes altos (`TestMessageQuotas`), y `IdentityRetentionWorker` borra los contadores que ya salieron de su ventana.
+
+**Con la cuenta compartida con ArquitecturaBase,** la suma de los topes globales de los dos proyectos queda por debajo del cupo, con lugar para los avisos: el multitenant usa 80 (256). Se separan las cuentas antes de producción ([runbook](runbook.md)).
 
 ## 6. Producción
 

@@ -57,6 +57,8 @@ public static class RecorridoApiHost
                 });
                 // El recorrido navega más rápido que una persona: las cuotas no lo frenan (E9).
                 configuration.AddInMemoryCollection(TestRateLimits.Settings);
+                // El E2E y el recorrido corren con topes de correo altos (ADR 0063).
+                configuration.AddInMemoryCollection(TestMessageQuotas.Settings);
             });
         configureModules?.Invoke(builder);
     });

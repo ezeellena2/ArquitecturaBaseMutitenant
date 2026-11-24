@@ -22,12 +22,15 @@ internal sealed class AdministrationContractContributor : IHttpContractContribut
         "/api/me/login-methods", "/api/me/login-methods/{methodId}/code",
     ];
 
-    /// <summary>Las invitaciones por correo y sus reenvíos, en los tres alcances (ADR 0063 y decisión 256).</summary>
+    /// <summary>
+    /// Las invitaciones por correo y sus reenvíos, en los tres alcances (ADR 0063 y decisión 256), y la del Dueño al crear
+    /// una organización desde Plataforma, que también es una invitación por correo.
+    /// </summary>
     public static readonly string[] EmailInvitationPaths =
     [
         "/api/users/invitations", "/api/users/invitations/{invitationId}/resend", "/api/companies/{companyId}/members",
         "/api/companies/{companyId}/invitations/{invitationId}/resend", "/api/platform/operators/invitations",
-        "/api/platform/operators/{id}/invitation/resend",
+        "/api/platform/operators/{id}/invitation/resend", "/api/platform/tenants",
     ];
 
     private const string Delivery = "invitationDelivery (0066 §4): el estado de entrega de la invitación pendiente, derivado de la cola al leer: Pending (en la cola), Sent (salió, o sin fila en la cola), Uncertain («Sin confirmar»: no se sabe si salió; reenviar pide revisar antes con la persona) o Failed (no salió). null sin invitación pendiente.";
