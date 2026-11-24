@@ -135,20 +135,26 @@ public sealed class DisplayFormatter(
         return date.ToString(context.Profile.Entry.DatePattern, context.Profile.Culture);
     }
 
-    /// <summary>«octubre de 2026» / «October 2026»: un mes civil como va dentro de una oración, sin conversión por zona.</summary>
-    public string FormatMonth(DateOnly month, DisplayFormatContext context)
+    /// <summary>
+    /// El mes civil de <paramref name="month"/> (cualquier día suyo) como su rango, solo con números (decisión 205) y sin
+    /// conversión por zona: «del 01/10/2026 al 31/10/2026» dentro de una oración y «01/10/2026 – 31/10/2026» como rótulo.
+    /// </summary>
+    public string FormatMonthRange(DateOnly month, DisplayFormatContext context, MonthRangeStyle style)
     {
         ArgumentNullException.ThrowIfNull(context);
-        return month.ToString(context.Profile.Culture.DateTimeFormat.YearMonthPattern, context.Profile.Culture);
+        var profile = context.Profile;
+        var first = new DateOnly(month.Year, month.Month, 1);
+        var last = new DateOnly(month.Year, month.Month, DateTime.DaysInMonth(month.Year, month.Month));
+        var start = first.ToString(profile.Entry.DatePattern, profile.Culture);
+        var end = last.ToString(profile.Entry.DatePattern, profile.Culture);
+        return style switch
+        {
+            MonthRangeStyle.Sentence => FormatResource(FormattingTexts.Get("MonthRange.Sentence", profile), profile, start, end),
+            MonthRangeStyle.Label => DateRangeLabel(start, end),
+            _ => throw new ArgumentOutOfRangeException(nameof(style), style, "Unknown month range style."),
+        };
     }
 #pragma warning restore CA1822
-
-    /// <summary>«Octubre de 2026»: el mes como rótulo, con mayúscula inicial, igual que <c>formatMonth</c> del front.</summary>
-    public string FormatMonthLabel(DateOnly month, DisplayFormatContext context)
-    {
-        var text = FormatMonth(month, context);
-        return text.Length == 0 ? text : char.ToUpper(text[0], context.Profile.Culture) + text[1..];
-    }
 
     private DateTime LocalInstant(DateTime instantUtc, DisplayFormatContext context)
     {
@@ -244,7 +250,7 @@ public sealed class DisplayFormatter(
             "date" => FormatDate(input, profile, timeZone),
             "dateTime" => FormatInstant(ParseInstant(input.GetString()!), context),
             "time" => FormatTime(input, profile, timeZone),
-            "dateLong" => FormatDateLong(input, profile, timeZone),
+            "month" => FormatMonthRange(ParseMonth(input), context, MonthRangeStyle.Label),
             "relative" => FormatRelative(input, profile, timeZone),
             "dateRange" => FormatDateRange(input, profile),
             "integer" => FormatNumber(input.GetDecimal(), 0, 0, profile),
@@ -275,8 +281,9 @@ public sealed class DisplayFormatter(
     private string FormatTime(JsonElement input, CultureProfile profile, string timeZone) =>
         LocalDateTime(input, timeZone).ToString(profile.Entry.TimePattern, profile.Culture);
 
-    private string FormatDateLong(JsonElement input, CultureProfile profile, string timeZone) =>
-        LocalDateTime(input, timeZone).ToString(profile.Entry.LongDatePattern, profile.Culture);
+    /// <summary>El mes del contrato, «2026-10», como el primer día de ese mes.</summary>
+    private static DateOnly ParseMonth(JsonElement input) =>
+        DateOnly.ParseExact(input.GetString()! + "-01", "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     private string FormatRelative(JsonElement input, CultureProfile profile, string timeZone)
     {
@@ -306,8 +313,11 @@ public sealed class DisplayFormatter(
     {
         var start = DateOnly.ParseExact(input.GetProperty("start").GetString()!, "yyyy-MM-dd", CultureInfo.InvariantCulture);
         var end = DateOnly.ParseExact(input.GetProperty("end").GetString()!, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-        return $"{start.ToString(profile.Entry.DatePattern, profile.Culture)} – {end.ToString(profile.Entry.DatePattern, profile.Culture)}";
+        return DateRangeLabel(start.ToString(profile.Entry.DatePattern, profile.Culture),
+            end.ToString(profile.Entry.DatePattern, profile.Culture));
     }
+
+    private static string DateRangeLabel(string start, string end) => $"{start} – {end}";
 
     private static Money ParseMoney(JsonElement input)
     {

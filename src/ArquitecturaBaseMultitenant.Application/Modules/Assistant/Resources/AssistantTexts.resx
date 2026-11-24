@@ -60,19 +60,19 @@
   <data name="Export.Assistant" xml:space="preserve"><value>Asistente</value></data>
   <data name="Budget.Alert.OwnKey.Near.Subject" xml:space="preserve"><value>El asistente de {0} usó el {1} del tope del mes</value></data>
   <data name="Budget.Alert.OwnKey.Near.Title" xml:space="preserve"><value>El asistente usó el {1} del tope del mes</value></data>
-  <data name="Budget.Alert.OwnKey.Near.Body" xml:space="preserve"><value>{0} {1} ya usó {2} de los {3} de tope de {4}.</value></data>
+  <data name="Budget.Alert.OwnKey.Near.Body" xml:space="preserve"><value>{0} {1} ya usó {2} de los {3} de tope {4}.</value></data>
   <data name="Budget.Alert.OwnKey.Near.After" xml:space="preserve"><value>Si llega al tope, el asistente deja de responder hasta el {0}. Podés subir el tope en la configuración del asistente.</value></data>
   <data name="Budget.Alert.OwnKey.Reached.Subject" xml:space="preserve"><value>El asistente de {0} llegó al tope del mes</value></data>
   <data name="Budget.Alert.OwnKey.Reached.Title" xml:space="preserve"><value>El asistente llegó al tope del mes</value></data>
-  <data name="Budget.Alert.OwnKey.Reached.Body" xml:space="preserve"><value>{0} {1} usó los {2} de tope de {3} y el asistente dejó de responder.</value></data>
+  <data name="Budget.Alert.OwnKey.Reached.Body" xml:space="preserve"><value>{0} {1} usó los {2} de tope {3} y el asistente dejó de responder.</value></data>
   <data name="Budget.Alert.OwnKey.Reached.After" xml:space="preserve"><value>Vuelve a responder el {0}, o antes si subís el tope en la configuración del asistente.</value></data>
   <data name="Budget.Alert.PlatformKey.Near.Subject" xml:space="preserve"><value>{0} usó el {1} del tope del asistente</value></data>
   <data name="Budget.Alert.PlatformKey.Near.Title" xml:space="preserve"><value>{0} usó el {1} del tope del asistente</value></data>
-  <data name="Budget.Alert.PlatformKey.Near.Body" xml:space="preserve"><value>{0}, que usa la clave de la plataforma, ya usó {1} de los {2} de tope de {3}.</value></data>
+  <data name="Budget.Alert.PlatformKey.Near.Body" xml:space="preserve"><value>{0}, que usa la clave de la plataforma, ya usó {1} de los {2} de tope {3}.</value></data>
   <data name="Budget.Alert.PlatformKey.Near.After" xml:space="preserve"><value>Si llega al tope, su asistente deja de responder hasta el {0}.</value></data>
   <data name="Budget.Alert.PlatformKey.Reached.Subject" xml:space="preserve"><value>{0} llegó al tope del asistente</value></data>
   <data name="Budget.Alert.PlatformKey.Reached.Title" xml:space="preserve"><value>{0} llegó al tope del asistente</value></data>
-  <data name="Budget.Alert.PlatformKey.Reached.Body" xml:space="preserve"><value>{0} usó los {1} de tope de {2} y su asistente dejó de responder hasta el {3}.</value></data>
+  <data name="Budget.Alert.PlatformKey.Reached.Body" xml:space="preserve"><value>{0} usó los {1} de tope {2} y su asistente dejó de responder hasta el {3}.</value></data>
   <data name="Budget.Alert.Organization" xml:space="preserve"><value>Organización</value></data>
   <data name="Budget.Alert.Used" xml:space="preserve"><value>Usado</value></data>
   <data name="Budget.Alert.UsedOf" xml:space="preserve"><value>{0} de {1}</value></data>

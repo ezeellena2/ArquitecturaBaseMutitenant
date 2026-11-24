@@ -293,6 +293,13 @@ function validatedCultureSource(document, countrySet, displayCultures, defaultCu
     for (const key of ['DatePattern', 'TimePattern', 'DateTimePattern', 'LongDatePattern', 'AmDesignator', 'PmDesignator', 'DecimalSeparator', 'GroupSeparator', 'CurrencyPattern', 'PercentPattern']) {
       assert(typeof row[key] === 'string' && row[key], `${row.Code}.${key} falta en cultures.source.json.`);
     }
+    // 205: una fecha solo con números y, con hora, la hora después de una coma. LongDatePattern queda sin uso (0060).
+    assert(!/MMM|ddd/.test(row.DatePattern), `${row.Code}.DatePattern escribe el mes o el día en letras.`);
+    assert(row.DateTimePattern === `${row.DatePattern}, ${row.TimePattern}`,
+      `${row.Code}.DateTimePattern debe ser la fecha, una coma y la hora.`);
+    // 208: el porcentaje va pegado al número.
+    assert(row.PercentPattern.includes('{number}') && row.PercentPattern.includes('%') && !/\s/.test(row.PercentPattern),
+      `${row.Code}.PercentPattern debe llevar el porcentaje pegado al número.`);
   }
   assert(codes.has(defaultCulture), `Cultura predeterminada desconocida: ${defaultCulture}`);
   for (const code of Object.keys(displayCultures)) assert(codes.has(code), `Cultura habilitada sin patrones: ${code}`);

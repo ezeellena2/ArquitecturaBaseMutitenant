@@ -32,8 +32,8 @@ JP\t+353916+1394441\tAsia/Tokyo
 US\t+404251-0740023\tAmerica/New_York
 `;
 const cultureSource = { Cultures: [
-  { Code: 'es-AR', LanguageCode: 'es', CountryCode: 'AR', DatePattern: 'dd/MM/yyyy', TimePattern: 'HH:mm', DateTimePattern: 'dd/MM/yyyy HH:mm', LongDatePattern: "d 'de' MMMM 'de' yyyy", AmDesignator: 'a. m.', PmDesignator: 'p. m.', DecimalSeparator: ',', GroupSeparator: '.', CurrencyPattern: '{symbol} {number}', PercentPattern: '{number} %', FallbackCulture: null },
-  { Code: 'en-US', LanguageCode: 'en', CountryCode: 'US', DatePattern: 'MM/dd/yyyy', TimePattern: 'h:mm tt', DateTimePattern: 'MM/dd/yyyy h:mm tt', LongDatePattern: 'MMMM d, yyyy', AmDesignator: 'AM', PmDesignator: 'PM', DecimalSeparator: '.', GroupSeparator: ',', CurrencyPattern: '{symbol}{number}', PercentPattern: '{number}%', FallbackCulture: 'es-AR' }
+  { Code: 'es-AR', LanguageCode: 'es', CountryCode: 'AR', DatePattern: 'dd/MM/yyyy', TimePattern: 'HH:mm', DateTimePattern: 'dd/MM/yyyy, HH:mm', LongDatePattern: "d 'de' MMMM 'de' yyyy", AmDesignator: 'a. m.', PmDesignator: 'p. m.', DecimalSeparator: ',', GroupSeparator: '.', CurrencyPattern: '{symbol} {number}', PercentPattern: '{number}%', FallbackCulture: null },
+  { Code: 'en-US', LanguageCode: 'en', CountryCode: 'US', DatePattern: 'MM/dd/yyyy', TimePattern: 'h:mm tt', DateTimePattern: 'MM/dd/yyyy, h:mm tt', LongDatePattern: 'MMMM d, yyyy', AmDesignator: 'AM', PmDesignator: 'PM', DecimalSeparator: '.', GroupSeparator: ',', CurrencyPattern: '{symbol}{number}', PercentPattern: '{number}%', FallbackCulture: 'es-AR' }
 ] };
 const taxIdSource = { TaxIdTypes: [
   { Code: 'AR-CUIT', CountryCode: 'AR', Label: 'CUIT', Mask: '99-99999999-9', ValidatorKey: 'ar-cuit-mod11', AppliesTo: 'Both', Names: { 'es-AR': 'CUIT', 'en-US': 'CUIT' } },
@@ -349,13 +349,28 @@ test('rechaza FK IANA y default incompatibles, y traducciones fiscales faltantes
 test('los patrones y nombres fiscales salen de source y no del generador', async () => {
   const customCultures = structuredClone(cultureSource);
   customCultures.Cultures[0].DatePattern = 'yyyy-MM-dd';
+  customCultures.Cultures[0].DateTimePattern = 'yyyy-MM-dd, HH:mm';
   customCultures.Cultures[0].AmDesignator = 'mañana';
   const customTaxIds = structuredClone(taxIdSource);
   customTaxIds.TaxIdTypes[0].Names['en-US'] = 'Tax number';
   const { cultures, taxIdTypes } = await generated(await fixture({ cultureRows: customCultures, taxRows: customTaxIds }));
   assert.equal(cultures.Cultures.find(value => value.Code === 'es-AR').DatePattern, 'yyyy-MM-dd');
+  assert.equal(cultures.Cultures.find(value => value.Code === 'es-AR').DateTimePattern, 'yyyy-MM-dd, HH:mm');
   assert.equal(cultures.Cultures.find(value => value.Code === 'es-AR').AmDesignator, 'mañana');
   assert.equal(taxIdTypes.TaxIdTypes.find(value => value.Code === 'AR-CUIT').Translations[1].Name, 'Tax number');
+});
+
+test('rechaza el mes en letras, la hora sin coma y el porcentaje separado (205 y 208)', async () => {
+  for (const [key, value] of [
+    ['DatePattern', 'dd MMM yyyy'],
+    ['DateTimePattern', 'dd/MM/yyyy HH:mm'],
+    ['PercentPattern', '{number} %']
+  ]) {
+    const customCultures = structuredClone(cultureSource);
+    customCultures.Cultures[0][key] = value;
+    if (key === 'DatePattern') customCultures.Cultures[0].DateTimePattern = `${value}, HH:mm`;
+    await assert.rejects(generateReferenceData(await fixture({ cultureRows: customCultures })), new RegExp(`es-AR\\.${key}`));
+  }
 });
 
 test('rechaza culturas sin designadores de mañana y tarde', async () => {
@@ -574,6 +589,12 @@ test('snapshots oficiales regeneran los cinco JSON versionados byte a byte sin r
   for (const row of cultures.Cultures.filter(value => value.IsEnabled)) {
     assert.deepEqual(row.Translations.map(value => value.DisplayCulture).sort(), enabledCultures);
   }
+  const patterns = code => {
+    const row = cultures.Cultures.find(value => value.Code === code);
+    return [row.DateTimePattern, row.PercentPattern];
+  };
+  assert.deepEqual(patterns('es-AR'), ['dd/MM/yyyy, HH:mm', '{number}%']);
+  assert.deepEqual(patterns('en-US'), ['MM/dd/yyyy, h:mm tt', '{number}%']);
   assert.match(currencies.Sources.Packages['libphonenumber-js'].Url, /^https:\/\//);
   assert.match(timeZones.Sources.Packages['cldr-dates-full'].Url, /^https:\/\//);
 });

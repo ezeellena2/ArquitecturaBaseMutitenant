@@ -51,16 +51,16 @@ public sealed class AssistantBudgetOutboxTests(ApiFactory factory)
         Assert.True((await RetryAsync(factory.Services, alert.Id)).IsSuccess);
         Assert.Equal(before + 1, await db.OutboxMessages.CountAsync(row => row.UserId == account.UserId, Ct));
 
-        // Tablero Mensajes, «Asistente: 80 % del tope (su clave)»: la organización, el mes del tope y el enlace al uso.
+        // Tablero Mensajes, «Asistente: 80% del tope (su clave)»: la organización, el mes del tope y el enlace al uso.
         var protector = read.ServiceProvider.GetRequiredService<IPayloadProtector>();
         var email = Assert.Single((await db.OutboxMessages.AsNoTracking()
                 .Where(row => row.UserId == account.UserId && row.Channel == "email" && row.EncryptedPayload != "").ToArrayAsync(Ct))
             .Select(row => JsonSerializer.Deserialize<EmailMessage>(protector.Unprotect(row.EncryptedPayload))!),
             message => message.Subject.Contains("Budget owner", StringComparison.Ordinal));
         Assert.Equal(account.Email.Value, email.To);
-        Assert.Equal("El asistente de Budget owner usó el 80 % del tope del mes", email.Subject);
+        Assert.Equal("El asistente de Budget owner usó el 80% del tope del mes", email.Subject);
         Assert.Contains("Si llega al tope, el asistente deja de responder hasta el 01/11/2026.", email.TextBody, StringComparison.Ordinal);
-        Assert.Contains("Mes: Octubre de 2026", email.TextBody, StringComparison.Ordinal);
+        Assert.Contains("Mes: 01/10/2026 – 31/10/2026", email.TextBody, StringComparison.Ordinal);
         Assert.Contains("Ver el uso: ", email.TextBody, StringComparison.Ordinal);
         Assert.Contains("/org/asistente/uso", email.TextBody, StringComparison.Ordinal);
     }

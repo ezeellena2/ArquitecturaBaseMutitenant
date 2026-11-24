@@ -34,4 +34,5 @@
   <data name="Enum.TestStatus.Active" xml:space="preserve"><value>Activo</value></data>
   <data name="DeletedAccount" xml:space="preserve"><value>Cuenta borrada</value></data>
   <data name="TimeZone.CountryTime" xml:space="preserve"><value>hora de {country}</value></data>
+  <data name="MonthRange.Sentence" xml:space="preserve"><value>del {0} al {1}</value></data>
 </root>

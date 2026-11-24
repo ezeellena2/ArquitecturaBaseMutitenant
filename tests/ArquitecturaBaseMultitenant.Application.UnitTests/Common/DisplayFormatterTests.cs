@@ -31,14 +31,14 @@ public sealed class DisplayFormatterTests
 
         Assert.Equal("$ 1.234,50", await formatter.FormatMoneyAsync(
             money, context, TestContext.Current.CancellationToken));
-        Assert.Equal("27/09/2026 14:35", formatter.FormatInstant(
+        Assert.Equal("27/09/2026, 14:35", formatter.FormatInstant(
             new DateTime(2026, 9, 27, 17, 35, 0, DateTimeKind.Utc), context));
         Assert.Throws<ArgumentException>(() => formatter.FormatInstant(
             new DateTime(2026, 9, 27, 17, 35, 0, DateTimeKind.Unspecified), context));
         Assert.Equal("011 15-2345-6789", await formatter.FormatPhoneAsync(
             phone, context, TestContext.Current.CancellationToken));
         Assert.Equal("1.234,50", formatter.FormatDecimal(1234.5m, 2, context));
-        Assert.Equal("12,5 %", formatter.FormatPercent(0.125m, context));
+        Assert.Equal("12,5%", formatter.FormatPercent(0.125m, context));
         Assert.Equal(1, countedCultures.ListCalls);
     }
 
@@ -77,12 +77,18 @@ public sealed class DisplayFormatterTests
 
         Assert.Equal("01/11/2026", formatter.FormatDate(new DateOnly(2026, 11, 1), spanish));
         Assert.Equal("11/01/2026", formatter.FormatDate(new DateOnly(2026, 11, 1), english));
-        // El mes dentro de una oración y como rótulo, igual que `formatMonth` del front.
-        Assert.Equal("octubre de 2026", formatter.FormatMonth(october, spanish));
-        Assert.Equal("octubre de 2026", formatter.FormatMonth(new DateOnly(2026, 10, 31), spanish));
-        Assert.Equal("Octubre de 2026", formatter.FormatMonthLabel(october, spanish));
-        Assert.Equal("October 2026", formatter.FormatMonth(october, english));
-        Assert.Equal("October 2026", formatter.FormatMonthLabel(october, english));
+        // El mes como su rango (205): dentro de una oración y como rótulo, igual que `formatMonth` del front. Cualquier día
+        // del mes da el mismo rango, y febrero de un bisiesto termina el 29.
+        Assert.Equal("del 01/10/2026 al 31/10/2026", formatter.FormatMonthRange(october, spanish, MonthRangeStyle.Sentence));
+        Assert.Equal("del 01/10/2026 al 31/10/2026",
+            formatter.FormatMonthRange(new DateOnly(2026, 10, 31), spanish, MonthRangeStyle.Sentence));
+        Assert.Equal("01/10/2026 – 31/10/2026", formatter.FormatMonthRange(october, spanish, MonthRangeStyle.Label));
+        Assert.Equal("from 10/01/2026 to 10/31/2026", formatter.FormatMonthRange(october, english, MonthRangeStyle.Sentence));
+        Assert.Equal("10/01/2026 – 10/31/2026", formatter.FormatMonthRange(october, english, MonthRangeStyle.Label));
+        Assert.Equal("01/02/2028 – 29/02/2028",
+            formatter.FormatMonthRange(new DateOnly(2028, 2, 15), spanish, MonthRangeStyle.Label));
+        Assert.Equal("01/12/9999 – 31/12/9999", formatter.FormatMonthRange(DateOnly.MaxValue, spanish, MonthRangeStyle.Label));
+        Assert.Throws<ArgumentOutOfRangeException>(() => formatter.FormatMonthRange(october, spanish, (MonthRangeStyle)7));
 
         // Cuánto pasó, en la unidad entera más grande y sin redondear para arriba.
         Assert.Equal("1 minuto", formatter.FormatElapsed(TimeSpan.FromSeconds(20), spanish));

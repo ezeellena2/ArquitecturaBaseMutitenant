@@ -11,9 +11,9 @@ using ArquitecturaBaseMultitenant.Domain.Assistant;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Email;
 
 /// <summary>
-/// Tablero Mensajes, «Asistente: 80 % del tope» y «… tope alcanzado», con su clave o la de la plataforma: los textos en la
-/// cultura de quien lo recibe, los montos, el mes y el día en que vuelve a responder formateados por DisplayFormatter, y
-/// el armado común de avisos del núcleo.
+/// Tablero Mensajes, «Asistente: 80% del tope» y «… tope alcanzado», con su clave o la de la plataforma: los textos en la
+/// cultura de quien lo recibe, los montos, el mes (como su rango, 205) y el día en que vuelve a responder formateados por
+/// DisplayFormatter, y el armado común de avisos del núcleo.
 /// </summary>
 internal sealed class AssistantBudgetEmailRenderer(DisplayFormatter formatter, ICultureCatalog cultures, IEmailTemplateRenderer emails)
     : IAssistantBudgetEmailRenderer
@@ -25,7 +25,7 @@ internal sealed class AssistantBudgetEmailRenderer(DisplayFormatter formatter, I
         var profile = await new CultureProfiles(cultures).LoadAsync(context.Culture, ct);
         var used = await formatter.FormatMoneyAsync(notice.Used, context, ct);
         var budget = await formatter.FormatMoneyAsync(notice.Budget, context, ct);
-        var month = formatter.FormatMonth(notice.Month, context);
+        var month = formatter.FormatMonthRange(notice.Month, context, MonthRangeStyle.Sentence);
         // El mes es civil y el tope vuelve a cero el primer día del siguiente.
         var resumes = formatter.FormatDate(notice.Month.AddMonths(1), context);
         var percent = formatter.FormatPercent(notice.Threshold / 100m, context);
@@ -56,7 +56,7 @@ internal sealed class AssistantBudgetEmailRenderer(DisplayFormatter formatter, I
             [
                 new(AssistantTexts.Get("Budget.Alert.Organization", profile), organization),
                 new(AssistantTexts.Get("Budget.Alert.Used", profile), AssistantTexts.Format("Budget.Alert.UsedOf", profile, used, budget)),
-                new(AssistantTexts.Get("Budget.Alert.Month", profile), formatter.FormatMonthLabel(notice.Month, context)),
+                new(AssistantTexts.Get("Budget.Alert.Month", profile), formatter.FormatMonthRange(notice.Month, context, MonthRangeStyle.Label)),
             ],
             Action = new(AssistantTexts.Get(action, profile), notice.ActionUrl),
         }, profile);

@@ -12,7 +12,7 @@ public sealed class FormatCasesContractTests
 
     private static readonly string[] FormatTypes =
     [
-        "date", "dateTime", "time", "dateLong", "relative", "dateRange",
+        "date", "dateTime", "time", "month", "relative", "dateRange",
         "integer", "decimal", "quantity", "percent", "money", "compact",
         "fileSize", "duration", "phone", "timeZone", "culture", "taxId",
         "email", "enum", "boolean", "empty", "text"
@@ -149,6 +149,29 @@ public sealed class FormatCasesContractTests
             AssertCase(cases, $"file-size-{culture}", "fileSize", culture,
                 culture == "es-AR" ? "1,5 MB" : "1.5 MB");
         }
+    }
+
+    [Fact]
+    public void Dates_only_with_numbers_and_the_percent_next_to_the_number()
+    {
+        // Decisiones 205 y 208: la hora después de una coma, el mes como su rango y nunca en letras, y el porcentaje pegado.
+        using var document = ReadJson("docs", "contracts", "format-cases.json");
+        var cases = document.RootElement.GetProperty("cases").EnumerateArray().ToArray();
+
+        foreach (var (culture, dateTime, month, leapFebruary, percent, smallPercent) in new[]
+        {
+            ("es-AR", "27/09/2026, 14:35", "01/10/2026 – 31/10/2026", "01/02/2028 – 29/02/2028", "12,5%", "0,12%"),
+            ("en-US", "09/27/2026, 2:35 PM", "10/01/2026 – 10/31/2026", "02/01/2028 – 02/29/2028", "12.5%", "0.12%")
+        })
+        {
+            AssertInput(cases, $"date-time-{culture}", "dateTime", culture, "2026-09-27T17:35:00Z", dateTime);
+            AssertInput(cases, $"month-{culture}", "month", culture, "2026-10", month);
+            AssertInput(cases, $"month-leap-february-{culture}", "month", culture, "2028-02", leapFebruary);
+            AssertCase(cases, $"percent-{culture}", "percent", culture, percent);
+            AssertCase(cases, $"percent-precision-{culture}", "percent", culture, smallPercent);
+        }
+
+        Assert.DoesNotContain(cases, item => item.GetProperty("type").GetString() == "dateLong");
     }
 
     private static void AssertMoney(JsonElement[] cases, Dictionary<string, JsonElement> currencies,

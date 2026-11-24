@@ -32,12 +32,12 @@ public sealed class AssistantBudgetEmailRendererTests
         var (to, notice) = await RenderAsync(AssistantKeyFunding.OwnKey, 80, 160m, 200m, "Lucía");
 
         Assert.Equal("lucia@example.test", to);
-        Assert.Equal("El asistente de Grupo Delta usó el 80 % del tope del mes", notice.Subject);
-        Assert.Equal("El asistente usó el 80 % del tope del mes", notice.Title);
-        Assert.Equal(["Hola, Lucía. Grupo Delta ya usó US$ 160,00 de los US$ 200,00 de tope de octubre de 2026.",
+        Assert.Equal("El asistente de Grupo Delta usó el 80% del tope del mes", notice.Subject);
+        Assert.Equal("El asistente usó el 80% del tope del mes", notice.Title);
+        Assert.Equal(["Hola, Lucía. Grupo Delta ya usó US$ 160,00 de los US$ 200,00 de tope del 01/10/2026 al 31/10/2026.",
             "Si llega al tope, el asistente deja de responder hasta el 01/11/2026. Podés subir el tope en la configuración del asistente."],
             notice.Paragraphs);
-        AssertDetails(notice, ("Organización", "Grupo Delta"), ("Usado", "US$ 160,00 de US$ 200,00"), ("Mes", "Octubre de 2026"));
+        AssertDetails(notice, ("Organización", "Grupo Delta"), ("Usado", "US$ 160,00 de US$ 200,00"), ("Mes", "01/10/2026 – 31/10/2026"));
         Assert.Equal(new EmailNoticeAction("Ver el uso", Url), notice.Action);
         Assert.Empty(notice.Notes);
         Assert.Null(notice.Footer);
@@ -50,9 +50,9 @@ public sealed class AssistantBudgetEmailRendererTests
 
         Assert.Equal("El asistente de Grupo Delta llegó al tope del mes", notice.Subject);
         Assert.Equal("El asistente llegó al tope del mes", notice.Title);
-        Assert.Equal(["Hola, Lucía. Grupo Delta usó los US$ 200,00 de tope de octubre de 2026 y el asistente dejó de responder.",
+        Assert.Equal(["Hola, Lucía. Grupo Delta usó los US$ 200,00 de tope del 01/10/2026 al 31/10/2026 y el asistente dejó de responder.",
             "Vuelve a responder el 01/11/2026, o antes si subís el tope en la configuración del asistente."], notice.Paragraphs);
-        AssertDetails(notice, ("Organización", "Grupo Delta"), ("Usado", "US$ 203,17 de US$ 200,00"), ("Mes", "Octubre de 2026"));
+        AssertDetails(notice, ("Organización", "Grupo Delta"), ("Usado", "US$ 203,17 de US$ 200,00"), ("Mes", "01/10/2026 – 31/10/2026"));
         Assert.Equal(new EmailNoticeAction("Revisar configuración", Url), notice.Action);
     }
 
@@ -62,11 +62,11 @@ public sealed class AssistantBudgetEmailRendererTests
         var (to, notice) = await RenderAsync(AssistantKeyFunding.PlatformKey, 80, 80m, 100m, null, "soporte@example.test");
 
         Assert.Equal("soporte@example.test", to);
-        Assert.Equal("Grupo Delta usó el 80 % del tope del asistente", notice.Subject);
-        Assert.Equal("Grupo Delta usó el 80 % del tope del asistente", notice.Title);
-        Assert.Equal(["Grupo Delta, que usa la clave de la plataforma, ya usó US$ 80,00 de los US$ 100,00 de tope de octubre de 2026.",
+        Assert.Equal("Grupo Delta usó el 80% del tope del asistente", notice.Subject);
+        Assert.Equal("Grupo Delta usó el 80% del tope del asistente", notice.Title);
+        Assert.Equal(["Grupo Delta, que usa la clave de la plataforma, ya usó US$ 80,00 de los US$ 100,00 de tope del 01/10/2026 al 31/10/2026.",
             "Si llega al tope, su asistente deja de responder hasta el 01/11/2026."], notice.Paragraphs);
-        AssertDetails(notice, ("Organización", "Grupo Delta"), ("Usado", "US$ 80,00 de US$ 100,00"), ("Mes", "Octubre de 2026"));
+        AssertDetails(notice, ("Organización", "Grupo Delta"), ("Usado", "US$ 80,00 de US$ 100,00"), ("Mes", "01/10/2026 – 31/10/2026"));
         Assert.Equal(new EmailNoticeAction("Ver el uso", Url), notice.Action);
     }
 
@@ -77,9 +77,9 @@ public sealed class AssistantBudgetEmailRendererTests
 
         Assert.Equal("Grupo Delta llegó al tope del asistente", notice.Subject);
         Assert.Equal("Grupo Delta llegó al tope del asistente", notice.Title);
-        Assert.Equal(["Grupo Delta usó los US$ 100,00 de tope de octubre de 2026 y su asistente dejó de responder hasta el 01/11/2026."],
+        Assert.Equal(["Grupo Delta usó los US$ 100,00 de tope del 01/10/2026 al 31/10/2026 y su asistente dejó de responder hasta el 01/11/2026."],
             notice.Paragraphs);
-        AssertDetails(notice, ("Organización", "Grupo Delta"), ("Usado", "US$ 100,00 de US$ 100,00"), ("Mes", "Octubre de 2026"));
+        AssertDetails(notice, ("Organización", "Grupo Delta"), ("Usado", "US$ 100,00 de US$ 100,00"), ("Mes", "01/10/2026 – 31/10/2026"));
         Assert.Equal(new EmailNoticeAction("Ver el uso", Url), notice.Action);
     }
 
@@ -91,13 +91,13 @@ public sealed class AssistantBudgetEmailRendererTests
 
         Assert.Equal("Grupo Delta's assistant used 80% of the monthly limit", near.Subject);
         Assert.Equal("The assistant used 80% of the monthly limit", near.Title);
-        Assert.Equal(["Hello, Lucía. Grupo Delta has already used $160.00 of its $200.00 limit for October 2026.",
+        Assert.Equal(["Hello, Lucía. Grupo Delta has already used $160.00 of its $200.00 limit from 10/01/2026 to 10/31/2026.",
             "If it reaches the limit, the assistant won't answer until 11/01/2026. You can raise the limit in the assistant settings."],
             near.Paragraphs);
-        AssertDetails(near, ("Organization", "Grupo Delta"), ("Used", "$160.00 of $200.00"), ("Month", "October 2026"));
+        AssertDetails(near, ("Organization", "Grupo Delta"), ("Used", "$160.00 of $200.00"), ("Month", "10/01/2026 – 10/31/2026"));
         Assert.Equal(new EmailNoticeAction("View usage", Url), near.Action);
         Assert.Equal("Grupo Delta reached its assistant limit", reached.Subject);
-        Assert.Equal(["Grupo Delta used its $100.00 limit for October 2026, and its assistant won't answer until 11/01/2026."],
+        Assert.Equal(["Grupo Delta used its $100.00 limit from 10/01/2026 to 10/31/2026, and its assistant won't answer until 11/01/2026."],
             reached.Paragraphs);
     }
 
