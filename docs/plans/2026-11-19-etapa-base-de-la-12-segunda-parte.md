@@ -6,11 +6,11 @@
 
 | Parte | Tareas | Estado |
 | --- | --- | --- |
-| Contrato | K0–K1 | Pendiente |
-| Back A · núcleo y WhatsApp | B16, B1–B9 y B18 | Pendiente |
-| Back B · formatos e IA | B10–B15 y B17 | Pendiente |
-| Front | F1–F13 | Pendiente |
-| Integración y puerta | I1–I3 | Pendiente |
+| Contrato | K0–K1 | Hecha |
+| Back A · núcleo y WhatsApp | B16, B1–B9 y B18 | Pendiente: B16, B1–B9 y B18, sin correr |
+| Back B · formatos e IA | B10–B15 y B17 | Pendiente: B11–B15 y B17, sin correr (B10 hecha) |
+| Front | F1–F13 | Pendiente: F1–F13, sin correr |
+| Integración y puerta | I1–I3 | Pendiente: I1–I3, esperan back y front |
 
 ## Forma de trabajo
 
@@ -205,6 +205,18 @@ Leé AGENTS.md de los dos repos, este plan, la spec y la skill /puerta. Integrá
 - la retención de las respuestas de formularios (antes de producción).
 
 ## Cambios al contrato
+
+- `grantable` también sale en `GET /api/roles/{id}`: el listado y el detalle comparten `RoleResponse`. (K1)
+- `GET /api/platform/audit` responde `PlatformAuditListResponse` (`items` con `maxItems` 100, `nextCursor`, `hasMore` y `loginAuditRetentionMonths`) en lugar de `CursorResultOfPlatformAuditEventResponse`; el front cambia el nombre del tipo generado. (K1)
+- La hora del país de cada zona horaria se llama `countryTimeName` («hora de Argentina» o «Argentina time»), puede venir en `null` y ya viene calculada desde K1. (K1)
+- En `PUT /api/platform/settings` los seis campos nuevos (los tres plazos, `appName`, `senderName` y `emailLogoUrl`) son opcionales: si faltan, se conserva lo guardado. Se validan con sus cotas, pero no se guardan hasta la B18. El GET devuelve 12/30/30, el nombre y el remitente de la configuración de arranque, y `emailLogoUrl` en `null`. (K1)
+- La configuración de WhatsApp de la organización trae `{chatRetentionDays, version}` y la de Plataforma `{allowedCountries, chatRetentionDays, maxOrganizationChatRetentionDays, version}`. Los dos PUT responden `VersionResponse` y no llevan `reason`. (K1)
+- `failureReason` sigue siendo el texto traducido del motivo; el código guardado es uno de los diez de `WhatsAppSendFailures`. Se sumaron los textos `Send.Failure.NotAllowed`, `WindowClosed`, `TokenInvalid`, `PermissionMissing`, `Unavailable` y `ReadOnly`. (K1)
+- `Uncertain` se suma al final de los enums `WhatsAppChatMessageStatus` y `WhatsAppRecipientStatus` del dominio; se deriva al leer y no se guarda. (K1)
+- `Assistant.Attachment.UploadTimedOut` es un 400 sin campo. Las fallas del proveedor son constantes de `AssistantErrors` con su texto, y la descripción del `code` del evento `error` y la de `providerIssue` los enumeran. (K1)
+- `docs/contracts/format-cases.json`: `date-time` es «27/09/2026, 14:35» y «09/27/2026, 2:35 PM»; `percent` es «12,5%» y «0,12%» en es-AR. (B10)
+- `docs/contracts/format-cases.json`: sale el tipo `dateLong` (casos `date-long-*`) y entra el tipo `month`: entrada «yyyy-MM» y como salida el rango como rótulo («01/10/2026 – 31/10/2026», «10/01/2026 – 10/31/2026»), con casos `month-*` y `month-leap-february-*` para es-AR y en-US. El front lo arma con `formatMonth`. (B10)
+- `GET /api/reference-data`: cambian solo valores (`DateTimePattern` con coma en es-AR y en-US, `PercentPattern` de es-AR «{number}%»); `LongDatePattern` sigue en la respuesta sin uso. (B10)
 
 ## Para decidir
 
