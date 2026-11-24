@@ -1,6 +1,6 @@
 # Módulos y suscripciones (spec)
 
-**Estado:** pendiente · spec de la etapa «Módulos y suscripciones», que va después de la E25 y programa la [ADR 0069](../../decisions/0069-modulos-y-suscripciones.md), aprobada por el usuario el 2026-11-23. Da por cerradas las «Costuras de módulos» (0069 §4 y §8), cuya spec se escribe aparte (`costuras-de-modulos.md`, en curso). Los tableros todavía no están dibujados: se dibujan y se aprueban antes de programar. Se contrasta con el código real con `/plan-etapa` cuando cierre la E25.
+**Estado:** pendiente · spec de la etapa «Módulos y suscripciones», que va después de la E25 y programa la [ADR 0069](../../decisions/0069-modulos-y-suscripciones.md), aprobada por el usuario el 2026-11-23. Da por cerradas las «Costuras de módulos» (0069 §4 y §8), cuya spec va aparte ([costuras de módulos](costuras-de-modulos.md)). Sus trece tableros están aprobados desde el 2026-11-24, en el lienzo aparte «Propuesta · Módulos y suscripciones» (v2). Se contrasta con el código real con `/plan-etapa` cuando cierre la E25.
 
 **Partes.** Lo que no está en la tabla está acá.
 
@@ -151,7 +151,7 @@ Van a cada persona activa con `modules.manage` en la organización y con el corr
 
 ## Pantallas ✓
 
-**Por dibujar:** ninguno está dibujado. Diseño los dibuja en el lienzo antes de programar y el usuario los aprueba. Cada uno lleva su teléfono a 390 px (`M-`), salvo `Mensajes-Modulos`, y estos estados: cargando, vacío, error con «Reintentar», sin permiso, un módulo suspendido y, en Plataforma, una organización suspendida o cerrada. Valen las de toda la app (160 a 164, 173 a 175, 180, 261 a 264 y 269): las acciones de una fila van en su ⋮.
+**Aprobados** por el usuario el 2026-11-24, en el lienzo aparte «Propuesta · Módulos y suscripciones» (v2), porque el principal no tenía lugar: pasan a él cuando Diseño se lo haga. Cada uno lleva su teléfono a 390 px (`M-`), salvo `Mensajes-Modulos`, y estos estados: cargando, vacío, error con «Reintentar», sin permiso, un módulo suspendido y, en Plataforma, una organización suspendida o cerrada. Valen las de toda la app (160 a 164, 173 a 175, 180, 261 a 264 y 269): las acciones de una fila van en su ⋮. Los tableros fijan además que «Suscribirme» también va en el ⋮, que el detalle de un estado (hasta cuándo, el próximo cobro o el motivo de un rechazo) va en su (i), y que el pedido de una organización cerrada muestra Aprobar y Rechazar apagados, con su motivo. Los precios que muestran son de ejemplo.
 
 | Tablero | Qué muestra |
 | --- | --- |
@@ -233,6 +233,6 @@ La puerta de la etapa, con la lista de control de `/puerta`, suma lo propio:
 ## Requisitos previos
 
 - La E25 y las Costuras de módulos, cerradas.
-- Los tableros de «Pantallas», dibujados y aprobados.
+- Los tableros de «Pantallas», aprobados el 2026-11-24.
 - Una cuenta de Mercado Pago de la plataforma con su entorno de prueba, que abre el usuario, y una URL pública para el webhook (el túnel, en desarrollo).
 - Las seis plantillas, mandadas a Meta al empezar.
