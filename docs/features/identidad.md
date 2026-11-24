@@ -147,7 +147,7 @@ El aviso diferido a la cuenta conserva la versión pública del pedido. `Account
 
 ## Sin enlaces de ingreso
 
-**Ningún mensaje lleva un enlace secreto** (base de la 12, decisión 179). El bot de WhatsApp contesta con «Entrar a mi cuenta», un botón que lleva al ingreso (`/login`), donde el código se pide desde la web; un mensaje entrante nunca abre una sesión. Salieron el enlace de un solo uso de la E8 con su canje (sus dos rutas responden 404, sin cookie), su emisor, sus opciones `Authentication:LoginLink`, la tabla `LoginLinks` (la migración `RetireLoginLinks` la borra y su vuelta atrás la recrea vacía) y `/login/enlace` como retorno de la baja.
+**Ningún mensaje lleva un enlace secreto** (base de la 12, decisión 179). El bot de WhatsApp contesta con «Entrar a mi cuenta», un botón que lleva al ingreso (`/login`), donde el código se pide desde la web; un mensaje entrante nunca abre una sesión. Salieron el enlace de un solo uso de la E8 con su canje (sus dos rutas responden 404, sin cookie), su emisor, sus opciones `Authentication:LoginLink`, la tabla `LoginLinks` (la migración `RetireLoginLinks` la borra y su vuelta atrás la recrea vacía; la borra en el mismo despliegue que el código que la usaba, una excepción a la [0060](../decisions/0060-dos-versiones-conviven.md) que valió porque todavía no había habido un despliegue) y `/login/enlace` como retorno de la baja.
 
 `Base12ContractTests` prueba que el canje no está en el contrato ni en la API, y `WhatsAppBotTests`, que ninguna respuesta lleva un token y que el botón abre `/login`.
 
