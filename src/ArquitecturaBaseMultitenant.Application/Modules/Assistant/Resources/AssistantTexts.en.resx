@@ -82,4 +82,16 @@
 
 
 
+  <data name="Assistant.Attachment.UploadBusy" xml:space="preserve"><value>You&#x27;re already uploading a file. Wait for it to finish.</value></data>
+  <data name="Assistant.Attachment.UploadQueueFull" xml:space="preserve"><value>Many files are being uploaded right now. Try again in a moment.</value></data>
+  <data name="Assistant.Attachment.UploadTimedOut" xml:space="preserve"><value>The file took too long to upload. Try again.</value></data>
+  <data name="Assistant.Conversation.Unavailable" xml:space="preserve"><value>This conversation isn&#x27;t available. You can delete it.</value></data>
+  <data name="Assistant.Provider.CredentialRejected" xml:space="preserve"><value>The provider rejected the key. Replace it.</value></data>
+  <data name="Assistant.Provider.Limited" xml:space="preserve"><value>The provider account reached its quota. Review its billing.</value></data>
+  <data name="Assistant.Provider.ModelRejected" xml:space="preserve"><value>The provider didn&#x27;t accept the model, the file or the request.</value></data>
+  <data name="Assistant.Provider.Rejected" xml:space="preserve"><value>The provider rejected the request.</value></data>
+  <data name="Assistant.Provider.Uncertain" xml:space="preserve"><value>The request may have reached the provider, but no answer was confirmed. Review possible usage before trying again.</value></data>
+  <data name="Assistant.Provider.KeyUnreadable" xml:space="preserve"><value>We couldn&#x27;t read the saved key: replace it.</value></data>
+  <data name="Assistant.Provider.UnsupportedProvider" xml:space="preserve"><value>The connection is paused: the saved provider isn&#x27;t available in this version. Save the settings to discard it.</value></data>
+  <data name="Assistant.Provider.PlatformUnavailable" xml:space="preserve"><value>The assistant isn&#x27;t available for now.</value></data>
 </root>

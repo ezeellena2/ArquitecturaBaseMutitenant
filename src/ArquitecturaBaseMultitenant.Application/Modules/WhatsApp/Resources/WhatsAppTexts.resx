@@ -543,4 +543,28 @@
   <data name="Bot.EnterAccountButton" xml:space="preserve">
     <value>Entrar a mi cuenta</value>
   </data>
+  <data name="WhatsApp.LoginCode.AccountDailyLimit" xml:space="preserve">
+    <value>Por hoy no se pueden mandar más códigos por WhatsApp a esta cuenta. Probá de nuevo más tarde.</value>
+  </data>
+  <data name="WhatsApp.Message.NotUncertain" xml:space="preserve">
+    <value>Ese mensaje no quedó sin confirmar: no hay nada que revisar.</value>
+  </data>
+  <data name="Send.Failure.NotAllowed" xml:space="preserve">
+    <value>Este número no está habilitado para recibir mensajes de la cuenta de WhatsApp.</value>
+  </data>
+  <data name="Send.Failure.WindowClosed" xml:space="preserve">
+    <value>La ventana para responder terminó antes de que saliera. Esperá un mensaje nuevo del contacto.</value>
+  </data>
+  <data name="Send.Failure.TokenInvalid" xml:space="preserve">
+    <value>La conexión con WhatsApp venció o la revocaron. Hay que renovarla.</value>
+  </data>
+  <data name="Send.Failure.PermissionMissing" xml:space="preserve">
+    <value>A la conexión con WhatsApp le falta un permiso para enviar.</value>
+  </data>
+  <data name="Send.Failure.Unavailable" xml:space="preserve">
+    <value>No se pudo llegar a WhatsApp, ni con los reintentos. Probá de nuevo en un rato.</value>
+  </data>
+  <data name="Send.Failure.ReadOnly" xml:space="preserve">
+    <value>El número de esta conversación está desconectado.</value>
+  </data>
 </root>

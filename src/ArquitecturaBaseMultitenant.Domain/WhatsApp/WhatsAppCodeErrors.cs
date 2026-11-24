@@ -4,6 +4,13 @@ namespace ArquitecturaBaseMultitenant.Domain.WhatsApp;
 public static class WhatsAppCodeErrors
 {
     public const string DailyLimitCode = "WhatsApp.LoginCode.DailyLimit";
+    /// <summary>Los códigos por WhatsApp que una cuenta pide desde Mi cuenta en las últimas 24 horas (B3).</summary>
+    public const string AccountDailyLimitCode = "WhatsApp.LoginCode.AccountDailyLimit";
+
+    public static Error AccountDailyLimit(int retryAfterSeconds) => Error.TooManyRequests(AccountDailyLimitCode,
+        "The WhatsApp code limit of this account for the last 24 hours was reached.",
+        new Dictionary<string, object?> { ["retryAfter"] = Math.Max(1, retryAfterSeconds) });
+
     public static Error DailyLimit(DateTime nowUtc)
     {
         var renewalUtc = DateOnly.FromDateTime(nowUtc).AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);

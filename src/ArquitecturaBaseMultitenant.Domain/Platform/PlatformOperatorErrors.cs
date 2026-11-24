@@ -13,6 +13,8 @@ public static class PlatformOperatorErrors
     public const string NotOperatorCode = "Platform.Operator.NotOperator";
     public const string InvitationPendingCode = "Platform.Operator.InvitationPending";
     public const string NoPendingInvitationCode = "Platform.Operator.NoPendingInvitation";
+    public const string PermissionsNotHeldCode = "Platform.Operator.PermissionsNotHeld";
+    public const string HasMorePermissionsCode = "Platform.Operator.HasMorePermissions";
 
     public static readonly Error PermissionsRequired = Error.Validation(PermissionsRequiredCode,
         "An operator needs at least one platform permission.");
@@ -43,4 +45,10 @@ public static class PlatformOperatorErrors
     /// <summary>Reenviar o revocar pide una invitación de operador sin aceptar, vigente o vencida.</summary>
     public static readonly Error NoPendingInvitation = Error.Conflict(NoPendingInvitationCode,
         "The account has no pending operator invitation.");
+
+    /// <summary>ADR 0061: nadie da ni quita a un operador un permiso que no tiene.</summary>
+    public static readonly Error PermissionsNotHeld = Error.Forbidden(PermissionsNotHeldCode, "You cannot give or take away permissions you do not have.");
+
+    /// <summary>ADR 0061: no se cambia, suspende, reactiva ni da de baja a un operador con permisos que quien actúa no tiene.</summary>
+    public static readonly Error HasMorePermissions = Error.Forbidden(HasMorePermissionsCode, "The operator has permissions you do not have.");
 }

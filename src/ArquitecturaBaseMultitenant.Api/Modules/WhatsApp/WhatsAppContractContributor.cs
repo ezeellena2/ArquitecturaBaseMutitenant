@@ -20,6 +20,11 @@ internal sealed class WhatsAppContractContributor : IHttpContractContributor
             HttpContractDocumentation.Describe(document, path, HttpMethod.Post,
                 "WhatsApp: cuota diaria persistente de códigos por UTC, una reserva por operación; replay no vuelve a gastar cuota. Error de entrega posterior a 202 se maneja en outbox.",
                 [E(429, "WhatsApp.LoginCode.DailyLimit")]);
+        // Desde Mi cuenta, cada cuenta pide hasta 10 códigos por WhatsApp en las últimas 24 horas (B3).
+        foreach (var path in new[] { "/api/me/login-methods", "/api/me/login-methods/{methodId}/code" })
+            HttpContractDocumentation.Describe(document, path, HttpMethod.Post,
+                "WhatsApp: tope por cuenta de las últimas 24 horas, por horas; al llegar, 429 WhatsApp.LoginCode.AccountDailyLimit con retryAfter y Retry-After.",
+                [E(429, WhatsAppCodeErrors.AccountDailyLimitCode)]);
         foreach (var path in NewDestinationPaths)
             HttpContractDocumentation.Describe(document, path, HttpMethod.Post,
                 "País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",

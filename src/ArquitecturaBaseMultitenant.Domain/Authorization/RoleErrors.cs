@@ -18,6 +18,7 @@ public static class RoleErrors
     public const string AlreadyExistsCode = "Roles.Role.AlreadyExists";
     public const string HasUsersCode = "Roles.Role.HasUsers";
     public const string ScopeChangeHasUsersCode = "Roles.Role.ScopeChangeHasUsers";
+    public const string PermissionsNotHeldCode = "Roles.Role.PermissionsNotHeld";
 
     public const string UserCountKey = "userCount";
 
@@ -33,6 +34,9 @@ public static class RoleErrors
     public static readonly Error SystemRoleNameReserved = Error.Conflict(SystemRoleNameReservedCode, "The name is reserved for a system role.");
     public static readonly Error NotFound = Error.NotFound(NotFoundCode, "The role was not found.");
     public static readonly Error AlreadyExists = Error.Conflict(AlreadyExistsCode, "A role with that name already exists.");
+
+    /// <summary>ADR 0061: nadie da ni quita en un rol un permiso que no tiene en ese alcance.</summary>
+    public static readonly Error PermissionsNotHeld = Error.Forbidden(PermissionsNotHeldCode, "You cannot give or take away permissions you do not have.");
 
     public static Error HasUsers(int userCount) => Error.Conflict(HasUsersCode,
         "The role still has users assigned.", new Dictionary<string, object?> { [UserCountKey] = userCount });

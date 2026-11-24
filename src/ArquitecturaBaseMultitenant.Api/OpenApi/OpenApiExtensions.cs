@@ -20,6 +20,8 @@ internal static class OpenApiExtensions
         services.AddSingleton<IHttpContractContributor, ValidationContractContributor>();
         // Después del validador: fija las formas cerradas del contrato E9 aunque un validador publique otras cotas.
         services.AddSingleton<IHttpContractContributor, SecurityContractContributor>();
+        // Segunda parte de la base de la 12: delegación, topes de correo, entrega de invitaciones y plazos de Plataforma.
+        services.AddSingleton<IHttpContractContributor, AdministrationContractContributor>();
         services.AddSingleton<SharedContractRules>();
         services.AddOpenApi(options =>
         {

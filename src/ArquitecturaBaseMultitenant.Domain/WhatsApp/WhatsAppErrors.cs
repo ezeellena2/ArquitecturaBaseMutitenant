@@ -43,6 +43,10 @@ public static class WhatsAppErrors
     public static Error NumberMetaRejected(string metaCode) => Error.ServiceUnavailable(NumberMetaRejectedCode,
         "Meta rejected the connection.", new Dictionary<string, object?> { ["metaCode"] = metaCode });
     public static readonly Error ConversationNotFound = Error.NotFound(ConversationNotFoundCode, "Conversation not found.");
+
+    /// <summary>ADR 0066: solo se marca como revisado un mensaje que quedó «Sin confirmar».</summary>
+    public const string MessageNotUncertainCode = "WhatsApp.Message.NotUncertain";
+    public static readonly Error MessageNotUncertain = Error.Conflict(MessageNotUncertainCode, "The message is not unconfirmed.");
     public static Error ConversationTakenByOther(string takenBy) => Error.Conflict(ConversationTakenByOtherCode,
         "Someone else took this conversation.", new Dictionary<string, object?> { ["takenBy"] = takenBy });
     public static readonly Error ConversationWindowClosed = Error.Conflict(ConversationWindowClosedCode, "More than 24 hours passed: send a template.");

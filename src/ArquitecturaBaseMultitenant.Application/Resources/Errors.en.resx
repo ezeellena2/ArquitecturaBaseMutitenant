@@ -57,6 +57,8 @@
   <data name="Features.Module.NotFound" xml:space="preserve"><value>We couldn't find the module.</value></data>
   <data name="Features.Module.InvalidScope" xml:space="preserve"><value>The module is not available for this profile.</value></data>
   <data name="Tenancy.Member.CannotDisableSelf" xml:space="preserve"><value>You can't deactivate yourself.</value></data>
+  <data name="Tenancy.Member.RolesNotHeld" xml:space="preserve"><value>You can't give or take away a role with permissions you don't have.</value></data>
+  <data name="Tenancy.Member.HasMorePermissions" xml:space="preserve"><value>This person has permissions you don't have: you can't change their roles, deactivate them, reactivate them or remove them.</value></data>
   <data name="Users.User.LastAdmin" xml:space="preserve"><value>The system must keep at least one active administrator.</value></data>
   <data name="Settings.System.NotFound" xml:space="preserve"><value>We couldn't find the system settings.</value></data>
   <data name="Users.User.AlreadyExists" xml:space="preserve"><value>An account with that email already exists.</value></data>
@@ -93,6 +95,7 @@
   <data name="Roles.Role.SystemRoleCannotChange" xml:space="preserve"><value>System roles can't be renamed, deleted or have their permissions changed.</value></data>
   <data name="Roles.Role.HasUsers" xml:space="preserve"><value>The role still has users assigned. Reassign them before deleting it.</value></data>
   <data name="Roles.Role.ScopeChangeHasUsers" xml:space="preserve"><value>The role still has users assigned. Reassign them before changing where it applies.</value></data>
+  <data name="Roles.Role.PermissionsNotHeld" xml:space="preserve"><value>You can't give or take away permissions you don't have.</value></data>
   <data name="General.ConcurrencyConflict" xml:space="preserve"><value>Someone else changed this. Review the latest version before saving.</value></data>
   <data name="Request.InProgress" xml:space="preserve"><value>The request is still being processed.</value></data>
   <data name="Request.IdempotencyKeyRequired" xml:space="preserve"><value>A key identifying this request is required.</value></data>
@@ -121,6 +124,8 @@
   <data name="Companies.Membership.AlreadyExists" xml:space="preserve"><value>This person already belongs to the company.</value></data>
   <data name="Companies.Membership.MemberInactive" xml:space="preserve"><value>Only a person with active access to the organization can be added.</value></data>
   <data name="Companies.Membership.LastCompanyAdmin" xml:space="preserve"><value>The company must keep at least one administrator.</value></data>
+  <data name="Companies.Membership.RolesNotHeld" xml:space="preserve"><value>You can't give or take away a company role with permissions you don't have in it.</value></data>
+  <data name="Companies.Membership.HasMorePermissions" xml:space="preserve"><value>This person has company permissions you don't have: you can't change their roles, deactivate them or reactivate them.</value></data>
   <data name="Tenancy.Tenant.InvalidTransition" xml:space="preserve"><value>The organization cannot change to that state.</value></data>
   <data name="Tenancy.Tenant.ProvisioningConflict" xml:space="preserve"><value>The organization already exists with different configuration data.</value></data>
   <data name="Tenancy.Member.Inactive" xml:space="preserve"><value>You are deactivated in this organization.</value></data>
@@ -183,6 +188,9 @@
   <data name="Platform.Operator.NotOperator" xml:space="preserve"><value>That account is not a platform operator.</value></data>
   <data name="Platform.Operator.InvitationPending" xml:space="preserve"><value>That account has a pending operator invitation: it can only be resent or revoked.</value></data>
   <data name="Platform.Operator.NoPendingInvitation" xml:space="preserve"><value>That account has no pending operator invitation.</value></data>
+  <data name="Platform.Operator.PermissionsNotHeld" xml:space="preserve"><value>You can't give or take away permissions you don't have.</value></data>
+  <data name="Platform.Operator.HasMorePermissions" xml:space="preserve"><value>This operator has permissions you don't have: you can't change their permissions, suspend, reactivate or delete them.</value></data>
+  <data name="Messaging.Email.DailyLimit" xml:space="preserve"><value>No more emails can be sent for now, and nothing was saved. Try again later.</value></data>
   <data name="Platform.Audit.NotFound" xml:space="preserve"><value>We couldn't find that event.</value></data>
   <data name="Legal.Publication.EffectiveDatePast" xml:space="preserve"><value>The effective date cannot be earlier than today.</value></data>
   <data name="Legal.Publication.CulturesMismatch" xml:space="preserve"><value>Write the content once in each language.</value></data>

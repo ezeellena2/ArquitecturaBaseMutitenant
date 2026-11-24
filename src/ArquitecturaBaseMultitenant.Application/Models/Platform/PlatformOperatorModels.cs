@@ -25,3 +25,6 @@ public sealed record PlatformOperatorDisplayRow(Guid UserId, string? DisplayName
 {
     public override string ToString() => nameof(PlatformOperatorDisplayRow);
 }
+
+/// <summary>Un permiso del catálogo de Plataforma: los códigos que incluye, de su mismo catálogo, y si quien pide lo tiene.</summary>
+public sealed record PlatformPermissionItem(string Code, IReadOnlyList<string> Includes, bool Grantable);

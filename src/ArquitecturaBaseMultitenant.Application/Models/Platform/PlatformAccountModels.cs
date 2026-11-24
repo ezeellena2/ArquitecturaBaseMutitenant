@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Models.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -52,6 +53,9 @@ public sealed record PlatformAccountResponse(Guid Id, string? DisplayName, Email
 {
     /// <summary>Phone principal global verificado, enmascarado; null para otro principal o cuenta eliminada.</summary>
     public string? MaskedPrimaryPhone { get; init; }
+
+    /// <summary>Estado de entrega de la invitación de operador pendiente; null sin invitación pendiente (B6).</summary>
+    public InvitationDeliveryStatus? InvitationDelivery { get; init; }
 }
 
 public sealed record PlatformAccountStateCount(PlatformAccountState State, int Count);
@@ -69,6 +73,9 @@ public sealed record PlatformAccountDetailResponse(Guid Id, string? DisplayName,
 {
     /// <summary>La misma identidad Phone principal enmascarada que el listado, independiente del canal disponible.</summary>
     public string? MaskedPrimaryPhone { get; init; }
+
+    /// <summary>Estado de entrega de la invitación de operador pendiente; null sin invitación pendiente (B6).</summary>
+    public InvitationDeliveryStatus? InvitationDelivery { get; init; }
 
     public override string ToString() => nameof(PlatformAccountDetailResponse);
 }

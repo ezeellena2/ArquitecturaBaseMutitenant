@@ -202,4 +202,9 @@ internal sealed class WhatsAppConversationService(IWhatsAppChatRepository chats,
 
     internal static WhatsAppChatMessageResponse Response(WhatsAppChatMessageBase message) => new(message.Id, message.Kind, message.Direction,
         message.AuthorName, message.Text, message.MediaKind, message.Status, WhatsAppConversationResponseBuilder.FailureText(message.FailureReason), message.CreatedAtUtc);
+
+    /// <summary>Contrato de la segunda parte de la base de la 12 (K1): responde 501 hasta que la B7 lo programe.</summary>
+    public Task<Result<WhatsAppChatMessageResponse>> ReviewAsync(WhatsAppInbox? inbox, Guid id, Guid messageId, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync(logger, clock, "WhatsAppConversationReview",
+            () => Task.FromResult(Result.Failure<WhatsAppChatMessageResponse>(ContractErrors.NotImplemented)));
 }

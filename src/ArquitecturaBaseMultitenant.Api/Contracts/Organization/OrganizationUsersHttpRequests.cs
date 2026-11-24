@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Models.Invitations;
 using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Api.Contracts.Auth;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -27,7 +28,7 @@ public sealed record OrganizationUserHttpResponse(Guid MemberId, Guid? UserId, s
     OrganizationUserState State, bool HasManagedEmail, IReadOnlyList<OrganizationUserRoleRow> Roles,
     IReadOnlyList<OrganizationUserCompanyRow> Companies, Guid? InvitationId,
     DateTime? InvitationIssuedAtUtc, DateTime? InvitationExpiresAtUtc, uint Version, DateTime CreatedAtUtc,
-    DateTime? DeletionScheduledForUtc, string? Phone);
+    DateTime? DeletionScheduledForUtc, string? Phone, InvitationDeliveryStatus? InvitationDelivery);
 
 public static class OrganizationUserHttpMappings
 {
@@ -59,5 +60,5 @@ public static class OrganizationUserHttpMappings
         response.MemberId, response.UserId, response.DisplayName, response.Email?.DisplayValue, response.State,
         response.HasManagedEmail, response.Roles, response.Companies, response.InvitationId,
         response.InvitationIssuedAtUtc, response.InvitationExpiresAtUtc, response.Version, response.CreatedAtUtc,
-        response.DeletionScheduledForUtc, response.Phone?.Value);
+        response.DeletionScheduledForUtc, response.Phone?.Value, response.InvitationDelivery);
 }

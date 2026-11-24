@@ -42,6 +42,10 @@ public sealed partial class ExplicitRouteInventoryTests
             "GET /api/platform/whatsapp/number",
             "POST /api/platform/whatsapp/number",
             "PUT /api/platform/whatsapp/number",
+            "GET /api/platform/whatsapp/settings",
+            "PUT /api/platform/whatsapp/settings",
+            "GET /api/organization/whatsapp/settings",
+            "PUT /api/organization/whatsapp/settings",
             "POST /api/platform/whatsapp/number/check",
             "GET /api/platform/whatsapp/bot",
             "PUT /api/platform/whatsapp/bot",
@@ -78,6 +82,7 @@ public sealed partial class ExplicitRouteInventoryTests
                 $"POST {prefix}/conversations/{{id:guid}}/templates",
                 $"GET {prefix}/conversations/{{id:guid}}/transfer-options/teams",
                 $"GET {prefix}/conversations/{{id:guid}}/transfer-options/people",
+                $"POST {prefix}/conversations/{{id:guid}}/messages/{{messageid:guid}}/review",
             ]);
     }
 }

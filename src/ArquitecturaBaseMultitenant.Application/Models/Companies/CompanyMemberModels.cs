@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Models.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -62,7 +63,7 @@ public sealed record CompanyMemberRow(Guid MemberId, Guid? UserId, string Displa
 public sealed record CompanyMemberResponse(Guid MemberId, Guid? UserId, string DisplayName, Email? Email,
     CompanyMemberState State, CompanyMembershipStatus MembershipStatus,
     IReadOnlyList<CompanyMemberRoleResponse> Roles, uint Version, DateTime CreatedAtUtc,
-    Guid? InvitationId, DateTime? InvitationExpiresAtUtc);
+    Guid? InvitationId, DateTime? InvitationExpiresAtUtc, InvitationDeliveryStatus? InvitationDelivery = null);
 
 public sealed record CompanyMemberRoleResponse(Guid Id, string Name, bool IsSystemRole, RoleScope Scope,
     Guid? CompanyId);

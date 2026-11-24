@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Models.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -46,7 +47,7 @@ public sealed record OrganizationUserResponse(Guid MemberId, Guid? UserId, strin
     OrganizationUserState State, bool HasManagedEmail, IReadOnlyList<OrganizationUserRoleRow> Roles,
     IReadOnlyList<OrganizationUserCompanyRow> Companies, Guid? InvitationId,
     DateTime? InvitationIssuedAtUtc, DateTime? InvitationExpiresAtUtc, uint Version, DateTime CreatedAtUtc,
-    DateTime? DeletionScheduledForUtc, PhoneNumber? Phone = null);
+    DateTime? DeletionScheduledForUtc, PhoneNumber? Phone = null, InvitationDeliveryStatus? InvitationDelivery = null);
 
 public sealed record OrganizationUserFilterCountsResponse(int All, int Active, int PendingDeletion,
     int Invited, int Expired, int Inactive, int? CompanyAll = null, int? WithoutCompany = null,

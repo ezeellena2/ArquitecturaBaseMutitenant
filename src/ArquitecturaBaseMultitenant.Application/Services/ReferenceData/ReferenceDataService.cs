@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.ReferenceData;
+using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.Extensions.Logging;
 
@@ -112,11 +113,17 @@ internal sealed class ReferenceDataService(
         CultureProfile selectedCulture, string? search, CancellationToken cancellationToken)
     {
         var entries = await timeZones.ListAsync(cancellationToken);
+        // La hora de su país (262): el nombre del primer país de la zona, en la cultura pedida.
+        var countryNames = (await countries.ListAsync(cancellationToken)).ToDictionary(entry => entry.Code,
+            entry => selectedCulture.Translate(entry.Translations, item => item.Culture).Name, StringComparer.Ordinal);
+        var countryTime = FormattingTexts.Get("TimeZone.CountryTime", selectedCulture);
         return entries
             .Select(entry => new TimeZoneReferenceItem(
                 entry.Id, entry.CountryCodes,
                 selectedCulture.Translate(entry.Translations, item => item.Culture).City,
-                entry.IsEnabled, entry.SortOrder))
+                entry.IsEnabled, entry.SortOrder,
+                entry.CountryCodes.Count > 0 && countryNames.TryGetValue(entry.CountryCodes[0], out var country)
+                    ? countryTime.Replace("{country}", country, StringComparison.Ordinal) : null))
             .Where(item => Matches(search, item.Id, item.City))
             .OrderBy(item => item.SortOrder ?? int.MaxValue)
             .ThenBy(item => item.City, StringComparer.Create(selectedCulture.Culture, ignoreCase: false))

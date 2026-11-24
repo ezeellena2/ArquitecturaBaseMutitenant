@@ -58,6 +58,11 @@ public static class ValidationTexts
 
     public static string RateLimitWindowRange => Get(nameof(RateLimitWindowRange));
 
+    /// <summary>Un número entero dentro de sus cotas, que recibe como {From} y {To}.</summary>
+    public static string NumberRange => Get(nameof(NumberRange));
+
+    public static string SecureUrlInvalid => Get(nameof(SecureUrlInvalid));
+
     public static string PermissionUnknown => Get(nameof(PermissionUnknown));
 
     public static string CultureInvalid => Get(nameof(CultureInvalid));

@@ -26,4 +26,10 @@ public interface IPlatformOperatorService
     Task<Result<VersionResponse>> ChangePermissionsAsync(Guid accountId, ChangePlatformOperatorRequest request, CancellationToken ct);
 
     Task<Result> RemoveAsync(Guid accountId, PlatformAccountActionRequest request, CancellationToken ct);
+
+    /// <summary>
+    /// El catálogo de permisos de un operador, con los de los módulos instalados: qué incluye cada uno (decisión 260) y si
+    /// quien pide puede darlo (decisión 269 y ADR 0061). Nombres y orden los toma el front de su catálogo.
+    /// </summary>
+    Task<Result<IReadOnlyList<PlatformPermissionItem>>> GetPermissionCatalogAsync(CancellationToken ct);
 }

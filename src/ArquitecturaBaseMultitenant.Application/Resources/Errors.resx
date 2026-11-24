@@ -57,6 +57,8 @@
   <data name="Features.Module.NotFound" xml:space="preserve"><value>No encontramos el módulo.</value></data>
   <data name="Features.Module.InvalidScope" xml:space="preserve"><value>El módulo no está disponible para este perfil.</value></data>
   <data name="Tenancy.Member.CannotDisableSelf" xml:space="preserve"><value>No podés darte de baja a vos misma.</value></data>
+  <data name="Tenancy.Member.RolesNotHeld" xml:space="preserve"><value>No podés dar ni quitar un rol con permisos que no tenés.</value></data>
+  <data name="Tenancy.Member.HasMorePermissions" xml:space="preserve"><value>Esta persona tiene permisos que vos no tenés: no podés cambiarle los roles, darla de baja, reactivarla ni quitarla.</value></data>
   <data name="Users.User.LastAdmin" xml:space="preserve"><value>Tiene que quedar al menos un administrador activo en el sistema.</value></data>
   <data name="Settings.System.NotFound" xml:space="preserve"><value>No encontramos la configuración del sistema.</value></data>
   <data name="Users.User.AlreadyExists" xml:space="preserve"><value>Ya existe una cuenta con ese correo.</value></data>
@@ -93,6 +95,7 @@
   <data name="Roles.Role.SystemRoleCannotChange" xml:space="preserve"><value>Los roles del sistema no se pueden renombrar, borrar ni cambiarles los permisos.</value></data>
   <data name="Roles.Role.HasUsers" xml:space="preserve"><value>El rol tiene usuarios asignados. Reasignalos antes de borrarlo.</value></data>
   <data name="Roles.Role.ScopeChangeHasUsers" xml:space="preserve"><value>El rol tiene usuarios asignados. Reasignalos antes de cambiar dónde vale.</value></data>
+  <data name="Roles.Role.PermissionsNotHeld" xml:space="preserve"><value>No podés dar ni quitar permisos que no tenés.</value></data>
   <data name="General.ConcurrencyConflict" xml:space="preserve"><value>Otra persona cambió esto. Revisá la versión más reciente antes de guardar.</value></data>
   <data name="Request.InProgress" xml:space="preserve"><value>La solicitud todavía se está procesando.</value></data>
   <data name="Request.IdempotencyKeyRequired" xml:space="preserve"><value>Falta la clave para identificar esta solicitud.</value></data>
@@ -121,6 +124,8 @@
   <data name="Companies.Membership.AlreadyExists" xml:space="preserve"><value>Esta persona ya pertenece a la empresa.</value></data>
   <data name="Companies.Membership.MemberInactive" xml:space="preserve"><value>Solo podés agregar a una persona con acceso activo a la organización.</value></data>
   <data name="Companies.Membership.LastCompanyAdmin" xml:space="preserve"><value>Tiene que quedar al menos un administrador en la empresa.</value></data>
+  <data name="Companies.Membership.RolesNotHeld" xml:space="preserve"><value>No podés dar ni quitar un rol de la empresa con permisos que no tenés en ella.</value></data>
+  <data name="Companies.Membership.HasMorePermissions" xml:space="preserve"><value>Esta persona tiene en la empresa permisos que vos no tenés: no podés cambiarle los roles, darla de baja ni reactivarla.</value></data>
   <data name="Tenancy.Tenant.InvalidTransition" xml:space="preserve"><value>La organización no puede pasar a ese estado.</value></data>
   <data name="Tenancy.Tenant.ProvisioningConflict" xml:space="preserve"><value>La organización ya existe con otros datos de configuración.</value></data>
   <data name="Tenancy.Member.Inactive" xml:space="preserve"><value>Estás de baja en esta organización.</value></data>
@@ -183,6 +188,9 @@
   <data name="Platform.Operator.NotOperator" xml:space="preserve"><value>Esa cuenta no es de un operador.</value></data>
   <data name="Platform.Operator.InvitationPending" xml:space="preserve"><value>Esa cuenta tiene una invitación de operador pendiente: solo se puede reenviar o revocar.</value></data>
   <data name="Platform.Operator.NoPendingInvitation" xml:space="preserve"><value>Esa cuenta no tiene una invitación de operador pendiente.</value></data>
+  <data name="Platform.Operator.PermissionsNotHeld" xml:space="preserve"><value>No podés dar ni quitar permisos que no tenés.</value></data>
+  <data name="Platform.Operator.HasMorePermissions" xml:space="preserve"><value>Este operador tiene permisos que vos no tenés: no podés cambiarle los permisos, suspenderlo, reactivarlo ni darlo de baja.</value></data>
+  <data name="Messaging.Email.DailyLimit" xml:space="preserve"><value>Por ahora no se pueden mandar más correos, y no se guardó nada. Probá de nuevo más tarde.</value></data>
   <data name="Platform.Audit.NotFound" xml:space="preserve"><value>No encontramos ese evento.</value></data>
   <data name="Legal.Publication.EffectiveDatePast" xml:space="preserve"><value>La vigencia no puede ser anterior a hoy.</value></data>
   <data name="Legal.Publication.CulturesMismatch" xml:space="preserve"><value>Escribí el contenido una vez en cada idioma.</value></data>

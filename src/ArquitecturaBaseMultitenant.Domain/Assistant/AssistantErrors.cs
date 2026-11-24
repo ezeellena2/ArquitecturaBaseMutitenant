@@ -50,6 +50,34 @@ public static class AssistantErrors
     public static readonly Error ProviderContextTooLarge = Field(ProviderContextTooLargeCode, "The conversation or attachments are too large. Start a new one.", "text", ErrorType.Validation);
     public static Error ProviderUnavailableWithRetry(int retryAfter) => Error.ServiceUnavailable(ProviderUnavailableCode, ProviderUnavailable.Description,
         new Dictionary<string, object?> { ["retryAfter"] = retryAfter });
+    // Subidas (ADR 0064 §2 y §4): sin cupo, el 429 de siempre; sin lugar, 429 con espera; el cuerpo tiene 120 s.
+    public const string AttachmentUploadBusyCode = "Assistant.Attachment.UploadBusy";
+    public static Error AttachmentUploadBusy(int retryAfter) => Error.TooManyRequests(AttachmentUploadBusyCode,
+        "Another upload of yours is in progress.", new Dictionary<string, object?> { ["retryAfter"] = retryAfter });
+    public const string AttachmentUploadQueueFullCode = "Assistant.Attachment.UploadQueueFull";
+    public static Error AttachmentUploadQueueFull(int retryAfter) => Error.TooManyRequests(AttachmentUploadQueueFullCode,
+        "Too many uploads are waiting.", new Dictionary<string, object?> { ["retryAfter"] = retryAfter });
+    public const string AttachmentUploadTimedOutCode = "Assistant.Attachment.UploadTimedOut";
+    public static readonly Error AttachmentUploadTimedOut = Error.Validation(AttachmentUploadTimedOutCode, "The upload took too long.");
+    /// <summary>ADR 0064 §6: una conversación que esta versión no puede leer se ve no disponible y se puede borrar.</summary>
+    public const string ConversationUnavailableCode = "Assistant.Conversation.Unavailable";
+    public static readonly Error ConversationUnavailable = Error.Conflict(ConversationUnavailableCode, "The conversation cannot be read.");
+    // Fallas del proveedor (ADR 0064 §7), en el evento error, el estado del turno y providerIssue; no son respuestas HTTP.
+    public const string ProviderCredentialRejectedCode = "Assistant.Provider.CredentialRejected";
+    public const string ProviderLimitedCode = "Assistant.Provider.Limited";
+    public const string ProviderModelRejectedCode = "Assistant.Provider.ModelRejected";
+    public const string ProviderRejectedCode = "Assistant.Provider.Rejected";
+    public const string ProviderUncertainCode = "Assistant.Provider.Uncertain";
+    public const string ProviderKeyUnreadableCode = "Assistant.Provider.KeyUnreadable";
+    public const string ProviderUnsupportedProviderCode = "Assistant.Provider.UnsupportedProvider";
+    public const string ProviderPlatformUnavailableCode = "Assistant.Provider.PlatformUnavailable";
+    /// <summary>Los códigos que toma <c>providerIssue</c> en la configuración, según quién paga.</summary>
+    public static IReadOnlyList<string> ProviderIssueCodes { get; } =
+        [ProviderCredentialRejectedCode, ProviderLimitedCode, ProviderModelRejectedCode, ProviderUnavailableCode, ProviderKeyUnreadableCode, ProviderPlatformUnavailableCode];
+    /// <summary>Los códigos de falla del proveedor en el evento error y el estado del turno.</summary>
+    public static IReadOnlyList<string> ProviderFailureCodes { get; } =
+        [ProviderCredentialRejectedCode, ProviderLimitedCode, ProviderModelRejectedCode, ProviderRejectedCode, ProviderUncertainCode,
+            ProviderUnavailableCode, ProviderKeyUnreadableCode, ProviderUnsupportedProviderCode, ProviderPlatformUnavailableCode];
     public const string ExportFailedCode = "Assistant.Export.Failed";
     public static readonly Error ExportFailed = Error.Failure(ExportFailedCode, "We could not export the conversation.");
     private static ValidationError Field(string code, string description, string field, ErrorType type) =>

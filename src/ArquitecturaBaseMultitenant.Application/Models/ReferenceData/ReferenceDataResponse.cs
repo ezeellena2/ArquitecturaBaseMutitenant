@@ -18,8 +18,9 @@ public sealed record CountryReferenceItem(
     string? DefaultCurrencyCode, string? DefaultTimeZoneId, string Name,
     bool IsEnabled, int? SortOrder);
 
+/// <summary><c>CountryTimeName</c> es la hora de su país («hora de Uruguay», decisión 262); null en una zona sin país.</summary>
 public sealed record TimeZoneReferenceItem(
-    string Id, IReadOnlyList<string> CountryCodes, string City, bool IsEnabled, int? SortOrder);
+    string Id, IReadOnlyList<string> CountryCodes, string City, bool IsEnabled, int? SortOrder, string? CountryTimeName = null);
 
 public sealed record CultureReferenceItem(
     string Code, string LanguageCode, string CountryCode,

@@ -11,7 +11,8 @@ public enum WhatsAppChatMessageKind { Text, Template, Note, Event, Media }
 
 public enum WhatsAppMediaKind { Image, Audio, Video, Document, Sticker, Location, Other }
 
-public enum WhatsAppChatMessageStatus { Received, Pending, Sent, Delivered, Read, Failed }
+/// <summary><c>Uncertain</c> («Sin confirmar», ADR 0066) se deriva al leer, desde la cola: no se guarda.</summary>
+public enum WhatsAppChatMessageStatus { Received, Pending, Sent, Delivered, Read, Failed, Uncertain }
 
 public enum WhatsAppConsent { Accepted, Declined, NoAnswer, Unsubscribed }
 
@@ -23,7 +24,8 @@ public enum WhatsAppTemplateStatus { Pending, Approved, Rejected, Paused }
 
 public enum WhatsAppBroadcastStatus { Scheduled, Sending, Sent, Cancelled }
 
-public enum WhatsAppRecipientStatus { Pending, Sent, Delivered, Read, Replied, Unsubscribed, Failed }
+/// <summary><c>Uncertain</c> («Sin confirmar», decisión 255) se deriva al leer, desde la cola: no cuenta como enviado ni como «No llegó».</summary>
+public enum WhatsAppRecipientStatus { Pending, Sent, Delivered, Read, Replied, Unsubscribed, Failed, Uncertain }
 
 public enum WhatsAppBotAction { Team, Reply }
 

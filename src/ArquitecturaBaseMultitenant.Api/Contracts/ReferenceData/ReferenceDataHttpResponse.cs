@@ -43,12 +43,15 @@ public sealed record CountryReferenceHttpResponse(
         item.DefaultTimeZoneId, item.Name, item.IsEnabled, item.SortOrder);
 }
 
-/// <summary>Expone una zona IANA y sus países para elegir y presentar la zona horaria.</summary>
+/// <summary>
+/// Expone una zona IANA y sus países para elegir y presentar la zona horaria, con la hora de su país («hora de Uruguay»,
+/// decisión 262); null en una zona sin país.
+/// </summary>
 public sealed record TimeZoneReferenceHttpResponse(
-    string Id, IReadOnlyList<string> CountryCodes, string City, bool IsEnabled, int? SortOrder)
+    string Id, IReadOnlyList<string> CountryCodes, string City, bool IsEnabled, int? SortOrder, string? CountryTimeName)
 {
     public static TimeZoneReferenceHttpResponse FromModel(TimeZoneReferenceItem item) => new(
-        item.Id, item.CountryCodes, item.City, item.IsEnabled, item.SortOrder);
+        item.Id, item.CountryCodes, item.City, item.IsEnabled, item.SortOrder, item.CountryTimeName);
 }
 
 /// <summary>Expone los patrones y separadores de una cultura para formatear fechas y números en el cliente.</summary>

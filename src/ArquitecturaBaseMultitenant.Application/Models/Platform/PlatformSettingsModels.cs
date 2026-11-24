@@ -3,14 +3,30 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Application.Models.Platform;
 
+/// <summary>
+/// La configuración de Plataforma. Los plazos de retención del núcleo (decisión 272) y el nombre, el remitente y el logo de
+/// los correos (decisión 273) valen para todas las organizaciones; sin logo, <c>EmailLogoUrl</c> es null.
+/// </summary>
 public sealed record PlatformSettingsResponse(ConsumerSignupMode ConsumerSignup, BusinessSignupMode BusinessSignup,
-    int MaxOwnedOrganizations, Email? SalesEmail, Email? SupportEmail, uint Version, PlatformRateLimitsResponse RateLimits);
+    int MaxOwnedOrganizations, Email? SalesEmail, Email? SupportEmail, uint Version, PlatformRateLimitsResponse RateLimits,
+    int LoginAuditRetentionMonths, int LoginCodeRetentionDays, int ClosedInvitationRetentionDays,
+    string AppName, string SenderName, string? EmailLogoUrl);
 
-/// <summary>Sin <see cref="RateLimits"/> se conservan las cuotas guardadas; con ellas, van los doce perfiles completos.</summary>
+/// <summary>
+/// Sin <see cref="RateLimits"/> se conservan las cuotas guardadas; con ellas, van los doce perfiles completos. Cada plazo y el
+/// nombre, el remitente y el logo, si faltan, conservan lo guardado; un logo vacío lo quita.
+/// </summary>
 public sealed record UpdatePlatformSettingsRequest(ConsumerSignupMode? ConsumerSignup, BusinessSignupMode? BusinessSignup,
     int? MaxOwnedOrganizations, Email? SalesEmail, Email? SupportEmail, uint? Version, string? Reason,
     PlatformRateLimitsInput? RateLimits = null)
 {
+    public int? LoginAuditRetentionMonths { get; init; }
+    public int? LoginCodeRetentionDays { get; init; }
+    public int? ClosedInvitationRetentionDays { get; init; }
+    public string? AppName { get; init; }
+    public string? SenderName { get; init; }
+    public string? EmailLogoUrl { get; init; }
+
     public override string ToString() => nameof(UpdatePlatformSettingsRequest);
 }
 

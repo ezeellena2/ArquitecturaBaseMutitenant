@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Application.Resources;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -24,9 +25,9 @@ internal sealed class PlatformAuditService(ISecurityEventReader reader, IUserRep
     ITimeZoneService timeZones, IRequestValidator validator, TimeProvider clock, ILogger<PlatformAuditService> logger)
     : IPlatformAuditService
 {
-    public Task<Result<CursorResult<PlatformAuditEventResponse>>> ListAsync(ListPlatformAuditRequest request,
+    public Task<Result<PlatformAuditListResponse>> ListAsync(ListPlatformAuditRequest request,
         CancellationToken ct) =>
-        OperationLog.RunAsync<CursorResult<PlatformAuditEventResponse>>(logger, clock, "ListPlatformAudit", async () =>
+        OperationLog.RunAsync<PlatformAuditListResponse>(logger, clock, "ListPlatformAudit", async () =>
         {
             ArgumentNullException.ThrowIfNull(request);
             if (await validator.ValidateAsync(request, ct) is { } invalid) return invalid;
@@ -35,8 +36,9 @@ internal sealed class PlatformAuditService(ISecurityEventReader reader, IUserRep
             // Los ingresos no tienen organización: con ese filtro no se suman.
             var signIns = request.Type is null or PlatformAuditCategories.SignIns && request.TenantId is null;
             var page = await reader.ListAsync(request, since, types, signIns, ct);
-            return new CursorResult<PlatformAuditEventResponse>([.. page.Items.Select(ToResponse)], page.NextCursor,
-                page.HasMore);
+            // Contrato de la segunda parte de la base de la 12 (K1): hasta que la B18 lo guarde, el plazo por defecto.
+            return new PlatformAuditListResponse([.. page.Items.Select(ToResponse)], page.NextCursor,
+                page.HasMore, PlatformSettingsLimits.DefaultLoginAuditRetentionMonths);
         });
 
     public Task<Result<PlatformAuditEventResponse>> FindAsync(Guid id, CancellationToken ct) =>

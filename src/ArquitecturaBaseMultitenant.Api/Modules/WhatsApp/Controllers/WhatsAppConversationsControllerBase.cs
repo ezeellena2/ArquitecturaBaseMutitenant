@@ -162,6 +162,21 @@ public abstract class WhatsAppConversationsControllerBase(IWhatsAppConversationS
     public async Task<IActionResult> ListTransferPeople([FromRoute] Guid id, [FromQuery] WhatsAppPagedHttpQuery query, CancellationToken cancellationToken) =>
         (await service.ListTransferPeopleAsync(Inbox, id, TransferPage(query), cancellationToken)).ToActionResult(this);
 
+    /// <summary>
+    /// Marca como revisado un mensaje «Sin confirmar» (ADR 0066), sin cuerpo y sin idempotencia: no crea ni envía, y revisar dos
+    /// veces devuelve la primera revisión.
+    /// </summary>
+    [HttpPost("conversations/{id:guid}/messages/{messageId:guid}/review")]
+    [ProducesResponseType<WhatsAppChatMessageResponse>(200)]
+    [ProducesProblem(401)]
+    [ProducesProblem(403)]
+    [ProducesProblem(404)]
+    [ProducesProblem(409)]
+    [ProducesProblem(500)]
+    [ProducesProblem(501)]
+    public async Task<IActionResult> Review([FromRoute] Guid id, [FromRoute] Guid messageId, CancellationToken cancellationToken) =>
+        (await service.ReviewAsync(Inbox, id, messageId, cancellationToken)).ToActionResult(this);
+
     private static WhatsAppTransferOptionListRequest TransferPage(WhatsAppPagedHttpQuery query) => new()
     {
         Page = query.Page ?? PagedRequest.DefaultPage,

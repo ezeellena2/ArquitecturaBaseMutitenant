@@ -7,7 +7,7 @@ namespace ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 /// <summary>Auditoría de seguridad de Plataforma: listado por cursor y detalle.</summary>
 public interface IPlatformAuditService
 {
-    Task<Result<CursorResult<PlatformAuditEventResponse>>> ListAsync(ListPlatformAuditRequest request,
+    Task<Result<PlatformAuditListResponse>> ListAsync(ListPlatformAuditRequest request,
         CancellationToken ct);
 
     Task<Result<PlatformAuditEventResponse>> FindAsync(Guid id, CancellationToken ct);

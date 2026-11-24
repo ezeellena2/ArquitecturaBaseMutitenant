@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using Microsoft.OpenApi;
 
@@ -57,6 +58,8 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
                 consent.Description = "Obligatorio en true: quien carga confirma que la persona aceptó recibir mensajes por WhatsApp (decisión 179). "
                     + "Si falta o es false responde 400 WhatsApp.PhoneImport.ConsentRequired en consentConfirmed y no manda nada. La vista previa no lo pide.";
             DescribeMoney(schemas);
+            DescribeUncertain(schemas);
+            DescribeSettings(schemas);
         }
 
         foreach (var (path, item) in document.Paths.Where(pair => IsOwnPath(pair.Key)))
@@ -65,10 +68,11 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
                 HttpContractDocumentation.Describe(document, path, method,
                     "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo.",
                     Errors(path, method), idempotent: method == HttpMethod.Post && IsCreation(path), authenticated: true);
+                Append(operation, Description(path));
                 operation.Extensions ??= new Dictionary<string, IOpenApiExtension>();
                 operation.Extensions["x-access"] = new JsonNodeExtension(JsonValue.Create(path.StartsWith("/api/me/", StringComparison.Ordinal) ? "consumer"
                     : path.StartsWith("/api/organization/", StringComparison.Ordinal) ? "business" : "platform")!);
-                operation.Extensions["x-permissions"] = new JsonNodeExtension(new JsonArray(Permission(path) is { } permission ? [JsonValue.Create(permission)] : []));
+                operation.Extensions["x-permissions"] = new JsonNodeExtension(new JsonArray(Permission(path, method) is { } permission ? [JsonValue.Create(permission)] : []));
                 operation.Extensions["x-module-gate"] = new JsonNodeExtension(JsonValue.Create(path.StartsWith("/api/platform/", StringComparison.Ordinal)
                     ? "installed-management" : "feature:" + WhatsAppFeature.Key)!);
                 LimitTags(operation);
@@ -79,11 +83,15 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
         || path.StartsWith("/api/platform/whatsapp/", StringComparison.Ordinal) || path.StartsWith("/api/me/whatsapp/", StringComparison.Ordinal);
 
     private static bool IsCreation(string path) => !path.EndsWith("/take", StringComparison.Ordinal) && !path.EndsWith("/transfer", StringComparison.Ordinal)
-        && !path.EndsWith("/check", StringComparison.Ordinal) && !path.EndsWith("/cancel", StringComparison.Ordinal) && !path.EndsWith("/preview", StringComparison.Ordinal);
+        && !path.EndsWith("/check", StringComparison.Ordinal) && !path.EndsWith("/cancel", StringComparison.Ordinal) && !path.EndsWith("/preview", StringComparison.Ordinal)
+        && !path.EndsWith("/review", StringComparison.Ordinal);
 
-    private static string? Permission(string path) => path switch
+    private static string? Permission(string path, HttpMethod method) => path switch
     {
         _ when path.StartsWith("/api/me/", StringComparison.Ordinal) => null,
+        // La configuración de WhatsApp (B18): la de Plataforma con su permiso de configuración; la de la organización, con los suyos.
+        "/api/platform/whatsapp/settings" => PlatformPermissions.Settings.Manage,
+        "/api/organization/whatsapp/settings" => method == HttpMethod.Get ? Permissions.Settings.Read : Permissions.Settings.Manage,
         // El contador del menú cuenta solo las bandejas que la persona puede ver; no declara un permiso único.
         "/api/organization/whatsapp/untaken" => null,
         _ when path.StartsWith("/api/platform/whatsapp/conversations", StringComparison.Ordinal)
@@ -137,6 +145,20 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
                 Add(409, WhatsAppErrors.ConversationPaymentRequiredCode);
             if (path.EndsWith("/templates", StringComparison.Ordinal)) Add(409, WhatsAppErrors.TemplateNotApprovedCode, "templateId");
             if (path.EndsWith("/transfer", StringComparison.Ordinal)) Add(404, WhatsAppErrors.TeamNotFoundCode);
+            if (path.EndsWith("/review", StringComparison.Ordinal))
+            {
+                Add(409, WhatsAppErrors.MessageNotUncertainCode);
+                errors.Add(HttpContractDocumentation.CoreError(501, ContractErrors.NotImplementedCode));
+            }
+        }
+        if (path.EndsWith("/whatsapp/settings", StringComparison.Ordinal))
+        {
+            errors.Add(HttpContractDocumentation.CoreError(501, ContractErrors.NotImplementedCode));
+            if (method == HttpMethod.Put)
+            {
+                errors.Add(HttpContractDocumentation.CoreError(400, "Validation.Failed"));
+                errors.Add(HttpContractDocumentation.CoreError(409, "General.ConcurrencyConflict"));
+            }
         }
         if (path.Contains("/contacts/{id}", StringComparison.Ordinal)) Add(404, WhatsAppErrors.ContactNotFoundCode);
         if (path.EndsWith("/contacts/import", StringComparison.Ordinal) || path.EndsWith("/contacts/import/preview", StringComparison.Ordinal))
@@ -188,6 +210,63 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
             ["amount"] = new OpenApiSchema { Type = JsonSchemaType.Number, Format = "decimal" },
             ["currency"] = new OpenApiSchema { Type = JsonSchemaType.String, Pattern = "^[A-Z]{3}$", MinLength = 3, MaxLength = 3 },
         };
+    }
+
+    private static string? Description(string path) => path switch
+    {
+        _ when path.EndsWith("/review", StringComparison.Ordinal) =>
+            "Marca como revisado un mensaje «Sin confirmar» (ADR 0066), sin cuerpo y sin Idempotency-Key: no crea ni envía. 200 con el mensaje, que suma reviewedByName y reviewedAtUtc; revisar dos veces devuelve la primera revisión. Otro chat, otra organización o un mensaje que no es de ese chat: 404. Si no está «Sin confirmar»: 409 WhatsApp.Message.NotUncertain. 501 hasta la B7.",
+        "/api/platform/whatsapp/settings" =>
+            "Configuración de WhatsApp de la plataforma (270 y 272): allowedCountries (al menos uno, de los países habilitados, sin repetir), chatRetentionDays y maxOrganizationChatRetentionDays, con version en el PUT y el 409 de siempre. Un valor fuera de su mínimo o su máximo es el 400 de validación en su campo. 501 hasta la B18.",
+        "/api/organization/whatsapp/settings" =>
+            "Configuración de WhatsApp de la organización (272): chatRetentionDays, de 1 al máximo de la plataforma, con version en el PUT y el 409 de siempre. Un valor fuera de su mínimo o su máximo es el 400 de validación en su campo. 501 hasta la B18.",
+        _ when path.EndsWith("/conversations/{id}", StringComparison.Ordinal) && !path.StartsWith("/api/me/", StringComparison.Ordinal) =>
+            "Cada mensaje: status suma Uncertain («Sin confirmar», ADR 0066), derivado de la cola mientras Meta no avise otra cosa; failureReason es el texto del motivo guardado (uno de los códigos WhatsApp.Send.*); reviewedByName y reviewedAtUtc dicen quién lo revisó y cuándo.",
+        _ when path.Contains("/broadcasts/{id}", StringComparison.Ordinal) =>
+            "Un destinatario suma Uncertain («Sin confirmar», decisión 255): no cuenta como enviado ni como «No llegó», sin revisión.",
+        _ => null,
+    };
+
+    private static void Append(OpenApiOperation operation, string? text)
+    {
+        if (text is null) return;
+        operation.Description = string.IsNullOrEmpty(operation.Description) ? text : operation.Description + " " + text;
+    }
+
+    /// <summary>«Sin confirmar» (ADR 0066 y decisión 255) y los motivos de lo que no salió.</summary>
+    private static void DescribeUncertain(IDictionary<string, IOpenApiSchema> schemas)
+    {
+        if (Property(schemas, "WhatsAppChatMessageResponse", "failureReason") is { } reason)
+            reason.Description = "El texto del motivo de «No se pudo enviar», en la cultura pedida. El código guardado es uno de: "
+                + string.Join(", ", WhatsAppSendFailures.All) + ".";
+        if (Property(schemas, "WhatsAppChatMessageResponse", "reviewedByName") is { } reviewer)
+            reviewer.Description = "Quién marcó como revisado el mensaje «Sin confirmar»; null sin revisión.";
+        if (Property(schemas, "WhatsAppChatMessageResponse", "reviewedAtUtc") is { } reviewed)
+            reviewed.Description = "Cuándo se marcó como revisado; null sin revisión.";
+    }
+
+    /// <summary>Las cotas de la configuración de WhatsApp (B18), como valores del contrato.</summary>
+    private static void DescribeSettings(IDictionary<string, IOpenApiSchema> schemas)
+    {
+        static string Number(int value) => Convert.ToString(value, CultureInfo.InvariantCulture);
+        foreach (var (schema, property) in new[]
+        {
+            ("UpdatePlatformWhatsAppSettingsHttpRequest", "chatRetentionDays"), ("UpdatePlatformWhatsAppSettingsHttpRequest", "maxOrganizationChatRetentionDays"),
+            ("UpdateWhatsAppOrganizationSettingsHttpRequest", "chatRetentionDays"),
+        })
+            if (Property(schemas, schema, property) is { } range)
+            {
+                range.Minimum = Number(WhatsAppSettingsLimits.MinChatRetentionDays);
+                range.Maximum = Number(WhatsAppSettingsLimits.MaxChatRetentionDays);
+            }
+        if (Property(schemas, "UpdatePlatformWhatsAppSettingsHttpRequest", "allowedCountries") is { } countries)
+        {
+            countries.MinItems = 1;
+            countries.UniqueItems = true;
+            countries.Description = "Los países que reciben códigos: al menos uno, de los habilitados en los datos de referencia, sin repetir.";
+        }
+        if (Property(schemas, "UpdateWhatsAppOrganizationSettingsHttpRequest", "chatRetentionDays") is { } organization)
+            organization.Description = "De 1 al máximo que deja la plataforma (maxOrganizationChatRetentionDays).";
     }
 
     /// <summary>Una etiqueta como consulta o campo del archivo a importar tiene el mismo largo que las de un contacto.</summary>

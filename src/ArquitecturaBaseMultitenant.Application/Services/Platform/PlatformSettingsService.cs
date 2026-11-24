@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Common;
@@ -13,7 +14,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 
 /// <summary>Consulta y modifica las reglas globales con evento en el mismo commit y caché posterior.</summary>
 internal sealed class PlatformSettingsService(IPlatformSettingsReader reader, IPlatformSettingsRepository repository,
-    IUnitOfWork unitOfWork, IRequestValidator validator, PlatformSettingsAuditWriter audit,
+    IUnitOfWork unitOfWork, IRequestValidator validator, PlatformSettingsAuditWriter audit, IEmailBrandingDefaults branding,
     TimeProvider timeProvider, ILogger<PlatformSettingsService> logger) : IPlatformSettingsService
 {
     public Task<Result<PlatformSettingsResponse>> GetAsync(CancellationToken cancellationToken) =>
@@ -23,7 +24,10 @@ internal sealed class PlatformSettingsService(IPlatformSettingsReader reader, IP
             return settings is null ? SettingsErrors.NotFound :
                 new PlatformSettingsResponse(settings.ConsumerSignup, settings.BusinessSignup, settings.MaxOwnedOrganizations,
                     settings.SalesEmail, settings.SupportEmail, settings.Version,
-                    PlatformRateLimitsResponse.From(settings.RateLimits ?? PlatformRateLimits.Initial));
+                    PlatformRateLimitsResponse.From(settings.RateLimits ?? PlatformRateLimits.Initial),
+                    // Contrato de la segunda parte de la base de la 12 (K1): hasta que la B18 los guarde, los valores por defecto.
+                    PlatformSettingsLimits.DefaultLoginAuditRetentionMonths, PlatformSettingsLimits.DefaultLoginCodeRetentionDays,
+                    PlatformSettingsLimits.DefaultClosedInvitationRetentionDays, branding.AppName, branding.SenderName, null);
         });
 
     public Task<Result<PlatformContactResponse>> GetContactAsync(CancellationToken cancellationToken) =>

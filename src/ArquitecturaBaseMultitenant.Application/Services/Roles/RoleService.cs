@@ -70,8 +70,9 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
                 .. Permissions.All
                     .GroupBy(AreaOf, StringComparer.Ordinal)
                     .Select(group => new PermissionGroupResponse(group.Key, PermissionTexts.Area(group.Key),
+                        // Contrato de la segunda parte de la base de la 12 (K1): includes vacío hasta la B16 y grantable en true hasta la B1.
                         [.. group.Select(permission => new PermissionItem(permission,
-                            PermissionTexts.Permission(permission), PermissionTexts.Description(permission)))])),
+                            PermissionTexts.Permission(permission), PermissionTexts.Description(permission), [], true))])),
             ];
             return Task.FromResult(Result.Success(groups));
         });

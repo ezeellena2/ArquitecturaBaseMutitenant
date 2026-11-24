@@ -20,6 +20,21 @@ internal sealed class UpdatePlatformSettingsRequestValidator : AbstractValidator
         RuleFor(request => request.SupportEmail).NotNull().WithMessage(_ => ValidationTexts.EmailInvalid);
         RuleFor(request => request.Version).NotNull().WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request.Reason).Required().Description();
+        // Plazos (272) y nombre de los correos (273): si faltan se conserva lo guardado; si llegan, dentro de sus cotas.
+        RuleFor(request => request.LoginAuditRetentionMonths)
+            .InclusiveBetween(PlatformSettingsLimits.MinLoginAuditRetentionMonths, PlatformSettingsLimits.MaxLoginAuditRetentionMonths)
+            .WithMessage(_ => ValidationTexts.NumberRange);
+        RuleFor(request => request.LoginCodeRetentionDays)
+            .InclusiveBetween(PlatformSettingsLimits.MinLoginCodeRetentionDays, PlatformSettingsLimits.MaxLoginCodeRetentionDays)
+            .WithMessage(_ => ValidationTexts.NumberRange);
+        RuleFor(request => request.ClosedInvitationRetentionDays)
+            .InclusiveBetween(PlatformSettingsLimits.MinClosedInvitationRetentionDays, PlatformSettingsLimits.MaxClosedInvitationRetentionDays)
+            .WithMessage(_ => ValidationTexts.NumberRange);
+        When(request => request.AppName is not null, () => RuleFor(request => request.AppName).Required().MaxLength(PlatformSettingsLimits.NameMaxLength));
+        When(request => request.SenderName is not null, () => RuleFor(request => request.SenderName).Required().MaxLength(PlatformSettingsLimits.NameMaxLength));
+        RuleFor(request => request.EmailLogoUrl)
+            .Must(url => string.IsNullOrEmpty(url) || Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps)
+            .WithMessage(_ => ValidationTexts.SecureUrlInvalid);
         // Sin rateLimits se conservan las cuotas; con ellas, van los doce perfiles completos (E9).
         When(request => request.RateLimits is not null, () =>
         {

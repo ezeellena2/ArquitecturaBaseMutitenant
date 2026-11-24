@@ -33,6 +33,13 @@ public sealed record PlatformAuditEventResponse(Guid Id, DateTime OccurredAtUtc,
     public Guid? AuditActorId { get; init; }
 }
 
+/// <summary>
+/// Una página de la auditoría, recorrida con cursor y sin totales, con los meses que se guardan los ingresos: los nombra la (i)
+/// de la pantalla (decisión 272).
+/// </summary>
+public sealed record PlatformAuditListResponse(IReadOnlyList<PlatformAuditEventResponse> Items, string? NextCursor, bool HasMore,
+    int LoginAuditRetentionMonths);
+
 /// <summary>Una organización presente en los eventos filtrados, con su nombre global actual.</summary>
 public sealed record PlatformAuditOrganizationResponse(Guid Id, string Name);
 

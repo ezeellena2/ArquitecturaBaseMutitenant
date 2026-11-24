@@ -31,6 +31,13 @@ public sealed record UpdateWhatsAppNumberHttpRequest(Guid? CompanyId, uint? Vers
 
 public sealed record UpdatePlatformWhatsAppNumberHttpRequest(bool? ConsultationsEnabled, uint? Version);
 
+/// <summary>La configuración de WhatsApp de la plataforma (B18), con su versión.</summary>
+public sealed record UpdatePlatformWhatsAppSettingsHttpRequest(IReadOnlyList<string>? AllowedCountries, int? ChatRetentionDays,
+    int? MaxOrganizationChatRetentionDays, uint? Version);
+
+/// <summary>La configuración de WhatsApp de la organización (B18), con su versión.</summary>
+public sealed record UpdateWhatsAppOrganizationSettingsHttpRequest(int? ChatRetentionDays, uint? Version);
+
 public sealed record UpdateWhatsAppBotHttpRequest(string? Welcome, string? OutOfHours, WhatsAppBotScheduleInput? Schedule,
     IReadOnlyList<WhatsAppBotMenuOptionInput>? Menu, bool? AskPromotions, bool? OfferAccountLink, Guid? EmployeesTeamId, uint? Version);
 

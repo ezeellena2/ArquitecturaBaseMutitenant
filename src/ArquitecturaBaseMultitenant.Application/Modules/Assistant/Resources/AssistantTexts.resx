@@ -82,4 +82,16 @@
 
 
 
+  <data name="Assistant.Attachment.UploadBusy" xml:space="preserve"><value>Ya estás subiendo un archivo. Esperá a que termine.</value></data>
+  <data name="Assistant.Attachment.UploadQueueFull" xml:space="preserve"><value>Hay muchos archivos subiéndose ahora. Probá de nuevo en un momento.</value></data>
+  <data name="Assistant.Attachment.UploadTimedOut" xml:space="preserve"><value>El archivo tardó demasiado en subir. Probá de nuevo.</value></data>
+  <data name="Assistant.Conversation.Unavailable" xml:space="preserve"><value>Esta conversación no está disponible. Podés borrarla.</value></data>
+  <data name="Assistant.Provider.CredentialRejected" xml:space="preserve"><value>El proveedor rechazó la clave. Reemplazala.</value></data>
+  <data name="Assistant.Provider.Limited" xml:space="preserve"><value>La cuenta del proveedor llegó a su cupo. Revisá su facturación.</value></data>
+  <data name="Assistant.Provider.ModelRejected" xml:space="preserve"><value>El proveedor no aceptó el modelo, el archivo o el pedido.</value></data>
+  <data name="Assistant.Provider.Rejected" xml:space="preserve"><value>El proveedor rechazó el pedido.</value></data>
+  <data name="Assistant.Provider.Uncertain" xml:space="preserve"><value>El pedido pudo llegar al proveedor, pero no hay una respuesta confirmada. Revisá el posible consumo antes de volver a probar.</value></data>
+  <data name="Assistant.Provider.KeyUnreadable" xml:space="preserve"><value>No pudimos leer la clave guardada: reemplazala.</value></data>
+  <data name="Assistant.Provider.UnsupportedProvider" xml:space="preserve"><value>La conexión está pausada: el proveedor guardado no está disponible en esta versión. Guardá la configuración para descartarlo.</value></data>
+  <data name="Assistant.Provider.PlatformUnavailable" xml:space="preserve"><value>El asistente no está disponible por ahora.</value></data>
 </root>

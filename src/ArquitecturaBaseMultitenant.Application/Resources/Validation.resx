@@ -43,6 +43,8 @@
   <data name="OwnedOrganizationsRange" xml:space="preserve"><value>Usá un número de 1 a 50.</value></data>
   <data name="RateLimitPermitRange" xml:space="preserve"><value>Usá un número de 1 a 1.000.000.</value></data>
   <data name="RateLimitWindowRange" xml:space="preserve"><value>Usá de 1 a 86.400 segundos.</value></data>
+  <data name="NumberRange" xml:space="preserve"><value>Usá un número de {From} a {To}.</value></data>
+  <data name="SecureUrlInvalid" xml:space="preserve"><value>Ingresá una dirección que empiece con https://.</value></data>
   <data name="FilterInvalid" xml:space="preserve"><value>Elegí un filtro de la lista.</value></data>
   <data name="NonceFormat" xml:space="preserve"><value>El pedido está incompleto. Empezá de nuevo.</value></data>
   <data name="RecoveryMethodRepeated" xml:space="preserve"><value>Tiene que ser un correo distinto del de antes.</value></data>

@@ -186,4 +186,9 @@ internal sealed class PlatformWhatsAppConversationService(IPlatformWhatsAppChatR
 
     private async Task<Result<WhatsAppConversationRowResponse>> RowAsync(Guid id, CancellationToken ct) =>
         await responses.RowAsync(null, id, ct) is { } row ? row : WhatsAppErrors.ConversationNotFound;
+
+    /// <summary>Contrato de la segunda parte de la base de la 12 (K1): responde 501 hasta que la B7 lo programe.</summary>
+    public Task<Result<WhatsAppChatMessageResponse>> ReviewAsync(WhatsAppInbox? inbox, Guid id, Guid messageId, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync(logger, clock, "PlatformWhatsAppConversationReview",
+            () => Task.FromResult(Result.Failure<WhatsAppChatMessageResponse>(ContractErrors.NotImplemented)));
 }

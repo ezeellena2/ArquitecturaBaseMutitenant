@@ -3,6 +3,7 @@ using System.Resources;
 using System.Text.Json.Nodes;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
+using ArquitecturaBaseMultitenant.Domain.Assistant;
 using Microsoft.OpenApi;
 
 namespace ArquitecturaBaseMultitenant.Api.Modules.Assistant;
@@ -38,7 +39,14 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         new(503, "Assistant.Provider.Unavailable", null, Resource("Assistant.Provider.Unavailable", "es"), Resource("Assistant.Provider.Unavailable", "en")),
         new(400, "Assistant.Provider.ContextTooLarge", "text", Resource("Assistant.Provider.ContextTooLarge", "es"), Resource("Assistant.Provider.ContextTooLarge", "en")),
         new(500, "Assistant.Export.Failed", null, Resource("Assistant.Export.Failed", "es"), Resource("Assistant.Export.Failed", "en")),
+        // Segunda parte de la base de la 12 (ADR 0064 §2, §4 y §6).
+        new(429, "Assistant.Attachment.UploadBusy", null, Resource("Assistant.Attachment.UploadBusy", "es"), Resource("Assistant.Attachment.UploadBusy", "en")),
+        new(429, "Assistant.Attachment.UploadQueueFull", null, Resource("Assistant.Attachment.UploadQueueFull", "es"), Resource("Assistant.Attachment.UploadQueueFull", "en")),
+        new(400, "Assistant.Attachment.UploadTimedOut", null, Resource("Assistant.Attachment.UploadTimedOut", "es"), Resource("Assistant.Attachment.UploadTimedOut", "en")),
+        new(409, "Assistant.Conversation.Unavailable", null, Resource("Assistant.Conversation.Unavailable", "es"), Resource("Assistant.Conversation.Unavailable", "en")),
     ];
+    private const string Uploads = "Subida (ADR 0064 §2 y §4), antes de leer el cuerpo: sin cupo, el 429 de siempre (Assistant.Limit.DailyReached o MonthlyReached, con retryAfter) y no se guarda nada; otra subida de la misma persona en curso, 429 Assistant.Attachment.UploadBusy; la cola de la copia llena, 429 Assistant.Attachment.UploadQueueFull, los dos con retryAfter y Retry-After; el cuerpo tiene 120 s y después es 400 Assistant.Attachment.UploadTimedOut. La misma Idempotency-Key con otro archivo es 422 Request.IdempotencyKeyReused.";
+    private const string Unavailable = "Una conversación que esta versión no puede leer (ADR 0064 §6) sale en el listado con available=false, sin título ni mensajes; su GET es 409 Assistant.Conversation.Unavailable y el DELETE la borra igual.";
     public void Describe(OpenApiDocument document)
     {
         DescribeSchemas(document);
@@ -79,6 +87,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
                     || operation.Responses?.TryGetValue("201", out result) == true)
                     AddSuccessExample(result, path, method, document);
                 if (path.EndsWith("/messages", StringComparison.Ordinal) && method == HttpMethod.Post) DescribeStream(operation, document);
+                DescribeUploadsAndAvailability(operation, path, method);
                 DescribeFiles(operation, path, method);
                 DescribeQuery(operation, path);
                 DescribeHeaders(operation, path);
@@ -127,6 +136,8 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
     private static bool Applies(string code, string path, HttpMethod method)
     {
         if (code == "Assistant.Conversation.NotFound") return IsChat(path) && path.Contains("/conversations/", StringComparison.Ordinal) || path.Contains("/quick/", StringComparison.Ordinal);
+        if (code == "Assistant.Conversation.Unavailable") return path.EndsWith("/conversations/{id}", StringComparison.Ordinal) && method == HttpMethod.Get;
+        if (code.StartsWith("Assistant.Attachment.Upload", StringComparison.Ordinal)) return path.EndsWith("/attachments", StringComparison.Ordinal) && method == HttpMethod.Post;
         if (code.StartsWith("Assistant.Attachment.", StringComparison.Ordinal)) return path.Contains("/attachments", StringComparison.Ordinal) || path.EndsWith("/messages", StringComparison.Ordinal);
         if (code.StartsWith("Assistant.Turn.", StringComparison.Ordinal)) return path.EndsWith("/messages", StringComparison.Ordinal) || path.Contains("/turns/", StringComparison.Ordinal);
         if (code == "Assistant.Model.AlreadyExists") return path.Contains("/models", StringComparison.Ordinal) && method != HttpMethod.Get;
@@ -134,7 +145,10 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         if (code == "Assistant.Model.NotAllowed") return path.EndsWith("/settings", StringComparison.Ordinal) && method == HttpMethod.Put || path.EndsWith("/messages", StringComparison.Ordinal);
         if (code == "Assistant.Settings.NotConfigured") return path.EndsWith("/messages", StringComparison.Ordinal);
         if (code.StartsWith("Assistant.Settings.", StringComparison.Ordinal)) return path.EndsWith("/settings", StringComparison.Ordinal) && method == HttpMethod.Put;
-        if (code.StartsWith("Assistant.Limit.", StringComparison.Ordinal) || code.StartsWith("Assistant.Provider.", StringComparison.Ordinal)) return path.EndsWith("/messages", StringComparison.Ordinal);
+        // Sin cupo, una subida responde el mismo 429 antes de leer el cuerpo (ADR 0064 §2).
+        if (code.StartsWith("Assistant.Limit.", StringComparison.Ordinal)) return path.EndsWith("/messages", StringComparison.Ordinal)
+            || path.EndsWith("/attachments", StringComparison.Ordinal) && method == HttpMethod.Post;
+        if (code.StartsWith("Assistant.Provider.", StringComparison.Ordinal)) return path.EndsWith("/messages", StringComparison.Ordinal);
         if (code.StartsWith("Assistant.Notice.", StringComparison.Ordinal)) return IsChat(path) && method != HttpMethod.Get;
         if (code.StartsWith("Assistant.QuickQuery.", StringComparison.Ordinal)) return path.Contains("/quick/", StringComparison.Ordinal);
         return code == "Assistant.Export.Failed" && path.EndsWith("/export", StringComparison.Ordinal);
@@ -571,6 +585,34 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         if (schema.Type?.HasFlag(JsonSchemaType.Integer) == true || schema.Type?.HasFlag(JsonSchemaType.Number) == true) return JsonValue.Create(1);
         return JsonValue.Create(schema.Format == "uuid" ? "10000000-0000-0000-0000-000000000001" : schema.Format == "date-time" ? "2026-10-09T12:00:00Z" : schema.Format == "date" ? "2026-10-09" : "example");
     }
+    /// <summary>Segunda parte de la base de la 12: el lugar de una subida y la conversación que no se puede leer (ADR 0064 §2, §4 y §6).</summary>
+    private static void DescribeUploadsAndAvailability(OpenApiOperation operation, string path, HttpMethod method)
+    {
+        if (path.EndsWith("/attachments", StringComparison.Ordinal) && method == HttpMethod.Post) operation.Description += " " + Uploads;
+        if (method == HttpMethod.Get && (path.EndsWith("/conversations/{id}", StringComparison.Ordinal) || path.EndsWith("/conversations", StringComparison.Ordinal)))
+            operation.Description += " " + Unavailable;
+    }
+
+    /// <summary>Las fallas del proveedor (ADR 0064 §7), el proveedor desconocido (§6) y la conversación no disponible.</summary>
+    private static void DescribeProviderFailures(string name, OpenApiSchema schema)
+    {
+        OpenApiSchema? Property(string property) =>
+            schema.Properties?.TryGetValue(property, out var value) == true ? value as OpenApiSchema : null;
+        if (name is "OrganizationAssistantSettingsResponse" or "PlatformAssistantSettingsResponse")
+        {
+            if (Property("providerIssue") is { } issue)
+                issue.Description = "La falla del proveedor que arregla quien ve esta configuración (ADR 0064 §7), según quién paga: "
+                    + string.Join(", ", AssistantErrors.ProviderIssueCodes) + "; PlatformUnavailable solo en la organización con la clave de la plataforma. null sin falla.";
+            if (Property("unsupportedProvider") is { } unsupported)
+                unsupported.Description = "El proveedor guardado no lo conoce esta versión: la conexión queda pausada; guardar sin clave lo descarta (ADR 0064 §6).";
+        }
+        if (name == "AssistantConversationSummaryResponse" && Property("available") is { } available)
+            available.Description = "false si esta versión no puede leerla: sin título ni mensajes, y se puede borrar (ADR 0064 §6).";
+        if (name == "AssistantErrorEventResponse" && Property("code") is { } code)
+            code.Description = "Código de la falla. Del proveedor (ADR 0064 §7), por el estado HTTP y sin leer el cuerpo: "
+                + string.Join(", ", AssistantErrors.ProviderFailureCodes) + ".";
+    }
+
     private static void DescribeStream(OpenApiOperation operation, OpenApiDocument document)
     {
         operation.Responses!["200"] = new OpenApiResponse
@@ -742,6 +784,8 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
                 "AssistantStateResponse" => ["monthlyBudgetProgress"],
                 "AssistantUsagePageResponse" => ["budgetProgress", "organizationCount"],
                 "AssistantUsageRowResponse" => ["dailyUsage", "peopleCount", "fundingMode", "budgetProgress"],
+                "AssistantConversationSummaryResponse" => ["available"],
+                "OrganizationAssistantSettingsResponse" or "PlatformAssistantSettingsResponse" => ["unsupportedProvider"],
                 _ => [],
             };
             foreach (var requiredProjection in requiredProjections)
@@ -782,6 +826,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
                         if (key == "efforts") { technicalProperty.MinItems = 1; technicalProperty.UniqueItems = true; }
                     }
             }
+            DescribeProviderFailures(name, mutable);
             if (name == "AssistantBudgetProgressResponse" && mutable.Properties!["fraction"] is OpenApiSchema fraction)
                 fraction.Format = "decimal";
             if (name.StartsWith("AssistantStreamHttpResponseAssistant", StringComparison.Ordinal))

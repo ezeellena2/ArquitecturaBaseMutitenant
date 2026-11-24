@@ -23,6 +23,8 @@ public sealed class GrowingCollectionContractTests
         "OrganizationUserHttpResponse.roles", "OrganizationUserHttpResponse.companies", "OrganizationUserCompanyRow.roles",
         "CompanyMemberHttpResponse.roles", "CompanyCandidateResponse.companies",
         "RoleResponse.permissions", "PermissionGroupResponse.permissions",
+        // Lo que incluye un permiso (260) son códigos de su mismo catálogo cerrado; los países que reciben códigos, del de países.
+        "PermissionItem.includes", "PlatformPermissionItem.includes", "PlatformWhatsAppSettingsResponse.allowedCountries",
         "PlatformAccountDetailResponse.loginMethods", "PlatformAccountDetailResponse.organizations", "PlatformAccountDetailResponse.soleOwnerOrganizations",
         "PlatformTenantDetailResponse.owners", "PlatformTenantFeaturesResponse.features",
         "PlatformLegalDocumentGroupResponse.versions", "PlatformLegalDocumentResponse.contents",
@@ -104,6 +106,8 @@ public sealed class GrowingCollectionContractTests
     {
         "ReferenceDataController.GetCurrencies", "ReferenceDataController.GetCountries", "ReferenceDataController.GetTimeZones",
         "ReferenceDataController.GetCultures", "ReferenceDataController.GetTaxIdTypes", "PermissionsController.List",
+        // El catálogo de permisos de un operador (260 y 269): PlatformPermissions.All, cerrado como el de la organización.
+        "PlatformPermissionsController.List",
         // Los dos grupos Terms/Privacy son el catálogo cerrado de tipos de documentos, no una lista de recursos.
         "PlatformLegalDocumentsController.List",
         // Features.All es el catálogo de módulos instalados, no filas que crecen con organizaciones o usuarios.

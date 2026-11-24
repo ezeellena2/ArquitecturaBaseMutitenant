@@ -20,7 +20,7 @@ namespace ArquitecturaBaseMultitenant.Api.Controllers.Platform;
 public sealed class PlatformAuditController(IPlatformAuditService service) : ControllerBase
 {
     [HttpGet]
-    [ProducesResponseType<CursorResult<PlatformAuditEventResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<PlatformAuditListResponse>(StatusCodes.Status200OK)]
     [ProducesProblem(StatusCodes.Status400BadRequest)]
     [ProducesProblem(StatusCodes.Status401Unauthorized)]
     [ProducesProblem(StatusCodes.Status403Forbidden)]

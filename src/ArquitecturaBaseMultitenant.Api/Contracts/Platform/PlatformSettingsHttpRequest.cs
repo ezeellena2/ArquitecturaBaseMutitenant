@@ -6,10 +6,14 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 
 namespace ArquitecturaBaseMultitenant.Api.Contracts.Platform;
 
-/// <summary>Sin <c>rateLimits</c> se conservan las cuotas guardadas; con ellas, van los doce perfiles completos (E9).</summary>
+/// <summary>
+/// Sin <c>rateLimits</c> se conservan las cuotas guardadas; con ellas, van los doce perfiles completos (E9). Los plazos (272) y
+/// el nombre, el remitente y el logo de los correos (273) que faltan conservan lo guardado.
+/// </summary>
 public sealed record UpdatePlatformSettingsHttpRequest(ConsumerSignupMode? ConsumerSignup, BusinessSignupMode? BusinessSignup,
     int? MaxOwnedOrganizations, string? SalesEmail, string? SupportEmail, uint? Version, string? Reason,
-    PlatformRateLimitsInput? RateLimits = null)
+    PlatformRateLimitsInput? RateLimits = null, int? LoginAuditRetentionMonths = null, int? LoginCodeRetentionDays = null,
+    int? ClosedInvitationRetentionDays = null, string? AppName = null, string? SenderName = null, string? EmailLogoUrl = null)
 {
     public override string ToString() => nameof(UpdatePlatformSettingsHttpRequest);
 
@@ -23,6 +27,14 @@ public sealed record UpdatePlatformSettingsHttpRequest(ConsumerSignupMode? Consu
         if (support.IsFailure) errors["supportEmail"] = [ValidationTexts.EmailInvalid];
         if (errors.Count > 0) return new ValidationError(errors);
         return new UpdatePlatformSettingsRequest(ConsumerSignup, BusinessSignup, MaxOwnedOrganizations, sales.Value,
-            support.Value, Version, Reason, RateLimits);
+            support.Value, Version, Reason, RateLimits)
+        {
+            LoginAuditRetentionMonths = LoginAuditRetentionMonths,
+            LoginCodeRetentionDays = LoginCodeRetentionDays,
+            ClosedInvitationRetentionDays = ClosedInvitationRetentionDays,
+            AppName = AppName,
+            SenderName = SenderName,
+            EmailLogoUrl = EmailLogoUrl,
+        };
     }
 }

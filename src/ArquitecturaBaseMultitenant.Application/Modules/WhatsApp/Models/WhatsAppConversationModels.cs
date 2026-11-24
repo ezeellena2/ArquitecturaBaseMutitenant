@@ -65,7 +65,14 @@ public sealed record WhatsAppConversationListRequest : PagedRequest
 /// mensaje saliente sin author es la respuesta automática del bot.
 /// </summary>
 public sealed record WhatsAppChatMessageResponse(Guid Id, WhatsAppChatMessageKind Kind, Domain.WhatsApp.WhatsAppMessageDirection Direction,
-    string? Author, string? Text, WhatsAppMediaKind? MediaKind, WhatsAppChatMessageStatus Status, string? FailureReason, DateTime CreatedAtUtc);
+    string? Author, string? Text, WhatsAppMediaKind? MediaKind, WhatsAppChatMessageStatus Status, string? FailureReason, DateTime CreatedAtUtc)
+{
+    /// <summary>Quién marcó como revisado un mensaje «Sin confirmar» (ADR 0066, B7); null sin revisión.</summary>
+    public string? ReviewedByName { get; init; }
+
+    /// <summary>Cuándo se marcó como revisado; null sin revisión.</summary>
+    public DateTime? ReviewedAtUtc { get; init; }
+}
 
 /// <summary>La conversación y sus mensajes: la página 1 trae los más recientes, en orden descendente.</summary>
 public sealed record WhatsAppConversationResponse(WhatsAppConversationRowResponse Conversation, PagedResult<WhatsAppChatMessageResponse> Messages);

@@ -20,4 +20,10 @@ public interface IWhatsAppConversationService
     Task<Result<PagedResult<WhatsAppTransferPersonResponse>>> ListTransferPeopleAsync(WhatsAppInbox? inbox, Guid id, WhatsAppTransferOptionListRequest request, CancellationToken cancellationToken);
     Task<Result<WhatsAppUntakenResponse>> GetUntakenAsync(CancellationToken cancellationToken);
     Task<Result<PagedResult<WhatsAppReferenceResponse>>> ListInboxTeamsAsync(WhatsAppInbox? inbox, WhatsAppInboxTeamListRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Marca como revisado un mensaje «Sin confirmar» del chat (ADR 0066), con quién y cuándo. Revisar dos veces devuelve la
+    /// primera revisión; un mensaje que no está «Sin confirmar» es 409 y uno de otro chat, 404.
+    /// </summary>
+    Task<Result<WhatsAppChatMessageResponse>> ReviewAsync(WhatsAppInbox? inbox, Guid id, Guid messageId, CancellationToken cancellationToken);
 }

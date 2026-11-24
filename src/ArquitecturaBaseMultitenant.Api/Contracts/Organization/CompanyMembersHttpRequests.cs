@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Models.Companies;
+using ArquitecturaBaseMultitenant.Application.Models.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using CompanyMemberModelResponse = ArquitecturaBaseMultitenant.Application.Models.Companies.CompanyMemberResponse;
 
@@ -24,7 +25,7 @@ public sealed record ChangeCompanyMemberStatusHttpRequest(CompanyMembershipStatu
 public sealed record CompanyMemberHttpResponse(Guid MemberId, Guid? UserId, string DisplayName, string? Email,
     CompanyMemberState State, CompanyMembershipStatus MembershipStatus,
     IReadOnlyList<CompanyMemberRoleResponse> Roles, uint Version, DateTime CreatedAtUtc, Guid? InvitationId,
-    DateTime? InvitationExpiresAtUtc);
+    DateTime? InvitationExpiresAtUtc, InvitationDeliveryStatus? InvitationDelivery);
 
 public static class CompanyMemberHttpMappings
 {
@@ -50,5 +51,5 @@ public static class CompanyMemberHttpMappings
     public static CompanyMemberHttpResponse ToHttpResponse(this CompanyMemberModelResponse response) => new(
         response.MemberId, response.UserId, response.DisplayName, response.Email?.DisplayValue,
         response.State, response.MembershipStatus, response.Roles, response.Version, response.CreatedAtUtc,
-        response.InvitationId, response.InvitationExpiresAtUtc);
+        response.InvitationId, response.InvitationExpiresAtUtc, response.InvitationDelivery);
 }

@@ -543,4 +543,28 @@
   <data name="Bot.EnterAccountButton" xml:space="preserve">
     <value>Go to my account</value>
   </data>
+  <data name="WhatsApp.LoginCode.AccountDailyLimit" xml:space="preserve">
+    <value>No more WhatsApp codes can be sent to this account today. Try again later.</value>
+  </data>
+  <data name="WhatsApp.Message.NotUncertain" xml:space="preserve">
+    <value>That message isn't unconfirmed: there's nothing to review.</value>
+  </data>
+  <data name="Send.Failure.NotAllowed" xml:space="preserve">
+    <value>This number is not allowed to receive messages from the WhatsApp account.</value>
+  </data>
+  <data name="Send.Failure.WindowClosed" xml:space="preserve">
+    <value>The reply window ended before it went out. Wait for a new message from the contact.</value>
+  </data>
+  <data name="Send.Failure.TokenInvalid" xml:space="preserve">
+    <value>The WhatsApp connection expired or was revoked. It needs to be renewed.</value>
+  </data>
+  <data name="Send.Failure.PermissionMissing" xml:space="preserve">
+    <value>The WhatsApp connection lacks a permission to send.</value>
+  </data>
+  <data name="Send.Failure.Unavailable" xml:space="preserve">
+    <value>WhatsApp could not be reached, not even with the retries. Try again in a while.</value>
+  </data>
+  <data name="Send.Failure.ReadOnly" xml:space="preserve">
+    <value>The number of this conversation is disconnected.</value>
+  </data>
 </root>

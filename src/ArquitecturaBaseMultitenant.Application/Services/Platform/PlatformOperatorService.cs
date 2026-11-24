@@ -91,4 +91,12 @@ internal sealed class PlatformOperatorService(
         if (assignment.Version != version) throw new ConcurrencyConflictException();
         return assignment;
     }
+
+    public Task<Result<IReadOnlyList<PlatformPermissionItem>>> GetPermissionCatalogAsync(CancellationToken ct) =>
+        OperationLog.RunAsync(logger, clock, "GetPlatformPermissionCatalog", () =>
+        {
+            // Contrato de la segunda parte de la base de la 12 (K1): includes vacío hasta la B16 y grantable en true hasta la B1.
+            IReadOnlyList<PlatformPermissionItem> catalog = [.. PlatformPermissions.All.Select(code => new PlatformPermissionItem(code, [], true))];
+            return Task.FromResult(Result.Success(catalog));
+        });
 }

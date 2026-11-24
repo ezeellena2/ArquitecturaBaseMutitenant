@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -235,7 +236,14 @@ public sealed class PlatformSettingsServiceTests
     private static PlatformSettingsService Create(ServiceFixture<PlatformSettingsService> fixture, StubRepository repository,
         StubEvents events, FakeUnitOfWork unitOfWork) =>
         new(new StubReader(), repository, unitOfWork, fixture.Validator,
-            new PlatformSettingsAuditWriter(new StubUser(), events, fixture.TimeProvider, new StubRequest()), fixture.TimeProvider, fixture.Logger);
+            new PlatformSettingsAuditWriter(new StubUser(), events, fixture.TimeProvider, new StubRequest()), new StubBranding(), fixture.TimeProvider, fixture.Logger);
+
+    private sealed class StubBranding : IEmailBrandingDefaults
+    {
+        public string AppName => "Arquitectura Base";
+
+        public string SenderName => "Arquitectura Base";
+    }
 
     private sealed class StubReader : IPlatformSettingsReader
     {
