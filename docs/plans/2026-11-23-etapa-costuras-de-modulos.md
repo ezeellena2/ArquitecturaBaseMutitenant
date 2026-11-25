@@ -49,7 +49,7 @@ La segunda parte de la base ya programó casi todo; faltan la B18, la F12 y la F
 
 El chat del contrato confirma contra el código y las tablas de sus puertas:
 - **las dos puertas cerradas;**
-- **la B18:** `WhatsAppPlatformSettings.MaxOrganizationChatRetentionDays` (3650 de entrada) y `WhatsAppOrganizationSettings.ChatRetentionDays` (90, de 1 al máximo); quién los valida, qué devuelve el `GET` de la organización y cómo purga el worker de los chats. Ese máximo es uno de «los máximos de hoy» (0069 §4), y la B5 lo pasa por el resolvedor con los nombres reales;
+- **la B18:** `WhatsAppPlatformSettings.MaxOrganizationChatRetentionDays` (3650 de entrada) y `WhatsAppOrganizationSettings.ChatRetentionDays` (90, de 1 al máximo), con los lectores que nombra la B5. Ese máximo es uno de «los máximos de hoy» (0069 §4), y la B5 lo pasa por el resolvedor;
 - **la B14:** el cupo del día con la clave de la plataforma sigue leyendo `DailyMessageLimit` de la plataforma, ahora por persona en la organización;
 - **los topes con máximo de la plataforma:** la lista cerrada que va al resolvedor. Se esperan tres: el presupuesto del mes y el cupo del día de la IA, y el plazo de los chats. Uno más va a la B4 o la B5, según su módulo;
 - **los lectores del permiso de uso:** quién usa `ITenantFeatureCache`, `ITenantFeatureReader` o `TenantFeatureRow`. Uno que sumaron la base 2 o las acciones va a la B2;
@@ -133,16 +133,15 @@ Los pasos, con sus archivos, lo que copian y sus tests, están en la spec (§Pas
      - `AssistantFinanceTests` sigue en verde.
    - **Escenarios del revisor:** que ningún camino pague con el máximo viejo o sin tope, con la reserva hecha antes de llamar al proveedor; el turno de un worker, que lee el tope con el actor, y nunca con datos de otra organización; y el presupuesto en su moneda, como `Money`.
 5. **B5 · El plazo de los chats de WhatsApp (R: datos y aislamiento).**
-   - **El aporte:** `Application/Modules/WhatsApp/Services/WhatsAppModuleLimitContributor.cs`, registrado en `WhatsAppModule.cs`, declara `whatsapp.chatRetentionDays` (`Count`, 90 de entrada, mínimo 1). Su máximo sale de `MaxOrganizationChatRetentionDays`, con los nombres reales que confirmó K0.
+   - **El aporte:** `Application/Modules/WhatsApp/Services/WhatsAppModuleLimitContributor.cs`, registrado en `WhatsAppModule.cs`, declara `whatsapp.chatRetentionDays` (`Count`, 90 de entrada, mínimo 1). Su máximo sale de `IWhatsAppSettingsReader.FindPlatformAsync` (`MaxOrganizationChatRetentionDays`; sin fila, `WhatsAppSettingsLimits.DefaultMaxOrganizationChatRetentionDays`).
    - **Quién lee por el resolvedor:**
-     - el validador del `PUT` de la organización: más que el tope da el 400 de siempre, en su campo;
-     - el `GET`, si muestra el máximo;
-     - la purga de los chats de cada organización, con `Effective`: si Plataforma baja el máximo, vale el menor, sin tocar lo guardado.
+     - `WhatsAppSettingsService.UpdateAsync`, que compara con el máximo adentro de la UoW (el validador del pedido mira solo de 1 a 3650): más que el tope da el 400 de siempre, en su campo;
+     - `WhatsAppSettingsResolver.OrganizationChatRetentionDaysAsync`, que hoy recorta con `Math.Min` y pasa a `Effective`. Lo usan el `GET` de la organización, que devuelve el plazo ya recortado y no el máximo, y la purga de cada organización (`WhatsAppMessageRetentionService.ClearExpiredOrganizationChatsAsync`): si Plataforma baja el máximo, vale el menor, sin tocar lo guardado.
    - **Tests:**
      - el `PUT` sobre el tope da 400;
      - bajar el máximo purga con el menor en esa organización y no en otra;
      - los chats de la plataforma siguen con su propio plazo.
-   - **Escenarios del revisor:** el worker entra con su organización (`TenantJobRunner`) y es idempotente y por lotes, como la B18, hasta que la E10 le dé el lease; nunca borra antes del plazo elegido, salvo que el tope sea menor; dos organizaciones sin cruce; el lote que falla registra y sigue.
+   - **Escenarios del revisor:** `WhatsAppMessageRetentionWorker` entra con su organización (`TenantJobRunner`) y es idempotente y por lotes, como la B18, hasta que la E10 le dé el lease; nunca vacía un mensaje antes del plazo elegido, salvo que el tope sea menor; dos organizaciones sin cruce; el lote que falla registra y sigue.
 6. **B6 · El test de arquitectura y la regla de los topes.**
    - **`ArchitectureTests/ModuleLimitArchitectureTests.cs`**, con `CallSites`:
      - una lista cerrada del getter de cada máximo de la plataforma, por clave declarada, que se cruza en los dos sentidos con las declaraciones reales;
