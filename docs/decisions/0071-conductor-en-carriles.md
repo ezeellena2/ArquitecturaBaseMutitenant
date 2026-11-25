@@ -35,7 +35,7 @@ El usuario teme que cada etapa tarde una semana.
    - **Al cerrar cada carril,** un agente corre los tests de integración y de seguridad de las áreas que tocaron sus tareas, y arregla lo que falle.
    - **Una sola integración por vez.** Esos tests esperan su turno en la fila pesada de `carril.mjs`, para no cargar la PC. Así se sigue cumpliendo «una corrida pesada por vez» (traspaso 18).
 4. **Agentes más baratos.**
-   - **Agentes cortos:** paran cerca de los 80 pasos (antes, 150) y siguen con otro, hasta cuatro.
+   - **Agentes cortos:** paran cerca de los 80 pasos (antes, 150) y siguen con otro, hasta seis.
    - **El mapa de la tarea:** cada agente lo recibe, así no recorre el repo buscando.
    - **Lectura por partes:** se lee con `grep -n` y por rangos, y de un diff, primero `--stat`.
    - **Verificación con la salida mínima:** se verifica con `scripts/arneses/verificar.mjs` en el back y `scripts/verificar.mjs` en el front. Muestran solo lo que falla y dejan el log entero en `.local/verificar/`.

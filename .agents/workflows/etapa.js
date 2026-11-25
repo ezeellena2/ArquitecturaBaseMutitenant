@@ -38,7 +38,7 @@ const FRONT = '../ArquitecturaBaseMutitenantFront'
 const TOPE_CUPO = 85
 // Cada paso de un agente relee todo lo que lleva: uno corto gasta mucho menos que uno largo con el mismo trabajo.
 const PASOS_POR_AGENTE = 80
-const VUELTAS = 4
+const VUELTAS = 6
 const PRESUPUESTO = typeof budget === 'undefined' ? null : budget
 const MINIMO_DE_PRESUPUESTO = 250000
 
@@ -420,7 +420,7 @@ function pProgramar(ctx, t, revisa, falta, vuelta, carril) {
   const cambios = ctx.CAMBIOS.length ? `\nCambios al contrato que hicieron otras tareas de esta corrida:\n- ${ctx.CAMBIOS.join('\n- ')}\n` : ''
   const sigue = falta
     ? `\nOtro agente empezó esta tarea y paró a mitad (vas por la vuelta ${vuelta + 1}). Lo que dejó dicho: ${falta}. Mirá git status y git log --grep "Tarea: ${ctx.CLAVE}/${t.id}" en ${repoDe(t, carril)} para ver dónde quedó, y seguí desde ahí.\n`
-    : ''
+    : `\nSi en su repo ya hay commits con «Tarea: ${ctx.CLAVE}/${t.id}» de una corrida anterior que quedó a medias, mirá qué hicieron con git log --grep "Tarea: ${ctx.CLAVE}/${t.id}" --stat y seguí desde ahí, sin rehacerlo. Lo que vio el lector del plan: ${t.motivo || 'nada'}.\n`
   const preparar = enCopia && !falta
     ? `\nAntes de empezar, desde la carpeta del back: node scripts/arneses/carril.mjs preparar ${carril.copia} (crea la copia o la pone al día con main).\n`
     : ''
@@ -692,7 +692,8 @@ function armarCarriles(back, cuantos, clave) {
       else porClave[k] = t.id
     }
   }
-  const peso = (t) => (t.riesgo.length ? 3 : 1)
+  // Pesa solo lo que falta: una tarea ya hecha no carga a su carril (en la base 2, un carril se llevó cuatro de seis pendientes).
+  const peso = (t) => (t.estado !== 'pendiente' ? 0 : (t.riesgo.length ? 3 : 1))
   const grupos = {}
   back.forEach((t, i) => {
     const g = (grupos[raiz(t.id)] = grupos[raiz(t.id)] || { ids: new Set(), peso: 0, primero: i })

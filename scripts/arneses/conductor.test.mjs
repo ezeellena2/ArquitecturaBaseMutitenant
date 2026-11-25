@@ -179,7 +179,7 @@ test('conductor: sin cupo no empieza ninguna tarea nueva', async () => {
   assert.match(resultado.detenido, /cupo/);
 });
 
-test('conductor: una tarea a medias sigue con otro agente, hasta cuatro', async () => {
+test('conductor: una tarea a medias sigue con otro agente, hasta seis', async () => {
   const lect = lectura([tarea('B1', 'back')]);
   let vuelta = 0;
   const resp = respondedor(lect, {});
@@ -187,7 +187,7 @@ test('conductor: una tarea a medias sigue con otro agente, hasta cuatro', async 
     if (/^B1 · programa/.test(label)) return programa('B1', { estado: 'parcial', falta: `falta el paso ${++vuelta}` });
     return resp(label, prompt);
   }, { plan: PLAN, modo: 'programar' });
-  assert.deepEqual(llamadas.filter((l) => /^B1/.test(l.label)).map((l) => l.label), ['B1 · programa', 'B1 · programa (2)', 'B1 · programa (3)', 'B1 · programa (4)']);
+  assert.deepEqual(llamadas.filter((l) => /^B1/.test(l.label)).map((l) => l.label), ['B1 · programa', 'B1 · programa (2)', 'B1 · programa (3)', 'B1 · programa (4)', 'B1 · programa (5)', 'B1 · programa (6)']);
   assert.match(llamadas[2].prompt, /falta el paso 1/);
   assert.equal(estadoDe(resultado, 'B1').estado, 'parcial');
 });
@@ -329,6 +329,22 @@ test('conductor: modelos elige el modelo de cada rol, y sin modelos todos van co
   }, { plan: PLAN, modo: 'cerrar', modelos: { verifica: 'haiku' } });
   assert.equal(cierre.llamadas.find((l) => l.label === 'verifica · Textos y errores').model, 'haiku');
   assert.equal(cierre.llamadas.find((l) => l.label === 'revisión · Textos y errores').model, undefined);
+});
+
+test('conductor: los carriles se reparten por lo que falta, y una tarea a medias sigue lo que dejó la corrida anterior', async () => {
+  const lect = lectura([
+    tarea('B1', 'back', { area: 'permisos', estado: 'hecha' }),
+    tarea('B2', 'back', { area: 'permisos', estado: 'hecha', riesgo: ['permisos'] }),
+    tarea('B3', 'back', { area: 'permisos', motivo: 'quedó a medias: faltan las listas hijas' }),
+    tarea('B4', 'back', { area: 'identidad' }),
+    tarea('B5', 'back', { area: 'whatsapp' }),
+  ]);
+  const { resultado } = await correr(respondedor(lect), { plan: PLAN, modo: 'planificar' });
+  assert.deepEqual(resultado.carrilesBack.map((c) => c.tareas), [['B1', 'B2', 'B3', 'B5'], ['B4']], 'lo hecho no pesa');
+  const { llamadas } = await correr(respondedor(lect), { plan: PLAN, modo: 'programar' });
+  const b3 = llamadas.find((l) => l.label === 'B3 · programa').prompt;
+  assert.match(b3, /git log --grep "Tarea: prueba\/B3" --stat y seguí desde ahí/);
+  assert.match(b3, /faltan las listas hijas/);
 });
 
 // ---------- Revisión por premisa ----------
