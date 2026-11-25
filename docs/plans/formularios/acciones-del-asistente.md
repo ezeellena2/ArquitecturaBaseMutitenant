@@ -62,10 +62,10 @@
 
 **Los estados de la tarjeta:**
 - **nueva;**
-- **«Reemplazada»:** otra propuesta posterior de esa conversación la reemplazó;
+- **«Reemplazada»:** otra propuesta posterior de su clase, en esa conversación, la reemplazó;
 - **«Ya no disponible»,** con el motivo: sin el permiso, sin el módulo, de otra versión, ya no está a quién se refiere, o la cuenta se dio de baja;
 - **aplicada:** se pliega en «Invitación enviada», «Roles cambiados», «Quitado», «Rol creado», «Rol cambiado» o «Rol dado de baja», con el enlace a lo hecho si se puede ver;
-- **«Sin confirmar»:** pasaron 24 h sin saber si se guardó, con el enlace al listado para revisarlo.
+- **«Sin confirmar»:** pasó la validez de la clave del último intento (24 h de entrada) sin saber si se guardó, con el enlace al listado para revisarlo.
 
 **Abrir:** el botón abre la pantalla de la acción con `?proposal=<id>`, que lee la propuesta del servidor.
 - **El diálogo** abre sobre el Inicio, y las páginas, en su lugar.
@@ -121,7 +121,7 @@ Cada uno lleva su teléfono (`M-`). Manda el tablero aprobado, salvo lo que cont
 **El contrato de las acciones:**
 - el build publica `docs/contracts/assistant-actions.json`, con cada acción: id, versión, clase, requisito, `SaveRoute`, confirmación, pantalla, efecto, campos (tipo, obligatorio, límites, `DependsOn`) y destino;
 - el front genera sus tipos con `npm run contracts`;
-- **lo armado como dato** (0068, «Consecuencias»): una acción puede declarar que sus campos salen de la definición de su destino, como las opciones de un catálogo (E12). `read_action` con el destino da esos campos, con su tipo y sus límites, y `assistant-actions.json` publica la acción con esa marca y sin campos fijos.
+- **lo armado como dato** (0068, «Consecuencias»): una acción puede declarar que sus campos salen de la definición de su destino, como las opciones de un catálogo. `read_action` con el destino da esos campos, con su tipo y sus límites, y `assistant-actions.json` publica la acción con esa marca y sin campos fijos.
 
 **Las herramientas** (no son HTTP; su forma va en `docs/features/asistente.md`):
 - `assistant_actions`, precargada: `[{action, name}]`, o las áreas si son más de 40;
@@ -151,7 +151,7 @@ Cada uno lleva su teléfono (`M-`). Manda el tablero aprobado, salvo lo que cont
 | Columna | Tipo | Regla |
 | --- | --- | --- |
 | `Id`, `TenantId`, `ConversationId`, `MessageId`, `OwnerUserId` | uuid | FK compuesta al mensaje, con borrado en cascada |
-| `Kind` | texto | `Action` (la E25 suma las suyas) |
+| `Kind` | texto | `Action` |
 | `ActionId`, `ActionVersion` | texto ≤80, int | sellados |
 | `Values` | jsonb | por campo: lo que escribió el modelo, el id resuelto y la duda; nunca nombres resueltos |
 | `TargetId?`, `BaseVersion?` | uuid, int | Edit y Remove |
@@ -160,13 +160,14 @@ Cada uno lleva su teléfono (`M-`). Manda el tablero aprobado, salvo lo que cont
 | `AppliedAtUtc?`, `AppliedLocation?` | timestamptz, texto ≤2048 | — |
 | `CreatedAtUtc` y versión (`xmin`) | — | — |
 
-- **«Sin confirmar»** sale al leer, como «no disponible»: hay claves en `AttemptKeys`, ninguna terminó en 2xx y pasaron 24 h desde la última. No lo escribe ningún worker.
-- **Índice** parcial por `ConversationId` con `State = 'New'`, para reemplazar.
-- **La migración** es aditiva, y la tabla se suma al inventario del módulo, que la quita si se quita el asistente.
+- **«Sin confirmar»** sale al leer, como «no disponible»: hay claves en `AttemptKeys`, ninguna terminó en 2xx y pasó la validez de la clave (`IdempotencyOptions.ValidityHours`, 24 h de entrada) desde la última. Vencida, `IdempotencyStore` la borra y la vuelve a reservar, así que otro guardado ya no sería único. No lo escribe ningún worker.
+- **Índice** parcial por `(TenantId, ConversationId, Kind)` con `State = 'New'`, para reemplazar dentro de su clase.
+- **La migración** es aditiva, y la tabla se suma al inventario del módulo (`AssistantModelContributor`), que la quita si se quita el asistente.
 - **Las personas que nombra una propuesta** (el destino y los `Record` de una persona) se suman a los `SubjectUserIds` de su mensaje.
-- **Se borra** con su conversación, con la retención de las conversaciones del Inicio (`retentionDays`, 30 por defecto; 272), salvo las guardadas, y con la baja de la cuenta. Se inscribe en `PersonalDataPurgeTests` (B2 de la base 2): la purga su conversación.
+- **En la historia del turno siguiente,** el mensaje con una propuesta suma la acción y lo que escribió el modelo, nunca lo resuelto ni los nombres (0068 §7; 0064 §9 y §10). El pedido lleva la conversación entera, así que la última propuesta nunca queda afuera.
+- **Se borra** con su conversación, con la retención de las conversaciones del Inicio (`retentionDays`, 30 por defecto; 272), salvo las guardadas, y con la baja de la cuenta. Es una tabla del módulo: no entra en `PersonalDataPurgeTests`, que mira solo el modelo del núcleo (ADR 0062); su borrado lo prueba la B5.
 
-**`tenant.AssistantTurns`** suma `OfferedActions` (jsonb, nulo): la lista de acciones que se ofreció en el turno, sellada (0068 §6). Su migración va con la B4, y se escribe en el mismo despliegue como excepción de la 0060: todavía no hay despliegue.
+**`tenant.AssistantTurns`** suma `OfferedActions` (jsonb, nulo): la lista de acciones que se ofreció en el turno, sellada (0068 §6). Su migración va con la B4. Un turno que ofrece acciones se sella con `EngineVersion` 2 (`AssistantTurnWork.CurrentEngineVersion` pasa a 2; uno sin acciones sigue en 1): una copia anterior no lo toma (0064 §6, B14 de la base 2), sin excepción de la 0060.
 
 **`platform.IdempotencyKeys`** no cambia: `IIdempotencyStore` suma una lectura, `FindAsync(scope, userId, key)`, con el estado, el código y la ruta.
 
@@ -174,15 +175,15 @@ Cada uno lleva su teléfono (`M-`). Manda el tablero aprobado, salvo lo que cont
 
 ## Pasos ✓
 
-**Back,** en orden y con un solo carril:
+**Back,** con las esperas del plan:
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| B1 | Los tests de arquitectura de las acciones y los endurecimientos de la 0068. Los modelos, el puerto, las declaraciones, la lista cerrada de pantallas del núcleo (`AssistantActionScreen`, que el módulo traduce a su `AssistantRouteKey`) y la fila `ActionSource` de capas-y-flujo entran antes, con el contrato. Los cuatro tests que usan `ExecuteSqlRaw` pasan a `ExecuteSqlAsync` interpolado | `Application/Models/AssistantActions/*`, `Application/Interfaces/Services/IAssistantActionSource.cs`, `BannedSymbols.txt`, `RuntimeRoleTests` y los cuatro tests | `IPendingItemSource` | `AssistantActionDeclarationTests`: id, ruta y requisito por reflexión de atributos, campos (un `Items` con un solo nivel, su tope y su clave), textos, casos, el árbol de dependencias con su lista de lo permitido, también a través de cada puerto lector del núcleo, `Company` con su campo, `Remove` con `RemoveConfirmation`, ninguna ruta de la lista de lo que no se declara y cada pantalla con su traducción |
+| B1 | Los tests de arquitectura de las acciones y los endurecimientos de la 0068. Los modelos, el puerto, las declaraciones, la lista cerrada de pantallas del núcleo (`AssistantActionScreen`, que el módulo traduce a su `AssistantRouteKey`) y la fila `ActionSource` de capas-y-flujo entran antes, con el contrato. Los usos de `ExecuteSqlRaw` de los tests (ocho, en seis archivos) pasan a `ExecuteSqlAsync` interpolado | `Application/Models/AssistantActions/*`, `Application/Interfaces/Services/IAssistantActionSource.cs`, `BannedSymbols.txt`, `RuntimeRoleTests` y esos tests | `IPendingItemSource` | `AssistantActionDeclarationTests` (en `ArchitectureTests/`, y la traducción de cada pantalla, en `ArchitectureTests/Modules/Assistant/`): id, ruta y requisito por reflexión de atributos, campos (un `Items` con un solo nivel, su tope y su clave), textos, casos, el árbol de dependencias con su lista de lo permitido, también a través de cada puerto lector del núcleo, `Company` con su campo, `Remove` con `RemoveConfirmation`, ninguna ruta de la lista de lo que no se declara y cada pantalla con su traducción |
 | B2 | El alcance de solo lectura: un alcance de DI propio. Entra con el actor revalidado (worker) o con el tenant del claim (petición), abre `READ ONLY` y se descarta. Corren ahí las fuentes y las 19 lecturas | el puerto `IAssistantReadOnlyScope` en `Application/Modules/Assistant/Interfaces/Integrations/`, implementado en `Infrastructure/Modules/Assistant/` | `ExecutionActorContext` (`IExecutionActorScope`), `TenantContext` | una fuente de prueba que escribe falla sin dejar filas; tenant correcto en los dos caminos; las lecturas de hoy siguen verdes |
-| B3 | Las `Policy` de la 0061: `OrganizationDelegationPolicy` y `CompanyDelegationPolicy`, que la B1 de la base 2 separó de sus `Guard`, las usan las fuentes sin cambiar la conducta de la ruta | las fuentes de B6 y B7 | las dos `Policy` | `DelegatedAdministrationTests` sin cambios; la `Policy` y su `Guard` deciden igual en la organización y en una empresa |
-| B4 | El registro y las tres piezas: el filtro por llamada, el sello en `AssistantTurns.OfferedActions` con su migración, la lista precargada en la preparación del turno, `read_action`, `propose_action`, `AssistantActionToolData` en el `switch` cerrado y la calificación | `Application/Modules/Assistant/Actions/*`, `AssistantTurnPreparationBuilder`, `AssistantTurnToolBuilder` | `AssistantToolCatalog`, `AssistantTool` | catálogo, sello, una por turno, rechazo sin cortar el turno, sin calificación no se ofrece |
-| B5 | La propuesta: entidad, migración, reemplazo, sujetos, retención y baja. Las tres rutas, `FindAsync` del almacén y «Sin confirmar» calculado al leer | `Domain/Assistant/AssistantProposal.cs`, configuración, migración, `AssistantProposalService`, controller | `AssistantMessage`, `AssistantConversationService` | aislamiento entre personas y organizaciones, estados, re-resolución, aplicada comprobada, `attempts` después de un 2xx |
+| B3 | Lo que tiene quien pide, sin el `Guard`: las `Policy` de la 0061 ya son puras (B1 de la base 2), y `ReadHeldAsync` y `ReadAssignedAsync` pasan de `OrganizationDelegationGuard` a `DelegationPermissionsResolver` (solo con `ICurrentUser` e `IRoleReader`), que usan los dos `Guard`, `RoleService` y las fuentes, sin cambiar la conducta de la ruta | `OrganizationDelegationGuard.cs`, `CompanyDelegationGuard.cs`, `RoleService.cs` y `Application/Services/Roles/DelegationPermissionsResolver.cs` (nuevo) | `OrganizationDelegationGuard.ReadHeldAsync` | `DelegatedAdministrationTests` sin cambios; la `Policy` y su `Guard` deciden igual en la organización y en una empresa, y el `Guard` y el resolvedor leen lo mismo |
+| B4 | El registro y las tres piezas: el filtro por llamada, el sello en `AssistantTurns.OfferedActions` con su migración y `EngineVersion` 2, la lista precargada en la preparación del turno, `read_action`, `propose_action`, `AssistantActionToolData` en el `switch` cerrado y la calificación | `Application/Modules/Assistant/Actions/*`, `AssistantTurnWork`, `AssistantTurnPreparationBuilder`, `AssistantTurnToolBuilder` | `AssistantToolCatalog`, `AssistantTool` | catálogo, sello y su versión, una por turno, rechazo sin cortar el turno, sin calificación no se ofrece, `ModelSnapshotTests` |
+| B5 | La propuesta: entidad, migración, reemplazo por clase, sujetos, retención y baja, y su lugar en la historia del turno siguiente. Las tres rutas, `FindAsync` del almacén y «Sin confirmar» calculado al leer | `Domain/Assistant/AssistantProposal.cs`, configuración, migración, `AssistantModelContributor`, `AssistantTurnWriter`, `AssistantProposalService`, controller | `AssistantMessage`, `AssistantConversationService` | aislamiento entre personas y organizaciones, estados, re-resolución, aplicada comprobada, `attempts` después de un 2xx, la retención y la baja la borran, el pedido siguiente la trae sin lo resuelto, `ModelSnapshotTests` |
 | B6 | `OrganizationUserActionSource`, con las tres de Usuarios, la empresa por su permiso y el aviso de la invitación | `Application/Services/OrganizationUsers/OrganizationUserActionSource.cs` | `OrganizationDomainPendingItems` | escenarios de la batería |
 | B7 | `RoleActionSource`, con las tres de Roles y los permisos del alcance que quien pide tiene. Quitar un permiso que sigue incluido por otro que queda (260) se rechaza con su ruta (`Invalid`) | `Application/Services/Roles/RoleActionSource.cs` | B6 | escenarios de la batería |
 | B8 | La batería genérica, los escenarios y el contrato publicado | `Api.IntegrationTests/Modules/Assistant/AssistantActionContractTests.cs`, `TestFeatures/AssistantActions/*`, el generador de `assistant-actions.json` | `RouteIsolationMatrixTests` | la batería de la 0068 para las seis |
@@ -197,17 +198,23 @@ Cada uno lleva su teléfono (`M-`). Manda el tablero aprobado, salvo lo que cont
 | F4 | Los adaptadores de Roles: crear, cambiar y dar de baja | `RoleEditorPage.tsx`, `RolesPage.tsx` | F3 | ídem |
 | F5 | Un adaptador por acción del contrato | `src/shared/assistant-actions/coverage.test.ts` | — | falla si falta uno |
 
+## Acciones del asistente ✓
+
+Las seis de «Qué se construye»: esta etapa arma la mecánica de la 0068 y las declara.
+
 ## Qué verificar al arrancar ✓
 
 | Marca | Qué hay que confirmar | Qué asume esta spec |
 | --- | --- | --- |
-| Base 2 · B1 | `OrganizationDelegationGuard`, `CompanyDelegationGuard`, sus `Policy` y los 403 de la 0061 en invitar, editar y roles | existen; B3 reusa las `Policy` |
-| Base 2 · B16 | lo incluido en la proyección efectiva | los permisos de quien pide ya lo incluyen |
+| Base 2 · B1 | `OrganizationDelegationGuard`, `CompanyDelegationGuard`, sus `Policy` y los 403 de la 0061 en invitar, editar y roles | existen, con las `Policy` puras; B3 saca del `Guard` la lectura de lo que tiene quien pide |
+| Base 2 · B16 | lo incluido en la proyección efectiva (`Permissions.Inclusions`) | los permisos de quien pide ya lo incluyen |
 | Base 2 · F5 | cómo sabe el front qué roles y permisos puede dar quien pide | `grantable` en los roles y en el catálogo (269), que calcula la misma `Policy` que usan las fuentes; lo que difiera va a «Cambios al contrato» en K0 |
-| Base 2 · F11 | `Picker` y su búsqueda por id | existe; F3 y F4 lo usan |
+| Base 2 · F11 | `Picker` con `selectedOptions`, lo elegido que no está en la página cargada | existe; F3 y F4 le pasan lo propuesto con el `label` de la propuesta, sin buscar por id |
+| Base 2 · B9 | `CoreTextsNeutralTests` y `ModelSnapshotTests` | existen; K1 y las migraciones de B4 y B5 los corren |
+| Base 2 · B14 | `AssistantTurnWork.CurrentEngineVersion` (1) | B4 sella 2 en un turno con acciones |
 | Tools | las 19 lecturas no usan `IUnitOfWork` en su camino | corren en `READ ONLY` sin cambios |
 | `UpdateOrganizationUserRequest` | reemplaza las listas enteras | la ficha aplica las operaciones sobre lo leído y manda las listas completas |
-| Rol | alcance y empresa no cambian al editar | `roles.edit@1` no los propone |
+| Rol | la pantalla no deja cambiar alcance ni empresa al editar (la ruta sí, sin personas) | `roles.edit@1` no los propone, y el adaptador manda los leídos |
 
 ## Decisiones tomadas
 
