@@ -13,22 +13,22 @@
 
 ## Forma de trabajo
 
-Modo rápido: primero el contrato; después un solo chat del back; una sola puerta al final ([etapa en paralelo](../guides/etapa-en-paralelo.md)). El front no programa: la etapa no tiene pantallas y su contrato no cambia. Cada tarea lleva su test dirigido y, al terminar, el build y los tests rápidos enteros del back, sin Docker y sin filtrar por módulo. Si la tarea toca rutas, persistencia, autenticación o aislamiento, al terminarla corren los tests de integración y de seguridad de su área. Un arreglo corre solo lo que toca.
+Modo rápido: primero el contrato; después el back, en carriles, y ningún chat del front; una sola puerta al final ([etapa en paralelo](../guides/etapa-en-paralelo.md)). El front no programa: la etapa no tiene pantallas y su contrato no cambia. Cada tarea lleva su test dirigido (de integración, filtrado por su clase, si lo es) y, al terminar, el build y los tests rápidos enteros del back con `node scripts/arneses/verificar.mjs`, sin Docker y sin filtrar por módulo. Los de integración y de seguridad de las áreas que tocan rutas, persistencia, autenticación o aislamiento corren una vez por carril, al cerrarlo ([0071](../decisions/0071-conductor-en-carriles.md)). Un arreglo corre solo lo que toca.
 
-Todo va en `main`, sin ramas, worktrees, stash, reset ni push. Cada chat commitea solo sus rutas con `git commit -- <rutas>`, con la línea `Tarea: costuras-de-modulos/<id>`. La tabla de estado la actualiza la Guía.
+Todo va en `main`, sin ramas, worktrees, stash, reset ni push. Cada chat commitea solo sus rutas con `git commit -- <rutas>`, con la línea `Tarea: costuras-de-modulos/<id>`. La tabla de estado la actualiza el cierre del conductor ([conducir una etapa](../guides/conducir-una-etapa.md)).
 
-**Un solo carril del back,** en el orden B1 → B7. La única migración es la de la B1.
+**El back va en carriles** ([0071](../decisions/0071-conductor-en-carriles.md)); la única migración es la de la B1.
 
 **Revisión adversarial** ([AGENTS.md](../../AGENTS.md), «Forma de trabajo»). La llevan las tareas marcadas con **(R)**, completa y antes del commit: un subagente nuevo recibe el código y los escenarios, sin la conclusión de quien programó. Los escenarios de cada una van en su tarea.
 
 **Reglas de orden:**
 - K0 y K1 van antes que todo, y nada corre si K1 no quedó hecha.
-- B1 → B7, en ese orden. B2 espera a B1; B4 y B5, a B3; B6, a B4 y B5.
+- B2 espera a B1; B4 y B5, a B3; B6, a B4 y B5; B7, a B2.
 - I1 espera a B7; I2, a I1.
 
 ## Qué se verificó al arrancar
 
-La segunda parte de la base y la etapa de acciones todavía no están programadas: lo que esta etapa usa de ellas sale de sus specs y lo confirma K0. Lo demás se miró en el código el 2026-11-23.
+La segunda parte de la base ya programó casi todo; faltan la B18, la F12 y la F13, y esta etapa usa la B18. Lo que usa de ella y de la etapa de acciones lo confirma K0 contra el código. Lo demás se miró en el código el 2026-11-23.
 
 | Fila | Qué se encontró | Qué cambia |
 | --- | --- | --- |
@@ -54,7 +54,7 @@ El chat del contrato confirma contra el código y las tablas de sus puertas:
 - **los topes con máximo de la plataforma:** la lista cerrada que va al resolvedor. Se esperan tres: el presupuesto del mes y el cupo del día de la IA, y el plazo de los chats. Uno más va a la B4 o la B5, según su módulo;
 - **los lectores del permiso de uso:** quién usa `ITenantFeatureCache`, `ITenantFeatureReader` o `TenantFeatureRow`. Uno que sumaron la base 2 o las acciones va a la B2;
 - **el uso de la IA:** que `AssistantFinancialCalls` y `AssistantBudgetMonths` siguen como dice «Qué se verificó». Si no, la columna o el índice mínimo va a la B4;
-- **la última migración y el snapshot,** para armar la de la B1 sobre el `HEAD` del momento.
+- **la última migración y el snapshot,** para armar la de la B1 sobre el `HEAD` del momento, con `ModelSnapshotTests` (B9).
 
 Lo que difiera va a «Cambios al contrato» antes de programar.
 
@@ -83,7 +83,7 @@ No hay ruta, error ni permiso nuevo. No toca entidades, configuraciones de EF ni
 **Texto para el chat de Contrato**
 
 ```text
-Leé AGENTS.md, la ADR docs/decisions/0069-modulos-y-suscripciones.md, este plan y la spec docs/plans/formularios/costuras-de-modulos.md. Hacé K0 y después K1, sin adelantar lógica: los dos valores nuevos al final de TenantFeatureSource con IsPlatformManaged(), el enum PlatformFeatureSource del contrato de Plataforma publicado con el nombre de esquema TenantFeatureSource, y los modelos y el puerto de los topes (IModuleLimitContributor, ModuleLimitDefinition, ModuleLimitKind, ModuleLimitValue y ModuleLimitCeiling). Regenerá docs/contracts/openapi.json y comprobá que no cambió: si cambia, no sigas y anotalo en «Cambios al contrato». No toques entidades, configuraciones de EF ni migraciones, ni el front. Todo en main, sin push, ramas, worktrees, stash ni reset; commiteá solo lo tuyo con git commit -- <rutas> y la línea Tarea: costuras-de-modulos/<id>. Aplicá capas-y-flujo, modulos-habilitados, api-http y tests. Al terminar: build y tests rápidos enteros del back, sin filtrar por módulo, y los de integración de Features y de Contracts.
+Leé AGENTS.md, la ADR docs/decisions/0069-modulos-y-suscripciones.md, este plan y la spec docs/plans/formularios/costuras-de-modulos.md. Hacé K0 y después K1, sin adelantar lógica: los dos valores nuevos al final de TenantFeatureSource con IsPlatformManaged(), el enum PlatformFeatureSource del contrato de Plataforma publicado con el nombre de esquema TenantFeatureSource, y los modelos y el puerto de los topes (IModuleLimitContributor, ModuleLimitDefinition, ModuleLimitKind, ModuleLimitValue y ModuleLimitCeiling). Regenerá docs/contracts/openapi.json y comprobá que no cambió: si cambia, no sigas y anotalo en «Cambios al contrato». No toques entidades, configuraciones de EF ni migraciones, ni el front. Todo en main, sin push, ramas, worktrees, stash ni reset; commiteá solo lo tuyo con git commit -- <rutas> y la línea Tarea: costuras-de-modulos/<id>. Aplicá capas-y-flujo, modulos-habilitados, api-http y tests. Al terminar: node scripts/arneses/verificar.mjs (build y tests rápidos enteros, sin filtrar por módulo) y git diff --exit-code docs/contracts/openapi.json; los de integración corren una vez por carril (ADR 0071).
 ```
 
 ## Back
@@ -106,7 +106,7 @@ Los pasos, con sus archivos, lo que copian y sus tests, están en la spec (§Pas
      - la base admite `Manual` y `Subscription` del mismo módulo, y rechaza dos `Manual`;
      - el `Down` se niega con dos filas;
      - dos altas a la vez con distinto origen dejan una fila y un 409;
-     - el modelo coincide con el snapshot (`HasPendingModelChanges`, como en `OutboxMigrationTests`).
+     - `ModelSnapshotTests` (B9 de la base 2) sigue en verde.
    - **Escenarios del revisor:** una migración portable, el `Down` que no pierde datos, la carrera de dos operadores, la de un operador con su propio reintento y el 409 que sigue siendo 409.
 2. **B2 · Leer varias filas (R: aislamiento y permisos).**
    - **La regla, en un solo lugar:** `TenantFeatureRow.IsModuleEnabled(rows, key, defaultEnabled, nowUtc)`. Sin filas del módulo, vale el de entrada; con filas, alguna vigente.
@@ -118,13 +118,13 @@ Los pasos, con sus archivos, lo que copian y sus tests, están en la spec (§Pas
      - de integración: `[FeatureGate]` da 200 o 404, `/api/me` trae el módulo, la política de WhatsApp sin sesión, y la pestaña y su `PUT` con una fila `Subscription` al lado, que no tocan;
      - la fila de otra organización no prende nada.
    - **Escenarios del revisor:** la fila de otra organización o de otro módulo; un acceso que no corresponde (Consumer en un módulo Business, Plataforma sin su política); el vencimiento justo en el instante, con la fila en la caché; el apagado de emergencia, que sigue mandando; y que la pestaña no muestre ni edite una fila que no es de Plataforma.
-3. **B3 · El resolvedor.** `Application/Services/Features/ModuleLimitResolver.cs`, registrado en la DI de Application, recibe todos los `IModuleLimitContributor`.
+3. **B3 · El resolvedor.** `Application/Services/Features/ModuleLimitResolver.cs`, registrado en `Application/DependencyInjection.cs`, recibe todos los `IModuleLimitContributor`. `Application/Services/Features/` entra en `docs/architecture/arbol.md`, con su fila del mapa y su `AGENTS.md`.
    - **`ResolveAsync(key, organizationId, ct)`** da el `ModuleLimitCeiling`. En esta etapa es el máximo de la plataforma, también con `organizationId` nulo (una persona o Plataforma).
    - **Lo que es un bug:** una clave desconocida o repetida, o un aporte que devuelve la otra clase, tiran una excepción.
    - **`ModuleLimitCeiling.Effective(int? organizationValue)`** da el menor entre lo que eligió la organización (o el de entrada) y el tope.
    - **Tests unitarios:** cada caso, con aportes de prueba; y que las declaraciones reales tengan claves únicas con el prefijo de una feature de su módulo, y mínimo y entrada coherentes.
-4. **B4 · Los topes de la IA (R: efectos).**
-   - **El aporte:** `Application/Modules/Assistant/Services/AssistantModuleLimitContributor.cs` declara `assistant.dailyMessages` (`Count`, sin entrada y con mínimo 1) y `assistant.monthlyBudget` (`Amount`). Los máximos salen de `IAssistantSettingsReader.FindPlatformAsync`.
+4. **B4 · Los topes de la IA (R: efectos y aislamiento, por el cupo de cada organización).**
+   - **El aporte:** `Application/Modules/Assistant/Services/AssistantModuleLimitContributor.cs`, registrado en `AssistantModule.cs`, declara `assistant.dailyMessages` (`Count`, sin entrada y con mínimo 1) y `assistant.monthlyBudget` (`Amount`). Los máximos salen de `IAssistantSettingsReader.FindPlatformAsync`.
    - **Quién lee por el resolvedor,** con la clave de la plataforma: los cinco lectores de «Qué se verificó» (la organización del claim; una persona y Plataforma, con nulo). Con clave propia, siguen los valores de la organización.
    - **Tests:**
      - los mismos valores que hoy, en la organización, la persona y Plataforma;
@@ -133,7 +133,7 @@ Los pasos, con sus archivos, lo que copian y sus tests, están en la spec (§Pas
      - `AssistantFinanceTests` sigue en verde.
    - **Escenarios del revisor:** que ningún camino pague con el máximo viejo o sin tope, con la reserva hecha antes de llamar al proveedor; el turno de un worker, que lee el tope con el actor, y nunca con datos de otra organización; y el presupuesto en su moneda, como `Money`.
 5. **B5 · El plazo de los chats de WhatsApp (R: datos y aislamiento).**
-   - **El aporte:** `Application/Modules/WhatsApp/Services/WhatsAppModuleLimitContributor.cs` declara `whatsapp.chatRetentionDays` (`Count`, 90 de entrada, mínimo 1). Su máximo sale de `MaxOrganizationChatRetentionDays`, con los nombres reales que confirmó K0.
+   - **El aporte:** `Application/Modules/WhatsApp/Services/WhatsAppModuleLimitContributor.cs`, registrado en `WhatsAppModule.cs`, declara `whatsapp.chatRetentionDays` (`Count`, 90 de entrada, mínimo 1). Su máximo sale de `MaxOrganizationChatRetentionDays`, con los nombres reales que confirmó K0.
    - **Quién lee por el resolvedor:**
      - el validador del `PUT` de la organización: más que el tope da el 400 de siempre, en su campo;
      - el `GET`, si muestra el máximo;
@@ -142,7 +142,7 @@ Los pasos, con sus archivos, lo que copian y sus tests, están en la spec (§Pas
      - el `PUT` sobre el tope da 400;
      - bajar el máximo purga con el menor en esa organización y no en otra;
      - los chats de la plataforma siguen con su propio plazo.
-   - **Escenarios del revisor:** el worker entra con su organización (`TenantJobRunner`) y corre una vez entre copias como la B18; nunca borra antes del plazo elegido, salvo que el tope sea menor; dos organizaciones sin cruce; el lote que falla registra y sigue.
+   - **Escenarios del revisor:** el worker entra con su organización (`TenantJobRunner`) y es idempotente y por lotes, como la B18, hasta que la E10 le dé el lease; nunca borra antes del plazo elegido, salvo que el tope sea menor; dos organizaciones sin cruce; el lote que falla registra y sigue.
 6. **B6 · El test de arquitectura y la regla de los topes.**
    - **`ArchitectureTests/ModuleLimitArchitectureTests.cs`**, con `CallSites`:
      - una lista cerrada del getter de cada máximo de la plataforma, por clave declarada, que se cruza en los dos sentidos con las declaraciones reales;
@@ -154,13 +154,13 @@ Los pasos, con sus archivos, lo que copian y sus tests, están en la spec (§Pas
    - **Los tests,** cada uno en el árbol de tests de su módulo:
      - `Modules/WhatsApp/WhatsAppModuleOffKeepsDataTests.cs`, con chats, mensajes y contactos;
      - `Modules/Assistant/AssistantModuleOffKeepsDataTests.cs`, con conversaciones, uso y configuración.
-   - **Qué prueba cada uno:** prende el módulo, carga datos y lo apaga con el `PUT` de Plataforma. Sus rutas dan 404 y sus filas siguen en la base; los trabajos de fondo no lo atienden ni lo borran; al prenderlo, se ven igual.
+   - **Qué prueba cada uno:** prende el módulo, carga datos y lo apaga con el `PUT` de Plataforma. Sus rutas dan 404 y sus filas siguen en la base; los trabajos de fondo no lo atienden, y apagarlo no borra nada: lo que vence lo sigue borrando la purga de siempre. Al prenderlo, se ven igual.
    - **La regla:** la línea «Apagar no borra datos (0069)» en `modulos-habilitados.md`, junto a «Apagar no toca los roles», con los dos tests en «Lo verifica». El plazo de los datos que siguen corriendo es la purga de siempre, no el apagado.
 
 **Texto para el chat del Back**
 
 ```text
-Leé AGENTS.md, la ADR docs/decisions/0069-modulos-y-suscripciones.md, este plan y la spec docs/plans/formularios/costuras-de-modulos.md. Esperá K1 y hacé B1 a B7 en orden, un solo carril. La única migración es la de B1, armada sobre el HEAD del momento. Las tareas con (R) llevan su revisión adversarial completa antes del commit, con los escenarios de su tarea. Nadie escribe filas Approved ni Subscription: los tests las cargan directo en la base. El contrato HTTP no cambia: si openapi.json cambia, pará y anotalo en «Cambios al contrato». Los valores de hoy no cambian para nadie. Sin proveedores reales ni secretos: la IA es el FakeChatClient, y WhatsApp, sus fakes. Todo en main, sin push, ramas, worktrees, stash ni reset; commiteá solo lo tuyo con git commit -- <rutas> y la línea Tarea: costuras-de-modulos/<id>. Por tarea: test dirigido, build y tests rápidos enteros, sin filtrar por módulo; si toca persistencia o aislamiento, los de integración y seguridad de Features, del Asistente y de WhatsApp. Las fichas que cambian (modulos-habilitados, plataforma, configuracion) van en el commit de su tarea.
+Leé AGENTS.md, la ADR docs/decisions/0069-modulos-y-suscripciones.md, este plan y la spec docs/plans/formularios/costuras-de-modulos.md. Esperá K1. Cada tarea respeta las «Reglas de orden»; la única migración es la de B1, armada sobre el HEAD del momento. Las tareas con (R) llevan su revisión adversarial completa antes del commit, con los escenarios de su tarea. Nadie escribe filas Approved ni Subscription: los tests las cargan directo en la base. El contrato HTTP no cambia: si openapi.json cambia, pará y anotalo en «Cambios al contrato». Los valores de hoy no cambian para nadie. Sin proveedores reales ni secretos: la IA es el FakeChatClient, y WhatsApp, sus fakes. Todo en main, sin push, ramas, worktrees, stash ni reset; commiteá solo lo tuyo con git commit -- <rutas> y la línea Tarea: costuras-de-modulos/<id>. Por tarea: el test dirigido y, al terminar, node scripts/arneses/verificar.mjs (build y tests rápidos enteros, sin filtrar por módulo); los de integración y seguridad de Features, del Asistente y de WhatsApp corren una vez, al cerrar el carril (ADR 0071). Las fichas que cambian (modulos-habilitados, plataforma, configuracion) van en el commit de su tarea.
 ```
 
 ## Front
@@ -198,7 +198,11 @@ Leé AGENTS.md de los dos repos, la ADR 0069, este plan, la spec y la skill /pue
 - **de la etapa de acciones:** nada; va antes solo por orden.
 
 **Deja para las siguientes:**
-- **Para la E12 a la E25,** el resolvedor de topes:
+- **Para la E12, que suma el módulo `forms`, y todo el bloque:**
+  - el permiso de uso con una fila por origen (`TenantFeatureSource` con `Approved` y `Subscription`, que nadie escribe todavía) y su regla en un solo lugar, `TenantFeatureRow.IsModuleEnabled`. Quien lea `TenantFeatures` sin pasar por `[FeatureGate]` ni `IFeatureService` (un trabajo de fondo, una política como `WhatsAppModulePolicy`) usa esa regla, nunca `SingleOrDefault`;
+  - el módulo se gatea solo por su funcionalidad (`[FeatureGate("forms")]`), sin mirar planes ni suscripciones (0069 §1);
+  - apagar no borra datos: cada módulo nuevo suma su `<Módulo>ModuleOffKeepsDataTests`, como los de la B7, y su línea en «Lo verifica» de `modulos-habilitados.md`.
+- **Desde la E14** ([0069](../decisions/0069-modulos-y-suscripciones.md) §4), el resolvedor de topes:
   - cada módulo declara sus topes en su `IModuleLimitContributor` (`WhatsAppModuleLimitContributor`, `AssistantModuleLimitContributor` o el de Formularios);
   - lee cada tope por `ModuleLimitResolver.ResolveAsync` y valida lo que elige la organización contra él, con `ModuleLimitCeiling.Effective` en cada uso;
   - suma el getter de su máximo a la lista de `ModuleLimitArchitectureTests`.
@@ -208,7 +212,7 @@ Leé AGENTS.md de los dos repos, la ADR 0069, este plan, la spec y la skill /pue
 | --- | --- | --- | --- |
 | E14 | `whatsapp.flowSessionHours` (`FlowSessionHours`) | `MaxFlowSessionHours` | `WhatsAppModuleLimitContributor` |
 | E18 | `forms.maxFileMiB` (`MaxFileMiB`) | el de `FormPlatformSettings` | `FormsModuleLimitContributor` |
-| E23 y E24 | `assistant.maxReplyLength`, `assistant.repliesPerDay` y `assistant.formOffersPerDay` | los tres de `AssistantPlatformSettings` | `AssistantModuleLimitContributor` |
+| E23 (la E24 los usa en cada asistente) | `assistant.maxReplyLength`, `assistant.repliesPerDay` y `assistant.formOffersPerDay` | los tres de `AssistantPlatformSettings` | `AssistantModuleLimitContributor` |
 | E25 | `forms.loadsPerSpreadsheet`, `forms.pdfPages`, `forms.rereadsPerPersonPerDay`, `forms.similarDocumentsToSuggest`, `forms.proposedExpiryDays` y `forms.discardedRetentionDays` | los seis de `FormPlatformSettings` | `FormsModuleLimitContributor` |
 
 - **Para la etapa «Módulos y suscripciones»,** después de la E25:

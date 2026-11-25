@@ -67,7 +67,7 @@ Sin pantallas ni tableros. La pestaña «Módulos» de Plataforma (`Organization
 
 **Idempotencia y concurrencia:** el `PUT` de Plataforma sigue con versión y 409. El writer toma un lock por organización y módulo antes de leer.
 
-**Las piezas internas** que usan la E14 a la E25 (`Application`):
+**Las piezas internas** que usan los módulos (`Application`):
 
 | Pieza | Dónde | Qué es |
 | --- | --- | --- |
@@ -96,15 +96,15 @@ En un `Count`, `Minimum` va de 0 en adelante y `Default`, si está, no es menor 
 
 ## Pasos ✓
 
-**Back,** en orden y con un solo carril:
+**Back,** con las esperas del plan:
 
 | # | Qué hace | Archivos | Copia de | Test |
 | --- | --- | --- | --- | --- |
-| B1 | El índice por origen, su migración y el lock del writer | `TenantFeatureConfiguration.cs`, `UniqueKeys.cs`, la migración, `ITenantFeatureRepository.LockAsync`, `AdvisoryLockKeys.TenantFeature`, `PlatformFeatureWriter.cs` | `PersonalSpaceLock.cs`, `OutboxMigrationTests.cs` | filas viejas, dos orígenes de un módulo, el `Down` que se niega, dos altas a la vez dejan una fila y un 409 |
+| B1 | El índice por origen, su migración y el lock del writer | `TenantFeatureConfiguration.cs`, `UniqueKeys.cs`, la migración, `ITenantFeatureRepository.LockAsync`, `AdvisoryLockKeys.TenantFeature`, `PlatformFeatureWriter.cs` | `PersonalSpaceLock.cs`, `OutboxMigrationTests.cs` | filas viejas, dos orígenes de un módulo, el `Down` que se niega, dos altas a la vez dejan una fila y un 409, `ModelSnapshotTests` |
 | B2 | Leer varias filas | `TenantFeatureRow.IsModuleEnabled`, `TenantFeatureSource.IsPlatformManaged()`, `TenantFeatureFilter.cs`, `WhatsAppModulePolicy.cs`, `PlatformFeatureListBuilder.cs`, `TenantFeatureRepository.cs` | `TenantFeatureFilter.cs` | sin filas, una, una manual con una prueba vencida, una aprobada vencida, otra organización; `[FeatureGate]`, `/api/me`, el trabajo de fondo y la pestaña |
-| B3 | El resolvedor | `ModuleLimitResolver.cs` y su registro | `FeatureCatalog.cs` | tope de la plataforma, clave desconocida, clase equivocada, claves repetidas, `Effective` |
-| B4 | Los topes de la IA | `AssistantModuleLimitContributor.cs`; `AssistantConfigurationPolicy`, `AssistantSettingsBuilder`, `AssistantStateConfigurationBuilder`, `AssistantUsageBuilder` y `AssistantSettingsService` | `AssistantFeatureDefinitionContributor.cs` | los mismos valores que hoy en los tres accesos; bajar el máximo baja el cupo |
-| B5 | El plazo de los chats de WhatsApp | `WhatsAppModuleLimitContributor.cs`; la configuración de WhatsApp de la organización y la purga de la B18 | B4 | el `PUT` sobre el tope da 400; bajar el máximo purga con el menor, sin cruzar organizaciones |
+| B3 | El resolvedor | `ModuleLimitResolver.cs`, registrado en `Application/DependencyInjection.cs` | `FeatureCatalog.cs` | tope de la plataforma, clave desconocida, clase equivocada, claves repetidas, `Effective` |
+| B4 | Los topes de la IA | `AssistantModuleLimitContributor.cs`, registrado en `AssistantModule.cs`; `AssistantConfigurationPolicy`, `AssistantSettingsBuilder`, `AssistantStateConfigurationBuilder`, `AssistantUsageBuilder` y `AssistantSettingsService` | `AssistantFeatureDefinitionContributor.cs` | los mismos valores que hoy en los tres accesos; bajar el máximo baja el cupo |
+| B5 | El plazo de los chats de WhatsApp | `WhatsAppModuleLimitContributor.cs`, registrado en `WhatsAppModule.cs`; la configuración de WhatsApp de la organización y la purga de la B18 | B4 | el `PUT` sobre el tope da 400; bajar el máximo purga con el menor, sin cruzar organizaciones |
 | B6 | El test de arquitectura y la regla de los topes | `ArchitectureTests/ModuleLimitArchitectureTests.cs`; `modulos-habilitados.md` y la sección 270 de `configuracion.md` | `CacheArchitectureTests.cs` | cada máximo, declarado y leído solo por su aporte y su pantalla de Plataforma; ningún módulo nombra la configuración de otro; control negativo |
 | B7 | Apagar no borra | `Modules/WhatsApp/WhatsAppModuleOffKeepsDataTests.cs`, `Modules/Assistant/AssistantModuleOffKeepsDataTests.cs`; `modulos-habilitados.md` | `AssistantFeatureTests.cs` | apagar da 404 y los datos siguen; prender los muestra igual |
 
