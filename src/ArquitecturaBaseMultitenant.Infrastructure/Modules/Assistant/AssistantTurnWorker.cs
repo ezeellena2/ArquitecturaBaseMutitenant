@@ -64,127 +64,185 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
             await service.CompleteAsync(turn.TurnId, lease, "Failed", AssistantErrors.ProviderUnavailable.Code, finish.Token);
             return;
         }
-        using var deadline = CreateDeadline(turn.DeadlineAtUtc, Clock);
+        var run = new TurnRun(scope.ServiceProvider, service, candidate, turn, lease);
+        var outcome = await RunTurnAsync(run, hostToken);
+        AssistantTracing.MarkOutcome(activity, outcome.Terminal, outcome.Code);
+        await FinalizeAsync(run, outcome, activity);
+    }
+
+    /// <summary>
+    /// Corre el turno con su plazo y el monitor que lo corta, y devuelve cómo terminó. El plazo del turno, el apagado o la persona
+    /// cortan con el token de quien llama: no es una respuesta del proveedor. AssistantChatClient entrega cada falla del proveedor
+    /// con su estado HTTP o su transporte, sin el cuerpo (0064 §7).
+    /// </summary>
+    private async Task<TurnOutcome> RunTurnAsync(TurnRun run, CancellationToken hostToken)
+    {
+        using var deadline = CreateDeadline(run.Turn.DeadlineAtUtc, Clock);
         using var execution = CancellationTokenSource.CreateLinkedTokenSource(hostToken, deadline.Token);
         Task monitor;
-        using (ExecutionContext.SuppressFlow()) monitor = Task.Run(() => MonitorAsync(candidate, lease, execution), CancellationToken.None);
-        string terminal = "Complete";
-        string? code = null;
-        // Lo que dijo el proveedor (0064 §7), aparte de las demás fallas: solo eso se anota para quien paga.
-        string? providerFailure = null;
-        // La versión de la configuración de quien paga, leída antes de armar el cliente: si alguien la guarda mientras el turno
-        // espera, lo que responda el proveedor es de la clave de antes y no se anota sobre la nueva (B13). Sin ella, no se anota.
-        uint? settingsVersion = null;
-        // Un paso reservado que no terminó pudo llegar al proveedor y se cobra (0064 §1): cortado, es incierto, no «no disponible».
-        var inFlight = false;
+        using (ExecutionContext.SuppressFlow()) monitor = Task.Run(() => MonitorAsync(run.Candidate, run.Lease, execution), CancellationToken.None);
+        var outcome = new TurnOutcome();
         try
         {
-            settingsVersion = await SettingsVersionAsync(scope.ServiceProvider, turn.Binding.Mode, execution.Token);
+            outcome.SettingsVersion = await SettingsVersionAsync(run.Services, run.Turn.Binding.Mode, execution.Token);
             // Resolve factory only after actor.Enter and after claim committed, without an ambient transaction.
-            scope.ServiceProvider.GetRequiredService<IAssistantChatContext>().Binding = turn.Binding;
-            var clientResult = await scope.ServiceProvider.GetRequiredService<IChatClientFactory>().CreateAsync(execution.Token);
-            if (clientResult.IsFailure) { terminal = "Failed"; code = clientResult.Error.Code; }
+            run.Services.GetRequiredService<IAssistantChatContext>().Binding = run.Turn.Binding;
+            var clientResult = await run.Services.GetRequiredService<IChatClientFactory>().CreateAsync(execution.Token);
+            if (clientResult.IsFailure) outcome.Fail(clientResult.Error.Code);
             else
             {
                 using var client = clientResult.Value;
-                var messages = turn.Messages.ToList();
-                for (var sequence = 1; sequence <= AssistantTechnicalLimits.MaxCallsPerTurn; sequence++)
-                {
-                    var authorized = await service.CheckExecutionAsync(turn.TurnId, lease, execution.Token);
-                    if (authorized.IsFailure) { terminal = "Failed"; code = authorized.Error.Code; break; }
-                    if (!authorized.Value) { terminal = "Stopped"; break; }
-                    if (!AssistantTurnContextGuard.Fits(messages, turn.Tools, turn.Binding))
-                    { terminal = "Failed"; code = AssistantErrors.ProviderContextTooLarge.Code; break; }
-                    var begun = await service.BeginCallAsync(turn.TurnId, lease, sequence, execution.Token);
-                    if (begun.IsFailure) { terminal = "Failed"; code = begun.Error.Code; break; }
-                    inFlight = true;
-                    // SDK-only context: retain every content block and let the official assembler merge
-                    // streamed reasoning/signature fragments. Only TextContent reaches durable storage.
-                    var updates = new List<ChatResponseUpdate>();
-                    AssistantCallUsage? counts = null;
-                    await foreach (var update in client.GetStreamingResponseAsync(messages,
-                        new ChatOptions { Tools = turn.Tools.ToList(), MaxOutputTokens = AssistantTechnicalLimits.MaxOutputTokens }, execution.Token))
-                    {
-                        var text = string.Concat(update.Contents.OfType<TextContent>().Select(content => content.Text));
-                        updates.Add(update);
-                        foreach (var usage in update.Contents.OfType<UsageContent>())
-                            counts = new AssistantCallUsage(usage.Details.InputTokenCount ?? counts?.InputTokens,
-                                usage.Details.OutputTokenCount ?? counts?.OutputTokens,
-                                usage.Details.CachedInputTokenCount ?? counts?.CacheReadTokens,
-                                null, null, null, usage.Details.ReasoningTokenCount ?? counts?.ReasoningTokens, false);
-                        var checkpoint = await service.CheckpointAsync(turn.TurnId, lease, text, counts, false, execution.Token);
-                        if (checkpoint.IsFailure) { terminal = "Failed"; code = checkpoint.Error.Code; execution.Cancel(); break; }
-                    }
-                    // Cortado justo al terminar el stream (el plazo o el apagado): el paso salió y se cobra, así que es incierto.
-                    if (execution.IsCancellationRequested)
-                    {
-                        if (terminal == "Complete") { terminal = "Failed"; code = Interrupted(inFlight); }
-                        break;
-                    }
-                    var ended = await service.CheckpointAsync(turn.TurnId, lease, null, counts, true, execution.Token);
-                    if (ended.IsFailure) { terminal = "Failed"; code = ended.Error.Code; break; }
-                    inFlight = false;
-                    var response = updates.ToChatResponse();
-                    var calls = response.Messages.SelectMany(message => message.Contents).OfType<FunctionCallContent>().ToList();
-                    if (calls.Count == 0)
-                    {
-                        await GenerateTitleAsync(scope.ServiceProvider, service, turn, lease, execution.Token);
-                        break;
-                    }
-                    if (sequence == AssistantTechnicalLimits.MaxCallsPerTurn || calls.Count > turn.Tools.Count)
-                    { terminal = "Failed"; code = AssistantErrors.ProviderUnavailable.Code; break; }
-                    messages.AddMessages(response);
-                    var results = new List<AIContent>();
-                    foreach (var function in calls)
-                    {
-                        if (!turn.Tools.Any(tool => tool.Name == function.Name))
-                        { terminal = "Failed"; code = AssistantErrors.QuickQueryNotAvailable.Code; break; }
-                        var running = await service.RecordToolAsync(turn.TurnId, lease, function.Name, AssistantToolState.Running, execution.Token);
-                        if (running.IsFailure) { terminal = "Failed"; code = running.Error.Code; break; }
-                        var arguments = JsonSerializer.SerializeToElement(function.Arguments ?? new Dictionary<string, object?>());
-                        var result = await service.ExecuteToolAsync(turn.TurnId, lease, function.Name, arguments, execution.Token);
-                        if (result.IsFailure)
-                        {
-                            terminal = "Failed"; code = result.Error.Code;
-                            await service.RecordToolAsync(turn.TurnId, lease, function.Name, AssistantToolState.Failed, execution.Token);
-                            break;
-                        }
-                        var completed = await service.RecordToolAsync(turn.TurnId, lease, function.Name, AssistantToolState.Complete, execution.Token);
-                        if (completed.IsFailure) { terminal = "Failed"; code = completed.Error.Code; break; }
-                        results.Add(new FunctionResultContent(function.CallId, result.Value.Data));
-                    }
-                    if (terminal == "Failed") break;
-                    messages.Add(new ChatMessage(ChatRole.Tool, results));
-                }
+                await RunCallsAsync(run, client, outcome, execution);
             }
         }
-        // El plazo del turno, el apagado o la persona cortan con el token de quien llama: no es una respuesta del proveedor.
-        catch (OperationCanceledException) { terminal = "Failed"; code = Interrupted(inFlight); }
-        // AssistantChatClient entrega cada falla del proveedor con su estado HTTP o su transporte, sin el cuerpo (0064 §7).
-        catch (HttpRequestException failure) { terminal = "Failed"; code = providerFailure = AssistantProviderFailureClassifier.Classify(failure); }
-        catch (Exception exception) { terminal = "Failed"; code = Interrupted(inFlight); ExceptionLog.Write(logger, "AssistantTurn", exception); }
+        catch (OperationCanceledException) { outcome.Interrupt(); }
+        catch (HttpRequestException failure) { outcome.FailByProvider(AssistantProviderFailureClassifier.Classify(failure)); }
+        catch (Exception exception) { outcome.Interrupt(); ExceptionLog.Write(logger, "AssistantTurn", exception); }
         finally
         {
             execution.Cancel();
             try { await monitor; } catch (OperationCanceledException) { }
         }
-        AssistantTracing.MarkOutcome(activity, terminal, code);
-        // Separate bounded finalization token, independent of both browser and provider cancellation.
+        return outcome;
+    }
+
+    /// <summary>Los pasos del turno, de a una llamada al proveedor y sus herramientas, hasta la respuesta final o un corte.</summary>
+    private static async Task RunCallsAsync(TurnRun run, IChatClient client, TurnOutcome outcome, CancellationTokenSource execution)
+    {
+        var (service, turn, lease) = (run.Service, run.Turn, run.Lease);
+        var messages = turn.Messages.ToList();
+        for (var sequence = 1; sequence <= AssistantTechnicalLimits.MaxCallsPerTurn; sequence++)
+        {
+            var authorized = await service.CheckExecutionAsync(turn.TurnId, lease, execution.Token);
+            if (authorized.IsFailure) { outcome.Fail(authorized.Error.Code); return; }
+            if (!authorized.Value) { outcome.Stop(); return; }
+            if (!AssistantTurnContextGuard.Fits(messages, turn.Tools, turn.Binding)) { outcome.Fail(AssistantErrors.ProviderContextTooLarge.Code); return; }
+            var begun = await service.BeginCallAsync(turn.TurnId, lease, sequence, execution.Token);
+            if (begun.IsFailure) { outcome.Fail(begun.Error.Code); return; }
+            outcome.InFlight = true;
+            var (updates, counts) = await StreamAsync(run, client, messages, outcome, execution);
+            // Cortado justo al terminar el stream (el plazo o el apagado): el paso salió y se cobra, así que es incierto.
+            if (execution.IsCancellationRequested)
+            {
+                if (outcome.IsComplete) outcome.Interrupt();
+                return;
+            }
+            var ended = await service.CheckpointAsync(turn.TurnId, lease, null, counts, true, execution.Token);
+            if (ended.IsFailure) { outcome.Fail(ended.Error.Code); return; }
+            outcome.InFlight = false;
+            var response = updates.ToChatResponse();
+            var calls = response.Messages.SelectMany(message => message.Contents).OfType<FunctionCallContent>().ToList();
+            if (calls.Count == 0)
+            {
+                await GenerateTitleAsync(run.Services, service, turn, lease, execution.Token);
+                return;
+            }
+            if (sequence == AssistantTechnicalLimits.MaxCallsPerTurn || calls.Count > turn.Tools.Count)
+            { outcome.Fail(AssistantErrors.ProviderUnavailable.Code); return; }
+            messages.AddMessages(response);
+            if (await RunToolsAsync(run, calls, outcome, execution.Token) is not { } results) return;
+            messages.Add(new ChatMessage(ChatRole.Tool, results));
+        }
+    }
+
+    /// <summary>
+    /// Una llamada al proveedor, en stream: cada parte y sus cantidades quedan anotadas; si una anotación falla, el turno queda
+    /// fallado y se corta. SDK-only context: retain every content block and let the official assembler merge streamed
+    /// reasoning/signature fragments. Only TextContent reaches durable storage.
+    /// </summary>
+    private static async Task<(List<ChatResponseUpdate> Updates, AssistantCallUsage? Counts)> StreamAsync(TurnRun run, IChatClient client,
+        List<ChatMessage> messages, TurnOutcome outcome, CancellationTokenSource execution)
+    {
+        var updates = new List<ChatResponseUpdate>();
+        AssistantCallUsage? counts = null;
+        await foreach (var update in client.GetStreamingResponseAsync(messages,
+            new ChatOptions { Tools = run.Turn.Tools.ToList(), MaxOutputTokens = AssistantTechnicalLimits.MaxOutputTokens }, execution.Token))
+        {
+            var text = string.Concat(update.Contents.OfType<TextContent>().Select(content => content.Text));
+            updates.Add(update);
+            foreach (var usage in update.Contents.OfType<UsageContent>())
+                counts = new AssistantCallUsage(usage.Details.InputTokenCount ?? counts?.InputTokens,
+                    usage.Details.OutputTokenCount ?? counts?.OutputTokens,
+                    usage.Details.CachedInputTokenCount ?? counts?.CacheReadTokens,
+                    null, null, null, usage.Details.ReasoningTokenCount ?? counts?.ReasoningTokens, false);
+            var checkpoint = await run.Service.CheckpointAsync(run.Turn.TurnId, run.Lease, text, counts, false, execution.Token);
+            if (checkpoint.IsFailure) { outcome.Fail(checkpoint.Error.Code); execution.Cancel(); break; }
+        }
+        return (updates, counts);
+    }
+
+    /// <summary>Las herramientas que pidió el proveedor, de a una y anotadas; null si una falla, con el turno fallado.</summary>
+    private static async Task<List<AIContent>?> RunToolsAsync(TurnRun run, IReadOnlyList<FunctionCallContent> calls, TurnOutcome outcome,
+        CancellationToken ct)
+    {
+        var (service, turn, lease) = (run.Service, run.Turn, run.Lease);
+        var results = new List<AIContent>();
+        foreach (var function in calls)
+        {
+            if (!turn.Tools.Any(tool => tool.Name == function.Name)) { outcome.Fail(AssistantErrors.QuickQueryNotAvailable.Code); return null; }
+            var running = await service.RecordToolAsync(turn.TurnId, lease, function.Name, AssistantToolState.Running, ct);
+            if (running.IsFailure) { outcome.Fail(running.Error.Code); return null; }
+            var arguments = JsonSerializer.SerializeToElement(function.Arguments ?? new Dictionary<string, object?>());
+            var result = await service.ExecuteToolAsync(turn.TurnId, lease, function.Name, arguments, ct);
+            if (result.IsFailure)
+            {
+                outcome.Fail(result.Error.Code);
+                await service.RecordToolAsync(turn.TurnId, lease, function.Name, AssistantToolState.Failed, ct);
+                return null;
+            }
+            var completed = await service.RecordToolAsync(turn.TurnId, lease, function.Name, AssistantToolState.Complete, ct);
+            if (completed.IsFailure) { outcome.Fail(completed.Error.Code); return null; }
+            results.Add(new FunctionResultContent(function.CallId, result.Value.Data));
+        }
+        return results;
+    }
+
+    /// <summary>
+    /// Cierra el turno con un plazo propio, independiente del navegador y del proveedor. Sin conexión no salió nada: la llamada
+    /// marcada no se cobra (0064 §7). Cerrado, anota para quien paga lo que respondió el proveedor, si leyó su configuración.
+    /// </summary>
+    private async Task FinalizeAsync(TurnRun run, TurnOutcome outcome, System.Diagnostics.Activity? activity)
+    {
         using var finalization = new CancellationTokenSource(options.Value.FinalizationTimeout, Clock);
         try
         {
-            // Sin conexión no salió nada: la llamada marcada no se cobra (0064 §7).
-            if (providerFailure == AssistantErrors.ProviderUnavailableCode)
-                await service.CheckpointAsync(turn.TurnId, lease, null, NothingSent, true, finalization.Token);
-            var closed = await service.CompleteAsync(turn.TurnId, lease, terminal, code, finalization.Token);
-            if (closed.IsFailure) await RecoverAsync(candidate, lease, activity);
-            else if (settingsVersion is { } version && (terminal == "Complete" || providerFailure is not null))
-                await RecordProviderOutcomeAsync(scope.ServiceProvider, turn.Binding.Mode, terminal == "Complete" ? null : providerFailure, version, finalization.Token);
+            if (outcome.ProviderFailure == AssistantErrors.ProviderUnavailableCode)
+                await run.Service.CheckpointAsync(run.Turn.TurnId, run.Lease, null, NothingSent, true, finalization.Token);
+            var closed = await run.Service.CompleteAsync(run.Turn.TurnId, run.Lease, outcome.Terminal, outcome.Code, finalization.Token);
+            if (closed.IsFailure) await RecoverAsync(run.Candidate, run.Lease, activity);
+            else if (outcome.SettingsVersion is { } version && (outcome.IsComplete || outcome.ProviderFailure is not null))
+                await RecordProviderOutcomeAsync(run.Services, run.Turn.Binding.Mode, outcome.IsComplete ? null : outcome.ProviderFailure,
+                    version, finalization.Token);
         }
         catch (Exception exception) { ExceptionLog.Write(logger, "AssistantTurn", exception); }
     }
+
+    /// <summary>Lo que el turno usa mientras corre, del scope del actor que lo reclamó.</summary>
+    private sealed record TurnRun(IServiceProvider Services, IAssistantTurnService Service, AssistantTurnDiscovery Candidate,
+        AssistantTurnExecution Turn, Guid Lease);
+
+    /// <summary>
+    /// Cómo termina un turno: el estado y el código con que se cierra; la falla que dijo el proveedor, aparte de las demás,
+    /// porque solo esa se anota para quien paga (0064 §7); si un paso reservado no terminó, que pudo llegar al proveedor y se
+    /// cobra (0064 §1), y la versión de la configuración de quien paga leída antes de armar el cliente: si alguien la guarda
+    /// mientras el turno espera, lo que responda el proveedor es de la clave de antes y no se anota sobre la nueva (B13).
+    /// </summary>
+    private sealed class TurnOutcome
+    {
+        internal string Terminal { get; private set; } = "Complete";
+        internal string? Code { get; private set; }
+        internal string? ProviderFailure { get; private set; }
+        internal bool InFlight { get; set; }
+        internal uint? SettingsVersion { get; set; }
+        internal bool IsComplete => Terminal == "Complete";
+        internal void Fail(string code) => (Terminal, Code) = ("Failed", code);
+        internal void Stop() => Terminal = "Stopped";
+        internal void FailByProvider(string code) { Fail(code); ProviderFailure = code; }
+        /// <summary>Cortado: incierto si un paso reservado pudo llegar al proveedor; si no, no disponible.</summary>
+        internal void Interrupt() => Fail(InFlight ? AssistantErrors.ProviderUncertainCode : AssistantErrors.ProviderUnavailable.Code);
+    }
+
     private static readonly AssistantCallUsage NothingSent = new(0, 0, 0, 0, 0, 0, 0, true);
-    private static string Interrupted(bool inFlight) => inFlight ? AssistantErrors.ProviderUncertainCode : AssistantErrors.ProviderUnavailable.Code;
     /// <summary>Si no se puede leer, el turno sigue igual (una falla pasajera de la base no lo cancela) y su resultado no se anota.</summary>
     private async Task<uint?> SettingsVersionAsync(IServiceProvider services, AssistantMode funding, CancellationToken ct)
     {
