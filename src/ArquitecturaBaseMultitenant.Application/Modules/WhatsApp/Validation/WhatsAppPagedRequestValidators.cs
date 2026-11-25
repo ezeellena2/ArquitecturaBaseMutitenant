@@ -5,13 +5,43 @@ using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Validation;
 
-// Los listados de atención: página, tamaño y búsqueda, sin orden elegible (cada uno tiene el suyo fijo).
+// Los listados de atención: página, tamaño y búsqueda. Los que muestran una tabla con columnas de un dato ordenan por ellas
+// (264); los demás (selectores y listas hijas) tienen su orden fijo.
 
 internal sealed class WhatsAppNumberListRequestValidator() : PagedRequestValidator<WhatsAppNumberListRequest>([]);
 
 internal sealed class WhatsAppCompanyOptionListRequestValidator() : PagedRequestValidator<WhatsAppCompanyOptionListRequest>([]);
 
-internal sealed class WhatsAppTeamListRequestValidator() : PagedRequestValidator<WhatsAppTeamListRequest>([]);
+internal sealed class WhatsAppTeamListRequestValidator() : PagedRequestValidator<WhatsAppTeamListRequest>(WhatsAppTeamListRequest.SortableFields);
+
+internal sealed class WhatsAppTemplateListRequestValidator : PagedRequestValidator<WhatsAppTemplateListRequest>
+{
+    public WhatsAppTemplateListRequestValidator() : base(WhatsAppTemplateListRequest.SortableFields)
+    {
+        RuleFor(request => request.Status).Must(value => value is null || Enum.IsDefined(value.Value))
+            .WithMessage(_ => WhatsAppTexts.Get("WhatsApp.Validation.SelectionInvalid"));
+        RuleFor(request => request.Group).Must(value => value is null || Enum.IsDefined(value.Value))
+            .WithMessage(_ => WhatsAppTexts.Get("WhatsApp.Validation.SelectionInvalid"));
+    }
+}
+
+internal sealed class WhatsAppBroadcastListRequestValidator : PagedRequestValidator<WhatsAppBroadcastListRequest>
+{
+    public WhatsAppBroadcastListRequestValidator() : base(WhatsAppBroadcastListRequest.SortableFields)
+    {
+        RuleFor(request => request.Status).Must(value => value is null || Enum.IsDefined(value.Value))
+            .WithMessage(_ => WhatsAppTexts.Get("WhatsApp.Validation.SelectionInvalid"));
+    }
+}
+
+internal sealed class WhatsAppBroadcastDetailRequestValidator : PagedRequestValidator<WhatsAppBroadcastDetailRequest>
+{
+    public WhatsAppBroadcastDetailRequestValidator() : base(WhatsAppBroadcastDetailRequest.SortableFields)
+    {
+        RuleFor(request => request.Status).Must(value => value is null || Enum.IsDefined(value.Value))
+            .WithMessage(_ => WhatsAppTexts.Get("WhatsApp.Validation.SelectionInvalid"));
+    }
+}
 
 internal sealed class WhatsAppTeamMemberOptionListRequestValidator() : PagedRequestValidator<WhatsAppTeamMemberOptionListRequest>([]);
 
@@ -29,7 +59,7 @@ internal sealed class PersonalWhatsAppConversationListRequestValidator() : Paged
 
 internal sealed class WhatsAppContactListRequestValidator : PagedRequestValidator<WhatsAppContactListRequest>
 {
-    public WhatsAppContactListRequestValidator() : base([])
+    public WhatsAppContactListRequestValidator() : base(WhatsAppContactListRequest.SortableFields)
     {
         RuleFor(request => request.Tag).MaximumLength(Domain.WhatsApp.WhatsAppTextLimits.Tag).WithMessage(_ => WhatsAppTexts.Get("WhatsApp.Validation.TooLong"));
         RuleFor(request => request.Consent).Must(value => value is null || Enum.IsDefined(value.Value))

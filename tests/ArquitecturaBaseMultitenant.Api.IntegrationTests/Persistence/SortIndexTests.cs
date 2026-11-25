@@ -37,6 +37,28 @@ public sealed class SortIndexTests(ApiFactory factory)
         new("OrganizationUserReader.Sort", "state", null),
         new("OrganizationUserReader.Sort", "createdAtUtc", new("tenant", "Members", "CreatedAtUtc")),
         new("PlatformAccountReader.Sort", "name", new("identity", "AspNetUsers", "DisplayName")),
+        // WhatsApp: un equipo cuenta sus integrantes; una plantilla resume su categoría, su estado y su fecha con lo que dijo Meta;
+        // una difusión cuenta entregados y leídos de sus destinatarios, y su fecha elige entre tres. Los destinatarios son los de
+        // una difusión, con su estado y su fecha calculados y el nombre del contacto.
+        new("WhatsAppTeamReader.Sort", "name", new("tenant", "WhatsAppTeams", "Name")),
+        new("WhatsAppTeamReader.Sort", "inbox", new("tenant", "WhatsAppTeams", "Inbox")),
+        new("WhatsAppTeamReader.Sort", "memberCount", null),
+        new("WhatsAppTeamReader.Sort", "notice", new("tenant", "WhatsAppTeams", "NotifyAfterMinutes")),
+        new("WhatsAppTemplateReader.Sort", "name", new("tenant", "WhatsAppTemplates", "Name")),
+        new("WhatsAppTemplateReader.Sort", "category", null),
+        new("WhatsAppTemplateReader.Sort", "status", null),
+        new("WhatsAppTemplateReader.Sort", "updatedAtUtc", null),
+        new("WhatsAppBroadcastReader.Sort", "name", new("tenant", "WhatsAppBroadcasts", "Name")),
+        new("WhatsAppBroadcastReader.Sort", "template", new("tenant", "WhatsAppBroadcasts", "TemplateName")),
+        new("WhatsAppBroadcastReader.Sort", "recipients", new("tenant", "WhatsAppBroadcasts", "Recipients")),
+        new("WhatsAppBroadcastReader.Sort", "status", new("tenant", "WhatsAppBroadcasts", "Status")),
+        new("WhatsAppBroadcastReader.Sort", "delivered", null),
+        new("WhatsAppBroadcastReader.Sort", "read", null),
+        new("WhatsAppBroadcastReader.Sort", "date", null),
+        new("WhatsAppBroadcastReader.RecipientSort", "contact", null),
+        new("WhatsAppBroadcastReader.RecipientSort", "number", null),
+        new("WhatsAppBroadcastReader.RecipientSort", "status", null),
+        new("WhatsAppBroadcastReader.RecipientSort", "changedAtUtc", null),
     ];
 
     private static readonly Regex BtreeColumns = new(@"USING btree \((?<columns>[^)]*)\)", RegexOptions.CultureInvariant);

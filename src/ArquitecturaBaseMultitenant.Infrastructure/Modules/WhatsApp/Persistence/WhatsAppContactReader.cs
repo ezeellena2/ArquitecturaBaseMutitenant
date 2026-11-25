@@ -12,13 +12,24 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Persistenc
 
 internal sealed class WhatsAppContactReader(ApplicationDbContext context, ITenantContext tenant) : IWhatsAppContactReader
 {
+    // Las columnas con un dato de la tabla de contactos (264); el consentimiento, por su circuito.
+    private static readonly SortMap<WhatsAppCustomer> Sort = new()
+    {
+        ["name"] = customer => customer.Name,
+        ["number"] = customer => customer.WaId,
+        ["consent"] = customer => customer.Consent,
+        ["lastConversationAtUtc"] = customer => customer.LastConversationAtUtc,
+    };
+
+    private static readonly SortDescriptor DefaultSort = new("name", Descending: false);
+
     public async Task<PagedResult<WhatsAppContactResponse>> ListAsync(WhatsAppContactListRequest request, CancellationToken ct)
     {
         var customers = Customers();
         if (!string.IsNullOrWhiteSpace(request.Tag)) { var tag = request.Tag.Trim(); customers = customers.Where(customer => customer.Tags.Contains(tag)); }
         if (request.Consent is { } consent) customers = customers.Where(customer => customer.Consent == consent);
         var page = await Project(customers.ApplySearch(request.Search, customer => customer.Name, customer => customer.WaId)
-                .OrderBy(customer => customer.Name == null).ThenBy(customer => customer.Name).ThenBy(customer => customer.Id))
+                .ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, customer => customer.Id))
             .ToPagedResultAsync(request, ct);
         return new PagedResult<WhatsAppContactResponse>([.. page.Items.Select(Response)], page.Page, page.PageSize, page.TotalCount);
     }

@@ -23,6 +23,8 @@ internal sealed class WhatsAppCustomerConfiguration : IEntityTypeConfiguration<W
         builder.HasIndex(value => new { value.TenantId, value.WaId }).IsUnique();
         builder.HasIndex(value => new { value.TenantId, value.Name, value.Id });
         builder.HasIndex(value => new { value.TenantId, value.Consent, value.Id });
+        builder.HasIndex(value => new { value.TenantId, value.WaId, value.Id });
+        builder.HasIndex(value => new { value.TenantId, value.LastConversationAtUtc, value.Id });
         builder.HasIndex(value => value.Tags).HasMethod("gin");
     }
 }

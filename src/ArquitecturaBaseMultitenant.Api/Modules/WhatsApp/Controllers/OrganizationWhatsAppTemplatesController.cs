@@ -38,6 +38,7 @@ public sealed class OrganizationWhatsAppTemplatesController(IWhatsAppTemplateSer
             Page = query.Page ?? PagedRequest.DefaultPage,
             PageSize = query.PageSize ?? PagedRequest.DefaultPageSize,
             Search = query.Search,
+            Sort = query.Sort,
             Status = query.Status,
         }, cancellationToken)).ToActionResult(this);
 
@@ -99,6 +100,7 @@ public sealed class PlatformWhatsAppTemplatesController(IPlatformWhatsAppTemplat
             Page = query.Page ?? PagedRequest.DefaultPage,
             PageSize = query.PageSize ?? PagedRequest.DefaultPageSize,
             Search = query.Search,
+            Sort = query.Sort,
             Status = query.Status,
             Group = query.Group,
         }, cancellationToken)).ToActionResult(this);

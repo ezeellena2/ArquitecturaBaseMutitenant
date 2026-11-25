@@ -7,6 +7,9 @@ namespace ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.Contracts;
 
 public sealed record WhatsAppPagedHttpQuery(int? Page, int? PageSize, string? Search);
 
+/// <summary>sort es el id de una columna con un dato de la tabla (264), con «-» delante para el sentido inverso.</summary>
+public sealed record WhatsAppTeamListHttpQuery(int? Page, int? PageSize, string? Search, string? Sort);
+
 public sealed record WhatsAppVersionHttpQuery(uint? Version);
 
 /// <summary>
@@ -71,7 +74,7 @@ public sealed record SendWhatsAppTemplateHttpRequest(Guid? TemplateId, IReadOnly
     public override string ToString() => nameof(SendWhatsAppTemplateHttpRequest);
 }
 
-public sealed record WhatsAppContactListHttpQuery(int? Page, int? PageSize, string? Search, string? Tag, WhatsAppConsent? Consent);
+public sealed record WhatsAppContactListHttpQuery(int? Page, int? PageSize, string? Search, string? Tag, WhatsAppConsent? Consent, string? Sort);
 
 public sealed record UpdateWhatsAppContactHttpRequest(string? Name, IReadOnlyList<string>? Tags, WhatsAppConsent? Consent, uint? Version)
 {
@@ -83,18 +86,18 @@ public sealed record ImportWhatsAppContactsHttpRequest(IFormFile? File, string? 
     public override string ToString() => nameof(ImportWhatsAppContactsHttpRequest);
 }
 
-public sealed record WhatsAppTemplateListHttpQuery(int? Page, int? PageSize, string? Search, WhatsAppTemplateStatus? Status);
+public sealed record WhatsAppTemplateListHttpQuery(int? Page, int? PageSize, string? Search, WhatsAppTemplateStatus? Status, string? Sort);
 
 public sealed record PlatformWhatsAppTemplateListHttpQuery(int? Page, int? PageSize, string? Search, WhatsAppTemplateStatus? Status,
-    WhatsAppTemplateGroup? Group);
+    WhatsAppTemplateGroup? Group, string? Sort);
 
 public sealed record CreateWhatsAppTemplateHttpRequest(string? Name, WhatsAppTemplateCategory? Category, string? Language, string? Body,
     IReadOnlyList<WhatsAppTemplateVariableInput>? Variables);
 
-public sealed record WhatsAppBroadcastListHttpQuery(int? Page, int? PageSize, string? Search, WhatsAppBroadcastStatus? Status);
+public sealed record WhatsAppBroadcastListHttpQuery(int? Page, int? PageSize, string? Search, WhatsAppBroadcastStatus? Status, string? Sort);
 
 /// <summary>search busca en los destinatarios de la difusión.</summary>
-public sealed record WhatsAppBroadcastDetailHttpQuery(int? Page, int? PageSize, string? Search, WhatsAppRecipientStatus? Status);
+public sealed record WhatsAppBroadcastDetailHttpQuery(int? Page, int? PageSize, string? Search, WhatsAppRecipientStatus? Status, string? Sort);
 
 public sealed record WhatsAppBroadcastEstimateHttpQuery(Guid? TemplateId, WhatsAppAudienceKind? Kind, string? Tag);
 

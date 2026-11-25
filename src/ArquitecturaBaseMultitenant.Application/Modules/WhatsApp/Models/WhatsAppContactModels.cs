@@ -17,6 +17,9 @@ public sealed record WhatsAppContactListResponse(PagedResult<WhatsAppContactResp
 
 public sealed record WhatsAppContactListRequest : PagedRequest
 {
+    /// <summary>Los ids de las columnas con un dato (264); las etiquetas son varias por contacto y no ordenan.</summary>
+    public static readonly IReadOnlyCollection<string> SortableFields = ["name", "number", "consent", "lastConversationAtUtc"];
+
     public string? Tag { get; init; }
     public WhatsAppConsent? Consent { get; init; }
 }
@@ -69,6 +72,9 @@ public sealed record WhatsAppTemplateListResponse(PagedResult<WhatsAppTemplateRe
 
 public sealed record WhatsAppTemplateListRequest : PagedRequest
 {
+    /// <summary>Los ids de las columnas con un dato (264); los idiomas son varios por plantilla y no ordenan.</summary>
+    public static readonly IReadOnlyCollection<string> SortableFields = ["name", "category", "status", "updatedAtUtc"];
+
     public WhatsAppTemplateStatus? Status { get; init; }
     public WhatsAppTemplateGroup? Group { get; init; }
 }
@@ -92,6 +98,9 @@ public sealed record WhatsAppBroadcastResponse(Guid Id, string Name, WhatsAppRef
 
 public sealed record WhatsAppBroadcastListRequest : PagedRequest
 {
+    /// <summary>Los ids de las columnas con un dato (264); date es la fecha de la fila (cuándo salió o para cuándo está).</summary>
+    public static readonly IReadOnlyCollection<string> SortableFields = ["name", "template", "recipients", "status", "delivered", "read", "date"];
+
     public WhatsAppBroadcastStatus? Status { get; init; }
 }
 
@@ -104,6 +113,8 @@ public sealed record WhatsAppBroadcastDetailResponse(WhatsAppBroadcastResponse B
 
 public sealed record WhatsAppBroadcastDetailRequest : PagedRequest
 {
+    public static readonly IReadOnlyCollection<string> SortableFields = ["contact", "number", "status", "changedAtUtc"];
+
     public WhatsAppRecipientStatus? Status { get; init; }
 }
 

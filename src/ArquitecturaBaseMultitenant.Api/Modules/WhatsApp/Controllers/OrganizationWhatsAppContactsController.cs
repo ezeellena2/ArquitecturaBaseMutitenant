@@ -37,6 +37,7 @@ public sealed class OrganizationWhatsAppContactsController(IWhatsAppContactServi
             Page = query.Page ?? PagedRequest.DefaultPage,
             PageSize = query.PageSize ?? PagedRequest.DefaultPageSize,
             Search = query.Search,
+            Sort = query.Sort,
             Tag = query.Tag,
             Consent = query.Consent,
         }, cancellationToken)).ToActionResult(this);

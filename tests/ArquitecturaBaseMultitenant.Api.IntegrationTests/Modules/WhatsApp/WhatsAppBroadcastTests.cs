@@ -151,6 +151,64 @@ public sealed class WhatsAppBroadcastTests(ApiFactory factory)
             new { version = cancelled.GetProperty("version").GetUInt32() }, Ct), HttpStatusCode.NotFound, WhatsAppErrors.BroadcastNotFoundCode);
     }
 
+    // Decisión 264: las tablas de WhatsApp ordenan por cada columna con un dato, en los dos sentidos, con lo vacío al final y
+    // un estado por su circuito; una columna que no está en la lista es un 400.
+    [Fact]
+    public async Task Every_whatsapp_table_sorts_by_its_columns_with_empty_values_last()
+    {
+        var templates = new FakeTemplates();
+        await using var host = WhatsAppAttentionJourney.Host(factory, new FakeGraph(), templates: templates);
+        using var owner = WhatsAppAttentionJourney.Client(host);
+        await WhatsAppAttentionJourney.OrganizationAsync(factory, host, owner, Ct);
+        var phoneNumberId = WhatsAppAttentionJourney.NewNumberId();
+        using (var connected = await WhatsAppAttentionJourney.ConnectAsync(owner, phoneNumberId, Ct)) Assert.Equal(HttpStatusCode.Created, connected.StatusCode);
+        var promo = await TemplateAsync(owner, "Promo ordenada", "Marketing", "Hola, esta semana tenés {{1}} de descuento.");
+        await TemplateAsync(owner, "Aviso ordenado", "Utility", "Tu turno es el {{1}}.");
+        await WhatsAppTemplateManagementTests.TemplateWebhookAsync(owner, "waba-" + phoneNumberId, "message_template_status_update",
+            new { @event = "APPROVED", message_template_id = 1L, message_template_name = "promo_ordenada", message_template_language = "es_AR", reason = "NONE" });
+        using var anonymous = WhatsAppAttentionJourney.Client(host);
+        var (ana, beto, caro) = (WhatsAppAttentionJourney.NewPhone(), WhatsAppAttentionJourney.NewPhone(), WhatsAppAttentionJourney.NewPhone());
+        foreach (var phone in new[] { ana, beto, caro }) await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, phone, "Hola", Ct);
+        var anaId = await ConsentAsync(owner, ana, "Accepted", []);
+        var betoId = await ConsentAsync(owner, beto, "Declined", []);
+        var caroId = Assert.Single(await IdsAsync(owner, $"contacts?search={Uri.EscapeDataString(caro)}", "contacts"));
+        var scheduled = (await CreateAsync(owner, promo, host.Services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime.AddDays(1)))
+            .GetProperty("id").GetGuid();
+        var sent = (await CreateAsync(owner, promo, null)).GetProperty("id").GetGuid();
+        await DispatchAsync(host);
+
+        // El consentimiento, por su circuito (acepta, no acepta, sin respuesta) y no por su nombre.
+        Assert.Equal([anaId, betoId, caroId], await IdsAsync(owner, "contacts?sort=consent", "contacts"));
+        Assert.Equal([caroId, betoId, anaId], await IdsAsync(owner, "contacts?sort=-consent", "contacts"));
+        // Entregados: la programada todavía no salió (la raya) y va al final en los dos sentidos.
+        Assert.Equal([sent, scheduled], await IdsAsync(owner, "broadcasts?sort=delivered", "broadcasts"));
+        Assert.Equal([sent, scheduled], await IdsAsync(owner, "broadcasts?sort=-delivered", "broadcasts"));
+        // El estado de una difusión, por su circuito: programada antes que enviada.
+        Assert.Equal([scheduled, sent], await IdsAsync(owner, "broadcasts?sort=status", "broadcasts"));
+
+        foreach (var (path, fields) in new[]
+        {
+            ("contacts", WhatsAppContactListRequest.SortableFields),
+            ("broadcasts", WhatsAppBroadcastListRequest.SortableFields),
+            ($"broadcasts/{sent}", WhatsAppBroadcastDetailRequest.SortableFields),
+            ("templates", WhatsAppTemplateListRequest.SortableFields),
+            ("teams", WhatsAppTeamListRequest.SortableFields),
+        })
+        {
+            foreach (var sort in fields.SelectMany(field => new[] { field, "-" + field }))
+            {
+                using var response = await owner.GetAsync($"/api/organization/whatsapp/{path}?sort={sort}", Ct);
+                Assert.True(response.StatusCode == HttpStatusCode.OK, $"{path}?sort={sort}: {(int)response.StatusCode}");
+            }
+        }
+
+        await ProblemAsync(owner.GetAsync("/api/organization/whatsapp/contacts?sort=tags", Ct), HttpStatusCode.BadRequest, "Validation.Failed");
+    }
+
+    private static async Task<Guid[]> IdsAsync(HttpClient owner, string path, string list) =>
+        [.. (await JsonAsync(owner.GetAsync("/api/organization/whatsapp/" + path, Ct))).GetProperty(list).GetProperty("items").EnumerateArray()
+            .Select(value => value.GetProperty("id").GetGuid())];
+
     private static async Task<Guid> TemplateAsync(HttpClient owner, string name, string category, string body)
     {
         var count = WhatsAppTemplateBase.Placeholders(body);

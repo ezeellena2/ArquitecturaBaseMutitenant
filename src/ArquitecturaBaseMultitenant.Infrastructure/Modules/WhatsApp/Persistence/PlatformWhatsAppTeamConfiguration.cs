@@ -17,5 +17,6 @@ internal sealed class PlatformWhatsAppTeamConfiguration : IEntityTypeConfigurati
         WhatsAppTeamMapping.Configure(builder);
         builder.HasIndex(value => value.NormalizedName).IsUnique().HasDatabaseName(WhatsAppUniqueKeys.PlatformTeamName);
         builder.HasIndex(value => new { value.Name, value.Id });
+        builder.HasIndex(value => new { value.NotifyAfterMinutes, value.Id });
     }
 }

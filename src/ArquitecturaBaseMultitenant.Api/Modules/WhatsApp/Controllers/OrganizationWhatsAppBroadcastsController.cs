@@ -37,6 +37,7 @@ public sealed class OrganizationWhatsAppBroadcastsController(IWhatsAppBroadcastS
             Page = query.Page ?? PagedRequest.DefaultPage,
             PageSize = query.PageSize ?? PagedRequest.DefaultPageSize,
             Search = query.Search,
+            Sort = query.Sort,
             Status = query.Status,
         }, cancellationToken)).ToActionResult(this);
 
@@ -83,6 +84,7 @@ public sealed class OrganizationWhatsAppBroadcastsController(IWhatsAppBroadcastS
             Page = query.Page ?? PagedRequest.DefaultPage,
             PageSize = query.PageSize ?? PagedRequest.DefaultPageSize,
             Search = query.Search,
+            Sort = query.Sort,
             Status = query.Status,
         }, cancellationToken)).ToActionResult(this);
 

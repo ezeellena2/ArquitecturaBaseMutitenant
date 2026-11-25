@@ -47,6 +47,13 @@
             "schema": {
               "$ref": "#/components/schemas/WhatsAppBroadcastStatus"
             }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -875,6 +882,13 @@
             "schema": {
               "$ref": "#/components/schemas/WhatsAppRecipientStatus"
             }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1584,6 +1598,13 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/WhatsAppConsent"
+            }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -14250,6 +14271,13 @@
             "schema": {
               "$ref": "#/components/schemas/WhatsAppTemplateStatus"
             }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -15082,6 +15110,13 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/WhatsAppTemplateGroup"
+            }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -18830,6 +18865,13 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -19999,6 +20041,13 @@
           },
           {
             "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Sort",
             "in": "query",
             "schema": {
               "type": "string"

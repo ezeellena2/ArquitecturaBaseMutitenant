@@ -17,12 +17,51 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Persistenc
 /// </summary>
 internal sealed class WhatsAppBroadcastReader(ApplicationDbContext context, ITenantContext tenant) : IWhatsAppBroadcastReader
 {
+    // Las columnas con un dato de la tabla de difusiones (264). Entregados y leídos se cuentan como en la fila y, antes de salir,
+    // están vacíos (la raya), al final; la fecha es la de la fila (cuándo salió, si no para cuándo está), y la de alta mientras
+    // no tiene ninguna, el orden de siempre.
+    private static readonly SortMap<BroadcastSortRow> Sort = new()
+    {
+        ["name"] = row => row.Broadcast.Name,
+        ["template"] = row => row.Broadcast.TemplateName,
+        ["recipients"] = row => row.Broadcast.Recipients,
+        ["status"] = row => row.Broadcast.Status,
+        ["delivered"] = row => row.Delivered,
+        ["read"] = row => row.Read,
+        ["date"] = row => row.Broadcast.SentAtUtc ?? row.Broadcast.ScheduledAtUtc ?? row.Broadcast.CreatedAtUtc,
+    };
+
+    private static readonly SortDescriptor DefaultSort = new("date", Descending: true);
+
+    // Los destinatarios de una difusión, por las columnas de su tabla; el estado por su circuito.
+    private static readonly SortMap<RecipientProjection> RecipientSort = new()
+    {
+        ["contact"] = recipient => recipient.ContactName,
+        ["number"] = recipient => recipient.WaId,
+        ["status"] = recipient => recipient.Status,
+        ["changedAtUtc"] = recipient => recipient.ChangedAtUtc,
+    };
+
+    private static readonly SortDescriptor DefaultRecipientSort = new("changedAtUtc", Descending: true);
+
     public async Task<PagedResult<WhatsAppBroadcastResponse>> ListAsync(WhatsAppBroadcastListRequest request, CancellationToken ct)
     {
         var broadcasts = Broadcasts();
         if (request.Status is { } status) broadcasts = broadcasts.Where(broadcast => broadcast.Status == status);
+        var recipients = Recipients();
         var page = await broadcasts.ApplySearch(request.Search, broadcast => broadcast.Name)
-            .OrderByDescending(broadcast => broadcast.SentAtUtc ?? broadcast.ScheduledAtUtc ?? broadcast.CreatedAtUtc).ThenByDescending(broadcast => broadcast.Id)
+            .Select(broadcast => new BroadcastSortRow
+            {
+                Broadcast = broadcast,
+                Delivered = broadcast.Status == WhatsAppBroadcastStatus.Sent || broadcast.Status == WhatsAppBroadcastStatus.Sending
+                    ? recipients.Count(recipient => recipient.BroadcastId == broadcast.Id && (recipient.Status == WhatsAppRecipientStatus.Delivered
+                        || recipient.Status == WhatsAppRecipientStatus.Read || recipient.Status == WhatsAppRecipientStatus.Replied)) : null,
+                Read = broadcast.Status == WhatsAppBroadcastStatus.Sent || broadcast.Status == WhatsAppBroadcastStatus.Sending
+                    ? recipients.Count(recipient => recipient.BroadcastId == broadcast.Id
+                        && (recipient.Status == WhatsAppRecipientStatus.Read || recipient.Status == WhatsAppRecipientStatus.Replied)) : null,
+            })
+            .ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, row => row.Broadcast.Id)
+            .Select(row => row.Broadcast)
             .ToPagedResultAsync(request, ct);
         return new PagedResult<WhatsAppBroadcastResponse>(await ResponsesAsync(page.Items, ct), page.Page, page.PageSize, page.TotalCount);
     }
@@ -38,7 +77,8 @@ internal sealed class WhatsAppBroadcastReader(ApplicationDbContext context, ITen
         var recipients = Recipients().Where(recipient => recipient.BroadcastId == broadcastId);
         if (request.Status is { } status) recipients = recipients.Where(recipient => recipient.Status == status);
         var page = await recipients.ApplySearch(request.Search, recipient => recipient.ContactName, recipient => recipient.WaId)
-            .OrderByDescending(recipient => recipient.ChangedAtUtc).ThenBy(recipient => recipient.Id).ToPagedResultAsync(request, ct);
+            .ApplySort(SortDescriptor.Parse(request.Sort), RecipientSort, DefaultRecipientSort, recipient => recipient.Id)
+            .ToPagedResultAsync(request, ct);
         return new PagedResult<WhatsAppRecipientResponse>([.. page.Items.Select(recipient => new WhatsAppRecipientResponse(recipient.ContactId,
             recipient.ContactName, recipient.WaId, recipient.Status, recipient.FailureReason, recipient.ChangedAtUtc))], page.Page, page.PageSize, page.TotalCount);
     }
@@ -123,6 +163,13 @@ internal sealed class WhatsAppBroadcastReader(ApplicationDbContext context, ITen
                        ? accepted.OccurredAtUtc : recipient.ChangedAtUtc,
                    SentAtUtc = recipient.SentAtUtc,
                };
+    }
+
+    private sealed class BroadcastSortRow
+    {
+        public WhatsAppBroadcast Broadcast { get; init; } = null!;
+        public int? Delivered { get; init; }
+        public int? Read { get; init; }
     }
 
     private sealed class RecipientProjection

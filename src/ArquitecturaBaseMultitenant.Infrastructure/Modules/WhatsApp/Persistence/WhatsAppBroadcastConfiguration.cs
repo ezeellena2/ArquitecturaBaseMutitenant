@@ -35,6 +35,9 @@ internal sealed class WhatsAppBroadcastConfiguration : IEntityTypeConfiguration<
         builder.Ignore(value => value.EstimatedCost);
         builder.HasIndex(value => new { value.TenantId, value.Status, value.ScheduledAtUtc });
         builder.HasIndex(value => new { value.TenantId, value.Name, value.Id });
+        builder.HasIndex(value => new { value.TenantId, value.TemplateName, value.Id });
+        builder.HasIndex(value => new { value.TenantId, value.Recipients, value.Id });
+        builder.HasIndex(value => new { value.TenantId, value.Status, value.Id });
     }
 }
 

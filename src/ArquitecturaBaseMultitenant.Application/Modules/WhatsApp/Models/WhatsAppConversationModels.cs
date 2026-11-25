@@ -20,7 +20,11 @@ public sealed record WhatsAppTeamResponse(Guid Id, string Name, WhatsAppInbox In
 public sealed record WhatsAppTeamDetailResponse(Guid Id, string Name, WhatsAppInbox Inbox, IReadOnlyList<WhatsAppReferenceResponse> Members,
     int? NotifyAfterMinutes, uint Version);
 
-public sealed record WhatsAppTeamListRequest : PagedRequest;
+public sealed record WhatsAppTeamListRequest : PagedRequest
+{
+    /// <summary>Los ids de las columnas con un dato (264); los integrantes son varios por equipo y ordenan por su cantidad.</summary>
+    public static readonly IReadOnlyCollection<string> SortableFields = ["name", "inbox", "memberCount", "notice"];
+}
 
 /// <summary>Las personas que se pueden sumar a un equipo: en la organización, miembros activos (memberId); en Plataforma, operadores (accountId).</summary>
 public sealed record WhatsAppTeamMemberOptionListRequest : PagedRequest;

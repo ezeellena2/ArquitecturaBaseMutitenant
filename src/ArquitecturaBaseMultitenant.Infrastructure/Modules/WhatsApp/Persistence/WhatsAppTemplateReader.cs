@@ -15,11 +15,24 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Persistenc
 /// </summary>
 internal sealed class WhatsAppTemplateReader(ApplicationDbContext context, ITenantContext tenant) : IWhatsAppTemplateReader
 {
+    // Las columnas con un dato de la tabla de plantillas (264): la categoría y el estado por su circuito, y la actualización como
+    // la muestra la fila (lo último entre el cambio de la plantilla y lo que dijo Meta).
+    private static readonly SortMap<TemplateProjection> Sort = new()
+    {
+        ["name"] = row => row.Name,
+        ["category"] = row => row.Category,
+        ["status"] = row => row.Status,
+        ["updatedAtUtc"] = row => row.ReviewedAtUtc != null && row.ReviewedAtUtc > row.ChangedAtUtc ? row.ReviewedAtUtc : row.ChangedAtUtc,
+    };
+
+    private static readonly SortDescriptor DefaultSort = new("name", Descending: false);
+
     public async Task<PagedResult<WhatsAppTemplateRow>> ListAsync(bool platform, WhatsAppTemplateListRequest request, CancellationToken ct)
     {
         var rows = Project(platform);
         if (request.Status is { } status) rows = rows.Where(row => row.Status == status);
-        var page = await rows.ApplySearch(request.Search, row => row.Name).OrderBy(row => row.Name).ThenBy(row => row.Id).ToPagedResultAsync(request, ct);
+        var page = await rows.ApplySearch(request.Search, row => row.Name)
+            .ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, row => row.Id).ToPagedResultAsync(request, ct);
         return new PagedResult<WhatsAppTemplateRow>([.. page.Items.Select(Row)], page.Page, page.PageSize, page.TotalCount);
     }
 

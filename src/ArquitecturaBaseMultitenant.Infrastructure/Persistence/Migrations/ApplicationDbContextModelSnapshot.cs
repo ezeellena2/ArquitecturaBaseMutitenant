@@ -3759,6 +3759,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Name", "Id");
 
+                    b.HasIndex("NotifyAfterMinutes", "Id");
+
                     b.ToTable("PlatformWhatsAppTeams", "platform");
                 });
 
@@ -4013,7 +4015,13 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId", "Name", "Id");
 
+                    b.HasIndex("TenantId", "Recipients", "Id");
+
+                    b.HasIndex("TenantId", "Status", "Id");
+
                     b.HasIndex("TenantId", "Status", "ScheduledAtUtc");
+
+                    b.HasIndex("TenantId", "TemplateName", "Id");
 
                     b.ToTable("WhatsAppBroadcasts", "tenant");
                 });
@@ -4571,7 +4579,11 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId", "Consent", "Id");
 
+                    b.HasIndex("TenantId", "LastConversationAtUtc", "Id");
+
                     b.HasIndex("TenantId", "Name", "Id");
+
+                    b.HasIndex("TenantId", "WaId", "Id");
 
                     b.ToTable("WhatsAppCustomers", "tenant");
                 });
@@ -4824,7 +4836,11 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("IX_WhatsAppTeams_TenantId_NormalizedName");
 
+                    b.HasIndex("TenantId", "Inbox", "Id");
+
                     b.HasIndex("TenantId", "Name", "Id");
+
+                    b.HasIndex("TenantId", "NotifyAfterMinutes", "Id");
 
                     b.ToTable("WhatsAppTeams", "tenant");
                 });

@@ -20,5 +20,7 @@ internal sealed class WhatsAppTeamConfiguration : IEntityTypeConfiguration<Whats
         builder.Property(value => value.Inbox).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.HasIndex(value => new { value.TenantId, value.NormalizedName }).IsUnique().HasDatabaseName(WhatsAppUniqueKeys.TeamName);
         builder.HasIndex(value => new { value.TenantId, value.Name, value.Id });
+        builder.HasIndex(value => new { value.TenantId, value.Inbox, value.Id });
+        builder.HasIndex(value => new { value.TenantId, value.NotifyAfterMinutes, value.Id });
     }
 }
