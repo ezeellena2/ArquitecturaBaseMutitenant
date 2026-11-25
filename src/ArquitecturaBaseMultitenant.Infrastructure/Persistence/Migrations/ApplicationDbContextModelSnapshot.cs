@@ -3491,9 +3491,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("LastMessageAtUtc")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("LastMessagePreview")
-                        .HasMaxLength(120)
-                        .HasColumnType("character varying(120)");
+                    b.Property<byte[]>("LastMessagePreview")
+                        .HasColumnType("bytea");
 
                     b.Property<DateTime>("StartedAtUtc")
                         .HasColumnType("timestamp with time zone");
@@ -3588,9 +3587,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("TemplateId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Text")
-                        .HasMaxLength(4096)
-                        .HasColumnType("character varying(4096)");
+                    b.Property<byte[]>("Text")
+                        .HasColumnType("bytea");
 
                     b.Property<string>("Wamid")
                         .HasMaxLength(500)
@@ -4126,9 +4124,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("LastMessageAtUtc")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("LastMessagePreview")
-                        .HasMaxLength(120)
-                        .HasColumnType("character varying(120)");
+                    b.Property<byte[]>("LastMessagePreview")
+                        .HasColumnType("bytea");
 
                     b.Property<Guid?>("MemberUserId")
                         .HasColumnType("uuid");
@@ -4232,9 +4229,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("TemplateId")
                         .HasColumnType("uuid");
 
-                    b.Property<string>("Text")
-                        .HasMaxLength(4096)
-                        .HasColumnType("character varying(4096)");
+                    b.Property<byte[]>("Text")
+                        .HasColumnType("bytea");
 
                     b.Property<string>("Wamid")
                         .HasMaxLength(500)
@@ -4387,9 +4383,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("LastMessageAtUtc")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("LastMessagePreview")
-                        .HasMaxLength(120)
-                        .HasColumnType("character varying(120)");
+                    b.Property<byte[]>("LastMessagePreview")
+                        .HasColumnType("bytea");
 
                     b.Property<DateTime>("LinkedAtUtc")
                         .HasColumnType("timestamp with time zone");
@@ -4509,9 +4504,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
 
-                    b.Property<string>("Text")
-                        .HasMaxLength(4096)
-                        .HasColumnType("character varying(4096)");
+                    b.Property<byte[]>("Text")
+                        .HasColumnType("bytea");
 
                     b.HasKey("Id");
 

@@ -15,7 +15,7 @@ internal sealed class WhatsAppLinkedMessageConfiguration : IEntityTypeConfigurat
         builder.HasKey(value => value.Id);
         builder.Property(value => value.Direction).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(value => value.MediaKind).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
-        builder.Property(value => value.Text).HasMaxLength(WhatsAppTextLimits.MessageText);
+        builder.Property(value => value.Text).HasConversion(WhatsAppChatContentConverter.Linked).HasColumnType("bytea");
         builder.HasIndex(value => new { value.LinkId, value.CreatedAtUtc, value.Id });
         builder.HasIndex(value => value.ConsumerTenantId);
         builder.HasIndex(value => value.BusinessTenantId);

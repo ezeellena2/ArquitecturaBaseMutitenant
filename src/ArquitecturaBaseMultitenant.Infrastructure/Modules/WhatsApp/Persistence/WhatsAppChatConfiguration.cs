@@ -15,7 +15,7 @@ internal sealed class WhatsAppChatConfiguration : IEntityTypeConfiguration<Whats
         builder.ToTable("WhatsAppChats", Schemas.Tenant);
         builder.HasKey(value => new { value.TenantId, value.Id });
         builder.HasOne<ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant>().WithMany().HasForeignKey(value => value.TenantId).OnDelete(DeleteBehavior.Restrict);
-        WhatsAppChatMapping.Configure(builder);
+        WhatsAppChatMapping.Configure(builder, WhatsAppChatContentConverter.Organization);
         builder.Property(value => value.Inbox).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.HasIndex(value => new { value.TenantId, value.ChannelId, value.WaId, value.Inbox }).IsUnique();
         builder.HasIndex(value => new { value.TenantId, value.Inbox, value.LastMessageAtUtc, value.Id });

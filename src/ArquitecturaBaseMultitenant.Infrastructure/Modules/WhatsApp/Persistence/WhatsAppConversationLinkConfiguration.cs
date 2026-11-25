@@ -17,7 +17,8 @@ internal sealed class WhatsAppConversationLinkConfiguration : IEntityTypeConfigu
         builder.Property(value => value.OrganizationName).HasMaxLength(TextLimits.OrganizationName).IsRequired();
         builder.Property(value => value.DisplayNumber).HasMaxLength(PhoneNumber.MaxLength).IsRequired();
         builder.Property(value => value.ConsumerName).HasMaxLength(TextLimits.PersonDisplayName);
-        builder.Property(value => value.LastMessagePreview).HasMaxLength(WhatsAppChatBase.PreviewLength);
+        // La copia vinculada lleva el propósito de su esquema, sin la organización: la persona la lee desde su espacio (ADR 0065).
+        builder.Property(value => value.LastMessagePreview).HasConversion(WhatsAppChatContentConverter.Linked).HasColumnType("bytea");
         builder.HasIndex(value => new { value.BusinessTenantId, value.ChatId }).IsUnique();
         builder.HasIndex(value => new { value.ConsumerTenantId, value.LastMessageAtUtc, value.Id });
         builder.HasOne<ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant>().WithMany().HasForeignKey(value => value.ConsumerTenantId)

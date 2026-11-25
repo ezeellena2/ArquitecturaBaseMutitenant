@@ -12,7 +12,7 @@ internal sealed class PlatformWhatsAppChatMessageConfiguration : IEntityTypeConf
         builder.HasBaseType((Type?)null);
         builder.ToTable("PlatformWhatsAppChatMessages", Schemas.Platform);
         builder.HasKey(value => value.Id);
-        WhatsAppChatMapping.ConfigureMessage(builder);
+        WhatsAppChatMapping.ConfigureMessage(builder, WhatsAppChatContentConverter.Platform);
         builder.HasOne<PlatformWhatsAppChat>().WithMany().HasForeignKey(value => value.ChatId).OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(value => new { value.ChatId, value.CreatedAtUtc, value.Id });
         builder.HasIndex(value => value.Wamid).IsUnique().HasFilter("\"Wamid\" IS NOT NULL");

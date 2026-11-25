@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Query.Internal;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 
@@ -53,6 +54,23 @@ public class ApplicationDbContext : IdentityUserContext<ApplicationUser, Guid>, 
     {
         base.OnConfiguring(optionsBuilder);
         optionsBuilder.ReplaceService<IModelCacheKeyFactory, PersistenceModelCacheKeyFactory>();
+#pragma warning disable EF1001 // Ver OperationQueryCompiler: cada consulta lleva su base (ADR 0065).
+        optionsBuilder.ReplaceService<IQueryCompiler, OperationQueryCompiler>();
+#pragma warning restore EF1001
+    }
+
+    /// <summary>El guardado corre con esta base fijada, así un conversor que depende del alcance cifra con su organización (ADR 0065).</summary>
+    public override int SaveChanges(bool acceptAllChangesOnSuccess)
+    {
+        using (PersistenceOperation.Enter(this))
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+    }
+
+    /// <summary>El guardado arranca con esta base fijada y se la lleva en su flujo aunque espere.</summary>
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        using (PersistenceOperation.Enter(this))
+            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 
     public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();

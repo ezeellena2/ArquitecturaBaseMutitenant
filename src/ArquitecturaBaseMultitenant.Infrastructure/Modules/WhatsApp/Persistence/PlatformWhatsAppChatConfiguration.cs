@@ -13,7 +13,7 @@ internal sealed class PlatformWhatsAppChatConfiguration : IEntityTypeConfigurati
         builder.HasBaseType((Type?)null);
         builder.ToTable("PlatformWhatsAppChats", Schemas.Platform);
         builder.HasKey(value => value.Id);
-        WhatsAppChatMapping.Configure(builder);
+        WhatsAppChatMapping.Configure(builder, WhatsAppChatContentConverter.Platform);
         builder.HasIndex(value => new { value.ChannelId, value.WaId }).IsUnique();
         builder.HasIndex(value => new { value.LastMessageAtUtc, value.Id });
         builder.HasIndex(value => new { value.TeamId, value.WaitingSinceUtc });

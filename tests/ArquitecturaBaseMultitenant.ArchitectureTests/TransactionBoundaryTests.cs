@@ -17,6 +17,7 @@ namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 public sealed class TransactionBoundaryTests
 {
     private const string UnitOfWorkClass = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.UnitOfWork";
+    private const string DbContextClass = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.ApplicationDbContext";
     private const string Registration = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.PersistenceRegistration";
     private const string ReferenceSeed = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed.ReferenceDataSeeder";
     private const string DatabaseSeed = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed.DatabaseSeeder";
@@ -91,19 +92,25 @@ public sealed class TransactionBoundaryTests
     [Fact]
     public void Only_unit_of_work_saves_the_ef_context()
     {
-        var owners = Production.SelectMany(ArchitectureIl.DbContextSaveCalls)
+        var calls = Production.SelectMany(ArchitectureIl.DbContextSaveCalls).ToArray();
+        var owners = calls.Where(call => !FixesItsDatabase(call))
             .Select(call => call.Owner)
             .Distinct(StringComparer.Ordinal)
             .ToArray();
 
         Assert.Contains(UnitOfWorkClass, owners);
         Assert.DoesNotContain(owners, owner => owner != UnitOfWorkClass);
+        // El guardado de la base solo fija su base para los conversores (ADR 0065) y delega en el de EF: no guarda por su cuenta.
+        Assert.Equal(["SaveChanges", "SaveChangesAsync"], calls.Where(FixesItsDatabase).Select(call => call.Method).Order(StringComparer.Ordinal));
 
         // Detecta también un SaveChangesAsync llamado sobre un contexto con otro nombre.
         Assert.Contains(ArchitectureIl.DbContextSaveCalls(typeof(TransactionBoundaryTests).Assembly),
             call => call.Owner == typeof(TransactionBoundaryTests).FullName
                 && call.Method == nameof(DbContext.SaveChangesAsync));
     }
+
+    private static bool FixesItsDatabase(ArchitectureIl.Call call) =>
+        call.Owner == DbContextClass && call.OwnerMethod == call.Method && call.DeclaringType != DbContextClass;
 
     [Fact]
     public void Only_unit_of_work_and_idempotency_store_open_transactions()
