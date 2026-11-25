@@ -61,6 +61,9 @@ public sealed class InvitationDeliveryMigrationTests
         Assert.True(await RlsForcedAsync());
         await migrator.MigrateAsync(Current, ct);
         Assert.Equal(DeliveryColumns, await DeliveryColumnsAsync());
+        // La migración se verifica con su esquema; la Api exige después el esquema actual completo (las invitaciones leen
+        // el nombre y los correos de la configuración, de una migración posterior).
+        await migrator.MigrateAsync(null, ct);
         Assert.Equal("Sent", await MemberDeliveryAsync(sentMember));
         Assert.Equal("Sent", await OperatorDeliveryAsync(operatorId));
 
@@ -84,11 +87,14 @@ public sealed class InvitationDeliveryMigrationTests
 
         async Task AssertDownRefusesAsync()
         {
+            // Las posteriores vuelven primero, así la negativa es la de esta migración; después, otra vez el esquema actual.
+            await migrator.MigrateAsync(Current, ct);
             var refused = await Assert.ThrowsAsync<PostgresException>(() => migrator.MigrateAsync(Previous, ct));
             Assert.Equal(PostgresErrorCodes.RaiseException, refused.SqlState);
             Assert.Equal(DeliveryColumns, await DeliveryColumnsAsync());
             Assert.True(await RlsForcedAsync());
             Assert.Contains(Current, await db.Database.GetAppliedMigrationsAsync(ct));
+            await migrator.MigrateAsync(null, ct);
         }
 
         async Task<(Guid MemberId, Guid OutboxId)> InviteMemberAsync()
