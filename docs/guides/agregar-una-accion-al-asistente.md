@@ -24,7 +24,7 @@ La mecánica (el puerto, el registro, las tres piezas de IA, la tarjeta y la bat
      - la pantalla, de la lista cerrada del núcleo (`AssistantActionScreen`), y el efecto fuera del sistema. Una pantalla nueva suma su valor y su traducción a `AssistantRouteKey` en el módulo;
      - los campos;
      - para editar o eliminar, qué lectura de la pantalla encuentra el registro.
-   - **Registrala** en `<Área>Registration.cs` como `IAssistantActionSource`.
+   - **Registrala** como `IAssistantActionSource` en `<Área>Registration.cs` o, si es de un módulo, en su `<Módulo>Module.cs` de Application, como los servicios de `WhatsAppModule.cs`.
 2. **Los campos son los de la pantalla,** no los del pedido HTTP: lo que la persona ve, y nada más.
    - **El tipo sale de la lista cerrada:** `Text`, `LongText`, `Integer`, `Decimal`, `Money`, `Date`, `Boolean`, `Email`, `Phone`, `TaxId`, `Choice`, `Choices`, `Record`, `Consent` o `Items`, y cada campo lleva su límite.
    - **Un campo puede depender de otro** (`DependsOn`), como los roles de la empresa elegida.
@@ -36,7 +36,7 @@ La mecánica (el puerto, el registro, las tres piezas de IA, la tarjeta y la bat
 3. **Resolvé y validá sin guardar.**
    - **`ListChoicesAsync`:** solo para un `Choice` o un `Choices` (un rol, un formulario, un catálogo), con su reader, 20 por página y solo lo que quien pide puede dar.
    - **`ResolveAsync`:** convierte cada texto o referencia en un id.
-     - Usá los readers del área, con RLS, y la `Policy` que usa el `Guard` de la ruta. Si la regla todavía vive en el `Guard`, separala en una `Policy` pura y que la usen los dos.
+     - Usá los readers del área, con RLS, y la `Policy` que usa el `Guard` de la ruta. Si la regla todavía vive en el `Guard`, separala en una `Policy` pura y que la usen los dos. Lo que tiene quien pide lo lee `DelegationPermissionsResolver` (B3 de las acciones), nunca el `Guard`.
      - Sobre datos públicos o compartidos, filtrá además por la organización del claim: RLS deja ver lo publicado de todas.
      - Sin coincidencia es un error con la ruta del campo, y con varias, una duda («Revisá»).
    - **`ValidateAsync`:** arma el mismo `*Request` que la pantalla y corre su validador.
@@ -57,7 +57,7 @@ La mecánica (el puerto, el registro, las tres piezas de IA, la tarjeta y la bat
    - en editar, muestra «Lo que cambia», también lo que se quita;
    - al crear, pide la clave de cada intento a la propuesta. Ante un 422 de clave repetida le vuelve a preguntar: si ya se guardó, lo dice y lleva a lo creado; si no, es otro intento.
 
-   Los selectores buscan por id lo elegido que no cargaron. Si guardar sale del sistema, la pantalla lo avisa antes de guardar, en un diálogo o en una página. Al pasar a `@2`, el adaptador de `@1` se queda un despliegue más.
+   Los selectores muestran lo elegido que no cargaron con el nombre que trae la propuesta del servidor (`selectedOptions` de `Picker`). Si guardar sale del sistema, la pantalla lo avisa antes de guardar, en un diálogo o en una página. Al pasar a `@2`, el adaptador de `@1` se queda un despliegue más.
 6. **Sus casos y su escenario:**
    - **Los casos de la acción:** uno válido, uno inválido, uno ambiguo, uno con instrucciones escondidas (en un adjunto o en un nombre) y uno con algo de otra organización o de otra empresa.
    - **El escenario de la batería genérica,** en `TestFeatures`: prepara la organización, quién pide, el registro de destino, otra empresa y otra organización, y da el cuerpo HTTP de su caso válido.
@@ -101,4 +101,4 @@ No hace falta una herramienta, un prompt, una tarjeta ni tests a mano para la IA
 - **La batería genérica** (con Docker): una teoría por acción.
 - **En el front:** el adaptador dibuja todo lo propuesto y manda lo que se ve.
 
-Al terminar la tarea van el build y los tests rápidos enteros, nunca filtrados ([AGENTS.md](../../AGENTS.md)), y la batería de integración y los tests del front de esa pantalla. La suite completa va en la puerta.
+Al terminar la tarea van el build y los tests rápidos enteros, nunca filtrados ([AGENTS.md](../../AGENTS.md)), y los tests del front de esa pantalla. La batería de integración corre una vez por grupo de tareas: con el conductor, al cerrar el carril ([0071](../decisions/0071-conductor-en-carriles.md)); a mano, al terminar la tarea. La suite completa va en la puerta.
