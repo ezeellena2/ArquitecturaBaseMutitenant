@@ -7,20 +7,20 @@
 - reglas: [AGENTS.md](../../../AGENTS.md) y las [fichas](../../rules/README.md);
 - referencia de producto: el traspaso 2 de ArquitecturaBase, anexo C §10 y anexo D (CA1-A a CA3). Es solo referencia, no código para copiar.
 
-**Requisitos:** la E11 (los contactos de la bandeja Clientes y sus etiquetas) y la E9 (cuotas y fuzz). La E10 no frena (123). Antes de esta etapa va [la base](base-de-la-12.md), con las piezas del front que esta usa: los botones y las esperas, la (i) y lo apagado con su motivo, los filtros sin cantidades, la primera carga, la confirmación que espera, la forma y la escala. Y la etapa [«Acciones del asistente»](acciones-del-asistente.md), con el puerto `IAssistantActionSource`, el sufijo `ActionSource`, la batería genérica y, en el front, `src/shared/assistant-actions/`.
+**Requisitos:** la E11 (los contactos de la bandeja Clientes y sus etiquetas) y la E9 (cuotas y fuzz). La E10 no frena (123). Antes de esta etapa va [la base](base-de-la-12.md), con las piezas del front que esta usa: los botones y las esperas, la (i) y lo apagado con su motivo, los filtros sin cantidades, la primera carga, la confirmación que espera, la forma y la escala. Después van [su segunda parte](base-de-la-12-segunda-parte.md) (214), con `Picker`, el orden por columnas y los formatos; la etapa [«Acciones del asistente»](acciones-del-asistente.md), con el puerto `IAssistantActionSource`, el sufijo `ActionSource`, la batería genérica y, en el front, `src/shared/assistant-actions/`; y las [Costuras de módulos](costuras-de-modulos.md) (0069): el permiso de uso con una fila por origen, que leen `[FeatureGate("forms")]` y la feature de WhatsApp, y apagar un módulo sin borrar sus datos, con un test por módulo.
 
 **Partes.** Esta spec no entra en un solo archivo, así que sigue en otros, con los mismos números de sección. Lo que no está en la tabla está acá.
 
 | Secciones | Archivo |
 | --- | --- |
 | §2, §3, §4, §4b, §5, §6, §7 y §8 | [datos y contrato](12-parte-datos-y-contrato.md) |
-| §9, §11 y §14 | [archivos, tests y referencia](12-parte-archivos-tests-y-referencia.md) |
+| §9, §11, §14 y los errores con sus textos | [archivos, tests y referencia](12-parte-archivos-tests-y-referencia.md) |
 
 ## Qué leer
 
 Antes de empezar:
 1. **Decisiones** de la hoja de ruta: las de la §13 de esta spec.
-2. **Fichas:** [persistencia-ef](../../rules/persistencia-ef.md), [multitenancy](../../rules/multitenancy.md), [auditoria](../../rules/auditoria.md), [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [idempotencia](../../rules/idempotencia.md), [api-http](../../rules/api-http.md), [permisos](../../rules/permisos.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [result-y-errores](../../rules/result-y-errores.md), [validacion](../../rules/validacion.md), [textos-libres](../../rules/textos-libres.md), [numeros-y-moneda](../../rules/numeros-y-moneda.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [logs](../../rules/logs.md), [cuotas](../../rules/cuotas.md), [modulos](../../rules/modulos.md) y [tests](../../rules/tests.md).
+2. **Fichas:** [persistencia-ef](../../rules/persistencia-ef.md), [multitenancy](../../rules/multitenancy.md), [auditoria](../../rules/auditoria.md), [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [idempotencia](../../rules/idempotencia.md), [api-http](../../rules/api-http.md), [permisos](../../rules/permisos.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [result-y-errores](../../rules/result-y-errores.md), [validacion](../../rules/validacion.md), [textos-libres](../../rules/textos-libres.md), [numeros-y-moneda](../../rules/numeros-y-moneda.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [logs](../../rules/logs.md), [cuotas](../../rules/cuotas.md), [modulos](../../rules/modulos.md), [modulos-habilitados](../../rules/modulos-habilitados.md), [datos-personales](../../rules/datos-personales.md) y [tests](../../rules/tests.md).
 3. **Código para copiar:** el módulo Asistente, pieza por pieza, en la §9.
 4. **Pantallas:** los tableros de la §10, con el recorrido `armar-un-catalogo` del front.
 5. **Referencia de producto:** la §14.
@@ -43,7 +43,7 @@ Antes de empezar:
 - **El nombre de un contacto** (81): un contacto sin nombre toma el de su perfil de WhatsApp cuando escribe, y se puede cambiar. El teléfono nunca se muestra.
 - **Con filtros:**
   - sobre la fuente «Miembros de la organización», con condiciones armadas por el sistema y «Sin incluir a quien lo recibe»;
-  - vista previa con una persona de ejemplo, elegida a propósito: el teléfono, con solo el desplegable «Persona» arriba, que se actualiza sola;
+  - vista previa con una persona de ejemplo, elegida a propósito: el teléfono, con solo la pieza «Persona» (262) arriba, que se actualiza sola;
   - el valor es siempre de texto.
 - **Permisos:** `formcatalogs.read` y `formcatalogs.manage`.
 - **Acciones del asistente (268):** las opciones de un catálogo a mano, declaradas una vez por tipo (§17).
@@ -136,7 +136,7 @@ Antes de empezar:
 - **Guardado (C3):** todo se guarda junto en un `PUT` del catálogo, con su versión, y viaja solo lo que cambió. Suma `deleteItems[]`, las opciones por borrar. Una que algo usa responde 409 `Forms.Catalog.ItemInUse`, con qué la usa por opción, y no se borra ninguna; en esta etapa nada usa una opción, y cada etapa suma su motivo.
 - **Nuevo catálogo:** abre el editor, y en «El catálogo» se elige primero el origen y, para los escritos a mano, el tipo de valor, los dos en la pieza, sin un diálogo que solo sirve para elegir (262); después el nombre, y el `POST` sale de «Crear catálogo».
 - **Persona de ejemplo:** sin ella no se crea un catálogo de miembros con condiciones (`Forms.Catalog.SampleRequired`, «Elegí una persona.»).
-- **La vista previa de un catálogo de miembros o de contactos** es el teléfono, con solo el desplegable «Persona» arriba, y se actualiza sola; no hay «Probar». Se ve con `formcatalogs.read`, como el catálogo.
+- **La vista previa de un catálogo de miembros o de contactos** es el teléfono, con solo la pieza «Persona» (262) arriba, y se actualiza sola; no hay «Probar». Se ve con `formcatalogs.read`, como el catálogo.
 
 ## 12. Puntos de contacto
 
