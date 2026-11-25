@@ -1,12 +1,13 @@
 # E20 · Cargar una respuesta desde la web (spec)
 
-**Estado:** pendiente · spec de la etapa 20 del bloque (decisiones 73, 78, 83 a 90, 94, 95, 98, 101, 153, 166, 177, 183, 184, 229, 230, 232 a 235, 261 a 264, 266 y 269; la 229 reemplaza la 96, la 104, la 178 y la 200, la 234 cambia la 97, la 261 cambia la 83 en «Cargar» y la 262, la 141), con el [formato](plantilla.md) de las etapas. Corresponde, en ArquitecturaBase, a las etapas 1, 2 (lo propio), 4 (listas dependientes) y 5 (títulos de sección) de «Cargar formularios desde la app», a la etapa 2 de sus renglones (T12), a SA1-A a SA5 («Dónde se completa») y a UB1-A a UB4-A y W1-A («Ubicación»).
+**Estado:** pendiente · spec de la etapa 20 del bloque (decisiones 73, 78, 83 a 90, 94, 95, 98, 101, 153, 166, 177, 183, 184, 229, 230, 232 a 235, 261 a 264, 266 y 269; la 229 reemplaza la 96, la 104, la 178 y la 200, la 234 cambia la 97, la 261 cambia la 83 en «Cargar» y la 262, la 141), con el [formato](plantilla.md) de las etapas. Corresponde, en ArquitecturaBase, a las etapas 1, 2, 4 y 5 de «Cargar formularios desde la app», a la etapa 2 de sus renglones (T12), a SA1-A a SA5 y a UB1-A a UB4-A y W1-A.
 
 **Partes.** Lo que no figura en esta tabla está acá.
 
 | Secciones | Archivo |
 | --- | --- |
-| «Cómo se arma cada pregunta», «El bloque en la carga», «Los textos», «Desde el celular», Contrato, Datos, Pasos y «Lo que ya se pagó allá» | [armado, contrato, datos y pasos](20-parte-contrato-datos-y-pasos.md) |
+| «Cómo se arma cada pregunta», «El bloque en la carga», «Los textos», Contrato, Datos, Pasos y «Lo que ya se pagó allá» | [armado, contrato, datos y pasos](20-parte-contrato-datos-y-pasos.md) |
+| «Errores y sus textos» y «Desde el celular» | [errores y celular](20-parte-errores-y-celular.md) |
 
 ## Qué leer
 
@@ -99,15 +100,15 @@ Aprobados en el lienzo como dice la tabla, con el armado del front real de Arqui
 | `FRM-Formularios-20` y su teléfono | «Cargar», «Estado», «Dónde se completa» y lo que ve quien solo carga | Redibujados en la v175 (229). **Se redibujan:** «Cargar» en el ⋮ (261), un dato por columna (263) y el encabezado que ordena (264) |
 | `FRM-Editor-20` y su teléfono | «Dónde se completa» al lado del prefijo, apagado en uno solo para clientes, y el aviso de una condición con «Pasar a «Solo en la app»» | Nuevos en la v175 (229 y 235); se redibujan: el aviso también debajo de una fecha anterior o posterior (229) y «Dónde se completa» en la pieza (262) |
 | `FRM-Editor-Ubicacion` y su teléfono | el tipo «Ubicación», último, solo con «Obligatoria», y apagado en el bloque | Nuevos en la v175 (230). **Se redibujan:** el tipo en la pieza (262) |
-| `FRM-Cargar-Respuesta` y su teléfono | la página, con zonas, grilla, títulos, lo condicional, el bloque, «Mantener», errores y salir | Redibujados en la v175: «Usar mi ubicación» con sus estados (pidiendo, el punto, más de 100 m, sin permiso y sin señal) y los cálculos en gris, también en el bloque (230, 233 y 234). **Se redibujan:** la forma de la E15, editable (266), lo que se elige en la pieza (262) y 🗑 en cada ítem del teléfono (261) |
+| `FRM-Cargar-Respuesta` y su teléfono | la página, con zonas, grilla, títulos, lo condicional, el bloque, «Mantener», errores y salir | Redibujados en la v175: «Usar mi ubicación» con sus estados y los cálculos en gris, también en el bloque (230, 233 y 234). **Se redibujan:** la forma de la E15, editable (266), lo que se elige en la pieza (262) y 🗑 en cada ítem del teléfono (261) |
 | `FRM-Cargar-Panel` | el panel junto a la planilla | Redibujado en la v175 (230 y 234). **Se redibuja:** como `FRM-Cargar-Respuesta` (261, 262 y 266) |
 | `FRM-Cargar-Lista` y su teléfono | la lista, una sola opción, sin el dato, elegir varias y la que espera otra respuesta | Aprobados en la v168: «Elegí primero «Zona»» (166). **Se redibujan:** la lista en la pieza (262) |
 | `FRM-Cargar-Archivos` y su teléfono | agregar, los límites, la barra de avance, el corte y la cámara | Aprobado |
-| `FRM-Cargar-Enviada` y su teléfono | «Enviada», versión nueva, dado de baja, opción dada de baja y sin conexión | Aprobados en la v168: «Volver a Formularios» y el bloque en una línea (166 y 177) |
+| `FRM-Cargar-Enviada` y su teléfono | «Enviada», versión nueva, dado de baja, opción dada de baja y sin conexión | Aprobados en la v168: «Volver a Formularios» y el bloque en una línea (166 y 177). **Se redibujan:** lo cargado con la forma de la E20, con el Sí o No en la pieza (262 y 266) |
 | `FRM-Respuestas-20` y `FRM-Respuesta-20`, con sus teléfonos | «App», su filtro y el origen en el detalle | Redibujados en la v175: el punto como enlace al mapa, y en el detalle, con la precisión y los momentos del pedido (230). **Se redibujan:** el detalle como el formulario (266), los momentos como renglones de la actividad (267) y «Canal» en la pieza (262) |
 | `FRM-Respuestas-Propias` y su teléfono | la misma planilla con lo suyo | Aprobados en la v168: «Filtros» y los chips (144). **Se redibujan:** como `FRM-Respuestas` de la E15 (262 y 264) |
 | `FRM-Editor-Listas` y su teléfono | «Según otra respuesta» | Se redibujan: «Dónde se completa» en «Solo en la app», «Publicar» y sin «Ver vista oficial» (229), y la pregunta de la que depende, en la pieza (262 y 269) |
-| `FRM-Publicar-20` y su teléfono | publicar «Solo en la app», al instante, y lo que WhatsApp no puede mostrar en «Problemas» | Redibujados en la v175: «Problemas» con «Pasar a «Solo en la app»», sin esa salida en uno solo para clientes, la fila «Dónde se completa», el aviso sin número y el freno de uno solo para clientes (98 y 229) |
+| `FRM-Publicar-20` y su teléfono | publicar «Solo en la app», al instante, y lo que WhatsApp no puede mostrar en «Problemas» | Redibujados en la v175: «Problemas» con «Pasar a «Solo en la app»», sin esa salida en uno solo para clientes, la fila «Dónde se completa», el aviso sin número y el freno de uno solo para clientes (98 y 229). **Se redibujan:** «Dónde se completa» en la pieza (262) |
 | `WA-Chats-Formulario-20` y `M-WA-Chats-Formulario-20` | en «Enviar formulario», los formularios de la app apagados, y el pedido de ubicación antes del Flow | Redibujados en la v175: «Se completa solo en la app.» (229) y el pedido, con sus estados, «Seguir sin ubicación» y la ubicación que llega (230). **Se redibujan:** el formulario, en la pieza (262) |
 | `WA-Chats-Respuesta` y `M-WA-Conversacion-Respuesta` | la tarjeta de la E14 | No cambian: la ubicación que llega y el Flow que sale después se dibujan en `WA-Chats-Formulario-20` (78) |
 
@@ -174,7 +175,7 @@ La puerta de la etapa, con la lista de control de `/puerta`, más un **recorrido
 7. en un teléfono real, sacar una foto con la cámara, cargar dos ítems en sus recuadros y usar la ubicación;
 8. en «Visita a cliente», cargar la ubicación y ver el punto en la planilla, el detalle y el Excel, y en un pedido, ver el cálculo en gris cambiar al escribir y quedar igual al del servidor.
 
-**Desde el celular:** un Android por USB, como allá; los pasos están en la [parte](20-parte-contrato-datos-y-pasos.md#desde-el-celular).
+**Desde el celular:** un Android por USB, como allá; los pasos están en la [parte](20-parte-errores-y-celular.md#desde-el-celular).
 
 ## Requisitos previos
 
