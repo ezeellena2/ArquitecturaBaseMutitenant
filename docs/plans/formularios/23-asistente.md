@@ -61,7 +61,7 @@ Antes de empezar, en este orden:
 - **el aislamiento por conversación:** `ChannelConversationId` en el contexto, la recuperación y la cancelación. Se prueba con tres personas a la vez;
 - **la medición** de texto a envío y de audio a envío, desde la primera corrida.
 
-**Costos y cupos** (270 y 271): el modelo, la transcripción y Probar entran en el tope mensual de IA (ADR 0051). Con el tope agotado, el asistente no está disponible y un mensaje que llega deriva como con los demás topes, con un motivo propio, distinto de «El asistente no pudo responder». Probar y «Armar desde un texto» gastan además el cupo diario de quien los usa, que es suyo en esta organización y se renueva a la medianoche de la zona de la organización; agotado, quedan grisados con «Llegaste a las N consultas de hoy. Se renuevan a las HH:mm.», no con el motivo del tope del mes.
+**Costos y cupos** (270 y 271): el modelo, la transcripción y Probar entran en el tope mensual de IA (ADR 0051). Con el tope agotado, el asistente no está disponible y un mensaje que llega deriva como con los demás topes, con un motivo propio, distinto de «El asistente no pudo responder». Probar y «Armar desde un texto» gastan además el cupo diario de quien los usa, que es suyo en esta organización y se renueva a la medianoche de la zona de la organización; agotado, quedan grisados con el texto del cupo del día en una organización de `LimitReached` (F13 de la base 2), no con el motivo del tope del mes.
 
 ## Pantallas
 
