@@ -92,7 +92,7 @@ public sealed class InstalledAssistantPersistenceModelTests
         Assert.Equal("platform", work.GetSchema());
         var expected = new[]
         {
-            "Access", "CallSequence", "CallStarted", "CreatedAtUtc", "Culture", "DeadlineAtUtc", "Effort", "Funding",
+            "Access", "CallSequence", "CallStarted", "CreatedAtUtc", "Culture", "DeadlineAtUtc", "Effort", "EngineVersion", "Funding",
             "Id", "LeaseExpiresAtUtc", "LeaseId", "ModelId", "OwnerUserId", "ProviderModelId", "ScopeTenantId",
             "SessionStartedAtUtc", "Status", "StopRequested", "TenantKind", "TimeZoneId",
         };

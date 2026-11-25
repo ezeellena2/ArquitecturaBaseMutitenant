@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
@@ -82,6 +83,16 @@ internal sealed class AssistantTurnTestSession : IAsyncDisposable
     }
 
     internal WebApplicationFactory<Program> Replica() => CreateHost(Factory, Provider);
+
+    /// <summary>La zona del perfil de las cuentas de prueba y de sus organizaciones (las de su país).</summary>
+    internal const string TestTimeZoneId = "America/Argentina/Buenos_Aires";
+
+    /// <summary>
+    /// 271: el cupo diario de esta sesión, ahora: el de la organización en el acceso de empresa, cortado a la medianoche de su
+    /// zona, y el de fuera de una en el resto, a la del perfil. Todas son de Buenos Aires.
+    /// </summary>
+    internal AssistantQuotaDay QuotaDay(IServiceProvider services) => services.GetRequiredService<AssistantQuotaDayResolver>().Of(
+        Access == "business" ? TenantId : null, services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime, TestTimeZoneId);
 
     internal async Task<HttpClient> LoginReplicaAsync(WebApplicationFactory<Program> replica)
     {

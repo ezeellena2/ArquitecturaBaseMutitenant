@@ -142,7 +142,8 @@ internal sealed class AssistantUsageReader(ApplicationDbContext db, ITenantConte
         AssistantMode mode, DateOnly dayUtc, CancellationToken cancellationToken)
     {
         if (mode == AssistantMode.PlatformKey)
-            return await db.Set<AssistantPlatformKeyDailyQuota>().AsNoTracking().Where(value => userIds.Contains(value.UserId) && value.DayUtc == dayUtc)
+            return await db.Set<AssistantPlatformKeyDailyQuota>().AsNoTracking().Where(value => value.OrganizationId == tenant.RequiredTenantId
+                    && userIds.Contains(value.UserId) && value.DayUtc == dayUtc)
                 .Select(value => new AssistantPersonDailyUsageRow(value.UserId, value.ConsumedQueries, value.ReservedQueries)).ToArrayAsync(cancellationToken);
         var organizationId = tenant.RequiredTenantId;
         return await db.Set<AssistantOwnKeyDailyQuota>().AsNoTracking()

@@ -7,7 +7,7 @@ public interface IAssistantFinanceRepository
 {
     Task LockAsync(AssistantFinancialBinding binding, Guid operationId, CancellationToken ct);
     Task<AssistantFinancialOperation?> GetOperationAsync(AssistantFinancialBinding binding, Guid operationId, CancellationToken ct);
-    Task<AssistantPlatformKeyDailyQuota?> GetPlatformQuotaAsync(Guid userId, DateOnly dayUtc, CancellationToken ct);
+    Task<AssistantPlatformKeyDailyQuota?> GetPlatformQuotaAsync(Guid userId, Guid? organizationId, DateOnly dayUtc, CancellationToken ct);
     Task<AssistantOwnKeyDailyQuota?> GetOwnQuotaAsync(Guid userId, DateOnly dayUtc, CancellationToken ct);
     Task<AssistantBudgetMonth?> GetLatestMonthAsync(Guid organizationId, DateTime nowUtc, CancellationToken ct);
     /// <summary>El mes de un aviso del tope, también si se creó en esta UOW; los meses no cambian.</summary>

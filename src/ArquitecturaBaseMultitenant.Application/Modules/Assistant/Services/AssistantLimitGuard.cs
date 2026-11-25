@@ -13,20 +13,21 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 /// tope mensual se miran acá también antes de leer una subida (<see cref="CheckAsync"/>, ADR 0064 §2), con el mismo día y el
 /// mismo mes que admiten un turno.
 /// </summary>
-internal sealed class AssistantLimitGuard(IAssistantFinanceRepository repository, ITimeZoneService zones, TimeProvider clock)
+internal sealed class AssistantLimitGuard(IAssistantFinanceRepository repository, ITimeZoneService zones, AssistantQuotaDayResolver days,
+    TimeProvider clock)
 {
     public async Task<Result<AssistantFinancialOperation>> ReserveAsync(AssistantFinanceAdmission input, CancellationToken ct)
     {
         Validate(input);
         var nowUtc = clock.GetUtcNow().UtcDateTime;
-        var dayUtc = DayOf(nowUtc);
+        var day = DayOf(input, nowUtc);
         await repository.LockAsync(input.Binding, input.OperationId, ct);
         // A durable released operation remains a replay, and never admits another provider effect.
         if (await repository.GetOperationAsync(input.Binding, input.OperationId, ct) is { } previous) return previous;
         var own = input.Mode == AssistantMode.OwnKey;
-        var (platformQuota, ownQuota) = await QuotasAsync(input.Binding.UserId, own, dayUtc, ct);
+        var (platformQuota, ownQuota) = await QuotasAsync(day, input.Binding.UserId, own, ct);
         if (!(own ? ownQuota!.CanReserve(input.DailyLimit) : platformQuota!.CanReserve(input.DailyLimit)))
-            return DailyReached(input.DailyLimit, nowUtc, dayUtc);
+            return DailyReached(input.DailyLimit, nowUtc, day);
         var reserved = AssistantCostPolicy.ReserveTurn(input.Price, input.EligibleTitlePrice);
         // ResolveAsync carries the platform budget for ALL PK actors. Binding, never nullable Money, selects scope.
         var budget = input.Binding.Access == Access.Business ? input.ConfigurationBudget : null;
@@ -50,7 +51,7 @@ internal sealed class AssistantLimitGuard(IAssistantFinanceRepository repository
             repository.Add(platformQuota);
         }
         var operation = AssistantFinancialOperation.Create(input.OperationId, input.Binding,
-            own ? AssistantKeyFunding.OwnKey : AssistantKeyFunding.PlatformKey, dayUtc, input.DailyLimit,
+            own ? AssistantKeyFunding.OwnKey : AssistantKeyFunding.PlatformKey, day.Day, input.DailyLimit,
             month?.Id, budget, reserved, AssistantPriceSnapshotBuilder.Copy(input.Price),
             input.EligibleTitlePrice is null ? null : AssistantPriceSnapshotBuilder.Copy(input.EligibleTitlePrice), nowUtc);
         repository.Add(operation);
@@ -66,11 +67,11 @@ internal sealed class AssistantLimitGuard(IAssistantFinanceRepository repository
     {
         Validate(input);
         var nowUtc = clock.GetUtcNow().UtcDateTime;
-        var dayUtc = DayOf(nowUtc);
+        var day = DayOf(input, nowUtc);
         var own = input.Mode == AssistantMode.OwnKey;
-        var (platformQuota, ownQuota) = await QuotasAsync(input.Binding.UserId, own, dayUtc, ct);
+        var (platformQuota, ownQuota) = await QuotasAsync(day, input.Binding.UserId, own, ct);
         if (!(own ? ownQuota!.CanReserve(input.DailyLimit) : platformQuota!.CanReserve(input.DailyLimit)))
-            return DailyReached(input.DailyLimit, nowUtc, dayUtc);
+            return DailyReached(input.DailyLimit, nowUtc, day);
         var budget = input.Binding.Access == Access.Business ? input.ConfigurationBudget : null;
         if (!AssistantContractPolicy.IsValidBudget(budget)) return Result.Success();
         var (month, _) = await CurrentMonthAsync(input, nowUtc, ct);
@@ -85,19 +86,21 @@ internal sealed class AssistantLimitGuard(IAssistantFinanceRepository repository
             throw new ArgumentException("Admission requires a valid server configuration.", nameof(input));
     }
 
-    /// <summary>El día de los contadores diarios de IA, el mismo para un turno y para una subida: hoy, el UTC (ADR 0064 §3).</summary>
-    private static DateOnly DayOf(DateTime nowUtc) => DateOnly.FromDateTime(nowUtc);
+    /// <summary>
+    /// El día de los contadores diarios de IA, el mismo para un turno y para una subida (271): el de la zona de la organización
+    /// en ella, con su cupo, y el de la zona del perfil fuera de una, que la preparación deja en la admisión.
+    /// </summary>
+    private AssistantQuotaDay DayOf(AssistantFinanceAdmission input, DateTime nowUtc) => days.Of(
+        AssistantQuotaDayResolver.OrganizationOf(input.Binding.Access, input.Binding.ScopeTenantId), nowUtc, input.OrganizationTimeZoneId);
 
-    private async Task<(AssistantPlatformKeyDailyQuota? Platform, AssistantOwnKeyDailyQuota? Own)> QuotasAsync(Guid userId, bool own,
-        DateOnly dayUtc, CancellationToken ct) => own
-        ? (null, await repository.GetOwnQuotaAsync(userId, dayUtc, ct) ?? AssistantOwnKeyDailyQuota.Create(userId, dayUtc))
-        : (await repository.GetPlatformQuotaAsync(userId, dayUtc, ct) ?? AssistantPlatformKeyDailyQuota.Create(userId, dayUtc), null);
+    private async Task<(AssistantPlatformKeyDailyQuota? Platform, AssistantOwnKeyDailyQuota? Own)> QuotasAsync(AssistantQuotaDay day,
+        Guid userId, bool own, CancellationToken ct) => own
+        ? (null, await repository.GetOwnQuotaAsync(userId, day.Day, ct) ?? AssistantOwnKeyDailyQuota.Create(userId, day.Day))
+        : (await repository.GetPlatformQuotaAsync(userId, day.OrganizationId, day.Day, ct)
+            ?? AssistantPlatformKeyDailyQuota.Create(userId, day.OrganizationId, day.Day), null);
 
-    private static Error DailyReached(int limit, DateTime nowUtc, DateOnly dayUtc)
-    {
-        var resetUtc = dayUtc.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
-        return AssistantErrors.LimitDailyReached(RetrySeconds(nowUtc, resetUtc), limit, resetUtc);
-    }
+    private static Error DailyReached(int limit, DateTime nowUtc, AssistantQuotaDay day) =>
+        AssistantErrors.LimitDailyReached(RetrySeconds(nowUtc, day.ResetAtUtc), limit, day.ResetAtUtc);
 
     /// <summary>El período en curso de la organización y los que hay que abrir para llegar a él; solo la admisión los guarda.</summary>
     private async Task<(AssistantBudgetMonth Month, IReadOnlyList<AssistantBudgetMonth> Created)> CurrentMonthAsync(
@@ -134,11 +137,10 @@ internal sealed class AssistantLimitGuard(IAssistantFinanceRepository repository
     private AssistantBudgetMonth CreateMonth(AssistantFinanceAdmission input, DateOnly month, DateTime startUtc) =>
         AssistantBudgetMonth.Create(input.Binding.ScopeTenantId!.Value, month, input.OrganizationTimeZoneId, startUtc,
             zones.GetDayRangeUtc(month.AddMonths(1), input.OrganizationTimeZoneId).StartUtc);
-    public static AssistantDailyQuotaRow Describe(int consumed, int reserved, int limit, DateOnly dayUtc)
+    public static AssistantDailyQuotaRow Describe(int consumed, int reserved, int limit, DateTime resetAtUtc)
     {
         var remaining = (int)Math.Max(0L, (long)limit - consumed - reserved);
-        return new(consumed, reserved, limit, remaining > AssistantTechnicalLimits.RemainingMessagesNotice ? null : remaining,
-            dayUtc.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc));
+        return new(consumed, reserved, limit, remaining > AssistantTechnicalLimits.RemainingMessagesNotice ? null : remaining, resetAtUtc);
     }
     private static int RetrySeconds(DateTime nowUtc, DateTime resetUtc) =>
         checked((int)Math.Max(1L, (resetUtc.Ticks - nowUtc.Ticks + TimeSpan.TicksPerSecond - 1) / TimeSpan.TicksPerSecond));

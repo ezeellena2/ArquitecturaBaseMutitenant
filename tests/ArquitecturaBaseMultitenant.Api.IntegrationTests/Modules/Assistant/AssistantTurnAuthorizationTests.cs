@@ -153,8 +153,8 @@ public sealed class AssistantTurnAuthorizationTests
         using (var scope = session.Host.Services.CreateScope())
         {
             var services = scope.ServiceProvider;
-            var day = DateOnly.FromDateTime(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
-            var quota = AssistantPlatformKeyDailyQuota.Create(session.Account.UserId, day);
+            var day = session.QuotaDay(services);
+            var quota = AssistantPlatformKeyDailyQuota.Create(session.Account.UserId, day.OrganizationId, day.Day);
             for (var index = 0; index < 50; index++) { quota.Reserve(); quota.Consume(); }
             var result = await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
             {

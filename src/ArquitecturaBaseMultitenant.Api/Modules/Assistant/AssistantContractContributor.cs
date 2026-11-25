@@ -46,7 +46,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         new(409, "Assistant.Conversation.Unavailable", null, Resource("Assistant.Conversation.Unavailable", "es"), Resource("Assistant.Conversation.Unavailable", "en")),
     ];
     private const string Uploads = "Subida (ADR 0064 §2 y §4), antes de leer el cuerpo: sin cupo, el 429 de siempre (Assistant.Limit.DailyReached o MonthlyReached, con retryAfter) y no se guarda nada; otra subida de la misma persona en curso, 429 Assistant.Attachment.UploadBusy; la cola de la copia llena, 429 Assistant.Attachment.UploadQueueFull, los dos con retryAfter y Retry-After; el cuerpo tiene 120 s y después es 400 Assistant.Attachment.UploadTimedOut. La misma Idempotency-Key con otro archivo es 422 Request.IdempotencyKeyReused.";
-    private const string Unavailable = "Una conversación que esta versión no puede leer (ADR 0064 §6) sale en el listado con available=false, sin título ni mensajes; su GET es 409 Assistant.Conversation.Unavailable y el DELETE la borra igual.";
+    private const string Unavailable = "Una conversación que esta versión no puede leer (ADR 0064 §6) sale en el listado con available=false, sin título ni mensajes; su GET y su exportación son 409 Assistant.Conversation.Unavailable, un mensaje nuevo también (antes de reservar el cupo) y el DELETE la borra igual.";
     public void Describe(OpenApiDocument document)
     {
         DescribeSchemas(document);
@@ -136,7 +136,9 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
     private static bool Applies(string code, string path, HttpMethod method)
     {
         if (code == "Assistant.Conversation.NotFound") return IsChat(path) && path.Contains("/conversations/", StringComparison.Ordinal) || path.Contains("/quick/", StringComparison.Ordinal);
-        if (code == "Assistant.Conversation.Unavailable") return path.EndsWith("/conversations/{id}", StringComparison.Ordinal) && method == HttpMethod.Get;
+        if (code == "Assistant.Conversation.Unavailable") return method == HttpMethod.Get
+            && (path.EndsWith("/conversations/{id}", StringComparison.Ordinal) || path.EndsWith("/conversations/{id}/export", StringComparison.Ordinal))
+            || method == HttpMethod.Post && path.EndsWith("/conversations/{id}/messages", StringComparison.Ordinal);
         if (code.StartsWith("Assistant.Attachment.Upload", StringComparison.Ordinal)) return path.EndsWith("/attachments", StringComparison.Ordinal) && method == HttpMethod.Post;
         if (code.StartsWith("Assistant.Attachment.", StringComparison.Ordinal)) return path.Contains("/attachments", StringComparison.Ordinal) || path.EndsWith("/messages", StringComparison.Ordinal);
         if (code.StartsWith("Assistant.Turn.", StringComparison.Ordinal)) return path.EndsWith("/messages", StringComparison.Ordinal) || path.Contains("/turns/", StringComparison.Ordinal);

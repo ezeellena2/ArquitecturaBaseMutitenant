@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,7 +21,12 @@ internal static class AssistantQuotaFixture
     {
         var db = services.GetRequiredService<ApplicationDbContext>();
         var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
-        var day = DateOnly.FromDateTime(nowUtc);
+        // 271: el día que corta el cupo es el de la zona de la organización en ella, y el de la del perfil fuera de una.
+        var organizationId = binding.Access == Access.Business ? binding.ScopeTenantId : null;
+        var zone = organizationId is null
+            ? await db.Set<ApplicationUser>().Where(row => row.Id == binding.UserId).Select(row => row.TimeZoneId).SingleAsync(ct)
+            : (await services.GetRequiredService<ITenantSettingsReader>().FindCurrentAsync(ct))?.DefaultTimeZoneId ?? TimeZoneInfo.Utc.Id;
+        var day = services.GetRequiredService<AssistantQuotaDayResolver>().Of(organizationId, nowUtc, zone).Day;
         var remaining = args.GetProperty("remainingMessages").GetInt32();
         var fraction = args.GetProperty("monthlyFraction").GetDecimal();
         var alertIds = new List<Guid>();
@@ -42,8 +48,9 @@ internal static class AssistantQuotaFixture
             }
             else
             {
-                var quota = await db.Set<AssistantPlatformKeyDailyQuota>().SingleOrDefaultAsync(row => row.UserId == binding.UserId && row.DayUtc == day, token);
-                if (quota is null) { quota = AssistantPlatformKeyDailyQuota.Create(binding.UserId, day); db.Add(quota); }
+                var quota = await db.Set<AssistantPlatformKeyDailyQuota>().SingleOrDefaultAsync(row => row.UserId == binding.UserId
+                    && row.OrganizationId == organizationId && row.DayUtc == day, token);
+                if (quota is null) { quota = AssistantPlatformKeyDailyQuota.Create(binding.UserId, organizationId, day); db.Add(quota); }
                 if (quota.ReservedQueries != 0) throw new InvalidOperationException("Fixture cannot overwrite active reservations.");
                 db.Entry(quota).Property(row => row.ConsumedQueries).CurrentValue = limit - remaining;
             }

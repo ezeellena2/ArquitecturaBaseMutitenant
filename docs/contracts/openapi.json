@@ -22832,7 +22832,7 @@
         "tags": [
           "Assistant Business"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Cursor opaco ligado a lado/organización/dueño/filtro; orden LastActivityAtUtc/Id descendente, limit=20 máximo100. Una conversación que esta versión no puede leer (ADR 0064 §6) sale en el listado con available=false, sin título ni mensajes; su GET es 409 Assistant.Conversation.Unavailable y el DELETE la borra igual.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Cursor opaco ligado a lado/organización/dueño/filtro; orden LastActivityAtUtc/Id descendente, limit=20 máximo100. Una conversación que esta versión no puede leer (ADR 0064 §6) sale en el listado con available=false, sin título ni mensajes; su GET y su exportación son 409 Assistant.Conversation.Unavailable, un mensaje nuevo también (antes de reservar el cupo) y el DELETE la borra igual.",
         "parameters": [
           {
             "name": "cursor",
@@ -23673,7 +23673,7 @@
         "tags": [
           "Assistant Business"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Conversación propia, mensajes cronológicos por cursor; limit=50 máximo100. Ajeno devuelve404. Una conversación que esta versión no puede leer (ADR 0064 §6) sale en el listado con available=false, sin título ni mensajes; su GET es 409 Assistant.Conversation.Unavailable y el DELETE la borra igual.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Conversación propia, mensajes cronológicos por cursor; limit=50 máximo100. Ajeno devuelve404. Una conversación que esta versión no puede leer (ADR 0064 §6) sale en el listado con available=false, sin título ni mensajes; su GET y su exportación son 409 Assistant.Conversation.Unavailable, un mensaje nuevo también (antes de reservar el cupo) y el DELETE la borra igual.",
         "parameters": [
           {
             "name": "id",
@@ -23922,6 +23922,38 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict; Assistant.Conversation.Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Assistant.Conversation.Unavailable.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "Esta conversación no está disponible. Podés borrarla.",
+                      "code": "Assistant.Conversation.Unavailable",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Conversation.Unavailable.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "This conversation isn't available. You can delete it.",
+                      "code": "Assistant.Conversation.Unavailable",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error; General.Unexpected",
             "content": {
@@ -23947,38 +23979,6 @@
                       "status": 500,
                       "detail": "An unexpected error occurred. If the problem persists, report the trace id.",
                       "code": "General.Unexpected",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Assistant.Conversation.Unavailable",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "Assistant.Conversation.Unavailable.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 409,
-                      "detail": "Esta conversación no está disponible. Podés borrarla.",
-                      "code": "Assistant.Conversation.Unavailable",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Assistant.Conversation.Unavailable.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 409,
-                      "detail": "This conversation isn't available. You can delete it.",
-                      "code": "Assistant.Conversation.Unavailable",
                       "traceId": "example-trace-id"
                     }
                   }
@@ -25559,7 +25559,7 @@
             }
           },
           "409": {
-            "description": "Conflict; Request.InProgress; General.ConcurrencyConflict; Assistant.Turn.InProgress; Assistant.Attachment.AlreadyUsed",
+            "description": "Conflict; Request.InProgress; General.ConcurrencyConflict; Assistant.Turn.InProgress; Assistant.Attachment.AlreadyUsed; Assistant.Conversation.Unavailable",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -25664,6 +25664,26 @@
                           "That attachment already belongs to a message."
                         ]
                       }
+                    }
+                  },
+                  "Assistant.Conversation.Unavailable.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "Esta conversación no está disponible. Podés borrarla.",
+                      "code": "Assistant.Conversation.Unavailable",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Conversation.Unavailable.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "This conversation isn't available. You can delete it.",
+                      "code": "Assistant.Conversation.Unavailable",
+                      "traceId": "example-trace-id"
                     }
                   }
                 }
@@ -26087,6 +26107,13 @@
             "field": "text",
             "es": "La conversación o los adjuntos son demasiado grandes. Empezá una nueva.",
             "en": "The conversation or attachments are too large. Start a new one."
+          },
+          {
+            "status": 409,
+            "code": "Assistant.Conversation.Unavailable",
+            "field": null,
+            "es": "Esta conversación no está disponible. Podés borrarla.",
+            "en": "This conversation isn't available. You can delete it."
           },
           {
             "status": 400,
@@ -30406,6 +30433,38 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict; Assistant.Conversation.Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Assistant.Conversation.Unavailable.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "Esta conversación no está disponible. Podés borrarla.",
+                      "code": "Assistant.Conversation.Unavailable",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Conversation.Unavailable.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "This conversation isn't available. You can delete it.",
+                      "code": "Assistant.Conversation.Unavailable",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error; General.Unexpected; Assistant.Export.Failed",
             "content": {
@@ -30562,6 +30621,13 @@
             "field": null,
             "es": "No pudimos exportar la conversación.",
             "en": "We could not export the conversation."
+          },
+          {
+            "status": 409,
+            "code": "Assistant.Conversation.Unavailable",
+            "field": null,
+            "es": "Esta conversación no está disponible. Podés borrarla.",
+            "en": "This conversation isn't available. You can delete it."
           },
           {
             "status": 429,
@@ -31398,7 +31464,7 @@
         "tags": [
           "Assistant Consumer"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Cursor opaco ligado a lado/organización/dueño/filtro; orden LastActivityAtUtc/Id descendente, limit=20 máximo100. Una conversación que esta versión no puede leer (ADR 0064 §6) sale en el listado con available=false, sin título ni mensajes; su GET es 409 Assistant.Conversation.Unavailable y el DELETE la borra igual.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Cursor opaco ligado a lado/organización/dueño/filtro; orden LastActivityAtUtc/Id descendente, limit=20 máximo100. Una conversación que esta versión no puede leer (ADR 0064 §6) sale en el listado con available=false, sin título ni mensajes; su GET y su exportación son 409 Assistant.Conversation.Unavailable, un mensaje nuevo también (antes de reservar el cupo) y el DELETE la borra igual.",
         "parameters": [
           {
             "name": "cursor",
@@ -32235,7 +32301,7 @@
         "tags": [
           "Assistant Consumer"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Conversación propia, mensajes cronológicos por cursor; limit=50 máximo100. Ajeno devuelve404. Una conversación que esta versión no puede leer (ADR 0064 §6) sale en el listado con available=false, sin título ni mensajes; su GET es 409 Assistant.Conversation.Unavailable y el DELETE la borra igual.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Conversación propia, mensajes cronológicos por cursor; limit=50 máximo100. Ajeno devuelve404. Una conversación que esta versión no puede leer (ADR 0064 §6) sale en el listado con available=false, sin título ni mensajes; su GET y su exportación son 409 Assistant.Conversation.Unavailable, un mensaje nuevo también (antes de reservar el cupo) y el DELETE la borra igual.",
         "parameters": [
           {
             "name": "id",
@@ -32484,6 +32550,38 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict; Assistant.Conversation.Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Assistant.Conversation.Unavailable.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "Esta conversación no está disponible. Podés borrarla.",
+                      "code": "Assistant.Conversation.Unavailable",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Conversation.Unavailable.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "This conversation isn't available. You can delete it.",
+                      "code": "Assistant.Conversation.Unavailable",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error; General.Unexpected",
             "content": {
@@ -32509,38 +32607,6 @@
                       "status": 500,
                       "detail": "An unexpected error occurred. If the problem persists, report the trace id.",
                       "code": "General.Unexpected",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Assistant.Conversation.Unavailable",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "Assistant.Conversation.Unavailable.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 409,
-                      "detail": "Esta conversación no está disponible. Podés borrarla.",
-                      "code": "Assistant.Conversation.Unavailable",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Assistant.Conversation.Unavailable.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 409,
-                      "detail": "This conversation isn't available. You can delete it.",
-                      "code": "Assistant.Conversation.Unavailable",
                       "traceId": "example-trace-id"
                     }
                   }
@@ -34115,7 +34181,7 @@
             }
           },
           "409": {
-            "description": "Conflict; Request.InProgress; General.ConcurrencyConflict; Assistant.Turn.InProgress; Assistant.Attachment.AlreadyUsed",
+            "description": "Conflict; Request.InProgress; General.ConcurrencyConflict; Assistant.Turn.InProgress; Assistant.Attachment.AlreadyUsed; Assistant.Conversation.Unavailable",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -34220,6 +34286,26 @@
                           "That attachment already belongs to a message."
                         ]
                       }
+                    }
+                  },
+                  "Assistant.Conversation.Unavailable.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "Esta conversación no está disponible. Podés borrarla.",
+                      "code": "Assistant.Conversation.Unavailable",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Conversation.Unavailable.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "This conversation isn't available. You can delete it.",
+                      "code": "Assistant.Conversation.Unavailable",
+                      "traceId": "example-trace-id"
                     }
                   }
                 }
@@ -34643,6 +34729,13 @@
             "field": "text",
             "es": "La conversación o los adjuntos son demasiado grandes. Empezá una nueva.",
             "en": "The conversation or attachments are too large. Start a new one."
+          },
+          {
+            "status": 409,
+            "code": "Assistant.Conversation.Unavailable",
+            "field": null,
+            "es": "Esta conversación no está disponible. Podés borrarla.",
+            "en": "This conversation isn't available. You can delete it."
           },
           {
             "status": 400,
@@ -38948,6 +39041,38 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict; Assistant.Conversation.Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Assistant.Conversation.Unavailable.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "Esta conversación no está disponible. Podés borrarla.",
+                      "code": "Assistant.Conversation.Unavailable",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Conversation.Unavailable.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "This conversation isn't available. You can delete it.",
+                      "code": "Assistant.Conversation.Unavailable",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error; General.Unexpected; Assistant.Export.Failed",
             "content": {
@@ -39104,6 +39229,13 @@
             "field": null,
             "es": "No pudimos exportar la conversación.",
             "en": "We could not export the conversation."
+          },
+          {
+            "status": 409,
+            "code": "Assistant.Conversation.Unavailable",
+            "field": null,
+            "es": "Esta conversación no está disponible. Podés borrarla.",
+            "en": "This conversation isn't available. You can delete it."
           },
           {
             "status": 429,
@@ -41879,7 +42011,7 @@
         "tags": [
           "Assistant Platform"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Cursor opaco ligado a lado/organización/dueño/filtro; orden LastActivityAtUtc/Id descendente, limit=20 máximo100. Una conversación que esta versión no puede leer (ADR 0064 §6) sale en el listado con available=false, sin título ni mensajes; su GET es 409 Assistant.Conversation.Unavailable y el DELETE la borra igual.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Cursor opaco ligado a lado/organización/dueño/filtro; orden LastActivityAtUtc/Id descendente, limit=20 máximo100. Una conversación que esta versión no puede leer (ADR 0064 §6) sale en el listado con available=false, sin título ni mensajes; su GET y su exportación son 409 Assistant.Conversation.Unavailable, un mensaje nuevo también (antes de reservar el cupo) y el DELETE la borra igual.",
         "parameters": [
           {
             "name": "cursor",
@@ -42720,7 +42852,7 @@
         "tags": [
           "Assistant Platform"
         ],
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Conversación propia, mensajes cronológicos por cursor; limit=50 máximo100. Ajeno devuelve404. Una conversación que esta versión no puede leer (ADR 0064 §6) sale en el listado con available=false, sin título ni mensajes; su GET es 409 Assistant.Conversation.Unavailable y el DELETE la borra igual.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Conversación propia, mensajes cronológicos por cursor; limit=50 máximo100. Ajeno devuelve404. Una conversación que esta versión no puede leer (ADR 0064 §6) sale en el listado con available=false, sin título ni mensajes; su GET y su exportación son 409 Assistant.Conversation.Unavailable, un mensaje nuevo también (antes de reservar el cupo) y el DELETE la borra igual.",
         "parameters": [
           {
             "name": "id",
@@ -42969,6 +43101,38 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict; Assistant.Conversation.Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Assistant.Conversation.Unavailable.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "Esta conversación no está disponible. Podés borrarla.",
+                      "code": "Assistant.Conversation.Unavailable",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Conversation.Unavailable.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "This conversation isn't available. You can delete it.",
+                      "code": "Assistant.Conversation.Unavailable",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error; General.Unexpected",
             "content": {
@@ -42994,38 +43158,6 @@
                       "status": 500,
                       "detail": "An unexpected error occurred. If the problem persists, report the trace id.",
                       "code": "General.Unexpected",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Assistant.Conversation.Unavailable",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "Assistant.Conversation.Unavailable.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 409,
-                      "detail": "Esta conversación no está disponible. Podés borrarla.",
-                      "code": "Assistant.Conversation.Unavailable",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "Assistant.Conversation.Unavailable.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 409,
-                      "detail": "This conversation isn't available. You can delete it.",
-                      "code": "Assistant.Conversation.Unavailable",
                       "traceId": "example-trace-id"
                     }
                   }
@@ -44606,7 +44738,7 @@
             }
           },
           "409": {
-            "description": "Conflict; Request.InProgress; General.ConcurrencyConflict; Assistant.Turn.InProgress; Assistant.Attachment.AlreadyUsed",
+            "description": "Conflict; Request.InProgress; General.ConcurrencyConflict; Assistant.Turn.InProgress; Assistant.Attachment.AlreadyUsed; Assistant.Conversation.Unavailable",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -44711,6 +44843,26 @@
                           "That attachment already belongs to a message."
                         ]
                       }
+                    }
+                  },
+                  "Assistant.Conversation.Unavailable.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "Esta conversación no está disponible. Podés borrarla.",
+                      "code": "Assistant.Conversation.Unavailable",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Conversation.Unavailable.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "This conversation isn't available. You can delete it.",
+                      "code": "Assistant.Conversation.Unavailable",
+                      "traceId": "example-trace-id"
                     }
                   }
                 }
@@ -45134,6 +45286,13 @@
             "field": "text",
             "es": "La conversación o los adjuntos son demasiado grandes. Empezá una nueva.",
             "en": "The conversation or attachments are too large. Start a new one."
+          },
+          {
+            "status": 409,
+            "code": "Assistant.Conversation.Unavailable",
+            "field": null,
+            "es": "Esta conversación no está disponible. Podés borrarla.",
+            "en": "This conversation isn't available. You can delete it."
           },
           {
             "status": 400,
@@ -49453,6 +49612,38 @@
               }
             }
           },
+          "409": {
+            "description": "Conflict; Assistant.Conversation.Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Assistant.Conversation.Unavailable.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "Esta conversación no está disponible. Podés borrarla.",
+                      "code": "Assistant.Conversation.Unavailable",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Conversation.Unavailable.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "This conversation isn't available. You can delete it.",
+                      "code": "Assistant.Conversation.Unavailable",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error; General.Unexpected; Assistant.Export.Failed",
             "content": {
@@ -49609,6 +49800,13 @@
             "field": null,
             "es": "No pudimos exportar la conversación.",
             "en": "We could not export the conversation."
+          },
+          {
+            "status": 409,
+            "code": "Assistant.Conversation.Unavailable",
+            "field": null,
+            "es": "Esta conversación no está disponible. Podés borrarla.",
+            "en": "This conversation isn't available. You can delete it."
           },
           {
             "status": 429,

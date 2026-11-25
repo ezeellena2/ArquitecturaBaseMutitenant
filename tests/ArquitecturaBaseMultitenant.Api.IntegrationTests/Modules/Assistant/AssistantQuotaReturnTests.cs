@@ -67,6 +67,36 @@ public sealed class AssistantQuotaReturnTests
     }
 
     [Fact]
+    public async Task A_turn_sealed_by_a_newer_engine_waits_for_its_copy_and_once_expired_gives_back_the_quota_without_the_provider()
+    {
+        await using var session = await AssistantTurnTestSession.CreateAsync("business", workerEnabled: false);
+        var (turnId, stream) = await OpenTurnAsync(session);
+        using (stream)
+        {
+            // 0064 §6: lo selló una versión más nueva, que esta copia no sabe armar.
+            await UpdateWorkAsync(session, turnId, (db, work, _) =>
+                db.Entry(work).Property(row => row.EngineVersion).CurrentValue = AssistantTurnWork.CurrentEngineVersion + 1);
+            Assert.Null(await ReadyAsync(session, turnId));
+            await AssertSpendingAsync(session, turnId, reserved: 1, consumed: 0, monthly: amount => Assert.True(amount > 0m));
+            Assert.Equal(AssistantTurnStatus.Pending, await StatusAsync(session, turnId));
+
+            await UpdateWorkAsync(session, turnId, (db, work, nowUtc) =>
+                db.Entry(work).Property(row => row.DeadlineAtUtc).CurrentValue = nowUtc.AddSeconds(-1));
+            Assert.False((await ReadyAsync(session, turnId))!.KnownEngine);
+            await using (var replica = session.Replica())
+            {
+                using var replicaClient = AssistantTurnTestSession.NewClient(replica);
+                Assert.Equal("error", (await stream.TerminalAsync(Ct)).Event);
+            }
+            await AssertSpendingAsync(session, turnId, reserved: 0, consumed: 0, monthly: amount => Assert.Equal(0m, amount),
+                AssistantFinancialState.Released);
+            Assert.Equal(AssistantTurnStatus.Failed, await StatusAsync(session, turnId));
+            Assert.Equal(0, session.Provider.Calls);
+            Assert.Empty(session.Provider.Invocations);
+        }
+    }
+
+    [Fact]
     public async Task A_turn_that_reserved_a_step_with_the_provider_keeps_the_daily_quota_and_the_monthly_cost_spent()
     {
         await using var session = await AssistantTurnTestSession.CreateAsync("business", workerEnabled: false);
@@ -154,6 +184,21 @@ public sealed class AssistantQuotaReturnTests
         Assert.True(updated.IsSuccess, updated.Error.Code);
     }
 
+    private static async Task<AssistantTurnDiscovery?> ReadyAsync(AssistantTurnTestSession session, Guid turnId)
+    {
+        using var scope = session.Host.Services.CreateScope();
+        var nowUtc = scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        var ready = await scope.ServiceProvider.GetRequiredService<IAssistantTurnRepository>().ListReadyAsync(nowUtc, Ct);
+        return ready.SingleOrDefault(row => row.TurnId == turnId);
+    }
+
+    private static async Task<AssistantTurnStatus> StatusAsync(AssistantTurnTestSession session, Guid turnId)
+    {
+        using var scope = session.Host.Services.CreateScope();
+        return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<AssistantTurnWork>().AsNoTracking()
+            .Where(row => row.Id == turnId).Select(row => row.Status).SingleAsync(Ct);
+    }
+
     // What the admission of the next turn sees: the person's quota of the day and what the organization's month has committed
     // or reserved, read by the same repository the guard uses.
     private static async Task AssertSpendingAsync(AssistantTurnTestSession session, Guid turnId, int reserved, int consumed,
@@ -169,7 +214,7 @@ public sealed class AssistantQuotaReturnTests
             var operation = await finance.GetOperationAsync(binding, turnId, ct);
             Assert.NotNull(operation);
             if (state is { } expected) Assert.Equal(expected, operation.State);
-            var quota = await finance.GetPlatformQuotaAsync(session.Account.UserId, operation.DayUtc, ct);
+            var quota = await finance.GetPlatformQuotaAsync(session.Account.UserId, session.TenantId, operation.DayUtc, ct);
             Assert.NotNull(quota);
             Assert.Equal(reserved, quota.ReservedQueries);
             Assert.Equal(consumed, quota.ConsumedQueries);

@@ -11,12 +11,12 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Persisten
 
 internal sealed class AssistantFinanceReader(ApplicationDbContext db, ITenantContext tenant) : IAssistantFinanceReader
 {
-    public async Task<AssistantDailyQuotaUsageRow> FindDailyQuotaAsync(Guid userId, AssistantMode mode, DateOnly dayUtc, CancellationToken ct)
+    public async Task<AssistantDailyQuotaUsageRow> FindDailyQuotaAsync(Guid userId, Guid? organizationId, AssistantMode mode, DateOnly dayUtc, CancellationToken ct)
     {
         if (userId == Guid.Empty || !Enum.IsDefined(mode)) throw new ArgumentException("A user and a valid funding mode are required.");
         if (mode == AssistantMode.PlatformKey)
             return await db.Set<AssistantPlatformKeyDailyQuota>().AsNoTracking()
-                .Where(row => row.UserId == userId && row.DayUtc == dayUtc)
+                .Where(row => row.UserId == userId && row.OrganizationId == organizationId && row.DayUtc == dayUtc)
                 .Select(row => new AssistantDailyQuotaUsageRow(row.ConsumedQueries, row.ReservedQueries))
                 .SingleOrDefaultAsync(ct) ?? new(0, 0);
         var id = tenant.RequiredTenantId;

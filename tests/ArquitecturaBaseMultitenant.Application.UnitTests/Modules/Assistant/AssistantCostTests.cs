@@ -85,9 +85,10 @@ public sealed class AssistantCostTests
     [Fact]
     public void Remaining_is_only_visible_at_ten_and_daily_reset_is_UTC()
     {
-        var day = new DateOnly(2026, 10, 10);
-        Assert.Null(AssistantLimitGuard.Describe(39, 0, 50, day).Remaining);
-        Assert.Equal(10, AssistantLimitGuard.Describe(40, 0, 50, day).Remaining);
-        Assert.Equal(new DateTime(2026, 10, 11, 0, 0, 0, DateTimeKind.Utc), AssistantLimitGuard.Describe(40, 0, 50, day).ResetAtUtc);
+        // 271: la renovación es la medianoche de la zona que corta el día (acá, la de Buenos Aires), no la de UTC.
+        var reset = new DateTime(2026, 10, 11, 3, 0, 0, DateTimeKind.Utc);
+        Assert.Null(AssistantLimitGuard.Describe(39, 0, 50, reset).Remaining);
+        Assert.Equal(10, AssistantLimitGuard.Describe(40, 0, 50, reset).Remaining);
+        Assert.Equal(reset, AssistantLimitGuard.Describe(40, 0, 50, reset).ResetAtUtc);
     }
 }

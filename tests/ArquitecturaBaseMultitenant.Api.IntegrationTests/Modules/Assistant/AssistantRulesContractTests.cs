@@ -42,6 +42,9 @@ public sealed class AssistantRulesContractTests
             var conversation = document["paths"]![root + "/conversations/{id}"]!;
             Assert.Contains("409 " + AssistantErrors.ConversationUnavailableCode, Codes(conversation["get"]!));
             Assert.DoesNotContain("409 " + AssistantErrors.ConversationUnavailableCode, Codes(conversation["delete"]!));
+            // Tampoco se exporta ni recibe un mensaje nuevo (B14, revisión adversarial).
+            Assert.Contains("409 " + AssistantErrors.ConversationUnavailableCode, Codes(document["paths"]![root + "/conversations/{id}/export"]!["get"]!));
+            Assert.Contains("409 " + AssistantErrors.ConversationUnavailableCode, Codes(document["paths"]![root + "/conversations/{id}/messages"]!["post"]!));
         }
         var summary = document["components"]!["schemas"]!["AssistantConversationSummaryResponse"]!;
         Assert.Contains("available", summary["required"]!.AsArray().Select(value => value!.GetValue<string>()));

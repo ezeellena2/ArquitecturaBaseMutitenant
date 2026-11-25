@@ -28,6 +28,12 @@ public sealed class AssistantTurnWork : Entity
     public string ProviderModelId { get; private set; } = string.Empty;
     public string Effort { get; private set; } = string.Empty;
     public AssistantKeyFunding Funding { get; private set; }
+    /// <summary>
+    /// La versión del motor que selló el turno (0064 §6). Una copia toma solo los que conoce; los de una versión más nueva
+    /// esperan a la copia que los conoce y, si nadie los toma antes de su plazo, vencen y devuelven el cupo.
+    /// </summary>
+    public const int CurrentEngineVersion = 1;
+    public int EngineVersion { get; private set; }
     public static AssistantTurnWork Create(Guid turnId, Guid owner, Access access, Guid? tenantId, TenantKind? kind,
         string culture, string timeZoneId, DateTime? sessionStartedAtUtc, Guid modelId, string providerModelId,
         string effort, AssistantKeyFunding funding, DateTime nowUtc, DateTime deadlineAtUtc)
@@ -55,6 +61,7 @@ public sealed class AssistantTurnWork : Entity
             ProviderModelId = providerModelId,
             Effort = effort,
             Funding = funding,
+            EngineVersion = CurrentEngineVersion,
             CreatedAtUtc = nowUtc,
             DeadlineAtUtc = deadlineAtUtc,
         };

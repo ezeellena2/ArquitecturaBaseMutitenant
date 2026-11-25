@@ -12,31 +12,63 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Persisten
 
 internal sealed class AssistantConversationReader(ApplicationDbContext context, ITenantContext tenant) : IAssistantConversationReader
 {
-    public Task<AssistantConversationSummaryResponse?> FindByIdAsync(Guid ownerUserId, Access access, Guid conversationId, CancellationToken ct)
+    // 0064 §6: una conversación con un mensaje que esta versión no sabe leer (AssistantKnownMessages) sale sin título ni
+    // mensajes, su GET y su exportación son 409, no recibe un turno y se puede borrar.
+    private static readonly string[] KnownRoles = AssistantKnownMessages.Roles;
+    private static readonly AssistantPersistedMessageStatus[] KnownStatuses = AssistantKnownMessages.Statuses;
+
+    public async Task<AssistantConversationSummaryResponse?> FindByIdAsync(Guid ownerUserId, Access access, Guid conversationId, CancellationToken ct)
     {
         Validate(ownerUserId, access);
-        if (access == Access.Platform)
-            return context.Set<PlatformAssistantConversation>().AsNoTracking().Where(value => value.Id == conversationId && value.OwnerUserId == ownerUserId)
-                .Select(value => new AssistantConversationSummaryResponse(value.Id, value.ManualTitle ?? value.Activity.AutomaticTitle, value.IsSaved, value.Version, value.CreatedAtUtc, value.Activity.LastActivityAtUtc)).SingleOrDefaultAsync(ct);
-        var tenantId = tenant.RequiredTenantId;
-        return context.Set<AssistantConversation>().AsNoTracking().Where(value => value.Id == conversationId && value.TenantId == tenantId && value.OwnerUserId == ownerUserId && value.Access == access)
-            .Select(value => new AssistantConversationSummaryResponse(value.Id, value.ManualTitle ?? value.Activity.AutomaticTitle, value.IsSaved, value.Version, value.CreatedAtUtc, value.Activity.LastActivityAtUtc)).SingleOrDefaultAsync(ct);
+        var row = await Conversations(ownerUserId, access, null).Where(value => value.Id == conversationId).SingleOrDefaultAsync(ct);
+        return row is null ? null : Summary(row);
     }
 
     public async Task<CursorResult<AssistantConversationSummaryResponse>> ListAsync(Guid ownerUserId, Access access, AssistantConversationListRequest request, CancellationToken ct)
     {
         Validate(ownerUserId, access);
         var tenantId = access == Access.Platform ? Guid.Empty : tenant.RequiredTenantId;
-        var query = access == Access.Platform
-            ? context.Set<PlatformAssistantConversation>().AsNoTracking().Where(value => value.OwnerUserId == ownerUserId && (request.Saved == null || value.IsSaved == request.Saved))
-                .Select(value => new { value.Id, Title = value.ManualTitle ?? value.Activity.AutomaticTitle, value.IsSaved, value.Version, value.CreatedAtUtc, value.Activity.LastActivityAtUtc })
-            : context.Set<AssistantConversation>().AsNoTracking().Where(value => value.TenantId == tenantId && value.OwnerUserId == ownerUserId && value.Access == access && (request.Saved == null || value.IsSaved == request.Saved))
-                .Select(value => new { value.Id, Title = value.ManualTitle ?? value.Activity.AutomaticTitle, value.IsSaved, value.Version, value.CreatedAtUtc, value.Activity.LastActivityAtUtc });
-        var page = await AssistantCursorPagination.ToCursorResultAsync(query, request.Limit ?? AssistantTechnicalLimits.QuickRows, request.Cursor,
+        var page = await AssistantCursorPagination.ToCursorResultAsync(Conversations(ownerUserId, access, request.Saved), request.Limit ?? AssistantTechnicalLimits.QuickRows, request.Cursor,
             $"conversations:{tenantId:N}:{ownerUserId:N}:{access}:{request.Saved?.ToString() ?? "all"}", false,
             value => value.LastActivityAtUtc, value => value.Id, ct);
-        return new CursorResult<AssistantConversationSummaryResponse>([.. page.Items.Select(value =>
-            new AssistantConversationSummaryResponse(value.Id, value.Title, value.IsSaved, value.Version, value.CreatedAtUtc, value.LastActivityAtUtc))], page.NextCursor, page.HasMore);
+        return new CursorResult<AssistantConversationSummaryResponse>([.. page.Items.Select(Summary)], page.NextCursor, page.HasMore);
+    }
+
+    private IQueryable<ConversationRow> Conversations(Guid ownerUserId, Access access, bool? saved)
+    {
+        if (access == Access.Platform)
+            return context.Set<PlatformAssistantConversation>().AsNoTracking().Where(value => value.OwnerUserId == ownerUserId && (saved == null || value.IsSaved == saved))
+                .Select(value => new ConversationRow
+                {
+                    Id = value.Id, Title = value.ManualTitle ?? value.Activity.AutomaticTitle, IsSaved = value.IsSaved, Version = value.Version,
+                    CreatedAtUtc = value.CreatedAtUtc, LastActivityAtUtc = value.Activity.LastActivityAtUtc,
+                    Available = !context.Set<PlatformAssistantMessage>().Any(message => message.ConversationId == value.Id
+                        && (!KnownRoles.Contains(message.Role) || !KnownStatuses.Contains(message.Status))),
+                });
+        var tenantId = tenant.RequiredTenantId;
+        return context.Set<AssistantConversation>().AsNoTracking().Where(value => value.TenantId == tenantId && value.OwnerUserId == ownerUserId && value.Access == access && (saved == null || value.IsSaved == saved))
+            .Select(value => new ConversationRow
+            {
+                Id = value.Id, Title = value.ManualTitle ?? value.Activity.AutomaticTitle, IsSaved = value.IsSaved, Version = value.Version,
+                CreatedAtUtc = value.CreatedAtUtc, LastActivityAtUtc = value.Activity.LastActivityAtUtc,
+                Available = !context.Set<AssistantMessage>().Any(message => message.TenantId == value.TenantId && message.ConversationId == value.Id
+                    && (!KnownRoles.Contains(message.Role) || !KnownStatuses.Contains(message.Status))),
+            });
+    }
+
+    private static AssistantConversationSummaryResponse Summary(ConversationRow row) =>
+        new(row.Id, row.Available ? row.Title : null, row.IsSaved, row.Version, row.CreatedAtUtc, row.LastActivityAtUtc) { Available = row.Available };
+
+    // Con inicializadores y no con constructor: el cursor ordena por sus propiedades después de proyectar.
+    private sealed class ConversationRow
+    {
+        public Guid Id { get; init; }
+        public string? Title { get; init; }
+        public bool IsSaved { get; init; }
+        public uint Version { get; init; }
+        public DateTime CreatedAtUtc { get; init; }
+        public DateTime LastActivityAtUtc { get; init; }
+        public bool Available { get; init; }
     }
 
     public async Task<CursorResult<AssistantMessageResponse>> ListMessagesAsync(Guid ownerUserId, Access access, Guid conversationId, AssistantMessageListRequest request, CancellationToken ct)

@@ -12,7 +12,7 @@ using Microsoft.Extensions.Logging;
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantTurnService(AssistantTurnWriter writer, AssistantTurnBuilder builder, AssistantTurnToolBuilder tools,
-    IAssistantAttachmentContentReader attachments, ICurrentUser user,
+    IAssistantAttachmentContentReader attachments, ICurrentUser user, AssistantRequestTimeBuilder requestTime,
     IUnitOfWork unitOfWork, TimeProvider clock, ILogger<AssistantTurnService> logger) : IAssistantTurnService
 {
     public Task<Result<AssistantTurnExecution>> ClaimAsync(Guid id, Guid lease, CancellationToken ct) =>
@@ -30,6 +30,12 @@ internal sealed class AssistantTurnService(AssistantTurnWriter writer, Assistant
                 if (content.IsFailure) return content.Error;
                 foreach (var file in content.Value) messages[index + 1].Contents.Add(new Microsoft.Extensions.AI.DataContent(file.Bytes, file.MediaType));
             }
+            // 0064 §9: la hora del pedido y la zona del perfil, al final del último mensaje de la persona, como el canal (0054 §1).
+            var asked = -1;
+            for (var index = 0; index < context.Count; index++) if (context[index].Role == AssistantMessageRole.User) asked = index;
+            if (asked >= 0 && result.Value.Requester is { } requester)
+                messages[asked + 1].Contents.Add(new Microsoft.Extensions.AI.TextContent(
+                    await requestTime.BuildAsync(context[asked].CreatedAtUtc, requester, ct)));
             return result.Value with { Tools = await tools.BuildAsync(ct), Messages = messages, ContextMessages = null };
         });
     public Task<Result> BeginCallAsync(Guid id, Guid lease, int sequence, CancellationToken ct) =>

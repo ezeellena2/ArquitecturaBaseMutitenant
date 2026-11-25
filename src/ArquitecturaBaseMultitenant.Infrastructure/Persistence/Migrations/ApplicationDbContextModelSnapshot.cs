@@ -68,6 +68,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId", "ConversationId", "MessageId");
 
+                    b.HasIndex("TenantId", "CreatedAtUtc", "Id")
+                        .HasDatabaseName("IX_AssistantAttachments_Unconfirmed")
+                        .HasFilter("\"MessageId\" IS NULL");
+
                     b.HasIndex("TenantId", "ConversationId", "CreatedAtUtc", "Id");
 
                     b.ToTable("AssistantAttachments", "tenant");
@@ -776,6 +780,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<DateOnly>("DayUtc")
                         .HasColumnType("date");
 
+                    b.Property<Guid?>("OrganizationId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("ReservedQueries")
                         .HasColumnType("integer");
 
@@ -784,8 +791,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId", "DayUtc")
+                    b.HasIndex("UserId", "OrganizationId", "DayUtc")
                         .IsUnique();
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("UserId", "OrganizationId", "DayUtc"), false);
 
                     b.ToTable("AssistantPlatformKeyDailyQuotas", "platform");
                 });
@@ -986,6 +995,11 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
 
+                    b.Property<int>("EngineVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Funding")
                         .IsRequired()
                         .HasMaxLength(60)
@@ -1032,6 +1046,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(60)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatedAtUtc", "Id")
+                        .HasDatabaseName("IX_AssistantTurnWorks_Open")
+                        .HasFilter("\"Status\" = 'Pending' OR \"Status\" = 'Running'");
 
                     b.HasIndex("OwnerUserId", "ScopeTenantId", "Id");
 
@@ -1193,6 +1211,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ConversationId", "MessageId");
+
+                    b.HasIndex("CreatedAtUtc", "Id")
+                        .HasDatabaseName("IX_PlatformAssistantAttachments_Unconfirmed")
+                        .HasFilter("\"MessageId\" IS NULL");
 
                     b.HasIndex("ConversationId", "CreatedAtUtc", "Id");
 

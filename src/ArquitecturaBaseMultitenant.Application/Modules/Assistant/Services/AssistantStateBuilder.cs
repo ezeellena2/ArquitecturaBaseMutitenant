@@ -10,7 +10,7 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantStateBuilder(AssistantNoticePolicy notices, ICurrentUser user,
-    AssistantStateConfigurationBuilder configuration, AssistantToolResolver tools, IAssistantFinanceReader finance, TimeProvider clock)
+    AssistantStateConfigurationBuilder configuration, AssistantToolResolver tools, IAssistantFinanceReader finance, AssistantQuotaDayResolver days, TimeProvider clock)
 {
     internal async Task<Result<AssistantStateResponse>> BuildAsync(CancellationToken ct)
     {
@@ -25,9 +25,10 @@ internal sealed class AssistantStateBuilder(AssistantNoticePolicy notices, ICurr
             foreach (var query in AssistantQuickCatalog.All.Where(query => query.Access == user.Access))
                 if (await tools.IsAvailableAsync(query.ToolKey, ct)) quick.Add(new(query.Key, query.LabelKey));
         var nowUtc = clock.GetUtcNow().UtcDateTime;
-        var dayUtc = DateOnly.FromDateTime(nowUtc);
-        var usage = await finance.FindDailyQuotaAsync(owner, current.Mode, dayUtc, ct);
-        var quota = AssistantLimitGuard.Describe(usage.ConsumedQueries, usage.ReservedQueries, current.DailyLimit, dayUtc);
+        // 271: el mismo día que admite un turno; sin una sesión que se pueda leer, el de UTC.
+        var day = await days.CurrentAsync(nowUtc, ct) ?? days.Of(null, nowUtc, TimeZoneInfo.Utc.Id);
+        var usage = await finance.FindDailyQuotaAsync(owner, day.OrganizationId, current.Mode, day.Day, ct);
+        var quota = AssistantLimitGuard.Describe(usage.ConsumedQueries, usage.ReservedQueries, current.DailyLimit, day.ResetAtUtc);
         var (budget, cost) = user.Access == Access.Business
             ? await ReadMonthAsync(current, nowUtc, ct) : (null, null);
         var progress = budget is { Amount: > 0 } && cost is not null

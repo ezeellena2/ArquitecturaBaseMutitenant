@@ -56,6 +56,8 @@ internal sealed class AssistantConversationService(IAssistantConversationReader 
             var access = user.Access ?? throw new InvalidOperationException("An access is required.");
             var conversation = await reader.FindByIdAsync(ownerId, access, id, cancellationToken);
             if (conversation is null) return AssistantErrors.ConversationNotFound;
+            // 0064 §6: lo que esta versión no sabe leer no se arma; la conversación se puede borrar.
+            if (!conversation.Available) return AssistantErrors.ConversationUnavailable;
             var messages = await reader.ListMessagesAsync(ownerId, access, id, request, cancellationToken);
             var filtered = await policy.FilterHistoryLinksAsync(messages.Items, cancellationToken);
             if (filtered.IsFailure) return filtered.Error;

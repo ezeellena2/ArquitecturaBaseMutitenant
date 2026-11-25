@@ -33,7 +33,7 @@ public sealed class AssistantFinanceTests(ApiFactory factory)
     private static FakeTimeProvider Clock(DateTime nowUtc) => new(new DateTimeOffset(nowUtc));
 
     [Fact]
-    public async Task Platform_fifty_is_shared_across_personal_two_organizations_and_operator_and_own_is_independent()
+    public async Task Platform_fifty_is_per_organization_shared_by_personal_and_operator_and_own_is_independent()
     {
         using var client = AssistantTestData.Client(factory);
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
@@ -48,18 +48,36 @@ public sealed class AssistantFinanceTests(ApiFactory factory)
         {
             var quota = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<AssistantPlatformKeyDailyQuota>()
                 .AsNoTracking().SingleAsync(row => row.UserId == account.UserId && row.DayUtc == DateOnly.FromDateTime(NowUtc), Ct);
-            Assert.Equal(10, AssistantLimitGuard.Describe(quota.ConsumedQueries, quota.ReservedQueries, 50, quota.DayUtc).Remaining);
+            Assert.Null(quota.OrganizationId);
+            Assert.Equal(10, AssistantLimitGuard.Describe(quota.ConsumedQueries, quota.ReservedQueries, 50, NowUtc).Remaining);
         }
-        for (var i = 0; i < 10; i++) await AdmitAndCompleteAsync(factory, i % 2 == 0 ? first : second);
-        var exhausted = await ReserveAsync(factory, second, Guid.CreateVersion7());
+        for (var i = 0; i < 10; i++) await AdmitAndCompleteAsync(factory, personal);
+        var exhausted = await ReserveAsync(factory, personal, Guid.CreateVersion7());
         Assert.Equal(AssistantErrors.LimitDailyReachedCode, exhausted.Error.Code);
         Assert.Equal(new DateTime(2026, 10, 11, 0, 0, 0, DateTimeKind.Utc), exhausted.Error.Metadata!["dailyResetAtUtc"]);
-        // This technical assertion exercises the global key only; it does not grant a personal account operator access.
+        // 271: fuera de una organización el cupo es uno, también para Plataforma. This technical assertion exercises the
+        // global key only; it does not grant a personal account operator access.
         var globalBinding = new AssistantFinancialBinding(account.UserId, Access.Platform, null);
         Assert.Equal(AssistantErrors.LimitDailyReachedCode, (await ReserveAsync(factory, globalBinding, Guid.CreateVersion7())).Error.Code);
+        // Cada organización tiene su propio cupo con la clave de la plataforma, intacto aunque el personal se haya agotado.
+        Assert.True((await ReserveAsync(factory, first, Guid.CreateVersion7())).IsSuccess);
+        Assert.True((await ReserveAsync(factory, second, Guid.CreateVersion7())).IsSuccess);
+        using (var scope = factory.Services.CreateScope())
+        {
+            var quotas = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<AssistantPlatformKeyDailyQuota>()
+                .AsNoTracking().Where(row => row.UserId == account.UserId).ToArrayAsync(Ct);
+            Assert.Equal(3, quotas.Length);
+            Assert.Equal(1, Assert.Single(quotas, row => row.OrganizationId == firstId).ReservedQueries);
+            Assert.Equal(1, Assert.Single(quotas, row => row.OrganizationId == secondId).ReservedQueries);
+            Assert.Equal(50, Assert.Single(quotas, row => row.OrganizationId is null).ConsumedQueries);
+        }
         Assert.True((await ReserveAsync(factory, first, Guid.CreateVersion7(), mode: AssistantMode.OwnKey)).IsSuccess);
         Assert.True((await ReserveAsync(factory, second, Guid.CreateVersion7(), mode: AssistantMode.OwnKey)).IsSuccess);
-        var nextDay = await ReserveAsync(factory, personal, Guid.CreateVersion7(), NowUtc.Date.AddDays(1), zone: "America/New_York");
+        // 271: fuera de una organización el día corta a la medianoche de la zona del perfil (Nueva York, UTC-4), no a la de UTC.
+        var stillToday = await ReserveAsync(factory, personal, Guid.CreateVersion7(), NowUtc.Date.AddDays(1), zone: "America/New_York");
+        Assert.Equal(AssistantErrors.LimitDailyReachedCode, stillToday.Error.Code);
+        Assert.Equal(new DateTime(2026, 10, 11, 4, 0, 0, DateTimeKind.Utc), stillToday.Error.Metadata!["dailyResetAtUtc"]);
+        var nextDay = await ReserveAsync(factory, personal, Guid.CreateVersion7(), NowUtc.Date.AddDays(1).AddHours(4), zone: "America/New_York");
         Assert.True(nextDay.IsSuccess);
         Assert.Null(nextDay.Value.MonthlyBudget); // Platform runtime carries a budget even for Consumer: binding discards it.
     }
@@ -663,7 +681,8 @@ public sealed class AssistantFinanceTests(ApiFactory factory)
         using var scope = host.Services.CreateScope();
         var services = scope.ServiceProvider;
         using var tenant = binding.ScopeTenantId is { } id ? services.GetRequiredService<ITenantScope>().Enter(id) : null;
-        var guard = new AssistantLimitGuard(services.GetRequiredService<IAssistantFinanceRepository>(), services.GetRequiredService<ITimeZoneService>(), Clock(nowUtc));
+        var guard = new AssistantLimitGuard(services.GetRequiredService<IAssistantFinanceRepository>(), services.GetRequiredService<ITimeZoneService>(),
+            services.GetRequiredService<AssistantQuotaDayResolver>(), Clock(nowUtc));
         return await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ => guard.ReserveAsync(admission, Ct), CommitPolicy.OnSuccess, Ct);
     }
     private static AssistantUsageWriter Writer(IServiceProvider services) => new(services.GetRequiredService<IAssistantFinanceRepository>(), Clock(NowUtc));

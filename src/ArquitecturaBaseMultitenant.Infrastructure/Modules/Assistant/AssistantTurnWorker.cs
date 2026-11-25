@@ -26,12 +26,20 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
         await using (var discovery = scopes.CreateAsyncScope())
             ready = await discovery.ServiceProvider.GetRequiredService<IAssistantTurnRepository>().ListReadyAsync(Clock.GetUtcNow().UtcDateTime, stoppingToken);
         await Parallel.ForEachAsync(ready, new ParallelOptions { MaxDegreeOfParallelism = AssistantTechnicalLimits.TurnsPerCopy, CancellationToken = stoppingToken },
-            async (candidate, ct) => await ProcessAsync(candidate, ct));
+            async (candidate, ct) =>
+            {
+                // Un turno que falla fuera de su ejecución (sus datos, su cierre) se anota y se reintenta en la vuelta siguiente:
+                // si saliera, Parallel cancelaría los turnos de otras personas que corren a la par y los cerraría como cortados.
+                try { await ProcessAsync(candidate, ct); }
+                catch (Exception exception) when (!ct.IsCancellationRequested) { ExceptionLog.Write(logger, "AssistantTurn", exception); }
+            });
     }
 
     private async Task ProcessAsync(AssistantTurnDiscovery candidate, CancellationToken hostToken)
     {
         var lease = Guid.NewGuid();
+        // Un turno de un motor más nuevo no se arma con este: solo se cierra, vencido y sin llamar al proveedor (0064 §6, B12).
+        if (!candidate.KnownEngine) { await RecoverAsync(candidate, lease); return; }
         await using var scope = scopes.CreateAsyncScope();
         var actors = scope.ServiceProvider.GetRequiredService<IExecutionActorFactory>();
         var prepared = await actors.RevalidateAsync(candidate.Actor, hostToken);

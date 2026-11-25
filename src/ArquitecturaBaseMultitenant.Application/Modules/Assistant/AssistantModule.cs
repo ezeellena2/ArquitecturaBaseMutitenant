@@ -80,6 +80,8 @@ public static class AssistantModule
         services.AddScoped<AssistantSettingsAuditWriter>();
         services.AddScoped<AssistantModelWriter>();
         services.AddScoped<AssistantLimitGuard>();
+        services.AddScoped<AssistantQuotaDayResolver>();
+        services.AddScoped<AssistantRequestTimeBuilder>();
         services.AddScoped<AssistantUsageWriter>();
         services.AddScoped<AssistantBudgetAlertNoticeBuilder>();
         services.AddScoped<AssistantBudgetNotifier>();

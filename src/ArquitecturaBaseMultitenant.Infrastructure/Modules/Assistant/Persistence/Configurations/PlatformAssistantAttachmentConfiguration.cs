@@ -17,6 +17,9 @@ internal sealed class PlatformAssistantAttachmentConfiguration : IEntityTypeConf
         builder.Property(value => value.StorageKey).HasMaxLength(TextLimits.WebAddress).IsRequired();
         builder.HasOne<PlatformAssistantConversation>().WithMany().HasForeignKey(value => value.ConversationId).OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(value => new { value.ConversationId, value.CreatedAtUtc, value.Id });
+        // 0064 §5: los adjuntos sin confirmar (sin mensaje) se buscan por su fecha, sin recorrer los confirmados.
+        builder.HasIndex(value => new { value.CreatedAtUtc, value.Id }).HasDatabaseName("IX_PlatformAssistantAttachments_Unconfirmed")
+            .HasFilter("\"MessageId\" IS NULL");
         builder.HasOne<PlatformAssistantMessage>().WithMany().HasForeignKey(value => new { value.ConversationId, value.MessageId })
             .HasPrincipalKey(value => new { value.ConversationId, value.Id }).OnDelete(DeleteBehavior.Restrict);
     }

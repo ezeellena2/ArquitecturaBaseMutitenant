@@ -34,6 +34,7 @@ internal sealed class AssistantTurnRequester(IAssistantTurnRepository turns, IAs
         var attachmentIds = input.AttachmentIds ?? [];
         if (!await turns.ValidateAttachmentsAsync(actor.OwnerUserId, actor.Access, conversationId, attachmentIds, ct)) return AssistantErrors.AttachmentNotFound;
         var history = await turns.FindHistoryPrivacyAsync(actor.OwnerUserId, actor.Access, conversationId, ct);
+        if (!AssistantTurnPreparationBuilder.IsReadable(history)) return AssistantErrors.ConversationUnavailable;
         if (!AssistantTurnPreparationBuilder.HasKnownProvenance(history)) return AssistantErrors.ConversationNotFound;
         var subjects = history.SelectMany(message => message.SubjectUserIds).Distinct().Order().ToArray();
         // A changed context requires a fresh preflight; never acquire new account shares after conversation locks.

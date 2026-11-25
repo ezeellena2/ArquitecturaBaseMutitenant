@@ -28,10 +28,10 @@ internal sealed class AssistantFinanceRepository(ApplicationDbContext db, ITenan
         if (row is not null && !row.IsBoundTo(binding)) throw new InvalidOperationException("A financial identity cannot be rebound.");
         return row;
     }
-    public async Task<AssistantPlatformKeyDailyQuota?> GetPlatformQuotaAsync(Guid userId, DateOnly dayUtc, CancellationToken ct)
+    public async Task<AssistantPlatformKeyDailyQuota?> GetPlatformQuotaAsync(Guid userId, Guid? organizationId, DateOnly dayUtc, CancellationToken ct)
     {
-        var row = db.Set<AssistantPlatformKeyDailyQuota>().Local.SingleOrDefault(row => row.UserId == userId && row.DayUtc == dayUtc)
-            ?? await db.Set<AssistantPlatformKeyDailyQuota>().SingleOrDefaultAsync(row => row.UserId == userId && row.DayUtc == dayUtc, ct);
+        var row = db.Set<AssistantPlatformKeyDailyQuota>().Local.SingleOrDefault(row => row.UserId == userId && row.OrganizationId == organizationId && row.DayUtc == dayUtc)
+            ?? await db.Set<AssistantPlatformKeyDailyQuota>().SingleOrDefaultAsync(row => row.UserId == userId && row.OrganizationId == organizationId && row.DayUtc == dayUtc, ct);
         if (row is not null) await RefreshAsync(row, ct);
         return row;
     }

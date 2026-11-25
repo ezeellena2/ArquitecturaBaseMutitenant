@@ -70,6 +70,7 @@ public abstract class AssistantControllerBase(IAssistantConversationService serv
     [ProducesProblem(401)]
     [ProducesProblem(403)]
     [ProducesProblem(404)]
+    [ProducesProblem(409)]
     [ProducesProblem(500)]
     public async Task<IActionResult> Get([FromRoute] Guid id, [FromQuery] AssistantMessageListHttpQuery request, CancellationToken cancellationToken) =>
         (await service.GetAsync(id, new AssistantMessageListRequest(request.Cursor, request.Limit), cancellationToken)).ToActionResult(this);
@@ -202,6 +203,7 @@ public abstract class AssistantControllerBase(IAssistantConversationService serv
     [ProducesProblem(401)]
     [ProducesProblem(403)]
     [ProducesProblem(404)]
+    [ProducesProblem(409)]
     [ProducesProblem(500)]
     public async Task<IActionResult> Export([FromRoute] Guid id, [FromQuery] AssistantExportHttpQuery request, CancellationToken cancellationToken) =>
         (await exports.ExportAsync(id, request.Format, cancellationToken)).ToFileResult(this);

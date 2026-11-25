@@ -10,11 +10,16 @@ public sealed record AssistantTurnFrame(string Event, int Sequence, JsonElement 
 public sealed record AssistantTurnRead(IReadOnlyList<AssistantTurnFrame> Frames, bool Terminal);
 public sealed record AssistantTurnExecution(Guid TurnId, Guid LeaseId, IReadOnlyList<ChatMessage> Messages,
     IReadOnlyList<AITool> Tools, AssistantChatBinding Binding, bool RecoverOnly,
-    Guid ConversationId = default, IReadOnlyList<AssistantMessageResponse>? ContextMessages = null, DateTime DeadlineAtUtc = default);
+    Guid ConversationId = default, IReadOnlyList<AssistantMessageResponse>? ContextMessages = null, DateTime DeadlineAtUtc = default,
+    AssistantRequestPlace? Requester = null);
+/// <summary>La cultura y la zona del perfil de quien pidió el turno, con las que va la hora del pedido (0064 §9).</summary>
+public sealed record AssistantRequestPlace(string Culture, string TimeZoneId);
 public sealed record AssistantToolExecution(string Data, IReadOnlyList<Guid> SubjectUserIds);
 public sealed record AssistantChatBinding(AssistantMode Mode, Guid ModelId, string ProviderModelId, AssistantEffort Effort);
-public sealed record AssistantHistoryMessageRow(Guid Id, string Role, bool PrivacySubjectsKnown, Guid[] SubjectUserIds);
-public sealed record AssistantTurnDiscovery(Guid TurnId, ExecutionActor Actor);
+/// <summary><c>Readable</c>: false si su rol o su estado los escribió una versión más nueva; la conversación no se arma (0064 §6).</summary>
+public sealed record AssistantHistoryMessageRow(Guid Id, string Role, bool PrivacySubjectsKnown, Guid[] SubjectUserIds, bool Readable);
+/// <summary><c>KnownEngine</c>: false si lo selló un motor más nuevo; solo llega vencido, para cerrarlo y devolver el cupo (0064 §6).</summary>
+public sealed record AssistantTurnDiscovery(Guid TurnId, ExecutionActor Actor, bool KnownEngine);
 public sealed record AssistantTitleCall(AssistantChatBinding Binding, uint ConversationVersion, int Sequence,
     IReadOnlyList<ChatMessage> Messages);
 

@@ -169,7 +169,7 @@ public sealed class AssistantUsageFinanceTests
     [Theory]
     [InlineData(AssistantMode.PlatformKey, 49)]
     [InlineData(AssistantMode.OwnKey, 3)]
-    public async Task Current_person_daily_usage_reads_account_utc_quota_and_reservations_only_affect_limit_flag(AssistantMode mode, int consumed)
+    public async Task Current_person_daily_usage_reads_the_organization_day_quota_and_reservations_only_affect_limit_flag(AssistantMode mode, int consumed)
     {
         await using var factory = new ApiFactory();
         await factory.InitializeAsync();
@@ -187,7 +187,7 @@ public sealed class AssistantUsageFinanceTests
             var day = DateOnly.FromDateTime(NowUtc);
             if (mode == AssistantMode.PlatformKey)
             {
-                var quota = AssistantPlatformKeyDailyQuota.Create(owner.UserId, day);
+                var quota = AssistantPlatformKeyDailyQuota.Create(owner.UserId, tenant, day);
                 for (var index = 0; index < consumed; index++) { quota.Reserve(); quota.Consume(); }
                 quota.Reserve(); db.Add(quota);
             }
@@ -205,7 +205,8 @@ public sealed class AssistantUsageFinanceTests
         using var response = await ReadAsync(client, Business + "&groupBy=person");
         var daily = Assert.Single(Items(response.RootElement)).GetProperty("dailyUsage");
         Assert.Equal("2026-10-10", daily.GetProperty("dayUtc").GetString());
-        Assert.Equal("2026-10-11T00:00:00Z", daily.GetProperty("resetAtUtc").GetString());
+        // 271: la medianoche de la zona de la organización (Buenos Aires), no la de UTC.
+        Assert.Equal("2026-10-11T03:00:00Z", daily.GetProperty("resetAtUtc").GetString());
         Assert.Equal(mode.ToString(), daily.GetProperty("scope").GetString());
         Assert.Equal(consumed, daily.GetProperty("queries").GetInt32());
         Assert.Equal(mode == AssistantMode.OwnKey ? 4 : 50, daily.GetProperty("limit").GetInt32());

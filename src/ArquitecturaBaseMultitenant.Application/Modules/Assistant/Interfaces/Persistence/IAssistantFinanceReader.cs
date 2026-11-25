@@ -8,7 +8,7 @@ public interface IAssistantFinanceReader
 {
     Task<IReadOnlyList<AssistantFinancialAggregateRow>> ListPlatformAsync(DateTime startUtc, DateTime endUtc, CancellationToken ct);
     Task<IReadOnlyList<AssistantFinancialAggregateRow>> ListBusinessAsync(DateTime startUtc, DateTime endUtc, CancellationToken ct);
-    Task<AssistantDailyQuotaUsageRow> FindDailyQuotaAsync(Guid userId, AssistantMode mode, DateOnly dayUtc, CancellationToken ct);
+    Task<AssistantDailyQuotaUsageRow> FindDailyQuotaAsync(Guid userId, Guid? organizationId, AssistantMode mode, DateOnly dayUtc, CancellationToken ct);
     Task<AssistantBudgetMonthRow?> FindLatestMonthAsync(DateTime nowUtc, CancellationToken ct);
     Task<AssistantMonthCostRow> FindMonthCostAsync(Guid monthId, AssistantKeyFunding funding, CancellationToken ct);
 }

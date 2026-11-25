@@ -16,7 +16,7 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 internal static class OrganizationJourney
 {
     internal static async Task<Guid> StageAsync(ApiFactory factory, AccountJourney owner, string name,
-        CancellationToken ct)
+        CancellationToken ct, string timeZoneId = "America/Argentina/Buenos_Aires")
     {
         var tenant = Tenant.CreateBusiness(name, requiresApproval: false);
         Assert.True(tenant.Activate().IsSuccess);
@@ -26,7 +26,7 @@ internal static class OrganizationJourney
         await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
         {
             services.GetRequiredService<TenantSpaceProvisioner>().Stage(tenant,
-                TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"), [owner.UserId], owner.UserId);
+                TenantSettings.Create("es-AR", timeZoneId, "ARS"), [owner.UserId], owner.UserId);
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, ct);
         return tenant.Id;

@@ -22,6 +22,8 @@ internal sealed class AssistantExportService(ICurrentUser user, AssistantConvers
             if (allowed.IsFailure) return allowed.Error;
             var conversation = await reader.FindByIdAsync(user.UserId!.Value, user.Access!.Value, id, ct);
             if (conversation is null) return AssistantErrors.ConversationNotFound;
+            // 0064 §6: lo que esta versión no sabe leer no se exporta, como su GET; la conversación se puede borrar.
+            if (!conversation.Available) return AssistantErrors.ConversationUnavailable;
             var messages = new List<AssistantMessageResponse>();
             string? cursor = null;
             do

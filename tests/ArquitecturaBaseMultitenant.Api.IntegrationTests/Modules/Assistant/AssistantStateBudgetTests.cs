@@ -1,6 +1,8 @@
 using System.Net;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantTurns;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
@@ -187,7 +189,7 @@ public sealed class AssistantStateBudgetTests
     [InlineData(38, 1, null)]
     [InlineData(39, 1, 10)]
     [InlineData(49, 1, 0)]
-    public async Task Platform_daily_remainder_is_shared_between_personal_and_business_and_counts_reservations(
+    public async Task Platform_daily_remainder_is_per_organization_and_personal_and_counts_reservations(
         int consumed, int reserved, int? remaining)
     {
         await using var factory = new ApiFactory();
@@ -199,21 +201,20 @@ public sealed class AssistantStateBudgetTests
         var second = await BusinessAsync(factory, client, account);
         await PlatformAsync(host, 100, false);
         var day = DateOnly.FromDateTime(NowUtc);
-        var quota = AssistantPlatformKeyDailyQuota.Create(account.UserId, day);
-        for (var index = 0; index < consumed; index++) { quota.Reserve(); quota.Consume(); }
-        for (var index = 0; index < reserved; index++) quota.Reserve();
+        // 271: con la clave de la plataforma, el cupo personal y el de la primera organización son distintos; la segunda no gastó.
+        var personal = Quota(account.UserId, null, day, consumed, reserved);
+        var business = Quota(account.UserId, first, day, consumed, reserved);
         await WriteAsync(host, null, services =>
         {
-            var foreign = AssistantPlatformKeyDailyQuota.Create(Guid.CreateVersion7(), day);
-            for (var index = 0; index < 50; index++) { foreign.Reserve(); foreign.Consume(); }
-            services.GetRequiredService<ApplicationDbContext>().AddRange(quota, foreign);
+            var foreign = Quota(Guid.CreateVersion7(), second, day, 50, 0);
+            services.GetRequiredService<ApplicationDbContext>().AddRange(personal, business, foreign);
             return Task.FromResult(Result.Success());
         });
         foreach (var tenant in new Guid?[] { null, first, second })
         {
             await AccountJourney.AuthorizeAsync(client, tenant is null ? "consumer" : "business", Ct, tenant);
             using var state = await ReadAsync(client, tenant is null ? "/api/me/assistant" : BusinessPath);
-            AssertDaily(state.RootElement, remaining);
+            AssertDaily(state.RootElement, tenant == second ? null : remaining);
             if (tenant is null)
                 Assert.Equal(JsonValueKind.Null, state.RootElement.GetProperty("monthlyBudgetProgress").ValueKind);
         }
@@ -362,12 +363,100 @@ public sealed class AssistantStateBudgetTests
         Assert.Equal("USD", money.GetProperty("currency").GetString());
     }
 
+    [Fact]
+    public async Task A_person_in_two_organizations_has_one_platform_quota_in_each_cut_at_the_midnight_of_its_zone()
+    {
+        // 23:30 UTC: todavía el 10 en Buenos Aires (UTC-3) y ya el 11 en Madrid (UTC+2 en octubre).
+        var nowUtc = new DateTime(2026, 10, 10, 23, 30, 0, DateTimeKind.Utc);
+        await using var factory = new ApiFactory();
+        await factory.InitializeAsync();
+        var provider = new AssistantTurnTestProvider();
+        using var host = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        {
+            services.RemoveAll<TimeProvider>();
+            services.AddSingleton<TimeProvider>(new FakeTimeProvider(new DateTimeOffset(nowUtc)));
+            services.RemoveAll<IChatClientFactory>();
+            services.AddScoped<IChatClientFactory>(provider.Factory);
+        }));
+        using var client = Client(host);
+        var account = await AccountJourney.RegisterAsync(host, client, Ct);
+        var buenosAires = await OrganizationJourney.StageAsync(factory, account, "Quota Buenos Aires", Ct);
+        var madrid = await OrganizationJourney.StageAsync(factory, account, "Quota Madrid", Ct, "Europe/Madrid");
+        foreach (var tenant in new[] { buenosAires, madrid }) await AssistantTestData.EnableAsync(factory, tenant);
+        await PlatformAsync(host, 100, true);
+        // Agotado el 10 en las dos: en Madrid ese día ya pasó y no cuenta.
+        await WriteAsync(host, null, services =>
+        {
+            services.GetRequiredService<ApplicationDbContext>().AddRange(Quota(account.UserId, buenosAires, new(2026, 10, 10), 50, 0),
+                Quota(account.UserId, madrid, new(2026, 10, 10), 50, 0));
+            return Task.FromResult(Result.Success());
+        });
+
+        await AccountJourney.AuthorizeAsync(client, "business", Ct, buenosAires);
+        using (var state = await ReadAsync(client, BusinessPath))
+        {
+            Assert.Equal(0, state.RootElement.GetProperty("remainingMessages").GetInt32());
+            Assert.Equal("2026-10-11T03:00:00Z", state.RootElement.GetProperty("dailyResetAtUtc").GetString());
+        }
+        await AssertDailyReachedAsync(client, 12_600, new(2026, 10, 11, 3, 0, 0, DateTimeKind.Utc));
+
+        await AccountJourney.AuthorizeAsync(client, "business", Ct, madrid);
+        using (var state = await ReadAsync(client, BusinessPath))
+        {
+            Assert.Equal(JsonValueKind.Null, state.RootElement.GetProperty("remainingMessages").ValueKind);
+            Assert.Equal("2026-10-11T22:00:00Z", state.RootElement.GetProperty("dailyResetAtUtc").GetString());
+        }
+        await WriteAsync(host, null, services =>
+        {
+            services.GetRequiredService<ApplicationDbContext>().Add(Quota(account.UserId, madrid, new(2026, 10, 11), 50, 0));
+            return Task.FromResult(Result.Success());
+        });
+        await AssertDailyReachedAsync(client, 81_000, new(2026, 10, 11, 22, 0, 0, DateTimeKind.Utc));
+
+        // Fuera de una organización, el cupo es otro y corta a la medianoche de la zona del perfil (Buenos Aires).
+        await AccountJourney.AuthorizeAsync(client, "consumer", Ct);
+        using (var personal = await ReadAsync(client, "/api/me/assistant"))
+        {
+            Assert.Equal(JsonValueKind.Null, personal.RootElement.GetProperty("remainingMessages").ValueKind);
+            Assert.Equal("2026-10-11T03:00:00Z", personal.RootElement.GetProperty("dailyResetAtUtc").GetString());
+        }
+        Assert.Equal(0, provider.Calls);
+    }
+
+    private static async Task AssertDailyReachedAsync(HttpClient client, int retryAfter, DateTime resetAtUtc)
+    {
+        await AssistantExecutionActorTests.AcceptNoticeAsync(client, BusinessPath + "/notice");
+        using var create = AssistantTurnTestSession.Request(HttpMethod.Post, BusinessPath + "/conversations", "{}", Guid.NewGuid());
+        using var created = await client.SendAsync(create, Ct);
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var conversation = JsonSerializer.Deserialize<AssistantConversationSummaryResponse>(
+            await created.Content.ReadAsStringAsync(Ct), AssistantTurnTestSession.Json)!;
+        using var send = AssistantTurnTestSession.Request(HttpMethod.Post, BusinessPath + $"/conversations/{conversation.Id:D}/messages",
+            AssistantTurnTestSession.Body(conversation), Guid.NewGuid());
+        using var limited = await client.SendAsync(send, Ct);
+        Assert.Equal(HttpStatusCode.TooManyRequests, limited.StatusCode);
+        using var problem = JsonDocument.Parse(await limited.Content.ReadAsStringAsync(Ct));
+        Assert.Equal(AssistantErrors.LimitDailyReachedCode, problem.RootElement.GetProperty("code").GetString());
+        Assert.Equal(retryAfter, problem.RootElement.GetProperty("retryAfter").GetInt32());
+        Assert.Equal(resetAtUtc, problem.RootElement.GetProperty("dailyResetAtUtc").GetDateTime());
+        Assert.Equal(TimeSpan.FromSeconds(retryAfter), limited.Headers.RetryAfter?.Delta);
+    }
+
+    private static AssistantPlatformKeyDailyQuota Quota(Guid userId, Guid? organizationId, DateOnly day, int consumed, int reserved)
+    {
+        var quota = AssistantPlatformKeyDailyQuota.Create(userId, organizationId, day);
+        for (var index = 0; index < consumed; index++) { quota.Reserve(); quota.Consume(); }
+        for (var index = 0; index < reserved; index++) quota.Reserve();
+        return quota;
+    }
+
     private static void AssertDaily(JsonElement state, int? remaining)
     {
         Assert.Equal(50, state.GetProperty("dailyLimit").GetInt32());
         var messages = state.GetProperty("remainingMessages");
         if (remaining is { } value) Assert.Equal(value, messages.GetInt32());
         else Assert.Equal(JsonValueKind.Null, messages.ValueKind);
-        Assert.Equal("2026-10-11T00:00:00Z", state.GetProperty("dailyResetAtUtc").GetString());
+        // 271: la medianoche de Buenos Aires, la zona del perfil y la de las organizaciones de prueba.
+        Assert.Equal("2026-10-11T03:00:00Z", state.GetProperty("dailyResetAtUtc").GetString());
     }
 }

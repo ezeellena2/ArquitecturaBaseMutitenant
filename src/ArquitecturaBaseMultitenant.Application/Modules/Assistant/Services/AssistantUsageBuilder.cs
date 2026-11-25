@@ -9,7 +9,7 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantUsageBuilder(IAssistantUsageReader reader, IAssistantSettingsReader settings,
-    IUserDisplayNameReader names, DisplayFormatter formatter, TimeProvider clock)
+    IUserDisplayNameReader names, DisplayFormatter formatter, AssistantQuotaDayResolver days, TimeProvider clock)
 {
     internal async Task<AssistantUsagePageResponse> BuildAsync(string month, AssistantUsageReadPage page, bool business, CancellationToken cancellationToken)
     {
@@ -18,20 +18,22 @@ internal sealed class AssistantUsageBuilder(IAssistantUsageReader reader, IAssis
         var displayNames = personIds.Length == 0 ? new Dictionary<Guid, string>()
             : await names.FindAsync(personIds, cancellationToken);
         var nowUtc = clock.GetUtcNow().UtcDateTime;
-        var dayUtc = DateOnly.FromDateTime(nowUtc);
         var currentPeople = business && page.IsCurrentMonth
             ? page.Rows.Items.Where(value => value.Kind == AssistantUsageRowKind.Person && value.PersonId != null)
                 .Select(value => value.PersonId!.Value).Distinct().ToArray() : [];
         var mode = AssistantMode.PlatformKey;
         var dailyLimit = 0;
         var daily = new Dictionary<Guid, AssistantPersonDailyUsageRow>();
+        AssistantQuotaDay? quotaDay = null;
         if (currentPeople.Length > 0)
         {
             var configuration = await settings.FindOrganizationAsync(cancellationToken);
             mode = configuration?.Mode ?? AssistantMode.PlatformKey;
             dailyLimit = mode == AssistantMode.OwnKey ? configuration!.DailyMessageLimit
                 : (await settings.FindPlatformAsync(cancellationToken)).DailyMessageLimit;
-            daily = (await reader.ListDailyAsync(currentPeople, mode, dayUtc, cancellationToken)).ToDictionary(value => value.UserId);
+            // 271: el día de los cupos de la organización es el de su zona, para todos sus miembros.
+            quotaDay = days.Of(null, nowUtc, await days.ZoneAsync(Domain.Users.Access.Business, TimeZoneInfo.Utc.Id, cancellationToken));
+            daily = (await reader.ListDailyAsync(currentPeople, mode, quotaDay.Day, cancellationToken)).ToDictionary(value => value.UserId);
         }
         var format = page.Rows.Items.Any(value => value.Day != null)
             ? await formatter.CreateForCurrentCultureAsync(TimeZoneInfo.Utc.Id, cancellationToken) : null;
@@ -52,7 +54,7 @@ internal sealed class AssistantUsageBuilder(IAssistantUsageReader reader, IAssis
                 daily.TryGetValue(person, out var usage);
                 var consumed = usage?.ConsumedQueries ?? 0;
                 var reserved = usage?.ReservedQueries ?? 0;
-                quota = new(dayUtc, dayUtc.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc),
+                quota = new(quotaDay!.Day, quotaDay.ResetAtUtc,
                     mode, consumed, dailyLimit, (long)consumed + reserved >= dailyLimit);
             }
             return new AssistantUsageRowResponse(value.Kind, value.OrganizationId, value.PersonId, value.Day,

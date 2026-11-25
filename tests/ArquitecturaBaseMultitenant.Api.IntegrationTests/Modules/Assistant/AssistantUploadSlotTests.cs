@@ -166,8 +166,8 @@ public sealed class AssistantUploadSlotTests
         var services = scope.ServiceProvider;
         var result = await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
         {
-            var today = DateOnly.FromDateTime(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
-            var quota = AssistantPlatformKeyDailyQuota.Create(session.Account.UserId, today);
+            var today = session.QuotaDay(services);
+            var quota = AssistantPlatformKeyDailyQuota.Create(session.Account.UserId, today.OrganizationId, today.Day);
             quota.Reserve();
             quota.Consume();
             services.GetRequiredService<ApplicationDbContext>().Add(quota);

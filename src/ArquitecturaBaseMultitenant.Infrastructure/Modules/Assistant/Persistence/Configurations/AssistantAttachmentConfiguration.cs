@@ -18,6 +18,9 @@ internal sealed class AssistantAttachmentConfiguration : IEntityTypeConfiguratio
         builder.Property(value => value.StorageKey).HasMaxLength(TextLimits.WebAddress).IsRequired();
         builder.HasOne<AssistantConversation>().WithMany().HasForeignKey(value => new { value.TenantId, value.ConversationId }).OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(value => new { value.TenantId, value.ConversationId, value.CreatedAtUtc, value.Id });
+        // 0064 §5: los adjuntos sin confirmar (sin mensaje) se buscan por su fecha, sin recorrer los confirmados.
+        builder.HasIndex(value => new { value.TenantId, value.CreatedAtUtc, value.Id }).HasDatabaseName("IX_AssistantAttachments_Unconfirmed")
+            .HasFilter("\"MessageId\" IS NULL");
         builder.HasOne<AssistantMessage>().WithMany().HasForeignKey(value => new { value.TenantId, value.ConversationId, value.MessageId })
             .HasPrincipalKey(value => new { value.TenantId, value.ConversationId, value.Id }).OnDelete(DeleteBehavior.Restrict);
     }

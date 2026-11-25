@@ -22,9 +22,11 @@ internal sealed class AssistantTurnRepository(ApplicationDbContext db, IEnumerab
     public async Task<IReadOnlyList<AssistantTurnDiscovery>> ListReadyAsync(DateTime nowUtc, CancellationToken ct) =>
         await db.Set<AssistantTurnWork>().AsNoTracking()
             .Where(row => row.Status == AssistantTurnStatus.Pending || row.Status == AssistantTurnStatus.Running && row.LeaseExpiresAtUtc <= nowUtc)
+            // 0064 §6: lo que selló un motor más nuevo espera a la copia que lo conoce; vencido, esta lo cierra y devuelve el cupo.
+            .Where(row => row.EngineVersion <= AssistantTurnWork.CurrentEngineVersion || row.DeadlineAtUtc <= nowUtc)
             .OrderBy(row => row.CreatedAtUtc).Take(AssistantTechnicalLimits.TurnsPerCopy)
             .Select(row => new AssistantTurnDiscovery(row.Id, new ExecutionActor(row.OwnerUserId, row.Access, row.ScopeTenantId, row.Culture, row.TimeZoneId)
-            { TenantKind = row.TenantKind, SessionStartedAtUtc = row.SessionStartedAtUtc })).ToArrayAsync(ct);
+            { TenantKind = row.TenantKind, SessionStartedAtUtc = row.SessionStartedAtUtc }, row.EngineVersion <= AssistantTurnWork.CurrentEngineVersion)).ToArrayAsync(ct);
 
     public async Task<AssistantTurnWork?> GetWorkAsync(Guid id, bool forUpdate, CancellationToken ct)
     {

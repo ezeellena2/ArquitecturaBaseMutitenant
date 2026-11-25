@@ -70,23 +70,28 @@ public sealed class AssistantStateFinanceReaderTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Daily_projection_shares_platform_account_day_and_isolates_own_quota_by_current_organization()
+    public async Task Daily_projection_keeps_one_platform_quota_per_organization_and_isolates_own_quota_by_current_organization()
     {
         using var client = AssistantTestData.Client(factory);
         var account = await AccountJourney.RegisterAsync(factory, client, Ct);
         var first = await OrganizationJourney.StageAsync(factory, account, "State finance first", Ct);
         var second = await OrganizationJourney.StageAsync(factory, account, "State finance second", Ct);
         var day = DateOnly.FromDateTime(NowUtc);
-        var platform = AssistantPlatformKeyDailyQuota.Create(account.UserId, day);
-        for (var index = 0; index < 39; index++) { platform.Reserve(); platform.Consume(); }
-        platform.Reserve();
+        // 271: con la clave de la plataforma, un cupo de la persona en cada organización y otro fuera de una.
+        var personal = AssistantPlatformKeyDailyQuota.Create(account.UserId, null, day);
+        for (var index = 0; index < 39; index++) { personal.Reserve(); personal.Consume(); }
+        personal.Reserve();
+        var platformFirst = AssistantPlatformKeyDailyQuota.Create(account.UserId, first, day);
+        for (var index = 0; index < 3; index++) { platformFirst.Reserve(); platformFirst.Consume(); }
+        var platformSecond = AssistantPlatformKeyDailyQuota.Create(account.UserId, second, day);
+        platformSecond.Reserve(); platformSecond.Reserve();
         var ownFirst = AssistantOwnKeyDailyQuota.Create(account.UserId, day);
         ownFirst.Reserve(); ownFirst.Consume(); ownFirst.Reserve();
         var ownSecond = AssistantOwnKeyDailyQuota.Create(account.UserId, day);
         ownSecond.Reserve(); ownSecond.Reserve();
         await WriteAsync(first, services =>
         {
-            services.GetRequiredService<ApplicationDbContext>().AddRange(platform, ownFirst);
+            services.GetRequiredService<ApplicationDbContext>().AddRange(personal, platformFirst, platformSecond, ownFirst);
             return Task.FromResult(Result.Success());
         });
         await WriteAsync(second, services =>
@@ -101,16 +106,17 @@ public sealed class AssistantStateFinanceReaderTests(ApiFactory factory)
             var services = scope.ServiceProvider;
             using var tenant = organizationId is { } id ? services.GetRequiredService<ITenantScope>().Enter(id) : null;
             var reader = services.GetRequiredService<IAssistantFinanceReader>();
-            var daily = await reader.FindDailyQuotaAsync(account.UserId, AssistantMode.PlatformKey, day, Ct);
-            Assert.Equal(new AssistantDailyQuotaUsageRow(39, 1), daily);
-            Assert.Equal(10, AssistantLimitGuard.Describe(daily.ConsumedQueries, daily.ReservedQueries, 50, day).Remaining);
-            Assert.Equal(new AssistantDailyQuotaUsageRow(0, 0), await reader.FindDailyQuotaAsync(account.UserId, AssistantMode.PlatformKey, day.AddDays(1), Ct));
-            Assert.Equal(new AssistantDailyQuotaUsageRow(0, 0), await reader.FindDailyQuotaAsync(Guid.CreateVersion7(), AssistantMode.PlatformKey, day, Ct));
+            var daily = await reader.FindDailyQuotaAsync(account.UserId, organizationId, AssistantMode.PlatformKey, day, Ct);
+            Assert.Equal(organizationId is null ? new(39, 1) : organizationId == first ? new(3, 0) : new AssistantDailyQuotaUsageRow(0, 2), daily);
+            Assert.Equal(organizationId is null ? (int?)10 : null,
+                AssistantLimitGuard.Describe(daily.ConsumedQueries, daily.ReservedQueries, 50, NowUtc).Remaining);
+            Assert.Equal(new AssistantDailyQuotaUsageRow(0, 0), await reader.FindDailyQuotaAsync(account.UserId, organizationId, AssistantMode.PlatformKey, day.AddDays(1), Ct));
+            Assert.Equal(new AssistantDailyQuotaUsageRow(0, 0), await reader.FindDailyQuotaAsync(Guid.CreateVersion7(), organizationId, AssistantMode.PlatformKey, day, Ct));
             if (organizationId is null)
-                await Assert.ThrowsAsync<InvalidOperationException>(() => reader.FindDailyQuotaAsync(account.UserId, AssistantMode.OwnKey, day, Ct));
+                await Assert.ThrowsAsync<InvalidOperationException>(() => reader.FindDailyQuotaAsync(account.UserId, organizationId, AssistantMode.OwnKey, day, Ct));
             else
                 Assert.Equal(organizationId == first ? new(1, 1) : new AssistantDailyQuotaUsageRow(0, 2),
-                    await reader.FindDailyQuotaAsync(account.UserId, AssistantMode.OwnKey, day, Ct));
+                    await reader.FindDailyQuotaAsync(account.UserId, organizationId, AssistantMode.OwnKey, day, Ct));
             Assert.Empty(services.GetRequiredService<ApplicationDbContext>().ChangeTracker.Entries());
         }
     }
@@ -215,7 +221,8 @@ public sealed class AssistantStateFinanceReaderTests(ApiFactory factory)
         {
             var price = AssistantPriceSnapshot.Create(Guid.CreateVersion7(), "state-fixture-haiku", "historical-v1",
                 Usd(.1m), Usd(.5m), Usd(.125m), Usd(.2m), Usd(.01m), null, null, null, null, null, null);
-            var guard = new AssistantLimitGuard(services.GetRequiredService<IAssistantFinanceRepository>(), services.GetRequiredService<ITimeZoneService>(), Clock(nowUtc));
+            var guard = new AssistantLimitGuard(services.GetRequiredService<IAssistantFinanceRepository>(), services.GetRequiredService<ITimeZoneService>(),
+            services.GetRequiredService<AssistantQuotaDayResolver>(), Clock(nowUtc));
             var admitted = await guard.ReserveAsync(new(Guid.CreateVersion7(), binding, mode, 50, Usd(budget), "UTC", price, null), Ct);
             Assert.True(admitted.IsSuccess, admitted.Error.Code);
             operation = admitted.Value;

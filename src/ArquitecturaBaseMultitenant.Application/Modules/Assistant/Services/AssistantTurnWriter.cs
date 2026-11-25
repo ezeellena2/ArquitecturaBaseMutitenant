@@ -34,6 +34,8 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
                 .Where(message => turn.ContextMessageIds.Contains(message.Id)).ToArray();
             if (metadata.Length != turn.ContextMessageIds.Length || !AssistantTurnPreparationBuilder.HasKnownProvenance(metadata))
                 return AssistantErrors.ConversationNotFound;
+            // Un mensaje del contexto que cambió una versión más nueva no se arma: el turno se cierra, sin leerlo (0064 §6).
+            if (!AssistantTurnPreparationBuilder.IsReadable(metadata)) return AssistantErrors.ConversationUnavailable;
             var contextSubjects = metadata.SelectMany(message => message.SubjectUserIds).Distinct().ToArray();
             if (contextSubjects.Except(admitted.SubjectUserIds).Any()) return AssistantErrors.ConversationNotFound;
             var safe = await privacy.CheckAsync(Owner, contextSubjects, ct);
@@ -55,7 +57,8 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
         return new AssistantTurnExecution(id, lease, prompt, [], new AssistantChatBinding(
             work.Funding == AssistantKeyFunding.OwnKey ? AssistantMode.OwnKey : AssistantMode.PlatformKey,
             work.ModelId, work.ProviderModelId, Enum.Parse<AssistantEffort>(work.Effort)), recover, turn.ConversationId,
-            messages.Where(row => row.Id != turn.AssistantMessageId).ToArray(), work.DeadlineAtUtc);
+            messages.Where(row => row.Id != turn.AssistantMessageId).ToArray(), work.DeadlineAtUtc,
+            recover ? null : new AssistantRequestPlace(work.Culture, work.TimeZoneId));
     }
     internal async Task<Result> BeginCallAsync(Guid id, Guid lease, int sequence, CancellationToken ct)
     {
@@ -224,10 +227,10 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
         var calls = await finance.ListCallsAsync(id, ct);
         var cost = new Money(calls.Sum(row => row.Cost.Amount), operation.ReservedCost.Currency).Round(12);
         var consumed = operation.Funding == AssistantKeyFunding.PlatformKey
-            ? (await finance.GetPlatformQuotaAsync(Owner, operation.DayUtc, ct))!.ConsumedQueries
+            ? (await finance.GetPlatformQuotaAsync(Owner, AssistantQuotaDayResolver.OrganizationOf(operation.Access, operation.ScopeTenantId), operation.DayUtc, ct))!.ConsumedQueries
             : (await finance.GetOwnQuotaAsync(Owner, operation.DayUtc, ct))!.ConsumedQueries;
         var reserved = operation.Funding == AssistantKeyFunding.PlatformKey
-            ? (await finance.GetPlatformQuotaAsync(Owner, operation.DayUtc, ct))!.ReservedQueries
+            ? (await finance.GetPlatformQuotaAsync(Owner, AssistantQuotaDayResolver.OrganizationOf(operation.Access, operation.ScopeTenantId), operation.DayUtc, ct))!.ReservedQueries
             : (await finance.GetOwnQuotaAsync(Owner, operation.DayUtc, ct))!.ReservedQueries;
         var remaining = Math.Max(0, operation.DailyLimit - consumed - reserved);
         Money? monthlyUsed = operation.BudgetMonthId is { } monthId

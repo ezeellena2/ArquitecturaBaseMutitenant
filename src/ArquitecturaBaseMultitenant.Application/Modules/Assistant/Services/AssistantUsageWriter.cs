@@ -29,7 +29,8 @@ internal sealed class AssistantUsageWriter(IAssistantFinanceRepository repositor
         if (operation.State == AssistantFinancialState.Reserved)
         {
             if (operation.Funding == AssistantKeyFunding.PlatformKey)
-                (await repository.GetPlatformQuotaAsync(operation.UserId, operation.DayUtc, ct)
+                (await repository.GetPlatformQuotaAsync(operation.UserId,
+                    AssistantQuotaDayResolver.OrganizationOf(operation.Access, operation.ScopeTenantId), operation.DayUtc, ct)
                     ?? throw new InvalidOperationException("The reservation lost its quota.")).Consume();
             else
                 (await repository.GetOwnQuotaAsync(operation.UserId, operation.DayUtc, ct)
@@ -67,7 +68,8 @@ internal sealed class AssistantUsageWriter(IAssistantFinanceRepository repositor
         if (operation.State == AssistantFinancialState.Reserved)
         {
             if (operation.Funding == AssistantKeyFunding.PlatformKey)
-                (await repository.GetPlatformQuotaAsync(operation.UserId, operation.DayUtc, ct)
+                (await repository.GetPlatformQuotaAsync(operation.UserId,
+                    AssistantQuotaDayResolver.OrganizationOf(operation.Access, operation.ScopeTenantId), operation.DayUtc, ct)
                     ?? throw new InvalidOperationException("The reservation lost its quota.")).Release();
             else
                 (await repository.GetOwnQuotaAsync(operation.UserId, operation.DayUtc, ct)

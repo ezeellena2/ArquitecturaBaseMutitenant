@@ -11,6 +11,7 @@ internal sealed class AssistantPlatformKeyDailyQuotaConfiguration : IEntityTypeC
     {
         builder.ToTable("AssistantPlatformKeyDailyQuotas", Schemas.Platform);
         builder.HasKey(value => value.Id);
-        builder.HasIndex(value => new { value.UserId, value.DayUtc }).IsUnique();
+        // 271: un cupo por persona y organización, y uno fuera de una (nula), sin que dos nulas cuenten como distintas.
+        builder.HasIndex(value => new { value.UserId, value.OrganizationId, value.DayUtc }).IsUnique().AreNullsDistinct(false);
     }
 }
