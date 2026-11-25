@@ -8,19 +8,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
 /// <summary>
-/// Comprueba que el modelo actual no tenga cambios sin migración. También revisa que las migraciones
-/// productivas no incluyan las tablas exclusivas de tests.
+/// Revisa que las migraciones productivas no incluyan las tablas exclusivas de tests. Que el modelo no tenga cambios
+/// sin migración lo comprueba <see cref="ModelSnapshotTests"/>.
 /// </summary>
 public sealed class MigrationsTests
 {
-    [Fact]
-    public void Current_model_has_no_pending_migration_changes()
-    {
-        using var context = CreateContext();
-
-        Assert.False(context.Database.HasPendingModelChanges());
-    }
-
     [Fact]
     public void Initial_migration_creates_e2_schema_without_business_test_tables_or_identity_users()
     {

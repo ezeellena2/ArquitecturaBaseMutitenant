@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Http.Resilience;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using OpenTelemetry;
@@ -21,6 +22,9 @@ public static class Extensions
     private const string AlivenessEndpointPath = "/alive";
     private static readonly string[] LiveTags = ["live"];
 
+    /// <summary>El ambiente del arnés de integración.</summary>
+    private const string TestingEnvironment = "Testing";
+
     public static TBuilder AddServiceDefaults<TBuilder>(this TBuilder builder) where TBuilder : IHostApplicationBuilder
     {
         builder.ConfigureOpenTelemetry();
@@ -31,7 +35,9 @@ public static class Extensions
 
         builder.Services.ConfigureHttpClientDefaults(http =>
         {
-            http.AddStandardResilienceHandler();
+            // Sin reintentar un POST, PUT, PATCH ni DELETE (N18): repetido, duplica el efecto en el proveedor (dos
+            // mensajes, dos cobros). Lo que conviene reintentar lo reintenta la cola de cada módulo.
+            http.AddStandardResilienceHandler(resilience => resilience.Retry.DisableForUnsafeHttpMethods());
             http.AddServiceDiscovery();
         });
 
@@ -45,6 +51,20 @@ public static class Extensions
             logging.IncludeFormattedMessage = true;
             logging.IncludeScopes = true;
         });
+
+        // Fuera de Development y Testing, la consola escribe una línea JSON por log con sus scopes (N10): el traceId y la
+        // ruta que pone ASP.NET Core en cada pedido, y los ids de la persona y de la organización de
+        // Api/RequestContext/RequestLogScopeMiddleware. Así el código que ve la persona en un error se encuentra en los
+        // logs aunque no haya exportador.
+        if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment(TestingEnvironment))
+        {
+            builder.Logging.AddJsonConsole(console =>
+            {
+                console.IncludeScopes = true;
+                console.UseUtcTimestamp = true;
+                console.TimestampFormat = "yyyy-MM-ddTHH:mm:ss.fffZ";
+            });
+        }
 
         builder.Services.AddOpenTelemetry()
             .WithMetrics(metrics =>

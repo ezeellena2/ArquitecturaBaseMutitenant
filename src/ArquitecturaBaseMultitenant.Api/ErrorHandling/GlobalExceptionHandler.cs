@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Api.RequestContext;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
@@ -45,7 +46,11 @@ internal sealed class GlobalExceptionHandler(
         }
         else
         {
-            ExceptionLog.Write(logger, nameof(GlobalExceptionHandler), exception);
+            // La excepción ya salió del scope del pedido: el log del 500 lleva quién pedía y en qué organización (N10).
+            using (RequestLogScopeMiddleware.Begin(logger, httpContext))
+            {
+                ExceptionLog.Write(logger, nameof(GlobalExceptionHandler), exception);
+            }
             problem = ProblemDetailsMapper.Create(
                 ErrorType.Failure, ApiErrorCodes.Unexpected, ErrorTexts.Get(ApiErrorCodes.Unexpected));
         }

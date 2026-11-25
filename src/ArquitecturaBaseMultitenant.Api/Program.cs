@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Api.Localization;
 using ArquitecturaBaseMultitenant.Api.Legal;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Api.RateLimiting;
+using ArquitecturaBaseMultitenant.Api.RequestContext;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
 using ArquitecturaBaseMultitenant.Application;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
@@ -81,6 +82,8 @@ app.UseMiddleware<InstalledModuleRouteMiddleware>();
 
 app.UseAuthentication();
 app.UseMiddleware<TenantResolutionMiddleware>();
+// Los ids de la persona y de la organización en el scope de los logs del pedido (N10).
+app.UseMiddleware<RequestLogScopeMiddleware>();
 app.UseMiddleware<TenantTelemetryMiddleware>();
 app.UseMiddleware<PublicSiteResolutionMiddleware>();
 // E9: las cuotas compartidas cuentan con la identidad firmada y la organización del claim ya resueltas.
