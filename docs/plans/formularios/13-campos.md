@@ -38,7 +38,7 @@ Antes de empezar, en este orden:
   - cambiar el tipo o las reglas valida todas las opciones bajo el bloqueo del catálogo, y un error revierte todo;
   - al convertir a número o a fecha se lee con la cultura del pedido, y lo ambiguo («1.500», «12.345») no convierte. A texto, queda el texto que se ve: el de la opción fuente, aunque esté dada de baja, o «Sí» o «No».
 - **Valores:**
-  - el valor se guarda canónico, con la precisión de los números de la E12 (C6): enteros y decimales exactos, fecha ISO, sí/no y la identidad de la opción fuente. En la app, un número se lee como el valor de la E12: con la región del idioma, «1.500» en español es `numberAmbiguous` (207) y llega con todos sus dígitos;
+  - el valor se guarda canónico, con la precisión de los números de la E12 (C6): enteros y decimales exactos, fecha ISO, sí/no y la identidad de la opción fuente. En la app, un número se lee como el valor de la E12: con la región del idioma, «1.500» en español es `numberAmbiguous` (207) y llega con todos sus dígitos, leído con `parseDecimalText` de la E12;
   - en el `PUT` del catálogo, `items[i].fields` es un delta: ausente conserva y `null` limpia. La importación manda todos los campos activos de la fila;
   - un valor de «De un catálogo» guarda la identidad de la opción fuente. Un valor nuevo exige una opción activa, y **el guardado que apunta a una opción dada de baja se conserva y no impide guardar**. Uno que no es opción de la fuente se rechaza;
   - un catálogo usado como fuente por campos activos no se da de baja.
@@ -83,7 +83,7 @@ Del traspaso 15 (v175): «Ordenar por…» en el ⋮ de estos tableros y ordenar
 
 **El catálogo de un campo (111):** con el tipo «De un catálogo», un combo debajo del tipo, que es la pieza (262). Cerrado dice el catálogo elegido («Zonas»). Abierto muestra los primeros catálogos a mano activos, cada uno con su cantidad de opciones en gris debajo del nombre («8 opciones»), y como vienen del servidor, el buscador va adentro de la lista, con el foco puesto: no se escribe en el campo. Es el listado de la E12, con `source=manual`, `status=active` y `search`.
 
-**«En WhatsApp»:** va debajo de «El catálogo». «Título · hasta 30 caracteres» y «Descripción · hasta 300», cada uno con un chip por lugar, con ✕, y un desplegable «Agregar campo» con lo que falta. Con un solo lugar en el título, su ✕ va apagado. «Por ejemplo» muestra la primera opción activa. Lo que no entra se avisa debajo, con cuántas son y hasta tres ejemplos, y en el teléfono.
+**«En WhatsApp»:** va debajo de «El catálogo». «Título · hasta 30 caracteres» y «Descripción · hasta 300», cada uno con un chip por lugar, con ✕, y «Agregar campo», la pieza (262), con lo que falta. Con un solo lugar en el título, su ✕ va apagado. «Por ejemplo» muestra la primera opción activa. Lo que no entra se avisa debajo, con cuántas son y hasta tres ejemplos, y en el teléfono.
 
 **Estados dibujados:**
 - **La página:** los campos, un campo recién agregado (la columna grisada, con el motivo en su tooltip, y el aviso), cambiar el tipo con errores (arriba de la tabla, con «Revisar», que abre el modal en ese campo), una opción que usa otra (no se borra), «En WhatsApp», elegir qué muestra, «Columnas», un catálogo nuevo, guardado, un valor de una opción dada de baja, solo `formcatalogs.read` y un título que no entra.
@@ -164,7 +164,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | F1 | Tipos y llamadas, validados con los ejemplos exportados | suma a `F/src/modules/forms/api/` | la API de catálogos [E12] | zod estricto con los ejemplos |
 | F2 | El modal «Campos de …», con el combo del catálogo | `F/src/modules/forms/components/catalog/CatalogFieldsDialog.tsx`, `CatalogCombo.tsx` | su tablero, el modal de opciones [E12] y `Picker` (262) | agregar, subir, bajar y quitar; una copia hasta «Listo»; tope de 20; la clave y su candado; el combo abre con los primeros y filtra; celular; axe |
 | F3 | Una columna por campo en la tabla de opciones, y una fila en el modal, con el control de su tipo | suma a `OptionsSection.tsx` y al modal de opciones [E12] | su tablero | columna y fila grisadas hasta guardar; valor dado de baja; la lección 4 |
-| F4 | «En WhatsApp», con sus chips y «Por ejemplo», y el teléfono al costado | `F/src/modules/forms/components/catalog/PresentationEditor.tsx`, `CatalogPreviewPhone.tsx` | su tablero | cada desplegable lista lo que falta; se arma como el servidor; un título que no entra |
+| F4 | «En WhatsApp», con sus chips y «Por ejemplo», y el teléfono al costado | `F/src/modules/forms/components/catalog/PresentationEditor.tsx`, `CatalogPreviewPhone.tsx` | su tablero, `FilterChip.tsx` (base de la 12) y `Picker` (262) | cada pieza lista lo que falta; se arma como el servidor; un título que no entra |
 | F5 | El editor: conflicto, guardado y lectura | suma a `CatalogEditorPage.tsx` [E12] | `CatalogEditorPage.tsx` [E12] | la lección 2; solo `formcatalogs.read`; textos en es y en |
 
 **Al cerrar:** `docs/features/formularios.md` suma la sección de los campos.
