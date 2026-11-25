@@ -44,6 +44,15 @@ public static class WhatsAppErrors
         "Meta rejected the connection.", new Dictionary<string, object?> { ["metaCode"] = metaCode });
     public static readonly Error ConversationNotFound = Error.NotFound(ConversationNotFoundCode, "Conversation not found.");
 
+    /// <summary>
+    /// 272: el plazo de los chats de una organización va de 1 al máximo que fija la plataforma al guardar. El texto del campo
+    /// dice ese máximo, que el validador no conoce.
+    /// </summary>
+    public const string ChatRetentionOutOfRangeCode = "WhatsApp.Settings.ChatRetentionOutOfRange";
+    public const string MaxChatRetentionDaysKey = "maxChatRetentionDays";
+    public static Error ChatRetentionOutOfRange(int maxChatRetentionDays) => Error.Validation(ChatRetentionOutOfRangeCode,
+        "The retention is above the platform maximum.", new Dictionary<string, object?> { [MaxChatRetentionDaysKey] = maxChatRetentionDays });
+
     /// <summary>ADR 0066: solo se marca como revisado un mensaje que quedó «Sin confirmar».</summary>
     public const string MessageNotUncertainCode = "WhatsApp.Message.NotUncertain";
     public static readonly Error MessageNotUncertain = Error.Conflict(MessageNotUncertainCode, "The message is not unconfirmed.");

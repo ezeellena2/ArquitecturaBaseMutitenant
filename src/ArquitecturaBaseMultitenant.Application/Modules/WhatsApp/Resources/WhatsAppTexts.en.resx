@@ -522,6 +522,9 @@
   <data name="WhatsApp.LoginCode.AccountDailyLimit" xml:space="preserve">
     <value>No more WhatsApp codes can be sent to this account today. Try again later.</value>
   </data>
+  <data name="WhatsApp.Settings.ChatRetentionOutOfRange" xml:space="preserve">
+    <value>It has to be from {0} to {1}: that is the platform maximum.</value>
+  </data>
   <data name="WhatsApp.Message.NotUncertain" xml:space="preserve">
     <value>That message isn't unconfirmed: there's nothing to review.</value>
   </data>

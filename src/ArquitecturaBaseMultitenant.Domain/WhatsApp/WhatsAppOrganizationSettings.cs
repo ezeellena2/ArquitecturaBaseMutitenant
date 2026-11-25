@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Domain.Common;
+using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Domain.WhatsApp;
 
@@ -20,11 +21,15 @@ public sealed class WhatsAppOrganizationSettings : Entity, ITenantOwned, IAudita
 
     public static WhatsAppOrganizationSettings Create() => new();
 
-    /// <summary>Cambia el plazo; nada cambia si está fuera de 1 y el máximo de la plataforma.</summary>
-    public bool Update(int chatRetentionDays, int maxChatRetentionDays)
+    /// <summary>
+    /// Cambia el plazo; fuera de 1 y el máximo de la plataforma no cambia nada y responde
+    /// <see cref="WhatsAppErrors.ChatRetentionOutOfRange"/>.
+    /// </summary>
+    public Result Update(int chatRetentionDays, int maxChatRetentionDays)
     {
-        if (chatRetentionDays < WhatsAppSettingsLimits.MinChatRetentionDays || chatRetentionDays > maxChatRetentionDays) return false;
+        if (chatRetentionDays < WhatsAppSettingsLimits.MinChatRetentionDays || chatRetentionDays > maxChatRetentionDays)
+            return WhatsAppErrors.ChatRetentionOutOfRange(maxChatRetentionDays);
         ChatRetentionDays = chatRetentionDays;
-        return true;
+        return Result.Success();
     }
 }

@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Application.UnitTests.TestDoubles;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
+using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Modules.WhatsApp;
 
@@ -52,7 +53,13 @@ public sealed class WhatsAppSettingsServiceTests
         var over = await service.UpdateAsync(new(31, 0), Ct);
         var top = await service.UpdateAsync(new(30, 0), Ct);
 
-        Assert.Equal("chatRetentionDays", Assert.Single(Assert.IsType<ValidationError>(over.Error).Errors).Key);
+        // Un error de negocio con su código, bajo el campo, y un texto que dice el máximo de la plataforma.
+        var refused = Assert.IsType<ValidationError>(over.Error);
+        Assert.Equal(WhatsAppErrors.ChatRetentionOutOfRangeCode, refused.Code);
+        var (field, messages) = Assert.Single(refused.Errors);
+        Assert.Equal("chatRetentionDays", field);
+        Assert.Contains("30", Assert.Single(messages), StringComparison.Ordinal);
+        Assert.DoesNotContain("{", messages[0], StringComparison.Ordinal);
         Assert.Equal(1, unitOfWork.Rollbacks);
         Assert.True(top.IsSuccess);
         Assert.Equal(30, repository.Organization!.ChatRetentionDays);
@@ -165,7 +172,7 @@ public sealed class WhatsAppSettingsServiceTests
         var repository = new Repository();
         var unitOfWork = new FakeUnitOfWork();
         return (new WhatsAppSettingsService(reader, repository, new WhatsAppSettingsResolver(reader, new Channel()), unitOfWork,
-            fixture.Validator, fixture.TimeProvider, fixture.Logger), repository, unitOfWork);
+            fixture.Validator, new JsonReferenceDataCatalog(), fixture.TimeProvider, fixture.Logger), repository, unitOfWork);
     }
 
     private static (PlatformWhatsAppSettingsService, Repository, FakeUnitOfWork) Platform(

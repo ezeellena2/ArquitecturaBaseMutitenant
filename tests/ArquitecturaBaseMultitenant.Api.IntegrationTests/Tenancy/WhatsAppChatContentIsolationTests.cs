@@ -234,7 +234,7 @@ public sealed class WhatsAppChatContentIsolationTests(ApiFactory factory)
         await InScopeAsync(a.TenantId, (_, db) =>
         {
             var settings = WhatsAppOrganizationSettings.Create();
-            Assert.True(settings.Update(30, 3650));
+            Assert.True(settings.Update(30, 3650).IsSuccess);
             db.Add(settings);
             return Task.CompletedTask;
         });

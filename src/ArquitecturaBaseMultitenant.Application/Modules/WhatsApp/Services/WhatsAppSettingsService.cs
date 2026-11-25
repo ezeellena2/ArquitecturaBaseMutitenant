@@ -1,10 +1,14 @@
+using System.Globalization;
+using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
+using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Resources;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
@@ -17,7 +21,7 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// plataforma en el momento de guardar. Sin fila vale el valor por defecto, recortado a ese máximo.
 /// </summary>
 internal sealed class WhatsAppSettingsService(IWhatsAppSettingsReader reader, IWhatsAppSettingsRepository repository,
-    WhatsAppSettingsResolver resolver, IUnitOfWork unitOfWork, IRequestValidator validator, TimeProvider clock,
+    WhatsAppSettingsResolver resolver, IUnitOfWork unitOfWork, IRequestValidator validator, ICultureCatalog cultures, TimeProvider clock,
     ILogger<WhatsAppSettingsService> logger) : IWhatsAppSettingsService
 {
     public Task<Result<WhatsAppOrganizationSettingsResponse>> GetAsync(CancellationToken cancellationToken) =>
@@ -42,13 +46,27 @@ internal sealed class WhatsAppSettingsService(IWhatsAppSettingsReader reader, IW
                     ?? WhatsAppSettingsLimits.DefaultMaxOrganizationChatRetentionDays;
                 var created = row is null;
                 row ??= WhatsAppOrganizationSettings.Create();
-                if (!row.Update(request.ChatRetentionDays!.Value, max))
-                    return FieldErrors.Validation(nameof(request.ChatRetentionDays), ValidationTexts.NumberRange);
+                var updated = row.Update(request.ChatRetentionDays!.Value, max);
+                if (updated.IsFailure) return updated.Error;
                 if (created) repository.Add(row); else repository.MarkUpdated(row);
                 return row;
             }, CommitPolicy.OnSuccess, cancellationToken);
+            if (result.IsFailure && result.Error.Code == WhatsAppErrors.ChatRetentionOutOfRangeCode)
+                return FieldErrors.On(result.Error, nameof(request.ChatRetentionDays), await OutOfRangeTextAsync(result.Error, cancellationToken));
             return VersionResponse.Of(result);
         });
+    }
+
+    /// <summary>
+    /// El validador no conoce el máximo de la plataforma: el texto del campo lo dice, con los números de la cultura de la petición
+    /// (sin una, la predeterminada del catálogo).
+    /// </summary>
+    private async Task<string> OutOfRangeTextAsync(Error error, CancellationToken ct)
+    {
+        var culture = CultureInfo.CurrentUICulture.Name;
+        var profile = await new CultureProfiles(cultures).LoadAsync(culture.Length == 0 ? null : culture, ct);
+        return WhatsAppTexts.Format(error.Code, profile, WhatsAppSettingsLimits.MinChatRetentionDays,
+            error.Metadata![WhatsAppErrors.MaxChatRetentionDaysKey]!);
     }
 }
 
