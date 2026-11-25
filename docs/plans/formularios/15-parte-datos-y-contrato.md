@@ -137,5 +137,5 @@ Cada punto lleva su test, escrito durante la etapa:
   - `Domain.UnitTests/Forms/FormRecordConditionTests.cs`;
   - en `Application.UnitTests/Modules/Forms/`: `FormRecordColumnsBuilderTests.cs`, `FormRecordFiltersPolicyTests.cs`, `FormRecordSheetBuilderTests.cs` y `FormDashboardBuilderTests.cs`;
   - en `Api.IntegrationTests/Modules/Forms/`: `FormRecordsTests.cs`, `FormRecordExportTests.cs`, `FormDashboardTests.cs` y `FormRecordsVolumeTests.cs`, y el aislamiento, en el `RouteIsolationMatrixTests.cs` del módulo, que crea la E12;
-  - `FormDashboardSettings` se inscribe en `tests/ArquitecturaBaseMultitenant.ArchitectureTests/PersonalDataPurgeTests.cs`, que crea la B2 de la base 2.
+  - `FormDashboardSettings` se inscribe en `tests/ArquitecturaBaseMultitenant.ArchitectureTests/Modules/Forms/FormsPersonalDataPurgeTests.cs` [E12], purgada por `AccountDeletionWorker`: la baja de la cuenta la borra con `FormsAccountDeletionParticipant`.
 - **Front,** en `src/modules/forms/`: `api/records.ts`, con las columnas, la búsqueda, las facetas, la navegación, el detalle, el Excel, el tablero y sus ajustes; `recordCount`, `lastRecord` y `overview` suman a `api/forms.ts` [E14], y las pestañas, a `lib/formTabs.ts` [E14].
