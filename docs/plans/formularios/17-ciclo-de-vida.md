@@ -13,7 +13,7 @@ Antes de empezar, en este orden:
    | Ficha | Por qué acá |
    | --- | --- |
    | [guardado](../../rules/guardado.md) y [concurrencia](../../rules/concurrencia.md) | todo bajo el bloqueo de la fila de estado; el 409 de borrar |
-   | [multitenancy](../../rules/multitenancy.md) | el worker entra por organización, sin transacción abierta |
+   | [multitenancy](../../rules/multitenancy.md) y [modulos-habilitados](../../rules/modulos-habilitados.md) | el worker entra por organización, sin transacción abierta, y salta la que tiene WhatsApp apagado |
    | [modulos](../../rules/modulos.md) | Forms y WhatsApp, por puertos neutrales |
    | [persistencia-ef](../../rules/persistencia-ef.md) | el borrado lógico y las columnas nuevas |
    | [idempotencia](../../rules/idempotencia.md) | copiar crea; dar de baja y borrar no se repiten por el estado |
@@ -152,7 +152,7 @@ Una migración, `<fecha>_FormLifecycle.cs`, aditiva. Sus columnas se agregan y s
 
 | Tabla | Columna | Tipo | Regla |
 | --- | --- | --- | --- |
-| `FormDefinitionStates` | `DeactivatedAtUtc`, `DeactivatedByUserId` | timestamptz?, uuid? | van acá por T7: dar de baja no le da un 409 falso a quien edita. Reactivar los limpia en la UoW que activa la versión |
+| `FormDefinitionStates` | `DeactivatedAtUtc`, `DeactivatedByUserId` | timestamptz?, uuid? | van acá por T7: dar de baja no le da un 409 falso a quien edita. Reactivar los limpia en la UoW que activa la versión. Por `DeactivatedByUserId`, la tabla entra en `FormsPersonalDataPurgeTests` [E12]: se conserva como la autoría, igual que los `*ByUserId` de la E14 |
 | `FormDefinitions` | `IsDeleted`, `DeletedAtUtc`, `DeletedBy` | bool, timestamptz?, uuid? | `ISoftDeletable`. El índice único del prefijo no se filtra: queda reservado |
 | `WhatsAppFlowBindings` | `DeprecationState` | texto? | `Pending`, `Uncertain`, `Deprecated` o `NeedsAttention` |
 | `WhatsAppFlowBindings` | `DeprecationInFlight` | bool | se commitea antes de llamar a Meta |
@@ -180,9 +180,9 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | B8 | Binding: reservar, marcar, registrar y verificar | suma a `D/WhatsApp/WhatsAppFlowBinding.cs` [E14] y a `D/WhatsApp/WhatsAppErrors.cs` | las transiciones de publicación del binding [E14] | un turno viejo no escribe; `InFlight` se vuelve «Sin confirmar»; los cuatro intentos y sus tres esperas |
 | B9 | La deprecación en sus fases, cada una con una UoW | `A/Modules/WhatsApp/Interfaces/Services/IWhatsAppFlowDeprecationService.cs`, `WhatsAppFlowDeprecationService.cs` | `IWhatsAppFlowPublicationService.cs` [E14] | sesión vigente; respuesta a tiempo sin capturar; otra WABA; sin token; el token no entra en la identidad |
 | B10 | Hablar con Meta | suma a `I/Modules/WhatsApp/WhatsAppFlowClient.cs` [E14] | el mismo | 2xx, 4xx, 5xx, 429, timeout y cuerpo ilegible; clasificación; ya deprecado |
-| B11 | El worker, por organización | `I/Modules/WhatsApp/WhatsAppFlowDeprecationWorker.cs` | `WhatsAppBroadcastWorker.cs` y `TenantJobRunner.cs` | una organización con falla no frena a las demás; con el reloj de prueba al vencer |
+| B11 | El worker, por organización | `I/Modules/WhatsApp/WhatsAppFlowDeprecationWorker.cs` | `WhatsAppBroadcastWorker.cs` y `TenantJobRunner.cs` | una organización con falla no frena a las demás; con el reloj de prueba al vencer; con WhatsApp apagado no llama a Meta, y al prenderlo depreca; una copia con otro anillo no toma nada |
 | B12 | Rutas y puertos | suma a `P/Modules/Forms/Controllers/BusinessFormsController.cs`, `Contracts/CopyFormHttpRequest.cs`, `FormsContractContributor.cs`, los apagados `I/StructuredData/DisabledStructuredFormSource.cs` y `DisabledStructuredFormChannel.cs` y `WhatsAppStructuredFormChannel.cs` | esos mismos [E14] | cada ruta con 401, 403, feature apagada = 404, 409; dos permisos distintos; ejemplos exportados; aislamiento, en `Modules/Forms/RouteIsolationMatrixTests.cs` |
-| B13 | Acciones del asistente: `forms.deactivate@1` (`Dialog`, `FRM-Dar-De-Baja`, con `forms.publish`) y `forms.remove@1` (`RemoveConfirmation`, con `forms.manage`), con su efecto en WhatsApp declarado | suma a `A/Modules/Forms/Services/FormDefinitionActionSource.cs`, que crea si la E14 no la trae; sus textos `Action.*` en `FormsTexts{,.en}.resx`; su escenario | `RoleActionSource.cs` | los de arquitectura de las acciones y la batería genérica |
+| B13 | Acciones del asistente: `forms.deactivate@1` (`Dialog`, `FRM-Dar-De-Baja`, con `forms.publish`) y `forms.remove@1` (`RemoveConfirmation`, con `forms.manage`), con su efecto en WhatsApp declarado | `A/Modules/Forms/Services/FormDefinitionActionSource.cs`, nueva (la E14 no declara acciones), registrada en `FormsModule.cs`; sus textos `Action.*` en `FormsTexts{,.en}.resx`; su escenario | `RoleActionSource.cs` | los de arquitectura de las acciones y la batería genérica |
 
 **Front:**
 
@@ -209,7 +209,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | [E15] | Las dos rutas de la lista. | `GET /` y `GET /overview`, con sus filtros en una sola función. |
 | [E16] | Dónde viven los filtros de una pregunta. | En el borrador, así que se copian solos. |
 | [Meta] | `POST {flow}/deprecate` y el estado `DEPRECATED`, contra la documentación vigente. | El Flow tiene que estar publicado, y un Flow deprecado no vuelve. |
-| #51 | `Enter` borra `TenantKind`. | El worker no consulta features ni permisos: `TenantJobRunner` alcanza. |
+| #51 | `Enter` borra `TenantKind`. | El worker no consulta permisos ni `IFeatureService`, que responde por una sesión: alcanza `TenantJobRunner`, y si WhatsApp está prendido lo dice `WhatsAppModulePolicy`, como en la cola de entrada. |
 
 ## Lo que ya se pagó allá (no repetir)
 
