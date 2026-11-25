@@ -7,9 +7,9 @@
 | Parte | Tareas | Estado |
 | --- | --- | --- |
 | Contrato | K0–K1 | Hecha |
-| Back A · núcleo y WhatsApp | B16, B1–B9 y B18 | Pendiente: B16, B1–B9 y B18, sin correr |
-| Back B · formatos e IA | B10–B15 y B17 | Pendiente: B11–B15 y B17, sin correr (B10 hecha) |
-| Front | F1–F13 | Pendiente: F1–F13, sin correr |
+| Back A · núcleo y WhatsApp | B16, B1–B9 y B18 | Pendiente: B18, sin correr (espera la B17) |
+| Back B · formatos e IA | B10–B15 y B17 | Pendiente: B17 parcial (faltan las dos listas hijas de la ficha de un contacto de WhatsApp) |
+| Front | F1–F13 | Pendiente: F12 y F13, sin correr (esperan la B17 y la B18) |
 | Integración y puerta | I1–I3 | Pendiente: I1–I3, esperan back y front |
 
 ## Forma de trabajo
@@ -217,6 +217,25 @@ Leé AGENTS.md de los dos repos, este plan, la spec y la skill /puerta. Integrá
 - `docs/contracts/format-cases.json`: `date-time` es «27/09/2026, 14:35» y «09/27/2026, 2:35 PM»; `percent` es «12,5%» y «0,12%» en es-AR. (B10)
 - `docs/contracts/format-cases.json`: sale el tipo `dateLong` (casos `date-long-*`) y entra el tipo `month`: entrada «yyyy-MM» y como salida el rango como rótulo («01/10/2026 – 31/10/2026», «10/01/2026 – 10/31/2026»), con casos `month-*` y `month-leap-february-*` para es-AR y en-US. El front lo arma con `formatMonth`. (B10)
 - `GET /api/reference-data`: cambian solo valores (`DateTimePattern` con coma en es-AR y en-US, `PercentPattern` de es-AR «{number}%»); `LongDatePattern` sigue en la respuesta sin uso. (B10)
+- GET /conversations/{id} (consumer, business y platform) declara ProducesProblem(409) con Assistant.Conversation.Unavailable. La respuesta ya estaba documentada, pero fuera de orden; ahora está bien declarada. (B14)
+- GET /conversations/{id}/export suma 409 Assistant.Conversation.Unavailable. (B14)
+- POST /conversations/{id}/messages suma Assistant.Conversation.Unavailable a su 409, antes de reservar el cupo. (B14)
+- La descripción de la conversación ilegible en el contrato ahora dice que su GET y su exportación son 409, que un mensaje nuevo también, y que el DELETE la borra. docs/contracts/openapi.json se regeneró con el build. (B14)
+- Todo listado paginado del núcleo: lo vacío va al final en los dos sentidos, un estado o un tipo ordena por su circuito (el orden de declaración del enum, igual en los dos idiomas) y, con el mismo valor, sigue el orden de siempre de la lista y después el Id. OpenAPI no cambia: sort sigue siendo texto. (B17)
+- GET de roles paginado: sort admite type, scope, userCount y permissions (los permisos que valen en el alcance del rol, los que muestra la fila). (B17)
+- GET de empresas paginado: sort admite taxId, timeZoneId, status y memberCount (miembros activos). (B17)
+- GET de personas de la organización paginado: sort admite state, invitationDelivery (por su circuito: Pending, Sent, Uncertain, Failed) e invitationExpiresAtUtc; las dos últimas quedan vacías, y van al final, fuera de una invitación. (B17)
+- GET de miembros de una empresa paginado: sort admite state, invitationDelivery e invitationExpiresAtUtc, estas dos solo para la invitación que incluye a esa empresa; si no, vacías y al final. (B17)
+- GET de organizaciones de Plataforma paginado: sort admite status, ownerName (el nombre del Dueño o, sin nombre, su correo; vacío al final), companyCount y memberCount. (B17)
+- GET de cuentas de Plataforma paginado: sort admite contact (teléfono principal o correo), lastSignInAtUtc (vacío en una invitación), state (por su circuito) e invitationDelivery. (B17)
+- GET de recuperaciones de Plataforma paginado: sort admite createdAtUtc (el id de su columna en el front), status y accountName (sin cuenta o sin nombre, al final); createdAt sigue valiendo mientras conviven las dos versiones. (B17)
+- GET /api/organization/whatsapp/contacts: nuevo query sort (name, number, consent, lastConversationAtUtc; consent por su circuito). Sin sort, por nombre. (B17)
+- GET /api/organization/whatsapp/broadcasts: nuevo query sort (name, template, recipients, status, delivered, read, date). Sin sort, -date. delivered y read vacíos (antes de salir) van al final. (B17)
+- GET /api/organization/whatsapp/broadcasts/{id}: nuevo query sort para los destinatarios (contact, number, status, changedAtUtc). Sin sort, -changedAtUtc. (B17)
+- GET de plantillas de WhatsApp de la organización y de Plataforma: nuevo query sort (name, category, status, updatedAtUtc). En Plataforma, group=System también respeta sort; sin sort, por título como antes. (B17)
+- GET de equipos de WhatsApp de la organización y de Plataforma: nuevo query sort (name, inbox, memberCount, notice; notice sin aviso va al final). (B17)
+- Los listados de plantillas, difusiones y destinatarios ahora validan: un sort fuera de la lista, un tamaño de página no admitido o un estado inválido es 400 Validation.Failed. (B17)
+- docs/contracts/openapi.json regenerado con el parámetro sort en esas siete rutas. (B17)
 
 ## Para decidir
 
