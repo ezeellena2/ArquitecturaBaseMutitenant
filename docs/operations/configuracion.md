@@ -28,9 +28,18 @@
 | `WhatsApp:AppSecret` | con lo que Meta firma cada webhook | Meta for Developers › la app › Configuración › Básica |
 | `WhatsApp:VerifyToken` | la palabra de verificación del webhook | la misma que cargaste en Meta |
 
+**Los datos de la instalación** no son secretos, pero son de cada instalación: van en los mismos user-secrets (en Production, en variables de entorno) y nunca en un json versionado. `StartupConfigurationTests` falla si vuelven a `appsettings.json` o `appsettings.Development.json`.
+
+| Clave | Qué es | De dónde sale |
+|---|---|---|
+| `Authentication:Google:ClientId` | id del cliente OAuth; sin él, el botón de Google no aparece | Google Cloud Console › Credenciales (el mismo cliente de ArquitecturaBase) |
+| `Email:Smtp:UserName` / `FromAddress` | la cuenta de Gmail que manda los correos y su remitente | tu cuenta de Gmail, la misma de ArquitecturaBase |
+| `WhatsApp:PhoneNumberId` | el número de Plataforma. Desde la E11 **solo sirve para el arranque**: si no hay número de Plataforma, se crea uno con este valor y `WhatsApp:AccessToken`; mientras nadie lo reemplace desde Plataforma › WhatsApp › Número, sigue a la configuración. Sin número conectado, WhatsApp queda apagado y la app arranca igual | Meta for Developers › la app › WhatsApp › Configuración de la API |
+| `WhatsApp:AppId`, `WhatsApp:EmbeddedSignupConfigId` | la app de Meta del alta embebida y la configuración de Facebook Login for Business (E11, §7). Sin las dos, las pantallas de números no ofrecen conectar. `AppSecret` canjea el código del alta en el servidor | Meta for Developers › la app › Configuración › Básica, y Facebook Login for Business › Configuraciones |
+
 ### Tres formas de cargarlos
 
-**A. Copiarlos de ArquitecturaBase (esta máquina, cero pegado).** Cinco están en los user-secrets de ArquitecturaBase y la clave HMAC en su configuración de desarrollo. El script copia los seis a user-secrets del multitenant sin mostrarlos:
+**A. Copiarlos de ArquitecturaBase (esta máquina, cero pegado).** Cinco están en los user-secrets de ArquitecturaBase y la clave HMAC en su configuración de desarrollo. El script copia los seis a user-secrets del multitenant sin mostrarlos; los datos de la instalación no los trae, y se cargan con B o C:
 ```powershell
 ./scripts/secretos/importar-desde-arquitecturabase.ps1
 ```
@@ -63,21 +72,15 @@ El importador de ArquitecturaBase no conoce al operador ni al certificado Data P
 
 Mismos valores que `../ArquitecturaBase/src/ArquitecturaBase.Api/appsettings.Development.json` y `appsettings.json`, salvo las plantillas de WhatsApp nuevas del multitenant (ver la tabla). Se copian en la Etapa 3 (Google y Gmail) y en la Etapa 8 (WhatsApp).
 
-No repetir (B1 de ArquitecturaBase): la plantilla no trae datos de una instalación en la configuración versionada. Allá, desde el 2026-11-16, el correo personal, el administrador inicial y el id de Google van a user-secrets. Acá siguen en el repo (`Authentication:Google:ClientId`, `Email:Smtp:UserName`/`FromAddress` y los ids de Meta de la §7), y `StartupConfigurationTests.Development_settings_enable_Google_and_Gmail_without_committing_credentials` exige que estén. Pasarlos a user-secrets, invertir ese test y poner al día esta sección y la §7 queda en el [backlog](../backlog.md#traspaso-15-el-núcleo-para-programar).
-
 | Clave | Valor |
 |---|---|
-| `Authentication:Google:ClientId` | el mismo `ClientId` de ArquitecturaBase |
 | `Authentication:Issuer` | `https://localhost:5174/` (el origen del front del multitenant) |
 | `Email:Delivery` | `Smtp`; `PickupDirectory` escribe `.eml` sin enviar solo en Development o Testing |
 | `Email:Smtp:Host` / `Port` | `smtp.gmail.com` / `587` (STARTTLS) |
-| `Email:Smtp:UserName` / `FromAddress` | tu cuenta de Gmail, la misma de ArquitecturaBase |
 | `Email:Smtp:FromName` | el nombre del producto; con la decisión 273 pasa a Plataforma › Configuración |
 | `Email:AppName` | nombre de plataforma usado también por los replies del bot; no altera la frase neutra del operador; con la decisión 273 pasa a Plataforma › Configuración |
-| `WhatsApp:PhoneNumberId` | el mismo de ArquitecturaBase. Desde la E11 **solo sirve para el arranque**: si no hay número de Plataforma, se crea uno con este valor y `WhatsApp:AccessToken`; mientras nadie lo reemplace desde Plataforma › WhatsApp › Número, sigue a la configuración. Sin número conectado, WhatsApp queda apagado y la app arranca igual |
 | `WhatsApp:BusinessAccountId`, `DisplayPhoneNumber`, `SendArgentineMobilesWithoutNine` | los mismos de ArquitecturaBase (el último, solo con el número de prueba) |
 | `WhatsApp:GraphApiVersion`, `Templates:LoginCode`, `AllowedCountries`, `DailyAuthCodeLimit` | `v26.0` desde la E11 (Embedded Signup v4); los demás, los de `appsettings.json` de ArquitecturaBase (`codigo_ingreso`, `["AR"]`, `100`) |
-| `WhatsApp:AppId`, `WhatsApp:EmbeddedSignupConfigId` | la app de Meta del alta embebida y la configuración de Facebook Login for Business (E11). Sin las dos, las pantallas de números no ofrecen conectar. `AppSecret` canjea el código del alta en el servidor |
 | `WhatsApp:Templates:Invitation` y las demás `WhatsApp:Templates:<Nombre>` | **no se copian** de ArquitecturaBase: Invitation es invitacion_organizacion. El módulo configura **16 nombres es/en** (Authentication + 15 Utility), incluidas recuperación/baja por Plataforma y organización. Configurar una clave no acredita aprobación en Meta. Dos «en uso» quedan derogadas, y no hay OTP de confirmación de cambios en Mi cuenta. Claves/paquete según [plantillas](whatsapp-plantillas.md) y ADR 0049. |
 
 `WhatsApp:AllowedCountries` reemplaza la lista predeterminada; no se suma a ella. Configurar solo `US` no conserva `AR`. La política se aplica al registro y a los métodos nuevos o pendientes, también al reenviar y verificar; un Phone ya verificado conserva ingreso y avisos aunque su país deje de admitirse. El país real se obtiene del E.164, no del campo `country` recibido. Con la B18 de la [segunda parte de la base](../plans/2026-11-19-etapa-base-de-la-12-segunda-parte.md) pasa a la configuración de Plataforma (decisión 270 de la [hoja de ruta de formularios](../plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md)); hasta entonces manda esta clave.
@@ -189,9 +192,9 @@ Las mismas claves, como variables de entorno con doble guion bajo (`Email__Smtp_
 
 ## 7. Meta: la app y el alta embebida
 
-La app de desarrollo es «Plantilla Multitenant» (`WhatsApp:AppId` 1482265200631609), **publicada**, en live mode con acceso estándar: sin publicar solo recibe los webhooks de prueba del panel, y con acceso estándar conectan números solo quienes tienen rol en la app. La producción sigue el [manual de operación](runbook.md).
+La app de desarrollo es «Plantilla Multitenant» (su id va en `WhatsApp:AppId`, §2), **publicada**, en live mode con acceso estándar: sin publicar solo recibe los webhooks de prueba del panel, y con acceso estándar conectan números solo quienes tienen rol en la app. La producción sigue el [manual de operación](runbook.md).
 
-- **Alta embebida:** caso de uso WhatsApp y Facebook Login for Business, con una configuración creada desde la plantilla de Embedded Signup. Su `config_id` va en `WhatsApp:EmbeddedSignupConfigId`; el de desarrollo es 2541931872886066, y su acceso vence a los 60 días.
+- **Alta embebida:** caso de uso WhatsApp y Facebook Login for Business, con una configuración creada desde la plantilla de Embedded Signup. Su `config_id` va en `WhatsApp:EmbeddedSignupConfigId` (§2), y su acceso vence a los 60 días.
 - **OAuth:** los seis interruptores, «Allowed domains» con `localtest.me` y «Valid OAuth redirect URIs» con `https://localtest.me:5174/`, porque la ventana la abre el front.
 - **Webhook:** `https://<túnel>/webhooks/whatsapp`, con `messages`, `account_update`, `message_template_status_update`, `template_category_update`, `phone_number_name_update`, `history`, `smb_app_state_sync` y `smb_message_echoes`.
 - **Para probar plantillas y difusiones:** un número real libre y un medio de pago en esa cuenta.

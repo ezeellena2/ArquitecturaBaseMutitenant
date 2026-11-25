@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Dice qué secretos están cargados y cuáles faltan, SIN mostrar ningún valor.
+  Dice qué secretos y datos de la instalación están cargados y cuáles faltan, SIN mostrar ningún valor.
 #>
 param(
     [string]$Destino = (Join-Path $PSScriptRoot '..\..\src\ArquitecturaBaseMultitenant.Api'),
@@ -16,6 +16,9 @@ $requeridas = [ordered]@{
     'WhatsApp:AccessToken'              = 'Enviar por WhatsApp (obligatoria si hay WhatsApp:PhoneNumberId)'
     'WhatsApp:AppSecret'                = 'Webhook de WhatsApp (va junto con VerifyToken)'
     'WhatsApp:VerifyToken'              = 'Webhook de WhatsApp (va junto con AppSecret)'
+    'Authentication:Google:ClientId'     = 'Dato de la instalación: sin él el botón de Google no aparece'
+    'Email:Smtp:UserName'               = 'Dato de la instalación: la cuenta de Gmail que manda los correos'
+    'Email:Smtp:FromAddress'            = 'Dato de la instalación: el remitente, la misma cuenta de Gmail'
 }
 if ($Ambiente -notin @('Development', 'Testing')) {
     $requeridas['DataProtection:Certificate:Base64'] =
@@ -26,6 +29,16 @@ $cargadas = (dotnet user-secrets list --project $Destino) -replace ' = .*', ''
 foreach ($clave in $requeridas.Keys) {
     if ($cargadas -contains $clave) { Write-Host "[ok]    $clave" -ForegroundColor Green }
     else { Write-Host "[falta] $clave  -> $($requeridas[$clave])" -ForegroundColor Yellow }
+}
+
+$opcionales = [ordered]@{
+    'WhatsApp:PhoneNumberId'          = 'Dato de la instalación: el número de Plataforma del arranque; sin él WhatsApp queda apagado'
+    'WhatsApp:AppId'                  = 'Dato de la instalación: con EmbeddedSignupConfigId, las pantallas de números ofrecen conectar'
+    'WhatsApp:EmbeddedSignupConfigId' = 'Dato de la instalación: va junto con WhatsApp:AppId'
+}
+foreach ($clave in $opcionales.Keys) {
+    if ($cargadas -contains $clave) { Write-Host "[ok]       $clave" -ForegroundColor Green }
+    else { Write-Host "[opcional] $clave  -> $($opcionales[$clave])" -ForegroundColor DarkGray }
 }
 
 $claveTelefono = 'Seed:PlatformOwner:Phone'

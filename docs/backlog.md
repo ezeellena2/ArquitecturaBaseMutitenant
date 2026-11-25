@@ -115,12 +115,10 @@ Lo que trajo el traspaso 15 de ArquitecturaBase para el núcleo (su traspaso 14,
 - **El correo no se pierde ni sale dos veces** (N5, N8 y O3): en `OutboxDispatcher`, clasificar las fallas de SMTP, volver a pendiente lo que falló antes del cuerpo, no repetir lo incierto, plazo propio dentro del apagado y el código que vence en la cola.
 - **Estado de entrega de la invitación** (`Pending`, `Sent`, `Uncertain` y `Failed`), con un chequeo `email` en Degraded ante un 535 y contadores de enviados y descartados ([organizaciones](features/organizaciones.md)). Mostrarlo en Usuarios es un cambio de pantalla y se dibuja antes.
 - **La resiliencia por defecto no reintenta un POST** (N18): `ServiceDefaults/Extensions.cs` usa `AddStandardResilienceHandler()` sin `DisableForUnsafeHttpMethods`. WhatsApp y Anthropic ya lo hacen por su cuenta.
-- **El 500 se puede rastrear** (N10): la persona y la organización en el scope del log, y la consola en JSON fuera de desarrollo ([logs](rules/logs.md)). El exportador OTLP y la alerta de 5xx van con la E10.
+- **El 500 se puede rastrear** (N10): el exportador OTLP y la alerta de 5xx van con la E10; la persona y la organización en el scope del log y la consola en JSON fuera de desarrollo ya están ([logs](rules/logs.md)).
 - **Salir cierra las demás pestañas de ese lado** (N12), en el front, con `BroadcastChannel`: la pública o la de Plataforma, nunca las dos ([ADR 0044](decisions/0044-sesion-de-plataforma-aparte.md)).
 - **Cada pantalla pide solo los conteos que muestra** (N30): revisar los `filter-counts` que pide el front (Roles, Usuarios, Empresas, Cuentas, Recuperaciones y Organizaciones).
-- **Textos neutrales en el núcleo** (N22): que ningún texto del núcleo nombre un módulo.
 - **Sin Formularios, el asistente de WhatsApp anda** (B5): al programar la E23 y la E25, pedir las capacidades `forms.*` solo si un dueño instalado las declara.
-- **La plantilla sin datos de la instalación** (B1): pasar a user-secrets el `ClientId` de Google, el Gmail (`Email:Smtp:UserName` y `FromAddress`) y los ids de Meta (`WhatsApp:PhoneNumberId`, `AppId` y `EmbeddedSignupConfigId`) de `appsettings.Development.json`; invertir `StartupConfigurationTests.Development_settings_enable_Google_and_Gmail_without_committing_credentials`, y poner al día la §3 y la §7 de [configuración](operations/configuracion.md), que hoy los da como «no secretos, en el repo», y los pasos de `user-secrets` de la §2.
 - **Borrar con el ETag del listado** (resto de N28): hoy no aplica, porque las claves son al azar. Va en el adaptador de Azure (E10) y en la E18 si alguna clave fuera determinística.
 
 ## Traspaso 15, diseño, fechas y números: para la segunda parte de la base

@@ -30,8 +30,20 @@ public sealed class StartupConfigurationTests
             configuration.GetSection("Authentication:Clients:Web:PostLogoutRedirectUris").Get<string[]>() ?? []);
     }
 
+    // Los datos de cada instalación van en user-secrets o variables de entorno, nunca en los json versionados
+    // (configuracion.md §2): el ClientId de Google, la cuenta de Gmail y los ids de Meta.
+    private static readonly string[] InstallationKeys =
+    [
+        "Authentication:Google:ClientId",
+        "Email:Smtp:UserName",
+        "Email:Smtp:FromAddress",
+        "WhatsApp:PhoneNumberId",
+        "WhatsApp:AppId",
+        "WhatsApp:EmbeddedSignupConfigId",
+    ];
+
     [Fact]
-    public void Development_settings_enable_Google_and_Gmail_without_committing_credentials()
+    public void Development_settings_use_Gmail_and_leave_installation_data_and_credentials_out_of_the_repo()
     {
         var apiDirectory = Path.Combine(FindRepositoryRoot(), "src", "ArquitecturaBaseMultitenant.Api");
         var configuration = new ConfigurationBuilder()
@@ -40,12 +52,10 @@ public sealed class StartupConfigurationTests
             .AddJsonFile("appsettings.Development.json")
             .Build();
 
-        Assert.False(string.IsNullOrWhiteSpace(configuration["Authentication:Google:ClientId"]));
         Assert.Equal("Smtp", configuration["Email:Delivery"]);
         Assert.Equal("smtp.gmail.com", configuration["Email:Smtp:Host"]);
         Assert.Equal("587", configuration["Email:Smtp:Port"]);
-        Assert.False(string.IsNullOrWhiteSpace(configuration["Email:Smtp:UserName"]));
-        Assert.False(string.IsNullOrWhiteSpace(configuration["Email:Smtp:FromAddress"]));
+        Assert.All(InstallationKeys, key => Assert.True(string.IsNullOrEmpty(configuration[key]), $"{key} está en un json versionado."));
 
         foreach (var file in new[] { "appsettings.json", "appsettings.Development.json" })
         {
