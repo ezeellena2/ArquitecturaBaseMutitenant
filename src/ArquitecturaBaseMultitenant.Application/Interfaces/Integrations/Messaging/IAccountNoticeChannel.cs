@@ -13,6 +13,7 @@ public interface IAccountNoticeChannel
     string Key { get; }
     LoginMethodType MethodType { get; }
 
-    Task EnqueueAsync(Guid? userId, string destination, AccountNotice notice, CultureProfile culture,
+    /// <summary>Devuelve el id del mensaje de la cola, o null si este canal no lo manda (B6).</summary>
+    Task<Guid?> EnqueueAsync(Guid? userId, string destination, AccountNotice notice, CultureProfile culture,
         CancellationToken cancellationToken);
 }

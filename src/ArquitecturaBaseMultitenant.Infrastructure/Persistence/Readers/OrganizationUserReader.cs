@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Application.Models.Home;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -258,7 +259,10 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
                 invitation.Id,
                 invitation.Destination,
                 invitation.IssuedAtUtc,
-                invitation.ExpiresAtUtc
+                invitation.ExpiresAtUtc,
+                // B6: el estado de entrega sale de la cola, por el mensaje que la lleva.
+                OutboxStatus = context.OutboxMessages.Where(outbox => outbox.Id == invitation.OutboxMessageId)
+                    .Select(outbox => (OutboxStatus?)outbox.Status).FirstOrDefault(),
             })
             .ToArrayAsync(cancellationToken);
         var invitationByMember = invitations.GroupBy(row => row.MemberId)
@@ -282,7 +286,8 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
                 invitation?.Id, invitation?.IssuedAtUtc, invitation?.ExpiresAtUtc,
                 rolesByMember.GetValueOrDefault(row.MemberId, []),
                 companiesByMember.GetValueOrDefault(row.MemberId, []), row.Version, row.CreatedAtUtc,
-                row.DeletionScheduledForUtc, row.DeletionRequestedAtUtc, phone);
+                row.DeletionScheduledForUtc, row.DeletionRequestedAtUtc, phone,
+                invitation is null ? null : InvitationDeliveryProjection.FromOutbox(invitation.OutboxStatus));
         })];
     }
 

@@ -35,12 +35,16 @@ public sealed record OrganizationUserRoleRow(Guid Id, string Name, bool IsSystem
 public sealed record OrganizationUserCompanyRow(Guid CompanyId, string CompanyName,
     CompanyMembershipStatus Status, IReadOnlyList<OrganizationUserRoleRow> Roles, CompanyStatus? CompanyStatus = null);
 
-/// <summary>Una persona de la organización; <c>State</c> lo calcula el reader en SQL (OrganizationUserStatePolicy).</summary>
+/// <summary>
+/// Una persona de la organización; <c>State</c> lo calcula el reader en SQL (OrganizationUserStatePolicy).
+/// <c>InvitationDelivery</c> es el estado de entrega de la invitación pendiente, derivado de la cola al leer (B6).
+/// </summary>
 public sealed record OrganizationUserRow(Guid MemberId, Guid? UserId, string DisplayName, Email? Email,
     bool HasManagedEmail, OrganizationUserState State, Guid? InvitationId, DateTime? InvitationIssuedAtUtc,
     DateTime? InvitationExpiresAtUtc, IReadOnlyList<OrganizationUserRoleRow> Roles,
     IReadOnlyList<OrganizationUserCompanyRow> Companies, uint Version, DateTime CreatedAtUtc,
-    DateTime? DeletionScheduledForUtc, DateTime? DeletionRequestedAtUtc = null, PhoneNumber? Phone = null);
+    DateTime? DeletionScheduledForUtc, DateTime? DeletionRequestedAtUtc = null, PhoneNumber? Phone = null,
+    InvitationDeliveryStatus? InvitationDelivery = null);
 
 /// <summary>Email es el correo verificado o el de la invitación; Phone, el teléfono de una invitación por teléfono (con Email null).</summary>
 public sealed record OrganizationUserResponse(Guid MemberId, Guid? UserId, string DisplayName, Email? Email,

@@ -16,14 +16,15 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 internal sealed class PlatformOperatorInvitationNotifier(IEnumerable<IAccountNoticeChannel> channels,
     UserCultureResolver cultures, IPublicOrigin origin, IUserRepository users)
 {
-    internal async Task EnqueueAsync(PlatformOperatorInvitee invitee, Guid inviterId, CancellationToken ct)
+    /// <summary>Devuelve el id del mensaje de la cola, que la invitación guarda para su estado de entrega (B6).</summary>
+    internal async Task<Guid?> EnqueueAsync(PlatformOperatorInvitee invitee, Guid inviterId, CancellationToken ct)
     {
         var inviter = await users.GetByIdAsync(inviterId, ct)
             ?? throw new InvalidOperationException("The inviting operator must exist.");
         var url = origin.Absolute(ReturnUrls.PlatformPath);
         var channel = channels.FirstOrDefault(item => item.MethodType == LoginMethodType.Email)
             ?? throw new InvalidOperationException("The email notice channel is not registered.");
-        await channel.EnqueueAsync(invitee.Id, invitee.Email.Value,
+        return await channel.EnqueueAsync(invitee.Id, invitee.Email.Value,
             new AccountNotice.OperatorInvited(inviter.DisplayName, invitee.Permissions, invitee.ExpiresAtUtc,
                 invitee.TimeZoneId, url),
             await cultures.ResolveAsync(invitee.Culture, null, ct), ct);

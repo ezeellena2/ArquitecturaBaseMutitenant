@@ -2,6 +2,7 @@ using System.Net;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -40,6 +41,10 @@ public sealed class InvitationWhatsAppConsentMigrationTests
         Assert.True(issued.StatusCode == HttpStatusCode.Created, await issued.Content.ReadAsStringAsync(ct));
         using var json = JsonDocument.Parse(await issued.Content.ReadAsStringAsync(ct));
         var invitationId = json.RootElement.GetProperty("invitationId").GetGuid();
+        // Su correo ya salió: con el mensaje en la cola, la vuelta atrás de la B6 (InvitationDeliveryOutbox) se negaría.
+        var outboxId = await InTenantAsync("""SELECT "OutboxMessageId" FROM tenant."Invitations" WHERE "Id" = @invitation""",
+            async command => (Guid)(await command.ExecuteScalarAsync(ct))!);
+        await OutboxRows.SetStatusAsync(isolated.Services, outboxId, OutboxStatus.Sent, ct);
         var options = new DbContextOptionsBuilder<ApplicationDbContext>().UseNpgsql(isolated.AdminConnectionString);
         options.UseOpenIddict<Guid>();
         await using var db = new ApplicationDbContext(options.Options, new NoTenant());

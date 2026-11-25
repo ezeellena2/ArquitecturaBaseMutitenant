@@ -42,6 +42,12 @@ public sealed class Invitation : Entity, ITenantOwned, IAuditable
     /// </summary>
     public Guid? ConsentConfirmedByUserId { get; private set; }
     public DateTime? ConsentConfirmedAtUtc { get; private set; }
+    /// <summary>
+    /// El mensaje de la cola que la lleva (B6): el estado de entrega no se guarda, sale de la cola al leer. Nulo en las
+    /// anteriores, que se leen como enviadas. Es técnico, no se audita.
+    /// </summary>
+    [NotAudited]
+    public Guid? OutboxMessageId { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public Guid? CreatedBy { get; private set; }
     public DateTime? ModifiedAtUtc { get; private set; }
@@ -71,6 +77,18 @@ public sealed class Invitation : Entity, ITenantOwned, IAuditable
             ConsentConfirmedByUserId = consent?.ConfirmedByUserId,
             ConsentConfirmedAtUtc = consent?.ConfirmedAtUtc,
         };
+    }
+
+    /// <summary>
+    /// Anota, al emitirla, el mensaje de la cola que la lleva. Una sola vez y solo pendiente: reenviar emite otra invitación
+    /// con su propio mensaje.
+    /// </summary>
+    public void AttachOutboxMessage(Guid outboxMessageId)
+    {
+        if (outboxMessageId == Guid.Empty) throw new ArgumentException("An outbox message ID is required.", nameof(outboxMessageId));
+        if (Status != InvitationStatus.Pending || OutboxMessageId is not null)
+            throw new InvalidOperationException("Only a new pending invitation takes its outbox message.");
+        OutboxMessageId = outboxMessageId;
     }
 
     /// <summary>El consentimiento que guarda, para conservarlo en la invitación que la reemplaza al reenviarla.</summary>

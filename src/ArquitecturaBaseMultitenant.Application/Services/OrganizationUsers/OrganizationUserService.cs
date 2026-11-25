@@ -186,7 +186,7 @@ internal sealed class OrganizationUserService(
         [.. row.Roles.Select(Translate)],
         [.. row.Companies.Select(company => company with { Roles = [.. company.Roles.Select(Translate)] })],
         row.InvitationId, row.InvitationIssuedAtUtc, row.InvitationExpiresAtUtc, row.Version, row.CreatedAtUtc,
-        row.DeletionScheduledForUtc, row.Phone);
+        row.DeletionScheduledForUtc, row.Phone, row.InvitationDelivery);
 
     private static OrganizationUserRoleRow Translate(OrganizationUserRoleRow role) => role with
     {

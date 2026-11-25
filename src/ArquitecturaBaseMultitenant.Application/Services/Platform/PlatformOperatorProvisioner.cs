@@ -44,6 +44,13 @@ internal sealed class PlatformOperatorProvisioner(IUserRepository users, Account
             account.Culture, account.TimeZoneId);
     }
 
+    /// <summary>
+    /// B6: la invitación recién emitida o reenviada guarda el mensaje de la cola que la lleva, en la UoW del llamador; su
+    /// estado de entrega sale de ahí al leer Cuentas.
+    /// </summary>
+    public Task RecordDeliveryAsync(Guid accountId, Guid? outboxMessageId, CancellationToken ct) =>
+        users.RecordOperatorInvitationDeliveryAsync(accountId, outboxMessageId, ct);
+
     /// <summary>La cuenta es una invitación de operador sin aceptar, vigente o vencida.</summary>
     public async Task<bool> IsPendingAsync(Guid accountId, CancellationToken ct) =>
         (await users.GetByIdAsync(accountId, ct))?.HasPendingOperatorInvitation == true;

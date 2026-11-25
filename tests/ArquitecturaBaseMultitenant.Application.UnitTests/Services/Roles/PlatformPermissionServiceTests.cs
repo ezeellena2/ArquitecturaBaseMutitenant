@@ -103,6 +103,8 @@ public sealed class PlatformPermissionServiceTests
             throw new NotSupportedException();
         public Task<Result> RenewOperatorInvitationAsync(Guid userId, DateTime expiresAtUtc,
             CancellationToken ct) => throw new NotSupportedException();
+        public Task RecordOperatorInvitationDeliveryAsync(Guid userId, Guid? outboxMessageId, CancellationToken ct) =>
+            throw new NotSupportedException();
         public Task<Result> AcceptOperatorInvitationAsync(Guid userId, DateTime acceptedAtUtc,
             CancellationToken ct) => throw new NotSupportedException();
         public Task<Result> DiscardOperatorInvitationAsync(Guid userId, DateTime discardedAtUtc,

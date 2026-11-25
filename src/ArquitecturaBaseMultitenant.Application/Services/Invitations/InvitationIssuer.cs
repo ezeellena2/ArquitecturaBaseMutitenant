@@ -73,7 +73,10 @@ internal sealed class InvitationIssuer(IInvitationRepository invitations, IMembe
             request.Consent);
         invitations.Add(invitation);
         var token = tokens.Protect(new InvitationTokenData(tenantId, invitation.Id, secret));
-        await delivery.EnqueueAsync(invitation, organization, token, userId, destination.Value, cancellationToken, preparedSettings, grant);
+        // B6: la invitación guarda el mensaje de la cola que la lleva; su estado de entrega sale de ahí al leer.
+        if (await delivery.EnqueueAsync(invitation, organization, token, userId, destination.Value, cancellationToken,
+                preparedSettings, grant) is { } outboxMessageId)
+            invitation.AttachOutboxMessage(outboxMessageId);
         return new IssuedInvitation(invitation.Id, member, invitation.ExpiresAtUtc);
     }
 }

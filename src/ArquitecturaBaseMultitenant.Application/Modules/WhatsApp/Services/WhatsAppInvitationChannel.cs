@@ -12,10 +12,10 @@ internal sealed class WhatsAppInvitationChannel(IWhatsAppChannelSettings setting
     public string Key => ChannelKey;
     public LoginMethodType SupportedMethodType => LoginMethodType.Phone;
     public bool IsAvailable => settings.IsEnabled;
-    public async Task EnqueueAsync(InvitationDeliveryDestination destination, InvitationNotice notice, CultureProfile culture,
+    public async Task<Guid?> EnqueueAsync(InvitationDeliveryDestination destination, InvitationNotice notice, CultureProfile culture,
         Guid? recipientUserId, CancellationToken cancellationToken)
     {
-        if (!IsAvailable || destination.Type != SupportedMethodType) return;
-        outbox.Enqueue(Key, JsonSerializer.Serialize(await templates.RenderInvitationAsync(destination.Value, notice, culture, cancellationToken)), recipientUserId);
+        if (!IsAvailable || destination.Type != SupportedMethodType) return null;
+        return outbox.Enqueue(Key, JsonSerializer.Serialize(await templates.RenderInvitationAsync(destination.Value, notice, culture, cancellationToken)), recipientUserId);
     }
 }

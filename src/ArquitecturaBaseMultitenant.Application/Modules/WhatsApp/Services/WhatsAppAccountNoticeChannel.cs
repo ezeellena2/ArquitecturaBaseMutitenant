@@ -10,10 +10,10 @@ internal sealed class WhatsAppAccountNoticeChannel(IWhatsAppChannelSettings sett
 {
     public string Key => "whatsapp";
     public LoginMethodType MethodType => LoginMethodType.Phone;
-    public async Task EnqueueAsync(Guid? userId, string destination, AccountNotice notice, CultureProfile culture, CancellationToken cancellationToken)
+    public async Task<Guid?> EnqueueAsync(Guid? userId, string destination, AccountNotice notice, CultureProfile culture, CancellationToken cancellationToken)
     {
-        if (!settings.IsEnabled || notice is AccountNotice.OperatorInvited) return;
+        if (!settings.IsEnabled || notice is AccountNotice.OperatorInvited) return null;
         var message = await templates.RenderNoticeAsync(destination, notice, culture, cancellationToken);
-        if (message is not null) outbox.Enqueue(Key, JsonSerializer.Serialize(message), userId);
+        return message is null ? null : outbox.Enqueue(Key, JsonSerializer.Serialize(message), userId);
     }
 }

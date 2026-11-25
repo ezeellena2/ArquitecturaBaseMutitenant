@@ -102,9 +102,11 @@ public sealed record PlatformAccountMembershipResponse(Guid TenantId, string Nam
     DateTime? JoinedAtUtc, MemberStatus Status, TenantStatus TenantStatus, DateTime? EndedAtUtc);
 
 /// <summary>Proyección del reader global; el servicio la completa con métodos y textos.</summary>
+/// <summary><c>InvitationDelivery</c>: la invitación de operador pendiente, derivada de la cola al leer (B6).</summary>
 public sealed record PlatformAccountRow(Guid Id, string? DisplayName, Email? PrimaryEmail, bool IsOperator,
     PlatformAccountState State, bool HasPersonalSpace, int OrganizationCount, DateTime? LastSignInAtUtc,
-    LoginAuditMethod? LastSignInMethod, DateTime? InvitationExpiresAtUtc, string? PrimaryPhone)
+    LoginAuditMethod? LastSignInMethod, DateTime? InvitationExpiresAtUtc, string? PrimaryPhone,
+    InvitationDeliveryStatus? InvitationDelivery = null)
 {
     public override string ToString() => nameof(PlatformAccountRow);
 }

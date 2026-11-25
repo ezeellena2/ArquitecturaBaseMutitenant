@@ -32,6 +32,12 @@ public interface IUserRepository
     /// <summary>Renueva el vencimiento de una invitación de operador sin aceptar.</summary>
     Task<Result> RenewOperatorInvitationAsync(Guid userId, DateTime expiresAtUtc, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// B6: anota el mensaje de la cola de la invitación de operador pendiente recién emitida o reenviada; reemplaza al
+    /// anterior.
+    /// </summary>
+    Task RecordOperatorInvitationDeliveryAsync(Guid userId, Guid? outboxMessageId, CancellationToken cancellationToken);
+
     /// <summary>Acepta la invitación de operador con el primer ingreso, si todavía no venció.</summary>
     Task<Result> AcceptOperatorInvitationAsync(Guid userId, DateTime acceptedAtUtc, CancellationToken cancellationToken);
 

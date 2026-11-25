@@ -11,6 +11,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integr
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -130,6 +131,47 @@ public sealed class WhatsAppPhoneInvitationTests(ApiFactory factory) : IClassFix
         Assert.NotEqual(first.Id, replacement.Id);
         Assert.Equal((first.ConsentConfirmedByUserId, first.ConsentConfirmedAtUtc),
             (replacement.ConsentConfirmedByUserId, replacement.ConsentConfirmedAtUtc));
+    }
+
+    /// <summary>B6 (ADR 0066 §4): la invitación por WhatsApp sigue en Usuarios el estado de su mensaje en la cola.</summary>
+    [Fact]
+    public async Task A_phone_invitation_shows_each_queue_state_of_its_whatsapp_message_in_users()
+    {
+        await using var host = Host();
+        using var client = WhatsAppAttentionJourney.Client(host);
+        var (_, tenantId) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, client, Ct);
+        var fresh = WhatsAppAttentionJourney.NewPhone();
+        using (var imported = await WhatsAppAttentionJourney.PostAsync(client, Imports, Body(Input(fresh)), Ct))
+            Assert.Equal(HttpStatusCode.OK, imported.StatusCode);
+        var invitation = Assert.Single(await InvitationsAsync(host.Services, tenantId),
+            value => value.Destination.Phone?.Value == fresh);
+        var outboxId = Assert.IsType<Guid>(invitation.OutboxMessageId);
+        await using (var scope = host.Services.CreateAsyncScope())
+            Assert.Equal("whatsapp", (await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().OutboxMessages
+                .AsNoTracking().SingleAsync(message => message.Id == outboxId, Ct)).Channel);
+
+        await AssertDeliveryAsync("Pending");
+        foreach (var (status, expected) in new[]
+                 {
+                     (OutboxStatus.Uncertain, "Uncertain"), (OutboxStatus.Sent, "Sent"), (OutboxStatus.Failed, "Failed"),
+                     (OutboxStatus.Cancelled, "Failed"),
+                 })
+        {
+            await OutboxRows.SetStatusAsync(host.Services, outboxId, status, Ct);
+            await AssertDeliveryAsync(expected);
+        }
+        await OutboxRows.DeleteAsync(factory, outboxId, Ct);
+        await AssertDeliveryAsync("Sent");
+
+        async Task AssertDeliveryAsync(string expected)
+        {
+            var users = await WhatsAppAttentionJourney.JsonAsync(await client.GetAsync("/api/users/paged?pageSize=50", Ct), Ct);
+            var row = Assert.Single(users.GetProperty("items").EnumerateArray(), item => item.GetProperty("phone").GetString() == fresh);
+            Assert.Equal(expected, row.GetProperty("invitationDelivery").GetString());
+            var detail = await WhatsAppAttentionJourney.JsonAsync(
+                await client.GetAsync($"/api/users/{invitation.MemberId:D}", Ct), Ct);
+            Assert.Equal(expected, detail.GetProperty("invitationDelivery").GetString());
+        }
     }
 
     [Fact]

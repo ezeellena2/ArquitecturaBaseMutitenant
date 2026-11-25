@@ -153,7 +153,8 @@ internal sealed class CompanyMembershipService(
             member.State, member.MembershipStatus,
             [.. member.Roles.Select(role => new CompanyMemberRoleResponse(role.Id, RoleTexts.Name(role.Name),
                 role.IsSystemRole, role.Scope, role.CompanyId))], member.Version, member.CreatedAtUtc,
-            resolvable ? member.InvitationId : null, resolvable ? member.InvitationExpiresAtUtc : null);
+            resolvable ? member.InvitationId : null, resolvable ? member.InvitationExpiresAtUtc : null,
+            resolvable ? member.InvitationDelivery : null);
     }
 
     // Quien suma a alguien a su empresa no ve Usuarios: el correo va tapado y, sin nombre, el nombre es ese correo.

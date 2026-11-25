@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Companies;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -84,7 +85,10 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
                     && invitation.Status == Domain.Invitations.InvitationStatus.Pending)
                 .OrderByDescending(invitation => invitation.IssuedAtUtc)
                 .Select(invitation => new PendingInvitation(invitation.Id, invitation.MemberId,
-                    invitation.Destination, invitation.ExpiresAtUtc))
+                    invitation.Destination, invitation.ExpiresAtUtc,
+                    // B6: el estado de entrega sale de la cola, por el mensaje que la lleva.
+                    context.OutboxMessages.Where(outbox => outbox.Id == invitation.OutboxMessageId)
+                        .Select(outbox => (OutboxStatus?)outbox.Status).FirstOrDefault()))
                 .ToArrayAsync(cancellationToken))
             .GroupBy(item => item.MemberId)
             .ToDictionary(group => group.Key, group => group.First());
@@ -103,7 +107,8 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
                 item.Member.Version, item.Member.CreatedAtUtc,
                 item.Includes ? item.Invitation!.Id : null,
                 item.Includes ? item.Invitation!.ExpiresAtUtc : null,
-                item.Includes && !sharedInvitations.Contains(item.Member.MemberId)))
+                item.Includes && !sharedInvitations.Contains(item.Member.MemberId),
+                item.Includes ? InvitationDeliveryProjection.FromOutbox(item.Invitation!.OutboxStatus) : null))
             .ToArray();
         return new PagedResult<CompanyMemberRow>(mapped, page.Page, page.PageSize, page.TotalCount);
     }
@@ -355,7 +360,8 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
         public string? Email { get; init; }
     }
 
-    private sealed record PendingInvitation(Guid Id, Guid MemberId, Domain.Invitations.InvitationIdentity Destination, DateTime ExpiresAtUtc);
+    private sealed record PendingInvitation(Guid Id, Guid MemberId, Domain.Invitations.InvitationIdentity Destination,
+        DateTime ExpiresAtUtc, OutboxStatus? OutboxStatus);
 
     private sealed record MemberProjection(Guid MemberId, Guid? UserId, string DisplayName, string? Email,
         CompanyMembershipStatus MembershipStatus, uint Version, DateTime CreatedAtUtc);

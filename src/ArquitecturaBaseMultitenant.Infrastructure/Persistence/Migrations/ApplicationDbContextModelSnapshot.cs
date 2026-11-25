@@ -2177,6 +2177,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("ModifiedBy")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("OutboxMessageId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("RevokedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -5014,6 +5017,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("OperatorInvitationExpiresAtUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("OperatorInvitationOutboxMessageId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("text");

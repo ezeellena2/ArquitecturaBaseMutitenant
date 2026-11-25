@@ -76,6 +76,7 @@ internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILog
                 MaskedPrimaryPhone = deleted ? null : accountMethods
                     .Where(method => method.Type == LoginMethodType.Phone && method.IsPrimary && method.VerifiedAtUtc is not null)
                     .Select(method => PersonalDataMask.Phone(method.Value)).SingleOrDefault(),
+                InvitationDelivery = account.InvitationDelivery,
             };
         });
 
@@ -85,6 +86,7 @@ internal sealed class PlatformAccountService(IPlatformAccountReader reader, ILog
         {
             MaskedPrimaryPhone = row.State != PlatformAccountState.Deleted && row.PrimaryPhone is { } phone
                 ? PersonalDataMask.Phone(phone) : null,
+            InvitationDelivery = row.InvitationDelivery,
         };
 
     // La identidad eliminada guarda el nombre en la cultura del worker; se traduce al leer.

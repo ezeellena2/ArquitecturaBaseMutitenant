@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -16,7 +17,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 /// Invitations: las membresías salen de la proyección global. El estado derivado se calcula en SQL con la
 /// misma regla que <c>LoginMethodAvailabilityPolicy</c>, para filtrar, contar y mostrar con una sola expresión. Una
 /// invitación de operador sin aceptar es Invited o InvitationExpired según <c>nowUtc</c>; una revocada no figura
-/// (ADR 0042).
+/// (ADR 0042). Su estado de entrega sale de la cola, por el mensaje que la lleva (B6).
 /// </summary>
 internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPlatformAccountReader
 {
@@ -111,6 +112,7 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
                    Email = user.Email,
                    IsOperator = user.IsPlatformOperator,
                    InvitationExpiresAtUtc = user.OperatorInvitationExpiresAtUtc,
+                   InvitationOutboxMessageId = user.OperatorInvitationOutboxMessageId,
                    State = user.Status == UserStatus.Active
                        ? (user.OperatorInvitationExpiresAtUtc != null
                            ? (user.OperatorInvitationExpiresAtUtc > nowUtc
@@ -166,7 +168,13 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
             account.State == PlatformAccountState.Deleted ? null : context.LoginMethods
                 .Where(method => method.UserId == account.Id && method.Type == LoginMethodType.Phone
                     && method.IsPrimary && method.VerifiedAtUtc != null)
-                .Select(method => method.Value).FirstOrDefault());
+                .Select(method => method.Value).FirstOrDefault(),
+            // B6: solo una invitación de operador pendiente, vigente o vencida, con el estado que da la cola.
+            account.State == PlatformAccountState.Invited || account.State == PlatformAccountState.InvitationExpired
+                ? InvitationDeliveryProjection.FromOutbox(context.OutboxMessages
+                    .Where(outbox => outbox.Id == account.InvitationOutboxMessageId)
+                    .Select(outbox => (OutboxStatus?)outbox.Status).FirstOrDefault())
+                : null);
 
     private sealed class AccountProjection
     {
@@ -176,5 +184,6 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
         public bool IsOperator { get; init; }
         public PlatformAccountState State { get; init; }
         public DateTime? InvitationExpiresAtUtc { get; init; }
+        public Guid? InvitationOutboxMessageId { get; init; }
     }
 }

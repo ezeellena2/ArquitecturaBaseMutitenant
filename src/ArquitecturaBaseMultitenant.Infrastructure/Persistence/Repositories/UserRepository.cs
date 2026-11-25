@@ -80,6 +80,13 @@ internal sealed class UserRepository(UserManager<ApplicationUser> manager, Appli
         return (await RequireUserAsync(userId, cancellationToken)).RenewOperatorInvitation(expiresAtUtc);
     }
 
+    public async Task RecordOperatorInvitationDeliveryAsync(Guid userId, Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        context.RequireTransaction();
+        (await RequireUserAsync(userId, cancellationToken)).RecordOperatorInvitationDelivery(outboxMessageId);
+    }
+
     public async Task<Result> AcceptOperatorInvitationAsync(Guid userId, DateTime acceptedAtUtc,
         CancellationToken cancellationToken)
     {

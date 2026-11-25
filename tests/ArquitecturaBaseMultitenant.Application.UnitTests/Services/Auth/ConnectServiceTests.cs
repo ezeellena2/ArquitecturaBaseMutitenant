@@ -277,6 +277,8 @@ public sealed class ConnectServiceTests
             throw new NotSupportedException();
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> RenewOperatorInvitationAsync(Guid userId, DateTime expiresAtUtc,
             CancellationToken ct) => throw new NotSupportedException();
+        public Task RecordOperatorInvitationDeliveryAsync(Guid userId, Guid? outboxMessageId, CancellationToken ct) =>
+            throw new NotSupportedException();
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> AcceptOperatorInvitationAsync(Guid userId, DateTime acceptedAtUtc,
             CancellationToken ct) => throw new NotSupportedException();
         public Task<ArquitecturaBaseMultitenant.Domain.Results.Result> DiscardOperatorInvitationAsync(Guid userId, DateTime discardedAtUtc,

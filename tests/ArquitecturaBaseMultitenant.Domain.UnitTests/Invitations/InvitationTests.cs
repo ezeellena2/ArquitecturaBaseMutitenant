@@ -159,6 +159,26 @@ public sealed class InvitationTests
         Assert.Equal(InvitationErrors.AlreadyUsed, invitation.AcceptVerifiedEmail(userId, invitation.Destination.Email!, IssuedAtUtc).Error);
     }
 
+    /// <summary>B6: la invitación nueva anota una sola vez el mensaje de la cola que la lleva; reenviar emite otra.</summary>
+    [Fact]
+    public void A_new_pending_invitation_takes_its_outbox_message_once()
+    {
+        var invitation = Issue();
+        Assert.Null(invitation.OutboxMessageId);
+        Assert.Throws<ArgumentException>(() => invitation.AttachOutboxMessage(Guid.Empty));
+        var outboxMessageId = Guid.CreateVersion7();
+
+        invitation.AttachOutboxMessage(outboxMessageId);
+
+        Assert.Equal(outboxMessageId, invitation.OutboxMessageId);
+        Assert.Throws<InvalidOperationException>(() => invitation.AttachOutboxMessage(Guid.CreateVersion7()));
+        Assert.Equal(outboxMessageId, invitation.OutboxMessageId);
+        var revoked = Issue();
+        Assert.True(revoked.Revoke(IssuedAtUtc).IsSuccess);
+        Assert.Throws<InvalidOperationException>(() => revoked.AttachOutboxMessage(outboxMessageId));
+        Assert.Null(revoked.OutboxMessageId);
+    }
+
     [Fact]
     public void Verified_email_does_not_accept_an_expired_or_revoked_invitation()
     {

@@ -71,7 +71,8 @@ internal sealed class PlatformOperatorInvitationService(
                 if (invited.IsFailure) return invited.Error;
                 audit.RecordOperator(invited.Value.Id, SecurityEventType.PlatformOperatorInvited,
                     AuditTexts.OperatorInvitationReason(), PlatformOperatorChanges.Between([], granted));
-                await notifier.EnqueueAsync(invited.Value, audit.CurrentOperatorId(), work);
+                await provisioner.RecordDeliveryAsync(invited.Value.Id,
+                    await notifier.EnqueueAsync(invited.Value, audit.CurrentOperatorId(), work), work);
                 return new PlatformOperatorInvitationResponse(invited.Value.Id, invited.Value.ExpiresAtUtc);
             }, CommitPolicy.OnSuccess, ct);
         });
@@ -88,7 +89,8 @@ internal sealed class PlatformOperatorInvitationService(
                 if (allowed.IsFailure) return allowed.Error;
                 audit.RecordOperator(accountId, SecurityEventType.PlatformOperatorInvitationResent,
                     AuditTexts.OperatorInvitationResendReason(), changes);
-                await notifier.EnqueueAsync(renewed.Value, audit.CurrentOperatorId(), work);
+                await provisioner.RecordDeliveryAsync(accountId,
+                    await notifier.EnqueueAsync(renewed.Value, audit.CurrentOperatorId(), work), work);
                 return new PlatformOperatorInvitationResponse(accountId, renewed.Value.ExpiresAtUtc);
             }, CommitPolicy.OnSuccess, ct));
 

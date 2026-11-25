@@ -54,7 +54,8 @@ internal sealed class InvitationDeliveryIssuer(IEnumerable<IInvitationChannel> c
         return null;
     }
 
-    internal async Task EnqueueAsync(Invitation invitation, TenantRow organization, string token,
+    /// <summary>Encola la invitación por su canal y devuelve el id del mensaje de la cola, o null si no salió nada.</summary>
+    internal async Task<Guid?> EnqueueAsync(Invitation invitation, TenantRow organization, string token,
         Guid? recipientId, InvitationDeliveryDestination destination, CancellationToken ct,
         TenantSettings? preparedSettings = null, InvitationGrantRow? grant = null)
     {
@@ -73,7 +74,7 @@ internal sealed class InvitationDeliveryIssuer(IEnumerable<IInvitationChannel> c
                 && method.Value == invitation.Destination.Value);
         // Al invitar, la empresa y los roles todavía no están guardados y llegan del llamador; al reenviar, se leen.
         grant ??= await invitations.FindGrantAsync(invitation.MemberId, null, ct);
-        await channel.EnqueueAsync(destination, new InvitationNotice(organization.Name, inviterName,
+        return await channel.EnqueueAsync(destination, new InvitationNotice(organization.Name, inviterName,
             invitation.ExpiresAtUtc, timeZoneId, url, usesEmailCode, grant.Companies, grant.Roles), profile, recipientId, ct);
     }
 }

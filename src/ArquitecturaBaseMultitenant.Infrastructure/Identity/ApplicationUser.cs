@@ -45,6 +45,12 @@ public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
     /// </summary>
     public DateTime? OperatorInvitationExpiresAtUtc { get; private set; }
 
+    /// <summary>
+    /// B6: el mensaje de la cola que lleva la invitación de operador pendiente (la última que se mandó). El estado de
+    /// entrega sale de la cola al leer; null en las anteriores, que se leen como enviadas.
+    /// </summary>
+    public Guid? OperatorInvitationOutboxMessageId { get; private set; }
+
     public static Result<ApplicationUser> Create(string? displayName, string culture, string timeZoneId,
         DateTime? createdAtUtc = null)
     {
@@ -182,7 +188,20 @@ public sealed class ApplicationUser : IdentityUser<Guid>, IVersioned
         if (!HasPendingOperatorInvitation || acceptedAtUtc >= OperatorInvitationExpiresAtUtc)
             return UserErrors.InvalidTransition;
         OperatorInvitationExpiresAtUtc = null;
+        OperatorInvitationOutboxMessageId = null;
         return Result.Success();
+    }
+
+    /// <summary>
+    /// Anota el mensaje de la cola de la invitación de operador recién emitida o reenviada; reenviar reemplaza al anterior.
+    /// Sin mensaje queda null y se lee como enviada.
+    /// </summary>
+    public void RecordOperatorInvitationDelivery(Guid? outboxMessageId)
+    {
+        if (outboxMessageId == Guid.Empty) throw new ArgumentException("An outbox message ID cannot be empty.", nameof(outboxMessageId));
+        if (!HasPendingOperatorInvitation)
+            throw new InvalidOperationException("Only a pending operator invitation takes its outbox message.");
+        OperatorInvitationOutboxMessageId = outboxMessageId;
     }
 
     /// <summary>

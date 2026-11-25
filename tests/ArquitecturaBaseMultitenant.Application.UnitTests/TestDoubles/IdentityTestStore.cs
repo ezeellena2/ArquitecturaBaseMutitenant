@@ -25,6 +25,7 @@ internal sealed class IdentityTestStore : IUserRepository, ILoginMethodRepositor
     Task IUserRepository.SetPlatformOperatorAsync(Guid userId, bool isOperator, CancellationToken cancellationToken) => throw new NotSupportedException();
     Task IUserRepository.InvitePlatformOperatorAsync(Guid userId, DateTime expiresAtUtc, CancellationToken cancellationToken) { Users[userId] = Users[userId] with { IsPlatformOperator = true, OperatorInvitationExpiresAtUtc = expiresAtUtc }; return Task.CompletedTask; }
     Task<Result> IUserRepository.RenewOperatorInvitationAsync(Guid userId, DateTime expiresAtUtc, CancellationToken cancellationToken) => throw new NotSupportedException();
+    Task IUserRepository.RecordOperatorInvitationDeliveryAsync(Guid userId, Guid? outboxMessageId, CancellationToken cancellationToken) => throw new NotSupportedException();
     Task<Result> IUserRepository.AcceptOperatorInvitationAsync(Guid userId, DateTime acceptedAtUtc, CancellationToken cancellationToken) => throw new NotSupportedException();
     Task<Result> IUserRepository.DiscardOperatorInvitationAsync(Guid userId, DateTime discardedAtUtc, CancellationToken cancellationToken) => throw new NotSupportedException();
     Task<UserAccountRow> IUserRepository.CreateAsync(string? displayName, string culture, string timeZoneId, CancellationToken cancellationToken) { var row = new UserAccountRow(Guid.CreateVersion7(), displayName, culture, timeZoneId, UserStatus.Active, false, null, null); Users.Add(row.Id, row); return Task.FromResult(row); }

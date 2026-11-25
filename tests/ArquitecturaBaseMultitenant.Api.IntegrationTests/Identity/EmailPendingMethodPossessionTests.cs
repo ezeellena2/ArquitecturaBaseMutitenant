@@ -203,7 +203,7 @@ public sealed class EmailPendingMethodPossessionTests
     {
         public string Key => inner.Key;
         public LoginMethodType MethodType => inner.MethodType;
-        public Task EnqueueAsync(Guid? userId, string destination, AccountNotice notice, CultureProfile culture, CancellationToken ct) =>
+        public Task<Guid?> EnqueueAsync(Guid? userId, string destination, AccountNotice notice, CultureProfile culture, CancellationToken ct) =>
             failure.Enabled ? throw new InvalidOperationException("Synthetic account notice failure.")
                 : inner.EnqueueAsync(userId, destination, notice, culture, ct);
     }
