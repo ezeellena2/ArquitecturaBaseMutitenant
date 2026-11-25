@@ -139,7 +139,7 @@ Los textos van en `Billing.resx` y `.en.resx`.
 - **Una por módulo:** una nueva lista borra el archivo de la anterior.
 
 **`platform.TenantFeatures`:**
-- **Las columnas,** si las Costuras no las sumaron: `State` (`Active`, `Grace`, `Suspended` o `Ended`), `SourceRefId?` (el pedido o la suscripción), `GraceUntilUtc?`, `SuspendedAtUtc?` y `EndedAtUtc?`.
+- **Las columnas** (las costuras no las suman): `State` (`Active`, `Grace`, `Suspended` o `Ended`), `SourceRefId?` (el pedido o la suscripción), `GraceUntilUtc?`, `SuspendedAtUtc?` y `EndedAtUtc?`.
 - **Las filas nuevas:** empiezan a escribirse las `Approved` y `Subscription` (0069 §8).
 - **Quién las escribe:** solo `ModuleUsageWriter`. Mantiene `Enabled` y `ExpiresAtUtc` de acuerdo con el estado: `Suspended` y `Ended` van con `Enabled = false`.
 
