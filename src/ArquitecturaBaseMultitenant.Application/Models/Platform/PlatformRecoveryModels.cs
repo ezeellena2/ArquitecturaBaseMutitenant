@@ -7,7 +7,7 @@ namespace ArquitecturaBaseMultitenant.Application.Models.Platform;
 /// <summary>Bandeja Recuperaciones: búsqueda por cuenta, correo o teléfono y filtro por estado.</summary>
 public sealed record ListPlatformRecoveriesRequest : PagedRequest
 {
-    public static readonly IReadOnlyCollection<string> SortableFields = ["createdAt", "createdAtUtc", "status"];
+    public static readonly IReadOnlyCollection<string> SortableFields = ["accountName", "createdAt", "createdAtUtc", "status"];
     public AccountRecoveryStatus? Status { get; init; }
 }
 

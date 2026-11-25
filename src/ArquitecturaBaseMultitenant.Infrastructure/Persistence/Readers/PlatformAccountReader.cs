@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Models.Invitations;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
@@ -24,6 +25,10 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
     private static readonly SortMap<AccountProjection> Sort = new()
     {
         ["name"] = account => account.DisplayName,
+        ["contact"] = account => account.Contact,
+        ["lastSignInAtUtc"] = account => account.LastSignInAtUtc,
+        ["state"] = account => account.State,
+        ["invitationDelivery"] = account => account.InvitationDelivery,
     };
 
     public Task<PagedResult<PlatformAccountRow>> ListAsync(ListPlatformAccountsRequest request,
@@ -105,6 +110,10 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
                    && (method.ManagedByTenantId == null || context.UserTenantAccesses.Any(access => access.UserId == user.Id
                        && access.TenantId == method.ManagedByTenantId && access.Status == MemberStatus.Active
                        && context.Tenants.Any(tenant => tenant.Id == access.TenantId && tenant.Status == TenantStatus.Active))))
+               // Una invitación de operador pendiente, vigente o vencida: Invited o InvitationExpired.
+               let invitation = user.Status == UserStatus.Active && user.OperatorInvitationExpiresAtUtc != null
+               let outboxStatus = context.OutboxMessages.Where(outbox => outbox.Id == user.OperatorInvitationOutboxMessageId)
+                   .Select(outbox => (OutboxStatus?)outbox.Status).FirstOrDefault()
                select new AccountProjection
                {
                    Id = user.Id,
@@ -121,6 +130,21 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
                        : user.Status == UserStatus.Suspended ? PlatformAccountState.Suspended
                        : user.Status == UserStatus.PendingDeletion ? PlatformAccountState.PendingDeletion
                        : PlatformAccountState.Deleted,
+                   // Lo que muestran las columnas que ordenan (264): el teléfono principal o el correo, el último ingreso
+                   // (una invitación dice «Nunca») y la entrega de la invitación, como InvitationDeliveryProjection.FromOutbox.
+                   Contact = (user.Status == UserStatus.Deleted ? null : context.LoginMethods
+                       .Where(method => method.UserId == user.Id && method.Type == LoginMethodType.Phone
+                           && method.IsPrimary && method.VerifiedAtUtc != null)
+                       .Select(method => method.Value).FirstOrDefault()) ?? user.Email,
+                   LastSignInAtUtc = invitation ? null : context.LoginAudits
+                       .Where(audit => audit.UserId == user.Id && audit.Succeeded)
+                       .Max(audit => (DateTime?)audit.OccurredAtUtc),
+                   InvitationDelivery = !invitation ? null
+                       : outboxStatus == OutboxStatus.Pending ? InvitationDeliveryStatus.Pending
+                       : outboxStatus == OutboxStatus.Uncertain ? InvitationDeliveryStatus.Uncertain
+                       : outboxStatus == OutboxStatus.Failed || outboxStatus == OutboxStatus.Cancelled
+                           ? InvitationDeliveryStatus.Failed
+                       : InvitationDeliveryStatus.Sent,
                };
     }
 
@@ -185,5 +209,8 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
         public PlatformAccountState State { get; init; }
         public DateTime? InvitationExpiresAtUtc { get; init; }
         public Guid? InvitationOutboxMessageId { get; init; }
+        public string? Contact { get; init; }
+        public DateTime? LastSignInAtUtc { get; init; }
+        public InvitationDeliveryStatus? InvitationDelivery { get; init; }
     }
 }

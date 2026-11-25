@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Companies;
+using ArquitecturaBaseMultitenant.Application.Models.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -22,6 +23,8 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
         ["displayName"] = row => row.DisplayName,
         ["email"] = row => row.Email,
         ["state"] = row => row.State,
+        ["invitationDelivery"] = row => row.InvitationDelivery,
+        ["invitationExpiresAtUtc"] = row => row.InvitationExpiresAtUtc,
     };
 
     private static readonly SortMap<CandidateRow> CandidateSort = new()
@@ -49,6 +52,20 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
                 : input.UserStatus == UserStatus.PendingDeletion
                     ? CompanyMemberState.PendingDeletion
                     : CompanyMemberState.Active,
+        // La entrega y el vencimiento, solo en la invitación que incluye a esta empresa, como los muestra la fila; la
+        // entrega sigue a InvitationDeliveryProjection.FromOutbox.
+        InvitationExpiresAtUtc = input.MemberStatus == MemberStatus.Invited
+            && input.MembershipStatus == CompanyMembershipStatus.Active ? input.PendingInvitationExpiresAtUtc : null,
+        InvitationDelivery = input.MemberStatus != MemberStatus.Invited
+            || input.MembershipStatus != CompanyMembershipStatus.Active || input.PendingInvitationExpiresAtUtc == null
+            ? null
+            : input.InvitationOutboxStatus == OutboxStatus.Pending
+                ? InvitationDeliveryStatus.Pending
+                : input.InvitationOutboxStatus == OutboxStatus.Uncertain
+                    ? InvitationDeliveryStatus.Uncertain
+                    : input.InvitationOutboxStatus == OutboxStatus.Failed || input.InvitationOutboxStatus == OutboxStatus.Cancelled
+                        ? InvitationDeliveryStatus.Failed
+                        : InvitationDeliveryStatus.Sent,
     };
 
     public async Task<PagedResult<CompanyMemberRow>> ListAsync(Guid companyId,
@@ -305,6 +322,16 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
                      && method.VerifiedAtUtc != null)
                  .OrderByDescending(method => method.IsPrimary).ThenBy(method => method.Id)
                  .Select(method => method.Value).FirstOrDefault(),
+             PendingInvitationExpiresAtUtc = context.Invitations.Where(invitation => invitation.TenantId == tenantId
+                     && invitation.MemberId == member.Id && invitation.Status == Domain.Invitations.InvitationStatus.Pending)
+                 .OrderByDescending(invitation => invitation.IssuedAtUtc)
+                 .Select(invitation => (DateTime?)invitation.ExpiresAtUtc).FirstOrDefault(),
+             InvitationOutboxStatus = context.Invitations.Where(invitation => invitation.TenantId == tenantId
+                     && invitation.MemberId == member.Id && invitation.Status == Domain.Invitations.InvitationStatus.Pending)
+                 .OrderByDescending(invitation => invitation.IssuedAtUtc)
+                 .Select(invitation => context.OutboxMessages.Where(outbox => outbox.Id == invitation.OutboxMessageId)
+                     .Select(outbox => (OutboxStatus?)outbox.Status).FirstOrDefault())
+                 .FirstOrDefault(),
          })
         .Select(WithState);
 
@@ -341,6 +368,8 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
         public CompanyMembershipStatus MembershipStatus { get; init; }
         public string? DisplayName { get; init; }
         public string? Email { get; init; }
+        public DateTime? PendingInvitationExpiresAtUtc { get; init; }
+        public OutboxStatus? InvitationOutboxStatus { get; init; }
     }
 
     /// <summary>Un miembro con su estado: lo que se filtra, se ordena y se cuenta.</summary>
@@ -351,6 +380,8 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
         public CompanyMemberState State { get; init; }
         public string? DisplayName { get; init; }
         public string? Email { get; init; }
+        public DateTime? InvitationExpiresAtUtc { get; init; }
+        public InvitationDeliveryStatus? InvitationDelivery { get; init; }
     }
 
     /// <summary>Una persona que se puede sumar a la empresa: lo que se ordena y se muestra.</summary>

@@ -17,7 +17,7 @@ public enum OrganizationUserState
 
 public sealed record ListOrganizationUsersRequest : PagedRequest
 {
-    public static readonly IReadOnlyCollection<string> SortableFields = ["displayName", "email", "state", "createdAtUtc"];
+    public static readonly IReadOnlyCollection<string> SortableFields = ["displayName", "email", "state", "invitationDelivery", "invitationExpiresAtUtc", "createdAtUtc"];
     public OrganizationUserState? State { get; init; }
     public Guid? CompanyId { get; init; }
     /// <summary>Internal typed assignment filter; not exposed by the HTTP adapter.</summary>

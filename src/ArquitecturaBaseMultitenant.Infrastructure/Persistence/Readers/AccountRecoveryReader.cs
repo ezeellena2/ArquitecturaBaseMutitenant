@@ -12,17 +12,24 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 /// </summary>
 internal sealed class AccountRecoveryReader(ApplicationDbContext context) : IAccountRecoveryReader
 {
-    private static readonly SortMap<Domain.Platform.AccountRecoveryRequest> Sort = new()
+    private static readonly SortMap<RecoverySortRow> Sort = new()
     {
+        ["accountName"] = row => row.AccountName,
         // «createdAt» queda por la versión anterior del front, que lo sigue mandando mientras conviven (ADR 0060).
-        ["createdAt"] = row => row.CreatedAtUtc,
-        ["createdAtUtc"] = row => row.CreatedAtUtc,
-        ["status"] = row => row.Status,
+        ["createdAt"] = row => row.Request.CreatedAtUtc,
+        ["createdAtUtc"] = row => row.Request.CreatedAtUtc,
+        ["status"] = row => row.Request.Status,
     };
 
     public Task<PagedResult<PlatformRecoveryRow>> ListAsync(ListPlatformRecoveriesRequest request, CancellationToken ct) =>
-        Rows(Filter(request).ApplySort(SortDescriptor.Parse(request.Sort), Sort,
-            new SortDescriptor("createdAt", true), row => row.Id)).ToPagedResultAsync(request, ct);
+        Rows(Filter(request)
+            .Select(row => new RecoverySortRow
+            {
+                Request = row,
+                AccountName = context.Users.Where(user => user.Id == row.UserId).Select(user => user.DisplayName).FirstOrDefault(),
+            })
+            .ApplySort(SortDescriptor.Parse(request.Sort), Sort, new SortDescriptor("createdAt", true), row => row.Request.Id)
+            .Select(row => row.Request)).ToPagedResultAsync(request, ct);
 
     public async Task<PlatformRecoveryFilterCounts> CountAsync(ListPlatformRecoveriesRequest request, CancellationToken ct)
     {
@@ -52,4 +59,11 @@ internal sealed class AccountRecoveryReader(ApplicationDbContext context) : IAcc
             row.DecidedAtUtc,
             context.Users.Where(user => user.Id == row.DecidedByOperatorId).Select(user => user.DisplayName).FirstOrDefault(),
             row.DecisionReason, row.Version);
+
+    /// <summary>Un pedido con lo que se ordena: el nombre de la cuenta, el de su fila (vacío sin cuenta o sin nombre).</summary>
+    private sealed class RecoverySortRow
+    {
+        public Domain.Platform.AccountRecoveryRequest Request { get; init; } = null!;
+        public string? AccountName { get; init; }
+    }
 }

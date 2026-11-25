@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Models.Invitations;
 using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Application.Models.Home;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
@@ -24,6 +25,8 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         ["displayName"] = row => row.DisplayName,
         ["email"] = row => row.Email,
         ["state"] = row => row.State,
+        ["invitationDelivery"] = row => row.InvitationDelivery,
+        ["invitationExpiresAtUtc"] = row => row.InvitationExpiresAtUtc,
         ["createdAtUtc"] = row => row.CreatedAtUtc,
     };
 
@@ -41,6 +44,18 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         CreatedAtUtc = input.CreatedAtUtc,
         PendingSinceUtc = input.MemberStatus == MemberStatus.Invited
             ? input.PendingInvitationExpiresAtUtc : input.DeletionRequestedAtUtc,
+        // La entrega y el vencimiento, solo en una invitación (Invited o Expired), como los muestra la fila; la entrega
+        // sigue a InvitationDeliveryProjection.FromOutbox.
+        InvitationExpiresAtUtc = input.MemberStatus == MemberStatus.Invited ? input.PendingInvitationExpiresAtUtc : null,
+        InvitationDelivery = input.MemberStatus != MemberStatus.Invited || input.PendingInvitationExpiresAtUtc == null
+            ? null
+            : input.InvitationOutboxStatus == OutboxStatus.Pending
+                ? InvitationDeliveryStatus.Pending
+                : input.InvitationOutboxStatus == OutboxStatus.Uncertain
+                    ? InvitationDeliveryStatus.Uncertain
+                    : input.InvitationOutboxStatus == OutboxStatus.Failed || input.InvitationOutboxStatus == OutboxStatus.Cancelled
+                        ? InvitationDeliveryStatus.Failed
+                        : InvitationDeliveryStatus.Sent,
         State = input.MemberStatus == MemberStatus.Invited && input.PendingInvitationExpiresAtUtc != null
             ? input.PendingInvitationExpiresAtUtc <= input.NowUtc
                 ? OrganizationUserState.Expired
@@ -165,6 +180,12 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
                     && invitation.MemberId == member.Id && invitation.Status == InvitationStatus.Pending)
                 .OrderByDescending(invitation => invitation.IssuedAtUtc)
                 .Select(invitation => (DateTime?)invitation.ExpiresAtUtc).FirstOrDefault(),
+            InvitationOutboxStatus = context.Invitations.Where(invitation => invitation.TenantId == tenantId
+                    && invitation.MemberId == member.Id && invitation.Status == InvitationStatus.Pending)
+                .OrderByDescending(invitation => invitation.IssuedAtUtc)
+                .Select(invitation => context.OutboxMessages.Where(outbox => outbox.Id == invitation.OutboxMessageId)
+                    .Select(outbox => (OutboxStatus?)outbox.Status).FirstOrDefault())
+                .FirstOrDefault(),
             NowUtc = nowUtc,
             // Sin cuenta (una invitación) no hay nombre: queda null y va al final, como antes.
             DisplayName = context.Users.Where(user => user.Id == member.UserId)
@@ -304,6 +325,7 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         public MemberStatus MemberStatus { get; init; }
         public UserStatus? UserStatus { get; init; }
         public DateTime? PendingInvitationExpiresAtUtc { get; init; }
+        public OutboxStatus? InvitationOutboxStatus { get; init; }
         public DateTime? DeletionRequestedAtUtc { get; init; }
         public DateTime NowUtc { get; init; }
         public string? DisplayName { get; init; }
@@ -320,6 +342,8 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         public string? Email { get; init; }
         public DateTime CreatedAtUtc { get; init; }
         public DateTime? PendingSinceUtc { get; init; }
+        public DateTime? InvitationExpiresAtUtc { get; init; }
+        public InvitationDeliveryStatus? InvitationDelivery { get; init; }
     }
 
     private sealed record UserProjection(Guid MemberId, Guid? UserId, string DisplayName, string? Email,

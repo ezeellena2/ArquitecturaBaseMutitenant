@@ -31,12 +31,26 @@ public sealed class SortIndexTests(ApiFactory factory)
         new("CompanyMembershipReader.Sort", "displayName", null),
         new("CompanyMembershipReader.Sort", "email", null),
         new("CompanyMembershipReader.Sort", "state", null),
+        new("CompanyMembershipReader.Sort", "invitationDelivery", null),
+        new("CompanyMembershipReader.Sort", "invitationExpiresAtUtc", null),
         new("CompanyMembershipReader.CandidateSort", "displayName", null),
         new("OrganizationUserReader.Sort", "displayName", null),
         new("OrganizationUserReader.Sort", "email", null),
         new("OrganizationUserReader.Sort", "state", null),
+        new("OrganizationUserReader.Sort", "invitationDelivery", null),
+        new("OrganizationUserReader.Sort", "invitationExpiresAtUtc", null),
         new("OrganizationUserReader.Sort", "createdAtUtc", new("tenant", "Members", "CreatedAtUtc")),
         new("PlatformAccountReader.Sort", "name", new("identity", "AspNetUsers", "DisplayName")),
+        // Una cuenta muestra su teléfono principal o su correo, su último ingreso, su estado y la entrega de su invitación;
+        // un pedido de recuperación, el nombre de su cuenta.
+        new("PlatformAccountReader.Sort", "contact", null),
+        new("PlatformAccountReader.Sort", "lastSignInAtUtc", null),
+        new("PlatformAccountReader.Sort", "state", null),
+        new("PlatformAccountReader.Sort", "invitationDelivery", null),
+        new("AccountRecoveryReader.Sort", "accountName", null),
+        new("AccountRecoveryReader.Sort", "createdAt", new("platform", "AccountRecoveryRequests", "CreatedAtUtc")),
+        new("AccountRecoveryReader.Sort", "createdAtUtc", new("platform", "AccountRecoveryRequests", "CreatedAtUtc")),
+        new("AccountRecoveryReader.Sort", "status", new("platform", "AccountRecoveryRequests", "Status")),
         // Un rol cuenta sus personas y los permisos de su alcance; una empresa, sus miembros activos; una organización toma
         // sus contadores y el Dueño que muestra su fila (el nombre o, sin nombre, el correo).
         new("RoleReader.Sort", "name", new("tenant", "Roles", "Name")),

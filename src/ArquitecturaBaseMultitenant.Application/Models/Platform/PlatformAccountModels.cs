@@ -38,7 +38,7 @@ public sealed record PlatformAccountActionRequest(uint? Version, string? Reason)
 
 public sealed record ListPlatformAccountsRequest : PagedRequest
 {
-    public static readonly IReadOnlyCollection<string> SortableFields = ["name"];
+    public static readonly IReadOnlyCollection<string> SortableFields = ["name", "contact", "lastSignInAtUtc", "state", "invitationDelivery"];
     public PlatformAccountState? State { get; init; }
     public PlatformAccountKind? Kind { get; init; }
 }
