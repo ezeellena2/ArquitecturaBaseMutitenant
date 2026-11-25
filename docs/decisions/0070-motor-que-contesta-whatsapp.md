@@ -18,7 +18,7 @@ Sin ese reparto, el servicio del turno junta un `switch` por acción y un `if` p
 
      | Paso | Pieza | Qué hace |
      |---|---|---|
-     | Tomar el chat | `WhatsAppAssistantWorker` | toma los chats con `TurnDueAtUtc` vencido, usando esa fecha como lease. La cola es una sola y durable, y corre una vez entre copias ([concurrencia](../rules/concurrencia.md)) |
+     | Tomar el chat | `WhatsAppAssistantWorker` | toma los chats con `TurnDueAtUtc` vencido, usando esa fecha como lease. La cola es una sola y durable, y corre una vez entre copias ([concurrencia](../rules/concurrencia.md)); no toma nada si el anillo de esta copia no coincide (`IKeyRingReadiness`, [0064](0064-reglas-de-toda-la-ia.md) §11) |
      | Ver si corresponde | `WhatsAppAssistantTurnPolicy` | el modo Asistente, la ventana de 24 horas y el tope del mes |
      | Elegir quién contesta | `WhatsAppAgentResolver` (E24) | el asistente del equipo, o el principal |
      | Armar el turno | `WhatsAppConversationTurnBuilder` | arma `ConversationTurn` con los mensajes, los candidatos que da Formularios por su puerto, lo ya hecho y las acciones permitidas en la bandeja, con su descripción. El pedido al modelo lo arma el Assistant (`AssistantTurnBuilder`, B4) |
