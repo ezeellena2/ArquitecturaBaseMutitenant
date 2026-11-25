@@ -69,7 +69,6 @@ public sealed class GoogleNamesTests(ApiFactory factory)
     [InlineData("suspended")]
     [InlineData("deletion")]
     [InlineData("operator")]
-    [InlineData("locked")]
     public async Task Rejected_login_never_imports_names_or_advances_the_profile(string rejection)
     {
         var identity = Identity();
@@ -89,7 +88,6 @@ public sealed class GoogleNamesTests(ApiFactory factory)
                     case "suspended": Assert.True(user.Suspend().IsSuccess); break;
                     case "deletion": Assert.True(user.RequestDeletion("Prueba", now.UtcDateTime, 30).IsSuccess); break;
                     case "operator": user.GrantPlatformOperator(); break;
-                    case "locked": user.LockoutEnabled = true; user.LockoutEnd = now.AddMinutes(10); break;
                 }
                 return Result.Success();
             }, CommitPolicy.OnSuccess, Ct);
@@ -98,6 +96,41 @@ public sealed class GoogleNamesTests(ApiFactory factory)
         using var callback = await client.GetAsync("/api/auth/external/callback", Ct);
         Assert.Contains("error=", callback.Headers.Location!.OriginalString, StringComparison.Ordinal);
         AssertNames(await ReadUserAsync(host, account.UserId), null, null, 0);
+    }
+
+    [Fact]
+    public async Task Account_locked_by_failed_codes_enters_with_Google_imports_names_and_clears_the_failures()
+    {
+        // B4: el bloqueo de Identity es de los códigos; Google no lo mira, pone en cero los fallos y el bloqueo en
+        // curso sigue para los códigos hasta vencer.
+        var identity = Identity();
+        using var host = HostWith(identity);
+        using var client = Client(host);
+        var account = await AccountJourney.RegisterAsync(host, client, Ct);
+        await SetNamesAsync(host, account.UserId, null, null, identity.Subject);
+        var lockoutEnd = DateTimeOffset.MinValue;
+        await using (var scope = host.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var user = await services.GetRequiredService<ApplicationDbContext>().Users.SingleAsync(row => row.Id == account.UserId, ct);
+                lockoutEnd = services.GetRequiredService<TimeProvider>().GetUtcNow().AddMinutes(10);
+                user.LockoutEnabled = true;
+                user.LockoutEnd = lockoutEnd;
+                user.AccessFailedCount = 3;
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        await ChallengeAsync(client, "consumer");
+        using var callback = await client.GetAsync("/api/auth/external/callback", Ct);
+        Assert.Equal(HttpStatusCode.Redirect, callback.StatusCode);
+        Assert.DoesNotContain("error=", callback.Headers.Location!.OriginalString, StringComparison.Ordinal);
+        var entered = await ReadUserAsync(host, account.UserId);
+        AssertNames(entered, "María José", "de la Cruz", 1);
+        Assert.Equal(0, entered.AccessFailedCount);
+        Assert.NotNull(entered.LockoutEnd);
+        Assert.Equal(lockoutEnd, entered.LockoutEnd.Value, TimeSpan.FromMilliseconds(1));
     }
 
     [Theory]
