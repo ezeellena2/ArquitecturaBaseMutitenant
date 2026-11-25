@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Models.Notifications;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 
 internal sealed class WhatsAppAccountNoticeChannel(IWhatsAppChannelSettings settings, IWhatsAppTemplateRenderer templates, IOutbox outbox) : IAccountNoticeChannel
@@ -14,6 +15,6 @@ internal sealed class WhatsAppAccountNoticeChannel(IWhatsAppChannelSettings sett
     {
         if (!settings.IsEnabled || notice is AccountNotice.OperatorInvited) return null;
         var message = await templates.RenderNoticeAsync(destination, notice, culture, cancellationToken);
-        return message is null ? null : outbox.Enqueue(Key, JsonSerializer.Serialize(message), userId);
+        return message is null ? null : outbox.Enqueue(Key, JsonSerializer.Serialize(message), userId, message.QueueOptions(OutboxPriority.Notice));
     }
 }

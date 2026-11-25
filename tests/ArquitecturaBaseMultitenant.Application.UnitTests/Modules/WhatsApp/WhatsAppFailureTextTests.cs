@@ -32,12 +32,19 @@ public sealed class WhatsAppFailureTextTests
         {
             CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("es-AR");
             var other = WhatsAppConversationResponseBuilder.FailureText("Http.Unexpected");
-            string[] codes = ["RecipientNotAllowed", "WindowExpired", "PaymentRequired", "Undeliverable", "RateLimited", "Credentials", "Permissions",
-                "Rejected", "Network", "Timeout", "InvalidResponse", "ChannelUnavailable"];
-            Assert.All(codes, code => Assert.NotEqual(other, WhatsAppConversationResponseBuilder.FailureText("WhatsApp.Send." + code)));
+            // Los diez motivos (ADR 0066 §3), cada uno con su texto y sin repetirse.
+            var texts = WhatsAppSendFailures.All.Select(WhatsAppConversationResponseBuilder.FailureText).ToArray();
+            Assert.All(texts, text => Assert.NotEqual(other, text));
+            Assert.Equal(texts.Length, texts.Distinct(StringComparer.Ordinal).Count());
+            // Los del tablero (WA-Chats-Base2): «No se pudo enviar» lleva debajo uno de estos.
+            Assert.Equal("Ese número no puede recibir mensajes de esta cuenta.", WhatsAppConversationResponseBuilder.FailureText(WhatsAppSendFailures.NotAllowed));
+            Assert.Equal("WhatsApp rechazó el mensaje.", WhatsAppConversationResponseBuilder.FailureText(WhatsAppSendFailures.Rejected));
+            // Lo que quedó «Sin confirmar» no es un motivo de «No se pudo enviar».
+            Assert.Equal(other, WhatsAppConversationResponseBuilder.FailureText("WhatsApp.Send.Uncertain"));
             var page = new PagedResult<WhatsAppChatMessageResponse>([new(Guid.NewGuid(), WhatsAppChatMessageKind.Text, WhatsAppMessageDirection.Outbound,
-                "Lucía", "Hola", null, WhatsAppChatMessageStatus.Failed, "WhatsApp.Send.Timeout", new DateTime(2026, 10, 16, 12, 0, 0, DateTimeKind.Utc))], 1, 10, 1);
-            Assert.Equal("WhatsApp tardó demasiado en responder.", WhatsAppConversationResponseBuilder.WithFailureTexts(page).Items[0].FailureReason);
+                "Lucía", "Hola", null, WhatsAppChatMessageStatus.Failed, WhatsAppSendFailures.Unavailable, new DateTime(2026, 10, 16, 12, 0, 0, DateTimeKind.Utc))], 1, 10, 1);
+            Assert.Equal("No pudimos comunicarnos con WhatsApp, ni con los reintentos. Probá de nuevo en un rato.",
+                WhatsAppConversationResponseBuilder.WithFailureTexts(page).Items[0].FailureReason);
         }
         finally { CultureInfo.CurrentUICulture = previous; }
     }

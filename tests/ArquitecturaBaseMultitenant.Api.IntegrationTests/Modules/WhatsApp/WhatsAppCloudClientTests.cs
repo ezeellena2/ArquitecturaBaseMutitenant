@@ -1,6 +1,8 @@
 using System.Net;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
+using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Configuration;
@@ -31,23 +33,49 @@ public sealed class WhatsAppCloudClientTests
         services.AddHttpClient<WhatsAppCloudClient>().ConfigurePrimaryHttpMessageHandler(() => handler);
         await using var provider = services.BuildServiceProvider();
         var receipt = await provider.GetRequiredService<WhatsAppCloudClient>().SendAsync(new WhatsAppOutboundMessage("number", "+5491134567890", "codigo_ingreso", "es", ["123456"], "123456", true), Ct);
-        Assert.False(receipt.IsAccepted);
-        Assert.True(receipt.IsRetryable);
+        // Un 5xx sin código no dice si Meta lo procesó: queda «Sin confirmar» y nadie lo repite (ADR 0066).
+        Assert.Equal(OutboxAttemptOutcome.Uncertain, receipt.Outcome);
         Assert.Equal(1, handler.Calls);
         Assert.DoesNotContain(logs.Entries, value => value.Category.StartsWith("System.Net.Http.HttpClient", StringComparison.Ordinal));
         Assert.DoesNotContain(logs.Entries, value => value.Text.Contains("fixture-token", StringComparison.Ordinal));
     }
+    /// <summary>
+    /// La tabla de respuestas de Meta (ADR 0066): lo que no salió vuelve a la cola, lo definitivo falla con uno de los ocho
+    /// motivos (o el medio de pago) y lo que no se sabe queda «Sin confirmar». Solo se lee el código de Meta.
+    /// </summary>
     [Theory]
-    [InlineData(200, "{\"messages\":[{\"id\":\"wamid.fixture\"}]}", true, false, null)]
-    [InlineData(200, "{}", true, false, null)]
-    [InlineData(200, "[]", true, false, null)]
-    [InlineData(200, "invalid-json", true, false, null)]
-    [InlineData(400, "{\"error\":{\"code\":131026,\"message\":\"raw phone and code secret\"}}", false, false, "WhatsApp.Send.Undeliverable")]
-    [InlineData(429, "{\"error\":{\"code\":130429}}", false, true, "WhatsApp.Send.RateLimited")]
-    [InlineData(500, "{\"error\":{\"code\":1}}", false, true, "WhatsApp.Send.Rejected")]
-    [InlineData(400, "invalid-json", false, false, "WhatsApp.Send.InvalidResponse")]
-    [InlineData(500, "invalid-json", false, true, "WhatsApp.Send.InvalidResponse")]
-    public async Task One_post_uses_explicit_number_and_safe_receipt(int status, string response, bool accepted, bool retryable, string? safeCode)
+    [InlineData(200, "{\"messages\":[{\"id\":\"wamid.fixture\"}]}", OutboxAttemptOutcome.Accepted, null)]
+    [InlineData(200, "{}", OutboxAttemptOutcome.Uncertain, WhatsAppCloudClient.UncertainCode)]
+    [InlineData(200, "[]", OutboxAttemptOutcome.Uncertain, WhatsAppCloudClient.UncertainCode)]
+    [InlineData(200, "{\"messages\":[{\"id\":\"\"}]}", OutboxAttemptOutcome.Uncertain, WhatsAppCloudClient.UncertainCode)]
+    [InlineData(200, "invalid-json", OutboxAttemptOutcome.Uncertain, WhatsAppCloudClient.UncertainCode)]
+    [InlineData(400, "{\"error\":{\"code\":131030}}", OutboxAttemptOutcome.Rejected, WhatsAppSendFailures.NotAllowed)]
+    [InlineData(400, "{\"error\":{\"code\":131047}}", OutboxAttemptOutcome.Rejected, WhatsAppSendFailures.WindowClosed)]
+    [InlineData(400, "{\"error\":{\"code\":131026,\"message\":\"raw phone and code secret\"}}", OutboxAttemptOutcome.Rejected, WhatsAppSendFailures.Undeliverable)]
+    [InlineData(400, "{\"error\":{\"code\":131042}}", OutboxAttemptOutcome.Rejected, WhatsAppSendFailures.PaymentRequired)]
+    [InlineData(429, "{\"error\":{\"code\":130429}}", OutboxAttemptOutcome.Retry, WhatsAppSendFailures.RateLimited)]
+    [InlineData(400, "{\"error\":{\"code\":131056}}", OutboxAttemptOutcome.Retry, WhatsAppSendFailures.RateLimited)]
+    [InlineData(400, "{\"error\":{\"code\":80007}}", OutboxAttemptOutcome.Retry, WhatsAppSendFailures.RateLimited)]
+    [InlineData(503, "{\"error\":{\"code\":131016}}", OutboxAttemptOutcome.Retry, WhatsAppSendFailures.Unavailable)]
+    [InlineData(500, "{\"error\":{\"code\":131000}}", OutboxAttemptOutcome.Retry, WhatsAppSendFailures.Unavailable)]
+    [InlineData(500, "{\"error\":{\"code\":2}}", OutboxAttemptOutcome.Retry, WhatsAppSendFailures.Unavailable)]
+    [InlineData(503, "{\"error\":{\"code\":133004}}", OutboxAttemptOutcome.Retry, WhatsAppSendFailures.Unavailable)]
+    [InlineData(400, "{\"error\":{\"code\":131000}}", OutboxAttemptOutcome.Rejected, WhatsAppSendFailures.Rejected)]
+    [InlineData(401, "{\"error\":{\"code\":190}}", OutboxAttemptOutcome.Rejected, WhatsAppSendFailures.TokenInvalid)]
+    [InlineData(400, "{\"error\":{\"code\":0}}", OutboxAttemptOutcome.Rejected, WhatsAppSendFailures.TokenInvalid)]
+    [InlineData(403, "{\"error\":{\"code\":10}}", OutboxAttemptOutcome.Rejected, WhatsAppSendFailures.PermissionMissing)]
+    [InlineData(500, "{\"error\":{\"code\":3}}", OutboxAttemptOutcome.Rejected, WhatsAppSendFailures.PermissionMissing)]
+    [InlineData(400, "{\"error\":{\"code\":200}}", OutboxAttemptOutcome.Rejected, WhatsAppSendFailures.PermissionMissing)]
+    [InlineData(400, "{\"error\":{\"code\":100}}", OutboxAttemptOutcome.Rejected, WhatsAppSendFailures.Rejected)]
+    [InlineData(500, "{\"error\":{\"code\":1}}", OutboxAttemptOutcome.Rejected, WhatsAppSendFailures.Rejected)]
+    [InlineData(401, "invalid-json", OutboxAttemptOutcome.Rejected, WhatsAppSendFailures.TokenInvalid)]
+    [InlineData(403, "{}", OutboxAttemptOutcome.Rejected, WhatsAppSendFailures.PermissionMissing)]
+    [InlineData(429, "invalid-json", OutboxAttemptOutcome.Retry, WhatsAppSendFailures.RateLimited)]
+    [InlineData(400, "invalid-json", OutboxAttemptOutcome.Rejected, WhatsAppSendFailures.Rejected)]
+    [InlineData(500, "invalid-json", OutboxAttemptOutcome.Uncertain, WhatsAppCloudClient.UncertainCode)]
+    [InlineData(502, "{}", OutboxAttemptOutcome.Uncertain, WhatsAppCloudClient.UncertainCode)]
+    [InlineData(500, "{\"error\":{\"message\":\"no code\"}}", OutboxAttemptOutcome.Uncertain, WhatsAppCloudClient.UncertainCode)]
+    public async Task One_post_uses_explicit_number_and_safe_receipt(int status, string response, OutboxAttemptOutcome outcome, string? safeCode)
     {
         using var handler = new Handler(status, response);
         using var http = new HttpClient(handler) { BaseAddress = new Uri("https://graph.example.test/") };
@@ -57,12 +85,11 @@ public sealed class WhatsAppCloudClientTests
         Assert.Equal(1, handler.Calls);
         Assert.Equal("/v26.0/explicit-number/messages", handler.Path);
         Assert.Equal("Bearer fixture-token", handler.Authorization);
-        Assert.Equal(accepted, receipt.IsAccepted);
-        Assert.Equal(retryable, receipt.IsRetryable);
+        Assert.Equal(outcome, receipt.Outcome);
         Assert.Equal(safeCode, receipt.SafeCode);
         Assert.DoesNotContain("secret", receipt.ToString());
         Assert.DoesNotContain("483920", receipt.ToString());
-        if (accepted) Assert.Equal("explicit-number", receipt.ProviderScope);
+        if (outcome == OutboxAttemptOutcome.Accepted) Assert.Equal("explicit-number", receipt.ProviderScope);
     }
     [Fact]
     public async Task Delayed_free_reply_expires_before_HTTP_while_templates_remain_sendable()
@@ -76,10 +103,34 @@ public sealed class WhatsAppCloudClientTests
         clock.Advance(TimeSpan.FromHours(25));
         var expired = await client.SendAsync(reply, Ct);
         Assert.False(expired.IsAccepted); Assert.False(expired.IsRetryable);
-        Assert.Equal("WhatsApp.Send.WindowExpired", expired.SafeCode); Assert.Equal(0, handler.Calls);
+        Assert.Equal(WhatsAppSendFailures.WindowClosed, expired.SafeCode); Assert.Equal(0, handler.Calls);
         var template = new WhatsAppOutboundMessage("number", "+5491134567890", "codigo_ingreso", "es", ["123456"], "123456", true);
-        Assert.True((await client.SendAsync(template, Ct)).IsAccepted); Assert.Equal(1, handler.Calls);
+        // 200 sin el id del mensaje: Meta pudo haberlo mandado, pero no lo confirmó.
+        Assert.True((await client.SendAsync(template, Ct)).IsUncertain); Assert.Equal(1, handler.Calls);
     }
+    /// <summary>
+    /// Lo que no llegó a Meta (DNS, conexión, TLS o el circuito abierto) vuelve a la cola; la respuesta cortada o la espera
+    /// vencida (de la cola, del cliente o de la resiliencia) quedan «Sin confirmar».
+    /// </summary>
+    [Theory]
+    [InlineData("connection", OutboxAttemptOutcome.Retry, WhatsAppSendFailures.Unavailable)]
+    [InlineData("dns", OutboxAttemptOutcome.Retry, WhatsAppSendFailures.Unavailable)]
+    [InlineData("tls", OutboxAttemptOutcome.Retry, WhatsAppSendFailures.Unavailable)]
+    [InlineData("circuit", OutboxAttemptOutcome.Retry, WhatsAppSendFailures.Unavailable)]
+    [InlineData("cut", OutboxAttemptOutcome.Uncertain, WhatsAppCloudClient.UncertainCode)]
+    [InlineData("io", OutboxAttemptOutcome.Uncertain, WhatsAppCloudClient.UncertainCode)]
+    [InlineData("timeout", OutboxAttemptOutcome.Uncertain, WhatsAppCloudClient.UncertainCode)]
+    [InlineData("resilience-timeout", OutboxAttemptOutcome.Uncertain, WhatsAppCloudClient.UncertainCode)]
+    [InlineData("body-cut", OutboxAttemptOutcome.Uncertain, WhatsAppCloudClient.UncertainCode)]
+    public async Task Transport_failures_split_what_did_not_leave_from_what_may_have(string failure, OutboxAttemptOutcome outcome, string code)
+    {
+        using var handler = new Throwing(failure);
+        using var http = new HttpClient(handler) { BaseAddress = new Uri("https://graph.example.test/") };
+        var client = new WhatsAppCloudClient(http, Options.Create(new WhatsAppOptions { AccessToken = "fixture-token" }), TimeProvider.System);
+        var receipt = await client.SendAsync(new WhatsAppOutboundMessage("number", "+5491134567890", "codigo_ingreso", "es", ["483920"], "483920", true), Ct);
+        Assert.Equal((outcome, code), (receipt.Outcome, receipt.SafeCode));
+    }
+
     [Fact]
     public void Argentine_provider_compatibility_never_changes_the_stored_phone()
     {
@@ -99,6 +150,32 @@ public sealed class WhatsAppCloudClientTests
             return Task.FromResult(new HttpResponseMessage((HttpStatusCode)status) { Content = new StringContent(response) });
         }
     }
+    private sealed class Throwing(string failure) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) => failure switch
+        {
+            "connection" => throw new HttpRequestException(HttpRequestError.ConnectionError),
+            "dns" => throw new HttpRequestException(HttpRequestError.NameResolutionError),
+            "tls" => throw new HttpRequestException(HttpRequestError.SecureConnectionError),
+            "circuit" => throw new Polly.CircuitBreaker.BrokenCircuitException(),
+            "cut" => throw new HttpRequestException(HttpRequestError.ResponseEnded),
+            "io" => throw new IOException("reset"),
+            "timeout" => throw new TaskCanceledException(),
+            "resilience-timeout" => throw new Polly.Timeout.TimeoutRejectedException(),
+            _ => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StreamContent(new CutStream()) }),
+        };
+    }
+
+    /// <summary>Un cuerpo que se corta a mitad de la lectura.</summary>
+    private sealed class CutStream : MemoryStream
+    {
+        public CutStream() : base("{\"messages\":[{\"id\":"u8.ToArray()) { }
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
+            Position >= Length ? throw new IOException("The response ended prematurely.") : base.ReadAsync(buffer, cancellationToken);
+        public override int Read(byte[] buffer, int offset, int count) =>
+            Position >= Length ? throw new IOException("The response ended prematurely.") : base.Read(buffer, offset, count);
+    }
+
     /// <summary>El número conectado con su token cifrado; las demás lecturas no se usan acá.</summary>
     private sealed class SendingReader(WhatsAppTokenProtector protector) : ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.IWhatsAppChannelReader
     {

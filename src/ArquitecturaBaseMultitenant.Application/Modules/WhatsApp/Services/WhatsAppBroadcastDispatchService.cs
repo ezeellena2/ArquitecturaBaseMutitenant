@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using Microsoft.Extensions.Logging;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 
@@ -62,7 +63,7 @@ internal sealed class WhatsAppBroadcastDispatchService(IWhatsAppBroadcastReader 
                         }
                         var message = new WhatsAppOutboundMessage(channel.Value.PhoneNumberId, recipient.WaId, template!.MetaName, template.MetaLanguage,
                             broadcast.Variables, ChannelId: channel.Value.Id, QuickReplyPayload: BotButtons.Unsubscribe);
-                        recipient.MarkSent(outbox.Enqueue("whatsapp", JsonSerializer.Serialize(message)), nowUtc);
+                        recipient.MarkSent(outbox.Enqueue("whatsapp", JsonSerializer.Serialize(message), options: message.QueueOptions(OutboxPriority.Notice)), nowUtc);
                     }
                 }
                 if (pending.Count < budget) broadcast.Finish(nowUtc);

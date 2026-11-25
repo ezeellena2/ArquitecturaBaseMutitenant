@@ -187,8 +187,24 @@ internal sealed class PlatformWhatsAppConversationService(IPlatformWhatsAppChatR
     private async Task<Result<WhatsAppConversationRowResponse>> RowAsync(Guid id, CancellationToken ct) =>
         await responses.RowAsync(null, id, ct) is { } row ? row : WhatsAppErrors.ConversationNotFound;
 
-    /// <summary>Contrato de la segunda parte de la base de la 12 (K1): responde 501 hasta que la B7 lo programe.</summary>
+    /// <summary>
+    /// Marca como revisado un envío «Sin confirmar» (ADR 0066 §2), con quién y cuándo, bajo el lock de la conversación: lo hace
+    /// cualquiera que puede enviar en la bandeja, sin tomarla. Revisar dos veces devuelve la primera revisión; no reenvía.
+    /// </summary>
     public Task<Result<WhatsAppChatMessageResponse>> ReviewAsync(WhatsAppInbox? inbox, Guid id, Guid messageId, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, clock, "PlatformWhatsAppConversationReview",
-            () => Task.FromResult(Result.Failure<WhatsAppChatMessageResponse>(ContractErrors.NotImplemented)));
+        OperationLog.RunAsync<WhatsAppChatMessageResponse>(logger, clock, "PlatformWhatsAppConversationReview", async () =>
+        {
+            var saved = await unitOfWork.ExecuteInTransactionAsync(async ct =>
+            {
+                if (await chats.GetForUpdateAsync(id, null, ct) is null || await chats.GetMessageAsync(id, messageId, ct) is not { } message)
+                    return Result.Failure(WhatsAppErrors.ConversationNotFound);
+                if (message.ReviewedAtUtc is not null) return Result.Success();
+                if ((await responses.MessageAsync(null, id, messageId, ct))?.Status != WhatsAppChatMessageStatus.Uncertain)
+                    return Result.Failure(WhatsAppErrors.MessageNotUncertain);
+                message.MarkReviewed(Me, await MyNameAsync(ct), clock.GetUtcNow().UtcDateTime);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, cancellationToken);
+            if (saved.IsFailure) return saved.Error;
+            return await responses.MessageAsync(null, id, messageId, cancellationToken) is { } response ? response : WhatsAppErrors.ConversationNotFound;
+        });
 }

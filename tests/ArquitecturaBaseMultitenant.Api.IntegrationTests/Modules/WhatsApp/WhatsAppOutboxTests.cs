@@ -100,7 +100,7 @@ public sealed class WhatsAppOutboxTests(ApiFactory factory) : IClassFixture<ApiF
         Assert.Equal(0, handler.Calls);
         await using var read = factory.Services.CreateAsyncScope();
         var saved = await read.ServiceProvider.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking().SingleAsync(value => value.Id == id, Ct);
-        Assert.Equal(OutboxStatus.Failed, saved.Status); Assert.Equal("WhatsApp.Send.WindowExpired", saved.LastErrorCode);
+        Assert.Equal(OutboxStatus.Failed, saved.Status); Assert.Equal(WhatsAppSendFailures.WindowClosed, saved.LastErrorCode);
         Assert.Null(saved.NextAttemptAtUtc); Assert.Empty(saved.EncryptedPayload);
     }
     [Fact]

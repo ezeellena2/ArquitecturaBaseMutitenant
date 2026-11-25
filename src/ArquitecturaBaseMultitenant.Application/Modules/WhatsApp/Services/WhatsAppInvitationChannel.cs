@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Models.Invitations;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 
 internal sealed class WhatsAppInvitationChannel(IWhatsAppChannelSettings settings, IWhatsAppTemplateRenderer templates, IOutbox outbox) : IInvitationChannel
@@ -16,6 +17,7 @@ internal sealed class WhatsAppInvitationChannel(IWhatsAppChannelSettings setting
         Guid? recipientUserId, CancellationToken cancellationToken)
     {
         if (!IsAvailable || destination.Type != SupportedMethodType) return null;
-        return outbox.Enqueue(Key, JsonSerializer.Serialize(await templates.RenderInvitationAsync(destination.Value, notice, culture, cancellationToken)), recipientUserId);
+        var message = await templates.RenderInvitationAsync(destination.Value, notice, culture, cancellationToken);
+        return outbox.Enqueue(Key, JsonSerializer.Serialize(message), recipientUserId, message.QueueOptions(OutboxPriority.Notice));
     }
 }

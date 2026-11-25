@@ -15,4 +15,6 @@ public interface IPlatformWhatsAppChatRepository
     Task<IReadOnlyList<PlatformWhatsAppChatMessage>> ListAuthoredByAsync(Guid userId, CancellationToken ct);
     void Add(PlatformWhatsAppChat chat);
     void Add(PlatformWhatsAppChatMessage message);
+    /// <summary>Un mensaje de esa consulta, para cambiarlo; null si es de otra.</summary>
+    Task<PlatformWhatsAppChatMessage?> GetMessageAsync(Guid chatId, Guid messageId, CancellationToken ct);
 }

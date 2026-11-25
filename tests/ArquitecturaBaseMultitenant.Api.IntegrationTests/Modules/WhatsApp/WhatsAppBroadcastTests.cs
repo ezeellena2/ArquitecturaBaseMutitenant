@@ -4,6 +4,7 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
@@ -89,6 +90,19 @@ public sealed class WhatsAppBroadcastTests(ApiFactory factory)
         Assert.Equal("Sent", detail.GetProperty("broadcast").GetProperty("status").GetString());
         Assert.Equal([(anaId, "Sent"), (betoId, "Unsubscribed")], Recipients(detail).OrderBy(value => value.Item1 == betoId));
 
+        // Una difusión es un aviso: sale después de lo que contesta. Si la cola no sabe si salió, el destinatario dice
+        // «Sin confirmar» y no cuenta como enviado ni como «No llegó» (decisión 255).
+        var queued = Assert.Single(await QueuedAsync(host), value => value.Message.TemplateName == "promo_de_la_semana");
+        Assert.Equal(OutboxPriority.Notice, queued.Row.Priority);
+        await OutboxRows.SetStatusAsync(host.Services, queued.Row.Id, OutboxStatus.Uncertain, Ct);
+        var unconfirmed = await DetailAsync(owner, nowId);
+        Assert.Contains((anaId, "Uncertain"), Recipients(unconfirmed));
+        Assert.Equal((0, 0), (unconfirmed.GetProperty("broadcast").GetProperty("delivered").GetInt32(),
+            unconfirmed.GetProperty("broadcast").GetProperty("failed").GetInt32()));
+        Assert.Equal(anaId, Assert.Single((await JsonAsync(await owner.GetAsync($"/api/organization/whatsapp/broadcasts/{nowId}?status=Uncertain", Ct)))
+            .GetProperty("recipients").GetProperty("items").EnumerateArray()).GetProperty("contactId").GetGuid());
+        await OutboxRows.SetStatusAsync(host.Services, queued.Row.Id, OutboxStatus.Pending, Ct);
+
         // Ana contesta: respondió. Después toca «No recibir más»: se da de baja y el bot lo confirma.
         await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, ana, "¿Hasta cuándo?", Ct);
         Assert.Contains((anaId, "Replied"), Recipients(await DetailAsync(owner, nowId)));
@@ -98,7 +112,10 @@ public sealed class WhatsAppBroadcastTests(ApiFactory factory)
         Assert.Contains((anaId, "Unsubscribed"), Recipients(afterUnsubscribe));
         Assert.Equal(2, afterUnsubscribe.GetProperty("broadcast").GetProperty("unsubscribed").GetInt32());
         Assert.Equal("Unsubscribed", (await JsonAsync(await owner.GetAsync($"/api/organization/whatsapp/contacts/{anaId}", Ct))).GetProperty("consent").GetString());
-        Assert.Contains(await OutboxAsync(host), message => message.To == ana && message.Body?.Contains("promociones", StringComparison.Ordinal) == true);
+        var confirmation = Assert.Single(await QueuedAsync(host), value => value.Message.To == ana
+            && value.Message.Body?.Contains("promociones", StringComparison.Ordinal) == true);
+        // La confirmación del bot contesta: va con prioridad y en el mismo chat que la difusión a Ana.
+        Assert.Equal((OutboxPriority.Reply, queued.Row.OrderingKey), (confirmation.Row.Priority, confirmation.Row.OrderingKey));
         var tab = Assert.Single((await JsonAsync(await owner.GetAsync($"/api/organization/whatsapp/contacts/{anaId}/broadcasts", Ct))).GetProperty("items").EnumerateArray());
         Assert.Equal((nowId, "Unsubscribed"), (tab.GetProperty("broadcastId").GetGuid(), tab.GetProperty("status").GetString()));
         await ProblemAsync(WhatsAppAttentionJourney.PostAsync(owner, $"/api/organization/whatsapp/broadcasts/{nowId}/cancel",
@@ -220,6 +237,21 @@ public sealed class WhatsAppBroadcastTests(ApiFactory factory)
             catch (System.Security.Cryptography.CryptographicException) { }
         }
         return messages;
+    }
+
+    private static async Task<IReadOnlyList<(OutboxMessage Row, WhatsAppOutboundMessage Message)>> QueuedAsync(WebApplicationFactory<Program> host)
+    {
+        await using var scope = host.Services.CreateAsyncScope();
+        var protector = scope.ServiceProvider.GetRequiredService<IPayloadProtector>();
+        var rows = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking()
+            .Where(value => value.Channel == "whatsapp" && value.EncryptedPayload != string.Empty).ToArrayAsync(Ct);
+        var queued = new List<(OutboxMessage, WhatsAppOutboundMessage)>();
+        foreach (var row in rows)
+        {
+            try { queued.Add((row, JsonSerializer.Deserialize<WhatsAppOutboundMessage>(protector.Unprotect(row.EncryptedPayload))!)); }
+            catch (System.Security.Cryptography.CryptographicException) { }
+        }
+        return queued;
     }
 
     private static async Task ProblemAsync(Task<HttpResponseMessage> request, HttpStatusCode status, string code)

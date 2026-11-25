@@ -70,6 +70,18 @@ public static class WhatsAppInfrastructureModule
         services.AddSingleton<WhatsAppPlatformChannelState>();
         services.AddSingleton<IWhatsAppChannelCache>(provider => provider.GetRequiredService<WhatsAppPlatformChannelState>());
         services.AddHostedService<WhatsAppPlatformChannelWorker>();
+        // ADR 0066: lo que no salió se reintenta dos veces como mucho; una clave propia de MaxAttempts en la configuración manda.
+        // Configurar solo la espera del canal conserva el tope: la entrada se rehace con la espera que trae.
+        services.PostConfigure<Application.Configuration.Messaging.OutboxOptions>(outbox =>
+        {
+            var own = outbox.Channels.GetValueOrDefault("whatsapp");
+            if (own?.MaxAttempts is not null) return;
+            outbox.Channels["whatsapp"] = new Application.Configuration.Messaging.OutboxChannelOptions
+            {
+                DeliveryTimeoutSeconds = own?.DeliveryTimeoutSeconds,
+                MaxAttempts = WhatsAppCloudClient.MaxAttempts,
+            };
+        });
         // Los números de las organizaciones envían aunque Plataforma no tenga uno (decisión 7 de la E11).
         // La API de reemplazo sigue experimental en Extensions 10; limita la supresión a esta composición.
 #pragma warning disable EXTEXP0001

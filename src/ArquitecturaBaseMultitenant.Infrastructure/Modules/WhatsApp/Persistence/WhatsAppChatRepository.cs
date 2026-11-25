@@ -63,7 +63,8 @@ internal sealed class WhatsAppChatRepository(ApplicationDbContext context, ITena
     {
         context.RequireTransaction();
         var tenantId = tenant.RequiredTenantId;
-        return await context.Set<WhatsAppChatMessage>().Where(value => value.TenantId == tenantId && value.AuthorUserId == userId).ToArrayAsync(ct);
+        return await context.Set<WhatsAppChatMessage>().Where(value => value.TenantId == tenantId
+            && (value.AuthorUserId == userId || value.ReviewedByUserId == userId)).ToArrayAsync(ct);
     }
 
     public async Task<IReadOnlyList<WhatsAppChat>> ListByTeamAsync(Guid teamId, CancellationToken ct)
@@ -71,6 +72,14 @@ internal sealed class WhatsAppChatRepository(ApplicationDbContext context, ITena
         context.RequireTransaction();
         var tenantId = tenant.RequiredTenantId;
         return await context.Set<WhatsAppChat>().Where(value => value.TenantId == tenantId && value.TeamId == teamId).ToArrayAsync(ct);
+    }
+
+    public Task<WhatsAppChatMessage?> GetMessageAsync(Guid chatId, Guid messageId, CancellationToken ct)
+    {
+        context.RequireTransaction();
+        var tenantId = tenant.RequiredTenantId;
+        return context.Set<WhatsAppChatMessage>().SingleOrDefaultAsync(value => value.TenantId == tenantId && value.ChatId == chatId
+            && value.Id == messageId, ct);
     }
 
     public void Add(WhatsAppChat chat) { context.RequireTransaction(); _ = tenant.RequiredTenantId; context.Set<WhatsAppChat>().Add(chat); }

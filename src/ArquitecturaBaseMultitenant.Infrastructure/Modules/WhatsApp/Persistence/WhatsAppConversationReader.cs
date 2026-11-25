@@ -13,7 +13,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Persistenc
 
 /// <summary>
 /// Las bandejas de la organización del claim (con RLS) y las consultas de Plataforma. El estado de lo que salió se lee del
-/// outbox (pendiente o fallido, con su código) y de la fila «accepted» de Meta (enviado, entregado, leído o fallido).
+/// outbox (pendiente, fallido con su código o «Sin confirmar», ADR 0066) y de la fila «accepted» de Meta (enviado, entregado,
+/// leído o fallido), que manda sobre la cola.
 /// </summary>
 internal sealed class WhatsAppConversationReader(ApplicationDbContext context, ITenantContext tenant) : IWhatsAppConversationReader
 {
@@ -45,14 +46,27 @@ internal sealed class WhatsAppConversationReader(ApplicationDbContext context, I
             && (!untaken || chat.AssigneeUserId == null), ct);
     }
 
-    public Task<PagedResult<WhatsAppChatMessageResponse>> ListMessagesAsync(WhatsAppInbox? inbox, Guid chatId, PagedRequest request,
+    public async Task<PagedResult<WhatsAppChatMessageResponse>> ListMessagesAsync(WhatsAppInbox? inbox, Guid chatId, PagedRequest request,
         CancellationToken ct)
     {
-        if (inbox is null)
-            return MessagesAsync(context.Set<PlatformWhatsAppChatMessage>().AsNoTracking().Where(message => message.ChatId == chatId), request, ct);
+        var page = await (inbox is null ? Project(PlatformMessages(chatId)) : Project(OrganizationMessages(chatId))).ToPagedResultAsync(request, ct);
+        return new PagedResult<WhatsAppChatMessageResponse>([.. page.Items.Select(Message)], page.Page, page.PageSize, page.TotalCount);
+    }
+
+    public async Task<WhatsAppChatMessageResponse?> FindMessageAsync(WhatsAppInbox? inbox, Guid chatId, Guid messageId, CancellationToken ct)
+    {
+        var rows = inbox is null ? Project(PlatformMessages(chatId).Where(message => message.Id == messageId))
+            : Project(OrganizationMessages(chatId).Where(message => message.Id == messageId));
+        return await rows.SingleOrDefaultAsync(ct) is { } row ? Message(row) : null;
+    }
+
+    private IQueryable<PlatformWhatsAppChatMessage> PlatformMessages(Guid chatId) =>
+        context.Set<PlatformWhatsAppChatMessage>().AsNoTracking().Where(message => message.ChatId == chatId);
+
+    private IQueryable<WhatsAppChatMessage> OrganizationMessages(Guid chatId)
+    {
         var tenantId = tenant.RequiredTenantId;
-        return MessagesAsync(context.Set<WhatsAppChatMessage>().AsNoTracking()
-            .Where(message => message.TenantId == tenantId && message.ChatId == chatId), request, ct);
+        return context.Set<WhatsAppChatMessage>().AsNoTracking().Where(message => message.TenantId == tenantId && message.ChatId == chatId);
     }
 
     public async Task<IReadOnlyDictionary<Guid, int>> CountTakenAsync(WhatsAppInbox? inbox, IReadOnlyCollection<Guid> userIds, CancellationToken ct)
@@ -159,34 +173,35 @@ internal sealed class WhatsAppConversationReader(ApplicationDbContext context, I
         row.TeamId, row.TeamName, row.AssigneeUserId, row.AssigneeMemberId, row.LastInboundAtUtc, row.ChannelId, row.ChannelNumber,
         row.ChannelStatus, row.Version, row.Linked, row.ContactConsent, row.ChannelWabaId);
 
-    private async Task<PagedResult<WhatsAppChatMessageResponse>> MessagesAsync<T>(IQueryable<T> messages, PagedRequest request, CancellationToken ct)
-        where T : WhatsAppChatMessageBase
-    {
-        var page = await (from message in messages
-                          from outbox in context.OutboxMessages.AsNoTracking().Where(outbox => outbox.Id == message.OutboxMessageId).DefaultIfEmpty()
-                          from accepted in context.Set<WhatsAppMessage>().AsNoTracking()
-                              .Where(accepted => accepted.EventType == "accepted" && accepted.OutboxMessageId == message.OutboxMessageId)
-                              .DefaultIfEmpty()
-                          orderby message.CreatedAtUtc descending, message.Id descending
-                          select new MessageProjection
-                          {
-                              Id = message.Id,
-                              Kind = message.Kind,
-                              Direction = message.Direction,
-                              Author = message.AuthorName,
-                              Text = message.Text,
-                              MediaKind = message.MediaKind,
-                              Status = message.Status,
-                              FailureReason = message.FailureReason,
-                              CreatedAtUtc = message.CreatedAtUtc,
-                              OutboxStatus = outbox == null ? null : outbox.Status,
-                              OutboxError = outbox == null ? null : outbox.LastErrorCode,
-                              Delivery = accepted == null ? null : accepted.Status,
-                          }).ToPagedResultAsync(request, ct);
-        return new PagedResult<WhatsAppChatMessageResponse>([.. page.Items.Select(Message)], page.Page, page.PageSize, page.TotalCount);
-    }
+    private IQueryable<MessageProjection> Project<T>(IQueryable<T> messages) where T : WhatsAppChatMessageBase =>
+            from message in messages
+            from outbox in context.OutboxMessages.AsNoTracking().Where(outbox => outbox.Id == message.OutboxMessageId).DefaultIfEmpty()
+            from accepted in context.Set<WhatsAppMessage>().AsNoTracking()
+                .Where(accepted => accepted.EventType == "accepted" && accepted.OutboxMessageId == message.OutboxMessageId)
+                .DefaultIfEmpty()
+            orderby message.CreatedAtUtc descending, message.Id descending
+            select new MessageProjection
+            {
+                Id = message.Id,
+                Kind = message.Kind,
+                Direction = message.Direction,
+                Author = message.AuthorName,
+                Text = message.Text,
+                MediaKind = message.MediaKind,
+                Status = message.Status,
+                FailureReason = message.FailureReason,
+                CreatedAtUtc = message.CreatedAtUtc,
+                OutboxStatus = outbox == null ? null : outbox.Status,
+                OutboxError = outbox == null ? null : outbox.LastErrorCode,
+                Delivery = accepted == null ? null : accepted.Status,
+                ReviewedByName = message.ReviewedByName,
+                ReviewedAtUtc = message.ReviewedAtUtc,
+            };
 
-    /// <summary>Lo que salió toma el estado más avanzado que se conoce; un rechazo del outbox lleva su código seguro.</summary>
+    /// <summary>
+    /// Lo que salió toma el estado más avanzado que se conoce; un rechazo del outbox lleva su código seguro. Mientras Meta no
+    /// avise nada, lo que la cola dejó «Sin confirmar» se lee así, sin motivo: un aviso de Meta manda.
+    /// </summary>
     private static WhatsAppChatMessageResponse Message(MessageProjection row)
     {
         var (status, reason) = row.Direction == WhatsAppMessageDirection.Inbound || row.Kind == WhatsAppChatMessageKind.Note
@@ -198,9 +213,18 @@ internal sealed class WhatsAppConversationReader(ApplicationDbContext context, I
                 WhatsAppMessageStatus.Delivered => (WhatsAppChatMessageStatus.Delivered, null),
                 WhatsAppMessageStatus.Failed => (WhatsAppChatMessageStatus.Failed, row.FailureReason),
                 not null => (WhatsAppChatMessageStatus.Sent, null),
-                null => row.OutboxStatus == OutboxStatus.Sent ? (WhatsAppChatMessageStatus.Sent, null) : (row.Status, row.FailureReason),
+                null => row.OutboxStatus switch
+                {
+                    OutboxStatus.Sent => (WhatsAppChatMessageStatus.Sent, null),
+                    OutboxStatus.Uncertain => (WhatsAppChatMessageStatus.Uncertain, null),
+                    _ => (row.Status, row.FailureReason),
+                },
             };
-        return new(row.Id, row.Kind, row.Direction, row.Author, row.Text, row.MediaKind, status, reason, row.CreatedAtUtc);
+        return new(row.Id, row.Kind, row.Direction, row.Author, row.Text, row.MediaKind, status, reason, row.CreatedAtUtc)
+        {
+            ReviewedByName = row.ReviewedByName,
+            ReviewedAtUtc = row.ReviewedAtUtc,
+        };
     }
 
     private sealed class ConversationProjection
@@ -243,5 +267,7 @@ internal sealed class WhatsAppConversationReader(ApplicationDbContext context, I
         public OutboxStatus? OutboxStatus { get; init; }
         public string? OutboxError { get; init; }
         public WhatsAppMessageStatus? Delivery { get; init; }
+        public string? ReviewedByName { get; init; }
+        public DateTime? ReviewedAtUtc { get; init; }
     }
 }

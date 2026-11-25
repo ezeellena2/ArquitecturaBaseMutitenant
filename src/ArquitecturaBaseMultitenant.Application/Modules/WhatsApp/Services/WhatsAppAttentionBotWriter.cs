@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persis
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Resources;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 
@@ -92,7 +93,7 @@ internal sealed class WhatsAppAttentionBotWriter(IWhatsAppBotRepository bots, Wh
         IReadOnlyList<WhatsAppReplyButton>? buttons = null)
     {
         var message = WhatsAppBotReplyBuilder.Attention(turn.Channel, turn.Chat.WaId, body, turn.ExpiresAtUtc, turn.Profile, rows, buttons);
-        var outboxId = outbox.Enqueue("whatsapp", JsonSerializer.Serialize(message));
+        var outboxId = outbox.Enqueue("whatsapp", JsonSerializer.Serialize(message), options: message.QueueOptions(OutboxPriority.Reply));
         chats.Add(WhatsAppChatMessage.Outbound(turn.Chat.Id, WhatsAppChatMessageKind.Text, null, null, body, outboxId, null, turn.NowUtc));
         turn.Chat.RecordBotReply(turn.NowUtc, body);
         await links.CopyAsync(turn.Chat.Id, WhatsAppMessageDirection.Outbound, body, null, turn.NowUtc, null, ct);

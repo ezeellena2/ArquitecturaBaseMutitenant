@@ -173,7 +173,6 @@ public abstract class WhatsAppConversationsControllerBase(IWhatsAppConversationS
     [ProducesProblem(404)]
     [ProducesProblem(409)]
     [ProducesProblem(500)]
-    [ProducesProblem(501)]
     public async Task<IActionResult> Review([FromRoute] Guid id, [FromRoute] Guid messageId, CancellationToken cancellationToken) =>
         (await service.ReviewAsync(Inbox, id, messageId, cancellationToken)).ToActionResult(this);
 

@@ -28,5 +28,6 @@ internal static class WhatsAppChatMapping
         builder.Property(value => value.Text).HasMaxLength(WhatsAppTextLimits.MessageText);
         builder.Property(value => value.FailureReason).HasMaxLength(TextLimits.ShortName);
         builder.Property(value => value.Wamid).HasMaxLength(TextLimits.Description);
+        builder.Property(value => value.ReviewedByName).HasMaxLength(TextLimits.PersonDisplayName);
     }
 }

@@ -53,13 +53,20 @@ internal sealed class PlatformWhatsAppChatRepository(ApplicationDbContext contex
     public async Task<IReadOnlyList<PlatformWhatsAppChatMessage>> ListAuthoredByAsync(Guid userId, CancellationToken ct)
     {
         context.RequireTransaction();
-        return await context.Set<PlatformWhatsAppChatMessage>().Where(value => value.AuthorUserId == userId).ToArrayAsync(ct);
+        return await context.Set<PlatformWhatsAppChatMessage>()
+            .Where(value => value.AuthorUserId == userId || value.ReviewedByUserId == userId).ToArrayAsync(ct);
     }
 
     public async Task<IReadOnlyList<PlatformWhatsAppChat>> ListByTeamAsync(Guid teamId, CancellationToken ct)
     {
         context.RequireTransaction();
         return await context.Set<PlatformWhatsAppChat>().Where(value => value.TeamId == teamId).ToArrayAsync(ct);
+    }
+
+    public Task<PlatformWhatsAppChatMessage?> GetMessageAsync(Guid chatId, Guid messageId, CancellationToken ct)
+    {
+        context.RequireTransaction();
+        return context.Set<PlatformWhatsAppChatMessage>().SingleOrDefaultAsync(value => value.ChatId == chatId && value.Id == messageId, ct);
     }
 
     public void Add(PlatformWhatsAppChat chat) { context.RequireTransaction(); context.Set<PlatformWhatsAppChat>().Add(chat); }

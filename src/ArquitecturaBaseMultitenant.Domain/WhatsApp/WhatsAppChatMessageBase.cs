@@ -23,6 +23,13 @@ public abstract class WhatsAppChatMessageBase : Entity
     public Guid? OutboxMessageId { get; private set; }
     public Guid? TemplateId { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
+    /// <summary>
+    /// Quién marcó como revisado un envío «Sin confirmar» (ADR 0066 §2) y cuándo; el nombre se copia al revisar, como el del
+    /// autor. Revisar no reenvía ni dice que llegó.
+    /// </summary>
+    public Guid? ReviewedByUserId { get; private set; }
+    public string? ReviewedByName { get; private set; }
+    public DateTime? ReviewedAtUtc { get; private set; }
 
     protected void InitializeInbound(Guid chatId, string wamid, string? text, WhatsAppMediaKind? mediaKind, DateTime occurredAtUtc)
     {
@@ -65,8 +72,31 @@ public abstract class WhatsAppChatMessageBase : Entity
     /// <summary>Borra el texto y el autor (retención y bajas); el mensaje queda como hecho sin contenido.</summary>
     public void ClearContent() { Text = null; AuthorName = null; }
 
-    /// <summary>La cuenta de quien escribió se eliminó: el mensaje o la nota quedan sin su nombre.</summary>
-    public void ForgetAuthor() { AuthorUserId = null; AuthorName = null; }
+    /// <summary>
+    /// Marca como revisado un envío que quedó «Sin confirmar»: quien decide si lo manda de nuevo. Solo lo que salió (no una
+    /// nota ni lo recibido); la primera revisión queda y otra no la cambia (devuelve false).
+    /// </summary>
+    public bool MarkReviewed(Guid userId, string? name, DateTime nowUtc)
+    {
+        if (userId == Guid.Empty) throw new ArgumentException("A reviewer is required.", nameof(userId));
+        if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC required.", nameof(nowUtc));
+        if (Direction != WhatsAppMessageDirection.Outbound || Kind == WhatsAppChatMessageKind.Note || OutboxMessageId is null)
+            throw new InvalidOperationException("Only a sent message can be reviewed.");
+        if (ReviewedAtUtc is not null) return false;
+        if (name?.Length > TextLimits.PersonDisplayName) name = name[..TextLimits.PersonDisplayName];
+        ReviewedByUserId = userId; ReviewedByName = name; ReviewedAtUtc = nowUtc;
+        return true;
+    }
+
+    /// <summary>
+    /// La cuenta se eliminó: el mensaje o la nota que escribió quedan sin su nombre, y la revisión que hizo, sin quién (queda
+    /// cuándo).
+    /// </summary>
+    public void ForgetAuthor(Guid userId)
+    {
+        if (AuthorUserId == userId) { AuthorUserId = null; AuthorName = null; }
+        if (ReviewedByUserId == userId) { ReviewedByUserId = null; ReviewedByName = null; }
+    }
 
     private void Initialize(Guid chatId, WhatsAppChatMessageKind kind, WhatsAppMessageDirection direction, Guid? authorUserId, string? authorName,
         string? text, DateTime createdAtUtc)

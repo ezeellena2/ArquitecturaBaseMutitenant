@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Time;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 
@@ -31,7 +32,7 @@ internal sealed class WhatsAppReplyIssuer(IWhatsAppChannelRepository channels, I
         }
         var message = new WhatsAppOutboundMessage(channel.PhoneNumberId, chat.WaId, string.Empty, string.Empty, [], Body: text,
             ReplyExpiresAtUtc: expiresAtUtc, ChannelId: channel.Id);
-        return outbox.Enqueue("whatsapp", JsonSerializer.Serialize(message));
+        return outbox.Enqueue("whatsapp", JsonSerializer.Serialize(message), options: message.QueueOptions(OutboxPriority.Reply));
     }
 
     internal async Task<Result<WhatsAppIssuedTemplateMessage>> IssueTemplateAsync(WhatsAppChatBase chat, bool platform, Guid templateId,
@@ -48,7 +49,7 @@ internal sealed class WhatsAppReplyIssuer(IWhatsAppChannelRepository channels, I
         if (channel.Status == WhatsAppNumberStatus.PaymentMissing) return WhatsAppErrors.ConversationPaymentRequired;
         var message = new WhatsAppOutboundMessage(channel.PhoneNumberId, chat.WaId, template.MetaName, template.MetaLanguage, variables,
             ChannelId: channel.Id, QuickReplyPayload: marketing ? BotButtons.Unsubscribe : null);
-        return new WhatsAppIssuedTemplateMessage(outbox.Enqueue("whatsapp", JsonSerializer.Serialize(message)), template.Id,
+        return new WhatsAppIssuedTemplateMessage(outbox.Enqueue("whatsapp", JsonSerializer.Serialize(message), options: message.QueueOptions(OutboxPriority.Reply)), template.Id,
             WhatsAppTemplateBase.Render(template.Body, variables));
     }
 }

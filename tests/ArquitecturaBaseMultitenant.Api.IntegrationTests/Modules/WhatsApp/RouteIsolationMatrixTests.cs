@@ -52,9 +52,9 @@ public sealed partial class RouteIsolationMatrixTests
         cases[$"POST {root}/broadcasts/{{id:guid}}/cancel"] = Foreign(w => Business($"{root}/broadcasts/{w.B("whatsapp.broadcast")}/cancel", new { version = 1 }));
         AddTeamCases(cases, root, Caller.Business);
         AddTeamCases(cases, "/api/platform/whatsapp", Caller.Platform);
-        AddConversationCases(cases, $"{root}/customers", Caller.Business, "whatsapp.customer-chat", "member");
-        AddConversationCases(cases, $"{root}/internal", Caller.Business, "whatsapp.internal-chat", "member");
-        AddConversationCases(cases, "/api/platform/whatsapp", Caller.Platform, "whatsapp.customer-chat", "operator");
+        AddConversationCases(cases, $"{root}/customers", Caller.Business, "whatsapp.customer-chat", "whatsapp.customer-message", "member");
+        AddConversationCases(cases, $"{root}/internal", Caller.Business, "whatsapp.internal-chat", "whatsapp.internal-message", "member");
+        AddConversationCases(cases, "/api/platform/whatsapp", Caller.Platform, "whatsapp.customer-chat", "whatsapp.customer-message", "operator");
         cases["GET /api/platform/whatsapp/templates/{id:guid}"] = Foreign(w => Platform($"/api/platform/whatsapp/templates/{w.B("whatsapp.template")}"));
         cases["DELETE /api/platform/whatsapp/templates/{id:guid}"] = Foreign(w => Platform($"/api/platform/whatsapp/templates/{w.B("whatsapp.template")}?version=1"));
         cases["GET /api/me/whatsapp/conversations/{id:guid}"] = Foreign(w => Consumer($"/api/me/whatsapp/conversations/{w.B("whatsapp.link")}"));
@@ -73,7 +73,8 @@ public sealed partial class RouteIsolationMatrixTests
     /// Las rutas de un chat: las de Plataforma prueban con el chat de una organización, que nunca ve. El traspaso va a una
     /// persona propia: un miembro en la organización, un operador en Plataforma.
     /// </summary>
-    private static void AddConversationCases(Dictionary<string, RouteCase> cases, string root, Caller caller, string kind, string person)
+    private static void AddConversationCases(Dictionary<string, RouteCase> cases, string root, Caller caller, string kind, string message,
+        string person)
     {
         string Chat(World w) => $"{root}/conversations/{w.B(kind)}";
         cases[$"GET {root}/conversations/{{id:guid}}"] = Foreign(w => new Probe(caller, Chat(w)));
@@ -87,6 +88,8 @@ public sealed partial class RouteIsolationMatrixTests
         cases[$"GET {root}/conversations/{{id:guid}}/template-options"] = Foreign(w => new Probe(caller, Chat(w) + "/template-options"));
         cases[$"GET {root}/conversations/{{id:guid}}/transfer-options/people"] = Foreign(w => new Probe(caller, Chat(w) + "/transfer-options/people"));
         cases[$"GET {root}/conversations/{{id:guid}}/transfer-options/teams"] = Foreign(w => new Probe(caller, Chat(w) + "/transfer-options/teams"));
+        cases[$"POST {root}/conversations/{{id:guid}}/messages/{{messageid:guid}}/review"] = Foreign(
+            w => new Probe(caller, Chat(w) + $"/messages/{w.B(message)}/review"));
     }
 
     static partial void AddWhatsAppSeed(List<Func<World, Task>> seeds) => seeds.Add(SeedWhatsAppAsync);
@@ -124,7 +127,11 @@ public sealed partial class RouteIsolationMatrixTests
             WhatsAppAudienceKind.AllAccepting, null, nowUtc.AddDays(30), 1, new Money(0m, CurrencyCode.Create("USD").Value));
         var link = WhatsAppConversationLink.Create(world.PersonalB, customerChat.Id, world.OwnerB.UserId, world.PersonMark,
             "Organización " + world.OrganizationMark, number.Value, nowUtc);
+        // Un mensaje en cada chat, para revisar uno ajeno con su id real.
+        var customerNote = WhatsAppChatMessage.Note(customerChat.Id, world.OwnerB.UserId, null, "Nota", nowUtc);
+        var internalNote = WhatsAppChatMessage.Note(internalChat.Id, world.OwnerB.UserId, null, "Nota", nowUtc);
         await SaveAsync(world, world.OrganizationB, (_, db) => db.AddRange(template, customer, team, customerChat, internalChat, broadcast));
+        await SaveAsync(world, world.OrganizationB, (_, db) => db.AddRange(customerNote, internalNote));
         // El vínculo es compartido: se guarda desde la organización, con el acceso clasificado.
         await SaveAsync(world, world.OrganizationB, (_, db) => db.Add(link), TenantKind.Business);
 
@@ -134,11 +141,13 @@ public sealed partial class RouteIsolationMatrixTests
         world.Foreign["whatsapp.team"] = team.Id;
         world.Foreign["whatsapp.customer-chat"] = customerChat.Id;
         world.Foreign["whatsapp.internal-chat"] = internalChat.Id;
+        world.Foreign["whatsapp.customer-message"] = customerNote.Id;
+        world.Foreign["whatsapp.internal-message"] = internalNote.Id;
         world.Foreign["whatsapp.broadcast"] = broadcast.Id;
         world.Foreign["whatsapp.link"] = link.Id;
         world.OpenDoors.AddRange([(Caller.Business, "/api/organization/whatsapp/numbers"), (Caller.Consumer, "/api/me/whatsapp/conversations")]);
         world.SeededTables.AddRange(["identity.WhatsAppChannels", "tenant.WhatsAppChats", "tenant.WhatsAppCustomers",
-            "tenant.WhatsAppBroadcasts", "engagement.WhatsAppConversationLinks"]);
+            "tenant.WhatsAppBroadcasts", "engagement.WhatsAppConversationLinks", "tenant.WhatsAppChatMessages"]);
     }
 
     private static async Task SaveAsync(World world, Guid? tenantId, Action<IServiceProvider, ApplicationDbContext> add,

@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persis
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Resources;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 
@@ -48,7 +49,7 @@ internal sealed class PlatformWhatsAppBotWriter(IPlatformWhatsAppBotRepository b
         Common.Formatting.CultureProfile profile, DateTime nowUtc, IReadOnlyList<WhatsAppReplyButton>? rows = null)
     {
         var message = WhatsAppBotReplyBuilder.Attention(channel, chat.WaId, body, expiresAtUtc, profile, rows);
-        var outboxId = outbox.Enqueue("whatsapp", JsonSerializer.Serialize(message));
+        var outboxId = outbox.Enqueue("whatsapp", JsonSerializer.Serialize(message), options: message.QueueOptions(OutboxPriority.Reply));
         chats.Add(PlatformWhatsAppChatMessage.Outbound(chat.Id, WhatsAppChatMessageKind.Text, null, null, body, outboxId, null, nowUtc));
         chat.RecordBotReply(nowUtc, body);
     }

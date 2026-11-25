@@ -13,9 +13,11 @@ public interface IWhatsAppChatRepository
     Task<bool> HasInboundAsync(string wamid, CancellationToken ct);
     Task<WhatsAppChatMessage?> GetOutboundAsync(Guid outboxMessageId, CancellationToken ct);
     Task<IReadOnlyList<WhatsAppChat>> ListByTeamAsync(Guid teamId, CancellationToken ct);
-    /// <summary>Las conversaciones que tiene tomadas esa persona y los mensajes y notas que escribió (para la baja de su cuenta).</summary>
+    /// <summary>Las conversaciones que tiene tomadas esa persona y los mensajes y notas que escribió o revisó (para la baja de su cuenta).</summary>
     Task<IReadOnlyList<WhatsAppChat>> ListTakenByAsync(Guid userId, CancellationToken ct);
     Task<IReadOnlyList<WhatsAppChatMessage>> ListAuthoredByAsync(Guid userId, CancellationToken ct);
     void Add(WhatsAppChat chat);
     void Add(WhatsAppChatMessage message);
+    /// <summary>Un mensaje de esa conversación, para cambiarlo; null si es de otra.</summary>
+    Task<WhatsAppChatMessage?> GetMessageAsync(Guid chatId, Guid messageId, CancellationToken ct);
 }

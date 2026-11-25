@@ -495,12 +495,6 @@
   <data name="WhatsApp.Template.NumberRequired" xml:space="preserve">
     <value>Connect a number to create templates.</value>
   </data>
-  <data name="Send.Failure.RecipientNotAllowed" xml:space="preserve">
-    <value>That number can't receive messages from this account.</value>
-  </data>
-  <data name="Send.Failure.WindowExpired" xml:space="preserve">
-    <value>24 hours have passed since their last message.</value>
-  </data>
   <data name="Send.Failure.PaymentRequired" xml:space="preserve">
     <value>The WhatsApp account has no payment method.</value>
   </data>
@@ -508,28 +502,10 @@
     <value>WhatsApp couldn't deliver it to that number.</value>
   </data>
   <data name="Send.Failure.RateLimited" xml:space="preserve">
-    <value>Too many messages were sent. Try again later.</value>
-  </data>
-  <data name="Send.Failure.Credentials" xml:space="preserve">
-    <value>The number needs to be connected again.</value>
-  </data>
-  <data name="Send.Failure.Permissions" xml:space="preserve">
-    <value>The app isn't allowed to send from this number.</value>
+    <value>WhatsApp held the send back because of its message limit. Try again in a while.</value>
   </data>
   <data name="Send.Failure.Rejected" xml:space="preserve">
-    <value>Meta didn't accept the message.</value>
-  </data>
-  <data name="Send.Failure.Network" xml:space="preserve">
-    <value>We couldn't reach WhatsApp.</value>
-  </data>
-  <data name="Send.Failure.Timeout" xml:space="preserve">
-    <value>WhatsApp took too long to answer.</value>
-  </data>
-  <data name="Send.Failure.InvalidResponse" xml:space="preserve">
-    <value>WhatsApp answered something we couldn't read.</value>
-  </data>
-  <data name="Send.Failure.ChannelUnavailable" xml:space="preserve">
-    <value>The number isn't available to send.</value>
+    <value>WhatsApp rejected the message.</value>
   </data>
   <data name="Send.Failure.Other" xml:space="preserve">
     <value>It couldn't be sent for a reason we don't know.</value>
@@ -550,19 +526,19 @@
     <value>That message isn't unconfirmed: there's nothing to review.</value>
   </data>
   <data name="Send.Failure.NotAllowed" xml:space="preserve">
-    <value>This number is not allowed to receive messages from the WhatsApp account.</value>
+    <value>That number can't receive messages from this account.</value>
   </data>
   <data name="Send.Failure.WindowClosed" xml:space="preserve">
-    <value>The reply window ended before it went out. Wait for a new message from the contact.</value>
+    <value>24 hours have passed since their last message.</value>
   </data>
   <data name="Send.Failure.TokenInvalid" xml:space="preserve">
-    <value>The WhatsApp connection expired or was revoked. It needs to be renewed.</value>
+    <value>The WhatsApp connection expired. The number needs to be connected again.</value>
   </data>
   <data name="Send.Failure.PermissionMissing" xml:space="preserve">
-    <value>The WhatsApp connection lacks a permission to send.</value>
+    <value>The WhatsApp connection lacks the permission to send from this number.</value>
   </data>
   <data name="Send.Failure.Unavailable" xml:space="preserve">
-    <value>WhatsApp could not be reached, not even with the retries. Try again in a while.</value>
+    <value>We couldn't reach WhatsApp, not even with the retries. Try again in a while.</value>
   </data>
   <data name="Send.Failure.ReadOnly" xml:space="preserve">
     <value>The number of this conversation is disconnected.</value>

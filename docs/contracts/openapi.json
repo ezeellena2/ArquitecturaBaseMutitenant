@@ -5990,7 +5990,7 @@
           "WhatsApp Business inboxes"
         ],
         "summary": "Marca como revisado un mensaje «Sin confirmar» (ADR 0066), sin cuerpo y sin idempotencia: no crea ni envía, y revisar dos\r\nveces devuelve la primera revisión.",
-        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo. Marca como revisado un mensaje «Sin confirmar» (ADR 0066), sin cuerpo y sin Idempotency-Key: no crea ni envía. 200 con el mensaje, que suma reviewedByName y reviewedAtUtc; revisar dos veces devuelve la primera revisión. Otro chat, otra organización o un mensaje que no es de ese chat: 404. Si no está «Sin confirmar»: 409 WhatsApp.Message.NotUncertain. 501 hasta la B7.",
+        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo. Marca como revisado un mensaje «Sin confirmar» (ADR 0066), sin cuerpo y sin Idempotency-Key: no crea ni envía. 200 con el mensaje, que suma reviewedByName y reviewedAtUtc; revisar dos veces devuelve la primera revisión. Otro chat, otra organización o un mensaje que no es de ese chat: 404. Si no está «Sin confirmar»: 409 WhatsApp.Message.NotUncertain.",
         "parameters": [
           {
             "name": "id",
@@ -6126,38 +6126,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -6220,13 +6188,6 @@
             "field": null,
             "es": "Ese mensaje no quedó sin confirmar: no hay nada que revisar.",
             "en": "That message isn't unconfirmed: there's nothing to review."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 429,
@@ -8866,7 +8827,7 @@
           "WhatsApp Business inboxes"
         ],
         "summary": "Marca como revisado un mensaje «Sin confirmar» (ADR 0066), sin cuerpo y sin idempotencia: no crea ni envía, y revisar dos\r\nveces devuelve la primera revisión.",
-        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo. Marca como revisado un mensaje «Sin confirmar» (ADR 0066), sin cuerpo y sin Idempotency-Key: no crea ni envía. 200 con el mensaje, que suma reviewedByName y reviewedAtUtc; revisar dos veces devuelve la primera revisión. Otro chat, otra organización o un mensaje que no es de ese chat: 404. Si no está «Sin confirmar»: 409 WhatsApp.Message.NotUncertain. 501 hasta la B7.",
+        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo. Marca como revisado un mensaje «Sin confirmar» (ADR 0066), sin cuerpo y sin Idempotency-Key: no crea ni envía. 200 con el mensaje, que suma reviewedByName y reviewedAtUtc; revisar dos veces devuelve la primera revisión. Otro chat, otra organización o un mensaje que no es de ese chat: 404. Si no está «Sin confirmar»: 409 WhatsApp.Message.NotUncertain.",
         "parameters": [
           {
             "name": "id",
@@ -9002,38 +8963,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -9096,13 +9025,6 @@
             "field": null,
             "es": "Ese mensaje no quedó sin confirmar: no hay nada que revisar.",
             "en": "That message isn't unconfirmed: there's nothing to review."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 429,
@@ -11742,7 +11664,7 @@
           "WhatsApp Platform inquiries"
         ],
         "summary": "Marca como revisado un mensaje «Sin confirmar» (ADR 0066), sin cuerpo y sin idempotencia: no crea ni envía, y revisar dos\r\nveces devuelve la primera revisión.",
-        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo. Marca como revisado un mensaje «Sin confirmar» (ADR 0066), sin cuerpo y sin Idempotency-Key: no crea ni envía. 200 con el mensaje, que suma reviewedByName y reviewedAtUtc; revisar dos veces devuelve la primera revisión. Otro chat, otra organización o un mensaje que no es de ese chat: 404. Si no está «Sin confirmar»: 409 WhatsApp.Message.NotUncertain. 501 hasta la B7.",
+        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo. Marca como revisado un mensaje «Sin confirmar» (ADR 0066), sin cuerpo y sin Idempotency-Key: no crea ni envía. 200 con el mensaje, que suma reviewedByName y reviewedAtUtc; revisar dos veces devuelve la primera revisión. Otro chat, otra organización o un mensaje que no es de ese chat: 404. Si no está «Sin confirmar»: 409 WhatsApp.Message.NotUncertain.",
         "parameters": [
           {
             "name": "id",
@@ -11878,38 +11800,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -11972,13 +11862,6 @@
             "field": null,
             "es": "Ese mensaje no quedó sin confirmar: no hay nada que revisar.",
             "en": "That message isn't unconfirmed: there's nothing to review."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 429,

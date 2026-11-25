@@ -145,11 +145,7 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
                 Add(409, WhatsAppErrors.ConversationPaymentRequiredCode);
             if (path.EndsWith("/templates", StringComparison.Ordinal)) Add(409, WhatsAppErrors.TemplateNotApprovedCode, "templateId");
             if (path.EndsWith("/transfer", StringComparison.Ordinal)) Add(404, WhatsAppErrors.TeamNotFoundCode);
-            if (path.EndsWith("/review", StringComparison.Ordinal))
-            {
-                Add(409, WhatsAppErrors.MessageNotUncertainCode);
-                errors.Add(HttpContractDocumentation.CoreError(501, ContractErrors.NotImplementedCode));
-            }
+            if (path.EndsWith("/review", StringComparison.Ordinal)) Add(409, WhatsAppErrors.MessageNotUncertainCode);
         }
         if (path.EndsWith("/whatsapp/settings", StringComparison.Ordinal))
         {
@@ -215,7 +211,7 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
     private static string? Description(string path) => path switch
     {
         _ when path.EndsWith("/review", StringComparison.Ordinal) =>
-            "Marca como revisado un mensaje «Sin confirmar» (ADR 0066), sin cuerpo y sin Idempotency-Key: no crea ni envía. 200 con el mensaje, que suma reviewedByName y reviewedAtUtc; revisar dos veces devuelve la primera revisión. Otro chat, otra organización o un mensaje que no es de ese chat: 404. Si no está «Sin confirmar»: 409 WhatsApp.Message.NotUncertain. 501 hasta la B7.",
+            "Marca como revisado un mensaje «Sin confirmar» (ADR 0066), sin cuerpo y sin Idempotency-Key: no crea ni envía. 200 con el mensaje, que suma reviewedByName y reviewedAtUtc; revisar dos veces devuelve la primera revisión. Otro chat, otra organización o un mensaje que no es de ese chat: 404. Si no está «Sin confirmar»: 409 WhatsApp.Message.NotUncertain.",
         "/api/platform/whatsapp/settings" =>
             "Configuración de WhatsApp de la plataforma (270 y 272): allowedCountries (al menos uno, de los países habilitados, sin repetir), chatRetentionDays y maxOrganizationChatRetentionDays, con version en el PUT y el 409 de siempre. Un valor fuera de su mínimo o su máximo es el 400 de validación en su campo. 501 hasta la B18.",
         "/api/organization/whatsapp/settings" =>

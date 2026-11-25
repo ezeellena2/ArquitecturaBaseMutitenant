@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// <summary>
 /// La respuesta de ingreso por el número de Plataforma (E8; desde la base de la 12, sin enlace secreto, 179). Una cuenta
@@ -53,7 +54,7 @@ internal sealed class WhatsAppSignInReplyIssuer(IWhatsAppChannelSettings setting
         // Con las consultas prendidas el chat sirve para más que entrar: el pie de la Etapa 8 deja de ser cierto.
         var reply = await replies.BuildAsync(numberId, destination, settings.AppName, account?.Culture, body, expiresAtUtc, ct,
             name, url, label, choices, footer: !consultations);
-        outbox.Enqueue("whatsapp", JsonSerializer.Serialize(reply), context.Message.OriginalUserId);
+        outbox.Enqueue("whatsapp", JsonSerializer.Serialize(reply), context.Message.OriginalUserId, reply.QueueOptions(OutboxPriority.Reply));
     }
 
     private string Url(string path) => new Uri(origin.Value ?? throw new InvalidOperationException("Public origin required."), path).AbsoluteUri;

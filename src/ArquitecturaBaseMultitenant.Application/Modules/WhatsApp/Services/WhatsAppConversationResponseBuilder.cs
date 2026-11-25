@@ -35,6 +35,10 @@ internal sealed class WhatsAppConversationResponseBuilder(IWhatsAppConversationR
     internal async Task<WhatsAppConversationResponse?> ConversationAsync(WhatsAppInbox? inbox, Guid id, PagedRequest request, CancellationToken ct) =>
         await RowAsync(inbox, id, ct) is { } row ? new(row, WithFailureTexts(await reader.ListMessagesAsync(inbox, id, request, ct))) : null;
 
+    /// <summary>Un mensaje de la conversación como lo muestra la bandeja, con el texto de su motivo; null si es de otra.</summary>
+    internal async Task<WhatsAppChatMessageResponse?> MessageAsync(WhatsAppInbox? inbox, Guid id, Guid messageId, CancellationToken ct) =>
+        await reader.FindMessageAsync(inbox, id, messageId, ct) is { } message ? message with { FailureReason = FailureText(message.FailureReason) } : null;
+
     /// <summary>
     /// El motivo de lo que no salió, con su texto para quien lo lee: el envío guarda el código (`WhatsApp.Send.*`), como el
     /// motivo de rechazo de una plantilla. Un código que no tiene texto dice que no se sabe por qué.

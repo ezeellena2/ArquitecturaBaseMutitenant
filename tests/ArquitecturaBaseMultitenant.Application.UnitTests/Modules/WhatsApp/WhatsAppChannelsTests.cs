@@ -1,10 +1,12 @@
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
+using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Application.Models.Invitations;
 using ArquitecturaBaseMultitenant.Application.Models.Notifications;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Modules.WhatsApp;
 
@@ -43,12 +45,45 @@ public sealed class WhatsAppChannelsTests
         await invitation.EnqueueAsync(InvitationDeliveryDestination.ForEmail(Email.Create("identity@example.test").Value), null!, null!, userId, TestContext.Current.CancellationToken);
         Assert.Equal(3, outbox.Calls);
     }
+    /// <summary>
+    /// ADR 0066: cada envío va detrás de lo anterior del mismo chat (el número que manda y el que recibe); el código contesta y
+    /// sale antes que los avisos, y la invitación y los avisos de la cuenta esperan su turno.
+    /// </summary>
+    [Fact]
+    public async Task Each_send_is_ordered_by_its_chat_and_a_code_goes_before_the_notices()
+    {
+        var settings = new WhatsAppCodeQuotaTests.Settings(); var templates = new Templates(); var outbox = new Outbox();
+        var login = new WhatsAppLoginCodeChannel(settings, templates, outbox);
+        login.EnqueueRenderedLoginCode(login.RenderLoginCode("+14155552671", "123456", 10, null!), 10);
+        await new WhatsAppInvitationChannel(settings, templates, outbox).EnqueueAsync(
+            InvitationDeliveryDestination.ForPhone(PhoneNumber.Create("+14155552671").Value), null!, null!, null, TestContext.Current.CancellationToken);
+        await new WhatsAppAccountNoticeChannel(settings, templates, outbox).EnqueueAsync(null, "+14155552671", new AccountNotice.AccountDeleted(), null!,
+            TestContext.Current.CancellationToken);
+        Assert.Equal([OutboxPriority.Reply, OutboxPriority.Notice, OutboxPriority.Notice], outbox.Options.Select(value => value.Priority));
+        Assert.All(outbox.Options, value => Assert.Equal("id|+14155552671", value.Destination));
+        Assert.All(outbox.Options, value => Assert.Null(value.DiscardAfterUtc));
+    }
+
+    [Fact]
+    public void A_different_number_or_destination_is_another_chat()
+    {
+        var message = new WhatsAppOutboundMessage("pn-1", "+14155552671", "aviso", "es", []);
+        Assert.NotEqual(message.QueueOptions(OutboxPriority.Reply).Destination, (message with { PhoneNumberId = "pn-2" }).QueueOptions(OutboxPriority.Reply).Destination);
+        Assert.NotEqual(message.QueueOptions(OutboxPriority.Reply).Destination, (message with { To = "+14155552672" }).QueueOptions(OutboxPriority.Reply).Destination);
+        Assert.Equal(OutboxPriority.Notice, message.QueueOptions(OutboxPriority.Notice).Priority);
+    }
+
     private sealed class Outbox : IOutbox
     {
         public int Calls { get; private set; }
         public Guid? UserId { get; private set; }
         public string? Channel { get; private set; }
-        public Guid Enqueue(string channel, string payload, Guid? userId = null, ArquitecturaBaseMultitenant.Application.Models.Messaging.OutboxEnqueueOptions? options = null) { Calls++; UserId = userId; Channel = channel; return Guid.CreateVersion7(); }
+        public List<OutboxEnqueueOptions> Options { get; } = [];
+        public Guid Enqueue(string channel, string payload, Guid? userId = null, OutboxEnqueueOptions? options = null)
+        {
+            Calls++; UserId = userId; Channel = channel; Options.Add(options ?? new OutboxEnqueueOptions());
+            return Guid.CreateVersion7();
+        }
     }
     private sealed class Templates : IWhatsAppTemplateRenderer
     {

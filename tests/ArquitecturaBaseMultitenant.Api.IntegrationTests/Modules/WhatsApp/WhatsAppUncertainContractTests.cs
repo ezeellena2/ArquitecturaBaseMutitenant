@@ -17,7 +17,7 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 
 /// <summary>
 /// Contrato de la segunda parte de la base de la 12 (K1) en WhatsApp: «Sin confirmar» y su revisión en las tres bases, los
-/// motivos de lo que no salió, el tope de códigos por cuenta y las dos configuraciones, en 501 hasta la B7 y la B18.
+/// motivos de lo que no salió, el tope de códigos por cuenta y las dos configuraciones, en 501 hasta la B18.
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class WhatsAppUncertainContractTests(ApiFactory factory)
@@ -43,7 +43,7 @@ public sealed class WhatsAppUncertainContractTests(ApiFactory factory)
             var codes = review["x-error-codes"]!.AsArray().Select(value => value!["status"]!.GetValue<int>() + " " + value["code"]!.GetValue<string>()).ToArray();
             Assert.Contains("404 " + WhatsAppErrors.ConversationNotFoundCode, codes);
             Assert.Contains("409 " + WhatsAppErrors.MessageNotUncertainCode, codes);
-            Assert.Contains("501 " + ContractErrors.NotImplementedCode, codes);
+            Assert.DoesNotContain("501 " + ContractErrors.NotImplementedCode, codes);
         }
         var schemas = document["components"]!["schemas"]!;
         Assert.Contains("Uncertain", schemas["WhatsAppChatMessageStatus"]!["enum"]!.AsArray().Select(value => value?.GetValue<string>()));
@@ -112,7 +112,7 @@ public sealed class WhatsAppUncertainContractTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Review_and_settings_answer_501_behind_access_and_module()
+    public async Task Review_answers_behind_access_and_module_and_settings_answer_501()
     {
         using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
@@ -123,7 +123,11 @@ public sealed class WhatsAppUncertainContractTests(ApiFactory factory)
             Assert.Equal(HttpStatusCode.NotFound, off.StatusCode);
         await EnableAsync(tenant);
         using (var reviewed = await client.PostAsync(review, null, Ct))
-            await AssertNotImplementedAsync(reviewed);
+        {
+            Assert.Equal(HttpStatusCode.NotFound, reviewed.StatusCode);
+            using var problem = JsonDocument.Parse(await reviewed.Content.ReadAsStringAsync(Ct));
+            Assert.Equal(WhatsAppErrors.ConversationNotFoundCode, problem.RootElement.GetProperty("code").GetString());
+        }
         using (var settings = await client.GetAsync("/api/organization/whatsapp/settings", Ct))
             await AssertNotImplementedAsync(settings);
         using (var update = await client.PutAsJsonAsync("/api/organization/whatsapp/settings", new { chatRetentionDays = 90, version = 0 }, Ct))

@@ -12,7 +12,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Persistenc
 
 /// <summary>
 /// Las difusiones con sus resultados. El estado de un destinatario que salió se lee del envío: fallido si el outbox no lo
-/// pudo mandar; si no, lo último que informó Meta en la fila «accepted» (enviado, entregado, leído o fallido).
+/// pudo mandar; si no, lo último que informó Meta en la fila «accepted» (enviado, entregado, leído o fallido). Mientras Meta no
+/// avise nada, lo que la cola dejó «Sin confirmar» se lee así (decisión 255): no cuenta como enviado ni como «No llegó».
 /// </summary>
 internal sealed class WhatsAppBroadcastReader(ApplicationDbContext context, ITenantContext tenant) : IWhatsAppBroadcastReader
 {
@@ -110,7 +111,8 @@ internal sealed class WhatsAppBroadcastReader(ApplicationDbContext context, ITen
                    WaId = recipient.WaId,
                    Status = recipient.Status != WhatsAppRecipientStatus.Sent ? recipient.Status
                        : outbox != null && (outbox.Status == OutboxStatus.Failed || outbox.Status == OutboxStatus.Cancelled) ? WhatsAppRecipientStatus.Failed
-                       : accepted == null ? WhatsAppRecipientStatus.Sent
+                       : accepted == null ? outbox != null && outbox.Status == OutboxStatus.Uncertain ? WhatsAppRecipientStatus.Uncertain
+                           : WhatsAppRecipientStatus.Sent
                        : accepted.Status == WhatsAppMessageStatus.Read ? WhatsAppRecipientStatus.Read
                        : accepted.Status == WhatsAppMessageStatus.Delivered ? WhatsAppRecipientStatus.Delivered
                        : accepted.Status == WhatsAppMessageStatus.Failed ? WhatsAppRecipientStatus.Failed
