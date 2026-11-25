@@ -23,7 +23,7 @@ Antes de empezar, en este orden:
    | [modulos](../../rules/modulos.md) | Forms y WhatsApp, por puertos neutrales |
    | [idempotencia](../../rules/idempotencia.md) | adjuntar es un archivo: modo durable |
    | [persistencia-ef](../../rules/persistencia-ef.md) y [multitenancy](../../rules/multitenancy.md) | las tablas nuevas, y las claves de los archivos sin organización |
-   | [api-http](../../rules/api-http.md) y [cuotas](../../rules/cuotas.md) | descargas por la Api; cuentan en las cuotas generales |
+   | [api-http](../../rules/api-http.md) y [cuotas](../../rules/cuotas.md) | descargas por la Api; cuentan en las cuotas generales, y adjuntar toma su lugar antes de leer el archivo |
    | [logs](../../rules/logs.md) y [datos-personales](../../rules/datos-personales.md) | nombres y contenidos nunca van a logs, a la lista de chats ni a los avisos |
    | [textos-libres](../../rules/textos-libres.md) y [textos-y-traducciones](../../rules/textos-y-traducciones.md) | los nombres se guardan como llegan |
    | [tests](../../rules/tests.md) | qué lleva test y dónde va |
@@ -104,6 +104,7 @@ Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133
 - `FRM-Respuestas-18` y `M-FRM-Respuestas-18`: la columna de archivos no ordena (264), y en el teléfono las fotos no van debajo de otro dato (263);
 - `FRM-Editor-18` y `M-FRM-Editor-18`: el origen de la foto en la pieza (262), y la (i) de «Cuántas fotos» con el tope de la configuración (270);
 - `WA-Chats-Visor` y `M-WA-Chats-Visor`: la fecha de cada foto al pie (O21);
+- `WA-Chats-Adjuntos` y `M-WA-Chats-Adjuntos`: un archivo mandado «Sin confirmar», con su (i) y «Marcar como revisado», y «No se pudo mandar» con su motivo debajo (0066);
 - `FRM-Config-Org`, su teléfono y `FRM-Config-Plat`, nuevos y por dibujar antes del front (270).
 
 **La planilla:** la foto dice su miniatura y «2 fotos», y el documento, «1 documento» (206). «Sin respuesta» si no se respondió y «—» si la pregunta no existía en esa versión. En el teléfono, la fila no la junta con otros datos: las fotos y los documentos se ven al abrir la respuesta (263). Las preguntas de archivo no aparecen en «Filtros» (143).
