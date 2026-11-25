@@ -23,6 +23,17 @@ internal sealed class WhatsAppContactReader(ApplicationDbContext context, ITenan
 
     private static readonly SortDescriptor DefaultSort = new("name", Descending: false);
 
+    // Las columnas de las conversaciones de la ficha (264): el equipo por su nombre, sin equipo al final; sin orden pedido, la
+    // más nueva primero. El último mensaje (contenido cifrado) y quien la atiende (un nombre de la cuenta) no ordenan.
+    private static readonly SortMap<ConversationSortRow> ConversationSort = new()
+    {
+        ["startedAtUtc"] = row => row.StartedAtUtc,
+        ["team"] = row => row.TeamName,
+        ["messageCount"] = row => row.MessageCount,
+    };
+
+    private static readonly SortDescriptor DefaultConversationSort = new("startedAtUtc", Descending: true);
+
     public async Task<PagedResult<WhatsAppContactResponse>> ListAsync(WhatsAppContactListRequest request, CancellationToken ct)
     {
         var customers = Customers();
@@ -40,7 +51,8 @@ internal sealed class WhatsAppContactReader(ApplicationDbContext context, ITenan
     public async Task<WhatsAppContactCounts> CountAsync(CancellationToken ct) =>
         new(await Customers().CountAsync(ct), await Customers().CountAsync(customer => customer.Consent == WhatsAppConsent.Accepted, ct));
 
-    public Task<PagedResult<WhatsAppContactConversationRow>> ListConversationsAsync(Guid contactId, PagedRequest request, CancellationToken ct)
+    public Task<PagedResult<WhatsAppContactConversationRow>> ListConversationsAsync(Guid contactId, WhatsAppContactConversationListRequest request,
+        CancellationToken ct)
     {
         var tenantId = tenant.RequiredTenantId;
         return (from chat in context.Set<WhatsAppChat>().AsNoTracking().Where(chat => chat.TenantId == tenantId && chat.CustomerId == contactId)
@@ -48,11 +60,20 @@ internal sealed class WhatsAppContactReader(ApplicationDbContext context, ITenan
                 from member in context.Members.AsNoTracking()
                     .Where(member => member.TenantId == tenantId && member.UserId == chat.AssigneeUserId && member.Status == MemberStatus.Active)
                     .DefaultIfEmpty()
-                orderby chat.LastMessageAtUtc descending, chat.Id descending
-                select new WhatsAppContactConversationRow(chat.Id, chat.StartedAtUtc, chat.TeamId, team == null ? null : team.Name, chat.AssigneeUserId,
-                    member == null ? null : member.Id,
-                    context.Set<WhatsAppChatMessage>().Count(message => message.TenantId == tenantId && message.ChatId == chat.Id),
-                    chat.LastMessagePreview))
+                select new ConversationSortRow
+                {
+                    Id = chat.Id,
+                    StartedAtUtc = chat.StartedAtUtc,
+                    TeamId = chat.TeamId,
+                    TeamName = team == null ? null : team.Name,
+                    AssigneeUserId = chat.AssigneeUserId,
+                    AssigneeMemberId = member == null ? null : member.Id,
+                    MessageCount = context.Set<WhatsAppChatMessage>().Count(message => message.TenantId == tenantId && message.ChatId == chat.Id),
+                    LastMessagePreview = chat.LastMessagePreview,
+                })
+            .ApplySort(SortDescriptor.Parse(request.Sort), ConversationSort, DefaultConversationSort, row => row.Id)
+            .Select(row => new WhatsAppContactConversationRow(row.Id, row.StartedAtUtc, row.TeamId, row.TeamName, row.AssigneeUserId, row.AssigneeMemberId,
+                row.MessageCount, row.LastMessagePreview))
             .ToPagedResultAsync(request, ct);
     }
 
@@ -117,5 +138,17 @@ internal sealed class WhatsAppContactReader(ApplicationDbContext context, ITenan
         public uint Version { get; init; }
         public Guid? LatestConversationId { get; init; }
         public bool Linked { get; init; }
+    }
+
+    private sealed class ConversationSortRow
+    {
+        public Guid Id { get; init; }
+        public DateTime StartedAtUtc { get; init; }
+        public Guid? TeamId { get; init; }
+        public string? TeamName { get; init; }
+        public Guid? AssigneeUserId { get; init; }
+        public Guid? AssigneeMemberId { get; init; }
+        public int MessageCount { get; init; }
+        public string? LastMessagePreview { get; init; }
     }
 }

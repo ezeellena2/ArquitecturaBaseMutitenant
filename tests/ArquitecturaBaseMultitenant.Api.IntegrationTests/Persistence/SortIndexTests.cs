@@ -93,6 +93,14 @@ public sealed class SortIndexTests(ApiFactory factory)
         new("WhatsAppBroadcastReader.RecipientSort", "number", null),
         new("WhatsAppBroadcastReader.RecipientSort", "status", null),
         new("WhatsAppBroadcastReader.RecipientSort", "changedAtUtc", null),
+        // Las tablas de la ficha de un contacto ordenan solo sus filas, que ya filtra el índice por contacto: (TenantId, CustomerId)
+        // en las conversaciones y (TenantId, CustomerId, SentAtUtc) en los destinatarios.
+        new("WhatsAppContactReader.ConversationSort", "startedAtUtc", null),
+        new("WhatsAppContactReader.ConversationSort", "team", null),
+        new("WhatsAppContactReader.ConversationSort", "messageCount", null),
+        new("WhatsAppBroadcastReader.ContactBroadcastSort", "name", null),
+        new("WhatsAppBroadcastReader.ContactBroadcastSort", "sentAtUtc", null),
+        new("WhatsAppBroadcastReader.ContactBroadcastSort", "status", null),
     ];
 
     private static readonly Regex BtreeColumns = new(@"USING btree \((?<columns>[^)]*)\)", RegexOptions.CultureInvariant);

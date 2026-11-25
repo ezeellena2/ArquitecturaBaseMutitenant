@@ -38,7 +38,7 @@ internal sealed class WhatsAppContactService(IWhatsAppContactReader reader, IWha
         OperationLog.RunAsync<WhatsAppContactResponse>(logger, clock, "WhatsAppContactGet", async () =>
             await reader.FindAsync(id, cancellationToken) is { } contact ? contact : WhatsAppErrors.ContactNotFound);
 
-    public Task<Result<PagedResult<WhatsAppContactConversationResponse>>> ListConversationsAsync(Guid id, WhatsAppContactChildListRequest request,
+    public Task<Result<PagedResult<WhatsAppContactConversationResponse>>> ListConversationsAsync(Guid id, WhatsAppContactConversationListRequest request,
         CancellationToken cancellationToken) =>
         OperationLog.RunAsync<PagedResult<WhatsAppContactConversationResponse>>(logger, clock, "WhatsAppContactConversations", async () =>
         {
@@ -53,7 +53,7 @@ internal sealed class WhatsAppContactService(IWhatsAppContactReader reader, IWha
         });
 
     /// <summary>Las difusiones que le salieron al contacto, la más nueva primero, con cómo le fue en cada una.</summary>
-    public Task<Result<PagedResult<WhatsAppContactBroadcastResponse>>> ListBroadcastsAsync(Guid id, WhatsAppContactChildListRequest request,
+    public Task<Result<PagedResult<WhatsAppContactBroadcastResponse>>> ListBroadcastsAsync(Guid id, WhatsAppContactBroadcastListRequest request,
         CancellationToken cancellationToken) =>
         OperationLog.RunAsync<PagedResult<WhatsAppContactBroadcastResponse>>(logger, clock, "WhatsAppContactBroadcasts", async () =>
         {

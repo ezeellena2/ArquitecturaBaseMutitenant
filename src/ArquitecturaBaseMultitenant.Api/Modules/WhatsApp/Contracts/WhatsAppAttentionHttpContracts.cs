@@ -74,6 +74,9 @@ public sealed record SendWhatsAppTemplateHttpRequest(Guid? TemplateId, IReadOnly
     public override string ToString() => nameof(SendWhatsAppTemplateHttpRequest);
 }
 
+/// <summary>Las tablas de la ficha de un contacto: sort es el id de una columna con un dato (264), con «-» delante para el sentido inverso.</summary>
+public sealed record WhatsAppContactChildListHttpQuery(int? Page, int? PageSize, string? Search, string? Sort);
+
 public sealed record WhatsAppContactListHttpQuery(int? Page, int? PageSize, string? Search, string? Tag, WhatsAppConsent? Consent, string? Sort);
 
 public sealed record UpdateWhatsAppContactHttpRequest(string? Name, IReadOnlyList<string>? Tags, WhatsAppConsent? Consent, uint? Version)

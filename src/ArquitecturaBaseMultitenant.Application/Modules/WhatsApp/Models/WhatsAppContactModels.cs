@@ -29,7 +29,21 @@ public sealed record WhatsAppContactConversationResponse(Guid ConversationId, Da
 
 public sealed record WhatsAppContactBroadcastResponse(Guid BroadcastId, string Name, DateTime SentAtUtc, WhatsAppRecipientStatus Status);
 
-public sealed record WhatsAppContactChildListRequest : PagedRequest;
+/// <summary>
+/// Las conversaciones de la ficha de un contacto, por las columnas de su tabla (264); sin orden, la más nueva primero. El último
+/// mensaje es contenido cifrado del chat, que ningún lector ordena, y quien la atiende es un nombre de la cuenta, que el módulo
+/// no lee: esas dos columnas no ordenan.
+/// </summary>
+public sealed record WhatsAppContactConversationListRequest : PagedRequest
+{
+    public static readonly IReadOnlyCollection<string> SortableFields = ["startedAtUtc", "team", "messageCount"];
+}
+
+/// <summary>Las difusiones que le salieron a un contacto, por las columnas de su tabla (264); el estado, por su circuito.</summary>
+public sealed record WhatsAppContactBroadcastListRequest : PagedRequest
+{
+    public static readonly IReadOnlyCollection<string> SortableFields = ["name", "sentAtUtc", "status"];
+}
 
 public sealed record UpdateWhatsAppContactRequest(string? Name, IReadOnlyList<string>? Tags, WhatsAppConsent? Consent, uint? Version)
 {

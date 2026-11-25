@@ -17,7 +17,7 @@ public interface IWhatsAppContactReader
     /// <summary>Todos los contactos y los que aceptan promociones, sin filtros.</summary>
     Task<WhatsAppContactCounts> CountAsync(CancellationToken ct);
     /// <summary>Las conversaciones del contacto, la más reciente primero; quien la tomó, por su cuenta y su miembro.</summary>
-    Task<PagedResult<WhatsAppContactConversationRow>> ListConversationsAsync(Guid contactId, PagedRequest request, CancellationToken ct);
+    Task<PagedResult<WhatsAppContactConversationRow>> ListConversationsAsync(Guid contactId, WhatsAppContactConversationListRequest request, CancellationToken ct);
     /// <summary>Las etiquetas en uso, en orden alfabético.</summary>
     Task<PagedResult<string>> ListTagsAsync(PagedRequest request, CancellationToken ct);
     /// <summary>Cuáles de esos números ya son contactos.</summary>

@@ -6,7 +6,7 @@ using FluentValidation;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Validation;
 
 // Los listados de atención: página, tamaño y búsqueda. Los que muestran una tabla con columnas de un dato ordenan por ellas
-// (264); los demás (selectores y listas hijas) tienen su orden fijo.
+// (264), también las tablas de la ficha de un contacto; los demás (selectores) tienen su orden fijo.
 
 internal sealed class WhatsAppNumberListRequestValidator() : PagedRequestValidator<WhatsAppNumberListRequest>([]);
 
@@ -51,7 +51,11 @@ internal sealed class WhatsAppTransferOptionListRequestValidator() : PagedReques
 
 internal sealed class WhatsAppInboxTeamListRequestValidator() : PagedRequestValidator<WhatsAppInboxTeamListRequest>([]);
 
-internal sealed class WhatsAppContactChildListRequestValidator() : PagedRequestValidator<WhatsAppContactChildListRequest>([]);
+internal sealed class WhatsAppContactConversationListRequestValidator()
+    : PagedRequestValidator<WhatsAppContactConversationListRequest>(WhatsAppContactConversationListRequest.SortableFields);
+
+internal sealed class WhatsAppContactBroadcastListRequestValidator()
+    : PagedRequestValidator<WhatsAppContactBroadcastListRequest>(WhatsAppContactBroadcastListRequest.SortableFields);
 
 internal sealed class WhatsAppTagListRequestValidator() : PagedRequestValidator<WhatsAppTagListRequest>([]);
 

@@ -234,6 +234,8 @@ Leé AGENTS.md de los dos repos, este plan, la spec y la skill /puerta. Integrá
 - GET /api/organization/whatsapp/broadcasts/{id}: nuevo query sort para los destinatarios (contact, number, status, changedAtUtc). Sin sort, -changedAtUtc. (B17)
 - GET de plantillas de WhatsApp de la organización y de Plataforma: nuevo query sort (name, category, status, updatedAtUtc). En Plataforma, group=System también respeta sort; sin sort, por título como antes. (B17)
 - GET de equipos de WhatsApp de la organización y de Plataforma: nuevo query sort (name, inbox, memberCount, notice; notice sin aviso va al final). (B17)
+- GET /api/organization/whatsapp/contacts/{id}/conversations: nuevo query sort (startedAtUtc, team, messageCount; sin equipo, al final). lastMessagePreview (contenido cifrado) y assignee (un nombre de la cuenta, que el módulo no lee) no ordenan. Sin sort, -startedAtUtc (antes, por el último mensaje). (B17)
+- GET /api/organization/whatsapp/contacts/{id}/broadcasts: nuevo query sort (name, sentAtUtc, status; status por su circuito). Sin sort, -sentAtUtc como antes. (B17)
 - Los listados de plantillas, difusiones y destinatarios ahora validan: un sort fuera de la lista, un tamaño de página no admitido o un estado inválido es 400 Validation.Failed. (B17)
 - docs/contracts/openapi.json regenerado con el parámetro sort en esas siete rutas. (B17)
 

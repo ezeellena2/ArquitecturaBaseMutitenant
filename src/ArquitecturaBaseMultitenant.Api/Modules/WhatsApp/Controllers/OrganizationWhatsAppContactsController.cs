@@ -58,12 +58,13 @@ public sealed class OrganizationWhatsAppContactsController(IWhatsAppContactServi
     [ProducesProblem(403)]
     [ProducesProblem(404)]
     [ProducesProblem(500)]
-    public async Task<IActionResult> ListConversations([FromRoute] Guid id, [FromQuery] WhatsAppPagedHttpQuery query, CancellationToken cancellationToken) =>
-        (await service.ListConversationsAsync(id, new WhatsAppContactChildListRequest
+    public async Task<IActionResult> ListConversations([FromRoute] Guid id, [FromQuery] WhatsAppContactChildListHttpQuery query, CancellationToken cancellationToken) =>
+        (await service.ListConversationsAsync(id, new WhatsAppContactConversationListRequest
         {
             Page = query.Page ?? PagedRequest.DefaultPage,
             PageSize = query.PageSize ?? PagedRequest.DefaultPageSize,
             Search = query.Search,
+            Sort = query.Sort,
         }, cancellationToken)).ToActionResult(this);
 
     [HttpGet("{id:guid}/broadcasts")]
@@ -73,12 +74,13 @@ public sealed class OrganizationWhatsAppContactsController(IWhatsAppContactServi
     [ProducesProblem(403)]
     [ProducesProblem(404)]
     [ProducesProblem(500)]
-    public async Task<IActionResult> ListBroadcasts([FromRoute] Guid id, [FromQuery] WhatsAppPagedHttpQuery query, CancellationToken cancellationToken) =>
-        (await service.ListBroadcastsAsync(id, new WhatsAppContactChildListRequest
+    public async Task<IActionResult> ListBroadcasts([FromRoute] Guid id, [FromQuery] WhatsAppContactChildListHttpQuery query, CancellationToken cancellationToken) =>
+        (await service.ListBroadcastsAsync(id, new WhatsAppContactBroadcastListRequest
         {
             Page = query.Page ?? PagedRequest.DefaultPage,
             PageSize = query.PageSize ?? PagedRequest.DefaultPageSize,
             Search = query.Search,
+            Sort = query.Sort,
         }, cancellationToken)).ToActionResult(this);
 
     [HttpPut("{id:guid}")]

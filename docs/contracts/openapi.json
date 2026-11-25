@@ -2167,6 +2167,13 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2373,6 +2380,13 @@
           },
           {
             "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Sort",
             "in": "query",
             "schema": {
               "type": "string"

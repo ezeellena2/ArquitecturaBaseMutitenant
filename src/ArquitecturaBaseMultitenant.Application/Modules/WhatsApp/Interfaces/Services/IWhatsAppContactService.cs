@@ -9,8 +9,8 @@ public interface IWhatsAppContactService
 {
     Task<Result<WhatsAppContactListResponse>> ListAsync(WhatsAppContactListRequest request, CancellationToken cancellationToken);
     Task<Result<WhatsAppContactResponse>> GetAsync(Guid id, CancellationToken cancellationToken);
-    Task<Result<PagedResult<WhatsAppContactConversationResponse>>> ListConversationsAsync(Guid id, WhatsAppContactChildListRequest request, CancellationToken cancellationToken);
-    Task<Result<PagedResult<WhatsAppContactBroadcastResponse>>> ListBroadcastsAsync(Guid id, WhatsAppContactChildListRequest request, CancellationToken cancellationToken);
+    Task<Result<PagedResult<WhatsAppContactConversationResponse>>> ListConversationsAsync(Guid id, WhatsAppContactConversationListRequest request, CancellationToken cancellationToken);
+    Task<Result<PagedResult<WhatsAppContactBroadcastResponse>>> ListBroadcastsAsync(Guid id, WhatsAppContactBroadcastListRequest request, CancellationToken cancellationToken);
     Task<Result<WhatsAppContactResponse>> UpdateAsync(Guid id, UpdateWhatsAppContactRequest request, CancellationToken cancellationToken);
     Task<Result<PagedResult<string>>> ListTagsAsync(WhatsAppTagListRequest request, CancellationToken cancellationToken);
     Task<Result<WhatsAppFileResponse>> GetImportSampleAsync(CancellationToken cancellationToken);

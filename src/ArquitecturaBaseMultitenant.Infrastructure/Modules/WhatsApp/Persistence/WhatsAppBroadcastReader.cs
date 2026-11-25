@@ -44,6 +44,17 @@ internal sealed class WhatsAppBroadcastReader(ApplicationDbContext context, ITen
 
     private static readonly SortDescriptor DefaultRecipientSort = new("changedAtUtc", Descending: true);
 
+    // Las difusiones de la ficha de un contacto, por las columnas de su tabla; la fecha es la de la fila (cuándo le salió) y el
+    // estado, el de su destinatario, por su circuito. Sin orden pedido, la más nueva primero.
+    private static readonly SortMap<ContactBroadcastRow> ContactBroadcastSort = new()
+    {
+        ["name"] = row => row.Name,
+        ["sentAtUtc"] = row => row.SentAtUtc,
+        ["status"] = row => row.Status,
+    };
+
+    private static readonly SortDescriptor DefaultContactBroadcastSort = new("sentAtUtc", Descending: true);
+
     public async Task<PagedResult<WhatsAppBroadcastResponse>> ListAsync(WhatsAppBroadcastListRequest request, CancellationToken ct)
     {
         var broadcasts = Broadcasts();
@@ -83,15 +94,21 @@ internal sealed class WhatsAppBroadcastReader(ApplicationDbContext context, ITen
             recipient.ContactName, recipient.WaId, recipient.Status, recipient.FailureReason, recipient.ChangedAtUtc))], page.Page, page.PageSize, page.TotalCount);
     }
 
-    public async Task<PagedResult<WhatsAppContactBroadcastResponse>> ListForContactAsync(Guid contactId, PagedRequest request, CancellationToken ct)
-    {
-        var page = await (from recipient in Recipients().Where(recipient => recipient.ContactId == contactId && recipient.Status != WhatsAppRecipientStatus.Pending)
-                          join broadcast in Broadcasts() on recipient.BroadcastId equals broadcast.Id
-                          orderby recipient.SentAtUtc ?? recipient.ChangedAtUtc descending, recipient.Id descending
-                          select new WhatsAppContactBroadcastResponse(broadcast.Id, broadcast.Name, recipient.SentAtUtc ?? recipient.ChangedAtUtc, recipient.Status))
-            .ToPagedResultAsync(request, ct);
-        return page;
-    }
+    public Task<PagedResult<WhatsAppContactBroadcastResponse>> ListForContactAsync(Guid contactId, WhatsAppContactBroadcastListRequest request,
+        CancellationToken ct) =>
+        (from recipient in Recipients().Where(recipient => recipient.ContactId == contactId && recipient.Status != WhatsAppRecipientStatus.Pending)
+         join broadcast in Broadcasts() on recipient.BroadcastId equals broadcast.Id
+         select new ContactBroadcastRow
+         {
+             Id = recipient.Id,
+             BroadcastId = broadcast.Id,
+             Name = broadcast.Name,
+             SentAtUtc = recipient.SentAtUtc ?? recipient.ChangedAtUtc,
+             Status = recipient.Status,
+         })
+        .ApplySort(SortDescriptor.Parse(request.Sort), ContactBroadcastSort, DefaultContactBroadcastSort, row => row.Id)
+        .Select(row => new WhatsAppContactBroadcastResponse(row.BroadcastId, row.Name, row.SentAtUtc, row.Status))
+        .ToPagedResultAsync(request, ct);
 
     public Task<WhatsAppDueBroadcast?> FindNextDueAsync(DateTime nowUtc, CancellationToken ct) =>
         Broadcasts().Where(broadcast => broadcast.Status == WhatsAppBroadcastStatus.Sending || broadcast.Status == WhatsAppBroadcastStatus.Scheduled
@@ -170,6 +187,15 @@ internal sealed class WhatsAppBroadcastReader(ApplicationDbContext context, ITen
         public WhatsAppBroadcast Broadcast { get; init; } = null!;
         public int? Delivered { get; init; }
         public int? Read { get; init; }
+    }
+
+    private sealed class ContactBroadcastRow
+    {
+        public Guid Id { get; init; }
+        public Guid BroadcastId { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public DateTime SentAtUtc { get; init; }
+        public WhatsAppRecipientStatus Status { get; init; }
     }
 
     private sealed class RecipientProjection

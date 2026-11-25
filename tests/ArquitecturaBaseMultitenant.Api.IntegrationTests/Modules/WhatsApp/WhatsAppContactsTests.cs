@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
@@ -111,6 +112,68 @@ public sealed class WhatsAppContactsTests(ApiFactory factory)
         await WhatsAppAttentionJourney.OrganizationAsync(factory, host, outsider, Ct);
         using var foreign = await outsider.GetAsync($"{Contacts}/{Id(contact)}", Ct);
         Assert.Equal(HttpStatusCode.NotFound, foreign.StatusCode);
+    }
+
+    // Decisión 264: las tablas de la ficha de un contacto ordenan por cada columna con un dato, en los dos sentidos y, con el mismo
+    // valor, la conversación más nueva primero. El último mensaje (contenido cifrado) y quien la atiende (un nombre de la cuenta)
+    // no ordenan: como cualquier columna que no está en la lista, son un 400.
+    [Fact]
+    public async Task The_contact_tables_sort_by_their_columns_and_keep_the_newest_first_on_ties()
+    {
+        await using var host = WhatsAppAttentionJourney.Host(factory, new FakeGraph());
+        using var client = WhatsAppAttentionJourney.Client(host);
+        await WhatsAppAttentionJourney.OrganizationAsync(factory, host, client, Ct);
+        var (first, second) = (WhatsAppAttentionJourney.NewNumberId(), WhatsAppAttentionJourney.NewNumberId());
+        foreach (var number in new[] { first, second })
+            using (var connected = await WhatsAppAttentionJourney.ConnectAsync(client, number, Ct)) Assert.Equal(HttpStatusCode.Created, connected.StatusCode);
+        using var anonymous = WhatsAppAttentionJourney.Client(host);
+        var writer = WhatsAppAttentionJourney.NewPhone();
+        // Una conversación por número: la del primero empieza antes y tiene más mensajes.
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, first, writer, "Quiero precios", Ct);
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, second, writer, "Hola", Ct);
+        foreach (var text in new[] { "¿Siguen abiertos?", "Gracias" })
+            await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, first, writer, text, Ct);
+        var contactId = Id(Single(await JsonAsync(await client.GetAsync($"{Contacts}?search={Uri.EscapeDataString(writer)}", Ct))));
+        var conversations = $"{Contacts}/{contactId}/conversations";
+        var (newer, older) = Pair(await ConversationsAsync(client, conversations));
+
+        Assert.Equal([older, newer], Ids(await ConversationsAsync(client, $"{conversations}?sort=startedAtUtc")));
+        Assert.Equal([newer, older], Ids(await ConversationsAsync(client, $"{conversations}?sort=-startedAtUtc")));
+        Assert.Equal([newer, older], Ids(await ConversationsAsync(client, $"{conversations}?sort=messageCount")));
+        Assert.Equal([older, newer], Ids(await ConversationsAsync(client, $"{conversations}?sort=-messageCount")));
+        // Ninguna tiene equipo: con el mismo valor, la más nueva primero en los dos sentidos.
+        Assert.Equal([newer, older], Ids(await ConversationsAsync(client, $"{conversations}?sort=team")));
+        Assert.Equal([newer, older], Ids(await ConversationsAsync(client, $"{conversations}?sort=-team")));
+
+        foreach (var (path, fields, unsortable) in new[]
+        {
+            (conversations, WhatsAppContactConversationListRequest.SortableFields, new[] { "lastMessagePreview", "assignee" }),
+            ($"{Contacts}/{contactId}/broadcasts", WhatsAppContactBroadcastListRequest.SortableFields, new[] { "number" }),
+        })
+        {
+            foreach (var sort in fields.SelectMany(field => new[] { field, "-" + field }))
+            {
+                using var response = await client.GetAsync($"{path}?sort={sort}", Ct);
+                Assert.True(response.StatusCode == HttpStatusCode.OK, $"{path}?sort={sort}: {(int)response.StatusCode}");
+            }
+            foreach (var sort in unsortable)
+            {
+                using var rejected = await client.GetAsync($"{path}?sort={sort}", Ct);
+                Assert.Equal((HttpStatusCode.BadRequest, "Validation.Failed"), (rejected.StatusCode, await CodeAsync(rejected)));
+            }
+        }
+    }
+
+    private static async Task<JsonElement[]> ConversationsAsync(HttpClient client, string path) =>
+        [.. (await JsonAsync(await client.GetAsync(path, Ct))).GetProperty("items").EnumerateArray()];
+
+    private static Guid[] Ids(JsonElement[] rows) => [.. rows.Select(row => row.GetProperty("conversationId").GetGuid())];
+
+    // Sin orden pedido, la más nueva primero.
+    private static (Guid Newer, Guid Older) Pair(JsonElement[] rows)
+    {
+        Assert.Equal(2, rows.Length);
+        return (Ids(rows)[0], Ids(rows)[1]);
     }
 
     private static Task<HttpResponseMessage> UploadAsync(HttpClient client, string path, string fileName, string text, string? tag)
