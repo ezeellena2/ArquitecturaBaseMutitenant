@@ -261,6 +261,8 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
         }
         if (Property(schemas, "UpdateWhatsAppOrganizationSettingsHttpRequest", "chatRetentionDays") is { } organization)
             organization.Description = "De 1 al máximo que deja la plataforma (maxOrganizationChatRetentionDays).";
+        if (Property(schemas, "WhatsAppOrganizationSettingsResponse", "maxOrganizationChatRetentionDays") is { } maximum)
+            maximum.Description = "El máximo que fija la plataforma para el plazo de los chats de una organización; solo lectura.";
     }
 
     /// <summary>Una etiqueta como consulta o campo del archivo a importar tiene el mismo largo que las de un contacto.</summary>

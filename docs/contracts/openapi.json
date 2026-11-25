@@ -21606,7 +21606,8 @@
                       "retentionDays": 30,
                       "maxAttachmentBytes": 10485760,
                       "maxAttachments": 5,
-                      "monthlyBudgetProgress": null
+                      "monthlyBudgetProgress": null,
+                      "dailyResetTimeZoneId": "example"
                     }
                   },
                   "monthlyZero.es": {
@@ -21640,7 +21641,8 @@
                       "monthlyBudgetProgress": {
                         "fraction": 0,
                         "status": "WithinLimit"
-                      }
+                      },
+                      "dailyResetTimeZoneId": "example"
                     }
                   },
                   "monthlyZero.en": {
@@ -21674,7 +21676,8 @@
                       "monthlyBudgetProgress": {
                         "fraction": 0,
                         "status": "WithinLimit"
-                      }
+                      },
+                      "dailyResetTimeZoneId": "example"
                     }
                   },
                   "monthlyBelowNear.es": {
@@ -21708,7 +21711,8 @@
                       "monthlyBudgetProgress": {
                         "fraction": 0.79,
                         "status": "WithinLimit"
-                      }
+                      },
+                      "dailyResetTimeZoneId": "example"
                     }
                   },
                   "monthlyBelowNear.en": {
@@ -21742,7 +21746,8 @@
                       "monthlyBudgetProgress": {
                         "fraction": 0.79,
                         "status": "WithinLimit"
-                      }
+                      },
+                      "dailyResetTimeZoneId": "example"
                     }
                   },
                   "monthlyNear.es": {
@@ -21776,7 +21781,8 @@
                       "monthlyBudgetProgress": {
                         "fraction": 0.8,
                         "status": "NearLimit"
-                      }
+                      },
+                      "dailyResetTimeZoneId": "example"
                     }
                   },
                   "monthlyNear.en": {
@@ -21810,7 +21816,8 @@
                       "monthlyBudgetProgress": {
                         "fraction": 0.8,
                         "status": "NearLimit"
-                      }
+                      },
+                      "dailyResetTimeZoneId": "example"
                     }
                   },
                   "monthlyReached.es": {
@@ -21844,7 +21851,8 @@
                       "monthlyBudgetProgress": {
                         "fraction": 1,
                         "status": "LimitReached"
-                      }
+                      },
+                      "dailyResetTimeZoneId": "example"
                     }
                   },
                   "monthlyReached.en": {
@@ -21878,7 +21886,8 @@
                       "monthlyBudgetProgress": {
                         "fraction": 1,
                         "status": "LimitReached"
-                      }
+                      },
+                      "dailyResetTimeZoneId": "example"
                     }
                   },
                   "monthlyOver.es": {
@@ -21912,7 +21921,8 @@
                       "monthlyBudgetProgress": {
                         "fraction": 1.2,
                         "status": "LimitReached"
-                      }
+                      },
+                      "dailyResetTimeZoneId": "example"
                     }
                   },
                   "monthlyOver.en": {
@@ -21946,7 +21956,8 @@
                       "monthlyBudgetProgress": {
                         "fraction": 1.2,
                         "status": "LimitReached"
-                      }
+                      },
+                      "dailyResetTimeZoneId": "example"
                     }
                   }
                 }
@@ -30582,7 +30593,8 @@
                       "retentionDays": 30,
                       "maxAttachmentBytes": 10485760,
                       "maxAttachments": 5,
-                      "monthlyBudgetProgress": null
+                      "monthlyBudgetProgress": null,
+                      "dailyResetTimeZoneId": "example"
                     }
                   }
                 }
@@ -41125,7 +41137,8 @@
                       "retentionDays": 30,
                       "maxAttachmentBytes": 10485760,
                       "maxAttachments": 5,
-                      "monthlyBudgetProgress": null
+                      "monthlyBudgetProgress": null,
+                      "dailyResetTimeZoneId": "example"
                     }
                   }
                 }
@@ -63299,7 +63312,7 @@
         "tags": [
           "Configuración de Plataforma"
         ],
-        "description": "rateLimits (E9): los doce perfiles cerrados de cuotas compartidas, con ventanas fijas UTC y sin cola. Plazos (272): loginAuditRetentionMonths, loginCodeRetentionDays y closedInvitationRetentionDays. Nombre y correos (273): appName y senderName (sin guardar, los de la configuración de arranque) y emailLogoUrl (null sin logo).",
+        "description": "rateLimits (E9): los doce perfiles cerrados de cuotas compartidas, con ventanas fijas UTC y sin cola. Plazos (272): loginAuditRetentionMonths, loginCodeRetentionDays y closedInvitationRetentionDays. Nombre y correos (273): appName y senderName (sin guardar, los de la configuración de arranque), emailLogoUrl (null sin logo) y senderAddress, la dirección del «De» que fija la instalación y no se edita (null sin configurar).",
         "responses": {
           "200": {
             "description": "OK",
@@ -88289,7 +88302,8 @@
           "retentionDays",
           "maxAttachmentBytes",
           "maxAttachments",
-          "monthlyBudgetProgress"
+          "monthlyBudgetProgress",
+          "dailyResetTimeZoneId"
         ],
         "type": "object",
         "properties": {
@@ -88374,8 +88388,12 @@
               }
             ],
             "description": "Siempre presente. Consumer/Platform null; Business con presupuesto positivo aplicable usa usedCost registrado confirmado o conservador dividido por monthlyBudget snapshot de la misma financiación efectiva y mes civil. Sin reservas, suma de financiaciones, repricing ni recorte; NearLimit desde 80% y LimitReached desde 1. Presupuesto cero/null/no aplicable: null, sin división por cero. Configured=false conserva precedencia; consultas fijas siguen disponibles y State no garantiza admisión."
+          },
+          "dailyResetTimeZoneId": {
+            "type": "string"
           }
-        }
+        },
+        "description": "El estado del asistente para quien pide. `DailyResetTimeZoneId` es la zona en que corta el cupo del día (271): la de la\r\norganización en el acceso de empresa y la del perfil fuera de una; la pantalla dice la hora de `DailyResetAtUtc` en ella."
       },
       "AssistantStreamHttpResponse": {
         "required": [
@@ -94742,9 +94760,15 @@
               "null",
               "string"
             ]
+          },
+          "senderAddress": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
-        "description": "La configuración de Plataforma. Los plazos de retención del núcleo (decisión 272) y el nombre, el remitente y el logo de\r\nlos correos (decisión 273) valen para todas las organizaciones; sin logo, `EmailLogoUrl` es null."
+        "description": "La configuración de Plataforma. Los plazos de retención del núcleo (decisión 272) y el nombre, el remitente y el logo de\r\nlos correos (decisión 273) valen para todas las organizaciones; sin logo, `EmailLogoUrl` es null. `SenderAddress`\r\nes la dirección del «De», que fija la instalación y no se edita: la muestra «Así llega»; null si no está configurada."
       },
       "PlatformTenantDetailResponse": {
         "required": [
@@ -96888,6 +96912,8 @@
             ]
           },
           "retentionDays": {
+            "maximum": 30,
+            "minimum": 1,
             "type": [
               "null",
               "integer"
@@ -99037,6 +99063,7 @@
       "WhatsAppOrganizationSettingsResponse": {
         "required": [
           "chatRetentionDays",
+          "maxOrganizationChatRetentionDays",
           "version"
         ],
         "type": "object",
@@ -99045,12 +99072,17 @@
             "type": "integer",
             "format": "int32"
           },
+          "maxOrganizationChatRetentionDays": {
+            "type": "integer",
+            "description": "El máximo que fija la plataforma para el plazo de los chats de una organización; solo lectura.",
+            "format": "int32"
+          },
           "version": {
             "type": "integer",
             "format": "uint32"
           }
         },
-        "description": "La configuración de WhatsApp de la organización (B18): cuánto se guardan sus chats, hasta el máximo de la plataforma."
+        "description": "La configuración de WhatsApp de la organización (B18): cuánto se guardan sus chats y el máximo que fija la plataforma, que\r\nla pantalla nombra en la (i) y en el error."
       },
       "WhatsAppPhoneImportHttpRequest": {
         "type": "object",

@@ -19,6 +19,7 @@ public sealed class WhatsAppHelpArticleTests
         ["/org/whatsapp/bot"] = "whatsapp.admin",
         ["/org/whatsapp/equipos"] = "whatsapp.admin",
         ["/org/whatsapp/plantillas"] = "whatsapp.admin",
+        ["/org/whatsapp/configuracion"] = "whatsapp.admin",
         ["/plataforma/whatsapp"] = "whatsapp.platform.consultations",
         ["/plataforma/whatsapp/consultas"] = "whatsapp.platform.consultations",
         ["/plataforma/whatsapp/numero"] = "whatsapp.platform.admin",

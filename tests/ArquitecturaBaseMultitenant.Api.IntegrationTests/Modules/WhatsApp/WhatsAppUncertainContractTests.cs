@@ -86,7 +86,8 @@ public sealed class WhatsAppUncertainContractTests(ApiFactory factory)
         }
         Assert.Equal(["allowedCountries", "chatRetentionDays", "maxOrganizationChatRetentionDays", "version"],
             schemas["PlatformWhatsAppSettingsResponse"]!["required"]!.AsArray().Select(value => value!.GetValue<string>()).Order(StringComparer.Ordinal));
-        Assert.Equal(["chatRetentionDays", "version"],
+        // La organización lee el máximo que fija la plataforma: la pantalla lo nombra en la (i) y en el error (WA-Config-Base2).
+        Assert.Equal(["chatRetentionDays", "maxOrganizationChatRetentionDays", "version"],
             schemas["WhatsAppOrganizationSettingsResponse"]!["required"]!.AsArray().Select(value => value!.GetValue<string>()).Order(StringComparer.Ordinal));
     }
 

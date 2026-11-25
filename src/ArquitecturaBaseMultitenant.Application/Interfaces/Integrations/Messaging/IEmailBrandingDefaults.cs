@@ -13,4 +13,7 @@ public interface IEmailBrandingDefaults
 
     /// <summary>El logo de arranque; null si no hay.</summary>
     string? LogoUrl { get; }
+
+    /// <summary>La dirección del remitente (<c>Email:Smtp:FromAddress</c>), que fija la instalación; null si no hay.</summary>
+    string? SenderAddress { get; }
 }

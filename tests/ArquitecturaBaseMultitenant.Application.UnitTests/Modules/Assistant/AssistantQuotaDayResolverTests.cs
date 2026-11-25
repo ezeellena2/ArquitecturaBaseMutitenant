@@ -22,8 +22,8 @@ public sealed class AssistantQuotaDayResolverTests
         var nowUtc = new DateTime(2026, 10, 11, 2, 0, 0, DateTimeKind.Utc);
         var inBuenosAires = resolver.Of(first, nowUtc, BuenosAires);
         var inMadrid = resolver.Of(second, nowUtc, Madrid);
-        Assert.Equal(new AssistantQuotaDay(first, new DateOnly(2026, 10, 10), new DateTime(2026, 10, 11, 3, 0, 0, DateTimeKind.Utc)), inBuenosAires);
-        Assert.Equal(new AssistantQuotaDay(second, new DateOnly(2026, 10, 11), new DateTime(2026, 10, 11, 22, 0, 0, DateTimeKind.Utc)), inMadrid);
+        Assert.Equal(new AssistantQuotaDay(first, new DateOnly(2026, 10, 10), new DateTime(2026, 10, 11, 3, 0, 0, DateTimeKind.Utc), BuenosAires), inBuenosAires);
+        Assert.Equal(new AssistantQuotaDay(second, new DateOnly(2026, 10, 11), new DateTime(2026, 10, 11, 22, 0, 0, DateTimeKind.Utc), Madrid), inMadrid);
         // Una hora después Buenos Aires ya cambió de día y Madrid no: los dos cupos de la misma persona cortan por separado.
         var later = nowUtc.AddHours(1.5);
         Assert.Equal(new DateOnly(2026, 10, 11), resolver.Of(first, later, BuenosAires).Day);

@@ -70,8 +70,9 @@ public sealed class WhatsAppSettingsServiceTests
         reader.Platform = null;
         var defaults = await service.GetAsync(Ct);
 
-        Assert.Equal((30, 7u), (trimmed.Value.ChatRetentionDays, trimmed.Value.Version));
-        Assert.Equal((WhatsAppSettingsLimits.DefaultChatRetentionDays, 0u), (defaults.Value.ChatRetentionDays, defaults.Value.Version));
+        Assert.Equal((30, 30, 7u), (trimmed.Value.ChatRetentionDays, trimmed.Value.MaxOrganizationChatRetentionDays, trimmed.Value.Version));
+        Assert.Equal((WhatsAppSettingsLimits.DefaultChatRetentionDays, WhatsAppSettingsLimits.DefaultMaxOrganizationChatRetentionDays, 0u),
+            (defaults.Value.ChatRetentionDays, defaults.Value.MaxOrganizationChatRetentionDays, defaults.Value.Version));
     }
 
     [Fact]

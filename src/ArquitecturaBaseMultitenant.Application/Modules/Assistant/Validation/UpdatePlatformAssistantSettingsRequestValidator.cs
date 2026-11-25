@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Resources;
 using FluentValidation;
+using ArquitecturaBaseMultitenant.Domain.Assistant;
 using ArquitecturaBaseMultitenant.Domain.Common;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Validation;
@@ -15,7 +16,7 @@ internal sealed class UpdatePlatformAssistantSettingsRequestValidator : Abstract
         RuleFor(request => request.DailyMessageLimit).Must(value => value is >= 1).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.LimitsInvalid"));
         RuleFor(request => request.MonthlyOrganizationBudget).Must(AssistantContractPolicy.IsValidBudget).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.PriceInvalid"));
         RuleFor(request => request.PersonalEnabled).NotNull().WithMessage(_ => AssistantTexts.Get("Assistant.Validation.Required"));
-        RuleFor(request => request.RetentionDays).Must(value => value is >= 1).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.LimitsInvalid"));
+        RuleFor(request => request.RetentionDays).Must(value => value is >= 1 and <= AssistantFeature.MaxRetentionDays).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.LimitsInvalid"));
         RuleFor(request => request.KeyAction).Must(value => value is not null && Enum.IsDefined(value.Value)).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.SelectionInvalid"));
         RuleFor(request => request.ApiKey).MaximumLength(TextLimits.LongText).WithMessage(_ => AssistantTexts.Get("Assistant.Validation.KeyTooLong"));
         RuleFor(request => request.Version).NotNull().WithMessage(_ => AssistantTexts.Get("Assistant.Validation.VersionRequired"));

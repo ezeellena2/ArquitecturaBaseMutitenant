@@ -778,6 +778,13 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
                 foreach (var (field, numericProperty) in mutable.Properties ?? new Dictionary<string, IOpenApiSchema>())
                     if (field is "maxInputTokens" or "maxOutputTokens" or "inputTokensThreshold" && numericProperty is OpenApiSchema number)
                         number.Minimum = "1";
+            // Las conversaciones del Inicio se guardan de 1 a 30 días (272).
+            if (name is "UpdatePlatformAssistantSettingsHttpRequest" && mutable.Properties?.TryGetValue("retentionDays", out var retention) == true
+                && retention is OpenApiSchema retentionDays)
+            {
+                retentionDays.Minimum = "1";
+                retentionDays.Maximum = Convert.ToString(Domain.Assistant.AssistantFeature.MaxRetentionDays, System.Globalization.CultureInfo.InvariantCulture);
+            }
 
             string[] requiredProjections = name switch
             {

@@ -41,7 +41,7 @@ internal sealed class AssistantStateBuilder(AssistantNoticePolicy notices, ICurr
         if (authorized.IsFailure) return authorized.Error;
         return new AssistantStateResponse(current.Configured, current.CanConfigure, current.Models,
             accepted ? quick : [], quota.Limit, quota.ResetAtUtc, quota.Remaining, budget, cost,
-            version, accepted, current.RetentionDays, AssistantTechnicalLimits.MaxAttachmentBytes, AssistantTechnicalLimits.MaxAttachments, progress);
+            version, accepted, current.RetentionDays, AssistantTechnicalLimits.MaxAttachmentBytes, AssistantTechnicalLimits.MaxAttachments, progress, day.TimeZoneId);
     }
 
     private async Task<(Money? Budget, Money? Cost)> ReadMonthAsync(AssistantStateConfigurationRow current, DateTime nowUtc, CancellationToken ct)

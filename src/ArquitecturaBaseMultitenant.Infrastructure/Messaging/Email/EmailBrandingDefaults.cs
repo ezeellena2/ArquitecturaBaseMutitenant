@@ -11,4 +11,6 @@ internal sealed class EmailBrandingDefaults(IOptions<EmailOptions> email, IOptio
     public string SenderName => string.IsNullOrWhiteSpace(smtp.Value.FromName) ? email.Value.AppName : smtp.Value.FromName;
 
     public string? LogoUrl => string.IsNullOrWhiteSpace(email.Value.LogoUrl) ? null : email.Value.LogoUrl;
+
+    public string? SenderAddress => string.IsNullOrWhiteSpace(smtp.Value.FromAddress) ? null : smtp.Value.FromAddress;
 }

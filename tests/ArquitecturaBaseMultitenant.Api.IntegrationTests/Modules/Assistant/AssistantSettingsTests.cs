@@ -68,11 +68,11 @@ public sealed class AssistantSettingsTests(ApiFactory factory)
             var globalBody = System.Text.Json.Nodes.JsonNode.Parse(JsonSerializer.Serialize(PlatformBody(global, global.RootElement.GetProperty("version").GetUInt32(), "keep")))!;
             globalBody["dailyMessageLimit"] = 70;
             globalBody["monthlyOrganizationBudget"]!["amount"] = 150m;
-            globalBody["retentionDays"] = 45;
+            globalBody["retentionDays"] = 25;
             using var changed = await operatorClient.PutAsJsonAsync("/api/platform/assistant/settings", globalBody, AssistantTestData.Ct);
             await SavedVersion.ReadAsync(changed, AssistantTestData.Ct);
             using var ownWithLiveRetention = await ReadAsync(client, "/api/organization/assistant/settings");
-            Assert.Equal(45, ownWithLiveRetention.RootElement.GetProperty("retentionDays").GetInt32());
+            Assert.Equal(25, ownWithLiveRetention.RootElement.GetProperty("retentionDays").GetInt32());
             Assert.Equal(8, ownWithLiveRetention.RootElement.GetProperty("dailyMessageLimit").GetInt32());
             using var switched = await client.PutAsJsonAsync("/api/organization/assistant/settings", new
             { mode = "PlatformKey", modelId = model, effort = "low", keyAction = "keep", version }, AssistantTestData.Ct);

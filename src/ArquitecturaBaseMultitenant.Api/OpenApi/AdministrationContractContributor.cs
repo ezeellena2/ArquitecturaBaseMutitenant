@@ -106,7 +106,7 @@ internal sealed class AdministrationContractContributor : IHttpContractContribut
     {
         const string Settings = "/api/platform/settings";
         Append(document, Settings, HttpMethod.Get,
-            "Plazos (272): loginAuditRetentionMonths, loginCodeRetentionDays y closedInvitationRetentionDays. Nombre y correos (273): appName y senderName (sin guardar, los de la configuración de arranque) y emailLogoUrl (null sin logo).");
+            "Plazos (272): loginAuditRetentionMonths, loginCodeRetentionDays y closedInvitationRetentionDays. Nombre y correos (273): appName y senderName (sin guardar, los de la configuración de arranque), emailLogoUrl (null sin logo) y senderAddress, la dirección del «De» que fija la instalación y no se edita (null sin configurar).");
         Append(document, Settings, HttpMethod.Put,
             "Los plazos (272) y appName, senderName y emailLogoUrl (273) son opcionales: si faltan se conserva lo guardado. Fuera de su mínimo o su máximo, 400 de validación en su campo; emailLogoUrl va vacío o con https://.");
     }

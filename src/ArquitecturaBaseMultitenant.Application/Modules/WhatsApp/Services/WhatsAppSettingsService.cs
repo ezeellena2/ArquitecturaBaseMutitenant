@@ -24,8 +24,8 @@ internal sealed class WhatsAppSettingsService(IWhatsAppSettingsReader reader, IW
         OperationLog.RunAsync<WhatsAppOrganizationSettingsResponse>(logger, clock, "WhatsAppSettingsGet", async () =>
         {
             var row = await reader.FindOrganizationAsync(cancellationToken);
-            return new WhatsAppOrganizationSettingsResponse(await resolver.OrganizationChatRetentionDaysAsync(cancellationToken),
-                row?.Version ?? 0);
+            var (days, max) = await resolver.OrganizationChatRetentionAsync(cancellationToken);
+            return new WhatsAppOrganizationSettingsResponse(days, max, row?.Version ?? 0);
         });
 
     public Task<Result<VersionResponse>> UpdateAsync(UpdateWhatsAppOrganizationSettingsRequest request, CancellationToken cancellationToken)

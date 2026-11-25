@@ -28,7 +28,7 @@ internal sealed class PlatformSettingsService(IPlatformSettingsReader reader, IP
                     settings.LoginAuditRetentionMonths, settings.LoginCodeRetentionDays, settings.ClosedInvitationRetentionDays,
                     // Sin nombre ni logo guardados, los de la configuración de arranque (273, 0060): lo que llega en los correos.
                     settings.AppName ?? branding.AppName, settings.SenderName ?? branding.SenderName,
-                    PlatformSettings.EffectiveLogoUrl(settings.EmailLogoUrl, branding.LogoUrl));
+                    PlatformSettings.EffectiveLogoUrl(settings.EmailLogoUrl, branding.LogoUrl), branding.SenderAddress);
         });
 
     public Task<Result<PlatformContactResponse>> GetContactAsync(CancellationToken cancellationToken) =>

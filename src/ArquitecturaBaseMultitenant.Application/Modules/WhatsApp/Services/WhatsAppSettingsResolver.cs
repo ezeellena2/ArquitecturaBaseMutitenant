@@ -21,10 +21,13 @@ internal sealed class WhatsAppSettingsResolver(IWhatsAppSettingsReader reader, I
     public async Task<IReadOnlyList<string>> AllowedCountriesAsync(CancellationToken ct) => (await PlatformAsync(ct)).AllowedCountries;
 
     /// <summary>El plazo de los chats de la organización activa, recortado al máximo de la plataforma.</summary>
-    public async Task<int> OrganizationChatRetentionDaysAsync(CancellationToken ct)
+    public async Task<int> OrganizationChatRetentionDaysAsync(CancellationToken ct) => (await OrganizationChatRetentionAsync(ct)).Days;
+
+    /// <summary>El plazo de la organización activa, recortado, y el máximo de la plataforma que lo recorta.</summary>
+    public async Task<(int Days, int Max)> OrganizationChatRetentionAsync(CancellationToken ct)
     {
         var platform = await PlatformAsync(ct);
         var own = (await reader.FindOrganizationAsync(ct))?.ChatRetentionDays ?? WhatsAppSettingsLimits.DefaultChatRetentionDays;
-        return Math.Min(own, platform.MaxOrganizationChatRetentionDays);
+        return (Math.Min(own, platform.MaxOrganizationChatRetentionDays), platform.MaxOrganizationChatRetentionDays);
     }
 }

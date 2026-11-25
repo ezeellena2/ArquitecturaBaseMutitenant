@@ -156,6 +156,22 @@ public sealed class PlatformSettingsServiceTests
     }
 
     [Fact]
+    public async Task Reading_names_the_sender_address_of_the_installation_next_to_the_saved_names()
+    {
+        using var fixture = new ServiceFixture<PlatformSettingsService>(new UpdatePlatformSettingsRequestValidator());
+        var service = new PlatformSettingsService(new StubReader(new PlatformSettingsRow(ConsumerSignupMode.Open, BusinessSignupMode.Open, 1, 30,
+                SenderName: "Equipo de Delta Apps")), new StubRepository(), new FakeUnitOfWork(), fixture.Validator,
+            new PlatformSettingsAuditWriter(new StubUser(), new StubEvents(), fixture.TimeProvider, new StubRequest()), new StubBranding(),
+            fixture.TimeProvider, fixture.Logger);
+
+        var settings = (await service.GetAsync(Ct)).Value;
+
+        // «Así llega» dice el «De» completo: el nombre guardado y la dirección que fija la instalación, que no se edita.
+        Assert.Equal(("Arquitectura Base", "Equipo de Delta Apps", "no-responder@example.test"),
+            (settings.AppName, settings.SenderName, settings.SenderAddress));
+    }
+
+    [Fact]
     public async Task Retention_and_mail_rules_are_saved_and_kept_when_omitted()
     {
         using var fixture = new ServiceFixture<PlatformSettingsService>(new UpdatePlatformSettingsRequestValidator());
@@ -301,11 +317,13 @@ public sealed class PlatformSettingsServiceTests
         public string SenderName => "Arquitectura Base";
 
         public string? LogoUrl => null;
+
+        public string? SenderAddress => "no-responder@example.test";
     }
 
-    private sealed class StubReader : IPlatformSettingsReader
+    private sealed class StubReader(PlatformSettingsRow? row = null) : IPlatformSettingsReader
     {
-        public Task<PlatformSettingsRow?> FindAsync(CancellationToken ct) => Task.FromResult<PlatformSettingsRow?>(null);
+        public Task<PlatformSettingsRow?> FindAsync(CancellationToken ct) => Task.FromResult(row);
 
         public Task<PlatformRateLimits?> FindRateLimitsAsync(CancellationToken ct) => Task.FromResult<PlatformRateLimits?>(null);
 

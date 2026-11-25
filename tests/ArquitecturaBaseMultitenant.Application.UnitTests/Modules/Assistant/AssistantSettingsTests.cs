@@ -45,6 +45,21 @@ public sealed class AssistantSettingsTests
         Assert.Contains(platformValidator.Validate(platform with { MonthlyOrganizationBudget = amount }).Errors, error => error.PropertyName == "MonthlyOrganizationBudget");
     }
 
+    [Theory]
+    [InlineData(0, false)]
+    [InlineData(1, true)]
+    [InlineData(30, true)]
+    [InlineData(31, false)]
+    public void Home_conversations_are_kept_from_one_to_thirty_days(int days, bool valid)
+    {
+        var modelId = Guid.CreateVersion7();
+        var budget = new Money(100m, CurrencyCode.Create("USD").Value);
+        var request = new UpdatePlatformAssistantSettingsRequest(modelId, [modelId], AssistantEffort.Low, 50, budget, false, days, AssistantKeyAction.Keep, null, 1);
+        var result = new UpdatePlatformAssistantSettingsRequestValidator().Validate(request);
+        Assert.Equal(valid, result.IsValid);
+        if (!valid) Assert.Contains(result.Errors, error => error.PropertyName == "RetentionDays");
+    }
+
     [Fact]
     public void Provider_tariffs_preserve_subcent_values_but_reject_loss_of_six_digit_precision()
     {

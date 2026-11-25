@@ -6,7 +6,7 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 /// <summary>El día de un cupo diario de la IA: de quién es (la organización, o nadie fuera de una), cuál es y cuándo se renueva.</summary>
-internal sealed record AssistantQuotaDay(Guid? OrganizationId, DateOnly Day, DateTime ResetAtUtc);
+internal sealed record AssistantQuotaDay(Guid? OrganizationId, DateOnly Day, DateTime ResetAtUtc, string TimeZoneId);
 
 /// <summary>
 /// El corte de los cupos diarios de la IA (271, que enmienda la 0064 §3): en una organización, la medianoche de su zona, con un
@@ -33,7 +33,7 @@ internal sealed class AssistantQuotaDayResolver(IExecutionActorFactory actors, I
     {
         if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC is required.", nameof(nowUtc));
         var day = DateOnly.FromDateTime(zones.ConvertToLocal(nowUtc, timeZoneId));
-        return new(organizationId, day, zones.GetDayRangeUtc(day, timeZoneId).EndUtc);
+        return new(organizationId, day, zones.GetDayRangeUtc(day, timeZoneId).EndUtc, timeZoneId);
     }
 
     /// <summary>De quién es el cupo con la clave de la plataforma: la organización en el acceso de empresa; nadie fuera de una.</summary>

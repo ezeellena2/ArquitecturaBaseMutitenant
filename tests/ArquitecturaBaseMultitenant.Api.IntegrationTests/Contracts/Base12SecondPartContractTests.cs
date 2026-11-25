@@ -113,6 +113,9 @@ public sealed class Base12SecondPartContractTests(ApiFactory factory)
         Assert.Superset(new HashSet<string>(["loginAuditRetentionMonths", "loginCodeRetentionDays", "closedInvitationRetentionDays", "appName", "senderName"]),
             Required(schemas["PlatformSettingsResponse"]!).ToHashSet());
         Assert.NotNull(schemas["PlatformSettingsResponse"]!["properties"]!["emailLogoUrl"]);
+        // «Así llega» muestra el «De» completo: la dirección la fija la instalación y no se edita (integración de la base 2).
+        Assert.NotNull(schemas["PlatformSettingsResponse"]!["properties"]!["senderAddress"]);
+        Assert.Null(schemas["UpdatePlatformSettingsHttpRequest"]!["properties"]!["senderAddress"]);
         var update = schemas["UpdatePlatformSettingsHttpRequest"]!["properties"]!;
         AssertRange(update["loginAuditRetentionMonths"]!, PlatformSettingsLimits.MinLoginAuditRetentionMonths, PlatformSettingsLimits.MaxLoginAuditRetentionMonths);
         AssertRange(update["loginCodeRetentionDays"]!, PlatformSettingsLimits.MinLoginCodeRetentionDays, PlatformSettingsLimits.MaxLoginCodeRetentionDays);

@@ -72,6 +72,7 @@ public sealed class AssistantStateTests
         Assert.Equal(50, state.RootElement.GetProperty("dailyLimit").GetInt32());
         Assert.Equal(JsonValueKind.Null, state.RootElement.GetProperty("remainingMessages").ValueKind);
         Assert.EndsWith("Z", state.RootElement.GetProperty("dailyResetAtUtc").GetString());
+        Assert.False(string.IsNullOrWhiteSpace(state.RootElement.GetProperty("dailyResetTimeZoneId").GetString()));
         Assert.Equal(30, state.RootElement.GetProperty("retentionDays").GetInt32());
         Assert.Equal(10485760, state.RootElement.GetProperty("maxAttachmentBytes").GetInt64());
         Assert.Equal(5, state.RootElement.GetProperty("maxAttachments").GetInt32());

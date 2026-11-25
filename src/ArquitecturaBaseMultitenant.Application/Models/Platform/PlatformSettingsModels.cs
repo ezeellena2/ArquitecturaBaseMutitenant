@@ -5,12 +5,13 @@ namespace ArquitecturaBaseMultitenant.Application.Models.Platform;
 
 /// <summary>
 /// La configuración de Plataforma. Los plazos de retención del núcleo (decisión 272) y el nombre, el remitente y el logo de
-/// los correos (decisión 273) valen para todas las organizaciones; sin logo, <c>EmailLogoUrl</c> es null.
+/// los correos (decisión 273) valen para todas las organizaciones; sin logo, <c>EmailLogoUrl</c> es null. <c>SenderAddress</c>
+/// es la dirección del «De», que fija la instalación y no se edita: la muestra «Así llega»; null si no está configurada.
 /// </summary>
 public sealed record PlatformSettingsResponse(ConsumerSignupMode ConsumerSignup, BusinessSignupMode BusinessSignup,
     int MaxOwnedOrganizations, Email? SalesEmail, Email? SupportEmail, uint Version, PlatformRateLimitsResponse RateLimits,
     int LoginAuditRetentionMonths, int LoginCodeRetentionDays, int ClosedInvitationRetentionDays,
-    string AppName, string SenderName, string? EmailLogoUrl);
+    string AppName, string SenderName, string? EmailLogoUrl, string? SenderAddress);
 
 /// <summary>
 /// Sin <see cref="RateLimits"/> se conservan las cuotas guardadas; con ellas, van los doce perfiles completos. Cada plazo y el

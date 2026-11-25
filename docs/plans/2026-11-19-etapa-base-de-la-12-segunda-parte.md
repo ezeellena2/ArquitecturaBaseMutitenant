@@ -238,6 +238,13 @@ Leé AGENTS.md de los dos repos, este plan, la spec y la skill /puerta. Integrá
 - GET /api/organization/whatsapp/contacts/{id}/broadcasts: nuevo query sort (name, sentAtUtc, status; status por su circuito). Sin sort, -sentAtUtc como antes. (B17)
 - Los listados de plantillas, difusiones y destinatarios ahora validan: un sort fuera de la lista, un tamaño de página no admitido o un estado inválido es 400 Validation.Failed. (B17)
 - docs/contracts/openapi.json regenerado con el parámetro sort en esas siete rutas. (B17)
+- `GET/PUT /api/organization/whatsapp/settings` y `/api/platform/whatsapp/settings` ya no responden el 501: contestan con su `version`, su 400 de validación y su 409. `GET /api/auth/methods` no cambia de forma: los países del canal `whatsapp` salen de la configuración de WhatsApp de Plataforma y, sin fila, de `WhatsApp:AllowedCountries`. (B18)
+- `GET /api/platform/settings`: `emailLogoUrl` es el logo que llega en los correos (sin guardar, el de arranque; quitado, `null`). (B18)
+- `GET /api/organization/whatsapp/settings` suma `maxOrganizationChatRetentionDays`, el máximo que fija la plataforma: la pantalla lo nombra en la (i) y en el error (`WA-Config-Base2`). (integración)
+- `GET /api/platform/settings` suma `senderAddress`, de solo lectura y `null` sin configurar: la dirección del «De» que fija la instalación (`Email:Smtp:FromAddress`), que muestra «Así llega» (`Config-Plat-Base2`). (integración)
+- `PUT /api/platform/assistant/settings`: `retentionDays` va de 1 a 30, como «Conversaciones del Inicio» de `Config-Plat-Base2`; openapi.json publica las dos cotas y el front las lee de ahí. (integración)
+- El estado del asistente (`GET /api/{organization|me|platform}/assistant`) suma `dailyResetTimeZoneId`, la zona en que corta el cupo del día (271): la de la organización en el acceso de empresa y la del perfil fuera de una. La pantalla dice «hora de Grupo Delta» (`Asistente-Org-Base2`). (integración)
+- `docs/contracts/frontend-routes.json` suma `/org/whatsapp/configuracion`, que explica el artículo de ayuda «Administrar WhatsApp». (integración)
 
 ## Para decidir
 
