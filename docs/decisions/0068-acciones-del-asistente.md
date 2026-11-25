@@ -117,7 +117,7 @@ El usuario pidió, con sus palabras, que cuando la IA pueda crear, editar o elim
    - revalida el dueño, el acceso, la organización, que la acción siga ofrecida para esa persona y su versión;
    - vuelve a resolver con la fuente cada id guardado, el destino y los `Record`, con los permisos de ese momento y en su empresa. Uno que ya no resuelve deja la propuesta «ya no disponible».
 
-   La dirección lleva solo el id, nunca valores. Cada pantalla presta un adaptador que dibuja **todos** los valores propuestos; si uno no se puede mostrar, la pantalla rechaza la propuesta. Los selectores buscan por id lo elegido que no cargaron.
+   La dirección lleva solo el id, nunca valores. Cada pantalla presta un adaptador que dibuja **todos** los valores propuestos; si uno no se puede mostrar, la pantalla rechaza la propuesta. Los selectores muestran lo elegido que no cargaron con el nombre que trae la propuesta del servidor (`selectedOptions` de `Picker`).
 
    **Cómo se confirma, según la acción:**
    - **`Dialog`:** ese diálogo sobre el Inicio, con «Propuesta del asistente» y «Revisá» en lo dudoso;
@@ -134,7 +134,7 @@ El usuario pidió, con sus palabras, que cuando la IA pueda crear, editar o elim
     - **la clave se repite** mientras ese intento no termine en 4xx, así que dos pestañas usan la misma;
     - **un 422 de clave repetida** no prueba que se guardó, porque la clave guarda también un 4xx: el front vuelve a pedir la clave a la propuesta, y si una ya terminó en 2xx, la respuesta es «ya se guardó», con el enlace a lo creado;
     - **«Aplicada»** la marca el servidor, cuando el almacén de idempotencia confirma que una clave de la propuesta terminó en 2xx para esa persona y esa ruta (el almacén suma esa lectura);
-    - **si pasan 24 h** sin saberlo, la propuesta no se vuelve a abrir y queda «Sin confirmar», con el enlace al listado, como la [0066](0066-lo-que-no-se-sabe-si-salio.md). Ese estado se calcula al leer, con las claves de la propuesta.
+    - **si pasa la validez de la clave** (`Idempotency:ValidityHours`, 24 h de entrada) sin saberlo, la propuesta no se vuelve a abrir y queda «Sin confirmar», con el enlace al listado, como la [0066](0066-lo-que-no-se-sabe-si-salio.md). Ese estado se calcula al leer, con las claves de la propuesta.
 
     **Al editar o eliminar, la versión** impide aplicar dos veces; «Aplicada» se marca con la versión nueva.
 11. **Los tres lados y WhatsApp:**
@@ -161,7 +161,7 @@ El usuario pidió, con sus palabras, que cuando la IA pueda crear, editar o elim
 | Editar de más | Listas con «sumar» y «quitar», «Lo que cambia» con lo que se quita, el aviso si cambió y el 409 |
 | SQL | Valores tipados que van a un `*Request` y a EF con parámetros; ningún tipo de campo es texto ejecutable; sin `FromSqlRaw`, `ExecuteSqlRaw` ni `SqlQueryRaw` |
 | Cambiar el esquema | No hay camino: las acciones son rutas que existen, los catálogos son filas y `mt_app` no crea ni altera tablas |
-| Duplicar | La clave de cada intento la da el servidor, ante un 422 se le vuelve a preguntar a la propuesta si ya se guardó, y pasadas las 24 h queda «Sin confirmar» |
+| Duplicar | La clave de cada intento la da el servidor, ante un 422 se le vuelve a preguntar a la propuesta si ya se guardó, y pasada la validez de la clave queda «Sin confirmar» |
 | Abrir la propuesta de otro | Solo la lee su dueño (0048, D5) |
 | Datos de terceros al proveedor | Van tipos, campos y nombres de definiciones; nunca registros ni personas, tampoco en la historia (0064 §10) |
 | Cantidades y costos | Los límites de la regla 12, y el costo de cada acción medido al calificarla |
