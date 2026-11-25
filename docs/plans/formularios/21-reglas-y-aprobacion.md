@@ -1,6 +1,6 @@
 # E21 · Reglas, aprobación, PDF y avisos (spec)
 
-**Estado:** pendiente · spec de la etapa 21 del bloque (decisiones 34, 78, 82, 91 a 93, 100, 106, 113, 114, 158, 159, 161, 166, 170, 177, 228, 230, 236, 237, 239, 240, 261 a 264, 266, 267, 275, 276 y 281; la 240 cambia la 80, y la 266, la 267 y la 276, la 25, la 139, la 166 y la 209), con el [formato](plantilla.md) de las etapas. Corresponde a la etapa 4 de ArquitecturaBase, a la 3 de su carga desde la app (corregir y anular) y a la 3 y la 4 de sus renglones (T12). «Por resolver», el aviso a quien cargó y lo demás del motor son de allá (T14).
+**Estado:** pendiente · spec de la etapa 21 del bloque (decisiones 34, 78, 82, 91 a 93, 100, 106, 113, 114, 158, 159, 161, 166, 170, 177, 228, 230, 236, 237, 239, 240, 261 a 264, 266, 267, 275, 276, 281 y 282; la 240 cambia la 80, y la 266, la 267 y la 276, la 25, la 139, la 166 y la 209), con el [formato](plantilla.md) de las etapas. Corresponde a la etapa 4 de ArquitecturaBase, a la 3 de su carga desde la app (corregir y anular) y a la 3 y la 4 de sus renglones (T12). «Por resolver», el aviso a quien cargó y lo demás del motor son de allá (T14).
 
 **Partes.** Esta spec no entra en un solo archivo, así que sigue en otros tres, con las mismas secciones. Lo que no está en la tabla está acá.
 
