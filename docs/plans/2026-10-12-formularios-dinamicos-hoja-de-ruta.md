@@ -881,6 +881,10 @@ De la revisión de alineación del 2026-11-23. El usuario eligió la recomendada
 
 280. **Un documento repetido por WhatsApp dice si solo se propuso o si ya se cargó** (O37 y O46 de ArquitecturaBase, que allá siguen sin decidir; E25): si el primero solo se propuso, el asistente contesta «Ya me lo mandaste el {fecha}: completá el formulario que te mandé.»; si ya se cargó, el de `Forms.Document.Duplicate`, «Ya se cargó en {number} el {date}.». Nunca dice que se cargó lo que solo se propuso.
 
+De la revisión de punta a punta del 2026-11-25. El usuario eligió la recomendada:
+
+281. **Un correo de una regla que no se sabe si salió queda «Sin confirmar»** (revisión del 2026-11-25, la G3-16; [ADR 0066](../decisions/0066-lo-que-no-se-sabe-si-salio.md) §7, que da al correo el mismo estado de la cola, y §4; precisa la 240, que lo decía solo por WhatsApp, la 228 y la 267, que ya lista «Sin confirmar» entre los estados de un aviso; E21): si la cola no sabe si salió el correo de una regla, por ejemplo porque el servidor de correo cortó la conexión después de recibirlo, el renglón de esa persona en la actividad de la respuesta dice «Sin confirmar», como una invitación por correo. No se repite solo, y la respuesta queda «Por resolver» (228). Como un correo no tiene bandeja donde revisarlo, quien tiene «Administrar reglas y PDF» ve «Reintentar» en el ⋮ del renglón (261), que pide confirmar: «Puede que ya le haya llegado. ¿Mandarlo otra vez?». Una vez mandado, deja de estar por resolver. Allá el correo se da por hecho al dejarlo en la cola, porque su cola no tiene «Sin confirmar».
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase
