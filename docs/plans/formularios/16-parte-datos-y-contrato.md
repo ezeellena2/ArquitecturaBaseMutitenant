@@ -103,5 +103,5 @@ Cada punto lleva su test, escrito durante la etapa, y los pasos los llaman «lec
   - en `Application.UnitTests/Modules/Forms/`: `FormRecipientFilterPolicyTests.cs` y `FormPersonDataValueEditorTests.cs`;
   - en `Api.IntegrationTests/Modules/Forms/`: `FormPersonDataTests.cs`, `FormRecipientFilterOfferTests.cs` y `FormsMembershipEndTests.cs`;
   - el escenario de las acciones, en `Api.IntegrationTests/TestFeatures/AssistantActions/`;
-  - `FormPersonDataValues` se inscribe en `tests/ArquitecturaBaseMultitenant.ArchitectureTests/PersonalDataPurgeTests.cs`, que crea la B2 de la base 2.
+  - `FormPersonDataValues` se inscribe en `tests/ArquitecturaBaseMultitenant.ArchitectureTests/Modules/Forms/FormsPersonalDataPurgeTests.cs` [E12], que suma `MemberId` a sus pistas porque ninguna columna dice que son datos de una persona, purgada por `AccountDeletionWorker`: la borra el fin de la membresía (`FormsMembershipEndParticipant`: sacar a alguien, revocar la invitación de quien no entró y la baja de la cuenta).
 - **Front,** en `src/modules/forms/`: `api/personData.ts`; las dos rutas de catálogos suman a `api/catalogs.ts` [E12], y la pestaña va en `tabs/MemberDataTab.tsx`, con `useMemberData.ts`, como pide `estructura-y-features.md` del front.
