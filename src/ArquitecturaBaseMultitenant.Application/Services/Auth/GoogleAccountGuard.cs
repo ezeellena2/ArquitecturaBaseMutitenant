@@ -1,4 +1,3 @@
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.Legal;
@@ -10,9 +9,9 @@ using ArquitecturaBaseMultitenant.Application.Models.Auth;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
-// El resolver llama bajo el lock de cuenta; la gracia entrega prueba sin emitir sesión.
-internal sealed class GoogleAccountGuard(IUserRepository users, ISignInService signIn,
-    AccountDeletionCancelIssuer cancellation)
+// El resolver llama bajo el lock de cuenta; la gracia entrega prueba sin emitir sesión. El bloqueo por códigos fallidos
+// no frena a Google (B4): cualquiera que conozca el correo lo provoca, y Google es la salida del dueño.
+internal sealed class GoogleAccountGuard(IUserRepository users, AccountDeletionCancelIssuer cancellation)
 {
     internal async Task<Result<UserAccountRow>> CheckAsync(Guid userId, Guid? methodId, string returnUrl,
         CancellationToken cancellationToken)
@@ -24,7 +23,6 @@ internal sealed class GoogleAccountGuard(IUserRepository users, ISignInService s
         if (account.HasPendingOperatorInvitation) return ExternalLoginErrors.Failed;
         if (account.IsPlatformOperator && (!ReturnUrls.TryReadAccessSelection(returnUrl, out var selection)
             || selection.Access != Access.Platform)) return AccessErrors.PlatformOnly;
-        if (await signIn.IsLockedOutAsync(userId, cancellationToken)) return AccountErrors.LockedOut;
         if (account.Status == UserStatus.PendingDeletion) return cancellation.Issue(account, returnUrl);
         return account;
     }

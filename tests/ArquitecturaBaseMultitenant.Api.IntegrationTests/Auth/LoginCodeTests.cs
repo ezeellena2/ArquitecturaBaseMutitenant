@@ -233,6 +233,31 @@ public sealed class LoginCodeTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task A_correct_code_on_a_locked_account_says_LockedOut_and_still_works_once_the_lock_ends()
+    {
+        // B4: con la cuenta bloqueada, el código correcto no abre la sesión ni se gasta.
+        using var client = factory.CreateClient();
+        var address = $"locked-correct-{Guid.NewGuid():N}@example.test";
+        var userId = await CreateVerifiedEmailAccountAsync(address);
+        var request = await client.PostAsJsonAsync("/test/auth/request-code", new { email = address }, Ct);
+        Assert.Equal(HttpStatusCode.OK, request.StatusCode);
+        var code = await ReadPickupCodeAsync(address);
+        await SetLockoutAsync(userId, locked: true);
+
+        var locked = await client.PostAsJsonAsync("/test/auth/verify-code",
+            new { email = address, code, returnUrl = "/connect/authorize?client_id=web" }, Ct);
+        Assert.Equal(HttpStatusCode.TooManyRequests, locked.StatusCode);
+        var problem = await locked.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(Ct);
+        Assert.Equal(AccountErrors.LockedOutCode, problem.GetProperty("code").GetString());
+        Assert.False(locked.Headers.Contains("Set-Cookie"));
+
+        await SetLockoutAsync(userId, locked: false);
+        var verified = await client.PostAsJsonAsync("/test/auth/verify-code",
+            new { email = address, code, returnUrl = "/connect/authorize?client_id=web" }, Ct);
+        Assert.Equal(HttpStatusCode.OK, verified.StatusCode);
+    }
+
+    [Fact]
     public async Task Suspended_account_receives_code_and_is_rejected_after_correct_verification()
     {
         using var client = factory.CreateClient();
@@ -291,6 +316,28 @@ public sealed class LoginCodeTests(ApiFactory factory)
         await using var scope = factory.Services.CreateAsyncScope();
         Assert.False(await scope.ServiceProvider.GetRequiredService<ISignInService>()
             .IsLockedOutAsync(userId, Ct));
+    }
+
+    private async Task SetLockoutAsync(Guid userId, bool locked)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+        {
+            var signIn = services.GetRequiredService<ISignInService>();
+            if (locked)
+            {
+                for (var attempt = 0; attempt < 20 && !await signIn.IsLockedOutAsync(userId, ct); attempt++)
+                    await signIn.RegisterFailedAttemptAsync(userId, ct);
+                Assert.True(await signIn.IsLockedOutAsync(userId, ct));
+                return Result.Success();
+            }
+            var manager = services.GetRequiredService<UserManager<ApplicationUser>>();
+            var user = await manager.FindByIdAsync(userId.ToString("D"));
+            Assert.NotNull(user);
+            Assert.True((await manager.SetLockoutEndDateAsync(user, null)).Succeeded);
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
     }
 
     private Task<Guid> CreateVerifiedEmailAccountAsync(string address) =>

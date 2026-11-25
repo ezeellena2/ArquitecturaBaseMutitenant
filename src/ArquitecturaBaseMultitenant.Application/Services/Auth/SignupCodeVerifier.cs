@@ -26,7 +26,7 @@ internal sealed class SignupCodeVerifier(LoginCodeAttemptVerifier verifier, Sign
             return Fail(destination, attemptedMethod.UserId, FieldErrors.On(SignupErrors.PhoneTaken, "phone"));
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         var verified = await verifier.VerifyAsync(destination, LoginCodePurpose.Signup,
-            requestedByUserId: null, request.Code!, attemptedMethod?.UserId, cancellationToken);
+            requestedByUserId: null, request.Code!, VerifiedOwner(attemptedMethod), cancellationToken);
         if (verified.IsFailure) return Fail(destination, attemptedMethod?.UserId, verified.Error);
 
         var method = await existingMethods.FindAsync(destination, cancellationToken);
@@ -69,7 +69,7 @@ internal sealed class SignupCodeVerifier(LoginCodeAttemptVerifier verifier, Sign
         var ownerId = LoginDestinationResolver.Type(destination) == LoginMethodType.Phone && attemptedMethod is { VerifiedAtUtc: not null }
             ? (Guid?)attemptedMethod.UserId : null;
         var verified = await verifier.VerifyAsync(destination, LoginCodePurpose.BusinessSignup,
-            ownerId, request.Code!, attemptedMethod?.UserId, cancellationToken);
+            ownerId, request.Code!, VerifiedOwner(attemptedMethod), cancellationToken);
         if (verified.IsFailure) return Fail(destination, attemptedMethod?.UserId, verified.Error);
 
         var method = await existingMethods.FindAsync(destination, cancellationToken);
@@ -99,6 +99,11 @@ internal sealed class SignupCodeVerifier(LoginCodeAttemptVerifier verifier, Sign
         audits.Add(LoginAudit.Success(userId, destinations.AuditMethod(destination), nowUtc));
         return userId;
     }
+
+    // B4: el bloqueo es de la cuenta que el código abriría. Con el destino solo pendiente en otra cuenta, el código crea
+    // una nueva: ni sus fallos ni el bloqueo de esa otra cuenta cuentan.
+    private static Guid? VerifiedOwner(LoginMethodLookup? method) =>
+        method is { VerifiedAtUtc: not null } ? method.UserId : null;
 
     private Error Fail(LoginCodeDestination destination, Guid? userId, Error error)
     {

@@ -136,6 +136,40 @@ public sealed class GoogleLoginTests(ApiFactory factory)
         Assert.Null(google.SignedInUserId);
     }
 
+    [Fact]
+    public async Task An_account_locked_by_failed_codes_still_enters_with_Google()
+    {
+        // B4: cualquiera que conozca el correo puede bloquear la cuenta fallando códigos; Google no mira ese bloqueo.
+        var subject = Guid.NewGuid().ToString("N");
+        var email = Email.Create("google-locked-" + subject + "@example.test").Value;
+        var userId = Guid.Empty;
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var services = seedScope.ServiceProvider;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var users = services.GetRequiredService<IUserRepository>();
+                var user = await users.CreateAsync(null, "es-AR", "America/Argentina/Buenos_Aires", ct);
+                userId = user.Id;
+                var method = LoginMethod.CreateGoogle(user.Id, subject, email);
+                method.Verify(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
+                method.MakePrimary();
+                services.GetRequiredService<ILoginMethodRepository>().Add(method);
+                await users.SetPrimaryEmailAsync(user.Id, email, ct);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        var google = new GoogleSignInDouble(new ExternalLogin("Google", subject, email, true, null), lockedOut: true);
+        await using var host = HostWith(google);
+        await using var scope = host.Services.CreateAsyncScope();
+
+        var result = await scope.ServiceProvider.GetRequiredService<IExternalLoginService>()
+            .SignInAsync(new ExternalSignInRequest("/connect/authorize?client_id=web", false, false), Ct);
+
+        Assert.True(result.IsSuccess, result.IsFailure ? result.Error.Code : null);
+        Assert.Equal(userId, google.SignedInUserId);
+    }
+
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
@@ -472,7 +506,7 @@ public sealed class GoogleLoginTests(ApiFactory factory)
         public void Clear() => Written = null;
     }
 
-    private sealed class GoogleSignInDouble(ExternalLogin login) : ISignInService
+    private sealed class GoogleSignInDouble(ExternalLogin login, bool lockedOut = false) : ISignInService
     {
         public Guid? SignedInUserId { get; private set; }
 
@@ -481,7 +515,7 @@ public sealed class GoogleLoginTests(ApiFactory factory)
 
         public Task SignOutExternalAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
-        public Task<bool> IsLockedOutAsync(Guid userId, CancellationToken cancellationToken) => Task.FromResult(false);
+        public Task<bool> IsLockedOutAsync(Guid userId, CancellationToken cancellationToken) => Task.FromResult(lockedOut);
 
         public Task RegisterFailedAttemptAsync(Guid userId, CancellationToken cancellationToken) => Task.CompletedTask;
 

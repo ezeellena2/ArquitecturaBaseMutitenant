@@ -5,7 +5,11 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 
-/// <summary>Verifica el propósito del código y conserva intentos/lockout solo ante un intento activo fallido.</summary>
+/// <summary>
+/// Verifica el propósito del código y conserva intentos/lockout solo ante un intento activo fallido. Con la cuenta
+/// bloqueada, el código correcto responde <c>LockedOut</c> sin gastarse (B4); uno equivocado gasta el intento igual,
+/// así el bloqueo no deja probar gratis ni distinguir el correcto.
+/// </summary>
 internal sealed class LoginCodeAttemptVerifier(LoginCodeVerifier verifier, ILoginCodeRepository codes,
     ISignInService signIn, TimeProvider clock)
 {
@@ -15,7 +19,10 @@ internal sealed class LoginCodeAttemptVerifier(LoginCodeVerifier verifier, ILogi
         await codes.LockDestinationAsync(destination, ct);
         var active = (await codes.GetLatestAsync(destination, purpose, requestedByUserId, ct))
             ?.IsActive(clock.GetUtcNow().UtcDateTime) == true;
-        var verified = await verifier.VerifyAsync(destination, purpose, requestedByUserId, code, ct, usable);
+        var locked = active && accountId is { } lockedId && await signIn.IsLockedOutAsync(lockedId, ct);
+        var verified = await verifier.VerifyAsync(destination, purpose, requestedByUserId, code, ct, usable,
+            consume: !locked);
+        if (verified.IsSuccess && locked) return AccountErrors.LockedOut;
         if (verified.IsFailure && active && accountId is { } userId && IsFailedAttempt(verified.Error))
         {
             await signIn.RegisterFailedAttemptAsync(userId, ct);

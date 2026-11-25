@@ -14,9 +14,11 @@ internal sealed class LoginCodeVerifier(
     ILoginCodeHasher codeHasher,
     TimeProvider timeProvider)
 {
-    // Con usable en falso, el código de una cuenta falla como uno mal escrito: su destino ya es de otra cuenta.
+    // Con usable en falso, el código de una cuenta falla como uno mal escrito: su destino ya es de otra cuenta. Con
+    // consume en falso, el correcto no se gasta (B4: la cuenta está bloqueada).
     public async Task<Result> VerifyAsync(LoginCodeDestination destination, LoginCodePurpose purpose,
-        Guid? requestedByUserId, string code, CancellationToken cancellationToken, bool usable = true)
+        Guid? requestedByUserId, string code, CancellationToken cancellationToken, bool usable = true,
+        bool consume = true)
     {
         ArgumentNullException.ThrowIfNull(destination);
         ArgumentException.ThrowIfNullOrWhiteSpace(code);
@@ -31,8 +33,8 @@ internal sealed class LoginCodeVerifier(
         var hash = codeHasher.Hash(destination, purpose, code);
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         return requestedByUserId is { } userId
-            ? row.VerifyFor(userId, purpose, hash, nowUtc, usable)
-            : row.Verify(purpose, hash, nowUtc);
+            ? row.VerifyFor(userId, purpose, hash, nowUtc, usable, consume)
+            : row.Verify(purpose, hash, nowUtc, consume);
     }
 
     /// <summary>Verifica el código de «Recuperar mi cuenta» con el nonce con el que se pidió.</summary>

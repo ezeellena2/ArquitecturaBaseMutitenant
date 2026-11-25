@@ -78,10 +78,8 @@ internal sealed class ExternalLoginService(
         var resolved = await accounts.ResolveAsync(request, login, draft, cancellationToken);
         if (resolved.IsFailure) return Fail(null, resolved.Error);
 
+        // B4: el bloqueo por códigos fallidos no frena a Google; la suspensión y la baja las revisa el resolver.
         var userId = resolved.Value;
-        if (await signIn.IsLockedOutAsync(userId, cancellationToken))
-            return Fail(userId, AccountErrors.LockedOut);
-
         if (access == Access.Platform && await users.GetByIdAsync(userId, cancellationToken) is { IsPlatformOperator: true })
         {
             // E9 (ADR 0043): Google probó el primer factor. La sesión, el borrado de los fallos y el ingreso exitoso

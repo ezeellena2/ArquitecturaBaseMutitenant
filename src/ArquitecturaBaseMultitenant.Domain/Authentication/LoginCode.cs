@@ -144,16 +144,17 @@ public sealed class LoginCode : Entity
     }
 
     /// <summary>
-    /// Verifica un código de ingreso o de registro. Otro propósito no gasta intentos.
+    /// Verifica un código de ingreso o de registro. Otro propósito no gasta intentos. Con <paramref name="consume"/> en
+    /// falso, el código correcto responde bien sin gastarse; uno equivocado gasta el intento igual (B4).
     /// </summary>
-    public Result Verify(LoginCodePurpose expectedPurpose, string codeHash, DateTime nowUtc)
+    public Result Verify(LoginCodePurpose expectedPurpose, string codeHash, DateTime nowUtc, bool consume = true)
     {
         ArgumentNullException.ThrowIfNull(codeHash);
 
         return RequestedByUserId is null
             && expectedPurpose is LoginCodePurpose.Login or LoginCodePurpose.Signup or LoginCodePurpose.BusinessSignup
             && Purpose == expectedPurpose
-            ? Check(codeHash, nowUtc)
+            ? Check(codeHash, nowUtc, consume: consume)
             : LoginCodeErrors.Invalid(attemptsLeft: null);
     }
 
@@ -162,16 +163,17 @@ public sealed class LoginCode : Entity
     /// Si el propósito difiere o lo pidió otra cuenta, responde como cuando no hay código sin tocar contadores:
     /// así una prueba de posesión nunca se transfiere al nuevo dueño del mismo destino.
     /// Un código que no se mandó, o cuyo destino ya es de otra cuenta (<paramref name="usable"/> en falso), falla como
-    /// uno mal escrito y gasta el intento (ADR 0041).
+    /// uno mal escrito y gasta el intento (ADR 0041). Con <paramref name="consume"/> en falso, como en
+    /// <see cref="Verify"/>.
     /// </summary>
     public Result VerifyFor(Guid userId, LoginCodePurpose expectedPurpose, string codeHash, DateTime nowUtc,
-        bool usable = true)
+        bool usable = true, bool consume = true)
     {
         ArgumentNullException.ThrowIfNull(codeHash);
 
         return expectedPurpose is LoginCodePurpose.VerifyDestination or LoginCodePurpose.Login or LoginCodePurpose.BusinessSignup
             && Purpose == expectedPurpose && RequestedByUserId == userId
-            ? Check(codeHash, nowUtc, usable: usable && SentAtUtc is not null)
+            ? Check(codeHash, nowUtc, usable: usable && SentAtUtc is not null, consume: consume)
             : LoginCodeErrors.Invalid(attemptsLeft: null);
     }
 
@@ -208,7 +210,7 @@ public sealed class LoginCode : Entity
         NonceHash is not null && nonceHash is not null
         && CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(NonceHash), Encoding.UTF8.GetBytes(nonceHash));
 
-    private Result Check(string codeHash, DateTime nowUtc, bool usable = true)
+    private Result Check(string codeHash, DateTime nowUtc, bool usable = true, bool consume = true)
     {
         if (nowUtc.Kind != DateTimeKind.Utc)
         {
@@ -244,7 +246,7 @@ public sealed class LoginCode : Entity
             return FailedAttempts >= MaxAttempts ? LoginCodeErrors.TooManyAttempts : LoginCodeErrors.Invalid(AttemptsLeft);
         }
 
-        ConsumedAtUtc = nowUtc;
+        if (consume) ConsumedAtUtc = nowUtc;
 
         return Result.Success();
     }
