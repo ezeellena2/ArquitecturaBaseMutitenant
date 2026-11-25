@@ -70,7 +70,7 @@ Toda descarga responde `no-store` y `nosniff`, y revisa el permiso antes y despu
 
 | Ruta | Qué suma |
 | --- | --- |
-| GET `/{id}` y PUT `/{id}/draft` | preguntas `Photo` y `Document`, con `photoSource?` (`CameraOrGallery` o `CameraOnly`), `minFiles?` y `maxFiles?`; `FormDetail` suma `maxFileMiB`, el tope vigente que dice la (i): el menor de las dos configuraciones (270) |
+| GET `/{id}` y PUT `/{id}/draft` | preguntas `Photo` y `Document`, con `photoSource?` (`CameraOrGallery` o `CameraOnly`), `minFiles?` y `maxFiles?`; `FormDetailResponse` suma `maxFileMiB`, el tope vigente que dice la (i): el menor de las dos configuraciones (270) |
 | POST `/{id}/publication-checks` | `Forms.Draft.TooManyFiles` (`questions`, con `limit` 10 y `length`, la suma de los máximos) y `Forms.Publication.FilesUnavailable`; `ResponseTooLarge` mide contra 64 KiB con una pregunta de archivo |
 | GET `/{id}/records/columns` | columnas `Photo` y `Document` |
 | POST `…/records/search` y GET `…/records/{recordId}` | el valor `{kind: "files", files[{id, fieldId, name, kind, mediaType, size, hasThumbnail}]}`, en orden |
