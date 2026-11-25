@@ -30,6 +30,7 @@
   "/org/whatsapp/bot",
   "/org/whatsapp/chats",
   "/org/whatsapp/chats/:conversationId",
+  "/org/whatsapp/configuracion",
   "/org/whatsapp/contactos",
   "/org/whatsapp/contactos/:contactId",
   "/org/whatsapp/difusiones",
