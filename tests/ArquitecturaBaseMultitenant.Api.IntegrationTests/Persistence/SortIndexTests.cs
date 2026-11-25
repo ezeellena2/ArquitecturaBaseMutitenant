@@ -37,6 +37,26 @@ public sealed class SortIndexTests(ApiFactory factory)
         new("OrganizationUserReader.Sort", "state", null),
         new("OrganizationUserReader.Sort", "createdAtUtc", new("tenant", "Members", "CreatedAtUtc")),
         new("PlatformAccountReader.Sort", "name", new("identity", "AspNetUsers", "DisplayName")),
+        // Un rol cuenta sus personas y los permisos de su alcance; una empresa, sus miembros activos; una organización toma
+        // sus contadores y el Dueño que muestra su fila (el nombre o, sin nombre, el correo).
+        new("RoleReader.Sort", "name", new("tenant", "Roles", "Name")),
+        new("RoleReader.Sort", "type", new("tenant", "Roles", "IsSystemRole")),
+        new("RoleReader.Sort", "scope", new("tenant", "Roles", "Scope")),
+        new("RoleReader.Sort", "userCount", null),
+        new("RoleReader.Sort", "permissions", null),
+        new("RoleReader.Sort", "createdAtUtc", new("tenant", "Roles", "CreatedAtUtc")),
+        new("CompanyReader.Sort", "name", new("tenant", "Companies", "Name")),
+        new("CompanyReader.Sort", "taxId", new("tenant", "Companies", "TaxNumber")),
+        new("CompanyReader.Sort", "timeZoneId", new("tenant", "Companies", "TimeZoneId")),
+        new("CompanyReader.Sort", "memberCount", null),
+        new("CompanyReader.Sort", "status", new("tenant", "Companies", "Status")),
+        new("CompanyReader.Sort", "createdAtUtc", new("tenant", "Companies", "CreatedAtUtc")),
+        new("PlatformReader.Sort", "name", new("platform", "Tenants", "Name")),
+        new("PlatformReader.Sort", "createdAtUtc", new("platform", "Tenants", "CreatedAtUtc")),
+        new("PlatformReader.Sort", "ownerName", null),
+        new("PlatformReader.Sort", "companyCount", null),
+        new("PlatformReader.Sort", "memberCount", null),
+        new("PlatformReader.Sort", "status", new("platform", "Tenants", "Status")),
         // WhatsApp: un equipo cuenta sus integrantes; una plantilla resume su categoría, su estado y su fecha con lo que dijo Meta;
         // una difusión cuenta entregados y leídos de sus destinatarios, y su fecha elige entre tres. Los destinatarios son los de
         // una difusión, con su estado y su fecha calculados y el nombre del contacto.

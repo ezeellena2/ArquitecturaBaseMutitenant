@@ -9,7 +9,7 @@ namespace ArquitecturaBaseMultitenant.Application.Models.Platform;
 
 public sealed record ListPlatformTenantsRequest : PagedRequest
 {
-    public static readonly IReadOnlyCollection<string> SortableFields = ["name", "createdAtUtc", "status"];
+    public static readonly IReadOnlyCollection<string> SortableFields = ["name", "createdAtUtc", "ownerName", "companyCount", "memberCount", "status"];
     public TenantStatus? Status { get; init; }
     public TenantRegistrationSource? Source { get; init; }
     /// <summary>

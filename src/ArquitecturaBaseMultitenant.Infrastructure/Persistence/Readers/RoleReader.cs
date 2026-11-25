@@ -12,13 +12,19 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 /// <summary>Proyecta roles del tenant activo y mantiene el orden y búsqueda del catálogo.</summary>
 internal sealed class RoleReader(ApplicationDbContext context, ITenantContext tenantContext) : IRoleReader
 {
-    private static readonly SortMap<Role> Sort = new()
+    private static readonly SortMap<RoleSortRow> Sort = new()
     {
         ["name"] = role => role.Name,
         ["type"] = role => role.IsSystemRole,
         ["scope"] = role => role.Scope,
+        ["userCount"] = role => role.UserCount,
+        ["permissions"] = role => role.PermissionCount,
         ["createdAtUtc"] = role => role.CreatedAtUtc,
     };
+
+    // La columna «Permisos» cuenta los que valen en el alcance del rol: los de empresa en un rol de empresa y los demás en
+    // uno de la organización. El rol de sistema de empresa trae además uno de la organización que no se muestra.
+    private static readonly string[] CompanyScoped = [.. Permissions.CompanyScoped];
 
     private static readonly SortDescriptor DefaultSort = new("name", Descending: false);
 
@@ -60,6 +66,19 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
         ArgumentNullException.ThrowIfNull(request);
         var tenantId = tenantContext.RequiredTenantId;
         var roles = ApplyRoleFilters(tenantId, request)
+            .Select(role => new RoleSortRow
+            {
+                Id = role.Id,
+                Name = role.Name,
+                IsSystemRole = role.IsSystemRole,
+                Scope = role.Scope,
+                UserCount = context.RoleAssignments.Where(assignment => assignment.TenantId == tenantId
+                    && assignment.RoleId == role.Id).Select(assignment => assignment.MemberId).Distinct().Count(),
+                PermissionCount = role.Scope == RoleScope.Organization
+                    ? role.Permissions.Count(code => !CompanyScoped.Contains(code))
+                    : role.Permissions.Count(code => CompanyScoped.Contains(code)),
+                CreatedAtUtc = role.CreatedAtUtc,
+            })
             .ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, role => role.Id);
         var page = await roles.ToPagedResultAsync(request, cancellationToken);
         if (page.Items.Count == 0)
@@ -207,4 +226,16 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
 
     private static RoleRow SortPermissions(RoleRow role) =>
         role with { Permissions = role.Permissions.Order(StringComparer.Ordinal).ToArray() };
+
+    /// <summary>Un rol con lo que se ordena: sus datos y las dos cuentas que muestra la tabla.</summary>
+    private sealed class RoleSortRow
+    {
+        public Guid Id { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public bool IsSystemRole { get; init; }
+        public RoleScope Scope { get; init; }
+        public int UserCount { get; init; }
+        public int PermissionCount { get; init; }
+        public DateTime CreatedAtUtc { get; init; }
+    }
 }

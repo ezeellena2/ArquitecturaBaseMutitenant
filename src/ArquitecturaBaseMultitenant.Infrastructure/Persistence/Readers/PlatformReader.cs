@@ -15,16 +15,49 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 /// <summary>Lee exclusivamente metadatos globales de organizaciones y el índice de accesos.</summary>
 internal sealed class PlatformReader(ApplicationDbContext context) : IPlatformReader
 {
-    private static readonly SortMap<Tenant> Sort = new()
+    private static readonly SortMap<TenantSortRow> Sort = new()
     {
         ["name"] = t => t.Name,
         ["createdAtUtc"] = t => t.CreatedAtUtc,
+        ["ownerName"] = t => t.Owner,
+        ["companyCount"] = t => t.CompanyCount,
+        ["memberCount"] = t => t.MemberCount,
         ["status"] = t => t.Status,
     };
 
-    public Task<PagedResult<PlatformTenantResponse>> ListTenantsAsync(ListPlatformTenantsRequest request, CancellationToken ct) =>
-        Project(ApplyFilters(request).ApplySort(SortDescriptor.Parse(request.Sort), Sort,
-            new SortDescriptor("name", false), t => t.Id)).ToPagedResultAsync(request, ct);
+    public async Task<PagedResult<PlatformTenantResponse>> ListTenantsAsync(ListPlatformTenantsRequest request, CancellationToken ct)
+    {
+        var page = await (from t in ApplyFilters(request)
+                          join counters in context.TenantCounters.AsNoTracking() on t.Id equals counters.TenantId
+                          let ownerId = context.UserTenantAccesses.Where(a => a.TenantId == t.Id && a.Status == MemberStatus.Active
+                              && a.RoleName == SystemRoles.TenantAdmin).OrderBy(a => a.JoinedAtUtc).ThenBy(a => a.UserId)
+                              .Select(a => (Guid?)a.UserId).FirstOrDefault()
+                          let userId = ownerId ?? (t.RegistrationSource == TenantRegistrationSource.SelfService ? t.RegisteredByUserId : null)
+                          let ownerName = context.Users.Where(u => u.Id == userId).Select(u => u.DisplayName).FirstOrDefault()
+                          // La columna «Dueño» muestra el nombre o, sin nombre, el correo (el del Dueño invitado, sin cuenta).
+                          let ownerEmail = context.Users.Where(u => u.Id == userId).Select(u => u.Email).FirstOrDefault()
+                              ?? context.PendingTenantOwners.Where(owner => owner.TenantId == t.Id)
+                                  .OrderBy(owner => owner.InvitationId).Select(owner => owner.Address).FirstOrDefault()
+                          select new TenantSortRow
+                          {
+                              Id = t.Id,
+                              Name = t.Name,
+                              CreatedAtUtc = t.CreatedAtUtc,
+                              Owner = ownerName != null && ownerName != "" ? ownerName : ownerEmail,
+                              CompanyCount = counters.CompanyCount,
+                              MemberCount = counters.MemberCount,
+                              Status = t.Status,
+                          })
+            .ApplySort(SortDescriptor.Parse(request.Sort), Sort, new SortDescriptor("name", false), t => t.Id)
+            .Select(t => t.Id)
+            .ToPagedResultAsync(request, ct);
+        if (page.Items.Count == 0) return new PagedResult<PlatformTenantResponse>([], page.Page, page.PageSize, page.TotalCount);
+
+        Guid[] ids = [.. page.Items];
+        var rows = await Project(context.Tenants.AsNoTracking().Where(t => ids.Contains(t.Id))).ToDictionaryAsync(t => t.Id, ct);
+        return new PagedResult<PlatformTenantResponse>([.. page.Items.Select(id => rows[id])], page.Page, page.PageSize,
+            page.TotalCount);
+    }
 
     public async Task<PlatformTenantFilterCounts> CountTenantsAsync(ListPlatformTenantsRequest request, CancellationToken ct)
     {
@@ -121,4 +154,16 @@ internal sealed class PlatformReader(ApplicationDbContext context) : IPlatformRe
             t.CreatedAtUtc, counters.CompanyCount, counters.MemberCount, t.Version,
             context.Users.Where(u => u.Id == userId).Select(u => u.DisplayName).FirstOrDefault(),
             ownerEmail == null ? null : Email.Create(ownerEmail).Value);
+
+    /// <summary>Una organización con lo que se ordena: sus datos, el Dueño que muestra la tabla y sus contadores.</summary>
+    private sealed class TenantSortRow
+    {
+        public Guid Id { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public DateTime? CreatedAtUtc { get; init; }
+        public string? Owner { get; init; }
+        public int CompanyCount { get; init; }
+        public int MemberCount { get; init; }
+        public TenantStatus Status { get; init; }
+    }
 }

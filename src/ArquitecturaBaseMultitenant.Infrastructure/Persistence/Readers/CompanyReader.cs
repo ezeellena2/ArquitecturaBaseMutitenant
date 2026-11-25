@@ -11,11 +11,12 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 /// <summary>Proyecta empresas y conteos de membresías bajo el tenant activo.</summary>
 internal sealed class CompanyReader(ApplicationDbContext context, ITenantContext tenantContext) : ICompanyReader
 {
-    private static readonly SortMap<Company> Sort = new()
+    private static readonly SortMap<CompanySortRow> Sort = new()
     {
         ["name"] = company => company.Name,
         ["taxId"] = company => company.TaxNumber,
         ["timeZoneId"] = company => company.TimeZoneId,
+        ["memberCount"] = company => company.MemberCount,
         ["status"] = company => company.Status,
         ["createdAtUtc"] = company => company.CreatedAtUtc,
     };
@@ -28,7 +29,21 @@ internal sealed class CompanyReader(ApplicationDbContext context, ITenantContext
         ArgumentNullException.ThrowIfNull(request);
         var tenantId = tenantContext.RequiredTenantId;
         var companies = Companies(tenantId, request)
-            .ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, company => company.Id);
+            .Select(company => new CompanySortRow
+            {
+                Id = company.Id,
+                Name = company.Name,
+                TaxNumber = company.TaxNumber,
+                TimeZoneId = company.TimeZoneId,
+                MemberCount = context.CompanyMemberships.Count(membership => membership.TenantId == company.TenantId
+                    && membership.CompanyId == company.Id && membership.Status == CompanyMembershipStatus.Active
+                    && context.Members.Any(member => member.TenantId == membership.TenantId
+                        && member.Id == membership.MemberId && member.Status == MemberStatus.Active)),
+                Status = company.Status,
+                CreatedAtUtc = company.CreatedAtUtc,
+            })
+            .ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, company => company.Id)
+            .Select(company => company.Id);
         return ProjectPageAsync(companies, tenantId, request, cancellationToken);
     }
 
@@ -93,18 +108,30 @@ internal sealed class CompanyReader(ApplicationDbContext context, ITenantContext
         company.Version,
         company.CreatedAtUtc));
 
-    private async Task<PagedResult<CompanyRow>> ProjectPageAsync(IQueryable<Company> companies, Guid tenantId,
+    private async Task<PagedResult<CompanyRow>> ProjectPageAsync(IQueryable<Guid> companies, Guid tenantId,
         ListCompaniesRequest request, CancellationToken cancellationToken)
     {
         var page = await companies.ToPagedResultAsync(request, cancellationToken);
         if (page.Items.Count == 0)
             return new PagedResult<CompanyRow>([], page.Page, page.PageSize, page.TotalCount);
 
-        var companyIds = page.Items.Select(company => company.Id).ToArray();
+        var companyIds = page.Items.ToArray();
         var rows = await Project(context.Companies.AsNoTracking().Where(company => company.TenantId == tenantId
                 && companyIds.Contains(company.Id)))
             .ToDictionaryAsync(company => company.Id, cancellationToken);
-        return new PagedResult<CompanyRow>([.. page.Items.Select(company => rows[company.Id])],
+        return new PagedResult<CompanyRow>([.. page.Items.Select(companyId => rows[companyId])],
             page.Page, page.PageSize, page.TotalCount);
+    }
+
+    /// <summary>Una empresa con lo que se ordena: sus datos y cuántos miembros activos tiene, la cuenta de su fila.</summary>
+    private sealed class CompanySortRow
+    {
+        public Guid Id { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public string? TaxNumber { get; init; }
+        public string TimeZoneId { get; init; } = string.Empty;
+        public int MemberCount { get; init; }
+        public CompanyStatus Status { get; init; }
+        public DateTime CreatedAtUtc { get; init; }
     }
 }
