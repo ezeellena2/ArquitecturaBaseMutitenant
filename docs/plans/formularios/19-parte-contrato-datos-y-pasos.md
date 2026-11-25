@@ -59,7 +59,7 @@
 
 ## Datos
 
-Una migración aditiva, `<fecha>_FormLogic.cs`. Lo de una pregunta vive en el jsonb del borrador y de la versión, sin columnas nuevas.
+Una migración aditiva, `<fecha>_FormLogic.cs`, que agrega y escribe en el mismo despliegue (los tipos `Calculation` y `Rows`): es la excepción de la [0060](../../decisions/0060-dos-versiones-conviven.md), anotada en ella, porque todavía no hay despliegue (123). Lo de una pregunta va en el jsonb, sin columnas.
 
 | Tabla | Columna | Tipo | Regla |
 | --- | --- | --- | --- |
@@ -114,7 +114,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 
 ## Los textos del bloque
 
-Todo texto que ve el usuario dice «ítem» («item» en inglés) donde allá decía «renglón» (177). «Ítem» lleva tilde y mayúscula solo al empezar, y va con «otro» y «un», así se lee bien con cualquier nombre de bloque. «Renglón» queda donde es una línea. Son los de esta etapa:
+Todo texto que ve el usuario dice «ítem» («item» en inglés) donde allá decía «renglón» (177). «Ítem» lleva tilde y mayúscula solo al empezar, y va con «otro» y «un». «Renglón» queda donde es una línea. Son los de esta etapa:
 
 | Dónde | Dice | En inglés |
 | --- | --- | --- |
@@ -151,9 +151,9 @@ Cada punto lleva su test:
 3. **Un cálculo que rompe la captura:** nada de una fórmula puede frenar una respuesta.
 4. **`double` en un paso intermedio:** todo en `decimal`, y sin `Math.Round` sin modo.
 5. **Un cálculo que cambia solo:** se guarda el resultado, no se recalcula al leer.
-6. **Un comprobante con varios ítems no entraba en una respuesta.** Allá, en la prueba del 2026-11-02, un remito de tres artículos fueron tres respuestas iguales salvo el artículo. Lo resuelve el bloque (146).
+6. **Un comprobante con varios ítems no entraba en una respuesta:** allá, un remito de tres artículos fueron tres respuestas. Lo resuelve el bloque (146).
 7. **Sin `routing_model`, «No» cortaba el formulario.** Allá, el 2026-11-06, el celular decía «Se produjo un error»: Meta deducía las rutas de los `navigate` y dejaba afuera la rama «No» del `If`. El test fija las dos ramas de cada `If`.
-8. **La captura que no entiende el bloque.** Allá la respuesta con ítems se descartó, porque la captura no aceptaba el tipo del bloque, y el chat dijo «no pudimos relacionar con un envío». Acá la captura y su aviso nacen con el bloque.
+8. **La captura que no entiende el bloque.** Allá la respuesta con ítems se descartó, y el chat dijo «no pudimos relacionar con un envío». Acá la captura y su aviso nacen con el bloque.
 9. **La planilla que no conoce el bloque.** Allá el backend sumó la columna del bloque, el front la rechazó y la planilla dijo «No pudimos cargar las respuestas.». La columna sale con su ejemplo exportado y el esquema del front, a la vez.
 10. **Un mínimo que WhatsApp no puede cumplir:** con 15, nadie completaba el formulario por WhatsApp. Publicar frena (178), y la captura valida siempre el mínimo.
 11. **Dar por aceptado lo que Meta no aceptó.** Allá se escribió que Meta había aceptado el bloque al final, y no era cierto: rechazó la publicación con `INVALID_PROPERTY_VALUE` («Expected 'complete'»), y lo desmintieron los dos `GET` de «Cómo se arma el Flow». Una documentación no prueba que Meta aceptó algo, y tampoco los dobles de prueba ni el Meta simulado del E2E: cada forma nueva del Flow se publica con Meta y se mira `validation_errors` antes de darla por buena. El test fija que ninguna pantalla que manda navega.

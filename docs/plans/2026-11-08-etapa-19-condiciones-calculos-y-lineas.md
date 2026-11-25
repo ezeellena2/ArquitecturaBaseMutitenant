@@ -11,13 +11,11 @@
 
 ## Forma de trabajo
 
-Modo rápido: contrato primero; después Back y Front a la vez, un chat por repo; una sola puerta al final.
+Modo rápido: contrato primero; después los carriles del back y el front a la vez; una sola puerta al final ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)). Un arreglo corre solo lo que toca. La tabla de estado la actualiza el cierre del conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). El evaluador, la fórmula, la captura y el Flow arrancan con su test en rojo.
 
-El evaluador, la fórmula, la captura y el Flow arrancan con su test en rojo. Una sola revisión de código, en la puerta. La tabla de estado la actualiza la Guía.
+**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): la llevan las tareas **(R)**, completa y antes de su commit.
 
-**Revisión adversarial:** la llevan las tareas **(R)**, completa y antes de su commit, como dice [AGENTS.md](../../AGENTS.md).
-
-**Las reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commiteá solo lo tuyo (git commit -- <rutas>, en español, conventional commits); con la app levantada, nadie edita el src del front; TDD donde hay lógica; al terminar cada tarea o arreglo, build y tests rápidos enteros de tu repo (en el front, npx tsc -b y npm test), sin Docker ni filtro por módulo, más los de integración y seguridad del área si tocó rutas, persistencia, autenticación o aislamiento; el contrato no cambia sin anotarlo en «Cambios al contrato» y avisar a la Guía; ninguna clave real pasa por vos; al usuario, solo lo de producto.
+**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 19-condiciones-calculos-y-lineas/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y, al terminar, el build y los tests rápidos enteros, sin Docker ni filtrar por módulo, con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los de integración y de seguridad corren una vez, al cerrar cada carril del back. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
 
 ## Qué se verificó al arrancar
 
@@ -26,8 +24,7 @@ El evaluador, la fórmula, la captura y el Flow arrancan con su test en rojo. Un
 | [Meta] Una pantalla por ítem | Probado allá el 6 y el 7/11, con el `routing_model`. **El bloque al final** pasó el 9/11 solo con la pantalla de cierre, y 10 ítems de 600 caracteres con eñes, 34,6 KB, llegaron enteros (traspaso 12, §4). | B4 suma la pantalla de cierre (204). K2 la prueba. La respuesta grande, con número propio, va a la I3 (123). |
 | [Meta] `If` y su expresión | Allá, «Mostrar si» sobre una sola pregunta (CO1-A), probado el 2026-11-11: una comparación por `If`, sin `&&` ni `\|\|`, y hasta tres anidados. Según Meta (2026-11-08), `>`, `>=`, `<` y `<=` comparan solo números, `==` pide el mismo tipo y `${screen.<pantalla>.form.<campo>}` existe desde Flow JSON 4.0; los números y las fechas del Flow son texto. | B4 («Cómo se arma el Flow» de la parte); lo demás frena, como dibuja `FRM-Publicar-19`. K2 lo prueba. |
 | [Meta] Archivo dentro de un `If` | Meta no admite `PhotoPicker` ni `DocumentPicker` en un `If`; allá aceptó un `If` con un `Footer` por rama. | B4 y K2. |
-| Allá: renglones | Probado de punta a punta con Meta el 9/11; sus planes se retiraron, y valen las fuentes de «Qué leer» de la spec. Los ítems van en una columna `Row`; acá, en `FormRecordRowValues`. Sirven 450 campos, cómo empareja «Pasan al bloque», el mismo ítem para varias condiciones, el Excel por ítem (227) y el cálculo del ítem (233). | B3, B4, B7 y B8 los toman. |
-| [E14] a [E18] | Todavía no existen. | Lista cerrada en K0. |
+| Allá: renglones | Probado de punta a punta con Meta el 9/11. Los ítems van en una columna `Row`; acá, en `FormRecordRowValues`. Sirven 450 campos, cómo empareja «Pasan al bloque», el mismo ítem para varias condiciones, el Excel por ítem (227) y el cálculo del ítem (233). | B3, B4, B7 y B8 los toman. |
 | Datos de referencia | `ICurrencyCatalog.FindAsync` da `MinorUnits` (`int?`); `ValidCurrency()` está en `ValidationRules.cs`; `Money.Round` usa `AwayFromZero`. | B2 (232). |
 
 ## Contrato
@@ -73,7 +70,8 @@ El chat del contrato confirma cada nombre en el código; lo que difiera va a «C
 - **E16:** `FormRecipientFilterPolicy`, `recipientFilters[]` (`fixed`, `recipient`), `warnings[]`, `offerProblems`, `CatalogQuestionFields.tsx` y la zona «Avisos».
 - **E17:** `FormDefinitionCopyCreator`, que copia el borrador con sus identidades, y las lecturas que parten de la definición.
 - **E18:** el perfil `flow-static-7.3-r10`, el último, donde cada pregunta de archivo abre su pantalla y las siguientes la comparten; 64 KiB con archivos, y los tipos `Photo` y `Document`.
-- **E12 y E13:** `FormsContractContributor.cs` y `fields[].id`, con su tipo numérico.
+- **E12 y E13:** `FormsContractContributor.cs`, `fields[].id`, con su tipo numérico, y `parseDecimalText`.
+- **Base 2:** `numberAmbiguous` (207), la pieza `Picker` (262) y el orden por columnas (264).
 
 ### K1 · Publicar el contrato
 
@@ -104,7 +102,7 @@ Cada tarea copia su molde, con `Result` y ProblemDetails, `OperationLog.RunAsync
 
 1. **B1 · Condiciones en memoria.** `D/Forms/FormConditionEvaluator.cs`, junto a `FormRecordCondition.cs` [E15], que suma `notShown`. Copia `FormRecordFiltersPolicy.cs` [E15]. Tests: cada operador por tipo; en cadena; `unanswered` sobre una oculta se cumple; una tabla de casos que B7 corre también en SQL.
 2. **B2 · La fórmula.** `D/Forms/FormFormula.cs` y `FormFormulaEvaluator.cs`: precedencia, todo en `decimal`. Cada cálculo, también el de cada ítem, se redondea al par (`MidpointRounding.ToEven`, 232) a sus decimales sellados, y el que suma otros suma lo ya redondeado, sin tocar `Money.Round`. «Demasiado grande» es más de 13 dígitos enteros en un monto y de 15 en un número (T9 de la E14). Copia `D/ValueObjects/Money.cs`. Tests: los de B2 de la spec, más un dato de una oculta, el importe de cada ítem con el campo del catálogo elegido en él y un ítem sin el dato, que no cuenta.
-3. **B3 · Las preguntas en el borrador.** Suma a `FormQuestionType.cs`, `FormDraft.cs`, `FormDraftEditor.cs`, `FormVersionCreator.cs` y al control de `FieldInUse` [E14]; `A/Modules/Forms/Services/FormLogicPolicy.cs`. Copia `FormRecipientFilterPolicy.cs` [E16]. Decisiones:
+3. **B3 · Las preguntas en el borrador (R: datos, por los bloqueos).** Suma a `FormQuestionType.cs`, `FormDraft.cs`, `FormDraftEditor.cs`, `FormVersionCreator.cs` y al control de `FieldInUse` [E14]; `A/Modules/Forms/Services/FormLogicPolicy.cs`. Copia `FormRecipientFilterPolicy.cs` [E16]. Decisiones:
    - una condición no usa un cálculo ni una pregunta del bloque, y ni el bloque ni sus preguntas llevan «Mostrar si»;
    - un cálculo del bloque usa solo lo de su ítem, y uno de afuera, una pregunta del bloque solo en una suma (233); una fórmula no mezcla montos de dos monedas;
    - un monto guarda `decimals` igual a los `MinorUnits` de su moneda, y una sin `MinorUnits` es `FormulaInvalid`; cambiar la moneda, o pasar de número a monto, da otra identidad (como T17);
@@ -120,20 +118,20 @@ Cada tarea copia su molde, con `Result` y ProblemDetails, `OperationLog.RunAsync
    - **Ninguna pantalla que manda navega en otra rama** (Meta lo rechaza): si el bloque o una pregunta de archivo salteada es lo último, esa rama va a la **pantalla de cierre** (204). Ninguna pantalla de ítem manda.
    - Topes: 50 componentes por pantalla, contando cada `If`; 64 KiB con bloque, con cada pregunta una vez por ítem y su clave `_r<n>`; 450 campos en la respuesta.
    - Un `validation_errors` que no cae en una pregunta es `ValidationUnlocated`, y la verificación lee los dos `GET` de la parte con el token de la organización.
-   - El Meta simulado [E14] arma respuestas con ítems, con «No», con el bloque al final y con ocultas, para el E2E. No prueba a Meta: eso es K2 e I3.
+   - El Meta simulado [E14] arma respuestas con ítems, «No», el bloque al final y ocultas, para el E2E; no prueba a Meta (K2 e I3).
 
    Tests: los de B4 de la spec, más cada combinación de condiciones; ningún control en dos ramas; el cuarto `If` en cadena; la marca en cada `navigate`; el archivo salteado al final, que termina en la pantalla de cierre; los bytes sin condiciones ni bloque, y la pantalla salteada.
 5. **B5 · Tabla, columnas y migración (R: datos, migración y aislamiento).** `D/Forms/FormRecordRowValue.cs`, `I/Modules/Forms/Persistence/Configurations/FormRecordRowValueConfiguration.cs` y `<fecha>_FormLogic.cs`, con los datos de la spec; suma a `FormRecordConfiguration.cs` (`HiddenFieldIds`) y `FormRecordValueConfiguration.cs` (`Currency`) [E14]. Copia `FormRecordValueConfiguration.cs` [E14]. `Currency` es `char(3)`, con el CHECK `Currency IS NULL OR NumberValue IS NOT NULL`, también en `FormRecordRowValues`, que lleva los índices de `FormRecordValues`, con `(TenantId, CatalogId, ChoiceId)` y el trigram de los textos largos. El `Down` se niega si hay ítems, ocultas o montos. Tests: aislamiento y RLS; ida y vuelta, y el `Down` que se niega; la cantidad en la fila del bloque; `SearchIndexTests`; `DecimalPrecisionTests`.
 6. **B6 · La captura (R: datos).** `A/Modules/Forms/Services/FormRecordLogicPolicy.cs`; suma a `FormRecordService.cs`, `FormRecordWriter.cs`, `WhatsAppFlowReplyVerifier.cs` y `FormsAccountDeletionParticipant.cs` con su cleanup [E14]. Copia esos mismos. Orden: visibilidad, descarte, ítems, sellado y cálculo, primero los de cada ítem. Tests: los de la captura en la spec, más un cálculo imposible que queda «Sin respuesta» sin frenar la respuesta, `HiddenFieldIds` y la baja de una cuenta, también en `ChoiceLabel` de los ítems.
 7. **B7 · Lo que se lee.** Suma a `FormRecordColumnsBuilder.cs`, `FormRecordReader.cs`, `FormRecordQueryFilters.cs` y `FormRecordQueryService.cs` [E15]; los ítems se leen desde la definición (E17), y la forma de la versión del detalle suma `calculation` y `rowsOf` (266). Copia esos mismos. Tests: los de B7 de la spec, con la tabla de B1; ordenar por el bloque es `Forms.RecordFilter.Invalid`; una copia del formulario, con los mismos `FieldId`, no mezcla sus ítems; EXPLAIN con 10.000 respuestas de 10 ítems.
-8. **B8 · Excel y tablero.** Suma a `FormRecordExportService.cs`, `FormRecordSheetBuilder.cs`, `FormRecordSpreadsheet.cs` y `FormDashboardBuilder.cs` [E15]. Copia esos mismos. Una sola hoja (227); con `rowsPer` `record`, o sin el bloque entre las columnas, una fila por respuesta, sin las del ítem. Las filas se cuentan con una consulta antes de escribir: más de 100.000 es `TooManyRows`. Tests: cada forma de la fila; 100.000 y 100.001 filas, sin escribir; la memoria con 100.000 (allá, 11 s y 0,4 GB); el monto; «No se mostró»; el total en su moneda; los bytes abiertos con ClosedXML.
-9. **B9 · La tarjeta y «Mensajes».** Suma a `FormRecordSource.cs` y a `FormCard` [E14]. Copia esos mismos. Tests: un ítem por línea, numerado, con « · » y sin las vacías; un ítem vacío, solo con su número; los cálculos; sin `formrecords.read`, solo el número.
+8. **B8 · Excel y tablero (R: archivos).** Suma a `FormRecordExportService.cs`, `FormRecordSheetBuilder.cs`, `FormRecordSpreadsheet.cs` y `FormDashboardBuilder.cs` [E15]. Copia esos mismos. Una sola hoja (227); con `rowsPer` `record`, o sin el bloque entre las columnas, una fila por respuesta, sin las del ítem. Las filas se cuentan con una consulta antes de escribir: más de 100.000 es `TooManyRows`. Tests: cada forma de la fila; 100.000 y 100.001 filas, sin escribir; la memoria con 100.000 (allá, 11 s y 0,4 GB); el monto; «No se mostró»; el total en su moneda; los bytes abiertos con ClosedXML.
+9. **B9 · La tarjeta y «Mensajes» (R: permisos).** Suma a `FormRecordSource.cs` y a `FormCard` [E14]. Copia esos mismos. Tests: un ítem por línea, numerado, con « · » y sin las vacías; un ítem vacío, solo con su número; los cálculos; sin `formrecords.read`, solo el número.
 10. **B10 · Contratos y ejemplos.** Suma a los contratos de la E14 y la E15, sin archivos nuevos, a `FormsContractContributor.cs` y a `A/Models/StructuredData/StructuredFormVersion.cs`, `StructuredRecordCapture.cs` y `StructuredRecordCard.cs` [E14]. Tests: los ejemplos de K1; copiar conserva las condiciones, los cálculos y el bloque, con sus identidades; `ResourceParityTests`.
 
 **Texto para el chat del Back**
 
 ```text
-Leé AGENTS.md, este plan, la spec de la E19 con su parte, las decisiones 264 y 266 de la hoja de ruta y las fichas de su «Qué leer». Esperá K0 y K1, y K2 antes de B4. Hacé B1 a B10 en orden, copiando el molde de cada tarea; no toques el front ni la tabla de estado del plan. Reglas: las de «Forma de trabajo» de este plan.
+Leé AGENTS.md, este plan, la spec de la E19 con su parte, las decisiones 264 y 266 de la hoja de ruta y las fichas de su «Qué leer». Esperá K0 y K1, y K2 antes de B4. Hacé B1 a B10 en orden, copiando el molde de cada tarea; no toques el front ni la tabla de estado del plan. Las tareas (R) llevan la revisión adversarial antes del commit. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
 ## Front
@@ -142,7 +140,7 @@ Las pantallas copian los tableros v175, con i18n en es y en, tipos generados, `s
 
 1. **F1 · Tipos y llamadas.** Suma a `F/src/modules/forms/api/forms.ts` [E14] y `records.ts` [E15], y a `F/src/modules/whatsapp/chats/api/chats.ts` [E14]. Copia la API de la E18. Tests: zod estricto con los ejemplos de K1, también la columna del bloque y los valores `hidden`, `money` y `rows`.
 2. **F2 · «Mostrar si».** `components/logic/ConditionsEditor.tsx` y `lib/conditions.ts`, que evalúa como B1. Tableros `FRM-Editor-Condiciones` y su teléfono. Tests: pregunta, condición y valor en la pieza (262); solo las anteriores que sirven; el aviso de WhatsApp debajo de la condición, con los casos de `ConditionNotSupported` que se ven en el borrador y el texto de su `reason`, también una fecha anterior o posterior (235); «Agregar condición» grisado con «No hay preguntas anteriores que sirvan.»; la referencia rota, con «Corregir»; hasta 10; «1.500» marca `numberAmbiguous` en su campo (207); `FormPreviewPhone.tsx` muestra y oculta; la tabla de casos de B1.
-3. **F3 · La pregunta «Cálculo».** `components/logic/CalculationEditor.tsx`, `lib/formula.ts` y `lib/decimal.ts`, la aritmética decimal exacta con el redondeo al par (232), que usa la vista previa de la E20; lo escrito se lee con `parseDecimal` de `shared/format/` (207), sin otro lector. Tableros `FRM-Editor-Calculo` y su teléfono. Tests: piezas y «Agregar dato ▾»; «1.500» ambiguo en un número fijo; en el bloque, solo lo de su ítem; la pregunta, la suma y la moneda en la pieza, sin diálogo (262), también con un cálculo del ítem; «Falta un dato después de «+».» y el dato quitado; «Es un monto», con la moneda de los datos de referencia; el teléfono no la muestra.
+3. **F3 · La pregunta «Cálculo».** `components/logic/CalculationEditor.tsx`, `lib/formula.ts` y `lib/decimal.ts`, la aritmética decimal exacta con el redondeo al par (232), que usa la vista previa de la E20; lo escrito, acá o en una condición, se lee con `parseDecimalText` de `shared/format/` [E12] (207), con los dígitos de su pregunta (T9), y `lib/decimal.ts` opera sobre ese texto. Tableros `FRM-Editor-Calculo` y su teléfono. Tests: piezas y «Agregar dato ▾»; «1.500» ambiguo en un número fijo; en el bloque, solo lo de su ítem; la pregunta, la suma y la moneda en la pieza, sin diálogo (262), también con un cálculo del ítem; «Falta un dato después de «+».» y el dato quitado; «Es un monto», con la moneda de los datos de referencia; el teléfono no la muestra.
 4. **F4 · El bloque.** `components/logic/RowsBlockEditor.tsx`; suma «Agregar bloque» a la banda, «Se carga varias veces» a `QuestionEditor.tsx` y la pantalla de un ítem a `FormPreviewPhone.tsx` [E14]. Tableros `FRM-Editor-Lineas` y su teléfono, y «Pasar al bloque» en `FRM-Editor-Condiciones`. «46 de 50 componentes» sale de `componentCount` del último `publication-checks`, desde 45: el front no cuenta. Tests: los de F4 de la spec, con «Ya hay un bloque.» y «¿Pasar «Monto» al bloque?».
 5. **F5 · Publicar.** Suma a `PublishDialog.tsx` [E14 y E16]. Tablero `FRM-Publicar-19`. Tests: los de F5 de la spec, con cada `reason` de `ConditionNotSupported`.
 6. **F6 · Planilla, detalle, tablero y tarjeta.** El bloque, en `components/records/RecordRowsTable.tsx` y `RecordRowsCards.tsx`, nuevos y de solo lectura, sobre `Table` de `table.tsx`, que usa `RecordForm.tsx`. Suma a `FormRecordsPage.tsx`, `RecordFiltersMenu.tsx`, `QuickView.tsx`, `RecordFullPage.tsx`, `lib/recordForm.ts`, `RecordForm.tsx`, `RecordValues.tsx`, `FormDashboard.tsx` y `lib/values.ts` [E15], y a `FormMessageCard.tsx` [E14]. Tableros `FRM-Respuestas-19`, `FRM-Respuesta-19`, `FRM-Tablero-19` y `WA-Chats-Respuesta-19`, con sus teléfonos. Tests: los de F6 de la spec, más el número del ítem sin encabezado y «Ítem» para el lector de pantalla; los datos del catálogo como columna; el recuadro también en la vista rápida, sin desplazarse de costado, y la tarjeta.
@@ -151,7 +149,7 @@ Las pantallas copian los tableros v175, con i18n en es y en, tipos generados, `s
 **Texto para el chat del Front**
 
 ```text
-Leé AGENTS.md del front, ../ArquitecturaBaseMutitenant/docs/plans/2026-11-08-etapa-19-condiciones-calculos-y-lineas.md y la spec de la E19 con su parte, con las decisiones 262 a 264, 266 y 269 de la hoja de ruta. Esperá K1 y corré npm run contracts. Hacé F1 a F7 contra los tipos generados, copiando los tableros v175 o los redibujados con el traspaso 18; no toques el lienzo, las specs, el back ni la tabla de estado del plan. Al cerrar la parte, npm run build, lint y contracts:check. Reglas: las de «Forma de trabajo» de este plan.
+Leé AGENTS.md del front, ../ArquitecturaBaseMutitenant/docs/plans/2026-11-08-etapa-19-condiciones-calculos-y-lineas.md y la spec de la E19 con su parte, con las decisiones 262 a 264, 266 y 269 de la hoja de ruta. Esperá K1 y corré npm run contracts. Hacé F1 a F7 contra los tipos generados, copiando los tableros v175 o los redibujados con el traspaso 18; no toques el lienzo, las specs, el back ni la tabla de estado del plan. Al cerrar la parte, también npm run build. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
 ## Integración y puerta
@@ -174,16 +172,12 @@ Leé AGENTS.md del front, ../ArquitecturaBaseMutitenant/docs/plans/2026-11-08-et
 **Texto para el chat de Integración**
 
 ```text
-Leé AGENTS.md de los dos repos, este plan y la skill /puerta. Integrá el front contra la API real y devolvé a su dueño solo las diferencias reales. Corré la puerta una sola vez sobre copias del corte; con un arreglo, corré solo lo que toca. Escribí la documentación de «Al cerrar». No toques el lienzo ni manejes la PC del usuario. Lo de Meta con número conectado queda pendiente (I3). En este plan, solo la tabla corta de la puerta. Reglas: las de «Forma de trabajo» de este plan.
+Leé AGENTS.md de los dos repos, este plan y la skill /puerta. Integrá el front contra la API real y devolvé a su dueño solo las diferencias reales. Corré la puerta una sola vez sobre copias del corte. Escribí la documentación de «Al cerrar». No toques el lienzo ni manejes la PC del usuario. Lo de Meta con número conectado queda pendiente (I3). En este plan, solo la tabla corta de la puerta. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
 ## Relación con otras etapas
 
-**Usa de las anteriores:**
-- **Base:** los botones que trabajan (43 y 115), `PageLoading`, `FormSkeleton` y la escala (180). No suma fuentes a la campana.
-- **Base 2:** `parseDecimal` con `numberAmbiguous` (207).
-- **E12 y E13:** `FormsContractContributor.cs`, la gramática C5, `FieldInUse` e `ItemInUse`, y `fields[].id` con su tipo numérico.
-- **E14 a E18:** lo de K0.
+**Usa de las anteriores:** lo de K0, la gramática C5 de la E12 y, de la base, los botones que trabajan (43 y 115), `PageLoading`, `FormSkeleton` y la escala (180). No suma fuentes a la campana.
 
 **Deja para las siguientes:**
 - **Borrador y versión:** los tipos `Calculation` y `Rows`; `visibleIf`, `calculation` (con `catalogFieldId`), `rows` y `rowsOf`.
@@ -199,4 +193,4 @@ Leé AGENTS.md de los dos repos, este plan y la skill /puerta. Integrá el front
 
 ## Para decidir
 
-Nada: la 32, la 33 y la S2 del traspaso 15 son las decisiones 232, 233 y 235.
+Nada: lo del traspaso 15 son las decisiones 232, 233 y 235.

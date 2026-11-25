@@ -107,7 +107,7 @@ Aprobados en el lienzo v175, con el recorrido guiado `un-pedido-con-renglones`. 
 
 **«Mostrar si»:** va en la pregunta abierta, en su caja, como las condiciones de las reglas de ArquitecturaBase: Pregunta, Condición y Valor, en la pieza (262) salvo un número o una fecha, que se escriben; el tacho, y «Agregar condición». Sin preguntas anteriores que sirvan, «Agregar condición» queda grisado, con el motivo en su tooltip. Una referencia rota queda en rojo, con el motivo debajo, y la pregunta dice «Corregir».
 
-**La fórmula:** piezas en una caja, con «Agregar dato ▾» (un número, una pregunta, un campo del catálogo o la suma de una pregunta del bloque) y + − × ÷ ( ). La pregunta, el campo, la suma y la moneda se eligen en la pieza (262), sin diálogo. En un cálculo del bloque, «Agregar dato ▾» ofrece solo lo de su ítem, sin la suma. «Es un monto», una casilla, pide la moneda, y los decimales salen de ella. Un número que se escribe, acá o en una condición, se lee con `parseDecimal` (207): «1.500» marca `numberAmbiguous` en su campo.
+**La fórmula:** piezas en una caja, con «Agregar dato ▾» (un número, una pregunta, un campo del catálogo o la suma de una pregunta del bloque) y + − × ÷ ( ). La pregunta, el campo, la suma y la moneda se eligen en la pieza (262), sin diálogo. En un cálculo del bloque, «Agregar dato ▾» ofrece solo lo de su ítem, sin la suma. «Es un monto», una casilla, pide la moneda, y los decimales salen de ella. Un número que se escribe, acá o en una condición, se lee con `parseDecimalText` (E12 y 207), con los dígitos de su pregunta (T9): «1.500» marca `numberAmbiguous` en su campo.
 
 **El bloque en el editor:** un recuadro en la lista de preguntas, con las suyas adentro, ↑ ↓ ✎ 🗑 en cada una y su propio «Agregar pregunta» en la banda «Preguntas de cada ítem». El ✎ del bloque edita el nombre, la ayuda y, bajo «Ítems», el mínimo y el máximo, y con el bloque abierto el teléfono al costado muestra la pantalla de un ítem. Cerca de 50 componentes en una pantalla, se lee «46 de 50 componentes».
 
@@ -168,5 +168,6 @@ La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba r
 - **Datos de la organización:** `FormRecordRowValues` y las columnas nuevas son `ITenantOwned`, con RLS.
 - **Workers:** no hay; el cálculo corre en la captura.
 - **Feature `forms`:** las rutas llevan `[FeatureGate("forms")]`.
-- **Permisos:** los de la E14, sin permisos nuevos.
+- **Permisos:** los de la E14 y `formrecords.export` de la E15, sin permisos nuevos.
+- **Topes:** los de esta etapa (10 condiciones, 100 ítems, 10 por WhatsApp y 100.000 filas) son de capacidad o de Meta y quedan en el código (270).
 - **Cuotas:** las rutas cuentan en las cuotas generales.
