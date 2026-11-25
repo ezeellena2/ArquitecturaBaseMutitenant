@@ -39,6 +39,33 @@ internal sealed class AssistantSettingsRepository(ApplicationDbContext context, 
         if (row is not null) context.Entry(row).Property(value => value.Version).OriginalValue = expectedVersion;
         return row;
     }
+    public async Task<uint> LockPlatformVersionAsync(CancellationToken ct)
+    {
+        context.RequireTransaction();
+        await context.AcquireAdvisoryLocksAsync([AssistantLockKeys.PlatformSettings], ct);
+        return await context.Set<AssistantPlatformSettings>().AsNoTracking().Select(value => (uint?)value.Version).SingleOrDefaultAsync(ct) ?? 0;
+    }
+    public async Task<uint> LockOrganizationVersionAsync(CancellationToken ct)
+    {
+        context.RequireTransaction();
+        var tenantId = tenant.RequiredTenantId;
+        await context.AcquireAdvisoryLocksAsync([AssistantLockKeys.OrganizationSettings(tenantId)], ct);
+        return await context.Set<AssistantOrganizationSettings>().AsNoTracking().Where(value => value.TenantId == tenantId)
+            .Select(value => (uint?)value.Version).SingleOrDefaultAsync(ct) ?? 0;
+    }
+    public Task<AssistantPlatformProviderIssue?> FindPlatformIssueAsync(CancellationToken ct)
+    {
+        context.RequireTransaction();
+        return context.Set<AssistantPlatformProviderIssue>().SingleOrDefaultAsync(ct);
+    }
+    public Task<AssistantOrganizationProviderIssue?> FindOrganizationIssueAsync(CancellationToken ct)
+    {
+        context.RequireTransaction();
+        var tenantId = tenant.RequiredTenantId;
+        return context.Set<AssistantOrganizationProviderIssue>().SingleOrDefaultAsync(value => value.TenantId == tenantId, ct);
+    }
+    public void Add(AssistantPlatformProviderIssue issue) { context.RequireTransaction(); context.Add(issue); }
+    public void Add(AssistantOrganizationProviderIssue issue) { context.RequireTransaction(); _ = tenant.RequiredTenantId; context.Add(issue); }
     public void Add(AssistantPlatformSettings row) { context.RequireTransaction(); context.Add(row); }
     public void Add(AssistantOrganizationSettings row) { context.RequireTransaction(); _ = tenant.RequiredTenantId; context.Add(row); }
     public void Add(AssistantOrganizationPolicy row) { context.RequireTransaction(); context.Add(row); }

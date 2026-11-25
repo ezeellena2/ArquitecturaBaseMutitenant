@@ -242,9 +242,17 @@ public sealed class AssistantEditableCatalogTests
         Assert.True(resolved.IsSuccess, resolved.IsFailure ? resolved.Error.Code : "");
         return resolved.Value;
     }
-    private static AssistantConfigurationPolicy Policy(IServiceProvider services, Guid userId) => new(
-        services.GetRequiredService<IAssistantSettingsReader>(), services.GetRequiredService<IAssistantModelReader>(),
-        services.GetRequiredService<ITenantAdminReader>(), services.GetRequiredService<ITenantContext>(), new CurrentUser(userId));
+    private static AssistantConfigurationPolicy Policy(IServiceProvider services, Guid userId)
+    {
+        var user = new CurrentUser(userId);
+        var tenant = services.GetRequiredService<ITenantContext>();
+        var settings = services.GetRequiredService<IAssistantSettingsReader>();
+        var models = services.GetRequiredService<IAssistantModelReader>();
+        var protector = new ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.AssistantKeyProtector(
+            services.GetRequiredService<Microsoft.AspNetCore.DataProtection.IDataProtectionProvider>(), tenant, user);
+        return new(settings, models, services.GetRequiredService<ITenantAdminReader>(), tenant, user,
+            new AssistantConnectionPolicy(settings, models, protector));
+    }
     private sealed class CurrentUser(Guid userId) : ICurrentUser
     {
         public Guid? UserId => userId;

@@ -8,7 +8,8 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantStateConfigurationBuilder(IAssistantSettingsReader settings, IAssistantModelReader models,
-    ITenantAdminReader owners, ITenantContext tenant, ICurrentUser user, AssistantAccessPolicy access)
+    ITenantAdminReader owners, ITenantContext tenant, ICurrentUser user, AssistantAccessPolicy access,
+    AssistantConnectionPolicy connection)
 {
     internal async Task<AssistantStateConfigurationRow> BuildAsync(CancellationToken ct)
     {
@@ -30,6 +31,9 @@ internal sealed class AssistantStateConfigurationBuilder(IAssistantSettingsReade
         var options = eligible.Select(model => new AssistantModelOptionResponse(model.Id, model.Name)).ToArray();
         var modelId = organization?.ModelId ?? platform.DefaultModelId;
         var hasKey = mode == AssistantMode.PlatformKey ? platform.HasKey : organization!.HasKey;
+        // 0064 §6 y §7: con el proveedor desconocido o la clave ilegible, el asistente no está disponible.
+        var connected = hasKey && !await connection.IsUnsupportedAsync(mode == AssistantMode.OwnKey ? modelId : platform.DefaultModelId, ct)
+            && !await connection.IsKeyUnreadableAsync(mode, ct);
         var configurePermission = user.Access switch
         {
             Access.Business => Permissions.Assistant.Configure,
@@ -38,7 +42,7 @@ internal sealed class AssistantStateConfigurationBuilder(IAssistantSettingsReade
         };
         var canConfigure = configurePermission is not null
             && await access.CanUseAsync(user.Access, [configurePermission], null, ct);
-        return new(hasKey && ownAllowed && recipient && options.Any(model => model.Id == modelId), canConfigure, mode, options,
+        return new(connected && ownAllowed && recipient && options.Any(model => model.Id == modelId), canConfigure, mode, options,
             mode == AssistantMode.PlatformKey ? platform.DailyMessageLimit : organization!.DailyMessageLimit,
             business ? mode == AssistantMode.PlatformKey ? platform.MonthlyOrganizationBudget : organization!.MonthlyBudget : null,
             platform.RetentionDays);

@@ -45,7 +45,17 @@ public static class AssistantModule
         // E9: transporte nombrado de los clientes de Anthropic, sin los reintentos de ServiceDefaults ni loggers HTTP que vean la clave.
         // La API de reemplazo sigue experimental en Extensions 10; limita la supresión a esta composición.
 #pragma warning disable EXTEXP0001
-        services.AddHttpClient(AnthropicChatClientBuilder.TransportName).RemoveAllLoggers().RemoveAllResilienceHandlers();
+        // 0064 §7 (B13): 10 s para conectarse; vencidos, no se mandó nada y la falla es no disponible. Una redirección no se
+        // sigue: repetiría el pedido pago y llevaría x-api-key a otro host; queda como rechazo. Como ArquitecturaBase.
+        services.AddHttpClient(AnthropicChatClientBuilder.TransportName)
+            .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+            {
+                AllowAutoRedirect = false,
+                PooledConnectionLifetime = TimeSpan.FromMinutes(2),
+                ConnectTimeout = AssistantProviderConnectHandler.ConnectTimeout,
+            })
+            .AddHttpMessageHandler(() => new AssistantProviderConnectHandler())
+            .RemoveAllLoggers().RemoveAllResilienceHandlers();
 #pragma warning restore EXTEXP0001
         services.AddScoped<AnthropicChatClientBuilder>();
         services.AddScoped<IChatClientFactory, AnthropicChatClientFactory>();

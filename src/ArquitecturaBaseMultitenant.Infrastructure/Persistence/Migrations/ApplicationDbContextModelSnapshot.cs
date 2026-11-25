@@ -653,6 +653,29 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.ToTable("AssistantOrganizationPolicies", "platform");
                 });
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantOrganizationProviderIssue", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("AtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.HasKey("TenantId", "Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("AssistantOrganizationProviderIssues", "tenant");
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantOrganizationSettings", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -765,6 +788,24 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("AssistantPlatformKeyDailyQuotas", "platform");
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantPlatformProviderIssue", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("AtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AssistantPlatformProviderIssues", "platform");
                 });
 
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantPlatformSettings", b =>
@@ -7638,6 +7679,15 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantOrganizationProviderIssue", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

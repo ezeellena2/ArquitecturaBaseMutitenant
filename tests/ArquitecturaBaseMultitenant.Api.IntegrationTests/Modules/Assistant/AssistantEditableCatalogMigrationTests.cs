@@ -29,7 +29,8 @@ public sealed class AssistantEditableCatalogMigrationTests
         var migrator = db.GetService<IMigrator>();
         const string previous = "20261010214712_PlatformOperatorAssistantPermissions";
         const string current = "20261010223305_AssistantEditableModelCatalog";
-        var originalSettings = await db.Set<AssistantPlatformSettings>().AsNoTracking().SingleAsync(ct);
+        // Only the columns this migration knows: a column added to the table later does not exist after migrating back.
+        var originalSettings = await SettingsAsync();
         var originalIds = await db.Set<AssistantModelPrice>().OrderBy(value => value.Id).Select(value => value.Id).ToArrayAsync(ct);
         await migrator.MigrateAsync(previous, ct);
         var legacy = Guid.CreateVersion7();
@@ -54,6 +55,9 @@ public sealed class AssistantEditableCatalogMigrationTests
         await AssertUpgradeAsync(8); // Down discards later technical edits, explicitly; base prices survive.
         Assert.False(db.Database.HasPendingModelChanges());
 
+        Task<SettingsColumns> SettingsAsync() => db.Set<AssistantPlatformSettings>().AsNoTracking()
+            .Select(value => new SettingsColumns(value.Id, value.Version, value.DefaultModelId, value.AllowedModelIds)).SingleAsync(ct);
+
         async Task AssertUpgradeAsync(int auditCount)
         {
             var rows = await db.Set<AssistantModelPrice>().AsNoTracking().OrderBy(value => value.Id).ToArrayAsync(ct);
@@ -67,7 +71,7 @@ public sealed class AssistantEditableCatalogMigrationTests
             Assert.Equal(1000000, known.Technical!.MaxInputTokens);
             Assert.Equal(128000, known.Technical.MaxOutputTokens);
             Assert.Equal(.1m, known.Technical.CacheRead.Amount);
-            var settings = await db.Set<AssistantPlatformSettings>().AsNoTracking().SingleAsync(ct);
+            var settings = await SettingsAsync();
             Assert.Equal(originalSettings.Id, settings.Id);
             Assert.Equal(originalSettings.Version, settings.Version);
             Assert.Equal(originalSettings.DefaultModelId, settings.DefaultModelId);
@@ -108,4 +112,5 @@ public sealed class AssistantEditableCatalogMigrationTests
         public TenantKind? TenantKind => null;
         public Guid RequiredTenantId => throw new InvalidOperationException("No tenant.");
     }
+    private sealed record SettingsColumns(Guid Id, uint Version, Guid DefaultModelId, Guid[] AllowedModelIds);
 }

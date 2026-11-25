@@ -10,7 +10,7 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantConfigurationPolicy(IAssistantSettingsReader settings, IAssistantModelReader models,
-    ITenantAdminReader owners, ITenantContext tenant, ICurrentUser user) : IAssistantConfigurationPolicy
+    ITenantAdminReader owners, ITenantContext tenant, ICurrentUser user, AssistantConnectionPolicy connection) : IAssistantConfigurationPolicy
 {
     public async Task<Result<AssistantRuntimeConfiguration>> ResolveAsync(CancellationToken cancellationToken)
     {
@@ -25,11 +25,17 @@ internal sealed class AssistantConfigurationPolicy(IAssistantSettingsReader sett
             if ((await owners.ListActiveVerifiedEmailRecipientsAsync(id, cancellationToken)).Count == 0) return AssistantErrors.SettingsAlertRecipientRequired;
         }
         var modelId = organization?.ModelId ?? platform.DefaultModelId;
+        // 0064 §6: un proveedor guardado que esta versión no conoce pausa la conexión. Con la clave propia, el de esa
+        // organización; con la de la plataforma, el del modelo por defecto, que es el de la clave: frena a todas.
+        if (await connection.IsUnsupportedAsync(mode == AssistantMode.OwnKey ? modelId : platform.DefaultModelId, cancellationToken))
+            return AssistantErrors.ProviderUnsupportedProvider;
         var model = (await models.ListAllAsync(cancellationToken)).SingleOrDefault(value => value.Id == modelId);
         var effort = organization?.Effort ?? platform.Effort;
         if (model is null || !AssistantModelCompatibilityPolicy.Supports(model, effort) || mode == AssistantMode.PlatformKey && !platform.AllowedModelIds.Contains(modelId))
             return AssistantErrors.ModelNotAllowed;
         if (!(mode == AssistantMode.PlatformKey ? platform.HasKey : organization!.HasKey)) return AssistantErrors.SettingsNotConfigured;
+        // 0064 §7: antes de reservar se prueba descifrar la clave, sin el proveedor; una ilegible no gasta cupo.
+        if (await connection.IsKeyUnreadableAsync(mode, cancellationToken)) return AssistantErrors.ProviderKeyUnreadable;
         var titleModel = (await models.ListAllAsync(cancellationToken))
             .Where(value => AssistantModelCompatibilityPolicy.Supports(value, AssistantEffort.Low)
                 && (mode == AssistantMode.OwnKey || platform.AllowedModelIds.Contains(value.Id)))

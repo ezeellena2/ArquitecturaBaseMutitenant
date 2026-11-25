@@ -50,7 +50,7 @@ internal sealed class AssistantSettingsService(IAssistantSettingsReader reader, 
         });
 
     public Task<Result<PlatformAssistantSettingsResponse>> GetPlatformAsync(CancellationToken cancellationToken) =>
-        OperationLog.RunAsync<PlatformAssistantSettingsResponse>(logger, clock, "AssistantSettingsGetPlatform", async () => await reader.FindPlatformAsync(cancellationToken));
+        OperationLog.RunAsync<PlatformAssistantSettingsResponse>(logger, clock, "AssistantSettingsGetPlatform", async () => await builder.BuildPlatformAsync(cancellationToken));
 
     public Task<Result<VersionResponse>> UpdatePlatformAsync(UpdatePlatformAssistantSettingsRequest request, CancellationToken cancellationToken) =>
         OperationLog.RunAsync<VersionResponse>(logger, clock, "AssistantSettingsUpdatePlatform", async () =>
@@ -70,4 +70,27 @@ internal sealed class AssistantSettingsService(IAssistantSettingsReader reader, 
             var result = await unitOfWork.ExecuteInTransactionAsync(ct => writer.UpdatePlatformAsync(request, ct), CommitPolicy.OnSuccess, cancellationToken);
             return VersionResponse.Of(result);
         });
+
+    public Task<Result<uint>> GetSettingsVersionAsync(AssistantMode funding, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync<uint>(logger, clock, "AssistantSettingsGetVersion", async () => (await StoredAsync(funding, cancellationToken)).Version);
+
+    public Task<Result> RecordProviderOutcomeAsync(AssistantMode funding, string? failureCode, uint settingsVersion, CancellationToken cancellationToken) =>
+        OperationLog.RunAsync(logger, clock, "AssistantSettingsRecordProviderOutcome", async () =>
+        {
+            if (failureCode is not null && !AssistantProviderIssuePolicy.IsRecorded(failureCode)) return Result.Success();
+            // Leer antes evita una transacción y un lock por cada turno: solo se escribe cuando cambia la falla y el turno usó la
+            // configuración de ahora. Adentro, con el lock, se vuelve a comparar.
+            var (issue, version) = await StoredAsync(funding, cancellationToken);
+            if (version != settingsVersion || issue == failureCode) return Result.Success();
+            return await unitOfWork.ExecuteInTransactionAsync(ct => writer.RecordProviderIssueAsync(funding, failureCode, settingsVersion, ct),
+                CommitPolicy.OnSuccess, cancellationToken);
+        });
+
+    private async Task<(string? Issue, uint Version)> StoredAsync(AssistantMode funding, CancellationToken ct)
+    {
+        if (funding == AssistantMode.OwnKey)
+            return await reader.FindOrganizationAsync(ct) is { } organization ? (organization.ProviderIssueCode, organization.Version) : (null, 0);
+        var platform = await reader.FindPlatformAsync(ct);
+        return (platform.ProviderIssue, platform.Version);
+    }
 }

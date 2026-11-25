@@ -42,7 +42,10 @@ internal sealed class AssistantTurnRequester(IAssistantTurnRepository turns, IAs
         var safe = await privacy.CheckAsync(actor.OwnerUserId, subjects, ct);
         if (safe.IsFailure) return safe.Error;
         var resolved = await configuration.ResolveAsync(ct);
-        if (resolved.IsFailure) return resolved.Error;
+        // La clave ilegible y el proveedor desconocido son códigos del turno (0064 §6 y §7), no de HTTP: antes del stream, el
+        // asistente no está configurado, como dice su estado.
+        if (resolved.IsFailure) return resolved.Error.Code is AssistantErrors.ProviderKeyUnreadableCode or AssistantErrors.ProviderUnsupportedProviderCode
+            ? AssistantErrors.SettingsNotConfigured : resolved.Error;
         var config = resolved.Value;
         var nowUtc = clock.GetUtcNow().UtcDateTime;
         var turn = turns.Add(conversationId, actor.Access, nowUtc);

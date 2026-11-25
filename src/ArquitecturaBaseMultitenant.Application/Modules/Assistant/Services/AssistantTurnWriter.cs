@@ -179,7 +179,15 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
         if (work.IsTerminal) return Result.Success();
         if (work.LeaseId != lease) return AssistantErrors.TurnInProgress;
         if (work.StopRequested) status = "Stopped";
-        else if (work.DeadlineAtUtc <= clock.GetUtcNow().UtcDateTime) { status = "Failed"; code = AssistantErrors.ProviderUnavailable.Code; }
+        // Al vencer el plazo, lo que el worker supo del proveedor se conserva (0064 §7): un paso cortado en vuelo es incierto, no
+        // «no disponible», y una respuesta del proveedor dice su motivo. Lo demás queda como no disponible.
+        else if (work.DeadlineAtUtc <= clock.GetUtcNow().UtcDateTime)
+        {
+            status = "Failed";
+            code = code is not null && AssistantErrors.ProviderFailureCodes.Contains(code) ? code : AssistantErrors.ProviderUnavailable.Code;
+        }
+        // 0064 §7: lo que arregla el operador no se le dice a quien paga con la clave de la plataforma.
+        code = AssistantProviderIssuePolicy.Shown(code, work.Funding, work.Access);
         var completed = await usage.CompleteAsync(Binding, id, ct);
         if (completed.IsFailure) return completed;
         work.Finish(status);

@@ -86,6 +86,7 @@ public static class AssistantModule
         services.AddScoped<IAssistantBudgetAlertService, AssistantBudgetAlertService>();
         services.AddScoped<IAssistantUsageFinalizer>(provider => provider.GetRequiredService<AssistantUsageWriter>());
         services.AddScoped<IAssistantConfigurationPolicy, AssistantConfigurationPolicy>();
+        services.AddScoped<AssistantConnectionPolicy>();
         services.AddOptions<AssistantOptions>().BindConfiguration(AssistantOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
         services.AddSingleton<IFeatureDefinitionContributor, AssistantFeatureDefinitionContributor>();
         services.AddScoped<IFeatureAvailabilityPolicy, AssistantAvailabilityPolicy>();

@@ -369,7 +369,8 @@ public sealed class AssistantPersistenceTests(ApiFactory factory)
         await using var admin = new NpgsqlConnection(factory.AdminConnectionString);
         await admin.OpenAsync(AssistantTestData.Ct);
         await using var policies = new NpgsqlCommand("SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='tenant' AND c.relname LIKE 'Assistant%' AND c.relrowsecurity AND c.relforcerowsecurity", admin);
-        // La actividad técnica conserva el mismo aislamiento privado que la conversación.
-        Assert.Equal(11L, await policies.ExecuteScalarAsync(AssistantTestData.Ct));
+        // La actividad técnica conserva el mismo aislamiento privado que la conversación, y la falla de la clave propia (B13), el
+        // de su configuración.
+        Assert.Equal(12L, await policies.ExecuteScalarAsync(AssistantTestData.Ct));
     }
 }

@@ -1,8 +1,8 @@
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using Microsoft.Extensions.AI;
 using Anthropic.Exceptions;
-using System.Net;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant;
 
@@ -13,9 +13,7 @@ internal sealed class AssistantChatClient(IChatClient inner, IDisposable owner, 
     public async Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
     {
         try { return await inner.GetResponseAsync(messages, Prepare(options), cancellationToken); }
-        catch (AnthropicException error) { throw Sanitized(error); }
-        catch (HttpRequestException error) { throw Sanitized(error); }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { throw Sanitized(null); }
+        catch (Exception error) when (IsProviderFailure(error, cancellationToken)) { throw Sanitized(error); }
     }
     public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default) =>
         StreamAsync(messages, Prepare(options), cancellationToken);
@@ -27,22 +25,33 @@ internal sealed class AssistantChatClient(IChatClient inner, IDisposable owner, 
         {
             bool more;
             try { more = await stream.MoveNextAsync(); }
-            catch (AnthropicException error) { throw Sanitized(error); }
-            catch (HttpRequestException error) { throw Sanitized(error); }
-            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { throw Sanitized(null); }
+            catch (Exception error) when (IsProviderFailure(error, cancellationToken)) { throw Sanitized(error); }
             if (!more) yield break;
             yield return stream.Current;
         }
     }
-    private static HttpRequestException Sanitized(Exception? error) => new("Assistant provider request failed.", null, error switch
+    /// <summary>
+    /// Lo que viene del proveedor o de su transporte: el SDK, la red, la espera del SDK y una respuesta cortada o ilegible. La
+    /// cancelación pedida por quien llama no es una falla.
+    /// </summary>
+    private static bool IsProviderFailure(Exception error, CancellationToken cancellationToken) => error switch
     {
-        AnthropicUnauthorizedException => HttpStatusCode.Unauthorized,
-        AnthropicForbiddenException => HttpStatusCode.Forbidden,
-        AnthropicBadRequestException => HttpStatusCode.BadRequest,
-        AnthropicRateLimitException => HttpStatusCode.TooManyRequests,
-        HttpRequestException request => request.StatusCode,
-        _ => HttpStatusCode.ServiceUnavailable,
-    });
+        OperationCanceledException => !cancellationToken.IsCancellationRequested,
+        AnthropicException or HttpRequestException or IOException or JsonException => true,
+        _ => false,
+    };
+    /// <summary>
+    /// Conserva solo el estado HTTP y la clase de falla del transporte, que <see cref="AssistantProviderFailureClassifier"/>
+    /// traduce (0064 §7): sin la excepción original, el cuerpo ni el mensaje del proveedor.
+    /// </summary>
+    private static HttpRequestException Sanitized(Exception error) => error switch
+    {
+        AnthropicApiException api => new(HttpRequestError.Unknown, Message, null, api.StatusCode),
+        AnthropicIOException { InnerException: HttpRequestException transport } => new(transport.HttpRequestError, Message, null, transport.StatusCode),
+        HttpRequestException request => new(request.HttpRequestError, Message, null, request.StatusCode),
+        _ => new(HttpRequestError.Unknown, Message),
+    };
+    private const string Message = "Assistant provider request failed.";
     public object? GetService(Type serviceType, object? serviceKey = null) => serviceType == typeof(IChatClient) && serviceKey is null ? this :
         serviceType == typeof(ChatClientMetadata) ? inner.GetService(serviceType, serviceKey) : null;
     public void Dispose()

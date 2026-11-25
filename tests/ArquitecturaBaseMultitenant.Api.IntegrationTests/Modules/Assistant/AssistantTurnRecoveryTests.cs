@@ -154,7 +154,8 @@ public sealed class AssistantTurnRecoveryTests
         if (!missingUsage)
         {
             Assert.Equal(turnId, terminal.Data.GetProperty("turnId").GetGuid());
-            Assert.Equal(AssistantErrors.ProviderUnavailableCode, terminal.Data.GetProperty("code").GetString());
+            // The stream was cut after a partial answer: generation had started, so it is uncertain (0064 §7).
+            Assert.Equal(AssistantErrors.ProviderUncertainCode, terminal.Data.GetProperty("code").GetString());
             Assert.Equal("Failed", terminal.Data.GetProperty("status").GetString());
             Assert.False(string.IsNullOrWhiteSpace(terminal.Data.GetProperty("traceId").GetString()));
             Assert.False(terminal.Data.TryGetProperty("detail", out _));

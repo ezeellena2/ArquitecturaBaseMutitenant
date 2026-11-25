@@ -57,8 +57,16 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
         using (ExecutionContext.SuppressFlow()) monitor = Task.Run(() => MonitorAsync(candidate, lease, execution), CancellationToken.None);
         string terminal = "Complete";
         string? code = null;
+        // Lo que dijo el proveedor (0064 §7), aparte de las demás fallas: solo eso se anota para quien paga.
+        string? providerFailure = null;
+        // La versión de la configuración de quien paga, leída antes de armar el cliente: si alguien la guarda mientras el turno
+        // espera, lo que responda el proveedor es de la clave de antes y no se anota sobre la nueva (B13). Sin ella, no se anota.
+        uint? settingsVersion = null;
+        // Un paso reservado que no terminó pudo llegar al proveedor y se cobra (0064 §1): cortado, es incierto, no «no disponible».
+        var inFlight = false;
         try
         {
+            settingsVersion = await SettingsVersionAsync(scope.ServiceProvider, turn.Binding.Mode, execution.Token);
             // Resolve factory only after actor.Enter and after claim committed, without an ambient transaction.
             scope.ServiceProvider.GetRequiredService<IAssistantChatContext>().Binding = turn.Binding;
             var clientResult = await scope.ServiceProvider.GetRequiredService<IChatClientFactory>().CreateAsync(execution.Token);
@@ -76,6 +84,7 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
                     { terminal = "Failed"; code = AssistantErrors.ProviderContextTooLarge.Code; break; }
                     var begun = await service.BeginCallAsync(turn.TurnId, lease, sequence, execution.Token);
                     if (begun.IsFailure) { terminal = "Failed"; code = begun.Error.Code; break; }
+                    inFlight = true;
                     // SDK-only context: retain every content block and let the official assembler merge
                     // streamed reasoning/signature fragments. Only TextContent reaches durable storage.
                     var updates = new List<ChatResponseUpdate>();
@@ -93,9 +102,15 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
                         var checkpoint = await service.CheckpointAsync(turn.TurnId, lease, text, counts, false, execution.Token);
                         if (checkpoint.IsFailure) { terminal = "Failed"; code = checkpoint.Error.Code; execution.Cancel(); break; }
                     }
-                    if (execution.IsCancellationRequested) break;
+                    // Cortado justo al terminar el stream (el plazo o el apagado): el paso salió y se cobra, así que es incierto.
+                    if (execution.IsCancellationRequested)
+                    {
+                        if (terminal == "Complete") { terminal = "Failed"; code = Interrupted(inFlight); }
+                        break;
+                    }
                     var ended = await service.CheckpointAsync(turn.TurnId, lease, null, counts, true, execution.Token);
                     if (ended.IsFailure) { terminal = "Failed"; code = ended.Error.Code; break; }
+                    inFlight = false;
                     var response = updates.ToChatResponse();
                     var calls = response.Messages.SelectMany(message => message.Contents).OfType<FunctionCallContent>().ToList();
                     if (calls.Count == 0)
@@ -130,8 +145,11 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
                 }
             }
         }
-        catch (OperationCanceledException) { terminal = "Failed"; code = AssistantErrors.ProviderUnavailable.Code; }
-        catch (Exception exception) { terminal = "Failed"; code = AssistantErrors.ProviderUnavailable.Code; ExceptionLog.Write(logger, "AssistantTurn", exception); }
+        // El plazo del turno, el apagado o la persona cortan con el token de quien llama: no es una respuesta del proveedor.
+        catch (OperationCanceledException) { terminal = "Failed"; code = Interrupted(inFlight); }
+        // AssistantChatClient entrega cada falla del proveedor con su estado HTTP o su transporte, sin el cuerpo (0064 §7).
+        catch (HttpRequestException failure) { terminal = "Failed"; code = providerFailure = AssistantProviderFailureClassifier.Classify(failure); }
+        catch (Exception exception) { terminal = "Failed"; code = Interrupted(inFlight); ExceptionLog.Write(logger, "AssistantTurn", exception); }
         finally
         {
             execution.Cancel();
@@ -141,10 +159,40 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
         using var finalization = new CancellationTokenSource(options.Value.FinalizationTimeout, Clock);
         try
         {
+            // Sin conexión no salió nada: la llamada marcada no se cobra (0064 §7).
+            if (providerFailure == AssistantErrors.ProviderUnavailableCode)
+                await service.CheckpointAsync(turn.TurnId, lease, null, NothingSent, true, finalization.Token);
             var closed = await service.CompleteAsync(turn.TurnId, lease, terminal, code, finalization.Token);
             if (closed.IsFailure) await RecoverAsync(candidate, lease);
+            else if (settingsVersion is { } version && (terminal == "Complete" || providerFailure is not null))
+                await RecordProviderOutcomeAsync(scope.ServiceProvider, turn.Binding.Mode, terminal == "Complete" ? null : providerFailure, version, finalization.Token);
         }
         catch (Exception exception) { ExceptionLog.Write(logger, "AssistantTurn", exception); }
+    }
+    private static readonly AssistantCallUsage NothingSent = new(0, 0, 0, 0, 0, 0, 0, true);
+    private static string Interrupted(bool inFlight) => inFlight ? AssistantErrors.ProviderUncertainCode : AssistantErrors.ProviderUnavailable.Code;
+    /// <summary>Si no se puede leer, el turno sigue igual (una falla pasajera de la base no lo cancela) y su resultado no se anota.</summary>
+    private async Task<uint?> SettingsVersionAsync(IServiceProvider services, AssistantMode funding, CancellationToken ct)
+    {
+        try
+        {
+            var read = await services.GetRequiredService<IAssistantSettingsService>().GetSettingsVersionAsync(funding, ct);
+            return read.IsSuccess ? read.Value : null;
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException) { ExceptionLog.Write(logger, "AssistantProviderOutcome", exception); return null; }
+    }
+    /// <summary>
+    /// Fuera del turno, que ya quedó cerrado: la falla queda anotada para quien paga, o se limpia si respondió, sin cambiar la
+    /// versión de su configuración. Si no se puede escribir, el turno no cambia.
+    /// </summary>
+    private async Task RecordProviderOutcomeAsync(IServiceProvider services, AssistantMode funding, string? failure, uint settingsVersion, CancellationToken ct)
+    {
+        try
+        {
+            var recorded = await services.GetRequiredService<IAssistantSettingsService>().RecordProviderOutcomeAsync(funding, failure, settingsVersion, ct);
+            if (recorded.IsFailure) LogFailure(logger, recorded.Error.Code);
+        }
+        catch (Exception exception) { ExceptionLog.Write(logger, "AssistantProviderOutcome", exception); }
     }
     private async Task MonitorAsync(AssistantTurnDiscovery candidate, Guid lease, CancellationTokenSource execution)
     {

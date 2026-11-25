@@ -41,7 +41,8 @@ internal sealed class AnthropicChatClientFactory(IAssistantConfigurationPolicy p
             if (string.IsNullOrWhiteSpace(key)) return AssistantErrors.SettingsNotConfigured;
             return Result.Success(clients.Build(key, configuration.Model.ProviderModelId, configuration.Effort, AssistantTechnicalLimits.MaxOutputTokens));
         }
-        catch (CryptographicException) { return AssistantErrors.SettingsNotConfigured; }
+        // 0064 §7: la clave que dejó de abrirse después de admitir el turno falla sin llamar al proveedor; el cupo vuelve.
+        catch (CryptographicException) { return AssistantErrors.ProviderKeyUnreadable; }
     }
     public async Task<Result> ValidateKeyAsync(string key, CancellationToken cancellationToken)
     {

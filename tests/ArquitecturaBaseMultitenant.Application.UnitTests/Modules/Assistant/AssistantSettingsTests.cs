@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Tenancy;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
@@ -98,12 +99,123 @@ public sealed class AssistantSettingsTests
         Assert.Equal(AssistantErrors.ModelNotAllowed, (await fixture.Policy.ResolveAsync(TestContext.Current.CancellationToken)).Error);
     }
 
+    // B13 (0064 §6 y §7): la clave ilegible y el proveedor desconocido frenan antes de reservar, y cada uno ve lo que arregla.
+    [Theory]
+    [InlineData(AssistantMode.PlatformKey)]
+    [InlineData(AssistantMode.OwnKey)]
+    public async Task An_unreadable_saved_key_stops_the_turn_before_reserving_without_calling_the_provider(AssistantMode mode)
+    {
+        var ct = TestContext.Current.CancellationToken;
+        Fixture Funded(AssistantMode? unreadable)
+        {
+            var fixture = new Fixture();
+            if (mode == AssistantMode.OwnKey) fixture.Organization = new(AssistantMode.OwnKey, fixture.Model.Id, AssistantEffort.Low, 8, fixture.Price, 30, true, "1234", 1);
+            if (unreadable is { } funding) fixture.Unreadable.Add(funding);
+            return fixture;
+        }
+        Assert.True((await Funded(null).Policy.ResolveAsync(ct)).IsSuccess);
+        Assert.Equal(AssistantErrors.ProviderKeyUnreadable, (await Funded(mode).Policy.ResolveAsync(ct)).Error);
+        // The other funding's key is not probed: an organization's own key never decides the platform's.
+        var other = mode == AssistantMode.OwnKey ? AssistantMode.PlatformKey : AssistantMode.OwnKey;
+        Assert.True((await Funded(other).Policy.ResolveAsync(ct)).IsSuccess);
+    }
+
+    [Fact]
+    public async Task A_provider_this_version_does_not_know_pauses_its_own_key_organization_and_every_platform_key_user()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var own = new Fixture();
+        own.Organization = new(AssistantMode.OwnKey, own.Model.Id, AssistantEffort.Low, 8, own.Price, 30, true, "1234", 1);
+        own.Providers[own.Model.Id] = "FutureProvider";
+        Assert.Equal(AssistantErrors.ProviderUnsupportedProvider, (await own.Policy.ResolveAsync(ct)).Error);
+        Assert.True((await own.Builder.BuildAsync(ct)).UnsupportedProvider);
+
+        // With the platform key the saved provider is the default model's: an organization that chose a known model also pauses.
+        var platform = new Fixture();
+        var future = Guid.CreateVersion7();
+        platform.Platform = platform.Platform with { DefaultModelId = future, AllowedModelIds = [platform.Model.Id, future] };
+        platform.Organization = new(AssistantMode.PlatformKey, platform.Model.Id, AssistantEffort.Low, 50, null, 30, false, null, 1);
+        platform.Providers[future] = "FutureProvider";
+        Assert.Equal(AssistantErrors.ProviderUnsupportedProvider, (await platform.Policy.ResolveAsync(ct)).Error);
+        var organization = await platform.Builder.BuildAsync(ct);
+        Assert.False(organization.UnsupportedProvider);
+        Assert.Equal(AssistantErrors.ProviderPlatformUnavailableCode, organization.ProviderIssue);
+        Assert.True((await platform.Builder.BuildPlatformAsync(ct)).UnsupportedProvider);
+        Assert.False((await new Fixture().Builder.BuildPlatformAsync(ct)).UnsupportedProvider);
+    }
+
+    [Fact]
+    public async Task Each_settings_screen_shows_the_issue_its_owner_fixes_according_to_who_pays()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var fixture = new Fixture();
+        fixture.Platform = fixture.Platform with { ProviderIssue = AssistantErrors.ProviderCredentialRejectedCode };
+        // Platform key: the operator sees the rejected key; the organization only learns that the platform is on it.
+        Assert.Equal(AssistantErrors.ProviderCredentialRejectedCode, (await fixture.Builder.BuildPlatformAsync(ct)).ProviderIssue);
+        Assert.Equal(AssistantErrors.ProviderPlatformUnavailableCode, (await fixture.Builder.BuildAsync(ct)).ProviderIssue);
+        // Own key: the owner sees the issue of their key, never the platform's.
+        fixture.Organization = new(AssistantMode.OwnKey, fixture.Model.Id, AssistantEffort.Low, 8, fixture.Price, 30, true, "1234", 1, AssistantErrors.ProviderLimitedCode);
+        Assert.Equal(AssistantErrors.ProviderLimitedCode, (await fixture.Builder.BuildAsync(ct)).ProviderIssue);
+        fixture.Organization = fixture.Organization with { ProviderIssueCode = null };
+        Assert.Null((await fixture.Builder.BuildAsync(ct)).ProviderIssue);
+        // An unreadable key is probed when reading, for whoever configures it.
+        var unreadable = new Fixture { Organization = fixture.Organization };
+        unreadable.Unreadable.Add(AssistantMode.OwnKey);
+        Assert.Equal(AssistantErrors.ProviderKeyUnreadableCode, (await unreadable.Builder.BuildAsync(ct)).ProviderIssue);
+        var platformUnreadable = new Fixture();
+        platformUnreadable.Unreadable.Add(AssistantMode.PlatformKey);
+        Assert.Equal(AssistantErrors.ProviderKeyUnreadableCode, (await platformUnreadable.Builder.BuildPlatformAsync(ct)).ProviderIssue);
+        Assert.Equal(AssistantErrors.ProviderPlatformUnavailableCode, (await platformUnreadable.Builder.BuildAsync(ct)).ProviderIssue);
+        var healthy = new Fixture();
+        Assert.Null((await healthy.Builder.BuildAsync(ct)).ProviderIssue);
+        Assert.Null((await healthy.Builder.BuildPlatformAsync(ct)).ProviderIssue);
+    }
+
+    [Theory]
+    [InlineData(AssistantErrors.ProviderCredentialRejectedCode, AssistantKeyFunding.PlatformKey, Access.Business, AssistantErrors.ProviderPlatformUnavailableCode)]
+    [InlineData(AssistantErrors.ProviderLimitedCode, AssistantKeyFunding.PlatformKey, Access.Consumer, AssistantErrors.ProviderPlatformUnavailableCode)]
+    [InlineData(AssistantErrors.ProviderKeyUnreadableCode, AssistantKeyFunding.PlatformKey, Access.Business, AssistantErrors.ProviderPlatformUnavailableCode)]
+    [InlineData(AssistantErrors.ProviderUnsupportedProviderCode, AssistantKeyFunding.PlatformKey, Access.Consumer, AssistantErrors.ProviderPlatformUnavailableCode)]
+    [InlineData(AssistantErrors.ProviderCredentialRejectedCode, AssistantKeyFunding.PlatformKey, Access.Platform, AssistantErrors.ProviderCredentialRejectedCode)]
+    [InlineData(AssistantErrors.ProviderCredentialRejectedCode, AssistantKeyFunding.OwnKey, Access.Business, AssistantErrors.ProviderCredentialRejectedCode)]
+    [InlineData(AssistantErrors.ProviderKeyUnreadableCode, AssistantKeyFunding.OwnKey, Access.Business, AssistantErrors.ProviderKeyUnreadableCode)]
+    [InlineData(AssistantErrors.ProviderModelRejectedCode, AssistantKeyFunding.PlatformKey, Access.Business, AssistantErrors.ProviderModelRejectedCode)]
+    [InlineData(AssistantErrors.ProviderRejectedCode, AssistantKeyFunding.PlatformKey, Access.Business, AssistantErrors.ProviderRejectedCode)]
+    [InlineData(AssistantErrors.ProviderUncertainCode, AssistantKeyFunding.PlatformKey, Access.Consumer, AssistantErrors.ProviderUncertainCode)]
+    [InlineData(AssistantErrors.ProviderUnavailableCode, AssistantKeyFunding.PlatformKey, Access.Business, AssistantErrors.ProviderUnavailableCode)]
+    public void The_person_sees_the_failure_that_who_pays_lets_them_act_on(string code, AssistantKeyFunding funding, Access access, string shown) =>
+        Assert.Equal(shown, AssistantProviderIssuePolicy.Shown(code, funding, access));
+
+    [Fact]
+    public void Only_what_the_configuration_owner_fixes_is_recorded_in_their_settings()
+    {
+        Assert.Equal([AssistantErrors.ProviderCredentialRejectedCode, AssistantErrors.ProviderLimitedCode, AssistantErrors.ProviderModelRejectedCode,
+            AssistantErrors.ProviderUnavailableCode], AssistantErrors.ProviderFailureCodes.Where(AssistantProviderIssuePolicy.IsRecorded));
+        Assert.Null(AssistantProviderIssuePolicy.Shown(null, AssistantKeyFunding.PlatformKey, Access.Business));
+        var row = AssistantOrganizationProviderIssue.Create();
+        var at = new DateTime(2026, 11, 25, 3, 0, 0, DateTimeKind.Utc);
+        Assert.True(row.Record(AssistantErrors.ProviderLimitedCode, at));
+        Assert.False(row.Record(AssistantErrors.ProviderLimitedCode, at.AddMinutes(1)));
+        Assert.Equal(at, row.AtUtc);
+        Assert.True(row.Record(null, at));
+        Assert.Null(row.AtUtc);
+        var platform = AssistantPlatformProviderIssue.Create();
+        Assert.Equal(AssistantPlatformSettings.SingletonId, platform.Id);
+        Assert.True(platform.Record(AssistantErrors.ProviderCredentialRejectedCode, at));
+        Assert.True(platform.Record(null, at));
+        Assert.False(platform.Record(null, at));
+        Assert.Throws<ArgumentException>(() => platform.Record(AssistantErrors.ProviderLimitedCode, DateTime.SpecifyKind(at, DateTimeKind.Unspecified)));
+    }
+
     internal static AssistantModelTechnicalRequest Technical() => new(true, true, true, true, true,
         [AssistantEffort.Low, AssistantEffort.Medium, AssistantEffort.High], 100000, 4096,
         new(0.125m, CurrencyCode.Create("USD").Value), new(0.2m, CurrencyCode.Create("USD").Value), new(0.01m, CurrencyCode.Create("USD").Value), null);
 
-    private sealed class Fixture : IAssistantSettingsReader, IAssistantModelReader, ITenantAdminReader, ITenantContext, ICurrentUser
+    private sealed class Fixture : IAssistantSettingsReader, IAssistantModelReader, ITenantAdminReader, ITenantContext, ICurrentUser, IAssistantKeyProtector
     {
+        public HashSet<AssistantMode> Unreadable { get; } = [];
+        public Dictionary<Guid, string> Providers { get; } = [];
+        public AssistantSettingsBuilder Builder { get; }
         public Money Price { get; } = new(100m, CurrencyCode.Create("USD").Value);
         public AssistantModelPriceResponse Model { get; set; }
         public PlatformAssistantSettingsResponse Platform { get; set; }
@@ -115,7 +227,9 @@ public sealed class AssistantSettingsTests
         {
             Model = new(Guid.CreateVersion7(), "Fixture", AssistantProvider.Anthropic, "fixture-model", Price, Price, true, 1, AssistantModelReferenceBuilder.ToResponse(AssistantModelReferenceBuilder.ToDomain(Technical())));
             Platform = new(Model.Id, [Model.Id], AssistantEffort.Low, 50, Price, false, 30, true, "0000", 1);
-            Policy = new(this, this, this, this, this);
+            var connection = new AssistantConnectionPolicy(this, this, this);
+            Policy = new(this, this, this, this, this, connection);
+            Builder = new(this, this, this, this, connection);
         }
         public Guid? UserId { get; } = Guid.CreateVersion7();
         public Access? Access => Domain.Users.Access.Business;
@@ -126,8 +240,16 @@ public sealed class AssistantSettingsTests
         public Task<PlatformAssistantSettingsResponse> FindPlatformAsync(CancellationToken ct) => Task.FromResult(Platform);
         public Task<AssistantOrganizationSettingsRow?> FindOrganizationAsync(CancellationToken ct) => Task.FromResult(Organization);
         public Task<AssistantPolicyResponse> FindPolicyAsync(Guid tenantId, CancellationToken ct) => Task.FromResult(new AssistantPolicyResponse(AllowOwn, 1));
-        public Task<AssistantKeyMaterial> GetPlatformKeyAsync(CancellationToken ct) => throw new NotSupportedException();
-        public Task<AssistantKeyMaterial> GetOrganizationKeyAsync(CancellationToken ct) => throw new NotSupportedException();
+        public Task<AssistantKeyMaterial> GetPlatformKeyAsync(CancellationToken ct) => Task.FromResult(new AssistantKeyMaterial([(byte)AssistantMode.PlatformKey], "0000", true));
+        public Task<AssistantKeyMaterial> GetOrganizationKeyAsync(CancellationToken ct) => Task.FromResult(new AssistantKeyMaterial([(byte)AssistantMode.OwnKey], "1234", true));
+        public Task<string?> FindProviderAsync(Guid modelId, CancellationToken ct) =>
+            Task.FromResult(Providers.TryGetValue(modelId, out var provider) ? provider : modelId == Model.Id ? nameof(AssistantProvider.Anthropic) : null);
+        public byte[] ProtectPlatform(string key) => throw new NotSupportedException();
+        public string UnprotectPlatform(byte[] ciphertext) => throw new NotSupportedException();
+        public byte[] ProtectOrganization(string key) => throw new NotSupportedException();
+        public string UnprotectOrganization(byte[] ciphertext) => throw new NotSupportedException();
+        public bool CanUnprotectPlatform(byte[] ciphertext) => !Unreadable.Contains((AssistantMode)ciphertext[0]);
+        public bool CanUnprotectOrganization(byte[] ciphertext) => !Unreadable.Contains((AssistantMode)ciphertext[0]);
         public Task<IReadOnlyList<AssistantModelPriceResponse>> ListAllAsync(CancellationToken ct) => Task.FromResult<IReadOnlyList<AssistantModelPriceResponse>>([Model]);
         public Task<PagedResult<AssistantModelPriceResponse>> ListAsync(AssistantModelListRequest request, CancellationToken ct) => throw new NotSupportedException();
         public Task<IReadOnlyList<ActiveTenantAdminEmail>> ListActiveVerifiedEmailRecipientsAsync(Guid tenantId, CancellationToken ct) => Task.FromResult<IReadOnlyList<ActiveTenantAdminEmail>>(Recipient ? [new(UserId!.Value, Email.Create("owner@example.test").Value)] : []);

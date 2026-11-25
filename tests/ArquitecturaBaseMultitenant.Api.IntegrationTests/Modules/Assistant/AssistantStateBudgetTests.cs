@@ -8,7 +8,9 @@ using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -251,12 +253,17 @@ public sealed class AssistantStateBudgetTests
         return tenant;
     }
 
+    private static byte[] Cipher(IServiceProvider services, string purpose, params string[] scope) =>
+        services.GetRequiredService<IDataProtectionProvider>().CreateProtector(purpose, scope)
+            .Protect("isolated-state-budget-key"u8.ToArray());
+
     private static Task PlatformAsync(WebApplicationFactory<Program> host, decimal budget, bool key) =>
         WriteAsync(host, null, async services =>
         {
             var settings = await services.GetRequiredService<ApplicationDbContext>().Set<AssistantPlatformSettings>().SingleAsync(Ct);
             settings.Update(settings.DefaultModelId, settings.AllowedModelIds, settings.Effort, 50, Usd(budget), true, 30);
-            settings.ReplaceKey(key ? [1, 2, 3, 4] : null, key ? "test" : null);
+            // A real cipher of the platform purpose: since B13 a key the ring cannot open leaves the assistant unavailable.
+            settings.ReplaceKey(key ? Cipher(services, AssistantKeyProtector.PlatformPurpose) : null, key ? "test" : null);
             services.GetRequiredService<ISecurityEventRepository>().Add(SecurityEvent.ForPlatformSettings(
                 AuditActorKind.System, Guid.Empty, "State budget fixture", services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime));
             return Result.Success();
@@ -270,7 +277,7 @@ public sealed class AssistantStateBudgetTests
             var settings = await db.Set<AssistantOrganizationSettings>().SingleOrDefaultAsync(Ct);
             if (settings is null) { settings = AssistantOrganizationSettings.Create(); db.Add(settings); }
             settings.Update(mode.ToString(), platform.DefaultModelId, platform.Effort, 50, budget, 30);
-            settings.ReplaceKey(key ? [1, 2, 3, 4] : null, key ? "test" : null);
+            settings.ReplaceKey(key ? Cipher(services, AssistantKeyProtector.OrganizationPurpose, tenant.ToString("N")) : null, key ? "test" : null);
             if (mode == AssistantMode.OwnKey)
             {
                 var policy = await db.Set<AssistantOrganizationPolicy>().SingleOrDefaultAsync(row => row.OrganizationId == tenant, Ct);

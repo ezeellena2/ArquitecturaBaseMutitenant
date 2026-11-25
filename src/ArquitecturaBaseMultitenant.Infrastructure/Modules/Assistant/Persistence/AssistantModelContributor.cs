@@ -20,6 +20,7 @@ internal sealed class AssistantModelContributor : IPersistenceModelContributor
         [typeof(PlatformAssistantTurn)] = Schemas.Platform,
         [typeof(PlatformAssistantUsageDaily)] = Schemas.Platform,
         [typeof(AssistantPlatformSettings)] = Schemas.Platform,
+        [typeof(AssistantPlatformProviderIssue)] = Schemas.Platform,
         [typeof(AssistantOrganizationPolicy)] = Schemas.Platform,
         [typeof(AssistantModelPrice)] = Schemas.Platform,
         [typeof(AssistantNoticeAcceptance)] = Schemas.Platform,

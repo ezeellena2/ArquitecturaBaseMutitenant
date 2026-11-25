@@ -17,20 +17,27 @@ internal sealed class AssistantSettingsReader(ApplicationDbContext context, ITen
         var row = await context.Set<AssistantPlatformSettings>().AsNoTracking().Where(value => value.Id == AssistantPlatformSettings.SingletonId)
             .Select(value => new PlatformAssistantSettingsResponse(value.DefaultModelId, value.AllowedModelIds, Enum.Parse<AssistantEffort>(value.Effort), value.DailyMessageLimit,
                 value.MonthlyOrganizationBudget, value.PersonalEnabled, value.RetentionDays, value.EncryptedApiKey != null, value.MaskedKeySuffix, value.Version)).SingleOrDefaultAsync(ct);
+        // B13: la falla del proveedor va en su propia fila, así anotarla no cambia la versión de la configuración.
+        var issue = await context.Set<AssistantPlatformProviderIssue>().AsNoTracking().Select(value => value.Code).SingleOrDefaultAsync(ct);
         row ??= new PlatformAssistantSettingsResponse(Guid.Empty, [], AssistantEffort.Low, AssistantFeature.DefaultDailyMessageLimit,
             new Money(100m, CurrencyCode.Create(AssistantContractPolicy.BillingCurrency).Value), false, AssistantFeature.DefaultRetentionDays, false, null, 0);
+        row = row with { ProviderIssue = issue };
         var overridden = await context.Set<AssistantPlatformSettings>().AsNoTracking()
             .Where(value => value.Id == AssistantPlatformSettings.SingletonId).Select(value => value.HasKeyOverride).SingleOrDefaultAsync(ct);
         var fallback = !overridden && !row.HasKey && !string.IsNullOrWhiteSpace(options.Value.Platform.ApiKey);
         return row with { HasKey = row.HasKey || fallback, MaskedKeySuffix = fallback ? Suffix(options.Value.Platform.ApiKey!) : row.MaskedKeySuffix };
     }
-    public Task<AssistantOrganizationSettingsRow?> FindOrganizationAsync(CancellationToken ct)
+    public async Task<AssistantOrganizationSettingsRow?> FindOrganizationAsync(CancellationToken ct)
     {
         var tenantId = tenant.RequiredTenantId;
-        return context.Set<AssistantOrganizationSettings>().AsNoTracking().Where(value => value.TenantId == tenantId)
+        var row = await context.Set<AssistantOrganizationSettings>().AsNoTracking().Where(value => value.TenantId == tenantId)
             .Select(value => new AssistantOrganizationSettingsRow(Enum.Parse<AssistantMode>(value.Mode), value.ModelId,
                 Enum.Parse<AssistantEffort>(value.Effort), value.DailyMessageLimit, value.MonthlyBudget, value.RetentionDays,
-                value.EncryptedApiKey != null, value.MaskedKeySuffix, value.Version)).SingleOrDefaultAsync(ct);
+                value.EncryptedApiKey != null, value.MaskedKeySuffix, value.Version, null)).SingleOrDefaultAsync(ct);
+        if (row is null) return null;
+        var issue = await context.Set<AssistantOrganizationProviderIssue>().AsNoTracking().Where(value => value.TenantId == tenantId)
+            .Select(value => value.Code).SingleOrDefaultAsync(ct);
+        return row with { ProviderIssueCode = issue };
     }
     public async Task<AssistantPolicyResponse> FindPolicyAsync(Guid tenantId, CancellationToken ct) =>
         await context.Set<AssistantOrganizationPolicy>().AsNoTracking().Where(value => value.OrganizationId == tenantId)

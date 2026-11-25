@@ -71,6 +71,17 @@ public static class AssistantErrors
     public const string ProviderKeyUnreadableCode = "Assistant.Provider.KeyUnreadable";
     public const string ProviderUnsupportedProviderCode = "Assistant.Provider.UnsupportedProvider";
     public const string ProviderPlatformUnavailableCode = "Assistant.Provider.PlatformUnavailable";
+    /// <summary>La clave guardada no se puede descifrar acá (0064 §7): el turno falla sin llamar al proveedor ni gastar.</summary>
+    public static readonly Error ProviderKeyUnreadable = Error.ServiceUnavailable(ProviderKeyUnreadableCode, "We couldn't read the saved key: replace it.");
+    /// <summary>El proveedor guardado no lo conoce esta versión (0064 §6): la conexión queda pausada.</summary>
+    public static readonly Error ProviderUnsupportedProvider = Error.ServiceUnavailable(ProviderUnsupportedProviderCode,
+        "The connection is paused: the saved provider isn't available in this version. Save the settings to discard it.");
+    /// <summary>
+    /// Lo que dijo el proveedor en un turno y queda anotado para quien paga, aparte de su configuración, hasta que vuelve a
+    /// responder o se guarda la configuración (0064 §7, B13). La clave ilegible y el proveedor desconocido no se guardan: se miran al leer.
+    /// </summary>
+    public static IReadOnlyList<string> ProviderRecordedIssueCodes { get; } =
+        [ProviderCredentialRejectedCode, ProviderLimitedCode, ProviderModelRejectedCode, ProviderUnavailableCode];
     /// <summary>Los códigos que toma <c>providerIssue</c> en la configuración, según quién paga.</summary>
     public static IReadOnlyList<string> ProviderIssueCodes { get; } =
         [ProviderCredentialRejectedCode, ProviderLimitedCode, ProviderModelRejectedCode, ProviderUnavailableCode, ProviderKeyUnreadableCode, ProviderPlatformUnavailableCode];

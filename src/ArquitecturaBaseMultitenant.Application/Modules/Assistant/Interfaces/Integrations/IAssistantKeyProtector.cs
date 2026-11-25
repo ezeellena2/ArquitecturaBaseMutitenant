@@ -7,4 +7,7 @@ public interface IAssistantKeyProtector
     string UnprotectPlatform(byte[] ciphertext);
     byte[] ProtectOrganization(string key);
     string UnprotectOrganization(byte[] ciphertext);
+    /// <summary>Si la clave guardada se puede descifrar acá, sin devolverla (0064 §7: la disponibilidad prueba el descifrado).</summary>
+    bool CanUnprotectPlatform(byte[] ciphertext);
+    bool CanUnprotectOrganization(byte[] ciphertext);
 }
