@@ -233,7 +233,7 @@ Leé AGENTS.md de los dos repos, la ADR 0068, este plan, la spec y la skill /pue
   - `assistant-actions.json`, y en el front `src/shared/assistant-actions/` y la tarjeta.
 
   Cada etapa que suma una pantalla que crea, edita o elimina declara sus acciones con la [receta](../guides/agregar-una-accion-al-asistente.md). Las opciones de un catálogo se declaran una vez por tipo, en la E12;
-- **la E23:** el alcance de solo lectura (`IAssistantReadOnlyScope`, B2), al que suma la entrada del turno de canal, con la organización y sin persona (0068 §5);
+- **la E23:** el alcance de solo lectura (`IAssistantReadOnlyScope`, B2), al que suma la entrada del turno de canal, con la organización y sin persona (0068 §5), y `AssistantTurnWork.CurrentEngineVersion` 2 (B4), que la E23 sube para el turno de canal;
 - **la E25:** `proposal` en el `Message` y la tabla `AssistantProposals`, a las que suma sus clases (`form`, `catalog` y `catalogImport`), con el reemplazo por clase;
 - **antes de la prueba integral del bloque:** la calificación de todas las acciones con un modelo real, con el visto bueno del usuario, que llena `qualified-actions.json`.
 
