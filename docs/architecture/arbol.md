@@ -138,6 +138,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   ├── ReferenceData/
 │   │   │   ├── Reports/
 │   │   │   ├── Request/
+│   │   │   ├── Retention/  los lotes de las purgas por fecha (0062)
 │   │   │   ├── Roles/
 │   │   │   ├── Settings/
 │   │   │   ├── Tenancy/
@@ -340,6 +341,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   ├── Home/
 │   │   │   ├── Identity/
 │   │   │   ├── Invitations/
+│   │   │   ├── Messaging/  los topes de correo (0063)
 │   │   │   ├── Notifications/  la campana (base de la 12)
 │   │   │   ├── OrganizationUsers/
 │   │   │   ├── Platform/
