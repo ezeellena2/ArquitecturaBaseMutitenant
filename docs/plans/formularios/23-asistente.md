@@ -1,12 +1,13 @@
 # E23 · El asistente, con Casos (spec)
 
-**Estado:** pendiente · spec de la etapa 23 del bloque (decisiones 34, 39, 51, 52, 63, 65 a 67, 78, 165, 169, 202, 219, 230, 261 a 264, 270, 271 y 278; la 278 precisa la 66), con el [formato](plantilla.md) de las etapas. Junta la etapa 5 de ArquitecturaBase, en piloto, con sus Casos del asistente, decididos y sin programar. El catálogo que propone el asistente pasa a la E25 (167). `/plan-etapa` la contrasta con el código real después de la E22.
+**Estado:** pendiente · spec de la etapa 23 del bloque (decisiones 34, 39, 51, 52, 63, 65 a 67, 78, 165, 169, 202, 219, 230, 261 a 264, 270, 271 y 278; la 278 precisa la 66), con el [formato](plantilla.md) de las etapas. Junta la etapa 5 de ArquitecturaBase, en piloto, con sus Casos del asistente, decididos y sin programar. `/plan-etapa` la contrasta con el código real después de la E22.
 
 **Partes.** Lo que no figura en esta tabla está acá.
 
 | Secciones | Archivo |
 | --- | --- |
-| Cómo responde (respuestas redactadas, un turno y los topes), Contrato, Datos, En el multitenant, Lo que ya se pagó allá, Pasos y Qué verificar al arrancar | [datos y contrato](23-parte-datos-y-contrato.md) |
+| Cómo responde (respuestas redactadas, un turno y los topes), Contrato, Datos, En el multitenant y Pasos | [datos y contrato](23-parte-datos-y-contrato.md) |
+| Lo que ya se pagó allá y Qué verificar al arrancar | [lo que ya se pagó y qué verificar](23-parte-pagado-y-verificar.md) |
 
 ## Qué leer
 
