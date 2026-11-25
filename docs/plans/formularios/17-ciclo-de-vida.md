@@ -52,7 +52,7 @@ Antes de empezar, en este orden:
 - WhatsApp espera a que no queden sesiones vigentes ni respuestas recibidas a tiempo sin capturar. Nunca lo deduce porque no ve sesiones: lo comprueba bajo el bloqueo del binding;
 - cada binding se deprecia con su reserva, su número de turno y su estado. Lo incierto queda «Sin confirmar» y se consulta por id, nombre técnico y WABA antes de repetir. Todo 4xx también se consulta;
 - cada respuesta de Meta se clasifica en definitiva, transitoria o desconocida. Un rechazo no se repite para siempre: se intenta cuatro veces, con esperas de 5, 15 y 30 minutos entre una y otra, y después del cuarto rechazo queda «No se pudo», a la vista, y no frena nada del formulario;
-- corre por organización, como las difusiones, sin una persona detrás: el último envío puede vencer días después de la baja, cuando quien la hizo ya no tiene permisos.
+- corre por organización, como las difusiones, sin una persona detrás (lo dice «Decisiones tomadas»).
 
 **La lista «Formularios»** (79): el filtro «Estado», la pieza con su botón y sin cantidades (262), suma «Dados de baja», junto a Activos (publicados y borradores), Publicados y Borradores. No es una vista aparte. Al ordenar por el estado, los dados de baja van después de los activos, al final de su circuito (264). Quien solo ve respuestas también lo tiene, porque si no, no llegaría a las respuestas de un dado de baja.
 
