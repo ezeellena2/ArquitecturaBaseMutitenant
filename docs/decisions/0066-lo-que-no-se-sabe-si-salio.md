@@ -1,6 +1,6 @@
 # ADR 0066 · Lo que no se sabe si salió por WhatsApp queda «Sin confirmar»
 
-**Estado:** aceptada por el usuario el 2026-11-18 (decisión 240 de la [hoja de ruta de formularios](../plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md#5-decisiones-de-producto), pregunta N1 de la tanda 5 del traspaso 15). Toma H7, H2, H8, H9 y H31 de la revisión de WhatsApp de ArquitecturaBase (su traspaso 13, `03-whatsapp-y-asistente.md`). Cambia la decisión 80 y precisa la [0038](0038-whatsapp-de-atencion.md). Todavía no está programada: la tarea está en el [backlog](../backlog.md#traspaso-15-whatsapp-y-arca-para-programar). Nada de ArquitecturaBase pasó todavía su prueba integral.
+**Estado:** aceptada por el usuario el 2026-11-18 (decisión 240 de la [hoja de ruta de formularios](../plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md#5-decisiones-de-producto), pregunta N1 de la tanda 5 del traspaso 15). Toma H7, H2, H8, H9 y H31 de la revisión de WhatsApp de ArquitecturaBase (su traspaso 13, `03-whatsapp-y-asistente.md`). Cambia la decisión 80 y precisa la [0038](0038-whatsapp-de-atencion.md). Programada en la B5, la B6 y la B7 de la [base de la 12, segunda parte](../plans/2026-11-19-etapa-base-de-la-12-segunda-parte.md) (`8bf60727`, `802a9819` y `08c5d7a7`). Nada de ArquitecturaBase pasó todavía su prueba integral.
 
 ## Contexto
 
