@@ -30,4 +30,12 @@ internal sealed class OutboxDispatchService(IUnitOfWork unitOfWork, IOutboxDispa
                         await observer.RecordAcceptedAsync(messageId, receipt, clock.GetUtcNow().UtcDateTime, c);
                 return Result.Success();
             }, CommitPolicy.OnSuccess, ct));
+
+    public Task<Result> ReleaseAsync(Guid messageId, Guid leaseId, CancellationToken ct) =>
+        OperationLog.RunAsync(logger, clock, "ReleaseOutbox", () =>
+            unitOfWork.ExecuteInTransactionAsync(async c =>
+            {
+                await store.ReleaseAsync(messageId, leaseId, c);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, ct));
 }

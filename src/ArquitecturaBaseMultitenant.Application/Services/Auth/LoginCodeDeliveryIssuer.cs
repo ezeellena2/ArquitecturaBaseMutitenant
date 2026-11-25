@@ -36,7 +36,7 @@ internal sealed class LoginCodeDeliveryIssuer(IUserRepository users, ILoginMetho
         }
         var admitted = await issuer.AdmitAsync(destination, issued, ct);
         if (admitted.IsFailure) return admitted;
-        channel.EnqueueRenderedLoginCode(payload, userId);
+        channel.EnqueueRenderedLoginCode(payload, issued.LifetimeMinutes, userId);
         issued.LoginCode.MarkSent(issued.IssuedAtUtc);
         return Result.Success();
     }

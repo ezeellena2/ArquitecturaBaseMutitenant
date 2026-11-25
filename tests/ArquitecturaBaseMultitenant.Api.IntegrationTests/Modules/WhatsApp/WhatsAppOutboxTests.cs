@@ -42,7 +42,7 @@ public sealed class WhatsAppOutboxTests(ApiFactory factory) : IClassFixture<ApiF
         await using (var seed = factory.Services.CreateAsyncScope())
         {
             var context = seed.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var outbox = new Outbox(context, seed.ServiceProvider.GetRequiredService<IPayloadProtector>(), TimeProvider.System, [sender]);
+            var outbox = new Outbox(context, seed.ServiceProvider.GetRequiredService<IPayloadProtector>(), TimeProvider.System, [sender], seed.ServiceProvider.GetRequiredService<OutboxOrderingKeyHasher>());
             await seed.ServiceProvider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
             {
                 if (authentication) new WhatsAppLoginCodeChannel(new Settings(), WhatsAppTemplateTests.Renderer(), outbox)
@@ -88,7 +88,7 @@ public sealed class WhatsAppOutboxTests(ApiFactory factory) : IClassFixture<ApiF
         await using (var scope = factory.Services.CreateAsyncScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var outbox = new Outbox(context, scope.ServiceProvider.GetRequiredService<IPayloadProtector>(), clock, [sender]);
+            var outbox = new Outbox(context, scope.ServiceProvider.GetRequiredService<IPayloadProtector>(), clock, [sender], scope.ServiceProvider.GetRequiredService<OutboxOrderingKeyHasher>());
             var reply = new WhatsAppOutboundMessage("number", "+5491134567890", "", "es", [], Body: "Reply", ReplyExpiresAtUtc: clock.GetUtcNow().UtcDateTime.AddHours(24));
             await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
             { outbox.Enqueue("whatsapp", JsonSerializer.Serialize(reply)); return Task.FromResult(Result.Success()); }, CommitPolicy.OnSuccess, Ct);
@@ -113,7 +113,7 @@ public sealed class WhatsAppOutboxTests(ApiFactory factory) : IClassFixture<ApiF
         using var handler = new Handler(factory, "wamid.not-sent");
         using var http = new HttpClient(handler) { BaseAddress = new Uri("https://graph.example.test/") };
         var sender = new WhatsAppChannelSender(new WhatsAppCloudClient(http, Options.Create(new WhatsAppOptions()), TimeProvider.System));
-        var outbox = new Outbox(context, scope.ServiceProvider.GetRequiredService<IPayloadProtector>(), TimeProvider.System, [sender]);
+        var outbox = new Outbox(context, scope.ServiceProvider.GetRequiredService<IPayloadProtector>(), TimeProvider.System, [sender], scope.ServiceProvider.GetRequiredService<OutboxOrderingKeyHasher>());
         await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
         { outbox.Enqueue("whatsapp", "transient-secret"); return Task.FromResult(Result.Failure(Error.Conflict("Test.Flow.Rollback", "Rollback."))); }, CommitPolicy.OnSuccess, Ct);
         await using var restart = factory.Services.CreateAsyncScope();

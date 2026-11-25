@@ -178,7 +178,7 @@ public sealed class WhatsAppQuotaEnqueueTests(ApiFactory factory) : IClassFixtur
         Assert.Equal(1, await scope.ServiceProvider.GetRequiredService<OutboxDeliveryProcessor>().ProcessOnceAsync([new FailedSender()], Ct));
         var row = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking()
             .SingleAsync(message => message.Channel == "whatsapp", Ct);
-        Assert.Equal(OutboxStatus.Failed, row.Status); Assert.Equal(1, row.Attempts);
+        Assert.Equal(OutboxStatus.Uncertain, row.Status); Assert.Equal(1, row.Attempts);
         await AssertCountsAsync(host.Services, 1, 1);
     }
     [Fact]

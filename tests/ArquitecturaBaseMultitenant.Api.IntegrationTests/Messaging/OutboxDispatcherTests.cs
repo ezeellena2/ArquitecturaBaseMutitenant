@@ -3,6 +3,7 @@ using ArquitecturaBaseMultitenant.Application.Configuration.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Application.Services.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -19,8 +20,8 @@ using Microsoft.Extensions.Time.Testing;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Messaging;
 
 /// <summary>
-/// Comprueba despacho, confirmación y reintentos de mensajes pendientes. Protege el backoff y que un
-/// mensaje enviado no vuelva a procesarse.
+/// Comprueba despacho, confirmación y reintentos de mensajes pendientes. Protege el backoff, que un mensaje enviado o
+/// «Sin confirmar» no vuelva a procesarse y que lo que no llegó al transporte vuelva a la cola (ADR 0066).
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class OutboxDispatcherTests(ApiFactory factory)
@@ -98,7 +99,8 @@ public sealed class OutboxDispatcherTests(ApiFactory factory)
 
         Assert.Equal(1, (await dispatcher.DispatchOnceAsync([sender], Ct)).Value);
         var first = await context.OutboxMessages.AsNoTracking().SingleAsync(message => message.Id == id, Ct);
-        Assert.Equal(OutboxStatus.Failed, first.Status);
+        Assert.Equal(OutboxStatus.Pending, first.Status);
+        Assert.Equal("Test.Transport.Failed", first.LastErrorCode);
         Assert.Equal(1, first.Attempts);
         Assert.Equal(clock.GetUtcNow().UtcDateTime.AddSeconds(30), first.NextAttemptAtUtc);
         Assert.Equal(0, (await dispatcher.DispatchOnceAsync([sender], Ct)).Value);
@@ -112,10 +114,89 @@ public sealed class OutboxDispatcherTests(ApiFactory factory)
         clock.Advance(TimeSpan.FromSeconds(60));
         Assert.Equal(1, (await dispatcher.DispatchOnceAsync([sender], Ct)).Value);
         var terminal = await context.OutboxMessages.AsNoTracking().SingleAsync(message => message.Id == id, Ct);
+        Assert.Equal(OutboxStatus.Failed, terminal.Status);
         Assert.Equal(3, terminal.Attempts);
         Assert.Null(terminal.NextAttemptAtUtc);
         Assert.Equal(0, (await dispatcher.DispatchOnceAsync([sender], Ct)).Value);
         Assert.Equal(3, sender.Payloads.Count);
+    }
+
+    [Fact]
+    public async Task Exception_during_the_transport_leaves_it_uncertain_and_never_sends_it_again()
+    {
+        using var client = factory.CreateClient();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var protector = CreateProtector();
+        var clock = CreateClock();
+        const string channel = "email-uncertain";
+        var id = await SeedAsync(context, services.GetRequiredService<IUnitOfWork>(), protector, "uncertain payload", clock, Ct, channel);
+        var sender = new TestSender { Key = channel, Throw = true };
+        var dispatcher = CreateDispatcher(services, protector, clock);
+
+        Assert.Equal(1, (await dispatcher.DispatchOnceAsync([sender], Ct)).Value);
+        clock.Advance(TimeSpan.FromDays(1));
+        Assert.Equal(0, (await dispatcher.DispatchOnceAsync([sender], Ct)).Value);
+
+        Assert.Single(sender.Payloads);
+        var saved = await context.OutboxMessages.AsNoTracking().SingleAsync(message => message.Id == id, Ct);
+        Assert.Equal(OutboxStatus.Uncertain, saved.Status);
+        Assert.Equal(OutboxDeliveryProcessor.TransportFailedCode, saved.LastErrorCode);
+        Assert.Null(saved.NextAttemptAtUtc);
+        Assert.Null(saved.LeaseId);
+        Assert.Empty(saved.EncryptedPayload);
+    }
+
+    [Fact]
+    public async Task A_payload_that_cannot_be_opened_goes_back_to_pending_without_calling_the_transport()
+    {
+        using var client = factory.CreateClient();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var clock = CreateClock();
+        const string channel = "email-unreadable";
+        // Cifrado con otra clave: esta copia no lo puede abrir.
+        var id = await SeedAsync(context, services.GetRequiredService<IUnitOfWork>(), CreateProtector(), "other key", clock, Ct, channel);
+        var sender = new TestSender { Key = channel };
+
+        Assert.Equal(1, (await CreateDispatcher(services, CreateProtector(), clock).DispatchOnceAsync([sender], Ct)).Value);
+
+        Assert.Empty(sender.Payloads);
+        var saved = await context.OutboxMessages.AsNoTracking().SingleAsync(message => message.Id == id, Ct);
+        Assert.Equal(OutboxStatus.Pending, saved.Status);
+        Assert.Equal(OutboxDeliveryProcessor.NotStartedCode, saved.LastErrorCode);
+        Assert.Equal(1, saved.Attempts);
+        Assert.Equal(clock.GetUtcNow().UtcDateTime.AddSeconds(30), saved.NextAttemptAtUtc);
+        Assert.NotEmpty(saved.EncryptedPayload);
+    }
+
+    [Fact]
+    public async Task Stop_between_the_claim_and_the_transport_gives_it_back_without_spending_the_attempt()
+    {
+        using var client = factory.CreateClient();
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var protector = CreateProtector();
+        var clock = CreateClock();
+        const string channel = "email-stop-claimed";
+        var id = await SeedAsync(context, services.GetRequiredService<IUnitOfWork>(), protector, "claimed", clock, Ct, channel);
+        using var stop = new CancellationTokenSource();
+        var sender = new TestSender { Key = channel };
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            CreateDispatcher(services, protector, clock, afterClaim: stop.Cancel).DispatchOnceAsync([sender], stop.Token));
+
+        Assert.Empty(sender.Payloads);
+        var saved = await context.OutboxMessages.AsNoTracking().SingleAsync(message => message.Id == id, Ct);
+        Assert.Equal(OutboxStatus.Pending, saved.Status);
+        Assert.Equal(0, saved.Attempts);
+        Assert.Null(saved.LeaseId);
+        // Otra copia lo toma enseguida.
+        Assert.Equal(1, (await CreateDispatcher(services, protector, clock).DispatchOnceAsync([sender], Ct)).Value);
+        Assert.Equal(OutboxStatus.Sent, (await context.OutboxMessages.AsNoTracking().SingleAsync(message => message.Id == id, Ct)).Status);
     }
 
     [Fact]
@@ -216,30 +297,48 @@ public sealed class OutboxDispatcherTests(ApiFactory factory)
 
     private static TestDispatcher CreateDispatcher(IServiceProvider services, PayloadProtector protector,
         FakeTimeProvider clock,
-        int maxAttempts = 5) =>
-        new(services, protector, clock, maxAttempts);
+        int maxAttempts = 5, Action? afterClaim = null) =>
+        new(services, protector, clock, maxAttempts, afterClaim);
 
-    private sealed class TestDispatcher(IServiceProvider services, PayloadProtector protector, FakeTimeProvider clock, int maxAttempts)
+    private sealed class TestDispatcher(IServiceProvider services, PayloadProtector protector, FakeTimeProvider clock, int maxAttempts,
+        Action? afterClaim)
     {
         public async Task<Result<int>> DispatchOnceAsync(IReadOnlyCollection<IChannelSender> senders, CancellationToken ct) =>
-            Result.Success(await new OutboxDeliveryProcessor(new DispatchScopeFactory(services, clock, maxAttempts),
+            Result.Success(await new OutboxDeliveryProcessor(new DispatchScopeFactory(services, clock, maxAttempts, afterClaim),
                 protector, clock, Options.Create(new OutboxOptions { MaxAttempts = maxAttempts }),
                 NullLogger<OutboxDeliveryProcessor>.Instance).ProcessOnceAsync(senders, ct));
     }
 
-    private sealed class DispatchScopeFactory(IServiceProvider services, FakeTimeProvider clock, int maxAttempts) : IServiceScopeFactory
+    private sealed class DispatchScopeFactory(IServiceProvider services, FakeTimeProvider clock, int maxAttempts, Action? afterClaim)
+        : IServiceScopeFactory
     {
-        public IServiceScope CreateScope() => new DispatchScope(services.CreateScope(), clock, maxAttempts);
+        public IServiceScope CreateScope() => new DispatchScope(services.CreateScope(), clock, maxAttempts, afterClaim);
     }
-    private sealed class DispatchScope(IServiceScope inner, FakeTimeProvider clock, int maxAttempts) : IServiceScope, IServiceProvider
+    private sealed class DispatchScope(IServiceScope inner, FakeTimeProvider clock, int maxAttempts, Action? afterClaim)
+        : IServiceScope, IServiceProvider
     {
         public IServiceProvider ServiceProvider => this;
         public object? GetService(Type type) => type == typeof(IOutboxDispatchService)
-            ? new OutboxDispatchService(inner.ServiceProvider.GetRequiredService<IUnitOfWork>(),
+            ? new ClaimHook(new OutboxDispatchService(inner.ServiceProvider.GetRequiredService<IUnitOfWork>(),
                 new OutboxDispatchStore(inner.ServiceProvider.GetRequiredService<ApplicationDbContext>(), clock,
-                    Options.Create(new OutboxOptions { MaxAttempts = maxAttempts })), [], clock, NullLogger<OutboxDispatchService>.Instance)
+                    Options.Create(new OutboxOptions { MaxAttempts = maxAttempts }), inner.ServiceProvider.GetRequiredService<IAfterCommit>(),
+                    inner.ServiceProvider.GetRequiredService<OutboxMetrics>()), [], clock, NullLogger<OutboxDispatchService>.Instance), afterClaim)
             : inner.ServiceProvider.GetService(type);
         public void Dispose() => inner.Dispose();
+    }
+
+    /// <summary>Deja hacer algo (como apagar la Api) justo después de confirmar la reserva y antes del transporte.</summary>
+    private sealed class ClaimHook(IOutboxDispatchService inner, Action? afterClaim) : IOutboxDispatchService
+    {
+        public async Task<Result<OutboxDispatchClaim?>> ClaimNextAsync(IReadOnlyCollection<string> channels, CancellationToken ct)
+        {
+            var claim = await inner.ClaimNextAsync(channels, ct);
+            if (claim.Value is not null) afterClaim?.Invoke();
+            return claim;
+        }
+        public Task<Result> CompleteAsync(Guid messageId, Guid leaseId, OutboxDeliveryReceipt receipt, CancellationToken ct) =>
+            inner.CompleteAsync(messageId, leaseId, receipt, ct);
+        public Task<Result> ReleaseAsync(Guid messageId, Guid leaseId, CancellationToken ct) => inner.ReleaseAsync(messageId, leaseId, ct);
     }
 
     private static PayloadProtector CreateProtector() =>
@@ -264,16 +363,18 @@ public sealed class OutboxDispatcherTests(ApiFactory factory)
         return id;
     }
 
-    private sealed class TestSender(Func<Task>? beforeSend = null) : IChannelSender
+    /// <summary>Un transporte que clasifica como el de correo: <see cref="Fail"/> no salió (se reintenta); <see cref="Throw"/> se cortó.</summary>
+    private sealed class TestSender(Func<Task>? beforeSend = null) : IChannelReceiptSender
     {
         public string Key { get; init; } = OutboxChannel.Email;
 
         public bool Fail { get; init; }
+        public bool Throw { get; init; }
         public Func<CancellationToken, Task>? DuringSend { get; init; }
 
         public List<string> Payloads { get; } = [];
 
-        public async Task SendAsync(string payload, CancellationToken cancellationToken)
+        public async Task<OutboxDeliveryReceipt> SendWithReceiptAsync(string payload, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             Payloads.Add(payload);
@@ -283,10 +384,10 @@ public sealed class OutboxDispatcherTests(ApiFactory factory)
                 await beforeSend();
             }
 
-            if (Fail)
-            {
-                throw new InvalidOperationException("Test transport failure.");
-            }
+            if (Throw) throw new InvalidOperationException("Test transport failure.");
+            return Fail ? OutboxDeliveryReceipt.Rejected("Test.Transport.Failed", retryable: true) : OutboxDeliveryReceipt.Accepted();
         }
+
+        public Task SendAsync(string payload, CancellationToken cancellationToken) => SendWithReceiptAsync(payload, cancellationToken);
     }
 }

@@ -12,7 +12,7 @@ internal sealed partial class PickupDirectoryEmailTransport(
     IHostEnvironment environment,
     ILogger<PickupDirectoryEmailTransport> logger) : IEmailTransport
 {
-    public async Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
+    public async Task<EmailSendOutcome> SendAsync(EmailMessage message, CancellationToken cancellationToken)
     {
         var directory = Path.Combine(environment.ContentRootPath, emailOptions.Value.PickupDirectory);
         Directory.CreateDirectory(directory);
@@ -21,6 +21,7 @@ internal sealed partial class PickupDirectoryEmailTransport(
         using var mime = MimeMessageFactory.Create(message, smtpOptions.Value);
         await mime.WriteToAsync(path, cancellationToken);
         LogSaved(logger, path);
+        return EmailSendOutcome.Sent;
     }
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Email saved to {Path}")]

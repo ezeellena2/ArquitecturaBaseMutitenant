@@ -156,7 +156,7 @@ public sealed partial class AssistantDynamicAuthorizationTests
         public string? ContactPhone => null;
         public Result ValidateNewDestination(LoginCodeDestination destination, string? country) => throw probe.UnexpectedSend();
         public string RenderLoginCode(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw probe.UnexpectedSend();
-        public void EnqueueRenderedLoginCode(string payload, Guid? userId = null) => throw probe.UnexpectedSend();
+        public void EnqueueRenderedLoginCode(string payload, int lifetimeMinutes, Guid? userId = null) => throw probe.UnexpectedSend();
         public void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw probe.UnexpectedSend();
         public void EnqueueVerification(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw probe.UnexpectedSend();
     }
@@ -175,7 +175,7 @@ public sealed partial class AssistantDynamicAuthorizationTests
         public string? ContactPhone => inner.ContactPhone;
         public Result ValidateNewDestination(LoginCodeDestination destination, string? country) => throw probe.UnexpectedSend();
         public string RenderLoginCode(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw probe.UnexpectedSend();
-        public void EnqueueRenderedLoginCode(string payload, Guid? userId = null) => throw probe.UnexpectedSend();
+        public void EnqueueRenderedLoginCode(string payload, int lifetimeMinutes, Guid? userId = null) => throw probe.UnexpectedSend();
         public void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw probe.UnexpectedSend();
         public void EnqueueVerification(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw probe.UnexpectedSend();
     }

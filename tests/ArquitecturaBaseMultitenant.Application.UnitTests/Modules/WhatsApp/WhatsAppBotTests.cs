@@ -60,6 +60,6 @@ public sealed class WhatsAppBotTests
     private sealed class Outbox : IOutbox
     {
         public int Calls { get; private set; }
-        public Guid Enqueue(string channel, string payload, Guid? userId = null) { Calls++; return Guid.CreateVersion7(); }
+        public Guid Enqueue(string channel, string payload, Guid? userId = null, ArquitecturaBaseMultitenant.Application.Models.Messaging.OutboxEnqueueOptions? options = null) { Calls++; return Guid.CreateVersion7(); }
     }
 }

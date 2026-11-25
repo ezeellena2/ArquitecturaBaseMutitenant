@@ -160,10 +160,10 @@ public sealed class EmailDeliveryTests
     {
         public List<EmailMessage> Messages { get; } = [];
 
-        public Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
+        public Task<EmailSendOutcome> SendAsync(EmailMessage message, CancellationToken cancellationToken)
         {
             Messages.Add(message);
-            return Task.CompletedTask;
+            return Task.FromResult(EmailSendOutcome.Sent);
         }
     }
 

@@ -1,8 +1,10 @@
+using ArquitecturaBaseMultitenant.Application.Configuration.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging;
 
@@ -13,6 +15,9 @@ internal static class MessagingRegistration
         IConfiguration configuration, IHostEnvironment environment)
     {
         services.AddScoped<IOutbox, Outbox>();
+        services.AddSingleton<OutboxOrderingKeyHasher>();
+        services.AddSingleton<OutboxMetrics>();
+        services.AddSingleton<IValidateOptions<OutboxOptions>, OutboxOptionsValidator>();
         services.AddScoped<IOutboxDispatchStore, OutboxDispatchStore>();
         services.AddScoped<OutboxDeliveryProcessor>();
         // El host de pruebas despacha explícitamente para verificar locks y reintentos sin carreras.

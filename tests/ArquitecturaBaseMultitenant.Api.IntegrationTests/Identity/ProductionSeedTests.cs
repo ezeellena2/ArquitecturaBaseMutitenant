@@ -274,7 +274,7 @@ public sealed partial class ProductionSeedTests
 
     private sealed class NoopEmailTransport : IEmailTransport
     {
-        public Task SendAsync(EmailMessage message, CancellationToken cancellationToken) =>
-            Task.CompletedTask;
+        public Task<EmailSendOutcome> SendAsync(EmailMessage message, CancellationToken cancellationToken) =>
+            Task.FromResult(EmailSendOutcome.Sent);
     }
 }

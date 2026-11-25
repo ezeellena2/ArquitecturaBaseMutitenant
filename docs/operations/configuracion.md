@@ -177,6 +177,12 @@ Al llegar, la ruta responde 429 `Messaging.Email.DailyLimit` con `retryAfter` y 
 
 **Con la cuenta compartida con ArquitecturaBase,** la suma de los topes globales de los dos proyectos queda por debajo del cupo, con lugar para los avisos: el multitenant usa 80 (256). Se separan las cuentas antes de producción ([runbook](runbook.md)).
 
+### La cola de salida (ADR 0066, N5, N8 y O3)
+
+`Messaging:Outbox:*` es técnico: `DeliveryTimeoutSeconds` (15) es la espera de un envío, `CompletionTimeoutSeconds` (10) la de anotar su resultado, `MaxAttempts` (5) el tope de intentos y `RetryBaseDelaySeconds` (30) la primera espera, que se duplica. Cada canal puede tener su espera y su tope en `Messaging:Outbox:Channels:<canal>:DeliveryTimeoutSeconds` y `MaxAttempts` (`email` o `whatsapp`, sin distinguir mayúsculas: `Channels__Email__MaxAttempts` también vale). La Api no arranca si la entrega más lenta y la confirmación no caben en el apagado del host (30 s por defecto): así apagarla no deja a medias un envío que ya salió.
+
+Lo que no salió vuelve a pendiente con su espera; lo que no se sabe si salió (un corte o la espera vencida después de que el servidor aceptó al destinatario, una reserva que venció) queda «Sin confirmar» y no se repite; un código por correo que vence en la cola se descarta. El chequeo `email` queda en Degraded con un 535 hasta el próximo envío que sale, y el medidor `ArquitecturaBaseMultitenant.Messaging` cuenta enviados y descartados por canal. Lo prueban `SmtpClassificationTests`, `OutboxReservationTests` y `OutboxOptionsValidatorTests`.
+
 ## 6. Producción
 
 Las mismas claves, como variables de entorno con doble guion bajo (`Email__Smtp__Password`, `DataProtection__Certificate__Base64`, `WhatsApp__AccessToken`…), en el gestor de secretos del proveedor. Nunca en `appsettings.Production.json`. `DataProtection:Certificate:Base64` es un PFX RSA distinto de los certificados OIDC: el proceso necesita su clave privada para leer el anillo persistido en `platform.DataProtectionKeys`; conservá el mismo certificado en todas las réplicas y en los reinicios. Perderlo impide leer cookies y payloads cifrados con esas claves. `ProtectKeysWithCertificate` cifra las claves **nuevas**; una instalación que ya haya escrito claves sin cifrar necesita tratar ese anillo antes de exponer sus backups. La lista completa de lo obligatorio fuera de Development estará en `runbook.md` (E10).

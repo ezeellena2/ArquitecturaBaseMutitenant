@@ -53,7 +53,9 @@ public static class Extensions
                     .AddHttpClientInstrumentation()
                     .AddRuntimeInstrumentation()
                     // Aciertos, misses, lecturas directas y caídas de la caché compartida (ADR 0052).
-                    .AddMeter("ArquitecturaBaseMultitenant.Cache");
+                    .AddMeter("ArquitecturaBaseMultitenant.Cache")
+                    // Enviados y descartados de la cola, por canal (ADR 0066).
+                    .AddMeter("ArquitecturaBaseMultitenant.Messaging");
             })
             .WithTracing(tracing =>
             {

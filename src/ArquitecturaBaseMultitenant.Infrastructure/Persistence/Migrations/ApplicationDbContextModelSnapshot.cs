@@ -2397,6 +2397,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("DiscardAfterUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("EncryptedPayload")
                         .IsRequired()
                         .HasColumnType("text");
@@ -2413,6 +2416,15 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("NextAttemptAtUtc")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("OrderingKey")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<short>("Priority")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("smallint")
+                        .HasDefaultValue((short)1);
 
                     b.Property<string>("ProviderMessageId")
                         .HasMaxLength(500)
@@ -2432,6 +2444,14 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("OrderingKey", "CreatedAtUtc", "Id")
+                        .HasDatabaseName("IX_OutboxMessages_Ordering")
+                        .HasFilter("\"Status\" IN ('Pending', 'Failed')");
+
+                    b.HasIndex("Priority", "NextAttemptAtUtc", "Id")
+                        .HasDatabaseName("IX_OutboxMessages_Due")
+                        .HasFilter("\"Status\" IN ('Pending', 'Failed')");
 
                     b.HasIndex("Status", "NextAttemptAtUtc", "Id");
 

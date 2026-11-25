@@ -192,7 +192,7 @@ public sealed class WhatsAppCodeQuotaTests
         public bool IsAvailable => true; public IReadOnlyList<string> Countries => []; public string? ContactPhone => null;
         public Result ValidateNewDestination(LoginCodeDestination destination, string? country) => Result.Success();
         public string RenderLoginCode(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw new NotSupportedException();
-        public void EnqueueRenderedLoginCode(string payload, Guid? userId = null) => throw new NotSupportedException();
+        public void EnqueueRenderedLoginCode(string payload, int lifetimeMinutes, Guid? userId = null) => throw new NotSupportedException();
         public void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw new NotSupportedException();
         public void EnqueueVerification(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw new NotSupportedException();
     }

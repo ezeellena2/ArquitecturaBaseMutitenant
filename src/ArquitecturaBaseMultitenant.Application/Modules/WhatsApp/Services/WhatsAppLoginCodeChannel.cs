@@ -17,16 +17,17 @@ internal sealed class WhatsAppLoginCodeChannel(IWhatsAppChannelSettings settings
     public Result ValidateNewDestination(LoginCodeDestination destination, string? country) => settings.ValidateNewDestination(destination);
     public string RenderLoginCode(string destination, string code, int lifetimeMinutes, CultureProfile culture) =>
         JsonSerializer.Serialize(templates.RenderCode(destination, code, lifetimeMinutes, culture));
-    public void EnqueueRenderedLoginCode(string payload, Guid? userId = null)
+    // WhatsApp encola el código sin plazo en la cola: la vigencia solo la usa el correo para descartar un código vencido.
+    public void EnqueueRenderedLoginCode(string payload, int lifetimeMinutes, Guid? userId = null)
     {
         if (IsAvailable) outbox.Enqueue(Key, payload, userId);
     }
     public void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture)
     {
-        if (IsAvailable) EnqueueRenderedLoginCode(RenderLoginCode(destination, code, lifetimeMinutes, culture));
+        if (IsAvailable) EnqueueRenderedLoginCode(RenderLoginCode(destination, code, lifetimeMinutes, culture), lifetimeMinutes);
     }
     public void EnqueueVerification(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture)
     {
-        if (IsAvailable) EnqueueRenderedLoginCode(RenderLoginCode(destination, code, lifetimeMinutes, culture), userId);
+        if (IsAvailable) EnqueueRenderedLoginCode(RenderLoginCode(destination, code, lifetimeMinutes, culture), lifetimeMinutes, userId);
     }
 }

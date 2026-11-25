@@ -3,8 +3,8 @@ using ArquitecturaBaseMultitenant.Domain.Messaging;
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Messaging;
 
 /// <summary>
-/// Comprueba el ciclo de un mensaje encolado, los reintentos y su caducidad operativa. Evita reenviar
-/// mensajes enviados o exponer el payload en texto.
+/// Comprueba el ciclo de un mensaje encolado, los reintentos, lo «Sin confirmar» y lo que vence (ADR 0066). Evita reenviar
+/// mensajes enviados o dudosos, o exponer el payload en texto.
 /// </summary>
 public sealed class OutboxMessageTests
 {
@@ -45,7 +45,7 @@ public sealed class OutboxMessageTests
         var delay = TimeSpan.FromMinutes(1);
 
         message.RecordFailure(NowUtc, delay, 3);
-        Assert.Equal(OutboxStatus.Failed, message.Status);
+        Assert.Equal(OutboxStatus.Pending, message.Status);
         Assert.Equal(1, message.Attempts);
         Assert.Equal(NowUtc.AddMinutes(1), message.NextAttemptAtUtc);
         Assert.False(message.IsDue(NowUtc.AddSeconds(30)));
@@ -55,6 +55,7 @@ public sealed class OutboxMessageTests
         Assert.Equal(NowUtc.AddMinutes(3), message.NextAttemptAtUtc);
 
         message.RecordFailure(NowUtc.AddMinutes(3), delay, 3);
+        Assert.Equal(OutboxStatus.Failed, message.Status);
         Assert.Equal(3, message.Attempts);
         Assert.Null(message.NextAttemptAtUtc);
         Assert.False(message.IsDue(NowUtc.AddYears(1)));
@@ -62,38 +63,151 @@ public sealed class OutboxMessageTests
     }
 
     [Fact]
-    public void Leases_survive_abandonment_and_old_completion_cannot_resurrect_the_message()
+    public void An_abandoned_lease_becomes_uncertain_and_is_never_claimed_again()
     {
         var message = OutboxMessage.Enqueue("email", "encrypted", NowUtc);
         var first = Guid.NewGuid(); var second = Guid.NewGuid();
-        Assert.True(message.TryClaim(first, NowUtc, TimeSpan.FromMinutes(5), 3));
-        Assert.False(message.TryClaim(second, NowUtc.AddMinutes(1), TimeSpan.FromMinutes(5), 3));
-        Assert.True(message.TryClaim(second, NowUtc.AddMinutes(5), TimeSpan.FromMinutes(5), 3));
-        Assert.Equal(2, message.Attempts);
-        Assert.False(message.TryComplete(first, true, false, "old", null, NowUtc.AddMinutes(6), TimeSpan.FromSeconds(30), 3));
-        Assert.True(message.TryComplete(second, true, false, "receipt", null, NowUtc.AddMinutes(11), TimeSpan.FromSeconds(30), 3));
+        Assert.Equal(OutboxClaimResult.Claimed, message.TryClaim(first, NowUtc, TimeSpan.FromMinutes(5), 3));
+        Assert.Equal(OutboxClaimResult.NotDue, message.TryClaim(second, NowUtc.AddMinutes(1), TimeSpan.FromMinutes(5), 3));
+
+        Assert.Equal(OutboxClaimResult.Interrupted, message.TryClaim(second, NowUtc.AddMinutes(5), TimeSpan.FromMinutes(5), 3));
+
+        Assert.Equal(OutboxStatus.Uncertain, message.Status);
+        Assert.Equal(OutboxMessage.InterruptedCode, message.LastErrorCode);
+        Assert.Equal(1, message.Attempts);
+        Assert.Null(message.NextAttemptAtUtc);
+        Assert.Null(message.LeaseId);
+        Assert.Empty(message.EncryptedPayload);
+        Assert.False(message.IsDue(NowUtc.AddYears(1)));
+        Assert.Equal(OutboxClaimResult.NotDue, message.TryClaim(Guid.NewGuid(), NowUtc.AddYears(1), TimeSpan.FromMinutes(5), 3));
+        // El resultado tardío del intento abandonado no lo revive ni lo da por enviado.
+        Assert.False(message.TryComplete(first, OutboxAttemptOutcome.Accepted, "late", null, NowUtc.AddMinutes(6), TimeSpan.FromSeconds(30), 3));
+        Assert.Equal(OutboxStatus.Uncertain, message.Status);
+        // Cancelar (la baja de la cuenta) no cambia lo que ya terminó.
+        message.Cancel();
+        Assert.Equal(OutboxStatus.Uncertain, message.Status);
+    }
+
+    [Fact]
+    public void Old_completion_cannot_resurrect_a_sent_message()
+    {
+        var message = OutboxMessage.Enqueue("email", "encrypted", NowUtc);
+        var lease = Guid.NewGuid();
+        Assert.Equal(OutboxClaimResult.Claimed, message.TryClaim(lease, NowUtc, TimeSpan.FromMinutes(5), 3));
+        Assert.False(message.TryComplete(Guid.NewGuid(), OutboxAttemptOutcome.Accepted, "other", null, NowUtc, TimeSpan.FromSeconds(30), 3));
+        Assert.True(message.TryComplete(lease, OutboxAttemptOutcome.Accepted, "receipt", null, NowUtc.AddMinutes(1), TimeSpan.FromSeconds(30), 3));
         Assert.Equal("receipt", message.ProviderMessageId);
-        Assert.False(message.TryComplete(second, false, true, null, "Transport.Failed", NowUtc.AddMinutes(12), TimeSpan.FromSeconds(30), 3));
+        Assert.False(message.TryComplete(lease, OutboxAttemptOutcome.Retry, null, "Transport.Failed", NowUtc.AddMinutes(2), TimeSpan.FromSeconds(30), 3));
         Assert.Equal(OutboxStatus.Sent, message.Status);
         Assert.Empty(message.EncryptedPayload);
     }
 
-    [Fact]
-    public void Cancel_and_exhausted_abandoned_leases_clear_payload_and_prevent_completion()
+    [Theory]
+    [InlineData(OutboxAttemptOutcome.Retry, OutboxStatus.Pending)]
+    [InlineData(OutboxAttemptOutcome.Rejected, OutboxStatus.Failed)]
+    [InlineData(OutboxAttemptOutcome.Uncertain, OutboxStatus.Uncertain)]
+    public void Each_outcome_of_an_attempt_has_its_transition(OutboxAttemptOutcome outcome, OutboxStatus expected)
     {
         var message = OutboxMessage.Enqueue("email", "encrypted", NowUtc);
         var lease = Guid.NewGuid();
-        Assert.True(message.TryClaim(lease, NowUtc, TimeSpan.FromMinutes(5), 1));
+        Assert.Equal(OutboxClaimResult.Claimed, message.TryClaim(lease, NowUtc, TimeSpan.FromMinutes(5), 3));
+
+        Assert.True(message.TryComplete(lease, outcome, null, "Email.Smtp.Code", NowUtc.AddSeconds(10), TimeSpan.FromSeconds(30), 3));
+
+        Assert.Equal(expected, message.Status);
+        Assert.Equal("Email.Smtp.Code", message.LastErrorCode);
+        Assert.Null(message.LeaseId);
+        if (expected == OutboxStatus.Pending)
+        {
+            Assert.Equal(NowUtc.AddSeconds(40), message.NextAttemptAtUtc);
+            Assert.Equal("encrypted", message.EncryptedPayload);
+            Assert.Equal(OutboxClaimResult.NotDue, message.TryClaim(Guid.NewGuid(), NowUtc.AddSeconds(39), TimeSpan.FromMinutes(5), 3));
+            Assert.Equal(OutboxClaimResult.Claimed, message.TryClaim(Guid.NewGuid(), NowUtc.AddSeconds(40), TimeSpan.FromMinutes(5), 3));
+        }
+        else
+        {
+            Assert.Null(message.NextAttemptAtUtc);
+            Assert.Empty(message.EncryptedPayload);
+            Assert.False(message.IsDue(NowUtc.AddYears(1)));
+        }
+    }
+
+    [Fact]
+    public void A_retry_on_the_last_attempt_fails()
+    {
+        var message = OutboxMessage.Enqueue("email", "encrypted", NowUtc);
+        var lease = Guid.NewGuid();
+        Assert.Equal(OutboxClaimResult.Claimed, message.TryClaim(lease, NowUtc, TimeSpan.FromMinutes(5), 1));
+        Assert.True(message.TryComplete(lease, OutboxAttemptOutcome.Retry, null, "Email.Smtp.NotSent", NowUtc, TimeSpan.FromSeconds(30), 1));
+        Assert.Equal(OutboxStatus.Failed, message.Status);
+        Assert.Null(message.NextAttemptAtUtc);
+        Assert.Empty(message.EncryptedPayload);
+    }
+
+    [Fact]
+    public void Release_gives_the_claim_back_without_spending_the_attempt()
+    {
+        var message = OutboxMessage.Enqueue("email", "encrypted", NowUtc);
+        var lease = Guid.NewGuid();
+        Assert.Equal(OutboxClaimResult.Claimed, message.TryClaim(lease, NowUtc, TimeSpan.FromMinutes(5), 3));
+        Assert.False(message.TryRelease(Guid.NewGuid()));
+
+        Assert.True(message.TryRelease(lease));
+
+        Assert.Equal(OutboxStatus.Pending, message.Status);
+        Assert.Equal(0, message.Attempts);
+        Assert.Null(message.LeaseId);
+        Assert.True(message.IsDue(NowUtc));
+        Assert.False(message.TryRelease(lease));
+        Assert.False(message.TryComplete(lease, OutboxAttemptOutcome.Accepted, "late", null, NowUtc, TimeSpan.FromSeconds(30), 3));
+    }
+
+    [Fact]
+    public void Expired_message_is_discarded_without_being_claimed()
+    {
+        var message = OutboxMessage.Enqueue("email", "encrypted", NowUtc, discardAfterUtc: NowUtc.AddMinutes(10));
+        Assert.Equal(OutboxClaimResult.Expired, message.TryClaim(Guid.NewGuid(), NowUtc.AddMinutes(10), TimeSpan.FromMinutes(5), 3));
+        Assert.Equal(OutboxStatus.Cancelled, message.Status);
+        Assert.Equal(OutboxMessage.ExpiredCode, message.LastErrorCode);
+        Assert.Equal(0, message.Attempts);
+        Assert.Null(message.NextAttemptAtUtc);
+        Assert.Empty(message.EncryptedPayload);
+
+        var fresh = OutboxMessage.Enqueue("email", "encrypted", NowUtc, discardAfterUtc: NowUtc.AddMinutes(10));
+        Assert.Equal(OutboxClaimResult.Claimed, fresh.TryClaim(Guid.NewGuid(), NowUtc.AddMinutes(9), TimeSpan.FromMinutes(5), 3));
+    }
+
+    [Fact]
+    public void Enqueue_keeps_ordering_priority_and_deadline()
+    {
+        var key = new string('a', OutboxMessage.OrderingKeyMaxLength);
+        var message = OutboxMessage.Enqueue("whatsapp", "encrypted", NowUtc, null, key, OutboxPriority.Reply, NowUtc.AddMinutes(5));
+        Assert.Equal(key, message.OrderingKey);
+        Assert.Equal(OutboxPriority.Reply, message.Priority);
+        Assert.Equal(NowUtc.AddMinutes(5), message.DiscardAfterUtc);
+        Assert.Equal(OutboxPriority.Notice, OutboxMessage.Enqueue("email", "encrypted", NowUtc).Priority);
+        Assert.Throws<ArgumentException>(() => OutboxMessage.Enqueue("email", "encrypted", NowUtc, orderingKey: key + "a"));
+        Assert.Throws<ArgumentException>(() => OutboxMessage.Enqueue("email", "encrypted", NowUtc,
+            discardAfterUtc: new DateTime(2026, 9, 29, 12, 0, 0, DateTimeKind.Local)));
+    }
+
+    [Fact]
+    public void Cancel_and_exhausted_attempts_clear_payload_and_prevent_completion()
+    {
+        var message = OutboxMessage.Enqueue("email", "encrypted", NowUtc);
+        var lease = Guid.NewGuid();
+        Assert.Equal(OutboxClaimResult.Claimed, message.TryClaim(lease, NowUtc, TimeSpan.FromMinutes(5), 1));
         message.Cancel();
-        Assert.False(message.TryComplete(lease, true, false, "receipt", null, NowUtc.AddMinutes(1), TimeSpan.FromSeconds(30), 1));
+        Assert.False(message.TryComplete(lease, OutboxAttemptOutcome.Accepted, "receipt", null, NowUtc.AddMinutes(1), TimeSpan.FromSeconds(30), 1));
         Assert.Equal(OutboxStatus.Cancelled, message.Status);
         Assert.Empty(message.EncryptedPayload);
-        var abandoned = OutboxMessage.Enqueue("email", "encrypted", NowUtc);
-        Assert.True(abandoned.TryClaim(lease, NowUtc, TimeSpan.FromMinutes(5), 1));
-        Assert.False(abandoned.TryClaim(Guid.NewGuid(), NowUtc.AddMinutes(5), TimeSpan.FromMinutes(5), 1));
-        Assert.Equal(1, abandoned.Attempts);
-        Assert.Null(abandoned.NextAttemptAtUtc);
-        Assert.Empty(abandoned.EncryptedPayload);
+        // Una versión con un tope más bajo no le da otro intento.
+        var retried = OutboxMessage.Enqueue("email", "encrypted", NowUtc);
+        retried.RecordFailure(NowUtc, TimeSpan.FromSeconds(30), 5);
+        Assert.Equal(OutboxClaimResult.Exhausted, retried.TryClaim(Guid.NewGuid(), NowUtc.AddMinutes(1), TimeSpan.FromMinutes(5), 1));
+        Assert.Equal(OutboxStatus.Failed, retried.Status);
+        Assert.Null(retried.NextAttemptAtUtc);
+        Assert.Empty(retried.EncryptedPayload);
     }
 
     [Fact]

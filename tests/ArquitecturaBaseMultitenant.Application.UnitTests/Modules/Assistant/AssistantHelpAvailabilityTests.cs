@@ -62,7 +62,7 @@ public sealed class AssistantHelpAvailabilityTests
         public string? ContactPhone => throw UnexpectedCall();
         public Result ValidateNewDestination(LoginCodeDestination destination, string? country) => throw UnexpectedCall();
         public string RenderLoginCode(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw UnexpectedCall();
-        public void EnqueueRenderedLoginCode(string payload, Guid? userId = null) => throw UnexpectedCall();
+        public void EnqueueRenderedLoginCode(string payload, int lifetimeMinutes, Guid? userId = null) => throw UnexpectedCall();
         public void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw UnexpectedCall();
         public void EnqueueVerification(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw UnexpectedCall();
     }

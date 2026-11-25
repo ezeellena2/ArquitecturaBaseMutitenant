@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Infrastructure.Security;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Messaging;
@@ -50,7 +51,7 @@ public sealed class OutboxTests(ApiFactory factory)
         var protector = new PayloadProtector(new EphemeralDataProtectionProvider());
         var clock = new FakeTimeProvider(new DateTimeOffset(2026, 9, 29, 12, 0, 0, TimeSpan.Zero));
         var sender = new TestEmailSender();
-        var outbox = new Outbox(context, protector, clock, [sender]);
+        var outbox = new Outbox(context, protector, clock, [sender], services.GetRequiredService<OutboxOrderingKeyHasher>());
         var unitOfWork = services.GetRequiredService<IUnitOfWork>();
         var payload = "test-message-" + Guid.CreateVersion7().ToString("N");
         Guid messageId = Guid.Empty;
@@ -96,7 +97,8 @@ public sealed class OutboxTests(ApiFactory factory)
     private static Outbox CreateOutbox(ApplicationDbContext context) =>
         new(context, new PayloadProtector(new EphemeralDataProtectionProvider()),
             new FakeTimeProvider(new DateTimeOffset(2026, 9, 29, 12, 0, 0, TimeSpan.Zero)),
-            [new TestEmailSender()]);
+            [new TestEmailSender()], new OutboxOrderingKeyHasher(Options.Create(new LoginCodeHashOptions
+            { HashKey = Convert.ToBase64String(new byte[LoginCodeHashOptions.MinKeyBytes]) })));
 
     private sealed class TestEmailSender : IChannelSender
     {

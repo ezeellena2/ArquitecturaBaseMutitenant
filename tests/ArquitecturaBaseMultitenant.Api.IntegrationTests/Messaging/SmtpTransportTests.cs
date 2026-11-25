@@ -4,6 +4,7 @@ using System.Text;
 using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 using MailKit.Security;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Messaging;
@@ -31,12 +32,12 @@ public sealed class SmtpTransportTests
             Password = "test-password",
             FromAddress = "sender@example.test",
             FromName = "Test",
-        }));
+        }), new EmailHealth(), NullLogger<SmtpEmailTransport>.Instance);
 
         try
         {
-            await transport.SendAsync(new EmailMessage("one@example.test", "One", "<b>One</b>", "One"), ct);
-            await transport.SendAsync(new EmailMessage("two@example.test", "Two", "<b>Two</b>", "Two"), ct);
+            Assert.Equal(EmailSendOutcome.Sent, await transport.SendAsync(new EmailMessage("one@example.test", "One", "<b>One</b>", "One"), ct));
+            Assert.Equal(EmailSendOutcome.Sent, await transport.SendAsync(new EmailMessage("two@example.test", "Two", "<b>Two</b>", "Two"), ct));
             Assert.Equal(1, await accepting.WaitAsync(TimeSpan.FromSeconds(10), ct));
         }
         finally

@@ -240,6 +240,9 @@ public sealed class WhatsAppPhoneInvitationTests(ApiFactory factory) : IClassFix
         foreach (var row in await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking()
             .Where(value => value.Channel == "whatsapp").ToArrayAsync(Ct))
         {
+            // Lo que ya intentó salir no conserva el payload: el lector del pickup lo pasa por el transporte prohibido, que
+            // lanza y lo deja «Sin confirmar» (ADR 0066).
+            if (string.IsNullOrEmpty(row.EncryptedPayload)) continue;
             using var payload = JsonDocument.Parse(protector.Unprotect(row.EncryptedPayload));
             var root = payload.RootElement;
             if (root.GetProperty("TemplateName").GetString() == "invitacion_organizacion" && phones.Contains(root.GetProperty("To").GetString()!))

@@ -20,7 +20,8 @@ public interface ILoginCodeChannel
 
     string RenderLoginCode(string destination, string code, int lifetimeMinutes, CultureProfile culture);
 
-    void EnqueueRenderedLoginCode(string payload, Guid? userId = null);
+    /// <summary>El código ya armado; <paramref name="lifetimeMinutes"/> es su vigencia, después de la cual no sirve mandarlo.</summary>
+    void EnqueueRenderedLoginCode(string payload, int lifetimeMinutes, Guid? userId = null);
 
     void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture);
     /// <summary>El código para verificar un destino; sin cuenta en «Recuperar mi cuenta».</summary>

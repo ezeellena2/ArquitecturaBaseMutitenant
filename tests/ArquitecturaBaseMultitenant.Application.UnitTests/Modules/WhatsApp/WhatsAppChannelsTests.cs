@@ -32,7 +32,7 @@ public sealed class WhatsAppChannelsTests
         var settings = new WhatsAppCodeQuotaTests.Settings(); var templates = new Templates(); var outbox = new Outbox();
         var userId = Guid.NewGuid();
         var login = new WhatsAppLoginCodeChannel(settings, templates, outbox);
-        login.EnqueueRenderedLoginCode(login.RenderLoginCode("+14155552671", "123456", 10, null!), userId);
+        login.EnqueueRenderedLoginCode(login.RenderLoginCode("+14155552671", "123456", 10, null!), 10, userId);
         Assert.Equal(userId, outbox.UserId);
         var invitation = new WhatsAppInvitationChannel(settings, templates, outbox);
         await invitation.EnqueueAsync(InvitationDeliveryDestination.ForPhone(PhoneNumber.Create("+14155552671").Value), null!, null!, userId, TestContext.Current.CancellationToken);
@@ -48,7 +48,7 @@ public sealed class WhatsAppChannelsTests
         public int Calls { get; private set; }
         public Guid? UserId { get; private set; }
         public string? Channel { get; private set; }
-        public Guid Enqueue(string channel, string payload, Guid? userId = null) { Calls++; UserId = userId; Channel = channel; return Guid.CreateVersion7(); }
+        public Guid Enqueue(string channel, string payload, Guid? userId = null, ArquitecturaBaseMultitenant.Application.Models.Messaging.OutboxEnqueueOptions? options = null) { Calls++; UserId = userId; Channel = channel; return Guid.CreateVersion7(); }
     }
     private sealed class Templates : IWhatsAppTemplateRenderer
     {

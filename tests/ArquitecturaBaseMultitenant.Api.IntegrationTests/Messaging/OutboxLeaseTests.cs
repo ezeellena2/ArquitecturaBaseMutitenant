@@ -15,7 +15,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Messaging;
 
-/// <summary>Reinicio, leases viejos y atomicidad del receipt contra PostgreSQL real.</summary>
+/// <summary>Reinicio, leases vencidos que quedan «Sin confirmar» (ADR 0066) y atomicidad del receipt contra PostgreSQL real.</summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class OutboxLeaseTests(ApiFactory factory)
 {
@@ -23,7 +23,7 @@ public sealed class OutboxLeaseTests(ApiFactory factory)
     private readonly FakeTimeProvider _clock = new(new DateTimeOffset(2026, 10, 8, 12, 0, 0, TimeSpan.Zero));
 
     [Fact]
-    public async Task Claim_commits_before_transport_and_restart_skips_lease_then_reclaims_without_old_completion()
+    public async Task Claim_commits_before_transport_and_an_expired_lease_becomes_uncertain_without_old_completion()
     {
         using var client = factory.CreateClient();
         var channel = "lease-" + Guid.NewGuid().ToString("N");
@@ -42,16 +42,43 @@ public sealed class OutboxLeaseTests(ApiFactory factory)
         Assert.Equal(first.LeaseId, saved.LeaseId);
         Assert.Null((await Dispatch(restart.ServiceProvider).ClaimNextAsync([channel], Ct)).Value);
         _clock.Advance(TimeSpan.FromMinutes(5));
-        var second = (await Dispatch(restart.ServiceProvider).ClaimNextAsync([channel], Ct)).Value!;
+        // La reserva venció sin respuesta: el intento pudo haber salido, así que queda «Sin confirmar» y no se reclama.
+        Assert.Null((await Dispatch(restart.ServiceProvider).ClaimNextAsync([channel], Ct)).Value);
+        saved = await context.OutboxMessages.AsNoTracking().SingleAsync(value => value.Id == id, Ct);
+        Assert.Equal(OutboxStatus.Uncertain, saved.Status);
+        Assert.Equal(OutboxMessage.InterruptedCode, saved.LastErrorCode);
+        Assert.Equal(1, saved.Attempts);
+        Assert.Null(saved.LeaseId);
+        Assert.Null(saved.NextAttemptAtUtc);
+        Assert.Empty(saved.EncryptedPayload);
+        _clock.Advance(TimeSpan.FromDays(1));
+        Assert.Null((await Dispatch(restart.ServiceProvider).ClaimNextAsync([channel], Ct)).Value);
+        // El resultado tardío del intento abandonado no lo da por enviado ni llama al observer.
         var observer = new Observer(channel);
         await Dispatch(restart.ServiceProvider, observer).CompleteAsync(id, first.LeaseId, OutboxDeliveryReceipt.Accepted("old"), Ct);
         Assert.Equal(0, observer.Calls);
-        await Dispatch(restart.ServiceProvider, observer).CompleteAsync(id, second.LeaseId, OutboxDeliveryReceipt.Accepted("receipt"), Ct);
-        await Dispatch(restart.ServiceProvider, observer).CompleteAsync(id, second.LeaseId, OutboxDeliveryReceipt.Accepted("replay"), Ct);
-        Assert.Equal(1, observer.Calls);
         saved = await context.OutboxMessages.AsNoTracking().SingleAsync(value => value.Id == id, Ct);
+        Assert.Equal(OutboxStatus.Uncertain, saved.Status);
+        Assert.Null(saved.ProviderMessageId);
+    }
+
+    [Fact]
+    public async Task Accepted_receipt_is_applied_once_and_a_replay_does_not_call_the_observer_again()
+    {
+        using var client = factory.CreateClient();
+        var channel = "replay-" + Guid.NewGuid().ToString("N");
+        var id = await SeedAsync(channel);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var claim = (await Dispatch(scope.ServiceProvider).ClaimNextAsync([channel], Ct)).Value!;
+        var observer = new Observer(channel);
+        await Dispatch(scope.ServiceProvider, observer).CompleteAsync(id, claim.LeaseId, OutboxDeliveryReceipt.Accepted("receipt"), Ct);
+        await Dispatch(scope.ServiceProvider, observer).CompleteAsync(id, claim.LeaseId, OutboxDeliveryReceipt.Accepted("replay"), Ct);
+        Assert.Equal(1, observer.Calls);
+        var saved = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking()
+            .SingleAsync(value => value.Id == id, Ct);
+        Assert.Equal(OutboxStatus.Sent, saved.Status);
         Assert.Equal("receipt", saved.ProviderMessageId);
-        Assert.Equal(2, saved.Attempts);
+        Assert.Equal(1, saved.Attempts);
         Assert.Empty(saved.EncryptedPayload);
     }
 
@@ -80,7 +107,8 @@ public sealed class OutboxLeaseTests(ApiFactory factory)
 
     private OutboxDispatchService Dispatch(IServiceProvider provider, params IOutboxDeliveryObserver[] observers) =>
         new(provider.GetRequiredService<IUnitOfWork>(), new OutboxDispatchStore(provider.GetRequiredService<ApplicationDbContext>(),
-            _clock, Options.Create(new OutboxOptions())), observers, _clock, NullLogger<OutboxDispatchService>.Instance);
+            _clock, Options.Create(new OutboxOptions()), provider.GetRequiredService<IAfterCommit>(),
+            provider.GetRequiredService<OutboxMetrics>()), observers, _clock, NullLogger<OutboxDispatchService>.Instance);
     private async Task<Guid> SeedAsync(string channel)
     {
         var row = OutboxMessage.Enqueue(channel, "encrypted-secret", _clock.GetUtcNow().UtcDateTime);

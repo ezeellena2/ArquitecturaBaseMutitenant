@@ -61,5 +61,7 @@ public sealed class OutboxDispatcherScopeTests
         }
         public Task<Result> CompleteAsync(Guid messageId, Guid leaseId, OutboxDeliveryReceipt receipt, CancellationToken ct)
         { observed.Services.Add(this); return Task.FromResult(Result.Success()); }
+        public Task<Result> ReleaseAsync(Guid messageId, Guid leaseId, CancellationToken ct)
+        { observed.Services.Add(this); return Task.FromResult(Result.Success()); }
     }
 }
