@@ -1,5 +1,6 @@
 using System.Net;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
@@ -37,5 +38,14 @@ public sealed class PlatformWhatsAppTeamTests(ApiFactory factory) : IClassFixtur
         var list = await WhatsAppAttentionJourney.JsonAsync(await client.GetAsync("/api/platform/whatsapp/teams", ct), ct);
         var row = list.GetProperty("items").EnumerateArray().Single(value => value.GetProperty("id").GetGuid() == id);
         Assert.Equal(account.Email.DisplayValue, Assert.Single(row.GetProperty("memberPreview").EnumerateArray()).GetString());
+
+        // 264: cada columna ordena en los dos sentidos, también la bandeja, que en Plataforma es siempre la misma.
+        foreach (var sort in WhatsAppTeamListRequest.SortableFields.SelectMany(field => new[] { field, "-" + field }))
+        {
+            using var sorted = await client.GetAsync($"/api/platform/whatsapp/teams?sort={sort}&search={Uri.EscapeDataString(team.GetProperty("name").GetString()!)}", ct);
+            Assert.Equal(HttpStatusCode.OK, sorted.StatusCode);
+            Assert.Equal(id, Assert.Single((await WhatsAppAttentionJourney.JsonAsync(sorted, ct)).GetProperty("items").EnumerateArray())
+                .GetProperty("id").GetGuid());
+        }
     }
 }

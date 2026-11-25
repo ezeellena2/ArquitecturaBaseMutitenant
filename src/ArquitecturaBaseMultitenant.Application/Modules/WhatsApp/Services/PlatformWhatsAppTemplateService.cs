@@ -32,9 +32,9 @@ internal sealed class PlatformWhatsAppTemplateService(IWhatsAppTemplateReader re
             if (request.Group == WhatsAppTemplateGroup.System)
             {
                 var search = request.Search?.Trim();
-                var shown = system.Where(template => (request.Status is null || template.Status == request.Status) && (string.IsNullOrEmpty(search)
-                    || template.Title!.Contains(search, StringComparison.CurrentCultureIgnoreCase) || template.Name.Contains(search, StringComparison.OrdinalIgnoreCase)))
-                    .OrderBy(template => template.Title, StringComparer.CurrentCulture).ToList();
+                var shown = SortSystem(system.Where(template => (request.Status is null || template.Status == request.Status) && (string.IsNullOrEmpty(search)
+                    || template.Title!.Contains(search, StringComparison.CurrentCultureIgnoreCase) || template.Name.Contains(search, StringComparison.OrdinalIgnoreCase))),
+                    SortDescriptor.Parse(request.Sort)).ToList();
                 return new WhatsAppTemplateListResponse(new PagedResult<WhatsAppTemplateResponse>([.. shown.Skip((request.Page - 1) * request.PageSize).Take(request.PageSize)],
                     request.Page, request.PageSize, shown.Count), system.Count(template => template.Status == WhatsAppTemplateStatus.Approved), consultations, system.Count);
             }
@@ -102,4 +102,24 @@ internal sealed class PlatformWhatsAppTemplateService(IWhatsAppTemplateReader re
 
     private async Task<Result<WhatsAppTemplateResponse>> FindAsync(Guid id, CancellationToken ct) =>
         await reader.FindAsync(true, id, ct) is { } row ? WhatsAppTemplateResponseBuilder.Response(row) : WhatsAppErrors.TemplateNotFound;
+
+    /// <summary>
+    /// Las del sistema se leen enteras en memoria y ordenan con la regla de los listados (decisión 264): la categoría y el
+    /// estado por su circuito (el orden del enum), la fecha y el título; con el mismo valor, el título y después el id. Ninguno
+    /// de estos datos queda vacío en una plantilla del sistema.
+    /// </summary>
+    private static IEnumerable<WhatsAppTemplateResponse> SortSystem(IEnumerable<WhatsAppTemplateResponse> templates, SortDescriptor? sort)
+    {
+        var descending = sort?.Descending ?? false;
+        var byTitle = StringComparer.CurrentCulture;
+        IOrderedEnumerable<WhatsAppTemplateResponse> ordered = sort?.Field.ToUpperInvariant() switch
+        {
+            "CATEGORY" => descending ? templates.OrderByDescending(template => template.Category) : templates.OrderBy(template => template.Category),
+            "STATUS" => descending ? templates.OrderByDescending(template => template.Status) : templates.OrderBy(template => template.Status),
+            "UPDATEDATUTC" => descending ? templates.OrderByDescending(template => template.UpdatedAtUtc) : templates.OrderBy(template => template.UpdatedAtUtc),
+            "NAME" when descending => templates.OrderByDescending(template => template.Title, byTitle),
+            _ => templates.OrderBy(template => template.Title, byTitle),
+        };
+        return ordered.ThenBy(template => template.Title, byTitle).ThenBy(template => template.Id);
+    }
 }

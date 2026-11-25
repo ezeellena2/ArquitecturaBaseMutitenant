@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
@@ -150,6 +151,9 @@ public sealed class WhatsAppTemplateManagementTests(ApiFactory factory)
         Assert.All(used, culture => Assert.Contains(culture, catalog));
     }
 
+    internal static string?[] SystemNames(JsonElement page) =>
+        [.. page.GetProperty("templates").GetProperty("items").EnumerateArray().Select(item => item.GetProperty("name").GetString())];
+
     internal static IEnumerable<(string?, string?)> Languages(JsonElement template) => template.GetProperty("languages").EnumerateArray()
         .Select(value => (value.GetProperty("culture").GetString(), value.GetProperty("category").GetString()));
 
@@ -243,6 +247,18 @@ public sealed class PlatformWhatsAppTemplateManagementTests(ApiFactory factory) 
         Assert.Equal(("Pending", "Marketing"), (invitation.GetProperty("status").GetString(), invitation.GetProperty("category").GetString()));
         Assert.Equal(3, invitation.GetProperty("variables").GetArrayLength());
         Assert.Equal(1, system.GetProperty("approved").GetInt32());
+        // Las del sistema ordenan por la columna pedida (264): el estado por su circuito y, con el mismo estado, el título.
+        var byTitle = WhatsAppTemplateManagementTests.SystemNames(system);
+        async Task<string?[]> SortedSystemAsync(string sort) => WhatsAppTemplateManagementTests.SystemNames(await JsonAsync(await client.GetAsync(
+            $"/api/platform/whatsapp/templates?group=System&pageSize=50&sort={sort}", Ct)));
+        string?[] pending = [.. byTitle.Where(name => name != "codigo_ingreso")];
+        var (byStatus, byStatusDescending, byTitleDescending) =
+            (await SortedSystemAsync("status"), await SortedSystemAsync("-status"), await SortedSystemAsync("-name"));
+        Assert.Equal([.. pending, "codigo_ingreso"], byStatus);
+        Assert.Equal(["codigo_ingreso", .. pending], byStatusDescending);
+        Assert.Equal(byTitle.Reverse(), byTitleDescending);
+        foreach (var sort in WhatsAppTemplateListRequest.SortableFields.SelectMany(field => new[] { field, "-" + field }))
+            Assert.Equal(16, (await SortedSystemAsync(sort)).Length);
         using (var systemDetail = await client.GetAsync($"/api/platform/whatsapp/templates/{code.GetProperty("id").GetGuid()}", Ct))
             Assert.Equal(HttpStatusCode.OK, systemDetail.StatusCode);
         using (var systemDelete = await client.DeleteAsync($"/api/platform/whatsapp/templates/{code.GetProperty("id").GetGuid()}?version=0", Ct))
