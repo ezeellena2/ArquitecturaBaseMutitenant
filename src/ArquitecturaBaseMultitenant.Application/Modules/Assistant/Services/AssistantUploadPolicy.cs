@@ -13,7 +13,7 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 internal sealed class AssistantUploadPolicy(AssistantTurnPreparationBuilder preparation, IAssistantConfigurationPolicy configuration,
     AssistantLimitGuard limits)
 {
-    /// <summary>Arma, fuera de la transacción, lo que admitiría un turno ahora; null si no hay nada que mirar.</summary>
+    /// <summary>Arma lo que admitiría un turno ahora; null si no hay nada que mirar.</summary>
     internal async Task<AssistantFinanceAdmission?> PrepareAsync(CancellationToken ct)
     {
         var prepared = await preparation.BuildAsync(null, ct);
@@ -26,6 +26,6 @@ internal sealed class AssistantUploadPolicy(AssistantTurnPreparationBuilder prep
             AssistantPriceSnapshotBuilder.Build(config.Model, config.Reference), null);
     }
 
-    /// <summary>Dentro de la transacción del servicio: el 429 de siempre si un turno no entraría.</summary>
+    /// <summary>El 429 de siempre si un turno no entraría; lee por el reader, sin transacción.</summary>
     internal Task<Result> CheckAsync(AssistantFinanceAdmission admission, CancellationToken ct) => limits.CheckAsync(admission, ct);
 }

@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Assistant;
 
@@ -31,10 +32,13 @@ public sealed class AssistantUploadSlotTests
     [Fact]
     public async Task Without_the_daily_quota_or_the_monthly_limit_the_upload_gets_429_and_nothing_is_kept()
     {
-        await using var session = await AssistantTurnTestSession.CreateAsync("business", workerEnabled: false);
+        var transactions = new ObservedTransactions();
+        await using var session = await AssistantTurnTestSession.CreateAsync("business", workerEnabled: false, configure: transactions.Install);
         var conversation = await session.ConversationAsync();
         await SpendTodayAsync(session);
 
+        // The quota is read through the reader: a refused upload opens no transaction (guardado: no boundary for a read).
+        transactions.Observing = true;
         using (var daily = await UploadAsync(session.Client, session.Path, conversation.Id, conversation.Version, Guid.NewGuid(), Png))
         {
             using var problem = await AssertWaitAsync(daily, AssistantErrors.LimitDailyReachedCode);
@@ -43,9 +47,13 @@ public sealed class AssistantUploadSlotTests
             Assert.True(problem.RootElement.TryGetProperty("dailyResetAtUtc", out _));
         }
 
+        transactions.Observing = false;
         await LimitsAsync(session, dailyLimit: 50, budget: 0m);
+        transactions.Observing = true;
         using (var monthly = await UploadAsync(session.Client, session.Path, conversation.Id, conversation.Version, Guid.NewGuid(), Png))
             (await AssertWaitAsync(monthly, AssistantErrors.LimitMonthlyReachedCode)).Dispose();
+        transactions.Observing = false;
+        Assert.Equal(0, transactions.Count);
 
         // Nothing was read into the store nor written for the conversation.
         Assert.Empty(await session.Host.Services.GetRequiredService<IFileStoreMaintenance>()
@@ -217,6 +225,31 @@ public sealed class AssistantUploadSlotTests
         using var request = new HttpRequestMessage(HttpMethod.Post, $"{path}/conversations/{conversation:D}/attachments") { Content = content };
         request.Headers.Add("Idempotency-Key", key.ToString("D"));
         return await client.SendAsync(request, Ct);
+    }
+
+    // Each transaction opened while the test observes, counted.
+    private sealed class ObservedTransactions
+    {
+        private int _count;
+        internal volatile bool Observing;
+        internal int Count => Volatile.Read(ref _count);
+
+        public void Install(IWebHostBuilder builder) => builder.ConfigureTestServices(services =>
+        {
+            var original = services.Single(row => row.ServiceType == typeof(IUnitOfWork));
+            services.Replace(ServiceDescriptor.Scoped<IUnitOfWork>(provider => new Observer(
+                (IUnitOfWork)ActivatorUtilities.CreateInstance(provider, original.ImplementationType!), this)));
+        });
+
+        private sealed class Observer(IUnitOfWork inner, ObservedTransactions probe) : IUnitOfWork
+        {
+            public Task<TResult> ExecuteInTransactionAsync<TResult>(Func<CancellationToken, Task<TResult>> work, CommitPolicy policy,
+                CancellationToken cancellationToken) where TResult : Result
+            {
+                if (probe.Observing) Interlocked.Increment(ref probe._count);
+                return inner.ExecuteInTransactionAsync(work, policy, cancellationToken);
+            }
+        }
     }
 
     // The real slots in Redis, observed: each slot taken is counted, so the test knows an upload holds its slots.

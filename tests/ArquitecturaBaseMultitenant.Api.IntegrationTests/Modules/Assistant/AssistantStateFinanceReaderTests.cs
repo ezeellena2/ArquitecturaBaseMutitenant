@@ -222,7 +222,7 @@ public sealed class AssistantStateFinanceReaderTests(ApiFactory factory)
             var price = AssistantPriceSnapshot.Create(Guid.CreateVersion7(), "state-fixture-haiku", "historical-v1",
                 Usd(.1m), Usd(.5m), Usd(.125m), Usd(.2m), Usd(.01m), null, null, null, null, null, null);
             var guard = new AssistantLimitGuard(services.GetRequiredService<IAssistantFinanceRepository>(), services.GetRequiredService<ITimeZoneService>(),
-            services.GetRequiredService<AssistantQuotaDayResolver>(), Clock(nowUtc));
+            services.GetRequiredService<AssistantQuotaDayResolver>(), Clock(nowUtc), services.GetRequiredService<IAssistantFinanceReader>());
             var admitted = await guard.ReserveAsync(new(Guid.CreateVersion7(), binding, mode, 50, Usd(budget), "UTC", price, null), Ct);
             Assert.True(admitted.IsSuccess, admitted.Error.Code);
             operation = admitted.Value;

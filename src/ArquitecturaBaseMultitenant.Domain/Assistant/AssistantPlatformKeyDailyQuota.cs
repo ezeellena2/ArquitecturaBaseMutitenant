@@ -21,7 +21,7 @@ public sealed class AssistantPlatformKeyDailyQuota : Entity
         if (organizationId == Guid.Empty) throw new ArgumentException("An organization or none is required.", nameof(organizationId));
         return new() { UserId = userId, OrganizationId = organizationId, DayUtc = dayUtc };
     }
-    public bool CanReserve(int limit) => (long)ReservedQueries + ConsumedQueries < limit;
+    public bool CanReserve(int limit) => AssistantDailyQuotaRule.CanReserve(ReservedQueries, ConsumedQueries, limit);
     public void Reserve() => ReservedQueries = checked(ReservedQueries + 1);
     public void Release()
     {

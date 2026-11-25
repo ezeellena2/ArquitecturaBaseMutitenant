@@ -682,7 +682,7 @@ public sealed class AssistantFinanceTests(ApiFactory factory)
         var services = scope.ServiceProvider;
         using var tenant = binding.ScopeTenantId is { } id ? services.GetRequiredService<ITenantScope>().Enter(id) : null;
         var guard = new AssistantLimitGuard(services.GetRequiredService<IAssistantFinanceRepository>(), services.GetRequiredService<ITimeZoneService>(),
-            services.GetRequiredService<AssistantQuotaDayResolver>(), Clock(nowUtc));
+            services.GetRequiredService<AssistantQuotaDayResolver>(), Clock(nowUtc), services.GetRequiredService<IAssistantFinanceReader>());
         return await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ => guard.ReserveAsync(admission, Ct), CommitPolicy.OnSuccess, Ct);
     }
     private static AssistantUsageWriter Writer(IServiceProvider services) => new(services.GetRequiredService<IAssistantFinanceRepository>(), Clock(NowUtc));

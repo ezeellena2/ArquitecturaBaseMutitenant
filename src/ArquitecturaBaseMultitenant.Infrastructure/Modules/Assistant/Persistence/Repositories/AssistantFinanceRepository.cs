@@ -61,17 +61,13 @@ internal sealed class AssistantFinanceRepository(ApplicationDbContext db, ITenan
     public async Task<decimal> GetCommittedAndReservedAmountAsync(Guid monthId, AssistantKeyFunding funding, CancellationToken ct)
     {
         db.RequireTransaction();
-        var operations = db.Set<AssistantFinancialOperation>().AsNoTracking().Where(row => row.BudgetMonthId == monthId && row.Funding == funding);
-        var reserved = await operations.Where(row => row.State == AssistantFinancialState.Reserved || row.State == AssistantFinancialState.Invoked)
-            .SumAsync(row => row.ReservedCost.Amount, ct);
-        var completed = await (from call in db.Set<AssistantFinancialCall>().AsNoTracking()
-                               join operation in operations.Where(row => row.State == AssistantFinancialState.Completed) on call.OperationId equals operation.Id
-                               select call.Cost.Amount).SumAsync(ct);
+        var persisted = await AssistantBudgetUsageQuery.SumAsync(db, db.Set<AssistantFinancialOperation>().AsNoTracking()
+            .Where(row => row.BudgetMonthId == monthId && row.Funding == funding), ct);
         // Multiple admissions in one caller UOW cannot ignore an Added reservation.
         var staged = db.Set<AssistantFinancialOperation>().Local.Where(row => db.Entry(row).State == EntityState.Added
             && row.BudgetMonthId == monthId && row.Funding == funding && row.State is AssistantFinancialState.Reserved or AssistantFinancialState.Invoked)
             .Sum(row => row.ReservedCost.Amount);
-        return reserved + completed + staged;
+        return persisted + staged;
     }
     public async Task<decimal> GetCommittedCostAsync(Guid monthId, AssistantKeyFunding funding, CancellationToken ct)
     {

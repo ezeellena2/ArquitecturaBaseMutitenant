@@ -84,7 +84,7 @@ public sealed class AssistantDailyQuotaAdversarialTests
     private static async Task<Guid> ReserveAsync(ApiFactory factory, AssistantFinancialBinding binding)
     {
         var reserved = await WriteAsync(factory, binding, services => new AssistantLimitGuard(services.GetRequiredService<IAssistantFinanceRepository>(),
-                services.GetRequiredService<ITimeZoneService>(), services.GetRequiredService<AssistantQuotaDayResolver>(), Clock(NowUtc))
+                services.GetRequiredService<ITimeZoneService>(), services.GetRequiredService<AssistantQuotaDayResolver>(), Clock(NowUtc), services.GetRequiredService<IAssistantFinanceReader>())
             .ReserveAsync(new(Guid.CreateVersion7(), binding, AssistantMode.PlatformKey, 50, Usd(1000), "UTC", Price(), null), Ct));
         Assert.True(reserved.IsSuccess, reserved.Error.Code);
         return reserved.Value.Id;

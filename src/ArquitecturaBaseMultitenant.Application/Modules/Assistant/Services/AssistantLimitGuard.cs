@@ -10,11 +10,11 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 /// <summary>
 /// Admisión financiera interna, dentro de la única UOW del turno. No concede autorización de ejecución. El cupo diario y el
-/// tope mensual se miran acá también antes de leer una subida (<see cref="CheckAsync"/>, ADR 0064 §2), con el mismo día y el
-/// mismo mes que admiten un turno.
+/// tope mensual se miran acá también antes de leer una subida (<see cref="CheckAsync"/>, ADR 0064 §2), con el mismo día, el
+/// mismo mes y las mismas reglas que admiten un turno, pero por el reader y sin abrir una transacción.
 /// </summary>
 internal sealed class AssistantLimitGuard(IAssistantFinanceRepository repository, ITimeZoneService zones, AssistantQuotaDayResolver days,
-    TimeProvider clock)
+    TimeProvider clock, IAssistantFinanceReader reader)
 {
     public async Task<Result<AssistantFinancialOperation>> ReserveAsync(AssistantFinanceAdmission input, CancellationToken ct)
     {
@@ -37,7 +37,8 @@ internal sealed class AssistantLimitGuard(IAssistantFinanceRepository repository
         {
             if (!AssistantContractPolicy.IsValidBudget(budget)) return AssistantErrors.SettingsNotConfigured;
             (month, newMonths) = await CurrentMonthAsync(input, nowUtc, ct);
-            if (await MonthlyRefusalAsync(month, own, reserved, budget!, nowUtc, ct) is { } refused) return refused;
+            var used = await repository.GetCommittedAndReservedAmountAsync(month.Id, Funding(own), ct);
+            if (MonthlyRefusal(used, reserved, budget!, nowUtc, month.EndUtc) is { } refused) return refused;
         }
         foreach (var newMonth in newMonths) repository.Add(newMonth);
         if (own)
@@ -51,7 +52,7 @@ internal sealed class AssistantLimitGuard(IAssistantFinanceRepository repository
             repository.Add(platformQuota);
         }
         var operation = AssistantFinancialOperation.Create(input.OperationId, input.Binding,
-            own ? AssistantKeyFunding.OwnKey : AssistantKeyFunding.PlatformKey, day.Day, input.DailyLimit,
+            Funding(own), day.Day, input.DailyLimit,
             month?.Id, budget, reserved, AssistantPriceSnapshotBuilder.Copy(input.Price),
             input.EligibleTitlePrice is null ? null : AssistantPriceSnapshotBuilder.Copy(input.EligibleTitlePrice), nowUtc);
         repository.Add(operation);
@@ -59,24 +60,30 @@ internal sealed class AssistantLimitGuard(IAssistantFinanceRepository repository
     }
 
     /// <summary>
-    /// Lo que respondería la admisión de un turno con el cupo diario y el tope mensual, sin reservar, sin bloquear y sin
-    /// escribir: la subida que no tendría turno no se lee ni se guarda (ADR 0064 §2). Sin un tope mensual válido no decide;
-    /// el turno responde lo suyo.
+    /// Lo que respondería la admisión de un turno con el cupo diario y el tope mensual, sin reservar, sin bloquear, sin escribir
+    /// y sin transacción: la subida que no tendría turno no se lee ni se guarda (ADR 0064 §2). Sin un tope mensual válido no
+    /// decide; el turno responde lo suyo.
     /// </summary>
     public async Task<Result> CheckAsync(AssistantFinanceAdmission input, CancellationToken ct)
     {
         Validate(input);
         var nowUtc = clock.GetUtcNow().UtcDateTime;
         var day = DayOf(input, nowUtc);
-        var own = input.Mode == AssistantMode.OwnKey;
-        var (platformQuota, ownQuota) = await QuotasAsync(day, input.Binding.UserId, own, ct);
-        if (!(own ? ownQuota!.CanReserve(input.DailyLimit) : platformQuota!.CanReserve(input.DailyLimit)))
+        var usage = await reader.FindDailyQuotaAsync(input.Binding.UserId, day.OrganizationId, input.Mode, day.Day, ct);
+        if (!AssistantDailyQuotaRule.CanReserve(usage.ReservedQueries, usage.ConsumedQueries, input.DailyLimit))
             return DailyReached(input.DailyLimit, nowUtc, day);
         var budget = input.Binding.Access == Access.Business ? input.ConfigurationBudget : null;
         if (!AssistantContractPolicy.IsValidBudget(budget)) return Result.Success();
-        var (month, _) = await CurrentMonthAsync(input, nowUtc, ct);
         var reserved = AssistantCostPolicy.ReserveTurn(input.Price, input.EligibleTitlePrice);
-        return await MonthlyRefusalAsync(month, own, reserved, budget!, nowUtc, ct) is { } refused ? refused : Result.Success();
+        // El período en curso ya abierto; si no lo hay, el que abriría el turno, que todavía no tiene nada reservado ni gastado.
+        var latest = await reader.FindLatestMonthAsync(nowUtc, ct);
+        if (latest is not null && nowUtc < latest.EndUtc)
+        {
+            var used = await reader.FindCommittedAndReservedAmountAsync(latest.Id, Funding(input.Mode == AssistantMode.OwnKey), ct);
+            return MonthlyRefusal(used, reserved, budget!, nowUtc, latest.EndUtc) is { } refused ? refused : Result.Success();
+        }
+        var opened = PeriodsToOpen(input.OrganizationTimeZoneId, latest?.Month, latest?.EndUtc, nowUtc)[^1];
+        return MonthlyRefusal(0m, reserved, budget!, nowUtc, opened.EndUtc) is { } first ? first : Result.Success();
     }
 
     private static void Validate(AssistantFinanceAdmission input)
@@ -106,37 +113,51 @@ internal sealed class AssistantLimitGuard(IAssistantFinanceRepository repository
     private async Task<(AssistantBudgetMonth Month, IReadOnlyList<AssistantBudgetMonth> Created)> CurrentMonthAsync(
         AssistantFinanceAdmission input, DateTime nowUtc, CancellationToken ct)
     {
-        var created = new List<AssistantBudgetMonth>();
-        var month = await repository.GetLatestMonthAsync(input.Binding.ScopeTenantId!.Value, nowUtc, ct);
-        if (month is null)
-        {
-            var local = zones.ConvertToLocal(nowUtc, input.OrganizationTimeZoneId);
-            var candidate = new DateOnly(local.Year, local.Month, 1);
-            month = CreateMonth(input, candidate, zones.GetDayRangeUtc(candidate, input.OrganizationTimeZoneId).StartUtc);
-            created.Add(month);
-        }
-        // Authorized transition: frozen periods stay intact; every next period starts at the previous end.
-        // Empty elapsed months are materialized too, so a zone change never reopens a civil month or leaves a gap.
-        while (nowUtc >= month.EndUtc)
-        {
-            month = CreateMonth(input, month.Month.AddMonths(1), month.EndUtc);
-            created.Add(month);
-        }
-        return (month, created);
+        var organizationId = input.Binding.ScopeTenantId!.Value;
+        var month = await repository.GetLatestMonthAsync(organizationId, nowUtc, ct);
+        if (month is not null && nowUtc < month.EndUtc) return (month, []);
+        AssistantBudgetMonth[] created = [.. PeriodsToOpen(input.OrganizationTimeZoneId, month?.Month, month?.EndUtc, nowUtc)
+            .Select(period => AssistantBudgetMonth.Create(organizationId, period.Month, input.OrganizationTimeZoneId, period.StartUtc, period.EndUtc))];
+        return (created[^1], created);
     }
 
-    private async Task<Error?> MonthlyRefusalAsync(AssistantBudgetMonth month, bool own, Money reserved, Money budget, DateTime nowUtc,
-        CancellationToken ct)
+    /// <summary>
+    /// Los períodos que hay que abrir para llegar al de ahora, en orden, desde el último abierto (o desde ninguno: el mes civil de
+    /// ahora en la zona); el último es el actual. Authorized transition: frozen periods stay intact; every next period starts at
+    /// the previous end. Empty elapsed months are materialized too, so a zone change never reopens a civil month or leaves a gap.
+    /// </summary>
+    private List<(DateOnly Month, DateTime StartUtc, DateTime EndUtc)> PeriodsToOpen(string zone, DateOnly? lastMonth,
+        DateTime? lastEndUtc, DateTime nowUtc)
     {
-        var committedAndReserved = await repository.GetCommittedAndReservedAmountAsync(month.Id,
-            own ? AssistantKeyFunding.OwnKey : AssistantKeyFunding.PlatformKey, ct);
-        return committedAndReserved + reserved.Amount > budget.Amount
-            ? AssistantErrors.LimitMonthlyReached(RetrySeconds(nowUtc, month.EndUtc)) : null;
+        var periods = new List<(DateOnly Month, DateTime StartUtc, DateTime EndUtc)>();
+        DateOnly month;
+        DateTime endUtc;
+        if (lastMonth is { } previous && lastEndUtc is { } previousEnd) (month, endUtc) = (previous, previousEnd);
+        else
+        {
+            var local = zones.ConvertToLocal(nowUtc, zone);
+            month = new DateOnly(local.Year, local.Month, 1);
+            endUtc = EndOf(month, zone);
+            periods.Add((month, zones.GetDayRangeUtc(month, zone).StartUtc, endUtc));
+        }
+        while (nowUtc >= endUtc)
+        {
+            var startUtc = endUtc;
+            month = month.AddMonths(1);
+            endUtc = EndOf(month, zone);
+            periods.Add((month, startUtc, endUtc));
+        }
+        return periods;
     }
 
-    private AssistantBudgetMonth CreateMonth(AssistantFinanceAdmission input, DateOnly month, DateTime startUtc) =>
-        AssistantBudgetMonth.Create(input.Binding.ScopeTenantId!.Value, month, input.OrganizationTimeZoneId, startUtc,
-            zones.GetDayRangeUtc(month.AddMonths(1), input.OrganizationTimeZoneId).StartUtc);
+    private DateTime EndOf(DateOnly month, string zone) => zones.GetDayRangeUtc(month.AddMonths(1), zone).StartUtc;
+
+    private static AssistantKeyFunding Funding(bool own) => own ? AssistantKeyFunding.OwnKey : AssistantKeyFunding.PlatformKey;
+
+    /// <summary>Lo reservado y gastado del mes más el turno no entran en el tope: el 429 hasta el fin del período.</summary>
+    private static Error? MonthlyRefusal(decimal used, Money reserved, Money budget, DateTime nowUtc, DateTime endUtc) =>
+        used + reserved.Amount > budget.Amount ? AssistantErrors.LimitMonthlyReached(RetrySeconds(nowUtc, endUtc)) : null;
+
     public static AssistantDailyQuotaRow Describe(int consumed, int reserved, int limit, DateTime resetAtUtc)
     {
         var remaining = (int)Math.Max(0L, (long)limit - consumed - reserved);

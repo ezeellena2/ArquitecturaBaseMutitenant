@@ -58,6 +58,14 @@ internal sealed class AssistantFinanceReader(ApplicationDbContext db, ITenantCon
         return snapshot?.Budget is { } budget ? new(budget, new Money(snapshot.Cost, budget.Currency)) : new(null, null);
     }
 
+    public Task<decimal> FindCommittedAndReservedAmountAsync(Guid monthId, AssistantKeyFunding funding, CancellationToken ct)
+    {
+        var id = tenant.RequiredTenantId;
+        if (monthId == Guid.Empty || !Enum.IsDefined(funding)) throw new ArgumentException("A month and a valid funding are required.");
+        return AssistantBudgetUsageQuery.SumAsync(db, db.Set<AssistantFinancialOperation>().AsNoTracking().Where(row => row.ScopeTenantId == id
+            && row.Access == Access.Business && row.BudgetMonthId == monthId && row.Funding == funding), ct);
+    }
+
     public async Task<IReadOnlyList<AssistantFinancialAggregateRow>> ListPlatformAsync(DateTime startUtc, DateTime endUtc, CancellationToken ct)
     {
         if (tenant.TenantId is not null) throw new InvalidOperationException("Platform aggregates require a global management scope.");

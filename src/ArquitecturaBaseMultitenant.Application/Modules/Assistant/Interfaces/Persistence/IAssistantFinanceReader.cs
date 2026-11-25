@@ -11,4 +11,6 @@ public interface IAssistantFinanceReader
     Task<AssistantDailyQuotaUsageRow> FindDailyQuotaAsync(Guid userId, Guid? organizationId, AssistantMode mode, DateOnly dayUtc, CancellationToken ct);
     Task<AssistantBudgetMonthRow?> FindLatestMonthAsync(DateTime nowUtc, CancellationToken ct);
     Task<AssistantMonthCostRow> FindMonthCostAsync(Guid monthId, AssistantKeyFunding funding, CancellationToken ct);
+    /// <summary>Lo reservado y lo gastado de un mes de la organización con esa forma de pago, como lo suma la admisión de un turno.</summary>
+    Task<decimal> FindCommittedAndReservedAmountAsync(Guid monthId, AssistantKeyFunding funding, CancellationToken ct);
 }

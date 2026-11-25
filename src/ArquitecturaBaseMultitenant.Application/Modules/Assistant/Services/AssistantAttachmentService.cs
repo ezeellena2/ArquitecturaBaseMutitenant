@@ -20,13 +20,13 @@ internal sealed class AssistantAttachmentService(AssistantAttachmentWriter write
     IUnitOfWork unitOfWork, IRequestValidator validator, TimeProvider clock, ILogger<AssistantAttachmentService> logger)
     : IAssistantAttachmentService, IAssistantUploadAdmission
 {
-    // ADR 0064 §2: lo llama el lugar de la subida antes de leer el cuerpo; no reserva ni escribe.
+    // ADR 0064 §2: lo llama el lugar de la subida antes de leer el cuerpo; no reserva ni escribe, y lee por el reader, sin
+    // abrir una transacción.
     public Task<Result> AdmitAsync(CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, clock, "AssistantAttachmentAdmit", async () =>
         {
             var admission = await uploads.PrepareAsync(cancellationToken);
-            if (admission is null) return Result.Success();
-            return await unitOfWork.ExecuteInTransactionAsync(ct => uploads.CheckAsync(admission, ct), CommitPolicy.OnSuccess, cancellationToken);
+            return admission is null ? Result.Success() : await uploads.CheckAsync(admission, cancellationToken);
         });
 
     public Task<Result<IdempotentReplayResponse<AssistantAttachmentSummaryResponse>>> UploadAsync(Guid id, AssistantUploadRequest input, CancellationToken ct) =>

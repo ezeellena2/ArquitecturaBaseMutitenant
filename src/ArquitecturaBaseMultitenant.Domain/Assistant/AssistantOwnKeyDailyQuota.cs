@@ -16,7 +16,7 @@ public sealed class AssistantOwnKeyDailyQuota : Entity, ITenantOwned
         if (userId == Guid.Empty) throw new ArgumentException("A user is required.", nameof(userId));
         return new() { UserId = userId, DayUtc = dayUtc };
     }
-    public bool CanReserve(int limit) => (long)ReservedQueries + ConsumedQueries < limit;
+    public bool CanReserve(int limit) => AssistantDailyQuotaRule.CanReserve(ReservedQueries, ConsumedQueries, limit);
     public void Reserve() => ReservedQueries = checked(ReservedQueries + 1);
     public void Release()
     {
