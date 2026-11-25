@@ -887,6 +887,8 @@ De la revisión de punta a punta del 2026-11-25. El usuario eligió la recomenda
 
 282. **El correo de una regla lleva arriba el nombre y el logo de la organización** (repaso de la B18 del 2026-11-25; precisa la 273, que decía «como la invitación»; E21): el correo que manda una regla de Formularios lleva en el encabezado el nombre y el logo de la página pública de la organización, en lugar de los de la aplicación, como el PDF (82); sin página pública, solo el nombre. El nombre de la aplicación y el remitente siguen saliendo de Plataforma › Configuración (273). La invitación queda como está: el encabezado de la aplicación y la organización nombrada en el texto.
 
+283. **La hora en que vuelve el cupo del día se dice en la zona de la organización** (repaso de la F13 del 2026-11-25; precisa la 271; tablero `Asistente-Org-Base2`): dentro de una organización, el aviso del cupo agotado dice cuándo vuelve en la zona de la organización y la nombra («Vuelven el 24/11/2026, a las 00:00, hora de Grupo Delta.»), porque el cupo corta a su medianoche, aunque el perfil de quien mira esté en otra zona. Fuera de una organización, en la zona del perfil. Es una excepción a la regla del front de mostrar fecha y hora en la zona de quien mira (decisión del 2026-10-25), solo para la hora en que vuelve un cupo.
+
 **Condición del usuario para todas:** ninguna decisión copiada de ArquitecturaBase pasa por encima de [AGENTS.md](../../AGENTS.md) ni de [docs/rules](../rules/README.md); si una choca con una regla de acá, manda la regla de acá.
 
 ## 6. Qué tomar de ArquitecturaBase
