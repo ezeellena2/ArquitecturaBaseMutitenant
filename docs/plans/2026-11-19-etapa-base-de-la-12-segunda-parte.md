@@ -7,10 +7,10 @@
 | Parte | Tareas | Estado |
 | --- | --- | --- |
 | Contrato | K0–K1 | Hecha |
-| Back A · núcleo y WhatsApp | B16, B1–B9 y B18 | Pendiente: B18, sin correr (espera la B17) |
-| Back B · formatos e IA | B10–B15 y B17 | Pendiente: B17 parcial (faltan las dos listas hijas de la ficha de un contacto de WhatsApp) |
-| Front | F1–F13 | Pendiente: F12 y F13, sin correr (esperan la B17 y la B18) |
-| Integración y puerta | I1–I3 | Pendiente: I1–I3, esperan back y front |
+| Back A · núcleo y WhatsApp | B16, B1–B9 y B18 | Hecha |
+| Back B · formatos e IA | B10–B15 y B17 | Hecha |
+| Front | F1–F13 | Hecha |
+| Integración y puerta | I1–I3 | Pendiente: I1–I3, la puerta no corrió |
 
 ## Forma de trabajo
 
@@ -245,6 +245,8 @@ Leé AGENTS.md de los dos repos, este plan, la spec y la skill /puerta. Integrá
 - `PUT /api/platform/assistant/settings`: `retentionDays` va de 1 a 30, como «Conversaciones del Inicio» de `Config-Plat-Base2`; openapi.json publica las dos cotas y el front las lee de ahí. (integración)
 - El estado del asistente (`GET /api/{organization|me|platform}/assistant`) suma `dailyResetTimeZoneId`, la zona en que corta el cupo del día (271): la de la organización en el acceso de empresa y la del perfil fuera de una. La pantalla dice «hora de Grupo Delta» (`Asistente-Org-Base2`). (integración)
 - `docs/contracts/frontend-routes.json` suma `/org/whatsapp/configuracion`, que explica el artículo de ayuda «Administrar WhatsApp». (integración)
+- Front: `src/shared/api/generated/schema.d.ts` regenerado con `npm run contracts`; suma el query `Sort` de las rutas de WhatsApp que ordenan desde la B17. Los dominios (`/api/platform/tenants/{id}/domains/paged`) y los roles de una empresa (`/api/companies/{id}/roles/paged`) ya admitían `sort`: el front ahora lo manda desde la dirección. (F12)
+- openapi.json no publica las cotas de `loginAuditRetentionMonths` (1 a 120), `loginCodeRetentionDays` (1 a 3650), `closedInvitationRetentionDays` (7 a 3650), `appName` y `senderName` (60) en `UpdatePlatformSettingsHttpRequest`; el front las fija en `src/areas/platform/settings/lib/rules.ts`. (F13)
 
 ## Para decidir
 
