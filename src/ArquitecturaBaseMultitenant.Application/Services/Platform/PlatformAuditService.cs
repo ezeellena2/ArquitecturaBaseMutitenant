@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Common.Text;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Localization;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Time;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -22,7 +23,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// enmascarado. «Hoy» es el día del operador, en su zona horaria.
 /// </summary>
 internal sealed class PlatformAuditService(ISecurityEventReader reader, IUserRepository users, ICurrentUser currentUser,
-    ITimeZoneService timeZones, IRequestValidator validator, TimeProvider clock, ILogger<PlatformAuditService> logger)
+    ITimeZoneService timeZones, IRequestValidator validator, IEnumerable<IAuditTextSource> moduleTexts, TimeProvider clock,
+    ILogger<PlatformAuditService> logger)
     : IPlatformAuditService
 {
     public Task<Result<PlatformAuditListResponse>> ListAsync(ListPlatformAuditRequest request,
@@ -89,12 +91,12 @@ internal sealed class PlatformAuditService(ISecurityEventReader reader, IUserRep
         }
     }
 
-    private static PlatformAuditEventResponse ToResponse(PlatformAuditRow row)
+    private PlatformAuditEventResponse ToResponse(PlatformAuditRow row)
     {
         if (row.EventType is not { } type)
         {
             var summary = row.SignInSucceeded
-                ? AuditTexts.SignIn(row.SignInMethod!.Value)
+                ? AuditTexts.SignIn(row.SignInMethod!.Value, moduleTexts)
                 : AuditTexts.SignInFailed(row.FailureCode is { } code ? ErrorTexts.Find(code) ?? code : string.Empty);
             return new PlatformAuditEventResponse(row.Id, row.OccurredAtUtc, PlatformAuditCategories.SignIns,
                 row.SignInSucceeded ? "SignIn" : "SignInFailed", summary, Name(row.TargetAccount),

@@ -23,7 +23,6 @@
   <data name="SortNotAllowed" xml:space="preserve"><value>Sorting by that field is not allowed.</value></data>
   <data name="ReturnUrlInvalid" xml:space="preserve"><value>The return address is not valid.</value></data>
   <data name="LoginCodeFormat" xml:space="preserve"><value>Enter the code we sent you by email.</value></data>
-  <data name="LoginCodeFormatWhatsApp" xml:space="preserve"><value>Enter the code we sent you on WhatsApp.</value></data>
   <data name="TwoFactorCodeFormat" xml:space="preserve"><value>Enter the 6 digits your app shows.</value></data>
   <data name="RecoveryCodeFormat" xml:space="preserve"><value>Enter the code in the XXXX-XXXX format.</value></data>
   <data name="RecoveryCodesSaved" xml:space="preserve"><value>Confirm that you saved the codes.</value></data>
@@ -38,8 +37,6 @@
   <data name="CreatedWithinDaysInvalid" xml:space="preserve"><value>The number of days must be between {From} and {To}.</value></data>
   <data name="InvitationChannelInvalid" xml:space="preserve"><value>Choose how to send the invitation.</value></data>
   <data name="InvitationEmailRequired" xml:space="preserve"><value>Add an email to use this option.</value></data>
-  <data name="InvitationPhoneRequired" xml:space="preserve"><value>Add a WhatsApp number to use this option.</value></data>
-  <data name="InvitationWhatsAppUnavailable" xml:space="preserve"><value>WhatsApp isn't available on this system.</value></data>
   <data name="OwnedOrganizationsRange" xml:space="preserve"><value>Use a number from 1 to 50.</value></data>
   <data name="RateLimitPermitRange" xml:space="preserve"><value>Use a number from 1 to 1,000,000.</value></data>
   <data name="RateLimitWindowRange" xml:space="preserve"><value>Use 1 to 86,400 seconds.</value></data>

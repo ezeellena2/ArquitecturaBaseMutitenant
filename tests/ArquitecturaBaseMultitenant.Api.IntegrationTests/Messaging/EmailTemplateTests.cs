@@ -271,8 +271,8 @@ public sealed class EmailTemplateTests
         var deleted = await renderer.RenderAccountNoticeAsync("user@example.test",
             new AccountNotice.AccountDeleted { RecipientName = "Diego" }, profile, Ct);
 
-        Assert.Equal("Agregaste un WhatsApp a tu cuenta", changed.Subject);
-        Assert.Contains("Hola, Lucía. El 27/09/2026 a las 14:35 agregaste el WhatsApp", changed.TextBody);
+        Assert.Equal("Agregaste un teléfono a tu cuenta", changed.Subject);
+        Assert.Contains("Hola, Lucía. El 27/09/2026 a las 14:35 agregaste el teléfono", changed.TextBody);
         Assert.Contains("+54 9 11 •••• 4521", changed.TextBody);
         Assert.Contains(url, changed.HtmlBody);
         Assert.Equal("Pediste borrar tu cuenta", requested.Subject);
@@ -286,11 +286,11 @@ public sealed class EmailTemplateTests
     [Theory]
     [InlineData("es-AR", "Revisá tus métodos de ingreso",
         "Hola, Lucía. Ya no sos miembro de Delta <Sur>. Tu cuenta de ArquitecturaBase sigue activa.",
-        "Si entrabas con un correo administrado por Delta <Sur>, ya no te sirve. Agregá un correo personal o tu WhatsApp para no perder tu cuenta.",
+        "Si entrabas con un correo administrado por Delta <Sur>, ya no te sirve. Agregá un correo personal u otro método de ingreso para no perder tu cuenta.",
         "Revisar mis métodos")]
     [InlineData("en-US", "Review your sign-in methods",
         "Hello, Lucía. You are no longer a member of Delta <Sur>. Your ArquitecturaBase account is still active.",
-        "If you signed in with an email managed by Delta <Sur>, it no longer works. Add a personal email or your WhatsApp so you don't lose your account.",
+        "If you signed in with an email managed by Delta <Sur>, it no longer works. Add a personal email or another sign-in method so you don't lose your account.",
         "Review my methods")]
     public async Task Membership_end_notice_matches_the_approved_board_and_links_to_account(string cultureCode,
         string subject, string body, string managedEmail, string action)
@@ -338,9 +338,9 @@ public sealed class EmailTemplateTests
     }
 
     [Theory]
-    [InlineData("es-AR", LoginMethodChange.Removed, "Quitaste un WhatsApp")]
+    [InlineData("es-AR", LoginMethodChange.Removed, "Quitaste un teléfono")]
     [InlineData("es-AR", LoginMethodChange.Primary, "Cambiaste el método principal")]
-    [InlineData("en-US", LoginMethodChange.Removed, "You removed WhatsApp")]
+    [InlineData("en-US", LoginMethodChange.Removed, "You removed a phone")]
     [InlineData("en-US", LoginMethodChange.Primary, "You changed your primary")]
     public async Task Phone_removed_and_primary_notices_have_localized_email_copy(string code, LoginMethodChange change, string subject)
     {

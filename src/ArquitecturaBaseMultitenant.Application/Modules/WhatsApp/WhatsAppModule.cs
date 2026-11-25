@@ -35,6 +35,7 @@ public static class WhatsAppModule
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity.IPhoneLinkObserver, WhatsAppPhoneLinkObserver>();
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Legal.IAccountDeletionParticipant, WhatsAppAccountDeletionParticipant>();
         services.AddSingleton<IErrorTextSource, WhatsAppErrorTextSource>();
+        services.AddSingleton<IAuditTextSource, WhatsAppAuditTextSource>();
         services.AddSingleton<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features.IFeatureDefinitionContributor, WhatsAppFeatureDefinitionContributor>();
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features.IFeatureAvailabilityPolicy, WhatsAppAvailabilityPolicy>();
         services.AddScoped<IWhatsAppChannelBootstrapService, WhatsAppChannelBootstrapService>();

@@ -29,3 +29,8 @@ internal sealed class WhatsAppErrorTextSource : IErrorTextSource
 {
     public string? Find(string code, CultureInfo culture) => WhatsAppTexts.ResourceManager.GetString(code, culture);
 }
+/// <summary>Los ingresos por WhatsApp en Plataforma › Auditoría: <c>SignIn.WhatsAppCode</c> y <c>SignIn.WhatsAppLink</c>.</summary>
+internal sealed class WhatsAppAuditTextSource : IAuditTextSource
+{
+    public string? Find(string key, CultureInfo culture) => WhatsAppTexts.ResourceManager.GetString(key, culture);
+}

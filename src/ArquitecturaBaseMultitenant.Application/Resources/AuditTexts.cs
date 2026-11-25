@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Resources;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Localization;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 
 namespace ArquitecturaBaseMultitenant.Application.Resources;
@@ -67,7 +68,15 @@ public static class AuditTexts
     public static string PlatformRecoveryCodeUsedReason() => Get("Platform.RecoveryCodeUsedReason");
     public static string PlatformReauthenticatedReason() => Get("Platform.ReauthenticatedReason");
     public static string SecurityEvent(SecurityEventType type) => Get("SecurityEvent." + type);
-    public static string SignIn(ArquitecturaBaseMultitenant.Domain.Authentication.LoginAuditMethod method) => Get("SignIn." + method);
+    /// <summary>«Qué» de un ingreso; el de un método que nombra a un módulo lo aporta ese módulo.</summary>
+    public static string SignIn(ArquitecturaBaseMultitenant.Domain.Authentication.LoginAuditMethod method,
+        IEnumerable<IAuditTextSource> modules)
+    {
+        var key = "SignIn." + method;
+        return ResourceManager.GetString(key, CultureInfo.CurrentUICulture)
+            ?? modules.Select(module => module.Find(key, CultureInfo.CurrentUICulture)).FirstOrDefault(text => text is not null)
+            ?? Get(key);
+    }
     public static string SignInFailed(string reason) => Get("SignIn.Failed").Replace("{0}", reason, StringComparison.Ordinal);
     public static string ActorRole(AuditActorKind actorKind) => Get("ActorRole." + actorKind);
     public static string PlatformTarget() => Get("Target.Platform");

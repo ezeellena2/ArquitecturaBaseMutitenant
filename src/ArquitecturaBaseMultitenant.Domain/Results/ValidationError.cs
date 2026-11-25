@@ -12,7 +12,7 @@ public sealed record ValidationError : Error
 
     /// <summary>
     /// Un error de una regla de negocio con su propio código que además se ata a un campo del formulario: por ejemplo,
-    /// <c>Users.Invitation.ConsentRequired</c> en la casilla del consentimiento. El front lo reconoce por el código y lo
+    /// <c>WhatsApp.PhoneImport.ConsentRequired</c> en la casilla del consentimiento. El front lo reconoce por el código y lo
     /// muestra debajo del campo, igual que un error de validación.
     /// </summary>
     public ValidationError(string code, string description, IReadOnlyDictionary<string, string[]> errors)

@@ -17,11 +17,11 @@
   <data name="ReviewLoginMethods.Subject" xml:space="preserve"><value>Review your sign-in methods</value></data>
   <data name="ReviewLoginMethods.Title" xml:space="preserve"><value>Review your sign-in methods</value></data>
   <data name="ReviewLoginMethods.Body" xml:space="preserve"><value>{0} You are no longer a member of {1}. Your {2} account is still active.</value></data>
-  <data name="ReviewLoginMethods.ManagedEmail" xml:space="preserve"><value>If you signed in with an email managed by {0}, it no longer works. Add a personal email or your WhatsApp so you don't lose your account.</value></data>
+  <data name="ReviewLoginMethods.ManagedEmail" xml:space="preserve"><value>If you signed in with an email managed by {0}, it no longer works. Add a personal email or another sign-in method so you don't lose your account.</value></data>
   <data name="ReviewLoginMethods.Action" xml:space="preserve"><value>Review my methods</value></data>
-  <data name="LoginMethodAddedPhone.Subject" xml:space="preserve"><value>You added WhatsApp to your account</value></data>
+  <data name="LoginMethodAddedPhone.Subject" xml:space="preserve"><value>You added a phone to your account</value></data>
   <data name="LoginMethodAddedPhone.Title" xml:space="preserve"><value>You added a sign-in method</value></data>
-  <data name="LoginMethodAddedPhone.Body" xml:space="preserve"><value>{0} On {1} at {2}, you added WhatsApp {3} to your {4} account.</value></data>
+  <data name="LoginMethodAddedPhone.Body" xml:space="preserve"><value>{0} On {1} at {2}, you added the phone {3} to your {4} account.</value></data>
   <data name="LoginMethodRemovedEmail.Subject" xml:space="preserve"><value>You removed an email from your account</value></data>
   <data name="LoginMethodRemovedEmail.Title" xml:space="preserve"><value>You removed a sign-in method</value></data>
   <data name="LoginMethodRemovedEmail.Body" xml:space="preserve"><value>{0} On {1} at {2}, you removed email {3} from your {4} account. You can no longer use it to sign in.</value></data>
@@ -109,10 +109,10 @@
   <data name="OrganizationApproved.Title" xml:space="preserve"><value>Your organization is ready</value></data>
   <data name="OrganizationApproved.Body" xml:space="preserve"><value>{0} We approved {1} and completed its setup. You can now enter your organization as its Owner.</value></data>
   <data name="OrganizationApproved.Note" xml:space="preserve"><value>Sign in with your account methods and select your organization.</value></data>
-  <data name="LoginMethodRemovedPhone.Subject" xml:space="preserve"><value>You removed WhatsApp from your account</value></data>
+  <data name="LoginMethodRemovedPhone.Subject" xml:space="preserve"><value>You removed a phone from your account</value></data>
   <data name="LoginMethodRemovedPhone.Title" xml:space="preserve"><value>You removed a sign-in method</value></data>
-  <data name="LoginMethodRemovedPhone.Body" xml:space="preserve"><value>{0} On {1} at {2}, you removed WhatsApp {3} from your {4} account. You can no longer use it to sign in.</value></data>
+  <data name="LoginMethodRemovedPhone.Body" xml:space="preserve"><value>{0} On {1} at {2}, you removed the phone {3} from your {4} account. You can no longer use it to sign in.</value></data>
   <data name="LoginMethodPrimaryPhone.Subject" xml:space="preserve"><value>You changed your primary sign-in method</value></data>
   <data name="LoginMethodPrimaryPhone.Title" xml:space="preserve"><value>You changed your primary method</value></data>
-  <data name="LoginMethodPrimaryPhone.Body" xml:space="preserve"><value>{0} On {1} at {2}, you chose WhatsApp {3} as your primary sign-in method for your {4} account. Notices will now arrive there.</value></data>
+  <data name="LoginMethodPrimaryPhone.Body" xml:space="preserve"><value>{0} On {1} at {2}, you chose the phone {3} as your primary sign-in method for your {4} account. Notices will now arrive there.</value></data>
 </root>

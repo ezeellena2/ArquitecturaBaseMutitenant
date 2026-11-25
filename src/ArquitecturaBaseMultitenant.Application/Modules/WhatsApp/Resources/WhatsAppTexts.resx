@@ -543,4 +543,10 @@
   <data name="Send.Failure.ReadOnly" xml:space="preserve">
     <value>El número de esta conversación está desconectado.</value>
   </data>
+  <data name="SignIn.WhatsAppCode" xml:space="preserve">
+    <value>Ingresó con un código por WhatsApp</value>
+  </data>
+  <data name="SignIn.WhatsAppLink" xml:space="preserve">
+    <value>Ingresó con un enlace de WhatsApp</value>
+  </data>
 </root>

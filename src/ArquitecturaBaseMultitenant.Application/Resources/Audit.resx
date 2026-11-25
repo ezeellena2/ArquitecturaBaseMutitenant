@@ -139,8 +139,6 @@
   <data name="Platform.ReauthenticatedReason" xml:space="preserve"><value>Confirmación del segundo factor para una acción sensible.</value></data>
   <data name="SignIn.Code" xml:space="preserve"><value>Ingresó con un código por correo</value></data>
   <data name="SignIn.Google" xml:space="preserve"><value>Ingresó con Google</value></data>
-  <data name="SignIn.WhatsAppCode" xml:space="preserve"><value>Ingresó con un código por WhatsApp</value></data>
-  <data name="SignIn.WhatsAppLink" xml:space="preserve"><value>Ingresó con un enlace de WhatsApp</value></data>
   <data name="SignIn.Authenticator" xml:space="preserve"><value>Ingresó con el autenticador</value></data>
   <data name="SignIn.RecoveryCode" xml:space="preserve"><value>Ingresó con un código de recuperación</value></data>
   <data name="SignIn.Failed" xml:space="preserve"><value>No pudo ingresar: {0}</value></data>

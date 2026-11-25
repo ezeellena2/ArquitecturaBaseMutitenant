@@ -31,8 +31,6 @@ public static class ValidationTexts
 
     public static string LoginCodeFormat => Get(nameof(LoginCodeFormat));
 
-    public static string LoginCodeFormatWhatsApp => Get(nameof(LoginCodeFormatWhatsApp));
-
     public static string TwoFactorCodeFormat => Get(nameof(TwoFactorCodeFormat));
 
     public static string RecoveryCodeFormat => Get(nameof(RecoveryCodeFormat));
@@ -74,10 +72,6 @@ public static class ValidationTexts
     public static string InvitationChannelInvalid => Get(nameof(InvitationChannelInvalid));
 
     public static string InvitationEmailRequired => Get(nameof(InvitationEmailRequired));
-
-    public static string InvitationPhoneRequired => Get(nameof(InvitationPhoneRequired));
-
-    public static string InvitationWhatsAppUnavailable => Get(nameof(InvitationWhatsAppUnavailable));
 
     public static string SlugInvalid => Get(nameof(SlugInvalid));
 

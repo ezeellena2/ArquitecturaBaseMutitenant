@@ -43,7 +43,6 @@
   <data name="Auth.ExternalLogin.Failed" xml:space="preserve"><value>No pudimos completar el ingreso con Google.</value></data>
   <data name="Auth.ExternalLogin.EmailNotVerified" xml:space="preserve"><value>Tu cuenta de Google no tiene el email verificado.</value></data>
   <data name="Auth.Google.AccountNotFound" xml:space="preserve"><value>No pudimos completar el ingreso con Google.</value></data>
-  <data name="Auth.WhatsApp.CountryNotSupported" xml:space="preserve"><value>Todavía no mandamos códigos a números de ese país.</value></data>
   <data name="Users.Email.Invalid" xml:space="preserve"><value>El email no es válido.</value></data>
   <data name="Users.Phone.Invalid" xml:space="preserve"><value>Ingresá un número de teléfono válido.</value></data>
   <data name="Users.Phone.NotMobile" xml:space="preserve"><value>Ingresá un número de celular.</value></data>
@@ -73,9 +72,6 @@
   <data name="Identity.Account.LockedOut" xml:space="preserve"><value>Tu cuenta está bloqueada por unos minutos.</value></data>
   <data name="Identity.Account.Suspended" xml:space="preserve"><value>Tu cuenta está suspendida.</value></data>
   <data name="Identity.Account.PendingDeletion" xml:space="preserve"><value>Tu cuenta está por borrarse.</value></data>
-  <data name="Users.Identity.Required" xml:space="preserve"><value>Cargá un correo o un número de WhatsApp.</value></data>
-  <data name="Users.Invitation.ConsentRequired" xml:space="preserve"><value>Confirmá que la persona aceptó recibir mensajes por WhatsApp.</value></data>
-  <data name="Users.Invitation.NameRequired" xml:space="preserve"><value>Para invitar por WhatsApp, cargá el nombre de la persona.</value></data>
   <data name="Users.Invitation.TooManyRequests" xml:space="preserve"><value>Esperá un minuto antes de volver a invitar a esta persona.</value></data>
   <data name="Users.Invitation.UserInactive" xml:space="preserve"><value>La persona está de baja: reactivala antes de invitarla.</value></data>
   <data name="Roles.Role.NameRequired" xml:space="preserve"><value>Escribí el nombre del rol.</value></data>
