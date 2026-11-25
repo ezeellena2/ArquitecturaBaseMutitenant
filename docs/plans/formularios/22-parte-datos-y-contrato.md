@@ -49,9 +49,13 @@ Una categoría se borra solo si ninguna plantilla la usa (`Forms.TemplateCategor
 | `CategoryId` | uuid | FK |
 | `State` | texto | `Draft` (nunca publicada), `Published` o `Retired` |
 | `Draft` | jsonb | `FormTemplateDraft` (abajo) |
+| `Name` | texto | el `name` del borrador, que guarda `SaveDraft`, para buscar y ordenar en SQL |
 | `PublishedVersionId` | uuid? | la versión que ven las organizaciones |
+| `LastPublishedAtUtc` | timestamptz? | la última publicación, para ordenar |
 | `HasUnpublishedChanges` | bool | el borrador guardado difiere de la versión publicada; habilita «Publicar» y no se muestra |
 | auditoría | — | `IGlobalSecurityAudited` |
+
+Búsqueda y orden ([paginado-y-busqueda](../../rules/paginado-y-busqueda.md)): `IX_FormTemplates_Search_Name` e `IX_FormTemplateVersions_Search_Name`, y un `(campo, Id)` por cada campo del `SortMap` de Plataforma; la categoría y «La usaron» ordenan por una proyección, declarada en `SortIndexTests`.
 
 **`FormTemplateDraft`** (jsonb, `format: 1`):
 - `name`, `description` (≤300), `suggestedPrefix` y `submitLabel`, cada uno un solo texto (35), y `audience`: para quién es el formulario (50), que la copia conserva;
@@ -87,6 +91,7 @@ Sigue la [spec de la E21](21-reglas-y-aprobacion.md). La regla: las reglas viaja
 | `Id`, `TemplateId` | uuid | — |
 | `Number` | int | único por plantilla |
 | `Snapshot` | jsonb | copia sellada del borrador |
+| `Name` | texto | el del `Snapshot`, para que la organización busque en SQL |
 | `ContentHash` | texto 64 | — |
 | `PublishedAtUtc`, `PublishedBy`, `Reason` | — | — |
 
@@ -122,7 +127,7 @@ Sigue la [spec de la E21](21-reglas-y-aprobacion.md). La regla: las reglas viaja
 
 ## 5. Contrato borrador
 
-**Plataforma:** todas las rutas llevan `[Access(Access.Platform)]` y `[HasPlatformPermission(PlatformPermissions.FormTemplates.Manage)]`. Las altas llevan `[Idempotent]`. El modelo es `Api/Modules/Assistant/Controllers/PlatformAssistantController.cs`.
+**Plataforma:** todas las rutas llevan `[Access(Access.Platform)]` y `[HasPlatformPermission(PlatformPermissions.FormTemplates.Manage)]`. Las altas llevan `[Idempotent]`. Los modelos son `Api/Modules/Assistant/Controllers/PlatformAssistantSettingsController.cs` (la ruta de gestión y su permiso) y `PlatformAssistantModelsController.cs` (el listado y el alta con `[Idempotent]`).
 
 | Método y ruta | Pide | Devuelve |
 | --- | --- | --- |
@@ -139,7 +144,7 @@ Sigue la [spec de la E21](21-reglas-y-aprobacion.md). La regla: las reglas viaja
 | POST `/api/platform/forms/template-categories` | `{name, reason}` | 201 |
 | PUT `/api/platform/forms/template-categories/{id}` | `{name, version, reason}` | 200 `VersionResponse` |
 | POST `/api/platform/forms/template-categories/{id}/move` | `{direction, version, reason}` | 200 `VersionResponse` |
-| DELETE `/api/platform/forms/template-categories/{id}` | `?version=` y `reason` | 204; o 409 `InUse` |
+| DELETE `/api/platform/forms/template-categories/{id}` | `{version, reason}` en el cuerpo, como las bajas de Plataforma | 204; o 409 `InUse` |
 
 **Organización:** todas las rutas llevan `[Access(Access.Business)]`, `[FeatureGate("forms")]` y `[HasPermission(Permissions.Forms.Manage)]`.
 
@@ -149,7 +154,7 @@ Sigue la [spec de la E21](21-reglas-y-aprobacion.md). La regla: las reglas viaja
 | GET `/api/organization/forms/template-categories` | `page`, `pageSize`, `search` | 200 `PagedResult<{id, name, position}>`, solo categorías con al menos una plantilla publicada, por posición e Id |
 | GET `/api/organization/forms/templates/{id}` | — | 200 la versión publicada, para ver: preguntas, catálogos con sus opciones, las reglas de ejemplo con `roleHint` y sin rol, que se leen en pasos como en la E21, `usedIn?{id, name, count}` y si trae diseño del PDF |
 | GET `/api/organization/forms/templates/{id}/use-proposal` | — | 200 `{name, prefix}`, con el prefijo libre, como `copy-proposal` de la E17 |
-| POST `/api/organization/forms/templates/{id}/use` | `{name, prefix}` y `[Idempotent]` | 201 `FormDetail` de la E14 + Location al formulario nuevo; valen `PrefixTaken` y `PrefixInvalid` |
+| POST `/api/organization/forms/templates/{id}/use` | `{name, prefix}` y `[Idempotent]` | 201 `FormDetailResponse` de la E14 + Location al formulario nuevo; valen `PrefixTaken` y `PrefixInvalid` |
 
 **En la lectura de reglas de un formulario (E21),** sin ruta nueva: la respuesta suma `suggestedRules?`, las reglas de ejemplo con `roleHint` y sin rol. Viene solo si el formulario salió de una plantilla y todavía no tiene ninguna revisión de reglas (decisión 30). La lee el mismo servicio de reglas, con un reader de Forms sobre la versión global de la plantilla.
 
@@ -189,6 +194,6 @@ Las categorías son editables y pueden crecer: tanto su administración como los
 | `A/Modules/Forms/Services/FormTemplateService.cs`, `FormTemplateCategoryService.cs`, `FormTemplateLibraryService.cs` (organización) y los helpers `FormTemplatePublicationPolicy` y `FormTemplateCopyCreator` | los servicios de la E14 |
 | `I/Modules/Forms/Persistence/Configurations/FormTemplate*Configuration.cs` y su declaración global en `FormsModelContributor` | `I/Modules/Assistant/Persistence/AssistantModelContributor.cs` |
 | `I/Persistence/Migrations/<fecha>_FormTemplates.cs` y `<fecha>_PlatformOperatorFormTemplatePermissions.cs` | `20261010214712_PlatformOperatorAssistantPermissions.cs` |
-| `P/Modules/Forms/Controllers/PlatformFormTemplatesController.cs` y `BusinessFormTemplatesController.cs` | `PlatformAssistantController.cs` y `BusinessFormsController` |
-| `P/Modules/Forms/Contracts/`, un archivo por pedido: `FormTemplateListHttpQuery`, `CreateFormTemplateHttpRequest`, `SaveFormTemplateDraftHttpRequest`, `PublishFormTemplateHttpRequest`, `RetireFormTemplateHttpRequest`, `Create`, `Update` y `MoveFormTemplateCategoryHttpRequest` y `UseFormTemplateHttpRequest`; cada pedido con su `<X>RequestValidator`, en `A/Modules/Forms/Validation/` | `P/Modules/Assistant/Contracts/` y `A/Modules/WhatsApp/Validation/` |
+| `P/Modules/Forms/Controllers/PlatformFormTemplatesController.cs` y `BusinessFormTemplatesController.cs` | `PlatformAssistantSettingsController.cs`, `PlatformAssistantModelsController.cs` y `BusinessFormsController` |
+| `P/Modules/Forms/Contracts/`, un archivo por pedido: `FormTemplateListHttpQuery`, `CreateFormTemplateHttpRequest`, `SaveFormTemplateDraftHttpRequest`, `PublishFormTemplateHttpRequest`, `RetireFormTemplateHttpRequest`, `Create`, `Update`, `Move` y `DeleteFormTemplateCategoryHttpRequest` y `UseFormTemplateHttpRequest`; cada pedido con su `<X>RequestValidator`, en `A/Modules/Forms/Validation/` | `P/Modules/Assistant/Contracts/` y `A/Modules/WhatsApp/Validation/` |
 | `F/src/modules/forms/pages/`: `PlatformTemplatesPage.tsx` (`/plataforma/formularios`), `PlatformTemplatePage.tsx` (`/plataforma/formularios/:id`), `PlatformTemplateCatalogPage.tsx` (`…/:id/catalogos/:catalogRef`), `PlatformTemplatePdfPage.tsx` (`…/:id/pdf`), `PlatformTemplateCategoriesPage.tsx` (`/plataforma/formularios/categorias`), `TemplateLibraryPage.tsx` (`/org/formularios/biblioteca`) y `TemplatePage.tsx` (`/org/formularios/biblioteca/:id`); en `components/templates/`, `NewTemplateDialog.tsx`, `TemplatePublishDialog.tsx`, `RetireTemplateDialog.tsx`, `TemplateCategoryDialog.tsx` y `UseTemplateDialog.tsx`; el editor de la E14 reusado con la pestaña «Catálogos» | `F/src/modules/assistant/registration.ts` (rutas por acceso) y el editor de la E14 |
