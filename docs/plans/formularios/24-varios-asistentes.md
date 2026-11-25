@@ -7,7 +7,7 @@
 Antes de empezar, en este orden:
 
 1. **Lo anterior:** la [spec de la E23](23-asistente.md): el agente, un turno y sus tablas; y la ficha [WhatsApp](../../features/whatsapp.md): equipos y bot.
-2. **Decisiones** de la hoja de ruta: 28, 35, 43, 46, 52, 68, 69, 77, 78, 206, 261 a 264, 268 a 271 y 278. ADR [0051](../../decisions/0051-precision-tecnica-de-costos-ia.md) y [0068](../../decisions/0068-acciones-del-asistente.md).
+2. **Decisiones** de la hoja de ruta: 28, 35, 43, 46, 52, 68, 69, 77, 78, 206, 261 a 264, 268 a 271 y 278. ADR [0051](../../decisions/0051-precision-tecnica-de-costos-ia.md), [0068](../../decisions/0068-acciones-del-asistente.md) y [0070](../../decisions/0070-motor-que-contesta-whatsapp.md), el motor que contesta, con el paso «Elegir quién contesta».
 3. **Fichas y guías:** [modulos](../../rules/modulos.md), [concurrencia](../../rules/concurrencia.md), [multitenancy](../../rules/multitenancy.md), [guardado](../../rules/guardado.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [tests](../../rules/tests.md) y la [receta de acciones](../../guides/agregar-una-accion-al-asistente.md).
 4. **Código para copiar:** la columna «Copia de» de los [pasos](#pasos).
 5. **Referencia de producto,** solo para leer: en `../ArquitecturaBase/docs/plans/2026-10-23-traspaso-multitenant/`, el anexo F, F2.
@@ -42,11 +42,11 @@ Datos de ejemplo: el principal, Delta; Delta Soporte y Delta Ventas, de esos equ
 | Tablero | Qué muestra | Estados |
 | --- | --- | --- |
 | `WA-Asistentes` y `M-WA-Asistentes` | la lista, como las de WhatsApp: el asistente, si es el principal, en su columna (206), sus equipos y su estado. Tiene «Nuevo asistente» y el ⋮ con Editar y Dar de baja o Reactivar. Cada uno abre `WA-Asistente` | el menú, el del principal («Dar de baja» grisado, con el motivo), nuevo asistente, falta el nombre, creando, dar de baja, uno de baja, un solo asistente, sin equipos, cargando y error |
-| `WA-Equipo-Asistente` y `M-WA-Equipo-Asistente` | «Asistente de este equipo», un desplegable en «Editar equipo» de la 11. Sin elegir, contesta el principal | elegir el asistente (uno de baja no se elige), sin elegir, un asistente de baja y un solo asistente |
+| `WA-Equipo-Asistente` y `M-WA-Equipo-Asistente` | «Asistente de este equipo», en la pieza (262), en «Editar equipo» de la 11. Sin elegir, contesta el principal | elegir el asistente (uno de baja no se elige), sin elegir, un asistente de baja y un solo asistente |
 | `WA-Chats-Casos-24` y `M-WA-Chats-Casos-24` | sobre `WA-Chats-Casos`: el nombre del asistente que contesta, en la cabecera, la lista, cada respuesta y «Por qué respondió esto». Un chat nuevo arranca con el menú del bot | eligió Soporte, por qué respondió, pasó a Ventas (con el mismo historial), un equipo sin asistente (contesta el principal) y un solo asistente, sin menú |
 
-**Se redibujan con el traspaso 18, tanda 4** (262 a 264):
-- `WA-Asistentes` y `M-WA-Asistentes`: el encabezado y «Ordenar por» ordenan «Asistente» y «Estado», y «Equipos» no, porque son varios; sin orden elegido va el principal primero y después por nombre, sin flecha (264). En el teléfono, sin datos juntos con «·», como «Delta · principal» (263);
+**Se redibujan con el traspaso 18, tanda 4** (206 y 262 a 264):
+- `WA-Asistentes` y `M-WA-Asistentes`: «Principal» en su columna, no junto al nombre (206); el encabezado y «Ordenar por» ordenan «Asistente» y «Estado», y «Equipos» no, porque son varios; sin orden elegido va el principal primero y después por nombre, sin flecha (264). En el teléfono, sin datos juntos con «·», como «Delta · principal» (263);
 - `WA-Equipo-Asistente` y `M-WA-Equipo-Asistente`: «Asistente de este equipo», en la pieza: sin elegir, el campo dice en gris que contesta el principal, y uno de baja va apagado con su motivo (262).
 
 El recorrido guiado «Dos equipos con su asistente» muestra a Lucía asignando el asistente de Ventas, a Martina eligiendo «Consultar un pedido» y el pase a Ventas, hasta el principal en un equipo sin asistente.
@@ -97,7 +97,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 | --- | --- | --- | --- | --- |
 | B1 | Varios agentes | suma a `D/Assistant/AssistantAgent.cs` y `AssistantAgentService.cs` [E23]; la migración | esos mismos | el principal no se da de baja; un asistente de baja; nombre repetido; el nuevo arranca con la copia del principal, con su nombre |
 | B2 | La asignación | suma a `D/WhatsApp/WhatsAppTeam.cs` y `WhatsAppTeamService.cs`; la migración | esos mismos | otro módulo opaco; un asistente de baja |
-| B3 | Elegir quién contesta | `A/Modules/WhatsApp/Services/WhatsAppAgentResolver.cs`; suma a `WhatsAppAssistantTurnService.cs` [E23] | `WhatsAppBotResolver.cs` | sin equipo; equipo sin asistente; cambiar de equipo con el mismo historial; el tope de ofrecimientos del que contesta, con el contador del chat, y con el tope lleno deriva (278) |
+| B3 | Elegir quién contesta: el paso de la [0070](../../decisions/0070-motor-que-contesta-whatsapp.md) §1, entre `WhatsAppAssistantTurnPolicy` y `WhatsAppConversationTurnBuilder` | `A/Modules/WhatsApp/Services/WhatsAppAgentResolver.cs`; suma a `WhatsAppAssistantTurnService.cs` [E23] | `WhatsAppBotResolver.cs` | sin equipo; equipo sin asistente; cambiar de equipo con el mismo historial; el tope de ofrecimientos del que contesta, con el contador del chat, y con el tope lleno deriva (278) |
 | B4 | El menú al empezar | suma a `WhatsAppAttentionBotWriter.cs` y `WhatsAppInboundGuard.cs` | esos mismos | con uno y con varios; la persona elige |
 | B5 | Rutas y contratos | suma a `OrganizationWhatsAppAssistantController.cs` y a los equipos, con sus contratos en `P/Modules/WhatsApp/Contracts/WhatsAppAttentionHttpContracts.cs` | esos mismos | cada ruta con 401, 403 y feature apagada = 404; segunda página; ejemplos exportados; aislamiento |
 
@@ -113,7 +113,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 
 ## Acciones del asistente
 
-Con la [receta](../../guides/agregar-una-accion-al-asistente.md) (268 y [0068](../../decisions/0068-acciones-del-asistente.md)), registrada y sin ofrecer hasta la calificación: `assistants.create@1` · Nuevo asistente, en su diálogo sobre el Inicio (`Dialog`), con el nombre (`Text`), `whatsapp.manage` y `POST api/organization/whatsapp/assistant/agents`, sin efecto fuera del sistema. La declara `A/Modules/WhatsApp/Services/WhatsAppAssistantActionSource.cs`, con su pantalla en `AssistantActionScreen` y su traducción a `AssistantRouteKey`, y valida con el validador del pedido; el nombre repetido lo decide la ruta.
+Con la [receta](../../guides/agregar-una-accion-al-asistente.md) (268 y [0068](../../decisions/0068-acciones-del-asistente.md)), registrada y sin ofrecer hasta la calificación: `assistants.create@1` · Nuevo asistente, en su diálogo sobre el Inicio (`Dialog`), con el nombre (`Text`), `whatsapp.manage` y `POST api/organization/whatsapp/assistant/agents`, sin efecto fuera del sistema. La declara `A/Modules/WhatsApp/Services/WhatsAppAgentActionSource.cs` [E23], la fuente de la `@1`, con su pantalla en `AssistantActionScreen` y su traducción a `AssistantRouteKey`, y valida con el validador del pedido; el nombre repetido lo decide la ruta.
 
 Las declara la misma fuente, que lee los asistentes por `IConversationAgentReader`, el lector del núcleo que implementa el Assistant (0068 §5):
 
@@ -123,7 +123,7 @@ Las declara la misma fuente, que lee los asistentes por `IConversationAgentReade
 | `assistants.remove@1` · Dar de baja | la confirmación de dar de baja de la lista (`RemoveConfirmation`); el principal no se ofrece | `POST …/agents/{id}/deactivation` |
 | `whatsappteams.assistant.edit@1` · El asistente de un equipo | «Editar equipo» (`Dialog`), con el equipo (`Record`) y el asistente (`Choice` de los activos) | `PUT …/teams/{id}/assistant` |
 
-Todas piden `whatsapp.manage`. La `@1` de la E23 se sigue leyendo un despliegue más (0060). **Reactivar no se declara:** es de un clic, sin confirmación (§9).
+Todas piden `whatsapp.manage`. La `@1` de la E23 se retira con su ruta, en el mismo despliegue: es la excepción de la 0060 de las rutas (todavía no hay despliegue, 123). Su adaptador del front se va con ella. **Reactivar no se declara:** es de un clic, sin confirmación (§9).
 
 ## Qué verificar al arrancar
 
