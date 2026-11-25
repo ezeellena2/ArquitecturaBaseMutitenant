@@ -1,6 +1,6 @@
 # E19 · Condiciones, cálculos y líneas (spec)
 
-**Estado:** pendiente · spec de la etapa 19 del bloque (decisiones 53, 54, 78, 146, 168, 177, 178, 204, 206, 227, 232, 233 y 235), con el [formato](plantilla.md) de las etapas. De ArquitecturaBase se toman el cálculo en el bloque y su redondeo, no sus operaciones fijas (232 y 233). El bloque es lo que allá llaman «Renglones en los formularios»: está programado entero y se probó de punta a punta con Meta el 2026-11-09. **Antes de programar** se prueba con Meta lo de «Requisitos previos» (K2 del plan).
+**Estado:** pendiente · spec de la etapa 19 del bloque (decisiones 53, 54, 78, 146, 168, 177, 178, 204, 206, 227, 232, 233 y 235), con el [formato](plantilla.md) de las etapas. De ArquitecturaBase se toman el cálculo en el bloque y su redondeo, no sus operaciones fijas (232 y 233). El bloque es lo que allá llaman «Renglones en los formularios». **Antes de programar** se prueba con Meta lo de «Requisitos previos» (K2 del plan).
 
 **Partes.** Esta spec no entra en un solo archivo, así que sigue en otro, con las mismas secciones. Lo que no está en la tabla está acá.
 
@@ -98,6 +98,7 @@ Aprobados en el lienzo v175, con el recorrido guiado `un-pedido-con-renglones`. 
 - `FRM-Respuestas-19` y su teléfono: el cálculo ordena y el bloque no (264), y en el teléfono nada debajo de otro dato (263);
 - `FRM-Editor-Condiciones` y `FRM-Editor-Calculo`, con sus teléfonos: la pregunta, la condición y el valor, el dato de la fórmula, la suma y la moneda, en la pieza, sin diálogo (262);
 - `FRM-Respuestas-Exportar-19`: «Filas» en la pieza (262);
+- `FRM-Editor-Lineas` y su teléfono: la fila del bloque, con «Bloque» en Tipo, «Sí» en Obligatoria si pide un ítem y el rango en su ✎ (263);
 - `FRM-Tablero-19` y su teléfono: los números de un monto, ninguno debajo de otro, y la tabla de una tarjeta, que ordena, como `FRM-Tablero` (263 y 264).
 
 **Estados que se dibujan:**
@@ -105,7 +106,7 @@ Aprobados en el lienzo v175, con el recorrido guiado `un-pedido-con-renglones`. 
 - **Publicar:** problemas por pregunta, con «Ir a la pregunta»;
 - **Planilla y detalle:** una respuesta con una pregunta oculta, un cálculo que quedó «Sin respuesta» y una respuesta de antes del bloque.
 
-**«Mostrar si»:** va en la pregunta abierta, en su caja, como las condiciones de las reglas de ArquitecturaBase: Pregunta, Condición y Valor, en la pieza (262) salvo un número o una fecha, que se escriben; el tacho, y «Agregar condición». Sin preguntas anteriores que sirvan, «Agregar condición» queda grisado, con el motivo en su tooltip. Una referencia rota queda en rojo, con el motivo debajo, y la pregunta dice «Corregir».
+**«Mostrar si»:** va en la pregunta abierta, en su caja: Pregunta, Condición y Valor, en la pieza (262) salvo un número o una fecha, que se escriben; el tacho, y «Agregar condición». Sin preguntas anteriores que sirvan, «Agregar condición» queda grisado, con el motivo en su tooltip. Una referencia rota queda en rojo, con el motivo debajo, y la pregunta dice «Corregir».
 
 **La fórmula:** piezas en una caja, con «Agregar dato ▾» (un número, una pregunta, un campo del catálogo o la suma de una pregunta del bloque) y + − × ÷ ( ). La pregunta, el campo, la suma y la moneda se eligen en la pieza (262), sin diálogo. En un cálculo del bloque, «Agregar dato ▾» ofrece solo lo de su ítem, sin la suma. «Es un monto», una casilla, pide la moneda, y los decimales salen de ella. Un número que se escribe, acá o en una condición, se lee con `parseDecimalText` (E12 y 207), con los dígitos de su pregunta (T9): «1.500» marca `numberAmbiguous` en su campo.
 
