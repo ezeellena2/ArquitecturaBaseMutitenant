@@ -38,7 +38,7 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
     /// El estado de un miembro de la empresa en SQL: la única expresión que usan el filtro, la fila y los conteos.
     /// Sigue a <c>CompanyMemberStatePolicy</c>, y un test de paridad las compara.
     /// </summary>
-    internal static readonly Expression<Func<StateInput, StateRow>> WithState = input => new StateRow
+    internal static readonly Expression<Func<StateInput, StateRow>> WithState = InvitationDeliveryProjection.InSql<StateInput, StateRow>(input => new StateRow
     {
         MemberId = input.MemberId,
         CompanyId = input.CompanyId,
@@ -53,20 +53,14 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
                     ? CompanyMemberState.PendingDeletion
                     : CompanyMemberState.Active,
         // La entrega y el vencimiento, solo en la invitación que incluye a esta empresa, como los muestra la fila; la
-        // entrega sigue a InvitationDeliveryProjection.FromOutbox.
+        // entrega, con la regla de InvitationDeliveryProjection.
         InvitationExpiresAtUtc = input.MemberStatus == MemberStatus.Invited
             && input.MembershipStatus == CompanyMembershipStatus.Active ? input.PendingInvitationExpiresAtUtc : null,
         InvitationDelivery = input.MemberStatus != MemberStatus.Invited
             || input.MembershipStatus != CompanyMembershipStatus.Active || input.PendingInvitationExpiresAtUtc == null
             ? null
-            : input.InvitationOutboxStatus == OutboxStatus.Pending
-                ? InvitationDeliveryStatus.Pending
-                : input.InvitationOutboxStatus == OutboxStatus.Uncertain
-                    ? InvitationDeliveryStatus.Uncertain
-                    : input.InvitationOutboxStatus == OutboxStatus.Failed || input.InvitationOutboxStatus == OutboxStatus.Cancelled
-                        ? InvitationDeliveryStatus.Failed
-                        : InvitationDeliveryStatus.Sent,
-    };
+            : InvitationDeliveryProjection.FromOutbox(input.InvitationOutboxStatus),
+    });
 
     public async Task<PagedResult<CompanyMemberRow>> ListAsync(Guid companyId,
         ListCompanyMembersRequest request, CancellationToken cancellationToken)

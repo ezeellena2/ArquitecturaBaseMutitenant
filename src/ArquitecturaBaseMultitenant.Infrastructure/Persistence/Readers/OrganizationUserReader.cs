@@ -36,7 +36,7 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
     /// El estado de una persona en SQL: la única expresión que usan el filtro, la fila y los conteos. Sigue a
     /// <c>OrganizationUserStatePolicy</c>, y un test de paridad las compara.
     /// </summary>
-    internal static readonly Expression<Func<StateInput, StateRow>> WithState = input => new StateRow
+    internal static readonly Expression<Func<StateInput, StateRow>> WithState = InvitationDeliveryProjection.InSql<StateInput, StateRow>(input => new StateRow
     {
         MemberId = input.MemberId,
         DisplayName = input.DisplayName,
@@ -44,18 +44,12 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
         CreatedAtUtc = input.CreatedAtUtc,
         PendingSinceUtc = input.MemberStatus == MemberStatus.Invited
             ? input.PendingInvitationExpiresAtUtc : input.DeletionRequestedAtUtc,
-        // La entrega y el vencimiento, solo en una invitación (Invited o Expired), como los muestra la fila; la entrega
-        // sigue a InvitationDeliveryProjection.FromOutbox.
+        // La entrega y el vencimiento, solo en una invitación (Invited o Expired), como los muestra la fila; la entrega,
+        // con la regla de InvitationDeliveryProjection.
         InvitationExpiresAtUtc = input.MemberStatus == MemberStatus.Invited ? input.PendingInvitationExpiresAtUtc : null,
         InvitationDelivery = input.MemberStatus != MemberStatus.Invited || input.PendingInvitationExpiresAtUtc == null
             ? null
-            : input.InvitationOutboxStatus == OutboxStatus.Pending
-                ? InvitationDeliveryStatus.Pending
-                : input.InvitationOutboxStatus == OutboxStatus.Uncertain
-                    ? InvitationDeliveryStatus.Uncertain
-                    : input.InvitationOutboxStatus == OutboxStatus.Failed || input.InvitationOutboxStatus == OutboxStatus.Cancelled
-                        ? InvitationDeliveryStatus.Failed
-                        : InvitationDeliveryStatus.Sent,
+            : InvitationDeliveryProjection.FromOutbox(input.InvitationOutboxStatus),
         State = input.MemberStatus == MemberStatus.Invited && input.PendingInvitationExpiresAtUtc != null
             ? input.PendingInvitationExpiresAtUtc <= input.NowUtc
                 ? OrganizationUserState.Expired
@@ -65,7 +59,7 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
                 : input.MemberStatus == MemberStatus.Active && input.UserStatus == UserStatus.Active
                     ? OrganizationUserState.Active
                     : OrganizationUserState.Inactive,
-    };
+    });
 
     public async Task<PagedResult<OrganizationUserRow>> ListAsync(ListOrganizationUsersRequest request,
         DateTime nowUtc, CancellationToken cancellationToken)

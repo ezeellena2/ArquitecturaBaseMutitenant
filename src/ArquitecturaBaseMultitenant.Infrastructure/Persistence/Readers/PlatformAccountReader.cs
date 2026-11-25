@@ -101,7 +101,8 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
         var email = signInTypes.Contains(LoginMethodType.Email);
         var google = signInTypes.Contains(LoginMethodType.Google);
         var phone = signInTypes.Contains(LoginMethodType.Phone);
-        return from user in context.Users.AsNoTracking()
+        // La entrega de la invitación, con la regla de InvitationDeliveryProjection también en SQL, para filtrar y ordenar.
+        return InvitationDeliveryProjection.InSql(from user in context.Users.AsNoTracking()
                    // Una invitación de operador revocada no es una cuenta: queda eliminada con su vencimiento como marca.
                where user.Status != UserStatus.Deleted || user.OperatorInvitationExpiresAtUtc == null
                let usable = context.LoginMethods.Any(method => method.UserId == user.Id && method.VerifiedAtUtc != null
@@ -131,7 +132,7 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
                        : user.Status == UserStatus.PendingDeletion ? PlatformAccountState.PendingDeletion
                        : PlatformAccountState.Deleted,
                    // Lo que muestran las columnas que ordenan (264): el teléfono principal o el correo, el último ingreso
-                   // (una invitación dice «Nunca») y la entrega de la invitación, como InvitationDeliveryProjection.FromOutbox.
+                   // (una invitación dice «Nunca») y la entrega de la invitación.
                    Contact = (user.Status == UserStatus.Deleted ? null : context.LoginMethods
                        .Where(method => method.UserId == user.Id && method.Type == LoginMethodType.Phone
                            && method.IsPrimary && method.VerifiedAtUtc != null)
@@ -139,13 +140,8 @@ internal sealed class PlatformAccountReader(ApplicationDbContext context) : IPla
                    LastSignInAtUtc = invitation ? null : context.LoginAudits
                        .Where(audit => audit.UserId == user.Id && audit.Succeeded)
                        .Max(audit => (DateTime?)audit.OccurredAtUtc),
-                   InvitationDelivery = !invitation ? null
-                       : outboxStatus == OutboxStatus.Pending ? InvitationDeliveryStatus.Pending
-                       : outboxStatus == OutboxStatus.Uncertain ? InvitationDeliveryStatus.Uncertain
-                       : outboxStatus == OutboxStatus.Failed || outboxStatus == OutboxStatus.Cancelled
-                           ? InvitationDeliveryStatus.Failed
-                       : InvitationDeliveryStatus.Sent,
-               };
+                   InvitationDelivery = !invitation ? null : InvitationDeliveryProjection.FromOutbox(outboxStatus),
+               });
     }
 
     private IQueryable<AccountProjection> Filter(IQueryable<AccountProjection> query, ListPlatformAccountsRequest request)

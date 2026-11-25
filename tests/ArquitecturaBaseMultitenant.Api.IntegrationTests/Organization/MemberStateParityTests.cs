@@ -1,6 +1,8 @@
+using System.Linq.Expressions;
 using ArquitecturaBaseMultitenant.Application.Services.Companies;
 using ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
@@ -53,6 +55,39 @@ public sealed class MemberStateParityTests
                 }
     }
 
+    /// <summary>
+    /// La entrega de una invitación que ven Personas y Miembros, también al filtrar y ordenar en SQL, es la de
+    /// <see cref="InvitationDeliveryProjection.FromOutbox"/> con cada estado de la cola, y sin ninguna llamada que EF no traduzca.
+    /// </summary>
+    [Fact]
+    public void The_invitation_delivery_in_sql_follows_the_projection()
+    {
+        var organization = OrganizationUserReader.WithState.Compile();
+        var company = CompanyMembershipReader.WithState.Compile();
+
+        foreach (var status in Enum.GetValues<OutboxStatus>().Select(value => (OutboxStatus?)value).Append(null))
+        {
+            var expected = InvitationDeliveryProjection.FromOutbox(status);
+            Assert.Equal(expected, organization(new OrganizationUserReader.StateInput
+            {
+                MemberStatus = MemberStatus.Invited,
+                PendingInvitationExpiresAtUtc = NowUtc.AddDays(1),
+                InvitationOutboxStatus = status,
+                NowUtc = NowUtc,
+            }).InvitationDelivery);
+            Assert.Equal(expected, company(new CompanyMembershipReader.StateInput
+            {
+                MemberStatus = MemberStatus.Invited,
+                MembershipStatus = CompanyMembershipStatus.Active,
+                PendingInvitationExpiresAtUtc = NowUtc.AddDays(1),
+                InvitationOutboxStatus = status,
+            }).InvitationDelivery);
+        }
+
+        Assert.False(MethodCalls.Find(OrganizationUserReader.WithState, nameof(InvitationDeliveryProjection.FromOutbox)));
+        Assert.False(MethodCalls.Find(CompanyMembershipReader.WithState, nameof(InvitationDeliveryProjection.FromOutbox)));
+    }
+
     [Fact]
     public void The_company_member_state_in_sql_follows_the_policy()
     {
@@ -72,5 +107,23 @@ public sealed class MemberStateParityTests
 
                     Assert.True(expected == actual, $"{memberStatus}, {userStatus}, {membershipStatus}: {expected} != {actual}");
                 }
+    }
+
+    private sealed class MethodCalls(string name) : ExpressionVisitor
+    {
+        private bool _found;
+
+        internal static bool Find(Expression expression, string name)
+        {
+            var visitor = new MethodCalls(name);
+            visitor.Visit(expression);
+            return visitor._found;
+        }
+
+        protected override Expression VisitMethodCall(MethodCallExpression node)
+        {
+            _found |= node.Method.Name == name;
+            return base.VisitMethodCall(node);
+        }
     }
 }
