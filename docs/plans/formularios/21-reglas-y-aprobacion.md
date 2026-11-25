@@ -1,6 +1,6 @@
 # E21 · Reglas, aprobación, PDF y avisos (spec)
 
-**Estado:** pendiente · spec de la etapa 21 del bloque (decisiones 34, 78, 82, 91 a 93, 100, 106, 113, 114, 158, 159, 161, 166, 170, 177, 228, 230, 236, 237, 239, 240, 261 a 264, 266, 267, 275 y 276; la 240 cambia la 80, y la 266, la 267 y la 276, la 25, la 139, la 166 y la 209), con el [formato](plantilla.md) de las etapas. Corresponde a la etapa 4 de ArquitecturaBase, con piloto real; a la etapa 3 de su carga desde la app, corregir y anular, programada allá el 2026-11-05, y a las etapas 3 y 4 de sus renglones: el PDF con el bloque, programado allá el 2026-11-07, y las reglas con el bloque, probadas allá de punta a punta con Meta el 9/11 (T12). «Por resolver», el aviso a quien cargó y lo demás del motor son de allá, del 15 al 17/11 (T14).
+**Estado:** pendiente · spec de la etapa 21 del bloque (decisiones 34, 78, 82, 91 a 93, 100, 106, 113, 114, 158, 159, 161, 166, 170, 177, 228, 230, 236, 237, 239, 240, 261 a 264, 266, 267, 275 y 276; la 240 cambia la 80, y la 266, la 267 y la 276, la 25, la 139, la 166 y la 209), con el [formato](plantilla.md) de las etapas. Corresponde a la etapa 4 de ArquitecturaBase; a la etapa 3 de su carga desde la app (corregir y anular) y a las etapas 3 y 4 de sus renglones, el PDF y las reglas con el bloque (T12). «Por resolver», el aviso a quien cargó y lo demás del motor son de allá (T14).
 
 **Partes.** Esta spec no entra en un solo archivo, así que sigue en otros tres, con las mismas secciones. Lo que no está en la tabla está acá.
 
@@ -8,7 +8,7 @@
 | --- | --- |
 | «Adjuntar el PDF», el bloque en las reglas, el motor de acciones, los avisos y los correos, el chat en «Mi cuenta», Contrato y Datos | [datos y contrato](21-parte-datos-y-contrato.md) |
 | «Corregir y anular» | [corregir y anular](21-parte-corregir-y-anular.md) |
-| La pregunta «Correo», Pasos, el detalle de «Acciones del asistente», «Qué verificar al arrancar» y «Lo que ya se pagó allá» | [pasos y qué verificar](21-parte-pasos-y-verificar.md) |
+| La pregunta «Correo», Pasos, el detalle de «Acciones del asistente», «Textos de los errores», «La prueba con Meta», «Qué verificar al arrancar» y «Lo que ya se pagó allá» | [pasos y qué verificar](21-parte-pasos-y-verificar.md) |
 
 ## Qué leer
 
@@ -160,9 +160,10 @@ La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba r
 ## En el multitenant
 
 - **Datos de la organización:** todo con RLS, salvo `platform.FormActionWorks`.
-- **Workers:** el de acciones abre un scope por organización con `SetFromAccess(tenantId, TenantKind.Business)`, como `WhatsAppInboundProcessor`, y suma a `TenantScopeUsageTests`: un aviso en un chat vinculado escribe la copia compartida, y con `Enter`, que usa `TenantJobRunner`, ese guardado falla ([multitenancy](../../rules/multitenancy.md)).
+- **Workers:** el de acciones abre un scope por organización con `SetFromAccess(tenantId, TenantKind.Business)`, como `WhatsAppInboundProcessor`, y suma a `TenantScopeUsageTests`: un aviso en un chat vinculado escribe la copia compartida, y con `Enter`, que usa `TenantJobRunner`, ese guardado falla ([multitenancy](../../rules/multitenancy.md)). No toma nada con otro anillo de claves (`IKeyRingReadiness`, [concurrencia](../../rules/concurrencia.md)) ni reserva en una organización con `forms` apagada (0069 §5), que sigue al prenderla.
 - **Feature `forms`:** las rutas la llevan.
 - **WhatsApp:** los avisos salen por el número de la organización.
-- **Almacenamiento:** los PDF van en `IFileStore`, con la categoría `forms`.
+- **Almacenamiento:** los PDF van en `IFileStore`, con su categoría, `form-documents`, que suma a su limpieza la de la E18 (`FormFileCleanupWorker`).
 - **«Para resolver»:** un `IPendingGroupSource` del módulo.
 - **Cuotas:** las rutas cuentan en las cuotas generales.
+- **Topes:** 20 reglas, 10 condiciones y 10 acciones, 3 firmas, 500 caracteres y las consultas automáticas son de capacidad o técnicos y quedan en el código (270).
