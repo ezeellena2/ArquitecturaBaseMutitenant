@@ -6,7 +6,6 @@ using ArquitecturaBaseMultitenant.Application.Models.Identity;
 using ArquitecturaBaseMultitenant.Application.Models.Retention;
 using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Results;
-using ArquitecturaBaseMultitenant.Domain.Settings;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
@@ -19,23 +18,29 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 internal sealed class IdentityRetentionService(
     IIdentityRetentionRepository retention,
     IOpenIddictPruner sessions,
+    IPlatformSettingsReader settings,
     IUnitOfWork unitOfWork,
     TimeProvider timeProvider,
     ILogger<IdentityRetentionService> logger) : IIdentityRetentionService
 {
     public Task<Result<int>> PurgeLoginCodesAsync(CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, timeProvider, "PurgeLoginCodes", () =>
-            unitOfWork.ExecuteInTransactionAsync(async ct => Result.Success(await retention.DeleteLoginCodesAsync(
-                    IdentityRetentionPolicy.LoginCodesBeforeUtc(NowUtc(), IdentityRetentionPeriods.Default),
-                    IdentityRetentionPolicy.BatchSize, ct)),
-                CommitPolicy.OnSuccess, cancellationToken));
+        OperationLog.RunAsync(logger, timeProvider, "PurgeLoginCodes", async () =>
+        {
+            // 272: el plazo sale de «Privacidad y retención» de Plataforma en cada lote.
+            var periods = await settings.FindRetentionPeriodsAsync(cancellationToken);
+            return await unitOfWork.ExecuteInTransactionAsync(async ct => Result.Success(await retention.DeleteLoginCodesAsync(
+                    IdentityRetentionPolicy.LoginCodesBeforeUtc(NowUtc(), periods), IdentityRetentionPolicy.BatchSize, ct)),
+                CommitPolicy.OnSuccess, cancellationToken);
+        });
 
     public Task<Result<RetentionBatch>> PurgeLoginAuditsAsync(RetentionCursor? after, CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, timeProvider, "PurgeLoginAudits", () =>
-            unitOfWork.ExecuteInTransactionAsync(async ct => Result.Success(await retention.DeleteLoginAuditsAsync(
-                    IdentityRetentionPolicy.LoginAuditsBeforeUtc(NowUtc(), IdentityRetentionPeriods.Default), after,
-                    IdentityRetentionPolicy.BatchSize, ct)),
-                CommitPolicy.OnSuccess, cancellationToken));
+        OperationLog.RunAsync(logger, timeProvider, "PurgeLoginAudits", async () =>
+        {
+            var periods = await settings.FindRetentionPeriodsAsync(cancellationToken);
+            return await unitOfWork.ExecuteInTransactionAsync(async ct => Result.Success(await retention.DeleteLoginAuditsAsync(
+                    IdentityRetentionPolicy.LoginAuditsBeforeUtc(NowUtc(), periods), after, IdentityRetentionPolicy.BatchSize, ct)),
+                CommitPolicy.OnSuccess, cancellationToken);
+        });
 
     public Task<Result<OpenIddictPruneTranche>> PruneSessionsAsync(DateTime? fromUtc,
         CancellationToken cancellationToken) =>

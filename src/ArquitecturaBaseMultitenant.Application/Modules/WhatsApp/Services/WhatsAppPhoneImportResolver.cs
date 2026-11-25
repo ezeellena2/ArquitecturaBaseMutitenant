@@ -15,7 +15,7 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// en el orden en que llegan; un número repetido se carga una sola vez.
 /// </summary>
 internal sealed class WhatsAppPhoneImportResolver(IPhoneNumberParser phones, IWhatsAppChannelSettings settings,
-    IActiveMemberPhoneReader members)
+    WhatsAppSettingsResolver configuration, IActiveMemberPhoneReader members)
 {
     internal bool CanInvite => settings.IsEnabled;
 
@@ -24,6 +24,7 @@ internal sealed class WhatsAppPhoneImportResolver(IPhoneNumberParser phones, IWh
         var parsed = inputs.Select(input => phones.Parse(input.Country, input.Number, PhoneUsage.Mobile)).ToArray();
         var valid = parsed.Where(result => result.IsSuccess).Select(result => result.Value).DistinctBy(phone => phone.Value).ToArray();
         var known = (await members.ListMembersAsync(valid, ct)).ToDictionary(member => member.Phone, StringComparer.Ordinal);
+        var allowed = await configuration.AllowedCountriesAsync(ct);
         var seen = new HashSet<string>(StringComparer.Ordinal);
         var rows = new List<Row>(parsed.Length);
         for (var index = 0; index < parsed.Length; index++)
@@ -38,7 +39,7 @@ internal sealed class WhatsAppPhoneImportResolver(IPhoneNumberParser phones, IWh
             var outcome = !seen.Add(phone.Value) ? WhatsAppPhoneImportOutcome.Invalid
                 : known.TryGetValue(phone.Value, out var member)
                     ? member.IsActive ? WhatsAppPhoneImportOutcome.AlreadyMember : WhatsAppPhoneImportOutcome.Invalid
-                : settings.CountryOf(phone.Value) is { } country && settings.Countries.Contains(country, StringComparer.Ordinal)
+                : settings.CountryOf(phone.Value) is { } country && allowed.Contains(country, StringComparer.Ordinal)
                     ? WhatsAppPhoneImportOutcome.Invite : WhatsAppPhoneImportOutcome.Invalid;
             var name = outcome == WhatsAppPhoneImportOutcome.Invite ? null : known.GetValueOrDefault(phone.Value)?.DisplayName;
             rows.Add(new Row(phone, new(number, phone.Value, name, outcome)));

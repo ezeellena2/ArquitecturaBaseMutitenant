@@ -53,10 +53,11 @@ public sealed class LoginMethodsCapabilitiesTests
     private sealed record Channel(string Key, LoginMethodType SupportedMethodType, bool IsAvailable,
         IReadOnlyList<string> Countries, string? ContactPhone, LoginAuditMethod AuditMethod = LoginAuditMethod.Code) : ILoginCodeChannel
     {
-        public Result ValidateNewDestination(LoginCodeDestination destination, string? country) => Result.Success();
-        public string RenderLoginCode(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw new NotSupportedException();
+        public Task<IReadOnlyList<string>> CountriesAsync(CancellationToken ct) => Task.FromResult(Countries);
+        public Task<Result> ValidateNewDestinationAsync(LoginCodeDestination destination, string? country, CancellationToken ct) => Task.FromResult(Result.Success());
+        public Task<string> RenderLoginCodeAsync(string destination, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken ct) => throw new NotSupportedException();
         public void EnqueueRenderedLoginCode(string payload, int lifetimeMinutes, Guid? userId = null) => throw new NotSupportedException();
-        public void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw new NotSupportedException();
-        public void EnqueueVerification(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw new NotSupportedException();
+        public Task EnqueueSignupAsync(string destination, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken ct) => throw new NotSupportedException();
+        public Task EnqueueVerificationAsync(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken ct) => throw new NotSupportedException();
     }
 }

@@ -219,9 +219,9 @@ public sealed class WhatsAppQuotaEnqueueTests(ApiFactory factory) : IClassFixtur
                 var result = await admission.ReserveAsync(destination, protectedLogin ? LoginCodePurpose.Login : LoginCodePurpose.BusinessSignup, owner, ct);
                 if (result.IsFailure) return result;
                 // Real rendering/encrypted enqueue in a technical transaction fixture; no Meta send or proof claim.
-                new WhatsAppLoginCodeChannel(p.GetRequiredService<IWhatsAppChannelSettings>(), p.GetRequiredService<IWhatsAppTemplateRenderer>(), p.GetRequiredService<IOutbox>())
-                    .EnqueueVerification(owner, destination.Value, "123456", 10,
-                    await p.GetRequiredService<UserCultureResolver>().ResolveAsync(null, null, ct));
+                await new WhatsAppLoginCodeChannel(p.GetRequiredService<IWhatsAppChannelSettings>(), null!, p.GetRequiredService<IWhatsAppTemplateRenderer>(), p.GetRequiredService<IOutbox>())
+                    .EnqueueVerificationAsync(owner, destination.Value, "123456", 10,
+                    await p.GetRequiredService<UserCultureResolver>().ResolveAsync(null, null, ct), ct);
                 return abort ? Result.Failure(Error.Conflict("Test.Transaction.Abort", "Fixture rollback.")) : result;
             }, CommitPolicy.OnSuccess, Ct);
         }

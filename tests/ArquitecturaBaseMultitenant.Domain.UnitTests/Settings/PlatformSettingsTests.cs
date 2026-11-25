@@ -134,4 +134,24 @@ public sealed class PlatformSettingsTests
         Assert.Equal("America/Argentina/Buenos_Aires", settings.DefaultTimeZoneId);
         Assert.Equal("ARS", settings.DefaultCurrency);
     }
+
+    [Fact]
+    public void A_removed_logo_stays_removed_while_one_never_saved_takes_the_bootstrap_logo()
+    {
+        const string Bootstrap = "https://cdn.example.test/arranque.png";
+        var settings = PlatformSettings.Create(ConsumerSignupMode.Open, BusinessSignupMode.Open, 1);
+        Assert.Equal(Bootstrap, PlatformSettings.EffectiveLogoUrl(settings.EmailLogoUrl, Bootstrap));
+
+        Assert.True(settings.UpdateRules(null, null, null, null, null, "https://cdn.example.test/plataforma.png").IsSuccess);
+        Assert.Equal("https://cdn.example.test/plataforma.png", PlatformSettings.EffectiveLogoUrl(settings.EmailLogoUrl, Bootstrap));
+
+        // Quitarlo deja el logo vacío, no null: los correos salen sin logo y no vuelve el de arranque.
+        Assert.True(settings.UpdateRules(null, null, null, null, null, string.Empty).IsSuccess);
+        Assert.Equal(string.Empty, settings.EmailLogoUrl);
+        Assert.Null(PlatformSettings.EffectiveLogoUrl(settings.EmailLogoUrl, Bootstrap));
+
+        // Sin logo en el pedido se conserva lo guardado, también el quitado.
+        Assert.True(settings.UpdateRules(24, null, null, null, null, null).IsSuccess);
+        Assert.Null(PlatformSettings.EffectiveLogoUrl(settings.EmailLogoUrl, Bootstrap));
+    }
 }

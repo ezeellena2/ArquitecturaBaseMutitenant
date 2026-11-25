@@ -15,6 +15,10 @@ internal sealed class WhatsAppOptions
     public string? EmbeddedSignupConfigId { get; init; }
     public bool HasWebhookSecrets => !string.IsNullOrWhiteSpace(AppSecret) && !string.IsNullOrWhiteSpace(VerifyToken);
     public string GraphApiVersion { get; init; } = "v26.0";
+    /// <summary>
+    /// Respaldo de los países que reciben códigos mientras Plataforma no guarda los suyos en la configuración de WhatsApp (270);
+    /// se borra en el despliegue siguiente (0060).
+    /// </summary>
     public string[] AllowedCountries { get; set; } = ["AR"];
     [Range(1, 10000)] public int DailyAuthCodeLimit { get; init; } = 100;
     [Range(typeof(decimal), "0", "1")] public decimal ProtectedAuthCodeFraction { get; init; } = 0.2m;

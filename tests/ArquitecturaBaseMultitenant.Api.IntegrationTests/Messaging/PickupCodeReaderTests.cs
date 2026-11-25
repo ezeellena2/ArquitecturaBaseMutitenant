@@ -36,7 +36,7 @@ public sealed class PickupCodeReaderTests(ApiFactory factory) : IClassFixture<Ap
         var invitation = await renderer.RenderInvitationAsync(recipient,
             new InvitationNotice("Organización", "Invitante", nowUtc.AddDays(1), "UTC",
                 "https://example.test/invitacion#fixture123456token", false), profile, Ct);
-        var authentication = renderer.RenderLoginCode(recipient, expectedCode, 10, profile);
+        var authentication = await renderer.RenderLoginCodeAsync(recipient, expectedCode, 10, profile, Ct);
         var protector = services.GetRequiredService<IPayloadProtector>();
         var first = OutboxMessage.Enqueue("email", protector.Protect(JsonSerializer.Serialize(invitation)), nowUtc.AddMinutes(-1));
         var second = OutboxMessage.Enqueue("email", protector.Protect(JsonSerializer.Serialize(authentication)), nowUtc);

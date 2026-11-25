@@ -20,4 +20,7 @@ public static class PlatformSettingsLimits
 
     /// <summary>El nombre de la aplicación y el del remitente, en los correos y las respuestas del bot.</summary>
     public const int NameMaxLength = 60;
+
+    /// <summary>El largo máximo de la dirección del logo de los correos.</summary>
+    public const int LogoUrlMaxLength = 2048;
 }

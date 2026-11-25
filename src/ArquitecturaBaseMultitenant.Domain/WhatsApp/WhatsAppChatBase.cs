@@ -67,6 +67,9 @@ public abstract class WhatsAppChatBase : Entity, IVersioned
         if (nowUtc >= LastMessageAtUtc) { LastMessageAtUtc = nowUtc; LastMessagePreview = Preview(preview); }
     }
 
+    /// <summary>La retención de los chats (272): la vista previa del último mensaje vencido se borra con él.</summary>
+    public void ClearPreview() => LastMessagePreview = null;
+
     /// <summary>
     /// Una conversación nueva (la ventana de 24 horas se había cerrado) vuelve a pasar por el bot: sin equipo ni quien la tome.
     /// </summary>

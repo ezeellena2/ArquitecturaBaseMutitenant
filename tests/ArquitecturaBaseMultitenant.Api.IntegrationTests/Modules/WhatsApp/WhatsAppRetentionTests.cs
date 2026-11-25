@@ -31,7 +31,8 @@ public sealed class WhatsAppRetentionTests(ApiFactory factory) : IClassFixture<A
             var service = scope.ServiceProvider.GetRequiredService<IWhatsAppMessageRetentionService>();
             Assert.Equal(100, (await service.ClearExpiredTextsAsync(Ct)).Value);
         }
-        using var worker = new RetentionWorker(host.Services.GetRequiredService<IServiceScopeFactory>(), host.Services.GetRequiredService<TimeProvider>(), NullLogger<RetentionWorker>.Instance);
+        using var worker = new RetentionWorker(host.Services.GetRequiredService<IServiceScopeFactory>(),
+            host.Services.GetRequiredService<ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs.TenantJobRunner>(), host.Services.GetRequiredService<TimeProvider>(), NullLogger<RetentionWorker>.Instance);
         Assert.True(await worker.RunOnceAsync(Ct) >= 107); Assert.Equal(0, await worker.RunOnceAsync(Ct));
         await using var read = host.Services.CreateAsyncScope(); var database = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var ids = messages.Select(value => value.Id).ToArray();

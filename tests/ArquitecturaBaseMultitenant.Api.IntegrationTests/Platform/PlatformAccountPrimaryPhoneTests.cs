@@ -58,8 +58,8 @@ public sealed class PlatformAccountPrimaryPhoneTests(ApiFactory factory)
         await AuthorizeOperatorAsync(platform);
         var account = await SeedAsync(enabled.Services, "PhoneOnly");
         Assert.True(channel.IsAvailable);
-        Assert.Empty(channel.Countries);
-        Assert.True(channel.ValidateNewDestination(LoginCodeDestination.ForPhone(PhoneNumber.Create(account.Phone).Value, channel.Key), "AR").IsFailure);
+        Assert.Empty(await channel.CountriesAsync(Ct));
+        Assert.True((await channel.ValidateNewDestinationAsync(LoginCodeDestination.ForPhone(PhoneNumber.Create(account.Phone).Value, channel.Key), "AR", Ct)).IsFailure);
         await AssertIdentityAsync(platform, account, PersonalDataMask.Phone(account.Phone));
         var detail = await GetAsync(platform, account.Id.ToString("D"));
         Assert.True(Assert.Single(detail.GetProperty("loginMethods").EnumerateArray()).GetProperty("canSignIn").GetBoolean());
@@ -247,12 +247,13 @@ public sealed class PlatformAccountPrimaryPhoneTests(ApiFactory factory)
         public string Key => "existing-phone";
         public LoginMethodType SupportedMethodType => LoginMethodType.Phone;
         public bool IsAvailable => true;
-        public IReadOnlyList<string> Countries => [];
+        public Task<IReadOnlyList<string>> CountriesAsync(CancellationToken ct) => Task.FromResult<IReadOnlyList<string>>([]);
         public string? ContactPhone => null;
-        public Result ValidateNewDestination(LoginCodeDestination destination, string? country) => PhoneErrors.Invalid;
-        public string RenderLoginCode(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw new NotSupportedException();
+        public Task<Result> ValidateNewDestinationAsync(LoginCodeDestination destination, string? country, CancellationToken ct) =>
+            Task.FromResult<Result>(PhoneErrors.Invalid);
+        public Task<string> RenderLoginCodeAsync(string destination, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken ct) => throw new NotSupportedException();
         public void EnqueueRenderedLoginCode(string payload, int lifetimeMinutes, Guid? userId = null) => throw new NotSupportedException();
-        public void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw new NotSupportedException();
-        public void EnqueueVerification(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw new NotSupportedException();
+        public Task EnqueueSignupAsync(string destination, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken ct) => throw new NotSupportedException();
+        public Task EnqueueVerificationAsync(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken ct) => throw new NotSupportedException();
     }
 }

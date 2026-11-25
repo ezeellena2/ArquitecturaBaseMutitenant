@@ -69,9 +69,9 @@ public sealed class WhatsAppCodeQuotaPersistenceTests(ApiFactory factory) : IAsy
             if (code.IsFailure) return Result.Failure(code.Error);
             var admitted = await issuer.AdmitAsync(Destination, code.Value, ct);
             if (admitted.IsFailure) return admitted;
-            var channel = new WhatsAppLoginCodeChannel(_settings, provider.GetRequiredService<IWhatsAppTemplateRenderer>(), provider.GetRequiredService<IOutbox>());
-            channel.EnqueueVerification(userId, Destination.Value, code.Value.Code, code.Value.LifetimeMinutes,
-                await provider.GetRequiredService<UserCultureResolver>().ResolveAsync(null, null, ct));
+            var channel = new WhatsAppLoginCodeChannel(_settings, null!, provider.GetRequiredService<IWhatsAppTemplateRenderer>(), provider.GetRequiredService<IOutbox>());
+            await channel.EnqueueVerificationAsync(userId, Destination.Value, code.Value.Code, code.Value.LifetimeMinutes,
+                await provider.GetRequiredService<UserCultureResolver>().ResolveAsync(null, null, ct), ct);
             code.Value.LoginCode.MarkSent(code.Value.IssuedAtUtc);
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
@@ -112,12 +112,11 @@ public sealed class WhatsAppCodeQuotaPersistenceTests(ApiFactory factory) : IAsy
     }
     private sealed class Settings : IWhatsAppChannelSettings
     {
-        public string AppName => "Fixture";
         public bool IsEnabled => true;
         public string PhoneNumberId { get; } = Guid.NewGuid().ToString("N");
         public string? ContactPhone => null;
-        public IReadOnlyList<string> Countries => ["AR"];
+        public IReadOnlyList<string> ConfiguredCountries => ["AR"];
         public int DailyAuthCodeLimit => 2;
-        public Result ValidateNewDestination(LoginCodeDestination destination) => Result.Success();
+        public Result ValidateNewDestination(LoginCodeDestination destination, IReadOnlyList<string> allowedCountries) => Result.Success();
     }
 }

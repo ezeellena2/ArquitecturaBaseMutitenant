@@ -160,6 +160,8 @@ public sealed class ReferenceDataHardcodeTests
             && violation == $"line {index + 1}: es-AR");
     }
 
+    // El único país fijo es el respaldo de WhatsApp:AllowedCountries: desde la B18 los países salen de la configuración de
+    // WhatsApp de Plataforma (270), y la clave queda solo hasta el despliegue siguiente (0060).
     private static bool IsOperationalCountryDefault(string path, string source, string violation) =>
         path == "ArquitecturaBaseMultitenant.Infrastructure/Modules/WhatsApp/WhatsAppOptions.cs"
         && source.Split('\n').Select((line, index) => (line, index)).Any(item =>

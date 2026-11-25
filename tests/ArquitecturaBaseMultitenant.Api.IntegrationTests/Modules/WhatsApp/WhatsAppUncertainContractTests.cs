@@ -17,7 +17,7 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 
 /// <summary>
 /// Contrato de la segunda parte de la base de la 12 (K1) en WhatsApp: «Sin confirmar» y su revisión en las tres bases, los
-/// motivos de lo que no salió, el tope de códigos por cuenta y las dos configuraciones, en 501 hasta la B18.
+/// motivos de lo que no salió, el tope de códigos por cuenta y las dos configuraciones (B18).
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class WhatsAppUncertainContractTests(ApiFactory factory)
@@ -71,6 +71,7 @@ public sealed class WhatsAppUncertainContractTests(ApiFactory factory)
             var codes = put["x-error-codes"]!.AsArray().Select(value => value!["code"]!.GetValue<string>()).ToArray();
             Assert.Contains("General.ConcurrencyConflict", codes);
             Assert.Contains("Validation.Failed", codes);
+            Assert.DoesNotContain(ContractErrors.NotImplementedCode, codes);
             Assert.Null(put["parameters"]?.AsArray().FirstOrDefault(value => value!["name"]!.GetValue<string>() == "Idempotency-Key"));
         }
         var schemas = document["components"]!["schemas"]!;
@@ -112,7 +113,7 @@ public sealed class WhatsAppUncertainContractTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Review_answers_behind_access_and_module_and_settings_answer_501()
+    public async Task Review_answers_behind_access_and_module_and_settings_keep_their_version()
     {
         using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var owner = await AccountJourney.RegisterAsync(factory, client, Ct);
@@ -129,16 +130,29 @@ public sealed class WhatsAppUncertainContractTests(ApiFactory factory)
             Assert.Equal(WhatsAppErrors.ConversationNotFoundCode, problem.RootElement.GetProperty("code").GetString());
         }
         using (var settings = await client.GetAsync("/api/organization/whatsapp/settings", Ct))
-            await AssertNotImplementedAsync(settings);
-        using (var update = await client.PutAsJsonAsync("/api/organization/whatsapp/settings", new { chatRetentionDays = 90, version = 0 }, Ct))
-            await AssertNotImplementedAsync(update);
-    }
-
-    private static async Task AssertNotImplementedAsync(HttpResponseMessage response)
-    {
-        Assert.Equal(HttpStatusCode.NotImplemented, response.StatusCode);
-        using var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync(Ct));
-        Assert.Equal(ContractErrors.NotImplementedCode, problem.RootElement.GetProperty("code").GetString());
+        {
+            Assert.Equal(HttpStatusCode.OK, settings.StatusCode);
+            using var body = JsonDocument.Parse(await settings.Content.ReadAsStringAsync(Ct));
+            Assert.Equal(WhatsAppSettingsLimits.DefaultChatRetentionDays, body.RootElement.GetProperty("chatRetentionDays").GetInt32());
+            Assert.Equal(0u, body.RootElement.GetProperty("version").GetUInt32());
+        }
+        using (var update = await client.PutAsJsonAsync("/api/organization/whatsapp/settings", new { chatRetentionDays = 30, version = 0 }, Ct))
+            Assert.Equal(HttpStatusCode.OK, update.StatusCode);
+        using (var saved = await client.GetAsync("/api/organization/whatsapp/settings", Ct))
+        {
+            using var body = JsonDocument.Parse(await saved.Content.ReadAsStringAsync(Ct));
+            Assert.Equal(30, body.RootElement.GetProperty("chatRetentionDays").GetInt32());
+            Assert.NotEqual(0u, body.RootElement.GetProperty("version").GetUInt32());
+        }
+        using (var stale = await client.PutAsJsonAsync("/api/organization/whatsapp/settings", new { chatRetentionDays = 60, version = 0 }, Ct))
+        {
+            Assert.Equal(HttpStatusCode.Conflict, stale.StatusCode);
+            using var problem = JsonDocument.Parse(await stale.Content.ReadAsStringAsync(Ct));
+            Assert.Equal("General.ConcurrencyConflict", problem.RootElement.GetProperty("code").GetString());
+        }
+        using (var outside = await client.PutAsJsonAsync("/api/organization/whatsapp/settings",
+            new { chatRetentionDays = WhatsAppSettingsLimits.MaxChatRetentionDays + 1, version = 0 }, Ct))
+            Assert.Equal(HttpStatusCode.BadRequest, outside.StatusCode);
     }
 
     private async Task EnableAsync(Guid tenantId)

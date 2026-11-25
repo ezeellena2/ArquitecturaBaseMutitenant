@@ -25,7 +25,7 @@ public sealed class WhatsAppChannelSettingsTests
         var (settings, state) = Settings(reader, new WhatsAppOptions());
         reader.Row = status is { } value ? new WhatsAppPlatformChannelRow(Guid.NewGuid(), "fixture-number", "+15551234567", value, true) : null;
         await state.RefreshAsync(Ct);
-        var channel = new WhatsAppLoginCodeChannel(settings, null!, null!);
+        var channel = new WhatsAppLoginCodeChannel(settings, null!, null!, null!);
         Assert.Equal("whatsapp", channel.Key);
         Assert.Equal(LoginMethodType.Phone, channel.SupportedMethodType);
         Assert.Equal(codes, channel.IsAvailable);
@@ -62,18 +62,40 @@ public sealed class WhatsAppChannelSettingsTests
         var reader = new Reader { Row = new WhatsAppPlatformChannelRow(Guid.NewGuid(), "technical-id", null, WhatsAppNumberStatus.Connected, false) };
         var (settings, state) = Settings(reader, new WhatsAppOptions { AllowedCountries = ["AR"] });
         await state.RefreshAsync(Ct);
-        var channel = new WhatsAppLoginCodeChannel(settings, null!, null!);
-        var result = channel.ValidateNewDestination(LoginCodeDestination.ForPhone(PhoneNumber.Create(phone).Value, "whatsapp"), declaredCountry);
+        var channel = new WhatsAppLoginCodeChannel(settings, new WhatsAppSettingsResolver(new SettingsReader(null), settings), null!, null!);
+        var result = await channel.ValidateNewDestinationAsync(LoginCodeDestination.ForPhone(PhoneNumber.Create(phone).Value, "whatsapp"), declaredCountry, Ct);
         Assert.Equal(allowed, result.IsSuccess);
         if (!allowed) Assert.Equal("WhatsApp.Phone.CountryNotAllowed", result.Error.Code);
+    }
+
+    [Theory]
+    [InlineData("+5491134567890", false)]
+    [InlineData("+14155552671", true)]
+    public async Task Countries_saved_by_platform_replace_the_configured_ones_on_each_request(string phone, bool allowed)
+    {
+        var reader = new Reader { Row = new WhatsAppPlatformChannelRow(Guid.NewGuid(), "technical-id", null, WhatsAppNumberStatus.Connected, false) };
+        var (settings, state) = Settings(reader, new WhatsAppOptions { AllowedCountries = ["AR"] });
+        await state.RefreshAsync(Ct);
+        var saved = new SettingsReader(new WhatsAppPlatformSettingsRow(["US"], 90, 3650, 1));
+        var channel = new WhatsAppLoginCodeChannel(settings, new WhatsAppSettingsResolver(saved, settings), null!, null!);
+
+        Assert.Equal(["US"], await channel.CountriesAsync(Ct));
+        var result = await channel.ValidateNewDestinationAsync(LoginCodeDestination.ForPhone(PhoneNumber.Create(phone).Value, "whatsapp"), null, Ct);
+        Assert.Equal(allowed, result.IsSuccess);
+    }
+
+    private sealed class SettingsReader(WhatsAppPlatformSettingsRow? platform) : IWhatsAppSettingsReader
+    {
+        public Task<WhatsAppPlatformSettingsRow?> FindPlatformAsync(CancellationToken ct) => Task.FromResult(platform);
+        public Task<WhatsAppOrganizationSettingsRow?> FindOrganizationAsync(CancellationToken ct) =>
+            Task.FromResult<WhatsAppOrganizationSettingsRow?>(null);
     }
 
     private static (WhatsAppChannelSettings Settings, WhatsAppPlatformChannelState State) Settings(Reader reader, WhatsAppOptions options)
     {
         var provider = new ServiceCollection().AddSingleton<IWhatsAppChannelReader>(reader).BuildServiceProvider();
         var state = new WhatsAppPlatformChannelState(provider.GetRequiredService<IServiceScopeFactory>(), Options.Create(options));
-        return (new WhatsAppChannelSettings(Options.Create(options),
-            Options.Create(new ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email.EmailOptions()), state), state);
+        return (new WhatsAppChannelSettings(Options.Create(options), state), state);
     }
 
     /// <summary>Solo el número vigente de Plataforma; las demás lecturas no se usan en estas pruebas.</summary>

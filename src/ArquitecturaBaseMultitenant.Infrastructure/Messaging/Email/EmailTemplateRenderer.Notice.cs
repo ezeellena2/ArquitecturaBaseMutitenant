@@ -13,10 +13,12 @@ internal sealed partial class EmailTemplateRenderer
     /// Tablero Mensajes: el título, los párrafos, la grilla de datos, el botón, las notas y, en el pie, el del aviso arriba
     /// del de todos los correos. Los textos llegan traducidos y formateados: acá solo se escapan y se ubican.
     /// </summary>
-    public EmailMessage RenderNotice(string to, EmailNotice notice, CultureProfile culture)
+    public async Task<EmailMessage> RenderNoticeAsync(string to, EmailNotice notice, CultureProfile culture,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(notice);
-        var layoutFooter = NotificationTexts.Format("Layout.Footer", culture, options.Value.AppName);
+        var branding = await BrandingAsync(cancellationToken);
+        var layoutFooter = NotificationTexts.Format("Layout.Footer", culture, branding.AppName);
         var content = Fill("Notice.html", new Dictionary<string, string>
         {
             ["Title"] = Encode(notice.Title),
@@ -35,7 +37,7 @@ internal sealed partial class EmailTemplateRenderer
         {
             ["Lang"] = Encode(culture.Entry.LanguageCode),
             ["Title"] = Encode(notice.Title),
-            ["Header"] = HeaderHtml(),
+            ["Header"] = HeaderHtml(branding),
             ["Content"] = content,
             ["Footer"] = notice.Footer is { Length: > 0 } footer ? Encode(footer) + "<br>" + Encode(layoutFooter) : Encode(layoutFooter),
         });

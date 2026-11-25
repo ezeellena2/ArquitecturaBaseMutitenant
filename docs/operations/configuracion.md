@@ -77,13 +77,14 @@ Mismos valores que `../ArquitecturaBase/src/ArquitecturaBase.Api/appsettings.Dev
 | `Authentication:Issuer` | `https://localhost:5174/` (el origen del front del multitenant) |
 | `Email:Delivery` | `Smtp`; `PickupDirectory` escribe `.eml` sin enviar solo en Development o Testing |
 | `Email:Smtp:Host` / `Port` | `smtp.gmail.com` / `587` (STARTTLS) |
-| `Email:Smtp:FromName` | el nombre del producto; con la decisión 273 pasa a Plataforma › Configuración |
-| `Email:AppName` | nombre de plataforma usado también por los replies del bot; no altera la frase neutra del operador; con la decisión 273 pasa a Plataforma › Configuración |
+| `Email:Smtp:FromName` | el remitente de arranque: el respaldo de «Nombre y correos» de Plataforma › Configuración mientras no tenga uno guardado (decisión 273); el canal lo lee antes de cada envío |
+| `Email:AppName` | el nombre de arranque: el respaldo de «Nombre y correos» para los correos y las respuestas del bot (273), y el emisor de la app autenticadora de los operadores (ver el inventario) |
+| `Email:LogoUrl` | opcional: el logo de arranque de los correos, que vale mientras «Nombre y correos» no tenga uno guardado; si Plataforma lo quita, los correos salen sin logo |
 | `WhatsApp:BusinessAccountId`, `DisplayPhoneNumber`, `SendArgentineMobilesWithoutNine` | los mismos de ArquitecturaBase (el último, solo con el número de prueba) |
 | `WhatsApp:GraphApiVersion`, `Templates:LoginCode`, `AllowedCountries`, `DailyAuthCodeLimit` | `v26.0` desde la E11 (Embedded Signup v4); los demás, los de `appsettings.json` de ArquitecturaBase (`codigo_ingreso`, `["AR"]`, `100`) |
 | `WhatsApp:Templates:Invitation` y las demás `WhatsApp:Templates:<Nombre>` | **no se copian** de ArquitecturaBase: Invitation es invitacion_organizacion. El módulo configura **16 nombres es/en** (Authentication + 15 Utility), incluidas recuperación/baja por Plataforma y organización. Configurar una clave no acredita aprobación en Meta. Dos «en uso» quedan derogadas, y no hay OTP de confirmación de cambios en Mi cuenta. Claves/paquete según [plantillas](whatsapp-plantillas.md) y ADR 0049. |
 
-`WhatsApp:AllowedCountries` reemplaza la lista predeterminada; no se suma a ella. Configurar solo `US` no conserva `AR`. La política se aplica al registro y a los métodos nuevos o pendientes, también al reenviar y verificar; un Phone ya verificado conserva ingreso y avisos aunque su país deje de admitirse. El país real se obtiene del E.164, no del campo `country` recibido. Con la B18 de la [segunda parte de la base](../plans/2026-11-19-etapa-base-de-la-12-segunda-parte.md) pasa a la configuración de Plataforma (decisión 270 de la [hoja de ruta de formularios](../plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md)); hasta entonces manda esta clave.
+Los países que reciben códigos por WhatsApp son los de «Países que reciben códigos» en la configuración de WhatsApp de Plataforma (`/api/platform/whatsapp/settings`, decisión 270 de la [hoja de ruta de formularios](../plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md)), leídos de la base en cada pedido. `WhatsApp:AllowedCountries` queda solo de respaldo mientras Plataforma no guarde los suyos, hasta el despliegue siguiente ([0060](../decisions/0060-dos-versiones-conviven.md)); el primer guardado parte de esa lista. La lista reemplaza la predeterminada; no se suma a ella: guardar solo `US` no conserva `AR`. La política se aplica al registro y a los métodos nuevos o pendientes, también al reenviar y verificar; un Phone ya verificado conserva ingreso y avisos aunque su país deje de admitirse. El país real se obtiene del E.164, no del campo `country` recibido.
 
 El bot de ingreso ya no emite enlaces (base de la 12, decisión 179): «Entrar a mi cuenta» abre el ingreso, donde el código se pide desde la web, y no quedan opciones `Authentication:LoginLink`. Un reply libre pendiente vence al cerrar la ventana de 24 horas, comprobada también antes de enviar a Cloud API.
 
@@ -97,7 +98,7 @@ La IP de las cuotas se guarda como HMAC con `Authentication:LoginCode:HashKey` y
 
 Desde la E11 el webhook depende solo de `WhatsApp:AppSecret` y `WhatsApp:VerifyToken` (lo usan también los números de las organizaciones). El token de cada número conectado se guarda cifrado en `identity.WhatsAppChannels`; el de la configuración se copia ahí al arrancar.
 
-La retención de texto es fija de **90 días desde `ReceivedAtUtc`** del servidor; no tiene clave para ampliarla. El worker corre al arrancar y una vez por día, con scopes/lotes propios, incluso sin `PhoneNumberId` ni secretos de Meta. Apagar el canal no desactiva esa limpieza. La exportación OpenAPI no inicia mantenimiento ni necesita base; retirar las fuentes del módulo sigue la receta de [quitar WhatsApp](../guides/quitar-whatsapp.md).
+La copia global de cada mensaje que entra (`identity.WhatsAppMessages`) vence a los **90 días fijos desde `ReceivedAtUtc`**: es técnica y además se purga al pasar a la organización. El contenido de los chats vence con el plazo de su dueño (decisión 272): el de la configuración de WhatsApp de cada organización, hasta el máximo que fija Plataforma, y el de la de Plataforma para su número; sin nada guardado, 90 días. El worker corre al arrancar y una vez por día, cada organización en su alcance con `TenantJobRunner` y la plataforma aparte, en lotes que toman solo filas libres (`SKIP LOCKED`), incluso sin `PhoneNumberId` ni secretos de Meta. Apagar el canal no desactiva esa limpieza. La exportación OpenAPI no inicia mantenimiento ni necesita base; retirar las fuentes del módulo sigue la receta de [quitar WhatsApp](../guides/quitar-whatsapp.md).
 
 **Con el depurador de Visual Studio,** el proveedor de log Debug manda cada línea a la ventana Salida y frena todo el proceso: allá bajó de unos 690 a unos 11 pedidos por segundo. Por eso `Logging:Debug:LogLevel:Default` está en Warning en el `appsettings.Development.json` de la Api desde la base de la 12, y `BuildConfigurationTests` lo controla; la consola y la telemetría no cambian (traspaso 9).
 
@@ -106,6 +107,33 @@ La retención de texto es fija de **90 días desde `ReceivedAtUtc`** del servido
 ### Reglas de negocio en pantalla (270)
 
 Un tope, un plazo, un cupo, una espera o un valor por defecto de una regla de negocio no va en `appsettings` ni fijo en el código: va en la configuración de su dueño, con su valor por defecto, su mínimo, su máximo, revisión y 409, y se lee de la base en cada uso (decisión 270 de la [hoja de ruta de formularios](../plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md)). Cada organización ajusta lo suyo dentro del máximo que fija la plataforma, y lo que no es de ninguna organización lo fija la plataforma. Quedan acá solo los secretos, lo que fija un proveedor, lo técnico y lo de seguridad, costo o abuso (los cupos de códigos, de invitaciones y de pedidos). Sacar una clave de este archivo sigue la regla de las dos versiones ([0060](../decisions/0060-dos-versiones-conviven.md)): la versión nueva lee la base antes de que se borre la clave, y la clave se borra con la reconstrucción que ya la lee.
+
+**Lo que ya pasó a la configuración de su dueño** (B18 de la [segunda parte de la base](../plans/2026-11-19-etapa-base-de-la-12-segunda-parte.md)):
+
+| Valor | Dónde vive | Respaldo hasta el despliegue siguiente |
+|---|---|---|
+| Los plazos del ingreso: auditoría (12 meses), códigos (30 días) e invitaciones cerradas (30 días) (272) | Plataforma › Configuración, «Privacidad y retención» | ninguno: sin fila, los de defecto |
+| El plazo de los chats de WhatsApp (90 días) y el máximo de las organizaciones (272) | la configuración de WhatsApp de Plataforma y la de cada organización | ninguno: sin fila, los de defecto |
+| Los países que reciben códigos (270) | la configuración de WhatsApp de Plataforma | `WhatsApp:AllowedCountries` |
+| El nombre de la app, el remitente y el logo de los correos y del bot (273) | Plataforma › Configuración, «Nombre y correos» | `Email:AppName`, `Email:Smtp:FromName` y `Email:LogoUrl` |
+| Las conversaciones del Inicio | el `retentionDays` del asistente de cada organización | ninguno |
+| Las cuotas de los doce perfiles | Plataforma › Configuración (E9) | `RateLimiting:<Perfil>`, solo para el seed |
+
+**Lo que se queda en `appsettings` o en el código, con su motivo:**
+
+| Valor | Clave o lugar | Motivo |
+|---|---|---|
+| Vigencia, largo, intentos, espera para reenviar y bloqueo de los códigos de ingreso | `Authentication:LoginCode` | seguridad: frenan la adivinación y el abuso, y el mismo valor vale para todas las organizaciones |
+| Vigencia de una invitación (7 días) | `Authentication:Invitations:LifetimeDays` | seguridad: es lo que dura un enlace que da acceso a una organización |
+| Vida del código de autorización, del token, del refresh y de la cookie | `Authentication:Lifetimes` | seguridad de la sesión |
+| El emisor de la app autenticadora de los operadores | `Email:AppName` | queda guardado en cada autenticador al vincularlo: cambiarlo en pantalla dejaría el mismo factor con dos nombres |
+| Topes diarios de correo y su reserva para invitaciones | `Email:Quotas` | costo y abuso ([0063](../decisions/0063-topes-de-correo-de-la-plataforma.md)) |
+| Cupo diario de códigos por WhatsApp, su parte protegida y los de IP y cuenta | `WhatsApp:DailyAuthCodeLimit` y vecinas | costo y abuso: Meta cobra cada código |
+| Los nombres de las plantillas de Meta | `WhatsApp:Templates` | los fija el proveedor al aprobarlas ([plantillas](whatsapp-plantillas.md)) |
+| La versión de Graph, las esperas y los reintentos de la entrada y la salida | `WhatsApp:GraphApiVersion`, `InboundLeaseSeconds`, `InboundMaxAttempts`, `Messaging:Outbox` | técnico: cómo trabaja la cola, no qué decide el negocio |
+| La copia global de la entrada de WhatsApp (90 días) | fijo en `WhatsAppMessageRetentionService` | técnico: se purga al pasar a la organización y no la ve nadie |
+| Lote y ciclo de la baja de cuentas, vigencia y limpieza de la idempotencia | `AccountDeletion`, `Idempotency` | técnico |
+| Los tiempos, la concurrencia y la cola del asistente, y el tamaño de los archivos | `Assistant` | técnico y de costo; el cupo de cada organización va en su configuración ([0064](../decisions/0064-reglas-de-toda-la-ia.md)) |
 
 ## 4. Lo que tenés que hacer vos, una sola vez, fuera del código
 

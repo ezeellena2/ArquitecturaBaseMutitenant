@@ -19,7 +19,7 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// dueño posterior del número.
 /// </summary>
 internal sealed class WhatsAppSignInReplyIssuer(IWhatsAppChannelSettings settings, IOutbox outbox, IPublicOrigin origin,
-    IPlatformSettingsReader platform, WhatsAppBotReplyBuilder replies)
+    IPlatformSettingsReader platform, WhatsAppBotReplyBuilder replies, WhatsAppSettingsResolver configuration)
 {
     internal async Task IssueAsync(WhatsAppInboundContext context, string destination, DateTime expiresAtUtc, bool consultations, CancellationToken ct)
     {
@@ -48,11 +48,14 @@ internal sealed class WhatsAppSignInReplyIssuer(IWhatsAppChannelSettings setting
             url = Url(context.Message.ReplyId == BotButtons.SignIn ? "login" : "recuperar");
         }
         else if ((await platform.FindAsync(ct))?.ConsumerSignup == ConsumerSignupMode.Open
-            && settings.ValidateNewDestination(LoginCodeDestination.ForPhone(PhoneNumber.Create(destination).Value, "whatsapp")).IsSuccess)
+            && settings.ValidateNewDestination(LoginCodeDestination.ForPhone(PhoneNumber.Create(destination).Value, "whatsapp"),
+                await configuration.AllowedCountriesAsync(ct)).IsSuccess)
         { body = "Bot.Unknown"; label = "Bot.Create"; url = Url("registro?channel=whatsapp"); }
         else { body = "Bot.Closed"; choices = true; }
         // Con las consultas prendidas el chat sirve para más que entrar: el pie de la Etapa 8 deja de ser cierto.
-        var reply = await replies.BuildAsync(numberId, destination, settings.AppName, account?.Culture, body, expiresAtUtc, ct,
+        // El nombre de la app es el de «Nombre y correos» de Plataforma (273), leído para cada respuesta.
+        var appName = (await platform.FindBrandingAsync(ct)).AppName;
+        var reply = await replies.BuildAsync(numberId, destination, appName, account?.Culture, body, expiresAtUtc, ct,
             name, url, label, choices, footer: !consultations);
         outbox.Enqueue("whatsapp", JsonSerializer.Serialize(reply), context.Message.OriginalUserId, reply.QueueOptions(OutboxPriority.Reply));
     }

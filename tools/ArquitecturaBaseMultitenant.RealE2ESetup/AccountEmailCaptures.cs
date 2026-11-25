@@ -52,7 +52,7 @@ internal static class AccountEmailCaptures
         foreach (var culture in new[] { "es-AR", "en-US" })
         {
             var profile = await new CultureProfiles(catalog).LoadAsync(culture, CancellationToken.None);
-            var verify = renderer.RenderVerifyEmailCode("visual@example.test", "715204", 10, profile);
+            var verify = await renderer.RenderVerifyEmailCodeAsync("visual@example.test", "715204", 10, profile, CancellationToken.None);
             await File.WriteAllTextAsync(Path.Combine(directory, $"verificar-metodo-{culture}.html"), verify.HtmlBody);
             foreach (var (key, notice) in notices)
             {

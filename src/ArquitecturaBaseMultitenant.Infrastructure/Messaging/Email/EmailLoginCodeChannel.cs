@@ -18,24 +18,28 @@ internal sealed class EmailLoginCodeChannel(IEmailTemplateRenderer templates, IO
     public LoginMethodType SupportedMethodType => LoginMethodType.Email;
     public LoginAuditMethod AuditMethod => LoginAuditMethod.Code;
     public bool IsAvailable => true;
-    public IReadOnlyList<string> Countries => [];
+    public Task<IReadOnlyList<string>> CountriesAsync(CancellationToken ct) => Task.FromResult<IReadOnlyList<string>>([]);
     public string? ContactPhone => null;
-    public Result ValidateNewDestination(LoginCodeDestination destination, string? country) => destination.Channel == Key
-        ? Result.Success() : Result.Failure(LoginChannelErrors.Unavailable);
+    public Task<Result> ValidateNewDestinationAsync(LoginCodeDestination destination, string? country, CancellationToken ct) =>
+        Task.FromResult(destination.Channel == Key ? Result.Success() : Result.Failure(LoginChannelErrors.Unavailable));
 
-    public string RenderLoginCode(string destination, string code, int lifetimeMinutes, CultureProfile culture) =>
-        JsonSerializer.Serialize(templates.RenderLoginCode(destination, code, lifetimeMinutes, culture));
+    public async Task<string> RenderLoginCodeAsync(string destination, string code, int lifetimeMinutes, CultureProfile culture,
+        CancellationToken ct) =>
+        JsonSerializer.Serialize(await templates.RenderLoginCodeAsync(destination, code, lifetimeMinutes, culture, ct));
 
     public void EnqueueRenderedLoginCode(string payload, int lifetimeMinutes, Guid? userId = null) =>
         outbox.Enqueue(Key, payload, userId, Expiring(lifetimeMinutes));
 
-    public void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture) =>
+    public async Task EnqueueSignupAsync(string destination, string code, int lifetimeMinutes, CultureProfile culture,
+        CancellationToken ct) =>
         outbox.Enqueue(Key, JsonSerializer.Serialize(
-            templates.RenderSignupCode(destination, code, lifetimeMinutes, culture)), options: Expiring(lifetimeMinutes));
+            await templates.RenderSignupCodeAsync(destination, code, lifetimeMinutes, culture, ct)), options: Expiring(lifetimeMinutes));
 
-    public void EnqueueVerification(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture) =>
+    public async Task EnqueueVerificationAsync(Guid? userId, string destination, string code, int lifetimeMinutes,
+        CultureProfile culture, CancellationToken ct) =>
         outbox.Enqueue(Key, JsonSerializer.Serialize(
-            templates.RenderVerifyEmailCode(destination, code, lifetimeMinutes, culture)), userId, Expiring(lifetimeMinutes));
+            await templates.RenderVerifyEmailCodeAsync(destination, code, lifetimeMinutes, culture, ct)), userId,
+            Expiring(lifetimeMinutes));
 
     private OutboxEnqueueOptions Expiring(int lifetimeMinutes)
     {

@@ -64,7 +64,7 @@ public sealed class WhatsAppStartupTests
         services.AddLogging(); services.AddSingleton<IConfiguration>(configuration);
         WhatsAppInfrastructureModule.AddWhatsAppModule(services, configuration);
         using var provider = services.BuildServiceProvider();
-        Assert.Equal(["US"], provider.GetRequiredService<IWhatsAppChannelSettings>().Countries);
+        Assert.Equal(["US"], provider.GetRequiredService<IWhatsAppChannelSettings>().ConfiguredCountries);
     }
 
     private static ServiceProvider Provider(bool number, bool token, bool app, bool verify)

@@ -20,7 +20,7 @@ internal sealed class LoginCodeDeliveryIssuer(IUserRepository users, ILoginMetho
         var culture = await cultures.ResolveAsync(account?.Culture, null, ct);
         var channel = channels.SingleOrDefault(value => value.Key == destination.Channel && value.IsAvailable);
         if (channel is null) return LoginChannelErrors.Unavailable;
-        var payload = channel.RenderLoginCode(destination.Value, issued.Code, issued.LifetimeMinutes, culture);
+        var payload = await channel.RenderLoginCodeAsync(destination.Value, issued.Code, issued.LifetimeMinutes, culture, ct);
         if (userId is { } knownUserId)
         {
             var expired = account?.OperatorInvitationExpiresAtUtc is { } expires && expires <= issued.IssuedAtUtc;

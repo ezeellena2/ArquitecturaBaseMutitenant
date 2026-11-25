@@ -33,7 +33,7 @@ internal sealed class UpdatePlatformSettingsRequestValidator : AbstractValidator
         When(request => request.AppName is not null, () => RuleFor(request => request.AppName).Required().MaxLength(PlatformSettingsLimits.NameMaxLength));
         When(request => request.SenderName is not null, () => RuleFor(request => request.SenderName).Required().MaxLength(PlatformSettingsLimits.NameMaxLength));
         RuleFor(request => request.EmailLogoUrl)
-            .Must(url => string.IsNullOrEmpty(url) || Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps)
+            .Must(url => string.IsNullOrEmpty(url) || PlatformSettings.IsSecureUrl(url))
             .WithMessage(_ => ValidationTexts.SecureUrlInvalid);
         // Sin rateLimits se conservan las cuotas; con ellas, van los doce perfiles completos (E9).
         When(request => request.RateLimits is not null, () =>

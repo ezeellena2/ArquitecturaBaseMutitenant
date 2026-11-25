@@ -17987,7 +17987,7 @@
         "tags": [
           "WhatsApp Business management"
         ],
-        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo. Configuración de WhatsApp de la organización (272): chatRetentionDays, de 1 al máximo de la plataforma, con version en el PUT y el 409 de siempre. Un valor fuera de su mínimo o su máximo es el 400 de validación en su campo. 501 hasta la B18.",
+        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo. Configuración de WhatsApp de la organización (272): chatRetentionDays, de 1 al máximo de la plataforma, con version en el PUT y el 409 de siempre. Un valor fuera de su mínimo o su máximo es el 400 de validación en su campo.",
         "responses": {
           "200": {
             "description": "OK",
@@ -18035,38 +18035,6 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
                 }
               }
             }
@@ -18121,13 +18089,6 @@
         ],
         "x-error-codes": [
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 429,
             "code": "Security.RateLimit.Exceeded",
             "field": null,
@@ -18145,7 +18106,7 @@
         "tags": [
           "WhatsApp Business management"
         ],
-        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo. Configuración de WhatsApp de la organización (272): chatRetentionDays, de 1 al máximo de la plataforma, con version en el PUT y el 409 de siempre. Un valor fuera de su mínimo o su máximo es el 400 de validación en su campo. 501 hasta la B18.",
+        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo. Configuración de WhatsApp de la organización (272): chatRetentionDays, de 1 al máximo de la plataforma, con version en el PUT y el 409 de siempre. Un valor fuera de su mínimo o su máximo es el 400 de validación en su campo.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -18281,38 +18242,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -18363,13 +18292,6 @@
         ],
         "x-error-codes": [
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 400,
             "code": "Validation.Failed",
             "field": null,
@@ -18403,7 +18325,7 @@
         "tags": [
           "WhatsApp Platform management"
         ],
-        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo. Configuración de WhatsApp de la plataforma (270 y 272): allowedCountries (al menos uno, de los países habilitados, sin repetir), chatRetentionDays y maxOrganizationChatRetentionDays, con version en el PUT y el 409 de siempre. Un valor fuera de su mínimo o su máximo es el 400 de validación en su campo. 501 hasta la B18.",
+        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo. Configuración de WhatsApp de la plataforma (270 y 272): allowedCountries (al menos uno, de los países habilitados, sin repetir), chatRetentionDays y maxOrganizationChatRetentionDays, con version en el PUT y el 409 de siempre. Un valor fuera de su mínimo o su máximo es el 400 de validación en su campo.",
         "responses": {
           "200": {
             "description": "OK",
@@ -18455,38 +18377,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -18537,13 +18427,6 @@
         ],
         "x-error-codes": [
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 429,
             "code": "Security.RateLimit.Exceeded",
             "field": null,
@@ -18561,7 +18444,7 @@
         "tags": [
           "WhatsApp Platform management"
         ],
-        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo. Configuración de WhatsApp de la plataforma (270 y 272): allowedCountries (al menos uno, de los países habilitados, sin repetir), chatRetentionDays y maxOrganizationChatRetentionDays, con version en el PUT y el 409 de siempre. Un valor fuera de su mínimo o su máximo es el 400 de validación en su campo. 501 hasta la B18.",
+        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo. Configuración de WhatsApp de la plataforma (270 y 272): allowedCountries (al menos uno, de los países habilitados, sin repetir), chatRetentionDays y maxOrganizationChatRetentionDays, con version en el PUT y el 409 de siempre. Un valor fuera de su mínimo o su máximo es el 400 de validación en su campo.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -18719,38 +18602,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -18800,13 +18651,6 @@
           }
         ],
         "x-error-codes": [
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
           {
             "status": 400,
             "code": "Validation.Failed",

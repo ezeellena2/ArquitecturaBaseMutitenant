@@ -58,12 +58,12 @@ public sealed class AssistantHelpAvailabilityTests
         internal int SendCalls { get; private set; }
         private InvalidOperationException UnexpectedCall() { SendCalls++; return new("Only Key and IsAvailable can be read."); }
         public LoginMethodType SupportedMethodType => throw UnexpectedCall();
-        public IReadOnlyList<string> Countries => throw UnexpectedCall();
+        public Task<IReadOnlyList<string>> CountriesAsync(CancellationToken ct) => throw UnexpectedCall();
         public string? ContactPhone => throw UnexpectedCall();
-        public Result ValidateNewDestination(LoginCodeDestination destination, string? country) => throw UnexpectedCall();
-        public string RenderLoginCode(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw UnexpectedCall();
+        public Task<Result> ValidateNewDestinationAsync(LoginCodeDestination destination, string? country, CancellationToken ct) => throw UnexpectedCall();
+        public Task<string> RenderLoginCodeAsync(string destination, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken ct) => throw UnexpectedCall();
         public void EnqueueRenderedLoginCode(string payload, int lifetimeMinutes, Guid? userId = null) => throw UnexpectedCall();
-        public void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw UnexpectedCall();
-        public void EnqueueVerification(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw UnexpectedCall();
+        public Task EnqueueSignupAsync(string destination, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken ct) => throw UnexpectedCall();
+        public Task EnqueueVerificationAsync(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken ct) => throw UnexpectedCall();
     }
 }

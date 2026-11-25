@@ -40,7 +40,7 @@ internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepo
         }
 
         // Pedir otro código reemplaza sólo el pendiente propio. Los ajenos se reclaman al probar posesión.
-        var validNew = destinations.ValidateNew(destination);
+        var validNew = await destinations.ValidateNewAsync(destination, ct);
         if (validNew.IsFailure) return validNew.Error;
         await RemoveOwnPendingAsync(userId, type, destination.Value, ct);
         var method = LoginDestinationResolver.Create(userId, destination);
@@ -62,7 +62,7 @@ internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepo
         var resolved = destinations.FromMethod(method);
         if (resolved.IsFailure) return resolved.Error;
         var destination = resolved.Value;
-        var validNew = destinations.ValidateNew(destination);
+        var validNew = await destinations.ValidateNewAsync(destination, ct);
         if (validNew.IsFailure) return validNew.Error;
         await codes.LockDestinationAsync(destination, ct);
         var latestCode = await codes.GetLatestAsync(destination,
@@ -110,8 +110,8 @@ internal sealed class LoginMethodIssuer(LoginMethodGuard guard, ILoginMethodRepo
         var profile = await cultures.ResolveAsync(culture, null, ct);
         var admitted = await codes.AdmitAsync(resolved.Value, code, ct);
         if (admitted.IsFailure) return admitted.Error;
-        channel.EnqueueVerification(userId, method.Value, code.Code, code.LifetimeMinutes,
-            profile);
+        await channel.EnqueueVerificationAsync(userId, method.Value, code.Code, code.LifetimeMinutes,
+            profile, ct);
         code.LoginCode.MarkSent(code.IssuedAtUtc);
         return new LoginMethodCodeResponse(method.Id, code.ResendCooldownSeconds);
     }

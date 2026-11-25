@@ -169,12 +169,12 @@ public sealed class WhatsAppCodeQuotaTests
     }
     internal sealed class Settings : IWhatsAppChannelSettings
     {
-        public string AppName => "Fixture"; public bool IsEnabled { get; set; } = true;
+        public bool IsEnabled { get; set; } = true;
         public string PhoneNumberId => "quota-fixture"; public string? ContactPhone => null;
-        public IReadOnlyList<string> Countries => []; public int DailyAuthCodeLimit { get; set; } = 100;
+        public IReadOnlyList<string> ConfiguredCountries => []; public int DailyAuthCodeLimit { get; set; } = 100;
         public int DailyNewAuthCodeIpLimit { get; set; } = 20;
         public int DailyAccountCodeLimit { get; set; } = 10;
-        public Result ValidateNewDestination(LoginCodeDestination destination) => Result.Success();
+        public Result ValidateNewDestination(LoginCodeDestination destination, IReadOnlyList<string> allowedCountries) => Result.Success();
     }
     private sealed class Request : IRequestInfo { public string? IpAddress { get; set; } public string? UserAgent => null; }
     private sealed class Google : IGoogleAvailability { public bool IsEnabled => false; }
@@ -189,12 +189,12 @@ public sealed class WhatsAppCodeQuotaTests
     private sealed class Channel : ILoginCodeChannel
     {
         public string Key => "whatsapp"; public LoginMethodType SupportedMethodType => LoginMethodType.Phone;
-        public bool IsAvailable => true; public IReadOnlyList<string> Countries => []; public string? ContactPhone => null;
-        public Result ValidateNewDestination(LoginCodeDestination destination, string? country) => Result.Success();
-        public string RenderLoginCode(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw new NotSupportedException();
+        public bool IsAvailable => true; public Task<IReadOnlyList<string>> CountriesAsync(CancellationToken ct) => Task.FromResult<IReadOnlyList<string>>([]); public string? ContactPhone => null;
+        public Task<Result> ValidateNewDestinationAsync(LoginCodeDestination destination, string? country, CancellationToken ct) => Task.FromResult(Result.Success());
+        public Task<string> RenderLoginCodeAsync(string destination, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken ct) => throw new NotSupportedException();
         public void EnqueueRenderedLoginCode(string payload, int lifetimeMinutes, Guid? userId = null) => throw new NotSupportedException();
-        public void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw new NotSupportedException();
-        public void EnqueueVerification(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw new NotSupportedException();
+        public Task EnqueueSignupAsync(string destination, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken ct) => throw new NotSupportedException();
+        public Task EnqueueVerificationAsync(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken ct) => throw new NotSupportedException();
     }
     private sealed class Quotas : IWhatsAppCodeQuotaRepository
     {

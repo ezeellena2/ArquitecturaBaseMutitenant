@@ -24,6 +24,18 @@ public sealed class PlatformSettings : Entity, IAuditable, IVersioned
     public Email? SalesEmail { get; private set; }
     public Email? SupportEmail { get; private set; }
     public PlatformRateLimits RateLimits { get; private set; } = PlatformRateLimits.Initial;
+    /// <summary>«Privacidad y retención» (decisión 272): cuánto se guardan los ingresos, los códigos y las invitaciones cerradas.</summary>
+    public int LoginAuditRetentionMonths { get; private set; } = PlatformSettingsLimits.DefaultLoginAuditRetentionMonths;
+    public int LoginCodeRetentionDays { get; private set; } = PlatformSettingsLimits.DefaultLoginCodeRetentionDays;
+    public int ClosedInvitationRetentionDays { get; private set; } = PlatformSettingsLimits.DefaultClosedInvitationRetentionDays;
+    /// <summary>
+    /// «Nombre y correos» (decisión 273): null mientras Plataforma no los guarda, y entonces valen <c>Email:AppName</c> y
+    /// <c>Email:Smtp:FromName</c> (0060). El logo es null mientras no se guarda (vale <c>Email:LogoUrl</c>) y vacío si Plataforma lo
+    /// quitó: así no vuelve el de arranque (<see cref="EffectiveLogoUrl"/>). Sin logo, los correos llevan solo el nombre.
+    /// </summary>
+    public string? AppName { get; private set; }
+    public string? SenderName { get; private set; }
+    public string? EmailLogoUrl { get; private set; }
     public DateTime CreatedAtUtc { get; private set; }
     public Guid? CreatedBy { get; private set; }
     public DateTime? ModifiedAtUtc { get; private set; }
@@ -75,6 +87,48 @@ public sealed class PlatformSettings : Entity, IAuditable, IVersioned
         RateLimits = rateLimits ?? RateLimits;
         return Result.Success();
     }
+
+    /// <summary>Los plazos de retención del núcleo que usan las purgas de la ADR 0062.</summary>
+    public IdentityRetentionPeriods RetentionPeriods =>
+        new(LoginAuditRetentionMonths, LoginCodeRetentionDays, ClosedInvitationRetentionDays);
+
+    /// <summary>
+    /// Los plazos (272) y el nombre, el remitente y el logo de los correos (273): lo que falta (null) conserva lo guardado, y
+    /// un logo vacío lo quita (queda vacío, no null). Nada cambia si un valor está fuera de sus cotas.
+    /// </summary>
+    public Result UpdateRules(int? loginAuditRetentionMonths, int? loginCodeRetentionDays, int? closedInvitationRetentionDays,
+        string? appName, string? senderName, string? emailLogoUrl)
+    {
+        if (loginAuditRetentionMonths is < PlatformSettingsLimits.MinLoginAuditRetentionMonths
+                or > PlatformSettingsLimits.MaxLoginAuditRetentionMonths
+            || loginCodeRetentionDays is < PlatformSettingsLimits.MinLoginCodeRetentionDays
+                or > PlatformSettingsLimits.MaxLoginCodeRetentionDays
+            || closedInvitationRetentionDays is < PlatformSettingsLimits.MinClosedInvitationRetentionDays
+                or > PlatformSettingsLimits.MaxClosedInvitationRetentionDays
+            || appName is not null && (string.IsNullOrWhiteSpace(appName) || appName.Length > PlatformSettingsLimits.NameMaxLength)
+            || senderName is not null && (string.IsNullOrWhiteSpace(senderName) || senderName.Length > PlatformSettingsLimits.NameMaxLength)
+            || !string.IsNullOrEmpty(emailLogoUrl) && !IsSecureUrl(emailLogoUrl))
+            return SettingsErrors.InvalidPlatformConfiguration;
+        LoginAuditRetentionMonths = loginAuditRetentionMonths ?? LoginAuditRetentionMonths;
+        LoginCodeRetentionDays = loginCodeRetentionDays ?? LoginCodeRetentionDays;
+        ClosedInvitationRetentionDays = closedInvitationRetentionDays ?? ClosedInvitationRetentionDays;
+        AppName = appName?.Trim() ?? AppName;
+        SenderName = senderName?.Trim() ?? SenderName;
+        EmailLogoUrl = emailLogoUrl ?? EmailLogoUrl;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// El logo con que salen los correos y que muestra la pantalla: el guardado; ninguno si Plataforma lo quitó (vacío); y mientras
+    /// no lo guardó (null), el de arranque, <paramref name="bootstrapLogoUrl"/>.
+    /// </summary>
+    public static string? EffectiveLogoUrl(string? savedLogoUrl, string? bootstrapLogoUrl) =>
+        savedLogoUrl is null ? bootstrapLogoUrl : savedLogoUrl.Length == 0 ? null : savedLogoUrl;
+
+    /// <summary>Una dirección absoluta <c>https://</c>, hasta <see cref="PlatformSettingsLimits.LogoUrlMaxLength"/> caracteres.</summary>
+    public static bool IsSecureUrl(string? url) =>
+        url is { Length: > 0 and <= PlatformSettingsLimits.LogoUrlMaxLength }
+        && Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps;
 
     public Result CanRegisterConsumer() => CanRegisterConsumer(ConsumerSignup);
 

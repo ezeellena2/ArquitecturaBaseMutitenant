@@ -16,17 +16,17 @@ internal sealed class LoginMethodsService(
     ILogger<LoginMethodsService> logger) : ILoginMethodsService
 {
     public Task<Result<LoginMethodsResponse>> GetLoginMethodsAsync(CancellationToken cancellationToken) =>
-        OperationLog.RunAsync<LoginMethodsResponse>(logger, timeProvider, "GetLoginMethods", () =>
+        OperationLog.RunAsync<LoginMethodsResponse>(logger, timeProvider, "GetLoginMethods", async () =>
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var available = channels.Where(channel => channel.IsAvailable)
-                .Select(channel => new LoginChannelAvailability(channel.Key, channel.Countries, channel.ContactPhone))
-                .ToList();
+            var available = new List<LoginChannelAvailability>();
+            foreach (var channel in channels.Where(channel => channel.IsAvailable))
+                available.Add(new LoginChannelAvailability(channel.Key, await channel.CountriesAsync(cancellationToken), channel.ContactPhone));
             if (google.IsEnabled)
             {
                 available.Add(new LoginChannelAvailability("google", []));
             }
 
-            return Task.FromResult<Result<LoginMethodsResponse>>(new LoginMethodsResponse(available));
+            return Result.Success(new LoginMethodsResponse(available));
         });
 }

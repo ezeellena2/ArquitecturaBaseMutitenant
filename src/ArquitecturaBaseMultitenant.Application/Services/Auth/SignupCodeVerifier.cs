@@ -33,7 +33,7 @@ internal sealed class SignupCodeVerifier(LoginCodeAttemptVerifier verifier, Sign
         Guid userId;
         if (method is null || method.VerifiedAtUtc is null)
         {
-            var validNew = destinations.ValidateNew(destination);
+            var validNew = await destinations.ValidateNewAsync(destination, cancellationToken);
             if (validNew.IsFailure) return Fail(destination, null, validNew.Error);
             var allowed = await policy.CanRegisterAsync(cancellationToken);
             if (allowed.IsFailure) return Fail(destination, null, allowed.Error);
@@ -76,7 +76,7 @@ internal sealed class SignupCodeVerifier(LoginCodeAttemptVerifier verifier, Sign
         Guid userId;
         if (method is null || method.VerifiedAtUtc is null)
         {
-            var validNew = destinations.ValidateNew(destination);
+            var validNew = await destinations.ValidateNewAsync(destination, cancellationToken);
             if (validNew.IsFailure) return Fail(destination, null, validNew.Error);
             var documents = await registrar.GetCurrentLegalAsync(nowUtc, cancellationToken);
             if (method is not null) await existingMethods.RemovePendingAsync(method, cancellationToken);

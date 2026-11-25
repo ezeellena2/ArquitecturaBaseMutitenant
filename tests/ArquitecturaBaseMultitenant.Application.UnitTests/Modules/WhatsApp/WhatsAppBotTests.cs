@@ -44,7 +44,7 @@ public sealed class WhatsAppBotTests
         contact.RecordInbound(now);
         var message = WhatsAppMessage.Create("fixture-number", "fixture-message", "inbound", WhatsAppMessageDirection.Inbound,
             WhatsAppMessageKind.Text, WhatsAppMessageStatus.Pending, now, now, contact.Id);
-        await new WhatsAppBotWriter(settings, new WhatsAppSignInReplyIssuer(settings, outbox, null!, null!, null!), clock)
+        await new WhatsAppBotWriter(settings, new WhatsAppSignInReplyIssuer(settings, outbox, null!, null!, null!, null!), clock)
             .ConsumeAsync(new(message, contact, null, null, false), Ct);
         Assert.Equal(0, outbox.Calls);
     }

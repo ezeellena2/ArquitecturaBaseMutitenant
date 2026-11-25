@@ -27,7 +27,7 @@ internal sealed class SignupCodeRequester(SignupPolicy policy, LoginCodeIssuer i
         if (allowed.IsFailure) return allowed.Error;
         if (owner is { VerifiedAtUtc: not null } || request.Email is not null && (await users.FindVerifiedUsersByEmailAsync(request.Email, cancellationToken)).Count > 0)
             return FieldErrors.On(request.Email is null ? SignupErrors.PhoneTaken : SignupErrors.EmailTaken, LoginDestinationResolver.Field(destination));
-        var validNew = destinations.ValidateNew(destination);
+        var validNew = await destinations.ValidateNewAsync(destination, cancellationToken);
         if (validNew.IsFailure) return validNew.Error;
 
         var issued = await issuer.IssueSignupCodeAsync(destination, cancellationToken);
@@ -38,7 +38,8 @@ internal sealed class SignupCodeRequester(SignupPolicy policy, LoginCodeIssuer i
         if (channel is null) return LoginChannelErrors.Unavailable;
         var admitted = await issuer.AdmitAsync(destination, issued.Value, cancellationToken);
         if (admitted.IsFailure) return admitted.Error;
-        channel.EnqueueSignup(destination.Value, issued.Value.Code, issued.Value.LifetimeMinutes, culture);
+        await channel.EnqueueSignupAsync(destination.Value, issued.Value.Code, issued.Value.LifetimeMinutes, culture,
+            cancellationToken);
         issued.Value.LoginCode.MarkSent(issued.Value.IssuedAtUtc);
         return new RequestLoginCodeResponse(issued.Value.ResendCooldownSeconds);
     }
@@ -53,7 +54,7 @@ internal sealed class SignupCodeRequester(SignupPolicy policy, LoginCodeIssuer i
 
         if (owner is not { VerifiedAtUtc: not null })
         {
-            var validNew = destinations.ValidateNew(destination);
+            var validNew = await destinations.ValidateNewAsync(destination, cancellationToken);
             if (validNew.IsFailure) return validNew.Error;
         }
         var ownerId = LoginDestinationResolver.Type(destination) == LoginMethodType.Phone && owner is { VerifiedAtUtc: not null }
@@ -66,7 +67,8 @@ internal sealed class SignupCodeRequester(SignupPolicy policy, LoginCodeIssuer i
         if (channel is null) return LoginChannelErrors.Unavailable;
         var admitted = await issuer.AdmitAsync(destination, issued.Value, cancellationToken);
         if (admitted.IsFailure) return admitted.Error;
-        channel.EnqueueSignup(destination.Value, issued.Value.Code, issued.Value.LifetimeMinutes, culture);
+        await channel.EnqueueSignupAsync(destination.Value, issued.Value.Code, issued.Value.LifetimeMinutes, culture,
+            cancellationToken);
         issued.Value.LoginCode.MarkSent(issued.Value.IssuedAtUtc);
         return new RequestLoginCodeResponse(issued.Value.ResendCooldownSeconds);
     }

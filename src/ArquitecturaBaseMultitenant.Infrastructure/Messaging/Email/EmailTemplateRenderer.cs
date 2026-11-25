@@ -3,45 +3,59 @@ using System.Net;
 using System.Text.RegularExpressions;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Application.Models.Notifications;
+using ArquitecturaBaseMultitenant.Application.Models.Settings;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 
-/// <summary>Combina plantillas HTML embebidas con textos localizados para producir correos de ingreso y avisos. Escapa los valores variables antes de insertarlos en el HTML.</summary>
-internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> options) : IEmailTemplateRenderer
+/// <summary>
+/// Combina plantillas HTML embebidas con textos localizados para producir correos de ingreso y avisos. Escapa los valores
+/// variables antes de insertarlos en el HTML. El nombre de la aplicación y el logo son los de «Nombre y correos» de
+/// Plataforma (273), leídos para cada correo; sin lector (los tests de plantillas), los de las opciones de correo.
+/// </summary>
+internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> options, DisplayFormatter? formatter = null,
+    IPlatformSettingsReader? settings = null) : IEmailTemplateRenderer
 {
-    private DisplayFormatter? _formatter;
-    public EmailTemplateRenderer(IOptions<EmailOptions> options, DisplayFormatter formatter) : this(options) =>
-        _formatter = formatter;
+    private readonly DisplayFormatter? _formatter = formatter;
     private const string LayoutTemplate = "_Layout.html";
     private const string LoginCodeTemplate = "LoginCode.html";
     private const string SignupCodeTemplate = "SignupCode.html";
     private static readonly ConcurrentDictionary<string, string> Templates = new(StringComparer.Ordinal);
 
-    public EmailMessage RenderLoginCode(string to, string code, int lifetimeMinutes, CultureProfile culture) =>
-        RenderCode(LoginCodeTemplate, to, code, lifetimeMinutes, culture);
+    public async Task<EmailMessage> RenderLoginCodeAsync(string to, string code, int lifetimeMinutes, CultureProfile culture,
+        CancellationToken cancellationToken) =>
+        RenderCode(await BrandingAsync(cancellationToken), LoginCodeTemplate, to, code, lifetimeMinutes, culture);
 
-    public EmailMessage RenderSignupCode(string to, string code, int lifetimeMinutes, CultureProfile culture) =>
-        RenderCode(SignupCodeTemplate, to, code, lifetimeMinutes, culture);
+    public async Task<EmailMessage> RenderSignupCodeAsync(string to, string code, int lifetimeMinutes, CultureProfile culture,
+        CancellationToken cancellationToken) =>
+        RenderCode(await BrandingAsync(cancellationToken), SignupCodeTemplate, to, code, lifetimeMinutes, culture);
 
-    public EmailMessage RenderVerifyEmailCode(string to, string code, int lifetimeMinutes, CultureProfile culture) =>
-        RenderCode(LoginCodeTemplate, to, code, lifetimeMinutes, culture, "VerifyEmail");
+    public async Task<EmailMessage> RenderVerifyEmailCodeAsync(string to, string code, int lifetimeMinutes,
+        CultureProfile culture, CancellationToken cancellationToken) =>
+        RenderCode(await BrandingAsync(cancellationToken), LoginCodeTemplate, to, code, lifetimeMinutes, culture, "VerifyEmail");
+
+    private async Task<PlatformBrandingRow> BrandingAsync(CancellationToken cancellationToken) => settings is null
+        ? new PlatformBrandingRow(options.Value.AppName, options.Value.AppName,
+            string.IsNullOrWhiteSpace(options.Value.LogoUrl) ? null : options.Value.LogoUrl)
+        : await settings.FindBrandingAsync(cancellationToken);
 
     public async Task<EmailMessage> RenderAccountNoticeAsync(string to, AccountNotice notice, CultureProfile culture,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(notice);
+        var branding = await BrandingAsync(cancellationToken);
         if (notice is AccountNotice.OperatorInvited operatorInvited)
-            return await RenderOperatorInvitedAsync(to, operatorInvited, culture, cancellationToken);
+            return await RenderOperatorInvitedAsync(branding, to, operatorInvited, culture, cancellationToken);
         var greeting = string.IsNullOrWhiteSpace(notice.RecipientName)
             ? NotificationTexts.Get("Greeting.Unnamed", culture)
             : NotificationTexts.Format("Greeting.Named", culture, notice.RecipientName);
 
-        var appName = options.Value.AppName;
+        var appName = branding.AppName;
         var (key, template, paragraphs, actionLabel, actionUrl, note) = notice switch
         {
             AccountNotice.LoginMethodChanged changed => await MethodChangedAsync(changed, greeting, appName, culture, cancellationToken),
@@ -94,7 +108,7 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
         {
             ["Lang"] = Encode(culture.Entry.LanguageCode),
             ["Title"] = Encode(title),
-            ["Header"] = HeaderHtml(),
+            ["Header"] = HeaderHtml(branding),
             ["Content"] = htmlContent,
             ["Footer"] = Encode(NotificationTexts.Format("Layout.Footer", culture, appName)),
         });
@@ -188,10 +202,10 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
             NotificationTexts.Get("Notice.NotMe", culture));
     }
 
-    private EmailMessage RenderCode(string template, string to, string code, int lifetimeMinutes, CultureProfile culture,
-        string key = "LoginCode")
+    private static EmailMessage RenderCode(PlatformBrandingRow branding, string template, string to, string code,
+        int lifetimeMinutes, CultureProfile culture, string key = "LoginCode")
     {
-        var appName = options.Value.AppName;
+        var appName = branding.AppName;
         var title = NotificationTexts.Get(key + ".Title", culture);
         var intro = NotificationTexts.Format(key + ".Intro", culture, appName);
         var expiry = NotificationTexts.Format(key + ".Expiry", culture, lifetimeMinutes);
@@ -208,7 +222,7 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
         {
             ["Lang"] = Encode(culture.Entry.LanguageCode),
             ["Title"] = Encode(title),
-            ["Header"] = HeaderHtml(),
+            ["Header"] = HeaderHtml(branding),
             ["Content"] = content,
             ["Footer"] = Encode(footer),
         });
@@ -218,13 +232,10 @@ internal sealed partial class EmailTemplateRenderer(IOptions<EmailOptions> optio
             NotificationTexts.Format(key + ".Subject", culture, code, appName), html, text);
     }
 
-    private string HeaderHtml()
-    {
-        var settings = options.Value;
-        return string.IsNullOrWhiteSpace(settings.LogoUrl)
-            ? Encode(settings.AppName)
-            : $"<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"padding-right:10px;\"><img src=\"{Encode(settings.LogoUrl)}\" alt=\"\" height=\"24\" width=\"24\" style=\"display:block;border:0;height:24px;width:24px;border-radius:7px;\"></td><td style=\"font-size:16px;font-weight:bold;color:#111827;\">{Encode(settings.AppName)}</td></tr></table>";
-    }
+    private static string HeaderHtml(PlatformBrandingRow branding) =>
+        string.IsNullOrWhiteSpace(branding.EmailLogoUrl)
+            ? Encode(branding.AppName)
+            : $"<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td style=\"padding-right:10px;\"><img src=\"{Encode(branding.EmailLogoUrl)}\" alt=\"\" height=\"24\" width=\"24\" style=\"display:block;border:0;height:24px;width:24px;border-radius:7px;\"></td><td style=\"font-size:16px;font-weight:bold;color:#111827;\">{Encode(branding.AppName)}</td></tr></table>";
 
     private static string Fill(string templateName, Dictionary<string, string> values) =>
         PlaceholderPattern().Replace(Load(templateName), match =>

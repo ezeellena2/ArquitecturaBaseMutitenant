@@ -16,7 +16,7 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// bandeja. Nunca lleva teléfonos ni textos de los chats.
 /// </summary>
 internal sealed class WhatsAppWaitingNotifier(IWhatsAppTeamReader teams, IUserRepository users, IWhatsAppWaitingEmailRenderer renderer,
-    IOutbox outbox, IPublicOrigin origin, ITenantReader tenants, ITenantContext tenant, IWhatsAppChannelSettings settings)
+    IOutbox outbox, IPublicOrigin origin, ITenantReader tenants, ITenantContext tenant, IPlatformSettingsReader settings)
 {
     private const string OrganizationInbox = "org/whatsapp/chats";
     private const string PlatformInbox = "plataforma/whatsapp";
@@ -26,8 +26,8 @@ internal sealed class WhatsAppWaitingNotifier(IWhatsAppTeamReader teams, IUserRe
         var accounts = platform ? team.MemberIds
             : [.. (await teams.ListActiveMembersAsync(team.MemberIds, ct)).Select(member => member.UserId)];
         var url = origin.Absolute(platform ? PlatformInbox : OrganizationInbox);
-        // Las consultas de Plataforma son de la plataforma, que se nombra como la app.
-        var place = platform ? settings.AppName
+        // Las consultas de Plataforma son de la plataforma, que se nombra como la app de «Nombre y correos» (273).
+        var place = platform ? (await settings.FindBrandingAsync(ct)).AppName
             : (await tenants.FindByIdAsync(tenant.RequiredTenantId, ct))?.Name
                 ?? throw new InvalidOperationException("The organization of the waiting notice is missing.");
         foreach (var userId in accounts.Distinct())

@@ -63,17 +63,18 @@ public sealed class LoginCodeEnumerationTests(ApiFactory factory)
     {
         public int LoginRenders { get; private set; }
 
-        public EmailMessage RenderLoginCode(string to, string code, int lifetimeMinutes, CultureProfile culture)
+        public Task<EmailMessage> RenderLoginCodeAsync(string to, string code, int lifetimeMinutes, CultureProfile culture,
+            CancellationToken cancellationToken)
         {
             LoginRenders++;
-            return new EmailMessage(to, "Test", "Test", "Test");
+            return Task.FromResult(new EmailMessage(to, "Test", "Test", "Test"));
         }
 
-        public EmailMessage RenderSignupCode(string to, string code, int lifetimeMinutes, CultureProfile culture) =>
-            throw new NotSupportedException();
+        public Task<EmailMessage> RenderSignupCodeAsync(string to, string code, int lifetimeMinutes, CultureProfile culture,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
 
-        public EmailMessage RenderVerifyEmailCode(string to, string code, int lifetimeMinutes, CultureProfile culture) =>
-            throw new NotSupportedException();
+        public Task<EmailMessage> RenderVerifyEmailCodeAsync(string to, string code, int lifetimeMinutes,
+            CultureProfile culture, CancellationToken cancellationToken) => throw new NotSupportedException();
 
         public Task<EmailMessage> RenderInvitationAsync(string to,
             ArquitecturaBaseMultitenant.Application.Models.Invitations.InvitationNotice notice,
@@ -83,7 +84,7 @@ public sealed class LoginCodeEnumerationTests(ApiFactory factory)
         public Task<EmailMessage> RenderAccountNoticeAsync(string to, AccountNotice notice,
             CultureProfile culture, CancellationToken cancellationToken) => throw new NotSupportedException();
 
-        public EmailMessage RenderNotice(string to, EmailNotice notice, CultureProfile culture) =>
-            throw new NotSupportedException();
+        public Task<EmailMessage> RenderNoticeAsync(string to, EmailNotice notice, CultureProfile culture,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 }

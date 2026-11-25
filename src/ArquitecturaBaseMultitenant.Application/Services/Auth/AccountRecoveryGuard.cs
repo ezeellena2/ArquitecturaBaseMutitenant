@@ -40,7 +40,7 @@ internal sealed class AccountRecoveryGuard(IUserLookup lookup, ILoginMethodRepos
     internal async Task<Result> CheckNewAsync(LoginCodeDestination destination, CancellationToken ct,
         Guid? recoveringUserId = null)
     {
-        var valid = destinations.ValidateNew(destination);
+        var valid = await destinations.ValidateNewAsync(destination, ct);
         if (valid.IsFailure) return valid.Error;
         var owners = LoginDestinationResolver.Type(destination) == LoginMethodType.Email
             ? await lookup.FindVerifiedUsersByEmailAsync(Email.Create(destination.Value).Value, ct)

@@ -10,11 +10,14 @@ public interface IWhatsAppChannelSettings
 {
     /// <summary>El número de Plataforma está conectado con medio de pago: salen códigos, invitaciones y avisos.</summary>
     bool IsEnabled { get; }
-    string AppName { get; }
     /// <summary>El identificador de Meta del número de Plataforma mientras atiende (conectado o sin medio de pago).</summary>
     string? PhoneNumberId { get; }
     string? ContactPhone { get; }
-    IReadOnlyList<string> Countries { get; }
+    /// <summary>
+    /// Los países de <c>WhatsApp:AllowedCountries</c>: solo el respaldo mientras Plataforma no guarda los suyos (270, 0060). Lo
+    /// que vale en cada pedido lo da <c>WhatsAppSettingsResolver.AllowedCountriesAsync</c>.
+    /// </summary>
+    IReadOnlyList<string> ConfiguredCountries { get; }
     /// <summary>El país (ISO 3166) de un número E.164, o null si no se reconoce.</summary>
     string? CountryOf(string e164) => null;
     int DailyAuthCodeLimit { get; }
@@ -30,5 +33,6 @@ public interface IWhatsAppChannelSettings
     bool ConsultationsEnabled => false;
     /// <summary>Datos públicos del alta embebida; null si la instalación no configuró la app de Meta.</summary>
     WhatsAppSignupConfigResponse? Signup => null;
-    Result ValidateNewDestination(LoginCodeDestination destination);
+    /// <summary>Un destino nuevo: el canal atiende y el número es de uno de <paramref name="allowedCountries"/> (los vigentes).</summary>
+    Result ValidateNewDestination(LoginCodeDestination destination, IReadOnlyList<string> allowedCountries);
 }

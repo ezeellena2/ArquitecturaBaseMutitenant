@@ -30,12 +30,12 @@ internal sealed class WhatsAppWaitingEmailRenderer(DisplayFormatter formatter, I
             : NotificationTexts.Format("Greeting.Named", profile, notice.RecipientName);
         var body = WhatsAppTexts.Format(prefix + ".Body" + number, profile, greeting, count, notice.TeamName, notice.PlaceName,
             formatter.FormatElapsed(notice.OldestWaiting, context));
-        return emails.RenderNotice(notice.Recipient, new EmailNotice(
+        return await emails.RenderNoticeAsync(notice.Recipient, new EmailNotice(
             WhatsAppTexts.Format(prefix + ".Subject" + number, profile, count, notice.TeamName),
             WhatsAppTexts.Format(prefix + ".Title" + number, profile, count, notice.TeamName), [body])
         {
             Action = new(WhatsAppTexts.Get(prefix + ".Action", profile), notice.InboxUrl),
             Footer = WhatsAppTexts.Format(prefix + ".Footer", profile, notice.TeamName),
-        }, profile);
+        }, profile, ct);
     }
 }

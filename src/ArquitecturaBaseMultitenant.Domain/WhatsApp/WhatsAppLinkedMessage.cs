@@ -40,4 +40,7 @@ public sealed class WhatsAppLinkedMessage : Entity, IConsumerBusinessShared
     {
         if (Direction == WhatsAppMessageDirection.Inbound) Text = null;
     }
+
+    /// <summary>La retención de los chats de la organización (272): la copia vence con el mensaje, en las dos direcciones.</summary>
+    public void ClearText() => Text = null;
 }

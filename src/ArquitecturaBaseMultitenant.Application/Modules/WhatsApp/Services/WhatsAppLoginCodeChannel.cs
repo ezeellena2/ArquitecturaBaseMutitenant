@@ -8,16 +8,20 @@ using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 
-internal sealed class WhatsAppLoginCodeChannel(IWhatsAppChannelSettings settings, IWhatsAppTemplateRenderer templates, IOutbox outbox) : ILoginCodeChannel
+internal sealed class WhatsAppLoginCodeChannel(IWhatsAppChannelSettings settings, WhatsAppSettingsResolver configuration,
+    IWhatsAppTemplateRenderer templates, IOutbox outbox) : ILoginCodeChannel
 {
     public string Key => "whatsapp";
     public LoginMethodType SupportedMethodType => LoginMethodType.Phone;
     public LoginAuditMethod AuditMethod => LoginAuditMethod.WhatsAppCode;
     public bool IsAvailable => settings.IsEnabled;
-    public IReadOnlyList<string> Countries => settings.Countries;
+    public Task<IReadOnlyList<string>> CountriesAsync(CancellationToken ct) => configuration.AllowedCountriesAsync(ct);
     public string? ContactPhone => settings.ContactPhone;
-    public Result ValidateNewDestination(LoginCodeDestination destination, string? country) => settings.ValidateNewDestination(destination);
-    public string RenderLoginCode(string destination, string code, int lifetimeMinutes, CultureProfile culture) =>
+    public async Task<Result> ValidateNewDestinationAsync(LoginCodeDestination destination, string? country, CancellationToken ct) =>
+        settings.ValidateNewDestination(destination, await configuration.AllowedCountriesAsync(ct));
+    public Task<string> RenderLoginCodeAsync(string destination, string code, int lifetimeMinutes, CultureProfile culture,
+        CancellationToken ct) => Task.FromResult(Render(destination, code, lifetimeMinutes, culture));
+    private string Render(string destination, string code, int lifetimeMinutes, CultureProfile culture) =>
         JsonSerializer.Serialize(templates.RenderCode(destination, code, lifetimeMinutes, culture));
     // WhatsApp encola el código sin plazo en la cola: la vigencia solo la usa el correo para descartar un código vencido. Un
     // código contesta a quien lo pidió: sale antes que los avisos, detrás de lo anterior a ese número (ADR 0066).
@@ -28,12 +32,16 @@ internal sealed class WhatsAppLoginCodeChannel(IWhatsAppChannelSettings settings
             ?? throw new InvalidOperationException("A rendered WhatsApp code is required.");
         outbox.Enqueue(Key, payload, userId, message.QueueOptions(OutboxPriority.Reply));
     }
-    public void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture)
+    public Task EnqueueSignupAsync(string destination, string code, int lifetimeMinutes, CultureProfile culture,
+        CancellationToken ct)
     {
-        if (IsAvailable) EnqueueRenderedLoginCode(RenderLoginCode(destination, code, lifetimeMinutes, culture), lifetimeMinutes);
+        if (IsAvailable) EnqueueRenderedLoginCode(Render(destination, code, lifetimeMinutes, culture), lifetimeMinutes);
+        return Task.CompletedTask;
     }
-    public void EnqueueVerification(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture)
+    public Task EnqueueVerificationAsync(Guid? userId, string destination, string code, int lifetimeMinutes,
+        CultureProfile culture, CancellationToken ct)
     {
-        if (IsAvailable) EnqueueRenderedLoginCode(RenderLoginCode(destination, code, lifetimeMinutes, culture), lifetimeMinutes, userId);
+        if (IsAvailable) EnqueueRenderedLoginCode(Render(destination, code, lifetimeMinutes, culture), lifetimeMinutes, userId);
+        return Task.CompletedTask;
     }
 }

@@ -30,7 +30,7 @@ internal sealed class LoginMethodVerifier(LoginMethodGuard guard, ILoginMethodRe
         var resolved = destinations.FromMethod(method);
         if (resolved.IsFailure) return resolved.Error;
         var destination = resolved.Value;
-        var validNew = destinations.ValidateNew(destination);
+        var validNew = await destinations.ValidateNewAsync(destination, ct);
         if (validNew.IsFailure) return validNew.Error;
         await codeRepository.LockDestinationAsync(destination, ct);
         var currentCode = await codeRepository.GetLatestAsync(destination,

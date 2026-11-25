@@ -29,7 +29,6 @@ public sealed class OrganizationWhatsAppSettingsController(IWhatsAppSettingsServ
     [ProducesProblem(401)]
     [ProducesProblem(403)]
     [ProducesProblem(500)]
-    [ProducesProblem(501)]
     public async Task<IActionResult> Get(CancellationToken cancellationToken) =>
         (await service.GetAsync(cancellationToken)).ToActionResult(this);
 
@@ -41,7 +40,6 @@ public sealed class OrganizationWhatsAppSettingsController(IWhatsAppSettingsServ
     [ProducesProblem(403)]
     [ProducesProblem(409)]
     [ProducesProblem(500)]
-    [ProducesProblem(501)]
     public async Task<IActionResult> Update([FromBody] UpdateWhatsAppOrganizationSettingsHttpRequest request, CancellationToken cancellationToken) =>
         (await service.UpdateAsync(new UpdateWhatsAppOrganizationSettingsRequest(request.ChatRetentionDays, request.Version), cancellationToken))
         .ToActionResult(this);
@@ -61,7 +59,6 @@ public sealed class PlatformWhatsAppSettingsController(IPlatformWhatsAppSettings
     [ProducesProblem(401)]
     [ProducesProblem(403)]
     [ProducesProblem(500)]
-    [ProducesProblem(501)]
     public async Task<IActionResult> Get(CancellationToken cancellationToken) =>
         (await service.GetAsync(cancellationToken)).ToActionResult(this);
 
@@ -72,7 +69,6 @@ public sealed class PlatformWhatsAppSettingsController(IPlatformWhatsAppSettings
     [ProducesProblem(403)]
     [ProducesProblem(409)]
     [ProducesProblem(500)]
-    [ProducesProblem(501)]
     public async Task<IActionResult> Update([FromBody] UpdatePlatformWhatsAppSettingsHttpRequest request, CancellationToken cancellationToken) =>
         (await service.UpdateAsync(new UpdatePlatformWhatsAppSettingsRequest(request.AllowedCountries, request.ChatRetentionDays,
             request.MaxOrganizationChatRetentionDays, request.Version), cancellationToken)).ToActionResult(this);

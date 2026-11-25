@@ -152,13 +152,13 @@ public sealed partial class AssistantDynamicAuthorizationTests
         public string Key => "whatsapp";
         public LoginMethodType SupportedMethodType => LoginMethodType.Phone;
         public bool IsAvailable => available;
-        public IReadOnlyList<string> Countries => [];
+        public Task<IReadOnlyList<string>> CountriesAsync(CancellationToken ct) => Task.FromResult<IReadOnlyList<string>>([]);
         public string? ContactPhone => null;
-        public Result ValidateNewDestination(LoginCodeDestination destination, string? country) => throw probe.UnexpectedSend();
-        public string RenderLoginCode(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw probe.UnexpectedSend();
+        public Task<Result> ValidateNewDestinationAsync(LoginCodeDestination destination, string? country, CancellationToken ct) => throw probe.UnexpectedSend();
+        public Task<string> RenderLoginCodeAsync(string destination, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken ct) => throw probe.UnexpectedSend();
         public void EnqueueRenderedLoginCode(string payload, int lifetimeMinutes, Guid? userId = null) => throw probe.UnexpectedSend();
-        public void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw probe.UnexpectedSend();
-        public void EnqueueVerification(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw probe.UnexpectedSend();
+        public Task EnqueueSignupAsync(string destination, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken ct) => throw probe.UnexpectedSend();
+        public Task EnqueueVerificationAsync(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken ct) => throw probe.UnexpectedSend();
     }
     private sealed class ChannelProbe
     {
@@ -171,12 +171,12 @@ public sealed partial class AssistantDynamicAuthorizationTests
         public string Key => inner.Key;
         public LoginMethodType SupportedMethodType => inner.SupportedMethodType;
         public bool IsAvailable => !probe.Disabled && inner.IsAvailable;
-        public IReadOnlyList<string> Countries => inner.Countries;
+        public Task<IReadOnlyList<string>> CountriesAsync(CancellationToken ct) => inner.CountriesAsync(ct);
         public string? ContactPhone => inner.ContactPhone;
-        public Result ValidateNewDestination(LoginCodeDestination destination, string? country) => throw probe.UnexpectedSend();
-        public string RenderLoginCode(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw probe.UnexpectedSend();
+        public Task<Result> ValidateNewDestinationAsync(LoginCodeDestination destination, string? country, CancellationToken ct) => throw probe.UnexpectedSend();
+        public Task<string> RenderLoginCodeAsync(string destination, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken ct) => throw probe.UnexpectedSend();
         public void EnqueueRenderedLoginCode(string payload, int lifetimeMinutes, Guid? userId = null) => throw probe.UnexpectedSend();
-        public void EnqueueSignup(string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw probe.UnexpectedSend();
-        public void EnqueueVerification(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture) => throw probe.UnexpectedSend();
+        public Task EnqueueSignupAsync(string destination, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken ct) => throw probe.UnexpectedSend();
+        public Task EnqueueVerificationAsync(Guid? userId, string destination, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken ct) => throw probe.UnexpectedSend();
     }
 }

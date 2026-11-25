@@ -156,6 +156,62 @@ public sealed class PlatformSettingsServiceTests
     }
 
     [Fact]
+    public async Task Retention_and_mail_rules_are_saved_and_kept_when_omitted()
+    {
+        using var fixture = new ServiceFixture<PlatformSettingsService>(new UpdatePlatformSettingsRequestValidator());
+        var repository = new StubRepository();
+        var audit = new StubEvents();
+        var service = Create(fixture, repository, audit, new FakeUnitOfWork());
+
+        Assert.True((await service.UpdateAsync(new(ConsumerSignupMode.Open, BusinessSignupMode.Open, 1, Sales, Support, 1,
+            "Plazos y correos")
+        {
+            LoginAuditRetentionMonths = 120, LoginCodeRetentionDays = 1, ClosedInvitationRetentionDays = 7,
+            AppName = " Mi App ", SenderName = "Equipo", EmailLogoUrl = "https://cdn.example.test/logo.png",
+        }, Ct)).IsSuccess);
+
+        var saved = repository.Settings!;
+        Assert.Equal(new IdentityRetentionPeriods(120, 1, 7), saved.RetentionPeriods);
+        Assert.Equal(("Mi App", "Equipo", "https://cdn.example.test/logo.png"), (saved.AppName, saved.SenderName, saved.EmailLogoUrl));
+        using (var changes = JsonDocument.Parse(audit.Items[^1].Changes))
+        {
+            Assert.Equal(12, changes.RootElement.GetProperty("loginAuditRetentionMonths").GetProperty("before").GetInt32());
+            Assert.Equal(120, changes.RootElement.GetProperty("loginAuditRetentionMonths").GetProperty("after").GetInt32());
+            Assert.True(changes.RootElement.TryGetProperty("appNameChanged", out _));
+        }
+
+        Assert.True((await service.UpdateAsync(new(ConsumerSignupMode.Open, BusinessSignupMode.Open, 1, Sales, Support, 2,
+            "Sin cambios de reglas") { EmailLogoUrl = "" }, Ct)).IsSuccess);
+
+        Assert.Equal(new IdentityRetentionPeriods(120, 1, 7), saved.RetentionPeriods);
+        // El logo quitado queda vacío, no null: así no vuelve el de arranque (Email:LogoUrl).
+        Assert.Equal(("Mi App", "Equipo", string.Empty), (saved.AppName, saved.SenderName, saved.EmailLogoUrl));
+    }
+
+    [Theory]
+    [InlineData(0, 30, 30)]
+    [InlineData(121, 30, 30)]
+    [InlineData(12, 0, 30)]
+    [InlineData(12, 3651, 30)]
+    [InlineData(12, 30, 6)]
+    [InlineData(12, 30, 3651)]
+    public async Task Retention_outside_its_bounds_fails_without_a_transaction(int months, int codeDays, int invitationDays)
+    {
+        using var fixture = new ServiceFixture<PlatformSettingsService>(new UpdatePlatformSettingsRequestValidator());
+        var unitOfWork = new FakeUnitOfWork();
+        var service = Create(fixture, new StubRepository(), new StubEvents(), unitOfWork);
+
+        var result = await service.UpdateAsync(new(ConsumerSignupMode.Open, BusinessSignupMode.Open, 1, Sales, Support, 1,
+            "Fuera de rango")
+        {
+            LoginAuditRetentionMonths = months, LoginCodeRetentionDays = codeDays, ClosedInvitationRetentionDays = invitationDays,
+        }, Ct);
+
+        Assert.IsType<ValidationError>(result.Error);
+        Assert.Equal(0, unitOfWork.Transactions);
+    }
+
+    [Fact]
     public async Task Rate_limits_are_kept_when_omitted_and_replaced_whole_when_sent()
     {
         using var fixture = new ServiceFixture<PlatformSettingsService>(new UpdatePlatformSettingsRequestValidator());
@@ -243,6 +299,8 @@ public sealed class PlatformSettingsServiceTests
         public string AppName => "Arquitectura Base";
 
         public string SenderName => "Arquitectura Base";
+
+        public string? LogoUrl => null;
     }
 
     private sealed class StubReader : IPlatformSettingsReader
@@ -250,6 +308,11 @@ public sealed class PlatformSettingsServiceTests
         public Task<PlatformSettingsRow?> FindAsync(CancellationToken ct) => Task.FromResult<PlatformSettingsRow?>(null);
 
         public Task<PlatformRateLimits?> FindRateLimitsAsync(CancellationToken ct) => Task.FromResult<PlatformRateLimits?>(null);
+
+        public Task<IdentityRetentionPeriods> FindRetentionPeriodsAsync(CancellationToken ct) =>
+            Task.FromResult(IdentityRetentionPeriods.Default);
+
+        public Task<PlatformBrandingRow> FindBrandingAsync(CancellationToken ct) => Task.FromResult(new PlatformBrandingRow("Arquitectura Base", "Arquitectura Base", null));
     }
 
     private sealed class StubRepository : IPlatformSettingsRepository

@@ -6,7 +6,6 @@ using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
-using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using Microsoft.OpenApi;
 
@@ -149,7 +148,6 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
         }
         if (path.EndsWith("/whatsapp/settings", StringComparison.Ordinal))
         {
-            errors.Add(HttpContractDocumentation.CoreError(501, ContractErrors.NotImplementedCode));
             if (method == HttpMethod.Put)
             {
                 errors.Add(HttpContractDocumentation.CoreError(400, "Validation.Failed"));
@@ -213,9 +211,9 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
         _ when path.EndsWith("/review", StringComparison.Ordinal) =>
             "Marca como revisado un mensaje «Sin confirmar» (ADR 0066), sin cuerpo y sin Idempotency-Key: no crea ni envía. 200 con el mensaje, que suma reviewedByName y reviewedAtUtc; revisar dos veces devuelve la primera revisión. Otro chat, otra organización o un mensaje que no es de ese chat: 404. Si no está «Sin confirmar»: 409 WhatsApp.Message.NotUncertain.",
         "/api/platform/whatsapp/settings" =>
-            "Configuración de WhatsApp de la plataforma (270 y 272): allowedCountries (al menos uno, de los países habilitados, sin repetir), chatRetentionDays y maxOrganizationChatRetentionDays, con version en el PUT y el 409 de siempre. Un valor fuera de su mínimo o su máximo es el 400 de validación en su campo. 501 hasta la B18.",
+            "Configuración de WhatsApp de la plataforma (270 y 272): allowedCountries (al menos uno, de los países habilitados, sin repetir), chatRetentionDays y maxOrganizationChatRetentionDays, con version en el PUT y el 409 de siempre. Un valor fuera de su mínimo o su máximo es el 400 de validación en su campo.",
         "/api/organization/whatsapp/settings" =>
-            "Configuración de WhatsApp de la organización (272): chatRetentionDays, de 1 al máximo de la plataforma, con version en el PUT y el 409 de siempre. Un valor fuera de su mínimo o su máximo es el 400 de validación en su campo. 501 hasta la B18.",
+            "Configuración de WhatsApp de la organización (272): chatRetentionDays, de 1 al máximo de la plataforma, con version en el PUT y el 409 de siempre. Un valor fuera de su mínimo o su máximo es el 400 de validación en su campo.",
         _ when path.EndsWith("/conversations/{id}", StringComparison.Ordinal) && !path.StartsWith("/api/me/", StringComparison.Ordinal) =>
             "Cada mensaje: status suma Uncertain («Sin confirmar», ADR 0066), derivado de la cola mientras Meta no avise otra cosa; failureReason es el texto del motivo guardado (uno de los códigos WhatsApp.Send.*); reviewedByName y reviewedAtUtc dicen quién lo revisó y cuándo.",
         _ when path.Contains("/broadcasts/{id}", StringComparison.Ordinal) =>

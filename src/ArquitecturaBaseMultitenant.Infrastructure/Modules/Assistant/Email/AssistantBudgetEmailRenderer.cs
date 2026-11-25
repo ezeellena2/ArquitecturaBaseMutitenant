@@ -49,7 +49,7 @@ internal sealed class AssistantBudgetEmailRenderer(DisplayFormatter formatter, I
         };
         var action = AssistantBudgetAlertNotice.LeadsToSettings(notice.Funding, notice.Threshold)
             ? "Budget.Alert.ReviewSettings" : "Budget.Alert.ViewUsage";
-        return emails.RenderNotice(notice.Recipient, new EmailNotice(AssistantTexts.Format(key + ".Subject", profile, organization, percent),
+        return await emails.RenderNoticeAsync(notice.Recipient, new EmailNotice(AssistantTexts.Format(key + ".Subject", profile, organization, percent),
             AssistantTexts.Format(key + ".Title", profile, organization, percent), paragraphs)
         {
             Details =
@@ -59,6 +59,6 @@ internal sealed class AssistantBudgetEmailRenderer(DisplayFormatter formatter, I
                 new(AssistantTexts.Get("Budget.Alert.Month", profile), formatter.FormatMonthRange(notice.Month, context, MonthRangeStyle.Label)),
             ],
             Action = new(AssistantTexts.Get(action, profile), notice.ActionUrl),
-        }, profile);
+        }, profile, ct);
     }
 }

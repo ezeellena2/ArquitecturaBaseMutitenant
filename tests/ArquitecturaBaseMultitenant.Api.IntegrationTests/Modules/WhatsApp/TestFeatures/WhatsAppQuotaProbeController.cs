@@ -37,13 +37,12 @@ public sealed class WhatsAppQuotaProbeController(IUnitOfWork unit, IWhatsAppCode
     }
     private sealed class Settings(string numberId) : IWhatsAppChannelSettings
     {
-        public string AppName => "Fixture";
         public bool IsEnabled => true;
         public string PhoneNumberId => numberId;
         public string? ContactPhone => null;
-        public IReadOnlyList<string> Countries => ["AR"];
+        public IReadOnlyList<string> ConfiguredCountries => ["AR"];
         // El probe no prueba propiedad: cap 2 deja un envío nuevo con la protección predeterminada.
         public int DailyAuthCodeLimit => 2;
-        public Result ValidateNewDestination(LoginCodeDestination destination) => Result.Success();
+        public Result ValidateNewDestination(LoginCodeDestination destination, IReadOnlyList<string> allowedCountries) => Result.Success();
     }
 }

@@ -5,16 +5,19 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Persistence;
+using ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Retention;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
@@ -218,6 +221,101 @@ public sealed class WhatsAppChatContentIsolationTests(ApiFactory factory)
             Assert.Null(WhatsAppChatContentConverter.Linked.ConvertFromProvider(platform));
             Assert.Null(WhatsAppChatContentConverter.Platform.ConvertFromProvider(Encoding.UTF8.GetBytes("hola")));
         }
+    }
+
+    [Fact]
+    public async Task Chat_retention_clears_each_organization_with_its_own_term_and_the_platform_with_its_own()
+    {
+        await using var host = WhatsAppAttentionJourney.Host(factory, new FakeGraph());
+        var a = await OrganizationAsync(host, "RA");
+        var b = await OrganizationAsync(host, "RB");
+        var linkedText = "vinculado-" + Guid.NewGuid().ToString("N");
+        // A guarda 30 días; B no eligió y vale el de defecto (90). Todo lo de las dos tiene 60 días.
+        await InScopeAsync(a.TenantId, (_, db) =>
+        {
+            var settings = WhatsAppOrganizationSettings.Create();
+            Assert.True(settings.Update(30, 3650));
+            db.Add(settings);
+            return Task.CompletedTask;
+        });
+        await InScopeAsync(a.TenantId, (services, db) =>
+        {
+            var now = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+            var link = WhatsAppConversationLink.Create(a.PersonalTenantId, a.ChatId, a.OwnerUserId, "Persona", "Organización A", a.Customer, now);
+            link.RecordMessage(now, linkedText);
+            db.AddRange(link, WhatsAppLinkedMessage.Copy(link, WhatsAppMessageDirection.Inbound, linkedText, null, now));
+            return Task.CompletedTask;
+        }, TenantKind.Business);
+        foreach (var world in new[] { a, b })
+        {
+            await RawAsync(world.TenantId, """UPDATE tenant."WhatsAppChatMessages" SET "CreatedAtUtc" = "CreatedAtUtc" - interval '60 days' WHERE "ChatId" = @chat""",
+                ("chat", world.ChatId));
+            await RawAsync(world.TenantId, """UPDATE tenant."WhatsAppChats" SET "LastMessageAtUtc" = "LastMessageAtUtc" - interval '60 days' WHERE "Id" = @chat""",
+                ("chat", world.ChatId));
+        }
+        await RawAsync(a.TenantId, """UPDATE engagement."WhatsAppConversationLinks" SET "LastMessageAtUtc" = "LastMessageAtUtc" - interval '60 days' WHERE "ChatId" = @chat""",
+            ("chat", a.ChatId));
+        await RawAsync(a.TenantId, """UPDATE engagement."WhatsAppLinkedMessages" SET "CreatedAtUtc" = "CreatedAtUtc" - interval '60 days' WHERE "BusinessTenantId" = @tenant""",
+            ("tenant", a.TenantId));
+
+        // Plataforma: una consulta de hace 100 días y otra de hoy, con su plazo de defecto (90).
+        var (oldText, newText) = ("plataforma-vieja-" + Guid.NewGuid().ToString("N"), "plataforma-nueva-" + Guid.NewGuid().ToString("N"));
+        PlatformWhatsAppChat? oldChat = null, newChat = null;
+        await InScopeAsync(null, async (services, db) =>
+        {
+            var now = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+            var channel = await db.Set<WhatsAppChannel>().AsNoTracking().SingleAsync(value => value.PhoneNumberId == a.PhoneNumberId, Ct);
+            (oldChat, newChat) = (Platform(channel.Id, now.AddDays(-100), oldText, db), Platform(channel.Id, now, newText, db));
+        });
+
+        var runner = host.Services.GetRequiredService<TenantJobRunner>();
+        using var worker = new WhatsAppMessageRetentionWorker(host.Services.GetRequiredService<IServiceScopeFactory>(), runner,
+            host.Services.GetRequiredService<TimeProvider>(), NullLogger<WhatsAppMessageRetentionWorker>.Instance);
+        var cleared = 0;
+        await runner.RunAsync([a.TenantId, b.TenantId], async (services, ct) => cleared += await worker.PurgeOrganizationAsync(services, ct), Ct);
+        Assert.True(cleared >= a.Marks.Length + 3);
+        await runner.RunAsync([a.TenantId, b.TenantId], async (services, ct) => Assert.Equal(0, await worker.PurgeOrganizationAsync(services, ct)), Ct);
+        await using (var scope = host.Services.CreateAsyncScope())
+        {
+            var retention = scope.ServiceProvider.GetRequiredService<IWhatsAppMessageRetentionService>();
+            while ((await retention.ClearExpiredPlatformChatsAsync(Ct)).Value > 0) { }
+        }
+
+        Assert.All(await TextsAsync(host.Services, a.TenantId, inboundOnly: false), Assert.Null);
+        Assert.Equal(b.Marks, await TextsAsync(host.Services, b.TenantId));
+        Assert.Null(await PreviewAsync(host.Services, a.TenantId, a.ChatId));
+        Assert.NotNull(await PreviewAsync(host.Services, b.TenantId, b.ChatId));
+        await using (var scope = host.Services.CreateAsyncScope())
+        {
+            scope.ServiceProvider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(a.PersonalTenantId, TenantKind.Personal);
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            Assert.Null(await db.Set<WhatsAppLinkedMessage>().Select(message => message.Text).SingleAsync(Ct));
+            Assert.Null(await db.Set<WhatsAppConversationLink>().Select(link => link.LastMessagePreview).SingleAsync(Ct));
+        }
+        await using (var scope = host.Services.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            Assert.Null(await db.Set<PlatformWhatsAppChatMessage>().Where(message => message.ChatId == oldChat!.Id).Select(message => message.Text).SingleAsync(Ct));
+            Assert.Null((await db.Set<PlatformWhatsAppChat>().AsNoTracking().SingleAsync(chat => chat.Id == oldChat!.Id, Ct)).LastMessagePreview);
+            Assert.Equal(newText, await db.Set<PlatformWhatsAppChatMessage>().Where(message => message.ChatId == newChat!.Id).Select(message => message.Text).SingleAsync(Ct));
+            Assert.Equal(newText, (await db.Set<PlatformWhatsAppChat>().AsNoTracking().SingleAsync(chat => chat.Id == newChat!.Id, Ct)).LastMessagePreview);
+        }
+    }
+
+    private static PlatformWhatsAppChat Platform(Guid channelId, DateTime atUtc, string text, ApplicationDbContext db)
+    {
+        var chat = PlatformWhatsAppChat.Create(channelId, PhoneNumber.Create(WhatsAppAttentionJourney.NewPhone()).Value, atUtc);
+        chat.RecordInbound(atUtc, text);
+        db.AddRange(chat, PlatformWhatsAppChatMessage.Inbound(chat.Id, "wamid.272." + Guid.NewGuid().ToString("N"), text, null, atUtc));
+        return chat;
+    }
+
+    private static async Task<string?> PreviewAsync(IServiceProvider root, Guid tenantId, Guid chatId)
+    {
+        await using var scope = root.CreateAsyncScope();
+        using var enter = scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(tenantId);
+        return (await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<WhatsAppChat>().AsNoTracking()
+            .SingleAsync(chat => chat.Id == chatId, Ct)).LastMessagePreview;
     }
 
     private async Task<World> OrganizationAsync(WebApplicationFactory<Program> host, string label)

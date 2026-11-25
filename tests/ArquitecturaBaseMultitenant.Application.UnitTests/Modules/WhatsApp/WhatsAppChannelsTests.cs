@@ -17,9 +17,9 @@ public sealed class WhatsAppChannelsTests
     {
         var settings = new WhatsAppCodeQuotaTests.Settings { IsEnabled = false };
         var templates = new Templates(); var outbox = new Outbox();
-        var login = new WhatsAppLoginCodeChannel(settings, templates, outbox);
-        login.EnqueueSignup("+5491134567890", "123456", 10, null!);
-        login.EnqueueVerification(Guid.NewGuid(), "+5491134567890", "123456", 10, null!);
+        var login = new WhatsAppLoginCodeChannel(settings, null!, templates, outbox);
+        await login.EnqueueSignupAsync("+5491134567890", "123456", 10, null!, TestContext.Current.CancellationToken);
+        await login.EnqueueVerificationAsync(Guid.NewGuid(), "+5491134567890", "123456", 10, null!, TestContext.Current.CancellationToken);
         await new WhatsAppAccountNoticeChannel(settings, templates, outbox).EnqueueAsync(null, "+5491134567890", new AccountNotice.AccountDeleted(), null!, TestContext.Current.CancellationToken);
         await new WhatsAppInvitationChannel(settings, templates, outbox).EnqueueAsync(InvitationDeliveryDestination.ForPhone(PhoneNumber.Create("+5491134567890").Value), null!, null!, null, TestContext.Current.CancellationToken);
         Assert.Equal(0, outbox.Calls);
@@ -33,8 +33,8 @@ public sealed class WhatsAppChannelsTests
     {
         var settings = new WhatsAppCodeQuotaTests.Settings(); var templates = new Templates(); var outbox = new Outbox();
         var userId = Guid.NewGuid();
-        var login = new WhatsAppLoginCodeChannel(settings, templates, outbox);
-        login.EnqueueRenderedLoginCode(login.RenderLoginCode("+14155552671", "123456", 10, null!), 10, userId);
+        var login = new WhatsAppLoginCodeChannel(settings, null!, templates, outbox);
+        login.EnqueueRenderedLoginCode(await login.RenderLoginCodeAsync("+14155552671", "123456", 10, null!, TestContext.Current.CancellationToken), 10, userId);
         Assert.Equal(userId, outbox.UserId);
         var invitation = new WhatsAppInvitationChannel(settings, templates, outbox);
         await invitation.EnqueueAsync(InvitationDeliveryDestination.ForPhone(PhoneNumber.Create("+14155552671").Value), null!, null!, userId, TestContext.Current.CancellationToken);
@@ -53,8 +53,8 @@ public sealed class WhatsAppChannelsTests
     public async Task Each_send_is_ordered_by_its_chat_and_a_code_goes_before_the_notices()
     {
         var settings = new WhatsAppCodeQuotaTests.Settings(); var templates = new Templates(); var outbox = new Outbox();
-        var login = new WhatsAppLoginCodeChannel(settings, templates, outbox);
-        login.EnqueueRenderedLoginCode(login.RenderLoginCode("+14155552671", "123456", 10, null!), 10);
+        var login = new WhatsAppLoginCodeChannel(settings, null!, templates, outbox);
+        login.EnqueueRenderedLoginCode(await login.RenderLoginCodeAsync("+14155552671", "123456", 10, null!, TestContext.Current.CancellationToken), 10);
         await new WhatsAppInvitationChannel(settings, templates, outbox).EnqueueAsync(
             InvitationDeliveryDestination.ForPhone(PhoneNumber.Create("+14155552671").Value), null!, null!, null, TestContext.Current.CancellationToken);
         await new WhatsAppAccountNoticeChannel(settings, templates, outbox).EnqueueAsync(null, "+14155552671", new AccountNotice.AccountDeleted(), null!,

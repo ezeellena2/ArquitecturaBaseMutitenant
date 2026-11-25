@@ -43,7 +43,21 @@ public sealed class WhatsAppCostResolverTests
     }
 
     private static WhatsAppCostResolver Resolver(Rates rates) =>
-        new(rates, new Currencies(), new Settings(), new FakeTimeProvider(new DateTimeOffset(2026, 10, 15, 12, 0, 0, TimeSpan.Zero)));
+        Resolver(rates, null);
+
+    private static WhatsAppCostResolver Resolver(Rates rates, WhatsAppPlatformSettingsRow? platform)
+    {
+        var settings = new Settings();
+        return new(rates, new Currencies(), settings, new WhatsAppSettingsResolver(new SettingsReader(platform), settings),
+            new FakeTimeProvider(new DateTimeOffset(2026, 10, 15, 12, 0, 0, TimeSpan.Zero)));
+    }
+
+    private sealed class SettingsReader(WhatsAppPlatformSettingsRow? platform) : IWhatsAppSettingsReader
+    {
+        public Task<WhatsAppPlatformSettingsRow?> FindPlatformAsync(CancellationToken ct) => Task.FromResult(platform);
+        public Task<WhatsAppOrganizationSettingsRow?> FindOrganizationAsync(CancellationToken ct) =>
+            Task.FromResult<WhatsAppOrganizationSettingsRow?>(null);
+    }
 
     private sealed class Rates(params (string Country, Money Price)[] prices) : IWhatsAppRateReader
     {
@@ -61,12 +75,11 @@ public sealed class WhatsAppCostResolverTests
     private sealed class Settings : IWhatsAppChannelSettings
     {
         public bool IsEnabled => true;
-        public string AppName => "Prueba";
         public string? PhoneNumberId => null;
         public string? ContactPhone => null;
-        public IReadOnlyList<string> Countries => ["AR"];
+        public IReadOnlyList<string> ConfiguredCountries => ["AR"];
         public int DailyAuthCodeLimit => 100;
         public string? CountryOf(string e164) => e164.StartsWith("+54", StringComparison.Ordinal) ? "AR" : e164.StartsWith("+598", StringComparison.Ordinal) ? "UY" : null;
-        public Result ValidateNewDestination(LoginCodeDestination destination) => Result.Success();
+        public Result ValidateNewDestination(LoginCodeDestination destination, IReadOnlyList<string> allowedCountries) => Result.Success();
     }
 }

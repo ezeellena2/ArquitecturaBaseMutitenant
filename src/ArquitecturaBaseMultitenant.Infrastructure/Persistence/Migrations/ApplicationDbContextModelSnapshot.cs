@@ -3057,10 +3057,19 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<int>("AccountDeletionGraceDays")
                         .HasColumnType("integer");
 
+                    b.Property<string>("AppName")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
                     b.Property<string>("BusinessSignup")
                         .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
+
+                    b.Property<int>("ClosedInvitationRetentionDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(30);
 
                     b.Property<string>("ConsumerSignup")
                         .IsRequired()
@@ -3072,6 +3081,20 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("EmailLogoUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<int>("LoginAuditRetentionMonths")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(12);
+
+                    b.Property<int>("LoginCodeRetentionDays")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(30);
 
                     b.Property<int>("MaxOwnedOrganizations")
                         .HasColumnType("integer");
@@ -3089,6 +3112,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<string>("SalesEmail")
                         .HasMaxLength(254)
                         .HasColumnType("character varying(254)");
+
+                    b.Property<string>("SenderName")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.Property<string>("SupportEmail")
                         .HasMaxLength(254)
@@ -4740,6 +4767,91 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasIndex("Direction", "NextAttemptAtUtc", "LeaseUntilUtc", "ReceivedAtUtc");
 
                     b.ToTable("WhatsAppMessages", "identity");
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppOrganizationSettings", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ChatRetentionDays")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ModifiedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("TenantId", "Id");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique();
+
+                    b.ToTable("WhatsAppOrganizationSettings", "tenant", t =>
+                        {
+                            t.HasCheckConstraint("CK_WhatsAppOrganizationSettings_ChatRetentionDays", "\"ChatRetentionDays\" BETWEEN 1 AND 3650");
+                        });
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppPlatformSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AllowedCountries")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("ChatRetentionDays")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("MaxOrganizationChatRetentionDays")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ModifiedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("WhatsAppPlatformSettings", "platform", t =>
+                        {
+                            t.HasCheckConstraint("CK_WhatsAppPlatformSettings_ChatRetentionDays", "\"ChatRetentionDays\" BETWEEN 1 AND 3650");
+
+                            t.HasCheckConstraint("CK_WhatsAppPlatformSettings_MaxOrganizationChatRetentionDays", "\"MaxOrganizationChatRetentionDays\" BETWEEN 1 AND 3650");
+
+                            t.HasCheckConstraint("CK_WhatsAppPlatformSettings_Singleton", "\"Id\" = '00000000-0000-0000-0000-00000000a9a2'");
+                        });
                 });
 
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppRate", b =>
@@ -8670,6 +8782,15 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("ContactId")
                         .OnDelete(DeleteBehavior.SetNull);
+                });
+
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppOrganizationSettings", b =>
+                {
+                    b.HasOne("ArquitecturaBaseMultitenant.Domain.Tenancy.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppRate", b =>

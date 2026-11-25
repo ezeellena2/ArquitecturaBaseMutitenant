@@ -111,15 +111,16 @@ public sealed class WhatsAppWaitingEmailRendererTests
     {
         public (EmailNotice Notice, CultureProfile Culture)? Last { get; private set; }
 
-        public EmailMessage RenderNotice(string to, EmailNotice notice, CultureProfile culture)
+        public Task<EmailMessage> RenderNoticeAsync(string to, EmailNotice notice, CultureProfile culture,
+            CancellationToken cancellationToken)
         {
             Last = (notice, culture);
-            return new EmailMessage(to, notice.Subject, "html", "text");
+            return Task.FromResult(new EmailMessage(to, notice.Subject, "html", "text"));
         }
 
-        public EmailMessage RenderLoginCode(string to, string code, int lifetimeMinutes, CultureProfile culture) => throw new NotSupportedException();
-        public EmailMessage RenderSignupCode(string to, string code, int lifetimeMinutes, CultureProfile culture) => throw new NotSupportedException();
-        public EmailMessage RenderVerifyEmailCode(string to, string code, int lifetimeMinutes, CultureProfile culture) => throw new NotSupportedException();
+        public Task<EmailMessage> RenderLoginCodeAsync(string to, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<EmailMessage> RenderSignupCodeAsync(string to, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<EmailMessage> RenderVerifyEmailCodeAsync(string to, string code, int lifetimeMinutes, CultureProfile culture, CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<EmailMessage> RenderInvitationAsync(string to, InvitationNotice notice, CultureProfile culture, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
         public Task<EmailMessage> RenderAccountNoticeAsync(string to, AccountNotice notice, CultureProfile culture, CancellationToken cancellationToken) =>

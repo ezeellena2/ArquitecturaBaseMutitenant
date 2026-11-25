@@ -126,10 +126,10 @@ public sealed class OutboxReservationTests(ApiFactory factory)
             var channel = new EmailLoginCodeChannel(services.GetRequiredService<IEmailTemplateRenderer>(), CreateOutbox(services, OutboxChannel.Email), _clock);
             var profile = await new CultureProfiles(new JsonReferenceDataCatalog()).LoadAsync("es-AR", Ct);
             var context = services.GetRequiredService<ApplicationDbContext>();
-            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
             {
-                channel.EnqueueVerification(null, $"vence-{Guid.NewGuid():N}@example.test", "123456", 10, profile);
-                return Task.FromResult(Result.Success());
+                await channel.EnqueueVerificationAsync(null, $"vence-{Guid.NewGuid():N}@example.test", "123456", 10, profile, ct);
+                return Result.Success();
             }, CommitPolicy.OnSuccess, Ct);
             id = Assert.Single(context.OutboxMessages.Local).Id;
             // La cola de correo es compartida con los demás tests: el código pasa a un canal propio para reservarlo solo.

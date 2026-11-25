@@ -12,13 +12,14 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// (o si no se reconoce), el primero que habilita WhatsApp. Un número cuyo país no tiene tarifa, o la tiene en otra moneda,
 /// se estima con la del país habilitado: cuenta igual que en la cantidad de destinatarios y en la difusión.
 /// </summary>
-internal sealed class WhatsAppCostResolver(IWhatsAppRateReader rates, ICurrencyCatalog currencies, IWhatsAppChannelSettings settings, TimeProvider clock)
+internal sealed class WhatsAppCostResolver(IWhatsAppRateReader rates, ICurrencyCatalog currencies, IWhatsAppChannelSettings settings,
+    WhatsAppSettingsResolver configuration, TimeProvider clock)
 {
     internal async Task<WhatsAppCostEstimate> EstimateAsync(IReadOnlyCollection<string> waIds, WhatsAppTemplateCategory category, CancellationToken ct)
     {
         var pricing = Pricing(category);
         var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
-        var fallback = settings.Countries.Count > 0 ? settings.Countries[0] : throw new InvalidOperationException("WhatsApp has no allowed country.");
+        var fallback = await FallbackCountryAsync(ct);
         var countries = waIds.GroupBy(waId => settings.CountryOf(waId) ?? fallback, StringComparer.Ordinal)
             .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
         var unit = await rates.FindAsync(fallback, pricing, today, ct)
@@ -40,11 +41,16 @@ internal sealed class WhatsAppCostResolver(IWhatsAppRateReader rates, ICurrencyC
 
     private async Task<Money> FallbackUnitAsync(WhatsAppTemplateCategory category, CancellationToken ct)
     {
-        var fallback = settings.Countries.Count > 0 ? settings.Countries[0] : throw new InvalidOperationException("WhatsApp has no allowed country.");
+        var fallback = await FallbackCountryAsync(ct);
         var unit = await rates.FindAsync(fallback, Pricing(category), DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime), ct)
             ?? throw new InvalidOperationException("The WhatsApp rate table does not cover the allowed country.");
         return await RoundAsync(unit, ct);
     }
+
+    /// <summary>El primer país que habilita WhatsApp, leído en cada pedido (270).</summary>
+    private async Task<string> FallbackCountryAsync(CancellationToken ct) =>
+        (await configuration.AllowedCountriesAsync(ct)) is [var first, ..] ? first
+            : throw new InvalidOperationException("WhatsApp has no allowed country.");
 
     private async Task<Money> RoundAsync(Money money, CancellationToken ct) =>
         (await currencies.FindAsync(money.Currency.Value, ct))?.MinorUnits is { } minorUnits ? money.Round(minorUnits) : money;

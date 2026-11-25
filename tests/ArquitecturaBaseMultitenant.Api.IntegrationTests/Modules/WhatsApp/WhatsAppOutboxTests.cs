@@ -45,8 +45,8 @@ public sealed class WhatsAppOutboxTests(ApiFactory factory) : IClassFixture<ApiF
             var outbox = new Outbox(context, seed.ServiceProvider.GetRequiredService<IPayloadProtector>(), TimeProvider.System, [sender], seed.ServiceProvider.GetRequiredService<OutboxOrderingKeyHasher>());
             await seed.ServiceProvider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
             {
-                if (authentication) new WhatsAppLoginCodeChannel(new Settings(), WhatsAppTemplateTests.Renderer(), outbox)
-                    .EnqueueVerification(null, "+5491134567890", "483920", 10, culture);
+                if (authentication) await new WhatsAppLoginCodeChannel(new Settings(), null!, WhatsAppTemplateTests.Renderer(), outbox)
+                    .EnqueueVerificationAsync(null, "+5491134567890", "483920", 10, culture, ct);
                 else await new WhatsAppAccountNoticeChannel(new Settings(), WhatsAppTemplateTests.Renderer(), outbox)
                     .EnqueueAsync(null, "+5491134567890", new AccountNotice.RecoveryApproved("https://example.test/login#transient-secret"), culture, ct);
                 return Result.Success();
@@ -122,10 +122,9 @@ public sealed class WhatsAppOutboxTests(ApiFactory factory) : IClassFixture<ApiF
     }
     private sealed class Settings : IWhatsAppChannelSettings
     {
-        public string AppName => "Fixture";
         public bool IsEnabled => true; public string? PhoneNumberId => "template-number"; public string? ContactPhone => null;
-        public IReadOnlyList<string> Countries => ["AR"]; public int DailyAuthCodeLimit => 100;
-        public Result ValidateNewDestination(LoginCodeDestination destination) => throw new InvalidOperationException("Verified methods do not apply new-country policy.");
+        public IReadOnlyList<string> ConfiguredCountries => ["AR"]; public int DailyAuthCodeLimit => 100;
+        public Result ValidateNewDestination(LoginCodeDestination destination, IReadOnlyList<string> allowedCountries) => throw new InvalidOperationException("Verified methods do not apply new-country policy.");
     }
     private sealed class Handler(ApiFactory factory, string wamid) : HttpMessageHandler
     {

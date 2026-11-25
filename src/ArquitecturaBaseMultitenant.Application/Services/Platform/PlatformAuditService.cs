@@ -9,7 +9,6 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Application.Resources;
-using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Platform;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -24,7 +23,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Platform;
 /// </summary>
 internal sealed class PlatformAuditService(ISecurityEventReader reader, IUserRepository users, ICurrentUser currentUser,
     ITimeZoneService timeZones, IRequestValidator validator, IEnumerable<IAuditTextSource> moduleTexts, TimeProvider clock,
-    ILogger<PlatformAuditService> logger)
+    IPlatformSettingsReader settings, ILogger<PlatformAuditService> logger)
     : IPlatformAuditService
 {
     public Task<Result<PlatformAuditListResponse>> ListAsync(ListPlatformAuditRequest request,
@@ -38,9 +37,10 @@ internal sealed class PlatformAuditService(ISecurityEventReader reader, IUserRep
             // Los ingresos no tienen organización: con ese filtro no se suman.
             var signIns = request.Type is null or PlatformAuditCategories.SignIns && request.TenantId is null;
             var page = await reader.ListAsync(request, since, types, signIns, ct);
-            // Contrato de la segunda parte de la base de la 12 (K1): hasta que la B18 lo guarde, el plazo por defecto.
+            // La (i) nombra el plazo de los ingresos de «Privacidad y retención» (272).
+            var periods = await settings.FindRetentionPeriodsAsync(ct);
             return new PlatformAuditListResponse([.. page.Items.Select(ToResponse)], page.NextCursor,
-                page.HasMore, PlatformSettingsLimits.DefaultLoginAuditRetentionMonths);
+                page.HasMore, periods.LoginAuditMonths);
         });
 
     public Task<Result<PlatformAuditEventResponse>> FindAsync(Guid id, CancellationToken ct) =>

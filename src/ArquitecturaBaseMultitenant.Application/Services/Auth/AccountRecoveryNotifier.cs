@@ -22,8 +22,8 @@ internal sealed class AccountRecoveryNotifier(IEnumerable<ILoginCodeChannel> cod
     {
         var channel = codeChannels.SingleOrDefault(value => value.Key == destination.Channel && value.IsAvailable);
         if (channel is null) return LoginChannelErrors.Unavailable;
-        channel.EnqueueVerification(null, destination.Value, issued.Code, issued.LifetimeMinutes,
-            await cultures.ResolveAsync(null, null, cancellationToken));
+        await channel.EnqueueVerificationAsync(null, destination.Value, issued.Code, issued.LifetimeMinutes,
+            await cultures.ResolveAsync(null, null, cancellationToken), cancellationToken);
         issued.LoginCode.MarkSent(issued.IssuedAtUtc);
         return Result.Success();
     }

@@ -61,4 +61,7 @@ public sealed class WhatsAppConversationLink : Entity, IConsumerBusinessShared, 
     }
 
     public void ReplaceConsumerCopy() => ConsumerName = null;
+
+    /// <summary>La retención de los chats de la organización (272): la vista previa del último mensaje vencido se borra con él.</summary>
+    public void ClearPreview() => LastMessagePreview = null;
 }

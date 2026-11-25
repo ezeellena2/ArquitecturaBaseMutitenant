@@ -25,9 +25,10 @@ internal sealed class PlatformSettingsService(IPlatformSettingsReader reader, IP
                 new PlatformSettingsResponse(settings.ConsumerSignup, settings.BusinessSignup, settings.MaxOwnedOrganizations,
                     settings.SalesEmail, settings.SupportEmail, settings.Version,
                     PlatformRateLimitsResponse.From(settings.RateLimits ?? PlatformRateLimits.Initial),
-                    // Contrato de la segunda parte de la base de la 12 (K1): hasta que la B18 los guarde, los valores por defecto.
-                    PlatformSettingsLimits.DefaultLoginAuditRetentionMonths, PlatformSettingsLimits.DefaultLoginCodeRetentionDays,
-                    PlatformSettingsLimits.DefaultClosedInvitationRetentionDays, branding.AppName, branding.SenderName, null);
+                    settings.LoginAuditRetentionMonths, settings.LoginCodeRetentionDays, settings.ClosedInvitationRetentionDays,
+                    // Sin nombre ni logo guardados, los de la configuración de arranque (273, 0060): lo que llega en los correos.
+                    settings.AppName ?? branding.AppName, settings.SenderName ?? branding.SenderName,
+                    PlatformSettings.EffectiveLogoUrl(settings.EmailLogoUrl, branding.LogoUrl));
         });
 
     public Task<Result<PlatformContactResponse>> GetContactAsync(CancellationToken cancellationToken) =>
@@ -58,8 +59,12 @@ internal sealed class PlatformSettingsService(IPlatformSettingsReader reader, IP
                 // Sin rateLimits se conservan las cuotas; con ellas, el diff nombra cada valor que cambió.
                 var rateLimits = request.RateLimits?.ToLimits();
                 if (rateLimits is not null) AddRateLimitChanges(changes, settings.RateLimits, rateLimits);
+                AddRuleChanges(changes, settings, request);
                 var changed = settings.Update(request.ConsumerSignup!.Value, request.BusinessSignup!.Value,
                     request.MaxOwnedOrganizations!.Value, request.SalesEmail!, request.SupportEmail!, rateLimits);
+                if (changed.IsFailure) return changed.Error;
+                changed = settings.UpdateRules(request.LoginAuditRetentionMonths, request.LoginCodeRetentionDays,
+                    request.ClosedInvitationRetentionDays, request.AppName, request.SenderName, request.EmailLogoUrl);
                 if (changed.IsFailure) return changed.Error;
                 repository.MarkUpdated(settings);
                 audit.Record(request.Reason!, changes);
@@ -67,6 +72,22 @@ internal sealed class PlatformSettingsService(IPlatformSettingsReader reader, IP
             }, CommitPolicy.OnSuccess, cancellationToken);
             return VersionResponse.Of(result);
         });
+    }
+
+    /// <summary>Los plazos (272) con su valor; el nombre, el remitente y el logo (273), solo que cambiaron.</summary>
+    private static void AddRuleChanges(SecurityEventChanges changes, PlatformSettings settings, UpdatePlatformSettingsRequest request)
+    {
+        if (request.LoginAuditRetentionMonths is { } months)
+            changes.AddCount("loginAuditRetentionMonths", settings.LoginAuditRetentionMonths, months);
+        if (request.LoginCodeRetentionDays is { } codeDays)
+            changes.AddCount("loginCodeRetentionDays", settings.LoginCodeRetentionDays, codeDays);
+        if (request.ClosedInvitationRetentionDays is { } invitationDays)
+            changes.AddCount("closedInvitationRetentionDays", settings.ClosedInvitationRetentionDays, invitationDays);
+        if (request.AppName is not null && request.AppName.Trim() != settings.AppName) changes.AddBoolean("appNameChanged", false, true);
+        if (request.SenderName is not null && request.SenderName.Trim() != settings.SenderName)
+            changes.AddBoolean("senderNameChanged", false, true);
+        if (request.EmailLogoUrl is not null && request.EmailLogoUrl != settings.EmailLogoUrl)
+            changes.AddBoolean("emailLogoUrlChanged", false, true);
     }
 
     private static void AddRateLimitChanges(SecurityEventChanges changes, PlatformRateLimits before, PlatformRateLimits after)

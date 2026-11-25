@@ -1,12 +1,16 @@
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Application.Models.Notifications;
 using ArquitecturaBaseMultitenant.Application.Models.Invitations;
+using ArquitecturaBaseMultitenant.Application.Models.Settings;
 using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 using ArquitecturaBaseMultitenant.Infrastructure.Phones;
@@ -146,7 +150,7 @@ public sealed class EmailTemplateTests
             Footer = "Te llega porque estás en el equipo <Ventas>.",
         };
 
-        var message = renderer.RenderNotice("recipient@example.test", notice, profile);
+        var message = await renderer.RenderNoticeAsync("recipient@example.test", notice, profile, Ct);
 
         Assert.Equal("recipient@example.test", message.To);
         Assert.Equal("Asunto <1>", message.Subject);
@@ -167,7 +171,7 @@ public sealed class EmailTemplateTests
             && At("&lt;Ventas&gt;.<br>") < At(System.Net.WebUtility.HtmlEncode(layoutFooter)));
 
         // Sin datos, botón, notas ni pie propio no quedan la grilla, el enlace ni el salto del pie.
-        var bare = renderer.RenderNotice("recipient@example.test", new EmailNotice("S", "T", ["P"]), profile);
+        var bare = await renderer.RenderNoticeAsync("recipient@example.test", new EmailNotice("S", "T", ["P"]), profile, Ct);
         Assert.Equal(string.Join(Environment.NewLine + Environment.NewLine, "T", "P", layoutFooter), bare.TextBody);
         Assert.DoesNotContain("<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin:0 0 20px",
             bare.HtmlBody);
@@ -184,7 +188,7 @@ public sealed class EmailTemplateTests
     {
         var profile = await new CultureProfiles(new JsonReferenceDataCatalog()).LoadAsync(culture, Ct);
         var renderer = new EmailTemplateRenderer(Options.Create(new EmailOptions { AppName = "ArquitecturaBase" }));
-        var message = renderer.RenderVerifyEmailCode("user@example.test", "715204", 10, profile);
+        var message = await renderer.RenderVerifyEmailCodeAsync("user@example.test", "715204", 10, profile, Ct);
         Assert.Contains(title, message.TextBody);
         Assert.Contains(subject, message.Subject);
         Assert.Contains("715204", message.TextBody);
@@ -199,8 +203,8 @@ public sealed class EmailTemplateTests
         var profile = await new CultureProfiles(new JsonReferenceDataCatalog()).LoadAsync(culture, Ct);
         var renderer = new EmailTemplateRenderer(Options.Create(new EmailOptions { AppName = "Mi App" }));
 
-        var login = renderer.RenderLoginCode("user@example.test", "123456", 10, profile);
-        var signup = renderer.RenderSignupCode("user@example.test", "654321", 10, profile);
+        var login = await renderer.RenderLoginCodeAsync("user@example.test", "123456", 10, profile, Ct);
+        var signup = await renderer.RenderSignupCodeAsync("user@example.test", "654321", 10, profile, Ct);
 
         Assert.Contains(title, login.TextBody);
         Assert.Contains(intro, login.TextBody);
@@ -217,7 +221,7 @@ public sealed class EmailTemplateTests
         var profile = await new CultureProfiles(new JsonReferenceDataCatalog()).LoadAsync("es-AR", Ct);
         var renderer = new EmailTemplateRenderer(Options.Create(new EmailOptions { AppName = "Mi App" }));
 
-        var message = renderer.RenderLoginCode("user@example.test", "<123&456>", 10, profile);
+        var message = await renderer.RenderLoginCodeAsync("user@example.test", "<123&456>", 10, profile, Ct);
 
         Assert.Contains("&lt;123&amp;456&gt;", message.HtmlBody);
         Assert.DoesNotContain("<123&456>", message.HtmlBody);
@@ -231,7 +235,7 @@ public sealed class EmailTemplateTests
         var profile = await new CultureProfiles(catalog).LoadAsync("it-IT", Ct);
         var renderer = new EmailTemplateRenderer(Options.Create(new EmailOptions { AppName = "Mi App" }));
 
-        var message = renderer.RenderLoginCode("user@example.test", "123456", 10, profile);
+        var message = await renderer.RenderLoginCodeAsync("user@example.test", "123456", 10, profile, Ct);
 
         Assert.Contains("Your access code", message.HtmlBody);
         Assert.Equal("Your access code", NotificationTexts.Get("LoginCode.Title", profile));
@@ -421,6 +425,75 @@ public sealed class EmailTemplateTests
 
         Assert.Contains(unnamedGreeting, unnamed.TextBody);
         Assert.Contains(namedGreeting, named.TextBody);
+    }
+
+    /// <summary>
+    /// Decisión 273: el nombre y el logo de «Nombre y correos» de Plataforma reemplazan a los de arranque en cada correo, y el
+    /// remitente lo pone el canal al mandar, sin que viaje en la cola.
+    /// </summary>
+    [Fact]
+    public async Task Email_uses_the_saved_app_name_logo_and_sender()
+    {
+        var profile = await new CultureProfiles(new JsonReferenceDataCatalog()).LoadAsync("es-AR", Ct);
+        var settings = new BrandingReader(new PlatformBrandingRow("Nombre Nuevo", "Equipo Nuevo", "https://cdn.example.test/logo.png"));
+        var renderer = new EmailTemplateRenderer(Options.Create(new EmailOptions { AppName = "Mi App" }), CreateFormatter(), settings);
+
+        var login = await renderer.RenderLoginCodeAsync("user@example.test", "123456", 10, profile, Ct);
+        var notice = await renderer.RenderAccountNoticeAsync("user@example.test", new AccountNotice.AccountDeleted(), profile, Ct);
+
+        foreach (var message in new[] { login, notice })
+        {
+            Assert.Contains("Nombre Nuevo", message.TextBody);
+            Assert.DoesNotContain("Mi App", message.HtmlBody + message.TextBody + message.Subject);
+            Assert.Contains("<img src=\"https://cdn.example.test/logo.png\"", message.HtmlBody);
+        }
+        Assert.Contains("Nombre Nuevo", login.Subject);
+        Assert.DoesNotContain("Equipo Nuevo", System.Text.Json.JsonSerializer.Serialize(login));
+
+        var transport = new CapturingTransport();
+        var receipt = await new EmailChannelSender(transport, settings)
+            .SendWithReceiptAsync(System.Text.Json.JsonSerializer.Serialize(login), Ct);
+        Assert.True(receipt.IsAccepted);
+        using var mime = MimeMessageFactory.Create(transport.Sent!, new SmtpOptions { FromName = "Arranque", FromAddress = "no-reply@example.test" });
+        Assert.Equal("Equipo Nuevo", Assert.IsType<MimeKit.MailboxAddress>(Assert.Single(mime.From)).Name);
+    }
+
+    [Fact]
+    public async Task Email_is_not_sent_when_the_sender_name_cannot_be_read()
+    {
+        var transport = new CapturingTransport();
+        var message = new EmailMessage("user@example.test", "Asunto", "<p>Hola</p>", "Hola");
+
+        var receipt = await new EmailChannelSender(transport, new BrandingReader(null))
+            .SendWithReceiptAsync(System.Text.Json.JsonSerializer.Serialize(message), Ct);
+
+        Assert.Equal((OutboxAttemptOutcome.Retry, EmailChannelSender.NotSentCode), (receipt.Outcome, receipt.SafeCode));
+        Assert.Null(transport.Sent);
+    }
+
+    /// <summary>Solo «Nombre y correos»; las demás lecturas de la configuración no se usan en estas pruebas.</summary>
+    private sealed class BrandingReader(PlatformBrandingRow? branding) : IPlatformSettingsReader
+    {
+        public Task<PlatformBrandingRow> FindBrandingAsync(CancellationToken cancellationToken) =>
+            branding is null ? throw new InvalidOperationException("The settings are unavailable.") : Task.FromResult(branding);
+
+        public Task<PlatformSettingsRow?> FindAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<PlatformRateLimits?> FindRateLimitsAsync(CancellationToken cancellationToken) => throw new NotSupportedException();
+
+        public Task<IdentityRetentionPeriods> FindRetentionPeriodsAsync(CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+    }
+
+    private sealed class CapturingTransport : IEmailTransport
+    {
+        public EmailMessage? Sent { get; private set; }
+
+        public Task<EmailSendOutcome> SendAsync(EmailMessage message, CancellationToken cancellationToken)
+        {
+            Sent = message;
+            return Task.FromResult(EmailSendOutcome.Sent);
+        }
     }
 
     private static DisplayFormatter CreateFormatter()

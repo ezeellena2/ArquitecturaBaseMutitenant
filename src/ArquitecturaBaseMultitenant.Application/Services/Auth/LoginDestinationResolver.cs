@@ -38,11 +38,11 @@ internal sealed class LoginDestinationResolver(IPhoneNumberParser phones, IEnume
             : LoginCodeDestination.ForPhone(PhoneNumber.Create(value).Value, channel.Key);
     }
 
-    internal Result ValidateNew(LoginCodeDestination destination)
+    internal async Task<Result> ValidateNewAsync(LoginCodeDestination destination, CancellationToken ct)
     {
         var channel = channels.SingleOrDefault(value => value.Key == destination.Channel && value.IsAvailable);
         if (channel is null) return LoginChannelErrors.Unavailable;
-        var valid = channel.ValidateNewDestination(destination, null);
+        var valid = await channel.ValidateNewDestinationAsync(destination, null, ct);
         return valid.IsFailure ? FieldErrors.On(valid.Error, Field(destination)) : Result.Success();
     }
 

@@ -126,12 +126,12 @@ public sealed class WhatsAppTemplateTests
     private sealed class PlatformNumber : ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations.IWhatsAppChannelSettings
     {
         public bool IsEnabled => true;
-        public string AppName => "Plataforma";
         public string? PhoneNumberId => "template-number";
         public string? ContactPhone => null;
-        public IReadOnlyList<string> Countries => ["AR"];
+        public IReadOnlyList<string> ConfiguredCountries => ["AR"];
         public int DailyAuthCodeLimit => 100;
-        public ArquitecturaBaseMultitenant.Domain.Results.Result ValidateNewDestination(ArquitecturaBaseMultitenant.Domain.Authentication.LoginCodeDestination destination) =>
+        public ArquitecturaBaseMultitenant.Domain.Results.Result ValidateNewDestination(ArquitecturaBaseMultitenant.Domain.Authentication.LoginCodeDestination destination,
+            IReadOnlyList<string> allowedCountries) =>
             ArquitecturaBaseMultitenant.Domain.Results.Result.Success();
     }
 }

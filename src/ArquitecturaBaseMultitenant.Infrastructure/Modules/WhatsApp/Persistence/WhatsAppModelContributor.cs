@@ -22,6 +22,7 @@ internal sealed class WhatsAppModelContributor : IPersistenceModelContributor
         [typeof(PlatformWhatsAppTemplate)] = Schemas.Platform,
         [typeof(WhatsAppTemplateState)] = Schemas.Identity,
         [typeof(WhatsAppRate)] = Schemas.Platform,
+        [typeof(WhatsAppPlatformSettings)] = Schemas.Platform,
     };
     public void Configure(ModelBuilder builder)
     {

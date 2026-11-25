@@ -9,7 +9,7 @@ internal static class MimeMessageFactory
     public static MimeMessage Create(EmailMessage message, SmtpOptions sender)
     {
         var mime = new MimeMessage();
-        mime.From.Add(new MailboxAddress(sender.FromName, sender.FromAddress));
+        mime.From.Add(new MailboxAddress(message.FromName ?? sender.FromName, sender.FromAddress));
         mime.To.Add(MailboxAddress.Parse(message.To));
         mime.Subject = message.Subject;
         mime.Body = new BodyBuilder
