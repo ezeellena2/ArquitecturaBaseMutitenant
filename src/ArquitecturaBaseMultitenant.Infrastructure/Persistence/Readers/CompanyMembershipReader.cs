@@ -21,6 +21,7 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
     {
         ["displayName"] = row => row.DisplayName,
         ["email"] = row => row.Email,
+        ["state"] = row => row.State,
     };
 
     private static readonly SortMap<CandidateRow> CandidateSort = new()

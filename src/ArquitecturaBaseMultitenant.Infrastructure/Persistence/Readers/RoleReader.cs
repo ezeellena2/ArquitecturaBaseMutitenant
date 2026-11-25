@@ -15,6 +15,8 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
     private static readonly SortMap<Role> Sort = new()
     {
         ["name"] = role => role.Name,
+        ["type"] = role => role.IsSystemRole,
+        ["scope"] = role => role.Scope,
         ["createdAtUtc"] = role => role.CreatedAtUtc,
     };
 

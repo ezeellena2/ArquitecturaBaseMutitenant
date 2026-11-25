@@ -26,5 +26,6 @@ internal sealed class AccountRecoveryRequestConfiguration : IEntityTypeConfigura
         builder.HasIndex(request => new { request.Status, request.CreatedAtUtc, request.Id });
         builder.HasIndex(request => request.UserId);
         builder.HasIndex(request => new { request.CreatedAtUtc, request.Id });
+        builder.HasIndex(request => new { request.Status, request.Id });
     }
 }

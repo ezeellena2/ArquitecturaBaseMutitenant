@@ -26,6 +26,8 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
             .AreNullsDistinct(false).HasDatabaseName(UniqueKeys.RoleName);
         builder.HasIndex(role => new { role.TenantId, role.Name, role.Id });
         builder.HasIndex(role => new { role.TenantId, role.CreatedAtUtc, role.Id });
+        builder.HasIndex(role => new { role.TenantId, role.IsSystemRole, role.Id });
+        builder.HasIndex(role => new { role.TenantId, role.Scope, role.Id });
         builder.HasOne<TenantEntity>().WithMany()
             .HasForeignKey(role => role.TenantId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Company>().WithMany()

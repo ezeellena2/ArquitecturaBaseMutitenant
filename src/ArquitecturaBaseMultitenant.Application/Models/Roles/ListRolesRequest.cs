@@ -5,7 +5,7 @@ namespace ArquitecturaBaseMultitenant.Application.Models.Roles;
 /// <summary>Listado paginado de roles; Search busca por nombre o descripción.</summary>
 public sealed record ListRolesRequest : PagedRequest
 {
-    public static readonly IReadOnlyCollection<string> SortableFields = ["name", "createdAtUtc"];
+    public static readonly IReadOnlyCollection<string> SortableFields = ["name", "type", "scope", "createdAtUtc"];
 
     public RoleScopeFilter? Scope { get; init; }
     public string? SystemRoleKey { get; init; }

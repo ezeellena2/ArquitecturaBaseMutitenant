@@ -2095,7 +2095,11 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId", "CreatedAtUtc", "Id");
 
+                    b.HasIndex("TenantId", "IsSystemRole", "Id");
+
                     b.HasIndex("TenantId", "Name", "Id");
+
+                    b.HasIndex("TenantId", "Scope", "Id");
 
                     b.ToTable("Roles", "tenant");
                 });
@@ -2623,6 +2627,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasIndex("UserId");
 
                     b.HasIndex("CreatedAtUtc", "Id");
+
+                    b.HasIndex("Status", "Id");
 
                     b.HasIndex("Status", "CreatedAtUtc", "Id");
 
@@ -3217,6 +3223,12 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId", "Name", "Id");
 
+                    b.HasIndex("TenantId", "Status", "Id");
+
+                    b.HasIndex("TenantId", "TaxNumber", "Id");
+
+                    b.HasIndex("TenantId", "TimeZoneId", "Id");
+
                     b.HasIndex("TenantId", "TaxCountry", "TaxType", "TaxNumber")
                         .IsUnique()
                         .HasDatabaseName("IX_Companies_TenantId_TaxCountry_TaxType_TaxNumber")
@@ -3419,6 +3431,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.HasIndex("Kind", "Status");
 
                     b.HasIndex("Name", "Id");
+
+                    b.HasIndex("Status", "Id");
 
                     b.ToTable("Tenants", "platform");
                 });

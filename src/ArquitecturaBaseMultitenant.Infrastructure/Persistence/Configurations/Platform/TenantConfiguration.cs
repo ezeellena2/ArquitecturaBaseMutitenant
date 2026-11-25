@@ -23,5 +23,6 @@ internal sealed class TenantConfiguration : IEntityTypeConfiguration<TenantEntit
         builder.HasIndex(tenant => new { tenant.Kind, tenant.Status });
         builder.HasIndex(t => new { t.Name, t.Id });
         builder.HasIndex(t => new { t.CreatedAtUtc, t.Id });
+        builder.HasIndex(t => new { t.Status, t.Id });
     }
 }

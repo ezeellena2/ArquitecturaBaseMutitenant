@@ -19,6 +19,7 @@ internal sealed class PlatformReader(ApplicationDbContext context) : IPlatformRe
     {
         ["name"] = t => t.Name,
         ["createdAtUtc"] = t => t.CreatedAtUtc,
+        ["status"] = t => t.Status,
     };
 
     public Task<PagedResult<PlatformTenantResponse>> ListTenantsAsync(ListPlatformTenantsRequest request, CancellationToken ct) =>

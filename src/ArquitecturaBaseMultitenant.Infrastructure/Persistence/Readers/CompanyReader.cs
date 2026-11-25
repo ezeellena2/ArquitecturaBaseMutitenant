@@ -14,6 +14,9 @@ internal sealed class CompanyReader(ApplicationDbContext context, ITenantContext
     private static readonly SortMap<Company> Sort = new()
     {
         ["name"] = company => company.Name,
+        ["taxId"] = company => company.TaxNumber,
+        ["timeZoneId"] = company => company.TimeZoneId,
+        ["status"] = company => company.Status,
         ["createdAtUtc"] = company => company.CreatedAtUtc,
     };
 

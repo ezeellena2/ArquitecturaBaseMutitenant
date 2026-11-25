@@ -18,7 +18,7 @@ public enum CompanyMemberState
 
 public sealed record ListCompanyMembersRequest : PagedRequest
 {
-    public static readonly IReadOnlyCollection<string> SortableFields = ["displayName", "email"];
+    public static readonly IReadOnlyCollection<string> SortableFields = ["displayName", "email", "state"];
     public CompanyMemberState? State { get; init; }
     public Guid? RoleId { get; init; }
     public bool? WithoutRoles { get; init; }

@@ -25,6 +25,9 @@ internal sealed class CompanyConfiguration : IEntityTypeConfiguration<Company>
         builder.Ignore(company => company.TaxId);
         builder.HasIndex(company => new { company.TenantId, company.Name, company.Id });
         builder.HasIndex(company => new { company.TenantId, company.CreatedAtUtc, company.Id });
+        builder.HasIndex(company => new { company.TenantId, company.TaxNumber, company.Id });
+        builder.HasIndex(company => new { company.TenantId, company.TimeZoneId, company.Id });
+        builder.HasIndex(company => new { company.TenantId, company.Status, company.Id });
         builder.HasIndex(company => new
         {
             company.TenantId,

@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Isolation;
+using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -23,15 +24,17 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 public sealed class SortIndexTests(ApiFactory factory)
 {
     // Los SortMap de una proyección no ordenan una tabla: cada campo dice la columna que ordena, o null cuando sale de la
-    // cuenta global (nombre o correo) de una lista acotada a una organización o empresa, que ningún índice de una tabla
-    // resuelve. Un SortMap de proyección nuevo entra acá.
+    // cuenta global (nombre o correo) de una lista acotada a una organización o empresa, o de una cuenta en SQL (el estado
+    // de una persona, por su circuito), que ningún índice de una tabla resuelve. Un SortMap de proyección nuevo entra acá.
     private static readonly ProjectedSortField[] Projected =
     [
         new("CompanyMembershipReader.Sort", "displayName", null),
         new("CompanyMembershipReader.Sort", "email", null),
+        new("CompanyMembershipReader.Sort", "state", null),
         new("CompanyMembershipReader.CandidateSort", "displayName", null),
         new("OrganizationUserReader.Sort", "displayName", null),
         new("OrganizationUserReader.Sort", "email", null),
+        new("OrganizationUserReader.Sort", "state", null),
         new("OrganizationUserReader.Sort", "createdAtUtc", new("tenant", "Members", "CreatedAtUtc")),
         new("PlatformAccountReader.Sort", "name", new("identity", "AspNetUsers", "DisplayName")),
     ];
@@ -100,6 +103,45 @@ public sealed class SortIndexTests(ApiFactory factory)
         var indexes = await BtreeIndexesAsync(cancellationToken);
         Assert.Empty(columns.Where(column => !indexes.Any(index => Supports(index, column)))
             .Select(column => $"{column.Schema}.{column.Table}.{column.Column}"));
+    }
+
+    // El orden de cada campo de una tabla llega a PostgreSQL en los dos sentidos: el «es nulo» de lo vacío y el CASE del
+    // circuito de un estado guardado como texto (decisión 264) se traducen y corren.
+    [Fact]
+    public async Task Every_sort_field_of_a_table_reader_runs_in_both_directions()
+    {
+        var cancellationToken = TestContext.Current.CancellationToken;
+        await using var scope = factory.Services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var run = typeof(SortIndexTests).GetMethod(nameof(RunEverySortAsync), BindingFlags.Static | BindingFlags.NonPublic)!;
+        var maps = (from type in typeof(ApplicationDbContext).Assembly.GetTypes()
+                    where !type.ContainsGenericParameters
+                    from field in type.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)
+                    where field.FieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition() == typeof(SortMap<>)
+                    let rowType = field.FieldType.GetGenericArguments()[0]
+                    where context.Model.FindEntityType(rowType) is not null
+                    select (RowType: rowType, Map: field.GetValue(null)!)).ToArray();
+
+        Assert.NotEmpty(maps);
+        foreach (var (rowType, map) in maps)
+        {
+            await (Task)run.MakeGenericMethod(rowType).Invoke(null, [context, map, cancellationToken])!;
+        }
+    }
+
+    private static async Task RunEverySortAsync<T>(ApplicationDbContext context, SortMap<T> map, CancellationToken cancellationToken)
+        where T : class
+    {
+        foreach (var field in map.Keys)
+        {
+            foreach (var descending in new[] { false, true })
+            {
+                await context.Set<T>().AsNoTracking()
+                    .ApplySort(new SortDescriptor(field, descending), map, new SortDescriptor(map.Keys.First(), false),
+                        row => EF.Property<Guid>(row, "Id"))
+                    .Take(1).ToListAsync(cancellationToken);
+            }
+        }
     }
 
     // Privada: (TenantId, campo, Id). Global: termina en (campo, Id).

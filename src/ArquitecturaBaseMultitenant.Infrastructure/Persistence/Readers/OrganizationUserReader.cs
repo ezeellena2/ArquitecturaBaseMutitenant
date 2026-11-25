@@ -23,6 +23,7 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
     {
         ["displayName"] = row => row.DisplayName,
         ["email"] = row => row.Email,
+        ["state"] = row => row.State,
         ["createdAtUtc"] = row => row.CreatedAtUtc,
     };
 

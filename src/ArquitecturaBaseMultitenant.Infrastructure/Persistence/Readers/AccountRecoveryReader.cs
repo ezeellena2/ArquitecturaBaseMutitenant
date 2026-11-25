@@ -14,7 +14,10 @@ internal sealed class AccountRecoveryReader(ApplicationDbContext context) : IAcc
 {
     private static readonly SortMap<Domain.Platform.AccountRecoveryRequest> Sort = new()
     {
+        // «createdAt» queda por la versión anterior del front, que lo sigue mandando mientras conviven (ADR 0060).
         ["createdAt"] = row => row.CreatedAtUtc,
+        ["createdAtUtc"] = row => row.CreatedAtUtc,
+        ["status"] = row => row.Status,
     };
 
     public Task<PagedResult<PlatformRecoveryRow>> ListAsync(ListPlatformRecoveriesRequest request, CancellationToken ct) =>
