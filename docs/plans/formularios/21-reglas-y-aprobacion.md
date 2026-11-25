@@ -1,6 +1,6 @@
 # E21 · Reglas, aprobación, PDF y avisos (spec)
 
-**Estado:** pendiente · spec de la etapa 21 del bloque (decisiones 34, 78, 82, 91 a 93, 100, 106, 113, 114, 158, 159, 161, 166, 170, 177, 228, 230, 236, 237, 239, 240, 261 a 264, 266, 267, 275 y 276; la 240 cambia la 80, y la 266, la 267 y la 276, la 25, la 139, la 166 y la 209), con el [formato](plantilla.md) de las etapas. Corresponde a la etapa 4 de ArquitecturaBase, a la 3 de su carga desde la app (corregir y anular) y a la 3 y la 4 de sus renglones (T12). «Por resolver», el aviso a quien cargó y lo demás del motor son de allá (T14).
+**Estado:** pendiente · spec de la etapa 21 del bloque (decisiones 34, 78, 82, 91 a 93, 100, 106, 113, 114, 158, 159, 161, 166, 170, 177, 228, 230, 236, 237, 239, 240, 261 a 264, 266, 267, 275, 276 y 281; la 240 cambia la 80, y la 266, la 267 y la 276, la 25, la 139, la 166 y la 209), con el [formato](plantilla.md) de las etapas. Corresponde a la etapa 4 de ArquitecturaBase, a la 3 de su carga desde la app (corregir y anular) y a la 3 y la 4 de sus renglones (T12). «Por resolver», el aviso a quien cargó y lo demás del motor son de allá (T14).
 
 **Partes.** Esta spec no entra en un solo archivo, así que sigue en otros tres, con las mismas secciones. Lo que no está en la tabla está acá.
 
@@ -64,7 +64,7 @@ Antes de empezar, en este orden:
 - cada acción de las reglas, con su estado, y cada PDF, con «Ver PDF» y «Bajar PDF»;
 - cada persona de un aviso, con su estado («Entregado», «Leído», «No se pudo», «Sin confirmar» o «No aplica» si dejó el rol, 239) y, si el aviso fue a un rol, el nombre actual del rol en «Detalle»;
 - «Reintentar», en una persona solo con la falla confirmada (WhatsApp lo rechazó o no lo pudo mandar después de sus dos reintentos), y en una acción, como dice la [parte](21-parte-datos-y-contrato.md#el-motor-de-acciones). «No se pudo» lleva su (i): «Reintentar» manda el aviso solo a esa persona, y antes hay que revisar el WhatsApp vinculado y la ventana de 24 horas. Sin permiso de reglas se ve la falla, sin «Reintentar» (158). Cada pedido de reintento es su renglón, con quién y cuándo (239);
-- **lo que no se sabe si salió queda «Sin confirmar»** (240), también un correo (0066 §7): no se repite solo. Por WhatsApp lo revisa en su bandeja cualquiera que puede enviar en ella, y el ⋮ de su renglón lleva ahí; un correo, sin bandeja, lleva «Reintentar», que pide confirmar. La revisión es su renglón, con quién y cuándo; revisar no reenvía ni dice que llegó;
+- **lo que no se sabe si salió queda «Sin confirmar»** (240), también un correo (0066 §7 y 281): no se repite solo. Por WhatsApp lo revisa en su bandeja cualquiera que puede enviar en ella, y el ⋮ de su renglón lleva ahí; un correo, sin bandeja, lleva «Reintentar», que pide confirmar. La revisión es su renglón, con quién y cuándo; revisar no reenvía ni dice que llegó;
 - la corrección y la anulación, con su motivo, como dice su [parte](21-parte-corregir-y-anular.md).
 
 **Corregir y anular** (91 a 93, 166 y 266, como en ArquitecturaBase): una respuesta confirmada no se modifica: queda reemplazada por su corrección, con el mismo número, o anulada, sin borrarse. Se corrige en el lugar: «Corregir», a la vista, destraba los mismos controles en la misma pantalla. Está en su [parte](21-parte-corregir-y-anular.md).
