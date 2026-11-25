@@ -34,6 +34,20 @@ public sealed class AssistantTurnWork : Entity
     /// </summary>
     public const int CurrentEngineVersion = 1;
     public int EngineVersion { get; private set; }
+    /// <summary>0064 §11: un <c>traceparent</c> W3C, la única forma que entra.</summary>
+    public const int TraceParentLength = 55;
+    /// <summary>
+    /// 0064 §11: el contexto de traza de quien pidió el turno, que el worker continúa con una actividad por turno; nulo sin traza
+    /// o en los turnos de antes.
+    /// </summary>
+    public string? TraceParent { get; private set; }
+    /// <summary>Se guarda una sola vez, al aceptar el turno.</summary>
+    public void RecordTrace(string traceParent)
+    {
+        if (traceParent is not { Length: TraceParentLength })
+            throw new ArgumentException("A trace context is a W3C traceparent.", nameof(traceParent));
+        TraceParent ??= traceParent;
+    }
     public static AssistantTurnWork Create(Guid turnId, Guid owner, Access access, Guid? tenantId, TenantKind? kind,
         string culture, string timeZoneId, DateTime? sessionStartedAtUtc, Guid modelId, string providerModelId,
         string effort, AssistantKeyFunding funding, DateTime nowUtc, DateTime deadlineAtUtc)

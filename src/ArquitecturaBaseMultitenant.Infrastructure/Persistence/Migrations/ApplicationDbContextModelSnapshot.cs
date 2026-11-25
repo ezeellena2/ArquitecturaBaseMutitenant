@@ -23,6 +23,24 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AiKeyRingControl", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("KeyId");
+
+                    b.Property<byte[]>("Control")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AiKeyRingControls", "platform");
+                });
+
             modelBuilder.Entity("ArquitecturaBaseMultitenant.Domain.Assistant.AssistantAttachment", b =>
                 {
                     b.Property<Guid>("TenantId")
@@ -1044,6 +1062,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
+
+                    b.Property<string>("TraceParent")
+                        .HasMaxLength(55)
+                        .HasColumnType("character varying(55)");
 
                     b.HasKey("Id");
 

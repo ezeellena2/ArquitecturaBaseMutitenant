@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
@@ -12,7 +13,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
 /// número vigente. Como la cola de entrada, se apaga cuando la instalación no procesa en segundo plano (las pruebas lo
 /// corren a mano).
 /// </summary>
-internal sealed class WhatsAppBroadcastWorker(IServiceScopeFactory scopes, TenantJobRunner tenants, IOptions<WhatsAppOptions> options, TimeProvider clock,
+internal sealed class WhatsAppBroadcastWorker(IServiceScopeFactory scopes, TenantJobRunner tenants, IOptions<WhatsAppOptions> options,
+    IEnumerable<IKeyRingReadiness> keyRings, TimeProvider clock,
     ILogger<WhatsAppBroadcastWorker> logger) : PeriodicWorker(TimeSpan.FromMinutes(1), clock, logger)
 {
     /// <summary>Tandas por organización y vuelta: el resto sale en la vuelta siguiente.</summary>
@@ -33,5 +35,10 @@ internal sealed class WhatsAppBroadcastWorker(IServiceScopeFactory scopes, Tenan
         }, ct);
     }
 
-    protected override Task RunIterationAsync(CancellationToken ct) => RunOnceAsync(ct);
+    protected override async Task RunIterationAsync(CancellationToken ct)
+    {
+        // 0064 §11: una copia con otro anillo no abre lo que guardaron las demás ni escribe lo que ellas no podrían abrir.
+        foreach (var keyRing in keyRings) if (!await keyRing.MatchesAsync(ct)) return;
+        await RunOnceAsync(ct);
+    }
 }

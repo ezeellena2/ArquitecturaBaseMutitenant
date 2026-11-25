@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Api.Features;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
+using OpenTelemetry.Trace;
 
 namespace ArquitecturaBaseMultitenant.Api.Modules.Assistant;
 
@@ -17,6 +18,9 @@ public static class AssistantApiModule
         services.AddScoped<AssistantNewKeyRateLimitFilter>();
         // ADR 0064 §4: los lugares de las subidas, uno por copia, que toma AssistantUploadSlot antes de leer el cuerpo.
         services.AddSingleton<AssistantUploadLimiter>();
+        // 0064 §11: la actividad de cada turno, hija de la traza de quien lo pidió.
+        services.ConfigureOpenTelemetryTracerProvider(tracing =>
+            tracing.AddSource(ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.AssistantTracing.SourceName));
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Idempotency.IIdempotentReplayResolver>(provider =>
             new AssistantReplayAdapter(provider.GetRequiredService<ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Services.IAssistantDurableService>(), "assistant.conversation"));
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Idempotency.IIdempotentReplayResolver>(provider =>

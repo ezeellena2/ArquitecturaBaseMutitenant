@@ -18,8 +18,11 @@ public sealed record AssistantToolExecution(string Data, IReadOnlyList<Guid> Sub
 public sealed record AssistantChatBinding(AssistantMode Mode, Guid ModelId, string ProviderModelId, AssistantEffort Effort);
 /// <summary><c>Readable</c>: false si su rol o su estado los escribió una versión más nueva; la conversación no se arma (0064 §6).</summary>
 public sealed record AssistantHistoryMessageRow(Guid Id, string Role, bool PrivacySubjectsKnown, Guid[] SubjectUserIds, bool Readable);
-/// <summary><c>KnownEngine</c>: false si lo selló un motor más nuevo; solo llega vencido, para cerrarlo y devolver el cupo (0064 §6).</summary>
-public sealed record AssistantTurnDiscovery(Guid TurnId, ExecutionActor Actor, bool KnownEngine);
+/// <summary>
+/// <c>KnownEngine</c>: false si lo selló un motor más nuevo; solo llega vencido, para cerrarlo y devolver el cupo (0064 §6).
+/// <c>TraceParent</c>: la traza de quien lo pidió, que continúa el worker (0064 §11).
+/// </summary>
+public sealed record AssistantTurnDiscovery(Guid TurnId, ExecutionActor Actor, bool KnownEngine, string? TraceParent = null);
 public sealed record AssistantTitleCall(AssistantChatBinding Binding, uint ConversationVersion, int Sequence,
     IReadOnlyList<ChatMessage> Messages);
 

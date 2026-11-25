@@ -7,6 +7,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Persisten
 internal static class AssistantLockKeys
 {
     internal const string PlatformSettings = "global:assistant-settings";
+    /// <summary>0064 §11: dos copias que comparan el anillo a la vez.</summary>
+    internal const string KeyRing = "global:assistant:key-ring";
     internal static string OrganizationSettings(Guid tenantId) => AdvisoryLockKeys.For(tenantId, "assistant-settings", "singleton");
     internal static string Policy(Guid tenantId) => AdvisoryLockKeys.For(tenantId, "assistant-policy", "singleton");
     internal static string AccountFinance(Guid owner) => AdvisoryLockKeys.Account(owner) + ":assistant:finance";

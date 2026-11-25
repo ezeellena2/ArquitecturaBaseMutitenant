@@ -29,6 +29,7 @@ internal sealed class AssistantModelContributor : IPersistenceModelContributor
         [typeof(AssistantFinancialCall)] = Schemas.Platform,
         [typeof(AssistantBudgetMonth)] = Schemas.Platform,
         [typeof(AssistantBudgetAlert)] = Schemas.Platform,
+        [typeof(AiKeyRingControl)] = Schemas.Platform,
     };
     public void Configure(ModelBuilder builder) => builder.ApplyConfigurationsFromAssembly(GetType().Assembly,
         type => type.Namespace == ConfigurationNamespace);

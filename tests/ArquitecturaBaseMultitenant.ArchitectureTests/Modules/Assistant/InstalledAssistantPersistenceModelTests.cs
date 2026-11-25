@@ -95,6 +95,8 @@ public sealed class InstalledAssistantPersistenceModelTests
             "Access", "CallSequence", "CallStarted", "CreatedAtUtc", "Culture", "DeadlineAtUtc", "Effort", "EngineVersion", "Funding",
             "Id", "LeaseExpiresAtUtc", "LeaseId", "ModelId", "OwnerUserId", "ProviderModelId", "ScopeTenantId",
             "SessionStartedAtUtc", "Status", "StopRequested", "TenantKind", "TimeZoneId",
+            // 0064 §11: el traceparent W3C de quien pidió el turno, ids de traza y nada del chat.
+            "TraceParent",
         };
         Assert.Equal(expected.Order(), work.GetProperties().Select(value => value.Name).Order());
         Assert.Contains(work.GetIndexes(), value => value.Properties.Select(property => property.Name)

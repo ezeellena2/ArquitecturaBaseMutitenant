@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,7 +12,7 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Inbound;
 
 internal sealed class WhatsAppInboundProcessor(WhatsAppInboundSignal signal, IServiceScopeFactory scopes,
-    IOptions<WhatsAppOptions> options, TimeProvider clock, ILogger<WhatsAppInboundProcessor> logger)
+    IOptions<WhatsAppOptions> options, IEnumerable<IKeyRingReadiness> keyRings, TimeProvider clock, ILogger<WhatsAppInboundProcessor> logger)
     : PeriodicWorker(TimeSpan.FromSeconds(options.Value.InboundPollSeconds), clock, logger)
 {
     // Un número puede conectarse desde la pantalla después del arranque: la cola se revisa siempre que el proceso la atienda.
@@ -57,7 +58,12 @@ internal sealed class WhatsAppInboundProcessor(WhatsAppInboundSignal signal, ISe
             scope.ServiceProvider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(organizationId, TenantKind.Business);
         return await scope.ServiceProvider.GetRequiredService<IWhatsAppInboundService>().ProcessAsync(claim, ct);
     }
-    protected override Task RunIterationAsync(CancellationToken ct) => ProcessPendingAsync(ct);
+    protected override async Task RunIterationAsync(CancellationToken ct)
+    {
+        // 0064 §11: una copia con otro anillo no abre lo que guardaron las demás ni escribe lo que ellas no podrían abrir.
+        foreach (var keyRing in keyRings) if (!await keyRing.MatchesAsync(ct)) return;
+        await ProcessPendingAsync(ct);
+    }
     protected override async ValueTask<bool> WaitForNextIterationAsync(PeriodicTimer timer, CancellationToken ct)
     {
         await signal.WaitAsync(TimeSpan.FromSeconds(options.Value.InboundPollSeconds), Clock, ct);

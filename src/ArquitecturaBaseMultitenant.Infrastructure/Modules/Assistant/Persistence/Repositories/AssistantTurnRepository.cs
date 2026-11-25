@@ -26,7 +26,7 @@ internal sealed class AssistantTurnRepository(ApplicationDbContext db, IEnumerab
             .Where(row => row.EngineVersion <= AssistantTurnWork.CurrentEngineVersion || row.DeadlineAtUtc <= nowUtc)
             .OrderBy(row => row.CreatedAtUtc).Take(AssistantTechnicalLimits.TurnsPerCopy)
             .Select(row => new AssistantTurnDiscovery(row.Id, new ExecutionActor(row.OwnerUserId, row.Access, row.ScopeTenantId, row.Culture, row.TimeZoneId)
-            { TenantKind = row.TenantKind, SessionStartedAtUtc = row.SessionStartedAtUtc }, row.EngineVersion <= AssistantTurnWork.CurrentEngineVersion)).ToArrayAsync(ct);
+            { TenantKind = row.TenantKind, SessionStartedAtUtc = row.SessionStartedAtUtc }, row.EngineVersion <= AssistantTurnWork.CurrentEngineVersion, row.TraceParent)).ToArrayAsync(ct);
 
     public async Task<AssistantTurnWork?> GetWorkAsync(Guid id, bool forUpdate, CancellationToken ct)
     {
@@ -87,7 +87,13 @@ internal sealed class AssistantTurnRepository(ApplicationDbContext db, IEnumerab
         db.Add(row);
         return row.Id;
     }
-    public void Add(AssistantTurnWork work) { db.RequireTransaction(); db.Add(work); }
+    public void Add(AssistantTurnWork work)
+    {
+        db.RequireTransaction();
+        // 0064 §11: la traza de quien pide el turno (el request del Inicio), que continúa el worker; sin una, nada.
+        if (AssistantTracing.Current() is { } trace) work.RecordTrace(trace);
+        db.Add(work);
+    }
     public void Touch(IAssistantConversation conversation, DateTime nowUtc)
     {
         conversation.Touch(nowUtc);

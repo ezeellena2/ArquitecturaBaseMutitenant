@@ -17,11 +17,13 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant;
 
 /// <summary>Durable discovery is the authority; request lifetime is never a worker cancellation source.</summary>
 internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, TimeProvider clock,
-    IOptions<AssistantOptions> options, ILogger<AssistantTurnWorker> logger) : PeriodicWorker(options.Value.WorkerInterval, clock, logger)
+    IOptions<AssistantOptions> options, AiKeyRingReadiness keyRing, ILogger<AssistantTurnWorker> logger) : PeriodicWorker(options.Value.WorkerInterval, clock, logger)
 {
     protected override bool Enabled => options.Value.TurnWorkerEnabled;
     protected override async Task RunIterationAsync(CancellationToken stoppingToken)
     {
+        // 0064 §11: una copia con otro anillo, o que todavía no lo pudo comprobar, no toma turnos.
+        if (!await keyRing.MatchesAsync(stoppingToken)) return;
         IReadOnlyList<AssistantTurnDiscovery> ready;
         await using (var discovery = scopes.CreateAsyncScope())
             ready = await discovery.ServiceProvider.GetRequiredService<IAssistantTurnRepository>().ListReadyAsync(Clock.GetUtcNow().UtcDateTime, stoppingToken);
@@ -37,25 +39,28 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
 
     private async Task ProcessAsync(AssistantTurnDiscovery candidate, CancellationToken hostToken)
     {
+        // 0064 §11: una actividad por turno, hija de la traza de quien lo pidió; lo que llama adentro (el proveedor, la base) cuelga de ella.
+        using var activity = AssistantTracing.StartTurn(candidate.TurnId, candidate.TraceParent);
         var lease = Guid.NewGuid();
         // Un turno de un motor más nuevo no se arma con este: solo se cierra, vencido y sin llamar al proveedor (0064 §6, B12).
-        if (!candidate.KnownEngine) { await RecoverAsync(candidate, lease); return; }
+        if (!candidate.KnownEngine) { await RecoverAsync(candidate, lease, activity); return; }
         await using var scope = scopes.CreateAsyncScope();
         var actors = scope.ServiceProvider.GetRequiredService<IExecutionActorFactory>();
         var prepared = await actors.RevalidateAsync(candidate.Actor, hostToken);
-        if (prepared.IsFailure) { await RecoverAsync(candidate, lease); return; }
+        if (prepared.IsFailure) { await RecoverAsync(candidate, lease, activity); return; }
         using var actor = scope.ServiceProvider.GetRequiredService<IExecutionActorScope>().Enter(prepared.Value);
         var service = scope.ServiceProvider.GetRequiredService<IAssistantTurnService>();
         var claimed = await service.ClaimAsync(candidate.TurnId, lease, hostToken);
         if (claimed.IsFailure)
         {
-            if (claimed.Error.Code != AssistantErrors.TurnInProgress.Code) await RecoverAsync(candidate, lease);
+            if (claimed.Error.Code != AssistantErrors.TurnInProgress.Code) await RecoverAsync(candidate, lease, activity);
             return;
         }
         var turn = claimed.Value;
         if (turn.RecoverOnly)
         {
             using var finish = new CancellationTokenSource(options.Value.FinalizationTimeout, Clock);
+            AssistantTracing.MarkOutcome(activity, "Failed", AssistantErrors.ProviderUnavailable.Code);
             await service.CompleteAsync(turn.TurnId, lease, "Failed", AssistantErrors.ProviderUnavailable.Code, finish.Token);
             return;
         }
@@ -163,6 +168,7 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
             execution.Cancel();
             try { await monitor; } catch (OperationCanceledException) { }
         }
+        AssistantTracing.MarkOutcome(activity, terminal, code);
         // Separate bounded finalization token, independent of both browser and provider cancellation.
         using var finalization = new CancellationTokenSource(options.Value.FinalizationTimeout, Clock);
         try
@@ -171,7 +177,7 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
             if (providerFailure == AssistantErrors.ProviderUnavailableCode)
                 await service.CheckpointAsync(turn.TurnId, lease, null, NothingSent, true, finalization.Token);
             var closed = await service.CompleteAsync(turn.TurnId, lease, terminal, code, finalization.Token);
-            if (closed.IsFailure) await RecoverAsync(candidate, lease);
+            if (closed.IsFailure) await RecoverAsync(candidate, lease, activity);
             else if (settingsVersion is { } version && (terminal == "Complete" || providerFailure is not null))
                 await RecordProviderOutcomeAsync(scope.ServiceProvider, turn.Binding.Mode, terminal == "Complete" ? null : providerFailure, version, finalization.Token);
         }
@@ -259,8 +265,10 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
         await service.FinishTitleAsync(turn.TurnId, lease, titleCall.ConversationVersion, title, usage, ct);
         services.GetRequiredService<IAssistantChatContext>().Binding = turn.Binding;
     }
-    private async Task RecoverAsync(AssistantTurnDiscovery candidate, Guid lease)
+    private async Task RecoverAsync(AssistantTurnDiscovery candidate, Guid lease, System.Diagnostics.Activity? activity)
     {
+        // Se cierra sin completarse: en la traza es un error.
+        AssistantTracing.MarkOutcome(activity, "Failed", null);
         // Trusted technical closure uses original scope only; no actor, chat, or provider is resolved here.
         using var timeout = new CancellationTokenSource(options.Value.FinalizationTimeout, Clock);
         await using var scope = scopes.CreateAsyncScope();

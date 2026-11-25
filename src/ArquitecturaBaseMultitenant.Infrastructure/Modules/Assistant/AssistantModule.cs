@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Persistence.Readers;
@@ -42,6 +43,13 @@ public static class AssistantModule
         services.AddScoped<IAssistantUsageReader, AssistantUsageReader>();
         services.AddSingleton<IAssistantProviderCatalog, AssistantProviderCatalog>();
         services.AddScoped<IAssistantKeyProtector, AssistantKeyProtector>();
+        // 0064 §11: el anillo y su control; una copia que no coincide no queda lista («ai-keyring») ni toma turnos, y con
+        // IKeyRingReadiness tampoco toma nada de la cola de salida ni de las de los canales.
+        services.AddScoped<IAiKeyRingControlRepository, AiKeyRingControlRepository>();
+        services.AddScoped<IAiKeyRingControl, HmacAiKeyRingControl>();
+        services.AddSingleton<AiKeyRingReadiness>();
+        services.AddSingleton<IKeyRingReadiness>(provider => provider.GetRequiredService<AiKeyRingReadiness>());
+        services.AddHealthChecks().AddCheck<AiKeyRingHealthCheck>(AiKeyRingHealthCheck.Name);
         // E9: transporte nombrado de los clientes de Anthropic, sin los reintentos de ServiceDefaults ni loggers HTTP que vean la clave.
         // La API de reemplazo sigue experimental en Extensions 10; limita la supresión a esta composición.
 #pragma warning disable EXTEXP0001

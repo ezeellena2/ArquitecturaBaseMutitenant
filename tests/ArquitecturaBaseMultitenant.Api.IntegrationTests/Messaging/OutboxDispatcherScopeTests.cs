@@ -25,7 +25,7 @@ public sealed class OutboxDispatcherScopeTests
             .AddScoped<IChannelSender>(_ => new ScopedSender(observed))
             .AddScoped<IOutboxDispatchService>(_ => new ScopedDispatchService(observed)).BuildServiceProvider();
         using var worker = new OutboxDispatcher(services.GetRequiredService<IServiceScopeFactory>(), TimeProvider.System,
-            Options.Create(new OutboxOptions { BatchSize = 3, PollIntervalSeconds = 60 }), NullLogger<OutboxDispatcher>.Instance);
+            Options.Create(new OutboxOptions { BatchSize = 3, PollIntervalSeconds = 60 }), [new KeyRing(true)], NullLogger<OutboxDispatcher>.Instance);
         await worker.StartAsync(TestContext.Current.CancellationToken);
         try { await observed.Completed.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken); }
         finally { await worker.StopAsync(CancellationToken.None); }
@@ -33,6 +33,37 @@ public sealed class OutboxDispatcherScopeTests
         Assert.Same(observed.Senders[0], observed.Senders[1]);
         Assert.Equal(5, observed.Services.Count);
         Assert.Equal(5, observed.Services.Distinct().Count());
+    }
+
+    /// <summary>
+    /// 0064 §11 (revisión de la B15): una copia con otro anillo no abre lo que las demás protegieron. Si tomara el aviso, gastaría
+    /// sus intentos sin poder abrirlo hasta perderlo; no toma ninguno y lo deja para las copias que sí.
+    /// </summary>
+    [Fact]
+    public async Task A_copy_whose_ring_does_not_match_claims_nothing()
+    {
+        var observed = new DispatchScopes();
+        var ring = new KeyRing(false);
+        using var services = new ServiceCollection().AddSingleton(observed).AddSingleton(TimeProvider.System)
+            .AddSingleton(Options.Create(new OutboxOptions { BatchSize = 3, PollIntervalSeconds = 60 }))
+            .AddSingleton<IPayloadProtector>(new PayloadProtector())
+            .AddSingleton<Microsoft.Extensions.Logging.ILogger<OutboxDeliveryProcessor>>(NullLogger<OutboxDeliveryProcessor>.Instance)
+            .AddScoped<OutboxDeliveryProcessor>()
+            .AddScoped<IChannelSender>(_ => new ScopedSender(observed))
+            .AddScoped<IOutboxDispatchService>(_ => new ScopedDispatchService(observed)).BuildServiceProvider();
+        using var worker = new OutboxDispatcher(services.GetRequiredService<IServiceScopeFactory>(), TimeProvider.System,
+            Options.Create(new OutboxOptions { BatchSize = 3, PollIntervalSeconds = 60 }), [new KeyRing(true), ring], NullLogger<OutboxDispatcher>.Instance);
+        await worker.StartAsync(TestContext.Current.CancellationToken);
+        try { await ring.Asked.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken); }
+        finally { await worker.StopAsync(CancellationToken.None); }
+        Assert.Equal(0, observed.Claims);
+        Assert.Empty(observed.Services);
+        Assert.Empty(observed.Senders);
+    }
+    private sealed class KeyRing(bool matches) : IKeyRingReadiness
+    {
+        public TaskCompletionSource Asked { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public Task<bool> MatchesAsync(CancellationToken cancellationToken) { Asked.TrySetResult(); return Task.FromResult(matches); }
     }
     private sealed class DispatchScopes
     {

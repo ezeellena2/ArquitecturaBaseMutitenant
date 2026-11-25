@@ -22,6 +22,7 @@ internal sealed class AssistantTurnWorkConfiguration : IEntityTypeConfiguration<
         builder.Property(row => row.Culture).HasMaxLength(TextLimits.ShortName);
         builder.Property(row => row.TimeZoneId).HasMaxLength(TextLimits.ShortName);
         builder.Property(row => row.EngineVersion).HasDefaultValue(1);
+        builder.Property(row => row.TraceParent).HasMaxLength(AssistantTurnWork.TraceParentLength);
         builder.HasIndex(row => new { row.Status, row.LeaseExpiresAtUtc, row.CreatedAtUtc, row.Id });
         // 0064 §5 y §6: el worker busca solo lo pendiente o en curso, en su orden, sin recorrer lo terminado.
         builder.HasIndex(row => new { row.CreatedAtUtc, row.Id }).HasDatabaseName("IX_AssistantTurnWorks_Open")

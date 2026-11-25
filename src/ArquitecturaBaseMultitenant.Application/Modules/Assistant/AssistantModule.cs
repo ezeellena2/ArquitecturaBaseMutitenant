@@ -42,6 +42,7 @@ public static class AssistantModule
         services.AddScoped<AssistantNoticePolicy>();
         services.AddScoped<AssistantNoticeWriter>();
         services.AddScoped<IAssistantSettingsService, AssistantSettingsService>();
+        services.AddScoped<IAiKeyRingControlService, AiKeyRingControlService>();
         services.AddScoped<IAssistantUsageService, AssistantUsageService>();
         services.AddScoped<AssistantUsagePolicy>();
         services.AddScoped<AssistantUsageBuilder>();
