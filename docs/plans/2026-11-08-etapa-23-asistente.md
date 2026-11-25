@@ -170,7 +170,7 @@ Leé AGENTS.md de los dos repos, este plan y la skill /puerta. Integrá el front
 
 **Deja para las siguientes:**
 - **Datos:** `AssistantAgents` (`IsPrimary`), `AssistantKnowledge`, `WhatsAppInboxAttention`, `WhatsAppAssistantActions`, `WhatsAppAssistantCounters`, `WhatsAppUnansweredTopics`, `FormMissingTopics`, `FormSuggestionSets` y las columnas nuevas de K1.
-- **Lo demás:** lo de K1 (en especial `assistant/agent` y `…/test`), `ConversationProposal`, los servicios de B2 a B5 y los helpers de la 0070 (`WhatsAppAssistantTurnPolicy`, `WhatsAppConversationTurnBuilder`, `WhatsAppAssistantCounterGuard`, `WhatsAppAssistantActionWriter`, `WhatsAppHandoffWriter`, `ConversationActionCatalog` y las seis `<Acción>ConversationAction`), `CurrentEngineVersion` 3, las fuentes de acciones de la B12 (`WhatsAppAgentActionSource`, `WhatsAppAttentionActionSource`, `WhatsAppUnansweredTopicActionSource` y `FormMissingTopicActionSource`), el perfil `flow-static-7.3-r13` y las pantallas de F2, F4 y F5.
+- **Lo demás:** lo de K1 (en especial `assistant/agent` y `…/test`), `ConversationProposal`, los servicios de B2 a B5 y los helpers de la 0070 (`WhatsAppAssistantTurnPolicy`, `WhatsAppConversationTurnBuilder`, `WhatsAppAssistantCounterGuard`, `WhatsAppAssistantActionWriter`, `WhatsAppHandoffWriter`, `ConversationActionCatalog`, `IConversationAction`, `ConversationActionKind` y las seis `<Acción>ConversationAction`), `CurrentEngineVersion` 3, las fuentes de acciones de la B12 (`WhatsAppAgentActionSource`, `WhatsAppAttentionActionSource`, `WhatsAppUnansweredTopicActionSource` y `FormMissingTopicActionSource`), el perfil `flow-static-7.3-r13` y las pantallas de F2, F4 y F5.
 
 ## Cambios al contrato
 
