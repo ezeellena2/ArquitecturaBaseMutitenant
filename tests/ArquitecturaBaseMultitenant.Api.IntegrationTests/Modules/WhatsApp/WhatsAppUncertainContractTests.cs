@@ -74,6 +74,12 @@ public sealed class WhatsAppUncertainContractTests(ApiFactory factory)
             Assert.DoesNotContain(ContractErrors.NotImplementedCode, codes);
             Assert.Null(put["parameters"]?.AsArray().FirstOrDefault(value => value!["name"]!.GetValue<string>() == "Idempotency-Key"));
         }
+        // El máximo que fija la plataforma lo compara el servicio al guardar: un error propio, en el campo.
+        var aboveMaximum = Assert.Single(organization["put"]!["x-error-codes"]!.AsArray(),
+            value => value!["code"]!.GetValue<string>() == WhatsAppErrors.ChatRetentionOutOfRangeCode)!;
+        Assert.Equal((400, "chatRetentionDays"), (aboveMaximum["status"]!.GetValue<int>(), aboveMaximum["field"]!.GetValue<string>()));
+        Assert.DoesNotContain(platform["put"]!["x-error-codes"]!.AsArray(),
+            value => value!["code"]!.GetValue<string>() == WhatsAppErrors.ChatRetentionOutOfRangeCode);
         var schemas = document["components"]!["schemas"]!;
         var platformBody = schemas["UpdatePlatformWhatsAppSettingsHttpRequest"]!["properties"]!;
         Assert.Equal(1, platformBody["allowedCountries"]!["minItems"]!.GetValue<int>());

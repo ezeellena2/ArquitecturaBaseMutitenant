@@ -13,6 +13,7 @@
 - Un error `TooManyRequests` lleva los segundos que faltan en la metadata `retryAfter`: el front los usa para la cuenta regresiva del botón.
 - **Un recurso de otro tenant devuelve 404**, nunca 403.
 - Para atar un error de negocio a un campo del formulario: `FieldErrors.On(error, "name")`.
+- Si el texto del campo nombra un dato que solo conoce el servicio al guardar (el máximo que fija la plataforma), `FieldErrors.On(error, "campo", texto)`, con el texto del código armado con la cultura de la petición. Nunca un texto con `{From}` o `{To}` sin reemplazar (`WhatsAppSettingsService`).
 
 ```csharp
 public const string HasUsersCode = "Roles.Role.HasUsers";

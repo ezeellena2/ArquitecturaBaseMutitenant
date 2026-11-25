@@ -17987,7 +17987,7 @@
         "tags": [
           "WhatsApp Business management"
         ],
-        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo. Configuración de WhatsApp de la organización (272): chatRetentionDays, de 1 al máximo de la plataforma, con version en el PUT y el 409 de siempre. Un valor fuera de su mínimo o su máximo es el 400 de validación en su campo.",
+        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo. Configuración de WhatsApp de la organización (272): chatRetentionDays, de 1 al máximo de la plataforma, con version en el PUT y el 409 de siempre. Un valor fuera de 1 y 3650 es el 400 de validación en su campo; uno por encima del máximo que fija la plataforma al guardar, el 400 WhatsApp.Settings.ChatRetentionOutOfRange en chatRetentionDays, con ese máximo en el texto.",
         "responses": {
           "200": {
             "description": "OK",
@@ -18106,7 +18106,7 @@
         "tags": [
           "WhatsApp Business management"
         ],
-        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo. Configuración de WhatsApp de la organización (272): chatRetentionDays, de 1 al máximo de la plataforma, con version en el PUT y el 409 de siempre. Un valor fuera de su mínimo o su máximo es el 400 de validación en su campo.",
+        "description": "Atención por WhatsApp (ADR 0038). La organización sale del token y el número de Meta; nunca del cuerpo. Configuración de WhatsApp de la organización (272): chatRetentionDays, de 1 al máximo de la plataforma, con version en el PUT y el 409 de siempre. Un valor fuera de 1 y 3650 es el 400 de validación en su campo; uno por encima del máximo que fija la plataforma al guardar, el 400 WhatsApp.Settings.ChatRetentionOutOfRange en chatRetentionDays, con ese máximo en el texto.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -18149,7 +18149,7 @@
             }
           },
           "400": {
-            "description": "Bad Request; Validation.Failed",
+            "description": "Bad Request; Validation.Failed; WhatsApp.Settings.ChatRetentionOutOfRange",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -18174,6 +18174,36 @@
                       "detail": "Check the highlighted fields.",
                       "code": "Validation.Failed",
                       "traceId": "example-trace-id"
+                    }
+                  },
+                  "WhatsApp.Settings.ChatRetentionOutOfRange.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Es más que el máximo de días que permite la plataforma.",
+                      "code": "WhatsApp.Settings.ChatRetentionOutOfRange",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "chatRetentionDays": [
+                          "Es más que el máximo de días que permite la plataforma."
+                        ]
+                      }
+                    }
+                  },
+                  "WhatsApp.Settings.ChatRetentionOutOfRange.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "It's more than the maximum number of days the platform allows.",
+                      "code": "WhatsApp.Settings.ChatRetentionOutOfRange",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "chatRetentionDays": [
+                          "It's more than the maximum number of days the platform allows."
+                        ]
+                      }
                     }
                   }
                 }
@@ -18304,6 +18334,13 @@
             "field": null,
             "es": "Otra persona cambió esto. Revisá la versión más reciente antes de guardar.",
             "en": "Someone else changed this. Review the latest version before saving."
+          },
+          {
+            "status": 400,
+            "code": "WhatsApp.Settings.ChatRetentionOutOfRange",
+            "field": "chatRetentionDays",
+            "es": "Es más que el máximo de días que permite la plataforma.",
+            "en": "It's more than the maximum number of days the platform allows."
           },
           {
             "status": 429,

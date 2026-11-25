@@ -152,6 +152,9 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
             {
                 errors.Add(HttpContractDocumentation.CoreError(400, "Validation.Failed"));
                 errors.Add(HttpContractDocumentation.CoreError(409, "General.ConcurrencyConflict"));
+                // El validador no conoce el máximo que fija la plataforma: el servicio lo compara al guardar.
+                if (path.StartsWith("/api/organization/", StringComparison.Ordinal))
+                    Add(400, WhatsAppErrors.ChatRetentionOutOfRangeCode, "chatRetentionDays");
             }
         }
         if (path.Contains("/contacts/{id}", StringComparison.Ordinal)) Add(404, WhatsAppErrors.ContactNotFoundCode);
@@ -213,7 +216,7 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
         "/api/platform/whatsapp/settings" =>
             "Configuración de WhatsApp de la plataforma (270 y 272): allowedCountries (al menos uno, de los países habilitados, sin repetir), chatRetentionDays y maxOrganizationChatRetentionDays, con version en el PUT y el 409 de siempre. Un valor fuera de su mínimo o su máximo es el 400 de validación en su campo.",
         "/api/organization/whatsapp/settings" =>
-            "Configuración de WhatsApp de la organización (272): chatRetentionDays, de 1 al máximo de la plataforma, con version en el PUT y el 409 de siempre. Un valor fuera de su mínimo o su máximo es el 400 de validación en su campo.",
+            "Configuración de WhatsApp de la organización (272): chatRetentionDays, de 1 al máximo de la plataforma, con version en el PUT y el 409 de siempre. Un valor fuera de 1 y 3650 es el 400 de validación en su campo; uno por encima del máximo que fija la plataforma al guardar, el 400 WhatsApp.Settings.ChatRetentionOutOfRange en chatRetentionDays, con ese máximo en el texto.",
         _ when path.EndsWith("/conversations/{id}", StringComparison.Ordinal) && !path.StartsWith("/api/me/", StringComparison.Ordinal) =>
             "Cada mensaje: status suma Uncertain («Sin confirmar», ADR 0066), derivado de la cola mientras Meta no avise otra cosa; failureReason es el texto del motivo guardado (uno de los códigos WhatsApp.Send.*); reviewedByName y reviewedAtUtc dicen quién lo revisó y cuándo.",
         _ when path.Contains("/broadcasts/{id}", StringComparison.Ordinal) =>

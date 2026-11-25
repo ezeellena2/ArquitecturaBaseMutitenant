@@ -60,13 +60,13 @@ internal sealed class WhatsAppSettingsService(IWhatsAppSettingsReader reader, IW
 
     /// <summary>
     /// El validador no conoce el máximo de la plataforma: el texto del campo lo dice, con los números de la cultura de la petición
-    /// (sin una, la predeterminada del catálogo).
+    /// (sin una, la predeterminada del catálogo). El del código, sin números, queda para el detalle del problema y el contrato.
     /// </summary>
     private async Task<string> OutOfRangeTextAsync(Error error, CancellationToken ct)
     {
         var culture = CultureInfo.CurrentUICulture.Name;
         var profile = await new CultureProfiles(cultures).LoadAsync(culture.Length == 0 ? null : culture, ct);
-        return WhatsAppTexts.Format(error.Code, profile, WhatsAppSettingsLimits.MinChatRetentionDays,
+        return WhatsAppTexts.Format("WhatsApp.Settings.ChatRetentionRange", profile, WhatsAppSettingsLimits.MinChatRetentionDays,
             error.Metadata![WhatsAppErrors.MaxChatRetentionDaysKey]!);
     }
 }

@@ -523,6 +523,9 @@
     <value>Por hoy no se pueden mandar más códigos por WhatsApp a esta cuenta. Probá de nuevo más tarde.</value>
   </data>
   <data name="WhatsApp.Settings.ChatRetentionOutOfRange" xml:space="preserve">
+    <value>Es más que el máximo de días que permite la plataforma.</value>
+  </data>
+  <data name="WhatsApp.Settings.ChatRetentionRange" xml:space="preserve">
     <value>Tiene que ser de {0} a {1}: es el máximo de la plataforma.</value>
   </data>
   <data name="WhatsApp.Message.NotUncertain" xml:space="preserve">
