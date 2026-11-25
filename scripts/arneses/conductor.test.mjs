@@ -102,6 +102,14 @@ test('conductor: el cupo en 85 % o un bloqueo del plan frenan antes de programar
   }
 });
 
+test('conductor: con topeCupo, el usuario deja pasar el 85 %, y los agentes miran ese tope', async () => {
+  const lect = lectura([tarea('B1', 'back')], { cupoSemanal: 90 });
+  const { resultado, llamadas } = await correr(respondedor(lect), { plan: PLAN, modo: 'programar', topeCupo: 100 });
+  assert.equal(estadoDe(resultado, 'B1').estado, 'hecha');
+  assert.match(llamadas.find((l) => l.label === 'B1 · programa').prompt, /Con 100 % o más no empieces/);
+  await assert.rejects(correr(respondedor(lect), { plan: PLAN, topeCupo: 120 }), /topeCupo va de 1 a 100/);
+});
+
 test('conductor: una espera del contrato hacia el back es un ciclo y no empieza', async () => {
   const lect = lectura([tarea('K1', 'contrato', { espera: ['B1'] }), tarea('B1', 'back')]);
   const { resultado, etiquetas } = await correr(respondedor(lect), { plan: PLAN });

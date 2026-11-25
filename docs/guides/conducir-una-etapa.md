@@ -25,6 +25,7 @@ Workflow({ scriptPath: '.agents/workflows/etapa.js', args: { plan: 'docs/plans/2
 | `usuarioListo` | `true` cuando el usuario ya hizo lo que la puerta necesita, por ejemplo cargar sus user-secrets. Con `planes`, vale solo para el primero |
 | `carrilesBack` | cuántos carriles del back corren a la vez, de 1 a 4. Por defecto 2. Con 1, el back trabaja en main, como antes de la 0071 |
 | `modelos` | otro modelo por rol: `{ front, back, verifica }`, por ejemplo `{ front: 'sonnet' }`. Por defecto, todos usan el de la sesión. Antes de usarlo en una etapa, se mide con una tarea |
+| `topeCupo` | el porcentaje del cupo semanal desde el que los agentes no empiezan nada nuevo. Por defecto 85 (`AGENTS.md`, «Sesiones y cupo»). Se sube solo si el usuario lo pide, como el 2026-11-25 para terminar la base 2 |
 
 Para retomar una corrida cortada, se lanza otra vez con el mismo plan: lo que ya está commiteado se saltea. Con `resumeFromRunId`, en cambio, se pasa el mismo script con que se lanzó. Si el conductor cambió desde entonces, se usa una copia del script viejo guardada en `.local/conductor/`, o los agentes ya hechos se vuelven a correr. Si una cadena frenó, se relanza con los planes que faltan, después de resolver lo que la frenó.
 

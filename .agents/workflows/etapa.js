@@ -1,7 +1,7 @@
 export const meta = {
   name: 'etapa',
   description: 'Programa una etapa, o varias seguidas, desde su plan ejecutable: contrato, los carriles del back (cada uno en su copia) y el front a la vez, revisión adversarial según el riesgo, la integración una vez por carril, revisores por premisa con su verificador y una sola puerta',
-  whenToUse: 'Cuando el usuario pide programar, retomar o cerrar una etapa con plan ejecutable (docs/plans/AAAA-MM-DD-etapa-*.md), o varias seguidas. args: { plan | planes: [rutas], modo?: planificar|programar|cerrar|todo, solo?: [ids], usuarioListo?: true, carrilesBack?: 2, modelos?: { front, back, verifica } }. Guía: docs/guides/conducir-una-etapa.md',
+  whenToUse: 'Cuando el usuario pide programar, retomar o cerrar una etapa con plan ejecutable (docs/plans/AAAA-MM-DD-etapa-*.md), o varias seguidas. args: { plan | planes: [rutas], modo?: planificar|programar|cerrar|todo, solo?: [ids], usuarioListo?: true, carrilesBack?: 2, modelos?: { front, back, verifica }, topeCupo?: 85 }. Guía: docs/guides/conducir-una-etapa.md',
   phases: [
     { title: 'Leer', detail: 'el plan, lo ya commiteado y lo que bloquea' },
     { title: 'Contrato', detail: 'las tareas K, en el back' },
@@ -35,7 +35,9 @@ if (!Number.isInteger(CARRILES_BACK) || CARRILES_BACK < 1 || CARRILES_BACK > 4) 
 const MODELOS = A.modelos && typeof A.modelos === 'object' ? A.modelos : {}
 const PREFIJO = PLANES.length > 1
 const FRONT = '../ArquitecturaBaseMutitenantFront'
-const TOPE_CUPO = 85
+// Con este porcentaje del cupo semanal no se empieza nada nuevo (AGENTS.md, «Sesiones y cupo»). Solo el usuario lo sube.
+const TOPE_CUPO = A.topeCupo === undefined ? 85 : A.topeCupo
+if (!Number.isInteger(TOPE_CUPO) || TOPE_CUPO < 1 || TOPE_CUPO > 100) throw new Error('topeCupo va de 1 a 100.')
 // Cada paso de un agente relee todo lo que lleva: uno corto gasta mucho menos que uno largo con el mismo trabajo.
 const PASOS_POR_AGENTE = 80
 const VUELTAS = 6
