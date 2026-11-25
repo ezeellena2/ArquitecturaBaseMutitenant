@@ -103,6 +103,8 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 - no guarda datos de negocio;
 - modelo: `AssistantTurnWorks` y `Infrastructure/Modules/Assistant/Persistence/Repositories/AssistantTurnRepository.cs` (`ListReadyAsync`).
 
+**platform.FormMetaCallCounters** (técnica, global como `FormPublicationWorks`, declarada en el contribuidor, sin datos personales): `TenantId`, `MinuteUtc` y `Count`, con clave `(TenantId, MinuteUtc)`. Cuenta el tope de consultas a Meta ([cuotas](../../rules/cuotas.md)): se suma con un `INSERT … ON CONFLICT DO UPDATE` que no pasa del tope, en una UoW propia antes de llamar al canal, y la misma UoW borra los de esa organización de antes del minuto anterior, sin un trabajo de fondo. Sin lugar, `Forms.Meta.TooManyCalls` con `Retry-After` hasta el minuto siguiente.
+
 ### WhatsApp (se suma al módulo de la E11)
 
 **WhatsAppFlowBindings**
@@ -137,9 +139,9 @@ Una pregunta opcional sin respuesta no tiene fila: es «Sin respuesta», y nunca
 | `ProtectedOffer`, `OfferHash` | texto?, texto? | la oferta de las preguntas de catálogo, cifrada con `IPayloadProtector` (T19): `[{fieldId, options: [{localId, catalogId, itemId, text, detail?, code?, value?}]}]` |
 
 **Lo que se suma a las tablas de la E11 [E11]:**
-- **la configuración de WhatsApp de la organización** (la que deja la segunda parte de la base con el plazo de los chats, 272): `FlowSessionHours`, el tiempo para contestar un formulario, 24 por defecto, de 1 a 168 y nunca más que el tope de la organización, que da el resolvedor de topes de las Costuras de módulos ([0069](../../decisions/0069-modulos-y-suscripciones.md)): WhatsApp lo declara con su máximo de la plataforma (`MaxFlowSessionHours`, 168 por defecto) y lo lee por él, con su revisión y el 409. Se lee de la base en cada envío, y una sesión creada antes conserva su vencimiento (270 y [ADR 0060](../../decisions/0060-dos-versiones-conviven.md));
+- **la configuración de WhatsApp de la organización** (la que deja la segunda parte de la base con el plazo de los chats, 272): `FlowSessionHours`, el tiempo para contestar un formulario, 24 por defecto, de 1 a 168 y nunca más que el tope de la organización, que da el resolvedor de topes de las Costuras de módulos ([0069](../../decisions/0069-modulos-y-suscripciones.md)): WhatsApp lo declara con su máximo de la plataforma (`MaxFlowSessionHours`, 168 por defecto) y lo lee por él, con su revisión y el 409. En cada envío vale el menor entre lo elegido y el tope (`ModuleLimitCeiling.Effective`): bajar el máximo acorta los envíos nuevos sin tocar lo guardado. Se lee de la base en cada envío, y una sesión creada antes conserva su vencimiento (270 y [ADR 0060](../../decisions/0060-dos-versiones-conviven.md));
 - **mensaje saliente:** un tipo «Formulario» que apunta a la sesión;
-- **mensaje entrante:** `ProtectedFlowResponse`, cifrado con `IPayloadProtector` y de hasta 24 KiB. Se borra con la retención de WhatsApp, solo cuando ya se procesó;
+- **mensaje entrante:** `ProtectedFlowResponse`, cifrado con `IPayloadProtector` y de hasta 24 KiB. Se borra con la retención de WhatsApp, solo cuando ya se procesó: un `nfm_reply` llega sin texto, así que `ClearText` y `ClearPersonalData` la vacían también, y `ListExpiredTextAsync` toma además los mensajes que solo la tienen y ya se procesaron (`ProcessedAtUtc`);
 - **copia compartida:** `WhatsAppLinkedMessage` suma `FormCard`, la tarjeta de T16. Es contenido del chat y se guarda cifrado, con el propósito de la copia vinculada ([ADR 0065](../../decisions/0065-contenido-del-chat-cifrado.md)): un JSON en `bytea`, no jsonb. El mensaje «Formulario» de la conversación también va cifrado, como todo texto del chat.
 
 ## 4. Dominio y errores
@@ -251,7 +253,7 @@ Las rutas Business de Forms llevan `[Access(Access.Business)]` y `[FeatureGate("
 - **`FormDetailResponse` y `PUT …/draft`:** la pregunta lleva también su `presentation?` propia (T22).
 - **`publication-checks`:** suma `Forms.Draft.CatalogUnavailable`, `CatalogTooLarge` y `CatalogPresentationInvalid`.
 - **`GET …/conversations/{id}/forms`:** cada formulario trae `offerProblems[{fieldId?, label?, code, minSelections?}]` (`TooManyOptions`, `TooFewOptions`, `NoOptions`, `CatalogUnavailable` y `PresentationInvalid`) y `optionCounts`, la cantidad de opciones de cada pregunta de catálogo con el nombre de la pregunta, nunca los de las opciones. `minSelections` va con `TooFewOptions` («se piden al menos 2»). WhatsApp suma `NotPublishedForNumber`, sin `fieldId`, si el número del chat está en una cuenta sin el Flow de esa versión (103). Si hay algún problema, el formulario aparece pero no se puede mandar.
-- **La configuración de WhatsApp de la organización** suma `flowSessionHours`, y la de la plataforma, `maxFlowSessionHours`, cada una en la ruta que ya tiene, con su revisión y el 409 (270).
+- **La configuración de WhatsApp de la organización** suma `flowSessionHours`, y la de la plataforma, `maxFlowSessionHours`, cada una en la ruta que ya tiene, con su revisión y el 409 (270), opcionales en el `PUT`: si faltan, se conserva lo guardado (0060).
 - **Las rutas de catálogos de la E12:** el listado y el detalle suman `usedByCount` (`null` sin `forms.read`), que el listado suma a su `sort` (264), y `fields[]` suma `inUse` y `usedIn` (`null` sin `forms.read`): hasta 3 `{formId, formName, fieldId, questionLabel, version}`, con `version` en `draft` o `active`, para que «Quitar «…»» diga qué formulario y qué pregunta lo usan («en la versión activa») y adónde lleva «Ir a la pregunta». Sin `forms.read`, el diálogo dice que está en uso, sin nombrarlos. Se suma GET `/api/organization/forms/catalogs/{id}/used-by` (`forms.read`, porque da nombres de formularios; `page`, `pageSize`, `search`, `sort` (`name`) → 200 `PagedResult<{formId, name}>`), con su segunda página en las pruebas de integración.
 
 **Contrato y errores en OpenAPI:** se suman al `FormsContractContributor.cs` de la E12.

@@ -67,7 +67,7 @@ Las de producto están en la hoja de ruta (§5). Estas siguen las reglas del rep
      - se bloquea el prefijo en la fila de estado.
    - Responde 202. El pedido lleva `[Idempotent]`: repetirlo con la misma `Idempotency-Key` («Repetir el mismo intento», 175) devuelve la misma publicación.
    - **El worker** (`Infrastructure/Modules/Forms/FormPublicationWorker.cs`, modelo `AssistantTurnWorker`) hace tres pasos:
-     1. busca trabajos listos y entra con `ExecutionActor` (el operador que publicó, revalidado: si perdió `forms.publish` antes de tocar Meta, la publicación termina `Failed`). Llama a `IFormPublicationService.ClaimAsync`, que reserva en su única UoW y pasa a `Preparing`;
+     1. busca trabajos listos y entra con `ExecutionActor` (el operador que publicó, revalidado: si perdió `forms.publish` antes de tocar Meta, la publicación termina `Failed`; con `forms` apagada para esa organización, `IFeatureService` con el actor, no la toma y queda como estaba hasta que se prenda, 0069 §5). Llama a `IFormPublicationService.ClaimAsync`, que reserva en su única UoW y pasa a `Preparing`;
      2. fuera de toda UoW llama a `IStructuredFormChannel.PublishAsync`:
         - el canal arma el Flow de la versión para cada WABA con números conectados **[E11]**;
         - por cada uno sigue los pasos Create → Upload → Validate → Publish → Verify;

@@ -1,13 +1,13 @@
 # E14 · Formularios: crear, publicar, mandar y recibir (spec)
 
-**Estado:** pendiente · spec de la etapa 14 del bloque (decisiones 34 y 78), con las de la §13. Nace con la pregunta «Elegir de un catálogo», sobre los catálogos de la E12 y sus campos de la E13. `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E11]**, **[E12]**, **[E9]** y **[Meta]** contra el código real y la documentación vigente.
+**Estado:** pendiente · spec de la etapa 14 del bloque (decisiones 34 y 78), con las de la §13. Nace con la pregunta «Elegir de un catálogo», sobre los catálogos de la E12 y sus campos de la E13. Su plan es [`2026-11-08-etapa-14-formularios.md`](../2026-11-08-etapa-14-formularios.md).
 
 **Fuentes:**
 - alcance y decisiones de producto: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E14 y §5;
 - reglas: [AGENTS.md](../../../AGENTS.md) y las [fichas](../../rules/README.md);
 - conocimiento de Meta: ArquitecturaBase ([§14](14-parte-archivos-tests-y-meta.md#14-referencia-de-meta-tomada-de-arquitecturabase)). Es solo referencia, no código para copiar.
 
-**Requisitos:** la E13 cerrada (con ella, el módulo `Forms`, los catálogos y sus campos), la E11 (números por organización, bandejas, token por organización) y la E9 (Redis, límites y fuzz). La prueba con Meta pide una organización con su número conectado, y queda pendiente hasta la I1 de la 10 (123).
+**Requisitos:** la E13 cerrada (con ella, el módulo `Forms`, los catálogos y sus campos), la E11 (números, bandejas y token por organización) y la E9 (Redis, límites y fuzz). Antes van la segunda parte de la base (la cola con «Sin confirmar», el chat cifrado y la configuración de WhatsApp de la B18) y las [Costuras de módulos](costuras-de-modulos.md) (el resolvedor de topes, 0069). La prueba con Meta pide una organización con su número conectado, y queda pendiente hasta la I1 de la 10 (123).
 
 **Partes.** Esta spec no entra en un solo archivo, así que sigue en otros, con los mismos números de sección. Lo que no está en la tabla está acá.
 
@@ -16,14 +16,14 @@
 | §2, §6 y §6b | [decisiones técnicas y flujos](14-parte-decisiones-y-flujos.md) |
 | §3, §4, §5 y §7 | [datos y contrato](14-parte-datos-y-contrato.md) |
 | §8, §10 y §14 | [archivos, tests y Meta](14-parte-archivos-tests-y-meta.md) |
-| §11, §12, §16 y §17 | [premisas, contactos, criterios y acciones](14-parte-premisas-criterios-y-acciones.md) |
+| §11, §12, §16, §17 y los textos de los errores | [premisas, contactos, criterios y acciones](14-parte-premisas-criterios-y-acciones.md) |
 
 ## Qué leer
 
 Antes de empezar:
 1. **Lo anterior:** las specs de la [E12](12-catalogos.md) y la [E13](13-campos.md), sobre todo sus datos, su contrato y sus archivos.
 2. **Decisiones** de la hoja de ruta: las de la §13 de esta spec.
-3. **Fichas:** [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [idempotencia](../../rules/idempotencia.md), [multitenancy](../../rules/multitenancy.md), [persistencia-ef](../../rules/persistencia-ef.md), [auditoria](../../rules/auditoria.md), [api-http](../../rules/api-http.md), [permisos](../../rules/permisos.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [result-y-errores](../../rules/result-y-errores.md), [validacion](../../rules/validacion.md), [textos-libres](../../rules/textos-libres.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [numeros-y-moneda](../../rules/numeros-y-moneda.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [datos-personales](../../rules/datos-personales.md), [logs](../../rules/logs.md), [cuotas](../../rules/cuotas.md), [modulos](../../rules/modulos.md) y [tests](../../rules/tests.md). Además, cómo caen en este módulo: [§11](14-parte-premisas-criterios-y-acciones.md#11-premisas-aplicadas).
+3. **Fichas:** [guardado](../../rules/guardado.md), [concurrencia](../../rules/concurrencia.md), [idempotencia](../../rules/idempotencia.md), [multitenancy](../../rules/multitenancy.md), [persistencia-ef](../../rules/persistencia-ef.md), [auditoria](../../rules/auditoria.md), [api-http](../../rules/api-http.md), [permisos](../../rules/permisos.md), [paginado-y-busqueda](../../rules/paginado-y-busqueda.md), [result-y-errores](../../rules/result-y-errores.md), [validacion](../../rules/validacion.md), [textos-libres](../../rules/textos-libres.md), [textos-y-traducciones](../../rules/textos-y-traducciones.md), [numeros-y-moneda](../../rules/numeros-y-moneda.md), [fechas-y-zonas](../../rules/fechas-y-zonas.md), [datos-personales](../../rules/datos-personales.md), [logs](../../rules/logs.md), [cuotas](../../rules/cuotas.md), [modulos](../../rules/modulos.md), [modulos-habilitados](../../rules/modulos-habilitados.md) y [tests](../../rules/tests.md). Además, cómo caen en este módulo: [§11](14-parte-premisas-criterios-y-acciones.md#11-premisas-aplicadas).
 4. **Código para copiar:** el módulo Asistente y lo que deje la E11, pieza por pieza, en la §8.
 5. **Pantallas:** los tableros de la §9.
 6. **Referencia de Meta:** la §14.
@@ -69,7 +69,7 @@ Antes de empezar:
 
 **Navegación (34, 78 y 79):** el menú principal dice «Gestión de formularios», y su panel ya tiene «Catálogos» (E12). Esta etapa suma «Formularios»: una sola lista, con «Nuevo formulario», y cada formulario se abre en «Diseño», sin barra de pestañas mientras sea la única (193). El panel va en dos grupos: arriba «Formularios» y, después de una línea sin título, «Catálogos» (275). No existe «Diseñar formularios». Los tableros de la etapa muestran solo lo que existe hasta ella.
 
-**Aprobados y publicados en el lienzo v150** (2026-11-02), con sus teléfonos, sin idioma en el contenido y con los botones de la decisión 43. Reemplazan a los de la v139:
+**Aprobados y publicados en el lienzo v150** (2026-11-02), con sus teléfonos, sin idioma en el contenido y con los botones de la decisión 43:
 - **`FRM-Formularios`:** la lista «Formularios» (79), una tabla con Formulario, Preguntas, En WhatsApp y Último cambio (fecha y hora completas), que ordenan desde el encabezado y desde «Ordenar por» (264), el filtro «Estado», la pieza con su botón y sin cantidades (262), y «Nuevo formulario». El nombre abre el editor, en su pestaña «Diseño» (275). Reemplaza a `FRM-Listado`;
 - **`FRM-Editor`:** el editor en una sola pantalla:
   - el formulario: nombre, «Para quién es» (empleados, clientes o los dos; 50), texto del botón final y prefijo, cada uno en su campo. «Para quién es», el tipo de una pregunta y su presentación se eligen con la pieza (262);
