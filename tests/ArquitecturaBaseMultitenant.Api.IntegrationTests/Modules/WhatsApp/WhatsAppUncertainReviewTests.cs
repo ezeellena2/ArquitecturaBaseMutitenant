@@ -116,6 +116,45 @@ public sealed class WhatsAppUncertainReviewTests(ApiFactory factory)
             WhatsAppErrors.MessageNotUncertainCode);
     }
 
+    /// <summary>
+    /// Dos que pueden enviar marcan como revisado el mismo envío «Sin confirmar» a la vez: la primera revisión queda escrita y sin
+    /// confirmar cuando llega la segunda. El lock de la conversación hace esperar a la segunda, que lee la primera y la devuelve;
+    /// sin el lock, la segunda la pisaría con otro nombre y otra hora.
+    /// </summary>
+    [Fact]
+    public async Task Two_agents_reviewing_the_same_unconfirmed_message_at_once_both_get_the_first_review()
+    {
+        var hold = new CommitHold(context => context.ChangeTracker.Entries<WhatsAppChatMessage>()
+            .Any(entry => entry.Entity.ReviewedAtUtc is not null));
+        await using var attention = WhatsAppAttentionJourney.Host(factory, new FakeGraph());
+        await using var host = attention.WithWebHostBuilder(hold.Install);
+        using var owner = WhatsAppAttentionJourney.Client(host);
+        var (account, tenant) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, owner, Ct);
+        // Otro nombre que el de la agente: una segunda revisión que pisara la primera se vería en la respuesta.
+        await using (var naming = host.Services.CreateAsyncScope())
+            await naming.ServiceProvider.GetRequiredService<ApplicationDbContext>().Users.Where(user => user.Id == account.UserId)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(user => user.DisplayName, "Bruno Díaz"), Ct);
+        var phoneNumberId = WhatsAppAttentionJourney.NewNumberId();
+        (await WhatsAppAttentionJourney.ConnectAsync(owner, phoneNumberId, Ct)).Dispose();
+        using var anonymous = WhatsAppAttentionJourney.Client(host);
+        var customer = WhatsAppAttentionJourney.NewPhone();
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, customer, "Hola", Ct);
+        var chat = ChatId(await JsonAsync(owner.GetAsync($"{Customers}/conversations", Ct)), customer);
+        var sent = await SendAsync(owner, $"{Customers}/conversations/{chat}/messages", "Te ayudo");
+        await OutboxRows.SetStatusAsync(host.Services, (await QueuedAsync(host, tenant, sent)).Id, OutboxStatus.Uncertain, Ct);
+        using var agent = await AgentAsync(host, tenant, Permissions.WhatsApp.Customers);
+
+        var (first, second) = await hold.RaceAsync(host.Services, () => agent.PostAsync(Review(Customers, chat, sent), null, Ct),
+            () => owner.PostAsync(Review(Customers, chat, sent), null, Ct), Ct);
+
+        var (byAgent, byOwner) = (await JsonAsync(first), await JsonAsync(second));
+        Assert.Equal("Ana Gómez", byAgent.GetProperty("reviewedByName").GetString());
+        Assert.Equal((byAgent.GetProperty("reviewedByName").GetString(), byAgent.GetProperty("reviewedAtUtc").GetDateTime()),
+            (byOwner.GetProperty("reviewedByName").GetString(), byOwner.GetProperty("reviewedAtUtc").GetDateTime()));
+        var listed = Message(await JsonAsync(owner.GetAsync($"{Customers}/conversations/{chat}", Ct)), sent);
+        Assert.Equal("Ana Gómez", listed.GetProperty("reviewedByName").GetString());
+    }
+
     [Fact]
     public async Task Internal_inbox_reviews_with_its_own_permission()
     {

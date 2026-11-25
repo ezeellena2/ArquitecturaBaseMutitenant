@@ -57,6 +57,28 @@ public sealed class AiKeyRingControlTests
         Assert.Equal(HealthStatus.Healthy, await HealthAsync(replica));
     }
 
+    /// <summary>
+    /// Dos copias que arrancan a la vez contra una base sin controles: la primera escribe y, antes de confirmar, la segunda llega.
+    /// El lock la hace esperar y leer lo confirmado: las dos quedan listas y cada control se escribe una vez. Sin el lock, la
+    /// segunda leería vacío y chocaría con la clave de la primera.
+    /// </summary>
+    [Fact]
+    public async Task Two_copies_that_start_at_once_against_a_database_without_controls_are_both_ready()
+    {
+        var hold = new CommitHold(context => context.ChangeTracker.Entries<AiKeyRingControl>().Any());
+        await using var session = await AssistantTurnTestSession.CreateAsync("consumer", workerEnabled: false, configure: hold.Install);
+        Assert.Empty(await ControlsAsync(session.Host));
+
+        var (first, second) = await hold.RaceAsync(session.Host.Services, () => CheckAsync(session.Host), () => CheckAsync(session.Host), Ct);
+
+        Assert.Empty(await first);
+        Assert.Empty(await second);
+        var written = await ControlsAsync(session.Host);
+        Assert.NotEmpty(written);
+        Assert.Empty(await CheckAsync(session.Host));
+        Assert.Equal(written.Keys.Order(), (await ControlsAsync(session.Host)).Keys.Order());
+    }
+
     [Fact]
     public async Task The_application_cannot_delete_or_change_a_control()
     {
