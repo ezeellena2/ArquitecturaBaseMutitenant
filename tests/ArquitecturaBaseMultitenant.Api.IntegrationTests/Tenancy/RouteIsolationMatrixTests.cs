@@ -185,11 +185,21 @@ public sealed partial class RouteIsolationMatrixTests(ApiFactory factory)
                 if (status != HttpStatusCode.NotFound || Code(body) != notFound) failures.Add($"{route.Key} responde en {name}: {(int)status}");
             }
             var (publishedStatus, publishedBody) = await SendAsync(publishedSite, route.Method, path, EmptyBody(route));
-            if ((publishedStatus == HttpStatusCode.NotFound && Code(publishedBody) == notFound) || (int)publishedStatus >= 500)
+            if ((publishedStatus == HttpStatusCode.NotFound && Code(publishedBody) == notFound) || Crashes(publishedStatus, publishedBody))
                 failures.Add($"{route.Key} no responde en el subdominio publicado: {(int)publishedStatus}");
             if (publishedBody.Contains(mark, StringComparison.Ordinal)) failures.Add($"{route.Key} devuelve datos de otra organización");
         }
         Assert.True(failures.Count == 0, string.Join('\n', failures));
+    }
+
+    [Fact]
+    public void Only_the_contract_placeholder_501_is_not_a_crash()
+    {
+        Assert.False(Crashes(HttpStatusCode.NotImplemented, $$"""{"code":"{{ContractErrors.NotImplementedCode}}"}"""));
+        Assert.True(Crashes(HttpStatusCode.NotImplemented, """{"code":"General.Unexpected"}"""));
+        Assert.True(Crashes(HttpStatusCode.NotImplemented, ""));
+        Assert.True(Crashes(HttpStatusCode.InternalServerError, $$"""{"code":"{{ContractErrors.NotImplementedCode}}"}"""));
+        Assert.False(Crashes(HttpStatusCode.NotFound, ""));
     }
 
     [Fact]
@@ -245,7 +255,7 @@ public sealed partial class RouteIsolationMatrixTests(ApiFactory factory)
             foreach (var caller in Callers(route.Endpoint))
             {
                 var (status, body) = await SendAsync(world.Client(caller), "GET", "/" + route.Template, null);
-                if ((int)status >= 500) failures.Add($"{route.Key} como {caller}: {(int)status}");
+                if (Crashes(status, body)) failures.Add($"{route.Key} como {caller}: {(int)status}");
                 if (world.Leaks(body, caller) is { } leak) failures.Add($"{route.Key} como {caller} devuelve {leak}");
             }
         var after = await ForeignRowsAsync(world);
@@ -514,6 +524,13 @@ public sealed partial class RouteIsolationMatrixTests(ApiFactory factory)
     private static MultipartFormDataContent? EmptyBody(RouteInfo route) =>
         route.Endpoint.Metadata.GetMetadata<IAcceptsMetadata>()?.ContentTypes
             .Any(type => type.StartsWith("multipart/", StringComparison.OrdinalIgnoreCase)) == true ? new MultipartFormDataContent() : null;
+
+    /// <summary>
+    /// Una caída es un 5xx que no sea el 501 de una ruta del contrato todavía sin programar (etapa en paralelo, paso 1):
+    /// ese no cae, contesta lo que el contrato publica hasta su tarea, y las fugas se miran igual.
+    /// </summary>
+    private static bool Crashes(HttpStatusCode status, string body) =>
+        (int)status >= 500 && !(status == HttpStatusCode.NotImplemented && Code(body) == ContractErrors.NotImplementedCode);
 
     private static string? Code(string body)
     {
