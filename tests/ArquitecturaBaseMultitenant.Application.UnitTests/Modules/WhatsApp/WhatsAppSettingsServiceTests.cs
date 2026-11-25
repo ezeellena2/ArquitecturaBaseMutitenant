@@ -1,12 +1,16 @@
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Validation;
 using ArquitecturaBaseMultitenant.Application.UnitTests.TestDoubles;
+using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
 
@@ -142,10 +146,15 @@ public sealed class WhatsAppSettingsServiceTests
     public async Task Platform_saves_the_countries_once_ordered_and_reads_the_configured_ones_without_a_row()
     {
         using var fixture = new ServiceFixture<PlatformWhatsAppSettingsService>(new UpdatePlatformWhatsAppSettingsRequestValidator(new Countries()));
-        var (service, repository, _) = Platform(fixture, new Reader());
+        var events = new Events();
+        var (service, repository, _) = Platform(fixture, new Reader(), events);
 
         var before = await service.GetAsync(Ct);
         var saved = await service.UpdateAsync(new(["UY", "AR"], 60, 365, 0), Ct);
+
+        // Es global: el guardado deja su evento de seguridad en la misma transacción, sin organización.
+        var recorded = Assert.Single(events.Items);
+        Assert.Equal((SecurityEventType.PlatformSettingsChanged, (Guid?)null), (recorded.Type, recorded.TargetTenantId));
 
         Assert.Equal(["AR"], before.Value.AllowedCountries);
         Assert.Equal(0u, before.Value.Version);
@@ -176,12 +185,31 @@ public sealed class WhatsAppSettingsServiceTests
     }
 
     private static (PlatformWhatsAppSettingsService, Repository, FakeUnitOfWork) Platform(
-        ServiceFixture<PlatformWhatsAppSettingsService> fixture, Reader reader)
+        ServiceFixture<PlatformWhatsAppSettingsService> fixture, Reader reader, Events? events = null)
     {
         var repository = new Repository();
         var unitOfWork = new FakeUnitOfWork();
-        return (new PlatformWhatsAppSettingsService(repository, new WhatsAppSettingsResolver(reader, new Channel()), unitOfWork,
+        var audit = new PlatformWhatsAppAuditWriter(new Operator(), events ?? new Events(), new Request(), fixture.TimeProvider);
+        return (new PlatformWhatsAppSettingsService(repository, new WhatsAppSettingsResolver(reader, new Channel()), audit, unitOfWork,
             fixture.Validator, fixture.TimeProvider, fixture.Logger), repository, unitOfWork);
+    }
+
+    private sealed class Events : ISecurityEventRepository
+    {
+        public List<SecurityEvent> Items { get; } = [];
+        public void Add(SecurityEvent securityEvent) => Items.Add(securityEvent);
+    }
+
+    private sealed class Operator : ICurrentUser
+    {
+        public Guid? UserId { get; } = Guid.NewGuid();
+        public Access? Access => Domain.Users.Access.Platform;
+    }
+
+    private sealed class Request : IRequestInfo
+    {
+        public string? IpAddress => "203.0.113.27";
+        public string? UserAgent => null;
     }
 
     private sealed class Reader : IWhatsAppSettingsReader

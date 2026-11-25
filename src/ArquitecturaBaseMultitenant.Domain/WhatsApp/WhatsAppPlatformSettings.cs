@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Common;
 
 namespace ArquitecturaBaseMultitenant.Domain.WhatsApp;
@@ -5,10 +6,14 @@ namespace ArquitecturaBaseMultitenant.Domain.WhatsApp;
 /// <summary>
 /// La configuración de WhatsApp de la plataforma (decisiones 270 y 272): los países cuyos números reciben códigos, cuánto se
 /// guardan los mensajes de los chats de su propio número y el máximo que puede elegir una organización. Una sola fila, global;
-/// sin fila valen los valores por defecto y, para los países, la clave <c>WhatsApp:AllowedCountries</c> (0060).
+/// sin fila valen los valores por defecto y, para los países, la clave <c>WhatsApp:AllowedCountries</c> (0060). Es global: cada
+/// cambio pide su evento de seguridad en la misma transacción (ADR 0050).
 /// </summary>
-public sealed class WhatsAppPlatformSettings : Entity, IAuditable, IVersioned
+public sealed class WhatsAppPlatformSettings : Entity, IGlobalSecurityAudited, IVersioned
 {
+    SecurityEventType IGlobalSecurityAudited.SecurityEventType => SecurityEventType.PlatformSettingsChanged;
+    Guid? IGlobalSecurityAudited.SecurityEventTargetTenantId => null;
+
     public const string SingletonIdValue = "00000000-0000-0000-0000-00000000a9a2";
     public static readonly Guid SingletonId = new(SingletonIdValue);
 

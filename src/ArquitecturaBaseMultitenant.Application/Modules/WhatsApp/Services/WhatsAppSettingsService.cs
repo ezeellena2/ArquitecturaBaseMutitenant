@@ -10,6 +10,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Servic
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Resources;
 using ArquitecturaBaseMultitenant.Application.Resources;
+using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using Microsoft.Extensions.Logging;
@@ -72,12 +73,15 @@ internal sealed class WhatsAppSettingsService(IWhatsAppSettingsReader reader, IW
 
 /// <summary>
 /// La configuración de WhatsApp de la plataforma (270 y 272): los países que reciben códigos y los plazos de los chats. Sin fila,
-/// los países son los de <c>WhatsApp:AllowedCountries</c> (0060) y los plazos, los de defecto.
+/// los países son los de <c>WhatsApp:AllowedCountries</c> (0060) y los plazos, los de defecto. Es global (ADR 0050): cada
+/// guardado deja su evento de seguridad en la misma transacción, como el bot y los equipos de Plataforma.
 /// </summary>
 internal sealed class PlatformWhatsAppSettingsService(IWhatsAppSettingsRepository repository, WhatsAppSettingsResolver resolver,
-    IUnitOfWork unitOfWork, IRequestValidator validator, TimeProvider clock, ILogger<PlatformWhatsAppSettingsService> logger)
-    : IPlatformWhatsAppSettingsService
+    PlatformWhatsAppAuditWriter audit, IUnitOfWork unitOfWork, IRequestValidator validator, TimeProvider clock,
+    ILogger<PlatformWhatsAppSettingsService> logger) : IPlatformWhatsAppSettingsService
 {
+    private const string Reason = "WhatsApp platform settings changed";
+
     public Task<Result<PlatformWhatsAppSettingsResponse>> GetAsync(CancellationToken cancellationToken) =>
         OperationLog.RunAsync<PlatformWhatsAppSettingsResponse>(logger, clock, "PlatformWhatsAppSettingsGet", async () =>
         {
@@ -97,9 +101,15 @@ internal sealed class PlatformWhatsAppSettingsService(IWhatsAppSettingsRepositor
                 var row = await repository.GetPlatformForUpdateAsync(request.Version!.Value, ct);
                 var created = row is null;
                 row ??= WhatsAppPlatformSettings.Create(resolver.ConfiguredCountries);
+                var changes = new SecurityEventChanges();
+                changes.AddCount("whatsappAllowedCountries", row.AllowedCountries.Count, request.AllowedCountries!.Count);
+                changes.AddCount("whatsappChatRetentionDays", row.ChatRetentionDays, request.ChatRetentionDays);
+                changes.AddCount("whatsappMaxOrganizationChatRetentionDays", row.MaxOrganizationChatRetentionDays,
+                    request.MaxOrganizationChatRetentionDays);
                 if (!row.Update(request.AllowedCountries!, request.ChatRetentionDays!.Value, request.MaxOrganizationChatRetentionDays!.Value))
                     return FieldErrors.Validation(nameof(request.AllowedCountries), ValidationTexts.CountryInvalid);
                 if (created) repository.Add(row); else repository.MarkUpdated(row);
+                audit.Record(Reason, changes);
                 return row;
             }, CommitPolicy.OnSuccess, cancellationToken);
             return VersionResponse.Of(result);
