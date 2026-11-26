@@ -91,6 +91,23 @@ public static class AssistantErrors
             ProviderUnavailableCode, ProviderKeyUnreadableCode, ProviderUnsupportedProviderCode, ProviderPlatformUnavailableCode];
     public const string ExportFailedCode = "Assistant.Export.Failed";
     public static readonly Error ExportFailed = Error.Failure(ExportFailedCode, "We could not export the conversation.");
+    // Las propuestas de las acciones (ADR 0068 §9 y §10): la de otra persona u organización es 404, como una que no existe.
+    public const string ProposalNotFoundCode = "Assistant.Proposal.NotFound";
+    public static readonly Error ProposalNotFound = Error.NotFound(ProposalNotFoundCode, "Proposal not found.");
+    public const string ProposalUnavailableCode = "Assistant.Proposal.Unavailable";
+    /// <summary>attempts o applied sobre una reemplazada, no disponible o sin confirmar, con el estado y el motivo.</summary>
+    public static Error ProposalUnavailable(string state, string? reason) => Error.Conflict(ProposalUnavailableCode, "The proposal is no longer available.",
+        new Dictionary<string, object?> { ["state"] = state, ["reason"] = reason });
+    public const string ProposalAlreadyAppliedCode = "Assistant.Proposal.AlreadyApplied";
+    /// <summary>attempts sobre una aplicada o con una clave que ya terminó en 2xx, con el enlace a lo hecho.</summary>
+    public static Error ProposalAlreadyApplied(string? location) => Error.Conflict(ProposalAlreadyAppliedCode, "The proposal was already saved.",
+        new Dictionary<string, object?> { ["location"] = location });
+    public const string ProposalNotAppliedCode = "Assistant.Proposal.NotApplied";
+    public static readonly Error ProposalNotApplied = Error.Conflict(ProposalNotAppliedCode, "We couldn't confirm that the proposal was saved.");
+    // El rechazo de propose_action (ADR 0068 §7): vuelve al modelo dentro de AssistantActionToolData, nunca como respuesta HTTP.
+    public const string ActionNotAvailableCode = "Assistant.Action.NotAvailable";
+    public const string ActionInvalidCode = "Assistant.Action.Invalid";
+    public const string ActionOnePerTurnCode = "Assistant.Action.OnePerTurn";
     private static ValidationError Field(string code, string description, string field, ErrorType type) =>
         new(code, description, new Dictionary<string, string[]> { [field] = [code] }, type);
 }

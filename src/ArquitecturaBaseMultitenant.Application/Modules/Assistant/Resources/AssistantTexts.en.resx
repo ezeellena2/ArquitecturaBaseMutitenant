@@ -95,4 +95,11 @@
   <data name="Assistant.Provider.KeyUnreadable" xml:space="preserve"><value>We couldn&#x27;t read the saved key: replace it.</value></data>
   <data name="Assistant.Provider.UnsupportedProvider" xml:space="preserve"><value>The connection is paused: the saved provider isn&#x27;t available in this version. Save the settings to discard it.</value></data>
   <data name="Assistant.Provider.PlatformUnavailable" xml:space="preserve"><value>The assistant isn&#x27;t available for now.</value></data>
+  <data name="Assistant.Proposal.NotFound" xml:space="preserve"><value>This proposal doesn&#x27;t exist.</value></data>
+  <data name="Assistant.Proposal.Unavailable" xml:space="preserve"><value>This proposal is no longer available.</value></data>
+  <data name="Assistant.Proposal.AlreadyApplied" xml:space="preserve"><value>This proposal was already saved.</value></data>
+  <data name="Assistant.Proposal.NotApplied" xml:space="preserve"><value>We couldn&#x27;t confirm that it was saved.</value></data>
+  <data name="Assistant.Action.NotAvailable" xml:space="preserve"><value>That action isn&#x27;t available.</value></data>
+  <data name="Assistant.Action.Invalid" xml:space="preserve"><value>The proposal isn&#x27;t valid.</value></data>
+  <data name="Assistant.Action.OnePerTurn" xml:space="preserve"><value>There is already a proposal in this turn.</value></data>
 </root>

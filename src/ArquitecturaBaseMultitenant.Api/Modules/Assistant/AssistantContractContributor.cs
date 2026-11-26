@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.OpenApi;
 
 namespace ArquitecturaBaseMultitenant.Api.Modules.Assistant;
@@ -44,12 +45,18 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         new(429, "Assistant.Attachment.UploadQueueFull", null, Resource("Assistant.Attachment.UploadQueueFull", "es"), Resource("Assistant.Attachment.UploadQueueFull", "en")),
         new(400, "Assistant.Attachment.UploadTimedOut", null, Resource("Assistant.Attachment.UploadTimedOut", "es"), Resource("Assistant.Attachment.UploadTimedOut", "en")),
         new(409, "Assistant.Conversation.Unavailable", null, Resource("Assistant.Conversation.Unavailable", "es"), Resource("Assistant.Conversation.Unavailable", "en")),
+        // Las propuestas de las acciones (ADR 0068 §9 y §10).
+        new(404, AssistantErrors.ProposalNotFoundCode, null, Resource(AssistantErrors.ProposalNotFoundCode, "es"), Resource(AssistantErrors.ProposalNotFoundCode, "en")),
+        new(409, AssistantErrors.ProposalUnavailableCode, null, Resource(AssistantErrors.ProposalUnavailableCode, "es"), Resource(AssistantErrors.ProposalUnavailableCode, "en")),
+        new(409, AssistantErrors.ProposalAlreadyAppliedCode, null, Resource(AssistantErrors.ProposalAlreadyAppliedCode, "es"), Resource(AssistantErrors.ProposalAlreadyAppliedCode, "en")),
+        new(409, AssistantErrors.ProposalNotAppliedCode, null, Resource(AssistantErrors.ProposalNotAppliedCode, "es"), Resource(AssistantErrors.ProposalNotAppliedCode, "en")),
     ];
     private const string Uploads = "Subida (ADR 0064 §2 y §4), antes de leer el cuerpo: sin cupo, el 429 de siempre (Assistant.Limit.DailyReached o MonthlyReached, con retryAfter) y no se guarda nada; otra subida de la misma persona en curso, 429 Assistant.Attachment.UploadBusy; la cola de la copia llena, 429 Assistant.Attachment.UploadQueueFull, los dos con retryAfter y Retry-After; el cuerpo tiene 120 s y después es 400 Assistant.Attachment.UploadTimedOut. La misma Idempotency-Key con otro archivo es 422 Request.IdempotencyKeyReused.";
     private const string Unavailable = "Una conversación que esta versión no puede leer (ADR 0064 §6) sale en el listado con available=false, sin título ni mensajes; su GET y su exportación son 409 Assistant.Conversation.Unavailable, un mensaje nuevo también (antes de reservar el cupo) y el DELETE la borra igual.";
     public void Describe(OpenApiDocument document)
     {
         DescribeSchemas(document);
+        DescribeProposals(document);
         if (document.Components?.Schemas?.TryGetValue("AssistantAttachmentSummaryResponse", out var attachmentSchema) == true
             && attachmentSchema is OpenApiSchema attachment && attachment.Properties?["mediaType"] is OpenApiSchema mediaType)
             mediaType.Enum = AssistantTechnicalLimits.AttachmentMediaTypes.Select(value => (JsonNode)JsonValue.Create(value)!).ToList();
@@ -64,7 +71,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
                 var declaredStatuses = errors.Select(error => System.Text.Json.JsonSerializer.Serialize(error.Status)).ToHashSet(StringComparer.Ordinal);
                 foreach (var status in operation.Responses?.Keys.ToArray() ?? [])
                     if (int.TryParse(status, out var code) && code >= 400 && !declaredStatuses.Contains(status)) operation.Responses!.Remove(status);
-                var idempotent = method == HttpMethod.Post;
+                var idempotent = IsIdempotent(path, method);
                 var mode = path.EndsWith("/messages", StringComparison.Ordinal) ? "DurableStream"
                     : path.EndsWith("/conversations", StringComparison.Ordinal) || path.Contains("/quick/", StringComparison.Ordinal)
                         || path.EndsWith("/attachments", StringComparison.Ordinal) ? "DurableReference" : "BufferedJson";
@@ -102,6 +109,9 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         || path.StartsWith("/api/organization/assistant", StringComparison.Ordinal)
         || path.StartsWith("/api/platform/assistant", StringComparison.Ordinal)
         || path.StartsWith("/api/platform/tenants/", StringComparison.Ordinal) && path.EndsWith("/assistant/policy", StringComparison.Ordinal);
+    /// <summary>Las rutas de la propuesta no crean ni envían: attempts devuelve la misma clave y applied se comprueba (ADR 0068 §10).</summary>
+    private static bool IsIdempotent(string path, HttpMethod method) => method == HttpMethod.Post && !IsProposal(path);
+    private static bool IsProposal(string path) => path.StartsWith("/api/organization/assistant/proposals/", StringComparison.Ordinal);
     private static bool IsChat(string path) => !path.Contains("/settings", StringComparison.Ordinal)
         && !path.Contains("/usage", StringComparison.Ordinal) && !path.Contains("/models", StringComparison.Ordinal) && !path.Contains("/policy", StringComparison.Ordinal);
     private static JsonArray Permissions(string path, HttpMethod method)
@@ -122,7 +132,9 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
             HttpContractDocumentation.CoreError(404, "Http.NotFound"),
             HttpContractDocumentation.CoreError(500, "General.Unexpected"),
         };
-        if (method == HttpMethod.Post)
+        if (IsProposal(path))
+            list.Add(HttpContractDocumentation.CoreError(501, ContractErrors.NotImplementedCode));
+        else if (method == HttpMethod.Post)
             list.AddRange([HttpContractDocumentation.CoreError(400, "Request.IdempotencyKeyRequired"),
                 HttpContractDocumentation.CoreError(422, "Request.IdempotencyKeyReused"), HttpContractDocumentation.CoreError(409, "Request.InProgress")]);
         if (method == HttpMethod.Put || method == HttpMethod.Delete || path.Contains("/quick/", StringComparison.Ordinal) || path.EndsWith("/messages", StringComparison.Ordinal) || path.EndsWith("/attachments", StringComparison.Ordinal))
@@ -135,6 +147,10 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
     }
     private static bool Applies(string code, string path, HttpMethod method)
     {
+        if (IsProposal(path)) return code == AssistantErrors.ProposalNotFoundCode
+            || code == AssistantErrors.ProposalUnavailableCode && method == HttpMethod.Post
+            || code == AssistantErrors.ProposalAlreadyAppliedCode && path.EndsWith("/attempts", StringComparison.Ordinal)
+            || code == AssistantErrors.ProposalNotAppliedCode && path.EndsWith("/applied", StringComparison.Ordinal);
         if (code == "Assistant.Conversation.NotFound") return IsChat(path) && path.Contains("/conversations/", StringComparison.Ordinal) || path.Contains("/quick/", StringComparison.Ordinal);
         if (code == "Assistant.Conversation.Unavailable") return method == HttpMethod.Get
             && (path.EndsWith("/conversations/{id}", StringComparison.Ordinal) || path.EndsWith("/conversations/{id}/export", StringComparison.Ordinal))
@@ -191,6 +207,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
     }
     private static string Description(string path, HttpMethod method)
     {
+        if (IsProposal(path)) return ProposalDescription(path);
         if (path.EndsWith("/messages", StringComparison.Ordinal)) return "POST SSE autenticado, sin EventSource anónimo. Primera admisión 200 text/event-stream; replay terminal 200 application/json TurnResult. Preflight antes de abrir stream; en curso 409. Sin copia de contenido en el store global.";
         if (path.Contains("/quick/", StringComparison.Ordinal)) return "Consulta fija sin IA, títulos automáticos, cuota ni costo; revalida permisos de la herramienta. DurableReference reconstruye el resultado privado tras revalidar dueño/lado/organización/legales/módulo/permisos.";
         if (path.EndsWith("/settings", StringComparison.Ordinal)) return "Clave write-only: keyAction keep/replace/clear; apiKey solo en replace, sin key/cipher en salidas o logs. OwnKey requiere política y Dueño activo con Email verificado utilizable. PlatformKey rechaza topes propios. Gestión Plataforma accesible sin clave de chat.";
@@ -210,10 +227,25 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
             : "Edición/borrado con uint/xmin y owner firmado; borrar cancela turno y elimina textos/adjuntos con limpieza física diferida fiable.";
         return $"Estado efectivo: apagado404; habilitado sin clave configured=false. remainingMessages=null si >{AssistantTechnicalLimits.RemainingMessagesNotice}. Retención30 días salvo guardados, maxAttachmentBytes{AssistantTechnicalLimits.MaxAttachmentBytes}/maxAttachments{AssistantTechnicalLimits.MaxAttachments}. monthlyBudgetProgress siempre presente: Consumer/Platform null; Business usa costo registrado y presupuesto snapshot de la misma financiación efectiva y mes civil, sin reservas, suma de financiaciones ni recorte. NearLimit desde {AssistantTechnicalLimits.BudgetNearPercent}%; LimitReached desde 1. Presupuesto no aplicable/cero/null devuelve null. Sin configurar conserva precedencia y las consultas fijas siguen disponibles; State no garantiza admisión.";
     }
+    /// <summary>Una propuesta trae como mucho 40 campos (ADR 0068 §12).</summary>
+    private static void DescribeProposals(OpenApiDocument document)
+    {
+        if (document.Components?.Schemas?.TryGetValue("AssistantProposalResponse", out var schema) == true
+            && schema is OpenApiSchema proposal && proposal.Properties?["values"] is OpenApiSchema values)
+            values.MaxItems = AssistantTechnicalLimits.MaxProposalFields;
+    }
+    private static string ProposalDescription(string path)
+    {
+        const string Common = "Propuesta de una acción (ADR 0068), solo de quien pide: la de otra persona u organización es 404 Assistant.Proposal.NotFound. 501 General.Contract.NotImplemented hasta la B5. ";
+        if (path.EndsWith("/attempts", StringComparison.Ordinal)) return Common + "Devuelve la clave del intento de guardar ({idempotencyKey}) para el encabezado Idempotency-Key de la ruta que guarda; la misma mientras ese intento no termine en 4xx. Sin Idempotency-Key propia: repetirlo devuelve la misma clave. Con una clave de la propuesta que ya terminó en 2xx la marca aplicada y responde 409 Assistant.Proposal.AlreadyApplied con location; reemplazada, no disponible o sin confirmar, 409 Assistant.Proposal.Unavailable con su motivo.";
+        if (path.EndsWith("/applied", StringComparison.Ordinal)) return Common + "La pantalla guardó: el servidor lo comprueba (al crear, una clave de la propuesta terminó en 2xx para esa persona y esa ruta; al quitar o dar de baja, el destino ya no se resuelve; al editar, version es la de ahora y distinta de la propuesta) y responde la propuesta aplicada. Sin poder comprobarlo, 409 Assistant.Proposal.NotApplied; reemplazada, no disponible o sin confirmar, 409 Assistant.Proposal.Unavailable.";
+        return Common + "state (new, replaced, applied, unconfirmed o unavailable, con unavailableReason) y los nombres se calculan en cada lectura, con los permisos de ese momento y en la empresa de la acción; el destino y cada registro se vuelven a resolver con la fuente.";
+    }
     private static Dictionary<string, JsonNode>? RequestExamples(string path, HttpMethod method)
     {
         if (method == HttpMethod.Get || method == HttpMethod.Delete) return null;
-        var body = path.EndsWith("/notice", StringComparison.Ordinal) ? "{\"noticeVersion\":\"2026-10-08\"}"
+        var body = path.EndsWith("/applied", StringComparison.Ordinal) && IsProposal(path) ? "{\"version\":2}"
+            : path.EndsWith("/notice", StringComparison.Ordinal) ? "{\"noticeVersion\":\"2026-10-08\"}"
             : path.EndsWith("/messages", StringComparison.Ordinal) ? "{\"text\":\"¿Cuántas personas hay?\",\"attachmentIds\":[],\"conversationVersion\":1}"
             : path.Contains("/feedback", StringComparison.Ordinal) ? "{\"rating\":\"up\",\"version\":1}"
             : path.Contains("/quick/", StringComparison.Ordinal) ? "{}"

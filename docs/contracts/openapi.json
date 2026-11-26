@@ -21612,6 +21612,1372 @@
         ]
       }
     },
+    "/api/organization/assistant/proposals/{proposalId}": {
+      "get": {
+        "tags": [
+          "Assistant Business"
+        ],
+        "summary": "La propuesta de quien pide, con su estado calculado al leer (ADR 0068 §9). 501 hasta la B5.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Propuesta de una acción (ADR 0068), solo de quien pide: la de otra persona u organización es 404 Assistant.Proposal.NotFound. 501 General.Contract.NotImplemented hasta la B5. state (new, replaced, applied, unconfirmed o unavailable, con unavailableReason) y los nombres se calculan en cada lectura, con los permisos de ese momento y en la empresa de la acción; el destino y cada registro se vuelven a resolver con la fuente.",
+        "parameters": [
+          {
+            "name": "proposalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantProposalResponse"
+                },
+                "examples": {
+                  "success": {
+                    "value": {
+                      "id": "10000000-0000-0000-0000-000000000001",
+                      "conversationId": "10000000-0000-0000-0000-000000000001",
+                      "kind": "action",
+                      "action": "example",
+                      "version": 1,
+                      "state": "new",
+                      "unavailableReason": null,
+                      "values": [ ],
+                      "target": null,
+                      "appliedLocation": "example"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request; Validation.Failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Validation.Failed.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Revisá los campos marcados.",
+                      "code": "Validation.Failed",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Validation.Failed.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "Check the highlighted fields.",
+                      "code": "Validation.Failed",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized; Http.Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Http.Unauthorized.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 401,
+                      "detail": "Tenés que iniciar sesión para continuar.",
+                      "code": "Http.Unauthorized",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Http.Unauthorized.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 401,
+                      "detail": "You need to sign in to continue.",
+                      "code": "Http.Unauthorized",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden; Http.Forbidden; Legal.AcceptanceRequired",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Http.Forbidden.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 403,
+                      "detail": "No tenés permiso para realizar esta acción.",
+                      "code": "Http.Forbidden",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Http.Forbidden.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 403,
+                      "detail": "You don't have permission to perform this action.",
+                      "code": "Http.Forbidden",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Legal.AcceptanceRequired.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 403,
+                      "detail": "Aceptá los términos vigentes para continuar.",
+                      "code": "Legal.AcceptanceRequired",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Legal.AcceptanceRequired.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 403,
+                      "detail": "Accept the current terms to continue.",
+                      "code": "Legal.AcceptanceRequired",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found; Http.NotFound; Assistant.Proposal.NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Http.NotFound.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 404,
+                      "detail": "No encontramos lo que buscás.",
+                      "code": "Http.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Http.NotFound.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 404,
+                      "detail": "We couldn't find what you're looking for.",
+                      "code": "Http.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Proposal.NotFound.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 404,
+                      "detail": "Esta propuesta no existe.",
+                      "code": "Assistant.Proposal.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Proposal.NotFound.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 404,
+                      "detail": "This proposal doesn't exist.",
+                      "code": "Assistant.Proposal.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error; General.Unexpected",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "General.Unexpected.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 500,
+                      "detail": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
+                      "code": "General.Unexpected",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "General.Unexpected.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 500,
+                      "detail": "An unexpected error occurred. If the problem persists, report the trace id.",
+                      "code": "General.Unexpected",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Not Implemented; General.Contract.NotImplemented",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "General.Contract.NotImplemented.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 501,
+                      "detail": "Esta función todavía está en preparación.",
+                      "code": "General.Contract.NotImplemented",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "General.Contract.NotImplemented.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 501,
+                      "detail": "This feature is still being prepared.",
+                      "code": "General.Contract.NotImplemented",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Security.RateLimit.Exceeded",
+            "headers": {
+              "Retry-After": {
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Security.RateLimit.Exceeded.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 429,
+                      "detail": "Hiciste muchos pedidos seguidos. Esperá un momento y volvé a intentar.",
+                      "code": "Security.RateLimit.Exceeded",
+                      "traceId": "example-trace-id",
+                      "retryAfter": 60
+                    }
+                  },
+                  "Security.RateLimit.Exceeded.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 429,
+                      "detail": "You made too many requests in a row. Wait a moment and try again.",
+                      "code": "Security.RateLimit.Exceeded",
+                      "traceId": "example-trace-id",
+                      "retryAfter": 60
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ],
+        "x-error-codes": [
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": null,
+            "es": "Revisá los campos marcados.",
+            "en": "Check the highlighted fields."
+          },
+          {
+            "status": 401,
+            "code": "Http.Unauthorized",
+            "field": null,
+            "es": "Tenés que iniciar sesión para continuar.",
+            "en": "You need to sign in to continue."
+          },
+          {
+            "status": 403,
+            "code": "Http.Forbidden",
+            "field": null,
+            "es": "No tenés permiso para realizar esta acción.",
+            "en": "You don't have permission to perform this action."
+          },
+          {
+            "status": 403,
+            "code": "Legal.AcceptanceRequired",
+            "field": null,
+            "es": "Aceptá los términos vigentes para continuar.",
+            "en": "Accept the current terms to continue."
+          },
+          {
+            "status": 404,
+            "code": "Http.NotFound",
+            "field": null,
+            "es": "No encontramos lo que buscás.",
+            "en": "We couldn't find what you're looking for."
+          },
+          {
+            "status": 500,
+            "code": "General.Unexpected",
+            "field": null,
+            "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
+            "en": "An unexpected error occurred. If the problem persists, report the trace id."
+          },
+          {
+            "status": 501,
+            "code": "General.Contract.NotImplemented",
+            "field": null,
+            "es": "Esta función todavía está en preparación.",
+            "en": "This feature is still being prepared."
+          },
+          {
+            "status": 404,
+            "code": "Assistant.Proposal.NotFound",
+            "field": null,
+            "es": "Esta propuesta no existe.",
+            "en": "This proposal doesn't exist."
+          },
+          {
+            "status": 429,
+            "code": "Security.RateLimit.Exceeded",
+            "field": null,
+            "es": "Hiciste muchos pedidos seguidos. Esperá un momento y volvé a intentar.",
+            "en": "You made too many requests in a row. Wait a moment and try again."
+          }
+        ],
+        "x-access": "business",
+        "x-permissions": [
+          "assistant.use"
+        ],
+        "x-module-gate": "feature:assistant"
+      }
+    },
+    "/api/organization/assistant/proposals/{proposalId}/attempts": {
+      "post": {
+        "tags": [
+          "Assistant Business"
+        ],
+        "summary": "La clave del intento de guardar (ADR 0068 §10). Sin `[Idempotent]`: es idempotente por naturaleza, porque repetirlo\r\ndevuelve la misma clave mientras ese intento no termine en 4xx, y responde 200 sin crear nada. 501 hasta la B5.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Propuesta de una acción (ADR 0068), solo de quien pide: la de otra persona u organización es 404 Assistant.Proposal.NotFound. 501 General.Contract.NotImplemented hasta la B5. Devuelve la clave del intento de guardar ({idempotencyKey}) para el encabezado Idempotency-Key de la ruta que guarda; la misma mientras ese intento no termine en 4xx. Sin Idempotency-Key propia: repetirlo devuelve la misma clave. Con una clave de la propuesta que ya terminó en 2xx la marca aplicada y responde 409 Assistant.Proposal.AlreadyApplied con location; reemplazada, no disponible o sin confirmar, 409 Assistant.Proposal.Unavailable con su motivo.",
+        "parameters": [
+          {
+            "name": "proposalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantProposalAttemptHttpRequest"
+              },
+              "examples": {
+                "request": {
+                  "value": { }
+                }
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantProposalAttemptHttpRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantProposalAttemptHttpRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantProposalAttemptResponse"
+                },
+                "examples": {
+                  "success": {
+                    "value": {
+                      "idempotencyKey": "example"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request; Validation.Failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Validation.Failed.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Revisá los campos marcados.",
+                      "code": "Validation.Failed",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Validation.Failed.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "Check the highlighted fields.",
+                      "code": "Validation.Failed",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized; Http.Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Http.Unauthorized.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 401,
+                      "detail": "Tenés que iniciar sesión para continuar.",
+                      "code": "Http.Unauthorized",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Http.Unauthorized.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 401,
+                      "detail": "You need to sign in to continue.",
+                      "code": "Http.Unauthorized",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden; Http.Forbidden; Legal.AcceptanceRequired",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Http.Forbidden.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 403,
+                      "detail": "No tenés permiso para realizar esta acción.",
+                      "code": "Http.Forbidden",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Http.Forbidden.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 403,
+                      "detail": "You don't have permission to perform this action.",
+                      "code": "Http.Forbidden",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Legal.AcceptanceRequired.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 403,
+                      "detail": "Aceptá los términos vigentes para continuar.",
+                      "code": "Legal.AcceptanceRequired",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Legal.AcceptanceRequired.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 403,
+                      "detail": "Accept the current terms to continue.",
+                      "code": "Legal.AcceptanceRequired",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found; Http.NotFound; Assistant.Proposal.NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Http.NotFound.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 404,
+                      "detail": "No encontramos lo que buscás.",
+                      "code": "Http.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Http.NotFound.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 404,
+                      "detail": "We couldn't find what you're looking for.",
+                      "code": "Http.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Proposal.NotFound.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 404,
+                      "detail": "Esta propuesta no existe.",
+                      "code": "Assistant.Proposal.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Proposal.NotFound.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 404,
+                      "detail": "This proposal doesn't exist.",
+                      "code": "Assistant.Proposal.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict; Assistant.Proposal.Unavailable; Assistant.Proposal.AlreadyApplied",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Assistant.Proposal.Unavailable.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "Esta propuesta ya no está disponible.",
+                      "code": "Assistant.Proposal.Unavailable",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Proposal.Unavailable.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "This proposal is no longer available.",
+                      "code": "Assistant.Proposal.Unavailable",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Proposal.AlreadyApplied.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "Esta propuesta ya se guardó.",
+                      "code": "Assistant.Proposal.AlreadyApplied",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Proposal.AlreadyApplied.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "This proposal was already saved.",
+                      "code": "Assistant.Proposal.AlreadyApplied",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error; General.Unexpected",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "General.Unexpected.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 500,
+                      "detail": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
+                      "code": "General.Unexpected",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "General.Unexpected.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 500,
+                      "detail": "An unexpected error occurred. If the problem persists, report the trace id.",
+                      "code": "General.Unexpected",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Not Implemented; General.Contract.NotImplemented",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "General.Contract.NotImplemented.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 501,
+                      "detail": "Esta función todavía está en preparación.",
+                      "code": "General.Contract.NotImplemented",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "General.Contract.NotImplemented.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 501,
+                      "detail": "This feature is still being prepared.",
+                      "code": "General.Contract.NotImplemented",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Security.RateLimit.Exceeded",
+            "headers": {
+              "Retry-After": {
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Security.RateLimit.Exceeded.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 429,
+                      "detail": "Hiciste muchos pedidos seguidos. Esperá un momento y volvé a intentar.",
+                      "code": "Security.RateLimit.Exceeded",
+                      "traceId": "example-trace-id",
+                      "retryAfter": 60
+                    }
+                  },
+                  "Security.RateLimit.Exceeded.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 429,
+                      "detail": "You made too many requests in a row. Wait a moment and try again.",
+                      "code": "Security.RateLimit.Exceeded",
+                      "traceId": "example-trace-id",
+                      "retryAfter": 60
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ],
+        "x-error-codes": [
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": null,
+            "es": "Revisá los campos marcados.",
+            "en": "Check the highlighted fields."
+          },
+          {
+            "status": 401,
+            "code": "Http.Unauthorized",
+            "field": null,
+            "es": "Tenés que iniciar sesión para continuar.",
+            "en": "You need to sign in to continue."
+          },
+          {
+            "status": 403,
+            "code": "Http.Forbidden",
+            "field": null,
+            "es": "No tenés permiso para realizar esta acción.",
+            "en": "You don't have permission to perform this action."
+          },
+          {
+            "status": 403,
+            "code": "Legal.AcceptanceRequired",
+            "field": null,
+            "es": "Aceptá los términos vigentes para continuar.",
+            "en": "Accept the current terms to continue."
+          },
+          {
+            "status": 404,
+            "code": "Http.NotFound",
+            "field": null,
+            "es": "No encontramos lo que buscás.",
+            "en": "We couldn't find what you're looking for."
+          },
+          {
+            "status": 500,
+            "code": "General.Unexpected",
+            "field": null,
+            "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
+            "en": "An unexpected error occurred. If the problem persists, report the trace id."
+          },
+          {
+            "status": 501,
+            "code": "General.Contract.NotImplemented",
+            "field": null,
+            "es": "Esta función todavía está en preparación.",
+            "en": "This feature is still being prepared."
+          },
+          {
+            "status": 404,
+            "code": "Assistant.Proposal.NotFound",
+            "field": null,
+            "es": "Esta propuesta no existe.",
+            "en": "This proposal doesn't exist."
+          },
+          {
+            "status": 409,
+            "code": "Assistant.Proposal.Unavailable",
+            "field": null,
+            "es": "Esta propuesta ya no está disponible.",
+            "en": "This proposal is no longer available."
+          },
+          {
+            "status": 409,
+            "code": "Assistant.Proposal.AlreadyApplied",
+            "field": null,
+            "es": "Esta propuesta ya se guardó.",
+            "en": "This proposal was already saved."
+          },
+          {
+            "status": 429,
+            "code": "Security.RateLimit.Exceeded",
+            "field": null,
+            "es": "Hiciste muchos pedidos seguidos. Esperá un momento y volvé a intentar.",
+            "en": "You made too many requests in a row. Wait a moment and try again."
+          }
+        ],
+        "x-access": "business",
+        "x-permissions": [
+          "assistant.use"
+        ],
+        "x-module-gate": "feature:assistant"
+      }
+    },
+    "/api/organization/assistant/proposals/{proposalId}/applied": {
+      "post": {
+        "tags": [
+          "Assistant Business"
+        ],
+        "summary": "La pantalla guardó: el servidor lo comprueba y la marca aplicada (ADR 0068 §10). Al editar, la versión del cuerpo es la\r\nnueva del registro, la que devuelve `target.version`. 501 hasta la B5.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Propuesta de una acción (ADR 0068), solo de quien pide: la de otra persona u organización es 404 Assistant.Proposal.NotFound. 501 General.Contract.NotImplemented hasta la B5. La pantalla guardó: el servidor lo comprueba (al crear, una clave de la propuesta terminó en 2xx para esa persona y esa ruta; al quitar o dar de baja, el destino ya no se resuelve; al editar, version es la de ahora y distinta de la propuesta) y responde la propuesta aplicada. Sin poder comprobarlo, 409 Assistant.Proposal.NotApplied; reemplazada, no disponible o sin confirmar, 409 Assistant.Proposal.Unavailable.",
+        "parameters": [
+          {
+            "name": "proposalId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantProposalAppliedHttpRequest"
+              },
+              "examples": {
+                "request": {
+                  "value": {
+                    "version": 2
+                  }
+                }
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantProposalAppliedHttpRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistantProposalAppliedHttpRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssistantProposalResponse"
+                },
+                "examples": {
+                  "success": {
+                    "value": {
+                      "id": "10000000-0000-0000-0000-000000000001",
+                      "conversationId": "10000000-0000-0000-0000-000000000001",
+                      "kind": "action",
+                      "action": "example",
+                      "version": 1,
+                      "state": "new",
+                      "unavailableReason": null,
+                      "values": [ ],
+                      "target": null,
+                      "appliedLocation": "example"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request; Validation.Failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Validation.Failed.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Revisá los campos marcados.",
+                      "code": "Validation.Failed",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Validation.Failed.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "Check the highlighted fields.",
+                      "code": "Validation.Failed",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized; Http.Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Http.Unauthorized.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 401,
+                      "detail": "Tenés que iniciar sesión para continuar.",
+                      "code": "Http.Unauthorized",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Http.Unauthorized.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 401,
+                      "detail": "You need to sign in to continue.",
+                      "code": "Http.Unauthorized",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden; Http.Forbidden; Legal.AcceptanceRequired",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Http.Forbidden.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 403,
+                      "detail": "No tenés permiso para realizar esta acción.",
+                      "code": "Http.Forbidden",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Http.Forbidden.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 403,
+                      "detail": "You don't have permission to perform this action.",
+                      "code": "Http.Forbidden",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Legal.AcceptanceRequired.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 403,
+                      "detail": "Aceptá los términos vigentes para continuar.",
+                      "code": "Legal.AcceptanceRequired",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Legal.AcceptanceRequired.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 403,
+                      "detail": "Accept the current terms to continue.",
+                      "code": "Legal.AcceptanceRequired",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found; Http.NotFound; Assistant.Proposal.NotFound",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Http.NotFound.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 404,
+                      "detail": "No encontramos lo que buscás.",
+                      "code": "Http.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Http.NotFound.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 404,
+                      "detail": "We couldn't find what you're looking for.",
+                      "code": "Http.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Proposal.NotFound.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 404,
+                      "detail": "Esta propuesta no existe.",
+                      "code": "Assistant.Proposal.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Proposal.NotFound.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 404,
+                      "detail": "This proposal doesn't exist.",
+                      "code": "Assistant.Proposal.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict; Assistant.Proposal.Unavailable; Assistant.Proposal.NotApplied",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Assistant.Proposal.Unavailable.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "Esta propuesta ya no está disponible.",
+                      "code": "Assistant.Proposal.Unavailable",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Proposal.Unavailable.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "This proposal is no longer available.",
+                      "code": "Assistant.Proposal.Unavailable",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Proposal.NotApplied.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "No pudimos confirmar que se guardó.",
+                      "code": "Assistant.Proposal.NotApplied",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Assistant.Proposal.NotApplied.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "We couldn't confirm that it was saved.",
+                      "code": "Assistant.Proposal.NotApplied",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error; General.Unexpected",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "General.Unexpected.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 500,
+                      "detail": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
+                      "code": "General.Unexpected",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "General.Unexpected.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 500,
+                      "detail": "An unexpected error occurred. If the problem persists, report the trace id.",
+                      "code": "General.Unexpected",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Not Implemented; General.Contract.NotImplemented",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "General.Contract.NotImplemented.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 501,
+                      "detail": "Esta función todavía está en preparación.",
+                      "code": "General.Contract.NotImplemented",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "General.Contract.NotImplemented.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 501,
+                      "detail": "This feature is still being prepared.",
+                      "code": "General.Contract.NotImplemented",
+                      "traceId": "example-trace-id"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Security.RateLimit.Exceeded",
+            "headers": {
+              "Retry-After": {
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "Security.RateLimit.Exceeded.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 429,
+                      "detail": "Hiciste muchos pedidos seguidos. Esperá un momento y volvé a intentar.",
+                      "code": "Security.RateLimit.Exceeded",
+                      "traceId": "example-trace-id",
+                      "retryAfter": 60
+                    }
+                  },
+                  "Security.RateLimit.Exceeded.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 429,
+                      "detail": "You made too many requests in a row. Wait a moment and try again.",
+                      "code": "Security.RateLimit.Exceeded",
+                      "traceId": "example-trace-id",
+                      "retryAfter": 60
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ],
+        "x-error-codes": [
+          {
+            "status": 400,
+            "code": "Validation.Failed",
+            "field": null,
+            "es": "Revisá los campos marcados.",
+            "en": "Check the highlighted fields."
+          },
+          {
+            "status": 401,
+            "code": "Http.Unauthorized",
+            "field": null,
+            "es": "Tenés que iniciar sesión para continuar.",
+            "en": "You need to sign in to continue."
+          },
+          {
+            "status": 403,
+            "code": "Http.Forbidden",
+            "field": null,
+            "es": "No tenés permiso para realizar esta acción.",
+            "en": "You don't have permission to perform this action."
+          },
+          {
+            "status": 403,
+            "code": "Legal.AcceptanceRequired",
+            "field": null,
+            "es": "Aceptá los términos vigentes para continuar.",
+            "en": "Accept the current terms to continue."
+          },
+          {
+            "status": 404,
+            "code": "Http.NotFound",
+            "field": null,
+            "es": "No encontramos lo que buscás.",
+            "en": "We couldn't find what you're looking for."
+          },
+          {
+            "status": 500,
+            "code": "General.Unexpected",
+            "field": null,
+            "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
+            "en": "An unexpected error occurred. If the problem persists, report the trace id."
+          },
+          {
+            "status": 501,
+            "code": "General.Contract.NotImplemented",
+            "field": null,
+            "es": "Esta función todavía está en preparación.",
+            "en": "This feature is still being prepared."
+          },
+          {
+            "status": 404,
+            "code": "Assistant.Proposal.NotFound",
+            "field": null,
+            "es": "Esta propuesta no existe.",
+            "en": "This proposal doesn't exist."
+          },
+          {
+            "status": 409,
+            "code": "Assistant.Proposal.Unavailable",
+            "field": null,
+            "es": "Esta propuesta ya no está disponible.",
+            "en": "This proposal is no longer available."
+          },
+          {
+            "status": 409,
+            "code": "Assistant.Proposal.NotApplied",
+            "field": null,
+            "es": "No pudimos confirmar que se guardó.",
+            "en": "We couldn't confirm that it was saved."
+          },
+          {
+            "status": 429,
+            "code": "Security.RateLimit.Exceeded",
+            "field": null,
+            "es": "Hiciste muchos pedidos seguidos. Esperá un momento y volvé a intentar.",
+            "en": "You made too many requests in a row. Wait a moment and try again."
+          }
+        ],
+        "x-access": "business",
+        "x-permissions": [
+          "assistant.use"
+        ],
+        "x-module-gate": "feature:assistant"
+      }
+    },
     "/api/organization/assistant": {
       "get": {
         "tags": [
@@ -25084,7 +26450,8 @@
                         "version": 1,
                         "attachments": [ ],
                         "links": [ ],
-                        "rating": null
+                        "rating": null,
+                        "proposal": null
                       },
                       "conversationVersion": 1,
                       "usage": {
@@ -26175,7 +27542,8 @@
                 "version": 1,
                 "attachments": [ ],
                 "links": [ ],
-                "rating": null
+                "rating": null,
+                "proposal": null
               },
               "conversationVersion": 1,
               "usage": {
@@ -26873,7 +28241,8 @@
                           "version": 1,
                           "attachments": [ ],
                           "links": [ ],
-                          "rating": null
+                          "rating": null,
+                          "proposal": null
                         },
                         {
                           "id": "10000000-0000-0000-0000-000000000002",
@@ -26884,7 +28253,8 @@
                           "version": 1,
                           "attachments": [ ],
                           "links": [ ],
-                          "rating": null
+                          "rating": null,
+                          "proposal": null
                         }
                       ],
                       "result": {
@@ -33707,7 +35077,8 @@
                         "version": 1,
                         "attachments": [ ],
                         "links": [ ],
-                        "rating": null
+                        "rating": null,
+                        "proposal": null
                       },
                       "conversationVersion": 1,
                       "usage": {
@@ -34796,7 +36167,8 @@
                 "version": 1,
                 "attachments": [ ],
                 "links": [ ],
-                "rating": null
+                "rating": null,
+                "proposal": null
               },
               "conversationVersion": 1,
               "usage": {
@@ -35492,7 +36864,8 @@
                           "version": 1,
                           "attachments": [ ],
                           "links": [ ],
-                          "rating": null
+                          "rating": null,
+                          "proposal": null
                         },
                         {
                           "id": "10000000-0000-0000-0000-000000000002",
@@ -35503,7 +36876,8 @@
                           "version": 1,
                           "attachments": [ ],
                           "links": [ ],
-                          "rating": null
+                          "rating": null,
+                          "proposal": null
                         }
                       ],
                       "result": {
@@ -44265,7 +45639,8 @@
                         "version": 1,
                         "attachments": [ ],
                         "links": [ ],
-                        "rating": null
+                        "rating": null,
+                        "proposal": null
                       },
                       "conversationVersion": 1,
                       "usage": {
@@ -45356,7 +46731,8 @@
                 "version": 1,
                 "attachments": [ ],
                 "links": [ ],
-                "rating": null
+                "rating": null,
+                "proposal": null
               },
               "conversationVersion": 1,
               "usage": {
@@ -46054,7 +47430,8 @@
                           "version": 1,
                           "attachments": [ ],
                           "links": [ ],
-                          "rating": null
+                          "rating": null,
+                          "proposal": null
                         },
                         {
                           "id": "10000000-0000-0000-0000-000000000002",
@@ -46065,7 +47442,8 @@
                           "version": 1,
                           "attachments": [ ],
                           "links": [ ],
-                          "rating": null
+                          "rating": null,
+                          "proposal": null
                         }
                       ],
                       "result": {
@@ -87438,6 +88816,38 @@
           }
         }
       },
+      "AssistantMessageProposalResponse": {
+        "required": [
+          "id",
+          "kind",
+          "action",
+          "version",
+          "state"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AssistantProposalKind"
+          },
+          "action": {
+            "type": "string"
+          },
+          "version": {
+            "maximum": 4294967295,
+            "minimum": 0,
+            "type": "integer",
+            "format": "int32"
+          },
+          "state": {
+            "$ref": "#/components/schemas/AssistantProposalState"
+          }
+        },
+        "description": "Lo que el mensaje del historial y del SSE dice de su propuesta; lo demás lo trae el GET de la propuesta."
+      },
       "AssistantMessageResponse": {
         "required": [
           "id",
@@ -87495,8 +88905,19 @@
                 "$ref": "#/components/schemas/AssistantRating"
               }
             ]
+          },
+          "proposal": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AssistantMessageProposalResponse"
+              }
+            ]
           }
-        }
+        },
+        "description": "Un mensaje del historial y del SSE; `Proposal` es la propuesta del turno, si la hay (ADR 0068 §8)."
       },
       "AssistantMessageRole": {
         "enum": [
@@ -87900,6 +89321,190 @@
             "format": "uint32"
           }
         }
+      },
+      "AssistantProposalAppliedHttpRequest": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "maximum": 4294967295,
+            "minimum": 0,
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          }
+        },
+        "description": "El aviso de que la pantalla guardó una propuesta: al editar, la versión nueva del registro; si no, sin cuerpo útil."
+      },
+      "AssistantProposalAttemptHttpRequest": {
+        "type": "object",
+        "description": "El cuerpo vacío (`{}`) del pedido de la clave de un intento de guardar desde una propuesta."
+      },
+      "AssistantProposalAttemptResponse": {
+        "required": [
+          "idempotencyKey"
+        ],
+        "type": "object",
+        "properties": {
+          "idempotencyKey": {
+            "type": "string"
+          }
+        },
+        "description": "La clave del intento de guardar desde una propuesta, para el encabezado Idempotency-Key de la ruta que guarda."
+      },
+      "AssistantProposalKind": {
+        "enum": [
+          "action"
+        ],
+        "type": "string"
+      },
+      "AssistantProposalResponse": {
+        "required": [
+          "id",
+          "conversationId",
+          "kind",
+          "action",
+          "version",
+          "state",
+          "values"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "conversationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AssistantProposalKind"
+          },
+          "action": {
+            "type": "string"
+          },
+          "version": {
+            "maximum": 4294967295,
+            "minimum": 0,
+            "type": "integer",
+            "format": "int32"
+          },
+          "state": {
+            "$ref": "#/components/schemas/AssistantProposalState"
+          },
+          "unavailableReason": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AssistantProposalUnavailableReason"
+              }
+            ]
+          },
+          "values": {
+            "maxItems": 40,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssistantProposalValueResponse"
+            }
+          },
+          "target": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AssistantProposalTargetResponse"
+              }
+            ]
+          },
+          "appliedLocation": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "description": "La propuesta de un turno (ADR 0068 §8 y §9), leída por id desde la pantalla que la confirma. El estado y los nombres se\r\ncalculan en cada lectura, con los permisos de ese momento y en la empresa de la acción; nunca se guardan."
+      },
+      "AssistantProposalState": {
+        "enum": [
+          "new",
+          "replaced",
+          "applied",
+          "unconfirmed",
+          "unavailable"
+        ],
+        "type": "string"
+      },
+      "AssistantProposalTargetResponse": {
+        "required": [
+          "id",
+          "label",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "label": {
+            "type": "string"
+          },
+          "version": {
+            "maximum": 4294967295,
+            "minimum": 0,
+            "type": "integer",
+            "format": "uint32"
+          }
+        },
+        "description": "El registro al que se refiere una propuesta que edita o elimina, como está ahora."
+      },
+      "AssistantProposalUnavailableReason": {
+        "enum": [
+          "permission",
+          "module",
+          "version",
+          "target",
+          "subject",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      "AssistantProposalValueResponse": {
+        "required": [
+          "field",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "doubt": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "description": "Un valor propuesto: el campo, el valor resuelto, su nombre leído del servidor y la clave de texto de la duda («Revisá»)."
       },
       "AssistantProvider": {
         "enum": [
@@ -90782,6 +92387,7 @@
           }
         }
       },
+      "JsonElement": { },
       "LegalAcceptanceItem": {
         "required": [
           "id",

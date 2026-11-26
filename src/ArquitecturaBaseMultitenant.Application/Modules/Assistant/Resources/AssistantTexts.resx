@@ -95,4 +95,11 @@
   <data name="Assistant.Provider.KeyUnreadable" xml:space="preserve"><value>No pudimos leer la clave guardada: reemplazala.</value></data>
   <data name="Assistant.Provider.UnsupportedProvider" xml:space="preserve"><value>La conexión está pausada: el proveedor guardado no está disponible en esta versión. Guardá la configuración para descartarlo.</value></data>
   <data name="Assistant.Provider.PlatformUnavailable" xml:space="preserve"><value>El asistente no está disponible por ahora.</value></data>
+  <data name="Assistant.Proposal.NotFound" xml:space="preserve"><value>Esta propuesta no existe.</value></data>
+  <data name="Assistant.Proposal.Unavailable" xml:space="preserve"><value>Esta propuesta ya no está disponible.</value></data>
+  <data name="Assistant.Proposal.AlreadyApplied" xml:space="preserve"><value>Esta propuesta ya se guardó.</value></data>
+  <data name="Assistant.Proposal.NotApplied" xml:space="preserve"><value>No pudimos confirmar que se guardó.</value></data>
+  <data name="Assistant.Action.NotAvailable" xml:space="preserve"><value>Esa acción no está disponible.</value></data>
+  <data name="Assistant.Action.Invalid" xml:space="preserve"><value>Lo propuesto no es válido.</value></data>
+  <data name="Assistant.Action.OnePerTurn" xml:space="preserve"><value>Ya hay una propuesta en este turno.</value></data>
 </root>

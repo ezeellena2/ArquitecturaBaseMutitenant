@@ -16,7 +16,8 @@ public sealed class AssistantContractTests
                 && !path.Key.Contains("/usage", StringComparison.Ordinal)
                 && !path.Key.Contains("/models", StringComparison.Ordinal))
                 .Sum(path => path.Value!.AsObject().Count(operation => operation.Key is "get" or "post" or "put" or "delete"));
-            Assert.Equal(15, operations);
+            // La organización suma las tres rutas de la propuesta de las acciones (ADR 0068).
+            Assert.Equal(side == "organization" ? 18 : 15, operations);
             var send = paths[$"/api/{side}/assistant/conversations/{{id}}/messages"]!["post"]!;
             Assert.NotNull(send["responses"]!["200"]!["content"]!["text/event-stream"]);
             Assert.NotNull(send["responses"]!["200"]!["content"]!["application/json"]);

@@ -23,6 +23,8 @@ public sealed partial class RouteIsolationMatrixTests
         ("platform", Caller.Platform, "pending_organizations"),
     ];
 
+    private const string ProposalsPending = "Las propuestas de las acciones responden 501 hasta la B5: todavía no hay datos de nadie";
+
     static partial void AddAssistantCases(Dictionary<string, RouteCase> cases)
     {
         foreach (var (side, caller, quick) in AssistantSides)
@@ -56,6 +58,16 @@ public sealed partial class RouteIsolationMatrixTests
             cases[$"POST {root}/quick/{{key}}"] = Foreign(w => As($"{root}/quick/{quick}",
                 new { conversationId = w.B(Kind("conversation")), version = 1 }));
         }
+
+        // Contrato de las acciones (K1): responden 501 hasta la B5, que cambia este caso por sus pruebas con la propuesta de otra
+        // persona y de otra organización.
+        foreach (var route in new[]
+        {
+            "GET /api/organization/assistant/proposals/{proposalid:guid}",
+            "POST /api/organization/assistant/proposals/{proposalid:guid}/attempts",
+            "POST /api/organization/assistant/proposals/{proposalid:guid}/applied",
+        })
+            cases[route] = Shared(ProposalsPending);
 
         cases["PUT /api/platform/assistant/models/{id:guid}"] = Shared(PlatformWide);
         cases["GET /api/platform/tenants/{tenantid:guid}/assistant/policy"] = Shared(PlatformWide);

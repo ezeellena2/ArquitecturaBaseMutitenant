@@ -19,6 +19,7 @@ public static class AssistantModule
         services.AddScoped<AssistantUploadPolicy>();
         services.AddScoped<AssistantAttachmentWriter>();
         services.AddScoped<IAssistantExportService, AssistantExportService>();
+        services.AddScoped<IAssistantProposalService, AssistantProposalService>();
         services.AddScoped<IAssistantRetentionService, AssistantRetentionService>();
         services.AddScoped<AssistantRetentionWriter>();
         services.AddScoped<IAssistantDurableService, AssistantDurableService>();
