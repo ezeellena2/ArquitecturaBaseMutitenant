@@ -29,13 +29,15 @@ public static class RecorridoInvitationDelivery
     ];
 
     /// <summary>
-    /// <c>{ kind: "invitation", email | phone, outcome: "Pending" | "Uncertain" | "Failed", code? }</c>, en la organización
-    /// <paramref name="tenantId"/>. El motivo va solo con <c>Failed</c>: uno de <see cref="EmailFailures"/> por correo (si no,
-    /// el destinatario rechazado), o uno de <c>WhatsAppSendFailures</c> por WhatsApp.
+    /// <c>{ kind: "invitation", email | phone, outcome: "Pending" | "Uncertain" | "Failed", code?, tenantId? }</c>, en la
+    /// organización de la orden (la del recorrido, que invita en la suya) o, sin ella, en <paramref name="tenantId"/>. El motivo
+    /// va solo con <c>Failed</c>: uno de <see cref="EmailFailures"/> por correo (si no, el destinatario rechazado), o uno de
+    /// <c>WhatsAppSendFailures</c> por WhatsApp.
     /// </summary>
     public static async Task<object> ExecuteAsync(IServiceProvider services, JsonElement command, Guid tenantId, CancellationToken ct)
     {
-        RecorridoCommandArguments.Allow(command, "kind", "email", "phone", "outcome", "code");
+        RecorridoCommandArguments.Allow(command, "kind", "email", "phone", "outcome", "code", "tenantId");
+        tenantId = RecorridoCommandArguments.OptionalGuid(command, "tenantId") ?? tenantId;
         if (RecorridoCommandArguments.Text(command, "kind") != "invitation")
             throw new InvalidOperationException("Unsupported isolated delivery command.");
         var email = RecorridoCommandArguments.OptionalText(command, "email");

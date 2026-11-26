@@ -13,7 +13,8 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Organization;
 /// <summary>
 /// La orden privada <c>delivery</c> del recorrido para una invitación (B-2 de la puerta de la base 2): deja el envío de la
 /// cola de la última invitación pendiente de un correo de prueba en cada estado que Usuarios lee (en la cola, «Sin
-/// confirmar» y sin salir, con su motivo), solo en la organización que se le da, y rechaza lo que no es de prueba.
+/// confirmar» y sin salir, con su motivo), solo en la organización que trae la orden o, sin ella, en la del host, y rechaza lo
+/// que no es de prueba.
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class RecorridoInvitationDeliveryTests(ApiFactory factory)
@@ -39,7 +40,9 @@ public sealed class RecorridoInvitationDeliveryTests(ApiFactory factory)
 
         await OrderAsync(tenantId, new { kind = "invitation", email, outcome = "Failed" });
         Assert.Equal("Failed", await DeliveryAsync(client, memberId));
-        await OrderAsync(tenantId, new { kind = "invitation", email, outcome = "Failed", code = "Email.Smtp.Rejected" });
+        // El recorrido invita en su propia organización, no en la empresa fija de E7 que el host da por defecto: la orden la
+        // trae y el host la busca ahí.
+        await OrderAsync(Guid.NewGuid(), new { kind = "invitation", email, outcome = "Failed", code = "Email.Smtp.Rejected", tenantId });
         Assert.Equal(("Email.Smtp.Rejected", ""), await RowAsync(outboxId));
 
         // De nuevo en la cola, con el próximo intento en un día: Usuarios la lee «Pendiente» y nadie la reclama todavía.
@@ -81,8 +84,9 @@ public sealed class RecorridoInvitationDeliveryTests(ApiFactory factory)
                      new { kind = "chatMessage", email, outcome = "Uncertain" },
                  })
             await Assert.ThrowsAsync<InvalidOperationException>(() => OrderAsync(tenantId, command));
-        // La organización de la orden es la del recorrido: la invitación de otra no se encuentra.
+        // La invitación se busca solo en la organización de la orden (o en la del host, sin ella): en otra no se encuentra.
         await Assert.ThrowsAsync<InvalidOperationException>(() => OrderAsync(otherTenant, new { kind = "invitation", email, outcome = "Uncertain" }));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => OrderAsync(tenantId, new { kind = "invitation", email, outcome = "Uncertain", tenantId = "otra" }));
         Assert.Equal("Sent", await DeliveryAsync(client, memberId));
     }
 
