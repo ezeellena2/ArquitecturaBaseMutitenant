@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Configuration.Security;
 using ArquitecturaBaseMultitenant.Application.Services.Auditing;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Application.Services.Companies;
+using ArquitecturaBaseMultitenant.Application.Services.Features;
 using ArquitecturaBaseMultitenant.Application.Services.Home;
 using ArquitecturaBaseMultitenant.Application.Services.Identity;
 using ArquitecturaBaseMultitenant.Application.Services.Invitations;
@@ -52,6 +53,8 @@ public static class DependencyInjection
             .AddInvitations()
             .AddIdentity();
         services.AddScoped<DisplayFormatter>();
+        // Los topes de los módulos (ADR 0069 §4): cada módulo suma su IModuleLimitContributor en su propio registro.
+        services.AddScoped<ModuleLimitResolver>();
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly, includeInternalTypes: true);
         services.AddScoped<IRequestValidator, RequestValidator>();
         services.AddSecurityOptions();

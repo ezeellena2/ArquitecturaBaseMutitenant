@@ -173,6 +173,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   ├── Auditing/
 │   │   │   ├── Auth/
 │   │   │   ├── Companies/
+│   │   │   ├── Features/  los topes de los módulos (0069)
 │   │   │   ├── Home/
 │   │   │   ├── Identity/
 │   │   │   ├── Invitations/
@@ -339,6 +340,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   ├── Services/
 │   │   │   ├── Auth/
 │   │   │   ├── Companies/
+│   │   │   ├── Features/
 │   │   │   ├── Home/
 │   │   │   ├── Identity/
 │   │   │   ├── Invitations/
@@ -463,6 +465,7 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `src/ArquitecturaBaseMultitenant.Application/Services/Auditing/` | Servicios de aplicación y sus helpers de auditoría. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Application/Services/Auditing/AuditingRegistration.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Services/Auditing/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Services/Auth/` | Servicios de aplicación y sus helpers de ingreso. | [docs/features/identidad.md](../features/identidad.md) | `src/ArquitecturaBaseMultitenant.Application/Services/Auth/AccessSwitchPolicy.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Services/Auth/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Services/Companies/` | Servicios de aplicación y sus helpers de empresas. | [docs/features/organizaciones.md](../features/organizaciones.md) | `src/ArquitecturaBaseMultitenant.Application/Services/Companies/CompaniesRegistration.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Services/Companies/AGENTS.md) |
+| `src/ArquitecturaBaseMultitenant.Application/Services/Features/` | Helpers del núcleo de Features: los topes de los módulos. | [docs/rules/modulos-habilitados.md](../rules/modulos-habilitados.md) | `src/ArquitecturaBaseMultitenant.Application/Services/Features/ModuleLimitResolver.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Services/Features/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Services/Home/` | Servicios de aplicación y sus helpers de Home. | [docs/features/inicio.md](../features/inicio.md) | `src/ArquitecturaBaseMultitenant.Application/Services/Home/HomeRegistration.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Services/Home/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Services/Identity/` | Servicios de aplicación y sus helpers de identidad. | [docs/features/identidad.md](../features/identidad.md) | `src/ArquitecturaBaseMultitenant.Application/Services/Identity/AccountGoogleService.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Services/Identity/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Services/Invitations/` | Servicios de aplicación y sus helpers de invitaciones. | [docs/features/organizaciones.md](../features/organizaciones.md) | `src/ArquitecturaBaseMultitenant.Application/Services/Invitations/InvitationAcceptanceGuard.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Services/Invitations/AGENTS.md) |
