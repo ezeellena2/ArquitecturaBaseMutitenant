@@ -138,7 +138,8 @@ Cada uno lleva su teléfono (`M-`). Manda el tablero aprobado, salvo lo que cont
 | `Assistant.Proposal.Unavailable` | Conflict | `attempts` o `applied` sobre una reemplazada, no disponible o sin confirmar; con el motivo |
 | `Assistant.Proposal.AlreadyApplied` | Conflict | `attempts` sobre una aplicada o con una clave que terminó en 2xx, con `location` |
 | `Assistant.Proposal.NotApplied` | Conflict | `applied` sin poder comprobarlo |
-| `Assistant.Action.NotAvailable`, `.Invalid` y `.OnePerTurn` | — | solo dentro de `AssistantActionToolData`, nunca como HTTP |
+| `Assistant.Action.NotAvailable`, `Assistant.Action.Invalid` y `Assistant.Action.OnePerTurn` | — | solo dentro de `AssistantActionToolData`, nunca como HTTP |
+| `Roles.Role.PermissionIncluded` | — | solo dentro de `AssistantActionToolData`: quitar un permiso que sigue incluido por otro que queda (260), con su ruta |
 
 **Las rutas de Usuarios y Roles no cambian.** Un 422 `Request.IdempotencyKeyReused` no prueba que se guardó: la clave guarda también un 4xx, y el 422 dice «misma clave con otro cuerpo». Ante un 422 con una clave de la propuesta, el front vuelve a llamar a `attempts`: un 409 `Assistant.Proposal.AlreadyApplied` con `location` es «Ya se guardó», y una clave nueva es otro intento.
 
@@ -194,8 +195,8 @@ Cada uno lleva su teléfono (`M-`). Manda el tablero aprobado, salvo lo que cont
 | --- | --- | --- | --- | --- |
 | F1 | El registro de adaptadores y `useAssistantProposal`: leer por id, marcas, operaciones, la clave de cada intento, el 422 que vuelve a preguntar a `attempts`, «Ya se guardó» y `applied` | `src/shared/assistant-actions/*` | `ModuleRegistry.tsx`, `useIdempotentMutation.ts` | hook, el 422 que se guardó y el que no, y límites del módulo |
 | F2 | La tarjeta en el hilo, con sus seis estados | `src/modules/assistant/components/AssistantActionCard.tsx` | `ToolStatus.tsx` | estados, teclado y axe |
-| F3 | Los adaptadores de Usuarios: el diálogo sobre el Inicio, la ficha con «Lo que cambia» y quitar | `InviteUserDialog.tsx`, `UserDetailPage.tsx` | — | todo lo propuesto se ve, y lo enviado es lo que se ve |
-| F4 | Los adaptadores de Roles: crear, cambiar y dar de baja | `RoleEditorPage.tsx`, `RolesPage.tsx` | F3 | ídem |
+| F3 | Los adaptadores de Usuarios: el diálogo sobre el Inicio, la ficha con «Lo que cambia» y quitar (`/org/usuarios/{memberId}?proposal=<id>`; lo aplicado y lo «Sin confirmar» llevan a `/org/usuarios`) | `InviteUserDialog.tsx`, `UserDetailPage.tsx` | — | todo lo propuesto se ve, y lo enviado es lo que se ve |
+| F4 | Los adaptadores de Roles: crear (`/org/roles/nuevo`), cambiar (`/org/roles/{id}`) y dar de baja (la confirmación de `/org/roles`), con `?proposal=<id>` | `RoleEditorPage.tsx`, `RolesPage.tsx` | F3 | ídem |
 | F5 | Un adaptador por acción del contrato | `src/shared/assistant-actions/coverage.test.ts` | — | falla si falta uno |
 
 ## Acciones del asistente ✓
