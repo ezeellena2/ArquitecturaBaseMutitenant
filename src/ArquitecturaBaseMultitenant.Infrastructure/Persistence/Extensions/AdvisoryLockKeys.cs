@@ -34,6 +34,9 @@ internal static class AdvisoryLockKeys
         return "global:tenant-domain:" + domain;
     }
 
+    /// <summary>Un lock por organización y módulo: dos altas a la vez, aun con distinto origen, no dejan dos filas (ADR 0069).</summary>
+    public static string TenantFeature(Guid tenantId, string key) => For(tenantId, "feature", key);
+
     public static string PersonalSpace(Guid userId)
     {
         if (userId == Guid.Empty)

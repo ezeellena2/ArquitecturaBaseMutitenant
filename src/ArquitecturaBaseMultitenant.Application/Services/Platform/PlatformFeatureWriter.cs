@@ -16,9 +16,12 @@ internal sealed class PlatformFeatureWriter(ITenantReader tenants, ITenantFeatur
     internal async Task<Result<TenantFeature>> UpdateAsync(Guid tenantId, string key, UpdatePlatformFeatureRequest request,
         CancellationToken ct)
     {
+        // El índice admite una fila por origen (ADR 0069): el lock, antes de leer, mantiene una sola fila por módulo (0060),
+        // y la segunda alta a la vez lee la de la primera y responde 409 por versión. Solo para un módulo del catálogo.
+        var definition = catalog.All.SingleOrDefault(row => row.Key == key);
+        if (definition is not null) await features.LockAsync(tenantId, definition.Key, ct);
         var tenant = await tenants.FindByIdAsync(tenantId, ct);
         if (tenant is not { Kind: TenantKind.Business }) return TenantErrors.NotFound;
-        var definition = catalog.All.SingleOrDefault(row => row.Key == key);
         if (definition is null) return TenantFeatureErrors.NotFound;
         if (!definition.Supports(tenant.Kind)) return TenantFeatureErrors.InvalidScope;
         var feature = await features.GetForUpdateAsync(tenantId, key, request.Version!.Value, ct);

@@ -8,6 +8,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Repositories;
 /// <summary>Modifica habilitaciones dentro del único límite del servicio.</summary>
 internal sealed class TenantFeatureRepository(ApplicationDbContext context) : ITenantFeatureRepository
 {
+    public Task LockAsync(Guid tenantId, string key, CancellationToken cancellationToken) =>
+        context.AcquireAdvisoryLocksAsync([AdvisoryLockKeys.TenantFeature(tenantId, key)], cancellationToken);
+
     public async Task<TenantFeature?> GetForUpdateAsync(Guid tenantId, string key, uint expectedVersion, CancellationToken cancellationToken)
     {
         context.RequireTransaction();

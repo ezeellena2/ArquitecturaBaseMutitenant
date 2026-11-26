@@ -23,8 +23,8 @@ public static class UniqueKeys
     /// <summary>Un dominio de correo pertenece a una sola organización mientras no esté quitado.</summary>
     public const string TenantDomain = "IX_TenantDomains_Domain";
 
-    /// <summary>Un módulo tiene una sola fila de configuración por organización.</summary>
-    public const string TenantFeature = "IX_TenantFeatures_TenantId_FeatureKey";
+    /// <summary>Un módulo tiene una sola fila por organización y origen (ADR 0069).</summary>
+    public const string TenantFeature = "IX_TenantFeatures_TenantId_FeatureKey_Source";
 
     /// <summary>La identificación fiscal de una empresa es única dentro de su organización.</summary>
     public const string CompanyTaxId = "IX_Companies_TenantId_TaxCountry_TaxType_TaxNumber";

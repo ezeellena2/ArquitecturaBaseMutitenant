@@ -32,6 +32,16 @@ public sealed class AdvisoryLockKeysTests
         Assert.Equal("p:ref:seed", AdvisoryLockKeys.ReferenceDataSeed);
     }
 
+    /// <summary>ADR 0069: un lock por organización y módulo, sin el origen, así dos altas con distinto origen se esperan.</summary>
+    [Fact]
+    public void Tenant_feature_lock_is_one_per_organization_and_module()
+    {
+        Assert.Equal("t:0123456789abcdef0123456789abcdef:lock:feature:whatsapp", AdvisoryLockKeys.TenantFeature(TenantA, "whatsapp"));
+        Assert.NotEqual(AdvisoryLockKeys.TenantFeature(TenantA, "whatsapp"), AdvisoryLockKeys.TenantFeature(TenantB, "whatsapp"));
+        Assert.NotEqual(AdvisoryLockKeys.TenantFeature(TenantA, "whatsapp"), AdvisoryLockKeys.TenantFeature(TenantA, "assistant"));
+        Assert.Throws<ArgumentException>(() => AdvisoryLockKeys.TenantFeature(Guid.Empty, "whatsapp"));
+    }
+
     [Fact]
     public void Different_tenants_never_share_a_resource_lock()
     {

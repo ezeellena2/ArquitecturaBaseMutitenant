@@ -4,7 +4,10 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Time;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Features;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -81,18 +84,28 @@ public sealed class PlatformFeatureAdministrationTests
         Assert.Equal(HttpStatusCode.BadRequest, wrongScope.StatusCode);
         using var personal = await client.GetAsync($"/api/platform/tenants/{personalId:D}/features", Ct);
         Assert.Equal(HttpStatusCode.NotFound, personal.StatusCode);
-        var concurrent = await Task.WhenAll(Enumerable.Range(0, 2).Select(_ => client.PutAsJsonAsync(path + "/test-emergency", new
-        { enabled = false, source = "Manual", version = 0u, reason = "Cambio concurrente del valor inicial" }, Ct)));
-        try
+        // Dos altas a la vez con distinto origen (ADR 0069): el índice admite una fila por origen, así que solo el lock del
+        // writer deja una. La primera retiene el lock sin confirmar; el PUT la espera, lee su fila y responde 409 por versión.
+        var held = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var first = HoldFirstCreationAsync(host.Services, tenantId, "test-emergency", held, release.Task);
+        await held.Task.WaitAsync(Ct);
+        var second = client.PutAsJsonAsync(path + "/test-emergency", new
+        { enabled = false, source = "Plan", version = 0u, reason = "Cambio concurrente del valor inicial" }, Ct);
+        var waited = await Task.WhenAny(second, Task.Delay(TimeSpan.FromSeconds(2), Ct)) != second;
+        release.TrySetResult();
+        await first;
+        using (var conflict = await second)
         {
-            Assert.Equal([HttpStatusCode.OK, HttpStatusCode.Conflict], concurrent.Select(response => response.StatusCode).Order());
+            Assert.True(waited);
+            Assert.Equal(HttpStatusCode.Conflict, conflict.StatusCode);
         }
-        finally { foreach (var response in concurrent) response.Dispose(); }
         await using (var scope = host.Services.CreateAsyncScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             Assert.Equal(2, await context.SecurityEvents.CountAsync(row => row.Type == SecurityEventType.TenantFeaturesChanged && row.TargetTenantId == tenantId, Ct));
-            var feature = await context.TenantFeatures.AsNoTracking().SingleAsync(row => row.TenantId == tenantId && row.FeatureKey == "test-business", Ct);
+            Assert.Equal(1, await context.TenantFeatures.CountAsync(row => row.TenantId == tenantId && row.FeatureKey == "test-emergency", Ct));
+            var feature =await context.TenantFeatures.AsNoTracking().SingleAsync(row => row.TenantId == tenantId && row.FeatureKey == "test-business", Ct);
             Assert.True(feature.Enabled);
             Assert.Equal(expires, feature.ExpiresAtUtc);
             var events = await context.SecurityEvents.AsNoTracking().Where(row => row.Type == SecurityEventType.TenantFeaturesChanged
@@ -115,6 +128,27 @@ public sealed class PlatformFeatureAdministrationTests
         Assert.Equal(HttpStatusCode.Forbidden, support.StatusCode);
         using var supportRead = await client.GetAsync(path, Ct);
         Assert.Equal(HttpStatusCode.OK, supportRead.StatusCode);
+    }
+
+    /// <summary>La primera alta: toma el lock del módulo como el writer, suma su fila y espera para confirmar.</summary>
+    private static async Task HoldFirstCreationAsync(IServiceProvider provider, Guid tenantId, string key, TaskCompletionSource held,
+        Task release)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        var saved = await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+        {
+            var features = services.GetRequiredService<ITenantFeatureRepository>();
+            await features.LockAsync(tenantId, key, ct);
+            features.Add(TenantFeature.Create(tenantId, key, false, TenantFeatureSource.Manual, null).Value);
+            services.GetRequiredService<ISecurityEventRepository>().Add(SecurityEvent.ForTenantFeatures(
+                AuditActorKind.System, Guid.Empty, tenantId, "Primera alta concurrente", nowUtc));
+            held.TrySetResult();
+            await release;
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
+        Assert.True(saved.IsSuccess);
     }
 
     private static Task GrantAsync(IServiceProvider provider, Guid userId, IReadOnlyCollection<string> permissions)
