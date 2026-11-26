@@ -57,7 +57,7 @@ internal sealed class RoleActionScenarios : IAssistantActionScenarioSource
                 Case(null, (RoleActionSource.NameField, "Cobranzas"), (RoleActionSource.ScopeField, SpecificCompany),
                     (RoleActionSource.CompanyField, ForeignCompany), (RoleActionSource.PermissionsField, new[] { "Ver miembros" }))
                     with { RejectedPath = RoleActionSource.CompanyField },
-                (review, token) => CreateAsync(client, review, token)),
+                (sender, review, key, token) => CreateAsync(sender, review, key, token)),
             "roles.edit@1" => new(action, owner, client, tenantId, otherTenantId,
                 Case("Ventas", (RoleActionSource.PermissionsField, new object[]
                 {
@@ -69,7 +69,7 @@ internal sealed class RoleActionScenarios : IAssistantActionScenarioSource
                     with { Doubtful = [RoleActionSource.PermissionsField], ShownLabel = "Ventas" },
                 Case(HiddenRole, (RoleActionSource.PermissionsField, new[] { "Ver la auditoría" })) with { ShownLabel = HiddenRole },
                 Case(ForeignRole, (RoleActionSource.PermissionsField, new[] { "Ver la auditoría" })) with { RejectedPath = "target" },
-                (review, token) => EditAsync(client, review, token)),
+                (sender, review, _, token) => EditAsync(client, sender, review, token)),
             "roles.remove@1" => new(action, owner, client, tenantId, otherTenantId,
                 Case("Ventas mayoristas") with { ShownLabel = "Ventas mayoristas" },
                 // La ruta no deja dar de baja un rol de sistema.
@@ -78,7 +78,7 @@ internal sealed class RoleActionScenarios : IAssistantActionScenarioSource
                 Case("Venta") with { RejectedPath = "target" },
                 Case(HiddenRole) with { ShownLabel = HiddenRole },
                 Case(ForeignRole) with { RejectedPath = "target" },
-                (review, token) => RemoveAsync(client, review, token)),
+                (sender, review, _, token) => RemoveAsync(sender, review, token)),
             _ => throw new ArgumentOutOfRangeException(nameof(action), action, "Not a Roles action."),
         };
     }
@@ -87,10 +87,10 @@ internal sealed class RoleActionScenarios : IAssistantActionScenarioSource
         new(target, [.. values.Select(value => new AssistantActionInput(value.Field, JsonSerializer.SerializeToElement(value.Value)))]);
 
     // Lo que manda el editor de roles con la propuesta cargada.
-    private static Task<HttpResponseMessage> CreateAsync(HttpClient client, AssistantActionReview review, CancellationToken ct)
+    private static Task<HttpResponseMessage> CreateAsync(HttpClient sender, AssistantActionReview review, Guid? key, CancellationToken ct)
     {
         var company = review.Values.SingleOrDefault(value => value.Field == RoleActionSource.CompanyField)?.Value.GetString();
-        return AccountJourney.PostAsync(client, "/api/roles", new
+        return AssistantActionRequests.PostAsync(sender, "/api/roles", new
         {
             name = Text(review, RoleActionSource.NameField),
             description = Text(review, RoleActionSource.DescriptionField),
@@ -98,11 +98,12 @@ internal sealed class RoleActionScenarios : IAssistantActionScenarioSource
             companyId = company is null ? (Guid?)null : Guid.Parse(company),
             permissions = review.Values.Where(value => value.Field == RoleActionSource.PermissionsField)
                 .Select(value => value.Value.GetProperty("id").GetString()).ToArray(),
-        }, ct);
+        }, key, ct);
     }
 
-    // Lo que manda el editor de ese rol: las operaciones sobre lo que leyó al abrir, con su alcance, su empresa y su versión.
-    private static async Task<HttpResponseMessage> EditAsync(HttpClient client, AssistantActionReview review, CancellationToken ct)
+    // Lo que manda el editor de ese rol: las operaciones sobre lo que leyó al abrir, con su alcance, su empresa y la versión que
+    // mostró la propuesta.
+    private static async Task<HttpResponseMessage> EditAsync(HttpClient client, HttpClient sender, AssistantActionReview review, CancellationToken ct)
     {
         using var detail = await client.GetFromJsonAsync<JsonDocument>($"/api/roles/{review.Target!.Id:D}", ct);
         var role = detail!.RootElement;
@@ -113,19 +114,19 @@ internal sealed class RoleActionScenarios : IAssistantActionScenarioSource
             if (value.Value.GetProperty("op").GetString() == "remove") permissions.Remove(code);
             else permissions.Add(code);
         }
-        return await client.PutAsJsonAsync($"/api/roles/{review.Target.Id:D}", new
+        return await sender.PutAsJsonAsync($"/api/roles/{review.Target.Id:D}", new
         {
             name = Text(review, RoleActionSource.NameField) ?? role.GetProperty("name").GetString(),
             description = Text(review, RoleActionSource.DescriptionField) ?? role.GetProperty("description").GetString(),
             scope = role.GetProperty("scope").GetString(),
             companyId = role.GetProperty("companyId").ValueKind == JsonValueKind.Null ? (Guid?)null : role.GetProperty("companyId").GetGuid(),
             permissions,
-            version = role.GetProperty("version").GetUInt32(),
+            version = review.Target.Version,
         }, ct);
     }
 
-    private static Task<HttpResponseMessage> RemoveAsync(HttpClient client, AssistantActionReview review, CancellationToken ct) =>
-        client.SendAsync(new HttpRequestMessage(HttpMethod.Delete, $"/api/roles/{review.Target!.Id:D}")
+    private static Task<HttpResponseMessage> RemoveAsync(HttpClient sender, AssistantActionReview review, CancellationToken ct) =>
+        sender.SendAsync(new HttpRequestMessage(HttpMethod.Delete, $"/api/roles/{review.Target!.Id:D}")
         {
             Content = JsonContent.Create(new { version = review.Target.Version }),
         }, ct);

@@ -65,7 +65,7 @@ public sealed class RoleActionSourceTests(ApiFactory factory)
         }
 
         Assert.NotNull(valid);
-        using var saved = await scenario.SaveAsync(valid, Ct);
+        using var saved = await scenario.SaveAsync(client, valid, null, Ct);
         Assert.True(saved.IsSuccessStatusCode, await saved.Content.ReadAsStringAsync(Ct));
         if (action == "roles.create@1")
         {

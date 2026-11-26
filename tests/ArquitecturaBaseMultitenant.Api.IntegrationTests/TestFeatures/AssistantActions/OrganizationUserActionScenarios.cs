@@ -21,6 +21,7 @@ internal sealed class OrganizationUserActionScenarios : IAssistantActionScenario
     internal const string ForeignCompany = "Empresa de otra organización";
     internal const string ForeignPerson = "Persona de otra organización";
     internal const string Email = "nueva.persona@example.com";
+    internal const string OtherCompany = "Gamma";
 
     public IReadOnlyList<string> Actions { get; } = ["users.invite@1", "users.edit@1", "users.remove@1"];
 
@@ -37,6 +38,7 @@ internal sealed class OrganizationUserActionScenarios : IAssistantActionScenario
 
         await AccountJourney.AuthorizeAsync(client, "business", ct, tenantId);
         var delta = await OrganizationJourney.CreateCompanyAsync(client, "Delta", ct);
+        await OrganizationJourney.CreateCompanyAsync(client, OtherCompany, ct);
         var sales = await CreateRoleAsync(client, "Ventas", Permissions.Audit.Read, null, ct);
         await CreateRoleAsync(client, "Ventas mayoristas", Permissions.Settings.Read, null, ct);
         await CreateRoleAsync(client, HiddenRole, Permissions.Companies.Read, null, ct);
@@ -60,7 +62,12 @@ internal sealed class OrganizationUserActionScenarios : IAssistantActionScenario
                     with { ShownLabel = HiddenRole },
                 Case(null, (OrganizationUserActionSource.EmailField, Email), (OrganizationUserActionSource.CompanyField, ForeignCompany))
                     with { RejectedPath = OrganizationUserActionSource.CompanyField },
-                (review, token) => InviteAsync(client, review, token)),
+                (sender, review, key, token) => InviteAsync(sender, review, key, token))
+            {
+                // Depósito es un rol de Delta: en Gamma no se puede dar.
+                OtherCompany = Case(null, (OrganizationUserActionSource.EmailField, Email), (OrganizationUserActionSource.CompanyField, OtherCompany),
+                    (OrganizationUserActionSource.CompanyRolesField, new[] { "Depósito" })) with { RejectedPath = "companyRoles[0]" },
+            },
             "users.edit@1" => new(action, owner, client, tenantId, otherTenantId,
                 Case("Martín Paz", (OrganizationUserActionSource.RolesField, new object[]
                 {
@@ -72,7 +79,11 @@ internal sealed class OrganizationUserActionScenarios : IAssistantActionScenario
                 Case("Martín Paz", (OrganizationUserActionSource.RolesField, new[] { HiddenRole })) with { ShownLabel = HiddenRole },
                 Case("Martín Paz", (OrganizationUserActionSource.CompanyField, ForeignCompany),
                     (OrganizationUserActionSource.CompanyRolesField, new[] { "Depósito" })) with { RejectedPath = OrganizationUserActionSource.CompanyField },
-                (review, token) => EditAsync(client, review, token)),
+                (sender, review, _, token) => EditAsync(client, sender, review, token))
+            {
+                OtherCompany = Case("Martín Paz", (OrganizationUserActionSource.CompanyField, OtherCompany),
+                    (OrganizationUserActionSource.CompanyRolesField, new[] { "Depósito" })) with { RejectedPath = "companyRoles[0]" },
+            },
             "users.remove@1" => new(action, owner, client, tenantId, otherTenantId,
                 Case("Martín Paz") with { ShownLabel = "Martín Paz" },
                 Case("Nadie Inexistente") with { RejectedPath = "target" },
@@ -80,7 +91,7 @@ internal sealed class OrganizationUserActionScenarios : IAssistantActionScenario
                 Case("Martín") with { RejectedPath = "target" },
                 Case(HiddenPerson) with { ShownLabel = HiddenPerson },
                 Case(ForeignPerson) with { RejectedPath = "target" },
-                (review, token) => client.DeleteAsync($"/api/users/{review.Target!.Id:D}?version={review.Target.Version}", token)),
+                (sender, review, _, token) => sender.DeleteAsync($"/api/users/{review.Target!.Id:D}?version={review.Target.Version}", token)),
             _ => throw new ArgumentOutOfRangeException(nameof(action), action, "Not a Users action."),
         };
     }
@@ -116,19 +127,19 @@ internal sealed class OrganizationUserActionScenarios : IAssistantActionScenario
         new(target, [.. values.Select(value => new AssistantActionInput(value.Field, JsonSerializer.SerializeToElement(value.Value)))]);
 
     // Lo que manda el diálogo «Invitar usuario» con la propuesta cargada.
-    private static Task<HttpResponseMessage> InviteAsync(HttpClient client, AssistantActionReview review, CancellationToken ct)
+    private static Task<HttpResponseMessage> InviteAsync(HttpClient sender, AssistantActionReview review, Guid? key, CancellationToken ct)
     {
         var company = review.Values.SingleOrDefault(value => value.Field == OrganizationUserActionSource.CompanyField)?.Value.GetString();
-        return AccountJourney.PostAsync(client, "/api/users/invitations", new
+        return AssistantActionRequests.PostAsync(sender, "/api/users/invitations", new
         {
             email = review.Values.Single(value => value.Field == OrganizationUserActionSource.EmailField).Value.GetString(),
             roleIds = Added(review, OrganizationUserActionSource.RolesField),
             companies = company is null ? [] : new[] { new { companyId = Guid.Parse(company), roleIds = Added(review, OrganizationUserActionSource.CompanyRolesField) } },
-        }, ct);
+        }, key, ct);
     }
 
-    // Lo que manda la ficha: las operaciones sobre lo que leyó al abrir, con la versión leída.
-    private static async Task<HttpResponseMessage> EditAsync(HttpClient client, AssistantActionReview review, CancellationToken ct)
+    // Lo que manda la ficha: las operaciones sobre lo que leyó al abrir, con la versión que mostró la propuesta.
+    private static async Task<HttpResponseMessage> EditAsync(HttpClient client, HttpClient sender, AssistantActionReview review, CancellationToken ct)
     {
         using var detail = await client.GetFromJsonAsync<JsonDocument>($"/api/users/{review.Target!.Id:D}", ct);
         var roles = detail!.RootElement.GetProperty("roles").EnumerateArray().Select(role => role.GetProperty("id").GetGuid()).ToHashSet();
@@ -138,11 +149,11 @@ internal sealed class OrganizationUserActionScenarios : IAssistantActionScenario
             if (value.Value.GetProperty("op").GetString() == "remove") roles.Remove(id);
             else roles.Add(id);
         }
-        return await client.PutAsJsonAsync($"/api/users/{review.Target.Id:D}", new
+        return await sender.PutAsJsonAsync($"/api/users/{review.Target.Id:D}", new
         {
             roleIds = roles,
             companies = Array.Empty<object>(),
-            version = detail.RootElement.GetProperty("version").GetUInt32(),
+            version = review.Target.Version,
         }, ct);
     }
 

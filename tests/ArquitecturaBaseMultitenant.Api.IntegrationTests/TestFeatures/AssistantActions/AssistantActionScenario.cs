@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Models.AssistantActions;
 
@@ -5,9 +6,9 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Assistan
 
 /// <summary>
 /// El escenario de una acción para la batería genérica (ADR 0068, «Verificación»): la organización, quién pide con su sesión
-/// de empresa, otra organización, los casos de la acción (válido, inválido, ambiguo, con instrucciones escondidas y con algo
-/// de otra organización) y cómo guarda la pantalla el caso válido con lo que muestra la propuesta. Quien lo usa libera
-/// <see cref="Client"/>.
+/// de empresa, otra organización, los casos de la acción (válido, inválido, ambiguo, con instrucciones escondidas, con algo
+/// de otra organización y, si la acción elige una empresa, con algo de otra empresa) y cómo guarda la pantalla el caso válido
+/// con lo que muestra la propuesta. Quien lo usa libera <see cref="Client"/>.
 /// </summary>
 internal sealed record AssistantActionScenario(
     string Action,
@@ -20,10 +21,35 @@ internal sealed record AssistantActionScenario(
     AssistantActionScenarioCase Ambiguous,
     AssistantActionScenarioCase Hidden,
     AssistantActionScenarioCase Foreign,
-    Func<AssistantActionReview, CancellationToken, Task<HttpResponseMessage>> SaveAsync)
+    AssistantActionSave SaveAsync)
 {
+    /// <summary>Algo de otra empresa de la misma organización; null si la acción no elige empresa.</summary>
+    public AssistantActionScenarioCase? OtherCompany { get; init; }
+
     public IEnumerable<(string Name, AssistantActionScenarioCase Case)> Cases =>
-        [("valid", Valid), ("invalid", Invalid), ("ambiguous", Ambiguous), ("hidden", Hidden), ("foreign", Foreign)];
+        OtherCompany is { } otherCompany
+            ? [("valid", Valid), ("invalid", Invalid), ("ambiguous", Ambiguous), ("hidden", Hidden), ("foreign", Foreign), ("otherCompany", otherCompany)]
+            : [("valid", Valid), ("invalid", Invalid), ("ambiguous", Ambiguous), ("hidden", Hidden), ("foreign", Foreign)];
+}
+
+/// <summary>
+/// El cuerpo HTTP del caso válido, como lo manda la pantalla con la propuesta cargada: lo que lee al abrir lo lee con la
+/// sesión del escenario, y lo manda <paramref name="sender"/>, con <paramref name="idempotencyKey"/> si la ruta crea (una
+/// nueva si es null). Un segundo envío con la misma propuesta es el de otra pestaña: lleva la versión que mostró la propuesta.
+/// </summary>
+internal delegate Task<HttpResponseMessage> AssistantActionSave(HttpClient sender, AssistantActionReview review, Guid? idempotencyKey,
+    CancellationToken ct);
+
+/// <summary>Los pedidos que arman los escenarios.</summary>
+internal static class AssistantActionRequests
+{
+    /// <summary>Un <c>POST</c> con la clave del intento, como lo manda la pantalla.</summary>
+    internal static async Task<HttpResponseMessage> PostAsync(HttpClient client, string path, object body, Guid? idempotencyKey, CancellationToken ct)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, path) { Content = JsonContent.Create(body) };
+        request.Headers.Add("Idempotency-Key", (idempotencyKey ?? Guid.NewGuid()).ToString("D"));
+        return await client.SendAsync(request, ct);
+    }
 }
 
 /// <summary>Un caso: el destino y los valores como los escribe el modelo, y lo que se espera de la fuente.</summary>

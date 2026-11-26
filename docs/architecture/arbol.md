@@ -318,6 +318,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   ├── Tenancy/  los tests de multitenancy.md §13
 │   │   ├── TestFeatures/  solo para tests, nunca en src/
 │   │   │   ├── Access/  probe de ruta exclusiva Business, sólo para tests
+│   │   │   ├── AssistantActions/  escenarios de la batería genérica de las acciones del asistente (ADR 0068)
 │   │   │   ├── AssistantTurns/
 │   │   │   ├── AssistantBrowser/  controles privados del recorrido real aislado
 │   │   │   ├── Auditing/

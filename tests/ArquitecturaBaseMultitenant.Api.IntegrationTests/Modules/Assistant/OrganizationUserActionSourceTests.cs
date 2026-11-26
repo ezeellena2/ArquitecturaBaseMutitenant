@@ -62,7 +62,7 @@ public sealed class OrganizationUserActionSourceTests(ApiFactory factory)
             if (name == "valid") valid = reviewed.Value;
         }
 
-        using var saved = await scenario.SaveAsync(valid!, Ct);
+        using var saved = await scenario.SaveAsync(client, valid!, null, Ct);
         Assert.True(saved.IsSuccessStatusCode, await saved.Content.ReadAsStringAsync(Ct));
         if (action == "users.edit@1")
         {
