@@ -21,6 +21,7 @@
   - una colección nunca sale de un `Find…` ni un diccionario de un `Count…`, tampoco en un repositorio: es un `List…`. Los desvíos de hoy se renombran en la E12, con el test (B9 de su plan).
 - **Readers:** `AsNoTracking` y proyección directa a `*Row` o `*Response`.
 - **Migración:** el comando de [`docs/guides/migracion.md`](../guides/migracion.md) (E2). Cada tabla nueva llama al helper RLS de su clase: `tenant` → `EnableTenantRls`, `public_site` → `EnablePublicRls`, `engagement` → `EnablePartiesRls` ([multitenancy](multitenancy.md)). Si la tabla es de `tenant`, además lleva un índice `(TenantId, campo, Id)` por cada campo de su `SortMap` ([paginado-y-busqueda](paginado-y-busqueda.md)). Se revisa el SQL generado antes de commitear.
+- **Permisos de la tabla nueva:** la base no tiene privilegios por defecto, así que la migración que crea una tabla le da su `GRANT` a `mt_app`, el rol de la Api (`SELECT, INSERT, UPDATE, DELETE`, o solo `SELECT` si la escriben funciones `SECURITY DEFINER`). Sin él, la Api responde 500 con «permission denied» (42501) en cuanto la lee.
 - **Lo que EF no modela** (una clave diferida, un índice parcial con SQL propio) va en SQL dentro de la migración generada, con un comentario en la migración y en la configuración. La migración que quita el módulo lo suelta y lo recrea a mano, porque EF no lo ve ([migración](../guides/migracion.md), paso 7).
 - **Dos versiones conviven en cada despliegue:** se agrega antes de borrar, y un CHECK nuevo sobre una tabla existente va en el despliegue siguiente ([ADR 0060](../decisions/0060-dos-versiones-conviven.md)).
 - **Orden alfabético en español (collation):** la base se crea con collation **ICU `es-AR`**: `CREATE DATABASE … LOCALE_PROVIDER icu ICU_LOCALE 'es-AR' TEMPLATE template0`. Así "Álvarez" queda antes que "Zapata" y "Ñandú" después de "Nuñez". En Development la crea `DatabaseBootstrapExtensions`; en producción, el DBA con el mismo comando. `RuntimeRoleValidator` **aborta** el arranque si la base no es ICU `es-AR`.
@@ -46,6 +47,7 @@
 
 ## Lo verifica
 - `EntityConfigurationTests` (E2), `DataClassificationTests` (E2), `DecimalPrecisionTests` (E1), `TextLimitsTests` (E1), `TransactionBoundaryTests` (E2), `UniqueKeysTests` (E6), `PersistenceNamingTests` (E12): el prefijo y lo que devuelve cada método de `Interfaces/Persistence`
+- `RuntimeRoleTableGrantsTests`: cada tabla que mapea el modelo, ya migrada, tiene su `GRANT SELECT` a `mt_app`
 - `BannedSymbols.txt`: `FromSqlRaw`, `ExecuteSqlRaw` y `SqlQueryRaw` rompen el build (RS0030), también en los tests
 
 ## Detalle
