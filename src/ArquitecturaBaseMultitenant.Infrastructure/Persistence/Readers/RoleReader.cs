@@ -119,6 +119,17 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
         return row is null ? null : SortPermissions(row);
     }
 
+    public async Task<IReadOnlyList<RoleRow>> ListByIdsAsync(IReadOnlyCollection<Guid> roleIds, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(roleIds);
+        if (roleIds.Count == 0) return [];
+        var tenantId = tenantContext.RequiredTenantId;
+        Guid[] ids = [.. roleIds.Distinct()];
+        var rows = await Project(context.Roles.AsNoTracking().Where(role => role.TenantId == tenantId && ids.Contains(role.Id)), tenantId)
+            .ToArrayAsync(cancellationToken);
+        return [.. rows.Select(SortPermissions)];
+    }
+
     public Task<bool> ExistsByNameAsync(string name, Guid? companyId, Guid? excludedRoleId,
         CancellationToken cancellationToken)
     {

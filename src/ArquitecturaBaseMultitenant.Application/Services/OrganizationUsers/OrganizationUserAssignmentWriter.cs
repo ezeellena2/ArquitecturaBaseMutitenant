@@ -69,29 +69,20 @@ internal sealed class OrganizationUserAssignmentWriter(
             Collect(companyAssignments.Value);
         }
 
-        var desiredKeys = desiredAssignments.Select(AssignmentKey).ToHashSet();
-        var existingKeys = snapshot.Assignments.Select(AssignmentKey).ToHashSet();
         var inactiveCompanyIds = snapshot.CompanyMemberships
             .Where(row => row.Status != CompanyMembershipStatus.Active)
             .Select(row => row.CompanyId)
             .ToHashSet();
-        // Una edición general no reactiva empresas inactivas ni borra sus roles guardados.
-        var removed = snapshot.Assignments.Where(row => !desiredKeys.Contains(AssignmentKey(row))
-            && (row.CompanyId is null || !inactiveCompanyIds.Contains(row.CompanyId.Value))).ToArray();
-        var added = desiredAssignments.Where(row => !existingKeys.Contains(AssignmentKey(row))).ToArray();
-        // Una empresa inactiva que vuelve con la edición reactiva también los roles que guardaba: vuelven a darse.
-        var revived = snapshot.Assignments.Where(row => !desiredKeys.Contains(AssignmentKey(row))
-            && row.CompanyId is { } companyId && inactiveCompanyIds.Contains(companyId)
-            && desired.CompanyRoles.ContainsKey(companyId)).ToArray();
-        // ADR 0061: cada rol que entra, sale o vuelve permite solo lo que quien pide tiene donde se da. Lo guardado en un
-        // invitado no vale todavía (pudo quedar de una invitación revocada): lo da la invitación, así que se da todo.
-        RoleAssignment[] granted = member.Status == MemberStatus.Invited ? [.. desiredAssignments] : added;
-        var delegated = await delegation.CheckRolesChangeAsync([.. removed, .. revived],
-            [.. granted.Select(row => new RoleGrant(desiredPermissions[AssignmentKey(row)], row.CompanyId))],
+        // ADR 0061: cada rol que entra, sale o vuelve permite solo lo que quien pide tiene donde se da; qué entra, sale o
+        // vuelve lo decide la misma regla que usa la fuente del asistente.
+        var changes = OrganizationUserRoleChangePolicy.Decide(snapshot.Assignments, desiredAssignments, AssignmentKey,
+            inactiveCompanyIds, [.. desired.CompanyRoles.Keys], member.Status == MemberStatus.Invited);
+        var delegated = await delegation.CheckRolesChangeAsync([.. changes.Removed, .. changes.Revived],
+            [.. changes.Granted.Select(row => new RoleGrant(desiredPermissions[AssignmentKey(row)], row.CompanyId))],
             cancellationToken);
         if (delegated.IsFailure) return delegated;
-        foreach (var assignment in removed) assignments.Remove(assignment);
-        foreach (var assignment in added) assignments.Add(assignment);
+        foreach (var assignment in changes.Removed) assignments.Remove(assignment);
+        foreach (var assignment in changes.Added) assignments.Add(assignment);
 
         var membershipsByCompany = snapshot.CompanyMemberships.ToDictionary(row => row.CompanyId);
         var desiredCompanyIds = desired.CompanyRoles.Keys.ToHashSet();

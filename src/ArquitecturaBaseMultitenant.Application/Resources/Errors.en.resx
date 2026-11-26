@@ -58,6 +58,7 @@
   <data name="Tenancy.Member.CannotDisableSelf" xml:space="preserve"><value>You can't deactivate yourself.</value></data>
   <data name="Tenancy.Member.RolesNotHeld" xml:space="preserve"><value>You can't give or take away a role with permissions you don't have.</value></data>
   <data name="Tenancy.Member.HasMorePermissions" xml:space="preserve"><value>This person has permissions you don't have: you can't change their roles, deactivate them, reactivate them or remove them.</value></data>
+  <data name="Tenancy.Member.Ambiguous" xml:space="preserve"><value>That name matches more than one person: say which one.</value></data>
   <data name="Users.User.LastAdmin" xml:space="preserve"><value>The system must keep at least one active administrator.</value></data>
   <data name="Settings.System.NotFound" xml:space="preserve"><value>We couldn't find the system settings.</value></data>
   <data name="Users.User.AlreadyExists" xml:space="preserve"><value>An account with that email already exists.</value></data>
@@ -93,6 +94,7 @@
   <data name="Roles.Role.ScopeChangeHasUsers" xml:space="preserve"><value>The role still has users assigned. Reassign them before changing where it applies.</value></data>
   <data name="Roles.Role.PermissionsNotHeld" xml:space="preserve"><value>You can't give or take away permissions you don't have.</value></data>
   <data name="Roles.Role.PermissionIncluded" xml:space="preserve"><value>Another permission the role keeps includes that one: remove the one that includes it too.</value></data>
+  <data name="Roles.Role.Ambiguous" xml:space="preserve"><value>That name matches more than one role: say which one.</value></data>
   <data name="General.ConcurrencyConflict" xml:space="preserve"><value>Someone else changed this. Review the latest version before saving.</value></data>
   <data name="Request.InProgress" xml:space="preserve"><value>The request is still being processed.</value></data>
   <data name="Request.IdempotencyKeyRequired" xml:space="preserve"><value>A key identifying this request is required.</value></data>

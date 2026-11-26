@@ -16,6 +16,8 @@ public static class MemberErrors
     public const string CannotDisableSelfCode = "Tenancy.Member.CannotDisableSelf";
     public const string RolesNotHeldCode = "Tenancy.Member.RolesNotHeld";
     public const string HasMorePermissionsCode = "Tenancy.Member.HasMorePermissions";
+    /// <summary>El nombre que escribió el asistente es de más de una persona: solo vuelve al asistente como dato, nunca como HTTP.</summary>
+    public const string AmbiguousCode = "Tenancy.Member.Ambiguous";
 
     public static readonly Error Inactive = Error.Forbidden(InactiveCode, "The membership is inactive.");
     public static readonly Error NotFound = Error.NotFound(NotFoundCode, "The organization member was not found.");
@@ -23,6 +25,7 @@ public static class MemberErrors
     public static readonly Error IdentityRequired = Error.Conflict(IdentityRequiredCode, "An invited member needs an identity before activation.");
     public static readonly Error LastTenantAdmin = Error.Conflict(LastTenantAdminCode, "The organization must keep at least one active owner.");
     public static readonly Error CannotDisableSelf = Error.Forbidden(CannotDisableSelfCode, "A member cannot disable their own organization access.");
+    public static readonly Error Ambiguous = Error.Validation(AmbiguousCode, "More than one person matches.");
 
     /// <summary>ADR 0061: no se da ni se quita un rol con permisos que quien edita no tiene.</summary>
     public static readonly Error RolesNotHeld = Error.Forbidden(RolesNotHeldCode, "You cannot give or take away a role with permissions you do not have.");

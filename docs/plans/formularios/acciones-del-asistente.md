@@ -140,6 +140,7 @@ Cada uno lleva su teléfono (`M-`). Manda el tablero aprobado, salvo lo que cont
 | `Assistant.Proposal.NotApplied` | Conflict | `applied` sin poder comprobarlo |
 | `Assistant.Action.NotAvailable`, `Assistant.Action.Invalid` y `Assistant.Action.OnePerTurn` | — | solo dentro de `AssistantActionToolData`, nunca como HTTP |
 | `Roles.Role.PermissionIncluded` | — | solo dentro de `AssistantActionToolData`: quitar un permiso que sigue incluido por otro que queda (260), con su ruta |
+| `Roles.Role.Ambiguous` y `Tenancy.Member.Ambiguous` | — | solo dentro de `AssistantActionToolData`: el destino nombra a más de un rol o a más de una persona, en `target` |
 
 **Las rutas de Usuarios y Roles no cambian.** Un 422 `Request.IdempotencyKeyReused` no prueba que se guardó: la clave guarda también un 4xx, y el 422 dice «misma clave con otro cuerpo». Ante un 422 con una clave de la propuesta, el front vuelve a llamar a `attempts`: un 409 `Assistant.Proposal.AlreadyApplied` con `location` es «Ya se guardó», y una clave nueva es otro intento.
 

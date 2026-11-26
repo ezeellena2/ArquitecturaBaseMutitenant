@@ -149,6 +149,8 @@ public sealed class DelegationPermissionsResolverTests
             throw new NotSupportedException();
         public Task<RoleRow?> FindByIdAsync(Guid roleId, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+        public Task<IReadOnlyList<RoleRow>> ListByIdsAsync(IReadOnlyCollection<Guid> roleIds, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
         public Task<bool> ExistsByNameAsync(string name, Guid? companyId, Guid? excludedRoleId,
             CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<int> CountUsersAsync(Guid roleId, CancellationToken cancellationToken) =>

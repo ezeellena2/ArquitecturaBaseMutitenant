@@ -21,6 +21,8 @@ public static class RoleErrors
     public const string PermissionsNotHeldCode = "Roles.Role.PermissionsNotHeld";
     /// <summary>Quitar un permiso que sigue incluido por otro que queda (260): solo vuelve al asistente como dato, nunca como HTTP.</summary>
     public const string PermissionIncludedCode = "Roles.Role.PermissionIncluded";
+    /// <summary>El nombre que escribió el asistente es de más de un rol: solo vuelve al asistente como dato, nunca como HTTP.</summary>
+    public const string AmbiguousCode = "Roles.Role.Ambiguous";
 
     public const string UserCountKey = "userCount";
 
@@ -36,6 +38,7 @@ public static class RoleErrors
     public static readonly Error SystemRoleNameReserved = Error.Conflict(SystemRoleNameReservedCode, "The name is reserved for a system role.");
     public static readonly Error NotFound = Error.NotFound(NotFoundCode, "The role was not found.");
     public static readonly Error AlreadyExists = Error.Conflict(AlreadyExistsCode, "A role with that name already exists.");
+    public static readonly Error Ambiguous = Error.Validation(AmbiguousCode, "More than one role matches.");
 
     /// <summary>ADR 0061: nadie da ni quita en un rol un permiso que no tiene en ese alcance.</summary>
     public static readonly Error PermissionsNotHeld = Error.Forbidden(PermissionsNotHeldCode, "You cannot give or take away permissions you do not have.");

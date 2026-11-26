@@ -151,6 +151,8 @@ public sealed class RoleServiceTests
             return Task.FromResult(Page);
         }
         public Task<RoleRow?> FindByIdAsync(Guid roleId, CancellationToken cancellationToken) => Task.FromResult(Role);
+        public Task<IReadOnlyList<RoleRow>> ListByIdsAsync(IReadOnlyCollection<Guid> roleIds, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<RoleRow>>(Role is null ? [] : [Role]);
         public Task<bool> ExistsByNameAsync(string name, Guid? companyId, Guid? excludedRoleId,
             CancellationToken cancellationToken) =>
             Task.FromResult(NameExists);

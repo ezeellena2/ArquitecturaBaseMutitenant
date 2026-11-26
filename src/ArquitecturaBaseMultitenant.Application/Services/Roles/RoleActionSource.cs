@@ -1,13 +1,12 @@
 using System.Globalization;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.AssistantActions;
-using ArquitecturaBaseMultitenant.Application.Models.Companies;
 using ArquitecturaBaseMultitenant.Application.Models.Roles;
 using ArquitecturaBaseMultitenant.Application.Resources;
+using ArquitecturaBaseMultitenant.Application.Services.Companies;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -28,13 +27,19 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Roles;
 /// <item>Un permiso se escribe por su nombre o su código; quitar elige solo entre los que el rol tiene. Quitar uno que sigue
 /// incluido por otro que queda vuelve al modelo con su ruta y <see cref="PermissionIncludedCode"/>: la ruta lo volvería a
 /// guardar.</item>
-/// <item>El destino es un rol de la organización por su nombre; con varios parecidos vuelve al modelo, y uno de sistema,
-/// que la ruta no deja cambiar ni dar de baja, también.</item>
+/// <item>El destino es un rol de la organización por su nombre, buscado con el lector (<see cref="RoleActionResolver"/>); con
+/// varios parecidos vuelve al modelo con <see cref="RoleErrors.AmbiguousCode"/>, y uno de sistema, que la ruta no deja cambiar
+/// ni dar de baja, también.</item>
+/// <item>La empresa se resuelve y se nombra solo con <c>companies.read</c>, lo que pide la lista de empresas del editor
+/// (<see cref="CompanyActionResolver"/>): <c>roles.manage</c> no lo trae.</item>
 /// </list>
+/// Elegir por nombre, leer un elemento y aplicar las operaciones es de <see cref="AssistantActionInputs"/>, igual para todas las
+/// fuentes.
 /// </summary>
 internal sealed class RoleActionSource(
     IRoleReader roles,
-    ICompanyReader companies,
+    RoleActionResolver roleNames,
+    CompanyActionResolver companies,
     DelegationPermissionsResolver delegation,
     IValidator<CreateRoleRequest> createValidator,
     IValidator<UpdateRoleRequest> updateValidator) : IAssistantActionSource
@@ -49,12 +54,6 @@ internal sealed class RoleActionSource(
     internal const string PermissionIncludedCode = RoleErrors.PermissionIncludedCode;
 
     private const string TargetPath = "target";
-    private const string Add = "add";
-    private const string Remove = "remove";
-    private const int ChoicesPageSize = 20;
-    private const int MaxNameLength = 200;
-
-    private static readonly JsonSerializerOptions Json = new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
 
     private static readonly AssistantActionField NameInput = new()
     { Name = NameField, Type = AssistantActionFieldType.Text, Required = true, MaxLength = TextLimits.ShortName };
@@ -136,17 +135,15 @@ internal sealed class RoleActionSource(
                 .OrderBy(row => row.Name, StringComparer.CurrentCulture)];
         }
         else return Invalid(request.Field, ValidationError.ErrorCode);
-
-        var found = rows.Where(row => string.IsNullOrWhiteSpace(request.Search) || Contains(row.Name, request.Search)).ToArray();
-        var page = Math.Max(PagedRequest.DefaultPage, request.Page);
-        return new PagedResult<AssistantActionChoiceRow>(
-            [.. found.Skip((page - 1) * ChoicesPageSize).Take(ChoicesPageSize)], page, ChoicesPageSize, found.Length);
+        // Los alcances y los permisos son catálogos cerrados, no una tabla.
+        return AssistantActionInputs.PageOf(rows, request.Search, request.Page);
     }
 
     public async Task<Result<AssistantActionResolution>> ResolveAsync(AssistantActionDraft draft, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(draft);
         var action = draft.Action;
+        var held = await delegation.ReadHeldAsync(cancellationToken);
         RoleRow? target = null;
         if (action.Target is not null)
         {
@@ -178,7 +175,7 @@ internal sealed class RoleActionSource(
         if (inputs.TryGetValue(CompanyField, out var companyInput))
         {
             var company = scope is not (null or RoleScope.SpecificCompany) ? RoleErrors.CompanyNotAllowed
-                : companyInput.Value.ValueKind == JsonValueKind.String ? await MatchCompanyAsync(companyInput.Value.GetString()!, cancellationToken)
+                : companyInput.Value.ValueKind == JsonValueKind.String ? await companies.MatchAsync(held, companyInput.Value.GetString(), cancellationToken)
                 : CompanyErrors.NotFound;
             if (company.IsFailure) errors[CompanyField] = [company.Error.Code];
             else values.Add(new(CompanyField, companyInput.Value, JsonSerializer.SerializeToElement(company.Value.Company.Id.ToString("D")), company.Value.Doubt));
@@ -186,8 +183,7 @@ internal sealed class RoleActionSource(
         else if (action.Kind == AssistantActionKind.Create && scope == RoleScope.SpecificCompany) errors[CompanyField] = [RoleErrors.CompanyRequiredCode];
 
         if (inputs.TryGetValue(PermissionsField, out var permissions) && scope is { } place)
-            ResolvePermissions(permissions, place, target?.Permissions ?? [], action.Kind,
-                await delegation.ReadHeldAsync(cancellationToken), values, errors);
+            ResolvePermissions(permissions, place, target?.Permissions ?? [], action.Kind, held, values, errors);
 
         if (errors.Count > 0) return new ValidationError(errors);
         return new AssistantActionResolution(action, target?.Id, target?.Version, values);
@@ -205,6 +201,7 @@ internal sealed class RoleActionSource(
     {
         ArgumentNullException.ThrowIfNull(resolution);
         var action = resolution.Action;
+        var held = await delegation.ReadHeldAsync(cancellationToken);
         AssistantActionTargetView? target = null;
         RoleScope? scope = null;
         if (action.Target is not null)
@@ -228,14 +225,13 @@ internal sealed class RoleActionSource(
                     views.Add(new(ScopeField, JsonSerializer.SerializeToElement(chosen.ToString()), ScopeLabel(action, chosen), value.Doubt));
                     break;
                 case CompanyField:
-                    if (IdOf(value.Resolved) is not { } id || await companies.FindByIdAsync(id, cancellationToken) is not { Status: CompanyStatus.Active } company)
+                    if (await companies.FindActiveAsync(held, AssistantActionInputs.IdOf(value.Resolved), cancellationToken) is not { } company)
                         return CompanyErrors.NotFound;
                     views.Add(new(CompanyField, JsonSerializer.SerializeToElement(company.Id.ToString("D")), company.Name, value.Doubt));
                     break;
             }
         }
 
-        var held = await delegation.ReadHeldAsync(cancellationToken);
         foreach (var element in OpsOf(resolution))
         {
             if (scope is not { } place || !Catalog(place).Contains(element.Id, StringComparer.Ordinal)) return RoleErrors.NotFound;
@@ -255,6 +251,7 @@ internal sealed class RoleActionSource(
     {
         ArgumentNullException.ThrowIfNull(resolution);
         var action = resolution.Action;
+        var held = await delegation.ReadHeldAsync(cancellationToken);
         RoleRow? target = null;
         if (action.Target is not null)
         {
@@ -268,12 +265,12 @@ internal sealed class RoleActionSource(
             ? string.IsNullOrWhiteSpace(written) ? null : written
             : target?.Description;
         var scope = target is null ? ScopeOf(ResolvedOf(resolution, ScopeField)) : target.Scope;
-        var companyId = target is null ? IdOf(ResolvedOf(resolution, CompanyField)) : target.CompanyId;
-        if (target is null && companyId is { } chosen && await companies.FindByIdAsync(chosen, cancellationToken) is not { Status: CompanyStatus.Active })
+        var companyId = target is null ? AssistantActionInputs.IdOf(ResolvedOf(resolution, CompanyField)) : target.CompanyId;
+        if (target is null && companyId is not null && await companies.FindActiveAsync(held, companyId, cancellationToken) is null)
             return Invalid(CompanyField, CompanyErrors.NotFoundCode);
         var before = target?.Permissions ?? [];
         // Como guarda la ruta: lo pedido más lo que incluye (260).
-        string[] after = [.. Permissions.Inclusions.WithIncluded(Apply(before, OpsOf(resolution))).Order(StringComparer.Ordinal)];
+        string[] after = [.. Permissions.Inclusions.WithIncluded(AssistantActionInputs.Apply(before, OpsOf(resolution))).Order(StringComparer.Ordinal)];
 
         var validation = target is null
             ? await createValidator.ValidateAsync(new CreateRoleRequest(name, description, scope, companyId, after), cancellationToken)
@@ -287,7 +284,7 @@ internal sealed class RoleActionSource(
         if (role.IsFailure) return Invalid(FieldOfCode(role.Error.Code), role.Error.Code);
         if (await roles.ExistsByNameAsync(role.Value.Name, companyId, target?.Id, cancellationToken))
             return Invalid(NameField, RoleErrors.AlreadyExistsCode);
-        return OrganizationDelegationPolicy.CanChangePermissions(await delegation.ReadHeldAsync(cancellationToken), before, after)
+        return OrganizationDelegationPolicy.CanChangePermissions(held, before, after)
             ? Result.Success()
             : Invalid(PermissionsField, RoleErrors.PermissionsNotHeldCode);
     }
@@ -313,14 +310,14 @@ internal sealed class RoleActionSource(
         }
         var catalog = Catalog(scope).ToArray();
         var assigned = catalog.Where(code => current.Contains(code, StringComparer.Ordinal)).ToArray();
-        var resolved = new List<(PermissionOp Op, string Path)>();
+        var resolved = new List<(AssistantActionOp<string> Op, string Path)>();
         var index = 0;
         foreach (var element in input.Value.EnumerateArray())
         {
             var path = $"{input.Field}[{index++}]";
-            if (!TryReadOp(element, out var op, out var text) || (op == Remove && kind != AssistantActionKind.Edit))
+            if (!AssistantActionInputs.TryReadOp(element, out var op, out var text) || (op == AssistantActionInputs.Remove && kind != AssistantActionKind.Edit))
                 errors[path] = [ValidationError.ErrorCode];
-            else if (Match(op == Remove ? assigned : catalog, Names, text) is not { } match)
+            else if (AssistantActionInputs.Match(op == AssistantActionInputs.Remove ? assigned : catalog, Names, text) is not { } match)
                 errors[path] = [RoleErrors.PermissionNotFoundCode];
             else if (!CanGive(held, match.Item))
                 errors[path] = [RoleErrors.PermissionsNotHeldCode];
@@ -328,37 +325,24 @@ internal sealed class RoleActionSource(
         }
 
         // 260: lo que sigue incluido por otro que queda, la ruta lo vuelve a guardar; quitarlo no cambia nada y vuelve al modelo.
-        var kept = Apply(current, resolved.Select(item => item.Op));
-        foreach (var (op, path) in resolved.Where(item => item.Op.Op == Remove))
+        var kept = AssistantActionInputs.Apply(current, resolved.Select(item => item.Op));
+        foreach (var (op, path) in resolved.Where(item => item.Op.Op == AssistantActionInputs.Remove))
             if (kept.Any(code => Permissions.Inclusions.Of(code).Contains(op.Id, StringComparer.Ordinal)))
                 errors[path] = [PermissionIncludedCode];
 
         var doubt = resolved.Any(item => item.Op.Doubt is not null) ? AssistantActionDoubts.Similar : null;
-        values.Add(new(input.Field, input.Value, JsonSerializer.SerializeToElement(resolved.Select(item => item.Op).ToArray(), Json), doubt));
+        values.Add(new(input.Field, input.Value,
+            JsonSerializer.SerializeToElement(resolved.Select(item => item.Op).ToArray(), AssistantActionInputs.Json), doubt));
     }
 
-    private async Task<Result<(CompanyRow Company, string? Doubt)>> MatchCompanyAsync(string text, CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(text) || text.Length > MaxNameLength) return CompanyErrors.NotFound;
-        var trimmed = text.Trim();
-        var page = await companies.ListAsync(new ListCompaniesRequest
-        {
-            Search = trimmed[..Math.Min(trimmed.Length, PagedRequest.MaxSearchLength)],
-            Status = CompanyStatus.Active,
-            PageSize = PagedRequest.MaxPageSize,
-        }, cancellationToken);
-        var match = Match(page.Items.Where(company => company.Status == CompanyStatus.Active).ToArray(), company => [company.Name], trimmed);
-        if (match is not { } found) return CompanyErrors.NotFound;
-        return (found.Item, found.Doubt);
-    }
-
+    // Lo busca el lector con su búsqueda; entre lo encontrado, igual gana y, si no hay, uno solo parecido.
     private async Task<Result<RoleRow>> MatchTargetAsync(string? text, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(text) || text.Length > MaxNameLength) return RoleErrors.NotFound;
-        var trimmed = text.Trim();
-        var all = await roles.ListAllAsync(cancellationToken);
-        var exact = all.Where(role => Names(role).Any(name => Same(name, trimmed))).ToArray();
-        var candidates = exact.Length > 0 ? exact : all.Where(role => Names(role).Any(name => Contains(name, trimmed))).ToArray();
+        if (!AssistantActionInputs.IsWritten(text)) return RoleErrors.NotFound;
+        var found = await roleNames.SearchAsync(text, new ListRolesRequest(), cancellationToken);
+        var exact = found.Where(role => RoleActionResolver.Names(role).Any(name => AssistantActionInputs.Same(name, text))).ToArray();
+        var candidates = exact.Length > 0 ? exact
+            : found.Where(role => RoleActionResolver.Names(role).Any(name => AssistantActionInputs.Contains(name, text))).ToArray();
         return candidates.Length switch
         {
             0 => RoleErrors.NotFound,
@@ -366,7 +350,7 @@ internal sealed class RoleActionSource(
             1 when candidates[0].IsSystemRole => RoleErrors.SystemRoleCannotChange,
             1 => candidates[0],
             // Con varios roles parecidos no se elige uno: el modelo pregunta cuál.
-            _ => Error.Validation(AssistantActionDoubts.Similar, "More than one role matches."),
+            _ => RoleErrors.Ambiguous,
         };
     }
 
@@ -379,39 +363,17 @@ internal sealed class RoleActionSource(
     private static readonly RoleScope[] OfferedScopes = [RoleScope.Organization, RoleScope.SpecificCompany];
 
     private static (RoleScope Item, string? Doubt)? MatchScope(AssistantActionDefinition action, string text) =>
-        Match(OfferedScopes, scope => new[]
+        AssistantActionInputs.Match(OfferedScopes, scope => new[]
         {
             ScopeLabel(action, scope), ActionTexts.OptionIn(action, ScopeField, scope.ToString(), CultureInfo.InvariantCulture), scope.ToString(),
         }.Distinct(StringComparer.Ordinal), text);
 
     private static string ScopeLabel(AssistantActionDefinition action, RoleScope scope) => ActionTexts.Option(action, ScopeField, scope.ToString());
 
-    // Igual gana; parecido (lo contiene) también. La duda: varios parecidos, o ninguno igual.
-    private static (T Item, string? Doubt)? Match<T>(IReadOnlyList<T> candidates, Func<T, IEnumerable<string>> names, string text)
-    {
-        var trimmed = text.Trim();
-        if (trimmed.Length == 0) return null;
-        var similar = candidates.Where(item => names(item).Any(name => Contains(name, trimmed)))
-            .OrderBy(item => names(item).First(), StringComparer.CurrentCulture).ToArray();
-        if (similar.Length == 0) return null;
-        var exact = similar.Where(item => names(item).Any(name => Same(name, trimmed))).ToArray();
-        var chosen = exact.Length > 0 ? exact[0] : similar[0];
-        return (chosen, exact.Length == 1 && similar.Length == 1 ? null : AssistantActionDoubts.Similar);
-    }
-
     // Un permiso se nombra como lo muestra la pantalla, en el idioma de la persona o en el de los recursos, o por su código.
     private static IEnumerable<string> Names(string permission) =>
         new[] { PermissionTexts.Permission(permission), PermissionTexts.PermissionIn(permission, CultureInfo.InvariantCulture), permission }
             .Distinct(StringComparer.Ordinal);
-
-    private static IEnumerable<string> Names(RoleRow role) =>
-        new[] { RoleTexts.Name(role.Name), RoleTexts.NameIn(role.Name, CultureInfo.InvariantCulture), role.Name }.Distinct(StringComparer.Ordinal);
-
-    private static bool Same(string candidate, string text) =>
-        CultureInfo.InvariantCulture.CompareInfo.Compare(candidate.Trim(), text, CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace) == 0;
-
-    private static bool Contains(string candidate, string text) =>
-        CultureInfo.InvariantCulture.CompareInfo.IndexOf(candidate, text.Trim(), CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace) >= 0;
 
     // El catálogo del alcance, como lo ofrece el editor: el de la organización o el de la empresa; sin alcance, los dos.
     private static IReadOnlyCollection<string> Catalog(RoleScope? scope) => scope switch
@@ -425,33 +387,11 @@ internal sealed class RoleActionSource(
     private static bool CanGive(PermissionsByPlace held, string permission) =>
         OrganizationDelegationPolicy.CanChangePermissions(held, [], [permission]);
 
-    private static bool TryReadOp(JsonElement element, out string op, out string text)
-    {
-        (op, text) = (Add, string.Empty);
-        if (element.ValueKind == JsonValueKind.String) text = element.GetString()!;
-        else if (element.ValueKind == JsonValueKind.Object && element.EnumerateObject().Count() == 2
-            && element.TryGetProperty("op", out var kind) && kind.ValueKind == JsonValueKind.String && kind.GetString() is Add or Remove
-            && element.TryGetProperty("value", out var value) && value.ValueKind == JsonValueKind.String)
-            (op, text) = (kind.GetString()!, value.GetString()!);
-        else return false;
-        return !string.IsNullOrWhiteSpace(text) && text.Length <= MaxNameLength;
-    }
-
-    private static PermissionOp[] OpsOf(AssistantActionResolution resolution) =>
-        [.. resolution.Values.Where(value => value.Field == PermissionsField)
-            .SelectMany(value => value.Resolved is { ValueKind: JsonValueKind.Array } array ? array.Deserialize<PermissionOp[]>(Json) ?? [] : [])];
-
-    private static HashSet<string> Apply(IEnumerable<string> current, IEnumerable<PermissionOp> ops)
-    {
-        var result = current.ToHashSet(StringComparer.Ordinal);
-        foreach (var op in ops)
-            if (op.Op == Remove) result.Remove(op.Id);
-            else result.Add(op.Id);
-        return result;
-    }
+    private static AssistantActionOp<string>[] OpsOf(AssistantActionResolution resolution) =>
+        AssistantActionInputs.OpsOf<string>(resolution, PermissionsField);
 
     private static JsonElement? ResolvedOf(AssistantActionResolution resolution, string field) =>
-        resolution.Values.SingleOrDefault(value => value.Field == field)?.Resolved;
+        AssistantActionInputs.ResolvedOf(resolution, field);
 
     private static string? TextOf(AssistantActionResolution resolution, string field) =>
         ResolvedOf(resolution, field) is { ValueKind: JsonValueKind.String } text ? text.GetString() : null;
@@ -459,9 +399,6 @@ internal sealed class RoleActionSource(
     private static RoleScope? ScopeOf(JsonElement? value) =>
         value is { ValueKind: JsonValueKind.String } text && Enum.TryParse<RoleScope>(text.GetString(), out var scope) && Enum.IsDefined(scope)
             ? scope : null;
-
-    private static Guid? IdOf(JsonElement? value) =>
-        value is { ValueKind: JsonValueKind.String } id && Guid.TryParse(id.GetString(), out var parsed) ? parsed : null;
 
     // El pedido nombra los campos del HTTP; la propuesta, los de la pantalla.
     private static string FieldOfProperty(string property) => property switch
@@ -483,12 +420,5 @@ internal sealed class RoleActionSource(
         _ => PermissionsField,
     };
 
-    private static ValidationError Invalid(string path, string code) =>
-        new(new Dictionary<string, string[]>(StringComparer.Ordinal) { [path] = [code] });
-
-    /// <summary>Un elemento resuelto de los permisos: sumar o quitar, el código y su duda.</summary>
-    private sealed record PermissionOp(
-        [property: JsonPropertyName("op")] string Op,
-        [property: JsonPropertyName("id")] string Id,
-        [property: JsonPropertyName("doubt")] string? Doubt);
+    private static ValidationError Invalid(string path, string code) => AssistantActionInputs.Invalid(path, code);
 }

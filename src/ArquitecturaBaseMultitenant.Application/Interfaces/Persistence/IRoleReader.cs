@@ -14,6 +14,9 @@ public interface IRoleReader
 
     Task<RoleRow?> FindByIdAsync(Guid roleId, CancellationToken cancellationToken);
 
+    /// <summary>Los roles pedidos de la organización activa, por id, en una consulta; sin ninguno pedido, ninguno.</summary>
+    Task<IReadOnlyList<RoleRow>> ListByIdsAsync(IReadOnlyCollection<Guid> roleIds, CancellationToken cancellationToken);
+
     /// <summary>Si ya hay otro rol con ese nombre en la misma empresa, o entre los que no tienen empresa (D3).</summary>
     Task<bool> ExistsByNameAsync(string name, Guid? companyId, Guid? excludedRoleId, CancellationToken cancellationToken);
 

@@ -206,6 +206,9 @@ public sealed class ForeignKeyRaceTests(ApiFactory factory)
         public Task<IReadOnlyList<RoleRow>> ListAllAsync(CancellationToken cancellationToken) =>
             inner.ListAllAsync(cancellationToken);
 
+        public Task<IReadOnlyList<RoleRow>> ListByIdsAsync(IReadOnlyCollection<Guid> roleIds, CancellationToken cancellationToken) =>
+            inner.ListByIdsAsync(roleIds, cancellationToken);
+
         public Task<PagedResult<RoleRow>> ListAsync(ListRolesRequest request, CancellationToken cancellationToken) =>
             inner.ListAsync(request, cancellationToken);
 

@@ -8,9 +8,11 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.AssistantActions;
 using ArquitecturaBaseMultitenant.Application.Models.Request;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
+using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Application.Services.Roles;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Assistant;
@@ -19,7 +21,8 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Assistant;
 /// B7 de las acciones (ADR 0068 §3, §5 y §9): la fuente de Roles resuelve, valida y vuelve a resolver en el alcance de solo
 /// lectura, con quien pide. Cada escenario corre sus cinco casos y el válido se guarda por la ruta de siempre con lo que
 /// muestra la propuesta. Quitar un permiso que sigue incluido por otro que queda vuelve al modelo con su ruta (260), y quien
-/// no tiene un permiso no lo puede dar en un rol: ni se lista, ni se resuelve, ni se vuelve a mostrar.
+/// no tiene un permiso no lo puede dar en un rol: ni se lista, ni se resuelve, ni se vuelve a mostrar. Los escenarios corren
+/// con un lector de roles que se niega a leer la lista entera: la fuente busca con el lector y lee por id.
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class RoleActionSourceTests(ApiFactory factory)
@@ -36,11 +39,12 @@ public sealed class RoleActionSourceTests(ApiFactory factory)
     {
         var scenario = await new RoleActionScenarios().PrepareAsync(factory, action, Ct);
         using var client = scenario.Client;
+        using var host = NoWholeRoleListReader.Host(factory);
         var actor = await AssistantExecutionActorTests.CaptureAsync(client);
         AssistantActionReview? valid = null;
         foreach (var (name, @case) in scenario.Cases)
         {
-            var proposed = await RunAsync(actor, action, (source, definition, ct) => ProposeAsync(source, definition, @case, ct));
+            var proposed = await RunAsync(actor, action, (source, definition, ct) => ProposeAsync(source, definition, @case, ct), host.Services);
             if (@case.RejectedPath is { } path)
             {
                 Assert.True(proposed.IsFailure, name);
@@ -54,7 +58,7 @@ public sealed class RoleActionSourceTests(ApiFactory factory)
             Assert.Empty(resolution.SubjectUserIds);
             Assert.Equal(@case.Doubtful.Order(StringComparer.Ordinal),
                 resolution.Values.Where(value => value.Doubt is not null).Select(value => value.Field).Order(StringComparer.Ordinal));
-            var reviewed = await RunAsync(actor, action, (source, _, ct) => source.ReviewAsync(resolution, ct));
+            var reviewed = await RunAsync(actor, action, (source, _, ct) => source.ReviewAsync(resolution, ct), host.Services);
             Assert.True(reviewed.IsSuccess, $"{name}: {(reviewed.IsFailure ? reviewed.Error.Code : string.Empty)}");
             // Cada opción que muestra la pantalla tiene su nombre, leído del servidor; nunca el texto del modelo.
             Assert.All(reviewed.Value.Values.Where(value => value.Field is not (RoleActionSource.NameField or RoleActionSource.DescriptionField)),
@@ -112,6 +116,58 @@ public sealed class RoleActionSourceTests(ApiFactory factory)
             Assert.True(rejected.IsFailure, written);
             Assert.True(Assert.IsType<ValidationError>(rejected.Error).Errors.ContainsKey(RoleActionSource.ScopeField), Describe(rejected.Error));
         }
+    }
+
+    /// <summary>
+    /// Dos roles parecidos: el destino no admite duda y vuelve al modelo con un código del catálogo de Roles, con su texto en
+    /// los dos idiomas, y no con la clave de una duda.
+    /// </summary>
+    [Fact]
+    public async Task A_target_like_several_roles_returns_to_the_model_with_the_ambiguous_code_of_the_catalog()
+    {
+        var scenario = await new RoleActionScenarios().PrepareAsync(factory, "roles.remove@1", Ct);
+        using var owner = scenario.Client;
+        var actor = await AssistantExecutionActorTests.CaptureAsync(owner);
+
+        var rejected = await RunAsync(actor, "roles.remove@1", (source, definition, ct) => ProposeAsync(source, definition, RoleActionScenarios.Case("Venta"), ct));
+
+        Assert.Equal(new[] { RoleErrors.AmbiguousCode }, Assert.IsType<ValidationError>(rejected.Error).Errors["target"]);
+        Assert.NotEqual(RoleErrors.AmbiguousCode, ErrorTexts.Get(RoleErrors.AmbiguousCode));
+    }
+
+    /// <summary>
+    /// <c>roles.manage</c> no trae <c>companies.read</c>, y el editor de siempre no le lista las empresas: la fuente tampoco le
+    /// resuelve ni le nombra una (0068 §5). Para ella ninguna existe, así el modelo no prueba nombres, y la propuesta del Dueño
+    /// con una empresa le queda «ya no disponible» sin mostrar su nombre.
+    /// </summary>
+    [Fact]
+    public async Task Who_cannot_see_companies_cannot_resolve_or_see_the_company_of_a_role()
+    {
+        var scenario = await new RoleActionScenarios().PrepareAsync(factory, "roles.create@1", Ct);
+        using var owner = scenario.Client;
+        var manager = await OrganizationUserActionScenarios.CreateRoleAsync(owner, "Administra roles", Permissions.Roles.Manage, null, Ct);
+        using var anaClient = AssistantTestData.Client(factory);
+        var ana = await AccountJourney.RegisterAsync(factory, anaClient, Ct);
+        var anaMember = await OrganizationJourney.AddActiveMemberAsync(factory, scenario.TenantId, ana.UserId, Ct);
+        await OrganizationUserActionScenarios.AssignAsync(owner, anaMember, [manager], Ct);
+        await AccountJourney.AuthorizeAsync(anaClient, "business", Ct, scenario.TenantId);
+        var anaActor = await AssistantExecutionActorTests.CaptureAsync(anaClient);
+        var ownerActor = await AssistantExecutionActorTests.CaptureAsync(owner);
+
+        foreach (var company in new[] { "Delta", "a", "Empresa que no existe" })
+        {
+            var forCompany = RoleActionScenarios.Case(null, (RoleActionSource.NameField, "Depósito Delta"),
+                (RoleActionSource.ScopeField, RoleActionScenarios.SpecificCompany), (RoleActionSource.CompanyField, company));
+            var rejected = await RunAsync(anaActor, "roles.create@1", (source, definition, ct) => ProposeAsync(source, definition, forCompany, ct));
+            Assert.True(rejected.IsFailure, company);
+            Assert.Equal(new[] { CompanyErrors.NotFoundCode }, Assert.IsType<ValidationError>(rejected.Error).Errors[RoleActionSource.CompanyField]);
+        }
+
+        var byOwner = await RunAsync(ownerActor, "roles.create@1", (source, definition, ct) => ProposeAsync(source, definition, scenario.Valid, ct));
+        Assert.True(byOwner.IsSuccess, byOwner.IsFailure ? Describe(byOwner.Error) : null);
+        var reviewed = await RunAsync(anaActor, "roles.create@1", (source, _, ct) => source.ReviewAsync(byOwner.Value, ct));
+        Assert.True(reviewed.IsFailure);
+        Assert.Equal(CompanyErrors.NotFoundCode, reviewed.Error.Code);
     }
 
     [Fact]
@@ -182,13 +238,13 @@ public sealed class RoleActionSourceTests(ApiFactory factory)
 
     // Como en el turno: con el actor revalidado del worker, en el alcance de solo lectura y en el idioma de quien pide.
     private async Task<T> RunAsync<T>(ExecutionActor actor, string action,
-        Func<IAssistantActionSource, AssistantActionDefinition, CancellationToken, Task<T>> work)
+        Func<IAssistantActionSource, AssistantActionDefinition, CancellationToken, Task<T>> work, IServiceProvider? root = null)
     {
         var previous = CultureInfo.CurrentUICulture;
         CultureInfo.CurrentUICulture = Spanish;
         try
         {
-            using var scope = factory.Services.CreateScope();
+            using var scope = (root ?? factory.Services).CreateScope();
             var services = scope.ServiceProvider;
             var prepared = await services.GetRequiredService<IExecutionActorFactory>().RevalidateAsync(actor, Ct);
             Assert.True(prepared.IsSuccess, prepared.IsFailure ? prepared.Error.Code : null);

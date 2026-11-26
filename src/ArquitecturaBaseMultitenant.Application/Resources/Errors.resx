@@ -58,6 +58,7 @@
   <data name="Tenancy.Member.CannotDisableSelf" xml:space="preserve"><value>No podés darte de baja a vos misma.</value></data>
   <data name="Tenancy.Member.RolesNotHeld" xml:space="preserve"><value>No podés dar ni quitar un rol con permisos que no tenés.</value></data>
   <data name="Tenancy.Member.HasMorePermissions" xml:space="preserve"><value>Esta persona tiene permisos que vos no tenés: no podés cambiarle los roles, darla de baja, reactivarla ni quitarla.</value></data>
+  <data name="Tenancy.Member.Ambiguous" xml:space="preserve"><value>Ese nombre coincide con más de una persona: decí cuál.</value></data>
   <data name="Users.User.LastAdmin" xml:space="preserve"><value>Tiene que quedar al menos un administrador activo en el sistema.</value></data>
   <data name="Settings.System.NotFound" xml:space="preserve"><value>No encontramos la configuración del sistema.</value></data>
   <data name="Users.User.AlreadyExists" xml:space="preserve"><value>Ya existe una cuenta con ese correo.</value></data>
@@ -93,6 +94,7 @@
   <data name="Roles.Role.ScopeChangeHasUsers" xml:space="preserve"><value>El rol tiene usuarios asignados. Reasignalos antes de cambiar dónde vale.</value></data>
   <data name="Roles.Role.PermissionsNotHeld" xml:space="preserve"><value>No podés dar ni quitar permisos que no tenés.</value></data>
   <data name="Roles.Role.PermissionIncluded" xml:space="preserve"><value>Ese permiso lo incluye otro que el rol sigue teniendo: quitá también el que lo incluye.</value></data>
+  <data name="Roles.Role.Ambiguous" xml:space="preserve"><value>Ese nombre coincide con más de un rol: decí cuál.</value></data>
   <data name="General.ConcurrencyConflict" xml:space="preserve"><value>Otra persona cambió esto. Revisá la versión más reciente antes de guardar.</value></data>
   <data name="Request.InProgress" xml:space="preserve"><value>La solicitud todavía se está procesando.</value></data>
   <data name="Request.IdempotencyKeyRequired" xml:space="preserve"><value>Falta la clave para identificar esta solicitud.</value></data>

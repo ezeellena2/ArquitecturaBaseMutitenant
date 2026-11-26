@@ -1,15 +1,13 @@
-using System.Globalization;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.AssistantActions;
-using ArquitecturaBaseMultitenant.Application.Models.Companies;
 using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Application.Models.Roles;
 using ArquitecturaBaseMultitenant.Application.Resources;
+using ArquitecturaBaseMultitenant.Application.Services.Companies;
 using ArquitecturaBaseMultitenant.Application.Services.Roles;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -25,20 +23,28 @@ namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 /// Solo lee, con los readers del área, lo que tiene quien pide (<see cref="DelegationPermissionsResolver"/>) y la misma
 /// <see cref="OrganizationDelegationPolicy"/> que usa el <c>Guard</c> de la ruta (0061): un rol se resuelve solo si quien pide
 /// lo puede dar donde se da (en la organización, o en esa empresa), y una persona, solo si quien pide tiene todo lo que ella
-/// tiene. Valida armando el mismo pedido que la pantalla. Lo que la ruta decide adentro (el último Dueño, una cuenta que ya es
-/// miembro) lo sigue diciendo la ruta al guardar.
+/// tiene. Qué roles da, quita o vuelve a dar un cambio lo decide <see cref="OrganizationUserRoleChangePolicy"/>, la misma
+/// regla que la ruta. Valida armando el mismo pedido que la pantalla. Lo que la ruta decide adentro (el último Dueño, una
+/// cuenta que ya es miembro) lo sigue diciendo la ruta al guardar.
 /// <list type="bullet">
 /// <item>Un <c>Choices</c> se escribe como una lista: cada elemento es un nombre (sumar) o <c>{op: "add" | "remove", value}</c>;
 /// al crear solo se suma. Se resuelve como <c>[{op, id, doubt?}]</c>.</item>
 /// <item>Un nombre igual resuelve; uno parecido también, con «Revisá» si hay más de uno parecido o si no hay uno igual. Sin
-/// coincidencia, vuelve al modelo con la ruta del elemento.</item>
-/// <item>El destino es una persona de la organización por su nombre o su correo; con varias parecidas vuelve al modelo.</item>
+/// coincidencia, vuelve al modelo con la ruta del elemento. Sumar busca con el lector (<see cref="RoleActionResolver"/>);
+/// quitar elige entre los que la persona tiene ahí.</item>
+/// <item>La empresa y los roles se resuelven y se nombran solo con lo que piden sus listas en el diálogo de siempre
+/// (<c>companies.read</c> y <c>roles.read</c>), que <c>users.invite</c> y <c>users.manage</c> no traen: sin eso, como si no
+/// existieran.</item>
+/// <item>El destino es una persona de la organización por su nombre o su correo; con varias parecidas vuelve al modelo con
+/// <see cref="MemberErrors.AmbiguousCode"/>.</item>
 /// </list>
+/// Elegir por nombre, leer un elemento y aplicar las operaciones es de <see cref="AssistantActionInputs"/>, igual para todas las
+/// fuentes.
 /// </summary>
 internal sealed class OrganizationUserActionSource(
     IOrganizationUserReader users,
-    ICompanyReader companies,
-    IRoleReader roles,
+    CompanyActionResolver companies,
+    RoleActionResolver roles,
     DelegationPermissionsResolver delegation,
     IValidator<InviteOrganizationUserRequest> inviteValidator,
     IValidator<UpdateOrganizationUserRequest> updateValidator,
@@ -49,13 +55,7 @@ internal sealed class OrganizationUserActionSource(
     internal const string RolesField = "roles";
     internal const string CompanyField = "company";
     internal const string CompanyRolesField = "companyRoles";
-    private const string Add = "add";
-    private const string Remove = "remove";
-    private const int ChoicesPageSize = 20;
-    private const int TargetCandidates = 20;
-    private const int MaxNameLength = 200;
-
-    private static readonly JsonSerializerOptions Json = new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
+    private const string TargetPath = "target";
 
     private static readonly AssistantActionField[] RoleFields =
     [
@@ -109,45 +109,51 @@ internal sealed class OrganizationUserActionSource(
 
     public IReadOnlyList<AssistantActionDefinition> Definitions => Actions;
 
-    /// <summary>Los roles que quien pide puede dar: los de la organización, o los que valen en la empresa del campo del que depende.</summary>
+    /// <summary>
+    /// Los roles que quien pide puede dar: los de la organización, o los que valen en la empresa del campo del que depende. La
+    /// página es la del lector, con su búsqueda; de ella quedan los que puede dar ahí. Sin <c>roles.read</c>, ninguno.
+    /// </summary>
     public async Task<Result<PagedResult<AssistantActionChoiceRow>>> ListChoicesAsync(AssistantActionChoiceRequest request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         if (request.Field is not (RolesField or CompanyRolesField)) return Invalid(request.Field, ValidationError.ErrorCode);
-        var context = await ReadContextAsync(cancellationToken);
+        var held = await delegation.ReadHeldAsync(cancellationToken);
+        var page = Math.Max(PagedRequest.DefaultPage, request.Page);
+        if (!RoleActionResolver.CanRead(held)) return new PagedResult<AssistantActionChoiceRow>([], page, AssistantActionLimits.ChoicesPerPage, 0);
         Guid? companyId = null;
         if (request.Field == CompanyRolesField && !string.IsNullOrWhiteSpace(request.DependsOnValue))
         {
-            var company = await MatchCompanyAsync(request.DependsOnValue, cancellationToken);
+            var company = await companies.MatchAsync(held, request.DependsOnValue, cancellationToken);
             if (company.IsFailure) return company.Error;
             companyId = company.Value.Company.Id;
         }
-        var rows = context.Roles.Values
-            .Where(role => request.Field == RolesField ? FitsPlace(role, null) && context.CanGrant(role, null)
-                : companyId is { } id ? FitsPlace(role, id) && context.CanGrant(role, id)
-                : role.Scope != RoleScope.Organization && context.CanGrantInEveryCompany(role))
+        var listed = await roles.PageAsync(Place(request.Field == RolesField, companyId) with
+        {
+            Search = string.IsNullOrWhiteSpace(request.Search) ? null : AssistantActionInputs.SearchOf(request.Search),
+            Page = page,
+            PageSize = AssistantActionLimits.ChoicesPerPage,
+        }, cancellationToken);
+        var rows = listed.Items
+            .Where(role => request.Field == RolesField || companyId is not null ? FitsPlace(role, companyId) && CanGrant(held, role, companyId)
+                : OrganizationDelegationPolicy.CanGrantListedRole(held, role.Scope, role.CompanyId, role.Permissions, companyId: null))
             .Select(role => new AssistantActionChoiceRow(role.Id.ToString("D"), RoleTexts.Name(role.Name)))
-            .Where(row => string.IsNullOrWhiteSpace(request.Search) || Contains(row.Name, request.Search))
-            .OrderBy(row => row.Name, StringComparer.CurrentCulture)
             .ToArray();
-        var page = Math.Max(PagedRequest.DefaultPage, request.Page);
-        return new PagedResult<AssistantActionChoiceRow>(
-            [.. rows.Skip((page - 1) * ChoicesPageSize).Take(ChoicesPageSize)], page, ChoicesPageSize, rows.Length);
+        return new PagedResult<AssistantActionChoiceRow>(rows, listed.Page, listed.PageSize, listed.TotalCount);
     }
 
     public async Task<Result<AssistantActionResolution>> ResolveAsync(AssistantActionDraft draft, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(draft);
         var action = draft.Action;
-        var context = await ReadContextAsync(cancellationToken);
+        var held = await delegation.ReadHeldAsync(cancellationToken);
         OrganizationUserRow? target = null;
         if (action.Target is not null)
         {
             var found = await MatchTargetAsync(draft.Target, cancellationToken);
-            if (found.IsFailure) return Invalid("target", found.Error.Code);
+            if (found.IsFailure) return Invalid(TargetPath, found.Error.Code);
             target = found.Value;
-            if (!context.CanActOn(action, target)) return Invalid("target", MemberErrors.HasMorePermissionsCode);
+            if (!await CanActOnAsync(held, action, target, cancellationToken)) return Invalid(TargetPath, MemberErrors.HasMorePermissionsCode);
         }
 
         var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
@@ -164,7 +170,7 @@ internal sealed class OrganizationUserActionSource(
         if (inputs.TryGetValue(CompanyField, out var companyInput))
         {
             var company = companyInput.Value.ValueKind == JsonValueKind.String
-                ? await MatchCompanyAsync(companyInput.Value.GetString()!, cancellationToken)
+                ? await companies.MatchAsync(held, companyInput.Value.GetString(), cancellationToken)
                 : CompanyErrors.NotFound;
             if (company.IsFailure) errors[CompanyField] = [company.Error.Code];
             else
@@ -174,14 +180,15 @@ internal sealed class OrganizationUserActionSource(
             }
         }
 
+        var context = new RoleInputContext(held, action.Kind, values, errors);
         if (inputs.TryGetValue(RolesField, out var organizationRoles))
-            ResolveRoles(organizationRoles, null, target?.Roles.Select(role => role.Id), action.Kind, context, values, errors);
+            await ResolveRolesAsync(organizationRoles, null, target?.Roles, context, cancellationToken);
         if (inputs.TryGetValue(CompanyRolesField, out var companyRoles))
         {
             if (!inputs.ContainsKey(CompanyField)) errors[CompanyField] = [CompanyErrors.NotFoundCode];
             else if (companyId is { } id)
-                ResolveRoles(companyRoles, id, target?.Companies.Where(row => row.CompanyId == id).SelectMany(row => row.Roles).Select(role => role.Id),
-                    action.Kind, context, values, errors);
+                await ResolveRolesAsync(companyRoles, id, target?.Companies.Where(row => row.CompanyId == id).SelectMany(row => row.Roles),
+                    context, cancellationToken);
         }
 
         if (errors.Count > 0) return new ValidationError(errors);
@@ -196,21 +203,22 @@ internal sealed class OrganizationUserActionSource(
         Task.FromResult(Result.Failure<IReadOnlyList<AssistantActionField>>(ContractErrors.NotImplemented));
 
     /// <summary>
-    /// Vuelve a leer por id la persona, la empresa y cada rol, con lo que quien pide tiene ahora: lo que ya no está es
-    /// <c>NotFound</c>, y lo que ya no puede dar, o una persona sobre la que ya no puede actuar, <c>Forbidden</c>.
+    /// Vuelve a leer por id la persona, la empresa y cada rol, con lo que quien pide tiene ahora: lo que ya no está, o lo que
+    /// ya no puede ver, es <c>NotFound</c>, y lo que ya no puede dar, o una persona sobre la que ya no puede actuar,
+    /// <c>Forbidden</c>.
     /// </summary>
     public async Task<Result<AssistantActionReview>> ReviewAsync(AssistantActionResolution resolution, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(resolution);
         var action = resolution.Action;
-        var context = await ReadContextAsync(cancellationToken);
+        var held = await delegation.ReadHeldAsync(cancellationToken);
         AssistantActionTargetView? target = null;
         if (action.Target is not null)
         {
             if (resolution.TargetId is not { } memberId) return MemberErrors.NotFound;
             var row = await users.FindByIdAsync(memberId, timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
             if (row is null) return MemberErrors.NotFound;
-            if (!context.CanActOn(action, row)) return MemberErrors.HasMorePermissions;
+            if (!await CanActOnAsync(held, action, row, cancellationToken)) return MemberErrors.HasMorePermissions;
             target = new(row.MemberId, Label(row), row.Version, Detail(row));
         }
 
@@ -224,21 +232,26 @@ internal sealed class OrganizationUserActionSource(
                     views.Add(new(EmailField, value.Resolved ?? value.Written, null, value.Doubt));
                     break;
                 case CompanyField:
-                    if (IdOf(value.Resolved) is not { } id || await companies.FindByIdAsync(id, cancellationToken) is not { Status: CompanyStatus.Active } company)
+                    if (await companies.FindActiveAsync(held, AssistantActionInputs.IdOf(value.Resolved), cancellationToken) is not { } company)
                         return CompanyErrors.NotFound;
                     companyId = company.Id;
                     views.Add(new(CompanyField, JsonSerializer.SerializeToElement(company.Id.ToString("D")), company.Name, value.Doubt));
                     break;
             }
         }
-        foreach (var value in resolution.Values.Where(value => value.Field is RolesField or CompanyRolesField))
+        var roleValues = resolution.Values.Where(value => value.Field is RolesField or CompanyRolesField)
+            .Select(value => (value.Field, Ops: AssistantActionInputs.OpsOf<Guid>(value.Resolved))).ToArray();
+        if (roleValues.Any(value => value.Field == CompanyRolesField) && companyId is null) return CompanyErrors.NotFound;
+        if (roleValues.All(value => value.Ops.Length == 0)) return new AssistantActionReview(target, views);
+        if (!RoleActionResolver.CanRead(held)) return RoleErrors.NotFound;
+        var known = await roles.ListByIdsAsync(roleValues.SelectMany(value => value.Ops).Select(op => op.Id), cancellationToken);
+        foreach (var value in roleValues)
         {
             var place = value.Field == RolesField ? null : companyId;
-            if (value.Field == CompanyRolesField && place is null) return CompanyErrors.NotFound;
-            foreach (var element in Elements(value.Resolved))
+            foreach (var element in value.Ops)
             {
-                if (!context.Roles.TryGetValue(element.Id, out var role) || !FitsPlace(role, place)) return RoleErrors.NotFound;
-                if (!context.CanGrant(role, place)) return MemberErrors.RolesNotHeld;
+                if (!known.TryGetValue(element.Id, out var role) || !FitsPlace(role, place)) return RoleErrors.NotFound;
+                if (!CanGrant(held, role, place)) return MemberErrors.RolesNotHeld;
                 views.Add(new(value.Field, JsonSerializer.SerializeToElement(new { op = element.Op, id = role.Id.ToString("D") }),
                     RoleTexts.Name(role.Name), element.Doubt));
             }
@@ -248,203 +261,156 @@ internal sealed class OrganizationUserActionSource(
 
     /// <summary>
     /// Arma el pedido de la pantalla con lo resuelto (al editar, las operaciones sobre lo que la persona tiene ahora), corre su
-    /// validador y la <see cref="OrganizationDelegationPolicy"/> con lo que la ruta da y quita, sin guardar.
+    /// validador y la <see cref="OrganizationDelegationPolicy"/> con lo que la ruta da, quita y vuelve a dar, sin guardar.
     /// </summary>
     public async Task<Result> ValidateAsync(AssistantActionResolution resolution, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(resolution);
         var action = resolution.Action;
-        var context = await ReadContextAsync(cancellationToken);
+        var held = await delegation.ReadHeldAsync(cancellationToken);
         OrganizationUserRow? target = null;
         if (action.Target is not null)
         {
             target = resolution.TargetId is { } memberId
                 ? await users.FindByIdAsync(memberId, timeProvider.GetUtcNow().UtcDateTime, cancellationToken)
                 : null;
-            if (target is null) return Invalid("target", MemberErrors.NotFoundCode);
-            if (!context.CanActOn(action, target)) return Invalid("target", MemberErrors.HasMorePermissionsCode);
+            if (target is null) return Invalid(TargetPath, MemberErrors.NotFoundCode);
+            if (!await CanActOnAsync(held, action, target, cancellationToken)) return Invalid(TargetPath, MemberErrors.HasMorePermissionsCode);
         }
         if (action.Kind == AssistantActionKind.Remove) return Result.Success();
 
-        var companyId = resolution.Values.SingleOrDefault(value => value.Field == CompanyField) is { } company ? IdOf(company.Resolved) : null;
-        if (companyId is { } chosen && await companies.FindByIdAsync(chosen, cancellationToken) is not { Status: CompanyStatus.Active })
+        var companyId = AssistantActionInputs.IdOf(AssistantActionInputs.ResolvedOf(resolution, CompanyField));
+        if (companyId is not null && await companies.FindActiveAsync(held, companyId, cancellationToken) is null)
             return Invalid(CompanyField, CompanyErrors.NotFoundCode);
-        var organizationOps = OpsOf(resolution, RolesField);
-        var companyOps = OpsOf(resolution, CompanyRolesField);
-
-        // Lo que tiene ahora: sus roles de organización y, por cada empresa activa donde está, los de esa empresa.
-        var currentOrganization = target?.Roles.Select(role => role.Id).ToHashSet() ?? [];
-        var currentCompanies = target?.Companies
-            .Where(row => row.Status == CompanyMembershipStatus.Active && row.CompanyStatus is null or CompanyStatus.Active)
-            .ToDictionary(row => row.CompanyId, row => row.Roles.Select(role => role.Id).ToHashSet()) ?? [];
-        var desiredOrganization = Apply(currentOrganization, organizationOps);
-        var desiredCompanies = currentCompanies.ToDictionary(pair => pair.Key, pair => pair.Value);
-        if (companyId is { } edited) desiredCompanies[edited] = Apply(currentCompanies.GetValueOrDefault(edited) ?? [], companyOps);
-        var companiesRequest = desiredCompanies
-            .Select(pair => new InviteCompanyRolesRequest(pair.Key, [.. pair.Value])).ToArray();
+        var companyOps = AssistantActionInputs.OpsOf<Guid>(resolution, CompanyRolesField);
+        var desired = Desired(target, AssistantActionInputs.OpsOf<Guid>(resolution, RolesField), companyId, companyOps);
 
         var validation = target is null
-            ? await inviteValidator.ValidateAsync(new InviteOrganizationUserRequest(EmailOf(resolution), [.. desiredOrganization], companiesRequest), cancellationToken)
-            : await updateValidator.ValidateAsync(new UpdateOrganizationUserRequest(target.MemberId, [.. desiredOrganization], companiesRequest, target.Version), cancellationToken);
+            ? await inviteValidator.ValidateAsync(new InviteOrganizationUserRequest(EmailOf(resolution), [.. desired.Organization], desired.Companies), cancellationToken)
+            : await updateValidator.ValidateAsync(new UpdateOrganizationUserRequest(target.MemberId, [.. desired.Organization], desired.Companies, target.Version), cancellationToken);
         if (!validation.IsValid)
             return new ValidationError(validation.Errors.GroupBy(failure => FieldOf(failure.PropertyName), StringComparer.Ordinal)
                 .ToDictionary(group => group.Key, _ => new[] { ValidationError.ErrorCode }, StringComparer.Ordinal));
 
-        // La regla del Guard de la ruta (0061): cada rol que se da, se quita o vuelve, lo tiene quien pide donde se da. A un
-        // invitado se le da todo lo pedido; a quien ya entró, lo que suma.
-        var desired = desiredOrganization.Select(roleId => (RoleId: roleId, CompanyId: (Guid?)null))
-            .Concat(desiredCompanies.SelectMany(pair => pair.Value.Select(roleId => (RoleId: roleId, CompanyId: (Guid?)pair.Key))))
-            .ToHashSet();
-        var saved = Assignments(target).ToHashSet();
-        var inactive = target?.Companies.Where(row => row.Status != CompanyMembershipStatus.Active).Select(row => row.CompanyId).ToHashSet() ?? [];
-        var removed = saved.Where(row => !desired.Contains(row) && (row.CompanyId is null || !inactive.Contains(row.CompanyId.Value)));
-        var revived = saved.Where(row => !desired.Contains(row) && row.CompanyId is { } id && inactive.Contains(id) && desiredCompanies.ContainsKey(id));
-        var granted = target is null || IsInvited(target) ? desired : desired.Where(row => !saved.Contains(row));
-        var changed = granted.Concat(removed).Concat(revived)
-            .Select(row => new RoleGrant(context.Roles.TryGetValue(row.RoleId, out var role) ? role.Permissions : [], row.CompanyId));
-        return OrganizationDelegationPolicy.CanChangeRoles(context.Held, changed)
+        // La regla del Guard de la ruta (0061): cada rol que se da, se quita o vuelve, lo tiene quien pide donde se da.
+        var changes = OrganizationUserRoleChangePolicy.Decide(Assignments(target).ToArray(), desired.Keys, key => key,
+            target?.Companies.Where(row => row.Status != CompanyMembershipStatus.Active).Select(row => row.CompanyId).ToHashSet() ?? [],
+            desired.Companies.Select(row => row.CompanyId).ToArray(), target is null || IsInvited(target));
+        (Guid RoleId, Guid? CompanyId)[] changed = [.. changes.Granted, .. changes.Removed, .. changes.Revived];
+        var permissions = await roles.ListPermissionsAsync(changed.Select(row => row.RoleId), cancellationToken);
+        return OrganizationDelegationPolicy.CanChangeRoles(held,
+                changed.Select(row => new RoleGrant(permissions.GetValueOrDefault(row.RoleId) ?? [], row.CompanyId)))
             ? Result.Success()
-            : Invalid(companyOps.Count > 0 ? CompanyRolesField : RolesField, MemberErrors.RolesNotHeldCode);
+            : Invalid(companyOps.Length > 0 ? CompanyRolesField : RolesField, MemberErrors.RolesNotHeldCode);
     }
 
-    private async Task<SourceContext> ReadContextAsync(CancellationToken cancellationToken) => new(
-        await delegation.ReadHeldAsync(cancellationToken),
-        (await roles.ListAllAsync(cancellationToken)).ToDictionary(role => role.Id),
-        currentUser.UserId);
+    // Lo que pide la pantalla: sus roles de organización y, por cada empresa activa donde está, los de esa empresa, con las
+    // operaciones aplicadas a la de la propuesta.
+    private static DesiredRoles Desired(OrganizationUserRow? target, IEnumerable<AssistantActionOp<Guid>> organizationOps, Guid? companyId,
+        IEnumerable<AssistantActionOp<Guid>> companyOps)
+    {
+        var organization = AssistantActionInputs.Apply(target?.Roles.Select(role => role.Id) ?? [], organizationOps);
+        var current = target?.Companies
+            .Where(row => row.Status == CompanyMembershipStatus.Active && row.CompanyStatus is null or CompanyStatus.Active)
+            .ToDictionary(row => row.CompanyId, row => row.Roles.Select(role => role.Id).ToHashSet()) ?? [];
+        if (companyId is { } edited) current[edited] = AssistantActionInputs.Apply(current.GetValueOrDefault(edited) ?? [], companyOps);
+        InviteCompanyRolesRequest[] byCompany = [.. current.Select(pair => new InviteCompanyRolesRequest(pair.Key, [.. pair.Value]))];
+        (Guid RoleId, Guid? CompanyId)[] keys = [.. organization.Select(roleId => (roleId, (Guid?)null)),
+            .. current.SelectMany(pair => pair.Value.Select(roleId => (roleId, (Guid?)pair.Key)))];
+        return new(organization, byCompany, keys);
+    }
 
-    // Sumar elige entre los roles que valen en ese lugar; quitar, solo entre los que la persona tiene ahí.
-    private static void ResolveRoles(AssistantActionInput input, Guid? companyId, IEnumerable<Guid>? current, AssistantActionKind kind,
-        SourceContext context, List<AssistantActionResolvedValue> values, Dictionary<string, string[]> errors)
+    // Sumar busca entre los roles que valen en ese lugar; quitar, solo entre los que la persona tiene ahí. Cada uno, si quien
+    // pide lo puede dar ahí. Sin ver los roles, ninguno se resuelve.
+    private async Task ResolveRolesAsync(AssistantActionInput input, Guid? companyId, IEnumerable<OrganizationUserRoleRow>? current,
+        RoleInputContext context, CancellationToken cancellationToken)
     {
         if (input.Value.ValueKind != JsonValueKind.Array)
         {
-            errors[input.Field] = [ValidationError.ErrorCode];
+            context.Errors[input.Field] = [ValidationError.ErrorCode];
             return;
         }
-        var place = context.Roles.Values.Where(role => FitsPlace(role, companyId)).ToArray();
-        var held = current?.ToHashSet() ?? [];
-        var assigned = place.Where(role => held.Contains(role.Id)).ToArray();
-        var resolved = new List<RoleOp>();
+        if (!RoleActionResolver.CanRead(context.Held))
+        {
+            context.Errors[input.Field] = [RoleErrors.NotFoundCode];
+            return;
+        }
+        var assigned = (await roles.ListByIdsAsync(current?.Select(role => role.Id) ?? [], cancellationToken)).Values
+            .Where(role => FitsPlace(role, companyId)).ToArray();
+        var resolved = new List<AssistantActionOp<Guid>>();
         var index = 0;
         foreach (var element in input.Value.EnumerateArray())
         {
             var path = $"{input.Field}[{index++}]";
-            if (!TryReadOp(element, out var op, out var text) || (op == Remove && kind != AssistantActionKind.Edit))
+            if (!AssistantActionInputs.TryReadOp(element, out var op, out var text)
+                || (op == AssistantActionInputs.Remove && context.Kind != AssistantActionKind.Edit))
             {
-                errors[path] = [ValidationError.ErrorCode];
+                context.Errors[path] = [ValidationError.ErrorCode];
                 continue;
             }
-            var match = Match(op == Remove ? assigned : place, role => Names(role), text);
-            if (match is null)
-            {
-                errors[path] = [RoleErrors.NotFoundCode];
-                continue;
-            }
-            if (!context.CanGrant(match.Value.Item, companyId))
-            {
-                errors[path] = [MemberErrors.RolesNotHeldCode];
-                continue;
-            }
-            resolved.Add(new(op, match.Value.Item.Id, match.Value.Doubt));
+            var candidates = op == AssistantActionInputs.Remove ? assigned
+                : (await roles.SearchAsync(text, Place(companyId is null, companyId), cancellationToken)).Where(role => FitsPlace(role, companyId)).ToArray();
+            if (AssistantActionInputs.Match(candidates, RoleActionResolver.Names, text) is not { } match)
+                context.Errors[path] = [RoleErrors.NotFoundCode];
+            else if (!CanGrant(context.Held, match.Item, companyId))
+                context.Errors[path] = [MemberErrors.RolesNotHeldCode];
+            else resolved.Add(new(op, match.Item.Id, match.Doubt));
         }
         var doubt = resolved.Any(item => item.Doubt is not null) ? AssistantActionDoubts.Similar : null;
-        values.Add(new(input.Field, input.Value, JsonSerializer.SerializeToElement(resolved, Json), doubt));
-    }
-
-    private async Task<Result<(CompanyRow Company, string? Doubt)>> MatchCompanyAsync(string text, CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(text) || text.Length > MaxNameLength) return CompanyErrors.NotFound;
-        var page = await companies.ListAsync(new ListCompaniesRequest
-        {
-            Search = text.Trim()[..Math.Min(text.Trim().Length, PagedRequest.MaxSearchLength)],
-            Status = CompanyStatus.Active,
-            PageSize = PagedRequest.MaxPageSize,
-        }, cancellationToken);
-        var match = Match(page.Items.Where(company => company.Status == CompanyStatus.Active).ToArray(), company => [company.Name], text);
-        if (match is not { } found) return CompanyErrors.NotFound;
-        return (found.Item, found.Doubt);
+        context.Values.Add(new(input.Field, input.Value, JsonSerializer.SerializeToElement(resolved, AssistantActionInputs.Json), doubt));
     }
 
     private async Task<Result<OrganizationUserRow>> MatchTargetAsync(string? text, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(text) || text.Length > MaxNameLength) return MemberErrors.NotFound;
+        if (!AssistantActionInputs.IsWritten(text)) return MemberErrors.NotFound;
         var trimmed = text.Trim();
         var page = await users.ListAsync(new ListOrganizationUsersRequest
         {
-            Search = trimmed[..Math.Min(trimmed.Length, PagedRequest.MaxSearchLength)],
-            PageSize = TargetCandidates,
+            Search = AssistantActionInputs.SearchOf(trimmed),
+            PageSize = AssistantActionLimits.Candidates,
         }, timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
-        var exact = page.Items.Where(row => Same(row.DisplayName, trimmed)
+        var exact = page.Items.Where(row => AssistantActionInputs.Same(row.DisplayName, trimmed)
             || (row.Email is { } email && string.Equals(email.Value, trimmed, StringComparison.OrdinalIgnoreCase))).ToArray();
-        var candidates = exact.Length > 0 ? exact : page.Items.Where(row => Contains(row.DisplayName, trimmed)).ToArray();
+        var candidates = exact.Length > 0 ? exact : page.Items.Where(row => AssistantActionInputs.Contains(row.DisplayName, trimmed)).ToArray();
         return candidates.Length switch
         {
             1 => candidates[0],
             0 => MemberErrors.NotFound,
             // Con varias personas parecidas no se elige una: el modelo pregunta a quién.
-            _ => Error.Validation(AssistantActionDoubts.Similar, "More than one person matches."),
+            _ => MemberErrors.Ambiguous,
         };
     }
 
-    // Igual gana; parecido (lo contiene) también. La duda: varias parecidas, o ninguna igual.
-    private static (T Item, string? Doubt)? Match<T>(IReadOnlyList<T> candidates, Func<T, IEnumerable<string>> names, string text)
+    // Actuar sobre alguien (0061): tener todo lo que le dan sus roles, en cada lugar. Sobre uno mismo, siempre; quitar a un
+    // invitado es revocar su invitación, que no pide nada. Se leen solo los permisos de sus roles.
+    private async Task<bool> CanActOnAsync(PermissionsByPlace held, AssistantActionDefinition action, OrganizationUserRow target,
+        CancellationToken cancellationToken)
     {
-        var trimmed = text.Trim();
-        if (trimmed.Length == 0) return null;
-        var similar = candidates.Where(item => names(item).Any(name => Contains(name, trimmed)))
-            .OrderBy(item => names(item).First(), StringComparer.CurrentCulture).ToArray();
-        if (similar.Length == 0) return null;
-        var exact = similar.Where(item => names(item).Any(name => Same(name, trimmed))).ToArray();
-        var chosen = exact.Length > 0 ? exact[0] : similar[0];
-        return (chosen, exact.Length == 1 && similar.Length == 1 ? null : AssistantActionDoubts.Similar);
+        var self = target.UserId is { } userId && userId == currentUser.UserId;
+        if (self || (action.Kind == AssistantActionKind.Remove && IsInvited(target))) return true;
+        var permissions = await roles.ListPermissionsAsync(Assignments(target).Select(row => row.RoleId), cancellationToken);
+        var organization = target.Roles.SelectMany(role => PermissionsOf(role.Id));
+        var byCompany = target.Companies.ToDictionary(company => company.CompanyId,
+            company => company.Roles.SelectMany(role => PermissionsOf(role.Id)));
+        return OrganizationDelegationPolicy.CanActOn(self, held, PermissionsByPlace.Of(organization, byCompany));
+
+        IEnumerable<string> PermissionsOf(Guid roleId) => permissions.GetValueOrDefault(roleId) ?? [];
     }
 
-    // Un rol de sistema se nombra como lo muestra la pantalla, en el idioma de la persona o en el de los recursos.
-    private static IEnumerable<string> Names(RoleRow role) =>
-        new[] { RoleTexts.Name(role.Name), RoleTexts.NameIn(role.Name, CultureInfo.InvariantCulture), role.Name }.Distinct(StringComparer.Ordinal);
-
-    private static bool Same(string candidate, string text) =>
-        CultureInfo.InvariantCulture.CompareInfo.Compare(candidate.Trim(), text, CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace) == 0;
-
-    private static bool Contains(string candidate, string text) =>
-        CultureInfo.InvariantCulture.CompareInfo.IndexOf(candidate, text.Trim(), CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace) >= 0;
+    // Los roles de un lugar, como los filtra la lista de la pantalla: los de la organización, o los que valen en una empresa.
+    private static ListRolesRequest Place(bool organization, Guid? companyId) => organization
+        ? new ListRolesRequest { Scope = RoleScopeFilter.Organization }
+        : new ListRolesRequest { Scope = RoleScopeFilter.Company, CompanyId = companyId };
 
     // Dónde vale un rol: sin empresa, en la organización; con una, en esa (RoleAssignment.Check, la regla de la ruta).
     private static bool FitsPlace(RoleRow role, Guid? companyId) => RoleAssignment.Check(role.Scope, role.CompanyId, companyId) is null;
 
-    private static bool TryReadOp(JsonElement element, out string op, out string text)
-    {
-        (op, text) = (Add, string.Empty);
-        if (element.ValueKind == JsonValueKind.String) text = element.GetString()!;
-        else if (element.ValueKind == JsonValueKind.Object && element.EnumerateObject().Count() == 2
-            && element.TryGetProperty("op", out var kind) && kind.ValueKind == JsonValueKind.String && kind.GetString() is Add or Remove
-            && element.TryGetProperty("value", out var value) && value.ValueKind == JsonValueKind.String)
-            (op, text) = (kind.GetString()!, value.GetString()!);
-        else return false;
-        return !string.IsNullOrWhiteSpace(text) && text.Length <= MaxNameLength;
-    }
-
-    private static RoleOp[] Elements(JsonElement? resolved) =>
-        resolved is { ValueKind: JsonValueKind.Array } array ? array.Deserialize<RoleOp[]>(Json) ?? [] : [];
-
-    private static List<RoleOp> OpsOf(AssistantActionResolution resolution, string field) =>
-        [.. resolution.Values.Where(value => value.Field == field).SelectMany(value => Elements(value.Resolved))];
-
-    private static HashSet<Guid> Apply(IEnumerable<Guid> current, IEnumerable<RoleOp> ops)
-    {
-        var result = current.ToHashSet();
-        foreach (var op in ops)
-            if (op.Op == Remove) result.Remove(op.Id);
-            else result.Add(op.Id);
-        return result;
-    }
+    private static bool CanGrant(PermissionsByPlace held, RoleRow role, Guid? companyId) =>
+        OrganizationDelegationPolicy.CanGrantRole(held, role.Permissions, role.Scope == RoleScope.Organization ? null : companyId ?? role.CompanyId);
 
     private static Email? EmailOf(AssistantActionResolution resolution) =>
-        resolution.Values.SingleOrDefault(value => value.Field == EmailField)?.Resolved is { ValueKind: JsonValueKind.String } email
+        AssistantActionInputs.ResolvedOf(resolution, EmailField) is { ValueKind: JsonValueKind.String } email
         && Email.Create(email.GetString()) is { IsSuccess: true } created ? created.Value : null;
-
-    private static Guid? IdOf(JsonElement? value) =>
-        value is { ValueKind: JsonValueKind.String } id && Guid.TryParse(id.GetString(), out var parsed) ? parsed : null;
 
     private static IEnumerable<(Guid RoleId, Guid? CompanyId)> Assignments(OrganizationUserRow? row) => row is null ? []
         : row.Roles.Select(role => (role.Id, (Guid?)null))
@@ -457,7 +423,7 @@ internal sealed class OrganizationUserActionSource(
         nameof(InviteOrganizationUserRequest.RoleIds) => RolesField,
         _ when property.StartsWith(nameof(InviteOrganizationUserRequest.RoleIds), StringComparison.Ordinal) => RolesField,
         _ when property.StartsWith(nameof(InviteOrganizationUserRequest.Companies), StringComparison.Ordinal) => CompanyRolesField,
-        _ => "target",
+        _ => TargetPath,
     };
 
     // Un invitado, con la invitación vigente o vencida: lo que tiene guardado no vale hasta que acepte.
@@ -469,36 +435,13 @@ internal sealed class OrganizationUserActionSource(
     // Con nombre, el correo la distingue de otra con el mismo nombre; sin nombre, el correo ya es su nombre.
     private static string? Detail(OrganizationUserRow row) => row.DisplayName.Length > 0 ? row.Email?.DisplayValue : null;
 
-    private static ValidationError Invalid(string path, string code) =>
-        new(new Dictionary<string, string[]>(StringComparer.Ordinal) { [path] = [code] });
+    private static ValidationError Invalid(string path, string code) => AssistantActionInputs.Invalid(path, code);
 
-    /// <summary>Un elemento resuelto de un <c>Choices</c>: sumar o quitar, el id y su duda.</summary>
-    private sealed record RoleOp(
-        [property: JsonPropertyName("op")] string Op,
-        [property: JsonPropertyName("id")] Guid Id,
-        [property: JsonPropertyName("doubt")] string? Doubt);
+    /// <summary>Lo que lee una vez la resolución para cada <c>Choices</c>: lo que tiene quien pide, la acción y dónde anota.</summary>
+    private sealed record RoleInputContext(PermissionsByPlace Held, AssistantActionKind Kind, List<AssistantActionResolvedValue> Values,
+        Dictionary<string, string[]> Errors);
 
-    /// <summary>Lo que se lee una vez por llamada: lo que tiene quien pide, los roles de la organización y quién pide.</summary>
-    private sealed record SourceContext(PermissionsByPlace Held, IReadOnlyDictionary<Guid, RoleRow> Roles, Guid? ActorId)
-    {
-        public bool CanGrant(RoleRow role, Guid? companyId) =>
-            OrganizationDelegationPolicy.CanGrantRole(Held, role.Permissions, role.Scope == RoleScope.Organization ? null : companyId ?? role.CompanyId);
-
-        public bool CanGrantInEveryCompany(RoleRow role) =>
-            OrganizationDelegationPolicy.CanGrantListedRole(Held, role.Scope, role.CompanyId, role.Permissions, companyId: null);
-
-        // Actuar sobre alguien (0061): tener todo lo que le dan sus roles, en cada lugar. Sobre uno mismo, siempre; quitar a un
-        // invitado es revocar su invitación, que no pide nada.
-        public bool CanActOn(AssistantActionDefinition action, OrganizationUserRow target)
-        {
-            var self = target.UserId is { } userId && userId == ActorId;
-            if (self || (action.Kind == AssistantActionKind.Remove && IsInvited(target))) return true;
-            var organization = target.Roles.SelectMany(role => PermissionsOf(role.Id));
-            var byCompany = target.Companies.ToDictionary(company => company.CompanyId,
-                company => company.Roles.SelectMany(role => PermissionsOf(role.Id)));
-            return OrganizationDelegationPolicy.CanActOn(self, Held, PermissionsByPlace.Of(organization, byCompany));
-        }
-
-        private IEnumerable<string> PermissionsOf(Guid roleId) => Roles.TryGetValue(roleId, out var role) ? role.Permissions : [];
-    }
+    /// <summary>Lo que pide la pantalla: los roles de organización, los de cada empresa y cada par rol y empresa.</summary>
+    private sealed record DesiredRoles(HashSet<Guid> Organization, InviteCompanyRolesRequest[] Companies,
+        (Guid RoleId, Guid? CompanyId)[] Keys);
 }

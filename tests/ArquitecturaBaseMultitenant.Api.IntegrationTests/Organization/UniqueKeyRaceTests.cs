@@ -172,6 +172,9 @@ public sealed class UniqueKeyRaceTests(ApiFactory factory)
         public Task<RoleRow?> FindByIdAsync(Guid roleId, CancellationToken cancellationToken) =>
             inner.FindByIdAsync(roleId, cancellationToken);
 
+        public Task<IReadOnlyList<RoleRow>> ListByIdsAsync(IReadOnlyCollection<Guid> roleIds, CancellationToken cancellationToken) =>
+            inner.ListByIdsAsync(roleIds, cancellationToken);
+
         public Task<int> CountUsersAsync(Guid roleId, CancellationToken cancellationToken) =>
             inner.CountUsersAsync(roleId, cancellationToken);
 

@@ -10,6 +10,7 @@ internal static class RolesRegistration
     {
         services.AddScoped<IAssistantActionSource, RoleActionSource>();
         services.AddScoped<IRoleService, RoleService>();
+        services.AddScoped<RoleActionResolver>();
         services.AddScoped<RoleAssignmentGuard>();
         services.AddScoped<DelegationPermissionsResolver>();
         services.AddScoped<OrganizationDelegationGuard>();

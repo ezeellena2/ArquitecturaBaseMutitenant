@@ -152,6 +152,19 @@ public sealed class AssistantActionCatalogTests
         }
     }
 
+    /// <summary>ADR 0068 §12: 20 opciones por página, de una constante del núcleo, aunque la fuente traiga más.</summary>
+    [Fact]
+    public async Task Read_action_gives_at_most_the_choices_of_one_page_even_if_the_source_brings_more()
+    {
+        var source = new FakeSource(Invite) { ChoiceCount = AssistantActionLimits.ChoicesPerPage + 5 };
+        var tools = new AssistantActionTools(Catalog([Qualified(Invite)], out _, sources: [source]));
+
+        var choices = await tools.ReadAsync(Json(new { action = Invite.Key, field = "roles" }), new AssistantActionTurn([Invite.Key], FakeModel, false), Spanish, Ct);
+
+        Assert.Equal(AssistantActionLimits.ChoicesPerPage, choices.Choices!.Count);
+        Assert.True(choices.HasMore);
+    }
+
     [Fact]
     public async Task A_rule_of_the_source_comes_back_with_its_path_without_cutting_the_turn()
     {
@@ -265,11 +278,14 @@ public sealed class AssistantActionCatalogTests
         internal static readonly Guid RoleId = Guid.CreateVersion7();
         internal Error? Validation { get; init; }
         internal string? TargetRead { get; private set; }
+        internal int ChoiceCount { get; init; } = 1;
 
         public IReadOnlyList<AssistantActionDefinition> Definitions => actions;
 
         public Task<Result<PagedResult<AssistantActionChoiceRow>>> ListChoicesAsync(AssistantActionChoiceRequest request, CancellationToken cancellationToken) =>
-            Task.FromResult(Result.Success(new PagedResult<AssistantActionChoiceRow>([new(RoleId.ToString(), "Vendedora")], 1, 20, 1)));
+            Task.FromResult(Result.Success(new PagedResult<AssistantActionChoiceRow>(
+                [.. Enumerable.Range(0, ChoiceCount).Select(index => new AssistantActionChoiceRow(RoleId.ToString(), index == 0 ? "Vendedora" : $"Vendedora {index}"))],
+                1, ChoiceCount, ChoiceCount)));
 
         public Task<Result<AssistantActionResolution>> ResolveAsync(AssistantActionDraft draft, CancellationToken cancellationToken) =>
             Task.FromResult(Result.Success(new AssistantActionResolution(draft.Action, PersonId, 3,

@@ -10,6 +10,7 @@ internal static class CompaniesRegistration
     {
         services.AddScoped<ICompanyService, CompanyService>();
         services.AddScoped<ICompanyMembershipService, CompanyMembershipService>();
+        services.AddScoped<CompanyActionResolver>();
         services.AddScoped<CompanyCreator>();
         services.AddScoped<CompanyReferenceDataResolver>();
         services.AddScoped<CompanyMembershipWriter>();

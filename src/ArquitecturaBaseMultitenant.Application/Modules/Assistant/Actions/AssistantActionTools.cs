@@ -30,7 +30,8 @@ internal sealed class AssistantActionTools(AssistantActionCatalog catalog)
     internal const int MaxProposalBytes = 16 * 1024;
     private const int NameLength = 80;
     private const int TextLength = 100;
-    private const int TargetLength = 200;
+    // El destino, una opción o un registro escrito por el modelo: el mismo tope que leen las fuentes.
+    private const int TargetLength = AssistantActionLimits.TextLength;
 
     private static readonly string[] ProposeRequired = ["action", "values"];
     private static readonly string[] ValueRequired = ["field", "value"];
@@ -109,7 +110,9 @@ internal sealed class AssistantActionTools(AssistantActionCatalog catalog)
                 return AssistantActionToolData.Reject(AssistantErrors.ActionInvalidCode, [new(name, AssistantErrors.ActionInvalidCode)]);
             var page = await entry.Source.ListChoicesAsync(new AssistantActionChoiceRequest(entry.Action, name, read.Search, 1, null), ct);
             if (page.IsFailure) return AssistantActionToolData.Reject(AssistantErrors.ActionNotAvailableCode);
-            return new() { Choices = page.Value.Items.Select(row => row.Name).ToArray(), HasMore = page.Value.HasNext };
+            // 0068 §12: 20 opciones por página, aunque la fuente traiga más.
+            var choices = page.Value.Items.Take(AssistantActionLimits.ChoicesPerPage).Select(row => row.Name).ToArray();
+            return new() { Choices = choices, HasMore = page.Value.HasNext || page.Value.Items.Count > choices.Length };
         }
         return new()
         {

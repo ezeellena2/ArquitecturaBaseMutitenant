@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.AssistantActions;
 using ArquitecturaBaseMultitenant.Application.Models.Request;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
+using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
@@ -23,7 +24,8 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Assistant;
 /// B6 de las acciones (ADR 0068 §3, §5 y §9): la fuente de Usuarios resuelve, valida y vuelve a resolver en el alcance de
 /// solo lectura, con quien pide. Cada escenario corre sus cinco casos (válido, inválido, ambiguo, con instrucciones escondidas
 /// y con algo de otra organización), y el válido se guarda por la ruta de siempre con lo que muestra la propuesta. Quien no
-/// tiene un permiso no puede dar el rol que lo trae: ni se lista, ni se resuelve, ni se vuelve a mostrar.
+/// tiene un permiso no puede dar el rol que lo trae: ni se lista, ni se resuelve, ni se vuelve a mostrar. Los escenarios
+/// corren con un lector de roles que se niega a leer la lista entera: la fuente busca con el lector y lee por id.
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class OrganizationUserActionSourceTests(ApiFactory factory)
@@ -38,11 +40,12 @@ public sealed class OrganizationUserActionSourceTests(ApiFactory factory)
     {
         var scenario = await new OrganizationUserActionScenarios().PrepareAsync(factory, action, Ct);
         using var client = scenario.Client;
+        using var host = NoWholeRoleListReader.Host(factory);
         var actor = await AssistantExecutionActorTests.CaptureAsync(client);
         AssistantActionReview? valid = null;
         foreach (var (name, @case) in scenario.Cases)
         {
-            var proposed = await RunAsync(actor, action, (source, definition, ct) => ProposeAsync(source, definition, @case, ct));
+            var proposed = await RunAsync(actor, action, (source, definition, ct) => ProposeAsync(source, definition, @case, ct), host.Services);
             if (@case.RejectedPath is { } path)
             {
                 Assert.True(proposed.IsFailure, name);
@@ -56,7 +59,7 @@ public sealed class OrganizationUserActionSourceTests(ApiFactory factory)
             Assert.Equal(KindOf(action) == AssistantActionKind.Create ? 0 : 1, resolution.SubjectUserIds.Count);
             Assert.Equal(@case.Doubtful.Order(StringComparer.Ordinal),
                 resolution.Values.Where(value => value.Doubt is not null).Select(value => value.Field).Order(StringComparer.Ordinal));
-            var reviewed = await RunAsync(actor, action, (source, _, ct) => source.ReviewAsync(resolution, ct));
+            var reviewed = await RunAsync(actor, action, (source, _, ct) => source.ReviewAsync(resolution, ct), host.Services);
             Assert.True(reviewed.IsSuccess, $"{name}: {(reviewed.IsFailure ? reviewed.Error.Code : string.Empty)}");
             // Todo lo que muestra la pantalla tiene su nombre, leído del servidor; nunca el texto del modelo.
             Assert.All(reviewed.Value.Values.Where(value => value.Field != OrganizationUserActionSource.EmailField),
@@ -127,7 +130,9 @@ public sealed class OrganizationUserActionSourceTests(ApiFactory factory)
         var scenario = await new OrganizationUserActionScenarios().PrepareAsync(factory, "users.invite@1", Ct);
         using var owner = scenario.Client;
         var inviter = await OrganizationUserActionScenarios.CreateRoleAsync(owner, "Invitadora", Permissions.Users.Invite, null, Ct);
-        // Invitadora trae users.invite; Ana la tiene junto a Ventas mayoristas (settings.read), pero no Ventas (audit.read).
+        var reader = await OrganizationUserActionScenarios.CreateRoleAsync(owner, "Lectora de roles", Permissions.Roles.Read, null, Ct);
+        // Invitadora trae users.invite y Lectora de roles, roles.read (lo que pide la lista de roles del diálogo); Ana las
+        // tiene junto a Ventas mayoristas (settings.read), pero no Ventas (audit.read).
         using var anaClient = AssistantTestData.Client(factory);
         var ana = await AccountJourney.RegisterAsync(factory, anaClient, Ct);
         var anaMember = await OrganizationJourney.AddActiveMemberAsync(factory, scenario.TenantId, ana.UserId, Ct);
@@ -135,7 +140,7 @@ public sealed class OrganizationUserActionSourceTests(ApiFactory factory)
         var roleIds = await RunAsync(ownerActor, "users.invite@1", async (source, definition, ct) =>
             (await source.ListChoicesAsync(new AssistantActionChoiceRequest(definition, OrganizationUserActionSource.RolesField, null, 1, null), ct))
                 .Value.Items.ToDictionary(row => row.Name, row => Guid.Parse(row.Id)));
-        await OrganizationUserActionScenarios.AssignAsync(owner, anaMember, [inviter, roleIds["Ventas mayoristas"]], Ct);
+        await OrganizationUserActionScenarios.AssignAsync(owner, anaMember, [inviter, reader, roleIds["Ventas mayoristas"]], Ct);
         await AccountJourney.AuthorizeAsync(anaClient, "business", Ct, scenario.TenantId);
         var anaActor = await AssistantExecutionActorTests.CaptureAsync(anaClient);
 
@@ -158,6 +163,67 @@ public sealed class OrganizationUserActionSourceTests(ApiFactory factory)
         Assert.Equal(ErrorType.Forbidden, reviewed.Error.Type);
     }
 
+    /// <summary>
+    /// Dos personas parecidas: el destino no admite duda y vuelve al modelo con un código del catálogo de miembros, con su
+    /// texto en los dos idiomas, y no con la clave de una duda.
+    /// </summary>
+    [Fact]
+    public async Task A_target_like_several_people_returns_to_the_model_with_the_ambiguous_code_of_the_catalog()
+    {
+        var scenario = await new OrganizationUserActionScenarios().PrepareAsync(factory, "users.remove@1", Ct);
+        using var owner = scenario.Client;
+        var actor = await AssistantExecutionActorTests.CaptureAsync(owner);
+
+        var rejected = await RunAsync(actor, "users.remove@1", (source, definition, ct) =>
+            ProposeAsync(source, definition, new AssistantActionScenarioCase("Martín", []), ct));
+
+        Assert.Equal(new[] { MemberErrors.AmbiguousCode }, Assert.IsType<ValidationError>(rejected.Error).Errors["target"]);
+        Assert.NotEqual(MemberErrors.AmbiguousCode, ErrorTexts.Get(MemberErrors.AmbiguousCode));
+    }
+
+    /// <summary>
+    /// <c>users.invite</c> no trae <c>companies.read</c> ni <c>roles.read</c>, y el diálogo «Invitar usuario» lista las
+    /// empresas y los roles con las rutas que los piden: la fuente tampoco los resuelve, ni los lista, ni los nombra (0068
+    /// §5). Para ella no existen, así el modelo no prueba nombres, y la propuesta del Dueño le queda «ya no disponible» sin
+    /// mostrar sus nombres.
+    /// </summary>
+    [Fact]
+    public async Task Who_cannot_see_companies_or_roles_cannot_resolve_list_or_see_them()
+    {
+        var scenario = await new OrganizationUserActionScenarios().PrepareAsync(factory, "users.invite@1", Ct);
+        using var owner = scenario.Client;
+        var inviter = await OrganizationUserActionScenarios.CreateRoleAsync(owner, "Invitadora", Permissions.Users.Invite, null, Ct);
+        using var anaClient = AssistantTestData.Client(factory);
+        var ana = await AccountJourney.RegisterAsync(factory, anaClient, Ct);
+        var anaMember = await OrganizationJourney.AddActiveMemberAsync(factory, scenario.TenantId, ana.UserId, Ct);
+        await OrganizationUserActionScenarios.AssignAsync(owner, anaMember, [inviter], Ct);
+        await AccountJourney.AuthorizeAsync(anaClient, "business", Ct, scenario.TenantId);
+        var anaActor = await AssistantExecutionActorTests.CaptureAsync(anaClient);
+        var ownerActor = await AssistantExecutionActorTests.CaptureAsync(owner);
+        var email = Input(OrganizationUserActionSource.EmailField, OrganizationUserActionScenarios.Email);
+
+        foreach (var company in new[] { "Delta", "a", "Empresa que no existe" })
+        {
+            var inCompany = new AssistantActionScenarioCase(null, [email, Input(OrganizationUserActionSource.CompanyField, company)]);
+            var rejected = await RunAsync(anaActor, "users.invite@1", (source, definition, ct) => ProposeAsync(source, definition, inCompany, ct));
+            Assert.True(rejected.IsFailure, company);
+            Assert.Equal(new[] { CompanyErrors.NotFoundCode }, Assert.IsType<ValidationError>(rejected.Error).Errors[OrganizationUserActionSource.CompanyField]);
+        }
+        var withRoles = new AssistantActionScenarioCase(null, [email, Input(OrganizationUserActionSource.RolesField, new[] { "Ventas mayoristas" })]);
+        var notSeen = await RunAsync(anaActor, "users.invite@1", (source, definition, ct) => ProposeAsync(source, definition, withRoles, ct));
+        Assert.Equal(new[] { RoleErrors.NotFoundCode }, Assert.IsType<ValidationError>(notSeen.Error).Errors[OrganizationUserActionSource.RolesField]);
+        var listed = await RunAsync(anaActor, "users.invite@1", (source, definition, ct) =>
+            source.ListChoicesAsync(new AssistantActionChoiceRequest(definition, OrganizationUserActionSource.RolesField, null, 1, null), ct));
+        Assert.True(listed.IsSuccess, listed.IsFailure ? listed.Error.Code : null);
+        Assert.Empty(listed.Value.Items);
+
+        var byOwner = await RunAsync(ownerActor, "users.invite@1", (source, definition, ct) => ProposeAsync(source, definition, scenario.Valid, ct));
+        Assert.True(byOwner.IsSuccess, byOwner.IsFailure ? Describe(byOwner.Error) : null);
+        var reviewed = await RunAsync(anaActor, "users.invite@1", (source, _, ct) => source.ReviewAsync(byOwner.Value, ct));
+        Assert.True(reviewed.IsFailure);
+        Assert.Equal(ErrorType.NotFound, reviewed.Error.Type);
+    }
+
     private static AssistantActionKind KindOf(string action) =>
         OrganizationUserActionSource.Actions.Single(definition => definition.Key == action).Kind;
 
@@ -174,9 +240,9 @@ public sealed class OrganizationUserActionSourceTests(ApiFactory factory)
 
     // Como en el turno: con el actor revalidado del worker y en el alcance de solo lectura.
     private async Task<T> RunAsync<T>(ExecutionActor actor, string action,
-        Func<IAssistantActionSource, AssistantActionDefinition, CancellationToken, Task<T>> work)
+        Func<IAssistantActionSource, AssistantActionDefinition, CancellationToken, Task<T>> work, IServiceProvider? root = null)
     {
-        using var scope = factory.Services.CreateScope();
+        using var scope = (root ?? factory.Services).CreateScope();
         var services = scope.ServiceProvider;
         var prepared = await services.GetRequiredService<IExecutionActorFactory>().RevalidateAsync(actor, Ct);
         Assert.True(prepared.IsSuccess, prepared.IsFailure ? prepared.Error.Code : null);

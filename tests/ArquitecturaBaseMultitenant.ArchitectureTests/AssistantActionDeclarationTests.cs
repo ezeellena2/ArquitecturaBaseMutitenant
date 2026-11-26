@@ -156,6 +156,24 @@ public sealed partial class AssistantActionDeclarationTests
         Assert.Contains(violations, violation => violation.StartsWith("WritingProbeSource → IUnitOfWork:", StringComparison.Ordinal));
     }
 
+    /// <summary>
+    /// Elegir por nombre, leer un elemento de un <c>Choices</c>, aplicar sus operaciones y los topes son del núcleo
+    /// (<c>AssistantActionInputs</c> y <c>AssistantActionLimits</c>), y la empresa y los roles por su nombre, de sus
+    /// <c>Resolver</c>: una fuente que se copia para un área nueva no se lleva una versión propia que una corrección no alcanza.
+    /// </summary>
+    [Fact]
+    public void Sources_use_the_shared_helpers_and_limits_instead_of_their_own_copies()
+    {
+        var sources = SourceTypes();
+        Assert.NotEmpty(sources);
+
+        Assert.Empty(sources.SelectMany(CopiedHelpers));
+    }
+
+    [Fact]
+    public void Detector_finds_a_copied_helper_and_a_limit_of_its_own() =>
+        Assert.Equal(["CopyingProbeSource.Match", "CopyingProbeSource.ChoicesPageSize"], CopiedHelpers(typeof(CopyingProbeSource)));
+
     [Fact]
     public void Detector_rejects_forbidden_field_names_and_accepts_the_others()
     {
@@ -224,6 +242,16 @@ public sealed partial class AssistantActionDeclarationTests
 
         Assert.Null(NotDeclarableReason(Find("POST api/users/invitations", ApiRoutes.Value)!, notDeclarable));
     }
+
+    private static readonly string[] SharedHelperNames = ["Match", "MatchCompanyAsync", "TryReadOp", "Same", "Contains", "Apply", "IdOf"];
+
+    private static string[] CopiedHelpers(Type source) =>
+    [
+        .. source.GetMethods(BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)
+            .Where(method => SharedHelperNames.Contains(method.Name, StringComparer.Ordinal)).Select(method => $"{source.Name}.{method.Name}"),
+        .. source.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)
+            .Where(field => field.IsLiteral && field.FieldType == typeof(int)).Select(field => $"{source.Name}.{field.Name}"),
+    ];
 
     private static Type[] SourceTypes() => ApplicationAssembly.GetTypes()
         .Where(type => type is { IsClass: true, IsAbstract: false }
@@ -650,6 +678,16 @@ public sealed partial class AssistantActionDeclarationTests
     private sealed record NotDeclarableRoute(string? Verb, string Prefix, string Reason);
 
 #pragma warning disable CA1812, CS9113 // Signature-only test probes, inspected by reflection.
+    // Una fuente que se copió los ayudantes y un tope en vez de usar los del núcleo.
+    private static class CopyingProbeSource
+    {
+        private const int ChoicesPageSize = 20;
+
+        private static bool Match(string candidate, string text) => candidate.Length > ChoicesPageSize && text.Length > 0;
+
+        internal static bool Probe() => Match("a", "b");
+    }
+
     // Una fuente que solo usa lo permitido, también a través de un Resolver, una Policy, un validador y un puerto lector.
     private sealed class ReadingProbeSource(ICurrentUser user, ITenantContext tenant, TimeProvider clock, IRoleReader roles,
         IValidator<CreateRoleRequest> validator, IPermissionService permissions, ICurrencyCatalog currencies,
