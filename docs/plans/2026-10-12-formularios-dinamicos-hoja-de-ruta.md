@@ -356,6 +356,7 @@ Son catorce, de la E12 a la E25, en el orden de la decisión 78: **el número es
 - **Importar respuestas desde Excel, y cargar a nombre de otra persona.**
 - **Varios niveles de aprobación** (60).
 - **Límites por plan.**
+- **Agentes que hacen procesos** (idea del usuario del 2026-11-25, sin decidir): el escalón que sigue al asistente de la E23 y la E24, sobre las mismas piezas. La empresa lo arma con configuración, y cada disparador y cada acción nueva es código nuestro. Son cuatro cosas, cada una con su decisión de producto: otros disparadores además de un mensaje (una hora, o un evento como una respuesta nueva); escribir sin que una persona confirme (hoy la IA prepara y la persona confirma, [0068](../decisions/0068-acciones-del-asistente.md)), con lo que puede hacer sola según el permiso; procesos de varios pasos con esperas («si no contesta en dos días, volvé a escribirle»); y actuar sobre los módulos de negocio que existan.
 
 ## 4. Lo que aprendimos en ArquitecturaBase
 
