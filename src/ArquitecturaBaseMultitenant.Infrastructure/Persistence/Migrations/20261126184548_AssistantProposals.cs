@@ -77,6 +77,15 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            // Una propuesta guardada (nueva, aplicada, con lo aplicado o con las claves de sus intentos) no existe en el esquema
+            // de antes: se niega antes que borrarla, antes de cualquier DDL (guía de migración, paso 4). AssistantProposals
+            // fuerza la RLS también para su dueño, que corre la migración sin organización: sin NO FORCE la guarda no vería
+            // ninguna. Va en la transacción de la migración: si se niega, la RLS sigue forzada. El SQL va en una línea: no lleva
+            // \r aunque el archivo tenga CRLF.
+            migrationBuilder.Sql("""
+                LOCK TABLE tenant."AssistantProposals" IN ACCESS EXCLUSIVE MODE; ALTER TABLE tenant."AssistantProposals" NO FORCE ROW LEVEL SECURITY; DO $$ BEGIN IF EXISTS (SELECT 1 FROM tenant."AssistantProposals") THEN RAISE EXCEPTION 'A saved assistant proposal cannot be represented by the previous schema.'; END IF; END $$; ALTER TABLE tenant."AssistantProposals" FORCE ROW LEVEL SECURITY;
+                """);
+
             migrationBuilder.DropTable(
                 name: "AssistantProposals",
                 schema: "tenant");
