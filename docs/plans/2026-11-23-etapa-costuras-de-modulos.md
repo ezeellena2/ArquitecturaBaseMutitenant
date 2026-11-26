@@ -1,6 +1,6 @@
 # Costuras de módulos · plan ejecutable
 
-**Estado:** pendiente · Spec: [`docs/plans/formularios/costuras-de-modulos.md`](formularios/costuras-de-modulos.md) (contrato, datos y pasos con sus tests). Va después de la puerta de la etapa de acciones del asistente y antes de la E12, sin pantallas ([ADR 0069](../decisions/0069-modulos-y-suscripciones.md)). Las decisiones de producto las tomó el usuario el 2026-11-23, en la 0069. Arma solo las cuatro costuras: el permiso de uso por origen, el resolvedor de topes, apagar sin borrar y la clave del uso de la IA.
+**Estado:** pendiente · Spec: [`docs/plans/formularios/costuras-de-modulos.md`](formularios/costuras-de-modulos.md) (contrato, datos y pasos con sus tests). Va a la vez que la etapa de acciones del asistente (decisión del usuario del 2026-11-26: no usa nada de ella), después de la puerta de la base 2 y antes de la E12, sin pantallas ([ADR 0069](../decisions/0069-modulos-y-suscripciones.md)). Las decisiones de producto las tomó el usuario el 2026-11-23, en la 0069. Arma solo las cuatro costuras: el permiso de uso por origen, el resolvedor de topes, apagar sin borrar y la clave del uso de la IA.
 
 **Fuente:** la ADR 0069 y la investigación del 2026-11-23 que resume.
 
@@ -48,7 +48,7 @@ La segunda parte de la base ya programó casi todo; faltan la B18, la F12 y la F
 ### K0 · Lo que dejaron la segunda parte de la base y la etapa de acciones
 
 El chat del contrato confirma contra el código y las tablas de sus puertas:
-- **las dos puertas cerradas;**
+- **la puerta de la base 2 cerrada.** Las acciones corren a la vez (decisión del 2026-11-26): lo que sumen a los lectores del permiso o a los topes lo vuelve a mirar la I1;
 - **la B18:** `WhatsAppPlatformSettings.MaxOrganizationChatRetentionDays` (3650 de entrada) y `WhatsAppOrganizationSettings.ChatRetentionDays` (90, de 1 al máximo), con los lectores que nombra la B5. Ese máximo es uno de «los máximos de hoy» (0069 §4), y la B5 lo pasa por el resolvedor;
 - **la B14:** el cupo del día con la clave de la plataforma sigue leyendo `DailyMessageLimit` de la plataforma, ahora por persona en la organización;
 - **los topes con máximo de la plataforma:** la lista cerrada que va al resolvedor. Se esperan tres: el presupuesto del mes y el cupo del día de la IA, y el plazo de los chats. Uno más va a la B4 o la B5, según su módulo;
@@ -194,7 +194,7 @@ Leé AGENTS.md de los dos repos, la ADR 0069, este plan, la spec y la skill /pue
 - **de la segunda parte de la base:** la configuración de WhatsApp y la purga de los chats (B18, 272) y el cupo del día de la IA (B14, 271);
 - **de la E8b:** `AssistantPlatformSettings`, `AssistantFinancialCalls`, `AssistantFinancialOperations` y `AssistantBudgetMonths`;
 - **del núcleo:** `TenantFeatures` y su filtro (E5), la caché con generaciones (E9) y los advisory locks;
-- **de la etapa de acciones:** nada; va antes solo por orden.
+- **de la etapa de acciones:** nada. Corren a la vez desde el 2026-11-26: las dos K1 no corren juntas en `main` (`openapi.json`), y cada migración se arma sobre el `HEAD` del momento con `ModelSnapshotTests`.
 
 **Deja para las siguientes:**
 - **Para la E12, que suma el módulo `forms`, y todo el bloque:**

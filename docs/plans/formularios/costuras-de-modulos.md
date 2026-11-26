@@ -1,13 +1,13 @@
 # Costuras de módulos (spec)
 
-**Estado:** pendiente · spec de la etapa «Costuras de módulos», que va después de la etapa de acciones del asistente y antes de la E12, sin pantallas ([ADR 0069](../../decisions/0069-modulos-y-suscripciones.md), aceptada por el usuario el 2026-11-23). Arma las cuatro costuras que necesita la etapa del cobro para no rehacer la 12 a la 25. Su plan ejecutable es el [del 2026-11-23](../2026-11-23-etapa-costuras-de-modulos.md); lo que deja la segunda parte de la base lo confirma su K0.
+**Estado:** pendiente · spec de la etapa «Costuras de módulos», que va a la vez que la etapa de acciones del asistente (decisión del usuario del 2026-11-26) y antes de la E12, sin pantallas ([ADR 0069](../../decisions/0069-modulos-y-suscripciones.md), aceptada por el usuario el 2026-11-23). Arma las cuatro costuras que necesita la etapa del cobro para no rehacer la 12 a la 25. Su plan ejecutable es el [del 2026-11-23](../2026-11-23-etapa-costuras-de-modulos.md); lo que deja la segunda parte de la base lo confirma su K0.
 
 ## Qué leer ✓
 
 1. **Lo anterior:**
    - de la [segunda parte de la base](base-de-la-12-segunda-parte.md), la B18 (la configuración de WhatsApp con `chatRetentionDays` y `maxOrganizationChatRetentionDays`, y la purga de los chats, 272) y la B14 (el cupo del día de la IA, 271);
    - del núcleo, los módulos por organización (`TenantFeatures`, `TenantFeatureFilter` y la pestaña «Módulos» de Plataforma) y la caché compartida;
-   - de la [etapa de acciones](acciones-del-asistente.md), nada: va antes solo por orden.
+   - de la [etapa de acciones](acciones-del-asistente.md), nada: corren a la vez desde el 2026-11-26.
 2. **Decisiones:**
    - la ADR [0069](../../decisions/0069-modulos-y-suscripciones.md), que manda;
    - la 0028 del [índice](../../decisions/README.md) (módulo ≠ permiso, 404 apagado), la [0060](../../decisions/0060-dos-versiones-conviven.md) (se lee un despliegue antes de escribir), la [0051](../../decisions/0051-precision-tecnica-de-costos-ia.md) (el costo de la IA) y la [0052](../../decisions/0052-cache-compartida-redis.md) (la caché);
@@ -153,5 +153,5 @@ No hay galería ni recorrido nuevos, ni prueba con Meta o con un proveedor real.
 
 ## Requisitos previos
 
-- La etapa de acciones del asistente, cerrada.
+- La etapa de acciones del asistente puede estar en curso: corren a la vez (2026-11-26).
 - La segunda parte de la base, cerrada, con la B18 y la B14.
