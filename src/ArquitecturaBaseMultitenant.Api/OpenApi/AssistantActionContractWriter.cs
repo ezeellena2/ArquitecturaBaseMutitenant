@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
@@ -28,9 +29,20 @@ internal static class AssistantActionContractWriter
             .OrderBy(action => action.Id, StringComparer.Ordinal).ThenBy(action => action.Version),
     }, Options) + "\n";
 
-    internal static void Write(IServiceProvider services, string directory)
+    /// <summary>
+    /// Lee las fuentes registradas sin construirlas: sus declaraciones son estáticas (el puerto lo pide), y en el build el
+    /// exportador no tiene base para los readers que una fuente recibe.
+    /// </summary>
+    internal static void Write(IServiceCollection services, string directory)
     {
-        using var scope = services.CreateScope();
-        File.WriteAllText(Path.Combine(directory, FileName), Render(scope.ServiceProvider.GetServices<IAssistantActionSource>()));
+        var sources = services.Where(descriptor => descriptor.ServiceType == typeof(IAssistantActionSource))
+            .Select(descriptor => descriptor.ImplementationType
+                ?? throw new InvalidOperationException("An action source must be registered by its type."))
+            .Select(type => (IAssistantActionSource)RuntimeHelpers.GetUninitializedObject(type))
+            .ToArray();
+        foreach (var source in sources)
+            if (source.Definitions is null)
+                throw new InvalidOperationException($"The action source {source.GetType().Name} must declare its actions statically.");
+        File.WriteAllText(Path.Combine(directory, FileName), Render(sources));
     }
 }

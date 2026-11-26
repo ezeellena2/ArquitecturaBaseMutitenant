@@ -41,3 +41,16 @@ public sealed record AssistantActionChoiceRequest(
 
 /// <summary>Una opción de una definición: su id y su nombre.</summary>
 public sealed record AssistantActionChoiceRow(string Id, string Name);
+
+/// <summary>
+/// Las claves de duda («Revisá») que publican las fuentes en cada valor resuelto; el front las traduce. Son códigos, no
+/// textos: el núcleo no guarda el texto.
+/// </summary>
+public static class AssistantActionDoubts
+{
+    /// <summary>
+    /// Hay más de una opción parecida al texto: queda la igual, o la primera por nombre, y la persona la revisa. En el destino
+    /// no hay duda: con varias personas parecidas, la fuente lo rechaza con esta clave y el modelo pregunta.
+    /// </summary>
+    public const string Similar = "Assistant.Action.Doubt.Similar";
+}

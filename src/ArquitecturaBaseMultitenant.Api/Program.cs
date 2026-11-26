@@ -40,7 +40,7 @@ var app = builder.Build();
 var isOpenApiExporter = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name is "GetDocument.Insider";
 // Junto con el OpenAPI, el build publica las acciones declaradas (ADR 0068); CopyVersionedOpenApi copia los dos a docs/contracts.
 if (isOpenApiExporter)
-    ArquitecturaBaseMultitenant.Api.OpenApi.AssistantActionContractWriter.Write(app.Services,
+    ArquitecturaBaseMultitenant.Api.OpenApi.AssistantActionContractWriter.Write(builder.Services,
         Path.GetDirectoryName(typeof(Program).Assembly.Location)!);
 if (!isOpenApiExporter)
 {
