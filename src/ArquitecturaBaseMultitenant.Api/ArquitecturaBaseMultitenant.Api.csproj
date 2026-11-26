@@ -31,6 +31,9 @@
   <Target Name="CopyVersionedOpenApi" AfterTargets="GenerateOpenApiDocuments">
     <Copy SourceFiles="$(OpenApiDocumentsDirectory)/$(MSBuildProjectName).json"
           DestinationFiles="$(MSBuildProjectDirectory)/../../docs/contracts/openapi.json" />
+    <!-- El exportador escribe las acciones declaradas junto al ensamblado (ADR 0068, AssistantActionContractWriter). -->
+    <Copy SourceFiles="$(TargetDir)assistant-actions.json" Condition="Exists('$(TargetDir)assistant-actions.json')"
+          DestinationFiles="$(MSBuildProjectDirectory)/../../docs/contracts/assistant-actions.json" />
   </Target>
   <ItemGroup>
     <EmbeddedResource Include="../../docs/contracts/examples/identity.json" LogicalName="Api.OpenApi.IdentityExamples.json" />

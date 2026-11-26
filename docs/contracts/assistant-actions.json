@@ -1,0 +1,194 @@
+{
+  "actions": [
+    {
+      "id": "roles.create",
+      "version": 1,
+      "kind": "create",
+      "requirement": {
+        "kind": "organization",
+        "permission": "roles.manage"
+      },
+      "saveRoute": "POST api/roles",
+      "confirmation": "page",
+      "screen": "roleEditor",
+      "effect": "none",
+      "fieldsFromTarget": false,
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "maxLength": 60
+        },
+        {
+          "name": "description",
+          "type": "longText",
+          "required": false,
+          "maxLength": 500
+        },
+        {
+          "name": "scope",
+          "type": "choice",
+          "required": true
+        },
+        {
+          "name": "company",
+          "type": "record",
+          "required": false,
+          "dependsOn": "scope"
+        },
+        {
+          "name": "permissions",
+          "type": "choices",
+          "required": true,
+          "dependsOn": "scope"
+        }
+      ]
+    },
+    {
+      "id": "roles.edit",
+      "version": 1,
+      "kind": "edit",
+      "requirement": {
+        "kind": "organization",
+        "permission": "roles.manage"
+      },
+      "saveRoute": "PUT api/roles/{id}",
+      "confirmation": "page",
+      "screen": "roleEditor",
+      "effect": "none",
+      "target": {
+        "readRoute": "GET api/roles/{id}"
+      },
+      "fieldsFromTarget": false,
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "maxLength": 60
+        },
+        {
+          "name": "description",
+          "type": "longText",
+          "required": false,
+          "maxLength": 500
+        },
+        {
+          "name": "permissions",
+          "type": "choices",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "roles.remove",
+      "version": 1,
+      "kind": "remove",
+      "requirement": {
+        "kind": "organization",
+        "permission": "roles.manage"
+      },
+      "saveRoute": "DELETE api/roles/{id}",
+      "confirmation": "removeConfirmation",
+      "screen": "roles",
+      "effect": "none",
+      "target": {
+        "readRoute": "GET api/roles/{id}"
+      },
+      "fieldsFromTarget": false,
+      "fields": []
+    },
+    {
+      "id": "users.edit",
+      "version": 1,
+      "kind": "edit",
+      "requirement": {
+        "kind": "organization",
+        "permission": "users.manage"
+      },
+      "saveRoute": "PUT api/users/{memberId}",
+      "confirmation": "page",
+      "screen": "userDetail",
+      "effect": "none",
+      "target": {
+        "readRoute": "GET api/users/{memberId}"
+      },
+      "fieldsFromTarget": false,
+      "fields": [
+        {
+          "name": "roles",
+          "type": "choices",
+          "required": false
+        },
+        {
+          "name": "company",
+          "type": "record",
+          "required": false
+        },
+        {
+          "name": "companyRoles",
+          "type": "choices",
+          "required": false,
+          "dependsOn": "company"
+        }
+      ]
+    },
+    {
+      "id": "users.invite",
+      "version": 1,
+      "kind": "create",
+      "requirement": {
+        "kind": "organization",
+        "permission": "users.invite"
+      },
+      "saveRoute": "POST api/users/invitations",
+      "confirmation": "dialog",
+      "screen": "inviteUser",
+      "effect": "sendsMessage",
+      "fieldsFromTarget": false,
+      "fields": [
+        {
+          "name": "email",
+          "type": "email",
+          "required": true,
+          "maxLength": 254
+        },
+        {
+          "name": "roles",
+          "type": "choices",
+          "required": false
+        },
+        {
+          "name": "company",
+          "type": "record",
+          "required": false
+        },
+        {
+          "name": "companyRoles",
+          "type": "choices",
+          "required": false,
+          "dependsOn": "company"
+        }
+      ]
+    },
+    {
+      "id": "users.remove",
+      "version": 1,
+      "kind": "remove",
+      "requirement": {
+        "kind": "organization",
+        "permission": "users.manage"
+      },
+      "saveRoute": "DELETE api/users/{memberId}",
+      "confirmation": "removeConfirmation",
+      "screen": "userDetail",
+      "effect": "sendsMessage",
+      "target": {
+        "readRoute": "GET api/users/{memberId}"
+      },
+      "fieldsFromTarget": false,
+      "fields": []
+    }
+  ]
+}

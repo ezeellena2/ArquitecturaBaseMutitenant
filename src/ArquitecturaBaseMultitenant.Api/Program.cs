@@ -38,6 +38,10 @@ var app = builder.Build();
 
 // El exportador OpenAPI de MSBuild construye el host sin Aspire ni conexiones.
 var isOpenApiExporter = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name is "GetDocument.Insider";
+// Junto con el OpenAPI, el build publica las acciones declaradas (ADR 0068); CopyVersionedOpenApi copia los dos a docs/contracts.
+if (isOpenApiExporter)
+    ArquitecturaBaseMultitenant.Api.OpenApi.AssistantActionContractWriter.Write(app.Services,
+        Path.GetDirectoryName(typeof(Program).Assembly.Location)!);
 if (!isOpenApiExporter)
 {
     var runtimeConnection = app.Configuration.GetConnectionString("appdb")
