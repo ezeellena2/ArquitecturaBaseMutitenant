@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Action.users.invite@1.Name" xml:space="preserve"><value>Invitar usuario</value></data>
+  <data name="Action.users.invite@1.Description" xml:space="preserve"><value>Invita a una persona a la organización por correo, con roles de la organización y, si corresponde, una empresa con sus roles. Guardar le manda la invitación.</value></data>
+  <data name="Action.users.invite@1.Field.email" xml:space="preserve"><value>Correo</value></data>
+  <data name="Action.users.invite@1.Field.roles" xml:space="preserve"><value>Roles de la organización</value></data>
+  <data name="Action.users.invite@1.Field.company" xml:space="preserve"><value>Empresa</value></data>
+  <data name="Action.users.invite@1.Field.companyRoles" xml:space="preserve"><value>Roles en la empresa</value></data>
+  <data name="Action.users.edit@1.Name" xml:space="preserve"><value>Cambiar roles</value></data>
+  <data name="Action.users.edit@1.Description" xml:space="preserve"><value>Suma o quita roles de la organización a una persona y, en una empresa, sus roles. Lo que no se nombra queda como está.</value></data>
+  <data name="Action.users.edit@1.Field.roles" xml:space="preserve"><value>Roles de la organización</value></data>
+  <data name="Action.users.edit@1.Field.company" xml:space="preserve"><value>Empresa</value></data>
+  <data name="Action.users.edit@1.Field.companyRoles" xml:space="preserve"><value>Roles en la empresa</value></data>
+  <data name="Action.users.remove@1.Name" xml:space="preserve"><value>Quitar de la organización</value></data>
+  <data name="Action.users.remove@1.Description" xml:space="preserve"><value>Quita a una persona de la organización y de sus empresas. Se le avisa.</value></data>
+  <data name="Action.roles.create@1.Name" xml:space="preserve"><value>Nuevo rol</value></data>
+  <data name="Action.roles.create@1.Description" xml:space="preserve"><value>Crea un rol de la organización o de una empresa, con su nombre, su descripción y sus permisos.</value></data>
+  <data name="Action.roles.create@1.Field.name" xml:space="preserve"><value>Nombre</value></data>
+  <data name="Action.roles.create@1.Field.description" xml:space="preserve"><value>Descripción</value></data>
+  <data name="Action.roles.create@1.Field.scope" xml:space="preserve"><value>Alcance</value></data>
+  <data name="Action.roles.create@1.Field.company" xml:space="preserve"><value>Empresa</value></data>
+  <data name="Action.roles.create@1.Field.permissions" xml:space="preserve"><value>Permisos</value></data>
+  <data name="Action.roles.edit@1.Name" xml:space="preserve"><value>Cambiar un rol</value></data>
+  <data name="Action.roles.edit@1.Description" xml:space="preserve"><value>Cambia el nombre o la descripción de un rol, y le suma o le quita permisos. Lo que no se nombra queda como está.</value></data>
+  <data name="Action.roles.edit@1.Field.name" xml:space="preserve"><value>Nombre</value></data>
+  <data name="Action.roles.edit@1.Field.description" xml:space="preserve"><value>Descripción</value></data>
+  <data name="Action.roles.edit@1.Field.permissions" xml:space="preserve"><value>Permisos</value></data>
+  <data name="Action.roles.remove@1.Name" xml:space="preserve"><value>Dar de baja un rol</value></data>
+  <data name="Action.roles.remove@1.Description" xml:space="preserve"><value>Da de baja un rol: deja de ofrecerse para asignar.</value></data>
+</root>

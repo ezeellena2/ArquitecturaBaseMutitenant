@@ -3,11 +3,12 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Roles;
 
-/// <summary>Registra los roles y los permisos efectivos.</summary>
+/// <summary>Registra los roles y los permisos efectivos, con sus acciones (ADR 0068).</summary>
 internal static class RolesRegistration
 {
     internal static IServiceCollection AddRoles(this IServiceCollection services)
     {
+        services.AddScoped<IAssistantActionSource, RoleActionSource>();
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<RoleAssignmentGuard>();
         services.AddScoped<OrganizationDelegationGuard>();

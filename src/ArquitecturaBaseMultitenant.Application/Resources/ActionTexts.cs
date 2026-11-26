@@ -1,0 +1,29 @@
+using System.Globalization;
+using System.Resources;
+using ArquitecturaBaseMultitenant.Application.Models.AssistantActions;
+
+namespace ArquitecturaBaseMultitenant.Application.Resources;
+
+/// <summary>
+/// Traduce el nombre, la descripción y los campos de cada acción declarada del núcleo (<c>Action.&lt;id&gt;@&lt;versión&gt;.*</c>)
+/// según la cultura del pedido. Las acciones de un módulo leen los suyos de sus recursos.
+/// </summary>
+public static class ActionTexts
+{
+    internal static ResourceManager ResourceManager { get; } =
+        new("ArquitecturaBaseMultitenant.Application.Resources.Actions", typeof(ActionTexts).Assembly);
+
+    public static string NameKey(AssistantActionDefinition action) => $"Action.{action.Key}.Name";
+
+    public static string DescriptionKey(AssistantActionDefinition action) => $"Action.{action.Key}.Description";
+
+    public static string FieldKey(AssistantActionDefinition action, string field) => $"Action.{action.Key}.Field.{field}";
+
+    public static string Name(AssistantActionDefinition action) => Get(NameKey(action));
+
+    public static string Description(AssistantActionDefinition action) => Get(DescriptionKey(action));
+
+    public static string Field(AssistantActionDefinition action, string field) => Get(FieldKey(action, field));
+
+    private static string Get(string key) => ResourceManager.GetString(key, CultureInfo.CurrentUICulture) ?? key;
+}

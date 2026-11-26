@@ -3,12 +3,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 
-/// <summary>Registra los usuarios de la organización (miembros, invitaciones y roles), con su fuente de «Para resolver».</summary>
+/// <summary>Registra los usuarios de la organización (miembros, invitaciones y roles), con su fuente de «Para resolver» y sus acciones (ADR 0068).</summary>
 internal static class OrganizationUsersRegistration
 {
     internal static IServiceCollection AddOrganizationUsers(this IServiceCollection services)
     {
         services.AddScoped<IPendingItemSource, OrganizationUserPendingItems>();
+        services.AddScoped<IAssistantActionSource, OrganizationUserActionSource>();
         services.AddScoped<IOrganizationUserService, OrganizationUserService>();
         services.AddScoped<OrganizationUserAssignmentWriter>();
         services.AddScoped<OrganizationUserAdministratorGuard>();

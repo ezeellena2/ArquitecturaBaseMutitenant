@@ -115,6 +115,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   ├── ReferenceData/  puertos de Application; Domain no los referencia
 │   │   │   └── Services/  lo que inyectan los controllers
 │   │   ├── Models/  *Request (entrada), *Response (salida), ReadModels/*Row (proyección)
+│   │   │   ├── AssistantActions/  las acciones declaradas por cada área (0068)
 │   │   │   ├── Auditing/
 │   │   │   ├── Auth/
 │   │   │   ├── Common/
@@ -427,6 +428,7 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `src/ArquitecturaBaseMultitenant.Application/Interfaces/ReferenceData/` | Puertos de la aplicación para datos de referencia. | [docs/rules/datos-de-referencia.md](../rules/datos-de-referencia.md) | `src/ArquitecturaBaseMultitenant.Application/Interfaces/ReferenceData/ICurrencyCatalog.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Interfaces/ReferenceData/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Interfaces/Services/` | Puertos de servicios. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Application/Interfaces/Services/IRoleService.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Interfaces/Services/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Models/` | Modelos de entrada y salida. | [docs/rules/numeros-y-moneda.md](../rules/numeros-y-moneda.md) | `src/ArquitecturaBaseMultitenant.Application/Models/Auditing/OrganizationAuditModels.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Models/AGENTS.md) |
+| `src/ArquitecturaBaseMultitenant.Application/Models/AssistantActions/` | Modelos de las acciones declaradas por cada área. | [docs/guides/agregar-una-accion-al-asistente.md](../guides/agregar-una-accion-al-asistente.md) | `src/ArquitecturaBaseMultitenant.Application/Models/AssistantActions/AssistantActionDefinition.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Models/AssistantActions/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Models/Auditing/` | Modelos de entrada y salida de auditoría. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Application/Models/Auditing/OrganizationAuditModels.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Models/Auditing/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Models/Auth/` | Modelos de entrada y salida de ingreso. | [docs/features/identidad.md](../features/identidad.md) | `src/ArquitecturaBaseMultitenant.Application/Models/Auth/AccessSelectionRequest.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Models/Auth/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Models/Common/` | Modelos de entrada y salida de uso común. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Application/Models/Common/PhoneInputRequest.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Models/Common/AGENTS.md) |
