@@ -1,6 +1,6 @@
 # Conducir una etapa de punta a punta
 
-El conductor es un workflow que programa una etapa entera desde su plan ejecutable, o varias seguidas. Corre las tres partes de [una etapa en paralelo](etapa-en-paralelo.md) y la skill [`/puerta`](../../.agents/skills/puerta/SKILL.md) con un agente nuevo por tarea, y para solo cuando necesita al usuario. La Guía ya no abre cada chat a mano: lanza el conductor, le muestra al usuario lo que este decide o hace, y lo relanza. El script es [`.agents/workflows/etapa.js`](../../.agents/workflows/etapa.js). Las decisiones son la 0067 del [índice](../decisions/README.md) y la [0071](../decisions/0071-conductor-en-carriles.md), que pone el back en carriles. Los revisores por premisa, «Para después» y seguir solo con `planes` salen de las decisiones del usuario del 2026-11-23.
+El conductor es un workflow que programa una etapa entera desde su plan ejecutable, o varias seguidas. Corre las tres partes de [una etapa en paralelo](etapa-en-paralelo.md) y la skill [`/puerta`](../../.agents/skills/puerta/SKILL.md) con un agente nuevo por tarea, y para solo cuando necesita al usuario. La Guía ya no abre cada chat a mano: lanza el conductor, le muestra al usuario lo que este decide o hace, y lo relanza. El script es [`.agents/workflows/etapa.js`](../../.agents/workflows/etapa.js). Las decisiones son la 0067 del [índice](../decisions/README.md) y la [0071](../decisions/0071-conductor-en-carriles.md), que pone el back en carriles y se enmendó el 2026-11-26 con código primero, por pedido del usuario. Los revisores por premisa, «Para después» y seguir solo con `planes` salen de las decisiones del usuario del 2026-11-23.
 
 ## Antes de lanzarlo
 
@@ -35,13 +35,13 @@ Para retomar una corrida cortada, se lanza otra vez con el mismo plan: lo que ya
 |---|---|
 | Leer | Lee el plan y la spec, y arma la lista de tareas. Marca como hecha la que tiene su commit y su código, como del usuario la que es suya (secretos, Meta), y como bloqueada la que espera un tablero o una decisión. Frena si la etapa anterior no cerró, si hay una decisión abierta, si la app está levantada, si el cupo llegó al 85 % o si las esperas forman un ciclo |
 | Contrato | Las tareas K, en orden. Si una no queda hecha, no corre nada más |
-| Programar | Los carriles del back y el front, a la vez. Cada carril del back trabaja en su copia y entrega encima de main; al cerrar, un agente corre los tests de integración y de seguridad de lo que tocó. El front tiene un solo agente escribiendo |
+| Programar | Los carriles del back y el front, a la vez. Cada carril del back trabaja en su copia y entrega encima de main. Cada tarea, con riesgo o sin él, hace su código, su test dirigido y el build, y commitea. El front tiene un solo agente escribiendo |
 | Integrar | El front contra el contrato real. Cada diferencia se arregla en el repo de su dueño. Deja listo lo que corre la puerta: los pasos del recorrido, los casos de la galería y los E2E de la etapa |
-| Revisión | Cinco revisores, uno por premisa, cada uno con su verificador, y un arreglador por repo con lo confirmado |
-| Puerta | `/puerta` una sola vez. Después, el revisor de pantallas mira la galería, con su verificador. Los fallos y lo confirmado de pantallas vuelven a su dueño, y con el arreglo se corre solo lo que toca |
+| Revisión | Cinco revisores, uno por premisa, más uno adversarial por cada tema de riesgo de las tareas con (R), cada uno con su verificador, y un arreglador por repo con lo confirmado |
+| Puerta | `/puerta` una sola vez, con los tests enteros, la integración y la seguridad. Después, el revisor de pantallas mira la galería, con su verificador. Los fallos y lo confirmado de pantallas vuelven a su dueño, y con el arreglo se corre solo lo que toca |
 | Cierre | Actualiza en el plan la tabla de estado, la de la puerta y «Cambios al contrato», escribe lo de para después en el [backlog](../backlog.md) y borra las copias |
 
-Con la etapa completa, una corrida de cierre usa hasta 20 agentes: integrar, 6 revisores, 6 verificadores, hasta 4 arregladores, la puerta, lo que tocan sus arreglos y el cierre.
+Con la etapa completa, una corrida de cierre usa hasta 20 agentes: integrar, 6 revisores, 6 verificadores, hasta 4 arregladores, la puerta, lo que tocan sus arreglos y el cierre. Cada tema de riesgo suma dos: su revisor adversarial y su verificador.
 
 ## Las premisas de la revisión
 
@@ -54,9 +54,10 @@ Cada revisor ve los commits de la etapa en los dos repos (los que llevan `Tarea:
 | Caché, cuotas y módulos | claves de `CacheKeys` con generaciones, cuotas por alcance, módulos por puertos y quitables, los límites de módulos del front (punto 6 en caché y cuotas, y 15) |
 | Seguridad y aislamiento | RLS, `ITenantScope`, accesos y permisos, 404 ajeno, trabajos de fondo con su organización, la pantalla sigue al servidor (puntos 6 y 16) |
 | Lo que no está en la spec | corre `arnes.mjs conformidad --detectar --plan <plan>`, compara lo nuevo contra la spec y los tableros, y mira los commits que se pisan |
+| Adversarial · <tema> | una por tema de riesgo de las tareas con (R): datos, permisos, efectos o aislamiento. Intenta romper esas tareas con los escenarios de su tema, sin la conclusión de quien programó |
 | Pantallas contra el tablero | después de la galería: piezas compartidas, ventanas, colores, filtros y estados (puntos 10 y 13) |
 
-Los puntos que no tiene ninguna premisa, como el 9 y el 12 y los de datos y proveedores, los mira la revisión adversarial de cada tarea con (R); el contrato lo mira la puerta.
+Los puntos que no tiene ninguna premisa, como el 9 y el 12 y los de datos y proveedores, los miran las premisas adversariales de cada tema de riesgo; el contrato lo mira la puerta.
 
 ## Reglas que pone
 
@@ -65,10 +66,10 @@ Los puntos que no tiene ninguna premisa, como el 9 y el 12 y los de datos y prov
   - **Main avanza solo con `--ff-only`,** y nunca pisa los cambios sin commitear de otra sesión.
 
   Las tareas de la misma área van en el mismo carril, y todas las que traen migración, juntas. El front tiene un solo escritor, en main.
-- **La integración, una vez por carril.** Cada tarea corre su test dirigido, el build y los tests rápidos. Los de integración y seguridad del área corren al cerrar el carril, de a una corrida por vez en la fila pesada de `carril.mjs`.
+- **Código primero** (pedido del usuario del 2026-11-26). Cada tarea corre su test dirigido y el build (en el front, `tsc -b` y el lint de lo que tocó), y commitea. Los tests rápidos enteros, la integración y la seguridad corren una vez, en la puerta.
 - **Consola callada.** El build y los tests se corren con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front. Muestran solo lo que falla y dejan el log entero en `.local/verificar/`.
 - **Cada commit lleva la línea `Tarea: <clave>/<id>`.** La clave es el nombre del plan sin la fecha ni `etapa-`, por ejemplo `base-de-la-12-segunda-parte`. Las fases suman `integracion`, `revision`, `puerta` y `cierre`.
-- **Una tarea con (R) no se commitea antes de su revisión adversarial.** El revisor recibe el código y los escenarios de su riesgo, sin la conclusión de quien programó. Corrige y commitea un tercer agente (`AGENTS.md`, «La revisión adversarial va según el riesgo»).
+- **La revisión adversarial va una vez, en el cierre.** Una premisa por tema de riesgo lee los commits de las tareas con (R) de ese tema, con sus escenarios y sin la conclusión de quien programó. Su verificador confirma y el arreglador del repo corrige (`AGENTS.md`, «La revisión adversarial va una vez por etapa, según el riesgo»).
 - **Solo lo confirmado se arregla.** Cada premisa pasa por un verificador nuevo apenas termina su revisor. Recibe las afirmaciones sin el razonamiento e intenta refutarlas contra el código. Lo que no confirma, o lo que queda sin verificar, no llega al arreglo y se devuelve como descartado.
 - **Lo que no está en la spec no se agrega.** Ni una tabla, columna, filtro, combo, ventana, ruta o permiso que no pidan la spec, el contrato o el tablero. El agente lo anota en `paraDespues` y sigue. Pregunta solo si la pantalla no funciona sin eso, con una captura si la tiene.
 - **Una tarea que pasa los 80 pasos** sigue con un agente nuevo, hasta seis. Si una corrida anterior la dejó a medias, el agente nuevo mira sus commits y sigue desde ahí. Cada paso relee todo lo que el agente lleva, así que uno corto gasta mucho menos. Cada agente recibe además el mapa de su tarea (los archivos y el modelo que copia) y lee por partes.
@@ -83,6 +84,6 @@ Devuelve el estado de cada tarea, con sus commits, y lo que el usuario decide o 
 
 ## Lo verifica
 
-`scripts/arneses/conductor.test.mjs` corre el script con agentes falsos, sin gastar tokens. Prueba el orden y las esperas, el reparto del back en carriles, que carriles y front corran a la vez, la integración por carril, los modelos, la revisión adversarial y lo que frena (bloqueos, cupo, ciclos, cambios sin commitear). También prueba un revisor y un verificador por premisa, que lo no confirmado no llegue al arreglo, las pantallas después de la galería, «Para después» en el backlog, `planes` y cuándo frena, retomar, `solo`, la puerta con sus arreglos y que las fases coincidan con `meta`.
+`scripts/arneses/conductor.test.mjs` corre el script con agentes falsos, sin gastar tokens. Prueba el orden y las esperas, el reparto del back en carriles, que carriles y front corran a la vez, que la integración no corra por carril, los modelos, que una tarea con riesgo commitee como cualquiera y su premisa adversarial en el cierre, y lo que frena (bloqueos, cupo, ciclos, cambios sin commitear). También prueba un revisor y un verificador por premisa, que lo no confirmado no llegue al arreglo, las pantallas después de la galería, «Para después» en el backlog, `planes` y cuándo frena, retomar, `solo`, la puerta con sus arreglos y que las fases coincidan con `meta`.
 
 `scripts/arneses/carril.test.mjs` prueba las copias y la entrega en repos temporales, y `verificar.test.mjs` (en los dos repos), la salida mínima.

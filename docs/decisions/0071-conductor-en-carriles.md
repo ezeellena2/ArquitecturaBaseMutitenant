@@ -1,6 +1,6 @@
 # ADR 0071 · El conductor en carriles: el back en copias, agentes cortos y la integración una vez por carril
 
-**Estado:** aceptada el 2026-11-24, por pedido del usuario («Sí, todo»), después de medir la base 2. Cambia la [0067](README.md) (el conductor de etapas) en tres puntos: el back pasa de un escritor a varios carriles, los agentes paran antes y los tests de integración corren por carril. Guía: [conducir una etapa](../guides/conducir-una-etapa.md).
+**Estado:** aceptada el 2026-11-24, por pedido del usuario («Sí, todo»), después de medir la base 2. Cambia la [0067](README.md) (el conductor de etapas) en tres puntos: el back pasa de un escritor a varios carriles, los agentes paran antes y los tests de integración corren por carril. Guía: [conducir una etapa](../guides/conducir-una-etapa.md). **Enmienda 2026-11-26 (código primero, pedido del usuario):** el punto 3 queda sin efecto. Cada tarea hace su código, su test dirigido y el build, y commitea; los tests rápidos enteros, la integración y la seguridad corren una vez, en la puerta. La revisión adversarial deja de ir en cada tarea: va una vez, en el cierre, como una premisa por tema de riesgo. En el reparto, cada tarea pendiente pesa uno.
 
 ## Contexto
 
