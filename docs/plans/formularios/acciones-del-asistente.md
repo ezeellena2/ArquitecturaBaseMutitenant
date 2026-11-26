@@ -105,7 +105,7 @@ Cada uno lleva su teléfono (`M-`). Manda el tablero aprobado, salvo lo que cont
 - `state` es `new`, `replaced`, `applied`, `unconfirmed` o `unavailable`;
 - `unavailableReason` es `permission`, `module`, `version`, `target` o `subject`;
 - `values` es `[{field, value, label?, doubt?}]`, con `label` resuelto en el servidor y `doubt` como clave de texto;
-- `target` es `{id, label, version}`, el de ahora.
+- `target` es `{id, label, version, detail?}`, el de ahora; `detail` es lo que lo distingue de otro con su nombre (el correo de una persona con nombre), para la tarjeta de quitar.
 
 **Cómo se calcula el estado:** se calcula en cada lectura, con los permisos de ese momento y en la empresa de la acción. El `GET` vuelve a resolver con la fuente el destino y cada `Record`.
 
