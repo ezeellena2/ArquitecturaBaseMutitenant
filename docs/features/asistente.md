@@ -240,6 +240,16 @@ Hoy el asistente solo lee. La [ADR 0068](../decisions/0068-acciones-del-asistent
 - **`propose_action`** `{action, target?, values: [{field, value}]}` (40 campos y 16 KiB como mucho) devuelve `AssistantActionToolData`: `{outcome: "accepted", proposalId}` o `{outcome: "rejected", code, errors?: [{path, code}]}`, con `code` `Assistant.Action.NotAvailable` (fuera del sello, ya no ofrecida o sin el permiso en su empresa), `.Invalid` (el esquema, la resolución o la validación de la fuente, con la ruta de cada campo) u `.OnePerTurn` (la segunda propuesta del turno).
 - **Lo rechazado vuelve como dato** y el turno sigue: el modelo lo corrige en el mismo turno. Cada llamada vuelve a autorizar con los permisos de ese momento, y corre en el alcance de solo lectura.
 
+**La propuesta guardada** (B5):
+- **Dónde:** `tenant.AssistantProposals`, privada, con RLS forzado y atada al mensaje del asistente del turno. Guarda la acción con su versión, lo que escribió el modelo con el id resuelto y la duda de cada campo, el destino y su versión al proponer, y nunca un nombre resuelto. Se borra en cascada con su mensaje, así que se va con la conversación, con la retención y con la baja de la cuenta.
+- **Una por turno.** Una nueva reemplaza a la anterior de su clase en la conversación, si esa no se aplicó.
+- **Los sujetos:** las cuentas que la fuente pone en `SubjectUserIds` van a los sujetos del mensaje. Si una se da de baja, la propuesta queda «ya no disponible» por `subject`.
+- **`message.proposal`,** en el historial y en el evento `done` del SSE, es `{id, kind, action, version, state}`, con el estado guardado (`new`, `replaced` o `applied`).
+- **El `GET` de la propuesta** vuelve a resolver todo con la fuente (`ReviewAsync`), en el alcance de solo lectura, y calcula `unavailable` (`version`, `module`, `permission`, `target` o `subject`) y `unconfirmed`. Ninguno de los dos se guarda. «Sin confirmar» es que hay claves, ninguna terminó en 2xx y pasó la validez de la clave (`IdempotencyOptions.ValidityHours`) desde la última.
+- **`attempts`** da la misma clave mientras el intento no termine, otra después de un 4xx, y `AlreadyApplied` con `location` cuando una clave terminó en 2xx en la `SaveRoute`. Lo mira con `IIdempotencyStore.FindAsync`.
+- **`applied`** lo comprueba el servidor: al crear, una clave en 2xx; al quitar, que el destino ya no resuelva; al editar, que la versión de ahora sea la del cuerpo y distinta de la de la propuesta.
+- **La historia del turno siguiente:** el mensaje con una propuesta suma, como la llamada aceptada, `{"propose_action": {action, target?, values: [{field, value}]}, "outcome": "accepted"}` con lo que escribió el modelo, nunca el id resuelto ni un nombre. La conversación entra entera, o el turno falla con `Assistant.Provider.ContextTooLarge`, así que la última propuesta nunca queda afuera.
+
 **Al proveedor** van lo que dijo la persona, los tipos de acción, los campos y los nombres de las definiciones, nunca registros ni personas. Plataforma solo propone sobre lo de Plataforma. Por WhatsApp, un resumen con «Revisar en la app» llega cuando el canal tenga lugar.
 
 **Para sumar un área,** está la receta [agregar una acción](../guides/agregar-una-accion-al-asistente.md). La 0057 (armar formularios y catálogos) no cambia.

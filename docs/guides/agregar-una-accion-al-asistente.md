@@ -39,6 +39,10 @@ La mecánica (el puerto, el registro, las tres piezas de IA, la tarjeta y la bat
      - Usá los readers del área, con RLS, y la `Policy` que usa el `Guard` de la ruta. Si la regla todavía vive en el `Guard`, separala en una `Policy` pura y que la usen los dos. Lo que tiene quien pide lo lee `DelegationPermissionsResolver` (B3 de las acciones), nunca el `Guard`.
      - Sobre datos públicos o compartidos, filtrá además por la organización del claim: RLS deja ver lo publicado de todas.
      - Sin coincidencia es un error con la ruta del campo, y con varias, una duda («Revisá»).
+     - Llená `SubjectUserIds` con las cuentas de las personas que nombra la propuesta (el destino o un `Record` de una persona): el `userId`, no el del miembro. Van a los sujetos del mensaje, y si una de esas cuentas se da de baja, la propuesta queda «ya no disponible».
+   - **`ReviewAsync`:** vuelve a resolver una propuesta guardada cada vez que la pantalla la lee.
+     - Lee por el id guardado, nunca por el texto, con los permisos de ahora y en su empresa, y devuelve el destino como está ahora (id, nombre y versión) y cada valor con su nombre, con la forma de la pantalla: un campo simple con su id, un elemento de un `Choices` como `{op, id}` y una fila de un `Items` como `{op, key, row?}`.
+     - Lo que ya no existe es `NotFound`, y la propuesta se ve «ya no disponible» por el destino. Lo que quien pide ya no puede dar es `Forbidden`, y se ve «ya no disponible» por el permiso.
    - **`ValidateAsync`:** arma el mismo `*Request` que la pantalla y corre su validador.
    - **Las dependencias:** solo lo de la lista de lo permitido de la [0068](../decisions/0068-acciones-del-asistente.md):
      - readers, validadores y `Policy`, y un `Resolver` solo si su propio árbol también la cumple;
