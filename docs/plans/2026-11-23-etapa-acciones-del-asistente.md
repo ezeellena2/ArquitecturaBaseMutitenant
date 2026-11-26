@@ -247,6 +247,9 @@ Leé AGENTS.md de los dos repos, la ADR 0068, este plan, la spec y la skill /pue
 
 ## Cambios al contrato
 
+- El front lee el valor propuesto de un campo `Choices` como `{op: "add"|"remove", id}` y el de uno `Items` como `{op: "add"|"change"|"remove", key, row?}`: B5 a B7 lo mandan con esa forma (`src/shared/assistant-actions/`). (F1)
+- `AssistantProposalResponse` suma `baseVersion`, la versión del registro cuando la IA preparó la propuesta, además de `target.version`: sin eso la pantalla no puede decir que el registro cambió desde la propuesta, como piden los tableros. Lo suma B5. (F1)
+
 ## Para decidir
 
 Nada abierto. Las de producto las tomó el usuario el 2026-11-23 (el lugar, el alcance y cuándo se ofrecen). Lo demás es técnico y está anotado en la ADR 0068 y en «Decisiones técnicas del contrato». Los diez tableros de la spec los aprobó el usuario en el lienzo v179, el 2026-11-23.
