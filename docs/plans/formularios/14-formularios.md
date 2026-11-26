@@ -109,6 +109,8 @@ Antes de empezar:
 - `WA-Chats-Respuesta` y `M-WA-Conversacion-Respuesta`: el código y el detalle de un valor de catálogo, cada uno en su renglón (263);
 - la Configuración de WhatsApp de la organización suma «Tiempo para contestar un formulario», y la de la plataforma, su máximo (270).
 
+**Redibujados y aprobados el 2026-11-26** (lienzo v186, front `f8192b07`; decisión 285).
+
 **Nuevos, aprobados y publicados en el lienzo v168:** `FRM-Vista-Oficial` y `M-FRM-Vista-Oficial` (176). «Ver vista oficial», en la banda cuando hay una versión publicada, abre el diálogo «Vista oficial · versión N»: el marco de Meta, de 480 × 840, achicado entero para entrar en la ventana, sin barras ni cortes, que arranca en la primera pantalla y se recorre como en el celular. «Abrir en otra pestaña» abre la misma vista. En el teléfono ocupa la pantalla, también a 320.
 
 **Estados que se dibujan** (cada uno tiene que poder producirse; si no, es un bug):

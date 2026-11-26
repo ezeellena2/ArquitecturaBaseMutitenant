@@ -70,6 +70,8 @@ Del traspaso 15 (v175): «Ordenar por…» en el ⋮ de estos tableros y ordenar
 - `FRM-Catalogo-Opciones-13` y su teléfono: el Estado, en la pieza, y el código en su columna, como en la E12;
 - `FRM-Catalogo-Ordenar-13` y su teléfono: la columna y el orden, en la pieza (262).
 
+**Redibujados y aprobados el 2026-11-26** (lienzo v186, front `f8192b07`; decisión 285).
+
 **«Agregar campos · N»:** va en el encabezado de «Opciones», al lado de «Agregar opción», y cuenta los activos; se pone en rojo si el servidor rechazó uno. Quien solo lee ve «Campos», si hay. Sin campos, abre en uno nuevo.
 
 **El modal «Campos de …» (125):** igual al de opciones, cada lado en su caja.
