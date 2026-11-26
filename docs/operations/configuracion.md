@@ -108,6 +108,8 @@ La copia global de cada mensaje que entra (`identity.WhatsAppMessages`) vence a 
 
 Un tope, un plazo, un cupo, una espera o un valor por defecto de una regla de negocio no va en `appsettings` ni fijo en el código: va en la configuración de su dueño, con su valor por defecto, su mínimo, su máximo, revisión y 409, y se lee de la base en cada uso (decisión 270 de la [hoja de ruta de formularios](../plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md)). Cada organización ajusta lo suyo dentro del máximo que fija la plataforma, y lo que no es de ninguna organización lo fija la plataforma. Quedan acá solo los secretos, lo que fija un proveedor, lo técnico y lo de seguridad, costo o abuso (los cupos de códigos, de invitaciones y de pedidos). Sacar una clave de este archivo sigue la regla de las dos versiones ([0060](../decisions/0060-dos-versiones-conviven.md)): la versión nueva lee la base antes de que se borre la clave, y la clave se borra con la reconstrucción que ya la lee.
 
+**Los topes de los módulos** ([0069](../decisions/0069-modulos-y-suscripciones.md)): un tope con máximo de la plataforma se declara en el aporte de su módulo y se lee por `ModuleLimitResolver`; la organización elige dentro de ese tope, y en cada uso vale el menor ([modulos-habilitados](../rules/modulos-habilitados.md), «Topes»).
+
 **Lo que ya pasó a la configuración de su dueño** (B18 de la [segunda parte de la base](../plans/formularios/base-de-la-12-segunda-parte.md)):
 
 | Valor | Dónde vive | Respaldo hasta el despliegue siguiente |
