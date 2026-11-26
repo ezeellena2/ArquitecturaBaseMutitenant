@@ -105,10 +105,13 @@ public sealed record WhatsAppAudienceInput(WhatsAppAudienceKind? Kind, string? T
 
 public sealed record WhatsAppAudienceResponse(WhatsAppAudienceKind Kind, string? Tag);
 
-/// <summary>variables son los valores con que se creó la difusión, para duplicarla.</summary>
+/// <summary>
+/// variables son los valores con que se creó la difusión, para duplicarla. uncertain cuenta los destinatarios «Sin confirmar»
+/// (decisión 255): la cola no sabe si salieron, y no cuentan en delivered ni en failed.
+/// </summary>
 public sealed record WhatsAppBroadcastResponse(Guid Id, string Name, WhatsAppReferenceResponse Template, IReadOnlyList<string> Variables, WhatsAppAudienceResponse Audience,
     int Recipients, WhatsAppBroadcastStatus Status, DateTime? ScheduledAtUtc, DateTime? SentAtUtc, int Delivered, int Read, int Replied,
-    int Unsubscribed, int Failed, Money EstimatedCost, uint Version);
+    int Unsubscribed, int Failed, int Uncertain, Money EstimatedCost, uint Version);
 
 public sealed record WhatsAppBroadcastListRequest : PagedRequest
 {

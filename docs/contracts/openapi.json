@@ -98317,6 +98317,7 @@
           "replied",
           "unsubscribed",
           "failed",
+          "uncertain",
           "estimatedCost",
           "version"
         ],
@@ -98384,6 +98385,10 @@
             "type": "integer",
             "format": "int32"
           },
+          "uncertain": {
+            "type": "integer",
+            "format": "int32"
+          },
           "estimatedCost": {
             "$ref": "#/components/schemas/Money"
           },
@@ -98392,7 +98397,7 @@
             "format": "uint32"
           }
         },
-        "description": "variables son los valores con que se creó la difusión, para duplicarla."
+        "description": "variables son los valores con que se creó la difusión, para duplicarla. uncertain cuenta los destinatarios «Sin confirmar»\r\n(decisión 255): la cola no sabe si salieron, y no cuentan en delivered ni en failed."
       },
       "WhatsAppBroadcastStatus": {
         "enum": [

@@ -140,7 +140,8 @@ internal sealed class WhatsAppBroadcastReader(ApplicationDbContext context, ITen
                 broadcast.ScheduledAtUtc, broadcast.SentAtUtc,
                 Count(WhatsAppRecipientStatus.Delivered, WhatsAppRecipientStatus.Read, WhatsAppRecipientStatus.Replied),
                 Count(WhatsAppRecipientStatus.Read, WhatsAppRecipientStatus.Replied), Count(WhatsAppRecipientStatus.Replied),
-                Count(WhatsAppRecipientStatus.Unsubscribed), Count(WhatsAppRecipientStatus.Failed), broadcast.EstimatedCost, broadcast.Version);
+                Count(WhatsAppRecipientStatus.Unsubscribed), Count(WhatsAppRecipientStatus.Failed), Count(WhatsAppRecipientStatus.Uncertain),
+                broadcast.EstimatedCost, broadcast.Version);
         })];
     }
 

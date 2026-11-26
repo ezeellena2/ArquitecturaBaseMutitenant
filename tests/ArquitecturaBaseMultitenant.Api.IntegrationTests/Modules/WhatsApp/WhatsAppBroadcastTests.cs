@@ -97,8 +97,12 @@ public sealed class WhatsAppBroadcastTests(ApiFactory factory)
         await OutboxRows.SetStatusAsync(host.Services, queued.Row.Id, OutboxStatus.Uncertain, Ct);
         var unconfirmed = await DetailAsync(owner, nowId);
         Assert.Contains((anaId, "Uncertain"), Recipients(unconfirmed));
-        Assert.Equal((0, 0), (unconfirmed.GetProperty("broadcast").GetProperty("delivered").GetInt32(),
-            unconfirmed.GetProperty("broadcast").GetProperty("failed").GetInt32()));
+        Assert.Equal((0, 0, 1), (unconfirmed.GetProperty("broadcast").GetProperty("delivered").GetInt32(),
+            unconfirmed.GetProperty("broadcast").GetProperty("failed").GetInt32(), unconfirmed.GetProperty("broadcast").GetProperty("uncertain").GetInt32()));
+        var listed = Assert.Single((await JsonAsync(owner.GetAsync("/api/organization/whatsapp/broadcasts?status=Sent", Ct))).GetProperty("broadcasts")
+            .GetProperty("items").EnumerateArray());
+        Assert.Equal((nowId, 0, 0, 1), (listed.GetProperty("id").GetGuid(), listed.GetProperty("delivered").GetInt32(),
+            listed.GetProperty("failed").GetInt32(), listed.GetProperty("uncertain").GetInt32()));
         Assert.Equal(anaId, Assert.Single((await JsonAsync(await owner.GetAsync($"/api/organization/whatsapp/broadcasts/{nowId}?status=Uncertain", Ct)))
             .GetProperty("recipients").GetProperty("items").EnumerateArray()).GetProperty("contactId").GetGuid());
         await OutboxRows.SetStatusAsync(host.Services, queued.Row.Id, OutboxStatus.Pending, Ct);
