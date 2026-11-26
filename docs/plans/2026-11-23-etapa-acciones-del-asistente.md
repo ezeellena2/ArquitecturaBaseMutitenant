@@ -1,6 +1,6 @@
 # Acciones del asistente · plan ejecutable
 
-**Estado:** pendiente · Spec: `docs/plans/formularios/acciones-del-asistente.md` (contrato, datos y pasos con sus tests). Va después de la puerta de la segunda parte de la base y antes de la E12 ([ADR 0068](../decisions/0068-acciones-del-asistente.md); decisión 268). Las decisiones de producto las tomó el usuario el 2026-11-23: el lugar, el alcance (Usuarios y Roles enteros) y que se ofrezcan calificadas antes de la prueba integral. Los diez tableros de la spec («Pantallas») están en el lienzo v179, aprobados por el usuario el 2026-11-23.
+**Estado:** pendiente · Spec: `docs/plans/formularios/acciones-del-asistente.md` (contrato, datos y pasos con sus tests). Va después de la puerta de la segunda parte de la base, que cerró el 2026-11-26 (el usuario decidió arrancar sin esperar el recorrido de sus cuatro pasos nuevos de la I3), a la vez que Costuras de módulos y antes de la E12 ([ADR 0068](../decisions/0068-acciones-del-asistente.md); decisión 268). Las decisiones de producto las tomó el usuario el 2026-11-23: el lugar, el alcance (Usuarios y Roles enteros) y que se ofrezcan calificadas antes de la prueba integral. Los diez tableros de la spec («Pantallas») están en el lienzo v179, aprobados por el usuario el 2026-11-23.
 
 **Fuente:** la ADR 0068, sus dos revisiones adversariales del 2026-11-23 y la sección «Acciones del asistente» de ArquitecturaBase (`docs/plans/2026-11-19-procesos-del-campo.md`, solo para leer).
 

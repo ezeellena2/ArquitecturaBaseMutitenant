@@ -1,6 +1,6 @@
 # Base de la 12, segunda parte · plan ejecutable
 
-**Estado:** pendiente · Spec: `docs/plans/formularios/base-de-la-12-segunda-parte.md`. Va después de la puerta de la base de la 12 y antes de la E12 (decisión 214). Tableros: lienzo v176, y los de la F4 (263), la F5 (260 y 269), la F10, la F11 y la F12 (262 y 264) y la F13 (270 a 273), aprobados en el lienzo v181, en la página «Segunda parte de la base»: cada `-Base2` manda sobre su tablero de siempre en lo que dibuja. Sin decisiones pendientes: las de producto las tomó el usuario (255, 256, 260 a 264 y 270 a 273), y la 269 se adoptó sin pregunta.
+**Estado:** cerrado · puerta del 2026-11-26; sigue el recorrido de los pasos B12B-12 a 15, y Acciones y Costuras arrancan sin esperarlo (decisión del usuario de ese día) · Spec: `docs/plans/formularios/base-de-la-12-segunda-parte.md`. Va después de la puerta de la base de la 12 y antes de la E12 (decisión 214). Tableros: lienzo v176, y los de la F4 (263), la F5 (260 y 269), la F10, la F11 y la F12 (262 y 264) y la F13 (270 a 273), aprobados en el lienzo v181, en la página «Segunda parte de la base»: cada `-Base2` manda sobre su tablero de siempre en lo que dibuja. Sin decisiones pendientes: las de producto las tomó el usuario (255, 256, 260 a 264 y 270 a 273), y la 269 se adoptó sin pregunta.
 
 **Fuente:** del [backlog](../backlog.md), «Traspaso 15, el núcleo: para programar», «Traspaso 15, diseño, fechas y números: para la segunda parte de la base», «Traspaso 15, la IA: para la segunda parte de la base», «Traspaso 15, WhatsApp y ARCA: para programar» (WhatsApp y la CUIT), «Traspasos 16 y 17: para la segunda parte de la base» y «Traspaso 18, tanda 1: para la segunda parte de la base». Lo que mandan a otra etapa está en «Queda afuera».
 
@@ -10,17 +10,13 @@
 | Back A · núcleo y WhatsApp | B16, B1–B9 y B18 | Hecha |
 | Back B · formatos e IA | B10–B15 y B17 | Hecha |
 | Front | F1–F13 | Hecha |
-| Integración y puerta | I1–I3 | Pendiente: I1–I3, la puerta no corrió |
+| Integración y puerta | I1–I3 | Hecha; sigue el recorrido de B12B-12 a 15 |
 
 ## Forma de trabajo
 
 Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md)): primero el contrato; después, a la vez, dos chats del back y uno del front; una sola puerta al final. Cada tarea lleva su test dirigido, y el build y los tests rápidos enteros de su repo, sin Docker ni filtros; si toca rutas, persistencia, autenticación o aislamiento, también los de integración y seguridad de su área. Un arreglo corre solo lo que toca.
 
 Todo va en `main`, sin ramas, worktrees, stash, reset ni push. Cada chat commitea solo sus rutas con `git commit -- <rutas>`, con la línea `Tarea: base-de-la-12-segunda-parte/<id>`. Con Vite levantado nadie edita el `src` del front. La tabla de estado la actualiza la Guía.
-
-**Migraciones en paralelo.** Back A y Back B comparten el checkout y el `ApplicationDbContextModelSnapshot`, así que una migración tomaría el modelo a medias del otro. Back A hace siete migraciones (B2, B3, B5, B6, B7, B8 y B18), más la de la B16 si completa los roles con una. Back B no toca entidades, configuraciones de EF ni migraciones hasta que Back A commitee la B8: hace antes B10 a B12, que no cambian el modelo. Después de la B8, Back A sigue con B4 y B9, que tampoco lo cambian, y la B18 arma su migración sobre el `HEAD` del momento, después de las de Back B que ya entraron, y corre `ModelSnapshotTests`.
-
-**Revisión adversarial** ([AGENTS.md](../../AGENTS.md), «Forma de trabajo»). La llevan las tareas marcadas con **(R)**, completa y antes del commit: un subagente nuevo recibe el código y los escenarios, sin la conclusión de quien programó.
 
 ## Contrato
 
@@ -121,13 +117,12 @@ Las tareas siguen el lienzo v176 y las fichas del front (`formatos.md`, `pantall
 
 | Puerta | Resultado |
 | --- | --- |
-| Back / Front / Contrato / E2E / Documentación / Galería / Recorrido | Pendiente |
-
-**Texto para el chat de Integración**
-
-```text
-Leé AGENTS.md de los dos repos, este plan, la spec y la skill /puerta. Integrá contra K1, devolvé cada diferencia real a su dueño y anotala en «Cambios al contrato». Dale al usuario los pasos de I1, comando por comando, para cargar sus user-secrets: no copies ni pegues ningún valor. Corré la puerta una sola vez sobre copias del corte; un arreglo corre solo lo que toca. Commiteá con la línea Tarea: base-de-la-12-segunda-parte/<fase>. No hagas push ni toques el lienzo. Dejá en este plan solo la tabla final corta.
-```
+| Back | `dotnet build` sin advertencias y `dotnet test` con Docker, 3932 de 3932. Los arreglos de la puerta corrieron sus tests y los de su área: el 429 (`587dee22`), «Sin confirmar» de la difusión (`cec9e99b`, integración y seguridad de WhatsApp 28 de 28) y el preparador del recorrido (`90f8e45c`) |
+| Front | build, lint sin errores, `npm test` 3833 de 3833 y `contracts:check`; con cada arreglo de la puerta, la suite entera otra vez |
+| E2E real | 47 casos: 36 en la primera corrida, y los 11 que fallaron pasan (el E2E viejo en 5b, 5d y 6, el entorno, y «Reintentar» en la falla incierta, `d8950356`). El asistente E8b, otra vez con el corte final: 42 hitos |
+| Documentación | `realinear-docs`, `estado-docs` y `conformidad` en 0 |
+| Galería | 344 pantallas a 1440, 390 y 320 al lado de su tablero (`a4caeb44`); las 23 diferencias de la app, arregladas en el front, y sus casos otra vez (`5de7c993` y `f33042d0`, 55 de 55) |
+| Recorrido | 246 de 246 con el front `eee6391f`, con la I3 como once pasos (B12B-01 a 11). Con el corte final, 123 de 127 a 1440: los cuatro pasos que pasan a bot lo que la I3 probaba a mano (B12B-12 a 15) esperan un arreglo del preparador, no de la app, y a mano pasaron. Sigue la corrida a 1440 y 390 |
 
 ## Relación con otras etapas
 
@@ -198,6 +193,7 @@ Leé AGENTS.md de los dos repos, este plan, la spec y la skill /puerta. Integrá
 - Migraciones: el `OutboxMessageId` de la invitación de un operador va en su cuenta, `AspNetUsers.OperatorInvitationOutboxMessageId` (B6); la última falla del proveedor va en `tenant.AssistantOrganizationProviderIssues` (con RLS) y `platform.AssistantPlatformProviderIssues`, con `Code` y `AtUtc`, y no en las configuraciones, que son versionadas (B13); el cupo del día suma `AssistantPlatformKeyDailyQuotas.OrganizationId` (B14).
 - Front, piezas nuevas de `shared/ui`: `noticeTones` (F2), `InformativeTooltip` (F3), `permissionAreas` (F5), `GroupLabel` y `FilterChip` (F6), `tableSort` (F12), y `PickerList`, `pickerRows`, `usePickerFocus` y `usePickerKeyboard`, las partes de `Picker` (revisión de la F11).
 - El 429 `Assistant.Limit.DailyReached` decía `{limit}` y `{time}` sin completar, y el `MonthlyReached`, «Llegaste al tope del mes.». Ahora su `detail` no lleva números: «Usaste tus consultas de hoy.» y «La organización llegó al tope del mes del asistente.», con su inglés. Al frenar una subida sin cupo, el front dice la frase de `LimitReached`, con `dailyLimit` y `dailyResetAtUtc` del 429 en la zona del estado (283). En openapi.json cambian solo los ejemplos. (puerta)
+- `WhatsAppBroadcastResponse` suma `uncertain` (int32, requerido): los destinatarios «Sin confirmar», derivados al leer como el estado `Uncertain` de cada destinatario, sin consulta nueva; no suman a `delivered` ni a `failed`. «Resultados» lo muestra cuando hay alguno. Campo agregado: compatible con dos versiones (0060). (puerta)
 
 ## Para decidir
 
