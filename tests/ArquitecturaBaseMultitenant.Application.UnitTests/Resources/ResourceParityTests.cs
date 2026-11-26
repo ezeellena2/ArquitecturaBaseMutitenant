@@ -87,7 +87,7 @@ public sealed class ResourceParityTests
             .ToDictionary(entry => (string)entry.Key, entry => (string)entry.Value!, StringComparer.Ordinal);
     }
 
-    private static string[] Placeholders(string text) =>
+    internal static string[] Placeholders(string text) =>
         Regex.Matches(text, @"(?<!\{)\{(?<index>\d+|[A-Za-z_][A-Za-z0-9_]*)(?:,[^}]*)?(?::[^}]*)?\}(?!\})")
             .Select(match => match.Groups["index"].Value)
             .Distinct(StringComparer.Ordinal)

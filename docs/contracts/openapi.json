@@ -25740,7 +25740,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 429,
-                      "detail": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.",
+                      "detail": "Usaste tus consultas de hoy.",
                       "code": "Assistant.Limit.DailyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60,
@@ -25753,7 +25753,7 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 429,
-                      "detail": "You reached today's limit of {limit} queries. They reset at {time}.",
+                      "detail": "You used your queries for today.",
                       "code": "Assistant.Limit.DailyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60,
@@ -25766,7 +25766,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 429,
-                      "detail": "Llegaste al tope del mes.",
+                      "detail": "La organización llegó al tope del mes del asistente.",
                       "code": "Assistant.Limit.MonthlyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60
@@ -25777,7 +25777,7 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 429,
-                      "detail": "You reached the monthly limit.",
+                      "detail": "The organization reached its monthly assistant limit.",
                       "code": "Assistant.Limit.MonthlyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60
@@ -25997,15 +25997,15 @@
             "status": 429,
             "code": "Assistant.Limit.DailyReached",
             "field": null,
-            "es": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.",
-            "en": "You reached today's limit of {limit} queries. They reset at {time}."
+            "es": "Usaste tus consultas de hoy.",
+            "en": "You used your queries for today."
           },
           {
             "status": 429,
             "code": "Assistant.Limit.MonthlyReached",
             "field": null,
-            "es": "Llegaste al tope del mes.",
-            "en": "You reached the monthly limit."
+            "es": "La organización llegó al tope del mes del asistente.",
+            "en": "The organization reached its monthly assistant limit."
           },
           {
             "status": 409,
@@ -28591,7 +28591,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 429,
-                      "detail": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.",
+                      "detail": "Usaste tus consultas de hoy.",
                       "code": "Assistant.Limit.DailyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60,
@@ -28604,7 +28604,7 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 429,
-                      "detail": "You reached today's limit of {limit} queries. They reset at {time}.",
+                      "detail": "You used your queries for today.",
                       "code": "Assistant.Limit.DailyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60,
@@ -28617,7 +28617,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 429,
-                      "detail": "Llegaste al tope del mes.",
+                      "detail": "La organización llegó al tope del mes del asistente.",
                       "code": "Assistant.Limit.MonthlyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60
@@ -28628,7 +28628,7 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 429,
-                      "detail": "You reached the monthly limit.",
+                      "detail": "The organization reached its monthly assistant limit.",
                       "code": "Assistant.Limit.MonthlyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60
@@ -28806,15 +28806,15 @@
             "status": 429,
             "code": "Assistant.Limit.DailyReached",
             "field": null,
-            "es": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.",
-            "en": "You reached today's limit of {limit} queries. They reset at {time}."
+            "es": "Usaste tus consultas de hoy.",
+            "en": "You used your queries for today."
           },
           {
             "status": 429,
             "code": "Assistant.Limit.MonthlyReached",
             "field": null,
-            "es": "Llegaste al tope del mes.",
-            "en": "You reached the monthly limit."
+            "es": "La organización llegó al tope del mes del asistente.",
+            "en": "The organization reached its monthly assistant limit."
           },
           {
             "status": 400,
@@ -34363,7 +34363,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 429,
-                      "detail": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.",
+                      "detail": "Usaste tus consultas de hoy.",
                       "code": "Assistant.Limit.DailyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60,
@@ -34376,7 +34376,7 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 429,
-                      "detail": "You reached today's limit of {limit} queries. They reset at {time}.",
+                      "detail": "You used your queries for today.",
                       "code": "Assistant.Limit.DailyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60,
@@ -34389,7 +34389,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 429,
-                      "detail": "Llegaste al tope del mes.",
+                      "detail": "La organización llegó al tope del mes del asistente.",
                       "code": "Assistant.Limit.MonthlyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60
@@ -34400,7 +34400,7 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 429,
-                      "detail": "You reached the monthly limit.",
+                      "detail": "The organization reached its monthly assistant limit.",
                       "code": "Assistant.Limit.MonthlyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60
@@ -34620,15 +34620,15 @@
             "status": 429,
             "code": "Assistant.Limit.DailyReached",
             "field": null,
-            "es": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.",
-            "en": "You reached today's limit of {limit} queries. They reset at {time}."
+            "es": "Usaste tus consultas de hoy.",
+            "en": "You used your queries for today."
           },
           {
             "status": 429,
             "code": "Assistant.Limit.MonthlyReached",
             "field": null,
-            "es": "Llegaste al tope del mes.",
-            "en": "You reached the monthly limit."
+            "es": "La organización llegó al tope del mes del asistente.",
+            "en": "The organization reached its monthly assistant limit."
           },
           {
             "status": 409,
@@ -37206,7 +37206,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 429,
-                      "detail": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.",
+                      "detail": "Usaste tus consultas de hoy.",
                       "code": "Assistant.Limit.DailyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60,
@@ -37219,7 +37219,7 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 429,
-                      "detail": "You reached today's limit of {limit} queries. They reset at {time}.",
+                      "detail": "You used your queries for today.",
                       "code": "Assistant.Limit.DailyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60,
@@ -37232,7 +37232,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 429,
-                      "detail": "Llegaste al tope del mes.",
+                      "detail": "La organización llegó al tope del mes del asistente.",
                       "code": "Assistant.Limit.MonthlyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60
@@ -37243,7 +37243,7 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 429,
-                      "detail": "You reached the monthly limit.",
+                      "detail": "The organization reached its monthly assistant limit.",
                       "code": "Assistant.Limit.MonthlyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60
@@ -37421,15 +37421,15 @@
             "status": 429,
             "code": "Assistant.Limit.DailyReached",
             "field": null,
-            "es": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.",
-            "en": "You reached today's limit of {limit} queries. They reset at {time}."
+            "es": "Usaste tus consultas de hoy.",
+            "en": "You used your queries for today."
           },
           {
             "status": 429,
             "code": "Assistant.Limit.MonthlyReached",
             "field": null,
-            "es": "Llegaste al tope del mes.",
-            "en": "You reached the monthly limit."
+            "es": "La organización llegó al tope del mes del asistente.",
+            "en": "The organization reached its monthly assistant limit."
           },
           {
             "status": 400,
@@ -44921,7 +44921,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 429,
-                      "detail": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.",
+                      "detail": "Usaste tus consultas de hoy.",
                       "code": "Assistant.Limit.DailyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60,
@@ -44934,7 +44934,7 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 429,
-                      "detail": "You reached today's limit of {limit} queries. They reset at {time}.",
+                      "detail": "You used your queries for today.",
                       "code": "Assistant.Limit.DailyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60,
@@ -44947,7 +44947,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 429,
-                      "detail": "Llegaste al tope del mes.",
+                      "detail": "La organización llegó al tope del mes del asistente.",
                       "code": "Assistant.Limit.MonthlyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60
@@ -44958,7 +44958,7 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 429,
-                      "detail": "You reached the monthly limit.",
+                      "detail": "The organization reached its monthly assistant limit.",
                       "code": "Assistant.Limit.MonthlyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60
@@ -45178,15 +45178,15 @@
             "status": 429,
             "code": "Assistant.Limit.DailyReached",
             "field": null,
-            "es": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.",
-            "en": "You reached today's limit of {limit} queries. They reset at {time}."
+            "es": "Usaste tus consultas de hoy.",
+            "en": "You used your queries for today."
           },
           {
             "status": 429,
             "code": "Assistant.Limit.MonthlyReached",
             "field": null,
-            "es": "Llegaste al tope del mes.",
-            "en": "You reached the monthly limit."
+            "es": "La organización llegó al tope del mes del asistente.",
+            "en": "The organization reached its monthly assistant limit."
           },
           {
             "status": 409,
@@ -47772,7 +47772,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 429,
-                      "detail": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.",
+                      "detail": "Usaste tus consultas de hoy.",
                       "code": "Assistant.Limit.DailyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60,
@@ -47785,7 +47785,7 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 429,
-                      "detail": "You reached today's limit of {limit} queries. They reset at {time}.",
+                      "detail": "You used your queries for today.",
                       "code": "Assistant.Limit.DailyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60,
@@ -47798,7 +47798,7 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 429,
-                      "detail": "Llegaste al tope del mes.",
+                      "detail": "La organización llegó al tope del mes del asistente.",
                       "code": "Assistant.Limit.MonthlyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60
@@ -47809,7 +47809,7 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 429,
-                      "detail": "You reached the monthly limit.",
+                      "detail": "The organization reached its monthly assistant limit.",
                       "code": "Assistant.Limit.MonthlyReached",
                       "traceId": "example-trace-id",
                       "retryAfter": 60
@@ -47987,15 +47987,15 @@
             "status": 429,
             "code": "Assistant.Limit.DailyReached",
             "field": null,
-            "es": "Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.",
-            "en": "You reached today's limit of {limit} queries. They reset at {time}."
+            "es": "Usaste tus consultas de hoy.",
+            "en": "You used your queries for today."
           },
           {
             "status": 429,
             "code": "Assistant.Limit.MonthlyReached",
             "field": null,
-            "es": "Llegaste al tope del mes.",
-            "en": "You reached the monthly limit."
+            "es": "La organización llegó al tope del mes del asistente.",
+            "en": "The organization reached its monthly assistant limit."
           },
           {
             "status": 400,

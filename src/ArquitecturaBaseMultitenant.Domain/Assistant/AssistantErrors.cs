@@ -27,9 +27,9 @@ public static class AssistantErrors
     public const string NoticeAcceptanceRequiredCode = "Assistant.Notice.AcceptanceRequired";
     public static readonly Error NoticeAcceptanceRequired = Field(NoticeAcceptanceRequiredCode, "Read the notice before your first query.", "noticeVersion", ErrorType.Validation);
     public const string LimitDailyReachedCode = "Assistant.Limit.DailyReached";
-    public static Error LimitDailyReached(int retryAfter, int dailyLimit, DateTime dailyResetAtUtc) => Error.TooManyRequests(LimitDailyReachedCode, "You reached today's limit of {limit} queries. They reset at {time}.", new Dictionary<string, object?> { ["retryAfter"] = retryAfter, ["dailyLimit"] = dailyLimit, ["dailyResetAtUtc"] = dailyResetAtUtc });
+    public static Error LimitDailyReached(int retryAfter, int dailyLimit, DateTime dailyResetAtUtc) => Error.TooManyRequests(LimitDailyReachedCode, "You used your queries for today.", new Dictionary<string, object?> { ["retryAfter"] = retryAfter, ["dailyLimit"] = dailyLimit, ["dailyResetAtUtc"] = dailyResetAtUtc });
     public const string LimitMonthlyReachedCode = "Assistant.Limit.MonthlyReached";
-    public static Error LimitMonthlyReached(int retryAfter) => Error.TooManyRequests(LimitMonthlyReachedCode, "You reached the monthly limit.", new Dictionary<string, object?> { ["retryAfter"] = retryAfter });
+    public static Error LimitMonthlyReached(int retryAfter) => Error.TooManyRequests(LimitMonthlyReachedCode, "The organization reached its monthly assistant limit.", new Dictionary<string, object?> { ["retryAfter"] = retryAfter });
     public const string TurnInProgressCode = "Assistant.Turn.InProgress";
     public static readonly Error TurnInProgress = Error.Conflict(TurnInProgressCode, "Wait for or stop the current response.");
     public const string TurnNotFoundCode = "Assistant.Turn.NotFound";

@@ -1,7 +1,10 @@
 using System.Globalization;
+using System.Reflection;
+using System.Resources;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Resources;
+using ArquitecturaBaseMultitenant.Domain.Assistant;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
@@ -42,6 +45,34 @@ public sealed class ErrorTextsTests
         using var scope = new CultureScope(culture);
 
         Assert.Equal(expected, ErrorTexts.Title(type));
+    }
+
+    /// <summary>
+    /// El texto de un código de error llega tal cual al <c>detail</c> del ProblemDetails, que no completa marcadores: un número
+    /// va en la metadata del error y la pantalla arma su frase, como el cupo agotado del asistente (283). El texto de un campo
+    /// con números va en otra clave, como <c>WhatsApp.Settings.ChatRetentionRange</c>.
+    /// </summary>
+    [Fact]
+    public void Error_code_texts_have_no_placeholders()
+    {
+        var assembly = typeof(ErrorTexts).Assembly;
+        var codes = ErrorCodes(typeof(Error).Assembly);
+        var sources = assembly.GetManifestResourceNames()
+            .Where(name => name.Contains(".Modules.", StringComparison.Ordinal) && name.EndsWith("Texts.resources", StringComparison.Ordinal))
+            .Select(name => new ResourceManager(name[..^".resources".Length], assembly))
+            .Append(ErrorTexts.ResourceManager).ToArray();
+        CultureInfo[] cultures = [CultureInfo.InvariantCulture, CultureInfo.GetCultureInfo("en")];
+
+        var templated = (from source in sources
+                         from culture in cultures
+                         let set = source.GetResourceSet(culture, createIfNotExists: true, tryParents: false)
+                         from code in codes
+                         let text = set?.GetString(code)
+                         where text is not null && ResourceParityTests.Placeholders(text).Length > 0
+                         select $"{culture.Name}:{code}").ToArray();
+
+        Assert.Contains(AssistantErrors.LimitDailyReachedCode, codes);
+        Assert.Empty(templated);
     }
 
     [Fact]
@@ -102,6 +133,26 @@ public sealed class ErrorTextsTests
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             SupportedCultures.LoadAsync(new CultureCatalogStub(noDefault), TestContext.Current.CancellationToken));
+    }
+
+    /// <summary>Los códigos de las clases <c>*Errors</c> del dominio: sus constantes <c>*Code</c> y sus errores sin argumentos.</summary>
+    private static HashSet<string> ErrorCodes(Assembly assembly)
+    {
+        const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+        var codes = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var type in assembly.GetTypes().Where(type => type.Name.EndsWith("Errors", StringComparison.Ordinal) && !type.ContainsGenericParameters))
+        {
+            foreach (var field in type.GetFields(flags))
+            {
+                if (field.IsLiteral && field.FieldType == typeof(string) && field.Name.EndsWith("Code", StringComparison.Ordinal))
+                    codes.Add((string)field.GetRawConstantValue()!);
+                else if (!field.IsLiteral && typeof(Error).IsAssignableFrom(field.FieldType) && field.GetValue(null) is Error error)
+                    codes.Add(error.Code);
+            }
+            foreach (var property in type.GetProperties(flags).Where(property => typeof(Error).IsAssignableFrom(property.PropertyType) && property.GetIndexParameters().Length == 0))
+                if (property.GetValue(null) is Error error) codes.Add(error.Code);
+        }
+        return codes;
     }
 
     private sealed class CultureCatalogStub(IReadOnlyList<CultureCatalogEntry> rows) : ICultureCatalog

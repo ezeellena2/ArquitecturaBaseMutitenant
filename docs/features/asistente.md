@@ -114,8 +114,8 @@ ProblemDetails pre-stream con code/traceId y errors de campos; códigos post-str
 | 404 `Assistant.Model.NotFound` | id | «No encontramos ese modelo.» / “Model not found.” |
 | 400 `Assistant.Settings.PlatformLimitsReadOnly` | topes platform-key | «Estos topes los fija la plataforma.» / “These limits are set by the platform.” |
 | 400 `Assistant.Notice.AcceptanceRequired` | noticeVersion | «Leé el aviso antes de tu primera consulta.» / “Read the notice before your first query.” |
-| 429 `Assistant.Limit.DailyReached` | Retry-After hasta 00:00Z siguiente; dailyLimit y dailyResetAtUtc en ProblemDetails | «Llegaste a las {limit} consultas de hoy. Se renuevan a las {hora}.» / “You reached today's limit of {limit} queries. They reset at {time}.” Hora local con DisplayFormatter; v115 muestra 21:00 en Buenos Aires, no literal fijo. |
-| 429 `Assistant.Limit.MonthlyReached` | Retry-After hasta próximo mes | «Llegaste al tope del mes.» / “You reached the monthly limit.” |
+| 429 `Assistant.Limit.DailyReached` | Retry-After hasta la medianoche en que corta el cupo (271); dailyLimit y dailyResetAtUtc en ProblemDetails | «Usaste tus consultas de hoy.» / “You used your queries for today.” Sin números: la pantalla, también al frenar una subida, dice la frase del tope con dailyLimit y dailyResetAtUtc del 429, en la zona `dailyResetTimeZoneId` del estado (283). |
+| 429 `Assistant.Limit.MonthlyReached` | Retry-After hasta el fin del período | «La organización llegó al tope del mes del asistente.» / “The organization reached its monthly assistant limit.” La pantalla nombra la organización. |
 | 409 `Assistant.Turn.InProgress` | conversación | «Esperá o detené la respuesta actual.» / “Wait for or stop the current response.” |
 | 404 `Assistant.Turn.NotFound` | turnId/ajeno | «No encontramos esa respuesta.» / “Response not found.” |
 | 400 `Assistant.Attachment.UnsupportedType` | file | «Adjuntá una imagen o un PDF.» / “Attach an image or a PDF.” |

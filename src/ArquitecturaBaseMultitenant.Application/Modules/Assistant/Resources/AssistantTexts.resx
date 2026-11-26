@@ -15,8 +15,8 @@
   <data name="Assistant.Model.NotFound" xml:space="preserve"><value>No encontramos ese modelo.</value></data>
   <data name="Assistant.Settings.PlatformLimitsReadOnly" xml:space="preserve"><value>Estos topes los fija la plataforma.</value></data>
   <data name="Assistant.Notice.AcceptanceRequired" xml:space="preserve"><value>Leé el aviso antes de tu primera consulta.</value></data>
-  <data name="Assistant.Limit.DailyReached" xml:space="preserve"><value>Llegaste a las {limit} consultas de hoy. Se renuevan a las {time}.</value></data>
-  <data name="Assistant.Limit.MonthlyReached" xml:space="preserve"><value>Llegaste al tope del mes.</value></data>
+  <data name="Assistant.Limit.DailyReached" xml:space="preserve"><value>Usaste tus consultas de hoy.</value></data>
+  <data name="Assistant.Limit.MonthlyReached" xml:space="preserve"><value>La organización llegó al tope del mes del asistente.</value></data>
   <data name="Assistant.Turn.InProgress" xml:space="preserve"><value>Esperá o detené la respuesta actual.</value></data>
   <data name="Assistant.Turn.NotFound" xml:space="preserve"><value>No encontramos esa respuesta.</value></data>
   <data name="Assistant.Attachment.UnsupportedType" xml:space="preserve"><value>Adjuntá una imagen o un PDF.</value></data>
