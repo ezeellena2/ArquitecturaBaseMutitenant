@@ -56,6 +56,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
             // ADR 0068 §8: privada de su dueño, con RLS forzado como los mensajes.
             migrationBuilder.EnableTenantRls("tenant", "AssistantProposals");
+            // La Api corre como mt_app, como en las demás tablas del asistente.
+            migrationBuilder.Sql("GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE tenant.\"AssistantProposals\" TO mt_app;");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AssistantProposals_TenantId_ConversationId_Kind",
