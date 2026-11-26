@@ -21,6 +21,8 @@ public static class AssistantModule
         services.AddScoped<AssistantTurnStore, TenantAssistantTurnStore>();
         services.AddScoped<AssistantTurnStore, PlatformAssistantTurnStore>();
         services.AddScoped<IAssistantChatContext, AssistantChatContext>();
+        // ADR 0068 §5: las herramientas y las fuentes corren en un alcance propio y READ ONLY.
+        services.AddScoped<IAssistantReadOnlyScope, AssistantReadOnlyScope>();
         services.AddHostedService<AssistantTurnWorker>();
         services.AddScoped<IAssistantConversationReader, AssistantConversationReader>();
         services.AddScoped<IAssistantNoticeReader, AssistantNoticeReader>();

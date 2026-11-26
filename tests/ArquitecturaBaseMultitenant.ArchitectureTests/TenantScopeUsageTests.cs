@@ -77,9 +77,11 @@ public sealed partial class TenantScopeUsageTests
     {
         var declared = new HashSet<string>(StringComparer.Ordinal) { TenantResolutionMiddleware, RolePermissionCache };
         ContributeAccessInitializerCallers(declared);
+        ContributeAssistantAccessInitializerCallers(declared);
         return declared;
     }
     static partial void ContributeAccessInitializerCallers(HashSet<string> declared);
+    static partial void ContributeAssistantAccessInitializerCallers(HashSet<string> declared);
 
     [Fact]
     public void Only_declared_callers_set_the_tenant_from_an_access()

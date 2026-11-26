@@ -13,7 +13,7 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantTurnService(AssistantTurnWriter writer, AssistantTurnBuilder builder, AssistantTurnToolBuilder tools,
     IAssistantAttachmentContentReader attachments, ICurrentUser user, AssistantRequestTimeBuilder requestTime,
-    IUnitOfWork unitOfWork, TimeProvider clock, ILogger<AssistantTurnService> logger) : IAssistantTurnService
+    IAssistantReadOnlyScope readOnly, IUnitOfWork unitOfWork, TimeProvider clock, ILogger<AssistantTurnService> logger) : IAssistantTurnService
 {
     public Task<Result<AssistantTurnExecution>> ClaimAsync(Guid id, Guid lease, CancellationToken ct) =>
         OperationLog.RunAsync<AssistantTurnExecution>(logger, clock, "AssistantTurnClaim", async () =>
@@ -56,7 +56,10 @@ internal sealed class AssistantTurnService(AssistantTurnWriter writer, Assistant
             var allowed = await builder.CheckAsync(id, lease, ct);
             if (allowed.IsFailure) return allowed.Error;
             if (!allowed.Value) return Domain.Assistant.AssistantErrors.TurnInProgress;
-            var result = await tools.ExecuteAsync(key, arguments, ct);
+            // ADR 0068 §5: la herramienta corre en su alcance READ ONLY y descartado; lo que deje en memoria nunca llega a la
+            // transacción que después ata los sujetos.
+            var result = await readOnly.RunAsync<AssistantTurnToolBuilder, Result<AssistantToolExecution>>(
+                (inner, c) => inner.ExecuteAsync(key, arguments, c), ct);
             if (result.IsFailure) return result;
             allowed = await builder.CheckAsync(id, lease, ct);
             if (allowed.IsFailure) return allowed.Error;

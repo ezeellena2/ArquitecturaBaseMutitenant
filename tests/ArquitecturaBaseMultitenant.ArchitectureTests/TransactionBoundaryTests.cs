@@ -14,7 +14,7 @@ namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 /// Comprueba quién abre transacciones y quién guarda el DbContext. Exige que las escrituras pasen por la
 /// unidad de trabajo del caso de uso.
 /// </summary>
-public sealed class TransactionBoundaryTests
+public sealed partial class TransactionBoundaryTests
 {
     private const string UnitOfWorkClass = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.UnitOfWork";
     private const string DbContextClass = "ArquitecturaBaseMultitenant.Infrastructure.Persistence.ApplicationDbContext";
@@ -121,9 +121,9 @@ public sealed class TransactionBoundaryTests
             .Distinct(StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Contains(UnitOfWorkClass, owners);
-        Assert.Contains(IdempotencyStore, owners);
-        Assert.DoesNotContain(owners, owner => owner is not (UnitOfWorkClass or IdempotencyStore));
+        var declared = new HashSet<string>(StringComparer.Ordinal) { UnitOfWorkClass, IdempotencyStore };
+        ContributeAssistantTransactionOwners(declared);
+        Assert.Equal(declared.Order(StringComparer.Ordinal), owners.Order(StringComparer.Ordinal));
 
         Assert.True(IsTransactionCall(new ArchitectureIl.Call("Rogue", "System.Data.Common.DbConnection",
             "BeginTransactionAsync", 1, [])));
@@ -193,6 +193,9 @@ public sealed class TransactionBoundaryTests
 
     private static string[] ConcreteUseViolations(IEnumerable<string> owners) =>
         [.. owners.Where(owner => owner is not (UnitOfWorkClass or Registration))];
+
+    // Cada módulo quitable aporta los suyos en su propio método parcial: un módulo retirado no deja referencias.
+    static partial void ContributeAssistantTransactionOwners(HashSet<string> owners);
 
     private static bool IsTransactionCall(ArchitectureIl.Call call) =>
         call.Method is "BeginTransaction" or "BeginTransactionAsync"

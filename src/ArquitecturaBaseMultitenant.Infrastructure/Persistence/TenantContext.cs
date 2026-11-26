@@ -17,6 +17,13 @@ internal sealed class TenantContext(Func<bool>? hasActiveTransaction = null,
 
     internal bool HasBoundTenant => _tenantId is not null || _activeScope is not null;
 
+    /// <summary>Un <see cref="Enter"/> técnico sigue abierto: el alcance de solo lectura del asistente nunca lo hereda (ADR 0068 §5).</summary>
+    internal bool HasTechnicalScope => _activeScope is not null;
+
+    /// <summary>La organización que fijó el acceso de la petición (<see cref="SetFromAccess"/>), sin el actor ni un alcance técnico.</summary>
+    internal (Guid TenantId, TenantKind Kind)? AccessBinding =>
+        _activeScope is null && _tenantId is { } tenantId && _tenantKind is { } kind ? (tenantId, kind) : null;
+
     public Guid? TenantId { get => _tenantId ?? executionActor?.Invoke()?.TenantId; private set => _tenantId = value; }
 
     public TenantKind? TenantKind { get => HasBoundTenant ? _tenantKind : executionActor?.Invoke()?.TenantKind; private set => _tenantKind = value; }
