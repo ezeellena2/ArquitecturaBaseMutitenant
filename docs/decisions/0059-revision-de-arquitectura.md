@@ -47,7 +47,7 @@ por dos motivos:
 
 - `docs/rules/documentacion.md` suma la carpeta `docs/reviews/`, y el arnés `estado-docs` la reconoce.
 - La tabla «Si vas a…» de `AGENTS.md` y el arnés nombran la guía.
-- Es aparte de la revisión adversarial según el riesgo, que se hace en cada tarea que toca datos, permisos, efectos fuera del
+- Es aparte de la revisión adversarial según el riesgo, que se hace una vez por etapa, en el cierre, por cada tema de riesgo (código primero, 2026-11-26): datos, permisos, efectos fuera del
   sistema o el aislamiento entre organizaciones (`AGENTS.md`, «Forma de trabajo»), y de la revisión de código del cierre de
   cada etapa.
 - La primera revisión, la del núcleo, va antes de programar el E10. Sus arreglos de «Hoy» entran antes del primer despliegue.

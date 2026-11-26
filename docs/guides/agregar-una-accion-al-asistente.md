@@ -62,7 +62,7 @@ La mecánica (el puerto, el registro, las tres piezas de IA, la tarjeta y la bat
    - **Los casos de la acción:** uno válido, uno inválido, uno ambiguo, uno con instrucciones escondidas (en un adjunto o en un nombre) y uno con algo de otra organización o de otra empresa.
    - **El escenario de la batería genérica,** en `TestFeatures`: prepara la organización, quién pide, el registro de destino, otra empresa y otra organización, y da el cuerpo HTTP de su caso válido.
    - **Con eso, la batería** prueba sola los permisos, el aislamiento, la validación, que no escriba, los efectos, la revocación en el medio, la versión y el guardado único. No escribas tests que la repitan.
-   - **La revisión adversarial:** si la acción da permisos o sale del sistema, pedila antes del commit, como manda [AGENTS.md](../../AGENTS.md).
+   - **La revisión adversarial:** si la acción da permisos o sale del sistema, la hace el cierre de la etapa, una vez por tema de riesgo, como manda [AGENTS.md](../../AGENTS.md) (código primero, 2026-11-26).
 7. **Calificala y ofrecela.**
    - La acción entra registrada y sin ofrecer.
    - Sus casos se califican con el modelo real contra cada modelo con el que se va a ofrecer, con el visto bueno del usuario, y se anota su costo.
@@ -101,4 +101,4 @@ No hace falta una herramienta, un prompt, una tarjeta ni tests a mano para la IA
 - **La batería genérica** (con Docker): una teoría por acción.
 - **En el front:** el adaptador dibuja todo lo propuesto y manda lo que se ve.
 
-Al terminar la tarea van el build y los tests rápidos enteros, nunca filtrados ([AGENTS.md](../../AGENTS.md)), y los tests del front de esa pantalla. La batería de integración corre una vez por grupo de tareas: con el conductor, al cerrar el carril ([0071](../decisions/0071-conductor-en-carriles.md)); a mano, al terminar la tarea. La suite completa va en la puerta.
+Al terminar la tarea van su test dirigido y el build (en el front, los tests de esa pantalla, `tsc -b` y el lint de lo tocado), como pide el código primero de [AGENTS.md](../../AGENTS.md). La batería de integración y la suite completa van una vez, en la puerta.
