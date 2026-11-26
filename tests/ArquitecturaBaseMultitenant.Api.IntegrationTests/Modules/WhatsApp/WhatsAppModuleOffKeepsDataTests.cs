@@ -49,7 +49,7 @@ public sealed class WhatsAppModuleOffKeepsDataTests(ApiFactory factory)
         var before = await ViewAsync(client, kept.Id);
         Assert.NotNull(Item(before.Conversations, expired.Id));
         var rows = await CountAsync(host, tenant);
-        Assert.Equal((2, 2), (rows.Chats, rows.Contacts));
+        Assert.Equal((2, 2), (rows.Chats, rows.Customers));
 
         // Apagado: sus rutas dan 404 y sus filas siguen en la base.
         version = await TurnAsync(platform, tenant, false, version);
@@ -60,11 +60,14 @@ public sealed class WhatsAppModuleOffKeepsDataTests(ApiFactory factory)
         }
         Assert.Equal(rows, await CountAsync(host, tenant));
 
-        // Los trabajos de fondo no lo atienden: el webhook guarda la entrada de un cliente nuevo (y su remitente), pero el
-        // procesador no le abre chat ni le agrega mensajes.
-        var wamid = await ReceiveAsync(host, phoneNumberId, WhatsAppAttentionJourney.NewPhone(), "Hola con el módulo apagado");
-        rows = rows with { Contacts = rows.Contacts + 1 };
+        // Los trabajos de fondo no lo atienden: el webhook guarda la entrada de un cliente nuevo (y su remitente, el contacto técnico
+        // global), pero el procesador no le abre chat, ni lo suma a los contactos de la organización, ni le agrega mensajes.
+        var sender = WhatsAppAttentionJourney.NewPhone();
+        var wamid = await ReceiveAsync(host, phoneNumberId, sender, "Hola con el módulo apagado");
         Assert.Equal(rows, await CountAsync(host, tenant));
+        await using (var scope = host.Services.CreateAsyncScope())
+            Assert.True(await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<WhatsAppContact>().AsNoTracking()
+                .AnyAsync(value => value.WaId == sender, Ct));
         await using (var scope = host.Services.CreateAsyncScope())
         {
             var entry = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<WhatsAppMessage>().AsNoTracking()
@@ -196,7 +199,10 @@ public sealed class WhatsAppModuleOffKeepsDataTests(ApiFactory factory)
         await transaction.CommitAsync(Ct);
     }
 
-    private sealed record Rows(int Chats, int Messages, int Contacts);
+    /// <summary>Las filas de la organización: sus chats, sus mensajes y sus contactos (<see cref="WhatsAppCustomer"/>, los de la
+    /// pestaña «Contactos»). <see cref="WhatsAppContact"/> no entra: es el contacto técnico global, compartido con las demás
+    /// organizaciones y con los otros tests que corren a la vez.</summary>
+    private sealed record Rows(int Chats, int Messages, int Customers);
 
     private static async Task<Rows> CountAsync(WebApplicationFactory<Program> host, Guid tenant)
     {
@@ -204,7 +210,7 @@ public sealed class WhatsAppModuleOffKeepsDataTests(ApiFactory factory)
         using var enter = scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(tenant);
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         return new(await db.Set<WhatsAppChat>().CountAsync(Ct), await db.Set<WhatsAppChatMessage>().CountAsync(Ct),
-            await db.Set<WhatsAppContact>().CountAsync(Ct));
+            await db.Set<WhatsAppCustomer>().CountAsync(Ct));
     }
 
     private static async Task<string?[]> TextsAsync(WebApplicationFactory<Program> host, Guid tenant, Guid chatId)
