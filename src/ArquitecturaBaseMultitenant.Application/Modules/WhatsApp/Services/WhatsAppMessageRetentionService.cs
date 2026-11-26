@@ -9,7 +9,8 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// <summary>
 /// La retención de WhatsApp. La copia global de la entrada (<c>identity.WhatsAppMessages</c>) vence a los 90 días fijos desde
 /// que llegó: es técnica y además se purga al pasar a la organización. Los chats vencen con el plazo de su dueño (272): el de la
-/// organización del alcance, recortado al máximo de la plataforma, o el del número de Plataforma. Un mensaje vencido queda como
+/// organización del alcance, recortado a su tope (ADR 0069 §4: el menor de los dos, sin tocar lo guardado), o el del número de
+/// Plataforma, que no tiene tope. Un mensaje vencido queda como
 /// hecho sin contenido; la vista previa y la copia vinculada vencen con él. Cada llamada es un lote en su transacción, y repetirla
 /// no cambia lo ya borrado.
 /// </summary>

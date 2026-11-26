@@ -62,7 +62,7 @@ public sealed class WhatsAppChannelSettingsTests
         var reader = new Reader { Row = new WhatsAppPlatformChannelRow(Guid.NewGuid(), "technical-id", null, WhatsAppNumberStatus.Connected, false) };
         var (settings, state) = Settings(reader, new WhatsAppOptions { AllowedCountries = ["AR"] });
         await state.RefreshAsync(Ct);
-        var channel = new WhatsAppLoginCodeChannel(settings, new WhatsAppSettingsResolver(new SettingsReader(null), settings), null!, null!);
+        var channel = new WhatsAppLoginCodeChannel(settings, new WhatsAppSettingsResolver(new SettingsReader(null), settings, null!, null!), null!, null!);
         var result = await channel.ValidateNewDestinationAsync(LoginCodeDestination.ForPhone(PhoneNumber.Create(phone).Value, "whatsapp"), declaredCountry, Ct);
         Assert.Equal(allowed, result.IsSuccess);
         if (!allowed) Assert.Equal("WhatsApp.Phone.CountryNotAllowed", result.Error.Code);
@@ -77,7 +77,7 @@ public sealed class WhatsAppChannelSettingsTests
         var (settings, state) = Settings(reader, new WhatsAppOptions { AllowedCountries = ["AR"] });
         await state.RefreshAsync(Ct);
         var saved = new SettingsReader(new WhatsAppPlatformSettingsRow(["US"], 90, 3650, 1));
-        var channel = new WhatsAppLoginCodeChannel(settings, new WhatsAppSettingsResolver(saved, settings), null!, null!);
+        var channel = new WhatsAppLoginCodeChannel(settings, new WhatsAppSettingsResolver(saved, settings, null!, null!), null!, null!);
 
         Assert.Equal(["US"], await channel.CountriesAsync(Ct));
         var result = await channel.ValidateNewDestinationAsync(LoginCodeDestination.ForPhone(PhoneNumber.Create(phone).Value, "whatsapp"), null, Ct);

@@ -53,6 +53,7 @@ public static class WhatsAppModule
         services.AddScoped<IWhatsAppConversationService, WhatsAppConversationService>();
         services.AddScoped<IPlatformWhatsAppConversationService, PlatformWhatsAppConversationService>();
         services.AddScoped<WhatsAppSettingsResolver>();
+        services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features.IModuleLimitContributor, WhatsAppModuleLimitContributor>();
         services.AddScoped<IWhatsAppSettingsService, WhatsAppSettingsService>();
         services.AddScoped<IPlatformWhatsAppSettingsService, PlatformWhatsAppSettingsService>();
         services.AddScoped<WhatsAppTeamResponseBuilder>();

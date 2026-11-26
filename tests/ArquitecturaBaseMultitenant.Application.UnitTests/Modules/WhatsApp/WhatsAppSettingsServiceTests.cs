@@ -2,10 +2,12 @@ using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
+using ArquitecturaBaseMultitenant.Application.Models.Features;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Validation;
+using ArquitecturaBaseMultitenant.Application.Services.Features;
 using ArquitecturaBaseMultitenant.Application.UnitTests.TestDoubles;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
@@ -84,6 +86,25 @@ public sealed class WhatsAppSettingsServiceTests
         Assert.Equal((30, 30, 7u), (trimmed.Value.ChatRetentionDays, trimmed.Value.MaxOrganizationChatRetentionDays, trimmed.Value.Version));
         Assert.Equal((WhatsAppSettingsLimits.DefaultChatRetentionDays, WhatsAppSettingsLimits.DefaultMaxOrganizationChatRetentionDays, 0u),
             (defaults.Value.ChatRetentionDays, defaults.Value.MaxOrganizationChatRetentionDays, defaults.Value.Version));
+    }
+
+    [Fact]
+    public async Task Chat_retention_is_a_count_of_ninety_from_one_whose_maximum_is_the_platform_one_or_its_default()
+    {
+        var reader = new Reader();
+        var contributor = new WhatsAppModuleLimitContributor(reader);
+        var resolver = new ModuleLimitResolver([contributor]);
+
+        var definition = Assert.Single(contributor.Limits);
+        Assert.Equal(new ModuleLimitDefinition("whatsapp.chatRetentionDays", ModuleLimitKind.Count, 90, 1), definition);
+        var withoutRow = await resolver.ResolveAsync(definition.Key, Guid.NewGuid(), Ct);
+        reader.Platform = new(["AR"], 120, 30, 4);
+        var withRow = await resolver.ResolveAsync(definition.Key, null, Ct);
+
+        Assert.Equal((WhatsAppSettingsLimits.DefaultMaxOrganizationChatRetentionDays, 90), (withoutRow.Count, withoutRow.Effective(null)));
+        // El plazo de los chats de la plataforma (120) no es el tope de las organizaciones.
+        Assert.Equal((30, 30, 20), (withRow.Count, withRow.Effective(null), withRow.Effective(20)));
+        await Assert.ThrowsAsync<ArgumentException>(() => contributor.ReadPlatformMaximumAsync("whatsapp.other", Ct));
     }
 
     [Fact]
@@ -180,7 +201,9 @@ public sealed class WhatsAppSettingsServiceTests
     {
         var repository = new Repository();
         var unitOfWork = new FakeUnitOfWork();
-        return (new WhatsAppSettingsService(reader, repository, new WhatsAppSettingsResolver(reader, new Channel()), unitOfWork,
+        var resolver = new WhatsAppSettingsResolver(reader, new Channel(),
+            new ModuleLimitResolver([new WhatsAppModuleLimitContributor(reader)]), new FakeTenantContext { TenantId = Guid.NewGuid() });
+        return (new WhatsAppSettingsService(reader, repository, resolver, unitOfWork,
             fixture.Validator, new JsonReferenceDataCatalog(), fixture.TimeProvider, fixture.Logger), repository, unitOfWork);
     }
 
@@ -190,7 +213,7 @@ public sealed class WhatsAppSettingsServiceTests
         var repository = new Repository();
         var unitOfWork = new FakeUnitOfWork();
         var audit = new PlatformWhatsAppAuditWriter(new Operator(), events ?? new Events(), new Request(), fixture.TimeProvider);
-        return (new PlatformWhatsAppSettingsService(repository, new WhatsAppSettingsResolver(reader, new Channel()), audit, unitOfWork,
+        return (new PlatformWhatsAppSettingsService(repository, new WhatsAppSettingsResolver(reader, new Channel(), null!, null!), audit, unitOfWork,
             fixture.Validator, fixture.TimeProvider, fixture.Logger), repository, unitOfWork);
     }
 

@@ -18,8 +18,9 @@ using Microsoft.Extensions.Logging;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 
 /// <summary>
-/// La configuración de WhatsApp de la organización del token (272): el plazo de sus chats, de 1 al máximo que fija la
-/// plataforma en el momento de guardar. Sin fila vale el valor por defecto, recortado a ese máximo.
+/// La configuración de WhatsApp de la organización del token (272): el plazo de sus chats, de 1 a su tope en el momento de
+/// guardar (ADR 0069 §4: el que da el resolvedor de los topes, hoy el máximo de la plataforma). Sin fila vale el valor por
+/// defecto, recortado a ese tope.
 /// </summary>
 internal sealed class WhatsAppSettingsService(IWhatsAppSettingsReader reader, IWhatsAppSettingsRepository repository,
     WhatsAppSettingsResolver resolver, IUnitOfWork unitOfWork, IRequestValidator validator, ICultureCatalog cultures, TimeProvider clock,
@@ -42,9 +43,9 @@ internal sealed class WhatsAppSettingsService(IWhatsAppSettingsReader reader, IW
             var result = await unitOfWork.ExecuteInTransactionAsync<Result<WhatsAppOrganizationSettings>>(async ct =>
             {
                 var row = await repository.GetOrganizationForUpdateAsync(request.Version!.Value, ct);
-                // El máximo se lee adentro, bajo el lock de la organización: un cambio de la plataforma posterior lo recorta al leer.
-                var max = (await reader.FindPlatformAsync(ct))?.MaxOrganizationChatRetentionDays
-                    ?? WhatsAppSettingsLimits.DefaultMaxOrganizationChatRetentionDays;
+                // El tope se lee adentro, bajo el lock de la organización: un cambio de la plataforma posterior lo recorta al leer.
+                // El validador del pedido mira solo de 1 a 3650; pasarse del tope es el 400 de siempre, en su campo.
+                var max = (await resolver.OrganizationChatRetentionCeilingAsync(ct)).Count!.Value;
                 var created = row is null;
                 row ??= WhatsAppOrganizationSettings.Create();
                 var updated = row.Update(request.ChatRetentionDays!.Value, max);

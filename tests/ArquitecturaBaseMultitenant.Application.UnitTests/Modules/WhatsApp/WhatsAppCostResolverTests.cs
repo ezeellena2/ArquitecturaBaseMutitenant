@@ -48,7 +48,7 @@ public sealed class WhatsAppCostResolverTests
     private static WhatsAppCostResolver Resolver(Rates rates, WhatsAppPlatformSettingsRow? platform)
     {
         var settings = new Settings();
-        return new(rates, new Currencies(), settings, new WhatsAppSettingsResolver(new SettingsReader(platform), settings),
+        return new(rates, new Currencies(), settings, new WhatsAppSettingsResolver(new SettingsReader(platform), settings, null!, null!),
             new FakeTimeProvider(new DateTimeOffset(2026, 10, 15, 12, 0, 0, TimeSpan.Zero)));
     }
 
