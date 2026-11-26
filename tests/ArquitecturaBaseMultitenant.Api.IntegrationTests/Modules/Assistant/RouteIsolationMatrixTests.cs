@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Assistant;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
@@ -12,7 +13,8 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Tenancy;
 
 /// <summary>
 /// La parte del Asistente en la matriz (E9): en los tres lados, la conversación, el mensaje, el adjunto y el turno de otra
-/// organización, persona u operador responden 404, también dentro de una conversación propia.
+/// organización, persona u operador responden 404, también dentro de una conversación propia; en el de empresa, también la
+/// propuesta de una acción.
 /// </summary>
 public sealed partial class RouteIsolationMatrixTests
 {
@@ -22,8 +24,6 @@ public sealed partial class RouteIsolationMatrixTests
         ("organization", Caller.Business, "active_users"),
         ("platform", Caller.Platform, "pending_organizations"),
     ];
-
-    private const string ProposalsPending = "Las propuestas de las acciones responden 501 hasta la B5: todavía no hay datos de nadie";
 
     static partial void AddAssistantCases(Dictionary<string, RouteCase> cases)
     {
@@ -59,15 +59,13 @@ public sealed partial class RouteIsolationMatrixTests
                 new { conversationId = w.B(Kind("conversation")), version = 1 }));
         }
 
-        // Contrato de las acciones (K1): responden 501 hasta la B5, que cambia este caso por sus pruebas con la propuesta de otra
-        // persona y de otra organización.
-        foreach (var route in new[]
-        {
-            "GET /api/organization/assistant/proposals/{proposalid:guid}",
-            "POST /api/organization/assistant/proposals/{proposalid:guid}/attempts",
-            "POST /api/organization/assistant/proposals/{proposalid:guid}/applied",
-        })
-            cases[route] = Shared(ProposalsPending);
+        // ADR 0068 §9 y §10: la propuesta de otra organización es 404 en sus tres rutas, sin datos ni efectos.
+        static string ProposalPath(World w) => $"/api/organization/assistant/proposals/{w.B("assistant.organization.proposal")}";
+        cases["GET /api/organization/assistant/proposals/{proposalid:guid}"] = Foreign(w => new(Caller.Business, ProposalPath(w)));
+        cases["POST /api/organization/assistant/proposals/{proposalid:guid}/attempts"] = Foreign(
+            w => new(Caller.Business, ProposalPath(w) + "/attempts", new { }));
+        cases["POST /api/organization/assistant/proposals/{proposalid:guid}/applied"] = Foreign(
+            w => new(Caller.Business, ProposalPath(w) + "/applied", new { version = 1 }));
 
         cases["PUT /api/platform/assistant/models/{id:guid}"] = Shared(PlatformWide);
         cases["GET /api/platform/tenants/{tenantid:guid}/assistant/policy"] = Shared(PlatformWide);
@@ -99,11 +97,15 @@ public sealed partial class RouteIsolationMatrixTests
         await PlatformConversationAsync(world, world.OperatorB.UserId, world.Foreign, world.OperatorMark);
         foreach (var (side, caller, _) in AssistantSides)
             world.OpenDoors.Add((caller, $"/api/{side}/assistant/conversations/{world.A($"assistant.{side}.conversation")}"));
+        world.OpenDoors.Add((Caller.Business, $"/api/organization/assistant/proposals/{world.A("assistant.organization.proposal")}"));
         world.SeededTables.AddRange(["tenant.AssistantConversations", "tenant.AssistantMessages", "tenant.AssistantAttachments",
-            "platform.PlatformAssistantConversations", "platform.PlatformAssistantTurns"]);
+            "tenant.AssistantProposals", "platform.PlatformAssistantConversations", "platform.PlatformAssistantTurns"]);
     }
 
-    /// <summary>Una conversación con su mensaje, su adjunto y un turno terminado; la marca va en el título y el texto.</summary>
+    /// <summary>
+    /// Una conversación con su mensaje, su adjunto y un turno terminado; la marca va en el título y el texto. En el acceso de
+    /// empresa, el mensaje lleva además una propuesta (ADR 0068 §8), con la marca en lo que escribió el modelo.
+    /// </summary>
     private static async Task ConversationAsync(World world, string side, Guid tenantId, Guid owner, Access access,
         Dictionary<string, Guid> into, string? mark)
     {
@@ -117,13 +119,20 @@ public sealed partial class RouteIsolationMatrixTests
         var attachment = AssistantAttachment.Create(conversation.Id, "matriz.txt", "text/plain", Guid.NewGuid().ToString("N"), 1, nowUtc);
         var turn = AssistantTurn.Create(conversation.Id, nowUtc);
         turn.Finish(nameof(AssistantTurnStatus.Complete));
+        var proposal = access == Access.Business
+            ? AssistantProposal.Create(Guid.CreateVersion7(), conversation.Id, message.Id, owner, "roles.create", 1, AssistantTurnJson.Serialize(
+                new AssistantProposalValues(null, [AssistantTestData.Written("name", mark ?? "Matriz propia")])), null, null, nowUtc)
+            : null;
         var saved = await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
         {
-            services.GetRequiredService<ApplicationDbContext>().AddRange(conversation, message, attachment, turn);
+            var db = services.GetRequiredService<ApplicationDbContext>();
+            db.AddRange(conversation, message, attachment, turn);
+            if (proposal is not null) db.Add(proposal);
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
         Assert.True(saved.IsSuccess);
         Remember(into, $"assistant.{side}", conversation.Id, message.Id, attachment.Id, turn.Id);
+        if (proposal is not null) into[$"assistant.{side}.proposal"] = proposal.Id;
     }
 
     private static async Task PlatformConversationAsync(World world, Guid owner, Dictionary<string, Guid> into, string? mark)
