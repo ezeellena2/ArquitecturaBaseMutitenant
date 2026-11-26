@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
+using ArquitecturaBaseMultitenant.Application.Services.Features;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
@@ -251,7 +252,7 @@ public sealed class AssistantEditableCatalogTests
         var protector = new ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.AssistantKeyProtector(
             services.GetRequiredService<Microsoft.AspNetCore.DataProtection.IDataProtectionProvider>(), tenant, user);
         return new(settings, models, services.GetRequiredService<ITenantAdminReader>(), tenant, user,
-            new AssistantConnectionPolicy(settings, models, protector));
+            new AssistantConnectionPolicy(settings, models, protector), services.GetRequiredService<ModuleLimitResolver>());
     }
     private sealed class CurrentUser(Guid userId) : ICurrentUser
     {

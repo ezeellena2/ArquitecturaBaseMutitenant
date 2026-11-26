@@ -2,12 +2,13 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
+using ArquitecturaBaseMultitenant.Application.Services.Features;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantSettingsBuilder(IAssistantSettingsReader settings, IAssistantModelReader models,
-    ITenantAdminReader owners, ITenantContext tenant, AssistantConnectionPolicy connection)
+    ITenantAdminReader owners, ITenantContext tenant, AssistantConnectionPolicy connection, ModuleLimitResolver limits)
 {
     internal async Task<OrganizationAssistantSettingsResponse> BuildAsync(CancellationToken ct)
     {
@@ -25,10 +26,13 @@ internal sealed class AssistantSettingsBuilder(IAssistantSettingsReader settings
             ? (await connection.IsKeyUnreadableAsync(AssistantMode.OwnKey, ct) ? AssistantErrors.ProviderKeyUnreadableCode : organization!.ProviderIssueCode,
                 await connection.IsUnsupportedAsync(organization!.ModelId, ct))
             : (await PlatformIssueAsync(platform, ct) is null ? null : AssistantErrors.ProviderPlatformUnavailableCode, false);
+        // 0069 §4: con la clave de la plataforma, los topes de la organización del claim salen del resolvedor.
+        var (dailyLimit, budget) = mode == AssistantMode.PlatformKey
+            ? ((await limits.ResolveAsync(AssistantModuleLimitContributor.DailyMessagesKey, tenantId, ct)).Effective(null),
+                (await limits.ResolveAsync(AssistantModuleLimitContributor.MonthlyBudgetKey, tenantId, ct)).Amount)
+            : (organization!.DailyMessageLimit, organization!.MonthlyBudget);
         return new OrganizationAssistantSettingsResponse(mode, organization?.ModelId ?? platform.DefaultModelId,
-            organization?.Effort ?? platform.Effort,
-            mode == AssistantMode.PlatformKey ? platform.DailyMessageLimit : organization!.DailyMessageLimit,
-            mode == AssistantMode.PlatformKey ? platform.MonthlyOrganizationBudget : organization!.MonthlyBudget,
+            organization?.Effort ?? platform.Effort, dailyLimit, budget,
             policy.AllowOwnKey, (await owners.ListActiveVerifiedEmailRecipientsAsync(tenantId, ct)).Count > 0,
             platform.RetentionDays,
             mode == AssistantMode.PlatformKey ? platform.HasKey : organization!.HasKey,

@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
+using ArquitecturaBaseMultitenant.Application.Services.Features;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Users;
 
@@ -9,7 +10,7 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantStateConfigurationBuilder(IAssistantSettingsReader settings, IAssistantModelReader models,
     ITenantAdminReader owners, ITenantContext tenant, ICurrentUser user, AssistantAccessPolicy access,
-    AssistantConnectionPolicy connection)
+    AssistantConnectionPolicy connection, ModuleLimitResolver limits)
 {
     internal async Task<AssistantStateConfigurationRow> BuildAsync(CancellationToken ct)
     {
@@ -42,9 +43,14 @@ internal sealed class AssistantStateConfigurationBuilder(IAssistantSettingsReade
         };
         var canConfigure = configurePermission is not null
             && await access.CanUseAsync(user.Access, [configurePermission], null, ct);
+        // 0069 §4: con la clave de la plataforma, los topes salen del resolvedor con la organización del claim (nula para una
+        // persona o Plataforma, que no tienen presupuesto del mes); con clave propia, los de la organización.
+        var organizationId = business ? tenant.TenantId : null;
+        var (dailyLimit, budget) = mode == AssistantMode.PlatformKey
+            ? ((await limits.ResolveAsync(AssistantModuleLimitContributor.DailyMessagesKey, organizationId, ct)).Effective(null),
+                business ? (await limits.ResolveAsync(AssistantModuleLimitContributor.MonthlyBudgetKey, organizationId, ct)).Amount : null)
+            : (organization!.DailyMessageLimit, organization!.MonthlyBudget);
         return new(connected && ownAllowed && recipient && options.Any(model => model.Id == modelId), canConfigure, mode, options,
-            mode == AssistantMode.PlatformKey ? platform.DailyMessageLimit : organization!.DailyMessageLimit,
-            business ? mode == AssistantMode.PlatformKey ? platform.MonthlyOrganizationBudget : organization!.MonthlyBudget : null,
-            platform.RetentionDays);
+            dailyLimit, budget, platform.RetentionDays);
     }
 }

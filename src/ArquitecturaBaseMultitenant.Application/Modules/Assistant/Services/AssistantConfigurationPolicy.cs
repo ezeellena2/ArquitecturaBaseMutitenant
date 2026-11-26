@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
+using ArquitecturaBaseMultitenant.Application.Services.Features;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
@@ -10,7 +11,8 @@ using ArquitecturaBaseMultitenant.Domain.Users;
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantConfigurationPolicy(IAssistantSettingsReader settings, IAssistantModelReader models,
-    ITenantAdminReader owners, ITenantContext tenant, ICurrentUser user, AssistantConnectionPolicy connection) : IAssistantConfigurationPolicy
+    ITenantAdminReader owners, ITenantContext tenant, ICurrentUser user, AssistantConnectionPolicy connection,
+    ModuleLimitResolver limits) : IAssistantConfigurationPolicy
 {
     public async Task<Result<AssistantRuntimeConfiguration>> ResolveAsync(CancellationToken cancellationToken)
     {
@@ -42,9 +44,14 @@ internal sealed class AssistantConfigurationPolicy(IAssistantSettingsReader sett
             .OrderBy(value => value.InputPricePerMillion.Amount + value.OutputPricePerMillion.Amount)
             .ThenBy(value => value.Id).FirstOrDefault();
         var titlePrice = titleModel is null ? null : AssistantPriceSnapshotBuilder.Build(titleModel, AssistantModelReferenceBuilder.Build(titleModel));
-        return new AssistantRuntimeConfiguration(mode, model, AssistantModelReferenceBuilder.Build(model), effort,
-            mode == AssistantMode.PlatformKey ? platform.DailyMessageLimit : organization!.DailyMessageLimit,
-            mode == AssistantMode.PlatformKey ? platform.MonthlyOrganizationBudget : organization!.MonthlyBudget,
+        // 0069 §4: con la clave de la plataforma, los topes salen del resolvedor con la organización del actor (nula para una
+        // persona o Plataforma), también en el turno de un worker; con clave propia, los de la organización.
+        var organizationId = user.Access == Access.Business ? tenant.TenantId : null;
+        var (dailyLimit, budget) = mode == AssistantMode.PlatformKey
+            ? ((await limits.ResolveAsync(AssistantModuleLimitContributor.DailyMessagesKey, organizationId, cancellationToken)).Effective(null),
+                (await limits.ResolveAsync(AssistantModuleLimitContributor.MonthlyBudgetKey, organizationId, cancellationToken)).Amount)
+            : (organization!.DailyMessageLimit, organization!.MonthlyBudget);
+        return new AssistantRuntimeConfiguration(mode, model, AssistantModelReferenceBuilder.Build(model), effort, dailyLimit, budget,
             platform.RetentionDays, titlePrice);
     }
 }

@@ -1,6 +1,8 @@
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Application.Services.Features;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Resources;
@@ -9,7 +11,8 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantUsageBuilder(IAssistantUsageReader reader, IAssistantSettingsReader settings,
-    IUserDisplayNameReader names, DisplayFormatter formatter, AssistantQuotaDayResolver days, TimeProvider clock)
+    IUserDisplayNameReader names, DisplayFormatter formatter, AssistantQuotaDayResolver days, TimeProvider clock,
+    ModuleLimitResolver limits, ITenantContext tenant)
 {
     internal async Task<AssistantUsagePageResponse> BuildAsync(string month, AssistantUsageReadPage page, bool business, CancellationToken cancellationToken)
     {
@@ -29,8 +32,9 @@ internal sealed class AssistantUsageBuilder(IAssistantUsageReader reader, IAssis
         {
             var configuration = await settings.FindOrganizationAsync(cancellationToken);
             mode = configuration?.Mode ?? AssistantMode.PlatformKey;
+            // 0069 §4: con la clave de la plataforma, el cupo del día de la organización del claim sale del resolvedor.
             dailyLimit = mode == AssistantMode.OwnKey ? configuration!.DailyMessageLimit
-                : (await settings.FindPlatformAsync(cancellationToken)).DailyMessageLimit;
+                : (await limits.ResolveAsync(AssistantModuleLimitContributor.DailyMessagesKey, tenant.TenantId, cancellationToken)).Effective(null);
             // 271: el día de los cupos de la organización es el de su zona, para todos sus miembros.
             quotaDay = days.Of(null, nowUtc, await days.ZoneAsync(Domain.Users.Access.Business, TimeZoneInfo.Utc.Id, cancellationToken));
             daily = (await reader.ListDailyAsync(currentPeople, mode, quotaDay.Day, cancellationToken)).ToDictionary(value => value.UserId);

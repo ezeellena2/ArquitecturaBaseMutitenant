@@ -8,6 +8,8 @@ using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persi
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Application.Services.Features;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
@@ -16,7 +18,8 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantSettingsService(IAssistantSettingsReader reader, AssistantSettingsBuilder builder,
     AssistantSettingsWriter writer, AssistantSettingsSelectionPolicy selection, IChatClientFactory clients, ICurrencyCatalog currencies, IUnitOfWork unitOfWork,
-    IRequestValidator validator, TimeProvider clock, ILogger<AssistantSettingsService> logger) : IAssistantSettingsService
+    IRequestValidator validator, TimeProvider clock, ModuleLimitResolver limits, ITenantContext tenant,
+    ILogger<AssistantSettingsService> logger) : IAssistantSettingsService
 {
     public Task<Result<OrganizationAssistantSettingsResponse>> GetOrganizationAsync(CancellationToken cancellationToken) =>
         OperationLog.RunAsync<OrganizationAssistantSettingsResponse>(logger, clock, "AssistantSettingsGetOrganization", async () => await builder.BuildAsync(cancellationToken));
@@ -26,7 +29,8 @@ internal sealed class AssistantSettingsService(IAssistantSettingsReader reader, 
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             if (request.Mode == AssistantMode.OwnKey && request.MonthlyBudget is null && (await reader.FindOrganizationAsync(cancellationToken))?.MonthlyBudget is null)
-                request = request with { MonthlyBudget = (await reader.FindPlatformAsync(cancellationToken)).MonthlyOrganizationBudget };
+                // 0069 §4: el valor de entrada del presupuesto propio es el tope de la plataforma, que da el resolvedor.
+                request = request with { MonthlyBudget = (await limits.ResolveAsync(AssistantModuleLimitContributor.MonthlyBudgetKey, tenant.TenantId, cancellationToken)).Amount };
             if (request.MonthlyBudget is not null)
             {
                 var currency = await currencies.FindAsync(request.MonthlyBudget.Currency.Value, cancellationToken);

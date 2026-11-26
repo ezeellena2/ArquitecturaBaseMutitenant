@@ -93,6 +93,7 @@ public static class AssistantModule
         services.AddScoped<AssistantConnectionPolicy>();
         services.AddOptions<AssistantOptions>().BindConfiguration(AssistantOptions.SectionName).ValidateDataAnnotations().ValidateOnStart();
         services.AddSingleton<IFeatureDefinitionContributor, AssistantFeatureDefinitionContributor>();
+        services.AddScoped<IModuleLimitContributor, AssistantModuleLimitContributor>();
         services.AddScoped<IFeatureAvailabilityPolicy, AssistantAvailabilityPolicy>();
         services.AddScoped<IModuleCapabilityContributor, AssistantCapabilityContributor>();
         services.AddSingleton<IErrorTextSource, AssistantErrorTextSource>();

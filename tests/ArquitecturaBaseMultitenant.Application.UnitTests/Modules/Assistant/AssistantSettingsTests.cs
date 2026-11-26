@@ -6,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integ
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
+using ArquitecturaBaseMultitenant.Application.Services.Features;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Validation;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -243,8 +244,9 @@ public sealed class AssistantSettingsTests
             Model = new(Guid.CreateVersion7(), "Fixture", AssistantProvider.Anthropic, "fixture-model", Price, Price, true, 1, AssistantModelReferenceBuilder.ToResponse(AssistantModelReferenceBuilder.ToDomain(Technical())));
             Platform = new(Model.Id, [Model.Id], AssistantEffort.Low, 50, Price, false, 30, true, "0000", 1);
             var connection = new AssistantConnectionPolicy(this, this, this);
-            Policy = new(this, this, this, this, this, connection);
-            Builder = new(this, this, this, this, connection);
+            var limits = new ModuleLimitResolver([new AssistantModuleLimitContributor(this)]);
+            Policy = new(this, this, this, this, this, connection, limits);
+            Builder = new(this, this, this, this, connection, limits);
         }
         public Guid? UserId { get; } = Guid.CreateVersion7();
         public Access? Access => Domain.Users.Access.Business;
