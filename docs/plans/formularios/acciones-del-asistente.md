@@ -78,7 +78,7 @@
 
 ## Pantallas ✓
 
-**Aprobados:** `Asistente-Org-Acciones`, `M-Asistente-Org-Acciones`, `Usuarios-Invitar-Propuesta`, `M-Usuarios-Invitar-Propuesta`, `Usuario-Propuesta`, `M-Usuario-Propuesta`, `Rol-Propuesta`, `M-Rol-Propuesta`, `Confirmar-Propuesta` y `M-Confirmar-Propuesta`, en el lienzo v179 (página «Organización · Acciones del asistente»), aprobados por el usuario el 2026-11-23.
+**Aprobados:** `Asistente-Org-Acciones`, `M-Asistente-Org-Acciones`, `Usuarios-Invitar-Propuesta`, `M-Usuarios-Invitar-Propuesta`, `Usuario-Propuesta`, `M-Usuario-Propuesta`, `Rol-Propuesta`, `M-Rol-Propuesta`, `Confirmar-Propuesta` y `M-Confirmar-Propuesta`, en el lienzo v179 (página «Organización · Acciones del asistente»), aprobados por el usuario el 2026-11-23. `Confirmar-Propuesta` se redibujó en la v184 (↑ en la lista de atrás y «Ordenar por» al final de la barra, 264), aprobado el 2026-11-26.
 
 | Tablero | Qué muestra |
 | --- | --- |

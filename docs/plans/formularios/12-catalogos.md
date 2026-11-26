@@ -87,6 +87,8 @@ Antes de empezar:
 
 **Se dibujan antes del front** (268): `FRM-Catalogo-Opciones-Propuesta` y su teléfono, el editor abierto desde una propuesta del asistente (§17), con «Propuesta del asistente» junto al título, lo propuesto cargado sin guardar, «Lo que cambia» con lo que se suma, cambia y quita, «Revisá» en lo dudoso y el aviso si el catálogo cambió desde la propuesta.
 
+**Redibujados y aprobados el 2026-11-26** (lienzo v185, front `c29ade7b`; decisión 284): los de la tanda 2 y los dos de la propuesta. `FRM-Catalogo-Nuevo` y `FRM-Catalogo-Tipo` pasaron al Archivo del lienzo.
+
 **«Ordenar por…» (224):** el diálogo «Ordenar las opciones» elige con la pieza (262) la columna (Texto o Código) y el sentido dicho con palabras, «De la A a la Z» o «De la Z a la A». El orden queda pendiente hasta guardar: arriba de las opciones, «Se ordenará por «Texto», de la A a la Z, al guardar.» con «Cancelar orden». Al guardar ordena todas, también las de otras páginas y las dadas de baja: los empates conservan su orden, lo vacío va al final y los números dentro de un texto se comparan por su valor («117» antes que «10030»). En el ⋮ queda apagado con su motivo en un catálogo sin guardar («Guardá el catálogo antes.») o con movimientos pendientes. No se ordena tocando el encabezado: el orden de las opciones es un dato (264).
 
 **El modal de opciones (117):**
