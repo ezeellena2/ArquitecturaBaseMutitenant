@@ -52,7 +52,7 @@ Antes de empezar, en este orden:
 
 **El bloque** (146, 177 y 178, que cambian la 54). Los textos, con su inglés, están en la [parte](19-parte-contrato-datos-y-pasos.md#los-textos-del-bloque):
 - **«Agregar bloque»** va en la banda «Preguntas», al lado de «Agregar pregunta». Suma el bloque al final de la lista, abierto y con «Bloque» de nombre, con su ayuda, el mínimo y el máximo de ítems y su propio «Agregar pregunta». El mínimo va de 0 al máximo y el máximo llega hasta 100; uno nuevo arranca con 1 y 20, y con mínimo 0 es opcional. Con un bloque armado, el botón se apaga con «Ya hay un bloque.» en su tooltip, y «Tipo de respuesta» no lo ofrece;
-- **en la lista,** el bloque es una pregunta más, con ↑ ↓ ✎ 🗑, con «Bloque» en su Tipo y «Sí» en Obligatoria si pide al menos un ítem; el rango va en su ✎ (263). Debajo va el recuadro «Preguntas de cada ítem», con las suyas numeradas 5.1, 5.2… Quitarlo pide confirmar, porque se lleva sus preguntas: «¿Quitar el bloque?» (162);
+- **en la lista,** el bloque es una pregunta más, con ↑ ↓ ✎ 🗑, con «Bloque» en su Tipo y «Sí» en Obligatoria si pide al menos un ítem; el rango, solo en Mínimo y Máximo de su ✎ (263 y 287). Debajo va el recuadro «Preguntas de cada ítem», con las suyas numeradas 5.1, 5.2… Quitarlo pide confirmar, porque se lleva sus preguntas: «¿Quitar el bloque?» (162);
 - **«Se carga varias veces»,** una casilla debajo de «Obligatoria», con su (i), junta las preguntas marcadas en el bloque; si no hay uno, lo crea en el lugar de la primera, con «Bloque» de nombre. Desmarcar una la saca, y queda justo después del bloque. Una pregunta que ya existía pasa como pregunta nueva, con otra identidad: lo cargado antes conserva su columna, y publicar lo dice en «Pasan al bloque». En Foto, Documento y Elegir varias, que no entran, la casilla no aparece. En una pregunta con «Mostrar si» o con «Permitir elegir varias», sigue activa, y marcarla pregunta antes «¿Pasar «Monto» al bloque?», con «Se quitan sus condiciones.» o «Pasa a elegir una sola opción.», «Cancelar» y «Pasar al bloque» (162 y 195);
 - **qué entra:** un bloque por formulario, sin bloques adentro, con texto corto y largo, número, fecha, sí o no, elegir una, propia o de un catálogo, y cálculo, con los datos de su ítem (233). En una pregunta del bloque, «Elegir varias», «Foto» y «Documento» aparecen apagadas en «Tipo de respuesta», y «Permitir elegir varias», en su casilla, cada una con su motivo en su tooltip (43). Sus preguntas cuentan para el tope del formulario, y el bloque mismo no; un bloque sin preguntas se guarda pero no se publica;
 - **un catálogo del bloque filtra por quien lo recibe** (168), como una pregunta suelta de la E16: lleva sus filtros fijos y por destinatario, los avisos al publicar (157) y su oferta, una sola para todos los ítems y con el mismo tope;
@@ -79,7 +79,7 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
-Aprobados en el lienzo v175, con el recorrido guiado `un-pedido-con-renglones`. El ejemplo es «Pedido de materiales», con el bloque «Productos». Muestran solo lo que existe hasta acá (78). **Falta dibujar** en `FRM-Editor-Condiciones` y `FRM-Publicar-19` el aviso también debajo de una fecha anterior o posterior (229 y 235). Con el traspaso 18 se redibujan los de la lista de abajo.
+Aprobados en el lienzo v175, con el recorrido guiado `un-pedido-con-renglones`. El ejemplo es «Pedido de materiales», con el bloque «Productos». Muestran solo lo que existe hasta acá (78). **Falta dibujar** en `FRM-Editor-Condiciones` y `FRM-Publicar-19` el aviso también debajo de una fecha anterior o posterior (229 y 235).
 
 | Tablero | Qué muestra |
 | --- | --- |
@@ -101,8 +101,10 @@ Aprobados en el lienzo v175, con el recorrido guiado `un-pedido-con-renglones`. 
 - `FRM-Editor-Lineas` y su teléfono: la fila del bloque, con «Bloque» en Tipo, «Sí» en Obligatoria si pide un ítem y el rango en su ✎ (263);
 - `FRM-Tablero-19` y su teléfono: los números de un monto, ninguno debajo de otro, y la tabla de una tarjeta, que ordena, como `FRM-Tablero` (263 y 264).
 
+**Redibujados y aprobados el 2026-11-26** (lienzo v188; decisión 287).
+
 **Estados que se dibujan:**
-- **Editor:** una condición con cada tipo de pregunta; una fórmula incompleta, con el motivo debajo de su pregunta; una referencia rota; el contador de componentes cerca de 50; sin preguntas anteriores que sirvan; el bloque recién agregado, uno con mínimo 0 («hasta 10 ítems») y «Agregar bloque» apagado;
+- **Editor:** una condición con cada tipo de pregunta; una fórmula incompleta, con el motivo debajo de su pregunta; una referencia rota; el contador de componentes cerca de 50; sin preguntas anteriores que sirvan; el bloque recién agregado, uno con mínimo 0 y «Agregar bloque» apagado;
 - **Publicar:** problemas por pregunta, con «Ir a la pregunta»;
 - **Planilla y detalle:** una respuesta con una pregunta oculta, un cálculo que quedó «Sin respuesta» y una respuesta de antes del bloque.
 

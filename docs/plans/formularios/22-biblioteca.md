@@ -88,6 +88,8 @@ Con el traspaso 5 se redibujaron `FRM-Editor-Reglas-Plantilla`, `M-FRM-Reglas-Pl
 - `FRM-Biblioteca` y `M-FRM-Biblioteca`: cada tarjeta nombra sus datos (las preguntas, los catálogos y para quién es), sin juntarlos con «·» (263);
 - `FRM-Plantilla`, `FRM-Editor-Reglas-Plantilla` y sus teléfonos: las preguntas, en columnas (263); en las reglas precargadas, «Rol sugerido» deja de ir debajo del rol: el campo vacío lo dice en gris («Sugerido: Supervisor»), y la opción con ese nombre, si la hay, lleva «Sugerido» en la pieza (262 y 263).
 
+**Redibujados y aprobados el 2026-11-26** (lienzo v188; decisión 287).
+
 `Plat-FRM-Categorias` no cambia: su orden es un dato, con ↑ ↓ (264).
 
 Sin «Textos en», sin el inglés obligatorio, sin «Cambios sin guardar» ni «Cambios sin publicar», sin el número de versión en la lista ni en la banda, y sin textos junto a los botones (35 y 43). La lectura de documentos no va en esta etapa.

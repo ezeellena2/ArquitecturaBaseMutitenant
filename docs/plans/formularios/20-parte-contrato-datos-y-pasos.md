@@ -18,7 +18,7 @@ El autor decide el contenido, y la app, la forma (269). La carga usa la forma qu
 - arranca con el mínimo de ítems. «Agregar ítem», al pie y sin contador, suma uno vacío y lleva el foco a su primera pregunta. Con el máximo se apaga, con «Hasta 20 ítems.» en su tooltip, y con el mínimo, el tacho, con el suyo. ↑ ↓ dejan el foco en el mismo botón del ítem movido, y quitar lo lleva al ítem que queda en su lugar o a «Agregar ítem»;
 - al enviar, cada ítem se valida como preguntas sueltas: la celda con un error se marca, el mensaje va debajo de su fila con el nombre de la pregunta («Cantidad: completá esta respuesta.») y el foco va a la primera. Si faltan ítems, lo dice debajo de la tabla: «Agregá al menos 1 ítem.»;
 - **en el panel y en el teléfono,** un recuadro por ítem, con «Ítem 2», ↑ ↓ y 🗑 en su banda (183 y 261, como en la tabla), y las preguntas una debajo de otra. El nombre del bloque va arriba, como etiqueta, así la banda entra en 320. En el teléfono, «Agregar ítem» va al pie de los recuadros, y Enviar sigue fijo abajo;
-- «Mantener» conserva también los ítems; una versión nueva los conserva si el bloque sigue, con las preguntas que siguen con el mismo tipo, y «Enviada» muestra el bloque en una línea, como su columna en la planilla;
+- «Mantener» conserva también los ítems; una versión nueva los conserva si el bloque sigue, con las preguntas que siguen con el mismo tipo, y «Enviada» muestra el bloque en su tabla (287);
 - **en el editor,** la (i) del máximo suma la app, con el texto de abajo.
 
 ## Los textos

@@ -46,8 +46,10 @@ Datos de ejemplo: el principal, Delta; Delta Soporte y Delta Ventas, de esos equ
 | `WA-Chats-Casos-24` y `M-WA-Chats-Casos-24` | sobre `WA-Chats-Casos`: el nombre del asistente que contesta, en la cabecera, la lista, cada respuesta y «Por qué respondió esto». Un chat nuevo arranca con el menú del bot | eligió Soporte, por qué respondió, pasó a Ventas (con el mismo historial), un equipo sin asistente (contesta el principal) y un solo asistente, sin menú |
 
 **Se redibujan con el traspaso 18, tanda 4** (206 y 262 a 264):
-- `WA-Asistentes` y `M-WA-Asistentes`: «Principal» en su columna, no junto al nombre (206); el encabezado y «Ordenar por» ordenan «Asistente» y «Estado», y «Equipos» no, porque son varios; sin orden elegido va el principal primero y después por nombre, sin flecha (264). En el teléfono, sin datos juntos con «·», como «Delta · principal» (263);
+- `WA-Asistentes` y `M-WA-Asistentes`: «Principal» en su columna, no junto al nombre (206); el encabezado y «Ordenar por» ordenan «Asistente», «Principal» (287) y «Estado», y «Equipos» no, porque son varios; sin orden elegido va el principal primero y después por nombre, sin flecha (264). En el teléfono, sin datos juntos con «·», como «Delta · principal» (263);
 - `WA-Equipo-Asistente` y `M-WA-Equipo-Asistente`: «Asistente de este equipo», en la pieza: sin elegir, el campo dice en gris que contesta el principal, y uno de baja va apagado con su motivo (262).
+
+**Redibujados y aprobados el 2026-11-26** (lienzo v188; decisión 287).
 
 El recorrido guiado «Dos equipos con su asistente» muestra a Lucía asignando el asistente de Ventas, a Martina eligiendo «Consultar un pedido» y el pase a Ventas, hasta el principal en un equipo sin asistente.
 
@@ -55,7 +57,7 @@ El recorrido guiado «Dos equipos con su asistente» muestra a Lucía asignando 
 
 | Ruta | Permiso | Pide | Devuelve |
 | --- | --- | --- | --- |
-| `GET /api/organization/whatsapp/assistant/agents` | `whatsapp.manage` | `page`, `pageSize`, `search`, `status` y `sort` por `name` o `status` (264) | `PagedResult<{id, name, isPrimary, isActive, teamCount, teams[]}>`, con hasta `MaxMemberPreview` equipos. La arma WhatsApp, con `IConversationAgentSettings.ListAsync` y sus equipos: el asistente no los conoce |
+| `GET /api/organization/whatsapp/assistant/agents` | `whatsapp.manage` | `page`, `pageSize`, `search`, `status` y `sort` por `name`, `isPrimary` o `status` (264 y 287) | `PagedResult<{id, name, isPrimary, isActive, teamCount, teams[]}>`, con hasta `MaxMemberPreview` equipos. La arma WhatsApp, con `IConversationAgentSettings.ListAsync` y sus equipos: el asistente no los conoce |
 | `POST /api/organization/whatsapp/assistant/agents` | `whatsapp.manage` | `{name}`, con `[Idempotent]` | 201 + Location; arranca con la copia del perfil, los casos y los límites del principal, también los de la 270 y la 278 |
 | `GET` y `PUT /api/organization/whatsapp/assistant/agents/{id}` | `whatsapp.manage` | lo de la E23 | el agente y 200 `{version, knowledgeVersion}` |
 | `POST …/agents/{id}/deactivation` y `reactivation` | `whatsapp.manage` | `{version}` | 200 `{version}` |

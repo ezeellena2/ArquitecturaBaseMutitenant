@@ -83,6 +83,8 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
+**Redibujados y aprobados el 2026-11-26** (lienzo v188; decisión 287).
+
 Aprobados en el lienzo v175, con el armado del front real de ArquitecturaBase (126 y 135) y los recorridos guiados `armar-las-reglas` y `aprobar-o-rechazar`. El ejemplo es «Visita a cliente», versión 4, que pide aprobación al rol Supervisor, con tres por aprobar; las reglas con el bloque usan «Pedido de materiales». Muestran solo lo que existe hasta acá (78). Lo que falta dice «Se redibujan», con su decisión.
 
 | Tablero | Qué muestra | Estado |

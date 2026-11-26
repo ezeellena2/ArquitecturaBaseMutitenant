@@ -102,6 +102,8 @@ Datos de ejemplo: Grupo Delta vende y repara heladeras. Martina López escribe p
 - `FRM-Respuesta-Cadena`: sobre la vista rápida de la E21 redibujada (266 y 267), y la cadena con cada dato en su columna, no debajo del número (263);
 - `Plat-Asistente-Config-23` y su teléfono: el máximo de ofrecimientos, de 1 a 50 y 50 de entrada (278); hoy dice 3.
 
+**Redibujados y aprobados el 2026-11-26** (lienzo v188; decisión 287).
+
 El recorrido guiado «Los casos del asistente» muestra a Lucía armando y probando los casos, y a Martina escribiendo, hasta la ráfaga con tres acciones.
 
 **Mandan sobre esta spec en:**

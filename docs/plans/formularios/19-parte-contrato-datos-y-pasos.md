@@ -120,7 +120,7 @@ Todo texto que ve el usuario dice «ítem» («item» en inglés) donde allá de
 | --- | --- | --- |
 | El botón, y apagado | «Agregar bloque» · «Ya hay un bloque.» | «Add block» · «There is already a block.» |
 | El nombre con que arranca | «Bloque» | «Block» |
-| La lista del editor (263) | Tipo «Bloque»; en su ✎, el rango: «De 1 a 10 ítems», «1 ítem» con el mínimo igual al máximo y «Hasta 10 ítems» con mínimo 0 | «Block»; «1 to 10 items», «1 item», «Up to 10 items» |
+| La lista del editor (263) | Tipo «Bloque»; el rango va solo en «Mínimo» y «Máximo», dentro de su ✎ (287) | «Block» |
 | El recuadro, y sobre «Mínimo» y «Máximo» | «Preguntas de cada ítem» · «Ítems» | «Questions for each item» · «Items» |
 | La (i) del máximo | «En WhatsApp se cargan hasta 10 ítems.» | «WhatsApp loads up to 10 items.» |
 | La casilla y su (i) | «Se carga varias veces» · «Se carga una vez por ítem.» | «Loaded several times» · «Loaded once per item.» |
@@ -141,7 +141,7 @@ Todo texto que ve el usuario dice «ítem» («item» en inglés) donde allá de
 | Publicar, un error de Meta sin pregunta (`ValidationUnlocated`) | «WhatsApp no aceptó cómo la app armó el formulario. No es un problema de tus preguntas: si vuelve a pasar, avisá a soporte.» | «WhatsApp didn't accept how the app built the form. It isn't a problem with your questions: if it happens again, contact support.» |
 | El aviso de «Mostrar si» (235) y su fila en «Problemas», que suma «: «{condición}»», según el `reason` de `ConditionNotSupported` | `number`, «WhatsApp no muestra una condición con números.»; `date`, «WhatsApp no muestra una fecha anterior o posterior a otra.»; `multiple`, «WhatsApp no muestra una condición sobre «Elegir varias».»; `catalogValues`, «WhatsApp admite una sola opción de un catálogo en una condición.»; `chain`, «WhatsApp muestra hasta tres condiciones en cadena, y esta es la cuarta.»; `unansweredConditional`, «WhatsApp no muestra «sin respuesta» sobre una pregunta que también tiene condición.»; `file`, «WhatsApp no puede ocultar acá esta foto o documento.» | «WhatsApp doesn't show a condition with numbers.»; «WhatsApp doesn't show a date before or after another one.»; «WhatsApp doesn't show a condition on “Choose several”.»; «WhatsApp allows a single catalog option in a condition.»; «WhatsApp shows up to three conditions in a chain, and this is the fourth.»; «WhatsApp doesn't show “no answer” on a question that also has a condition.»; «WhatsApp can't hide this photo or document here.» |
 
-El ✎ del bloque elige la forma del rango por el mínimo y el máximo (263): iguales, la cantidad («1 ítem», «3 ítems»); mínimo 0, «hasta N ítems»; si no, «de N a M ítems». El plural sigue al último número. El nombre del bloque es contenido, y va como se escribió (35). «¿Agregás otro ítem?» usa 19 de los 30 caracteres que Meta admite en un sí o no.
+El rango no se resume en una frase como «De 1 a 10 ítems»: el ✎ del bloque muestra solo «Mínimo» y «Máximo» (287). El nombre del bloque es contenido, y va como se escribió (35). «¿Agregás otro ítem?» usa 19 de los 30 caracteres que Meta admite en un sí o no.
 
 ## Lo que puede salir mal (no repetir)
 

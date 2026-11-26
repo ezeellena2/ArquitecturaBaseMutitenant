@@ -93,6 +93,8 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
+**Redibujados y aprobados el 2026-11-26** (lienzo v188; decisión 287).
+
 Aprobados en el lienzo como dice la tabla, con el armado del front real de ArquitecturaBase (126 y 134) y el recorrido guiado `cargar-una-respuesta`. El ejemplo es «Pedido de materiales», versión 4, que suma «Zona», «Proveedor» con su lista dependiente, «Foto del remito» y el bloque «Productos», y por eso se completa «Solo en la app»; el de la ubicación es «Visita a cliente».
 
 | Tablero | Qué muestra | Estado |
@@ -104,7 +106,7 @@ Aprobados en el lienzo como dice la tabla, con el armado del front real de Arqui
 | `FRM-Cargar-Panel` | el panel junto a la planilla | Redibujado en la v175 (230 y 234). **Se redibuja:** como `FRM-Cargar-Respuesta` (261, 262 y 266) |
 | `FRM-Cargar-Lista` y su teléfono | la lista, una sola opción, sin el dato, elegir varias y la que espera otra respuesta | Aprobados en la v168: «Elegí primero «Zona»» (166). **Se redibujan:** la lista en la pieza (262) |
 | `FRM-Cargar-Archivos` y su teléfono | agregar, los límites, la barra de avance, el corte y la cámara | Aprobado |
-| `FRM-Cargar-Enviada` y su teléfono | «Enviada», versión nueva, dado de baja, opción dada de baja y sin conexión | Aprobados en la v168: «Volver a Formularios» y el bloque en una línea (166 y 177). **Se redibujan:** lo cargado con la forma de la E20, con el Sí o No en la pieza (262 y 266) |
+| `FRM-Cargar-Enviada` y su teléfono | «Enviada», versión nueva, dado de baja, opción dada de baja y sin conexión | Aprobados en la v168: «Volver a Formularios» (166). **Se redibujan:** lo cargado con la forma de la E20, el bloque en su tabla (287) y el Sí o No en la pieza (262 y 266) |
 | `FRM-Respuestas-20` y `FRM-Respuesta-20`, con sus teléfonos | «App», su filtro y el origen en el detalle | Redibujados en la v175: el punto como enlace al mapa, y en el detalle, con la precisión y los momentos del pedido (230). **Se redibujan:** el detalle como el formulario (266), los momentos como renglones de la actividad (267) y «Canal» en la pieza (262) |
 | `FRM-Respuestas-Propias` y su teléfono | la misma planilla con lo suyo | Aprobados en la v168: «Filtros» y los chips (144). **Se redibujan:** como `FRM-Respuestas` de la E15 (262 y 264) |
 | `FRM-Editor-Listas` y su teléfono | «Según otra respuesta» | Se redibujan: «Dónde se completa» en «Solo en la app», «Publicar» y sin «Ver vista oficial» (229), y la pregunta de la que depende, en la pieza (262 y 269) |

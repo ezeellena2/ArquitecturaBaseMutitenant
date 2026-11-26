@@ -20,6 +20,8 @@ Lo que la [spec](25-documentos.md#qué-se-construye) resume (la IA propone y una
 
 ## Pantallas
 
+**Redibujados y aprobados el 2026-11-26** (lienzo v188; decisión 287).
+
 Aprobados y publicados en el lienzo v168, con sus tres recorridos guiados: el comprobante que se reconoce y queda en la planilla, el que no se reconoce y termina en «Armar formulario con la IA», y el catálogo «Proveedores de obra», pedido con un Excel («Proveedores» ya existe desde la 12). Muestran lo que existe hasta acá. Las del catálogo propuesto vienen de la E23, que las retiró (167).
 
 **Con el traspaso 15** (lienzo v175) suman sus estados: en la bandeja, «Venció», «Protegido», el tope del día y pasar un repetido; en la lectura, «Lo escribió la IA» y los ejemplos solo para personas; en el chat, el tope del día, el PDF protegido y las planillas; en el Inicio, armar desde un documento, el prefijo corregido, importar en un catálogo que existe, la propuesta que no entra y borrar con sus audios, y por WhatsApp, el motivo cuando no crea y la planilla con un pedido.
