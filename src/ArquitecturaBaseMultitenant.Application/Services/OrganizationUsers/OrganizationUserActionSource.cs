@@ -211,7 +211,7 @@ internal sealed class OrganizationUserActionSource(
             var row = await users.FindByIdAsync(memberId, timeProvider.GetUtcNow().UtcDateTime, cancellationToken);
             if (row is null) return MemberErrors.NotFound;
             if (!context.CanActOn(action, row)) return MemberErrors.HasMorePermissions;
-            target = new(row.MemberId, Label(row), row.Version);
+            target = new(row.MemberId, Label(row), row.Version, Detail(row));
         }
 
         var views = new List<AssistantActionValueView>();
@@ -465,6 +465,9 @@ internal sealed class OrganizationUserActionSource(
 
     private static string Label(OrganizationUserRow row) =>
         row.DisplayName.Length > 0 ? row.DisplayName : row.Email?.DisplayValue ?? row.Phone?.Value ?? string.Empty;
+
+    // Con nombre, el correo la distingue de otra con el mismo nombre; sin nombre, el correo ya es su nombre.
+    private static string? Detail(OrganizationUserRow row) => row.DisplayName.Length > 0 ? row.Email?.DisplayValue : null;
 
     private static ValidationError Invalid(string path, string code) =>
         new(new Dictionary<string, string[]>(StringComparer.Ordinal) { [path] = [code] });

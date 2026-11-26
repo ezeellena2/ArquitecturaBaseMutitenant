@@ -89352,9 +89352,15 @@
             "minimum": 0,
             "type": "integer",
             "format": "uint32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         },
-        "description": "El registro al que se refiere una propuesta que edita o elimina, como está ahora."
+        "description": "El registro de una propuesta que edita o elimina, como está ahora, y el dato que lo distingue de otro del mismo nombre."
       },
       "AssistantProposalUnavailableReason": {
         "enum": [

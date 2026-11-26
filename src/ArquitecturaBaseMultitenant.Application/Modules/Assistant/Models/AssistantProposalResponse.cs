@@ -15,8 +15,8 @@ public sealed record AssistantProposalResponse(Guid Id, Guid ConversationId, Ass
 /// <summary>Un valor propuesto: el campo, el valor resuelto, su nombre leído del servidor y la clave de texto de la duda («Revisá»).</summary>
 public sealed record AssistantProposalValueResponse(string Field, JsonElement Value, string? Label, string? Doubt);
 
-/// <summary>El registro al que se refiere una propuesta que edita o elimina, como está ahora.</summary>
-public sealed record AssistantProposalTargetResponse(Guid Id, string Label, uint Version);
+/// <summary>El registro de una propuesta que edita o elimina, como está ahora, y el dato que lo distingue de otro del mismo nombre.</summary>
+public sealed record AssistantProposalTargetResponse(Guid Id, string Label, uint Version, string? Detail);
 
 /// <summary>
 /// Lo que el mensaje del historial y del SSE dice de su propuesta, con su estado guardado (nueva, reemplazada o aplicada); lo

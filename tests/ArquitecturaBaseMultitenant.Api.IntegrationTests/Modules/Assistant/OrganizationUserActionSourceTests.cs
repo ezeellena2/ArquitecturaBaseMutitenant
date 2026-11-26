@@ -3,14 +3,18 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantActions;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.AssistantActions;
 using ArquitecturaBaseMultitenant.Application.Models.Request;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Assistant;
@@ -75,6 +79,45 @@ public sealed class OrganizationUserActionSourceTests(ApiFactory factory)
             var gone = await RunAsync(actor, action, (source, definition, ct) =>
                 source.ReviewAsync(new AssistantActionResolution(definition, valid!.Target!.Id, valid.Target.Version, []), ct));
             Assert.Equal(ErrorType.NotFound, gone.Error.Type);
+        }
+    }
+
+    /// <summary>
+    /// La tarjeta de quitar nombra a la persona y su correo (Asistente-Org-Acciones), así se distingue de otra con el mismo
+    /// nombre: el destino lleva el correo verificado que muestra su ficha. Sin correo, o sin nombre (el correo ya es su nombre),
+    /// no lleva nada más.
+    /// </summary>
+    [Fact]
+    public async Task The_person_to_remove_carries_the_email_that_tells_her_apart()
+    {
+        var scenario = await new OrganizationUserActionScenarios().PrepareAsync(factory, "users.remove@1", Ct);
+        using var client = scenario.Client;
+        var actor = await AssistantExecutionActorTests.CaptureAsync(client);
+        var email = Email.Create("lucia.ferrer." + Guid.NewGuid().ToString("N") + "@example.test").Value;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            var saved = await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async work =>
+            {
+                var user = await services.GetRequiredService<IUserRepository>().CreateAsync("Lucía Ferrer", "es-AR", "America/Argentina/Buenos_Aires", work);
+                var method = LoginMethod.CreateEmail(user.Id, email);
+                Assert.True(method.Verify(services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime).IsSuccess);
+                services.GetRequiredService<ApplicationDbContext>().Add(method);
+                return Result.Success(user.Id);
+            }, CommitPolicy.OnSuccess, Ct);
+            Assert.True(saved.IsSuccess, saved.IsFailure ? saved.Error.Code : null);
+            await OrganizationJourney.AddActiveMemberAsync(factory, scenario.TenantId, saved.Value, Ct);
+        }
+
+        foreach (var (target, detail) in new[] { ("Lucía Ferrer", email.DisplayValue), ("Martín Paz", null) })
+        {
+            var proposed = await RunAsync(actor, "users.remove@1", (source, definition, ct) =>
+                ProposeAsync(source, definition, new AssistantActionScenarioCase(target, []), ct));
+            Assert.True(proposed.IsSuccess, $"{target}: {(proposed.IsFailure ? Describe(proposed.Error) : string.Empty)}");
+            var reviewed = await RunAsync(actor, "users.remove@1", (source, _, ct) => source.ReviewAsync(proposed.Value, ct));
+            Assert.True(reviewed.IsSuccess, reviewed.IsFailure ? reviewed.Error.Code : null);
+            Assert.Equal(target, reviewed.Value.Target!.Label);
+            Assert.Equal(detail, reviewed.Value.Target.Detail);
         }
     }
 

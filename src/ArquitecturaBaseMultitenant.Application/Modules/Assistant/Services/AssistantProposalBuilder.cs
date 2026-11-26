@@ -47,7 +47,7 @@ internal sealed class AssistantProposalBuilder(IAssistantReadOnlyScope readOnly,
         // Lo que muestra la tarjeta lo resuelve la fuente; nunca es texto del modelo. Sin resolver, no se muestra nada.
         var review = subjectGone ? null : outcome.Review;
         var values = review?.Values.Select(value => new AssistantProposalValueResponse(value.Field, value.Value, value.Label, value.Doubt)).ToArray() ?? [];
-        var target = review?.Target is { } now ? new AssistantProposalTargetResponse(now.Id, now.Label, now.Version) : null;
+        var target = review?.Target is { } now ? new AssistantProposalTargetResponse(now.Id, now.Label, now.Version, now.Detail) : null;
         return new(new AssistantProposalResponse(proposal.Id, proposal.ConversationId, AssistantProposalKind.Action, proposal.ActionId,
             proposal.ActionVersion, shown.State, shown.Reason, values, target, proposal.BaseVersion, shown.Location), outcome.Action, review);
     }

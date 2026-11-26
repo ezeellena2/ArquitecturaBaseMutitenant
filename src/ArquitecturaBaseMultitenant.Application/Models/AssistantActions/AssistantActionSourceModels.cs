@@ -22,8 +22,11 @@ public sealed record AssistantActionResolution(
     public IReadOnlyList<Guid> SubjectUserIds { get; init; } = [];
 }
 
-/// <summary>El destino de una propuesta como está ahora: su id, su nombre leído del servidor y su versión.</summary>
-public sealed record AssistantActionTargetView(Guid Id, string Label, uint Version);
+/// <summary>
+/// El destino de una propuesta como está ahora: su id, su nombre leído del servidor y su versión. <c>Detail</c> es el dato que
+/// lo distingue de otro con el mismo nombre (el correo de una persona), o null si el nombre ya alcanza.
+/// </summary>
+public sealed record AssistantActionTargetView(Guid Id, string Label, uint Version, string? Detail = null);
 
 /// <summary>
 /// Un valor de una propuesta como lo dibuja la pantalla: un campo simple con su valor (el id, si es una opción o un registro),

@@ -41,7 +41,7 @@ La mecánica (el puerto, el registro, las tres piezas de IA, la tarjeta y la bat
      - Sin coincidencia es un error con la ruta del campo, y con varias, una duda («Revisá»).
      - Llená `SubjectUserIds` con las cuentas de las personas que nombra la propuesta (el destino o un `Record` de una persona): el `userId`, no el del miembro. Van a los sujetos del mensaje, y si una de esas cuentas se da de baja, la propuesta queda «ya no disponible».
    - **`ReviewAsync`:** vuelve a resolver una propuesta guardada cada vez que la pantalla la lee.
-     - Lee por el id guardado, nunca por el texto, con los permisos de ahora y en su empresa, y devuelve el destino como está ahora (id, nombre y versión) y cada valor con su nombre, con la forma de la pantalla: un campo simple con su id, un elemento de un `Choices` como `{op, id}` y una fila de un `Items` como `{op, key, row?}`.
+     - Lee por el id guardado, nunca por el texto, con los permisos de ahora y en su empresa, y devuelve el destino como está ahora (id, nombre, versión y, si otro puede tener el mismo nombre, el dato que lo distingue, como el correo de una persona) y cada valor con su nombre, con la forma de la pantalla: un campo simple con su id, un elemento de un `Choices` como `{op, id}` y una fila de un `Items` como `{op, key, row?}`.
      - Lo que ya no existe es `NotFound`, y la propuesta se ve «ya no disponible» por el destino. Lo que quien pide ya no puede dar es `Forbidden`, y se ve «ya no disponible» por el permiso.
    - **`ValidateAsync`:** arma el mismo `*Request` que la pantalla y corre su validador.
    - **Las dependencias:** solo lo de la lista de lo permitido de la [0068](../decisions/0068-acciones-del-asistente.md):
