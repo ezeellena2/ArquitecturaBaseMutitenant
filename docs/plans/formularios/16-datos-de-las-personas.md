@@ -93,6 +93,8 @@ Aprobados y publicados en el lienzo v150, con su recorrido guiado. Muestran solo
 - `WA-Chats-Formulario-16` y su teléfono: el formulario, en la pieza, como en la E14 (262);
 - `FRM-Respuestas-16` y su teléfono siguen lo que la E15 redibuja de la planilla.
 
+**Redibujados y aprobados el 2026-11-26** (lienzo v187; decisión 286).
+
 **Corregidos en el lienzo v169,** porque chocaban con una decisión, una ficha del front o esta spec: la (i) de «Clave» de `FRM-Datos-Personas` y su teléfono, con las filas sin rótulos (138); la (i) de «Papel» de `FRM-Catalogo-16`; `M-FRM-Respuestas-16`, sin «Columnas» y con el nombre entero (174); el editor de atrás de `FRM-Publicar-16`, y «A un cliente» de `WA-Chats-Formulario-16`, en Clientes.
 
 **«Datos de las personas»:** dos secciones, como en ArquitecturaBase. «Datos», con su (i) y «+ Agregar dato» en el encabezado: Dato, Clave, Tipo, Catálogo («—» en uno de texto), Lo usan, Estado («Activo» o «De baja», con su punto, en su columna y nunca debajo del nombre, 206) y el ⋮ de la fila (261): cada dato en su columna, nunca «De un catálogo · Zonas» (263). Con el tope de 20, «Agregar dato» queda grisado, con el motivo en su tooltip. «Personas», con el resumen «6 personas · 2 sin Zona» y «Buscar personas»: Persona, una columna por dato activo, «—» si no tiene y el ⋮ de la fila, con `users.manage`. Sin `users.read`, una línea lo dice. Las dos tablas ordenan desde el encabezado y desde «Ordenar por», salvo «Lo usan», que tiene varios valores; en «Personas», un dato ordena por su valor (el texto de su opción, en uno de catálogo), con lo vacío al final en los dos sentidos (264). En el teléfono, una persona no junta sus datos con «·» debajo del nombre: lleva menos datos o es una tarjeta con cada dato nombrado (263).

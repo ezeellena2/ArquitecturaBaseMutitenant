@@ -64,7 +64,7 @@ El chat del contrato la confirma contra el código; lo que difiera va a «Cambio
 
 Toda descarga responde `no-store` y `nosniff`, y revisa el permiso antes y después de abrir el archivo.
 
-**La Configuración de Formularios** (270): GET y PUT `/api/organization/forms/settings`, con `forms.manage`, y `/api/platform/forms/settings`, con `[Access(Access.Platform)]` y `platform.settings.manage`; los cuerpos, el 400 y el 409, en la parte de la spec.
+**La Configuración de Formularios** (270): `/api/organization/forms/settings`, el GET con `forms.read` y el PUT con `forms.manage` (286), y `/api/platform/forms/settings`, con `[Access(Access.Platform)]` y `platform.settings.manage`; los cuerpos, el 400 y el 409, en la parte de la spec.
 
 **Rutas que cambian:**
 

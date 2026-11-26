@@ -78,6 +78,8 @@ Aprobados y publicados en el lienzo v151, con el armado de ArquitecturaBase (131
 - los dos, con el panel de «Gestión de formularios» en dos grupos (275);
 - `M-FRM-Formularios-17` y `M-FRM-Editor-Baja`: el motivo de «Borrar» apagado, en el tooltip que abre el toque, sin texto debajo (211).
 
+**Redibujados y aprobados el 2026-11-26** (lienzo v187; decisión 286).
+
 **Corregido en el lienzo v169:** en `M-FRM-Formularios-17`, «Reactivar» se abre sobre el formulario, como en `M-FRM-Editor-Baja` (131), y la hoja «Filtros» va a pantalla completa y sin cantidades (144 y 164).
 
 **El formulario dado de baja:** la banda dice «De baja · versión 2», y su ⓘ dice la baja en una frase, «Lo dio de baja Ana Gómez el 09/10/2026, 10:12.», y qué pasa en WhatsApp (175). «Sin confirmar en WhatsApp» y «No se pudo deprecar en WhatsApp» van al lado, en la banda. Sin cartel en el cuerpo (avisos, 25/10).

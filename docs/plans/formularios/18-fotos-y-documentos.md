@@ -41,7 +41,7 @@ Antes de empezar, en este orden:
 - **tope por archivo** (270): «Tamaño máximo de un archivo», de la Configuración de Formularios (abajo). Publicar lo sella en la versión, y la versión publicada conserva el suyo aunque la configuración cambie. La (i) de «Cuántas fotos» y «Cuántos documentos» dice el vigente, con el número como parámetro. Hasta 10 archivos y 100 MiB por respuesta, por el tope de Meta, que queda en el código;
 - copiar un formulario copia estas preguntas como cualquier otra.
 
-**La Configuración de Formularios** (270) nace acá, como la del Asistente: una página del módulo para la organización, con `forms.manage`, y otra para la plataforma, con `platform.settings.manage`. Por ahora tiene un solo valor, «Tamaño máximo de un archivo», en MB, con su (i): en la organización, de 1 a 25 y 25 por defecto, nunca más que el tope de la organización, que la página dice. Ese tope lo da el resolvedor de topes de las Costuras de módulos ([0069](../../decisions/0069-modulos-y-suscripciones.md)): Formularios lo declara con su máximo de la plataforma (de 1 a 25, 25 por defecto) y lo lee por él. Cada una con su revisión y el 409, y se lee de la base en cada uso. Si la plataforma baja su máximo, vale el menor de los dos, sin tocar lo guardado.
+**La Configuración de Formularios** (270) nace acá, como la del Asistente: una página del módulo para la organización, que lee quien tiene `forms.read` y cambia quien tiene `forms.manage` (286), y otra para la plataforma, con `platform.settings.manage`. Por ahora tiene un solo valor, «Tamaño máximo de un archivo», en MB, con su (i): en la organización, de 1 a 25 y 25 por defecto, nunca más que el tope de la organización, que la página dice. Ese tope lo da el resolvedor de topes de las Costuras de módulos ([0069](../../decisions/0069-modulos-y-suscripciones.md)): Formularios lo declara con su máximo de la plataforma (de 1 a 25, 25 por defecto) y lo lee por él. Cada una con su revisión y el 409, y se lee de la base en cada uso. Si la plataforma baja su máximo, vale el menor de los dos, sin tocar lo guardado.
 
 **El Flow:** `PhotoPicker` y `DocumentPicker`, una pregunta de archivo por pantalla, con un perfil nuevo. Su etiqueta admite 80 caracteres, y su ayuda, 300. Los IDs de pantalla son solo letras y guiones bajos. Cada selector lleva el tope por archivo sellado en la versión (`max-file-size-kb`), así el celular lo dice al elegir (270). Las opciones de catálogo que viajan en `data` llegan a la pantalla que las usa, aunque el Flow tenga varias **[Meta]**.
 
@@ -106,6 +106,8 @@ Aprobados y publicados en el lienzo v152, con el armado de ArquitecturaBase (133
 - `WA-Chats-Visor` y `M-WA-Chats-Visor`: la fecha de cada foto al pie (O21);
 - `WA-Chats-Adjuntos` y `M-WA-Chats-Adjuntos`: un archivo mandado «Sin confirmar», con su (i) y «Marcar como revisado», y «No se pudo mandar» con su motivo debajo (0066);
 - `FRM-Config-Org`, su teléfono y `FRM-Config-Plat`, nuevos y por dibujar antes del front (270).
+
+**Redibujados y aprobados el 2026-11-26** (lienzo v187; decisión 286). Los nuevos son `FRM-Config-Org`, `M-FRM-Config-Org` y `FRM-Config-Plat`.
 
 **La planilla:** la foto dice su miniatura y «2 fotos», y el documento, «1 documento» (206). «Sin respuesta» si no se respondió y «—» si la pregunta no existía en esa versión. En el teléfono, la fila no la junta con otros datos: las fotos y los documentos se ven al abrir la respuesta (263). Las preguntas de archivo no aparecen en «Filtros» (143).
 

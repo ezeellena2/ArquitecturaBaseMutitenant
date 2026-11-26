@@ -73,6 +73,8 @@ Antes de empezar, en este orden:
 
 ## Pantallas
 
+**Redibujados y aprobados el 2026-11-26** (lienzo v187; decisión 286).
+
 Aprobados en el lienzo v150. Con el traspaso 5, los filtros (143 y 144) y el detalle (139) están redibujados, aprobados y publicados en el lienzo v160. El recorrido guiado suma dos circuitos: de pegar los proveedores a verlos en la planilla y el Excel, y de armar los campos a ver el CUIT sellado en la planilla. Muestran solo lo que existe hasta acá (78). Con los traspasos 17 y 18 se redibujan los que dice la tabla, con su decisión.
 
 | Tablero | Qué muestra | Estado |

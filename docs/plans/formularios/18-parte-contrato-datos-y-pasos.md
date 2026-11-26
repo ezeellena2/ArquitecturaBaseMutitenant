@@ -10,7 +10,7 @@
 | --- | --- | --- | --- |
 | `GET /{id}/records/{recordId}/files/{fileId}/thumbnail` | `formrecords.read` | — | 200 JPEG, en línea |
 | `GET /{id}/records/{recordId}/files/{fileId}/content` | `formrecords.read` | — | 200 el original: en línea si es una foto; si no, adjunto |
-| `GET /settings` | `forms.manage` | — | 200 `{maxFileMiB, platformMaxFileMiB, version}`, con `platformMaxFileMiB` leído por `ModuleLimitResolver` (0069); sin fila, los de por defecto con `version` 0 |
+| `GET /settings` | `forms.read` (286) | — | 200 `{maxFileMiB, platformMaxFileMiB, version}`, con `platformMaxFileMiB` leído por `ModuleLimitResolver` (0069); sin fila, los de por defecto con `version` 0 |
 | `PUT /settings` | `forms.manage` | `{maxFileMiB, version}` | 200 `VersionResponse`; el primero crea la fila; 409 con otra versión |
 
 **La Configuración de Formularios de la plataforma** (270), en `/api/platform/forms/settings`, con `platform.settings.manage`: `GET` y `PUT`, con `{maxFileMiB, version}` y el 409, como las de la organización. Bajar el máximo no toca lo que guardó cada organización: en cada uso vale el menor de los dos.
