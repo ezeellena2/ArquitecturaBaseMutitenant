@@ -92,6 +92,7 @@
   <data name="Roles.Role.HasUsers" xml:space="preserve"><value>El rol tiene usuarios asignados. Reasignalos antes de borrarlo.</value></data>
   <data name="Roles.Role.ScopeChangeHasUsers" xml:space="preserve"><value>El rol tiene usuarios asignados. Reasignalos antes de cambiar dónde vale.</value></data>
   <data name="Roles.Role.PermissionsNotHeld" xml:space="preserve"><value>No podés dar ni quitar permisos que no tenés.</value></data>
+  <data name="Roles.Role.PermissionIncluded" xml:space="preserve"><value>Ese permiso lo incluye otro que el rol sigue teniendo: quitá también el que lo incluye.</value></data>
   <data name="General.ConcurrencyConflict" xml:space="preserve"><value>Otra persona cambió esto. Revisá la versión más reciente antes de guardar.</value></data>
   <data name="Request.InProgress" xml:space="preserve"><value>La solicitud todavía se está procesando.</value></data>
   <data name="Request.IdempotencyKeyRequired" xml:space="preserve"><value>Falta la clave para identificar esta solicitud.</value></data>

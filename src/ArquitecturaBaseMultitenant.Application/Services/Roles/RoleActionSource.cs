@@ -46,7 +46,7 @@ internal sealed class RoleActionSource(
     internal const string PermissionsField = "permissions";
 
     /// <summary>Quitar un permiso que sigue incluido por otro que queda (260); solo vuelve al modelo, nunca como HTTP.</summary>
-    internal const string PermissionIncludedCode = "Roles.Role.PermissionIncluded";
+    internal const string PermissionIncludedCode = RoleErrors.PermissionIncludedCode;
 
     private const string TargetPath = "target";
     private const string Add = "add";

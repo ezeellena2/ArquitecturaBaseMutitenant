@@ -92,6 +92,7 @@
   <data name="Roles.Role.HasUsers" xml:space="preserve"><value>The role still has users assigned. Reassign them before deleting it.</value></data>
   <data name="Roles.Role.ScopeChangeHasUsers" xml:space="preserve"><value>The role still has users assigned. Reassign them before changing where it applies.</value></data>
   <data name="Roles.Role.PermissionsNotHeld" xml:space="preserve"><value>You can't give or take away permissions you don't have.</value></data>
+  <data name="Roles.Role.PermissionIncluded" xml:space="preserve"><value>Another permission the role keeps includes that one: remove the one that includes it too.</value></data>
   <data name="General.ConcurrencyConflict" xml:space="preserve"><value>Someone else changed this. Review the latest version before saving.</value></data>
   <data name="Request.InProgress" xml:space="preserve"><value>The request is still being processed.</value></data>
   <data name="Request.IdempotencyKeyRequired" xml:space="preserve"><value>A key identifying this request is required.</value></data>

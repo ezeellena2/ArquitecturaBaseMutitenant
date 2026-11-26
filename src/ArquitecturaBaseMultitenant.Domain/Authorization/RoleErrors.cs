@@ -19,6 +19,8 @@ public static class RoleErrors
     public const string HasUsersCode = "Roles.Role.HasUsers";
     public const string ScopeChangeHasUsersCode = "Roles.Role.ScopeChangeHasUsers";
     public const string PermissionsNotHeldCode = "Roles.Role.PermissionsNotHeld";
+    /// <summary>Quitar un permiso que sigue incluido por otro que queda (260): solo vuelve al asistente como dato, nunca como HTTP.</summary>
+    public const string PermissionIncludedCode = "Roles.Role.PermissionIncluded";
 
     public const string UserCountKey = "userCount";
 
