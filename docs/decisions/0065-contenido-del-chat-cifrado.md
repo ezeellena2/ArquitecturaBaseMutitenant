@@ -1,6 +1,6 @@
 # ADR 0065 · El contenido del chat de WhatsApp se guarda cifrado
 
-**Estado:** aceptada por el usuario el 2026-11-18 (preguntas 55 a 58 del traspaso 15, tanda 5). Toma la ADR 0030 de ArquitecturaBase (H16 de su revisión de WhatsApp) y la adapta a muchas organizaciones. Precisa la [0038](0038-whatsapp-de-atencion.md) y deja la retención como está (D4). Programada en la B8 de la [base de la 12, segunda parte](../plans/2026-11-19-etapa-base-de-la-12-segunda-parte.md) (2026-11-24). Nada de ArquitecturaBase pasó todavía su prueba integral.
+**Estado:** aceptada por el usuario el 2026-11-18 (preguntas 55 a 58 del traspaso 15, tanda 5). Toma la ADR 0030 de ArquitecturaBase (H16 de su revisión de WhatsApp) y la adapta a muchas organizaciones. Precisa la [0038](0038-whatsapp-de-atencion.md) y deja la retención como está (D4). Programada en la B8 de la [base de la 12, segunda parte](../plans/formularios/base-de-la-12-segunda-parte.md) (2026-11-24). Nada de ArquitecturaBase pasó todavía su prueba integral.
 
 ## Contexto
 

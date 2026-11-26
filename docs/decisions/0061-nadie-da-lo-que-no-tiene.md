@@ -1,6 +1,6 @@
 # ADR 0061 · Nadie da lo que no tiene
 
-**Estado:** aceptada por el usuario el 2026-11-18 (pregunta 15 del traspaso 15). Toma la N1 de ArquitecturaBase (traspaso 14, `02-nucleo.md` §1, y su `docs/features/administracion.md`), adaptada a los tres alcances del multitenant: la organización, cada empresa y Plataforma. Programada en la B1 de la [segunda parte de la base](../plans/2026-11-19-etapa-base-de-la-12-segunda-parte.md): sus `Guard` y sus `Policy` están en la ficha [permisos](../rules/permisos.md). Nada de ArquitecturaBase pasó todavía su prueba integral, así que un detalle puede cambiar con el traspaso 16.
+**Estado:** aceptada por el usuario el 2026-11-18 (pregunta 15 del traspaso 15). Toma la N1 de ArquitecturaBase (traspaso 14, `02-nucleo.md` §1, y su `docs/features/administracion.md`), adaptada a los tres alcances del multitenant: la organización, cada empresa y Plataforma. Programada en la B1 de la [segunda parte de la base](../plans/formularios/base-de-la-12-segunda-parte.md): sus `Guard` y sus `Policy` están en la ficha [permisos](../rules/permisos.md). Nada de ArquitecturaBase pasó todavía su prueba integral, así que un detalle puede cambiar con el traspaso 16.
 
 ## Contexto
 

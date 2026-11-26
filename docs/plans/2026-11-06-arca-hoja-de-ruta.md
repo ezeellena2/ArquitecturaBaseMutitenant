@@ -141,11 +141,11 @@ Solo anotadas, sin etapas. Se evalúan con su traspaso, como dice la 151.
   - el límite de allá, que «fuera de las 24 horas falla», es menor acá, porque cada organización tiene sus plantillas;
   - «Se carga sola» crea una respuesta a nombre de quien cargó la primera, y cargar a nombre de otra persona está después del bloque;
   - una falla con origen «Sistema» puede ser de la plataforma o de una organización.
-- **Lo que allá quedó sin decidir:** conectar bases externas (allá se recomendó no construir el conector), copiar formularios, los tableros que cruzan formularios y la retención de las respuestas. La conexión a la base de un cliente y los tableros que cruzan ya están en «Después del bloque» de la hoja de ruta de formularios; la retención de las respuestas está en el [backlog](../backlog.md#traspaso-15-whatsapp-y-arca-para-programar), para decidir antes de producción.
+- **Lo que allá quedó sin decidir:** conectar bases externas (allá se recomendó no construir el conector), copiar formularios, los tableros que cruzan formularios y la retención de las respuestas. La conexión a la base de un cliente y los tableros que cruzan ya están en «Después del bloque» de la hoja de ruta de formularios; la retención de las respuestas está en el [backlog](../backlog.md#queda-afuera-de-la-segunda-parte-de-la-base), para decidir antes de producción.
 
 ## 7. Pendiente
 
 - La prueba integral, la homologación real con una CUIT del usuario y la corrida real del robot, con la medición de memoria y CPU. Allá también faltan.
 - Los traspasos 16 a 18 ya están incorporados (2026-11-23); el que siga, antes de armar cualquier etapa.
 - El plan de la etapa 1, con `/plan-etapa`, cuando le toque.
-- Lo que pide código fuera de ARCA y ya se puede hacer, como que la CUIT rechace once ceros, está en el [backlog](../backlog.md#traspaso-15-whatsapp-y-arca-para-programar).
+- Lo que pedía código fuera de ARCA y ya se podía hacer, como que la CUIT rechace once ceros, entró en la [segunda parte de la base](formularios/base-de-la-12-segunda-parte.md) (B11).

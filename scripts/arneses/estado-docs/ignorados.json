@@ -1,1 +1,7 @@
-[]
+[
+  {
+    "id": "estados|back|docs/plans/formularios/base-de-la-12-segunda-parte.md|por-retirar|retiro",
+    "motivo": "La spec cerrada de la base 2 se queda como referencia de lo que trajo la etapa: al retirar su plan, la enlazan en su lugar la fila de la hoja de ruta, las ADR 0061, 0063, 0065 y 0066, la configuración y el backlog (cierre del 2026-11-26).",
+    "fecha": "2026-11-26"
+  }
+]

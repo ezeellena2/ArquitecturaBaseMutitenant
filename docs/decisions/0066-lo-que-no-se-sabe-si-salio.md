@@ -1,12 +1,12 @@
 # ADR 0066 · Lo que no se sabe si salió por WhatsApp queda «Sin confirmar»
 
-**Estado:** aceptada por el usuario el 2026-11-18 (decisión 240 de la [hoja de ruta de formularios](../plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md#5-decisiones-de-producto), pregunta N1 de la tanda 5 del traspaso 15). Toma H7, H2, H8, H9 y H31 de la revisión de WhatsApp de ArquitecturaBase (su traspaso 13, `03-whatsapp-y-asistente.md`). Cambia la decisión 80 y precisa la [0038](0038-whatsapp-de-atencion.md). Programada en la B5, la B6 y la B7 de la [base de la 12, segunda parte](../plans/2026-11-19-etapa-base-de-la-12-segunda-parte.md) (`8bf60727`, `802a9819` y `08c5d7a7`). Nada de ArquitecturaBase pasó todavía su prueba integral.
+**Estado:** aceptada por el usuario el 2026-11-18 (decisión 240 de la [hoja de ruta de formularios](../plans/2026-10-12-formularios-dinamicos-hoja-de-ruta.md#5-decisiones-de-producto), pregunta N1 de la tanda 5 del traspaso 15). Toma H7, H2, H8, H9 y H31 de la revisión de WhatsApp de ArquitecturaBase (su traspaso 13, `03-whatsapp-y-asistente.md`). Cambia la decisión 80 y precisa la [0038](0038-whatsapp-de-atencion.md). Programada en la B5, la B6 y la B7 de la [base de la 12, segunda parte](../plans/formularios/base-de-la-12-segunda-parte.md) (`8bf60727`, `802a9819` y `08c5d7a7`). Nada de ArquitecturaBase pasó todavía su prueba integral.
 
 ## Contexto
 
 La salida de WhatsApp va por el outbox del núcleo: reclama con lease, llama a Meta fuera de la transacción y confirma en otra ([WhatsApp](../features/whatsapp.md#operación-y-entrega)). Hoy cualquier falla vuelve a pendiente y se reintenta con espera hasta `MaxAttempts`, y `OutboxStatus` tiene solo `Pending`, `Sent`, `Failed` y `Cancelled`. Si Meta recibió el mensaje y la respuesta se cortó, el cliente lo recibe dos veces.
 
-La 80 lo había aceptado («la cola del núcleo no suma un estado incierto»), y por eso salieron «Envío sin confirmar» y su revisión de la E14 y la E21. El correo ya va para el otro lado: el núcleo deja de repetir lo incierto y la invitación suma `Uncertain` (N5, N8 y O3, en el [backlog](../backlog.md#traspaso-15-el-núcleo-para-programar)).
+La 80 lo había aceptado («la cola del núcleo no suma un estado incierto»), y por eso salieron «Envío sin confirmar» y su revisión de la E14 y la E21. El correo ya va para el otro lado: el núcleo deja de repetir lo incierto y la invitación suma `Uncertain` (N5, N8 y O3, programados en la [segunda parte de la base](../plans/formularios/base-de-la-12-segunda-parte.md)).
 
 ## Decisión
 

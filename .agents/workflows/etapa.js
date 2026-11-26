@@ -19,7 +19,7 @@ export const meta = {
 const A = typeof args === 'string' ? { plan: args } : (Array.isArray(args) ? { planes: args } : (args || {}))
 const CADENA = Array.isArray(A.planes) && A.planes.length > 0
 const PLANES = (CADENA ? A.planes : (A.plan ? [A.plan] : [])).map((p) => String(p).replace(/\\/g, '/'))
-if (!PLANES.length) throw new Error('Falta args.plan: la ruta del plan ejecutable, por ejemplo docs/plans/2026-11-19-etapa-base-de-la-12-segunda-parte.md (o args.planes, con varias rutas en orden)')
+if (!PLANES.length) throw new Error('Falta args.plan: la ruta del plan ejecutable, por ejemplo docs/plans/2026-11-08-etapa-12-catalogos.md (o args.planes, con varias rutas en orden)')
 if (CADENA && A.plan) throw new Error('Pasá plan o planes, no los dos.')
 if (new Set(PLANES).size !== PLANES.length) throw new Error('Un plan está repetido en planes.')
 const MODO = A.modo || 'todo'

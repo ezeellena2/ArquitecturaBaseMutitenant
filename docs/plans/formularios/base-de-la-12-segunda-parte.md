@@ -1,6 +1,6 @@
 # Base de la 12, segunda parte (spec)
 
-**Estado:** pendiente · spec de lo que va entre la puerta de la base de la 12 y la E12 (214): lo de los traspasos 15 a 18 que cae sobre lo ya programado. El plan es [`2026-11-19-etapa-base-de-la-12-segunda-parte.md`](../2026-11-19-etapa-base-de-la-12-segunda-parte.md).
+**Estado:** cerrado · se cerró el 2026-11-26 con su puerta en verde ([hoja de ruta](../2026-09-27-plan-de-desarrollo.md)). Era lo que iba entre la puerta de la base de la 12 y la E12 (214): lo de los traspasos 15 a 18 que cae sobre lo ya programado. Lo que vale hoy está en las fichas que nombra «Qué leer» y en las ADR 0061 a 0066; su plan se retiró al cerrar y queda en la historia de git.
 
 ## Qué leer ✓
 
@@ -172,8 +172,8 @@ Cada migración se agrega y se escribe en el mismo despliegue, como excepción d
 
 ## Qué verificar al arrancar ✓
 
-Se verificó al arrancar, y la K0 lo confirmó; lo que difería está en «Cambios al contrato» del plan. La tabla salió del plan al cerrar la etapa y queda en su historia de git.
+Se verificó al arrancar, y la K0 lo confirmó; lo que difería quedó en «Cambios al contrato» del plan, que se retiró al cerrar la etapa y queda en su historia de git.
 
 ## Cómo se cierra ✓
 
-Con una sola puerta (`/puerta`), sobre copias del corte, como dice la I2 del plan. Sin prueba con Meta: lo que pide un número conectado queda para la I1 de la E10 (123).
+Con una sola puerta (`/puerta`), sobre copias del corte: las suites de los dos repos, el E2E real, los detectores de documentación, la galería de lo cambiado a 1440, 390 y 320 y el recorrido, con la I3 como pasos. Sin prueba con Meta: lo que pide un número conectado queda para la I1 de la E10 (123). Lo que la etapa mandó a otra está en el [backlog](../../backlog.md#queda-afuera-de-la-segunda-parte-de-la-base).

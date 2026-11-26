@@ -1,6 +1,6 @@
 # ADR 0063 · Topes de correo de la plataforma
 
-**Estado:** aceptada por el usuario el 2026-11-18 (pregunta 16 del traspaso 15). Toma la N7 de ArquitecturaBase (traspaso 14, `02-nucleo.md` §3) y suma un tope por organización. Programada en la B3 de la [base de la 12, segunda parte](../plans/2026-11-19-etapa-base-de-la-12-segunda-parte.md) (`bbfe2355`). Nada de ArquitecturaBase pasó todavía su prueba integral.
+**Estado:** aceptada por el usuario el 2026-11-18 (pregunta 16 del traspaso 15). Toma la N7 de ArquitecturaBase (traspaso 14, `02-nucleo.md` §3) y suma un tope por organización. Programada en la B3 de la [base de la 12, segunda parte](../plans/formularios/base-de-la-12-segunda-parte.md) (`bbfe2355`). Nada de ArquitecturaBase pasó todavía su prueba integral.
 
 ## Contexto
 

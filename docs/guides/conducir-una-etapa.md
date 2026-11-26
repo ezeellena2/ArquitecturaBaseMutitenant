@@ -13,7 +13,7 @@ La sesión que lo lanza revisa cuatro cosas, en este orden:
 ## Cómo se lanza
 
 ```js
-Workflow({ scriptPath: '.agents/workflows/etapa.js', args: { plan: 'docs/plans/2026-11-19-etapa-base-de-la-12-segunda-parte.md' } })
+Workflow({ scriptPath: '.agents/workflows/etapa.js', args: { plan: 'docs/plans/2026-11-08-etapa-12-catalogos.md' } })
 ```
 
 | Argumento | Qué hace |
