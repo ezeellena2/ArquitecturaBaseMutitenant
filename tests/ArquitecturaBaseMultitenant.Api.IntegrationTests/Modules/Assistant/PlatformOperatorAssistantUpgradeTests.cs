@@ -111,7 +111,7 @@ public sealed class PlatformOperatorAssistantUpgradeTests
         var before = await SnapshotAsync(factory);
         await using var db = AdminContext(factory);
         await db.GetService<IMigrator>().MigrateAsync(Previous(db), Ct);
-        await db.Database.ExecuteSqlRawAsync("""
+        await db.Database.ExecuteSqlAsync($"""
             CREATE FUNCTION platform.reject_upgrade_evidence_test() RETURNS trigger LANGUAGE plpgsql AS $$
             BEGIN
                 IF NEW."Reason" = 'Platform operator assistant permissions upgrade' THEN
@@ -132,7 +132,7 @@ public sealed class PlatformOperatorAssistantUpgradeTests
         }
         finally
         {
-            await db.Database.ExecuteSqlRawAsync("""
+            await db.Database.ExecuteSqlAsync($"""
                 DROP TRIGGER reject_upgrade_evidence_test ON platform."SecurityEvents";
                 DROP FUNCTION platform.reject_upgrade_evidence_test();
                 """, Ct);

@@ -169,8 +169,8 @@ public sealed class AccountDeletionParticipantsTests(ApiFactory factory)
                         // Aunque el alcance sea correcto, DELETE queda prohibido para una empresa.
                         Assert.Equal(0, await context.Database.ExecuteSqlInterpolatedAsync(
                             $"DELETE FROM tenant.\"Members\" WHERE \"UserId\" = {account.UserId}", ct));
-                        Assert.Equal(0, await context.Database.ExecuteSqlRawAsync(
-                            "DELETE FROM tenant.\"TenantSettings\"", ct));
+                        Assert.Equal(0, await context.Database.ExecuteSqlAsync(
+                            $"DELETE FROM tenant.\"TenantSettings\"", ct));
                         return Result.Success();
                     }, CommitPolicy.OnSuccess, Ct);
                 }

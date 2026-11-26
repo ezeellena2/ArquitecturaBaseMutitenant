@@ -46,7 +46,7 @@ public sealed class AssistantEditableCatalogMigrationTests
         await AssertUpgradeAsync(4);
         await migrator.MigrateAsync(current, ct);
         await AssertUpgradeAsync(4);
-        await db.Database.ExecuteSqlRawAsync("""
+        await db.Database.ExecuteSqlAsync($"""
             UPDATE platform."AssistantModelPrices" SET "TechnicalCacheReadAmount"=0.333333
                 WHERE "ProviderModelId"='claude-sonnet-5-5';
             """, ct);

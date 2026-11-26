@@ -93,13 +93,17 @@ public sealed class AssistantUnreadableConversationTests
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
         Assert.True(written.IsSuccess, written.Error.Code);
-        var table = platform ? "platform.\"PlatformAssistantMessages\"" : "tenant.\"AssistantMessages\"";
-        var sql = column == "Role"
-            ? "UPDATE " + table + " SET \"Role\" = 'Futuro' WHERE \"Id\" = {0}"
-            : "UPDATE " + table + " SET \"Status\" = 'Futuro' WHERE \"Id\" = {0}";
         var changed = await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
         {
-            Assert.Equal(1, await services.GetRequiredService<ApplicationDbContext>().Database.ExecuteSqlRawAsync(sql, [id], ct));
+            var database = services.GetRequiredService<ApplicationDbContext>().Database;
+            var rows = (platform, column) switch
+            {
+                (true, "Role") => await database.ExecuteSqlAsync($"UPDATE platform.\"PlatformAssistantMessages\" SET \"Role\" = 'Futuro' WHERE \"Id\" = {id}", ct),
+                (true, _) => await database.ExecuteSqlAsync($"UPDATE platform.\"PlatformAssistantMessages\" SET \"Status\" = 'Futuro' WHERE \"Id\" = {id}", ct),
+                (false, "Role") => await database.ExecuteSqlAsync($"UPDATE tenant.\"AssistantMessages\" SET \"Role\" = 'Futuro' WHERE \"Id\" = {id}", ct),
+                (false, _) => await database.ExecuteSqlAsync($"UPDATE tenant.\"AssistantMessages\" SET \"Status\" = 'Futuro' WHERE \"Id\" = {id}", ct),
+            };
+            Assert.Equal(1, rows);
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
         Assert.True(changed.IsSuccess, changed.Error.Code);

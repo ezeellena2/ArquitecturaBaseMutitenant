@@ -63,10 +63,13 @@ public sealed class AssistantUnreadableConversationAdversarialTests
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
         Assert.True(written.IsSuccess, written.Error.Code);
-        var sql = "UPDATE tenant.\"AssistantMessages\" SET \"" + column + "\" = 'Futuro' WHERE \"Id\" = {0}";
         var changed = await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
         {
-            Assert.Equal(1, await services.GetRequiredService<ApplicationDbContext>().Database.ExecuteSqlRawAsync(sql, [id], ct));
+            var database = services.GetRequiredService<ApplicationDbContext>().Database;
+            var rows = column == "Role"
+                ? await database.ExecuteSqlAsync($"UPDATE tenant.\"AssistantMessages\" SET \"Role\" = 'Futuro' WHERE \"Id\" = {id}", ct)
+                : await database.ExecuteSqlAsync($"UPDATE tenant.\"AssistantMessages\" SET \"Status\" = 'Futuro' WHERE \"Id\" = {id}", ct);
+            Assert.Equal(1, rows);
             return Result.Success();
         }, CommitPolicy.OnSuccess, Ct);
         Assert.True(changed.IsSuccess, changed.Error.Code);

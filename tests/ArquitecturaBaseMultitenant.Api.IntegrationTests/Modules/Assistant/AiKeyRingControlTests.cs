@@ -86,8 +86,8 @@ public sealed class AiKeyRingControlTests
         Assert.Empty(await CheckAsync(session.Host));
         await using var scope = session.Host.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        await Assert.ThrowsAnyAsync<Exception>(() => db.Database.ExecuteSqlRawAsync("DELETE FROM platform.\"AiKeyRingControls\"", Ct));
-        await Assert.ThrowsAnyAsync<Exception>(() => db.Database.ExecuteSqlRawAsync("UPDATE platform.\"AiKeyRingControls\" SET \"Control\" = '\x00'", Ct));
+        await Assert.ThrowsAnyAsync<Exception>(() => db.Database.ExecuteSqlAsync($"DELETE FROM platform.\"AiKeyRingControls\"", Ct));
+        await Assert.ThrowsAnyAsync<Exception>(() => db.Database.ExecuteSqlAsync($"UPDATE platform.\"AiKeyRingControls\" SET \"Control\" = {new byte[] { 0 }}", Ct));
     }
 
     private static async Task<IReadOnlyList<Guid>> CheckAsync(WebApplicationFactory<Program> host)
