@@ -18,5 +18,10 @@ public static class RecorridoAssistantModule
             ["Assistant:TurnWorkerEnabled"] = "true",
             ["Assistant:Platform:ApiKey"] = "isolated-assistant-provider-key",
         }))
-        .ConfigureTestServices(AssistantFakeChatRegistration.Configure);
+        .ConfigureTestServices(services =>
+        {
+            AssistantFakeChatRegistration.Configure(services);
+            // Las acciones se ofrecen solo calificadas (0068 §12): el entorno aislado las califica con el modelo falso.
+            FakeChatClient.QualifyActionsWithInitialModels(services);
+        });
 }

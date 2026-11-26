@@ -7,4 +7,6 @@
 <data name="Assistant.Fake.Title" xml:space="preserve"><value>Consulta de prueba</value></data>
 <data name="Assistant.Fake.Prefix" xml:space="preserve"><value>Respuesta de prueba con acentos: </value></data>
 <data name="Assistant.Fake.Suffix" xml:space="preserve"><value>información útil.</value></data>
+<data name="Assistant.Fake.Proposed" xml:space="preserve"><value>Te preparé la propuesta. Revisala antes de guardarla.</value></data>
+<data name="Assistant.Fake.NotProposed" xml:space="preserve"><value>No pude prepararla con esos datos. Revisalos y pedila de nuevo.</value></data>
 </root>
