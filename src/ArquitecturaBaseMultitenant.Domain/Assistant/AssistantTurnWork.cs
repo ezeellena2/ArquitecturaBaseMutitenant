@@ -30,9 +30,12 @@ public sealed class AssistantTurnWork : Entity
     public AssistantKeyFunding Funding { get; private set; }
     /// <summary>
     /// La versión del motor que selló el turno (0064 §6). Una copia toma solo los que conoce; los de una versión más nueva
-    /// esperan a la copia que los conoce y, si nadie los toma antes de su plazo, vencen y devuelven el cupo.
+    /// esperan a la copia que los conoce y, si nadie los toma antes de su plazo, vencen y devuelven el cupo. La 2 es la de un
+    /// turno que ofrece acciones (0068 §6): una copia anterior no sabe ofrecerlas, así que no lo toma.
     /// </summary>
-    public const int CurrentEngineVersion = 1;
+    public const int CurrentEngineVersion = 2;
+    /// <summary>La versión de un turno sin acciones: la sigue tomando la copia anterior (0060).</summary>
+    public const int WithoutActionsEngineVersion = 1;
     public int EngineVersion { get; private set; }
     /// <summary>0064 §11: un <c>traceparent</c> W3C, la única forma que entra.</summary>
     public const int TraceParentLength = 55;
@@ -50,7 +53,7 @@ public sealed class AssistantTurnWork : Entity
     }
     public static AssistantTurnWork Create(Guid turnId, Guid owner, Access access, Guid? tenantId, TenantKind? kind,
         string culture, string timeZoneId, DateTime? sessionStartedAtUtc, Guid modelId, string providerModelId,
-        string effort, AssistantKeyFunding funding, DateTime nowUtc, DateTime deadlineAtUtc)
+        string effort, AssistantKeyFunding funding, DateTime nowUtc, DateTime deadlineAtUtc, bool offersActions = false)
     {
         new AssistantFinancialBinding(owner, access, tenantId).Validate();
         if (turnId == Guid.Empty || modelId == Guid.Empty || nowUtc.Kind != DateTimeKind.Utc ||
@@ -75,7 +78,7 @@ public sealed class AssistantTurnWork : Entity
             ProviderModelId = providerModelId,
             Effort = effort,
             Funding = funding,
-            EngineVersion = CurrentEngineVersion,
+            EngineVersion = offersActions ? CurrentEngineVersion : WithoutActionsEngineVersion,
             CreatedAtUtc = nowUtc,
             DeadlineAtUtc = deadlineAtUtc,
         };

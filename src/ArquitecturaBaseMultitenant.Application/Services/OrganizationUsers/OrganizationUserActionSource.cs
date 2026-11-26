@@ -71,6 +71,10 @@ internal sealed class OrganizationUserActionSource : IAssistantActionSource
     public Task<Result<AssistantActionResolution>> ResolveAsync(AssistantActionDraft draft, CancellationToken cancellationToken) =>
         Task.FromResult(Result.Failure<AssistantActionResolution>(ContractErrors.NotImplemented));
 
+    // Sus campos son fijos: ninguna de sus acciones arma los campos desde su destino.
+    public Task<Result<IReadOnlyList<AssistantActionField>>> ReadTargetFieldsAsync(AssistantActionDefinition action, string target, CancellationToken cancellationToken) =>
+        Task.FromResult(Result.Failure<IReadOnlyList<AssistantActionField>>(ContractErrors.NotImplemented));
+
     public Task<Result> ValidateAsync(AssistantActionResolution resolution, CancellationToken cancellationToken) =>
         Task.FromResult(Result.Failure(ContractErrors.NotImplemented));
 }

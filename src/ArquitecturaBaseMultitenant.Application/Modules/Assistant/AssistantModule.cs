@@ -58,6 +58,10 @@ public static class AssistantModule
         services.AddScoped<AssistantQuickResponseBuilder>();
         services.AddScoped<IAssistantQuickService, AssistantQuickService>();
         services.AddScoped<Tools.AssistantToolCatalog>();
+        // ADR 0068 §6 y §7: el registro de las acciones, sus tres herramientas y la lista de calificadas del módulo.
+        services.AddSingleton(_ => Actions.AssistantActionQualifications.Load());
+        services.AddScoped<Actions.AssistantActionCatalog>();
+        services.AddScoped<Actions.AssistantActionTools>();
         services.AddScoped<Tools.IAssistantTool, Tools.Business.OrganizationUsersTool>();
         services.AddScoped<Tools.IAssistantTool, Tools.Business.FindOrganizationPersonTool>();
         services.AddScoped<Tools.IAssistantTool, Tools.Business.RoleMembersTool>();

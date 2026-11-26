@@ -1,5 +1,11 @@
 using System.Runtime.CompilerServices;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Actions;
+using ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
+using ArquitecturaBaseMultitenant.Application.Services.Roles;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantBrowser;
 
@@ -24,7 +30,7 @@ internal sealed class FakeChatClient(AssistantFakeChatMetrics metrics, TimeProvi
         var input = messages.ToArray();
         var scenario = input.LastOrDefault(row => row.Role == ChatRole.User)?.Text ?? string.Empty;
         if (scenario.Contains("[E2E:tool]", StringComparison.Ordinal)
-            && !input.SelectMany(row => row.Contents).OfType<FunctionResultContent>().Any())
+            && !input.SelectMany(row => row.Contents).OfType<FunctionResultContent>().Any(row => row.CallId != AssistantActionTools.PreloadCallId))
         {
             var tool = options?.Tools?.SingleOrDefault(row => row.Name == "org_users")
                 ?? throw new InvalidOperationException("The scripted users scenario requires its declared tool.");
@@ -43,6 +49,15 @@ internal sealed class FakeChatClient(AssistantFakeChatMetrics metrics, TimeProvi
         yield return new ChatResponseUpdate(ChatRole.Assistant, Text("Assistant.Fake.Suffix"));
         yield return new ChatResponseUpdate { Contents = [new UsageContent(new UsageDetails { InputTokenCount = 1, OutputTokenCount = 1, TotalTokenCount = 2 })], FinishReason = ChatFinishReason.Stop };
     }
+    /// <summary>
+    /// La calificación de prueba del modelo falso (ADR 0068 §12): las acciones del núcleo, calificadas con el modelo del turno.
+    /// Solo la instalan los tests y el recorrido; producción carga <c>qualified-actions.json</c>, vacía hasta calificarlas.
+    /// </summary>
+    internal static void QualifyActions(IServiceCollection services, string providerModelId) =>
+        services.Replace(ServiceDescriptor.Singleton(new AssistantActionQualifications(
+            OrganizationUserActionSource.Actions.Concat(RoleActionSource.Actions)
+                .Select(action => new AssistantActionQualification(action.Id, action.Version, providerModelId, new DateOnly(2026, 11, 26),
+                    new Money(0.01m, CurrencyCode.Create("USD").Value))).ToArray())));
     public object? GetService(Type serviceType, object? serviceKey = null) => serviceType == typeof(IChatClient) && serviceKey is null ? this : null;
     public void Dispose() { }
 }

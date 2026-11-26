@@ -11,10 +11,15 @@ public sealed record AssistantTurnRead(IReadOnlyList<AssistantTurnFrame> Frames,
 public sealed record AssistantTurnExecution(Guid TurnId, Guid LeaseId, IReadOnlyList<ChatMessage> Messages,
     IReadOnlyList<AITool> Tools, AssistantChatBinding Binding, bool RecoverOnly,
     Guid ConversationId = default, IReadOnlyList<AssistantMessageResponse>? ContextMessages = null, DateTime DeadlineAtUtc = default,
-    AssistantRequestPlace? Requester = null);
+    AssistantRequestPlace? Requester = null, IReadOnlyList<string>? OfferedActions = null);
 /// <summary>La cultura y la zona del perfil de quien pidió el turno, con las que va la hora del pedido (0064 §9).</summary>
 public sealed record AssistantRequestPlace(string Culture, string TimeZoneId);
-public sealed record AssistantToolExecution(string Data, IReadOnlyList<Guid> SubjectUserIds);
+public sealed record AssistantToolExecution(string Data, IReadOnlyList<Guid> SubjectUserIds)
+{
+    /// <summary>Lo que devolvió una herramienta de acciones (0068 §7): el turno anota ahí si ya hubo una propuesta aceptada.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public AssistantActionToolData? Action { get; init; }
+}
 public sealed record AssistantChatBinding(AssistantMode Mode, Guid ModelId, string ProviderModelId, AssistantEffort Effort);
 /// <summary><c>Readable</c>: false si su rol o su estado los escribió una versión más nueva; la conversación no se arma (0064 §6).</summary>
 public sealed record AssistantHistoryMessageRow(Guid Id, string Role, bool PrivacySubjectsKnown, Guid[] SubjectUserIds, bool Readable);

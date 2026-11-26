@@ -42,4 +42,7 @@
   <data name="Tool.my_organizations" xml:space="preserve"><value>Read my organizations</value></data>
   <data name="Tool.my_interactions" xml:space="preserve"><value>Read my interactions</value></data>
   <data name="Tool.help_article" xml:space="preserve"><value>Read help article</value></data>
+  <data name="Tool.assistant_actions" xml:space="preserve"><value>Read actions</value></data>
+  <data name="Tool.read_action" xml:space="preserve"><value>Read an action</value></data>
+  <data name="Tool.propose_action" xml:space="preserve"><value>Prepare an action</value></data>
 </root>

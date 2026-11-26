@@ -19,6 +19,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- ADR 0068 §12: la lista de acciones calificadas del asistente, vacía hasta calificarlas con un modelo real. -->
+    <EmbeddedResource Include="Modules\Assistant\Actions\qualified-actions.json"
+      LogicalName="ArquitecturaBaseMultitenant.Application.Modules.Assistant.Actions.qualified-actions.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="ArquitecturaBaseMultitenant.Application.UnitTests" />
     <!-- Los tests de integración emiten enlaces de ingreso con LoginLinkIssuer, sin pasar por el bot. -->
     <InternalsVisibleTo Include="ArquitecturaBaseMultitenant.Api.IntegrationTests" />

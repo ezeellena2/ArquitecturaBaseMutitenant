@@ -23,6 +23,12 @@ public interface IAssistantActionSource
     /// </summary>
     Task<Result<AssistantActionResolution>> ResolveAsync(AssistantActionDraft draft, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Lo armado como dato (ADR 0068, «Consecuencias»): los campos de una acción con <c>FieldsFromTarget</c>, que salen de la
+    /// definición de su destino (las opciones de un catálogo), con su tipo y sus límites. Sin destino que resuelva, un error.
+    /// </summary>
+    Task<Result<IReadOnlyList<AssistantActionField>>> ReadTargetFieldsAsync(AssistantActionDefinition action, string target, CancellationToken cancellationToken);
+
     /// <summary>Arma el pedido de la pantalla y corre su validador y las <c>Policy</c> de la ruta, sin guardar.</summary>
     Task<Result> ValidateAsync(AssistantActionResolution resolution, CancellationToken cancellationToken);
 }

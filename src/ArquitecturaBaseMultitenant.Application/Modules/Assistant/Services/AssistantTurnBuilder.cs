@@ -74,6 +74,13 @@ internal sealed class AssistantTurnBuilder(IAssistantTurnRepository turns, IAssi
             await turns.GetAsync(Owner, Access, turnId, false, ct) is null) return AssistantErrors.ConversationNotFound;
         return new IdempotentReplayResponse<AssistantTurnResultResponse>(reference, Restore(binding).Result);
     }
+    /// <summary>Lo que selló el turno para las herramientas de acciones (0068 §6), con su modelo; null si no ofrece ninguna.</summary>
+    internal async Task<Actions.AssistantActionTurn?> ActionsAsync(Guid id, bool proposed, CancellationToken ct)
+    {
+        if (await turns.GetAsync(Owner, Access, id, false, ct) is not AssistantTurn { OfferedActions: not null } turn) return null;
+        var work = await turns.GetWorkAsync(id, false, ct);
+        return work is null ? null : new(turn.ReadOfferedActions(), work.ProviderModelId, proposed);
+    }
     internal async Task<Result<bool>> CheckAsync(Guid id, Guid lease, CancellationToken ct)
     {
         var allowed = await policy.AuthorizeAsync(ct);

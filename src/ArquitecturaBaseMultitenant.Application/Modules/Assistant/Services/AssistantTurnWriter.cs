@@ -58,7 +58,9 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
             work.Funding == AssistantKeyFunding.OwnKey ? AssistantMode.OwnKey : AssistantMode.PlatformKey,
             work.ModelId, work.ProviderModelId, Enum.Parse<AssistantEffort>(work.Effort)), recover, turn.ConversationId,
             messages.Where(row => row.Id != turn.AssistantMessageId).ToArray(), work.DeadlineAtUtc,
-            recover ? null : new AssistantRequestPlace(work.Culture, work.TimeZoneId));
+            recover ? null : new AssistantRequestPlace(work.Culture, work.TimeZoneId),
+            // 0068 §6: lo que selló el turno al aceptarlo; solo se proponen esas, y cada llamada vuelve a autorizar.
+            recover || turn is not AssistantTurn local ? null : local.ReadOfferedActions());
     }
     internal async Task<Result> BeginCallAsync(Guid id, Guid lease, int sequence, CancellationToken ct)
     {

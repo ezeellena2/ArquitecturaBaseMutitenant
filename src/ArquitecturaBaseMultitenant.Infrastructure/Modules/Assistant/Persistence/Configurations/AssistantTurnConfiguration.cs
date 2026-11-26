@@ -20,6 +20,8 @@ internal sealed class AssistantTurnConfiguration : IEntityTypeConfiguration<Assi
         builder.HasIndex(value => new { value.TenantId, value.ConversationId, value.CreatedAtUtc, value.Id });
         builder.HasIndex(value => new { value.TenantId, value.ConversationId }).IsUnique().HasDatabaseName(UniqueKeys.AssistantActiveTurn).HasFilter("\"Status\" = 'Pending' OR \"Status\" = 'Running'");
         builder.Property(value => value.EventsJson).HasColumnType("jsonb");
+        // 0068 §6: la lista sellada de acciones del turno; nula en los turnos sin acciones y en los de antes.
+        builder.Property(value => value.OfferedActions).HasColumnType("jsonb");
         builder.Property(value => value.ContextMessageIds).HasColumnType("uuid[]");
         builder.Property(value => value.AdmissionVersion).HasConversion<long?>().HasColumnType("bigint");
     }

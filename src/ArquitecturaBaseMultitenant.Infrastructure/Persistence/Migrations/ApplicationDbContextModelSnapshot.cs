@@ -957,6 +957,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("LeaseId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("OfferedActions")
+                        .HasColumnType("jsonb");
+
                     b.Property<int>("Sequence")
                         .HasColumnType("integer");
 

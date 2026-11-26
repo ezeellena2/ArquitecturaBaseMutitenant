@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Options;
+using ArquitecturaBaseMultitenant.Application.Models.AssistantActions;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Actions;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Configuration;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Models.Request;
@@ -10,9 +12,17 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed record AssistantTurnPreparation(ExecutionActor Actor, string OrganizationTimeZoneId,
-    IReadOnlyList<AssistantHistoryMessageRow> History, Guid[] Subjects, TimeSpan TurnTimeout);
+    IReadOnlyList<AssistantHistoryMessageRow> History, Guid[] Subjects, TimeSpan TurnTimeout)
+{
+    /// <summary>
+    /// 0068 §6: las acciones que se le pueden ofrecer a quien pide, leídas antes de la transacción, como dato del turno. Al
+    /// aceptarlo, el turno sella las calificadas con su modelo.
+    /// </summary>
+    public IReadOnlyList<AssistantActionDefinition> Actions { get; init; } = [];
+}
 internal sealed class AssistantTurnPreparationBuilder(IExecutionActorFactory actors, AssistantQuotaDayResolver days,
-    IAssistantTurnRepository turns, AssistantSnapshotPrivacyGuard privacy, AssistantConversationPolicy policy, IOptions<AssistantOptions> options)
+    IAssistantTurnRepository turns, AssistantSnapshotPrivacyGuard privacy, AssistantConversationPolicy policy,
+    AssistantActionCatalog actions, IOptions<AssistantOptions> options)
 {
     internal async Task<Result<AssistantTurnPreparation>> BuildAsync(Guid? conversationId, CancellationToken ct)
     {
@@ -33,7 +43,10 @@ internal sealed class AssistantTurnPreparationBuilder(IExecutionActorFactory act
         }
         var subjects = history.SelectMany(message => message.SubjectUserIds).Distinct().Order().ToArray();
         var safe = await privacy.CheckAsync(actor.Value.OwnerUserId, subjects, ct);
-        return safe.IsFailure ? safe.Error : new AssistantTurnPreparation(actor.Value, zone, history, subjects, options.Value.TurnTimeout);
+        if (safe.IsFailure) return safe.Error;
+        // Solo un turno nuevo (con su conversación) ofrece acciones; detener o subir un adjunto no las lee.
+        IReadOnlyList<AssistantActionDefinition> offered = conversationId is null ? [] : await actions.ListAsync(null, ct);
+        return new AssistantTurnPreparation(actor.Value, zone, history, subjects, options.Value.TurnTimeout) { Actions = offered };
     }
     internal static bool IsReadable(IReadOnlyList<AssistantHistoryMessageRow> rows) => rows.All(message => message.Readable);
     internal static bool HasKnownProvenance(IReadOnlyList<AssistantHistoryMessageRow> rows) =>

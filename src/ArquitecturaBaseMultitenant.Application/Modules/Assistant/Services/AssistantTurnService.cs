@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Actions;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -15,6 +16,8 @@ internal sealed class AssistantTurnService(AssistantTurnWriter writer, Assistant
     IAssistantAttachmentContentReader attachments, ICurrentUser user, AssistantRequestTimeBuilder requestTime,
     IAssistantReadOnlyScope readOnly, IUnitOfWork unitOfWork, TimeProvider clock, ILogger<AssistantTurnService> logger) : IAssistantTurnService
 {
+    // Los turnos de este alcance que ya tienen su propuesta aceptada (0068 §8: una por turno).
+    private readonly HashSet<Guid> _proposals = [];
     public Task<Result<AssistantTurnExecution>> ClaimAsync(Guid id, Guid lease, CancellationToken ct) =>
         OperationLog.RunAsync<AssistantTurnExecution>(logger, clock, "AssistantTurnClaim", async () =>
         {
@@ -36,7 +39,20 @@ internal sealed class AssistantTurnService(AssistantTurnWriter writer, Assistant
             if (asked >= 0 && result.Value.Requester is { } requester)
                 messages[asked + 1].Contents.Add(new Microsoft.Extensions.AI.TextContent(
                     await requestTime.BuildAsync(context[asked].CreatedAtUtc, requester, ct)));
-            return result.Value with { Tools = await tools.BuildAsync(ct), Messages = messages, ContextMessages = null };
+            // 0068 §7: la lista precargada de lo sellado que se sigue ofreciendo, al final del pedido y como resultado de una
+            // herramienta: es un dato, nunca una instrucción. Sin nada que ofrecer, el turno va sin las herramientas de acciones.
+            AssistantToolExecution? preloaded = null;
+            if (result.Value.OfferedActions is { Count: > 0 } offered)
+                preloaded = await readOnly.RunAsync<AssistantTurnToolBuilder, AssistantToolExecution?>((inner, c) =>
+                    inner.PreloadActionsAsync(new(offered, result.Value.Binding.ProviderModelId, false), c), ct);
+            if (preloaded is not null)
+            {
+                messages.Add(new(Microsoft.Extensions.AI.ChatRole.Assistant,
+                    [new Microsoft.Extensions.AI.FunctionCallContent(AssistantActionTools.PreloadCallId, AssistantActionTools.ListKey)]));
+                messages.Add(new(Microsoft.Extensions.AI.ChatRole.Tool,
+                    [new Microsoft.Extensions.AI.FunctionResultContent(AssistantActionTools.PreloadCallId, preloaded.Data)]));
+            }
+            return result.Value with { Tools = await tools.BuildAsync(preloaded is not null, ct), Messages = messages, ContextMessages = null };
         });
     public Task<Result> BeginCallAsync(Guid id, Guid lease, int sequence, CancellationToken ct) =>
         OperationLog.RunAsync(logger, clock, "AssistantTurnBeginCall", () => unitOfWork.ExecuteInTransactionAsync(c => writer.BeginCallAsync(id, lease, sequence, c), CommitPolicy.OnSuccess, ct));
@@ -56,11 +72,15 @@ internal sealed class AssistantTurnService(AssistantTurnWriter writer, Assistant
             var allowed = await builder.CheckAsync(id, lease, ct);
             if (allowed.IsFailure) return allowed.Error;
             if (!allowed.Value) return Domain.Assistant.AssistantErrors.TurnInProgress;
+            // 0068 §6: las herramientas de acciones leen lo que selló el turno; una por turno, contada en este alcance, que es
+            // el del turno entero en el worker.
+            var actions = AssistantActionTools.Handles(key) ? await builder.ActionsAsync(id, _proposals.Contains(id), ct) : null;
             // ADR 0068 §5: la herramienta corre en su alcance READ ONLY y descartado; lo que deje en memoria nunca llega a la
             // transacción que después ata los sujetos.
             var result = await readOnly.RunAsync<AssistantTurnToolBuilder, Result<AssistantToolExecution>>(
-                (inner, c) => inner.ExecuteAsync(key, arguments, c), ct);
+                (inner, c) => inner.ExecuteAsync(key, arguments, actions, c), ct);
             if (result.IsFailure) return result;
+            if (result.Value.Action is { Outcome: AssistantActionToolData.Accepted }) _proposals.Add(id);
             allowed = await builder.CheckAsync(id, lease, ct);
             if (allowed.IsFailure) return allowed.Error;
             if (!allowed.Value) return Domain.Assistant.AssistantErrors.TurnInProgress;

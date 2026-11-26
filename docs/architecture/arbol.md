@@ -146,6 +146,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   └── Time/
 │   │   ├── Modules/  módulos quitables: el núcleo no los referencia (test)
 │   │   │   ├── Assistant/
+│   │   │   │   ├── Actions/  el registro de las acciones, sus tres herramientas y la calificación (0068)
 │   │   │   │   ├── Configuration/
 │   │   │   │   ├── Interfaces/
 │   │   │   │   │   ├── Integrations/
@@ -459,6 +460,7 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `src/ArquitecturaBaseMultitenant.Application/Models/Tenancy/` | Modelos de entrada y salida de Tenancy. | [docs/features/organizaciones.md](../features/organizaciones.md) | `src/ArquitecturaBaseMultitenant.Application/Models/Tenancy/ActiveTenantAdminEmail.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Models/Tenancy/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Models/Time/` | Modelos de entrada y salida de tiempo. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Application/Models/Time/DayRangeUtc.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Models/Time/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Modules/Assistant/` | Casos de uso del Asistente. | [Asistente](../features/asistente.md) | `src/ArquitecturaBaseMultitenant.Application/Modules/Assistant/Services/AssistantConversationService.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Modules/Assistant/AGENTS.md) |
+| `src/ArquitecturaBaseMultitenant.Application/Modules/Assistant/Actions/` | El registro de las acciones, sus tres herramientas y la calificación. | [ADR 0068](../decisions/0068-acciones-del-asistente.md) | `src/ArquitecturaBaseMultitenant.Application/Modules/Assistant/Actions/AssistantActionCatalog.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Modules/Assistant/Actions/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Modules/WhatsApp/` | Composición del módulo de WhatsApp en la capa. | [docs/features/whatsapp.md](../features/whatsapp.md) | `src/ArquitecturaBaseMultitenant.Application/Modules/WhatsApp/Interfaces/Integrations/IWhatsAppAvailability.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Modules/WhatsApp/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Resources/` | Resources de textos visibles en español e inglés. | [docs/rules/textos-y-traducciones.md](../rules/textos-y-traducciones.md) | `src/ArquitecturaBaseMultitenant.Application/Resources/Errors.resx` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Resources/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Services/` | Servicios de aplicación y sus helpers. | [docs/rules/guardado.md](../rules/guardado.md) | `src/ArquitecturaBaseMultitenant.Application/Services/Roles/RoleService.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Services/AGENTS.md) |

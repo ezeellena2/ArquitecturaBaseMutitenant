@@ -233,6 +233,13 @@ Hoy el asistente solo lee. La [ADR 0068](../decisions/0068-acciones-del-asistent
 - **El front** suma la tarjeta genérica y abre la pantalla de la acción con lo propuesto, que la pantalla lee por id. Guardar es la ruta de siempre, con la clave que la propuesta da para cada intento. Lo que nace en borrador sigue con la 0057.
 - **Desde esa etapa, las 19 lecturas** también corren en el alcance de solo lectura.
 
+**La forma de las herramientas** (B4; no son HTTP). Solo existen en un turno que selló acciones:
+- **El sello:** al aceptar el turno, `tenant.AssistantTurns.OfferedActions` guarda los ids con versión que se le ofrecen a quien pide con el modelo del turno, y el turno va en `EngineVersion` 2, que una copia anterior no toma (sin acciones sigue en 1). La lista de calificadas es `Application/Modules/Assistant/Actions/qualified-actions.json`, `[{action, version, providerModelId, qualifiedOn, measuredCost}]`, vacía hasta calificarlas con un modelo real.
+- **`assistant_actions`**, precargada al final del pedido como resultado de una herramienta (un dato, nunca una instrucción): `{actions: [{action, name}]}`, o `{areas: [...]}` con más de 40.
+- **`read_action`** `{action | area, field?, search?, target?}`: con `area`, `{actions}`; con `action`, `{action: {action, name, description, kind, hasTarget, fields: [{name, label, type, required, maxLength?, maxItems?, minimum?, maximum?, dependsOn?, itemKey?, itemFields?}]}}`, sin los `Consent`; con `field` de un `Choice` o un `Choices`, `{choices: [nombres], hasMore}` (20, la primera página, con la búsqueda); con `target`, los campos de lo armado como dato, que salen de la definición del destino.
+- **`propose_action`** `{action, target?, values: [{field, value}]}` (40 campos y 16 KiB como mucho) devuelve `AssistantActionToolData`: `{outcome: "accepted", proposalId}` o `{outcome: "rejected", code, errors?: [{path, code}]}`, con `code` `Assistant.Action.NotAvailable` (fuera del sello, ya no ofrecida o sin el permiso en su empresa), `.Invalid` (el esquema, la resolución o la validación de la fuente, con la ruta de cada campo) u `.OnePerTurn` (la segunda propuesta del turno).
+- **Lo rechazado vuelve como dato** y el turno sigue: el modelo lo corrige en el mismo turno. Cada llamada vuelve a autorizar con los permisos de ese momento, y corre en el alcance de solo lectura.
+
 **Al proveedor** van lo que dijo la persona, los tipos de acción, los campos y los nombres de las definiciones, nunca registros ni personas. Plataforma solo propone sobre lo de Plataforma. Por WhatsApp, un resumen con «Revisar en la app» llega cuando el canal tenga lugar.
 
 **Para sumar un área,** está la receta [agregar una acción](../guides/agregar-una-accion-al-asistente.md). La 0057 (armar formularios y catálogos) no cambia.
@@ -253,8 +260,8 @@ Hoy el asistente solo lee. La [ADR 0068](../decisions/0068-acciones-del-asistent
 
 ## Lo verifica
 
-- Domain: `AssistantStateTests`, `AssistantConversationActivityTests`, `AssistantSnapshotRetentionTests` y `AssistantSystemRoleTests`.
-- Application: `AssistantToolCatalogTests`, `AssistantCostTests`, `AssistantSnapshotPrivacyTests`, `AssistantSettingsTests` y `AssistantBudgetEmailRendererTests` (los cuatro correos del tope).
-- API (Docker/Testcontainers): `AssistantConversationIsolationTests`, `AssistantDurableAuthorizationTests`, `AssistantAuthorizationTests`, `AssistantAnthropicTransportTests` y `AssistantBudgetOutboxTests`.
+- Domain: `AssistantStateTests`, `AssistantConversationActivityTests`, `AssistantSnapshotRetentionTests`, `AssistantSystemRoleTests` y `AssistantTurnOfferedActionsTests`.
+- Application: `AssistantToolCatalogTests`, `AssistantActionCatalogTests` (el registro y las tres herramientas), `AssistantCostTests`, `AssistantSnapshotPrivacyTests`, `AssistantSettingsTests` y `AssistantBudgetEmailRendererTests` (los cuatro correos del tope).
+- API (Docker/Testcontainers): `AssistantActionTurnTests` (el sello, su versión y lo que va al proveedor), `AssistantConversationIsolationTests`, `AssistantDurableAuthorizationTests`, `AssistantAuthorizationTests`, `AssistantAnthropicTransportTests` y `AssistantBudgetOutboxTests`.
 - Arquitectura: `AssistantApprovedContractTests`, `AssistantQualityContractTests` e `InstalledAssistantPersistenceModelTests`.
 - Acciones (etapa «Acciones del asistente»): los tests de arquitectura de las acciones, sin Docker, y la batería genérica, una teoría por acción registrada. Sus nombres están en la [0068](../decisions/0068-acciones-del-asistente.md).
