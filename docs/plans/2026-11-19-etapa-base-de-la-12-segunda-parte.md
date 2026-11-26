@@ -1,6 +1,6 @@
 # Base de la 12, segunda parte · plan ejecutable
 
-**Estado:** cerrado · puerta del 2026-11-26; sigue el recorrido de los pasos B12B-12 a 15, y Acciones y Costuras arrancan sin esperarlo (decisión del usuario de ese día) · Spec: `docs/plans/formularios/base-de-la-12-segunda-parte.md`. Va después de la puerta de la base de la 12 y antes de la E12 (decisión 214). Tableros: lienzo v176, y los de la F4 (263), la F5 (260 y 269), la F10, la F11 y la F12 (262 y 264) y la F13 (270 a 273), aprobados en el lienzo v181, en la página «Segunda parte de la base»: cada `-Base2` manda sobre su tablero de siempre en lo que dibuja. Sin decisiones pendientes: las de producto las tomó el usuario (255, 256, 260 a 264 y 270 a 273), y la 269 se adoptó sin pregunta.
+**Estado:** cerrado · puerta del 2026-11-26, con el recorrido entero en verde a 1440 y a 390 · Spec: `docs/plans/formularios/base-de-la-12-segunda-parte.md`. Va después de la puerta de la base de la 12 y antes de la E12 (decisión 214). Tableros: lienzo v176, y los de la F4 (263), la F5 (260 y 269), la F10, la F11 y la F12 (262 y 264) y la F13 (270 a 273), aprobados en el lienzo v181, en la página «Segunda parte de la base»: cada `-Base2` manda sobre su tablero de siempre en lo que dibuja. Sin decisiones pendientes: las de producto las tomó el usuario (255, 256, 260 a 264 y 270 a 273), y la 269 se adoptó sin pregunta.
 
 **Fuente:** del [backlog](../backlog.md), «Traspaso 15, el núcleo: para programar», «Traspaso 15, diseño, fechas y números: para la segunda parte de la base», «Traspaso 15, la IA: para la segunda parte de la base», «Traspaso 15, WhatsApp y ARCA: para programar» (WhatsApp y la CUIT), «Traspasos 16 y 17: para la segunda parte de la base» y «Traspaso 18, tanda 1: para la segunda parte de la base». Lo que mandan a otra etapa está en «Queda afuera».
 
@@ -10,7 +10,7 @@
 | Back A · núcleo y WhatsApp | B16, B1–B9 y B18 | Hecha |
 | Back B · formatos e IA | B10–B15 y B17 | Hecha |
 | Front | F1–F13 | Hecha |
-| Integración y puerta | I1–I3 | Hecha; sigue el recorrido de B12B-12 a 15 |
+| Integración y puerta | I1–I3 | Hecha |
 
 ## Forma de trabajo
 
@@ -118,11 +118,11 @@ Las tareas siguen el lienzo v176 y las fichas del front (`formatos.md`, `pantall
 | Puerta | Resultado |
 | --- | --- |
 | Back | `dotnet build` sin advertencias y `dotnet test` con Docker, 3932 de 3932. Los arreglos de la puerta corrieron sus tests y los de su área: el 429 (`587dee22`), «Sin confirmar» de la difusión (`cec9e99b`, integración y seguridad de WhatsApp 28 de 28) y el preparador del recorrido (`90f8e45c`) |
-| Front | build, lint sin errores, `npm test` 3833 de 3833 y `contracts:check`; con cada arreglo de la puerta, la suite entera otra vez |
+| Front | build, lint sin errores, `npm test` 3833 de 3833 en el corte de la puerta y `contracts:check`. Cada arreglo posterior corrió sus tests y los de sus pantallas; una corrida entera más, con la máquina cargada por los conductores, dio solo timeouts, y los archivos que fallaban pasan solos |
 | E2E real | 47 casos: 36 en la primera corrida, y los 11 que fallaron pasan (el E2E viejo en 5b, 5d y 6, el entorno, y «Reintentar» en la falla incierta, `d8950356`). El asistente E8b, otra vez con el corte final: 42 hitos |
 | Documentación | `realinear-docs`, `estado-docs` y `conformidad` en 0 |
 | Galería | 344 pantallas a 1440, 390 y 320 al lado de su tablero (`a4caeb44`); las 23 diferencias de la app, arregladas en el front, y sus casos otra vez (`5de7c993` y `f33042d0`, 55 de 55) |
-| Recorrido | 246 de 246 con el front `eee6391f`, con la I3 como once pasos (B12B-01 a 11). Con el corte final, 123 de 127 a 1440: los cuatro pasos que pasan a bot lo que la I3 probaba a mano (B12B-12 a 15) esperan un arreglo del preparador, no de la app, y a mano pasaron. Sigue la corrida a 1440 y 390 |
+| Recorrido | 127 de 127 a 1440 y 127 de 127 a 390 con el corte final (front `f7f962c3` a 1440 y `f22fa885` a 390, back `e1e9bdc1`), con la I3 entera como pasos (B12B-01 a 15) y nada a mano. Arreglos de la app: «Revisá con la persona» al reenviar (`92f01893`) y la espera en horas y minutos al invitar (`16fda546`); del script y del preparador: `0dcd17a9`, `4720cbfe`, `c68eb6a3`, `8bff1616`, `e29fd695`, `684df851`, `3c7efd2a` y, en el back, `e1e9bdc1` |
 
 ## Relación con otras etapas
 
