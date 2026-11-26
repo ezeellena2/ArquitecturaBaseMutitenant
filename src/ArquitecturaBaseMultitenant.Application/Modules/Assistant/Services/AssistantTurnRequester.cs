@@ -1,7 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Idempotency;
 using ArquitecturaBaseMultitenant.Application.Models.Idempotency;
-using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Actions;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
@@ -13,8 +12,7 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantTurnRequester(IAssistantTurnRepository turns, IAssistantDurableRepository durable,
     IIdempotentRequestContext requests, AssistantConversationPolicy policy, IAssistantConfigurationPolicy configuration,
-    AssistantLimitGuard limits, AssistantSnapshotPrivacyGuard privacy, AssistantTurnPreparationBuilder preparation,
-    AssistantActionCatalog actions, TimeProvider clock)
+    AssistantLimitGuard limits, AssistantSnapshotPrivacyGuard privacy, AssistantTurnPreparationBuilder preparation, TimeProvider clock)
 {
     internal Task<Result<AssistantTurnPreparation>> PrepareAsync(Guid? conversationId, CancellationToken ct) => preparation.BuildAsync(conversationId, ct);
     internal async Task<Result<AssistantTurnAdmission>> AdmitAsync(Guid conversationId, SendAssistantMessageRequest input,
@@ -71,7 +69,7 @@ internal sealed class AssistantTurnRequester(IAssistantTurnRepository turns, IAs
         IReadOnlyList<string> offered = [];
         if (turn is AssistantTurn local)
         {
-            offered = actions.Seal(prepared.Actions, config.Model.ProviderModelId);
+            offered = preparation.Seal(prepared, config.Model.ProviderModelId);
             local.OfferActions(offered.ToArray());
         }
         turns.Add(AssistantTurnWork.Create(turn.Id, actor.OwnerUserId, actor.Access, actor.TenantId, actor.TenantKind,

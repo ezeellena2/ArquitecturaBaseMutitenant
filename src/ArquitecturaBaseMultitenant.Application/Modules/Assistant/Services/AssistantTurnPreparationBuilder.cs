@@ -48,6 +48,9 @@ internal sealed class AssistantTurnPreparationBuilder(IExecutionActorFactory act
         IReadOnlyList<AssistantActionDefinition> offered = conversationId is null ? [] : await actions.ListAsync(null, ct);
         return new AssistantTurnPreparation(actor.Value, zone, history, subjects, options.Value.TurnTimeout) { Actions = offered };
     }
+    /// <summary>0068 §6: lo que sella el turno al aceptarlo, de lo preparado, solo lo calificado con su modelo.</summary>
+    internal IReadOnlyList<string> Seal(AssistantTurnPreparation prepared, string providerModelId) =>
+        actions.Seal(prepared.Actions, providerModelId);
     internal static bool IsReadable(IReadOnlyList<AssistantHistoryMessageRow> rows) => rows.All(message => message.Readable);
     internal static bool HasKnownProvenance(IReadOnlyList<AssistantHistoryMessageRow> rows) =>
         rows.All(message => message.Role == nameof(AssistantMessageRole.User) || message.PrivacySubjectsKnown);
