@@ -121,7 +121,7 @@ internal sealed class RoleActionSource(
         ArgumentNullException.ThrowIfNull(request);
         AssistantActionChoiceRow[] rows;
         if (request.Field == ScopeField)
-            rows = [.. Enum.GetValues<RoleScope>().Select(scope => new AssistantActionChoiceRow(scope.ToString(), ScopeLabel(request.Action, scope)))];
+            rows = [.. OfferedScopes.Select(scope => new AssistantActionChoiceRow(scope.ToString(), ScopeLabel(request.Action, scope)))];
         else if (request.Field == PermissionsField)
         {
             RoleScope? scope = null;
@@ -374,8 +374,12 @@ internal sealed class RoleActionSource(
     private async Task<RoleRow?> FindTargetAsync(Guid? roleId, CancellationToken cancellationToken) =>
         roleId is { } id && await roles.FindByIdAsync(id, cancellationToken) is { IsSystemRole: false } role ? role : null;
 
+    // Los alcances que el editor deja elegir al crear: «Cada empresa» queda solo en la API y en los roles de sistema
+    // (docs/features/roles.md), así que una propuesta con ese alcance no se podría confirmar en la pantalla de siempre.
+    private static readonly RoleScope[] OfferedScopes = [RoleScope.Organization, RoleScope.SpecificCompany];
+
     private static (RoleScope Item, string? Doubt)? MatchScope(AssistantActionDefinition action, string text) =>
-        Match(Enum.GetValues<RoleScope>(), scope => new[]
+        Match(OfferedScopes, scope => new[]
         {
             ScopeLabel(action, scope), ActionTexts.OptionIn(action, ScopeField, scope.ToString(), CultureInfo.InvariantCulture), scope.ToString(),
         }.Distinct(StringComparer.Ordinal), text);

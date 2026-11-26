@@ -88,6 +88,32 @@ public sealed class RoleActionSourceTests(ApiFactory factory)
         }
     }
 
+    /// <summary>
+    /// El editor crea roles de la organización o de una empresa; «Cada empresa» queda solo en la API (roles.md). Una propuesta
+    /// con ese alcance no se podría confirmar en la pantalla de siempre, así que vuelve al modelo por el alcance y no se lista.
+    /// </summary>
+    [Fact]
+    public async Task A_new_role_for_each_company_is_not_offered_because_the_editor_does_not_create_it()
+    {
+        var scenario = await new RoleActionScenarios().PrepareAsync(factory, "roles.create@1", Ct);
+        using var owner = scenario.Client;
+        var actor = await AssistantExecutionActorTests.CaptureAsync(owner);
+
+        var scopes = await RunAsync(actor, "roles.create@1", (source, definition, ct) =>
+            source.ListChoicesAsync(new AssistantActionChoiceRequest(definition, RoleActionSource.ScopeField, null, 1, null), ct));
+        Assert.True(scopes.IsSuccess, scopes.IsFailure ? scopes.Error.Code : null);
+        Assert.Equal(new[] { nameof(RoleScope.Organization), nameof(RoleScope.SpecificCompany) }, scopes.Value.Items.Select(row => row.Id));
+
+        foreach (var written in new[] { "Cada empresa", nameof(RoleScope.AnyCompany) })
+        {
+            var proposed = RoleActionScenarios.Case(null, (RoleActionSource.NameField, "Coordinación"), (RoleActionSource.ScopeField, written),
+                (RoleActionSource.PermissionsField, new[] { "Ver usuarios" }));
+            var rejected = await RunAsync(actor, "roles.create@1", (source, definition, ct) => ProposeAsync(source, definition, proposed, ct));
+            Assert.True(rejected.IsFailure, written);
+            Assert.True(Assert.IsType<ValidationError>(rejected.Error).Errors.ContainsKey(RoleActionSource.ScopeField), Describe(rejected.Error));
+        }
+    }
+
     [Fact]
     public async Task Removing_a_permission_still_included_by_one_that_stays_returns_to_the_model_with_its_path()
     {

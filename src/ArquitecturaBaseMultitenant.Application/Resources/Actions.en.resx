@@ -23,7 +23,6 @@
   <data name="Action.roles.create@1.Field.description" xml:space="preserve"><value>Description</value></data>
   <data name="Action.roles.create@1.Field.scope" xml:space="preserve"><value>Scope</value></data>
   <data name="Action.roles.create@1.Field.scope.Organization" xml:space="preserve"><value>The whole organization</value></data>
-  <data name="Action.roles.create@1.Field.scope.AnyCompany" xml:space="preserve"><value>Each company</value></data>
   <data name="Action.roles.create@1.Field.scope.SpecificCompany" xml:space="preserve"><value>One specific company</value></data>
   <data name="Action.roles.create@1.Field.company" xml:space="preserve"><value>Company</value></data>
   <data name="Action.roles.create@1.Field.permissions" xml:space="preserve"><value>Permissions</value></data>
