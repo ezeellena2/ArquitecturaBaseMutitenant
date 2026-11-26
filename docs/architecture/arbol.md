@@ -330,6 +330,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   └── Time/
 │   ├── ArquitecturaBaseMultitenant.Application.UnitTests/
 │   │   ├── Common/
+│   │   ├── Features/  si un módulo está prendido en una organización (TenantFeatureRow)
 │   │   ├── Formatting/  Versiones para URLs y validadores HTTP
 │   │   ├── Identity/
 │   │   ├── Messaging/

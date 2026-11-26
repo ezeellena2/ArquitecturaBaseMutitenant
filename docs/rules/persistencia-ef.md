@@ -37,7 +37,7 @@
 - `SaveChanges` en repositorios (ver [guardado](guardado.md)).
 - Setear a mano o cambiar campos de auditoría, de soft delete o las columnas de tenant (`TenantId`, `BusinessTenantId`, `ConsumerTenantId`): los sella el interceptor ([multitenancy](multitenancy.md)).
 - `ExecuteUpdate`/`ExecuteDelete` sobre entidades `IAuditable` o `ISoftDeletable`.
-- SQL armado a mano con `FromSqlRaw`, `ExecuteSqlRaw` o `SqlQueryRaw`, también en los tests: se escribe `FromSql`, `ExecuteSql` o `SqlQuery` con un string interpolado, que EF pasa como parámetros ([ADR 0068](../decisions/0068-acciones-del-asistente.md)).
+- SQL armado a mano con `FromSqlRaw`, `ExecuteSqlRaw` o `SqlQueryRaw`, también en los tests: se escribe la versión interpolada (`FromSql`, `ExecuteSql`), con un string interpolado que EF pasa como parámetros ([ADR 0068](../decisions/0068-acciones-del-asistente.md)).
 - Editar una migración ya aplicada.
 - Eventos de dominio (ADR 0003).
 
