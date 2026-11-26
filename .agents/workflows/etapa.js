@@ -372,7 +372,8 @@ Devolvé:
    - el plan dice que va después de otra etapa o de su puerta, y esa no cerró según la hoja de ruta (docs/plans/2026-09-27-plan-de-desarrollo.md) o su propio plan.${sigue}
    - una decisión que el plan deja abierta en «Para decidir» y nadie tomó;
    - la app levantada: un proceso de Aspire (aspire o dcp) o de Vite (node con vite en su línea de comando);
-   - cambios sin commitear en los archivos que la etapa va a tocar (git status de los dos repos). Los de otra área no bloquean: van en notas.
+   - cambios sin commitear de otra sesión en los archivos que la etapa va a tocar (git status de los dos repos). Los de otra área no bloquean: van en notas. Tampoco bloquean los de una tarea de este mismo plan que dejó una corrida anterior frenada (tocan los archivos de esa tarea, o están en una copia .local/copias/${ctx.CLAVE}-back-*): van en notas, con la tarea y la copia, y esa tarea los continúa.
+   Los agentes que lista ListAgents (subagentes de Diseño o de otra sesión) no son un bloqueo: un conductor frenado no sigue vivo, y bloquea solo lo de esta lista.
 3. cupoSemanal: si tenés la herramienta mcp__ccd_session_mgmt__get_usage (buscala con ToolSearch), el porcentaje usado del límite semanal de todos los modelos. Si no la tenés, null.
 4. tareas: cada K, B, F e I del plan, en el orden en que el conductor las va a correr.
    - carril: contrato (K), back (B), front (F) o integracion (I). subcarril: el nombre del carril en el plan (por ejemplo «Back A»), o el carril.

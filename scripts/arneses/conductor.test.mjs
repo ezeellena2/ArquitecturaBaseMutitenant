@@ -41,12 +41,11 @@ function respondedor(lect, propias = {}) {
     if (label === 'leer el plan') return lect;
     const programa_ = label.match(/^(\S+) · programa/);
     if (programa_) return programa(programa_[1]);
-    if (/revisión adversarial|^revisión · /.test(label)) return { hallazgos: [], resumen: 'sin hallazgos' };
+    if (/^revisión · /.test(label)) return { hallazgos: [], resumen: 'sin hallazgos' };
     if (label.startsWith('verifica · ')) return { veredictos: [] };
-    const cierra = label.match(/^(\S+) · (corrige|commitea)/);
+    const cierra = label.match(/^(\S+) · commitea/);
     if (cierra) return commit(cierra[1]);
     if (label === 'integrar') return integrar;
-    if (/^back(-\d+)? · integración$/.test(label)) return commit('carril');
     if (label === 'puerta' || label === 'puerta · lo que tocan los arreglos') return puerta();
     if (label.startsWith('arreglos de')) return commit('arreglo');
     if (label === 'cierre del plan') return { commit: 'c-cierre', motivo: '' };
@@ -89,8 +88,10 @@ test('conductor: planificar solo lee, con un agente, y devuelve los carriles y l
   assert.equal(resultado.clave, 'prueba');
   assert.deepEqual(resultado.carriles, { contrato: ['K1'], back: ['B1', 'B2'], front: ['F1'] });
   assert.deepEqual(resultado.carrilesBack.map((c) => c.tareas), [['B1'], ['B2']], 'sin área en común, cada una en su carril');
-  // La integración de cada carril (2) y el cierre: integrar, 5 revisores, 5 verificadores, 2 arreglos, la puerta, pantallas y su verificador, 2 arreglos, lo que tocan y el cierre.
-  assert.equal(resultado.agentesEstimados, 1 + 1 + 3 + 1 + 1 + 2 + 20);
+  // Leer, un agente por tarea (código primero: la de riesgo también, y sin integración por carril) y el cierre: integrar,
+  // 5 revisores, 5 verificadores, 2 arreglos, la puerta, pantallas y su verificador, 2 arreglos, lo que tocan y el cierre,
+  // más el revisor adversarial de «datos» y su verificador.
+  assert.equal(resultado.agentesEstimados, 1 + 4 + 20 + 2);
 });
 
 test('conductor: el cupo en 85 % o un bloqueo del plan frenan antes de programar', async () => {
@@ -100,6 +101,14 @@ test('conductor: el cupo en 85 % o un bloqueo del plan frenan antes de programar
     assert.equal(resultado.bloqueos.length, 1);
     assert.deepEqual(etiquetas, ['leer el plan']);
   }
+});
+
+test('conductor: el lector bloquea solo por cambios de otra sesión: lo de una corrida frenada del plan y los agentes de ListAgents no frenan', async () => {
+  const { llamadas } = await correr(respondedor(lectura([tarea('B1', 'back')])), { plan: PLAN, modo: 'planificar' });
+  const leer = llamadas.find((l) => l.label === 'leer el plan').prompt;
+  assert.match(leer, /cambios sin commitear de otra sesión en los archivos que la etapa va a tocar/);
+  assert.match(leer, /Tampoco bloquean los de una tarea de este mismo plan que dejó una corrida anterior frenada .*\.local\/copias\/prueba-back-\*\): van en notas, con la tarea y la copia, y esa tarea los continúa/);
+  assert.match(leer, /Los agentes que lista ListAgents .* no son un bloqueo: un conductor frenado no sigue vivo/);
 });
 
 test('conductor: con topeCupo, el usuario deja pasar el 85 %, y los agentes miran ese tope', async () => {
@@ -117,27 +126,43 @@ test('conductor: una espera del contrato hacia el back es un ciclo y no empieza'
   assert.deepEqual(etiquetas, ['leer el plan']);
 });
 
-test('conductor: una tarea con riesgo pasa por programa, revisión adversarial y commit; sin riesgo, solo programa', async () => {
+test('conductor: una tarea con riesgo commitea como una sin riesgo, sin revisión adversarial ni otro agente', async () => {
   const lect = lectura([tarea('B1', 'back', { riesgo: ['datos', 'aislamiento'], area: 'roles' }), tarea('B2', 'back', { area: 'roles' })]);
-  const { llamadas, etiquetas } = await correr(respondedor(lect), { plan: PLAN, modo: 'programar' });
-  assert.deepEqual(etiquetas.filter((e) => /^B/.test(e)), ['B1 · programa', 'B1 · revisión adversarial', 'B1 · commitea', 'B2 · programa']);
-  const prog = llamadas.find((l) => l.label === 'B1 · programa');
-  assert.match(prog.prompt, /NO commitees/);
-  const adversarial = llamadas.find((l) => l.label === 'B1 · revisión adversarial');
-  assert.match(adversarial.prompt, /- Datos:.*\n- Aislamiento:/);
-  assert.doesNotMatch(adversarial.prompt, /build y tests en verde/, 'el revisor no recibe la conclusión de quien programó');
-  assert.equal(llamadas.find((l) => l.label === 'B1 · commitea').effort, 'low');
-  assert.match(llamadas.find((l) => l.label === 'B2 · programa').prompt, /Tarea: prueba\/B2/);
+  const { resultado, llamadas, etiquetas } = await correr(respondedor(lect), { plan: PLAN, modo: 'programar' });
+  assert.deepEqual(etiquetas.filter((e) => /^B/.test(e)), ['B1 · programa', 'B2 · programa']);
+  assert.ok(!etiquetas.some((e) => /adversarial/i.test(e)), 'la revisión adversarial va en el cierre, no en la tarea');
+  for (const id of ['B1', 'B2']) {
+    const prompt = llamadas.find((l) => l.label === `${id} · programa`).prompt;
+    assert.match(prompt, new RegExp(`Commiteá cada parte coherente y verificada con la línea «Tarea: prueba/${id}»`));
+    assert.match(prompt, /Código primero/);
+    assert.doesNotMatch(prompt, /NO commitees|lleva revisión adversarial/);
+    assert.match(prompt, /la revisión adversarial antes del commit: eso cambió el 2026-11-26 y no se hace/, 'lo que el plan pide por tarea quedó sin efecto');
+  }
+  assert.equal(estadoDe(resultado, 'B1').estado, 'hecha');
+  assert.deepEqual(estadoDe(resultado, 'B1').commits, ['c-B1']);
 });
 
-test('conductor: con hallazgos, otro agente corrige y commitea con el esfuerzo de la sesión', async () => {
-  const lect = lectura([tarea('B1', 'back', { riesgo: ['permisos'] })]);
-  const hallazgo = { titulo: 'un permiso ajeno pasa', punto: 'permisos', archivo: 'RoleService.cs', linea: 12, escenario: 'falta un permiso', prueba: 'RoleTests.Ajeno', gravedad: 'alta' };
-  const { llamadas } = await correr(respondedor(lect, { 'B1 · revisión adversarial': { hallazgos: [hallazgo], resumen: '' } }), { plan: PLAN, modo: 'programar' });
-  const corrige = llamadas.find((l) => l.label === 'B1 · corrige 1 y commitea');
-  assert.ok(corrige);
-  assert.equal(corrige.effort, undefined);
-  assert.match(corrige.prompt, /\[alta\] un permiso ajeno pasa \(RoleService\.cs:12\)/);
+test('conductor: lo que confirma el verificador de una premisa de riesgo lo corrige el arreglador del repo, con el esfuerzo de la sesión', async () => {
+  const lect = lectura([tarea('B1', 'back', { estado: 'hecha', riesgo: ['permisos'] }), tarea('B2', 'back', { estado: 'hecha', riesgo: ['permisos', 'aislamiento'] }), tarea('F1', 'front', { estado: 'hecha' })]);
+  const hallazgo = { titulo: 'un permiso ajeno pasa', punto: 'permisos', repo: 'back', archivo: 'RoleService.cs', linea: 12, escenario: 'falta un permiso', regla: 'permisos', porque: 'RAZON-permiso', gravedad: 'alta' };
+  const base = respondedor(lect);
+  const { llamadas, resultado } = await correr(async (label, prompt) => {
+    if (label === 'revisión · Adversarial · permisos') return { hallazgos: [hallazgo], resumen: '' };
+    if (label === 'verifica · Adversarial · permisos') return { veredictos: [{ numero: 1, confirmado: true, motivo: 'el 403 no se ve' }] };
+    return base(label, prompt);
+  }, { plan: PLAN, modo: 'cerrar' });
+  const revisor = llamadas.find((l) => l.label === 'revisión · Adversarial · permisos');
+  assert.equal(revisor.effort, 'high');
+  assert.match(revisor.prompt, /romper lo que programaron estas tareas, que tocan permisos: B1 · tarea B1; B2 · tarea B2\./);
+  assert.match(revisor.prompt, /- Permisos: a quien le falta un permiso recibe 403/);
+  assert.match(llamadas.find((l) => l.label === 'revisión · Adversarial · aislamiento').prompt, /que tocan aislamiento: B2 · tarea B2\./, 'una premisa por tema');
+  const verifica = llamadas.find((l) => l.label === 'verifica · Adversarial · permisos');
+  assert.equal(verifica.effort, 'high');
+  assert.doesNotMatch(verifica.prompt, /RAZON-/, 'el verificador no recibe el razonamiento del revisor');
+  const arreglo = llamadas.find((l) => l.label === 'arreglos de la revisión · back');
+  assert.equal(arreglo.effort, undefined);
+  assert.match(arreglo.prompt, /\[alta\] un permiso ajeno pasa \(RoleService\.cs:12\).*Lo confirmó un verificador: el 403 no se ve/);
+  assert.equal(resultado.revision.premisas.find((p) => p.id === 'riesgo-permisos').confirmados, 1);
 });
 
 test('conductor: el back y el front corren a la vez, después de todo el contrato', async () => {
@@ -284,10 +309,12 @@ test('conductor: en una copia se prepara, se entrega y se lee poco; en main, com
   assert.match(b1, /unos 80 pasos/);
   assert.match(b1, /node scripts\/arneses\/verificar\.mjs/);
   assert.match(b1, /Leé por partes/);
-  assert.doesNotMatch(b1, /también los tests de integración y de seguridad de esa área/, 'la integración corre al cerrar el carril');
-  assert.match(prompt('B2 · programa'), /NO commitees\. Dejá todo en el árbol de la copia/, 'con revisión adversarial no commitea ni entrega');
-  assert.match(prompt('B2 · revisión adversarial'), /la copia \.local\/copias\/prueba-back-\d del back/);
-  assert.match(prompt('B2 · commitea'), /carril\.mjs entregar/);
+  assert.doesNotMatch(b1, /también los tests de integración y de seguridad de esa área/, 'la integración corre en la puerta');
+  assert.match(b1, /la integración y la seguridad no los corrés: corren una vez, con todo el código de la etapa, en la puerta/);
+  const b2 = prompt('B2 · programa');
+  assert.match(b2, /carril\.mjs entregar \.local\/copias\/prueba-back-\d/, 'con riesgo también commitea y entrega');
+  assert.doesNotMatch(b2, /NO commitees/);
+  assert.ok(!llamadas.some((l) => /^B2 · (revisión adversarial|commitea)/.test(l.label)), 'ni un revisor ni otro agente que commitee');
   const f1 = prompt('F1 · programa');
   assert.match(f1, /Trabajás en main/);
   assert.match(f1, /node scripts\/verificar\.mjs en el front/);
@@ -297,31 +324,33 @@ test('conductor: en una copia se prepara, se entrega y se lee poco; en main, com
   assert.match(solo.llamadas.find((l) => l.label === 'B1 · programa').prompt, /Trabajás en main/);
 });
 
-test('conductor: un carril espera a otro cuando el plan lo pide, y la integración corre una vez por carril', async () => {
+test('conductor: un carril espera a otro cuando el plan lo pide, y la integración no corre por carril', async () => {
   const orden = [];
   const lect = lectura([tarea('B1', 'back', { area: 'permisos' }), tarea('B2', 'back', { area: 'asistente', espera: ['B1'] }), tarea('F1', 'front')]);
   const resp = respondedor(lect, {
     'B1 · programa': async () => { await new Promise((r) => setTimeout(r, 30)); orden.push('B1'); return programa('B1'); },
     'B2 · programa': () => { orden.push('B2'); return programa('B2'); },
   });
-  const { resultado, etiquetas, llamadas } = await correr(resp, { plan: PLAN, modo: 'programar' });
+  const { etiquetas, llamadas } = await correr(resp, { plan: PLAN, modo: 'programar' });
   assert.deepEqual(orden, ['B1', 'B2']);
-  assert.deepEqual(etiquetas.filter((e) => / · integración$/.test(e)).sort(), ['back-1 · integración', 'back-2 · integración']);
-  const integra = llamadas.find((l) => l.label === 'back-1 · integración').prompt;
-  assert.match(integra, /verificar\.mjs --integracion --espacio/);
-  assert.match(integra, /Tarea: prueba\/back-1/);
-  assert.equal(resultado.integracionDeCarriles.length, 2);
+  assert.match(llamadas.find((l) => l.label === 'B2 · programa').prompt, /Ya están commiteadas: .*B1 \(c-B1\)/);
+  assert.ok(!etiquetas.some((e) => / · integración$/.test(e)), 'la integración y la seguridad corren una vez, en la puerta');
   assert.ok(etiquetas.includes('integrar'));
 });
 
-test('conductor: si la integración de un carril queda en rojo, no se integra ni se cierra', async () => {
-  const lect = lectura([tarea('B1', 'back', { area: 'permisos' }), tarea('F1', 'front')]);
-  const mal = { ...commit('carril'), estado: 'bloqueada', motivo: 'RoleTests.Ajeno sigue en rojo' };
-  const { resultado, etiquetas } = await correr(respondedor(lect, { 'back · integración': mal }), { plan: PLAN });
-  assert.ok(!etiquetas.includes('integrar'));
-  assert.ok(!etiquetas.includes('puerta'));
-  assert.equal(resultado.resultado, 'faltan tareas');
-  assert.match(resultado.faltan.join(' · '), /integración del carril back: bloqueada, RoleTests\.Ajeno sigue en rojo/);
+test('conductor: con una tarea de riesgo «datos», el cierre tiene la premisa «Adversarial · datos»', async () => {
+  const lect = lectura([tarea('K1', 'contrato'), tarea('B1', 'back', { riesgo: ['datos'] }), tarea('B2', 'back'), tarea('F1', 'front')]);
+  const { resultado, etiquetas, llamadas } = await correr(respondedor(lect), { plan: PLAN });
+  assert.deepEqual(etiquetas.slice(-10), ['integrar', ...PREMISAS.map((p) => `revisión · ${p}`), 'revisión · Adversarial · datos', 'puerta', `revisión · ${PANTALLAS}`, 'cierre del plan']);
+  const adversarial = llamadas.find((l) => l.label === 'revisión · Adversarial · datos');
+  assert.equal(adversarial.phase, 'Revisión');
+  assert.equal(adversarial.effort, 'high');
+  assert.match(adversarial.prompt, /que tocan datos: B1 · tarea B1\./);
+  assert.match(adversarial.prompt, /- Datos: la migración es portable/);
+  assert.doesNotMatch(adversarial.prompt, /B2 · tarea B2/, 'solo las tareas de su tema');
+  assert.doesNotMatch(adversarial.prompt, /build y tests en verde/, 'el revisor no recibe la conclusión de quien programó');
+  assert.deepEqual(resultado.revision.premisas.map((p) => p.titulo), [...PREMISAS, 'Adversarial · datos', PANTALLAS]);
+  assert.equal(resultado.resultado, 'puerta corrida');
 });
 
 test('conductor: modelos elige el modelo de cada rol, y sin modelos todos van con el de la sesión', async () => {
@@ -526,7 +555,7 @@ test('conductor: plan solo sigue como antes, y los argumentos de planes se valid
   const plan = await correr(respondedorDePlanes({ a: respondedor(lect), b: respondedor(lect) }), { planes: [PA, PB], modo: 'planificar' });
   assert.deepEqual(plan.etiquetas, ['a · leer el plan', 'b · leer el plan']);
   assert.equal(plan.resultado.resultado, 'planificados');
-  assert.equal(plan.resultado.agentesEstimados, 2 * (1 + 1 + 1 + 20));
+  assert.equal(plan.resultado.agentesEstimados, 2 * (1 + 1 + 20));
 });
 
 test('conductor: las fases de meta son exactamente las que usa el script', () => {
