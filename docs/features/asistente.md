@@ -200,7 +200,7 @@ El título automático y la actividad viven en una fila privada separada: comple
 
 ## Reglas de toda la IA (traspaso 15, sin programar)
 
-La [ADR 0064](../decisions/0064-reglas-de-toda-la-ia.md) fija para el Inicio, el canal, la transcripción, los documentos y armar lo que la revisión de la IA de ArquitecturaBase encontró al correr en varias copias (decisiones 216, 217 y 223 de formularios). Sobre el Inicio ya programado va en la segunda parte de la base (214), con sus tareas en [`docs/backlog.md`](../backlog.md); lo demás, con la E23 y la E25.
+La [ADR 0064](../decisions/0064-reglas-de-toda-la-ia.md) fija para el Inicio, el canal, la transcripción, los documentos y armar lo que la revisión de la IA de ArquitecturaBase encontró al correr en varias copias (decisiones 216, 217 y 223 de formularios). Sobre el Inicio ya programado fue en la segunda parte de la base (214), con sus tareas en [`docs/backlog.md`](../backlog.md); lo demás, con la E23 y la E25.
 
 - **El cupo:** vuelve solo si el pedido venció sin reservar un paso con el proveedor; lo intentado cuenta aunque termine incierto, y «borrar no libera» vale solo para eso. Antes de leer el cuerpo de una subida se miran el cupo diario y el tope mensual: sin cupo, el 429 de siempre y no se guarda nada. Los contadores diarios de IA cortan a la medianoche de la zona de la organización, y fuera de una, a la de la zona del perfil (271, que enmienda la [0064](../decisions/0064-reglas-de-toda-la-ia.md)); el tope mensual va por el mes de la organización. En el Inicio ya va (B14): `AssistantQuotaDayResolver` da el día y su renovación, y `AssistantPlatformKeyDailyQuotas` suma `OrganizationId` (nula fuera de una), así una persona en dos organizaciones tiene dos cupos también con la clave de la plataforma; `DayUtc` conserva el nombre, pero es el día civil de esa zona. La migración pasa lo abierto de un turno de empresa a la fila de su organización, y su `Down` se niega si hay un cupo de una organización o un turno de otro motor.
 - **Las subidas:** un lugar por persona, sin cola, y una cola corta por copia en la que una organización ocupa como mucho dos lugares; el cuerpo tiene 120 s. El mismo archivo dos veces con el mismo pedido da un solo resultado.
@@ -212,9 +212,9 @@ La [ADR 0064](../decisions/0064-reglas-de-toda-la-ia.md) fija para el Inicio, el
 - **El anillo y la traza:** un valor de control por clave del anillo (`platform.AiKeyRingControls`); una copia que no coincide no queda lista. Cada turno guarda la traza de quien lo pidió.
 - **Lo de otra persona:** ningún pedido al proveedor lleva respuestas, correcciones, documentos ni mensajes de otras personas (216).
 
-## Acciones: crear, editar y eliminar (etapa «Acciones del asistente», sin programar)
+## Acciones: crear, editar y eliminar (etapa «Acciones del asistente»)
 
-Hoy el asistente solo lee. La [ADR 0068](../decisions/0068-acciones-del-asistente.md) fija cómo va a crear, editar y eliminar. Se programa en su propia etapa, después de la segunda parte de la base y antes de la E12, y desde la E12 cada pantalla nueva declara sus acciones.
+La [ADR 0068](../decisions/0068-acciones-del-asistente.md) fija cómo el asistente prepara lo que se crea, se edita o se elimina. Su etapa, después de la segunda parte de la base y antes de la E12, programó la mecánica y las seis acciones de Usuarios y Roles, y desde la E12 cada pantalla nueva declara las suyas. Se ofrecen solo calificadas: hasta la calificación con un modelo real, antes de la prueba integral del bloque, `qualified-actions.json` está vacía y el asistente solo lee.
 
 **La regla:** la IA prepara, la persona confirma en la pantalla de siempre y guarda la ruta de siempre. El asistente no tiene un camino propio para escribir.
 
