@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261126181534_AssistantTurnOfferedActions")]
+    [Migration("20261126183300_AssistantTurnOfferedActions")]
     partial class AssistantTurnOfferedActions
     {
         /// <inheritdoc />
@@ -2204,9 +2204,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("TenantId", "FeatureKey")
+                    b.HasIndex("TenantId", "FeatureKey", "Source")
                         .IsUnique()
-                        .HasDatabaseName("IX_TenantFeatures_TenantId_FeatureKey");
+                        .HasDatabaseName("IX_TenantFeatures_TenantId_FeatureKey_Source");
 
                     b.ToTable("TenantFeatures", "platform");
                 });
