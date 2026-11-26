@@ -41,11 +41,19 @@ internal sealed class AssistantProposalRepository(ApplicationDbContext db, ITena
         db.Set<AssistantProposal>().AsNoTracking().AnyAsync(row => row.TenantId == tenant.RequiredTenantId
             && row.ConversationId == conversationId && row.MessageId == messageId, ct);
 
-    public async Task<IReadOnlyList<AssistantProposal>> ListNewAsync(Guid conversationId, string kind, CancellationToken ct)
+    public async Task<IReadOnlyList<AssistantProposal>> LockNewAsync(Guid conversationId, string kind, CancellationToken ct)
     {
         db.RequireTransaction();
-        return await db.Set<AssistantProposal>().Where(row => row.TenantId == tenant.RequiredTenantId && row.ConversationId == conversationId
-            && row.Kind == kind && row.State == AssistantProposalStatus.New).ToArrayAsync(ct);
+        var tenantId = tenant.RequiredTenantId;
+        var state = nameof(AssistantProposalStatus.New);
+        // El lock espera al intento que la tiene (attempts la toma FOR UPDATE) y la fila vuelve como quedó: con su xmin de
+        // ahora, el UPDATE de Replace no choca. En orden de id, así dos turnos no se cruzan.
+        return await db.Set<AssistantProposal>().FromSqlInterpolated($"""
+            SELECT *, xmin FROM tenant."AssistantProposals"
+            WHERE "TenantId" = {tenantId} AND "ConversationId" = {conversationId} AND "Kind" = {kind} AND "State" = {state}
+            ORDER BY "Id"
+            FOR NO KEY UPDATE
+            """).ToArrayAsync(ct);
     }
 
     public void Add(AssistantProposal proposal)

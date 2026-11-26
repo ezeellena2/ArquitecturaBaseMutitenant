@@ -108,6 +108,8 @@ public static class AssistantErrors
     public const string ActionNotAvailableCode = "Assistant.Action.NotAvailable";
     public const string ActionInvalidCode = "Assistant.Action.Invalid";
     public const string ActionOnePerTurnCode = "Assistant.Action.OnePerTurn";
+    /// <summary>Guardar una segunda propuesta para el mensaje del turno: la regla de una por turno, al atar los sujetos.</summary>
+    public static readonly Error ActionOnePerTurn = Error.Conflict(ActionOnePerTurnCode, "The turn already has a proposal.");
     private static ValidationError Field(string code, string description, string field, ErrorType type) =>
         new(code, description, new Dictionary<string, string[]> { [field] = [code] }, type);
 }

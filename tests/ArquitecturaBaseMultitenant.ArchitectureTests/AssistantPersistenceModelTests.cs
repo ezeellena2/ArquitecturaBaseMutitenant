@@ -21,6 +21,24 @@ public sealed class AssistantPersistenceModelTests
         var error = Assert.IsType<InvalidOperationException>(invocation.InnerException);
         Assert.Contains(nameof(GlobalAuditedPrivateProbe), error.Message, StringComparison.Ordinal);
     }
+    /// <summary>
+    /// ADR 0068 §8: la propuesta del mensaje sale de una sola consulta (<c>AssistantMessageProposalQuery</c>), así el historial
+    /// y el mensaje del SSE traen lo mismo con el mismo filtro de la organización.
+    /// </summary>
+    [Fact]
+    public void The_proposal_of_a_message_is_projected_in_one_place()
+    {
+        var infrastructure = Path.Combine(SolutionRoot.FullPath, "src", "ArquitecturaBaseMultitenant.Infrastructure");
+        var compiled = new[] { $"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", $"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}" };
+        var projecting = Directory.EnumerateFiles(infrastructure, "*.cs", SearchOption.AllDirectories)
+            .Where(path => !compiled.Any(folder => path.Contains(folder, StringComparison.Ordinal)))
+            .Where(path => File.ReadAllText(path).Contains("AssistantMessageProposalResponse.From(", StringComparison.Ordinal))
+            .Select(path => Path.GetFileName(path))
+            .ToArray();
+
+        Assert.Equal(["AssistantMessageProposalQuery.cs"], projecting);
+    }
+
     private sealed class GlobalAuditedPrivateProbe : ITenantOwned, IGlobalSecurityAudited
     {
         public Guid TenantId { get; set; }

@@ -25,8 +25,11 @@ public interface IAssistantProposalRepository
     /// <summary>Si el mensaje ya tiene su propuesta: una por turno (0068 §8).</summary>
     Task<bool> ExistsForMessageAsync(Guid conversationId, Guid messageId, CancellationToken ct);
 
-    /// <summary>Las propuestas nuevas de una clase en la conversación, seguidas, para reemplazarlas.</summary>
-    Task<IReadOnlyList<AssistantProposal>> ListNewAsync(Guid conversationId, string kind, CancellationToken ct);
+    /// <summary>
+    /// Las propuestas nuevas de una clase en la conversación, tomadas con lock (<c>FOR NO KEY UPDATE</c>) y leídas después,
+    /// seguidas, para reemplazarlas: un intento de guardarla que la tiene termina antes y no se pisa (guardado.md).
+    /// </summary>
+    Task<IReadOnlyList<AssistantProposal>> LockNewAsync(Guid conversationId, string kind, CancellationToken ct);
 
     void Add(AssistantProposal proposal);
 }

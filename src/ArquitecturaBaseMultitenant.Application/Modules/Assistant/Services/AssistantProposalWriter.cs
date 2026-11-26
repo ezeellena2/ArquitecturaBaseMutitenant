@@ -24,8 +24,9 @@ internal sealed class AssistantProposalWriter(IAssistantProposalRepository propo
     {
         if (accepted is not { Outcome: AssistantActionToolData.Accepted, ProposalId: { } id, Resolution: { } resolution })
             throw new InvalidOperationException("Only an accepted proposal is saved.");
-        if (await proposals.ExistsForMessageAsync(turn.ConversationId, turn.AssistantMessageId, ct)) return AssistantErrors.QuickQueryNotAvailable;
-        foreach (var previous in await proposals.ListNewAsync(turn.ConversationId, AssistantProposal.ActionKind, ct)) previous.Replace();
+        if (await proposals.ExistsForMessageAsync(turn.ConversationId, turn.AssistantMessageId, ct)) return AssistantErrors.ActionOnePerTurn;
+        // La nueva anterior se toma con lock y se lee después: un intento de guardarla que la tiene la deja con su clave.
+        foreach (var previous in await proposals.LockNewAsync(turn.ConversationId, AssistantProposal.ActionKind, ct)) previous.Replace();
         var values = AssistantTurnJson.Serialize(new AssistantProposalValues(accepted.WrittenTarget, resolution.Values));
         proposals.Add(AssistantProposal.Create(id, turn.ConversationId, turn.AssistantMessageId, Owner, resolution.Action.Id,
             resolution.Action.Version, values, resolution.TargetId, resolution.BaseVersion, Now));

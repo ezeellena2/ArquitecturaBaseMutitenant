@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Application.Models.Request;
@@ -10,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Persistence.Repositories;
 
 internal sealed class AssistantTurnRepository(ApplicationDbContext db, IEnumerable<AssistantTurnStore> stores,
-    IAssistantAttachmentRepository attachments) : IAssistantTurnRepository
+    IAssistantAttachmentRepository attachments, ITenantContext tenant) : IAssistantTurnRepository
 {
     private AssistantTurnStore Store(Access access) => stores.Single(store => store.Handles(access));
     private async Task<T?> ReloadAsync<T>(T? row, CancellationToken ct) where T : class
@@ -63,16 +64,13 @@ internal sealed class AssistantTurnRepository(ApplicationDbContext db, IEnumerab
         var rows = await store.ListMessagesAsync(owner, access, conversationId, messageIds, ct);
         var files = await store.ListAttachmentsAsync(conversationId, ct);
         // ADR 0068 §8: el mensaje del SSE trae su propuesta, con su estado guardado.
-        var ids = rows.Select(row => row.Id).ToArray();
-        var proposals = access == Access.Platform ? []
-            : await db.Set<AssistantProposal>().AsNoTracking().Where(row => row.ConversationId == conversationId && ids.Contains(row.MessageId))
-                .Select(row => new { row.MessageId, row.Id, row.ActionId, row.ActionVersion, row.State }).ToArrayAsync(ct);
+        var proposals = access == Access.Platform ? new Dictionary<Guid, AssistantMessageProposalResponse>()
+            : await AssistantMessageProposalQuery.ListAsync(db, tenant.RequiredTenantId, conversationId, [.. rows.Select(row => row.Id)], ct);
         return rows.Select(row => new AssistantMessageResponse(row.Id, Enum.Parse<AssistantMessageRole>(row.Role), row.Text ?? string.Empty,
             Enum.Parse<AssistantMessageStatus>(row.Status.ToString()), row.CreatedAtUtc, row.Version, [], [], null) with
         {
             Attachments = files.Where(file => file.MessageId == row.Id).Select(file => new AssistantAttachmentSummaryResponse(file.Id, file.FileName, file.ContentType, file.Size, file.Version)).ToArray(),
-            Proposal = proposals.Where(proposal => proposal.MessageId == row.Id)
-                .Select(proposal => AssistantMessageProposalResponse.From(proposal.Id, proposal.ActionId, proposal.ActionVersion, proposal.State)).SingleOrDefault(),
+            Proposal = proposals.GetValueOrDefault(row.Id),
         }).ToArray();
     }
     public async Task<bool> ValidateAttachmentsAsync(Guid owner, Access access, Guid conversationId, IReadOnlyList<Guid> ids, CancellationToken ct)
