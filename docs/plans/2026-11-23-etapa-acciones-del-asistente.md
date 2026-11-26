@@ -249,6 +249,8 @@ Leé AGENTS.md de los dos repos, la ADR 0068, este plan, la spec y la skill /pue
 
 - El front lee el valor propuesto de un campo `Choices` como `{op: "add"|"remove", id}` y el de uno `Items` como `{op: "add"|"change"|"remove", key, row?}`: B5 a B7 lo mandan con esa forma (`src/shared/assistant-actions/`). (F1)
 - `AssistantProposalResponse` suma `baseVersion`, la versión del registro cuando la IA preparó la propuesta, además de `target.version`: sin eso la pantalla no puede decir que el registro cambió desde la propuesta, como piden los tableros. Lo suma B5. (F1)
+- `AssistantActionDeclarationTests` (B1) frena, en una fuente de acciones, `IRequestValidator` (se inyecta `IValidator<T>`), `ILogger` y las políticas que usan `IFeatureService` o repositorios; `IOptions` vale, y un puerto lector solo devuelve datos. Lo respetan B6 y B7. (B1)
+- Los casos de cada acción, con sus escenarios en `TestFeatures`, los comprueba B8: B1 no los cubre. (B1)
 
 ## Para decidir
 
