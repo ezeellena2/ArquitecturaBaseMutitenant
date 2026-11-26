@@ -4,7 +4,6 @@ using System.Text.Json.Nodes;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
-using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.OpenApi;
 
 namespace ArquitecturaBaseMultitenant.Api.Modules.Assistant;
@@ -132,9 +131,8 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
             HttpContractDocumentation.CoreError(404, "Http.NotFound"),
             HttpContractDocumentation.CoreError(500, "General.Unexpected"),
         };
-        if (IsProposal(path))
-            list.Add(HttpContractDocumentation.CoreError(501, ContractErrors.NotImplementedCode));
-        else if (method == HttpMethod.Post)
+        // Las rutas de la propuesta no llevan Idempotency-Key propia: attempts y applied repiten sin efecto (ADR 0068 §10).
+        if (!IsProposal(path) && method == HttpMethod.Post)
             list.AddRange([HttpContractDocumentation.CoreError(400, "Request.IdempotencyKeyRequired"),
                 HttpContractDocumentation.CoreError(422, "Request.IdempotencyKeyReused"), HttpContractDocumentation.CoreError(409, "Request.InProgress")]);
         if (method == HttpMethod.Put || method == HttpMethod.Delete || path.Contains("/quick/", StringComparison.Ordinal) || path.EndsWith("/messages", StringComparison.Ordinal) || path.EndsWith("/attachments", StringComparison.Ordinal))
@@ -236,7 +234,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
     }
     private static string ProposalDescription(string path)
     {
-        const string Common = "Propuesta de una acción (ADR 0068), solo de quien pide: la de otra persona u organización es 404 Assistant.Proposal.NotFound. 501 General.Contract.NotImplemented hasta la B5. ";
+        const string Common = "Propuesta de una acción (ADR 0068), solo de quien pide: la de otra persona u organización es 404 Assistant.Proposal.NotFound. ";
         if (path.EndsWith("/attempts", StringComparison.Ordinal)) return Common + "Devuelve la clave del intento de guardar ({idempotencyKey}) para el encabezado Idempotency-Key de la ruta que guarda; la misma mientras ese intento no termine en 4xx. Sin Idempotency-Key propia: repetirlo devuelve la misma clave. Con una clave de la propuesta que ya terminó en 2xx la marca aplicada y responde 409 Assistant.Proposal.AlreadyApplied con location; reemplazada, no disponible o sin confirmar, 409 Assistant.Proposal.Unavailable con su motivo.";
         if (path.EndsWith("/applied", StringComparison.Ordinal)) return Common + "La pantalla guardó: el servidor lo comprueba (al crear, una clave de la propuesta terminó en 2xx para esa persona y esa ruta; al quitar o dar de baja, el destino ya no se resuelve; al editar, version es la de ahora y distinta de la propuesta) y responde la propuesta aplicada. Sin poder comprobarlo, 409 Assistant.Proposal.NotApplied; reemplazada, no disponible o sin confirmar, 409 Assistant.Proposal.Unavailable.";
         return Common + "state (new, replaced, applied, unconfirmed o unavailable, con unavailableReason) y los nombres se calculan en cada lectura, con los permisos de ese momento y en la empresa de la acción; el destino y cada registro se vuelven a resolver con la fuente.";

@@ -283,6 +283,9 @@ public sealed class AssistantActionCatalogTests
                 [new AssistantActionField { Name = "size", Type = AssistantActionFieldType.Text, MaxLength = 20 }]));
         }
 
+        public Task<Result<AssistantActionReview>> ReviewAsync(AssistantActionResolution resolution, CancellationToken cancellationToken) =>
+            Task.FromResult(Result.Success(new AssistantActionReview(null, [])));
+
         public Task<Result> ValidateAsync(AssistantActionResolution resolution, CancellationToken cancellationToken) =>
             Task.FromResult(Validation is { } error ? Result.Failure(error) : Result.Success());
     }

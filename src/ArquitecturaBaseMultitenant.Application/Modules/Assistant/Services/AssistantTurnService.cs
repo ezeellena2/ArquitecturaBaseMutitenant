@@ -14,10 +14,9 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantTurnService(AssistantTurnWriter writer, AssistantTurnBuilder builder, AssistantTurnToolBuilder tools,
     IAssistantAttachmentContentReader attachments, ICurrentUser user, AssistantRequestTimeBuilder requestTime,
-    IAssistantReadOnlyScope readOnly, IUnitOfWork unitOfWork, TimeProvider clock, ILogger<AssistantTurnService> logger) : IAssistantTurnService
+    IAssistantReadOnlyScope readOnly, AssistantProposalWriter proposals, IUnitOfWork unitOfWork, TimeProvider clock,
+    ILogger<AssistantTurnService> logger) : IAssistantTurnService
 {
-    // Los turnos de este alcance que ya tienen su propuesta aceptada (0068 §8: una por turno).
-    private readonly HashSet<Guid> _proposals = [];
     public Task<Result<AssistantTurnExecution>> ClaimAsync(Guid id, Guid lease, CancellationToken ct) =>
         OperationLog.RunAsync<AssistantTurnExecution>(logger, clock, "AssistantTurnClaim", async () =>
         {
@@ -33,6 +32,12 @@ internal sealed class AssistantTurnService(AssistantTurnWriter writer, Assistant
                 if (content.IsFailure) return content.Error;
                 foreach (var file in content.Value) messages[index + 1].Contents.Add(new Microsoft.Extensions.AI.DataContent(file.Bytes, file.MediaType));
             }
+            // 0068 §7: el mensaje con una propuesta lleva la acción y lo que escribió el modelo, nunca lo resuelto ni los nombres.
+            // La conversación entra entera (o el turno falla con ContextTooLarge), así la última propuesta nunca queda afuera.
+            var written = await builder.ProposalHistoryAsync(result.Value.ConversationId, context.Select(row => row.Id).ToArray(), ct);
+            for (var index = 0; index < context.Count; index++)
+                if (written.TryGetValue(context[index].Id, out var proposal))
+                    messages[index + 1].Contents.Add(new Microsoft.Extensions.AI.TextContent(proposal));
             // 0064 §9: la hora del pedido y la zona del perfil, al final del último mensaje de la persona, como el canal (0054 §1).
             var asked = -1;
             for (var index = 0; index < context.Count; index++) if (context[index].Role == AssistantMessageRole.User) asked = index;
@@ -72,19 +77,20 @@ internal sealed class AssistantTurnService(AssistantTurnWriter writer, Assistant
             var allowed = await builder.CheckAsync(id, lease, ct);
             if (allowed.IsFailure) return allowed.Error;
             if (!allowed.Value) return Domain.Assistant.AssistantErrors.TurnInProgress;
-            // 0068 §6: las herramientas de acciones leen lo que selló el turno; una por turno, contada en este alcance, que es
-            // el del turno entero en el worker.
-            var actions = AssistantActionTools.Handles(key) ? await builder.ActionsAsync(id, _proposals.Contains(id), ct) : null;
+            // 0068 §6 y §8: las herramientas de acciones leen lo que selló el turno; una propuesta por turno, la guardada.
+            var actions = AssistantActionTools.Handles(key) ? await builder.ActionsAsync(id, ct) : null;
             // ADR 0068 §5: la herramienta corre en su alcance READ ONLY y descartado; lo que deje en memoria nunca llega a la
             // transacción que después ata los sujetos.
             var result = await readOnly.RunAsync<AssistantTurnToolBuilder, Result<AssistantToolExecution>>(
                 (inner, c) => inner.ExecuteAsync(key, arguments, actions, c), ct);
             if (result.IsFailure) return result;
-            if (result.Value.Action is { Outcome: AssistantActionToolData.Accepted }) _proposals.Add(id);
             allowed = await builder.CheckAsync(id, lease, ct);
             if (allowed.IsFailure) return allowed.Error;
             if (!allowed.Value) return Domain.Assistant.AssistantErrors.TurnInProgress;
-            var bound = await unitOfWork.ExecuteInTransactionAsync(c => writer.BindSubjectsAsync(id, lease, result.Value.SubjectUserIds, c), CommitPolicy.OnSuccess, ct);
+            // 0068 §8: la propuesta aceptada se guarda con el mensaje, en la misma transacción que ata sus sujetos.
+            var accepted = result.Value.Action is { Outcome: AssistantActionToolData.Accepted } action ? action : null;
+            var bound = await unitOfWork.ExecuteInTransactionAsync(c => writer.BindSubjectsAsync(id, lease, result.Value.SubjectUserIds,
+                accepted is null ? null : (turn, inner) => proposals.SaveAsync(turn, accepted, inner), c), CommitPolicy.OnSuccess, ct);
             return bound.IsFailure ? bound.Error : result;
         });
     public Task<Result> CompleteAsync(Guid id, Guid lease, string status, string? code, CancellationToken ct) =>

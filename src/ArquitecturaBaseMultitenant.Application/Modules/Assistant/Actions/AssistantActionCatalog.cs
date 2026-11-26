@@ -2,12 +2,17 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.AssistantActions;
 using ArquitecturaBaseMultitenant.Application.Models.Roles;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Domain.Users;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Actions;
 
 /// <summary>Una acción del registro con la fuente de su área, que lista, resuelve y valida sin guardar.</summary>
 internal sealed record AssistantActionEntry(AssistantActionDefinition Action, IAssistantActionSource Source);
+
+/// <summary>Una propuesta guardada vuelta a resolver: por qué ya no está disponible o lo que muestra la pantalla.</summary>
+internal sealed record AssistantActionReviewOutcome(AssistantProposalUnavailableReason? Reason, AssistantActionDefinition? Action,
+    AssistantActionReview? Review);
 
 /// <summary>
 /// El registro de las acciones (ADR 0068 §6). Junta las fuentes de las áreas por DI y comprueba que cada id con versión sea
@@ -82,6 +87,34 @@ internal sealed class AssistantActionCatalog
             return action.Requirement.OrganizationPermission is { } alternative && granted.Organization.Contains(alternative, StringComparer.Ordinal);
         return await HoldsAsync(userId, action.Requirement, granted, companyId, ct);
     }
+
+    /// <summary>
+    /// Vuelve a resolver una propuesta guardada para quien pide ahora (0068 §9): que su versión exista, su módulo siga
+    /// prendido, quien pide tenga el requisito (en la empresa de la acción) y la fuente resuelva cada id, el destino y los
+    /// <c>Record</c>. Corre en el alcance de solo lectura; la calificación no cuenta, porque es para ofrecerla al modelo.
+    /// </summary>
+    internal async Task<AssistantActionReviewOutcome> ReviewAsync(string key, Guid? targetId, uint? baseVersion,
+        IReadOnlyList<AssistantActionResolvedValue> values, CancellationToken ct)
+    {
+        var entry = _entries.SingleOrDefault(item => string.Equals(item.Action.Key, key, StringComparison.Ordinal));
+        if (entry is null || _user.UserId is not { } userId || _user.Access is not { } access || !IsOfAccess(entry.Action.Requirement.Kind, access))
+            return new(AssistantProposalUnavailableReason.Version, null, null);
+        var action = entry.Action;
+        if (action.Module is not null && !await _features.IsEnabledAsync(action.Module, ct)) return new(AssistantProposalUnavailableReason.Module, action, null);
+        var granted = access == Access.Business ? await _permissions.GetBusinessPermissionsAsync(userId, ct) : null;
+        var held = action.Requirement is { Kind: AssistantActionRequirementKind.Company, CompanyField: { } companyField }
+            ? await HoldsInCompanyAsync(action, CompanyOf(values, companyField), ct)
+            : await HoldsAsync(userId, action.Requirement, granted, null, ct);
+        if (!held) return new(AssistantProposalUnavailableReason.Permission, action, null);
+        var review = await entry.Source.ReviewAsync(new AssistantActionResolution(action, targetId, baseVersion, values), ct);
+        if (review.IsSuccess) return new(null, action, review.Value);
+        return new(review.Error.Type == Domain.Results.ErrorType.Forbidden ? AssistantProposalUnavailableReason.Permission
+            : AssistantProposalUnavailableReason.Target, action, null);
+    }
+
+    private static Guid? CompanyOf(IReadOnlyList<AssistantActionResolvedValue> values, string field) =>
+        values.SingleOrDefault(value => value.Field == field)?.Resolved is { ValueKind: System.Text.Json.JsonValueKind.String } id
+            && Guid.TryParse(id.GetString(), out var parsed) ? parsed : null;
 
     private static bool IsOfAccess(AssistantActionRequirementKind kind, Access access) => kind switch
     {

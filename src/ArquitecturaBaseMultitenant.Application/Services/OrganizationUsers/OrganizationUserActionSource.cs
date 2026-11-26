@@ -75,6 +75,10 @@ internal sealed class OrganizationUserActionSource : IAssistantActionSource
     public Task<Result<IReadOnlyList<AssistantActionField>>> ReadTargetFieldsAsync(AssistantActionDefinition action, string target, CancellationToken cancellationToken) =>
         Task.FromResult(Result.Failure<IReadOnlyList<AssistantActionField>>(ContractErrors.NotImplemented));
 
+    // Volver a resolver una propuesta guardada, con sus nombres, lo programa la tarea de esta fuente (B6 y B7 de las acciones).
+    public Task<Result<AssistantActionReview>> ReviewAsync(AssistantActionResolution resolution, CancellationToken cancellationToken) =>
+        Task.FromResult(Result.Failure<AssistantActionReview>(ContractErrors.NotImplemented));
+
     public Task<Result> ValidateAsync(AssistantActionResolution resolution, CancellationToken cancellationToken) =>
         Task.FromResult(Result.Failure(ContractErrors.NotImplemented));
 }

@@ -69,9 +69,9 @@ internal sealed class AssistantTurnToolBuilder(AssistantToolCatalog catalog, Ass
         AssistantPendingToolData { PrivacySubjectsKnown: true } pending => pending.SubjectUserIds.Distinct().ToArray(),
         // Closed projections of organization/role names and authored help; no account-name copies.
         AssistantRolesToolData or AssistantCompaniesToolData or AssistantHelpToolData => [],
-        // 0068 §7: tipos de acción, campos y nombres de definiciones; nunca registros ni personas. Las personas que nombre la
-        // propuesta las suma su mensaje (B5).
-        AssistantActionToolData => [],
+        // 0068 §7 y §8: al proveedor van tipos de acción, campos y nombres de definiciones, nunca registros ni personas. Las
+        // personas que nombra una propuesta aceptada (el destino y los Record de una persona) quedan como sujetos de su mensaje.
+        AssistantActionToolData action => action.Resolution?.SubjectUserIds.Distinct().ToArray() ?? [],
         _ => null,
     };
 

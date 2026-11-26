@@ -21617,8 +21617,8 @@
         "tags": [
           "Assistant Business"
         ],
-        "summary": "La propuesta de quien pide, con su estado calculado al leer (ADR 0068 §9). 501 hasta la B5.",
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Propuesta de una acción (ADR 0068), solo de quien pide: la de otra persona u organización es 404 Assistant.Proposal.NotFound. 501 General.Contract.NotImplemented hasta la B5. state (new, replaced, applied, unconfirmed o unavailable, con unavailableReason) y los nombres se calculan en cada lectura, con los permisos de ese momento y en la empresa de la acción; el destino y cada registro se vuelven a resolver con la fuente.",
+        "summary": "La propuesta de quien pide, con su estado calculado al leer (ADR 0068 §9).",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Propuesta de una acción (ADR 0068), solo de quien pide: la de otra persona u organización es 404 Assistant.Proposal.NotFound. state (new, replaced, applied, unconfirmed o unavailable, con unavailableReason) y los nombres se calculan en cada lectura, con los permisos de ese momento y en la empresa de la acción; el destino y cada registro se vuelven a resolver con la fuente.",
         "parameters": [
           {
             "name": "proposalId",
@@ -21650,6 +21650,7 @@
                       "unavailableReason": null,
                       "values": [ ],
                       "target": null,
+                      "baseVersion": 1,
                       "appliedLocation": "example"
                     }
                   }
@@ -21857,38 +21858,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -21981,13 +21950,6 @@
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 404,
             "code": "Assistant.Proposal.NotFound",
             "field": null,
@@ -22014,8 +21976,8 @@
         "tags": [
           "Assistant Business"
         ],
-        "summary": "La clave del intento de guardar (ADR 0068 §10). Sin `[Idempotent]`: es idempotente por naturaleza, porque repetirlo\r\ndevuelve la misma clave mientras ese intento no termine en 4xx, y responde 200 sin crear nada. 501 hasta la B5.",
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Propuesta de una acción (ADR 0068), solo de quien pide: la de otra persona u organización es 404 Assistant.Proposal.NotFound. 501 General.Contract.NotImplemented hasta la B5. Devuelve la clave del intento de guardar ({idempotencyKey}) para el encabezado Idempotency-Key de la ruta que guarda; la misma mientras ese intento no termine en 4xx. Sin Idempotency-Key propia: repetirlo devuelve la misma clave. Con una clave de la propuesta que ya terminó en 2xx la marca aplicada y responde 409 Assistant.Proposal.AlreadyApplied con location; reemplazada, no disponible o sin confirmar, 409 Assistant.Proposal.Unavailable con su motivo.",
+        "summary": "La clave del intento de guardar (ADR 0068 §10). Sin `[Idempotent]`: es idempotente por naturaleza, porque repetirlo\r\ndevuelve la misma clave mientras ese intento no termine en 4xx, y responde 200 sin crear nada.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Propuesta de una acción (ADR 0068), solo de quien pide: la de otra persona u organización es 404 Assistant.Proposal.NotFound. Devuelve la clave del intento de guardar ({idempotencyKey}) para el encabezado Idempotency-Key de la ruta que guarda; la misma mientras ese intento no termine en 4xx. Sin Idempotency-Key propia: repetirlo devuelve la misma clave. Con una clave de la propuesta que ya terminó en 2xx la marca aplicada y responde 409 Assistant.Proposal.AlreadyApplied con location; reemplazada, no disponible o sin confirmar, 409 Assistant.Proposal.Unavailable con su motivo.",
         "parameters": [
           {
             "name": "proposalId",
@@ -22322,38 +22284,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -22446,13 +22376,6 @@
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 404,
             "code": "Assistant.Proposal.NotFound",
             "field": null,
@@ -22493,8 +22416,8 @@
         "tags": [
           "Assistant Business"
         ],
-        "summary": "La pantalla guardó: el servidor lo comprueba y la marca aplicada (ADR 0068 §10). Al editar, la versión del cuerpo es la\r\nnueva del registro, la que devuelve `target.version`. 501 hasta la B5.",
-        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Propuesta de una acción (ADR 0068), solo de quien pide: la de otra persona u organización es 404 Assistant.Proposal.NotFound. 501 General.Contract.NotImplemented hasta la B5. La pantalla guardó: el servidor lo comprueba (al crear, una clave de la propuesta terminó en 2xx para esa persona y esa ruta; al quitar o dar de baja, el destino ya no se resuelve; al editar, version es la de ahora y distinta de la propuesta) y responde la propuesta aplicada. Sin poder comprobarlo, 409 Assistant.Proposal.NotApplied; reemplazada, no disponible o sin confirmar, 409 Assistant.Proposal.Unavailable.",
+        "summary": "La pantalla guardó: el servidor lo comprueba y la marca aplicada (ADR 0068 §10). Al editar, la versión del cuerpo es la\r\nnueva del registro, la que devuelve `target.version`.",
+        "description": "Asistente privado con consultas fijas, turnos durables por SSE, archivos privados y exportación. Identidad, acceso y organización se derivan del contexto firmado. JSON estricto; UTC con Z; versiones uint/xmin. Propuesta de una acción (ADR 0068), solo de quien pide: la de otra persona u organización es 404 Assistant.Proposal.NotFound. La pantalla guardó: el servidor lo comprueba (al crear, una clave de la propuesta terminó en 2xx para esa persona y esa ruta; al quitar o dar de baja, el destino ya no se resuelve; al editar, version es la de ahora y distinta de la propuesta) y responde la propuesta aplicada. Sin poder comprobarlo, 409 Assistant.Proposal.NotApplied; reemplazada, no disponible o sin confirmar, 409 Assistant.Proposal.Unavailable.",
         "parameters": [
           {
             "name": "proposalId",
@@ -22553,6 +22476,7 @@
                       "unavailableReason": null,
                       "values": [ ],
                       "target": null,
+                      "baseVersion": 1,
                       "appliedLocation": "example"
                     }
                   }
@@ -22812,38 +22736,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -22934,13 +22826,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 404,
@@ -88846,7 +88731,7 @@
             "$ref": "#/components/schemas/AssistantProposalState"
           }
         },
-        "description": "Lo que el mensaje del historial y del SSE dice de su propuesta; lo demás lo trae el GET de la propuesta."
+        "description": "Lo que el mensaje del historial y del SSE dice de su propuesta, con su estado guardado (nueva, reemplazada o aplicada); lo\r\ndemás, también «no disponible» y «Sin confirmar», lo calcula el GET de la propuesta."
       },
       "AssistantMessageResponse": {
         "required": [
@@ -89421,6 +89306,13 @@
               }
             ]
           },
+          "baseVersion": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
           "appliedLocation": {
             "type": [
               "null",
@@ -89428,7 +89320,7 @@
             ]
           }
         },
-        "description": "La propuesta de un turno (ADR 0068 §8 y §9), leída por id desde la pantalla que la confirma. El estado y los nombres se\r\ncalculan en cada lectura, con los permisos de ese momento y en la empresa de la acción; nunca se guardan."
+        "description": "La propuesta de un turno (ADR 0068 §8 y §9), leída por id desde la pantalla que la confirma. El estado y los nombres se\r\ncalculan en cada lectura, con los permisos de ese momento y en la empresa de la acción; nunca se guardan. `BaseVersion`\r\nes la versión del registro cuando la IA preparó la propuesta: si difiere de `Target.Version`, cambió desde entonces."
       },
       "AssistantProposalState": {
         "enum": [

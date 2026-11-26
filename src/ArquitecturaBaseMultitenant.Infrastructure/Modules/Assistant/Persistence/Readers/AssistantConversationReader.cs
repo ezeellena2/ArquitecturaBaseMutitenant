@@ -93,10 +93,16 @@ internal sealed class AssistantConversationReader(ApplicationDbContext context, 
                 .Select(row => new { MessageId = row.MessageId!.Value, row.Id, row.FileName, row.ContentType, row.Size, row.Version }).ToArrayAsync(ct);
         var attachments = attachmentRows.GroupBy(row => row.MessageId).ToDictionary(group => group.Key,
             group => group.Select(row => new AssistantAttachmentSummaryResponse(row.Id, row.FileName, row.ContentType, row.Size, row.Version)).ToArray());
+        // ADR 0068 §8: la propuesta del turno, con su estado guardado; el GET de la propuesta calcula lo demás.
+        var proposals = access == Access.Platform ? []
+            : await context.Set<AssistantProposal>().AsNoTracking().Where(row => row.TenantId == tenantId && row.ConversationId == conversationId && ids.Contains(row.MessageId))
+                .Select(row => new { row.MessageId, row.Id, row.ActionId, row.ActionVersion, row.State }).ToArrayAsync(ct);
+        var proposalOf = proposals.ToDictionary(row => row.MessageId, row => AssistantMessageProposalResponse.From(row.Id, row.ActionId, row.ActionVersion, row.State));
         return new CursorResult<AssistantMessageResponse>([.. page.Items.Select(value => new AssistantMessageResponse(value.Id,
             Enum.Parse<AssistantMessageRole>(value.Role), value.Text ?? "", Enum.Parse<AssistantMessageStatus>(value.Status.ToString()), value.CreatedAtUtc, value.Version,
             attachments.GetValueOrDefault(value.Id) ?? [], value.LinksJson is null ? [] : JsonSerializer.Deserialize<AssistantLinkResponse[]>(value.LinksJson)!,
-            value.PositiveFeedback == null ? null : value.PositiveFeedback.Value ? AssistantRating.Up : AssistantRating.Down))], page.NextCursor, page.HasMore);
+            value.PositiveFeedback == null ? null : value.PositiveFeedback.Value ? AssistantRating.Up : AssistantRating.Down, proposalOf.GetValueOrDefault(value.Id)))],
+            page.NextCursor, page.HasMore);
     }
 
     public Task<bool> ExistsAttachmentAsync(Guid ownerUserId, Access access, Guid conversationId, Guid attachmentId, CancellationToken ct)

@@ -73,6 +73,7 @@ public static class AssistantModule
         services.AddScoped<IAssistantAttachmentContentReader, AssistantAttachmentContentReader>();
         services.AddScoped<IAssistantExportRenderer, Export.AssistantExportRenderer>();
         services.AddScoped<IAssistantRetentionRepository, AssistantRetentionRepository>();
+        services.AddScoped<IAssistantProposalRepository, AssistantProposalRepository>();
         services.AddHostedService<Retention.AssistantRetentionWorker>();
         services.AddSingleton<IValidateOptions<AssistantOptions>, AssistantOptionsValidator>();
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Help.IHelpArticleReader,

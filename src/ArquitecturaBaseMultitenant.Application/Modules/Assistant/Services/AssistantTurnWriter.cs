@@ -158,14 +158,16 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
         work.Renew(clock.GetUtcNow().UtcDateTime, options.Value.LeaseDuration);
         return Result.Success();
     }
-    internal async Task<Result> BindSubjectsAsync(Guid id, Guid lease, IReadOnlyList<Guid> subjects, CancellationToken ct)
+    /// <summary>Ata los sujetos de una herramienta al turno y a su mensaje; <paramref name="also"/> escribe con ellos, como la propuesta.</summary>
+    internal async Task<Result> BindSubjectsAsync(Guid id, Guid lease, IReadOnlyList<Guid> subjects,
+        Func<IAssistantTurn, CancellationToken, Task<Result>>? also, CancellationToken ct)
     {
         var loaded = await LoadAsync(id, lease, true, ct, subjects);
         if (loaded.IsFailure) return loaded.Error;
         var (turn, work) = loaded.Value;
         if (work.StopRequested) return AssistantErrors.TurnInProgress;
         await turns.AddSubjectsAsync(Owner, Access, turn.BindingId, subjects, ct);
-        return Result.Success();
+        return also is null ? Result.Success() : await also(turn, ct);
     }
     internal async Task<Result> CompleteAsync(Guid id, Guid lease, string status, string? code, CancellationToken ct)
     {

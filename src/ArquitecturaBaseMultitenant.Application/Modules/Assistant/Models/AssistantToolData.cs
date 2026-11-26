@@ -70,6 +70,10 @@ public sealed record AssistantActionToolData : AssistantToolData
     [JsonIgnore]
     public ArquitecturaBaseMultitenant.Application.Models.AssistantActions.AssistantActionResolution? Resolution { get; init; }
 
+    /// <summary>El destino como lo escribió el modelo: lo guarda la propuesta para la historia del turno siguiente.</summary>
+    [JsonIgnore]
+    public string? WrittenTarget { get; init; }
+
     public static AssistantActionToolData Reject(string code, IReadOnlyList<AssistantActionToolError>? errors = null) =>
         new() { Outcome = Rejected, Code = code, Errors = errors };
 }

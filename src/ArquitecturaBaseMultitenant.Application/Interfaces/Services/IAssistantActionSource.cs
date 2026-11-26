@@ -29,6 +29,13 @@ public interface IAssistantActionSource
     /// </summary>
     Task<Result<IReadOnlyList<AssistantActionField>>> ReadTargetFieldsAsync(AssistantActionDefinition action, string target, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Vuelve a resolver una propuesta guardada (ADR 0068 §9): cada id guardado, el destino y los <c>Record</c>, con los permisos
+    /// de ahora y en su empresa. Devuelve el destino como está ahora y cada valor como lo dibuja la pantalla, con su nombre.
+    /// Lo que ya no resuelve es <c>NotFound</c>, y lo que quien pide ya no puede dar, <c>Forbidden</c>.
+    /// </summary>
+    Task<Result<AssistantActionReview>> ReviewAsync(AssistantActionResolution resolution, CancellationToken cancellationToken);
+
     /// <summary>Arma el pedido de la pantalla y corre su validador y las <c>Policy</c> de la ruta, sin guardar.</summary>
     Task<Result> ValidateAsync(AssistantActionResolution resolution, CancellationToken cancellationToken);
 }

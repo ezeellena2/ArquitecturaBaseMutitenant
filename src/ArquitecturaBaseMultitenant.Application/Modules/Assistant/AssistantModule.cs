@@ -20,6 +20,8 @@ public static class AssistantModule
         services.AddScoped<AssistantAttachmentWriter>();
         services.AddScoped<IAssistantExportService, AssistantExportService>();
         services.AddScoped<IAssistantProposalService, AssistantProposalService>();
+        services.AddScoped<AssistantProposalBuilder>();
+        services.AddScoped<AssistantProposalWriter>();
         services.AddScoped<IAssistantRetentionService, AssistantRetentionService>();
         services.AddScoped<AssistantRetentionWriter>();
         services.AddScoped<IAssistantDurableService, AssistantDurableService>();

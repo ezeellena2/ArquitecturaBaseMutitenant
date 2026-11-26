@@ -62,9 +62,18 @@ internal sealed class AssistantTurnRepository(ApplicationDbContext db, IEnumerab
         var store = Store(access);
         var rows = await store.ListMessagesAsync(owner, access, conversationId, messageIds, ct);
         var files = await store.ListAttachmentsAsync(conversationId, ct);
+        // ADR 0068 §8: el mensaje del SSE trae su propuesta, con su estado guardado.
+        var ids = rows.Select(row => row.Id).ToArray();
+        var proposals = access == Access.Platform ? []
+            : await db.Set<AssistantProposal>().AsNoTracking().Where(row => row.ConversationId == conversationId && ids.Contains(row.MessageId))
+                .Select(row => new { row.MessageId, row.Id, row.ActionId, row.ActionVersion, row.State }).ToArrayAsync(ct);
         return rows.Select(row => new AssistantMessageResponse(row.Id, Enum.Parse<AssistantMessageRole>(row.Role), row.Text ?? string.Empty,
             Enum.Parse<AssistantMessageStatus>(row.Status.ToString()), row.CreatedAtUtc, row.Version, [], [], null) with
-        { Attachments = files.Where(file => file.MessageId == row.Id).Select(file => new AssistantAttachmentSummaryResponse(file.Id, file.FileName, file.ContentType, file.Size, file.Version)).ToArray() }).ToArray();
+        {
+            Attachments = files.Where(file => file.MessageId == row.Id).Select(file => new AssistantAttachmentSummaryResponse(file.Id, file.FileName, file.ContentType, file.Size, file.Version)).ToArray(),
+            Proposal = proposals.Where(proposal => proposal.MessageId == row.Id)
+                .Select(proposal => AssistantMessageProposalResponse.From(proposal.Id, proposal.ActionId, proposal.ActionVersion, proposal.State)).SingleOrDefault(),
+        }).ToArray();
     }
     public async Task<bool> ValidateAttachmentsAsync(Guid owner, Access access, Guid conversationId, IReadOnlyList<Guid> ids, CancellationToken ct)
     {

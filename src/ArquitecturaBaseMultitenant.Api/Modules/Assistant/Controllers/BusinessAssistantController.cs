@@ -20,7 +20,7 @@ namespace ArquitecturaBaseMultitenant.Api.Modules.Assistant.Controllers;
 public sealed class BusinessAssistantController(IAssistantConversationService service, IAssistantAttachmentService attachments, IAssistantExportService exports,
     IAssistantProposalService proposals) : AssistantControllerBase(service, attachments, exports)
 {
-    /// <summary>La propuesta de quien pide, con su estado calculado al leer (ADR 0068 §9). 501 hasta la B5.</summary>
+    /// <summary>La propuesta de quien pide, con su estado calculado al leer (ADR 0068 §9).</summary>
     [HttpGet("proposals/{proposalId:guid}")]
     [ProducesResponseType<AssistantProposalResponse>(200)]
     [ProducesProblem(400)]
@@ -28,13 +28,12 @@ public sealed class BusinessAssistantController(IAssistantConversationService se
     [ProducesProblem(403)]
     [ProducesProblem(404)]
     [ProducesProblem(500)]
-    [ProducesProblem(501)]
     public async Task<IActionResult> GetProposal([FromRoute] Guid proposalId, CancellationToken cancellationToken) =>
         (await proposals.GetAsync(proposalId, cancellationToken)).ToActionResult(this);
 
     /// <summary>
     /// La clave del intento de guardar (ADR 0068 §10). Sin <c>[Idempotent]</c>: es idempotente por naturaleza, porque repetirlo
-    /// devuelve la misma clave mientras ese intento no termine en 4xx, y responde 200 sin crear nada. 501 hasta la B5.
+    /// devuelve la misma clave mientras ese intento no termine en 4xx, y responde 200 sin crear nada.
     /// </summary>
     [HttpPost("proposals/{proposalId:guid}/attempts")]
     [ProducesResponseType<AssistantProposalAttemptResponse>(200)]
@@ -44,14 +43,13 @@ public sealed class BusinessAssistantController(IAssistantConversationService se
     [ProducesProblem(404)]
     [ProducesProblem(409)]
     [ProducesProblem(500)]
-    [ProducesProblem(501)]
     public async Task<IActionResult> AttemptProposal([FromRoute] Guid proposalId, [FromBody] AssistantProposalAttemptHttpRequest request,
         CancellationToken cancellationToken) =>
         (await proposals.AttemptAsync(proposalId, cancellationToken)).ToActionResult(this);
 
     /// <summary>
     /// La pantalla guardó: el servidor lo comprueba y la marca aplicada (ADR 0068 §10). Al editar, la versión del cuerpo es la
-    /// nueva del registro, la que devuelve <c>target.version</c>. 501 hasta la B5.
+    /// nueva del registro, la que devuelve <c>target.version</c>.
     /// </summary>
     [HttpPost("proposals/{proposalId:guid}/applied")]
     [ResponseVersion("Target.Version")]
@@ -62,7 +60,6 @@ public sealed class BusinessAssistantController(IAssistantConversationService se
     [ProducesProblem(404)]
     [ProducesProblem(409)]
     [ProducesProblem(500)]
-    [ProducesProblem(501)]
     public async Task<IActionResult> AppliedProposal([FromRoute] Guid proposalId, [FromBody] AssistantProposalAppliedHttpRequest request,
         CancellationToken cancellationToken) =>
         (await proposals.AppliedAsync(proposalId, new AssistantProposalAppliedRequest(request.Version), cancellationToken)).ToActionResult(this);

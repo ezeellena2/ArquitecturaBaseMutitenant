@@ -140,7 +140,8 @@ internal sealed class AssistantActionTools(AssistantActionCatalog catalog)
             return AssistantActionToolData.Reject(AssistantErrors.ActionNotAvailableCode);
         var validated = await entry.Source.ValidateAsync(resolved.Value, ct);
         if (validated.IsFailure) return Rejection(validated.Error);
-        return new() { Outcome = AssistantActionToolData.Accepted, ProposalId = Guid.CreateVersion7(), Resolution = resolved.Value };
+        return new() { Outcome = AssistantActionToolData.Accepted, ProposalId = Guid.CreateVersion7(), Resolution = resolved.Value,
+            WrittenTarget = proposal.Target };
     }
 
     private async Task<bool> HoldsInCompanyAsync(AssistantActionDefinition action, AssistantActionResolution resolution, string companyField,

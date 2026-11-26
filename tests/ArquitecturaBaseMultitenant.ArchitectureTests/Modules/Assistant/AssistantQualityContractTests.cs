@@ -19,9 +19,7 @@ public sealed class AssistantQualityContractTests
     public void Implemented_routes_publish_the_shared_limits_and_no_placeholder_status()
     {
         var document = JsonNode.Parse(File.ReadAllText(Path.Combine(SolutionRoot.FullPath, "docs/contracts/openapi.json")))!;
-        // Las rutas de la propuesta de las acciones responden 501 hasta la B5, que quita esta excepción (contrato, K1).
-        foreach (var path in document["paths"]!.AsObject().Where(path => path.Key.Contains("/assistant", StringComparison.Ordinal)
-            && !path.Key.StartsWith("/api/organization/assistant/proposals/", StringComparison.Ordinal)))
+        foreach (var path in document["paths"]!.AsObject().Where(path => path.Key.Contains("/assistant", StringComparison.Ordinal)))
             foreach (var action in path.Value!.AsObject().Where(action => action.Key is "get" or "post" or "put" or "delete"))
                 Assert.Null(action.Value!["responses"]!["501"]);
         var schemas = document["components"]!["schemas"]!;

@@ -181,6 +181,24 @@ public sealed class IdempotencyStore : IIdempotencyStore
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
+    /// <summary>Lee una clave vigente sin reservarla; vencida no cuenta, porque la próxima reserva la borra.</summary>
+    public async Task<IdempotencyKeyState?> FindAsync(Guid? tenantId, Guid userId, Guid key, CancellationToken cancellationToken)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT "ResponseStatusCode", "Route", "ResponseLocation"
+            FROM platform."IdempotencyKeys"
+            WHERE "TenantId" IS NOT DISTINCT FROM @tenant AND "UserId" = @user AND "Key" = @key AND "ExpiresAtUtc" > @now
+            """;
+        AddScope(command, tenantId, userId, key);
+        command.Parameters.AddWithValue("now", _timeProvider.GetUtcNow().UtcDateTime);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        if (!await reader.ReadAsync(cancellationToken)) return null;
+        return new IdempotencyKeyState(reader.IsDBNull(0) ? null : reader.GetInt32(0), reader.GetString(1), reader.IsDBNull(2) ? null : reader.GetString(2));
+    }
+
     public async Task<int> CleanupExpiredAsync(CancellationToken cancellationToken)
     {
         await using var connection = new NpgsqlConnection(_connectionString);

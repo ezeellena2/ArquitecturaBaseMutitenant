@@ -9,7 +9,8 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 
 internal sealed class AssistantTurnBuilder(IAssistantTurnRepository turns, IAssistantDurableRepository durable,
-    AssistantConversationPolicy policy, ICurrentUser user, AssistantSnapshotPrivacyGuard privacy, TimeProvider clock)
+    AssistantConversationPolicy policy, ICurrentUser user, AssistantSnapshotPrivacyGuard privacy, IAssistantProposalRepository proposals,
+    TimeProvider clock)
 {
     private Guid Owner => user.UserId ?? throw new InvalidOperationException("A session is required.");
     private Domain.Users.Access Access => user.Access ?? throw new InvalidOperationException("An access is required.");
@@ -75,11 +76,29 @@ internal sealed class AssistantTurnBuilder(IAssistantTurnRepository turns, IAssi
         return new IdempotentReplayResponse<AssistantTurnResultResponse>(reference, Restore(binding).Result);
     }
     /// <summary>Lo que selló el turno para las herramientas de acciones (0068 §6), con su modelo; null si no ofrece ninguna.</summary>
-    internal async Task<Actions.AssistantActionTurn?> ActionsAsync(Guid id, bool proposed, CancellationToken ct)
+    internal async Task<Actions.AssistantActionTurn?> ActionsAsync(Guid id, CancellationToken ct)
     {
         if (await turns.GetAsync(Owner, Access, id, false, ct) is not AssistantTurn { OfferedActions: not null } turn) return null;
         var work = await turns.GetWorkAsync(id, false, ct);
-        return work is null ? null : new(turn.ReadOfferedActions(), work.ProviderModelId, proposed);
+        // Una por turno (0068 §8): la que ya quedó guardada con el mensaje del asistente.
+        return work is null ? null : new(turn.ReadOfferedActions(), work.ProviderModelId,
+            await proposals.ExistsForMessageAsync(turn.ConversationId, turn.AssistantMessageId, ct));
+    }
+
+    /// <summary>
+    /// Lo que la historia del turno lleva de cada propuesta de la conversación (0068 §7): la acción y lo que escribió el modelo,
+    /// por mensaje; nunca lo resuelto ni los nombres.
+    /// </summary>
+    internal async Task<IReadOnlyDictionary<Guid, string>> ProposalHistoryAsync(Guid conversationId, IReadOnlyList<Guid> messageIds, CancellationToken ct)
+    {
+        if (Access == Domain.Users.Access.Platform) return new Dictionary<Guid, string>();
+        var rows = await proposals.ListByMessagesAsync(Owner, Access, conversationId, messageIds, ct);
+        return rows.ToDictionary(row => row.MessageId, row =>
+        {
+            var stored = AssistantTurnJson.Restore<AssistantProposalValues>(row.Values);
+            return new AssistantProposalHistory(row.ActionKey, stored.Target,
+                stored.Values.Select(value => new AssistantProposalHistoryValue(value.Field, value.Written)).ToArray()).Render();
+        });
     }
     internal async Task<Result<bool>> CheckAsync(Guid id, Guid lease, CancellationToken ct)
     {
