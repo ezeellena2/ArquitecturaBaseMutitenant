@@ -32,19 +32,19 @@ internal sealed class PlatformFeatureWriter(ITenantReader tenants, ITenantFeatur
         var changes = new SecurityEventChanges();
         var prefix = "features." + definition.Key + ".";
         changes.AddBoolean(prefix + "enabled", feature?.Enabled ?? definition.DefaultEnabled, request.Enabled);
-        changes.AddEnum<TenantFeatureSource>(prefix + "source", feature?.Source, request.Source);
+        changes.AddEnum<TenantFeatureSource>(prefix + "source", feature?.Source, request.DomainSource);
         changes.AddUtc(prefix + "expiresAtUtc", feature?.ExpiresAtUtc, expiresAtUtc);
         if (feature is null)
         {
             if (request.Version.Value != 0) return TenantFeatureErrors.NotFound;
-            var created = TenantFeature.Create(tenantId, key, request.Enabled!.Value, request.Source!.Value, expiresAtUtc, request.ExpiresOn);
+            var created = TenantFeature.Create(tenantId, key, request.Enabled!.Value, request.DomainSource!.Value, expiresAtUtc, request.ExpiresOn);
             if (created.IsFailure) return created.Error;
             feature = created.Value;
             features.Add(feature);
         }
         else
         {
-            var update = feature.Update(request.Enabled!.Value, request.Source!.Value, expiresAtUtc, request.ExpiresOn);
+            var update = feature.Update(request.Enabled!.Value, request.DomainSource!.Value, expiresAtUtc, request.ExpiresOn);
             if (update.IsFailure) return update.Error;
             features.MarkUpdated(feature);
         }

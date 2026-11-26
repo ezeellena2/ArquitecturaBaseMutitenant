@@ -17,7 +17,7 @@ internal sealed class PlatformFeatureListBuilder(ITenantReader tenants, ITenantF
         return catalog.All.Where(definition => definition.Supports(tenant.Kind)).Select(definition =>
         {
             var grant = grants.SingleOrDefault(row => row.Key == definition.Key);
-            return new PlatformFeatureResponse(definition.Key, grant?.Enabled ?? definition.DefaultEnabled,
+            return PlatformFeatureResponse.From(definition.Key, grant?.Enabled ?? definition.DefaultEnabled,
                 grant?.Source ?? TenantFeatureSource.Plan, grant?.ExpiresOn, grant?.Version ?? 0);
         }).ToArray();
     }

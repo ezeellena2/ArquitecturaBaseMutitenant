@@ -2,9 +2,11 @@ using System.Reflection;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization.Metadata;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Models.Platform;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
 
 namespace ArquitecturaBaseMultitenant.Api.OpenApi;
@@ -13,6 +15,7 @@ namespace ArquitecturaBaseMultitenant.Api.OpenApi;
 internal static class OpenApiExtensions
 {
     private const string DocumentUrl = "/openapi/v1.json";
+    private const string PlatformFeatureSourceSchemaId = "TenantFeatureSource";
 
     public static IServiceCollection AddOpenApiDocumentation(this IServiceCollection services)
     {
@@ -25,6 +28,11 @@ internal static class OpenApiExtensions
         services.AddSingleton<SharedContractRules>();
         services.AddOpenApi(options =>
         {
+            // El enum de Plataforma conserva el esquema de siempre aunque el dominio sume orígenes (ADR 0069).
+            options.CreateSchemaReferenceId = type =>
+                (Nullable.GetUnderlyingType(type.Type) ?? type.Type) == typeof(PlatformFeatureSource)
+                    ? PlatformFeatureSourceSchemaId
+                    : OpenApiOptions.CreateDefaultSchemaReferenceId(type);
             options.AddSchemaTransformer((schema, context, _) =>
             {
                 // Per-property input converters can otherwise leave string schemas empty.
