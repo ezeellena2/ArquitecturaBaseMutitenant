@@ -1,6 +1,10 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Services.Companies;
 using ArquitecturaBaseMultitenant.Application.Services.Roles;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Services.Roles;
 
@@ -139,8 +143,164 @@ public sealed class OrganizationDelegationPolicyTests
         Assert.True(CompanyDelegationPolicy.CanActOn(self: true, admin, North, Held(Permissions.All)));
     }
 
+    // B3 de Acciones: la guarda decide con su Policy y con lo que lee el resolvedor, el mismo que leen RoleService y las
+    // fuentes del asistente.
+    [Fact]
+    public async Task The_organization_guard_decides_like_its_policy_with_what_the_resolver_reads()
+    {
+        var reader = new DelegationPermissionsResolverTests.RolesByPlace();
+        reader.Holds([Permissions.Users.Manage, Permissions.Roles.Manage, Permissions.Roles.Assign]);
+        reader.Holds([Permissions.Company.Members.Manage], North);
+        var requester = new DelegationPermissionsResolverTests.Requester(Guid.CreateVersion7());
+        var resolver = new DelegationPermissionsResolver(requester, reader);
+        var guard = new OrganizationDelegationGuard(requester, resolver, reader);
+        var held = await resolver.ReadHeldAsync(Ct);
+        var member = Member.Invite(Guid.CreateVersion7());
+
+        (string[] Before, string[] After)[] changes =
+        [
+            ([], [Permissions.Roles.Read]),
+            ([], [Permissions.Settings.Read]),
+            ([Permissions.Settings.Read], [Permissions.Settings.Read]),
+        ];
+        (RoleAssignment Assignment, RoleGrant Grant)[][] targets =
+        [
+            [Given([Permissions.Users.Read], null)],
+            [Given([Permissions.Users.Read], null), Given([Permissions.Settings.Read], null)],
+            [Given([Permissions.Company.Members.Read], North)],
+            [Given([Permissions.Company.Members.Read], South)],
+        ];
+        RoleGrant[] added = [new([Permissions.Users.Read], null), new([Permissions.Company.Members.Read], South)];
+
+        List<(bool Guard, bool Policy)> decisions = [];
+        foreach (var (before, after) in changes)
+            decisions.Add(((await guard.CheckPermissionsChangeAsync(before, after, Ct)).IsSuccess,
+                OrganizationDelegationPolicy.CanChangePermissions(held, before, after)));
+        foreach (var target in targets)
+        {
+            RoleAssignment[] assignments = [.. target.Select(given => given.Assignment)];
+            decisions.Add(((await guard.CheckActOnAsync(member, assignments, Ct)).IsSuccess,
+                OrganizationDelegationPolicy.CanActOn(self: false, held,
+                    await resolver.ReadAssignedAsync(assignments, Ct))));
+            decisions.Add(((await guard.CheckRolesChangeAsync(assignments, [], Ct)).IsSuccess,
+                OrganizationDelegationPolicy.CanChangeRoles(held, target.Select(given => given.Grant))));
+        }
+        foreach (var grant in added)
+            decisions.Add(((await guard.CheckRolesChangeAsync([], [grant], Ct)).IsSuccess,
+                OrganizationDelegationPolicy.CanChangeRoles(held, [grant])));
+
+        Assert.Equal(decisions.Select(decision => decision.Policy), decisions.Select(decision => decision.Guard));
+        Assert.Equal([true, false, true, true, true, false, false, true, true, false, false, true, false],
+            decisions.Select(decision => decision.Guard));
+
+        (RoleAssignment, RoleGrant) Given(string[] codes, Guid? companyId) =>
+            (DelegationPermissionsResolverTests.Assign(member.Id, reader.Role(codes), companyId), new(codes, companyId));
+    }
+
+    [Fact]
+    public async Task The_company_guard_decides_like_its_policy_with_what_the_resolver_reads()
+    {
+        var reader = new DelegationPermissionsResolverTests.RolesByPlace();
+        reader.Holds([Permissions.Users.Read]);
+        reader.Holds([Permissions.Company.Members.Manage], North);
+        var requester = new DelegationPermissionsResolverTests.Requester(Guid.CreateVersion7());
+        var resolver = new DelegationPermissionsResolver(requester, reader);
+        var held = await resolver.ReadHeldAsync(Ct);
+        var member = Member.Invite(Guid.CreateVersion7());
+        var current = new AssignedRoles();
+        var guard = new CompanyDelegationGuard(requester, resolver, new NoLock(), new InEveryCompany(),
+            new OneMember(member), current, reader);
+        var membersRead = reader.Role([Permissions.Company.Members.Read]);
+        var membersManage = reader.Role([Permissions.Company.Members.Manage]);
+        var settingsRead = reader.Role([Permissions.Settings.Read]);
+        var usersRead = reader.Role([Permissions.Users.Read]);
+        var assistant = reader.Role([Permissions.Assistant.Use]);
+
+        List<(bool Guard, bool Policy)> decisions = [];
+        (Guid CompanyId, Guid RoleId)[] added =
+            [(North, membersRead), (North, settingsRead), (South, membersRead), (North, usersRead)];
+        foreach (var (companyId, roleId) in added)
+            decisions.Add(((await guard.CheckAddAsync(companyId, [roleId], Ct)).IsSuccess,
+                CompanyDelegationPolicy.CanChangeRoles(held, companyId, [await PermissionsOf(roleId)])));
+        RoleAssignment[][] targets =
+        [
+            [Assign(membersRead, North)],
+            [Assign(membersRead, North), Assign(settingsRead, null)],
+            [Assign(membersManage, North), Assign(assistant, South)],
+        ];
+        foreach (var assignments in targets)
+        {
+            current.Current = assignments;
+            decisions.Add(((await guard.CheckActOnAsync(North, member.Id, Ct)).IsSuccess,
+                CompanyDelegationPolicy.CanActOn(self: false, held, North,
+                    await resolver.ReadAssignedAsync(assignments, Ct))));
+        }
+        current.Current = [Assign(membersRead, North)];
+        foreach (var roleId in new[] { membersManage, settingsRead })
+            decisions.Add(((await guard.CheckRolesChangeAsync(North, member.Id, [roleId], Ct)).IsSuccess,
+                CompanyDelegationPolicy.CanActOn(self: false, held, North,
+                    await resolver.ReadAssignedAsync(current.Current, Ct))
+                && CompanyDelegationPolicy.CanChangeRoles(held, North,
+                    [await PermissionsOf(roleId), await PermissionsOf(membersRead)])));
+
+        Assert.Equal(decisions.Select(decision => decision.Policy), decisions.Select(decision => decision.Guard));
+        Assert.Equal([true, false, false, true, true, false, true, true, false],
+            decisions.Select(decision => decision.Guard));
+
+        RoleAssignment Assign(Guid roleId, Guid? companyId) =>
+            DelegationPermissionsResolverTests.Assign(member.Id, roleId, companyId);
+
+        async Task<IEnumerable<string>> PermissionsOf(Guid roleId) =>
+            (await reader.ListPermissionsByRoleAsync([roleId], Ct))[roleId];
+    }
+
+    private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
     private static PermissionsByPlace Held(IEnumerable<string> organization,
         params (Guid CompanyId, string[] Permissions)[] companies) =>
         PermissionsByPlace.Of(organization,
             companies.ToDictionary(company => company.CompanyId, company => (IEnumerable<string>)company.Permissions));
+
+    private sealed class NoLock : ILastCompanyAdminGuard
+    {
+        public Task LockAsync(Guid companyId, CancellationToken cancellationToken) => Task.CompletedTask;
+        public Task<Result> CheckAnotherActiveAdminAsync(Guid companyId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+    }
+
+    /// <summary>La persona tiene la membresía de cualquier empresa: la guarda mira sus roles.</summary>
+    private sealed class InEveryCompany : ICompanyMembershipRepository
+    {
+        public Task<CompanyMembership?> FindAsync(Guid companyId, Guid memberId, CancellationToken cancellationToken) =>
+            Task.FromResult<CompanyMembership?>(CompanyMembership.Create(companyId, memberId).Value);
+        public Task<CompanyMembership?> GetByIdAsync(Guid companyId, Guid memberId, uint expectedVersion,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<IReadOnlyList<CompanyMembership>> ListForMemberAsync(Guid memberId,
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+        public void Add(CompanyMembership membership) => throw new NotSupportedException();
+        public void MarkUpdated(CompanyMembership membership) => throw new NotSupportedException();
+        public void Remove(CompanyMembership membership) => throw new NotSupportedException();
+    }
+
+    private sealed class OneMember(Member member) : IMemberRepository
+    {
+        public Task<Member?> GetByIdAsync(Guid id, CancellationToken cancellationToken) =>
+            Task.FromResult<Member?>(member);
+        public Task LockUserAsync(Guid userId, CancellationToken cancellationToken) => throw new NotSupportedException();
+        public Task<Member?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public Task<Member?> GetByIdAsync(Guid id, uint expectedVersion, CancellationToken cancellationToken) =>
+            throw new NotSupportedException();
+        public void Add(Member member) => throw new NotSupportedException();
+        public void MarkUpdated(Member member) => throw new NotSupportedException();
+    }
+
+    private sealed class AssignedRoles : IRoleAssignmentRepository
+    {
+        public IReadOnlyList<RoleAssignment> Current { get; set; } = [];
+        public Task<IReadOnlyList<RoleAssignment>> ListForMemberAsync(Guid memberId, CancellationToken cancellationToken) =>
+            Task.FromResult(Current);
+        public void Add(RoleAssignment assignment) => throw new NotSupportedException();
+        public void Remove(RoleAssignment assignment) => throw new NotSupportedException();
+    }
 }

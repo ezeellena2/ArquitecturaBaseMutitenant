@@ -18,11 +18,13 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Roles;
 /// Administra roles tenant-scoped; cada escritura valida antes y usa una única transacción. Un rol se guarda con lo que
 /// incluye cada permiso pedido (decisión 260): lo guardado es lo que permite. Nadie da ni quita un permiso que no tiene
 /// (ADR 0061, <see cref="OrganizationDelegationGuard"/>), y los listados dicen qué puede dar quien pide (<c>grantable</c>,
-/// decisión 269) con la misma <see cref="OrganizationDelegationPolicy"/>.
+/// decisión 269) con la misma <see cref="OrganizationDelegationPolicy"/> y lo que lee
+/// <see cref="DelegationPermissionsResolver"/>.
 /// </summary>
 internal sealed class RoleService(IRoleReader roles, IRoleRepository repository, ICompanyReader companies,
-    OrganizationDelegationGuard delegation, IRequestValidator validator, IUnitOfWork unitOfWork,
-    TimeProvider timeProvider, ILogger<RoleService> logger) : IRoleService
+    DelegationPermissionsResolver delegationPermissions, OrganizationDelegationGuard delegation,
+    IRequestValidator validator, IUnitOfWork unitOfWork, TimeProvider timeProvider, ILogger<RoleService> logger)
+    : IRoleService
 {
     public Task<Result<RoleFilterCountsResponse>> GetFilterCountsAsync(string? search, CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, timeProvider, "GetRoleFilterCounts", async () =>
@@ -39,7 +41,7 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var page = await roles.ListAsync(request, cancellationToken);
-            var held = await delegation.ReadHeldAsync(cancellationToken);
+            var held = await delegationPermissions.ReadHeldAsync(cancellationToken);
             return Result.Success(new PagedResult<RoleResponse>(
                 [.. page.Items.Select(role => ToResponse(role, held, request.CompanyId))],
                 page.Page, page.PageSize, page.TotalCount));
@@ -56,7 +58,7 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
             if (await validator.ValidateAsync(filtered, cancellationToken) is { } invalid) return invalid;
             if (await companies.FindByIdAsync(companyId, cancellationToken) is null) return CompanyErrors.NotFound;
             var page = await roles.ListAsync(filtered, cancellationToken);
-            var held = await delegation.ReadHeldAsync(cancellationToken);
+            var held = await delegationPermissions.ReadHeldAsync(cancellationToken);
             return Result.Success(new PagedResult<RoleResponse>(
                 [.. page.Items.Select(role => ToResponse(role, held, companyId))],
                 page.Page, page.PageSize, page.TotalCount));
@@ -68,13 +70,13 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
         {
             var role = await roles.FindByIdAsync(roleId, cancellationToken);
             if (role is null) return RoleErrors.NotFound;
-            return ToResponse(role, await delegation.ReadHeldAsync(cancellationToken), companyId: null);
+            return ToResponse(role, await delegationPermissions.ReadHeldAsync(cancellationToken), companyId: null);
         });
 
     public Task<Result<IReadOnlyList<PermissionGroupResponse>>> GetPermissionsAsync(CancellationToken cancellationToken) =>
         OperationLog.RunAsync(logger, timeProvider, "GetPermissions", async () =>
         {
-            var held = await delegation.ReadHeldAsync(cancellationToken);
+            var held = await delegationPermissions.ReadHeldAsync(cancellationToken);
             IReadOnlyList<PermissionGroupResponse> groups =
             [
                 .. Permissions.All

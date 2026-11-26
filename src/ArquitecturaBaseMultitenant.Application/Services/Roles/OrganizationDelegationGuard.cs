@@ -9,49 +9,19 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Roles;
 /// <summary>
 /// Nadie da lo que no tiene, en la organización (ADR 0061): lo usan <c>RoleService</c> y los casos de Usuarios (invitar,
 /// editar, cambiar el estado y quitar), adentro del límite del caso de uso y después de sus locks, y decide con
-/// <see cref="OrganizationDelegationPolicy"/>. Lo que tiene quien pide se lee de la base en cada llamada, con la misma
-/// proyección que la caché de permisos que mira <c>PermissionAuthorizationHandler</c> (sus roles de organización y los de
-/// cada empresa activa donde tiene la membresía activa), y no de lo que el pedido ya memorizó. Cuenta solo lo efectivo
-/// del catálogo vigente (decisión 260): un permiso de un módulo quitado no da ni pide nada.
+/// <see cref="OrganizationDelegationPolicy"/>. Lo que tiene quien pide y lo que dan las asignaciones de la persona los
+/// lee <see cref="DelegationPermissionsResolver"/>, el mismo que usan los listados y las fuentes del asistente (ADR 0068).
 /// </summary>
-internal sealed class OrganizationDelegationGuard(ICurrentUser currentUser, IRoleReader roles)
+internal sealed class OrganizationDelegationGuard(ICurrentUser currentUser, DelegationPermissionsResolver held,
+    IRoleReader roles)
 {
-    /// <summary>Lo que tiene quien pide, en la organización y en cada empresa, leído ahora.</summary>
-    internal async Task<PermissionsByPlace> ReadHeldAsync(CancellationToken cancellationToken)
-    {
-        if (currentUser.UserId is not { } actorId || actorId == Guid.Empty) return PermissionsByPlace.None;
-        var organizationRoleIds = await roles.ListOrganizationRoleIdsAsync(actorId, cancellationToken);
-        var companyRoleIds = await roles.ListCompanyRoleIdsAsync(actorId, cancellationToken);
-        var permissions = await roles.ListPermissionsByRoleAsync(
-            [.. organizationRoleIds.Concat(companyRoleIds.Values.SelectMany(ids => ids)).Distinct()], cancellationToken);
-        return PermissionsByPlace.Of(organizationRoleIds.SelectMany(Of),
-            companyRoleIds.ToDictionary(company => company.Key, company => company.Value.SelectMany(Of)));
-
-        IEnumerable<string> Of(Guid roleId) => permissions.GetValueOrDefault(roleId) ?? [];
-    }
-
-    /// <summary>Lo que dan estas asignaciones, por lugar, sin mirar el estado del miembro, la membresía ni la empresa.</summary>
-    internal async Task<PermissionsByPlace> ReadAssignedAsync(IReadOnlyCollection<RoleAssignment> assignments,
-        CancellationToken cancellationToken)
-    {
-        ArgumentNullException.ThrowIfNull(assignments);
-        var permissions = await PermissionsOfAsync(assignments, cancellationToken);
-        return PermissionsByPlace.Of(
-            assignments.Where(assignment => assignment.CompanyId is null).SelectMany(Of),
-            assignments.Where(assignment => assignment.CompanyId is not null)
-                .GroupBy(assignment => assignment.CompanyId!.Value)
-                .ToDictionary(company => company.Key, company => company.SelectMany(Of)));
-
-        IEnumerable<string> Of(RoleAssignment assignment) => permissions.GetValueOrDefault(assignment.RoleId) ?? [];
-    }
-
     /// <summary>
     /// Crear o editar un rol: quien pide tiene cada permiso que entra o sale; si no,
     /// <see cref="RoleErrors.PermissionsNotHeld"/>.
     /// </summary>
     internal async Task<Result> CheckPermissionsChangeAsync(IEnumerable<string> before, IEnumerable<string> after,
         CancellationToken cancellationToken) =>
-        OrganizationDelegationPolicy.CanChangePermissions(await ReadHeldAsync(cancellationToken), before, after)
+        OrganizationDelegationPolicy.CanChangePermissions(await held.ReadHeldAsync(cancellationToken), before, after)
             ? Result.Success()
             : RoleErrors.PermissionsNotHeld;
 
@@ -73,7 +43,7 @@ internal sealed class OrganizationDelegationGuard(ICurrentUser currentUser, IRol
             .. saved.Select(assignment => new RoleGrant(
                 permissions.GetValueOrDefault(assignment.RoleId) ?? [], assignment.CompanyId)),
         ];
-        return OrganizationDelegationPolicy.CanChangeRoles(await ReadHeldAsync(cancellationToken), changed)
+        return OrganizationDelegationPolicy.CanChangeRoles(await held.ReadHeldAsync(cancellationToken), changed)
             ? Result.Success()
             : MemberErrors.RolesNotHeld;
     }
@@ -88,8 +58,8 @@ internal sealed class OrganizationDelegationGuard(ICurrentUser currentUser, IRol
         ArgumentNullException.ThrowIfNull(member);
         var self = member.UserId is { } userId && userId == currentUser.UserId;
         if (self || assignments.Count == 0) return Result.Success();
-        return OrganizationDelegationPolicy.CanActOn(self, await ReadHeldAsync(cancellationToken),
-                await ReadAssignedAsync(assignments, cancellationToken))
+        return OrganizationDelegationPolicy.CanActOn(self, await held.ReadHeldAsync(cancellationToken),
+                await held.ReadAssignedAsync(assignments, cancellationToken))
             ? Result.Success()
             : MemberErrors.HasMorePermissions;
     }

@@ -11,14 +11,14 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Companies;
 /// Nadie da lo que no tiene, en una empresa (ADR 0061 §3): lo usa <c>CompanyMembershipService</c> al sumar a alguien,
 /// cambiarle los roles y cambiarle el estado, adentro de la transacción y antes de que escriba el writer. Toma primero el
 /// mismo lock de la empresa que el writer (un advisory lock de la transacción, que se puede volver a pedir), relee lo
-/// que tiene quien pide (<see cref="OrganizationDelegationGuard.ReadHeldAsync"/>) y las asignaciones de la persona, y
+/// que tiene quien pide (<see cref="DelegationPermissionsResolver.ReadHeldAsync"/>) y las asignaciones de la persona, y
 /// decide con <see cref="CompanyDelegationPolicy"/>. Una persona, un rol o una empresa que no está no se decide acá:
 /// lo responde el writer. Tampoco quien no está en la empresa: sin su membresía no se miran sus roles, así la empresa
 /// responde 404 por cualquiera de afuera, tenga los permisos que tenga.
 /// </summary>
 internal sealed class CompanyDelegationGuard(
     ICurrentUser currentUser,
-    OrganizationDelegationGuard organization,
+    DelegationPermissionsResolver held,
     ILastCompanyAdminGuard companyLock,
     ICompanyMembershipRepository memberships,
     IMemberRepository members,
@@ -82,8 +82,8 @@ internal sealed class CompanyDelegationGuard(
         if (member is null) return Result.Success();
         var self = member.UserId is { } userId && userId == currentUser.UserId;
         if (self) return Result.Success();
-        return CompanyDelegationPolicy.CanActOn(self, await organization.ReadHeldAsync(cancellationToken), companyId,
-                await organization.ReadAssignedAsync(current, cancellationToken))
+        return CompanyDelegationPolicy.CanActOn(self, await held.ReadHeldAsync(cancellationToken), companyId,
+                await held.ReadAssignedAsync(current, cancellationToken))
             ? Result.Success()
             : CompanyMembershipErrors.HasMorePermissions;
     }
@@ -93,7 +93,7 @@ internal sealed class CompanyDelegationGuard(
     {
         if (changedRoleIds.Count == 0) return Result.Success();
         var permissions = await roles.ListPermissionsByRoleAsync(changedRoleIds, cancellationToken);
-        return CompanyDelegationPolicy.CanChangeRoles(await organization.ReadHeldAsync(cancellationToken), companyId,
+        return CompanyDelegationPolicy.CanChangeRoles(await held.ReadHeldAsync(cancellationToken), companyId,
                 changedRoleIds.Select(roleId => (IEnumerable<string>)(permissions.GetValueOrDefault(roleId) ?? [])))
             ? Result.Success()
             : CompanyMembershipErrors.RolesNotHeld;

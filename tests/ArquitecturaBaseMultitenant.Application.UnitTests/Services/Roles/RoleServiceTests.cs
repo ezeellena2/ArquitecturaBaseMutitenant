@@ -93,7 +93,7 @@ public sealed class RoleServiceTests
         };
         using var fixture = new ServiceFixture<RoleService>(new ListRolesRequestValidator());
         var service = new RoleService(reader, new FakeRoleRepository(), new CompanyServiceTests.FakeCompanyReader(),
-            new OrganizationDelegationGuard(new SignedInUser(), reader), fixture.Validator, new FakeUnitOfWork(),
+            Held(reader), Delegation(reader), fixture.Validator, new FakeUnitOfWork(),
             fixture.TimeProvider, fixture.Logger);
 
         var permissions = (await service.GetPermissionsAsync(Ct)).Value.SelectMany(group => group.Permissions)
@@ -106,12 +106,21 @@ public sealed class RoleServiceTests
     }
 
     private static RoleService Create(FakeRoleReader reader, ServiceFixture<RoleService> fixture) =>
-        new(reader, new FakeRoleRepository(), new CompanyServiceTests.FakeCompanyReader(), RoleServiceTests.OwnerDelegation(),
+        new(reader, new FakeRoleRepository(), new CompanyServiceTests.FakeCompanyReader(), OwnerHeld(), OwnerDelegation(),
             fixture.Validator, new FakeUnitOfWork(), fixture.TimeProvider, fixture.Logger);
 
+    /// <summary>Lo que tiene quien pide, leído de <paramref name="reader"/> (B3 de Acciones).</summary>
+    internal static DelegationPermissionsResolver Held(IRoleReader reader) => new(new SignedInUser(), reader);
+
+    /// <summary>La guarda de la 0061, con lo que tiene quien pide leído de <paramref name="reader"/>.</summary>
+    internal static OrganizationDelegationGuard Delegation(IRoleReader reader) =>
+        new(new SignedInUser(), Held(reader), reader);
+
+    /// <summary>Quien pide como Dueño: tiene todo el catálogo de la organización.</summary>
+    internal static DelegationPermissionsResolver OwnerHeld() => Held(new FakeRoleReader());
+
     /// <summary>Una guarda con quien pide como Dueño: tiene todo el catálogo de la organización.</summary>
-    internal static OrganizationDelegationGuard OwnerDelegation() =>
-        new(new SignedInUser(), new FakeRoleReader());
+    internal static OrganizationDelegationGuard OwnerDelegation() => Delegation(new FakeRoleReader());
 
     internal sealed class SignedInUser : ICurrentUser
     {
