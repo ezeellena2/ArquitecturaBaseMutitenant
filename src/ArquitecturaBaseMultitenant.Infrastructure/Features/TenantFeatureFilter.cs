@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Caching;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Application.Models.Features;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.FeatureManagement;
 
@@ -29,8 +30,8 @@ internal sealed class TenantFeatureFilter(ITenantContext tenantContext, IFeature
         }
         if (currentUser.Access == Access.Platform || tenantContext.TenantId is not { } tenantId
             || tenantContext.TenantKind is not { } kind || !definition.Supports(kind)) return false;
+        // Una fila por origen (ADR 0069): prendido si alguna fila del módulo está vigente; sin filas, el valor de entrada.
         var grants = await cache.ListAsync(tenantId, cancellationToken);
-        var grant = grants.SingleOrDefault(row => row.Key == definition.Key);
-        return grant?.IsEnabledAt(timeProvider.GetUtcNow().UtcDateTime) ?? definition.DefaultEnabled;
+        return TenantFeatureRow.IsModuleEnabled(grants, definition.Key, definition.DefaultEnabled, timeProvider.GetUtcNow().UtcDateTime);
     }
 }

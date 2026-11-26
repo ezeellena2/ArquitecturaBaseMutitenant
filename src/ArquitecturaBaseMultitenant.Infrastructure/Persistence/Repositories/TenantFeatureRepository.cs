@@ -14,7 +14,13 @@ internal sealed class TenantFeatureRepository(ApplicationDbContext context) : IT
     public async Task<TenantFeature?> GetForUpdateAsync(Guid tenantId, string key, uint expectedVersion, CancellationToken cancellationToken)
     {
         context.RequireTransaction();
-        var feature = await context.TenantFeatures.SingleOrDefaultAsync(row => row.TenantId == tenantId && row.FeatureKey == key, cancellationToken);
+        // Plataforma edita solo su fila (Plan, Manual o Trial), nunca la de otro origen (ADR 0069); si hubiera varias, la más
+        // reciente. Se eligen en memoria porque son a lo sumo una por origen y IsPlatformManaged es la única regla.
+        var rows = await context.TenantFeatures.Where(row => row.TenantId == tenantId && row.FeatureKey == key)
+            .ToListAsync(cancellationToken);
+        var feature = rows.Where(row => row.Source.IsPlatformManaged())
+            .OrderByDescending(row => row.ModifiedAtUtc ?? row.CreatedAtUtc).ThenBy(row => row.Source.ToString(), StringComparer.Ordinal)
+            .FirstOrDefault();
         if (feature is not null) context.Entry(feature).Property(row => row.Version).OriginalValue = expectedVersion;
         return feature;
     }
