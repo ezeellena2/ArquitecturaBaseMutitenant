@@ -22,37 +22,6 @@ Todo va en `main`, sin ramas, worktrees, stash, reset ni push. Cada chat commite
 
 **Revisión adversarial** ([AGENTS.md](../../AGENTS.md), «Forma de trabajo»). La llevan las tareas marcadas con **(R)**, completa y antes del commit: un subagente nuevo recibe el código y los escenarios, sin la conclusión de quien programó.
 
-## Qué se verificó al arrancar
-
-| Fila | Qué se encontró | Qué cambia |
-| --- | --- | --- |
-| Base de la 12 | Contrato, back y front hechos; faltan I1 a I4. La 214 la cierra como está | K0 |
-| Lo incluido (260) | Cada permiso es independiente; `PermissionItem` no trae `includes`; Plataforma no tiene catálogo en la API (lo arma `permissionCatalog.ts`), y `RolePermissionCache` guarda lo asignado | K1 y B16, antes de la B1 |
-| Delegación (0061) | `RoleService` cuida solo los roles de sistema; `OrganizationUserAdministratorGuard` y `LastCompanyAdminGuard`, solo al último; Plataforma no tiene nada | B1, tres guardas |
-| Retención (0062) | Nada purga códigos, ingresos, OpenIddict ni invitaciones. `PeriodicWorker` no tiene lease: llega con la B6 de la E10 | B2, purgas idempotentes por lotes |
-| Topes de correo (0063) | `EmailOptions` no tiene topes; `WhatsAppCodeQuota` cuenta por número que manda, no por cuenta | B3, con una tabla global por horas |
-| IPv6 (N20) | `RateLimitIpHasher` y `WhatsAppQuotaIpHasher` usan la dirección entera | B3 |
-| Bloqueo (N3) | `LoginCodeAttemptVerifier` ya cuenta solo contra un código activo, pero con la cuenta bloqueada un código correcto entra. `GoogleAccountGuard` y `ExternalLoginService` frenan por el bloqueo | B4 |
-| La cola (N5, N8, O3 y 0066) | `OutboxStatus` no tiene `Uncertain`. Toda excepción es `Outbox.Transport.Failed`, que se reintenta. Un lease vencido se vuelve a reclamar. `LockIdsAsync` no ordena por destino ni por prioridad | B5. La reserva por destino estaba en la B6 de la E10 y entra acá, porque «el chat espera» la necesita |
-| Invitación | `Invitation` no tiene estado de entrega ni id de la cola. `IOutboxDeliveryObserver` solo registra lo aceptado, y la confirmación corre sin organización | B6, que deriva el estado al leer |
-| Transporte de WhatsApp | `WhatsAppCloudClient` reintenta un 5xx, `Network`, `Timeout` e `InvalidResponse`. Sus códigos (`RecipientNotAllowed`, `WindowExpired`, `Credentials`, `Permissions`) no son los de la 0066 | B7; la migración pasa los guardados |
-| Contenido del chat (0065) | En claro. Hay además un `engagement.WhatsAppConversationLinks.LastMessagePreview` que el backlog no nombra | B8 lo suma |
-| Resiliencia (N18) | En `ServiceDefaults/Extensions.cs:34` falta `DisableForUnsafeHttpMethods`; WhatsApp ya lo tiene | B9 |
-| El 500 (N10) | La Api no abre un scope con la persona y la organización, y la consola no es JSON | B9 |
-| Textos neutrales (N22) | `Errors`, `Audit`, `Notifications`, `Permissions` y `Validation` nombran a WhatsApp o al asistente | B9, con una lista escrita para los permisos del catálogo |
-| Datos de la instalación (B1) | Hay seis valores en `appsettings.Development.json` | B9; el usuario los carga en I1 |
-| Formatos (205 y 208) | `cultures.source.json` va sin coma, con `LongDatePattern` y con `{number} %`. `FormatMonth` y `FormatMonthLabel` se usan solo en `AssistantBudgetEmailRenderer` | B10 |
-| CUIT | `ArgentineCuitValidator` acepta once ceros | B11 |
-| Cupo (0064 §1 y §12) | `RecoverAsync` ya libera el diario sin llamada. `ListReadyAsync` toma 32 y procesa de a 4 | B12: tests del mensual y tope de 4 |
-| Subidas (§2 y §4) | `[FromForm]` lee el cuerpo antes del servicio, y `UploadAsync` no mira el cupo | B12, con un filtro de recurso |
-| Proveedor (§6 y §7) | Hay solo `Unavailable` y `ContextTooLarge`. `AssistantChatClient` conserva el estado HTTP, pero el worker lo pasa todo a `Unavailable`. Las configuraciones no traen la falla | B13 y K1 |
-| Fecha (§9) | `AssistantTurnPreparationBuilder` usa primero la zona de la organización | B14 |
-| Borrar (§5) | El borrado ya limpia los archivos en la misma operación; el front dice «con sus adjuntos» | F8 y los índices de B14 |
-| Anillo (§11) | No hay control del anillo ni traza en el turno | B15 |
-| Configuración (270 a 273) | `PlatformSettings` no tiene plazos ni nombre; WhatsApp no tiene configuración propia; `AssistantPlatformKeyDailyQuotas` cuenta por persona y día UTC | B18 y B14 |
-| Front | `toastError` no vence; `ModelEditorDialog` pliega «Avanzado»; `PermissionPicker` usa áreas plegables; no hay `BroadcastChannel`; `parseDecimal` no detecta lo ambiguo | F1 a F8 |
-| Lienzo v176 y v181 | Están el diseño y la IA (v176), y los tableros de la F4, la F5 y la F10 a la F13, aprobados en el lienzo v181, en la página «Segunda parte de la base» | Cada `-Base2` manda sobre su tablero de siempre |
-
 ## Contrato
 
 ### K0 · Lo que dejó la base de la 12
@@ -76,12 +45,6 @@ El back publica los DTO, los atributos, los códigos con sus textos y las rutas 
 - `grantable` lo calcula la `Policy` de la B1, la misma de la guarda: el front no repite la regla.
 - El cupo de la IA (271) va en la B14 de Back B, dueño del asistente; la B18 de Back A no lo toca.
 
-**Texto para el chat de Contrato**
-
-```text
-Leé AGENTS.md, este plan y la spec docs/plans/formularios/base-de-la-12-segunda-parte.md. Hacé K0 y después K1, sin adelantar lógica: DTO, atributos, códigos de error con sus textos es/en (núcleo en Errors.resx; WhatsApp y asistente en los recursos de su módulo) y la ruta de revisión con 501. No toques entidades, configuraciones de EF ni migraciones. Generá openapi.json y avisá a la Guía para que el front corra npm run contracts. Todo en main, sin push, ramas, worktrees, stash ni reset; commiteá solo lo tuyo con git commit -- <rutas> y la línea Tarea: base-de-la-12-segunda-parte/<id>. Aplicá api-http, permisos, result-y-errores, textos y tests. Al terminar: build y tests rápidos enteros del back, sin filtrar por módulo; como cambian rutas, los de integración y seguridad de Contracts.
-```
-
 ## Back
 
 Los pasos están en la spec. Valen Result y ProblemDetails, `OperationLog.RunAsync`, `LoggerMessage`, `TimeProvider`, una UoW por escritura, RLS, auditoría y textos es/en. WhatsApp y el asistente siguen siendo quitables: el núcleo no los nombra.
@@ -100,12 +63,6 @@ Los pasos están en la spec. Valen Result y ProblemDetails, `OperationLog.RunAsy
 10. **B9 · Lo transversal.** La resiliencia sin POST, el scope del log, las guardas de textos neutrales y de métricas, `ModelSnapshotTests` (traspaso 18, 04) y los datos de la instalación fuera del repo.
 11. **B18 · Reglas en Configuración (R: datos y aislamiento, con migración).** Va después de la B9: el inventario (270), cada plazo en la configuración de su dueño con la purga de los chats de WhatsApp (272), «Nombre y correos» (273) y los países que reciben códigos (270). El cupo de la IA (271) va en la B14.
 
-**Texto para el chat del Back A**
-
-```text
-Leé AGENTS.md, este plan, la spec docs/plans/formularios/base-de-la-12-segunda-parte.md, las decisiones 255 y 256 y las ADR 0060 a 0063, 0065 y 0066; las fichas y las features de «Qué leer» de la spec; para la B16, la decisión 260 y el traspaso 16, 01, de ArquitecturaBase (git show origin/main:docs/plans/2026-11-21-traspaso-multitenant/01-roles-y-permisos.md). Después de K1, hacé en este orden B16, B1, B2, B3, B5, B6, B7, B8, B4, B9 y B18, con los pasos de la spec; para la B18, las decisiones 270, 272 y 273. Avisale a la Guía cuando commitees la B8: desde ahí Back B toca el modelo, y vos no hacés más migraciones hasta la B18, que arma la suya sobre el HEAD del momento, después de las de Back B que ya entraron, y corre ModelSnapshotTests. Las tareas (R) llevan la revisión adversarial completa antes del commit, con un subagente nuevo que no recibe tu conclusión. No toques el front ni las tareas de Back B. Cualquier cambio de contrato imprescindible va a «Cambios al contrato» del plan. Todo en main, sin push, ramas, worktrees, stash ni reset; commiteá solo lo tuyo con git commit -- <rutas> y la línea Tarea: base-de-la-12-segunda-parte/<id>. Por tarea: test dirigido rojo y verde, build y tests rápidos enteros del back sin Docker y sin filtrar por módulo; si tocó rutas, persistencia, autenticación o aislamiento, sus tests de integración y de seguridad. Nunca pegues ni copies claves: los datos de la instalación los carga el usuario en I1. Ninguna corrida contra Meta real.
-```
-
 ### Back B · formatos e IA
 
 1. **B10 · Fechas y porcentaje.** Los patrones, `format-cases.json` y `FormatMonthRange`.
@@ -115,12 +72,6 @@ Leé AGENTS.md, este plan, la spec docs/plans/formularios/base-de-la-12-segunda-
 5. **B14 · Versiones, borrado, fecha y el cupo del día (R: datos, migración).** `EngineVersion`, la conversación ilegible, la zona del perfil y el cupo del día de la 271, por organización y a su medianoche.
 6. **B15 · El anillo y la traza (R: cifrado).** El chequeo `ai-keyring` y `TraceParent`.
 7. **B17 · El orden de los listados (264).** `ApplySort` y cada `SortMap` del núcleo, con sus índices en una migración después del commit de la B8. Los listados de cursor conservan su orden.
-
-**Texto para el chat del Back B**
-
-```text
-Leé AGENTS.md, este plan, la spec docs/plans/formularios/base-de-la-12-segunda-parte.md, la ADR 0064 (con la enmienda de la 271 en §3, para la B14), la feature asistente, las fichas de «Qué leer» de la spec y, para la B17, paginado-y-busqueda y la decisión 264. Después de K1, hacé B10, B11 y B12, que no tocan entidades, configuraciones de EF ni migraciones. B13, B14, B15 y B17 van recién cuando la Guía confirme el commit de la B8 de Back A: los dos comparten el ModelSnapshot. Las tareas marcadas (R) llevan la revisión adversarial completa antes del commit, con un subagente nuevo que no recibe tu conclusión. Los datos de referencia se cambian en la fuente y se regeneran, nunca a mano en el JSON generado. No toques el front ni las tareas de Back A. Todo en main, sin push, ramas, worktrees, stash ni reset; commiteá solo lo tuyo con git commit -- <rutas> y la línea Tarea: base-de-la-12-segunda-parte/<id>. Por tarea: test dirigido, build y tests rápidos enteros del back sin Docker y sin filtrar por módulo; si tocó rutas, persistencia o aislamiento, sus tests de integración y de seguridad. Ninguna corrida contra un proveedor de IA real: usá el cliente falso.
-```
 
 ## Front
 
@@ -139,12 +90,6 @@ Las tareas siguen el lienzo v176 y las fichas del front (`formatos.md`, `pantall
 11. **F11 · Una sola pieza para elegir (262).** `Picker` en `shared/ui`, que reemplaza en todas las pantallas a las piezas viejas que nombra la spec; los segmentados de filtro pasan a un filtro sin cantidad, y la zona horaria dice la hora de su país. Suma la regla del arnés que impide otra pieza para elegir, el foco al cerrarse y la guarda de elegir lo ya elegido. Con su tablero `-Base2` de la v181.
 12. **F12 · Ordenar por las columnas (264).** El encabezado de `DataTable` con ↑ ↓ y ↕, y «Ordenar por» al final de `FilterBar`, con el orden en la dirección; contra la B17. Con su tablero `-Base2` de la v181.
 13. **F13 · Las reglas en Configuración (270 a 273).** «Privacidad y retención», «Nombre y correos» y «Países que reciben códigos» en Plataforma, el plazo de los chats en la de WhatsApp de la organización y el cupo agotado de la IA. Contra la B18 y la B14. Con sus tableros `-Base2` de la v181.
-
-**Texto para el chat del Front**
-
-```text
-Leé AGENTS.md del front, este plan y la spec docs/plans/formularios/base-de-la-12-segunda-parte.md, con las decisiones 205 a 211, 213, 240, 254, 255, 260 a 264 y 269 a 273 de la hoja de ruta, la ADR 0066, las fichas del front y los tableros del lienzo v176 que nombra la spec. Esperá K1, corré npm run contracts y hacé F1 a F13 en orden, contra los tipos generados. Los tableros de la F4, la F5 y la F10 a la F13 son los `-Base2`, aprobados en el lienzo v181, en la página «Segunda parte de la base», y mandan sobre su tablero de siempre en lo que dibujan; nunca dibujes ni inventes esas pantallas. No toques el lienzo, las specs ni el back, ni el src si Vite está levantado. Usá i18n, shared/format, shared/ui, TanStack Query y las reglas de accesibilidad; no escribas tipos generados. Todo en main, sin push, ramas, worktrees, stash ni reset; commiteá solo lo tuyo con git commit -- <rutas> y la línea Tarea: base-de-la-12-segunda-parte/<id>. Por tarea: tests focales, npx tsc -b y npm test completos, sin filtrar por módulo; al cerrar la parte, build, lint y contracts:check.
-```
 
 ## Integración y puerta
 

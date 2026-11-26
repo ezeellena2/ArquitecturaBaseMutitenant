@@ -172,7 +172,7 @@ Cada migración se agrega y se escribe en el mismo despliegue, como excepción d
 
 ## Qué verificar al arrancar ✓
 
-Está en la tabla «Qué se verificó al arrancar» del plan. El chat del contrato confirma la K0 y anota lo que difiera en «Cambios al contrato».
+Se verificó al arrancar, y la K0 lo confirmó; lo que difería está en «Cambios al contrato» del plan. La tabla salió del plan al cerrar la etapa y queda en su historia de git.
 
 ## Cómo se cierra ✓
 
