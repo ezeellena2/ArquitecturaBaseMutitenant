@@ -225,6 +225,8 @@ Leé AGENTS.md de los dos repos, la ADR 0069, este plan, la spec y la skill /pue
 
 ## Cambios al contrato
 
+- **K0 (2026-11-26):** el código coincide con lo que asumen este plan y la spec: la puerta de la base 2 cerrada, la B18 y la B14, los tres topes con máximo de la plataforma, los cuatro lectores del permiso de la B2, el uso de la IA y la última migración (`20261125153522_SettingsRules`). Un detalle para la B5: el `GET` de WhatsApp de la organización devuelve el plazo recortado y también `maxOrganizationChatRetentionDays`, los dos de `WhatsAppSettingsResolver.OrganizationChatRetentionAsync`. La B5 sigue devolviendo los dos, con el tope en `ModuleLimitCeiling.Count`, y el contrato no cambia.
+
 ## Para decidir
 
 Nada abierto. Las de producto las tomó el usuario el 2026-11-23, en la 0069: una fila por origen y prendido si alguna está vigente, un solo resolvedor de topes y apagar sin borrar. Lo demás es técnico y está anotado en «Decisiones técnicas del contrato» y en cada tarea.
