@@ -20,6 +20,7 @@
 - **Controller de un módulo:** `[FeatureGate("clave")]` (como `[FeatureGate("assistant")]` en `BusinessAssistantController`) + `[Access]` y el permiso real Business/Platform. Consumer no lleva permiso explícito. Apagado, responde404 ProblemDetails (`DisabledFeatureHandler`). Una interacción creada desde `[PublicSite][Access(Consumer)]` comprueba el módulo de la organización publicada, sin cambiar el tenant del token.
 - La edición privada de la página usa `PublicPageController`; la lectura anónima y el directorio usan `PublicSiteController` y `DirectoryController`. Son núcleo y no se agregan features sintéticas al catálogo productivo.
 - **Apagar no toca los roles:** los permisos del módulo siguen guardados y vuelven a valer al prenderlo otra vez, con cualquier origen. Para que alguien deje de tenerlos, se le quitan del rol.
+- **Apagar no borra datos ([0069](../decisions/0069-modulos-y-suscripciones.md)):** con el módulo apagado sus rutas dan 404 y sus trabajos de fondo no lo atienden, pero sus filas siguen en la base y al prenderlo se ven igual. El plazo de lo que sigue guardado es la purga de siempre, que corre igual con el módulo apagado; apagar no borra ni adelanta nada.
 - **Workers y correos del módulo:** preguntan `IFeatureService.IsEnabledAsync(Features.X)` (un puerto de Application, sobre `IFeatureManager`) antes de hacer algo por un tenant.
 - **`GET /api/me`** devuelve `features: ["reportes", …]` del acceso activo. Un módulo de datos compartidos está prendido para una persona si lo está para la organización con la que interactúa.
 - **Plataforma:** la ficha de una organización tiene la sección "Módulos", para prenderlos, apagarlos y fijar la fecha de fin de una prueba, con motivo y `SecurityEvent`.
@@ -40,7 +41,7 @@ Los defaults de FeatureManagement se generan desde el catálogo completo despué
 - `Infrastructure/Features/TenantFeatureFilter.cs` (E5) · la guía [`agregar-un-area.md`](../guides/agregar-un-area.md) (E4), paso "¿es un módulo?" (E5).
 
 ## Lo verifica
-- `ModuleControllersTests` (E5) · `TenantFeatureRowTests` y `TenantFeatureMultipleSourcesTests` (varias filas por módulo)
+- `ModuleControllersTests` (E5) · `TenantFeatureRowTests` y `TenantFeatureMultipleSourcesTests` (varias filas por módulo) · `WhatsAppModuleOffKeepsDataTests` y `AssistantModuleOffKeepsDataTests` (apagar no borra)
 - `ModuleLimitArchitectureTests` (E12, ADR 0069; topes: cada máximo de la plataforma declarado y leído solo por su aporte y su pantalla de Plataforma; ningún módulo nombra la configuración de otro; control negativo) · `ModuleLimitResolverTests` (E12: el tope y `Effective`)
 
 ## Detalle
