@@ -88,7 +88,7 @@ const ESCENARIOS = {
 // ---------- Premisas de la revisión del cierre ----------
 // Cada revisor ve los cambios de la etapa en los dos repos, la spec y solo las reglas y los puntos de su premisa.
 // Los puntos son los de la «Lista de control» de .agents/skills/puerta/SKILL.md; van con su nombre por si la lista se renumera.
-// Los puntos que no nombra ninguna premisa los cubren la revisión adversarial de cada tarea con riesgo (ESCENARIOS) y la puerta.
+// Los puntos que no nombra ninguna premisa los cubren la revisión adversarial por riesgo (premisasDeRiesgo, con ESCENARIOS) y la puerta.
 
 const PREMISAS = [
   {
@@ -154,6 +154,26 @@ const PREMISAS = [
     reglas: 'la spec que nombra el plan, el contrato y los tableros: lo que no está en ninguno de los tres no se agrega, va a «Para después»',
   },
 ]
+
+// Código primero (pedido del usuario del 2026-11-26): la revisión adversarial no va en cada tarea. Va una vez, con todo el
+// código de la etapa, como una premisa más del cierre por cada tema de riesgo, con su verificador y sus arreglos.
+function premisasDeRiesgo(ts) {
+  const temas = [...new Set(ts.flatMap((t) => t.riesgo))]
+  return temas.map((tema) => {
+    const delTema = ts.filter((t) => t.riesgo.includes(tema))
+    return {
+      id: `riesgo-${tema}`,
+      titulo: `Adversarial · ${tema}`,
+      revisa: 'high',
+      verifica: 'high',
+      foco: (ctx) => `- Sos un revisor adversarial: tu trabajo es romper lo que programaron estas tareas, que tocan ${tema}: ${delTema.map((t) => `${t.id} · ${t.titulo}`).join('; ')}. Sus commits llevan la línea «Tarea: ${ctx.CLAVE}/<id>».
+${ESCENARIOS[tema]}
+- Cada problema va con el escenario concreto que lo rompe. No lo arregles: lo arregla otro agente, con su test.`,
+      puntos: 'los que toca ese riesgo',
+      reglas: 'las fichas de docs/rules/ que nombra la spec para esas tareas',
+    }
+  })
+}
 
 // Este necesita la galería, que solo deja la puerta: corre después de ella, y sus arreglos van con los de la puerta.
 const PANTALLAS = {
@@ -401,9 +421,9 @@ function repoDe(t, carril) {
 
 function verificacionDe(t) {
   if (t.carril === 'front') {
-    return `- Para los tests, node scripts/verificar.mjs en el front: muestra solo lo que falla y deja el log entero en .local/verificar/. Mientras trabajás, con --cambiados (solo lo que tocan tus cambios) o --archivos <tests>. Al terminar, sin opciones: tipos, lint, todos los tests y el contrato.`
+    return `- Para los tests, node scripts/verificar.mjs en el front: muestra solo lo que falla y deja el log entero en .local/verificar/. Mientras trabajás, con --cambiados (solo lo que tocan tus cambios) o --archivos <tests>. Al terminar, solo los tipos (npx tsc -b) y el lint de lo que tocaste, para que main compile. Todos los tests corren una vez, con todo el código de la etapa, en la puerta.`
   }
-  return `- Para el build y los tests, node scripts/arneses/verificar.mjs en el back (o en tu copia): muestra solo lo que falla y deja el log entero en .local/verificar/. El test dirigido: --sin-build --proyecto <Proyecto> --clase <Clase>, o --integracion --clase <Clase> si es de integración. Al terminar, sin opciones: el build y los tests rápidos enteros. Los de integración del área no los corrés: corren una vez, al cerrar el carril.`
+  return `- Para el build y los tests, node scripts/arneses/verificar.mjs en el back (o en tu copia): muestra solo lo que falla y deja el log entero en .local/verificar/. El test dirigido: --sin-build --proyecto <Proyecto> --clase <Clase>, o --integracion --clase <Clase> si es de integración. Al terminar, solo el build de la solución (dotnet build ArquitecturaBaseMultitenant.slnx, sin advertencias), para que main compile. Los tests rápidos enteros, la integración y la seguridad no los corrés: corren una vez, con todo el código de la etapa, en la puerta.`
 }
 
 function dondeDe(repo) {
@@ -449,7 +469,7 @@ ${t.texto}
 Sus pasos, archivos y tests están en la spec que nombra el plan. Ya están commiteadas: ${ctx.hechas()}. Lo que el texto dice de avisarle a la Guía o de esperarla lo resuelve el conductor: no esperes a nadie, no avises y no hagas otra tarea.
 ${mapa}${cambios}${sigue}
 Cómo trabajás:
-- TDD: el test dirigido en rojo, después en verde. Al terminar, el build y los tests rápidos enteros de tu repo, sin Docker y sin filtrar por módulo.
+- Código primero (pedido del usuario del 2026-11-26): el código y su test dirigido, en rojo y después en verde, y al terminar solo el build o los tipos, como dice abajo. Nada de suites enteras ni integración: corren una vez, al final. Si en tu copia o en tu repo hay cambios sin commitear de un agente anterior de esta misma tarea (la corrida anterior se frenó el 2026-11-26 para pasar a código primero), seguí desde ahí. Si son de otra tarea, no los toques ni los borres: devolvé bloqueada nombrándolos.
 ${verificacionDe(t)}
 - ${cierre}
 - Si llevás unos ${PASOS_POR_AGENTE} pasos y no terminaste, pará en un punto coherente${parar} y devolvé estado «parcial»: en falta va lo que queda, concreto, para el agente que sigue. Un agente corto gasta mucho menos cupo que uno largo.
@@ -879,7 +899,8 @@ async function correrPlan(PLAN, anterior, usuarioListo) {
   }
 
   async function programarTarea(t, fase, carril) {
-    const revisa = t.riesgo.length > 0
+    // Código primero (2026-11-26): toda tarea commitea al terminar; la revisión adversarial va una vez, en el cierre (premisasDeRiesgo).
+    const revisa = false
     const rol = t.carril === 'front' ? 'front' : (t.carril === 'back' ? 'back' : null)
     let r = null
     let falta = ''
@@ -938,8 +959,8 @@ async function correrPlan(PLAN, anterior, usuarioListo) {
     } catch (e) {
       for (const t of lista) fin(t, { estado: 'bloqueada', motivo: `el conductor falló en este carril: ${e && e.message ? e.message : e}` })
     }
-    // Los tests de integración y de seguridad corren una vez por carril del back, sobre lo que este carril commiteó.
-    if (carril && hechasAca.length && !detenido && !sucio) {
+    // Código primero (2026-11-26): la integración y la seguridad ya no corren por carril; corren una vez, en la puerta.
+    if (false && carril && hechasAca.length && !detenido && !sucio) {
       let c = null
       try {
         c = await agent(pIntegrarCarril(ctx, carril, hechasAca), { label: ctx.et(`${carril.nombre} · integración`), phase: fase, schema: S_COMMIT })
@@ -1005,12 +1026,14 @@ async function correrPlan(PLAN, anterior, usuarioListo) {
   if (puedeCerrar && !esperaAlUsuario) {
     phase('Revisión')
     // Cada premisa se verifica apenas termina su revisión; los arreglos esperan a todas, porque hay un solo escritor por repo.
+    // Las premisas de riesgo son la revisión adversarial de código primero: una por tema, sobre las tareas que lo tocan.
+    const PREMISAS_ETAPA = PREMISAS.concat(premisasDeRiesgo([...contrato, ...back, ...front].filter((t) => t.riesgo.length)))
     const revisadas = await pipeline(
-      PREMISAS,
+      PREMISAS_ETAPA,
       (p) => agent(pRevisarPremisa(ctx, p), { label: ctx.et(`revisión · ${p.titulo}`), phase: 'Revisión', schema: S_PREMISA, effort: p.revisa }),
       (rev, p) => verificar(ctx, p, rev, 'Revisión'),
     )
-    const premisas = PREMISAS.map((p, i) => revisadas[i] || { id: p.id, titulo: p.titulo, hallazgos: null, confirmados: null, descartados: [], resumen: 'la revisión no terminó' })
+    const premisas = PREMISAS_ETAPA.map((p, i) => revisadas[i] || { id: p.id, titulo: p.titulo, hallazgos: null, confirmados: null, descartados: [], resumen: 'la revisión no terminó' })
     const aArreglar = porRepo(premisas.flatMap((r) => r.confirmados || []), 'repo')
     const repos = Object.keys(aArreglar)
     const arreglosDeRevision = await parallel(repos.map((repo) => () =>
