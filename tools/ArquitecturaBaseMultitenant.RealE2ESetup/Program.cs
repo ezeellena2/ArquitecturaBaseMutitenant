@@ -86,12 +86,16 @@ try
         services.GetRequiredService<TimeProvider>());
     while (await timer.WaitForNextTickAsync(cancellationToken))
     {
-        await LegalVersionCommand.TryExecuteAsync(host.Services, readyFile, cancellationToken);
-        await InvitationCommand.TryExecuteAsync(host.Services, readyFile, prepared.BusinessId, prepared.UserId, cancellationToken);
-        await PlatformCommand.TryExecuteAsync(host.Services, readyFile, prepared.BusinessId, prepared.UserId, cancellationToken);
-        await LegacyBrowserSessionCommand.TryExecuteAsync(host.Services, readyFile, cancellationToken);
-        await LoginCodeCommand.TryExecuteAsync(host.Services, readyFile, cancellationToken);
-        await RecentProofCommand.TryExecuteAsync(host.Services, readyFile, cancellationToken);
+        // B-4: como en el host del recorrido, una orden que falla contesta su rechazo y el preparador sigue.
+        await PrivateCommandGuard.RunAsync(readyFile, "legal", () => LegalVersionCommand.TryExecuteAsync(host.Services, readyFile, cancellationToken), cancellationToken);
+        await PrivateCommandGuard.RunAsync(readyFile, "invitations",
+            () => InvitationCommand.TryExecuteAsync(host.Services, readyFile, prepared.BusinessId, prepared.UserId, cancellationToken), cancellationToken);
+        await PrivateCommandGuard.RunAsync(readyFile, "platform",
+            () => PlatformCommand.TryExecuteAsync(host.Services, readyFile, prepared.BusinessId, prepared.UserId, cancellationToken), cancellationToken);
+        await PrivateCommandGuard.RunAsync(readyFile, "legacy-session",
+            () => LegacyBrowserSessionCommand.TryExecuteAsync(host.Services, readyFile, cancellationToken), cancellationToken);
+        await PrivateCommandGuard.RunAsync(readyFile, "login-code", () => LoginCodeCommand.TryExecuteAsync(host.Services, readyFile, cancellationToken), cancellationToken);
+        await PrivateCommandGuard.RunAsync(readyFile, "recent-proof", () => RecentProofCommand.TryExecuteAsync(host.Services, readyFile, cancellationToken), cancellationToken);
     }
     return 0;
 }

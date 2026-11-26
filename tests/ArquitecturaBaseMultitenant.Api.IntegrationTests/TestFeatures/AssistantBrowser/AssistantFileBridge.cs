@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Recorrido;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -11,6 +12,7 @@ using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -21,6 +23,9 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Assistan
 public sealed class AssistantFileBridge
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
+    /// <summary>Un propósito que no es el de ninguna clave del asistente: lo cifrado con él no se puede leer como clave.</summary>
+    internal const string UnreadableKeyPurpose = "ArquitecturaBaseMultitenant.RecorridoE2E.OtherPurpose.v1";
+    internal const string UnreadableKey = "isolated-unreadable-key-E2E1";
     private readonly IServiceProvider _services;
     private readonly string _commandFile;
     private readonly Dictionary<AssistantFinancialBinding, Guid> _fixtures = [];
@@ -141,6 +146,11 @@ public sealed class AssistantFileBridge
             _fixtures[binding] = reset.OperationId;
             return new { configured = true };
         }
+        if (request.Kind == "unreadableKey")
+        {
+            await WriteAsync(services, token => UnreadableKeyAsync(services, db, tenantId, nowUtc, token), ct);
+            return new { unreadable = true };
+        }
         var alerts = await AssistantQuotaFixture.StageAsync(services, binding, request.Args,
             _fixtures.GetValueOrDefault(binding), ct);
         _fixtures[binding] = alerts.OperationId;
@@ -149,6 +159,35 @@ public sealed class AssistantFileBridge
                 throw new InvalidOperationException("Alert failed.");
         return request.Args.TryGetProperty("notify", out var notify) && notify.GetBoolean()
             ? new { alertQueued = alerts.Alerts.Length > 0 } : (object)new { };
+    }
+
+    /// <summary>
+    /// La clave guardada que el anillo de claves no abre (0064 §7), como la que quedó de otra instalación: se cifra con otro
+    /// propósito. La de una organización queda en uso, con la clave propia permitida por Plataforma; la de Plataforma reemplaza
+    /// a la de la configuración. «prepare» las vuelve a sacar.
+    /// </summary>
+    private static async Task UnreadableKeyAsync(IServiceProvider services, ApplicationDbContext db, Guid? tenantId, DateTime nowUtc,
+        CancellationToken ct)
+    {
+        var plain = Encoding.UTF8.GetBytes(UnreadableKey);
+        var cipher = services.GetRequiredService<IDataProtectionProvider>().CreateProtector(UnreadableKeyPurpose).Protect(plain);
+        var suffix = UnreadableKey[^4..];
+        var platform = await db.Set<AssistantPlatformSettings>().SingleAsync(ct);
+        var security = services.GetRequiredService<ISecurityEventRepository>();
+        if (tenantId is not { } organizationId)
+        {
+            platform.ReplaceKey(cipher, suffix);
+            security.Add(SecurityEvent.ForPlatformSettings(AuditActorKind.System, Guid.Empty, "Isolated assistant scenario", nowUtc));
+            return;
+        }
+        var policy = await db.Set<AssistantOrganizationPolicy>().SingleOrDefaultAsync(row => row.OrganizationId == organizationId, ct);
+        if (policy is null) { policy = AssistantOrganizationPolicy.Create(organizationId); db.Add(policy); }
+        policy.SetAllowOwnKey(true);
+        security.Add(SecurityEvent.ForTenantFeatures(AuditActorKind.System, Guid.Empty, organizationId, "Isolated assistant scenario", nowUtc));
+        var own = await db.Set<AssistantOrganizationSettings>().SingleOrDefaultAsync(ct);
+        if (own is null) { own = AssistantOrganizationSettings.Create(); db.Add(own); }
+        own.Update("OwnKey", platform.DefaultModelId, platform.Effort, 50, Usd(1000m), 30);
+        own.ReplaceKey(cipher, suffix);
     }
 
     internal static async Task WriteAsync(IServiceProvider services, Func<CancellationToken, Task> work, CancellationToken ct)

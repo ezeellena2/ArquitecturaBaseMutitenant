@@ -20,6 +20,7 @@ public sealed record AssistantBrowserRequest(Guid Id, string Kind, JsonElement A
             "prepare" => ["email", "access", "tenantId"],
             "quotas" => ["email", "access", "tenantId", "remainingMessages", "monthlyFraction", "notify"],
             "clock" => ["email", "access", "tenantId", "retentionExpired"],
+            "unreadableKey" => ["email", "access", "tenantId"],
             "providerCounters" => [],
             _ => throw new InvalidOperationException("Unsupported private assistant command."),
         };
@@ -35,6 +36,8 @@ public sealed record AssistantBrowserRequest(Guid Id, string Kind, JsonElement A
         if (request.Kind == "quotas" && (request.Args.GetProperty("remainingMessages").GetInt32() is not (0 or 10 or 50)
             || request.Args.GetProperty("monthlyFraction").GetDecimal() is not (0m or .8m or 1m)))
             throw new InvalidOperationException("Private assistant quota scenario invalid.");
+        if (request.Kind == "unreadableKey" && request.Args.GetProperty("access").GetString() == "consumer")
+            throw new InvalidOperationException("Only an organization or Platform saves a key.");
         if (request.Kind == "clock" && !request.Args.GetProperty("retentionExpired").GetBoolean())
             throw new InvalidOperationException("Private retention scenario invalid.");
         return request;

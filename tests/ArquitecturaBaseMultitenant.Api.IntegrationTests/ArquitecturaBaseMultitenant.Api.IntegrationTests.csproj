@@ -11,5 +11,6 @@
     <ProjectReference Include="..\..\src\ArquitecturaBaseMultitenant.Api\ArquitecturaBaseMultitenant.Api.csproj" />
     <Compile Include="..\ArquitecturaBaseMultitenant.ArchitectureTests\PersistenceModelComparison.cs" Link="Support\PersistenceModelComparison.cs" />
     <Compile Include="..\..\tools\ArquitecturaBaseMultitenant.RealE2ESetup\LegalVersionCommand.cs" Link="TestFeatures\Recorrido\LegalVersionCommand.cs" />
+    <Compile Include="..\..\tools\ArquitecturaBaseMultitenant.RealE2ESetup\PrivateCommandGuard.cs" Link="TestFeatures\Recorrido\PrivateCommandGuard.cs" />
   </ItemGroup>
 </Project>

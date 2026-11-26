@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Recorrido;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.WhatsAppBrowser;
@@ -67,24 +68,37 @@ internal static class RecorridoHost
         var prepared = await E7Preparation.PrepareAsync(app.Services, email, ct);
         var bridge = new WhatsAppFileBridge(app.Services, readyFile, isolated: true);
         var assistant = new AssistantFileBridge(app.Services, readyFile, isolated: true);
+        var quota = new RecorridoInvitationQuota(app.Services);
         await using (var marker = new FileStream(readyFile, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             await marker.FlushAsync(ct);
         using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(250));
         while (await timer.WaitForNextTickAsync(ct))
         {
-            await LegalVersionCommand.TryExecuteAsync(app.Services, readyFile, ct);
-            await InvitationCommand.TryExecuteAsync(app.Services, readyFile, prepared.BusinessId, prepared.UserId, ct);
-            await PlatformCommand.TryExecuteAsync(app.Services, readyFile, prepared.BusinessId, prepared.UserId, ct);
-            await LegacyBrowserSessionCommand.TryExecuteAsync(app.Services, readyFile, ct);
-            await LoginCodeCommand.TryExecuteAsync(app.Services, readyFile, ct);
-            await RecentProofCommand.TryExecuteAsync(app.Services, readyFile, ct);
-            await bridge.TryExecuteAsync(client, ct);
-            await assistant.TryExecuteAsync(ct);
+            // B-4: una orden que falla le contesta su rechazo a quien la pidió; el host y la API siguen.
+            await PrivateCommandGuard.RunAsync(readyFile, "legal", () => LegalVersionCommand.TryExecuteAsync(app.Services, readyFile, ct), ct);
+            await PrivateCommandGuard.RunAsync(readyFile, "invitations",
+                () => InvitationCommand.TryExecuteAsync(app.Services, readyFile, prepared.BusinessId, prepared.UserId, ct), ct);
+            await PrivateCommandGuard.RunAsync(readyFile, "platform",
+                () => PlatformCommand.TryExecuteAsync(app.Services, readyFile, prepared.BusinessId, prepared.UserId, ct), ct);
+            await PrivateCommandGuard.RunAsync(readyFile, "legacy-session", () => LegacyBrowserSessionCommand.TryExecuteAsync(app.Services, readyFile, ct), ct);
+            await PrivateCommandGuard.RunAsync(readyFile, "login-code", () => LoginCodeCommand.TryExecuteAsync(app.Services, readyFile, ct), ct);
+            await PrivateCommandGuard.RunAsync(readyFile, "recent-proof", () => RecentProofCommand.TryExecuteAsync(app.Services, readyFile, ct), ct);
+            await PrivateCommandGuard.RunAsync(readyFile, "whatsapp", () => bridge.TryExecuteAsync(client, ct), ct);
+            await PrivateCommandGuard.RunAsync(readyFile, "assistant", () => assistant.TryExecuteAsync(ct), ct);
+            // B-2 y B-3: los estados de la cola y el tope de quien invita que el entorno no deja solo.
+            await PrivateCommandGuard.ExecuteAsync(readyFile, "delivery", (command, token) => DeliveryAsync(app.Services, command, prepared.BusinessId, token), ct);
+            await PrivateCommandGuard.ExecuteAsync(readyFile, "invitation-quota", quota.ExecuteAsync, ct);
             // Un único claim email por tick; WhatsApp cifrado permanece disponible para su control privado.
             await RecorridoEmailPump.ProcessOnceAsync(app.Services, ct);
         }
         return 0;
     }
+
+    /// <summary>Un mensaje del chat es del módulo de WhatsApp; una invitación, del núcleo.</summary>
+    private static Task<object> DeliveryAsync(IServiceProvider services, JsonElement command, Guid businessId, CancellationToken ct) =>
+        command.TryGetProperty("kind", out var kind) && kind.ValueKind == JsonValueKind.String && kind.GetString() == "chatMessage"
+            ? WhatsAppDeliveryControl.ExecuteAsync(services, command, businessId, ct)
+            : RecorridoInvitationDelivery.ExecuteAsync(services, command, businessId, ct);
 
     private static string Required(string name) => Environment.GetEnvironmentVariable(name)
         is { Length: > 0 } value ? value : throw new InvalidOperationException("Required isolated host setting missing.");

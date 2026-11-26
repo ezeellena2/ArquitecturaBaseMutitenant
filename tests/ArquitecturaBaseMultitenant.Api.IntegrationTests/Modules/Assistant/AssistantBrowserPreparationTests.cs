@@ -76,4 +76,64 @@ public sealed class AssistantBrowserPreparationTests
         }
         finally { RecorridoPaths.Validate(ready); Directory.Delete(directory, recursive: true); }
     }
+
+    [Theory]
+    [InlineData("business")]
+    [InlineData("platform")]
+    public async Task Unreadable_key_leaves_the_saved_key_unreadable_in_its_settings_until_prepare(string access)
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await using var session = await AssistantTurnTestSession.CreateAsync(access, acceptNotice: true, workerEnabled: false);
+        var directory = Directory.CreateTempSubdirectory("mt-e2e-assistant-").FullName;
+        var ready = Path.Combine(directory, "mt-e2e-assistant.ready");
+        var settingsPath = access == "platform" ? "/api/platform/assistant/settings" : "/api/organization/assistant/settings";
+        try
+        {
+            var bridge = new AssistantFileBridge(session.Host.Services, ready, isolated: true);
+            var args = access == "platform"
+                ? JsonSerializer.SerializeToElement(new { email = session.Account.Email.Value, access })
+                : JsonSerializer.SerializeToElement(new { email = session.Account.Email.Value, access, tenantId = session.TenantId });
+            await CommandAsync("prepare", args);
+            Assert.Equal(JsonValueKind.Null, (await SettingsAsync()).GetProperty("providerIssue").ValueKind);
+
+            await CommandAsync("unreadableKey", args);
+            var unreadable = await SettingsAsync();
+            Assert.Equal("Assistant.Provider.KeyUnreadable", unreadable.GetProperty("providerIssue").GetString());
+            Assert.True(unreadable.GetProperty("hasKey").GetBoolean());
+            Assert.Equal("E2E1", unreadable.GetProperty("maskedKeySuffix").GetString());
+            if (access == "business") Assert.Equal("OwnKey", unreadable.GetProperty("mode").GetString());
+
+            // «prepare» saca la clave ilegible: el próximo ancho del recorrido arranca con la de la configuración.
+            await CommandAsync("prepare", args);
+            Assert.Equal(JsonValueKind.Null, (await SettingsAsync()).GetProperty("providerIssue").ValueKind);
+            Assert.Equal(0, session.Provider.Calls);
+
+            // Una persona no guarda clave: la orden se rechaza.
+            var consumer = Path.ChangeExtension(ready, ".assistant.json");
+            await File.WriteAllTextAsync(consumer, JsonSerializer.Serialize(new { id = Guid.NewGuid(), kind = "unreadableKey",
+                args = new { email = session.Account.Email.Value, access = "consumer" } }), ct);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => bridge.TryExecuteAsync(ct));
+            File.Delete(consumer);
+
+            async Task CommandAsync(string kind, JsonElement arguments)
+            {
+                var command = Path.ChangeExtension(ready, ".assistant.json");
+                var id = Guid.NewGuid();
+                await File.WriteAllTextAsync(command, JsonSerializer.Serialize(new { id, kind, args = arguments }), ct);
+                Assert.True(await bridge.TryExecuteAsync(ct));
+                using var response = JsonDocument.Parse(await File.ReadAllTextAsync(command + ".done", ct));
+                Assert.Equal(id, response.RootElement.GetProperty("id").GetGuid());
+                Assert.True(response.RootElement.GetProperty("ok").GetBoolean(), "The isolated assistant command must succeed.");
+                File.Delete(command); File.Delete(command + ".done");
+            }
+            async Task<JsonElement> SettingsAsync()
+            {
+                using var response = await session.Client.GetAsync(settingsPath, ct);
+                Assert.True(response.StatusCode == HttpStatusCode.OK, await response.Content.ReadAsStringAsync(ct));
+                using var body = JsonDocument.Parse(await response.Content.ReadAsStringAsync(ct));
+                return body.RootElement.Clone();
+            }
+        }
+        finally { RecorridoPaths.Validate(ready); Directory.Delete(directory, recursive: true); }
+    }
 }
