@@ -19,6 +19,8 @@ Todo va en `main`, sin ramas, worktrees, stash, reset ni push. Cada chat commite
 
 **El back va en carriles** ([0071](../decisions/0071-conductor-en-carriles.md)). Las dos migraciones, la de la B4 (`OfferedActions` del turno) y la de la B5 (la propuesta), van en ese orden y en el mismo carril, armadas sobre el `HEAD` del momento y con `ModelSnapshotTests` en verde.
 
+**Código primero** (pedido del usuario del 2026-11-26): lo que este plan y los textos de los chats piden por tarea (los tests rápidos enteros, la integración de las áreas y la revisión adversarial antes del commit) queda sin efecto. Cada tarea hace su código, su test dirigido y el build; la revisión adversarial va una vez por tema de riesgo, en el cierre, y los tests enteros y la integración, en la puerta ([AGENTS.md](../../AGENTS.md)).
+
 **Revisión adversarial** ([AGENTS.md](../../AGENTS.md), «Forma de trabajo»). La llevan las tareas marcadas con **(R)**, completa y antes del commit: un subagente nuevo recibe el código y los escenarios, sin la conclusión de quien programó. Los escenarios de cada una están en la ADR 0068 («Modelo de amenazas»).
 
 **Reglas de orden:**

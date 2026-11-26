@@ -1,13 +1,13 @@
 export const meta = {
   name: 'etapa',
-  description: 'Programa una etapa, o varias seguidas, desde su plan ejecutable: contrato, los carriles del back (cada uno en su copia) y el front a la vez, revisión adversarial según el riesgo, la integración una vez por carril, revisores por premisa con su verificador y una sola puerta',
+  description: 'Programa una etapa, o varias seguidas, desde su plan ejecutable: contrato, los carriles del back (cada uno en su copia) y el front a la vez, código primero (cada tarea con su test dirigido y el build), revisores por premisa con su verificador, más uno adversarial por cada tema de riesgo, y una sola puerta con los tests enteros y la integración',
   whenToUse: 'Cuando el usuario pide programar, retomar o cerrar una etapa con plan ejecutable (docs/plans/AAAA-MM-DD-etapa-*.md), o varias seguidas. args: { plan | planes: [rutas], modo?: planificar|programar|cerrar|todo, solo?: [ids], usuarioListo?: true, carrilesBack?: 2, modelos?: { front, back, verifica }, topeCupo?: 85 }. Guía: docs/guides/conducir-una-etapa.md',
   phases: [
     { title: 'Leer', detail: 'el plan, lo ya commiteado y lo que bloquea' },
     { title: 'Contrato', detail: 'las tareas K, en el back' },
     { title: 'Programar', detail: 'los carriles del back, cada uno en su copia, y el front, a la vez' },
     { title: 'Integrar', detail: 'el front contra el contrato real' },
-    { title: 'Revisión', detail: 'un revisor por premisa, cada uno con su verificador, y un arreglador por repo' },
+    { title: 'Revisión', detail: 'un revisor por premisa, más uno adversarial por cada tema de riesgo, cada uno con su verificador, y un arreglador por repo' },
     { title: 'Puerta', detail: 'suites, E2E, detectores, galería y recorrido, una vez, y después las pantallas contra el tablero' },
     { title: 'Cierre', detail: 'las tablas del plan, lo que queda para después y lo que queda para el usuario' },
   ],
@@ -265,30 +265,6 @@ const S_PROGRAMA = {
   required: ['estado', 'commits', 'archivos', 'archivosSinCommit', 'falta', 'motivo', 'pregunta', 'captura', 'cambiosAlContrato', 'paraDespues', 'verificacion'],
 }
 
-const S_HALLAZGOS = {
-  type: 'object',
-  properties: {
-    hallazgos: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          titulo: TEXTO,
-          punto: TEXTO,
-          archivo: TEXTO,
-          linea: { type: 'integer' },
-          escenario: TEXTO,
-          prueba: TEXTO,
-          gravedad: { type: 'string', enum: ['alta', 'media', 'baja'] },
-        },
-        required: ['titulo', 'punto', 'archivo', 'linea', 'escenario', 'prueba', 'gravedad'],
-      },
-    },
-    resumen: TEXTO,
-  },
-  required: ['hallazgos', 'resumen'],
-}
-
 const S_PREMISA = {
   type: 'object',
   properties: {
@@ -437,7 +413,7 @@ function textoDelCarril(t, T) {
   return (propio || T.back[0] || { texto: '' }).texto
 }
 
-function pProgramar(ctx, t, revisa, falta, vuelta, carril) {
+function pProgramar(ctx, t, falta, vuelta, carril) {
   const enCopia = Boolean(carril && carril.copia)
   const cambios = ctx.CAMBIOS.length ? `\nCambios al contrato que hicieron otras tareas de esta corrida:\n- ${ctx.CAMBIOS.join('\n- ')}\n` : ''
   const sigue = falta
@@ -448,12 +424,8 @@ function pProgramar(ctx, t, revisa, falta, vuelta, carril) {
     : ''
   const mapa = (t.archivos || []).length ? `\nEl mapa de la tarea (lo que crea o cambia y el modelo que copia): ${t.archivos.join(', ')}. Empezá por ahí, sin recorrer el repo.\n` : ''
   const entrega = enCopia ? ` y entregalos con node scripts/arneses/carril.mjs entregar ${carril.copia}` : ''
-  const cierre = revisa
-    ? `Esta tarea lleva revisión adversarial (${t.riesgo.join(', ')}): NO commitees. Dejá todo en el árbol${enCopia ? ' de la copia' : ''}, en verde, y devolvé estado «lista» con la lista completa de archivos que tocaste o creaste.`
-    : `Commiteá cada parte coherente y verificada con la línea «Tarea: ${ctx.CLAVE}/${t.id}»${entrega}, y devolvé estado «hecha» con sus commits.`
-  const parar = revisa
-    ? ', en verde y sin commitear,'
-    : ` y commiteá lo que está en verde${enCopia ? ' (entregalo también)' : ''},`
+  const cierre = `Commiteá cada parte coherente y verificada con la línea «Tarea: ${ctx.CLAVE}/${t.id}»${entrega}, y devolvé estado «hecha» con sus commits.`
+  const parar = ` y commiteá lo que está en verde${enCopia ? ' (entregalo también)' : ''},`
   return `Sos el agente que programa la tarea ${t.id} de la etapa «${ctx.ETAPA}» (plan: ${ctx.PLAN}).
 ${CUPO}${preparar}
 
@@ -468,6 +440,8 @@ ${t.texto}
 """
 Sus pasos, archivos y tests están en la spec que nombra el plan. Ya están commiteadas: ${ctx.hechas()}. Lo que el texto dice de avisarle a la Guía o de esperarla lo resuelve el conductor: no esperes a nadie, no avises y no hagas otra tarea.
 ${mapa}${cambios}${sigue}
+El texto del chat y el plan pueden pedir, por tarea, los tests rápidos enteros, la integración de las áreas o la revisión adversarial antes del commit: eso cambió el 2026-11-26 y no se hace. Vale lo de abajo.
+
 Cómo trabajás:
 - Código primero (pedido del usuario del 2026-11-26): el código y su test dirigido, en rojo y después en verde, y al terminar solo el build o los tipos, como dice abajo. Nada de suites enteras ni integración: corren una vez, al final. Si en tu copia o en tu repo hay cambios sin commitear de un agente anterior de esta misma tarea (la corrida anterior se frenó el 2026-11-26 para pasar a código primero), seguí desde ahí. Si son de otra tarea, no los toques ni los borres: devolvé bloqueada nombrándolos.
 ${verificacionDe(t)}
@@ -481,60 +455,21 @@ ${SIN_AGREGAR}
 ${comunes(ctx, carril)}`
 }
 
-function pAdversarial(ctx, t, archivos, carril) {
-  return `Sos un revisor adversarial. Otro agente programó la tarea ${t.id} de la etapa «${ctx.ETAPA}» (plan ${ctx.PLAN}) y dejó el código sin commitear. No sabés qué concluyó, y no importa: tu trabajo es romperla.
-
-La tarea: ${t.titulo}.
-"""
-${t.texto}
-"""
-Sus pasos y tests están en la spec que nombra el plan. Los archivos que tocó, en ${repoDe(t, carril)}, son: ${archivos.join(', ')}. Leelos con git diff y git status de ese repo.
-
-Riesgo: ${t.riesgo.join(', ')}. Probá al menos estos escenarios, y los que se te ocurran:
-${t.riesgo.map((c) => ESCENARIOS[c]).join('\n')}
-
-Por cada problema real, escribí un test que falle, dejalo en el árbol sin commitear y nombralo en «prueba». No arregles el código de producción ni commitees. Borrá los tests que escribiste y pasan. En «punto» va la categoría del riesgo. Si no encontrás nada, devolvé la lista vacía: no inventes.
-${verificacionDe(t)} Corré solo tus pruebas, filtradas por su clase.
-
-${comunes(ctx, carril)}`
-}
-
 function lineaDeHallazgo(h) {
-  const extra = `${h.prueba ? ` Prueba: ${h.prueba}.` : ''}${h.regla ? ` Regla: ${h.regla}.` : ''}${h.confirmacion ? ` Lo confirmó un verificador: ${h.confirmacion}.` : ''}`
+  const extra = `${h.regla ? ` Regla: ${h.regla}.` : ''}${h.confirmacion ? ` Lo confirmó un verificador: ${h.confirmacion}.` : ''}`
   return `- [${h.gravedad}] ${h.titulo} (${h.archivo}:${h.linea}). Escenario: ${h.escenario}.${extra}`
 }
 
-function pCorregir(ctx, t, archivos, hallazgos, carril) {
-  const cuerpo = hallazgos.length
-    ? `Hallazgos de la revisión adversarial:
-${hallazgos.map(lineaDeHallazgo).join('\n')}
-
-Con cada uno, corré solo su prueba. Si es real, arreglalo, dejá el test y buscá el mismo defecto en los caminos hermanos y en las piezas compartidas. Si no es real, borrá su test y contá por qué en descartados. Después corré el build y los tests rápidos enteros del repo, sin Docker y sin filtrar. Los de integración del área no: corren una vez, al cerrar el carril.
-${verificacionDe(t)}`
-    : 'No hay hallazgos que corregir: quien la programó ya corrió las suites. Confirmá con git status que los archivos de la tarea están ahí, sin cambios ajenos mezclados, y no vuelvas a correrlas.'
+// Por si quien programa devuelve «lista» con el código sin commitear: otro agente lo commitea, sin volver a correr nada.
+function pCommitear(ctx, t, archivos, carril) {
   const entrega = carril && carril.copia ? `, entregalo con node scripts/arneses/carril.mjs entregar ${carril.copia}` : ''
-  return `Sos el agente que commitea la tarea ${t.id} de la etapa «${ctx.ETAPA}» (plan ${ctx.PLAN}). No la programaste ni la revisaste.
+  return `Sos el agente que commitea la tarea ${t.id} de la etapa «${ctx.ETAPA}» (plan ${ctx.PLAN}). No la programaste.
 
 La tarea: ${t.titulo}. Sus archivos, en ${repoDe(t, carril)}: ${archivos.join(', ')}.
 
-${cuerpo}
+Quien la programó ya corrió su test dirigido y el build. Confirmá con git status que los archivos de la tarea están ahí, sin cambios ajenos mezclados, y no vuelvas a correrlos.
 
-Commiteá todo lo de la tarea, los archivos de arriba más los tests que quedaron, con la línea «Tarea: ${ctx.CLAVE}/${t.id}»${entrega}, y devolvé estado hecha con los commits. Si no queda en verde, no commitees: devolvé bloqueada, con el motivo y archivosSinCommit.
-
-${comunes(ctx, carril)}`
-}
-
-function pIntegrarCarril(ctx, carril, hechas) {
-  const donde = carril.copia
-    ? `en la copia ${carril.copia}: primero, desde la carpeta del back, node scripts/arneses/carril.mjs preparar ${carril.copia}, que la pone al día con main`
-    : 'en el back (la carpeta actual)'
-  return `Sos el agente que cierra el carril ${carril.nombre} de la etapa «${ctx.ETAPA}» (plan ${ctx.PLAN}). No programaste sus tareas.
-
-Sus tareas ya están commiteadas en main: ${hechas.map((t) => `${t.id} · ${t.titulo}`).join('; ')}. Mirá qué tocaron con git log --grep "Tarea: ${ctx.CLAVE}/<id>" --stat.
-
-Los tests de integración y de seguridad se corren una vez por carril, no en cada tarea. Si alguna de esas tareas tocó rutas, persistencia, autenticación o aislamiento, corré los de sus áreas ${donde}, con node scripts/arneses/verificar.mjs --integracion --espacio <Namespace> (uno por área; espera su turno en la fila pesada, así corre una integración por vez). Si ninguna tocó eso, no corras nada y devolvé hecha.
-
-Cada falla real se arregla con su test, que falle sin el arreglo, y se busca el mismo defecto en los caminos hermanos. Commiteá con la línea «Tarea: ${ctx.CLAVE}/${carril.nombre}»${carril.copia ? ` y entregá con node scripts/arneses/carril.mjs entregar ${carril.copia}` : ''}. Un test que se pasó de tiempo se corre una vez más, solo. Si no queda en verde, devolvé bloqueada con el motivo.
+Commiteá todo lo de la tarea con la línea «Tarea: ${ctx.CLAVE}/${t.id}»${entrega}, y devolvé estado hecha con los commits. Si falta algo o no compila, no commitees: devolvé bloqueada, con el motivo y archivosSinCommit.
 
 ${comunes(ctx, carril)}`
 }
@@ -698,9 +633,9 @@ function buscarCiclo(contrato, carriles, porId) {
 /**
  * Reparte las tareas del back en carriles que corren a la vez, cada uno en su copia (ADR 0071). Van juntas las de
  * la misma área (tocan los mismos archivos) y todas las que traen migración (comparten el snapshot del modelo).
- * Cada grupo va al carril con menos trabajo, contando tres por cada tarea con revisión adversarial, y adentro de
- * cada carril se respeta el orden del plan: como cada tarea va después de lo que espera, nadie espera a algo que
- * su propio carril todavía no corrió.
+ * Cada grupo va al carril con menos tareas pendientes (con código primero, una tarea con riesgo es un agente, como
+ * cualquiera), y adentro de cada carril se respeta el orden del plan: como cada tarea va después de lo que espera,
+ * nadie espera a algo que su propio carril todavía no corrió.
  */
 function armarCarriles(back, cuantos, clave) {
   const grupo = {}
@@ -715,7 +650,7 @@ function armarCarriles(back, cuantos, clave) {
     }
   }
   // Pesa solo lo que falta: una tarea ya hecha no carga a su carril (en la base 2, un carril se llevó cuatro de seis pendientes).
-  const peso = (t) => (t.estado !== 'pendiente' ? 0 : (t.riesgo.length ? 3 : 1))
+  const peso = (t) => (t.estado !== 'pendiente' ? 0 : 1)
   const grupos = {}
   back.forEach((t, i) => {
     const g = (grupos[raiz(t.id)] = grupos[raiz(t.id)] || { ids: new Set(), peso: 0, primero: i })
@@ -738,11 +673,12 @@ function armarCarriles(back, cuantos, clave) {
     }))
 }
 
-function agentesEstimados(pendientes, carrilesDelBack) {
-  // Integrar 1; Revisión: 5 revisores, hasta 5 verificadores y hasta 2 arregladores; Puerta: 1, el revisor de pantallas,
-  // su verificador, hasta 2 arregladores y lo que tocan los arreglos; Cierre 1. Más la integración de cada carril del back.
-  const deCierre = MODO === 'programar' ? 2 : 1 + (PREMISAS.length * 2 + 2) + (1 + 2 + 2 + 1) + 1
-  return 1 + pendientes.reduce((n, t) => n + (t.riesgo.length ? 3 : 1), 0) + carrilesDelBack + deCierre
+function agentesEstimados(pendientes, temasDeRiesgo) {
+  // Leer 1 y un agente por tarea pendiente (código primero: commitea sin revisión aparte ni integración por carril).
+  // Integrar 1; Revisión: 5 revisores y uno adversarial por tema de riesgo, cada uno con su verificador, y hasta 2
+  // arregladores; Puerta: 1, el revisor de pantallas, su verificador, hasta 2 arregladores y lo que tocan los arreglos; Cierre 1.
+  const deCierre = MODO === 'programar' ? 2 : 1 + ((PREMISAS.length + temasDeRiesgo) * 2 + 2) + (1 + 2 + 2 + 1) + 1
+  return 1 + pendientes.length + deCierre
 }
 
 function modelo(opciones, rol) {
@@ -817,6 +753,8 @@ async function correrPlan(PLAN, anterior, usuarioListo) {
   const contrato = tareas.filter((t) => t.carril === 'contrato')
   const back = tareas.filter((t) => t.carril === 'back')
   const front = tareas.filter((t) => t.carril === 'front')
+  // Las que revisa la premisa adversarial de su tema en el cierre, estén hechas de antes o no.
+  const conRiesgo = [...contrato, ...back, ...front].filter((t) => t.riesgo.length)
 
   const bloqueos = L.bloqueos.slice()
   if (typeof L.cupoSemanal === 'number' && L.cupoSemanal >= TOPE_CUPO) bloqueos.push(`El cupo semanal va en ${L.cupoSemanal} %: con ${TOPE_CUPO} % no se empieza a programar`)
@@ -842,7 +780,7 @@ async function correrPlan(PLAN, anterior, usuarioListo) {
       carrilesBack: carrilesBack.map((c) => ({ nombre: c.nombre, copia: c.copia, tareas: c.tareas.map((t) => t.id) })),
       tareas: tareas.map((t) => ({ id: t.id, carril: t.carril, estado: t.estado, riesgo: t.riesgo, espera: t.espera, motivo: t.motivo, area: t.area, migracion: t.migracion })),
       pasosDelUsuario: L.pasosDelUsuario,
-      agentesEstimados: agentesEstimados(pendientes, carrilesBack.length),
+      agentesEstimados: agentesEstimados(pendientes, premisasDeRiesgo(conRiesgo).length),
       notas: L.notas,
     }
   }
@@ -876,7 +814,6 @@ async function correrPlan(PLAN, anterior, usuarioListo) {
   const PASOS = L.pasosDelUsuario.map((p) => p.paso)
   const PASOS_DE_INTEGRACION = []
   const PARA_DESPUES_DEL_PLAN = []
-  const INTEGRACION_DE_CARRILES = []
   let detenido = null
 
   function anotarCambio(c, quien) {
@@ -900,14 +837,13 @@ async function correrPlan(PLAN, anterior, usuarioListo) {
 
   async function programarTarea(t, fase, carril) {
     // Código primero (2026-11-26): toda tarea commitea al terminar; la revisión adversarial va una vez, en el cierre (premisasDeRiesgo).
-    const revisa = false
     const rol = t.carril === 'front' ? 'front' : (t.carril === 'back' ? 'back' : null)
     let r = null
     let falta = ''
     let vuelta = 0
     while (true) {
       const opciones = { label: ctx.et(`${t.id} · programa${vuelta ? ` (${vuelta + 1})` : ''}`), phase: fase, schema: S_PROGRAMA }
-      r = await agent(pProgramar(ctx, t, revisa, falta, vuelta, carril), rol ? modelo(opciones, rol) : opciones)
+      r = await agent(pProgramar(ctx, t, falta, vuelta, carril), rol ? modelo(opciones, rol) : opciones)
       if (!r) return { estado: 'bloqueada', motivo: 'el agente que programaba no terminó', archivosSinCommit: ['(revisar git status)'] }
       juntar(t.id, r)
       vuelta += 1
@@ -916,28 +852,19 @@ async function correrPlan(PLAN, anterior, usuarioListo) {
     }
     if (r.estado === 'parcial') return Object.assign({}, r, { motivo: `quedó a medias después de ${VUELTAS} agentes: ${r.falta}` })
     if (r.estado === 'sin-cupo' || r.estado === 'bloqueada') return r
-    if (!revisa && r.estado === 'hecha') return r
+    if (r.estado === 'hecha') return r
 
-    // Una tarea con riesgo pasa por la revisión adversarial; una sin riesgo que quedó «lista» sin commitear, solo por el commit.
+    // Si quedó «lista», con el código sin commitear, otro agente solo la commitea.
     const archivos = r.archivos.length ? r.archivos : r.archivosSinCommit
-    let hallazgos = []
-    if (revisa) {
-      let rev = await agent(pAdversarial(ctx, t, archivos, carril), { label: ctx.et(`${t.id} · revisión adversarial`), phase: fase, schema: S_HALLAZGOS })
-      if (!rev) rev = await agent(pAdversarial(ctx, t, archivos, carril), { label: ctx.et(`${t.id} · revisión adversarial (2)`), phase: fase, schema: S_HALLAZGOS })
-      if (!rev) return { estado: 'bloqueada', motivo: 'la revisión adversarial no terminó: el código quedó sin commitear', archivosSinCommit: archivos }
-      hallazgos = rev.hallazgos || []
-    }
-    const opciones = { label: ctx.et(`${t.id} · ${hallazgos.length ? `corrige ${hallazgos.length} y commitea` : 'commitea'}`), phase: fase, schema: S_COMMIT }
-    if (!hallazgos.length) opciones.effort = 'low'
-    const c = await agent(pCorregir(ctx, t, archivos, hallazgos, carril), opciones)
+    const c = await agent(pCommitear(ctx, t, archivos, carril), { label: ctx.et(`${t.id} · commitea`), phase: fase, schema: S_COMMIT, effort: 'low' })
     if (!c) return { estado: 'bloqueada', motivo: 'el agente que cerraba la tarea no terminó', archivosSinCommit: archivos }
     juntar(t.id, c)
-    return Object.assign({}, c, { commits: (r.commits || []).concat(c.commits), hallazgos: hallazgos.length, descartados: c.descartados.length })
+    return Object.assign({}, c, { commits: (r.commits || []).concat(c.commits) })
   }
 
+  // Código primero (2026-11-26): un carril solo programa; la integración y la seguridad corren una vez, en la puerta.
   async function correrCarril(lista, fase, carril) {
     let sucio = false
-    const hechasAca = []
     try {
       for (const t of lista) {
         if (R[t.id]) continue
@@ -951,7 +878,6 @@ async function correrPlan(PLAN, anterior, usuarioListo) {
         ctx.corrieron += 1
         const res = fin(t, await programarTarea(t, fase, carril))
         log(ctx.et(`${t.id}: ${res.estado}${res.motivo ? ` · ${res.motivo}` : ''}`))
-        if (res.estado === 'hecha') hechasAca.push(t)
         if (res.estado === 'sin-cupo') detenido = `el cupo semanal llegó al ${TOPE_CUPO} %`
         if (res.estado !== 'hecha' && (res.archivosSinCommit || []).length) sucio = true
         if (PRESUPUESTO && PRESUPUESTO.total && PRESUPUESTO.remaining() < MINIMO_DE_PRESUPUESTO) detenido = 'se acabó el presupuesto de la corrida'
@@ -959,27 +885,10 @@ async function correrPlan(PLAN, anterior, usuarioListo) {
     } catch (e) {
       for (const t of lista) fin(t, { estado: 'bloqueada', motivo: `el conductor falló en este carril: ${e && e.message ? e.message : e}` })
     }
-    // Código primero (2026-11-26): la integración y la seguridad ya no corren por carril; corren una vez, en la puerta.
-    if (false && carril && hechasAca.length && !detenido && !sucio) {
-      let c = null
-      try {
-        c = await agent(pIntegrarCarril(ctx, carril, hechasAca), { label: ctx.et(`${carril.nombre} · integración`), phase: fase, schema: S_COMMIT })
-      } catch (e) {
-        c = null
-      }
-      if (c) juntar(carril.nombre, c)
-      INTEGRACION_DE_CARRILES.push(c
-        ? { carril: carril.nombre, estado: c.estado, motivo: c.motivo, commits: c.commits, arreglados: c.arreglados }
-        : { carril: carril.nombre, estado: 'no terminó', motivo: 'el agente que corría la integración del carril no terminó', commits: [], arreglados: [] })
-    }
   }
 
   function faltan() {
     return [...contrato, ...back, ...front].filter((t) => !R[t.id] || !['hecha', 'del-usuario'].includes(R[t.id].estado))
-  }
-
-  function carrilesMal() {
-    return INTEGRACION_DE_CARRILES.filter((c) => c.estado !== 'hecha')
   }
 
   // ---------- Contrato y programar ----------
@@ -998,7 +907,7 @@ async function correrPlan(PLAN, anterior, usuarioListo) {
     if (carrilesBack.length > 1) log(ctx.et(`El back va en ${carrilesBack.length} carriles: ${carrilesBack.map((c) => `${c.nombre} (${c.tareas.map((t) => t.id).join(', ')})`).join('; ')}`))
     await parallel(carrilesBack.map((c) => () => correrCarril(c.tareas, 'Programar', c)).concat([() => correrCarril(front, 'Programar', null)]))
 
-    if (!faltan().length && !carrilesMal().length && !detenido) {
+    if (!faltan().length && !detenido) {
       phase('Integrar')
       integracion = await agent(pIntegrar(ctx), { label: ctx.et('integrar'), phase: 'Integrar', schema: S_INTEGRAR })
       if (integracion) {
@@ -1018,7 +927,7 @@ async function correrPlan(PLAN, anterior, usuarioListo) {
   let puerta = null
   let copias = ''
   const integro = !programa || (integracion && integracion.estado === 'hecha')
-  const puedeCerrar = cierra && !detenido && !faltan().length && !carrilesMal().length && integro
+  const puedeCerrar = cierra && !detenido && !faltan().length && integro
   const esperaAlUsuario = pasosAntes.length > 0 && !usuarioListo
 
   if (puedeCerrar && esperaAlUsuario) log(ctx.et(`La puerta espera al usuario: ${pasosAntes.join('; ')}. Relanzá con modo cerrar y usuarioListo: true.`))
@@ -1027,7 +936,7 @@ async function correrPlan(PLAN, anterior, usuarioListo) {
     phase('Revisión')
     // Cada premisa se verifica apenas termina su revisión; los arreglos esperan a todas, porque hay un solo escritor por repo.
     // Las premisas de riesgo son la revisión adversarial de código primero: una por tema, sobre las tareas que lo tocan.
-    const PREMISAS_ETAPA = PREMISAS.concat(premisasDeRiesgo([...contrato, ...back, ...front].filter((t) => t.riesgo.length)))
+    const PREMISAS_ETAPA = PREMISAS.concat(premisasDeRiesgo(conRiesgo))
     const revisadas = await pipeline(
       PREMISAS_ETAPA,
       (p) => agent(pRevisarPremisa(ctx, p), { label: ctx.et(`revisión · ${p.titulo}`), phase: 'Revisión', schema: S_PREMISA, effort: p.revisa }),
@@ -1092,7 +1001,6 @@ async function correrPlan(PLAN, anterior, usuarioListo) {
   }
 
   const queFalta = faltan().map((t) => `${t.id}: ${R[t.id] ? `${R[t.id].estado}, ${R[t.id].motivo}` : 'sin correr'}`)
-    .concat(carrilesMal().map((c) => `integración del carril ${c.carril}: ${c.estado}, ${c.motivo}`))
   let resultado = 'puerta corrida'
   if (!puerta) resultado = queFalta.length ? 'faltan tareas' : (esperaAlUsuario && cierra ? 'espera al usuario antes de la puerta' : 'programada, sin puerta')
   if (puerta && puerta.fallos.length) resultado = 'puerta con fallos'
@@ -1117,7 +1025,6 @@ async function correrPlan(PLAN, anterior, usuarioListo) {
     paraDespues: PARA_DESPUES_DEL_PLAN,
     cambiosAlContrato: ctx.CAMBIOS,
     carrilesBack: carrilesBack.map((c) => ({ nombre: c.nombre, tareas: c.tareas.map((t) => t.id) })),
-    integracionDeCarriles: INTEGRACION_DE_CARRILES,
     integracion: integracion ? { estado: integracion.estado, diferencias: integracion.diferencias, motivo: integracion.motivo } : null,
     revision,
     puerta: puerta ? { tabla: puerta.tabla, fallos: puerta.fallos, galeria: puerta.galeria, corte: puerta.corte } : null,
