@@ -15,13 +15,17 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // Cada sentencia en una línea: el cuerpo de la función no lleva retornos de carro aunque el archivo tenga CRLF.
             migrationBuilder.Sql("""
                 CREATE POLICY form_work_lease_capacity ON tenant."FormWorkLeases" FOR SELECT TO mt_owner USING (true);
-                CREATE FUNCTION tenant.count_form_work_leases(at_utc timestamp with time zone) RETURNS integer
-                LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog AS $function$
-                    SELECT count(*)::integer FROM tenant."FormWorkLeases" WHERE "ExpiresAtUtc" > at_utc
-                $function$;
+                """);
+            migrationBuilder.Sql("""
+                CREATE FUNCTION tenant.count_form_work_leases(at_utc timestamp with time zone) RETURNS integer LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog AS $function$ SELECT count(*)::integer FROM tenant."FormWorkLeases" WHERE "ExpiresAtUtc" > at_utc $function$;
+                """);
+            migrationBuilder.Sql("""
                 REVOKE ALL ON FUNCTION tenant.count_form_work_leases(timestamp with time zone) FROM PUBLIC;
+                """);
+            migrationBuilder.Sql("""
                 GRANT EXECUTE ON FUNCTION tenant.count_form_work_leases(timestamp with time zone) TO mt_app;
                 """);
         }
@@ -31,6 +35,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
         {
             migrationBuilder.Sql("""
                 DROP FUNCTION tenant.count_form_work_leases(timestamp with time zone);
+                """);
+            migrationBuilder.Sql("""
                 DROP POLICY form_work_lease_capacity ON tenant."FormWorkLeases";
                 """);
         }
