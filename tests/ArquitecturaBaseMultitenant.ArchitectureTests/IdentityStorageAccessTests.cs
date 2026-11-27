@@ -32,6 +32,9 @@ public sealed partial class IdentityStorageAccessTests
         Infrastructure + "Identity.Deletion.LegalAcceptanceDeletionParticipant",
         Infrastructure + "Persistence.Readers.LoginMethodMembershipReader",
         Infrastructure + "Persistence.Readers.MemberReader",
+        // E12: el directorio de miembros de los catálogos: solo el nombre visible de una cuenta activa, nunca correos ni
+        // métodos de ingreso; lo usa Forms por IMemberDirectoryReader (C2).
+        Infrastructure + "Persistence.Readers.MemberDirectoryReader",
         Infrastructure + "Persistence.Readers.InvitationReader",
         Infrastructure + "Persistence.Readers.UserTenantAccessReader",
         Infrastructure + "Persistence.Readers.LoginInvitationReader",

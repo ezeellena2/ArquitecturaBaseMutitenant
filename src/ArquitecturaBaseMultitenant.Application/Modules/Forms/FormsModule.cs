@@ -17,6 +17,9 @@ public static class FormsModule
         services.AddScoped<IFormCatalogService, FormCatalogService>();
         services.AddScoped<FormCatalogItemEditor>();
         services.AddScoped<FormCatalogPositionGuard>();
+        services.AddScoped<IFormCatalogSourceService, FormCatalogSourceService>();
+        services.AddScoped<FormCatalogFiltersPolicy>();
+        services.AddScoped<FormCatalogPreviewBuilder>();
         return services;
     }
 }

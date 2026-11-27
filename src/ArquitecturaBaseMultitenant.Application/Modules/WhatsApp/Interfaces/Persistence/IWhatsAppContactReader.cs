@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Models.StructuredData;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
@@ -22,6 +23,17 @@ public interface IWhatsAppContactReader
     Task<PagedResult<string>> ListTagsAsync(PagedRequest request, CancellationToken ct);
     /// <summary>Cuáles de esos números ya son contactos.</summary>
     Task<IReadOnlySet<string>> FindExistingAsync(IReadOnlyCollection<string> waIds, CancellationToken ct);
+    /// <summary>
+    /// Los contactos con nombre para una lista de otra área (C12 de la E12), sin teléfono: por nombre, hasta el tope, con un
+    /// timeout corto; cuenta el total solo si lo pasan.
+    /// </summary>
+    Task<StructuredContactPage> ListStructuredAsync(StructuredContactQuery query, CancellationToken ct);
+    /// <summary>Un contacto con nombre, sin teléfono.</summary>
+    Task<StructuredContact?> FindStructuredAsync(Guid id, CancellationToken ct);
+    /// <summary>Los contactos con nombre, por nombre, sin teléfono; search busca solo en el nombre.</summary>
+    Task<PagedResult<StructuredContact>> ListStructuredPageAsync(PagedRequest request, CancellationToken ct);
+    /// <summary>Las etiquetas de los contactos con nombre, en orden alfabético, con cuántos la tienen.</summary>
+    Task<PagedResult<StructuredContactTag>> ListTagCountsAsync(PagedRequest request, CancellationToken ct);
 }
 
 public sealed record WhatsAppContactCounts(int Total, int Accepting);

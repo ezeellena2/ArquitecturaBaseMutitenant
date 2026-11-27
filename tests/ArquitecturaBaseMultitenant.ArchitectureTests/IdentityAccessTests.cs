@@ -79,6 +79,8 @@ public sealed partial class IdentityAccessTests
             || relative == "Persistence/Configurations/Platform/PlatformPermissionAssignmentConfiguration.cs"
             || relative == "Persistence/Repositories/UserRepository.cs"
             || relative == "Persistence/Readers/MemberReader.cs"
+            // E12: el directorio de miembros de los catálogos lee solo el nombre visible de la cuenta (C2).
+            || relative == "Persistence/Readers/MemberDirectoryReader.cs"
             || relative == "Persistence/Seed/PlatformSeeder.cs"
             || relative.StartsWith("Persistence/Migrations/", StringComparison.Ordinal)
             || relative == "Persistence/Rls/TenantIsolationModelValidator.cs"

@@ -15,6 +15,8 @@ public static class FormCatalogLimits
     public const int MaxConditions = 10;
     /// <summary>Valores de una condición: ids de roles o de empresas, o textos de etiqueta.</summary>
     public const int MaxConditionValues = 50;
+    /// <summary>El largo de un valor de una condición: un texto que busca en el nombre o una etiqueta.</summary>
+    public const int MaxConditionValueLength = 100;
     /// <summary>Los roles o las empresas con nombre que trae el detalle: a lo sumo uno por valor de cada condición.</summary>
     public const int MaxFilterReferences = MaxConditions * MaxConditionValues;
     /// <summary>Columnas y operadores de una fuente: catálogos cerrados del código.</summary>

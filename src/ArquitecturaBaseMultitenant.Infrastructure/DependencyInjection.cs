@@ -79,6 +79,9 @@ public static class DependencyInjection
         services.AddMessaging(configuration, environment);
         services.AddEmail(configuration, environment);
         services.AddBackgroundJobs();
+        // Sin un módulo de mensajería no hay contactos; el que los da se registra después y la reemplaza (C12 de la E12).
+        services.TryAddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.StructuredData.IStructuredContactSource,
+            StructuredData.DisabledStructuredContactSource>();
 
         // El exportador construye el host sin PostgreSQL; solo allí usa el JSON que alimenta el seed.
         if (System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name is "GetDocument.Insider")

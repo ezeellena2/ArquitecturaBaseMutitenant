@@ -119,6 +119,7 @@ internal static class PersistenceRegistration
         services.AddScoped<ICompanyAdminReader, CompanyAdminReader>();
         services.AddScoped<ICompanyAdminLock, CompanyAdminLock>();
         services.AddScoped<IMemberReader, MemberReader>();
+        services.AddScoped<IMemberDirectoryReader, MemberDirectoryReader>();
         services.AddScoped<IInvitationRepository, InvitationRepository>();
         services.AddScoped<IInvitationRetentionRepository, InvitationRetentionRepository>();
         services.AddScoped<IInvitationReader, InvitationReader>();

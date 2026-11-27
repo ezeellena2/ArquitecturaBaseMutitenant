@@ -38,7 +38,9 @@ public static class FormCatalogErrors
     public const string SampleRequiredCode = "Forms.Catalog.SampleRequired";
     public static readonly Error SampleRequired = Field(SampleRequiredCode, "Choose a person.", "sampleMemberId", ErrorType.Validation);
     public const string FiltersInvalidCode = "Forms.Catalog.FiltersInvalid";
-    public static Error FiltersInvalid(int index) => Field(FiltersInvalidCode, "Check this condition.", $"conditions.{index}", ErrorType.Validation);
+    public static Error FiltersInvalid(int index) => FiltersFieldInvalid($"conditions.{index}");
+    /// <summary>Unos filtros que no corresponden a la fuente fuera de una condición: <c>sourceVersion</c>, <c>detail</c> o <c>sort</c>.</summary>
+    public static Error FiltersFieldInvalid(string field) => Field(FiltersInvalidCode, "Check this condition.", field, ErrorType.Validation);
     public const string SampleMemberNotFoundCode = "Forms.Catalog.SampleMemberNotFound";
     public static readonly Error SampleMemberNotFound = Field(SampleMemberNotFoundCode, "That person is no longer in the organization.", "sampleMemberId", ErrorType.Validation);
     public const string SampleContactNotFoundCode = "Forms.Catalog.SampleContactNotFound";

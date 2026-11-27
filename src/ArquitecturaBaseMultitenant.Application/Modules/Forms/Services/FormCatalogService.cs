@@ -13,20 +13,19 @@ using ArquitecturaBaseMultitenant.Domain.Forms;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.Extensions.Logging;
 using CatalogFilters = ArquitecturaBaseMultitenant.Domain.Forms.FormCatalogFilters;
-using CatalogCondition = ArquitecturaBaseMultitenant.Domain.Forms.FormCatalogCondition;
-using CatalogFilterSort = ArquitecturaBaseMultitenant.Domain.Forms.FormCatalogFilterSort;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.Forms.Services;
 
 /// <summary>
 /// Los catálogos de la organización (E12). Cada escritura valida afuera y usa una sola UoW: el alta, y guardar todo junto con la
 /// versión del catálogo (C3), que toma su bloqueo, cambia solo las opciones que vienen y toca siempre la fila del catálogo, así
-/// un guardado sin cambios compara la versión (409 común) sin tocar ni auditar opciones. El estado «No se puede usar» se calcula
-/// al leer con la regla del dominio.
+/// un guardado sin cambios compara la versión (409 común) sin tocar ni auditar opciones. Los filtros de uno de miembros o de
+/// contactos se validan contra su fuente, y el estado «No se puede usar» se calcula al leer con la regla del dominio y lo que dan
+/// las fuentes (<see cref="FormCatalogFiltersPolicy"/>).
 /// </summary>
 internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalogRepository repository, FormCatalogItemEditor editor,
-    IUserDisplayNameReader names, IPermissionService permissions, ICurrentUser user, IRequestValidator validator, IUnitOfWork unitOfWork,
-    TimeProvider clock, ILogger<FormCatalogService> logger) : IFormCatalogService
+    FormCatalogFiltersPolicy filters, IUserDisplayNameReader names, IPermissionService permissions, ICurrentUser user,
+    IRequestValidator validator, IUnitOfWork unitOfWork, TimeProvider clock, ILogger<FormCatalogService> logger) : IFormCatalogService
 {
     public Task<Result<PagedResult<FormCatalogRow>>> ListAsync(ListFormCatalogsRequest request, CancellationToken cancellationToken)
     {
@@ -35,7 +34,9 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var page = await reader.ListAsync(request, cancellationToken);
-            return Result.Success(new PagedResult<FormCatalogRow>([.. page.Items.Select(ToRow)], page.Page, page.PageSize, page.TotalCount));
+            var states = await filters.DecideStatesAsync(page.Items, cancellationToken);
+            return Result.Success(new PagedResult<FormCatalogRow>([.. page.Items.Select(catalog => ToRow(catalog, states[catalog.Id].Reason))],
+                page.Page, page.PageSize, page.TotalCount));
         });
     }
 
@@ -69,7 +70,7 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
         return OperationLog.RunAsync<FormCatalogCreatedResponse>(logger, clock, "CreateFormCatalog", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            var catalog = NewCatalog(request);
+            var catalog = await NewCatalogAsync(request, cancellationToken);
             if (catalog.IsFailure) return catalog.Error;
             var saved = await unitOfWork.ExecuteInTransactionAsync(
                 ct => CreateCoreAsync(catalog.Value, FormCatalogItemChanges.Of(request), ct), CommitPolicy.OnSuccess, cancellationToken);
@@ -125,8 +126,12 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
 
         if (request.Filters is not null)
         {
-            var sample = SampleOf(catalog.Source, request.SampleMemberId, request.SampleContactId) ?? catalog.ReadFilters()?.SampleId;
-            var changed = catalog.ChangeFilters(ToFilters(request.Filters, sample));
+            if (catalog.Source == FormCatalogSource.Manual) return FormCatalogErrors.WrongSource;
+            var sample = FormCatalogFiltersPolicy.SampleOf(catalog.Source, request.SampleMemberId, request.SampleContactId)
+                ?? catalog.ReadFilters()?.SampleId;
+            var decided = await filters.DecideAsync(catalog.Source, request.Filters, sample, ct);
+            if (decided.IsFailure) return decided.Error;
+            var changed = catalog.ChangeFilters(decided.Value);
             if (changed.IsFailure) return changed.Error;
         }
 
@@ -137,9 +142,9 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
 
     /// <summary>
     /// El catálogo del alta, con el origen y el tipo que ya no cambian. Uno a mano no lleva filtros; uno de miembros o de contactos
-    /// es siempre de texto y no lleva opciones (<see cref="FormCatalogErrors.WrongSource"/>).
+    /// es siempre de texto, no lleva opciones (<see cref="FormCatalogErrors.WrongSource"/>) y sus filtros se validan contra su fuente.
     /// </summary>
-    private static Result<FormCatalog> NewCatalog(CreateFormCatalogRequest request)
+    private async Task<Result<FormCatalog>> NewCatalogAsync(CreateFormCatalogRequest request, CancellationToken ct)
     {
         var source = request.Source!.Value;
         if (source == FormCatalogSource.Manual)
@@ -149,56 +154,35 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
         }
 
         if (request.Items is { Count: > 0 } || request.ValueType is not (null or FormCatalogValueType.Text)) return FormCatalogErrors.WrongSource;
-        var filters = ToFilters(request.Filters!, SampleOf(source, request.SampleMemberId, request.SampleContactId));
+        var decided = await filters.DecideAsync(source, request.Filters!,
+            FormCatalogFiltersPolicy.SampleOf(source, request.SampleMemberId, request.SampleContactId), ct);
+        if (decided.IsFailure) return decided.Error;
         return source == FormCatalogSource.Members
-            ? FormCatalog.CreateMembers(request.Name!, request.Description, filters)
-            : FormCatalog.CreateContacts(request.Name!, request.Description, filters);
+            ? FormCatalog.CreateMembers(request.Name!, request.Description, decided.Value)
+            : FormCatalog.CreateContacts(request.Name!, request.Description, decided.Value);
     }
 
-    /// <summary>La persona de ejemplo en uno de miembros y el cliente de ejemplo en uno de contactos; se guarda en los filtros.</summary>
-    private static Guid? SampleOf(FormCatalogSource source, Guid? sampleMemberId, Guid? sampleContactId) => source switch
-    {
-        FormCatalogSource.Members => sampleMemberId,
-        FormCatalogSource.Contacts => sampleContactId,
-        _ => null,
-    };
-
-    private static CatalogFilters ToFilters(FormCatalogFiltersInput input, Guid? sampleId) => new(input.SourceVersion!.Value,
-        [.. input.Conditions!.Select(condition => new CatalogCondition(condition.Column!, condition.Operator!, [.. condition.Values!]))],
-        input.ExcludeRecipient!.Value, string.IsNullOrWhiteSpace(input.Detail) ? null : input.Detail,
-        input.Sort is null ? null : new CatalogFilterSort(input.Sort.Column!, input.Sort.Descending!.Value), sampleId);
-
-    private static FormCatalogRow ToRow(FormCatalogSummary catalog)
-    {
-        var reason = UnusableReason(catalog);
-        return new FormCatalogRow(catalog.Id, catalog.Name, catalog.Description, catalog.Source, catalog.ValueType,
+    private static FormCatalogRow ToRow(FormCatalogSummary catalog, FormCatalogUnusableReason? reason) =>
+        new FormCatalogRow(catalog.Id, catalog.Name, catalog.Description, catalog.Source, catalog.ValueType,
             catalog.Source == FormCatalogSource.Manual ? catalog.TotalItems : null, catalog.IsActive, catalog.IsActive && reason is null,
             reason);
-    }
 
     private async Task<FormCatalogResponse> BuildAsync(FormCatalogSummary catalog, CancellationToken ct)
     {
-        var reason = UnusableReason(catalog);
+        var state = (await filters.DecideStatesAsync([catalog], ct))[catalog.Id];
+        var reason = state.Reason;
+        var sample = catalog.Filters?.SampleId is { } sampleId ? await filters.FindSampleAsync(catalog.Source, sampleId, ct) : null;
         string? modifiedBy = null;
         if (catalog.ModifiedBy is { } modifierId) modifiedBy = (await names.FindAsync([modifierId], ct)).GetValueOrDefault(modifierId);
         var canManage = user.UserId is { } me && await permissions.HasPermissionAsync(me, Permissions.Forms.CatalogsManage, ct);
         return new FormCatalogResponse(catalog.Id, catalog.Name, catalog.Description, catalog.Source, catalog.ValueType,
-            ToResponse(catalog.Filters), Roles: null, Companies: null, Sample: null, catalog.IsActive, catalog.IsActive && reason is null,
+            ToResponse(catalog.Filters), state.Roles, state.Companies, sample, catalog.IsActive, catalog.IsActive && reason is null,
             reason, canManage, new FormCatalogItemCounts(catalog.TotalItems, catalog.ActiveItems), catalog.ModifiedAtUtc, modifiedBy,
             catalog.Version);
     }
 
-    /// <summary>
-    /// «No se puede usar», con la regla del dominio. Uno a mano mira sus opciones activas. En uno de miembros o de contactos, la
-    /// versión de hoy de la fuente, el canal y los roles y empresas que faltan los dan las fuentes (§4 y §4b); mientras no se leen,
-    /// se toma la versión que guardó y nada faltante.
-    /// </summary>
-    private static FormCatalogUnusableReason? UnusableReason(FormCatalogSummary catalog) =>
-        FormCatalog.UnusableReason(new FormCatalogState(catalog.Source, catalog.IsActive, catalog.Filters), catalog.ActiveItems,
-            currentSourceVersion: catalog.Filters?.SourceVersion ?? 0, channelAvailable: true, roleMissing: false, companyMissing: false);
-
-    private static Models.FormCatalogFilters? ToResponse(CatalogFilters? filters) => filters is null ? null : new(filters.SourceVersion,
-        [.. filters.Conditions.Select(condition => new Models.FormCatalogCondition(condition.Column, condition.Operator, condition.Values))],
-        filters.ExcludeRecipient, filters.Detail,
-        filters.Sort is null ? null : new Models.FormCatalogFilterSort(filters.Sort.Column, filters.Sort.Descending));
+    private static Models.FormCatalogFilters? ToResponse(CatalogFilters? saved) => saved is null ? null : new(saved.SourceVersion,
+        [.. saved.Conditions.Select(condition => new Models.FormCatalogCondition(condition.Column, condition.Operator, condition.Values))],
+        saved.ExcludeRecipient, saved.Detail,
+        saved.Sort is null ? null : new Models.FormCatalogFilterSort(saved.Sort.Column, saved.Sort.Descending));
 }

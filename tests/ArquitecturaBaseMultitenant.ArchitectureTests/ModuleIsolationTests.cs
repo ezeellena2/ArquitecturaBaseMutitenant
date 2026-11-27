@@ -38,6 +38,17 @@ public sealed class ModuleIsolationTests
             "ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppContact")));
         Assert.False(Classifies(new("ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppMessage",
             "ArquitecturaBaseMultitenant.Domain.WhatsApp.WhatsAppContact")));
+        // E12: Forms y WhatsApp hablan solo por el puerto neutral del núcleo (C12); ninguno referencia al otro.
+        Assert.True(Classifies(new("ArquitecturaBaseMultitenant.Application.Modules.Forms.Services.FormCatalogSourceService",
+            "ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.IWhatsAppContactReader")));
+        Assert.True(Classifies(new("ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services.WhatsAppStructuredContactSource",
+            "ArquitecturaBaseMultitenant.Application.Modules.Forms.Catalogs.ContactsCatalogSource")));
+        Assert.False(Classifies(new("ArquitecturaBaseMultitenant.Application.Modules.Forms.Services.FormCatalogSourceService",
+            "ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.StructuredData.IStructuredContactSource")));
+        Assert.False(Classifies(new("ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services.WhatsAppStructuredContactSource",
+            "ArquitecturaBaseMultitenant.Application.Models.StructuredData.StructuredContactQuery")));
+        Assert.False(Classifies(new("ArquitecturaBaseMultitenant.Infrastructure.StructuredData.DisabledStructuredContactSource",
+            "ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.StructuredData.IStructuredContactSource")));
     }
     private static readonly string[] OptionalDomainPrefixes = new[] { "Application", "Infrastructure", "Api" }
         .SelectMany(layer => Assembly.Load("ArquitecturaBaseMultitenant." + layer).GetTypes())

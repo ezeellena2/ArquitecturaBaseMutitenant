@@ -29,6 +29,9 @@ public static class WhatsAppModule
         services.AddScoped<WhatsAppInboundGuard>();
         services.AddScoped<ILoginCodeAdmission, WhatsAppCodeQuotaIssuer>();
         services.AddScoped<ILoginCodeChannel, WhatsAppLoginCodeChannel>();
+        // Reemplaza la versión apagada del núcleo, que se registra antes con TryAdd (C12 de la E12).
+        services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.StructuredData.IStructuredContactSource,
+            WhatsAppStructuredContactSource>();
         services.AddScoped<IInvitationChannel, WhatsAppInvitationChannel>();
         services.AddScoped<IAccountNoticeChannel, WhatsAppAccountNoticeChannel>();
         services.AddScoped<IOutboxDeliveryObserver, WhatsAppDeliveryObserver>();

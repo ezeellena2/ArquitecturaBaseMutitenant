@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
+using ArquitecturaBaseMultitenant.Application.Models.StructuredData;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
@@ -99,6 +100,68 @@ internal sealed class WhatsAppContactReader(ApplicationDbContext context, ITenan
             .ToHashSet(StringComparer.Ordinal);
     }
 
+    public async Task<StructuredContactPage> ListStructuredAsync(StructuredContactQuery query, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        ArgumentOutOfRangeException.ThrowIfLessThan(query.Limit, 1);
+        using var timeout = ShortQueryTimeout.Apply(context);
+        var customers = Named();
+        foreach (var condition in query.Tags)
+        {
+            // La etiqueta se compara sin distinguir mayúsculas, con los valores como parámetros.
+            var tags = condition.Tags.Select(tag => tag.Trim().ToLowerInvariant()).ToArray();
+            // ToLower() se traduce a lower() de PostgreSQL, como ApplySearch: la cultura del proceso no interviene.
+#pragma warning disable CA1304, CA1311, CA1862
+            customers = condition.Include
+                ? customers.Where(customer => customer.Tags.Any(tag => tags.Contains(tag.ToLower())))
+                : customers.Where(customer => !customer.Tags.Any(tag => tags.Contains(tag.ToLower())));
+#pragma warning restore CA1304, CA1311, CA1862
+        }
+
+        if (query.ExcludedContactId is { } excluded) customers = customers.Where(customer => customer.Id != excluded);
+        var ordered = query.Descending
+            ? customers.OrderByDescending(customer => customer.Name).ThenByDescending(customer => customer.Id)
+            : customers.OrderBy(customer => customer.Name).ThenBy(customer => customer.Id);
+        var rows = await ordered.Take(query.Limit + 1)
+            .Select(customer => new StructuredRow { Id = customer.Id, Name = customer.Name!, Tags = customer.Tags }).ToListAsync(ct);
+        var exceedsLimit = rows.Count > query.Limit;
+        if (exceedsLimit) rows.RemoveAt(rows.Count - 1);
+        var total = exceedsLimit ? await customers.CountAsync(ct) : rows.Count;
+        return new StructuredContactPage([.. rows.Select(Structured)], total, exceedsLimit);
+    }
+
+    public async Task<StructuredContact?> FindStructuredAsync(Guid id, CancellationToken ct) =>
+        await Named().Where(customer => customer.Id == id)
+            .Select(customer => new StructuredRow { Id = customer.Id, Name = customer.Name!, Tags = customer.Tags })
+            .SingleOrDefaultAsync(ct) is { } row ? Structured(row) : null;
+
+    public async Task<PagedResult<StructuredContact>> ListStructuredPageAsync(PagedRequest request, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var customers = Named().ApplySearch(request.Search, customer => customer.Name);
+        var page = await (SortDescriptor.Parse(request.Sort)?.Descending == true
+                ? customers.OrderByDescending(customer => customer.Name).ThenByDescending(customer => customer.Id)
+                : customers.OrderBy(customer => customer.Name).ThenBy(customer => customer.Id))
+            .Select(customer => new StructuredRow { Id = customer.Id, Name = customer.Name!, Tags = customer.Tags })
+            .ToPagedResultAsync(request, ct);
+        return new PagedResult<StructuredContact>([.. page.Items.Select(Structured)], page.Page, page.PageSize, page.TotalCount);
+    }
+
+    public Task<PagedResult<StructuredContactTag>> ListTagCountsAsync(PagedRequest request, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var tags = Named().SelectMany(customer => customer.Tags).ApplySearch(request.Search, tag => tag).GroupBy(tag => tag);
+        return (SortDescriptor.Parse(request.Sort)?.Descending == true ? tags.OrderByDescending(group => group.Key) : tags.OrderBy(group => group.Key))
+            .Select(group => new StructuredContactTag(group.Key, group.Count())).ToPagedResultAsync(request, ct);
+    }
+
+    /// <summary>Los contactos que se ofrecen en una lista de otra área: los que tienen nombre (C14 de la E12).</summary>
+    private IQueryable<WhatsAppCustomer> Named() =>
+        Customers().Where(customer => customer.Name != null && customer.Name != string.Empty);
+
+    private static StructuredContact Structured(StructuredRow row) =>
+        new(row.Id, row.Name, [.. row.Tags.Order(StringComparer.OrdinalIgnoreCase)]);
+
     private IQueryable<WhatsAppCustomer> Customers()
     {
         var tenantId = tenant.RequiredTenantId;
@@ -138,6 +201,13 @@ internal sealed class WhatsAppContactReader(ApplicationDbContext context, ITenan
         public uint Version { get; init; }
         public Guid? LatestConversationId { get; init; }
         public bool Linked { get; init; }
+    }
+
+    private sealed class StructuredRow
+    {
+        public Guid Id { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public IReadOnlyCollection<string> Tags { get; init; } = [];
     }
 
     private sealed class ConversationSortRow
