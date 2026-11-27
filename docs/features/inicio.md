@@ -1,6 +1,6 @@
 # Inicio de la organización
 
-**Revisado:** 2026-11-19
+**Revisado:** 2026-11-27
 
 Lo primero que ve un miembro al entrar a `/org`. Arriba, una tarjeta por área con un dato real; abajo, «Para resolver»: lo que pide una acción y quien mira puede resolver. El lienzo v120 (front `74141645`, aprobado el 12/10) agrega los grupos de pendientes a Inicio-Org, M-Inicio-Org, Inicio-Miembro, Asistente-Org y Asistente-Plat; `Criterio-Tablas` fija su presentación. La decisión está en la [ADR 0040](../decisions/0040-para-resolver.md).
 

@@ -113,6 +113,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   │   ├── Phones/
 │   │   │   │   ├── Request/
 │   │   │   │   ├── Security/
+│   │   │   │   ├── StructuredData/  contactos de un canal para otra área, sin conocer el canal (E12)
 │   │   │   │   └── Time/
 │   │   │   ├── Persistence/  implementados en Infrastructure/Persistence
 │   │   │   ├── ReferenceData/  puertos de Application; Domain no los referencia
@@ -145,6 +146,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   ├── Retention/  los lotes de las purgas por fecha (0062)
 │   │   │   ├── Roles/
 │   │   │   ├── Settings/
+│   │   │   ├── StructuredData/
 │   │   │   ├── Tenancy/
 │   │   │   └── Time/
 │   │   ├── Modules/  módulos quitables: el núcleo no los referencia (test)
@@ -164,9 +166,16 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   │   │   └── Platform/
 │   │   │   │   └── Validation/
 │   │   │   ├── Forms/
+│   │   │   │   ├── Catalogs/  las fuentes definidas en el código, como Miembros (E12)
+│   │   │   │   ├── Configuration/
+│   │   │   │   ├── Interfaces/
+│   │   │   │   │   ├── Integrations/
+│   │   │   │   │   ├── Persistence/
+│   │   │   │   │   └── Services/
 │   │   │   │   ├── Models/
 │   │   │   │   ├── Resources/
-│   │   │   │   └── Services/
+│   │   │   │   ├── Services/
+│   │   │   │   └── Validation/
 │   │   │   └── WhatsApp/  AddWhatsAppModule() registra todo lo de esta carpeta
 │   │   │       ├── Interfaces/
 │   │   │       │   ├── Integrations/
@@ -265,6 +274,10 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   │   ├── ReferenceData/
 │   │   │   │   └── Retention/
 │   │   │   ├── Forms/
+│   │   │   │   └── Persistence/  catálogos, opciones y la barrera de archivos
+│   │   │   │       ├── Configurations/
+│   │   │   │       ├── Readers/
+│   │   │   │       └── Repositories/
 │   │   │   └── WhatsApp/  módulo opcional instalado por composición; canal de Plataforma con número conectado, webhook con sus dos secretos
 │   │   │       ├── Disabled/
 │   │   │       ├── Email/  el correo «Chats esperando» (D6), con el armado común de avisos del núcleo
@@ -347,6 +360,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   ├── Messaging/
 │   │   ├── Modules/
 │   │   │   ├── Assistant/
+│   │   │   ├── Forms/
 │   │   │   └── WhatsApp/
 │   │   ├── Persistence/
 │   │   ├── ReferenceData/
