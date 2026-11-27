@@ -1,6 +1,6 @@
 # E12 · Catálogos base: archivos, tests y referencia (spec, parte)
 
-**Estado:** pendiente · parte de la [spec de la E12](12-catalogos.md), que dice qué leer y cómo se cierra.
+**Estado:** cerrado · se cerró el 2026-11-27 con la [spec de la E12](12-catalogos.md), de la que es parte; ella dice cómo se cerró.
 
 ## 9. Archivos
 

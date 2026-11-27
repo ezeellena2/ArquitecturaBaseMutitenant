@@ -13,5 +13,20 @@
     "id": "estados|back|docs/plans/formularios/costuras-de-modulos.md|por-retirar|retiro",
     "motivo": "La spec cerrada de Costuras de módulos se queda como referencia de las piezas de la 0069 que usan la E12 a la 25 y la etapa del cobro: al retirar su plan, la enlazan en su lugar la fila de la hoja de ruta, el backlog y modulos-y-suscripciones (cierre del 2026-11-27).",
     "fecha": "2026-11-27"
+  },
+  {
+    "id": "estados|back|docs/plans/formularios/12-catalogos.md|por-retirar|retiro",
+    "motivo": "La spec de la E12, cerrada con el código listo, se queda como referencia de lo que trajo la etapa, de lo que deja a la E13 y la E14 y de los cambios al contrato, y la verificación la nombra desde el backlog: al retirar su plan, la enlazan en su lugar la fila de la hoja de ruta, el índice de formularios, la ficha de Formularios y el backlog (cierre del código del 2026-11-27).",
+    "fecha": "2026-11-27"
+  },
+  {
+    "id": "estados|back|docs/plans/formularios/12-parte-archivos-tests-y-referencia.md|por-retirar|retiro",
+    "motivo": "Parte de la spec cerrada de la E12, con los errores y sus textos que enlazan la spec y la receta de las acciones: se queda con ella como referencia (cierre del código del 2026-11-27).",
+    "fecha": "2026-11-27"
+  },
+  {
+    "id": "estados|back|docs/plans/formularios/12-parte-datos-y-contrato.md|por-retirar|retiro",
+    "motivo": "Parte de la spec cerrada de la E12, con el modelo de datos, las fuentes y el contrato que usan la E13 y la E14: se queda con ella como referencia (cierre del código del 2026-11-27).",
+    "fecha": "2026-11-27"
   }
 ]

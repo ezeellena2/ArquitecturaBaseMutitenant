@@ -14,7 +14,7 @@ Se lanza directo con `modo: 'todo'`. El modo `planificar` sigue para mirar antes
 ## Cómo se lanza
 
 ```js
-Workflow({ scriptPath: '.agents/workflows/etapa.js', args: { plan: 'docs/plans/2026-11-08-etapa-12-catalogos.md' } })
+Workflow({ scriptPath: '.agents/workflows/etapa.js', args: { plan: 'docs/plans/2026-11-08-etapa-13-campos.md' } })
 ```
 
 | Argumento | Qué hace |

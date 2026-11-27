@@ -1,6 +1,6 @@
 # E12 · Catálogos base (spec)
 
-**Estado:** pendiente · spec de la primera etapa del bloque (decisiones 34, 78, 117, 119, 120 y 129). Es el ABM de catálogos completo, sin formularios: lo que ArquitecturaBase llama E1 (tipo de valor, carga de una vez y hasta 10.000 opciones), sobre los catálogos a mano, de los miembros y de los contactos. Acá nace el módulo `Forms`; la E14 le suma los formularios y la pregunta «Elegir de un catálogo». `/plan-etapa` la convierte en plan cuando le toque, después de verificar los puntos marcados **[E11]** y **[E9]** contra el código real.
+**Estado:** cerrado · se cerró el 2026-11-27 con el código listo ([hoja de ruta](../2026-09-27-plan-de-desarrollo.md)); falta la verificación, el segundo hito, que sigue la [sección del backlog](../../backlog.md#verificación-de-la-etapa-12-catalogos). Era la primera etapa del bloque (decisiones 34, 78, 117, 119, 120 y 129): el ABM de catálogos completo, sin formularios, sobre los catálogos a mano, de los miembros y de los contactos, donde nace el módulo `Forms`. Lo que vale hoy está en [Formularios](../../features/formularios.md); su plan se retiró al cerrar y queda en la historia de git.
 
 **Fuentes:**
 - alcance: [hoja de ruta](../2026-10-12-formularios-dinamicos-hoja-de-ruta.md), §E12;
@@ -179,12 +179,70 @@ Están en la §5 de la hoja de ruta y no se vuelven a preguntar:
 
 ## 15. Cómo se cierra
 
-La revisión, con su lista de control ([conducir una etapa](../../guides/conducir-una-etapa.md)); el E2E real, la galería y el recorrido van en la prueba integral. No hay prueba con Meta, porque la E12 no manda nada por WhatsApp. El recorrido prueba:
+Código listo el 2026-11-27, con el conductor ([conducir una etapa](../../guides/conducir-una-etapa.md)). Falta la verificación: el contrato, el E2E real, la galería y el recorrido, con lo que dice la [sección del backlog](../../backlog.md#verificación-de-la-etapa-12-catalogos). No hay prueba con Meta, porque la E12 no manda nada por WhatsApp. El recorrido prueba:
 1. **A mano:** «Proveedores» pegando desde una planilla, y «Recargo por zona», decimal, con el valor en su columna.
 2. **Carga de una vez:** importar una planilla real de unas 1.000 filas, con algunas bajas, y exportarla de nuevo sin diferencias.
 3. **Miembros:** un catálogo con filtros y su vista previa con una persona de ejemplo, vacío y con opciones, con «Sin incluir a quien lo recibe».
 4. **Contactos:** un catálogo de los contactos de Clientes, filtrado por etiqueta, sin teléfonos a la vista. Un contacto nuevo que escribe sin nombre aparece con el de su perfil (81).
 5. **Volumen:** 10.000 opciones: buscar, guardar una y exportar, con EXPLAIN.
+
+| Qué | Resultado |
+| --- | --- |
+| Build del back | 0 errores y 0 advertencias |
+| Tests del back | 4266 de 4266; dos se pasaron de tiempo por la carga y pasaron solos |
+| Front | build y lint sin errores; 3932 de 3950, y las 18 fallas las arreglaron los arreglos de la primera revisión |
+| Contrato | `contracts:check` con 89 ejemplos |
+| Detectores | `realinear-docs`, `estado-docs` y `conformidad` en 0 |
+| Primera revisión | unos 40 revisores y 88 hallazgos, arreglados en 9 commits del back y 14 del front |
+| Segunda revisión | 37 hallazgos, más 7 de la E12 de la revisión externa (Antigravity): en el back, 14 arreglados, 4 descartados y 1 al backlog; en el front, 22 arreglados, 4 descartados y 5 al backlog |
+| Última revisión | 1 arreglado y 3 al backlog |
+
+Lo que quedó para después está en el [backlog](../../backlog.md#para-después-de-la-etapa-12-catalogos). El nombre del perfil (C14) con un número real conectado queda para la I1 de la 10.
+
+### Lo que deja
+
+- **Módulo:** `AddFormsModule` en las tres capas, `FormsApiModule`, `BusinessFormCatalogsController`, la feature `forms`, `FormsModelContributor`, `FormsContractContributor`, `FormsTexts` con `FormsErrorTextSource`, `Permissions.Forms` y `src/modules/forms/registration.ts` con el panel «Gestión de formularios» y sus permisos.
+- **Datos:** lo de B1; las tablas `tenant.FormCatalogs`, `FormCatalogItems` y `FormWorkLeases` (clave `TenantId, UserId`).
+- **Servicios y helpers:** los tres servicios y los helpers de B3, B4 y B7; `IFormCatalogRepository` con `LockAsync(ids)`, `IFormCatalogReader`, `IFormWorkLease` con `FormCatalogFileSlotAttribute`, `UniqueKeys`, `IFormCatalogSpreadsheet` y `MembersCatalogSource`.
+- **Puertos:** los de B4, `IStructuredContactSource` en `Application/Interfaces/Integrations/StructuredData/`, con su modelo y su versión apagada, e `IMemberDirectoryReader`, con una fila más que el tope.
+- **Rutas:** las diecisiete; `ItemInUse` con `uses`, una lista en orden fijo a la que cada etapa suma su motivo; el `sort: {column, descending}` del `PUT`, con su orden estable (224).
+- **Front:** las páginas, componentes y hooks de F3 a F9 y `api/catalogs.ts`; `EditableTable`, `PasteGrid`, las columnas fijas de `table.tsx`, `parseDecimalText` y la lista de vistas previas de `picker-usage.test.ts`.
+- **Acciones:** `catalogoptions.edit@1`, que la E13 extiende con los campos.
+- **Pruebas:** la de volumen del módulo, `PersistenceNamingTests`, `FormsPersonalDataPurgeTests`, con las pistas del núcleo, a las que cada etapa suma las suyas, `FormsModuleOffKeepsDataTests` y los ejemplos: `docs/contracts/examples/forms.json`, su guarda y la validación de `contracts:check`.
+
+### Cambios al contrato
+
+- `Forms.Catalog.Ambiguous` (revisión): el código que pide la [receta](../../guides/agregar-una-accion-al-asistente.md) cuando el asistente nombra un catálogo que coincide con varios; vuelve solo al modelo, no a una ruta. Suma su fila en [«Errores y sus textos»](12-parte-archivos-tests-y-referencia.md#errores-y-sus-textos).
+- `FormCatalogValueType` es `Text`, `WholeNumber`, `DecimalNumber` y `Date`, no `Integer` y `Decimal` (CA1720 rompe el build; son los nombres de las acciones del asistente). El mensaje de campo de `Forms.Catalog.ValueInvalid` es `Forms.Catalog.ValueInvalid.{WholeNumber|DecimalNumber|Date}` (K1).
+- `POST /` responde 201 `FormCatalogCreatedResponse {catalog, itemIdentityMap: [{localId, itemId}]}`; `PUT {id}`, `FormCatalogUpdatedResponse {version, itemIdentityMap}`. El mapa de ids es una lista (K1).
+- `FormCatalogResponse`: `{id, name, description?, source, valueType, filters?, roles?, companies?, sample?: {id, name, detail?}, isActive, usable, unusableReason?, canManage, itemCounts: {total, active}, modifiedAtUtc, modifiedBy? (nombre visible), version}` (K1).
+- Filtros, de entrada y de salida: `{sourceVersion, conditions: [{column, operator, values: string[]}], excludeRecipient, detail?, sort?: {column, descending}}`; `column` y `operator` se validan contra la fuente. `POST`, `PUT` y `POST previews` reciben `sampleMemberId` o `sampleContactId` (K1).
+- Ítem de entrada: `{itemId?, localId?, code, text, detail?, value? (texto canónico), isActive}`; movimiento `{itemId, direction: Up|Down}`; orden `{column: Text|Code, descending}`; `deleteItems: Guid[]` (K1).
+- `imports/previews` es multipart con `file`, `mode` (Append|Replace), `version`, `page` y `pageSize`; lo pegado viaja como CSV en `file`. `imports` es multipart con `file`, `mode`, `sha256`, `version`, `skipErrorRows` y `confirmedDeactivations`, y responde `VersionResponse`. Fila de error `{row, column?, code, value?, otherRow?}`; `changed`, `{row, code, column, before?, after?}` (K1).
+- Filtros de consulta en PascalCase: `source = All|Manual|Members|Contacts`; `status = All|Active|Inactive`. Roles, empresas, etiquetas y ejemplos usan `FormCatalogLookupHttpQuery {page, pageSize, search, sort}`; la plantilla pide `valueType` (K1).
+- Listas: `sources/members` da `{version, columns: [{key, type: Text|List|Boolean, operators, canDetail, canSort}]}`; roles y empresas, `PagedResult<{id, name}>`; `sample-members`, `PagedResult<{memberId, name, companies, roles}>`; `sample-contacts`, `PagedResult<{contactId, name}>`; `tags`, `PagedResult<{name, contacts}>`; `POST previews`, `{options: [{text, detail?}], total, exceedsLimit}` (K1).
+- Topes con `maxItems` (`FormCatalogLimits`): conditions 10, values 50, roles y companies del detalle 500, columns 16, operators 8, companies y roles de una persona de ejemplo 50, options de la vista previa 200, items 10.000, moves y deleteItems 500. Los de valores, nombres, columnas y operadores son técnicos (K1).
+- Metadata: `DuplicateCode` lleva `n`, `ItemInUse` lleva `uses` (string[]), `TooManyAtOnce` lleva `retryAfter`. `FileInvalid` va en `file` con `Forms.CatalogImport.FileInvalid` o `.FileInvalid.Limits`. `ValueAmbiguous` y `CellRequired` son solo códigos de filas de la revisión (K1).
+- Formato de `docs/contracts/examples/*.json`: `{ "examples": [{ name?, method, path (como en openapi.json, con {id}), status, body? }] }`, validado en modo estricto por `npm run contracts:check` (F2).
+- `ProblemDetails` declara `n` (integer|null) y `uses` (string[]|null) como propiedades opcionales (F2, B8).
+- `CreateFormCatalogHttpRequest` y `UpdateFormCatalogHttpRequest` publican `maxLength` 60 en `name` y 300 en `description`; `FormCatalogItemHttpInput`, 40 en `code`, 30 en `text` y 300 en `detail` (B3, revisión).
+- Los campos de los errores de las opciones van con puntos: `items.{i}.code|text|detail|value|itemId`, `deleteItems.{i}`, `moves.{i}`, `conditions.{i}`; también en `x-error-codes` (B3, B8).
+- Textos nuevos: `Forms.Validation.Repeated` (localId, itemId o borrado repetido), `Forms.Validation.SortCombined` (`sort` con `moves` o `deleteItems`, en el campo `sort`) y `Forms.Validation.TooMany` (más de 500 moves o deleteItems, 10 condiciones o 50 valores) (B3).
+- En el alta, una opción con `itemId` da 400 en `items.{i}.itemId` con el texto de `Forms.Catalog.ItemNotFound`; en el `PUT`, un `itemId` de otro catálogo da `Forms.Catalog.ItemNotFound` ahí (B3).
+- `DuplicateCode` lleva `n` = posición + 1 de la opción que ya tiene el código; dentro del mismo pedido el error va en la posterior. Textos: «Ya está en otra opción.» y `ValueAmbiguous` «Se lee de dos formas.», sin marcadores; la pantalla arma la frase con `n` o `value` (B3, B8).
+- `Forms.Catalog.FiltersInvalid` sale también en `sourceVersion`, `detail` y `sort`. `column`, `detail` y `sort.column` son claves de la fuente: `name`, `role`, `company`, `active` en Miembros; `name`, `tags` en Contactos (B4).
+- Migraciones nuevas: `20261127131006_WhatsAppContactProfileName` (`identity.WhatsAppMessages.EncryptedProfileName`, `tenant.WhatsAppCustomers.ProfileNameTakenAtUtc`, nulos; B5) y encima `20261127132551_FormWorkLeaseCapacity`, solo SQL (política `form_work_lease_capacity` y `tenant.count_form_work_leases(timestamptz)`; B6).
+- Planilla: encabezados Código, Texto, Valor (entero|decimal|fecha), Detalle (en inglés Code, Text, Value (…), Detail), sin columna de estado, reconocidos en cualquier cultura sin acentos ni mayúsculas. Lo pegado llega como `*.csv` UTF-8 estricto, separado por coma, punto y coma o tabulación (B7, F7).
+- `column` en `errors` y `changed` es una clave (`code`, `text`, `value`, `detail`); `value` viene solo con `ValueAmbiguous`. `deactivationShare` y `errorShare` van redondeadas a 4 decimales; las confirmaciones (> 0.25 y > 0.10) se deciden sin redondear (B7).
+- Aplicar: con filas con error exige `skipErrorRows=true` y, con `confirmDeactivations`, `confirmedDeactivations` exacto, o da 400 `Forms.CatalogImport.ConfirmationRequired`. Versión vieja 409 `General.ConcurrencyConflict`; sin permiso 403 `Tenancy.Access.Wrong`; más de 10.000 409 `TooManyItems`; no a mano 409 `WrongSource`; de baja 409 `Inactive` (B7).
+- Las 17 rutas de Forms ya no declaran 501. `GET template` documenta 400 `Request.Invalid` en lugar de `Validation.Failed` (B8).
+- Nuevo `docs/contracts/examples/forms.json` con 88 ejemplos grabados (B8).
+- `assistant-actions.json` suma `catalogoptions.edit@1`: edit, `formcatalogs.manage`, módulo `forms`, `PUT api/organization/forms/catalogs/{id}`, pantalla `catalogEditor` (valor nuevo de `AssistantActionScreen`), `target.readRoute` `GET …/catalogs/{id}`, `fieldsFromTarget` y `fields []`. Los campos del destino son un Items `options` (máx. 500, clave `code`) con `code`, `text`, `detail`, `active` y, si es tipado, `value` (B10).
+- Lo que escribe el modelo: `[{op: add, row}, {op: change, key, row}, {op: remove, key}]`. En `GET proposals/{id}` llega `{field: options, value: {op, key, row?}, label, doubt}`, con `key` = itemId en change y remove (B10).
+- `AssistantRouteKey` suma `business.forms.catalogs` (Business, `formcatalogs.read`) (B10, F9).
+- Los textos de los `*HttpInput` de Forms se limpian como los de un `*HttpRequest`: recorte, NFC, sin invisibles peligrosos, vacío a null (revisión).
+- `docs/contracts/frontend-routes.json` suma `/org/formularios/catalogos`, `/nuevo` y `/:id` (revisión).
+- Faltan en el contrato y van al backlog: `FormCatalogImportAddedRow` sin `detail` (F7); la fuente Contactos sin `GET sources/contacts`, el front fija sus columnas con versión 1 en `useCatalogFilters.ts` (F8); `GET proposals/{id}` sin los valores guardados de la opción (F9).
 
 ## 16. Criterios
 

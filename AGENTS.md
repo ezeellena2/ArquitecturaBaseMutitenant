@@ -118,6 +118,7 @@ El inventario de todos los estándares transversales (los definidos y los propue
 | EF: repositorio / reader / configuración / migración | `Infrastructure/Persistence/{Repositories,Readers,Configurations/<Esquema>,Migrations}/` |
 | Adaptador técnico o worker | `Infrastructure/<Tema>/` |
 | Módulo quitable (WhatsApp, E8) | `Domain/WhatsApp/` y `Modules/WhatsApp/` en Application, Infrastructure y Api (E8); se enchufa por puertos del núcleo; el núcleo nunca referencia `*.Modules.*` |
+| Módulo Formularios (E12, [Formularios](docs/features/formularios.md)) | `Domain/Forms/` y `Modules/Forms/` en Application, Infrastructure y Api; habla con WhatsApp solo por puertos del núcleo (`IStructuredContactSource`) y el núcleo nunca referencia `*.Modules.Forms` |
 | Receta paso a paso | `docs/guides/` (agregar un área, permiso nuevo, migración, prefijo de backend, quitar WhatsApp) |
 | Registro DI | `DependencyInjection.cs` o `*Registration.cs` de la capa dueña |
 | Tests | `tests/<Proyecto>/<Área>/`; los de aislamiento, en `Api.IntegrationTests/Tenancy/` |
