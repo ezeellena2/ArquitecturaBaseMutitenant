@@ -88,6 +88,37 @@ public sealed class FormWorkLeaseTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task A_release_the_database_does_not_answer_does_not_fail_the_operation_and_the_barrier_expires_alone()
+    {
+        var clock = Clock();
+        var tenantId = await OrganizationAsync();
+        // Un segundo de espera por comando: la fila tomada por otra transacción hace vencer el DELETE de la barrera.
+        var impatient = new NpgsqlConnectionStringBuilder(factory.RuntimeConnectionString) { CommandTimeout = 1 }.ConnectionString;
+        var store = Store(tenantId, clock, connectionString: impatient);
+        var person = Guid.NewGuid();
+        var lease = Taken(await store.TryTakeAsync(person, FormWorkLeaseKind.Apply, Ct));
+
+        await using (var holder = await OpenAdminAsync(tenantId))
+        await using (var transaction = await holder.BeginTransactionAsync(Ct))
+        {
+            await using var hold = new NpgsqlCommand("""
+                SELECT 1 FROM tenant."FormWorkLeases" WHERE "TenantId" = @tenant AND "UserId" = @user FOR UPDATE
+                """, holder, transaction);
+            hold.Parameters.AddWithValue("tenant", tenantId);
+            hold.Parameters.AddWithValue("user", person);
+            Assert.Equal(1, await hold.ExecuteScalarAsync(Ct));
+
+            // Lo que la operación ya guardó responde igual: soltar no lanza, avisa, y la barrera queda hasta vencer.
+            await lease.DisposeAsync();
+            await transaction.RollbackAsync(Ct);
+        }
+
+        Assert.Equal(FormCatalogImportErrors.BusyCode, Refused(await store.TryTakeAsync(person, FormWorkLeaseKind.Export, Ct)).Code);
+        clock.Advance(FormWorkLease.Lifetime);
+        await using var later = Taken(await store.TryTakeAsync(person, FormWorkLeaseKind.Export, Ct));
+    }
+
+    [Fact]
     public async Task The_third_of_an_organization_gets_too_many_at_once_and_another_organization_does_not_wait()
     {
         var clock = Clock();
@@ -159,8 +190,9 @@ public sealed class FormWorkLeaseTests(ApiFactory factory)
     private static FakeTimeProvider Clock() =>
         new(new DateTimeOffset(3000, 1, 1, 0, 0, 0, TimeSpan.Zero).AddMinutes(Random.Shared.NextInt64(0, 1_000_000_000)));
 
-    private FormWorkLeaseStore Store(Guid tenantId, TimeProvider clock, FormCatalogFileOptions? limits = null) =>
-        new(factory.RuntimeConnectionString, new Organization(tenantId), clock,
+    private FormWorkLeaseStore Store(Guid tenantId, TimeProvider clock, FormCatalogFileOptions? limits = null,
+        string? connectionString = null) =>
+        new(connectionString ?? factory.RuntimeConnectionString, new Organization(tenantId), clock,
             Options.Create(new FormsOptions { CatalogFiles = limits ?? new FormCatalogFileOptions() }),
             NullLogger<FormWorkLeaseStore>.Instance);
 

@@ -104,7 +104,8 @@ internal sealed partial class FormWorkLeaseStore(
 
     /// <summary>
     /// La barrera tomada: la renueva mientras dura la operación y la suelta por su id, una sola vez y aunque el pedido se haya
-    /// cortado. Si venció y la persona ya tomó otra, esa tiene otro id: ni se renueva ni se suelta.
+    /// cortado. Si venció y la persona ya tomó otra, esa tiene otro id: ni se renueva ni se suelta. Si la base no responde al
+    /// soltarla, se avisa y vence sola.
     /// </summary>
     private sealed class Lease : IAsyncDisposable
     {
@@ -130,8 +131,9 @@ internal sealed partial class FormWorkLeaseStore(
             await _stop.CancelAsync();
             await _renewal;
             _stop.Dispose();
-            await using (var connection = new NpgsqlConnection(_connectionString))
+            try
             {
+                await using var connection = new NpgsqlConnection(_connectionString);
                 await connection.OpenAsync(CancellationToken.None);
                 await using var transaction = await connection.BeginTransactionAsync(CancellationToken.None);
                 await ExecuteAsync(connection, transaction, "SELECT set_config('app.tenant_id', @tenant, true)",
@@ -140,6 +142,12 @@ internal sealed partial class FormWorkLeaseStore(
                     DELETE FROM tenant."FormWorkLeases" WHERE "TenantId" = @tenant AND "Id" = @id
                     """, CancellationToken.None, ("tenant", _tenantId), ("id", _leaseId));
                 await transaction.CommitAsync(CancellationToken.None);
+            }
+            catch (Exception exception) when (exception is NpgsqlException or TimeoutException)
+            {
+                // Sin la base no se puede soltar: vence sola, como en RedisExclusiveSlots, y lo que la operación ya guardó
+                // responde igual, sin un 500 después de confirmar.
+                LogReleaseFailed(_logger, exception.GetType().Name);
             }
         }
 
@@ -191,4 +199,7 @@ internal sealed partial class FormWorkLeaseStore(
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Catalog file barrier renewal failed: {ExceptionType}")]
     private static partial void LogRenewalFailed(ILogger logger, string exceptionType);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Catalog file barrier release failed: {ExceptionType}")]
+    private static partial void LogReleaseFailed(ILogger logger, string exceptionType);
 }
