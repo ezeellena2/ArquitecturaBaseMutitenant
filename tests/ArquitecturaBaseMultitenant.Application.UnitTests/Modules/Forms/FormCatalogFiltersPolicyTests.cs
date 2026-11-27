@@ -33,7 +33,7 @@ public sealed class FormCatalogFiltersPolicyTests
         var decided = await Policy().DecideAsync(FormCatalogSource.Members, Filters(
             Condition(MembersCatalogSource.Role, FormCatalogOperators.HasAny, Sales.ToString()),
             Condition(MembersCatalogSource.Company, FormCatalogOperators.HasNone, North.ToString()),
-            Condition(MembersCatalogSource.Name, FormCatalogOperators.Contains, " Ríos "),
+            Condition(MembersCatalogSource.Name, FormCatalogOperators.Contains, "Ríos"),
             Condition(MembersCatalogSource.Active, FormCatalogOperators.Is, "true")) with { Detail = MembersCatalogSource.Role },
             Laura, Ct);
 

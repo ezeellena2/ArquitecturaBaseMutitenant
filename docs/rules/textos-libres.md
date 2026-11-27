@@ -9,7 +9,8 @@
   - saca los controles Unicode salvo `\n` y `\t`, y una lista cerrada de invisibles peligrosos: soft hyphen (`U+00AD`), marca árabe (`U+061C`), zero-width space (`U+200B`), marcas de dirección (`U+200E`, `U+200F`, `U+202A`–`U+202E`, `U+2066`–`U+2069`), word joiner (`U+2060`) y BOM (`U+FEFF`);
   - conserva ZWNJ (`U+200C`) y ZWJ (`U+200D`), necesarios para escritura y secuencias emoji legítimas;
   - conserva los espacios y saltos de línea internos: no colapsa globalmente los nombres ni las descripciones;
-  - un texto que queda vacío pasa a `null`.
+  - un texto que queda vacío pasa a `null`;
+  - una lista de textos (`IReadOnlyList<string>` o `IReadOnlyCollection<string>`, como las etiquetas o los valores de una condición) limpia cada uno con `NormalizedStringListJsonConverter`; ahí uno que queda vacío pasa a `""`, que la regla de la lista rechaza.
   
   Excepción: una propiedad marcada `[RawText]` (tokens, códigos, contenido que se firma).
 - **Nivel 2, por tipo**, con constantes en `Domain/Common/TextLimits.cs`:
@@ -37,7 +38,7 @@
 - `Application/Common/Text/TextNormalizer.cs` y `Api/Json/NormalizedStringJsonConverter.cs` (E1).
 
 ## Lo verifica
-- `TextLimitsTests` (E1) · `NestedInputJsonTests` (E12): los `*HttpInput` limpian sus textos como el pedido
+- `TextLimitsTests` (E1) · `NestedInputJsonTests` (E12): los `*HttpInput` y las listas de textos limpian sus textos como el pedido
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas)

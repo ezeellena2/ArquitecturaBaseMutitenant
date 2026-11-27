@@ -67,7 +67,7 @@ internal sealed class FormCatalogFiltersPolicy(IMemberDirectoryReader members, I
         if (sample.IsFailure) return sample.Error;
         return new CatalogFilters(definition.Version,
             [.. conditions.Select(condition => new CatalogCondition(condition.Column!, condition.Operator!,
-                [.. condition.Values!.Select(value => value.Trim())]))],
+                [.. condition.Values!]))],
             input.ExcludeRecipient!.Value, string.IsNullOrWhiteSpace(input.Detail) ? null : input.Detail,
             input.Sort is null ? null : new CatalogFilterSort(input.Sort.Column!, input.Sort.Descending!.Value), sampleId);
     }
@@ -121,7 +121,8 @@ internal sealed class FormCatalogFiltersPolicy(IMemberDirectoryReader members, I
     {
         var column = definition.Columns.FirstOrDefault(candidate => candidate.Key == condition.Column);
         if (column is null || !column.Operators.Contains(condition.Operator!)) return false;
-        var values = condition.Values!.Select(value => value.Trim()).ToArray();
+        // Los valores llegan limpios del contrato (textos-libres, nivel 1); uno vacío o en blanco llega como "".
+        var values = condition.Values!.ToArray();
         if (values.Length == 0 || values.Any(value => value.Length == 0 || value.Length > FormCatalogLimits.MaxConditionValueLength))
             return false;
         return column.Type switch
@@ -146,7 +147,7 @@ internal sealed class FormCatalogFiltersPolicy(IMemberDirectoryReader members, I
                 MembersCatalogSource.Company => companies,
                 _ => null,
             };
-            if (existing is not null && conditions[index].Values!.Any(value => !existing.Contains(Guid.Parse(value.Trim(), CultureInfo.InvariantCulture))))
+            if (existing is not null && conditions[index].Values!.Any(value => !existing.Contains(Guid.Parse(value, CultureInfo.InvariantCulture))))
                 return index;
         }
 
@@ -165,7 +166,7 @@ internal sealed class FormCatalogFiltersPolicy(IMemberDirectoryReader members, I
         Func<IReadOnlyCollection<Guid>, CancellationToken, Task<IReadOnlyList<MemberDirectoryNameRow>>> read, CancellationToken ct)
     {
         Guid[] ids = [.. conditions.Where(condition => condition.Column == column).SelectMany(condition => condition.Values!)
-            .Select(value => Guid.Parse(value.Trim(), CultureInfo.InvariantCulture)).Distinct()];
+            .Select(value => Guid.Parse(value, CultureInfo.InvariantCulture)).Distinct()];
         if (ids.Length == 0) return [];
         return [.. (await read(ids, ct)).Select(row => row.Id)];
     }

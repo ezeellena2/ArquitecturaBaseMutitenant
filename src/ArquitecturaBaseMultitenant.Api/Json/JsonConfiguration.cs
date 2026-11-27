@@ -32,13 +32,23 @@ public static class JsonConfiguration
                 return;
             }
 
-            foreach (var property in typeInfo.Properties.Where(property => property.PropertyType == typeof(string)))
+            foreach (var property in typeInfo.Properties)
             {
-                if (property.CustomConverter is null
-                    && property.AttributeProvider?.IsDefined(typeof(RawTextAttribute), inherit: true) != true)
+                if (property.CustomConverter is not null
+                    || property.AttributeProvider?.IsDefined(typeof(RawTextAttribute), inherit: true) == true)
                 {
-                    property.CustomConverter = new NormalizedStringJsonConverter();
+                    continue;
                 }
+
+                // Una lista de textos (etiquetas, valores de una condición) limpia cada uno como un texto suelto.
+                property.CustomConverter = property.PropertyType switch
+                {
+                    var type when type == typeof(string) => new NormalizedStringJsonConverter(),
+                    var type when type == typeof(IReadOnlyList<string>) => new NormalizedStringListJsonConverter<IReadOnlyList<string>>(),
+                    var type when type == typeof(IReadOnlyCollection<string>) =>
+                        new NormalizedStringListJsonConverter<IReadOnlyCollection<string>>(),
+                    _ => null,
+                };
             }
         });
         options.TypeInfoResolverChain.Insert(0, resolver);

@@ -26,4 +26,21 @@ public sealed class NestedInputJsonTests
         Assert.Equal(("ROJ", "Rojo", (string?)null), (item.Code, item.Text, item.Detail));
         Assert.Equal("role", request.Filters!.Detail);
     }
+
+    [Fact]
+    public void A_list_of_texts_cleans_each_one_and_keeps_an_emptied_one_as_empty()
+    {
+        var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+        JsonConfiguration.ConfigureJson(options);
+        // «Café» escrito en NFD y con un zero-width space pegado, como sale de copiar y pegar.
+        const string json = """
+            {"name":"Clientes","filters":{"conditions":[{"column":"tags","operator":"hasAny","values":[" Café​ ","   ",null]}]}}
+            """;
+
+        var request = JsonSerializer.Deserialize<CreateFormCatalogHttpRequest>(json, options)!;
+
+        var condition = Assert.Single(request.Filters!.Conditions!);
+        Assert.Equal<string?>(["Café", "", null], condition.Values!);
+        Assert.Equal("Café".Normalize(), condition.Values![0]);
+    }
 }
