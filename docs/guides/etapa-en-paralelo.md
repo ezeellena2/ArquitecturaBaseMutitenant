@@ -26,7 +26,7 @@ Las partes 2a y 2b corren al mismo tiempo. El [conductor](conducir-una-etapa.md)
 ## El cierre (parte 3)
 
 Desde el 2026-11-27 la etapa no tiene puerta: la cierra el conductor en cuatro fases, una sola vez aunque salgan varias etapas juntas ([conducir una etapa](conducir-una-etapa.md)):
-1. **Revisión, todo a la vez:** un revisor por cada ficha de `docs/rules/` que tocan los archivos de la etapa, los transversales de arquitectura y de lo que no está en la spec, uno adversarial por cada tema de riesgo tocado, y los tests enteros: `dotnet build` sin advertencias, `dotnet test` con Docker, `npm run build`, `lint`, `test` y `contracts:check`, y los detectores de documentación (`realinear-docs`, `estado-docs` y `conformidad`).
+1. **Revisión, todo a la vez:** un revisor de reglas por repo, con las fichas de `docs/rules/` que tocan los archivos de la etapa, tres cazadores de bugs por tema (lo que se rompe al usarlo, entradas hostiles e ingreso, y volumen y escala), los transversales de arquitectura y de lo que no está en la spec, uno adversarial por cada tema de riesgo tocado, y los tests enteros: `dotnet build` sin advertencias, `dotnet test` con Docker, `npm run build`, `lint`, `test` y `contracts:check`, y los detectores de documentación (`realinear-docs`, `estado-docs` y `conformidad`).
 2. **Arreglos:** un agente por repo comprueba cada hallazgo y arregla lo real con su test dirigido.
 3. **Una última revisión** del diff entero, que arregla lo chico y manda lo demás al backlog.
 4. **El cierre y su commit:** la spec cerrada, el plan retirado, la hoja de ruta y el backlog. La etapa queda con el código listo, el primer hito.

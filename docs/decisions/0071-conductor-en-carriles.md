@@ -6,6 +6,8 @@
 
 **Enmienda 2026-11-27 (los dos hitos, pedido del usuario):** cada etapa tiene dos hitos, que se avisan por separado. Las cinco fases la dejan en «Código listo»: el cierre retira el plan y pasa su sección «Verificación de la etapa» al backlog. «Verificada» lo da otro workflow, `verificar-etapa.js`, sobre copias del corte en `C:\e2e-<clave>\`, mientras la etapa siguiente se programa en main: el build de la copia y el contrato (la suite de integración ya corrió en la revisión), el E2E real, la galería con las pantallas contra el tablero y su verificador, y el recorrido, cada paso con su propia llamada a la fila pesada; los arreglos, en main, por dueño; y se repite solo lo que tocan. La etapa siguiente arranca con la anterior en código listo. El E2E, la galería y el recorrido dejan de esperar al cierre del bloque E12–E25, cuya prueba integral con el usuario sigue como pasada final.
 
+**Enmienda 2026-11-27 (la revisión por temas, pedido del usuario después de cerrar la E12):** se va el revisor por ficha. En la E12, la revisión lanzó unos 40 agentes; unos 30 revisores por ficha no encontraron nada o solo algo cosmético, y corriendo a la par llevaron los tests de 52 min a 1 h 48 min, mientras una revisión por tema (la de Antigravity) encontró los bugs reales. En su lugar van un revisor de reglas por repo tocado, con las fichas que tocan sus archivos, que busca solo incumplimientos con efecto (lo que una persona ve mal, un dato mal guardado, seguridad, convivencia de versiones), y tres cazadores de bugs que siempre corren: «Lo que se rompe al usarlo», «Entradas hostiles e ingreso» y «Volumen y escala», cada hallazgo con los pasos de una persona. Los transversales, los adversariales por tema de riesgo, los tests enteros y lo que sigue no cambian: la revisión pasa a unos 10 agentes. Además, un Aspire o un Vite que corren desde una copia fuera de main (`C:\e2e-*` o `.local/`) ya no frenan al conductor.
+
 ## Contexto
 
 La corrida de la base 2 del 2026-11-24 se midió en sus primeras 2 h 40 min. Los números son de 15 agentes:
@@ -69,4 +71,5 @@ El usuario teme que cada etapa tarde una semana.
   - las copias en los prompts;
   - la espera entre carriles;
   - las cinco fases, con una sola revisión y un solo cierre para varias etapas;
+  - un revisor de reglas por repo, con sus fichas y sus archivos, y los tres cazadores en cada revisión;
   - los modelos y los agentes cortos.
