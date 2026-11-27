@@ -7,15 +7,14 @@
 | Contrato | K0–K1 | Pendiente |
 | Back | B1–B9 | Pendiente |
 | Front | F1–F10 | Pendiente |
-| Integración y puerta | I1–I3 | Pendiente |
 
 ## Forma de trabajo
 
-Modo rápido: contrato primero; después los carriles del back y el front a la vez; una sola puerta al final ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)). Un arreglo corre solo lo que toca. La tabla de estado la actualiza el cierre del conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). Las migraciones de la B5 y la B9 van en ese orden y en el mismo carril, cada una armada sobre el `HEAD` del momento y con `ModelSnapshotTests` en verde.
+Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la prueba integral del bloque (abajo). Un arreglo corre solo lo que toca. La tabla de estado la actualiza el cierre del conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). Las migraciones de la B5 y la B9 van en ese orden y en el mismo carril, cada una armada sobre el `HEAD` del momento y con `ModelSnapshotTests` en verde.
 
-**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): la llevan las tareas **(R)**, completa y antes de su commit.
+**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): una vez, en la revisión de la etapa, un revisor por cada tema de riesgo de las tareas **(R)**.
 
-**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 20-cargar-desde-la-web/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y, al terminar, el build y los tests rápidos enteros, sin Docker ni filtrar por módulo, con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los de integración y de seguridad corren una vez, al cerrar cada carril del back. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
+**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 20-cargar-desde-la-web/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y el build (en el front, `tsc -b` y el lint de lo que tocó), con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los tests enteros, los de integración y los de seguridad corren una vez, en la revisión de la etapa. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
 
 ## Qué se verificó al arrancar
 
@@ -106,7 +105,7 @@ Cada tarea copia su molde, con `Result` y ProblemDetails, `OperationLog.RunAsync
 **Texto para el chat del Back**
 
 ```text
-Leé AGENTS.md, este plan, la spec de la E20 con su parte, las decisiones 261 a 264, 266, 267 y 269 de la hoja de ruta y las fichas de su «Qué leer». Esperá K0 y K1. Hacé B1 a B9 en orden, copiando el molde de cada tarea; no toques el front ni la tabla de estado del plan. Las tareas con (R) llevan su revisión adversarial antes del commit. Reglas: las de «Forma de trabajo» de este plan.
+Leé AGENTS.md, este plan, la spec de la E20 con su parte, las decisiones 261 a 264, 266, 267 y 269 de la hoja de ruta y las fichas de su «Qué leer». Esperá K0 y K1. Hacé B1 a B9 en orden, copiando el molde de cada tarea; no toques el front ni la tabla de estado del plan. La revisión adversarial de las tareas (R) va después, en la revisión de la etapa. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
 ## Front
@@ -131,29 +130,20 @@ Las pantallas copian los tableros v175, con i18n en es y en, tipos generados, `s
 Leé AGENTS.md del front, ../ArquitecturaBaseMutitenant/docs/plans/2026-11-08-etapa-20-cargar-desde-la-web.md y la spec de la E20 con su parte, con las decisiones 261 a 264, 266, 267 y 269 de la hoja de ruta y «Cómo se lee una respuesta» de la parte de la E15. Esperá K1 y corré npm run contracts. Hacé F1 a F10 contra los tipos generados, copiando los tableros v175; no toques el lienzo, las specs, el back ni la tabla de estado del plan. Al cerrar la parte, también npm run build. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
-## Integración y puerta
+## Revisión y cierre
 
-1. **I1 · Integrar.** El front contra la API real, con los tipos regenerados y los ejemplos estrictos.
-2. **I2 · Puerta.** `/puerta`, una sola vez, sobre copias del corte:
-   - las suites de los dos repos y `contracts:check`;
-   - el E2E real, en `F/scripts/test-e2e-real-forms.mjs` [E12], con los pasos 1 a 4, 6 y 8 de «Cómo se cierra» de la spec, comparando con una respuesta del Meta simulado, y del paso 5, publicar y cargar sin número, también sobre uno dado de baja;
-   - `realinear-docs --detectar` y `estado-docs --detectar` en 0;
-   - la galería de `scripts/capturas/etapa-20.json`, a 1440, 390 y 320, con los tableros de la etapa;
-   - `/recorrido`, con `cargar-una-respuesta` sumado a `F/scripts/recorrido-usuario-forms.mjs` [E12], y la revisión de código con la lista de control, que suma los riesgos de la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase): a 1024 px, «Solo en la app» entra en su tarjeta (O18); el cálculo en vivo lee con `parseDecimalText` y la cultura de la cuenta, sin resultado mientras un número sea ambiguo, igual que «Enviada» (O19), y «Según otra respuesta» sin su pregunta se frena en la pantalla, marcando solo ese campo (O16);
-   - el paso 7 en un Android por USB (`chrome://inspect`, del 5174 a `127.0.0.1:5174`, y `https://localtest.me:5174`): una foto con la cámara, dos ítems en sus recuadros y la ubicación.
+Sin tareas: los hace el conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). La lista de control de la revisión suma los riesgos de la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase): a 1024 px, «Solo en la app» entra en su tarjeta (O18); el cálculo en vivo lee con `parseDecimalText` y la cultura de la cuenta, sin resultado mientras un número sea ambiguo, igual que «Enviada» (O19), y «Según otra respuesta» sin su pregunta se frena en la pantalla, marcando solo ese campo (O16). Al cerrar, `docs/features/formularios.md` suma la sección, y nace el `AGENTS.md` de `components/entry/` en el front.
 
-   Al cerrar, `docs/features/formularios.md` suma la sección; nacen `docs/guides/probar-en-el-celular.md`, con lo que dio el teléfono, y el `AGENTS.md` de `components/entry/` en el front.
-3. **I3 · Pendiente para la I1 de la E10** (123). El resto del paso 5: conectar un número, volver a publicar y mandar el formulario por WhatsApp a un celular; y el pedido de ubicación con el número de una organización, con la ubicación, «Seguir sin ubicación» y el Flow después.
+**Pendiente para la I1 de la E10** (123). El resto del paso 5: conectar un número, volver a publicar y mandar el formulario por WhatsApp a un celular; y el pedido de ubicación con el número de una organización, con la ubicación, «Seguir sin ubicación» y el Flow después.
 
-| Puerta | Resultado |
-| --- | --- |
-| Back / Front / Contrato / E2E / Documentación / Galería / Recorrido / Celular / Revisión | Pendiente |
+## Al cierre del bloque E12–E25
 
-**Texto para el chat de Integración**
+Lo que la prueba integral recorre de esta etapa. Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Para después de la etapa 20-cargar-desde-la-web».
 
-```text
-Leé AGENTS.md de los dos repos, este plan y la skill /puerta. Integrá contra la API real y devolvé a su dueño solo las diferencias reales. Corré la puerta una vez sobre copias del corte. Para el celular, dale al usuario los pasos clic por clic; no manejes su PC. Escribí la documentación de «Al cerrar»; no toques el lienzo; Meta con número queda pendiente (I3); en el plan, solo la tabla de la puerta. Reglas: las de «Forma de trabajo» de este plan.
-```
+- **E2E real** (`F/scripts/test-e2e-real-forms.mjs` [E12]): los pasos 1 a 4, 6 y 8 de «Cómo se cierra» de la spec, comparando con una respuesta del Meta simulado, y del paso 5, publicar y cargar sin número, también sobre uno dado de baja.
+- **Recorrido:** `cargar-una-respuesta`, sumado a `F/scripts/recorrido-usuario-forms.mjs` [E12].
+- **Galería** (`scripts/capturas/etapa-20.json`), a 1440, 390 y 320: los tableros de la etapa.
+- **Celular:** el paso 7 en un Android por USB (`chrome://inspect`, del 5174 a `127.0.0.1:5174`, y `https://localtest.me:5174`): una foto con la cámara, dos ítems en sus recuadros y la ubicación. El usuario recibe los pasos clic por clic; nadie maneja su PC. Con lo que dé el teléfono nace `docs/guides/probar-en-el-celular.md`.
 
 ## Relación con otras etapas
 

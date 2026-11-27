@@ -7,15 +7,14 @@
 | Contrato | K0–K1 | Pendiente |
 | Back | B1–B12 | Pendiente |
 | Front | F1–F8 | Pendiente |
-| Integración y puerta | I1–I3 | Pendiente |
 
 ## Forma de trabajo
 
-Modo rápido: contrato primero; después los carriles del back y el front a la vez; una sola puerta al final ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)). Un arreglo corre solo lo que toca. No hay prueba con Meta: la etapa lee lo que ya llegó. La tabla de estado la actualiza el cierre del conductor.
+Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la prueba integral del bloque (abajo). Un arreglo corre solo lo que toca. No hay prueba con Meta: la etapa lee lo que ya llegó. La tabla de estado la actualiza el cierre del conductor.
 
-**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 15-respuestas/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y, al terminar, el build y los tests rápidos enteros, sin Docker ni filtrar por módulo, con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los de integración y de seguridad corren una vez, al cerrar cada carril del back. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
+**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 15-respuestas/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y el build (en el front, `tsc -b` y el lint de lo que tocó), con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los tests enteros, los de integración y los de seguridad corren una vez, en la revisión de la etapa. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
 
-**Revisión adversarial:** la llevan las tareas **(R)**, completa y antes de su commit, como dice [AGENTS.md](../../AGENTS.md).
+**Revisión adversarial:** una vez, en la revisión de la etapa, un revisor por cada tema de riesgo de las tareas **(R)**, como dice [AGENTS.md](../../AGENTS.md).
 
 ## Qué se verificó al arrancar
 
@@ -115,7 +114,7 @@ Cada servicio público va en `OperationLog.RunAsync`, sin valores, textos buscad
 **Texto para el chat del Back**
 
 ```text
-Leé AGENTS.md, docs/plans/2026-11-08-etapa-15-respuestas.md, la spec 15-respuestas.md con su parte, las fichas de su «Qué leer» y las decisiones 263, 264 y 266 de la hoja de ruta. Después de K1, hacé B1 a B12 en orden, copiando los moldes de cada tarea, y grabá los ejemplos de tus respuestas; las tareas (R) llevan la revisión adversarial antes del commit. No toques el front ni la tabla de estado del plan. Reglas: las de «Forma de trabajo» de este plan.
+Leé AGENTS.md, docs/plans/2026-11-08-etapa-15-respuestas.md, la spec 15-respuestas.md con su parte, las fichas de su «Qué leer» y las decisiones 263, 264 y 266 de la hoja de ruta. Después de K1, hacé B1 a B12 en orden, copiando los moldes de cada tarea, y grabá los ejemplos de tus respuestas; la revisión adversarial de las tareas (R) va después, en la revisión de la etapa. No toques el front ni la tabla de estado del plan. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
 ## Front
@@ -137,21 +136,18 @@ Todo va en `src/modules/forms`, con i18n es/en, los tipos generados, `shared/for
 Leé AGENTS.md del front, ../ArquitecturaBaseMutitenant/docs/plans/2026-11-08-etapa-15-respuestas.md, la spec 15-respuestas.md con su parte y las decisiones 261 a 264, 266, 267 y 269 de la hoja de ruta. Esperá K1, corré npm run contracts y hacé F1 a F8 contra los tipos generados, copiando los tableros de cada tarea, de la v175 o los que dice «Estado»; si a uno le falta un estado, seguí y avisale a la Guía. No toques el lienzo, las specs, el back ni la tabla de estado del plan. Lo privado nunca va a la URL ni al storage. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
-## Integración y puerta
+## Revisión y cierre
 
-1. **I1 · Integrar.** El front contra la API real; cada diferencia vuelve a su dueño y se anota en «Cambios al contrato».
-2. **I2 · Puerta.** `/puerta` una vez, sobre copias del corte: build y `dotnet test` del back; build, lint, test y `contracts:check` del front; el E2E real (`F/scripts/test-e2e-real-forms.mjs` [E12]) con respuestas del Meta simulado de la E14 (un catálogo con campos, «elegir varias» y una opcional vacía, de la lista al tablero); `realinear-docs` y `estado-docs` en 0; la galería (`F/scripts/capturas/etapa-15.json`) a 1440, 390 y 320, solo de los tableros de la spec, con sus teléfonos; y la lista de control, con un test por punto que aplica (1, 3, 5, 6, 7, 8 y 10). El retiro del módulo no corresponde.
-3. **I3 · Recorrido y cierre.** `/recorrido` (`F/scripts/recorrido-usuario-forms.mjs` [E12]) con `revisar-las-respuestas`, `del-catalogo-a-la-planilla` y `del-campo-a-la-planilla`, más un cliente con su nombre y «Abrir conversación», un enlace abierto en otra pestaña sin los filtros privados y el `.xlsx` abierto en Excel sin reparación. Al cerrar, `docs/features/formularios.md` suma «Respuestas»; cada carpeta nueva trae su `AGENTS.md` y `CLAUDE.md` desde que nace, con su fila en `docs/architecture/arbol.md`.
+Sin tareas: los hace el conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). La lista de control de la revisión lleva un test por punto que aplica (1, 3, 5, 6, 7, 8 y 10). Al cerrar, `docs/features/formularios.md` suma «Respuestas»; cada carpeta nueva trae su `AGENTS.md` y `CLAUDE.md` desde que nace, con su fila en `docs/architecture/arbol.md`.
 
-| Puerta | Resultado |
-| --- | --- |
-| Back / Front / Contrato / E2E / Documentación / Galería / Recorrido | Pendiente |
+## Al cierre del bloque E12–E25
 
-**Texto para el chat de Integración**
+Lo que la prueba integral recorre de esta etapa. Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Para después de la etapa 15-respuestas».
 
-```text
-Leé AGENTS.md de los dos repos, docs/plans/2026-11-08-etapa-15-respuestas.md y la skill /puerta. Hacé I1 a I3: integrá contra el contrato, devolvé cada diferencia a su dueño y corré la puerta una sola vez sobre copias del corte; después de un arreglo, solo lo que toca. No toques el lienzo ni manejes la PC del usuario. Dejá solo la tabla final corta en este plan. Reglas: las de «Forma de trabajo» de este plan.
-```
+- **E2E real** (`F/scripts/test-e2e-real-forms.mjs` [E12]): con respuestas del Meta simulado de la E14, un catálogo con campos, «elegir varias» y una opcional vacía, de la lista al tablero.
+- **Recorrido** (`F/scripts/recorrido-usuario-forms.mjs` [E12]): `revisar-las-respuestas`, `del-catalogo-a-la-planilla` y `del-campo-a-la-planilla`, más un cliente con su nombre y «Abrir conversación», un enlace abierto en otra pestaña sin los filtros privados y el `.xlsx` abierto en Excel sin reparación.
+- **Galería** (`F/scripts/capturas/etapa-15.json`), a 1440, 390 y 320: solo los tableros de la spec, con sus teléfonos.
+- El retiro del módulo no corresponde.
 
 ## Relación con otras etapas
 

@@ -7,15 +7,14 @@
 | Contrato | K0–K1 | Pendiente |
 | Back | B1–B8 | Pendiente |
 | Front | F1–F7 | Pendiente |
-| Integración y puerta | I1–I3 | Pendiente |
 
 ## Forma de trabajo
 
-Modo rápido: contrato primero; después los carriles del back y el front a la vez; una sola puerta al final ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)). Un arreglo corre solo lo que toca. La prueba con Meta queda para la I1 de la E10 (123). La tabla de estado la actualiza el cierre del conductor.
+Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la prueba integral del bloque (abajo). Un arreglo corre solo lo que toca. La prueba con Meta queda para la I1 de la E10 (123). La tabla de estado la actualiza el cierre del conductor.
 
-**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 22-biblioteca/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y, al terminar, el build y los tests rápidos enteros, sin Docker ni filtrar por módulo, con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los de integración y de seguridad corren una vez, al cerrar cada carril del back. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
+**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 22-biblioteca/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y el build (en el front, `tsc -b` y el lint de lo que tocó), con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los tests enteros, los de integración y los de seguridad corren una vez, en la revisión de la etapa. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
 
-**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): la llevan las tareas **(R)**, completa y antes de su commit.
+**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): una vez, en la revisión de la etapa, un revisor por cada tema de riesgo de las tareas **(R)**.
 
 ## Qué se verificó al arrancar
 
@@ -133,7 +132,7 @@ Rigen Result y ProblemDetails, `OperationLog.RunAsync`, `[LoggerMessage]`, `Time
 **Texto para el chat del Back**
 
 ```text
-Leé AGENTS.md, este plan (docs/plans/2026-11-08-etapa-22-biblioteca.md), la spec de la E22 con su parte de datos y contrato, la ADR 0050 y las fichas persistencia-ef, multitenancy, auditoria, guardado, concurrencia, idempotencia, api-http, permisos, paginado-y-busqueda, result-y-errores, validacion, textos-y-traducciones, logs, modulos y tests. Después de K1, hacé B1 a B8 en orden y contra ese contrato, copiando los moldes de cada tarea. No toques el front ni la tabla de estado del plan. Las tareas (R) llevan la revisión adversarial antes del commit. Reglas: las de «Forma de trabajo» de este plan.
+Leé AGENTS.md, este plan (docs/plans/2026-11-08-etapa-22-biblioteca.md), la spec de la E22 con su parte de datos y contrato, la ADR 0050 y las fichas persistencia-ef, multitenancy, auditoria, guardado, concurrencia, idempotencia, api-http, permisos, paginado-y-busqueda, result-y-errores, validacion, textos-y-traducciones, logs, modulos y tests. Después de K1, hacé B1 a B8 en orden y contra ese contrato, copiando los moldes de cada tarea. No toques el front ni la tabla de estado del plan. La revisión adversarial de las tareas (R) va después, en la revisión de la etapa. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
 ## Front
@@ -154,27 +153,19 @@ Siguen los tableros v175 y las fichas de UI, formularios, listados, accesibilida
 Leé AGENTS.md del front, ../ArquitecturaBaseMutitenant/docs/plans/2026-11-08-etapa-22-biblioteca.md y la spec de la E22. Esperá K1, corré npm run contracts y hacé F1 a F7 contra los tipos generados, copiando los tableros aprobados y, los que la spec da como «Se redibujan», su redibujo aprobado, y los componentes de cada tarea, con MSW y axe. No toques el lienzo, las specs, el back ni la tabla de estado del plan. Al cerrar la parte, también npm run build. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
-## Integración y puerta
+## Revisión y cierre
 
-1. **I1 · Integrar.** El front contra la API real; cada diferencia vuelve a su dueño. Se regeneran los tipos y se validan los ejemplos.
-2. **I2 · Puerta.** `/puerta` una sola vez sobre copias del corte:
-   - build sin advertencias y `dotnet test` con Docker; front build, lint, test y `contracts:check`;
-   - E2E real, con sus casos en `F/scripts/test-e2e-real-forms.mjs` [E12]: el operador crea una plantilla con un catálogo a mano con un campo extra y reglas de ejemplo, y la publica con motivo; una organización la usa, elige los roles, guarda las reglas y publica el formulario con el canal de prueba; la plataforma la retira y la copia sigue igual; un segundo uso en la misma organización no suma, y uno en otra, sí;
-   - `realinear-docs --detectar` en 0 y `estado-docs --detectar`;
-   - galería de `F/scripts/capturas/etapa-22.json`, a 1440, 390 y 320, con las pantallas nuevas: `Plat-FRM-Biblioteca`, `Plat-FRM-Plantilla-Nueva`, `Plat-FRM-Plantilla` con sus pestañas, `Plat-FRM-Plantilla-Reglas`, `Plat-FRM-Pdf`, `Plat-FRM-Publicar`, `Plat-FRM-Retirar`, `Plat-FRM-Categorias`, `FRM-Formularios-22`, `FRM-Biblioteca`, `FRM-Plantilla`, `FRM-Plantilla-Usar`, `FRM-Editor-Reglas-Plantilla` y `Cuenta-Plat`;
-   - `/recorrido` con `armar-una-plantilla` y `usar-una-plantilla`, sumados a `F/scripts/recorrido-usuario-forms.mjs` [E12];
-   - la lista de control (269): los catálogos que crea una plantilla numeran sus opciones desde 1, como todo catálogo (O43 de la prueba integral de ArquitecturaBase, que ya coincide).
-3. **I3 · Cierre.** `docs/features/formularios.md` suma «Biblioteca»; la ficha de Plataforma, el grupo «Formularios»; los `AGENTS.md` de las carpetas nuevas. La prueba con Meta de la §11 de la spec (publicar la copia en el número de la organización, mandarla desde Internos y responderla en el teléfono) queda pendiente para la I1 de la E10 (123).
+Sin tareas: los hace el conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). La lista de control de la revisión (269) suma que los catálogos que crea una plantilla numeran sus opciones desde 1, como todo catálogo (O43 de la prueba integral de ArquitecturaBase, que ya coincide). Al cerrar, `docs/features/formularios.md` suma «Biblioteca»; la ficha de Plataforma, el grupo «Formularios», y cada carpeta nueva, su `AGENTS.md`.
 
-| Puerta | Resultado |
-| --- | --- |
-| Back / Front / Contrato / E2E / Documentación / Galería / Recorrido | Pendiente |
+**Pendiente para la I1 de la E10** (123): la prueba con Meta de la §11 de la spec (publicar la copia en el número de la organización, mandarla desde Internos y responderla en el teléfono).
 
-**Texto para el chat de Integración**
+## Al cierre del bloque E12–E25
 
-```text
-Leé AGENTS.md de los dos repos, este plan (docs/plans/2026-11-08-etapa-22-biblioteca.md) y la skill /puerta. Integrá el front con la API real, devolvé cada diferencia a su dueño y corré la puerta una sola vez sobre copias del corte; después de un arreglo, solo lo que toca. No toques el lienzo. Lo de Meta queda pendiente para la I1 de la E10. Dejá solo la tabla corta del resultado en este plan. Reglas: las de «Forma de trabajo» de este plan.
-```
+Lo que la prueba integral recorre de esta etapa. Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Para después de la etapa 22-biblioteca».
+
+- **E2E real** (casos en `F/scripts/test-e2e-real-forms.mjs` [E12]): el operador crea una plantilla con un catálogo a mano con un campo extra y reglas de ejemplo, y la publica con motivo; una organización la usa, elige los roles, guarda las reglas y publica el formulario con el canal de prueba; la plataforma la retira y la copia sigue igual; un segundo uso en la misma organización no suma, y uno en otra, sí.
+- **Recorrido:** `armar-una-plantilla` y `usar-una-plantilla`, sumados a `F/scripts/recorrido-usuario-forms.mjs` [E12].
+- **Galería** (`F/scripts/capturas/etapa-22.json`), a 1440, 390 y 320, con las pantallas nuevas: `Plat-FRM-Biblioteca`, `Plat-FRM-Plantilla-Nueva`, `Plat-FRM-Plantilla` con sus pestañas, `Plat-FRM-Plantilla-Reglas`, `Plat-FRM-Pdf`, `Plat-FRM-Publicar`, `Plat-FRM-Retirar`, `Plat-FRM-Categorias`, `FRM-Formularios-22`, `FRM-Biblioteca`, `FRM-Plantilla`, `FRM-Plantilla-Usar`, `FRM-Editor-Reglas-Plantilla` y `Cuenta-Plat`.
 
 ## Relación con otras etapas
 

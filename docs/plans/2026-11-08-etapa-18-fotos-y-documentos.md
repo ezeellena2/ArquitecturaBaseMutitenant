@@ -7,15 +7,14 @@
 | Contrato | K0, K1 | Pendiente |
 | Back | B1–B15 | Pendiente |
 | Front | F1–F7 | Pendiente |
-| Integración y puerta | I1–I3 | Pendiente |
 
 ## Forma de trabajo
 
-Modo rápido: contrato primero; después los carriles del back y el front a la vez; una sola puerta al final ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)). Un arreglo corre solo lo que toca. Se desarrolla con `LocalFileStore`; Meta y la nube quedan para la E10 (123). La tabla de estado la actualiza el cierre del conductor.
+Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la prueba integral del bloque (abajo). Un arreglo corre solo lo que toca. Se desarrolla con `LocalFileStore`; Meta y la nube quedan para la E10 (123). La tabla de estado la actualiza el cierre del conductor.
 
-**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 18-fotos-y-documentos/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y, al terminar, el build y los tests rápidos enteros, sin Docker ni filtrar por módulo, con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los de integración y de seguridad corren una vez, al cerrar cada carril del back. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
+**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 18-fotos-y-documentos/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y el build (en el front, `tsc -b` y el lint de lo que tocó), con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los tests enteros, los de integración y los de seguridad corren una vez, en la revisión de la etapa. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
 
-**Revisión adversarial:** la llevan las tareas **(R)**, completa y antes de su commit, como dice [AGENTS.md](../../AGENTS.md).
+**Revisión adversarial:** una vez, en la revisión de la etapa, un revisor por cada tema de riesgo de las tareas **(R)**, como dice [AGENTS.md](../../AGENTS.md).
 
 ## Qué se verificó al arrancar
 
@@ -25,7 +24,7 @@ Modo rápido: contrato primero; después los carriles del back y el front a la v
 | [E10] sin almacenamiento | no hay cómo saberlo: `IFileStore` resuelve siempre | nace en el núcleo `IFileStorageStatus.IsConfigured`, verdadero en Development y Testing; la E10 lo prende con su adaptador |
 | [E11] entrada y salida | `WhatsAppWebhookReader` guarda solo el tipo y descarta el id, `mime_type`, `sha256`, `filename` y el epígrafe (D7); la salida maneja solo texto y plantillas | B10 y B11 |
 | [E11] la reserva de la cola | `WhatsApp:InboundLeaseSeconds` es 120 | alcanza para 90 s |
-| [Meta] selectores | uno por pantalla; el valor, solo en `complete`, y entre pantallas con `${screen.<ID>.form.<campo>}`; hasta 10 archivos y 100 MiB; cada archivo trae `file_name`, `mime_type`, `sha256` e `id` | confirma la spec; las pantallas con `data` se prueban en I3 |
+| [Meta] selectores | uno por pantalla; el valor, solo en `complete`, y entre pantallas con `${screen.<ID>.form.<campo>}`; hasta 10 archivos y 100 MiB; cada archivo trae `file_name`, `mime_type`, `sha256` e `id` | confirma la spec; las pantallas con `data` se prueban en la E10 |
 | [Meta] medios | `GET /{media-id}` da una `url` de 5 minutos, que se baja con el token; los topes de la spec. **El id de un webhook vence a los 7 días** | confirma los topes, en bytes decimales |
 | Piezas de hoy | `FileSignaturePolicy` reconoce PNG, JPEG, WebP y PDF; las descargas van adjuntas; faltan `SkiaSharp` y `OpenMcdf` | B1 amplía; B7 y B12, en línea |
 | Chat | las tres bandejas salen de `WhatsAppConversationsControllerBase`; WhatsApp no borra mensajes | las rutas van en la base; el archivo vive con su mensaje |
@@ -120,7 +119,7 @@ Todas aplican Result y ProblemDetails, `OperationLog.RunAsync`, `[LoggerMessage]
 **Texto para el chat del Back**
 
 ```text
-Leé AGENTS.md, este plan, la spec docs/plans/formularios/18-fotos-y-documentos.md con su parte, las decisiones 264 y 270 de la hoja de ruta y las fichas de su «Qué leer». Después de K1, hacé B1 a B15 en orden, contra ese contrato, copiando los moldes de cada tarea; las tareas (R) llevan la revisión adversarial antes del commit. No toques el front ni edites la tabla de estado. Reglas: las de «Forma de trabajo» de este plan.
+Leé AGENTS.md, este plan, la spec docs/plans/formularios/18-fotos-y-documentos.md con su parte, las decisiones 264 y 270 de la hoja de ruta y las fichas de su «Qué leer». Después de K1, hacé B1 a B15 en orden, contra ese contrato, copiando los moldes de cada tarea; la revisión adversarial de las tareas (R) va después, en la revisión de la etapa. No toques el front ni edites la tabla de estado. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
 ## Front
@@ -141,30 +140,20 @@ Las tareas siguen sus tableros (los de «Estado») y las fichas del front, con i
 Leé AGENTS.md del front, este plan y la spec ../ArquitecturaBaseMutitenant/docs/plans/formularios/18-fotos-y-documentos.md con su parte, con las decisiones 262 a 264, 266, 269 y 270 de la hoja de ruta. Esperá K1, corré npm run contracts y hacé F1 a F7 contra los tipos generados, copiando los tableros de cada tarea, de la v175 o los que dice «Estado»; si a uno le falta un estado, seguí y avisale a la Guía; nombres de archivos nunca en la URL ni en el storage. No toques el lienzo, las specs ni el back, ni edites la tabla de estado. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
-## Integración y puerta
+## Revisión y cierre
 
-1. **I1 · Integrar.** El front contra la API real de B13, con los ejemplos validados con zod; una diferencia vuelve a su dueño.
-2. **I2 · Puerta.** `/puerta` una vez, sobre copias del corte:
-   - back: build sin advertencias y `dotnet test` completo; front: build, lint, test y `contracts:check`;
-   - E2E real con el canal de prueba y B14: una respuesta con dos fotos, un PDF y una opcional vacía, vista en el chat, la planilla y el visor, y bajada íntegra; un rechazo y «Mandar de nuevo», sin saltos de número; en Clientes, recibir una foto y mandar un PDF;
-   - `realinear-docs --detectar` y `estado-docs --detectar` en 0;
-   - la galería (`F/scripts/capturas/etapa-18.json`) a 1440, 390 y 320, solo de los tableros de la tabla de la spec, con sus teléfonos;
-   - `/recorrido`, con `fotos-y-documentos` y `archivos-en-el-chat`, y la lista de control de `/puerta`, que suma el riesgo de la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase): el visor de fotos muestra la fecha de cada una (O21);
-   - al cerrar: `docs/features/formularios.md` y `docs/features/whatsapp.md` suman su sección, y `docs/architecture/backend.md`, la de `IFileContentInspector` e `IFileStorageStatus`.
+Sin tareas: los hace el conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). La lista de control de la revisión suma el riesgo de la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase): el visor de fotos muestra la fecha de cada una (O21). Al cerrar, `docs/features/formularios.md` y `docs/features/whatsapp.md` suman su sección, y `docs/architecture/backend.md`, la de `IFileContentInspector` e `IFileStorageStatus`.
 
-   El retiro del módulo no corresponde: la etapa no cambia la composición.
-3. **I3 · Meta y la nube, pendiente para la E10.** Los cinco pasos de «Cómo se cierra» de la spec, con el adaptador de la E10; el usuario hace lo de su cuenta y nadie pega secretos.
+**Meta y la nube, pendiente para la E10.** Los cinco pasos de «Cómo se cierra» de la spec, con el adaptador de la E10; el usuario hace lo de su cuenta, con los pasos clic por clic, y nadie pega secretos.
 
-| Puerta | Resultado |
-| --- | --- |
-| Back / Front / Contrato / E2E / Documentación / Galería / Recorrido | Pendiente |
-| Meta y la nube (I3) | Pendiente para la E10 |
+## Al cierre del bloque E12–E25
 
-**Texto para el chat de Integración**
+Lo que la prueba integral recorre de esta etapa. Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Para después de la etapa 18-fotos-y-documentos».
 
-```text
-Leé AGENTS.md de los dos repos, este plan y /puerta. Integrá el front contra la API real, devolvé cada diferencia a su dueño y corré la puerta una sola vez sobre copias del corte; después de un arreglo, solo lo que toca. No toques el lienzo. La prueba con Meta y la nube queda para la E10, con los pasos clic por clic para el usuario y sin manejar su PC. Dejá solo la tabla final corta en este plan. Reglas: las de «Forma de trabajo» de este plan.
-```
+- **E2E real,** con el canal de prueba y B14: una respuesta con dos fotos, un PDF y una opcional vacía, vista en el chat, la planilla y el visor, y bajada íntegra; un rechazo y «Mandar de nuevo», sin saltos de número; en Clientes, recibir una foto y mandar un PDF.
+- **Recorrido:** `fotos-y-documentos` y `archivos-en-el-chat`.
+- **Galería** (`F/scripts/capturas/etapa-18.json`), a 1440, 390 y 320: solo los tableros de la tabla de la spec, con sus teléfonos.
+- El retiro del módulo no corresponde: la etapa no cambia la composición.
 
 ## Relación con otras etapas
 

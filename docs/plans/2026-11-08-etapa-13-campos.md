@@ -7,15 +7,14 @@
 | Contrato | K0–K1 | Pendiente |
 | Back | B1–B10 | Pendiente |
 | Front | F1–F6 | Pendiente |
-| Integración y puerta | I1–I3 | Pendiente |
 
 ## Forma de trabajo
 
-Modo rápido: contrato primero; después los carriles del back y el front a la vez; una sola puerta al final ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)). Un arreglo corre solo lo que toca. La tabla de estado la actualiza el cierre del conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). No hay prueba con Meta. Requisito: la E12 cerrada.
+Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la prueba integral del bloque (abajo). Un arreglo corre solo lo que toca. La tabla de estado la actualiza el cierre del conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). No hay prueba con Meta. Requisito: la E12 cerrada.
 
-**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 13-campos/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y, al terminar, el build y los tests rápidos enteros, sin Docker ni filtrar por módulo, con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los de integración y de seguridad corren una vez, al cerrar cada carril del back. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
+**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 13-campos/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y el build (en el front, `tsc -b` y el lint de lo que tocó), con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los tests enteros, los de integración y los de seguridad corren una vez, en la revisión de la etapa. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
 
-**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): la llevan las tareas **(R)**, completa y antes de su commit; un subagente nuevo recibe el código y los escenarios, sin la conclusión de quien programó.
+**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): una vez, en la revisión de la etapa, un revisor por cada tema de riesgo de las tareas **(R)**, que recibe el código y los escenarios sin la conclusión de quien programó.
 
 ## Qué se verificó al arrancar
 
@@ -122,7 +121,7 @@ Abreviaturas de la spec: `D/`, `A/`, `I/` y `P/`, y `[E12]` es un archivo que de
 **Texto para el chat del Back**
 
 ```text
-Leé AGENTS.md, docs/plans/2026-11-08-etapa-13-campos.md, la spec 13-campos.md y las fichas de su «Qué leer». Con K1 publicado, hacé B1 a B10 en orden, contra ese contrato, sumando a las piezas de la E12 en lugar de crear otras; nada de ArquitecturaBase. Las tareas (R) llevan la revisión adversarial antes del commit. Cada lección de «Lo que ya se pagó allá» lleva su test. No toques el front ni la tabla de estado del plan. Reglas: las de «Forma de trabajo» de este plan.
+Leé AGENTS.md, docs/plans/2026-11-08-etapa-13-campos.md, la spec 13-campos.md y las fichas de su «Qué leer». Con K1 publicado, hacé B1 a B10 en orden, contra ese contrato, sumando a las piezas de la E12 en lugar de crear otras; nada de ArquitecturaBase. La revisión adversarial de las tareas (R) va después, en la revisión de la etapa. Cada lección de «Lo que ya se pagó allá» lleva su test. No toques el front ni la tabla de estado del plan. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
 ## Front
@@ -142,21 +141,17 @@ Todo suma al módulo `src/modules/forms` de la E12, contra los tipos generados. 
 Leé AGENTS.md del front, ../ArquitecturaBaseMutitenant/docs/plans/2026-11-08-etapa-13-campos.md y la spec 13-campos.md, con las decisiones 261 a 264 y 269 de la hoja de ruta. Con K1 publicado, corré npm run contracts y hacé F1 a F6 sumando a las piezas de la E12, contra los tipos generados y copiando los tableros de cada tarea, de la v175 o los que dice «Estado»; si a uno le falta un estado, seguí y avisale a la Guía. No toques el lienzo, el back ni la tabla de estado del plan, ni escribas tipos generados. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
-## Integración y puerta
+## Revisión y cierre
 
-1. **I1 · Integrar.** El front contra la API real, con los ejemplos validados por `contracts:check`. Lo que no encaja vuelve a su dueño y se anota abajo.
-2. **I2 · Puerta.** `/puerta` una sola vez, sobre copias del corte: las suites y `contracts:check`; el E2E real, con los casos de «Cómo se cierra» de la spec sumados a `F/scripts/test-e2e-real-forms.mjs` [E12]; `realinear-docs` y `estado-docs` en 0; la galería (`F/scripts/capturas/etapa-13.json`) a 1440, 390 y 320, con los ocho tableros de la etapa y el diálogo de importar con las columnas de los campos al lado de `FRM-Catalogo-Importar`, y la lista de control, que suma los riesgos de la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase): el tope del nombre, la clave y el largo de un campo es el mismo en la pantalla y en el servidor, y al llegar se ve (O13); la plantilla y la exportación nombran igual las columnas de los campos (O14); la revisión de otra persona lista los cambios de los campos y de las opciones antes de «Usar la revisión actual» (O15).
-3. **I3 · Recorrido y cierre.** `/recorrido` con `campos-de-un-catalogo`, sumado a `F/scripts/recorrido-usuario-forms.mjs` [E12]. Al cerrar, `docs/features/formularios.md` suma la sección de los campos, y cada carpeta nueva lleva su `AGENTS.md`.
+Sin tareas: los hace el conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). La lista de control de la revisión suma los riesgos de la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase): el tope del nombre, la clave y el largo de un campo es el mismo en la pantalla y en el servidor, y al llegar se ve (O13); la plantilla y la exportación nombran igual las columnas de los campos (O14); la revisión de otra persona lista los cambios de los campos y de las opciones antes de «Usar la revisión actual» (O15). Al cerrar, `docs/features/formularios.md` suma la sección de los campos, y cada carpeta nueva lleva su `AGENTS.md`.
 
-| Puerta | Resultado |
-| --- | --- |
-| Back / Front / Contrato / E2E / Documentación / Galería / Recorrido | Pendiente |
+## Al cierre del bloque E12–E25
 
-**Texto para el chat de Integración**
+Lo que la prueba integral recorre de esta etapa. Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Para después de la etapa 13-campos».
 
-```text
-Leé AGENTS.md de los dos repos, docs/plans/2026-11-08-etapa-13-campos.md y la skill /puerta. Integrá el front contra la API real; lo que no encaja vuelve a su dueño. Corré la puerta una sola vez sobre copias del corte y después solo lo que toque cada arreglo; en el plan va solo la tabla final. No toques el lienzo ni manejes la PC del usuario. Reglas: las de «Forma de trabajo» de este plan.
-```
+- **E2E real:** los casos de «Cómo se cierra» de la spec, sumados a `F/scripts/test-e2e-real-forms.mjs` [E12].
+- **Recorrido:** `campos-de-un-catalogo`, sumado a `F/scripts/recorrido-usuario-forms.mjs` [E12].
+- **Galería** (`F/scripts/capturas/etapa-13.json`), a 1440, 390 y 320: los ocho tableros de la etapa y el diálogo de importar con las columnas de los campos al lado de `FRM-Catalogo-Importar`.
 
 ## Relación con otras etapas
 

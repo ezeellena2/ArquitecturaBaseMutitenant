@@ -7,15 +7,14 @@
 | Contrato | K0–K1 | Pendiente |
 | Back | B1–B10 | Pendiente |
 | Front | F1–F9 | Pendiente |
-| Integración y puerta | I1–I3 | Pendiente |
 
 ## Forma de trabajo
 
-Modo rápido: contrato primero; después los carriles del back y el front a la vez; una sola puerta al final ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)). Un arreglo corre solo lo que toca. No hay prueba con Meta: la etapa no manda nada por WhatsApp.
+Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la prueba integral del bloque (abajo). Un arreglo corre solo lo que toca. No hay prueba con Meta: la etapa no manda nada por WhatsApp.
 
-**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 12-catalogos/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y, al terminar, el build y los tests rápidos enteros, sin Docker ni filtrar por módulo, con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los de integración y de seguridad corren una vez, al cerrar cada carril del back. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
+**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 12-catalogos/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y el build (en el front, `tsc -b` y el lint de lo que tocó), con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los tests enteros, los de integración y los de seguridad corren una vez, en la revisión de la etapa. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
 
-**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): la llevan las tareas **(R)**, completa y antes de su commit.
+**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): una vez, en la revisión de la etapa, un revisor por cada tema de riesgo de las tareas **(R)**.
 
 ## Qué se verificó al arrancar
 
@@ -124,7 +123,7 @@ Cada tarea copia la estructura de su modelo, nunca código de ArquitecturaBase. 
 **Texto para el chat del Back**
 
 ```text
-Leé AGENTS.md, docs/plans/2026-11-08-etapa-12-catalogos.md, la spec de la E12 con sus dos partes y las fichas de su «Qué leer». Con K1 publicado, hacé B1 a B10 en orden, contra ese contrato, copiando los modelos de cada tarea; nada de ArquitecturaBase. Las tareas (R) llevan la revisión adversarial antes del commit. Forms nunca referencia a WhatsApp: hablan por IStructuredContactSource. No toques el front ni la tabla de estado del plan. Reglas: las de «Forma de trabajo» de este plan.
+Leé AGENTS.md, docs/plans/2026-11-08-etapa-12-catalogos.md, la spec de la E12 con sus dos partes y las fichas de su «Qué leer». Con K1 publicado, hacé B1 a B10 en orden, contra ese contrato, copiando los modelos de cada tarea; nada de ArquitecturaBase. La revisión adversarial de las tareas (R) va después, en la revisión de la etapa. Forms nunca referencia a WhatsApp: hablan por IStructuredContactSource. No toques el front ni la tabla de estado del plan. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
 ## Front
@@ -147,23 +146,20 @@ Todo va en `src/modules/forms`, aportado por `registration.ts`, contra los tipos
 Leé AGENTS.md del front, ../ArquitecturaBaseMutitenant/docs/plans/2026-11-08-etapa-12-catalogos.md y la spec de la E12 con sus dos partes, con las decisiones 261 a 264 y 269 de la hoja de ruta. Con K1 publicado, corré npm run contracts y hacé F1 a F8 contra los tipos generados, y la F9 con la B10 publicada y otro npm run contracts, copiando los tableros de cada tarea, de la v175 o los que dice «Estado»; si a uno le falta un estado, seguí y avisale a la Guía. No toques el lienzo, el back ni la tabla de estado del plan, ni escribas tipos generados. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
-## Integración y puerta
+## Revisión y cierre
 
-1. **I1 · Integrar.** El front contra la API real, con los ejemplos validados por `contracts:check`. Lo que no encaja vuelve a su dueño y se anota abajo.
-2. **I2 · Puerta.** `/puerta` una sola vez, sobre copias del corte: las suites y `contracts:check`; el E2E real (`F/scripts/test-e2e-real-forms.mjs`, nuevo, con sus casos en `test-e2e-real.test.mjs`) con los cinco casos de la §15 de la spec, habilitando antes `forms` en la organización; `realinear-docs` y `estado-docs` en 0; la galería de los quince tableros de la etapa: los trece de la §10, sin `FRM-Catalogo-Nuevo` ni `FRM-Catalogo-Tipo`, y la propuesta con su teléfono (`F/scripts/capturas/etapa-12.json`) a 1440, 390 y 320, y la lista de control, que suma los riesgos de la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase): el tope de un texto es el mismo en la pantalla y en el servidor, y al llegar se ve (O13); la plantilla y la exportación nombran las columnas igual (O14); la revisión de otra persona lista los cambios de las opciones antes de «Usar la revisión actual» (O15).
-3. **I3 · Recorrido y cierre.** `/recorrido` con `armar-un-catalogo` y `catalogo-con-filtros` (`F/scripts/recorrido-usuario-forms.mjs`, nuevo). Al cerrar nacen `docs/features/formularios.md` con su sección de catálogos, la fila de Forms en «Dónde va cada cosa» de `AGENTS.md`, los `AGENTS.md` de cada carpeta nueva y sus filas en `docs/architecture/arbol.md`. El retiro del módulo no se prueba en esta etapa (C13).
+Sin tareas: los hace el conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). La lista de control de la revisión suma los riesgos de la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase): el tope de un texto es el mismo en la pantalla y en el servidor, y al llegar se ve (O13); la plantilla y la exportación nombran las columnas igual (O14); la revisión de otra persona lista los cambios de las opciones antes de «Usar la revisión actual» (O15). Al cerrar nacen `docs/features/formularios.md` con su sección de catálogos, la fila de Forms en «Dónde va cada cosa» de `AGENTS.md`, los `AGENTS.md` de cada carpeta nueva y sus filas en `docs/architecture/arbol.md`.
 
 **Pendiente para la I1 de la 10:** el nombre del perfil (C14) con un número real conectado.
 
-| Puerta | Resultado |
-| --- | --- |
-| Back / Front / Contrato / E2E / Documentación / Galería / Recorrido | Pendiente |
+## Al cierre del bloque E12–E25
 
-**Texto para el chat de Integración**
+Lo que la prueba integral recorre de esta etapa. Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Para después de la etapa 12-catalogos».
 
-```text
-Leé AGENTS.md de los dos repos, docs/plans/2026-11-08-etapa-12-catalogos.md y la skill /puerta. Integrá el front contra la API real. Corré la puerta una sola vez sobre copias del corte. No toques el lienzo ni manejes la PC del usuario. Reglas: las de «Forma de trabajo» de este plan.
-```
+- **E2E real** (`F/scripts/test-e2e-real-forms.mjs`, nuevo, con sus casos en `test-e2e-real.test.mjs`): los cinco casos de la §15 de la spec, habilitando antes `forms` en la organización.
+- **Recorrido** (`F/scripts/recorrido-usuario-forms.mjs`, nuevo): `armar-un-catalogo` y `catalogo-con-filtros`.
+- **Galería** (`F/scripts/capturas/etapa-12.json`), a 1440, 390 y 320: los quince tableros de la etapa, los trece de la §10, sin `FRM-Catalogo-Nuevo` ni `FRM-Catalogo-Tipo`, y la propuesta con su teléfono.
+- El retiro del módulo no se prueba en esta etapa (C13).
 
 ## Relación con otras etapas
 

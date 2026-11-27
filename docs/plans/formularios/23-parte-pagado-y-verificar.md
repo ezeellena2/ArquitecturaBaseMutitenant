@@ -16,7 +16,7 @@ Cada punto lleva su test, escrito durante la etapa:
 9. **Con el tope lleno, un audio no se transcribía** y quedaba sin respuesta, aunque pidiera algo que contesta un caso (O39): se transcribe siempre (278).
 10. **Un cupo diario agotado derivaba con «El asistente no pudo responder»,** sin que la persona ni el operador supieran que fue el cupo (O35): cada tope dice el suyo (271).
 
-Y lo que vio la [prueba integral de allá](../../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase), que va también en la lista de control de la puerta:
+Y lo que vio la [prueba integral de allá](../../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase), que va también en la lista de control de la revisión:
 11. **Una sugerencia hacia un formulario que publicó otra versión** lo nombra y dice qué hacer (O20).
 12. **Una sugerencia armada antes de tomar la conversación y mandada después:** el servidor la rechaza con un 409 claro, y la pantalla no la muestra como un resultado incierto (O32).
 13. **Un audio que el proveedor devuelve vacío** contesta o deriva, y dice por qué (270). Allá el chat decía «No pudimos pasar este audio a texto», a la persona no le llegaba nada y no se derivaba.

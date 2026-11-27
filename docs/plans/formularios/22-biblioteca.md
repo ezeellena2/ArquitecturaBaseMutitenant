@@ -144,7 +144,7 @@ Sin «Textos en», sin el inglés obligatorio, sin «Cambios sin guardar» ni «
 
 ## 11. Cómo se cierra
 
-La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba real con Meta**:
+La revisión, con su lista de control; el recorrido, en la prueba integral; y una **prueba real con Meta**:
 1. **En Plataforma:** un operador crea una plantilla con un catálogo a mano con un campo extra y reglas de ejemplo, y la publica con motivo.
 2. **En una organización de prueba:** alguien la usa. El formulario queda en borrador, con su catálogo propio y el prefijo propuesto; se publica en Meta con el número de la organización, se manda desde un chat de Internos y se responde en el teléfono.
 3. **El retiro:** la plataforma retira la plantilla, y la copia de la organización sigue igual.

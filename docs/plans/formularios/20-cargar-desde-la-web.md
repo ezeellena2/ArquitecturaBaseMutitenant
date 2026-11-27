@@ -167,7 +167,7 @@ Aprobados en el lienzo como dice la tabla, con el armado del front real de Arqui
 
 ## Cómo se cierra
 
-La puerta de la etapa, con la lista de control de `/puerta`, más un **recorrido real**:
+La revisión, con su lista de control; el **recorrido real**, en la prueba integral:
 1. cargar una respuesta con una condición, dos ítems, un cálculo y una foto, y ver que queda igual que una por WhatsApp, con el canal «App»;
 2. repetir el envío después de un corte: devuelve el primer número, sin saltos;
 3. publicar otra versión con la página abierta: pasa a la nueva sin perder lo cargado, ni los ítems;

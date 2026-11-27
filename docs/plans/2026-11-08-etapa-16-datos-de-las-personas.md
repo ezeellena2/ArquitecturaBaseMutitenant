@@ -7,15 +7,14 @@
 | Contrato | K0–K1 | Pendiente |
 | Back | B1–B13 | Pendiente |
 | Front | F1–F7 | Pendiente |
-| Integración y puerta | I1–I3 | Pendiente |
 
 ## Forma de trabajo
 
-Modo rápido: contrato primero; después los carriles del back y el front a la vez; una sola puerta al final ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)). Un arreglo corre solo lo que toca. La prueba con Meta queda para la I1 de la 10 (123). Cada bloqueo lleva un test con dos actores. La tabla de estado la actualiza el cierre del conductor.
+Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la prueba integral del bloque (abajo). Un arreglo corre solo lo que toca. La prueba con Meta queda para la I1 de la 10 (123). Cada bloqueo lleva un test con dos actores. La tabla de estado la actualiza el cierre del conductor.
 
-**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 16-datos-de-las-personas/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y, al terminar, el build y los tests rápidos enteros, sin Docker ni filtrar por módulo, con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los de integración y de seguridad corren una vez, al cerrar cada carril del back. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
+**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 16-datos-de-las-personas/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y el build (en el front, `tsc -b` y el lint de lo que tocó), con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los tests enteros, los de integración y los de seguridad corren una vez, en la revisión de la etapa. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
 
-**Revisión adversarial:** la llevan las tareas **(R)**, completa y antes de su commit, como dice [AGENTS.md](../../AGENTS.md).
+**Revisión adversarial:** una vez, en la revisión de la etapa, un revisor por cada tema de riesgo de las tareas **(R)**, como dice [AGENTS.md](../../AGENTS.md).
 
 ## Qué se verificó al arrancar
 
@@ -126,7 +125,7 @@ Cada servicio público va en `OperationLog.RunAsync`, sin valores ni opciones en
 **Texto para el chat del Back**
 
 ```text
-Leé AGENTS.md, docs/plans/2026-11-08-etapa-16-datos-de-las-personas.md, la spec 16 con su parte, la decisión 264 de la hoja de ruta y las fichas de su «Qué leer». Después de K1, hacé B1 a B13 en orden con sus moldes, un test con dos actores por bloqueo y los ejemplos de tus respuestas; las tareas (R) llevan la revisión adversarial antes del commit; no toques el front ni la tabla de estado del plan. Reglas: las de «Forma de trabajo» de este plan.
+Leé AGENTS.md, docs/plans/2026-11-08-etapa-16-datos-de-las-personas.md, la spec 16 con su parte, la decisión 264 de la hoja de ruta y las fichas de su «Qué leer». Después de K1, hacé B1 a B13 en orden con sus moldes, un test con dos actores por bloqueo y los ejemplos de tus respuestas; la revisión adversarial de las tareas (R) va después, en la revisión de la etapa; no toques el front ni la tabla de estado del plan. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
 ## Front
@@ -147,22 +146,20 @@ Todo va en `src/modules/forms`, con i18n es/en, los tipos generados, TanStack Qu
 Leé AGENTS.md del front, ../ArquitecturaBaseMutitenant/docs/plans/2026-11-08-etapa-16-datos-de-las-personas.md y la spec 16, con las decisiones 261 a 264 y 269 de la hoja de ruta. Esperá K1, corré npm run contracts y hacé F1 a F7 con los tipos generados, copiando los tableros de cada tarea, de la v175 o los que dice «Estado»; si a uno le falta un estado, seguí y avisale a la Guía. No toques el lienzo, las specs, el back ni la tabla de estado del plan; fuera de src/modules/forms, solo las pestañas de F3 y SendFormDialog.tsx. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
-## Integración y puerta
+## Revisión y cierre
 
-1. **I1 · Integrar.** El front contra la API real; cada diferencia vuelve a su dueño, anotada en «Cambios al contrato».
-2. **I2 · Puerta.** `/puerta` una vez, sobre copias del corte: build y `dotnet test` del back; build, lint, test y `contracts:check` del front; el E2E real (`F/scripts/test-e2e-real-forms.mjs` [E12]) con el Meta simulado de la E14 (definir «Zona», cargarla, armar el filtro, publicar con avisos y mandar a quien tiene el dato y a quien no); `realinear-docs` y `estado-docs` en 0; la galería (`F/scripts/capturas/etapa-16.json`) a 1440, 390 y 320, solo de `FRM-Datos-Personas`, `FRM-Usuario-Datos`, `FRM-Catalogo-16`, `FRM-Editor-16`, `FRM-Publicar-16`, `WA-Chats-Formulario-16`, `FRM-Respuestas-16` y sus teléfonos; y la lista de control, con un test por punto que aplica (2 a 10), más el riesgo de la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase): guardar un filtro sin completar se frena en la pantalla y marca solo lo que falta (O16). El retiro del módulo no corresponde.
-3. **I3 · Recorrido y cierre.** `/recorrido` (`F/scripts/recorrido-usuario-forms.mjs` [E12]) con `una-zona-para-cada-persona`, más sacar a una persona y revocar la invitación de otra con «Zona» cargada, con sus valores borrados. **Pendiente para la I1 de la 10:** la prueba con Meta de la spec (dos zonas, una persona sin el dato y una persona de dos organizaciones). Al cerrar, `docs/features/formularios.md` suma la sección, y `docs/features/organizaciones.md`, el aviso de fin de membresía; cada carpeta nueva trae su `AGENTS.md` y `CLAUDE.md` desde que nace.
+Sin tareas: los hace el conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). La lista de control de la revisión lleva un test por punto que aplica (2 a 10), más el riesgo de la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase): guardar un filtro sin completar se frena en la pantalla y marca solo lo que falta (O16). Al cerrar, `docs/features/formularios.md` suma la sección, y `docs/features/organizaciones.md`, el aviso de fin de membresía; cada carpeta nueva trae su `AGENTS.md` y `CLAUDE.md` desde que nace.
 
-| Puerta | Resultado |
-| --- | --- |
-| Back / Front / Contrato / E2E / Documentación / Galería / Recorrido | Pendiente |
-| Meta | Pendiente para la I1 de la 10 |
+**Pendiente para la I1 de la 10:** la prueba con Meta de la spec (dos zonas, una persona sin el dato y una persona de dos organizaciones).
 
-**Texto para el chat de Integración**
+## Al cierre del bloque E12–E25
 
-```text
-Leé AGENTS.md de los dos repos, docs/plans/2026-11-08-etapa-16-datos-de-las-personas.md y la skill /puerta. Hacé I1 a I3: integrá, devolvé cada diferencia a su dueño y corré la puerta una vez sobre copias del corte; después, solo lo que toca cada arreglo. Meta queda para la I1 de la 10. No toques el lienzo ni manejes la PC del usuario; en el plan, solo la tabla final. Reglas: las de «Forma de trabajo» de este plan.
-```
+Lo que la prueba integral recorre de esta etapa. Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Para después de la etapa 16-datos-de-las-personas».
+
+- **E2E real** (`F/scripts/test-e2e-real-forms.mjs` [E12]): con el Meta simulado de la E14, definir «Zona», cargarla, armar el filtro, publicar con avisos y mandar a quien tiene el dato y a quien no.
+- **Recorrido** (`F/scripts/recorrido-usuario-forms.mjs` [E12]): `una-zona-para-cada-persona`, más sacar a una persona y revocar la invitación de otra con «Zona» cargada, con sus valores borrados.
+- **Galería** (`F/scripts/capturas/etapa-16.json`), a 1440, 390 y 320: solo `FRM-Datos-Personas`, `FRM-Usuario-Datos`, `FRM-Catalogo-16`, `FRM-Editor-16`, `FRM-Publicar-16`, `WA-Chats-Formulario-16`, `FRM-Respuestas-16` y sus teléfonos.
+- El retiro del módulo no corresponde.
 
 ## Relación con otras etapas
 

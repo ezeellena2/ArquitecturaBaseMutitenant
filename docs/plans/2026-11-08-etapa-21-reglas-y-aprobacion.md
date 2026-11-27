@@ -7,15 +7,14 @@
 | Contrato | K0–K1 | Pendiente |
 | Back | B1–B18 | Pendiente |
 | Front | F1–F9 | Pendiente |
-| Integración y puerta | I1–I4 | Pendiente |
 
 ## Forma de trabajo
 
-Modo rápido: contrato primero; después los carriles del back y el front a la vez; una sola puerta al final ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)). Un arreglo corre solo lo que toca. Las migraciones de la B2, la B9, la B10 y la B17 van en ese orden y en el mismo carril, cada una sobre el `HEAD` del momento y con `ModelSnapshotTests` en verde.
+Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la prueba integral del bloque (abajo). Un arreglo corre solo lo que toca. Las migraciones de la B2, la B9, la B10 y la B17 van en ese orden y en el mismo carril, cada una sobre el `HEAD` del momento y con `ModelSnapshotTests` en verde.
 
-**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): la llevan las tareas **(R)**, completa y antes de su commit.
+**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): una vez, en la revisión de la etapa, un revisor por cada tema de riesgo de las tareas **(R)**.
 
-**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 21-reglas-y-aprobacion/<id>`; con la app levantada, nadie edita el `src` del front, y el lienzo no se toca; TDD donde hay lógica. Cada tarea corre su test dirigido y, al terminar, el build y los tests rápidos enteros, sin Docker ni filtrar por módulo, con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los de integración y de seguridad corren una vez, al cerrar cada carril del back. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos y nunca manejás la PC del usuario; al usuario, solo lo de producto, por la Guía; la tabla de estado no se edita: la actualiza el cierre del conductor ([conducir una etapa](../guides/conducir-una-etapa.md)).
+**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 21-reglas-y-aprobacion/<id>`; con la app levantada, nadie edita el `src` del front, y el lienzo no se toca; TDD donde hay lógica. Cada tarea corre su test dirigido y el build (en el front, `tsc -b` y el lint de lo que tocó), con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los tests enteros, los de integración y los de seguridad corren una vez, en la revisión de la etapa. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos y nunca manejás la PC del usuario; al usuario, solo lo de producto, por la Guía; la tabla de estado no se edita: la actualiza el cierre del conductor ([conducir una etapa](../guides/conducir-una-etapa.md)).
 
 ## Qué se verificó al arrancar
 
@@ -128,7 +127,7 @@ Los archivos completos de cada tarea están en su fila de la [parte de pasos](fo
 **Texto para el chat del Back**
 
 ```text
-Leé AGENTS.md, docs/plans/2026-11-08-etapa-21-reglas-y-aprobacion.md, la spec de la E21 con sus partes, las decisiones 261 a 264, 266, 267, 270, 275 y 276 de la hoja de ruta y las fichas que cita su «Qué leer». Después de K1, hacé B1 a B18 en orden contra ese contrato, copiando los moldes nombrados; para B18, la ADR 0068 y su receta. No toques el front. Las tareas con (R) llevan su revisión adversarial antes del commit. Reglas: las de «Forma de trabajo» de este plan.
+Leé AGENTS.md, docs/plans/2026-11-08-etapa-21-reglas-y-aprobacion.md, la spec de la E21 con sus partes, las decisiones 261 a 264, 266, 267, 270, 275 y 276 de la hoja de ruta y las fichas que cita su «Qué leer». Después de K1, hacé B1 a B18 en orden contra ese contrato, copiando los moldes nombrados; para B18, la ADR 0068 y su receta. No toques el front. La revisión adversarial de las tareas (R) va después, en la revisión de la etapa. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
 ## Front
@@ -151,22 +150,19 @@ Siguen los tableros de la v175 y las fichas del front, con i18n, los tipos gener
 Leé AGENTS.md del front, ../ArquitecturaBaseMutitenant/docs/plans/2026-11-08-etapa-21-reglas-y-aprobacion.md y la spec de la E21 con sus partes, con las decisiones 261 a 264, 266, 267, 269, 275 y 276 de la hoja de ruta. Esperá K1, corré npm run contracts y hacé F1 a F9 contra los tipos generados, copiando los tableros de la v175; lo que el encabezado del plan da por redibujar se espera aprobado. No toques el lienzo, las specs ni el back. Al cerrar la parte, también npm run build. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
-## Integración y puerta
+## Revisión y cierre
 
-1. **I1 · Integrar** contra la API real: lo que no encaja vuelve a su dueño o va a «Cambios al contrato».
-2. **I2 · Puerta.** `/puerta`: las suites y `contracts:check`; el E2E real, en `F/scripts/test-e2e-real-forms.mjs` [E12] (armar las reglas, recibir, aprobar desde la lista y desde «Para resolver», rechazar, corregir en el lugar una aprobada, anular una por aprobar, el PDF, un correo con adjunto en la carpeta de correos y los pasos 10 y 11 de «Cómo se cierra»); `realinear-docs` y `estado-docs` en 0; la galería de `scripts/capturas/etapa-21.json`; la lista de control, que suma los riesgos de la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase): la vista rápida y la pantalla completa cuentan y recorren lo mismo, «1 de 2 por aprobar» (O22); si «Enviada» dice el estado, es el que quedó después de las reglas, también «Por resolver» (O23), y una regla con una opción borrada dice cuál y marca su condición (O41).
-3. **I3 · Recorrido.** `/recorrido` con `armar-las-reglas` y `aprobar-o-rechazar`, sumados a `F/scripts/recorrido-usuario-forms.mjs` [E12].
-4. **I4 · Al cerrar.** `docs/features/formularios.md` y `whatsapp.md` suman su sección, la guía de correos los adjuntos y cada carpeta nueva su `AGENTS.md`. **Pendiente para la I1 de la E10** (123): «Cómo se cierra» con un número conectado y el almacenamiento, y crear por la API una plantilla con documento.
+Sin tareas: los hace el conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). La lista de control de la revisión suma los riesgos de la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase): la vista rápida y la pantalla completa cuentan y recorren lo mismo, «1 de 2 por aprobar» (O22); si «Enviada» dice el estado, es el que quedó después de las reglas, también «Por resolver» (O23), y una regla con una opción borrada dice cuál y marca su condición (O41). Al cerrar, `docs/features/formularios.md` y `whatsapp.md` suman su sección, la guía de correos los adjuntos y cada carpeta nueva su `AGENTS.md`.
 
-| Puerta | Resultado |
-| --- | --- |
-| Back / Front / Contrato / E2E / Documentación / Galería / Recorrido | Pendiente |
+**Pendiente para la I1 de la E10** (123): «Cómo se cierra» con un número conectado y el almacenamiento, y crear por la API una plantilla con documento.
 
-**Texto para el chat de Integración**
+## Al cierre del bloque E12–E25
 
-```text
-Leé AGENTS.md de los dos repos, docs/plans/2026-11-08-etapa-21-reglas-y-aprobacion.md y la skill /puerta. Integrá contra K1, devolvé cada diferencia a su dueño y corré la puerta una sola vez sobre copias del corte. Dejá solo la tabla final en este plan. Reglas: las de «Forma de trabajo» de este plan.
-```
+Lo que la prueba integral recorre de esta etapa. Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Para después de la etapa 21-reglas-y-aprobacion».
+
+- **E2E real** (`F/scripts/test-e2e-real-forms.mjs` [E12]): armar las reglas, recibir, aprobar desde la lista y desde «Para resolver», rechazar, corregir en el lugar una aprobada, anular una por aprobar, el PDF, un correo con adjunto en la carpeta de correos y los pasos 10 y 11 de «Cómo se cierra».
+- **Recorrido:** `armar-las-reglas` y `aprobar-o-rechazar`, sumados a `F/scripts/recorrido-usuario-forms.mjs` [E12].
+- **Galería** (`scripts/capturas/etapa-21.json`): los tableros de la etapa.
 
 ## Relación con otras etapas
 

@@ -181,7 +181,7 @@ Ninguna ([0068](../../decisions/0068-acciones-del-asistente.md)): la etapa solo 
 
 ## Cómo se cierra
 
-La puerta de la etapa, con la lista de control de `/puerta`. No hace falta una prueba nueva con Meta: lee lo que ya llegó. El recorrido prueba:
+La revisión, con su lista de control; el recorrido, en la prueba integral. No hace falta una prueba nueva con Meta: lee lo que ya llegó. El recorrido prueba:
 1. respuestas reales de la E14, con un catálogo con campos, «elegir varias» y una opcional vacía, en la lista, la planilla, ordenada por un dato sellado, los filtros, la vista rápida, la pantalla completa y el tablero;
 2. un cliente con su nombre y «Abrir conversación»;
 3. un enlace a una respuesta abierto en otra pestaña, sin la búsqueda ni los filtros privados;

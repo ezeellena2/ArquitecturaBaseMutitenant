@@ -154,7 +154,7 @@ Aprobados en el lienzo v175, con el recorrido guiado `un-pedido-con-renglones`. 
 
 ## Cómo se cierra
 
-La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba real con Meta** con el número de una organización de prueba, abriendo cada variante en un celular:
+La revisión, con su lista de control; el recorrido, en la prueba integral; y una **prueba real con Meta** con el número de una organización de prueba, abriendo cada variante en un celular:
 1. «Monto» aparece solo si «¿Se concretó la venta?» es Sí; con No, la respuesta llega sin monto.
 2. Un pedido con 3 ítems (producto del catálogo y cantidad), con el «Importe» de cada ítem, Cantidad × el precio del catálogo, y el «Total» que suma los importes, en la tarjeta del chat.
 3. Un pedido con un ítem y «No» en «¿Agregás otro ítem?», y un bloque con mínimo 0 y «No» en «¿Agregás un ítem?»: los dos llegan enteros, sin cortar el formulario.

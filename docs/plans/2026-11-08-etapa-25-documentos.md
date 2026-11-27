@@ -7,15 +7,14 @@
 | Contrato | K0, K1 | Pendiente |
 | Back | B1–B16 | Pendiente |
 | Front | F1–F8 | Pendiente |
-| Integración y puerta | I1–I4 | Pendiente |
 
 ## Forma de trabajo
 
-Modo rápido: contrato primero; después los carriles del back y el front a la vez; una sola puerta al final ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)). Un arreglo corre solo lo que toca. La tabla de estado la actualiza el cierre del conductor.
+Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la prueba integral del bloque (abajo). Un arreglo corre solo lo que toca.
 
-**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 25-documentos/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y, al terminar, el build y los tests rápidos enteros, sin Docker ni filtrar por módulo, con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los de integración y de seguridad corren una vez, al cerrar cada carril del back. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos y nunca manejás la PC del usuario; al usuario, solo lo de producto, por la Guía.
+**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 25-documentos/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y el build (en el front, `tsc -b` y el lint de lo que tocó), con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los tests enteros, los de integración y los de seguridad corren una vez, en la revisión de la etapa. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos y nunca manejás la PC del usuario; al usuario, solo lo de producto, por la Guía.
 
-**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): la llevan las tareas **(R)**, completa y antes de su commit.
+**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): una vez, en la revisión de la etapa, un revisor por cada tema de riesgo de las tareas **(R)**.
 
 ## Qué se verificó al arrancar
 
@@ -88,13 +87,13 @@ Cada tarea lleva los tests de su fila en la spec y los que nombra. Cada tarea qu
 12. **B12 · El chat del Inicio (R: IA, archivos y cuotas por alcance).** Suma a los turnos, los adjuntos y el historial de Assistant lo de K1, con los tres tipos de a uno y `forms.manage` o `formcatalogs.manage`; `AssistantAudioService.cs`, `AssistantAudios` (con `<fecha>_AssistantAudios.cs`, que suma `AudioRequestId`), `AssistantAudioDurableAdapter` y `AuthoringMaxOutputTokens`. Un turno que ofrece armar o lleva un audio se sella con `EngineVersion` 4, después del 3 de la E23 (0064 §6), con su clase de turno en `AssistantTurnWork.Create`. El audio va a `IFileStore` con su categoría, `assistant-audio`, que limpia `AssistantRetentionWorker`, y se confirma después del commit; el micrófono depende de `IFileStorageStatus` (E18) y del transcriptor. Copiá `AssistantAttachmentService.cs`. Tests: WebM y MP4 por sus bytes; el audio sigue a las 24 horas; sin cupo; dos veces; borrar.
 13. **B13 · Cargar solo si es seguro (R: datos: la carga sola dispara las reglas).** `FormAutoLoadPolicy.cs`: las tres señales y el aviso fijo con el número. Copiá la captura de `FormRecordService.cs`.
 14. **B14 · Precisión, retención, configuración y baja (R: datos y trabajos de fondo).** La Configuración de Formularios (E18) suma sus seis valores, con `<fecha>_FormDocumentSettings.cs` (270 y 272). Suma a `FormsModuleLimitContributor` [E18] `forms.loadsPerSpreadsheet` (`Count`, 3 de entrada, mínimo 1), `forms.pdfPages` (10, mínimo 1), `forms.rereadsPerPersonPerDay` (5, mínimo 1), `forms.similarDocumentsToSuggest` (3, mínimo 2), `forms.proposedExpiryDays` (90, mínimo 1) y `forms.discardedRetentionDays` (90, mínimo 1), con sus máximos en las seis columnas de `FormPlatformSettings`, como `MaxFileMiB`: valida contra `ModuleLimitResolver.ResolveAsync`, usa `ModuleLimitCeiling.Effective` en cada uso y suma el getter de cada máximo a `ModuleLimitArchitectureTests` ([0069](../decisions/0069-modulos-y-suscripciones.md)). `FormDocumentRetentionWorker.cs`, con `TenantJobRunner`, en lotes y también al arrancar, corre una vez entre copias, como `WhatsAppFlowSessionCleanupWorker` [E14]: con los plazos vigentes, sin tocar la copia de una respuesta ni un archivo de otra fila, y lo propuesto sin revisar vence con «Nadie lo revisó en {n} días: venció.» (215). «Ver los ejemplos» (`GET /{id}/reading/examples`) y la precisión, de 30 días. Programa la purga de `FormsPersonalDataPurgeTests`: el worker y la baja, que suma a `FormsAccountDeletionParticipant.cs` y, por los audios, a `AssistantAccountDeletionParticipant.cs`. Copiá `InvitationExpiryWorker.cs`.
-15. **B15 · Rutas y cierre (R: permisos y aislamiento).** Los controllers de K1, sus contratos (un archivo por pedido) y `FormsContractContributor.cs`; suma a `TenantScopeUsageTests`, `ExplicitRouteInventoryTests` y `ModuleIsolationTests`, y los artículos de ayuda (D25 de la 0048). Tests: 401, 403, feature apagada (404) y 409 en cada ruta; aislamiento; ejemplos exportados.
+15. **B15 · Rutas y cierre (R: permisos y aislamiento).** Los controllers de K1, sus contratos (un archivo por pedido) y `FormsContractContributor.cs`; suma a `TenantScopeUsageTests`, `ExplicitRouteInventoryTests` y `ModuleIsolationTests`, y los artículos de ayuda (D25 de la 0048). Suma los casos ficticios de la calificación de leer y de armar («Cómo se cierra» de la spec) en `Modules/Assistant/Evaluation/` de `Api.IntegrationTests`, como la B13 de la E23. Tests: 401, 403, feature apagada (404) y 409 en cada ruta; aislamiento; ejemplos exportados.
 16. **B16 · Acciones del asistente (R: permisos y efectos fuera del sistema).** Las de la spec, con la receta y los archivos de su fila B16. Copiá `RoleActionSource.cs`. Tests: `AssistantActionDeclarationTests` y la batería genérica.
 
 **Texto para el chat del Back**
 
 ```text
-Leé AGENTS.md, este plan y la spec de la E25 con sus fichas, con las decisiones 261 a 264, 266 a 272 y 275 a 278 de la hoja de ruta. Después de K1, hacé B1 a B16 en orden, copiando los moldes; las tareas (R) llevan la revisión adversarial antes del commit. No toques el front ni la tabla de estado. Reglas: las de «Forma de trabajo» de este plan.
+Leé AGENTS.md, este plan y la spec de la E25 con sus fichas, con las decisiones 261 a 264, 266 a 272 y 275 a 278 de la hoja de ruta. Después de K1, hacé B1 a B16 en orden, copiando los moldes; la revisión adversarial de las tareas (R) va después, en la revisión de la etapa. No toques el front ni la tabla de estado. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
 ## Front
@@ -116,22 +115,22 @@ Cada pantalla copia su tablero y sus textos, con i18n, tipos generados, `shared/
 Leé AGENTS.md del front, este plan (../ArquitecturaBaseMutitenant/docs/plans/2026-11-08-etapa-25-documentos.md) y la spec de la E25, con las decisiones 261 a 264, 266 a 272 y 275 a 278 de la hoja de ruta. Después de K1 y npm run contracts, hacé F1 a F8 contra los tipos generados, copiando los tableros de la v175 y, los que la spec da como «Se redibujan», su redibujo aprobado; assistant no importa forms. No toques el lienzo, las specs, el back ni la tabla de estado. Al cerrar la parte, también npm run build. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
-## Integración y puerta
+## Revisión y cierre
 
-1. **I1 · Integrar** contra la API real. **Pendiente para la I1 de la 10:** la prueba real con la IA y Meta de la spec, con `M-WA-Flow-Prellenado` y `M-WA-Armar-Con-IA` en un celular, que confirma que la respuesta llega sin el archivo (O38); la nube y el antivirus.
-2. **I2 · Calificar.** Antes de la puerta, los perfiles de leer y de armar, con los casos ficticios de la spec, en `Modules/Assistant/Evaluation/` de `Api.IntegrationTests`, como la E23: `FakeChatClient` en los tests, y el proveedor real en una corrida que habilita el usuario.
-3. **I3 · Puerta.** `/puerta`: build sin advertencias y `dotnet test`; front `build`, `lint`, `test` y `contracts:check`; el E2E real con los recorridos `un-comprobante-por-whatsapp`, `un-documento-sin-reconocer` y `un-catalogo-desde-un-excel`, en `F/scripts/test-e2e-real-forms.mjs` [E12]; `realinear-docs --detectar` en 0; la galería de lo nuevo o cambiado (`F/scripts/capturas/etapa-25.json`), a 1440, 390 y 320, con `M-WA-Flow-Prellenado` contra su cuarta pantalla; `/recorrido` y la lista de control, que suma los riesgos de la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase): los puntos 13 a 15 de «Lo que ya se pagó allá» de la spec (O38, O34 y O24), el repetido (O37 y O46), el banco que se ve solo en el logo (O45) y el monto negativo de un débito (O47). Al cerrar nacen la documentación de la parte de pasos y los `AGENTS.md` nuevos.
-4. **I4 · Recorrido.** La prueba de «Cómo se cierra» de la spec, con Meta simulado, y esos tres recorridos en `F/scripts/recorrido-usuario-forms.mjs` [E12].
+Sin tareas: los hace el conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). La lista de control de la revisión suma los riesgos de la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase): los puntos 13 a 15 de «Lo que ya se pagó allá» de la spec (O38, O34 y O24), el repetido (O37 y O46), el banco que se ve solo en el logo (O45) y el monto negativo de un débito (O47). Al cerrar nacen la documentación de la parte de pasos y los `AGENTS.md` nuevos.
 
-| Puerta | Resultado |
-| --- | --- |
-| Back / Front / Contrato / E2E / Documentación / Galería / Recorrido | Pendiente |
+**Pendiente para la I1 de la 10:** la prueba real con la IA y Meta de la spec, con `M-WA-Flow-Prellenado` y `M-WA-Armar-Con-IA` en un celular, que confirma que la respuesta llega sin el archivo (O38); la nube y el antivirus.
 
-**Texto para el chat de Integración**
+## Al cierre del bloque E12–E25
 
-```text
-Leé AGENTS.md de los dos repos, este plan y /puerta. Integrá contra K1, devolvé cada diferencia a su dueño y corré la puerta una vez sobre copias del corte; acá va solo su tabla. Meta con un número conectado y la nube quedan para la I1 de la 10; al usuario, pasos clic por clic. Reglas: las de «Forma de trabajo» de este plan.
-```
+Lo que la prueba integral recorre de esta etapa, la última del bloque. Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Para después de la etapa 25-documentos».
+
+- **Calificación** de los perfiles de leer y de armar con el proveedor real, con los casos de la B15, en una corrida que habilita el usuario.
+- **E2E real** (`F/scripts/test-e2e-real-forms.mjs` [E12]): los recorridos `un-comprobante-por-whatsapp`, `un-documento-sin-reconocer` y `un-catalogo-desde-un-excel`.
+- **Recorrido:** la prueba de «Cómo se cierra» de la spec, con Meta simulado, y esos tres recorridos en `F/scripts/recorrido-usuario-forms.mjs` [E12].
+- **Galería** de lo nuevo o cambiado (`F/scripts/capturas/etapa-25.json`), a 1440, 390 y 320, con `M-WA-Flow-Prellenado` contra su cuarta pantalla.
+
+Después van la revisión de arquitectura de Formularios ([revisar-arquitectura](../guides/revisar-arquitectura.md)) y la prueba integral con el usuario, que junta esta sección de cada plan y lo que dejaron Acciones y Costuras.
 
 ## Relación con otras etapas
 

@@ -151,7 +151,7 @@ Todas piden `whatsapp.manage`. La `@1` de la E23 se retira con su ruta, en el mi
 
 ## Cómo se cierra
 
-La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba real con la IA y Meta**:
+La revisión, con su lista de control; el recorrido, en la prueba integral; y una **prueba real con la IA y Meta**:
 1. dos equipos con su asistente: una persona elige «Soporte» en el menú y contesta el asistente de Soporte;
 2. un operador pasa el chat a Ventas, y el mensaje siguiente lo contesta el asistente de Ventas, con el historial;
 3. un chat sin equipo lo contesta el principal.

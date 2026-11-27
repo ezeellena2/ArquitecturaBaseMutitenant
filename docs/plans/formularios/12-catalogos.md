@@ -179,7 +179,7 @@ Están en la §5 de la hoja de ruta y no se vuelven a preguntar:
 
 ## 15. Cómo se cierra
 
-La puerta de la etapa ([etapa en paralelo](../../guides/etapa-en-paralelo.md)), con la lista de control de `/puerta`. No hay prueba con Meta, porque la E12 no manda nada por WhatsApp. El recorrido prueba:
+La revisión, con su lista de control ([conducir una etapa](../../guides/conducir-una-etapa.md)); el E2E real, la galería y el recorrido van en la prueba integral. No hay prueba con Meta, porque la E12 no manda nada por WhatsApp. El recorrido prueba:
 1. **A mano:** «Proveedores» pegando desde una planilla, y «Recargo por zona», decimal, con el valor en su columna.
 2. **Carga de una vez:** importar una planilla real de unas 1.000 filas, con algunas bajas, y exportarla de nuevo sin diferencias.
 3. **Miembros:** un catálogo con filtros y su vista previa con una persona de ejemplo, vacío y con opciones, con «Sin incluir a quien lo recibe».

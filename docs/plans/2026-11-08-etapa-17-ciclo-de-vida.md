@@ -7,22 +7,21 @@
 | Contrato | K0, K1 | Pendiente |
 | Back | B1–B13 | Pendiente |
 | Front | F1–F6 | Pendiente |
-| Integración y puerta | I1–I3 | Pendiente |
 
 ## Forma de trabajo
 
-Modo rápido: contrato primero; después los carriles del back y el front a la vez; una sola puerta al final ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)). Un arreglo corre solo lo que toca. La prueba con Meta queda para la I1 de la 10 (123). La tabla de estado la actualiza el cierre del conductor.
+Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la prueba integral del bloque (abajo). Un arreglo corre solo lo que toca. La prueba con Meta queda para la I1 de la 10 (123). La tabla de estado la actualiza el cierre del conductor.
 
-**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 17-ciclo-de-vida/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y, al terminar, el build y los tests rápidos enteros, sin Docker ni filtrar por módulo, con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los de integración y de seguridad corren una vez, al cerrar cada carril del back. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
+**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 17-ciclo-de-vida/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y el build (en el front, `tsc -b` y el lint de lo que tocó), con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los tests enteros, los de integración y los de seguridad corren una vez, en la revisión de la etapa. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
 
-**Revisión adversarial:** la llevan las tareas **(R)**, completa y antes de su commit, como dice [AGENTS.md](../../AGENTS.md).
+**Revisión adversarial:** una vez, en la revisión de la etapa, un revisor por cada tema de riesgo de las tareas **(R)**, como dice [AGENTS.md](../../AGENTS.md).
 
 ## Qué se verificó al arrancar
 
 | Fila | Qué se encontró | Qué cambia |
 | --- | --- | --- |
 | [E14], [E15] y [E16] | todavía no existen | van a K0 |
-| [Meta] deprecar | la API de Flows vigente: `POST /{flow-id}/deprecate` → `{success: true}`; un Flow `DEPRECATED` no se manda, no se abre ni vuelve | confirma la spec: sin sesiones vigentes; «ya deprecado» se confirma con `GET /{flow-id}`. La prueba real va a I3 |
+| [Meta] deprecar | la API de Flows vigente: `POST /{flow-id}/deprecate` → `{success: true}`; un Flow `DEPRECATED` no se manda, no se abre ni vuelve | confirma la spec: sin sesiones vigentes; «ya deprecado» se confirma con `GET /{flow-id}`. La prueba real va a la I1 de la 10 |
 | #51 | `TenantContext.Enter` deja `TenantKind` en nulo y falla con una transacción abierta | el worker escribe solo filas `ITenantOwned`: alcanza `TenantJobRunner`; el módulo lo pregunta `WhatsAppModulePolicy` |
 | `TenantJobRunner.RunAsync` | no aísla fallas: una excepción corta a las organizaciones que siguen | B11 envuelve cada organización con `try/catch` y `ExceptionLog.Write`, como `AssistantRetentionWorker` |
 | `IWhatsAppChannelReader.ListOrganizationIdsAsync` | lista solo números vigentes; desconectar conserva `EncryptedToken` | B11 suma una lista que incluye los desconectados |
@@ -127,7 +126,7 @@ Todas aplican Result y ProblemDetails, `OperationLog.RunAsync`, `[LoggerMessage]
 **Texto para el chat del Back**
 
 ```text
-Leé AGENTS.md, este plan, la spec docs/plans/formularios/17-ciclo-de-vida.md, las decisiones 264 y 270 de la hoja de ruta y las fichas de su «Qué leer». Después de K1, hacé B1 a B13 en orden, contra ese contrato, copiando los moldes de cada tarea; Forms y WhatsApp, solo por los puertos, y nada de Meta adentro de una UoW; las tareas (R) llevan la revisión adversarial antes del commit. No toques el front ni edites la tabla de estado. Reglas: las de «Forma de trabajo» de este plan.
+Leé AGENTS.md, este plan, la spec docs/plans/formularios/17-ciclo-de-vida.md, las decisiones 264 y 270 de la hoja de ruta y las fichas de su «Qué leer». Después de K1, hacé B1 a B13 en orden, contra ese contrato, copiando los moldes de cada tarea; Forms y WhatsApp, solo por los puertos, y nada de Meta adentro de una UoW; la revisión adversarial de las tareas (R) va después, en la revisión de la etapa. No toques el front ni edites la tabla de estado. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
 ## Front
@@ -147,30 +146,20 @@ Las tareas siguen los tableros v175, o los redibujados que dice la spec, y las f
 Leé AGENTS.md del front, este plan y la spec ../ArquitecturaBaseMutitenant/docs/plans/formularios/17-ciclo-de-vida.md, con las decisiones 261 a 264, 269 y 275 de la hoja de ruta. Esperá K1, corré npm run contracts y hacé F1 a F6 contra los tipos generados, copiando los tableros de cada tarea, de la v175 o los que dice «Estado» (si a uno le falta un estado, seguí y avisale a la Guía), con i18n, shared/ui y TanStack Query, y «Dar de baja», «Reactivar» y «Borrar», nunca «Eliminar». No toques el lienzo, las specs ni el back, ni edites la tabla de estado. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
-## Integración y puerta
+## Revisión y cierre
 
-1. **I1 · Integrar.** El front contra la API real de B12; los ejemplos validados con zod. Una diferencia vuelve a su dueño y se anota abajo.
-2. **I2 · Puerta.** `/puerta` una vez, sobre copias del corte:
-   - back: build sin advertencias y `dotnet test` completo; front: build, lint, test y `contracts:check`;
-   - E2E real con el canal de prueba de la E14: dar de baja con un envío abierto y responderlo; reactivar, con versión nueva y el número siguiente; borrar un borrador y un publicado sin respuestas; copiar uno con un catálogo y un filtro, y publicar la copia;
-   - `realinear-docs --detectar` y `estado-docs --detectar` en 0;
-   - la galería (`F/scripts/capturas/etapa-17.json`) a 1440, 390 y 320, solo de `FRM-Formularios-17`, `M-FRM-Formularios-17`, `FRM-Editor-Baja`, `M-FRM-Editor-Baja`, `FRM-Dar-De-Baja`, `FRM-Reactivar-Eliminar` y `FRM-Copiar`;
-   - `/recorrido`, con `dar-de-baja-y-reactivar` y copiar un formulario con un catálogo y un filtro, y la lista de control de `/puerta`;
-   - al cerrar: `docs/features/formularios.md` suma la sección, `docs/features/whatsapp.md` la deprecación, y el `AGENTS.md` de `Infrastructure/Modules/WhatsApp` nombra el worker.
+Sin tareas: los hace el conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). Al cerrar, `docs/features/formularios.md` suma la sección, `docs/features/whatsapp.md` la deprecación, y el `AGENTS.md` de `Infrastructure/Modules/WhatsApp` nombra el worker.
 
-   El retiro del módulo no corresponde: se probó en la E14 y esta etapa no cambia la composición.
-3. **I3 · Meta, pendiente para la I1 de la 10.** Con el número de una organización de prueba y el tiempo para contestar en 1 hora, en su Configuración de WhatsApp (270), los cuatro pasos de «Cómo se cierra» de la spec. El usuario hace lo que pide su cuenta, con los pasos clic por clic; nadie maneja su PC ni pega secretos.
+**Meta, pendiente para la I1 de la 10.** Con el número de una organización de prueba y el tiempo para contestar en 1 hora, en su Configuración de WhatsApp (270), los cuatro pasos de «Cómo se cierra» de la spec. El usuario hace lo que pide su cuenta, con los pasos clic por clic; nadie maneja su PC ni pega secretos.
 
-| Puerta | Resultado |
-| --- | --- |
-| Back / Front / Contrato / E2E / Documentación / Galería / Recorrido | Pendiente |
-| Meta (I3) | Pendiente para la I1 de la 10 |
+## Al cierre del bloque E12–E25
 
-**Texto para el chat de Integración**
+Lo que la prueba integral recorre de esta etapa. Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Para después de la etapa 17-ciclo-de-vida».
 
-```text
-Leé AGENTS.md de los dos repos, este plan y /puerta. Integrá el front contra la API real, devolvé cada diferencia a su dueño y corré la puerta una sola vez sobre copias del corte; después de un arreglo, solo lo que toca. No toques el lienzo. La prueba con Meta queda para la I1 de la 10, con los pasos clic por clic para el usuario y sin manejar su PC. Dejá solo la tabla final corta en este plan. Reglas: las de «Forma de trabajo» de este plan.
-```
+- **E2E real,** con el canal de prueba de la E14: dar de baja con un envío abierto y responderlo; reactivar, con versión nueva y el número siguiente; borrar un borrador y un publicado sin respuestas; copiar uno con un catálogo y un filtro, y publicar la copia.
+- **Recorrido:** `dar-de-baja-y-reactivar`, y copiar un formulario con un catálogo y un filtro.
+- **Galería** (`F/scripts/capturas/etapa-17.json`), a 1440, 390 y 320: solo `FRM-Formularios-17`, `M-FRM-Formularios-17`, `FRM-Editor-Baja`, `M-FRM-Editor-Baja`, `FRM-Dar-De-Baja`, `FRM-Reactivar-Eliminar` y `FRM-Copiar`.
+- El retiro del módulo no corresponde: va con la E14, y esta etapa no cambia la composición.
 
 ## Relación con otras etapas
 

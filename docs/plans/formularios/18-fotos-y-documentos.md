@@ -167,7 +167,7 @@ Cada punto lleva su test, escrito durante la etapa:
 
 ## Cómo se cierra
 
-La puerta de la etapa, más una **prueba real con Meta y el almacenamiento de la E10**, que queda pendiente hasta la E10 (123):
+La revisión, con su lista de control; el recorrido, en la prueba integral; y una **prueba real con Meta y el almacenamiento de la E10**, que queda pendiente hasta la E10 (123):
 1. una respuesta con cámara, un PDF y una pregunta de archivo opcional vacía;
 2. las descargas íntegras, con el tamaño y el SHA-256 iguales a los guardados;
 3. un rechazo y el reenvío manual, sin saltos de numeración;

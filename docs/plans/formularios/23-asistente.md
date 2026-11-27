@@ -164,7 +164,7 @@ Con la [receta](../../guides/agregar-una-accion-al-asistente.md) (268 y [0068](.
 
 ## Cómo se cierra
 
-La puerta de la etapa, con la lista de control de `/puerta`, más:
+La revisión, con su lista de control; el recorrido, en la prueba integral, más:
 - **pruebas de arquitectura:** nadie llama al modelo fuera de las piezas del asistente, y las herramientas no reciben `IUnitOfWork`;
 - **casos de evaluación** antes de habilitar el modelo: con y sin la información, fuera de tema, saludo y hora, derivación e instrucciones escondidas, y un tema sin revisar que no se usa;
 - **la medición** de texto a envío y de audio a envío;

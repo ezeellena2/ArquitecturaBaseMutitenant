@@ -7,15 +7,14 @@
 | Contrato | K0–K1 | Pendiente |
 | Back | B1–B13 | Pendiente |
 | Front | F1–F9 | Pendiente |
-| Integración y puerta | I1–I3 | Pendiente |
 
 ## Forma de trabajo
 
-Modo rápido: contrato primero; después los carriles del back y el front a la vez; una sola puerta al final ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)). Un arreglo corre solo lo que toca. La prueba real con la IA y Meta queda para la I1 de la E10 (123). La tabla de estado la actualiza el cierre del conductor.
+Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la prueba integral del bloque (abajo). Un arreglo corre solo lo que toca. La prueba real con la IA y Meta queda para la I1 de la E10 (123). La tabla de estado la actualiza el cierre del conductor.
 
-**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 23-asistente/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y, al terminar, el build y los tests rápidos enteros, sin Docker ni filtrar por módulo, con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los de integración y de seguridad corren una vez, al cerrar cada carril del back. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
+**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 23-asistente/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y el build (en el front, `tsc -b` y el lint de lo que tocó), con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los tests enteros, los de integración y los de seguridad corren una vez, en la revisión de la etapa. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
 
-**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): la llevan las tareas **(R)**, completa y antes de su commit.
+**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): una vez, en la revisión de la etapa, un revisor por cada tema de riesgo de las tareas **(R)**.
 
 ## Qué se verificó al arrancar
 
@@ -139,29 +138,19 @@ Siguen los tableros v175 y las reglas de toda la app (160 a 164, 173 a 175, 180 
 Leé AGENTS.md del front, ../ArquitecturaBaseMutitenant/docs/plans/2026-11-08-etapa-23-asistente.md y la spec de la E23. Esperá K1, corré npm run contracts y hacé F1 a F9 contra los tipos generados, copiando los tableros aprobados y, los que la spec da como «Se redibujan», su redibujo aprobado, con MSW y axe. No toques el lienzo, las specs, el back ni la tabla de estado del plan. Al cerrar la parte, también npm run build. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
-## Integración y puerta
+## Revisión y cierre
 
-1. **I1 · Integrar** contra la API real, con `FakeChatClient` y el canal de prueba.
-2. **I2 · Puerta.** `/puerta`:
-   - build sin advertencias y `dotnet test` con Docker; front build, lint, test y `contracts:check`;
-   - los casos de evaluación con el modelo real, con la clave que ya cargó el usuario;
-   - E2E real, con sus casos en `F/scripts/test-e2e-real-whatsapp.mjs`, con «Los casos del asistente»: Lucía arma y prueba; Martina escribe hasta la ráfaga con tres acciones; una consulta sin la información deriva; un formulario sale con su oferta; con el tope de ofrecimientos en 1, el segundo deriva con su motivo; tres personas a la vez; un audio; una regla desde un texto;
-   - la medición de texto y de audio a envío, en el resultado;
-   - `realinear-docs --detectar` en 0 y `estado-docs --detectar`;
-   - la lista de control (269), con los puntos 11 a 14 de «Lo que ya se pagó allá» de la spec, que vio la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase);
-   - galería de `F/scripts/capturas/etapa-23.json`, a 1440, 390 y 320, con los tableros de F2 a F9;
-   - `/recorrido` con `los-casos-del-asistente`, en `F/scripts/recorrido-usuario-whatsapp.mjs`.
-3. **I3 · Cierre.** Las fichas y la regla de WhatsApp, como «Al cerrar» de la spec, y los `AGENTS.md` de las carpetas nuevas. Queda un pendiente del usuario: publicar desde «Legales» la versión de los Términos y la Privacidad que nombra a OpenAI (ADR 0055).
+Sin tareas: los hace el conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). La lista de control de la revisión (269) suma los puntos 11 a 14 de «Lo que ya se pagó allá» de la spec, que vio la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase). Al cerrar, las fichas y la regla de WhatsApp, como «Al cerrar» de la spec, y los `AGENTS.md` de las carpetas nuevas. Queda un pendiente del usuario: publicar desde «Legales» la versión de los Términos y la Privacidad que nombra a OpenAI (ADR 0055).
 
-| Puerta | Resultado |
-| --- | --- |
-| Back / Front / Contrato / Evaluación / E2E / Medición / Documentación / Galería / Recorrido | Pendiente |
+## Al cierre del bloque E12–E25
 
-**Texto para el chat de Integración**
+Lo que la prueba integral recorre de esta etapa. Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Para después de la etapa 23-asistente».
 
-```text
-Leé AGENTS.md de los dos repos, este plan y la skill /puerta. Integrá el front con la API real, devolvé cada diferencia a su dueño y corré la puerta una sola vez sobre copias del corte. La clave de los casos de evaluación ya la cargó el usuario. No toques el lienzo. Dejá solo la tabla corta del resultado en este plan. Reglas: las de «Forma de trabajo» de este plan.
-```
+- **Evaluación:** los casos de la B13 con el modelo real, con la clave que ya cargó el usuario, en una corrida que él habilita.
+- **Medición** de texto y de audio a envío, en el resultado.
+- **E2E real** (casos en `F/scripts/test-e2e-real-whatsapp.mjs`), con «Los casos del asistente»: Lucía arma y prueba; Martina escribe hasta la ráfaga con tres acciones; una consulta sin la información deriva; un formulario sale con su oferta; con el tope de ofrecimientos en 1, el segundo deriva con su motivo; tres personas a la vez; un audio; una regla desde un texto.
+- **Recorrido:** `los-casos-del-asistente`, en `F/scripts/recorrido-usuario-whatsapp.mjs`.
+- **Galería** (`F/scripts/capturas/etapa-23.json`), a 1440, 390 y 320: los tableros de F2 a F9.
 
 ## Relación con otras etapas
 

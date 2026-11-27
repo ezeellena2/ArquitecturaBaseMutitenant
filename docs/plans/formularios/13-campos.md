@@ -218,7 +218,7 @@ Cada punto lleva su test, escrito durante la etapa:
 
 ## Cómo se cierra
 
-La puerta de la etapa, con la lista de control de `/puerta`. No hay prueba con Meta, porque la etapa no manda nada por WhatsApp. El recorrido prueba:
+La revisión, con su lista de control; el recorrido, en la prueba integral. No hay prueba con Meta, porque la etapa no manda nada por WhatsApp. El recorrido prueba:
 1. un catálogo «Proveedores» con CUIT, Zona (elegir del catálogo «Zonas») y Plazo de pago, cargados importando una planilla, y exportado de nuevo sin diferencias;
 2. la presentación con el CUIT en la descripción, vista en el teléfono al costado;
 3. dar de baja una zona: «Proveedores» se sigue guardando, importando y exportando, con el valor que tenía.

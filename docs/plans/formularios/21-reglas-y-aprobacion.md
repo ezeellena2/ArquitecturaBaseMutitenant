@@ -141,7 +141,7 @@ Anular una respuesta, `formrecords.void@1`, con «¿Anular VIS-000127?» (268 y 
 
 ## Cómo se cierra
 
-La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba real con Meta y el almacenamiento**:
+La revisión, con su lista de control; el recorrido, en la prueba integral; y una **prueba real con Meta y el almacenamiento**:
 1. llega un aviso al recibir;
 2. otra cuenta con el rol aprueba desde la lista y desde «Para resolver», con «¿Aprobar VIS-…?»;
 3. el PDF con el logo, la foto, los campos «Dato», el bloque, el total, una ubicación y las horas en la zona de quien cargó se abre en el celular, y las acciones quedan en «Hecho»;

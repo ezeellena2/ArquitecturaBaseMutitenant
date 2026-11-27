@@ -246,7 +246,7 @@ Las dos de B13 ([0068](../../decisions/0068-acciones-del-asistente.md)): `forms.
 
 ## Cómo se cierra
 
-La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba real con Meta**, que queda pendiente hasta la I1 de la 10 (123), con el número de una organización de prueba y el tiempo para contestar en 1 hora, en su Configuración de WhatsApp (270):
+La revisión, con su lista de control; el recorrido, en la prueba integral; y una **prueba real con Meta**, que queda pendiente hasta la I1 de la 10 (123), con el número de una organización de prueba y el tiempo para contestar en 1 hora, en su Configuración de WhatsApp (270):
 1. dar de baja un formulario con un envío abierto, y responder ese envío;
 2. al vencer, ver los Flows deprecados en el administrador de Meta;
 3. reactivar: versión nueva, Flow nuevo y el número de respuesta siguiente;

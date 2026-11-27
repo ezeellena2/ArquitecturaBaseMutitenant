@@ -7,21 +7,20 @@
 | Contrato | K0–K2 | Pendiente |
 | Back | B1–B10 | Pendiente |
 | Front | F1–F7 | Pendiente |
-| Integración y puerta | I1–I3 | Pendiente |
 
 ## Forma de trabajo
 
-Modo rápido: contrato primero; después los carriles del back y el front a la vez; una sola puerta al final ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)). Un arreglo corre solo lo que toca. La tabla de estado la actualiza el cierre del conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). El evaluador, la fórmula, la captura y el Flow arrancan con su test en rojo.
+Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la prueba integral del bloque (abajo). Un arreglo corre solo lo que toca. La tabla de estado la actualiza el cierre del conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). El evaluador, la fórmula, la captura y el Flow arrancan con su test en rojo.
 
-**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): la llevan las tareas **(R)**, completa y antes de su commit.
+**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): una vez, en la revisión de la etapa, un revisor por cada tema de riesgo de las tareas **(R)**.
 
-**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 19-condiciones-calculos-y-lineas/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y, al terminar, el build y los tests rápidos enteros, sin Docker ni filtrar por módulo, con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los de integración y de seguridad corren una vez, al cerrar cada carril del back. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
+**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 19-condiciones-calculos-y-lineas/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y el build (en el front, `tsc -b` y el lint de lo que tocó), con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los tests enteros, los de integración y los de seguridad corren una vez, en la revisión de la etapa. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
 
 ## Qué se verificó al arrancar
 
 | Fila de la spec | Qué se encontró | Qué cambia |
 | --- | --- | --- |
-| [Meta] Una pantalla por ítem | Probado allá el 6 y el 7/11, con el `routing_model`. **El bloque al final** pasó el 9/11 solo con la pantalla de cierre, y 10 ítems de 600 caracteres con eñes, 34,6 KB, llegaron enteros (traspaso 12, §4). | B4 suma la pantalla de cierre (204). K2 la prueba. La respuesta grande, con número propio, va a la I3 (123). |
+| [Meta] Una pantalla por ítem | Probado allá el 6 y el 7/11, con el `routing_model`. **El bloque al final** pasó el 9/11 solo con la pantalla de cierre, y 10 ítems de 600 caracteres con eñes, 34,6 KB, llegaron enteros (traspaso 12, §4). | B4 suma la pantalla de cierre (204). K2 la prueba. La respuesta grande, con número propio, va a la I1 de la E10 (123). |
 | [Meta] `If` y su expresión | Allá, «Mostrar si» sobre una sola pregunta (CO1-A), probado el 2026-11-11: una comparación por `If`, sin `&&` ni `\|\|`, y hasta tres anidados. Según Meta (2026-11-08), `>`, `>=`, `<` y `<=` comparan solo números, `==` pide el mismo tipo y `${screen.<pantalla>.form.<campo>}` existe desde Flow JSON 4.0; los números y las fechas del Flow son texto. | B4 («Cómo se arma el Flow» de la parte); lo demás frena, como dibuja `FRM-Publicar-19`. K2 lo prueba. |
 | [Meta] Archivo dentro de un `If` | Meta no admite `PhotoPicker` ni `DocumentPicker` en un `If`; allá aceptó un `If` con un `Footer` por rama. | B4 y K2. |
 | Allá: renglones | Probado de punta a punta con Meta el 9/11. Los ítems van en una columna `Row`; acá, en `FormRecordRowValues`. Sirven 450 campos, cómo empareja «Pasan al bloque», el mismo ítem para varias condiciones, el Excel por ítem (227) y el cálculo del ítem (233). | B3, B4, B7 y B8 los toman. |
@@ -118,7 +117,7 @@ Cada tarea copia su molde, con `Result` y ProblemDetails, `OperationLog.RunAsync
    - **Ninguna pantalla que manda navega en otra rama** (Meta lo rechaza): si el bloque o una pregunta de archivo salteada es lo último, esa rama va a la **pantalla de cierre** (204). Ninguna pantalla de ítem manda.
    - Topes: 50 componentes por pantalla, contando cada `If`; 64 KiB con bloque, con cada pregunta una vez por ítem y su clave `_r<n>`; 450 campos en la respuesta.
    - Un `validation_errors` que no cae en una pregunta es `ValidationUnlocated`, y la verificación lee los dos `GET` de la parte con el token de la organización.
-   - El Meta simulado [E14] arma respuestas con ítems, «No», el bloque al final y ocultas, para el E2E; no prueba a Meta (K2 e I3).
+   - El Meta simulado [E14] arma respuestas con ítems, «No», el bloque al final y ocultas, para el E2E; no prueba a Meta (K2 y la I1 de la E10).
 
    Tests: los de B4 de la spec, más cada combinación de condiciones; ningún control en dos ramas; el cuarto `If` en cadena; la marca en cada `navigate`; el archivo salteado al final, que termina en la pantalla de cierre; los bytes sin condiciones ni bloque, y la pantalla salteada.
 5. **B5 · Tabla, columnas y migración (R: datos, migración y aislamiento).** `D/Forms/FormRecordRowValue.cs`, `I/Modules/Forms/Persistence/Configurations/FormRecordRowValueConfiguration.cs` y `<fecha>_FormLogic.cs`, con los datos de la spec; suma a `FormRecordConfiguration.cs` (`HiddenFieldIds`) y `FormRecordValueConfiguration.cs` (`Currency`) [E14]. Copia `FormRecordValueConfiguration.cs` [E14]. `Currency` es `char(3)`, con el CHECK `Currency IS NULL OR NumberValue IS NOT NULL`, también en `FormRecordRowValues`, que lleva los índices de `FormRecordValues`, con `(TenantId, CatalogId, ChoiceId)` y el trigram de los textos largos. El `Down` se niega si hay ítems, ocultas o montos. Tests: aislamiento y RLS; ida y vuelta, y el `Down` que se niega; la cantidad en la fila del bloque; `SearchIndexTests`; `DecimalPrecisionTests`.
@@ -131,7 +130,7 @@ Cada tarea copia su molde, con `Result` y ProblemDetails, `OperationLog.RunAsync
 **Texto para el chat del Back**
 
 ```text
-Leé AGENTS.md, este plan, la spec de la E19 con su parte, las decisiones 264 y 266 de la hoja de ruta y las fichas de su «Qué leer». Esperá K0 y K1, y K2 antes de B4. Hacé B1 a B10 en orden, copiando el molde de cada tarea; no toques el front ni la tabla de estado del plan. Las tareas (R) llevan la revisión adversarial antes del commit. Reglas: las de «Forma de trabajo» de este plan.
+Leé AGENTS.md, este plan, la spec de la E19 con su parte, las decisiones 264 y 266 de la hoja de ruta y las fichas de su «Qué leer». Esperá K0 y K1, y K2 antes de B4. Hacé B1 a B10 en orden, copiando el molde de cada tarea; no toques el front ni la tabla de estado del plan. La revisión adversarial de las tareas (R) va después, en la revisión de la etapa. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
 ## Front
@@ -152,28 +151,19 @@ Las pantallas copian los tableros v175, con i18n en es y en, tipos generados, `s
 Leé AGENTS.md del front, ../ArquitecturaBaseMutitenant/docs/plans/2026-11-08-etapa-19-condiciones-calculos-y-lineas.md y la spec de la E19 con su parte, con las decisiones 262 a 264, 266 y 269 de la hoja de ruta. Esperá K1 y corré npm run contracts. Hacé F1 a F7 contra los tipos generados, copiando los tableros v175 o los redibujados con el traspaso 18; no toques el lienzo, las specs, el back ni la tabla de estado del plan. Al cerrar la parte, también npm run build. Reglas: las de «Forma de trabajo» de este plan.
 ```
 
-## Integración y puerta
+## Revisión y cierre
 
-1. **I1 · Integrar.** El front contra la API real, con los tipos regenerados y los ejemplos estrictos. Lo que no encaja vuelve a su dueño.
-2. **I2 · Puerta.** `/puerta`, una sola vez, sobre copias del corte:
-   - las suites de los dos repos y `contracts:check`;
-   - el E2E real, con sus casos en `F/scripts/test-e2e-real-forms.mjs` [E12], con «Pedido de materiales» y el Meta simulado: publicar; capturar con 3 ítems, con uno y «No», con mínimo 0 y «No», con el bloque al final y con «Monto» oculto; verlas en la planilla, el detalle, el Excel, con una fila por ítem, y el tablero; copiar el formulario;
-   - `realinear-docs --detectar` y `estado-docs --detectar` en 0;
-   - la galería de `scripts/capturas/etapa-19.json`, a 1440, 390 y 320, con los tableros de la etapa;
-   - `/recorrido`, con `un-pedido-con-renglones` sumado a `F/scripts/recorrido-usuario-forms.mjs` [E12], y la revisión de código con la lista de control, que suma el riesgo de la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase): la vista previa del formulario aplica las condiciones (O17).
+Sin tareas: los hace el conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). La lista de control de la revisión suma el riesgo de la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase): la vista previa del formulario aplica las condiciones (O17). Al cerrar, `docs/features/formularios.md` suma la sección; `docs/features/whatsapp.md`, el perfil `r11`, y nace el `AGENTS.md` de `components/logic/` en el front.
 
-   Al cerrar, `docs/features/formularios.md` suma la sección; `docs/features/whatsapp.md`, el perfil `r11`; y nace el `AGENTS.md` de `components/logic/` en el front.
-3. **I3 · Pendiente para la I1 de la E10.** Con el número de una organización de prueba: las pruebas de «Cómo se cierra» de la spec, con el bloque al final, una respuesta de unos 40 KB y, en un celular, una pregunta condicional y una pantalla de archivo salteada.
+**Pendiente para la I1 de la E10.** Con el número de una organización de prueba: las pruebas de «Cómo se cierra» de la spec, con el bloque al final, una respuesta de unos 40 KB y, en un celular, una pregunta condicional y una pantalla de archivo salteada.
 
-| Puerta | Resultado |
-| --- | --- |
-| Back / Front / Contrato / E2E / Documentación / Galería / Recorrido / Revisión | Pendiente |
+## Al cierre del bloque E12–E25
 
-**Texto para el chat de Integración**
+Lo que la prueba integral recorre de esta etapa. Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Para después de la etapa 19-condiciones-calculos-y-lineas».
 
-```text
-Leé AGENTS.md de los dos repos, este plan y la skill /puerta. Integrá el front contra la API real y devolvé a su dueño solo las diferencias reales. Corré la puerta una sola vez sobre copias del corte. Escribí la documentación de «Al cerrar». No toques el lienzo ni manejes la PC del usuario. Lo de Meta con número conectado queda pendiente (I3). En este plan, solo la tabla corta de la puerta. Reglas: las de «Forma de trabajo» de este plan.
-```
+- **E2E real** (casos en `F/scripts/test-e2e-real-forms.mjs` [E12]), con «Pedido de materiales» y el Meta simulado: publicar; capturar con 3 ítems, con uno y «No», con mínimo 0 y «No», con el bloque al final y con «Monto» oculto; verlas en la planilla, el detalle, el Excel, con una fila por ítem, y el tablero; copiar el formulario.
+- **Recorrido:** `un-pedido-con-renglones`, sumado a `F/scripts/recorrido-usuario-forms.mjs` [E12].
+- **Galería** (`scripts/capturas/etapa-19.json`), a 1440, 390 y 320: los tableros de la etapa.
 
 ## Relación con otras etapas
 

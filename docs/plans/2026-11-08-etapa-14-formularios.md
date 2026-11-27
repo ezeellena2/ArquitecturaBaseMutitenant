@@ -7,15 +7,14 @@
 | Contrato | K0–K1 | Pendiente |
 | Back | B1–B12 | Pendiente |
 | Front | F1–F9 | Pendiente |
-| Integración y puerta | I1–I4 | Pendiente |
 
 ## Forma de trabajo
 
-Modo rápido: contrato primero; después los carriles del back y el front a la vez; una sola puerta al final ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)). Un arreglo corre solo lo que toca. En el back, cada tarea espera a la anterior, porque usa lo que deja. La etapa no declara acciones del asistente (§17 de la spec).
+Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la prueba integral del bloque (abajo). Un arreglo corre solo lo que toca. En el back, cada tarea espera a la anterior, porque usa lo que deja. La etapa no declara acciones del asistente (§17 de la spec).
 
-**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 14-formularios/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y, al terminar, el build y los tests rápidos enteros, sin Docker ni filtrar por módulo, con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los de integración y de seguridad corren una vez, al cerrar cada carril del back. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
+**Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 14-formularios/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y el build (en el front, `tsc -b` y el lint de lo que tocó), con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los tests enteros, los de integración y los de seguridad corren una vez, en la revisión de la etapa. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
 
-**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): la llevan las tareas **(R)**, completa y antes de su commit.
+**Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): una vez, en la revisión de la etapa, un revisor por cada tema de riesgo de las tareas **(R)**.
 
 ## Qué se verificó al arrancar
 
@@ -27,7 +26,7 @@ Modo rápido: contrato primero; después los carriles del back y el front a la v
 | [E11] Entrada | `SetFromAccess`; `ProcessAsync` corre consumidores y bot en una UoW; `Fail` espera 6·n s, hasta 8, con reserva de 120 s; el `nfm_reply` se descarta | el `nfm_reply` va a sus fases (B9) |
 | [E11] Outbox y vista previa | sin Flow; reintento solo; `LastMessagePreview` es un texto | la variante Flow; `lastForm` |
 | [E11] Rutas y front | `WhatsAppConversationsControllerBase` la hereda también Plataforma; `ChatComposer`, `MessageThread`, `ConversationItem` y el ⋮ por `Page moreActions` | nace `OrganizationWhatsAppConversationsControllerBase`; `FormCard` |
-| [Meta] | la documentación vigente (2026-11-08) confirma los límites de la §12, Flow JSON 7.3, `flow_name` en lugar de `flow_id` y `data` no vacío | mandar con un número, en la I1 |
+| [Meta] | la documentación vigente (2026-11-08) confirma los límites de la §12, Flow JSON 7.3, `flow_name` en lugar de `flow_id` y `data` no vacío | mandar con un número, en la I1 de la 10 |
 | [E9], #51 y CSP | cuotas cerradas; sin caché nueva; `Enter` deja `TenantKind` en null; `frame-src` trae `https://*.facebook.com` | worker con `ExecutionActor`, captura con `SetFromAccess`; test de `business.facebook.com` |
 | Guardas | un `I*Service` por servicio; `[Idempotent]` en cada `POST` con 201 o 202; ningún lector del idioma de una cuenta | `IWhatsAppFormSendService` e `IAccountCultureReader` |
 | Front | solo `Page` arma pestañas, sin barra con una sola | pestañas por `Page tabs` |
@@ -107,7 +106,7 @@ Cada tarea copia sus moldes, con una UoW por método que escribe, RLS, auditorí
 **Texto para el chat del Back**
 
 ```text
-Leé AGENTS.md, este plan, la spec de la E14 con sus tres partes, las decisiones 207, 261 a 264, 269, 270, 274 y 275 de la hoja de ruta y las fichas de su «Qué leer». Esperá K1 y hacé B1 a B12 en orden, con sus moldes; las tareas (R) llevan la revisión adversarial antes del commit. Forms y WhatsApp se hablan solo por los puertos de la §7. No toques el front. Reglas: las de «Forma de trabajo» de este plan. No edites la tabla de estado.
+Leé AGENTS.md, este plan, la spec de la E14 con sus tres partes, las decisiones 207, 261 a 264, 269, 270, 274 y 275 de la hoja de ruta y las fichas de su «Qué leer». Esperá K1 y hacé B1 a B12 en orden, con sus moldes; la revisión adversarial de las tareas (R) va después, en la revisión de la etapa. Forms y WhatsApp se hablan solo por los puertos de la §7. No toques el front. Reglas: las de «Forma de trabajo» de este plan. No edites la tabla de estado.
 ```
 
 ## Front
@@ -130,22 +129,20 @@ Cada pantalla copia su tablero (la v175 o el que dice «Estado») con todos sus 
 Leé AGENTS.md del front, este plan, la §9 de la spec de la E14, las decisiones 261 a 264, 269, 270 y 275 de la hoja de ruta y las fichas de UI del front. Esperá K1, corré npm run contracts y hacé F1 a F9 contra los tipos generados y los tableros de cada tarea, con todos sus estados. No toques el lienzo, las specs ni el back. Reglas: las de «Forma de trabajo» de este plan. No edites la tabla de estado.
 ```
 
-## Integración y puerta
+## Revisión y cierre
 
-1. **I1 · Integrar.** El front contra la API real, con los tipos regenerados y los ejemplos con zod estricto; cada diferencia vuelve a su dueño.
-2. **I2 · Puerta.** `/puerta`, una vez sobre copias del corte: las suites de los dos repos, con Docker, y `contracts:check`; el E2E real (`test-e2e-real-forms.mjs`) con el Meta de B12 y los casos de la fila «E2E real y recorrido» de la §10; `realinear-docs` y `estado-docs` en 0; la galería de lo nuevo o cambiado, a 1440, 390 y 320; `/recorrido` (`recorrido-usuario-forms.mjs`) con `publicar-un-formulario`, `mandar-un-formulario` y `usar-un-catalogo`; quitar Forms una vez con la base vacía, con `quitar-formularios.md`; y la lista de control de `/puerta`, con los criterios de la §16 y los riesgos de la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase): la coma de la ayuda del número, con `[,.]` y ninguna coma antes de `]` o `}` (O29); el número ambiguo, con su pregunta nombrada (O30); «1.500,5», que frena Meta, con la ayuda «sin separador de miles» (O42), lo que se guarda del webhook para diagnosticar una respuesta de Flow que se pierde (O49), y el tope de un texto de Forms, el mismo en la pantalla y en el servidor, que al llegar se ve (O13, 269).
-3. **I3 · Al cerrar.** `docs/features/formularios.md` suma los formularios, y `docs/features/whatsapp.md`, los Flows; cada carpeta nueva, su `AGENTS.md`, su `CLAUDE.md` y su fila en `arbol.md`.
-4. **I4 · Pendiente para la I1 de la 10:** la prueba con Meta de la §15, con el número de una organización, en Android y iPhone.
+Sin tareas: los hace el conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). La lista de control de la revisión suma los criterios de la §16 y los riesgos de la [prueba integral de ArquitecturaBase](../backlog.md#lo-que-vio-la-prueba-integral-de-arquitecturabase): la coma de la ayuda del número, con `[,.]` y ninguna coma antes de `]` o `}` (O29); el número ambiguo, con su pregunta nombrada (O30); «1.500,5», que frena Meta, con la ayuda «sin separador de miles» (O42), lo que se guarda del webhook para diagnosticar una respuesta de Flow que se pierde (O49), y el tope de un texto de Forms, el mismo en la pantalla y en el servidor, que al llegar se ve (O13, 269). Al cerrar, `docs/features/formularios.md` suma los formularios, y `docs/features/whatsapp.md`, los Flows; cada carpeta nueva, su `AGENTS.md`, su `CLAUDE.md` y su fila en `arbol.md`.
 
-| Puerta | Resultado |
-| --- | --- |
-| Back / Front / Contrato / E2E / Documentación / Galería / Recorrido / Retiro | Pendiente |
+**Pendiente para la I1 de la 10:** la prueba con Meta de la §15, con el número de una organización, en Android y iPhone.
 
-**Texto para el chat de Integración**
+## Al cierre del bloque E12–E25
 
-```text
-Leé AGENTS.md de los dos repos, este plan y /puerta. Integrá contra el contrato, devolvé cada diferencia a su dueño y corré la puerta una vez sobre copias del corte. No manejes la PC del usuario; la prueba con Meta queda para la I1 de la 10. Dejá solo la tabla corta del resultado. Reglas: las de «Forma de trabajo» de este plan.
-```
+Lo que la prueba integral recorre de esta etapa. Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Para después de la etapa 14-formularios».
+
+- **E2E real** (`test-e2e-real-forms.mjs`): con el Meta de B12, los casos de la fila «E2E real y recorrido» de la §10.
+- **Recorrido** (`recorrido-usuario-forms.mjs`): `publicar-un-formulario`, `mandar-un-formulario` y `usar-un-catalogo`.
+- **Galería** (`scripts/capturas/etapa-14.json`, de la F9), a 1440, 390 y 320: lo nuevo o cambiado.
+- **Quitar Forms,** una vez y con la base vacía, con `quitar-formularios.md`: el núcleo, el build, los tests y el ingreso en verde.
 
 ## Relación con otras etapas
 

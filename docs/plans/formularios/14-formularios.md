@@ -160,7 +160,7 @@ Están en la §5 de la hoja de ruta y no se vuelven a preguntar: 86 (la unidad v
 
 ## 15. Cómo se cierra
 
-La puerta de la etapa ([etapa en paralelo](../../guides/etapa-en-paralelo.md)) tiene las suites, el E2E real, la documentación en 0, la galería, el recorrido y la lista de control de `/puerta`. Además, hay una **prueba real con Meta** con el número de una organización de prueba, abriendo cada variante en un celular. Lo que allá ya se probó con Meta, acá se prueba igual:
+La revisión tiene las suites, la documentación en 0 y la lista de control; el E2E real, la galería, el recorrido y quitar el módulo van en la prueba integral. Además, hay una **prueba real con Meta** con el número de una organización de prueba, abriendo cada variante en un celular. Lo que allá ya se probó con Meta, acá se prueba igual:
 1. **Formulario de prueba:** con los siete tipos de pregunta, entre ellos «elegir varias» con mínimo 1 y máximo 3, y con un título de sección, que se ve como subtítulo (`TextSubheading`, que allá Meta aceptó el 2026-11-06). Meta confirma `PUBLISHED`, con un solo Flow, que en el administrador de WhatsApp se llama «Visita a cliente · v1 · ab63a1f9» (165).
 2. **Mandar a una cuenta en inglés:** el formulario llega como está escrito, y el mensaje sin texto del operador («Complete the form “Visita a cliente”.»), el botón, la ayuda de los números y «Elegí hasta N» llegan en inglés. Se abre en Android y en iPhone.
 3. **Completar:** dejar vacía una opcional, poner `12.50` en el número y marcar dos opciones. En el chat aparece el número de la respuesta tras recargar, y las dos opciones quedan en su orden.

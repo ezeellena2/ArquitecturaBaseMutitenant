@@ -195,7 +195,7 @@ Las tres de B13 ([0068](../../decisions/0068-acciones-del-asistente.md)): `formp
 
 ## Cómo se cierra
 
-La puerta de la etapa, con la lista de control de `/puerta`, más una **prueba real con Meta**, que queda pendiente hasta la I1 de la 10 (123), con el número de una organización de prueba:
+La revisión, con su lista de control; el recorrido, en la prueba integral; y una **prueba real con Meta**, que queda pendiente hasta la I1 de la 10 (123), con el número de una organización de prueba:
 1. dos personas con distinta «Zona» reciben el mismo formulario, cada una con los proveedores de su zona;
 2. una persona sin «Zona» no lo recibe, y el operador ve el motivo;
 3. una persona que es miembro de dos organizaciones, con «Zona» en una sola, recibe según cada organización.
