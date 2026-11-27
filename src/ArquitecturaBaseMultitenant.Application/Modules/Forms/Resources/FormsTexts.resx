@@ -5,6 +5,7 @@
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
   <data name="Forms.Catalog.NotFound" xml:space="preserve"><value>No encontramos este catálogo.</value></data>
+  <data name="Forms.Catalog.Ambiguous" xml:space="preserve"><value>Ese nombre coincide con más de un catálogo: decí cuál.</value></data>
   <data name="Forms.Catalog.ItemNotFound" xml:space="preserve"><value>Esa opción no es de este catálogo.</value></data>
   <data name="Forms.Catalog.ItemInUse" xml:space="preserve"><value>No se puede borrar porque se usa. Podés darla de baja.</value></data>
   <data name="Forms.Catalog.DuplicateCode" xml:space="preserve"><value>Ya está en otra opción.</value></data>
@@ -48,4 +49,12 @@
   <data name="CatalogImport.Example.Code" xml:space="preserve"><value>CAP</value></data>
   <data name="CatalogImport.Example.Text" xml:space="preserve"><value>Capital</value></data>
   <data name="CatalogImport.Example.Detail" xml:space="preserve"><value>Dentro de la ciudad</value></data>
+  <data name="Action.catalogoptions.edit@1.Name" xml:space="preserve"><value>Cambiar las opciones de un catálogo</value></data>
+  <data name="Action.catalogoptions.edit@1.Description" xml:space="preserve"><value>Suma, cambia o quita opciones de un catálogo a mano. Cada opción guardada se nombra por su código o su texto, y lo que no se nombra queda como está. No cambia el orden ni importa un archivo.</value></data>
+  <data name="Action.catalogoptions.edit@1.Field.options" xml:space="preserve"><value>Opciones</value></data>
+  <data name="Action.catalogoptions.edit@1.Field.options.code" xml:space="preserve"><value>Código</value></data>
+  <data name="Action.catalogoptions.edit@1.Field.options.text" xml:space="preserve"><value>Texto</value></data>
+  <data name="Action.catalogoptions.edit@1.Field.options.detail" xml:space="preserve"><value>Detalle</value></data>
+  <data name="Action.catalogoptions.edit@1.Field.options.active" xml:space="preserve"><value>Estado</value></data>
+  <data name="Action.catalogoptions.edit@1.Field.options.value" xml:space="preserve"><value>Valor</value></data>
 </root>

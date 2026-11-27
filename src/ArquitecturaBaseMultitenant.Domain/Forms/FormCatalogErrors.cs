@@ -7,6 +7,9 @@ public static class FormCatalogErrors
 {
     public const string NotFoundCode = "Forms.Catalog.NotFound";
     public static readonly Error NotFound = Error.NotFound(NotFoundCode, "Catalog not found.");
+    public const string AmbiguousCode = "Forms.Catalog.Ambiguous";
+    /// <summary>Más de un catálogo se parece al nombre que escribió el asistente: vuelve al modelo, nunca como respuesta HTTP.</summary>
+    public static readonly Error Ambiguous = Error.Validation(AmbiguousCode, "More than one catalog matches.");
     public const string ItemNotFoundCode = "Forms.Catalog.ItemNotFound";
     /// <summary>La opción no es de ese catálogo, en <c>deleteItems.{i}</c> o <c>moves.{i}</c>.</summary>
     public static Error ItemNotFound(string field) => Field(ItemNotFoundCode, "That option isn't in this catalog.", field, ErrorType.NotFound);

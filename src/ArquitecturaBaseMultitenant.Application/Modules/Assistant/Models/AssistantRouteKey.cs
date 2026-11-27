@@ -10,6 +10,7 @@ public enum AssistantRouteKey
     [JsonStringEnumMemberName("business.companies")] BusinessCompanies,
     [JsonStringEnumMemberName("business.audit")] BusinessAudit,
     [JsonStringEnumMemberName("business.home")] BusinessHome,
+    [JsonStringEnumMemberName("business.forms.catalogs")] BusinessFormCatalogs,
     [JsonStringEnumMemberName("platform.organizations")] PlatformOrganizations,
     [JsonStringEnumMemberName("platform.accounts")] PlatformAccounts,
     [JsonStringEnumMemberName("platform.recoveries")] PlatformRecoveries,
@@ -30,6 +31,7 @@ public static class AssistantActionScreenRoutes
         AssistantActionScreen.InviteUser => AssistantRouteKey.BusinessHome,
         AssistantActionScreen.UserDetail => AssistantRouteKey.BusinessUsers,
         AssistantActionScreen.RoleEditor or AssistantActionScreen.Roles => AssistantRouteKey.BusinessRoles,
+        AssistantActionScreen.CatalogEditor => AssistantRouteKey.BusinessFormCatalogs,
         _ => throw new ArgumentOutOfRangeException(nameof(screen), screen, "Pantalla sin traducción."),
     };
 }

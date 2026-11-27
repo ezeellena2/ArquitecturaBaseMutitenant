@@ -102,8 +102,8 @@ internal sealed class AssistantActionTools(AssistantActionCatalog catalog)
         }
         var entry = await catalog.FindAsync(read.Action!, turn.Offered, turn.ProviderModelId, ct);
         if (entry is null) return AssistantActionToolData.Reject(AssistantErrors.ActionNotAvailableCode);
-        var fields = await FieldsAsync(entry, read.Target, ct);
-        if (fields is null) return AssistantActionToolData.Reject(AssistantErrors.ActionNotAvailableCode);
+        var (fields, rejected) = await FieldsAsync(entry, read.Target, ct);
+        if (fields is null) return rejected!;
         if (read.Field is { } name)
         {
             if (fields.SingleOrDefault(field => field.Name == name) is not { Type: AssistantActionFieldType.Choice or AssistantActionFieldType.Choices })
@@ -132,8 +132,8 @@ internal sealed class AssistantActionTools(AssistantActionCatalog catalog)
         if (turn.Proposed) return AssistantActionToolData.Reject(AssistantErrors.ActionOnePerTurnCode);
         var entry = await catalog.FindAsync(proposal.Action, turn.Offered, turn.ProviderModelId, ct);
         if (entry is null) return AssistantActionToolData.Reject(AssistantErrors.ActionNotAvailableCode);
-        var fields = await FieldsAsync(entry, proposal.Target, ct);
-        if (fields is null) return AssistantActionToolData.Reject(AssistantErrors.ActionNotAvailableCode);
+        var (fields, rejected) = await FieldsAsync(entry, proposal.Target, ct);
+        if (fields is null) return rejected!;
         var errors = SchemaErrors(entry.Action, fields, proposal);
         if (errors.Count > 0) return AssistantActionToolData.Reject(AssistantErrors.ActionInvalidCode, errors);
         var resolved = await entry.Source.ResolveAsync(new AssistantActionDraft(entry.Action, proposal.Target, proposal.Values), ct);
@@ -164,12 +164,18 @@ internal sealed class AssistantActionTools(AssistantActionCatalog catalog)
         _ => AssistantActionToolData.Reject(AssistantErrors.ActionInvalidCode, [new(string.Empty, error.Code)]),
     };
 
-    private static async Task<IReadOnlyList<AssistantActionField>?> FieldsAsync(AssistantActionEntry entry, string? target, CancellationToken ct)
+    // Los campos que salen del destino los da la fuente: sin destino no hay campos, y uno que no resuelve (de otra organización,
+    // con varios parecidos) vuelve al modelo con su ruta y su código, como al resolver.
+    private static async Task<(IReadOnlyList<AssistantActionField>? Fields, AssistantActionToolData? Rejected)> FieldsAsync(
+        AssistantActionEntry entry, string? target, CancellationToken ct)
     {
-        if (!entry.Action.FieldsFromTarget) return entry.Action.Fields;
-        if (string.IsNullOrWhiteSpace(target)) return null;
+        if (!entry.Action.FieldsFromTarget) return (entry.Action.Fields, null);
+        if (string.IsNullOrWhiteSpace(target)) return (null, AssistantActionToolData.Reject(AssistantErrors.ActionNotAvailableCode));
         var fields = await entry.Source.ReadTargetFieldsAsync(entry.Action, target, ct);
-        return fields.IsSuccess ? fields.Value : null;
+        if (fields.IsSuccess) return (fields.Value, null);
+        return (null, fields.Error.Type == ErrorType.NotImplemented
+            ? AssistantActionToolData.Reject(AssistantErrors.ActionNotAvailableCode)
+            : AssistantActionToolData.Reject(AssistantErrors.ActionInvalidCode, [new("target", fields.Error.Code)]));
     }
 
     private static List<AssistantActionToolError> SchemaErrors(AssistantActionDefinition action, IReadOnlyList<AssistantActionField> fields,

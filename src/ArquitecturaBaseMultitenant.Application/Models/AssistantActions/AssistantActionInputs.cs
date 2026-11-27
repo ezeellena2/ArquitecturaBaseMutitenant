@@ -10,12 +10,13 @@ namespace ArquitecturaBaseMultitenant.Application.Models.AssistantActions;
 /// <summary>
 /// Lo que comparten las fuentes de acciones para leer lo que escribió el modelo (ADR 0068 §5 y §7), en un solo lugar: una
 /// corrección vale para todas, y la próxima área lo usa en vez de copiarlo. Elegir por nombre (igual gana, parecido también,
-/// con la duda), leer un elemento de un <c>Choices</c>, aplicar sus operaciones a lo que hay y paginar un catálogo cerrado.
+/// con la duda), leer un elemento de un <c>Choices</c> o una fila de un <c>Items</c>, aplicar sus operaciones a lo que hay y paginar un catálogo cerrado.
 /// </summary>
 internal static class AssistantActionInputs
 {
     internal const string Add = "add";
     internal const string Remove = "remove";
+    internal const string Change = "change";
 
     /// <summary>Cómo se guarda lo resuelto: sin la duda cuando no hay.</summary>
     internal static readonly JsonSerializerOptions Json = new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
@@ -68,6 +69,37 @@ internal static class AssistantActionInputs
             (op, text) = (kind.GetString()!, value.GetString()!);
         else return false;
         return IsWritten(text);
+    }
+
+    /// <summary>
+    /// Una fila de un <c>Items</c> (0068 §4): <c>{op: "add" | "change" | "remove", key?, row?}</c>. Sumar lleva la fila y no la
+    /// clave; cambiar, la clave con que el modelo nombra la fila guardada y la fila con lo que cambia; quitar, solo la clave. La
+    /// clave va escrita y dentro del tope; los campos de la fila los lee la fuente, con los de su destino.
+    /// </summary>
+    internal static bool TryReadRowOp(JsonElement element, out string op, out string? key, out JsonElement? row)
+    {
+        (op, key, row) = (string.Empty, null, null);
+        if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty("op", out var kind) || kind.ValueKind != JsonValueKind.String
+            || element.EnumerateObject().Any(property => property.Name is not ("op" or "key" or "row")))
+            return false;
+        op = kind.GetString()!;
+        if (element.TryGetProperty("key", out var written))
+        {
+            if (written.ValueKind != JsonValueKind.String || !IsWritten(written.GetString())) return false;
+            key = written.GetString();
+        }
+        if (element.TryGetProperty("row", out var fields))
+        {
+            if (fields.ValueKind != JsonValueKind.Object) return false;
+            row = fields;
+        }
+        return op switch
+        {
+            Add => key is null && row is not null,
+            Change => key is not null && row is not null,
+            Remove => key is not null && row is null,
+            _ => false,
+        };
     }
 
     /// <summary>Lo que queda después de sumar y quitar sobre lo que hay.</summary>

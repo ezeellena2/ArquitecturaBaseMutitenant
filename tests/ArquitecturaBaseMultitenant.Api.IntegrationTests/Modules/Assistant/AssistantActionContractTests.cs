@@ -15,6 +15,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Services;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Features;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -38,7 +39,7 @@ public sealed class AssistantActionContractTests(ApiFactory factory)
     private const string Model = "assistant-action-battery";
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
-    private static readonly IAssistantActionScenarioSource[] Scenarios = [new OrganizationUserActionScenarios(), new RoleActionScenarios()];
+    private static readonly IAssistantActionScenarioSource[] Scenarios = [new OrganizationUserActionScenarios(), new RoleActionScenarios(), new FormCatalogActionScenarios()];
 
     public static TheoryData<string> Actions() => [.. Scenarios.SelectMany(source => source.Actions)];
 
@@ -176,6 +177,8 @@ public sealed class AssistantActionContractTests(ApiFactory factory)
             await AssertProblemAsync(foreign, HttpStatusCode.NotFound, AssistantErrors.ProposalNotFoundCode);
         // Con el módulo apagado no se ofrece: la misma persona, con el requisito, en una organización sin el asistente.
         var withoutAssistant = await OrganizationJourney.StageAsync(factory, scenario.Requester, "Sin asistente " + definition.Id, Ct);
+        // Lo apagado es el asistente: una acción de un módulo se ofrece con su módulo prendido.
+        if (definition.Module is { } module) await EnableModuleAsync(withoutAssistant, module);
         await AccountJourney.AuthorizeAsync(client, "business", Ct, withoutAssistant);
         var elsewhere = await AssistantExecutionActorTests.CaptureAsync(client);
         Assert.Contains(action, await OfferedAsync(elsewhere));
@@ -183,6 +186,21 @@ public sealed class AssistantActionContractTests(ApiFactory factory)
         // Desde otro acceso no aparece.
         await AccountJourney.AuthorizeAsync(client, "consumer", Ct);
         Assert.DoesNotContain(action, await OfferedAsync(await AssistantExecutionActorTests.CaptureAsync(client)));
+    }
+
+    // Prende el módulo de la acción en la organización, como lo deja Plataforma, con su evento de seguridad.
+    private async Task EnableModuleAsync(Guid tenantId, string module)
+    {
+        using var scope = factory.Services.CreateScope();
+        var services = scope.ServiceProvider;
+        var saved = await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+        {
+            services.GetRequiredService<ITenantFeatureRepository>().Add(TenantFeature.Create(tenantId, module, true, TenantFeatureSource.Manual, null).Value);
+            services.GetRequiredService<ISecurityEventRepository>().Add(SecurityEvent.ForTenantFeatures(AuditActorKind.System, Guid.Empty, tenantId,
+                "Module fixture grant", services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime));
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
+        Assert.True(saved.IsSuccess, saved.IsFailure ? saved.Error.Code : null);
     }
 
     private async Task AssertRevokedAsync(AssistantActionScenario scenario, AssistantActionDefinition definition, AssistantActionReview review)

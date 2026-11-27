@@ -107,6 +107,14 @@ internal sealed class FormCatalogReader(ApplicationDbContext context, ITenantCon
         return Snapshots(await items.OrderBy(item => item.Position).Take(take).ToListAsync(ct));
     }
 
+    public async Task<IReadOnlyList<FormCatalogItemSnapshot>> ListItemsByIdsAsync(Guid catalogId, IReadOnlyCollection<Guid> itemIds,
+        CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(itemIds);
+        if (itemIds.Count == 0) return [];
+        return Snapshots(await Items(catalogId).Where(item => itemIds.Contains(item.Id)).OrderBy(item => item.Position).ToListAsync(ct));
+    }
+
     public async Task<IReadOnlyList<FormCatalogItemSnapshot>> ListItemsByCodesAsync(Guid catalogId,
         IReadOnlyCollection<string> normalizedCodes, CancellationToken ct)
     {

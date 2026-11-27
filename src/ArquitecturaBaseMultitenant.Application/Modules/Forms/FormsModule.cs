@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Localization;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Configuration;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Resources;
@@ -26,6 +27,7 @@ public static class FormsModule
         services.AddScoped<FormCatalogPreviewBuilder>();
         services.AddScoped<IFormCatalogImportService, FormCatalogImportService>();
         services.AddScoped<FormCatalogFileResolver>();
+        services.AddScoped<IAssistantActionSource, FormCatalogActionSource>();
         return services;
     }
 }

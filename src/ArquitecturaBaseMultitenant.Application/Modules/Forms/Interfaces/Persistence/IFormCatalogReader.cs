@@ -27,6 +27,9 @@ public interface IFormCatalogReader
     Task<IReadOnlyList<FormCatalogItemSnapshot>> ListItemBatchAsync(Guid catalogId, int? afterPosition, int take, CancellationToken ct);
 
     /// <summary>Las opciones del catálogo que tienen guardado alguno de esos códigos normalizados: lo que revisa lo pegado.</summary>
+    /// <summary>Las opciones del catálogo con esos ids, sin las de otro: lo que vuelve a leer una propuesta guardada (ADR 0068 §9).</summary>
+    Task<IReadOnlyList<FormCatalogItemSnapshot>> ListItemsByIdsAsync(Guid catalogId, IReadOnlyCollection<Guid> itemIds, CancellationToken ct);
+
     Task<IReadOnlyList<FormCatalogItemSnapshot>> ListItemsByCodesAsync(Guid catalogId, IReadOnlyCollection<string> normalizedCodes,
         CancellationToken ct);
 }

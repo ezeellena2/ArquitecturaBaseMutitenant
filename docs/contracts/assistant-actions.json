@@ -1,6 +1,25 @@
 {
   "actions": [
     {
+      "id": "catalogoptions.edit",
+      "version": 1,
+      "kind": "edit",
+      "requirement": {
+        "kind": "organization",
+        "permission": "formcatalogs.manage"
+      },
+      "module": "forms",
+      "saveRoute": "PUT api/organization/forms/catalogs/{id}",
+      "confirmation": "page",
+      "screen": "catalogEditor",
+      "effect": "none",
+      "target": {
+        "readRoute": "GET api/organization/forms/catalogs/{id}"
+      },
+      "fieldsFromTarget": true,
+      "fields": []
+    },
+    {
       "id": "roles.create",
       "version": 1,
       "kind": "create",

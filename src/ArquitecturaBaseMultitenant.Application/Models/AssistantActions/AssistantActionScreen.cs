@@ -14,4 +14,6 @@ public enum AssistantActionScreen
     RoleEditor,
     /// <summary>El listado de roles, con su confirmación de dar de baja.</summary>
     Roles,
+    /// <summary>El editor de un catálogo a mano, con sus opciones (Formularios).</summary>
+    CatalogEditor,
 }
