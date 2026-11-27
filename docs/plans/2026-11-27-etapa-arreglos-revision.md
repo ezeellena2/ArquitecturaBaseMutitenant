@@ -1,16 +1,16 @@
 # Arreglos de la revisión externa · plan ejecutable
 
-**Estado:** pendiente · Va después de la E12 con el código listo y antes de la E13. Spec: este plan. Cada tarea trae el hallazgo de la revisión externa del 2026-11-27 (Antigravity), comprobado contra el código de `67cba1c1` por la verificación del mismo día (`.local/antigravity/verificacion/00-verificacion.md`, fuera de git; el id `T0N-M` de cada tarea es el de esa verificación). Tableros: ninguno nuevo; ninguna tarea suma una pantalla.
+**Estado:** pendiente · Va después de la E12 con el código listo y antes de la E13. Spec: este plan. Cada tarea trae el hallazgo de la revisión externa del 2026-11-27 (Antigravity), comprobado contra el código de `67cba1c1` por la verificación del mismo día (`.local/antigravity/verificacion/00-verificacion.md`, fuera de git; el id `T0N-M` de cada tarea es el de esa verificación). Tableros: ninguno nuevo; ninguna tarea suma una pantalla (F3 suma un texto en el chat).
 
 | Parte | Tareas | Estado |
 | --- | --- | --- |
-| Contrato | — | Sin cambios de rutas ni de cuerpos |
-| Back | B1–B8 | Pendiente |
-| Front | F1 | Pendiente |
+| Contrato | K1 | Pendiente |
+| Back | B1–B12 | Pendiente |
+| Front | F1–F3 | Pendiente |
 
 ## Forma de trabajo
 
-Modo rápido con el conductor ([conducir una etapa](../guides/conducir-una-etapa.md), [ADR 0071](../decisions/0071-conductor-en-carriles.md)): back y front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código, y el cierre, que deja el código listo. Después, la verificación, mientras se programa la E13.
+Modo rápido con el conductor ([conducir una etapa](../guides/conducir-una-etapa.md), [ADR 0071](../decisions/0071-conductor-en-carriles.md)): el contrato primero (K1); después back y front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código, y el cierre, que deja el código listo. Después, la verificación, mientras se programa la E13.
 
 **Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: arreglos-revision/<id>`; con la app levantada, nadie edita el `src` del front; TDD: cada arreglo empieza por su test dirigido en rojo. Cada tarea termina con su test dirigido y el build de la solución (en el front, `tsc -b` y el lint de lo que tocó).
 
@@ -22,13 +22,20 @@ Modo rápido con el conductor ([conducir una etapa](../guides/conducir-una-etapa
 
 ## Contrato
 
-No cambia ninguna ruta, ningún cuerpo ni ningún permiso. Los errores son los que ya existen:
+No cambia ninguna ruta ni ningún permiso. Suma un campo de respuesta (K1) y un error (B9); los demás errores son los que ya existen.
+
+**K1 · Los mensajes enviados desde el celular** (decisión 2)
+- `WhatsAppChatMessageResponse` (`Application/Modules/WhatsApp/Models/WhatsAppConversationModels.cs`) suma `SentFromPhone` (`bool`, `false` por defecto), como `ReviewedByName`: `true` en un mensaje saliente que la organización mandó desde la app WhatsApp Business del celular, en coexistencia. Lo llena la B10.
+- Hace falta porque hoy un mensaje saliente sin autor es la respuesta del bot.
+- `docs/contracts/openapi.json` regenerado, y en el front `schema.d.ts` con `contracts:check` en verde. El campo es opcional para el front, así convive con la versión anterior.
+- **Tests:** el test del contrato de WhatsApp de atención (`Api.IntegrationTests/Modules/WhatsApp/WhatsAppAttentionContractTests.cs`) con el campo.
 
 | Tarea | Caso | Respuesta |
 | --- | --- | --- |
 | B1 | Google o un alta con un correo administrado cuya membresía terminó | La misma que da hoy el ingreso por código en ese caso (`LoginVerifier.cs:64`: `LoginCodeErrors.Invalid`; en Google, `ExternalLoginErrors.Failed`), sin sesión ni método nuevo |
 | B2 | Una planilla de contactos pasada de los topes | 400 `WhatsApp.Import.InvalidFile` (o `WhatsApp.Import.TooManyRows` si son filas), como hoy |
 | B2 | Un cuerpo multipart más grande que el tope | 413 de Kestrel, antes de leer el archivo |
+| B9 | «Cargar teléfonos» pasado el tope diario de invitaciones por WhatsApp | **Nuevo:** 429 `WhatsApp.PhoneImport.DailyLimit`, con `retryAfter` y `Retry-After`, sin mandar ni guardar nada, como `Messaging.Email.DailyLimit`. Texto en es y en en los dos repos |
 
 ## Back
 
@@ -104,6 +111,66 @@ La importación de contactos de WhatsApp no tiene tope de bytes, escaneo del ZIP
   - `WhatsAppChannelSettingsTests.cs`: con `PhoneNumberId` vacío y un secreto del webhook inválido, el host no arranca;
   - el test de la migración con filas guardadas antes del cambio.
 
+**B9 · Tope diario de las invitaciones por WhatsApp (R efectos)** (T05-03, decisión 1)
+
+«Cargar teléfonos» manda las invitaciones desde el número de Plataforma, el mismo de los códigos de ingreso, sin tope propio: si Meta lo marca por calidad, se cae el ingreso por WhatsApp de todos.
+- `Application/Modules/WhatsApp/Services/WhatsAppPhoneImportService.cs` cuenta las invitaciones por WhatsApp en `identity.MessageQuotaBuckets`, como el correo:
+  - `WhatsApp:Quotas:DailyInvitationLimitPerOrganization` (100);
+  - `WhatsApp:Quotas:DailyInvitationLimit` (200, global de la plataforma), por debajo del nivel de mensajería del número para dejar lugar a los códigos.
+- Son topes contra el abuso, como los del correo, así que van en `appsettings` («Lo que se queda en `appsettings`», [configuración](../operations/configuracion.md)). El runbook dice cuándo subirlos: cuando Meta sube el nivel del número.
+- Si la carga entera no entra en lo que queda del día, responde 429 `WhatsApp.PhoneImport.DailyLimit` con `retryAfter`, sin mandar ni guardar nada.
+- **Copiá de:** `Application/Services/Messaging/EmailQuotaGuard.cs` y `Application/Configuration/Messaging/EmailQuotaOptions.cs`.
+- **Tests:**
+  - en `Application.UnitTests/Services/Messaging/EmailQuotaGuardTests.cs` como modelo, los dos topes, la ventana de 24 h y el `retryAfter`;
+  - en el test de integración de «Cargar teléfonos», la carga que pasa el tope responde 429 sin encolar nada, y la de otra organización sigue entrando.
+
+**B10 · Las respuestas desde el celular, en coexistencia (R efectos, datos)** (T05-04, decisión 2)
+
+Con la coexistencia, la organización sigue contestando desde la app WhatsApp Business del celular. Meta manda esas respuestas en `smb_message_echoes`, que ya está suscripto (`configuracion.md:229`), pero `WhatsAppWebhookReader` lo ignora: la bandeja muestra el chat sin responder y sale el correo de «Chats esperando».
+- `Infrastructure/Modules/WhatsApp/WhatsAppWebhookReader.cs` lee `smb_message_echoes` (el número de la organización le escribe al cliente).
+- El escritor del webhook guarda cada eco como un mensaje saliente del chat de ese cliente:
+  - cifrado como los demás (ADR 0065);
+  - con `SentFromPhone` en la fila, una columna nueva con su migración, que se agrega antes de usarse ([migración](../guides/migracion.md));
+  - sin autor, sin pasar por el Outbox y sin repetirse si Meta manda el mismo eco dos veces (por su id, como lo entrante).
+- Cuenta como respuesta: el chat queda respondido, no dispara el bot, no abre la ventana de 24 h (la abre solo el cliente) y frena el aviso de «Chats esperando». No cambia quién tiene tomado el chat.
+- Si el cliente nunca escribió, el eco crea el contacto y el chat como cuando escribe un cliente, sin bot ni aviso.
+- Un archivo entra como hoy entra uno del cliente: el tipo, sin descarga hasta la E18.
+- El historial anterior a la conexión (`history`) no entra.
+- **Copiá de:** cómo `WhatsAppWebhookReader` y el escritor del webhook tratan un mensaje entrante.
+- **Tests:** en el test del webhook de la organización, con el ejemplo de `smb_message_echoes` de la documentación de Meta:
+  - el eco aparece en el chat con `SentFromPhone`, el chat queda respondido y no sale el bot ni el aviso;
+  - el mismo eco dos veces queda uno;
+  - un eco a un cliente nuevo crea su chat;
+  - el test de la migración con filas guardadas antes del cambio.
+
+**B11 · La respuesta a la plantilla de un operador sigue con él** (T04-03, decisión 3)
+
+Hoy, si la ventana de 24 h está cerrada, la respuesta del cliente reinicia el chat con el bot (`chat.RestartWithBot()` en `Application/Modules/WhatsApp/Services/WhatsAppOrganizationInboundWriter.cs:39-46` y `PlatformWhatsAppInboundWriter.cs:30-36`, D11 de `whatsapp.md`), aunque un operador acabe de mandarle una plantilla.
+- Si en las 24 h anteriores salió en ese chat una plantilla de un operador (un mensaje saliente de tipo plantilla con autor), la respuesta no reinicia con el bot: el chat sigue tomado por quien lo tenía, en su equipo, sin la bienvenida.
+- En la ficha del contacto cuenta igual como una conversación nueva (`RecordConversation`).
+- Una difusión no cuenta: su respuesta sigue entrando por el bot, como dice D11.
+- Vale en las bandejas de la organización y en la de Plataforma.
+- **Copiá de:** la lectura del último mensaje del chat que ya usa el escritor de lo entrante.
+- **Tests:** en el test de lo entrante del chat (`Api.IntegrationTests/Modules/WhatsApp/WhatsAppInboxTests.cs`):
+  - plantilla de un operador, ventana cerrada y el cliente contesta: el chat sigue tomado por él y no sale el bot;
+  - la plantilla de hace 30 h, o una difusión: vuelve al bot como hoy;
+  - lo mismo en Plataforma.
+
+**B12 · Los chats de quien ya no puede atender vuelven a «Sin tomar» (R permisos)** (T04-11, decisión 4)
+
+Hoy solo se liberan al borrar la cuenta (`WhatsAppAccountDataRemover` con `ListTakenByAsync`). Si a alguien lo suspenden o le sacan el permiso de WhatsApp, sus chats quedan tomados a su nombre. Además, `TransferAsync` (`WhatsAppConversationService.cs:93-98`) solo pide que sea miembro activo del equipo.
+- Un puerto nuevo del núcleo, `IMemberAccessObserver` (`Application/Interfaces/Integrations/Organization/`, como `IPhoneLinkObserver`), avisa en la misma transacción cuando un miembro pierde el acceso o permisos:
+  - lo suspenden o lo quitan de la organización;
+  - le cambian los roles;
+  - se edita un rol que tiene, con un aviso por cada miembro afectado.
+- WhatsApp lo implementa: los chats tomados por alguien que ya no puede atender esa bandeja (la misma regla que para tomar un chat: `whatsapp.customers` o `whatsapp.internal`) vuelven a «Sin tomar» de su equipo, como al borrar la cuenta.
+- «Transferir» acepta solo a quien puede atender esa bandeja. Si no, `WhatsApp.Validation.SelectionInvalid` en `memberId`, como hoy con alguien fuera del equipo.
+- **Copiá de:** `IPhoneLinkObserver` y `WhatsAppAccountDataRemover`.
+- **Tests:** en `Api.IntegrationTests/Modules/WhatsApp/WhatsAppInboxTests.cs`, A tiene dos chats tomados:
+  - suspender a A, sacarle el rol o quitarle `whatsapp.customers` a su rol los deja «Sin tomar» en su equipo;
+  - transferir a alguien sin permiso da 400;
+  - un miembro con permiso sigue con los suyos.
+
 ### Back C · Asistente
 
 **B7 · El PDF tiene tope antes de descomprimirse (R efectos)** (T06-03)
@@ -137,9 +204,20 @@ En `src/modules/forms/hooks/useCatalogEditor.ts`, `buildRequest` manda solo las 
 - **Copiá de:** cómo `useCatalogEditor` ya conserva lo propuesto por el asistente en otra página (F9 de la E12, `5e2b8ef1`).
 - **Tests:** en `CatalogEditorPage.test.tsx`, editar una opción en la página 1, pasar a la 2, editar otra, buscar y guardar: el `PUT` lleva las dos, y después de guardar las dos se ven con su valor nuevo.
 
+**F2 · El tope de las invitaciones por WhatsApp en «Cargar teléfonos»** (decisión 1)
+- El 429 `WhatsApp.PhoneImport.DailyLimit` se muestra como hoy el de `Messaging.Email.DailyLimit`, con la hora en que se renueva. Su texto va en es y en.
+- **Copiá de:** cómo el front muestra `Messaging.Email.DailyLimit` en las invitaciones.
+- **Tests:** el test de la pantalla de «Cargar teléfonos» con el 429 muestra el texto y no limpia la carga.
+
+**F3 · «Enviado desde el celular» en el chat** (decisión 2)
+- Un mensaje con `sentFromPhone` muestra, donde va el autor, «Enviado desde el celular» («Sent from the phone»), en el chat de la organización, en escritorio y en el teléfono.
+- No cambia nada más del chat.
+- **Copiá de:** cómo el chat muestra el autor de un mensaje saliente y la respuesta del bot.
+- **Tests:** el test del chat con un mensaje con `sentFromPhone` muestra el texto y no lo muestra como del bot.
+
 **Texto para «Arreglos · Front»:**
 
-> Leé AGENTS.md del front, sus fichas de docs/rules/ y docs/plans/2026-11-27-etapa-arreglos-revision.md del back. La F1 arregla un hallazgo comprobado: empezá por su test en rojo, arreglá lo mínimo, sin pantallas ni textos nuevos, y terminá con `tsc -b` y el lint de lo que tocaste. Con la app levantada, no edites `src`. Commiteá con la línea «Tarea: arreglos-revision/F1».
+> Leé AGENTS.md del front, sus fichas de docs/rules/ y docs/plans/2026-11-27-etapa-arreglos-revision.md del back. Cada tarea arregla un hallazgo comprobado o suma lo que decidió el usuario: empezá por su test en rojo, hacé lo mínimo, sin pantallas ni textos que el plan no nombre, y terminá con `tsc -b` y el lint de lo que tocaste. Con la app levantada, no edites `src`. Commiteá con la línea «Tarea: arreglos-revision/<id>».
 
 ## Acciones del asistente
 
@@ -151,14 +229,17 @@ No hay: ninguna tarea suma una pantalla que cree, edite o elimine.
   - que B1 no abra otra forma de saber si una cuenta existe;
   - que B2 rechace antes de abrir el libro;
   - que B3 no deje copiar nada de un vínculo viejo;
-  - que B5 no aumente la superficie del webhook sin firma.
+  - que B5 no aumente la superficie del webhook sin firma;
+  - que un eco de B10 entre solo al chat del número que lo firmó;
+  - que B12 no deje a nadie con un chat que no puede atender, ni libere los de quien sí puede.
 - **El cierre actualiza la documentación:**
   - `docs/features/identidad.md` (B1);
-  - `docs/features/whatsapp.md` (B3, B4, B5 y B6);
+  - `docs/features/whatsapp.md` (B3, B4, B5, B6, B9, B10, B11 y B12, con D11 enmendada);
+  - `docs/features/organizaciones.md` (B12: lo que pasa con los chats al suspender a alguien o cambiarle los roles);
   - `docs/rules/cuotas.md` y `docs/operations/configuracion.md`, si nombran el perfil de 120 (B5);
   - `docs/features/asistente.md` (B7 y B8);
   - `docs/backlog.md`: se quitan los ítems que esta etapa deja viejos. El 15 ya no vale, porque `BrokenMarkdownLinks` valida los punteros (`HarnessTests.cs:326,648`), y la parte de la regla 10 del ítem 4 tampoco, porque existe `OperationLogTests`.
-- **Para la I1 de la 10:** nada nuevo; sus ajustes están en la B7 de su plan.
+- **Para la I1 de la 10:** el eco real de la B10; los ajustes de despliegue están en la B7 de su plan.
 
 ## Verificación de la etapa
 
@@ -169,8 +250,12 @@ No hay: ninguna tarea suma una pantalla que cree, edite o elimine.
   - un chat de WhatsApp con su vínculo en «Mensajes»;
   - una difusión;
   - un turno del asistente con un PDF;
-  - el editor de catálogos con dos páginas editadas.
-- **A mano:** nada. El ingreso con Google y el webhook de Meta los cubren los tests de integración.
+  - el editor de catálogos con dos páginas editadas;
+  - «Cargar teléfonos» pasado el tope;
+  - un eco desde el celular por el webhook de prueba;
+  - la respuesta a una plantilla de un operador;
+  - suspender a alguien con chats tomados.
+- **A mano:** un eco real desde la app del celular, cuando haya un número en coexistencia (la I1 de la 10). El ingreso con Google lo cubren los tests de integración.
 
 ## Relación con otras etapas
 
@@ -181,54 +266,21 @@ No hay: ninguna tarea suma una pantalla que cree, edite o elimine.
 
 ## Para después
 
-El cierre lo pasa a `docs/backlog.md`, a «Para después de la etapa arreglos-revision». Son los hallazgos reales de la verificación que no entran acá, con su id:
-
-- **Medios:**
-  - escala, para antes de pasar de unas 50 organizaciones:
-    - los viajes a PostgreSQL por pedido (T03-01: Legal sin caché);
-    - el checkpoint por fragmento del streaming (T06-02);
-    - el Outbox secuencial sin señal de despertar (el resto de T03-03, sin la prioridad, que arregla la B4);
-    - los sondeos del front (T09-04, T04-17);
-    - la cola de entrada (T03-10);
-    - los índices (T03-13);
-  - Meta:
-    - el estado «reconectar» ante el 190 y reconectar el mismo número sin crear un canal nuevo (T05-01), que pide tablero;
-    - un primer país sin tarifa (T05-06);
-    - `account_update` y la calidad del número (T05-07);
-  - WhatsApp: el hilo de más de 100 mensajes (T04-10, T09-03), los avisos pegados (T04-15), el Bot que guarda con la versión viva (T09-02) y el front del asistente con `DailyReached` (T04-16);
-  - Forms: la `Idempotency-Key` después de un 400 (T09-06);
-  - módulos: las guías de retiro sin `CoreTextsNeutralTests` (T01-02), los pares Organización y Plataforma de WhatsApp (T01-03);
-  - E10: no van acá; están en la B7 de su plan.
-- **Bajos:** los de la tabla de la verificación, salvo los que arregla de paso una tarea de este plan.
-- **Decisiones de producto pendientes:**
-  - una WABA en dos organizaciones (T02-09);
-  - un mensaje para una organización con WhatsApp apagado (T02-11, `backlog.md:167`);
-  - el autenticador de un operador que se quita (T07-08);
-  - la retención de `OutboxMessages` y `WhatsAppMessages` (T03-07);
-  - una conversación guardada que nombra a alguien dado de baja (T06-10);
-  - el tope de gasto del asistente en Personal, antes de prenderlo (T06-04);
-  - la escala de escritorio al 75 % (T09-11);
-  - el arnés de punteros (T01-08).
+El cierre lo pasa a `docs/backlog.md`, a «Para después de la etapa arreglos-revision». Son los hallazgos reales de la verificación que no entran acá (el detalle, en su tabla):
+- **Escala, antes de pasar de unas 50 organizaciones:** Legal sin caché en cada pedido (T03-01), el checkpoint por fragmento del streaming (T06-02), el Outbox secuencial sin señal (el resto de T03-03), los sondeos del front (T09-04, T04-17), la cola de entrada (T03-10) y los índices (T03-13).
+- **Meta:** el estado «reconectar» ante el 190 y reconectar el mismo número sin canal nuevo, que pide tablero (T05-01); un primer país sin tarifa (T05-06); `account_update` y la calidad del número (T05-07).
+- **Pantallas:** el hilo de más de 100 mensajes (T04-10, T09-03), los avisos pegados del chat (T04-15), el Bot que guarda con la versión viva (T09-02), el asistente con `DailyReached` (T04-16) y la `Idempotency-Key` de Catálogos después de un 400 (T09-06).
+- **Módulos:** las guías de retiro sin `CoreTextsNeutralTests` (T01-02) y los pares Organización y Plataforma de WhatsApp (T01-03).
+- **Bajos:** los de la verificación que ninguna tarea arregla de paso.
+- **Decisiones de producto pendientes:** una WABA en dos organizaciones (T02-09), un mensaje para una organización con WhatsApp apagado (T02-11, `backlog.md:167`), el autenticador de un operador que se quita (T07-08), la retención de `OutboxMessages` y `WhatsAppMessages` (T03-07), una conversación guardada que nombra a alguien dado de baja (T06-10), el tope del asistente en Personal antes de prenderlo (T06-04), la escala de escritorio al 75 % (T09-11) y el arnés de punteros (T01-08).
 
 ## Cambios al contrato
 
 ## Para decidir
 
-Las cuatro son de producto (lo que ve o puede hacer una persona). Cada respuesta suma su tarea a este plan o pasa a «Para después».
+Nada abierto. Las cuatro decisiones de producto del plan, tomadas por el usuario el 2026-11-27:
 
-1. **Invitaciones por WhatsApp desde el número de Plataforma** (T05-03).
-   - *Ejemplo:* una organización sube 200 teléfonos en «Invitar por teléfono» y salen 200 invitaciones Marketing, pagadas por la plataforma, desde el mismo número que manda los códigos de ingreso. Si Meta lo marca por calidad, se cae el ingreso por WhatsApp de todos.
-   - *Recomendada:* un tope diario por organización y otro global para las invitaciones por WhatsApp, con `MessageQuotaBuckets`, como el correo; pasado el tope, la persona se invita por correo.
-   - *Alternativa:* dejarlo con los límites de Meta.
-2. **Coexistencia con la app WhatsApp Business** (T05-04).
-   - *Ejemplo:* una pyme conectó su número en coexistencia y contesta desde el celular; la bandeja web sigue mostrando el chat sin responder y le llega el correo de «Chats esperando».
-   - *Recomendada:* leer `smb_message_echoes` y mostrar esas respuestas en el chat como enviadas desde el celular.
-   - *Alternativa:* sacar la opción de coexistencia del alta hasta tenerlo.
-3. **La respuesta a una plantilla fuera de las 24 h** (T04-03).
-   - *Ejemplo:* un operador manda una plantilla a un cliente que escribió hace tres días. El cliente contesta, el chat vuelve al bot con la bienvenida y pierde la asignación (D11 de `whatsapp.md`).
-   - *Recomendada:* si en las últimas 24 h salió una plantilla de un operador, el chat sigue con ese operador y su equipo, sin la bienvenida.
-   - *Alternativa:* dejarlo como dice D11.
-4. **Los chats tomados de alguien suspendido o sin permiso** (T04-11).
-   - *Ejemplo:* una organización suspende a un empleado o le saca el permiso de WhatsApp, y sus chats siguen tomados a su nombre sin que nadie los conteste. Además, «Transferir» deja pasar un chat a quien no tiene permiso de WhatsApp.
-   - *Recomendada:* al suspenderlo o sacarle el permiso, sus chats vuelven a «Sin tomar» de su bandeja, como al borrar la cuenta, y «Transferir» acepta solo a quien puede atender esa bandeja.
-   - *Alternativa:* que queden tomados y los libere a mano un administrador.
+1. **Invitaciones por WhatsApp desde el número de Plataforma** (T05-03). **Decidido el 2026-11-27: tope diario**, por organización y global, como el correo (B9 y F2). «Cargar teléfonos» no tiene correos, así que pasado el tope la carga espera al día siguiente, como pasa con las invitaciones por correo.
+2. **Coexistencia con la app WhatsApp Business** (T05-04). **Decidido el 2026-11-27: mostrar lo que se contesta desde el celular** (K1, B10 y F3).
+3. **La respuesta a una plantilla fuera de las 24 h** (T04-03). **Decidido el 2026-11-27: sigue con el operador** si su plantilla salió en las 24 h anteriores (B11). El cierre enmienda D11 en `whatsapp.md`.
+4. **Los chats tomados de alguien suspendido o sin permiso** (T04-11). **Decidido el 2026-11-27: vuelven a «Sin tomar»**, y «Transferir» acepta solo a quien puede atender esa bandeja (B12).
