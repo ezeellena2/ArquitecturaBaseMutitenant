@@ -45,13 +45,16 @@ export function etapaDe(archivo) {
   return m ? Number(m[1]) : null;
 }
 
-/** La tabla del plan de desarrollo: número → { linea, cerrada }. */
+/**
+ * La tabla del plan de desarrollo: número → { linea, cerrada }. Desde los dos hitos (2026-11-27), una etapa con el
+ * código listo o verificada cuenta como cerrada: su código ya está, y lo marcado con ella se exige.
+ */
 export async function leerEtapas(ctx) {
   const etapas = new Map();
   if (!ctx.archivos.existe(PLAN)) return etapas;
   for (const { linea, celdas } of ctx.markdown.filasDeTabla(await ctx.leer(PLAN))) {
     const m = celdas[0]?.match(/^(\d{1,2}) · /);
-    if (m) etapas.set(Number(m[1]), { linea, cerrada: /^cerrada/i.test(celdas[1] ?? '') });
+    if (m) etapas.set(Number(m[1]), { linea, cerrada: /^(cerrada|código listo|verificada)/i.test(celdas[1] ?? '') });
   }
   return etapas;
 }

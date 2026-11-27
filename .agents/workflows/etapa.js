@@ -1,13 +1,13 @@
 export const meta = {
   name: 'etapa',
-  description: 'Programa una etapa, o varias juntas, desde su plan ejecutable, en cinco fases: 1) programar: el contrato y después los carriles del back (cada uno en su copia) y el front a la vez, cada tarea con su test dirigido, el build y su commit; 2) revisar en paralelo: un revisor por cada ficha de docs/rules/ que tocan los archivos de la etapa, los transversales de arquitectura y de lo que no está en la spec, uno adversarial por cada tema de riesgo tocado y los tests enteros con los detectores de documentación; 3) arreglar lo encontrado, sin repetidos, un agente por repo; 4) una última revisión del diff entero; 5) cerrar el plan y commitear. Con varias etapas, la 1 corre para cada una y de la 2 a la 5, una sola vez',
+  description: 'Programa una etapa, o varias juntas, desde su plan ejecutable, en cinco fases: 1) programar: el contrato y después los carriles del back (cada uno en su copia) y el front a la vez, cada tarea con su test dirigido, el build y su commit; 2) revisar en paralelo: un revisor por cada ficha de docs/rules/ que tocan los archivos de la etapa, los transversales de arquitectura y de lo que no está en la spec, uno adversarial por cada tema de riesgo tocado y los tests enteros con los detectores de documentación; 3) arreglar lo encontrado, sin repetidos, un agente por repo; 4) una última revisión del diff entero; 5) el cierre con el código listo: el plan retirado, su sección de verificación al backlog y el commit. La verificación (integración, E2E, galería y recorrido) va aparte, con verificar-etapa.js. Con varias etapas, la 1 corre para cada una y de la 2 a la 5, una sola vez',
   whenToUse: 'Cuando el usuario pide programar, retomar o cerrar una etapa con plan ejecutable (docs/plans/AAAA-MM-DD-etapa-*.md), o varias juntas. args: { plan | planes: [rutas], modo?: todo|programar|cerrar|planificar, solo?: [ids], usuarioListo?: true, carrilesBack?: 2, modelos?: { front, back, revisa }, topeCupo?: 85 }. Guía: docs/guides/conducir-una-etapa.md',
   phases: [
     { title: 'Programar', detail: 'leer el plan, el contrato y después los carriles del back (cada uno en su copia) y el front, a la vez' },
     { title: 'Revisión', detail: 'en paralelo: un revisor por ficha tocada, los dos transversales, uno adversarial por tema de riesgo y los tests enteros con los detectores' },
     { title: 'Arreglos', detail: 'lo encontrado, sin repetidos: un agente por repo comprueba cada hallazgo y arregla lo real' },
     { title: 'Última revisión', detail: 'el diff entero de la etapa con los arreglos: lo chico lo arregla, lo demás va al backlog' },
-    { title: 'Cierre', detail: 'la spec cerrada, el plan retirado, la hoja de ruta, el backlog y el commit' },
+    { title: 'Cierre', detail: 'código listo: la spec cerrada, el plan retirado, la hoja de ruta, la verificación al backlog y el commit' },
   ],
 }
 
@@ -42,6 +42,8 @@ if (!Number.isInteger(TOPE_CUPO) || TOPE_CUPO < 1 || TOPE_CUPO > 100) throw new 
 const PASOS_POR_AGENTE = 80
 const VUELTAS = 6
 const PRESUPUESTO = typeof budget === 'undefined' ? null : budget
+// El primer hito de una etapa; el segundo, «verificada», lo da verificar-etapa.js (pedido del usuario del 2026-11-27).
+const CODIGO_LISTO = 'código listo'
 const MINIMO_DE_PRESUPUESTO = 250000
 
 function claveDe(plan) {
@@ -83,7 +85,8 @@ const SIN_AGREGAR = `Lo que no está en la spec no se agrega:
 // Pedido del usuario del 2026-11-27: un revisor chico y enfocado por cada ficha de docs/rules/ (del back y del front)
 // que tocan los archivos que cambió la etapa; dos transversales («Arquitectura, clean code y SOLID» y «Lo que no está
 // en la spec»); uno adversarial por cada tema de riesgo que tocan esos archivos; y los tests enteros. Todos a la vez.
-// Las pantallas contra el tablero, el E2E y el recorrido van en la prueba integral del cierre del bloque E12–E25.
+// Las pantallas contra el tablero, el E2E y el recorrido van en la verificación de la etapa (verificar-etapa.js), el
+// segundo hito, que corre sobre una copia del corte mientras se programa la siguiente.
 
 /** Un patrón de rutas (** cualquier carpeta, * dentro de una, ? un carácter) como expresión regular, sin mayúsculas. */
 function patronARegex(patron) {
@@ -440,7 +443,7 @@ const S_ULTIMA = {
   required: ['estado', 'commits', 'arreglados', 'alBacklog', 'archivosSinCommit', 'motivo', 'verificacion'],
 }
 
-const S_CIERRE = { type: 'object', properties: { commits: LISTA, cerradas: LISTA, motivo: TEXTO }, required: ['commits', 'cerradas', 'motivo'] }
+const S_CIERRE = { type: 'object', properties: { commits: LISTA, listas: LISTA, motivo: TEXTO }, required: ['commits', 'listas', 'motivo'] }
 
 // ---------- Prompts ----------
 
@@ -455,7 +458,7 @@ El plan ejecutable es ${ctx.PLAN}. La clave de sus commits es «${ctx.CLAVE}»: 
 Devolvé:
 1. etapa: el nombre de la etapa, como lo dice el título del plan.
 2. bloqueos: lo que impide empezar a programar hoy, uno por línea, o la lista vacía:
-   - el plan dice que va después de otra etapa, y esa no cerró según la hoja de ruta (docs/plans/2026-09-27-plan-de-desarrollo.md) o su propio plan.${sigue}
+   - el plan dice que va después de otra etapa, y esa no tiene el código listo según la hoja de ruta (docs/plans/2026-09-27-plan-de-desarrollo.md) o su propio plan: su fila dice «Código listo», «Verificada» o «Cerrada». Que todavía corra su verificación no es un bloqueo: va a la vez que esta etapa.${sigue}
    - una decisión que el plan deja abierta en «Para decidir» y nadie tomó;
    - la app levantada: un proceso de Aspire (aspire o dcp) o de Vite (node con vite en su línea de comando);
    - cambios sin commitear de otra sesión en los archivos que la etapa va a tocar (git status de los dos repos). Los de otra área no bloquean: van en notas. Tampoco bloquean los de una tarea de este mismo plan que dejó una corrida anterior frenada (tocan los archivos de esa tarea, o están en una copia .local/copias/${ctx.CLAVE}-back-*): van en notas, con la tarea y la copia, y esa tarea los continúa.
@@ -527,7 +530,7 @@ ${t.texto}
 """
 Sus pasos, archivos y tests están en la spec que nombra el plan. Ya están commiteadas: ${ctx.hechas()}. Lo que el texto dice de avisarle a la Guía o de esperarla lo resuelve el conductor: no esperes a nadie, no avises y no hagas otra tarea.
 ${mapa}${cambios}${sigue}
-El texto del chat y el plan pueden pedir, por tarea, los tests rápidos enteros, la integración de las áreas o la revisión adversarial antes del commit: eso cambió el 2026-11-26 y no se hace. Tampoco corrés el E2E real, la galería ni el recorrido: desde el 2026-11-27 corren una vez, en la prueba integral del cierre del bloque E12–E25. Vale lo de abajo.
+El texto del chat y el plan pueden pedir, por tarea, los tests rápidos enteros, la integración de las áreas o la revisión adversarial antes del commit: eso cambió el 2026-11-26 y no se hace. Tampoco corrés el E2E real, la galería ni el recorrido: desde el 2026-11-27 corren una vez, en la verificación de la etapa, después del código listo. Vale lo de abajo.
 
 Cómo trabajás:
 - Código primero (pedido del usuario del 2026-11-26): el código y su test dirigido, en rojo y después en verde, y al terminar solo el build o los tipos, como dice abajo. Nada de suites enteras ni integración: corren una vez, al final. Si en tu copia o en tu repo hay cambios sin commitear de un agente anterior de esta misma tarea (la corrida anterior se frenó el 2026-11-26 para pasar a código primero), seguí desde ahí. Si son de otra tarea, no los toques ni los borres: devolvé bloqueada nombrándolos.
@@ -598,7 +601,7 @@ Lo que revisás son los cambios de la etapa en los dos repos: los commits con la
 Tu premisa, y solo ella:
 ${p.foco(C)}
 
-De la «Lista de control» de .agents/skills/puerta/SKILL.md, mirás ${p.puntos}. Las reglas son ${p.reglas}. Lo demás lo miran otros revisores o la prueba integral del bloque: no lo nombres. ${delPlan(C)}
+De la «Lista de control» de .agents/skills/puerta/SKILL.md, mirás ${p.puntos}. Las reglas son ${p.reglas}. Lo demás lo miran otros revisores o la verificación de la etapa: no lo nombres. ${delPlan(C)}
 
 Devolvé solo problemas reales del código de la etapa. En repo, back o front; archivo y línea; en punto, el número de la lista o la regla; en escenario, qué hace alguien y qué pasa, en una línea; en regla, la que se rompe; y en porque, la evidencia que te convenció. Una lista vacía es un resultado válido: no inventes.`
 }
@@ -616,7 +619,7 @@ function pTests(C) {
 3. Leé solo los resúmenes y, de lo que falla, sus líneas. Un test que se pasó de tiempo se corre una vez más, solo: si así pasa, era la carga de la PC y no cuenta.
 4. Al terminar, aspire stop si algo quedó levantado, y borrá ${copias}.
 
-Sin E2E real, galería ni recorrido: van en la prueba integral del cierre del bloque E12–E25 (pedido del usuario del 2026-11-27).
+Sin E2E real, galería ni recorrido: van en la verificación de la etapa, el segundo hito (pedido del usuario del 2026-11-27).
 
 Devolvé en tabla una fila por paso, con su resultado y su número (por ejemplo, «1989/1989»). Cada test que falla, cada advertencia del build y cada hallazgo de un detector es un hallazgo: repo; archivo y línea, los del test o los que da el detector; en punto, el paso; en escenario, la causa en una línea; en regla, «tests enteros» o el detector; en porque, la salida que lo muestra; y gravedad alta. Sin fallos, la lista vacía.
 
@@ -655,18 +658,16 @@ function lineaParaDespues(p) {
   return `- **${p.que}.** ${p.porQue} Dónde: ${p.donde} (${p.tarea}).`
 }
 
-// Con el cierre entero, la sección «Al cierre del bloque E12–E25» del plan pasa entera al backlog antes de retirarlo:
-// la prueba integral del bloque escribe y corre desde ahí el E2E, el recorrido y la galería de la etapa.
+// Con el código listo, la sección «Verificación de la etapa» del plan pasa entera al backlog antes de retirarlo:
+// verificar-etapa.js escribe y corre desde ahí el E2E, el recorrido y la galería de la etapa, y la saca al verificarla.
 function seccionDelBacklog(E, retira) {
   const lineas = E.PARA_DESPUES_DEL_PLAN.length ? `una línea por cosa que no esté ya, así:
 ${E.PARA_DESPUES_DEL_PLAN.map(lineaParaDespues).join('\n')}` : ''
-  if (retira) {
-    return `
-- En docs/backlog.md, la sección «## Para después de la etapa ${E.ctx.CLAVE}», al final si todavía no está: antes del git rm, la sección «Al cierre del bloque E12–E25» del plan pasa ahí entera${lineas ? `, y después ${lineas}` : '.'}`
-  }
-  if (!lineas) return ''
+  const paraDespues = lineas ? `
+- En docs/backlog.md, la sección «## Para después de la etapa ${E.ctx.CLAVE}», al final si todavía no está, con ${lineas}` : ''
+  if (!retira) return paraDespues
   return `
-- En docs/backlog.md, la sección «## Para después de la etapa ${E.ctx.CLAVE}», al final si todavía no está, con ${lineas}`
+- En docs/backlog.md, la sección «## Verificación de la etapa ${E.ctx.CLAVE}», al final: antes del git rm, la sección «Verificación de la etapa» del plan (en los planes de antes del 2026-11-27, «Al cierre del bloque E12–E25») pasa ahí entera, para la verificación.${paraDespues}`
 }
 
 function estadoDeLasTareas(E) {
@@ -678,8 +679,9 @@ function estadoDeLasTareas(E) {
 
 /**
  * El cierre, uno para todos los planes del lanzamiento. Si la etapa quedó lista (código, arreglos y última revisión
- * hechos), se cierra: la spec cerrada, el plan retirado, la hoja de ruta y el backlog, como en 82087a6a. Si no, solo
- * la tabla de estado del plan y lo de para después.
+ * hechos), queda con el código listo, el primer hito: la spec cerrada, el plan retirado, la hoja de ruta y el backlog,
+ * como en 82087a6a, con su sección de verificación en el backlog para verificar-etapa.js. Si no, solo la tabla de
+ * estado del plan y lo de para después.
  */
 function pCierre(Es, K) {
   const C = contextoDeCierre(Es)
@@ -695,12 +697,12 @@ ${estadoDeLasTareas(E)}
 - En «Cambios al contrato», una línea por cambio de esta corrida que todavía no esté: ${cambios(E)}.${seccionDelBacklog(E, false)}`).join('\n')}
 
 ${compartidos}
-Commiteá solo eso, con git commit -m "docs(planes): ${Es.map((E) => E.ctx.ETAPA).join(' y ')}, el estado después del conductor" -m "Tarea: ${Es[0].ctx.CLAVE}/cierre" -- <los planes>, más docs/backlog.md si lo tocaste. Si nada cambió, no commitees y devolvé commits vacío. En cerradas, la lista vacía.
+Commiteá solo eso, con git commit -m "docs(planes): ${Es.map((E) => E.ctx.ETAPA).join(' y ')}, el estado después del conductor" -m "Tarea: ${Es[0].ctx.CLAVE}/cierre" -- <los planes>, más docs/backlog.md si lo tocaste. Si nada cambió, no commitees y devolvé commits vacío. En listas, la lista vacía.
 ${copias}
 
 ${comunes(C)}`
   }
-  return `Sos el que cierra ${C.deLa}: el código está, la revisión y sus arreglos corrieron y la última revisión terminó. La fecha es la de hoy (date +%F). Cambiás solo lo que dice abajo, sin historial ni actas y en el tono de cada documento. Mirá cómo se cerraron Acciones del asistente y Costuras de módulos en el commit 82087a6a.
+  return `Sos el que deja ${C.deLa} con el código listo, el primer hito: el código está, la revisión y sus arreglos corrieron y la última revisión terminó. La verificación (la integración, el E2E real, la galería y el recorrido) es el segundo hito y va aparte, con verificar-etapa.js. La fecha es la de hoy (date +%F). Cambiás solo lo que dice abajo, sin historial ni actas y en el tono de cada documento. Mirá cómo se cerraron Acciones del asistente y Costuras de módulos en el commit 82087a6a.
 
 Los tests enteros: ${JSON.stringify(K.tests ? K.tests.tabla : [])}.
 La revisión: ${K.resumen}.
@@ -709,13 +711,13 @@ Plan ${E.ctx.PLAN} («${E.ctx.ETAPA}»), con estas tareas:
 ${estadoDeLasTareas(E)}
 - La spec que nombra pasa a «**Estado:** cerrado · se cerró el <fecha> …», y su sección del cierre dice, en una tabla corta, los tests enteros y la revisión. Lo que la etapa deja a otras queda dicho ahí, y los cambios al contrato de esta corrida también: ${cambios(E)}.
 - git rm del plan. Lo que apuntaba a él (la hoja de ruta, otras specs, el índice de formularios, el backlog, las fichas de docs/features/) pasa a apuntar a la spec.
-- En la hoja de ruta (docs/plans/2026-09-27-plan-de-desarrollo.md), la fila de la etapa dice «Cerrada el <fecha>», con lo que trajo en una o dos líneas, y cuál es la siguiente.
+- En la hoja de ruta (docs/plans/2026-09-27-plan-de-desarrollo.md), la fila de la etapa dice «Código listo el <fecha>; falta la verificación», con lo que trajo en una o dos líneas, y cuál es la siguiente.
 - Si la etapa tiene número (E12, E13…), se suma a ClosedStages en los dos repos (tests/ArquitecturaBaseMultitenant.ArchitectureTests/HarnessStage.cs y, en el front, src/test/HarnessStage.ts), como dice docs/rules/documentacion.md.
 - La documentación que nombra la sección «Revisión y cierre» del plan la escribís vos, en su lugar.${seccionDelBacklog(E, true)}`).join('\n')}
 
 Después corré node scripts/arneses/arnes.mjs estado-docs --detectar y realinear-docs --detectar, y dejalos en 0: si estado-docs pide retirar una spec cerrada que se queda como referencia, va a scripts/arneses/estado-docs/ignorados.json con su motivo y la fecha.
 ${compartidos}
-Commiteá todo junto en el back, con git commit -m "docs(planes): ${Es.map((E) => E.ctx.ETAPA).join(' y ')} ${Es.length > 1 ? 'quedan cerradas' : 'queda cerrada'} el <fecha> y se retira${Es.length > 1 ? 'n sus planes' : ' su plan'}" -m "Tarea: ${Es[0].ctx.CLAVE}/cierre" -- <rutas>; en el front, otro commit si tocaste HarnessStage.ts. Devolvé los commits y en cerradas las claves de lo que cerraste.
+Commiteá todo junto en el back, con git commit -m "docs(planes): ${Es.map((E) => E.ctx.ETAPA).join(' y ')}, código listo el <fecha>: se retira${Es.length > 1 ? 'n sus planes y sus verificaciones pasan' : ' su plan y su verificación pasa'} al backlog" -m "Tarea: ${Es[0].ctx.CLAVE}/cierre" -- <rutas>; en el front, otro commit si tocaste HarnessStage.ts. Devolvé los commits y en listas las claves de lo que dejaste con el código listo.
 ${copias}
 
 ${comunes(C)}`
@@ -1199,7 +1201,7 @@ async function cerrarPlanes(Es, K) {
   if (!Es.length || (!K.corrio && !Es.some((E) => E.ctx.corrieron))) return null
   phase('Cierre')
   const c = await agent(pCierre(Es, K), { label: 'cierre', phase: 'Cierre', schema: S_CIERRE, effort: 'medium' })
-  if (K.cerrable && c) log(`Cerradas: ${(c.cerradas || []).join(', ') || 'ninguna'}`)
+  if (K.cerrable && c) log(`Código listo: ${(c.listas || []).join(', ') || 'ninguna'}. Falta la verificación de cada una, con verificar-etapa.js`)
   return c
 }
 
@@ -1208,8 +1210,8 @@ function resultadoDe(E, K, cierre) {
   if (queFalta.length) return { resultado: 'faltan tareas', queFalta }
   if (MODO === 'programar') return { resultado: 'programada', queFalta }
   if (K.esperaAlUsuario) return { resultado: 'espera al usuario antes de revisar', queFalta }
-  // Cerrada solo si el cierre lo dice: la revisión en orden no alcanza si el agente del cierre no terminó.
-  if (K.cerrable) return { resultado: cierre && (cierre.cerradas || []).includes(E.ctx.CLAVE) ? 'cerrada' : 'revisada, sin cerrar', queFalta }
+  // Código listo solo si el cierre lo dice: la revisión en orden no alcanza si el agente del cierre no terminó.
+  if (K.cerrable) return { resultado: cierre && (cierre.listas || []).includes(E.ctx.CLAVE) ? CODIGO_LISTO : 'revisada, sin cerrar', queFalta }
   return { resultado: K.corrio ? 'revisada, sin cerrar' : 'sin revisar', queFalta }
 }
 
@@ -1220,6 +1222,7 @@ function planParaDevolver(E, K, cierre) {
     clave: E.ctx.CLAVE,
     modo: MODO,
     resultado,
+    verificacion: resultado === CODIGO_LISTO ? `falta: Workflow({ scriptPath: '.agents/workflows/verificar-etapa.js', args: { clave: '${E.ctx.CLAVE}' } })` : '',
     tareas: E.tareas.filter((t) => t.carril !== 'integracion').map((t) => {
       const r = E.R[t.id] || { estado: t.estado, motivo: t.motivo, commits: [] }
       return { id: t.id, estado: r.estado, motivo: r.motivo, commits: r.commits || [], verificacion: r.verificacion || '' }
@@ -1307,7 +1310,7 @@ const K = await revisarEtapas(programados, USUARIO_LISTO)
 const cierre = await cerrarPlanes(programados, K)
 const planes = corridos.map((E) => E.fin || planParaDevolver(E, K, cierre))
 
-let resultadoDeLaCadena = planes.every((p) => p.resultado === 'cerrada') ? 'cerradas' : 'revisadas, sin cerrar'
+let resultadoDeLaCadena = planes.every((p) => p.resultado === CODIGO_LISTO) ? CODIGO_LISTO : 'revisadas, sin cerrar'
 if (frenoEn) resultadoDeLaCadena = 'frenó'
 else if (MODO === 'programar') resultadoDeLaCadena = 'programadas'
 else if (K.esperaAlUsuario) resultadoDeLaCadena = 'espera al usuario antes de revisar'

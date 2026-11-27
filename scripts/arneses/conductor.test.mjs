@@ -56,7 +56,7 @@ function respondedor(lect, propias = {}) {
     if (label === 'tests enteros') return tests();
     if (label.startsWith('arreglos · ')) return commit('arreglo');
     if (label === 'última revisión') return ultima();
-    if (label === 'cierre') return { commits: ['c-cierre'], cerradas: ['prueba', 'a', 'b'], motivo: '' };
+    if (label === 'cierre') return { commits: ['c-cierre'], listas: ['prueba', 'a', 'b'], motivo: '' };
     throw new Error(`etiqueta sin respuesta: ${label}`);
   };
 }
@@ -121,6 +121,7 @@ test('conductor: el lector bloquea solo por cambios de otra sesión: lo de una c
   assert.match(leer, /Tampoco bloquean los de una tarea de este mismo plan que dejó una corrida anterior frenada .*\.local\/copias\/prueba-back-\*\): van en notas, con la tarea y la copia, y esa tarea los continúa/);
   assert.match(leer, /Los agentes que lista ListAgents .* no son un bloqueo: un conductor frenado no sigue vivo/);
   assert.match(leer, /Las I no corren como tareas: las cubren la revisión, los arreglos, la última revisión y el cierre/);
+  assert.match(leer, /esa no tiene el código listo según la hoja de ruta .*: su fila dice «Código listo», «Verificada» o «Cerrada»\. Que todavía corra su verificación no es un bloqueo/, 'la etapa siguiente no espera la verificación de la anterior');
 });
 
 test('conductor: con topeCupo, el usuario deja pasar el 85 %, y los agentes miran ese tope', async () => {
@@ -258,20 +259,24 @@ test('conductor: las cinco fases en orden: programar, revisión en paralelo, arr
   assert.match(promptDe(llamadas, 'arreglos · back'), /dos guardados \(dos guardados\.cs:3\).*Lo vio: Regla · back\/guardado/);
   assert.match(promptDe(llamadas, 'última revisión'), /back: 0 arreglados y 0 descartados de 1 \(hecha\)/);
   const cierre = promptDe(llamadas, 'cierre');
-  assert.match(cierre, /Sos el que cierra la etapa «Etapa de prueba» \(plan docs\/plans\/2026-11-19-etapa-prueba\.md\)/);
+  assert.match(cierre, /Sos el que deja la etapa «Etapa de prueba» \(plan docs\/plans\/2026-11-19-etapa-prueba\.md\) con el código listo, el primer hito/);
+  assert.match(cierre, /La verificación .* es el segundo hito y va aparte, con verificar-etapa\.js/);
   assert.match(cierre, /82087a6a/);
   assert.match(cierre, /git rm del plan/);
-  assert.match(cierre, /la fila de la etapa dice «Cerrada el <fecha>»/);
+  assert.match(cierre, /la fila de la etapa dice «Código listo el <fecha>; falta la verificación»/);
+  assert.doesNotMatch(cierre, /«Cerrada el <fecha>»/);
   assert.match(cierre, /ClosedStages en los dos repos/);
   assert.match(cierre, /estado-docs --detectar y realinear-docs --detectar, y dejalos en 0/);
   assert.match(cierre, /Los tests enteros: \[\{"paso":"Tests del back"/);
   assert.match(cierre, /carril\.mjs limpiar prueba-back/);
-  assert.match(cierre, /antes del git rm, la sección «Al cierre del bloque E12–E25» del plan pasa ahí entera/, 'la prueba integral del bloque sale del backlog');
+  assert.match(cierre, /la sección «## Verificación de la etapa prueba», al final: antes del git rm, la sección «Verificación de la etapa» del plan \(en los planes de antes del 2026-11-27, «Al cierre del bloque E12–E25»\) pasa ahí entera, para la verificación/, 'la verificación la lee del backlog');
+  assert.match(cierre, /código listo el <fecha>: se retira su plan y su verificación pasa al backlog" -m "Tarea: prueba\/cierre"/);
   assert.match(cierre, /La documentación que nombra la sección «Revisión y cierre» del plan la escribís vos/);
   assert.doesNotMatch(cierre, /tabla de la puerta/);
   const delPlan = /De la sección «Revisión y cierre» de docs\/plans\/2026-11-19-etapa-prueba\.md: los riesgos que suma son ítems de tu lista de control/;
   for (const l of ['revisión · Regla · back/guardado', ...TRANSVERSALES.map((t) => `revisión · ${t}`), 'última revisión']) assert.match(promptDe(llamadas, l), delPlan, l);
-  assert.equal(resultado.resultado, 'cerrada');
+  assert.equal(resultado.resultado, 'código listo');
+  assert.equal(resultado.verificacion, "falta: Workflow({ scriptPath: '.agents/workflows/verificar-etapa.js', args: { clave: 'prueba' } })");
   assert.equal(resultado.revision.hallazgos, 2);
   assert.deepEqual(resultado.arreglos.map((a) => a.repo), ['back', 'front']);
 });
@@ -345,7 +350,7 @@ test('conductor: los tests enteros corren en copias de HEAD con la fila pesada y
   assert.match(t, /npm run build, npm run lint, npm test .* y npm run contracts:check/);
   assert.match(t, /realinear-docs --detectar, estado-docs --detectar y conformidad --detectar --plan docs\/plans\/2026-11-19-etapa-prueba\.md/);
   assert.match(t, /borrá \.local\/copias\/prueba-tests/);
-  assert.match(t, /Sin E2E real, galería ni recorrido: van en la prueba integral del cierre del bloque E12–E25/);
+  assert.match(t, /Sin E2E real, galería ni recorrido: van en la verificación de la etapa, el segundo hito/);
   assert.doesNotMatch(t, /test:e2e:real|capturar-etapa|recorrido-usuario/);
   assert.match(t, /Cada test que falla, cada advertencia del build y cada hallazgo de un detector es un hallazgo/);
 });
@@ -380,7 +385,7 @@ test('conductor: sin hallazgos no hay arreglos, y la última revisión corre igu
   assert.equal(u.effort, 'high');
   assert.match(u.prompt, /Los arreglos de la revisión: no hubo hallazgos\./);
   assert.match(u.prompt, /git log --grep "Tarea: prueba\/" --format="%H %s"/);
-  assert.equal(resultado.resultado, 'cerrada');
+  assert.equal(resultado.resultado, 'código listo');
 });
 
 test('conductor: la última revisión arregla lo chico y manda lo demás al backlog, sin otra ronda', async () => {
@@ -598,8 +603,8 @@ test('conductor: lo de para después se junta de cada agente y el cierre lo escr
 
   const sinNada = await correr(respondedor(lectura([tarea('B1', 'back')])), { plan: PLAN });
   const cierreSinNada = promptDe(sinNada.llamadas, 'cierre');
-  assert.match(cierreSinNada, /«## Para después de la etapa prueba», al final si todavía no está: antes del git rm, la sección «Al cierre del bloque E12–E25» del plan pasa ahí entera\./);
-  assert.doesNotMatch(cierreSinNada, /- \*\*/, 'sin nada para después, solo lo del bloque');
+  assert.match(cierreSinNada, /«## Verificación de la etapa prueba», al final: antes del git rm, .* pasa ahí entera, para la verificación\./);
+  assert.doesNotMatch(cierreSinNada, /- \*\*|Para después de la etapa/, 'sin nada para después, solo la sección de verificación');
   assert.deepEqual(sinNada.resultado.paraDespues, []);
 });
 
@@ -620,8 +625,8 @@ function respondedorDePlanes(porClave, juntas = respondedor(lectura([]))) {
 test('conductor: con planes, la fase 1 corre para cada uno en orden, y de la 2 a la 5 una sola vez, juntas', async () => {
   const resp = respondedorDePlanes({ a: respondedor(lectura([tarea('B1', 'back')])), b: respondedor(lectura([tarea('B1', 'back')])) });
   const { resultado, etiquetas, llamadas } = await correr(resp, { planes: [PA, PB] });
-  assert.equal(resultado.resultado, 'cerradas');
-  assert.deepEqual(resultado.planes.map((p) => `${p.clave}: ${p.resultado}`), ['a: cerrada', 'b: cerrada']);
+  assert.equal(resultado.resultado, 'código listo');
+  assert.deepEqual(resultado.planes.map((p) => `${p.clave}: ${p.resultado}`), ['a: código listo', 'b: código listo']);
   assert.equal(resultado.frenoEn, null);
   const i = (e) => etiquetas.indexOf(e);
   assert.ok(i('a · B1 · programa') < i('b · leer el plan'), 'uno después del otro');
@@ -634,7 +639,7 @@ test('conductor: con planes, la fase 1 corre para cada uno en orden, y de la 2 a
   assert.match(promptDe(llamadas, 'última revisión'), /las etapas «Etapa de prueba» \(plan docs\/plans\/2026-11-20-etapa-a\.md\), «Etapa de prueba» \(plan docs\/plans\/2026-11-21-etapa-b\.md\), que se revisan y se cierran juntas/);
   const cierre = promptDe(llamadas, 'cierre');
   assert.match(cierre, /Plan docs\/plans\/2026-11-20-etapa-a\.md .*\n[\s\S]*Plan docs\/plans\/2026-11-21-etapa-b\.md/);
-  assert.match(cierre, /quedan cerradas el <fecha> y se retiran sus planes/);
+  assert.match(cierre, /código listo el <fecha>: se retiran sus planes y sus verificaciones pasan al backlog/);
   assert.match(cierre, /carril\.mjs limpiar a-back y node scripts\/arneses\/carril\.mjs limpiar b-back/);
 });
 
@@ -656,7 +661,7 @@ test('conductor: planes frena con una pregunta abierta, un paso del usuario o un
   }
   const soloMirar = respondedor(lectura([tarea('B1', 'back')], { pasosDelUsuario: [{ paso: 'la prueba integral del bloque', cuando: 'despues', soloMirar: true }] }));
   const sigue = await correr(respondedorDePlanes({ a: soloMirar, b: respondedor(lectura([tarea('B1', 'back')])) }), { planes: [PA, PB] });
-  assert.equal(sigue.resultado.resultado, 'cerradas', 'mirar no frena');
+  assert.equal(sigue.resultado.resultado, 'código listo', 'mirar no frena');
 });
 
 test('conductor: con planes, si el siguiente no termina su código no se revisa nada, y el cierre deja al día los dos', async () => {
@@ -670,13 +675,13 @@ test('conductor: con planes, si el siguiente no termina su código no se revisa 
   assert.match(cierre, /Plan docs\/plans\/2026-11-20-etapa-a\.md[\s\S]*Plan docs\/plans\/2026-11-21-etapa-b\.md/);
 
   const lectorCaido = await correr(respondedorDePlanes({ a: respondedor(lectura([tarea('B1', 'back')])), b: respondedor(lectura([]), { 'leer el plan': null }) }), { planes: [PA, PB] });
-  assert.equal(lectorCaido.resultado.planes[0].resultado, 'cerrada', 'lo del plan anterior se revisa y se cierra');
+  assert.equal(lectorCaido.resultado.planes[0].resultado, 'código listo', 'lo del plan anterior se revisa y se cierra');
   assert.match(lectorCaido.resultado.frenoEn.porque[0], /no empezó: El agente que lee el plan docs\/plans\/2026-11-21-etapa-b\.md no terminó/);
 });
 
 test('conductor: plan solo devuelve el plan, y los argumentos de planes se validan', async () => {
   const { resultado, etiquetas } = await correr(respondedor(lectura([tarea('B1', 'back')])), { plan: PLAN });
-  assert.equal(resultado.resultado, 'cerrada');
+  assert.equal(resultado.resultado, 'código listo');
   assert.equal(resultado.planes, undefined, 'con plan devuelve el plan, no la cadena');
   assert.ok(etiquetas.includes('leer el plan'), 'sin la clave adelante');
   await assert.rejects(correr(respondedor(lectura([])), { plan: PLAN, planes: [PA] }), /plan o planes/);

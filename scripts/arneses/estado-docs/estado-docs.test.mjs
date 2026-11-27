@@ -120,6 +120,18 @@ test('estados: una etapa cerrada en el plan tiene que estar en ClosedStages, y a
   assert.match(sobra[0].real, /E10/);
 });
 
+test('estados: con los dos hitos, «Código listo» y «Verificada» cuentan como cerradas', async () => {
+  const conHitos = [
+    '| Etapa | Estado |', '|---|---|', '| 8 · WhatsApp | Cerrada |', '| 9 · Endurecimiento | Código listo el 2026-11-28; falta la verificación |',
+    '| 10 · Operación | Verificada el 2026-11-29 |', '| 11 · Atención | Pendiente |',
+  ].join('\n');
+  const archivos = { [PLAN]: `# Hoja de ruta\n\n**Estado:** en curso\n\n[backlog](../backlog.md)\n\n${conHitos}` };
+  assert.deepEqual(await estados.detectar(contexto({ archivos, cerradas: [8, 9, 10] })), []);
+  const falta = await estados.detectar(contexto({ archivos, cerradas: [8, 9] }));
+  assert.deepEqual(tipos(falta), ['etapa-sin-cerrar']);
+  assert.match(falta[0].real, /E10: el plan de desarrollo la da por cerrada/);
+});
+
 test('estados: un insumo dice cuándo se retira', async () => {
   const sinFin = await estados.detectar(contexto({ archivos: { 'docs/plans/x.md': '# X\n\n**Estado:** insumo · material\n' } }));
   assert.deepEqual(tipos(sinFin), ['insumo-sin-fin']);
