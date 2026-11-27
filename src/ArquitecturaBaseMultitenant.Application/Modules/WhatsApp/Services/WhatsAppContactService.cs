@@ -69,7 +69,7 @@ internal sealed class WhatsAppContactService(IWhatsAppContactReader reader, IWha
             var saved = await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
                 if (await customers.GetAsync(id, request.Version, ct) is not { } customer) return Result.Failure(WhatsAppErrors.ContactNotFound);
-                customer.Rename(request.Name);
+                customer.RenameByPerson(request.Name, clock.GetUtcNow().UtcDateTime);
                 customer.ReplaceTags(request.Tags!);
                 if (request.Consent is { } consent) customer.ChangeConsent(consent, WhatsAppConsentSource.Manual, clock.GetUtcNow().UtcDateTime);
                 return Result.Success();

@@ -44,6 +44,18 @@ public sealed class WhatsAppCustomer : Entity, ITenantOwned, IVersioned
         Name = string.IsNullOrWhiteSpace(name) ? null : name.Trim();
     }
 
+    /// <summary>
+    /// Una persona cambia el nombre en la ficha. Si lo cambió o lo vació, el del perfil ya no lo vuelve a llenar (C14); si lo dejó
+    /// igual (editó solo las etiquetas o el consentimiento), el contacto sin nombre todavía puede tomar el del perfil.
+    /// </summary>
+    public void RenameByPerson(string? name, DateTime nowUtc)
+    {
+        if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC required.", nameof(nowUtc));
+        var before = Name;
+        Rename(name);
+        if (!string.Equals(before, Name, StringComparison.Ordinal)) ProfileNameTakenAtUtc ??= nowUtc;
+    }
+
     public void ReplaceTags(IEnumerable<string> values)
     {
         ArgumentNullException.ThrowIfNull(values);

@@ -29,4 +29,27 @@ public sealed class WhatsAppCustomerTests
         Assert.False(customer.TakeProfileName("Anita", Now));
         Assert.Equal(("Ana de Ventas", Now), (customer.Name, customer.ProfileNameTakenAtUtc));
     }
+
+    [Fact]
+    public void A_name_a_person_emptied_before_the_profile_arrived_is_not_filled_again()
+    {
+        // Un contacto con nombre (de antes de la E12 o de una importación) que todavía no tomó el perfil.
+        var customer = WhatsAppCustomer.Create(PhoneNumber.Create("+5491134567890").Value, Now);
+        customer.Rename("Ana de Ventas");
+        customer.RenameByPerson(null, Now);
+
+        Assert.False(customer.TakeProfileName("Anita", Now.AddDays(1)));
+        Assert.Equal((null, Now), (customer.Name, customer.ProfileNameTakenAtUtc));
+    }
+
+    [Fact]
+    public void Saving_the_card_without_touching_the_empty_name_still_lets_the_profile_fill_it()
+    {
+        var customer = WhatsAppCustomer.Create(PhoneNumber.Create("+5491134567890").Value, Now);
+        customer.RenameByPerson(null, Now);
+
+        Assert.Null(customer.ProfileNameTakenAtUtc);
+        Assert.True(customer.TakeProfileName("Ana Pérez", Now.AddDays(1)));
+        Assert.Equal("Ana Pérez", customer.Name);
+    }
 }
