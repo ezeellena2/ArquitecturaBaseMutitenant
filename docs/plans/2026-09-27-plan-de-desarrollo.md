@@ -3,7 +3,7 @@
 **Estado:** en curso · la tabla dice el estado de cada etapa. Lo que quedó para después está en el [backlog](../backlog.md).
 
 Orden vigente: **8 → 8b → 11 → 9 → base → base 2 → acciones y costuras, a la vez → 12 → 13 → 14 → 15 → 16 → 17 → 18 → 19 → 20 → 21 → 22 → 23 → 24 → 25 → módulos y suscripciones**. [AGENTS.md](../../AGENTS.md) define el modo rápido:
-contrato primero; back y front a la vez; la revisión en paralelo, con los tests enteros; los arreglos; la última revisión de código y el cierre, sin puerta por etapa ([conducir una etapa](../guides/conducir-una-etapa.md)). Tras un arreglo se verifica sólo lo afectado.
+contrato primero; back y front a la vez; la revisión en paralelo, con los tests enteros; los arreglos; la última revisión de código y el cierre, sin puerta por etapa. Cada etapa tiene dos hitos: «Código listo», con el conductor, y «Verificada», con la integración, el E2E real, la galería y el recorrido sobre una copia del corte, mientras se programa la siguiente ([conducir una etapa](../guides/conducir-una-etapa.md)). Tras un arreglo se verifica sólo lo afectado.
 La tabla indica el estado; las reglas y conducta viven en fichas, ADR y features.
 El historial se recupera con git show historial-docs:<ruta>, sin cargar planes cerrados. Los planes y la revisión retirados el 2026-10-13 (E8, E8b, correctivos y limpieza) y el 2026-10-31 (E9 y E11) se encuentran con git log --diff-filter=D -- <ruta> y se leen con git show <commit>^:<ruta>.
 
@@ -81,5 +81,5 @@ Una organización arma formularios, los manda por WhatsApp a sus empleados y a s
 - **Cómo se trabaja cada etapa:**
   - se escribe en el formato de [etapa en paralelo](../guides/etapa-en-paralelo.md) cuando le toca;
   - sus tableros se dibujan en el lienzo antes de programar;
-  - cierra sin puerta (pedido del usuario, 2026-11-27): su E2E real, su galería y su recorrido corren una sola vez, en la prueba integral del cierre del bloque, que junta la sección «Al cierre del bloque E12–E25» de cada plan (la de un plan retirado, en el [backlog](../backlog.md)) y lo que dejaron Acciones del asistente y Costuras de módulos en sus secciones «Para después de la etapa…» del backlog. Con ella va la revisión de arquitectura de Formularios.
+  - cierra sin puerta y en dos hitos (pedido del usuario, 2026-11-27): «Código listo», con el conductor, y «Verificada», con su E2E real, su galería y su recorrido, desde la sección «Verificación de la etapa» de su plan (la de un plan retirado, en el [backlog](../backlog.md)), mientras se programa la siguiente. Al cerrar el bloque, la prueba integral con el usuario es la pasada final, con lo que dejaron Acciones del asistente y Costuras de módulos en sus secciones «Para después de la etapa…» del backlog, y con ella va la revisión de arquitectura de Formularios.
 - **Después:** la 26, las carpetas de formularios y catálogos (decisión 231), cuya spec se escribe después del traspaso 16; después, las integraciones (decisión 76), y los catálogos con orígenes externos. Los clientes completan formularios desde el principio (decisión 49).

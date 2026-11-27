@@ -29,9 +29,9 @@ Desde el 2026-11-27 la etapa no tiene puerta: la cierra el conductor en cuatro f
 1. **Revisión, todo a la vez:** un revisor por cada ficha de `docs/rules/` que tocan los archivos de la etapa, los transversales de arquitectura y de lo que no está en la spec, uno adversarial por cada tema de riesgo tocado, y los tests enteros: `dotnet build` sin advertencias, `dotnet test` con Docker, `npm run build`, `lint`, `test` y `contracts:check`, y los detectores de documentación (`realinear-docs`, `estado-docs` y `conformidad`).
 2. **Arreglos:** un agente por repo comprueba cada hallazgo y arregla lo real con su test dirigido.
 3. **Una última revisión** del diff entero, que arregla lo chico y manda lo demás al backlog.
-4. **El cierre y su commit:** la spec cerrada, el plan retirado, la hoja de ruta y el backlog.
+4. **El cierre y su commit:** la spec cerrada, el plan retirado, la hoja de ruta y el backlog. La etapa queda con el código listo, el primer hito.
 
-El E2E real, la galería de capturas y el recorrido de usuario corren una vez, enteros, en la prueba integral del cierre del bloque E12–E25, que escribe sus casos a partir de lo que cada plan dejó en el backlog («Al cierre del bloque E12–E25») (skills [`/puerta`](../../.agents/skills/puerta/SKILL.md) y [`/recorrido`](../../.agents/skills/recorrido/SKILL.md)). Lo que falla va a los arreglos, que corren solo su test dirigido y el build. No se repite todo al final. El resultado es una tabla corta, y no un registro de cada corrida (`AGENTS.md`, «Velocidad y cierre liviano»).
+El segundo hito, «Verificada», lo da `verificar-etapa.js` sobre una copia del corte, mientras la etapa siguiente se programa en main: escribe los casos a partir de la sección «Verificación de la etapa» (la del plan, o la que el cierre pasó al backlog) y corre una vez, enteros, la integración, el E2E real, la galería de capturas y el recorrido de usuario (skills [`/puerta`](../../.agents/skills/puerta/SKILL.md) y [`/recorrido`](../../.agents/skills/recorrido/SKILL.md)). La prueba integral del cierre del bloque E12–E25 sigue como pasada final. Lo que falla va a los arreglos, que corren solo su test dirigido y el build. No se repite todo al final. El resultado es una tabla corta, y no un registro de cada corrida (`AGENTS.md`, «Velocidad y cierre liviano»).
 
 ## Cómo se arma el plan de una etapa
 
@@ -41,6 +41,6 @@ El plan ejecutable de cada etapa trae tres secciones, una por parte:
 - «Contrato», con la tabla de rutas;
 - «Back» y «Front», con sus tareas;
 - «Revisión y cierre», con los riesgos que suma a la lista de control y la documentación que escribe el cierre;
-- «Al cierre del bloque E12–E25», con los casos del E2E, los pasos del recorrido y los tableros de la galería que va a recorrer la prueba integral.
+- «Verificación de la etapa», con los casos del E2E, los pasos del recorrido y los tableros de la galería que va a recorrer su verificación.
 
 Además trae el texto con que la Guía abre cada chat, y la sección «Cambios al contrato», vacía al empezar. Tiene unas 4.000 palabras como mucho y no lleva historial: el estado es una tabla de tareas.
