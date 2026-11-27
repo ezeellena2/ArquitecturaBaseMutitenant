@@ -114,14 +114,14 @@ public sealed class AssistantAttachmentsTests(ApiFactory factory)
         Assert.True(problem.RootElement.GetProperty("errors").TryGetProperty("attachmentIds", out _));
     }
 
-    internal static async Task<HttpResponseMessage> UploadAsync(HttpClient client, Guid conversation, uint version, Guid key, byte[] bytes, string mediaType, string boundary = "assistant-fixture-boundary")
+    internal static async Task<HttpResponseMessage> UploadAsync(HttpClient client, Guid conversation, uint version, Guid key, byte[] bytes, string mediaType, string boundary = "assistant-fixture-boundary", string root = "/api/me/assistant")
     {
         using var content = new MultipartFormDataContent(boundary);
         var file = new ByteArrayContent(bytes);
         file.Headers.ContentType = new MediaTypeHeaderValue(mediaType);
         content.Add(file, "file", "árbol.png");
         content.Add(new StringContent(System.Xml.XmlConvert.ToString(version)), "conversationVersion");
-        using var request = new HttpRequestMessage(HttpMethod.Post, $"/api/me/assistant/conversations/{conversation}/attachments") { Content = content };
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"{root}/conversations/{conversation}/attachments") { Content = content };
         request.Headers.Add("Idempotency-Key", key.ToString("D"));
         return await client.SendAsync(request, Ct);
     }

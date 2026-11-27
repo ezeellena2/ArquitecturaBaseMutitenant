@@ -161,6 +161,61 @@ public sealed class AssistantActionTurnTests
         Assert.Equal(ChatRole.Assistant, holder.Role);
     }
 
+    /// <summary>
+    /// Con las acciones selladas el turno suma la lista precargada y sus tres herramientas; cinco imágenes chicas, el máximo de
+    /// un mensaje, igual entran en el contexto y el turno termina en done, no en <c>Assistant.Provider.ContextTooLarge</c>.
+    /// </summary>
+    [Fact]
+    public async Task Five_small_images_with_the_actions_offered_fit_the_context_and_the_turn_ends_done()
+    {
+        await using var session = await AssistantTurnTestSession.CreateAsync("business", workerEnabled: false);
+        var providerModelId = await DefaultModelAsync(session);
+        var seen = new ConcurrentQueue<IReadOnlyList<ChatMessage>>();
+        var tools = new ConcurrentQueue<string>();
+        using var host = session.Host.WithWebHostBuilder(builder =>
+        {
+            builder.UseSetting("Assistant:TurnWorkerEnabled", "true");
+            builder.ConfigureTestServices(services =>
+            {
+                FakeChatClient.QualifyActions(services, providerModelId);
+                services.RemoveAll<IChatClientFactory>();
+                services.AddScoped<IChatClientFactory>(_ => new CapturingClients(seen, tools));
+            });
+        });
+        using var client = await session.LoginReplicaAsync(host);
+        using var create = AssistantTurnTestSession.Request(HttpMethod.Post, session.Path + "/conversations", "{}", Guid.NewGuid());
+        using var created = await client.SendAsync(create, Ct);
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var conversation = (await created.Content.ReadFromJsonAsync<AssistantConversationSummaryResponse>(AssistantTurnTestSession.Json, Ct))!;
+        var version = conversation.Version;
+        var attachments = new List<Guid>();
+        for (var index = 0; index < AssistantTechnicalLimits.MaxAttachments; index++)
+        {
+            using var uploaded = await AssistantAttachmentsTests.UploadAsync(client, conversation.Id, version, Guid.NewGuid(), SmallPng, "image/png",
+                root: session.Path);
+            Assert.Equal(HttpStatusCode.Created, uploaded.StatusCode);
+            attachments.Add((await uploaded.Content.ReadFromJsonAsync<AssistantAttachmentSummaryResponse>(AssistantTurnTestSession.Json, Ct))!.Id);
+            version = (await client.GetFromJsonAsync<AssistantConversationResponse>(session.Path + $"/conversations/{conversation.Id:D}",
+                AssistantTurnTestSession.Json, Ct))!.Conversation.Version;
+        }
+        using var send = AssistantTurnTestSession.Request(HttpMethod.Post, session.Path + $"/conversations/{conversation.Id:D}/messages",
+            JsonSerializer.Serialize(new { text = "Cinco imágenes de prueba.", attachmentIds = attachments, conversationVersion = version }), Guid.NewGuid());
+        using var response = await client.SendAsync(send, HttpCompletionOption.ResponseHeadersRead, Ct).WaitAsync(TimeSpan.FromSeconds(30), Ct);
+        using var stream = await AssistantSseTestReader.OpenAsync(response, Ct);
+        AssistantSseTestReader.Frame frame;
+        do frame = await stream.NextAsync(Ct); while (frame.Event is not ("done" or "error"));
+        Assert.True(frame.Event == "done", frame.Data.ToString());
+
+        var request = Assert.Single(seen);
+        Assert.Equal(AssistantTechnicalLimits.MaxAttachments, request.SelectMany(message => message.Contents).OfType<DataContent>().Count());
+        Assert.Contains(request.SelectMany(message => message.Contents).OfType<FunctionResultContent>(),
+            content => content.CallId == AssistantActionTools.PreloadCallId);
+        Assert.Contains(AssistantActionTools.ProposeKey, tools);
+    }
+
+    // El PNG de 1x1 que sube el E2E real.
+    private static readonly byte[] SmallPng = Convert.FromBase64String("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jh5kAAAAASUVORK5CYII=");
+
     private static async Task<string> DefaultModelAsync(AssistantTurnTestSession session)
     {
         using var scope = session.Host.Services.CreateScope();
