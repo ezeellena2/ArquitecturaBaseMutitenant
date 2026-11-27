@@ -123,6 +123,7 @@ internal sealed class FormCatalogImportService(IFormCatalogReader reader, IFormC
     private async Task<Result<FormCatalog>> ApplyCoreAsync(ApplyFormCatalogImportRequest request, Guid userId, FormCatalogFile file,
         CancellationToken ct)
     {
+        await repository.LockAsync([request.CatalogId], ct);
         var catalog = await repository.GetByIdAsync(request.CatalogId, request.Version!.Value, ct);
         if (catalog is null) return FormCatalogErrors.NotFound;
         if (catalog.Version != request.Version) throw new ConcurrencyConflictException("The catalog changed since it was reviewed.");

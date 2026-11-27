@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
@@ -70,16 +71,14 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
         return OperationLog.RunAsync<FormCatalogCreatedResponse>(logger, clock, "CreateFormCatalog", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            var catalog = await NewCatalogAsync(request, cancellationToken);
-            if (catalog.IsFailure) return catalog.Error;
-            var saved = await unitOfWork.ExecuteInTransactionAsync(
-                ct => CreateCoreAsync(catalog.Value, FormCatalogItemChanges.Of(request), ct), CommitPolicy.OnSuccess, cancellationToken);
+            var saved = await unitOfWork.ExecuteInTransactionAsync(ct => CreateCoreAsync(request, ct), CommitPolicy.OnSuccess,
+                cancellationToken);
             if (saved.IsFailure) return saved.Error;
+            var (catalog, identities) = saved.Value;
             // La versión es la que trajo el INSERT, nunca la de una relectura (concurrencia.md).
-            var summary = await reader.FindAsync(catalog.Value.Id, cancellationToken)
+            var summary = await reader.FindAsync(catalog.Id, cancellationToken)
                 ?? throw new InvalidOperationException("The catalog that was just created can't be read.");
-            return new FormCatalogCreatedResponse(await BuildAsync(summary with { Version = catalog.Value.Version }, cancellationToken),
-                saved.Value);
+            return new FormCatalogCreatedResponse(await BuildAsync(summary with { Version = catalog.Version }, cancellationToken), identities);
         });
     }
 
@@ -96,12 +95,19 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
         });
     }
 
-    private async Task<Result<IReadOnlyList<FormCatalogItemIdentity>>> CreateCoreAsync(FormCatalog catalog, FormCatalogItemChanges changes,
-        CancellationToken ct)
+    /// <summary>Lecturas, reglas y escrituras, en ese orden: los filtros se deciden contra su fuente dentro de la transacción.</summary>
+    private async Task<Result<(FormCatalog Catalog, IReadOnlyList<FormCatalogItemIdentity> Identities)>> CreateCoreAsync(
+        CreateFormCatalogRequest request, CancellationToken ct)
     {
-        repository.Add(catalog);
-        if (changes.Items.Count == 0) return Result.Success<IReadOnlyList<FormCatalogItemIdentity>>([]);
-        return await editor.ApplyAsync(catalog, changes, ct);
+        var catalog = await NewCatalogAsync(request, ct);
+        if (catalog.IsFailure) return catalog.Error;
+        repository.Add(catalog.Value);
+        var changes = FormCatalogItemChanges.Of(request);
+        IReadOnlyList<FormCatalogItemIdentity> none = [];
+        if (changes.Items.Count == 0) return (catalog.Value, none);
+        var applied = await editor.ApplyAsync(catalog.Value, changes, ct);
+        if (applied.IsFailure) return applied.Error;
+        return (catalog.Value, applied.Value);
     }
 
     /// <summary>
@@ -111,8 +117,11 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
     private async Task<Result<(FormCatalog Catalog, IReadOnlyList<FormCatalogItemIdentity> Identities)>> UpdateCoreAsync(
         UpdateFormCatalogRequest request, CancellationToken ct)
     {
+        await repository.LockAsync([request.CatalogId], ct);
         var catalog = await repository.GetByIdAsync(request.CatalogId, request.Version!.Value, ct);
         if (catalog is null) return FormCatalogErrors.NotFound;
+        // Con una versión vieja, el 409 común antes de cualquier regla de las opciones: la pantalla abre el conflicto (concurrencia.md).
+        if (catalog.Version != request.Version) throw new ConcurrencyConflictException("The catalog changed since it was read.");
         if (request.IsActive!.Value) catalog.Reactivate();
         catalog.Rename(request.Name!, request.Description);
 

@@ -4,11 +4,20 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Forms.Interfaces.Persi
 
 /// <summary>
 /// Prepara los cambios de los catálogos y sus opciones dentro de la transacción del servicio llamador. Cambiar las opciones de un
-/// catálogo va bajo su bloqueo (C4): <see cref="GetByIdAsync"/> lo toma antes de leerlo, y lo demás se lee después.
+/// catálogo va bajo su bloqueo (C4): <see cref="LockAsync"/> lo toma antes de leerlo, y lo demás se lee después.
 /// </summary>
 public interface IFormCatalogRepository
 {
-    /// <summary>El catálogo, seguido para escribir, después de tomar su bloqueo; compara la versión al confirmar (409).</summary>
+    /// <summary>
+    /// Toma el bloqueo de cada catálogo (advisory, en orden) dentro de la transacción del llamador; va antes de leer el catálogo y
+    /// sus opciones.
+    /// </summary>
+    Task LockAsync(IReadOnlyCollection<Guid> catalogIds, CancellationToken ct);
+
+    /// <summary>
+    /// El catálogo, seguido para escribir; compara la versión al confirmar (409). Se lee después de <see cref="LockAsync"/>, y el
+    /// servicio compara la versión antes de sus reglas, así una versión vieja da siempre el 409 común.
+    /// </summary>
     Task<FormCatalog?> GetByIdAsync(Guid catalogId, uint expectedVersion, CancellationToken ct);
 
     /// <summary>Las opciones pedidas del catálogo, seguidas; una de otro catálogo no viene.</summary>

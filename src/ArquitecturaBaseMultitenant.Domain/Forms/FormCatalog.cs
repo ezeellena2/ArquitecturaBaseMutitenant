@@ -51,12 +51,17 @@ public sealed class FormCatalog : Entity, ITenantOwned, IAuditable, IVersioned
         Description = trimmedDescription;
     }
 
-    /// <summary>Cambia los filtros de un catálogo de miembros o de contactos; uno a mano no tiene filtros.</summary>
+    /// <summary>
+    /// Cambia los filtros de un catálogo de miembros o de contactos; uno a mano no tiene filtros. Los mismos filtros no cambian la
+    /// columna: la base devuelve el <c>jsonb</c> con otro orden y otros espacios, así que se compara lo que dicen, no el texto, y un
+    /// guardado sin cambios no audita un cambio de filtros.
+    /// </summary>
     public Result ChangeFilters(FormCatalogFilters filters)
     {
         ArgumentNullException.ThrowIfNull(filters);
         if (Source == FormCatalogSource.Manual) return FormCatalogErrors.WrongSource;
-        Filters = filters.ToJson();
+        var next = filters.ToJson();
+        if (!string.Equals(ReadFilters()?.ToJson(), next, StringComparison.Ordinal)) Filters = next;
         return Result.Success();
     }
 

@@ -10,10 +10,16 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Forms.Persistence.R
 /// <summary>Prepara la escritura de los catálogos y sus opciones; el guardado ocurre en la UoW del caso de uso.</summary>
 internal sealed class FormCatalogRepository(ApplicationDbContext context, ITenantContext tenantContext) : IFormCatalogRepository
 {
+    public Task LockAsync(IReadOnlyCollection<Guid> catalogIds, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(catalogIds);
+        var tenantId = RequireTenant();
+        return context.AcquireAdvisoryLocksAsync(catalogIds.Select(catalogId => AdvisoryLockKeys.For(tenantId, "forms-catalog", catalogId)), ct);
+    }
+
     public async Task<FormCatalog?> GetByIdAsync(Guid catalogId, uint expectedVersion, CancellationToken ct)
     {
         var tenantId = RequireTenant();
-        await context.AcquireAdvisoryLocksAsync([AdvisoryLockKeys.For(tenantId, "forms-catalog", catalogId)], ct);
         var catalog = await context.Set<FormCatalog>().SingleOrDefaultAsync(value => value.TenantId == tenantId && value.Id == catalogId, ct);
         if (catalog is not null) context.Entry(catalog).Property(value => value.Version).OriginalValue = expectedVersion;
         return catalog;

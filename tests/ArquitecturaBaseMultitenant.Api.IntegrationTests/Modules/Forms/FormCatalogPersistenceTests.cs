@@ -73,6 +73,7 @@ public sealed class FormCatalogPersistenceTests(ApiFactory factory)
         // Un guardado intercambia códigos y posiciones: a mitad de camino se repiten, y al confirmar ya no.
         var swapped = await WriteAsync(tenantId, async (repository, ctx) =>
         {
+            await repository.LockAsync([catalog.Id], ctx);
             var locked = await repository.GetByIdAsync(catalog.Id, catalog.Version, ctx);
             Assert.NotNull(locked);
             var items = await repository.ListAllItemsAsync(catalog.Id, ctx);
@@ -93,6 +94,7 @@ public sealed class FormCatalogPersistenceTests(ApiFactory factory)
         // antes, bajo el bloqueo del catálogo, y un choque al confirmar sería un 500 (C4), por eso la UoW no lo traduce.
         var repeated = await Assert.ThrowsAsync<PostgresException>(() => WriteAsync(tenantId, async (repository, ctx) =>
         {
+            await repository.LockAsync([catalog.Id], ctx);
             var locked = await repository.GetByIdAsync(catalog.Id, current.Version, ctx);
             repository.Add(FormCatalogItem.Create(locked!, 0, "a", "Tres", null, null, true, 2).Value);
             return Result.Success();
@@ -102,6 +104,7 @@ public sealed class FormCatalogPersistenceTests(ApiFactory factory)
 
         var position = await Assert.ThrowsAsync<PostgresException>(() => WriteAsync(tenantId, async (repository, ctx) =>
         {
+            await repository.LockAsync([catalog.Id], ctx);
             var locked = await repository.GetByIdAsync(catalog.Id, current.Version, ctx);
             repository.Add(FormCatalogItem.Create(locked!, 0, "C", "Tres", null, null, true, 1).Value);
             return Result.Success();

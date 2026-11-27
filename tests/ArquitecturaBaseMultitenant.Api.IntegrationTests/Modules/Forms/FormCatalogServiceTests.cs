@@ -75,6 +75,50 @@ public sealed class FormCatalogServiceTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Saving_the_same_filters_does_not_audit_a_change_of_filters()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var tenantId = await OrganizationAsync(ct);
+        var filters = new FormCatalogFiltersInput(1, [], true, null, null);
+        var members = Value(await RunAsync(tenantId, service => service.CreateAsync(new CreateFormCatalogRequest("Equipo", null,
+            FormCatalogSource.Members, null, null, filters, null, null), ct))).Catalog;
+        var auditsBefore = await CountItemAuditsAsync(tenantId, [members.Id], ct);
+        Assert.True(auditsBefore > 0);
+
+        // La base guarda el jsonb con otro orden y otros espacios: los mismos filtros no son un cambio.
+        var saved = Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(members) with { Filters = filters }, ct)));
+
+        Assert.NotEqual(members.Version, saved.Version);
+        Assert.Equal(auditsBefore, await CountItemAuditsAsync(tenantId, [members.Id], ct));
+    }
+
+    [Fact]
+    public async Task An_old_version_is_the_common_conflict_before_any_rule_of_the_options()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var tenantId = await OrganizationAsync(ct);
+        var catalog = await CreateManualAsync(tenantId, "Frutas", [("A", "Uno"), ("B", "Dos")], ct);
+        var items = await ItemsAsync(tenantId, catalog.Id, ct);
+
+        // Otra persona borra la opción A y guarda.
+        Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with { DeleteItems = [items[0].Id] }, ct)));
+
+        // Con la ficha vieja, editar A, borrarla o pasar el tope da el 409 común, no ItemNotFound ni otra regla.
+        await Assert.ThrowsAsync<ConcurrencyConflictException>(() => RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Items = [new FormCatalogItemInput(items[0].Id, null, "A", "Uno editado", null, null, true)],
+        }, ct)));
+        await Assert.ThrowsAsync<ConcurrencyConflictException>(() => RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            DeleteItems = [items[0].Id],
+        }, ct)));
+        await Assert.ThrowsAsync<ConcurrencyConflictException>(() => RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Moves = [new FormCatalogMoveInput(items[1].Id, FormCatalogMoveDirection.Up)],
+        }, ct)));
+    }
+
+    [Fact]
     public async Task Sorting_reorders_every_option_also_other_pages_and_inactive_ones_keeping_ties_and_numbers_by_value()
     {
         var ct = TestContext.Current.CancellationToken;
