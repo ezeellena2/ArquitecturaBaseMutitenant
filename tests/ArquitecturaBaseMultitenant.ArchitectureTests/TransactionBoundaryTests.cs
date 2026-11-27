@@ -123,6 +123,7 @@ public sealed partial class TransactionBoundaryTests
 
         var declared = new HashSet<string>(StringComparer.Ordinal) { UnitOfWorkClass, IdempotencyStore };
         ContributeAssistantTransactionOwners(declared);
+        ContributeFormsTransactionOwners(declared);
         Assert.Equal(declared.Order(StringComparer.Ordinal), owners.Order(StringComparer.Ordinal));
 
         Assert.True(IsTransactionCall(new ArchitectureIl.Call("Rogue", "System.Data.Common.DbConnection",
@@ -196,6 +197,7 @@ public sealed partial class TransactionBoundaryTests
 
     // Cada módulo quitable aporta los suyos en su propio método parcial: un módulo retirado no deja referencias.
     static partial void ContributeAssistantTransactionOwners(HashSet<string> owners);
+    static partial void ContributeFormsTransactionOwners(HashSet<string> owners);
 
     private static bool IsTransactionCall(ArchitectureIl.Call call) =>
         call.Method is "BeginTransaction" or "BeginTransactionAsync"
