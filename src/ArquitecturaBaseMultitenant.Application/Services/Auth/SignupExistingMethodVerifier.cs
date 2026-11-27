@@ -12,8 +12,19 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 /// <summary>Valida la cuenta existente y confirma su método sin duplicar identidad.</summary>
 internal sealed class SignupExistingMethodVerifier(IUserRepository users,
     ILoginMethodRepository methods, IUserLookup userLookup,
-    LoginMethodLinker linker)
+    LoginMethodLinker linker, LoginMethodAvailabilityPolicy availability)
 {
+    internal async Task<bool> CanReceiveCodeAsync(LoginMethodLookup method, CancellationToken cancellationToken)
+    {
+        var tracked = await methods.GetByIdForUserAsync(method.UserId, method.MethodId, cancellationToken);
+        return tracked is not null && await availability.CanReceiveCodeAsync(tracked, [], cancellationToken);
+    }
+
+    internal async Task<bool> IsAvailableAsync(LoginMethodLookup method, CancellationToken cancellationToken)
+    {
+        var tracked = await methods.GetByIdForUserAsync(method.UserId, method.MethodId, cancellationToken);
+        return tracked is not null && await availability.IsAvailableAsync(tracked, cancellationToken);
+    }
     internal async Task<LoginMethodLookup?> LockAsync(LoginCodeDestination destination, CancellationToken ct)
     {
         await linker.LockDestinationAsync(destination, ct);

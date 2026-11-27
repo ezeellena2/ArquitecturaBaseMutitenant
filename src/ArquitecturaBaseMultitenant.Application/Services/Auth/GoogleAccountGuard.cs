@@ -13,7 +13,7 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Auth;
 // no frena a Google (B4): cualquiera que conozca el correo lo provoca, y Google es la salida del dueño.
 internal sealed class GoogleAccountGuard(IUserRepository users, AccountDeletionCancelIssuer cancellation)
 {
-    internal async Task<Result<UserAccountRow>> CheckAsync(Guid userId, Guid? methodId, string returnUrl,
+    internal async Task<Result<UserAccountRow>> CheckAsync(Guid userId, string returnUrl,
         CancellationToken cancellationToken)
     {
         var account = await users.GetByIdAsync(userId, cancellationToken);

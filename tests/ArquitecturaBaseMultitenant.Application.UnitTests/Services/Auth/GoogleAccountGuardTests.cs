@@ -38,7 +38,7 @@ public sealed class GoogleAccountGuardTests
         var guard = new GoogleAccountGuard(store, new AccountDeletionCancelIssuer(new NoTickets(), new NoSecrets(),
             new FakeTimeProvider(new DateTimeOffset(2026, 11, 25, 12, 0, 0, TimeSpan.Zero))));
 
-        var checkedAccount = await guard.CheckAsync(account.Id, methodId: null,
+        var checkedAccount = await guard.CheckAsync(account.Id,
             "/connect/authorize?client_id=web&access=consumer", Ct);
 
         if (expectedError is null) Assert.Equal(account.Id, checkedAccount.Value.Id);

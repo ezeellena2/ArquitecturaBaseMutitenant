@@ -10,6 +10,8 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.Settings;
+using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -457,6 +459,114 @@ public sealed class GoogleLoginTests(ApiFactory factory)
         Assert.Equal(ExternalLoginErrors.FailedCode, result.Error.Code);
         Assert.Null(google.SignedInUserId);
         Assert.Equal(0, await CountMethodsAsync(subject));
+    }
+
+    [Fact]
+    public async Task Revoked_managed_email_cannot_sign_in_or_link_Google_until_membership_is_active_while_linked_Google_keeps_working()
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        var domainText = $"acme-{Guid.NewGuid():N}.example";
+        var address = $"juan@{domainText}";
+        var nowUtc = factory.Services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        Guid userId = Guid.Empty;
+        Guid ownerId = Guid.Empty;
+        var tenant = Tenant.CreateBusiness("Acme Google B1", requiresApproval: false);
+        Assert.True(tenant.Activate().IsSuccess);
+
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var services = seedScope.ServiceProvider;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var users = services.GetRequiredService<IUserRepository>();
+                var methods = services.GetRequiredService<ILoginMethodRepository>();
+                ownerId = (await users.CreateAsync("Dueño Acme", "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
+                userId = (await users.CreateAsync("Juan Acme", "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
+                var email = Email.Create(address).Value;
+                var method = LoginMethod.CreateEmail(userId, email);
+                method.Verify(nowUtc);
+                method.MakePrimary();
+                method.AssignManagedByOrganization(tenant.Id);
+                methods.Add(method);
+                await users.SetPrimaryEmailAsync(userId, email, ct);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+            using (services.GetRequiredService<ITenantScope>().Enter(tenant.Id))
+            {
+                await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+                {
+                    services.GetRequiredService<TenantSpaceProvisioner>().Stage(tenant,
+                        TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"),
+                        [userId, ownerId], ownerId);
+                    var domain = TenantDomain.Create(tenant.Id, OrganizationEmailDomain.Create(domainText).Value,
+                        "token-b1", nowUtc).Value;
+                    domain.Verify(nowUtc);
+                    services.GetRequiredService<ITenantDomainRepository>().Add(domain);
+                    await Task.CompletedTask;
+                    return Result.Success();
+                }, CommitPolicy.OnSuccess, Ct);
+            }
+            await SetMemberActiveAsync(tenant.Id, userId, active: false);
+        }
+
+        var subject = Guid.NewGuid().ToString("N");
+        var login = new ExternalLogin("Google", subject, Email.Create(address).Value, true, "Juan");
+
+        // 1) Membresía dada de baja, sin método Google previo: falla en ingreso y en alta sin sesión ni método.
+        foreach (var isSignup in new[] { false, true })
+        {
+            var revokedDouble = new GoogleSignInDouble(login);
+            await using var host = HostWith(revokedDouble);
+            await using var scope = host.Services.CreateAsyncScope();
+            var result = await scope.ServiceProvider.GetRequiredService<IExternalLoginService>()
+                .SignInAsync(new ExternalSignInRequest("/connect/authorize?client_id=web&access=consumer",
+                    isSignup, isSignup, "es-AR", "America/Argentina/Buenos_Aires", Access.Consumer), Ct);
+
+            Assert.True(result.IsFailure);
+            Assert.Equal(ExternalLoginErrors.FailedCode, result.Error.Code);
+            Assert.Null(revokedDouble.SignedInUserId);
+            Assert.Equal(0, await CountMethodsAsync(subject));
+        }
+
+        // 2) Membresía reactivada: ahora sí entra y vincula el método Google propio.
+        await SetMemberActiveAsync(tenant.Id, userId, active: true);
+        var activeDouble = new GoogleSignInDouble(login);
+        await using (var host = HostWith(activeDouble))
+        await using (var scope = host.Services.CreateAsyncScope())
+        {
+            var result = await scope.ServiceProvider.GetRequiredService<IExternalLoginService>()
+                .SignInAsync(new ExternalSignInRequest("/connect/authorize?client_id=web&access=consumer", false, false), Ct);
+            Assert.True(result.IsSuccess);
+            Assert.Equal(userId, activeDouble.SignedInUserId);
+            Assert.Equal(1, await CountMethodsAsync(subject));
+        }
+
+        // 3) Membresía dada de baja otra vez: el Google propio ya vinculado sigue entrando.
+        await SetMemberActiveAsync(tenant.Id, userId, active: false);
+        var linkedDouble = new GoogleSignInDouble(login);
+        await using (var host = HostWith(linkedDouble))
+        await using (var scope = host.Services.CreateAsyncScope())
+        {
+            var result = await scope.ServiceProvider.GetRequiredService<IExternalLoginService>()
+                .SignInAsync(new ExternalSignInRequest("/connect/authorize?client_id=web&access=consumer", false, false), Ct);
+            Assert.True(result.IsSuccess);
+            Assert.Equal(userId, linkedDouble.SignedInUserId);
+        }
+    }
+
+    private async Task SetMemberActiveAsync(Guid tenantId, Guid userId, bool active)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+        {
+            var member = await services.GetRequiredService<IMemberRepository>().GetByUserIdAsync(userId, ct);
+            Assert.NotNull(member);
+            Assert.True((active ? member.Activate(nowUtc) : member.Deactivate()).IsSuccess);
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
     }
 
     private Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> HostWith(GoogleSignInDouble google) =>

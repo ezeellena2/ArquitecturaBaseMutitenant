@@ -2,11 +2,15 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Auth;
+using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -234,6 +238,138 @@ public sealed class BusinessSignupTests(ApiFactory factory)
         Assert.True(repeated.IsSuccess, repeated.IsFailure ? repeated.Error.Code : null);
         Assert.Equal(created.Value, repeated.Value);
         Assert.Equal(operationId, repeated.Value.TenantId);
+    }
+
+    [Fact]
+    public async Task Revoked_managed_email_is_withheld_and_rejected_by_business_signup_while_active_membership_still_works()
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        var domainText = $"acme-biz-{Guid.NewGuid():N}.example";
+        var address = $"juan@{domainText}";
+        var nowUtc = factory.Services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        Guid userId = Guid.Empty;
+        Guid ownerId = Guid.Empty;
+        var tenant = Tenant.CreateBusiness("Acme Biz B1", requiresApproval: false);
+        Assert.True(tenant.Activate().IsSuccess);
+
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var services = seedScope.ServiceProvider;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var users = services.GetRequiredService<IUserRepository>();
+                var methods = services.GetRequiredService<ILoginMethodRepository>();
+                ownerId = (await users.CreateAsync("Dueño Acme", "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
+                userId = (await users.CreateAsync("Juan Acme", "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
+                var email = Email.Create(address).Value;
+                var method = LoginMethod.CreateEmail(userId, email);
+                method.Verify(nowUtc);
+                method.MakePrimary();
+                method.AssignManagedByOrganization(tenant.Id);
+                methods.Add(method);
+                await users.SetPrimaryEmailAsync(userId, email, ct);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+            using (services.GetRequiredService<ITenantScope>().Enter(tenant.Id))
+            {
+                await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+                {
+                    services.GetRequiredService<TenantSpaceProvisioner>().Stage(tenant,
+                        TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"),
+                        [userId, ownerId], ownerId);
+                    var domain = TenantDomain.Create(tenant.Id, OrganizationEmailDomain.Create(domainText).Value,
+                        "token-biz-b1", nowUtc).Value;
+                    domain.Verify(nowUtc);
+                    services.GetRequiredService<ITenantDomainRepository>().Add(domain);
+                    return Task.FromResult(Result.Success());
+                }, CommitPolicy.OnSuccess, Ct);
+            }
+        }
+
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("https://localhost"),
+            AllowAutoRedirect = false,
+            HandleCookies = true,
+        });
+
+        // Emitimos un código mientras todavía está activo, y luego damos de baja la membresía antes de verificarlo.
+        using var preRevokeRequest = await PostAsync(client, "/api/auth/business-signup/code",
+            new { email = address, acceptedTerms = true, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires" });
+        Assert.Equal(HttpStatusCode.Accepted, preRevokeRequest.StatusCode);
+        var preRevokeCode = await PickupCodeReader.ReadAsync(factory.Services, address, Ct);
+
+        await SetMemberActiveAsync(tenant.Id, userId, active: false);
+
+        // 1) Verificar un código BusinessSignup existente con membresía dada de baja: falla con Invalid sin cookie.
+        using var verifyRevoked = await PostAsync(client, "/api/auth/business-signup/verify",
+            new { email = address, code = preRevokeCode, acceptedTerms = true, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires" });
+        Assert.Equal(HttpStatusCode.BadRequest, verifyRevoked.StatusCode);
+        Assert.False(verifyRevoked.Headers.Contains("Set-Cookie"));
+        using (var problem = await verifyRevoked.Content.ReadFromJsonAsync<JsonDocument>(Ct))
+            Assert.Equal(LoginCodeErrors.InvalidCode, problem!.RootElement.GetProperty("code").GetString());
+
+        // 2) Pedir un nuevo código con membresía dada de baja: responde 202 pero NO envía correo (SentAtUtc null y sin nuevo Outbox).
+        await RecoveryJourney.AgeCodesAsync(factory, address, Ct);
+        var outboxBefore = await CountOutboxAsync(address);
+        using var revokedRequest = await PostAsync(client, "/api/auth/business-signup/code",
+            new { email = address, acceptedTerms = true, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires" });
+        Assert.Equal(HttpStatusCode.Accepted, revokedRequest.StatusCode);
+        Assert.Equal(outboxBefore, await CountOutboxAsync(address));
+        Assert.Null(await LatestSentAtUtcAsync(address));
+
+        // 3) Membresía reactivada: vuelve a mandar el código y verificar abre sesión normalmente.
+        await SetMemberActiveAsync(tenant.Id, userId, active: true);
+        await RecoveryJourney.AgeCodesAsync(factory, address, Ct);
+        using var activeRequest = await PostAsync(client, "/api/auth/business-signup/code",
+            new { email = address, acceptedTerms = true, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires" });
+        Assert.Equal(HttpStatusCode.Accepted, activeRequest.StatusCode);
+        var activeCode = await PickupCodeReader.ReadAsync(factory.Services, address, Ct);
+        using var verifyActive = await PostAsync(client, "/api/auth/business-signup/verify",
+            new { email = address, code = activeCode, acceptedTerms = true, culture = "es-AR", timeZoneId = "America/Argentina/Buenos_Aires" });
+        Assert.Equal(HttpStatusCode.NoContent, verifyActive.StatusCode);
+        Assert.Contains(verifyActive.Headers.GetValues("Set-Cookie"),
+            value => value.Contains("Identity.Application", StringComparison.Ordinal));
+    }
+
+    private async Task SetMemberActiveAsync(Guid tenantId, Guid userId, bool active)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+        {
+            var member = await services.GetRequiredService<IMemberRepository>().GetByUserIdAsync(userId, ct);
+            Assert.NotNull(member);
+            Assert.True((active ? member.Activate(nowUtc) : member.Deactivate()).IsSuccess);
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
+    }
+
+    private async Task<long> CountOutboxAsync(string address)
+    {
+        await using var connection = new NpgsqlConnection(factory.AdminConnectionString);
+        await connection.OpenAsync(Ct);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT count(*) FROM platform.\"OutboxMessages\" WHERE \"OrderingKey\" = @email";
+        command.Parameters.AddWithValue("email", address);
+        return (long)(await command.ExecuteScalarAsync(Ct) ?? 0L);
+    }
+
+    private async Task<DateTime?> LatestSentAtUtcAsync(string address)
+    {
+        await using var connection = new NpgsqlConnection(factory.AdminConnectionString);
+        await connection.OpenAsync(Ct);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT "SentAtUtc" FROM identity."LoginCodes"
+            WHERE "Destination" = @email
+            ORDER BY "CreatedAtUtc" DESC LIMIT 1
+            """;
+        command.Parameters.AddWithValue("email", address);
+        var result = await command.ExecuteScalarAsync(Ct);
+        return result is DBNull or null ? null : (DateTime)result;
     }
 
     private async Task<Result<BusinessSignupResponse>> CreateOrganizationAsync(Guid userId, Guid operationId,

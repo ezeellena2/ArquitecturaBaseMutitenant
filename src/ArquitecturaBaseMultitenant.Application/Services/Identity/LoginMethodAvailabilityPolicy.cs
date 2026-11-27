@@ -48,11 +48,25 @@ internal sealed class LoginMethodAvailabilityPolicy(IEnumerable<ILoginCodeChanne
         && (method.ManagedByTenantId is not { } manager || invitedTenantIds.Contains(manager)
             || await memberships.IsActiveAsync(userId, manager, ct));
 
+    public async Task<bool> CanReceiveCodeAsync(LoginMethod method,
+        IReadOnlyCollection<Guid> invitedTenantIds, CancellationToken ct) =>
+        method.VerifiedAtUtc is not null && CanReceiveCode(method)
+        && (method.ManagedByTenantId is not { } manager || invitedTenantIds.Contains(manager)
+            || await memberships.IsActiveAsync(method.UserId, manager, ct));
+
     public async Task<bool> IsAvailableAsync(Guid userId, LoginMethodRow method, CancellationToken ct)
     {
         var channelAvailable = HasChannel(method.Type);
         return method.VerifiedAtUtc is not null && channelAvailable
             && (method.ManagedByTenantId is not { } tenantId || await memberships.IsActiveAsync(userId, tenantId, ct));
+    }
+
+    public async Task<bool> IsAvailableAsync(LoginMethod method, CancellationToken ct)
+    {
+        var channelAvailable = HasChannel(method.Type);
+        var managedActive = method.ManagedByTenantId is not { } tenantId
+            || await memberships.IsActiveAsync(method.UserId, tenantId, ct);
+        return method.CanSignIn(channelAvailable, managedActive);
     }
 
     public async Task<bool> HasPersonalBackupAsync(Guid userId, IReadOnlyList<LoginMethodRow> methods, CancellationToken ct)

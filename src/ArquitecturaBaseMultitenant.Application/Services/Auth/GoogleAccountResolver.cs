@@ -14,6 +14,7 @@ internal sealed class GoogleAccountResolver(
     IUserLookup lookup,
     ILoginMethodRepository methods,
     IExternalLoginLock loginLock,
+    LoginMethodAvailabilityPolicy availability,
     GoogleAccountRegistrar registrar,
     GoogleAccountGuard guard,
     GoogleAccountMethodFinalizer methodFinalizer,
@@ -37,6 +38,7 @@ internal sealed class GoogleAccountResolver(
             login.ProviderKey, cancellationToken);
 
         Guid userId;
+        var linkedExistingEmail = false;
         if (googleMethod is not null)
         {
             if (googleMethod.VerifiedAtUtc is null) return ExternalLoginErrors.Failed;
@@ -50,6 +52,7 @@ internal sealed class GoogleAccountResolver(
             if (linkedId is { } existingId)
             {
                 userId = existingId;
+                linkedExistingEmail = true;
             }
             else
             {
@@ -64,14 +67,27 @@ internal sealed class GoogleAccountResolver(
         }
 
         await methods.LockUserAsync(userId, cancellationToken);
-        var checkedAccount = await guard.CheckAsync(userId, googleMethod?.MethodId, request.ReturnUrl!, cancellationToken);
+        IReadOnlyList<LoginMethod>? all = null;
+        if (googleMethod is null)
+        {
+            all = await methods.ListByUserIdAsync(userId, cancellationToken);
+            if (linkedExistingEmail)
+            {
+                // ADR 0033: un correo corporativo revocado no abre la cuenta ni habilita a vincular Google propio.
+                var emailMethod = all.SingleOrDefault(method =>
+                    method.Type == LoginMethodType.Email && method.Value == email!.Value);
+                if (emailMethod is null || !await availability.IsAvailableAsync(emailMethod, cancellationToken))
+                    return ExternalLoginErrors.Failed;
+            }
+        }
+
+        var checkedAccount = await guard.CheckAsync(userId, request.ReturnUrl!, cancellationToken);
         if (checkedAccount.IsFailure) return checkedAccount.Error;
         var account = checkedAccount.Value;
 
         if (googleMethod is null)
         {
-            var all = await methods.ListByUserIdAsync(userId, cancellationToken);
-            await methodFinalizer.AddGoogleMethodAsync(account, userId, login.ProviderKey, email, all,
+            await methodFinalizer.AddGoogleMethodAsync(account, userId, login.ProviderKey, email, all!,
                 cancellationToken);
         }
         else if (email is not null)

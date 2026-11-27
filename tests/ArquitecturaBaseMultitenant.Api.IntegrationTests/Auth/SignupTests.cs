@@ -2,9 +2,13 @@ using System.Net;
 using System.Net.Http.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Settings;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
@@ -340,6 +344,112 @@ public sealed class SignupTests(ApiFactory factory)
         {
             await SetConsumerSignupAsync("Open");
         }
+    }
+
+    [Fact]
+    public async Task Revoked_managed_email_cannot_enter_through_personal_signup_code_or_verification()
+    {
+        await factory.Services.SeedDatabaseAsync(Ct);
+        var domainText = $"acme-pers-{Guid.NewGuid():N}.example";
+        var address = $"juan@{domainText}";
+        var email = Email.Create(address).Value;
+        var nowUtc = factory.Services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        Guid userId = Guid.Empty;
+        Guid ownerId = Guid.Empty;
+        var tenant = Tenant.CreateBusiness("Acme Pers B1", requiresApproval: false);
+        Assert.True(tenant.Activate().IsSuccess);
+
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var services = seedScope.ServiceProvider;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                var users = services.GetRequiredService<IUserRepository>();
+                var methods = services.GetRequiredService<ILoginMethodRepository>();
+                ownerId = (await users.CreateAsync("Dueño Acme", "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
+                userId = (await users.CreateAsync("Juan Acme", "es-AR", "America/Argentina/Buenos_Aires", ct)).Id;
+                var method = LoginMethod.CreateEmail(userId, email);
+                method.Verify(nowUtc);
+                method.MakePrimary();
+                method.AssignManagedByOrganization(tenant.Id);
+                methods.Add(method);
+                await users.SetPrimaryEmailAsync(userId, email, ct);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+            using (services.GetRequiredService<ITenantScope>().Enter(tenant.Id))
+            {
+                await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+                {
+                    services.GetRequiredService<TenantSpaceProvisioner>().Stage(tenant,
+                        TenantSettings.Create("es-AR", "America/Argentina/Buenos_Aires", "ARS"),
+                        [userId, ownerId], ownerId);
+                    var domain = TenantDomain.Create(tenant.Id, OrganizationEmailDomain.Create(domainText).Value,
+                        "token-pers-b1", nowUtc).Value;
+                    domain.Verify(nowUtc);
+                    services.GetRequiredService<ITenantDomainRepository>().Add(domain);
+                    return Task.FromResult(Result.Success());
+                }, CommitPolicy.OnSuccess, Ct);
+            }
+        }
+
+        await SetMemberActiveAsync(tenant.Id, userId, active: false);
+        using var client = factory.CreateClient();
+
+        // 1) Pedir código de alta personal con correo administrado revocado: no manda código ni abre sesión.
+        using var requested = await client.PostAsJsonAsync("/test/auth/signup",
+            new { email = address, acceptedTerms = true }, Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, requested.StatusCode);
+        Assert.False(requested.Headers.Contains("Set-Cookie"));
+
+        // 2) Incluso si existiera un código Signup vigente en carrera, verificar con membresía dada de baja rechaza sin cookie.
+        const string code = "654321";
+        await SeedSignupCodeAsync(email, code);
+        using var verifyRevoked = await client.PostAsJsonAsync("/test/auth/signup/verify",
+            new { email = address, code, acceptedTerms = true }, Ct);
+        Assert.Equal(HttpStatusCode.BadRequest, verifyRevoked.StatusCode);
+        Assert.False(verifyRevoked.Headers.Contains("Set-Cookie"));
+        var problem = await verifyRevoked.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(Ct);
+        Assert.Equal(LoginCodeErrors.InvalidCode, problem.GetProperty("code").GetString());
+
+        // 3) Con la membresía activa nuevamente, verificar un código Signup vigente vuelve a entrar.
+        await SetMemberActiveAsync(tenant.Id, userId, active: true);
+        await SeedSignupCodeAsync(email, code);
+        using var verifyActive = await client.PostAsJsonAsync("/test/auth/signup/verify",
+            new { email = address, code, acceptedTerms = true }, Ct);
+        Assert.Equal(HttpStatusCode.NoContent, verifyActive.StatusCode);
+        Assert.Contains(verifyActive.Headers.GetValues("Set-Cookie"),
+            value => value.Contains("Identity.Application", StringComparison.Ordinal));
+    }
+
+    private async Task SetMemberActiveAsync(Guid tenantId, Guid userId, bool active)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+        {
+            var member = await services.GetRequiredService<IMemberRepository>().GetByUserIdAsync(userId, ct);
+            Assert.NotNull(member);
+            Assert.True((active ? member.Activate(nowUtc) : member.Deactivate()).IsSuccess);
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
+    }
+
+    private async Task SeedSignupCodeAsync(Email email, string code)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        var destination = LoginCodeDestination.ForEmail(email);
+        var hash = services.GetRequiredService<ILoginCodeHasher>().Hash(destination, LoginCodePurpose.Signup, code);
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+        {
+            services.GetRequiredService<ILoginCodeRepository>().Add(
+                LoginCode.Issue(destination, LoginCodePurpose.Signup, requestedByUserId: null, hash, nowUtc,
+                    TimeSpan.FromMinutes(10), maxAttempts: 5));
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, Ct);
     }
 
     private async Task<Guid> CreateVerifiedEmailAccountAsync(string address)

@@ -50,6 +50,8 @@ internal sealed class SignupCodeVerifier(LoginCodeAttemptVerifier verifier, Sign
                 return Fail(destination, method.UserId, AccountErrors.LockedOut);
             if (await existingMethods.CheckAccountAsync(method.UserId, cancellationToken) is { } accountError)
                 return Fail(destination, method.UserId, accountError);
+            if (!await existingMethods.IsAvailableAsync(method, cancellationToken))
+                return Fail(destination, method.UserId, LoginCodeErrors.Invalid(attemptsLeft: null));
             userId = await existingMethods.ConfirmAsync(method, nowUtc, cancellationToken);
             await signIn.ResetFailedAttemptsAsync(userId, cancellationToken);
         }
@@ -89,6 +91,8 @@ internal sealed class SignupCodeVerifier(LoginCodeAttemptVerifier verifier, Sign
                 return Fail(destination, method.UserId, AccountErrors.LockedOut);
             if (await existingMethods.CheckAccountAsync(method.UserId, cancellationToken) is { } accountError)
                 return Fail(destination, method.UserId, accountError);
+            if (!await existingMethods.IsAvailableAsync(method, cancellationToken))
+                return Fail(destination, method.UserId, LoginCodeErrors.Invalid(attemptsLeft: null));
             userId = await existingMethods.ConfirmAsync(method, nowUtc, cancellationToken);
             await signIn.ResetFailedAttemptsAsync(userId, cancellationToken);
             var documents = await registrar.GetCurrentLegalAsync(nowUtc, cancellationToken);

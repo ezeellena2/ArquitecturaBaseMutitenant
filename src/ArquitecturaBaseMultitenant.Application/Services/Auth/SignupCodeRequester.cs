@@ -65,6 +65,13 @@ internal sealed class SignupCodeRequester(SignupPolicy policy, LoginCodeIssuer i
         var culture = await userCultures.ResolveAsync(null, request.Culture, cancellationToken);
         var channel = channels.SingleOrDefault(value => value.Key == destination.Channel && value.IsAvailable);
         if (channel is null) return LoginChannelErrors.Unavailable;
+        // ADR 0033: un correo administrado cuya membresía terminó no recibe códigos de alta, sin revelar el motivo.
+        if (owner is { VerifiedAtUtc: not null } && !await existing.CanReceiveCodeAsync(owner, cancellationToken))
+        {
+            var withheld = await issuer.WithholdAsync(destination, issued.Value, cancellationToken);
+            if (withheld.IsFailure) return withheld.Error;
+            return new RequestLoginCodeResponse(issued.Value.ResendCooldownSeconds);
+        }
         var admitted = await issuer.AdmitAsync(destination, issued.Value, cancellationToken);
         if (admitted.IsFailure) return admitted.Error;
         await channel.EnqueueSignupAsync(destination.Value, issued.Value.Code, issued.Value.LifetimeMinutes, culture,
