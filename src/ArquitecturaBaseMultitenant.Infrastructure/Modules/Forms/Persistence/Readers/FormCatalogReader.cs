@@ -1,0 +1,152 @@
+using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Application.Modules.Forms.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Modules.Forms.Models;
+using ArquitecturaBaseMultitenant.Domain.Forms;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
+using Microsoft.EntityFrameworkCore;
+
+namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Forms.Persistence.Readers;
+
+/// <summary>Proyecta los catálogos de la organización activa y sus opciones, con orden estable y búsqueda sin acentos.</summary>
+internal sealed class FormCatalogReader(ApplicationDbContext context, ITenantContext tenantContext) : IFormCatalogReader
+{
+    // El origen y el tipo ordenan por su orden, con el CASE del enum (264). Las opciones son las de uno a mano: los demás no
+    // tienen cuenta y quedan al final. El estado va de activo a sin opciones activas y a dado de baja; el resto de «No se puede
+    // usar» se calcula al leer, con la fuente.
+    private static readonly SortMap<CatalogProjection> Sort = new()
+    {
+        ["name"] = catalog => catalog.Name,
+        ["source"] = catalog => catalog.Source,
+        ["valueType"] = catalog => catalog.ValueType,
+        ["optionsCount"] = catalog => catalog.OptionsCount,
+        ["status"] = catalog => catalog.Status,
+    };
+
+    private static readonly SortDescriptor DefaultSort = new("name", Descending: false);
+
+    public async Task<PagedResult<FormCatalogSummary>> ListAsync(ListFormCatalogsRequest request, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var tenantId = tenantContext.RequiredTenantId;
+        var catalogs = context.Set<FormCatalog>().AsNoTracking().Where(catalog => catalog.TenantId == tenantId)
+            .ApplySearch(request.Search, catalog => catalog.Name);
+        catalogs = request.Source switch
+        {
+            FormCatalogSourceFilter.Manual => catalogs.Where(catalog => catalog.Source == FormCatalogSource.Manual),
+            FormCatalogSourceFilter.Members => catalogs.Where(catalog => catalog.Source == FormCatalogSource.Members),
+            FormCatalogSourceFilter.Contacts => catalogs.Where(catalog => catalog.Source == FormCatalogSource.Contacts),
+            _ => catalogs,
+        };
+        catalogs = request.Status switch
+        {
+            FormCatalogStatusFilter.Active => catalogs.Where(catalog => catalog.IsActive),
+            FormCatalogStatusFilter.Inactive => catalogs.Where(catalog => !catalog.IsActive),
+            _ => catalogs,
+        };
+        var page = await Project(tenantId, catalogs)
+            .ApplySort(SortDescriptor.Parse(request.Sort), Sort, DefaultSort, catalog => catalog.Id)
+            .ToPagedResultAsync(request, ct);
+        return new PagedResult<FormCatalogSummary>([.. page.Items.Select(ToSummary)], page.Page, page.PageSize, page.TotalCount);
+    }
+
+    public async Task<FormCatalogFilterCountsResponse> CountFiltersAsync(CancellationToken ct)
+    {
+        var tenantId = tenantContext.RequiredTenantId;
+        var counts = await context.Set<FormCatalog>().AsNoTracking().Where(catalog => catalog.TenantId == tenantId)
+            .GroupBy(catalog => catalog.IsActive).Select(group => new { IsActive = group.Key, Count = group.Count() })
+            .ToListAsync(ct);
+        return new FormCatalogFilterCountsResponse(counts.Sum(row => row.Count), counts.Where(row => row.IsActive).Sum(row => row.Count));
+    }
+
+    public async Task<FormCatalogSummary?> FindAsync(Guid catalogId, CancellationToken ct)
+    {
+        var tenantId = tenantContext.RequiredTenantId;
+        var catalogs = context.Set<FormCatalog>().AsNoTracking().Where(catalog => catalog.TenantId == tenantId && catalog.Id == catalogId);
+        var row = await Project(tenantId, catalogs).SingleOrDefaultAsync(ct);
+        return row is null ? null : ToSummary(row);
+    }
+
+    public async Task<PagedResult<FormCatalogItemRow>> ListItemsAsync(Guid catalogId, ListFormCatalogItemsRequest request,
+        CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var tenantId = tenantContext.RequiredTenantId;
+        var all = context.Set<FormCatalogItem>().AsNoTracking().Where(item => item.TenantId == tenantId && item.CatalogId == catalogId);
+        var items = all.ApplySearch(request.Search, item => item.Text, item => item.Code);
+        items = request.Status switch
+        {
+            FormCatalogStatusFilter.Active => items.Where(item => item.IsActive),
+            FormCatalogStatusFilter.Inactive => items.Where(item => !item.IsActive),
+            _ => items,
+        };
+        // Un texto repetido avisa sin frenar: otra opción del catálogo con el mismo texto, sin distinguir mayúsculas. EF lo
+        // traduce a lower() de PostgreSQL, como ApplySearch: la cultura del proceso no interviene.
+#pragma warning disable CA1304, CA1311, CA1862
+        var page = await items.OrderBy(item => item.Position).ThenBy(item => item.Id)
+            .Select(item => new ItemProjection
+            {
+                Item = item,
+                TextRepeated = all.Any(other => other.Id != item.Id && other.Text.ToLower() == item.Text.ToLower()),
+            })
+            .ToPagedResultAsync(request, ct);
+#pragma warning restore CA1304, CA1311, CA1862
+        return new PagedResult<FormCatalogItemRow>([.. page.Items.Select(row => new FormCatalogItemRow(row.Item.Id, row.Item.Code,
+            row.Item.Text, row.Item.Detail, row.Item.ValueText(), row.Item.Position, row.Item.IsActive, row.TextRepeated))],
+            page.Page, page.PageSize, page.TotalCount);
+    }
+
+    private IQueryable<CatalogProjection> Project(Guid tenantId, IQueryable<FormCatalog> catalogs) =>
+        catalogs.Select(catalog => new CatalogProjection
+        {
+            Id = catalog.Id,
+            Name = catalog.Name,
+            Description = catalog.Description,
+            Source = catalog.Source,
+            ValueType = catalog.ValueType,
+            Filters = catalog.Filters,
+            IsActive = catalog.IsActive,
+            TotalItems = context.Set<FormCatalogItem>().Count(item => item.TenantId == tenantId && item.CatalogId == catalog.Id),
+            ActiveItems = context.Set<FormCatalogItem>()
+                .Count(item => item.TenantId == tenantId && item.CatalogId == catalog.Id && item.IsActive),
+            OptionsCount = catalog.Source == FormCatalogSource.Manual
+                ? context.Set<FormCatalogItem>().Count(item => item.TenantId == tenantId && item.CatalogId == catalog.Id)
+                : null,
+            Status = !catalog.IsActive ? 2
+                : catalog.Source == FormCatalogSource.Manual && !context.Set<FormCatalogItem>()
+                    .Any(item => item.TenantId == tenantId && item.CatalogId == catalog.Id && item.IsActive) ? 1 : 0,
+            ModifiedAtUtc = catalog.ModifiedAtUtc ?? catalog.CreatedAtUtc,
+            ModifiedBy = catalog.ModifiedBy ?? catalog.CreatedBy,
+            Version = catalog.Version,
+        });
+
+    private static FormCatalogSummary ToSummary(CatalogProjection row) => new(row.Id, row.Name, row.Description, row.Source,
+        row.ValueType, row.Filters is null ? null : Domain.Forms.FormCatalogFilters.FromJson(row.Filters), row.IsActive, row.TotalItems,
+        row.ActiveItems, DateTime.SpecifyKind(row.ModifiedAtUtc, DateTimeKind.Utc), row.ModifiedBy, row.Version);
+
+    /// <summary>Un catálogo con lo que se ordena y se cuenta en la base.</summary>
+    private sealed class CatalogProjection
+    {
+        public Guid Id { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public string? Description { get; init; }
+        public FormCatalogSource Source { get; init; }
+        public FormCatalogValueType ValueType { get; init; }
+        public string? Filters { get; init; }
+        public bool IsActive { get; init; }
+        public int TotalItems { get; init; }
+        public int ActiveItems { get; init; }
+        public int? OptionsCount { get; init; }
+        public int Status { get; init; }
+        public DateTime ModifiedAtUtc { get; init; }
+        public Guid? ModifiedBy { get; init; }
+        public uint Version { get; init; }
+    }
+
+    private sealed class ItemProjection
+    {
+        public FormCatalogItem Item { get; init; } = null!;
+        public bool TextRepeated { get; init; }
+    }
+}

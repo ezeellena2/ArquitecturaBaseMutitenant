@@ -101,6 +101,13 @@ public sealed class SortIndexTests(ApiFactory factory)
         new("WhatsAppBroadcastReader.ContactBroadcastSort", "name", null),
         new("WhatsAppBroadcastReader.ContactBroadcastSort", "sentAtUtc", null),
         new("WhatsAppBroadcastReader.ContactBroadcastSort", "status", null),
+        // Formularios (E12, §3): un catálogo cuenta sus opciones y resume su estado con ellas; el nombre, el origen y el tipo
+        // son columnas de la tabla.
+        new("FormCatalogReader.Sort", "name", new("tenant", "FormCatalogs", "Name")),
+        new("FormCatalogReader.Sort", "source", new("tenant", "FormCatalogs", "Source")),
+        new("FormCatalogReader.Sort", "valueType", new("tenant", "FormCatalogs", "ValueType")),
+        new("FormCatalogReader.Sort", "optionsCount", null),
+        new("FormCatalogReader.Sort", "status", null),
     ];
 
     private static readonly Regex BtreeColumns = new(@"USING btree \((?<columns>[^)]*)\)", RegexOptions.CultureInvariant);

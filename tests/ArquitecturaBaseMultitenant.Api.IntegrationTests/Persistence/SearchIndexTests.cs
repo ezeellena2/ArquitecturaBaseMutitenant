@@ -43,6 +43,18 @@ public sealed class SearchIndexTests(ApiFactory factory)
             "public.f_unaccent(lower(\"Changes\"::text)) LIKE public.f_unaccent(lower({pattern}))"),
     ];
 
+    // Los readers de un módulo leen con context.Set<T>(), que el detector de arriba no resuelve: cada módulo que entra declara
+    // la carpeta de sus readers y las columnas que buscan, y el control pide que coincidan con sus ApplySearch y su índice.
+    private static readonly ModuleSearch[] ModuleSearches =
+    [
+        new(Path.Combine("Modules", "Forms", "Persistence", "Readers"),
+        [
+            new("tenant", "FormCatalogs", "Name"),
+            new("tenant", "FormCatalogItems", "Text"),
+            new("tenant", "FormCatalogItems", "Code"),
+        ]),
+    ];
+
     private static readonly Regex SqlLike = new(@"\bI?LIKE\b", RegexOptions.CultureInvariant);
 
     private static readonly Regex Source = new(@"context\.(?<set>\w+)", RegexOptions.CultureInvariant);
@@ -57,7 +69,7 @@ public sealed class SearchIndexTests(ApiFactory factory)
         var cancellationToken = TestContext.Current.CancellationToken;
         await using var scope = factory.Services.CreateAsyncScope();
         var model = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Model;
-        var fields = ReaderSearchFields().ToArray();
+        var fields = ReaderSearchFields(ReadersDirectory()).ToArray();
         var resolved = fields.Where(field => field.Set is not null).Select(field => Column(model, field)).ToArray();
 
         // Sin la fuente en la misma sentencia, la columna tiene que estar en la lista de búsquedas indirectas.
@@ -99,6 +111,26 @@ public sealed class SearchIndexTests(ApiFactory factory)
             .Select(column => $"{column.Schema}.{column.Table}.{column.Column}"));
     }
 
+    [Fact]
+    public async Task Every_column_a_module_reader_searches_is_declared_and_has_its_trigram_index()
+    {
+        var indexes = await TrigramIndexesAsync(TestContext.Current.CancellationToken);
+        foreach (var module in ModuleSearches)
+        {
+            var searched = ReaderSearchFields(Path.Combine(InfrastructureDirectory(), module.Directory))
+                .Select(field => field.Property).Distinct().Order(StringComparer.Ordinal).ToArray();
+            Assert.NotEmpty(searched);
+            Assert.Equal(module.Columns.Select(column => column.Column).Distinct().Order(StringComparer.Ordinal), searched);
+            Assert.Empty(module.Columns
+                .Where(column => !indexes.Any(index => index.Schema == column.Schema && index.Table == column.Table
+                    && index.Definition.Contains("f_unaccent(lower(", StringComparison.Ordinal)
+                    && index.Definition.Contains($"\"{column.Column}\"", StringComparison.Ordinal)))
+                .Select(column => $"{column.Schema}.{column.Table}.{column.Column}"));
+        }
+    }
+
+    private static string InfrastructureDirectory() => Path.Combine(FindRepositoryRoot(), "src", "ArquitecturaBaseMultitenant.Infrastructure");
+
     private static string ReadersDirectory() => Path.Combine(FindRepositoryRoot(), "src",
         "ArquitecturaBaseMultitenant.Infrastructure", "Persistence", "Readers");
 
@@ -115,9 +147,9 @@ public sealed class SearchIndexTests(ApiFactory factory)
     }
 
     // Cada campo simple de ApplySearch (x => x.Columna o EF.Property) con el DbSet de su sentencia, si lo hay.
-    private static IEnumerable<SearchField> ReaderSearchFields()
+    private static IEnumerable<SearchField> ReaderSearchFields(string directory)
     {
-        foreach (var path in Directory.EnumerateFiles(ReadersDirectory(), "*.cs", SearchOption.AllDirectories))
+        foreach (var path in Directory.EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories))
         {
             var source = File.ReadAllText(path);
             for (var call = source.IndexOf(ApplySearchCall, StringComparison.Ordinal); call >= 0;
@@ -194,4 +226,6 @@ public sealed class SearchIndexTests(ApiFactory factory)
     private sealed record SearchedColumn(string Schema, string Table, string Column);
 
     private sealed record SqlSearch(string File, SearchedColumn Column, string Expression);
+
+    private sealed record ModuleSearch(string Directory, SearchedColumn[] Columns);
 }
