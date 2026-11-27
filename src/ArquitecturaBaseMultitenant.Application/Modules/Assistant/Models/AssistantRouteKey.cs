@@ -3,6 +3,8 @@ using ArquitecturaBaseMultitenant.Application.Models.AssistantActions;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 
+// Los enlaces del asistente se guardan con este valor como número (LinksJson): uno nuevo va siempre al final, así lo guardado
+// se sigue leyendo igual (migración, «Convivencia de versiones»).
 public enum AssistantRouteKey
 {
     [JsonStringEnumMemberName("business.users")] BusinessUsers,
@@ -10,7 +12,6 @@ public enum AssistantRouteKey
     [JsonStringEnumMemberName("business.companies")] BusinessCompanies,
     [JsonStringEnumMemberName("business.audit")] BusinessAudit,
     [JsonStringEnumMemberName("business.home")] BusinessHome,
-    [JsonStringEnumMemberName("business.forms.catalogs")] BusinessFormCatalogs,
     [JsonStringEnumMemberName("platform.organizations")] PlatformOrganizations,
     [JsonStringEnumMemberName("platform.accounts")] PlatformAccounts,
     [JsonStringEnumMemberName("platform.recoveries")] PlatformRecoveries,
@@ -18,6 +19,7 @@ public enum AssistantRouteKey
     [JsonStringEnumMemberName("platform.assistant.usage")] PlatformAssistantUsage,
     [JsonStringEnumMemberName("personal.account")] PersonalAccount,
     [JsonStringEnumMemberName("personal.organizations")] PersonalOrganizations,
+    [JsonStringEnumMemberName("business.forms.catalogs")] BusinessFormCatalogs,
 }
 
 /// <summary>
