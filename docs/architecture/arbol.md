@@ -295,6 +295,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   ├── ReferenceData/
 │   │   ├── RequestContext/
 │   │   ├── Security/
+│   │   ├── StructuredData/  contactos sin canal instalado (TryAdd)
 │   │   └── Time/
 │   └── ArquitecturaBaseMultitenant.ServiceDefaults/
 ├── tests/  ver abajo
@@ -560,6 +561,7 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `src/ArquitecturaBaseMultitenant.Infrastructure/ReferenceData/` | Adaptadores técnicos de datos de referencia. | [docs/rules/datos-de-referencia.md](../rules/datos-de-referencia.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/ReferenceData/JsonReferenceDataCatalog.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/ReferenceData/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/RequestContext/` | Adaptadores técnicos de Request Context. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/RequestContext/ExecutionActorContext.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/RequestContext/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Security/` | Adaptadores técnicos de seguridad. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Security/InvitationTokenProtector.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Security/AGENTS.md) |
+| `src/ArquitecturaBaseMultitenant.Infrastructure/StructuredData/` | Adaptadores técnicos de datos estructurados: los contactos de otra área sin canal instalado. | [docs/rules/modulos.md](../rules/modulos.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/StructuredData/DisabledStructuredContactSource.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/StructuredData/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Time/` | Adaptadores técnicos de tiempo. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Time/TimeZoneService.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Time/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.ServiceDefaults/` | Configuración común de observabilidad, resiliencia y salud. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.ServiceDefaults/Extensions.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.ServiceDefaults/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/` | Proyecto de pruebas de integración. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Organization/RolesTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/AGENTS.md) |
