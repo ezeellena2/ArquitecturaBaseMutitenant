@@ -11,6 +11,13 @@ public static class Permissions
         public const string Configure = "assistant.configure";
     }
 
+    /// <summary>Catálogos de Formularios (E12): «Administrar catálogos» incluye «Ver catálogos» (decisión 260).</summary>
+    public static class Forms
+    {
+        public const string CatalogsRead = "formcatalogs.read";
+        public const string CatalogsManage = "formcatalogs.manage";
+    }
+
     public static class WhatsApp
     {
         public const string Customers = "whatsapp.customers";
@@ -84,6 +91,8 @@ public static class Permissions
         WhatsApp.Internal,
         WhatsApp.Broadcasts,
         WhatsApp.Manage,
+        Forms.CatalogsRead,
+        Forms.CatalogsManage,
     ];
 
     public static IReadOnlyCollection<string> CompanyScoped { get; } =
@@ -111,6 +120,7 @@ public static class Permissions
             [Companies.Manage] = [Companies.Read],
             [Settings.Manage] = [Settings.Read],
             [Company.Members.Manage] = [Company.Members.Read],
+            [Forms.CatalogsManage] = [Forms.CatalogsRead],
         }.AsReadOnly();
 
     /// <summary>

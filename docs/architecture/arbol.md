@@ -68,6 +68,9 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   ├── Assistant/
 │   │   │   │   ├── Contracts/
 │   │   │   │   └── Controllers/
+│   │   │   ├── Forms/
+│   │   │   │   ├── Contracts/
+│   │   │   │   └── Controllers/
 │   │   │   └── WhatsApp/
 │   │   │       ├── Contracts/  request/query T01
 │   │   │       ├── Controllers/
@@ -160,6 +163,10 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   │   │   ├── Personal/
 │   │   │   │   │   └── Platform/
 │   │   │   │   └── Validation/
+│   │   │   ├── Forms/
+│   │   │   │   ├── Models/
+│   │   │   │   ├── Resources/
+│   │   │   │   └── Services/
 │   │   │   └── WhatsApp/  AddWhatsAppModule() registra todo lo de esta carpeta
 │   │   │       ├── Interfaces/
 │   │   │       │   ├── Integrations/
@@ -212,6 +219,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   ├── Common/
 │   │   ├── Companies/
 │   │   ├── Features/
+│   │   ├── Forms/
 │   │   ├── Invitations/
 │   │   ├── Legal/
 │   │   ├── Messaging/
@@ -256,6 +264,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   │   │   └── Repositories/
 │   │   │   │   ├── ReferenceData/
 │   │   │   │   └── Retention/
+│   │   │   ├── Forms/
 │   │   │   └── WhatsApp/  módulo opcional instalado por composición; canal de Plataforma con número conectado, webhook con sus dos secretos
 │   │   │       ├── Disabled/
 │   │   │       ├── Email/  el correo «Chats esperando» (D6), con el armado común de avisos del núcleo
@@ -306,6 +315,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   ├── Assistant/  tests de integración del módulo
 │   │   │   ├── TechnicalContribution/
 │   │   │   │   └── Persistence/
+│   │   │   ├── Forms/
 │   │   │   └── WhatsApp/  tests de integración del módulo
 │   │   │       └── TestFeatures/
 │   │   ├── Organization/
@@ -358,6 +368,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   ├── ArquitecturaBaseMultitenant.ArchitectureTests/
 │   │   ├── Modules/
 │   │   │   ├── Assistant/
+│   │   │   ├── Forms/
 │   │   │   └── WhatsApp/
 │   │   └── Support/
 │   └── ArquitecturaBaseMultitenant.Domain.UnitTests/
@@ -414,6 +425,7 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `src/ArquitecturaBaseMultitenant.Api/Json/` | Adaptadores HTTP de Json. | [docs/rules/textos-libres.md](../rules/textos-libres.md) | `src/ArquitecturaBaseMultitenant.Api/Json/NormalizedStringJsonConverter.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Api/Json/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Api/Legal/` | Adaptadores HTTP de documentos legales. | [docs/rules/datos-personales.md](../rules/datos-personales.md) | `src/ArquitecturaBaseMultitenant.Api/Legal/LegalAcceptanceMiddleware.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Api/Legal/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Api/Modules/Assistant/` | Rutas del Asistente. | [Asistente](../features/asistente.md) | `src/ArquitecturaBaseMultitenant.Api/Modules/Assistant/Controllers/BusinessAssistantController.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Api/Modules/Assistant/AGENTS.md) |
+| `src/ArquitecturaBaseMultitenant.Api/Modules/Forms/` | Rutas de Formularios. | [docs/plans/formularios/12-catalogos.md](../plans/formularios/12-catalogos.md) | `src/ArquitecturaBaseMultitenant.Api/Modules/Forms/Controllers/BusinessFormCatalogsController.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Api/Modules/Forms/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Api/Modules/WhatsApp/` | Composición del módulo de WhatsApp en la capa. | [docs/features/whatsapp.md](../features/whatsapp.md) | `src/ArquitecturaBaseMultitenant.Api/Modules/WhatsApp/Contracts/WhatsAppWebhookHttpRequest.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Api/Modules/WhatsApp/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Api/RateLimiting/` | Adaptadores HTTP de las cuotas compartidas: perfil por ruta, rechazo propio y middleware. | [docs/rules/cuotas.md](../rules/cuotas.md) | `src/ArquitecturaBaseMultitenant.Api/RateLimiting/RateLimitAttribute.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Api/RateLimiting/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Api/Tenancy/` | Resolución de organización y subdominio para la petición. | [docs/features/organizaciones.md](../features/organizaciones.md) | `src/ArquitecturaBaseMultitenant.Api/Tenancy/PublicSiteResolutionMiddleware.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Api/Tenancy/AGENTS.md) |
@@ -463,6 +475,7 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `src/ArquitecturaBaseMultitenant.Application/Models/Time/` | Modelos de entrada y salida de tiempo. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Application/Models/Time/DayRangeUtc.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Models/Time/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Modules/Assistant/` | Casos de uso del Asistente. | [Asistente](../features/asistente.md) | `src/ArquitecturaBaseMultitenant.Application/Modules/Assistant/Services/AssistantConversationService.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Modules/Assistant/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Modules/Assistant/Actions/` | El registro de las acciones, sus tres herramientas y la calificación. | [ADR 0068](../decisions/0068-acciones-del-asistente.md) | `src/ArquitecturaBaseMultitenant.Application/Modules/Assistant/Actions/AssistantActionCatalog.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Modules/Assistant/Actions/AGENTS.md) |
+| `src/ArquitecturaBaseMultitenant.Application/Modules/Forms/` | Casos de uso de Formularios. | [docs/plans/formularios/12-catalogos.md](../plans/formularios/12-catalogos.md) | `src/ArquitecturaBaseMultitenant.Application/Modules/Assistant/AssistantModule.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Modules/Forms/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Modules/WhatsApp/` | Composición del módulo de WhatsApp en la capa. | [docs/features/whatsapp.md](../features/whatsapp.md) | `src/ArquitecturaBaseMultitenant.Application/Modules/WhatsApp/Interfaces/Integrations/IWhatsAppAvailability.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Modules/WhatsApp/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Resources/` | Resources de textos visibles en español e inglés. | [docs/rules/textos-y-traducciones.md](../rules/textos-y-traducciones.md) | `src/ArquitecturaBaseMultitenant.Application/Resources/Errors.resx` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Resources/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Application/Services/` | Servicios de aplicación y sus helpers. | [docs/rules/guardado.md](../rules/guardado.md) | `src/ArquitecturaBaseMultitenant.Application/Services/Roles/RoleService.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Application/Services/AGENTS.md) |
@@ -505,6 +518,7 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `src/ArquitecturaBaseMultitenant.Domain/Common/` | Entidades, valores y errores de uso común. | [docs/rules/multitenancy.md](../rules/multitenancy.md) | `src/ArquitecturaBaseMultitenant.Domain/Common/Entity.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Domain/Common/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Domain/Companies/` | Entidades, valores y errores de empresas. | [docs/features/organizaciones.md](../features/organizaciones.md) | `src/ArquitecturaBaseMultitenant.Domain/Tenancy/Company.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Domain/Companies/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Domain/Features/` | Entidades, valores y errores de Features. | [docs/rules/modulos-habilitados.md](../rules/modulos-habilitados.md) | `src/ArquitecturaBaseMultitenant.Domain/Features/Features.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Domain/Features/AGENTS.md) |
+| `src/ArquitecturaBaseMultitenant.Domain/Forms/` | Entidades, valores y errores de los catálogos de Formularios. | [docs/plans/formularios/12-catalogos.md](../plans/formularios/12-catalogos.md) | `src/ArquitecturaBaseMultitenant.Domain/Forms/FormCatalogErrors.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Domain/Forms/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Domain/Invitations/` | Entidades, valores y errores de invitaciones. | [docs/features/organizaciones.md](../features/organizaciones.md) | `src/ArquitecturaBaseMultitenant.Domain/Invitations/Invitation.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Domain/Invitations/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Domain/Legal/` | Entidades, valores y errores de documentos legales. | [docs/rules/modulos.md](../rules/modulos.md) | `src/ArquitecturaBaseMultitenant.Domain/Legal/AccountDeletionCancelTicket.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Domain/Legal/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Domain/Messaging/` | Entidades, valores y errores de Messaging. | [docs/rules/modulos.md](../rules/modulos.md) | `src/ArquitecturaBaseMultitenant.Domain/Messaging/OutboxChannel.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Domain/Messaging/AGENTS.md) |
@@ -529,6 +543,7 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Messaging/Email/Templates/` | Adaptadores técnicos de Messaging / correo / Templates. | [docs/rules/textos-y-traducciones.md](../rules/textos-y-traducciones.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Messaging/Email/Templates/LoginCode.html` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Messaging/Email/Templates/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/` | Módulos opcionales y su composición en la capa. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/AnthropicChatClientFactory.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Modules/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/` | Adaptadores técnicos de módulos / asistente. | [docs/features/asistente.md](../features/asistente.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/AnthropicChatClientFactory.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/AGENTS.md) |
+| `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Forms/` | Adaptadores técnicos de módulos / formularios. | [docs/plans/formularios/12-catalogos.md](../plans/formularios/12-catalogos.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/AssistantModule.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Forms/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/WhatsApp/` | Adaptadores técnicos de módulos / WhatsApp. | [docs/features/whatsapp.md](../features/whatsapp.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/WhatsApp/Disabled/DisabledWhatsAppAvailability.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Modules/WhatsApp/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/` | Adaptadores técnicos de persistencia. | [docs/rules/persistencia-ef.md](../rules/persistencia-ef.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/TenantContext.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/AGENTS.md) |
 | `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Configurations/Identity/` | Configuraciones EF del esquema identidad. | [docs/features/identidad.md](../features/identidad.md) | `src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Configurations/Identity/AccountDeletionCancelTicketConfiguration.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.Infrastructure/Persistence/Configurations/Identity/AGENTS.md) |
@@ -548,6 +563,7 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `src/ArquitecturaBaseMultitenant.ServiceDefaults/` | Configuración común de observabilidad, resiliencia y salud. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `src/ArquitecturaBaseMultitenant.ServiceDefaults/Extensions.cs` | [AGENTS.md](../../src/ArquitecturaBaseMultitenant.ServiceDefaults/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/` | Proyecto de pruebas de integración. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Organization/RolesTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Modules/Assistant/` | Pruebas de integración: módulos / asistente. | [docs/features/asistente.md](../features/asistente.md) | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Modules/Assistant/AssistantTestData.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Modules/Assistant/AGENTS.md) |
+| `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Modules/Forms/` | Pruebas de integración: módulos / formularios. | [docs/plans/formularios/12-catalogos.md](../plans/formularios/12-catalogos.md) | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Modules/Forms/ExplicitRouteInventoryTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Modules/Forms/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Modules/TechnicalContribution/` | Pruebas de integración: módulos / Technical Contribution. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Modules/TechnicalContribution/Persistence/TechnicalContribution.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Modules/TechnicalContribution/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Modules/WhatsApp/` | Pruebas de integración: módulos / WhatsApp. | [docs/features/whatsapp.md](../features/whatsapp.md) | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Modules/WhatsApp/TestControllerApplicationPart.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Modules/WhatsApp/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Application.UnitTests/` | Proyecto de pruebas de unidad. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `tests/ArquitecturaBaseMultitenant.Application.UnitTests/ModuleServiceControlProbe.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Application.UnitTests/AGENTS.md) |
@@ -555,6 +571,7 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `tests/ArquitecturaBaseMultitenant.Application.UnitTests/Modules/WhatsApp/` | Pruebas de unidad: módulos / WhatsApp. | [docs/features/whatsapp.md](../features/whatsapp.md) | `tests/ArquitecturaBaseMultitenant.Application.UnitTests/Modules/WhatsApp/DependencyInjectionTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Application.UnitTests/Modules/WhatsApp/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.ArchitectureTests/` | Proyecto de pruebas de arquitectura. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `tests/ArquitecturaBaseMultitenant.ArchitectureTests/ApplicationNamespaceShape.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.ArchitectureTests/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.ArchitectureTests/Modules/Assistant/` | Pruebas de arquitectura: módulos / asistente. | [docs/features/asistente.md](../features/asistente.md) | `tests/ArquitecturaBaseMultitenant.ArchitectureTests/Modules/Assistant/ApplicationServicesTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.ArchitectureTests/Modules/Assistant/AGENTS.md) |
+| `tests/ArquitecturaBaseMultitenant.ArchitectureTests/Modules/Forms/` | Pruebas de arquitectura: módulos / formularios. | [docs/plans/formularios/12-catalogos.md](../plans/formularios/12-catalogos.md) | `tests/ArquitecturaBaseMultitenant.ArchitectureTests/Modules/Forms/ModuleControllersTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.ArchitectureTests/Modules/Forms/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.ArchitectureTests/Modules/WhatsApp/` | Pruebas de arquitectura: módulos / WhatsApp. | [docs/features/whatsapp.md](../features/whatsapp.md) | `tests/ArquitecturaBaseMultitenant.ArchitectureTests/Modules/WhatsApp/AccessDeclarationTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.ArchitectureTests/Modules/WhatsApp/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/` | Proyecto de pruebas de unidad. | [docs/rules/capas-y-flujo.md](../rules/capas-y-flujo.md) | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Authorization/RoleAssignmentTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Domain.UnitTests/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Api/` | Pruebas de integración: Api. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Api/IdempotencyModeContractTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Api.IntegrationTests/Api/AGENTS.md) |

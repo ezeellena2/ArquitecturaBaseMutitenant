@@ -34,6 +34,10 @@ ArquitecturaBaseMultitenant.Api.Modules.Assistant.AssistantApiModule.AddAssistan
     ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.AssistantModule.AddAssistantModule(
         ArquitecturaBaseMultitenant.Application.Modules.Assistant.AssistantModule.AddAssistantModule(builder.Services)));
 
+ArquitecturaBaseMultitenant.Api.Modules.Forms.FormsApiModule.AddFormsModule(
+    ArquitecturaBaseMultitenant.Infrastructure.Modules.Forms.FormsModule.AddFormsModule(
+        ArquitecturaBaseMultitenant.Application.Modules.Forms.FormsModule.AddFormsModule(builder.Services)));
+
 var app = builder.Build();
 
 // El exportador OpenAPI de MSBuild construye el host sin Aspire ni conexiones.

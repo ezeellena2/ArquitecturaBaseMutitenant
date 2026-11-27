@@ -51,6 +51,8 @@ public sealed class ResourceParityTests
         if (assembly.GetType("ArquitecturaBaseMultitenant.Application.Modules.Assistant.AssistantModule") is not null)
             expected.AddRange(new[] { "Assistant", "AssistantTexts", "AssistantContractData" }
                 .Select(name => "ArquitecturaBaseMultitenant.Application.Modules.Assistant.Resources." + name + ".resources"));
+        if (assembly.GetType("ArquitecturaBaseMultitenant.Application.Modules.Forms.FormsModule") is not null)
+            expected.Add("ArquitecturaBaseMultitenant.Application.Modules.Forms.Resources.FormsTexts.resources");
         Assert.Equal(expected.Order(StringComparer.Ordinal), modules.Order(StringComparer.Ordinal));
         foreach (var resource in modules)
             AssertSameKeysAndPlaceholders(new ResourceManager(resource[..^".resources".Length], assembly));

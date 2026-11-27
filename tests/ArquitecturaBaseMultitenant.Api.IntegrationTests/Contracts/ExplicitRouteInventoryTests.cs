@@ -171,11 +171,13 @@ public sealed partial class ExplicitRouteInventoryTests(ApiFactory factory)
     ];
         AddWhatsAppRoutes(routes);
         AddAssistantRoutes(routes);
+        AddFormsRoutes(routes);
         return [.. routes];
     }
 
     static partial void AddWhatsAppRoutes(List<string> routes);
     static partial void AddAssistantRoutes(List<string> routes);
+    static partial void AddFormsRoutes(List<string> routes);
 
     [Fact]
     public void Every_explicit_api_route_is_listed_once()

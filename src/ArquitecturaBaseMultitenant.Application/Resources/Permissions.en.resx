@@ -84,4 +84,9 @@
   <data name="PermissionDescription.platform.whatsapp.manage" xml:space="preserve"><value>Connect the number and configure the bot, teams and inquiry templates.</value></data>
   <data name="Permission.platform.whatsapp.attend" xml:space="preserve"><value>Answer inquiries</value></data>
   <data name="PermissionDescription.platform.whatsapp.attend" xml:space="preserve"><value>View and reply to the inquiries that reach the Platform number.</value></data>
+  <data name="Area.formcatalogs" xml:space="preserve"><value>Catalogs</value></data>
+  <data name="Permission.formcatalogs.read" xml:space="preserve"><value>View catalogs</value></data>
+  <data name="PermissionDescription.formcatalogs.read" xml:space="preserve"><value>View catalogs and their options.</value></data>
+  <data name="Permission.formcatalogs.manage" xml:space="preserve"><value>Manage catalogs</value></data>
+  <data name="PermissionDescription.formcatalogs.manage" xml:space="preserve"><value>Create and edit catalogs, import them and deactivate them.</value></data>
 </root>

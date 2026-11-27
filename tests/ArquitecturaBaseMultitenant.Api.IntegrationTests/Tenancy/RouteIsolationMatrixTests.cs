@@ -120,11 +120,13 @@ public sealed partial class RouteIsolationMatrixTests(ApiFactory factory)
         cases["POST /api/notifications/{id}/read"] = Shared(ViewerNotification);
         AddAssistantCases(cases);
         AddWhatsAppCases(cases);
+        AddFormsCases(cases);
         return cases;
     }
 
     static partial void AddAssistantCases(Dictionary<string, RouteCase> cases);
     static partial void AddWhatsAppCases(Dictionary<string, RouteCase> cases);
+    static partial void AddFormsCases(Dictionary<string, RouteCase> cases);
     static partial void AddAssistantSeed(List<Func<World, Task>> seeds);
     static partial void AddWhatsAppSeed(List<Func<World, Task>> seeds);
 

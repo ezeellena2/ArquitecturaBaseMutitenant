@@ -84,4 +84,9 @@
   <data name="PermissionDescription.platform.whatsapp.manage" xml:space="preserve"><value>Conectar el número y configurar el bot, los equipos y las plantillas de consultas.</value></data>
   <data name="Permission.platform.whatsapp.attend" xml:space="preserve"><value>Atender consultas</value></data>
   <data name="PermissionDescription.platform.whatsapp.attend" xml:space="preserve"><value>Ver y responder las consultas que llegan al número de Plataforma.</value></data>
+  <data name="Area.formcatalogs" xml:space="preserve"><value>Catálogos</value></data>
+  <data name="Permission.formcatalogs.read" xml:space="preserve"><value>Ver catálogos</value></data>
+  <data name="PermissionDescription.formcatalogs.read" xml:space="preserve"><value>Ver los catálogos y sus opciones.</value></data>
+  <data name="Permission.formcatalogs.manage" xml:space="preserve"><value>Administrar catálogos</value></data>
+  <data name="PermissionDescription.formcatalogs.manage" xml:space="preserve"><value>Crear y editar catálogos, importarlos y darlos de baja.</value></data>
 </root>

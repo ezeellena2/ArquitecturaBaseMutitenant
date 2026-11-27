@@ -31,6 +31,7 @@ public sealed class PermissionInclusionsTests
             ["companies.manage"] = ["companies.read"],
             ["settings.manage"] = ["settings.read"],
             ["company.members.manage"] = ["company.members.read"],
+            ["formcatalogs.manage"] = ["formcatalogs.read"],
         }, Permissions.All.Where(code => Permissions.Inclusions.Of(code).Count > 0)
             .ToDictionary(code => code, code => Permissions.Inclusions.Of(code).ToArray()));
         Assert.Equal(new Dictionary<string, string[]>
