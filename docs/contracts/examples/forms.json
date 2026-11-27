@@ -572,12 +572,12 @@
         "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
         "title": "Datos inválidos",
         "status": 400,
-        "detail": "Ya está en la opción {n}.",
+        "detail": "Ya está en otra opción.",
         "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
         "code": "Forms.Catalog.DuplicateCode",
         "errors": {
           "items.1.code": [
-            "Ya está en la opción {n}."
+            "Ya está en otra opción."
           ]
         },
         "n": 1
@@ -1081,12 +1081,12 @@
         "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
         "title": "Datos inválidos",
         "status": 400,
-        "detail": "Ya está en la opción {n}.",
+        "detail": "Ya está en otra opción.",
         "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
         "code": "Forms.Catalog.DuplicateCode",
         "errors": {
           "items.0.code": [
-            "Ya está en la opción {n}."
+            "Ya está en otra opción."
           ]
         },
         "n": 1

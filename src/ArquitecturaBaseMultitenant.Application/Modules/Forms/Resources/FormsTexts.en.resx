@@ -7,7 +7,7 @@
   <data name="Forms.Catalog.NotFound" xml:space="preserve"><value>We couldn't find this catalog.</value></data>
   <data name="Forms.Catalog.ItemNotFound" xml:space="preserve"><value>That option isn't in this catalog.</value></data>
   <data name="Forms.Catalog.ItemInUse" xml:space="preserve"><value>It can't be deleted because it's in use. You can deactivate it.</value></data>
-  <data name="Forms.Catalog.DuplicateCode" xml:space="preserve"><value>Option {n} already has it.</value></data>
+  <data name="Forms.Catalog.DuplicateCode" xml:space="preserve"><value>Another option already has it.</value></data>
   <data name="Forms.Catalog.TooManyItems" xml:space="preserve"><value>It reached 10,000 options, the maximum for a catalog.</value></data>
   <data name="Forms.Catalog.ValueRequired" xml:space="preserve"><value>Enter the value.</value></data>
   <data name="Forms.Catalog.ValueInvalid" xml:space="preserve"><value>The value doesn't match the catalog's type.</value></data>
@@ -26,7 +26,7 @@
   <data name="Forms.CatalogImport.FileChanged" xml:space="preserve"><value>This isn't the file you reviewed. Review it again.</value></data>
   <data name="Forms.CatalogImport.FileInvalid" xml:space="preserve"><value>The file isn't an XLSX or a UTF-8 CSV.</value></data>
   <data name="Forms.CatalogImport.FileInvalid.Limits" xml:space="preserve"><value>The file is over the limits.</value></data>
-  <data name="Forms.CatalogImport.ValueAmbiguous" xml:space="preserve"><value>"{value}" can be read two ways. Write {a} or {b}.</value></data>
+  <data name="Forms.CatalogImport.ValueAmbiguous" xml:space="preserve"><value>It can be read two ways.</value></data>
   <data name="Forms.CatalogImport.CellRequired" xml:space="preserve"><value>The value is missing.</value></data>
   <data name="Forms.CatalogImport.ConfirmationRequired" xml:space="preserve"><value>Confirm the deactivations or the rows with errors before applying.</value></data>
   <data name="Forms.CatalogImport.Busy" xml:space="preserve"><value>You already have an import or an export in progress. Try again in a moment.</value></data>

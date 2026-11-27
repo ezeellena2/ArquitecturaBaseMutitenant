@@ -66,7 +66,7 @@ Los códigos de la §5, con el HTTP, el campo y los textos es y en que publica l
 | `Forms.Catalog.NotFound` | 404 | No encontramos este catálogo. | We couldn't find this catalog. |
 | `Forms.Catalog.ItemNotFound` | 404, `deleteItems[i]` o `moves[i]` | Esa opción no es de este catálogo. | That option isn't in this catalog. |
 | `Forms.Catalog.ItemInUse` | 409, `deleteItems[i]`, con `uses` | No se puede borrar porque se usa. Podés darla de baja. | It can't be deleted because it's in use. You can deactivate it. |
-| `Forms.Catalog.DuplicateCode` | 400, `items[i].code` | Ya está en la opción {n}. | Option {n} already has it. |
+| `Forms.Catalog.DuplicateCode` | 400, `items.{i}.code`, con `n` | Ya está en otra opción. (la pantalla dice «Ya está en la opción {n}.») | Another option already has it. («Option {n} already has it.») |
 | `Forms.Catalog.TooManyItems` | 409 | Llegó a 10.000 opciones, el máximo de un catálogo. | It reached 10,000 options, the maximum for a catalog. |
 | `Forms.Catalog.ValueRequired` | 400, `items[i].value` | Escribí el valor. | Enter the value. |
 | `Forms.Catalog.ValueInvalid` | 400, `items[i].value` | Escribí un número entero. / Escribí un número. / Escribí una fecha. | Enter a whole number. / Enter a number. / Enter a date. |
@@ -81,7 +81,7 @@ Los códigos de la §5, con el HTTP, el campo y los textos es y en que publica l
 | `Forms.Catalog.ItemDetailTooLong` | 400, `items[i].detail` | Puede tener hasta 300 caracteres. | It can have up to 300 characters. |
 | `Forms.CatalogImport.FileChanged` | 409 | El archivo no es el que se revisó. Revisá de nuevo. | This isn't the file you reviewed. Review it again. |
 | `Forms.CatalogImport.FileInvalid` | 400, `file` | El archivo no es un XLSX ni un CSV en UTF-8. / El archivo pasa los topes (C8). | The file isn't an XLSX or a UTF-8 CSV. / The file is over the limits. |
-| `Forms.CatalogImport.ValueAmbiguous` | en la revisión, con `value` | «{value}» se lee de dos formas. Escribí {a} o {b}. | "{value}" can be read two ways. Write {a} or {b}. |
+| `Forms.CatalogImport.ValueAmbiguous` | en la revisión, con `value` | Se lee de dos formas. (la pantalla dice «{value}» se lee de dos formas. Escribí {a} o {b}.) | It can be read two ways. ("{value}" can be read two ways. Write {a} or {b}.) |
 | `Forms.CatalogImport.CellRequired` | en la revisión | Falta el dato. | The value is missing. |
 | `Forms.CatalogImport.ConfirmationRequired` | 400 | Confirmá las bajas o las filas con errores antes de aplicar. | Confirm the deactivations or the rows with errors before applying. |
 | `Forms.CatalogImport.Busy` | 409 | Ya tenés una importación o una exportación en curso. Probá en un momento. | You already have an import or an export in progress. Try again in a moment. |

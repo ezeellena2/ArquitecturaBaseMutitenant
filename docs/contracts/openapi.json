@@ -22187,12 +22187,12 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 400,
-                      "detail": "Ya está en la opción {n}.",
+                      "detail": "Ya está en otra opción.",
                       "code": "Forms.Catalog.DuplicateCode",
                       "traceId": "example-trace-id",
                       "errors": {
                         "items.{i}.code": [
-                          "Ya está en la opción {n}."
+                          "Ya está en otra opción."
                         ]
                       }
                     }
@@ -22202,12 +22202,12 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 400,
-                      "detail": "Option {n} already has it.",
+                      "detail": "Another option already has it.",
                       "code": "Forms.Catalog.DuplicateCode",
                       "traceId": "example-trace-id",
                       "errors": {
                         "items.{i}.code": [
-                          "Option {n} already has it."
+                          "Another option already has it."
                         ]
                       }
                     }
@@ -22732,8 +22732,8 @@
             "status": 400,
             "code": "Forms.Catalog.DuplicateCode",
             "field": "items.{i}.code",
-            "es": "Ya está en la opción {n}.",
-            "en": "Option {n} already has it."
+            "es": "Ya está en otra opción.",
+            "en": "Another option already has it."
           },
           {
             "status": 400,
@@ -23558,12 +23558,12 @@
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 400,
-                      "detail": "Ya está en la opción {n}.",
+                      "detail": "Ya está en otra opción.",
                       "code": "Forms.Catalog.DuplicateCode",
                       "traceId": "example-trace-id",
                       "errors": {
                         "items.{i}.code": [
-                          "Ya está en la opción {n}."
+                          "Ya está en otra opción."
                         ]
                       }
                     }
@@ -23573,12 +23573,12 @@
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 400,
-                      "detail": "Option {n} already has it.",
+                      "detail": "Another option already has it.",
                       "code": "Forms.Catalog.DuplicateCode",
                       "traceId": "example-trace-id",
                       "errors": {
                         "items.{i}.code": [
-                          "Option {n} already has it."
+                          "Another option already has it."
                         ]
                       }
                     }
@@ -24194,8 +24194,8 @@
             "status": 400,
             "code": "Forms.Catalog.DuplicateCode",
             "field": "items.{i}.code",
-            "es": "Ya está en la opción {n}.",
-            "en": "Option {n} already has it."
+            "es": "Ya está en otra opción.",
+            "en": "Another option already has it."
           },
           {
             "status": 400,
