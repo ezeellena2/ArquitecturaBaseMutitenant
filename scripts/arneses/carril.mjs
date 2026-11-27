@@ -6,7 +6,9 @@
  *   node scripts/arneses/carril.mjs preparar <copia>     clona main en la copia, o la pone al día si ya existe
  *   node scripts/arneses/carril.mjs actualizar <copia>   trae a la copia lo último de main (solo avanza)
  *   node scripts/arneses/carril.mjs entregar <copia>     pone los commits de la copia encima de main, de a un carril por vez
- *   node scripts/arneses/carril.mjs fila "<comando>"     corre el comando cuando la fila pesada está libre
+ *   node scripts/arneses/carril.mjs fila [--dir <carpeta>] "<comando>"
+ *                                                       corre el comando cuando la fila pesada está libre, en <carpeta>
+ *                                                       si se pasa (una copia de la verificación de una etapa, por ejemplo)
  *   node scripts/arneses/carril.mjs limpiar <prefijo>    borra las copias que empiezan así y ya entregaron todo
  *
  * Las rutas de las copias son relativas a la raíz de main. Sale 0 si anduvo; 2 si la copia no está lista (cambios
@@ -179,9 +181,9 @@ export async function entregar(copia, { verificar = VERIFICAR, avisar = () => {}
 }
 
 /** Corre un comando pesado (los tests de integración) cuando nadie más lo está haciendo. */
-export function enFila(main, comando, { avisar = () => {} } = {}) {
+export function enFila(main, comando, { avisar = () => {}, cwd = process.cwd() } = {}) {
   return conCandado(main, 'pesada', () => new Promise((res) => {
-    const p = spawn(comando, { cwd: process.cwd(), shell: true, stdio: 'inherit', windowsHide: true });
+    const p = spawn(comando, { cwd, shell: true, stdio: 'inherit', windowsHide: true });
     p.on('exit', (codigo) => res(codigo ?? 1));
   }), { avisar });
 }
@@ -227,13 +229,23 @@ export async function ejecutar(argv, { cwd = process.cwd(), escribir = (s) => pr
       const r = await entregar(rutaDeCopia(main, resto[0]), { verificar: i >= 0 ? resto[i + 1] : VERIFICAR, avisar: escribir });
       escribir(r.mensaje);
     } else if (orden === 'fila' && resto.length) {
-      return await enFila(main, resto.join(' '), { avisar: escribir });
+      // El candado es el de main (el de los carriles) aunque el comando corra en otra carpeta, como las copias de la
+      // verificación de una etapa, que son de otro repo. Un -- adelante se ignora.
+      const partes = resto.filter((x, i) => !(x === '--' && i === 0));
+      let dir = cwd;
+      if (partes[0] === '--dir') {
+        dir = resolve(cwd, partes[1] || '');
+        if (!partes[1] || !existsSync(dir)) throw new ErrorDeCarril(1, `No existe la carpeta de --dir: ${partes[1] || '(falta)'}`);
+        partes.splice(0, partes[2] === '--' ? 3 : 2);
+      }
+      if (!partes.length) throw new ErrorDeCarril(1, 'Falta el comando de la fila.');
+      return await enFila(main, partes.join(' '), { avisar: escribir, cwd: dir });
     } else if (orden === 'limpiar' && resto[0]) {
       const r = limpiar(main, resto[0], { forzar: resto.includes('--forzar') });
       escribir(`Borradas: ${r.borradas.join(', ') || 'ninguna'}.${r.quedan.length ? `\nQuedan:\n${r.quedan.join('\n')}` : ''}`);
       return r.quedan.length ? 2 : 0;
     } else {
-      escribir('Uso: carril.mjs preparar|actualizar|entregar <copia> · fila "<comando>" · limpiar <prefijo> [--forzar]');
+      escribir('Uso: carril.mjs preparar|actualizar|entregar <copia> · fila [--dir <carpeta>] "<comando>" · limpiar <prefijo> [--forzar]');
       return 1;
     }
     return 0;

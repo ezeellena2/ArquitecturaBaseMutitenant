@@ -162,3 +162,25 @@ test('carril: limpiar borra solo lo entregado, y el CLI devuelve sus códigos', 
     r.borrar();
   }
 });
+
+test('carril: la fila corre el comando en --dir con el candado de main, e ignora un -- adelante', async () => {
+  const r = repoMain();
+  try {
+    const otra = join(r.dir, 'copia-del-front');
+    mkdirSync(otra);
+    const salida = [];
+    const escribir = (s) => salida.push(s);
+    const crea = `node -e "require('fs').writeFileSync('aca.txt', 'x')"`;
+    assert.equal(await ejecutar(['fila', '--dir', otra, crea], { cwd: r.main, escribir }), 0);
+    assert.equal(existsSync(join(otra, 'aca.txt')), true, 'corre en la carpeta de --dir');
+    assert.equal(existsSync(join(r.main, 'aca.txt')), false);
+    assert.equal(existsSync(join(r.main, '.local', 'copias')), true, 'el candado es el de main');
+    assert.equal(await ejecutar(['fila', '--', 'node', '-e', '"process.exit(3)"'], { cwd: r.main, escribir }), 3);
+    assert.equal(await ejecutar(['fila', '--dir', join(r.dir, 'no-existe'), OK], { cwd: r.main, escribir }), 1);
+    assert.match(salida.at(-1), /No existe la carpeta de --dir/);
+    assert.equal(await ejecutar(['fila', '--dir', otra], { cwd: r.main, escribir }), 1);
+    assert.match(salida.at(-1), /Falta el comando de la fila/);
+  } finally {
+    r.borrar();
+  }
+});
