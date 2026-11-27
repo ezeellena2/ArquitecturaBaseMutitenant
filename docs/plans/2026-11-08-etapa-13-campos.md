@@ -1,6 +1,6 @@
 # E13 · Campos de los catálogos · plan ejecutable
 
-**Estado:** pendiente · Spec: `docs/plans/formularios/13-campos.md`. Tableros: los de la v175, salvo los que la spec marca «Se redibujan con el traspaso 18, tanda 2»: la tarea que usa uno de esos espera la versión del lienzo que lo trae, y donde un tablero contradiga la 261 a la 264, manda la decisión. No queda nada de producto para decidir.
+**Estado:** pendiente · Va después de los [arreglos de la revisión externa](2026-11-27-etapa-arreglos-revision.md) con el código listo (decisión del usuario del 2026-11-27). Spec: `docs/plans/formularios/13-campos.md`. Tableros: los de la v175, salvo los que la spec marca «Se redibujan con el traspaso 18, tanda 2»: la tarea que usa uno de esos espera la versión del lienzo que lo trae, y donde un tablero contradiga la 261 a la 264, manda la decisión. No queda nada de producto para decidir.
 
 | Parte | Tareas | Estado |
 | --- | --- | --- |

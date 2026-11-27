@@ -1,6 +1,6 @@
 # Arreglos de la revisión externa · plan ejecutable
 
-**Estado:** pendiente · Va después de la E12 con el código listo y antes de la E13. Spec: este plan. Cada tarea trae el hallazgo de la revisión externa del 2026-11-27 (Antigravity), comprobado contra el código de `67cba1c1` por la verificación del mismo día (`.local/antigravity/verificacion/00-verificacion.md`, fuera de git; el id `T0N-M` de cada tarea es el de esa verificación). Tableros: ninguno nuevo; ninguna tarea suma una pantalla (F3 suma un texto en el chat).
+**Estado:** pendiente · Va después de la E12 con el código listo y antes de la E13 (decisión del usuario del 2026-11-27). Spec: este plan. Cada tarea trae el hallazgo de la revisión externa del 2026-11-27 (Antigravity), comprobado contra el código de `67cba1c1` por la verificación del mismo día (`.local/antigravity/verificacion/00-verificacion.md`, fuera de git; el id `T0N-M` de cada tarea es el de esa verificación). Tableros: ninguno nuevo; ninguna tarea suma una pantalla (F3 suma un texto en el chat).
 
 | Parte | Tareas | Estado |
 | --- | --- | --- |
