@@ -1,6 +1,6 @@
 # Costuras de módulos · plan ejecutable
 
-**Estado:** pendiente · Spec: [`docs/plans/formularios/costuras-de-modulos.md`](formularios/costuras-de-modulos.md) (contrato, datos y pasos con sus tests). Va a la vez que la etapa de acciones del asistente (decisión del usuario del 2026-11-26: no usa nada de ella), después de la puerta de la base 2 y antes de la E12, sin pantallas ([ADR 0069](../decisions/0069-modulos-y-suscripciones.md)). Las decisiones de producto las tomó el usuario el 2026-11-23, en la 0069. Arma solo las cuatro costuras: el permiso de uso por origen, el resolvedor de topes, apagar sin borrar y la clave del uso de la IA.
+**Estado:** cerrado · puerta mínima del 2026-11-27 (build y tests enteros de los dos repos y los detectores de documentación; el E2E real y el recorrido van al cierre del bloque E12–E25, decisión del usuario de ese día) · Spec: [`docs/plans/formularios/costuras-de-modulos.md`](formularios/costuras-de-modulos.md) (contrato, datos y pasos con sus tests). Va a la vez que la etapa de acciones del asistente (decisión del usuario del 2026-11-26: no usa nada de ella), después de la puerta de la base 2 y antes de la E12, sin pantallas ([ADR 0069](../decisions/0069-modulos-y-suscripciones.md)). Las decisiones de producto las tomó el usuario el 2026-11-23, en la 0069. Arma solo las cuatro costuras: el permiso de uso por origen, el resolvedor de topes, apagar sin borrar y la clave del uso de la IA.
 
 **Fuente:** la ADR 0069 y la investigación del 2026-11-23 que resume.
 
@@ -9,7 +9,7 @@
 | Contrato | K0–K1 | Hecha |
 | Back | B1–B7 | Hecha |
 | Front | — | Sin tareas |
-| Integración y puerta | I1–I2 | Pendiente: I2, el E2E real (46/47) y el recorrido (58/254) se cortan en el Asistente, por e465d7e5 de acciones del asistente |
+| Integración y puerta | I1–I2 | Hecha |
 
 ## Forma de trabajo
 
@@ -182,21 +182,16 @@ Sin tareas. La etapa no tiene pantallas, y `openapi.json` no cambia. La pestaña
 
 | Paso | Resultado | Número |
 | --- | --- | --- |
-| Build del back | Pasa en 3a4ca9f5: 0 errores y 0 advertencias | 11 proyectos |
-| Tests del back (con Docker) | Pasa con los arreglos, en 3a4ca9f5: pasan los 59 que fallaban. Corrí el área Modules.Assistant de la integración (426/426): están los 57 del Asistente, con los 24 que vencían, AssistantModuleOffKeepsDataTests y AssistantPersistenceTests con sus 13 tablas. También corrí WhatsAppModuleOffKeepsDataTests, RouteIsolationMatrixTests y RuntimeRoleTableGrantsTests, que es nuevo (7/7). La suite completa no se repitió porque los arreglos tocan solo tests y una ficha. El resto quedó en verde en el corte (3998) | 433/433 (59/59 de los que fallaban) |
-| Build del front | Pasa: sale 0 | exit 0 |
-| Lint | Pasa: 0 errores (11 advertencias) | 0 errores |
-| Tests del front (corridos solos) | Pasa: 373 archivos | 3956/3956 |
-| Contrato (contracts:check) | Pasa: el esquema TypeScript generado coincide con openapi.json | exit 0 |
-| E2E real | No pasa. «Asistente real E8B» ya pasa E8B-20-2 en 1440 y 390 (la causa era la falta del GRANT), pero en los dos anchos se corta en el caso técnico attachments.five-six: un mensaje con cinco imágenes termina en Assistant.Provider.ContextTooLarge (assistant-real-ui.mjs:205). Desde history-rename, el resto del caso pasa en los dos anchos (15 comprobaciones por ancho). Probé el entorno aislado sin calificar las acciones, solo en la copia, y así el paso pasa: lo rompe e465d7e5, de acciones del asistente. Los demás grupos no se repitieron y siguen en verde desde el corte. Sin proveedores reales | 46/47 |
-| Documentación (realinear-docs --detectar) | Pasa: ccde3fe3 resolvió los 2 hallazgos (arbol.md:330 y persistencia-ef.md:40). Con los dos repos en main (front 2b719e81) da 0. Con el front en su corte (7c5cfa3c) da 4 para el modelo, todos en agregar-una-accion-al-asistente.md:66: la guía nombra hooks y users/lib/proposal.ts del front de acciones del asistente (dcbbd07d), que todavía no estaban en ese corte | auto 0 · modelo 0 · humano 0 |
-| Estado de los documentos (estado-docs --detectar) | Pasa: organizaciones.md quedó al día con 83323c0a | auto 0 · modelo 0 · humano 0 |
-| Lo que no está en la spec (conformidad --detectar) | Pasa en los dos repos: 11 commits del back, con los 2 de la puerta, y 1 del front con la línea Tarea | auto 0 · modelo 0 · humano 0 |
-| Galería | No aplica: la etapa no tiene pantallas nuevas ni cambiadas. El plan, en la I2, dice «No hay galería» | — |
-| Recorrido de usuario | No pasa: se corta en E8B-20-2 a 1440 (TimeoutError, el mismo paso del Asistente que el E2E). Los pasos que siguen no corrieron. Índice: C:\e2e-cm\ArquitecturaBaseMutitenantFront\docs\design\capturas\recorrido\2026-11-26\index.html | 58/254 |
-| Quitar el módulo | No aplica: no es la etapa de un módulo | — |
-| Lista de control (revisión de código del cierre) | 9 revisores por premisa: textos, arquitectura, caché/cuotas/módulos, seguridad, fuera de la spec y las 4 adversariales. Juntaron 1 hallazgo y no confirmaron ninguno. Los tres tests de la 0069 pasan. El de apagar sin borrar de WhatsApp quedó en verde con el arreglo del test, que cuenta WhatsAppCustomer y sigue comprobando que el webhook guardó al remitente. El del Asistente quedó en verde con el GRANT; Pantallas contra el tablero: 0 hallazgos, 0 confirmados | 0 confirmados |
-| Commits que se pisan | Pasa: lo de cada commit de la etapa sigue en el código. La B3 cambió el record ModuleLimitCeiling al sumarle cuerpo. Los 2 arreglos de la puerta tocan dos tests: el conteo de AssistantPersistenceTests (de 12 a 13) y la cuenta del test de la B7, que mantiene su comprobación | 12/12 |
+| Build del back | Pasa en 3a4ca9f5 | 0 errores, 0 advertencias |
+| Tests del back (con Docker) | Pasa en 3a4ca9f5, con los arreglos de la puerta (el GRANT de `AssistantProposals` y dos conteos de tests); el resto, en verde en el corte. La integración entera volvió a pasar en la puerta de acciones (52 min), con el código de las dos | 433/433 de lo que se corrió de nuevo · 3998 en el corte |
+| Build, lint y contrato del front | Pasa | sale 0 · 0 errores · `contracts:check` 0 |
+| Tests del front | Pasa | 3956/3956 |
+| Documentación (realinear-docs, estado-docs, alinear-etapas) | Pasa | 0 · 0 · 0 |
+| E2E real | Al cierre del bloque E12–E25 (decisión del 2026-11-27). Se cortaba en attachments.five-six (`ContextTooLarge`), que rompió e465d7e5 de acciones; lo arregló 77155ea9 y el E2E de la puerta de acciones lo pasó | 46/47 en su corte |
+| Galería | No aplica: la etapa no tiene pantallas | — |
+| Recorrido de usuario | Al cierre del bloque E12–E25 (decisión del 2026-11-27). Se cortaba en el mismo paso del Asistente (E8B-20-2) | 58/254 en su corte |
+| Revisión de código del cierre | 9 revisores, 1 hallazgo, ninguno confirmado | 0 confirmados |
+| Proveedor real | No se corrió ni hizo falta | 0 |
 
 **Texto para el chat de Integración**
 

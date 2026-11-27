@@ -1,6 +1,6 @@
 # Acciones del asistente · plan ejecutable
 
-**Estado:** pendiente · Spec: `docs/plans/formularios/acciones-del-asistente.md` (contrato, datos y pasos con sus tests). Va después de la puerta de la segunda parte de la base, que cerró el 2026-11-26 (el usuario decidió arrancar sin esperar el recorrido de sus cuatro pasos nuevos de la I3), a la vez que Costuras de módulos y antes de la E12 ([ADR 0068](../decisions/0068-acciones-del-asistente.md); decisión 268). Las decisiones de producto las tomó el usuario el 2026-11-23: el lugar, el alcance (Usuarios y Roles enteros) y que se ofrezcan calificadas antes de la prueba integral. Los diez tableros de la spec («Pantallas») están en el lienzo v179, aprobados por el usuario el 2026-11-23.
+**Estado:** cerrado · puerta mínima del 2026-11-27 (build y tests enteros de los dos repos y los detectores de documentación; el E2E real, la galería y el recorrido van al cierre del bloque E12–E25, decisión del usuario de ese día) · Spec: `docs/plans/formularios/acciones-del-asistente.md` (contrato, datos y pasos con sus tests). Va después de la puerta de la segunda parte de la base, que cerró el 2026-11-26 (el usuario decidió arrancar sin esperar el recorrido de sus cuatro pasos nuevos de la I3), a la vez que Costuras de módulos y antes de la E12 ([ADR 0068](../decisions/0068-acciones-del-asistente.md); decisión 268). Las decisiones de producto las tomó el usuario el 2026-11-23: el lugar, el alcance (Usuarios y Roles enteros) y que se ofrezcan calificadas antes de la prueba integral. Los diez tableros de la spec («Pantallas») están en el lienzo v179, aprobados por el usuario el 2026-11-23.
 
 **Fuente:** la ADR 0068, sus dos revisiones adversariales del 2026-11-23 y la sección «Acciones del asistente» de ArquitecturaBase (`docs/plans/2026-11-19-procesos-del-campo.md`, solo para leer).
 
@@ -9,7 +9,7 @@
 | Contrato | K0–K1 | Hecha |
 | Back | B1–B8 | Hecha |
 | Front | F1–F5 | Hecha |
-| Integración y puerta | I1–I3 | Pendiente: I2 (falla `AssistantActionDeclarationTests.The_dependency_tree_of_every_source_only_reads`, que rompió 81111203) e I3 (el recorrido se corta en ACC-08 a 1440: el paso cierra el navegador antes de la captura; 134/272) |
+| Integración y puerta | I1–I3 | Hecha |
 
 ## Forma de trabajo
 
@@ -212,21 +212,15 @@ Leé AGENTS.md del front, la ADR 0068 del back, este plan y la spec docs/plans/f
 
 | Paso | Resultado | Número |
 | --- | --- | --- |
-| Build del back | Pasa (corte 77155ea9) | 0 errores, 0 advertencias |
-| Tests del back (con Docker) | Falla: 1 nuevo, `AssistantActionDeclarationTests.The_dependency_tree_of_every_source_only_reads`, que rompió 81111203. Los 2 fallos de antes (`InjectedValidatorTests`, `HarnessTests`) ya pasan; Application entero y la integración dirigida en verde | Architecture 431/432 · Application 1033/1033 · integración dirigida 38/38 |
-| Build del front | Pasa | sale 0 |
-| Lint | Pasa | 0 errores (11 advertencias) |
-| Tests del front | Pasa, con los dirigidos (access-paths, structure, locales, assistant, assistant-actions, users) | 765/765 (58/58 archivos) |
-| Contrato (contracts:check) | Pasa | sale 0 |
-| E2E real | Pasa: attachments.five-six termina en done sin ContextTooLarge, y «Acciones del asistente» («Invitar usuario» y «Ya se guardó»), a 1440 y 390 | 2/2 (48/48 con la corrida anterior) |
-| Documentación (realinear-docs) | Pasa, en los dos repos | 0 · 0 · 0 |
-| Estado de los documentos | Pasa | 0 · 0 · 0 |
-| Conformidad | Pasa (35 commits del back y 15 del front) | 0 · 0 · 0 |
-| Galería | 57 casos del grupo «asistente» recapturados a 1440, 390 y 320; galería entera en `.local/puerta-acciones/galeria/`. A los tableros les falta la tarjeta mientras lee y la de error con «Reintentar» | 57/57 (98/98) |
-| Recorrido de usuario | Falla: E8B-40-3 y ACC-01 a ACC-07 a 1440 pasan; se corta en ACC-08 (el paso cierra el navegador antes de la captura). No corrieron ACC-09 ni nada a 390 | 134/272 |
-| Quitar el módulo | No aplica | - |
-| Revisión de código del cierre | 21 hallazgos, 20 confirmados; 17 arreglos más 5 commits de esta tanda. El arreglo de `InjectedValidatorTests` rompió la regla hermana. Pantallas contra el tablero: 3 de 4 confirmados | 20/21 |
-| Commits que se pisan | Pasa: nada de una tarea quedó deshecho; la migración AssistantActionTurnOfferedActions se regeneró a propósito (86910d58) | back 58 (35), front 30 (15) |
+| Build del back | Pasa en 8a263564 | 0 errores, 0 advertencias |
+| Tests del back (con Docker) | Pasa: la integración entera (52 min), Application y Domain en verde en el corte de la puerta. El único fallo, `The_dependency_tree_of_every_source_only_reads`, lo arregló 8a263564: las fuentes reciben `IEnumerable<IValidator<T>>` y lo corren con `RequestValidator.ValidateAsync` ([validacion](../rules/validacion.md)); después corrieron Architecture entero y los dirigidos de las dos fuentes | Architecture 432/432 · fuentes 15/15 · batería 7/7 · `AssistantActionInputsTests` 2/2 |
+| Build, lint y contrato del front | Pasa | sale 0 · 0 errores · `contracts:check` 0 |
+| Tests del front | Pasa: en la corrida entera falló solo `access-paths.test.ts`, que ya pasa | 4014/4015, y ese después |
+| Documentación (realinear-docs, estado-docs, alinear-etapas) | Pasa | 0 · 0 · 0 |
+| E2E real | Al cierre del bloque E12–E25 (decisión del 2026-11-27). En el corte de 77155ea9 pasó: «Invitar usuario» con «Ya se guardó» y attachments.five-six sin `ContextTooLarge` | 2/2 |
+| Galería | Al cierre del bloque E12–E25 (decisión del 2026-11-27). A los tableros les falta la tarjeta mientras lee y la de error con «Reintentar» ([backlog](../backlog.md#para-después-de-la-etapa-acciones-del-asistente)) | — |
+| Recorrido de usuario | Al cierre del bloque E12–E25 (decisión del 2026-11-27). El script de ACC-08, que cerraba el navegador antes de la captura, ya está arreglado en el front (2084389b, `scripts/recorrido-usuario-acciones.mjs`), sin correr | — |
+| Revisión de código del cierre | 21 hallazgos, 20 confirmados y arreglados; lo que quedó, en el backlog | 20/21 |
 | Proveedor real | No se corrió ni hizo falta | 0 |
 
 **Texto para el chat de Integración**
