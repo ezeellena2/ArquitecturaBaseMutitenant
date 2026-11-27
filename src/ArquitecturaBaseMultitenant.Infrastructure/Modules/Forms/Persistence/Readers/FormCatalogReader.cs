@@ -82,18 +82,19 @@ internal sealed class FormCatalogReader(ApplicationDbContext context, ITenantCon
             _ => items,
         };
         // Un texto repetido avisa sin frenar: otra opción del catálogo con el mismo texto, sin distinguir mayúsculas. EF lo
-        // traduce a lower() de PostgreSQL, como ApplySearch: la cultura del proceso no interviene.
+        // traduce a lower() de PostgreSQL, como ApplySearch: la cultura del proceso no interviene. Se busca después, solo para los
+        // textos de la página y en una sola pasada: calcularlo en cada fila recorría el catálogo entero por cada opción salteada.
 #pragma warning disable CA1304, CA1311, CA1862
         var page = await items.OrderBy(item => item.Position).ThenBy(item => item.Id)
-            .Select(item => new ItemProjection
-            {
-                Item = item,
-                TextRepeated = all.Any(other => other.Id != item.Id && other.Text.ToLower() == item.Text.ToLower()),
-            })
+            .Select(item => new ItemProjection { Item = item, LowerText = item.Text.ToLower() })
             .ToPagedResultAsync(request, ct);
+        var lowerTexts = page.Items.Select(row => row.LowerText).Distinct(StringComparer.Ordinal).ToArray();
+        HashSet<string> repeated = lowerTexts.Length == 0 ? [] : (await all.Where(item => lowerTexts.Contains(item.Text.ToLower()))
+            .GroupBy(item => item.Text.ToLower()).Where(group => group.Count() > 1).Select(group => group.Key).ToListAsync(ct))
+            .ToHashSet(StringComparer.Ordinal);
 #pragma warning restore CA1304, CA1311, CA1862
         return new PagedResult<FormCatalogItemRow>([.. page.Items.Select(row => new FormCatalogItemRow(row.Item.Id, row.Item.Code,
-            row.Item.Text, row.Item.Detail, row.Item.ValueText(), row.Item.Position, row.Item.IsActive, row.TextRepeated))],
+            row.Item.Text, row.Item.Detail, row.Item.ValueText(), row.Item.Position, row.Item.IsActive, repeated.Contains(row.LowerText)))],
             page.Page, page.PageSize, page.TotalCount);
     }
 
@@ -175,6 +176,6 @@ internal sealed class FormCatalogReader(ApplicationDbContext context, ITenantCon
     private sealed class ItemProjection
     {
         public FormCatalogItem Item { get; init; } = null!;
-        public bool TextRepeated { get; init; }
+        public string LowerText { get; init; } = null!;
     }
 }
