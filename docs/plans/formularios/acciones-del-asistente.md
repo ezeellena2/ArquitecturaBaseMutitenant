@@ -1,6 +1,6 @@
 # Acciones del asistente (spec)
 
-**Estado:** pendiente · spec de la etapa «Acciones del asistente», que va después de la segunda parte de la base y antes de la E12 ([ADR 0068](../../decisions/0068-acciones-del-asistente.md); decisión 268). El usuario eligió el lugar y el alcance el 2026-11-23: el motor y Usuarios y Roles enteros. Se contrasta con el código real con `/plan-etapa` cuando cierre la segunda parte de la base.
+**Estado:** cerrado · se cerró el 2026-11-27 con su puerta mínima en verde ([hoja de ruta](../2026-09-27-plan-de-desarrollo.md)); el E2E real, la galería y el recorrido van al cierre del bloque E12–E25. Era la etapa que iba después de la segunda parte de la base y antes de la E12 ([ADR 0068](../../decisions/0068-acciones-del-asistente.md); decisión 268): el motor y Usuarios y Roles enteros, como eligió el usuario el 2026-11-23. Lo que vale hoy está en la 0068, la [receta](../../guides/agregar-una-accion-al-asistente.md) y el [Asistente](../../features/asistente.md); su plan se retiró al cerrar y queda en la historia de git.
 
 ## Qué leer ✓
 
@@ -166,7 +166,7 @@ Cada uno lleva su teléfono (`M-`). Manda el tablero aprobado, salvo lo que cont
 - **Índice** parcial por `(TenantId, ConversationId, Kind)` con `State = 'New'`, para reemplazar dentro de su clase.
 - **La migración** es aditiva, y la tabla se suma al inventario del módulo (`AssistantModelContributor`), que la quita si se quita el asistente.
 - **Las personas que nombra una propuesta** (el destino y los `Record` de una persona) se suman a los `SubjectUserIds` de su mensaje.
-- **En la historia del turno siguiente,** el mensaje con una propuesta suma la acción y lo que escribió el modelo, nunca lo resuelto ni los nombres (0068 §7; 0064 §9 y §10). El pedido lleva la conversación entera, así que la última propuesta nunca queda afuera.
+- **En la historia del turno siguiente** (la arma `AssistantTurnBuilder.ProposalHistoryAsync`, que llama `AssistantTurnService`), el mensaje con una propuesta suma la acción y lo que escribió el modelo, nunca lo resuelto ni los nombres (0068 §7; 0064 §9 y §10). El pedido lleva la conversación entera, así que la última propuesta nunca queda afuera.
 - **Se borra** con su conversación, con la retención de las conversaciones del Inicio (`retentionDays`, 30 por defecto; 272), salvo las guardadas, y con la baja de la cuenta. Es una tabla del módulo: no entra en `PersonalDataPurgeTests`, que mira solo el modelo del núcleo (ADR 0062); su borrado lo prueba la B5.
 
 **`tenant.AssistantTurns`** suma `OfferedActions` (jsonb, nulo): la lista de acciones que se ofreció en el turno, sellada (0068 §6). Su migración va con la B4. Un turno que ofrece acciones se sella con `EngineVersion` 2 (`AssistantTurnWork.CurrentEngineVersion` pasa a 2; uno sin acciones sigue en 1): una copia anterior no lo toma (0064 §6, B14 de la base 2), sin excepción de la 0060.
@@ -185,7 +185,7 @@ Cada uno lleva su teléfono (`M-`). Manda el tablero aprobado, salvo lo que cont
 | B2 | El alcance de solo lectura: un alcance de DI propio. Entra con el actor revalidado (worker) o con el tenant del claim (petición), abre `READ ONLY` y se descarta. Corren ahí las fuentes y las 19 lecturas | el puerto `IAssistantReadOnlyScope` en `Application/Modules/Assistant/Interfaces/Integrations/`, implementado en `Infrastructure/Modules/Assistant/` | `ExecutionActorContext` (`IExecutionActorScope`), `TenantContext` | una fuente de prueba que escribe falla sin dejar filas; tenant correcto en los dos caminos; las lecturas de hoy siguen verdes |
 | B3 | Lo que tiene quien pide, sin el `Guard`: las `Policy` de la 0061 ya son puras (B1 de la base 2), y `ReadHeldAsync` y `ReadAssignedAsync` pasan de `OrganizationDelegationGuard` a `DelegationPermissionsResolver` (solo con `ICurrentUser` e `IRoleReader`), que usan los dos `Guard`, `RoleService` y las fuentes, sin cambiar la conducta de la ruta | `OrganizationDelegationGuard.cs`, `CompanyDelegationGuard.cs`, `RoleService.cs` y `Application/Services/Roles/DelegationPermissionsResolver.cs` (nuevo) | `OrganizationDelegationGuard.ReadHeldAsync` | `DelegatedAdministrationTests` sin cambios; la `Policy` y su `Guard` deciden igual en la organización y en una empresa, y el `Guard` y el resolvedor leen lo mismo |
 | B4 | El registro y las tres piezas: el filtro por llamada, el sello en `AssistantTurns.OfferedActions` con su migración y `EngineVersion` 2, la lista precargada en la preparación del turno, `read_action`, `propose_action`, `AssistantActionToolData` en el `switch` cerrado y la calificación | `Application/Modules/Assistant/Actions/*`, `AssistantTurnWork`, `AssistantTurnPreparationBuilder`, `AssistantTurnToolBuilder` | `AssistantToolCatalog`, `AssistantTool` | catálogo, sello y su versión, una por turno, rechazo sin cortar el turno, sin calificación no se ofrece, `ModelSnapshotTests` |
-| B5 | La propuesta: entidad, migración, reemplazo por clase, sujetos, retención y baja, y su lugar en la historia del turno siguiente. Las tres rutas, `FindAsync` del almacén y «Sin confirmar» calculado al leer | `Domain/Assistant/AssistantProposal.cs`, configuración, migración, `AssistantModelContributor`, `AssistantTurnWriter`, `AssistantProposalService`, controller | `AssistantMessage`, `AssistantConversationService` | aislamiento entre personas y organizaciones, estados, re-resolución, aplicada comprobada, `attempts` después de un 2xx, la retención y la baja la borran, el pedido siguiente la trae sin lo resuelto, `ModelSnapshotTests` |
+| B5 | La propuesta: entidad, migración, reemplazo por clase, sujetos, retención y baja, y su lugar en la historia del turno siguiente. Las tres rutas, `FindAsync` del almacén y «Sin confirmar» calculado al leer | `Domain/Assistant/AssistantProposal.cs`, configuración, migración, `AssistantModelContributor`, `AssistantProposalWriter`, `AssistantTurnBuilder`, `AssistantProposalService`, controller | `AssistantMessage`, `AssistantConversationService` | aislamiento entre personas y organizaciones, estados, re-resolución, aplicada comprobada, `attempts` después de un 2xx, la retención y la baja la borran, el pedido siguiente la trae sin lo resuelto, `ModelSnapshotTests` |
 | B6 | `OrganizationUserActionSource`, con las tres de Usuarios, la empresa por su permiso y el aviso de la invitación | `Application/Services/OrganizationUsers/OrganizationUserActionSource.cs` | `OrganizationDomainPendingItems` | escenarios de la batería |
 | B7 | `RoleActionSource`, con las tres de Roles y los permisos del alcance que quien pide tiene. Quitar un permiso que sigue incluido por otro que queda (260) se rechaza con su ruta (`Invalid`) | `Application/Services/Roles/RoleActionSource.cs` | B6 | escenarios de la batería |
 | B8 | La batería genérica, los escenarios y el contrato publicado | `Api.IntegrationTests/Modules/Assistant/AssistantActionContractTests.cs`, `TestFeatures/AssistantActions/*`, el generador de `assistant-actions.json` | `RouteIsolationMatrixTests` | la batería de la 0068 para las seis |
@@ -235,13 +235,19 @@ Las seis de «Qué se construye»: esta etapa arma la mecánica de la 0068 y las
 
 ## Cómo se cierra ✓
 
-La puerta de la etapa, con la lista de control de `/puerta`, suma lo propio:
-- **la batería genérica** en verde para las seis acciones;
-- **el E2E** «Invitar usuario» desde una propuesta del modelo falso, con «Ya se guardó» en una segunda pestaña;
-- **el recorrido de cada acción** con el modelo falso;
+Se cerró con la puerta mínima del 2026-11-27 (decisión del usuario de ese día): el build y los tests enteros de los dos repos, con la batería genérica en verde para las seis acciones, y los detectores de documentación en 0. Al cierre del bloque E12–E25, en la prueba integral, van:
+- **el E2E** «Invitar usuario» desde una propuesta del modelo falso, con «Ya se guardó» en una segunda pestaña (pasó en el corte de la puerta);
+- **el recorrido de cada acción** con el modelo falso; el script de ACC-08 ya está arreglado en el front (2084389b);
 - **la galería** de los tableros nuevos, lado a lado.
 
-No hay prueba con Meta ni con un proveedor real.
+No hubo prueba con Meta ni con un proveedor real. Lo que la etapa dejó para después está en el [backlog](../../backlog.md#para-después-de-la-etapa-acciones-del-asistente).
+
+## Lo que deja
+
+- **la E12 y todo el bloque:** el puerto `IAssistantActionSource` y el sufijo `ActionSource`, el registro y las tres piezas, la batería genérica, `assistant-actions.json` y, en el front, `src/shared/assistant-actions/` y la tarjeta. Cada etapa que suma una pantalla que crea, edita o elimina declara sus acciones con la [receta](../../guides/agregar-una-accion-al-asistente.md); las opciones de un catálogo se declaran una vez por tipo, en la E12;
+- **la E23:** el alcance de solo lectura (`IAssistantReadOnlyScope.RunAsync`, B2), que elige su entrada en `AssistantReadOnlyScope`: el actor que revalidó el worker o, sin actor, la organización del claim; la E23 suma la del turno de canal, con la organización y sin persona (0068 §5). Y la versión del motor (B4): `AssistantTurnWork.Create(…, offersActions)` sella `CurrentEngineVersion` 2 con acciones o `WithoutActionsEngineVersion` 1 sin ellas, y el worker toma `EngineVersion <= CurrentEngineVersion`; la E23 suma la clase del turno de canal, que sella con 3;
+- **la E25:** `proposal` en el `Message` (`AssistantMessageProposalResponse`) y la tabla `AssistantProposals` (`Kind` de texto, hoy solo «Action», con el reemplazo por `IAssistantProposalRepository.LockNewAsync` y una propuesta por mensaje), a las que suma sus clases (`form`, `catalog` y `catalogImport`), con el reemplazo por clase;
+- **antes de la prueba integral del bloque:** la calificación de todas las acciones con un modelo real, con el visto bueno del usuario, que llena `qualified-actions.json`.
 
 ## Requisitos previos
 

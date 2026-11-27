@@ -1,6 +1,6 @@
 # Costuras de módulos (spec)
 
-**Estado:** pendiente · spec de la etapa «Costuras de módulos», que va a la vez que la etapa de acciones del asistente (decisión del usuario del 2026-11-26) y antes de la E12, sin pantallas ([ADR 0069](../../decisions/0069-modulos-y-suscripciones.md), aceptada por el usuario el 2026-11-23). Arma las cuatro costuras que necesita la etapa del cobro para no rehacer la 12 a la 25. Su plan ejecutable es el [del 2026-11-23](../2026-11-23-etapa-costuras-de-modulos.md); lo que deja la segunda parte de la base lo confirma su K0.
+**Estado:** cerrado · se cerró el 2026-11-27 con su puerta mínima en verde ([hoja de ruta](../2026-09-27-plan-de-desarrollo.md)); el E2E real y el recorrido de siempre van al cierre del bloque E12–E25. Era la etapa que iba a la vez que la de acciones del asistente y antes de la E12, sin pantallas ([ADR 0069](../../decisions/0069-modulos-y-suscripciones.md), aceptada por el usuario el 2026-11-23): las cuatro costuras que necesita la etapa del cobro para no rehacer la 12 a la 25. Lo que vale hoy está en [modulos-habilitados](../../rules/modulos-habilitados.md) y en la 0069; su plan se retiró al cerrar y queda en la historia de git.
 
 ## Qué leer ✓
 
@@ -75,8 +75,8 @@ Sin pantallas ni tableros. La pestaña «Módulos» de Plataforma (`Organization
 | `ModuleLimitDefinition` | `Models/Features/` | `(Key, Kind, Default, Minimum)`; la clave es `<módulo>.<campo>` |
 | `ModuleLimitKind` | `Models/Features/` | `Count` (un entero: veces, días, horas, MiB, caracteres) o `Amount` (`Money`) |
 | `ModuleLimitValue` | `Models/Features/` | `(Count, Amount)`, con uno solo cargado |
-| `ModuleLimitCeiling` | `Models/Features/` | el tope: `(Key, Count, Amount)` y `Effective(int? organizationValue)`, el menor entre lo elegido (o el de entrada) y el tope |
-| `ModuleLimitResolver` | `Services/Features/` | `ResolveAsync(key, organizationId, ct)`; `organizationId` nulo (una persona o Plataforma) da el máximo de la plataforma |
+| `ModuleLimitCeiling` | `Models/Features/` | el tope: `(Key, Count, Amount)`, con `Default` (el de entrada de su definición, que carga el resolvedor), y `Effective(int? organizationValue)`, el menor entre lo elegido (o `Default`) y el tope; en un `Amount` tira |
+| `ModuleLimitResolver` | `Services/Features/` | `ResolveAsync(key, organizationId, ct)`: hoy ignora `organizationId` y da siempre el máximo de la plataforma; la etapa del cobro le suma el valor de Plataforma para una organización y el del plan |
 
 En un `Count`, `Minimum` va de 0 en adelante y `Default`, si está, no es menor que el mínimo; nulo dice que la organización no elige y vale el tope. En un `Amount`, los dos van nulos: lo valida el validador del módulo.
 
@@ -144,12 +144,12 @@ Todo va en la etapa «Módulos y suscripciones», después de la E25:
 
 ## Cómo se cierra ✓
 
-La puerta de la etapa, con la lista de control de `/puerta`, suma lo propio:
+Se cerró con la puerta mínima del 2026-11-27 (decisión del usuario de ese día): el build y los tests enteros de los dos repos y los detectores de documentación en 0. Pasaron lo propio:
 - **los tres tests de la 0069:** varias filas por módulo con una prueba vencida que no apaga una manual, el de arquitectura de los topes y el de apagar sin borrar;
 - **el contrato igual:** `openapi.json` sin cambios y `contracts:check` del front en verde sin regenerar;
 - **la migración** con filas guardadas antes y su `Down`.
 
-No hay galería ni recorrido nuevos, ni prueba con Meta o con un proveedor real.
+El E2E real y el recorrido de siempre, sin casos nuevos, van al cierre del bloque E12–E25. No hay galería, ni hubo prueba con Meta o con un proveedor real. Lo que deja para la E12 a la 25 lo dicen sus planes y [modulos-habilitados](../../rules/modulos-habilitados.md); lo que quedó para después, el [backlog](../../backlog.md#para-después-de-la-etapa-costuras-de-modulos).
 
 ## Requisitos previos
 

@@ -3,5 +3,15 @@
     "id": "estados|back|docs/plans/formularios/base-de-la-12-segunda-parte.md|por-retirar|retiro",
     "motivo": "La spec cerrada de la base 2 se queda como referencia de lo que trajo la etapa: al retirar su plan, la enlazan en su lugar la fila de la hoja de ruta, las ADR 0061, 0063, 0065 y 0066, la configuración y el backlog (cierre del 2026-11-26).",
     "fecha": "2026-11-26"
+  },
+  {
+    "id": "estados|back|docs/plans/formularios/acciones-del-asistente.md|por-retirar|retiro",
+    "motivo": "La spec cerrada de Acciones del asistente se queda como referencia de lo que trajo la etapa y de lo que deja a la E12, la E23, la E25 y la calificación: al retirar su plan, la enlazan en su lugar la fila de la hoja de ruta, las specs de la 12, la 23 y la 25, el índice de formularios y el backlog (cierre del 2026-11-27).",
+    "fecha": "2026-11-27"
+  },
+  {
+    "id": "estados|back|docs/plans/formularios/costuras-de-modulos.md|por-retirar|retiro",
+    "motivo": "La spec cerrada de Costuras de módulos se queda como referencia de las piezas de la 0069 que usan la E12 a la 25 y la etapa del cobro: al retirar su plan, la enlazan en su lugar la fila de la hoja de ruta, el backlog y modulos-y-suscripciones (cierre del 2026-11-27).",
+    "fecha": "2026-11-27"
   }
 ]

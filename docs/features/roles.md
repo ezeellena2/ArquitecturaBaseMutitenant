@@ -1,6 +1,6 @@
 # Roles y permisos
 
-**Revisado:** 2026-11-25
+**Revisado:** 2026-11-27
 
 Área de referencia para administrar autorización dentro de una organización. El catálogo es global y estable; los roles y sus asignaciones son privados del tenant, con RLS. Una cuenta puede usar sus permisos del acceso Business sin mezclar su acceso Consumer. Las reglas generales y la clasificación de datos están en [AGENTS.md](../../AGENTS.md), [backend.md](../architecture/backend.md) y [multitenancy.md](../architecture/multitenancy.md).
 

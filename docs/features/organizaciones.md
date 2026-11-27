@@ -1,6 +1,6 @@
 # Organizaciones y administración B2B
 
-**Revisado:** 2026-11-25
+**Revisado:** 2026-11-27
 
 Esta ficha describe el acceso empresarial de la plantilla multitenant. Una identidad es global; cada organización tiene su propio espacio Business y puede tener empresas y miembros. El acceso privado se determina por `tenant_id`, nunca por el host. Las reglas de aislamiento están en [multitenancy.md](../architecture/multitenancy.md); la autorización se apoya en [roles.md](roles.md).
 
