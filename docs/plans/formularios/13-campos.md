@@ -173,7 +173,7 @@ Abreviaturas: `D/`, `A/`, `I/` y `P/` son las capas del back; `F/`, el front, y 
 
 ## Acciones del asistente
 
-No declara acciones nuevas: `catalogoptions.edit@1` de la E12 (§17 de su spec) toma los campos activos del catálogo destino como dato, sin versión nueva (0068, «Consecuencias»). Cada tipo cae en la lista cerrada (0068 §4): Texto → `Text`, Número entero → `Integer`, Número con decimales → `Decimal`, Fecha → `Date`, Sí/No → `Boolean` y «De un catálogo» → `Record`, que resuelve el servidor. Sus reglas son los límites. El adaptador dibuja la columna de cada campo, y los casos de la acción suman uno con un campo. Los campos de un catálogo se arman en «Campos de …», que no es una acción.
+No declara acciones nuevas: `catalogoptions.edit@1` de la E12 (§17 de su spec) toma los campos activos del catálogo destino como dato, sin versión nueva (0068, «Consecuencias»). Cada tipo cae en la lista cerrada (0068 §4): Texto → `Text`, Número entero → `WholeNumber`, Número con decimales → `DecimalNumber`, Fecha → `Date`, Sí/No → `Boolean` y «De un catálogo» → `Record`, que resuelve el servidor. Sus reglas son los límites. El adaptador dibuja la columna de cada campo, y los casos de la acción suman uno con un campo. Los campos de un catálogo se arman en «Campos de …», que no es una acción.
 
 ## Qué verificar al arrancar
 

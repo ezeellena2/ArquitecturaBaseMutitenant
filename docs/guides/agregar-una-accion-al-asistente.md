@@ -26,7 +26,7 @@ La mecánica (el puerto, el registro, las tres piezas de IA, la tarjeta y la bat
      - para editar o eliminar, qué lectura de la pantalla encuentra el registro.
    - **Registrala** como `IAssistantActionSource` en `<Área>Registration.cs` o, si es de un módulo, en su `<Módulo>Module.cs` de Application, como los servicios de `WhatsAppModule.cs`.
 2. **Los campos son los de la pantalla,** no los del pedido HTTP: lo que la persona ve, y nada más.
-   - **El tipo sale de la lista cerrada:** `Text`, `LongText`, `Integer`, `Decimal`, `Money`, `Date`, `Boolean`, `Email`, `Phone`, `TaxId`, `Choice`, `Choices`, `Record`, `Consent` o `Items`, y cada campo lleva su límite.
+   - **El tipo sale de la lista cerrada:** `Text`, `LongText`, `WholeNumber` (el `Integer` de la 0068, `integer` en el JSON), `DecimalNumber` (el `Decimal`, `decimal`), `Money`, `Date`, `Boolean`, `Email`, `Phone`, `TaxId`, `Choice`, `Choices`, `Record`, `Consent` o `Items`, y cada campo lleva su límite.
    - **Un campo puede depender de otro** (`DependsOn`), como los roles de la empresa elegida.
    - **Las listas, al editar,** se cambian con «sumar» y «quitar».
    - **Un consentimiento** es `Consent`: llega sin tildar.

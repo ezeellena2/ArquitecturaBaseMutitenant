@@ -139,8 +139,8 @@ Con la [receta](../../guides/agregar-una-accion-al-asistente.md) (268 y [0068](.
 
 | Acción | Dónde se confirma | Permiso | Ruta que guarda |
 | --- | --- | --- | --- |
-| `assistant.agent.edit@1` · El asistente | su pantalla, con un solo Guardar (`Page`): el perfil (`Text` y `LongText`), cada sección del conocimiento (`LongText`), las preguntas frecuentes y los casos (`Items`) y los límites de cada bandeja (`Integer` y `Choice`) | `whatsapp.manage` | `PUT …/whatsapp/assistant/agent` |
-| `whatsappattention.edit@1` · Atención | la pestaña «Atención» de «Asistente», sin guardar (`Page`): por bandeja, quién atiende y cuándo vuelve (`Choice`) y los minutos (`Integer`) | `whatsapp.manage` | `PUT api/organization/whatsapp/attention` |
+| `assistant.agent.edit@1` · El asistente | su pantalla, con un solo Guardar (`Page`): el perfil (`Text` y `LongText`), cada sección del conocimiento (`LongText`), las preguntas frecuentes y los casos (`Items`) y los límites de cada bandeja (`WholeNumber` y `Choice`) | `whatsapp.manage` | `PUT …/whatsapp/assistant/agent` |
+| `whatsappattention.edit@1` · Atención | la pestaña «Atención» de «Asistente», sin guardar (`Page`): por bandeja, quién atiende y cuándo vuelve (`Choice`) y los minutos (`WholeNumber`) | `whatsapp.manage` | `PUT api/organization/whatsapp/attention` |
 | `unansweredtopics.dismiss@1` · Descartar un tema | la confirmación de descartar de «Preguntas sin respuesta» (`RemoveConfirmation`) | `whatsapp.manage` | `POST …/unanswered-topics/{id}/dismiss` |
 | `missingforms.dismiss@1` · Descartar un tema | la de «Formularios que faltan» (`RemoveConfirmation`) | `forms.manage` | `POST …/forms/missing/{id}/dismiss` |
 
