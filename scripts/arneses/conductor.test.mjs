@@ -9,8 +9,15 @@ const ruta = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '.agents'
 const fuente = await readFile(ruta, 'utf8');
 const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
 const PLAN = 'docs/plans/2026-11-19-etapa-prueba.md';
-const PREMISAS = ['Textos y errores', 'Arquitectura, clean code y SOLID', 'Caché, cuotas y módulos', 'Seguridad y aislamiento', 'Lo que no está en la spec'];
-const PANTALLAS = 'Pantallas contra el tablero';
+const TRANSVERSALES = ['Arquitectura, clean code y SOLID', 'Lo que no está en la spec'];
+// Rutas de ejemplo que tocan cada tema de riesgo (y algunas fichas), para el agente que lista los archivos de la etapa.
+const RUTA = {
+  datos: 'src/X.Infrastructure/Persistence/Repositories/RoleRepository.cs',
+  permisos: 'src/X.Api/Authorization/RolePolicy.cs',
+  aislamiento: 'src/X.Api/Tenancy/TenantResolver.cs',
+  servicio: 'src/X.Application/Services/Roles/RoleService.cs',
+};
+const archivosDe = (...lista) => ({ archivos: lista.map(([r, tareas, repo = 'back']) => ({ repo, ruta: r, tareas })), motivo: '' });
 
 function tarea(id, carril, extra = {}) {
   return { id, titulo: `tarea ${id}`, carril, subcarril: carril, riesgo: [], espera: [], estado: 'pendiente', motivo: '', texto: `texto de ${id}`, area: '', migracion: false, archivos: [], ...extra };
@@ -22,7 +29,7 @@ function lectura(tareas, extra = {}) {
     bloqueos: [],
     cupoSemanal: 50,
     tareas,
-    textos: { contrato: 'chat del contrato', back: [{ subcarril: 'back', texto: 'chat del back' }], front: 'chat del front', integracion: 'chat de integración' },
+    textos: { contrato: 'chat del contrato', back: [{ subcarril: 'back', texto: 'chat del back' }], front: 'chat del front' },
     pasosDelUsuario: [],
     notas: [],
     ...extra,
@@ -30,9 +37,10 @@ function lectura(tareas, extra = {}) {
 }
 
 const programa = (id, extra = {}) => ({ estado: 'hecha', commits: [`c-${id}`], archivos: [`${id}.cs`], archivosSinCommit: [], falta: '', motivo: '', pregunta: '', cambiosAlContrato: [], verificacion: 'build y tests en verde', ...extra });
-const commit = (id) => ({ estado: 'hecha', commits: [`c2-${id}`], archivos: [`${id}.cs`], archivosSinCommit: [], arreglados: [], descartados: [], motivo: '', pregunta: '', cambiosAlContrato: [], verificacion: 'ok' });
-const integrar = { estado: 'hecha', commits: [], diferencias: [], pasosDelUsuario: [], cambiosAlContrato: [], archivosSinCommit: [], motivo: '', verificacion: 'contracts:check en verde' };
-const puerta = (fallos = []) => ({ corte: { back: 'b1', front: 'f1' }, copias: { back: 'C:/e2e/back', front: 'C:/e2e/front' }, tabla: [{ paso: 'Back', resultado: 'ok', numero: '10/10' }], fallos, galeria: 'capturas/etapa-prueba', motivo: '' });
+const commit = (id, extra = {}) => ({ estado: 'hecha', commits: [`c2-${id}`], archivos: [`${id}.cs`], archivosSinCommit: [], arreglados: [], descartados: [], motivo: '', pregunta: '', cambiosAlContrato: [], verificacion: 'ok', ...extra });
+const tests = (hallazgos = []) => ({ tabla: [{ paso: 'Tests del back', resultado: 'ok', numero: '10/10' }], hallazgos, resumen: '' });
+const ultima = (extra = {}) => ({ estado: 'hecha', commits: [], arreglados: [], alBacklog: [], archivosSinCommit: [], motivo: '', verificacion: 'ok', ...extra });
+const hallazgoDe = (titulo, repo = 'back', extra = {}) => ({ titulo, punto: '4', repo, archivo: `${titulo}.cs`, linea: 3, escenario: `pasa ${titulo}`, regla: 'guardado', porque: `RAZON-${titulo}`, gravedad: 'media', ...extra });
 
 /** Responde según la etiqueta; `propias` pisa las respuestas por defecto. */
 function respondedor(lect, propias = {}) {
@@ -41,20 +49,21 @@ function respondedor(lect, propias = {}) {
     if (label === 'leer el plan') return lect;
     const programa_ = label.match(/^(\S+) · programa/);
     if (programa_) return programa(programa_[1]);
-    if (/^revisión · /.test(label)) return { hallazgos: [], resumen: 'sin hallazgos' };
-    if (label.startsWith('verifica · ')) return { veredictos: [] };
     const cierra = label.match(/^(\S+) · commitea/);
     if (cierra) return commit(cierra[1]);
-    if (label === 'integrar') return integrar;
-    if (label === 'puerta' || label === 'puerta · lo que tocan los arreglos') return puerta();
-    if (label.startsWith('arreglos de')) return commit('arreglo');
-    if (label === 'cierre del plan') return { commit: 'c-cierre', motivo: '' };
+    if (label === 'archivos de la etapa') return { archivos: [], motivo: '' };
+    if (/^revisión · /.test(label)) return { hallazgos: [], resumen: 'sin hallazgos' };
+    if (label === 'tests enteros') return tests();
+    if (label.startsWith('arreglos · ')) return commit('arreglo');
+    if (label === 'última revisión') return ultima();
+    if (label === 'cierre') return { commits: ['c-cierre'], cerradas: ['prueba', 'a', 'b'], motivo: '' };
     throw new Error(`etiqueta sin respuesta: ${label}`);
   };
 }
 
 async function correr(responder, args) {
   const llamadas = [];
+  const logs = [];
   const agent = async (prompt, opts = {}) => {
     llamadas.push({ label: opts.label, phase: opts.phase, effort: opts.effort, model: opts.model, prompt });
     return responder(opts.label ?? '', prompt, opts);
@@ -70,11 +79,12 @@ async function correr(responder, args) {
   const budget = { total: null, spent: () => 0, remaining: () => Infinity };
   const cuerpo = fuente.replace(/^export const meta = /m, 'const meta = ');
   const fn = new AsyncFunction('agent', 'parallel', 'pipeline', 'phase', 'log', 'args', 'budget', cuerpo);
-  const resultado = await fn(agent, parallel, pipeline, () => {}, () => {}, args, budget);
-  return { resultado, llamadas, etiquetas: llamadas.map((l) => l.label) };
+  const resultado = await fn(agent, parallel, pipeline, () => {}, (m) => logs.push(m), args, budget);
+  return { resultado, llamadas, logs, etiquetas: llamadas.map((l) => l.label) };
 }
 
 const estadoDe = (resultado, id) => resultado.tareas.find((t) => t.id === id);
+const promptDe = (llamadas, label) => llamadas.find((l) => l.label === label).prompt;
 
 test('conductor: sin plan falla con el ejemplo, y un modo desconocido también', async () => {
   await assert.rejects(correr(respondedor(lectura([])), {}), /Falta args\.plan/);
@@ -82,20 +92,21 @@ test('conductor: sin plan falla con el ejemplo, y un modo desconocido también',
 });
 
 test('conductor: planificar solo lee, con un agente, y devuelve los carriles y lo que va a costar', async () => {
-  const lect = lectura([tarea('K1', 'contrato'), tarea('B1', 'back', { riesgo: ['datos'] }), tarea('B2', 'back'), tarea('F1', 'front'), tarea('I1', 'integracion')]);
+  const lect = lectura([tarea('K1', 'contrato'), tarea('B1', 'back', { riesgo: ['datos'], archivos: [`${RUTA.datos} (nuevo)`] }), tarea('B2', 'back'), tarea('F1', 'front'), tarea('I1', 'integracion')]);
   const { resultado, etiquetas } = await correr(respondedor(lect), { plan: PLAN, modo: 'planificar' });
   assert.deepEqual(etiquetas, ['leer el plan']);
   assert.equal(resultado.clave, 'prueba');
   assert.deepEqual(resultado.carriles, { contrato: ['K1'], back: ['B1', 'B2'], front: ['F1'] });
   assert.deepEqual(resultado.carrilesBack.map((c) => c.tareas), [['B1'], ['B2']], 'sin área en común, cada una en su carril');
-  // Leer, un agente por tarea (código primero: la de riesgo también, y sin integración por carril) y el cierre: integrar,
-  // 5 revisores, 5 verificadores, 2 arreglos, la puerta, pantallas y su verificador, 2 arreglos, lo que tocan y el cierre,
-  // más el revisor adversarial de «datos» y su verificador.
-  assert.equal(resultado.agentesEstimados, 1 + 4 + 20 + 2);
+  // Las fichas que llevarían revisor salen del mapa de archivos de las tareas; capas-y-flujo la controlan sus tests.
+  assert.deepEqual(resultado.reglasPrevistas, ['back/guardado', 'back/logs', 'back/persistencia-ef', 'back/tests']);
+  // Leer y un agente por tarea pendiente; después, una vez: el que lista los archivos, 4 fichas, 2 transversales, el
+  // adversarial de «datos», los tests enteros, 2 arregladores, la última revisión y el cierre.
+  assert.equal(resultado.agentesEstimados, (1 + 4) + (1 + 4 + 2 + 1 + 1 + 2 + 1 + 1));
 });
 
 test('conductor: el cupo en 85 % o un bloqueo del plan frenan antes de programar', async () => {
-  for (const extra of [{ cupoSemanal: 85 }, { bloqueos: ['la puerta de la etapa anterior no cerró'] }]) {
+  for (const extra of [{ cupoSemanal: 85 }, { bloqueos: ['la etapa anterior no cerró'] }]) {
     const { resultado, etiquetas } = await correr(respondedor(lectura([tarea('B1', 'back')], extra)), { plan: PLAN });
     assert.equal(resultado.resultado, 'no empezó');
     assert.equal(resultado.bloqueos.length, 1);
@@ -105,17 +116,18 @@ test('conductor: el cupo en 85 % o un bloqueo del plan frenan antes de programar
 
 test('conductor: el lector bloquea solo por cambios de otra sesión: lo de una corrida frenada del plan y los agentes de ListAgents no frenan', async () => {
   const { llamadas } = await correr(respondedor(lectura([tarea('B1', 'back')])), { plan: PLAN, modo: 'planificar' });
-  const leer = llamadas.find((l) => l.label === 'leer el plan').prompt;
+  const leer = promptDe(llamadas, 'leer el plan');
   assert.match(leer, /cambios sin commitear de otra sesión en los archivos que la etapa va a tocar/);
   assert.match(leer, /Tampoco bloquean los de una tarea de este mismo plan que dejó una corrida anterior frenada .*\.local\/copias\/prueba-back-\*\): van en notas, con la tarea y la copia, y esa tarea los continúa/);
   assert.match(leer, /Los agentes que lista ListAgents .* no son un bloqueo: un conductor frenado no sigue vivo/);
+  assert.match(leer, /Las I no corren como tareas: las cubren la revisión, los arreglos, la última revisión y el cierre/);
 });
 
 test('conductor: con topeCupo, el usuario deja pasar el 85 %, y los agentes miran ese tope', async () => {
   const lect = lectura([tarea('B1', 'back')], { cupoSemanal: 90 });
   const { resultado, llamadas } = await correr(respondedor(lect), { plan: PLAN, modo: 'programar', topeCupo: 100 });
   assert.equal(estadoDe(resultado, 'B1').estado, 'hecha');
-  assert.match(llamadas.find((l) => l.label === 'B1 · programa').prompt, /Con 100 % o más no empieces/);
+  assert.match(promptDe(llamadas, 'B1 · programa'), /Con 100 % o más no empieces/);
   await assert.rejects(correr(respondedor(lect), { plan: PLAN, topeCupo: 120 }), /topeCupo va de 1 a 100/);
 });
 
@@ -130,39 +142,18 @@ test('conductor: una tarea con riesgo commitea como una sin riesgo, sin revisió
   const lect = lectura([tarea('B1', 'back', { riesgo: ['datos', 'aislamiento'], area: 'roles' }), tarea('B2', 'back', { area: 'roles' })]);
   const { resultado, llamadas, etiquetas } = await correr(respondedor(lect), { plan: PLAN, modo: 'programar' });
   assert.deepEqual(etiquetas.filter((e) => /^B/.test(e)), ['B1 · programa', 'B2 · programa']);
-  assert.ok(!etiquetas.some((e) => /adversarial/i.test(e)), 'la revisión adversarial va en el cierre, no en la tarea');
+  assert.ok(!etiquetas.some((e) => /adversarial/i.test(e)), 'la revisión adversarial va en la fase 2, no en la tarea');
   for (const id of ['B1', 'B2']) {
-    const prompt = llamadas.find((l) => l.label === `${id} · programa`).prompt;
+    const prompt = promptDe(llamadas, `${id} · programa`);
     assert.match(prompt, new RegExp(`Commiteá cada parte coherente y verificada con la línea «Tarea: prueba/${id}»`));
     assert.match(prompt, /Código primero/);
     assert.doesNotMatch(prompt, /NO commitees|lleva revisión adversarial/);
     assert.match(prompt, /la revisión adversarial antes del commit: eso cambió el 2026-11-26 y no se hace/, 'lo que el plan pide por tarea quedó sin efecto');
+    assert.match(prompt, /Tampoco corrés el E2E real, la galería ni el recorrido/);
   }
   assert.equal(estadoDe(resultado, 'B1').estado, 'hecha');
   assert.deepEqual(estadoDe(resultado, 'B1').commits, ['c-B1']);
-});
-
-test('conductor: lo que confirma el verificador de una premisa de riesgo lo corrige el arreglador del repo, con el esfuerzo de la sesión', async () => {
-  const lect = lectura([tarea('B1', 'back', { estado: 'hecha', riesgo: ['permisos'] }), tarea('B2', 'back', { estado: 'hecha', riesgo: ['permisos', 'aislamiento'] }), tarea('F1', 'front', { estado: 'hecha' })]);
-  const hallazgo = { titulo: 'un permiso ajeno pasa', punto: 'permisos', repo: 'back', archivo: 'RoleService.cs', linea: 12, escenario: 'falta un permiso', regla: 'permisos', porque: 'RAZON-permiso', gravedad: 'alta' };
-  const base = respondedor(lect);
-  const { llamadas, resultado } = await correr(async (label, prompt) => {
-    if (label === 'revisión · Adversarial · permisos') return { hallazgos: [hallazgo], resumen: '' };
-    if (label === 'verifica · Adversarial · permisos') return { veredictos: [{ numero: 1, confirmado: true, motivo: 'el 403 no se ve' }] };
-    return base(label, prompt);
-  }, { plan: PLAN, modo: 'cerrar' });
-  const revisor = llamadas.find((l) => l.label === 'revisión · Adversarial · permisos');
-  assert.equal(revisor.effort, 'high');
-  assert.match(revisor.prompt, /romper lo que programaron estas tareas, que tocan permisos: B1 · tarea B1; B2 · tarea B2\./);
-  assert.match(revisor.prompt, /- Permisos: a quien le falta un permiso recibe 403/);
-  assert.match(llamadas.find((l) => l.label === 'revisión · Adversarial · aislamiento').prompt, /que tocan aislamiento: B2 · tarea B2\./, 'una premisa por tema');
-  const verifica = llamadas.find((l) => l.label === 'verifica · Adversarial · permisos');
-  assert.equal(verifica.effort, 'high');
-  assert.doesNotMatch(verifica.prompt, /RAZON-/, 'el verificador no recibe el razonamiento del revisor');
-  const arreglo = llamadas.find((l) => l.label === 'arreglos de la revisión · back');
-  assert.equal(arreglo.effort, undefined);
-  assert.match(arreglo.prompt, /\[alta\] un permiso ajeno pasa \(RoleService\.cs:12\).*Lo confirmó un verificador: el 403 no se ve/);
-  assert.equal(resultado.revision.premisas.find((p) => p.id === 'riesgo-permisos').confirmados, 1);
+  assert.equal(resultado.resultado, 'programada');
 });
 
 test('conductor: el back y el front corren a la vez, después de todo el contrato', async () => {
@@ -185,16 +176,21 @@ test('conductor: el back y el front corren a la vez, después de todo el contrat
   assert.equal(estadoDe(resultado, 'F1').estado, 'hecha');
 });
 
-test('conductor: lo que espera a una tarea bloqueada no corre, y el resto del carril sigue', async () => {
+test('conductor: lo que espera a una tarea bloqueada no corre, el resto del carril sigue, y sin el código entero no se revisa', async () => {
   const lect = lectura([tarea('B1', 'back'), tarea('B2', 'back', { espera: ['B1'] }), tarea('B3', 'back'), tarea('F1', 'front', { espera: ['B1'] })]);
   const bloqueada = programa('B1', { estado: 'bloqueada', commits: [], pregunta: '¿La difusión cuenta como enviada?', motivo: 'decisión de producto' });
-  const { resultado, etiquetas } = await correr(respondedor(lect, { 'B1 · programa': bloqueada }), { plan: PLAN, modo: 'programar' });
+  const { resultado, etiquetas, llamadas } = await correr(respondedor(lect, { 'B1 · programa': bloqueada }), { plan: PLAN });
   assert.equal(estadoDe(resultado, 'B2').estado, 'sin-correr');
   assert.match(estadoDe(resultado, 'B2').motivo, /espera B1, que quedó bloqueada/);
   assert.equal(estadoDe(resultado, 'F1').estado, 'sin-correr');
   assert.equal(estadoDe(resultado, 'B3').estado, 'hecha');
   assert.deepEqual(resultado.preguntas, [{ tarea: 'B1', pregunta: '¿La difusión cuenta como enviada?' }]);
-  assert.ok(!etiquetas.includes('integrar'), 'con tareas sin hacer no se integra');
+  assert.ok(!etiquetas.includes('archivos de la etapa') && !etiquetas.includes('tests enteros'), 'con tareas sin hacer no se revisa');
+  assert.equal(resultado.resultado, 'faltan tareas');
+  const cierre = promptDe(llamadas, 'cierre');
+  assert.match(cierre, /La etapa no se cierra: faltan tareas de prueba/);
+  assert.match(cierre, /«Pendiente: <ids y motivo corto>»/);
+  assert.doesNotMatch(cierre, /git rm/);
 });
 
 test('conductor: una tarea que deja cambios sin commitear frena su carril', async () => {
@@ -235,43 +231,252 @@ test('conductor: lo hecho antes no se repite, y solo corre lo pedido', async () 
   assert.equal(resultado.resultado, 'faltan tareas');
 });
 
-test('conductor: con la etapa completa integra, revisa por premisa, corre la puerta una vez y cierra', async () => {
+// ---------- Las cinco fases ----------
+
+test('conductor: las cinco fases en orden: programar, revisión en paralelo, arreglos, última revisión y cierre', async () => {
   const lect = lectura([tarea('K1', 'contrato'), tarea('B1', 'back'), tarea('F1', 'front'), tarea('I1', 'integracion'), tarea('I3', 'integracion', { texto: 'el recorrido cubre un rol con un permiso ajeno' })]);
-  const { resultado, etiquetas, llamadas } = await correr(respondedor(lect), { plan: PLAN });
-  assert.deepEqual(etiquetas.slice(-9), ['integrar', ...PREMISAS.map((p) => `revisión · ${p}`), 'puerta', `revisión · ${PANTALLAS}`, 'cierre del plan']);
-  assert.ok(!etiquetas.some((e) => e.startsWith('verifica · ')), 'sin hallazgos no hay nada que verificar');
-  assert.equal(resultado.resultado, 'puerta corrida');
-  assert.ok(!etiquetas.includes('I1 · programa'), 'la integración la hacen sus fases, no un carril');
-  const integra = llamadas.find((l) => l.label === 'integrar').prompt;
-  assert.match(integra, /I3 · tarea I3: el recorrido cubre un rol con un permiso ajeno/, 'el integrador deja listos los pasos del recorrido antes de la puerta');
-  assert.match(integra, /recorrido-usuario\.mjs/);
+  const falla = { titulo: 'el 403 no muestra su texto', punto: 'Tests del front', repo: 'front', archivo: 'Roles.test.tsx', linea: 40, escenario: 'falta el texto del 403', regla: 'tests enteros', porque: 'expected «Sin permiso»', gravedad: 'alta' };
+  const { resultado, etiquetas, llamadas } = await correr(respondedor(lect, {
+    'archivos de la etapa': archivosDe([RUTA.servicio, ['prueba/B1']]),
+    'revisión · Regla · back/guardado': { hallazgos: [hallazgoDe('dos guardados')], resumen: '' },
+    'tests enteros': tests([falla]),
+  }), { plan: PLAN });
+  const fase = (label) => llamadas.find((l) => l.label === label).phase;
+  assert.equal(fase('leer el plan'), 'Programar');
+  assert.equal(fase('K1 · programa'), 'Programar');
+  for (const l of ['archivos de la etapa', 'tests enteros', 'revisión · Regla · back/guardado', ...TRANSVERSALES.map((t) => `revisión · ${t}`)]) assert.equal(fase(l), 'Revisión', l);
+  assert.equal(fase('arreglos · back'), 'Arreglos');
+  assert.equal(fase('arreglos · front'), 'Arreglos');
+  assert.equal(fase('última revisión'), 'Última revisión');
+  assert.equal(fase('cierre'), 'Cierre');
+  const i = (e) => etiquetas.indexOf(e);
+  assert.ok(i('F1 · programa') < i('archivos de la etapa') && i('tests enteros') < i('arreglos · back'));
+  assert.ok(i('arreglos · front') < i('última revisión') && i('última revisión') < i('cierre'));
+  assert.equal(etiquetas[etiquetas.length - 1], 'cierre');
+  assert.ok(!etiquetas.some((e) => /^I\d · |integrar|^verifica · |puerta|Pantallas/.test(e)), 'sin integración, verificadores, puerta ni pantallas');
+  assert.match(promptDe(llamadas, 'arreglos · front'), /el 403 no muestra su texto \(Roles\.test\.tsx:40\).*Lo vio: Tests enteros/);
+  assert.match(promptDe(llamadas, 'arreglos · back'), /dos guardados \(dos guardados\.cs:3\).*Lo vio: Regla · back\/guardado/);
+  assert.match(promptDe(llamadas, 'última revisión'), /back: 0 arreglados y 0 descartados de 1 \(hecha\)/);
+  const cierre = promptDe(llamadas, 'cierre');
+  assert.match(cierre, /Sos el que cierra la etapa «Etapa de prueba» \(plan docs\/plans\/2026-11-19-etapa-prueba\.md\)/);
+  assert.match(cierre, /82087a6a/);
+  assert.match(cierre, /git rm del plan/);
+  assert.match(cierre, /la fila de la etapa dice «Cerrada el <fecha>»/);
+  assert.match(cierre, /ClosedStages en los dos repos/);
+  assert.match(cierre, /estado-docs --detectar y realinear-docs --detectar, y dejalos en 0/);
+  assert.match(cierre, /Los tests enteros: \[\{"paso":"Tests del back"/);
+  assert.match(cierre, /carril\.mjs limpiar prueba-back/);
+  assert.match(cierre, /antes del git rm, la sección «Al cierre del bloque E12–E25» del plan pasa ahí entera/, 'la prueba integral del bloque sale del backlog');
+  assert.match(cierre, /La documentación que nombra la sección «Revisión y cierre» del plan la escribís vos/);
+  assert.doesNotMatch(cierre, /tabla de la puerta/);
+  const delPlan = /De la sección «Revisión y cierre» de docs\/plans\/2026-11-19-etapa-prueba\.md: los riesgos que suma son ítems de tu lista de control/;
+  for (const l of ['revisión · Regla · back/guardado', ...TRANSVERSALES.map((t) => `revisión · ${t}`), 'última revisión']) assert.match(promptDe(llamadas, l), delPlan, l);
+  assert.equal(resultado.resultado, 'cerrada');
+  assert.equal(resultado.revision.hallazgos, 2);
+  assert.deepEqual(resultado.arreglos.map((a) => a.repo), ['back', 'front']);
 });
 
-test('conductor: con pasos del usuario antes de la puerta, frena antes y los devuelve', async () => {
-  const lect = lectura([tarea('B1', 'back')], { pasosDelUsuario: [{ paso: 'cargar los user-secrets de B9', cuando: 'antes-de-la-puerta' }] });
-  const { resultado, etiquetas } = await correr(respondedor(lect), { plan: PLAN });
-  assert.ok(!etiquetas.includes('puerta'));
-  assert.equal(resultado.resultado, 'espera al usuario antes de la puerta');
-  assert.deepEqual(resultado.pasosAntesDeLaPuerta, ['cargar los user-secrets de B9']);
-  const despues = await correr(respondedor(lectura([tarea('B1', 'back', { estado: 'hecha' })], { pasosDelUsuario: lect.pasosDelUsuario })), { plan: PLAN, modo: 'cerrar', usuarioListo: true });
-  assert.ok(despues.etiquetas.includes('puerta'));
-  assert.ok(!despues.etiquetas.includes('integrar'), 'cerrar no vuelve a integrar');
+test('conductor: en la revisión todo corre a la vez: fichas, transversales, adversariales y los tests enteros', async () => {
+  const esperados = ['tests enteros', ...TRANSVERSALES.map((t) => `revisión · ${t}`), 'revisión · Regla · back/guardado', 'revisión · Adversarial · datos'];
+  const empezados = new Set();
+  let todos;
+  const estanTodos = new Promise((r) => { todos = r; });
+  const base = respondedor(lectura([tarea('B1', 'back', { estado: 'hecha' })]), { 'archivos de la etapa': archivosDe([RUTA.datos, ['prueba/B1']]) });
+  const { etiquetas } = await correr(async (label, prompt) => {
+    if (esperados.includes(label)) {
+      empezados.add(label);
+      if (empezados.size === esperados.length) todos();
+      await Promise.race([estanTodos, new Promise((_, no) => setTimeout(() => no(new Error(`${label} esperó solo`)), 2000))]);
+    }
+    return base(label, prompt);
+  }, { plan: PLAN, modo: 'cerrar' });
+  assert.equal(empezados.size, esperados.length);
+  assert.ok(etiquetas.includes('última revisión'), 'nadie quedó esperando');
 });
 
-test('conductor: un fallo de la puerta vuelve a su dueño y se corre solo lo que toca el arreglo', async () => {
+test('conductor: un revisor por cada ficha con archivos, con su ficha y solo sus archivos, y lo salteado lo dice', async () => {
+  const fichas = [
+    'back/guardado', 'back/logs', 'back/persistencia-ef', 'back/tests',
+    'front/accesibilidad', 'front/accesos-y-permisos', 'front/errores', 'front/estructura-y-features', 'front/formatos',
+    'front/pantallas-y-ui', 'front/responsive', 'front/tests', 'front/textos-y-traducciones',
+  ];
+  const archivos = archivosDe(
+    [RUTA.datos, ['prueba/B1']],
+    ['docs/guides/una-guia.md', ['prueba/B1']],
+    ['src/areas/business/roles/RolesPage.tsx', ['prueba/F1'], 'front'],
+    ['src/areas/business/roles/RolesPage.test.tsx', ['prueba/F1'], 'front'],
+  );
+  const base = respondedor(lectura([tarea('B1', 'back', { estado: 'hecha' }), tarea('F1', 'front', { estado: 'hecha' })]), { 'archivos de la etapa': archivos });
+  const { llamadas, logs, resultado } = await correr(base, { plan: PLAN, modo: 'cerrar' });
+  const deFicha = llamadas.filter((l) => /^revisión · Regla · /.test(l.label));
+  assert.deepEqual(deFicha.map((l) => l.label.replace('revisión · Regla · ', '')).sort(), fichas.slice().sort());
+  const lista = llamadas.find((l) => l.label === 'archivos de la etapa');
+  assert.equal(lista.effort, 'low');
+  assert.match(lista.prompt, /git log --grep "Tarea: prueba\/" --name-only/);
+
+  const de = (ficha) => deFicha.find((l) => l.label === `revisión · Regla · ${ficha}`);
+  assert.equal(de('back/guardado').effort, 'medium');
+  assert.match(de('back/guardado').prompt, /La regla es la ficha docs\/rules\/guardado\.md/);
+  assert.match(de('back/guardado').prompt, /- src\/X\.Infrastructure\/Persistence\/Repositories\/RoleRepository\.cs/);
+  assert.doesNotMatch(de('back/guardado').prompt, /RolesPage|una-guia/, 'solo sus archivos');
+  assert.match(de('back/guardado').prompt, /git log --grep "Tarea: prueba\/" -p --format="%H %s" -- <esos archivos>/);
+  assert.match(de('back/guardado').prompt, /Buscá únicamente incumplimientos de esa ficha/);
+  assert.match(de('front/accesibilidad').prompt, /La regla es la ficha \.\.\/ArquitecturaBaseMutitenantFront\/docs\/rules\/accesibilidad\.md/);
+  assert.match(de('front/accesibilidad').prompt, /RolesPage\.tsx/);
+  assert.doesNotMatch(de('front/accesibilidad').prompt, /RolesPage\.test\.tsx/, 'los tests del front van solo a la ficha de tests');
+  assert.match(de('front/tests').prompt, /RolesPage\.test\.tsx/);
+
+  assert.match(promptDe(llamadas, 'revisión · Arquitectura, clean code y SOLID'), /revisar-arquitectura\.md/);
+  assert.match(promptDe(llamadas, 'revisión · Lo que no está en la spec'), /node scripts\/arneses\/arnes\.mjs conformidad --detectar --plan docs\/plans\/2026-11-19-etapa-prueba\.md/);
+
+  assert.ok(logs.some((m) => /^Sin revisor, porque un test la controla entera: back\/capas-y-flujo \(la controla .*ApplicationServicesTests.*back\/documentacion \(la controla los detectores de documentación/.test(m)));
+  assert.ok(logs.some((m) => /^Sin revisor, porque la etapa no tocó sus archivos: back\/api-http, .*front\/telefonos$/.test(m)));
+  assert.deepEqual(resultado.revision.reparto.fichas.conRevisor.slice().sort(), fichas.slice().sort());
+  assert.equal(resultado.revision.reparto.archivos, 4);
+  assert.equal(resultado.revision.revisores.length, 2 + fichas.length + 1, 'transversales, fichas y el adversarial de datos');
+});
+
+test('conductor: los tests enteros corren en copias de HEAD con la fila pesada y los detectores, sin E2E, galería ni recorrido', async () => {
+  const { llamadas } = await correr(respondedor(lectura([tarea('B1', 'back', { estado: 'hecha' })])), { plan: PLAN, modo: 'cerrar' });
+  const t = promptDe(llamadas, 'tests enteros');
+  assert.match(t, /git clone --local \. \.local\/copias\/prueba-tests\/ArquitecturaBaseMutitenant y git clone --local \.\.\/ArquitecturaBaseMutitenantFront \.local\/copias\/prueba-tests\/ArquitecturaBaseMutitenantFront/);
+  assert.match(t, /carril\.mjs fila "dotnet build ArquitecturaBaseMultitenant\.slnx" \(0 errores y 0 advertencias\)/);
+  assert.match(t, /carril\.mjs fila "dotnet test --no-build" \(con Docker\)/);
+  assert.match(t, /npm run build, npm run lint, npm test .* y npm run contracts:check/);
+  assert.match(t, /realinear-docs --detectar, estado-docs --detectar y conformidad --detectar --plan docs\/plans\/2026-11-19-etapa-prueba\.md/);
+  assert.match(t, /borrá \.local\/copias\/prueba-tests/);
+  assert.match(t, /Sin E2E real, galería ni recorrido: van en la prueba integral del cierre del bloque E12–E25/);
+  assert.doesNotMatch(t, /test:e2e:real|capturar-etapa|recorrido-usuario/);
+  assert.match(t, /Cada test que falla, cada advertencia del build y cada hallazgo de un detector es un hallazgo/);
+});
+
+test('conductor: los hallazgos repetidos se juntan antes de arreglar, y el arreglador comprueba cada uno', async () => {
+  const base = respondedor(lectura([tarea('B1', 'back', { estado: 'hecha' })]), { 'archivos de la etapa': archivosDe([RUTA.datos, ['prueba/B1']]) });
+  const repetido = { archivo: 'RoleRepository.cs', linea: 40 };
+  const { llamadas, etiquetas, logs, resultado } = await correr(async (label, prompt) => {
+    if (label === 'revisión · Regla · back/guardado') return { hallazgos: [hallazgoDe('dos guardados', 'back', repetido)], resumen: '' };
+    if (label === 'revisión · Regla · back/persistencia-ef') return { hallazgos: [hallazgoDe('escribe fuera del repositorio', 'back', { ...repetido, regla: 'persistencia-ef' })], resumen: '' };
+    if (label === 'tests enteros') return tests([hallazgoDe('el test de guardado falla', 'back', { ...repetido, regla: 'tests enteros' })]);
+    return base(label, prompt);
+  }, { plan: PLAN, modo: 'cerrar' });
+  assert.ok(!etiquetas.some((e) => e.startsWith('verifica · ')), 'no hay fase de verificación');
+  assert.equal(etiquetas.filter((e) => e.startsWith('arreglos · ')).length, 1, 'un arreglador por repo con hallazgos');
+  const arreglo = promptDe(llamadas, 'arreglos · back');
+  assert.equal(arreglo.match(/RoleRepository\.cs:40/g).length, 1, 'los repetidos llegan una sola vez');
+  assert.match(arreglo, /también Regla · back\/persistencia-ef: escribe fuera del repositorio; también Tests enteros: el test de guardado falla/);
+  assert.match(arreglo, /primero comprobá contra el código de HEAD que es real/);
+  assert.match(arreglo, /va en descartados, con su motivo/);
+  assert.match(arreglo, /«Tarea: prueba\/revision»/);
+  assert.doesNotMatch(arreglo, /RAZON-/, 'el arreglador no recibe el razonamiento de los revisores');
+  assert.ok(logs.includes('Se juntaron 2 hallazgos que repetían archivo y línea'));
+  assert.equal(resultado.revision.hallazgos, 1);
+  assert.equal(resultado.revision.juntados, 2);
+});
+
+test('conductor: sin hallazgos no hay arreglos, y la última revisión corre igual', async () => {
+  const { etiquetas, llamadas, resultado } = await correr(respondedor(lectura([tarea('B1', 'back', { estado: 'hecha' })])), { plan: PLAN, modo: 'cerrar' });
+  assert.ok(!etiquetas.some((e) => e.startsWith('arreglos · ')));
+  const u = llamadas.find((l) => l.label === 'última revisión');
+  assert.equal(u.effort, 'high');
+  assert.match(u.prompt, /Los arreglos de la revisión: no hubo hallazgos\./);
+  assert.match(u.prompt, /git log --grep "Tarea: prueba\/" --format="%H %s"/);
+  assert.equal(resultado.resultado, 'cerrada');
+});
+
+test('conductor: la última revisión arregla lo chico y manda lo demás al backlog, sin otra ronda', async () => {
+  const grande = { que: 'partir RoleService', porQue: 'pasa la complejidad.', donde: 'RoleService.cs' };
+  const { llamadas, etiquetas, resultado } = await correr(respondedor(lectura([tarea('B1', 'back', { estado: 'hecha' })]), {
+    'última revisión': ultima({ arreglados: ['el 404 del camino hermano (c-u1)'], commits: ['c-u1'], alBacklog: [grande] }),
+  }), { plan: PLAN, modo: 'cerrar' });
+  const u = promptDe(llamadas, 'última revisión');
+  assert.match(u, /Lo chico y seguro lo arreglás vos.*«Tarea: prueba\/ultima-revision»/);
+  assert.match(u, /va en alBacklog \(que, porQue y donde\)\. No hay otra ronda/);
+  assert.equal(etiquetas.filter((e) => e === 'última revisión').length, 1);
+  assert.match(promptDe(llamadas, 'cierre'), /- \*\*partir RoleService\.\*\* pasa la complejidad\. Dónde: RoleService\.cs \(ultima-revision\)\./);
+  assert.deepEqual(resultado.ultimaRevision.commits, ['c-u1']);
+});
+
+test('conductor: si un arreglo queda bloqueado o un revisor no termina, no se cierra: el cierre solo deja al día el plan', async () => {
+  const base = respondedor(lectura([tarea('B1', 'back', { estado: 'hecha' })]));
+  const casos = [
+    { motivo: /los arreglos del back quedaron bloqueada: el test no se deja arreglar/, r: { 'revisión · Arquitectura, clean code y SOLID': { hallazgos: [hallazgoDe('A1')], resumen: '' }, 'arreglos · back': commit('arreglo', { estado: 'bloqueada', motivo: 'el test no se deja arreglar' }) } },
+    { motivo: /no terminaron: Lo que no está en la spec/, r: { 'revisión · Lo que no está en la spec': null } },
+    { motivo: /no terminaron: .*Tests enteros/, r: { 'tests enteros': null } },
+    { motivo: /la última revisión no terminó/, r: { 'última revisión': null } },
+  ];
+  for (const caso of casos) {
+    const { llamadas, resultado } = await correr(async (label, prompt) => (label in caso.r ? caso.r[label] : base(label, prompt)), { plan: PLAN, modo: 'cerrar' });
+    const cierre = promptDe(llamadas, 'cierre');
+    assert.match(cierre, /La etapa no se cierra: /);
+    assert.match(cierre, caso.motivo);
+    assert.doesNotMatch(cierre, /git rm/);
+    assert.equal(resultado.resultado, 'revisada, sin cerrar');
+    assert.match(resultado.pendiente.join(' · '), caso.motivo);
+  }
+  const sinCierre = await correr(respondedor(lectura([tarea('B1', 'back', { estado: 'hecha' })]), { cierre: null }), { plan: PLAN, modo: 'cerrar' });
+  assert.equal(sinCierre.resultado.resultado, 'revisada, sin cerrar', 'sin el cierre no se da por cerrada');
+});
+
+// ---------- Temas de riesgo ----------
+
+test('conductor: los temas de riesgo salen de los archivos de los commits: uno que no tocan no lleva revisor, aunque el plan lo marque', async () => {
+  const lect = lectura([tarea('K1', 'contrato'), tarea('B1', 'back', { riesgo: ['datos', 'permisos'] }), tarea('B2', 'back'), tarea('F1', 'front')]);
+  const archivos = archivosDe([RUTA.datos, ['prueba/B1']], [RUTA.servicio, ['prueba/B2']]);
+  const { resultado, etiquetas, llamadas, logs } = await correr(respondedor(lect, { 'archivos de la etapa': archivos }), { plan: PLAN });
+  assert.ok(etiquetas.includes('revisión · Adversarial · datos'));
+  assert.ok(!etiquetas.includes('revisión · Adversarial · permisos'), 'los commits no tocan permisos');
+  assert.ok(logs.includes('Revisión adversarial: datos'));
+  const adversarial = llamadas.find((l) => l.label === 'revisión · Adversarial · datos');
+  assert.equal(adversarial.phase, 'Revisión');
+  assert.equal(adversarial.effort, 'high');
+  assert.match(adversarial.prompt, /que tocan datos: B1 · tarea B1\./);
+  assert.match(adversarial.prompt, /Los archivos que tocan datos: src\/X\.Infrastructure\/Persistence\/Repositories\/RoleRepository\.cs\./);
+  assert.match(adversarial.prompt, /- Datos: la migración es portable/);
+  assert.doesNotMatch(adversarial.prompt, /B2 · tarea B2/, 'solo las tareas de su tema');
+  assert.doesNotMatch(adversarial.prompt, /build y tests en verde/, 'el revisor no recibe la conclusión de quien programó');
+  assert.equal(resultado.revision.reparto.origen, 'archivos');
+  assert.deepEqual(resultado.revision.reparto.temasDeRiesgo, ['datos']);
+
+  // Si el agente que lista los archivos no termina, van los temas que marca el plan, y no se cierra.
+  const sinLista = await correr(respondedor(lect, { 'archivos de la etapa': null }), { plan: PLAN });
+  assert.ok(sinLista.etiquetas.includes('revisión · Adversarial · datos') && sinLista.etiquetas.includes('revisión · Adversarial · permisos'));
+  assert.ok(!sinLista.etiquetas.some((e) => e.startsWith('revisión · Regla · ')));
+  assert.ok(sinLista.logs.some((m) => /no corre la revisión por ficha, y los temas de riesgo son los que marca el plan/.test(m)));
+  assert.equal(sinLista.resultado.resultado, 'revisada, sin cerrar');
+});
+
+test('conductor: sin temas de riesgo no hay revisión adversarial, y lo dice', async () => {
   const lect = lectura([tarea('B1', 'back', { estado: 'hecha' })]);
-  const fallo = { paso: 'Tests del front', archivo: 'Roles.test.tsx', linea: 40, causa: 'falta el texto del 403', dueno: 'front' };
-  const { resultado, etiquetas } = await correr(respondedor(lect, { puerta: puerta([fallo]) }), { plan: PLAN, modo: 'cerrar' });
-  assert.deepEqual(etiquetas.slice(-5), ['puerta', `revisión · ${PANTALLAS}`, 'arreglos de la puerta · front', 'puerta · lo que tocan los arreglos', 'cierre del plan']);
-  assert.equal(resultado.resultado, 'puerta corrida');
+  const { etiquetas, logs } = await correr(respondedor(lect, { 'archivos de la etapa': archivosDe([RUTA.servicio, ['prueba/B1']]) }), { plan: PLAN, modo: 'cerrar' });
+  assert.ok(!etiquetas.some((e) => /Adversarial/.test(e)));
+  assert.ok(logs.includes('Los archivos de la etapa no tocan ningún tema de riesgo: no va revisión adversarial'));
 });
 
-test('conductor: cerrar con tareas pendientes no corre la puerta ni gasta un cierre', async () => {
-  const lect = lectura([tarea('B1', 'back', { estado: 'hecha' }), tarea('F1', 'front', { estado: 'bloqueada', motivo: 'faltan sus tableros' })]);
-  const { resultado, etiquetas } = await correr(respondedor(lect), { plan: PLAN, modo: 'cerrar' });
-  assert.deepEqual(etiquetas, ['leer el plan']);
-  assert.equal(resultado.resultado, 'faltan tareas');
-  assert.match(resultado.faltan[0], /F1: bloqueada, faltan sus tableros/);
+test('conductor: lo que encuentra un adversarial lo arregla el arreglador de su repo', async () => {
+  const lect = lectura([tarea('B1', 'back', { estado: 'hecha', riesgo: ['permisos'] }), tarea('B2', 'back', { estado: 'hecha', riesgo: ['permisos', 'aislamiento'] }), tarea('F1', 'front', { estado: 'hecha' })]);
+  const hallazgo = { titulo: 'un permiso ajeno pasa', punto: 'permisos', repo: 'back', archivo: 'RoleService.cs', linea: 12, escenario: 'falta un permiso', regla: 'permisos', porque: 'RAZON-permiso', gravedad: 'alta' };
+  const { llamadas } = await correr(respondedor(lect, {
+    'archivos de la etapa': archivosDe([RUTA.permisos, ['prueba/B1', 'prueba/B2']], [RUTA.aislamiento, ['prueba/B2']]),
+    'revisión · Adversarial · permisos': { hallazgos: [hallazgo], resumen: '' },
+  }), { plan: PLAN, modo: 'cerrar' });
+  const revisor = promptDe(llamadas, 'revisión · Adversarial · permisos');
+  assert.match(revisor, /romper lo que programaron estas tareas, que tocan permisos: B1 · tarea B1; B2 · tarea B2\./);
+  assert.match(revisor, /- Permisos: cada ruta declara \[Access\(\.\.\.\)\] o \[PublicSite\].*A quien le falta un permiso recibe 403/);
+  assert.match(promptDe(llamadas, 'revisión · Adversarial · aislamiento'), /que tocan aislamiento: B2 · tarea B2\./, 'una premisa por tema');
+  const arreglo = llamadas.find((l) => l.label === 'arreglos · back');
+  assert.equal(arreglo.effort, undefined, 'el arreglador va con el esfuerzo de la sesión');
+  assert.match(arreglo.prompt, /\[alta\] un permiso ajeno pasa \(RoleService\.cs:12\).*Lo vio: Adversarial · permisos/);
+});
+
+test('conductor: modelos elige el modelo de cada rol, y sin modelos todos van con el de la sesión', async () => {
+  const lect = lectura([tarea('B1', 'back'), tarea('F1', 'front')]);
+  const { llamadas } = await correr(respondedor(lect), { plan: PLAN, modo: 'programar', modelos: { front: 'sonnet' } });
+  assert.equal(llamadas.find((l) => l.label === 'F1 · programa').model, 'sonnet');
+  assert.equal(llamadas.find((l) => l.label === 'B1 · programa').model, undefined);
+  const cierre = await correr(respondedor(lectura([tarea('B1', 'back', { estado: 'hecha' })])), { plan: PLAN, modo: 'cerrar', modelos: { revisa: 'haiku' } });
+  assert.equal(cierre.llamadas.find((l) => l.label === 'revisión · Arquitectura, clean code y SOLID').model, 'haiku');
+  assert.equal(cierre.llamadas.find((l) => l.label === 'tests enteros').model, undefined);
+  assert.equal(cierre.llamadas.find((l) => l.label === 'última revisión').model, undefined);
 });
 
 // ---------- Carriles del back (ADR 0071) ----------
@@ -301,30 +506,28 @@ test('conductor: en una copia se prepara, se entrega y se lee poco; en main, com
     tarea('F1', 'front'),
   ]);
   const { llamadas } = await correr(respondedor(lect), { plan: PLAN, modo: 'programar' });
-  const prompt = (label) => llamadas.find((l) => l.label === label).prompt;
-  const b1 = prompt('B1 · programa');
+  const b1 = promptDe(llamadas, 'B1 · programa');
   assert.match(b1, /carril\.mjs preparar \.local\/copias\/prueba-back-\d/);
   assert.match(b1, /carril\.mjs entregar \.local\/copias\/prueba-back-\d/);
   assert.match(b1, /El mapa de la tarea .*Permissions\.cs, tests\/X\/PermissionTests\.cs \(nuevo\)/);
   assert.match(b1, /unos 80 pasos/);
   assert.match(b1, /node scripts\/arneses\/verificar\.mjs/);
   assert.match(b1, /Leé por partes/);
-  assert.doesNotMatch(b1, /también los tests de integración y de seguridad de esa área/, 'la integración corre en la puerta');
-  assert.match(b1, /la integración y la seguridad no los corrés: corren una vez, con todo el código de la etapa, en la puerta/);
-  const b2 = prompt('B2 · programa');
+  assert.match(b1, /la integración y la seguridad no los corrés: corren una vez, con todo el código de la etapa, en la revisión/);
+  const b2 = promptDe(llamadas, 'B2 · programa');
   assert.match(b2, /carril\.mjs entregar \.local\/copias\/prueba-back-\d/, 'con riesgo también commitea y entrega');
   assert.doesNotMatch(b2, /NO commitees/);
   assert.ok(!llamadas.some((l) => /^B2 · (revisión adversarial|commitea)/.test(l.label)), 'ni un revisor ni otro agente que commitee');
-  const f1 = prompt('F1 · programa');
+  const f1 = promptDe(llamadas, 'F1 · programa');
   assert.match(f1, /Trabajás en main/);
   assert.match(f1, /node scripts\/verificar\.mjs en el front/);
   assert.doesNotMatch(f1, /carril\.mjs/);
-  assert.match(prompt('integrar'), /carril\.mjs limpiar prueba-back/);
+  assert.match(promptDe(llamadas, 'cierre'), /carril\.mjs limpiar prueba-back/, 'el cierre borra las copias de los carriles');
   const solo = await correr(respondedor(lect), { plan: PLAN, modo: 'programar', carrilesBack: 1 });
   assert.match(solo.llamadas.find((l) => l.label === 'B1 · programa').prompt, /Trabajás en main/);
 });
 
-test('conductor: un carril espera a otro cuando el plan lo pide, y la integración no corre por carril', async () => {
+test('conductor: un carril espera a otro cuando el plan lo pide, y no hay integración aparte', async () => {
   const orden = [];
   const lect = lectura([tarea('B1', 'back', { area: 'permisos' }), tarea('B2', 'back', { area: 'asistente', espera: ['B1'] }), tarea('F1', 'front')]);
   const resp = respondedor(lect, {
@@ -333,39 +536,8 @@ test('conductor: un carril espera a otro cuando el plan lo pide, y la integraci�
   });
   const { etiquetas, llamadas } = await correr(resp, { plan: PLAN, modo: 'programar' });
   assert.deepEqual(orden, ['B1', 'B2']);
-  assert.match(llamadas.find((l) => l.label === 'B2 · programa').prompt, /Ya están commiteadas: .*B1 \(c-B1\)/);
-  assert.ok(!etiquetas.some((e) => / · integración$/.test(e)), 'la integración y la seguridad corren una vez, en la puerta');
-  assert.ok(etiquetas.includes('integrar'));
-});
-
-test('conductor: con una tarea de riesgo «datos», el cierre tiene la premisa «Adversarial · datos»', async () => {
-  const lect = lectura([tarea('K1', 'contrato'), tarea('B1', 'back', { riesgo: ['datos'] }), tarea('B2', 'back'), tarea('F1', 'front')]);
-  const { resultado, etiquetas, llamadas } = await correr(respondedor(lect), { plan: PLAN });
-  assert.deepEqual(etiquetas.slice(-10), ['integrar', ...PREMISAS.map((p) => `revisión · ${p}`), 'revisión · Adversarial · datos', 'puerta', `revisión · ${PANTALLAS}`, 'cierre del plan']);
-  const adversarial = llamadas.find((l) => l.label === 'revisión · Adversarial · datos');
-  assert.equal(adversarial.phase, 'Revisión');
-  assert.equal(adversarial.effort, 'high');
-  assert.match(adversarial.prompt, /que tocan datos: B1 · tarea B1\./);
-  assert.match(adversarial.prompt, /- Datos: la migración es portable/);
-  assert.doesNotMatch(adversarial.prompt, /B2 · tarea B2/, 'solo las tareas de su tema');
-  assert.doesNotMatch(adversarial.prompt, /build y tests en verde/, 'el revisor no recibe la conclusión de quien programó');
-  assert.deepEqual(resultado.revision.premisas.map((p) => p.titulo), [...PREMISAS, 'Adversarial · datos', PANTALLAS]);
-  assert.equal(resultado.resultado, 'puerta corrida');
-});
-
-test('conductor: modelos elige el modelo de cada rol, y sin modelos todos van con el de la sesión', async () => {
-  const lect = lectura([tarea('B1', 'back'), tarea('F1', 'front')]);
-  const { llamadas } = await correr(respondedor(lect), { plan: PLAN, modo: 'programar', modelos: { front: 'sonnet' } });
-  assert.equal(llamadas.find((l) => l.label === 'F1 · programa').model, 'sonnet');
-  assert.equal(llamadas.find((l) => l.label === 'B1 · programa').model, undefined);
-  const base = respondedor(lectura([tarea('B1', 'back', { estado: 'hecha' })]));
-  const cierre = await correr(async (label, prompt) => {
-    if (label === 'revisión · Textos y errores') return { hallazgos: [hallazgoDe('TXT')], resumen: '' };
-    if (label.startsWith('verifica · ')) return { veredictos: [{ numero: 1, confirmado: true, motivo: 'se ve' }] };
-    return base(label, prompt);
-  }, { plan: PLAN, modo: 'cerrar', modelos: { verifica: 'haiku' } });
-  assert.equal(cierre.llamadas.find((l) => l.label === 'verifica · Textos y errores').model, 'haiku');
-  assert.equal(cierre.llamadas.find((l) => l.label === 'revisión · Textos y errores').model, undefined);
+  assert.match(promptDe(llamadas, 'B2 · programa'), /Ya están commiteadas: .*B1 \(c-B1\)/);
+  assert.ok(!etiquetas.some((e) => / · integración$|^integrar$/.test(e)), 'los tests enteros corren una vez, en la revisión');
 });
 
 test('conductor: los carriles se reparten por lo que falta, y una tarea a medias sigue lo que dejó la corrida anterior', async () => {
@@ -379,92 +551,30 @@ test('conductor: los carriles se reparten por lo que falta, y una tarea a medias
   const { resultado } = await correr(respondedor(lect), { plan: PLAN, modo: 'planificar' });
   assert.deepEqual(resultado.carrilesBack.map((c) => c.tareas), [['B1', 'B2', 'B3', 'B5'], ['B4']], 'lo hecho no pesa');
   const { llamadas } = await correr(respondedor(lect), { plan: PLAN, modo: 'programar' });
-  const b3 = llamadas.find((l) => l.label === 'B3 · programa').prompt;
+  const b3 = promptDe(llamadas, 'B3 · programa');
   assert.match(b3, /git log --grep "Tarea: prueba\/B3" --stat y seguí desde ahí/);
   assert.match(b3, /faltan las listas hijas/);
 });
 
-// ---------- Revisión por premisa ----------
+// ---------- Lo que frena antes de revisar ----------
 
-const hallazgoDe = (titulo, repo = 'back') => ({ titulo, punto: '4', repo, archivo: `${titulo}.cs`, linea: 3, escenario: `pasa ${titulo}`, regla: 'guardado', porque: `RAZON-${titulo}`, gravedad: 'media' });
-
-test('conductor: un revisor por premisa sobre los dos repos, cada uno con su verificador y su esfuerzo', async () => {
-  const base = respondedor(lectura([tarea('B1', 'back', { estado: 'hecha' })]));
-  const { llamadas, resultado } = await correr(async (label, prompt) => {
-    const rev = label.match(/^revisión · (.+)$/);
-    if (rev) return { hallazgos: [hallazgoDe(rev[1])], resumen: '' };
-    if (label.startsWith('verifica · ')) return { veredictos: [{ numero: 1, confirmado: true, motivo: 'se ve en el código' }] };
-    return base(label, prompt);
-  }, { plan: PLAN, modo: 'cerrar' });
-  const revisores = llamadas.filter((l) => /^revisión · /.test(l.label));
-  const verificadores = llamadas.filter((l) => /^verifica · /.test(l.label));
-  assert.deepEqual(revisores.map((l) => l.label), [...PREMISAS, PANTALLAS].map((p) => `revisión · ${p}`));
-  assert.deepEqual(verificadores.map((l) => l.label).sort(), [...PREMISAS, PANTALLAS].map((p) => `verifica · ${p}`).sort());
-  assert.deepEqual(revisores.map((l) => l.phase), ['Revisión', 'Revisión', 'Revisión', 'Revisión', 'Revisión', 'Puerta']);
-  for (const l of [...revisores, ...verificadores]) assert.ok(l.effort, `${l.label} lleva su esfuerzo`);
-  for (const l of revisores) {
-    assert.match(l.prompt, /git log --grep "Tarea: prueba\/"/);
-    assert.match(l.prompt, /ArquitecturaBaseMutitenantFront/, 'cada revisor ve los dos repos');
-  }
-  const de = (titulo) => revisores.find((l) => l.label === `revisión · ${titulo}`).prompt;
-  assert.match(de('Textos y errores'), /14 \(cada error en pantalla tiene un solo dueño\)/);
-  assert.doesNotMatch(de('Textos y errores'), /cache\.md|16 \(/, 'solo las reglas y los puntos de su premisa');
-  assert.match(de('Arquitectura, clean code y SOLID'), /revisar-arquitectura\.md/);
-  assert.match(de('Seguridad y aislamiento'), /16 \(lo que la pantalla ofrece/);
-  assert.match(de('Lo que no está en la spec'), /node scripts\/arneses\/arnes\.mjs conformidad --detectar --plan docs\/plans\/2026-11-19-etapa-prueba\.md/);
-  for (const l of verificadores) assert.doesNotMatch(l.prompt, /RAZON-/, 'el verificador no recibe el razonamiento del revisor');
-  const arreglo = llamadas.filter((l) => l.label === 'arreglos de la revisión · back');
-  assert.equal(arreglo.length, 1, 'un solo escritor por repo');
-  for (const p of PREMISAS) assert.match(arreglo[0].prompt, new RegExp(`\\] ${p.replace(/[()]/g, '\\$&')} \\(`));
-  assert.equal(resultado.revision.premisas.length, 6);
+test('conductor: con pasos del usuario antes de revisar, frena antes y los devuelve', async () => {
+  const lect = lectura([tarea('B1', 'back')], { pasosDelUsuario: [{ paso: 'cargar los user-secrets de B9', cuando: 'antes-de-revisar', soloMirar: false }] });
+  const { resultado, etiquetas } = await correr(respondedor(lect), { plan: PLAN });
+  assert.ok(!etiquetas.includes('tests enteros'));
+  assert.equal(resultado.resultado, 'espera al usuario antes de revisar');
+  assert.deepEqual(resultado.pasosAntesDeRevisar, ['cargar los user-secrets de B9']);
+  const despues = await correr(respondedor(lectura([tarea('B1', 'back', { estado: 'hecha' })], { pasosDelUsuario: lect.pasosDelUsuario })), { plan: PLAN, modo: 'cerrar', usuarioListo: true });
+  assert.ok(despues.etiquetas.includes('tests enteros'));
+  assert.ok(!despues.etiquetas.some((e) => / · programa$/.test(e)), 'cerrar no vuelve a programar');
 });
 
-test('conductor: lo que el verificador no confirma no llega al arreglo', async () => {
-  const base = respondedor(lectura([tarea('B1', 'back', { estado: 'hecha' })]));
-  const { llamadas, etiquetas, resultado } = await correr(async (label, prompt) => {
-    if (label === 'revisión · Textos y errores') return { hallazgos: [hallazgoDe('TXT', 'front')], resumen: '' };
-    if (label === 'revisión · Arquitectura, clean code y SOLID') return { hallazgos: [hallazgoDe('A1'), hallazgoDe('A2')], resumen: '' };
-    if (label === 'revisión · Seguridad y aislamiento') return { hallazgos: [hallazgoDe('S1')], resumen: '' };
-    if (label === 'verifica · Textos y errores') return { veredictos: [{ numero: 1, confirmado: false, motivo: 'el texto sale del resx' }] };
-    if (label === 'verifica · Arquitectura, clean code y SOLID') return { veredictos: [{ numero: 1, confirmado: false, motivo: 'otra pieza lo resuelve' }, { numero: 2, confirmado: true, motivo: 'reescribe las opciones' }] };
-    if (label === 'verifica · Seguridad y aislamiento') return null;
-    return base(label, prompt);
-  }, { plan: PLAN, modo: 'cerrar' });
-  assert.ok(!etiquetas.includes('arreglos de la revisión · front'), 'sin confirmados en el front no hay arreglo');
-  assert.ok(!etiquetas.includes('verifica · Caché, cuotas y módulos'), 'sin hallazgos no se verifica');
-  const arreglo = llamadas.find((l) => l.label === 'arreglos de la revisión · back').prompt;
-  assert.match(arreglo, /A2 \(A2\.cs:3\).*Lo confirmó un verificador: reescribe las opciones/);
-  assert.doesNotMatch(arreglo, /A1|S1|TXT/);
-  const premisa = (id) => resultado.revision.premisas.find((p) => p.id === id);
-  assert.deepEqual(premisa('textos').descartados, [{ titulo: 'TXT', motivo: 'el texto sale del resx' }]);
-  assert.equal(premisa('arquitectura').confirmados, 1);
-  assert.equal(premisa('seguridad').confirmados, null, 'una verificación que no terminó no confirma nada');
-});
-
-test('conductor: el revisor de pantallas corre después de la galería, y sus arreglos van con los de la puerta', async () => {
-  const fallo = { paso: 'Tests del back', archivo: 'RoleTests.cs', linea: 8, causa: 'falta el 404', dueno: 'back' };
-  const base = respondedor(lectura([tarea('B1', 'back', { estado: 'hecha' })]), { puerta: puerta([fallo]) });
-  const { llamadas, etiquetas } = await correr(async (label, prompt) => {
-    if (label === `revisión · ${PANTALLAS}`) return { hallazgos: [hallazgoDe('el filtro no es el de shared', 'front')], resumen: '' };
-    if (label === `verifica · ${PANTALLAS}`) return { veredictos: [{ numero: 1, confirmado: true, motivo: 'la captura lo muestra' }] };
-    return base(label, prompt);
-  }, { plan: PLAN, modo: 'cerrar' });
-  const i = (e) => etiquetas.indexOf(e);
-  assert.ok(i('puerta') < i(`revisión · ${PANTALLAS}`) && i(`revisión · ${PANTALLAS}`) < i(`verifica · ${PANTALLAS}`));
-  assert.ok(i(`verifica · ${PANTALLAS}`) < i('arreglos de la puerta · front'));
-  assert.ok(i('arreglos de la puerta · back') < i('puerta · lo que tocan los arreglos'));
-  assert.ok(i('arreglos de la puerta · front') < i('puerta · lo que tocan los arreglos'));
-  assert.equal(etiquetas.filter((e) => e === 'arreglos de la puerta · front').length, 1);
-  assert.ok(!etiquetas.includes('arreglos de la revisión · front'));
-  const pantallas = llamadas.find((l) => l.label === `revisión · ${PANTALLAS}`);
-  assert.equal(pantallas.phase, 'Puerta');
-  assert.match(pantallas.prompt, /capturas\/etapa-prueba/);
-  assert.match(llamadas.find((l) => l.label === 'arreglos de la puerta · front').prompt, /el filtro no es el de shared/);
-  assert.match(llamadas.find((l) => l.label === 'arreglos de la puerta · back').prompt, /RoleTests\.cs:8\. falta el 404/);
-  assert.match(llamadas.find((l) => l.label === 'puerta · lo que tocan los arreglos').prompt, /sus casos de la galería/);
-
-  const sinGaleria = await correr(respondedor(lectura([tarea('B1', 'back', { estado: 'hecha' })]), { puerta: { ...puerta(), galeria: '' } }), { plan: PLAN, modo: 'cerrar' });
-  assert.ok(!sinGaleria.etiquetas.includes(`revisión · ${PANTALLAS}`), 'sin galería no hay pantallas que mirar');
+test('conductor: cerrar con tareas pendientes no revisa ni gasta un cierre', async () => {
+  const lect = lectura([tarea('B1', 'back', { estado: 'hecha' }), tarea('F1', 'front', { estado: 'bloqueada', motivo: 'faltan sus tableros' })]);
+  const { resultado, etiquetas } = await correr(respondedor(lect), { plan: PLAN, modo: 'cerrar' });
+  assert.deepEqual(etiquetas, ['leer el plan']);
+  assert.equal(resultado.resultado, 'faltan tareas');
+  assert.match(resultado.faltan[0], /F1: bloqueada, faltan sus tableros/);
 });
 
 // ---------- Para después ----------
@@ -475,51 +585,61 @@ test('conductor: lo de para después se junta de cada agente y el cierre lo escr
   const { resultado, llamadas } = await correr(respondedor(lect, {
     'B1 · programa': programa('B1', { paraDespues: [filtro] }),
     'F1 · programa': programa('F1', { paraDespues: [filtro, { que: 'exportar a Excel', porQue: 'lo pidió un cliente.', donde: 'spec §4' }], pregunta: '¿Sin roles, se muestra el vacío?', captura: '.local/vacio.png' }),
-    integrar: { ...integrar, paraDespues: [{ que: 'una columna de la empresa', porQue: 'el contrato ya la trae.', donde: 'RoleResponse' }] },
   }), { plan: PLAN });
-  assert.match(llamadas.find((l) => l.label === 'B1 · programa').prompt, /Nunca agregás una tabla, una columna, un filtro, un combo, una ventana emergente, una ruta ni un permiso/);
-  assert.match(llamadas.find((l) => l.label === 'B1 · programa').prompt, /paraDespues \(que, porQue y donde/);
-  assert.deepEqual(resultado.paraDespues.map((p) => `${p.tarea}: ${p.que}`), ['B1: un filtro por fecha', 'F1: exportar a Excel', 'integracion: una columna de la empresa']);
+  assert.match(promptDe(llamadas, 'B1 · programa'), /Nunca agregás una tabla, una columna, un filtro, un combo, una ventana emergente, una ruta ni un permiso/);
+  assert.match(promptDe(llamadas, 'B1 · programa'), /paraDespues \(que, porQue y donde/);
+  assert.deepEqual(resultado.paraDespues.map((p) => `${p.tarea}: ${p.que}`), ['B1: un filtro por fecha', 'F1: exportar a Excel']);
   assert.deepEqual(resultado.preguntas, [{ tarea: 'F1', pregunta: '¿Sin roles, se muestra el vacío?', captura: '.local/vacio.png' }]);
-  const cierre = llamadas.find((l) => l.label === 'cierre del plan').prompt;
+  const cierre = promptDe(llamadas, 'cierre');
+  assert.match(cierre, /La etapa no se cierra: preguntas abiertas para el usuario: 1/, 'con una pregunta abierta no se cierra');
   assert.match(cierre, /docs\/backlog\.md, la sección «## Para después de la etapa prueba»/);
   assert.match(cierre, /- \*\*un filtro por fecha\.\*\* la lista crece rápido\. Dónde: Roles\.tsx \(B1\)\./);
   assert.match(cierre, /git diff --quiet -- docs\/backlog\.md/, 'no se lleva cambios de otra sesión');
 
   const sinNada = await correr(respondedor(lectura([tarea('B1', 'back')])), { plan: PLAN });
-  assert.doesNotMatch(sinNada.llamadas.find((l) => l.label === 'cierre del plan').prompt, /backlog/);
+  const cierreSinNada = promptDe(sinNada.llamadas, 'cierre');
+  assert.match(cierreSinNada, /«## Para después de la etapa prueba», al final si todavía no está: antes del git rm, la sección «Al cierre del bloque E12–E25» del plan pasa ahí entera\./);
+  assert.doesNotMatch(cierreSinNada, /- \*\*/, 'sin nada para después, solo lo del bloque');
   assert.deepEqual(sinNada.resultado.paraDespues, []);
 });
 
-// ---------- Varios planes seguidos ----------
+// ---------- Varios planes juntos ----------
 
 const PA = 'docs/plans/2026-11-20-etapa-a.md';
 const PB = 'docs/plans/2026-11-21-etapa-b.md';
 
-/** Con varios planes, cada etiqueta lleva la clave de su plan adelante: «a · leer el plan». */
-function respondedorDePlanes(porClave) {
+/** Con varios planes, la fase 1 lleva la clave de su plan adelante («a · leer el plan»); las fases 2 a 5, no. */
+function respondedorDePlanes(porClave, juntas = respondedor(lectura([]))) {
   return async (label, prompt, opts) => {
     const m = label.match(/^([a-z0-9-]+) · (.*)$/);
-    if (!m || !porClave[m[1]]) throw new Error(`etiqueta sin plan: ${label}`);
-    return porClave[m[1]](m[2], prompt, opts);
+    if (m && porClave[m[1]]) return porClave[m[1]](m[2], prompt, opts);
+    return juntas(label, prompt, opts);
   };
 }
 
-test('conductor: planes sigue con el siguiente cuando la puerta pasa en verde, y devuelve cada plan', async () => {
+test('conductor: con planes, la fase 1 corre para cada uno en orden, y de la 2 a la 5 una sola vez, juntas', async () => {
   const resp = respondedorDePlanes({ a: respondedor(lectura([tarea('B1', 'back')])), b: respondedor(lectura([tarea('B1', 'back')])) });
   const { resultado, etiquetas, llamadas } = await correr(resp, { planes: [PA, PB] });
-  assert.equal(resultado.resultado, 'todos con la puerta en verde');
-  assert.deepEqual(resultado.planes.map((p) => `${p.clave}: ${p.resultado}`), ['a: puerta corrida', 'b: puerta corrida']);
+  assert.equal(resultado.resultado, 'cerradas');
+  assert.deepEqual(resultado.planes.map((p) => `${p.clave}: ${p.resultado}`), ['a: cerrada', 'b: cerrada']);
   assert.equal(resultado.frenoEn, null);
-  assert.ok(etiquetas.indexOf('a · cierre del plan') < etiquetas.indexOf('b · leer el plan'), 'uno después del otro');
-  assert.doesNotMatch(llamadas.find((l) => l.label === 'a · leer el plan').prompt, /sigue a/);
-  assert.match(llamadas.find((l) => l.label === 'b · leer el plan').prompt, /sigue a docs\/plans\/2026-11-20-etapa-a\.md .*no es un bloqueo/);
+  const i = (e) => etiquetas.indexOf(e);
+  assert.ok(i('a · B1 · programa') < i('b · leer el plan'), 'uno después del otro');
+  assert.ok(i('b · B1 · programa') < i('tests enteros'));
+  for (const unaVez of ['archivos de la etapa', 'tests enteros', 'última revisión', 'cierre']) assert.equal(etiquetas.filter((e) => e === unaVez).length, 1, unaVez);
+  assert.doesNotMatch(promptDe(llamadas, 'a · leer el plan'), /sigue a/);
+  assert.match(promptDe(llamadas, 'b · leer el plan'), /sigue a docs\/plans\/2026-11-20-etapa-a\.md .*no es un bloqueo/);
+  assert.match(promptDe(llamadas, 'archivos de la etapa'), /git log --grep "Tarea: a\/" --grep "Tarea: b\/" --name-only/);
+  assert.match(promptDe(llamadas, 'tests enteros'), /conformidad --detectar --plan docs\/plans\/2026-11-20-etapa-a\.md y conformidad --detectar --plan docs\/plans\/2026-11-21-etapa-b\.md/);
+  assert.match(promptDe(llamadas, 'última revisión'), /las etapas «Etapa de prueba» \(plan docs\/plans\/2026-11-20-etapa-a\.md\), «Etapa de prueba» \(plan docs\/plans\/2026-11-21-etapa-b\.md\), que se revisan y se cierran juntas/);
+  const cierre = promptDe(llamadas, 'cierre');
+  assert.match(cierre, /Plan docs\/plans\/2026-11-20-etapa-a\.md .*\n[\s\S]*Plan docs\/plans\/2026-11-21-etapa-b\.md/);
+  assert.match(cierre, /quedan cerradas el <fecha> y se retiran sus planes/);
+  assert.match(cierre, /carril\.mjs limpiar a-back y node scripts\/arneses\/carril\.mjs limpiar b-back/);
 });
 
-test('conductor: planes frena con la puerta en rojo, una pregunta abierta o un paso del usuario', async () => {
-  const fallo = { paso: 'E2E real', archivo: 'roles.spec.ts', linea: 5, causa: 'no carga', dueno: 'front' };
+test('conductor: planes frena con una pregunta abierta, un paso del usuario o un bloqueo, y no programa el siguiente', async () => {
   const casos = [
-    { motivo: /la puerta no pasó en verde: puerta con fallos/, a: respondedor(lectura([tarea('B1', 'back')]), { puerta: puerta([fallo]), 'puerta · lo que tocan los arreglos': puerta([fallo]) }) },
     { motivo: /preguntas abiertas para el usuario: 1/, a: respondedor(lectura([tarea('B1', 'back')]), { 'B1 · programa': programa('B1', { pregunta: '¿Se muestra el vacío?' }) }) },
     { motivo: /el usuario tiene que: probar el envío con Meta/, a: respondedor(lectura([tarea('B1', 'back')], { pasosDelUsuario: [{ paso: 'probar el envío con Meta', cuando: 'despues', soloMirar: false }] })) },
     { motivo: /el usuario tiene que: B9: tarea B9/, a: respondedor(lectura([tarea('B1', 'back'), tarea('B9', 'back', { estado: 'del-usuario' })])) },
@@ -534,33 +654,48 @@ test('conductor: planes frena con la puerta en rojo, una pregunta abierta o un p
     assert.deepEqual(resultado.sinCorrer, [PB]);
     assert.ok(!etiquetas.some((e) => e.startsWith('b · ')), 'el plan siguiente no corre');
   }
-  const lectorCaido = await correr(respondedorDePlanes({ a: respondedor(lectura([tarea('B1', 'back')])), b: respondedor(lectura([]), { 'leer el plan': null }) }), { planes: [PA, PB] });
-  assert.equal(lectorCaido.resultado.planes[0].resultado, 'puerta corrida', 'lo del plan anterior no se pierde');
-  assert.match(lectorCaido.resultado.frenoEn.porque[0], /no empezó: El agente que lee el plan docs\/plans\/2026-11-21-etapa-b\.md no terminó/);
-  const soloMirar = respondedor(lectura([tarea('B1', 'back')], { pasosDelUsuario: [{ paso: 'mirar la galería', cuando: 'despues', soloMirar: true }] }));
+  const soloMirar = respondedor(lectura([tarea('B1', 'back')], { pasosDelUsuario: [{ paso: 'la prueba integral del bloque', cuando: 'despues', soloMirar: true }] }));
   const sigue = await correr(respondedorDePlanes({ a: soloMirar, b: respondedor(lectura([tarea('B1', 'back')])) }), { planes: [PA, PB] });
-  assert.equal(sigue.resultado.resultado, 'todos con la puerta en verde', 'mirar la galería no frena');
+  assert.equal(sigue.resultado.resultado, 'cerradas', 'mirar no frena');
 });
 
-test('conductor: plan solo sigue como antes, y los argumentos de planes se validan', async () => {
+test('conductor: con planes, si el siguiente no termina su código no se revisa nada, y el cierre deja al día los dos', async () => {
+  const b = respondedor(lectura([tarea('B1', 'back')]), { 'B1 · programa': programa('B1', { estado: 'bloqueada', commits: [], motivo: 'falta el tablero' }) });
+  const { resultado, etiquetas, llamadas } = await correr(respondedorDePlanes({ a: respondedor(lectura([tarea('B1', 'back')])), b }), { planes: [PA, PB] });
+  assert.equal(resultado.frenoEn.clave, 'b');
+  assert.ok(!etiquetas.includes('tests enteros') && !etiquetas.includes('archivos de la etapa'), 'la revisión espera el código de todas');
+  assert.deepEqual(resultado.planes.map((p) => `${p.clave}: ${p.resultado}`), ['a: sin revisar', 'b: faltan tareas']);
+  const cierre = promptDe(llamadas, 'cierre');
+  assert.match(cierre, /La etapa no se cierra: faltan tareas de b/);
+  assert.match(cierre, /Plan docs\/plans\/2026-11-20-etapa-a\.md[\s\S]*Plan docs\/plans\/2026-11-21-etapa-b\.md/);
+
+  const lectorCaido = await correr(respondedorDePlanes({ a: respondedor(lectura([tarea('B1', 'back')])), b: respondedor(lectura([]), { 'leer el plan': null }) }), { planes: [PA, PB] });
+  assert.equal(lectorCaido.resultado.planes[0].resultado, 'cerrada', 'lo del plan anterior se revisa y se cierra');
+  assert.match(lectorCaido.resultado.frenoEn.porque[0], /no empezó: El agente que lee el plan docs\/plans\/2026-11-21-etapa-b\.md no terminó/);
+});
+
+test('conductor: plan solo devuelve el plan, y los argumentos de planes se validan', async () => {
   const { resultado, etiquetas } = await correr(respondedor(lectura([tarea('B1', 'back')])), { plan: PLAN });
-  assert.equal(resultado.resultado, 'puerta corrida');
+  assert.equal(resultado.resultado, 'cerrada');
   assert.equal(resultado.planes, undefined, 'con plan devuelve el plan, no la cadena');
   assert.ok(etiquetas.includes('leer el plan'), 'sin la clave adelante');
   await assert.rejects(correr(respondedor(lectura([])), { plan: PLAN, planes: [PA] }), /plan o planes/);
-  await assert.rejects(correr(respondedor(lectura([])), { planes: [PA, PB], modo: 'programar' }), /Con planes, el modo es todo o planificar/);
   await assert.rejects(correr(respondedor(lectura([])), { planes: [PA, PB], solo: ['B1'] }), /solo va con un plan/);
   await assert.rejects(correr(respondedor(lectura([])), { planes: [PA, PA] }), /repetido/);
   const lect = lectura([tarea('B1', 'back')]);
+  const programar = await correr(respondedorDePlanes({ a: respondedor(lect), b: respondedor(lect) }), { planes: [PA, PB], modo: 'programar' });
+  assert.equal(programar.resultado.resultado, 'programadas');
+  assert.ok(!programar.etiquetas.includes('tests enteros'));
   const plan = await correr(respondedorDePlanes({ a: respondedor(lect), b: respondedor(lect) }), { planes: [PA, PB], modo: 'planificar' });
   assert.deepEqual(plan.etiquetas, ['a · leer el plan', 'b · leer el plan']);
   assert.equal(plan.resultado.resultado, 'planificados');
-  assert.equal(plan.resultado.agentesEstimados, 2 * (1 + 1 + 20));
+  // Cada plan, leer y su tarea; las fases 2 a 5, una vez: el que lista, 2 transversales, los tests, 2 arreglos, la última y el cierre.
+  assert.equal(plan.resultado.agentesEstimados, 2 * (1 + 1) + (1 + 2 + 1 + 2 + 1 + 1));
 });
 
 test('conductor: las fases de meta son exactamente las que usa el script', () => {
   const meta = [...fuente.match(/phases: \[([\s\S]*?)\n  \],/)[1].matchAll(/title: '([^']+)'/g)].map((m) => m[1]);
   const usadas = new Set([...fuente.matchAll(/phase(?:\(|: )'([^']+)'/g)].map((m) => m[1]));
-  for (const f of fuente.matchAll(/correrCarril\([a-z]+, '([^']+)'\)/g)) usadas.add(f[1]);
   assert.deepEqual([...usadas].sort(), [...meta].sort());
+  assert.deepEqual(meta, ['Programar', 'Revisión', 'Arreglos', 'Última revisión', 'Cierre']);
 });
