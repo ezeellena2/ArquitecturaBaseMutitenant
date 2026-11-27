@@ -5,16 +5,19 @@ using ArquitecturaBaseMultitenant.Domain.Forms;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.Forms.Persistence.Repositories;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Time.Testing;
+using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Forms;
 
 /// <summary>
 /// La barrera de las operaciones de archivo de los catálogos (C11) con la base real: una por persona, que se toma sin esperar y se
 /// suelta al terminar; una vencida se retoma; otra persona no espera; la tercera de una organización da <c>TooManyAtOnce</c> y otra
-/// organización no espera; el tope de la instalación cuenta todas las organizaciones. Cada prueba corre en su propio momento, lejos
-/// del reloj de las demás, así las barreras de otras pruebas no cuentan.
+/// organización no espera; el tope de la instalación cuenta todas las organizaciones; una barrera en uso se renueva y no vence
+/// mientras dura su operación. Cada prueba corre en su propio momento, lejos del reloj de las demás, así las barreras de otras
+/// pruebas no cuentan.
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class FormWorkLeaseTests(ApiFactory factory)
@@ -43,20 +46,45 @@ public sealed class FormWorkLeaseTests(ApiFactory factory)
     public async Task An_expired_barrier_is_taken_again_and_its_late_release_keeps_the_new_one()
     {
         var clock = Clock();
-        var store = Store(await OrganizationAsync(), clock);
+        var tenantId = await OrganizationAsync();
+        var store = Store(tenantId, clock);
         var person = Guid.NewGuid();
-        var stale = Taken(await store.TryTakeAsync(person, FormWorkLeaseKind.Apply, Ct));
 
+        // La copia que la tenía se cayó sin soltarla ni renovarla: a los dos minutos vence sola y la persona vuelve a tomarla.
+        await LeaveAsync(tenantId, person, clock.GetUtcNow().UtcDateTime + FormWorkLease.Lifetime);
         clock.Advance(FormWorkLease.Lifetime - TimeSpan.FromSeconds(1));
         Assert.Equal(FormCatalogImportErrors.BusyCode, Refused(await store.TryTakeAsync(person, FormWorkLeaseKind.Preview, Ct)).Code);
-
-        // El proceso que la tenía se cayó: a los dos minutos vence sola y la persona vuelve a tomarla.
         clock.Advance(TimeSpan.FromSeconds(1));
-        await using var current = Taken(await store.TryTakeAsync(person, FormWorkLeaseKind.Preview, Ct));
+        var stale = Taken(await store.TryTakeAsync(person, FormWorkLeaseKind.Apply, Ct));
 
-        // Si el de antes termina tarde, suelta la suya, no la nueva.
+        // Si no se pudo renovar y venció, la persona toma otra; cuando la de antes termina tarde, suelta la suya, no la nueva.
+        await ExpireAsync(tenantId, person, clock.GetUtcNow().UtcDateTime);
+        await using var current = Taken(await store.TryTakeAsync(person, FormWorkLeaseKind.Preview, Ct));
         await stale.DisposeAsync();
         Assert.Equal(FormCatalogImportErrors.BusyCode, Refused(await store.TryTakeAsync(person, FormWorkLeaseKind.Export, Ct)).Code);
+    }
+
+    [Fact]
+    public async Task A_barrier_in_use_is_renewed_and_does_not_expire_while_its_operation_runs()
+    {
+        var clock = Clock();
+        var tenantId = await OrganizationAsync();
+        var store = Store(tenantId, clock);
+        var person = Guid.NewGuid();
+        var slow = Taken(await store.TryTakeAsync(person, FormWorkLeaseKind.Preview, Ct));
+
+        // Una subida lenta que dura más que el vencimiento: cada renovación corre el vencimiento.
+        for (var elapsed = TimeSpan.Zero; elapsed <= FormWorkLease.Lifetime; elapsed += FormWorkLeaseStore.RenewEvery)
+        {
+            clock.Advance(FormWorkLeaseStore.RenewEvery);
+            var expected = clock.GetUtcNow().UtcDateTime + FormWorkLease.Lifetime;
+            await WaitUntilAsync(async () => await ExpiresAtAsync(tenantId, person) >= expected.AddMilliseconds(-1));
+        }
+        Assert.Equal(FormCatalogImportErrors.BusyCode, Refused(await store.TryTakeAsync(person, FormWorkLeaseKind.Export, Ct)).Code);
+
+        // Al terminar se suelta y deja de renovarse.
+        await slow.DisposeAsync();
+        await using var next = Taken(await store.TryTakeAsync(person, FormWorkLeaseKind.Export, Ct));
     }
 
     [Fact]
@@ -133,7 +161,55 @@ public sealed class FormWorkLeaseTests(ApiFactory factory)
 
     private FormWorkLeaseStore Store(Guid tenantId, TimeProvider clock, FormCatalogFileOptions? limits = null) =>
         new(factory.RuntimeConnectionString, new Organization(tenantId), clock,
-            Options.Create(new FormsOptions { CatalogFiles = limits ?? new FormCatalogFileOptions() }));
+            Options.Create(new FormsOptions { CatalogFiles = limits ?? new FormCatalogFileOptions() }),
+            NullLogger<FormWorkLeaseStore>.Instance);
+
+    /// <summary>La barrera que dejó una copia que se cayó: está en la base y nadie la renueva ni la suelta.</summary>
+    private Task LeaveAsync(Guid tenantId, Guid person, DateTime expiresAtUtc) => AdminAsync(tenantId, """
+        INSERT INTO tenant."FormWorkLeases" ("Id", "TenantId", "UserId", "Kind", "ExpiresAtUtc")
+        VALUES (@id, @tenant, @user, 'Apply', @expires)
+        """, ("id", Guid.CreateVersion7()), ("tenant", tenantId), ("user", person), ("expires", expiresAtUtc));
+
+    /// <summary>Una barrera que no se pudo renovar (la base no respondía) y venció.</summary>
+    private Task ExpireAsync(Guid tenantId, Guid person, DateTime atUtc) => AdminAsync(tenantId, """
+        UPDATE tenant."FormWorkLeases" SET "ExpiresAtUtc" = @at WHERE "TenantId" = @tenant AND "UserId" = @user
+        """, ("at", atUtc), ("tenant", tenantId), ("user", person));
+
+    private async Task<DateTime?> ExpiresAtAsync(Guid tenantId, Guid person)
+    {
+        await using var connection = await OpenAdminAsync(tenantId);
+        await using var command = new NpgsqlCommand("""
+            SELECT "ExpiresAtUtc" FROM tenant."FormWorkLeases" WHERE "TenantId" = @tenant AND "UserId" = @user
+            """, connection);
+        command.Parameters.AddWithValue("tenant", tenantId);
+        command.Parameters.AddWithValue("user", person);
+        return await command.ExecuteScalarAsync(Ct) as DateTime?;
+    }
+
+    private async Task AdminAsync(Guid tenantId, string sql, params (string Name, object Value)[] parameters)
+    {
+        await using var connection = await OpenAdminAsync(tenantId);
+        await using var command = new NpgsqlCommand(sql, connection);
+        foreach (var (name, value) in parameters) command.Parameters.AddWithValue(name, value);
+        Assert.Equal(1, await command.ExecuteNonQueryAsync(Ct));
+    }
+
+    private async Task<NpgsqlConnection> OpenAdminAsync(Guid tenantId)
+    {
+        var connection = new NpgsqlConnection(factory.AdminConnectionString);
+        await connection.OpenAsync(Ct);
+        await using var enter = new NpgsqlCommand("SELECT set_config('app.tenant_id', @tenant, false)", connection);
+        enter.Parameters.AddWithValue("tenant", tenantId.ToString("D"));
+        await enter.ExecuteNonQueryAsync(Ct);
+        return connection;
+    }
+
+    private static async Task WaitUntilAsync(Func<Task<bool>> condition)
+    {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+        timeout.CancelAfter(TimeSpan.FromSeconds(10));
+        while (!await condition()) await Task.Delay(20, timeout.Token);
+    }
 
     private async Task<Guid> OrganizationAsync()
     {

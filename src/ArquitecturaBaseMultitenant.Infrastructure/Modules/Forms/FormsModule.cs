@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Infrastructure.Modules.Forms.Persistence.Repos
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Forms;
@@ -29,7 +30,7 @@ public static class FormsModule
             provider.GetRequiredService<IConfiguration>().GetConnectionString("appdb")
                 ?? throw new InvalidOperationException("The catalog file barrier needs the appdb connection."),
             provider.GetRequiredService<ITenantContext>(), provider.GetRequiredService<TimeProvider>(),
-            provider.GetRequiredService<IOptions<FormsOptions>>()));
+            provider.GetRequiredService<IOptions<FormsOptions>>(), provider.GetRequiredService<ILogger<FormWorkLeaseStore>>()));
         return services;
     }
 }
