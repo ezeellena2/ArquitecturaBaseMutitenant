@@ -218,7 +218,7 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
         "/api/organization/whatsapp/settings" =>
             "Configuración de WhatsApp de la organización (272): chatRetentionDays, de 1 al máximo de la plataforma, con version en el PUT y el 409 de siempre. Un valor fuera de 1 y 3650 es el 400 de validación en su campo; uno por encima del máximo que fija la plataforma al guardar, el 400 WhatsApp.Settings.ChatRetentionOutOfRange en chatRetentionDays, con ese máximo en el texto.",
         _ when path.EndsWith("/conversations/{id}", StringComparison.Ordinal) && !path.StartsWith("/api/me/", StringComparison.Ordinal) =>
-            "Cada mensaje: status suma Uncertain («Sin confirmar», ADR 0066), derivado de la cola mientras Meta no avise otra cosa; failureReason es el texto del motivo guardado (uno de los códigos WhatsApp.Send.*); reviewedByName y reviewedAtUtc dicen quién lo revisó y cuándo.",
+            "Cada mensaje: status suma Uncertain («Sin confirmar», ADR 0066), derivado de la cola mientras Meta no avise otra cosa; failureReason es el texto del motivo guardado (uno de los códigos WhatsApp.Send.*); reviewedByName y reviewedAtUtc dicen quién lo revisó y cuándo; sentFromPhone marca lo que la organización mandó desde la app del celular, en coexistencia.",
         _ when path.Contains("/broadcasts/{id}", StringComparison.Ordinal) =>
             "Un destinatario suma Uncertain («Sin confirmar», decisión 255): no cuenta como enviado ni como «No llegó», sin revisión.",
         _ => null,
@@ -240,6 +240,9 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
             reviewer.Description = "Quién marcó como revisado el mensaje «Sin confirmar»; null sin revisión.";
         if (Property(schemas, "WhatsAppChatMessageResponse", "reviewedAtUtc") is { } reviewed)
             reviewed.Description = "Cuándo se marcó como revisado; null sin revisión.";
+        if (Property(schemas, "WhatsAppChatMessageResponse", "sentFromPhone") is { } phone)
+            phone.Description = "true en un mensaje saliente que la organización mandó desde la app WhatsApp Business del celular, en coexistencia; "
+                + "false en los demás. Un saliente sin author y sin sentFromPhone es la respuesta del bot. Puede faltar en una versión anterior: se lee como false.";
     }
 
     /// <summary>Las cotas de la configuración de WhatsApp (B18), como valores del contrato.</summary>

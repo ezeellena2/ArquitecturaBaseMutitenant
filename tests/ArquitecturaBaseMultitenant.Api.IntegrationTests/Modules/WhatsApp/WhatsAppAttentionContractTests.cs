@@ -97,6 +97,19 @@ public sealed class WhatsAppAttentionContractTests(ApiFactory factory)
     }
 
     [Fact]
+    public void A_chat_message_says_whether_it_was_sent_from_the_phone()
+    {
+        // Arreglos de la revisión, K1 (decisión 2): un saliente sin autor es el bot, salvo que la organización lo haya mandado
+        // desde la app del celular en coexistencia. Opcional para el front, así convive con la versión anterior.
+        var document = JsonNode.Parse(File.ReadAllText(Path.Combine(FindRepositoryRoot(), "docs", "contracts", "openapi.json")))!;
+        var message = document["components"]!["schemas"]!["WhatsAppChatMessageResponse"]!;
+        var sentFromPhone = message["properties"]!["sentFromPhone"]!;
+        Assert.Equal("boolean", sentFromPhone["type"]!.GetValue<string>());
+        Assert.False(string.IsNullOrWhiteSpace(sentFromPhone["description"]?.GetValue<string>()));
+        Assert.DoesNotContain(message["required"]!.AsArray(), value => value!.GetValue<string>() == "sentFromPhone");
+    }
+
+    [Fact]
     public void Phone_import_asks_for_consent_and_its_preview_does_not()
     {
         // Base de la 12 (decisión 179): «Vincular y mandar» pide la casilla; la vista previa no guarda ni manda nada.

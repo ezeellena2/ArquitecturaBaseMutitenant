@@ -66,7 +66,7 @@ public sealed record WhatsAppConversationListRequest : PagedRequest
 
 /// <summary>
 /// Un mensaje de la conversación. Las notas nunca salen a Meta; los archivos se informan sin descarga hasta la E14. Un
-/// mensaje saliente sin author es la respuesta automática del bot.
+/// mensaje saliente sin author es la respuesta automática del bot, salvo que tenga SentFromPhone.
 /// </summary>
 public sealed record WhatsAppChatMessageResponse(Guid Id, WhatsAppChatMessageKind Kind, Domain.WhatsApp.WhatsAppMessageDirection Direction,
     string? Author, string? Text, WhatsAppMediaKind? MediaKind, WhatsAppChatMessageStatus Status, string? FailureReason, DateTime CreatedAtUtc)
@@ -76,6 +76,12 @@ public sealed record WhatsAppChatMessageResponse(Guid Id, WhatsAppChatMessageKin
 
     /// <summary>Cuándo se marcó como revisado; null sin revisión.</summary>
     public DateTime? ReviewedAtUtc { get; init; }
+
+    /// <summary>
+    /// true en un mensaje saliente que la organización mandó desde la app WhatsApp Business del celular, en coexistencia
+    /// (decisión 2 de los arreglos de la revisión); false en todos los demás.
+    /// </summary>
+    public bool SentFromPhone { get; init; }
 }
 
 /// <summary>La conversación y sus mensajes: la página 1 trae los más recientes, en orden descendente.</summary>
