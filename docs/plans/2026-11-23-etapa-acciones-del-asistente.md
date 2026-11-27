@@ -6,10 +6,10 @@
 
 | Parte | Tareas | Estado |
 | --- | --- | --- |
-| Contrato | K0–K1 | Pendiente |
-| Back | B1–B8 | Pendiente |
-| Front | F1–F5 | Pendiente |
-| Integración y puerta | I1–I3 | Pendiente |
+| Contrato | K0–K1 | Hecha |
+| Back | B1–B8 | Hecha |
+| Front | F1–F5 | Hecha |
+| Integración y puerta | I1–I3 | Pendiente: I2 (falla `AssistantActionDeclarationTests.The_dependency_tree_of_every_source_only_reads`, que rompió 81111203) e I3 (el recorrido se corta en ACC-08 a 1440: el paso cierra el navegador antes de la captura; 134/272) |
 
 ## Forma de trabajo
 
@@ -210,9 +210,24 @@ Leé AGENTS.md del front, la ADR 0068 del back, este plan y la spec docs/plans/f
    - una tarjeta sin el permiso, que se ve «Ya no disponible»;
    - en el teléfono, la tarjeta y el diálogo.
 
-| Puerta | Resultado |
-| --- | --- |
-| Back / Front / Contrato / E2E / Documentación / Galería / Recorrido | Pendiente |
+| Paso | Resultado | Número |
+| --- | --- | --- |
+| Build del back | Pasa (corte 77155ea9) | 0 errores, 0 advertencias |
+| Tests del back (con Docker) | Falla: 1 nuevo, `AssistantActionDeclarationTests.The_dependency_tree_of_every_source_only_reads`, que rompió 81111203. Los 2 fallos de antes (`InjectedValidatorTests`, `HarnessTests`) ya pasan; Application entero y la integración dirigida en verde | Architecture 431/432 · Application 1033/1033 · integración dirigida 38/38 |
+| Build del front | Pasa | sale 0 |
+| Lint | Pasa | 0 errores (11 advertencias) |
+| Tests del front | Pasa, con los dirigidos (access-paths, structure, locales, assistant, assistant-actions, users) | 765/765 (58/58 archivos) |
+| Contrato (contracts:check) | Pasa | sale 0 |
+| E2E real | Pasa: attachments.five-six termina en done sin ContextTooLarge, y «Acciones del asistente» («Invitar usuario» y «Ya se guardó»), a 1440 y 390 | 2/2 (48/48 con la corrida anterior) |
+| Documentación (realinear-docs) | Pasa, en los dos repos | 0 · 0 · 0 |
+| Estado de los documentos | Pasa | 0 · 0 · 0 |
+| Conformidad | Pasa (35 commits del back y 15 del front) | 0 · 0 · 0 |
+| Galería | 57 casos del grupo «asistente» recapturados a 1440, 390 y 320; galería entera en `.local/puerta-acciones/galeria/`. A los tableros les falta la tarjeta mientras lee y la de error con «Reintentar» | 57/57 (98/98) |
+| Recorrido de usuario | Falla: E8B-40-3 y ACC-01 a ACC-07 a 1440 pasan; se corta en ACC-08 (el paso cierra el navegador antes de la captura). No corrieron ACC-09 ni nada a 390 | 134/272 |
+| Quitar el módulo | No aplica | - |
+| Revisión de código del cierre | 21 hallazgos, 20 confirmados; 17 arreglos más 5 commits de esta tanda. El arreglo de `InjectedValidatorTests` rompió la regla hermana. Pantallas contra el tablero: 3 de 4 confirmados | 20/21 |
+| Commits que se pisan | Pasa: nada de una tarea quedó deshecho; la migración AssistantActionTurnOfferedActions se regeneró a propósito (86910d58) | back 58 (35), front 30 (15) |
+| Proveedor real | No se corrió ni hizo falta | 0 |
 
 **Texto para el chat de Integración**
 
@@ -259,6 +274,17 @@ Leé AGENTS.md de los dos repos, la ADR 0068, este plan, la spec y la skill /pue
 - Con una propuesta en el hilo, el campo del Inicio en la compu dice «Pedí un cambio o hacé otra consulta…», como el tablero; el del teléfono sigue «Preguntá algo». (I1)
 - El modelo falso suma el escenario `[E2E:action] {action, target?, values}`, que propone una vez lo que escribe el recorrido o el E2E con los nombres de su entorno, y el entorno aislado califica las acciones con cada modelo del catálogo inicial (`RecorridoAssistantModule`). La galería acepta una etapa con nombre (`etapa-acciones-del-asistente.json`). (I1)
 - Un destino con varios parecidos vuelve al modelo con `Roles.Role.Ambiguous` o `Tenancy.Member.Ambiguous`, del catálogo y con texto en es y en, en lugar de `Assistant.Action.Doubt.Similar`, que queda solo como duda de un valor. La empresa y los roles se resuelven y se nombran solo con `companies.read` y `roles.read`, como las listas de la pantalla de siempre; `read_action` de los roles de Usuarios da la página del lector con los que se pueden dar (`totalCount` cuenta los del lugar). (revisión)
+- La tarjeta traduce solo la duda `Assistant.Action.Doubt.Similar` («Hay más de una opción parecida.»), sin parámetros; Usuarios y Roles publican solo esa clave (`AssistantActionDoubts.Similar`). Con otra clave queda solo «Revisá». (F2, B6, B7)
+- `AssistantActionAdapter` (front) suma `appliedHref?` y `reviewHref?`; `roles.create` saca el id del rol de `appliedLocation` (o del `location` del 409), y `users.invite` lleva a `/org/usuarios`. (F2, F3, F4)
+- `AssistantTurnExecution` suma `OfferedActions`; `AssistantTurnWork.Create` suma `offersActions`; `CurrentEngineVersion` pasa a 2 y se agrega `WithoutActionsEngineVersion = 1`. (B4)
+- Las tres rutas de la propuesta dejan de dar 501: el 409 `Assistant.Proposal.Unavailable` lleva `state` y `reason`, y `AlreadyApplied` lleva `location`. `message.proposal` llega con `{id, kind, action, version, state}`. (B5)
+- `IAssistantActionSource` suma `ReviewAsync`, que devuelve `AssistantActionReview(Target?, Values)` con la forma de la pantalla; `AssistantActionResolution` suma `SubjectUserIds`; `AssistantActionToolData` suma `WrittenTarget`; `IIdempotencyStore` suma `FindAsync`. (B5)
+- `propose_action`: un `Choices` se escribe como nombre (sumar) o `{op, value}`; está en `asistente.md`, pero no en la descripción que recibe el modelo. (B6)
+- Forma de los valores en el GET. Usuarios: `email`, `company` `{value: id, label}`, roles y `companyRoles` `{value: {op, id}, label, doubt?}`, y `target.id` es el memberId. Roles: `name`, `description`, `scope` (`Organization`|`SpecificCompany`), `company`, `permissions` `{value: {op, id: código}, label, doubt?}`. (B6, B7, F3, F4)
+- `users.remove` y `roles.remove` mandan `target.version` en el DELETE y llaman a applied sin versión; `users.edit` y `roles.edit` llaman a applied con la versión del PUT. (F3, F4)
+- Rechazos dentro de `AssistantActionToolData`, nunca HTTP: `Roles.Role.PermissionIncluded` (ahora `RoleErrors.PermissionIncludedCode`, con texto), `SystemRoleCannotChange`, `PermissionNotFound`, `PermissionsNotHeld`, `AlreadyExists`. `ActionTexts` suma `OptionKey`, `Option` y `OptionIn`. (B7, I1)
+- `AssistantActionContractWriter.Write` recibe `IServiceCollection`; `assistant-actions.json` no cambia. (B6)
+- `IRoleReader` suma `ListByIdsAsync`; `IAssistantProposalRepository.ListNewAsync` pasa a `LockNewAsync`; una segunda propuesta para el mismo mensaje da `Assistant.Action.OnePerTurn`. En el front, `AssistantActionAdapter.Dialog` recibe `{ onClose, onSaved? }` y el índice suma `useDropAssistantProposal`, `useLoadAssistantProposalOnce` y `useAssistantProposalConfirmation`. (revisión)
 - **K0 (2026-11-26):** el código coincide con lo que asumen este plan y la spec: la puerta de la base 2 cerrada; `OrganizationDelegationGuard` y `CompanyDelegationGuard` con sus `Policy`, y los 403 de la 0061 (`RoleErrors.PermissionsNotHeld`, `MemberErrors.RolesNotHeld` y `HasMorePermissions`) en invitar, editar y roles; `Permissions.Inclusions` con `Effective` y `Of` en la proyección efectiva (`OrganizationDelegationPolicy`, `PermissionService`) y en `RoleService`; `grantable` e `includes` en `PermissionGroupResponse` y `RoleResponse`; en el front, `PermissionPicker` (lo incluido y lo que no se puede dar, apagados) dentro de `RoleEditorPage`, y `Picker` con `selectedOptions`; `CoreTextsNeutralTests`, `ModelSnapshotTests` y `AssistantTurnWork.CurrentEngineVersion` (1) con su filtro en `AssistantTurnRepository`. Recontados, no queda ningún `ExecuteSqlRaw` en `src` ni en `tests`: la B1 ya pasó los ocho. El contrato no cambia.
 
 ## Para decidir
