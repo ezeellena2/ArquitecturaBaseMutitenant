@@ -180,7 +180,7 @@ La lista de K0 y, de la E11, la E9 y el núcleo, lo que nombran sus tareas.
 
 ## Cambios al contrato
 
-- `Forms.Catalog.Ambiguous` (revisión): el código que pide la [receta](../guides/agregar-una-accion-al-asistente.md) cuando el asistente nombra un catálogo que coincide con varios; vuelve solo al modelo, no a una ruta. Suma su fila en las dos tablas de errores de la spec.
+- `Forms.Catalog.Ambiguous` (revisión): el código que pide la [receta](../guides/agregar-una-accion-al-asistente.md) cuando el asistente nombra un catálogo que coincide con varios; vuelve solo al modelo, no a una ruta. Suma su fila en [«Errores y sus textos»](formularios/12-parte-archivos-tests-y-referencia.md#errores-y-sus-textos).
 
 ## Para decidir
 
