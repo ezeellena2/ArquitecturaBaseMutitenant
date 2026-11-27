@@ -23,6 +23,10 @@
   - **lo que sale para una misma persona respeta su orden:** la reserva toma lo siguiente de un destinatario solo si no tiene otra salida en curso (`NOT EXISTS`). Así un texto no llega antes que el aviso con un PDF que otra copia todavía está subiendo;
   - **una copia con otro anillo de claves no toma lo que no puede abrir:** el trabajo de fondo que abre lo que protegieron otras copias, o escribe lo que ellas tienen que abrir (el outbox y las colas de WhatsApp), pregunta a cada `IKeyRingReadiness` al empezar la vuelta y no toma nada si uno dice que no; si lo tomara, gastaría sus intentos sin poder abrirlo ([0064 §11](../decisions/0064-reglas-de-toda-la-ia.md), `OutboxDispatcherScopeTests`, `AiKeyRingWhatsAppInboundTests`);
   - **un Guid v7 no ordena lo creado en el mismo milisegundo:** lo que se crea en una misma unidad de trabajo se ordena por un dato propio (la posición, la hora del pedido) y el `Id` va solo como último desempate.
+- **Tomar sin esperar.** Lo que no corre dos veces a la vez para una misma persona no espera a la otra vez: responde enseguida. Ninguna de las dos formas es `AdvisoryLockExtensions`, que espera dentro de la transacción del guardado:
+  - **`IExclusiveSlots`** ([ADR 0064](../decisions/0064-reglas-de-toda-la-ia.md) §4): un lugar con un solo dueño, en Redis y, sin Redis, de la copia ([0058](../decisions/0058-sin-redis-la-copia-sigue-en-el-trafico.md)). No cuenta lugares. Va cuando alcanza con uno por dueño y un lugar por copia sin Redis no rompe nada, como las subidas del Inicio;
+  - **una barrera con vencimiento en PostgreSQL**, como `IFormWorkLease` sobre `tenant."FormWorkLeases"` (C11 de la E12): un `INSERT … ON CONFLICT` que pisa solo una vencida, en una conexión y una transacción propias, fuera de la del servicio; se suelta al terminar y vence sola si la copia se cae. Va cuando el tope tiene que valer entre copias también sin Redis, o cuando hay que contar lugares: por organización y en la instalación. Las tomas se ordenan con un advisory lock que dura solo esa transacción corta, y la instalación se cuenta con una función `SECURITY DEFINER` que devuelve solo un número;
+  - **en una ruta multipart** la toma un filtro de recurso que corre antes de la idempotencia y del enlace de `[FromForm]`, y la suelta al terminar el pedido: sin lugar, no se lee el cuerpo (`AssistantUploadSlotAttribute`, `FormCatalogFileSlotAttribute`). Una ruta sin cuerpo la toma en su servicio.
 
 ## Prohibido
 - Una columna `Version` o `RowVersion` manual incrementada a mano, salvo `ProfileVersion` de «Tus datos» (la excepción de arriba).
@@ -36,9 +40,11 @@
 ## Copiá de
 - `Domain/Common/IVersioned.cs` (E2) y `Infrastructure/Persistence/Configurations/Tenant/RoleConfiguration.cs` (E4).
 - La respuesta del guardado: `Application/Models/Common/VersionResponse.cs` y `UpdateAsync` de `Application/Services/Roles/RoleService.cs` (E7).
+- Tomar sin esperar: `Api/Modules/Assistant/AssistantUploadSlotAttribute.cs` (`IExclusiveSlots`), y `Infrastructure/Modules/Forms/Persistence/Repositories/FormWorkLeaseStore.cs` con `Api/Modules/Forms/FormCatalogFileSlotAttribute.cs` (la barrera en PostgreSQL, E12).
 
 ## Lo verifica
 - `VersionedContractTests` (E2)
+- `AssistantUploadSlotTests`, `FormWorkLeaseTests` y `FormCatalogFileSlotTests` (E12)
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas) · front: `docs/rules/formularios.md`, "Ediciones simultáneas".

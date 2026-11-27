@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Models;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Domain.Forms;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.AspNetCore.Mvc;
@@ -98,6 +99,7 @@ public sealed class BusinessFormCatalogsController : ControllerBase
     public IActionResult ListItems([FromRoute] Guid id, [FromQuery] FormCatalogItemListHttpQuery query) => Pending();
 
     [HttpPost("{id:guid}/imports/previews")]
+    [FormCatalogFileSlot(FormWorkLeaseKind.Preview)]
     [Consumes("multipart/form-data")]
     [ResponseVersion("Version")]
     [HasPermission(Permissions.Forms.CatalogsManage)]
@@ -115,6 +117,7 @@ public sealed class BusinessFormCatalogsController : ControllerBase
 
     [HttpPost("{id:guid}/imports")]
     [Idempotent]
+    [FormCatalogFileSlot(FormWorkLeaseKind.Apply)]
     [Consumes("multipart/form-data")]
     [HasPermission(Permissions.Forms.CatalogsManage)]
     [ProducesResponseType<VersionResponse>(200)]
