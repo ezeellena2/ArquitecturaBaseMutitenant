@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -106,6 +107,88 @@ public sealed class WhatsAppOrganizationInboundTests(ApiFactory factory)
         Assert.True(kept.NextAttemptAtUtc > TimeProvider.System.GetUtcNow().UtcDateTime);
     }
 
+    [Fact]
+    public async Task A_contact_without_a_name_takes_its_profile_name_and_the_name_does_not_stay_in_the_queue()
+    {
+        await using var host = WhatsAppAttentionJourney.Host(factory, new FakeGraph());
+        using var client = WhatsAppAttentionJourney.Client(host);
+        var (_, tenant) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, client, Ct);
+        var number = WhatsAppAttentionJourney.NewNumberId();
+        (await WhatsAppAttentionJourney.ConnectAsync(client, number, Ct)).Dispose();
+        var phone = NewPhone(); var wamid = "wamid.profile." + Guid.NewGuid().ToString("N");
+        using var anonymous = WhatsAppAttentionJourney.Client(host);
+        (await WhatsAppAttentionJourney.WebhookAsync(anonymous, WithProfile(number, phone, wamid, "Ana  Pérez"), Ct)).Dispose();
+
+        // En la cola, cifrado como el texto.
+        await using (var scope = host.Services.CreateAsyncScope())
+        {
+            var queued = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<WhatsAppMessage>().AsNoTracking()
+                .SingleAsync(value => value.Wamid == wamid, Ct);
+            Assert.NotNull(queued.EncryptedProfileName);
+            Assert.NotEqual("Ana Pérez", queued.EncryptedProfileName);
+            Assert.Equal("Ana Pérez", scope.ServiceProvider.GetRequiredService<IPayloadProtector>().Unprotect(queued.EncryptedProfileName));
+        }
+        await ProcessAsync(host);
+
+        var customer = await CustomerAsync(host, tenant, phone);
+        Assert.Equal("Ana Pérez", customer.Name);
+        Assert.NotNull(customer.ProfileNameTakenAtUtc);
+        await using var read = host.Services.CreateAsyncScope();
+        var processed = await read.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<WhatsAppMessage>().AsNoTracking()
+            .SingleAsync(value => value.Wamid == wamid, Ct);
+        Assert.NotNull(processed.ProcessedAtUtc);
+        Assert.Null(processed.EncryptedProfileName);
+    }
+
+    [Fact]
+    public async Task A_name_set_by_a_person_is_not_replaced_and_one_they_emptied_is_not_filled_again()
+    {
+        await using var host = WhatsAppAttentionJourney.Host(factory, new FakeGraph());
+        using var client = WhatsAppAttentionJourney.Client(host);
+        var (_, tenant) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, client, Ct);
+        var number = WhatsAppAttentionJourney.NewNumberId();
+        (await WhatsAppAttentionJourney.ConnectAsync(client, number, Ct)).Dispose();
+        var phone = NewPhone();
+        await InTenantAsync(host, tenant, (db, _) =>
+        {
+            var customer = WhatsAppCustomer.Create(PhoneNumber.Create(phone).Value, TimeProvider.System.GetUtcNow().UtcDateTime);
+            customer.Rename("Ana de Ventas");
+            db.Add(customer);
+            return Task.CompletedTask;
+        });
+        using var anonymous = WhatsAppAttentionJourney.Client(host);
+
+        (await WhatsAppAttentionJourney.WebhookAsync(anonymous, WithProfile(number, phone, "wamid.kept." + Guid.NewGuid().ToString("N"), "Anita"), Ct)).Dispose();
+        await ProcessAsync(host);
+        var kept = await CustomerAsync(host, tenant, phone);
+        Assert.Equal("Ana de Ventas", kept.Name);
+        Assert.NotNull(kept.ProfileNameTakenAtUtc);
+
+        await InTenantAsync(host, tenant, async (db, ct) => (await db.Set<WhatsAppCustomer>().SingleAsync(value => value.WaId == phone, ct)).Rename(null));
+        (await WhatsAppAttentionJourney.WebhookAsync(anonymous, WithProfile(number, phone, "wamid.empty." + Guid.NewGuid().ToString("N"), "Anita"), Ct)).Dispose();
+        await ProcessAsync(host);
+        var emptied = await CustomerAsync(host, tenant, phone);
+        Assert.Null(emptied.Name);
+        Assert.Equal(kept.ProfileNameTakenAtUtc, emptied.ProfileNameTakenAtUtc);
+    }
+
+    private static async Task<WhatsAppCustomer> CustomerAsync(WebApplicationFactory<Program> host, Guid tenantId, string phone)
+    {
+        await using var scope = host.Services.CreateAsyncScope();
+        using var tenantScope = scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(tenantId);
+        return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<WhatsAppCustomer>().AsNoTracking()
+            .SingleAsync(value => value.WaId == phone, Ct);
+    }
+
+    /// <summary>Lo que hace una persona desde Clientes, dentro del alcance de su organización.</summary>
+    private static async Task InTenantAsync(WebApplicationFactory<Program> host, Guid tenantId, Func<ApplicationDbContext, CancellationToken, Task> work)
+    {
+        await using var scope = host.Services.CreateAsyncScope();
+        using var tenantScope = scope.ServiceProvider.GetRequiredService<ITenantScope>().Enter(tenantId);
+        await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+        { await work(scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(), ct); return Result.Success(); }, CommitPolicy.OnSuccess, Ct);
+    }
+
     private static async Task ProcessAsync(WebApplicationFactory<Program> host) =>
         await host.Services.GetServices<IHostedService>().OfType<WhatsAppInboundProcessor>().Single().ProcessPendingAsync(Ct);
 
@@ -174,6 +257,27 @@ public sealed class WhatsAppOrganizationInboundTests(ApiFactory factory)
 
     private static string NewPhone() => "+54911" + System.Security.Cryptography.RandomNumberGenerator.GetInt32(30_000_000, 59_999_999)
         .ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    /// <summary>Un mensaje con el perfil del remitente en contacts[], como lo manda Meta.</summary>
+    private static string WithProfile(string phoneNumberId, string from, string wamid, string profileName) => JsonSerializer.Serialize(new
+    {
+        @object = "whatsapp_business_account",
+        entry = new[] { new
+        {
+            id = "waba-" + phoneNumberId,
+            changes = new[] { new { field = "messages", value = new
+            {
+                messaging_product = "whatsapp",
+                metadata = new { display_phone_number = "5491100000000", phone_number_id = phoneNumberId },
+                contacts = new[] { new { profile = new { name = profileName }, wa_id = from.TrimStart('+') } },
+                messages = new[] { new
+                {
+                    from = from.TrimStart('+'), id = wamid, type = "text", text = new { body = "Hola" },
+                    timestamp = TimeProvider.System.GetUtcNow().ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
+                } },
+            } } },
+        } },
+    });
 
     private static string Inbound(params (string PhoneNumberId, string From, string Wamid, string Text)[] messages) => JsonSerializer.Serialize(new
     {

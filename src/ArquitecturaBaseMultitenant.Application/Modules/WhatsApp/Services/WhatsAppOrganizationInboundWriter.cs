@@ -34,6 +34,8 @@ internal sealed class WhatsAppOrganizationInboundWriter(IWhatsAppChatRepository 
         var chat = await chats.GetAsync(channel.Id, waId.Value, member is null ? WhatsAppInbox.Customers : WhatsAppInbox.Internal, ct);
         WhatsAppCustomer? customer = null;
         if (member is null) customer = await CustomerAsync(waId, nowUtc, ct);
+        // Un contacto sin nombre toma el de su perfil una sola vez (C14 de la E12); el dato se vacía abajo con el resto.
+        if (customer is not null && message.EncryptedProfileName is { } profile) customer.TakeProfileName(protector.Unprotect(profile), nowUtc);
         var newConversation = chat is null || !chat.IsWindowOpen(occurredAtUtc);
         if (chat is null)
         {

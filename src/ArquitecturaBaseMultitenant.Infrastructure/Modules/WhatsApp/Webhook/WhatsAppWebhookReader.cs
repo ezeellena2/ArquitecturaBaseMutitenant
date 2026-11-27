@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using ArquitecturaBaseMultitenant.Application.Common.Text;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Phones;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
@@ -31,6 +32,7 @@ internal sealed class WhatsAppWebhookReader(IPhoneNumberParser phones) : IWhatsA
                     if (Text(change, "field") != "messages" || !Property(change, "value", out var value)
                         || !Property(value, "metadata", out var metadata)
                         || Text(metadata, "phone_number_id") is not { Length: > 0 and <= TextLimits.ShortName } number) continue;
+                    var profiles = Profiles(value);
                     if (Array(value, "messages", out var inbound))
                         foreach (var message in inbound.EnumerateArray())
                         {
@@ -53,7 +55,7 @@ internal sealed class WhatsAppWebhookReader(IPhoneNumberParser phones) : IWhatsA
                             reply = BotButtons.IsKnown(reply) ? reply : null;
                             // Lo que no es texto ni respuesta se informa por su tipo, sin el archivo (D7 de la E11).
                             var contentType = kind == WhatsAppMessageKind.Unsupported ? Short(type) : null;
-                            messages.Add(new(number, id, sender.Value.Value, kind, text, reply, time, contentType));
+                            messages.Add(new(number, id, sender.Value.Value, kind, text, reply, time, contentType, profiles.GetValueOrDefault(from)));
                         }
                     if (Array(value, "statuses", out var delivery))
                         foreach (var status in delivery.EnumerateArray())
@@ -94,6 +96,20 @@ internal sealed class WhatsAppWebhookReader(IPhoneNumberParser phones) : IWhatsA
         return new(wabaId, new WhatsAppMetaTemplate(id, name, language, WhatsAppMetaTemplateValues.Status(status),
             WhatsAppMetaTemplateValues.Category(Text(value, "message_template_category")), WhatsAppMetaTemplateValues.Reason(Text(value, "reason")),
             WhatsAppMetaTemplateValues.IsDeleted(status)));
+    }
+    /// <summary>
+    /// El nombre del perfil de cada remitente (contacts[].profile.name), por su wa_id, limpio como un nombre de persona; uno
+    /// vacío o más largo que el nombre de un contacto no se toma (C14 de la E12).
+    /// </summary>
+    private static Dictionary<string, string> Profiles(JsonElement value)
+    {
+        var profiles = new Dictionary<string, string>(StringComparer.Ordinal);
+        if (!Array(value, "contacts", out var contacts)) return profiles;
+        foreach (var contact in contacts.EnumerateArray())
+            if (Text(contact, "wa_id") is { Length: > 0 } waId && Property(contact, "profile", out var profile)
+                && TextNormalizer.CleanName(Text(profile, "name")) is { Length: <= TextLimits.PersonDisplayName } name)
+                profiles[waId] = name;
+        return profiles;
     }
     /// <summary>Solo claves técnicas cortas de Meta (por ejemplo «service», «regular»), nunca texto libre.</summary>
     private static string? Short(string? value) => value is { Length: > 0 and <= 40 } && value.All(c => char.IsAsciiLetterOrDigit(c) || c == '_') ? value : null;

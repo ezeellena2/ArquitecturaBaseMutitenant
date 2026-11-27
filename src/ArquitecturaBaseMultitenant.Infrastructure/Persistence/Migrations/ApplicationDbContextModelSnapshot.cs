@@ -4815,6 +4815,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasMaxLength(201)
                         .HasColumnType("character varying(201)");
 
+                    b.Property<DateTime?>("ProfileNameTakenAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime?>("PromotionsAskedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
@@ -4917,6 +4920,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
+
+                    b.Property<string>("EncryptedProfileName")
+                        .HasColumnType("text");
 
                     b.Property<string>("EncryptedText")
                         .HasColumnType("text");

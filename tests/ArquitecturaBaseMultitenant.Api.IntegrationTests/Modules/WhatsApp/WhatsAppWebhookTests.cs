@@ -258,6 +258,29 @@ public sealed class WhatsAppWebhookTests(ApiFactory factory) : IClassFixture<Api
         Assert.Null(message.EncryptedText); Assert.Equal(WhatsAppMessageKind.Authentication, message.Kind);
     }
 
+    [Fact]
+    public async Task The_platform_number_reads_the_profile_name_but_does_not_keep_it()
+    {
+        await using var application = Host(); using var client = application.CreateClient();
+        var id = Guid.NewGuid().ToString("N");
+        var body = JsonSerializer.Serialize(new
+        {
+            @object = "whatsapp_business_account",
+            entry = new[] { new { changes = new[] { new { field = "messages", value = new
+            {
+                metadata = new { phone_number_id = "fixture-number" },
+                contacts = new[] { new { profile = new { name = "Ana Pérez" }, wa_id = "5491134567890" } },
+                messages = new[] { Message(id, "Hola, qué tal") },
+            } } } } },
+        });
+        using var response = await SendAsync(client, body, true);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await using var scope = application.Services.CreateAsyncScope();
+        var message = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<WhatsAppMessage>().AsNoTracking().SingleAsync(value => value.Wamid == id, Ct);
+        // El número de Plataforma no crea contactos de una organización (C14 de la E12): el nombre no se guarda.
+        Assert.NotNull(message.EncryptedText); Assert.Null(message.EncryptedProfileName);
+    }
+
     private static object Message(string id, string text) => new { id, from = "5491134567890", timestamp = "1791400000", type = "text", text = new { body = text } };
     private static object Status(string id, string state, string time) => new { id, status = state, timestamp = time };
     private static string Envelope(object[] messages, object[]? statuses = null, string number = "fixture-number") => JsonSerializer.Serialize(new

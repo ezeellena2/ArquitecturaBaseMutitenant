@@ -24,6 +24,8 @@ public sealed class WhatsAppMessage : Entity, IVersioned
     public DateTime OccurredAtUtc { get; private set; }
     public DateTime? ProcessedAtUtc { get; private set; }
     public string? EncryptedText { get; private set; }
+    /// <summary>El nombre del perfil de WhatsApp del remitente, cifrado como el texto (C14 de la E12): lo toma la entrada y se vacía con él.</summary>
+    public string? EncryptedProfileName { get; private set; }
     public int Attempts { get; private set; }
     public Guid? LeaseId { get; private set; }
     public DateTime? LeaseUntilUtc { get; private set; }
@@ -34,14 +36,15 @@ public sealed class WhatsAppMessage : Entity, IVersioned
         WhatsAppMessageDirection direction, WhatsAppMessageKind kind, WhatsAppMessageStatus status,
         DateTime occurredAtUtc, DateTime receivedAtUtc, Guid? contactId = null,
         string? encryptedText = null, Guid? outboxMessageId = null, Guid? originalUserId = null,
-        Guid? originalMethodId = null, string? replyId = null, Guid? channelId = null, string? contentType = null)
+        Guid? originalMethodId = null, string? replyId = null, Guid? channelId = null, string? contentType = null,
+        string? encryptedProfileName = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(phoneNumberId);
         ArgumentException.ThrowIfNullOrWhiteSpace(wamid);
         ArgumentException.ThrowIfNullOrWhiteSpace(eventType);
         if (occurredAtUtc.Kind != DateTimeKind.Utc || receivedAtUtc.Kind != DateTimeKind.Utc)
             throw new ArgumentException("UTC required.");
-        if (kind == WhatsAppMessageKind.Authentication && encryptedText is not null)
+        if (kind == WhatsAppMessageKind.Authentication && (encryptedText is not null || encryptedProfileName is not null))
             throw new ArgumentException("Authentication messages contain metadata only.", nameof(encryptedText));
         return new WhatsAppMessage
         {
@@ -55,6 +58,7 @@ public sealed class WhatsAppMessage : Entity, IVersioned
             ReceivedAtUtc = receivedAtUtc,
             ContactId = contactId,
             EncryptedText = encryptedText,
+            EncryptedProfileName = encryptedProfileName,
             OutboxMessageId = outboxMessageId,
             OriginalUserId = originalUserId,
             OriginalMethodId = originalMethodId,
@@ -108,8 +112,8 @@ public sealed class WhatsAppMessage : Entity, IVersioned
     }
     private static int DeliveryRank(WhatsAppMessageStatus status) => status switch
     { WhatsAppMessageStatus.Sent => 0, WhatsAppMessageStatus.Failed => 1, WhatsAppMessageStatus.Delivered => 2, WhatsAppMessageStatus.Read => 3, _ => -1 };
-    public void ClearText() => EncryptedText = null;
-    public void ClearPersonalData() { EncryptedText = null; ContactId = null; }
+    public void ClearText() { EncryptedText = null; EncryptedProfileName = null; }
+    public void ClearPersonalData() { EncryptedText = null; EncryptedProfileName = null; ContactId = null; }
     public void MarkOutboundAccepted(DateTime nowUtc)
     {
         if (Direction != WhatsAppMessageDirection.Outbound || nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("Outbound UTC required.");

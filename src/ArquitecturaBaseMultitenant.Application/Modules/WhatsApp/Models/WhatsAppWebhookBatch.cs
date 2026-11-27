@@ -10,8 +10,9 @@ public sealed record WhatsAppWebhookBatch(IReadOnlyList<WhatsAppWebhookMessage> 
 }
 /// <summary>Un cambio de estado o de categoría de una plantilla en una cuenta de WhatsApp (el id de la entrada).</summary>
 public sealed record WhatsAppWebhookTemplate(string WabaId, WhatsAppMetaTemplate Update);
+/// <summary>Un mensaje recibido, con el nombre del perfil de WhatsApp del remitente si Meta lo mandó (C14 de la E12).</summary>
 public sealed record WhatsAppWebhookMessage(string PhoneNumberId, string Wamid, string Sender, WhatsAppMessageKind Kind,
-    string? Text, string? ReplyId, DateTime OccurredAtUtc, string? ContentType = null)
+    string? Text, string? ReplyId, DateTime OccurredAtUtc, string? ContentType = null, string? ProfileName = null)
 {
     public override string ToString() => nameof(WhatsAppWebhookMessage);
 }

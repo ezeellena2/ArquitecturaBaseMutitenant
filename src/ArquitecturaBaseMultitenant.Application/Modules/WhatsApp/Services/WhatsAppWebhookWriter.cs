@@ -54,12 +54,15 @@ internal sealed class WhatsAppWebhookWriter(IWhatsAppContactRepository contacts,
             var route = routes[inbound.PhoneNumberId];
             // El número de Plataforma no conserva códigos ni enlaces; el de una organización guarda el texto del cliente.
             var text = route.OrganizationId is null ? WhatsAppSafeTextPolicy.Retain(inbound.Text) : inbound.Text;
+            // El nombre del perfil solo completa un contacto de la organización (C14 de la E12): el de Plataforma no lo guarda.
+            var profileName = route.OrganizationId is null ? null : inbound.ProfileName;
             var original = owners[inbound.Sender];
             var kind = inbound.Text is not null && text is null ? WhatsAppMessageKind.Authentication : inbound.Kind;
             messages.Add(WhatsAppMessage.Create(inbound.PhoneNumberId, inbound.Wamid, "inbound", WhatsAppMessageDirection.Inbound,
                 kind, WhatsAppMessageStatus.Pending, inbound.OccurredAtUtc, nowUtc, contact.Id,
                 text is null ? null : protector.Protect(text), originalUserId: original?.UserId,
-                originalMethodId: original?.MethodId, replyId: inbound.ReplyId, channelId: route.Id, contentType: inbound.ContentType));
+                originalMethodId: original?.MethodId, replyId: inbound.ReplyId, channelId: route.Id, contentType: inbound.ContentType,
+                encryptedProfileName: profileName is null ? null : protector.Protect(profileName)));
         }
         var delivered = new HashSet<(string, string)>();
         foreach (var status in batch.Statuses.Where(value => activeNumbers.Contains(value.PhoneNumberId)))

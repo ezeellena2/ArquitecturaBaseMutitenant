@@ -32,4 +32,21 @@ public sealed class WhatsAppMessageTests
         Assert.Equal(2, message.Attempts);
         message.ClearText(); Assert.Null(message.EncryptedText);
     }
+    [Fact]
+    public void Authentication_never_retains_the_profile_name() =>
+        Assert.Throws<ArgumentException>(() => WhatsAppMessage.Create("number", "wamid", "inbound",
+            WhatsAppMessageDirection.Inbound, WhatsAppMessageKind.Authentication, WhatsAppMessageStatus.Pending,
+            Now, Now, encryptedProfileName: "ciphertext"));
+    [Fact]
+    public void The_purge_and_the_processing_also_clear_the_profile_name()
+    {
+        var purged = WhatsAppMessage.Create("number", "wamid", "inbound", WhatsAppMessageDirection.Inbound,
+            WhatsAppMessageKind.Unsupported, WhatsAppMessageStatus.Pending, Now, Now, contentType: "image", encryptedProfileName: "ciphertext");
+        purged.ClearText();
+        Assert.Null(purged.EncryptedProfileName);
+        var processed = WhatsAppMessage.Create("number", "wamid", "inbound", WhatsAppMessageDirection.Inbound,
+            WhatsAppMessageKind.Text, WhatsAppMessageStatus.Pending, Now, Now, Guid.NewGuid(), encryptedText: "ciphertext", encryptedProfileName: "ciphertext");
+        processed.ClearPersonalData();
+        Assert.Equal((null, null, null), (processed.EncryptedText, processed.EncryptedProfileName, processed.ContactId));
+    }
 }

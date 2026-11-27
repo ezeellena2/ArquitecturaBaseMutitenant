@@ -31,7 +31,7 @@ internal sealed class WhatsAppMessageRepository(ApplicationDbContext context) : 
         context.RequireTransaction();
         var rows = await context.Set<WhatsAppMessage>().FromSqlInterpolated($"""
             SELECT *, xmin FROM identity."WhatsAppMessages"
-            WHERE "EncryptedText" IS NOT NULL AND "ReceivedAtUtc" <= {beforeUtc}
+            WHERE ("EncryptedText" IS NOT NULL OR "EncryptedProfileName" IS NOT NULL) AND "ReceivedAtUtc" <= {beforeUtc}
             ORDER BY "ReceivedAtUtc", "Id" LIMIT {limit} FOR UPDATE SKIP LOCKED
             """).ToArrayAsync(ct);
         foreach (var row in rows) await context.Entry(row).ReloadAsync(ct);

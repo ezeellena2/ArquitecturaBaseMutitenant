@@ -58,6 +58,29 @@ public sealed class WhatsAppRetentionTests(ApiFactory factory) : IClassFixture<A
         clock.Advance(TimeSpan.FromDays(1));
         await WaitUntilClearedAsync(running.Services, almost.Id);
     }
+    [Fact]
+    public async Task The_purge_also_clears_the_profile_name_of_a_media_message_without_text()
+    {
+        await using var host = WhatsAppPrivacyFixture.Host(factory);
+        var expired = MediaWithProfile(91); var recent = MediaWithProfile(89);
+        await WhatsAppPrivacyFixture.TransactionAsync(host.Services, (services, _) =>
+        { services.GetRequiredService<ApplicationDbContext>().AddRange(expired, recent); return Task.CompletedTask; }, Ct);
+        await using (var scope = host.Services.CreateAsyncScope())
+        {
+            var service = scope.ServiceProvider.GetRequiredService<IWhatsAppMessageRetentionService>();
+            while ((await service.ClearExpiredTextsAsync(Ct)).Value > 0) { }
+        }
+        await using var read = host.Services.CreateAsyncScope();
+        var rows = await read.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<WhatsAppMessage>().AsNoTracking()
+            .Where(value => value.Id == expired.Id || value.Id == recent.Id).ToDictionaryAsync(value => value.Id, Ct);
+        Assert.Null(rows[expired.Id].EncryptedProfileName);
+        Assert.Equal(("image", Snapshot(expired)), (rows[expired.Id].ContentType, Snapshot(rows[expired.Id])));
+        Assert.Equal("encrypted-profile-name", rows[recent.Id].EncryptedProfileName);
+    }
+    /// <summary>Una foto sin texto: lo único personal que guarda es el nombre del perfil (C14 de la E12).</summary>
+    private static WhatsAppMessage MediaWithProfile(int age) => WhatsAppMessage.Create("retention-number", Guid.NewGuid().ToString("N"), "inbound",
+        WhatsAppMessageDirection.Inbound, WhatsAppMessageKind.Unsupported, WhatsAppMessageStatus.Pending, WhatsAppPrivacyFixture.NowUtc,
+        WhatsAppPrivacyFixture.NowUtc.AddDays(-age), contentType: "image", encryptedProfileName: "encrypted-profile-name");
     private static WhatsAppMessage Message(int age, bool inbound) => WhatsAppMessage.Create("retention-number", Guid.NewGuid().ToString("N"), inbound ? "inbound" : "accepted",
         inbound ? WhatsAppMessageDirection.Inbound : WhatsAppMessageDirection.Outbound, WhatsAppMessageKind.Text, WhatsAppMessageStatus.Pending,
         WhatsAppPrivacyFixture.NowUtc.AddYears(10), WhatsAppPrivacyFixture.NowUtc.AddDays(-age), encryptedText: "encrypted-human-text");

@@ -25,6 +25,11 @@ public sealed class WhatsAppCustomer : Entity, ITenantOwned, IVersioned
     public DateTime? PromotionsAskedAtUtc { get; private set; }
     /// <summary>Cuándo el bot le ofreció vincular la conversación con su cuenta (D2): una sola vez por contacto.</summary>
     public DateTime? LinkOfferedAtUtc { get; private set; }
+    /// <summary>
+    /// Cuándo la entrada le ofreció el nombre de su perfil de WhatsApp (C14 de la E12): una sola vez, así un nombre que una
+    /// persona cambió o vació no se vuelve a llenar.
+    /// </summary>
+    public DateTime? ProfileNameTakenAtUtc { get; private set; }
 
     public static WhatsAppCustomer Create(PhoneNumber waId, DateTime nowUtc)
     {
@@ -72,6 +77,20 @@ public sealed class WhatsAppCustomer : Entity, ITenantOwned, IVersioned
             .Distinct(StringComparer.OrdinalIgnoreCase).Take(WhatsAppFeature.MaxContactTags)]);
         if (acceptsPromotions) { if (Consent != WhatsAppConsent.Unsubscribed) ChangeConsent(WhatsAppConsent.Accepted, WhatsAppConsentSource.Import, nowUtc); }
         else if (ConsentSource is null) ChangeConsent(WhatsAppConsent.NoAnswer, WhatsAppConsentSource.Import, nowUtc);
+    }
+
+    /// <summary>
+    /// El primer nombre de perfil que llega completa el nombre si no tiene; si ya tiene uno, no lo pisa. En los dos casos
+    /// queda tomado, y los siguientes no cambian nada. Devuelve si completó el nombre.
+    /// </summary>
+    public bool TakeProfileName(string? profileName, DateTime nowUtc)
+    {
+        if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC required.", nameof(nowUtc));
+        if (ProfileNameTakenAtUtc is not null || string.IsNullOrWhiteSpace(profileName)) return false;
+        ProfileNameTakenAtUtc = nowUtc;
+        if (Name is not null) return false;
+        Rename(profileName);
+        return true;
     }
 
     public void MarkLinkOffered(DateTime nowUtc)
