@@ -243,7 +243,7 @@ No hay: ninguna tarea suma una pantalla que cree, edite o elimine.
 
 ## Verificación de la etapa
 
-- Sin tableros nuevos: la galería no suma pantallas.
+- **Galería:** suma solo el chat con un mensaje «Enviado desde el celular» (F3), contra el tablero del chat de siempre: el texto va donde va el autor.
 - **E2E real y recorrido de las áreas tocadas:**
   - el ingreso y las dos altas;
   - la importación de contactos con su ejemplo;
