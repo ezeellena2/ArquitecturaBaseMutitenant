@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Infrastructure.Caching;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -10,7 +11,10 @@ using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Forms;
 
-/// <summary>El Dueño de cada organización existente recibe los permisos de los catálogos una sola vez, y nadie más (E12, K1).</summary>
+/// <summary>
+/// El Dueño de cada organización existente recibe los permisos de los catálogos una sola vez, y nadie más (E12, K1); la caché de
+/// los roles de esa organización avanza su generación una vez, la vez que cambian (cache.md §5).
+/// </summary>
 public sealed class FormCatalogPermissionUpgradeTests
 {
     private const string Upgrade = "20261127120737_SystemRoleFormCatalogPermissions";
@@ -32,6 +36,7 @@ public sealed class FormCatalogPermissionUpgradeTests
         // Una instalación que ya tenía uno de los permisos no lo duplica.
         await SqlAsync(factory, tenant, """UPDATE tenant."Roles" SET "Permissions" = array_append("Permissions", 'formcatalogs.read') WHERE "Name" = 'TenantAdmin';""");
         var before = await RolesAsync(factory, tenant);
+        var generationBefore = await RolesGenerationAsync(factory, tenant);
 
         await using var db = AdminContext(factory);
         var migrator = db.GetService<IMigrator>();
@@ -55,6 +60,16 @@ public sealed class FormCatalogPermissionUpgradeTests
         Assert.Equal(1, after.Single(role => role.Name == SystemRoles.TenantAdmin).Permissions.Count(permission => permission == Permissions.Forms.CatalogsRead));
         Assert.DoesNotContain(after.Single(role => role.Name == SystemRoles.CompanyAdmin).Permissions,
             permission => permission.StartsWith("formcatalogs.", StringComparison.Ordinal));
+        // La segunda vuelta no cambia ningún rol y no vuelve a avanzarla.
+        Assert.Equal(generationBefore + 1, await RolesGenerationAsync(factory, tenant));
+    }
+
+    private static async Task<long> RolesGenerationAsync(ApiFactory factory, Guid tenantId)
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var tag = CacheTags.Roles(tenantId);
+        return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().CacheTagVersions.AsNoTracking()
+            .Where(version => version.Tag == tag).Select(version => version.Generation).SingleOrDefaultAsync(Ct);
     }
 
     private static ApplicationDbContext AdminContext(ApiFactory factory)
