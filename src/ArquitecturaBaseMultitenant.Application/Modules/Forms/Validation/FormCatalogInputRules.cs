@@ -59,14 +59,30 @@ internal static class FormCatalogInputRules
 
     /// <summary>
     /// Cada id local y cada id de opción va una sola vez entre las opciones del pedido; si se repite, se marcan todas las que lo
-    /// llevan, en <c>items.{i}</c>.
+    /// llevan, en <c>items.{i}</c>. Se cuenta de una pasada: ninguna opción se compara contra todas las demás, así un pedido con
+    /// muchas opciones llega rápido al tope del servicio (<c>TooManyItems</c>, 409).
     /// </summary>
-    public static bool IsUnique(IReadOnlyList<FormCatalogItemInput?>? items, FormCatalogItemInput? item)
+    public static void AddRepeated<T>(IReadOnlyList<FormCatalogItemInput?>? items, ValidationContext<T> context)
     {
-        if (items is null || item is null) return true;
-        return item.ItemId is { } itemId
-            ? items.Count(other => other?.ItemId == itemId) == 1
-            : string.IsNullOrEmpty(item.LocalId)
-                || items.Count(other => other is { ItemId: null } && string.Equals(other.LocalId, item.LocalId, StringComparison.Ordinal)) == 1;
+        ArgumentNullException.ThrowIfNull(context);
+        if (items is null) return;
+        var ids = new Dictionary<Guid, int>();
+        var locals = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var item in items)
+        {
+            if (item?.ItemId is { } itemId) ids[itemId] = ids.GetValueOrDefault(itemId) + 1;
+            else if (item is { LocalId.Length: > 0 }) locals[item.LocalId] = locals.GetValueOrDefault(item.LocalId) + 1;
+        }
+
+        for (var index = 0; index < items.Count; index++)
+        {
+            var repeated = items[index] switch
+            {
+                { ItemId: { } itemId } => ids[itemId] > 1,
+                { LocalId: { Length: > 0 } localId } => locals[localId] > 1,
+                _ => false,
+            };
+            if (repeated) context.AddFailure($"{context.PropertyPath}[{index}]", Repeated);
+        }
     }
 }

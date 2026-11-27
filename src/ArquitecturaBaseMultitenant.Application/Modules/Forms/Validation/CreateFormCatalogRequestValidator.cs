@@ -22,8 +22,7 @@ internal sealed class CreateFormCatalogRequestValidator : AbstractValidator<Crea
         RuleFor(request => request.ValueType).IsInEnum().WithMessage(_ => ValidationTexts.Required);
         RuleForEach(request => request.Items).NotNull().WithMessage(_ => ValidationTexts.Required)
             .ChildRules(item => FormCatalogInputRules.Item(item, created: true));
-        RuleForEach(request => request.Items).Must((request, item) => FormCatalogInputRules.IsUnique(request.Items, item))
-            .WithMessage(_ => FormCatalogInputRules.Repeated);
+        RuleFor(request => request.Items).Custom(FormCatalogInputRules.AddRepeated);
         RuleFor(request => request.Filters).NotNull().When(request => request.Source is FormCatalogSource.Members or FormCatalogSource.Contacts)
             .WithMessage(_ => ValidationTexts.Required);
         RuleFor(request => request.Filters).ChildRules(filters => FormCatalogInputRules.Filters(filters!)).When(request => request.Filters is not null);

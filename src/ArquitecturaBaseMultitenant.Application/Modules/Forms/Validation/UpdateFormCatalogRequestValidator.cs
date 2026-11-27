@@ -22,8 +22,7 @@ internal sealed class UpdateFormCatalogRequestValidator : AbstractValidator<Upda
         RuleFor(request => request.Version).NotNull().WithMessage(_ => ValidationTexts.Required);
         RuleForEach(request => request.Items).NotNull().WithMessage(_ => ValidationTexts.Required)
             .ChildRules(item => FormCatalogInputRules.Item(item, created: false));
-        RuleForEach(request => request.Items).Must((request, item) => FormCatalogInputRules.IsUnique(request.Items, item))
-            .WithMessage(_ => FormCatalogInputRules.Repeated);
+        RuleFor(request => request.Items).Custom(FormCatalogInputRules.AddRepeated);
         RuleFor(request => request.Moves).Must(moves => moves is null || moves.Count <= FormCatalogLimits.MaxMoves)
             .WithMessage(_ => FormCatalogInputRules.TooMany);
         RuleForEach(request => request.Moves).NotNull().WithMessage(_ => ValidationTexts.Required).ChildRules(move =>
@@ -34,12 +33,14 @@ internal sealed class UpdateFormCatalogRequestValidator : AbstractValidator<Upda
             move.RuleFor(input => input.Direction).Cascade(CascadeMode.Stop)
                 .NotNull().WithMessage(_ => ValidationTexts.Required)
                 .IsInEnum().WithMessage(_ => ValidationTexts.Required);
-        });
+        }).When(request => request.Moves is not { Count: > FormCatalogLimits.MaxMoves });
         RuleFor(request => request.DeleteItems).Must(ids => ids is null || ids.Count <= FormCatalogLimits.MaxDeleteItems)
             .WithMessage(_ => FormCatalogInputRules.TooMany);
         RuleForEach(request => request.DeleteItems)
             .NotEqual(Guid.Empty).WithMessage(_ => FormsTexts.Get(FormCatalogErrors.ItemNotFoundCode))
-            .Must(IsDeletedOnce).WithMessage(_ => FormCatalogInputRules.Repeated);
+            .When(request => request.DeleteItems is not { Count: > FormCatalogLimits.MaxDeleteItems });
+        RuleFor(request => request.DeleteItems).Custom(AddRepeatedDeletions)
+            .When(request => request.DeleteItems is not { Count: > FormCatalogLimits.MaxDeleteItems });
         RuleFor(request => request.Sort).ChildRules(sort =>
         {
             sort.RuleFor(input => input!.Column).Cascade(CascadeMode.Stop)
@@ -53,9 +54,22 @@ internal sealed class UpdateFormCatalogRequestValidator : AbstractValidator<Upda
         RuleFor(request => request.Filters).ChildRules(filters => FormCatalogInputRules.Filters(filters!)).When(request => request.Filters is not null);
     }
 
-    /// <summary>Una opción por borrar va una sola vez y no va también entre las opciones ni entre los movimientos.</summary>
-    private static bool IsDeletedOnce(UpdateFormCatalogRequest request, Guid id) =>
-        request.DeleteItems!.Count(other => other == id) == 1
-        && !(request.Items ?? []).Any(item => item?.ItemId == id)
-        && !(request.Moves ?? []).Any(move => move?.ItemId == id);
+    /// <summary>
+    /// Una opción por borrar va una sola vez y no va también entre las opciones ni entre los movimientos; se marca en
+    /// <c>deleteItems.{i}</c>. Se cuenta de una pasada, sin recorrer las opciones del pedido por cada borrado.
+    /// </summary>
+    private static void AddRepeatedDeletions(IReadOnlyList<Guid>? ids, ValidationContext<UpdateFormCatalogRequest> context)
+    {
+        if (ids is null) return;
+        var request = context.InstanceToValidate;
+        var counts = new Dictionary<Guid, int>();
+        foreach (var id in ids) counts[id] = counts.GetValueOrDefault(id) + 1;
+        var elsewhere = (request.Items ?? []).Select(item => item?.ItemId).Concat((request.Moves ?? []).Select(move => move?.ItemId))
+            .OfType<Guid>().ToHashSet();
+        for (var index = 0; index < ids.Count; index++)
+        {
+            if (counts[ids[index]] > 1 || elsewhere.Contains(ids[index]))
+                context.AddFailure($"{context.PropertyPath}[{index}]", FormCatalogInputRules.Repeated);
+        }
+    }
 }

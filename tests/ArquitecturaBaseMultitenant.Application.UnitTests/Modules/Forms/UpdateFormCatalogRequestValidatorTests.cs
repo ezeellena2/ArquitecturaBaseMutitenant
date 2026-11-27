@@ -89,6 +89,43 @@ public sealed class UpdateFormCatalogRequestValidatorTests
         Assert.Equal([FormCatalogInputRules.Repeated], failure.Errors["items.1"]);
     }
 
+    [Fact]
+    public async Task Moves_and_deletions_over_their_limit_are_rejected_whole_without_checking_each_entry()
+    {
+        var deleted = Guid.NewGuid();
+
+        var failure = await ValidateAsync(Request() with
+        {
+            Moves = [.. Enumerable.Repeat(new FormCatalogMoveInput(null, null), FormCatalogLimits.MaxMoves + 1)],
+            DeleteItems = [.. Enumerable.Repeat(deleted, FormCatalogLimits.MaxDeleteItems + 1)],
+        });
+
+        Assert.NotNull(failure);
+        Assert.Equal(["deleteItems", "moves"], failure.Errors.Keys.Order(StringComparer.Ordinal));
+    }
+
+    /// <summary>
+    /// Un pedido con muchas opciones se valida de una pasada: comparar cada una con todas serían 10^10 vueltas con 100.000 y dejaría
+    /// la copia ocupada antes del tope del servicio.
+    /// </summary>
+    [Fact(Timeout = 30_000)]
+    public async Task Many_items_and_deletions_are_checked_in_one_pass_and_only_the_repeated_ones_are_marked()
+    {
+        var saved = Guid.NewGuid();
+        var items = Enumerable.Range(0, 100_000).Select(index => new FormCatalogItemInput(null, $"n{index}", $"C{index}", "Texto", null, null, true))
+            .Append(new FormCatalogItemInput(null, "n7", "R", "Repetida", null, null, true))
+            .Append(new FormCatalogItemInput(saved, null, "S", "Guardada", null, null, true)).ToList();
+
+        var failure = await Task.Run(() => ValidateAsync(Request() with
+        {
+            Items = items,
+            DeleteItems = [.. Enumerable.Range(0, FormCatalogLimits.MaxDeleteItems - 1).Select(_ => Guid.NewGuid()), saved],
+        }), TestContext.Current.CancellationToken);
+
+        Assert.NotNull(failure);
+        Assert.Equal(["deleteItems.499", "items.100000", "items.7"], failure.Errors.Keys.Order(StringComparer.Ordinal));
+    }
+
     private static UpdateFormCatalogRequest Request() =>
         new(Guid.NewGuid(), "Talles", null, true, 7, null, null, null, null, null, null, null);
 
