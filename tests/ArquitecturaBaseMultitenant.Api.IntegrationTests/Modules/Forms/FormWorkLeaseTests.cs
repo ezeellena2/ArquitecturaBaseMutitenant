@@ -99,6 +99,34 @@ public sealed class FormWorkLeaseTests(ApiFactory factory)
         await using var after = Taken(await third.TryTakeAsync(Guid.NewGuid(), FormWorkLeaseKind.Apply, Ct));
     }
 
+    [Fact]
+    public async Task Two_people_asking_for_the_last_place_at_once_take_turns_and_only_one_gets_it()
+    {
+        var clock = Clock();
+        var store = Store(await OrganizationAsync(), clock,
+            new FormCatalogFileOptions { MaxPerOrganization = 1, MaxPerInstallation = 1_000 });
+
+        // Mientras otra toma tiene el advisory lock de la barrera, las dos esperan; al soltarlo, la segunda ya cuenta a la primera.
+        var (connection, transaction) = await FormsTestData.HoldLockAsync(factory, FormWorkLeaseStore.TakersLock);
+        Task<Result<IAsyncDisposable>>[] takes;
+        await using (connection)
+        await using (transaction)
+        {
+            takes =
+            [
+                store.TryTakeAsync(Guid.NewGuid(), FormWorkLeaseKind.Preview, Ct),
+                store.TryTakeAsync(Guid.NewGuid(), FormWorkLeaseKind.Export, Ct),
+            ];
+            await FormsTestData.WaitForLockWaitersAsync(factory, FormWorkLeaseStore.TakersLock, 2);
+            Assert.DoesNotContain(takes, take => take.IsCompleted);
+            await transaction.CommitAsync(Ct);
+        }
+
+        var results = await Task.WhenAll(takes);
+        await using var taken = Taken(Assert.Single(results, result => result.IsSuccess));
+        Assert.Equal(FormCatalogImportErrors.TooManyAtOnceCode, Refused(Assert.Single(results, result => result.IsFailure)).Code);
+    }
+
     // Un momento propio y lejano: las barreras de otras pruebas, con su reloj, ya vencieron o todavía no nacieron.
     private static FakeTimeProvider Clock() =>
         new(new DateTimeOffset(3000, 1, 1, 0, 0, 0, TimeSpan.Zero).AddMinutes(Random.Shared.NextInt64(0, 1_000_000_000)));

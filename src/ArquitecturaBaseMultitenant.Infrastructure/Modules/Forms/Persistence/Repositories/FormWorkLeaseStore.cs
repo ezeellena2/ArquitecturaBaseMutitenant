@@ -24,7 +24,7 @@ internal sealed class FormWorkLeaseStore(
 {
     // Un lugar de la organización o de la instalación se libera cuando termina otra operación de archivo.
     internal const int RetryAfterSeconds = 5;
-    private const string TakersLock = "forms:catalog-files";
+    internal const string TakersLock = "forms:catalog-files";
 
     public async Task<Result<IAsyncDisposable>> TryTakeAsync(Guid userId, FormWorkLeaseKind kind, CancellationToken ct)
     {
