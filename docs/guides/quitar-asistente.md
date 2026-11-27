@@ -1,6 +1,6 @@
 # Quitar el Asistente de una instalación
 
-Usá la copia descartable de la puerta y una única base propia vacía. Los resguardos de Windows, conexiones explícitas y composición EF están en [quitar-whatsapp](quitar-whatsapp.md). El retiro de este módulo se verifica una vez: build, tests núcleo e ingreso.
+Usá una copia descartable de `HEAD` dentro de `.local/` y una única base propia vacía. Los resguardos de Windows, conexiones explícitas y composición EF están en [quitar-whatsapp](quitar-whatsapp.md). El retiro de este módulo se verifica una vez: build, tests núcleo e ingreso.
 
 ## Modelo, fuentes e historia
 

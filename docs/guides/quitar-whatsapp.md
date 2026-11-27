@@ -1,6 +1,6 @@
 # Quitar WhatsApp de una instalación
 
-Ejecutá esta receta en la copia descartable de la puerta, con una única base propia vacía. El retiro de este módulo se verifica una vez en su etapa: build, tests núcleo e ingreso.
+Ejecutá esta receta en una copia descartable de `HEAD` dentro de `.local/`, con una única base propia vacía. El retiro de este módulo se verifica una vez en su etapa: build, tests núcleo e ingreso.
 
 Antes de retirarlo de una instalación con usuarios, cada cuenta cuyo único método disponible sea Phone necesita verificar un método alternativo ([ADR 0033](../decisions/0033-metodos-de-ingreso.md)). Phone, Email, Google y sus puertos pertenecen al núcleo. Apagar `PhoneNumberId` conserva el modelo instalado: no representa una retirada física.
 

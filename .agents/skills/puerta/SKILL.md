@@ -1,20 +1,21 @@
 ---
 name: puerta
-description: Corre la puerta de una etapa (suites del back y del front, contrato, E2E real, detector de documentación, galería lado a lado y recorrido de usuario) sobre una copia del corte, sin worktrees ni ramas, con cada paso completo una sola vez y después solo lo que toca cada arreglo, y muestra un resumen corto de qué pasó y qué no. Usala cuando pidan verificar o cerrar una etapa, «correr la puerta» o confirmar que todo está en verde.
+description: Corre la prueba integral del cierre del bloque E12–E25 (suites del back y del front, contrato, E2E real, detectores de documentación, galería lado a lado y recorrido de usuario) sobre una copia del corte, sin worktrees ni ramas, con cada paso completo una sola vez y después solo lo que toca cada arreglo, y muestra un resumen corto de qué pasó y qué no. Usala cuando pidan la prueba integral del bloque o «correr la puerta» del bloque. Una etapa no la corre: la cierra el conductor (docs/guides/conducir-una-etapa.md), cuyos revisores usan la lista de control de acá.
 ---
 
-# /puerta <etapa> [corte del back] [corte del front]
+# /puerta [corte del back] [corte del front]: la prueba integral del cierre del bloque
 
-La puerta se corre **una sola vez, al final de la etapa** (`AGENTS.md`, «Cierre liviano»). Esta skill la corre y cuenta el resultado; no arregla nada. Cada paso pasa completo una sola vez. Cada fallo vuelve a su dueño, y con el arreglo se corre solo lo que ese arreglo toca. **No se repite todo al final ni se arma un corte nuevo por cada arreglo.** La suite completa de un repo se repite solo si el arreglo tocó algo que usa todo el repo: autenticación, persistencia base o composición de la app.
+Desde el 2026-11-27 (pedido del usuario), cada etapa se cierra con el conductor: revisión en paralelo con los tests enteros, arreglos, una última revisión y commit ([conducir una etapa](../../../docs/guides/conducir-una-etapa.md)). El E2E real, la galería y el recorrido corren **una sola vez, enteros, en la prueba integral del cierre del bloque E12–E25**, con el usuario (`AGENTS.md`, «Forma de trabajo»). Esta skill corre esa prueba y cuenta el resultado; no arregla nada. Cada paso pasa completo una sola vez. Cada fallo vuelve a su dueño, y con el arreglo se corre solo lo que ese arreglo toca. **No se repite todo al final ni se arma un corte nuevo por cada arreglo.** La suite completa de un repo se repite solo si el arreglo tocó algo que usa todo el repo: autenticación, persistencia base o composición de la app.
 
 ## Qué hacer
 
+0. **Escribí primero lo que el bloque dejó para esta prueba.** Ninguna etapa escribió sus casos: al cerrarse, cada una pasó la sección «Al cierre del bloque E12–E25» de su plan al backlog, en «Para después de la etapa <clave>». Desde ahí se escriben, con sus tests, los casos del E2E real, los pasos del recorrido y el JSON de la galería (`scripts/capturas/etapa-<etapa>.json`), y se commitean antes de armar las copias.
 1. **Elegí el punto de partida, una sola vez.** Usá los dos commits que te pasen o, si no te pasan ninguno, `HEAD` de `main` en cada repo. Los arreglos que lleguen después se traen a esas mismas copias, y se corre solo lo que tocan.
 2. **Armá dos copias hermanas del corte, sin worktrees ni ramas** (`AGENTS.md`, «Todo en `main`, también la puerta»), de ruta corta y con el nombre exacto de cada repo, porque el E2E, `contracts:check` y el detector buscan el otro repo al lado.
    - Por ejemplo, `C:\e2e\ArquitecturaBaseMutitenant` y `C:\e2e\ArquitecturaBaseMutitenantFront`, con `git clone --local <repo> <ruta>` y `git -C <ruta> checkout --detach <corte>` desde cada repo: la copia conserva la historia que leen los detectores y no suma ramas ni worktrees al repo de trabajo. Un arreglo se trae con `git -C <ruta> fetch` y otro `checkout --detach`.
    - En el front corré `npm ci`, porque un `node_modules` enlazado rompe la letra Inter en las capturas.
    - No uses la copia de trabajo: ahí trabajan otros chats.
-3. **Corré cada paso en segundo plano y esperá a que termine, sin consultar el avance.** Tardan minutos. Guardá cada salida en `.local/puerta-<etapa>/` de la copia principal del back, que no se versiona.
+3. **Corré cada paso en segundo plano y esperá a que termine, sin consultar el avance.** Tardan minutos. Guardá cada salida en `.local/puerta-bloque/` de la copia principal del back, que no se versiona.
 
    | Paso | Dónde | Comando | Pasa si |
    |---|---|---|---|
@@ -27,12 +28,10 @@ La puerta se corre **una sola vez, al final de la etapa** (`AGENTS.md`, «Cierre
    | E2E real | front | `npm run test:e2e:real`, **solo**, porque levanta su propio AppHost | 0 fallidos |
    | Documentación | back | `node scripts/arneses/arnes.mjs realinear-docs --detectar` | auto, modelo y humano en 0, en los dos repos |
    | Estado de los documentos | back | `node scripts/arneses/arnes.mjs estado-docs --detectar` | auto, modelo y humano en 0 |
-   | Lo que no está en la spec | back | `node scripts/arneses/arnes.mjs conformidad --detectar --plan <plan de la etapa>` | humano en 0, en los dos repos. Cada hallazgo vuelve a su dueño: lo saca, o pasa a la spec por «Cambios al contrato» si es una decisión de producto del usuario; lo que no entra va a «Para después» |
-   | Galería | front | `node scripts/capturar-etapa.mjs --casos scripts/capturas/etapa-<etapa>.json` y, si existe, `node scripts/generar-galeria-etapa-<etapa>.mjs` | solo las pantallas nuevas o cambiadas en la etapa, cada una al lado de su tablero en `docs/design/capturas/etapa-<etapa>/`, y alguien la mira |
+   | Galería | front | `node scripts/capturar-etapa.mjs --casos scripts/capturas/etapa-<etapa>.json` por cada etapa del bloque y, si existe, `node scripts/generar-galeria-etapa-<etapa>.mjs` | solo las pantallas nuevas o cambiadas en el bloque, cada una al lado de su tablero en `docs/design/capturas/etapa-<etapa>/`, comparadas contra él (puntos 10 y 13), y el usuario la mira |
    | Recorrido de usuario | front | `node scripts/recorrido-usuario.mjs --no-build` (ver la skill `/recorrido`) | todas las comprobaciones en verde |
-   | Quitar el módulo | copia descartable | solo en la etapa del módulo, una sola vez y con la base vacía, según su guía (por ejemplo `docs/guides/quitar-whatsapp.md`) | núcleo, build, tests e ingreso en verde |
-   | Lista de control | los dos | la revisión de código del cierre, contra la lista de abajo | cada punto que aplica a la etapa tiene su test, y pasa |
-   | Commits que se pisan | los dos | contra el código del corte, que ningún commit de la etapa haya deshecho lo de otro (en ArquitecturaBase uno armado sobre una copia vieja deshizo 34 archivos) | lo de cada tarea sigue en el código |
+   | Quitar el módulo | copia descartable | solo si el bloque trajo un módulo quitable nuevo, una sola vez y con la base vacía, según su guía (por ejemplo `docs/guides/quitar-whatsapp.md`) | núcleo, build, tests e ingreso en verde |
+   | Commits que se pisan | los dos | contra el código del corte, que ningún commit del bloque haya deshecho lo de otro (en ArquitecturaBase uno armado sobre una copia vieja deshizo 34 archivos) | lo de cada tarea sigue en el código |
 
 4. **Leé solo los resúmenes:** totales, `passed` y `failed`, `# pass` y `# fail`, y los contadores del detector. Si algo falla, abrí solo las líneas del fallo.
 5. **Antes de contar un fallo, descartá el entorno.** Si un test se pasó de tiempo, corré ese archivo solo. Si así pasa, el problema era el entorno y no cuenta como fallo.
@@ -43,12 +42,11 @@ La puerta se corre **una sola vez, al final de la etapa** (`AGENTS.md`, «Cierre
 - **Una tabla** con una fila por paso: el resultado y el número (por ejemplo, «1989/1989»).
 - **Por cada fallo:** `archivo:línea`, la causa en una línea y a qué dueño vuelve (Back o Front).
 - **El corte medido:** los dos commits.
-- **Qué falta para cerrar la etapa.** No digas «cerrada» si falta el E2E real, la galería o el recorrido de usuario. Lo «terminado» se comprueba contra el código, no contra los commits ni el reporte de un chat.
-- **Al cerrar el bloque E12–E25** faltan además la revisión de arquitectura de Formularios (`docs/guides/revisar-arquitectura.md`) y la prueba integral con el usuario (`AGENTS.md`, «Forma de trabajo»).
+- **Qué falta para cerrar el bloque.** No digas «cerrado» si falta el E2E real, la galería, el recorrido de usuario, la revisión de arquitectura de Formularios (`docs/guides/revisar-arquitectura.md`) o que el usuario haya mirado. Lo «terminado» se comprueba contra el código, no contra los commits ni el reporte de un chat.
 
 ## Lista de control
 
-Sale de los 142 problemas que encontraron los reviews de ArquitecturaBase (capítulo 05 y anexo E del traspaso del 2026-10-23, pedido del usuario del 2026-10-24) y de las doce preguntas de su `validar-un-cambio.md` (traspaso 15). Cada punto que aplica a la etapa tiene un test escrito durante la etapa, o una comprobación contra el tablero o el código. Si falta uno, vuelve a su dueño como un fallo.
+Sale de los 142 problemas que encontraron los reviews de ArquitecturaBase (capítulo 05 y anexo E del traspaso del 2026-10-23, pedido del usuario del 2026-10-24) y de las doce preguntas de su `validar-un-cambio.md` (traspaso 15). Cada punto que aplica a una etapa tiene un test escrito durante la etapa, o una comprobación contra el tablero o el código. Los revisores del cierre de cada etapa la usan; los puntos 10 y 13, contra el tablero, se miran acá, en la galería.
 
 1. **Números y fechas** se leen con la cultura del pedido, y lo ambiguo se rechaza. Se prueba con «1.500», «1,500», «12.345» y «3/4/2026», en es y en.
 2. **El front no tapa la validación del servidor.** Solo el 409 de versión pone el editor en conflicto; otro 409 es un error que se corrige.
@@ -78,7 +76,7 @@ Sale de los 142 problemas que encontraron los reviews de ArquitecturaBase (capí
 
 ## Nunca
 
-- **Hacer push**, fusionar o cerrar la etapa si el usuario no lo pide.
+- **Hacer push**, fusionar o dar el bloque por cerrado si el usuario no lo pide.
 - **Mostrar secretos:** de user-secrets se leen solo los nombres.
 - **Matar procesos con un filtro amplio:** si hay que cortar algo, se corta por PID.
 - **Dejar algo levantado:** al final, `aspire stop` y se borran las dos copias.

@@ -7,8 +7,8 @@ app y mucho volumen, qué pasa cuando falla un tercero, y cómo resuelve la segu
 errores y la operación. Es de solo lectura: no cambia código ni reglas. La decisión está en la
 [ADR 0059](../decisions/0059-revision-de-arquitectura.md).
 
-No reemplaza la lista de control de la puerta (skill `/puerta`), que mira lo de una etapa, ni la revisión adversarial de
-cada tarea riesgosa (`AGENTS.md`, «Forma de trabajo»). Las reglas siguen en `docs/rules/`: esta revisión comprueba que el
+No reemplaza la revisión del cierre de cada etapa, con la lista de control de la skill `/puerta`, ni sus revisores
+adversariales por tema de riesgo (`AGENTS.md`, «Forma de trabajo»). Las reglas siguen en `docs/rules/`: esta revisión comprueba que el
 desarrollo las cumple y mira lo que ninguna regla cubre, que es cómo se comporta con carga, con varias copias, con fallas y
 con entradas hostiles.
 

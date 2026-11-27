@@ -2,6 +2,8 @@
 
 **Estado:** aceptada el 2026-11-24, por pedido del usuario («Sí, todo»), después de medir la base 2. Cambia la [0067](README.md) (el conductor de etapas) en tres puntos: el back pasa de un escritor a varios carriles, los agentes paran antes y los tests de integración corren por carril. Guía: [conducir una etapa](../guides/conducir-una-etapa.md). **Enmienda 2026-11-26 (código primero, pedido del usuario):** el punto 3 queda sin efecto. Cada tarea hace su código, su test dirigido y el build, y commitea; los tests rápidos enteros, la integración y la seguridad corren una vez, en la puerta. La revisión adversarial deja de ir en cada tarea: va una vez, en el cierre, como una premisa por tema de riesgo. En el reparto, cada tarea pendiente pesa uno.
 
+**Enmienda 2026-11-27 (las cinco fases, pedido del usuario):** el conductor programa y cierra en cinco fases: programar; revisar todo a la vez (un revisor por cada ficha de `docs/rules/` que tocan los archivos de la etapa, los transversales de arquitectura y de lo que no está en la spec, uno adversarial por cada tema de riesgo tocado y los tests enteros con los detectores, en copias de `HEAD` dentro de `.local/`); arreglar, con un agente por repo que comprueba cada hallazgo; una última revisión del diff entero; y cerrar el plan con su commit. Se van la puerta, los verificadores, la integración aparte y la premisa de pantallas por etapa: el E2E real, la galería y el recorrido corren en la prueba integral del cierre del bloque E12–E25. Con varias etapas, de la revisión al cierre corren una sola vez. Los carriles, `carril.mjs` y la fila pesada siguen.
+
 ## Contexto
 
 La corrida de la base 2 del 2026-11-24 se midió en sus primeras 2 h 40 min. Los números son de 15 agentes:
@@ -48,7 +50,7 @@ El usuario teme que cada etapa tarde una semana.
 - **Una etapa típica pasa de un día a medio día,** si el cupo alcanza. Lo más largo pasa a ser el carril más cargado.
 - **El cupo baja menos que el tiempo.** Los carriles gastan lo mismo en menos horas, así que llenan antes la ventana de 5 horas. Lo que baja el cupo son los agentes cortos, el mapa y la consola callada: entre 30 y 50 % menos tokens por etapa, a confirmar con la próxima.
 - **Una falla de integración aparece al cerrar el carril y no en la tarea misma.** Los commits son chicos y llevan su `Tarea:`, así que se ubica rápido.
-- **En una copia, los tests que cruzan al front se saltean,** porque el front no está al lado. Corren en main, en la integración del front y en la puerta.
+- **En una copia, los tests que cruzan al front se saltean,** porque el front no está al lado. Corren en los tests enteros de la revisión, que arma las dos copias hermanas.
 
 ## Verificación
 
@@ -64,5 +66,5 @@ El usuario teme que cada etapa tarde una semana.
   - el reparto por área y las migraciones juntas;
   - las copias en los prompts;
   - la espera entre carriles;
-  - la integración por carril, y que si queda en rojo no se cierra;
+  - las cinco fases, con una sola revisión y un solo cierre para varias etapas;
   - los modelos y los agentes cortos.
