@@ -35,12 +35,18 @@ public sealed class SearchIndexTests(ApiFactory factory)
 
     // OrganizationAuditReader busca con SQL en el texto de los cambios: "Changes" es jsonb y ApplySearch no lo pasa a
     // texto. Usa la misma expresión de ApplySearch, sobre "Changes"::text, y cada columna tiene su índice trigram.
+    // FormCatalogReader busca de una vez los parecidos de varias opciones que nombra el asistente (unnest y LATERAL), con la
+    // misma expresión sobre el texto y el código.
     private static readonly SqlSearch[] SqlSearches =
     [
         new("OrganizationAuditReader.cs", new("tenant", "AuditEntries", "EntityType"),
             "public.f_unaccent(lower(\"EntityType\")) LIKE public.f_unaccent(lower({pattern}))"),
         new("OrganizationAuditReader.cs", new("tenant", "AuditEntries", "Changes"),
             "public.f_unaccent(lower(\"Changes\"::text)) LIKE public.f_unaccent(lower({pattern}))"),
+        new("FormCatalogReader.cs", new("tenant", "FormCatalogItems", "Text"),
+            "public.f_unaccent(lower(item.\"Text\")) LIKE public.f_unaccent(lower(wanted.\"Pattern\"))"),
+        new("FormCatalogReader.cs", new("tenant", "FormCatalogItems", "Code"),
+            "public.f_unaccent(lower(item.\"Code\")) LIKE public.f_unaccent(lower(wanted.\"Pattern\"))"),
     ];
 
     // Los readers de un módulo leen con context.Set<T>(), que el detector de arriba no resuelve: cada módulo que entra declara
@@ -90,12 +96,16 @@ public sealed class SearchIndexTests(ApiFactory factory)
     public async Task A_search_written_in_sql_uses_the_search_expression_and_has_its_trigram_index()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
-        var sources = Directory.EnumerateFiles(ReadersDirectory(), "*.cs", SearchOption.AllDirectories)
+        // Los readers del núcleo y los de cada módulo declarado en ModuleSearches.
+        var sources = ModuleSearches.Select(module => Path.Combine(InfrastructureDirectory(), module.Directory)).Prepend(ReadersDirectory())
+            .SelectMany(directory => Directory.EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories))
             .ToDictionary(path => Path.GetFileName(path), File.ReadAllText, StringComparer.Ordinal);
 
-        // Un reader que busca con LIKE en SQL está en la lista, con la expresión de ApplySearch y no con ILIKE.
+        // Un reader que busca con LIKE en SQL (FromSql o Database.SqlQuery) está en la lista, con la expresión de ApplySearch y
+        // no con ILIKE.
         Assert.Equal(SqlSearches.Select(search => search.File).Distinct().Order(StringComparer.Ordinal),
-            sources.Where(source => source.Value.Contains("FromSql", StringComparison.Ordinal)
+            sources.Where(source => (source.Value.Contains("FromSql", StringComparison.Ordinal)
+                        || source.Value.Contains("SqlQuery", StringComparison.Ordinal))
                     && SqlLike.IsMatch(source.Value))
                 .Select(source => source.Key).Order(StringComparer.Ordinal));
         Assert.Empty(SqlSearches.Where(search => !sources[search.File].Contains(search.Expression, StringComparison.Ordinal))
