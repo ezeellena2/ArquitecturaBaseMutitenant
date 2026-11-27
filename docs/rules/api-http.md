@@ -28,7 +28,8 @@
 - **Ejemplos de una corrida real** (desde la E12, decisión del 2026-10-24):
   - toda respuesta que consume el front tiene ejemplos exportados de una corrida real, con sus estados y sus errores de negocio, junto con `openapi.json`;
   - el front los valida con zod estricto;
-  - la E12 suma la exportación y su guarda.
+  - los graba un test de integración del módulo con `ContractExampleRecorder` (`FormsContractExamplesTests`, E12) en `docs/contracts/examples/<módulo>.json`, con la forma `{ examples: [{ name, method, path, status, body }] }` y la ruta como la escribe `openapi.json`; los ids, las fechas, las versiones y el `traceId` quedan fijos, así dos corridas graban lo mismo, y si el archivo cambió, la corrida lo graba y falla hasta que se commitea;
+  - la guarda (`FormsContractExamplesCoverageTests`) pide un ejemplo por cada respuesta JSON de éxito y por cada error de negocio de `x-error-codes` del módulo; los del núcleo que dan todas las rutas igual (401, 403, el 404 del módulo apagado, la idempotencia y el 500) no lo piden, y lo que ninguna corrida puede dar todavía va en su lista con el motivo.
 
   En ArquitecturaBase, el back mandaba `pending` y el front esperaba `Pending`, y el chat de Inicio estuvo roto una semana.
 - El esquema de `application/problem+json` declara `code` y `traceId` obligatorios, y `errors` (campo → mensajes) y `retryAfter` (segundos) opcionales; es la misma forma que devuelve el mapper HTTP.
@@ -49,7 +50,7 @@
 - `Api/Controllers/Organization/RolesController.cs` y `Api/Contracts/Organization/*Role*` (E4)
 
 ## Lo verifica
-- `ControllerInputContractTests` (E1), `ControllerServiceRepositoryTests` (E0), `MinimalApiRoutesTests` (E0), `ControllerOutputContractTests` (E7), `AccessDeclarationTests` (E3), `SecurityHeadersTests` (E9), `BrowserSecurityTests` (E9)
+- `FormsContractExamplesCoverageTests` y `FormsContractExamplesTests` (E12, los ejemplos de una corrida real) · `ControllerInputContractTests` (E1), `ControllerServiceRepositoryTests` (E0), `MinimalApiRoutesTests` (E0), `ControllerOutputContractTests` (E7), `AccessDeclarationTests` (E3), `SecurityHeadersTests` (E9), `BrowserSecurityTests` (E9)
 
 ## Detalle
 [backend.md §5 y §17](../architecture/backend.md#controller) · ADR 0002 · [errores técnicos del contrato](../features/contrato-http.md)

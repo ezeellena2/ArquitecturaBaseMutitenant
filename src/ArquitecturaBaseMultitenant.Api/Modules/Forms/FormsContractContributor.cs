@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Resources;
 using System.Text.Json.Nodes;
+using ArquitecturaBaseMultitenant.Api.ErrorHandling;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Models;
 using ArquitecturaBaseMultitenant.Domain.Forms;
@@ -95,7 +96,10 @@ internal sealed class FormsContractContributor : IHttpContractContributor
         var filtersPreview = path == Prefix + "/previews";
         if (!(withId && method == HttpMethod.Get && !path.EndsWith("/items", StringComparison.Ordinal)) && !path.EndsWith("/filter-counts", StringComparison.Ordinal)
             && !path.EndsWith("/sources/members", StringComparison.Ordinal))
-            errors.Add(HttpContractDocumentation.CoreError(400, "Validation.Failed"));
+            // La plantilla solo recibe el tipo: uno que no existe no llega al validador y lo rechaza el binding.
+            errors.Add(path.EndsWith("/template", StringComparison.Ordinal)
+                ? HttpContractDocumentation.CoreError(400, ApiErrorCodes.InvalidRequest)
+                : HttpContractDocumentation.CoreError(400, "Validation.Failed"));
         if (IsIdempotent(path, method))
             errors.AddRange([HttpContractDocumentation.CoreError(400, "Request.IdempotencyKeyRequired"),
                 HttpContractDocumentation.CoreError(422, "Request.IdempotencyKeyReused"), HttpContractDocumentation.CoreError(409, "Request.InProgress")]);

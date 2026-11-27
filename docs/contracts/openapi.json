@@ -26426,30 +26426,30 @@
             }
           },
           "400": {
-            "description": "Bad Request; Validation.Failed",
+            "description": "Bad Request; Request.Invalid",
             "content": {
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 },
                 "examples": {
-                  "Validation.Failed.es": {
+                  "Request.Invalid.es": {
                     "value": {
                       "type": "about:blank",
                       "title": "Solicitud rechazada",
                       "status": 400,
-                      "detail": "Revisá los campos marcados.",
-                      "code": "Validation.Failed",
+                      "detail": "La solicitud tiene un formato inválido.",
+                      "code": "Request.Invalid",
                       "traceId": "example-trace-id"
                     }
                   },
-                  "Validation.Failed.en": {
+                  "Request.Invalid.en": {
                     "value": {
                       "type": "about:blank",
                       "title": "Request rejected",
                       "status": 400,
-                      "detail": "Check the highlighted fields.",
-                      "code": "Validation.Failed",
+                      "detail": "The request has an invalid format.",
+                      "code": "Request.Invalid",
                       "traceId": "example-trace-id"
                     }
                   }
@@ -26691,10 +26691,10 @@
           },
           {
             "status": 400,
-            "code": "Validation.Failed",
+            "code": "Request.Invalid",
             "field": null,
-            "es": "Revisá los campos marcados.",
-            "en": "Check the highlighted fields."
+            "es": "La solicitud tiene un formato inválido.",
+            "en": "The request has an invalid format."
           },
           {
             "status": 429,

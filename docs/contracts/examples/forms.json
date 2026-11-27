@@ -1,0 +1,1861 @@
+{
+  "examples": [
+    {
+      "name": "La fuente «Miembros»",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/sources/members",
+      "status": 200,
+      "body": {
+        "version": 1,
+        "columns": [
+          {
+            "key": "name",
+            "type": "Text",
+            "operators": [
+              "contains",
+              "equals"
+            ],
+            "canDetail": false,
+            "canSort": true
+          },
+          {
+            "key": "role",
+            "type": "List",
+            "operators": [
+              "hasAny",
+              "hasNone"
+            ],
+            "canDetail": true,
+            "canSort": false
+          },
+          {
+            "key": "company",
+            "type": "List",
+            "operators": [
+              "hasAny",
+              "hasNone"
+            ],
+            "canDetail": true,
+            "canSort": false
+          },
+          {
+            "key": "active",
+            "type": "Boolean",
+            "operators": [
+              "is"
+            ],
+            "canDetail": false,
+            "canSort": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "Roles",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/sources/members/roles",
+      "status": 200,
+      "body": {
+        "items": [
+          {
+            "id": "00000000-0000-4000-8000-000000000001",
+            "name": "CompanyAdmin"
+          },
+          {
+            "id": "00000000-0000-4000-8000-000000000002",
+            "name": "TenantAdmin"
+          }
+        ],
+        "page": 1,
+        "pageSize": 10,
+        "totalCount": 2,
+        "totalPages": 1,
+        "hasPrevious": false,
+        "hasNext": false
+      }
+    },
+    {
+      "name": "Roles con un orden que no existe",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/sources/members/roles",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Revisá los campos marcados.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Validation.Failed",
+        "errors": {
+          "sort": [
+            "No se puede ordenar por ese campo."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Empresas",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/sources/members/companies",
+      "status": 200,
+      "body": {
+        "items": [
+          {
+            "id": "00000000-0000-4000-8000-000000000003",
+            "name": "Sucursal Norte"
+          }
+        ],
+        "page": 1,
+        "pageSize": 10,
+        "totalCount": 1,
+        "totalPages": 1,
+        "hasPrevious": false,
+        "hasNext": false
+      }
+    },
+    {
+      "name": "Empresas con un orden que no existe",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/sources/members/companies",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Revisá los campos marcados.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Validation.Failed",
+        "errors": {
+          "sort": [
+            "No se puede ordenar por ese campo."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Etiquetas de los contactos",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/sources/contacts/tags",
+      "status": 200,
+      "body": {
+        "items": [],
+        "page": 1,
+        "pageSize": 10,
+        "totalCount": 0,
+        "totalPages": 0,
+        "hasPrevious": false,
+        "hasNext": false
+      }
+    },
+    {
+      "name": "Etiquetas con un orden que no existe",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/sources/contacts/tags",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Revisá los campos marcados.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Validation.Failed",
+        "errors": {
+          "sort": [
+            "No se puede ordenar por ese campo."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Personas de ejemplo",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/sample-members",
+      "status": 200,
+      "body": {
+        "items": [
+          {
+            "memberId": "00000000-0000-4000-8000-000000000004",
+            "name": "Ana Gómez",
+            "companies": [],
+            "roles": []
+          }
+        ],
+        "page": 1,
+        "pageSize": 10,
+        "totalCount": 1,
+        "totalPages": 1,
+        "hasPrevious": false,
+        "hasNext": false
+      }
+    },
+    {
+      "name": "Personas de ejemplo con un orden que no existe",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/sample-members",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Revisá los campos marcados.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Validation.Failed",
+        "errors": {
+          "sort": [
+            "No se puede ordenar por ese campo."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Clientes de ejemplo",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/sample-contacts",
+      "status": 200,
+      "body": {
+        "items": [],
+        "page": 1,
+        "pageSize": 10,
+        "totalCount": 0,
+        "totalPages": 0,
+        "hasPrevious": false,
+        "hasNext": false
+      }
+    },
+    {
+      "name": "Clientes de ejemplo con un orden que no existe",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/sample-contacts",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Revisá los campos marcados.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Validation.Failed",
+        "errors": {
+          "sort": [
+            "No se puede ordenar por ese campo."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Vista previa",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/previews",
+      "status": 200,
+      "body": {
+        "options": [
+          {
+            "text": "Ana Gómez",
+            "detail": null
+          }
+        ],
+        "total": 1,
+        "exceedsLimit": false
+      }
+    },
+    {
+      "name": "Vista previa sin la persona de ejemplo",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/previews",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Elegí una persona.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.SampleRequired",
+        "errors": {
+          "sampleMemberId": [
+            "Elegí una persona."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Vista previa con una columna que la fuente no tiene",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/previews",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Revisá esta condición.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.FiltersInvalid",
+        "errors": {
+          "conditions.0": [
+            "Revisá esta condición."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Vista previa con una persona de ejemplo que no está",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/previews",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Esa persona ya no es de la organización.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.SampleMemberNotFound",
+        "errors": {
+          "sampleMemberId": [
+            "Esa persona ya no es de la organización."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Vista previa con un cliente de ejemplo que no está",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/previews",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Ese cliente ya no está en Clientes.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.SampleContactNotFound",
+        "errors": {
+          "sampleContactId": [
+            "Ese cliente ya no está en Clientes."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Vista previa sin origen",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/previews",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Revisá los campos marcados.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Validation.Failed",
+        "errors": {
+          "source": [
+            "Este campo es obligatorio."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Alta a mano",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 201,
+      "body": {
+        "catalog": {
+          "id": "00000000-0000-4000-8000-000000000005",
+          "name": "Talles",
+          "description": "Los talles de la ropa de trabajo",
+          "source": "Manual",
+          "valueType": "Text",
+          "filters": null,
+          "roles": null,
+          "companies": null,
+          "sample": null,
+          "isActive": true,
+          "usable": true,
+          "unusableReason": null,
+          "canManage": true,
+          "itemCounts": {
+            "total": 3,
+            "active": 3
+          },
+          "modifiedAtUtc": "2026-11-27T12:00:00Z",
+          "modifiedBy": null,
+          "version": 2
+        },
+        "itemIdentityMap": [
+          {
+            "localId": "n1",
+            "itemId": "00000000-0000-4000-8000-000000000006"
+          },
+          {
+            "localId": "n2",
+            "itemId": "00000000-0000-4000-8000-000000000007"
+          },
+          {
+            "localId": "n3",
+            "itemId": "00000000-0000-4000-8000-000000000008"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Alta de miembros con filtros",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 201,
+      "body": {
+        "catalog": {
+          "id": "00000000-0000-4000-8000-000000000009",
+          "name": "Equipo del Norte",
+          "description": null,
+          "source": "Members",
+          "valueType": "Text",
+          "filters": {
+            "sourceVersion": 1,
+            "conditions": [
+              {
+                "column": "company",
+                "operator": "hasAny",
+                "values": [
+                  "00000000-0000-4000-8000-000000000003"
+                ]
+              }
+            ],
+            "excludeRecipient": true,
+            "detail": "role",
+            "sort": {
+              "column": "name",
+              "descending": false
+            }
+          },
+          "roles": [],
+          "companies": [
+            {
+              "id": "00000000-0000-4000-8000-000000000003",
+              "name": "Sucursal Norte"
+            }
+          ],
+          "sample": {
+            "id": "00000000-0000-4000-8000-000000000004",
+            "name": "Ana Gómez",
+            "detail": null
+          },
+          "isActive": true,
+          "usable": true,
+          "unusableReason": null,
+          "canManage": true,
+          "itemCounts": {
+            "total": 0,
+            "active": 0
+          },
+          "modifiedAtUtc": "2026-11-27T12:00:00Z",
+          "modifiedBy": null,
+          "version": 3
+        },
+        "itemIdentityMap": []
+      }
+    },
+    {
+      "name": "Alta de miembros sin condiciones",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 201,
+      "body": {
+        "catalog": {
+          "id": "00000000-0000-4000-8000-000000000010",
+          "name": "Todo el equipo",
+          "description": null,
+          "source": "Members",
+          "valueType": "Text",
+          "filters": {
+            "sourceVersion": 1,
+            "conditions": [],
+            "excludeRecipient": false,
+            "detail": null,
+            "sort": null
+          },
+          "roles": [],
+          "companies": [],
+          "sample": null,
+          "isActive": true,
+          "usable": true,
+          "unusableReason": null,
+          "canManage": true,
+          "itemCounts": {
+            "total": 0,
+            "active": 0
+          },
+          "modifiedAtUtc": "2026-11-27T12:00:00Z",
+          "modifiedBy": null,
+          "version": 4
+        },
+        "itemIdentityMap": []
+      }
+    },
+    {
+      "name": "Alta de contactos",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 201,
+      "body": {
+        "catalog": {
+          "id": "00000000-0000-4000-8000-000000000011",
+          "name": "Clientes VIP",
+          "description": null,
+          "source": "Contacts",
+          "valueType": "Text",
+          "filters": {
+            "sourceVersion": 1,
+            "conditions": [],
+            "excludeRecipient": false,
+            "detail": null,
+            "sort": null
+          },
+          "roles": null,
+          "companies": null,
+          "sample": null,
+          "isActive": true,
+          "usable": false,
+          "unusableReason": "ChannelUnavailable",
+          "canManage": true,
+          "itemCounts": {
+            "total": 0,
+            "active": 0
+          },
+          "modifiedAtUtc": "2026-11-27T12:00:00Z",
+          "modifiedBy": null,
+          "version": 5
+        },
+        "itemIdentityMap": []
+      }
+    },
+    {
+      "name": "Alta con valores enteros",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 201,
+      "body": {
+        "catalog": {
+          "id": "00000000-0000-4000-8000-000000000012",
+          "name": "Cuotas",
+          "description": null,
+          "source": "Manual",
+          "valueType": "WholeNumber",
+          "filters": null,
+          "roles": null,
+          "companies": null,
+          "sample": null,
+          "isActive": true,
+          "usable": true,
+          "unusableReason": null,
+          "canManage": true,
+          "itemCounts": {
+            "total": 1,
+            "active": 1
+          },
+          "modifiedAtUtc": "2026-11-27T12:00:00Z",
+          "modifiedBy": null,
+          "version": 6
+        },
+        "itemIdentityMap": [
+          {
+            "localId": "n1",
+            "itemId": "00000000-0000-4000-8000-000000000013"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Alta con un código repetido",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Ya está en la opción {n}.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.DuplicateCode",
+        "errors": {
+          "items.1.code": [
+            "Ya está en la opción {n}."
+          ]
+        },
+        "n": 1
+      }
+    },
+    {
+      "name": "Alta con una columna que la fuente no tiene",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Revisá esta condición.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.FiltersInvalid",
+        "errors": {
+          "conditions.0": [
+            "Revisá esta condición."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Alta con un detalle de más de 300 caracteres",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Puede tener hasta 300 caracteres.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.ItemDetailTooLong",
+        "errors": {
+          "items.0.detail": [
+            "Puede tener hasta 300 caracteres."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Alta con un texto de más de 30 caracteres",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Puede tener hasta 30 caracteres.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.ItemTextTooLong",
+        "errors": {
+          "items.0.text": [
+            "Puede tener hasta 30 caracteres."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Alta con un cliente de ejemplo que no está",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Ese cliente ya no está en Clientes.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.SampleContactNotFound",
+        "errors": {
+          "sampleContactId": [
+            "Ese cliente ya no está en Clientes."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Alta con una persona de ejemplo que no está",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Esa persona ya no es de la organización.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.SampleMemberNotFound",
+        "errors": {
+          "sampleMemberId": [
+            "Esa persona ya no es de la organización."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Alta de miembros con condiciones y sin persona de ejemplo",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Elegí una persona.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.SampleRequired",
+        "errors": {
+          "sampleMemberId": [
+            "Elegí una persona."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Alta con un valor que no es un número entero",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "El valor no es del tipo del catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.ValueInvalid",
+        "errors": {
+          "items.0.value": [
+            "Escribí un número entero."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Alta sin el valor de una opción",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Escribí el valor.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.ValueRequired",
+        "errors": {
+          "items.0.value": [
+            "Escribí el valor."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Alta sin nombre",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Revisá los campos marcados.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Validation.Failed",
+        "errors": {
+          "name": [
+            "Este campo es obligatorio."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Alta de miembros con opciones",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "Eso no corresponde al origen de este catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.WrongSource"
+      }
+    },
+    {
+      "name": "Alta con más de 10.000 opciones",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "Llegó a 10.000 opciones, el máximo de un catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.TooManyItems"
+      }
+    },
+    {
+      "name": "Listado",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs",
+      "status": 200,
+      "body": {
+        "items": [
+          {
+            "id": "00000000-0000-4000-8000-000000000011",
+            "name": "Clientes VIP",
+            "description": null,
+            "source": "Contacts",
+            "valueType": "Text",
+            "optionsCount": null,
+            "isActive": true,
+            "usable": false,
+            "unusableReason": "ChannelUnavailable"
+          },
+          {
+            "id": "00000000-0000-4000-8000-000000000012",
+            "name": "Cuotas",
+            "description": null,
+            "source": "Manual",
+            "valueType": "WholeNumber",
+            "optionsCount": 1,
+            "isActive": true,
+            "usable": true,
+            "unusableReason": null
+          },
+          {
+            "id": "00000000-0000-4000-8000-000000000009",
+            "name": "Equipo del Norte",
+            "description": null,
+            "source": "Members",
+            "valueType": "Text",
+            "optionsCount": null,
+            "isActive": true,
+            "usable": true,
+            "unusableReason": null
+          },
+          {
+            "id": "00000000-0000-4000-8000-000000000005",
+            "name": "Talles",
+            "description": "Los talles de la ropa de trabajo",
+            "source": "Manual",
+            "valueType": "Text",
+            "optionsCount": 3,
+            "isActive": true,
+            "usable": true,
+            "unusableReason": null
+          },
+          {
+            "id": "00000000-0000-4000-8000-000000000010",
+            "name": "Todo el equipo",
+            "description": null,
+            "source": "Members",
+            "valueType": "Text",
+            "optionsCount": null,
+            "isActive": true,
+            "usable": true,
+            "unusableReason": null
+          }
+        ],
+        "page": 1,
+        "pageSize": 10,
+        "totalCount": 5,
+        "totalPages": 1,
+        "hasPrevious": false,
+        "hasNext": false
+      }
+    },
+    {
+      "name": "Listado con un orden que no existe",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Revisá los campos marcados.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Validation.Failed",
+        "errors": {
+          "sort": [
+            "No se puede ordenar por ese campo."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Resumen del listado",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/filter-counts",
+      "status": 200,
+      "body": {
+        "all": 5,
+        "active": 5
+      }
+    },
+    {
+      "name": "Detalle",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 200,
+      "body": {
+        "id": "00000000-0000-4000-8000-000000000005",
+        "name": "Talles",
+        "description": "Los talles de la ropa de trabajo",
+        "source": "Manual",
+        "valueType": "Text",
+        "filters": null,
+        "roles": null,
+        "companies": null,
+        "sample": null,
+        "isActive": true,
+        "usable": true,
+        "unusableReason": null,
+        "canManage": true,
+        "itemCounts": {
+          "total": 3,
+          "active": 3
+        },
+        "modifiedAtUtc": "2026-11-27T12:00:00Z",
+        "modifiedBy": null,
+        "version": 2
+      }
+    },
+    {
+      "name": "Detalle de miembros",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 200,
+      "body": {
+        "id": "00000000-0000-4000-8000-000000000009",
+        "name": "Equipo del Norte",
+        "description": null,
+        "source": "Members",
+        "valueType": "Text",
+        "filters": {
+          "sourceVersion": 1,
+          "conditions": [
+            {
+              "column": "company",
+              "operator": "hasAny",
+              "values": [
+                "00000000-0000-4000-8000-000000000003"
+              ]
+            }
+          ],
+          "excludeRecipient": true,
+          "detail": "role",
+          "sort": {
+            "column": "name",
+            "descending": false
+          }
+        },
+        "roles": [],
+        "companies": [
+          {
+            "id": "00000000-0000-4000-8000-000000000003",
+            "name": "Sucursal Norte"
+          }
+        ],
+        "sample": {
+          "id": "00000000-0000-4000-8000-000000000004",
+          "name": "Ana Gómez",
+          "detail": null
+        },
+        "isActive": true,
+        "usable": true,
+        "unusableReason": null,
+        "canManage": true,
+        "itemCounts": {
+          "total": 0,
+          "active": 0
+        },
+        "modifiedAtUtc": "2026-11-27T12:00:00Z",
+        "modifiedBy": null,
+        "version": 3
+      }
+    },
+    {
+      "name": "Detalle de un catálogo que no está",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 404,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
+        "title": "No encontrado",
+        "status": 404,
+        "detail": "No encontramos este catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.NotFound"
+      }
+    },
+    {
+      "name": "Opciones",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/{id}/items",
+      "status": 200,
+      "body": {
+        "items": [
+          {
+            "id": "00000000-0000-4000-8000-000000000006",
+            "code": "S",
+            "text": "Chico",
+            "detail": null,
+            "value": null,
+            "position": 0,
+            "isActive": true,
+            "textRepeated": false
+          },
+          {
+            "id": "00000000-0000-4000-8000-000000000007",
+            "code": "M",
+            "text": "Mediano",
+            "detail": "El más pedido",
+            "value": null,
+            "position": 1,
+            "isActive": true,
+            "textRepeated": false
+          },
+          {
+            "id": "00000000-0000-4000-8000-000000000008",
+            "code": "L",
+            "text": "Grande",
+            "detail": null,
+            "value": null,
+            "position": 2,
+            "isActive": true,
+            "textRepeated": false
+          }
+        ],
+        "page": 1,
+        "pageSize": 10,
+        "totalCount": 3,
+        "totalPages": 1,
+        "hasPrevious": false,
+        "hasNext": false
+      }
+    },
+    {
+      "name": "Opciones con un tamaño de página que no existe",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/{id}/items",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Revisá los campos marcados.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Validation.Failed",
+        "errors": {
+          "pageSize": [
+            "Elegí 10, 20, 50 o 100 resultados por página."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Opciones de un catálogo que no está",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/{id}/items",
+      "status": 404,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
+        "title": "No encontrado",
+        "status": 404,
+        "detail": "No encontramos este catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.NotFound"
+      }
+    },
+    {
+      "name": "Guardar",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 200,
+      "body": {
+        "version": 7,
+        "itemIdentityMap": [
+          {
+            "localId": "n4",
+            "itemId": "00000000-0000-4000-8000-000000000014"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Guardar con un código repetido",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Ya está en la opción {n}.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.DuplicateCode",
+        "errors": {
+          "items.0.code": [
+            "Ya está en la opción {n}."
+          ]
+        },
+        "n": 1
+      }
+    },
+    {
+      "name": "Guardar con un detalle de más de 300 caracteres",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Puede tener hasta 300 caracteres.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.ItemDetailTooLong",
+        "errors": {
+          "items.0.detail": [
+            "Puede tener hasta 300 caracteres."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Guardar con un texto de más de 30 caracteres",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Puede tener hasta 30 caracteres.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.ItemTextTooLong",
+        "errors": {
+          "items.0.text": [
+            "Puede tener hasta 30 caracteres."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Guardar sin el estado",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Revisá los campos marcados.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Validation.Failed",
+        "errors": {
+          "isActive": [
+            "Este campo es obligatorio."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Guardar borrando una opción que no está",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 404,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
+        "title": "No encontrado",
+        "status": 404,
+        "detail": "Esa opción no es de este catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.ItemNotFound",
+        "errors": {
+          "deleteItems.0": [
+            "Esa opción no es de este catálogo."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Guardar un catálogo que no está",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 404,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
+        "title": "No encontrado",
+        "status": 404,
+        "detail": "No encontramos este catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.NotFound"
+      }
+    },
+    {
+      "name": "Guardar subiendo la primera opción",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "No se puede mover más.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.MoveOutOfRange"
+      }
+    },
+    {
+      "name": "Guardar con filtros un catálogo a mano",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "Eso no corresponde al origen de este catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.WrongSource"
+      }
+    },
+    {
+      "name": "Guardar con una versión vieja",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "Otra persona cambió esto. Revisá la versión más reciente antes de guardar.",
+        "code": "General.ConcurrencyConflict",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"
+      }
+    },
+    {
+      "name": "Guardar con una columna que la fuente no tiene",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Revisá esta condición.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.FiltersInvalid",
+        "errors": {
+          "conditions.0": [
+            "Revisá esta condición."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Guardar con una persona de ejemplo que no está",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Esa persona ya no es de la organización.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.SampleMemberNotFound",
+        "errors": {
+          "sampleMemberId": [
+            "Esa persona ya no es de la organización."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Guardar condiciones sin persona de ejemplo",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Elegí una persona.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.SampleRequired",
+        "errors": {
+          "sampleMemberId": [
+            "Elegí una persona."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Guardar con un cliente de ejemplo que no está",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Ese cliente ya no está en Clientes.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.SampleContactNotFound",
+        "errors": {
+          "sampleContactId": [
+            "Ese cliente ya no está en Clientes."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Guardar un valor que no es un número entero",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "El valor no es del tipo del catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.ValueInvalid",
+        "errors": {
+          "items.0.value": [
+            "Escribí un número entero."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Guardar sin el valor de una opción",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Escribí el valor.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.ValueRequired",
+        "errors": {
+          "items.0.value": [
+            "Escribí el valor."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Guardar opciones de un catálogo dado de baja",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "El catálogo está dado de baja. Reactivalo para cambiar sus opciones.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.Inactive"
+      }
+    },
+    {
+      "name": "Guardar una opción más en un catálogo con 10.000",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "Llegó a 10.000 opciones, el máximo de un catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.TooManyItems"
+      }
+    },
+    {
+      "name": "Revisar lo pegado",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports/previews",
+      "status": 200,
+      "body": {
+        "version": 7,
+        "sha256": "869a94dfdb436affa9d30b4b294910242faed170f5e01bb9680ed289afbf51b0",
+        "sheetName": null,
+        "rowsRead": 1,
+        "unchanged": 0,
+        "deactivationShare": 0,
+        "errorShare": 0,
+        "confirmDeactivations": false,
+        "confirmErrors": false,
+        "errors": {
+          "items": [],
+          "page": 1,
+          "pageSize": 10,
+          "totalCount": 0,
+          "totalPages": 0,
+          "hasPrevious": false,
+          "hasNext": false
+        },
+        "added": {
+          "items": [
+            {
+              "row": 2,
+              "code": "XXL",
+              "text": "Enorme"
+            }
+          ],
+          "page": 1,
+          "pageSize": 10,
+          "totalCount": 1,
+          "totalPages": 1,
+          "hasPrevious": false,
+          "hasNext": false
+        },
+        "changed": {
+          "items": [],
+          "page": 1,
+          "pageSize": 10,
+          "totalCount": 0,
+          "totalPages": 0,
+          "hasPrevious": false,
+          "hasNext": false
+        },
+        "deactivated": {
+          "items": [],
+          "page": 1,
+          "pageSize": 10,
+          "totalCount": 0,
+          "totalPages": 0,
+          "hasPrevious": false,
+          "hasNext": false
+        }
+      }
+    },
+    {
+      "name": "Revisar con una fila con errores",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports/previews",
+      "status": 200,
+      "body": {
+        "version": 7,
+        "sha256": "3712d8c6e8657587e51ac3a16e30fd59c2dd0f0c8e7f61761a4e26eeb42dde01",
+        "sheetName": null,
+        "rowsRead": 2,
+        "unchanged": 0,
+        "deactivationShare": 0,
+        "errorShare": 0.5,
+        "confirmDeactivations": false,
+        "confirmErrors": true,
+        "errors": {
+          "items": [
+            {
+              "row": 3,
+              "column": "code",
+              "code": "Forms.Catalog.DuplicateCode",
+              "value": null,
+              "otherRow": 2
+            }
+          ],
+          "page": 1,
+          "pageSize": 10,
+          "totalCount": 1,
+          "totalPages": 1,
+          "hasPrevious": false,
+          "hasNext": false
+        },
+        "added": {
+          "items": [
+            {
+              "row": 2,
+              "code": "XS",
+              "text": "Muy chico"
+            }
+          ],
+          "page": 1,
+          "pageSize": 10,
+          "totalCount": 1,
+          "totalPages": 1,
+          "hasPrevious": false,
+          "hasNext": false
+        },
+        "changed": {
+          "items": [],
+          "page": 1,
+          "pageSize": 10,
+          "totalCount": 0,
+          "totalPages": 0,
+          "hasPrevious": false,
+          "hasNext": false
+        },
+        "deactivated": {
+          "items": [],
+          "page": 1,
+          "pageSize": 10,
+          "totalCount": 0,
+          "totalPages": 0,
+          "hasPrevious": false,
+          "hasNext": false
+        }
+      }
+    },
+    {
+      "name": "Revisar un archivo que no es una planilla",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports/previews",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "El archivo no es un XLSX ni un CSV en UTF-8.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.CatalogImport.FileInvalid",
+        "errors": {
+          "file": [
+            "El archivo no es un XLSX ni un CSV en UTF-8."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Revisar sin el modo",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports/previews",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Revisá los campos marcados.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Validation.Failed",
+        "errors": {
+          "mode": [
+            "Este campo es obligatorio."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Revisar en un catálogo que no está",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports/previews",
+      "status": 404,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
+        "title": "No encontrado",
+        "status": 404,
+        "detail": "No encontramos este catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.NotFound"
+      }
+    },
+    {
+      "name": "Revisar en un catálogo dado de baja",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports/previews",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "El catálogo está dado de baja. Reactivalo para cambiar sus opciones.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.Inactive"
+      }
+    },
+    {
+      "name": "Revisar en un catálogo de miembros",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports/previews",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "Eso no corresponde al origen de este catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.WrongSource"
+      }
+    },
+    {
+      "name": "Revisar con una versión vieja",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports/previews",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "Otra persona cambió esto. Revisá la versión más reciente antes de guardar.",
+        "code": "General.ConcurrencyConflict",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"
+      }
+    },
+    {
+      "name": "Revisar con otra operación de archivo en curso",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports/previews",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "Ya tenés una importación o una exportación en curso. Probá en un momento.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.CatalogImport.Busy"
+      }
+    },
+    {
+      "name": "Aplicar con otra operación de archivo en curso",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "Ya tenés una importación o una exportación en curso. Probá en un momento.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.CatalogImport.Busy"
+      }
+    },
+    {
+      "name": "Exportar con otra operación de archivo en curso",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/{id}/export",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "Ya tenés una importación o una exportación en curso. Probá en un momento.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.CatalogImport.Busy"
+      }
+    },
+    {
+      "name": "Revisar con la organización sin lugar",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports/previews",
+      "status": 429,
+      "body": {
+        "title": "Demasiadas solicitudes",
+        "status": 429,
+        "detail": "Hay muchas importaciones y exportaciones en curso. Probá en un momento.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.CatalogImport.TooManyAtOnce",
+        "retryAfter": 5
+      }
+    },
+    {
+      "name": "Aplicar con la organización sin lugar",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports",
+      "status": 429,
+      "body": {
+        "title": "Demasiadas solicitudes",
+        "status": 429,
+        "detail": "Hay muchas importaciones y exportaciones en curso. Probá en un momento.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.CatalogImport.TooManyAtOnce",
+        "retryAfter": 5
+      }
+    },
+    {
+      "name": "Exportar con la organización sin lugar",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/{id}/export",
+      "status": 429,
+      "body": {
+        "title": "Demasiadas solicitudes",
+        "status": 429,
+        "detail": "Hay muchas importaciones y exportaciones en curso. Probá en un momento.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.CatalogImport.TooManyAtOnce",
+        "retryAfter": 5
+      }
+    },
+    {
+      "name": "Aplicar filas con errores sin confirmarlas",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Confirmá las bajas o las filas con errores antes de aplicar.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.CatalogImport.ConfirmationRequired"
+      }
+    },
+    {
+      "name": "Aplicar un archivo que no es una planilla",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "El archivo no es un XLSX ni un CSV en UTF-8.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.CatalogImport.FileInvalid",
+        "errors": {
+          "file": [
+            "El archivo no es un XLSX ni un CSV en UTF-8."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Aplicar sin el SHA-256 de la revisión",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Revisá los campos marcados.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Validation.Failed",
+        "errors": {
+          "sha256": [
+            "Este campo es obligatorio."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Aplicar en un catálogo que no está",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports",
+      "status": 404,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
+        "title": "No encontrado",
+        "status": 404,
+        "detail": "No encontramos este catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.NotFound"
+      }
+    },
+    {
+      "name": "Aplicar en un catálogo dado de baja",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "El catálogo está dado de baja. Reactivalo para cambiar sus opciones.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.Inactive"
+      }
+    },
+    {
+      "name": "Aplicar en un catálogo de miembros",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "Eso no corresponde al origen de este catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.WrongSource"
+      }
+    },
+    {
+      "name": "Aplicar otro archivo que el revisado",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "El archivo no es el que se revisó. Revisá de nuevo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.CatalogImport.FileChanged"
+      }
+    },
+    {
+      "name": "Aplicar con una versión vieja",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "Otra persona cambió esto. Revisá la versión más reciente antes de guardar.",
+        "code": "General.ConcurrencyConflict",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"
+      }
+    },
+    {
+      "name": "Aplicar una opción más en un catálogo con 10.000",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "Llegó a 10.000 opciones, el máximo de un catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.TooManyItems"
+      }
+    },
+    {
+      "name": "Aplicar lo revisado",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs/{id}/imports",
+      "status": 200,
+      "body": {
+        "version": 8
+      }
+    },
+    {
+      "name": "Exportar un catálogo que no está",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/{id}/export",
+      "status": 404,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
+        "title": "No encontrado",
+        "status": 404,
+        "detail": "No encontramos este catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.NotFound"
+      }
+    },
+    {
+      "name": "Exportar un catálogo de miembros",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/{id}/export",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "Eso no corresponde al origen de este catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.WrongSource"
+      }
+    },
+    {
+      "name": "Plantilla de un tipo que no existe",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/template",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "La solicitud tiene un formato inválido.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Request.Invalid"
+      }
+    }
+  ]
+}
