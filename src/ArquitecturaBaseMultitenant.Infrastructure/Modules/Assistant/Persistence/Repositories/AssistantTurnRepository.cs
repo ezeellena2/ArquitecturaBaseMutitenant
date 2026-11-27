@@ -57,7 +57,7 @@ internal sealed class AssistantTurnRepository(ApplicationDbContext db, IEnumerab
         else if (row is PlatformAssistantConversation global) await ReloadAsync(global.Activity, ct);
         return row;
     }
-    public async Task<IReadOnlyList<AssistantHistoryMessageRow>> FindHistoryPrivacyAsync(Guid owner, Access access, Guid conversationId, CancellationToken ct) => await Store(access).FindHistoryPrivacyAsync(owner, access, conversationId, ct);
+    public async Task<IReadOnlyList<AssistantHistoryMessageRow>> ListHistoryPrivacyAsync(Guid owner, Access access, Guid conversationId, CancellationToken ct) => await Store(access).ListHistoryPrivacyAsync(owner, access, conversationId, ct);
     public async Task<IReadOnlyList<AssistantMessageResponse>> ListMessagesAsync(Guid owner, Access access, Guid conversationId, CancellationToken ct, IReadOnlyList<Guid>? messageIds = null)
     {
         var store = Store(access);

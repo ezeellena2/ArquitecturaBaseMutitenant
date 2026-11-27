@@ -81,7 +81,7 @@ internal sealed class OrganizationUserReader(ApplicationDbContext context, ITena
             page.Page, page.PageSize, page.TotalCount);
     }
 
-    public async Task<OrganizationUserFilterCountsResponse> GetFilterCountsAsync(
+    public async Task<OrganizationUserFilterCountsResponse> CountFiltersAsync(
         ListOrganizationUsersRequest request, DateTime nowUtc, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);

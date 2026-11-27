@@ -14,7 +14,7 @@ internal abstract class AssistantTurnStore
     public abstract Task<AssistantMessageBase?> GetMessageAsync(Guid owner, Access access, Guid conversationId, Guid messageId, CancellationToken ct);
     public abstract Task<AssistantMessageBase?> GetMessageMetadataAsync(Guid owner, Access access, IAssistantTurn turn, CancellationToken ct);
     public abstract Task<AssistantMessageBase[]> ListMessagesAsync(Guid owner, Access access, Guid conversationId, IReadOnlyList<Guid>? ids, CancellationToken ct);
-    public abstract Task<AssistantHistoryMessageRow[]> FindHistoryPrivacyAsync(Guid owner, Access access, Guid conversationId, CancellationToken ct);
+    public abstract Task<AssistantHistoryMessageRow[]> ListHistoryPrivacyAsync(Guid owner, Access access, Guid conversationId, CancellationToken ct);
     public abstract Task<AssistantStoredAttachmentRow[]> ListAttachmentsAsync(Guid conversationId, CancellationToken ct);
     public abstract Task<int> CountUnboundAttachmentsAsync(Guid conversationId, IReadOnlyList<Guid> ids, CancellationToken ct);
     public abstract AssistantTurnBase CreateTurn(Guid conversationId, DateTime nowUtc);

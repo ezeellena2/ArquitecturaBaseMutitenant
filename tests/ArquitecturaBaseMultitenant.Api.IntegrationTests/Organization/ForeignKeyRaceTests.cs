@@ -182,8 +182,8 @@ public sealed class ForeignKeyRaceTests(ApiFactory factory)
 
     private sealed class HeldRoleReader(IRoleReader inner, Hold? afterFind, Hold? afterCount) : IRoleReader
     {
-        public Task<RoleFilterCountsResponse> GetFilterCountsAsync(string? search, CancellationToken cancellationToken) =>
-            inner.GetFilterCountsAsync(search, cancellationToken);
+        public Task<RoleFilterCountsResponse> CountFiltersAsync(string? search, CancellationToken cancellationToken) =>
+            inner.CountFiltersAsync(search, cancellationToken);
 
         public async Task<RoleRow?> FindByIdAsync(Guid roleId, CancellationToken cancellationToken)
         {

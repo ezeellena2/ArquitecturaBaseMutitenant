@@ -43,7 +43,7 @@ internal sealed class CompanyService(
         return OperationLog.RunAsync(logger, timeProvider, "GetCompanyFilterCounts", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            return Result.Success(await reader.GetFilterCountsAsync(request, cancellationToken));
+            return Result.Success(await reader.CountFiltersAsync(request, cancellationToken));
         });
     }
 

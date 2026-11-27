@@ -69,7 +69,7 @@ internal sealed class WhatsAppConversationReader(ApplicationDbContext context, I
         return context.Set<WhatsAppChatMessage>().AsNoTracking().Where(message => message.TenantId == tenantId && message.ChatId == chatId);
     }
 
-    public async Task<IReadOnlyDictionary<Guid, int>> CountTakenAsync(WhatsAppInbox? inbox, IReadOnlyCollection<Guid> userIds, CancellationToken ct)
+    public async Task<IReadOnlyDictionary<Guid, int>> ListTakenCountsAsync(WhatsAppInbox? inbox, IReadOnlyCollection<Guid> userIds, CancellationToken ct)
     {
         if (userIds.Count == 0) return new Dictionary<Guid, int>();
         if (inbox is not { } value)

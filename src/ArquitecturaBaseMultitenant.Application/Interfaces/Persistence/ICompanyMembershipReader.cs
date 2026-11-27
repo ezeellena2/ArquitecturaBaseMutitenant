@@ -8,14 +8,14 @@ public interface ICompanyMembershipReader
 {
     Task<PagedResult<CompanyMemberRow>> ListAsync(Guid companyId, ListCompanyMembersRequest request,
         CancellationToken cancellationToken);
-    Task<CompanyMemberFilterCountsResponse> GetFilterCountsAsync(Guid companyId,
+    Task<CompanyMemberFilterCountsResponse> CountFiltersAsync(Guid companyId,
         ListCompanyMembersRequest request, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Los miembros activos de cada empresa en una sola consulta: el conteo «Activos» de <see cref="GetFilterCountsAsync"/>
+    /// Los miembros activos de cada empresa en una sola consulta: el conteo «Activos» de <see cref="CountFiltersAsync"/>
     /// sin filtros. Una empresa sin miembros activos no figura.
     /// </summary>
-    Task<IReadOnlyDictionary<Guid, int>> CountActiveMembersAsync(IReadOnlyCollection<Guid> companyIds,
+    Task<IReadOnlyDictionary<Guid, int>> ListActiveMemberCountsAsync(IReadOnlyCollection<Guid> companyIds,
         CancellationToken cancellationToken);
     Task<IReadOnlyList<UserCompanyRow>> ListActiveForUserAsync(Guid userId, CancellationToken cancellationToken);
 

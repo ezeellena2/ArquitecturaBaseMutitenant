@@ -89,7 +89,7 @@ public sealed class PlatformPermissionServiceTests
 
     private sealed class StubAssignments(string[]? permissions) : IPlatformPermissionAssignmentReader
     {
-        public Task<IReadOnlyList<string>?> FindPermissionsAsync(Guid userId, CancellationToken ct) =>
+        public Task<IReadOnlyList<string>?> ListPermissionsAsync(Guid userId, CancellationToken ct) =>
             Task.FromResult<IReadOnlyList<string>?>(permissions);
     }
 

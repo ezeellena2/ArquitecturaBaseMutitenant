@@ -25,7 +25,7 @@ internal sealed class PlatformDelegationGuard(ICurrentUser currentUser, IUserRep
         // ADR 0042: una invitación sin aceptar todavía no da permisos.
         if (actor is not { Status: UserStatus.Active, IsPlatformOperator: true, HasPendingOperatorInvitation: false })
             return new HashSet<string>();
-        return PlatformDelegationPolicy.Effective(await assignments.FindPermissionsAsync(actorId, cancellationToken) ?? []);
+        return PlatformDelegationPolicy.Effective(await assignments.ListPermissionsAsync(actorId, cancellationToken) ?? []);
     }
 
     /// <summary>
@@ -45,7 +45,7 @@ internal sealed class PlatformDelegationGuard(ICurrentUser currentUser, IUserRep
     internal async Task<Result> CheckActOnAsync(Guid accountId, CancellationToken cancellationToken)
     {
         if (accountId == currentUser.UserId) return Result.Success();
-        var target = await assignments.FindPermissionsAsync(accountId, cancellationToken);
+        var target = await assignments.ListPermissionsAsync(accountId, cancellationToken);
         if (target is not { Count: > 0 }) return Result.Success();
         return PlatformDelegationPolicy.CanActOn(self: false, await ReadHeldAsync(cancellationToken), target)
             ? Result.Success()

@@ -22,14 +22,14 @@ internal sealed class OrganizationHomeAreasBuilder(IOrganizationUserReader users
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         return new HomeOrganizationSummary(
             context.Can(Permissions.Users.Read)
-                ? new HomeCount((await users.GetFilterCountsAsync(new ListOrganizationUsersRequest(), nowUtc,
+                ? new HomeCount((await users.CountFiltersAsync(new ListOrganizationUsersRequest(), nowUtc,
                     cancellationToken)).All)
                 : null,
             context.Can(Permissions.Roles.Read)
                 ? new HomeCount((await roles.ListAsync(new ListRolesRequest(), cancellationToken)).TotalCount)
                 : null,
             context.Can(Permissions.Companies.Read)
-                ? new HomeCount((await companies.GetFilterCountsAsync(new ListCompaniesRequest(), cancellationToken)).All)
+                ? new HomeCount((await companies.CountFiltersAsync(new ListCompaniesRequest(), cancellationToken)).All)
                 : null,
             context.Can(Permissions.PublicPage.Manage) ? await PublicPageAsync(cancellationToken) : null,
             context.Can(Permissions.Settings.Read) ? await SettingsAsync(cancellationToken) : null,

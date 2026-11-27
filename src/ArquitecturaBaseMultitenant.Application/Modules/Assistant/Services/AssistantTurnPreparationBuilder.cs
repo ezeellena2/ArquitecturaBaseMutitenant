@@ -36,7 +36,7 @@ internal sealed class AssistantTurnPreparationBuilder(IExecutionActorFactory act
         {
             var allowed = await policy.AuthorizeAsync(ct);
             if (allowed.IsFailure) return allowed.Error;
-            history = await turns.FindHistoryPrivacyAsync(actor.Value.OwnerUserId, actor.Value.Access, id, ct);
+            history = await turns.ListHistoryPrivacyAsync(actor.Value.OwnerUserId, actor.Value.Access, id, ct);
             // 0064 §6: lo que esta versión no sabe leer no recibe un turno, como su GET, antes de reservar el cupo.
             if (!IsReadable(history)) return AssistantErrors.ConversationUnavailable;
             if (!HasKnownProvenance(history)) return AssistantErrors.ConversationNotFound;

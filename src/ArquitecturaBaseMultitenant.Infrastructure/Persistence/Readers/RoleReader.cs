@@ -28,7 +28,7 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
 
     private static readonly SortDescriptor DefaultSort = new("name", Descending: false);
 
-    public async Task<RoleFilterCountsResponse> GetFilterCountsAsync(string? search, CancellationToken cancellationToken)
+    public async Task<RoleFilterCountsResponse> CountFiltersAsync(string? search, CancellationToken cancellationToken)
     {
         var tenantId = tenantContext.RequiredTenantId;
         var all = ApplyRoleFilters(tenantId, new ListRolesRequest());

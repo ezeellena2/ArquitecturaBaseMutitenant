@@ -33,7 +33,7 @@ internal sealed class AssistantTurnRequester(IAssistantTurnRepository turns, IAs
         if (await turns.FindActiveAsync(actor.OwnerUserId, actor.Access, conversationId, ct) is not null) return AssistantErrors.TurnInProgress;
         var attachmentIds = input.AttachmentIds ?? [];
         if (!await turns.ValidateAttachmentsAsync(actor.OwnerUserId, actor.Access, conversationId, attachmentIds, ct)) return AssistantErrors.AttachmentNotFound;
-        var history = await turns.FindHistoryPrivacyAsync(actor.OwnerUserId, actor.Access, conversationId, ct);
+        var history = await turns.ListHistoryPrivacyAsync(actor.OwnerUserId, actor.Access, conversationId, ct);
         if (!AssistantTurnPreparationBuilder.IsReadable(history)) return AssistantErrors.ConversationUnavailable;
         if (!AssistantTurnPreparationBuilder.HasKnownProvenance(history)) return AssistantErrors.ConversationNotFound;
         var subjects = history.SelectMany(message => message.SubjectUserIds).Distinct().Order().ToArray();

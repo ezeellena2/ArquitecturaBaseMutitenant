@@ -20,7 +20,7 @@ internal sealed class AssistantConnectionPolicy(IAssistantSettingsReader setting
     internal async Task<bool> IsKeyUnreadableAsync(AssistantMode funding, CancellationToken ct)
     {
         if (unreadable.TryGetValue(funding, out var known)) return known;
-        var material = funding == AssistantMode.OwnKey ? await settings.GetOrganizationKeyAsync(ct) : await settings.GetPlatformKeyAsync(ct);
+        var material = funding == AssistantMode.OwnKey ? await settings.FindOrganizationKeyAsync(ct) : await settings.FindPlatformKeyAsync(ct);
         var result = material.Ciphertext is { } cipher && !(funding == AssistantMode.OwnKey
             ? protector.CanUnprotectOrganization(cipher) : protector.CanUnprotectPlatform(cipher));
         unreadable[funding] = result;

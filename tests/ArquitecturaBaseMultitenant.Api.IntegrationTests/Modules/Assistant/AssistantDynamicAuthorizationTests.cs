@@ -262,7 +262,7 @@ public sealed partial class AssistantDynamicAuthorizationTests(ApiFactory factor
             if (request.State == state) await pause.AfterReadAsync(ct);
             return rows;
         }
-        public Task<OrganizationUserFilterCountsResponse> GetFilterCountsAsync(ListOrganizationUsersRequest request, DateTime nowUtc, CancellationToken ct) => inner.GetFilterCountsAsync(request, nowUtc, ct);
+        public Task<OrganizationUserFilterCountsResponse> CountFiltersAsync(ListOrganizationUsersRequest request, DateTime nowUtc, CancellationToken ct) => inner.CountFiltersAsync(request, nowUtc, ct);
         public Task<OrganizationUserRow?> FindByIdAsync(Guid id, DateTime nowUtc, CancellationToken ct) => inner.FindByIdAsync(id, nowUtc, ct);
     }
     private sealed class NoChat : IChatClientFactory

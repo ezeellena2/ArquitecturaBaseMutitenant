@@ -26,8 +26,8 @@ internal sealed class NoWholeRoleListReader(IRoleReader inner) : IRoleReader
     public Task<IReadOnlyList<RoleRow>> ListAllAsync(CancellationToken cancellationToken) =>
         throw new InvalidOperationException("An action source read every role of the organization.");
 
-    public Task<RoleFilterCountsResponse> GetFilterCountsAsync(string? search, CancellationToken cancellationToken) =>
-        inner.GetFilterCountsAsync(search, cancellationToken);
+    public Task<RoleFilterCountsResponse> CountFiltersAsync(string? search, CancellationToken cancellationToken) =>
+        inner.CountFiltersAsync(search, cancellationToken);
 
     public Task<PagedResult<RoleRow>> ListAsync(ListRolesRequest request, CancellationToken cancellationToken) =>
         inner.ListAsync(request, cancellationToken);

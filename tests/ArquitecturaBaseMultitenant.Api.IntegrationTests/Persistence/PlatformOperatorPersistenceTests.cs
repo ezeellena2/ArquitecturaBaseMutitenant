@@ -57,8 +57,8 @@ public sealed class PlatformOperatorPersistenceTests(ApiFactory factory)
         await migrator.MigrateAsync(OperatorPermissions, Ct);
 
         var reader = isolated.Services.GetRequiredService<IPlatformPermissionAssignmentReader>();
-        Assert.Equal(HistoricalOwnerPermissions, await reader.FindPermissionsAsync(ownerId, Ct));
-        Assert.Equal(HistoricalSupportPermissions, await reader.FindPermissionsAsync(supportId, Ct));
+        Assert.Equal(HistoricalOwnerPermissions, await reader.ListPermissionsAsync(ownerId, Ct));
+        Assert.Equal(HistoricalSupportPermissions, await reader.ListPermissionsAsync(supportId, Ct));
         Assert.False(await context.Tenants.AnyAsync(Ct));
     }
 
@@ -79,8 +79,8 @@ public sealed class PlatformOperatorPersistenceTests(ApiFactory factory)
             return Result.Success(user.Id);
         }, CommitPolicy.OnSuccess, Ct);
 
-        Assert.Equal(PlatformOperators.Reduced, await reader.FindPermissionsAsync(account.Value, Ct));
-        Assert.Null(await reader.FindPermissionsAsync(Guid.CreateVersion7(), Ct));
+        Assert.Equal(PlatformOperators.Reduced, await reader.ListPermissionsAsync(account.Value, Ct));
+        Assert.Null(await reader.ListPermissionsAsync(Guid.CreateVersion7(), Ct));
         var context = services.GetRequiredService<ApplicationDbContext>();
         var originalVersion = await context.PlatformPermissionAssignments.AsNoTracking()
             .Where(assignment => assignment.UserId == account.Value).Select(assignment => assignment.Version).SingleAsync(Ct);
@@ -92,7 +92,7 @@ public sealed class PlatformOperatorPersistenceTests(ApiFactory factory)
             return assignment.ChangePermissions(PlatformPermissions.All);
         }, CommitPolicy.OnSuccess, Ct);
 
-        Assert.Equal(PlatformPermissions.All, await reader.FindPermissionsAsync(account.Value, Ct));
+        Assert.Equal(PlatformPermissions.All, await reader.ListPermissionsAsync(account.Value, Ct));
         var newVersion = await context.PlatformPermissionAssignments.AsNoTracking()
             .Where(assignment => assignment.UserId == account.Value).Select(assignment => assignment.Version).SingleAsync(Ct);
         Assert.NotEqual(originalVersion, newVersion);

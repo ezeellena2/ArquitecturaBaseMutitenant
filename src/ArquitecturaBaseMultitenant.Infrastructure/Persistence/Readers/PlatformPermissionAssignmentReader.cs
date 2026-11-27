@@ -6,7 +6,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers;
 /// <summary>Proyección de la asignación global vigente; no cachea permisos revocables.</summary>
 internal sealed class PlatformPermissionAssignmentReader(ApplicationDbContext context) : IPlatformPermissionAssignmentReader
 {
-    public async Task<IReadOnlyList<string>?> FindPermissionsAsync(Guid userId, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<string>?> ListPermissionsAsync(Guid userId, CancellationToken cancellationToken)
     {
         var assignment = await context.PlatformPermissionAssignments.AsNoTracking()
             .SingleOrDefaultAsync(row => row.UserId == userId, cancellationToken);

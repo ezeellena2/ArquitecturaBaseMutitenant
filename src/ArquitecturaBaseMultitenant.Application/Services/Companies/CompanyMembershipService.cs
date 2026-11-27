@@ -62,7 +62,7 @@ internal sealed class CompanyMembershipService(
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             if (await companies.FindByIdAsync(companyId, cancellationToken) is null) return CompanyErrors.NotFound;
-            return Result.Success(await reader.GetFilterCountsAsync(companyId, request, cancellationToken));
+            return Result.Success(await reader.CountFiltersAsync(companyId, request, cancellationToken));
         });
     }
 

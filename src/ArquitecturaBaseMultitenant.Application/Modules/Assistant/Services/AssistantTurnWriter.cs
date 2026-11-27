@@ -30,7 +30,7 @@ internal sealed class AssistantTurnWriter(IAssistantTurnRepository turns, IAssis
         IReadOnlyList<AssistantMessageResponse> messages = [];
         if (!recover)
         {
-            var metadata = (await turns.FindHistoryPrivacyAsync(Owner, Access, turn.ConversationId, ct))
+            var metadata = (await turns.ListHistoryPrivacyAsync(Owner, Access, turn.ConversationId, ct))
                 .Where(message => turn.ContextMessageIds.Contains(message.Id)).ToArray();
             if (metadata.Length != turn.ContextMessageIds.Length || !AssistantTurnPreparationBuilder.HasKnownProvenance(metadata))
                 return AssistantErrors.ConversationNotFound;

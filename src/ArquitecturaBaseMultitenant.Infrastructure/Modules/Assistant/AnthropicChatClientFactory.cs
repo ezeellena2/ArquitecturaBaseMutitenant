@@ -34,7 +34,7 @@ internal sealed class AnthropicChatClientFactory(IAssistantConfigurationPolicy p
         try
         {
             var material = configuration.Mode == AssistantMode.OwnKey
-                ? await settings.GetOrganizationKeyAsync(cancellationToken) : await settings.GetPlatformKeyAsync(cancellationToken);
+                ? await settings.FindOrganizationKeyAsync(cancellationToken) : await settings.FindPlatformKeyAsync(cancellationToken);
             var key = material.Ciphertext is not null
                 ? configuration.Mode == AssistantMode.OwnKey ? protector.UnprotectOrganization(material.Ciphertext) : protector.UnprotectPlatform(material.Ciphertext)
                 : configuration.Mode == AssistantMode.PlatformKey && !material.HasOverride ? options.Value.Platform.ApiKey : null;

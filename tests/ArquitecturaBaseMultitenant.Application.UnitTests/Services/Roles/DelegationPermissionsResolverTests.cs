@@ -141,7 +141,7 @@ public sealed class DelegationPermissionsResolverTests
                 .Where(role => roleIds.Contains(role.Key))
                 .ToDictionary(role => role.Key, role => role.Value));
 
-        public Task<RoleFilterCountsResponse> GetFilterCountsAsync(string? search, CancellationToken cancellationToken) =>
+        public Task<RoleFilterCountsResponse> CountFiltersAsync(string? search, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
         public Task<IReadOnlyList<RoleRow>> ListAllAsync(CancellationToken cancellationToken) =>
             throw new NotSupportedException();

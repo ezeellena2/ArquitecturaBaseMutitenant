@@ -257,8 +257,8 @@ public sealed class AssistantSettingsTests
         public Task<PlatformAssistantSettingsResponse> FindPlatformAsync(CancellationToken ct) => Task.FromResult(Platform);
         public Task<AssistantOrganizationSettingsRow?> FindOrganizationAsync(CancellationToken ct) => Task.FromResult(Organization);
         public Task<AssistantPolicyResponse> FindPolicyAsync(Guid tenantId, CancellationToken ct) => Task.FromResult(new AssistantPolicyResponse(AllowOwn, 1));
-        public Task<AssistantKeyMaterial> GetPlatformKeyAsync(CancellationToken ct) => Task.FromResult(new AssistantKeyMaterial([(byte)AssistantMode.PlatformKey], "0000", true));
-        public Task<AssistantKeyMaterial> GetOrganizationKeyAsync(CancellationToken ct) => Task.FromResult(new AssistantKeyMaterial([(byte)AssistantMode.OwnKey], "1234", true));
+        public Task<AssistantKeyMaterial> FindPlatformKeyAsync(CancellationToken ct) => Task.FromResult(new AssistantKeyMaterial([(byte)AssistantMode.PlatformKey], "0000", true));
+        public Task<AssistantKeyMaterial> FindOrganizationKeyAsync(CancellationToken ct) => Task.FromResult(new AssistantKeyMaterial([(byte)AssistantMode.OwnKey], "1234", true));
         public Task<string?> FindProviderAsync(Guid modelId, CancellationToken ct) =>
             Task.FromResult(Providers.TryGetValue(modelId, out var provider) ? provider : modelId == Model.Id ? nameof(AssistantProvider.Anthropic) : null);
         public byte[] ProtectPlatform(string key) => throw new NotSupportedException();

@@ -80,7 +80,7 @@ public sealed class MemberHomeCompaniesTests(ApiFactory factory)
         Assert.DoesNotContain(cards, card => card.CompanyId == d.Id);
         var memberships = services.GetRequiredService<ICompanyMembershipReader>();
         foreach (var card in cards.Where(card => card.MemberCount is not null))
-            Assert.Equal((await memberships.GetFilterCountsAsync(card.CompanyId, new ListCompanyMembersRequest(), Ct)).Active,
+            Assert.Equal((await memberships.CountFiltersAsync(card.CompanyId, new ListCompanyMembersRequest(), Ct)).Active,
                 card.MemberCount);
 
         // A y B dejan ver los miembros; C tiene otro permiso en la empresa.

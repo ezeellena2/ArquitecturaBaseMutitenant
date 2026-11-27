@@ -101,7 +101,7 @@ internal sealed class WhatsAppContactService(IWhatsAppContactReader reader, IWha
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var plan = await imports.ResolveAsync(request, cancellationToken);
             if (plan.IsFailure) return plan.Error;
-            var existing = await reader.FindExistingAsync([.. plan.Value.Valid.Select(row => row.WaId.Value)], cancellationToken);
+            var existing = await reader.ListExistingAsync([.. plan.Value.Valid.Select(row => row.WaId.Value)], cancellationToken);
             return new WhatsAppImportPreviewResponse(plan.Value.Rows, plan.Value.Valid.Count - existing.Count, existing.Count,
                 Rejected(plan.Value.Rejected));
         });

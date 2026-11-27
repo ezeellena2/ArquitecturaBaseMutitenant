@@ -128,9 +128,9 @@ public sealed class HomeSummaryServiceTests
             Task.FromResult<IReadOnlyList<UserCompanyRow>>([]);
         public Task<PagedResult<CompanyMemberRow>> ListAsync(Guid companyId, ListCompanyMembersRequest request,
             CancellationToken ct) => throw new NotSupportedException();
-        public Task<CompanyMemberFilterCountsResponse> GetFilterCountsAsync(Guid companyId, ListCompanyMembersRequest request,
+        public Task<CompanyMemberFilterCountsResponse> CountFiltersAsync(Guid companyId, ListCompanyMembersRequest request,
             CancellationToken ct) => throw new NotSupportedException();
-        public Task<IReadOnlyDictionary<Guid, int>> CountActiveMembersAsync(IReadOnlyCollection<Guid> companyIds,
+        public Task<IReadOnlyDictionary<Guid, int>> ListActiveMemberCountsAsync(IReadOnlyCollection<Guid> companyIds,
             CancellationToken ct) => throw new NotSupportedException();
         public Task<PagedResult<CompanyCandidateRow>> ListCandidatesAsync(Guid companyId, ListCompanyCandidatesRequest request,
             CancellationToken ct) => throw new NotSupportedException();
@@ -152,7 +152,7 @@ public sealed class HomeSummaryServiceTests
             Request = request;
             return Task.FromResult(new PagedResult<OrganizationUserRow>([row], 1, request.Page, request.PageSize));
         }
-        public Task<OrganizationUserFilterCountsResponse> GetFilterCountsAsync(ListOrganizationUsersRequest request,
+        public Task<OrganizationUserFilterCountsResponse> CountFiltersAsync(ListOrganizationUsersRequest request,
             DateTime nowUtc, CancellationToken ct) => throw new InvalidOperationException("Unexpected counts read");
         public Task<OrganizationUserRow?> FindByIdAsync(Guid memberId, DateTime nowUtc, CancellationToken ct) =>
             throw new InvalidOperationException("Unexpected per-item read");
@@ -162,7 +162,7 @@ public sealed class HomeSummaryServiceTests
     {
         public Task<PagedResult<OrganizationUserRow>> ListAsync(ListOrganizationUsersRequest request, DateTime nowUtc,
             CancellationToken ct) => throw new InvalidOperationException("Unexpected list read");
-        public Task<OrganizationUserFilterCountsResponse> GetFilterCountsAsync(ListOrganizationUsersRequest request,
+        public Task<OrganizationUserFilterCountsResponse> CountFiltersAsync(ListOrganizationUsersRequest request,
             DateTime nowUtc, CancellationToken ct) => Task.FromResult(new OrganizationUserFilterCountsResponse(1, 1, 0, 0, 0, 0));
         public Task<OrganizationUserRow?> FindByIdAsync(Guid memberId, DateTime nowUtc, CancellationToken ct) =>
             throw new InvalidOperationException("Unexpected per-item read");

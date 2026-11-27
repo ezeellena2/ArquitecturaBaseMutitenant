@@ -31,7 +31,7 @@ internal sealed class PlatformWhatsAppOperatorResolver(IPlatformAccountReader ac
     internal async Task<bool> AreOperatorsAsync(IEnumerable<Guid> accountIds, CancellationToken ct)
     {
         foreach (var accountId in accountIds.Distinct())
-            if (await assignments.FindPermissionsAsync(accountId, ct) is null) return false;
+            if (await assignments.ListPermissionsAsync(accountId, ct) is null) return false;
         return true;
     }
 }

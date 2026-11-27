@@ -43,11 +43,11 @@ internal sealed class AssistantSettingsReader(ApplicationDbContext context, ITen
         await context.Set<AssistantOrganizationPolicy>().AsNoTracking().Where(value => value.OrganizationId == tenantId)
             .Select(value => new AssistantPolicyResponse(value.AllowOwnKey, value.Version)).SingleOrDefaultAsync(ct) ?? new(false, 0);
 
-    public async Task<AssistantKeyMaterial> GetPlatformKeyAsync(CancellationToken ct) =>
+    public async Task<AssistantKeyMaterial> FindPlatformKeyAsync(CancellationToken ct) =>
         await context.Set<AssistantPlatformSettings>().AsNoTracking().Where(value => value.Id == AssistantPlatformSettings.SingletonId)
             .Select(value => new AssistantKeyMaterial(value.EncryptedApiKey, value.MaskedKeySuffix, value.HasKeyOverride)).SingleOrDefaultAsync(ct) ?? new(null, null, false);
 
-    public async Task<AssistantKeyMaterial> GetOrganizationKeyAsync(CancellationToken ct)
+    public async Task<AssistantKeyMaterial> FindOrganizationKeyAsync(CancellationToken ct)
     {
         var tenantId = tenant.RequiredTenantId;
         return await context.Set<AssistantOrganizationSettings>().AsNoTracking().Where(value => value.TenantId == tenantId)

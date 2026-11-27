@@ -21,7 +21,7 @@ public interface IWhatsAppConversationReader
     /// <summary>Un mensaje de esa conversación, con su estado como lo lee la bandeja; null si es de otra.</summary>
     Task<WhatsAppChatMessageResponse?> FindMessageAsync(WhatsAppInbox? inbox, Guid chatId, Guid messageId, CancellationToken ct);
     /// <summary>Cuántas conversaciones de la bandeja tiene tomadas cada cuenta.</summary>
-    Task<IReadOnlyDictionary<Guid, int>> CountTakenAsync(WhatsAppInbox? inbox, IReadOnlyCollection<Guid> userIds, CancellationToken ct);
+    Task<IReadOnlyDictionary<Guid, int>> ListTakenCountsAsync(WhatsAppInbox? inbox, IReadOnlyCollection<Guid> userIds, CancellationToken ct);
     /// <summary>Por equipo, las conversaciones que esperan que alguien las tome y desde cuándo espera la más vieja.</summary>
     Task<IReadOnlyList<WhatsAppWaitingRow>> ListWaitingAsync(bool platform, CancellationToken ct);
 }

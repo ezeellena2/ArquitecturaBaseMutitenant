@@ -115,7 +115,7 @@ public sealed class AssistantInvitationHydrationTests(ApiFactory factory)
                     index == 0 && missingId ? null : id, nowUtc,
                     index == 0 && missingExpiry ? null : ExpiresAtUtc, [], [], 1, nowUtc, null))], request.Page, request.PageSize, 21));
         }
-        public Task<OrganizationUserFilterCountsResponse> GetFilterCountsAsync(ListOrganizationUsersRequest request, DateTime nowUtc, CancellationToken ct) => throw new InvalidOperationException("Only the typed page is requested.");
+        public Task<OrganizationUserFilterCountsResponse> CountFiltersAsync(ListOrganizationUsersRequest request, DateTime nowUtc, CancellationToken ct) => throw new InvalidOperationException("Only the typed page is requested.");
         public Task<OrganizationUserRow?> FindByIdAsync(Guid memberId, DateTime nowUtc, CancellationToken ct) => throw new InvalidOperationException("No invitation reread or automatic retry.");
     }
     private sealed class NoChat : IChatClientFactory

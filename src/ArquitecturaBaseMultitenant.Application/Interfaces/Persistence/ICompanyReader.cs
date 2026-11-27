@@ -8,7 +8,7 @@ public interface ICompanyReader
 {
     Task<PagedResult<CompanyRow>> ListAsync(ListCompaniesRequest request, CancellationToken cancellationToken);
     Task<CompanyRow?> FindByIdAsync(Guid companyId, CancellationToken cancellationToken);
-    Task<CompanyFilterCountsResponse> GetFilterCountsAsync(ListCompaniesRequest request,
+    Task<CompanyFilterCountsResponse> CountFiltersAsync(ListCompaniesRequest request,
         CancellationToken cancellationToken);
     Task<bool> ExistsTaxIdAsync(string country, string type, string number, Guid? excludedCompanyId,
         CancellationToken cancellationToken);

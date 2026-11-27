@@ -54,7 +54,7 @@ internal sealed class CompanyReader(ApplicationDbContext context, ITenantContext
             && company.Id == companyId)).SingleOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<CompanyFilterCountsResponse> GetFilterCountsAsync(ListCompaniesRequest request,
+    public async Task<CompanyFilterCountsResponse> CountFiltersAsync(ListCompaniesRequest request,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);

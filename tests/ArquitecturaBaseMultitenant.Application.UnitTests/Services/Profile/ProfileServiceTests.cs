@@ -667,7 +667,7 @@ public sealed class ProfileServiceTests
     private sealed class StubPlatformAssignments(string[]? permissions) : IPlatformPermissionAssignmentReader
     {
         public string[]? Permissions { get; set; } = permissions;
-        public Task<IReadOnlyList<string>?> FindPermissionsAsync(Guid userId, CancellationToken ct) =>
+        public Task<IReadOnlyList<string>?> ListPermissionsAsync(Guid userId, CancellationToken ct) =>
             Task.FromResult<IReadOnlyList<string>?>(Permissions);
     }
 

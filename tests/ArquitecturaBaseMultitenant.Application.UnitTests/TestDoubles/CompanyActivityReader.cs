@@ -22,7 +22,7 @@ internal sealed class CompanyActivityReader(params Guid[] active) : ICompanyRead
         throw new NotSupportedException();
     public Task<CompanyRow?> FindByIdAsync(Guid companyId, CancellationToken cancellationToken) =>
         throw new NotSupportedException();
-    public Task<CompanyFilterCountsResponse> GetFilterCountsAsync(ListCompaniesRequest request,
+    public Task<CompanyFilterCountsResponse> CountFiltersAsync(ListCompaniesRequest request,
         CancellationToken cancellationToken) => throw new NotSupportedException();
     public Task<bool> ExistsTaxIdAsync(string country, string type, string number, Guid? excludedCompanyId,
         CancellationToken cancellationToken) => throw new NotSupportedException();

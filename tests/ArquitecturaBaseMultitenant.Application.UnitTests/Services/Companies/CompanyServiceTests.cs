@@ -273,7 +273,7 @@ public sealed class CompanyServiceTests
         }
         public Task<CompanyRow?> FindByIdAsync(Guid companyId, CancellationToken cancellationToken) =>
             Task.FromResult(Row);
-        public Task<CompanyFilterCountsResponse> GetFilterCountsAsync(ListCompaniesRequest request,
+        public Task<CompanyFilterCountsResponse> CountFiltersAsync(ListCompaniesRequest request,
             CancellationToken cancellationToken)
         {
             CountRequest = request;

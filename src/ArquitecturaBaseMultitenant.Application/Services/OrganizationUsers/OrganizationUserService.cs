@@ -52,7 +52,7 @@ internal sealed class OrganizationUserService(
         return OperationLog.RunAsync(logger, timeProvider, "GetOrganizationUserFilterCounts", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            return Result.Success(await reader.GetFilterCountsAsync(request,
+            return Result.Success(await reader.CountFiltersAsync(request,
                 timeProvider.GetUtcNow().UtcDateTime, cancellationToken));
         });
     }

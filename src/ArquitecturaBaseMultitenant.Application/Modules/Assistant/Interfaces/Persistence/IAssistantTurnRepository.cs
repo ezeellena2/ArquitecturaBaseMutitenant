@@ -11,7 +11,7 @@ public interface IAssistantTurnRepository
     Task<IAssistantTurn?> GetAsync(Guid owner, Access access, Guid turnId, bool forUpdate, CancellationToken ct);
     Task<Guid?> FindActiveAsync(Guid owner, Access access, Guid conversationId, CancellationToken ct);
     Task<IAssistantConversation?> GetConversationAsync(Guid owner, Access access, Guid id, uint? version, CancellationToken ct);
-    Task<IReadOnlyList<AssistantHistoryMessageRow>> FindHistoryPrivacyAsync(Guid owner, Access access, Guid conversationId, CancellationToken ct);
+    Task<IReadOnlyList<AssistantHistoryMessageRow>> ListHistoryPrivacyAsync(Guid owner, Access access, Guid conversationId, CancellationToken ct);
     Task<IReadOnlyList<AssistantMessageResponse>> ListMessagesAsync(Guid owner, Access access, Guid conversationId, CancellationToken ct, IReadOnlyList<Guid>? messageIds = null);
     Task<bool> ValidateAttachmentsAsync(Guid owner, Access access, Guid conversationId, IReadOnlyList<Guid> ids, CancellationToken ct);
     Task BindAttachmentsAsync(Guid owner, Access access, Guid conversationId, Guid messageId, IReadOnlyList<Guid> ids, CancellationToken ct);

@@ -7,6 +7,6 @@ public interface IAssistantSettingsReader
     Task<PlatformAssistantSettingsResponse> FindPlatformAsync(CancellationToken ct);
     Task<AssistantOrganizationSettingsRow?> FindOrganizationAsync(CancellationToken ct);
     Task<AssistantPolicyResponse> FindPolicyAsync(Guid tenantId, CancellationToken ct);
-    Task<AssistantKeyMaterial> GetPlatformKeyAsync(CancellationToken ct);
-    Task<AssistantKeyMaterial> GetOrganizationKeyAsync(CancellationToken ct);
+    Task<AssistantKeyMaterial> FindPlatformKeyAsync(CancellationToken ct);
+    Task<AssistantKeyMaterial> FindOrganizationKeyAsync(CancellationToken ct);
 }

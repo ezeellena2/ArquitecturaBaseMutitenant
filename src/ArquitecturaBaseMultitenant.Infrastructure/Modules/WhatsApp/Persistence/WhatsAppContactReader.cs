@@ -93,7 +93,7 @@ internal sealed class WhatsAppContactReader(ApplicationDbContext context, ITenan
         ids.Count == 0 ? new Dictionary<Guid, WhatsAppConsent>()
             : await Customers().Where(customer => ids.Contains(customer.Id)).ToDictionaryAsync(customer => customer.Id, customer => customer.Consent, ct);
 
-    public async Task<IReadOnlySet<string>> FindExistingAsync(IReadOnlyCollection<string> waIds, CancellationToken ct)
+    public async Task<IReadOnlySet<string>> ListExistingAsync(IReadOnlyCollection<string> waIds, CancellationToken ct)
     {
         if (waIds.Count == 0) return new HashSet<string>(StringComparer.Ordinal);
         return (await Customers().Where(customer => waIds.Contains(customer.WaId)).Select(customer => customer.WaId).ToArrayAsync(ct))

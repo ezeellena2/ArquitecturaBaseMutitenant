@@ -56,7 +56,7 @@ internal sealed class WhatsAppConversationResponseBuilder(IWhatsAppConversationR
     internal async Task<PagedResult<WhatsAppTransferPersonResponse>> PeopleAsync(WhatsAppInbox? inbox,
         IReadOnlyDictionary<Guid, WhatsAppTeamResponseBuilder.TeamPerson> people, PagedRequest request, CancellationToken ct)
     {
-        var taken = await reader.CountTakenAsync(inbox, [.. people.Values.Select(person => person.UserId).Distinct()], ct);
+        var taken = await reader.ListTakenCountsAsync(inbox, [.. people.Values.Select(person => person.UserId).Distinct()], ct);
         var search = request.Search?.Trim();
         var matches = people.Where(pair => string.IsNullOrEmpty(search) || CultureInfo.InvariantCulture.CompareInfo.IndexOf(pair.Value.Name, search,
                 CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace) >= 0)

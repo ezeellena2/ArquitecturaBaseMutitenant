@@ -30,7 +30,7 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
         OperationLog.RunAsync(logger, timeProvider, "GetRoleFilterCounts", async () =>
         {
             if (await validator.ValidateAsync(new ListRolesRequest { Search = search }, cancellationToken) is { } invalid) return invalid;
-            return Result.Success(await roles.GetFilterCountsAsync(search, cancellationToken));
+            return Result.Success(await roles.CountFiltersAsync(search, cancellationToken));
         });
 
     public Task<Result<PagedResult<RoleResponse>>> ListAsync(ListRolesRequest request,

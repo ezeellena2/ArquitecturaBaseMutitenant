@@ -22,7 +22,7 @@ public interface IWhatsAppContactReader
     /// <summary>Las etiquetas en uso, en orden alfabético.</summary>
     Task<PagedResult<string>> ListTagsAsync(PagedRequest request, CancellationToken ct);
     /// <summary>Cuáles de esos números ya son contactos.</summary>
-    Task<IReadOnlySet<string>> FindExistingAsync(IReadOnlyCollection<string> waIds, CancellationToken ct);
+    Task<IReadOnlySet<string>> ListExistingAsync(IReadOnlyCollection<string> waIds, CancellationToken ct);
     /// <summary>
     /// Los contactos con nombre para una lista de otra área (C12 de la E12), sin teléfono: por nombre, hasta el tope, con un
     /// timeout corto; cuenta el total solo si lo pasan.

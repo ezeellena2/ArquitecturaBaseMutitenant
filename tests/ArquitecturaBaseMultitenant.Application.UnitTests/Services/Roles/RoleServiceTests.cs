@@ -130,7 +130,7 @@ public sealed class RoleServiceTests
 
     internal sealed class FakeRoleReader : IRoleReader
     {
-        public Task<RoleFilterCountsResponse> GetFilterCountsAsync(string? search, CancellationToken cancellationToken) =>
+        public Task<RoleFilterCountsResponse> CountFiltersAsync(string? search, CancellationToken cancellationToken) =>
             Task.FromResult(new RoleFilterCountsResponse(new(0, 0, 0), new(0, 0, 0), 0, new Dictionary<Guid, int>()));
 
         public PagedResult<RoleRow> Page { get; init; } = new([], 1, 10, 0);

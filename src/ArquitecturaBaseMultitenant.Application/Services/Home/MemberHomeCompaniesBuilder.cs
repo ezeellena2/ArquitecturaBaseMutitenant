@@ -21,7 +21,7 @@ internal sealed class MemberHomeCompaniesBuilder(ICompanyMembershipReader member
             .ToArray();
         Guid[] counted = [.. companies.Select(company => company.CompanyId)
             .Where(id => permissionsByCompany[id].Contains(Permissions.Company.Members.Read, StringComparer.Ordinal))];
-        var members = counted.Length == 0 ? null : await memberships.CountActiveMembersAsync(counted, cancellationToken);
+        var members = counted.Length == 0 ? null : await memberships.ListActiveMemberCountsAsync(counted, cancellationToken);
         return [.. companies.Select(company => new HomeCompanyCard(company.CompanyId, company.CompanyName,
             [.. company.Roles.Select(role => RoleTexts.Name(role.Name))],
             members is not null && counted.Contains(company.CompanyId) ? members.GetValueOrDefault(company.CompanyId) : null))];

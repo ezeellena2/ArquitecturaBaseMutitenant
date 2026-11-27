@@ -16,7 +16,7 @@ public interface IOrganizationUserReader
             PageSize = PendingGroup.PreviewLimit,
             PendingPreview = true,
         }, nowUtc, cancellationToken);
-    Task<OrganizationUserFilterCountsResponse> GetFilterCountsAsync(ListOrganizationUsersRequest request,
+    Task<OrganizationUserFilterCountsResponse> CountFiltersAsync(ListOrganizationUsersRequest request,
         DateTime nowUtc, CancellationToken cancellationToken);
     Task<OrganizationUserRow?> FindByIdAsync(Guid memberId, DateTime nowUtc,
         CancellationToken cancellationToken);

@@ -125,7 +125,7 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
         return new PagedResult<CompanyMemberRow>(mapped, page.Page, page.PageSize, page.TotalCount);
     }
 
-    public async Task<CompanyMemberFilterCountsResponse> GetFilterCountsAsync(Guid companyId,
+    public async Task<CompanyMemberFilterCountsResponse> CountFiltersAsync(Guid companyId,
         ListCompanyMembersRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -139,7 +139,7 @@ internal sealed class CompanyMembershipReader(ApplicationDbContext context, ITen
             Count(CompanyMemberState.Invited));
     }
 
-    public async Task<IReadOnlyDictionary<Guid, int>> CountActiveMembersAsync(IReadOnlyCollection<Guid> companyIds,
+    public async Task<IReadOnlyDictionary<Guid, int>> ListActiveMemberCountsAsync(IReadOnlyCollection<Guid> companyIds,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(companyIds);
