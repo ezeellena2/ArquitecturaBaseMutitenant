@@ -7,10 +7,12 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Forms.Services;
 
 /// <summary>
 /// Cambia las opciones de un catálogo a mano dentro de la transacción del servicio y bajo el bloqueo del catálogo (C3 y C4). Toca
-/// solo lo que viene en el pedido: las que se borran, las cambiadas y las nuevas; el orden, el tope y el código único los protege
-/// <see cref="FormCatalogPositionGuard"/>. Un error de cualquier paso revierte todo el guardado.
+/// solo lo que viene en el pedido: las que se borran, las cambiadas y las nuevas; el tope y el código único los protege
+/// <see cref="FormCatalogPositionGuard"/>, y el orden lo acomoda <see cref="FormCatalogPositionEditor"/>. Un error de cualquier paso
+/// revierte todo el guardado.
 /// </summary>
-internal sealed class FormCatalogItemEditor(IFormCatalogRepository repository, FormCatalogPositionGuard guard)
+internal sealed class FormCatalogItemEditor(IFormCatalogRepository repository, FormCatalogPositionGuard guard,
+    FormCatalogPositionEditor positions)
 {
     /// <summary>Aplica los cambios y devuelve el id del servidor de cada opción nueva, por su id local.</summary>
     public async Task<Result<IReadOnlyList<FormCatalogItemIdentity>>> ApplyAsync(FormCatalog catalog, FormCatalogItemChanges changes,
@@ -31,7 +33,7 @@ internal sealed class FormCatalogItemEditor(IFormCatalogRepository repository, F
         var newItems = created.Value.Select(entry => entry.Item).ToList();
         var capacity = await guard.CheckCapacityAsync(catalog, removed.Value.Count, newItems.Count, ct);
         if (capacity.IsFailure) return capacity.Error;
-        var arranged = await guard.ArrangeAsync(catalog, removed.Value, newItems, changes.Moves, changes.Sort, ct);
+        var arranged = await positions.ArrangeAsync(catalog, removed.Value, newItems, changes.Moves, changes.Sort, ct);
         if (arranged.IsFailure) return arranged.Error;
         var changed = edited.Value.Concat(created.Value.Select(entry => (entry.Index, entry.Item))).OrderBy(entry => entry.Index).ToList();
         var codes = await guard.CheckCodesAsync(catalog, changed, removed.Value, ct);
@@ -83,7 +85,7 @@ internal sealed class FormCatalogItemEditor(IFormCatalogRepository repository, F
         return Result.Success<IReadOnlyList<(int, FormCatalogItem)>>(edited);
     }
 
-    /// <summary>Las nuevas, todavía sin lugar: <see cref="FormCatalogPositionGuard.ArrangeAsync"/> las pone al final.</summary>
+    /// <summary>Las nuevas, todavía sin lugar: <see cref="FormCatalogPositionEditor.ArrangeAsync"/> las pone al final.</summary>
     private static Result<IReadOnlyList<(int Index, string LocalId, FormCatalogItem Item)>> Create(FormCatalog catalog,
         IReadOnlyList<FormCatalogItemInput> items)
     {
