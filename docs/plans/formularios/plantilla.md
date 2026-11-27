@@ -62,7 +62,7 @@ Lo único, junto con «Requisitos previos» y «Qué verificar», que puede nomb
 
 ## Cómo se cierra ✓
 
-La revisión de la etapa, con su lista de control ([conducir una etapa](../../guides/conducir-una-etapa.md)), más lo propio: lo que la prueba integral del cierre del bloque recorre de ella (los casos del E2E real, los pasos del recorrido y los tableros de la galería) y, si la etapa manda algo por WhatsApp, la prueba con Meta. No hay puerta por etapa.
+La revisión de la etapa, con su lista de control ([conducir una etapa](../../guides/conducir-una-etapa.md)), más lo propio: lo que recorre su verificación, el segundo hito, sobre una copia del corte (los casos del E2E real, los pasos del recorrido y los tableros de la galería; en el plan, la sección «Verificación de la etapa») y, si la etapa manda algo por WhatsApp, la prueba con Meta. No hay puerta por etapa.
 
 ## Requisitos previos
 

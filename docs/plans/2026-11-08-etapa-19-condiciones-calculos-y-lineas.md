@@ -10,7 +10,7 @@
 
 ## Forma de trabajo
 
-Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la prueba integral del bloque (abajo). Un arreglo corre solo lo que toca. La tabla de estado la actualiza el cierre del conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). El evaluador, la fórmula, la captura y el Flow arrancan con su test en rojo.
+Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la verificación de la etapa (abajo), sobre una copia de su corte, mientras se programa la siguiente. Un arreglo corre solo lo que toca. La tabla de estado la actualiza el cierre del conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). El evaluador, la fórmula, la captura y el Flow arrancan con su test en rojo.
 
 **Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): una vez, en la revisión de la etapa, un revisor por cada tema de riesgo de las tareas **(R)**.
 
@@ -157,9 +157,9 @@ Sin tareas: los hace el conductor ([conducir una etapa](../guides/conducir-una-e
 
 **Pendiente para la I1 de la E10.** Con el número de una organización de prueba: las pruebas de «Cómo se cierra» de la spec, con el bloque al final, una respuesta de unos 40 KB y, en un celular, una pregunta condicional y una pantalla de archivo salteada.
 
-## Al cierre del bloque E12–E25
+## Verificación de la etapa
 
-Lo que la prueba integral recorre de esta etapa. Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Para después de la etapa 19-condiciones-calculos-y-lineas».
+Lo que recorre la verificación de esta etapa, el segundo hito, después del código listo ([conducir una etapa](../guides/conducir-una-etapa.md)). Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Verificación de la etapa 19-condiciones-calculos-y-lineas».
 
 - **E2E real** (casos en `F/scripts/test-e2e-real-forms.mjs` [E12]), con «Pedido de materiales» y el Meta simulado: publicar; capturar con 3 ítems, con uno y «No», con mínimo 0 y «No», con el bloque al final y con «Monto» oculto; verlas en la planilla, el detalle, el Excel, con una fila por ítem, y el tablero; copiar el formulario.
 - **Recorrido:** `un-pedido-con-renglones`, sumado a `F/scripts/recorrido-usuario-forms.mjs` [E12].

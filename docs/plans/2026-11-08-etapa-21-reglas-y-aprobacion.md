@@ -10,7 +10,7 @@
 
 ## Forma de trabajo
 
-Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la prueba integral del bloque (abajo). Un arreglo corre solo lo que toca. Las migraciones de la B2, la B9, la B10 y la B17 van en ese orden y en el mismo carril, cada una sobre el `HEAD` del momento y con `ModelSnapshotTests` en verde.
+Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la verificación de la etapa (abajo), sobre una copia de su corte, mientras se programa la siguiente. Un arreglo corre solo lo que toca. Las migraciones de la B2, la B9, la B10 y la B17 van en ese orden y en el mismo carril, cada una sobre el `HEAD` del momento y con `ModelSnapshotTests` en verde.
 
 **Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): una vez, en la revisión de la etapa, un revisor por cada tema de riesgo de las tareas **(R)**.
 
@@ -156,9 +156,9 @@ Sin tareas: los hace el conductor ([conducir una etapa](../guides/conducir-una-e
 
 **Pendiente para la I1 de la E10** (123): «Cómo se cierra» con un número conectado y el almacenamiento, y crear por la API una plantilla con documento.
 
-## Al cierre del bloque E12–E25
+## Verificación de la etapa
 
-Lo que la prueba integral recorre de esta etapa. Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Para después de la etapa 21-reglas-y-aprobacion».
+Lo que recorre la verificación de esta etapa, el segundo hito, después del código listo ([conducir una etapa](../guides/conducir-una-etapa.md)). Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Verificación de la etapa 21-reglas-y-aprobacion».
 
 - **E2E real** (`F/scripts/test-e2e-real-forms.mjs` [E12]): armar las reglas, recibir, aprobar desde la lista y desde «Para resolver», rechazar, corregir en el lugar una aprobada, anular una por aprobar, el PDF, un correo con adjunto en la carpeta de correos y los pasos 10 y 11 de «Cómo se cierra».
 - **Recorrido:** `armar-las-reglas` y `aprobar-o-rechazar`, sumados a `F/scripts/recorrido-usuario-forms.mjs` [E12].

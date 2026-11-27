@@ -10,7 +10,7 @@
 
 ## Forma de trabajo
 
-Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la prueba integral del bloque (abajo). Un arreglo corre solo lo que toca. La prueba real con la IA y Meta queda para la I1 de la E10 (123). La tabla de estado la actualiza el cierre del conductor.
+Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la verificación de la etapa (abajo), sobre una copia de su corte, mientras se programa la siguiente. Un arreglo corre solo lo que toca. La prueba real con la IA y Meta queda para la I1 de la E10 (123). La tabla de estado la actualiza el cierre del conductor.
 
 **Reglas de cada chat:** todo en main, sin ramas, worktrees, stash, reset ni push; commits propios con `git commit -- <rutas>`, en español y conventional, con la línea `Tarea: 24-varios-asistentes/<id>`; con la app levantada, nadie edita el `src` del front; TDD donde hay lógica. Cada tarea corre su test dirigido y el build (en el front, `tsc -b` y el lint de lo que tocó), con `node scripts/arneses/verificar.mjs` en el back y `node scripts/verificar.mjs` en el front; los tests enteros, los de integración y los de seguridad corren una vez, en la revisión de la etapa. El contrato no cambia sin anotarlo en «Cambios al contrato»; ninguna clave real pasa por vos; al usuario, solo lo de producto, por la Guía.
 
@@ -122,9 +122,9 @@ Sin tareas: los hace el conductor ([conducir una etapa](../guides/conducir-una-e
 
 **Pendiente para la I1 de la E10** (123): la prueba real con la IA y Meta de la spec (dos equipos, el pase a Ventas y un chat sin equipo).
 
-## Al cierre del bloque E12–E25
+## Verificación de la etapa
 
-Lo que la prueba integral recorre de esta etapa. Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Para después de la etapa 24-varios-asistentes».
+Lo que recorre la verificación de esta etapa, el segundo hito, después del código listo ([conducir una etapa](../guides/conducir-una-etapa.md)). Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Verificación de la etapa 24-varios-asistentes».
 
 - **E2E real** (casos en `F/scripts/test-e2e-real-whatsapp.mjs`), con «Dos equipos con su asistente»: Lucía asigna el asistente de Ventas; Martina elige «Consultar un pedido» en el menú y contesta el asistente de ese equipo; un operador pasa el chat a Ventas y el mensaje siguiente lo contesta el de Ventas, con el historial; un chat sin equipo lo contesta el principal; dar de baja un asistente pasa sus equipos al principal.
 - **Recorrido:** `dos-equipos-con-su-asistente`, en `F/scripts/recorrido-usuario-whatsapp.mjs`.

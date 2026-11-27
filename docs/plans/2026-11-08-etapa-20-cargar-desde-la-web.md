@@ -10,7 +10,7 @@
 
 ## Forma de trabajo
 
-Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la prueba integral del bloque (abajo). Un arreglo corre solo lo que toca. La tabla de estado la actualiza el cierre del conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). Las migraciones de la B5 y la B9 van en ese orden y en el mismo carril, cada una armada sobre el `HEAD` del momento y con `ModelSnapshotTests` en verde.
+Modo rápido ([etapa en paralelo](../guides/etapa-en-paralelo.md) y [ADR 0071](../decisions/0071-conductor-en-carriles.md)): contrato primero; después los carriles del back y el front a la vez; la revisión en paralelo, con los tests enteros y los detectores; los arreglos; la última revisión de código y el cierre. No hay puerta por etapa: el E2E real, la galería y el recorrido van en la verificación de la etapa (abajo), sobre una copia de su corte, mientras se programa la siguiente. Un arreglo corre solo lo que toca. La tabla de estado la actualiza el cierre del conductor ([conducir una etapa](../guides/conducir-una-etapa.md)). Las migraciones de la B5 y la B9 van en ese orden y en el mismo carril, cada una armada sobre el `HEAD` del momento y con `ModelSnapshotTests` en verde.
 
 **Revisión adversarial** ([AGENTS.md](../../AGENTS.md)): una vez, en la revisión de la etapa, un revisor por cada tema de riesgo de las tareas **(R)**.
 
@@ -136,9 +136,9 @@ Sin tareas: los hace el conductor ([conducir una etapa](../guides/conducir-una-e
 
 **Pendiente para la I1 de la E10** (123). El resto del paso 5: conectar un número, volver a publicar y mandar el formulario por WhatsApp a un celular; y el pedido de ubicación con el número de una organización, con la ubicación, «Seguir sin ubicación» y el Flow después.
 
-## Al cierre del bloque E12–E25
+## Verificación de la etapa
 
-Lo que la prueba integral recorre de esta etapa. Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Para después de la etapa 20-cargar-desde-la-web».
+Lo que recorre la verificación de esta etapa, el segundo hito, después del código listo ([conducir una etapa](../guides/conducir-una-etapa.md)). Cuando el cierre retira el plan, esta sección pasa a `docs/backlog.md`, a «Verificación de la etapa 20-cargar-desde-la-web».
 
 - **E2E real** (`F/scripts/test-e2e-real-forms.mjs` [E12]): los pasos 1 a 4, 6 y 8 de «Cómo se cierra» de la spec, comparando con una respuesta del Meta simulado, y del paso 5, publicar y cargar sin número, también sobre uno dado de baja.
 - **Recorrido:** `cargar-una-respuesta`, sumado a `F/scripts/recorrido-usuario-forms.mjs` [E12].
