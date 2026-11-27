@@ -1,10 +1,10 @@
 export const meta = {
   name: 'etapa',
-  description: 'Programa una etapa, o varias juntas, desde su plan ejecutable, en cinco fases: 1) programar: el contrato y después los carriles del back (cada uno en su copia) y el front a la vez, cada tarea con su test dirigido, el build y su commit; 2) revisar en paralelo: un revisor por cada ficha de docs/rules/ que tocan los archivos de la etapa, los transversales de arquitectura y de lo que no está en la spec, uno adversarial por cada tema de riesgo tocado y los tests enteros con los detectores de documentación; 3) arreglar lo encontrado, sin repetidos, un agente por repo; 4) una última revisión del diff entero; 5) el cierre con el código listo: el plan retirado, su sección de verificación al backlog y el commit. La verificación (contrato, E2E, galería y recorrido) va aparte, con verificar-etapa.js. Con varias etapas, la 1 corre para cada una y de la 2 a la 5, una sola vez',
+  description: 'Programa una etapa, o varias juntas, desde su plan ejecutable, en cinco fases: 1) programar: el contrato y después los carriles del back (cada uno en su copia) y el front a la vez, cada tarea con su test dirigido, el build y su commit; 2) revisar en paralelo: un revisor de reglas por repo tocado, con las fichas de docs/rules/ que tocan sus archivos, que busca solo lo que tiene efecto; tres cazadores de bugs por tema (lo que se rompe al usarlo, entradas hostiles e ingreso, y volumen y escala); los transversales de arquitectura y de lo que no está en la spec; uno adversarial por cada tema de riesgo tocado; y los tests enteros con los detectores de documentación; 3) arreglar lo encontrado, sin repetidos, un agente por repo; 4) una última revisión del diff entero; 5) el cierre con el código listo: el plan retirado, su sección de verificación al backlog y el commit. La verificación (contrato, E2E, galería y recorrido) va aparte, con verificar-etapa.js. Con varias etapas, la 1 corre para cada una y de la 2 a la 5, una sola vez',
   whenToUse: 'Cuando el usuario pide programar, retomar o cerrar una etapa con plan ejecutable (docs/plans/AAAA-MM-DD-etapa-*.md), o varias juntas. args: { plan | planes: [rutas], modo?: todo|programar|cerrar|planificar, solo?: [ids], usuarioListo?: true, carrilesBack?: 2, modelos?: { front, back, revisa }, topeCupo?: 85 }. Guía: docs/guides/conducir-una-etapa.md',
   phases: [
     { title: 'Programar', detail: 'leer el plan, el contrato y después los carriles del back (cada uno en su copia) y el front, a la vez' },
-    { title: 'Revisión', detail: 'en paralelo: un revisor por ficha tocada, los dos transversales, uno adversarial por tema de riesgo y los tests enteros con los detectores' },
+    { title: 'Revisión', detail: 'en paralelo: un revisor de reglas por repo, tres cazadores de bugs, los dos transversales, uno adversarial por tema de riesgo y los tests enteros con los detectores' },
     { title: 'Arreglos', detail: 'lo encontrado, sin repetidos: un agente por repo comprueba cada hallazgo y arregla lo real' },
     { title: 'Última revisión', detail: 'el diff entero de la etapa con los arreglos: lo chico lo arregla, lo demás va al backlog' },
     { title: 'Cierre', detail: 'código listo: la spec cerrada, el plan retirado, la hoja de ruta, la verificación al backlog y el commit' },
@@ -82,11 +82,14 @@ const SIN_AGREGAR = `Lo que no está en la spec no se agrega:
 - Solo si la pantalla no funciona sin eso, devolvé estado bloqueada con la pregunta de producto y, si tenés una captura que lo muestra, su ruta en captura.`
 
 // ---------- Los revisores de la fase 2 ----------
-// Pedido del usuario del 2026-11-27: un revisor chico y enfocado por cada ficha de docs/rules/ (del back y del front)
-// que tocan los archivos que cambió la etapa; dos transversales («Arquitectura, clean code y SOLID» y «Lo que no está
-// en la spec»); uno adversarial por cada tema de riesgo que tocan esos archivos; y los tests enteros. Todos a la vez.
-// Las pantallas contra el tablero, el E2E y el recorrido van en la verificación de la etapa (verificar-etapa.js), el
-// segundo hito, que corre sobre una copia del corte mientras se programa la siguiente.
+// Pedido del usuario del 2026-11-27, después de cerrar la E12: un revisor de reglas por repo que tocó la etapa, con las
+// fichas de docs/rules/ que tocan sus archivos, que busca solo incumplimientos con efecto; tres cazadores de bugs por
+// tema, que corren siempre; dos transversales («Arquitectura, clean code y SOLID» y «Lo que no está en la spec»); uno
+// adversarial por cada tema de riesgo que tocan esos archivos; y los tests enteros. Todos a la vez: unos 10 agentes.
+// En la E12, un revisor por ficha (unos 40 agentes en total) devolvió casi siempre «no encontré incumplimientos» o algo
+// cosmético, y corriendo a la par llevó los tests de 52 min a 1 h 48 min; los bugs reales los encontró una revisión por
+// tema, la de Antigravity. Las pantallas contra el tablero, el E2E y el recorrido van en la verificación de la etapa
+// (verificar-etapa.js), el segundo hito, que corre sobre una copia del corte mientras se programa la siguiente.
 
 /** Un patrón de rutas (** cualquier carpeta, * dentro de una, ? un carácter) como expresión regular, sin mayúsculas. */
 function patronARegex(patron) {
@@ -116,7 +119,7 @@ const PRUEBAS_DEL_FRONT = ['**/*.test.ts', '**/*.test.tsx', 'src/test/**']
 
 /**
  * Cada ficha de docs/rules/ de los dos repos, con las rutas que cubre (desde la raíz de su repo). `controla` es el test
- * que la controla entera: esa ficha no lleva revisor. Ante la duda, null: lleva revisor.
+ * que la controla entera: esa ficha no va al revisor de reglas de su repo. Ante la duda, null: va.
  */
 const REGLAS = [
   { repo: 'back', ficha: 'api-http', patrones: ['src/**/Controllers/**', 'src/**/Contracts/**', 'docs/contracts/openapi.json'], controla: null },
@@ -169,7 +172,7 @@ function archivosDeLaRegla(regla, archivos) {
   return archivos.filter((a) => a.repo === regla.repo && coincide(a.ruta, regla.patrones) && !coincide(a.ruta, fuera))
 }
 
-/** Reparte los archivos de la etapa entre las fichas: cuáles llevan revisor y cuáles se saltean, y por qué. */
+/** Reparte los archivos de la etapa entre las fichas: cuáles van al revisor de reglas y cuáles se saltean, y por qué. */
 function reglasDeLaEtapa(archivos) {
   const conRevisor = []
   const controladas = []
@@ -181,16 +184,26 @@ function reglasDeLaEtapa(archivos) {
     else if (regla.controla) controladas.push(`${nombre} (la controla ${regla.controla})`)
     else {
       conRevisor.push({
-        id: `regla-${regla.repo}-${regla.ficha}`,
-        titulo: `Regla · ${nombre}`,
         regla,
         ficha: regla.repo === 'back' ? `docs/rules/${regla.ficha}.md` : `${FRONT}/docs/rules/${regla.ficha}.md`,
         archivos: propios.map((a) => a.ruta),
-        revisa: 'medium',
       })
     }
   }
   return { conRevisor, controladas, sinArchivos }
+}
+
+/** Un revisor de reglas por repo que tocó la etapa: recibe cada ficha que tocan sus archivos, con esos archivos. */
+function revisoresDeReglas(conRevisor) {
+  return ['back', 'front']
+    .map((repo) => ({ repo, fichas: conRevisor.filter((f) => f.regla.repo === repo) }))
+    .filter((r) => r.fichas.length)
+    .map(({ repo, fichas }) => ({ id: `reglas-${repo}`, titulo: `Reglas · ${repo}`, repo, fichas, revisa: 'medium' }))
+}
+
+/** Cuántos revisores de reglas lleva una lista de fichas («back/guardado»): uno por repo. */
+function reposConReglas(fichas) {
+  return new Set(fichas.map((f) => String(f).split('/')[0])).size
 }
 
 // Los temas de riesgo de la revisión adversarial y las rutas que los tocan. Desde el 2026-11-27 cubren también lo que
@@ -291,6 +304,47 @@ const TRANSVERSALES = [
     reglas: 'la spec que nombra cada plan, el contrato y los tableros: lo que no está en ninguno de los tres no se agrega, va a «Para después»',
   },
 ]
+
+// Los tres cazadores de bugs, al estilo de la revisión de Antigravity (.local/antigravity/revision-del-proyecto.md), que
+// en la E12 encontró lo que no vio ningún revisor por ficha: el editor de catálogos que perdía lo editado en otra página,
+// un PUT sin un campo obligatorio, un correo corporativo revocado que seguía sirviendo para entrar. Buscan por tema qué
+// se rompe para una persona, no si el código sigue una ficha, y corren siempre, sobre los commits de los dos repos.
+const CAZADORES = [
+  {
+    id: 'usar',
+    titulo: 'Lo que se rompe al usarlo',
+    foco: `- Recorré de punta a punta cada flujo de cada pantalla que la etapa sumó o cambió: el componente, su hook, la llamada, la ruta, el servicio y el validador.
+- Guardar: lo que la pantalla manda contra lo que el back exige (un campo obligatorio que el front no manda, un valor que el validador rechaza), y el contrato (openapi.json) contra su lector en el front.
+- El conflicto 409, cuando dos personas editan lo mismo: qué ve cada una y qué se pierde.
+- Paginar, buscar o filtrar con cambios sin guardar: lo editado en otra página que se pierde al guardar o al cambiar de página.
+- Errores y reintentos: qué ve la persona con un 400, un 404, un 409 o un 500, y si reintentar duplica o deja algo a medias.
+- El doble clic y los envíos repetidos.
+- Lo que se pierde en silencio: un cambio que no se guarda y no avisa, un error que se traga, una lista que se corta.`,
+  },
+  {
+    id: 'hostiles',
+    titulo: 'Entradas hostiles e ingreso',
+    foco: `- Archivos: el tipo real contra la extensión, el tamaño, un contenido malicioso o ilegible (una planilla con macros o fórmulas, un zip que se infla) y el nombre.
+- Textos: largos, vacíos, con invisibles, con HTML o con fórmulas, en cada campo que la etapa recibe.
+- Cuentas y métodos de ingreso: un correo o un método revocado o desvinculado que sigue sirviendo para entrar, una membresía revocada que conserva el acceso, una invitación vencida o usada.
+- Enumeración: una respuesta, un tiempo o un mensaje que revela si existe una cuenta, una organización o un recurso.
+- Lo que puede hacer con las rutas de la etapa un usuario malicioso de otra organización, o uno sin el permiso, con ids ajenos o inventados.`,
+  },
+  {
+    id: 'volumen',
+    titulo: 'Volumen y escala',
+    foco: `- Pensalo con cientos de organizaciones y con los topes reales que dicen la spec y las constantes del código (filas, opciones, archivos, tamaños).
+- Lecturas que traen todo para quedarse con poco, y conteos o búsquedas sin índice.
+- N+1: una consulta por fila en el back, o una llamada por fila en el front.
+- Algoritmos cuadráticos con esos topes.
+- Colas y prioridades: el trabajo grande de una organización que frena a las demás.
+- Memoria: un archivo, una planilla o una lista entera cargada de una vez.
+- Locks y barreras que vencen en medio de una operación larga, o que no se sueltan si algo falla.`,
+  },
+].map((c) => Object.assign({}, c, { id: `cazador-${c.id}`, cazador: true, revisa: 'high' }))
+
+// Los que corren siempre, sin esperar la lista de archivos de la etapa.
+const DE_SIEMPRE = TRANSVERSALES.concat(CAZADORES)
 
 // ---------- Esquemas ----------
 
@@ -460,7 +514,7 @@ Devolvé:
 2. bloqueos: lo que impide empezar a programar hoy, uno por línea, o la lista vacía:
    - el plan dice que va después de otra etapa, y esa no tiene el código listo según la hoja de ruta (docs/plans/2026-09-27-plan-de-desarrollo.md) o su propio plan: su fila dice «Código listo», «Verificada» o «Cerrada». Que todavía corra su verificación no es un bloqueo: va a la vez que esta etapa.${sigue}
    - una decisión que el plan deja abierta en «Para decidir» y nadie tomó;
-   - la app levantada: un proceso de Aspire (aspire o dcp) o de Vite (node con vite en su línea de comando);
+   - la app levantada desde main: un proceso de Aspire (aspire o dcp) o de Vite (node con vite en su línea de comando) que corre desde las carpetas de los dos repos. Uno que corre desde una copia fuera de main (su línea de comando o su carpeta está en C:/e2e-* o en .local/, como la verificación de otra etapa, que va a la par por diseño, o el entorno aislado de un ticket) no bloquea, porque no mira el src de main: va en notas;
    - cambios sin commitear de otra sesión en los archivos que la etapa va a tocar (git status de los dos repos). Los de otra área no bloquean: van en notas. Tampoco bloquean los de una tarea de este mismo plan que dejó una corrida anterior frenada (tocan los archivos de esa tarea, o están en una copia .local/copias/${ctx.CLAVE}-back-*): van en notas, con la tarea y la copia, y esa tarea los continúa.
    Los agentes que lista ListAgents (subagentes de Diseño o de otra sesión) no son un bloqueo: un conductor frenado no sigue vivo, y bloquea solo lo de esta lista.
 3. cupoSemanal: si tenés la herramienta mcp__ccd_session_mgmt__get_usage (buscala con ToolSearch), el porcentaje usado del límite semanal de todos los modelos. Si no la tenés, null.
@@ -572,25 +626,27 @@ function delPlan(C) {
 
 // El script no lee git: este agente barato le pasa la lista de archivos de la etapa, y el script la cruza con REGLAS.
 function pArchivos(C) {
-  return `Sos el que lista los archivos que cambió ${C.deLa}, para repartir la revisión del cierre por ficha. Solo leés: no cambiás nada, no abrís ni juzgás ningún archivo.
+  return `Sos el que lista los archivos que cambió ${C.deLa}, para repartir entre los revisores de reglas las fichas que tocan, y los temas de riesgo. Solo leés: no cambiás nada, no abrís ni juzgás ningún archivo.
 
 En el back (la carpeta actual) y en el front (${FRONT}), corré git log ${C.grep} --name-only --format="%n%H%n%b". Devolvé cada archivo una sola vez: su repo (back o front), su ruta desde la raíz de su repo, con /, y en tareas las de la línea «Tarea: <clave>/<id>» de los commits que lo cambiaron, como <clave>/<id> (por ejemplo ${C.CLAVES[0]}/B1). Los que la etapa borró van también. En motivo, una línea solo si algo no se pudo leer.`
 }
 
-// Un revisor por ficha: recibe la ficha y solo sus archivos, y busca únicamente incumplimientos de esa regla.
-function pRevisarRegla(C, p) {
-  return `Sos el revisor de la regla ${p.regla.repo}/${p.regla.ficha} en el cierre de ${C.deLa}. Solo leés: no cambiás nada, no compilás ni corrés tests.
+// Un revisor de reglas por repo: recibe las fichas que tocan los archivos de la etapa, cada una con los suyos, y busca solo
+// incumplimientos con efecto. Lo cosmético y lo que controla un test no son hallazgos (pedido del usuario del 2026-11-27).
+function pRevisarReglas(C, p) {
+  const deUnTest = p.repo === 'front'
+    ? 'los tokens de color de src/theme-tokens.test.ts, o las claves y la paridad de los textos de src/locales/*.test.ts'
+    : 'la paridad de los textos de ResourceParityTests, o los símbolos de BannedSymbols.txt, que rompen el build'
+  return `Sos el revisor de las reglas del ${p.repo} en el cierre de ${C.deLa}. Solo leés: no cambiás nada, no compilás ni corrés tests.
 
-La regla es la ficha ${p.ficha}: leela entera, con su «Cómo se hace» y su «Prohibido».
+Las fichas de docs/rules/ que tocan los archivos de la etapa, cada una con sus archivos, en ${dondeDe(p.repo)}:
+${p.fichas.map((f) => `- ${f.ficha}: ${f.archivos.join(', ')}`).join('\n')}
 
-Tus archivos, y solo ellos, en ${dondeDe(p.regla.repo)}:
-${p.archivos.map((a) => `- ${a}`).join('\n')}
+De cada ficha, leé su «Cómo se hace» y su «Prohibido». El diff de sus archivos, en ese repo: git log ${C.grep} -p --format="%H %s" -- <esos archivos>. Leé lo que cambió la etapa y, si hace falta, el resto del archivo para entenderlo.
 
-Su diff, en ese repo: git log ${C.grep} -p --format="%H %s" -- <esos archivos>. Leé lo que cambió la etapa y, si hace falta, el resto del archivo para entenderlo.
+Buscá solo incumplimientos con efecto: algo que una persona ve mal, un dato que se guarda mal, o una regla de seguridad o de convivencia de versiones (dos versiones de la app a la vez, ADR 0060) que se rompe. Lo cosmético (un color, un corte sm, un nombre) no es un hallazgo, ni lo que ya controla un test, como ${deUnTest}: si no cambia lo que le pasa a una persona o a un dato, no lo nombres. Lo demás lo miran otros revisores. ${delPlan(C)}
 
-Buscá únicamente incumplimientos de esa ficha en lo que cambió la etapa. Lo demás lo miran otros revisores: no lo nombres. ${delPlan(C)}
-
-Devolvé solo problemas reales. En repo, ${p.regla.repo}; archivo y línea; en punto, la sección de la ficha; en escenario, qué hace alguien y qué pasa, en una línea; en regla, ${p.regla.ficha}; y en porque, la evidencia que te convenció. Una lista vacía es un resultado válido: no inventes.`
+Devolvé solo problemas reales. En repo, ${p.repo}; archivo y línea; en punto, la sección de la ficha; en escenario, qué hace alguien y qué pasa, en una línea; en regla, el nombre de la ficha; y en porque, la evidencia que te convenció. Una lista vacía es un resultado válido: no inventes.`
 }
 
 function pRevisarPremisa(C, p) {
@@ -604,6 +660,25 @@ ${p.foco(C)}
 De la «Lista de control» de .agents/skills/puerta/SKILL.md, mirás ${p.puntos}. Las reglas son ${p.reglas}. Lo demás lo miran otros revisores o la verificación de la etapa: no lo nombres. ${delPlan(C)}
 
 Devolvé solo problemas reales del código de la etapa. En repo, back o front; archivo y línea; en punto, el número de la lista o la regla; en escenario, qué hace alguien y qué pasa, en una línea; en regla, la que se rompe; y en porque, la evidencia que te convenció. Una lista vacía es un resultado válido: no inventes.`
+}
+
+// Un cazador de bugs: busca por tema qué se rompe para una persona en lo que sumó la etapa, con los pasos que lo muestran.
+function pCazar(C, p) {
+  return `Sos un cazador de bugs del tema «${p.titulo}» en el cierre de ${C.deLa}. Solo leés: no cambiás nada, no compilás ni corrés tests.
+
+No es una auditoría de cumplimiento: no buscás si el código sigue una ficha, sino qué se rompe para una persona que lo usa. Pensalo como un producto real, con cientos de organizaciones y miles de personas. Leé el código, no solo la spec: la spec dice lo que se quiso hacer, y el código, lo que se hizo.
+
+Lo que revisás son los cambios de la etapa en los dos repos: los commits con la línea ${C.lineas}. Listalos con git log ${C.grep} --format="%H %s" en el back (la carpeta actual) y en el front (${FRONT}), primero con --stat, y leé sus diffs y el código de alrededor que haga falta. De la spec que nombra ${C.CLAVES.length > 1 ? 'cada plan' : 'el plan'}, leé lo necesario para saber qué se decidió.
+
+Tu tema, y solo él:
+${p.foco}
+
+- Cada hallazgo trae los pasos concretos de una persona y lo que pasa: «hace esto, después esto, y pasa esto; tendría que pasar esto otro». Sin pasos que lo muestren, no es un hallazgo.
+- Antes de anotarlo, volvé a leer el código y confirmalo. Mejor tres reales que veinte dudosos.
+- Lo que la spec decidió (qué ve o puede hacer una persona) no es un bug, y lo que ya está en docs/backlog.md no se repite.
+- Lo cosmético (un color, un corte, un nombre) no es un hallazgo. Lo de los otros temas lo miran otros revisores: no lo nombres. ${delPlan(C)}
+
+Devolvé solo problemas reales del código de la etapa. En repo, back o front; archivo y línea, los de la causa; en punto, «${p.titulo}»; en escenario, los pasos de la persona y lo que pasa; en regla, lo que se rompe para la persona, en pocas palabras; y en porque, la evidencia del código que te convenció. En gravedad: alta si se pierde o se expone un dato, o si alguien entra donde no debe; media si una persona no puede terminar lo que hace; baja, lo demás. Una lista vacía es un resultado válido: no inventes.`
 }
 
 // Los tests enteros son un revisor más: corren en copias de HEAD dentro de .local/, que se borran al terminar.
@@ -645,7 +720,7 @@ function pUltima(C, arreglos) {
 
 Los arreglos de la revisión: ${arreglos}.
 
-Buscás dos cosas: lo que rompió un arreglo (un camino hermano, un test que dejó de probar lo que probaba, un contrato que cambió sin su lector) y lo grave que quedó (datos, permisos, organizaciones que se mezclan, efectos fuera del sistema). No repitas la revisión por ficha. ${delPlan(C)}
+Buscás dos cosas: lo que rompió un arreglo (un camino hermano, un test que dejó de probar lo que probaba, un contrato que cambió sin su lector) y lo grave que quedó (datos, permisos, organizaciones que se mezclan, efectos fuera del sistema). No repitas la revisión de reglas ni la de los cazadores. ${delPlan(C)}
 - Lo chico y seguro lo arreglás vos, con su test dirigido y el build (en el front, tsc -b y el lint de lo que tocaste), y lo commiteás con la línea ${C.commitDe('ultima-revision')}.
 - Lo que no es chico no lo arreglás: va en alBacklog (que, porQue y donde). No hay otra ronda.
 
@@ -811,13 +886,14 @@ function agentesDelPlan(pendientes) {
   return 1 + pendientes.length
 }
 
-// Las fases 2 a 5 van una vez por lanzamiento: el que lista los archivos, una por ficha con revisor, los transversales,
-// una por tema de riesgo, los tests enteros, hasta 2 arregladores, la última revisión y el cierre.
-function agentesDelCierre(reglas, temasDeRiesgo) {
-  return 1 + reglas + TRANSVERSALES.length + temasDeRiesgo + 1 + 2 + 1 + 1
+// Las fases 2 a 5 van una vez por lanzamiento: el que lista los archivos, un revisor de reglas por repo, los
+// transversales, los cazadores, uno por tema de riesgo, los tests enteros, hasta 2 arregladores, la última revisión y
+// el cierre.
+function agentesDelCierre(reposConFichas, temasDeRiesgo) {
+  return 1 + reposConFichas + TRANSVERSALES.length + CAZADORES.length + temasDeRiesgo + 1 + 2 + 1 + 1
 }
 
-/** Lo que el plan dice que van a tocar sus tareas (su mapa de archivos), para estimar qué fichas llevan revisor. */
+/** Lo que el plan dice que van a tocar sus tareas (su mapa de archivos), para estimar qué fichas van a revisarse. */
 function archivosPrevistos(tareas) {
   return tareas.filter((t) => t.carril !== 'integracion').flatMap((t) => (t.archivos || []).map((r) => ({
     repo: t.carril === 'front' ? 'front' : 'back',
@@ -898,7 +974,7 @@ async function programarPlan(PLAN, anterior) {
         temasDeRiesgo,
         reglasPrevistas,
         // Con planes, las fases 2 a 5 se cuentan una vez, en la cadena.
-        agentesEstimados: agentesDelPlan(pendientes) + (CADENA ? 0 : agentesDelCierre(reglasPrevistas.length, temasDeRiesgo.length)),
+        agentesEstimados: agentesDelPlan(pendientes) + (CADENA ? 0 : agentesDelCierre(reposConReglas(reglasPrevistas), temasDeRiesgo.length)),
         notas: L.notas,
       },
     }
@@ -1068,8 +1144,14 @@ function contextoDeCierre(Es) {
 
 // ---------- Fases 2 a 4: revisión en paralelo, arreglos y última revisión ----------
 
+function promptDelRevisor(C, p) {
+  if (p.fichas) return pRevisarReglas(C, p)
+  if (p.cazador) return pCazar(C, p)
+  return pRevisarPremisa(C, p)
+}
+
 function revisar(C, p) {
-  return agent(p.regla ? pRevisarRegla(C, p) : pRevisarPremisa(C, p), modelo({ label: C.et(`revisión · ${p.titulo}`), phase: 'Revisión', schema: S_PREMISA, effort: p.revisa }, 'revisa'))
+  return agent(promptDelRevisor(C, p), modelo({ label: C.et(`revisión · ${p.titulo}`), phase: 'Revisión', schema: S_PREMISA, effort: p.revisa }, 'revisa'))
 }
 
 function lineaDelRevisor(p, r) {
@@ -1077,9 +1159,10 @@ function lineaDelRevisor(p, r) {
 }
 
 /**
- * Pedido del usuario del 2026-11-27: los revisores de todas las fichas y premisas corren a la vez, con los tests
- * enteros; lo que encuentran va a un arreglador por repo, que comprueba cada hallazgo; y una última revisión lee el
- * diff entero. Corre una vez para todos los planes del lanzamiento, con el código de todos terminado.
+ * Pedido del usuario del 2026-11-27: los revisores de reglas, los cazadores, los transversales y los adversariales
+ * corren a la vez, con los tests enteros; lo que encuentran va a un arreglador por repo, que comprueba cada hallazgo; y
+ * una última revisión lee el diff entero. Corre una vez para todos los planes del lanzamiento, con el código de todos
+ * terminado.
  */
 async function revisarEtapas(Es, usuarioListo) {
   const K = { corrio: false, esperaAlUsuario: false, pasosAntes: [], cerrable: false, porQueNoCierra: [], revision: null, tests: null, arreglos: [], ultima: null, resumen: '' }
@@ -1101,20 +1184,22 @@ async function revisarEtapas(Es, usuarioListo) {
 
   // ---------- Fase 2: todo a la vez ----------
   phase('Revisión')
-  const [porArchivos, transversales, tests] = await parallel([
+  const [porArchivos, deSiempre, tests] = await parallel([
     async () => {
       const A = await agent(pArchivos(C), { label: C.et('archivos de la etapa'), phase: 'Revisión', schema: S_ARCHIVOS, effort: 'low' })
       const archivos = A ? A.archivos.map((x) => Object.assign({}, x, { ruta: String(x.ruta).replace(/\\/g, '/').replace(/^\.\//, '') })) : null
       const reglas = archivos ? reglasDeLaEtapa(archivos) : null
-      if (!reglas) log('El agente que lista los archivos de la etapa no terminó: no corre la revisión por ficha, y los temas de riesgo son los que marca el plan')
+      const deReglas = reglas ? revisoresDeReglas(reglas.conRevisor) : []
+      if (!reglas) log('El agente que lista los archivos de la etapa no terminó: no corre la revisión de reglas, y los temas de riesgo son los que marca el plan')
       else {
-        log(`Revisión por ficha: ${reglas.conRevisor.map((p) => `${p.regla.repo}/${p.regla.ficha}`).join(', ') || 'ninguna'}`)
+        log(`Revisión de reglas: ${deReglas.map((r) => `${r.repo} (${r.fichas.map((f) => f.regla.ficha).join(', ')})`).join('; ') || 'ninguna'}`)
         if (reglas.controladas.length) log(`Sin revisor, porque un test la controla entera: ${reglas.controladas.join('; ')}`)
         if (reglas.sinArchivos.length) log(`Sin revisor, porque la etapa no tocó sus archivos: ${reglas.sinArchivos.join(', ')}`)
       }
       const adversariales = premisasDeRiesgo(archivos ? temasDeLaEtapa(archivos) : temasDelPlan(Es), C.nombre)
       log(adversariales.length ? `Revisión adversarial: ${adversariales.map((p) => p.tema).join(', ')}` : 'Los archivos de la etapa no tocan ningún tema de riesgo: no va revisión adversarial')
-      const ps = (reglas ? reglas.conRevisor : []).concat(adversariales)
+      const ps = deReglas.concat(adversariales)
+      log(`Corren ${DE_SIEMPRE.length + ps.length} revisores y los tests enteros: ${DE_SIEMPRE.concat(ps).map((p) => p.titulo).join(', ')}`)
       const rs = await parallel(ps.map((p) => () => revisar(C, p)))
       return {
         reparto: {
@@ -1128,11 +1213,11 @@ async function revisarEtapas(Es, usuarioListo) {
         rs,
       }
     },
-    () => parallel(TRANSVERSALES.map((p) => () => revisar(C, p))),
+    () => parallel(DE_SIEMPRE.map((p) => () => revisar(C, p))),
     () => agent(pTests(C), { label: C.et('tests enteros'), phase: 'Revisión', schema: S_TESTS }),
   ])
 
-  const revisores = TRANSVERSALES.map((p, i) => ({ p, r: transversales ? transversales[i] : null }))
+  const revisores = DE_SIEMPRE.map((p, i) => ({ p, r: deSiempre ? deSiempre[i] : null }))
     .concat(porArchivos ? porArchivos.ps.map((p, i) => ({ p, r: porArchivos.rs[i] })) : [])
   K.tests = tests ? { tabla: tests.tabla, resumen: tests.resumen } : null
   const deTodos = revisores.flatMap(({ p, r }) => ((r && r.hallazgos) || []).map((h) => Object.assign({}, h, { de: p.titulo })))
@@ -1148,7 +1233,7 @@ async function revisarEtapas(Es, usuarioListo) {
   }
   if (juntados) log(`Se juntaron ${juntados} hallazgos que repetían archivo y línea`)
   const sinRevisar = revisores.filter(({ r }) => !r).map(({ p }) => p.titulo)
-  if (!porArchivos || !porArchivos.listado) sinRevisar.push('Revisión por ficha (no se supo qué archivos cambió la etapa)')
+  if (!porArchivos || !porArchivos.listado) sinRevisar.push('Revisión de reglas (no se supo qué archivos cambió la etapa)')
   if (!tests) sinRevisar.push('Tests enteros')
   K.revision = {
     reparto: porArchivos ? porArchivos.reparto : null,
@@ -1300,7 +1385,7 @@ if (MODO === 'planificar') {
     planes,
     frenoEn: null,
     sinCorrer: [],
-    agentesEstimados: planes.reduce((n, p) => n + (p.agentesEstimados || 0), 0) + agentesDelCierre(reglas.size, temas.size),
+    agentesEstimados: planes.reduce((n, p) => n + (p.agentesEstimados || 0), 0) + agentesDelCierre(reposConReglas([...reglas]), temas.size),
   }
 }
 
