@@ -93,10 +93,7 @@ internal sealed class FormCatalogActionSource(
                 errors[input.Field] = [ValidationError.ErrorCode];
                 continue;
             }
-            var ops = new List<OptionOp>();
-            var index = 0;
-            foreach (var element in input.Value.EnumerateArray())
-                if (await ResolveOptionAsync(catalog, element, $"{OptionsField}[{index++}]", ops, errors, cancellationToken) is { } op) ops.Add(op);
+            var ops = await ResolveOptionsAsync(catalog, [.. input.Value.EnumerateArray()], errors, cancellationToken);
             var doubt = ops.Any(op => op.Doubt is not null) ? AssistantActionDoubts.Similar : null;
             values.Add(new(OptionsField, input.Value, JsonSerializer.SerializeToElement(ops, AssistantActionInputs.Json), doubt));
         }
@@ -167,41 +164,51 @@ internal sealed class FormCatalogActionSource(
         return await CheckCodesAsync(catalog.Id, items, deleted, cancellationToken);
     }
 
-    private async Task<OptionOp?> ResolveOptionAsync(FormCatalogSummary catalog, JsonElement element, string path, List<OptionOp> resolved,
+    // Las filas que escribió el modelo, en orden. Los parecidos de todas las claves se leen juntos, en una sola consulta: hasta 500
+    // filas no hacen una lectura cada una.
+    private async Task<List<OptionOp>> ResolveOptionsAsync(FormCatalogStoredRow catalog, IReadOnlyList<JsonElement> elements,
         Dictionary<string, string[]> errors, CancellationToken cancellationToken)
     {
-        if (!AssistantActionInputs.TryReadRowOp(element, out var op, out var key, out var written))
+        var read = new List<(string Path, string Op, string? Key, JsonElement? Written)>();
+        for (var index = 0; index < elements.Count; index++)
         {
-            errors[path] = [ValidationError.ErrorCode];
-            return null;
+            var path = $"{OptionsField}[{index}]";
+            if (AssistantActionInputs.TryReadRowOp(elements[index], out var op, out var key, out var written)) read.Add((path, op, key, written));
+            else errors[path] = [ValidationError.ErrorCode];
         }
 
-        Guid? itemId = null;
-        string? doubt = null;
-        if (key is not null)
-        {
-            var page = await catalogs.ListItemsAsync(catalog.Id, new ListFormCatalogItemsRequest
-            {
-                Search = AssistantActionInputs.SearchOf(key),
-                PageSize = AssistantActionLimits.Candidates,
-            }, cancellationToken);
-            if (AssistantActionInputs.Match(page.Items, OptionNames, key) is not { } match)
-            {
-                errors[path] = [FormCatalogErrors.ItemNotFoundCode];
-                return null;
-            }
-            // Dos operaciones sobre la misma opción no se dibujan: la pantalla aplica una por fila.
-            if (resolved.Any(other => other.Id == match.Item.Id))
-            {
-                errors[path] = [ValidationError.ErrorCode];
-                return null;
-            }
-            (itemId, doubt) = (match.Item.Id, match.Doubt);
-        }
+        string[] searches = [.. read.Where(item => item.Key is not null).Select(item => AssistantActionInputs.SearchOf(item.Key!))
+            .Distinct(StringComparer.Ordinal)];
+        IReadOnlyList<FormCatalogItemCandidateRow> found = searches.Length == 0 ? []
+            : await catalogs.ListItemCandidatesAsync(catalog.Id, searches, AssistantActionLimits.Candidates, cancellationToken);
+        var candidates = found.ToLookup(candidate => candidate.Search, StringComparer.Ordinal);
 
-        OptionRow? row = null;
-        if (written is { } fields && (row = ReadRow(catalog.ValueType, fields, path, op == AssistantActionInputs.Add, errors)) is null) return null;
-        return new OptionOp(op, itemId, row, doubt);
+        var resolved = new List<OptionOp>();
+        foreach (var (path, op, key, written) in read)
+        {
+            Guid? itemId = null;
+            string? doubt = null;
+            if (key is not null)
+            {
+                if (AssistantActionInputs.Match([.. candidates[AssistantActionInputs.SearchOf(key)]], OptionNames, key) is not { } match)
+                {
+                    errors[path] = [FormCatalogErrors.ItemNotFoundCode];
+                    continue;
+                }
+                // Dos operaciones sobre la misma opción no se dibujan: la pantalla aplica una por fila.
+                if (resolved.Any(other => other.Id == match.Item.Id))
+                {
+                    errors[path] = [ValidationError.ErrorCode];
+                    continue;
+                }
+                (itemId, doubt) = (match.Item.Id, match.Doubt);
+            }
+
+            OptionRow? row = null;
+            if (written is { } fields && (row = ReadRow(catalog.ValueType, fields, path, op == AssistantActionInputs.Add, errors)) is null) continue;
+            resolved.Add(new OptionOp(op, itemId, row, doubt));
+        }
+        return resolved;
     }
 
     // Lo que escribió el modelo en una fila, con los límites y el tipo de cada columna; el valor queda como texto canónico (C6).
@@ -315,7 +322,7 @@ internal sealed class FormCatalogActionSource(
     }
 
     // Lo busca el lector con su búsqueda, entre los catálogos a mano; igual gana y, si no hay, uno solo parecido.
-    private async Task<Result<FormCatalogSummary>> MatchTargetAsync(string? text, CancellationToken cancellationToken)
+    private async Task<Result<FormCatalogStoredRow>> MatchTargetAsync(string? text, CancellationToken cancellationToken)
     {
         if (!AssistantActionInputs.IsWritten(text)) return FormCatalogErrors.NotFound;
         var found = (await catalogs.ListAsync(new ListFormCatalogsRequest
@@ -338,12 +345,12 @@ internal sealed class FormCatalogActionSource(
     }
 
     // El catálogo de una propuesta guardada, por su id: a mano y activo, como lo deja cambiar el editor.
-    private async Task<FormCatalogSummary?> FindTargetAsync(Guid? catalogId, CancellationToken cancellationToken) =>
+    private async Task<FormCatalogStoredRow?> FindTargetAsync(Guid? catalogId, CancellationToken cancellationToken) =>
         catalogId is { } id && await catalogs.FindAsync(id, cancellationToken) is { Source: FormCatalogSource.Manual, IsActive: true } catalog
             ? catalog : null;
 
     // Las opciones guardadas que nombra la propuesta que siguen en el catálogo, leídas por id.
-    private async Task<Dictionary<Guid, FormCatalogItemSnapshot>> SavedAsync(Guid catalogId, IReadOnlyList<OptionOp> ops,
+    private async Task<Dictionary<Guid, FormCatalogStoredItemRow>> SavedAsync(Guid catalogId, IReadOnlyList<OptionOp> ops,
         CancellationToken cancellationToken)
     {
         Guid[] ids = [.. ops.Where(op => op.Id is not null).Select(op => op.Id!.Value).Distinct()];
@@ -379,7 +386,7 @@ internal sealed class FormCatalogActionSource(
     };
 
     // Una opción se nombra por su código o por su texto, como se ve en el editor.
-    private static IEnumerable<string> OptionNames(FormCatalogItemRow item) => [item.Code, item.Text];
+    private static IEnumerable<string> OptionNames(FormCatalogItemCandidateRow item) => [item.Code, item.Text];
 
     private static OptionOp[] OpsOf(AssistantActionResolution resolution) =>
         AssistantActionInputs.ResolvedOf(resolution, OptionsField) is { ValueKind: JsonValueKind.Array } array

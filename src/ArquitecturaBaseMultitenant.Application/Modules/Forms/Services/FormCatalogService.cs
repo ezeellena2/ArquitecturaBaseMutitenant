@@ -162,12 +162,12 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
             : FormCatalog.CreateContacts(request.Name!, request.Description, decided.Value);
     }
 
-    private static FormCatalogRow ToRow(FormCatalogSummary catalog, FormCatalogUnusableReason? reason) =>
+    private static FormCatalogRow ToRow(FormCatalogStoredRow catalog, FormCatalogUnusableReason? reason) =>
         new FormCatalogRow(catalog.Id, catalog.Name, catalog.Description, catalog.Source, catalog.ValueType,
             catalog.Source == FormCatalogSource.Manual ? catalog.TotalItems : null, catalog.IsActive, catalog.IsActive && reason is null,
             reason);
 
-    private async Task<FormCatalogResponse> BuildAsync(FormCatalogSummary catalog, CancellationToken ct)
+    private async Task<FormCatalogResponse> BuildAsync(FormCatalogStoredRow catalog, CancellationToken ct)
     {
         var state = (await filters.DecideStatesAsync([catalog], ct))[catalog.Id];
         var reason = state.Reason;

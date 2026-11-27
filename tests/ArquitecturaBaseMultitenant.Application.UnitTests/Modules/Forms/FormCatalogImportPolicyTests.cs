@@ -175,7 +175,7 @@ public sealed class FormCatalogImportPolicyTests
         Assert.Equal(("1899-12-31", (DateOnly?)null), (old.Text, old.Date));
     }
 
-    private static FormCatalogItemSnapshot Saved(string code, string text, int position, string? detail = null, bool isActive = true) =>
+    private static FormCatalogStoredItemRow Saved(string code, string text, int position, string? detail = null, bool isActive = true) =>
         new(Guid.CreateVersion7(), code, FormCatalogItem.NormalizeCode(code), text, detail, null, position, isActive);
 
     private static FormCatalogFileRow Row(int row, string? code, string? text, string? detail) => new(row, code, text, detail, null);

@@ -36,7 +36,7 @@ internal static class FormCatalogExportBuilder
         return new FormCatalogSheetLayout(FormsTexts.Get("CatalogImport.SheetName"), headers);
     }
 
-    public static IReadOnlyList<FormCatalogCell> Row(FormCatalogItemSnapshot item, FormCatalogValueType valueType, CultureProfile profile)
+    public static IReadOnlyList<FormCatalogCell> Row(FormCatalogStoredItemRow item, FormCatalogValueType valueType, CultureProfile profile)
     {
         ArgumentNullException.ThrowIfNull(item);
         return Cells(item.Code, item.Text, item.Value, item.Detail, valueType, profile);

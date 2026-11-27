@@ -185,6 +185,25 @@ public sealed class FormCatalogPersistenceTests(ApiFactory factory)
         Assert.Equal(["C"], searched.Items.Select(row => row.Code));
     }
 
+    [Fact]
+    public async Task The_reader_finds_the_candidates_of_every_search_at_once_without_accents_or_wildcards()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (tenantId, _) = await OrganizationAsync(ct);
+        var manual = await SaveManualAsync(tenantId, FormCatalogValueType.Text,
+            [("AZU", "Azul", null), ("AZM", "Azul marino", null), ("NAN", "Ñandú", null), ("P50", "50% menos", null), ("X21", "Otra", null),
+                ("X_1", "Equis", null)], ct);
+        await SaveManualAsync(tenantId, FormCatalogValueType.Text, [("AZO", "Azul de otro catálogo", null)], ct);
+
+        // Una por búsqueda, la primera por posición; los comodines se buscan como texto y «nada» no trae ninguna.
+        var first = await ReadAsync(tenantId, reader => reader.ListItemCandidatesAsync(manual.Id, ["azul", "nandu", "%", "x_", "nada"], 1, ct));
+        Assert.Equal(new Dictionary<string, string> { ["azul"] = "AZU", ["nandu"] = "NAN", ["%"] = "P50", ["x_"] = "X_1" },
+            first.ToDictionary(row => row.Search, row => row.Code));
+        // Todas las de una búsqueda, por posición, y solo de ese catálogo.
+        var all = await ReadAsync(tenantId, reader => reader.ListItemCandidatesAsync(manual.Id, ["AZUL"], 10, ct));
+        Assert.Equal(["AZU", "AZM"], all.Select(row => row.Code));
+    }
+
     private async Task<(Guid TenantId, AccountJourney Owner)> OrganizationAsync(CancellationToken ct)
     {
         using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
@@ -193,7 +212,7 @@ public sealed class FormCatalogPersistenceTests(ApiFactory factory)
         return (tenantId, owner);
     }
 
-    private async Task<FormCatalogSummary> SaveManualAsync(Guid tenantId, FormCatalogValueType valueType,
+    private async Task<FormCatalogStoredRow> SaveManualAsync(Guid tenantId, FormCatalogValueType valueType,
         IReadOnlyList<(string Code, string Text, string? Value)> items, CancellationToken ct)
     {
         var catalog = FormCatalog.CreateManual("Catálogo " + Guid.NewGuid().ToString("N")[..6], null, valueType);
@@ -211,7 +230,7 @@ public sealed class FormCatalogPersistenceTests(ApiFactory factory)
         return (await ReadAsync(tenantId, reader => reader.FindAsync(catalog.Id, ct)))!;
     }
 
-    private async Task<FormCatalogSummary> SaveAsync(Guid tenantId, FormCatalog catalog, CancellationToken ct)
+    private async Task<FormCatalogStoredRow> SaveAsync(Guid tenantId, FormCatalog catalog, CancellationToken ct)
     {
         var saved = await WriteAsync(tenantId, (repository, _) =>
         {

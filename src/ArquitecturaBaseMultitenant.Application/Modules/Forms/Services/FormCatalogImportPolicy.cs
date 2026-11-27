@@ -18,7 +18,7 @@ internal static class FormCatalogImportPolicy
     internal const decimal ErrorShareToConfirm = 0.10m;
 
     public static FormCatalogImportPlan Decide(FormCatalogValueType valueType, FormCatalogImportMode mode, FormCatalogFile file,
-        IReadOnlyList<FormCatalogItemSnapshot> saved, int activeItems)
+        IReadOnlyList<FormCatalogStoredItemRow> saved, int activeItems)
     {
         ArgumentNullException.ThrowIfNull(file);
         ArgumentNullException.ThrowIfNull(saved);
@@ -38,7 +38,7 @@ internal static class FormCatalogImportPolicy
             void Fail(string column, string code, string? value = null, int? otherRow = null) =>
                 rowErrors.Add(new FormCatalogImportErrorRow(row.Row, column, code, value, otherRow));
 
-            FormCatalogItemSnapshot? existing = null;
+            FormCatalogStoredItemRow? existing = null;
             if (row.Code is null) Fail(FormCatalogFileResolver.CodeColumn, FormCatalogImportErrors.CellRequiredCode);
             else if (row.Code.Length > FormsTextLimits.OptionCode) Fail(FormCatalogFileResolver.CodeColumn, FormCatalogErrors.ItemTextTooLongCode);
             else
@@ -96,7 +96,7 @@ internal static class FormCatalogImportPolicy
             Share(deactivated.Count, activeItems), Share(errorRows, rowsRead));
     }
 
-    private static string? Value(FormCatalogFile file, FormCatalogFileRow row, FormCatalogItemSnapshot? existing,
+    private static string? Value(FormCatalogFile file, FormCatalogFileRow row, FormCatalogStoredItemRow? existing,
         Action<string, string, string?, int?> fail)
     {
         if (!file.HasValue || row.Value is null)
@@ -111,7 +111,7 @@ internal static class FormCatalogImportPolicy
     }
 
     /// <summary>Lo que cambió, columna por columna y en el orden de la plantilla, con el antes y el después.</summary>
-    private static List<FormCatalogImportChangedRow> Differences(int row, FormCatalogItemSnapshot saved, FormCatalogItem next)
+    private static List<FormCatalogImportChangedRow> Differences(int row, FormCatalogStoredItemRow saved, FormCatalogItem next)
     {
         var differences = new List<FormCatalogImportChangedRow>();
         void Compare(string column, string? before, string? after)

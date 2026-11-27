@@ -81,8 +81,7 @@ public sealed class FormCatalogItem : Entity, ITenantOwned, IAuditable
     }
 
     /// <summary>El valor como texto canónico (C6): el número con punto y sin ceros de más, o la fecha ISO; <c>null</c> en uno de texto.</summary>
-    public string? ValueText() => DateValue is { } date ? FormCatalogValueText.Date(date)
-        : NumberValue is { } number ? FormCatalogValueText.Number(number) : null;
+    public string? ValueText() => FormCatalogValueText.Of(DateValue, NumberValue);
 
     /// <summary>La clave del código único por catálogo, sin distinguir mayúsculas ni la forma de escribir un acento.</summary>
     public static string NormalizeCode(string code)

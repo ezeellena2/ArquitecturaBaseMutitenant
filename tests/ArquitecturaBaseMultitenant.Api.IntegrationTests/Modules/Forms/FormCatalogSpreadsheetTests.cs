@@ -162,7 +162,7 @@ public sealed partial class FormCatalogSpreadsheetTests
         Assert.Empty(plan.Deactivations);
     }
 
-    private static FormCatalogItemSnapshot[] Saved(FormCatalogValueType valueType)
+    private static FormCatalogStoredItemRow[] Saved(FormCatalogValueType valueType)
     {
         string?[] values = valueType switch
         {
@@ -173,11 +173,11 @@ public sealed partial class FormCatalogSpreadsheetTests
         };
         (string Code, string Text, string? Detail)[] items = [("S", "Chico", "Hasta 40"), ("001", "Uno", null), ("M-2", "Mediano", "Ñandú"),
             ("L", "Grande", null)];
-        return [.. items.Select((item, index) => new FormCatalogItemSnapshot(Guid.CreateVersion7(), item.Code,
+        return [.. items.Select((item, index) => new FormCatalogStoredItemRow(Guid.CreateVersion7(), item.Code,
             FormCatalogItem.NormalizeCode(item.Code), item.Text, item.Detail, values[index], index, true))];
     }
 
-    private static async IAsyncEnumerable<IReadOnlyList<FormCatalogCell>> Rows(IEnumerable<FormCatalogItemSnapshot> items,
+    private static async IAsyncEnumerable<IReadOnlyList<FormCatalogCell>> Rows(IEnumerable<FormCatalogStoredItemRow> items,
         FormCatalogValueType valueType, CultureProfile profile)
     {
         await Task.CompletedTask;

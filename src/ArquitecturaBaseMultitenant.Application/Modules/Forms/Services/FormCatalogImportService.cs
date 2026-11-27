@@ -167,29 +167,29 @@ internal sealed class FormCatalogImportService(IFormCatalogReader reader, IFormC
         return catalog;
     }
 
-    private static Result CanChange(FormCatalogSummary catalog)
+    private static Result CanChange(FormCatalogStoredRow catalog)
     {
         if (catalog.Source != FormCatalogSource.Manual) return FormCatalogErrors.WrongSource;
         return catalog.IsActive ? Result.Success() : FormCatalogErrors.Inactive;
     }
 
     /// <summary>Todas las opciones, en lotes por posición: un reemplazo da de baja lo que no vino.</summary>
-    private async Task<List<FormCatalogItemSnapshot>> ReadAllAsync(Guid catalogId, CancellationToken ct)
+    private async Task<List<FormCatalogStoredItemRow>> ReadAllAsync(Guid catalogId, CancellationToken ct)
     {
-        var all = new List<FormCatalogItemSnapshot>();
+        var all = new List<FormCatalogStoredItemRow>();
         await foreach (var batch in BatchesAsync(catalogId, ct)) all.AddRange(batch);
         return all;
     }
 
     /// <summary>Lo pegado agrega: solo hacen falta las opciones con los códigos que vinieron.</summary>
-    private async Task<List<FormCatalogItemSnapshot>> ReadByCodesAsync(Guid catalogId, FormCatalogFile file, CancellationToken ct)
+    private async Task<List<FormCatalogStoredItemRow>> ReadByCodesAsync(Guid catalogId, FormCatalogFile file, CancellationToken ct)
     {
-        var found = new List<FormCatalogItemSnapshot>();
+        var found = new List<FormCatalogStoredItemRow>();
         foreach (var chunk in Codes(file).Chunk(BatchSize)) found.AddRange(await reader.ListItemsByCodesAsync(catalogId, chunk, ct));
         return found;
     }
 
-    private async IAsyncEnumerable<IReadOnlyList<FormCatalogItemSnapshot>> BatchesAsync(Guid catalogId,
+    private async IAsyncEnumerable<IReadOnlyList<FormCatalogStoredItemRow>> BatchesAsync(Guid catalogId,
         [EnumeratorCancellation] CancellationToken ct)
     {
         int? after = null;
@@ -202,7 +202,7 @@ internal sealed class FormCatalogImportService(IFormCatalogReader reader, IFormC
         }
     }
 
-    private async IAsyncEnumerable<IReadOnlyList<FormCatalogCell>> ExportRowsAsync(FormCatalogSummary catalog, CultureProfile profile,
+    private async IAsyncEnumerable<IReadOnlyList<FormCatalogCell>> ExportRowsAsync(FormCatalogStoredRow catalog, CultureProfile profile,
         [EnumeratorCancellation] CancellationToken ct)
     {
         await foreach (var batch in BatchesAsync(catalog.Id, ct))
@@ -222,6 +222,6 @@ internal sealed class FormCatalogImportService(IFormCatalogReader reader, IFormC
         [.. file.Rows.Where(row => row.Code is { Length: <= FormsTextLimits.OptionCode }).Select(row => FormCatalogItem.NormalizeCode(row.Code!))
             .Distinct(StringComparer.Ordinal)];
 
-    private static FormCatalogItemSnapshot Snapshot(FormCatalogItem item) => new(item.Id, item.Code, item.CodeNormalized, item.Text,
+    private static FormCatalogStoredItemRow Snapshot(FormCatalogItem item) => new(item.Id, item.Code, item.CodeNormalized, item.Text,
         item.Detail, item.ValueText(), item.Position, item.IsActive);
 }

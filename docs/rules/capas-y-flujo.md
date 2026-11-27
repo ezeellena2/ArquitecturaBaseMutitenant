@@ -43,7 +43,7 @@ Scheduler/Canceller/Processor/Activator son los pasos nominales de baja y activa
 - ICurrentUser usa actor sólo sin HttpContext; sin ambos queda vacío. TenantContext conserva RLS y HTTP; ITenantScope.Enter(Guid) deja kind null y no sustituye al actor.
 - Cada fase/herramienta reautoriza estados, membresía sin caché, legales, feature y permisos. El aviso IA se exige antes/después de datos; aceptar el primer aviso usa autorización de acceso.
 - IdentityAccessTests fija los consumidores exactos de IUserTenantAccessReader, incluida la factory neutral y AssistantSessionPolicy; no exime namespaces.
-- **Lo que devuelve un lector** se llama `Row`, `Response` o `Counts`; una excepción de un módulo va con su motivo en su aporte. Lo controlará un test de arquitectura que se suma al programar (traspaso 9).
+- **Lo que devuelve un lector** se llama `Row`, `Response` o `Counts`; una excepción va con su motivo en la lista de `ReaderRowNamesTests` (E12), que lo controla.
 
 ## Prohibido
 - CQRS/handlers/MediatR, repositorio genérico, Scrutor, AutoMapper o Minimal APIs de negocio.
@@ -54,7 +54,7 @@ Scheduler/Canceller/Processor/Activator son los pasos nominales de baja y activa
 - `Application/Services/Roles/RoleService.cs` y `Api/Controllers/Organization/RolesController.cs` (E4).
 
 ## Lo verifica
-- `LayerDependencyTests` (E0), `ProjectReferencesTests` (E0), `ApplicationPackagesTests` (E0), `ControllerServiceRepositoryTests` (E1), `ApplicationPublicApiTests` (E1), `ApplicationServicesTests` (E0), `ServiceDependencyCountTests` (E1), `MinimalApiRoutesTests` (E0), `IdentityAccessTests` (E0), `ForbiddenPackagesTests` (E12): ningún proyecto ni `Directory.Packages.props` trae AutoMapper, MediatR o Scrutor, `GenericRepositoryTests` (E12): ningún `IRepository<T>`, `Repository<T>` o `RepositoryBase`, ni una interfaz de repositorio con métodos genéricos, `CA1502` (E12): un método de `src` más complejo que el umbral de `CodeMetricsConfig.txt` rompe el build; `BuildConfigurationTests` (E12) frena que el umbral suba o que la regla se apague o se suprima
+- `LayerDependencyTests` (E0), `ProjectReferencesTests` (E0), `ApplicationPackagesTests` (E0), `ControllerServiceRepositoryTests` (E1), `ApplicationPublicApiTests` (E1), `ApplicationServicesTests` (E0), `ServiceDependencyCountTests` (E1), `MinimalApiRoutesTests` (E0), `IdentityAccessTests` (E0), `ForbiddenPackagesTests` (E12): ningún proyecto ni `Directory.Packages.props` trae AutoMapper, MediatR o Scrutor, `GenericRepositoryTests` (E12): ningún `IRepository<T>`, `Repository<T>` o `RepositoryBase`, ni una interfaz de repositorio con métodos genéricos, `CA1502` (E12): un método de `src` más complejo que el umbral de `CodeMetricsConfig.txt` rompe el build; `BuildConfigurationTests` (E12) frena que el umbral suba o que la regla se apague o se suprima, `ReaderRowNamesTests` (E12): lo que devuelve un lector
 
 ## Detalle
 [Backend](../architecture/backend.md#3-capas-y-dependencias) y [ADR 0039](../decisions/0039-tope-de-dependencias-de-negocio.md).

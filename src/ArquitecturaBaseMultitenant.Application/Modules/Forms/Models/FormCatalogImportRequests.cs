@@ -36,10 +36,3 @@ public sealed record FormCatalogFileResponse(Stream Content, string MediaType, s
 {
     public override string ToString() => nameof(FormCatalogFileResponse);
 }
-
-/// <summary>Una opción guardada tal como la comparan la revisión y la exportación, con su valor canónico (C6).</summary>
-public sealed record FormCatalogItemSnapshot(Guid Id, string Code, string CodeNormalized, string Text, string? Detail, string? Value,
-    int Position, bool IsActive)
-{
-    public override string ToString() => nameof(FormCatalogItemSnapshot);
-}

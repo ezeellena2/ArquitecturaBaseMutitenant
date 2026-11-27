@@ -119,7 +119,8 @@ public static class QueryableExtensions
         return new PagedResult<T>(items, request.Page, request.PageSize, totalCount);
     }
 
-    private static string EscapeLike(string value) => value
+    /// <summary>Escapa los comodines de LIKE con la barra invertida, el escape de <c>ApplySearch</c>.</summary>
+    internal static string EscapeLike(string value) => value
         .Replace("\\", "\\\\", StringComparison.Ordinal)
         .Replace("%", "\\%", StringComparison.Ordinal)
         .Replace("_", "\\_", StringComparison.Ordinal);

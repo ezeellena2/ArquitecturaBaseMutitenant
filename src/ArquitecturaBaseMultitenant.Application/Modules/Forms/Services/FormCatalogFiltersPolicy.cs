@@ -91,7 +91,7 @@ internal sealed class FormCatalogFiltersPolicy(IMemberDirectoryReader members, I
     /// El estado de cada catálogo de una página o de un detalle: los roles y las empresas que faltan se leen de una vez para todos,
     /// y el canal de los contactos, una sola vez. El motivo lo decide la regla del dominio, la única.
     /// </summary>
-    public async Task<IReadOnlyDictionary<Guid, FormCatalogFilterState>> DecideStatesAsync(IReadOnlyList<FormCatalogSummary> catalogs,
+    public async Task<IReadOnlyDictionary<Guid, FormCatalogFilterState>> DecideStatesAsync(IReadOnlyList<FormCatalogStoredRow> catalogs,
         CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(catalogs);
@@ -170,7 +170,7 @@ internal sealed class FormCatalogFiltersPolicy(IMemberDirectoryReader members, I
         return [.. (await read(ids, ct)).Select(row => row.Id)];
     }
 
-    private static async Task<IReadOnlyDictionary<Guid, string>> NamesAsync(IEnumerable<FormCatalogSummary> catalogs, string column,
+    private static async Task<IReadOnlyDictionary<Guid, string>> NamesAsync(IEnumerable<FormCatalogStoredRow> catalogs, string column,
         Func<IReadOnlyCollection<Guid>, CancellationToken, Task<IReadOnlyList<MemberDirectoryNameRow>>> read, CancellationToken ct)
     {
         Guid[] ids = [.. catalogs.SelectMany(catalog => Values(catalog, column))
@@ -180,7 +180,7 @@ internal sealed class FormCatalogFiltersPolicy(IMemberDirectoryReader members, I
         return (await read(ids, ct)).ToDictionary(row => row.Id, row => row.Name);
     }
 
-    private static string[] Values(FormCatalogSummary catalog, string column) => catalog.Source != FormCatalogSource.Members
+    private static string[] Values(FormCatalogStoredRow catalog, string column) => catalog.Source != FormCatalogSource.Members
         ? []
         : [.. (catalog.Filters?.Conditions ?? []).Where(condition => condition.Column == column).SelectMany(condition => condition.Values)
             .Distinct(StringComparer.Ordinal)];

@@ -131,7 +131,7 @@ public sealed class FormCatalogFiltersPolicyTests
 
     private static FormCatalogConditionInput Condition(string column, string op, params string[] values) => new(column, op, values);
 
-    private static FormCatalogSummary Summary(FormCatalogSource source, FormCatalogFilters filters) =>
+    private static FormCatalogStoredRow Summary(FormCatalogSource source, FormCatalogFilters filters) =>
         new(Guid.NewGuid(), "Catálogo", null, source, FormCatalogValueType.Text, filters, true, 0, 0, DateTime.UnixEpoch, null, 1);
 
     private static void AssertField<T>(Result<T> result, string code, string field)

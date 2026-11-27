@@ -10,12 +10,12 @@ public interface IFormCatalogReader
     /// El listado, con orden estable (264). <c>optionsCount</c> ordena por las opciones de uno a mano, y los demás quedan al
     /// final; <c>status</c>, por activo, sin opciones activas y dado de baja.
     /// </summary>
-    Task<PagedResult<FormCatalogSummary>> ListAsync(ListFormCatalogsRequest request, CancellationToken ct);
+    Task<PagedResult<FormCatalogStoredRow>> ListAsync(ListFormCatalogsRequest request, CancellationToken ct);
 
     /// <summary>Solo lo que dice el resumen del listado: todos y los activos (262).</summary>
     Task<FormCatalogFilterCountsResponse> CountFiltersAsync(CancellationToken ct);
 
-    Task<FormCatalogSummary?> FindAsync(Guid catalogId, CancellationToken ct);
+    Task<FormCatalogStoredRow?> FindAsync(Guid catalogId, CancellationToken ct);
 
     /// <summary>Las opciones de un catálogo a mano, por posición, con el aviso del texto repetido.</summary>
     Task<PagedResult<FormCatalogItemRow>> ListItemsAsync(Guid catalogId, ListFormCatalogItemsRequest request, CancellationToken ct);
@@ -24,12 +24,20 @@ public interface IFormCatalogReader
     /// Un lote de opciones, activas y dadas de baja, por posición y después de <paramref name="afterPosition"/>: exportar y revisar
     /// un reemplazo leen en lotes, sin traer las 10.000 de una vez.
     /// </summary>
-    Task<IReadOnlyList<FormCatalogItemSnapshot>> ListItemBatchAsync(Guid catalogId, int? afterPosition, int take, CancellationToken ct);
+    Task<IReadOnlyList<FormCatalogStoredItemRow>> ListItemBatchAsync(Guid catalogId, int? afterPosition, int take, CancellationToken ct);
+
+    /// <summary>Las opciones del catálogo con esos ids, sin las de otro: lo que vuelve a leer una propuesta guardada (ADR 0068 §9).</summary>
+    Task<IReadOnlyList<FormCatalogStoredItemRow>> ListItemsByIdsAsync(Guid catalogId, IReadOnlyCollection<Guid> itemIds, CancellationToken ct);
 
     /// <summary>Las opciones del catálogo que tienen guardado alguno de esos códigos normalizados: lo que revisa lo pegado.</summary>
-    /// <summary>Las opciones del catálogo con esos ids, sin las de otro: lo que vuelve a leer una propuesta guardada (ADR 0068 §9).</summary>
-    Task<IReadOnlyList<FormCatalogItemSnapshot>> ListItemsByIdsAsync(Guid catalogId, IReadOnlyCollection<Guid> itemIds, CancellationToken ct);
-
-    Task<IReadOnlyList<FormCatalogItemSnapshot>> ListItemsByCodesAsync(Guid catalogId, IReadOnlyCollection<string> normalizedCodes,
+    Task<IReadOnlyList<FormCatalogStoredItemRow>> ListItemsByCodesAsync(Guid catalogId, IReadOnlyCollection<string> normalizedCodes,
         CancellationToken ct);
+
+    /// <summary>
+    /// Para cada búsqueda, las opciones cuyo código o texto la contienen, sin mirar mayúsculas ni acentos (como
+    /// <see cref="ListItemsAsync"/>), por posición y hasta <paramref name="perSearch"/>: lo que resuelve, en una sola consulta,
+    /// las opciones que nombra el asistente (§17).
+    /// </summary>
+    Task<IReadOnlyList<FormCatalogItemCandidateRow>> ListItemCandidatesAsync(Guid catalogId, IReadOnlyCollection<string> searches,
+        int perSearch, CancellationToken ct);
 }

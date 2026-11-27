@@ -15,4 +15,10 @@ public static class FormCatalogValueText
         (value / 1.000000000000000000000000000000000m).ToString(CultureInfo.InvariantCulture);
 
     public static string Date(DateOnly value) => value.ToString(DateFormat, CultureInfo.InvariantCulture);
+
+    /// <summary>
+    /// El valor guardado de una opción: la fecha o el número; <c>null</c> en uno de texto. Lo usan la entidad y las filas que
+    /// proyecta el lector sin cargarla.
+    /// </summary>
+    public static string? Of(DateOnly? date, decimal? number) => date is { } day ? Date(day) : number is { } value ? Number(value) : null;
 }
