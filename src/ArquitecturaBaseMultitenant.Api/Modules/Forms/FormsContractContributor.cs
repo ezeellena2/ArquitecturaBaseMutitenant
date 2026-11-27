@@ -29,12 +29,21 @@ internal sealed class FormsContractContributor : IHttpContractContributor
         ("FormCatalogCreatedResponse", "itemIdentityMap", FormCatalogLimits.MaxItems), ("FormCatalogUpdatedResponse", "itemIdentityMap", FormCatalogLimits.MaxItems),
     ];
 
+    // Los topes de una opción, que el validador anidado no publica: la pantalla los lee de validationConstraints (269).
+    private static readonly (string Schema, string Property, int MaxLength)[] Lengths =
+    [
+        ("FormCatalogItemHttpInput", "code", FormsTextLimits.OptionCode), ("FormCatalogItemHttpInput", "text", FormsTextLimits.OptionText),
+        ("FormCatalogItemHttpInput", "detail", FormsTextLimits.OptionDetail),
+    ];
+
     public void Describe(OpenApiDocument document)
     {
         if (document.Components?.Schemas is { } schemas)
         {
             foreach (var (schema, property, maxItems) in Bounds)
                 if (Property(schemas, schema, property) is { } value) value.MaxItems = maxItems;
+            foreach (var (schema, property, maxLength) in Lengths)
+                if (Property(schemas, schema, property) is { } value) value.MaxLength = maxLength;
             // Los datos de DuplicateCode (n, la opción que ya tiene el código) y de ItemInUse (uses, quién la usa) van en el problema.
             if (schemas.TryGetValue("ProblemDetails", out var problemSchema) && problemSchema is OpenApiSchema problem)
             {

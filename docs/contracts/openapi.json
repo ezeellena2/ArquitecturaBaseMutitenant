@@ -99865,18 +99865,21 @@
             ]
           },
           "code": {
+            "maxLength": 40,
             "type": [
               "null",
               "string"
             ]
           },
           "text": {
+            "maxLength": 30,
             "type": [
               "null",
               "string"
             ]
           },
           "detail": {
+            "maxLength": 300,
             "type": [
               "null",
               "string"
