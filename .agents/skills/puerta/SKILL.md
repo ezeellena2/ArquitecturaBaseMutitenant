@@ -1,13 +1,13 @@
 ---
 name: puerta
-description: Corre la verificación de una etapa con el código listo (el segundo hito, con el workflow verificar-etapa.js: integración y contrato, E2E real, galería lado a lado con las pantallas contra el tablero y recorrido de usuario) o la prueba integral del cierre del bloque E12–E25 (la pasada final con el usuario, con las suites y los detectores), sobre una copia del corte, sin worktrees ni ramas, con cada paso completo una sola vez y después solo lo que toca cada arreglo, y muestra un resumen corto de qué pasó y qué no. Usala cuando pidan verificar una etapa, la prueba integral del bloque o «correr la puerta».
+description: Corre la verificación de una etapa con el código listo (el segundo hito, con el workflow verificar-etapa.js: build y contrato, E2E real, galería lado a lado con las pantallas contra el tablero y recorrido de usuario) o la prueba integral del cierre del bloque E12–E25 (la pasada final con el usuario, con las suites y los detectores), sobre una copia del corte, sin worktrees ni ramas, con cada paso completo una sola vez y después solo lo que toca cada arreglo, y muestra un resumen corto de qué pasó y qué no. Usala cuando pidan verificar una etapa, la prueba integral del bloque o «correr la puerta».
 ---
 
 # /puerta [clave de la etapa | bloque] [corte del back] [corte del front]
 
 Desde el 2026-11-27 (pedido del usuario), cada etapa tiene dos hitos, que se avisan por separado ([conducir una etapa](../../../docs/guides/conducir-una-etapa.md)):
 1. **«Código listo»:** lo deja el conductor (`etapa.js`), con la revisión en paralelo, los tests enteros, los arreglos y una última revisión.
-2. **«Verificada»:** la integración, el E2E real, la galería contra los tableros y el recorrido de esa etapa, sobre una copia de su corte, mientras la siguiente se programa en `main`. Así se encadenan: E12 código → (verificación E12 ∥ código E13) → (verificación E13 ∥ código E14)…
+2. **«Verificada»:** el contrato, el E2E real, la galería contra los tableros y el recorrido de esa etapa, sobre una copia de su corte, mientras la siguiente se programa en `main`. Así se encadenan: E12 código → (verificación E12 ∥ código E13) → (verificación E13 ∥ código E14)…
 
 Esta skill corre ese segundo hito, y también **la prueba integral del cierre del bloque E12–E25**, que sigue como pasada final con el usuario (`AGENTS.md`, «Forma de trabajo»). Cuenta el resultado; los arreglos los hacen sus dueños, en `main`. Cada paso pasa completo una sola vez. Cada fallo vuelve a su dueño, y con el arreglo se corre solo lo que ese arreglo toca. **No se repite todo al final ni se arma un corte nuevo por cada arreglo.** La suite completa de un repo se repite solo si el arreglo tocó algo que usa todo el repo: autenticación, persistencia base o composición de la app.
 
@@ -19,7 +19,7 @@ Workflow({ scriptPath: '.agents/workflows/verificar-etapa.js', args: { clave: '1
 
 Va con `clave` o con `plan` (su ruta, aunque ya esté retirado), y con `corte: { back, front }` si no es el `HEAD` del momento. Hace los pasos de abajo en cinco fases:
 - **a. Preparar:** lee la sección de verificación de la etapa (en su plan, «Verificación de la etapa»; si se retiró, en el backlog, como «Verificación de la etapa <clave>» o «Para después de la etapa <clave>», o en el plan que retiró git), escribe en `main` los casos del E2E real, los pasos del recorrido y el JSON de la galería (scripts del front, sin tocar su `src`) y arma las copias en `C:\e2e-<clave>\`, con esos casos encima.
-- **b. Correr:** integración y contrato, E2E real, galería, recorrido a 1440 y a 390, y quitar el módulo si la sección lo pide, cada uno con su agente y de a uno por la fila pesada de `carril.mjs` (`fila --dir <copia>`), que se suelta entre paso y paso para que entren los carriles de la etapa siguiente. Las pantallas contra el tablero (puntos 10 y 13) las mira un revisor sobre la galería, con un verificador, a la vez que el recorrido.
+- **b. Correr:** el build de la copia y el contrato (la suite de integración ya corrió en la fase 2 de `etapa.js`), E2E real, galería, recorrido a 1440 y a 390, y quitar el módulo si la sección lo pide, cada uno con su agente y de a uno por la fila pesada de `carril.mjs` (`fila --dir <copia>`), que se suelta entre paso y paso para que entren los carriles de la etapa siguiente. Las pantallas contra el tablero (puntos 10 y 13) las mira un revisor sobre la galería, con un verificador, a la vez que el recorrido.
 - **c. Arreglos:** cada fallo y cada diferencia confirmada, en `main`, por su dueño y con su test dirigido.
 - **d. Repetir:** trae los arreglos a las copias con `cherry-pick` (nunca el `HEAD` de `main`, que trae la etapa siguiente) y corre solo lo que tocan.
 - **e. Cierre:** la hoja de ruta pasa de «Código listo» a «Verificada el <fecha>», la tabla corta va a la spec, la galería al front de `main`, la sección sale del backlog, lo de a mano queda en «Para después de la etapa <clave>» y se borran las copias. El resultado dice «verificada» o «verificación con fallos», con lo que falta.
@@ -38,9 +38,8 @@ Va con `clave` o con `plan` (su ruta, aunque ya esté retirado), y con `corte: {
 
    | Paso | Dónde | Comando | Pasa si |
    |---|---|---|---|
-   | Build del back | back | `dotnet build ArquitecturaBaseMultitenant.slnx` (etapa: lo hace la integración) | 0 errores y 0 advertencias |
+   | Build del back (etapa) | back | `dotnet build ArquitecturaBaseMultitenant.slnx`, por la fila: el E2E y el recorrido arrancan el AppHost sin compilar | 0 errores y 0 advertencias |
    | Tests del back | back | `dotnet test --no-build`; necesita Docker | 0 fallidos |
-   | Integración (etapa) | back | `node scripts/arneses/verificar.mjs --integracion`, que espera su turno en la fila | 0 fallidos |
    | Build del front | front | `npm run build` | sale 0 |
    | Lint | front | `npm run lint` | 0 errores |
    | Tests del front | front | `npm test`, **solo**, porque con la suite del back en paralelo los tests con axe pasan los 5 s | 0 fallidos |

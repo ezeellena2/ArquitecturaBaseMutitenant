@@ -1,10 +1,10 @@
 export const meta = {
   name: 'verificar-etapa',
-  description: 'Verifica una etapa con el código listo (el segundo hito), sobre copias de su corte y sin worktrees ni ramas, mientras la siguiente se programa en main: a) prepara: lee su sección de verificación, escribe en main los casos del E2E, los pasos del recorrido y el JSON de la galería, y arma las copias; b) corre la integración y el contrato, el E2E real, la galería con las pantallas contra el tablero y el recorrido a 1440 y 390, cada paso entero una vez y de a uno por la fila pesada; c) arregla en main, por dueño; d) repite solo lo que tocan los arreglos; e) cierra: «verificada» o «verificación con fallos», con lo que falta',
+  description: 'Verifica una etapa con el código listo (el segundo hito), sobre copias de su corte y sin worktrees ni ramas, mientras la siguiente se programa en main: a) prepara: lee su sección de verificación, escribe en main los casos del E2E, los pasos del recorrido y el JSON de la galería, y arma las copias; b) compila la copia y corre el contrato, el E2E real, la galería con las pantallas contra el tablero y el recorrido a 1440 y 390, cada paso entero una vez y de a uno por la fila pesada; c) arregla en main, por dueño; d) repite solo lo que tocan los arreglos; e) cierra: «verificada» o «verificación con fallos», con lo que falta',
   whenToUse: 'Cuando una etapa llegó a «Código listo» con el conductor (etapa.js) y hay que verificarla, a la vez que se programa la siguiente. args: { plan | clave, corte?: { back, front }, topeCupo?: 85 }. Guía: docs/guides/conducir-una-etapa.md, «La verificación»',
   phases: [
     { title: 'Preparar', detail: 'la sección de verificación, sus casos escritos en main y las copias del corte' },
-    { title: 'Correr', detail: 'integración y contrato, E2E real, galería con las pantallas contra el tablero y recorrido a 1440 y 390, de a un paso por la fila pesada' },
+    { title: 'Correr', detail: 'build y contrato, E2E real, galería con las pantallas contra el tablero y recorrido a 1440 y 390, de a un paso por la fila pesada' },
     { title: 'Arreglos', detail: 'cada fallo, en main, por su dueño y con su test dirigido' },
     { title: 'Repetir', detail: 'solo los pasos que tocan los arreglos, en las mismas copias' },
     { title: 'Cierre', detail: 'la hoja de ruta, la tabla de resultados, la galería, el backlog y las copias borradas' },
@@ -71,11 +71,11 @@ const FILA = `La fila pesada: cada comando pesado va en su propia llamada, desde
 
 const PASOS = [
   {
-    id: 'integracion',
-    titulo: 'Integración y contrato',
-    corre: () => `1. En la copia del back (cd ${COPIAS.back}): node scripts/arneses/verificar.mjs --integracion. Compila la solución y corre los tests de integración, y espera él solo su turno en la fila pesada: no lo envuelvas en otra llamada a la fila.
+    id: 'build',
+    titulo: 'Build y contrato',
+    corre: () => `1. El build de la copia del back, que el E2E y el recorrido necesitan porque arrancan el AppHost sin compilar: ${fila(COPIAS.back, 'dotnet build ArquitecturaBaseMultitenant.slnx')}. La suite de integración no corre acá: ya corrió completa en la revisión del código listo (la fase 2 de etapa.js), y lo que rompan los arreglos lo encuentran el E2E y el recorrido.
 2. En la copia del front (cd ${COPIAS.front}): npm run contracts:check, que es liviano y va sin fila.`,
-    pasaSi: 'el build tiene 0 errores y 0 advertencias, la integración 0 fallidos y contracts:check sale 0. En compila, false si el build de la copia del back falló: sin él no corre ningún otro paso',
+    pasaSi: 'el build tiene 0 errores y 0 advertencias y contracts:check sale 0. En compila, false si el build de la copia del back falló: sin él no corre ningún otro paso',
   },
   {
     id: 'e2e',
@@ -262,7 +262,7 @@ Devolvé:
 6. bloqueos, uno por línea, o la lista vacía:
    - origen ninguno: no hay qué verificar;
    - la fila de la hoja de ruta no dice que la etapa tiene el código listo («Código listo el …», o «Cerrada el …» como la dejaba el cierre de antes de los dos hitos), o ya dice «Verificada»;
-   - Docker no responde (docker info): la integración y el E2E lo necesitan;
+   - Docker no responde (docker info): el E2E y el recorrido lo necesitan;
    - quedan menos de 15 GB libres en el disco C: (las copias, con sus builds y node_modules, ocupan unos 6 GB);
    - un AppHost o un Vite levantados (procesos aspire, dcp o node con vite en su línea de comando): el E2E, la galería y el recorrido usan sus mismos puertos.
    Que en main se esté programando la etapa siguiente, o que haya copias de sus carriles en .local/copias/ o de una verificación anterior en ${RAIZ}, no es un bloqueo: la verificación arma sus propias copias.
@@ -320,7 +320,7 @@ Pasa si ${P.pasaSi}.
 
 Leé solo el resumen (totales, passed y failed, # pass y # fail) y, de lo que falla, sus líneas. Antes de contar un fallo, descartá el entorno: un test que se pasó de tiempo se corre una vez más, solo, con su propia llamada a la fila; si así pasa, era la carga de la PC y no cuenta.
 
-Devolvé: paso «${P.id}»; resultado verde, con fallos o no corrió; numero (por ejemplo «41/41»); compila (${P.id === 'integracion' ? 'false si el build de la copia del back falló' : 'true'}); fallos, cada uno con su paso, archivo y línea, la causa en una línea y su dueño (back o front); galeria (${P.id === 'galeria' ? 'la carpeta de las capturas lado a lado' : 'cadena vacía'}); aMano, lo que el paso no automatiza; salida, dónde quedó el log; y motivo.
+Devolvé: paso «${P.id}»; resultado verde, con fallos o no corrió; numero (por ejemplo «41/41»); compila (${P.id === 'build' ? 'false si el build de la copia del back falló' : 'true'}); fallos, cada uno con su paso, archivo y línea, la causa en una línea y su dueño (back o front); galeria (${P.id === 'galeria' ? 'la carpeta de las capturas lado a lado' : 'cadena vacía'}); aMano, lo que el paso no automatiza; salida, dónde quedó el log; y motivo.
 
 ${comunes()}`
 }
@@ -506,9 +506,9 @@ let carpetaDeLaGaleria = ''
 if (!copiasListas) {
   for (const P of PASOS) if (!R[P.id]) R[P.id] = sinCorrer(P, `las copias del corte no quedaron listas: ${copias ? copias.motivo : 'el agente no terminó'}`)
 } else {
-  R.integracion = await correrPaso(P_.integracion, C)
+  R.build = await correrPaso(P_.build, C)
   // Sin el back de la copia compilado no corre nada más: el E2E y el recorrido arrancan el AppHost con --no-build.
-  if (R.integracion.compila === false || R.integracion.resultado === 'no corrió') {
+  if (R.build.compila === false || R.build.resultado === 'no corrió') {
     for (const P of PASOS) if (!R[P.id]) R[P.id] = sinCorrer(P, 'el back de la copia no quedó compilado: el primer paso no lo dejó')
   } else {
     R.e2e = await correrPaso(P_.e2e, C)

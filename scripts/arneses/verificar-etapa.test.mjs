@@ -10,7 +10,7 @@ const fuente = await readFile(ruta, 'utf8');
 const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
 const CLAVE = 'prueba';
 const COPIA_FRONT = 'C:/e2e-prueba/ArquitecturaBaseMutitenantFront';
-const PASOS = ['Integración y contrato', 'E2E real', 'Galería', 'Recorrido a 1440', 'Recorrido a 390'];
+const PASOS = ['Build y contrato', 'E2E real', 'Galería', 'Recorrido a 1440', 'Recorrido a 390'];
 const PANTALLAS = 'Pantallas contra el tablero';
 
 function lectura(extra = {}) {
@@ -39,7 +39,7 @@ const paso = (id, extra = {}) => ({ paso: id, resultado: 'verde', numero: '10/10
 const fallo = (archivo, dueno, extra = {}) => ({ paso: 'E2E real', archivo, linea: 7, causa: `rompe ${archivo}`, dueno, ...extra });
 const commit = (extra = {}) => ({ estado: 'hecha', commits: ['arr1'], archivos: [], archivosSinCommit: [], arreglados: ['uno (arr1)'], descartados: [], motivo: '', pregunta: '', cambiosAlContrato: [], verificacion: 'ok', ...extra });
 const hallazgo = (titulo, repo = 'front') => ({ titulo, punto: '13', repo, archivo: `${titulo}.tsx`, linea: 4, escenario: `se ve ${titulo}`, regla: 'pantallas-y-ui', porque: 'la captura', gravedad: 'media' });
-const idDe = { 'Integración y contrato': 'integracion', 'E2E real': 'e2e', Galería: 'galeria', 'Recorrido a 1440': 'recorrido-1440', 'Recorrido a 390': 'recorrido-390', 'Quitar el módulo': 'quitar-modulo' };
+const idDe = { 'Build y contrato': 'build', 'E2E real': 'e2e', Galería: 'galeria', 'Recorrido a 1440': 'recorrido-1440', 'Recorrido a 390': 'recorrido-390', 'Quitar el módulo': 'quitar-modulo' };
 
 /** Responde según la etiqueta; `propias` pisa las respuestas por defecto. */
 function respondedor(propias = {}, lect = lectura()) {
@@ -95,8 +95,8 @@ test('verificar: las cinco fases en orden, cada paso con su agente, y sin fallos
   assert.equal(fase('cierre'), 'Cierre');
   const i = (e) => etiquetas.indexOf(e);
   assert.ok(i('leer la sección') < i('escribir los casos') && i('escribir los casos') < i('armar las copias'), 'los casos se escriben antes de armar las copias');
-  assert.ok(i('armar las copias') < i('paso · Integración y contrato'));
-  assert.ok(i('paso · Integración y contrato') < i('paso · E2E real') && i('paso · E2E real') < i('paso · Galería'));
+  assert.ok(i('armar las copias') < i('paso · Build y contrato'));
+  assert.ok(i('paso · Build y contrato') < i('paso · E2E real') && i('paso · E2E real') < i('paso · Galería'));
   assert.ok(i('paso · Galería') < i(`revisión · ${PANTALLAS}`) && i('paso · Galería') < i('paso · Recorrido a 1440'));
   assert.ok(i('paso · Recorrido a 1440') < i('paso · Recorrido a 390'));
   assert.equal(etiquetas[etiquetas.length - 1], 'cierre');
@@ -165,10 +165,12 @@ test('verificar: cada paso pesado toma la fila por su cuenta, de a un comando, y
     const p = promptDe(llamadas, `paso · ${t}`);
     assert.match(p, /Nunca encadenes dos comandos en una misma llamada ni la tomes para esperar/, t);
     const comandos = [...p.matchAll(/carril\.mjs fila --dir (\S+) "([^"]*)"/g)].filter((m) => m[1] !== '<copia>');
-    if (t === 'Integración y contrato') {
-      assert.equal(comandos.length, 0, 'la integración espera la fila sola, con verificar.mjs');
-      assert.match(p, /cd C:\/e2e-prueba\/ArquitecturaBaseMutitenant\): node scripts\/arneses\/verificar\.mjs --integracion/);
-      assert.match(p, /no lo envuelvas en otra llamada a la fila/);
+    if (t === 'Build y contrato') {
+      assert.equal(comandos.length, 1, 'el build, en su propia llamada a la fila');
+      assert.equal(comandos[0][1], 'C:/e2e-prueba/ArquitecturaBaseMutitenant');
+      assert.equal(comandos[0][2], 'dotnet build ArquitecturaBaseMultitenant.slnx');
+      assert.doesNotMatch(p, /verificar\.mjs --integracion/, 'la suite de integración ya corrió en la fase 2 de etapa.js');
+      assert.match(p, /La suite de integración no corre acá: ya corrió completa en la revisión del código listo/);
       assert.match(p, /npm run contracts:check, que es liviano y va sin fila/);
       continue;
     }
@@ -196,7 +198,7 @@ test('verificar: los pasos van de a uno, y las pantallas contra el tablero corre
     return paso(id);
   };
   const resp = respondedor({
-    'paso · Integración y contrato': medir('integracion'),
+    'paso · Build y contrato': medir('build'),
     'paso · E2E real': medir('e2e'),
     'paso · Galería': medir('galeria'),
     'paso · Recorrido a 1440': medir('recorrido-1440'),
@@ -271,7 +273,7 @@ test('verificar: con un paso que sigue fallando, la verificación queda con fall
 });
 
 test('verificar: si el back de la copia no compila, no corre ningún otro paso', async () => {
-  const resp = respondedor({ 'paso · Integración y contrato': paso('integracion', { resultado: 'con fallos', compila: false, fallos: [fallo('Program.cs', 'back', { paso: 'Integración y contrato' })] }) });
+  const resp = respondedor({ 'paso · Build y contrato': paso('build', { resultado: 'con fallos', compila: false, fallos: [fallo('Program.cs', 'back', { paso: 'Build y contrato' })] }) });
   const { resultado, etiquetas } = await correr(resp);
   assert.ok(!etiquetas.some((e) => /^paso · (E2E|Galería|Recorrido)|^revisión · /.test(e)));
   assert.equal(filaDe(resultado, 'E2E real').resultado, 'no corrió');
