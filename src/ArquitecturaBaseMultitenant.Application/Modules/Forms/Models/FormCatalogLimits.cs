@@ -26,4 +26,13 @@ public static class FormCatalogLimits
     public const int MaxSampleMemberNames = 50;
     /// <summary>Opciones de la vista previa: con más, avisa <c>exceedsLimit</c> (§4).</summary>
     public const int PreviewOptions = 200;
+    /// <summary>
+    /// Los topes del archivo de importar (C8): 10 MiB, 64 columnas, 10.000 filas de datos y 640.128 celdas de trabajo, contando
+    /// las vacías con formato y las fórmulas matriciales; un XLSX, hasta 100 MiB descomprimido con sus estilos y textos compartidos.
+    /// </summary>
+    public const int MaxFileBytes = 10 * 1024 * 1024;
+    public const int MaxFileColumns = 64;
+    public const int MaxFileRows = 10_000;
+    public const int MaxFileCells = 640_128;
+    public const long MaxFileUncompressedBytes = 100L * 1024 * 1024;
 }

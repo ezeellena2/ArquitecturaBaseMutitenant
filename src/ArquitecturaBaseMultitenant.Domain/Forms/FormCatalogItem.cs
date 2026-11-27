@@ -17,7 +17,6 @@ public sealed class FormCatalogItem : Entity, ITenantOwned, IAuditable
     public const int MaxIntegerDigits = 18;
     public const int MaxDecimalDigits = 10;
     private const string DateFormat = "yyyy-MM-dd";
-    private const string NumberFormat = "0.##########";
 
     private FormCatalogItem() { }
     public Guid TenantId { get; private set; }
@@ -82,8 +81,8 @@ public sealed class FormCatalogItem : Entity, ITenantOwned, IAuditable
     }
 
     /// <summary>El valor como texto canónico (C6): el número con punto y sin ceros de más, o la fecha ISO; <c>null</c> en uno de texto.</summary>
-    public string? ValueText() =>
-        DateValue?.ToString(DateFormat, CultureInfo.InvariantCulture) ?? NumberValue?.ToString(NumberFormat, CultureInfo.InvariantCulture);
+    public string? ValueText() => DateValue is { } date ? FormCatalogValueText.Date(date)
+        : NumberValue is { } number ? FormCatalogValueText.Number(number) : null;
 
     /// <summary>La clave del código único por catálogo, sin distinguir mayúsculas ni la forma de escribir un acento.</summary>
     public static string NormalizeCode(string code)

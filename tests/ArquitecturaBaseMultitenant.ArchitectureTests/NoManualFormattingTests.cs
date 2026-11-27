@@ -31,6 +31,7 @@ public sealed class NoManualFormattingTests
         "ArquitecturaBaseMultitenant.Api.ErrorHandling.RetryAfterHeaderFormatter",
         "ArquitecturaBaseMultitenant.Application.Common.Formatting.VersionWireFormatter",
         "ArquitecturaBaseMultitenant.Infrastructure.Caching.CacheKeyFormat", // Generaciones de la clave física (ADR 0052).
+        "ArquitecturaBaseMultitenant.Domain.Forms.FormCatalogValueText", // El valor canónico de una opción de catálogo (C6 de la E12).
     };
 
     [Fact]

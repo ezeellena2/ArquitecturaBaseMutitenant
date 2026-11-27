@@ -34,4 +34,18 @@
   <data name="Forms.Validation.Repeated" xml:space="preserve"><value>Está repetido en el pedido.</value></data>
   <data name="Forms.Validation.SortCombined" xml:space="preserve"><value>Guardá los movimientos y las opciones por borrar antes de ordenar.</value></data>
   <data name="Forms.Validation.TooMany" xml:space="preserve"><value>Son demasiados de una vez. Guardá en partes.</value></data>
+  <data name="CatalogImport.Header.Code" xml:space="preserve"><value>Código</value></data>
+  <data name="CatalogImport.Header.Text" xml:space="preserve"><value>Texto</value></data>
+  <data name="CatalogImport.Header.Detail" xml:space="preserve"><value>Detalle</value></data>
+  <data name="CatalogImport.Header.Value" xml:space="preserve"><value>Valor</value></data>
+  <data name="CatalogImport.Header.Value.WholeNumber" xml:space="preserve"><value>Valor (entero)</value></data>
+  <data name="CatalogImport.Header.Value.DecimalNumber" xml:space="preserve"><value>Valor (decimal)</value></data>
+  <data name="CatalogImport.Header.Value.Date" xml:space="preserve"><value>Valor (fecha)</value></data>
+  <data name="CatalogImport.Required" xml:space="preserve"><value>Obligatorio.</value></data>
+  <data name="CatalogImport.Optional" xml:space="preserve"><value>Opcional.</value></data>
+  <data name="CatalogImport.SheetName" xml:space="preserve"><value>Opciones</value></data>
+  <data name="CatalogImport.TemplateFileName" xml:space="preserve"><value>Plantilla de catálogo.xlsx</value></data>
+  <data name="CatalogImport.Example.Code" xml:space="preserve"><value>CAP</value></data>
+  <data name="CatalogImport.Example.Text" xml:space="preserve"><value>Capital</value></data>
+  <data name="CatalogImport.Example.Detail" xml:space="preserve"><value>Dentro de la ciudad</value></data>
 </root>

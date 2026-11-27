@@ -97,6 +97,34 @@ internal sealed class FormCatalogReader(ApplicationDbContext context, ITenantCon
             page.Page, page.PageSize, page.TotalCount);
     }
 
+    public async Task<IReadOnlyList<FormCatalogItemSnapshot>> ListItemBatchAsync(Guid catalogId, int? afterPosition, int take,
+        CancellationToken ct)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(take);
+        var items = Items(catalogId);
+        if (afterPosition is { } after) items = items.Where(item => item.Position > after);
+        return Snapshots(await items.OrderBy(item => item.Position).Take(take).ToListAsync(ct));
+    }
+
+    public async Task<IReadOnlyList<FormCatalogItemSnapshot>> ListItemsByCodesAsync(Guid catalogId,
+        IReadOnlyCollection<string> normalizedCodes, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(normalizedCodes);
+        if (normalizedCodes.Count == 0) return [];
+        return Snapshots(await Items(catalogId).Where(item => normalizedCodes.Contains(item.CodeNormalized))
+            .OrderBy(item => item.Position).ToListAsync(ct));
+    }
+
+    private IQueryable<FormCatalogItem> Items(Guid catalogId)
+    {
+        var tenantId = tenantContext.RequiredTenantId;
+        return context.Set<FormCatalogItem>().AsNoTracking().Where(item => item.TenantId == tenantId && item.CatalogId == catalogId);
+    }
+
+    private static FormCatalogItemSnapshot[] Snapshots(IEnumerable<FormCatalogItem> items) =>
+        [.. items.Select(item => new FormCatalogItemSnapshot(item.Id, item.Code, item.CodeNormalized, item.Text, item.Detail,
+            item.ValueText(), item.Position, item.IsActive))];
+
     private IQueryable<CatalogProjection> Project(Guid tenantId, IQueryable<FormCatalog> catalogs) =>
         catalogs.Select(catalog => new CatalogProjection
         {

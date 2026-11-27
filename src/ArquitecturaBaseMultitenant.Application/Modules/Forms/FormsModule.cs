@@ -24,6 +24,8 @@ public static class FormsModule
         services.AddScoped<IFormCatalogSourceService, FormCatalogSourceService>();
         services.AddScoped<FormCatalogFiltersPolicy>();
         services.AddScoped<FormCatalogPreviewBuilder>();
+        services.AddScoped<IFormCatalogImportService, FormCatalogImportService>();
+        services.AddScoped<FormCatalogFileResolver>();
         return services;
     }
 }

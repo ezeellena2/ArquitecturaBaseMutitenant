@@ -19,4 +19,14 @@ public interface IFormCatalogReader
 
     /// <summary>Las opciones de un catálogo a mano, por posición, con el aviso del texto repetido.</summary>
     Task<PagedResult<FormCatalogItemRow>> ListItemsAsync(Guid catalogId, ListFormCatalogItemsRequest request, CancellationToken ct);
+
+    /// <summary>
+    /// Un lote de opciones, activas y dadas de baja, por posición y después de <paramref name="afterPosition"/>: exportar y revisar
+    /// un reemplazo leen en lotes, sin traer las 10.000 de una vez.
+    /// </summary>
+    Task<IReadOnlyList<FormCatalogItemSnapshot>> ListItemBatchAsync(Guid catalogId, int? afterPosition, int take, CancellationToken ct);
+
+    /// <summary>Las opciones del catálogo que tienen guardado alguno de esos códigos normalizados: lo que revisa lo pegado.</summary>
+    Task<IReadOnlyList<FormCatalogItemSnapshot>> ListItemsByCodesAsync(Guid catalogId, IReadOnlyCollection<string> normalizedCodes,
+        CancellationToken ct);
 }
