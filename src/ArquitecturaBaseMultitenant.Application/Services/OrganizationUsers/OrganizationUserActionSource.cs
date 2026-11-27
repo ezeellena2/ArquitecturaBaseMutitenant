@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
@@ -14,7 +15,6 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
-using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 
@@ -46,8 +46,7 @@ internal sealed class OrganizationUserActionSource(
     CompanyActionResolver companies,
     RoleActionResolver roles,
     DelegationPermissionsResolver delegation,
-    IValidator<InviteOrganizationUserRequest> inviteValidator,
-    IValidator<UpdateOrganizationUserRequest> updateValidator,
+    IRequestValidator validator,
     ICurrentUser currentUser,
     TimeProvider timeProvider) : IAssistantActionSource
 {
@@ -285,12 +284,10 @@ internal sealed class OrganizationUserActionSource(
         var companyOps = AssistantActionInputs.OpsOf<Guid>(resolution, CompanyRolesField);
         var desired = Desired(target, AssistantActionInputs.OpsOf<Guid>(resolution, RolesField), companyId, companyOps);
 
-        var validation = target is null
-            ? await inviteValidator.ValidateAsync(new InviteOrganizationUserRequest(EmailOf(resolution), [.. desired.Organization], desired.Companies), cancellationToken)
-            : await updateValidator.ValidateAsync(new UpdateOrganizationUserRequest(target.MemberId, [.. desired.Organization], desired.Companies, target.Version), cancellationToken);
-        if (!validation.IsValid)
-            return new ValidationError(validation.Errors.GroupBy(failure => FieldOf(failure.PropertyName), StringComparer.Ordinal)
-                .ToDictionary(group => group.Key, _ => new[] { ValidationError.ErrorCode }, StringComparer.Ordinal));
+        var failure = target is null
+            ? await validator.ValidateAsync(new InviteOrganizationUserRequest(EmailOf(resolution), [.. desired.Organization], desired.Companies), cancellationToken)
+            : await validator.ValidateAsync(new UpdateOrganizationUserRequest(target.MemberId, [.. desired.Organization], desired.Companies, target.Version), cancellationToken);
+        if (failure is not null) return AssistantActionInputs.OnActionFields(failure, FieldOf);
 
         // La regla del Guard de la ruta (0061): cada rol que se da, se quita o vuelve, lo tiene quien pide donde se da.
         var changes = OrganizationUserRoleChangePolicy.Decide(Assignments(target).ToArray(), desired.Keys, key => key,
@@ -417,7 +414,7 @@ internal sealed class OrganizationUserActionSource(
             .Concat(row.Companies.SelectMany(company => company.Roles.Select(role => (role.Id, (Guid?)company.CompanyId))));
 
     // El pedido nombra los campos del HTTP; la propuesta, los de la pantalla.
-    private static string FieldOf(string property) => property switch
+    internal static string FieldOf(string property) => property switch
     {
         nameof(InviteOrganizationUserRequest.Email) => EmailField,
         nameof(InviteOrganizationUserRequest.RoleIds) => RolesField,

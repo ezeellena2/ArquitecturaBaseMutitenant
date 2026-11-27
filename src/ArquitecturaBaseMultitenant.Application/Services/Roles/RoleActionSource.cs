@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.AssistantActions;
@@ -11,7 +12,6 @@ using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
-using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Roles;
 
@@ -41,8 +41,7 @@ internal sealed class RoleActionSource(
     RoleActionResolver roleNames,
     CompanyActionResolver companies,
     DelegationPermissionsResolver delegation,
-    IValidator<CreateRoleRequest> createValidator,
-    IValidator<UpdateRoleRequest> updateValidator) : IAssistantActionSource
+    IRequestValidator validator) : IAssistantActionSource
 {
     internal const string NameField = "name";
     internal const string DescriptionField = "description";
@@ -272,12 +271,10 @@ internal sealed class RoleActionSource(
         // Como guarda la ruta: lo pedido más lo que incluye (260).
         string[] after = [.. Permissions.Inclusions.WithIncluded(AssistantActionInputs.Apply(before, OpsOf(resolution))).Order(StringComparer.Ordinal)];
 
-        var validation = target is null
-            ? await createValidator.ValidateAsync(new CreateRoleRequest(name, description, scope, companyId, after), cancellationToken)
-            : await updateValidator.ValidateAsync(new UpdateRoleRequest(target.Id, name, description, target.Scope, target.CompanyId, after, target.Version), cancellationToken);
-        if (!validation.IsValid)
-            return new ValidationError(validation.Errors.GroupBy(failure => FieldOfProperty(failure.PropertyName), StringComparer.Ordinal)
-                .ToDictionary(group => group.Key, _ => new[] { ValidationError.ErrorCode }, StringComparer.Ordinal));
+        var failure = target is null
+            ? await validator.ValidateAsync(new CreateRoleRequest(name, description, scope, companyId, after), cancellationToken)
+            : await validator.ValidateAsync(new UpdateRoleRequest(target.Id, name, description, target.Scope, target.CompanyId, after, target.Version), cancellationToken);
+        if (failure is not null) return AssistantActionInputs.OnActionFields(failure, FieldOfProperty);
 
         // Las reglas del rol que corre la ruta (dónde vale, su empresa y el catálogo de su alcance), en memoria.
         var role = Role.Create(name, description, scope!.Value, companyId, after);
@@ -401,7 +398,7 @@ internal sealed class RoleActionSource(
             ? scope : null;
 
     // El pedido nombra los campos del HTTP; la propuesta, los de la pantalla.
-    private static string FieldOfProperty(string property) => property switch
+    internal static string FieldOfProperty(string property) => property switch
     {
         nameof(CreateRoleRequest.Name) => NameField,
         nameof(CreateRoleRequest.Description) => DescriptionField,

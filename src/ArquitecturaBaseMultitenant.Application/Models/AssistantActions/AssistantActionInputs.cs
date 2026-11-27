@@ -101,6 +101,23 @@ internal static class AssistantActionInputs
         new(new Dictionary<string, string[]>(StringComparer.Ordinal) { [path] = [code] });
 
     /// <summary>
+    /// Lo que rechazó el validador de la ruta (<c>IRequestValidator</c>), vuelto a los campos de la acción con el código
+    /// genérico. Cada clave llega como campo JSON (<c>companyId</c>, <c>permissions.0</c>); <paramref name="fieldOfProperty"/>
+    /// recibe la propiedad del pedido que la originó (<c>CompanyId</c>, <c>Permissions</c>), así la fuente la nombra con
+    /// <c>nameof</c>.
+    /// </summary>
+    internal static ValidationError OnActionFields(ValidationError failure, Func<string, string> fieldOfProperty) =>
+        new(failure.Errors.Keys.GroupBy(key => fieldOfProperty(PropertyOf(key)), StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, _ => new[] { ValidationError.ErrorCode }, StringComparer.Ordinal));
+
+    // El primer tramo del campo JSON con su inicial en mayúscula: la propiedad del pedido que lo originó.
+    private static string PropertyOf(string field)
+    {
+        var head = field.Split('.', 2)[0];
+        return head.Length == 0 ? head : string.Concat(char.ToUpperInvariant(head[0]).ToString(), head.AsSpan(1));
+    }
+
+    /// <summary>
     /// Una página de un catálogo cerrado (los alcances, los permisos del catálogo): no es una tabla, así que se busca y se
     /// pagina en memoria, de a <see cref="AssistantActionLimits.ChoicesPerPage"/>. Lo que sale de la base pagina en su lector.
     /// </summary>
