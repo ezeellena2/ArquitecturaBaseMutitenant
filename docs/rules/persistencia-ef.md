@@ -47,7 +47,7 @@
 
 ## Lo verifica
 - `EntityConfigurationTests` (E2), `DataClassificationTests` (E2), `DecimalPrecisionTests` (E1), `TextLimitsTests` (E1), `TransactionBoundaryTests` (E2), `UniqueKeysTests` (E6), `PersistenceNamingTests` (E12): el prefijo y lo que devuelve cada método de `Interfaces/Persistence`
-- `RuntimeRoleTableGrantsTests`: cada tabla que mapea el modelo, ya migrada, tiene su `GRANT SELECT` a `mt_app`
+- `RuntimeRoleTableGrantsTests` (E12): cada tabla que mapea el modelo, ya migrada, tiene su `GRANT SELECT` a `mt_app`
 - `BannedSymbols.txt`: `FromSqlRaw`, `ExecuteSqlRaw` y `SqlQueryRaw` rompen el build (RS0030), también en los tests
 
 ## Detalle
