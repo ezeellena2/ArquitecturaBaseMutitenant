@@ -17,9 +17,10 @@ public sealed class SensitiveToStringLoggingTests
     {
         var violations = SensitiveRequests(ApiAssembly)
             .Where(type => !HasSafeToString(CreateWithSentinel(type), Sentinel))
-            .Select(type => type.FullName);
+            .Select(type => type.Name)
+            .ToArray();
 
-        Assert.Empty(violations);
+        Assert.True(violations.Length == 0, string.Join(", ", violations));
     }
 
     [Fact]
@@ -29,12 +30,18 @@ public sealed class SensitiveToStringLoggingTests
         Assert.True(HasSafeToString(new PhoneInputHttpRequest("AR", Sentinel), Sentinel));
     }
 
+    // Los pedidos y las partes que llevan adentro (*HttpInput), del núcleo y de los módulos (api-http.md). Un sí o no, un id o un
+    // número (OfferAccountLink) no llevan el dato: cuentan los textos y las partes.
     private static IEnumerable<Type> SensitiveRequests(Assembly assembly) =>
         assembly.GetTypes().Where(type => type is { IsClass: true, IsAbstract: false }
-            && type.Name.EndsWith("HttpRequest", StringComparison.Ordinal)
-            && type.Namespace?.StartsWith("ArquitecturaBaseMultitenant.Api.Contracts", StringComparison.Ordinal) == true
+            && (type.Name.EndsWith("HttpRequest", StringComparison.Ordinal) || type.Name.EndsWith("HttpInput", StringComparison.Ordinal))
+            && type.Namespace is { } ns
+            && (ns.StartsWith("ArquitecturaBaseMultitenant.Api.Contracts", StringComparison.Ordinal)
+                || (ns.StartsWith("ArquitecturaBaseMultitenant.Api.Modules.", StringComparison.Ordinal)
+                    && ns.Contains(".Contracts", StringComparison.Ordinal)))
             && type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Any(property => SensitiveNames.Any(name => property.Name.Contains(name, StringComparison.OrdinalIgnoreCase))));
+                .Any(property => !property.PropertyType.IsValueType
+                    && SensitiveNames.Any(name => property.Name.Contains(name, StringComparison.OrdinalIgnoreCase))));
 
     private static readonly string[] SensitiveNames =
         ["Email", "Phone", "Number", "Tax", "Token", "Password", "Secret", "Code", "Link", "Document"];

@@ -25,7 +25,9 @@ public static class JsonConfiguration
         var resolver = new DefaultJsonTypeInfoResolver();
         resolver.Modifiers.Add(typeInfo =>
         {
-            if (!typeInfo.Type.Name.EndsWith("HttpRequest", StringComparison.Ordinal))
+            // Un pedido y las partes que lleva adentro (*HttpInput, como una opción de un catálogo) limpian igual sus textos.
+            if (!typeInfo.Type.Name.EndsWith("HttpRequest", StringComparison.Ordinal)
+                && !typeInfo.Type.Name.EndsWith("HttpInput", StringComparison.Ordinal))
             {
                 return;
             }

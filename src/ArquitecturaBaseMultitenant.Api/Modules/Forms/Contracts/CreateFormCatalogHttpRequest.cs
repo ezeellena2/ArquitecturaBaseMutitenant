@@ -11,7 +11,10 @@ public sealed record CreateFormCatalogHttpRequest(string? Name, string? Descript
 
 /// <summary>Una opción nueva (con <c>localId</c>) o cambiada (con <c>itemId</c>); el valor va como texto canónico (C6).</summary>
 public sealed record FormCatalogItemHttpInput(Guid? ItemId, string? LocalId, string? Code, string? Text, string? Detail, string? Value,
-    bool? IsActive);
+    bool? IsActive)
+{
+    public override string ToString() => nameof(FormCatalogItemHttpInput);
+}
 
 /// <summary>Los filtros de un catálogo de miembros o de contactos (C5), con la versión de la fuente que se leyó.</summary>
 public sealed record FormCatalogFiltersHttpInput(int? SourceVersion, IReadOnlyList<FormCatalogConditionHttpInput>? Conditions,

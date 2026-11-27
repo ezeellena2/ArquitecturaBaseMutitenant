@@ -3,7 +3,7 @@
 **Regla:** todo texto que entra a la API se **limpia solo**: sin espacios en los bordes, Unicode NFC y sin invisibles peligrosos. Además, cada campo declara su **tipo de texto**, que fija su largo y si se colapsan los espacios. Los largos son constantes compartidas por la base, el validador y el front.
 
 ## Cómo se hace
-- **Nivel 1, automático:** el resolver de `JsonConfiguration` aplica `NormalizedStringJsonConverter` a las propiedades `string` de los contratos HTTP de entrada (`*HttpRequest`) y ejecuta `TextNormalizer.Clean`:
+- **Nivel 1, automático:** el resolver de `JsonConfiguration` aplica `NormalizedStringJsonConverter` a las propiedades `string` de los contratos HTTP de entrada (`*HttpRequest` y las partes que llevan adentro, `*HttpInput`) y ejecuta `TextNormalizer.Clean`:
   - trim;
   - normalización NFC;
   - saca los controles Unicode salvo `\n` y `\t`, y una lista cerrada de invisibles peligrosos: soft hyphen (`U+00AD`), marca árabe (`U+061C`), zero-width space (`U+200B`), marcas de dirección (`U+200E`, `U+200F`, `U+202A`–`U+202E`, `U+2066`–`U+2069`), word joiner (`U+2060`) y BOM (`U+FEFF`);
@@ -37,7 +37,7 @@
 - `Application/Common/Text/TextNormalizer.cs` y `Api/Json/NormalizedStringJsonConverter.cs` (E1).
 
 ## Lo verifica
-- `TextLimitsTests` (E1)
+- `TextLimitsTests` (E1) · `NestedInputJsonTests` (E12): los `*HttpInput` limpian sus textos como el pedido
 
 ## Detalle
 [backend.md §20](../architecture/backend.md#20-reglas-de-datos-que-se-aplican-solas)

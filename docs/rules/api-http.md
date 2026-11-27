@@ -7,7 +7,7 @@
 - **Entrada:**
   - `[FromBody] XHttpRequest` o `[FromQuery] XQuery` (records sealed con props nullable), mapeados a mano;
   - excepción de protocolo: `POST /api/auth/external/google` recibe `[FromForm] ExternalLoginQuery` porque el navegador debe navegar al desafío Google; valida antiforgery antes de iniciarlo. `GET .../google/antiforgery` emite el token para Registro;
-  - si lleva datos personales, códigos o tokens (una propiedad que termina en Email, Phone, Code, Token, ApiKey o DisplayName, o que se llama Number), sobrescribe `ToString()`, también en los módulos, y los modelos de Application con datos privados lo ocultan igual. `ControllerInputContractTests` lo controlará en todo contrato, no solo en los `*HttpRequest` del núcleo (traspaso 9).
+  - si lleva datos personales, códigos o tokens (una propiedad que termina en Email, Phone, Code, Token, ApiKey o DisplayName, o que se llama Number), sobrescribe `ToString()`, también en los módulos, y los modelos de Application con datos privados lo ocultan igual. `SensitiveToStringLoggingTests` lo controla en los `*HttpRequest` y en las partes que llevan adentro (`*HttpInput`), del núcleo y de los módulos.
   - los enums viajan por su nombre en JSON; un valor numérico se rechaza con 400. Los instantes usan `DateTime` UTC con sufijo `Utc`; `DateTimeOffset` no va en propiedades ni parámetros de contratos HTTP.
 - **Salida:**
   - `POST` que crea: `ToCreatedResult(this, nameof(Get), id => new { id })` → 201 con `Location`;
@@ -50,7 +50,7 @@
 - `Api/Controllers/Organization/RolesController.cs` y `Api/Contracts/Organization/*Role*` (E4)
 
 ## Lo verifica
-- `FormsContractExamplesCoverageTests` y `FormsContractExamplesTests` (E12, los ejemplos de una corrida real) · `ControllerInputContractTests` (E1), `ControllerServiceRepositoryTests` (E0), `MinimalApiRoutesTests` (E0), `ControllerOutputContractTests` (E7), `AccessDeclarationTests` (E3), `SecurityHeadersTests` (E9), `BrowserSecurityTests` (E9)
+- `FormsContractExamplesCoverageTests` y `FormsContractExamplesTests` (E12, los ejemplos de una corrida real) · `ControllerInputContractTests` (E1), `ControllerServiceRepositoryTests` (E0), `MinimalApiRoutesTests` (E0), `ControllerOutputContractTests` (E7), `AccessDeclarationTests` (E3), `SecurityHeadersTests` (E9), `BrowserSecurityTests` (E9), `SensitiveToStringLoggingTests` (E1; los módulos y los `*HttpInput` desde la E12)
 
 ## Detalle
 [backend.md §5 y §17](../architecture/backend.md#controller) · ADR 0002 · [errores técnicos del contrato](../features/contrato-http.md)
