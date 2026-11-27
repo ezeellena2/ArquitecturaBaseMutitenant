@@ -11,8 +11,8 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Modules.Assistant;
 
 /// <summary>
-/// Las fuentes de acciones validan con el puerto <c>IRequestValidator</c>, como la ruta: lo que rechaza su validador llega
-/// con el campo JSON del pedido y vuelve al modelo en el campo de la acción, con el código genérico.
+/// Las fuentes de acciones corren los validadores del pedido con <c>RequestValidator.ValidateAsync</c>, como la ruta: lo
+/// que rechazan llega con el campo JSON del pedido y vuelve al modelo en el campo de la acción, con el código genérico.
 /// </summary>
 public sealed class AssistantActionInputsTests
 {

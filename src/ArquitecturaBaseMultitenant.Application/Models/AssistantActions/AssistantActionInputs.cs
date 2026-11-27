@@ -101,10 +101,10 @@ internal static class AssistantActionInputs
         new(new Dictionary<string, string[]>(StringComparer.Ordinal) { [path] = [code] });
 
     /// <summary>
-    /// Lo que rechazó el validador de la ruta (<c>IRequestValidator</c>), vuelto a los campos de la acción con el código
-    /// genérico. Cada clave llega como campo JSON (<c>companyId</c>, <c>permissions.0</c>); <paramref name="fieldOfProperty"/>
-    /// recibe la propiedad del pedido que la originó (<c>CompanyId</c>, <c>Permissions</c>), así la fuente la nombra con
-    /// <c>nameof</c>.
+    /// Lo que rechazaron los validadores de la ruta, corridos con <c>RequestValidator.ValidateAsync</c> como en el puerto,
+    /// vuelto a los campos de la acción con el código genérico. Cada clave llega como campo JSON (<c>companyId</c>,
+    /// <c>permissions.0</c>); <paramref name="fieldOfProperty"/> recibe la propiedad del pedido que la originó
+    /// (<c>CompanyId</c>, <c>Permissions</c>), así la fuente la nombra con <c>nameof</c>.
     /// </summary>
     internal static ValidationError OnActionFields(ValidationError failure, Func<string, string> fieldOfProperty) =>
         new(failure.Errors.Keys.GroupBy(key => fieldOfProperty(PropertyOf(key)), StringComparer.Ordinal)

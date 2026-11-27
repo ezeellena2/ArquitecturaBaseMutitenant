@@ -18,7 +18,7 @@
 
 ## Prohibido
 - Validar dentro del límite o en el controller.
-- Inyectar un `IValidator<T>` o un validador por request en el constructor.
+- Inyectar un `IValidator<T>` o un validador por request en el constructor. Única excepción: una fuente de acciones del asistente (`IAssistantActionSource`) recibe `IEnumerable<IValidator<T>>` de su pedido y lo corre con `RequestValidator.ValidateAsync(request, validators, ct)`, porque el puerto resuelve con `IServiceProvider` y el test del árbol de solo lectura ([0068 §5](../decisions/0068-acciones-del-asistente.md)) no lo puede recorrer; así recorre cada validador y el error sale igual que en la ruta.
 - `.WithMessage("texto")` literal.
 - Reglas de negocio que necesitan la base (unicidad, existencia) en el validador: van en el servicio, como `Error`.
 - Validar un teléfono en el validador: lo decide el servicio con `IPhoneNumberParser`.
@@ -27,7 +27,7 @@
 - `Application/Validation/Roles/CreateRoleRequestValidator.cs` (E4)
 
 ## Lo verifica
-- `ValidationMessageTests` (E7), `InjectedValidatorTests` (E1), `ServiceDependencyCountTests` (E1)
+- `ValidationMessageTests` (E7), `InjectedValidatorTests` (E1, con la excepción de las fuentes de acciones), `ServiceDependencyCountTests` (E1)
 
 ## Detalle
 [backend.md §6, "Validación"](../architecture/backend.md#6-result-pattern-y-manejo-de-errores)

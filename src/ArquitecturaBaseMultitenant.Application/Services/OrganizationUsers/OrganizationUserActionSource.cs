@@ -15,6 +15,7 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.OrganizationUsers;
 
@@ -46,7 +47,8 @@ internal sealed class OrganizationUserActionSource(
     CompanyActionResolver companies,
     RoleActionResolver roles,
     DelegationPermissionsResolver delegation,
-    IRequestValidator validator,
+    IEnumerable<IValidator<InviteOrganizationUserRequest>> inviteValidators,
+    IEnumerable<IValidator<UpdateOrganizationUserRequest>> updateValidators,
     ICurrentUser currentUser,
     TimeProvider timeProvider) : IAssistantActionSource
 {
@@ -285,8 +287,8 @@ internal sealed class OrganizationUserActionSource(
         var desired = Desired(target, AssistantActionInputs.OpsOf<Guid>(resolution, RolesField), companyId, companyOps);
 
         var failure = target is null
-            ? await validator.ValidateAsync(new InviteOrganizationUserRequest(EmailOf(resolution), [.. desired.Organization], desired.Companies), cancellationToken)
-            : await validator.ValidateAsync(new UpdateOrganizationUserRequest(target.MemberId, [.. desired.Organization], desired.Companies, target.Version), cancellationToken);
+            ? await RequestValidator.ValidateAsync(new InviteOrganizationUserRequest(EmailOf(resolution), [.. desired.Organization], desired.Companies), inviteValidators, cancellationToken)
+            : await RequestValidator.ValidateAsync(new UpdateOrganizationUserRequest(target.MemberId, [.. desired.Organization], desired.Companies, target.Version), updateValidators, cancellationToken);
         if (failure is not null) return AssistantActionInputs.OnActionFields(failure, FieldOf);
 
         // La regla del Guard de la ruta (0061): cada rol que se da, se quita o vuelve, lo tiene quien pide donde se da.

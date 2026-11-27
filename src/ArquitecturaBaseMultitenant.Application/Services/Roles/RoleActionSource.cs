@@ -12,6 +12,7 @@ using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using FluentValidation;
 
 namespace ArquitecturaBaseMultitenant.Application.Services.Roles;
 
@@ -41,7 +42,8 @@ internal sealed class RoleActionSource(
     RoleActionResolver roleNames,
     CompanyActionResolver companies,
     DelegationPermissionsResolver delegation,
-    IRequestValidator validator) : IAssistantActionSource
+    IEnumerable<IValidator<CreateRoleRequest>> createValidators,
+    IEnumerable<IValidator<UpdateRoleRequest>> updateValidators) : IAssistantActionSource
 {
     internal const string NameField = "name";
     internal const string DescriptionField = "description";
@@ -272,8 +274,8 @@ internal sealed class RoleActionSource(
         string[] after = [.. Permissions.Inclusions.WithIncluded(AssistantActionInputs.Apply(before, OpsOf(resolution))).Order(StringComparer.Ordinal)];
 
         var failure = target is null
-            ? await validator.ValidateAsync(new CreateRoleRequest(name, description, scope, companyId, after), cancellationToken)
-            : await validator.ValidateAsync(new UpdateRoleRequest(target.Id, name, description, target.Scope, target.CompanyId, after, target.Version), cancellationToken);
+            ? await RequestValidator.ValidateAsync(new CreateRoleRequest(name, description, scope, companyId, after), createValidators, cancellationToken)
+            : await RequestValidator.ValidateAsync(new UpdateRoleRequest(target.Id, name, description, target.Scope, target.CompanyId, after, target.Version), updateValidators, cancellationToken);
         if (failure is not null) return AssistantActionInputs.OnActionFields(failure, FieldOfProperty);
 
         // Las reglas del rol que corre la ruta (dónde vale, su empresa y el catálogo de su alcance), en memoria.
