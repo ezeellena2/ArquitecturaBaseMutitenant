@@ -8,7 +8,7 @@ namespace ArquitecturaBaseMultitenant.Domain.Forms;
 /// <summary>
 /// Una opción de un catálogo a mano (E12, §3). El código es único por catálogo sin distinguir mayúsculas
 /// (<see cref="CodeNormalized"/>), y la posición la maneja el servidor (C4). En un catálogo tipado lleva su valor, guardado canónico
-/// (C6); en uno de texto, ninguno. El índice de cada método es el de la opción en el pedido (<c>items[i]</c>), para el campo del
+/// (C6); en uno de texto, ninguno. El índice de cada método es el de la opción en el pedido (<c>items.{i}</c>), para el campo del
 /// error. Borrarla es sacarla con el repositorio, después de comprobar que nada la usa (129).
 /// </summary>
 public sealed class FormCatalogItem : Entity, ITenantOwned, IAuditable
@@ -69,6 +69,16 @@ public sealed class FormCatalogItem : Entity, ITenantOwned, IAuditable
         if (neighbor.CatalogId != CatalogId) throw new InvalidOperationException("The neighbor belongs to another catalog.");
         (Position, neighbor.Position) = (neighbor.Position, Position);
         return Result.Success();
+    }
+
+    /// <summary>
+    /// La deja en su lugar del orden que arma el servidor bajo el bloqueo del catálogo (C4): al ordenar todas (224), al cerrar el
+    /// hueco de las borradas o al sumar una nueva al final. La restricción diferida admite que dos se crucen hasta confirmar.
+    /// </summary>
+    public void PlaceAt(int position)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(position);
+        Position = position;
     }
 
     /// <summary>El valor como texto canónico (C6): el número con punto y sin ceros de más, o la fecha ISO; <c>null</c> en uno de texto.</summary>

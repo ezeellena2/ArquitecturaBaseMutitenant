@@ -31,4 +31,7 @@
   <data name="Forms.CatalogImport.ConfirmationRequired" xml:space="preserve"><value>Confirmá las bajas o las filas con errores antes de aplicar.</value></data>
   <data name="Forms.CatalogImport.Busy" xml:space="preserve"><value>Ya tenés una importación o una exportación en curso. Probá en un momento.</value></data>
   <data name="Forms.CatalogImport.TooManyAtOnce" xml:space="preserve"><value>Hay muchas importaciones y exportaciones en curso. Probá en un momento.</value></data>
+  <data name="Forms.Validation.Repeated" xml:space="preserve"><value>Está repetido en el pedido.</value></data>
+  <data name="Forms.Validation.SortCombined" xml:space="preserve"><value>Guardá los movimientos y las opciones por borrar antes de ordenar.</value></data>
+  <data name="Forms.Validation.TooMany" xml:space="preserve"><value>Son demasiados de una vez. Guardá en partes.</value></data>
 </root>

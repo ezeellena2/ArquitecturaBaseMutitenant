@@ -99484,12 +99484,14 @@
         "type": "object",
         "properties": {
           "name": {
+            "maxLength": 60,
             "type": [
               "null",
               "string"
             ]
           },
           "description": {
+            "maxLength": 300,
             "type": [
               "null",
               "string"
@@ -107966,12 +107968,14 @@
         "type": "object",
         "properties": {
           "name": {
+            "maxLength": 60,
             "type": [
               "null",
               "string"
             ]
           },
           "description": {
+            "maxLength": 300,
             "type": [
               "null",
               "string"

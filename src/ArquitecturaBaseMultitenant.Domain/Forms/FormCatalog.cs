@@ -84,14 +84,24 @@ public sealed class FormCatalog : Entity, ITenantOwned, IAuditable, IVersioned
     /// <param name="roleMissing">Si falta un rol de una condición.</param>
     /// <param name="companyMissing">Si falta una empresa de una condición.</param>
     public FormCatalogUnusableReason? UnusableReason(int activeItems, int currentSourceVersion, bool channelAvailable,
-        bool roleMissing, bool companyMissing)
+        bool roleMissing, bool companyMissing) =>
+        UnusableReason(new FormCatalogState(Source, IsActive, Source == FormCatalogSource.Manual ? null : ReadFilters()), activeItems,
+            currentSourceVersion, channelAvailable, roleMissing, companyMissing);
+
+    /// <summary>
+    /// La misma regla sobre lo que se leyó de la base sin la entidad, como la fila del listado o el detalle: un lector proyecta el
+    /// catálogo y sus cuentas, y el servicio calcula el estado con esta regla, la única.
+    /// </summary>
+    public static FormCatalogUnusableReason? UnusableReason(FormCatalogState catalog, int activeItems, int currentSourceVersion,
+        bool channelAvailable, bool roleMissing, bool companyMissing)
     {
-        if (!IsActive) return null;
-        if (Source == FormCatalogSource.Manual) return activeItems > 0 ? null : FormCatalogUnusableReason.NoActiveOptions;
-        if (Source == FormCatalogSource.Contacts && !channelAvailable) return FormCatalogUnusableReason.ChannelUnavailable;
-        var filters = ReadFilters() ?? throw new InvalidOperationException("A filtered catalog needs its filters.");
+        ArgumentNullException.ThrowIfNull(catalog);
+        if (!catalog.IsActive) return null;
+        if (catalog.Source == FormCatalogSource.Manual) return activeItems > 0 ? null : FormCatalogUnusableReason.NoActiveOptions;
+        if (catalog.Source == FormCatalogSource.Contacts && !channelAvailable) return FormCatalogUnusableReason.ChannelUnavailable;
+        var filters = catalog.Filters ?? throw new InvalidOperationException("A filtered catalog needs its filters.");
         if (filters.SourceVersion != currentSourceVersion) return FormCatalogUnusableReason.SourceOutdated;
-        if (Source == FormCatalogSource.Contacts) return null;
+        if (catalog.Source == FormCatalogSource.Contacts) return null;
         if (roleMissing) return FormCatalogUnusableReason.RoleMissing;
         return companyMissing ? FormCatalogUnusableReason.CompanyMissing : null;
     }

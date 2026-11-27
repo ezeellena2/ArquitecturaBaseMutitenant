@@ -31,4 +31,7 @@
   <data name="Forms.CatalogImport.ConfirmationRequired" xml:space="preserve"><value>Confirm the deactivations or the rows with errors before applying.</value></data>
   <data name="Forms.CatalogImport.Busy" xml:space="preserve"><value>You already have an import or an export in progress. Try again in a moment.</value></data>
   <data name="Forms.CatalogImport.TooManyAtOnce" xml:space="preserve"><value>There are too many imports and exports in progress. Try again in a moment.</value></data>
+  <data name="Forms.Validation.Repeated" xml:space="preserve"><value>It's repeated in the request.</value></data>
+  <data name="Forms.Validation.SortCombined" xml:space="preserve"><value>Save the moves and the options to delete before sorting.</value></data>
+  <data name="Forms.Validation.TooMany" xml:space="preserve"><value>There are too many at once. Save in parts.</value></data>
 </root>

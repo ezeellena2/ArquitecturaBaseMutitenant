@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Localization;
+using ArquitecturaBaseMultitenant.Application.Modules.Forms.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Resources;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,9 @@ public static class FormsModule
     {
         services.AddSingleton<IFeatureDefinitionContributor, FormsFeatureDefinitionContributor>();
         services.AddSingleton<IErrorTextSource, FormsErrorTextSource>();
+        services.AddScoped<IFormCatalogService, FormCatalogService>();
+        services.AddScoped<FormCatalogItemEditor>();
+        services.AddScoped<FormCatalogPositionGuard>();
         return services;
     }
 }

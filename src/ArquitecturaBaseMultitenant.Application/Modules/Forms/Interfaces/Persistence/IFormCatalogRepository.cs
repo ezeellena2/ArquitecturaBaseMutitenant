@@ -14,6 +14,13 @@ public interface IFormCatalogRepository
     /// <summary>Las opciones pedidas del catálogo, seguidas; una de otro catálogo no viene.</summary>
     Task<IReadOnlyList<FormCatalogItem>> ListItemsAsync(Guid catalogId, IReadOnlyCollection<Guid> itemIds, CancellationToken ct);
 
+    /// <summary>
+    /// Las opciones del catálogo que tienen guardado alguno de esos códigos normalizados, seguidas: el código único se comprueba
+    /// bajo el bloqueo sin traer las 10.000 (C4).
+    /// </summary>
+    Task<IReadOnlyList<FormCatalogItem>> ListItemsByCodesAsync(Guid catalogId, IReadOnlyCollection<string> normalizedCodes,
+        CancellationToken ct);
+
     /// <summary>Todas las opciones del catálogo por posición, seguidas: para reordenar o cargar de una vez (hasta 10.000).</summary>
     Task<IReadOnlyList<FormCatalogItem>> ListAllItemsAsync(Guid catalogId, CancellationToken ct);
 

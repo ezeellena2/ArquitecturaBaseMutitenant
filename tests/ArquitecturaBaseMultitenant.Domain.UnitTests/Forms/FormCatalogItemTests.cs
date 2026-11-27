@@ -39,8 +39,8 @@ public sealed class FormCatalogItemTests
             new string('x', FormsTextLimits.OptionDetail), null, true, 0);
 
         Assert.Equal(FormCatalogErrors.ItemTextTooLongCode, text.Error.Code);
-        Assert.Equal(["items[2].text"], ((ValidationError)text.Error).Errors.Keys);
-        Assert.Equal(["items[3].detail"], ((ValidationError)detail.Error).Errors.Keys);
+        Assert.Equal(["items.2.text"], ((ValidationError)text.Error).Errors.Keys);
+        Assert.Equal(["items.3.detail"], ((ValidationError)detail.Error).Errors.Keys);
         Assert.True(fits.IsSuccess);
     }
 
@@ -82,7 +82,7 @@ public sealed class FormCatalogItemTests
         var result = FormCatalogItem.Create(catalog, 4, "A", "Uno", null, value, true, 0);
 
         Assert.Equal(FormCatalogErrors.ValueInvalidCode, result.Error.Code);
-        Assert.Equal(["Forms.Catalog.ValueInvalid." + valueType], ((ValidationError)result.Error).Errors["items[4].value"]);
+        Assert.Equal(["Forms.Catalog.ValueInvalid." + valueType], ((ValidationError)result.Error).Errors["items.4.value"]);
     }
 
     [Fact]
@@ -95,7 +95,7 @@ public sealed class FormCatalogItemTests
         var edited = item.Edit(catalog, 7, "B", "Cinco", null, null);
 
         Assert.Equal(FormCatalogErrors.ValueRequiredCode, missing.Error.Code);
-        Assert.Equal(["items[7].value"], ((ValidationError)edited.Error).Errors.Keys);
+        Assert.Equal(["items.7.value"], ((ValidationError)edited.Error).Errors.Keys);
         Assert.Equal(("Opción B", "5"), (item.Text, item.ValueText()));
         Assert.True(item.Edit(catalog, 7, "b2", "Seis", "Detalle", "6").IsSuccess);
         Assert.Equal(("b2", "B2", "Seis", "Detalle", "6"), (item.Code, item.CodeNormalized, item.Text, item.Detail, item.ValueText()));

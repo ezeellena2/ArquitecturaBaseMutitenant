@@ -27,6 +27,15 @@ internal sealed class FormCatalogRepository(ApplicationDbContext context, ITenan
         return await Items(tenantId, catalogId).Where(item => itemIds.Contains(item.Id)).OrderBy(item => item.Position).ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<FormCatalogItem>> ListItemsByCodesAsync(Guid catalogId, IReadOnlyCollection<string> normalizedCodes,
+        CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(normalizedCodes);
+        var tenantId = RequireTenant();
+        if (normalizedCodes.Count == 0) return [];
+        return await Items(tenantId, catalogId).Where(item => normalizedCodes.Contains(item.CodeNormalized)).ToListAsync(ct);
+    }
+
     public async Task<IReadOnlyList<FormCatalogItem>> ListAllItemsAsync(Guid catalogId, CancellationToken ct) =>
         await Items(RequireTenant(), catalogId).OrderBy(item => item.Position).ToListAsync(ct);
 
