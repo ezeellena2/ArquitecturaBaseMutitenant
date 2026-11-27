@@ -378,6 +378,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │       ├── Authorization/
 │       ├── Common/
 │       ├── Features/
+│       ├── Forms/
 │       ├── Invitations/
 │       ├── Legal/
 │       ├── Messaging/
@@ -614,6 +615,7 @@ Decisión del usuario (2026-10-11): cada raíz de capa, área, módulo, proyecto
 | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Authorization/` | Pruebas de unidad: roles y permisos. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Authorization/RoleAssignmentTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Authorization/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Common/` | Pruebas de unidad: uso común. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Common/EntityAndValueObjectTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Common/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Features/` | Pruebas de unidad: Features. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Features/TenantFeatureTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Features/AGENTS.md) |
+| `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Forms/` | Pruebas de unidad: catálogos de Formularios. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Forms/FormCatalogItemTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Forms/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Invitations/` | Pruebas de unidad: invitaciones. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Invitations/InvitationTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Invitations/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Legal/` | Pruebas de unidad: documentos legales. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Legal/AccountDeletionCancelTicketTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Legal/AGENTS.md) |
 | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Messaging/` | Pruebas de unidad: Messaging. | [docs/rules/tests.md](../rules/tests.md) | `tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Messaging/OutboxMessageTests.cs` | [AGENTS.md](../../tests/ArquitecturaBaseMultitenant.Domain.UnitTests/Messaging/AGENTS.md) |
