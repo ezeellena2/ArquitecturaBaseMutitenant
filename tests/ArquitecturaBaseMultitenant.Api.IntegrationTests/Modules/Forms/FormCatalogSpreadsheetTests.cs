@@ -47,6 +47,28 @@ public sealed partial class FormCatalogSpreadsheetTests
     }
 
     [Fact]
+    public void A_sheet_outside_the_worksheets_folder_counts_its_cells_and_too_many_parts_are_over_limits()
+    {
+        var workbook = Workbook(sheet =>
+        {
+            Header(sheet);
+            sheet.Cell(2, 1).SetValue("A");
+            sheet.Cell(2, 2).SetValue("Uno");
+        });
+        // La misma hoja en otra carpeta, declarada en [Content_Types].xml y en las relaciones del libro: ClosedXML la carga igual.
+        var moved = Rename(workbook, "xl/worksheets/sheet1.xml", "xl/hojas/datos.xml",
+            ("/xl/worksheets/sheet1.xml", "/xl/hojas/datos.xml"), ("worksheets/sheet1.xml", "hojas/datos.xml"));
+        Assert.Single(Spreadsheet.Read("catalogo.xlsx", moved, Limits).Rows);
+
+        Assert.Equal(FormCatalogSheetStatus.OverLimits, Spreadsheet.Read("catalogo.xlsx", moved, Limits with { MaxCells = 3 }).Status);
+        using (var archive = new ZipArchive(new MemoryStream(workbook), ZipArchiveMode.Read))
+        {
+            Assert.Equal(FormCatalogSheetStatus.OverLimits,
+                Spreadsheet.Read("catalogo.xlsx", workbook, Limits with { MaxEntries = archive.Entries.Count - 1 }).Status);
+        }
+    }
+
+    [Fact]
     public void Empty_cells_with_a_format_count_against_the_cells_although_only_the_header_has_content()
     {
         var workbook = Workbook(sheet =>
@@ -162,6 +184,47 @@ public sealed partial class FormCatalogSpreadsheetTests
         Assert.Empty(plan.Deactivations);
     }
 
+    /// <summary>
+    /// O14: la plantilla, con sus notas y su fila de ejemplo, nombra las columnas igual que la exportación, y su ejemplo se importa
+    /// como una opción nueva, sin errores, en cada idioma y cada tipo.
+    /// </summary>
+    [Theory]
+    [InlineData("es-AR", FormCatalogValueType.Text)]
+    [InlineData("es-AR", FormCatalogValueType.WholeNumber)]
+    [InlineData("es-AR", FormCatalogValueType.DecimalNumber)]
+    [InlineData("es-AR", FormCatalogValueType.Date)]
+    [InlineData("en-US", FormCatalogValueType.Text)]
+    [InlineData("en-US", FormCatalogValueType.WholeNumber)]
+    [InlineData("en-US", FormCatalogValueType.DecimalNumber)]
+    [InlineData("en-US", FormCatalogValueType.Date)]
+    public async Task The_template_names_the_columns_like_the_export_and_its_example_imports_as_a_new_option(string culture,
+        FormCatalogValueType valueType)
+    {
+        using var scope = new CultureScope(culture);
+        var cultures = new JsonReferenceDataCatalog();
+        var profile = await new CultureProfiles(cultures).LoadAsync(culture, Ct);
+
+        var template = await Spreadsheet.WriteAsync(FormCatalogExportBuilder.Layout(valueType, withNotes: true),
+            Rows([FormCatalogExportBuilder.Example(valueType, profile)]), Ct);
+        var export = await Spreadsheet.WriteAsync(FormCatalogExportBuilder.Layout(valueType, withNotes: false),
+            Rows(Saved(valueType), valueType, profile), Ct);
+
+        var templateSheet = Spreadsheet.Read("plantilla.xlsx", template, Limits);
+        Assert.Equal(FormCatalogSheetStatus.Read, templateSheet.Status);
+        Assert.Equal(Spreadsheet.Read("Talles.xlsx", export, Limits).Headers, templateSheet.Headers);
+        Assert.Single(templateSheet.Rows);
+
+        var file = await new FormCatalogFileResolver(Spreadsheet, cultures).ResolveAsync("plantilla.xlsx", new MemoryStream(template),
+            valueType, Ct);
+        Assert.True(file.IsSuccess, file.IsFailure ? file.Error.Code : null);
+        var plan = FormCatalogImportPolicy.Decide(valueType, FormCatalogImportMode.Replace, file.Value, [], 0);
+
+        Assert.Empty(plan.Lists.Errors);
+        Assert.Equal(0, plan.ErrorRows);
+        Assert.Single(plan.Lists.Added);
+        Assert.Single(plan.Writes);
+    }
+
     private static FormCatalogStoredItemRow[] Saved(FormCatalogValueType valueType)
     {
         string?[] values = valueType switch
@@ -182,6 +245,12 @@ public sealed partial class FormCatalogSpreadsheetTests
     {
         await Task.CompletedTask;
         foreach (var item in items) yield return FormCatalogExportBuilder.Row(item, valueType, profile);
+    }
+
+    private static async IAsyncEnumerable<IReadOnlyList<FormCatalogCell>> Rows(IEnumerable<IReadOnlyList<FormCatalogCell>> rows)
+    {
+        await Task.CompletedTask;
+        foreach (var row in rows) yield return row;
     }
 
     private static void Header(IXLWorksheet sheet)
@@ -222,6 +291,27 @@ public sealed partial class FormCatalogSpreadsheetTests
         {
             if (name == sheet) target.Write(Encoding.UTF8.GetBytes(replaced));
         }, sheet, skipOriginal: true);
+    }
+
+    /// <summary>Copia el libro con una parte en otra ruta y los textos de las partes XML reemplazados (los tipos y las relaciones).</summary>
+    private static byte[] Rename(byte[] workbook, string from, string to, params (string Old, string New)[] references)
+    {
+        using var output = new MemoryStream();
+        using (var source = new ZipArchive(new MemoryStream(workbook), ZipArchiveMode.Read))
+        using (var target = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            Assert.Contains(source.Entries, entry => entry.FullName == from);
+            foreach (var entry in source.Entries)
+            {
+                using var reader = new StreamReader(entry.Open(), Encoding.UTF8);
+                var text = reader.ReadToEnd();
+                if (entry.FullName.EndsWith(".xml", StringComparison.Ordinal) || entry.FullName.EndsWith(".rels", StringComparison.Ordinal))
+                    text = references.Aggregate(text, (current, reference) => current.Replace(reference.Old, reference.New, StringComparison.Ordinal));
+                using var writer = new StreamWriter(target.CreateEntry(entry.FullName == from ? to : entry.FullName).Open(), new UTF8Encoding(false));
+                writer.Write(text);
+            }
+        }
+        return output.ToArray();
     }
 
     /// <summary>Copia cada parte del libro; <paramref name="extend"/> escribe después de la parte (o en su lugar).</summary>

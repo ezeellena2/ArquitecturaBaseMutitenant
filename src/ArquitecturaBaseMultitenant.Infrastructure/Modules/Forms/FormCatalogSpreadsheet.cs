@@ -16,6 +16,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Forms;
 internal sealed class FormCatalogSpreadsheet : IFormCatalogSpreadsheet
 {
     private const int SizedRows = 200;
+    private const string ContentTypesPart = "[Content_Types].xml";
     private static readonly char[] Separators = [',', ';', '\t'];
 
     public async Task<byte[]> WriteAsync(FormCatalogSheetLayout layout, IAsyncEnumerable<IReadOnlyList<FormCatalogCell>> rows,
@@ -118,24 +119,56 @@ internal sealed class FormCatalogSpreadsheet : IFormCatalogSpreadsheet
     }
 
     /// <summary>
-    /// Lo descomprimido de cada parte, contado mientras se lee (un encabezado del zip puede mentir), y las celdas de todas las
-    /// hojas: cada <c>&lt;c&gt;</c>, también vacía con formato, y el área entera de cada fórmula matricial.
+    /// Las partes del zip, lo descomprimido de cada una, contado mientras se lee (un encabezado del zip puede mentir), y las celdas
+    /// de todas las hojas: cada <c>&lt;c&gt;</c>, también vacía con formato, y el área entera de cada fórmula matricial. Una hoja es
+    /// toda parte que <c>[Content_Types].xml</c> declara como hoja, en cualquier carpeta, porque así la carga ClosedXML.
     /// </summary>
     private static void Scan(Stream content, FormCatalogFileLimits limits)
     {
         using var zip = new ZipArchive(content, ZipArchiveMode.Read, leaveOpen: true);
+        if (zip.Entries.Count > limits.MaxEntries) throw new OverLimitsException();
         if (zip.Entries.Sum(entry => entry.Length) > limits.MaxUncompressedBytes) throw new OverLimitsException();
         var budget = new Budget(limits.MaxUncompressedBytes);
+        var types = zip.GetEntry(ContentTypesPart);
+        var sheets = types is null ? new SheetParts([], []) : ReadSheetParts(new BudgetStream(types.Open(), budget));
         long cells = 0;
         foreach (var entry in zip.Entries)
         {
+            if (entry == types) continue;
             using var part = new BudgetStream(entry.Open(), budget);
-            if (entry.FullName.StartsWith("xl/worksheets/", StringComparison.OrdinalIgnoreCase)
-                && entry.FullName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase))
-                cells += CountCells(part);
+            if (sheets.Contains(entry.FullName)) cells += CountCells(part);
             else part.CopyTo(Stream.Null);
             if (cells > limits.MaxCells) throw new OverLimitsException();
         }
+    }
+
+    /// <summary>Las partes que <c>[Content_Types].xml</c> declara como hoja, por su nombre o por su extensión.</summary>
+    private static SheetParts ReadSheetParts(Stream part)
+    {
+        using (part)
+        {
+            var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, IgnoreComments = true };
+            using var reader = XmlReader.Create(part, settings);
+            var names = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+            var extensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            while (reader.Read())
+            {
+                if (reader.NodeType != XmlNodeType.Element) continue;
+                var isSheet = reader.GetAttribute("ContentType")?.EndsWith(".worksheet+xml", StringComparison.OrdinalIgnoreCase) == true;
+                if (reader.LocalName == "Override" && reader.GetAttribute("PartName") is { } name) names[name.TrimStart('/')] = isSheet;
+                else if (reader.LocalName == "Default" && isSheet && reader.GetAttribute("Extension") is { } extension) extensions.Add(extension);
+            }
+            return new SheetParts(names, extensions);
+        }
+    }
+
+    private sealed record SheetParts(Dictionary<string, bool> Names, HashSet<string> Extensions)
+    {
+        public bool Contains(string fullName) => Names.TryGetValue(fullName, out var isSheet)
+            ? isSheet
+            : Extensions.Contains(Path.GetExtension(fullName).TrimStart('.'))
+                || (fullName.StartsWith("xl/worksheets/", StringComparison.OrdinalIgnoreCase)
+                    && fullName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase));
     }
 
     private static long CountCells(Stream part)

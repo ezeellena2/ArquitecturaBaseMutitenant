@@ -281,6 +281,13 @@ public sealed class FormsContractExamplesTests(ApiFactory factory)
         await GetAsync("Exportar un catálogo que no está", WithId + "/export", $"{Root}/{Guid.NewGuid()}/export");
         await GetAsync("Exportar un catálogo de miembros", WithId + "/export", $"{Root}/{membersId}/export");
         await GetAsync("Plantilla de un tipo que no existe", Root + "/template", Root + "/template?valueType=9");
+        using (var template = await _client.GetAsync(Root + "/template?valueType=Date", Ct))
+        {
+            Assert.Equal(HttpStatusCode.OK, template.StatusCode);
+            Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", template.Content.Headers.ContentType?.MediaType);
+            Assert.Equal("attachment", template.Content.Headers.ContentDisposition?.DispositionType);
+            Assert.NotEmpty(await template.Content.ReadAsByteArrayAsync(Ct));
+        }
 
         _recorder.Publish();
     }

@@ -27,7 +27,7 @@ internal sealed partial class FormCatalogFileResolver(IFormCatalogSpreadsheet sp
     private const string HeaderPrefix = "CatalogImport.Header.";
 
     internal static FormCatalogFileLimits Limits { get; } = new(FormCatalogLimits.MaxFileColumns, FormCatalogLimits.MaxFileRows,
-        FormCatalogLimits.MaxFileCells, FormCatalogLimits.MaxFileUncompressedBytes);
+        FormCatalogLimits.MaxFileCells, FormCatalogLimits.MaxFileUncompressedBytes, FormCatalogLimits.MaxFileEntries);
 
     public async Task<Result<FormCatalogFile>> ResolveAsync(string? fileName, Stream content, FormCatalogValueType valueType,
         CancellationToken ct)

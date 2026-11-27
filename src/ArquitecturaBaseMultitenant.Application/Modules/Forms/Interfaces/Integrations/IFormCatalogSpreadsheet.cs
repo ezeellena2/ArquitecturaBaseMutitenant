@@ -22,7 +22,7 @@ public interface IFormCatalogSpreadsheet
     FormCatalogSheetRead Read(string? fileName, byte[] content, FormCatalogFileLimits limits);
 }
 
-public sealed record FormCatalogFileLimits(int MaxColumns, int MaxRows, int MaxCells, long MaxUncompressedBytes);
+public sealed record FormCatalogFileLimits(int MaxColumns, int MaxRows, int MaxCells, long MaxUncompressedBytes, int MaxEntries);
 
 public sealed record FormCatalogSheetLayout(string Name, IReadOnlyList<FormCatalogSheetHeader> Headers);
 

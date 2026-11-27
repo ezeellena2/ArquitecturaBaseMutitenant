@@ -35,4 +35,6 @@ public static class FormCatalogLimits
     public const int MaxFileRows = 10_000;
     public const int MaxFileCells = 640_128;
     public const long MaxFileUncompressedBytes = 100L * 1024 * 1024;
+    /// <summary>Las partes de un XLSX: uno común trae unas veinte; miles de partes chicas solo cargan la lectura.</summary>
+    public const int MaxFileEntries = 1_000;
 }
