@@ -148,6 +148,7 @@ Se define en el código, en `Application/Modules/Forms/Catalogs/MembersCatalogSo
 | `Forms.Catalog.FiltersInvalid` | Validation (campo `conditions[i]`) | columna, operador o valor fuera de la fuente |
 | `Forms.Catalog.SampleMemberNotFound` / `SampleContactNotFound` | Validation | la persona o el cliente de ejemplo no es de la organización |
 | `Forms.Catalog.ItemTextTooLong` / `ItemDetailTooLong` | Validation (campo `items[i].text` o `.detail`) | textos fuera de límite |
+| `Forms.Catalog.Ambiguous` | Validation (campo `target`, solo al modelo) | el asistente nombra un catálogo que coincide con varios (§17) |
 | `Forms.CatalogImport.FileChanged` | Conflict | el archivo que se aplica no es el de la vista previa (SHA-256) |
 | `Forms.CatalogImport.FileInvalid` | Validation | formato, codificación o topes del archivo (C8) |
 | `Forms.CatalogImport.ValueAmbiguous` | Validation (fila y columna) | un número o una fecha que se lee de dos formas (C9) |

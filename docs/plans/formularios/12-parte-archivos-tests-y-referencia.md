@@ -79,6 +79,7 @@ Los códigos de la §5, con el HTTP, el campo y los textos es y en que publica l
 | `Forms.Catalog.SampleContactNotFound` | 400, `sampleContactId` | Ese cliente ya no está en Clientes. | That customer is no longer in Customers. |
 | `Forms.Catalog.ItemTextTooLong` | 400, `items[i].text` | Puede tener hasta 30 caracteres. | It can have up to 30 characters. |
 | `Forms.Catalog.ItemDetailTooLong` | 400, `items[i].detail` | Puede tener hasta 300 caracteres. | It can have up to 300 characters. |
+| `Forms.Catalog.Ambiguous` | al modelo, en `target` (§17; la [receta](../../guides/agregar-una-accion-al-asistente.md)) | Ese nombre coincide con más de un catálogo: decí cuál. | That name matches more than one catalog: say which one. |
 | `Forms.CatalogImport.FileChanged` | 409 | El archivo no es el que se revisó. Revisá de nuevo. | This isn't the file you reviewed. Review it again. |
 | `Forms.CatalogImport.FileInvalid` | 400, `file` | El archivo no es un XLSX ni un CSV en UTF-8. / El archivo pasa los topes (C8). | The file isn't an XLSX or a UTF-8 CSV. / The file is over the limits. |
 | `Forms.CatalogImport.ValueAmbiguous` | en la revisión, con `value` | Se lee de dos formas. (la pantalla dice «{value}» se lee de dos formas. Escribí {a} o {b}.) | It can be read two ways. ("{value}" can be read two ways. Write {a} or {b}.) |
