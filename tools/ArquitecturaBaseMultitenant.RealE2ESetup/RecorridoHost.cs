@@ -9,6 +9,7 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.WhatsAppBrow
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantBrowser;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -38,6 +39,8 @@ internal static class RecorridoHost
 
         await using var factory = ApiFactory.ForIsolatedDatabase(connections);
         await factory.InitializeDatabaseAsync(ct);
+        // E12: las lecturas de las opciones que hace la API, para el EXPLAIN del E2E de Catálogos (FormsCommand).
+        var formsCapture = new FormsItemCapture();
         await using var app = RecorridoApiHost.Configure(factory, repository.FullName, pickup, builder =>
         {
             RecorridoWhatsAppModule.Configure(builder);
@@ -46,6 +49,7 @@ internal static class RecorridoHost
             {
                 services.RemoveAll<IPublicOrigin>();
                 services.AddSingleton<IPublicOrigin, E2EPublicOrigin>();
+                services.AddDbContext<ApplicationDbContext>(options => options.AddInterceptors(formsCapture));
             });
         });
         // Certificado efímero propio. El cliente interno fija su huella; Vite conserva HTTPS5174.
@@ -69,6 +73,7 @@ internal static class RecorridoHost
         var bridge = new WhatsAppFileBridge(app.Services, readyFile, isolated: true);
         var assistant = new AssistantFileBridge(app.Services, readyFile, isolated: true);
         var quota = new RecorridoInvitationQuota(app.Services);
+        var forms = new FormsCommand(formsCapture, client, factory.AdminConnectionString);
         await using (var marker = new FileStream(readyFile, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             await marker.FlushAsync(ct);
         using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(250));
@@ -88,6 +93,8 @@ internal static class RecorridoHost
             // B-2 y B-3: los estados de la cola y el tope de quien invita que el entorno no deja solo.
             await PrivateCommandGuard.ExecuteAsync(readyFile, "delivery", (command, token) => DeliveryAsync(app.Services, command, prepared.BusinessId, token), ct);
             await PrivateCommandGuard.ExecuteAsync(readyFile, "invitation-quota", quota.ExecuteAsync, ct);
+            // E12: lo que escribe un contacto con el nombre de su perfil y el plan de las lecturas de las opciones.
+            await PrivateCommandGuard.ExecuteAsync(readyFile, "forms", forms.ExecuteAsync, ct);
             // Un único claim email por tick; WhatsApp cifrado permanece disponible para su control privado.
             await RecorridoEmailPump.ProcessOnceAsync(app.Services, ct);
         }
