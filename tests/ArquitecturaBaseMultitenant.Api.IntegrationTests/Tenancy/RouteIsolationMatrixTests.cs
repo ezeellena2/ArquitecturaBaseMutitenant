@@ -129,6 +129,7 @@ public sealed partial class RouteIsolationMatrixTests(ApiFactory factory)
     static partial void AddFormsCases(Dictionary<string, RouteCase> cases);
     static partial void AddAssistantSeed(List<Func<World, Task>> seeds);
     static partial void AddWhatsAppSeed(List<Func<World, Task>> seeds);
+    static partial void AddFormsSeed(List<Func<World, Task>> seeds);
 
     [Fact]
     public void Every_route_with_identifiers_has_an_isolation_case()
@@ -223,6 +224,7 @@ public sealed partial class RouteIsolationMatrixTests(ApiFactory factory)
         var seeds = new List<Func<World, Task>>();
         AddAssistantSeed(seeds);
         AddWhatsAppSeed(seeds);
+        AddFormsSeed(seeds);
         foreach (var seed in seeds) await seed(world);
         // Las puertas están abiertas: con datos propios cada lado responde, así un 404 de la matriz es por el dato ajeno.
         world.OpenDoors.AddRange([

@@ -41,7 +41,7 @@ Los defaults de FeatureManagement se generan desde el catálogo completo despué
 - `Infrastructure/Features/TenantFeatureFilter.cs` (E5) · la guía [`agregar-un-area.md`](../guides/agregar-un-area.md) (E4), paso "¿es un módulo?" (E5).
 
 ## Lo verifica
-- `ModuleControllersTests` (E5) · `TenantFeatureRowTests` y `TenantFeatureMultipleSourcesTests` (varias filas por módulo) · `WhatsAppModuleOffKeepsDataTests` y `AssistantModuleOffKeepsDataTests` (apagar no borra)
+- `ModuleControllersTests` (E5) · `TenantFeatureRowTests` y `TenantFeatureMultipleSourcesTests` (varias filas por módulo) · `WhatsAppModuleOffKeepsDataTests`, `AssistantModuleOffKeepsDataTests` y `FormsModuleOffKeepsDataTests` (E12) (apagar no borra: las rutas dan 404, las filas siguen y al prender se ve igual)
 - `ModuleLimitArchitectureTests` (E12, ADR 0069; topes: cada máximo de la plataforma declarado y leído solo por su aporte y su pantalla de Plataforma; ningún módulo nombra la configuración de otro; control negativo) · `ModuleLimitResolverTests` (E12: el tope y `Effective`)
 
 ## Detalle

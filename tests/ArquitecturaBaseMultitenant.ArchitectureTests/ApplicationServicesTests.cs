@@ -89,6 +89,7 @@ public sealed partial class ApplicationServicesTests
     /// </summary>
     static partial void AddAssistantServices(IServiceCollection services);
     static partial void AddWhatsAppServices(IServiceCollection services);
+    static partial void AddFormsServices(IServiceCollection services);
 
     private static Type[] Helpers()
     {
@@ -96,6 +97,7 @@ public sealed partial class ApplicationServicesTests
         registrations.AddApplication();
         AddAssistantServices(registrations);
         AddWhatsAppServices(registrations);
+        AddFormsServices(registrations);
 
         return
         [

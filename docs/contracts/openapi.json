@@ -21617,7 +21617,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Responde 501 General.Contract.NotImplemented hasta que la B8 conecte la ruta con su servicio. Listado paginado (10 por defecto; 20, 50 o 100) con search, source (all, manual, members o contacts), status (all, active o inactive) y sort por name, source, valueType, optionsCount o status, con - delante el otro sentido (264); optionsCount nulo va al final en los dos sentidos y source, valueType y status ordenan por su orden.",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Listado paginado (10 por defecto; 20, 50 o 100) con search, source (all, manual, members o contacts), status (all, active o inactive) y sort por name, source, valueType, optionsCount o status, con - delante el otro sentido (264); optionsCount nulo va al final en los dos sentidos y source, valueType y status ordenan por su orden.",
         "parameters": [
           {
             "name": "Page",
@@ -21861,38 +21861,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -21978,13 +21946,6 @@
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 400,
             "code": "Validation.Failed",
             "field": null,
@@ -22009,7 +21970,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Responde 501 General.Contract.NotImplemented hasta que la B8 conecte la ruta con su servicio. Alta con Location: sin tipo, Text; Members con condiciones exige sampleMemberId. Devuelve el detalle y el mapa de ids de las opciones nuevas.",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Alta con Location: sin tipo, Text; Members con condiciones exige sampleMemberId. Devuelve el detalle y el mapa de ids de las opciones nuevas.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -22140,7 +22101,7 @@
                       "code": "Forms.Catalog.FiltersInvalid",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "conditions[i]": [
+                        "conditions.{i}": [
                           "Revisá esta condición."
                         ]
                       }
@@ -22155,7 +22116,7 @@
                       "code": "Forms.Catalog.FiltersInvalid",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "conditions[i]": [
+                        "conditions.{i}": [
                           "Check this condition."
                         ]
                       }
@@ -22230,7 +22191,7 @@
                       "code": "Forms.Catalog.DuplicateCode",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].code": [
+                        "items.{i}.code": [
                           "Ya está en la opción {n}."
                         ]
                       }
@@ -22245,7 +22206,7 @@
                       "code": "Forms.Catalog.DuplicateCode",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].code": [
+                        "items.{i}.code": [
                           "Option {n} already has it."
                         ]
                       }
@@ -22260,7 +22221,7 @@
                       "code": "Forms.Catalog.ValueRequired",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].value": [
+                        "items.{i}.value": [
                           "Escribí el valor."
                         ]
                       }
@@ -22275,7 +22236,7 @@
                       "code": "Forms.Catalog.ValueRequired",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].value": [
+                        "items.{i}.value": [
                           "Enter the value."
                         ]
                       }
@@ -22290,7 +22251,7 @@
                       "code": "Forms.Catalog.ValueInvalid",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].value": [
+                        "items.{i}.value": [
                           "El valor no es del tipo del catálogo."
                         ]
                       }
@@ -22305,7 +22266,7 @@
                       "code": "Forms.Catalog.ValueInvalid",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].value": [
+                        "items.{i}.value": [
                           "The value doesn't match the catalog's type."
                         ]
                       }
@@ -22320,7 +22281,7 @@
                       "code": "Forms.Catalog.ItemTextTooLong",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].text": [
+                        "items.{i}.text": [
                           "Puede tener hasta 30 caracteres."
                         ]
                       }
@@ -22335,7 +22296,7 @@
                       "code": "Forms.Catalog.ItemTextTooLong",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].text": [
+                        "items.{i}.text": [
                           "It can have up to 30 characters."
                         ]
                       }
@@ -22350,7 +22311,7 @@
                       "code": "Forms.Catalog.ItemDetailTooLong",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].detail": [
+                        "items.{i}.detail": [
                           "Puede tener hasta 300 caracteres."
                         ]
                       }
@@ -22365,7 +22326,7 @@
                       "code": "Forms.Catalog.ItemDetailTooLong",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].detail": [
+                        "items.{i}.detail": [
                           "It can have up to 300 characters."
                         ]
                       }
@@ -22627,38 +22588,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -22744,13 +22673,6 @@
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 400,
             "code": "Validation.Failed",
             "field": null,
@@ -22788,7 +22710,7 @@
           {
             "status": 400,
             "code": "Forms.Catalog.FiltersInvalid",
-            "field": "conditions[i]",
+            "field": "conditions.{i}",
             "es": "Revisá esta condición.",
             "en": "Check this condition."
           },
@@ -22809,35 +22731,35 @@
           {
             "status": 400,
             "code": "Forms.Catalog.DuplicateCode",
-            "field": "items[i].code",
+            "field": "items.{i}.code",
             "es": "Ya está en la opción {n}.",
             "en": "Option {n} already has it."
           },
           {
             "status": 400,
             "code": "Forms.Catalog.ValueRequired",
-            "field": "items[i].value",
+            "field": "items.{i}.value",
             "es": "Escribí el valor.",
             "en": "Enter the value."
           },
           {
             "status": 400,
             "code": "Forms.Catalog.ValueInvalid",
-            "field": "items[i].value",
+            "field": "items.{i}.value",
             "es": "El valor no es del tipo del catálogo.",
             "en": "The value doesn't match the catalog's type."
           },
           {
             "status": 400,
             "code": "Forms.Catalog.ItemTextTooLong",
-            "field": "items[i].text",
+            "field": "items.{i}.text",
             "es": "Puede tener hasta 30 caracteres.",
             "en": "It can have up to 30 characters."
           },
           {
             "status": 400,
             "code": "Forms.Catalog.ItemDetailTooLong",
-            "field": "items[i].detail",
+            "field": "items.{i}.detail",
             "es": "Puede tener hasta 300 caracteres.",
             "en": "It can have up to 300 characters."
           },
@@ -22876,7 +22798,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Responde 501 General.Contract.NotImplemented hasta que la B8 conecte la ruta con su servicio. Solo {all, active}: lo que dice el resumen del listado (262).",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Solo {all, active}: lo que dice el resumen del listado (262).",
         "responses": {
           "200": {
             "description": "OK",
@@ -23036,38 +22958,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -23153,13 +23043,6 @@
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 429,
             "code": "Security.RateLimit.Exceeded",
             "field": null,
@@ -23179,7 +23062,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Responde 501 General.Contract.NotImplemented hasta que la B8 conecte la ruta con su servicio. Detalle con los nombres de los roles y las empresas del filtro, la persona o el cliente de ejemplo, canManage, itemCounts y quién lo guardó por última vez.",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Detalle con los nombres de los roles y las empresas del filtro, la persona o el cliente de ejemplo, canManage, itemCounts y quién lo guardó por última vez.",
         "parameters": [
           {
             "name": "id",
@@ -23370,38 +23253,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -23487,13 +23338,6 @@
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 404,
             "code": "Forms.Catalog.NotFound",
             "field": null,
@@ -23518,7 +23362,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Responde 501 General.Contract.NotImplemented hasta que la B8 conecte la ruta con su servicio. Guarda todo junto con su versión (C3): items solo con lo nuevo o cambiado, moves, sort o deleteItems (hasta 500), que no se combinan entre sí. Devuelve la versión y el mapa de ids.",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Guarda todo junto con su versión (C3): items solo con lo nuevo o cambiado, moves, sort o deleteItems (hasta 500), que no se combinan entre sí. Devuelve la versión y el mapa de ids.",
         "parameters": [
           {
             "name": "id",
@@ -23628,7 +23472,7 @@
                       "code": "Forms.Catalog.FiltersInvalid",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "conditions[i]": [
+                        "conditions.{i}": [
                           "Revisá esta condición."
                         ]
                       }
@@ -23643,7 +23487,7 @@
                       "code": "Forms.Catalog.FiltersInvalid",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "conditions[i]": [
+                        "conditions.{i}": [
                           "Check this condition."
                         ]
                       }
@@ -23718,7 +23562,7 @@
                       "code": "Forms.Catalog.DuplicateCode",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].code": [
+                        "items.{i}.code": [
                           "Ya está en la opción {n}."
                         ]
                       }
@@ -23733,7 +23577,7 @@
                       "code": "Forms.Catalog.DuplicateCode",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].code": [
+                        "items.{i}.code": [
                           "Option {n} already has it."
                         ]
                       }
@@ -23748,7 +23592,7 @@
                       "code": "Forms.Catalog.ValueRequired",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].value": [
+                        "items.{i}.value": [
                           "Escribí el valor."
                         ]
                       }
@@ -23763,7 +23607,7 @@
                       "code": "Forms.Catalog.ValueRequired",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].value": [
+                        "items.{i}.value": [
                           "Enter the value."
                         ]
                       }
@@ -23778,7 +23622,7 @@
                       "code": "Forms.Catalog.ValueInvalid",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].value": [
+                        "items.{i}.value": [
                           "El valor no es del tipo del catálogo."
                         ]
                       }
@@ -23793,7 +23637,7 @@
                       "code": "Forms.Catalog.ValueInvalid",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].value": [
+                        "items.{i}.value": [
                           "The value doesn't match the catalog's type."
                         ]
                       }
@@ -23808,7 +23652,7 @@
                       "code": "Forms.Catalog.ItemTextTooLong",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].text": [
+                        "items.{i}.text": [
                           "Puede tener hasta 30 caracteres."
                         ]
                       }
@@ -23823,7 +23667,7 @@
                       "code": "Forms.Catalog.ItemTextTooLong",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].text": [
+                        "items.{i}.text": [
                           "It can have up to 30 characters."
                         ]
                       }
@@ -23838,7 +23682,7 @@
                       "code": "Forms.Catalog.ItemDetailTooLong",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].detail": [
+                        "items.{i}.detail": [
                           "Puede tener hasta 300 caracteres."
                         ]
                       }
@@ -23853,7 +23697,7 @@
                       "code": "Forms.Catalog.ItemDetailTooLong",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "items[i].detail": [
+                        "items.{i}.detail": [
                           "It can have up to 300 characters."
                         ]
                       }
@@ -24004,7 +23848,7 @@
                       "code": "Forms.Catalog.ItemNotFound",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "deleteItems[i]": [
+                        "deleteItems.{i}": [
                           "Esa opción no es de este catálogo."
                         ]
                       }
@@ -24019,7 +23863,7 @@
                       "code": "Forms.Catalog.ItemNotFound",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "deleteItems[i]": [
+                        "deleteItems.{i}": [
                           "That option isn't in this catalog."
                         ]
                       }
@@ -24116,7 +23960,7 @@
                       "code": "Forms.Catalog.ItemInUse",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "deleteItems[i]": [
+                        "deleteItems.{i}": [
                           "No se puede borrar porque se usa. Podés darla de baja."
                         ]
                       }
@@ -24131,7 +23975,7 @@
                       "code": "Forms.Catalog.ItemInUse",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "deleteItems[i]": [
+                        "deleteItems.{i}": [
                           "It can't be deleted because it's in use. You can deactivate it."
                         ]
                       }
@@ -24206,38 +24050,6 @@
                       "status": 500,
                       "detail": "An unexpected error occurred. If the problem persists, report the trace id.",
                       "code": "General.Unexpected",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
                       "traceId": "example-trace-id"
                     }
                   }
@@ -24330,13 +24142,6 @@
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 400,
             "code": "Validation.Failed",
             "field": null,
@@ -24367,7 +24172,7 @@
           {
             "status": 400,
             "code": "Forms.Catalog.FiltersInvalid",
-            "field": "conditions[i]",
+            "field": "conditions.{i}",
             "es": "Revisá esta condición.",
             "en": "Check this condition."
           },
@@ -24388,35 +24193,35 @@
           {
             "status": 400,
             "code": "Forms.Catalog.DuplicateCode",
-            "field": "items[i].code",
+            "field": "items.{i}.code",
             "es": "Ya está en la opción {n}.",
             "en": "Option {n} already has it."
           },
           {
             "status": 400,
             "code": "Forms.Catalog.ValueRequired",
-            "field": "items[i].value",
+            "field": "items.{i}.value",
             "es": "Escribí el valor.",
             "en": "Enter the value."
           },
           {
             "status": 400,
             "code": "Forms.Catalog.ValueInvalid",
-            "field": "items[i].value",
+            "field": "items.{i}.value",
             "es": "El valor no es del tipo del catálogo.",
             "en": "The value doesn't match the catalog's type."
           },
           {
             "status": 400,
             "code": "Forms.Catalog.ItemTextTooLong",
-            "field": "items[i].text",
+            "field": "items.{i}.text",
             "es": "Puede tener hasta 30 caracteres.",
             "en": "It can have up to 30 characters."
           },
           {
             "status": 400,
             "code": "Forms.Catalog.ItemDetailTooLong",
-            "field": "items[i].detail",
+            "field": "items.{i}.detail",
             "es": "Puede tener hasta 300 caracteres.",
             "en": "It can have up to 300 characters."
           },
@@ -24437,14 +24242,14 @@
           {
             "status": 404,
             "code": "Forms.Catalog.ItemNotFound",
-            "field": "deleteItems[i]",
+            "field": "deleteItems.{i}",
             "es": "Esa opción no es de este catálogo.",
             "en": "That option isn't in this catalog."
           },
           {
             "status": 409,
             "code": "Forms.Catalog.ItemInUse",
-            "field": "deleteItems[i]",
+            "field": "deleteItems.{i}",
             "es": "No se puede borrar porque se usa. Podés darla de baja.",
             "en": "It can't be deleted because it's in use. You can deactivate it."
           },
@@ -24482,7 +24287,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Responde 501 General.Contract.NotImplemented hasta que la B8 conecte la ruta con su servicio. Opciones por posición, paginadas, con search y status (active, inactive o all).",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Opciones por posición, paginadas, con search y status (active, inactive o all).",
         "parameters": [
           {
             "name": "id",
@@ -24741,38 +24546,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -24858,13 +24631,6 @@
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 400,
             "code": "Validation.Failed",
             "field": null,
@@ -24898,7 +24664,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Responde 501 General.Contract.NotImplemented hasta que la B8 conecte la ruta con su servicio. Revisa el archivo o lo pegado (mode append al pegar, replace con un archivo) sin escribir: versión leída, SHA-256 y las cuatro listas paginadas con el page y el pageSize del pedido. De a una por persona (Busy) y con lugar en la organización y la instalación (429 TooManyAtOnce, con Retry-After).",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Revisa el archivo o lo pegado (mode append al pegar, replace con un archivo) sin escribir: versión leída, SHA-256 y las cuatro listas paginadas con el page y el pageSize del pedido. De a una por persona (Busy) y con lugar en la organización y la instalación (429 TooManyAtOnce, con Retry-After).",
         "parameters": [
           {
             "name": "id",
@@ -25356,38 +25122,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -25430,13 +25164,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -25514,7 +25241,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Responde 501 General.Contract.NotImplemented hasta que la B8 conecte la ruta con su servicio. Aplica lo revisado en una UoW: el mismo archivo (409 FileChanged si el SHA-256 difiere), la versión de la revisión, skipErrorRows y confirmedDeactivations con la cantidad exacta. Más del 25 % de bajas o del 10 % de filas con error sin confirmar es 400 ConfirmationRequired.",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Aplica lo revisado en una UoW: el mismo archivo (409 FileChanged si el SHA-256 difiere), la versión de la revisión, skipErrorRows y confirmedDeactivations con la cantidad exacta. Más del 25 % de bajas o del 10 % de filas con error sin confirmar es 400 ConfirmationRequired.",
         "parameters": [
           {
             "name": "id",
@@ -26116,38 +25843,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -26190,13 +25885,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -26317,7 +26005,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Responde 501 General.Contract.NotImplemented hasta que la B8 conecte la ruta con su servicio. XLSX con todas las opciones, activas y dadas de baja, con las columnas de la plantilla (C10). De a una por persona.",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. XLSX con todas las opciones, activas y dadas de baja, con las columnas de la plantilla (C10). De a una por persona.",
         "parameters": [
           {
             "name": "id",
@@ -26624,38 +26312,6 @@
                 }
               }
             }
-          },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -26698,13 +26354,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 404,
@@ -26754,7 +26403,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Responde 501 General.Contract.NotImplemented hasta que la B8 conecte la ruta con su servicio. XLSX de la plantilla para el valueType pedido, sin barrera (C11).",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. XLSX de la plantilla para el valueType pedido, sin barrera (C11).",
         "parameters": [
           {
             "name": "ValueType",
@@ -26956,38 +26605,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -27073,13 +26690,6 @@
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 400,
             "code": "Validation.Failed",
             "field": null,
@@ -27106,7 +26716,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Responde 501 General.Contract.NotImplemented hasta que la B8 conecte la ruta con su servicio. La fuente «Miembros»: su versión y el catálogo cerrado de columnas y operadores (§4).",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. La fuente «Miembros»: su versión y el catálogo cerrado de columnas y operadores (§4).",
         "responses": {
           "200": {
             "description": "OK",
@@ -27266,38 +26876,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -27383,13 +26961,6 @@
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 429,
             "code": "Security.RateLimit.Exceeded",
             "field": null,
@@ -27409,7 +26980,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Responde 501 General.Contract.NotImplemented hasta que la B8 conecte la ruta con su servicio. Lista paginada con search y orden por name, para editar los filtros.",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Lista paginada con search y orden por name, para editar los filtros.",
         "parameters": [
           {
             "name": "Page",
@@ -27639,38 +27210,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -27754,13 +27293,6 @@
             "field": null,
             "es": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
-          },
-          {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
           },
           {
             "status": 400,
@@ -27789,7 +27321,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Responde 501 General.Contract.NotImplemented hasta que la B8 conecte la ruta con su servicio. Lista paginada con search y orden por name, para editar los filtros.",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Lista paginada con search y orden por name, para editar los filtros.",
         "parameters": [
           {
             "name": "Page",
@@ -28019,38 +27551,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -28136,13 +27636,6 @@
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 400,
             "code": "Validation.Failed",
             "field": null,
@@ -28169,7 +27662,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Responde 501 General.Contract.NotImplemented hasta que la B8 conecte la ruta con su servicio. Lista paginada con search y orden por name, para editar los filtros.",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Lista paginada con search y orden por name, para editar los filtros.",
         "parameters": [
           {
             "name": "Page",
@@ -28399,38 +27892,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -28516,13 +27977,6 @@
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 400,
             "code": "Validation.Failed",
             "field": null,
@@ -28549,7 +28003,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Responde 501 General.Contract.NotImplemented hasta que la B8 conecte la ruta con su servicio. Personas de ejemplo de la organización, sin correo, con los nombres de sus empresas y sus roles.",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Personas de ejemplo de la organización, sin correo, con los nombres de sus empresas y sus roles.",
         "parameters": [
           {
             "name": "Page",
@@ -28779,38 +28233,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -28896,13 +28318,6 @@
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 400,
             "code": "Validation.Failed",
             "field": null,
@@ -28929,7 +28344,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Responde 501 General.Contract.NotImplemented hasta que la B8 conecte la ruta con su servicio. Clientes de ejemplo de Clientes, sin teléfono (C12).",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Clientes de ejemplo de Clientes, sin teléfono (C12).",
         "parameters": [
           {
             "name": "Page",
@@ -29159,38 +28574,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -29276,13 +28659,6 @@
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 400,
             "code": "Validation.Failed",
             "field": null,
@@ -29309,7 +28685,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Responde 501 General.Contract.NotImplemented hasta que la B8 conecte la ruta con su servicio. Vista previa de unos filtros sin guardar con la persona o el cliente de ejemplo como destinatario; no escribe. Hasta 200 opciones, total exacto y exceedsLimit.",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Vista previa de unos filtros sin guardar con la persona o el cliente de ejemplo como destinatario; no escribe. Hasta 200 opciones, total exacto y exceedsLimit.",
         "requestBody": {
           "content": {
             "application/json": {
@@ -29408,7 +28784,7 @@
                       "code": "Forms.Catalog.FiltersInvalid",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "conditions[i]": [
+                        "conditions.{i}": [
                           "Revisá esta condición."
                         ]
                       }
@@ -29423,7 +28799,7 @@
                       "code": "Forms.Catalog.FiltersInvalid",
                       "traceId": "example-trace-id",
                       "errors": {
-                        "conditions[i]": [
+                        "conditions.{i}": [
                           "Check this condition."
                         ]
                       }
@@ -29641,38 +29017,6 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented; General.Contract.NotImplemented",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Contract.NotImplemented.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 501,
-                      "detail": "Esta función todavía está en preparación.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Contract.NotImplemented.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 501,
-                      "detail": "This feature is still being prepared.",
-                      "code": "General.Contract.NotImplemented",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
             "description": "Security.RateLimit.Exceeded",
             "headers": {
@@ -29758,13 +29102,6 @@
             "en": "An unexpected error occurred. If the problem persists, report the trace id."
           },
           {
-            "status": 501,
-            "code": "General.Contract.NotImplemented",
-            "field": null,
-            "es": "Esta función todavía está en preparación.",
-            "en": "This feature is still being prepared."
-          },
-          {
             "status": 400,
             "code": "Validation.Failed",
             "field": null,
@@ -29781,7 +29118,7 @@
           {
             "status": 400,
             "code": "Forms.Catalog.FiltersInvalid",
-            "field": "conditions[i]",
+            "field": "conditions.{i}",
             "es": "Revisá esta condición.",
             "en": "Check this condition."
           },
@@ -106680,6 +106017,22 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "n": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "uses": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
           }
         }
       },

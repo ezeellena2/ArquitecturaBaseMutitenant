@@ -4,7 +4,6 @@ using System.Text.Json.Nodes;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Models;
 using ArquitecturaBaseMultitenant.Domain.Forms;
-using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.OpenApi;
 using FormsPermissions = ArquitecturaBaseMultitenant.Domain.Authorization.Permissions.Forms;
 
@@ -32,15 +31,28 @@ internal sealed class FormsContractContributor : IHttpContractContributor
     public void Describe(OpenApiDocument document)
     {
         if (document.Components?.Schemas is { } schemas)
+        {
             foreach (var (schema, property, maxItems) in Bounds)
                 if (Property(schemas, schema, property) is { } value) value.MaxItems = maxItems;
+            // Los datos de DuplicateCode (n, la opción que ya tiene el código) y de ItemInUse (uses, quién la usa) van en el problema.
+            if (schemas.TryGetValue("ProblemDetails", out var problemSchema) && problemSchema is OpenApiSchema problem)
+            {
+                problem.Properties ??= new Dictionary<string, IOpenApiSchema>(StringComparer.Ordinal);
+                problem.Properties["n"] = new OpenApiSchema { Type = JsonSchemaType.Integer | JsonSchemaType.Null, Format = "int32" };
+                problem.Properties["uses"] = new OpenApiSchema
+                {
+                    Type = JsonSchemaType.Array | JsonSchemaType.Null,
+                    Items = new OpenApiSchema { Type = JsonSchemaType.String },
+                };
+            }
+        }
 
         foreach (var (path, item) in document.Paths.Where(pair => pair.Key.StartsWith(Prefix, StringComparison.Ordinal)))
             foreach (var (method, operation) in item.Operations ?? [])
             {
                 HttpContractDocumentation.Describe(document, path, method,
                     "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. "
-                    + "Responde 501 General.Contract.NotImplemented hasta que la B8 conecte la ruta con su servicio. " + Description(path, method),
+                    + Description(path, method),
                     Errors(path, method), idempotent: IsIdempotent(path, method), authenticated: true);
                 operation.Extensions ??= new Dictionary<string, IOpenApiExtension>();
                 operation.Extensions["x-access"] = new JsonNodeExtension(JsonValue.Create("business")!);
@@ -71,7 +83,6 @@ internal sealed class FormsContractContributor : IHttpContractContributor
             HttpContractDocumentation.CoreError(403, "Legal.AcceptanceRequired"),
             HttpContractDocumentation.CoreError(404, "Http.NotFound"),
             HttpContractDocumentation.CoreError(500, "General.Unexpected"),
-            HttpContractDocumentation.CoreError(501, ContractErrors.NotImplementedCode),
         };
         void Add(int status, string code, string? field = null) => errors.Add(new HttpContractError(status, code, field,
             Resources.GetString(code, CultureInfo.GetCultureInfo("es")) ?? code, Resources.GetString(code, CultureInfo.GetCultureInfo("en")) ?? code));
@@ -93,24 +104,24 @@ internal sealed class FormsContractContributor : IHttpContractContributor
         if (create || update || filtersPreview)
         {
             Add(400, FormCatalogErrors.SampleRequiredCode, "sampleMemberId");
-            Add(400, FormCatalogErrors.FiltersInvalidCode, "conditions[i]");
+            Add(400, FormCatalogErrors.FiltersInvalidCode, "conditions.{i}");
             Add(400, FormCatalogErrors.SampleMemberNotFoundCode, "sampleMemberId");
             Add(400, FormCatalogErrors.SampleContactNotFoundCode, "sampleContactId");
         }
         if (create || update)
         {
-            Add(400, FormCatalogErrors.DuplicateCodeCode, "items[i].code");
-            Add(400, FormCatalogErrors.ValueRequiredCode, "items[i].value");
-            Add(400, FormCatalogErrors.ValueInvalidCode, "items[i].value");
-            Add(400, FormCatalogErrors.ItemTextTooLongCode, "items[i].text");
-            Add(400, FormCatalogErrors.ItemDetailTooLongCode, "items[i].detail");
+            Add(400, FormCatalogErrors.DuplicateCodeCode, "items.{i}.code");
+            Add(400, FormCatalogErrors.ValueRequiredCode, "items.{i}.value");
+            Add(400, FormCatalogErrors.ValueInvalidCode, "items.{i}.value");
+            Add(400, FormCatalogErrors.ItemTextTooLongCode, "items.{i}.text");
+            Add(400, FormCatalogErrors.ItemDetailTooLongCode, "items.{i}.detail");
             Add(409, FormCatalogErrors.WrongSourceCode);
             Add(409, FormCatalogErrors.TooManyItemsCode);
         }
         if (update)
         {
-            Add(404, FormCatalogErrors.ItemNotFoundCode, "deleteItems[i]");
-            Add(409, FormCatalogErrors.ItemInUseCode, "deleteItems[i]");
+            Add(404, FormCatalogErrors.ItemNotFoundCode, "deleteItems.{i}");
+            Add(409, FormCatalogErrors.ItemInUseCode, "deleteItems.{i}");
             Add(409, FormCatalogErrors.MoveOutOfRangeCode);
             Add(409, FormCatalogErrors.InactiveCode);
         }
