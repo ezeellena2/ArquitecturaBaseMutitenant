@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Messaging;
@@ -17,7 +18,8 @@ internal sealed class Outbox(
     IPayloadProtector protector,
     TimeProvider timeProvider,
     IEnumerable<IChannelSender> senders,
-    OutboxOrderingKeyHasher orderingKeys) : IOutbox
+    OutboxOrderingKeyHasher orderingKeys,
+    ITenantContext? tenantContext = null) : IOutbox
 {
     private readonly HashSet<string> _channels = senders.Select(sender => sender.Key)
         .ToHashSet(StringComparer.Ordinal);
@@ -36,8 +38,9 @@ internal sealed class Outbox(
         options ??= new OutboxEnqueueOptions();
         var orderingKey = options.Destination is null ? null : orderingKeys.Hash(channel, options.Destination);
         var encryptedPayload = protector.Protect(payload);
+        var tenantId = options.TenantId ?? (tenantContext?.TenantId is { } active && active != Guid.Empty ? active : null);
         var message = OutboxMessage.Enqueue(channel, encryptedPayload, timeProvider.GetUtcNow().UtcDateTime, userId,
-            orderingKey, options.Priority, options.DiscardAfterUtc);
+            orderingKey, options.Priority, options.DiscardAfterUtc, tenantId);
         context.OutboxMessages.Add(message);
         return message.Id;
     }

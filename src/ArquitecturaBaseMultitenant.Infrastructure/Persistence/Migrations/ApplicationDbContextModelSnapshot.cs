@@ -2791,6 +2791,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
 
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uuid");
 
@@ -2804,6 +2807,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Priority", "NextAttemptAtUtc", "Id")
                         .HasDatabaseName("IX_OutboxMessages_Due")
+                        .HasFilter("\"Status\" IN ('Pending', 'Failed')");
+
+                    b.HasIndex("Priority", "TenantId", "NextAttemptAtUtc", "Id")
+                        .HasDatabaseName("IX_OutboxMessages_Fairness")
                         .HasFilter("\"Status\" IN ('Pending', 'Failed')");
 
                     b.HasIndex("Status", "NextAttemptAtUtc", "Id");

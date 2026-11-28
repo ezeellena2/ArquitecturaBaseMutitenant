@@ -26,6 +26,8 @@ internal sealed class OutboxMessageConfiguration : IEntityTypeConfiguration<Outb
         builder.Property(message => message.Priority).HasDefaultValue(OutboxPriority.Notice).HasSentinel((OutboxPriority)(-1));
         builder.HasIndex(message => new { message.Priority, message.NextAttemptAtUtc, message.Id })
             .HasDatabaseName("IX_OutboxMessages_Due").HasFilter(Claimable);
+        builder.HasIndex(message => new { message.Priority, message.TenantId, message.NextAttemptAtUtc, message.Id })
+            .HasDatabaseName("IX_OutboxMessages_Fairness").HasFilter(Claimable);
         builder.HasIndex(message => new { message.OrderingKey, message.CreatedAtUtc, message.Id })
             .HasDatabaseName("IX_OutboxMessages_Ordering").HasFilter(Claimable);
     }

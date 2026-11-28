@@ -65,7 +65,10 @@ public sealed class OutboxMigrationTests
             """, ct);
 
         await migrator.MigrateAsync(current, ct);
-        var rows = await context.OutboxMessages.AsNoTracking().Where(value => value.Id == retrying || value.Id == failed).ToDictionaryAsync(value => value.Id, ct);
+        var rows = await context.OutboxMessages.AsNoTracking()
+            .Where(value => value.Id == retrying || value.Id == failed)
+            .Select(value => new { value.Id, value.Status, value.Priority, value.OrderingKey })
+            .ToDictionaryAsync(value => value.Id, ct);
         Assert.Equal(OutboxStatus.Pending, rows[retrying].Status);
         Assert.Equal(OutboxStatus.Failed, rows[failed].Status);
         Assert.All(rows.Values, row => Assert.Equal(OutboxPriority.Notice, row.Priority));
@@ -76,7 +79,10 @@ public sealed class OutboxMigrationTests
             INSERT INTO platform."OutboxMessages" ("Id", "Channel", "EncryptedPayload", "Status", "Attempts", "CreatedAtUtc", "NextAttemptAtUtc")
             VALUES ({legacy}, 'email', 'cipher', 'Pending', 0, {nowUtc}, {nowUtc});
             """, ct);
-        Assert.Equal(OutboxPriority.Notice, (await context.OutboxMessages.AsNoTracking().SingleAsync(value => value.Id == legacy, ct)).Priority);
+        Assert.Equal(OutboxPriority.Notice, await context.OutboxMessages.AsNoTracking()
+            .Where(value => value.Id == legacy)
+            .Select(value => value.Priority)
+            .SingleAsync(ct));
 
         var uncertain = Guid.CreateVersion7();
         await context.Database.ExecuteSqlInterpolatedAsync($"""

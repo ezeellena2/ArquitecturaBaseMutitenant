@@ -32,6 +32,7 @@ public sealed class OutboxReservationTests(ApiFactory factory)
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
     private readonly FakeTimeProvider _clock = new(new DateTimeOffset(2026, 11, 24, 12, 0, 0, TimeSpan.Zero));
+    private readonly OutboxFairnessCursor _fairness = new();
 
     [Fact]
     public async Task A_reply_goes_before_an_earlier_notice()
@@ -207,6 +208,56 @@ public sealed class OutboxReservationTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Fair_dispatch_delivers_a_small_organization_within_the_first_ten_ahead_of_a_large_broadcast_and_keeps_replies_first()
+    {
+        using var client = factory.CreateClient();
+        var channel = Channel("fairness");
+        var tenantA = Guid.CreateVersion7();
+        var tenantB = Guid.CreateVersion7();
+
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            var outbox = CreateOutbox(services, channel);
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+            {
+                for (var index = 0; index < 200; index++)
+                    outbox.Enqueue(channel, $"broadcast-a-{index}",
+                        options: new OutboxEnqueueOptions(Priority: OutboxPriority.Notice, TenantId: tenantA));
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+
+        _clock.Advance(TimeSpan.FromSeconds(1));
+
+        var tenantBIds = new Guid[2];
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            var outbox = CreateOutbox(services, channel);
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+            {
+                tenantBIds[0] = outbox.Enqueue(channel, "notice-b-0",
+                    options: new OutboxEnqueueOptions(Priority: OutboxPriority.Notice, TenantId: tenantB));
+                tenantBIds[1] = outbox.Enqueue(channel, "notice-b-1",
+                    options: new OutboxEnqueueOptions(Priority: OutboxPriority.Notice, TenantId: tenantB));
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+
+        _clock.Advance(TimeSpan.FromSeconds(1));
+        var replyId = await EnqueueAsync(channel, "code-reply",
+            new OutboxEnqueueOptions(Priority: OutboxPriority.Reply));
+
+        var firstTen = new Guid[10];
+        for (var index = 0; index < firstTen.Length; index++)
+            firstTen[index] = (await ClaimAsync(channel))!.MessageId;
+
+        Assert.Equal(replyId, firstTen[0]);
+        Assert.All(tenantBIds, id => Assert.Contains(id, firstTen));
+    }
+
+    [Fact]
     public async Task Sent_messages_are_counted_by_channel_only_after_the_commit()
     {
         using var client = factory.CreateClient();
@@ -275,7 +326,7 @@ public sealed class OutboxReservationTests(ApiFactory factory)
     private OutboxDispatchService Dispatch(IServiceProvider provider) =>
         new(provider.GetRequiredService<IUnitOfWork>(), new OutboxDispatchStore(provider.GetRequiredService<ApplicationDbContext>(),
             _clock, Options.Create(new OutboxOptions()), provider.GetRequiredService<IAfterCommit>(),
-            provider.GetRequiredService<OutboxMetrics>()), [], _clock, NullLogger<OutboxDispatchService>.Instance);
+            provider.GetRequiredService<OutboxMetrics>(), _fairness), [], _clock, NullLogger<OutboxDispatchService>.Instance);
 
     /// <summary>Escucha un contador del medidor de la cola y anota el canal de cada medición.</summary>
     private static MeterListener Listen(string instrument, List<string> channels)

@@ -55,7 +55,8 @@ public sealed record WhatsAppOutboundMessage(string PhoneNumberId, string To, st
     /// Cómo se encola (ADR 0066): detrás de lo anterior del mismo chat (el número que manda y el que recibe, que la cola guarda
     /// solo como HMAC) y con su turno: lo que contesta antes que los avisos.
     /// </summary>
-    public OutboxEnqueueOptions QueueOptions(OutboxPriority priority) => new(PhoneNumberId + "|" + To, priority);
+    public OutboxEnqueueOptions QueueOptions(OutboxPriority priority) =>
+        new(PhoneNumberId + "|" + To, priority, TenantId: BroadcastOrganizationId);
 
     public override string ToString() => nameof(WhatsAppOutboundMessage);
 }

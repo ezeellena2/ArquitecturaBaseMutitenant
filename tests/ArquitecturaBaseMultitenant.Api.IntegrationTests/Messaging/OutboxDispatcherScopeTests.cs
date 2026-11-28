@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Infrastructure.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Time.Testing;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Messaging;
 
 /// <summary>SMTP conserva un scope por lote; claim y complete no comparten el scope transaccional.</summary>
@@ -60,13 +61,38 @@ public sealed class OutboxDispatcherScopeTests
         Assert.Empty(observed.Services);
         Assert.Empty(observed.Senders);
     }
+
+    [Fact]
+    public async Task Full_batch_keeps_draining_immediately_without_waiting_for_the_poll_interval()
+    {
+        const int totalMessages = 60;
+        var clock = new FakeTimeProvider(new DateTimeOffset(2026, 11, 28, 12, 0, 0, TimeSpan.Zero));
+        var observed = new DispatchScopes(totalMessages);
+        using var services = new ServiceCollection().AddSingleton(observed).AddSingleton<TimeProvider>(clock)
+            .AddSingleton(Options.Create(new OutboxOptions { BatchSize = 25, PollIntervalSeconds = 60 }))
+            .AddSingleton<IPayloadProtector>(new PayloadProtector())
+            .AddSingleton<Microsoft.Extensions.Logging.ILogger<OutboxDeliveryProcessor>>(NullLogger<OutboxDeliveryProcessor>.Instance)
+            .AddScoped<OutboxDeliveryProcessor>()
+            .AddScoped<IChannelSender>(_ => new ScopedSender(observed))
+            .AddScoped<IOutboxDispatchService>(_ => new ScopedDispatchService(observed)).BuildServiceProvider();
+        using var worker = new OutboxDispatcher(services.GetRequiredService<IServiceScopeFactory>(), clock,
+            Options.Create(new OutboxOptions { BatchSize = 25, PollIntervalSeconds = 60 }), [new KeyRing(true)],
+            NullLogger<OutboxDispatcher>.Instance);
+        await worker.StartAsync(TestContext.Current.CancellationToken);
+        try { await observed.Completed.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken); }
+        finally { await worker.StopAsync(CancellationToken.None); }
+        Assert.Equal(totalMessages, observed.Senders.Count);
+        Assert.Equal(3, observed.Senders.Distinct().Count());
+    }
+
     private sealed class KeyRing(bool matches) : IKeyRingReadiness
     {
         public TaskCompletionSource Asked { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public Task<bool> MatchesAsync(CancellationToken cancellationToken) { Asked.TrySetResult(); return Task.FromResult(matches); }
     }
-    private sealed class DispatchScopes
+    private sealed class DispatchScopes(int messagesToEmit = 2)
     {
+        public int MessagesToEmit { get; } = messagesToEmit;
         public List<IChannelSender> Senders { get; } = [];
         public List<IOutboxDispatchService> Services { get; } = [];
         public int Claims { get; set; }
@@ -87,7 +113,11 @@ public sealed class OutboxDispatcherScopeTests
         public Task<Result<OutboxDispatchClaim?>> ClaimNextAsync(IReadOnlyCollection<string> channels, CancellationToken ct)
         {
             observed.Services.Add(this);
-            if (++observed.Claims == 3) { observed.Completed.TrySetResult(); return Task.FromResult(Result.Success<OutboxDispatchClaim?>(null)); }
+            if (++observed.Claims > observed.MessagesToEmit)
+            {
+                observed.Completed.TrySetResult();
+                return Task.FromResult(Result.Success<OutboxDispatchClaim?>(null));
+            }
             return Task.FromResult(Result.Success<OutboxDispatchClaim?>(new(Guid.NewGuid(), Guid.NewGuid(), "email", "payload")));
         }
         public Task<Result> CompleteAsync(Guid messageId, Guid leaseId, OutboxDeliveryReceipt receipt, CancellationToken ct)

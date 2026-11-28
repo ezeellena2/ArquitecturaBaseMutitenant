@@ -10,10 +10,12 @@ namespace ArquitecturaBaseMultitenant.Application.Models.Messaging;
 /// </param>
 /// <param name="Priority">Lo que contesta sale antes que los avisos; por defecto, un aviso.</param>
 /// <param name="DiscardAfterUtc">Desde este instante (UTC) no se manda: se descarta, como un código que ya venció.</param>
+/// <param name="TenantId">Organización que origina el envío para repartir la cola con equidad; si falta, se toma del contexto activo.</param>
 public sealed record OutboxEnqueueOptions(
     string? Destination = null,
     OutboxPriority Priority = OutboxPriority.Notice,
-    DateTime? DiscardAfterUtc = null)
+    DateTime? DiscardAfterUtc = null,
+    Guid? TenantId = null)
 {
     public override string ToString() => $"OutboxEnqueueOptions ({Priority})";
 }

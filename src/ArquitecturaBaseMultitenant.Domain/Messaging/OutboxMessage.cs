@@ -47,8 +47,12 @@ public sealed class OutboxMessage : Entity
     /// <summary>Desde este instante no se manda: se descarta con <see cref="ExpiredCode"/>, como un código que ya venció.</summary>
     public DateTime? DiscardAfterUtc { get; private set; }
 
+    /// <summary>Organización dueña del envío cuando corresponde; reparte la cola con equidad entre organizaciones.</summary>
+    public Guid? TenantId { get; private set; }
+
     public static OutboxMessage Enqueue(string channel, string encryptedPayload, DateTime nowUtc, Guid? userId = null,
-        string? orderingKey = null, OutboxPriority priority = OutboxPriority.Notice, DateTime? discardAfterUtc = null)
+        string? orderingKey = null, OutboxPriority priority = OutboxPriority.Notice, DateTime? discardAfterUtc = null,
+        Guid? tenantId = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(channel);
         ArgumentException.ThrowIfNullOrWhiteSpace(encryptedPayload);
@@ -57,6 +61,7 @@ public sealed class OutboxMessage : Entity
         if (orderingKey is not null && (orderingKey.Length is 0 or > OrderingKeyMaxLength))
             throw new ArgumentException("The ordering key must be a short technical hash.", nameof(orderingKey));
         if (!Enum.IsDefined(priority)) throw new ArgumentOutOfRangeException(nameof(priority));
+        if (tenantId == Guid.Empty) throw new ArgumentException("The tenant id cannot be empty.", nameof(tenantId));
 
         return new OutboxMessage
         {
@@ -69,6 +74,7 @@ public sealed class OutboxMessage : Entity
             OrderingKey = orderingKey,
             Priority = priority,
             DiscardAfterUtc = discardAfterUtc,
+            TenantId = tenantId,
         };
     }
 

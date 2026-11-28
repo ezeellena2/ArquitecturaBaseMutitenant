@@ -17,6 +17,7 @@ internal static class MessagingRegistration
         services.AddScoped<IOutbox, Outbox>();
         services.AddSingleton<OutboxOrderingKeyHasher>();
         services.AddSingleton<OutboxMetrics>();
+        services.AddSingleton<OutboxFairnessCursor>();
         services.AddSingleton<IValidateOptions<OutboxOptions>, OutboxOptionsValidator>();
         services.AddScoped<IOutboxDispatchStore, OutboxDispatchStore>();
         services.AddScoped<OutboxDeliveryProcessor>();
