@@ -288,6 +288,11 @@ public sealed class FormCatalogFieldChangePolicyTests
         public Task<FormCatalogFilterCountsResponse> CountFiltersAsync(CancellationToken ct) => throw new NotSupportedException();
         public Task<FormCatalogStoredRow?> FindAsync(Guid catalogId, CancellationToken ct) => throw new NotSupportedException();
         public Task<FormCatalogFieldsRow?> FindFieldsAsync(Guid catalogId, CancellationToken ct) => throw new NotSupportedException();
+
+        public Task<FormCatalogPresentationRow?> FindPresentationAsync(Guid catalogId, CancellationToken ct) => throw new NotSupportedException();
+
+        public Task<IReadOnlyList<FormCatalogStoredItemRow>> ListActiveItemBatchAsync(Guid catalogId, int? afterPosition, int take,
+            CancellationToken ct) => throw new NotSupportedException();
         public Task<IReadOnlyList<FormCatalogFieldSourceRow>> ListFieldSourcesAsync(IReadOnlyCollection<Guid> catalogIds, CancellationToken ct) =>
             throw new NotSupportedException();
         public Task<PagedResult<FormCatalogItemRow>> ListItemsAsync(Guid catalogId, ListFormCatalogItemsRequest request, CancellationToken ct) =>

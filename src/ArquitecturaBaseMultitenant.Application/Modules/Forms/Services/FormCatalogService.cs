@@ -23,11 +23,13 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Forms.Services;
 /// un guardado sin cambios compara la versión (409 común) sin tocar ni auditar opciones. Los filtros de uno de miembros o de
 /// contactos se validan contra su fuente, y el estado «No se puede usar» se calcula al leer con la regla del dominio y lo que dan
 /// las fuentes (<see cref="FormCatalogFiltersPolicy"/>). Desde la E13, uno a mano guarda también sus campos, su presentación y los
-/// valores de sus opciones (<see cref="FormCatalogFieldEditor"/>), bajo el bloqueo del catálogo y de las fuentes de sus campos.
+/// valores de sus opciones (<see cref="FormCatalogFieldEditor"/>), bajo el bloqueo del catálogo y de las fuentes de sus campos, y lo
+/// que no entra en WhatsApp se calcula al leer (<see cref="FormCatalogPresentationBuilder"/>).
 /// </summary>
 internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalogRepository repository, FormCatalogItemEditor editor,
-    FormCatalogFieldEditor fieldEditor, FormCatalogFiltersPolicy filters, IUserDisplayNameReader names, IPermissionService permissions, ICurrentUser user,
-    IRequestValidator validator, IUnitOfWork unitOfWork, TimeProvider clock, ILogger<FormCatalogService> logger) : IFormCatalogService
+    FormCatalogFieldEditor fieldEditor, FormCatalogPresentationBuilder presentations, FormCatalogFiltersPolicy filters,
+    IUserDisplayNameReader names, IPermissionService permissions, ICurrentUser user, IRequestValidator validator, IUnitOfWork unitOfWork,
+    TimeProvider clock, ILogger<FormCatalogService> logger) : IFormCatalogService
 {
     public Task<Result<PagedResult<FormCatalogRow>>> ListAsync(ListFormCatalogsRequest request, CancellationToken cancellationToken)
     {
@@ -61,8 +63,9 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
         return OperationLog.RunAsync<PagedResult<FormCatalogItemRow>>(logger, clock, "ListFormCatalogItems", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
-            if (await reader.FindAsync(catalogId, cancellationToken) is null) return FormCatalogErrors.NotFound;
-            return await reader.ListItemsAsync(catalogId, request, cancellationToken);
+            if (await reader.FindAsync(catalogId, cancellationToken) is not { } catalog) return FormCatalogErrors.NotFound;
+            return await presentations.WithIssuesAsync(catalog, await reader.ListItemsAsync(catalogId, request, cancellationToken),
+                cancellationToken);
         });
     }
 
@@ -207,22 +210,22 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
         string? modifiedBy = null;
         if (catalog.ModifiedBy is { } modifierId) modifiedBy = (await names.FindAsync([modifierId], ct)).GetValueOrDefault(modifierId);
         var canManage = user.UserId is { } me && await permissions.HasPermissionAsync(me, Permissions.Forms.CatalogsManage, ct);
-        var (fields, presentation) = await FieldsOfAsync(catalog.Id, ct);
+        var (fields, presentation, issues) = await FieldsOfAsync(catalog, ct);
         return new FormCatalogResponse(catalog.Id, catalog.Name, catalog.Description, catalog.Source, catalog.ValueType,
             ToResponse(catalog.Filters), state.Roles, state.Companies, sample, catalog.IsActive, catalog.IsActive && reason is null,
             reason, canManage, new FormCatalogItemCounts(catalog.TotalItems, catalog.ActiveItems), catalog.ModifiedAtUtc, modifiedBy,
-            catalog.Version, fields, presentation, FormCatalogPresentationIssues.None);
+            catalog.Version, fields, presentation, issues);
     }
 
     /// <summary>
     /// Los campos del detalle en su orden, primero los activos y después los quitados, con el nombre de su fuente y cuántas opciones
-    /// tienen un valor; y lo que arma el título y la descripción en WhatsApp.
+    /// tienen un valor; lo que arma el título y la descripción en WhatsApp, y cuántas opciones activas no entran.
     /// </summary>
-    private async Task<(IReadOnlyList<FormCatalogFieldDetail> Fields, FormCatalogPresentationDetail Presentation)> FieldsOfAsync(
-        Guid catalogId, CancellationToken ct)
+    private async Task<(IReadOnlyList<FormCatalogFieldDetail> Fields, FormCatalogPresentationDetail Presentation,
+        FormCatalogPresentationIssues Issues)> FieldsOfAsync(FormCatalogStoredRow catalog, CancellationToken ct)
     {
-        var stored = await reader.FindFieldsAsync(catalogId, ct);
-        if (stored is null) return ([], FormCatalogPresentationDetail.Default);
+        var stored = await reader.FindFieldsAsync(catalog.Id, ct);
+        if (stored is null) return ([], FormCatalogPresentationDetail.Default, FormCatalogPresentationIssues.None);
         var fields = FormCatalogField.ListFromJson(stored.FieldsJson).OrderBy(field => field.Position).ToList();
         var presentation = FormCatalogPresentation.FromJson(stored.Presentation);
         Guid[] sourceIds = [.. fields.Select(field => field.SourceCatalogId).OfType<Guid>().Distinct()];
@@ -230,7 +233,8 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
         return ([.. fields.Select(field => new FormCatalogFieldDetail(field.Id, field.Key, field.Name, field.Type, field.SourceCatalogId,
                 field.SourceCatalogId is { } sourceId ? sources.GetValueOrDefault(sourceId) : null, field.Required, field.Unique,
                 field.MaxLength, field.Min, field.Max, field.IsActive, stored.ValuesCount.GetValueOrDefault(field.Key)))],
-            new FormCatalogPresentationDetail(presentation.Title, presentation.Description));
+            new FormCatalogPresentationDetail(presentation.Title, presentation.Description),
+            await presentations.IssuesAsync(catalog, presentation, fields, ct));
     }
 
     private static Models.FormCatalogFilters? ToResponse(CatalogFilters? saved) => saved is null ? null : new(saved.SourceVersion,

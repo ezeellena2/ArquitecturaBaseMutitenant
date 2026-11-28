@@ -91,6 +91,15 @@ internal sealed class FormCatalogReader(ApplicationDbContext context, ITenantCon
             counts.ToDictionary(row => row.Key, row => row.Count, StringComparer.Ordinal));
     }
 
+    public async Task<FormCatalogPresentationRow?> FindPresentationAsync(Guid catalogId, CancellationToken ct)
+    {
+        var tenantId = tenantContext.RequiredTenantId;
+        return await context.Set<FormCatalog>().AsNoTracking()
+            .Where(catalog => catalog.TenantId == tenantId && catalog.Id == catalogId)
+            .Select(catalog => new FormCatalogPresentationRow(catalog.FieldsJson, catalog.Presentation))
+            .SingleOrDefaultAsync(ct);
+    }
+
     public async Task<IReadOnlyList<FormCatalogFieldSourceRow>> ListFieldSourcesAsync(IReadOnlyCollection<Guid> catalogIds,
         CancellationToken ct)
     {
@@ -168,6 +177,15 @@ internal sealed class FormCatalogReader(ApplicationDbContext context, ITenantCon
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(take);
         var items = Items(catalogId);
+        if (afterPosition is { } after) items = items.Where(item => item.Position > after);
+        return await Stored(items.OrderBy(item => item.Position).Take(take)).ToListAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<FormCatalogStoredItemRow>> ListActiveItemBatchAsync(Guid catalogId, int? afterPosition, int take,
+        CancellationToken ct)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(take);
+        var items = Items(catalogId).Where(item => item.IsActive);
         if (afterPosition is { } after) items = items.Where(item => item.Position > after);
         return await Stored(items.OrderBy(item => item.Position).Take(take)).ToListAsync(ct);
     }

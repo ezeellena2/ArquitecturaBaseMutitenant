@@ -8,5 +8,8 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Forms.Models;
 /// </summary>
 public sealed record FormCatalogFieldsRow(string FieldsJson, string Presentation, IReadOnlyDictionary<string, int> ValuesCount);
 
+/// <summary>El jsonb de los campos, también los quitados, y el de la presentación de un catálogo, sin contar valores (E13).</summary>
+public sealed record FormCatalogPresentationRow(string FieldsJson, string Presentation);
+
 /// <summary>Un catálogo que puede ser la fuente de un campo «De un catálogo» (111): a mano y activo, de la misma organización.</summary>
 public sealed record FormCatalogFieldSourceRow(Guid Id, string Name, FormCatalogSource Source, bool IsActive);

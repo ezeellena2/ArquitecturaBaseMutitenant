@@ -23,6 +23,12 @@ public interface IFormCatalogReader
     /// </summary>
     Task<FormCatalogFieldsRow?> FindFieldsAsync(Guid catalogId, CancellationToken ct);
 
+    /// <summary>
+    /// Los campos y la presentación guardados, sin contar valores: lo que arma el título y la descripción de una página de opciones
+    /// (E13). <c>null</c> si el catálogo no es de la organización.
+    /// </summary>
+    Task<FormCatalogPresentationRow?> FindPresentationAsync(Guid catalogId, CancellationToken ct);
+
     /// <summary>Los catálogos de la organización con esos ids, con su nombre, su origen y su estado: las fuentes de los campos (111).</summary>
     Task<IReadOnlyList<FormCatalogFieldSourceRow>> ListFieldSourcesAsync(IReadOnlyCollection<Guid> catalogIds, CancellationToken ct);
 
@@ -34,6 +40,12 @@ public interface IFormCatalogReader
     /// un reemplazo leen en lotes, sin traer las 10.000 de una vez.
     /// </summary>
     Task<IReadOnlyList<FormCatalogStoredItemRow>> ListItemBatchAsync(Guid catalogId, int? afterPosition, int take, CancellationToken ct);
+
+    /// <summary>
+    /// Un lote de opciones activas, por posición y después de <paramref name="afterPosition"/>: lo que revisa qué no entra en
+    /// WhatsApp (<c>presentationIssues</c>, E13), en lotes de 500.
+    /// </summary>
+    Task<IReadOnlyList<FormCatalogStoredItemRow>> ListActiveItemBatchAsync(Guid catalogId, int? afterPosition, int take, CancellationToken ct);
 
     /// <summary>Las opciones del catálogo con esos ids, sin las de otro: lo que vuelve a leer una propuesta guardada (ADR 0068 §9).</summary>
     Task<IReadOnlyList<FormCatalogStoredItemRow>> ListItemsByIdsAsync(Guid catalogId, IReadOnlyCollection<Guid> itemIds, CancellationToken ct);
