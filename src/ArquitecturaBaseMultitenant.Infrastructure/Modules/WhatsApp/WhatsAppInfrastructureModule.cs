@@ -127,7 +127,7 @@ public static class WhatsAppInfrastructureModule
             // Bind appends to initialized arrays; configured countries replace the default.
             if (countries.Exists()) options.AllowedCountries = countries.Get<string[]>() ?? [];
         }).ValidateDataAnnotations();
-        if (configured && !exporter)
+        if (!exporter)
             services.AddOptions<WhatsAppOptions>().ValidateOnStart();
         services.AddSingleton<IValidateOptions<WhatsAppOptions>, WhatsAppOptionsValidator>();
         // El exportador de OpenAPI arma el host sin base: ahí el canal queda apagado.

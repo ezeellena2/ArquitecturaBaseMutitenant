@@ -14,7 +14,7 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// leer (D7), pasadas las 24 horas hace falta una plantilla, y sin medio de pago Meta entrega los de servicio solo dentro de
 /// los 1.000 gratis del mes (D1). Encola por el número que recibió la conversación y devuelve el mensaje del outbox.
 /// Una plantilla sale en cualquier momento, pero solo si está aprobada en la cuenta de ese número y con medio de pago; una
-/// Marketing, solo a un contacto que acepta promociones y con su botón «No recibir más».
+/// Marketing, solo a un contacto que acepta promociones, y el botón «No recibir más» sale solo si se creó con él.
 /// </summary>
 internal sealed class WhatsAppReplyIssuer(IWhatsAppChannelRepository channels, ITimeZoneService zones, IOutbox outbox, IWhatsAppTemplateReader templates,
     IWhatsAppCustomerRepository customers, TimeProvider clock)
@@ -48,7 +48,7 @@ internal sealed class WhatsAppReplyIssuer(IWhatsAppChannelRepository channels, I
         // Las plantillas siempre exigen medio de pago (error 131042 de Meta).
         if (channel.Status == WhatsAppNumberStatus.PaymentMissing) return WhatsAppErrors.ConversationPaymentRequired;
         var message = new WhatsAppOutboundMessage(channel.PhoneNumberId, chat.WaId, template.MetaName, template.MetaLanguage, variables,
-            ChannelId: channel.Id, QuickReplyPayload: marketing ? BotButtons.Unsubscribe : null);
+            ChannelId: channel.Id, QuickReplyPayload: template.HasUnsubscribeButton ? BotButtons.Unsubscribe : null);
         return new WhatsAppIssuedTemplateMessage(outbox.Enqueue("whatsapp", JsonSerializer.Serialize(message), options: message.QueueOptions(OutboxPriority.Reply)), template.Id,
             WhatsAppTemplateBase.Render(template.Body, variables));
     }

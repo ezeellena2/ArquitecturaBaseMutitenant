@@ -28,8 +28,8 @@ public interface IWhatsAppTemplateReader
 public sealed record WhatsAppPlatformTemplateStates(DateTime? ConnectedAtUtc, IReadOnlyList<WhatsAppTemplateStateRow> States);
 
 public sealed record WhatsAppTemplateRow(Guid Id, string Name, string MetaName, string Language, string MetaLanguage, WhatsAppTemplateCategory Category,
-    string Body, IReadOnlyList<WhatsAppTemplateVariable> Variables, WhatsAppTemplateStatus Status, string? RejectionReason, DateTime UpdatedAtUtc,
-    uint Version);
+    bool HasUnsubscribeButton, string Body, IReadOnlyList<WhatsAppTemplateVariable> Variables, WhatsAppTemplateStatus Status, string? RejectionReason,
+    DateTime UpdatedAtUtc, uint Version);
 
 public sealed record WhatsAppTemplateStateRow(string MetaName, string MetaLanguage, WhatsAppTemplateStatus Status, WhatsAppTemplateCategory Category,
     string? RejectionReason, DateTime UpdatedAtUtc);

@@ -20,6 +20,8 @@ public abstract partial class WhatsAppTemplateBase : Entity, IVersioned, IAudita
     public string Language { get; private set; } = string.Empty;
     public string MetaLanguage { get; private set; } = string.Empty;
     public WhatsAppTemplateCategory Category { get; private set; }
+    /// <summary>Si se mandó a Meta con el botón «No recibir más» (al crearse como Marketing): no cambia si Meta la recategoriza.</summary>
+    public bool HasUnsubscribeButton { get; private set; }
     public string Body { get; private set; } = string.Empty;
     public IReadOnlyList<WhatsAppTemplateVariable> Variables => _variables.AsReadOnly();
     public DateTime CreatedAtUtc { get; private set; }
@@ -43,7 +45,9 @@ public abstract partial class WhatsAppTemplateBase : Entity, IVersioned, IAudita
                 Example: { Length: > 0 and <= WhatsAppTextLimits.TemplateVariable }
             })) throw new ArgumentException("Invalid variables.", nameof(variables));
         Name = trimmed; MetaName = ToMetaName(trimmed) ?? throw new ArgumentException("The name has no letters or digits.", nameof(name));
-        Language = language.Trim(); MetaLanguage = ToMetaLanguage(Language); Category = category; Body = body; _variables = list;
+        Language = language.Trim(); MetaLanguage = ToMetaLanguage(Language); Category = category;
+        HasUnsubscribeButton = category == WhatsAppTemplateCategory.Marketing;
+        Body = body; _variables = list;
     }
 
     /// <summary>

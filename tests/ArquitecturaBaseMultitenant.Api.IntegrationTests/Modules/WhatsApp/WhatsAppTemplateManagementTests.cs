@@ -2,12 +2,16 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -115,6 +119,107 @@ public sealed class WhatsAppTemplateManagementTests(ApiFactory factory)
             Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
         Assert.Equal((wabaId, "promo_de_otono"), Assert.Single(templates.Deleted));
         using (var gone = await owner.GetAsync($"/api/organization/whatsapp/templates/{id}", Ct)) Assert.Equal(HttpStatusCode.NotFound, gone.StatusCode);
+    }
+
+    [Fact]
+    public async Task Recategorized_utility_template_sends_without_unsubscribe_button_while_marketing_sends_with_it()
+    {
+        var templates = new FakeTemplates();
+        await using var host = WhatsAppAttentionJourney.Host(factory, new FakeGraph(), templates: templates);
+        using var owner = WhatsAppAttentionJourney.Client(host);
+        await WhatsAppAttentionJourney.OrganizationAsync(factory, host, owner, Ct);
+        var phoneNumberId = WhatsAppAttentionJourney.NewNumberId();
+        using (var connected = await WhatsAppAttentionJourney.ConnectAsync(owner, phoneNumberId, Ct)) Assert.Equal(HttpStatusCode.Created, connected.StatusCode);
+        var wabaId = "waba-" + phoneNumberId;
+
+        using var createdUtility = await WhatsAppAttentionJourney.PostAsync(owner, "/api/organization/whatsapp/templates", new
+        {
+            name = "Aviso recategorizado",
+            category = "Utility",
+            language = "es-AR",
+            body = "Tu turno es el {{1}}.",
+            variables = new[] { new { label = "fecha", example = "lunes" } },
+        }, Ct);
+        Assert.Equal(HttpStatusCode.Created, createdUtility.StatusCode);
+        var utilityId = (await WhatsAppAttentionJourney.JsonAsync(createdUtility, Ct)).GetProperty("id").GetGuid();
+
+        using var createdMarketing = await WhatsAppAttentionJourney.PostAsync(owner, "/api/organization/whatsapp/templates", new
+        {
+            name = "Promo con baja",
+            category = "Marketing",
+            language = "es-AR",
+            body = "Esta semana tenés {{1}} de descuento.",
+            variables = new[] { new { label = "oferta", example = "20%" } },
+        }, Ct);
+        Assert.Equal(HttpStatusCode.Created, createdMarketing.StatusCode);
+        var marketingId = (await WhatsAppAttentionJourney.JsonAsync(createdMarketing, Ct)).GetProperty("id").GetGuid();
+
+        // Meta aprueba las dos y pasa la Utility a Marketing: la plantilla en Meta sigue sin botón «No recibir más».
+        templates.Accounts[wabaId] =
+        [
+            new("101", "aviso_recategorizado", "es_AR", WhatsAppTemplateStatus.Approved, WhatsAppTemplateCategory.Marketing, null),
+            new("102", "promo_con_baja", "es_AR", WhatsAppTemplateStatus.Approved, WhatsAppTemplateCategory.Marketing, null),
+        ];
+        await host.Services.GetServices<IHostedService>().OfType<WhatsAppTemplateSyncWorker>().Single().RunOnceAsync(Ct);
+
+        var recategorized = await JsonAsync(await owner.GetAsync($"/api/organization/whatsapp/templates/{utilityId}", Ct));
+        Assert.Equal(("Approved", "Marketing"), (recategorized.GetProperty("status").GetString(), recategorized.GetProperty("category").GetString()));
+
+        using var anonymous = WhatsAppAttentionJourney.Client(host);
+        var ana = WhatsAppAttentionJourney.NewPhone();
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, ana, "Hola", Ct);
+        var contact = Assert.Single((await JsonAsync(await owner.GetAsync($"/api/organization/whatsapp/contacts?search={Uri.EscapeDataString(ana)}", Ct)))
+            .GetProperty("contacts").GetProperty("items").EnumerateArray());
+        using (var consent = await owner.PutAsJsonAsync($"/api/organization/whatsapp/contacts/{contact.GetProperty("id").GetGuid()}",
+            new { name = "Ana", tags = Array.Empty<string>(), consent = "Accepted", version = contact.GetProperty("version").GetUInt32() }, Ct))
+            Assert.Equal(HttpStatusCode.OK, consent.StatusCode);
+
+        var chatId = Assert.Single((await JsonAsync(await owner.GetAsync(
+            $"/api/organization/whatsapp/customers/conversations?search={Uri.EscapeDataString(ana)}", Ct))).GetProperty("conversations")
+            .GetProperty("items").EnumerateArray()).GetProperty("id").GetGuid();
+
+        using (var sentUtility = await WhatsAppAttentionJourney.PostAsync(owner, $"/api/organization/whatsapp/customers/conversations/{chatId}/templates",
+            new { templateId = utilityId, variables = new[] { "lunes" } }, Ct))
+            Assert.Equal(HttpStatusCode.Created, sentUtility.StatusCode);
+        using (var sentMarketing = await WhatsAppAttentionJourney.PostAsync(owner, $"/api/organization/whatsapp/customers/conversations/{chatId}/templates",
+            new { templateId = marketingId, variables = new[] { "20%" } }, Ct))
+            Assert.Equal(HttpStatusCode.Created, sentMarketing.StatusCode);
+
+        // También en una difusión, la recategorizada sale sin el botón que no tiene en Meta.
+        using (var broadcast = await WhatsAppAttentionJourney.PostAsync(owner, "/api/organization/whatsapp/broadcasts", new
+        {
+            name = "Difusión recategorizada",
+            templateId = utilityId,
+            variables = new[] { "martes" },
+            audience = new { kind = "AllAccepting" },
+            scheduledAtUtc = (DateTime?)null,
+        }, Ct))
+            Assert.Equal(HttpStatusCode.Created, broadcast.StatusCode);
+        await host.Services.GetServices<IHostedService>().OfType<WhatsAppBroadcastWorker>().Single().RunOnceAsync(Ct);
+
+        var queued = (await OutboxAsync(host)).Where(message => message.To == ana).ToArray();
+        var utilityInChat = Assert.Single(queued, message => message.TemplateName == "aviso_recategorizado" && message.BodyParameters.SequenceEqual(["lunes"]));
+        Assert.Null(utilityInChat.QuickReplyPayload);
+        var utilityInBroadcast = Assert.Single(queued, message => message.TemplateName == "aviso_recategorizado" && message.BodyParameters.SequenceEqual(["martes"]));
+        Assert.Null(utilityInBroadcast.QuickReplyPayload);
+        var marketingInChat = Assert.Single(queued, message => message.TemplateName == "promo_con_baja");
+        Assert.Equal(BotButtons.Unsubscribe, marketingInChat.QuickReplyPayload);
+    }
+
+    private static async Task<IReadOnlyList<WhatsAppOutboundMessage>> OutboxAsync(WebApplicationFactory<Program> host)
+    {
+        await using var scope = host.Services.CreateAsyncScope();
+        var protector = scope.ServiceProvider.GetRequiredService<IPayloadProtector>();
+        var rows = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking()
+            .Where(value => value.Channel == "whatsapp" && value.EncryptedPayload != string.Empty)
+            .OrderBy(value => value.CreatedAtUtc).ThenBy(value => value.Id).ToArrayAsync(Ct);
+        var messages = new List<WhatsAppOutboundMessage>();
+        foreach (var row in rows)
+        {
+            try { messages.Add(JsonSerializer.Deserialize<WhatsAppOutboundMessage>(protector.Unprotect(row.EncryptedPayload))!); }
+            catch (System.Security.Cryptography.CryptographicException) { }
+        }
+        return messages;
     }
 
     [Fact]

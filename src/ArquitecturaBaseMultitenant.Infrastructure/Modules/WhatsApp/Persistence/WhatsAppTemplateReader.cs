@@ -95,6 +95,7 @@ internal sealed class WhatsAppTemplateReader(ApplicationDbContext context, ITena
             MetaLanguage = template.MetaLanguage,
             Category = states.Where(state => state.MetaName == template.MetaName && state.MetaLanguage == template.MetaLanguage)
                 .OrderBy(state => state.WabaId).Select(state => (WhatsAppTemplateCategory?)state.Category).FirstOrDefault() ?? template.Category,
+            HasUnsubscribeButton = template.HasUnsubscribeButton,
             Body = template.Body,
             Variables = EF.Property<List<WhatsAppTemplateVariable>>(template, "_variables"),
             Status = states.Any(state => state.MetaName == template.MetaName && state.MetaLanguage == template.MetaLanguage
@@ -128,7 +129,7 @@ internal sealed class WhatsAppTemplateReader(ApplicationDbContext context, ITena
     }
 
     private static WhatsAppTemplateRow Row(TemplateProjection row) => new(row.Id, row.Name, row.MetaName, row.Language, row.MetaLanguage, row.Category,
-        row.Body, [.. row.Variables], row.Status, row.RejectionReason,
+        row.HasUnsubscribeButton, row.Body, [.. row.Variables], row.Status, row.RejectionReason,
         row.ReviewedAtUtc is { } reviewed && reviewed > row.ChangedAtUtc ? reviewed : row.ChangedAtUtc, row.Version);
 
     private sealed class TemplateProjection
@@ -139,6 +140,7 @@ internal sealed class WhatsAppTemplateReader(ApplicationDbContext context, ITena
         public string Language { get; init; } = string.Empty;
         public string MetaLanguage { get; init; } = string.Empty;
         public WhatsAppTemplateCategory Category { get; init; }
+        public bool HasUnsubscribeButton { get; init; }
         public string Body { get; init; } = string.Empty;
         public List<WhatsAppTemplateVariable> Variables { get; init; } = [];
         public WhatsAppTemplateStatus Status { get; init; }

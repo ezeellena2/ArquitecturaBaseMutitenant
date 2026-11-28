@@ -64,7 +64,8 @@ internal sealed class WhatsAppBroadcastDispatchService(IWhatsAppBroadcastReader 
                             continue;
                         }
                         var message = new WhatsAppOutboundMessage(channel.Value.PhoneNumberId, recipient.WaId, template!.MetaName, template.MetaLanguage,
-                            broadcast.Variables, ChannelId: channel.Value.Id, QuickReplyPayload: BotButtons.Unsubscribe);
+                            broadcast.Variables, ChannelId: channel.Value.Id,
+                            QuickReplyPayload: template.HasUnsubscribeButton ? BotButtons.Unsubscribe : null);
                         recipient.MarkSent(outbox.Enqueue("whatsapp", JsonSerializer.Serialize(message), options: message.QueueOptions(OutboxPriority.Notice)), nowUtc);
                     }
                 }

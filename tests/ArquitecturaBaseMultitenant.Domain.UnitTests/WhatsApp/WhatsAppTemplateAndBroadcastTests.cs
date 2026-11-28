@@ -33,7 +33,10 @@ public sealed class WhatsAppTemplateAndBroadcastTests
     {
         var template = WhatsAppTemplate.Create("Aviso de turno", "es-AR", WhatsAppTemplateCategory.Utility, "Tu turno es el {{1}}.",
             [new WhatsAppTemplateVariable("fecha", "lunes")]);
-        Assert.Equal(("Aviso de turno", "aviso_de_turno", "es-AR", "es_AR"), (template.Name, template.MetaName, template.Language, template.MetaLanguage));
+        Assert.Equal(("Aviso de turno", "aviso_de_turno", "es-AR", "es_AR", false),
+            (template.Name, template.MetaName, template.Language, template.MetaLanguage, template.HasUnsubscribeButton));
+        Assert.True(WhatsAppTemplate.Create("Promo", "es-AR", WhatsAppTemplateCategory.Marketing, "Hola", []).HasUnsubscribeButton);
+        Assert.False(PlatformWhatsAppTemplate.Create("Seguimiento", "es-AR", "Hola", []).HasUnsubscribeButton);
         Assert.Equal("Tu turno es el lunes 20.", WhatsAppTemplateBase.Render(template.Body, ["lunes 20"]));
         Assert.Throws<ArgumentException>(() => WhatsAppTemplate.Create("Sin datos", "es-AR", WhatsAppTemplateCategory.Utility, "Hola {{1}}", []));
     }

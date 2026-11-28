@@ -4071,6 +4071,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("HasUnsubscribeButton")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Language")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -5246,6 +5249,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("HasUnsubscribeButton")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Language")
                         .IsRequired()

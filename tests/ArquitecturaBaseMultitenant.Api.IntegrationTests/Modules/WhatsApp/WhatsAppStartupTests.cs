@@ -15,7 +15,6 @@ public sealed class WhatsAppStartupTests
     /// </summary>
     [Theory]
     [InlineData(false, false, false, false)]
-    [InlineData(false, false, true, false)]
     [InlineData(false, false, true, true)]
     [InlineData(true, true, false, false)]
     [InlineData(true, true, true, true)]
@@ -32,6 +31,8 @@ public sealed class WhatsAppStartupTests
     [InlineData(true, false, false, false, "WhatsApp:AccessToken")]
     [InlineData(true, true, true, false, "WhatsApp:VerifyToken")]
     [InlineData(true, true, false, true, "WhatsApp:AppSecret")]
+    [InlineData(false, false, true, false, "WhatsApp:VerifyToken")]
+    [InlineData(false, false, false, true, "WhatsApp:AppSecret")]
     public void Missing_keys_fail_startup_without_revealing_values(bool number, bool token, bool app, bool verify, string expected)
     {
         using var provider = Provider(number, token, app, verify);

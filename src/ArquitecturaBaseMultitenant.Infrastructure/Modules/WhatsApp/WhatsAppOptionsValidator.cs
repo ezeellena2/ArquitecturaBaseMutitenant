@@ -8,10 +8,9 @@ internal sealed partial class WhatsAppOptionsValidator(IOptions<LoginCodeOptions
     public ValidateOptionsResult Validate(string? name, WhatsAppOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
-        if (string.IsNullOrWhiteSpace(options.PhoneNumberId)) return ValidateOptionsResult.Success;
         var failures = new List<string>();
         if (loginCodes.Value.LifetimeMinutes != 10) failures.Add("WhatsApp Authentication template requires Authentication:LoginCode:LifetimeMinutes=10.");
-        if (string.IsNullOrWhiteSpace(options.AccessToken)) failures.Add("Missing WhatsApp:AccessToken.");
+        if (!string.IsNullOrWhiteSpace(options.PhoneNumberId) && string.IsNullOrWhiteSpace(options.AccessToken)) failures.Add("Missing WhatsApp:AccessToken.");
         var app = !string.IsNullOrWhiteSpace(options.AppSecret);
         var verify = !string.IsNullOrWhiteSpace(options.VerifyToken);
         if (app && !verify) failures.Add("Missing WhatsApp:VerifyToken; WhatsApp:AppSecret requires both webhook secrets.");

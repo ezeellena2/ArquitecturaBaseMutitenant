@@ -8,6 +8,7 @@ using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Application.Configuration.Auth;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 
@@ -45,7 +46,28 @@ public sealed class WhatsAppChannelSettingsTests
     {
         var validator = new WhatsAppOptionsValidator(Options.Create(new LoginCodeOptions { LifetimeMinutes = minutes }));
         Assert.Equal(success, validator.Validate(null, new WhatsAppOptions { PhoneNumberId = "id", AccessToken = "fixture" }).Succeeded);
-        Assert.True(validator.Validate(null, new WhatsAppOptions()).Succeeded);
+        Assert.Equal(success, validator.Validate(null, new WhatsAppOptions()).Succeeded);
+    }
+
+    [Theory]
+    [InlineData("fixture-secret", null, "WhatsApp:VerifyToken")]
+    [InlineData(null, "fixture-verify", "WhatsApp:AppSecret")]
+    public void Host_does_not_start_without_a_number_when_webhook_secrets_are_incomplete(string? appSecret, string? verifyToken, string expected)
+    {
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["WhatsApp:PhoneNumberId"] = string.Empty,
+            ["WhatsApp:AppSecret"] = appSecret,
+            ["WhatsApp:VerifyToken"] = verifyToken,
+        }).Build();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<IConfiguration>(configuration);
+        WhatsAppInfrastructureModule.AddWhatsAppModule(services, configuration);
+        using var provider = services.BuildServiceProvider();
+
+        var error = Assert.Throws<OptionsValidationException>(() => provider.GetRequiredService<IStartupValidator>().Validate());
+        Assert.Contains(expected, error.Message, StringComparison.Ordinal);
     }
     [Theory]
     [InlineData("15551234567", "+15551234567")]
