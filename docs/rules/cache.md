@@ -26,6 +26,8 @@
 | Preferencias de organización | `t:…:settings` | 5 min | preferencias |
 | Configuración no sensible de Plataforma | `p:settings` | 5 min | configuración de Plataforma |
 | Catálogos de referencia | `p:ref:<catálogo>` | 1 h | referencias |
+| Versiones de documentos legales | `p:legal:versions` | 5 min | documentos legales |
+| Aceptaciones legales de una persona | `u:…:legal:acceptances` | 5 min | aceptaciones legales de la cuenta |
 
 ## Prohibido
 - Usar `HybridCache`, `IDistributedCache` o Redis fuera de `Infrastructure/Caching`.

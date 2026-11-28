@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Features;
+using ArquitecturaBaseMultitenant.Domain.Legal;
 using ArquitecturaBaseMultitenant.Domain.ReferenceData;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -27,6 +28,8 @@ internal static class CacheTags
 
     internal static string References { get; } = CacheKeys.Platform("ref");
 
+    internal static string LegalDocuments { get; } = CacheKeys.Platform("legal:documents");
+
     internal static string Organization(Guid tenantId) => CacheKeys.Tenant(tenantId, "org");
 
     internal static string Members(Guid tenantId) => CacheKeys.Tenant(tenantId, "members");
@@ -42,6 +45,8 @@ internal static class CacheTags
     internal static string Settings(Guid tenantId) => CacheKeys.Tenant(tenantId, "settings");
 
     internal static string Account(Guid userId) => CacheKeys.User(userId, "account");
+
+    internal static string LegalAcceptances(Guid userId) => CacheKeys.User(userId, "legal:acceptances");
 
     /// <summary>Las etiquetas que avanza un alta, un cambio o una baja rastreada; ninguna si la entidad no alimenta una caché.</summary>
     internal static IEnumerable<string> Changed(EntityEntry entry)
@@ -63,6 +68,9 @@ internal static class CacheTags
             TenantFeature feature => [Features(feature.TenantId)],
             TenantSettings settings => [Settings(settings.TenantId)],
             PlatformSettings => [PlatformConfiguration],
+            LegalDocument => [LegalDocuments],
+            LegalDocumentContent => [LegalDocuments],
+            LegalAcceptance acceptance => [LegalAcceptances(acceptance.UserId)],
             _ when entry.Metadata.ClrType.Namespace == typeof(Currency).Namespace => [References],
             _ => [],
         };

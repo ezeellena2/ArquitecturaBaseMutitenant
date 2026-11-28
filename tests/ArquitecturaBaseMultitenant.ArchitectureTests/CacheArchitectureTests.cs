@@ -42,6 +42,7 @@ public sealed class CacheArchitectureTests
         "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers.TenantSettingsReader",
         "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers.PlatformSettingsReader",
         "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers.ReferenceDataReader",
+        "ArquitecturaBaseMultitenant.Infrastructure.Persistence.Readers.LegalReader",
     };
 
     // Solo CacheKeys arma una clave con su alcance (t:, s:, u:, p:). AdvisoryLockKeys arma las de los locks con los mismos

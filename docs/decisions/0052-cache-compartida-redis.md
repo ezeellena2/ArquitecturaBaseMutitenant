@@ -35,6 +35,8 @@ El TTL administra espacio; no sustituye la invalidación. Los responsables inval
 | Preferencias de organización, `t:…:settings` | 5 min | preferencias de organización | Configuración/nombre de organización |
 | Configuración no sensible de Plataforma, `p:settings` | 5 min | configuración de plataforma | PlatformSettingsService y seed |
 | Monedas, países, zonas, culturas y tipos fiscales, `p:ref:<catálogo>` | 1 h | referencias | ReferenceDataSeeder/DatabaseSeeder |
+| Versiones de documentos legales, `p:legal:versions` | 5 min | documentos legales (`p:legal:documents`) | PlatformLegalService y LegalDocumentSeeder (KAN-114); la vigencia se evalúa con TimeProvider en cada uso |
+| Aceptaciones legales de una persona, `u:…:legal:acceptances` | 5 min | aceptaciones legales de la cuenta (`u:…:legal:acceptances`) | LegalAcceptanceService y alta de cuenta (KAN-114); solo `LegalDocumentId` y `Version`, sin IP ni navegador |
 
 Los permisos efectivos se obtienen con lecturas agrupadas. `HasPermissionAsync` consulta empresas únicamente para claves de `Permissions.OrganizationProjectedFromCompany`. El mismo conjunto alimenta los listados de permisos; no se introduce una segunda interpretación de sus alcances. Las etiquetas de empresa son por organización para no tener una dependencia creciente de etiquetas por persona.
 
