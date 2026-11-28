@@ -1,4 +1,5 @@
 using ArquitecturaBaseMultitenant.Application.Models.Common;
+using ArquitecturaBaseMultitenant.Domain.Forms;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.Forms.Models;
 
@@ -27,12 +28,12 @@ public static class FormCatalogLimits
     /// <summary>Los nombres de empresas y de roles que acompañan a una persona de ejemplo.</summary>
     public const int MaxSampleMemberNames = 50;
     /// <summary>Campos activos de un catálogo a mano: los quitados no cuentan (E13).</summary>
-    public const int MaxFields = 20;
+    public const int MaxFields = FormCatalogField.MaxActive;
     /// <summary>
     /// Campos guardados de un catálogo, entre activos y quitados, que se conservan con sus valores y vienen en el detail (E13):
     /// cinco veces el tope de activos, así un catálogo no crece sin fin.
     /// </summary>
-    public const int MaxStoredFields = 5 * MaxFields;
+    public const int MaxStoredFields = FormCatalogField.MaxStored;
     /// <summary>Los lugares de un título o de una descripción en WhatsApp: texto, código, valor, detalle y cada campo activo (E13).</summary>
     public const int MaxPresentationPlaces = 4 + MaxFields;
     /// <summary>Las opciones que nombra el filtro <c>ids</c> del listado de opciones, para mostrar los valores de una fuente (E13).</summary>

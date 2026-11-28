@@ -1,3 +1,4 @@
+using System.Text.Json;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Forms;
 using ArquitecturaBaseMultitenant.Domain.Results;
@@ -134,5 +135,157 @@ public sealed class FormCatalogItemTests
         Assert.False(item.IsActive);
         item.Reactivate();
         Assert.True(item.IsActive);
+    }
+
+    private static FormCatalogFieldDraft FieldDraft(string name, FormCatalogFieldType type, int? maxLength = null, string? min = null,
+        string? max = null, Guid? source = null) => new(null, null, name, type, source, false, false, maxLength, min, max);
+
+    private static JsonElement? Json<T>(T value) => JsonSerializer.SerializeToElement(value);
+
+    /// <summary>Un catálogo con un campo de cada tipo: CUIT (texto hasta 13), Plazo, Tasa, Alta, Activo, Zona y Notas (texto sin regla).</summary>
+    private static (FormCatalog Catalog, IReadOnlyList<FormCatalogField> Fields) WithFields()
+    {
+        var catalog = FormCatalog.CreateManual("Proveedores", null, FormCatalogValueType.Text);
+        var fields = catalog.ChangeFields([
+            FieldDraft("CUIT", FormCatalogFieldType.Text, maxLength: 13),
+            FieldDraft("Plazo", FormCatalogFieldType.WholeNumber, min: "0", max: "90"),
+            FieldDraft("Tasa", FormCatalogFieldType.DecimalNumber),
+            FieldDraft("Alta", FormCatalogFieldType.Date, min: "2020-01-01", max: "2030-12-31"),
+            FieldDraft("Activo", FormCatalogFieldType.YesNo),
+            FieldDraft("Zona", FormCatalogFieldType.Catalog, source: Guid.CreateVersion7()),
+            FieldDraft("Notas", FormCatalogFieldType.Text),
+        ], name => name).Value;
+        return (catalog, fields);
+    }
+
+    private static Dictionary<Guid, JsonElement?> Delta(params (FormCatalogField Field, JsonElement? Value)[] values) =>
+        values.ToDictionary(pair => pair.Field.Id, pair => pair.Value);
+
+    [Fact]
+    public void Field_values_are_kept_canonical_by_key()
+    {
+        var (catalog, fields) = WithFields();
+        var item = Item(catalog, "A", 0);
+        var zone = Guid.CreateVersion7();
+
+        var result = item.SetFieldValues(catalog, 4, Delta((fields[0], Json("  20-12345678-9 ")), (fields[1], Json("030")),
+            (fields[2], Json("1500.50")), (fields[3], Json("2026-03-01")), (fields[4], Json(true)),
+            (fields[5], Json(zone.ToString().ToUpperInvariant()))));
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal($"{{\"activo\":true,\"alta\":\"2026-03-01\",\"cuit\":\"20-12345678-9\",\"plazo\":\"30\",\"tasa\":\"1500.5\",\"zona\":\"{zone}\"}}",
+            item.FieldValuesJson);
+        var values = item.ReadFieldValues();
+        Assert.Equal("30", values["plazo"].GetString());
+        Assert.True(values["activo"].GetBoolean());
+        Assert.Equal(6, FormCatalogItem.FieldValuesFromJson(item.FieldValuesJson).Count);
+    }
+
+    [Fact]
+    public void Field_values_are_a_delta_where_a_missing_field_is_kept_and_null_clears()
+    {
+        var (catalog, fields) = WithFields();
+        var item = Item(catalog, "A", 0);
+        Assert.Equal("{}", item.FieldValuesJson);
+        item.SetFieldValues(catalog, 0, Delta((fields[0], Json("20123456789")), (fields[1], Json("30")), (fields[4], Json(false))));
+
+        Assert.True(item.SetFieldValues(catalog, 0, Delta((fields[1], null), (fields[4], JsonSerializer.SerializeToElement<object?>(null)))).IsSuccess);
+
+        Assert.Equal("{\"cuit\":\"20123456789\"}", item.FieldValuesJson);
+        var before = item.FieldValuesJson;
+        Assert.True(item.SetFieldValues(catalog, 0, Delta((fields[0], Json("20123456789")), (fields[1], null))).IsSuccess);
+        Assert.True(item.SetFieldValues(catalog, 0, Delta()).IsSuccess);
+        Assert.Same(before, item.FieldValuesJson);
+    }
+
+    [Theory]
+    [InlineData(0, "true")]
+    [InlineData(0, "12")]
+    [InlineData(0, "\"12345678901234\"")]
+    [InlineData(6, "\"x301\"")]
+    [InlineData(1, "\"1.5\"")]
+    [InlineData(1, "\"1.500\"")]
+    [InlineData(1, "\"1,5\"")]
+    [InlineData(1, "30")]
+    [InlineData(1, "\"91\"")]
+    [InlineData(1, "\"-1\"")]
+    [InlineData(1, "\"\"")]
+    [InlineData(2, "\"1.12345678901\"")]
+    [InlineData(3, "\"01/03/2026\"")]
+    [InlineData(3, "\"2031-01-01\"")]
+    [InlineData(4, "\"Sí\"")]
+    [InlineData(5, "\"zona-norte\"")]
+    [InlineData(5, "\"00000000-0000-0000-0000-000000000000\"")]
+    public void A_value_that_is_not_of_its_type_or_breaks_its_limit_is_invalid(int field, string json)
+    {
+        var (catalog, fields) = WithFields();
+        var item = Item(catalog, "A", 0);
+        using var document = JsonDocument.Parse(json.Replace("x301", new string('x', 301), StringComparison.Ordinal));
+
+        var result = item.SetFieldValues(catalog, 2, Delta((fields[field], document.RootElement.Clone())));
+
+        FieldErrorAssert.Same(FormCatalogErrors.FieldValueInvalid(2, fields[field].Id, FormCatalogErrors.FieldValueInvalidCode), result.Error);
+        Assert.Equal("{}", item.FieldValuesJson);
+    }
+
+    [Fact]
+    public void An_empty_text_is_a_value_and_a_text_without_a_rule_takes_up_to_300()
+    {
+        var (catalog, fields) = WithFields();
+        var item = Item(catalog, "A", 0);
+
+        Assert.True(item.SetFieldValues(catalog, 0, Delta((fields[0], Json("")), (fields[6], Json(new string('x', 300))))).IsSuccess);
+
+        Assert.Equal("", item.ReadFieldValues()["cuit"].GetString());
+        Assert.Equal(300, item.ReadFieldValues()["notas"].GetString()!.Length);
+    }
+
+    [Fact]
+    public void A_value_of_an_unknown_or_removed_field_is_invalid_and_the_removed_values_are_kept()
+    {
+        var (catalog, fields) = WithFields();
+        var item = Item(catalog, "A", 0);
+        item.SetFieldValues(catalog, 0, Delta((fields[0], Json("20123456789")), (fields[1], Json("30"))));
+        catalog.ChangeFields([.. fields.Skip(1).Select(field => new FormCatalogFieldDraft(field.Id, null, field.Name, field.Type,
+            field.SourceCatalogId, false, false, field.MaxLength, field.Min, field.Max))], name => name);
+        var unknown = Guid.CreateVersion7();
+
+        FieldErrorAssert.Same(FormCatalogErrors.FieldValueInvalid(1, fields[0].Id, FormCatalogErrors.FieldValueInvalidCode),
+            item.SetFieldValues(catalog, 1, Delta((fields[0], Json("1")))).Error);
+        FieldErrorAssert.Same(FormCatalogErrors.FieldValueInvalid(1, unknown, FormCatalogErrors.FieldValueInvalidCode),
+            item.SetFieldValues(catalog, 1, new Dictionary<Guid, JsonElement?> { [unknown] = Json("1") }).Error);
+        Assert.True(item.SetFieldValues(catalog, 1, Delta((fields[1], Json("45")))).IsSuccess);
+
+        Assert.Equal("{\"cuit\":\"20123456789\",\"plazo\":\"45\"}", item.FieldValuesJson);
+    }
+
+    [Fact]
+    public void A_required_field_needs_a_value_only_on_an_active_option()
+    {
+        var (catalog, fields) = WithFields();
+        var drafts = fields.Select(field => new FormCatalogFieldDraft(field.Id, null, field.Name, field.Type, field.SourceCatalogId,
+            Required: field.Key is "cuit" or "plazo", false, field.MaxLength, field.Min, field.Max)).ToArray();
+        var active = Item(catalog, "A", 0);
+        var inactive = FormCatalogItem.Create(catalog, 1, "B", "Opción B", null, null, isActive: false, 1).Value;
+        active.SetFieldValues(catalog, 0, Delta((fields[0], Json("20123456789")), (fields[1], Json("30"))));
+        Assert.True(catalog.ChangeFields(drafts, name => name).IsSuccess);
+
+        FieldErrorAssert.Same(FormCatalogErrors.FieldValueRequired(3, fields[1].Id), active.SetFieldValues(catalog, 3, Delta((fields[1], null))).Error);
+        FieldErrorAssert.Same(FormCatalogErrors.FieldValueRequired(3, fields[0].Id), active.SetFieldValues(catalog, 3, Delta((fields[0], Json("  ")))).Error);
+        Assert.Equal("{\"cuit\":\"20123456789\",\"plazo\":\"30\"}", active.FieldValuesJson);
+        Assert.True(inactive.SetFieldValues(catalog, 1, Delta((fields[4], Json(true)))).IsSuccess);
+
+        inactive.Reactivate();
+        FieldErrorAssert.Same(FormCatalogErrors.FieldValueRequired(1, fields[0].Id), inactive.SetFieldValues(catalog, 1, Delta()).Error);
+    }
+
+    [Fact]
+    public void Field_values_belong_to_an_option_of_the_same_catalog()
+    {
+        var (catalog, _) = WithFields();
+        var other = FormCatalog.CreateManual("Otro", null, FormCatalogValueType.Text);
+        var item = Item(catalog, "A", 0);
+
+        Assert.Throws<InvalidOperationException>(() => item.SetFieldValues(other, 0, Delta()));
     }
 }
