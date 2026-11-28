@@ -19,7 +19,7 @@ public static class AssistantTechnicalLimits
     public const int MaxInputTokens = 51200;
     /// <summary>Cota conservadora de tokens por página de un PDF (coincide con el tope visual de una imagen).</summary>
     public const long PdfTokensPerPage = 8192;
-    /// <summary>Máximo de páginas de un PDF derivado de <see cref="MaxInputTokens"/> antes de descomprimir streams (KAN-69).</summary>
+    /// <summary>Máximo de páginas de un PDF, derivado de <see cref="MaxInputTokens"/> (KAN-69).</summary>
     public const int MaxPdfPages = (int)(MaxInputTokens / PdfTokensPerPage);
     public const int MaxOutputTokens = 2048;
     public const int TitleMaxOutputTokens = 64;
