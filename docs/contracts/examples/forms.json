@@ -2410,6 +2410,20 @@
         "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
         "code": "Request.Invalid"
       }
+    },
+    {
+      "name": "Plantilla de un catálogo que no está",
+      "method": "GET",
+      "path": "/api/organization/forms/catalogs/template",
+      "status": 404,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.5",
+        "title": "No encontrado",
+        "status": 404,
+        "detail": "No encontramos este catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.NotFound"
+      }
     }
   ]
 }

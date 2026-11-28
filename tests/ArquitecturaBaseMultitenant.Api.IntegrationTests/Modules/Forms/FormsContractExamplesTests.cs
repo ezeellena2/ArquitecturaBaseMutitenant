@@ -413,6 +413,7 @@ public sealed class FormsContractExamplesTests(ApiFactory factory)
         await GetAsync("Exportar un catálogo que no está", WithId + "/export", $"{Root}/{Guid.NewGuid()}/export");
         await GetAsync("Exportar un catálogo de miembros", WithId + "/export", $"{Root}/{membersId}/export");
         await GetAsync("Plantilla de un tipo que no existe", Root + "/template", Root + "/template?valueType=9");
+        await GetAsync("Plantilla de un catálogo que no está", Root + "/template", $"{Root}/template?catalogId={Guid.NewGuid()}");
         using (var template = await _client.GetAsync(Root + "/template?valueType=Date", Ct))
         {
             Assert.Equal(HttpStatusCode.OK, template.StatusCode);

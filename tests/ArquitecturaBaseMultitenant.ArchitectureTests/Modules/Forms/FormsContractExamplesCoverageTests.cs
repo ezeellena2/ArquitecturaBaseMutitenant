@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Text.Json;
-using ArquitecturaBaseMultitenant.Domain.Forms;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
@@ -19,10 +18,7 @@ public sealed class FormsContractExamplesCoverageTests
     /// Lo que ninguna corrida puede dar todavía, con su motivo: un código en todas sus rutas, o una sola respuesta con la forma
     /// «MÉTODO ruta status código». La tarea que lo produce graba su ejemplo y lo saca de acá.
     /// </summary>
-    private static readonly Dictionary<string, string> NotReachableYet = new(StringComparer.Ordinal)
-    {
-        ["GET /api/organization/forms/catalogs/template 404 " + FormCatalogErrors.NotFoundCode] = "la plantilla con catalogId llega en la E13 (B7)",
-    };
+    private static readonly Dictionary<string, string> NotReachableYet = new(StringComparer.Ordinal);
 
     [Fact]
     public void Every_forms_response_and_business_error_has_an_example_of_a_real_run()
