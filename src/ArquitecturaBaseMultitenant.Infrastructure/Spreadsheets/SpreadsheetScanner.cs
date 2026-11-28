@@ -5,7 +5,8 @@ using System.Xml;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Spreadsheets;
 
 /// <summary>Topes técnicos para escanear un archivo <c>.xlsx</c> antes de abrirlo con ClosedXML.</summary>
-internal sealed record SpreadsheetScanLimits(long MaxUncompressedBytes, long MaxCells, int MaxEntries);
+internal sealed record SpreadsheetScanLimits(long MaxUncompressedBytes, long MaxCells, int MaxEntries,
+    int MaxSheets = SpreadsheetScanner.DefaultMaxSheets);
 
 /// <summary>Se lanza cuando la planilla supera alguno de los topes de tamaño, partes o celdas.</summary>
 internal sealed class SpreadsheetOverLimitsException() : Exception("The spreadsheet is over the limits.");
@@ -14,11 +15,25 @@ internal sealed class SpreadsheetOverLimitsException() : Exception("The spreadsh
 /// Escáner común para planillas <c>.xlsx</c> de cualquier módulo (Forms, WhatsApp): valida la cantidad de partes del ZIP, los
 /// bytes descomprimidos reales (el encabezado del ZIP puede mentir) y la cantidad de celdas de todas las hojas —declaradas por
 /// <c>xl/workbook.xml</c> y sus relaciones o por <c>[Content_Types].xml</c>, estén en la carpeta que estén—, contando celdas vacías
-/// con formato y el área entera de fórmulas matriciales antes de abrir <c>XLWorkbook</c>.
+/// con formato y el área entera de fórmulas matriciales antes de abrir <c>XLWorkbook</c>. También topa la cantidad de hojas y
+/// rechaza dos hojas que apuntan a la misma parte, que ClosedXML cargaría una vez por hoja. Para un CSV da el tope de largo de línea.
 /// </summary>
 internal static class SpreadsheetScanner
 {
     internal const int DefaultMaxFileBytes = 10 * 1024 * 1024;
+
+    /// <summary>
+    /// Las hojas de un libro (los <c>&lt;sheet&gt;</c> de <c>xl/workbook.xml</c>): 255 es lo más que Excel deja poner en un libro
+    /// nuevo, y una planilla de contactos o de opciones trae unas pocas. Las dos importaciones leen solo la primera, pero ClosedXML
+    /// arma en memoria cada una.
+    /// </summary>
+    internal const int DefaultMaxSheets = 255;
+
+    /// <summary>
+    /// El largo de una línea de un CSV (de un registro, si lleva saltos de línea entre comillas): 32.768 caracteres alcanzan para
+    /// 64 columnas de 512 y para lo que entra en una celda de Excel (32.767). Se corta mientras se lee.
+    /// </summary>
+    internal const int MaxCsvLineChars = 32_768;
 
     private const string ContentTypesPart = "[Content_Types].xml";
     private const string PackageRelsPart = "_rels/.rels";
@@ -64,7 +79,7 @@ internal static class SpreadsheetScanner
 
         var budget = new Budget(limits.MaxUncompressedBytes);
         var scannedMetadata = new HashSet<ZipArchiveEntry>(ReferenceEqualityComparer.Instance);
-        var sheets = DiscoverSheetParts(zip, budget, scannedMetadata);
+        var sheets = DiscoverSheetParts(zip, limits.MaxSheets, budget, scannedMetadata);
 
         long cells = 0;
         foreach (var entry in zip.Entries)
@@ -90,7 +105,7 @@ internal static class SpreadsheetScanner
         }
     }
 
-    private static SheetParts DiscoverSheetParts(ZipArchive zip, Budget budget, HashSet<ZipArchiveEntry> scannedMetadata)
+    private static SheetParts DiscoverSheetParts(ZipArchive zip, int maxSheets, Budget budget, HashSet<ZipArchiveEntry> scannedMetadata)
     {
         var overrides = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         var extensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -104,7 +119,7 @@ internal static class SpreadsheetScanner
         var workbookPaths = DiscoverWorkbookPaths(zip, budget, scannedMetadata);
         var workbookSheets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var workbookPath in workbookPaths)
-            ReadWorkbookSheets(zip, workbookPath, budget, scannedMetadata, workbookSheets);
+            ReadWorkbookSheets(zip, workbookPath, maxSheets, budget, scannedMetadata, workbookSheets);
 
         return new SheetParts(workbookSheets, overrides, extensions);
     }
@@ -131,10 +146,16 @@ internal static class SpreadsheetScanner
         return paths;
     }
 
-    private static void ReadWorkbookSheets(ZipArchive zip, string workbookPath, Budget budget,
+    /// <summary>
+    /// Las hojas que declara un libro, hasta <paramref name="maxSheets"/>. ClosedXML carga una hoja por cada <c>&lt;sheet&gt;</c>,
+    /// aunque dos lleguen a la misma parte (el mismo <c>r:id</c>, o dos relaciones con el mismo destino escrito de otra forma): las
+    /// celdas de esa parte, contadas una vez, se cargarían una vez por hoja, así que eso tampoco pasa.
+    /// </summary>
+    private static void ReadWorkbookSheets(ZipArchive zip, string workbookPath, int maxSheets, Budget budget,
         HashSet<ZipArchiveEntry> scannedMetadata, HashSet<string> workbookSheets)
     {
         var sheetIds = new HashSet<string>(StringComparer.Ordinal);
+        var sheets = 0;
         foreach (var workbookEntry in FindEntries(zip, workbookPath))
         {
             scannedMetadata.Add(workbookEntry);
@@ -143,15 +164,17 @@ internal static class SpreadsheetScanner
             while (reader.Read())
             {
                 if (reader.NodeType != XmlNodeType.Element || reader.LocalName != "sheet") continue;
+                if (++sheets > maxSheets) throw new SpreadsheetOverLimitsException();
                 var relationId = reader.GetAttribute("id", OfficeRelationshipsNamespace)
                     ?? reader.GetAttribute("id", StrictRelationshipsNamespace)
                     ?? reader.GetAttribute("id");
-                if (!string.IsNullOrEmpty(relationId)) sheetIds.Add(relationId);
+                if (!string.IsNullOrEmpty(relationId) && !sheetIds.Add(relationId)) throw new SpreadsheetOverLimitsException();
             }
         }
 
         var directory = DirectoryOf(workbookPath);
         var relsPath = RelsPathOf(workbookPath);
+        var sheetTargets = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var relsEntry in FindEntries(zip, relsPath))
         {
             scannedMetadata.Add(relsEntry);
@@ -165,11 +188,19 @@ internal static class SpreadsheetScanner
                 var type = reader.GetAttribute("Type");
                 var target = reader.GetAttribute("Target");
                 if (target is null) continue;
-                var isWorksheet = (id is not null && sheetIds.Contains(id))
-                    || type?.EndsWith("/worksheet", StringComparison.OrdinalIgnoreCase) == true;
-                if (isWorksheet) AddResolvedPaths(workbookSheets, directory, target);
+                var isSheetRelation = id is not null && sheetIds.Contains(id);
+                if (isSheetRelation) ClaimSheetTarget(sheetTargets, ResolveTarget(directory, Uri.UnescapeDataString(target)), id!);
+                if (isSheetRelation || type?.EndsWith("/worksheet", StringComparison.OrdinalIgnoreCase) == true)
+                    AddResolvedPaths(workbookSheets, directory, target);
             }
         }
+    }
+
+    /// <summary>Dos <c>&lt;sheet&gt;</c> con relaciones distintas no pueden llegar a la misma parte (sin distinguir mayúsculas, como OPC).</summary>
+    private static void ClaimSheetTarget(Dictionary<string, string> sheetTargets, string target, string relationId)
+    {
+        if (!sheetTargets.TryAdd(target, relationId) && !string.Equals(sheetTargets[target], relationId, StringComparison.Ordinal))
+            throw new SpreadsheetOverLimitsException();
     }
 
     /// <summary>Las partes que <c>[Content_Types].xml</c> declara como hoja, por su nombre o por su extensión.</summary>

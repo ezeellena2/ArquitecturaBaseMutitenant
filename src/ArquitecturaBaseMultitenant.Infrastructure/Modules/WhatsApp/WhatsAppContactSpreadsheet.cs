@@ -9,7 +9,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
 /// <summary>
 /// La planilla de contactos: .xlsx con ClosedXML (MIT, decisión 10 de la E11) o .csv separado por comas o punto y coma, como
 /// lo guarda Excel en español. Corta en 10 MiB antes de copiar el archivo, escanea el <c>.xlsx</c> con
-/// <see cref="SpreadsheetScanner"/> antes de abrir el libro y lee el valor guardado de las fórmulas sin evaluarlas.
+/// <see cref="SpreadsheetScanner"/> antes de abrir el libro y lee el valor guardado de las fórmulas sin evaluarlas. El <c>.csv</c>
+/// tiene el mismo tope de columnas que el libro y el tope de largo de línea del escáner.
 /// </summary>
 internal sealed class WhatsAppContactSpreadsheet : IWhatsAppContactSpreadsheet
 {
@@ -76,17 +77,22 @@ internal sealed class WhatsAppContactSpreadsheet : IWhatsAppContactSpreadsheet
         };
     }
 
+    /// <summary>
+    /// Con los topes del libro: una línea de más de <see cref="SpreadsheetScanner.MaxCsvLineChars"/> caracteres o de más de
+    /// <see cref="MaxColumns"/> columnas corta la lectura ahí mismo, sin armar antes la línea o las celdas enteras.
+    /// </summary>
     private static WhatsAppSpreadsheet? ReadCsv(byte[] content, int maxRows)
     {
         using var stream = new MemoryStream(content, writable: false);
         using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
-        var headerLine = reader.ReadLine();
+        var buffer = new StringBuilder();
+        var headerLine = ReadLine(reader, buffer);
         if (string.IsNullOrWhiteSpace(headerLine)) return null;
         var separator = headerLine.Count(character => character == ';') > headerLine.Count(character => character == ',') ? ';' : ',';
         var headers = Split(headerLine, separator).Select(value => value ?? string.Empty).ToArray();
         var rows = new List<WhatsAppSpreadsheetRow>();
         var number = 1;
-        while (reader.ReadLine() is { } line && rows.Count <= maxRows)
+        while (rows.Count <= maxRows && ReadLine(reader, buffer) is { } line)
         {
             number++;
             rows.Add(new(number, Split(line, separator)));
@@ -94,7 +100,26 @@ internal sealed class WhatsAppContactSpreadsheet : IWhatsAppContactSpreadsheet
         return new(headers, rows);
     }
 
-    /// <summary>Un renglón de CSV con comillas dobles para los campos que llevan el separador.</summary>
+    /// <summary>Un renglón, como <see cref="TextReader.ReadLine"/>, que corta en cuanto pasa el tope de largo.</summary>
+    private static string? ReadLine(TextReader reader, StringBuilder line)
+    {
+        line.Clear();
+        var next = reader.Read();
+        if (next < 0) return null;
+        for (; next >= 0 && next != '\n'; next = reader.Read())
+        {
+            if (next == '\r')
+            {
+                if (reader.Peek() == '\n') reader.Read();
+                break;
+            }
+            if (line.Length == SpreadsheetScanner.MaxCsvLineChars) throw new SpreadsheetOverLimitsException();
+            line.Append((char)next);
+        }
+        return line.ToString();
+    }
+
+    /// <summary>Un renglón de CSV con comillas dobles para los campos que llevan el separador; corta en la columna 65.</summary>
     private static string?[] Split(string line, char separator)
     {
         var cells = new List<string?>();
@@ -105,7 +130,13 @@ internal sealed class WhatsAppContactSpreadsheet : IWhatsAppContactSpreadsheet
             var character = line[index];
             if (character == '"' && quoted && index + 1 < line.Length && line[index + 1] == '"') { current.Append('"'); index++; }
             else if (character == '"') quoted = !quoted;
-            else if (character == separator && !quoted) { cells.Add(current.Length == 0 ? null : current.ToString()); current.Clear(); }
+            else if (character == separator && !quoted)
+            {
+                // Después de este separador viene otra celda: con ella, la línea pasaría de MaxColumns.
+                if (cells.Count + 1 == MaxColumns) throw new SpreadsheetOverLimitsException();
+                cells.Add(current.Length == 0 ? null : current.ToString());
+                current.Clear();
+            }
             else current.Append(character);
         }
         cells.Add(current.Length == 0 ? null : current.ToString());

@@ -10,6 +10,7 @@ using ArquitecturaBaseMultitenant.Application.Modules.Forms.Services;
 using ArquitecturaBaseMultitenant.Domain.Forms;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.Forms;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
+using ArquitecturaBaseMultitenant.Infrastructure.Spreadsheets;
 using ClosedXML.Excel;
 using Microsoft.AspNetCore.Http.Metadata;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +20,8 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Forms;
 /// <summary>
 /// La planilla de los catálogos (C8 a C10) con ClosedXML, sin base: los topes se cuentan antes de cargar el libro (lo
 /// descomprimido de los estilos y los textos compartidos, las celdas vacías con formato y el área de una fórmula matricial), el
-/// CSV es UTF-8 estricto y lee comillas con saltos de línea, más de 64 columnas pasan el tope, y lo exportado se vuelve a importar
+/// CSV es UTF-8 estricto y lee comillas con saltos de línea, más de 64 columnas, un registro más largo que el tope de línea, dos
+/// hojas que apuntan a la misma parte y más hojas que el tope pasan los topes, y lo exportado se vuelve a importar
 /// sin diferencias en español y en inglés, con un número de 16 cifras y una fecha de 1899 como texto canónico.
 /// </summary>
 public sealed partial class FormCatalogSpreadsheetTests
@@ -123,6 +125,28 @@ public sealed partial class FormCatalogSpreadsheetTests
         Assert.Equal(FormCatalogSheetStatus.OverLimits, Spreadsheet.Read("catalogo.xlsx", hiddenFromContentTypes, Limits).Status);
     }
 
+    /// <summary>ClosedXML carga una hoja por cada <c>&lt;sheet&gt;</c>, aunque dos apunten a la misma parte: no pasa ninguno de los dos.</summary>
+    [Fact]
+    public void Two_sheets_pointing_to_the_same_part_or_more_sheets_than_the_cap_are_over_limits()
+    {
+        static void Options(IXLWorksheet sheet)
+        {
+            Header(sheet);
+            sheet.Cell(2, 1).SetValue("A");
+            sheet.Cell(2, 2).SetValue("Uno");
+        }
+        var twoSheets = Workbook(Options, extraSheets: 1);
+        Assert.Single(Spreadsheet.Read("catalogo.xlsx", twoSheets, Limits).Rows);
+
+        var repeated = ReplacePart(Workbook(Options), "xl/workbook.xml", xml => SheetElement().Replace(xml, match =>
+            string.Concat(Enumerable.Range(1, 2).Select(index =>
+                $"""<{match.Groups["prefix"].Value}sheet name="H{index}" sheetId="{index}" {match.Groups["attr"].Value}="{match.Groups["id"].Value}"/>""")), 1));
+        Assert.Equal(FormCatalogSheetStatus.OverLimits, Spreadsheet.Read("catalogo.xlsx", repeated, Limits).Status);
+
+        var tooMany = Workbook(Options, extraSheets: SpreadsheetScanner.DefaultMaxSheets);
+        Assert.Equal(FormCatalogSheetStatus.OverLimits, Spreadsheet.Read("catalogo.xlsx", tooMany, Limits).Status);
+    }
+
     [Fact]
     public async Task A_zip_with_twenty_thousand_parts_and_a_twelve_mib_file_are_rejected_without_opening_the_workbook()
     {
@@ -192,6 +216,23 @@ public sealed partial class FormCatalogSpreadsheetTests
         Assert.Equal(FormCatalogSheetStatus.OverLimits, Spreadsheet.Read("pegado.csv", Csv(65), Limits).Status);
         Assert.Equal(FormCatalogSheetStatus.Read, Spreadsheet.Read("catalogo.xlsx", Xlsx(64), Limits).Status);
         Assert.Equal(FormCatalogSheetStatus.OverLimits, Spreadsheet.Read("catalogo.xlsx", Xlsx(65), Limits).Status);
+    }
+
+    [Fact]
+    public void A_csv_record_longer_than_the_line_cap_is_over_limits_also_inside_quotes()
+    {
+        var cap = SpreadsheetScanner.MaxCsvLineChars;
+        Assert.Equal(FormCatalogSheetStatus.Read,
+            Spreadsheet.Read("pegado.csv", Encoding.UTF8.GetBytes("Código;Texto\nA;" + new string('x', cap - 2) + "\n"), Limits).Status);
+
+        Assert.Equal(FormCatalogSheetStatus.OverLimits,
+            Spreadsheet.Read("pegado.csv", Encoding.UTF8.GetBytes("Código;Texto\nA;" + new string('x', cap) + "\n"), Limits).Status);
+        // Un campo entre comillas con saltos de línea es un solo registro: el tope cuenta el registro entero.
+        var quotedLines = string.Join("\n", Enumerable.Repeat(new string('x', 1_000), cap / 1_000 + 1));
+        Assert.Equal(FormCatalogSheetStatus.OverLimits,
+            Spreadsheet.Read("pegado.csv", Encoding.UTF8.GetBytes($"Código;Texto\nA;\"{quotedLines}\"\n"), Limits).Status);
+        Assert.Equal(FormCatalogSheetStatus.OverLimits,
+            Spreadsheet.Read("pegado.csv", Encoding.UTF8.GetBytes(new string(';', 10_000_000)), Limits).Status);
     }
 
     [Theory]
@@ -320,10 +361,11 @@ public sealed partial class FormCatalogSpreadsheetTests
         sheet.Cell(1, 2).SetValue("Texto");
     }
 
-    private static byte[] Workbook(Action<IXLWorksheet> fill)
+    private static byte[] Workbook(Action<IXLWorksheet> fill, int extraSheets = 0)
     {
         using var workbook = new XLWorkbook();
         fill(workbook.AddWorksheet("Opciones"));
+        for (var index = 1; index <= extraSheets; index++) workbook.AddWorksheet($"H{index}");
         using var stream = new MemoryStream();
         workbook.SaveAs(stream);
         return stream.ToArray();
@@ -438,6 +480,9 @@ public sealed partial class FormCatalogSpreadsheetTests
 
     [GeneratedRegex(@"</(?<prefix>\w+:)?row>", RegexOptions.CultureInvariant)]
     private static partial Regex FirstRowEnd();
+
+    [GeneratedRegex(@"<(?<prefix>(?:\w+:)?)sheet\s[^>]*?\b(?<attr>\w+:id)=""(?<id>[^""]+)""[^>]*/>", RegexOptions.CultureInvariant)]
+    private static partial Regex SheetElement();
 
     private sealed class BoundedReadStream(long totalLength) : Stream
     {

@@ -2,6 +2,7 @@ using System.IO.Compression;
 using System.Text;
 using System.Text.RegularExpressions;
 using ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.Controllers;
+using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Spreadsheets;
@@ -13,8 +14,9 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 
 /// <summary>
 /// La planilla de importación de contactos de WhatsApp pasa por el escáner común antes de abrir ClosedXML: rechaza fórmulas
-/// matriciales grandes, hojas fuera de <c>xl/worksheets/</c> que superan los topes, ZIPs con 20.000 partes y archivos de 12 MiB
-/// sin copiar más de 10 MiB a memoria ni evaluar fórmulas; el ejemplo descargable sigue entrando.
+/// matriciales grandes, hojas fuera de <c>xl/worksheets/</c> que superan los topes, dos hojas que apuntan a la misma parte, más
+/// hojas que el tope, ZIPs con 20.000 partes y archivos de 12 MiB sin copiar más de 10 MiB a memoria ni evaluar fórmulas. Un CSV
+/// tiene el mismo tope de columnas que el libro y un tope de largo de línea; el ejemplo descargable sigue entrando.
 /// </summary>
 public sealed partial class WhatsAppContactSpreadsheetTests
 {
@@ -82,6 +84,79 @@ public sealed partial class WhatsAppContactSpreadsheetTests
             Assert.Throws<SpreadsheetOverLimitsException>(() => SpreadsheetScanner.ScanXlsx(scanStream, WhatsAppContactSpreadsheet.ScanLimits));
         using var readStream = new MemoryStream(zipWithTooManyParts, writable: false);
         Assert.Null(await Spreadsheet.ReadAsync("contactos.xlsx", readStream, WhatsAppFeature.MaxImportRows, Ct));
+    }
+
+    /// <summary>
+    /// ClosedXML carga una hoja por cada <c>&lt;sheet&gt;</c> de <c>xl/workbook.xml</c>: si dos apuntan a la misma parte (el mismo
+    /// <c>r:id</c>, o dos relaciones con el mismo destino, aunque se escriba distinto), las celdas contadas una vez se cargarían
+    /// muchas veces.
+    /// </summary>
+    [Theory]
+    [InlineData("repeated-id")]
+    [InlineData("same-target")]
+    [InlineData("same-target-written-differently")]
+    public async Task Two_sheets_pointing_to_the_same_part_are_rejected_without_opening_the_workbook(string variant)
+    {
+        var workbook = Workbook(sheet =>
+        {
+            ContactHeader(sheet);
+            sheet.Cell(2, 1).SetValue("Ana");
+            sheet.Cell(2, 2).SetValue("+5491155551234");
+        });
+        var attack = variant == "repeated-id"
+            ? RepeatSheet(workbook, copies: 200)
+            : SheetWithSecondRelationship(workbook, writtenDifferently: variant == "same-target-written-differently");
+
+        using (var scanStream = new MemoryStream(attack, writable: false))
+            Assert.Throws<SpreadsheetOverLimitsException>(() => SpreadsheetScanner.ScanXlsx(scanStream, WhatsAppContactSpreadsheet.ScanLimits));
+        using var readStream = new MemoryStream(attack, writable: false);
+        Assert.Null(await Spreadsheet.ReadAsync("contactos.xlsx", readStream, WhatsAppFeature.MaxImportRows, Ct));
+    }
+
+    [Fact]
+    public async Task More_sheets_than_the_cap_are_rejected_and_a_workbook_with_a_second_sheet_still_reads()
+    {
+        static void Contacts(IXLWorksheet sheet)
+        {
+            ContactHeader(sheet);
+            sheet.Cell(2, 1).SetValue("Ana");
+            sheet.Cell(2, 2).SetValue("+5491155551234");
+        }
+
+        using (var twoSheets = new MemoryStream(Workbook(Contacts, extraSheets: 1), writable: false))
+        {
+            var read = await Spreadsheet.ReadAsync("contactos.xlsx", twoSheets, WhatsAppFeature.MaxImportRows, Ct);
+            Assert.NotNull(read);
+            Assert.Single(read.Rows);
+        }
+
+        var tooMany = Workbook(Contacts, extraSheets: WhatsAppContactSpreadsheet.ScanLimits.MaxSheets);
+        using (var scanStream = new MemoryStream(tooMany, writable: false))
+            Assert.Throws<SpreadsheetOverLimitsException>(() => SpreadsheetScanner.ScanXlsx(scanStream, WhatsAppContactSpreadsheet.ScanLimits));
+        using var readStream = new MemoryStream(tooMany, writable: false);
+        Assert.Null(await Spreadsheet.ReadAsync("contactos.xlsx", readStream, WhatsAppFeature.MaxImportRows, Ct));
+    }
+
+    [Fact]
+    public async Task A_csv_with_more_than_64_columns_or_a_line_past_the_cap_is_rejected()
+    {
+        async Task<WhatsAppSpreadsheet?> ReadCsvAsync(string text)
+        {
+            using var stream = new MemoryStream(Encoding.UTF8.GetBytes(text), writable: false);
+            return await Spreadsheet.ReadAsync("contactos.csv", stream, WhatsAppFeature.MaxImportRows, Ct);
+        }
+        string[] header = ["Nombre", "Teléfono", .. Enumerable.Range(3, 62).Select(column => "C" + column)];
+
+        var sixtyFour = await ReadCsvAsync(string.Join(';', header) + "\nAna;+5491155551234;" + new string(';', 61) + "\n");
+        Assert.NotNull(sixtyFour);
+        Assert.Equal(64, sixtyFour.Headers.Count);
+        Assert.Equal(64, Assert.Single(sixtyFour.Rows).Cells.Count);
+
+        Assert.Null(await ReadCsvAsync(string.Join(';', header) + ";C65\nAna;+5491155551234\n"));
+        Assert.Null(await ReadCsvAsync("Nombre;Teléfono\nAna;+5491155551234;" + new string(';', 62) + "\n"));
+        Assert.Null(await ReadCsvAsync("Nombre;Teléfono\nAna;" + new string('1', SpreadsheetScanner.MaxCsvLineChars) + "\n"));
+        // Diez millones de separadores en el encabezado (10 MB, bajo el tope del archivo): se corta al leer la línea.
+        Assert.Null(await ReadCsvAsync(new string(';', 10_000_000)));
     }
 
     [Theory]
@@ -158,13 +233,43 @@ public sealed partial class WhatsAppContactSpreadsheetTests
         sheet.Cell(1, 2).SetValue("Teléfono");
     }
 
-    private static byte[] Workbook(Action<IXLWorksheet> fill)
+    private static byte[] Workbook(Action<IXLWorksheet> fill, int extraSheets = 0)
     {
         using var workbook = new XLWorkbook();
         fill(workbook.AddWorksheet("Contactos"));
+        for (var index = 1; index <= extraSheets; index++) workbook.AddWorksheet($"H{index}");
         using var stream = new MemoryStream();
         workbook.SaveAs(stream);
         return stream.ToArray();
+    }
+
+    /// <summary>Reemplaza el único <c>&lt;sheet&gt;</c> del libro por <paramref name="copies"/> con el mismo <c>r:id</c>.</summary>
+    private static byte[] RepeatSheet(byte[] workbook, int copies) => ReplacePart(workbook, "xl/workbook.xml", xml =>
+        SheetElement().Replace(xml, match => string.Concat(Enumerable.Range(1, copies).Select(index =>
+            $"""<{match.Groups["prefix"].Value}sheet name="H{index}" sheetId="{index}" {match.Groups["attr"].Value}="{match.Groups["id"].Value}"/>""")), 1));
+
+    /// <summary>
+    /// Suma un segundo <c>&lt;sheet&gt;</c> con otra relación al mismo destino: igual, o escrito con «..» desde la raíz del paquete.
+    /// </summary>
+    private static byte[] SheetWithSecondRelationship(byte[] workbook, bool writtenDifferently)
+    {
+        string attr = string.Empty, id = string.Empty;
+        var withSheet = ReplacePart(workbook, "xl/workbook.xml", xml => SheetElement().Replace(xml, match =>
+        {
+            (attr, id) = (match.Groups["attr"].Value, match.Groups["id"].Value);
+            return $"""{match.Value}<{match.Groups["prefix"].Value}sheet name="Copia" sheetId="2" {attr}="rIdCopia"/>""";
+        }, 1));
+        Assert.NotEmpty(id);
+        return ReplacePart(withSheet, "xl/_rels/workbook.xml.rels", xml => Regex.Replace(xml,
+            $"""<Relationship\b[^>]*\bId="{Regex.Escape(id)}"[^>]*/>""", match =>
+            {
+                var target = TargetAttribute().Match(match.Value).Groups["target"].Value;
+                var path = target.StartsWith('/') ? target[1..] : "xl/" + target;
+                var copy = match.Value.Replace($"Id=\"{id}\"", "Id=\"rIdCopia\"", StringComparison.Ordinal);
+                return match.Value + (writtenDifferently
+                    ? TargetAttribute().Replace(copy, $"Target=\"../{path}\"", 1)
+                    : copy);
+            }, RegexOptions.CultureInvariant));
     }
 
     private static byte[] ReplaceSheet(byte[] workbook, Func<string, string> replace)
@@ -244,6 +349,12 @@ public sealed partial class WhatsAppContactSpreadsheetTests
 
     [GeneratedRegex(@"<(?<prefix>(?:\w+:)?)row\b[^>]*r=""2""[^>]*>.*?</\k<prefix>row>", RegexOptions.CultureInvariant | RegexOptions.Singleline)]
     private static partial Regex RowTwo();
+
+    [GeneratedRegex(@"<(?<prefix>(?:\w+:)?)sheet\s[^>]*?\b(?<attr>\w+:id)=""(?<id>[^""]+)""[^>]*/>", RegexOptions.CultureInvariant)]
+    private static partial Regex SheetElement();
+
+    [GeneratedRegex(@"\bTarget=""(?<target>[^""]+)""", RegexOptions.CultureInvariant)]
+    private static partial Regex TargetAttribute();
 
     private sealed class BoundedReadStream(long totalLength) : Stream
     {

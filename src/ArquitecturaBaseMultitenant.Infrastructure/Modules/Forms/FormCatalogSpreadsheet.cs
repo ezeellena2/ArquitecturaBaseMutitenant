@@ -124,14 +124,16 @@ internal sealed class FormCatalogSpreadsheet : IFormCatalogSpreadsheet
         var text = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true).GetString(content);
         if (text.Length > 0 && text[0] == '﻿') text = text[1..];
         if (text.Contains('\0', StringComparison.Ordinal)) return FormCatalogSheetRead.Invalid;
-        var firstLine = text.Split('\n', 2)[0];
+        // Una primera línea más larga que el tope no pasa como registro: alcanza con mirar hasta ahí para elegir el separador.
+        var head = text[..Math.Min(text.Length, SpreadsheetScanner.MaxCsvLineChars + 1)];
+        var firstLine = head.Split('\n', 2)[0];
         var separator = Separators.MaxBy(candidate => firstLine.Count(character => character == candidate));
 
         var records = new List<string?[]>();
         long cells = 0;
-        foreach (var record in Records(text, separator))
+        foreach (var record in Records(text, separator, limits.MaxColumns))
         {
-            if (record.Length > limits.MaxColumns || records.Count > limits.MaxRows) throw new SpreadsheetOverLimitsException();
+            if (records.Count > limits.MaxRows) throw new SpreadsheetOverLimitsException();
             cells += record.Length;
             if (cells > limits.MaxCells) throw new SpreadsheetOverLimitsException();
             records.Add(record);
@@ -144,30 +146,44 @@ internal sealed class FormCatalogSpreadsheet : IFormCatalogSpreadsheet
         return new FormCatalogSheetRead(FormCatalogSheetStatus.Read, null, [.. records[0].Select(value => value ?? string.Empty)], rows);
     }
 
-    /// <summary>Los registros de un CSV: un campo entre comillas puede llevar el separador, comillas dobladas y saltos de línea.</summary>
-    private static IEnumerable<string?[]> Records(string text, char separator)
+    /// <summary>
+    /// Los registros de un CSV: un campo entre comillas puede llevar el separador, comillas dobladas y saltos de línea. Un registro
+    /// de más de <paramref name="maxColumns"/> columnas o de más de <see cref="SpreadsheetScanner.MaxCsvLineChars"/> caracteres
+    /// corta la lectura ahí mismo, sin armarlo entero.
+    /// </summary>
+    private static IEnumerable<string?[]> Records(string text, char separator, int maxColumns)
     {
         var fields = new List<string?>();
         var current = new StringBuilder();
         var quoted = false;
+        var length = 0;
         for (var index = 0; index < text.Length; index++)
         {
             var character = text[index];
-            if (quoted)
-            {
-                if (character == '"' && index + 1 < text.Length && text[index + 1] == '"') { current.Append('"'); index++; }
-                else if (character == '"') quoted = false;
-                else current.Append(character);
-            }
-            else if (character == '"') quoted = true;
-            else if (character == separator) { fields.Add(Field(current)); current.Clear(); }
-            else if (character is '\r' or '\n')
+            if (!quoted && (character is '\r' or '\n'))
             {
                 if (character == '\r' && index + 1 < text.Length && text[index + 1] == '\n') index++;
                 fields.Add(Field(current));
                 current.Clear();
                 yield return [.. fields];
                 fields.Clear();
+                length = 0;
+                continue;
+            }
+            if (++length > SpreadsheetScanner.MaxCsvLineChars) throw new SpreadsheetOverLimitsException();
+            if (quoted)
+            {
+                if (character == '"' && index + 1 < text.Length && text[index + 1] == '"') { current.Append('"'); index++; length++; }
+                else if (character == '"') quoted = false;
+                else current.Append(character);
+            }
+            else if (character == '"') quoted = true;
+            else if (character == separator)
+            {
+                // Después de este separador viene otro campo: con él, el registro pasaría de maxColumns.
+                if (fields.Count + 1 == maxColumns) throw new SpreadsheetOverLimitsException();
+                fields.Add(Field(current));
+                current.Clear();
             }
             else current.Append(character);
         }
