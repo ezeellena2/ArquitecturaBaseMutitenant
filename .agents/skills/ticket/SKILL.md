@@ -55,17 +55,18 @@ Si el problema se ve en la app (una pantalla, un ingreso, un chat, una importaci
    - Claude usa Claude en Chrome en una pestaña nueva, o Playwright si la extensión no está conectada; Antigravity usa su navegador.
    - Solo con personas de prueba que creás en esa base, con correos `@acme.example`. Nunca el correo, el teléfono ni las cuentas reales del usuario.
    - Sin proveedores reales: WhatsApp y la IA van con sus falsos, que el entorno aislado ya usa. Si el problema necesita a Meta o a la IA de verdad, no va en vivo.
-5. **Guardá lo que se vio** en `C:/e2e-KAN-<n>/evidencia/`: una captura por paso, otra del momento de la falla, o un video corto.
-   - Mostráselo al usuario en el chat.
-   - Si se puede, subí la captura de la falla al ticket como adjunto.
-6. **Apagá y borrá todo:**
+5. **Guardá la evidencia del «antes» en una carpeta persistente (fuera de `C:/e2e-KAN-<n>/`, nunca commiteada al repo):**
+   - Antigravity guarda en `.local/antigravity/evidencia-kan-<n>/antes/` y Claude en `.local/evidencia-kan-<n>/antes/`: una captura numerada por paso (`01-…png`, `02-…png`), la captura del momento de la falla y el video `.webm` de la corrida cuando se grabe.
+   - Mostrale las capturas/video al usuario en el chat (con rutas clickeables).
+   - Si se puede, subí la captura de la falla al ticket como adjunto y nombrá la carpeta de evidencia en el comentario de Jira.
+6. **Apagá y borrá las copias pesadas (conservando la evidencia):**
    - `aspire stop --apphost <la copia del back>/src/ArquitecturaBaseMultitenant.AppHost/ArquitecturaBaseMultitenant.AppHost.csproj`;
    - cerrá el navegador de la prueba;
-   - borrá `C:/e2e-KAN-<n>/` entera, porque las copias ocupan unos 6 GB.
+   - borrá `C:/e2e-KAN-<n>/` entera, porque las copias ocupan unos 6 GB (la evidencia ya quedó a salvo en `.local/…/evidencia-kan-<n>/`).
 
    Nunca dejes un AppHost levantado.
 
-Si el problema no se ve en una pantalla (concurrencia, escala, despliegue, configuración o un proveedor real), mostralo con el test que lo reproduce: en rojo, con su salida. Decí que esa es la forma en que se ve.
+Si el problema no se ve en una pantalla (concurrencia, escala, despliegue, configuración o un proveedor real), mostralo con el test que lo reproduce: en rojo, con su salida guardada en `.local/…/evidencia-kan-<n>/antes/test-rojo.txt` (o `.log`). Decí que esa es la forma en que se ve.
 
 ## 4. Explicarlo y recomendar
 
@@ -94,9 +95,13 @@ Dejá lo mismo como comentario en el ticket, con el título «Análisis del <fec
      - el test dirigido en rojo, el código y el test en verde;
      - el build de la solución; en el front, `npx tsc -b` y el lint de lo que tocaste;
      - sin suites enteras: corren en el PR / revisión.
-  4. **Mostrá que ya no falla:** si lo mostraste en vivo, repetí la misma prueba sobre una copia nueva con el arreglo y mostrale al usuario que ahora anda. Apagá y borrá todo igual que en el paso 3.
-  5. **No commitees directo a `main` ni abras el siguiente ticket:** dejá los cambios verificados en el working tree (o, si el usuario pidió explícitamente commit en `main`, solo con `git commit -m "<tipo>(<área>): <qué hace>" -m "Jira: KAN-<n>" -- <tus rutas>`), comentá en Jira qué cambió y qué tests pasaron, y **avisale al usuario** con:
+  4. **Guardá y mostrá la evidencia del «después» (obligatorio en cada ticket):**
+     - Si se puede ver en la app, repetí la misma prueba en vivo sobre una copia nueva con el arreglo, guardá capturas numeradas + video `.webm` en `.local/antigravity/evidencia-kan-<n>/despues/` (o `.local/evidencia-kan-<n>/despues/` en Claude), mostráselo al usuario en el chat, y apagá y borrá `C:/e2e-KAN-<n>/` igual que en el paso 3.
+     - Si no se ve en la app (o la prueba en vivo está bloqueada por otro AppHost/puertos, explicando el motivo), guardá la salida del test dirigido en verde y del build/lint en `.local/…/evidencia-kan-<n>/despues/` (junto con el `antes/test-rojo.txt` del paso 3).
+     - La evidencia **nunca se commitea al repo** (vive en `.local/`, ignorada por git), pero su ruta exacta y un resumen de lo comprobado quedan en el comentario de Jira y en el mensaje al usuario.
+  5. **No commitees directo a `main` ni abras el siguiente ticket:** dejá los cambios verificados en el working tree (o, si el usuario pidió explícitamente commit en `main`, solo con `git commit -m "<tipo>(<área>): <qué hace>" -m "Jira: KAN-<n>" -- <tus rutas>`), comentá en Jira qué cambió, qué tests pasaron y la evidencia guardada (antes/después), y **avisale al usuario** con:
      - la **lista exacta de archivos tocados** por este ticket;
+     - el enlace a la **carpeta de evidencia** (`.local/…/evidencia-kan-<n>/`, antes y después) y las capturas/video en el chat;
      - aviso explícito si en ese momento hay cambios sin commitear de otra sesión en el mismo repo (para que no se mezclen al armar la rama);
      - confirmación de que está listo para que el usuario le pida a **Claude Code** crear la rama, abrir el PR y revisarlo con **Claude Ship**.
   6. **No lo pasás a «Done»:** eso lo hace Claude tras revisar y aprobar el PR.
