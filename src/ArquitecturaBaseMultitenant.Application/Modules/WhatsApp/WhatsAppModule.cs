@@ -91,6 +91,8 @@ public static class WhatsAppModule
             .ValidateDataAnnotations()
             .ValidateOnStart();
         services.AddScoped<WhatsAppPhoneImportQuotaGuard>();
+        // Los mismos topes para cada invitación por WhatsApp que emite el núcleo, como un reenvío desde Usuarios (B9).
+        services.AddScoped<IInvitationAdmission>(provider => provider.GetRequiredService<WhatsAppPhoneImportQuotaGuard>());
         services.AddScoped<IPersonalWhatsAppService, PersonalWhatsAppService>();
         return services;
     }

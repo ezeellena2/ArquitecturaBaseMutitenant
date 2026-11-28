@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
+using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using Microsoft.Extensions.Logging;
@@ -30,16 +31,22 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Messaging;
 /// (<see cref="IAfterCommit"/>): cada aviso lo deja el pedido que cruza esa marca y se guarda, que es uno solo entre todas
 /// las copias porque suma con el lock del global; si se deshace, la cruza el siguiente. El rechazo es
 /// <see cref="EmailQuotaErrors.DailyLimit"/> con la espera; no suma en ningún contador. Es la admisión del canal de correo:
-/// <see cref="Services.Auth.LoginCodeIssuer"/> la llama al emitir, y los emisores de invitaciones por correo llaman a
-/// <see cref="ReserveInvitationAsync"/>.
+/// <see cref="Services.Auth.LoginCodeIssuer"/> la llama al emitir, el emisor de las invitaciones de una organización por
+/// <see cref="IInvitationAdmission"/>, y la invitación de un operador llama a <see cref="ReserveInvitationAsync"/>.
 /// </para>
 /// </summary>
 internal sealed partial class EmailQuotaGuard(MessageQuotaGuard quotas, IMessageQuotaKeyHasher keys, IRequestInfo request,
-    IOptions<EmailQuotaOptions> options, IAfterCommit afterCommit, ILogger<EmailQuotaGuard> logger) : ILoginCodeAdmission
+    IOptions<EmailQuotaOptions> options, IAfterCommit afterCommit, ILogger<EmailQuotaGuard> logger)
+    : ILoginCodeAdmission, IInvitationAdmission
 {
     private const decimal WarningShare = 0.8m;
 
     public string Channel => LoginCodeChannel.Email;
+
+    string IInvitationAdmission.Channel => InvitationChannel.Email;
+
+    Task<Result> IInvitationAdmission.ReserveAsync(Guid inviterId, Guid organizationId, CancellationToken cancellationToken) =>
+        ReserveInvitationAsync(inviterId, organizationId, cancellationToken);
 
     /// <summary>
     /// Un código por correo que sale: el tope de la dirección, el de la cuenta si lo pide desde Mi cuenta y el global hasta

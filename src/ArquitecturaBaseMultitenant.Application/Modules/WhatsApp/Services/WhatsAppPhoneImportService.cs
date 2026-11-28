@@ -54,6 +54,9 @@ internal sealed class WhatsAppPhoneImportService(IRequestValidator validator, IC
             if (desired.IsFailure) return desired.Error;
             var rows = await resolver.ResolveAsync(request.Phones!, cancellationToken);
             var toInvite = rows.Where(row => row.Response.Outcome == WhatsAppPhoneImportOutcome.Invite).ToArray();
+            // Una carga más grande que el tope diario no entra ni esperando (B9): se rechaza antes de tomar locks.
+            var size = quota.CheckBatchSize(toInvite.Length);
+            if (size.IsFailure) return size.Error;
             var consent = new InvitationConsent(inviterId, clock.GetUtcNow().UtcDateTime);
             try
             {
@@ -61,8 +64,9 @@ internal sealed class WhatsAppPhoneImportService(IRequestValidator validator, IC
                 {
                     foreach (var row in toInvite)
                     {
+                        // El lote entero se reserva abajo, después de los locks de todas las filas.
                         var issued = await invitations.InviteByPhoneAsync(row.Phone!, WhatsAppInvitationChannel.ChannelKey,
-                            desired.Value, inviterId, consent, ct);
+                            desired.Value, inviterId, consent, reservedByCaller: true, ct);
                         if (issued.IsFailure) return Result.Failure<WhatsAppPhoneImportResponse>(
                             issued.Error.Code == InvitationErrors.ChannelUnavailableCode ? InvitationErrors.ChannelUnavailableForNow() : issued.Error);
                     }

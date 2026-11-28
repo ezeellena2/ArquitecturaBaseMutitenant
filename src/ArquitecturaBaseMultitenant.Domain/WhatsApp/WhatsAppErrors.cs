@@ -37,7 +37,9 @@ public static class WhatsAppErrors
     public const string LinkNotFoundCode = "WhatsApp.Link.NotFound";
     public const string PhoneImportConsentRequiredCode = "WhatsApp.PhoneImport.ConsentRequired";
     public const string PhoneImportDailyLimitCode = "WhatsApp.PhoneImport.DailyLimit";
+    public const string PhoneImportTooManyInvitationsCode = "WhatsApp.PhoneImport.TooManyInvitations";
     public const string RetryAfterKey = "retryAfter";
+    public const string DailyLimitKey = "dailyLimit";
 
     public static readonly Error NumberNotFound = Error.NotFound(NumberNotFoundCode, "Number not found.");
     public static readonly Error NumberAlreadyConnected = Error.Conflict(NumberAlreadyConnectedCode, "That number is already connected.");
@@ -86,10 +88,20 @@ public static class WhatsAppErrors
     /// <summary>«Cargar teléfonos» invita solo si quien carga confirma que la persona aceptó los mensajes (decisión 179).</summary>
     public static readonly Error PhoneImportConsentRequired = Field(PhoneImportConsentRequiredCode,
         "Confirm that the person agreed to receive WhatsApp messages.", "consentConfirmed", ErrorType.Validation);
-    /// <summary>Tope diario de invitaciones por WhatsApp de «Cargar teléfonos» (decisión 1 de los arreglos de la revisión).</summary>
+    /// <summary>
+    /// Tope diario de invitaciones por WhatsApp de «Cargar teléfonos» (decisión 1 de los arreglos de la revisión), que cuenta
+    /// también sus reenvíos desde Usuarios o desde una empresa (B9).
+    /// </summary>
     public static Error PhoneImportDailyLimit(int retryAfterSeconds) => Error.TooManyRequests(PhoneImportDailyLimitCode,
         "No more WhatsApp invitations can be sent for now, and nothing was saved.",
         new Dictionary<string, object?> { [RetryAfterKey] = Math.Max(1, retryAfterSeconds) });
+    /// <summary>
+    /// Una carga con más invitaciones que el tope diario (el menor entre el de la organización y el global) no entra ni con la
+    /// ventana vacía: sin espera, con el máximo en <c>dailyLimit</c>, para partirla (B9).
+    /// </summary>
+    public static Error PhoneImportTooManyInvitations(int dailyLimit) => Error.Validation(PhoneImportTooManyInvitationsCode,
+        "The upload has more invitations than can be sent by WhatsApp in a day, and nothing was saved.",
+        new Dictionary<string, object?> { [DailyLimitKey] = dailyLimit });
 
     private static ValidationError Field(string code, string description, string field, ErrorType type) =>
         new(code, description, new Dictionary<string, string[]> { [field] = [code] }, type);

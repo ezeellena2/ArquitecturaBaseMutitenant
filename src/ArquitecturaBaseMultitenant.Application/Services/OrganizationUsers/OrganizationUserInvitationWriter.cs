@@ -40,9 +40,12 @@ internal sealed class OrganizationUserInvitationWriter(
     /// <summary>
     /// Invita por teléfono desde «Cargar teléfonos» (decisión 11 de la E11), por el canal que nombra el módulo. Si el número
     /// ya tiene una invitación pendiente en la organización, la reemplaza, como Reenviar, con la empresa y los roles de ahora.
+    /// Con <paramref name="reservedByCaller"/>, la carga reserva su lote entero en los topes del canal y esta invitación no
+    /// vuelve a contar (B9).
     /// </summary>
     internal async Task<Result<Guid>> InviteByPhoneAsync(PhoneNumber phone, string channel,
-        DesiredOrganizationUserAssignments desired, Guid inviterId, InvitationConsent consent, CancellationToken ct)
+        DesiredOrganizationUserAssignments desired, Guid inviterId, InvitationConsent consent, bool reservedByCaller,
+        CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(consent);
         var destination = InvitationIdentity.ForPhone(phone);
@@ -56,7 +59,7 @@ internal sealed class OrganizationUserInvitationWriter(
             if (revoked.IsFailure) return revoked.Error;
         }
         var issued = await issuer.IssueWithMemberAsync(new IssueInvitationRequest(destination, inviterId, channel,
-            pending?.MemberId, pending?.Id, consent), ct, grant: Grant(desired));
+            pending?.MemberId, pending?.Id, consent, reservedByCaller), ct, grant: Grant(desired));
         if (issued.IsFailure) return issued.Error;
         var assigned = await assignmentManager.SetAsync(issued.Value.MemberId, desired, ct,
             memberInUnitOfWork: issued.Value.Member);

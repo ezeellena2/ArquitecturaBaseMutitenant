@@ -321,6 +321,9 @@
   <data name="WhatsApp.PhoneImport.DailyLimit" xml:space="preserve">
     <value>No more WhatsApp invitations can be sent for now, and nothing was saved. Try again later.</value>
   </data>
+  <data name="WhatsApp.PhoneImport.TooManyInvitations" xml:space="preserve">
+    <value>This upload has more invitations than can be sent by WhatsApp in a day, and nothing was saved. Split it into smaller uploads.</value>
+  </data>
   <data name="WhatsApp.Validation.Required" xml:space="preserve">
     <value>Complete this field.</value>
   </data>

@@ -24,9 +24,9 @@ public enum MessageQuotaScope
     /// <summary>Los códigos por WhatsApp que una cuenta pide desde Mi cuenta.</summary>
     WhatsAppCodeAccount,
 
-    /// <summary>Las invitaciones por WhatsApp de «Cargar teléfonos» de la plataforma entera.</summary>
+    /// <summary>Las invitaciones por WhatsApp de la plataforma entera: «Cargar teléfonos» y sus reenvíos.</summary>
     WhatsAppInvitationGlobal,
 
-    /// <summary>Las invitaciones por WhatsApp de «Cargar teléfonos» de una organización.</summary>
+    /// <summary>Las invitaciones por WhatsApp de una organización: «Cargar teléfonos» y sus reenvíos.</summary>
     WhatsAppInvitationOrganization,
 }

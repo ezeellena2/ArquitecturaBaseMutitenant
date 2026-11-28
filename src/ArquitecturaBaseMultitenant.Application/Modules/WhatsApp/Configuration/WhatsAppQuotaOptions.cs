@@ -3,10 +3,11 @@ using System.ComponentModel.DataAnnotations;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Configuration;
 
 /// <summary>
-/// Los topes diarios de las invitaciones por WhatsApp de «Cargar teléfonos» (decisión 1 de los arreglos de la revisión),
-/// de la configuración de la instalación porque salen desde el número de Plataforma, el mismo de los códigos de ingreso.
-/// Cuentan las últimas 24 horas por horas en <c>identity.MessageQuotaBuckets</c>, así valen para todas las copias. Se
-/// validan al arrancar.
+/// Los topes diarios de las invitaciones por WhatsApp de «Cargar teléfonos» y de sus reenvíos desde Usuarios o desde una
+/// empresa (decisión 1 de los arreglos de la revisión, B9), de la configuración de la instalación porque salen desde el
+/// número de Plataforma, el mismo de los códigos de ingreso. Cuentan las últimas 24 horas por horas en
+/// <c>identity.MessageQuotaBuckets</c>, así valen para todas las copias. El menor de los dos es también la carga más grande
+/// que entra. Se validan al arrancar.
 /// </summary>
 public sealed class WhatsAppQuotaOptions
 {

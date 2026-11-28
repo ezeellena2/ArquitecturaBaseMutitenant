@@ -25,6 +25,8 @@ internal static class MessagingRegistration
         services.AddScoped<EmailQuotaGuard>();
         // Es la admisión del canal de correo: LoginCodeIssuer la llama al emitir cada código por correo.
         services.AddScoped<ILoginCodeAdmission>(provider => provider.GetRequiredService<EmailQuotaGuard>());
+        // Y la de las invitaciones por correo: InvitationIssuer la llama al emitir cada una (B9).
+        services.AddScoped<IInvitationAdmission>(provider => provider.GetRequiredService<EmailQuotaGuard>());
         return services;
     }
 }

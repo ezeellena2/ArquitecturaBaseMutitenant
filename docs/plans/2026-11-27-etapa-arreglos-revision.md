@@ -36,6 +36,8 @@ No cambia ninguna ruta ni ningún permiso. Suma un campo de respuesta (K1) y un 
 | B2 | Una planilla de contactos pasada de los topes | 400 `WhatsApp.Import.InvalidFile` (o `WhatsApp.Import.TooManyRows` si son filas), como hoy |
 | B2 | Un cuerpo multipart más grande que el tope | 413 de Kestrel, antes de leer el archivo |
 | B9 | «Cargar teléfonos» pasado el tope diario de invitaciones por WhatsApp | **Nuevo:** 429 `WhatsApp.PhoneImport.DailyLimit`, con `retryAfter` y `Retry-After`, sin mandar ni guardar nada, como `Messaging.Email.DailyLimit`. Texto en es y en en los dos repos |
+| B9 (revisión) | Reenviar una invitación por WhatsApp desde Usuarios o una empresa pasado ese tope | El mismo 429 `WhatsApp.PhoneImport.DailyLimit`: el emisor del núcleo cuenta cada invitación en los topes de su canal (`IInvitationAdmission`) |
+| B9 (revisión) | Una carga con más invitaciones que el menor de los dos topes | **Nuevo:** 400 `WhatsApp.PhoneImport.TooManyInvitations`, sin espera, con el máximo en `dailyLimit`; el front lo dice y pide partir la carga |
 
 ## Back
 

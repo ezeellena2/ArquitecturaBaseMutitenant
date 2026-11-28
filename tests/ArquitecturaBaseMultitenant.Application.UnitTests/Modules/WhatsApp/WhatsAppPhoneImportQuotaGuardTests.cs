@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Configuration;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 using ArquitecturaBaseMultitenant.Application.Services.Messaging;
@@ -14,8 +15,9 @@ namespace ArquitecturaBaseMultitenant.Application.UnitTests.Modules.WhatsApp;
 
 /// <summary>
 /// Decisión 1 de los arreglos de la revisión (T05-03 / B9): los topes diarios de invitaciones por WhatsApp de «Cargar
-/// teléfonos», por organización y global de la plataforma, en las 24 horas móviles. Si la carga entera no entra, responde
-/// 429 <c>WhatsApp.PhoneImport.DailyLimit</c> con la espera en <c>retryAfter</c> y no suma nada en ningún contador.
+/// teléfonos» y sus reenvíos (B9), por organización y global de la plataforma, en las 24 horas móviles. Si la carga entera
+/// no entra en lo que queda, responde 429 <c>WhatsApp.PhoneImport.DailyLimit</c> con la espera en <c>retryAfter</c>; si es más
+/// grande que el tope, <c>WhatsApp.PhoneImport.TooManyInvitations</c> sin espera. Un rechazo no suma nada.
 /// </summary>
 public sealed class WhatsAppPhoneImportQuotaGuardTests
 {
@@ -70,8 +72,8 @@ public sealed class WhatsAppPhoneImportQuotaGuardTests
         AssertLimited(await f.ReserveAsync(org, 2), (21 * 60 + 30) * 60);
         // Pedir 4 ahora (13:30): con 2 libres quedan 3, 3 + 4 = 7 > 6; necesita que salgan también los 3 de las 13:00 (mañana a las 14:00 = 24 h 30 min).
         AssertLimited(await f.ReserveAsync(org, 4), (24 * 60 + 30) * 60);
-        // Pedir 7 (más que el tope diario de la organización): no falla con excepción, espera la ventana completa (24 h 30 min).
-        AssertLimited(await f.ReserveAsync(org, 7), (24 * 60 + 30) * 60);
+        // Pedir 7 (más que el tope diario de la organización) no entra ni con la ventana vacía: sin espera, con el máximo (B9).
+        AssertTooMany(await f.ReserveAsync(org, 7), 6);
 
         // Ningún rechazo sumó nada.
         Assert.Equal(5, f.Quotas.Total(MessageQuotaScope.WhatsAppInvitationOrganization));
@@ -167,6 +169,58 @@ public sealed class WhatsAppPhoneImportQuotaGuardTests
         Assert.Empty(rollbackFixture.Warnings());
     }
 
+    /// <summary>
+    /// B9: un lote más grande que el tope (el menor entre el de la organización y el global) no entra nunca: responde su propio
+    /// error, sin espera y con ese máximo, sin tomar locks ni sumar; uno del tamaño del tope entra.
+    /// </summary>
+    [Theory]
+    [InlineData(3, 10, 3)]
+    [InlineData(10, 3, 3)]
+    public async Task A_batch_larger_than_the_daily_limit_never_fits_and_says_the_limit_without_a_wait(int perOrganization, int global, int dailyLimit)
+    {
+        var f = new Fixture(new WhatsAppQuotaOptions
+        {
+            DailyInvitationLimitPerOrganization = perOrganization,
+            DailyInvitationLimit = global,
+        });
+        var org = Guid.NewGuid();
+
+        AssertTooMany(f.Guard.CheckBatchSize(dailyLimit + 1), dailyLimit);
+        AssertTooMany(await f.ReserveAsync(org, dailyLimit + 1), dailyLimit);
+        Assert.Empty(f.Quotas.Locks);
+        Assert.Empty(f.Quotas.Counts);
+
+        Assert.True(f.Guard.CheckBatchSize(dailyLimit).IsSuccess);
+        Assert.True((await f.ReserveAsync(org, dailyLimit)).IsSuccess);
+        Assert.Equal(dailyLimit, f.Quotas.Total(MessageQuotaScope.WhatsAppInvitationOrganization));
+    }
+
+    /// <summary>
+    /// B9: es la admisión del canal de WhatsApp para el emisor de invitaciones del núcleo: cada reenvío cuenta uno en los topes
+    /// de la organización y global, y pasado el tope responde el mismo 429 con la espera.
+    /// </summary>
+    [Fact]
+    public async Task As_the_whatsapp_invitation_admission_each_invitation_counts_one_in_the_same_limits()
+    {
+        var f = new Fixture(new WhatsAppQuotaOptions
+        {
+            DailyInvitationLimitPerOrganization = 2,
+            DailyInvitationLimit = 10,
+        });
+        var admission = f.Guard;
+        Assert.IsAssignableFrom<IInvitationAdmission>(admission);
+        var (org, inviter) = (Guid.NewGuid(), Guid.NewGuid());
+
+        Assert.Equal("whatsapp", admission.Channel);
+        Assert.True((await f.ReserveAsync(org, 1)).IsSuccess);
+        Assert.True((await admission.ReserveAsync(inviter, org, Ct)).IsSuccess);
+        Assert.Equal(2, f.Quotas.Total(MessageQuotaScope.WhatsAppInvitationOrganization));
+        Assert.Equal(2, f.Quotas.Total(MessageQuotaScope.WhatsAppInvitationGlobal));
+
+        AssertLimited(await admission.ReserveAsync(inviter, org, Ct), (24 * 60 + 30) * 60);
+        Assert.Equal(2, f.Quotas.Total(MessageQuotaScope.WhatsAppInvitationOrganization));
+    }
+
     [Fact]
     public async Task An_empty_batch_succeeds_without_locking_or_recording()
     {
@@ -180,6 +234,15 @@ public sealed class WhatsAppPhoneImportQuotaGuardTests
         Assert.True((await f.ReserveAsync(org, 0)).IsSuccess);
         Assert.Empty(f.Quotas.Locks);
         Assert.Empty(f.Quotas.Counts);
+    }
+
+    private static void AssertTooMany(Result result, int dailyLimit)
+    {
+        Assert.True(result.IsFailure);
+        Assert.Equal(WhatsAppErrors.PhoneImportTooManyInvitationsCode, result.Error.Code);
+        Assert.Equal(ErrorType.Validation, result.Error.Type);
+        Assert.Equal(dailyLimit, result.Error.Metadata![WhatsAppErrors.DailyLimitKey]);
+        Assert.False(result.Error.Metadata.ContainsKey(WhatsAppErrors.RetryAfterKey));
     }
 
     private static void AssertLimited(Result result, int retryAfterSeconds)

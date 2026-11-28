@@ -1,10 +1,9 @@
 using ArquitecturaBaseMultitenant.Application.Configuration.Invitations;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Invitations;
-using ArquitecturaBaseMultitenant.Application.Services.Messaging;
-using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Invitations;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -14,12 +13,14 @@ using Microsoft.Extensions.Options;
 namespace ArquitecturaBaseMultitenant.Application.Services.Invitations;
 
 /// <summary>
-/// Emite dentro de la transacción del llamador y encola el correo en su outbox; no tiene ruta propia. Una invitación que
-/// sale por correo pasa antes por los topes de correo (ADR 0063): el de quien invita, el de la organización y el global.
+/// Emite dentro de la transacción del llamador y encola el mensaje en su outbox; no tiene ruta propia. Cada invitación pasa
+/// antes por los topes de su canal (<see cref="IInvitationAdmission"/>): por correo, el de quien invita, el de la
+/// organización y el global (ADR 0063); por WhatsApp, los de «Cargar teléfonos», también al reenviar desde Usuarios o desde
+/// una empresa (B9). Pasado un tope, no se guarda ni se manda nada.
 /// </summary>
 internal sealed class InvitationIssuer(IInvitationRepository invitations, IMemberRepository members,
     ITenantContext tenantContext, IInvitationTokenProtector tokens, InvitationIssuingGuard guard,
-    InvitationDeliveryIssuer delivery, EmailQuotaGuard emailQuota, IOptions<InvitationOptions> options,
+    InvitationDeliveryIssuer delivery, IEnumerable<IInvitationAdmission> admissions, IOptions<InvitationOptions> options,
     TimeProvider timeProvider)
 {
     public async Task<Result<Guid>> IssueAsync(IssueInvitationRequest request, CancellationToken cancellationToken)
@@ -52,12 +53,13 @@ internal sealed class InvitationIssuer(IInvitationRepository invitations, IMembe
                 ? await members.GetByUserIdAsync(recipientId, cancellationToken) : null;
         if (request.MemberId is not null && member is null) return MemberErrors.NotFound;
         if (member?.UserId is { } boundUserId && userId != boundUserId) return InvitationErrors.WrongAccount;
-        // Lo que va por WhatsApp tiene los límites de Meta; por correo, los topes van después de los demás locks.
-        if (destination.Value.Type == LoginMethodType.Email)
-        {
-            var allowed = await emailQuota.ReserveInvitationAsync(request.InviterUserId, tenantId, cancellationToken);
-            if (allowed.IsFailure) return allowed.Error;
-        }
+        // Los topes del canal van después de los demás locks; una carga que reserva su lote entero no cuenta de nuevo.
+        if (!request.ReservedByCaller)
+            foreach (var admission in admissions.Where(value => value.Channel == request.Channel))
+            {
+                var allowed = await admission.ReserveAsync(request.InviterUserId, tenantId, cancellationToken);
+                if (allowed.IsFailure) return allowed.Error;
+            }
         if (member is null)
         {
             member = userId is { } existingId ? Member.Invite(existingId) : Member.Invite();

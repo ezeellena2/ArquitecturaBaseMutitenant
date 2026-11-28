@@ -300,6 +300,91 @@ public sealed class WhatsAppPhoneInvitationTests(ApiFactory factory) : IClassFix
         }
     }
 
+    /// <summary>
+    /// B9: reenviar desde Usuarios una invitación por WhatsApp emite otra plantilla Marketing desde el número de Plataforma, así
+    /// que cuenta en el mismo tope diario de la organización; pasado, 429 sin revocar la pendiente ni encolar otro mensaje.
+    /// </summary>
+    [Fact]
+    public async Task Resending_a_whatsapp_invitation_counts_in_the_daily_limit_and_past_it_answers_429_without_revoking_or_enqueuing()
+    {
+        await using var host = Host(new Dictionary<string, string> { ["WhatsApp:Quotas:DailyInvitationLimitPerOrganization"] = "2" });
+        using var client = WhatsAppAttentionJourney.Client(host);
+        var (_, tenantId) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, client, Ct);
+        var phone = WhatsAppAttentionJourney.NewPhone();
+        using (var imported = await WhatsAppAttentionJourney.PostAsync(client, Imports, Body(Input(phone)), Ct))
+            Assert.Equal(HttpStatusCode.OK, imported.StatusCode);
+        var first = Assert.Single(await InvitationsAsync(host.Services, tenantId));
+
+        // 2 de 2: el reenvío entra y deja otra invitación pendiente con su mensaje.
+        using (var resent = await WhatsAppAttentionJourney.PostAsync(client, $"/api/users/invitations/{first.Id:D}/resend", new { }, Ct))
+            Assert.Equal(HttpStatusCode.OK, resent.StatusCode);
+        var pending = Assert.Single(await InvitationsAsync(host.Services, tenantId), invitation => invitation.Status == InvitationStatus.Pending);
+        Assert.NotEqual(first.Id, pending.Id);
+        var messages = await WhatsAppOutboxCountAsync(host.Services);
+
+        // Lleno: otro reenvío responde 429, la pendiente sigue siendo la misma y no sale otro mensaje.
+        using (var limited = await WhatsAppAttentionJourney.PostAsync(client, $"/api/users/invitations/{pending.Id:D}/resend", new { }, Ct))
+            await AssertDailyLimitAsync(limited);
+        var invitations = await InvitationsAsync(host.Services, tenantId);
+        Assert.Equal(2, invitations.Count);
+        Assert.Equal(pending.Id, Assert.Single(invitations, invitation => invitation.Status == InvitationStatus.Pending).Id);
+        Assert.Equal(messages, await WhatsAppOutboxCountAsync(host.Services));
+    }
+
+    /// <summary>
+    /// B9: una carga con más invitaciones que el tope diario (el de la organización o el global, el menor) no entra ni con la
+    /// ventana vacía. Responde su propio error, sin espera, con el máximo en <c>dailyLimit</c>, y partida en cargas de ese
+    /// tamaño entra.
+    /// </summary>
+    [Theory]
+    [InlineData(2, 10)]
+    [InlineData(10, 2)]
+    public async Task A_batch_larger_than_the_daily_limit_answers_its_own_error_with_the_limit_and_without_a_wait(int perOrganization, int global)
+    {
+        await using var host = Host(new Dictionary<string, string>
+        {
+            ["WhatsApp:Quotas:DailyInvitationLimitPerOrganization"] = perOrganization.ToString(CultureInfo.InvariantCulture),
+            ["WhatsApp:Quotas:DailyInvitationLimit"] = global.ToString(CultureInfo.InvariantCulture),
+        });
+        await ClearWhatsAppInvitationGlobalQuotaAsync(host.Services);
+        try
+        {
+            using var client = WhatsAppAttentionJourney.Client(host);
+            var (_, tenantId) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, client, Ct);
+            var phones = new[] { WhatsAppAttentionJourney.NewPhone(), WhatsAppAttentionJourney.NewPhone(), WhatsAppAttentionJourney.NewPhone() };
+
+            using (var refused = await WhatsAppAttentionJourney.PostAsync(client, Imports, Body([.. phones.Select(Input)]), Ct))
+            {
+                Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+                Assert.False(refused.Headers.Contains("Retry-After"));
+                var problem = await WhatsAppAttentionJourney.JsonAsync(refused, Ct);
+                Assert.Equal("WhatsApp.PhoneImport.TooManyInvitations", problem.GetProperty("code").GetString());
+                Assert.Equal("Esta carga tiene más invitaciones de las que se pueden mandar por WhatsApp en un día, y no se guardó nada. Partila en cargas más chicas.",
+                    problem.GetProperty("detail").GetString());
+                Assert.Equal(2, problem.GetProperty("dailyLimit").GetInt32());
+                Assert.False(problem.TryGetProperty(WhatsAppErrors.RetryAfterKey, out _));
+            }
+            Assert.Empty(await InvitationsAsync(host.Services, tenantId));
+            Assert.Empty(await InvitationMessagesAsync(host.Services, phones));
+
+            using (var split = await WhatsAppAttentionJourney.PostAsync(client, Imports, Body([.. phones[..2].Select(Input)]), Ct))
+                Assert.Equal(HttpStatusCode.OK, split.StatusCode);
+            Assert.Equal(2, (await InvitationsAsync(host.Services, tenantId)).Count);
+        }
+        finally
+        {
+            await ClearWhatsAppInvitationGlobalQuotaAsync(host.Services);
+        }
+    }
+
+    /// <summary>Las filas de la cola de WhatsApp, en cualquier estado: la que ya intentó salir pierde el payload, no la fila.</summary>
+    private static async Task<int> WhatsAppOutboxCountAsync(IServiceProvider services)
+    {
+        await using var scope = services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking()
+            .CountAsync(message => message.Channel == "whatsapp", Ct);
+    }
+
     private WebApplicationFactory<Program> Host(IReadOnlyDictionary<string, string>? extraSettings = null)
     {
         var settings = new Dictionary<string, string>

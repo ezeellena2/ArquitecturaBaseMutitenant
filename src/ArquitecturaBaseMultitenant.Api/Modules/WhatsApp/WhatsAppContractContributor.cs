@@ -12,6 +12,7 @@ namespace ArquitecturaBaseMultitenant.Api.Modules.WhatsApp;
 internal sealed class WhatsAppContractContributor : IHttpContractContributor
 {
     private static readonly string[] CodePaths = ["/api/auth/login-code", "/api/auth/signup", "/api/auth/business-signup/code", "/api/me/login-methods", "/api/me/login-methods/{methodId}/code", "/api/account-recovery/code"];
+    private static readonly string[] ResendPaths = ["/api/users/invitations/{invitationId}/resend", "/api/companies/{companyId}/invitations/{invitationId}/resend"];
     private static readonly string[] NewDestinationPaths = ["/api/auth/signup", "/api/auth/signup/verify", "/api/auth/business-signup/code", "/api/auth/business-signup/verify", "/api/me/login-methods", "/api/account-recovery/code", "/api/account-recovery/verify", "/api/account-recovery"];
 
     public void Describe(OpenApiDocument document)
@@ -25,6 +26,15 @@ internal sealed class WhatsAppContractContributor : IHttpContractContributor
             HttpContractDocumentation.Describe(document, path, HttpMethod.Post,
                 "WhatsApp: tope por cuenta de las últimas 24 horas, por horas; al llegar, 429 WhatsApp.LoginCode.AccountDailyLimit con retryAfter y Retry-After.",
                 [E(429, WhatsAppCodeErrors.AccountDailyLimitCode)]);
+        // B9: reenviar una invitación por WhatsApp emite otra plantilla desde el número de Plataforma y cuenta en los topes de
+        // «Cargar teléfonos». Las rutas son del núcleo y piden sesión: se suma el texto y el error sin tocar su seguridad.
+        foreach (var path in ResendPaths)
+            if (HttpContractDocumentation.Find(document, path, HttpMethod.Post) is { } resend)
+            {
+                const string Limit = "WhatsApp: reenviar una invitación por WhatsApp cuenta en los topes diarios de las invitaciones por WhatsApp (por organización y global, últimas 24 horas, por horas); al llegar, 429 WhatsApp.PhoneImport.DailyLimit con retryAfter y Retry-After, sin revocar la pendiente ni mandar nada.";
+                resend.Description = string.IsNullOrEmpty(resend.Description) ? Limit : resend.Description + " " + Limit;
+                HttpContractDocumentation.AddErrors(document, path, HttpMethod.Post, [E(429, WhatsAppErrors.PhoneImportDailyLimitCode)]);
+            }
         foreach (var path in NewDestinationPaths)
             HttpContractDocumentation.Describe(document, path, HttpMethod.Post,
                 "País habilitado se valida solo para destino nuevo; cambiar AllowedCountries no invalida un Phone ya verificado.",

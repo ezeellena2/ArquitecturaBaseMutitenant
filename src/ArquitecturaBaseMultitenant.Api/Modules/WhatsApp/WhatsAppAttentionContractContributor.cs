@@ -189,6 +189,7 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
         if (path.EndsWith("/phone-imports", StringComparison.Ordinal) && method == HttpMethod.Post)
         {
             Add(400, WhatsAppErrors.PhoneImportConsentRequiredCode, "consentConfirmed");
+            Add(400, WhatsAppErrors.PhoneImportTooManyInvitationsCode);
             Add(429, WhatsAppErrors.PhoneImportDailyLimitCode);
             errors.Add(HttpContractDocumentation.CoreError(503, InvitationErrors.ChannelUnavailableCode));
         }

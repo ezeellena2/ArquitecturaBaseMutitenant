@@ -211,14 +211,14 @@ Al llegar, la ruta responde 429 `Messaging.Email.DailyLimit` con `retryAfter` y 
 
 **Con la cuenta compartida con ArquitecturaBase,** la suma de los topes globales de los dos proyectos queda por debajo del cupo, con lugar para los avisos: el multitenant usa 80 (256). Se separan las cuentas antes de producción ([runbook](runbook.md)).
 
-**Las invitaciones por WhatsApp de «Cargar teléfonos»** salen del número de Plataforma, el mismo de los códigos de ingreso, y cuentan igual: 24 horas móviles, por horas, en `identity.MessageQuotaBuckets`. Las claves se validan al arrancar:
+**Las invitaciones por WhatsApp de «Cargar teléfonos»** salen del número de Plataforma, el mismo de los códigos de ingreso, y cuentan igual: 24 horas móviles, por horas, en `identity.MessageQuotaBuckets`. Cada reenvío de una de ellas desde Usuarios o desde una empresa manda otra plantilla y cuenta uno en los mismos topes. Las claves se validan al arrancar:
 
 | Clave | Arranque | Qué limita |
 |---|---|---|
 | `WhatsApp:Quotas:DailyInvitationLimitPerOrganization` | 100 | invitaciones por WhatsApp que manda una organización |
 | `WhatsApp:Quotas:DailyInvitationLimit` | 200 | las de todas las organizaciones, por debajo del nivel de mensajería del número para dejar lugar a los códigos. Al 80 % y al llegar queda un aviso en el log |
 
-Si la carga entera no entra en lo que queda, la ruta responde 429 `WhatsApp.PhoneImport.DailyLimit` con `retryAfter` y `Retry-After`, sin mandar ni guardar nada. Se suben cuando Meta sube el nivel del número ([runbook](runbook.md)).
+Si la carga entera (o el reenvío) no entra en lo que queda, la ruta responde 429 `WhatsApp.PhoneImport.DailyLimit` con `retryAfter` y `Retry-After`, sin mandar ni guardar nada. Una carga con más invitaciones que el menor de los dos topes no entra ni esperando: responde 400 `WhatsApp.PhoneImport.TooManyInvitations` con ese máximo en `dailyLimit` y sin espera, y la pantalla pide partirla. Se suben cuando Meta sube el nivel del número ([runbook](runbook.md)).
 
 ### La cola de salida (ADR 0066, N5, N8 y O3)
 

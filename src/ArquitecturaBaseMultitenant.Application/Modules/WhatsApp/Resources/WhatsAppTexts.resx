@@ -321,6 +321,9 @@
   <data name="WhatsApp.PhoneImport.DailyLimit" xml:space="preserve">
     <value>Por ahora no se pueden mandar más invitaciones por WhatsApp, y no se guardó nada. Probá de nuevo más tarde.</value>
   </data>
+  <data name="WhatsApp.PhoneImport.TooManyInvitations" xml:space="preserve">
+    <value>Esta carga tiene más invitaciones de las que se pueden mandar por WhatsApp en un día, y no se guardó nada. Partila en cargas más chicas.</value>
+  </data>
   <data name="WhatsApp.Validation.Required" xml:space="preserve">
     <value>Completá este dato.</value>
   </data>

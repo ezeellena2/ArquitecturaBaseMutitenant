@@ -82,7 +82,7 @@ internal sealed class AdministrationContractContributor : IHttpContractContribut
 
     private static void DescribeEmailQuota(OpenApiDocument document)
     {
-        const string Quota = "Por correo (ADR 0063 y 256): un tope global y los de cada código o invitación cuentan las últimas 24 horas, por horas; al llegar, 429 Messaging.Email.DailyLimit con retryAfter (segundos, con una hora de precisión) y Retry-After, sin mandar ni guardar nada. Lo que va por WhatsApp tiene los límites de Meta.";
+        const string Quota = "Por correo (ADR 0063 y 256): un tope global y los de cada código o invitación cuentan las últimas 24 horas, por horas; al llegar, 429 Messaging.Email.DailyLimit con retryAfter (segundos, con una hora de precisión) y Retry-After, sin mandar ni guardar nada. Lo que va por otro canal no cuenta acá: tiene sus propios topes.";
         foreach (var path in EmailCodePaths.Concat(EmailInvitationPaths))
             Describe(document, path, HttpMethod.Post, Quota, [E(429, EmailQuotaErrors.DailyLimitCode)]);
     }
