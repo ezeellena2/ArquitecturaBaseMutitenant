@@ -5,6 +5,8 @@ public static class AssistantTechnicalLimits
     public static IReadOnlyList<string> AttachmentMediaTypes { get; } = Array.AsReadOnly(Domain.Common.FileMediaTypes.Images.Append(Domain.Common.FileMediaTypes.Pdf).ToArray());
     public const int MaxAttachmentBytes = 10 * 1024 * 1024;
     public const int MaxAttachments = 5;
+    /// <summary>Máximo de adjuntos pendientes sin asociar a un mensaje en una misma conversación (KAN-79).</summary>
+    public const int MaxUnboundAttachmentsPerConversation = MaxAttachments;
     /// <summary>Los campos de una propuesta de una acción, como mucho (ADR 0068 §12).</summary>
     public const int MaxProposalFields = 40;
     public const long MaxProviderPayloadBytes = 32L * 1024 * 1024;

@@ -27,6 +27,11 @@ internal sealed class AssistantAttachmentRepository(ApplicationDbContext db, ITe
             .Select(row => new AssistantAttachmentRow(row.Id, row.ConversationId, row.MessageId, row.FileName, row.ContentType, row.StorageKey, row.Size, row.Version)).ToArrayAsync(ct);
     }
 
+    public Task<int> CountUnboundAsync(Access access, Guid conversationId, CancellationToken ct) =>
+        access == Access.Platform
+            ? db.Set<PlatformAssistantAttachment>().CountAsync(row => row.ConversationId == conversationId && row.MessageId == null, ct)
+            : db.Set<AssistantAttachment>().CountAsync(row => row.TenantId == tenant.RequiredTenantId && row.ConversationId == conversationId && row.MessageId == null, ct);
+
     public IVersioned Add(Access access, Guid conversationId, string fileName, string mediaType, string storageKey, long length, DateTime nowUtc)
     {
         db.RequireTransaction();

@@ -40,6 +40,8 @@ public static class AssistantErrors
     public static readonly Error AttachmentTooLarge = Field(AttachmentTooLargeCode, "The file is larger than 10 MB.", "file", ErrorType.PayloadTooLarge);
     public const string AttachmentTooManyCode = "Assistant.Attachment.TooMany";
     public static readonly Error AttachmentTooMany = Field(AttachmentTooManyCode, "You can attach up to 5 files per message.", "attachmentIds", ErrorType.Validation);
+    public const string AttachmentTooManyPendingCode = "Assistant.Attachment.TooManyPending";
+    public static readonly Error AttachmentTooManyPending = Field(AttachmentTooManyPendingCode, "You reached the maximum of 5 pending attachments in this conversation. Send a message or delete one before uploading another.", "file", ErrorType.Validation);
     public const string AttachmentAlreadyUsedCode = "Assistant.Attachment.AlreadyUsed";
     public static readonly Error AttachmentAlreadyUsed = Field(AttachmentAlreadyUsedCode, "That attachment already belongs to a message.", "attachmentIds", ErrorType.Conflict);
     public const string QuickQueryNotAvailableCode = "Assistant.QuickQuery.NotAvailable";

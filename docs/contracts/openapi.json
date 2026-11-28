@@ -18553,7 +18553,7 @@
             }
           },
           "400": {
-            "description": "Bad Request; Validation.Failed",
+            "description": "Bad Request; Validation.Failed; WhatsApp.Settings.CountriesWithoutRates",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -18578,6 +18578,36 @@
                       "detail": "Check the highlighted fields.",
                       "code": "Validation.Failed",
                       "traceId": "example-trace-id"
+                    }
+                  },
+                  "WhatsApp.Settings.CountriesWithoutRates.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Incluí al menos un país con tarifas de Meta cargadas.",
+                      "code": "WhatsApp.Settings.CountriesWithoutRates",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "allowedCountries": [
+                          "Incluí al menos un país con tarifas de Meta cargadas."
+                        ]
+                      }
+                    }
+                  },
+                  "WhatsApp.Settings.CountriesWithoutRates.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "Include at least one country with Meta rates.",
+                      "code": "WhatsApp.Settings.CountriesWithoutRates",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "allowedCountries": [
+                          "Include at least one country with Meta rates."
+                        ]
+                      }
                     }
                   }
                 }
@@ -18730,6 +18760,13 @@
             "field": null,
             "es": "Otra persona cambió esto. Revisá la versión más reciente antes de guardar.",
             "en": "Someone else changed this. Review the latest version before saving."
+          },
+          {
+            "status": 400,
+            "code": "WhatsApp.Settings.CountriesWithoutRates",
+            "field": "allowedCountries",
+            "es": "Incluí al menos un país con tarifas de Meta cargadas.",
+            "en": "Include at least one country with Meta rates."
           },
           {
             "status": 429,
@@ -36868,7 +36905,7 @@
             }
           },
           "400": {
-            "description": "Bad Request; Validation.Failed; Request.IdempotencyKeyRequired; Assistant.Notice.AcceptanceRequired; Assistant.Attachment.UnsupportedType; Assistant.Attachment.TooMany; Assistant.Attachment.UploadTimedOut; Validation.Failed; Validation.Failed",
+            "description": "Bad Request; Validation.Failed; Request.IdempotencyKeyRequired; Assistant.Notice.AcceptanceRequired; Assistant.Attachment.UnsupportedType; Assistant.Attachment.TooMany; Assistant.Attachment.TooManyPending; Assistant.Attachment.UploadTimedOut; Validation.Failed; Validation.Failed",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -37011,6 +37048,36 @@
                       "errors": {
                         "attachmentIds": [
                           "You can attach up to 5 files per message."
+                        ]
+                      }
+                    }
+                  },
+                  "Assistant.Attachment.TooManyPending.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Ya llegaste al máximo de 5 adjuntos pendientes en esta conversación. Enviá un mensaje o borrá alguno antes de subir otro.",
+                      "code": "Assistant.Attachment.TooManyPending",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "file": [
+                          "Ya llegaste al máximo de 5 adjuntos pendientes en esta conversación. Enviá un mensaje o borrá alguno antes de subir otro."
+                        ]
+                      }
+                    }
+                  },
+                  "Assistant.Attachment.TooManyPending.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "You reached the maximum of 5 pending attachments in this conversation. Send a message or delete one before uploading another.",
+                      "code": "Assistant.Attachment.TooManyPending",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "file": [
+                          "You reached the maximum of 5 pending attachments in this conversation. Send a message or delete one before uploading another."
                         ]
                       }
                     }
@@ -37361,40 +37428,8 @@
               }
             }
           },
-          "500": {
-            "description": "Internal Server Error; General.Unexpected",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Unexpected.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 500,
-                      "detail": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
-                      "code": "General.Unexpected",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Unexpected.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 500,
-                      "detail": "An unexpected error occurred. If the problem persists, report the trace id.",
-                      "code": "General.Unexpected",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
-            "description": "Assistant.Limit.DailyReached; Assistant.Limit.MonthlyReached; Assistant.Attachment.UploadBusy; Assistant.Attachment.UploadQueueFull; Security.RateLimit.Exceeded",
+            "description": "Too Many Requests; Assistant.Limit.DailyReached; Assistant.Limit.MonthlyReached; Assistant.Attachment.UploadBusy; Assistant.Attachment.UploadQueueFull; Security.RateLimit.Exceeded",
             "headers": {
               "Retry-After": {
                 "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
@@ -37521,6 +37556,38 @@
                       "code": "Security.RateLimit.Exceeded",
                       "traceId": "example-trace-id",
                       "retryAfter": 60
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error; General.Unexpected",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "General.Unexpected.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 500,
+                      "detail": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
+                      "code": "General.Unexpected",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "General.Unexpected.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 500,
+                      "detail": "An unexpected error occurred. If the problem persists, report the trace id.",
+                      "code": "General.Unexpected",
+                      "traceId": "example-trace-id"
                     }
                   }
                 }
@@ -37659,6 +37726,13 @@
             "field": "attachmentIds",
             "es": "Podés adjuntar hasta 5 archivos por mensaje.",
             "en": "You can attach up to 5 files per message."
+          },
+          {
+            "status": 400,
+            "code": "Assistant.Attachment.TooManyPending",
+            "field": "file",
+            "es": "Ya llegaste al máximo de 5 adjuntos pendientes en esta conversación. Enviá un mensaje o borrá alguno antes de subir otro.",
+            "en": "You reached the maximum of 5 pending attachments in this conversation. Send a message or delete one before uploading another."
           },
           {
             "status": 409,
@@ -45487,7 +45561,7 @@
             }
           },
           "400": {
-            "description": "Bad Request; Validation.Failed; Request.IdempotencyKeyRequired; Assistant.Notice.AcceptanceRequired; Assistant.Attachment.UnsupportedType; Assistant.Attachment.TooMany; Assistant.Attachment.UploadTimedOut; Validation.Failed; Validation.Failed",
+            "description": "Bad Request; Validation.Failed; Request.IdempotencyKeyRequired; Assistant.Notice.AcceptanceRequired; Assistant.Attachment.UnsupportedType; Assistant.Attachment.TooMany; Assistant.Attachment.TooManyPending; Assistant.Attachment.UploadTimedOut; Validation.Failed; Validation.Failed",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -45630,6 +45704,36 @@
                       "errors": {
                         "attachmentIds": [
                           "You can attach up to 5 files per message."
+                        ]
+                      }
+                    }
+                  },
+                  "Assistant.Attachment.TooManyPending.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Ya llegaste al máximo de 5 adjuntos pendientes en esta conversación. Enviá un mensaje o borrá alguno antes de subir otro.",
+                      "code": "Assistant.Attachment.TooManyPending",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "file": [
+                          "Ya llegaste al máximo de 5 adjuntos pendientes en esta conversación. Enviá un mensaje o borrá alguno antes de subir otro."
+                        ]
+                      }
+                    }
+                  },
+                  "Assistant.Attachment.TooManyPending.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "You reached the maximum of 5 pending attachments in this conversation. Send a message or delete one before uploading another.",
+                      "code": "Assistant.Attachment.TooManyPending",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "file": [
+                          "You reached the maximum of 5 pending attachments in this conversation. Send a message or delete one before uploading another."
                         ]
                       }
                     }
@@ -45980,40 +46084,8 @@
               }
             }
           },
-          "500": {
-            "description": "Internal Server Error; General.Unexpected",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Unexpected.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 500,
-                      "detail": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
-                      "code": "General.Unexpected",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Unexpected.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 500,
-                      "detail": "An unexpected error occurred. If the problem persists, report the trace id.",
-                      "code": "General.Unexpected",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
-            "description": "Assistant.Limit.DailyReached; Assistant.Limit.MonthlyReached; Assistant.Attachment.UploadBusy; Assistant.Attachment.UploadQueueFull; Security.RateLimit.Exceeded",
+            "description": "Too Many Requests; Assistant.Limit.DailyReached; Assistant.Limit.MonthlyReached; Assistant.Attachment.UploadBusy; Assistant.Attachment.UploadQueueFull; Security.RateLimit.Exceeded",
             "headers": {
               "Retry-After": {
                 "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
@@ -46140,6 +46212,38 @@
                       "code": "Security.RateLimit.Exceeded",
                       "traceId": "example-trace-id",
                       "retryAfter": 60
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error; General.Unexpected",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "General.Unexpected.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 500,
+                      "detail": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
+                      "code": "General.Unexpected",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "General.Unexpected.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 500,
+                      "detail": "An unexpected error occurred. If the problem persists, report the trace id.",
+                      "code": "General.Unexpected",
+                      "traceId": "example-trace-id"
                     }
                   }
                 }
@@ -46278,6 +46382,13 @@
             "field": "attachmentIds",
             "es": "Podés adjuntar hasta 5 archivos por mensaje.",
             "en": "You can attach up to 5 files per message."
+          },
+          {
+            "status": 400,
+            "code": "Assistant.Attachment.TooManyPending",
+            "field": "file",
+            "es": "Ya llegaste al máximo de 5 adjuntos pendientes en esta conversación. Enviá un mensaje o borrá alguno antes de subir otro.",
+            "en": "You reached the maximum of 5 pending attachments in this conversation. Send a message or delete one before uploading another."
           },
           {
             "status": 409,
@@ -56057,7 +56168,7 @@
             }
           },
           "400": {
-            "description": "Bad Request; Validation.Failed; Request.IdempotencyKeyRequired; Assistant.Notice.AcceptanceRequired; Assistant.Attachment.UnsupportedType; Assistant.Attachment.TooMany; Assistant.Attachment.UploadTimedOut; Validation.Failed; Validation.Failed",
+            "description": "Bad Request; Validation.Failed; Request.IdempotencyKeyRequired; Assistant.Notice.AcceptanceRequired; Assistant.Attachment.UnsupportedType; Assistant.Attachment.TooMany; Assistant.Attachment.TooManyPending; Assistant.Attachment.UploadTimedOut; Validation.Failed; Validation.Failed",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -56200,6 +56311,36 @@
                       "errors": {
                         "attachmentIds": [
                           "You can attach up to 5 files per message."
+                        ]
+                      }
+                    }
+                  },
+                  "Assistant.Attachment.TooManyPending.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Ya llegaste al máximo de 5 adjuntos pendientes en esta conversación. Enviá un mensaje o borrá alguno antes de subir otro.",
+                      "code": "Assistant.Attachment.TooManyPending",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "file": [
+                          "Ya llegaste al máximo de 5 adjuntos pendientes en esta conversación. Enviá un mensaje o borrá alguno antes de subir otro."
+                        ]
+                      }
+                    }
+                  },
+                  "Assistant.Attachment.TooManyPending.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "You reached the maximum of 5 pending attachments in this conversation. Send a message or delete one before uploading another.",
+                      "code": "Assistant.Attachment.TooManyPending",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "file": [
+                          "You reached the maximum of 5 pending attachments in this conversation. Send a message or delete one before uploading another."
                         ]
                       }
                     }
@@ -56550,40 +56691,8 @@
               }
             }
           },
-          "500": {
-            "description": "Internal Server Error; General.Unexpected",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "General.Unexpected.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 500,
-                      "detail": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
-                      "code": "General.Unexpected",
-                      "traceId": "example-trace-id"
-                    }
-                  },
-                  "General.Unexpected.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 500,
-                      "detail": "An unexpected error occurred. If the problem persists, report the trace id.",
-                      "code": "General.Unexpected",
-                      "traceId": "example-trace-id"
-                    }
-                  }
-                }
-              }
-            }
-          },
           "429": {
-            "description": "Assistant.Limit.DailyReached; Assistant.Limit.MonthlyReached; Assistant.Attachment.UploadBusy; Assistant.Attachment.UploadQueueFull; Security.RateLimit.Exceeded",
+            "description": "Too Many Requests; Assistant.Limit.DailyReached; Assistant.Limit.MonthlyReached; Assistant.Attachment.UploadBusy; Assistant.Attachment.UploadQueueFull; Security.RateLimit.Exceeded",
             "headers": {
               "Retry-After": {
                 "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
@@ -56710,6 +56819,38 @@
                       "code": "Security.RateLimit.Exceeded",
                       "traceId": "example-trace-id",
                       "retryAfter": 60
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error; General.Unexpected",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "General.Unexpected.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 500,
+                      "detail": "Ocurrió un error inesperado. Si el problema continúa, informá el código de seguimiento.",
+                      "code": "General.Unexpected",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "General.Unexpected.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 500,
+                      "detail": "An unexpected error occurred. If the problem persists, report the trace id.",
+                      "code": "General.Unexpected",
+                      "traceId": "example-trace-id"
                     }
                   }
                 }
@@ -56848,6 +56989,13 @@
             "field": "attachmentIds",
             "es": "Podés adjuntar hasta 5 archivos por mensaje.",
             "en": "You can attach up to 5 files per message."
+          },
+          {
+            "status": 400,
+            "code": "Assistant.Attachment.TooManyPending",
+            "field": "file",
+            "es": "Ya llegaste al máximo de 5 adjuntos pendientes en esta conversación. Enviá un mensaje o borrá alguno antes de subir otro.",
+            "en": "You reached the maximum of 5 pending attachments in this conversation. Send a message or delete one before uploading another."
           },
           {
             "status": 409,

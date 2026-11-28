@@ -22,6 +22,7 @@
   <data name="Assistant.Attachment.UnsupportedType" xml:space="preserve"><value>Attach an image or a PDF.</value></data>
   <data name="Assistant.Attachment.TooLarge" xml:space="preserve"><value>The file is larger than 10 MB.</value></data>
   <data name="Assistant.Attachment.TooMany" xml:space="preserve"><value>You can attach up to 5 files per message.</value></data>
+  <data name="Assistant.Attachment.TooManyPending" xml:space="preserve"><value>You reached the maximum of 5 pending attachments in this conversation. Send a message or delete one before uploading another.</value></data>
   <data name="Assistant.Attachment.AlreadyUsed" xml:space="preserve"><value>That attachment already belongs to a message.</value></data>
   <data name="Assistant.QuickQuery.NotAvailable" xml:space="preserve"><value>That query is unavailable.</value></data>
   <data name="Assistant.Provider.Unavailable" xml:space="preserve"><value>The assistant is unavailable now.</value></data>

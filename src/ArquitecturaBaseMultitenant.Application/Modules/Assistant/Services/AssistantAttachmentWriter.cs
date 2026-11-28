@@ -36,6 +36,8 @@ internal sealed class AssistantAttachmentWriter(ICurrentUser user, IAssistantCon
         var conversation = await ConversationAsync(conversationId, input.ConversationVersion, ct);
         if (conversation is null) return AssistantErrors.ConversationNotFound;
         if (conversation.Version != input.ConversationVersion) throw new ConcurrencyConflictException("The conversation changed.");
+        if (await attachments.CountUnboundAsync(Access, conversationId, ct) >= AssistantTechnicalLimits.MaxUnboundAttachmentsPerConversation)
+            return AssistantErrors.AttachmentTooManyPending;
         var row = attachments.Add(Access, conversationId, input.FileName!, input.MediaType!, storageKey, input.ByteLength!.Value, clock.GetUtcNow().UtcDateTime);
         var id = ((Entity)row).Id;
         var summary = new AssistantAttachmentSummaryResponse(id, input.FileName!, input.MediaType!, input.ByteLength.Value, 0);

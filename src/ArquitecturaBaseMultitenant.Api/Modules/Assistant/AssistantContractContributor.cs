@@ -34,6 +34,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
         new(400, "Assistant.Attachment.UnsupportedType", "file", Resource("Assistant.Attachment.UnsupportedType", "es"), Resource("Assistant.Attachment.UnsupportedType", "en")),
         new(413, "Assistant.Attachment.TooLarge", "file", Resource("Assistant.Attachment.TooLarge", "es"), Resource("Assistant.Attachment.TooLarge", "en")),
         new(400, "Assistant.Attachment.TooMany", "attachmentIds", Resource("Assistant.Attachment.TooMany", "es"), Resource("Assistant.Attachment.TooMany", "en")),
+        new(400, AssistantErrors.AttachmentTooManyPendingCode, "file", Resource(AssistantErrors.AttachmentTooManyPendingCode, "es"), Resource(AssistantErrors.AttachmentTooManyPendingCode, "en")),
         new(409, "Assistant.Attachment.AlreadyUsed", "attachmentIds", Resource("Assistant.Attachment.AlreadyUsed", "es"), Resource("Assistant.Attachment.AlreadyUsed", "en")),
         new(400, "Assistant.QuickQuery.NotAvailable", "key", Resource("Assistant.QuickQuery.NotAvailable", "es"), Resource("Assistant.QuickQuery.NotAvailable", "en")),
         new(503, "Assistant.Provider.Unavailable", null, Resource("Assistant.Provider.Unavailable", "es"), Resource("Assistant.Provider.Unavailable", "en")),
@@ -154,6 +155,7 @@ internal sealed class AssistantContractContributor : IHttpContractContributor
             && (path.EndsWith("/conversations/{id}", StringComparison.Ordinal) || path.EndsWith("/conversations/{id}/export", StringComparison.Ordinal))
             || method == HttpMethod.Post && path.EndsWith("/conversations/{id}/messages", StringComparison.Ordinal);
         if (code.StartsWith("Assistant.Attachment.Upload", StringComparison.Ordinal)) return path.EndsWith("/attachments", StringComparison.Ordinal) && method == HttpMethod.Post;
+        if (code == AssistantErrors.AttachmentTooManyPendingCode) return path.EndsWith("/attachments", StringComparison.Ordinal) && method == HttpMethod.Post;
         if (code.StartsWith("Assistant.Attachment.", StringComparison.Ordinal)) return path.Contains("/attachments", StringComparison.Ordinal) || path.EndsWith("/messages", StringComparison.Ordinal);
         if (code.StartsWith("Assistant.Turn.", StringComparison.Ordinal)) return path.EndsWith("/messages", StringComparison.Ordinal) || path.Contains("/turns/", StringComparison.Ordinal);
         if (code == "Assistant.Model.AlreadyExists") return path.Contains("/models", StringComparison.Ordinal) && method != HttpMethod.Get;

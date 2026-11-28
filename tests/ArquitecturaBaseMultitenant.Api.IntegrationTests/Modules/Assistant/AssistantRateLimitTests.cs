@@ -65,6 +65,9 @@ public sealed class AssistantRateLimitTests(ApiFactory factory) : IClassFixture<
     [InlineData("api/me/assistant/conversations", RateLimitProfile.AssistantConversation)]
     [InlineData("api/organization/assistant/conversations/{id:guid}/messages", RateLimitProfile.AssistantConversation)]
     [InlineData("api/platform/assistant/conversations", RateLimitProfile.AssistantConversation)]
+    [InlineData("api/me/assistant/conversations/{id:guid}/attachments", RateLimitProfile.AssistantConversation)]
+    [InlineData("api/organization/assistant/conversations/{id:guid}/attachments", RateLimitProfile.AssistantConversation)]
+    [InlineData("api/platform/assistant/conversations/{id:guid}/attachments", RateLimitProfile.AssistantConversation)]
     public void Assistant_routes_declare_their_profile(string pattern, RateLimitProfile profile)
     {
         var endpoint = Assert.Single(factory.Services.GetRequiredService<Microsoft.AspNetCore.Routing.EndpointDataSource>()
@@ -72,6 +75,50 @@ public sealed class AssistantRateLimitTests(ApiFactory factory) : IClassFixture<
                 && candidate.Metadata.GetMetadata<Microsoft.AspNetCore.Routing.HttpMethodMetadata>()?.HttpMethods.Contains("POST") == true);
 
         Assert.Equal(profile, endpoint.Metadata.GetMetadata<RateLimitAttribute>()?.Profile);
+    }
+
+    [Fact]
+    public async Task Uploading_attachments_over_the_conversation_quota_returns_429_rate_limit_exceeded()
+    {
+        await using var host = factory.WithWebHostBuilder(builder =>
+            builder.UseSetting("Cache:Environment", "au-" + Guid.NewGuid().ToString("N")[..20]));
+        using var client = host.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
+        var account = await AccountJourney.RegisterAsync(host, client, Ct);
+        await PlatformOperators.GrantAsync(host.Services, account.UserId, PlatformOperators.All, Ct);
+        await AccountJourney.AuthorizeAsync(client, "platform", Ct);
+        await AssistantExecutionActorTests.AcceptNoticeAsync(client, "/api/platform/assistant/notice");
+
+        Guid conversationId;
+        uint version;
+        using (var created = await AccountJourney.PostAsync(client, "/api/platform/assistant/conversations", new { }, Ct))
+        {
+            Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+            using var body = JsonDocument.Parse(await created.Content.ReadAsStringAsync(Ct));
+            conversationId = body.RootElement.GetProperty("id").GetGuid();
+            version = body.RootElement.GetProperty("version").GetUInt32();
+        }
+
+        try
+        {
+            // Crear la conversación ya consumió 1 pedido de AssistantConversation; con tope 2 entra una subida y la segunda da 429.
+            await TestRateLimits.SetAsync(host.Services, TestRateLimits.Unlimited with { AssistantConversation = new(2, 60) }, Ct);
+
+            using var first = await AssistantAttachmentsTests.UploadAsync(client, conversationId, version, Guid.NewGuid(),
+                AssistantAttachmentsTests.Png, "image/png", root: "/api/platform/assistant");
+            Assert.Equal(HttpStatusCode.Created, first.StatusCode);
+
+            using var limited = await AssistantAttachmentsTests.UploadAsync(client, conversationId, version, Guid.NewGuid(),
+                AssistantAttachmentsTests.Png, "image/png", root: "/api/platform/assistant");
+            Assert.Equal(HttpStatusCode.TooManyRequests, limited.StatusCode);
+            using var problem = JsonDocument.Parse(await limited.Content.ReadAsStringAsync(Ct));
+            Assert.Equal(RateLimitErrors.ExceededCode, problem.RootElement.GetProperty("code").GetString());
+            Assert.InRange(problem.RootElement.GetProperty("retryAfter").GetInt32(), 1, 60);
+            Assert.True(limited.Headers.Contains("Retry-After"));
+        }
+        finally
+        {
+            await TestRateLimits.SetAsync(factory.Services, TestRateLimits.Unlimited, Ct);
+        }
     }
 
     [Theory]

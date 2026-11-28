@@ -157,6 +157,7 @@ public abstract class AssistantControllerBase(IAssistantConversationService serv
         (await service.FeedbackAsync(id, messageId, new AssistantFeedbackRequest(request.Rating, request.Version), cancellationToken)).ToActionResult(this);
 
     [HttpPost("conversations/{id:guid}/attachments")]
+    [RateLimit(RateLimitProfile.AssistantConversation)]
     [AssistantUploadSlot]
     [IdempotencyDurable(typeof(AssistantDurableAdapter))]
     [Idempotent(Mode = IdempotencyMode.DurableReference)]
@@ -169,6 +170,7 @@ public abstract class AssistantControllerBase(IAssistantConversationService serv
     [ProducesProblem(409)]
     [ProducesProblem(413)]
     [ProducesProblem(422)]
+    [ProducesProblem(429)]
     [ProducesProblem(500)]
     public async Task<IActionResult> Upload([FromRoute] Guid id, [FromForm] AssistantUploadHttpRequest request, CancellationToken cancellationToken) =>
         (await attachments.UploadAsync(id, new AssistantUploadRequest(request.File?.FileName, request.File?.ContentType, request.File?.Length, request.File?.OpenReadStream(), request.ConversationVersion), cancellationToken)).ToReferencedResult(this);
