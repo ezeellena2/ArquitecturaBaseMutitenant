@@ -272,6 +272,53 @@ public sealed class FormsContractExamplesTests(ApiFactory factory)
             SaveSuppliers(fields: SavedFields(plazoField: Saved(plazo, 1, "Plazo de pago", "WholeNumber", min: "45"))));
         await PutAsync("Guardar un campo obligatorio con opciones activas sin valor", suppliersId,
             SaveSuppliers(fields: SavedFields(zoneField: Saved(zona, 2, "Zona", "Text", required: true))));
+        // Quitar un campo con valores y proteger una fuente (B6): el plazo de Acme se quita sin confirmarlo, y «Zonas» es la fuente
+        // del campo de «Clientes», cuya opción tiene a Norte como valor.
+        await PutAsync("Guardar quitando un campo con valores sin confirmarlo", suppliersId,
+            SaveSuppliers(fields: new[] { Saved(cuit, 0, "CUIT", "Text", required: true, unique: true), Saved(zona, 2, "Zona", "Text") }));
+        var zones = await FormsTestData.CreateManualAsync(factory, tenantId, "Zonas", ("N", "Norte"), ("S", "Sur"));
+        Guid north;
+        using (var listed = await _client.GetFromJsonAsync<JsonDocument>($"{Root}/{zones.Id}/items", Ct))
+            north = listed!.RootElement.GetProperty("items")[0].GetProperty("id").GetGuid();
+        using (var create = new HttpRequestMessage(HttpMethod.Post, Root)
+        {
+            Content = JsonContent.Create(new
+            {
+                name = "Clientes", source = "Manual", items = new[] { Item("C1", "Kiosco") },
+                fields = new[] { new { localId = "zona", name = "Zona", type = "Catalog", sourceCatalogId = zones.Id, required = false, unique = false } },
+            }),
+        })
+        {
+            create.Headers.Add("Idempotency-Key", Guid.NewGuid().ToString("D"));
+            using var answered = await _client.SendAsync(create, Ct);
+            Assert.True(answered.StatusCode == HttpStatusCode.Created, await answered.Content.ReadAsStringAsync(Ct));
+            using var body = JsonDocument.Parse(await answered.Content.ReadAsStringAsync(Ct));
+            var customers = body.RootElement.GetProperty("catalog");
+            var customersId = customers.GetProperty("id").GetGuid();
+            Guid kiosk;
+            using (var listed = await _client.GetFromJsonAsync<JsonDocument>($"{Root}/{customersId}/items", Ct))
+                kiosk = listed!.RootElement.GetProperty("items")[0].GetProperty("id").GetGuid();
+            await PutAsync(null, customersId, new
+            {
+                name = "Clientes", isActive = true, version = customers.GetProperty("version").GetUInt32(),
+                items = new[]
+                {
+                    new
+                    {
+                        itemId = kiosk, code = "C1", text = "Kiosco", isActive = true,
+                        fields = new Dictionary<string, object?> { [customers.GetProperty("fields")[0].GetProperty("id").GetString()!] = north.ToString("D") },
+                    },
+                },
+            });
+        }
+        await PutAsync("Guardar borrando una opción que usa otra", zones.Id, new
+        {
+            name = "Zonas", isActive = true, version = zones.Version, deleteItems = new[] { north },
+        });
+        await PutAsync("Dar de baja un catálogo que es la fuente de un campo", zones.Id, new
+        {
+            name = "Zonas", isActive = false, version = zones.Version,
+        });
         var membersVersion = members.GetProperty("catalog").GetProperty("version").GetUInt32();
         await PutAsync("Guardar con una columna que la fuente no tiene", membersId, new
         {

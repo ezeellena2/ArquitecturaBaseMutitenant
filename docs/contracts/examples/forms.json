@@ -1724,6 +1724,61 @@
       }
     },
     {
+      "name": "Guardar quitando un campo con valores sin confirmarlo",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Confirmá que se quitan sus {count} valores.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.FieldRemovalNotConfirmed",
+        "errors": {
+          "fields.1": [
+            "Confirmá que se quita su valor."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Guardar borrando una opción que usa otra",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "No se puede borrar porque se usa. Podés darla de baja.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.ItemInUse",
+        "errors": {
+          "deleteItems.0": [
+            "No se puede borrar porque se usa. Podés darla de baja."
+          ]
+        },
+        "uses": [
+          "options"
+        ]
+      }
+    },
+    {
+      "name": "Dar de baja un catálogo que es la fuente de un campo",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 409,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.10",
+        "title": "Conflicto",
+        "status": 409,
+        "detail": "Lo usan campos de otros catálogos. Quitalos antes de darlo de baja.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.SourceInUse"
+      }
+    },
+    {
       "name": "Guardar con una columna que la fuente no tiene",
       "method": "PUT",
       "path": "/api/organization/forms/catalogs/{id}",

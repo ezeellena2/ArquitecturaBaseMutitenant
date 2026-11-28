@@ -21,9 +21,6 @@ public sealed class FormsContractExamplesCoverageTests
     /// </summary>
     private static readonly Dictionary<string, string> NotReachableYet = new(StringComparer.Ordinal)
     {
-        [FormCatalogErrors.ItemInUseCode] = "nada usa una opción hasta que un campo de otro catálogo la tenga como valor (E13, B6)",
-        [FormCatalogErrors.FieldRemovalNotConfirmedCode] = "quitar un campo con valores llega en la E13 (B6)",
-        [FormCatalogErrors.SourceInUseCode] = "proteger una fuente llega en la E13 (B6)",
         ["GET /api/organization/forms/catalogs/template 404 " + FormCatalogErrors.NotFoundCode] = "la plantilla con catalogId llega en la E13 (B7)",
     };
 
