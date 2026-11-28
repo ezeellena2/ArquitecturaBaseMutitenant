@@ -41,10 +41,14 @@ internal sealed class OrganizationUserRemover(
         var removed = member.Remove();
         if (removed.IsFailure) return removed;
         members.MarkUpdated(member);
-        if (membershipWasActive && member.UserId is { } removedUserId)
+        if (member.UserId is { } removedUserId)
         {
-            var notice = await membershipEndNotifier.NotifyAsync(removedUserId, ct);
-            if (notice.IsFailure) return notice;
+            if (membershipWasActive)
+            {
+                var notice = await membershipEndNotifier.NotifyAsync(removedUserId, ct);
+                if (notice.IsFailure) return notice;
+            }
+            await assignments.NotifyAccessChangedAsync(removedUserId, [], ct);
         }
         return Result.Success();
     }

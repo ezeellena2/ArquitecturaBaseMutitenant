@@ -155,5 +155,7 @@ public sealed class DelegationPermissionsResolverTests
             CancellationToken cancellationToken) => throw new NotSupportedException();
         public Task<int> CountUsersAsync(Guid roleId, CancellationToken cancellationToken) =>
             throw new NotSupportedException();
+        public Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> ListActiveUsersOrganizationRoleIdsByRoleAsync(
+            Guid roleId, CancellationToken cancellationToken) => throw new NotSupportedException();
     }
 }

@@ -38,4 +38,11 @@ public interface IRoleReader
     /// <summary>Los permisos de cada rol pedido, en una consulta.</summary>
     Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> ListPermissionsByRoleAsync(IReadOnlyCollection<Guid> roleIds,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Los usuarios activos de la organización que tienen asignado este rol de organización, junto con todos los roles de
+    /// organización que cada uno tiene asignados (para avisar cambios de permisos efectivos dentro de la UoW).
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> ListActiveUsersOrganizationRoleIdsByRoleAsync(Guid roleId,
+        CancellationToken cancellationToken);
 }

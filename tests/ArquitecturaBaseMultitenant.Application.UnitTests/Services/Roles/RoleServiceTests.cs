@@ -168,6 +168,9 @@ public sealed class RoleServiceTests
                 roleIds.Contains(heldRoleId)
                     ? new Dictionary<Guid, IReadOnlyList<string>> { [heldRoleId] = Held }
                     : new Dictionary<Guid, IReadOnlyList<string>>());
+        public Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> ListActiveUsersOrganizationRoleIdsByRoleAsync(
+            Guid roleId, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>>(new Dictionary<Guid, IReadOnlyList<Guid>>());
     }
 
     internal sealed class FakeRoleRepository : IRoleRepository

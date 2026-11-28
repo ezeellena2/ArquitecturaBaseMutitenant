@@ -2,6 +2,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Organization;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Models.Common;
@@ -23,7 +24,8 @@ namespace ArquitecturaBaseMultitenant.Application.Services.Roles;
 /// </summary>
 internal sealed class RoleService(IRoleReader roles, IRoleRepository repository, ICompanyReader companies,
     DelegationPermissionsResolver delegationPermissions, OrganizationDelegationGuard delegation,
-    IRequestValidator validator, IUnitOfWork unitOfWork, TimeProvider timeProvider, ILogger<RoleService> logger)
+    IRequestValidator validator, IUnitOfWork unitOfWork, TimeProvider timeProvider, ILogger<RoleService> logger,
+    IEnumerable<IMemberAccessObserver>? accessObservers = null)
     : IRoleService
 {
     public Task<Result<RoleFilterCountsResponse>> GetFilterCountsAsync(string? search, CancellationToken cancellationToken) =>
@@ -181,13 +183,51 @@ internal sealed class RoleService(IRoleReader roles, IRoleRepository repository,
             && await delegation.CheckPermissionsChangeAsync(role.Permissions, permissions, cancellationToken)
                 is { IsFailure: true } denied)
             return denied.Error;
+        var previousPermissions = role.Permissions.ToArray();
         var updated = role.Update(request.Name, request.Description, request.Scope!.Value, request.CompanyId,
             permissions);
         if (updated.IsFailure) return updated.Error;
         if (await roles.ExistsByNameAsync(role.Name, role.CompanyId, role.Id, cancellationToken))
             return RoleErrors.AlreadyExists;
         repository.MarkUpdated(role);
+        await NotifyRemovedPermissionsAsync(role, previousPermissions, cancellationToken);
         return role;
+    }
+
+    private async Task NotifyRemovedPermissionsAsync(Role role, IReadOnlyCollection<string> previousPermissions,
+        CancellationToken cancellationToken)
+    {
+        if (accessObservers is null || role.Scope != RoleScope.Organization) return;
+        var removed = previousPermissions.Except(role.Permissions, StringComparer.Ordinal).ToArray();
+        if (removed.Length == 0) return;
+        var observers = accessObservers as IMemberAccessObserver[] ?? [.. accessObservers];
+        if (observers.Length == 0) return;
+        var affectedUsers = await roles.ListActiveUsersOrganizationRoleIdsByRoleAsync(role.Id, cancellationToken);
+        if (affectedUsers.Count == 0) return;
+        var otherRoleIds = affectedUsers.Values.SelectMany(ids => ids).Where(id => id != role.Id).Distinct().ToArray();
+        var otherPermissions = await roles.ListPermissionsByRoleAsync(otherRoleIds, cancellationToken);
+        var checkProjected = removed.Any(permission =>
+            Permissions.OrganizationProjectedFromCompany.Contains(permission, StringComparer.Ordinal));
+        foreach (var (userId, assignedRoleIds) in affectedUsers)
+        {
+            var granted = new HashSet<string>(
+                Permissions.Inclusions.Effective(assignedRoleIds.SelectMany(id =>
+                    id == role.Id ? role.Permissions : otherPermissions.GetValueOrDefault(id) ?? [])),
+                StringComparer.Ordinal);
+            if (checkProjected)
+            {
+                var companyRoleIds = await roles.ListCompanyRoleIdsAsync(userId, cancellationToken);
+                var companyPermissions = await roles.ListPermissionsByRoleAsync(
+                    [.. companyRoleIds.Values.SelectMany(ids => ids).Distinct()], cancellationToken);
+                foreach (var permissionsOfCompany in companyRoleIds.Values)
+                    granted.UnionWith(Permissions.Inclusions.Effective(
+                        permissionsOfCompany.SelectMany(id => companyPermissions.GetValueOrDefault(id) ?? []))
+                        .Intersect(Permissions.OrganizationProjectedFromCompany, StringComparer.Ordinal));
+            }
+            IReadOnlyCollection<string> effective = [.. granted];
+            foreach (var observer in observers)
+                await observer.AccessChangedAsync(userId, effective, cancellationToken);
+        }
     }
 
     private async Task<Result> DeleteCoreAsync(DeleteRoleRequest request, CancellationToken cancellationToken)

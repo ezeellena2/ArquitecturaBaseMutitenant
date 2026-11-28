@@ -36,6 +36,7 @@ public static class WhatsAppModule
         services.AddScoped<IAccountNoticeChannel, WhatsAppAccountNoticeChannel>();
         services.AddScoped<IOutboxDeliveryObserver, WhatsAppDeliveryObserver>();
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity.IPhoneLinkObserver, WhatsAppPhoneLinkObserver>();
+        services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Organization.IMemberAccessObserver, WhatsAppMemberAccessObserver>();
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Legal.IAccountDeletionParticipant, WhatsAppAccountDeletionParticipant>();
         services.AddSingleton<IErrorTextSource, WhatsAppErrorTextSource>();
         services.AddSingleton<IAuditTextSource, WhatsAppAuditTextSource>();

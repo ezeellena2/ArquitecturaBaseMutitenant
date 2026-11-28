@@ -74,6 +74,11 @@ internal sealed class WhatsAppConversationResponseBuilder(IWhatsAppConversationR
     /// <summary>El nombre de una cuenta (quien tomó el chat o quien escribe); null si la cuenta ya no lo muestra.</summary>
     internal async Task<string?> NameAsync(Guid userId, CancellationToken ct) => (await names.FindAsync([userId], ct)).GetValueOrDefault(userId);
 
+    /// <summary>Si esa persona puede atender la bandeja indicada con sus permisos vigentes (B12).</summary>
+    internal Task<bool> CanAttendAsync(Guid userId, WhatsAppInbox inbox, CancellationToken ct) =>
+        permissions.HasPermissionAsync(userId,
+            inbox == WhatsAppInbox.Internal ? Permissions.WhatsApp.Internal : Permissions.WhatsApp.Customers, ct);
+
     private Guid Me => user.UserId ?? throw new InvalidOperationException("An authenticated user is required.");
 
     /// <summary>

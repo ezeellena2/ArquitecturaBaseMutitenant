@@ -91,16 +91,18 @@ internal sealed class WhatsAppConversationService(IWhatsAppChatRepository chats,
         OperationLog.RunAsync<WhatsAppConversationRowResponse>(logger, clock, "WhatsAppConversationTransfer", async () =>
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
+            var box = Box(inbox);
             Guid? userId = null;
             if (request.MemberId is { } memberId)
             {
-                if ((await teamReader.ListActiveMembersAsync([memberId], cancellationToken)).SingleOrDefault() is not { } member)
+                if ((await teamReader.ListActiveMembersAsync([memberId], cancellationToken)).SingleOrDefault() is not { } member
+                    || !await responses.CanAttendAsync(member.UserId, box, cancellationToken))
                     return WhatsAppTeamService.Invalid("memberId", "WhatsApp.Validation.SelectionInvalid");
                 userId = member.UserId;
             }
             var saved = await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
-                if (await chats.GetForUpdateAsync(id, Box(inbox), request.Version, ct) is not { } chat)
+                if (await chats.GetForUpdateAsync(id, box, request.Version, ct) is not { } chat)
                     return Result.Failure(WhatsAppErrors.ConversationNotFound);
                 // Un equipo de la otra bandeja no existe para esta conversación.
                 if (request.TeamId is { } teamId && (await teams.ListAsync([teamId], ct)).SingleOrDefault()?.Inbox != chat.Inbox)

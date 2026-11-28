@@ -187,6 +187,10 @@ public sealed class UniqueKeyRaceTests(ApiFactory factory)
         public Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> ListPermissionsByRoleAsync(
             IReadOnlyCollection<Guid> roleIds, CancellationToken cancellationToken) =>
             inner.ListPermissionsByRoleAsync(roleIds, cancellationToken);
+
+        public Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> ListActiveUsersOrganizationRoleIdsByRoleAsync(
+            Guid roleId, CancellationToken cancellationToken) =>
+            inner.ListActiveUsersOrganizationRoleIdsByRoleAsync(roleId, cancellationToken);
     }
 
     private sealed class GatedPublicPageRepository(IPublicPageRepository inner, BothArrived gate)

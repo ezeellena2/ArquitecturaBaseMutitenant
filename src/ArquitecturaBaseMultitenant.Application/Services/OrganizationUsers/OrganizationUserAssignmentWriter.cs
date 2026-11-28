@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Organization;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Companies;
 using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
@@ -20,7 +21,8 @@ internal sealed class OrganizationUserAssignmentWriter(
     OrganizationDelegationGuard delegation,
     IRoleAssignmentRepository assignments,
     ICompanyMembershipRepository companyMemberships,
-    IMemberRepository members)
+    IMemberRepository members,
+    IEnumerable<IMemberAccessObserver>? accessObservers = null)
 {
     internal async Task<Result<DesiredOrganizationUserAssignments>> ValidateAsync(
         IReadOnlyCollection<Guid> roleIds, IReadOnlyCollection<InviteCompanyRolesRequest> requestedCompanies,
@@ -58,6 +60,7 @@ internal sealed class OrganizationUserAssignmentWriter(
 
         var desiredAssignments = new List<RoleAssignment>();
         var desiredPermissions = new Dictionary<(Guid RoleId, Guid? CompanyId), IReadOnlyCollection<string>>();
+        var companyPermissions = new List<IReadOnlyCollection<string>>();
         var organizationAssignments = await RecheckAsync(memberId, desired.OrganizationRoles, null,
             cancellationToken);
         if (organizationAssignments.IsFailure) return organizationAssignments.Error;
@@ -67,6 +70,7 @@ internal sealed class OrganizationUserAssignmentWriter(
             var companyAssignments = await RecheckAsync(memberId, selection.Roles, companyId, cancellationToken);
             if (companyAssignments.IsFailure) return companyAssignments.Error;
             Collect(companyAssignments.Value);
+            companyPermissions.AddRange(companyAssignments.Value.Select(item => item.Permissions));
         }
 
         var inactiveCompanyIds = snapshot.CompanyMemberships
@@ -109,6 +113,9 @@ internal sealed class OrganizationUserAssignmentWriter(
             membership.SetStatus(CompanyMembershipStatus.Inactive);
             companyMemberships.MarkUpdated(membership);
         }
+        if (member.Status == MemberStatus.Active && member.UserId is { } activeUserId)
+            await NotifyAccessChangedAsync(activeUserId,
+                EffectiveOrganizationPermissions(organizationAssignments.Value, companyPermissions), cancellationToken);
         return Result.Success();
 
         void Collect(IEnumerable<(RoleAssignment Assignment, IReadOnlyCollection<string> Permissions)> rechecked)
@@ -119,6 +126,26 @@ internal sealed class OrganizationUserAssignmentWriter(
                 desiredPermissions[AssignmentKey(assignment)] = permissions;
             }
         }
+    }
+
+    internal async Task NotifyAccessChangedAsync(Guid userId, IReadOnlyCollection<string> effectivePermissions,
+        CancellationToken cancellationToken)
+    {
+        foreach (var observer in accessObservers ?? [])
+            await observer.AccessChangedAsync(userId, effectivePermissions, cancellationToken);
+    }
+
+    private static IReadOnlyCollection<string> EffectiveOrganizationPermissions(
+        IEnumerable<(RoleAssignment Assignment, IReadOnlyCollection<string> Permissions)> organizationRoles,
+        IEnumerable<IReadOnlyCollection<string>> companyRoles)
+    {
+        var granted = new HashSet<string>(
+            Permissions.Inclusions.Effective(organizationRoles.SelectMany(item => item.Permissions)),
+            StringComparer.Ordinal);
+        foreach (var permissions in companyRoles)
+            granted.UnionWith(Permissions.Inclusions.Effective(permissions)
+                .Intersect(Permissions.OrganizationProjectedFromCompany, StringComparer.Ordinal));
+        return [.. granted];
     }
 
     internal void Clear(OrganizationUserAssignmentSnapshot snapshot)
