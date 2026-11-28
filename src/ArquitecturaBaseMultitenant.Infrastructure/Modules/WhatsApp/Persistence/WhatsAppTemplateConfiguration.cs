@@ -52,6 +52,7 @@ internal static class WhatsAppTemplateMapping
         builder.Property(value => value.MetaLanguage).HasMaxLength(TextLimits.ShortCode).IsRequired();
         builder.Property(value => value.Category).HasConversion<string>().HasMaxLength(TextLimits.ShortName);
         builder.Property(value => value.HasUnsubscribeButton);
+        builder.Ignore(value => value.SendsUnsubscribeButton);
         builder.Property(value => value.Body).HasMaxLength(WhatsAppTextLimits.TemplateBody).IsRequired();
         builder.Property<List<WhatsAppTemplateVariable>>("_variables").HasColumnName("Variables").HasColumnType("jsonb").IsRequired()
             .HasConversion(value => JsonSerializer.Serialize(value, Json), value => JsonSerializer.Deserialize<List<WhatsAppTemplateVariable>>(value, Json) ?? new(),

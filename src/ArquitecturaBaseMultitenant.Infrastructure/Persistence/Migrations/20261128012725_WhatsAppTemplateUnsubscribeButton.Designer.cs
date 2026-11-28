@@ -4074,7 +4074,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<bool>("HasUnsubscribeButton")
+                    b.Property<bool?>("HasUnsubscribeButton")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Language")
@@ -5253,7 +5253,7 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("uuid");
 
-                    b.Property<bool>("HasUnsubscribeButton")
+                    b.Property<bool?>("HasUnsubscribeButton")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Language")

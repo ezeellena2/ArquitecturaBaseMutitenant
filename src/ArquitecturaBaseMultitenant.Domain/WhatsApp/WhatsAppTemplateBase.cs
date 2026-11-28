@@ -20,8 +20,13 @@ public abstract partial class WhatsAppTemplateBase : Entity, IVersioned, IAudita
     public string Language { get; private set; } = string.Empty;
     public string MetaLanguage { get; private set; } = string.Empty;
     public WhatsAppTemplateCategory Category { get; private set; }
-    /// <summary>Si se mandó a Meta con el botón «No recibir más» (al crearse como Marketing): no cambia si Meta la recategoriza.</summary>
-    public bool HasUnsubscribeButton { get; private set; }
+    /// <summary>
+    /// Si se mandó a Meta con el botón «No recibir más» (al crearse como Marketing): no cambia si Meta la recategoriza. Null en
+    /// una fila que creó la versión anterior mientras convivían en un despliegue (ADR 0060), que no conoce la columna.
+    /// </summary>
+    public bool? HasUnsubscribeButton { get; private set; }
+    /// <summary>Lo que decide el envío: lo guardado o, si la fila no lo sabe, la categoría con la que se creó, como esa versión.</summary>
+    public bool SendsUnsubscribeButton => HasUnsubscribeButton ?? Category == WhatsAppTemplateCategory.Marketing;
     public string Body { get; private set; } = string.Empty;
     public IReadOnlyList<WhatsAppTemplateVariable> Variables => _variables.AsReadOnly();
     public DateTime CreatedAtUtc { get; private set; }

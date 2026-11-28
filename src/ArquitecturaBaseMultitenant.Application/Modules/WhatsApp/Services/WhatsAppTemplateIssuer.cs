@@ -19,7 +19,7 @@ internal sealed class WhatsAppTemplateIssuer(IWhatsAppChannelReader channels, IW
         if (accounts.Count == 0) return WhatsAppErrors.TemplateNumberRequired;
         var submission = new WhatsAppTemplateSubmission(template.MetaName, template.MetaLanguage, template.Category, template.Body,
             [.. template.Variables.Select(variable => variable.Example)],
-            template.HasUnsubscribeButton ? WhatsAppTexts.Get("Template.Unsubscribe.Button", template.Language) : null);
+            template.SendsUnsubscribeButton ? WhatsAppTexts.Get("Template.Unsubscribe.Button", template.Language) : null);
         var issued = new List<WhatsAppIssuedTemplate>();
         Error? first = null;
         foreach (var account in accounts)

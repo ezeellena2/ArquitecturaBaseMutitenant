@@ -81,6 +81,16 @@ public sealed class WhatsAppTemplateUnsubscribeButtonMigrationTests
         await migrator.MigrateAsync(cancellationToken: ct);
         Assert.False(db.Database.HasPendingModelChanges());
 
+        // Mientras conviven, la versión anterior crea una Marketing sin conocer la columna: queda en null, sin valor por defecto
+        // que la deje sin botón, y se lee por la categoría con la que se creó (ADR 0060).
+        var coexistingMarketingId = Guid.CreateVersion7();
+        Assert.Equal(1, await RunAsync("""
+            INSERT INTO tenant."WhatsAppTemplates" ("Id", "TenantId", "Variables", "Name", "MetaName", "Language", "MetaLanguage", "Category", "Body", "CreatedAtUtc")
+            VALUES (@id, @tenant, '[]'::jsonb, 'Promo en convivencia', 'promo_convivencia', 'es-AR', 'es_AR', 'Marketing', 'Promo en convivencia', now())
+            """, inTenant: true, coexistingMarketingId));
+        Assert.Equal(0, await RunAsync("""UPDATE tenant."WhatsAppTemplates" SET "Body" = "Body" WHERE "Id" = @id AND "HasUnsubscribeButton" IS NOT NULL""",
+            inTenant: true, coexistingMarketingId));
+
         // Meta recategoriza la Utility a Marketing y la Marketing a Utility: el botón sigue lo guardado al crearse.
         var wabaId = "waba-migration-" + Guid.NewGuid().ToString("N")[..8];
         Assert.Equal(1, await RunAsync("""
@@ -108,6 +118,10 @@ public sealed class WhatsAppTemplateUnsubscribeButtonMigrationTests
             var recategorizedMarketing = await reader.FindAsync(platform: false, marketingId, ct);
             Assert.NotNull(recategorizedMarketing);
             Assert.Equal((WhatsAppTemplateCategory.Utility, true), (recategorizedMarketing.Category, recategorizedMarketing.HasUnsubscribeButton));
+
+            var coexistingMarketing = await reader.FindAsync(platform: false, coexistingMarketingId, ct);
+            Assert.NotNull(coexistingMarketing);
+            Assert.True(coexistingMarketing.HasUnsubscribeButton);
         }
 
         async Task AssertFlagsAsync()

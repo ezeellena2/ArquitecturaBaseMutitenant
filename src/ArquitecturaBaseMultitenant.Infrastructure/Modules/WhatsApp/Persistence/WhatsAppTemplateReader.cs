@@ -95,7 +95,8 @@ internal sealed class WhatsAppTemplateReader(ApplicationDbContext context, ITena
             MetaLanguage = template.MetaLanguage,
             Category = states.Where(state => state.MetaName == template.MetaName && state.MetaLanguage == template.MetaLanguage)
                 .OrderBy(state => state.WabaId).Select(state => (WhatsAppTemplateCategory?)state.Category).FirstOrDefault() ?? template.Category,
-            HasUnsubscribeButton = template.HasUnsubscribeButton,
+            // Una fila de la versión anterior no lo sabe: vale la categoría con la que se creó, la que guardó (ADR 0060).
+            HasUnsubscribeButton = template.HasUnsubscribeButton ?? template.Category == WhatsAppTemplateCategory.Marketing,
             Body = template.Body,
             Variables = EF.Property<List<WhatsAppTemplateVariable>>(template, "_variables"),
             Status = states.Any(state => state.MetaName == template.MetaName && state.MetaLanguage == template.MetaLanguage
