@@ -87,16 +87,19 @@ Dejá lo mismo como comentario en el ticket, con el título «Análisis del <fec
   - sumá la etiqueta `descartado`;
   - movelo a «Done».
 - **Más adelante:** comentá el motivo, bajale la prioridad si corresponde y devolvelo a «To Do».
-- **Arreglar:**
-  1. **Lo que espera el plan:** si el plan de la tarea espera algo antes de arrancar, confirmá que ya se cumplió o que el usuario dijo que arranques igual.
-  2. **Programalo** con `AGENTS.md` y la tarea del plan, si hay una:
+- **Arreglar (flujo ticket por ticket + Claude Ship, pedido del usuario del 2026-11-28):**
+  1. **Un ticket por vez (sin tandas en paralelo sobre «To Do»):** se toma y se resuelve únicamente este ticket (salvo si el plan de una etapa explícitamente agrupa otros bajo la misma tarea y el usuario pide correrlo por el conductor de etapas).
+  2. **Lo que espera el plan:** si el plan de la tarea espera algo antes de arrancar, confirmá que ya se cumplió o que el usuario dijo que arranques igual.
+  3. **Programalo** con `AGENTS.md` y la tarea del plan, si hay una:
      - el test dirigido en rojo, el código y el test en verde;
      - el build de la solución; en el front, `npx tsc -b` y el lint de lo que tocaste;
-     - sin suites enteras: corren una vez, en la revisión.
-  3. **Commiteá** solo tus rutas: `git commit -m "<tipo>(<área>): <qué hace>" -m "Jira: KAN-<n>" -- <tus rutas>`. Si el ticket es de la tarea de un plan, sumá también `-m "Tarea: <clave>/<id>"`.
+     - sin suites enteras: corren en el PR / revisión.
   4. **Mostrá que ya no falla:** si lo mostraste en vivo, repetí la misma prueba sobre una copia nueva con el arreglo y mostrale al usuario que ahora anda. Apagá y borrá todo igual que en el paso 3.
-  5. **Cerrá tu parte:** comentá en el ticket qué cambió, los commits, el test y la prueba en vivo, y movelo a «In Review».
-  6. **No lo pasás a «Done»:** eso lo hace quien lo revisa.
+  5. **No commitees directo a `main` ni abras el siguiente ticket:** dejá los cambios verificados en el working tree (o, si el usuario pidió explícitamente commit en `main`, solo con `git commit -m "<tipo>(<área>): <qué hace>" -m "Jira: KAN-<n>" -- <tus rutas>`), comentá en Jira qué cambió y qué tests pasaron, y **avisale al usuario** con:
+     - la **lista exacta de archivos tocados** por este ticket;
+     - aviso explícito si en ese momento hay cambios sin commitear de otra sesión en el mismo repo (para que no se mezclen al armar la rama);
+     - confirmación de que está listo para que el usuario le pida a **Claude Code** crear la rama, abrir el PR y revisarlo con **Claude Ship**.
+  6. **No lo pasás a «Done»:** eso lo hace Claude tras revisar y aprobar el PR.
 
 ## Repaso rápido: /ticket repaso <filtro>
 
@@ -111,11 +114,11 @@ Sirve para limpiar el tablero de tickets que casi nunca pasan o que están mal a
    - la recomendación (arreglar, más adelante o descartar) y su motivo.
 4. **No cambies los tickets.** El usuario elige cuáles descartar, y recién ahí se comentan y se cierran con la etiqueta `descartado`.
 
-## Revisión, la hace otro agente
+## Revisión y entrega por PR (Claude Ship)
 
-La revisa alguien que no programó el arreglo:
-1. Lee el comentario del ticket y el diff de los commits con `Jira: KAN-<n>`.
-2. Corre el test dirigido.
-3. Si está bien, lo pasa a «Done» con un comentario. Si no, comenta lo que falta y lo devuelve a «In Progress».
+El flujo estándar para tickets individuales tomados de «To Do» (decisión del usuario del 2026-11-28) es:
+1. El agente que resuelve el ticket trabaja **únicamente ese ticket**, deja el código + test dirigido + build/lint en verde sin commitear en `main`, y avisa al usuario con la lista exacta de rutas tocadas.
+2. Con el aviso del usuario, **Claude Code** crea la rama con solo esas rutas (cuidando que no haya otra sesión editando `main` en ese mismo directorio, o usando su propia copia/worktree), arma el PR con **Claude Ship**, analiza/revisa el PR con los cambios realizados y pasa el ticket a «In Review».
+3. Si la revisión del PR está bien, se aprueba/mergea y el revisor lo pasa a «Done» con su comentario. Si encuentra algo, comenta lo que falta y devuelve el ticket a «In Progress».
 
-Las tareas de un plan con conductor se revisan juntas, con `etapa.js` en modo `cerrar`.
+Las tareas de un plan de etapa con conductor se revisan juntas con `etapa.js` en modo `cerrar`.
