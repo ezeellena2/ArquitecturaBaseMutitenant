@@ -16,7 +16,8 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 
 /// <summary>
 /// KAN-44 (B10): los mensajes de chat guardados antes del cambio quedan con <c>SentFromPhone = false</c> al migrar
-/// adelante, atrás y adelante, respetando la RLS forzada de <c>tenant."WhatsAppChatMessages"</c>.
+/// adelante, atrás y adelante, respetando la RLS forzada de <c>tenant."WhatsAppChatMessages"</c>; con un eco guardado, el
+/// Down se niega.
 /// </summary>
 public sealed class WhatsAppChatMessageSentFromPhoneMigrationTests
 {
@@ -85,6 +86,23 @@ public sealed class WhatsAppChatMessageSentFromPhoneMigrationTests
         Assert.Equal(columns, await ColumnsAsync());
         Assert.True(await RlsForcedAsync());
         await AssertFlagsFalseAsync();
+
+        // Con un eco del celular guardado, en cualquiera de las dos tablas, el Down se niega y deja todo como estaba.
+        foreach (var (table, id, inTenant) in new[]
+        {
+            ("tenant.\"WhatsAppChatMessages\"", orgMessageId, true),
+            ("platform.\"PlatformWhatsAppChatMessages\"", platformMessageId, false),
+        })
+        {
+            Assert.Equal(1, await RunAsync($"UPDATE {table} SET \"SentFromPhone\" = true WHERE \"Id\" = @id", inTenant, id));
+            var refused = await Assert.ThrowsAsync<PostgresException>(() => migrator.MigrateAsync(previous, ct));
+            Assert.Equal(PostgresErrorCodes.RaiseException, refused.SqlState);
+            Assert.Equal(columns, await ColumnsAsync());
+            Assert.True(await RlsForcedAsync());
+            Assert.Contains(current, await db.Database.GetAppliedMigrationsAsync(ct));
+            Assert.True(await FlagAsync(table, id, inTenant));
+            Assert.Equal(1, await RunAsync($"UPDATE {table} SET \"SentFromPhone\" = false WHERE \"Id\" = @id", inTenant, id));
+        }
 
         await migrator.MigrateAsync(previous, ct);
         Assert.Empty(await ColumnsAsync());
