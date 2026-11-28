@@ -37,6 +37,13 @@ internal sealed class FormCatalogFieldValuePolicy(DisplayFormatter formatter, IF
     /// </summary>
     public static FormCatalogFieldValue Read(FormCatalogField field, string text, DisplayFormatContext culture)
     {
+        ArgumentNullException.ThrowIfNull(culture);
+        return Read(field, text, culture.Profile);
+    }
+
+    /// <summary>Lo mismo con el perfil de la cultura ya cargado: el de quien lee un archivo (B7).</summary>
+    public static FormCatalogFieldValue Read(FormCatalogField field, string text, CultureProfile culture)
+    {
         ArgumentNullException.ThrowIfNull(field);
         ArgumentNullException.ThrowIfNull(text);
         ArgumentNullException.ThrowIfNull(culture);
@@ -53,12 +60,12 @@ internal sealed class FormCatalogFieldValuePolicy(DisplayFormatter formatter, IF
                     FormCatalogFieldType.DecimalNumber => FormCatalogValueType.DecimalNumber,
                     _ => FormCatalogValueType.Date,
                 };
-                var read = FormCatalogFileResolver.ReadValue(trimmed, valueType, culture.Profile.Entry);
+                var read = FormCatalogFileResolver.ReadValue(trimmed, valueType, culture.Entry);
                 if (read.Canonical is { } canonical) return field.Check(JsonSerializer.SerializeToElement(canonical));
                 return FormCatalogFieldValue.Failed(read.ErrorCode == FormCatalogImportErrors.ValueAmbiguousCode
                     ? FormCatalogFieldValueIssue.Ambiguous : FormCatalogFieldValueIssue.Invalid);
             case FormCatalogFieldType.YesNo:
-                return YesOrNo(trimmed, culture.Profile) is { } yes ? field.Check(JsonSerializer.SerializeToElement(yes))
+                return YesOrNo(trimmed, culture) is { } yes ? field.Check(JsonSerializer.SerializeToElement(yes))
                     : FormCatalogFieldValue.Failed(FormCatalogFieldValueIssue.Invalid);
             default:
                 return field.Check(JsonSerializer.SerializeToElement(trimmed));
@@ -93,6 +100,39 @@ internal sealed class FormCatalogFieldValuePolicy(DisplayFormatter formatter, IF
 
         return accepted;
     }
+
+    /// <summary>
+    /// El texto que se ve de un valor canónico, en la cultura del pedido: el número con sus miles y sus decimales, la fecha con su
+    /// patrón, «Sí» o «No», el texto y, en «De un catálogo», el de su opción, que da <paramref name="optionText"/> también si está
+    /// dada de baja. <c>null</c> si no se puede leer.
+    /// </summary>
+    public string? TextOf(FormCatalogField field, JsonElement value, DisplayFormatContext culture, Func<Guid, string?> optionText)
+    {
+        ArgumentNullException.ThrowIfNull(field);
+        ArgumentNullException.ThrowIfNull(culture);
+        ArgumentNullException.ThrowIfNull(optionText);
+        switch (field.Type)
+        {
+            case FormCatalogFieldType.Text when value.ValueKind == JsonValueKind.String:
+                return value.GetString();
+            case FormCatalogFieldType.YesNo when value.ValueKind is JsonValueKind.True or JsonValueKind.False:
+                return YesOrNoText(value.GetBoolean(), culture);
+            case FormCatalogFieldType.WholeNumber or FormCatalogFieldType.DecimalNumber when value.ValueKind == JsonValueKind.String
+                && decimal.TryParse(value.GetString(), NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var number):
+                var canonical = value.GetString()!;
+                var point = canonical.IndexOf('.', StringComparison.Ordinal);
+                return formatter.FormatDecimal(number, point < 0 ? 0 : canonical.Length - point - 1, culture);
+            case FormCatalogFieldType.Date when value.ValueKind == JsonValueKind.String && FormCatalogValueText.TryParseDate(value.GetString()!, out var date):
+                return formatter.FormatDate(date, culture);
+            case FormCatalogFieldType.Catalog when value.ValueKind == JsonValueKind.String && Guid.TryParse(value.GetString(), out var optionId):
+                return optionText(optionId);
+            default:
+                return null;
+        }
+    }
+
+    /// <summary>«Sí» o «No» en la cultura del pedido: lo que se ve, y se vuelve a leer, de un valor sí/no.</summary>
+    public string YesOrNoText(bool value, DisplayFormatContext culture) => formatter.FormatBoolean(value, culture);
 
     /// <summary>
     /// <see cref="FormCatalogErrors.FieldValueInvalid"/> de la opción <paramref name="index"/>, con su mensaje: el largo o el rango,

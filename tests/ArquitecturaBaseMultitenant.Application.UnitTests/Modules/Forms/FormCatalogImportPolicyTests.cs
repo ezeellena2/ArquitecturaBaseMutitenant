@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Interfaces.ReferenceData;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Models;
@@ -175,8 +176,132 @@ public sealed class FormCatalogImportPolicyTests
         Assert.Equal(("1899-12-31", (DateOnly?)null), (old.Text, old.Date));
     }
 
-    private static FormCatalogStoredItemRow Saved(string code, string text, int position, string? detail = null, bool isActive = true) =>
-        new(Guid.CreateVersion7(), code, FormCatalogItem.NormalizeCode(code), text, detail, null, position, isActive);
+    /// <summary>
+    /// E13: una columna de un campo que no vino conserva lo guardado y una vacía lo limpia; solo lo que cambia va al delta, y el
+    /// cambio dice el antes y el después como se leen, en la columna con el nombre del campo.
+    /// </summary>
+    [Fact]
+    public void A_field_column_that_did_not_come_keeps_its_values_and_an_empty_one_clears_them()
+    {
+        var cuit = Field("cuit", "CUIT", FormCatalogFieldType.Text, 0);
+        var plazo = Field("plazo_de_pago", "Plazo de pago", FormCatalogFieldType.WholeNumber, 1);
+        var saved = new[] { Saved("A", "Acme", 0, fields: """{"cuit":"30-1","plazo_de_pago":"30"}""") };
+        var fields = Fields([cuit, plazo]);
+
+        var plan = FormCatalogImportPolicy.Decide(FormCatalogValueType.Text, FormCatalogImportMode.Append,
+            FieldFile([plazo], Row(2, "A", "Acme", null, (plazo, FormCatalogFileFieldCell.Blank))), saved, 1, fields);
+        var same = FormCatalogImportPolicy.Decide(FormCatalogValueType.Text, FormCatalogImportMode.Append,
+            FieldFile([cuit, plazo], Row(2, "A", "Acme", null, (cuit, Typed(cuit, "30-1")), (plazo, Typed(plazo, "30")))), saved, 1, fields);
+
+        var write = Assert.Single(plan.Writes);
+        Assert.Equal([plazo.Id], write.Fields.Keys);
+        Assert.Null(write.Fields[plazo.Id]);
+        Assert.Equal([new FormCatalogImportChangedRow(2, "A", "Plazo de pago", "30", null)], plan.Lists.Changed);
+        Assert.Equal((1, 0), (same.Unchanged, same.Writes.Count));
+    }
+
+    /// <summary>
+    /// E13: una fuente se nombra por la identidad, el código o el texto de una opción activa; un texto que tienen dos activas no
+    /// nombra a ninguna, y su código sí. Una opción dada de baja no se elige, pero la guardada se conserva aunque la celda la nombre
+    /// por su texto (lección 1); si nombra una activa, pasa a esa. Al exportar, el texto que llevaría a otra va como su código.
+    /// </summary>
+    [Fact]
+    public void A_source_option_is_named_by_its_identity_code_or_unique_text_and_the_stored_deactivated_one_is_kept()
+    {
+        var north = SourceOption("N", "Norte", isActive: false);
+        var south = SourceOption("S", "Sur");
+        var centerOne = SourceOption("C1", "Centro");
+        var centerTwo = SourceOption("C2", "Centro");
+        var zona = Field("zona", "Zona", FormCatalogFieldType.Catalog, 0, source: Guid.CreateVersion7());
+        var options = new FormCatalogFieldOptions(new Dictionary<Guid, IReadOnlyList<FormCatalogStoredItemRow>>
+        {
+            [zona.SourceCatalogId!.Value] = [north, south, centerOne, centerTwo],
+        });
+        var stored = "{\"zona\":\"" + north.Id.ToString("D") + "\"}";
+        var saved = new[] { Saved("A", "Acme", 0, fields: stored), Saved("B", "Beta", 1, fields: stored) };
+        var file = FieldFile([zona],
+            Row(2, "A", "Acme", null, (zona, new FormCatalogFileFieldCell("norte", null))),
+            Row(3, "B", "Beta", null, (zona, new FormCatalogFileFieldCell("Sur", null))),
+            Row(4, "N1", "Uno", null, (zona, new FormCatalogFileFieldCell(south.Id.ToString("D"), null))),
+            Row(5, "N2", "Dos", null, (zona, new FormCatalogFileFieldCell("c2", null))),
+            Row(6, "N3", "Tres", null, (zona, new FormCatalogFileFieldCell("Centro", null))),
+            Row(7, "N4", "Cuatro", null, (zona, new FormCatalogFileFieldCell("Norte", null))));
+
+        var plan = FormCatalogImportPolicy.Decide(FormCatalogValueType.Text, FormCatalogImportMode.Append, file, saved, 2,
+            new FormCatalogImportFields([zona], options, (field, value) => options.TextOf(field.SourceCatalogId, Guid.Parse(value.GetString()!))));
+
+        Assert.Equal(1, plan.Unchanged);
+        Assert.Equal([new FormCatalogImportChangedRow(3, "B", "Zona", "Norte", "Sur")], plan.Lists.Changed);
+        Assert.Equal([south.Id.ToString("D"), south.Id.ToString("D"), centerTwo.Id.ToString("D")],
+            plan.Writes.Select(write => write.Fields[zona.Id]!.Value.GetString()));
+        Assert.Equal([new FormCatalogImportErrorRow(6, "Zona", FormCatalogErrors.FieldValueInvalidCode, null, null),
+            new FormCatalogImportErrorRow(7, "Zona", FormCatalogErrors.FieldValueInvalidCode, null, null)], plan.Lists.Errors);
+        Assert.Equal(("Norte", "Sur", "C1"), (options.ExportText(zona.SourceCatalogId, north.Id),
+            options.ExportText(zona.SourceCatalogId, south.Id), options.ExportText(zona.SourceCatalogId, centerOne.Id)));
+    }
+
+    /// <summary>
+    /// E13: un campo obligatorio necesita su valor en una opción activa, también nueva sin su columna, y un valor único no puede
+    /// repetirse ni en el archivo ni en las activas que quedan al agregar; al reemplazar, las que no vinieron se dan de baja y no
+    /// cuentan. Un valor ambiguo dice lo que se escribió, como el valor de la E12.
+    /// </summary>
+    [Fact]
+    public void A_required_field_needs_its_value_and_a_unique_one_cannot_repeat_in_the_file_or_in_the_options_that_stay()
+    {
+        var cuit = Field("cuit", "CUIT", FormCatalogFieldType.Text, 0, unique: true);
+        var plazo = Field("plazo", "Plazo", FormCatalogFieldType.DecimalNumber, 1, required: true);
+        var saved = new[]
+        {
+            Saved("A", "Acme", 0, fields: """{"cuit":"30-1","plazo":"30"}"""), Saved("K", "Kept", 1, fields: """{"cuit":"30-9","plazo":"5"}"""),
+        };
+
+        var missing = FormCatalogImportPolicy.Decide(FormCatalogValueType.Text, FormCatalogImportMode.Append, FieldFile([cuit],
+            Row(2, "A", "Acme", null, (cuit, Typed(cuit, "30-2"))), Row(3, "N1", "Uno", null, (cuit, Typed(cuit, "30-3")))), saved, 2,
+            Fields([cuit, plazo]));
+        var repeated = FormCatalogImportPolicy.Decide(FormCatalogValueType.Text, FormCatalogImportMode.Append, FieldFile([cuit, plazo],
+            Row(2, "N1", "Uno", null, (cuit, Typed(cuit, "30-3")), (plazo, Typed(plazo, "1"))),
+            Row(3, "N2", "Dos", null, (cuit, Typed(cuit, "30-3")), (plazo, Typed(plazo, "2"))),
+            Row(4, "N3", "Tres", null, (cuit, Typed(cuit, "30-9")), (plazo, Typed(plazo, "3")))), saved, 2, Fields([cuit, plazo]));
+        var replaced = FormCatalogImportPolicy.Decide(FormCatalogValueType.Text, FormCatalogImportMode.Replace, FieldFile([cuit, plazo],
+            Row(2, "N3", "Tres", null, (cuit, Typed(cuit, "30-9")), (plazo, Typed(plazo, "3"))),
+            Row(3, "N4", "Cuatro", null, (cuit, Typed(cuit, "30-4")),
+                (plazo, new FormCatalogFileFieldCell("1.500", FormCatalogFieldValue.Failed(FormCatalogFieldValueIssue.Ambiguous))))),
+            saved, 2, Fields([cuit, plazo]));
+
+        Assert.Equal([new FormCatalogImportErrorRow(3, "Plazo", FormCatalogErrors.FieldValueRequiredCode, null, null)], missing.Lists.Errors);
+        Assert.Equal([new FormCatalogImportChangedRow(2, "A", "CUIT", "30-1", "30-2")], missing.Lists.Changed);
+        Assert.Equal([
+            new FormCatalogImportErrorRow(3, "CUIT", FormCatalogErrors.FieldValueDuplicateCode, null, 2),
+            new FormCatalogImportErrorRow(4, "CUIT", FormCatalogErrors.FieldValueDuplicateCode, null, null),
+        ], repeated.Lists.Errors);
+        // Al reemplazar, «K» no vino y se da de baja: su CUIT queda libre.
+        Assert.Equal([new FormCatalogImportErrorRow(3, "Plazo", FormCatalogImportErrors.ValueAmbiguousCode, "1.500", null)], replaced.Lists.Errors);
+        Assert.Equal(["N3"], replaced.Lists.Added.Select(row => row.Code));
+    }
+
+    private static FormCatalogField Field(string key, string name, FormCatalogFieldType type, int position, bool required = false,
+        bool unique = false, Guid? source = null) =>
+        new(Guid.CreateVersion7(), key, name, type, source, required, unique, null, null, null, position, true);
+
+    private static FormCatalogImportFields Fields(IReadOnlyList<FormCatalogField> fields) =>
+        new(fields, FormCatalogFieldOptions.None, (_, value) => value.ValueKind == JsonValueKind.String ? value.GetString() : value.GetRawText());
+
+    private static FormCatalogFileFieldCell Typed(FormCatalogField field, string canonical) =>
+        new(canonical, field.Check(JsonSerializer.SerializeToElement(canonical)));
+
+    private static FormCatalogStoredItemRow SourceOption(string code, string text, bool isActive = true) =>
+        new(Guid.CreateVersion7(), code, FormCatalogItem.NormalizeCode(code), text, null, null, 0, isActive);
+
+    private static FormCatalogFileRow Row(int row, string? code, string? text, string? detail,
+        params (FormCatalogField Field, FormCatalogFileFieldCell Cell)[] cells) =>
+        new(row, code, text, detail, null, cells.ToDictionary(cell => cell.Field.Id, cell => cell.Cell));
+
+    private static FormCatalogFile FieldFile(IReadOnlyList<FormCatalogField> columns, params FormCatalogFileRow[] rows) =>
+        new("hash", null, true, true, false, false, rows, [.. columns.Select(field => field.Id)]);
+
+    private static FormCatalogStoredItemRow Saved(string code, string text, int position, string? detail = null, bool isActive = true,
+        string fields = "{}") =>
+        new(Guid.CreateVersion7(), code, FormCatalogItem.NormalizeCode(code), text, detail, null, position, isActive, fields);
 
     private static FormCatalogFileRow Row(int row, string? code, string? text, string? detail) => new(row, code, text, detail, null);
 

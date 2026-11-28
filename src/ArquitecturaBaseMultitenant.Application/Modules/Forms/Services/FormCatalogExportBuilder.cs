@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Models;
@@ -12,7 +13,9 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Forms.Services;
 /// «Valor (tipo)» en un catálogo tipado y Detalle. Entero y decimal van como números de Excel, con separador de miles y tantos
 /// decimales como tenga el valor, y la fecha, como fecha de Excel con el formato del idioma. Un número de más de 15 cifras
 /// significativas, que una celda numérica no guarda, y una fecha que Excel no cuenta bien (antes del 1 de marzo de 1900) van como
-/// su texto canónico, que se reimporta sin ambigüedad.
+/// su texto canónico, que se reimporta sin ambigüedad. Desde la E13, una columna por campo activo, con su nombre, antes del detalle
+/// (119): número y fecha como el valor, sí/no con su palabra y «De un catálogo» con el texto de la opción o, si ese texto llevaría a
+/// otra, con su código; así se vuelve a importar sin diferencias.
 /// </summary>
 internal static class FormCatalogExportBuilder
 {
@@ -20,11 +23,14 @@ internal static class FormCatalogExportBuilder
     private const int MaxSignificantDigits = 15;
     private static readonly DateOnly FirstExcelDate = new(1900, 3, 1);
 
-    /// <summary>Los encabezados; la plantilla dice en la nota de cada uno si es obligatorio.</summary>
-    public static FormCatalogSheetLayout Layout(FormCatalogValueType valueType, bool withNotes)
+    /// <summary>
+    /// Los encabezados, con los de los campos activos por su nombre (E13); la plantilla dice en la nota de cada uno si es
+    /// obligatorio. La plantilla y la exportación nombran igual las columnas (O14).
+    /// </summary>
+    public static FormCatalogSheetLayout Layout(FormCatalogValueType valueType, bool withNotes, IReadOnlyList<FormCatalogField>? fields = null)
     {
-        FormCatalogSheetHeader Header(string key, bool required) =>
-            new(FormsTexts.Get(key), withNotes ? FormsTexts.Get(required ? "CatalogImport.Required" : "CatalogImport.Optional") : null);
+        string? Note(bool required) => withNotes ? FormsTexts.Get(required ? "CatalogImport.Required" : "CatalogImport.Optional") : null;
+        FormCatalogSheetHeader Header(string key, bool required) => new(FormsTexts.Get(key), Note(required));
 
         var headers = new List<FormCatalogSheetHeader>
         {
@@ -32,18 +38,27 @@ internal static class FormCatalogExportBuilder
             Header("CatalogImport.Header.Text", required: true),
         };
         if (valueType != FormCatalogValueType.Text) headers.Add(Header("CatalogImport.Header.Value." + valueType, required: true));
+        headers.AddRange((fields ?? []).Select(field => new FormCatalogSheetHeader(field.Name, Note(field.Required))));
         headers.Add(Header("CatalogImport.Header.Detail", required: false));
         return new FormCatalogSheetLayout(FormsTexts.Get("CatalogImport.SheetName"), headers);
     }
 
-    public static IReadOnlyList<FormCatalogCell> Row(FormCatalogStoredItemRow item, FormCatalogValueType valueType, CultureProfile profile)
+    public static IReadOnlyList<FormCatalogCell> Row(FormCatalogStoredItemRow item, FormCatalogValueType valueType, CultureProfile profile,
+        FormCatalogExportFields? fields = null)
     {
         ArgumentNullException.ThrowIfNull(item);
-        return Cells(item.Code, item.Text, item.Value, item.Detail, valueType, profile);
+        ArgumentNullException.ThrowIfNull(profile);
+        IReadOnlyList<FormCatalogCell> fieldCells = [];
+        if (fields is { Fields.Count: > 0 })
+        {
+            var values = FormCatalogItem.FieldValuesFromJson(item.FieldValuesJson);
+            fieldCells = [.. fields.Fields.Select(field => FieldCell(field, values, fields, profile))];
+        }
+        return Cells(item.Code, item.Text, item.Value, item.Detail, valueType, profile, fieldCells);
     }
 
-    /// <summary>La fila de ejemplo de la plantilla, con un valor del tipo.</summary>
-    public static IReadOnlyList<FormCatalogCell> Example(FormCatalogValueType valueType, CultureProfile profile)
+    /// <summary>La fila de ejemplo de la plantilla, con un valor del tipo y las celdas de los campos vacías.</summary>
+    public static IReadOnlyList<FormCatalogCell> Example(FormCatalogValueType valueType, CultureProfile profile, int fieldCount = 0)
     {
         var value = valueType switch
         {
@@ -53,7 +68,7 @@ internal static class FormCatalogExportBuilder
             _ => null,
         };
         return Cells(FormsTexts.Get("CatalogImport.Example.Code"), FormsTexts.Get("CatalogImport.Example.Text"), value,
-            FormsTexts.Get("CatalogImport.Example.Detail"), valueType, profile);
+            FormsTexts.Get("CatalogImport.Example.Detail"), valueType, profile, [.. Enumerable.Repeat(FormCatalogCell.Blank, fieldCount)]);
     }
 
     /// <summary>El nombre del archivo: el del catálogo, sin los caracteres que un sistema de archivos no acepta.</summary>
@@ -83,8 +98,38 @@ internal static class FormCatalogExportBuilder
         return new FormCatalogCell(null, Number: number, Format: decimals == 0 ? "#,##0" : "#,##0." + new string('0', decimals));
     }
 
+    /// <summary>
+    /// La celda de un campo: el número y la fecha como el valor de la E12, sí/no con su palabra, una opción con su texto o su código
+    /// (<see cref="FormCatalogFieldOptions.ExportText"/>) y un texto como es; sin valor, vacía.
+    /// </summary>
+    private static FormCatalogCell FieldCell(FormCatalogField field, IReadOnlyDictionary<string, JsonElement> values,
+        FormCatalogExportFields fields, CultureProfile profile)
+    {
+        if (!values.TryGetValue(field.Key, out var value)) return FormCatalogCell.Blank;
+        var text = value.ValueKind == JsonValueKind.String ? value.GetString()! : null;
+        return field.Type switch
+        {
+            FormCatalogFieldType.WholeNumber when text is not null => ValueCell(text, FormCatalogValueType.WholeNumber, profile),
+            FormCatalogFieldType.DecimalNumber when text is not null => ValueCell(text, FormCatalogValueType.DecimalNumber, profile),
+            FormCatalogFieldType.Date when text is not null => ValueCell(text, FormCatalogValueType.Date, profile),
+            FormCatalogFieldType.YesNo when value.ValueKind is JsonValueKind.True or JsonValueKind.False =>
+                new FormCatalogCell(value.GetBoolean() ? fields.Yes : fields.No),
+            FormCatalogFieldType.Catalog when Guid.TryParse(text, out var optionId) => new FormCatalogCell(fields.Options.ExportText(field.SourceCatalogId, optionId)),
+            _ => new FormCatalogCell(text ?? value.GetRawText()),
+        };
+    }
+
     private static FormCatalogCell[] Cells(string code, string text, string? value, string? detail, FormCatalogValueType valueType,
-        CultureProfile profile) => valueType == FormCatalogValueType.Text
-        ? [new(code), new(text), new(detail)]
-        : [new(code), new(text), ValueCell(value, valueType, profile), new(detail)];
+        CultureProfile profile, IReadOnlyList<FormCatalogCell> fieldCells) => valueType == FormCatalogValueType.Text
+        ? [new(code), new(text), .. fieldCells, new(detail)]
+        : [new(code), new(text), ValueCell(value, valueType, profile), .. fieldCells, new(detail)];
+}
+
+/// <summary>
+/// Los campos activos que se exportan (E13), en su orden, con las opciones de sus fuentes y las palabras de sí y no en la cultura
+/// del pedido.
+/// </summary>
+internal sealed record FormCatalogExportFields(IReadOnlyList<FormCatalogField> Fields, FormCatalogFieldOptions Options, string Yes, string No)
+{
+    public override string ToString() => nameof(FormCatalogExportFields);
 }

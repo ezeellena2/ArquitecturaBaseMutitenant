@@ -135,6 +135,13 @@ public sealed class DisplayFormatter(
         return date.ToString(context.Profile.Entry.DatePattern, context.Profile.Culture);
     }
 
+    /// <summary>«Sí» o «No»: un sí/no con la palabra de la cultura, como el formato <c>boolean</c>.</summary>
+    public string FormatBoolean(bool value, DisplayFormatContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        return FormattingTexts.Get(value ? "Boolean.True" : "Boolean.False", context.Profile);
+    }
+
     /// <summary>
     /// El mes civil de <paramref name="month"/> (cualquier día suyo) como su rango, solo con números (decisión 205) y sin
     /// conversión por zona: «del 01/10/2026 al 31/10/2026» dentro de una oración y «01/10/2026 – 31/10/2026» como rótulo.
@@ -268,7 +275,7 @@ public sealed class DisplayFormatter(
             "taxId" => await FormatTaxIdAsync(input, cancellationToken),
             "email" => FormatEmail(input),
             "enum" => FormatEnum(input, profile),
-            "boolean" => FormattingTexts.Get(input.GetBoolean() ? "Boolean.True" : "Boolean.False", profile),
+            "boolean" => FormatBoolean(input.GetBoolean(), context),
             "empty" => FormattingTexts.Get("Empty.Value", profile),
             "text" => input.GetString() ?? string.Empty,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, "Unknown display format."),

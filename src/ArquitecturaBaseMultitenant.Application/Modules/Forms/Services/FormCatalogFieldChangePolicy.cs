@@ -1,10 +1,8 @@
-using System.Globalization;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Resources;
-using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Forms;
 using ArquitecturaBaseMultitenant.Domain.Results;
 
@@ -141,25 +139,8 @@ internal sealed class FormCatalogFieldChangePolicy(IFormCatalogRepository reposi
     }
 
     /// <summary>El texto que se ve de un valor canónico, en la cultura del pedido; <c>null</c> si no se puede leer.</summary>
-    private string? TextOf(FormCatalogField previous, JsonElement value, DisplayFormatContext culture, IReadOnlyDictionary<Guid, string> optionTexts)
-    {
-        switch (previous.Type)
-        {
-            case FormCatalogFieldType.YesNo when value.ValueKind is JsonValueKind.True or JsonValueKind.False:
-                return FormattingTexts.Get(value.GetBoolean() ? "Boolean.True" : "Boolean.False", culture.Profile);
-            case FormCatalogFieldType.WholeNumber or FormCatalogFieldType.DecimalNumber when value.ValueKind == JsonValueKind.String
-                && decimal.TryParse(value.GetString(), NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var number):
-                var canonical = value.GetString()!;
-                var point = canonical.IndexOf('.', StringComparison.Ordinal);
-                return formatter.FormatDecimal(number, point < 0 ? 0 : canonical.Length - point - 1, culture);
-            case FormCatalogFieldType.Date when value.ValueKind == JsonValueKind.String && FormCatalogValueText.TryParseDate(value.GetString()!, out var date):
-                return formatter.FormatDate(date, culture);
-            case FormCatalogFieldType.Catalog when OptionOf(value) is { } optionId:
-                return optionTexts.GetValueOrDefault(optionId);
-            default:
-                return null;
-        }
-    }
+    private string? TextOf(FormCatalogField previous, JsonElement value, DisplayFormatContext culture, IReadOnlyDictionary<Guid, string> optionTexts) =>
+        values.TextOf(previous, value, culture, optionTexts.GetValueOrDefault);
 
     /// <summary>
     /// El texto de las opciones de la fuente vieja que nombran los valores, también las dadas de baja: lo que queda al pasar a texto.

@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Services;
+using ArquitecturaBaseMultitenant.Application.Resources;
 using ArquitecturaBaseMultitenant.Domain.Forms;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.Forms;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
@@ -158,7 +159,7 @@ public sealed partial class FormCatalogSpreadsheetTests
 
         using var twelveMiBStream = new BoundedReadStream(12L * 1024 * 1024);
         var resolved = await new FormCatalogFileResolver(Spreadsheet, new JsonReferenceDataCatalog())
-            .ResolveAsync("catalogo.xlsx", twelveMiBStream, FormCatalogValueType.Text, Ct);
+            .ResolveAsync("catalogo.xlsx", twelveMiBStream, FormCatalogValueType.Text, [], Ct);
         Assert.True(resolved.IsFailure);
         Assert.Equal(FormCatalogImportErrors.FileInvalidCode, resolved.Error.Code);
         Assert.True(twelveMiBStream.TotalRead <= FormCatalogLimits.MaxFileBytes + 81_920,
@@ -275,7 +276,7 @@ public sealed partial class FormCatalogSpreadsheetTests
         }
 
         var file = await new FormCatalogFileResolver(Spreadsheet, cultures).ResolveAsync("Talles.xlsx", new MemoryStream(content),
-            valueType, Ct);
+            valueType, [], Ct);
         Assert.True(file.IsSuccess, file.IsFailure ? file.Error.Code : null);
         var plan = FormCatalogImportPolicy.Decide(valueType, FormCatalogImportMode.Replace, file.Value, saved, saved.Length);
 
@@ -317,7 +318,7 @@ public sealed partial class FormCatalogSpreadsheetTests
         Assert.Single(templateSheet.Rows);
 
         var file = await new FormCatalogFileResolver(Spreadsheet, cultures).ResolveAsync("plantilla.xlsx", new MemoryStream(template),
-            valueType, Ct);
+            valueType, [], Ct);
         Assert.True(file.IsSuccess, file.IsFailure ? file.Error.Code : null);
         var plan = FormCatalogImportPolicy.Decide(valueType, FormCatalogImportMode.Replace, file.Value, [], 0);
 
@@ -326,6 +327,111 @@ public sealed partial class FormCatalogSpreadsheetTests
         Assert.Single(plan.Lists.Added);
         Assert.Single(plan.Writes);
     }
+
+    /// <summary>
+    /// E13 (119): los campos se exportan como en pantalla, con su nombre, antes del detalle: número y fecha como el valor, Sí/No con
+    /// su palabra y la fuente con el texto de su opción, o con su código si el texto llevaría a otra (dos opciones activas «Centro»).
+    /// Subirlo de vuelta no da diferencias, también con una opción de la fuente dada de baja (lección 1), un texto vacío (lección 3)
+    /// y un campo «Detalle», que se llama como la columna fija.
+    /// </summary>
+    [Theory]
+    [InlineData("es-AR", FormCatalogValueType.Text)]
+    [InlineData("es-AR", FormCatalogValueType.Date)]
+    [InlineData("en-US", FormCatalogValueType.Text)]
+    [InlineData("en-US", FormCatalogValueType.DecimalNumber)]
+    public async Task What_is_exported_with_fields_imports_back_without_differences(string culture, FormCatalogValueType valueType)
+    {
+        using var scope = new CultureScope(culture);
+        var cultures = new JsonReferenceDataCatalog();
+        var profile = await new CultureProfiles(cultures).LoadAsync(culture, Ct);
+        var sourceId = Guid.CreateVersion7();
+        var (north, south, centerOne, centerTwo) = (Option("N", "Norte", false), Option("S", "Sur"), Option("C1", "Centro"), Option("C2", "Centro"));
+        var options = new FormCatalogFieldOptions(new Dictionary<Guid, IReadOnlyList<FormCatalogStoredItemRow>>
+        {
+            [sourceId] = [north, south, centerOne, centerTwo],
+        });
+        FormCatalogField[] fields =
+        [
+            Field("cuit", "CUIT", FormCatalogFieldType.Text, 0), Field("plazo", "Plazo de pago", FormCatalogFieldType.WholeNumber, 1),
+            Field("limite", "Límite", FormCatalogFieldType.DecimalNumber, 2), Field("alta", "Alta", FormCatalogFieldType.Date, 3),
+            Field("activo", "Activo", FormCatalogFieldType.YesNo, 4), Field("zona", "Zona", FormCatalogFieldType.Catalog, 5, sourceId),
+            Field("detalle", "Detalle", FormCatalogFieldType.Text, 6),
+        ];
+        string? value = valueType switch { FormCatalogValueType.Date => "2026-03-31", FormCatalogValueType.DecimalNumber => "2500.25", _ => null };
+        FormCatalogStoredItemRow[] saved =
+        [
+            Item("A", "Acme", 0, value, $$"""{"cuit":"30-1","plazo":"30","limite":"2500.25","alta":"2026-03-31","activo":true,"zona":"{{north.Id}}","detalle":"Hasta 40"}"""),
+            Item("B", "Beta", 1, value, $$"""{"cuit":"","plazo":"1234567890123456","limite":"-0.5","alta":"1899-12-31","activo":false,"zona":"{{centerOne.Id}}"}"""),
+            Item("C", "Sin valores", 2, value, "{}"),
+        ];
+        var export = new FormCatalogExportFields(fields, options, FormattingTexts.Get("Boolean.True", profile), FormattingTexts.Get("Boolean.False", profile));
+
+        var content = await Spreadsheet.WriteAsync(FormCatalogExportBuilder.Layout(valueType, withNotes: false, fields),
+            Rows(saved.Select(item => FormCatalogExportBuilder.Row(item, valueType, profile, export))), Ct);
+
+        var sheet = Spreadsheet.Read("Proveedores.xlsx", content, Limits);
+        var first = valueType == FormCatalogValueType.Text ? 2 : 3;
+        Assert.Equal(["CUIT", "Plazo de pago", "Límite", "Alta", "Activo", "Zona", "Detalle"], sheet.Headers.Skip(first).Take(fields.Length));
+        Assert.Equal([FormattingTexts.Get("Boolean.True", profile), "Norte", "Hasta 40"],
+            new[] { sheet.Rows[0].Cells[first + 4].Text, sheet.Rows[0].Cells[first + 5].Text, sheet.Rows[0].Cells[first + 6].Text });
+        Assert.Equal(("C1", 2500.25m, new DateOnly(2026, 3, 31)),
+            (sheet.Rows[1].Cells[first + 5].Text, sheet.Rows[0].Cells[first + 2].Number!.Value, sheet.Rows[0].Cells[first + 3].Date!.Value));
+
+        var file = await new FormCatalogFileResolver(Spreadsheet, cultures).ResolveAsync("Proveedores.xlsx", new MemoryStream(content),
+            valueType, fields, Ct);
+        Assert.True(file.IsSuccess, file.IsFailure ? file.Error.Code : null);
+        Assert.Equal(fields.Select(field => field.Id), file.Value.FieldColumns!);
+        Assert.True(file.Value.HasDetail);
+        var plan = FormCatalogImportPolicy.Decide(valueType, FormCatalogImportMode.Replace, file.Value, saved, saved.Length,
+            new FormCatalogImportFields(fields, options, (_, stored) => stored.ToString()));
+
+        Assert.Empty(plan.Lists.Errors);
+        Assert.Empty(plan.Lists.Changed);
+        Assert.Empty(plan.Writes);
+        Assert.Equal(saved.Length, plan.Unchanged);
+    }
+
+    /// <summary>
+    /// E13: el encabezado de un campo se reconoce por su nombre, sin acentos ni mayúsculas, o por su clave, como lo manda lo pegado,
+    /// y una clave exacta gana aunque sea la palabra de una columna fija («detalle»); una columna que no es de ningún campo no se lee.
+    /// Un número, una fecha y un sí/no escritos se leen con la cultura del pedido, y la fuente queda por resolver.
+    /// </summary>
+    [Fact]
+    public async Task A_field_header_is_recognized_by_its_name_or_its_key()
+    {
+        using var scope = new CultureScope("es-AR");
+        FormCatalogField[] fields =
+        [
+            Field("plazo_de_pago", "Plazo de pago", FormCatalogFieldType.WholeNumber, 0), Field("cuit", "CUIT", FormCatalogFieldType.Text, 1),
+            Field("zona", "Zona", FormCatalogFieldType.Catalog, 2, Guid.CreateVersion7()), Field("alta", "Fecha de alta", FormCatalogFieldType.Date, 3),
+            Field("activo", "Activo", FormCatalogFieldType.YesNo, 4), Field("detalle", "Notas", FormCatalogFieldType.Text, 5),
+        ];
+        var csv = Encoding.UTF8.GetBytes("Code;Text;plazo_de_pago;cuit;ZONA;fecha de ALTA;Activo;detalle;Detail;Rubro\r\n"
+            + "A;Acme;1.234,5;30-1;Norte;27/09/2026;si;Nota;Detalle fijo;Ferretería");
+
+        var file = await new FormCatalogFileResolver(Spreadsheet, new JsonReferenceDataCatalog()).ResolveAsync("pegado.csv",
+            new MemoryStream(csv), FormCatalogValueType.Text, fields, Ct);
+
+        Assert.True(file.IsSuccess, file.IsFailure ? file.Error.Code : null);
+        Assert.Equal(fields.Select(field => field.Id), file.Value.FieldColumns!);
+        var row = Assert.Single(file.Value.Rows);
+        Assert.Equal("Detalle fijo", row.Detail);
+        Assert.Equal(FormCatalogFieldValueIssue.Invalid, row.Fields![fields[0].Id].Value!.Issue);
+        Assert.Equal("30-1", row.Fields[fields[1].Id].Value!.Canonical!.Value.GetString());
+        Assert.Equal(("Norte", (FormCatalogFieldValue?)null), (row.Fields[fields[2].Id].Raw, row.Fields[fields[2].Id].Value));
+        Assert.Equal("2026-09-27", row.Fields[fields[3].Id].Value!.Canonical!.Value.GetString());
+        Assert.True(row.Fields[fields[4].Id].Value!.Canonical!.Value.GetBoolean());
+        Assert.Equal("Nota", row.Fields[fields[5].Id].Value!.Canonical!.Value.GetString());
+    }
+
+    private static FormCatalogField Field(string key, string name, FormCatalogFieldType type, int position, Guid? source = null) =>
+        new(Guid.CreateVersion7(), key, name, type, source, false, false, null, null, null, position, true);
+
+    private static FormCatalogStoredItemRow Option(string code, string text, bool isActive = true) =>
+        new(Guid.CreateVersion7(), code, FormCatalogItem.NormalizeCode(code), text, null, null, 0, isActive);
+
+    private static FormCatalogStoredItemRow Item(string code, string text, int position, string? value, string fields) =>
+        new(Guid.CreateVersion7(), code, FormCatalogItem.NormalizeCode(code), text, null, value, position, true, fields);
 
     private static FormCatalogStoredItemRow[] Saved(FormCatalogValueType valueType)
     {

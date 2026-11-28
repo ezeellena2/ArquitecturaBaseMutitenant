@@ -6,9 +6,11 @@ using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
+using ArquitecturaBaseMultitenant.Application.Modules.Forms.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Models;
+using ArquitecturaBaseMultitenant.Application.Modules.Forms.Services;
 using ArquitecturaBaseMultitenant.Domain.Forms;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
@@ -180,14 +182,15 @@ public sealed class FormCatalogImportServiceTests(ApiFactory factory)
 
     /// <summary>
     /// Lección 1 de la E13: dar de baja la opción de la fuente no frena al catálogo que la tiene como valor. «Proveedores» se sigue
-    /// guardando, importando y exportando, y conserva ese valor.
+    /// guardando, importando y exportando, y conserva ese valor: también cuando la columna «Zona» la nombra por su texto, mientras
+    /// otra fila pasa a una opción activa por su código. Lo exportado se vuelve a revisar sin diferencias.
     /// </summary>
     [Fact]
     public async Task A_deactivated_source_option_does_not_block_saving_importing_or_exporting_and_its_value_is_kept()
     {
         var organization = await OrganizationAsync();
         var zones = await CreateManualAsync(organization, "Zonas", [("N", "Norte"), ("S", "Sur")]);
-        var north = (await RowsAsync(organization, zones.Id))[0];
+        var (north, south) = ((await RowsAsync(organization, zones.Id))[0], (await RowsAsync(organization, zones.Id))[1]);
         var created = Value(await RunAsync<IFormCatalogService, Result<FormCatalogCreatedResponse>>(organization, service => service.CreateAsync(
             new CreateFormCatalogRequest("Proveedores", null, FormCatalogSource.Manual, null,
                 [new FormCatalogItemInput(null, "n0", "P1", "Uno", null, null, true)], null, null, null,
@@ -201,13 +204,59 @@ public sealed class FormCatalogImportServiceTests(ApiFactory factory)
 
         version = await SaveAsync(organization, created, version, [Edit(supplier with { Text = "Uno editado" }, null)]);
         version = await ApplyReviewedAsync(organization, created.Id, version, Csv(["P1;Uno importado", "P2;Dos"]), FormCatalogImportMode.Append);
+        version = await ApplyReviewedAsync(organization, created.Id, version,
+            Encoding.UTF8.GetBytes("Código;Texto;Zona\r\nP1;Uno importado;Norte\r\nP2;Dos;s"), FormCatalogImportMode.Append);
         var exported = Value(await RunAsync(organization, service => service.ExportAsync(created.Id, Ct)));
+        using var workbook = new MemoryStream();
+        await exported.Content.CopyToAsync(workbook, Ct);
         await exported.Content.DisposeAsync();
 
         var rows = await RowsAsync(organization, created.Id);
         Assert.Equal(("Uno importado", north.Id.ToString("D")), (rows[0].Text, rows[0].Fields[zona].GetString()));
+        Assert.Equal(south.Id.ToString("D"), rows[1].Fields[zona].GetString());
         Assert.Equal(2, rows.Count);
+        var again = Value(await RunAsync(organization, service => service.PreviewAsync(new FormCatalogImportPreviewRequest
+        {
+            CatalogId = created.Id, FileName = "Proveedores.xlsx", Content = new MemoryStream(workbook.ToArray()),
+            Mode = FormCatalogImportMode.Replace, Version = version,
+        }, Ct)));
+        Assert.Equal((2, 2, 0, 0), (again.RowsRead, again.Unchanged, again.Changed.TotalCount, again.Errors.TotalCount));
     }
+
+    /// <summary>
+    /// E13: la plantilla pedida con <c>catalogId</c> suma una columna por campo activo, con su nombre y antes del detalle, como la
+    /// exportación (O14); un catálogo que no es de la organización es <c>NotFound</c>.
+    /// </summary>
+    [Fact]
+    public async Task The_template_of_a_catalog_adds_its_field_columns_and_an_unknown_catalog_is_not_found()
+    {
+        var organization = await OrganizationAsync();
+        var created = Value(await RunAsync<IFormCatalogService, Result<FormCatalogCreatedResponse>>(organization, service => service.CreateAsync(
+            new CreateFormCatalogRequest("Proveedores", null, FormCatalogSource.Manual, null,
+                [new FormCatalogItemInput(null, "n0", "P1", "Uno", null, null, true)], null, null, null,
+                [new FormCatalogFieldInput(null, "cuit", null, "CUIT", FormCatalogFieldType.Text, null, false, false, null, null, null),
+                    new FormCatalogFieldInput(null, "plazo", null, "Plazo de pago", FormCatalogFieldType.WholeNumber, null, false, false, null, null, null)]),
+            Ct))).Catalog;
+
+        var template = Value(await RunAsync(organization, service => service.GetTemplateAsync(new FormCatalogTemplateRequest(null, created.Id), Ct)));
+        var exported = Value(await RunAsync(organization, service => service.ExportAsync(created.Id, Ct)));
+        var missing = await RunAsync(organization, service => service.GetTemplateAsync(new FormCatalogTemplateRequest(null, Guid.NewGuid()), Ct));
+
+        var headers = await HeadersAsync(organization, template);
+        Assert.Equal(["CUIT", "Plazo de pago"], headers.Skip(2).Take(2));
+        Assert.Equal(5, headers.Count);
+        Assert.Equal(headers, await HeadersAsync(organization, exported));
+        Assert.Equal(FormCatalogErrors.NotFoundCode, missing.Error.Code);
+    }
+
+    private Task<IReadOnlyList<string>> HeadersAsync(Organization organization, FormCatalogFileResponse file) =>
+        RunAsync<IFormCatalogSpreadsheet, IReadOnlyList<string>>(organization, async spreadsheet =>
+        {
+            await using var content = file.Content;
+            using var copy = new MemoryStream();
+            await content.CopyToAsync(copy, Ct);
+            return spreadsheet.Read(file.FileName, copy.ToArray(), FormCatalogFileResolver.Limits).Headers;
+        });
 
     private async Task<uint> SaveAsync(Organization organization, FormCatalogResponse catalog, uint version, FormCatalogItemInput[] items) =>
         Value(await RunAsync<IFormCatalogService, Result<FormCatalogUpdatedResponse>>(organization, service => service.UpdateAsync(
