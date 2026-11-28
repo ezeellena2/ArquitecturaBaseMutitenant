@@ -16,9 +16,17 @@ internal sealed class MessageQuotaGuard(IMessageQuotaRepository buckets, TimePro
     /// espera del primero promete un lugar que el otro todavía no da. No suma nada: eso lo hace <see cref="RecordAsync"/>,
     /// en la misma transacción.
     /// </summary>
-    internal async Task<MessageQuotaCheck> CheckAsync(IReadOnlyList<MessageQuotaLimit> limits, CancellationToken ct)
+    internal Task<MessageQuotaCheck> CheckAsync(IReadOnlyList<MessageQuotaLimit> limits, CancellationToken ct) =>
+        CheckAsync(limits, amount: 1, ct);
+
+    /// <summary>
+    /// Como <see cref="CheckAsync(IReadOnlyList{MessageQuotaLimit}, CancellationToken)"/>, para un lote entero de
+    /// <paramref name="amount"/> envíos: si no entran todos en la ventana, informa cuándo se liberan los lugares necesarios.
+    /// </summary>
+    internal async Task<MessageQuotaCheck> CheckAsync(IReadOnlyList<MessageQuotaLimit> limits, int amount, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(limits);
+        ArgumentOutOfRangeException.ThrowIfLessThan(amount, 1);
         await buckets.LockAsync([.. limits.Select(limit => limit.Key)], ct);
         // La hora se lee después del lock: la espera de otro pedido no corre la ventana.
         var nowUtc = clock.GetUtcNow().UtcDateTime;
@@ -30,21 +38,23 @@ internal sealed class MessageQuotaGuard(IMessageQuotaRepository buckets, TimePro
             var limit = limits[index];
             var hours = await buckets.ListAsync(limit.Key, MessageQuotaWindow.FirstHour(nowUtc), ct);
             counts[index] = MessageQuotaWindow.Count(hours, nowUtc);
-            if (MessageQuotaWindow.WaitSeconds(hours, limit.Limit, nowUtc) is { } wait && wait > retryAfterSeconds)
+            if (MessageQuotaWindow.WaitSeconds(hours, limit.Limit, nowUtc, amount) is { } wait && wait > retryAfterSeconds)
                 (exceeded, retryAfterSeconds) = (limit, wait);
         }
-        return new MessageQuotaCheck(exceeded, retryAfterSeconds, counts, limits, nowUtc);
+        return new MessageQuotaCheck(exceeded, retryAfterSeconds, counts, limits, nowUtc, amount);
     }
 
     /// <summary>
-    /// Suma uno a cada contador que cuenta este pedido, en la hora del control. Sus locks ya los tomó <see cref="CheckAsync"/>.
+    /// Suma la cantidad controlada a cada contador que cuenta este pedido, en la hora del control. Sus locks ya los tomó
+    /// <see cref="CheckAsync(IReadOnlyList{MessageQuotaLimit}, int, CancellationToken)"/>.
     /// </summary>
     internal async Task RecordAsync(MessageQuotaCheck check, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(check);
         if (check.Exceeded is not null) throw new InvalidOperationException("A full quota does not record.");
         var hourUtc = MessageQuotaWindow.HourOf(check.CheckedAtUtc);
-        foreach (var limit in check.Limits.Where(limit => limit.Records)) await buckets.IncrementAsync(limit.Key, hourUtc, ct);
+        foreach (var limit in check.Limits.Where(limit => limit.Records))
+            await buckets.IncrementAsync(limit.Key, hourUtc, check.Amount, ct);
     }
 }
 
@@ -55,9 +65,9 @@ internal sealed class MessageQuotaGuard(IMessageQuotaRepository buckets, TimePro
 internal sealed record MessageQuotaLimit(MessageQuotaKey Key, int Limit, bool Records = true);
 
 /// <summary>
-/// Lo que vio <see cref="MessageQuotaGuard.CheckAsync"/>: el tope lleno que libera lugar más tarde con los segundos de
-/// espera, o ninguno; lo que contaba cada tope antes de este pedido y los topes, en el orden pedido. <see cref="MessageQuotaGuard.RecordAsync"/>
-/// suma los que cuentan.
+/// Lo que vio <see cref="MessageQuotaGuard.CheckAsync(IReadOnlyList{MessageQuotaLimit}, int, CancellationToken)"/>: el tope
+/// lleno que libera lugar más tarde con los segundos de espera, o ninguno; lo que contaba cada tope antes de este pedido,
+/// los topes en el orden pedido y cuántos envíos se controlaron. <see cref="MessageQuotaGuard.RecordAsync"/> suma los que cuentan.
 /// </summary>
 internal sealed record MessageQuotaCheck(MessageQuotaLimit? Exceeded, int RetryAfterSeconds, IReadOnlyList<int> Counts,
-    IReadOnlyList<MessageQuotaLimit> Limits, DateTime CheckedAtUtc);
+    IReadOnlyList<MessageQuotaLimit> Limits, DateTime CheckedAtUtc, int Amount = 1);

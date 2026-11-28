@@ -54,4 +54,21 @@ public sealed class MessageQuotaWindowTests
         Assert.True(MessageQuotaWindow.PurgeBefore(Now) < ThisHour.AddHours(-24));
         Assert.Throws<ArgumentException>(() => MessageQuotaWindow.HourOf(DateTime.SpecifyKind(Now, DateTimeKind.Local)));
     }
+
+    [Fact]
+    public void A_batch_waits_until_enough_hours_leave_or_a_full_window_when_it_exceeds_the_limit()
+    {
+        MessageQuotaHour[] hours = [new(ThisHour.AddHours(-24), 2), new(ThisHour.AddHours(-3), 3), new(ThisHour, 1)];
+
+        // Con 6 usados y tope 7: 1 entra; 2 necesitan que salgan los 2 de ayer a las 10:00 (45 min).
+        Assert.Null(MessageQuotaWindow.WaitSeconds(hours, 7, Now, amount: 1));
+        Assert.Equal(45 * 60, MessageQuotaWindow.WaitSeconds(hours, 7, Now, amount: 2));
+        // 4 necesitan que salgan también los 3 de hoy a las 07:00: mañana a las 08:00.
+        Assert.Equal((21 * 60 + 45) * 60, MessageQuotaWindow.WaitSeconds(hours, 7, Now, amount: 4));
+        // 7 necesitan la ventana vacía: mañana a las 11:00.
+        Assert.Equal((24 * 60 + 45) * 60, MessageQuotaWindow.WaitSeconds(hours, 7, Now, amount: 7));
+        // Un lote mayor al tope diario entero no entra ni con la ventana vacía: espera la ventana completa sin fallar.
+        Assert.Equal((24 * 60 + 45) * 60, MessageQuotaWindow.WaitSeconds(hours, 7, Now, amount: 8));
+        Assert.Equal((24 * 60 + 45) * 60, MessageQuotaWindow.WaitSeconds([], 7, Now, amount: 8));
+    }
 }

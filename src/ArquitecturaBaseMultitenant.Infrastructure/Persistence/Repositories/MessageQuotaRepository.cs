@@ -31,16 +31,17 @@ internal sealed class MessageQuotaRepository(ApplicationDbContext context) : IMe
         return [.. rows.Select(row => new MessageQuotaHour(row.HourUtc, row.Count))];
     }
 
-    public Task IncrementAsync(MessageQuotaKey key, DateTime hourUtc, CancellationToken cancellationToken)
+    public Task IncrementAsync(MessageQuotaKey key, DateTime hourUtc, int amount, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(key);
         if (hourUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("The hour must be UTC.", nameof(hourUtc));
+        ArgumentOutOfRangeException.ThrowIfLessThan(amount, 1);
         context.RequireTransaction();
         var scope = key.Scope.ToString();
         return context.Database.ExecuteSqlAsync($"""
             INSERT INTO identity."MessageQuotaBuckets" ("Scope", "KeyHash", "HourUtc", "Count")
-            VALUES ({scope}, {key.KeyHash}, {hourUtc}, 1)
-            ON CONFLICT ("Scope", "KeyHash", "HourUtc") DO UPDATE SET "Count" = identity."MessageQuotaBuckets"."Count" + 1
+            VALUES ({scope}, {key.KeyHash}, {hourUtc}, {amount})
+            ON CONFLICT ("Scope", "KeyHash", "HourUtc") DO UPDATE SET "Count" = identity."MessageQuotaBuckets"."Count" + {amount}
             """, cancellationToken);
     }
 }

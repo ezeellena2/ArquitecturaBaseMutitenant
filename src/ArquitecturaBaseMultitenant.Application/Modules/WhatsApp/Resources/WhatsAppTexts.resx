@@ -318,6 +318,9 @@
   <data name="WhatsApp.PhoneImport.ConsentRequired" xml:space="preserve">
     <value>Confirmá que la persona aceptó recibir mensajes por WhatsApp.</value>
   </data>
+  <data name="WhatsApp.PhoneImport.DailyLimit" xml:space="preserve">
+    <value>Por ahora no se pueden mandar más invitaciones por WhatsApp, y no se guardó nada. Probá de nuevo más tarde.</value>
+  </data>
   <data name="WhatsApp.Validation.Required" xml:space="preserve">
     <value>Completá este dato.</value>
   </data>

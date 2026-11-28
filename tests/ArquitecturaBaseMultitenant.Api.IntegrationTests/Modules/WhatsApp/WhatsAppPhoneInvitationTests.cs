@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Security.Claims;
 using System.Text.Json;
@@ -15,6 +16,7 @@ using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -241,14 +243,98 @@ public sealed class WhatsAppPhoneInvitationTests(ApiFactory factory) : IClassFix
         finally { await SetPlatformStatusAsync(host.Services, "PaymentMissing", "Connected"); }
     }
 
-    private WebApplicationFactory<Program> Host() => WhatsAppAttentionJourney.Host(factory, new FakeGraph(), settings: new Dictionary<string, string>
+    /// <summary>B9 (decisión 1 de los arreglos de la revisión): tope diario por organización y global de «Cargar teléfonos».</summary>
+    [Fact]
+    public async Task A_batch_over_the_daily_limit_answers_429_without_saving_or_enqueuing_and_another_organization_still_imports()
     {
-        ["WhatsApp:PhoneNumberId"] = "phone-invitations",
-        ["WhatsApp:AccessToken"] = "fixture-token",
-        ["WhatsApp:AllowedCountries:0"] = "AR",
-        ["Authentication:LoginCode:ResendCooldownSeconds"] = "0",
-        ["Authentication:LoginCode:MaxRequestsPerWindow"] = "100",
-    }).WithWebHostBuilder(builder => builder.ConfigureTestServices(WhatsAppIdentityTestTransport.BlockExternalSender));
+        await using var host = Host(new Dictionary<string, string>
+        {
+            ["WhatsApp:Quotas:DailyInvitationLimitPerOrganization"] = "2",
+            ["WhatsApp:Quotas:DailyInvitationLimit"] = "3",
+        });
+        await ClearWhatsAppInvitationGlobalQuotaAsync(host.Services);
+        try
+        {
+            using var firstClient = WhatsAppAttentionJourney.Client(host);
+            var (_, firstTenantId) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, firstClient, Ct);
+            using var secondClient = WhatsAppAttentionJourney.Client(host);
+            var (_, secondTenantId) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, secondClient, Ct);
+            using var thirdClient = WhatsAppAttentionJourney.Client(host);
+            var (_, thirdTenantId) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, thirdClient, Ct);
+
+            // Primera organización: 1 invitación entra (1/2 de la org, 1/3 global).
+            var firstPhone = WhatsAppAttentionJourney.NewPhone();
+            using (var ok = await WhatsAppAttentionJourney.PostAsync(firstClient, Imports, Body(Input(firstPhone)), Ct))
+                Assert.Equal(HttpStatusCode.OK, ok.StatusCode);
+            Assert.Single(await InvitationsAsync(host.Services, firstTenantId));
+            Assert.Single(await InvitationMessagesAsync(host.Services, [firstPhone]));
+
+            // Primera organización: una carga de 2 pasa su tope (1 + 2 > 2) → 429 con retryAfter y Retry-After, sin guardar ni encolar nada.
+            var rejectedFirst = WhatsAppAttentionJourney.NewPhone();
+            var rejectedSecond = WhatsAppAttentionJourney.NewPhone();
+            using (var limited = await WhatsAppAttentionJourney.PostAsync(firstClient, Imports,
+                       Body(Input(rejectedFirst), Input(rejectedSecond)), Ct))
+                await AssertDailyLimitAsync(limited);
+            Assert.Empty(await InvitationMessagesAsync(host.Services, [rejectedFirst, rejectedSecond]));
+            Assert.Single(await InvitationsAsync(host.Services, firstTenantId));
+
+            // Otra organización sigue entrando con su propio tope hasta completar el global (1 + 2 = 3).
+            var secondPhone1 = WhatsAppAttentionJourney.NewPhone();
+            var secondPhone2 = WhatsAppAttentionJourney.NewPhone();
+            using (var secondOk = await WhatsAppAttentionJourney.PostAsync(secondClient, Imports,
+                       Body(Input(secondPhone1), Input(secondPhone2)), Ct))
+                Assert.Equal(HttpStatusCode.OK, secondOk.StatusCode);
+            Assert.Equal(2, (await InvitationsAsync(host.Services, secondTenantId)).Count);
+            Assert.Equal(2, (await InvitationMessagesAsync(host.Services, [secondPhone1, secondPhone2])).Count);
+
+            // Tercera organización: el global ya está en 3/3 → 429 sin guardar ni encolar nada.
+            var thirdPhone = WhatsAppAttentionJourney.NewPhone();
+            using (var globalLimited = await WhatsAppAttentionJourney.PostAsync(thirdClient, Imports, Body(Input(thirdPhone)), Ct))
+                await AssertDailyLimitAsync(globalLimited);
+            Assert.Empty(await InvitationMessagesAsync(host.Services, [thirdPhone]));
+            Assert.Empty(await InvitationsAsync(host.Services, thirdTenantId));
+        }
+        finally
+        {
+            await ClearWhatsAppInvitationGlobalQuotaAsync(host.Services);
+        }
+    }
+
+    private WebApplicationFactory<Program> Host(IReadOnlyDictionary<string, string>? extraSettings = null)
+    {
+        var settings = new Dictionary<string, string>
+        {
+            ["WhatsApp:PhoneNumberId"] = "phone-invitations",
+            ["WhatsApp:AccessToken"] = "fixture-token",
+            ["WhatsApp:AllowedCountries:0"] = "AR",
+            ["Authentication:LoginCode:ResendCooldownSeconds"] = "0",
+            ["Authentication:LoginCode:MaxRequestsPerWindow"] = "100",
+        };
+        if (extraSettings is not null)
+            foreach (var (key, value) in extraSettings) settings[key] = value;
+        return WhatsAppAttentionJourney.Host(factory, new FakeGraph(), settings: settings)
+            .WithWebHostBuilder(builder => builder.ConfigureTestServices(WhatsAppIdentityTestTransport.BlockExternalSender));
+    }
+
+    private static async Task AssertDailyLimitAsync(HttpResponseMessage response)
+    {
+        Assert.Equal(HttpStatusCode.TooManyRequests, response.StatusCode);
+        var problem = await WhatsAppAttentionJourney.JsonAsync(response, Ct);
+        Assert.Equal(WhatsAppErrors.PhoneImportDailyLimitCode, problem.GetProperty("code").GetString());
+        Assert.Equal("Por ahora no se pueden mandar más invitaciones por WhatsApp, y no se guardó nada. Probá de nuevo más tarde.",
+            problem.GetProperty("detail").GetString());
+        var seconds = problem.GetProperty(WhatsAppErrors.RetryAfterKey).GetInt32();
+        Assert.InRange(seconds, 24 * 3600, 25 * 3600);
+        Assert.Equal(seconds.ToString(CultureInfo.InvariantCulture), Assert.Single(response.Headers.GetValues("Retry-After")));
+    }
+
+    private static async Task ClearWhatsAppInvitationGlobalQuotaAsync(IServiceProvider services)
+    {
+        await using var scope = services.CreateAsyncScope();
+        var scopeName = MessageQuotaScope.WhatsAppInvitationGlobal.ToString();
+        await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Database.ExecuteSqlAsync(
+            $"""DELETE FROM identity."MessageQuotaBuckets" WHERE "Scope" = {scopeName}""", Ct);
+    }
 
     private static object Input(string phone) => new { country = "AR", number = phone };
     private static object Body(params object[] phones) =>

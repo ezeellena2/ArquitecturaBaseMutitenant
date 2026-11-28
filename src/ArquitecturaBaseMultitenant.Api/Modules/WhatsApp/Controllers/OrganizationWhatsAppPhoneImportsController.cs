@@ -44,6 +44,7 @@ public sealed class OrganizationWhatsAppPhoneImportsController(IWhatsAppPhoneImp
     [ProducesProblem(404)]
     [ProducesProblem(409)]
     [ProducesProblem(422)]
+    [ProducesProblem(429)]
     [ProducesProblem(500)]
     [ProducesProblem(503)]
     public async Task<IActionResult> Import([FromBody] WhatsAppPhoneImportHttpRequest request, CancellationToken cancellationToken) =>

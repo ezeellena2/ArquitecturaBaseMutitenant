@@ -23,9 +23,9 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// invitación guarda quién la marcó y cuándo (179).
 /// </summary>
 internal sealed class WhatsAppPhoneImportService(IRequestValidator validator, ICurrentUser currentUser,
-    WhatsAppPhoneImportResolver resolver, OrganizationUserAssignmentWriter assignments,
-    OrganizationUserInvitationWriter invitations, IUnitOfWork unitOfWork, TimeProvider clock,
-    ILogger<WhatsAppPhoneImportService> logger) : IWhatsAppPhoneImportService
+    ITenantContext tenantContext, WhatsAppPhoneImportResolver resolver, OrganizationUserAssignmentWriter assignments,
+    OrganizationUserInvitationWriter invitations, WhatsAppPhoneImportQuotaGuard quota, IUnitOfWork unitOfWork,
+    TimeProvider clock, ILogger<WhatsAppPhoneImportService> logger) : IWhatsAppPhoneImportService
 {
     public Task<Result<WhatsAppPhoneImportPreviewResponse>> PreviewAsync(WhatsAppPhoneImportRequest request, CancellationToken cancellationToken)
     {
@@ -53,20 +53,26 @@ internal sealed class WhatsAppPhoneImportService(IRequestValidator validator, IC
                 request.CompanyId is { } companyId ? [new InviteCompanyRolesRequest(companyId, request.RoleIds)] : [], cancellationToken);
             if (desired.IsFailure) return desired.Error;
             var rows = await resolver.ResolveAsync(request.Phones!, cancellationToken);
+            var toInvite = rows.Where(row => row.Response.Outcome == WhatsAppPhoneImportOutcome.Invite).ToArray();
             var consent = new InvitationConsent(inviterId, clock.GetUtcNow().UtcDateTime);
             try
             {
                 return await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
-                    foreach (var row in rows.Where(row => row.Response.Outcome == WhatsAppPhoneImportOutcome.Invite))
+                    foreach (var row in toInvite)
                     {
                         var issued = await invitations.InviteByPhoneAsync(row.Phone!, WhatsAppInvitationChannel.ChannelKey,
                             desired.Value, inviterId, consent, ct);
                         if (issued.IsFailure) return Result.Failure<WhatsAppPhoneImportResponse>(
                             issued.Error.Code == InvitationErrors.ChannelUnavailableCode ? InvitationErrors.ChannelUnavailableForNow() : issued.Error);
                     }
+                    if (toInvite.Length > 0)
+                    {
+                        var allowed = await quota.ReserveAsync(tenantContext.RequiredTenantId, toInvite.Length, ct);
+                        if (allowed.IsFailure) return Result.Failure<WhatsAppPhoneImportResponse>(allowed.Error);
+                    }
                     return new WhatsAppPhoneImportResponse(Count(rows, WhatsAppPhoneImportOutcome.AlreadyMember),
-                        Count(rows, WhatsAppPhoneImportOutcome.Invite), Count(rows, WhatsAppPhoneImportOutcome.Invalid));
+                        toInvite.Length, Count(rows, WhatsAppPhoneImportOutcome.Invalid));
                 }, CommitPolicy.OnSuccess, cancellationToken);
             }
             catch (ForeignKeyViolationException exception) when (exception.ConstraintName == ForeignKeys.RoleAssignmentRole)

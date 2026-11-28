@@ -1,3 +1,4 @@
+using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Configuration;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
@@ -85,6 +86,11 @@ public static class WhatsAppModule
         services.AddScoped<IWhatsAppBroadcastService, WhatsAppBroadcastService>();
         services.AddScoped<IWhatsAppPhoneImportService, WhatsAppPhoneImportService>();
         services.AddScoped<WhatsAppPhoneImportResolver>();
+        services.AddOptions<WhatsAppQuotaOptions>()
+            .BindConfiguration(WhatsAppQuotaOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddScoped<WhatsAppPhoneImportQuotaGuard>();
         services.AddScoped<IPersonalWhatsAppService, PersonalWhatsAppService>();
         return services;
     }

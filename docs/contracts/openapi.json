@@ -14123,6 +14123,70 @@
               }
             }
           },
+          "429": {
+            "description": "Too Many Requests; WhatsApp.PhoneImport.DailyLimit; Security.RateLimit.Exceeded",
+            "headers": {
+              "Retry-After": {
+                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                },
+                "examples": {
+                  "WhatsApp.PhoneImport.DailyLimit.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 429,
+                      "detail": "Por ahora no se pueden mandar más invitaciones por WhatsApp, y no se guardó nada. Probá de nuevo más tarde.",
+                      "code": "WhatsApp.PhoneImport.DailyLimit",
+                      "traceId": "example-trace-id",
+                      "retryAfter": 60
+                    }
+                  },
+                  "WhatsApp.PhoneImport.DailyLimit.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 429,
+                      "detail": "No more WhatsApp invitations can be sent for now, and nothing was saved. Try again later.",
+                      "code": "WhatsApp.PhoneImport.DailyLimit",
+                      "traceId": "example-trace-id",
+                      "retryAfter": 60
+                    }
+                  },
+                  "Security.RateLimit.Exceeded.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 429,
+                      "detail": "Hiciste muchos pedidos seguidos. Esperá un momento y volvé a intentar.",
+                      "code": "Security.RateLimit.Exceeded",
+                      "traceId": "example-trace-id",
+                      "retryAfter": 60
+                    }
+                  },
+                  "Security.RateLimit.Exceeded.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 429,
+                      "detail": "You made too many requests in a row. Wait a moment and try again.",
+                      "code": "Security.RateLimit.Exceeded",
+                      "traceId": "example-trace-id",
+                      "retryAfter": 60
+                    }
+                  }
+                }
+              }
+            }
+          },
           "500": {
             "description": "Internal Server Error",
             "content": {
@@ -14164,48 +14228,6 @@
                 }
               }
             }
-          },
-          "429": {
-            "description": "Security.RateLimit.Exceeded",
-            "headers": {
-              "Retry-After": {
-                "description": "Opcional: segundos iguales a retryAfter cuando la respuesta incluye esa metadata entera. Identity.Account.LockedOut no incluye plazo ni este encabezado.",
-                "schema": {
-                  "type": "integer"
-                }
-              }
-            },
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                },
-                "examples": {
-                  "Security.RateLimit.Exceeded.es": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Solicitud rechazada",
-                      "status": 429,
-                      "detail": "Hiciste muchos pedidos seguidos. Esperá un momento y volvé a intentar.",
-                      "code": "Security.RateLimit.Exceeded",
-                      "traceId": "example-trace-id",
-                      "retryAfter": 60
-                    }
-                  },
-                  "Security.RateLimit.Exceeded.en": {
-                    "value": {
-                      "type": "about:blank",
-                      "title": "Request rejected",
-                      "status": 429,
-                      "detail": "You made too many requests in a row. Wait a moment and try again.",
-                      "code": "Security.RateLimit.Exceeded",
-                      "traceId": "example-trace-id",
-                      "retryAfter": 60
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         "security": [
@@ -14220,6 +14242,13 @@
             "field": "consentConfirmed",
             "es": "Confirmá que la persona aceptó recibir mensajes por WhatsApp.",
             "en": "Confirm that the person agreed to receive WhatsApp messages."
+          },
+          {
+            "status": 429,
+            "code": "WhatsApp.PhoneImport.DailyLimit",
+            "field": null,
+            "es": "Por ahora no se pueden mandar más invitaciones por WhatsApp, y no se guardó nada. Probá de nuevo más tarde.",
+            "en": "No more WhatsApp invitations can be sent for now, and nothing was saved. Try again later."
           },
           {
             "status": 503,

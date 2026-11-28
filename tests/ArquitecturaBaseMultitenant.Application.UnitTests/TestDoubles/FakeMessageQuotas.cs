@@ -25,9 +25,10 @@ internal sealed class FakeMessageQuotaRepository : IMessageQuotaRepository
             .Where(pair => pair.Key.Scope == key.Scope && pair.Key.Key == key.KeyHash && pair.Key.Hour >= fromHourUtc)
             .Select(pair => new MessageQuotaHour(pair.Key.Hour, pair.Value))]);
 
-    public Task IncrementAsync(MessageQuotaKey key, DateTime hourUtc, CancellationToken cancellationToken)
+    public Task IncrementAsync(MessageQuotaKey key, DateTime hourUtc, int amount, CancellationToken cancellationToken)
     {
-        Counts[(key.Scope, key.KeyHash, hourUtc)] = Counts.GetValueOrDefault((key.Scope, key.KeyHash, hourUtc)) + 1;
+        ArgumentOutOfRangeException.ThrowIfLessThan(amount, 1);
+        Counts[(key.Scope, key.KeyHash, hourUtc)] = Counts.GetValueOrDefault((key.Scope, key.KeyHash, hourUtc)) + amount;
         return Task.CompletedTask;
     }
 }

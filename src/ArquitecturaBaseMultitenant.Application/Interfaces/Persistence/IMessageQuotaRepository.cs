@@ -15,8 +15,8 @@ public interface IMessageQuotaRepository
     Task<IReadOnlyList<MessageQuotaHour>> ListAsync(MessageQuotaKey key, DateTime fromHourUtc,
         CancellationToken cancellationToken);
 
-    /// <summary>Suma uno al contador en la hora <paramref name="hourUtc"/>.</summary>
-    Task IncrementAsync(MessageQuotaKey key, DateTime hourUtc, CancellationToken cancellationToken);
+    /// <summary>Suma <paramref name="amount"/> al contador en la hora <paramref name="hourUtc"/>.</summary>
+    Task IncrementAsync(MessageQuotaKey key, DateTime hourUtc, int amount, CancellationToken cancellationToken);
 }
 
 /// <summary>Un contador: qué cuenta y de quién, con la clave ya protegida por un HMAC.</summary>

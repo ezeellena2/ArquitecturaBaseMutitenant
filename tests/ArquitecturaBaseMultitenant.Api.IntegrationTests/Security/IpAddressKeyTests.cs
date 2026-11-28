@@ -55,7 +55,9 @@ public sealed class IpAddressKeyTests
 
         Assert.NotEqual(email.ForSubject(MessageQuotaScope.CodeAccount, id), email.ForSubject(MessageQuotaScope.Inviter, id));
         Assert.NotEqual(email.ForSubject(MessageQuotaScope.CodeAccount, id), email.ForSubject(MessageQuotaScope.WhatsAppCodeAccount, id));
+        Assert.NotEqual(email.ForSubject(MessageQuotaScope.Organization, id), email.ForSubject(MessageQuotaScope.WhatsAppInvitationOrganization, id));
         Assert.DoesNotContain(id.ToString(), email.ForSubject(MessageQuotaScope.Organization, id), StringComparison.OrdinalIgnoreCase);
         Assert.Throws<ArgumentOutOfRangeException>(() => email.ForSubject(MessageQuotaScope.Global, id));
+        Assert.Throws<ArgumentOutOfRangeException>(() => email.ForSubject(MessageQuotaScope.WhatsAppInvitationGlobal, id));
     }
 }

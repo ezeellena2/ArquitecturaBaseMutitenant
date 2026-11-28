@@ -30,21 +30,24 @@ public static class MessageQuotaWindow
     }
 
     /// <summary>
-    /// Null si la ventana todavía tiene lugar para uno más bajo <paramref name="limit"/>; si no, los segundos hasta que
-    /// salen de la ventana las horas más viejas que hacen falta para dejar uno libre (al menos 1).
+    /// Null si la ventana todavía tiene lugar para <paramref name="amount"/> más bajo <paramref name="limit"/>; si no, los
+    /// segundos hasta que salen de la ventana las horas más viejas que hacen falta para dejar lugar (al menos 1). Si el lote
+    /// supera el tope diario entero, espera la ventana completa.
     /// </summary>
-    public static int? WaitSeconds(IReadOnlyCollection<MessageQuotaHour> hours, int limit, DateTime nowUtc)
+    public static int? WaitSeconds(IReadOnlyCollection<MessageQuotaHour> hours, int limit, DateTime nowUtc, int amount = 1)
     {
         ArgumentNullException.ThrowIfNull(hours);
         ArgumentOutOfRangeException.ThrowIfLessThan(limit, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(amount, 1);
         var first = FirstHour(nowUtc);
         var counted = hours.Where(hour => hour.HourUtc >= first && hour.HourUtc <= nowUtc).OrderBy(hour => hour.HourUtc).ToArray();
         long total = counted.Sum(hour => (long)hour.Count);
-        if (total < limit) return null;
+        if (total + amount <= limit) return null;
+        if (amount > limit) return Math.Max(1, (int)Math.Ceiling((HourOf(nowUtc) + Span - nowUtc).TotalSeconds));
         foreach (var hour in counted)
         {
             total -= hour.Count;
-            if (total < limit) return Math.Max(1, (int)Math.Ceiling((hour.HourUtc + Span - nowUtc).TotalSeconds));
+            if (total + amount <= limit) return Math.Max(1, (int)Math.Ceiling((hour.HourUtc + Span - nowUtc).TotalSeconds));
         }
         throw new InvalidOperationException("A full window always frees a place when its hours leave it.");
     }

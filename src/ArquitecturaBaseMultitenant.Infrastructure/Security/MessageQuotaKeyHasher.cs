@@ -20,7 +20,7 @@ internal sealed class MessageQuotaKeyHasher(IOptions<LoginCodeHashOptions> optio
 
     public string ForSubject(MessageQuotaScope scope, Guid id)
     {
-        if (scope is MessageQuotaScope.Global or MessageQuotaScope.CodeIp)
+        if (scope is MessageQuotaScope.Global or MessageQuotaScope.CodeIp or MessageQuotaScope.WhatsAppInvitationGlobal)
             throw new ArgumentOutOfRangeException(nameof(scope), "The global and the address quotas have no subject.");
         if (id == Guid.Empty) throw new ArgumentException("The subject is required.", nameof(id));
         return Hash(scope, id.ToString("D", CultureInfo.InvariantCulture));

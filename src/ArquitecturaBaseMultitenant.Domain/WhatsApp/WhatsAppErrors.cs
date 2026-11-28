@@ -36,6 +36,8 @@ public static class WhatsAppErrors
     public const string ImportTooManyRowsCode = "WhatsApp.Import.TooManyRows";
     public const string LinkNotFoundCode = "WhatsApp.Link.NotFound";
     public const string PhoneImportConsentRequiredCode = "WhatsApp.PhoneImport.ConsentRequired";
+    public const string PhoneImportDailyLimitCode = "WhatsApp.PhoneImport.DailyLimit";
+    public const string RetryAfterKey = "retryAfter";
 
     public static readonly Error NumberNotFound = Error.NotFound(NumberNotFoundCode, "Number not found.");
     public static readonly Error NumberAlreadyConnected = Error.Conflict(NumberAlreadyConnectedCode, "That number is already connected.");
@@ -79,6 +81,10 @@ public static class WhatsAppErrors
     /// <summary>«Cargar teléfonos» invita solo si quien carga confirma que la persona aceptó los mensajes (decisión 179).</summary>
     public static readonly Error PhoneImportConsentRequired = Field(PhoneImportConsentRequiredCode,
         "Confirm that the person agreed to receive WhatsApp messages.", "consentConfirmed", ErrorType.Validation);
+    /// <summary>Tope diario de invitaciones por WhatsApp de «Cargar teléfonos» (decisión 1 de los arreglos de la revisión).</summary>
+    public static Error PhoneImportDailyLimit(int retryAfterSeconds) => Error.TooManyRequests(PhoneImportDailyLimitCode,
+        "No more WhatsApp invitations can be sent for now, and nothing was saved.",
+        new Dictionary<string, object?> { [RetryAfterKey] = Math.Max(1, retryAfterSeconds) });
 
     private static ValidationError Field(string code, string description, string field, ErrorType type) =>
         new(code, description, new Dictionary<string, string[]> { [field] = [code] }, type);
