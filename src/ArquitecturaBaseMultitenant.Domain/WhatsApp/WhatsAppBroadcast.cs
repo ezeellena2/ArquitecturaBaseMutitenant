@@ -83,6 +83,16 @@ public sealed class WhatsAppBroadcast : Entity, ITenantOwned, IVersioned, IAudit
         Status = WhatsAppBroadcastStatus.Sent; StartedAtUtc ??= nowUtc; SentAtUtc = nowUtc;
     }
 
+    /// <summary>
+    /// Le devolvieron destinatarios que no llegaron a salir (el módulo se apagó con sus mensajes en la cola): si figuraba
+    /// enviada, vuelve a enviándose, y los manda cuando le toque.
+    /// </summary>
+    public void Reopen()
+    {
+        if (Status != WhatsAppBroadcastStatus.Sent) return;
+        Status = WhatsAppBroadcastStatus.Sending; SentAtUtc = null;
+    }
+
     public Result Cancel()
     {
         if (Status != WhatsAppBroadcastStatus.Scheduled) return Result.Failure(WhatsAppErrors.BroadcastNotCancellable);
@@ -123,6 +133,16 @@ public sealed class WhatsAppBroadcastRecipient : Entity, ITenantOwned
     {
         if (Status != WhatsAppRecipientStatus.Pending) return;
         Status = WhatsAppRecipientStatus.Sent; OutboxMessageId = outboxMessageId; SentAtUtc = nowUtc; ChangedAtUtc = nowUtc;
+    }
+
+    /// <summary>
+    /// Su mensaje salió de la cola sin llegar a Meta (el módulo se apagó): vuelve a pendiente, sin el envío ni su fecha, y la
+    /// difusión lo manda cuando le toque. Si escribió mientras tanto, no fue una respuesta a esta difusión.
+    /// </summary>
+    public void ReturnToPending(DateTime nowUtc)
+    {
+        if (Status is not (WhatsAppRecipientStatus.Sent or WhatsAppRecipientStatus.Replied)) return;
+        Status = WhatsAppRecipientStatus.Pending; OutboxMessageId = null; SentAtUtc = null; ChangedAtUtc = nowUtc;
     }
 
     public void MarkReplied(DateTime nowUtc)

@@ -88,6 +88,7 @@ La importación de contactos de WhatsApp no tiene tope de bytes, escaneo del ZIP
 **B4 · El código por correo pasa adelante y las difusiones respetan el módulo apagado (R efectos)** (T03-03, T04-07)
 - `Infrastructure/Messaging/Email/EmailLoginCodeChannel.cs` encola los códigos de ingreso, de alta y de verificación con `OutboxPriority.Reply`. Así lo hace `WhatsAppLoginCodeChannel.cs:33` y así lo dice `whatsapp.md` («El turno»: los códigos van con prioridad 0). Hoy caen en `Notice`, detrás de las difusiones.
 - `Application/Modules/WhatsApp/Services/WhatsAppBroadcastDispatchService.cs` saltea las organizaciones con el módulo `whatsapp` apagado (`WhatsAppModulePolicy`). La difusión no se cancela: sigue cuando se prende, como todo lo del módulo apagado, que no borra.
+- Lo ya encolado tampoco sale (revisión del 2026-11-28): `WhatsAppCloudClient` posterga sin gastar intentos un mensaje de difusión de una organización con el módulo apagado (`OutboxDeliveryReceipt.Deferred`), y el worker lo saca de la cola (`IOutbox.WithdrawAsync`) y devuelve sus destinatarios a pendiente (`PauseNextAsync`).
 - **Tests:**
   - en `Api.IntegrationTests/Messaging/OutboxReservationTests.cs`, con 200 envíos de una difusión en la cola, un código de ingreso por correo sale primero;
   - en `Api.IntegrationTests/Modules/WhatsApp/WhatsAppBroadcastTests.cs`, con el módulo apagado, el worker no encola nada de esa organización y la de al lado sigue.

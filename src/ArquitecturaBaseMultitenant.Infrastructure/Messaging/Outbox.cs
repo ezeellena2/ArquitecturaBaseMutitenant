@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging;
 
@@ -39,5 +40,29 @@ internal sealed class Outbox(
             orderingKey, options.Priority, options.DiscardAfterUtc);
         context.OutboxMessages.Add(message);
         return message.Id;
+    }
+
+    /// <summary>
+    /// <c>SKIP LOCKED</c> no espera a la copia que lo está reservando: esa reserva sigue, y el canal decide si sale. Bajo el lock
+    /// se relee la fila, porque el DbContext puede tener una versión anterior.
+    /// </summary>
+    public async Task<IReadOnlySet<Guid>> WithdrawAsync(IReadOnlyCollection<Guid> messageIds, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(messageIds);
+        context.RequireTransaction();
+        var withdrawn = new HashSet<Guid>();
+        if (messageIds.Count == 0) return withdrawn;
+        var ids = messageIds.ToArray();
+        var messages = await context.OutboxMessages.FromSqlInterpolated($"""
+            SELECT * FROM platform."OutboxMessages"
+            WHERE "Id" = ANY({ids}) AND "Status" IN ('Pending', 'Failed') AND "NextAttemptAtUtc" IS NOT NULL AND "LeaseId" IS NULL
+            ORDER BY "Id" FOR UPDATE SKIP LOCKED
+            """).ToArrayAsync(ct);
+        foreach (var message in messages)
+        {
+            await context.Entry(message).ReloadAsync(ct);
+            if (message.TryWithdraw()) withdrawn.Add(message.Id);
+        }
+        return withdrawn;
     }
 }

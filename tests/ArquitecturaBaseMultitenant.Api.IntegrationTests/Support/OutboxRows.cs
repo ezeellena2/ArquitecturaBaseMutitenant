@@ -28,6 +28,16 @@ internal static class OutboxRows
                 .SetProperty(message => message.LastErrorCode, code), ct));
     }
 
+    /// <summary>Le toca salir ya, como si hubiera pasado su espera.</summary>
+    internal static async Task MakeDueAsync(IServiceProvider services, Guid id, CancellationToken ct)
+    {
+        await using var scope = services.CreateAsyncScope();
+        var nowUtc = scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().OutboxMessages
+            .Where(message => message.Id == id && message.NextAttemptAtUtc != null)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(message => message.NextAttemptAtUtc, nowUtc), ct);
+    }
+
     /// <summary>La aplicación no borra filas de la cola salvo con la baja de una cuenta: se borra como dueño de la base.</summary>
     internal static async Task DeleteAsync(ApiFactory factory, Guid id, CancellationToken ct)
     {

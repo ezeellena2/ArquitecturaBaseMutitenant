@@ -24,6 +24,8 @@ public static class WhatsAppModule
         services.AddScoped<PlatformWhatsAppBotWriter>();
         services.AddScoped<WhatsAppBotResolver>();
         services.AddScoped<WhatsAppModulePolicy>();
+        // La cola de salida (Infrastructure) pregunta lo mismo, a la misma instancia del scope.
+        services.AddScoped<Interfaces.Integrations.IWhatsAppModuleState>(provider => provider.GetRequiredService<WhatsAppModulePolicy>());
         services.AddScoped<WhatsAppBotReplyBuilder>();
         services.AddScoped<WhatsAppWebhookWriter>();
         services.AddScoped<IWhatsAppInboundService, WhatsAppInboundService>();

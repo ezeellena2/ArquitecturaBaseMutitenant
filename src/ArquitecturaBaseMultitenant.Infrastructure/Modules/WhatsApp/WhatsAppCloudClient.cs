@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Models.Messaging;
+using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
@@ -22,16 +23,22 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
 /// <item>lo definitivo falla con uno de los motivos de <see cref="WhatsAppSendFailures"/>;</item>
 /// <item>no se sabe (la espera vencida, la respuesta cortada, un 5xx sin código o una respuesta ilegible): «Sin confirmar»,
 /// que no se repite.</item>
+/// <item>una difusión de una organización con el módulo apagado no se manda: la cola la posterga sin gastar un intento, y
+/// <see cref="WhatsAppBroadcastWorker"/> la devuelve a la difusión, que la retoma al prenderlo. Se mira después de leer el
+/// número, así uno desconectado falla como siempre.</item>
 /// </list>
 /// </summary>
 internal sealed class WhatsAppCloudClient(HttpClient client, IOptions<WhatsAppOptions> options, TimeProvider clock,
-    WhatsAppChannelCredentials? credentials = null, ILogger<WhatsAppCloudClient>? logger = null)
+    WhatsAppChannelCredentials? credentials = null, ILogger<WhatsAppCloudClient>? logger = null, IWhatsAppModuleState? module = null)
 {
     /// <summary>El primer envío y dos reintentos: el tope de intentos del canal en la cola.</summary>
     internal const int MaxAttempts = 3;
 
     /// <summary>El código técnico de lo que quedó «Sin confirmar»: no es un motivo de «No se pudo enviar».</summary>
     internal const string UncertainCode = "WhatsApp.Send.Uncertain";
+
+    /// <summary>El código técnico de la difusión que espera en la cola porque el módulo de su organización está apagado.</summary>
+    internal const string ModuleOffCode = "WhatsApp.Broadcast.ModuleOff";
 
     public async Task<OutboxDeliveryReceipt> SendAsync(WhatsAppOutboundMessage message, CancellationToken ct)
     {
@@ -56,6 +63,7 @@ internal sealed class WhatsAppCloudClient(HttpClient client, IOptions<WhatsAppOp
             return Retry(WhatsAppSendFailures.Unavailable);
         }
         if (channel is null) return OutboxDeliveryReceipt.Rejected(WhatsAppSendFailures.ReadOnly, retryable: false);
+        if (await HoldBroadcastAsync(message, ct) is { } held) return held;
         using var request = new HttpRequestMessage(HttpMethod.Post,
             options.Value.GraphApiVersion + "/" + Uri.EscapeDataString(channel.PhoneNumberId) + "/messages");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", channel.Token);
@@ -116,6 +124,25 @@ internal sealed class WhatsAppCloudClient(HttpClient client, IOptions<WhatsAppOp
             HttpStatusCode.TooManyRequests => Retry(WhatsAppSendFailures.RateLimited),
             _ => Definitive(WhatsAppSendFailures.Rejected),
         };
+    }
+
+    /// <summary>
+    /// Con el módulo de su organización apagado, la difusión espera. Si no se sabe (no contestan la caché ni la base), también:
+    /// una excepción que saliera de acá la cola la tomaría como «Sin confirmar». El módulo sale de la caché de las
+    /// habilitaciones, sin una consulta por mensaje.
+    /// </summary>
+    private async Task<OutboxDeliveryReceipt?> HoldBroadcastAsync(WhatsAppOutboundMessage message, CancellationToken ct)
+    {
+        if (message.BroadcastOrganizationId is not { } organizationId || module is null) return null;
+        try
+        {
+            if (await module.IsEnabledAsync(organizationId, ct)) return null;
+        }
+        catch (Exception exception)
+        {
+            if (logger is not null) ExceptionLog.Write(logger, nameof(WhatsAppCloudClient), exception);
+        }
+        return OutboxDeliveryReceipt.Deferred(ModuleOffCode);
     }
 
     private static OutboxDeliveryReceipt Definitive(string code) => OutboxDeliveryReceipt.Rejected(code, retryable: false);

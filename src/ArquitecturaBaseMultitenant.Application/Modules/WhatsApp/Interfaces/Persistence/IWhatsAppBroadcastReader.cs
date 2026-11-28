@@ -17,6 +17,8 @@ public interface IWhatsAppBroadcastReader
     Task<PagedResult<WhatsAppContactBroadcastResponse>> ListForContactAsync(Guid contactId, WhatsAppContactBroadcastListRequest request, CancellationToken ct);
     /// <summary>La difusión que más tiempo lleva esperando para salir, o null.</summary>
     Task<WhatsAppDueBroadcast?> FindNextDueAsync(DateTime nowUtc, CancellationToken ct);
+    /// <summary>Una difusión con algún mensaje que sigue en la cola sin reservar, o null.</summary>
+    Task<Guid?> FindNextQueuedAsync(CancellationToken ct);
     /// <summary>A cuántos contactos distintos les salió una difusión desde esa fecha (el tope de Meta es por 24 horas).</summary>
     Task<int> CountContactsSentSinceAsync(DateTime sinceUtc, CancellationToken ct);
 }

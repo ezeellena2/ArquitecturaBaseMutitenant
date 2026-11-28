@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
@@ -35,6 +36,22 @@ internal sealed class WhatsAppBroadcastRepository(ApplicationDbContext context, 
         return await context.Set<WhatsAppBroadcastRecipient>()
             .Where(value => value.TenantId == tenantId && value.BroadcastId == broadcastId && value.Status == WhatsAppRecipientStatus.Pending)
             .OrderBy(value => value.Id).Take(limit).ToArrayAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<WhatsAppBroadcastRecipient>> ListQueuedAsync(Guid broadcastId, int limit, CancellationToken ct)
+    {
+        context.RequireTransaction();
+        var tenantId = tenant.RequiredTenantId;
+        return await (from recipient in context.Set<WhatsAppBroadcastRecipient>()
+                          .Where(value => value.TenantId == tenantId && value.BroadcastId == broadcastId
+                              && (value.Status == WhatsAppRecipientStatus.Sent || value.Status == WhatsAppRecipientStatus.Replied))
+                      // Sin AsNoTracking: en EF vale para toda la consulta, y los destinatarios tienen que quedar seguidos.
+                      join outbox in context.OutboxMessages
+                          .Where(outbox => (outbox.Status == OutboxStatus.Pending || outbox.Status == OutboxStatus.Failed)
+                              && outbox.NextAttemptAtUtc != null && outbox.LeaseId == null)
+                          on recipient.OutboxMessageId equals (Guid?)outbox.Id
+                      orderby recipient.Id
+                      select recipient).Take(limit).ToArrayAsync(ct);
     }
 
     public async Task<WhatsAppBroadcastRecipient?> FindLatestSentAsync(Guid customerId, DateTime sinceUtc, CancellationToken ct)

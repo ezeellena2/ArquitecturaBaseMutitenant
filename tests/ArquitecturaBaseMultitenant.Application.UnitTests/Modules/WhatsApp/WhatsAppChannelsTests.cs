@@ -84,6 +84,8 @@ public sealed class WhatsAppChannelsTests
             Calls++; UserId = userId; Channel = channel; Options.Add(options ?? new OutboxEnqueueOptions());
             return Guid.CreateVersion7();
         }
+
+        public Task<IReadOnlySet<Guid>> WithdrawAsync(IReadOnlyCollection<Guid> messageIds, CancellationToken ct) => throw new NotSupportedException();
     }
     private sealed class Templates : IWhatsAppTemplateRenderer
     {

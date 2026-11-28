@@ -10,7 +10,8 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
 
 /// <summary>
 /// Cada minuto manda las difusiones que ya tienen que salir, en tandas, dentro del alcance de cada organización con un
-/// número vigente. Como la cola de entrada, se apaga cuando la instalación no procesa en segundo plano (las pruebas lo
+/// número vigente. Antes, si la organización tiene el módulo apagado, saca de la cola lo que sus difusiones no mandaron
+/// (quedan en pausa). Como la cola de entrada, se apaga cuando la instalación no procesa en segundo plano (las pruebas lo
 /// corren a mano).
 /// </summary>
 internal sealed class WhatsAppBroadcastWorker(IServiceScopeFactory scopes, TenantJobRunner tenants, IOptions<WhatsAppOptions> options,
@@ -30,6 +31,8 @@ internal sealed class WhatsAppBroadcastWorker(IServiceScopeFactory scopes, Tenan
         await tenants.RunAsync(organizations, async (provider, token) =>
         {
             var dispatch = provider.GetRequiredService<IWhatsAppBroadcastDispatchService>();
+            for (var batch = 0; batch < MaxBatchesPerRun; batch++)
+                if ((await dispatch.PauseNextAsync(token)) is not { IsSuccess: true, Value: true }) break;
             for (var batch = 0; batch < MaxBatchesPerRun; batch++)
                 if ((await dispatch.DispatchNextAsync(token)) is not { IsSuccess: true, Value: true }) break;
         }, ct);

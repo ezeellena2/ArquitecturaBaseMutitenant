@@ -163,6 +163,49 @@ public sealed class OutboxMessageTests
     }
 
     [Fact]
+    public void A_deferred_attempt_waits_its_turn_without_spending_the_attempt()
+    {
+        var message = OutboxMessage.Enqueue("whatsapp", "encrypted", NowUtc);
+        var lease = Guid.NewGuid();
+        Assert.Equal(OutboxClaimResult.Claimed, message.TryClaim(lease, NowUtc, TimeSpan.FromMinutes(5), 1));
+
+        Assert.True(message.TryComplete(lease, OutboxAttemptOutcome.Deferred, null, "WhatsApp.Broadcast.ModuleOff", NowUtc,
+            TimeSpan.FromSeconds(30), 1));
+
+        Assert.Equal((OutboxStatus.Pending, 0, (Guid?)null), (message.Status, message.Attempts, message.LeaseId));
+        Assert.Equal("encrypted", message.EncryptedPayload);
+        Assert.False(message.IsDue(NowUtc.AddSeconds(29)));
+        Assert.True(message.IsDue(NowUtc.AddSeconds(30)));
+        // Con un solo intento, postergarlo no lo agota: la reserva siguiente todavía puede mandarlo.
+        Assert.Equal(OutboxClaimResult.Claimed, message.TryClaim(Guid.NewGuid(), NowUtc.AddSeconds(30), TimeSpan.FromMinutes(5), 1));
+    }
+
+    [Fact]
+    public void Withdraw_takes_out_only_what_is_waiting_without_a_claim()
+    {
+        var waiting = OutboxMessage.Enqueue("whatsapp", "encrypted", NowUtc);
+        Assert.True(waiting.TryWithdraw());
+        Assert.Equal((OutboxStatus.Cancelled, OutboxMessage.WithdrawnCode, (DateTime?)null), (waiting.Status, waiting.LastErrorCode, waiting.NextAttemptAtUtc));
+        Assert.Empty(waiting.EncryptedPayload);
+        Assert.False(waiting.TryWithdraw());
+
+        // Lo reservado pudo haber llegado al transporte, y lo enviado ya terminó.
+        var claimed = OutboxMessage.Enqueue("whatsapp", "encrypted", NowUtc);
+        Assert.Equal(OutboxClaimResult.Claimed, claimed.TryClaim(Guid.NewGuid(), NowUtc, TimeSpan.FromMinutes(5), 3));
+        Assert.False(claimed.TryWithdraw());
+        Assert.Equal(OutboxStatus.Pending, claimed.Status);
+        var sent = OutboxMessage.Enqueue("whatsapp", "encrypted", NowUtc);
+        sent.MarkSent(NowUtc);
+        Assert.False(sent.TryWithdraw());
+        Assert.Equal(OutboxStatus.Sent, sent.Status);
+
+        // Lo que espera un reintento todavía no salió.
+        var retrying = OutboxMessage.Enqueue("whatsapp", "encrypted", NowUtc);
+        retrying.RecordFailure(NowUtc, TimeSpan.FromSeconds(30), 3);
+        Assert.True(retrying.TryWithdraw());
+    }
+
+    [Fact]
     public void Expired_message_is_discarded_without_being_claimed()
     {
         var message = OutboxMessage.Enqueue("email", "encrypted", NowUtc, discardAfterUtc: NowUtc.AddMinutes(10));

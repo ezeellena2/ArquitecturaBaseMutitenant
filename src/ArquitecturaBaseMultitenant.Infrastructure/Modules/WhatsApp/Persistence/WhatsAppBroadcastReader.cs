@@ -117,6 +117,21 @@ internal sealed class WhatsAppBroadcastReader(ApplicationDbContext context, ITen
             .Select(broadcast => new WhatsAppDueBroadcast(broadcast.Id, broadcast.TemplateId, EF.Property<List<string>>(broadcast, "_variables")))
             .FirstOrDefaultAsync(ct);
 
+    // Desde la cola, que es corta: un mensaje pendiente, sin reservar, de un destinatario de la organización.
+    public Task<Guid?> FindNextQueuedAsync(CancellationToken ct)
+    {
+        var tenantId = tenant.RequiredTenantId;
+        return (from outbox in context.OutboxMessages.AsNoTracking()
+                    .Where(outbox => (outbox.Status == OutboxStatus.Pending || outbox.Status == OutboxStatus.Failed)
+                        && outbox.NextAttemptAtUtc != null && outbox.LeaseId == null)
+                join recipient in context.Set<WhatsAppBroadcastRecipient>().AsNoTracking()
+                    .Where(recipient => recipient.TenantId == tenantId
+                        && (recipient.Status == WhatsAppRecipientStatus.Sent || recipient.Status == WhatsAppRecipientStatus.Replied))
+                    on (Guid?)outbox.Id equals recipient.OutboxMessageId
+                orderby recipient.BroadcastId
+                select (Guid?)recipient.BroadcastId).FirstOrDefaultAsync(ct);
+    }
+
     public Task<int> CountContactsSentSinceAsync(DateTime sinceUtc, CancellationToken ct)
     {
         var tenantId = tenant.RequiredTenantId;

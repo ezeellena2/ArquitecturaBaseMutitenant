@@ -61,5 +61,6 @@ public sealed class WhatsAppBotTests
     {
         public int Calls { get; private set; }
         public Guid Enqueue(string channel, string payload, Guid? userId = null, ArquitecturaBaseMultitenant.Application.Models.Messaging.OutboxEnqueueOptions? options = null) { Calls++; return Guid.CreateVersion7(); }
+        public Task<IReadOnlySet<Guid>> WithdrawAsync(IReadOnlyCollection<Guid> messageIds, CancellationToken ct) => throw new NotSupportedException();
     }
 }

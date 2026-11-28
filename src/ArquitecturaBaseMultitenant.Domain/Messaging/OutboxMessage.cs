@@ -17,6 +17,9 @@ public sealed class OutboxMessage : Entity
     /// <summary>La versión que lo reclamó ya no le da intentos (un tope más bajo que el de quien lo reintentó).</summary>
     public const string ExhaustedCode = "Outbox.Delivery.LeaseExpired";
 
+    /// <summary>Lo sacó de la cola quien lo encoló, antes de que saliera (una difusión que quedó en pausa).</summary>
+    public const string WithdrawnCode = "Outbox.Delivery.Withdrawn";
+
     /// <summary>Un HMAC-SHA256 en hexadecimal.</summary>
     public const int OrderingKeyMaxLength = 64;
 
@@ -77,6 +80,20 @@ public sealed class OutboxMessage : Entity
         NextAttemptAtUtc = null;
         EncryptedPayload = string.Empty;
         ClearLease();
+    }
+
+    /// <summary>
+    /// Lo saca de la cola quien lo encoló, mientras no salió ni está reservado (una difusión que queda en pausa): queda
+    /// cancelado y sin payload. Lo reservado pudo haber llegado al transporte, y lo que terminó no tiene nada por mandar.
+    /// </summary>
+    public bool TryWithdraw()
+    {
+        if (LeaseId is not null || Status is not (OutboxStatus.Pending or OutboxStatus.Failed) || NextAttemptAtUtc is null) return false;
+        Status = OutboxStatus.Cancelled;
+        LastErrorCode = WithdrawnCode;
+        NextAttemptAtUtc = null;
+        EncryptedPayload = string.Empty;
+        return true;
     }
 
     public bool IsDue(DateTime nowUtc)
@@ -161,6 +178,14 @@ public sealed class OutboxMessage : Entity
                 return true;
             case OutboxAttemptOutcome.Uncertain:
                 MarkUncertain(safeCode);
+                return true;
+            case OutboxAttemptOutcome.Deferred:
+                // No llamó al transporte: devuelve el intento, como TryRelease, pero espera su turno.
+                LastErrorCode = safeCode;
+                Status = OutboxStatus.Pending;
+                Attempts = Math.Max(0, Attempts - 1);
+                NextAttemptAtUtc = nowUtc.Add(baseDelay);
+                ClearLease();
                 return true;
             default:
                 LastErrorCode = safeCode;

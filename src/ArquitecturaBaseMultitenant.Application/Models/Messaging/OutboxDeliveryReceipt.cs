@@ -34,6 +34,13 @@ public sealed class OutboxDeliveryReceipt
     public static OutboxDeliveryReceipt Uncertain(string safeCode) =>
         new(OutboxAttemptOutcome.Uncertain, null, RequireCode(safeCode), null, null);
 
+    /// <summary>
+    /// El canal lo posterga sin llamar al transporte (una difusión de una organización con el módulo apagado): vuelve a
+    /// pendiente con su espera y no gasta el intento.
+    /// </summary>
+    public static OutboxDeliveryReceipt Deferred(string safeCode) =>
+        new(OutboxAttemptOutcome.Deferred, null, RequireCode(safeCode), null, null);
+
     private static string RequireCode(string safeCode)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(safeCode);

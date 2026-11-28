@@ -4,13 +4,17 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 
-/// <summary>Payload transitorio; se serializa exclusivamente en el outbox cifrado.</summary>
+/// <summary>
+/// Payload transitorio; se serializa exclusivamente en el outbox cifrado. <see cref="BroadcastOrganizationId"/> va solo en
+/// los mensajes de una difusión: la organización cuyo módulo tiene que estar prendido para que salga. Una versión anterior
+/// lo ignora al leerlo, y un payload anterior, sin él, sale como siempre.
+/// </summary>
 public sealed record WhatsAppOutboundMessage(string PhoneNumberId, string To, string TemplateName,
     string Language, IReadOnlyList<string> BodyParameters, string? ButtonParameter = null,
     bool IsAuthentication = false, string? Body = null, string? Footer = null,
     string? LinkLabel = null, string? LinkUrl = null, IReadOnlyList<WhatsAppReplyButton>? ReplyButtons = null,
     DateTime? ReplyExpiresAtUtc = null, Guid? ChannelId = null, string? ListButton = null, IReadOnlyList<WhatsAppReplyButton>? ListRows = null,
-    string? QuickReplyPayload = null)
+    string? QuickReplyPayload = null, Guid? BroadcastOrganizationId = null)
 {
     /// <summary>Topes de Meta para la lista interactiva: el botón que la abre y cada fila.</summary>
     public const int MaxListButton = 20;

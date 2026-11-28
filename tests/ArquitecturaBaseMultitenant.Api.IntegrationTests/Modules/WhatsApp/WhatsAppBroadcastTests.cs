@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -13,9 +14,11 @@ using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
+using ArquitecturaBaseMultitenant.Infrastructure.Messaging;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -227,8 +230,8 @@ public sealed class WhatsAppBroadcastTests(ApiFactory factory)
         using var anonymous = WhatsAppAttentionJourney.Client(host);
 
         var (ana, beto) = (WhatsAppAttentionJourney.NewPhone(), WhatsAppAttentionJourney.NewPhone());
-        var broadcastA = await StageDueBroadcastAsync(host, ownerA, anonymous, ana, "Promo pausa", "promo_pausa");
-        var broadcastB = await StageDueBroadcastAsync(host, ownerB, anonymous, beto, "Promo activa", "promo_activa");
+        var broadcastA = await StageDueBroadcastAsync(host, ownerA, anonymous, "Promo pausa", "promo_pausa", ana);
+        var broadcastB = await StageDueBroadcastAsync(host, ownerB, anonymous, "Promo activa", "promo_activa", beto);
 
         // Se apaga WhatsApp solo en la organización A: su difusión espera sin cancelarse y B sigue enviando.
         await SetModuleEnabledAsync(host, tenantA, false);
@@ -244,6 +247,82 @@ public sealed class WhatsAppBroadcastTests(ApiFactory factory)
         await DispatchAsync(host);
         Assert.Equal("Sent", (await DetailAsync(ownerA, broadcastA)).GetProperty("broadcast").GetProperty("status").GetString());
         Assert.Contains(await OutboxAsync(host), message => message.To == ana && message.TemplateName == "promo_pausa");
+    }
+
+    [Fact]
+    public async Task Queued_broadcast_messages_never_reach_meta_while_the_module_is_off_and_each_recipient_gets_one_when_it_is_back()
+    {
+        var meta = new FakeMeta();
+        await using var host = MetaHost(meta);
+        using var ownerA = WhatsAppAttentionJourney.Client(host);
+        var (_, tenantA) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, ownerA, Ct);
+        using var ownerB = WhatsAppAttentionJourney.Client(host);
+        await WhatsAppAttentionJourney.OrganizationAsync(factory, host, ownerB, Ct);
+        using var anonymous = WhatsAppAttentionJourney.Client(host);
+        var (ana, beto, caro) = (WhatsAppAttentionJourney.NewPhone(), WhatsAppAttentionJourney.NewPhone(), WhatsAppAttentionJourney.NewPhone());
+        var broadcastA = await StageDueBroadcastAsync(host, ownerA, anonymous, "Promo en cola", "promo_en_cola", ana, beto);
+        await StageDueBroadcastAsync(host, ownerB, anonymous, "Promo vecina", "promo_vecina", caro);
+
+        // Las dos difusiones quedan enteras en la cola, y Plataforma apaga WhatsApp de A antes de que salgan.
+        await DispatchAsync(host);
+        Assert.Equal("Sent", Status(await DetailAsync(ownerA, broadcastA)));
+        await SetModuleEnabledAsync(host, tenantA, false);
+
+        // Corre la cola: lo de A no llega a Meta y lo de B sale.
+        await DeliverAsync(host);
+        Assert.Equal((0, 0, 1), (meta.Count(ana, "promo_en_cola"), meta.Count(beto, "promo_en_cola"), meta.Count(caro, "promo_vecina")));
+
+        // La vuelta de las difusiones saca de la cola lo de A, y no sale nada.
+        await DispatchAsync(host);
+        await DeliverAsync(host);
+        Assert.Equal((0, 0), (meta.Count(ana, "promo_en_cola"), meta.Count(beto, "promo_en_cola")));
+
+        // Apagado, sus rutas dan 404; al prenderlo, la difusión estaba en pausa, con sus destinatarios pendientes.
+        await SetModuleEnabledAsync(host, tenantA, true);
+        var paused = await DetailAsync(ownerA, broadcastA);
+        Assert.Equal("Sending", Status(paused));
+        Assert.All(Recipients(paused), recipient => Assert.Equal("Pending", recipient.Item2));
+
+        // Sigue sola: cada destinatario recibe uno, una sola vez.
+        await DispatchAsync(host);
+        await DeliverAsync(host);
+        await DispatchAsync(host);
+        await DeliverAsync(host);
+        Assert.Equal((1, 1, 1), (meta.Count(ana, "promo_en_cola"), meta.Count(beto, "promo_en_cola"), meta.Count(caro, "promo_vecina")));
+        var resumed = await DetailAsync(ownerA, broadcastA);
+        Assert.Equal("Sent", Status(resumed));
+        Assert.All(Recipients(resumed), recipient => Assert.Equal("Sent", recipient.Item2));
+    }
+
+    [Fact]
+    public async Task A_broadcast_message_held_by_the_queue_goes_out_once_without_spending_attempts_when_the_module_is_back()
+    {
+        var meta = new FakeMeta();
+        await using var host = MetaHost(meta);
+        using var owner = WhatsAppAttentionJourney.Client(host);
+        var (_, tenant) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, owner, Ct);
+        using var anonymous = WhatsAppAttentionJourney.Client(host);
+        var ana = WhatsAppAttentionJourney.NewPhone();
+        await StageDueBroadcastAsync(host, owner, anonymous, "Promo retenida", "promo_retenida", ana);
+        await DispatchAsync(host);
+
+        // Con el módulo apagado, la cola no lo manda ni le gasta un intento: espera.
+        await SetModuleEnabledAsync(host, tenant, false);
+        await DeliverAsync(host);
+        Assert.Equal(0, meta.Count(ana, "promo_retenida"));
+        var held = Assert.Single(await QueuedAsync(host), value => value.Message.To == ana && value.Message.TemplateName == "promo_retenida").Row;
+        Assert.Equal((OutboxStatus.Pending, 0, (Guid?)null), (held.Status, held.Attempts, held.LeaseId));
+
+        // Se prende antes de que la vuelta de las difusiones lo saque: cuando le toca otra vez, sale una sola vez.
+        await SetModuleEnabledAsync(host, tenant, true);
+        await OutboxRows.MakeDueAsync(host.Services, held.Id, Ct);
+        await DeliverAsync(host);
+        await OutboxRows.MakeDueAsync(host.Services, held.Id, Ct);
+        await DeliverAsync(host);
+        Assert.Equal(1, meta.Count(ana, "promo_retenida"));
+        await using var read = host.Services.CreateAsyncScope();
+        var sent = await read.ServiceProvider.GetRequiredService<ApplicationDbContext>().OutboxMessages.AsNoTracking().SingleAsync(value => value.Id == held.Id, Ct);
+        Assert.Equal((OutboxStatus.Sent, 1), (sent.Status, sent.Attempts));
     }
 
     [Fact]
@@ -315,7 +394,7 @@ public sealed class WhatsAppBroadcastTests(ApiFactory factory)
     }
 
     private static async Task<Guid> StageDueBroadcastAsync(WebApplicationFactory<Program> host, HttpClient owner, HttpClient anonymous,
-        string phone, string templateName, string metaName)
+        string templateName, string metaName, params string[] phones)
     {
         var phoneNumberId = WhatsAppAttentionJourney.NewNumberId();
         using (var connected = await WhatsAppAttentionJourney.ConnectAsync(owner, phoneNumberId, Ct))
@@ -323,10 +402,29 @@ public sealed class WhatsAppBroadcastTests(ApiFactory factory)
         var templateId = await TemplateAsync(owner, templateName, "Marketing", "Hola, tenés {{1}} de descuento.");
         await WhatsAppTemplateManagementTests.TemplateWebhookAsync(owner, "waba-" + phoneNumberId, "message_template_status_update",
             new { @event = "APPROVED", message_template_id = 1L, message_template_name = metaName, message_template_language = "es_AR", reason = "NONE" });
-        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, phone, "Hola", Ct);
-        await ConsentAsync(owner, phone, "Accepted", []);
+        foreach (var phone in phones)
+        {
+            await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, phone, "Hola", Ct);
+            await ConsentAsync(owner, phone, "Accepted", []);
+        }
         return (await CreateAsync(owner, templateId, null)).GetProperty("id").GetGuid();
     }
+
+    /// <summary>Un host cuya Cloud API es <paramref name="meta"/>: la cola manda de verdad, sin salir de la prueba.</summary>
+    private WebApplicationFactory<Program> MetaHost(FakeMeta meta) =>
+        WhatsAppAttentionJourney.Host(factory, new FakeGraph(), templates: new FakeTemplates()).WithWebHostBuilder(builder =>
+            builder.ConfigureTestServices(services => services.AddHttpClient<WhatsAppCloudClient>().ConfigurePrimaryHttpMessageHandler(() => meta)));
+
+    /// <summary>Corre la cola de WhatsApp como el despacho, que en las pruebas no corre solo, hasta que no queda nada que le toque.</summary>
+    private static async Task DeliverAsync(WebApplicationFactory<Program> host)
+    {
+        await using var scope = host.Services.CreateAsyncScope();
+        var senders = scope.ServiceProvider.GetServices<IChannelSender>().Where(sender => sender.Key == "whatsapp").ToArray();
+        var processor = scope.ServiceProvider.GetRequiredService<OutboxDeliveryProcessor>();
+        for (var processed = 0; processed < 500 && await processor.ProcessOnceAsync(senders, Ct) > 0; processed++) { }
+    }
+
+    private static string? Status(JsonElement detail) => detail.GetProperty("broadcast").GetProperty("status").GetString();
 
     private static async Task SetModuleEnabledAsync(WebApplicationFactory<Program> host, Guid tenantId, bool enabled)
     {
@@ -463,5 +561,27 @@ public sealed class WhatsAppBroadcastTests(ApiFactory factory)
     private static async Task<JsonElement> JsonAsync(HttpResponseMessage response)
     {
         using (response) return await WhatsAppAttentionJourney.JsonAsync(response, Ct);
+    }
+
+    /// <summary>La Cloud API de Meta: anota a quién le llegó cada plantilla y la acepta.</summary>
+    private sealed class FakeMeta : HttpMessageHandler
+    {
+        private readonly ConcurrentQueue<(string? To, string? Template)> _received = new();
+
+        /// <summary>Cuántas veces le llegó esa plantilla a ese teléfono (Meta lo recibe sin el «+» y, en la Argentina, sin el 9).</summary>
+        internal int Count(string phone, string template) =>
+            _received.Count(value => value.Template == template && value.To is { } to && to.EndsWith(phone[^8..], StringComparison.Ordinal));
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            using var body = JsonDocument.Parse(await request.Content!.ReadAsStringAsync(cancellationToken));
+            var root = body.RootElement;
+            _received.Enqueue((root.TryGetProperty("to", out var to) ? to.GetString() : null,
+                root.TryGetProperty("template", out var template) && template.TryGetProperty("name", out var name) ? name.GetString() : null));
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("{\"messages\":[{\"id\":\"wamid.fake." + Guid.NewGuid().ToString("N") + "\"}]}"),
+            };
+        }
     }
 }

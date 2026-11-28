@@ -17,7 +17,8 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// Manda una tanda de la difusión que más espera, dentro del alcance de la organización. Respeta el tope de Meta por 24
 /// horas (<c>whatsapp_business_manager_messaging_limit</c>): lo que no entra sale en otra vuelta. Al salir vuelve a mirar el
 /// consentimiento: quien ya no acepta promociones no recibe. Sin un número que la mande (plantilla que dejó de estar
-/// aprobada o sin medio de pago), sus destinatarios quedan como no enviados con el motivo.
+/// aprobada o sin medio de pago), sus destinatarios quedan como no enviados con el motivo. Con el módulo apagado no encola
+/// nada y saca de la cola lo que todavía no salió (<see cref="PauseNextAsync"/>): la difusión queda en pausa, no cancelada.
 /// </summary>
 internal sealed class WhatsAppBroadcastDispatchService(IWhatsAppBroadcastReader reader, IWhatsAppBroadcastRepository broadcasts,
     WhatsAppBroadcastChannelResolver channels, IWhatsAppTemplateClient client, IWhatsAppTokenProtector protector,
@@ -63,14 +64,35 @@ internal sealed class WhatsAppBroadcastDispatchService(IWhatsAppBroadcastReader 
                             recipient.MarkUnsubscribed(nowUtc);
                             continue;
                         }
+                        // Lleva la organización: la cola no lo manda mientras su módulo esté apagado.
                         var message = new WhatsAppOutboundMessage(channel.Value.PhoneNumberId, recipient.WaId, template!.MetaName, template.MetaLanguage,
                             broadcast.Variables, ChannelId: channel.Value.Id,
-                            QuickReplyPayload: template.HasUnsubscribeButton ? BotButtons.Unsubscribe : null);
+                            QuickReplyPayload: template.HasUnsubscribeButton ? BotButtons.Unsubscribe : null, BroadcastOrganizationId: broadcast.TenantId);
                         recipient.MarkSent(outbox.Enqueue("whatsapp", JsonSerializer.Serialize(message), options: message.QueueOptions(OutboxPriority.Notice)), nowUtc);
                     }
                 }
                 if (pending.Count < budget) broadcast.Finish(nowUtc);
                 return true;
+            }, CommitPolicy.OnSuccess, cancellationToken);
+        });
+
+    public Task<Result<bool>> PauseNextAsync(CancellationToken cancellationToken) =>
+        OperationLog.RunAsync<bool>(logger, clock, "WhatsAppBroadcastPause", async () =>
+        {
+            if (await module.IsCurrentEnabledAsync(cancellationToken)) return false;
+            if (await reader.FindNextQueuedAsync(cancellationToken) is not { } broadcastId) return false;
+            var nowUtc = clock.GetUtcNow().UtcDateTime;
+            return await unitOfWork.ExecuteInTransactionAsync<Result<bool>>(async ct =>
+            {
+                // El lock de la difusión no deja que una tanda la dé por enviada mientras le devuelve destinatarios.
+                if (await broadcasts.GetForUpdateAsync(broadcastId, null, ct) is not { } broadcast) return false;
+                var queued = await broadcasts.ListQueuedAsync(broadcast.Id, BatchSize, ct);
+                var withdrawn = await outbox.WithdrawAsync([.. queued.Select(recipient => recipient.OutboxMessageId!.Value)], ct);
+                foreach (var recipient in queued)
+                    if (withdrawn.Contains(recipient.OutboxMessageId!.Value)) recipient.ReturnToPending(nowUtc);
+                if (withdrawn.Count > 0) broadcast.Reopen();
+                // Lo que otra copia está reservando no sale (la cola lo posterga) y vuelve en la próxima vuelta.
+                return withdrawn.Count > 0 && queued.Count == BatchSize;
             }, CommitPolicy.OnSuccess, cancellationToken);
         });
 }

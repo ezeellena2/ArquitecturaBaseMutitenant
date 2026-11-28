@@ -75,6 +75,32 @@ public sealed class WhatsAppTemplateAndBroadcastTests
     }
 
     [Fact]
+    public void A_recipient_whose_message_left_the_queue_goes_back_to_pending_and_the_broadcast_reopens()
+    {
+        var broadcast = Broadcast(null);
+        broadcast.Reopen();
+        Assert.Equal(WhatsAppBroadcastStatus.Scheduled, broadcast.Status);
+        broadcast.Start(Now);
+        broadcast.Finish(Now.AddMinutes(1));
+        broadcast.Reopen();
+        Assert.Equal((WhatsAppBroadcastStatus.Sending, (DateTime?)null), (broadcast.Status, broadcast.SentAtUtc));
+        Assert.True(broadcast.IsDue(Now.AddMinutes(2)));
+
+        var recipient = WhatsAppBroadcastRecipient.Create(broadcast.Id, Guid.CreateVersion7(), PhoneNumber.Create("+5491155550000").Value, Now);
+        recipient.MarkSent(Guid.CreateVersion7(), Now);
+        recipient.MarkReplied(Now.AddMinutes(1));
+        recipient.ReturnToPending(Now.AddMinutes(2));
+        Assert.Equal((WhatsAppRecipientStatus.Pending, (Guid?)null, (DateTime?)null, Now.AddMinutes(2)),
+            (recipient.Status, recipient.OutboxMessageId, recipient.SentAtUtc, recipient.ChangedAtUtc));
+
+        // Lo que ya terminó por su cuenta (se dio de baja o falló) no vuelve.
+        recipient.MarkSent(Guid.CreateVersion7(), Now.AddMinutes(3));
+        recipient.MarkUnsubscribed(Now.AddMinutes(4));
+        recipient.ReturnToPending(Now.AddMinutes(5));
+        Assert.Equal(WhatsAppRecipientStatus.Unsubscribed, recipient.Status);
+    }
+
+    [Fact]
     public void A_failed_status_webhook_maps_meta_codes_and_updates_a_sent_recipient()
     {
         Assert.Equal(WhatsAppSendFailures.RateLimited, WhatsAppSendFailures.ForWebhookError(131049));
