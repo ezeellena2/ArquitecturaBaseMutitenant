@@ -1,8 +1,10 @@
+using System.Data.Common;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Persistence;
 
@@ -97,5 +99,66 @@ public sealed class CursorPaginationTests(ApiFactory factory)
         Assert.False(CursorCodec.TryDecode(null, out _));
     }
 
+    [Fact]
+    public async Task Consecutive_cursor_pages_generate_identical_parameterized_sql()
+    {
+        var tenantId = Guid.NewGuid();
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var capture = new SqlCaptureInterceptor();
+        await using var fixture = await WidgetQueryFixture.CreateAsync(factory, tenantId, cancellationToken, capture);
+        var baseline = new DateTime(2026, 9, 28, 12, 0, 0, DateTimeKind.Utc);
+        var ids = new[] { Guid.CreateVersion7(), Guid.CreateVersion7(), Guid.CreateVersion7(), Guid.CreateVersion7() };
+        for (var index = 0; index < ids.Length; index++)
+        {
+            await fixture.AddAsync(tenantId, ids[index], $"Fila {index}", baseline.AddMinutes(-index), cancellationToken);
+        }
+
+        var first = await fixture.Rows.ToCursorResultAsync(
+            new WidgetCursorRequest { Limit = 1 }, widget => widget.CreatedAtUtc, widget => widget.Id,
+            cancellationToken);
+        Assert.NotNull(first.NextCursor);
+
+        capture.Clear();
+        var second = await fixture.Rows.ToCursorResultAsync(
+            new WidgetCursorRequest { Limit = 1, After = first.NextCursor },
+            widget => widget.CreatedAtUtc, widget => widget.Id, cancellationToken);
+        var secondSql = Assert.Single(capture.Commands);
+        Assert.NotNull(second.NextCursor);
+
+        capture.Clear();
+        var third = await fixture.Rows.ToCursorResultAsync(
+            new WidgetCursorRequest { Limit = 1, After = second.NextCursor },
+            widget => widget.CreatedAtUtc, widget => widget.Id, cancellationToken);
+        var thirdSql = Assert.Single(capture.Commands);
+
+        Assert.Equal([ids[0]], first.Items.Select(widget => widget.Id));
+        Assert.Equal([ids[1]], second.Items.Select(widget => widget.Id));
+        Assert.Equal([ids[2]], third.Items.Select(widget => widget.Id));
+        Assert.Equal(secondSql, thirdSql);
+        Assert.DoesNotContain(ids[0].ToString("D"), secondSql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain(ids[1].ToString("D"), thirdSql, StringComparison.OrdinalIgnoreCase);
+    }
+
     private sealed record WidgetCursorRequest : CursorRequest;
+
+    private sealed class SqlCaptureInterceptor : DbCommandInterceptor
+    {
+        public List<string> Commands { get; } = [];
+
+        public void Clear() => Commands.Clear();
+
+        public override InterceptionResult<DbDataReader> ReaderExecuting(DbCommand command, CommandEventData eventData,
+            InterceptionResult<DbDataReader> result)
+        {
+            Commands.Add(command.CommandText);
+            return result;
+        }
+
+        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command,
+            CommandEventData eventData, InterceptionResult<DbDataReader> result, CancellationToken cancellationToken = default)
+        {
+            Commands.Add(command.CommandText);
+            return ValueTask.FromResult(result);
+        }
+    }
 }

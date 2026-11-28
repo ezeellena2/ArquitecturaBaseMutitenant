@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -20,6 +21,7 @@ public static class QueryableExtensions
             [typeof(DbFunctions), typeof(ITuple), typeof(ITuple)])!;
     private static readonly ConstructorInfo CursorRowConstructor = typeof(ValueTuple<DateTime, Guid>)
         .GetConstructor([typeof(DateTime), typeof(Guid)])!;
+    private static readonly ConcurrentDictionary<MemberKey, Delegate> MemberAccessors = new();
 
     /// <summary>
     /// Ordena por un campo de la lista blanca (sin distinguir mayúsculas) con la regla de todas las tablas (decisión 264):
@@ -79,8 +81,9 @@ public static class QueryableExtensions
         }
 
         var parameter = Expression.Parameter(typeof(T), "entry");
-        var pattern = Expression.Constant($"%{EscapeLike(search.Trim())}%");
-        var normalizedPattern = Expression.Call(UnaccentMethod, Expression.Call(pattern, LowerMethod));
+        var rawPattern = $"%{EscapeLike(search.Trim())}%";
+        Expression<Func<string>> patternAccessor = () => rawPattern;
+        var normalizedPattern = Expression.Call(UnaccentMethod, Expression.Call(patternAccessor.Body, LowerMethod));
         var efFunctions = Expression.Property(null, typeof(EF), nameof(EF.Functions));
         Expression? predicate = null;
 
@@ -156,9 +159,11 @@ public static class QueryableExtensions
             var sortValue = new ReplaceParameterVisitor(sortUtc.Parameters[0], parameter).Visit(sortUtc.Body)!;
             var idValue = new ReplaceParameterVisitor(id.Parameters[0], parameter).Visit(id.Body)!;
             var row = Expression.Convert(Expression.New(CursorRowConstructor, sortValue, idValue), typeof(ITuple));
-            var cursor = Expression.Convert(Expression.Constant(ValueTuple.Create(position.SortUtc, position.Id)), typeof(ITuple));
+            var cursorSortUtc = position.SortUtc;
+            var cursorId = position.Id;
+            Expression<Func<ITuple>> cursorAccessor = () => ValueTuple.Create(cursorSortUtc, cursorId);
             var predicate = Expression.Call(RowLessThanMethod,
-                Expression.Property(null, typeof(EF), nameof(EF.Functions)), row, cursor);
+                Expression.Property(null, typeof(EF), nameof(EF.Functions)), row, cursorAccessor.Body);
             query = query.Where(Expression.Lambda<Func<T, bool>>(predicate, parameter));
         }
 
@@ -171,9 +176,23 @@ public static class QueryableExtensions
         }
 
         var nextCursor = hasMore
-            ? CursorCodec.Encode(sortUtc.Compile()(page[^1]), id.Compile()(page[^1]))
+            ? CursorCodec.Encode(Accessor(sortUtc)(page[^1]), Accessor(id)(page[^1]))
             : null;
         return new CursorResult<T>(page, nextCursor, hasMore);
+    }
+
+    private static Func<T, TResult> Accessor<T, TResult>(Expression<Func<T, TResult>> selector)
+    {
+        if (selector.Body is MemberExpression { Expression: ParameterExpression parameter } member
+            && parameter == selector.Parameters[0])
+        {
+            return (Func<T, TResult>)MemberAccessors.GetOrAdd(
+                new MemberKey(typeof(T), typeof(TResult), member.Member),
+                static (_, expression) => expression.Compile(),
+                selector);
+        }
+
+        return selector.Compile();
     }
 
     private static Expression<Func<T, object?>> Field<T>(IReadOnlyDictionary<string, Expression<Func<T, object?>>> sortableFields,
@@ -246,4 +265,6 @@ public static class QueryableExtensions
         Expression.Lambda<Func<T, object?>>(body.Type == typeof(object) ? body : Expression.Convert(body, typeof(object)), parameter);
 
     private sealed record SortKey<T>(Expression<Func<T, object?>> Key, bool Descending);
+
+    private readonly record struct MemberKey(Type SourceType, Type ResultType, MemberInfo Member);
 }

@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Npgsql;
 
@@ -32,16 +33,20 @@ internal sealed class WidgetQueryFixture : IAsyncDisposable
     public IsolationApplicationDbContext Context { get; }
 
     public static async Task<WidgetQueryFixture> CreateAsync(
-        ApiFactory factory, Guid tenantId, CancellationToken cancellationToken)
+        ApiFactory factory, Guid tenantId, CancellationToken cancellationToken, params IInterceptor[] interceptors)
     {
         var connection = await RuntimeRoleConnection.OpenAsync(
             factory.RuntimeConnectionString, tenantId, cancellationToken);
-        var options = new DbContextOptionsBuilder<IsolationApplicationDbContext>()
+        var builder = new DbContextOptionsBuilder<IsolationApplicationDbContext>()
             .UseNpgsql(connection)
-            .ReplaceService<IModelCustomizer, IsolationModelCustomizer>()
-            .Options;
+            .ReplaceService<IModelCustomizer, IsolationModelCustomizer>();
+        if (interceptors.Length > 0)
+        {
+            builder.AddInterceptors(interceptors);
+        }
+
         return new WidgetQueryFixture(connection,
-            new IsolationApplicationDbContext(options, new QueryTenantContext(tenantId)));
+            new IsolationApplicationDbContext(builder.Options, new QueryTenantContext(tenantId)));
     }
 
     public async Task AddAsync(Guid tenantId, Guid id, string name, DateTime createdAtUtc, CancellationToken cancellationToken)
