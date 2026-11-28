@@ -110,6 +110,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   │   ├── Legal/
 │   │   │   │   ├── Localization/
 │   │   │   │   ├── Messaging/
+│   │   │   │   ├── Organization/  avisos de cambios de acceso de un miembro a otra área
 │   │   │   │   ├── Phones/
 │   │   │   │   ├── Request/
 │   │   │   │   ├── Security/
@@ -177,6 +178,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   │   │   ├── Services/
 │   │   │   │   └── Validation/
 │   │   │   └── WhatsApp/  AddWhatsAppModule() registra todo lo de esta carpeta
+│   │   │       ├── Configuration/  opciones de los topes diarios de WhatsApp
 │   │   │       ├── Interfaces/
 │   │   │       │   ├── Integrations/
 │   │   │       │   ├── Persistence/
@@ -308,6 +310,7 @@ El árbol ubica responsabilidades. Solo enumera archivos que sirven como modelo 
 │   │   ├── ReferenceData/
 │   │   ├── RequestContext/
 │   │   ├── Security/
+│   │   ├── Spreadsheets/  lectura de planillas importadas (E12)
 │   │   ├── StructuredData/  contactos sin canal instalado (TryAdd)
 │   │   └── Time/
 │   └── ArquitecturaBaseMultitenant.ServiceDefaults/
