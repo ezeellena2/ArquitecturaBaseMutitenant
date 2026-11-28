@@ -131,6 +131,7 @@ Un tope, un plazo, un cupo, una espera o un valor por defecto de una regla de ne
 | El emisor de la app autenticadora de los operadores | `Email:AppName` | queda guardado en cada autenticador al vincularlo: cambiarlo en pantalla dejaría el mismo factor con dos nombres |
 | Topes diarios de correo y su reserva para invitaciones | `Email:Quotas` | costo y abuso ([0063](../decisions/0063-topes-de-correo-de-la-plataforma.md)) |
 | Cupo diario de códigos por WhatsApp, su parte protegida y los de IP y cuenta | `WhatsApp:DailyAuthCodeLimit` y vecinas | costo y abuso: Meta cobra cada código |
+| Topes diarios de las invitaciones por WhatsApp de «Cargar teléfonos», por organización y global | `WhatsApp:Quotas` | abuso: salen del número de Plataforma, el de los códigos, y si Meta lo marca por calidad se cae el ingreso por WhatsApp de todos ([runbook](runbook.md)) |
 | Los nombres de las plantillas de Meta | `WhatsApp:Templates` | los fija el proveedor al aprobarlas ([plantillas](whatsapp-plantillas.md)) |
 | La versión de Graph, las esperas y los reintentos de la entrada y la salida | `WhatsApp:GraphApiVersion`, `InboundLeaseSeconds`, `InboundMaxAttempts`, `Messaging:Outbox` | técnico: cómo trabaja la cola, no qué decide el negocio |
 | La copia global de la entrada de WhatsApp (90 días) | fijo en `WhatsAppMessageRetentionService` | técnico: se purga al pasar a la organización y no la ve nadie |
@@ -206,9 +207,18 @@ Lo que sale por correo con un código o una invitación cuenta en 24 horas móvi
 | `Email:Quotas:DailyInvitationLimitPerOrganization` | 100 | invitaciones que manda una organización |
 | `WhatsApp:DailyAccountCodeLimit` | 10 | códigos por WhatsApp que pide una cuenta desde Mi cuenta (`WhatsApp.LoginCode.AccountDailyLimit`) |
 
-Al llegar, la ruta responde 429 `Messaging.Email.DailyLimit` con `retryAfter` y `Retry-After`, sin mandar ni guardar nada. Las invitaciones por WhatsApp no cuentan: tienen los límites de Meta. La invitación del Dueño al crear una organización desde Plataforma cuenta como cualquier otra. El E2E y el recorrido corren con topes altos (`TestMessageQuotas`), y `IdentityRetentionWorker` borra los contadores que ya salieron de su ventana.
+Al llegar, la ruta responde 429 `Messaging.Email.DailyLimit` con `retryAfter` y `Retry-After`, sin mandar ni guardar nada. Las invitaciones por WhatsApp no cuentan acá: las de «Cargar teléfonos» tienen sus topes (abajo). La invitación del Dueño al crear una organización desde Plataforma cuenta como cualquier otra. El E2E y el recorrido corren con topes altos (`TestMessageQuotas`), y `IdentityRetentionWorker` borra los contadores que ya salieron de su ventana.
 
 **Con la cuenta compartida con ArquitecturaBase,** la suma de los topes globales de los dos proyectos queda por debajo del cupo, con lugar para los avisos: el multitenant usa 80 (256). Se separan las cuentas antes de producción ([runbook](runbook.md)).
+
+**Las invitaciones por WhatsApp de «Cargar teléfonos»** salen del número de Plataforma, el mismo de los códigos de ingreso, y cuentan igual: 24 horas móviles, por horas, en `identity.MessageQuotaBuckets`. Las claves se validan al arrancar:
+
+| Clave | Arranque | Qué limita |
+|---|---|---|
+| `WhatsApp:Quotas:DailyInvitationLimitPerOrganization` | 100 | invitaciones por WhatsApp que manda una organización |
+| `WhatsApp:Quotas:DailyInvitationLimit` | 200 | las de todas las organizaciones, por debajo del nivel de mensajería del número para dejar lugar a los códigos. Al 80 % y al llegar queda un aviso en el log |
+
+Si la carga entera no entra en lo que queda, la ruta responde 429 `WhatsApp.PhoneImport.DailyLimit` con `retryAfter` y `Retry-After`, sin mandar ni guardar nada. Se suben cuando Meta sube el nivel del número ([runbook](runbook.md)).
 
 ### La cola de salida (ADR 0066, N5, N8 y O3)
 

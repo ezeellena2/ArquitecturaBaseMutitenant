@@ -67,7 +67,8 @@ Desde la 10, producción tiene WhatsApp (P8 del [plan de la 10](../plans/2026-10
   - hasta verificar la empresa, 10 organizaciones nuevas cada 7 días, 250 destinatarios por día fuera de la ventana de 24 horas y 2 números;
   - con la verificación de la empresa y App Review, 200 organizaciones por semana, 2.000 destinatarios y 20 números;
   - App Review pide acceso avanzado a `whatsapp_business_messaging` y `whatsapp_business_management`, con dos videos: un mensaje enviado y recibido, y la creación de una plantilla;
-  - la verificación de la empresa tarda unos días y App Review, cerca de 24 horas ([Tech Provider](https://developers.facebook.com/documentation/business-messaging/whatsapp/solution-providers/get-started-for-tech-providers)).
+  - la verificación de la empresa tarda unos días y App Review, cerca de 24 horas ([Tech Provider](https://developers.facebook.com/documentation/business-messaging/whatsapp/solution-providers/get-started-for-tech-providers));
+  - las invitaciones de «Cargar teléfonos» salen del número de la plataforma con sus propios topes, `WhatsApp:Quotas:DailyInvitationLimit` (200) y `DailyInvitationLimitPerOrganization` (100), por debajo del nivel de mensajería del número para dejar lugar a los códigos de ingreso. Cuando Meta sube el nivel, se suben (en `appsettings` o como `WhatsApp__Quotas__*`), sin pasar del nivel nuevo menos lo que usan los códigos ([configuración](configuracion.md#topes-diarios-de-correo-adr-0063-y-256)).
 - **Los secretos** van por nombre en el gestor del ambiente: los `WhatsApp:*` de [configuracion](configuracion.md), con los valores de la app y de la WABA de producción. Nunca van en el repo ni en la imagen.
 
 ## Al lanzar un producto
