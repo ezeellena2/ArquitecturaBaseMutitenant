@@ -24,6 +24,20 @@
   <data name="Forms.Catalog.SampleContactNotFound" xml:space="preserve"><value>That customer is no longer in Customers.</value></data>
   <data name="Forms.Catalog.ItemTextTooLong" xml:space="preserve"><value>It can have up to 30 characters.</value></data>
   <data name="Forms.Catalog.ItemDetailTooLong" xml:space="preserve"><value>It can have up to 300 characters.</value></data>
+  <data name="Forms.Catalog.TooManyFields" xml:space="preserve"><value>It reached 20 fields, the maximum for a catalog.</value></data>
+  <data name="Forms.Catalog.FieldKeyDuplicate" xml:space="preserve"><value>"{name}" already uses it.</value></data>
+  <data name="Forms.Catalog.FieldInvalid" xml:space="preserve"><value>Check this field's type, rules or catalog.</value></data>
+  <data name="Forms.Catalog.FieldRemovalNotConfirmed" xml:space="preserve"><value>Confirm that its {count} values are removed.</value></data>
+  <data name="Forms.Catalog.FieldTypeNotConvertible" xml:space="preserve"><value>{count} options have a value that isn't {type}.</value></data>
+  <data name="Forms.Catalog.FieldValuesIncompatible" xml:space="preserve"><value>{count} options don't meet the new rule.</value></data>
+  <data name="Forms.Catalog.FieldValuesMissing" xml:space="preserve"><value>{count} active options have no value.</value></data>
+  <data name="Forms.Catalog.FieldValueInvalid" xml:space="preserve"><value>This value doesn't match the field.</value></data>
+  <data name="Forms.Catalog.FieldValueInvalid.Length" xml:space="preserve"><value>It can have up to {n} characters.</value></data>
+  <data name="Forms.Catalog.FieldValueInvalid.Range" xml:space="preserve"><value>It must be between {min} and {max}.</value></data>
+  <data name="Forms.Catalog.FieldValueRequired" xml:space="preserve"><value>Fill in this value.</value></data>
+  <data name="Forms.Catalog.FieldValueDuplicate" xml:space="preserve"><value>Option {n} already has it.</value></data>
+  <data name="Forms.Catalog.SourceInUse" xml:space="preserve"><value>Fields in other catalogs use it. Remove them before deactivating it.</value></data>
+  <data name="Forms.Catalog.PresentationInvalid" xml:space="preserve"><value>Check what goes in the title and the description.</value></data>
   <data name="Forms.CatalogImport.FileChanged" xml:space="preserve"><value>This isn't the file you reviewed. Review it again.</value></data>
   <data name="Forms.CatalogImport.FileInvalid" xml:space="preserve"><value>The file isn't an XLSX or a UTF-8 CSV.</value></data>
   <data name="Forms.CatalogImport.FileInvalid.Limits" xml:space="preserve"><value>The file is over the limits.</value></data>

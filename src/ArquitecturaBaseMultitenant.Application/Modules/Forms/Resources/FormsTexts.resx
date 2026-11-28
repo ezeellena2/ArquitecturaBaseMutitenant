@@ -24,6 +24,20 @@
   <data name="Forms.Catalog.SampleContactNotFound" xml:space="preserve"><value>Ese cliente ya no está en Clientes.</value></data>
   <data name="Forms.Catalog.ItemTextTooLong" xml:space="preserve"><value>Puede tener hasta 30 caracteres.</value></data>
   <data name="Forms.Catalog.ItemDetailTooLong" xml:space="preserve"><value>Puede tener hasta 300 caracteres.</value></data>
+  <data name="Forms.Catalog.TooManyFields" xml:space="preserve"><value>Llegó a 20 campos, el máximo de un catálogo.</value></data>
+  <data name="Forms.Catalog.FieldKeyDuplicate" xml:space="preserve"><value>Ya la usa «{name}».</value></data>
+  <data name="Forms.Catalog.FieldInvalid" xml:space="preserve"><value>Revisá el tipo, las reglas o el catálogo de este campo.</value></data>
+  <data name="Forms.Catalog.FieldRemovalNotConfirmed" xml:space="preserve"><value>Confirmá que se quitan sus {count} valores.</value></data>
+  <data name="Forms.Catalog.FieldTypeNotConvertible" xml:space="preserve"><value>{count} opciones tienen un valor que no es {type}.</value></data>
+  <data name="Forms.Catalog.FieldValuesIncompatible" xml:space="preserve"><value>{count} opciones no cumplen la regla nueva.</value></data>
+  <data name="Forms.Catalog.FieldValuesMissing" xml:space="preserve"><value>{count} opciones activas no tienen valor.</value></data>
+  <data name="Forms.Catalog.FieldValueInvalid" xml:space="preserve"><value>El valor no corresponde a este campo.</value></data>
+  <data name="Forms.Catalog.FieldValueInvalid.Length" xml:space="preserve"><value>Puede tener hasta {n} caracteres.</value></data>
+  <data name="Forms.Catalog.FieldValueInvalid.Range" xml:space="preserve"><value>Tiene que estar entre {min} y {max}.</value></data>
+  <data name="Forms.Catalog.FieldValueRequired" xml:space="preserve"><value>Completá este dato.</value></data>
+  <data name="Forms.Catalog.FieldValueDuplicate" xml:space="preserve"><value>Ya lo tiene la opción {n}.</value></data>
+  <data name="Forms.Catalog.SourceInUse" xml:space="preserve"><value>Lo usan campos de otros catálogos. Quitalos antes de darlo de baja.</value></data>
+  <data name="Forms.Catalog.PresentationInvalid" xml:space="preserve"><value>Revisá qué va en el título y en la descripción.</value></data>
   <data name="Forms.CatalogImport.FileChanged" xml:space="preserve"><value>El archivo no es el que se revisó. Revisá de nuevo.</value></data>
   <data name="Forms.CatalogImport.FileInvalid" xml:space="preserve"><value>El archivo no es un XLSX ni un CSV en UTF-8.</value></data>
   <data name="Forms.CatalogImport.FileInvalid.Limits" xml:space="preserve"><value>El archivo pasa los topes.</value></data>

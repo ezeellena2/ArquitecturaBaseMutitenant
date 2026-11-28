@@ -43,9 +43,10 @@ internal sealed class UpdateFormCatalogRequestValidator : AbstractValidator<Upda
             .When(request => request.DeleteItems is not { Count: > FormCatalogLimits.MaxDeleteItems });
         RuleFor(request => request.Sort).ChildRules(sort =>
         {
+            // Text, Code o la identidad de un campo; que el campo sea uno activo guardado lo comprueba el servicio bajo el bloqueo.
             sort.RuleFor(input => input!.Column).Cascade(CascadeMode.Stop)
-                .NotNull().WithMessage(_ => ValidationTexts.Required)
-                .IsInEnum().WithMessage(_ => ValidationTexts.Required);
+                .NotEmpty().WithMessage(_ => ValidationTexts.Required)
+                .Must((input, _) => input!.FixedColumn is not null || input.FieldId is not null).WithMessage(_ => ValidationTexts.Required);
             sort.RuleFor(input => input!.Descending).NotNull().WithMessage(_ => ValidationTexts.Required);
         }).When(request => request.Sort is not null);
         RuleFor(request => request.Sort)

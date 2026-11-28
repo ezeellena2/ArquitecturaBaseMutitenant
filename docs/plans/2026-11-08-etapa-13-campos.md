@@ -177,6 +177,14 @@ Lo que recorre la verificación de esta etapa, el segundo hito, después del có
 - **La barrera** (`IFormWorkLease`) tiene, además del lugar por persona, topes por organización y por instalación (`Forms:CatalogFiles:MaxPerOrganization` y `MaxPerInstallation`); `FormCatalogFileSlotAttribute` vive en `Api/Modules/Forms/`, y el `UniqueKeys` del módulo, en `A/Modules/Forms/Interfaces/Persistence/`.
 - **El adaptador de la propuesta** (`catalogoptions.edit@1`) vive en `src/modules/forms/lib/proposal.ts` y `hooks/useCatalogProposal.ts`; `CatalogEditorPage.tsx` solo lo usa. F5 suma ahí la columna de cada campo.
 
+**K1 (2026-11-28).** Publicado en `openapi.json` y en los ejemplos de `forms.json`, con las listas vacías y la presentación por defecto hasta que B1 a B9 las llenen. Lo que fijó:
+- **Nombres:** `FormCatalogFieldType` (`Text`, `WholeNumber`, `DecimalNumber`, `Date`, `YesNo` y `Catalog`) y `FormCatalogPresentationIssue` en el dominio; en el contrato, `FormCatalogFieldDetail`, `FormCatalogPresentationDetail`, `FormCatalogPresentationIssues`, `FormCatalogFieldIdentity`, `FormCatalogFieldHttpInput` y `FormCatalogPresentationHttpInput`, para no chocar con las clases del dominio de B1.
+- **Valores:** `fields` de una opción y su delta son un mapa del `id` del campo a texto o booleano; en el delta, `null` limpia.
+- **`sort.column`** es texto: `Text`, `Code` (sin distinguir mayúsculas) o el `id` de un campo. El validador rechaza lo demás en `sort.column`; que el campo exista, esté activo y esté guardado lo comprueba B4 bajo el bloqueo.
+- **Topes:** `fields` del detalle trae hasta 100, entre activos y quitados (`MaxStoredFields`, lo pide `GrowingCollectionContractTests`), y B1 lo hace cumplir con `TooManyFields`; cada lugar de la presentación, hasta 24; `ids`, hasta 100; `invalidRows`, hasta 50.
+- **Textos con un dato** (`{name}`, `{count}`, `{type}`, `{n}`, `{min}`, `{max}`): el servicio los arma con la cultura del pedido y los pasa en `message` a la fábrica de `FormCatalogErrors`, como dice [result-y-errores](../rules/result-y-errores.md); `invalidCount` e `invalidRows` van en el problema, con su motivo en minúsculas.
+- **La guarda de ejemplos** lista los errores nuevos y el 404 de `template` en `NotReachableYet`; la tarea que produce cada uno graba su ejemplo y lo saca de ahí.
+
 ## Para decidir
 
 Nada.

@@ -22063,7 +22063,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Alta con Location: sin tipo, Text; Members con condiciones exige sampleMemberId. Devuelve el detalle y el mapa de ids de las opciones nuevas.",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Alta con Location: sin tipo, Text; Members con condiciones exige sampleMemberId. Uno a mano puede traer fields, que nacen sin valores, y presentation (E13). Devuelve el detalle y el mapa de ids de las opciones nuevas.",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -22108,7 +22108,7 @@
             }
           },
           "400": {
-            "description": "Bad Request; Validation.Failed; Request.IdempotencyKeyRequired; Forms.Catalog.SampleRequired; Forms.Catalog.FiltersInvalid; Forms.Catalog.SampleMemberNotFound; Forms.Catalog.SampleContactNotFound; Forms.Catalog.DuplicateCode; Forms.Catalog.ValueRequired; Forms.Catalog.ValueInvalid; Forms.Catalog.ItemTextTooLong; Forms.Catalog.ItemDetailTooLong",
+            "description": "Bad Request; Validation.Failed; Request.IdempotencyKeyRequired; Forms.Catalog.SampleRequired; Forms.Catalog.FiltersInvalid; Forms.Catalog.SampleMemberNotFound; Forms.Catalog.SampleContactNotFound; Forms.Catalog.DuplicateCode; Forms.Catalog.ValueRequired; Forms.Catalog.ValueInvalid; Forms.Catalog.ItemTextTooLong; Forms.Catalog.ItemDetailTooLong; Forms.Catalog.TooManyFields; Forms.Catalog.FieldKeyDuplicate; Forms.Catalog.FieldInvalid; Forms.Catalog.PresentationInvalid",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -22421,6 +22421,126 @@
                       "errors": {
                         "items.{i}.detail": [
                           "It can have up to 300 characters."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.TooManyFields.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Llegó a 20 campos, el máximo de un catálogo.",
+                      "code": "Forms.Catalog.TooManyFields",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields": [
+                          "Llegó a 20 campos, el máximo de un catálogo."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.TooManyFields.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "It reached 20 fields, the maximum for a catalog.",
+                      "code": "Forms.Catalog.TooManyFields",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields": [
+                          "It reached 20 fields, the maximum for a catalog."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldKeyDuplicate.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Ya la usa «{name}».",
+                      "code": "Forms.Catalog.FieldKeyDuplicate",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields.{i}.key": [
+                          "Ya la usa «{name}»."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldKeyDuplicate.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "\"{name}\" already uses it.",
+                      "code": "Forms.Catalog.FieldKeyDuplicate",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields.{i}.key": [
+                          "\"{name}\" already uses it."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldInvalid.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Revisá el tipo, las reglas o el catálogo de este campo.",
+                      "code": "Forms.Catalog.FieldInvalid",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields.{i}": [
+                          "Revisá el tipo, las reglas o el catálogo de este campo."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldInvalid.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "Check this field's type, rules or catalog.",
+                      "code": "Forms.Catalog.FieldInvalid",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields.{i}": [
+                          "Check this field's type, rules or catalog."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.PresentationInvalid.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Revisá qué va en el título y en la descripción.",
+                      "code": "Forms.Catalog.PresentationInvalid",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "presentation": [
+                          "Revisá qué va en el título y en la descripción."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.PresentationInvalid.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "Check what goes in the title and the description.",
+                      "code": "Forms.Catalog.PresentationInvalid",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "presentation": [
+                          "Check what goes in the title and the description."
                         ]
                       }
                     }
@@ -22871,6 +22991,34 @@
             "en": "It reached 10,000 options, the maximum for a catalog."
           },
           {
+            "status": 400,
+            "code": "Forms.Catalog.TooManyFields",
+            "field": "fields",
+            "es": "Llegó a 20 campos, el máximo de un catálogo.",
+            "en": "It reached 20 fields, the maximum for a catalog."
+          },
+          {
+            "status": 400,
+            "code": "Forms.Catalog.FieldKeyDuplicate",
+            "field": "fields.{i}.key",
+            "es": "Ya la usa «{name}».",
+            "en": "\"{name}\" already uses it."
+          },
+          {
+            "status": 400,
+            "code": "Forms.Catalog.FieldInvalid",
+            "field": "fields.{i}",
+            "es": "Revisá el tipo, las reglas o el catálogo de este campo.",
+            "en": "Check this field's type, rules or catalog."
+          },
+          {
+            "status": 400,
+            "code": "Forms.Catalog.PresentationInvalid",
+            "field": "presentation",
+            "es": "Revisá qué va en el título y en la descripción.",
+            "en": "Check what goes in the title and the description."
+          },
+          {
             "status": 429,
             "code": "Security.RateLimit.Exceeded",
             "field": null,
@@ -23155,7 +23303,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Detalle con los nombres de los roles y las empresas del filtro, la persona o el cliente de ejemplo, canManage, itemCounts y quién lo guardó por última vez.",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Detalle con los nombres de los roles y las empresas del filtro, la persona o el cliente de ejemplo, canManage, itemCounts y quién lo guardó por última vez. Desde la E13, fields (los campos en su orden, también los quitados, con valuesCount), presentation y presentationIssues ({count, examples}, hasta tres).",
         "parameters": [
           {
             "name": "id",
@@ -23455,7 +23603,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Guarda todo junto con su versión (C3): items solo con lo nuevo o cambiado, moves, sort o deleteItems (hasta 500), que no se combinan entre sí. Devuelve la versión y el mapa de ids.",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Guarda todo junto con su versión (C3): items solo con lo nuevo o cambiado (con el delta de sus fields: ausente conserva y null limpia), moves, sort o deleteItems (hasta 500), que no se combinan entre sí. sort.column es Text, Code o el id de un campo activo guardado. fields es la lista entera de los campos activos si cambió, con id o localId; confirmedFieldRemovals, los campos con valores que se quitan; presentation, qué va en WhatsApp (E13). Devuelve la versión y los mapas de ids de las opciones y de los campos nuevos.",
         "parameters": [
           {
             "name": "id",
@@ -23499,7 +23647,7 @@
             }
           },
           "400": {
-            "description": "Bad Request; Validation.Failed; Forms.Catalog.SampleRequired; Forms.Catalog.FiltersInvalid; Forms.Catalog.SampleMemberNotFound; Forms.Catalog.SampleContactNotFound; Forms.Catalog.DuplicateCode; Forms.Catalog.ValueRequired; Forms.Catalog.ValueInvalid; Forms.Catalog.ItemTextTooLong; Forms.Catalog.ItemDetailTooLong",
+            "description": "Bad Request; Validation.Failed; Forms.Catalog.SampleRequired; Forms.Catalog.FiltersInvalid; Forms.Catalog.SampleMemberNotFound; Forms.Catalog.SampleContactNotFound; Forms.Catalog.DuplicateCode; Forms.Catalog.ValueRequired; Forms.Catalog.ValueInvalid; Forms.Catalog.ItemTextTooLong; Forms.Catalog.ItemDetailTooLong; Forms.Catalog.TooManyFields; Forms.Catalog.FieldKeyDuplicate; Forms.Catalog.FieldInvalid; Forms.Catalog.PresentationInvalid; Forms.Catalog.FieldRemovalNotConfirmed; Forms.Catalog.FieldTypeNotConvertible; Forms.Catalog.FieldValuesIncompatible; Forms.Catalog.FieldValuesMissing; Forms.Catalog.FieldValueInvalid; Forms.Catalog.FieldValueRequired; Forms.Catalog.FieldValueDuplicate",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -23795,6 +23943,336 @@
                         ]
                       }
                     }
+                  },
+                  "Forms.Catalog.TooManyFields.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Llegó a 20 campos, el máximo de un catálogo.",
+                      "code": "Forms.Catalog.TooManyFields",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields": [
+                          "Llegó a 20 campos, el máximo de un catálogo."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.TooManyFields.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "It reached 20 fields, the maximum for a catalog.",
+                      "code": "Forms.Catalog.TooManyFields",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields": [
+                          "It reached 20 fields, the maximum for a catalog."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldKeyDuplicate.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Ya la usa «{name}».",
+                      "code": "Forms.Catalog.FieldKeyDuplicate",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields.{i}.key": [
+                          "Ya la usa «{name}»."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldKeyDuplicate.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "\"{name}\" already uses it.",
+                      "code": "Forms.Catalog.FieldKeyDuplicate",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields.{i}.key": [
+                          "\"{name}\" already uses it."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldInvalid.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Revisá el tipo, las reglas o el catálogo de este campo.",
+                      "code": "Forms.Catalog.FieldInvalid",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields.{i}": [
+                          "Revisá el tipo, las reglas o el catálogo de este campo."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldInvalid.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "Check this field's type, rules or catalog.",
+                      "code": "Forms.Catalog.FieldInvalid",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields.{i}": [
+                          "Check this field's type, rules or catalog."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.PresentationInvalid.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Revisá qué va en el título y en la descripción.",
+                      "code": "Forms.Catalog.PresentationInvalid",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "presentation": [
+                          "Revisá qué va en el título y en la descripción."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.PresentationInvalid.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "Check what goes in the title and the description.",
+                      "code": "Forms.Catalog.PresentationInvalid",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "presentation": [
+                          "Check what goes in the title and the description."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldRemovalNotConfirmed.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Confirmá que se quitan sus {count} valores.",
+                      "code": "Forms.Catalog.FieldRemovalNotConfirmed",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields.{i}": [
+                          "Confirmá que se quitan sus {count} valores."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldRemovalNotConfirmed.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "Confirm that its {count} values are removed.",
+                      "code": "Forms.Catalog.FieldRemovalNotConfirmed",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields.{i}": [
+                          "Confirm that its {count} values are removed."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldTypeNotConvertible.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "{count} opciones tienen un valor que no es {type}.",
+                      "code": "Forms.Catalog.FieldTypeNotConvertible",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields.{i}.type": [
+                          "{count} opciones tienen un valor que no es {type}."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldTypeNotConvertible.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "{count} options have a value that isn't {type}.",
+                      "code": "Forms.Catalog.FieldTypeNotConvertible",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields.{i}.type": [
+                          "{count} options have a value that isn't {type}."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldValuesIncompatible.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "{count} opciones no cumplen la regla nueva.",
+                      "code": "Forms.Catalog.FieldValuesIncompatible",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields.{i}": [
+                          "{count} opciones no cumplen la regla nueva."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldValuesIncompatible.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "{count} options don't meet the new rule.",
+                      "code": "Forms.Catalog.FieldValuesIncompatible",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields.{i}": [
+                          "{count} options don't meet the new rule."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldValuesMissing.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "{count} opciones activas no tienen valor.",
+                      "code": "Forms.Catalog.FieldValuesMissing",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields.{i}.required": [
+                          "{count} opciones activas no tienen valor."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldValuesMissing.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "{count} active options have no value.",
+                      "code": "Forms.Catalog.FieldValuesMissing",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "fields.{i}.required": [
+                          "{count} active options have no value."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldValueInvalid.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "El valor no corresponde a este campo.",
+                      "code": "Forms.Catalog.FieldValueInvalid",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "items.{i}.fields.{fieldId}": [
+                          "El valor no corresponde a este campo."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldValueInvalid.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "This value doesn't match the field.",
+                      "code": "Forms.Catalog.FieldValueInvalid",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "items.{i}.fields.{fieldId}": [
+                          "This value doesn't match the field."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldValueRequired.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Completá este dato.",
+                      "code": "Forms.Catalog.FieldValueRequired",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "items.{i}.fields.{fieldId}": [
+                          "Completá este dato."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldValueRequired.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "Fill in this value.",
+                      "code": "Forms.Catalog.FieldValueRequired",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "items.{i}.fields.{fieldId}": [
+                          "Fill in this value."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldValueDuplicate.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 400,
+                      "detail": "Ya lo tiene la opción {n}.",
+                      "code": "Forms.Catalog.FieldValueDuplicate",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "items.{i}.fields.{fieldId}": [
+                          "Ya lo tiene la opción {n}."
+                        ]
+                      }
+                    }
+                  },
+                  "Forms.Catalog.FieldValueDuplicate.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 400,
+                      "detail": "Option {n} already has it.",
+                      "code": "Forms.Catalog.FieldValueDuplicate",
+                      "traceId": "example-trace-id",
+                      "errors": {
+                        "items.{i}.fields.{fieldId}": [
+                          "Option {n} already has it."
+                        ]
+                      }
+                    }
                   }
                 }
               }
@@ -23967,7 +24445,7 @@
             }
           },
           "409": {
-            "description": "Conflict; General.ConcurrencyConflict; Forms.Catalog.WrongSource; Forms.Catalog.TooManyItems; Forms.Catalog.ItemInUse; Forms.Catalog.MoveOutOfRange; Forms.Catalog.Inactive",
+            "description": "Conflict; General.ConcurrencyConflict; Forms.Catalog.WrongSource; Forms.Catalog.TooManyItems; Forms.Catalog.ItemInUse; Forms.Catalog.MoveOutOfRange; Forms.Catalog.Inactive; Forms.Catalog.SourceInUse",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -24111,6 +24589,26 @@
                       "status": 409,
                       "detail": "The catalog is deactivated. Reactivate it to change its options.",
                       "code": "Forms.Catalog.Inactive",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Forms.Catalog.SourceInUse.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 409,
+                      "detail": "Lo usan campos de otros catálogos. Quitalos antes de darlo de baja.",
+                      "code": "Forms.Catalog.SourceInUse",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Forms.Catalog.SourceInUse.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 409,
+                      "detail": "Fields in other catalogs use it. Remove them before deactivating it.",
+                      "code": "Forms.Catalog.SourceInUse",
                       "traceId": "example-trace-id"
                     }
                   }
@@ -24333,6 +24831,34 @@
             "en": "It reached 10,000 options, the maximum for a catalog."
           },
           {
+            "status": 400,
+            "code": "Forms.Catalog.TooManyFields",
+            "field": "fields",
+            "es": "Llegó a 20 campos, el máximo de un catálogo.",
+            "en": "It reached 20 fields, the maximum for a catalog."
+          },
+          {
+            "status": 400,
+            "code": "Forms.Catalog.FieldKeyDuplicate",
+            "field": "fields.{i}.key",
+            "es": "Ya la usa «{name}».",
+            "en": "\"{name}\" already uses it."
+          },
+          {
+            "status": 400,
+            "code": "Forms.Catalog.FieldInvalid",
+            "field": "fields.{i}",
+            "es": "Revisá el tipo, las reglas o el catálogo de este campo.",
+            "en": "Check this field's type, rules or catalog."
+          },
+          {
+            "status": 400,
+            "code": "Forms.Catalog.PresentationInvalid",
+            "field": "presentation",
+            "es": "Revisá qué va en el título y en la descripción.",
+            "en": "Check what goes in the title and the description."
+          },
+          {
             "status": 404,
             "code": "Forms.Catalog.ItemNotFound",
             "field": "deleteItems.{i}",
@@ -24361,6 +24887,62 @@
             "en": "The catalog is deactivated. Reactivate it to change its options."
           },
           {
+            "status": 400,
+            "code": "Forms.Catalog.FieldRemovalNotConfirmed",
+            "field": "fields.{i}",
+            "es": "Confirmá que se quitan sus {count} valores.",
+            "en": "Confirm that its {count} values are removed."
+          },
+          {
+            "status": 400,
+            "code": "Forms.Catalog.FieldTypeNotConvertible",
+            "field": "fields.{i}.type",
+            "es": "{count} opciones tienen un valor que no es {type}.",
+            "en": "{count} options have a value that isn't {type}."
+          },
+          {
+            "status": 400,
+            "code": "Forms.Catalog.FieldValuesIncompatible",
+            "field": "fields.{i}",
+            "es": "{count} opciones no cumplen la regla nueva.",
+            "en": "{count} options don't meet the new rule."
+          },
+          {
+            "status": 400,
+            "code": "Forms.Catalog.FieldValuesMissing",
+            "field": "fields.{i}.required",
+            "es": "{count} opciones activas no tienen valor.",
+            "en": "{count} active options have no value."
+          },
+          {
+            "status": 400,
+            "code": "Forms.Catalog.FieldValueInvalid",
+            "field": "items.{i}.fields.{fieldId}",
+            "es": "El valor no corresponde a este campo.",
+            "en": "This value doesn't match the field."
+          },
+          {
+            "status": 400,
+            "code": "Forms.Catalog.FieldValueRequired",
+            "field": "items.{i}.fields.{fieldId}",
+            "es": "Completá este dato.",
+            "en": "Fill in this value."
+          },
+          {
+            "status": 400,
+            "code": "Forms.Catalog.FieldValueDuplicate",
+            "field": "items.{i}.fields.{fieldId}",
+            "es": "Ya lo tiene la opción {n}.",
+            "en": "Option {n} already has it."
+          },
+          {
+            "status": 409,
+            "code": "Forms.Catalog.SourceInUse",
+            "field": null,
+            "es": "Lo usan campos de otros catálogos. Quitalos antes de darlo de baja.",
+            "en": "Fields in other catalogs use it. Remove them before deactivating it."
+          },
+          {
             "status": 429,
             "code": "Security.RateLimit.Exceeded",
             "field": null,
@@ -24380,7 +24962,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Opciones por posición, paginadas, con search y status (active, inactive o all).",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Opciones por posición, paginadas, con search y status (active, inactive o all), y ids repetido (hasta 100 y sin vacíos) para nombrar las opciones de una fuente. Cada opción trae fields (el valor canónico de cada campo por su id: número como texto, fecha yyyy-MM-dd, sí/no booleano y una fuente con el id de su opción) y presentationIssue (E13).",
         "parameters": [
           {
             "name": "id",
@@ -24425,6 +25007,18 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/FormCatalogStatusFilter"
+            }
+          },
+          {
+            "name": "Ids",
+            "in": "query",
+            "schema": {
+              "maxItems": 100,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              }
             }
           }
         ],
@@ -24757,7 +25351,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Revisa el archivo o lo pegado (mode append al pegar, replace con un archivo) sin escribir: versión leída, SHA-256 y las cuatro listas paginadas con el page y el pageSize del pedido. De a una por persona (Busy) y con lugar en la organización y la instalación (429 TooManyAtOnce, con Retry-After).",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. Revisa el archivo o lo pegado (mode append al pegar, replace con un archivo) sin escribir: versión leída, SHA-256 y las cuatro listas paginadas con el page y el pageSize del pedido. Una columna por campo activo, por su nombre o su clave, con sus errores por fila y columna (Forms.Catalog.FieldValueInvalid, FieldValueRequired y FieldValueDuplicate, E13). De a una por persona (Busy) y con lugar en la organización y la instalación (429 TooManyAtOnce, con Retry-After).",
         "parameters": [
           {
             "name": "id",
@@ -26098,7 +26692,7 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. XLSX con todas las opciones, activas y dadas de baja, con las columnas de la plantilla (C10). De a una por persona.",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. XLSX con todas las opciones, activas y dadas de baja, con las columnas de la plantilla (C10) y una por campo activo, como en pantalla (119). De a una por persona.",
         "parameters": [
           {
             "name": "id",
@@ -26496,13 +27090,21 @@
         "tags": [
           "Forms Catalogs"
         ],
-        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. XLSX de la plantilla para el valueType pedido, sin barrera (C11).",
+        "description": "Catálogos de Formularios (E12). La organización sale del token; un catálogo ajeno o con forms apagada es 404. XLSX de la plantilla para el valueType pedido, sin barrera (C11); con catalogId, también las columnas de los campos activos de ese catálogo (E13), y uno ajeno o que no existe es 404.",
         "parameters": [
           {
             "name": "ValueType",
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/FormCatalogValueType"
+            }
+          },
+          {
+            "name": "CatalogId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -26635,7 +27237,7 @@
             }
           },
           "404": {
-            "description": "Not Found; Http.NotFound",
+            "description": "Not Found; Http.NotFound; Forms.Catalog.NotFound",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -26659,6 +27261,26 @@
                       "status": 404,
                       "detail": "We couldn't find what you're looking for.",
                       "code": "Http.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Forms.Catalog.NotFound.es": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Solicitud rechazada",
+                      "status": 404,
+                      "detail": "No encontramos este catálogo.",
+                      "code": "Forms.Catalog.NotFound",
+                      "traceId": "example-trace-id"
+                    }
+                  },
+                  "Forms.Catalog.NotFound.en": {
+                    "value": {
+                      "type": "about:blank",
+                      "title": "Request rejected",
+                      "status": 404,
+                      "detail": "We couldn't find this catalog.",
+                      "code": "Forms.Catalog.NotFound",
                       "traceId": "example-trace-id"
                     }
                   }
@@ -26788,6 +27410,13 @@
             "field": null,
             "es": "La solicitud tiene un formato inválido.",
             "en": "The request has an invalid format."
+          },
+          {
+            "status": 404,
+            "code": "Forms.Catalog.NotFound",
+            "field": null,
+            "es": "No encontramos este catálogo.",
+            "en": "We couldn't find this catalog."
           },
           {
             "status": 429,
@@ -99150,9 +99779,29 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "fields": {
+            "maxItems": 20,
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/FormCatalogFieldHttpInput"
+            }
+          },
+          "presentation": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FormCatalogPresentationHttpInput"
+              }
+            ]
           }
         },
-        "description": "El alta. Sin tipo, Text. Un catálogo a mano lleva sus opciones, con un id local cada una; uno de miembros o de contactos, sus\r\nfiltros y la persona (`sampleMemberId`) o el cliente (`sampleContactId`) de ejemplo, que se guarda en los filtros."
+        "description": "El alta. Sin tipo, Text. Un catálogo a mano lleva sus opciones, con un id local cada una; uno de miembros o de contactos, sus\r\nfiltros y la persona (`sampleMemberId`) o el cliente (`sampleContactId`) de ejemplo, que se guarda en los filtros. Uno\r\na mano puede traer sus campos (E13), que nacen sin valores, y su presentación."
       },
       "CreatePlatformTenantHttpRequest": {
         "type": "object",
@@ -99777,6 +100426,193 @@
         },
         "description": "El alta: el detalle y el mapa de ids de las opciones nuevas."
       },
+      "FormCatalogFieldDetail": {
+        "required": [
+          "id",
+          "key",
+          "name",
+          "type",
+          "required",
+          "unique",
+          "isActive",
+          "valuesCount"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/FormCatalogFieldType"
+          },
+          "sourceCatalogId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "sourceCatalogName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "unique": {
+            "type": "boolean"
+          },
+          "maxLength": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "min": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "max": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "valuesCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "Un campo de las opciones (E13): su identidad, su clave fija, su nombre, su tipo y sus reglas. Guid? FormCatalogFieldDetail.SourceCatalogId y\r\nstring? FormCatalogFieldDetail.SourceCatalogName son el catálogo de «De un catálogo»; string? FormCatalogFieldDetail.Min y string? FormCatalogFieldDetail.Max, el límite de un\r\nnúmero (como texto, para no perder precisión) o de una fecha (`yyyy-MM-dd`); int FormCatalogFieldDetail.ValuesCount, las opciones con valor."
+      },
+      "FormCatalogFieldHttpInput": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "localId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "key": {
+            "maxLength": 40,
+            "pattern": "^[a-z][a-z0-9_]{0,39}$",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "maxLength": 35,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "type": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FormCatalogFieldType"
+              }
+            ]
+          },
+          "sourceCatalogId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "required": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "unique": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "maxLength": {
+            "maximum": 300,
+            "minimum": 1,
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "min": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "max": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "description": "Un campo de las opciones (E13): uno guardado con `id` o uno nuevo con `localId`; la clave queda fija al guardar, y\r\n`min` y `max` van como texto canónico, un número o `yyyy-MM-dd`."
+      },
+      "FormCatalogFieldIdentity": {
+        "required": [
+          "localId",
+          "fieldId"
+        ],
+        "type": "object",
+        "properties": {
+          "localId": {
+            "type": "string"
+          },
+          "fieldId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "description": "El id del servidor de cada campo nuevo, por el id local con que lo mandó la pantalla (E13)."
+      },
+      "FormCatalogFieldType": {
+        "enum": [
+          "Text",
+          "WholeNumber",
+          "DecimalNumber",
+          "Date",
+          "YesNo",
+          "Catalog"
+        ],
+        "type": "string",
+        "description": "El tipo de un campo de las opciones de un catálogo a mano (E13): texto, número entero o con decimales, fecha, sí/no o «De un\r\ncatálogo», que toma sus valores de las opciones de otro catálogo a mano activo de la misma organización."
+      },
       "FormCatalogFilterCountsResponse": {
         "required": [
           "all",
@@ -100158,9 +100994,23 @@
               "null",
               "boolean"
             ]
+          },
+          "fields": {
+            "maxProperties": 100,
+            "type": [
+              "null",
+              "object"
+            ],
+            "additionalProperties": {
+              "type": [
+                "null",
+                "boolean",
+                "string"
+              ]
+            }
           }
         },
-        "description": "Una opción nueva (con `localId`) o cambiada (con `itemId`); el valor va como texto canónico (C6)."
+        "description": "Una opción nueva (con `localId`) o cambiada (con `itemId`); el valor va como texto canónico (C6). `fields` es el\r\ndelta de los valores de sus campos (E13), por la identidad del campo: ausente se conserva y `null` limpia; un número va\r\ncomo texto, una fecha `yyyy-MM-dd`, sí/no como booleano y una fuente como la identidad de su opción."
       },
       "FormCatalogItemIdentity": {
         "required": [
@@ -100186,7 +101036,8 @@
           "text",
           "position",
           "isActive",
-          "textRepeated"
+          "textRepeated",
+          "fields"
         ],
         "type": "object",
         "properties": {
@@ -100221,32 +101072,36 @@
           },
           "textRepeated": {
             "type": "boolean"
-          }
-        },
-        "description": "Una opción de un catálogo a mano, por posición. string? FormCatalogItemRow.Value es el texto canónico del valor en un catálogo tipado (C6),\r\ny bool FormCatalogItemRow.TextRepeated avisa que otra opción tiene el mismo texto, sin distinguir mayúsculas."
-      },
-      "FormCatalogItemSortColumn": {
-        "enum": [
-          "Text",
-          "Code",
-          null
-        ],
-        "type": [
-          "null",
-          "string"
-        ]
-      },
-      "FormCatalogItemSortHttpInput": {
-        "type": "object",
-        "properties": {
-          "column": {
+          },
+          "fields": {
+            "type": "object",
+            "additionalProperties": {
+              "type": [
+                "boolean",
+                "string"
+              ]
+            }
+          },
+          "presentationIssue": {
             "oneOf": [
               {
                 "type": "null"
               },
               {
-                "$ref": "#/components/schemas/FormCatalogItemSortColumn"
+                "$ref": "#/components/schemas/FormCatalogPresentationIssue"
               }
+            ]
+          }
+        },
+        "description": "Una opción de un catálogo a mano, por posición. string? FormCatalogItemRow.Value es el texto canónico del valor en un catálogo tipado (C6),\r\ny bool FormCatalogItemRow.TextRepeated avisa que otra opción tiene el mismo texto, sin distinguir mayúsculas. Desde la E13,\r\nIReadOnlyDictionary&lt;Guid, JsonElement&gt; FormCatalogItemRow.Fields lleva el valor canónico de cada campo con valor, por la identidad del campo (un número como texto, una fecha\r\n`yyyy-MM-dd`, sí/no como booleano y una fuente como la identidad de su opción), y FormCatalogPresentationIssue? FormCatalogItemRow.PresentationIssue lo que no\r\nentra en WhatsApp."
+      },
+      "FormCatalogItemSortHttpInput": {
+        "type": "object",
+        "properties": {
+          "column": {
+            "type": [
+              "null",
+              "string"
             ]
           },
           "descending": {
@@ -100255,7 +101110,8 @@
               "boolean"
             ]
           }
-        }
+        },
+        "description": "«Ordenar por…» (224): `column` es `Text`, `Code` o, desde la E13, la identidad de un campo activo guardado."
       },
       "FormCatalogMoveDirection": {
         "enum": [
@@ -100289,6 +101145,106 @@
             ]
           }
         }
+      },
+      "FormCatalogPresentationDetail": {
+        "required": [
+          "title",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "maxItems": 24,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "maxItems": 24,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Qué arma el título y la descripción de cada opción en WhatsApp (E13): cada uno es una lista de lugares, unidos con « · »; un\r\nlugar es `text`, `code`, `value`, `detail` o `field:&lt;id&gt;`."
+      },
+      "FormCatalogPresentationExample": {
+        "required": [
+          "itemId",
+          "text",
+          "issue"
+        ],
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "text": {
+            "type": "string"
+          },
+          "issue": {
+            "$ref": "#/components/schemas/FormCatalogPresentationIssue"
+          }
+        }
+      },
+      "FormCatalogPresentationHttpInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "maxItems": 24,
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "maxItems": 24,
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Qué arma el título y la descripción en WhatsApp (E13): `text`, `code`, `value`, `detail` o `field:&lt;id&gt;`."
+      },
+      "FormCatalogPresentationIssue": {
+        "enum": [
+          "TitleEmpty",
+          "TitleTooLong",
+          "DescriptionTooLong"
+        ],
+        "type": "string",
+        "description": "Lo que no entra en WhatsApp de una opción, según la presentación del catálogo (E13); se calcula al leer."
+      },
+      "FormCatalogPresentationIssues": {
+        "required": [
+          "count",
+          "examples"
+        ],
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "examples": {
+            "maxItems": 3,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormCatalogPresentationExample"
+            }
+          }
+        },
+        "description": "Cuántas opciones activas no entran en WhatsApp y hasta tres de ejemplo, en orden de posición (E13)."
       },
       "FormCatalogPreviewHttpRequest": {
         "type": "object",
@@ -100400,7 +101356,10 @@
           "canManage",
           "itemCounts",
           "modifiedAtUtc",
-          "version"
+          "version",
+          "fields",
+          "presentation",
+          "presentationIssues"
         ],
         "type": "object",
         "properties": {
@@ -100498,9 +101457,22 @@
           "version": {
             "type": "integer",
             "format": "uint32"
+          },
+          "fields": {
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormCatalogFieldDetail"
+            }
+          },
+          "presentation": {
+            "$ref": "#/components/schemas/FormCatalogPresentationDetail"
+          },
+          "presentationIssues": {
+            "$ref": "#/components/schemas/FormCatalogPresentationIssues"
           }
         },
-        "description": "El detalle de un catálogo. IReadOnlyList&lt;FormCatalogReference&gt;? FormCatalogResponse.Roles y IReadOnlyList&lt;FormCatalogReference&gt;? FormCatalogResponse.Companies traen el nombre de cada id que usa el filtro, así\r\nquien solo lo ve lo lee sin pedir esas listas; un id que ya no existe no viene. FormCatalogSample? FormCatalogResponse.Sample es la persona o el\r\ncliente de ejemplo guardado en los filtros."
+        "description": "El detalle de un catálogo. IReadOnlyList&lt;FormCatalogReference&gt;? FormCatalogResponse.Roles y IReadOnlyList&lt;FormCatalogReference&gt;? FormCatalogResponse.Companies traen el nombre de cada id que usa el filtro, así\r\nquien solo lo ve lo lee sin pedir esas listas; un id que ya no existe no viene. FormCatalogSample? FormCatalogResponse.Sample es la persona o el\r\ncliente de ejemplo guardado en los filtros. Desde la E13, IReadOnlyList&lt;FormCatalogFieldDetail&gt; FormCatalogResponse.Fields son los campos de las opciones en su orden,\r\ntambién los quitados (vacío si no es a mano), FormCatalogPresentationDetail FormCatalogResponse.Presentation lo que arma el título y la descripción en WhatsApp, y\r\nFormCatalogPresentationIssues FormCatalogResponse.PresentationIssues las opciones activas que no entran."
       },
       "FormCatalogRow": {
         "required": [
@@ -100750,7 +101722,8 @@
       "FormCatalogUpdatedResponse": {
         "required": [
           "version",
-          "itemIdentityMap"
+          "itemIdentityMap",
+          "fieldIdentityMap"
         ],
         "type": "object",
         "properties": {
@@ -100764,9 +101737,16 @@
             "items": {
               "$ref": "#/components/schemas/FormCatalogItemIdentity"
             }
+          },
+          "fieldIdentityMap": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormCatalogFieldIdentity"
+            }
           }
         },
-        "description": "Guardar: la versión nueva del catálogo y el mapa de ids de las opciones nuevas (C3)."
+        "description": "Guardar: la versión nueva del catálogo y los mapas de ids de las opciones y de los campos nuevos (C3, E13)."
       },
       "FormCatalogValueType": {
         "enum": [
@@ -106299,6 +107279,51 @@
             "items": {
               "type": "string"
             }
+          },
+          "invalidCount": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "invalidRows": {
+            "maxItems": 50,
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "required": [
+                "position",
+                "itemId",
+                "text",
+                "reason"
+              ],
+              "type": "object",
+              "properties": {
+                "position": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "itemId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "reason": {
+                  "enum": [
+                    "required",
+                    "range",
+                    "length",
+                    "invalid"
+                  ],
+                  "type": "string"
+                }
+              }
+            }
           }
         }
       },
@@ -107677,9 +108702,40 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "fields": {
+            "maxItems": 20,
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/FormCatalogFieldHttpInput"
+            }
+          },
+          "presentation": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/FormCatalogPresentationHttpInput"
+              }
+            ]
+          },
+          "confirmedFieldRemovals": {
+            "maxItems": 20,
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         },
-        "description": "Guardar todo junto (C3): `items` lleva solo lo nuevo o cambiado; `isActive` es obligatorio; `moves`,\r\n`sort` y `deleteItems` (hasta 500, sin repetir) no se combinan entre sí."
+        "description": "Guardar todo junto (C3): `items` lleva solo lo nuevo o cambiado; `isActive` es obligatorio; `moves`,\r\n`sort` y `deleteItems` (hasta 500, sin repetir) no se combinan entre sí. Desde la E13, `fields` es la lista entera\r\nde los campos activos si cambió, en su orden; `confirmedFieldRemovals`, los campos con valores que se quitan, y\r\n`presentation`, qué va en WhatsApp."
       },
       "UpdateMeHttpRequest": {
         "type": "object",

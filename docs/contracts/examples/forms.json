@@ -378,7 +378,20 @@
           },
           "modifiedAtUtc": "2026-11-27T12:00:00Z",
           "modifiedBy": null,
-          "version": 2
+          "version": 2,
+          "fields": [],
+          "presentation": {
+            "title": [
+              "text"
+            ],
+            "description": [
+              "detail"
+            ]
+          },
+          "presentationIssues": {
+            "count": 0,
+            "examples": []
+          }
         },
         "itemIdentityMap": [
           {
@@ -448,7 +461,20 @@
           },
           "modifiedAtUtc": "2026-11-27T12:00:00Z",
           "modifiedBy": null,
-          "version": 3
+          "version": 3,
+          "fields": [],
+          "presentation": {
+            "title": [
+              "text"
+            ],
+            "description": [
+              "detail"
+            ]
+          },
+          "presentationIssues": {
+            "count": 0,
+            "examples": []
+          }
         },
         "itemIdentityMap": []
       }
@@ -485,7 +511,20 @@
           },
           "modifiedAtUtc": "2026-11-27T12:00:00Z",
           "modifiedBy": null,
-          "version": 4
+          "version": 4,
+          "fields": [],
+          "presentation": {
+            "title": [
+              "text"
+            ],
+            "description": [
+              "detail"
+            ]
+          },
+          "presentationIssues": {
+            "count": 0,
+            "examples": []
+          }
         },
         "itemIdentityMap": []
       }
@@ -522,7 +561,20 @@
           },
           "modifiedAtUtc": "2026-11-27T12:00:00Z",
           "modifiedBy": null,
-          "version": 5
+          "version": 5,
+          "fields": [],
+          "presentation": {
+            "title": [
+              "text"
+            ],
+            "description": [
+              "detail"
+            ]
+          },
+          "presentationIssues": {
+            "count": 0,
+            "examples": []
+          }
         },
         "itemIdentityMap": []
       }
@@ -553,7 +605,20 @@
           },
           "modifiedAtUtc": "2026-11-27T12:00:00Z",
           "modifiedBy": null,
-          "version": 6
+          "version": 6,
+          "fields": [],
+          "presentation": {
+            "title": [
+              "text"
+            ],
+            "description": [
+              "detail"
+            ]
+          },
+          "presentationIssues": {
+            "count": 0,
+            "examples": []
+          }
         },
         "itemIdentityMap": [
           {
@@ -907,7 +972,20 @@
         },
         "modifiedAtUtc": "2026-11-27T12:00:00Z",
         "modifiedBy": null,
-        "version": 2
+        "version": 2,
+        "fields": [],
+        "presentation": {
+          "title": [
+            "text"
+          ],
+          "description": [
+            "detail"
+          ]
+        },
+        "presentationIssues": {
+          "count": 0,
+          "examples": []
+        }
       }
     },
     {
@@ -961,7 +1039,20 @@
         },
         "modifiedAtUtc": "2026-11-27T12:00:00Z",
         "modifiedBy": null,
-        "version": 3
+        "version": 3,
+        "fields": [],
+        "presentation": {
+          "title": [
+            "text"
+          ],
+          "description": [
+            "detail"
+          ]
+        },
+        "presentationIssues": {
+          "count": 0,
+          "examples": []
+        }
       }
     },
     {
@@ -993,7 +1084,9 @@
             "value": null,
             "position": 0,
             "isActive": true,
-            "textRepeated": false
+            "textRepeated": false,
+            "fields": {},
+            "presentationIssue": null
           },
           {
             "id": "00000000-0000-4000-8000-000000000007",
@@ -1003,7 +1096,9 @@
             "value": null,
             "position": 1,
             "isActive": true,
-            "textRepeated": false
+            "textRepeated": false,
+            "fields": {},
+            "presentationIssue": null
           },
           {
             "id": "00000000-0000-4000-8000-000000000008",
@@ -1013,7 +1108,9 @@
             "value": null,
             "position": 2,
             "isActive": true,
-            "textRepeated": false
+            "textRepeated": false,
+            "fields": {},
+            "presentationIssue": null
           }
         ],
         "page": 1,
@@ -1069,7 +1166,8 @@
             "localId": "n4",
             "itemId": "00000000-0000-4000-8000-000000000014"
           }
-        ]
+        ],
+        "fieldIdentityMap": []
       }
     },
     {

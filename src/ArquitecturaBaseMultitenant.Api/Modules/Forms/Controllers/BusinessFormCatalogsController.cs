@@ -76,7 +76,8 @@ public sealed class BusinessFormCatalogsController(
     [ProducesProblem(500)]
     public async Task<IActionResult> Create([FromBody] CreateFormCatalogHttpRequest request, CancellationToken cancellationToken) =>
         (await catalogs.CreateAsync(new CreateFormCatalogRequest(request.Name, request.Description, request.Source, request.ValueType,
-            ToItems(request.Items), ToFilters(request.Filters), request.SampleMemberId, request.SampleContactId), cancellationToken))
+            ToItems(request.Items), ToFilters(request.Filters), request.SampleMemberId, request.SampleContactId, ToFields(request.Fields),
+            ToPresentation(request.Presentation)), cancellationToken))
         .ToCreatedResult(this, nameof(Get), created => new { id = created.Catalog.Id });
 
     [HttpGet("{id:guid}")]
@@ -104,7 +105,8 @@ public sealed class BusinessFormCatalogsController(
         (await catalogs.UpdateAsync(new UpdateFormCatalogRequest(id, request.Name, request.Description, request.IsActive, request.Version,
             ToItems(request.Items), request.Moves?.Select(move => move is null ? null! : new FormCatalogMoveInput(move.ItemId, move.Direction)).ToArray(),
             request.Sort is null ? null : new FormCatalogItemSortInput(request.Sort.Column, request.Sort.Descending), request.DeleteItems,
-            ToFilters(request.Filters), request.SampleMemberId, request.SampleContactId), cancellationToken)).ToActionResult(this);
+            ToFilters(request.Filters), request.SampleMemberId, request.SampleContactId, ToFields(request.Fields),
+            ToPresentation(request.Presentation), request.ConfirmedFieldRemovals), cancellationToken)).ToActionResult(this);
 
     [HttpGet("{id:guid}/items")]
     [HasPermission(Permissions.Forms.CatalogsRead)]
@@ -122,6 +124,7 @@ public sealed class BusinessFormCatalogsController(
             PageSize = query.PageSize ?? PagedRequest.DefaultPageSize,
             Search = query.Search,
             Status = query.Status,
+            Ids = query.Ids,
         }, cancellationToken)).ToActionResult(this);
 
     [HttpPost("{id:guid}/imports/previews")]
@@ -196,7 +199,7 @@ public sealed class BusinessFormCatalogsController(
     [ProducesProblem(404)]
     [ProducesProblem(500)]
     public async Task<IActionResult> GetTemplate([FromQuery] FormCatalogTemplateHttpQuery query, CancellationToken cancellationToken) =>
-        (await imports.GetTemplateAsync(new FormCatalogTemplateRequest(query.ValueType), cancellationToken)).ToFileResult(this);
+        (await imports.GetTemplateAsync(new FormCatalogTemplateRequest(query.ValueType, query.CatalogId), cancellationToken)).ToFileResult(this);
 
     [HttpGet("sources/members")]
     [HasPermission(Permissions.Forms.CatalogsManage)]
@@ -285,7 +288,14 @@ public sealed class BusinessFormCatalogsController(
 
     private static FormCatalogItemInput[]? ToItems(IReadOnlyList<FormCatalogItemHttpInput>? items) =>
         items?.Select(item => item is null ? null! : new FormCatalogItemInput(item.ItemId, item.LocalId, item.Code, item.Text, item.Detail,
-            item.Value, item.IsActive)).ToArray();
+            item.Value, item.IsActive, item.Fields)).ToArray();
+
+    private static FormCatalogFieldInput[]? ToFields(IReadOnlyList<FormCatalogFieldHttpInput>? fields) =>
+        fields?.Select(field => field is null ? null! : new FormCatalogFieldInput(field.Id, field.LocalId, field.Key, field.Name, field.Type,
+            field.SourceCatalogId, field.Required, field.Unique, field.MaxLength, field.Min, field.Max)).ToArray();
+
+    private static FormCatalogPresentationInput? ToPresentation(FormCatalogPresentationHttpInput? presentation) =>
+        presentation is null ? null : new(presentation.Title, presentation.Description);
 
     private static FormCatalogFiltersInput? ToFilters(FormCatalogFiltersHttpInput? filters) => filters is null
         ? null

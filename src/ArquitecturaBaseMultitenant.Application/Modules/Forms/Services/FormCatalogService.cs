@@ -91,7 +91,7 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
             var saved = await unitOfWork.ExecuteInTransactionAsync(ct => UpdateCoreAsync(request, ct), CommitPolicy.OnSuccess,
                 cancellationToken);
             if (saved.IsFailure) return saved.Error;
-            return new FormCatalogUpdatedResponse(saved.Value.Catalog.Version, saved.Value.Identities);
+            return new FormCatalogUpdatedResponse(saved.Value.Catalog.Version, saved.Value.Identities, []);
         });
     }
 
@@ -187,7 +187,7 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
         return new FormCatalogResponse(catalog.Id, catalog.Name, catalog.Description, catalog.Source, catalog.ValueType,
             ToResponse(catalog.Filters), state.Roles, state.Companies, sample, catalog.IsActive, catalog.IsActive && reason is null,
             reason, canManage, new FormCatalogItemCounts(catalog.TotalItems, catalog.ActiveItems), catalog.ModifiedAtUtc, modifiedBy,
-            catalog.Version);
+            catalog.Version, [], FormCatalogPresentationDetail.Default, FormCatalogPresentationIssues.None);
     }
 
     private static Models.FormCatalogFilters? ToResponse(CatalogFilters? saved) => saved is null ? null : new(saved.SourceVersion,

@@ -14,4 +14,10 @@ public static class FormsTextLimits
     public const int OptionDetail = 300;
     /// <summary>La descripción de un catálogo.</summary>
     public const int CatalogDescription = 300;
+    /// <summary>El nombre de un campo de las opciones (E13), un solo texto.</summary>
+    public const int FieldName = 35;
+    /// <summary>La clave de un campo, que nace del nombre y queda fija al guardar (E13).</summary>
+    public const int FieldKey = 40;
+    /// <summary>El largo máximo que admite la regla de un campo de texto, de 1 a este (E13).</summary>
+    public const int FieldTextLength = 300;
 }

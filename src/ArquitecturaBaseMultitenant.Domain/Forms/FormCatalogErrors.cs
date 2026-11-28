@@ -14,10 +14,15 @@ public static class FormCatalogErrors
     /// <summary>La opción no es de ese catálogo, en <c>deleteItems.{i}</c> o <c>moves.{i}</c>.</summary>
     public static Error ItemNotFound(string field) => Field(ItemNotFoundCode, "That option isn't in this catalog.", field, ErrorType.NotFound);
     public const string ItemInUseCode = "Forms.Catalog.ItemInUse";
-    /// <summary>Borrar una opción que algo usa (129): no se borra ninguna, y <c>uses</c> dice qué la usa, sin repetir.</summary>
+    /// <summary>
+    /// Borrar una opción que algo usa (129): no se borra ninguna, y <c>uses</c> dice qué la usa, sin repetir; desde la E13,
+    /// <see cref="UsedByOptions"/> cuando un campo activo de otro catálogo la tiene como valor.
+    /// </summary>
     public static Error ItemInUse(int index, IReadOnlyList<string> uses) =>
         Field(ItemInUseCode, "It can't be deleted because it's in use.", $"deleteItems.{index}", ErrorType.Conflict)
             with { Metadata = new Dictionary<string, object?> { ["uses"] = uses } };
+    /// <summary>El uso de <see cref="ItemInUse"/> por las opciones de otro catálogo, con su frase en el front (E13).</summary>
+    public const string UsedByOptions = "options";
     public const string DuplicateCodeCode = "Forms.Catalog.DuplicateCode";
     /// <summary>El código ya existe en el catálogo: <c>n</c> es el número de la opción que ya lo tiene.</summary>
     public static Error DuplicateCode(int index, int optionNumber) =>
@@ -53,6 +58,63 @@ public static class FormCatalogErrors
     public const string ItemDetailTooLongCode = "Forms.Catalog.ItemDetailTooLong";
     public static Error ItemDetailTooLong(int index) => Field(ItemDetailTooLongCode, "The detail is too long.", $"items.{index}.detail", ErrorType.Validation);
 
+    // Los campos de las opciones (E13). El campo del error es el de la lista del pedido (fields.{i} o items.{i}.fields.{id del campo});
+    // los textos con un dato ({name}, {count}, {type}, {n}, {min} o {max}) llegan ya armados con la cultura del pedido en message.
+    public const string TooManyFieldsCode = "Forms.Catalog.TooManyFields";
+    /// <summary>Más de 20 campos activos: los quitados no cuentan.</summary>
+    public static readonly Error TooManyFields = Field(TooManyFieldsCode, "The catalog reached its maximum number of fields.", "fields", ErrorType.Validation);
+    public const string FieldKeyDuplicateCode = "Forms.Catalog.FieldKeyDuplicate";
+    /// <summary>Dos campos activos con la misma clave; <paramref name="message"/> nombra al otro campo.</summary>
+    public static Error FieldKeyDuplicate(int index, string message) =>
+        Field(FieldKeyDuplicateCode, "Another field already uses that key.", $"fields.{index}.key", ErrorType.Validation, message);
+    public const string FieldInvalidCode = "Forms.Catalog.FieldInvalid";
+    /// <summary>Un tipo, una regla o una fuente fuera de lo permitido, otra clave en un campo guardado o un campo en un catálogo que no es a mano.</summary>
+    public static Error FieldInvalid(int index) => Field(FieldInvalidCode, "Check this field's type, rules or catalog.", $"fields.{index}", ErrorType.Validation);
+    public const string FieldRemovalNotConfirmedCode = "Forms.Catalog.FieldRemovalNotConfirmed";
+    /// <summary>Quitar un campo con valores sin nombrarlo en <c>confirmedFieldRemovals</c>.</summary>
+    public static Error FieldRemovalNotConfirmed(int index, string message) =>
+        Field(FieldRemovalNotConfirmedCode, "Confirm that the field's values are removed.", $"fields.{index}", ErrorType.Validation, message);
+    public const string FieldTypeNotConvertibleCode = "Forms.Catalog.FieldTypeNotConvertible";
+    /// <summary>Valores que no convierten al tipo nuevo: las primeras filas en orden de posición y cuántas son en total.</summary>
+    public static Error FieldTypeNotConvertible(int index, string message, int invalidCount, IReadOnlyList<FormCatalogInvalidRow> invalidRows) =>
+        Field(FieldTypeNotConvertibleCode, "Some values can't be converted to the new type.", $"fields.{index}.type", ErrorType.Validation, message)
+            with { Metadata = InvalidRows(invalidCount, invalidRows) };
+    public const string FieldValuesIncompatibleCode = "Forms.Catalog.FieldValuesIncompatible";
+    /// <summary>Valores que no cumplen una regla nueva (único o el límite), con sus filas como en <see cref="FieldTypeNotConvertible"/>.</summary>
+    public static Error FieldValuesIncompatible(int index, string message, int invalidCount, IReadOnlyList<FormCatalogInvalidRow> invalidRows) =>
+        Field(FieldValuesIncompatibleCode, "Some values don't meet the new rule.", $"fields.{index}", ErrorType.Validation, message)
+            with { Metadata = InvalidRows(invalidCount, invalidRows) };
+    public const string FieldValuesMissingCode = "Forms.Catalog.FieldValuesMissing";
+    /// <summary>Opciones activas sin valor al volver obligatorio un campo.</summary>
+    public static Error FieldValuesMissing(int index, string message) =>
+        Field(FieldValuesMissingCode, "Some active options have no value.", $"fields.{index}.required", ErrorType.Validation, message);
+    public const string FieldValueInvalidCode = "Forms.Catalog.FieldValueInvalid";
+    /// <summary>El valor de una opción no es del tipo del campo o no cumple su límite; <paramref name="message"/> dice cuál.</summary>
+    public static Error FieldValueInvalid(int index, Guid fieldId, string message) =>
+        Field(FieldValueInvalidCode, "The value doesn't match the field.", FieldValue(index, fieldId), ErrorType.Validation, message);
+    public const string FieldValueRequiredCode = "Forms.Catalog.FieldValueRequired";
+    /// <summary>Falta el valor de un campo obligatorio en una opción activa.</summary>
+    public static Error FieldValueRequired(int index, Guid fieldId) =>
+        Field(FieldValueRequiredCode, "Fill in this value.", FieldValue(index, fieldId), ErrorType.Validation);
+    public const string FieldValueDuplicateCode = "Forms.Catalog.FieldValueDuplicate";
+    /// <summary>Un valor único que ya tiene otra opción activa; <paramref name="message"/> dice cuál.</summary>
+    public static Error FieldValueDuplicate(int index, Guid fieldId, string message) =>
+        Field(FieldValueDuplicateCode, "Another option already has that value.", FieldValue(index, fieldId), ErrorType.Validation, message);
+    public const string SourceInUseCode = "Forms.Catalog.SourceInUse";
+    /// <summary>Dar de baja un catálogo que es fuente de campos activos de otros catálogos: se corrige, no pone el editor en conflicto.</summary>
+    public static readonly Error SourceInUse = Error.Conflict(SourceInUseCode, "Fields in other catalogs use this catalog.");
+    public const string PresentationInvalidCode = "Forms.Catalog.PresentationInvalid";
+    /// <summary>Un lugar de la presentación que no existe, repetido, o el título sin lugar.</summary>
+    public static readonly Error PresentationInvalid = Field(PresentationInvalidCode, "Check what goes in the title and the description.", "presentation", ErrorType.Validation);
+
+    private static string FieldValue(int index, Guid fieldId) => $"items.{index}.fields.{fieldId}";
+
+    private static Dictionary<string, object?> InvalidRows(int invalidCount, IReadOnlyList<FormCatalogInvalidRow> invalidRows) =>
+        new() { ["invalidCount"] = invalidCount, ["invalidRows"] = invalidRows };
+
+    private static ValidationError Field(string code, string description, string field, ErrorType type, string message) =>
+        new(code, description, new Dictionary<string, string[]> { [field] = [message] }, type);
+
     private static ValidationError Field(string code, string description, string field, ErrorType type) =>
-        new(code, description, new Dictionary<string, string[]> { [field] = [code] }, type);
+        Field(code, description, field, type, code);
 }

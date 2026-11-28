@@ -80,7 +80,7 @@ public sealed class FormCatalogActionSourceTests
         {
             ItemPages++;
             FormCatalogItemRow[] found = [.. Matching(request.Search!).Take(request.PageSize)
-                .Select(item => new FormCatalogItemRow(item.Id, item.Code, item.Text, null, null, 0, true, false))];
+                .Select(item => new FormCatalogItemRow(item.Id, item.Code, item.Text, null, null, 0, true, false, FormCatalogItemRow.NoFields, null))];
             return Task.FromResult(new PagedResult<FormCatalogItemRow>(found, 1, request.PageSize, found.Length));
         }
 

@@ -12,6 +12,29 @@ public sealed class UpdateFormCatalogRequestValidatorTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
+    [Theory]
+    [InlineData("Text")]
+    [InlineData("Code")]
+    [InlineData("code")]
+    [InlineData("8d0f5a52-3c1e-4a8e-9a55-0d6f2b7e1c11")]
+    public async Task Sort_column_accepts_text_code_or_the_id_of_a_field(string column)
+    {
+        Assert.Null(await ValidateAsync(Request() with { Sort = new FormCatalogItemSortInput(column, false) }));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("Detail")]
+    [InlineData("0")]
+    [InlineData("00000000-0000-0000-0000-000000000000")]
+    public async Task Sort_column_rejects_anything_else_in_sort_column(string column)
+    {
+        var invalid = await ValidateAsync(Request() with { Sort = new FormCatalogItemSortInput(column, false) });
+
+        Assert.NotNull(invalid);
+        Assert.Equal(["sort.column"], invalid.Errors.Keys);
+    }
+
     [Fact]
     public async Task Sort_with_moves_or_deletions_is_rejected_in_sort()
     {

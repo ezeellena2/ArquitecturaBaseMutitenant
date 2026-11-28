@@ -28,8 +28,11 @@ public sealed record ApplyFormCatalogImportRequest(Guid CatalogId, string? FileN
     public override string ToString() => nameof(ApplyFormCatalogImportRequest);
 }
 
-/// <summary>La plantilla para importar, con la columna del valor del tipo pedido; sin tipo, la de un catálogo de texto (C10).</summary>
-public sealed record FormCatalogTemplateRequest(FormCatalogValueType? ValueType);
+/// <summary>
+/// La plantilla para importar, con la columna del valor del tipo pedido; sin tipo, la de un catálogo de texto (C10). Con
+/// <see cref="CatalogId"/> (E13), también las columnas de los campos activos de ese catálogo.
+/// </summary>
+public sealed record FormCatalogTemplateRequest(FormCatalogValueType? ValueType, Guid? CatalogId = null);
 
 /// <summary>Una planilla para descargar: la exportación o la plantilla.</summary>
 public sealed record FormCatalogFileResponse(Stream Content, string MediaType, string FileName)

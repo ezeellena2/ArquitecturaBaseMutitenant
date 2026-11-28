@@ -45,7 +45,7 @@ internal sealed class FormCatalogPositionEditor(IFormCatalogRepository repositor
         if (moved.IsFailure) return moved;
         if (sort is not null)
         {
-            Func<FormCatalogItem, string?> key = sort.Column == FormCatalogItemSortColumn.Code ? item => item.Code : item => item.Text;
+            Func<FormCatalogItem, string?> key = sort.FixedColumn == FormCatalogItemSortColumn.Code ? item => item.Code : item => item.Text;
             order = [.. SortByText(order, key, sort.Descending ?? false, CultureInfo.CurrentCulture)];
         }
 

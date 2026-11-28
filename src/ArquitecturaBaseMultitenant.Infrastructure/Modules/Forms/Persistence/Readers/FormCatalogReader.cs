@@ -105,7 +105,8 @@ internal sealed class FormCatalogReader(ApplicationDbContext context, ITenantCon
             .ToHashSet(StringComparer.Ordinal);
 #pragma warning restore CA1304, CA1311, CA1862
         return new PagedResult<FormCatalogItemRow>([.. page.Items.Select(row => new FormCatalogItemRow(row.Id, row.Code, row.Text,
-            row.Detail, FormCatalogValueText.Of(row.DateValue, row.NumberValue), row.Position, row.IsActive, repeated.Contains(row.LowerText)))],
+            row.Detail, FormCatalogValueText.Of(row.DateValue, row.NumberValue), row.Position, row.IsActive, repeated.Contains(row.LowerText),
+            FormCatalogItemRow.NoFields, null))],
             page.Page, page.PageSize, page.TotalCount);
     }
 

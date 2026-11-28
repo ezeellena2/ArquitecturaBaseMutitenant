@@ -11,10 +11,14 @@ public sealed record ListFormCatalogsRequest : PagedRequest
     public FormCatalogStatusFilter? Status { get; init; }
 }
 
-/// <summary>Las opciones de un catálogo a mano, por posición; <see cref="PagedRequest.Search"/> busca por el texto o el código.</summary>
+/// <summary>
+/// Las opciones de un catálogo a mano, por posición; <see cref="PagedRequest.Search"/> busca por el texto o el código, e
+/// <see cref="Ids"/> (E13, hasta 100 y sin vacíos) trae solo esas, para nombrar las opciones de una fuente.
+/// </summary>
 public sealed record ListFormCatalogItemsRequest : PagedRequest
 {
     public FormCatalogStatusFilter? Status { get; init; }
+    public IReadOnlyList<Guid>? Ids { get; init; }
 }
 
 /// <summary>
