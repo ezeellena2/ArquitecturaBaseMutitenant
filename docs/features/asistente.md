@@ -1,6 +1,6 @@
 # Asistente: contrato E8b
 
-**Revisado:** 2026-11-27
+**Revisado:** 2026-11-28
 
 Freeze T01: 56 operaciones nuevas (45 chat, 11 gestión), 40 rutas. Los controllers llaman interfaces y servicios de Application. T02 implementa instalación, persistencia privada, gates, lectura de conversaciones propias y configuración global sin clave; las formas HTTP congeladas se conservan. T03 implementa configuración, políticas y catálogo técnico editable; T05c implementa State en los tres accesos y T06b las lecturas de Uso. Turnos de proveedor, archivos y workers restantes se completan según sus tareas.
 
@@ -177,6 +177,8 @@ Cada mensaje assistant conserva SubjectUserIds (identidades reales de las copias
 El preflight lee sólo la metadata del historial y revalida los sujetos antes de la reserva financiera. La admisión toma las shares de la unión conocida antes del lock de conversación y vuelve a leer esa metadata; si cambió, exige un preflight nuevo. El nuevo binding y el mensaje Generating conservan la unión de los sujetos del contexto. ContextMessageIds del turno fija los mensajes admitidos; Claim comprueba la metadata y los sujetos de esos IDs antes y después de leer sus textos. No incorpora mensajes posteriores ni omite filas del contexto. Un sujeto con baja empezada, ausente o una copia cuyo origen no se puede verificar rechaza el envío con Assistant.Conversation.NotFound; no llama al proveedor ni admite consumo financiero.
 
 Quick usa la metadata tipada de SubjectCopies de M3. Los pendientes de usuarios resuelven TargetId como MemberId hacia el UserId real, y verifican que el dato coincida con la proyección actual antes de registrar los sujetos; un UserId null corresponde a la invitación propia de la organización, no a una identidad inferida por email. Los tipos cerrados de roles, empresas, dominios de organización y ayuda escrita no copian nombres de cuenta. Una salida desconocida con datos personales no se acepta como una unión vacía: exige procedencia explícita o falla cerrada.
+
+`org_pending` también devuelve los pendientes de la organización que no son de una persona, como el de WhatsApp de un número sin medio de pago (`numberPaymentMissing`), en lugar de cortar el turno con `QuickQueryNotAvailable`. El uso de cada vuelta y del título se registra con cero escrituras de caché y `CacheBreakdownComplete=true`, porque el pedido no manda `cache_control`: la entrada se cobra a la tarifa base, y las lecturas de caché solo cuentan si el proveedor las informa (arreglos de la revisión externa, B8).
 
 El legado empieza con PrivacySubjectsKnown=false. La migración sólo puede marcar como conocido lo verificable por IDs de mensaje, conversación, dueño/acceso y sujetos de un snapshot M3 intacto. Una tombstone o un snapshot irreconstruible no prueba ausencia de sujetos: conserva unknown y no puede alimentar al modelo. Los mensajes User son texto aportado por su dueño, no copias generadas por herramientas. La purga de esos mensajes y archivos corresponde al worker de retención y a la baja de la cuenta; conserva el plazo separado de replay.
 

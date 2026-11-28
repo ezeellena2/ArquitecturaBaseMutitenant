@@ -44,14 +44,13 @@ El [panorama vigente](architecture/backend.md) describe la arquitectura; los pen
 
 ## Etapa 9 o descartar
 
-- **4.** Las reglas no negociables 2 ("una vez por método") y 10 (OperationLog en cada método público) no tienen verificación
+- **4.** La regla no negociable 2 ("una vez por método") no tiene verificación
 - **7.** La cadena real de interceptores con auditoría compartida nunca se prueba contra la base
 - **8.** El diff de auditoría enmascara por nombre de propiedad, no por tipo
 - **9.** Los grants de mt_app solo cubren las tablas de E2 y dan DML completo sobre los catálogos globales
 - **11.** Runtime_role_validator_rejects_superuser es un falso verde
 - **13.** Ningún test verifica que las claves de HybridCache salgan de CacheKeys
 - **14.** El inventario de RLS solo mira los nombres de las políticas
-- **15.** Los archivos modelo de 25 punteros nunca se verifican (solo se mira "Copiá de:" con dos puntos)
 - **16.** NoManualFormattingTests sigue sin ver la interpolación sin formato (`$"{monto}"`) ni con alineación
 - **17.** SensitiveToStringLoggingTests da verde con contratos que sí filtran datos en ToString()
 - **18.** TenantScopeUsageTests habilita a TenantJobRunner, que cualquier clase de Infrastructure puede usar para entrar a cualquier organización
@@ -218,3 +217,51 @@ Lo que recorre la verificación de esta etapa, el segundo hito, después del có
 - **Recorrido** (`F/scripts/recorrido-usuario-forms.mjs`, nuevo): `armar-un-catalogo` y `catalogo-con-filtros`.
 - **Galería** (`F/scripts/capturas/etapa-12.json`), a 1440, 390 y 320: los quince tableros de la etapa, los trece de la §10, sin `FRM-Catalogo-Nuevo` ni `FRM-Catalogo-Tipo`, y la propuesta con su teléfono.
 - El retiro del módulo no se prueba en esta etapa (C13).
+
+## Para después de la etapa arreglos-revision
+
+Vienen de la sección «Para después» del plan, que se retiró con el código listo del 2026-11-28 (el detalle de cada hallazgo, en `.local/antigravity/verificacion/00-verificacion.md`, fuera de git), y de la revisión y los arreglos de la etapa:
+- **Escala, antes de pasar de unas 50 organizaciones:** Legal sin caché en cada pedido (T03-01), el checkpoint por fragmento del streaming (T06-02), el Outbox secuencial sin señal (el resto de T03-03), los sondeos del front (T09-04, T04-17), la cola de entrada (T03-10) y los índices (T03-13).
+- **Meta:** el estado «reconectar» ante el 190 y reconectar el mismo número sin canal nuevo, que pide tablero (T05-01); un primer país sin tarifa (T05-06); `account_update` y la calidad del número (T05-07).
+- **Pantallas:** el hilo de más de 100 mensajes (T04-10, T09-03), los avisos pegados del chat (T04-15), el Bot que guarda con la versión viva (T09-02), el asistente con `DailyReached` (T04-16) y la `Idempotency-Key` de Catálogos después de un 400 (T09-06).
+- **Módulos:** las guías de retiro sin `CoreTextsNeutralTests` (T01-02) y los pares Organización y Plataforma de WhatsApp (T01-03).
+- **La regla de B12 en Plataforma:** «Transferir» en la bandeja de Plataforma acepta a un operador sin `WhatsApp.Attend`, y quitarle ese permiso o quitar al operador no libera sus consultas tomadas. B12 cubrió solo las bandejas de la organización. Dónde: `PlatformWhatsAppConversationService.cs` (revisión).
+- **Bajos:** los de la verificación que ninguna tarea arregla de paso.
+- **Decisiones de producto pendientes:** una WABA en dos organizaciones (T02-09), un mensaje para una organización con WhatsApp apagado (T02-11, el ítem de B7 de [costuras de módulos](#para-después-de-la-etapa-costuras-de-modulos)), el autenticador de un operador que se quita (T07-08), la retención de `OutboxMessages` y `WhatsAppMessages` (T03-07), una conversación guardada que nombra a alguien dado de baja (T06-10), el tope del asistente en Personal antes de prenderlo (T06-04), la escala de escritorio al 75 % (T09-11) y el arnés de punteros (T01-08).
+- **Darles mensaje propio, en es y en, a las reglas Predicate de `CreateFormCatalogRequestValidator.Items`, `UpdateFormCatalogRequestValidator.Items` y `UpdateFormCatalogRequestValidator.DeleteItems`.** `ValidationMessageTests.Every_validation_rule_reports_its_own_message` falla en main desde 95972ccf, así que ArchitectureTests no pasa, y cada vez que main avanza `carril.mjs entregar` frena la entrega de cualquier carril del back con código 5. Dónde: `src/ArquitecturaBaseMultitenant.Application/Modules/Forms/Validation/` (los dos validadores y `FormCatalogInputRules.cs`); `tests/ArquitecturaBaseMultitenant.ArchitectureTests/ValidationMessageTests.cs` (B1, B5, B9, B10).
+- **Que el conductor no lance una tarea del plan que ya está tomando otra sesión en main.** B1 la programaron a la vez un carril y la sesión de KAN-12, y la copia del carril quedó con dos commits que no se pueden entregar (con B2 y B3 pasó lo mismo). Dónde: `scripts/arneses/carril.mjs` o el workflow `etapa.js`: mirar `git log --grep "Tarea: <plan>/<id>"` y los cambios sin commitear de main antes de lanzar y antes de entregar (B1).
+- **Revisar si `RemoveByAccountAndPhoneAsync` puede cambiar `app.tenant_id` con `set_config` dentro de la transacción de la petición** (pasa al espacio personal y a cada organización vinculada, y lee `tenant.WhatsAppChats` ajenos con SQL crudo). Es un cambio de alcance de RLS que hace el módulo fuera de `ITenantScope.Enter` y con una transacción abierta; `ITenantScope` dice «antes de abrir una transacción» y las reglas 4 y 5 piden no saltear el aislamiento fuera de la lista blanca. Si se acepta, va como excepción en la ficha de multitenancy. Dónde: `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/WhatsApp/Persistence/WhatsAppConversationLinkRepository.cs` (commit 2b4b7db7); `docs/rules/multitenancy.md` (B3).
+- **Revisar el nombre `SpreadsheetScanner`.** El plan pedía un sufijo de la lista cerrada de capas-y-flujo, y «Scanner» no está; ningún test lo controla en Infrastructure. Dónde: `src/ArquitecturaBaseMultitenant.Infrastructure/Spreadsheets/SpreadsheetScanner.cs`; `docs/rules/capas-y-flujo.md` (B2).
+- **Un PDF con un stream `LZWDecode` o `Crypt`, o con un filtro que el medidor no conoce, se rechaza como `Assistant.Provider.ContextTooLarge` aunque sea chico.** La persona lee «demasiado grande» por un archivo chico; hay que ver si esos filtros se cuentan por su largo crudo o si el rechazo se queda así a propósito. Dónde: `src/ArquitecturaBaseMultitenant.Infrastructure/Modules/Assistant/AssistantTurnContextGuard.Pdf.cs` (`PdfFilter.Unsupported`) (B7).
+- **Que `OrganizationPendingTool` deje de comparar el pendiente de WhatsApp con los textos fijos `"whatsapp"` y `"numberPaymentMissing"`, o que un test de contrato compruebe que siguen iguales a las constantes del módulo.** El núcleo no puede referenciar el módulo y copia los textos a mano: si el módulo renombra `Area` o `Kind`, `org_pending` vuelve a cortar el turno con `QuickQueryNotAvailable` sin que falle ningún build. Dónde: `src/ArquitecturaBaseMultitenant.Application/Modules/Assistant/Tools/Business/OrganizationPendingTool.cs:30` (B8).
+- **Que no se pierda el motivo de un «failed» que llega por el webhook antes de que exista la fila «accepted».** `WhatsAppDeliveryObserver.RecordAcceptedAsync` aplica el estado Failed de los avisos guardados, pero esos avisos no conservan el código de error: el mensaje queda «No se pudo enviar» sin motivo. Pasa poco. Dónde: `src/ArquitecturaBaseMultitenant.Application/Modules/WhatsApp/Services/WhatsAppDeliveryObserver.cs` y `WhatsAppWebhookWriter.cs` (B5).
+- **Que los contratos generados dejen de aparecer como modificados después de cada build:** `docs/contracts/*.json text eol=lf` en `.gitattributes`, o que el generador escriba con el fin de línea del repo. Con `core.autocrlf=true`, el build reescribe `assistant-actions.json` y `openapi.json` con LF sin cambio de contenido; eso frena `carril.mjs preparar` y confunde a las sesiones sobre de quién son esos cambios. Dónde: `.gitattributes` y el generador de `docs/contracts` (B11).
+- **Tomar, Responder y Mandar plantilla en un chat de la organización no toman el lock de la persona ni vuelven a mirar adentro de la transacción si quien toma puede atender esa bandeja; «Transferir» sí, desde 6c563251.** Es la misma carrera de B12: si en ese momento se edita el rol o se suspende a la persona, el observador no encuentra chats que liberar y enseguida el Take confirma. La ventana es corta. No es un arreglo chico: el lock va antes de `GetForUpdateAsync` en los tres caminos (después invierte el orden contra Transferir y puede trabar las dos transacciones), suma un lock a cada envío y hay que elegir qué error ve la persona. Dónde: `src/ArquitecturaBaseMultitenant.Application/Modules/WhatsApp/Services/WhatsAppConversationService.cs` (`TakeAsync`, `SendAsync`, `SendTemplateAsync` y el `TakeAsync` privado); también `WhatsAppAccountDataRemover.ForgetOrganizationAuthorAsync`, que libera chats sin `LockAssigneesAsync` (última revisión).
+
+## Verificación de la etapa arreglos-revision
+
+Lo que recorre la verificación de esta etapa, el segundo hito, después del código listo ([conducir una etapa](guides/conducir-una-etapa.md)). Viene del plan, que era también su spec y se retiró con el código listo del 2026-11-28; lo que trajo está en las fichas de [Identidad](features/identidad.md), [WhatsApp](features/whatsapp.md), [Organizaciones](features/organizaciones.md) y [Asistente](features/asistente.md).
+
+**El código listo** (2026-11-28):
+
+| Paso | Resultado |
+| --- | --- |
+| Back: build y tests enteros, con Docker (copia de `638371b7`) | Build sin advertencias; 4364 de 4367: dos vencimientos por carga que pasan solos y tres fallas reales a los arreglos: `InvitedLoginCodeTests` (68449e94), `RouteIsolationMatrixTests` (el `transfer` respondía 400 a un id ajeno) y `ValidationMessageTests`, que viene de 95972ccf y queda en «Para después» |
+| Front: build, lint y tests enteros (copia de `5c9fb39b`) | Build y lint en verde (las 11 advertencias que ya estaban); 4171 de 4171, con lo que venció por carga repetido solo; `contracts:check`, en verde después de los arreglos |
+| Revisión | 41 revisores y los tests enteros: 24 hallazgos (7 repetidos juntados). Back: 15 arreglados y 7 descartados de 23; front: 1 descartado. La última revisión dejó 1 al backlog |
+| Contrato | `WhatsAppChatMessageResponse` suma `sentFromPhone` (boolean, no requerido, false por defecto; opcional en el front), y `POST /api/organization/whatsapp/phone-imports` declara el 429 `WhatsApp.PhoneImport.DailyLimit`, con `retryAfter` y `Retry-After`, y el 400 `WhatsApp.PhoneImport.TooManyInvitations` |
+
+- **Galería:** suma solo el chat con un mensaje «Enviado desde el celular» (F3), contra el tablero del chat de siempre: el texto va donde va el autor.
+- **E2E real y recorrido de las áreas tocadas:**
+  - el ingreso y las dos altas;
+  - la importación de contactos con su ejemplo;
+  - un chat de WhatsApp con su vínculo en «Mensajes»;
+  - una difusión;
+  - un turno del asistente con un PDF;
+  - el editor de catálogos con dos páginas editadas;
+  - «Cargar teléfonos» pasado el tope;
+  - un eco desde el celular por el webhook de prueba;
+  - la respuesta a una plantilla de un operador;
+  - suspender a alguien con chats tomados.
+- **A mano:** un eco real desde la app del celular, cuando haya un número en coexistencia (la I1 de la 10). El ingreso con Google lo cubren los tests de integración.
+- **Para la I1 de la 10:** el eco real de la B10; los ajustes de despliegue están en la B7 de su [plan](plans/2026-10-16-etapa-10-despliegue.md).

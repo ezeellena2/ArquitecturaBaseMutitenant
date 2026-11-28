@@ -22,7 +22,7 @@ Sirve igual para Claude y para Antigravity.
 2. **Movelo:** si está en «To Do», pasalo a «In Progress» y comentá «En análisis (Claude)» o «En análisis (Antigravity)». Si ya está en «In Progress» con otro, frená y avisale al usuario.
 3. **Buscá con qué se cruza,** en tres lugares:
    - **En Jira:** los tickets que nombran los mismos archivos, con JQL `project = KAN AND text ~ "<Archivo>"`, los de su mismo épico y los que su comentario marca como «se cruza con…».
-   - **En los planes:** `grep -n "<T0N-MM>\|KAN-<n>" docs/plans/*.md`, con los números de sus etiquetas `antigravity-T0N-MM`. Si una tarea de un plan lo cubre, esa tarea manda: sus archivos, su test, su línea `Tarea:` y lo que el plan espera antes de arrancar. Por ejemplo, `docs/plans/2026-11-27-etapa-arreglos-revision.md` espera el código listo de la E12. Los otros tickets de esa tarea van en este mismo chat.
+   - **En los planes:** `grep -n "<T0N-MM>\|KAN-<n>" docs/plans/*.md`, con los números de sus etiquetas `antigravity-T0N-MM`. Si una tarea de un plan lo cubre, esa tarea manda: sus archivos, su test, su línea `Tarea:` y lo que el plan espera antes de arrancar. Por ejemplo, `docs/plans/2026-11-08-etapa-13-campos.md` espera el código listo de los arreglos de la revisión externa. Los otros tickets de esa tarea van en este mismo chat.
    - **En `git log`:** si alguien ya tocó esos archivos después de la fecha del ticket.
 
 ## 2. Volver a analizarlo, sin cambiar el código
