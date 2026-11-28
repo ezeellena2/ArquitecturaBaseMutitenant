@@ -63,15 +63,24 @@ internal sealed class AssistantRetentionWorker(IServiceScopeFactory scopes, Tena
             var files = cleanupScope.ServiceProvider.GetRequiredService<IFileStore>();
             foreach (var key in await maintenance.ListUnconfirmedAsync("assistant", Clock.GetUtcNow().UtcDateTime.Subtract(options.Value.UnconfirmedFileGrace), ct))
             {
-                var referenced = false;
-                await using (var global = scopes.CreateAsyncScope()) await CheckScopeAsync(global.ServiceProvider, ct);
-                if (!referenced) await jobs.RunAsync(tenantIds, CheckScopeAsync, ct);
-                async Task CheckScopeAsync(IServiceProvider services, CancellationToken token)
+                try
                 {
-                    if (!referenced) referenced = await services.GetRequiredService<IAssistantRetentionRepository>().IsStorageReferencedAsync(key, token);
+                    var referenced = false;
+                    await using (var global = scopes.CreateAsyncScope()) await CheckScopeAsync(global.ServiceProvider, ct);
+                    foreach (var tenantId in tenantIds)
+                    {
+                        if (referenced) break;
+                        await jobs.RunForTenantAsync(tenantId, CheckScopeAsync, ct);
+                    }
+                    async Task CheckScopeAsync(IServiceProvider services, CancellationToken token)
+                    {
+                        if (!referenced) referenced = await services.GetRequiredService<IAssistantRetentionRepository>().IsStorageReferencedAsync(key, token);
+                    }
+                    if (referenced) await maintenance.ConfirmAsync(key, "assistant", ct);
+                    else await files.DeleteAsync(key, ct);
                 }
-                if (referenced) await maintenance.ConfirmAsync(key, "assistant", ct);
-                else await files.DeleteAsync(key, ct);
+                catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
+                catch (Exception exception) { ExceptionLog.Write(logger, "AssistantUnconfirmedFileCleanup", exception); }
             }
         }
         return total;

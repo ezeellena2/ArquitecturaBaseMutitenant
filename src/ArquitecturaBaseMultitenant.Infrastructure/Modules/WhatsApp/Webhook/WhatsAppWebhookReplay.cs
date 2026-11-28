@@ -27,7 +27,7 @@ internal sealed class WhatsAppWebhookReplay(IServiceScopeFactory scopes, TenantJ
         foreach (var group in failures.GroupBy(value => value.OrganizationId).OrderBy(group => group.Key))
         {
             var items = group.ToArray();
-            await tenants.RunAsync([group.Key], async (provider, token) =>
+            await tenants.RunForTenantAsync(group.Key, async (provider, token) =>
             {
                 var result = await provider.GetRequiredService<IWhatsAppWebhookService>().RecordDeliveryFailuresAsync(items, token);
                 if (result.IsFailure) throw new InvalidOperationException(result.Error.Code);
