@@ -99,13 +99,11 @@ public sealed class AssistantTurnProviderRoundtripTests
         {
             Assert.Equal(17, call.InputTokens);
             Assert.Equal(7, call.OutputTokens);
-            // El transporte no aporta desglose write-cache 5m/1h: conservar la marca de estimación, con los tokens conocidos.
-            Assert.True(call.IsEstimated);
-            var worstInputPrice = new[] { call.Price.Input.Amount, call.Price.CacheRead.Amount,
-                call.Price.CacheWrite5Minutes.Amount, call.Price.CacheWrite1Hour.Amount }.Max();
-            var conservativeCost = decimal.Round((17m * worstInputPrice + 7m * call.Price.Output.Amount) / 1_000_000m,
+            // Sin cache_control no hay escrituras de caché: se cobra la entrada base y no queda marcado como estimado (KAN-73).
+            Assert.False(call.IsEstimated);
+            var exactCost = decimal.Round((17m * call.Price.Input.Amount + 7m * call.Price.Output.Amount) / 1_000_000m,
                 12, MidpointRounding.AwayFromZero);
-            Assert.Equal(conservativeCost, call.Cost.Amount);
+            Assert.Equal(exactCost, call.Cost.Amount);
             Assert.Equal(call.Price.Input.Currency, call.Cost.Currency);
         });
         var quota = await db.Set<AssistantPlatformKeyDailyQuota>().SingleAsync(row => row.UserId == session.Account.UserId, Ct);

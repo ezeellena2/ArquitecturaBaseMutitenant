@@ -27,6 +27,8 @@ internal sealed class OrganizationPendingTool(AssistantAccessPolicy policy, IHom
         {
             if (item.Area == OrganizationDomainPendingItems.Area && item.Kind == OrganizationDomainPendingItems.DomainUnverified)
                 continue; // This closed source copies an organization domain, not account data.
+            if (item.Area == "whatsapp" && item.Kind == "numberPaymentMissing")
+                continue; // Organization-owned WhatsApp Business number, not user account data (KAN-83, sin referencia entre módulos).
             if (item.Area != OrganizationUserPendingItems.Area || item.TargetId is not { } memberId ||
                 item.Kind is not (OrganizationUserPendingItems.DeletionRequested or OrganizationUserPendingItems.InvitationExpired))
                 return AssistantErrors.QuickQueryNotAvailable;

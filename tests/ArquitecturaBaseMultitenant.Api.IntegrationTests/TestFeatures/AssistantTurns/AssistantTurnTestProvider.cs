@@ -31,6 +31,7 @@ internal sealed class AssistantTurnTestProvider
     internal ConcurrentQueue<Invocation> Invocations { get; } = new();
     internal string? ToolKey { get; set; }
     internal int ToolCycles { get; set; } = 1;
+    internal int ToolCallsPerRound { get; set; } = 1;
     internal int ToolCallIdSize { get; set; }
     internal ConcurrentQueue<string> ToolResults { get; } = new();
     internal ConcurrentQueue<string> Contexts { get; } = new();
@@ -107,14 +108,20 @@ internal sealed class AssistantTurnTestProvider
             if (probe.ToolKey is { } toolKey)
             {
                 var results = messages.SelectMany(message => message.Contents).OfType<FunctionResultContent>().ToArray();
-                if (results.Length < probe.ToolCycles)
+                if (results.Length < probe.ToolCycles * probe.ToolCallsPerRound)
                 {
-                    var callId = probe.ToolCallIdSize == 0 ? "isolated-turn-tool"
-                        : new string('x', probe.ToolCallIdSize) + "-" + (results.Length + 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    var calls = Enumerable.Range(0, probe.ToolCallsPerRound).Select(index =>
+                    {
+                        var ordinal = (results.Length + index + 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                        var callId = probe.ToolCallIdSize == 0
+                            ? (probe.ToolCallsPerRound == 1 ? "isolated-turn-tool" : "isolated-turn-tool-" + ordinal)
+                            : new string('x', probe.ToolCallIdSize) + "-" + ordinal;
+                        return (AIContent)new FunctionCallContent(callId, toolKey, new Dictionary<string, object?>());
+                    }).ToList();
                     yield return new ChatResponseUpdate
                     {
                         Role = ChatRole.Assistant,
-                        Contents = [new FunctionCallContent(callId, toolKey, new Dictionary<string, object?>())],
+                        Contents = calls,
                     };
                     yield return new ChatResponseUpdate
                     {

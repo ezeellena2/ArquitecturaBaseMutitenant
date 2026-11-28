@@ -1,8 +1,16 @@
 using System.Net;
+using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantTurns;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
+using ArquitecturaBaseMultitenant.Domain.Auditing;
+using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Domain.Features;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -146,5 +154,88 @@ public sealed class AssistantWorkerActorTests
         var quota = await db.Set<AssistantPlatformKeyDailyQuota>().SingleAsync(row => row.UserId == session.Account.UserId, Ct);
         Assert.Equal(1, quota.ConsumedQueries);
         Assert.Equal(0, quota.ReservedQueries);
+    }
+
+    [Fact]
+    public async Task Org_pending_includes_whatsapp_number_without_payment_method_without_failing_the_turn()
+    {
+        await using var session = await AssistantTurnTestSession.CreateAsync("business");
+        var displayNumber = PhoneNumber.Create("+5491155551234").Value;
+        using (var setup = session.Host.Services.CreateScope())
+        {
+            var services = setup.ServiceProvider;
+            var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+            var saved = await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+            {
+                services.GetRequiredService<ITenantFeatureRepository>().Add(
+                    TenantFeature.Create(session.TenantId!.Value, WhatsAppFeature.Key, true, TenantFeatureSource.Manual, null).Value);
+                var channel = WhatsAppChannel.Connect(session.TenantId.Value, null, "wa-pending-" + Guid.NewGuid().ToString("N"),
+                    "waba-pending-test", displayNumber, "Organización prueba", false, hasPayment: false,
+                    WhatsAppChannelSource.Signup, AssistantTurnTestSession.TestTimeZoneId, nowUtc);
+                channel.ProtectSecrets([1, 2, 3, 4], null);
+                services.GetRequiredService<ApplicationDbContext>().Add(channel);
+                services.GetRequiredService<ISecurityEventRepository>().Add(SecurityEvent.ForTenantFeatures(
+                    AuditActorKind.System, Guid.Empty, session.TenantId.Value,
+                    "Assistant org_pending WhatsApp payment-missing fixture", nowUtc));
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+            Assert.True(saved.IsSuccess, saved.Error.Code);
+        }
+
+        session.Provider.ToolKey = "org_pending";
+        var conversation = await session.ConversationAsync();
+        session.Provider.Release();
+        using var request = AssistantTurnTestSession.Request(HttpMethod.Post,
+            session.Path + $"/conversations/{conversation.Id:D}/messages", AssistantTurnTestSession.Body(conversation), Guid.NewGuid());
+        using var response = await session.OpenStreamAsync(request, Ct);
+        using var stream = await AssistantSseTestReader.OpenAsync(response, Ct);
+        Assert.Equal("start", (await stream.NextAsync(Ct)).Event);
+        var terminal = await stream.TerminalAsync(Ct);
+        Assert.Equal("done", terminal.Event);
+        Assert.Equal("Complete", terminal.Data.GetProperty("message").GetProperty("status").GetString());
+        Assert.Equal(2, session.Provider.Calls);
+        var data = Assert.Single(session.Provider.ToolResults);
+        using var parsed = JsonDocument.Parse(data);
+        var item = Assert.Single(parsed.RootElement.GetProperty("pending").EnumerateArray(),
+            entry => entry.GetProperty("area").GetString() == "whatsapp");
+        Assert.Equal("numberPaymentMissing", item.GetProperty("kind").GetString());
+        Assert.Equal(displayNumber.Value, item.GetProperty("subject").GetString());
+    }
+
+    [Fact]
+    public async Task Repeated_calls_to_the_same_tool_in_one_round_complete_even_above_distinct_tool_count()
+    {
+        await using var session = await AssistantTurnTestSession.CreateAsync("platform");
+        // Con sólo platform.assistant.use el turno tiene 1 herramienta (help_article); 2 llamadas en la misma vuelta prueban KAN-96.
+        await PlatformOperators.GrantAsync(session.Host.Services, session.Account.UserId,
+            [PlatformPermissions.Assistant.Use], Ct);
+        session.Provider.ToolKey = "help_article";
+        session.Provider.ToolCallsPerRound = 2;
+        var conversation = await session.ConversationAsync();
+        session.Provider.Release();
+        using var request = AssistantTurnTestSession.Request(HttpMethod.Post,
+            session.Path + $"/conversations/{conversation.Id:D}/messages", AssistantTurnTestSession.Body(conversation), Guid.NewGuid());
+        using var response = await session.OpenStreamAsync(request, Ct);
+        using var stream = await AssistantSseTestReader.OpenAsync(response, Ct);
+        Assert.Equal("start", (await stream.NextAsync(Ct)).Event);
+        var states = new List<string>();
+        while (true)
+        {
+            var frame = await stream.NextAsync(Ct);
+            if (frame.Event == "tool")
+            {
+                Assert.Equal("help_article", frame.Data.GetProperty("toolKey").GetString());
+                states.Add(frame.Data.GetProperty("state").GetString()!);
+            }
+            if (frame.Event is "done" or "error")
+            {
+                Assert.Equal("done", frame.Event);
+                Assert.Equal("Complete", frame.Data.GetProperty("message").GetProperty("status").GetString());
+                break;
+            }
+        }
+        Assert.Equal(new[] { "running", "complete", "running", "complete" }, states);
+        Assert.Equal(2, session.Provider.Calls);
+        Assert.Equal(2, session.Provider.ToolResults.Count);
     }
 }

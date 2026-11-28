@@ -137,7 +137,7 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
                 await GenerateTitleAsync(run.Services, service, turn, lease, execution.Token);
                 return;
             }
-            if (sequence == AssistantTechnicalLimits.MaxCallsPerTurn || calls.Count > turn.Tools.Count)
+            if (sequence == AssistantTechnicalLimits.MaxCallsPerTurn || calls.Count > AssistantTechnicalLimits.MaxCallsPerTurn)
             { outcome.Fail(AssistantErrors.ProviderUnavailable.Code); return; }
             messages.AddMessages(response);
             if (await RunToolsAsync(run, calls, outcome, execution.Token) is not { } results) return;
@@ -160,11 +160,12 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
         {
             var text = string.Concat(update.Contents.OfType<TextContent>().Select(content => content.Text));
             updates.Add(update);
+            // El cliente no envía cache_control, así que no hay escrituras de caché (0, 0, 0) y el desglose está completo (KAN-73).
             foreach (var usage in update.Contents.OfType<UsageContent>())
                 counts = new AssistantCallUsage(usage.Details.InputTokenCount ?? counts?.InputTokens,
                     usage.Details.OutputTokenCount ?? counts?.OutputTokens,
-                    usage.Details.CachedInputTokenCount ?? counts?.CacheReadTokens,
-                    null, null, null, usage.Details.ReasoningTokenCount ?? counts?.ReasoningTokens, false);
+                    usage.Details.CachedInputTokenCount ?? counts?.CacheReadTokens ?? 0,
+                    0, 0, 0, usage.Details.ReasoningTokenCount ?? counts?.ReasoningTokens, true);
             var checkpoint = await run.Service.CheckpointAsync(run.Turn.TurnId, run.Lease, text, counts, false, execution.Token);
             if (checkpoint.IsFailure) { outcome.Fail(checkpoint.Error.Code); execution.Cancel(); break; }
         }
@@ -312,8 +313,8 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
                         new ChatOptions { MaxOutputTokens = AssistantTechnicalLimits.TitleMaxOutputTokens }, ct);
                     title = response.Text;
                     if (response.Usage is { } counts)
-                        usage = new AssistantCallUsage(counts.InputTokenCount, counts.OutputTokenCount, counts.CachedInputTokenCount,
-                            null, null, null, counts.ReasoningTokenCount, false);
+                        usage = new AssistantCallUsage(counts.InputTokenCount, counts.OutputTokenCount, counts.CachedInputTokenCount ?? 0,
+                            0, 0, 0, counts.ReasoningTokenCount, true);
                 }
                 else usage = new AssistantCallUsage(0, 0, 0, 0, 0, 0, 0, true);
             }

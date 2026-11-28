@@ -83,6 +83,19 @@ public sealed class AssistantCostTests
         Assert.Equal(.00015m, call.Cost.Amount);
     }
     [Fact]
+    public void Ten_thousand_input_tokens_without_cache_are_billed_at_base_input_rate_not_double()
+    {
+        // Price() tiene Input = 0.1 USD/M y CacheWrite1Hour = 0.2 USD/M (el doble). Sin cache_control se cobra 1x (KAN-73).
+        var result = AssistantCostPolicy.Calculate(Price(), new(10_000, 0, 0, 0, 0, 0, null, true), false);
+        Assert.Equal(.001m, result.Cost.Amount);
+        Assert.False(result.IsEstimated);
+
+        var withCacheRead = AssistantCostPolicy.Calculate(Price(), new(10_000, 0, 2_000, 0, 0, 0, null, true), false);
+        Assert.Equal(.00082m, withCacheRead.Cost.Amount);
+        Assert.False(withCacheRead.IsEstimated);
+    }
+
+    [Fact]
     public void Remaining_is_only_visible_at_ten_and_daily_reset_is_UTC()
     {
         // 271: la renovación es la medianoche de la zona que corta el día (acá, la de Buenos Aires), no la de UTC.
