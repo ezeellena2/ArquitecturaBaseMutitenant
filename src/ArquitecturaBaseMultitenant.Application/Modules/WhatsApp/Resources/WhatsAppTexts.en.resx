@@ -531,6 +531,9 @@
   <data name="WhatsApp.Settings.ChatRetentionRange" xml:space="preserve">
     <value>It has to be from {0} to {1}: that is the platform maximum.</value>
   </data>
+  <data name="WhatsApp.Settings.CountriesWithoutRates" xml:space="preserve">
+    <value>Include at least one country with Meta rates.</value>
+  </data>
   <data name="WhatsApp.Message.NotUncertain" xml:space="preserve">
     <value>That message isn't unconfirmed: there's nothing to review.</value>
   </data>

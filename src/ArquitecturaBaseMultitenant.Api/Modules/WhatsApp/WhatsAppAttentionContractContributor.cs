@@ -155,6 +155,8 @@ internal sealed class WhatsAppAttentionContractContributor : IHttpContractContri
                 // El validador no conoce el máximo que fija la plataforma: el servicio lo compara al guardar.
                 if (path.StartsWith("/api/organization/", StringComparison.Ordinal))
                     Add(400, WhatsAppErrors.ChatRetentionOutOfRangeCode, "chatRetentionDays");
+                if (path.StartsWith("/api/platform/", StringComparison.Ordinal))
+                    Add(400, WhatsAppErrors.CountriesWithoutRatesCode, "allowedCountries");
             }
         }
         if (path.Contains("/contacts/{id}", StringComparison.Ordinal)) Add(404, WhatsAppErrors.ContactNotFoundCode);

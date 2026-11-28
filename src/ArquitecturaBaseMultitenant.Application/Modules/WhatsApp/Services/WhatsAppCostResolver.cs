@@ -19,11 +19,9 @@ internal sealed class WhatsAppCostResolver(IWhatsAppRateReader rates, ICurrencyC
     {
         var pricing = Pricing(category);
         var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
-        var fallback = await FallbackCountryAsync(ct);
+        var (fallback, unit) = await ResolveFallbackAsync(pricing, today, ct);
         var countries = waIds.GroupBy(waId => settings.CountryOf(waId) ?? fallback, StringComparer.Ordinal)
             .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
-        var unit = await rates.FindAsync(fallback, pricing, today, ct)
-            ?? throw new InvalidOperationException("The WhatsApp rate table does not cover the allowed country.");
         var total = 0m;
         foreach (var (country, count) in countries)
         {
@@ -41,16 +39,29 @@ internal sealed class WhatsAppCostResolver(IWhatsAppRateReader rates, ICurrencyC
 
     private async Task<Money> FallbackUnitAsync(WhatsAppTemplateCategory category, CancellationToken ct)
     {
-        var fallback = await FallbackCountryAsync(ct);
-        var unit = await rates.FindAsync(fallback, Pricing(category), DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime), ct)
-            ?? throw new InvalidOperationException("The WhatsApp rate table does not cover the allowed country.");
+        var (_, unit) = await ResolveFallbackAsync(Pricing(category), DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime), ct);
         return await RoundAsync(unit, ct);
     }
 
-    /// <summary>El primer país que habilita WhatsApp, leído en cada pedido (270).</summary>
-    private async Task<string> FallbackCountryAsync(CancellationToken ct) =>
-        (await configuration.AllowedCountriesAsync(ct)) is [var first, ..] ? first
-            : throw new InvalidOperationException("WhatsApp has no allowed country.");
+    /// <summary>
+    /// Primer país habilitado que tenga tarifa vigente en la tabla de Meta; si ninguno la tiene (por una configuración previa),
+    /// toma la primera tarifa vigente disponible para no romper las pantallas con 500.
+    /// </summary>
+    private async Task<(string Country, Money Unit)> ResolveFallbackAsync(WhatsAppPricingCategory pricing, DateOnly today, CancellationToken ct)
+    {
+        var allowed = await configuration.AllowedCountriesAsync(ct);
+        if (allowed.Count == 0)
+            throw new InvalidOperationException("WhatsApp has no allowed country.");
+
+        foreach (var country in allowed)
+            if (await rates.FindAsync(country, pricing, today, ct) is { } price)
+                return (country, price);
+
+        if (await rates.FindFallbackAsync(pricing, today, ct) is { } fallback)
+            return fallback;
+
+        throw new InvalidOperationException("The WhatsApp rate table does not cover any country.");
+    }
 
     private async Task<Money> RoundAsync(Money money, CancellationToken ct) =>
         (await currencies.FindAsync(money.Currency.Value, ct))?.MinorUnits is { } minorUnits ? money.Round(minorUnits) : money;

@@ -78,10 +78,17 @@ internal sealed class WhatsAppSettingsService(IWhatsAppSettingsReader reader, IW
 /// guardado deja su evento de seguridad en la misma transacción, como el bot y los equipos de Plataforma.
 /// </summary>
 internal sealed class PlatformWhatsAppSettingsService(IWhatsAppSettingsRepository repository, WhatsAppSettingsResolver resolver,
-    PlatformWhatsAppAuditWriter audit, IUnitOfWork unitOfWork, IRequestValidator validator, TimeProvider clock,
+    PlatformWhatsAppAuditWriter audit, IWhatsAppRateReader rates, IUnitOfWork unitOfWork, IRequestValidator validator, TimeProvider clock,
     ILogger<PlatformWhatsAppSettingsService> logger) : IPlatformWhatsAppSettingsService
 {
     private const string Reason = "WhatsApp platform settings changed";
+
+    private static readonly WhatsAppPricingCategory[] TemplatePricingCategories =
+    [
+        WhatsAppPricingCategory.Marketing,
+        WhatsAppPricingCategory.Utility,
+        WhatsAppPricingCategory.Authentication,
+    ];
 
     public Task<Result<PlatformWhatsAppSettingsResponse>> GetAsync(CancellationToken cancellationToken) =>
         OperationLog.RunAsync<PlatformWhatsAppSettingsResponse>(logger, clock, "PlatformWhatsAppSettingsGet", async () =>
@@ -100,6 +107,8 @@ internal sealed class PlatformWhatsAppSettingsService(IWhatsAppSettingsRepositor
             var result = await unitOfWork.ExecuteInTransactionAsync<Result<WhatsAppPlatformSettings>>(async ct =>
             {
                 var row = await repository.GetPlatformForUpdateAsync(request.Version!.Value, ct);
+                if (!await HasCoveredCountryAsync(request.AllowedCountries!, ct))
+                    return WhatsAppErrors.CountriesWithoutRates;
                 var created = row is null;
                 row ??= WhatsAppPlatformSettings.Create(resolver.ConfiguredCountries);
                 var changes = new SecurityEventChanges();
@@ -115,5 +124,25 @@ internal sealed class PlatformWhatsAppSettingsService(IWhatsAppSettingsRepositor
             }, CommitPolicy.OnSuccess, cancellationToken);
             return VersionResponse.Of(result);
         });
+    }
+
+    /// <summary>Al menos un país habilitado debe cubrir las categorías de plantillas para que el estimador tenga respaldo.</summary>
+    private async Task<bool> HasCoveredCountryAsync(IReadOnlyList<string> countries, CancellationToken ct)
+    {
+        var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+        foreach (var country in countries)
+        {
+            var covered = true;
+            foreach (var category in TemplatePricingCategories)
+            {
+                if (await rates.FindAsync(country, category, today, ct) is null)
+                {
+                    covered = false;
+                    break;
+                }
+            }
+            if (covered) return true;
+        }
+        return false;
     }
 }

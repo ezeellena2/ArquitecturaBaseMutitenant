@@ -13,6 +13,7 @@ using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
 
@@ -185,6 +186,33 @@ public sealed class WhatsAppSettingsServiceTests
     }
 
     [Fact]
+    public async Task Platform_countries_require_at_least_one_country_with_Meta_rates()
+    {
+        using var fixture = new ServiceFixture<PlatformWhatsAppSettingsService>(new UpdatePlatformWhatsAppSettingsRequestValidator(new Countries()));
+        var events = new Events();
+        var (service, repository, unitOfWork) = Platform(fixture, new Reader(), events);
+
+        var withoutRates = await service.UpdateAsync(new(["UY"], 90, 3650, 0), Ct);
+        var severalWithoutRates = await service.UpdateAsync(new(["AD", "UY"], 90, 3650, 0), Ct);
+
+        foreach (var rejected in new[] { withoutRates, severalWithoutRates })
+        {
+            Assert.True(rejected.IsFailure);
+            var validation = Assert.IsType<ValidationError>(rejected.Error);
+            Assert.Equal(WhatsAppErrors.CountriesWithoutRatesCode, validation.Code);
+            Assert.Equal("allowedCountries", Assert.Single(validation.Errors).Key);
+        }
+        Assert.Equal(2, unitOfWork.Rollbacks);
+        Assert.Null(repository.Platform);
+        Assert.Empty(events.Items);
+
+        // Si algún país habilitado tiene tarifas (aunque otro sin tarifa quede primero al ordenar), se puede guardar.
+        var withCoveredCountry = await service.UpdateAsync(new(["AD", "AR"], 90, 3650, 0), Ct);
+        Assert.True(withCoveredCountry.IsSuccess);
+        Assert.Equal(["AD", "AR"], repository.Platform!.AllowedCountries);
+    }
+
+    [Fact]
     public async Task Platform_with_an_old_version_is_a_concurrency_conflict()
     {
         using var fixture = new ServiceFixture<PlatformWhatsAppSettingsService>(new UpdatePlatformWhatsAppSettingsRequestValidator(new Countries()));
@@ -208,13 +236,24 @@ public sealed class WhatsAppSettingsServiceTests
     }
 
     private static (PlatformWhatsAppSettingsService, Repository, FakeUnitOfWork) Platform(
-        ServiceFixture<PlatformWhatsAppSettingsService> fixture, Reader reader, Events? events = null)
+        ServiceFixture<PlatformWhatsAppSettingsService> fixture, Reader reader, Events? events = null, Rates? rates = null)
     {
         var repository = new Repository();
         var unitOfWork = new FakeUnitOfWork();
         var audit = new PlatformWhatsAppAuditWriter(new Operator(), events ?? new Events(), new Request(), fixture.TimeProvider);
-        return (new PlatformWhatsAppSettingsService(repository, new WhatsAppSettingsResolver(reader, new Channel(), null!, null!), audit, unitOfWork,
-            fixture.Validator, fixture.TimeProvider, fixture.Logger), repository, unitOfWork);
+        return (new PlatformWhatsAppSettingsService(repository, new WhatsAppSettingsResolver(reader, new Channel(), null!, null!), audit,
+            rates ?? new Rates("AR"), unitOfWork, fixture.Validator, fixture.TimeProvider, fixture.Logger), repository, unitOfWork);
+    }
+
+    private sealed class Rates(params string[] countries) : IWhatsAppRateReader
+    {
+        private static readonly Money Sample = new(0.0618m, CurrencyCode.Create("USD").Value);
+
+        public Task<Money?> FindAsync(string countryCode, WhatsAppPricingCategory category, DateOnly date, CancellationToken ct) =>
+            Task.FromResult<Money?>(countries.Contains(countryCode, StringComparer.Ordinal) ? Sample : null);
+
+        public Task<(string CountryCode, Money Price)?> FindFallbackAsync(WhatsAppPricingCategory category, DateOnly date, CancellationToken ct) =>
+            Task.FromResult(countries.Order(StringComparer.Ordinal).Select(code => ((string CountryCode, Money Price)?)(code, Sample)).FirstOrDefault());
     }
 
     private sealed class Events : ISecurityEventRepository
@@ -272,11 +311,11 @@ public sealed class WhatsAppSettingsServiceTests
         public void MarkUpdated(WhatsAppOrganizationSettings settings) => Organization = settings;
     }
 
-    /// <summary>Argentina y Uruguay habilitados; Brasil, en el catálogo pero apagado.</summary>
+    /// <summary>Andorra, Argentina y Uruguay habilitados; Brasil, en el catálogo pero apagado.</summary>
     private sealed class Countries : ICountryCatalog
     {
         private static readonly CountryCatalogEntry[] Rows =
-            [Country("AR", true), Country("UY", true), Country("BR", false)];
+            [Country("AD", true), Country("AR", true), Country("UY", true), Country("BR", false)];
 
         public Task<IReadOnlyList<CountryCatalogEntry>> ListAsync(CancellationToken cancellationToken) =>
             Task.FromResult<IReadOnlyList<CountryCatalogEntry>>(Rows);

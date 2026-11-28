@@ -42,6 +42,39 @@ public sealed class WhatsAppCostResolverTests
         Assert.Equal("UY", estimate.Country);
     }
 
+    [Fact]
+    public async Task When_the_first_allowed_country_has_no_rate_uses_the_next_allowed_country_with_a_rate()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var rates = new Rates(("AR", new Money(0.0618m, Usd)));
+        var resolver = Resolver(rates, new WhatsAppPlatformSettingsRow(["AD", "AR"], 90, 3650, 1));
+
+        var estimate = await resolver.EstimateAsync(["+59899000001"], WhatsAppTemplateCategory.Marketing, ct);
+        var unit = await resolver.UnitAsync(null, WhatsAppTemplateCategory.Marketing, ct);
+
+        Assert.Equal(new Money(0.06m, Usd), estimate.Cost);
+        Assert.Equal("UY", estimate.Country);
+        Assert.Equal(new Money(0.06m, Usd), unit);
+    }
+
+    [Fact]
+    public async Task When_no_allowed_country_has_a_rate_falls_back_to_the_rate_table_without_throwing()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var rates = new Rates(("AR", new Money(0.0618m, Usd)));
+        var resolver = Resolver(rates, new WhatsAppPlatformSettingsRow(["UY"], 90, 3650, 1));
+
+        var estimate = await resolver.EstimateAsync(["+59899000001"], WhatsAppTemplateCategory.Marketing, ct);
+        var empty = await resolver.EstimateAsync([], WhatsAppTemplateCategory.Marketing, ct);
+        var unit = await resolver.UnitAsync(null, WhatsAppTemplateCategory.Marketing, ct);
+
+        Assert.Equal(new Money(0.06m, Usd), estimate.Cost);
+        Assert.Equal("UY", estimate.Country);
+        Assert.Equal(new Money(0m, Usd), empty.Cost);
+        Assert.Equal("AR", empty.Country);
+        Assert.Equal(new Money(0.06m, Usd), unit);
+    }
+
     private static WhatsAppCostResolver Resolver(Rates rates) =>
         Resolver(rates, null);
 
@@ -63,6 +96,10 @@ public sealed class WhatsAppCostResolverTests
     {
         public Task<Money?> FindAsync(string countryCode, WhatsAppPricingCategory category, DateOnly date, CancellationToken ct) =>
             Task.FromResult(prices.Where(price => price.Country == countryCode).Select(price => (Money?)price.Price).FirstOrDefault());
+
+        public Task<(string CountryCode, Money Price)?> FindFallbackAsync(WhatsAppPricingCategory category, DateOnly date, CancellationToken ct) =>
+            Task.FromResult(prices.OrderBy(price => price.Country, StringComparer.Ordinal)
+                .Select(price => ((string CountryCode, Money Price)?)(price.Country, price.Price)).FirstOrDefault());
     }
 
     private sealed class Currencies : ICurrencyCatalog

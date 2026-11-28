@@ -55,6 +55,11 @@ public static class WhatsAppErrors
     public static Error ChatRetentionOutOfRange(int maxChatRetentionDays) => Error.Validation(ChatRetentionOutOfRangeCode,
         "The retention is above the platform maximum.", new Dictionary<string, object?> { [MaxChatRetentionDaysKey] = maxChatRetentionDays });
 
+    /// <summary>Al menos un país habilitado debe tener tarifas de Meta cargadas para estimar costos de plantillas y difusiones.</summary>
+    public const string CountriesWithoutRatesCode = "WhatsApp.Settings.CountriesWithoutRates";
+    public static readonly Error CountriesWithoutRates = Field(CountriesWithoutRatesCode,
+        "Include at least one country with Meta rates.", "allowedCountries", ErrorType.Validation);
+
     /// <summary>ADR 0066: solo se marca como revisado un mensaje que quedó «Sin confirmar».</summary>
     public const string MessageNotUncertainCode = "WhatsApp.Message.NotUncertain";
     public static readonly Error MessageNotUncertain = Error.Conflict(MessageNotUncertainCode, "The message is not unconfirmed.");
