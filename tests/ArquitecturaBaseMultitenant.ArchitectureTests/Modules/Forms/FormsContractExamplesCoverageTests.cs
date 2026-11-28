@@ -22,17 +22,10 @@ public sealed class FormsContractExamplesCoverageTests
     private static readonly Dictionary<string, string> NotReachableYet = new(StringComparer.Ordinal)
     {
         [FormCatalogErrors.ItemInUseCode] = "nada usa una opción hasta que un campo de otro catálogo la tenga como valor (E13, B6)",
-        [FormCatalogErrors.TooManyFieldsCode] = "los campos llegan con el dominio y el guardado de la E13 (B1 y B4)",
-        [FormCatalogErrors.FieldKeyDuplicateCode] = "los campos llegan con el dominio y el guardado de la E13 (B1 y B4)",
-        [FormCatalogErrors.FieldInvalidCode] = "los campos llegan con el dominio y el guardado de la E13 (B1 y B4)",
-        [FormCatalogErrors.PresentationInvalidCode] = "la presentación llega con el guardado de la E13 (B4)",
         [FormCatalogErrors.FieldRemovalNotConfirmedCode] = "quitar un campo con valores llega en la E13 (B6)",
         [FormCatalogErrors.FieldTypeNotConvertibleCode] = "cambiar el tipo o las reglas llega en la E13 (B5)",
         [FormCatalogErrors.FieldValuesIncompatibleCode] = "cambiar el tipo o las reglas llega en la E13 (B5)",
         [FormCatalogErrors.FieldValuesMissingCode] = "cambiar el tipo o las reglas llega en la E13 (B5)",
-        [FormCatalogErrors.FieldValueInvalidCode] = "los valores de los campos llegan en la E13 (B3 y B4)",
-        [FormCatalogErrors.FieldValueRequiredCode] = "los valores de los campos llegan en la E13 (B3 y B4)",
-        [FormCatalogErrors.FieldValueDuplicateCode] = "los valores de los campos llegan en la E13 (B3 y B4)",
         [FormCatalogErrors.SourceInUseCode] = "proteger una fuente llega en la E13 (B6)",
         ["GET /api/organization/forms/catalogs/template 404 " + FormCatalogErrors.NotFoundCode] = "la plantilla con catalogId llega en la E13 (B7)",
     };

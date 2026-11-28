@@ -1323,6 +1323,326 @@
       }
     },
     {
+      "name": "Alta con más de 20 campos",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Llegó a 20 campos, el máximo de un catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.TooManyFields",
+        "errors": {
+          "fields": [
+            "Llegó a 20 campos, el máximo de un catálogo."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Alta con dos campos con la misma clave",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Ya la usa «{name}».",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.FieldKeyDuplicate",
+        "errors": {
+          "fields.1.key": [
+            "Ya la usa «CUIT»."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Alta con un mínimo en un campo de texto",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Revisá el tipo, las reglas o el catálogo de este campo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.FieldInvalid",
+        "errors": {
+          "fields.0": [
+            "Revisá el tipo, las reglas o el catálogo de este campo."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Alta sin nada en el título de WhatsApp",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Revisá qué va en el título y en la descripción.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.PresentationInvalid",
+        "errors": {
+          "presentation": [
+            "Revisá qué va en el título y en la descripción."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Alta con campos",
+      "method": "POST",
+      "path": "/api/organization/forms/catalogs",
+      "status": 201,
+      "body": {
+        "catalog": {
+          "id": "00000000-0000-4000-8000-000000000015",
+          "name": "Proveedores",
+          "description": null,
+          "source": "Manual",
+          "valueType": "Text",
+          "filters": null,
+          "roles": null,
+          "companies": null,
+          "sample": null,
+          "isActive": true,
+          "usable": true,
+          "unusableReason": null,
+          "canManage": true,
+          "itemCounts": {
+            "total": 2,
+            "active": 2
+          },
+          "modifiedAtUtc": "2026-11-27T12:00:00Z",
+          "modifiedBy": null,
+          "version": 8,
+          "fields": [
+            {
+              "id": "00000000-0000-4000-8000-000000000016",
+              "key": "cuit",
+              "name": "CUIT",
+              "type": "Text",
+              "sourceCatalogId": null,
+              "sourceCatalogName": null,
+              "required": false,
+              "unique": true,
+              "maxLength": null,
+              "min": null,
+              "max": null,
+              "isActive": true,
+              "valuesCount": 0
+            },
+            {
+              "id": "00000000-0000-4000-8000-000000000017",
+              "key": "plazo_de_pago",
+              "name": "Plazo de pago",
+              "type": "WholeNumber",
+              "sourceCatalogId": null,
+              "sourceCatalogName": null,
+              "required": false,
+              "unique": false,
+              "maxLength": null,
+              "min": null,
+              "max": null,
+              "isActive": true,
+              "valuesCount": 0
+            }
+          ],
+          "presentation": {
+            "title": [
+              "text"
+            ],
+            "description": [
+              "detail"
+            ]
+          },
+          "presentationIssues": {
+            "count": 0,
+            "examples": []
+          }
+        },
+        "itemIdentityMap": [
+          {
+            "localId": "nP1",
+            "itemId": "00000000-0000-4000-8000-000000000018"
+          },
+          {
+            "localId": "nP2",
+            "itemId": "00000000-0000-4000-8000-000000000019"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Guardar los valores de los campos",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 200,
+      "body": {
+        "version": 9,
+        "itemIdentityMap": [],
+        "fieldIdentityMap": []
+      }
+    },
+    {
+      "name": "Guardar un campo obligatorio y uno nuevo",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 200,
+      "body": {
+        "version": 10,
+        "itemIdentityMap": [],
+        "fieldIdentityMap": [
+          {
+            "localId": "zona",
+            "fieldId": "00000000-0000-4000-8000-000000000020"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Guardar un valor que no es del tipo del campo",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "El valor no corresponde a este campo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.FieldValueInvalid",
+        "errors": {
+          "items.0.fields.00000000-0000-4000-8000-000000000017": [
+            "Escribí un número entero."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Guardar sin el valor de un campo obligatorio",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Completá este dato.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.FieldValueRequired",
+        "errors": {
+          "items.0.fields.00000000-0000-4000-8000-000000000016": [
+            "Completá este dato."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Guardar un valor único que ya tiene otra opción",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Ya lo tiene la opción {n}.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.FieldValueDuplicate",
+        "errors": {
+          "items.0.fields.00000000-0000-4000-8000-000000000016": [
+            "Ya lo tiene la opción 1."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Guardar más de 20 campos",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Llegó a 20 campos, el máximo de un catálogo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.TooManyFields",
+        "errors": {
+          "fields": [
+            "Llegó a 20 campos, el máximo de un catálogo."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Guardar un campo nuevo con una clave que ya se usa",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Ya la usa «{name}».",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.FieldKeyDuplicate",
+        "errors": {
+          "fields.2.key": [
+            "Ya la usa «CUIT»."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Guardar un mínimo en un campo de texto",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Revisá el tipo, las reglas o el catálogo de este campo.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.FieldInvalid",
+        "errors": {
+          "fields.2": [
+            "Revisá el tipo, las reglas o el catálogo de este campo."
+          ]
+        }
+      }
+    },
+    {
+      "name": "Guardar un campo que no existe en WhatsApp",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "Revisá qué va en el título y en la descripción.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.PresentationInvalid",
+        "errors": {
+          "presentation": [
+            "Revisá qué va en el título y en la descripción."
+          ]
+        }
+      }
+    },
+    {
       "name": "Guardar con una columna que la fuente no tiene",
       "method": "PUT",
       "path": "/api/organization/forms/catalogs/{id}",
@@ -1910,7 +2230,7 @@
       "path": "/api/organization/forms/catalogs/{id}/imports",
       "status": 200,
       "body": {
-        "version": 8
+        "version": 11
       }
     },
     {

@@ -187,6 +187,74 @@ public sealed class FormsContractExamplesTests(ApiFactory factory)
             name = "Talles de ropa", isActive = true, version = catalogVersion, filters = Filters(), sampleMemberId = memberId,
         });
         await PutAsync("Guardar con una versión vieja", catalogId, Save(version: 1));
+
+        // Los campos de las opciones (E13): el alta y el guardado con campos, valores y presentación, y sus errores.
+        static object NewField(string localId, string name, string type, bool unique = false, string? key = null, string? min = null) =>
+            new { localId, key, name, type, required = false, unique, min };
+        await PostAsync("Alta con más de 20 campos", Root, Root, new
+        {
+            name = "Muchos campos", source = "Manual",
+            fields = Enumerable.Range(1, 21).Select(index => NewField($"f{index}", $"Campo {index}", "Text")).ToArray(),
+        }, idempotent: true);
+        await PostAsync("Alta con dos campos con la misma clave", Root, Root, new
+        {
+            name = "Claves", source = "Manual", fields = new[] { NewField("f1", "CUIT", "Text", key: "cuit"), NewField("f2", "Cuit", "Text", key: "cuit") },
+        }, idempotent: true);
+        await PostAsync("Alta con un mínimo en un campo de texto", Root, Root, new
+        {
+            name = "Reglas", source = "Manual", fields = new[] { NewField("f1", "Nombre", "Text", min: "1") },
+        }, idempotent: true);
+        await PostAsync("Alta sin nada en el título de WhatsApp", Root, Root, new
+        {
+            name = "Presentación", source = "Manual", presentation = new { title = Array.Empty<string>(), description = new[] { "detail" } },
+        }, idempotent: true);
+        var suppliers = await PostAsync("Alta con campos", Root, Root, new
+        {
+            name = "Proveedores", source = "Manual", items = new[] { Item("P1", "Acme"), Item("P2", "Delta") },
+            fields = new[] { NewField("cuit", "CUIT", "Text", unique: true), NewField("plazo", "Plazo de pago", "WholeNumber") },
+            presentation = new { title = new[] { "text" }, description = new[] { "detail" } },
+        }, idempotent: true);
+        var suppliersId = suppliers.GetProperty("catalog").GetProperty("id").GetGuid();
+        var supplierFields = suppliers.GetProperty("catalog").GetProperty("fields");
+        var (cuit, plazo) = (supplierFields[0].GetProperty("id").GetGuid(), supplierFields[1].GetProperty("id").GetGuid());
+        Guid[] supplierItems;
+        using (var listed = await _client.GetFromJsonAsync<JsonDocument>($"{Root}/{suppliersId}/items", Ct))
+            supplierItems = [.. listed!.RootElement.GetProperty("items").EnumerateArray().Select(item => item.GetProperty("id").GetGuid())];
+        var supplierVersion = suppliers.GetProperty("catalog").GetProperty("version").GetUInt32();
+        object Supplier(int index, Dictionary<string, object?> values) =>
+            new { itemId = supplierItems[index], code = index == 0 ? "P1" : "P2", text = index == 0 ? "Acme" : "Delta", isActive = true, fields = values };
+        // Los dos campos guardados, con el CUIT ya obligatorio, más uno nuevo.
+        object[] KeptAnd(object added) =>
+        [
+            new { id = cuit, key = supplierFields[0].GetProperty("key").GetString(), name = "CUIT", type = "Text", required = true, unique = true },
+            new { id = plazo, key = supplierFields[1].GetProperty("key").GetString(), name = "Plazo de pago", type = "WholeNumber", required = false, unique = false },
+            added,
+        ];
+        object SaveSuppliers(object? items = null, object? fields = null, object? presentation = null) =>
+            new { name = "Proveedores", isActive = true, version = supplierVersion, items, fields, presentation };
+        supplierVersion = (await PutAsync("Guardar los valores de los campos", suppliersId, SaveSuppliers(items: new[]
+        {
+            Supplier(0, new() { [cuit.ToString()] = "20-12345678-6", [plazo.ToString()] = "30" }),
+            Supplier(1, new() { [cuit.ToString()] = "30-71234567-1" }),
+        }))).GetProperty("version").GetUInt32();
+        supplierVersion = (await PutAsync("Guardar un campo obligatorio y uno nuevo", suppliersId,
+            SaveSuppliers(fields: KeptAnd(NewField("zona", "Zona", "Text"))))).GetProperty("version").GetUInt32();
+        await PutAsync("Guardar un valor que no es del tipo del campo", suppliersId,
+            SaveSuppliers(items: new[] { Supplier(0, new() { [plazo.ToString()] = "treinta" }) }));
+        await PutAsync("Guardar sin el valor de un campo obligatorio", suppliersId,
+            SaveSuppliers(items: new[] { Supplier(0, new() { [cuit.ToString()] = null }) }));
+        await PutAsync("Guardar un valor único que ya tiene otra opción", suppliersId,
+            SaveSuppliers(items: new[] { Supplier(1, new() { [cuit.ToString()] = "20-12345678-6" }) }));
+        await PutAsync("Guardar más de 20 campos", suppliersId,
+            SaveSuppliers(fields: Enumerable.Range(1, 21).Select(index => NewField($"f{index}", $"Campo {index}", "Text")).ToArray()));
+        await PutAsync("Guardar un campo nuevo con una clave que ya se usa", suppliersId,
+            SaveSuppliers(fields: KeptAnd(NewField("otro", "Otro CUIT", "Text", key: "cuit"))));
+        await PutAsync("Guardar un mínimo en un campo de texto", suppliersId,
+            SaveSuppliers(fields: KeptAnd(NewField("nombre", "Nombre", "Text", min: "1"))));
+        await PutAsync("Guardar un campo que no existe en WhatsApp", suppliersId, SaveSuppliers(presentation: new
+        {
+            title = new[] { "text", "field:" + Guid.NewGuid().ToString("D") }, description = new[] { "detail" },
+        }));
         var membersVersion = members.GetProperty("catalog").GetProperty("version").GetUInt32();
         await PutAsync("Guardar con una columna que la fuente no tiene", membersId, new
         {

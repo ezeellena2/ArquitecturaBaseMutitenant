@@ -9,8 +9,8 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 /// <summary>
 /// Graba las respuestas de una corrida real en <c>docs/contracts/examples/&lt;archivo&gt;</c> (api-http, desde la E12), con la forma que
 /// valida el front con zod estricto: <c>{ "examples": [{ name, method, path, status, body? }] }</c>, con la ruta como la escribe
-/// openapi.json. Lo que cambia entre corridas queda fijo para que dos corridas graben lo mismo: cada id pasa a uno numerado por orden
-/// de aparición, cada fecha a una sola, cada <c>version</c> a un número por orden de aparición y el <c>traceId</c> a uno fijo.
+/// openapi.json. Lo que cambia entre corridas queda fijo para que dos corridas graben lo mismo: cada id (también el que va en una clave)
+/// pasa a uno numerado por orden de aparición, cada fecha a una sola, cada <c>version</c> a un número por orden de aparición y el <c>traceId</c> a uno fijo.
 /// </summary>
 internal sealed partial class ContractExampleRecorder(string fileName)
 {
@@ -76,8 +76,11 @@ internal sealed partial class ContractExampleRecorder(string fileName)
         switch (node)
         {
             case JsonObject value:
-                foreach (var key in value.Select(pair => pair.Key).ToArray())
-                    value[key] = Normalize(value[key]?.DeepClone(), key);
+                // Un id también puede ir en la clave, como en items.0.fields.{id} de los errores por campo.
+                var pairs = value.ToArray();
+                value.Clear();
+                foreach (var (key, child) in pairs)
+                    value[GuidInText().Replace(key, match => Stable(Guid.ParseExact(match.Value, "D")).ToString("D"))] = Normalize(child?.DeepClone(), key);
                 return value;
             case JsonArray value:
                 for (var index = 0; index < value.Count; index++)
@@ -112,4 +115,7 @@ internal sealed partial class ContractExampleRecorder(string fileName)
 
     [GeneratedRegex(@"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$")]
     private static partial Regex DateTimeShape();
+
+    [GeneratedRegex(@"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")]
+    private static partial Regex GuidInText();
 }
