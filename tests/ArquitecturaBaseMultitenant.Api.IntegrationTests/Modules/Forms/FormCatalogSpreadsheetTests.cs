@@ -2,6 +2,7 @@ using System.Globalization;
 using System.IO.Compression;
 using System.Text;
 using System.Text.RegularExpressions;
+using ArquitecturaBaseMultitenant.Api.Modules.Forms.Controllers;
 using ArquitecturaBaseMultitenant.Application.Common.Formatting;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Interfaces.Integrations;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Models;
@@ -10,6 +11,8 @@ using ArquitecturaBaseMultitenant.Domain.Forms;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.Forms;
 using ArquitecturaBaseMultitenant.Infrastructure.ReferenceData;
 using ClosedXML.Excel;
+using Microsoft.AspNetCore.Http.Metadata;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Forms;
 
@@ -93,6 +96,64 @@ public sealed partial class FormCatalogSpreadsheetTests
         }, 1));
 
         Assert.Equal(FormCatalogSheetStatus.OverLimits, Spreadsheet.Read("catalogo.xlsx", workbook, Limits with { MaxCells = 100 }).Status);
+
+        var hugeArray = ReplaceSheet(Workbook(Header), xml => FirstRowEnd().Replace(xml, match =>
+        {
+            var prefix = match.Groups["prefix"].Value;
+            return $"""<{prefix}c r="C1"><{prefix}f t="array" ref="A1:ZZ100000">1</{prefix}f><{prefix}v>1</{prefix}v></{prefix}c>{match.Value}""";
+        }, 1));
+
+        Assert.Equal(FormCatalogSheetStatus.OverLimits, Spreadsheet.Read("catalogo.xlsx", hugeArray, Limits).Status);
+    }
+
+    [Fact]
+    public void A_sheet_outside_worksheets_declared_by_workbook_relationships_is_rejected_without_opening_the_workbook()
+    {
+        var moved = Rename(Workbook(Header), "xl/worksheets/sheet1.xml", "xl/hojas/datos.xml",
+            ("/xl/worksheets/sheet1.xml", "/xl/hojas/datos.xml"), ("worksheets/sheet1.xml", "hojas/datos.xml"));
+        var withHugeArray = ReplacePart(moved, "xl/hojas/datos.xml", xml => FirstRowEnd().Replace(xml, match =>
+        {
+            var prefix = match.Groups["prefix"].Value;
+            return $"""<{prefix}c r="C1"><{prefix}f t="array" ref="A1:ZZ100000">1</{prefix}f><{prefix}v>1</{prefix}v></{prefix}c>{match.Value}""";
+        }, 1));
+        var hiddenFromContentTypes = ReplacePart(withHugeArray, "[Content_Types].xml",
+            xml => xml.Replace("application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml", "application/xml", StringComparison.OrdinalIgnoreCase));
+
+        Assert.Equal(FormCatalogSheetStatus.OverLimits, Spreadsheet.Read("catalogo.xlsx", withHugeArray, Limits).Status);
+        Assert.Equal(FormCatalogSheetStatus.OverLimits, Spreadsheet.Read("catalogo.xlsx", hiddenFromContentTypes, Limits).Status);
+    }
+
+    [Fact]
+    public async Task A_zip_with_twenty_thousand_parts_and_a_twelve_mib_file_are_rejected_without_opening_the_workbook()
+    {
+        var zipWithTooManyParts = ZipWithEntries(20_000);
+        Assert.Equal(FormCatalogSheetStatus.OverLimits, Spreadsheet.Read("catalogo.xlsx", zipWithTooManyParts, Limits).Status);
+
+        var twelveMiBBytes = new byte[12 * 1024 * 1024];
+        Assert.Equal(FormCatalogSheetStatus.OverLimits, Spreadsheet.Read("catalogo.xlsx", twelveMiBBytes, Limits).Status);
+
+        using var twelveMiBStream = new BoundedReadStream(12L * 1024 * 1024);
+        var resolved = await new FormCatalogFileResolver(Spreadsheet, new JsonReferenceDataCatalog())
+            .ResolveAsync("catalogo.xlsx", twelveMiBStream, FormCatalogValueType.Text, Ct);
+        Assert.True(resolved.IsFailure);
+        Assert.Equal(FormCatalogImportErrors.FileInvalidCode, resolved.Error.Code);
+        Assert.True(twelveMiBStream.TotalRead <= FormCatalogLimits.MaxFileBytes + 81_920,
+            $"Leyó {twelveMiBStream.TotalRead} bytes; debía cortar en {FormCatalogLimits.MaxFileBytes}.");
+    }
+
+    [Theory]
+    [InlineData(nameof(BusinessFormCatalogsController.PreviewImport))]
+    [InlineData(nameof(BusinessFormCatalogsController.ApplyImport))]
+    public void Multipart_import_endpoints_declare_eleven_mib_request_limits(string actionName)
+    {
+        const long expectedBytes = 11L * 1024 * 1024;
+        var method = typeof(BusinessFormCatalogsController).GetMethod(actionName);
+        Assert.NotNull(method);
+
+        var sizeLimit = Assert.Single(method.GetCustomAttributes(inherit: false).OfType<IRequestSizeLimitMetadata>());
+        var formLimit = Assert.Single(method.GetCustomAttributes(inherit: false).OfType<RequestFormLimitsAttribute>());
+        Assert.Equal(expectedBytes, sizeLimit.MaxRequestBodySize);
+        Assert.Equal(expectedBytes, formLimit.MultipartBodyLengthLimit);
     }
 
     [Fact]
@@ -336,8 +397,83 @@ public sealed partial class FormCatalogSpreadsheetTests
         return output.ToArray();
     }
 
+    private static byte[] ReplacePart(byte[] workbook, string partName, Func<string, string> replace)
+    {
+        using var output = new MemoryStream();
+        using (var input = new MemoryStream(workbook, writable: false))
+        using (var source = new ZipArchive(input, ZipArchiveMode.Read))
+        using (var target = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            Assert.Contains(source.Entries, entry => entry.FullName == partName);
+            foreach (var entry in source.Entries)
+            {
+                using var to = target.CreateEntry(entry.FullName, CompressionLevel.Optimal).Open();
+                if (entry.FullName == partName)
+                {
+                    using var reader = new StreamReader(entry.Open(), Encoding.UTF8);
+                    var replaced = replace(reader.ReadToEnd());
+                    using var writer = new StreamWriter(to, new UTF8Encoding(false));
+                    writer.Write(replaced);
+                }
+                else
+                {
+                    using var from = entry.Open();
+                    from.CopyTo(to);
+                }
+            }
+        }
+        return output.ToArray();
+    }
+
+    private static byte[] ZipWithEntries(int count)
+    {
+        using var output = new MemoryStream();
+        using (var archive = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            for (var index = 0; index < count; index++)
+                archive.CreateEntry($"p/{index}.txt", CompressionLevel.NoCompression).Open().Dispose();
+        }
+        return output.ToArray();
+    }
+
     [GeneratedRegex(@"</(?<prefix>\w+:)?row>", RegexOptions.CultureInvariant)]
     private static partial Regex FirstRowEnd();
+
+    private sealed class BoundedReadStream(long totalLength) : Stream
+    {
+        private long _remaining = totalLength;
+        public long TotalRead { get; private set; }
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            if (_remaining <= 0) return 0;
+            var chunk = (int)Math.Min(count, _remaining);
+            Array.Fill(buffer, (byte)'A', offset, chunk);
+            _remaining -= chunk;
+            TotalRead += chunk;
+            return chunk;
+        }
+
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            if (_remaining <= 0) return ValueTask.FromResult(0);
+            var chunk = (int)Math.Min(buffer.Length, _remaining);
+            buffer.Span[..chunk].Fill((byte)'A');
+            _remaining -= chunk;
+            TotalRead += chunk;
+            return ValueTask.FromResult(chunk);
+        }
+
+        public override void Flush() { }
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+    }
 
     private sealed class CultureScope : IDisposable
     {

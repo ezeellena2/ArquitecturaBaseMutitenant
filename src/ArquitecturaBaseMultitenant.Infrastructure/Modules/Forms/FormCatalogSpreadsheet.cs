@@ -1,22 +1,20 @@
 using System.Globalization;
-using System.IO.Compression;
 using System.Text;
-using System.Xml;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Interfaces.Integrations;
+using ArquitecturaBaseMultitenant.Application.Modules.Forms.Models;
+using ArquitecturaBaseMultitenant.Infrastructure.Spreadsheets;
 using ClosedXML.Excel;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Forms;
 
 /// <summary>
 /// La planilla de las opciones de un catálogo: .xlsx con ClosedXML (P12, que se adopta en la E12) o .csv en UTF-8 estricto,
-/// separado por comas, punto y coma o tabulaciones, con comillas dobles como lo guarda Excel. Antes de cargar un libro cuenta lo
-/// descomprimido y las celdas de cada hoja leyendo el XML de a poco, así una celda vacía con formato o una fórmula matricial no
-/// pasan los topes (C8).
+/// separado por comas, punto y coma o tabulaciones, con comillas dobles como lo guarda Excel. Antes de cargar un libro lo escanea
+/// con <see cref="SpreadsheetScanner"/>, así una celda vacía con formato o una fórmula matricial no pasan los topes (C8).
 /// </summary>
 internal sealed class FormCatalogSpreadsheet : IFormCatalogSpreadsheet
 {
     private const int SizedRows = 200;
-    private const string ContentTypesPart = "[Content_Types].xml";
     private static readonly char[] Separators = [',', ';', '\t'];
 
     public async Task<byte[]> WriteAsync(FormCatalogSheetLayout layout, IAsyncEnumerable<IReadOnlyList<FormCatalogCell>> rows,
@@ -51,6 +49,7 @@ internal sealed class FormCatalogSpreadsheet : IFormCatalogSpreadsheet
     {
         ArgumentNullException.ThrowIfNull(content);
         ArgumentNullException.ThrowIfNull(limits);
+        if (content.Length > FormCatalogLimits.MaxFileBytes) return FormCatalogSheetRead.OverLimits;
         var extension = Path.GetExtension(fileName ?? string.Empty).ToUpperInvariant();
         try
         {
@@ -61,7 +60,7 @@ internal sealed class FormCatalogSpreadsheet : IFormCatalogSpreadsheet
                 _ => FormCatalogSheetRead.Invalid,
             };
         }
-        catch (OverLimitsException) { return FormCatalogSheetRead.OverLimits; }
+        catch (SpreadsheetOverLimitsException) { return FormCatalogSheetRead.OverLimits; }
         catch (Exception exception) when (exception is not OperationCanceledException and not OutOfMemoryException)
         {
             return FormCatalogSheetRead.Invalid;
@@ -85,7 +84,8 @@ internal sealed class FormCatalogSpreadsheet : IFormCatalogSpreadsheet
 
     private static FormCatalogSheetRead ReadWorkbook(byte[] content, FormCatalogFileLimits limits)
     {
-        using (var archive = new MemoryStream(content, writable: false)) Scan(archive, limits);
+        using (var archive = new MemoryStream(content, writable: false))
+            SpreadsheetScanner.ScanXlsx(archive, new SpreadsheetScanLimits(limits.MaxUncompressedBytes, limits.MaxCells, limits.MaxEntries));
         using var stream = new MemoryStream(content, writable: false);
         using var workbook = new XLWorkbook(stream);
         var sheet = workbook.Worksheets.FirstOrDefault();
@@ -118,94 +118,6 @@ internal sealed class FormCatalogSpreadsheet : IFormCatalogSpreadsheet
         };
     }
 
-    /// <summary>
-    /// Las partes del zip, lo descomprimido de cada una, contado mientras se lee (un encabezado del zip puede mentir), y las celdas
-    /// de todas las hojas: cada <c>&lt;c&gt;</c>, también vacía con formato, y el área entera de cada fórmula matricial. Una hoja es
-    /// toda parte que <c>[Content_Types].xml</c> declara como hoja, en cualquier carpeta, porque así la carga ClosedXML.
-    /// </summary>
-    private static void Scan(Stream content, FormCatalogFileLimits limits)
-    {
-        using var zip = new ZipArchive(content, ZipArchiveMode.Read, leaveOpen: true);
-        if (zip.Entries.Count > limits.MaxEntries) throw new OverLimitsException();
-        if (zip.Entries.Sum(entry => entry.Length) > limits.MaxUncompressedBytes) throw new OverLimitsException();
-        var budget = new Budget(limits.MaxUncompressedBytes);
-        var types = zip.GetEntry(ContentTypesPart);
-        var sheets = types is null ? new SheetParts([], []) : ReadSheetParts(new BudgetStream(types.Open(), budget));
-        long cells = 0;
-        foreach (var entry in zip.Entries)
-        {
-            if (entry == types) continue;
-            using var part = new BudgetStream(entry.Open(), budget);
-            if (sheets.Contains(entry.FullName)) cells += CountCells(part);
-            else part.CopyTo(Stream.Null);
-            if (cells > limits.MaxCells) throw new OverLimitsException();
-        }
-    }
-
-    /// <summary>Las partes que <c>[Content_Types].xml</c> declara como hoja, por su nombre o por su extensión.</summary>
-    private static SheetParts ReadSheetParts(Stream part)
-    {
-        using (part)
-        {
-            var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, IgnoreComments = true };
-            using var reader = XmlReader.Create(part, settings);
-            var names = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
-            var extensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            while (reader.Read())
-            {
-                if (reader.NodeType != XmlNodeType.Element) continue;
-                var isSheet = reader.GetAttribute("ContentType")?.EndsWith(".worksheet+xml", StringComparison.OrdinalIgnoreCase) == true;
-                if (reader.LocalName == "Override" && reader.GetAttribute("PartName") is { } name) names[name.TrimStart('/')] = isSheet;
-                else if (reader.LocalName == "Default" && isSheet && reader.GetAttribute("Extension") is { } extension) extensions.Add(extension);
-            }
-            return new SheetParts(names, extensions);
-        }
-    }
-
-    private sealed record SheetParts(Dictionary<string, bool> Names, HashSet<string> Extensions)
-    {
-        public bool Contains(string fullName) => Names.TryGetValue(fullName, out var isSheet)
-            ? isSheet
-            : Extensions.Contains(Path.GetExtension(fullName).TrimStart('.'))
-                || (fullName.StartsWith("xl/worksheets/", StringComparison.OrdinalIgnoreCase)
-                    && fullName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static long CountCells(Stream part)
-    {
-        var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, IgnoreComments = true };
-        using var reader = XmlReader.Create(part, settings);
-        long cells = 0;
-        while (reader.Read())
-        {
-            if (reader.NodeType != XmlNodeType.Element) continue;
-            if (reader.LocalName == "c") cells++;
-            else if (reader.LocalName == "f" && reader.GetAttribute("t") == "array" && reader.GetAttribute("ref") is { } area)
-                cells += Math.Max(0, Area(area) - 1);
-        }
-        return cells;
-    }
-
-    /// <summary>Las celdas de un rango como «A1:C10»; una sola celda es 1.</summary>
-    private static long Area(string reference)
-    {
-        var corners = reference.Split(':');
-        if (corners.Length != 2) return 1;
-        var (firstColumn, firstRow) = Corner(corners[0]);
-        var (lastColumn, lastRow) = Corner(corners[1]);
-        return (Math.Abs(lastColumn - firstColumn) + 1L) * (Math.Abs(lastRow - firstRow) + 1L);
-    }
-
-    private static (long Column, long Row) Corner(string reference)
-    {
-        long column = 0;
-        var index = 0;
-        for (; index < reference.Length && char.IsAsciiLetter(reference[index]); index++)
-            column = Math.Min(column * 26 + (char.ToUpperInvariant(reference[index]) - 'A' + 1), 1_000_000);
-        var row = long.TryParse(reference.AsSpan(index), NumberStyles.None, CultureInfo.InvariantCulture, out var parsed) ? parsed : 1;
-        return (column, Math.Min(row, 10_000_000));
-    }
-
     /// <summary>UTF-8 estricto: un byte que no es UTF-8 hace inválido el archivo.</summary>
     private static FormCatalogSheetRead ReadCsv(byte[] content, FormCatalogFileLimits limits)
     {
@@ -219,9 +131,9 @@ internal sealed class FormCatalogSpreadsheet : IFormCatalogSpreadsheet
         long cells = 0;
         foreach (var record in Records(text, separator))
         {
-            if (record.Length > limits.MaxColumns || records.Count > limits.MaxRows) throw new OverLimitsException();
+            if (record.Length > limits.MaxColumns || records.Count > limits.MaxRows) throw new SpreadsheetOverLimitsException();
             cells += record.Length;
-            if (cells > limits.MaxCells) throw new OverLimitsException();
+            if (cells > limits.MaxCells) throw new SpreadsheetOverLimitsException();
             records.Add(record);
         }
 
@@ -267,46 +179,4 @@ internal sealed class FormCatalogSpreadsheet : IFormCatalogSpreadsheet
     }
 
     private static string? Field(StringBuilder value) => value.Length == 0 ? null : value.ToString();
-
-    private sealed class Budget(long remaining)
-    {
-        public void Spend(int bytes)
-        {
-            remaining -= bytes;
-            if (remaining < 0) throw new OverLimitsException();
-        }
-    }
-
-    /// <summary>Cuenta lo que se descomprime de una parte y corta en cuanto pasa lo que queda del tope.</summary>
-    private sealed class BudgetStream(Stream inner, Budget budget) : Stream
-    {
-        public override bool CanRead => true;
-        public override bool CanSeek => false;
-        public override bool CanWrite => false;
-        public override long Length => throw new NotSupportedException();
-        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            var read = inner.Read(buffer, offset, count);
-            budget.Spend(read);
-            return read;
-        }
-
-        public override void Flush() { }
-        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
-        public override void SetLength(long value) => throw new NotSupportedException();
-        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing) inner.Dispose();
-            base.Dispose(disposing);
-        }
-    }
-
-    private sealed class OverLimitsException : Exception
-    {
-        public OverLimitsException() : base("The file is over the limits.") { }
-    }
 }

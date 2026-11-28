@@ -120,7 +120,11 @@ public sealed class OrganizationWhatsAppContactsController(IWhatsAppContactServi
     public async Task<IActionResult> GetImportSample(CancellationToken cancellationToken) =>
         (await service.GetImportSampleAsync(cancellationToken)).ToFileResult(this);
 
+    private const long MaxImportRequestBytes = 11 * 1024 * 1024;
+
     [HttpPost("import/preview")]
+    [RequestSizeLimit(MaxImportRequestBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaxImportRequestBytes)]
     [Consumes("multipart/form-data")]
     [ProducesResponseType<WhatsAppImportPreviewResponse>(200)]
     [ProducesProblem(400)]
@@ -135,6 +139,8 @@ public sealed class OrganizationWhatsAppContactsController(IWhatsAppContactServi
 
     [HttpPost("import")]
     [Idempotent]
+    [RequestSizeLimit(MaxImportRequestBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaxImportRequestBytes)]
     [Consumes("multipart/form-data")]
     [ProducesResponseType<WhatsAppImportResponse>(200)]
     [ProducesProblem(400)]

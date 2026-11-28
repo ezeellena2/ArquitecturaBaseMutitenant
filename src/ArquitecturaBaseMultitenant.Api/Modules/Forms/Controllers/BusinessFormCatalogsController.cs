@@ -32,6 +32,7 @@ public sealed class BusinessFormCatalogsController(
     IFormCatalogSourceService sources) : ControllerBase
 {
     private const string Spreadsheet = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    private const long MaxImportRequestBytes = 11 * 1024 * 1024;
 
     [HttpGet]
     [HasPermission(Permissions.Forms.CatalogsRead)]
@@ -125,6 +126,8 @@ public sealed class BusinessFormCatalogsController(
 
     [HttpPost("{id:guid}/imports/previews")]
     [FormCatalogFileSlot(FormWorkLeaseKind.Preview)]
+    [RequestSizeLimit(MaxImportRequestBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaxImportRequestBytes)]
     [Consumes("multipart/form-data")]
     [ResponseVersion("Version")]
     [HasPermission(Permissions.Forms.CatalogsManage)]
@@ -153,6 +156,8 @@ public sealed class BusinessFormCatalogsController(
     [HttpPost("{id:guid}/imports")]
     [Idempotent]
     [FormCatalogFileSlot(FormWorkLeaseKind.Apply)]
+    [RequestSizeLimit(MaxImportRequestBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaxImportRequestBytes)]
     [Consumes("multipart/form-data")]
     [HasPermission(Permissions.Forms.CatalogsManage)]
     [ProducesResponseType<VersionResponse>(200)]
