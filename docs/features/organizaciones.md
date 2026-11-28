@@ -1,6 +1,6 @@
 # Organizaciones y administración B2B
 
-**Revisado:** 2026-11-27
+**Revisado:** 2026-11-28
 
 Esta ficha describe el acceso empresarial de la plantilla multitenant. Una identidad es global; cada organización tiene su propio espacio Business y puede tener empresas y miembros. El acceso privado se determina por `tenant_id`, nunca por el host. Las reglas de aislamiento están en [multitenancy.md](../architecture/multitenancy.md); la autorización se apoya en [roles.md](roles.md).
 
@@ -65,7 +65,9 @@ En el mismo cursor van las acciones de Plataforma sobre la organización que dib
 
 Las invitaciones de Usuarios y las del Dueño creado por Plataforma también se aceptan al ingresar con el código del correo (o del teléfono, si se invitó desde «Cargar teléfonos»), sin tocar el enlace: todas las pendientes vigentes quedan aceptadas juntas (ADR 0047). Vencidas y revocadas no cuentan; la puerta Persona conserva su acceso Personal y Empresa elige la última organización usada o la membresía más antigua. El consentimiento legal pendiente sigue siendo explícito. El límite transaccional y RLS de este camino se documentan en [Identidad e ingreso](identidad.md#invitaciones).
 
-«Cargar teléfonos» (WhatsApp) invita solo si quien carga marca «La persona aceptó recibir mensajes por WhatsApp» (decisión 179): sin la casilla responde 400 `WhatsApp.PhoneImport.ConsentRequired` y no sale ninguna invitación. Cada invitación guarda quién la marcó y cuándo (`ConsentConfirmedByUserId` y `ConsentConfirmedAtUtc`), y reenviarla conserva ese consentimiento; las de correo y las anteriores lo tienen nulo. Lo prueba `WhatsAppPhoneInvitationTests`.
+«Cargar teléfonos» (WhatsApp) invita solo si quien carga marca «La persona aceptó recibir mensajes por WhatsApp» (decisión 179): sin la casilla responde 400 `WhatsApp.PhoneImport.ConsentRequired` y no sale ninguna invitación. Cada invitación guarda quién la marcó y cuándo (`ConsentConfirmedByUserId` y `ConsentConfirmedAtUtc`), y reenviarla conserva ese consentimiento; las de correo y las anteriores lo tienen nulo. Las invitaciones por WhatsApp tienen topes diarios, por organización y global (B9): la carga toma los locks de sus números, reserva el lote entero y recién con lugar escribe; pasado el tope responde 429 `WhatsApp.PhoneImport.DailyLimit` sin guardar nada, una carga más grande que el tope responde 400 `WhatsApp.PhoneImport.TooManyInvitations`, y un reenvío por WhatsApp cuenta uno. Lo prueba `WhatsAppPhoneInvitationTests`.
+
+Suspender a alguien, quitarlo o cambiarle los roles, y editar un rol que tiene, deja en «Sin tomar» de su equipo los chats de WhatsApp que ya no puede atender (B12; ver [Roles](roles.md)).
 
 Las rutas privadas declaran acceso Business y el permiso de organización o empresa que corresponde. Un tenant ajeno responde 404; las entidades privadas aplican RLS y el tenant siempre proviene del claim validado. Los cambios que editan recursos con versión devuelven 409 si otra operación guardó primero.
 
