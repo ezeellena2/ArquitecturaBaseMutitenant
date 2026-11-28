@@ -38,10 +38,17 @@ internal sealed class OrganizationUserInvitationWriter(
     }
 
     /// <summary>
-    /// Invita por teléfono desde «Cargar teléfonos» (decisión 11 de la E11), por el canal que nombra el módulo. Si el número
-    /// ya tiene una invitación pendiente en la organización, la reemplaza, como Reenviar, con la empresa y los roles de ahora.
-    /// Con <paramref name="reservedByCaller"/>, la carga reserva su lote entero en los topes del canal y esta invitación no
-    /// vuelve a contar (B9).
+    /// Los locks de un número que se va a invitar desde «Cargar teléfonos», los mismos que toma el emisor antes de los topes.
+    /// La carga los toma para todos sus números antes de reservar su lote en los topes del canal y de escribir (B9).
+    /// </summary>
+    internal Task LockPhoneAsync(PhoneNumber phone, CancellationToken ct) =>
+        issuer.LockAsync(InvitationIdentity.ForPhone(phone), ct);
+
+    /// <summary>
+    /// Invita por teléfono desde «Cargar teléfonos» (decisión 11 de la E11), por el canal que nombra el módulo, con los locks
+    /// de <see cref="LockPhoneAsync"/> ya tomados. Si el número ya tiene una invitación pendiente en la organización, la
+    /// reemplaza, como Reenviar, con la empresa y los roles de ahora. Con <paramref name="reservedByCaller"/>, la carga reserva
+    /// su lote entero en los topes del canal y esta invitación no vuelve a contar (B9).
     /// </summary>
     internal async Task<Result<Guid>> InviteByPhoneAsync(PhoneNumber phone, string channel,
         DesiredOrganizationUserAssignments desired, Guid inviterId, InvitationConsent consent, bool reservedByCaller,
@@ -49,8 +56,6 @@ internal sealed class OrganizationUserInvitationWriter(
     {
         ArgumentNullException.ThrowIfNull(consent);
         var destination = InvitationIdentity.ForPhone(phone);
-        await externalLoginLock.LockIdentityAsync(destination, ct);
-        await invitations.LockDestinationAsync(destination, ct);
         var pending = await invitations.GetPendingByDestinationAsync(destination, ct);
         if (pending is not null)
         {

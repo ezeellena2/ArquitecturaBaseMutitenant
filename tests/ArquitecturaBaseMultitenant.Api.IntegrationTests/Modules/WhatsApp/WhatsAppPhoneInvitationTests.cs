@@ -1,3 +1,4 @@
+using System.Data.Common;
 using System.Globalization;
 using System.Net;
 using System.Security.Claims;
@@ -22,6 +23,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 
@@ -374,6 +376,70 @@ public sealed class WhatsAppPhoneInvitationTests(ApiFactory factory) : IClassFix
         finally
         {
             await ClearWhatsAppInvitationGlobalQuotaAsync(host.Services);
+        }
+    }
+
+    /// <summary>
+    /// Revisión de la etapa: la carga toma los locks de sus números y reserva su lote antes de escribir. Con el tope ya lleno
+    /// responde 429 sin leer ni armar ninguna invitación.
+    /// </summary>
+    [Fact]
+    public async Task A_batch_that_does_not_fit_answers_429_before_reading_or_writing_any_invitation()
+    {
+        var counter = new InvitationQueryCounter();
+        await using var baseHost = Host(new Dictionary<string, string> { ["WhatsApp:Quotas:DailyInvitationLimitPerOrganization"] = "1" });
+        await using var host = baseHost.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+            services.AddDbContext<ApplicationDbContext>(options => options.AddInterceptors(counter))));
+        await ClearWhatsAppInvitationGlobalQuotaAsync(host.Services);
+        try
+        {
+            using var client = WhatsAppAttentionJourney.Client(host);
+            await WhatsAppAttentionJourney.OrganizationAsync(factory, host, client, Ct);
+            using (var ok = await WhatsAppAttentionJourney.PostAsync(client, Imports, Body(Input(WhatsAppAttentionJourney.NewPhone())), Ct))
+                Assert.Equal(HttpStatusCode.OK, ok.StatusCode);
+            Assert.True(counter.Count > 0);
+
+            counter.Reset();
+            using (var limited = await WhatsAppAttentionJourney.PostAsync(client, Imports,
+                       Body(Input(WhatsAppAttentionJourney.NewPhone()), Input(WhatsAppAttentionJourney.NewPhone())), Ct))
+                Assert.Equal(HttpStatusCode.BadRequest, limited.StatusCode);
+            using (var limited = await WhatsAppAttentionJourney.PostAsync(client, Imports, Body(Input(WhatsAppAttentionJourney.NewPhone())), Ct))
+                await AssertDailyLimitAsync(limited);
+            Assert.Equal(0, counter.Count);
+        }
+        finally
+        {
+            await ClearWhatsAppInvitationGlobalQuotaAsync(host.Services);
+        }
+    }
+
+    /// <summary>Cuenta lo que se lee o escribe en las invitaciones de una organización adentro de una transacción.</summary>
+    private sealed class InvitationQueryCounter : DbCommandInterceptor
+    {
+        private int _count;
+
+        public int Count => Volatile.Read(ref _count);
+
+        public void Reset() => Interlocked.Exchange(ref _count, 0);
+
+        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command,
+            CommandEventData eventData, InterceptionResult<DbDataReader> result, CancellationToken cancellationToken = default)
+        {
+            Observe(command);
+            return ValueTask.FromResult(result);
+        }
+
+        public override ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(DbCommand command, CommandEventData eventData,
+            InterceptionResult<int> result, CancellationToken cancellationToken = default)
+        {
+            Observe(command);
+            return ValueTask.FromResult(result);
+        }
+
+        private void Observe(DbCommand command)
+        {
+            if (command.Transaction is not null && command.CommandText.Contains("tenant.\"Invitations\"", StringComparison.Ordinal))
+                Interlocked.Increment(ref _count);
         }
     }
 

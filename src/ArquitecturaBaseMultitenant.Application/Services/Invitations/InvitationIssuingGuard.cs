@@ -15,8 +15,7 @@ internal sealed class InvitationIssuingGuard(IUserLookup lookup, IExternalLoginL
     internal async Task<Result<(TenantRow Organization, Guid? UserId)>> CheckAsync(
         Guid tenantId, IssueInvitationRequest request, CancellationToken ct)
     {
-        await loginLock.LockIdentityAsync(request.Destination, ct);
-        await invitations.LockDestinationAsync(request.Destination, ct);
+        var owners = await LockAsync(request.Destination, ct);
         var tenant = await tenants.GetByIdAsync(tenantId, ct);
         if (tenant is null || tenant.Kind != TenantKind.Business) return InvitationErrors.Invalid;
         if (tenant.Status != TenantStatus.Active) return tenant.Status switch
@@ -26,8 +25,15 @@ internal sealed class InvitationIssuingGuard(IUserLookup lookup, IExternalLoginL
             TenantStatus.Provisioning => TenantErrors.Provisioning,
             _ => TenantErrors.Closed,
         };
-        var owners = await lookup.FindOwnersAsync(request.Destination, ct);
         if (owners.Count > 1) return InvitationErrors.WrongAccount;
         return (new TenantRow(tenant.Id, tenant.Kind, tenant.Status, tenant.Name, tenant.Slug), owners.Count == 0 ? null : owners[0]);
+    }
+
+    /// <summary>Serializa el destino (su identidad externa y sus invitaciones) y devuelve las cuentas que ya lo tienen.</summary>
+    internal async Task<IReadOnlyList<Guid>> LockAsync(InvitationIdentity destination, CancellationToken ct)
+    {
+        await loginLock.LockIdentityAsync(destination, ct);
+        await invitations.LockDestinationAsync(destination, ct);
+        return await lookup.FindOwnersAsync(destination, ct);
     }
 }

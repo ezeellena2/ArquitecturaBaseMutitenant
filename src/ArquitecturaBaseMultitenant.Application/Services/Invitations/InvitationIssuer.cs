@@ -29,6 +29,17 @@ internal sealed class InvitationIssuer(IInvitationRepository invitations, IMembe
         return issued.IsFailure ? issued.Error : issued.Value.InvitationId;
     }
 
+    /// <summary>
+    /// Los locks que una invitación toma antes de los topes de su canal: el destino y la cuenta que ya lo tiene, si hay una.
+    /// Una carga que reserva su lote entero los toma para todos sus destinos antes de reservar, así los topes van después de
+    /// los mismos locks que en una invitación suelta y no escribe nada si el lote no entra (B9).
+    /// </summary>
+    internal async Task LockAsync(InvitationIdentity destination, CancellationToken cancellationToken)
+    {
+        var owners = await guard.LockAsync(destination, cancellationToken);
+        if (owners.Count == 1) await members.LockUserAsync(owners[0], cancellationToken);
+    }
+
     public async Task<Result<IssuedInvitation>> IssueWithMemberAsync(IssueInvitationRequest request,
         CancellationToken cancellationToken, TenantSettings? preparedSettings = null, InvitationGrantRow? grant = null)
     {

@@ -62,18 +62,18 @@ internal sealed class WhatsAppPhoneImportService(IRequestValidator validator, IC
             {
                 return await unitOfWork.ExecuteInTransactionAsync(async ct =>
                 {
+                    // Primero los locks de todos los números, en un orden fijo; después el lote entero se reserva en los topes, y
+                    // recién con lugar se escribe: una carga que no entra no lee ni arma ninguna invitación.
+                    foreach (var row in toInvite.OrderBy(row => row.Phone!.Value, StringComparer.Ordinal))
+                        await invitations.LockPhoneAsync(row.Phone!, ct);
+                    var allowed = await quota.ReserveAsync(tenantContext.RequiredTenantId, toInvite.Length, ct);
+                    if (allowed.IsFailure) return Result.Failure<WhatsAppPhoneImportResponse>(allowed.Error);
                     foreach (var row in toInvite)
                     {
-                        // El lote entero se reserva abajo, después de los locks de todas las filas.
                         var issued = await invitations.InviteByPhoneAsync(row.Phone!, WhatsAppInvitationChannel.ChannelKey,
                             desired.Value, inviterId, consent, reservedByCaller: true, ct);
                         if (issued.IsFailure) return Result.Failure<WhatsAppPhoneImportResponse>(
                             issued.Error.Code == InvitationErrors.ChannelUnavailableCode ? InvitationErrors.ChannelUnavailableForNow() : issued.Error);
-                    }
-                    if (toInvite.Length > 0)
-                    {
-                        var allowed = await quota.ReserveAsync(tenantContext.RequiredTenantId, toInvite.Length, ct);
-                        if (allowed.IsFailure) return Result.Failure<WhatsAppPhoneImportResponse>(allowed.Error);
                     }
                     return new WhatsAppPhoneImportResponse(Count(rows, WhatsAppPhoneImportOutcome.AlreadyMember),
                         toInvite.Length, Count(rows, WhatsAppPhoneImportOutcome.Invalid));
