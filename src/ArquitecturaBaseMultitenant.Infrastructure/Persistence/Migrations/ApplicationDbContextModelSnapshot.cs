@@ -3943,6 +3943,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("ReviewedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("SentFromPhone")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(60)
@@ -4595,6 +4598,9 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
 
                     b.Property<Guid?>("ReviewedByUserId")
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("SentFromPhone")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Status")
                         .IsRequired()

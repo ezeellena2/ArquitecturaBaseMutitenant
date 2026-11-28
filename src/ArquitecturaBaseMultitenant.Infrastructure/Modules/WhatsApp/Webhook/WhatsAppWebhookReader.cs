@@ -18,62 +18,102 @@ internal sealed class WhatsAppWebhookReader(IPhoneNumberParser phones) : IWhatsA
             using var json = JsonDocument.Parse(body);
             var root = json.RootElement;
             if (Text(root, "object") != "whatsapp_business_account" || !Array(root, "entry", out var entries)) return WhatsAppErrors.InvalidPayload;
-            var messages = new List<WhatsAppWebhookMessage>(); var statuses = new List<WhatsAppWebhookStatus>(); var templates = new List<WhatsAppWebhookTemplate>();
+            var messages = new List<WhatsAppWebhookMessage>(); var statuses = new List<WhatsAppWebhookStatus>();
+            var templates = new List<WhatsAppWebhookTemplate>(); var echoes = new List<WhatsAppWebhookEcho>();
             foreach (var entry in entries.EnumerateArray())
             {
                 if (!Array(entry, "changes", out var changes)) continue;
                 foreach (var change in changes.EnumerateArray())
                 {
-                    if (Text(change, "field") is "message_template_status_update" or "template_category_update")
+                    var field = Text(change, "field");
+                    if (field is "message_template_status_update" or "template_category_update")
                     {
                         if (Template(Text(entry, "id"), change) is { } template) templates.Add(template);
                         continue;
                     }
-                    if (Text(change, "field") != "messages" || !Property(change, "value", out var value)
+                    // El historial previo a la conexión («history») y otros campos que no se procesan se ignoran (B10).
+                    if (field is not ("messages" or "smb_message_echoes") || !Property(change, "value", out var value)
                         || !Property(value, "metadata", out var metadata)
                         || Text(metadata, "phone_number_id") is not { Length: > 0 and <= TextLimits.ShortName } number) continue;
-                    var profiles = Profiles(value);
-                    if (Array(value, "messages", out var inbound))
-                        foreach (var message in inbound.EnumerateArray())
-                        {
-                            if (Id(message) is not { } id || !Timestamp(message, out var time) || Text(message, "from") is not { } from) continue;
-                            var sender = phones.Parse(null, from.StartsWith('+') ? from : "+" + from, PhoneUsage.Mobile);
-                            if (sender.IsFailure) continue;
-                            var type = Text(message, "type");
-                            var kind = type switch { "text" => WhatsAppMessageKind.Text, "interactive" or "button" => WhatsAppMessageKind.Interactive, _ => WhatsAppMessageKind.Unsupported };
-                            string? text = null; string? reply = null;
-                            if (type == "text" && Property(message, "text", out var content)) text = Text(content, "body");
-                            if (type == "button" && Property(message, "button", out var button)) { reply = Text(button, "payload"); text = Text(button, "text"); }
-                            if (type == "interactive" && Property(message, "interactive", out var interactive)
-                                && (Property(interactive, "button_reply", out var choice) || Property(interactive, "list_reply", out choice)))
-                            {
-                                reply = Text(choice, "id");
-                                // Lo que eligió queda en la conversación con el texto que vio.
-                                text = Text(choice, "title");
-                            }
-                            // Solo identificadores de respuestas que ofrece el bot; nunca un token recibido.
-                            reply = BotButtons.IsKnown(reply) ? reply : null;
-                            // Lo que no es texto ni respuesta se informa por su tipo, sin el archivo (D7 de la E11).
-                            var contentType = kind == WhatsAppMessageKind.Unsupported ? Short(type) : null;
-                            messages.Add(new(number, id, sender.Value.Value, kind, text, reply, time, contentType, profiles.GetValueOrDefault(from)));
-                        }
-                    if (Array(value, "statuses", out var delivery))
-                        foreach (var status in delivery.EnumerateArray())
-                        {
-                            WhatsAppMessageStatus? state = Text(status, "status") switch
-                            { "sent" => WhatsAppMessageStatus.Sent, "delivered" => WhatsAppMessageStatus.Delivered, "read" => WhatsAppMessageStatus.Read, "failed" => WhatsAppMessageStatus.Failed, _ => null };
-                            if (state is null || Id(status) is not { } id || !Timestamp(status, out var time)) continue;
-                            string? category = null, pricingType = null; int? error = null;
-                            if (Property(status, "pricing", out var pricing)) { category = Short(Text(pricing, "category")); pricingType = Short(Text(pricing, "type")); }
-                            if (Array(status, "errors", out var errors) && errors.GetArrayLength() > 0 && Property(errors[0], "code", out var code)
-                                && code.ValueKind == JsonValueKind.Number && code.TryGetInt32(out var errorCode)) error = errorCode;
-                            statuses.Add(new(number, id, state.Value, time, category, pricingType, error));
-                        }
+                    if (field == "smb_message_echoes") { ReadEchoes(number, value, echoes); continue; }
+                    ReadInboundMessages(number, value, messages);
+                    ReadStatuses(number, value, statuses);
                 }
             }
-            return new WhatsAppWebhookBatch(messages, statuses, templates);
+            return new WhatsAppWebhookBatch(messages, statuses, templates, echoes);
         }
         catch (JsonException) { return WhatsAppErrors.InvalidPayload; }
+    }
+
+    private void ReadInboundMessages(string number, JsonElement value, List<WhatsAppWebhookMessage> messages)
+    {
+        if (!Array(value, "messages", out var inbound)) return;
+        var profiles = Profiles(value);
+        foreach (var message in inbound.EnumerateArray())
+        {
+            if (Id(message) is not { } id || !Timestamp(message, out var time) || Text(message, "from") is not { } from) continue;
+            var sender = phones.Parse(null, from.StartsWith('+') ? from : "+" + from, PhoneUsage.Mobile);
+            if (sender.IsFailure) continue;
+            var type = Text(message, "type");
+            var kind = type switch { "text" => WhatsAppMessageKind.Text, "interactive" or "button" => WhatsAppMessageKind.Interactive, _ => WhatsAppMessageKind.Unsupported };
+            string? text = null; string? reply = null;
+            if (type == "text" && Property(message, "text", out var content)) text = Text(content, "body");
+            if (type == "button" && Property(message, "button", out var button)) { reply = Text(button, "payload"); text = Text(button, "text"); }
+            if (type == "interactive" && Property(message, "interactive", out var interactive)
+                && (Property(interactive, "button_reply", out var choice) || Property(interactive, "list_reply", out choice)))
+            {
+                reply = Text(choice, "id");
+                // Lo que eligió queda en la conversación con el texto que vio.
+                text = Text(choice, "title");
+            }
+            // Solo identificadores de respuestas que ofrece el bot; nunca un token recibido.
+            reply = BotButtons.IsKnown(reply) ? reply : null;
+            // Lo que no es texto ni respuesta se informa por su tipo, sin el archivo (D7 de la E11).
+            var contentType = kind == WhatsAppMessageKind.Unsupported ? Short(type) : null;
+            messages.Add(new(number, id, sender.Value.Value, kind, text, reply, time, contentType, profiles.GetValueOrDefault(from)));
+        }
+    }
+
+    /// <summary>
+    /// Mensajes enviados desde la app WhatsApp Business del celular en coexistencia (<c>smb_message_echoes</c>, B10):
+    /// <c>to</c> es el teléfono del cliente y <c>metadata.phone_number_id</c> identifica el canal conectado.
+    /// </summary>
+    private void ReadEchoes(string number, JsonElement value, List<WhatsAppWebhookEcho> echoes)
+    {
+        if (!Array(value, "message_echoes", out var items)) return;
+        foreach (var item in items.EnumerateArray())
+        {
+            if (Id(item) is not { } id || !Timestamp(item, out var time) || Text(item, "to") is not { } to) continue;
+            var recipient = phones.Parse(null, to.StartsWith('+') ? to : "+" + to, PhoneUsage.Mobile);
+            if (recipient.IsFailure) continue;
+            var type = Text(item, "type");
+            var kind = type == "text" ? WhatsAppMessageKind.Text : WhatsAppMessageKind.Unsupported;
+            string? text = null;
+            if (type == "text" && Property(item, "text", out var content))
+            {
+                text = Text(content, "body");
+                if (text?.Length > WhatsAppTextLimits.MessageText) text = text[..WhatsAppTextLimits.MessageText];
+            }
+            // Un archivo entra como hoy entra uno del cliente: el tipo, sin descarga hasta la E18.
+            var contentType = kind == WhatsAppMessageKind.Unsupported ? Short(type) : null;
+            echoes.Add(new(number, id, recipient.Value.Value, kind, text, time, contentType));
+        }
+    }
+
+    private static void ReadStatuses(string number, JsonElement value, List<WhatsAppWebhookStatus> statuses)
+    {
+        if (!Array(value, "statuses", out var delivery)) return;
+        foreach (var status in delivery.EnumerateArray())
+        {
+            WhatsAppMessageStatus? state = Text(status, "status") switch
+            { "sent" => WhatsAppMessageStatus.Sent, "delivered" => WhatsAppMessageStatus.Delivered, "read" => WhatsAppMessageStatus.Read, "failed" => WhatsAppMessageStatus.Failed, _ => null };
+            if (state is null || Id(status) is not { } id || !Timestamp(status, out var time)) continue;
+            string? category = null, pricingType = null; int? error = null;
+            if (Property(status, "pricing", out var pricing)) { category = Short(Text(pricing, "category")); pricingType = Short(Text(pricing, "type")); }
+            if (Array(status, "errors", out var errors) && errors.GetArrayLength() > 0 && Property(errors[0], "code", out var code)
+                && code.ValueKind == JsonValueKind.Number && code.TryGetInt32(out var errorCode)) error = errorCode;
+            statuses.Add(new(number, id, state.Value, time, category, pricingType, error));
+        }
     }
     /// <summary>
     /// El estado (message_template_status_update) o la categoría (template_category_update) de una plantilla de la cuenta

@@ -4,6 +4,9 @@ namespace ArquitecturaBaseMultitenant.Domain.WhatsApp;
 /// <summary>Entrada durable y metadatos Meta; Authentication nunca conserva contenido, OTP o enlaces.</summary>
 public sealed class WhatsAppMessage : Entity, IVersioned
 {
+    public const string InboundEventType = "inbound";
+    public const string EchoEventType = "echo";
+
     private WhatsAppMessage() { PhoneNumberId = string.Empty; Wamid = string.Empty; EventType = string.Empty; }
     public string PhoneNumberId { get; private set; }
     public string Wamid { get; private set; }
@@ -32,6 +35,12 @@ public sealed class WhatsAppMessage : Entity, IVersioned
     public DateTime? NextAttemptAtUtc { get; private set; }
     public uint Version { get; private set; }
 
+    /// <summary>Eco de un mensaje enviado desde la app WhatsApp Business del celular en coexistencia (B10).</summary>
+    public bool IsEcho => Direction == WhatsAppMessageDirection.Outbound && EventType == EchoEventType;
+
+    /// <summary>Si esta fila pasa por la cola durable de entrada: un mensaje entrante o un eco desde el celular.</summary>
+    public bool IsQueuedInbound => (Direction == WhatsAppMessageDirection.Inbound && EventType == InboundEventType) || IsEcho;
+
     public static WhatsAppMessage Create(string phoneNumberId, string wamid, string eventType,
         WhatsAppMessageDirection direction, WhatsAppMessageKind kind, WhatsAppMessageStatus status,
         DateTime occurredAtUtc, DateTime receivedAtUtc, Guid? contactId = null,
@@ -46,6 +55,8 @@ public sealed class WhatsAppMessage : Entity, IVersioned
             throw new ArgumentException("UTC required.");
         if (kind == WhatsAppMessageKind.Authentication && (encryptedText is not null || encryptedProfileName is not null))
             throw new ArgumentException("Authentication messages contain metadata only.", nameof(encryptedText));
+        var queued = (direction == WhatsAppMessageDirection.Inbound && eventType == InboundEventType)
+            || (direction == WhatsAppMessageDirection.Outbound && eventType == EchoEventType);
         return new WhatsAppMessage
         {
             PhoneNumberId = phoneNumberId,
@@ -65,13 +76,13 @@ public sealed class WhatsAppMessage : Entity, IVersioned
             ReplyId = replyId,
             ChannelId = channelId,
             ContentType = contentType is { Length: > 0 and <= TextLimits.ShortName } ? contentType : null,
-            NextAttemptAtUtc = direction == WhatsAppMessageDirection.Inbound ? receivedAtUtc : null
+            NextAttemptAtUtc = queued ? receivedAtUtc : null
         };
     }
     public bool TryLease(Guid leaseId, DateTime nowUtc, TimeSpan lifetime, int maxAttempts = 8)
     {
         if (leaseId == Guid.Empty || nowUtc.Kind != DateTimeKind.Utc || lifetime <= TimeSpan.Zero) throw new ArgumentException("Invalid lease.");
-        if (Direction != WhatsAppMessageDirection.Inbound || EventType != "inbound"
+        if (!IsQueuedInbound
             || ProcessedAtUtc is not null || NextAttemptAtUtc is null || NextAttemptAtUtc > nowUtc || LeaseUntilUtc > nowUtc) return false;
         if (Attempts >= maxAttempts) { Status = WhatsAppMessageStatus.Failed; NextAttemptAtUtc = null; LeaseId = null; LeaseUntilUtc = null; return false; }
         LeaseId = leaseId; LeaseUntilUtc = nowUtc + lifetime; Attempts++; Status = WhatsAppMessageStatus.Processing;

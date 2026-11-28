@@ -30,6 +30,11 @@ public abstract class WhatsAppChatMessageBase : Entity
     public Guid? ReviewedByUserId { get; private set; }
     public string? ReviewedByName { get; private set; }
     public DateTime? ReviewedAtUtc { get; private set; }
+    /// <summary>
+    /// true en un mensaje saliente que la organización mandó desde la app WhatsApp Business del celular, en coexistencia
+    /// (B10); false en los demás.
+    /// </summary>
+    public bool SentFromPhone { get; private set; }
 
     protected void InitializeInbound(Guid chatId, string wamid, string? text, WhatsAppMediaKind? mediaKind, DateTime occurredAtUtc)
     {
@@ -37,6 +42,18 @@ public abstract class WhatsAppChatMessageBase : Entity
         Initialize(chatId, text is null && mediaKind is null ? WhatsAppChatMessageKind.Event : mediaKind is null ? WhatsAppChatMessageKind.Text : WhatsAppChatMessageKind.Media,
             WhatsAppMessageDirection.Inbound, null, null, text, occurredAtUtc);
         Wamid = wamid; MediaKind = mediaKind; Status = WhatsAppChatMessageStatus.Received;
+    }
+
+    /// <summary>
+    /// Una respuesta enviada desde la app del celular en coexistencia (B10): saliente, sin autor, sin pasar por el outbox,
+    /// ya enviada y deduplicada por su identificador de Meta.
+    /// </summary>
+    protected void InitializeFromPhone(Guid chatId, string wamid, string? text, WhatsAppMediaKind? mediaKind, DateTime occurredAtUtc)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(wamid);
+        Initialize(chatId, text is null && mediaKind is null ? WhatsAppChatMessageKind.Event : mediaKind is null ? WhatsAppChatMessageKind.Text : WhatsAppChatMessageKind.Media,
+            WhatsAppMessageDirection.Outbound, null, null, text, occurredAtUtc);
+        Wamid = wamid; MediaKind = mediaKind; Status = WhatsAppChatMessageStatus.Sent; SentFromPhone = true;
     }
 
     protected void InitializeOutbound(Guid chatId, WhatsAppChatMessageKind kind, Guid? authorUserId, string? authorName, string text,

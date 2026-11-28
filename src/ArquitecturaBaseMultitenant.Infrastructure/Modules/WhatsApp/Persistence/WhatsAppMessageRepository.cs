@@ -21,7 +21,9 @@ internal sealed class WhatsAppMessageRepository(ApplicationDbContext context) : 
     public async Task<IReadOnlyList<WhatsAppMessage>> ListPendingAsync(DateTime nowUtc, int limit, CancellationToken ct)
     {
         context.RequireTransaction();
-        return await context.Set<WhatsAppMessage>().Where(value => value.Direction == WhatsAppMessageDirection.Inbound && value.EventType == "inbound"
+        return await context.Set<WhatsAppMessage>().Where(value =>
+            ((value.Direction == WhatsAppMessageDirection.Inbound && value.EventType == WhatsAppMessage.InboundEventType)
+                || (value.Direction == WhatsAppMessageDirection.Outbound && value.EventType == WhatsAppMessage.EchoEventType))
             && value.ProcessedAtUtc == null && value.NextAttemptAtUtc != null && value.NextAttemptAtUtc <= nowUtc
             && (value.LeaseUntilUtc == null || value.LeaseUntilUtc <= nowUtc))
             .OrderBy(value => value.ReceivedAtUtc).ThenBy(value => value.Id).Take(limit).ToArrayAsync(ct);
@@ -79,7 +81,8 @@ internal sealed class WhatsAppMessageRepository(ApplicationDbContext context) : 
         {
             var rows = await context.Set<WhatsAppMessage>().FromSqlInterpolated($"""
                 SELECT *, xmin FROM identity."WhatsAppMessages"
-                WHERE "Direction" = 'Inbound' AND "EventType" = 'inbound' AND "ProcessedAtUtc" IS NULL
+                WHERE (("Direction" = 'Inbound' AND "EventType" = 'inbound') OR ("Direction" = 'Outbound' AND "EventType" = 'echo'))
+                  AND "ProcessedAtUtc" IS NULL
                   AND "NextAttemptAtUtc" <= {nowUtc} AND ("LeaseUntilUtc" IS NULL OR "LeaseUntilUtc" <= {nowUtc})
                   AND NOT ("Id" = ANY({exhausted.ToArray()}))
                 ORDER BY "NextAttemptAtUtc", "ReceivedAtUtc", "Id" LIMIT 1 FOR UPDATE SKIP LOCKED

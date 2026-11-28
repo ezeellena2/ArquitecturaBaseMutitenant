@@ -21,8 +21,9 @@ internal sealed class WhatsAppOrganizationInboundWriter(IWhatsAppChatRepository 
 {
     public async Task ConsumeAsync(WhatsAppInboundContext context, CancellationToken ct)
     {
-        if (context.Channel is not { OrganizationId: not null } channel || context.Contact is not { } contact
-            || context.Message.Direction != WhatsAppMessageDirection.Inbound) return;
+        if (context.Channel is not { OrganizationId: not null } channel || context.Contact is not { } contact) return;
+        if (context.Message.IsEcho) { await ConsumeEchoAsync(channel, contact, context.Message, ct); return; }
+        if (context.Message.Direction != WhatsAppMessageDirection.Inbound) return;
         var message = context.Message;
         if (await chats.HasInboundAsync(message.Wamid, ct)) { message.ClearPersonalData(); return; }
         var waId = PhoneNumber.Create(contact.WaId).Value;
@@ -55,6 +56,36 @@ internal sealed class WhatsAppOrganizationInboundWriter(IWhatsAppChatRepository 
         // Una difusión: la baja por su botón o la respuesta del contacto (B6).
         if (customer is not null) await recipients.RecordInboundAsync(customer, message.ReplyId == BotButtons.Unsubscribe, occurredAtUtc, ct);
         await bot.RespondAsync(context, chat, customer, startsWithBot, ct);
+        message.ClearPersonalData();
+    }
+
+    /// <summary>
+    /// Un eco enviado desde la app WhatsApp Business del celular en coexistencia (B10): entra al chat como mensaje saliente sin
+    /// autor ni outbox, deja el chat respondido y frena el aviso de espera, sin bot, sin abrir la ventana de 24 h y sin cambiar
+    /// quién lo tiene tomado ni su equipo.
+    /// </summary>
+    private async Task ConsumeEchoAsync(WhatsAppInboundChannel channel, WhatsAppContact contact, WhatsAppMessage message, CancellationToken ct)
+    {
+        if (await chats.HasInboundAsync(message.Wamid, ct)) { message.ClearPersonalData(); return; }
+        var waId = PhoneNumber.Create(contact.WaId).Value;
+        var nowUtc = clock.GetUtcNow().UtcDateTime;
+        var occurredAtUtc = message.OccurredAtUtc > nowUtc ? nowUtc : message.OccurredAtUtc;
+        var text = message.EncryptedText is { } cipher ? protector.Unprotect(cipher) : null;
+        var media = MediaKind(message.ContentType);
+        var member = await members.FindMemberUserIdAsync(waId, ct);
+        await chats.LockAsync(channel.Id, waId.Value, ct);
+        var chat = await chats.GetAsync(channel.Id, waId.Value, member is null ? WhatsAppInbox.Customers : WhatsAppInbox.Internal, ct);
+        WhatsAppCustomer? customer = null;
+        if (member is null) customer = await CustomerAsync(waId, nowUtc, ct);
+        if (chat is null)
+        {
+            chat = customer is null ? WhatsAppChat.ForMember(channel.Id, waId, member!.Value, occurredAtUtc)
+                : WhatsAppChat.ForCustomer(channel.Id, waId, customer.Id, occurredAtUtc);
+            chats.Add(chat);
+        }
+        chats.Add(WhatsAppChatMessage.FromPhone(chat.Id, message.Wamid, text, media, occurredAtUtc));
+        chat.RecordPhoneEcho(occurredAtUtc, text);
+        await links.CopyAsync(chat.Id, WhatsAppMessageDirection.Outbound, text, media, occurredAtUtc, null, ct);
         message.ClearPersonalData();
     }
 

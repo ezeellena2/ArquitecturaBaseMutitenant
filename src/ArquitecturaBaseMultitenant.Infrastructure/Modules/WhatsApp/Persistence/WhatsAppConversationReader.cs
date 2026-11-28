@@ -177,7 +177,7 @@ internal sealed class WhatsAppConversationReader(ApplicationDbContext context, I
             from message in messages
             from outbox in context.OutboxMessages.AsNoTracking().Where(outbox => outbox.Id == message.OutboxMessageId).DefaultIfEmpty()
             from accepted in context.Set<WhatsAppMessage>().AsNoTracking()
-                .Where(accepted => accepted.EventType == "accepted" && accepted.OutboxMessageId == message.OutboxMessageId)
+                .Where(accepted => message.OutboxMessageId != null && accepted.EventType == "accepted" && accepted.OutboxMessageId == message.OutboxMessageId)
                 .DefaultIfEmpty()
             orderby message.CreatedAtUtc descending, message.Id descending
             select new MessageProjection
@@ -196,6 +196,7 @@ internal sealed class WhatsAppConversationReader(ApplicationDbContext context, I
                 Delivery = accepted == null ? null : accepted.Status,
                 ReviewedByName = message.ReviewedByName,
                 ReviewedAtUtc = message.ReviewedAtUtc,
+                SentFromPhone = message.SentFromPhone,
             };
 
     /// <summary>
@@ -224,6 +225,7 @@ internal sealed class WhatsAppConversationReader(ApplicationDbContext context, I
         {
             ReviewedByName = row.ReviewedByName,
             ReviewedAtUtc = row.ReviewedAtUtc,
+            SentFromPhone = row.SentFromPhone,
         };
     }
 
@@ -269,5 +271,6 @@ internal sealed class WhatsAppConversationReader(ApplicationDbContext context, I
         public WhatsAppMessageStatus? Delivery { get; init; }
         public string? ReviewedByName { get; init; }
         public DateTime? ReviewedAtUtc { get; init; }
+        public bool SentFromPhone { get; init; }
     }
 }

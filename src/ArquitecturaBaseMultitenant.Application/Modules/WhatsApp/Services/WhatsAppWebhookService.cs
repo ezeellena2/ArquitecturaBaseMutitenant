@@ -45,7 +45,7 @@ internal sealed class WhatsAppWebhookService(IWhatsAppSignatureValidator signatu
             catch (UniqueConstraintViolationException exception) when (exception.ConstraintName is WhatsAppUniqueKeys.MessageEvent or WhatsAppUniqueKeys.ContactNumber)
             { return await replay.ReplayAsync(request, ct); }
             if (result.IsSuccess && result.Value.Count > 0) await replay.ApplyDeliveryFailuresAsync(result.Value, ct);
-            if (result.IsSuccess && batch.Value.Messages.Count > 0) signal.Notify();
+            if (result.IsSuccess && (batch.Value.Messages.Count > 0 || batch.Value.MessageEchoes.Count > 0)) signal.Notify();
             // Meta informó que un número quedó sin medio de pago: ingreso y avisos de Plataforma lo ven enseguida.
             if (result.IsSuccess && batch.Value.Statuses.Any(value => value.ErrorCode == WhatsAppChannelUsageWriter.PaymentRequiredError))
                 await channels.RefreshAsync(ct);

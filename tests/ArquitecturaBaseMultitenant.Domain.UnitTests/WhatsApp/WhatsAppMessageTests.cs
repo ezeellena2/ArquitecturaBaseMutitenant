@@ -49,4 +49,23 @@ public sealed class WhatsAppMessageTests
         processed.ClearPersonalData();
         Assert.Equal((null, null, null), (processed.EncryptedText, processed.EncryptedProfileName, processed.ContactId));
     }
+    [Fact]
+    public void Phone_echo_can_be_leased_as_queued_while_delivery_callbacks_cannot()
+    {
+        var echo = WhatsAppMessage.Create("number", "wamid.echo", WhatsAppMessage.EchoEventType, WhatsAppMessageDirection.Outbound,
+            WhatsAppMessageKind.Text, WhatsAppMessageStatus.Pending, Now, Now, Guid.NewGuid(), encryptedText: "ciphertext");
+        Assert.True(echo.IsEcho);
+        Assert.True(echo.IsQueuedInbound);
+        var lease = Guid.NewGuid();
+        Assert.True(echo.TryLease(lease, Now, TimeSpan.FromMinutes(1)));
+        Assert.True(echo.Complete(lease, Now));
+        echo.ClearPersonalData();
+        Assert.Equal((null, null), (echo.EncryptedText, echo.ContactId));
+
+        var accepted = WhatsAppMessage.Create("number", "wamid.out", "accepted", WhatsAppMessageDirection.Outbound,
+            WhatsAppMessageKind.Text, WhatsAppMessageStatus.Sent, Now, Now);
+        Assert.False(accepted.IsEcho);
+        Assert.False(accepted.IsQueuedInbound);
+        Assert.False(accepted.TryLease(Guid.NewGuid(), Now, TimeSpan.FromMinutes(1)));
+    }
 }

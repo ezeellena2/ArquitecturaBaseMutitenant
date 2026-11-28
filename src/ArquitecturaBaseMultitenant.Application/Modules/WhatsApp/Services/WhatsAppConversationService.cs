@@ -203,7 +203,10 @@ internal sealed class WhatsAppConversationService(IWhatsAppChatRepository chats,
         await responses.RowAsync(Box(inbox), id, ct) is { } row ? row : WhatsAppErrors.ConversationNotFound;
 
     internal static WhatsAppChatMessageResponse Response(WhatsAppChatMessageBase message) => new(message.Id, message.Kind, message.Direction,
-        message.AuthorName, message.Text, message.MediaKind, message.Status, WhatsAppConversationResponseBuilder.FailureText(message.FailureReason), message.CreatedAtUtc);
+        message.AuthorName, message.Text, message.MediaKind, message.Status, WhatsAppConversationResponseBuilder.FailureText(message.FailureReason), message.CreatedAtUtc)
+    {
+        SentFromPhone = message.SentFromPhone,
+    };
 
     /// <summary>
     /// Marca como revisado un envío «Sin confirmar» (ADR 0066 §2), con quién y cuándo, bajo el lock de la conversación: lo hace

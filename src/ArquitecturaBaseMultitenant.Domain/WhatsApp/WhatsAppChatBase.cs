@@ -59,6 +59,30 @@ public abstract class WhatsAppChatBase : Entity, IVersioned
     }
 
     /// <summary>
+    /// Una respuesta enviada desde el celular en coexistencia (B10): si no llegó un mensaje posterior del cliente, el chat
+    /// queda respondido y deja de esperar aviso, sin abrir la ventana de 24 horas ni cambiar quién lo tiene tomado ni su equipo.
+    /// </summary>
+    public void RecordPhoneEcho(DateTime occurredAtUtc, string? preview)
+    {
+        RequireUtc(occurredAtUtc);
+        var answersLatestInbound = LastInboundAtUtc is null || occurredAtUtc >= LastInboundAtUtc;
+        if (occurredAtUtc >= LastMessageAtUtc)
+        {
+            LastMessageAtUtc = occurredAtUtc;
+            LastMessagePreview = Preview(preview);
+        }
+        else if (answersLatestInbound && LastMessagePreview is null)
+        {
+            LastMessagePreview = Preview(preview);
+        }
+        if (answersLatestInbound)
+        {
+            AwaitingReply = false;
+            WaitingSinceUtc = null;
+        }
+    }
+
+    /// <summary>
     /// Un mensaje del bot: no cuenta como respuesta de una persona, así que el chat sigue esperando si nadie lo atendió.
     /// </summary>
     public void RecordBotReply(DateTime nowUtc, string? preview)

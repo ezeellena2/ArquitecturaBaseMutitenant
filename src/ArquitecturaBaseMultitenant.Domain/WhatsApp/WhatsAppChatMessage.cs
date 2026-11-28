@@ -15,6 +15,13 @@ public sealed class WhatsAppChatMessage : WhatsAppChatMessageBase, ITenantOwned
         return message;
     }
 
+    public static WhatsAppChatMessage FromPhone(Guid chatId, string wamid, string? text, WhatsAppMediaKind? mediaKind, DateTime occurredAtUtc)
+    {
+        var message = new WhatsAppChatMessage();
+        message.InitializeFromPhone(chatId, wamid, text, mediaKind, occurredAtUtc);
+        return message;
+    }
+
     public static WhatsAppChatMessage Outbound(Guid chatId, WhatsAppChatMessageKind kind, Guid? authorUserId, string? authorName, string text,
         Guid outboxMessageId, Guid? templateId, DateTime nowUtc)
     {

@@ -19,7 +19,7 @@ internal sealed class WhatsAppInboundGuard(IWhatsAppMessageRepository messages, 
         if (hint.WaId is { } contactNumber) await contacts.LockAsync(contactNumber, ct);
         var message = await messages.GetForUpdateAsync(claim.MessageId, ct);
         var nowUtc = clock.GetUtcNow().UtcDateTime;
-        if (message is null || message.Direction != Domain.WhatsApp.WhatsAppMessageDirection.Inbound
+        if (message is null || !message.IsQueuedInbound
             || message.LeaseId != claim.LeaseId || message.LeaseUntilUtc <= nowUtc || message.ProcessedAtUtc is not null) return null;
         var contact = hint.WaId is { } sender ? await contacts.GetAsync(sender, ct) : null;
         var account = message.OriginalUserId is { } userId ? await users.GetByIdAsync(userId, ct) : null;
