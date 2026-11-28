@@ -303,6 +303,9 @@ public sealed class FormCatalogFieldChangePolicyTests
             CancellationToken ct) => throw new NotSupportedException();
         public Task<IReadOnlyList<FormCatalogItem>> ListActiveItemsByFieldValuesAsync(Guid catalogId, string key, IReadOnlyCollection<string> upperValues,
             CancellationToken ct) => throw new NotSupportedException();
+        public Task<bool> IsFieldSourceAsync(Guid catalogId, CancellationToken ct) => throw new NotSupportedException();
+        public Task<IReadOnlyList<Guid>> ListItemsUsedByOptionsAsync(Guid catalogId, IReadOnlyCollection<Guid> itemIds, CancellationToken ct) =>
+            throw new NotSupportedException();
         public Task<IReadOnlyList<FormCatalogItem>> ListAllItemsAsync(Guid catalogId, CancellationToken ct) => throw new NotSupportedException();
         public Task<int> CountItemsAsync(Guid catalogId, CancellationToken ct) => throw new NotSupportedException();
         public Task<int?> FindLastPositionAsync(Guid catalogId, CancellationToken ct) => throw new NotSupportedException();

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
@@ -20,7 +21,8 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Forms;
 /// La carga de una vez (E12, C7 a C11) por el servicio, con la base real: la revisión no escribe y pagina sus listas; aplicar otro
 /// archivo da <c>FileChanged</c>; las filas con error y más del 25 % de bajas piden su confirmación; una versión vieja da el 409
 /// común en la revisión y al aplicar; reemplazar da de baja lo que no vino y pegar agrega al final; exportar con la barrera de la
-/// persona tomada da <c>Busy</c>.
+/// persona tomada da <c>Busy</c>. Desde la E13, una opción de la fuente dada de baja no frena guardar, importar ni exportar el
+/// catálogo que la tiene como valor (lección 1).
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class FormCatalogImportServiceTests(ApiFactory factory)
@@ -176,6 +178,44 @@ public sealed class FormCatalogImportServiceTests(ApiFactory factory)
         await exported.Content.DisposeAsync();
     }
 
+    /// <summary>
+    /// Lección 1 de la E13: dar de baja la opción de la fuente no frena al catálogo que la tiene como valor. «Proveedores» se sigue
+    /// guardando, importando y exportando, y conserva ese valor.
+    /// </summary>
+    [Fact]
+    public async Task A_deactivated_source_option_does_not_block_saving_importing_or_exporting_and_its_value_is_kept()
+    {
+        var organization = await OrganizationAsync();
+        var zones = await CreateManualAsync(organization, "Zonas", [("N", "Norte"), ("S", "Sur")]);
+        var north = (await RowsAsync(organization, zones.Id))[0];
+        var created = Value(await RunAsync<IFormCatalogService, Result<FormCatalogCreatedResponse>>(organization, service => service.CreateAsync(
+            new CreateFormCatalogRequest("Proveedores", null, FormCatalogSource.Manual, null,
+                [new FormCatalogItemInput(null, "n0", "P1", "Uno", null, null, true)], null, null, null,
+                [new FormCatalogFieldInput(null, "zona", null, "Zona", FormCatalogFieldType.Catalog, zones.Id, false, false, null, null, null)]),
+            Ct))).Catalog;
+        var zona = created.Fields[0].Id;
+        var supplier = (await RowsAsync(organization, created.Id))[0];
+        var version = await SaveAsync(organization, created, created.Version,
+            [Edit(supplier, new Dictionary<Guid, JsonElement?> { [zona] = JsonSerializer.SerializeToElement(north.Id.ToString("D")) })]);
+        await SaveAsync(organization, zones, zones.Version, [new FormCatalogItemInput(north.Id, null, north.Code, north.Text, null, null, false)]);
+
+        version = await SaveAsync(organization, created, version, [Edit(supplier with { Text = "Uno editado" }, null)]);
+        version = await ApplyReviewedAsync(organization, created.Id, version, Csv(["P1;Uno importado", "P2;Dos"]), FormCatalogImportMode.Append);
+        var exported = Value(await RunAsync(organization, service => service.ExportAsync(created.Id, Ct)));
+        await exported.Content.DisposeAsync();
+
+        var rows = await RowsAsync(organization, created.Id);
+        Assert.Equal(("Uno importado", north.Id.ToString("D")), (rows[0].Text, rows[0].Fields[zona].GetString()));
+        Assert.Equal(2, rows.Count);
+    }
+
+    private async Task<uint> SaveAsync(Organization organization, FormCatalogResponse catalog, uint version, FormCatalogItemInput[] items) =>
+        Value(await RunAsync<IFormCatalogService, Result<FormCatalogUpdatedResponse>>(organization, service => service.UpdateAsync(
+            new UpdateFormCatalogRequest(catalog.Id, catalog.Name, null, true, version, items, null, null, null, null, null, null), Ct))).Version;
+
+    private static FormCatalogItemInput Edit(FormCatalogItemRow item, Dictionary<Guid, JsonElement?>? fields) =>
+        new(item.Id, null, item.Code, item.Text, item.Detail, item.Value, item.IsActive, fields);
+
     private async Task<uint> ApplyReviewedAsync(Organization organization, Guid catalogId, uint version, byte[] csv,
         FormCatalogImportMode mode)
     {
@@ -220,7 +260,11 @@ public sealed class FormCatalogImportServiceTests(ApiFactory factory)
         Value(await RunAsync<IFormCatalogService, Result<FormCatalogResponse>>(organization, service => service.GetAsync(catalogId, Ct)));
 
     /// <summary>Las opciones por su posición, con el código, el texto y si están activas.</summary>
-    private async Task<(string Code, string Text, bool IsActive)[]> ItemsAsync(Organization organization, Guid catalogId)
+    private async Task<(string Code, string Text, bool IsActive)[]> ItemsAsync(Organization organization, Guid catalogId) =>
+        [.. (await RowsAsync(organization, catalogId)).Select(row => (row.Code, row.Text, row.IsActive))];
+
+    /// <summary>Las opciones por su posición, enteras.</summary>
+    private async Task<IReadOnlyList<FormCatalogItemRow>> RowsAsync(Organization organization, Guid catalogId)
     {
         var rows = new List<FormCatalogItemRow>();
         for (var page = 1; ; page++)
@@ -231,7 +275,7 @@ public sealed class FormCatalogImportServiceTests(ApiFactory factory)
             rows.AddRange(current.Items);
             if (rows.Count >= current.TotalCount) break;
         }
-        return [.. rows.OrderBy(row => row.Position).Select(row => (row.Code, row.Text, row.IsActive))];
+        return [.. rows.OrderBy(row => row.Position)];
     }
 
     private async Task<Organization> OrganizationAsync()

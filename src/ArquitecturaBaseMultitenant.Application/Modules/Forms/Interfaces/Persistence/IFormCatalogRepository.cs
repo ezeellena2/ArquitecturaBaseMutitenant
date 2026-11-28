@@ -45,6 +45,19 @@ public interface IFormCatalogRepository
     Task<IReadOnlyList<FormCatalogItem>> ListActiveItemsByFieldValuesAsync(Guid catalogId, string key,
         IReadOnlyCollection<string> upperValues, CancellationToken ct);
 
+    /// <summary>
+    /// Si algún campo activo de otro catálogo de la organización toma sus valores de <paramref name="catalogId"/> (E13): lo que frena
+    /// darlo de baja. Mira <c>FieldsJson @&gt;</c> sin índice, porque son pocos catálogos por organización.
+    /// </summary>
+    Task<bool> IsFieldSourceAsync(Guid catalogId, CancellationToken ct);
+
+    /// <summary>
+    /// De <paramref name="itemIds"/>, las opciones del catálogo que alguna opción de otro catálogo, activa o dada de baja, tiene como
+    /// valor de un campo activo (E13): <c>FieldValuesJson @&gt;</c>, con el índice GIN. Va bajo el bloqueo del catálogo, que también
+    /// toma quien guarda un valor que la nombra, porque bloquea las fuentes de sus campos.
+    /// </summary>
+    Task<IReadOnlyList<Guid>> ListItemsUsedByOptionsAsync(Guid catalogId, IReadOnlyCollection<Guid> itemIds, CancellationToken ct);
+
     /// <summary>Todas las opciones del catálogo por posición, seguidas: para reordenar o cargar de una vez (hasta 10.000).</summary>
     Task<IReadOnlyList<FormCatalogItem>> ListAllItemsAsync(Guid catalogId, CancellationToken ct);
 

@@ -134,6 +134,19 @@ internal sealed class FormCatalogFieldValuePolicy(DisplayFormatter formatter, IF
     }
 
     /// <summary>
+    /// <see cref="FormCatalogErrors.FieldRemovalNotConfirmed"/> del campo <paramref name="index"/>: «Confirmá que se quitan sus {count}
+    /// valores.», o el de un solo valor, con la cantidad en la cultura del pedido.
+    /// </summary>
+    public Error RemovalErrorOf(int index, int count, DisplayFormatContext culture)
+    {
+        ArgumentNullException.ThrowIfNull(culture);
+        const string code = FormCatalogErrors.FieldRemovalNotConfirmedCode;
+        var message = FormsTexts.Get(count == 1 ? code + ".Singular" : code, culture.Profile)
+            .Replace("{count}", formatter.FormatDecimal(count, 0, culture), StringComparison.Ordinal);
+        return FormCatalogErrors.FieldRemovalNotConfirmed(index, message);
+    }
+
+    /// <summary>
     /// <see cref="FormCatalogErrors.FieldKeyDuplicate"/>: «Ya la usa «{name}».», con el nombre del otro campo, en la cultura del pedido.
     /// </summary>
     public static string KeyTakenBy(string otherName, DisplayFormatContext culture)

@@ -51,8 +51,9 @@ internal sealed class FormCatalogItemEditor(IFormCatalogRepository repository, F
     }
 
     /// <summary>
-    /// Las opciones por borrar (129): cada una tiene que ser de este catálogo. En esta etapa nada usa una opción; la etapa que sume
-    /// un uso lo lee acá, bajo el bloqueo, y responde <see cref="FormCatalogErrors.ItemInUse"/> sin borrar ninguna.
+    /// Las opciones por borrar (129): cada una tiene que ser de este catálogo, y una que algo usa responde
+    /// <see cref="FormCatalogErrors.ItemInUse"/> sin borrar ninguna. Cada etapa que sume un uso lo lee acá, bajo el bloqueo; desde la
+    /// E13, el valor de un campo activo de otro catálogo (<see cref="FormCatalogFieldEditor.CheckRemovableAsync"/>).
     /// </summary>
     private async Task<Result<IReadOnlyList<FormCatalogItem>>> ReadRemovedAsync(FormCatalog catalog, IReadOnlyList<Guid> ids,
         CancellationToken ct)
@@ -64,6 +65,8 @@ internal sealed class FormCatalogItemEditor(IFormCatalogRepository repository, F
             if (!found.ContainsKey(ids[index])) return FormCatalogErrors.ItemNotFound($"deleteItems.{index}");
         }
 
+        var removable = await fields.CheckRemovableAsync(catalog, ids, ct);
+        if (removable.IsFailure) return removable.Error;
         return Result.Success<IReadOnlyList<FormCatalogItem>>([.. found.Values]);
     }
 

@@ -28,6 +28,7 @@
   <data name="Forms.Catalog.FieldKeyDuplicate" xml:space="preserve"><value>"{name}" already uses it.</value></data>
   <data name="Forms.Catalog.FieldInvalid" xml:space="preserve"><value>Check this field's type, rules or catalog.</value></data>
   <data name="Forms.Catalog.FieldRemovalNotConfirmed" xml:space="preserve"><value>Confirm that its {count} values are removed.</value></data>
+  <data name="Forms.Catalog.FieldRemovalNotConfirmed.Singular" xml:space="preserve"><value>Confirm that its value is removed.</value></data>
   <data name="Forms.Catalog.FieldTypeNotConvertible" xml:space="preserve"><value>{count} options have a value that isn't {type}.</value></data>
   <data name="Forms.Catalog.FieldValuesIncompatible" xml:space="preserve"><value>{count} options don't meet the new rule.</value></data>
   <data name="Forms.Catalog.FieldValuesMissing" xml:space="preserve"><value>{count} active options have no value.</value></data>

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Domain.Forms;
@@ -75,6 +76,66 @@ internal sealed class FormCatalogRepository(ApplicationDbContext context, ITenan
             .ToListAsync(ct);
     }
 
+    public Task<bool> IsFieldSourceAsync(Guid catalogId, CancellationToken ct)
+    {
+        var tenantId = RequireTenant();
+        var probe = FieldSourceProbe(catalogId);
+        return context.Database.SqlQuery<bool>($"""
+                SELECT EXISTS (
+                    SELECT 1 FROM tenant."FormCatalogs"
+                    WHERE "TenantId" = {tenantId} AND "Id" <> {catalogId} AND "FieldsJson" @> {probe}::jsonb) AS "Value"
+                """)
+            .SingleAsync(ct);
+    }
+
+    // Primero los campos activos de otros catálogos que toman sus valores de este (FieldsJson @>, sin índice); después, una sola
+    // consulta con un par (catálogo, {"clave": "opción"}) por cada clave y cada opción, que el GIN de FieldValuesJson resuelve con @>.
+    public async Task<IReadOnlyList<Guid>> ListItemsUsedByOptionsAsync(Guid catalogId, IReadOnlyCollection<Guid> itemIds, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(itemIds);
+        var tenantId = RequireTenant();
+        if (itemIds.Count == 0) return [];
+        var probe = FieldSourceProbe(catalogId);
+        var users = await context.Set<FormCatalog>().FromSql($"""
+                SELECT * FROM tenant."FormCatalogs"
+                WHERE "TenantId" = {tenantId} AND "Id" <> {catalogId} AND "FieldsJson" @> {probe}::jsonb
+                """)
+            .AsNoTracking()
+            .Where(catalog => catalog.TenantId == tenantId)
+            .Select(catalog => new { catalog.Id, catalog.FieldsJson })
+            .ToListAsync(ct);
+
+        var catalogIds = new List<Guid>();
+        var optionIds = new List<Guid>();
+        var values = new List<string>();
+        foreach (var user in users)
+        {
+            var keys = FormCatalogField.ListFromJson(user.FieldsJson)
+                .Where(field => field.IsActive && field.SourceCatalogId == catalogId)
+                .Select(field => field.Key);
+            foreach (var key in keys)
+                foreach (var itemId in itemIds)
+                {
+                    catalogIds.Add(user.Id);
+                    optionIds.Add(itemId);
+                    values.Add(JsonSerializer.Serialize(new Dictionary<string, string> { [key] = itemId.ToString("D") }));
+                }
+        }
+
+        if (values.Count == 0) return [];
+        Guid[] byCatalog = [.. catalogIds];
+        Guid[] byOption = [.. optionIds];
+        string[] byValue = [.. values];
+        return await context.Database.SqlQuery<Guid>($"""
+                SELECT DISTINCT probe.item_id AS "Value"
+                FROM unnest({byCatalog}, {byOption}, {byValue}::jsonb[]) AS probe(catalog_id, item_id, value)
+                WHERE EXISTS (
+                    SELECT 1 FROM tenant."FormCatalogItems" AS item
+                    WHERE item."TenantId" = {tenantId} AND item."CatalogId" = probe.catalog_id AND item."FieldValuesJson" @> probe.value)
+                """)
+            .ToListAsync(ct);
+    }
+
     public async Task<IReadOnlyList<FormCatalogItem>> ListAllItemsAsync(Guid catalogId, CancellationToken ct) =>
         await Items(RequireTenant(), catalogId).OrderBy(item => item.Position).ToListAsync(ct);
 
@@ -110,6 +171,10 @@ internal sealed class FormCatalogRepository(ApplicationDbContext context, ITenan
         _ = RequireTenant();
         context.Set<FormCatalogItem>().Remove(item);
     }
+
+    /// <summary>Lo que contiene la lista de campos de un catálogo con un campo activo que toma sus valores de <paramref name="catalogId"/>.</summary>
+    private static string FieldSourceProbe(Guid catalogId) =>
+        JsonSerializer.Serialize(new[] { new { sourceCatalogId = catalogId.ToString("D"), isActive = true } });
 
     private IQueryable<FormCatalogItem> Items(Guid tenantId, Guid catalogId) =>
         context.Set<FormCatalogItem>().Where(item => item.TenantId == tenantId && item.CatalogId == catalogId);

@@ -15,7 +15,9 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Forms.Services;
 /// <c>null</c> limpia). La regla de cada valor es <see cref="FormCatalogField.Check"/>, con el mensaje de
 /// <see cref="FormCatalogFieldValuePolicy"/>; una fuente nueva tiene que ser un catálogo a mano activo de la organización, y un valor
 /// único se compara con las opciones activas que quedan. Cambiar el tipo, la fuente o una regla de un campo guardado lo comprueba
-/// contra todas las opciones <see cref="FormCatalogFieldChangePolicy"/>. Un error de cualquier paso revierte todo el guardado.
+/// contra todas las opciones <see cref="FormCatalogFieldChangePolicy"/>. Quitar un campo con valores pide su confirmación, y protege
+/// lo que usan otros catálogos: una opción que es valor de un campo activo de otro no se borra, y un catálogo que es fuente de campos
+/// activos no se da de baja. Un error de cualquier paso revierte todo el guardado.
 /// </summary>
 internal sealed class FormCatalogFieldEditor(IFormCatalogRepository repository, IFormCatalogReader reader, FormCatalogFieldValuePolicy values,
     FormCatalogFieldChangePolicy changes)
@@ -30,15 +32,18 @@ internal sealed class FormCatalogFieldEditor(IFormCatalogRepository repository, 
     /// Deja los campos de <paramref name="fields"/> (la lista entera de los activos, en su orden) y la presentación, si vinieron, y
     /// devuelve la identidad de cada campo nuevo por su id local. Una fuente que no cambia no se vuelve a leer, y los valores guardados
     /// de un campo que cambió se comprueban teniendo en cuenta <paramref name="items"/>, los cambios de las opciones del mismo guardado.
+    /// Un campo guardado que no vino queda quitado con sus valores; si tiene alguno, tiene que estar en <paramref name="confirmedRemovals"/>.
     /// </summary>
     public async Task<Result<IReadOnlyList<FormCatalogFieldIdentity>>> ChangeAsync(FormCatalog catalog,
-        IReadOnlyList<FormCatalogFieldInput>? fields, FormCatalogPresentationInput? presentation, FormCatalogItemChanges items, CancellationToken ct)
+        IReadOnlyList<FormCatalogFieldInput>? fields, FormCatalogPresentationInput? presentation, FormCatalogItemChanges items,
+        IReadOnlyCollection<Guid> confirmedRemovals, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(catalog);
+        ArgumentNullException.ThrowIfNull(confirmedRemovals);
         IReadOnlyList<FormCatalogFieldIdentity> identities = [];
         if (fields is not null)
         {
-            var changed = await ChangeFieldsAsync(catalog, fields, items, ct);
+            var changed = await ChangeFieldsAsync(catalog, fields, items, confirmedRemovals, ct);
             if (changed.IsFailure) return changed.Error;
             identities = changed.Value;
         }
@@ -152,7 +157,8 @@ internal sealed class FormCatalogFieldEditor(IFormCatalogRepository repository, 
     /// el tipo o la regla nueva, <see cref="FormCatalogFieldChangePolicy"/>.
     /// </summary>
     private async Task<Result<IReadOnlyList<FormCatalogFieldIdentity>>> ChangeFieldsAsync(FormCatalog catalog,
-        IReadOnlyList<FormCatalogFieldInput> fields, FormCatalogItemChanges items, CancellationToken ct)
+        IReadOnlyList<FormCatalogFieldInput> fields, FormCatalogItemChanges items, IReadOnlyCollection<Guid> confirmedRemovals,
+        CancellationToken ct)
     {
         var before = catalog.ReadFields();
         var stored = before.ToDictionary(field => field.Id);
@@ -182,12 +188,66 @@ internal sealed class FormCatalogFieldEditor(IFormCatalogRepository repository, 
         var culture = await values.CultureAsync(ct);
         var active = catalog.ChangeFields(drafts, name => FormCatalogFieldValuePolicy.KeyTakenBy(name, culture));
         if (active.IsFailure) return active.Error;
+        var removals = await CheckRemovalsAsync(catalog.Id, before, fields, confirmedRemovals, culture, ct);
+        if (removals.IsFailure) return removals.Error;
         var converted = await changes.ApplyAsync(catalog, before, items, ct);
         if (converted.IsFailure) return converted.Error;
         var identities = new List<FormCatalogFieldIdentity>();
         for (var index = 0; index < fields.Count; index++)
             if (fields[index].Id is null) identities.Add(new FormCatalogFieldIdentity(fields[index].LocalId!, active.Value[index].Id));
         return Result.Success<IReadOnlyList<FormCatalogFieldIdentity>>(identities);
+    }
+
+    /// <summary>
+    /// Un campo activo guardado que no vino en la lista queda quitado y conserva sus valores (E13); si alguna opción, activa o dada de
+    /// baja, tiene uno, quitarlo se confirma nombrándolo en <paramref name="confirmed"/>, o es
+    /// <see cref="FormCatalogErrors.FieldRemovalNotConfirmed"/> con cuántos son. Como un campo quitado no está en el pedido, el índice
+    /// del error es el lugar que tenía entre los activos: el de <c>fields[i]</c> en el detalle que se leyó.
+    /// </summary>
+    private async Task<Result> CheckRemovalsAsync(Guid catalogId, IReadOnlyList<FormCatalogField> before,
+        IReadOnlyList<FormCatalogFieldInput> fields, IReadOnlyCollection<Guid> confirmed, DisplayFormatContext culture, CancellationToken ct)
+    {
+        var kept = fields.Select(field => field.Id).OfType<Guid>().ToHashSet();
+        var unconfirmed = before.Where(field => field.IsActive && !kept.Contains(field.Id) && !confirmed.Contains(field.Id)).ToList();
+        if (unconfirmed.Count == 0) return Result.Success();
+        var counts = (await reader.FindFieldsAsync(catalogId, ct))?.ValuesCount;
+        if (counts is null) return Result.Success();
+        foreach (var field in unconfirmed)
+            if (counts.TryGetValue(field.Key, out var count) && count > 0) return values.RemovalErrorOf(field.Position, count, culture);
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Las opciones por borrar que una opción de otro catálogo tiene como valor de un campo activo (129, E13): no se borra ninguna, y
+    /// el error nombra la primera en el orden del pedido, con <see cref="FormCatalogErrors.UsedByOptions"/>. Darla de baja no se
+    /// frena: lo guardado que la nombra se conserva (lección 1).
+    /// </summary>
+    /// <param name="catalog">El catálogo, ya bloqueado.</param>
+    /// <param name="ids">Las opciones por borrar, en el orden del pedido (<c>deleteItems.{i}</c>), todas de este catálogo.</param>
+    /// <param name="ct">El token del pedido.</param>
+    public async Task<Result> CheckRemovableAsync(FormCatalog catalog, IReadOnlyList<Guid> ids, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(catalog);
+        ArgumentNullException.ThrowIfNull(ids);
+        if (ids.Count == 0 || catalog.Source != FormCatalogSource.Manual) return Result.Success();
+        var used = (await repository.ListItemsUsedByOptionsAsync(catalog.Id, ids, ct)).ToHashSet();
+        for (var index = 0; index < ids.Count; index++)
+            if (used.Contains(ids[index])) return FormCatalogErrors.ItemInUse(index, [FormCatalogErrors.UsedByOptions]);
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Dar de baja un catálogo que es la fuente de campos activos de otros catálogos es <see cref="FormCatalogErrors.SourceInUse"/>:
+    /// se corrige quitando esos campos y no pone el editor en conflicto (lección 2). Uno que ya estaba dado de baja no se mira, así
+    /// se puede seguir guardando.
+    /// </summary>
+    /// <param name="catalog">El catálogo, ya bloqueado, con el estado que tenía guardado.</param>
+    /// <param name="ct">El token del pedido.</param>
+    public async Task<Result> CheckDeactivationAsync(FormCatalog catalog, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(catalog);
+        if (!catalog.IsActive || catalog.Source != FormCatalogSource.Manual) return Result.Success();
+        return await repository.IsFieldSourceAsync(catalog.Id, ct) ? FormCatalogErrors.SourceInUse : Result.Success();
     }
 
     /// <summary>La opción que tenía guardada ese campo, si es una identidad.</summary>

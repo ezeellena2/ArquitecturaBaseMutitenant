@@ -109,7 +109,7 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
         if (catalog.IsFailure) return catalog.Error;
         repository.Add(catalog.Value);
         var changes = FormCatalogItemChanges.Of(request);
-        var fields = await fieldEditor.ChangeAsync(catalog.Value, request.Fields, request.Presentation, changes, ct);
+        var fields = await fieldEditor.ChangeAsync(catalog.Value, request.Fields, request.Presentation, changes, [], ct);
         if (fields.IsFailure) return fields.Error;
         IReadOnlyList<FormCatalogItemIdentity> none = [];
         if (changes.Items.Count == 0) return (catalog.Value, none);
@@ -122,7 +122,9 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
     /// Bloqueo, lecturas, reglas y escrituras, en ese orden. «Dar de baja» y «Reactivar» mandan el mismo guardado con lo pendiente:
     /// reactivar va antes de cambiar opciones y dar de baja, después, así un catálogo que sigue de baja no cambia sus opciones. Los
     /// campos y la presentación van antes de las opciones, que guardan los valores de los campos activos de este guardado; un campo
-    /// que cambia de tipo o de regla convierte y comprueba antes los valores guardados de todas las opciones.
+    /// que cambia de tipo o de regla convierte y comprueba antes los valores guardados de todas las opciones. Desde la E13, uno que es
+    /// fuente de campos activos de otros catálogos no se da de baja, quitar un campo con valores se confirma y una opción que es valor
+    /// de otra no se borra (<see cref="FormCatalogFieldEditor"/>).
     /// </summary>
     private async Task<Result<(FormCatalog Catalog, IReadOnlyList<FormCatalogItemIdentity> Identities,
         IReadOnlyList<FormCatalogFieldIdentity> FieldIdentities)>> UpdateCoreAsync(UpdateFormCatalogRequest request, CancellationToken ct)
@@ -133,9 +135,17 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
         // Con una versión vieja, el 409 común antes de cualquier regla de las opciones: la pantalla abre el conflicto (concurrencia.md).
         if (catalog.Version != request.Version) throw new ConcurrencyConflictException("The catalog changed since it was read.");
         if (request.IsActive!.Value) catalog.Reactivate();
+        else
+        {
+            // Dar de baja una fuente de campos activos es un error que se corrige, no un conflicto (lección 2).
+            var deactivable = await fieldEditor.CheckDeactivationAsync(catalog, ct);
+            if (deactivable.IsFailure) return deactivable.Error;
+        }
+
         catalog.Rename(request.Name!, request.Description);
         var changes = FormCatalogItemChanges.Of(request);
-        var fields = await fieldEditor.ChangeAsync(catalog, request.Fields, request.Presentation, changes, ct);
+        var fields = await fieldEditor.ChangeAsync(catalog, request.Fields, request.Presentation, changes,
+            request.ConfirmedFieldRemovals ?? [], ct);
         if (fields.IsFailure) return fields.Error;
 
         IReadOnlyList<FormCatalogItemIdentity> identities = [];

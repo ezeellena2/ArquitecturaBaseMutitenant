@@ -15,8 +15,9 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Forms;
 /// Guardar a mano (E12, C3, C4 y C6) por el servicio, con la base real: el listado ordena por cada columna con lo vacío al final
 /// (264); guardar sin cambios compara la versión sin tocar ni auditar opciones; «Ordenar por…» (224) ordena todas; borrar libera
 /// el código y cierra el hueco; un movimiento fuera de rango revierte todo el guardado. Desde la E13, los campos, la presentación y
-/// los valores de las opciones: el delta, guardar sin cambios, ordenar por un campo y una opción entre 10.000; y cambiar el tipo o
-/// una regla de un campo, que comprueba todas las opciones y revierte todo si una no entra.
+/// los valores de las opciones: el delta, guardar sin cambios, ordenar por un campo y una opción entre 10.000; cambiar el tipo o
+/// una regla de un campo, que comprueba todas las opciones y revierte todo si una no entra; quitar un campo con valores, que se
+/// confirma y los conserva; y lo que protege a una fuente: <c>SourceInUse</c> e <c>ItemInUse</c> con <c>uses: options</c>.
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class FormCatalogServiceTests(ApiFactory factory)
@@ -500,6 +501,130 @@ public sealed class FormCatalogServiceTests(ApiFactory factory)
         }, ct));
         Assert.Equal(FormCatalogErrors.FieldValuesMissingCode, missing.Error.Code);
         Assert.Equal(["fields.1.required"], Assert.IsType<ValidationError>(missing.Error).Errors.Keys);
+    }
+
+    /// <summary>
+    /// Quitar un campo con valores pide confirmarlo, con cuántos son, en el lugar que tenía entre los activos; uno sin valores se quita
+    /// sin confirmar. Confirmado, el campo queda quitado con sus valores, sale de la presentación (el título vacío vuelve al texto) y
+    /// no vuelve.
+    /// </summary>
+    [Fact]
+    public async Task Removing_a_field_with_values_needs_its_confirmation_and_keeps_its_values()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var tenantId = await OrganizationAsync(ct);
+        var catalog = await CreateWithFieldsAsync(tenantId, "Proveedores", [("P1", "Uno"), ("P2", "Dos"), ("P3", "Tres")],
+            [NewField("plazo", "Plazo", FormCatalogFieldType.WholeNumber), NewField("cuit", "CUIT", FormCatalogFieldType.Text),
+                NewField("nota", "Nota", FormCatalogFieldType.Text)], ct);
+        var (plazo, cuit, nota) = (catalog.Fields[0].Id, catalog.Fields[1].Id, catalog.Fields[2].Id);
+        var items = await ItemsAsync(tenantId, catalog.Id, ct);
+        var version = Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Items =
+            [
+                Edit(items[0], new() { [cuit] = Json("20-1"), [plazo] = Json("30") }),
+                Edit(items[1] with { IsActive = false }, new() { [cuit] = Json("20-2") }),
+            ],
+            Presentation = new FormCatalogPresentationInput(["field:" + cuit], ["field:" + plazo, "detail"]),
+        }, ct))).Version;
+        var detail = Value(await RunAsync(tenantId, service => service.GetAsync(catalog.Id, ct)));
+
+        var unconfirmed = await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Version = version, Fields = [Keep(detail.Fields[0]), Keep(detail.Fields[2])],
+        }, ct));
+        Assert.Equal(FormCatalogErrors.FieldRemovalNotConfirmedCode, unconfirmed.Error.Code);
+        var errors = Assert.IsType<ValidationError>(unconfirmed.Error).Errors;
+        Assert.Equal(["fields.1"], errors.Keys);
+        Assert.Contains(" 2 ", Assert.Single(errors["fields.1"]), StringComparison.Ordinal);
+        Assert.All(Value(await RunAsync(tenantId, service => service.GetAsync(catalog.Id, ct))).Fields, field => Assert.True(field.IsActive));
+
+        // La nota no tiene valores: no hace falta confirmarla.
+        var removed = Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Version = version, Fields = [Keep(detail.Fields[0])], ConfirmedFieldRemovals = [cuit],
+        }, ct)));
+        var after = Value(await RunAsync(tenantId, service => service.GetAsync(catalog.Id, ct)));
+        Assert.Equal([(plazo, true, 1), (cuit, false, 2), (nota, false, 0)],
+            after.Fields.Select(field => (field.Id, field.IsActive, field.ValuesCount)));
+        Assert.Equal(["text"], after.Presentation.Title);
+        Assert.Equal(["field:" + plazo.ToString("D"), "detail"], after.Presentation.Description);
+        Assert.Equal([plazo], (await ItemsAsync(tenantId, catalog.Id, ct))[0].Fields.Keys);
+
+        var back = await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Version = removed.Version, Fields = [Keep(after.Fields[0]), Keep(after.Fields[1])],
+        }, ct));
+        Assert.Equal(FormCatalogErrors.FieldInvalidCode, back.Error.Code);
+    }
+
+    /// <summary>
+    /// Un catálogo que es la fuente de un campo activo de otro no se da de baja: es <c>SourceInUse</c>, un 409 que no es el de la
+    /// versión (lección 2) y no cambia nada; quitado el campo, se da de baja. Uno ya dado de baja se sigue guardando.
+    /// </summary>
+    [Fact]
+    public async Task A_catalog_that_is_the_source_of_an_active_field_is_not_deactivated_until_the_field_is_removed()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var tenantId = await OrganizationAsync(ct);
+        var zones = await CreateManualAsync(tenantId, "Zonas", [("N", "Norte")], ct);
+        var catalog = await CreateWithFieldsAsync(tenantId, "Proveedores", [("P1", "Uno")],
+            [NewField("zona", "Zona", FormCatalogFieldType.Catalog, zones.Id)], ct);
+
+        var inUse = await RunAsync(tenantId, service => service.UpdateAsync(Update(zones) with { IsActive = false }, ct));
+        Assert.Equal((FormCatalogErrors.SourceInUseCode, ErrorType.Conflict), (inUse.Error.Code, inUse.Error.Type));
+        var stillActive = Value(await RunAsync(tenantId, service => service.GetAsync(zones.Id, ct)));
+        Assert.Equal((true, zones.Version), (stillActive.IsActive, stillActive.Version));
+
+        Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with { Fields = [] }, ct)));
+        var deactivated = Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(zones) with { IsActive = false }, ct)));
+        Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(zones) with
+        {
+            Name = "Zonas viejas", IsActive = false, Version = deactivated.Version,
+        }, ct)));
+        Assert.False(Value(await RunAsync(tenantId, service => service.GetAsync(zones.Id, ct))).IsActive);
+    }
+
+    /// <summary>
+    /// Borrar una opción que es el valor de un campo activo de otro catálogo no borra ninguna de las pedidas: <c>ItemInUse</c> en la
+    /// que se usa, con <c>uses: options</c>. Darla de baja sí se puede, y quitado el campo, ya no la usa nadie.
+    /// </summary>
+    [Fact]
+    public async Task Deleting_an_option_that_another_option_uses_deletes_none()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var tenantId = await OrganizationAsync(ct);
+        var zones = await CreateManualAsync(tenantId, "Zonas", [("N", "Norte"), ("S", "Sur"), ("O", "Oeste")], ct);
+        var zoneItems = await ItemsAsync(tenantId, zones.Id, ct);
+        var (north, south) = (zoneItems[0], zoneItems[1]);
+        var catalog = await CreateWithFieldsAsync(tenantId, "Proveedores", [("P1", "Uno"), ("P2", "Dos")],
+            [NewField("zona", "Zona", FormCatalogFieldType.Catalog, zones.Id)], ct);
+        var zona = catalog.Fields[0].Id;
+        var supplier = (await ItemsAsync(tenantId, catalog.Id, ct))[0];
+        var version = Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Items = [Edit(supplier with { IsActive = false }, new() { [zona] = Json(north.Id.ToString()) })],
+        }, ct))).Version;
+
+        var inUse = await RunAsync(tenantId, service => service.UpdateAsync(Update(zones) with { DeleteItems = [south.Id, north.Id] }, ct));
+        Assert.Equal((FormCatalogErrors.ItemInUseCode, ErrorType.Conflict), (inUse.Error.Code, inUse.Error.Type));
+        Assert.Equal(["deleteItems.1"], Assert.IsType<ValidationError>(inUse.Error).Errors.Keys);
+        Assert.Equal([FormCatalogErrors.UsedByOptions], Assert.IsAssignableFrom<IReadOnlyList<string>>(inUse.Error.Metadata!["uses"]));
+        Assert.Equal(3, (await ItemsAsync(tenantId, zones.Id, ct)).Count);
+
+        var deactivated = Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(zones) with
+        {
+            Items = [new FormCatalogItemInput(north.Id, null, north.Code, north.Text, null, null, false)],
+        }, ct)));
+        Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Version = version, Fields = [], ConfirmedFieldRemovals = [zona],
+        }, ct)));
+        Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(zones) with
+        {
+            Version = deactivated.Version, DeleteItems = [north.Id],
+        }, ct)));
+        Assert.Equal([south.Id, zoneItems[2].Id], (await ItemsAsync(tenantId, zones.Id, ct)).Select(item => item.Id));
     }
 
     private static FormCatalogFieldInput NewField(string localId, string name, FormCatalogFieldType type, Guid? source = null,

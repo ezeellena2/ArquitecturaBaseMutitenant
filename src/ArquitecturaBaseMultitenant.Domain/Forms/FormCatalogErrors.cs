@@ -71,7 +71,10 @@ public static class FormCatalogErrors
     /// <summary>Un tipo, una regla o una fuente fuera de lo permitido, otra clave en un campo guardado o un campo en un catálogo que no es a mano.</summary>
     public static Error FieldInvalid(int index) => Field(FieldInvalidCode, "Check this field's type, rules or catalog.", $"fields.{index}", ErrorType.Validation);
     public const string FieldRemovalNotConfirmedCode = "Forms.Catalog.FieldRemovalNotConfirmed";
-    /// <summary>Quitar un campo con valores sin nombrarlo en <c>confirmedFieldRemovals</c>.</summary>
+    /// <summary>
+    /// Quitar un campo con valores sin nombrarlo en <c>confirmedFieldRemovals</c>. Como no está en el pedido, <paramref name="index"/>
+    /// es el lugar que tenía entre los activos: el de <c>fields[i]</c> en el detalle que se leyó.
+    /// </summary>
     public static Error FieldRemovalNotConfirmed(int index, string message) =>
         Field(FieldRemovalNotConfirmedCode, "Confirm that the field's values are removed.", $"fields.{index}", ErrorType.Validation, message);
     public const string FieldTypeNotConvertibleCode = "Forms.Catalog.FieldTypeNotConvertible";
@@ -101,7 +104,10 @@ public static class FormCatalogErrors
     public static Error FieldValueDuplicate(int index, Guid fieldId, string message) =>
         Field(FieldValueDuplicateCode, "Another option already has that value.", FieldValue(index, fieldId), ErrorType.Validation, message);
     public const string SourceInUseCode = "Forms.Catalog.SourceInUse";
-    /// <summary>Dar de baja un catálogo que es fuente de campos activos de otros catálogos: se corrige, no pone el editor en conflicto.</summary>
+    /// <summary>
+    /// Dar de baja un catálogo que es fuente de campos activos de otros catálogos (también de uno dado de baja): se corrige quitando
+    /// esos campos, no pone el editor en conflicto.
+    /// </summary>
     public static readonly Error SourceInUse = Error.Conflict(SourceInUseCode, "Fields in other catalogs use this catalog.");
     public const string PresentationInvalidCode = "Forms.Catalog.PresentationInvalid";
     /// <summary>Un lugar de la presentación que no existe, repetido, o el título sin lugar.</summary>
