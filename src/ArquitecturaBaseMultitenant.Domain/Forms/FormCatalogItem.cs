@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Domain.Common;
@@ -122,13 +121,14 @@ public sealed class FormCatalogItem : Entity, ITenantOwned, IAuditable
         {
             var field = fields.FirstOrDefault(candidate => candidate.Id == fieldId && candidate.IsActive);
             if (field is null) return FormCatalogErrors.FieldValueInvalid(index, fieldId, FormCatalogErrors.FieldValueInvalidCode);
-            if (value is not { ValueKind: not (JsonValueKind.Null or JsonValueKind.Undefined) } present)
+            var checkedValue = field.Check(value ?? default);
+            if (checkedValue.IsEmpty)
             {
                 values.Remove(field.Key);
                 continue;
             }
 
-            if (Canonical(field, present) is not { } canonical)
+            if (checkedValue.Canonical is not { } canonical)
                 return FormCatalogErrors.FieldValueInvalid(index, fieldId, FormCatalogErrors.FieldValueInvalidCode);
             values[field.Key] = canonical;
         }
@@ -143,35 +143,6 @@ public sealed class FormCatalogItem : Entity, ITenantOwned, IAuditable
         var next = JsonSerializer.Serialize(values);
         if (!string.Equals(current, next, StringComparison.Ordinal)) FieldValuesJson = next;
         return Result.Success();
-    }
-
-    /// <summary>El valor canónico de un campo, o <c>null</c> si no es de su tipo o no cumple su límite.</summary>
-    private static JsonElement? Canonical(FormCatalogField field, JsonElement value)
-    {
-        if (field.Type == FormCatalogFieldType.YesNo)
-            return value.ValueKind is JsonValueKind.True or JsonValueKind.False ? JsonSerializer.SerializeToElement(value.GetBoolean()) : null;
-        if (value.ValueKind != JsonValueKind.String) return null;
-
-        var text = value.GetString()!.Trim();
-        switch (field.Type)
-        {
-            case FormCatalogFieldType.Text:
-                return text.Length <= (field.MaxLength ?? FormsTextLimits.FieldTextLength) ? JsonSerializer.SerializeToElement(text) : null;
-            case FormCatalogFieldType.WholeNumber or FormCatalogFieldType.DecimalNumber:
-                if (!FormCatalogValueText.TryParseNumber(text, field.Type == FormCatalogFieldType.WholeNumber, out var number)) return null;
-                if (field.Min is { } min && number < decimal.Parse(min, NumberStyles.Number, CultureInfo.InvariantCulture)) return null;
-                if (field.Max is { } max && number > decimal.Parse(max, NumberStyles.Number, CultureInfo.InvariantCulture)) return null;
-                return JsonSerializer.SerializeToElement(FormCatalogValueText.Number(number));
-            case FormCatalogFieldType.Date:
-                if (!FormCatalogValueText.TryParseDate(text, out var date)) return null;
-                if (field.Min is { } from && date < DateOnly.ParseExact(from, "yyyy-MM-dd", CultureInfo.InvariantCulture)) return null;
-                if (field.Max is { } to && date > DateOnly.ParseExact(to, "yyyy-MM-dd", CultureInfo.InvariantCulture)) return null;
-                return JsonSerializer.SerializeToElement(FormCatalogValueText.Date(date));
-            case FormCatalogFieldType.Catalog:
-                return Guid.TryParse(text, out var optionId) && optionId != Guid.Empty ? JsonSerializer.SerializeToElement(optionId.ToString("D")) : null;
-            default:
-                throw new InvalidOperationException("Unknown field type.");
-        }
     }
 
     /// <summary>La clave del código único por catálogo, sin distinguir mayúsculas ni la forma de escribir un acento.</summary>

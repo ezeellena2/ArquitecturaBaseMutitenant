@@ -73,6 +73,49 @@ public sealed record FormCatalogField(Guid Id, string Key, string Name, FormCata
         }
     }
 
+    /// <summary>
+    /// Un valor del contrato para este campo (un número como texto con punto, la fecha <c>yyyy-MM-dd</c>, sí/no como booleano y una
+    /// fuente como la identidad de su opción), con su forma canónica o el motivo por el que no sirve: no es de su tipo, pasa el largo
+    /// (un texto sin regla, hasta 300) o sale del rango. <c>null</c> no es un valor y limpia; <c>""</c> es un texto vacío, que en un
+    /// campo de texto se guarda y en los demás no es de su tipo. La única regla de los valores: la usan la opción y el servicio.
+    /// </summary>
+    public FormCatalogFieldValue Check(JsonElement value)
+    {
+        if (value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined) return FormCatalogFieldValue.Empty;
+        if (Type == FormCatalogFieldType.YesNo)
+            return value.ValueKind is JsonValueKind.True or JsonValueKind.False
+                ? FormCatalogFieldValue.Of(JsonSerializer.SerializeToElement(value.GetBoolean()))
+                : FormCatalogFieldValue.Failed(FormCatalogFieldValueIssue.Invalid);
+        if (value.ValueKind != JsonValueKind.String) return FormCatalogFieldValue.Failed(FormCatalogFieldValueIssue.Invalid);
+
+        var text = value.GetString()!.Trim();
+        switch (Type)
+        {
+            case FormCatalogFieldType.Text:
+                return text.Length <= (MaxLength ?? FormsTextLimits.FieldTextLength) ? FormCatalogFieldValue.Of(JsonSerializer.SerializeToElement(text))
+                    : FormCatalogFieldValue.Failed(FormCatalogFieldValueIssue.Length);
+            case FormCatalogFieldType.WholeNumber or FormCatalogFieldType.DecimalNumber:
+                if (!FormCatalogValueText.TryParseNumber(text, Type == FormCatalogFieldType.WholeNumber, out var number))
+                    return FormCatalogFieldValue.Failed(FormCatalogFieldValueIssue.Invalid);
+                if ((Min is { } min && number < decimal.Parse(min, NumberStyles.Number, CultureInfo.InvariantCulture))
+                    || (Max is { } max && number > decimal.Parse(max, NumberStyles.Number, CultureInfo.InvariantCulture)))
+                    return FormCatalogFieldValue.Failed(FormCatalogFieldValueIssue.Range);
+                return FormCatalogFieldValue.Of(JsonSerializer.SerializeToElement(FormCatalogValueText.Number(number)));
+            case FormCatalogFieldType.Date:
+                if (!FormCatalogValueText.TryParseDate(text, out var date)) return FormCatalogFieldValue.Failed(FormCatalogFieldValueIssue.Invalid);
+                if ((Min is { } from && FormCatalogValueText.TryParseDate(from, out var first) && date < first)
+                    || (Max is { } to && FormCatalogValueText.TryParseDate(to, out var last) && date > last))
+                    return FormCatalogFieldValue.Failed(FormCatalogFieldValueIssue.Range);
+                return FormCatalogFieldValue.Of(JsonSerializer.SerializeToElement(FormCatalogValueText.Date(date)));
+            case FormCatalogFieldType.Catalog:
+                return Guid.TryParse(text, out var optionId) && optionId != Guid.Empty
+                    ? FormCatalogFieldValue.Of(JsonSerializer.SerializeToElement(optionId.ToString("D")))
+                    : FormCatalogFieldValue.Failed(FormCatalogFieldValueIssue.Invalid);
+            default:
+                throw new InvalidOperationException("Unknown field type.");
+        }
+    }
+
     public static string ToJson(IEnumerable<FormCatalogField> fields) => JsonSerializer.Serialize(fields, JsonOptions);
 
     public static IReadOnlyList<FormCatalogField> ListFromJson(string json)
@@ -96,3 +139,28 @@ public sealed record FormCatalogField(Guid Id, string Key, string Name, FormCata
 /// </summary>
 public sealed record FormCatalogFieldDraft(Guid? Id, string? Key, string Name, FormCatalogFieldType Type, Guid? SourceCatalogId,
     bool Required, bool Unique, int? MaxLength, string? Min, string? Max);
+
+/// <summary>
+/// Por qué un valor no sirve para su campo: no es de su tipo (<see cref="Invalid"/>), lo que escribió una persona se lee de dos
+/// formas, como «1.500» en español (<see cref="Ambiguous"/>), pasa el largo de un texto (<see cref="Length"/>) o sale del mínimo o
+/// del máximo (<see cref="Range"/>).
+/// </summary>
+public enum FormCatalogFieldValueIssue
+{
+    Invalid,
+    Ambiguous,
+    Length,
+    Range,
+}
+
+/// <summary>El valor de un campo, con su forma canónica (C6) o el motivo por el que no sirve; sin ninguno de los dos, no hay valor.</summary>
+public sealed record FormCatalogFieldValue(JsonElement? Canonical, FormCatalogFieldValueIssue? Issue)
+{
+    /// <summary>Sin valor: en el delta del <c>PUT</c>, limpia.</summary>
+    public static FormCatalogFieldValue Empty { get; } = new(null, null);
+    public bool IsEmpty => Canonical is null && Issue is null;
+    public static FormCatalogFieldValue Of(JsonElement canonical) => new(canonical, null);
+    public static FormCatalogFieldValue Failed(FormCatalogFieldValueIssue issue) => new(null, issue);
+
+    public override string ToString() => nameof(FormCatalogFieldValue);
+}
