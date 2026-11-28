@@ -9,7 +9,9 @@ using ArquitecturaBaseMultitenant.Application.Configuration.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
+using ArquitecturaBaseMultitenant.Application.Models.Settings;
 using ArquitecturaBaseMultitenant.Domain.Settings;
+using ArquitecturaBaseMultitenant.Infrastructure.Caching;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -17,6 +19,9 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Time.Testing;
 using StackExchange.Redis;
 using Testcontainers.Redis;
 
@@ -243,6 +248,108 @@ public sealed class DistributedRateLimitTests(ApiFactory factory) : IClassFixtur
     }
 
     [Fact]
+    public async Task Cleanup_drains_more_than_one_batch_of_expired_durable_counters()
+    {
+        await using var scope = factory.Services.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var nowUtc = scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        var prefix = "cleanup-batch:" + Guid.NewGuid().ToString("N") + ":";
+        var activeKey = prefix + "active";
+        var expiredAtUtc = nowUtc.AddMinutes(-5);
+        await context.Database.ExecuteSqlAsync($"""
+            INSERT INTO platform."RateLimitCounters" ("Key", "Count", "ExpiresAtUtc")
+            SELECT {prefix} || g::text, 1, {expiredAtUtc}
+            FROM generate_series(1, 2500) AS g
+            """, Ct);
+        await context.Database.ExecuteSqlAsync($"""
+            INSERT INTO platform."RateLimitCounters" ("Key", "Count", "ExpiresAtUtc")
+            VALUES ({activeKey}, 2, {nowUtc.AddMinutes(5)})
+            """, Ct);
+
+        Assert.True((await scope.ServiceProvider.GetRequiredService<IRateLimitService>().CleanupExpiredAsync(Ct)).IsSuccess);
+
+        var pattern = prefix + "%";
+        var left = await context.Database.SqlQuery<string>($"""
+            SELECT "Key" AS "Value" FROM platform."RateLimitCounters" WHERE "Key" LIKE {pattern}
+            """).ToListAsync(Ct);
+        Assert.Equal([activeKey], left);
+    }
+
+    [Fact]
+    public async Task Redis_failure_on_one_profile_does_not_force_postgres_reads_for_other_profiles_or_past_its_window()
+    {
+        await using var redis = new RedisBuilder("redis:8.6").Build();
+        await redis.StartAsync(Ct);
+        var cacheOptions = Options.Create(new CacheOptions
+        {
+            Environment = NewEnvironment(),
+            ConnectionString = redis.GetConnectionString(),
+            ConnectTimeoutMilliseconds = 500,
+            OperationTimeoutMilliseconds = 250,
+        });
+        await using var connection = new RedisConnection(cacheOptions);
+        var scopeCounter = new CountingScopeFactory(factory.Services.GetRequiredService<IServiceScopeFactory>());
+        var baseUtc = factory.Services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        // Arranca en el límite de una ventana de 15 min futura para que PXAT en Redis sea siempre futuro.
+        var windowStartUtc = RateLimitWindow.Of(baseUtc, new RateLimitQuota(1, 900)).EndUtc;
+        var clock = new FakeTimeProvider(new DateTimeOffset(windowStartUtc, TimeSpan.Zero));
+        var counter = new RedisRateLimitCounter(connection, cacheOptions, scopeCounter,
+            factory.Services.GetRequiredService<CacheMetrics>(), clock, NullLogger<RedisRateLimitCounter>.Instance);
+
+        var ipQuota = new RateLimitQuota(10, 60);
+        var publicIpQuota = new RateLimitQuota(10, 60);
+        var loginCodeQuota = new RateLimitQuota(10, 900);
+        var partition = "p-" + Guid.NewGuid().ToString("N");
+
+        RateLimitBucket Bucket(RateLimitProfile profile, RateLimitQuota quota) =>
+            new(profile, partition, quota, RateLimitWindow.Of(clock.GetUtcNow().UtcDateTime, quota));
+
+        // Conexión cálida y sin lecturas durables mientras Redis responde.
+        var warmup = await counter.TryAdmitAsync([Bucket(RateLimitProfile.Ip, ipQuota)], Ct);
+        Assert.NotNull(warmup);
+        Assert.True(warmup.Admitted);
+        Assert.Equal(0, scopeCounter.Created);
+
+        // Caída de Redis con un perfil de 60 s (Ip) y otro de 15 min (LoginCode) en el mismo pedido.
+        await redis.PauseAsync(Ct);
+        var fallen = await counter.TryAdmitAsync(
+            [Bucket(RateLimitProfile.Ip, ipQuota), Bucket(RateLimitProfile.LoginCode, loginCodeQuota)], Ct);
+        Assert.Null(fallen);
+
+        await redis.UnpauseAsync(Ct);
+        await WaitRedisReadyAsync(connection);
+
+        // Otro perfil (PublicIp) no quedó afectado por la caída: no consulta PostgreSQL.
+        clock.Advance(TimeSpan.FromSeconds(10));
+        var unrelated = await counter.TryAdmitAsync([Bucket(RateLimitProfile.PublicIp, publicIpQuota)], Ct);
+        Assert.NotNull(unrelated);
+        Assert.Equal(0, scopeCounter.Created);
+
+        // Ip dentro de su ventana de 60 s sí consulta PostgreSQL para conservar lo contado durante la caída.
+        clock.Advance(TimeSpan.FromSeconds(10));
+        var ipRecovering = await counter.TryAdmitAsync([Bucket(RateLimitProfile.Ip, ipQuota)], Ct);
+        Assert.NotNull(ipRecovering);
+        Assert.Equal(1, scopeCounter.Created);
+
+        // Pasada la ventana de 60 s de Ip (aunque LoginCode siga en su ventana de 15 min), Ip deja de leer PostgreSQL.
+        clock.Advance(TimeSpan.FromSeconds(45));
+        var ipNextWindow = await counter.TryAdmitAsync([Bucket(RateLimitProfile.Ip, ipQuota)], Ct);
+        Assert.NotNull(ipNextWindow);
+        Assert.Equal(1, scopeCounter.Created);
+
+        // LoginCode sigue en su propia ventana de 15 min: todavía consulta PostgreSQL.
+        var loginRecovering = await counter.TryAdmitAsync([Bucket(RateLimitProfile.LoginCode, loginCodeQuota)], Ct);
+        Assert.NotNull(loginRecovering);
+        Assert.Equal(2, scopeCounter.Created);
+
+        // Pasada la ventana de 15 min de LoginCode, también deja de consultar PostgreSQL.
+        clock.Advance(TimeSpan.FromMinutes(15));
+        var loginNextWindow = await counter.TryAdmitAsync([Bucket(RateLimitProfile.LoginCode, loginCodeQuota)], Ct);
+        Assert.NotNull(loginNextWindow);
+        Assert.Equal(2, scopeCounter.Created);
+    }
+
+    [Fact]
     public async Task Initial_whatsapp_webhook_profile_allows_three_thousand_requests_per_minute()
     {
         var expected = new RateLimitQuota(3_000, 60);
@@ -294,6 +401,24 @@ public sealed class DistributedRateLimitTests(ApiFactory factory) : IClassFixtur
         }
 
         Assert.Fail("Redis did not come back.");
+    }
+
+    private static async Task WaitRedisReadyAsync(RedisConnection connection)
+    {
+        for (var attempt = 0; attempt < 50; attempt++)
+        {
+            try
+            {
+                await (await connection.GetAsync()).GetDatabase().PingAsync();
+                return;
+            }
+            catch (Exception exception) when (exception is RedisException or TimeoutException)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(100), Ct);
+            }
+        }
+
+        Assert.Fail("Redis did not become ready after unpause.");
     }
 
     private static JsonObject TestLimitsJson() =>
@@ -380,5 +505,17 @@ public sealed class DistributedRateLimitTests(ApiFactory factory) : IClassFixtur
             });
             next(app);
         };
+    }
+
+    private sealed class CountingScopeFactory(IServiceScopeFactory inner) : IServiceScopeFactory
+    {
+        private int _created;
+        internal int Created => Volatile.Read(ref _created);
+
+        public IServiceScope CreateScope()
+        {
+            Interlocked.Increment(ref _created);
+            return inner.CreateScope();
+        }
     }
 }

@@ -22,6 +22,7 @@ internal sealed class RateLimitService(IPlatformSettingsReader settings, IOption
     TimeProvider timeProvider, ILogger<RateLimitService> logger) : IRateLimitService
 {
     internal const int CleanupBatchSize = 1000;
+    internal const int MaxCleanupBatches = 50;
 
     public Task<Result> AdmitAsync(RateLimitRequest request, CancellationToken cancellationToken)
     {
@@ -47,12 +48,19 @@ internal sealed class RateLimitService(IPlatformSettingsReader settings, IOption
     }
 
     public Task<Result> CleanupExpiredAsync(CancellationToken cancellationToken) =>
-        OperationLog.RunAsync(logger, timeProvider, "CleanupRateLimitCounters", () =>
-            unitOfWork.ExecuteInTransactionAsync(async ct =>
+        OperationLog.RunAsync(logger, timeProvider, "CleanupRateLimitCounters", async () =>
+        {
+            for (var batch = 0; batch < MaxCleanupBatches && !cancellationToken.IsCancellationRequested; batch++)
             {
-                await counters.DeleteExpiredAsync(timeProvider.GetUtcNow().UtcDateTime, CleanupBatchSize, ct);
-                return Result.Success();
-            }, CommitPolicy.OnSuccess, cancellationToken));
+                var deleted = await unitOfWork.ExecuteInTransactionAsync(
+                    async ct => Result.Success(await counters.DeleteExpiredAsync(timeProvider.GetUtcNow().UtcDateTime, CleanupBatchSize, ct)),
+                    CommitPolicy.OnSuccess, cancellationToken);
+                if (deleted.IsFailure) return deleted.Error;
+                if (deleted.Value < CleanupBatchSize) break;
+            }
+
+            return Result.Success();
+        });
 
     // Locks → lecturas → regla → escrituras: si alguna cuota no tiene lugar, no suma en ninguna.
     private async Task<Result<RateLimitTally>> AdmitDurablyAsync(RateLimitBucket[] buckets, CancellationToken cancellationToken)

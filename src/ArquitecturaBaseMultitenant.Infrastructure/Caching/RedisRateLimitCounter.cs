@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Models.Settings;
+using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,7 +50,7 @@ internal sealed partial class RedisRateLimitCounter(RedisConnection connection, 
         """;
 
     private readonly ConcurrentDictionary<string, Seen> _seen = new(StringComparer.Ordinal);
-    private long _recoveringUntilTicks;
+    private readonly ConcurrentDictionary<RateLimitProfile, long> _recoveringUntilTicks = new();
     private long _prunedAtTicks;
 
     public async Task<RateLimitTally?> TryAdmitAsync(IReadOnlyList<RateLimitBucket> buckets,
@@ -59,9 +60,7 @@ internal sealed partial class RedisRateLimitCounter(RedisConnection connection, 
         var nowUtc = timeProvider.GetUtcNow().UtcDateTime;
         try
         {
-            var floors = nowUtc.Ticks < Interlocked.Read(ref _recoveringUntilTicks)
-                ? await DurableCountsAsync(buckets, cancellationToken)
-                : new int[buckets.Count];
+            var floors = await DurableFloorsAsync(buckets, nowUtc, cancellationToken);
             var redis = (await connection.GetAsync()).GetDatabase();
             var keys = buckets.Select(bucket => (RedisKey)(options.Value.KeyPrefix + "{rl}:" + bucket.Key)).ToArray();
             var values = buckets.SelectMany((bucket, index) => new RedisValue[]
@@ -77,12 +76,12 @@ internal sealed partial class RedisRateLimitCounter(RedisConnection connection, 
         }
         catch (Exception exception) when (exception is RedisException or TimeoutException)
         {
-            // Mientras duren las ventanas de esta caída, cada admisión que vuelva a Redis lee primero lo que contó PostgreSQL.
-            var until = buckets.Max(bucket => bucket.Window.EndUtc).Ticks;
-            for (var current = Interlocked.Read(ref _recoveringUntilTicks); current < until;
-                 current = Interlocked.Read(ref _recoveringUntilTicks))
+            // KAN-115: mientras dure la ventana de cada perfil afectado, solo ese perfil lee primero PostgreSQL al
+            // volver Redis; un corte en un perfil de 60 s no fuerza lecturas a la base en los demás ni por 15 minutos.
+            foreach (var bucket in buckets)
             {
-                if (Interlocked.CompareExchange(ref _recoveringUntilTicks, until, current) == current) break;
+                var until = bucket.Window.EndUtc.Ticks;
+                _recoveringUntilTicks.AddOrUpdate(bucket.Profile, until, (_, current) => Math.Max(current, until));
             }
 
             metrics.RateLimitFallback();
@@ -99,15 +98,31 @@ internal sealed partial class RedisRateLimitCounter(RedisConnection connection, 
             _seen.TryGetValue(bucket.Key, out var seen) && seen.ExpiresAtUtc > nowUtc ? seen.Count : 0)];
     }
 
-    private async Task<int[]> DurableCountsAsync(IReadOnlyList<RateLimitBucket> buckets, CancellationToken cancellationToken)
+    private async Task<int[]> DurableFloorsAsync(IReadOnlyList<RateLimitBucket> buckets, DateTime nowUtc,
+        CancellationToken cancellationToken)
     {
-        string[] keys = [.. buckets.Select(bucket => bucket.Key)];
+        var floors = new int[buckets.Count];
+        List<int>? recovering = null;
+        for (var index = 0; index < buckets.Count; index++)
+        {
+            if (_recoveringUntilTicks.TryGetValue(buckets[index].Profile, out var until) && nowUtc.Ticks < until)
+            {
+                recovering ??= new List<int>(buckets.Count);
+                recovering.Add(index);
+            }
+        }
+
+        if (recovering is null) return floors;
+
+        string[] keys = [.. recovering.Select(index => buckets[index].Key)];
         await using var scope = scopes.CreateAsyncScope();
         var counted = await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().RateLimitCounters
             .AsNoTracking()
             .Where(counter => keys.Contains(counter.Key))
             .ToDictionaryAsync(counter => counter.Key, counter => counter.Count, StringComparer.Ordinal, cancellationToken);
-        return [.. keys.Select(key => counted.GetValueOrDefault(key))];
+        foreach (var index in recovering)
+            floors[index] = counted.GetValueOrDefault(buckets[index].Key);
+        return floors;
     }
 
     private void Remember(IReadOnlyList<RateLimitBucket> buckets, int[] counts, DateTime nowUtc)
