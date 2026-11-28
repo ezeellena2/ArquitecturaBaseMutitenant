@@ -218,36 +218,57 @@ internal sealed class RoleReader(ApplicationDbContext context, ITenantContext te
             row => (IReadOnlyList<string>)[.. row.Permissions.Order(StringComparer.Ordinal)]);
     }
 
-    public async Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> ListActiveUsersOrganizationRoleIdsByRoleAsync(
-        Guid roleId, CancellationToken cancellationToken)
+    // Cuatro consultas sin importar cuántas personas tengan el rol: quiénes lo tienen, sus roles de organización, sus empresas
+    // activas y sus roles en ellas, con las mismas reglas que ListOrganizationRoleIdsAsync y ListCompanyRoleIdsAsync.
+    public async Task<IReadOnlyList<RoleHolderRow>> ListActiveHoldersAsync(Guid roleId, CancellationToken cancellationToken)
     {
         var tenantId = tenantContext.RequiredTenantId;
-        var affectedMemberIds = await (from assignment in context.RoleAssignments.AsNoTracking()
-                                       join member in context.Members.AsNoTracking()
-                                           on new { assignment.TenantId, assignment.MemberId }
-                                           equals new { member.TenantId, MemberId = member.Id }
-                                       where assignment.TenantId == tenantId && assignment.RoleId == roleId
-                                           && assignment.CompanyId == null
-                                           && member.Status == MemberStatus.Active && member.UserId != null
-                                       select assignment.MemberId)
+        var holders = await (from assignment in context.RoleAssignments.AsNoTracking()
+                             join member in context.Members.AsNoTracking()
+                                 on new { assignment.TenantId, assignment.MemberId }
+                                 equals new { member.TenantId, MemberId = member.Id }
+                             where assignment.TenantId == tenantId && assignment.RoleId == roleId
+                                 && assignment.CompanyId == null
+                                 && member.Status == MemberStatus.Active && member.UserId != null
+                             select new { assignment.MemberId, UserId = member.UserId!.Value })
             .Distinct().ToArrayAsync(cancellationToken);
-        if (affectedMemberIds.Length == 0) return new Dictionary<Guid, IReadOnlyList<Guid>>();
+        if (holders.Length == 0) return [];
 
-        var rows = await (from assignment in context.RoleAssignments.AsNoTracking()
-                          join member in context.Members.AsNoTracking()
-                              on new { assignment.TenantId, assignment.MemberId }
-                              equals new { member.TenantId, MemberId = member.Id }
-                          join role in context.Roles.AsNoTracking()
-                              on new { assignment.TenantId, assignment.RoleId }
-                              equals new { role.TenantId, RoleId = role.Id }
-                          where assignment.TenantId == tenantId && affectedMemberIds.Contains(assignment.MemberId)
-                              && member.Status == MemberStatus.Active && member.UserId != null
-                              && assignment.CompanyId == null && role.Scope == RoleScope.Organization
-                          select new { UserId = member.UserId!.Value, assignment.RoleId })
+        var memberIds = holders.Select(row => row.MemberId).ToArray();
+        var organizationRoles = (await (from assignment in context.RoleAssignments.AsNoTracking()
+                                        join role in context.Roles.AsNoTracking()
+                                            on new { assignment.TenantId, assignment.RoleId }
+                                            equals new { role.TenantId, RoleId = role.Id }
+                                        where assignment.TenantId == tenantId && memberIds.Contains(assignment.MemberId)
+                                            && assignment.CompanyId == null && role.Scope == RoleScope.Organization
+                                        select new { assignment.MemberId, assignment.RoleId })
+            .ToArrayAsync(cancellationToken)).ToLookup(row => row.MemberId, row => row.RoleId);
+        var memberships = (await (from membership in context.CompanyMemberships.AsNoTracking()
+                                  join company in context.Companies.AsNoTracking()
+                                      on new { membership.TenantId, membership.CompanyId }
+                                      equals new { company.TenantId, CompanyId = company.Id }
+                                  where membership.TenantId == tenantId && memberIds.Contains(membership.MemberId)
+                                      && membership.Status == CompanyMembershipStatus.Active
+                                      && company.Status == CompanyStatus.Active
+                                  select new { membership.MemberId, membership.CompanyId })
+            .ToArrayAsync(cancellationToken)).Select(row => (row.MemberId, row.CompanyId)).ToHashSet();
+        var companyIds = memberships.Select(row => row.CompanyId).Distinct().ToArray();
+        var companyRoles = await (from assignment in context.RoleAssignments.AsNoTracking()
+                                  join role in context.Roles.AsNoTracking()
+                                      on new { assignment.TenantId, assignment.RoleId }
+                                      equals new { role.TenantId, RoleId = role.Id }
+                                  where assignment.TenantId == tenantId && memberIds.Contains(assignment.MemberId)
+                                      && assignment.CompanyId != null && companyIds.Contains(assignment.CompanyId.Value)
+                                      && role.Scope != RoleScope.Organization
+                                      && (role.Scope != RoleScope.SpecificCompany || role.CompanyId == assignment.CompanyId)
+                                  select new { assignment.MemberId, CompanyId = assignment.CompanyId!.Value, assignment.RoleId })
             .ToArrayAsync(cancellationToken);
-        return rows.GroupBy(row => row.UserId)
-            .ToDictionary(group => group.Key,
-                group => (IReadOnlyList<Guid>)group.Select(row => row.RoleId).Distinct().ToArray());
+        var byMember = companyRoles.Where(row => memberships.Contains((row.MemberId, row.CompanyId)))
+            .ToLookup(row => row.MemberId);
+        return [.. holders.Select(holder => new RoleHolderRow(holder.UserId,
+            [.. organizationRoles[holder.MemberId].Distinct()],
+            byMember[holder.MemberId].GroupBy(row => row.CompanyId).ToDictionary(group => group.Key,
+                group => (IReadOnlyList<Guid>)[.. group.Select(row => row.RoleId).Distinct()])))];
     }
 
     // Personas asignadas a un rol (decisión 42): cada persona con una asignación del rol, activa, invitada o

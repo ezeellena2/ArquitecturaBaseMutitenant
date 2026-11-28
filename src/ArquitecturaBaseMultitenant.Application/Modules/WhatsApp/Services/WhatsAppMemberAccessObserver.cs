@@ -6,24 +6,33 @@ using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 
 /// <summary>
-/// Observa cambios de acceso o permisos de un miembro dentro de la UoW del núcleo (B12): los chats que tenía tomados en
-/// una bandeja que ya no puede atender vuelven a «Sin tomar» en su equipo; los de la bandeja que sí conserva quedan igual.
+/// Observa cambios de acceso o permisos de los miembros dentro de la UoW del núcleo (B12): los chats que tenía tomados cada
+/// persona en una bandeja que ya no puede atender vuelven a «Sin tomar» en su equipo; los de la bandeja que sí conserva quedan
+/// igual. Toma el lock de cada persona antes de leer sus chats, el mismo que toma «Transferir», y lee los de todas en una
+/// consulta: una transferencia que pasó su control antes espera a este cambio, y una que llega después ya no la ve habilitada.
 /// </summary>
 internal sealed class WhatsAppMemberAccessObserver(IWhatsAppChatRepository chats, TimeProvider clock) : IMemberAccessObserver
 {
-    public async Task AccessChangedAsync(Guid userId, IReadOnlyCollection<string> effectivePermissions, CancellationToken ct)
+    public async Task AccessChangedAsync(IReadOnlyDictionary<Guid, IReadOnlyCollection<string>> effectivePermissionsByUser,
+        CancellationToken ct)
     {
-        var canCustomers = effectivePermissions.Contains(Permissions.WhatsApp.Customers, StringComparer.Ordinal);
-        var canInternal = effectivePermissions.Contains(Permissions.WhatsApp.Internal, StringComparer.Ordinal);
-        if (canCustomers && canInternal) return;
+        Guid[] limited = [.. effectivePermissionsByUser
+            .Where(user => !CanAttend(user.Value, WhatsAppInbox.Customers) || !CanAttend(user.Value, WhatsAppInbox.Internal))
+            .Select(user => user.Key)];
+        if (limited.Length == 0) return;
+        await chats.LockAssigneesAsync(limited, ct);
         var nowUtc = clock.GetUtcNow().UtcDateTime;
-        foreach (var chat in await chats.ListTakenByAsync(userId, ct))
+        foreach (var chat in await chats.ListTakenByAsync(limited, ct))
         {
-            if (chat.Inbox == WhatsAppInbox.Customers && !canCustomers
-                || chat.Inbox == WhatsAppInbox.Internal && !canInternal)
-            {
+            if (chat.AssigneeUserId is { } userId && !CanAttend(effectivePermissionsByUser[userId], chat.Inbox))
                 chat.Transfer(null, null, nowUtc);
-            }
         }
     }
+
+    /// <summary>La misma regla que para tomar un chat: «whatsapp.customers» o «whatsapp.internal», según la bandeja.</summary>
+    private static bool CanAttend(IReadOnlyCollection<string> permissions, WhatsAppInbox inbox) =>
+        permissions.Contains(AttendPermission(inbox), StringComparer.Ordinal);
+
+    internal static string AttendPermission(WhatsAppInbox inbox) =>
+        inbox == WhatsAppInbox.Internal ? Permissions.WhatsApp.Internal : Permissions.WhatsApp.Customers;
 }

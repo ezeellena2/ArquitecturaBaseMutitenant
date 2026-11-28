@@ -13,6 +13,10 @@ internal sealed class WhatsAppChatRepository(ApplicationDbContext context, ITena
     public Task LockAsync(Guid channelId, string waId, CancellationToken ct) =>
         context.AcquireAdvisoryLocksAsync([AdvisoryLockKeys.For(tenant.RequiredTenantId, "whatsapp-chat", channelId.ToString("N") + ":" + waId)], ct);
 
+    public Task LockAssigneesAsync(IReadOnlyCollection<Guid> userIds, CancellationToken ct) =>
+        context.AcquireAdvisoryLocksInOneCallAsync(userIds.Select(userId =>
+            AdvisoryLockKeys.For(tenant.RequiredTenantId, "whatsapp-assignee", userId)), ct);
+
     public Task<WhatsAppChat?> GetAsync(Guid channelId, string waId, WhatsAppInbox inbox, CancellationToken ct)
     {
         context.RequireTransaction();
@@ -62,11 +66,14 @@ internal sealed class WhatsAppChatRepository(ApplicationDbContext context, ITena
         return context.Set<WhatsAppChatMessage>().SingleOrDefaultAsync(value => value.TenantId == tenantId && value.OutboxMessageId == outboxMessageId, ct);
     }
 
-    public async Task<IReadOnlyList<WhatsAppChat>> ListTakenByAsync(Guid userId, CancellationToken ct)
+    public async Task<IReadOnlyList<WhatsAppChat>> ListTakenByAsync(IReadOnlyCollection<Guid> userIds, CancellationToken ct)
     {
         context.RequireTransaction();
+        if (userIds.Count == 0) return [];
         var tenantId = tenant.RequiredTenantId;
-        return await context.Set<WhatsAppChat>().Where(value => value.TenantId == tenantId && value.AssigneeUserId == userId).ToArrayAsync(ct);
+        Guid?[] assignees = [.. userIds.Select(userId => (Guid?)userId)];
+        return await context.Set<WhatsAppChat>().Where(value => value.TenantId == tenantId && assignees.Contains(value.AssigneeUserId))
+            .ToArrayAsync(ct);
     }
 
     public async Task<IReadOnlyList<WhatsAppChatMessage>> ListAuthoredByAsync(Guid userId, CancellationToken ct)

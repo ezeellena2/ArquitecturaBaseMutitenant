@@ -129,4 +129,19 @@ public static class Permissions
     /// </summary>
     public static PermissionInclusions Inclusions { get; } =
         PermissionInclusions.Compose([OrganizationScoped, CompanyScoped], Includes);
+
+    /// <summary>
+    /// Los permisos de organización efectivos de una persona: lo efectivo de sus roles de organización más lo que se proyecta
+    /// desde lo efectivo de cada empresa donde tiene membresía activa (<see cref="OrganizationProjectedFromCompany"/>). Lo usan la
+    /// lectura de permisos y los avisos de cambios de acceso (B12 de los arreglos de la revisión), así nunca calculan distinto.
+    /// </summary>
+    public static IReadOnlyList<string> OrganizationEffective(IEnumerable<string> organization,
+        IEnumerable<IEnumerable<string>> companies)
+    {
+        ArgumentNullException.ThrowIfNull(companies);
+        var granted = new SortedSet<string>(Inclusions.Effective(organization), StringComparer.Ordinal);
+        foreach (var company in companies)
+            granted.UnionWith(Inclusions.Effective(company).Intersect(OrganizationProjectedFromCompany, StringComparer.Ordinal));
+        return [.. granted];
+    }
 }

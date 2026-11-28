@@ -1,4 +1,3 @@
-using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Organization;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Companies;
 using ArquitecturaBaseMultitenant.Application.Models.OrganizationUsers;
@@ -22,7 +21,7 @@ internal sealed class OrganizationUserAssignmentWriter(
     IRoleAssignmentRepository assignments,
     ICompanyMembershipRepository companyMemberships,
     IMemberRepository members,
-    IEnumerable<IMemberAccessObserver>? accessObservers = null)
+    MemberAccessNotifier? accessNotifier = null)
 {
     internal async Task<Result<DesiredOrganizationUserAssignments>> ValidateAsync(
         IReadOnlyCollection<Guid> roleIds, IReadOnlyCollection<InviteCompanyRolesRequest> requestedCompanies,
@@ -113,9 +112,9 @@ internal sealed class OrganizationUserAssignmentWriter(
             membership.SetStatus(CompanyMembershipStatus.Inactive);
             companyMemberships.MarkUpdated(membership);
         }
-        if (member.Status == MemberStatus.Active && member.UserId is { } activeUserId)
-            await NotifyAccessChangedAsync(activeUserId,
-                EffectiveOrganizationPermissions(organizationAssignments.Value, companyPermissions), cancellationToken);
+        if (member.Status == MemberStatus.Active && member.UserId is { } activeUserId && accessNotifier is not null)
+            await accessNotifier.NotifyAsync(activeUserId, organizationAssignments.Value.Select(item => item.Permissions),
+                companyPermissions, cancellationToken);
         return Result.Success();
 
         void Collect(IEnumerable<(RoleAssignment Assignment, IReadOnlyCollection<string> Permissions)> rechecked)
@@ -128,25 +127,10 @@ internal sealed class OrganizationUserAssignmentWriter(
         }
     }
 
-    internal async Task NotifyAccessChangedAsync(Guid userId, IReadOnlyCollection<string> effectivePermissions,
-        CancellationToken cancellationToken)
-    {
-        foreach (var observer in accessObservers ?? [])
-            await observer.AccessChangedAsync(userId, effectivePermissions, cancellationToken);
-    }
-
-    private static IReadOnlyCollection<string> EffectiveOrganizationPermissions(
-        IEnumerable<(RoleAssignment Assignment, IReadOnlyCollection<string> Permissions)> organizationRoles,
-        IEnumerable<IReadOnlyCollection<string>> companyRoles)
-    {
-        var granted = new HashSet<string>(
-            Permissions.Inclusions.Effective(organizationRoles.SelectMany(item => item.Permissions)),
-            StringComparer.Ordinal);
-        foreach (var permissions in companyRoles)
-            granted.UnionWith(Permissions.Inclusions.Effective(permissions)
-                .Intersect(Permissions.OrganizationProjectedFromCompany, StringComparer.Ordinal));
-        return [.. granted];
-    }
+    /// <summary>La persona dejó de estar activa (suspendida o quitada): no le queda ningún permiso de la organización.</summary>
+    internal Task NotifyAccessLostAsync(Guid userId, CancellationToken cancellationToken) =>
+        accessNotifier?.NotifyAsync(new Dictionary<Guid, IReadOnlyCollection<string>> { [userId] = [] }, cancellationToken)
+        ?? Task.CompletedTask;
 
     internal void Clear(OrganizationUserAssignmentSnapshot snapshot)
     {

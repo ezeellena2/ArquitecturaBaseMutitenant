@@ -48,7 +48,7 @@ internal sealed class OrganizationUserRemover(
                 var notice = await membershipEndNotifier.NotifyAsync(removedUserId, ct);
                 if (notice.IsFailure) return notice;
             }
-            await assignments.NotifyAccessChangedAsync(removedUserId, [], ct);
+            await assignments.NotifyAccessLostAsync(removedUserId, ct);
         }
         return Result.Success();
     }

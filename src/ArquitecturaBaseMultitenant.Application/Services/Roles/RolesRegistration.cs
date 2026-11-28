@@ -14,6 +14,7 @@ internal static class RolesRegistration
         services.AddScoped<RoleAssignmentGuard>();
         services.AddScoped<DelegationPermissionsResolver>();
         services.AddScoped<OrganizationDelegationGuard>();
+        services.AddScoped<MemberAccessNotifier>();
         services.AddScoped<IPermissionService, PermissionService>();
         services.AddScoped<IPlatformPermissionService, PlatformPermissionService>();
         return services;

@@ -51,6 +51,6 @@ internal sealed class NoWholeRoleListReader(IRoleReader inner) : IRoleReader
     public Task<IReadOnlyDictionary<Guid, IReadOnlyList<string>>> ListPermissionsByRoleAsync(IReadOnlyCollection<Guid> roleIds,
         CancellationToken cancellationToken) => inner.ListPermissionsByRoleAsync(roleIds, cancellationToken);
 
-    public Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> ListActiveUsersOrganizationRoleIdsByRoleAsync(Guid roleId,
-        CancellationToken cancellationToken) => inner.ListActiveUsersOrganizationRoleIdsByRoleAsync(roleId, cancellationToken);
+    public Task<IReadOnlyList<RoleHolderRow>> ListActiveHoldersAsync(Guid roleId, CancellationToken cancellationToken) =>
+        inner.ListActiveHoldersAsync(roleId, cancellationToken);
 }

@@ -92,22 +92,22 @@ internal sealed class WhatsAppConversationService(IWhatsAppChatRepository chats,
         {
             if (await validator.ValidateAsync(request, cancellationToken) is { } invalid) return invalid;
             var box = Box(inbox);
-            Guid? userId = null;
-            if (request.MemberId is { } memberId)
-            {
-                if ((await teamReader.ListActiveMembersAsync([memberId], cancellationToken)).SingleOrDefault() is not { } member
-                    || !await responses.CanAttendAsync(member.UserId, box, cancellationToken))
-                    return WhatsAppTeamService.Invalid("memberId", "WhatsApp.Validation.SelectionInvalid");
-                userId = member.UserId;
-            }
             var saved = await unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
+                // La persona elegida se ubica sin tracking y se bloquea antes que la conversación, con el mismo lock que toma lo
+                // que le saca el permiso (B12): si ese cambio está en curso, esto lo espera y después decide con lo que quedó.
+                var member = request.MemberId is { } memberId
+                    ? (await teamReader.ListActiveMembersAsync([memberId], ct)).SingleOrDefault() : null;
+                if (member is not null) await chats.LockAssigneesAsync([member.UserId], ct);
                 if (await chats.GetForUpdateAsync(id, box, request.Version, ct) is not { } chat)
                     return Result.Failure(WhatsAppErrors.ConversationNotFound);
+                // Solo quien sigue activa y puede atender esta bandeja, leído después del lock.
+                if (request.MemberId is not null && (member is null || !await responses.CanAttendAsync(member.UserId, chat.Inbox, ct)))
+                    return Result.Failure(WhatsAppTeamService.Invalid("memberId", "WhatsApp.Validation.SelectionInvalid"));
                 // Un equipo de la otra bandeja no existe para esta conversación.
                 if (request.TeamId is { } teamId && (await teams.ListAsync([teamId], ct)).SingleOrDefault()?.Inbox != chat.Inbox)
                     return Result.Failure(WhatsAppErrors.TeamNotFound);
-                chat.Transfer(request.TeamId, userId, clock.GetUtcNow().UtcDateTime);
+                chat.Transfer(request.TeamId, member?.UserId, clock.GetUtcNow().UtcDateTime);
                 return Result.Success();
             }, CommitPolicy.OnSuccess, cancellationToken);
             return saved.IsFailure ? saved.Error : await RowAsync(inbox, id, cancellationToken);

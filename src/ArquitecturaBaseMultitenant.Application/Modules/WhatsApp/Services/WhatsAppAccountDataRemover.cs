@@ -11,7 +11,7 @@ internal sealed class WhatsAppAccountDataRemover(IWhatsAppChatRepository chats, 
 {
     internal async Task ForgetOrganizationAuthorAsync(Guid userId, DateTime nowUtc, CancellationToken ct)
     {
-        foreach (var chat in await chats.ListTakenByAsync(userId, ct)) chat.Transfer(null, null, nowUtc);
+        foreach (var chat in await chats.ListTakenByAsync([userId], ct)) chat.Transfer(null, null, nowUtc);
         foreach (var message in await chats.ListAuthoredByAsync(userId, ct)) message.ForgetAuthor(userId);
     }
 

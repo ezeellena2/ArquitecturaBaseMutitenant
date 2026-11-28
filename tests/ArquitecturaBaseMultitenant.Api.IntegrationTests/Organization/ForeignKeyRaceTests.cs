@@ -222,8 +222,7 @@ public sealed class ForeignKeyRaceTests(ApiFactory factory)
             IReadOnlyCollection<Guid> roleIds, CancellationToken cancellationToken) =>
             inner.ListPermissionsByRoleAsync(roleIds, cancellationToken);
 
-        public Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> ListActiveUsersOrganizationRoleIdsByRoleAsync(
-            Guid roleId, CancellationToken cancellationToken) =>
-            inner.ListActiveUsersOrganizationRoleIdsByRoleAsync(roleId, cancellationToken);
+        public Task<IReadOnlyList<RoleHolderRow>> ListActiveHoldersAsync(Guid roleId, CancellationToken cancellationToken) =>
+            inner.ListActiveHoldersAsync(roleId, cancellationToken);
     }
 }

@@ -76,8 +76,7 @@ internal sealed class WhatsAppConversationResponseBuilder(IWhatsAppConversationR
 
     /// <summary>Si esa persona puede atender la bandeja indicada con sus permisos vigentes (B12).</summary>
     internal Task<bool> CanAttendAsync(Guid userId, WhatsAppInbox inbox, CancellationToken ct) =>
-        permissions.HasPermissionAsync(userId,
-            inbox == WhatsAppInbox.Internal ? Permissions.WhatsApp.Internal : Permissions.WhatsApp.Customers, ct);
+        permissions.HasPermissionAsync(userId, WhatsAppMemberAccessObserver.AttendPermission(inbox), ct);
 
     private Guid Me => user.UserId ?? throw new InvalidOperationException("An authenticated user is required.");
 

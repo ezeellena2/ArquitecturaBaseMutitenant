@@ -1,3 +1,4 @@
+using System.Data.Common;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -10,12 +11,17 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
+using ArquitecturaBaseMultitenant.Infrastructure.Caching;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Extensions;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Npgsql;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 
@@ -400,6 +406,140 @@ public sealed class WhatsAppInboxTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.OK, accepted.StatusCode);
         var row = await JsonAsync(accepted);
         Assert.Equal(customersAgent.MemberId, row.GetProperty("assignee").GetProperty("id").GetGuid());
+    }
+
+    [Fact]
+    public async Task A_transfer_waits_for_a_permission_change_in_progress_and_decides_with_what_is_left()
+    {
+        await using var host = WhatsAppAttentionJourney.Host(factory, new FakeGraph());
+        using var owner = WhatsAppAttentionJourney.Client(host);
+        var (_, tenant) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, owner, Ct);
+        var phoneNumberId = WhatsAppAttentionJourney.NewNumberId();
+        using (var connected = await WhatsAppAttentionJourney.ConnectAsync(owner, phoneNumberId, Ct))
+            Assert.Equal(HttpStatusCode.Created, connected.StatusCode);
+        var customersRoleId = await CreateOrgRoleAsync(owner, "Atención clientes", Permissions.WhatsApp.Customers);
+        var agent = await AgentWithRolesAsync(host, tenant, customersRoleId);
+        using var _1 = agent.Client;
+        using var anonymous = WhatsAppAttentionJourney.Client(host);
+        var customer = WhatsAppAttentionJourney.NewPhone();
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, customer, "Hola", Ct);
+        var chat = Row(await JsonAsync(await owner.GetAsync($"{Customers}/conversations", Ct)), customer);
+
+        // Otra transacción tiene el lock de la persona y le saca «whatsapp.customers» a su rol, todavía sin confirmar.
+        var key = AdvisoryLockKeys.For(tenant, "whatsapp-assignee", agent.UserId);
+        await using var connection = await RuntimeRoleConnection.OpenAsync(factory.RuntimeConnectionString, tenant, Ct);
+        await using var change = await connection.BeginTransactionAsync(Ct);
+        await SqlAsync(connection, change, "SELECT pg_advisory_xact_lock(hashtextextended(@key, 0))", ("key", key));
+        await SqlAsync(connection, change, """UPDATE tenant."Roles" SET "Permissions" = ARRAY[@permission]::text[] WHERE "Id" = @role""",
+            ("permission", Permissions.Audit.Read), ("role", customersRoleId));
+        await SqlAsync(connection, change, """
+            INSERT INTO platform."CacheTagVersions" ("Tag", "Generation") VALUES (@tag, 1)
+            ON CONFLICT ("Tag") DO UPDATE SET "Generation" = platform."CacheTagVersions"."Generation" + 1
+            """, ("tag", CacheTags.Roles(tenant)));
+
+        var transfer = WhatsAppAttentionJourney.PostAsync(owner, $"{Customers}/conversations/{Id(chat)}/transfer",
+            new { memberId = agent.MemberId, version = chat.GetProperty("version").GetUInt32() }, Ct);
+        // La transferencia espera ese lock antes de decidir, en vez de decidir con el permiso que todavía ve.
+        await WaitForAdvisoryWaiterAsync(key);
+        Assert.False(transfer.IsCompleted);
+        await change.CommitAsync(Ct);
+
+        using var rejected = await transfer;
+        Assert.Equal(HttpStatusCode.BadRequest, rejected.StatusCode);
+        Assert.True((await WhatsAppAttentionJourney.JsonAsync(rejected, Ct)).GetProperty("errors").TryGetProperty("memberId", out _));
+        var after = (await JsonAsync(await owner.GetAsync($"{Customers}/conversations/{Id(chat)}", Ct))).GetProperty("conversation");
+        Assert.Equal(JsonValueKind.Null, after.GetProperty("assignee").ValueKind);
+    }
+
+    [Fact]
+    public async Task Editing_a_role_reads_its_holders_and_their_chats_in_the_same_queries_however_many_they_are()
+    {
+        var counter = new ChatAndRoleQueryCounter();
+        await using var baseHost = WhatsAppAttentionJourney.Host(factory, new FakeGraph());
+        await using var host = baseHost.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+            services.AddDbContext<ApplicationDbContext>(options => options.AddInterceptors(counter))));
+        using var owner = WhatsAppAttentionJourney.Client(host);
+        var (_, tenant) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, owner, Ct);
+        var fewRoleId = await CreateOrgRoleAsync(owner, "Pocos", Permissions.WhatsApp.Customers, Permissions.Audit.Read);
+        var manyRoleId = await CreateOrgRoleAsync(owner, "Muchos", Permissions.WhatsApp.Customers, Permissions.Audit.Read);
+        var agents = new List<HttpClient>();
+        try
+        {
+            for (var index = 0; index < 2; index++) agents.Add((await AgentWithRolesAsync(host, tenant, fewRoleId)).Client);
+            for (var index = 0; index < 6; index++) agents.Add((await AgentWithRolesAsync(host, tenant, manyRoleId)).Client);
+
+            var few = await CountRoleEditAsync(owner, counter, fewRoleId, "Pocos");
+            var many = await CountRoleEditAsync(owner, counter, manyRoleId, "Muchos");
+
+            Assert.True(few > 0);
+            Assert.Equal(few, many);
+        }
+        finally
+        {
+            foreach (var agent in agents) agent.Dispose();
+        }
+    }
+
+    // Saca «whatsapp.customers» del rol y cuenta las consultas de su transacción que leen chats, asignaciones o membresías.
+    private static async Task<int> CountRoleEditAsync(HttpClient owner, ChatAndRoleQueryCounter counter, Guid roleId, string name)
+    {
+        var version = (await JsonAsync(await owner.GetAsync($"/api/roles/{roleId}", Ct))).GetProperty("version").GetUInt32();
+        counter.Reset();
+        using var edited = await owner.PutAsJsonAsync($"/api/roles/{roleId}", new
+        {
+            name,
+            description = (string?)null,
+            scope = "Organization",
+            companyId = (Guid?)null,
+            permissions = new[] { Permissions.Audit.Read },
+            version,
+        }, Ct);
+        Assert.Equal(HttpStatusCode.OK, edited.StatusCode);
+        return counter.Count;
+    }
+
+    private sealed class ChatAndRoleQueryCounter : DbCommandInterceptor
+    {
+        private int _count;
+
+        public int Count => Volatile.Read(ref _count);
+
+        public void Reset() => Interlocked.Exchange(ref _count, 0);
+
+        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command,
+            CommandEventData eventData, InterceptionResult<DbDataReader> result, CancellationToken cancellationToken = default)
+        {
+            if (command.Transaction is not null && (command.CommandText.Contains("\"WhatsAppChats\"", StringComparison.Ordinal)
+                || command.CommandText.Contains("\"RoleAssignments\"", StringComparison.Ordinal)
+                || command.CommandText.Contains("\"CompanyMemberships\"", StringComparison.Ordinal)))
+                Interlocked.Increment(ref _count);
+            return ValueTask.FromResult(result);
+        }
+    }
+
+    private static async Task SqlAsync(NpgsqlConnection connection, NpgsqlTransaction transaction, string sql,
+        params (string Name, object Value)[] parameters)
+    {
+        await using var command = new NpgsqlCommand(sql, connection, transaction);
+        foreach (var (name, value) in parameters) command.Parameters.AddWithValue(name, value);
+        await command.ExecuteNonQueryAsync(Ct);
+    }
+
+    // Una sesión espera ese lock consultivo: pg_locks lo muestra sin conceder, con la clave partida en classid y objid.
+    private async Task WaitForAdvisoryWaiterAsync(string key)
+    {
+        await using var connection = await RuntimeRoleConnection.OpenAsync(factory.RuntimeConnectionString, null, Ct);
+        await using var command = new NpgsqlCommand("""
+            SELECT EXISTS (SELECT 1 FROM pg_locks WHERE locktype = 'advisory' AND NOT granted
+                AND ((classid::bigint << 32) | objid::bigint) = hashtextextended(@key, 0))
+            """, connection);
+        command.Parameters.AddWithValue("key", key);
+        for (var attempt = 0; attempt < 200; attempt++)
+        {
+            if ((bool)(await command.ExecuteScalarAsync(Ct))!) return;
+            await Task.Delay(50, Ct);
+        }
+        Assert.Fail("La transferencia no esperó el lock de la persona.");
     }
 
     private static async Task<Guid> CreateTeamAsync(HttpClient owner, string name, string inbox)

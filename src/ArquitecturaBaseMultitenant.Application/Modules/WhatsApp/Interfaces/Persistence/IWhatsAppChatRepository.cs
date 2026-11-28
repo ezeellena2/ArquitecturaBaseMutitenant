@@ -7,6 +7,11 @@ public interface IWhatsAppChatRepository
 {
     /// <summary>Serializa la conversación de un número con un remitente, aunque todavía no exista.</summary>
     Task LockAsync(Guid channelId, string waId, CancellationToken ct);
+    /// <summary>
+    /// Serializa lo que les da o les saca chats a esas personas (B12): «Transferir» a una de ellas y lo que libera sus chats al
+    /// perder el permiso. Va antes del lock de fila de cualquier conversación.
+    /// </summary>
+    Task LockAssigneesAsync(IReadOnlyCollection<Guid> userIds, CancellationToken ct);
     Task<WhatsAppChat?> GetAsync(Guid channelId, string waId, WhatsAppInbox inbox, CancellationToken ct);
     /// <summary>Una conversación de la bandeja, bajo su lock de fila; con versión, la exige.</summary>
     Task<WhatsAppChat?> GetForUpdateAsync(Guid id, WhatsAppInbox inbox, uint? expectedVersion, CancellationToken ct);
@@ -15,8 +20,9 @@ public interface IWhatsAppChatRepository
     Task<bool> HasOperatorTemplateSinceAsync(Guid chatId, DateTime sinceUtc, CancellationToken ct);
     Task<WhatsAppChatMessage?> GetOutboundAsync(Guid outboxMessageId, CancellationToken ct);
     Task<IReadOnlyList<WhatsAppChat>> ListByTeamAsync(Guid teamId, CancellationToken ct);
-    /// <summary>Las conversaciones que tiene tomadas esa persona y los mensajes y notas que escribió o revisó (para la baja de su cuenta).</summary>
-    Task<IReadOnlyList<WhatsAppChat>> ListTakenByAsync(Guid userId, CancellationToken ct);
+    /// <summary>Las conversaciones que tienen tomadas esas personas (al perder el acceso o en la baja de su cuenta), en una consulta.</summary>
+    Task<IReadOnlyList<WhatsAppChat>> ListTakenByAsync(IReadOnlyCollection<Guid> userIds, CancellationToken ct);
+    /// <summary>Los mensajes y notas que escribió o revisó esa persona (para la baja de su cuenta).</summary>
     Task<IReadOnlyList<WhatsAppChatMessage>> ListAuthoredByAsync(Guid userId, CancellationToken ct);
     void Add(WhatsAppChat chat);
     void Add(WhatsAppChatMessage message);

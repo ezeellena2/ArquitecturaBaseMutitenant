@@ -40,9 +40,9 @@ public interface IRoleReader
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// Los usuarios activos de la organización que tienen asignado este rol de organización, junto con todos los roles de
-    /// organización que cada uno tiene asignados (para avisar cambios de permisos efectivos dentro de la UoW).
+    /// Las personas activas que tienen asignado este rol de organización, cada una con sus roles de organización y los de cada
+    /// empresa donde es miembro activo, en tres consultas sin importar cuántas sean (para avisar, dentro de la UoW, los permisos
+    /// que les quedan).
     /// </summary>
-    Task<IReadOnlyDictionary<Guid, IReadOnlyList<Guid>>> ListActiveUsersOrganizationRoleIdsByRoleAsync(Guid roleId,
-        CancellationToken cancellationToken);
+    Task<IReadOnlyList<RoleHolderRow>> ListActiveHoldersAsync(Guid roleId, CancellationToken cancellationToken);
 }

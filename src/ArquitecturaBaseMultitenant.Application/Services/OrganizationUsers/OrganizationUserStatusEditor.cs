@@ -67,7 +67,7 @@ internal sealed class OrganizationUserStatusEditor(
             {
                 var notice = await membershipEndNotifier.NotifyAsync(deactivatedUserId, ct);
                 if (notice.IsFailure) return notice;
-                await assignments.NotifyAccessChangedAsync(deactivatedUserId, [], ct);
+                await assignments.NotifyAccessLostAsync(deactivatedUserId, ct);
             }
         }
         members.MarkUpdated(member);
