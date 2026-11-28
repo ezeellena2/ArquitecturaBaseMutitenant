@@ -197,6 +197,22 @@ public sealed class WhatsAppInboundProcessorTests(ApiFactory factory) : IClassFi
         Assert.DoesNotContain(entity.GetForeignKeys(), key => key.Properties.Any(property => property.Name == nameof(WhatsAppMessage.OriginalMethodId)));
     }
 
+    [Fact]
+    public async Task Burst_of_more_than_one_batch_drains_all_pending_messages_in_one_iteration()
+    {
+        await using var app = Host(); using var client = app.CreateClient();
+        await ResetQueueAsync(app.Services);
+        await SeedBurstAsync(app.Services, 120);
+        var processed = await Worker(app.Services).ProcessPendingAsync(Ct);
+        Assert.Equal(120, processed);
+        await using var read = app.Services.CreateAsyncScope();
+        var context = read.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var remaining = await context.Set<WhatsAppMessage>().AsNoTracking()
+            .CountAsync(value => value.PhoneNumberId == "fixture-number" && value.ProcessedAtUtc == null, Ct);
+        Assert.Equal(0, remaining);
+        Assert.Equal(120, await context.OutboxMessages.CountAsync(value => value.Channel == _probe.Channel, Ct));
+    }
+
     private WhatsAppInboundProcessor Worker(IServiceProvider provider) => new(provider.GetRequiredService<WhatsAppInboundSignal>(),
         provider.GetRequiredService<IServiceScopeFactory>(),
         Options.Create(new WhatsAppOptions { PhoneNumberId = "fixture-number", InboundMaxAttempts = 2 }), [], _clock, NullLogger<WhatsAppInboundProcessor>.Instance);
@@ -228,6 +244,19 @@ public sealed class WhatsAppInboundProcessorTests(ApiFactory factory) : IClassFi
             context.Set<WhatsAppMessage>().Add(row); id = row.Id;
         }
     }
+    private Task SeedBurstAsync(IServiceProvider provider, int count) => TransactionAsync(provider, async (scope, ct) =>
+    {
+        var context = scope.GetRequiredService<ApplicationDbContext>();
+        var nowUtc = _clock.GetUtcNow().UtcDateTime;
+        var candidate = WhatsAppContact.Create(PhoneNumber.Create("+5491134567890").Value, nowUtc);
+        var contact = await context.Set<WhatsAppContact>().SingleOrDefaultAsync(value => value.WaId == candidate.WaId, ct);
+        if (contact is null) { contact = candidate; context.Set<WhatsAppContact>().Add(contact); }
+        for (var index = 0; index < count; index++)
+        {
+            context.Set<WhatsAppMessage>().Add(WhatsAppMessage.Create("fixture-number", Guid.NewGuid().ToString("N"), "inbound",
+                WhatsAppMessageDirection.Inbound, WhatsAppMessageKind.Text, WhatsAppMessageStatus.Pending, nowUtc, nowUtc, contact.Id));
+        }
+    });
     private static async Task TransactionAsync(IServiceProvider services, Func<IServiceProvider, CancellationToken, Task> work)
     {
         await using var scope = services.CreateAsyncScope();
