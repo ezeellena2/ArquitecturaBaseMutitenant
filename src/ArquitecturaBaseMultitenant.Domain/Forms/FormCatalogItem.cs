@@ -145,6 +145,26 @@ public sealed class FormCatalogItem : Entity, ITenantOwned, IAuditable
         return Result.Success();
     }
 
+    /// <summary>
+    /// Deja, por la clave del campo, los valores ya convertidos al tipo nuevo de un campo que cambió (E13); <c>null</c> lo quita. Los
+    /// convierte y los valida contra todas las opciones quien cambia el campo, antes de escribir ninguno, así que acá no se vuelven a
+    /// comprobar. Si nada cambió, la columna no cambia.
+    /// </summary>
+    public void ReplaceFieldValues(IReadOnlyDictionary<string, JsonElement?> converted)
+    {
+        ArgumentNullException.ThrowIfNull(converted);
+        var values = new SortedDictionary<string, JsonElement>(ReadFieldValues().ToDictionary(), StringComparer.Ordinal);
+        var current = JsonSerializer.Serialize(values);
+        foreach (var (key, value) in converted)
+        {
+            if (value is { } next) values[key] = next;
+            else values.Remove(key);
+        }
+
+        var serialized = JsonSerializer.Serialize(values);
+        if (!string.Equals(current, serialized, StringComparison.Ordinal)) FieldValuesJson = serialized;
+    }
+
     /// <summary>La clave del código único por catálogo, sin distinguir mayúsculas ni la forma de escribir un acento.</summary>
     public static string NormalizeCode(string code)
     {

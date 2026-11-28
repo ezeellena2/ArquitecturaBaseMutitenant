@@ -108,9 +108,9 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
         var catalog = await NewCatalogAsync(request, ct);
         if (catalog.IsFailure) return catalog.Error;
         repository.Add(catalog.Value);
-        var fields = await fieldEditor.ChangeAsync(catalog.Value, request.Fields, request.Presentation, ct);
-        if (fields.IsFailure) return fields.Error;
         var changes = FormCatalogItemChanges.Of(request);
+        var fields = await fieldEditor.ChangeAsync(catalog.Value, request.Fields, request.Presentation, changes, ct);
+        if (fields.IsFailure) return fields.Error;
         IReadOnlyList<FormCatalogItemIdentity> none = [];
         if (changes.Items.Count == 0) return (catalog.Value, none);
         var applied = await editor.ApplyAsync(catalog.Value, changes, ct);
@@ -121,7 +121,8 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
     /// <summary>
     /// Bloqueo, lecturas, reglas y escrituras, en ese orden. «Dar de baja» y «Reactivar» mandan el mismo guardado con lo pendiente:
     /// reactivar va antes de cambiar opciones y dar de baja, después, así un catálogo que sigue de baja no cambia sus opciones. Los
-    /// campos y la presentación van antes de las opciones, que guardan los valores de los campos activos de este guardado.
+    /// campos y la presentación van antes de las opciones, que guardan los valores de los campos activos de este guardado; un campo
+    /// que cambia de tipo o de regla convierte y comprueba antes los valores guardados de todas las opciones.
     /// </summary>
     private async Task<Result<(FormCatalog Catalog, IReadOnlyList<FormCatalogItemIdentity> Identities,
         IReadOnlyList<FormCatalogFieldIdentity> FieldIdentities)>> UpdateCoreAsync(UpdateFormCatalogRequest request, CancellationToken ct)
@@ -133,13 +134,14 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
         if (catalog.Version != request.Version) throw new ConcurrencyConflictException("The catalog changed since it was read.");
         if (request.IsActive!.Value) catalog.Reactivate();
         catalog.Rename(request.Name!, request.Description);
-        var fields = await fieldEditor.ChangeAsync(catalog, request.Fields, request.Presentation, ct);
+        var changes = FormCatalogItemChanges.Of(request);
+        var fields = await fieldEditor.ChangeAsync(catalog, request.Fields, request.Presentation, changes, ct);
         if (fields.IsFailure) return fields.Error;
 
         IReadOnlyList<FormCatalogItemIdentity> identities = [];
         if (request.ChangesItems)
         {
-            var applied = await editor.ApplyAsync(catalog, FormCatalogItemChanges.Of(request), ct);
+            var applied = await editor.ApplyAsync(catalog, changes, ct);
             if (applied.IsFailure) return applied.Error;
             identities = applied.Value;
         }

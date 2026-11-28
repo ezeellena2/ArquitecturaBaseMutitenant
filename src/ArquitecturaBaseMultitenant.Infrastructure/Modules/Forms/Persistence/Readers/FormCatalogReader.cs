@@ -222,10 +222,11 @@ internal sealed class FormCatalogReader(ApplicationDbContext context, ITenantCon
         return context.Set<FormCatalogItem>().AsNoTracking().Where(item => item.TenantId == tenantId && item.CatalogId == catalogId);
     }
 
-    // La fila en la consulta, sin cargar la entidad: solo sus columnas, y el valor canónico armado con las dos del valor.
+    // La fila en la consulta, sin cargar la entidad: solo sus columnas, el valor canónico armado con las dos del valor y los valores
+    // de sus campos (E13).
     private static IQueryable<FormCatalogStoredItemRow> Stored(IQueryable<FormCatalogItem> items) =>
         items.Select(item => new FormCatalogStoredItemRow(item.Id, item.Code, item.CodeNormalized, item.Text, item.Detail,
-            FormCatalogValueText.Of(item.DateValue, item.NumberValue), item.Position, item.IsActive));
+            FormCatalogValueText.Of(item.DateValue, item.NumberValue), item.Position, item.IsActive, item.FieldValuesJson));
 
     private IQueryable<CatalogProjection> Project(Guid tenantId, IQueryable<FormCatalog> catalogs) =>
         catalogs.Select(catalog => new CatalogProjection

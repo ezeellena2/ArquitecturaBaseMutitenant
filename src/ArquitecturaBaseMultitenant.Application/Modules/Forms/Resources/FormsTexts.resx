@@ -31,6 +31,15 @@
   <data name="Forms.Catalog.FieldTypeNotConvertible" xml:space="preserve"><value>{count} opciones tienen un valor que no es {type}.</value></data>
   <data name="Forms.Catalog.FieldValuesIncompatible" xml:space="preserve"><value>{count} opciones no cumplen la regla nueva.</value></data>
   <data name="Forms.Catalog.FieldValuesMissing" xml:space="preserve"><value>{count} opciones activas no tienen valor.</value></data>
+  <data name="Forms.Catalog.FieldTypeNotConvertible.Singular" xml:space="preserve"><value>{count} opción tiene un valor que no es {type}.</value></data>
+  <data name="Forms.Catalog.FieldTypeNotConvertible.Type.Text" xml:space="preserve"><value>un texto</value></data>
+  <data name="Forms.Catalog.FieldTypeNotConvertible.Type.WholeNumber" xml:space="preserve"><value>un número entero</value></data>
+  <data name="Forms.Catalog.FieldTypeNotConvertible.Type.DecimalNumber" xml:space="preserve"><value>un número</value></data>
+  <data name="Forms.Catalog.FieldTypeNotConvertible.Type.Date" xml:space="preserve"><value>una fecha</value></data>
+  <data name="Forms.Catalog.FieldTypeNotConvertible.Type.YesNo" xml:space="preserve"><value>sí o no</value></data>
+  <data name="Forms.Catalog.FieldTypeNotConvertible.Type.Catalog" xml:space="preserve"><value>una opción de su catálogo</value></data>
+  <data name="Forms.Catalog.FieldValuesIncompatible.Singular" xml:space="preserve"><value>{count} opción no cumple la regla nueva.</value></data>
+  <data name="Forms.Catalog.FieldValuesMissing.Singular" xml:space="preserve"><value>{count} opción activa no tiene valor.</value></data>
   <data name="Forms.Catalog.FieldValueInvalid" xml:space="preserve"><value>El valor no corresponde a este campo.</value></data>
   <data name="Forms.Catalog.FieldValueInvalid.Length" xml:space="preserve"><value>Puede tener hasta {n} caracteres.</value></data>
   <data name="Forms.Catalog.FieldValueInvalid.Range" xml:space="preserve"><value>Tiene que estar entre {min} y {max}.</value></data>

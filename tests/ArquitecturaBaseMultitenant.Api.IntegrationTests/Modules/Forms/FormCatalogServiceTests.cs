@@ -15,7 +15,8 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Forms;
 /// Guardar a mano (E12, C3, C4 y C6) por el servicio, con la base real: el listado ordena por cada columna con lo vacío al final
 /// (264); guardar sin cambios compara la versión sin tocar ni auditar opciones; «Ordenar por…» (224) ordena todas; borrar libera
 /// el código y cierra el hueco; un movimiento fuera de rango revierte todo el guardado. Desde la E13, los campos, la presentación y
-/// los valores de las opciones: el delta, guardar sin cambios, ordenar por un campo y una opción entre 10.000.
+/// los valores de las opciones: el delta, guardar sin cambios, ordenar por un campo y una opción entre 10.000; y cambiar el tipo o
+/// una regla de un campo, que comprueba todas las opciones y revierte todo si una no entra.
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class FormCatalogServiceTests(ApiFactory factory)
@@ -429,6 +430,76 @@ public sealed class FormCatalogServiceTests(ApiFactory factory)
             Version = saved.Version, Items = [Edit(other, new() { [cuit] = Json("30-7") })],
         }, ct));
         Assert.Equal(FormCatalogErrors.FieldValueDuplicateCode, repeated.Error.Code);
+    }
+
+    /// <summary>
+    /// Cambiar el tipo o una regla (B5) comprueba todas las opciones: lo que no convierte da sus filas y no cambia nada, tampoco el
+    /// otro campo del mismo guardado; con el valor corregido en el mismo guardado convierte las demás, y a texto queda el de la opción
+    /// fuente aunque esté dada de baja; único y obligatorio miran solo las opciones activas.
+    /// </summary>
+    [Fact]
+    public async Task Changing_a_field_type_or_rule_checks_every_option_and_an_error_reverts_the_whole_save()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var tenantId = await OrganizationAsync(ct);
+        var zones = await CreateManualAsync(tenantId, "Zonas", [("N", "Norte"), ("S", "Sur")], ct);
+        var north = (await ItemsAsync(tenantId, zones.Id, ct))[0];
+        var catalog = await CreateWithFieldsAsync(tenantId, "Proveedores", [("P1", "Uno"), ("P2", "Dos"), ("P3", "Tres")],
+            [NewField("plazo", "Plazo", FormCatalogFieldType.Text), NewField("zona", "Zona", FormCatalogFieldType.Catalog, zones.Id)], ct);
+        var (plazo, zona) = (catalog.Fields[0].Id, catalog.Fields[1].Id);
+        var items = await ItemsAsync(tenantId, catalog.Id, ct);
+        var version = Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Items =
+            [
+                Edit(items[0], new() { [plazo] = Json("30"), [zona] = Json(north.Id.ToString()) }),
+                Edit(items[1], new() { [plazo] = Json("treinta") }),
+                Edit(items[2] with { IsActive = false }, new() { [plazo] = Json("30") }),
+            ],
+        }, ct))).Version;
+        Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(zones) with
+        {
+            Items = [new FormCatalogItemInput(north.Id, null, north.Code, north.Text, null, null, false)],
+        }, ct)));
+        var detail = Value(await RunAsync(tenantId, service => service.GetAsync(catalog.Id, ct)));
+        FormCatalogFieldInput Changed(int index, FormCatalogFieldType type, bool required = false, bool unique = false) =>
+            Keep(detail.Fields[index]) with { Type = type, SourceCatalogId = null, Required = required, Unique = unique };
+
+        var failed = await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Version = version, Fields = [Changed(0, FormCatalogFieldType.WholeNumber), Changed(1, FormCatalogFieldType.Text)],
+        }, ct));
+        Assert.Equal(FormCatalogErrors.FieldTypeNotConvertibleCode, failed.Error.Code);
+        Assert.Equal(["fields.0.type"], Assert.IsType<ValidationError>(failed.Error).Errors.Keys);
+        Assert.Equal(1, failed.Error.Metadata!["invalidCount"]);
+        var row = Assert.Single(Assert.IsAssignableFrom<IReadOnlyList<FormCatalogInvalidRow>>(failed.Error.Metadata["invalidRows"]));
+        Assert.Equal((1, items[1].Id, "Dos", FormCatalogInvalidRow.Invalid), (row.Position, row.ItemId, row.Text, row.Reason));
+        Assert.Equal([FormCatalogFieldType.Text, FormCatalogFieldType.Catalog],
+            Value(await RunAsync(tenantId, service => service.GetAsync(catalog.Id, ct))).Fields.Select(field => field.Type));
+        Assert.Equal(north.Id.ToString("D"), (await ItemsAsync(tenantId, catalog.Id, ct))[0].Fields[zona].GetString());
+
+        var converted = Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Version = version, Fields = [Changed(0, FormCatalogFieldType.WholeNumber), Changed(1, FormCatalogFieldType.Text)],
+            Items = [Edit(items[1], new() { [plazo] = Json("45") })],
+        }, ct)));
+        var values = (await ItemsAsync(tenantId, catalog.Id, ct)).Select(item => item.Fields).ToList();
+        Assert.Equal(["30", "45", "30"], values.Select(value => value[plazo].GetString()));
+        Assert.Equal("Norte", values[0][zona].GetString());
+
+        detail = Value(await RunAsync(tenantId, service => service.GetAsync(catalog.Id, ct)));
+        var unique = Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Version = converted.Version, Fields = [Changed(0, FormCatalogFieldType.WholeNumber, unique: true), Changed(1, FormCatalogFieldType.Text)],
+        }, ct)));
+        detail = Value(await RunAsync(tenantId, service => service.GetAsync(catalog.Id, ct)));
+        var missing = await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Version = unique.Version,
+            Fields = [Changed(0, FormCatalogFieldType.WholeNumber, unique: true), Changed(1, FormCatalogFieldType.Text, required: true)],
+        }, ct));
+        Assert.Equal(FormCatalogErrors.FieldValuesMissingCode, missing.Error.Code);
+        Assert.Equal(["fields.1.required"], Assert.IsType<ValidationError>(missing.Error).Errors.Keys);
     }
 
     private static FormCatalogFieldInput NewField(string localId, string name, FormCatalogFieldType type, Guid? source = null,

@@ -27,6 +27,7 @@ public static class FormsModule
         services.AddScoped<IFormCatalogSourceService, FormCatalogSourceService>();
         services.AddScoped<FormCatalogFiltersPolicy>();
         services.AddScoped<FormCatalogFieldValuePolicy>();
+        services.AddScoped<FormCatalogFieldChangePolicy>();
         services.AddScoped<FormCatalogPreviewBuilder>();
         services.AddScoped<IFormCatalogImportService, FormCatalogImportService>();
         services.AddScoped<FormCatalogFileResolver>();

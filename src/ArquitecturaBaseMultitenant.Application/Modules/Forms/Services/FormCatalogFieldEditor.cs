@@ -14,9 +14,11 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Forms.Services;
 /// presentación si vinieron, y el delta de valores de cada opción nueva o cambiada, por la identidad del campo (ausente conserva y
 /// <c>null</c> limpia). La regla de cada valor es <see cref="FormCatalogField.Check"/>, con el mensaje de
 /// <see cref="FormCatalogFieldValuePolicy"/>; una fuente nueva tiene que ser un catálogo a mano activo de la organización, y un valor
-/// único se compara con las opciones activas que quedan. Un error de cualquier paso revierte todo el guardado.
+/// único se compara con las opciones activas que quedan. Cambiar el tipo, la fuente o una regla de un campo guardado lo comprueba
+/// contra todas las opciones <see cref="FormCatalogFieldChangePolicy"/>. Un error de cualquier paso revierte todo el guardado.
 /// </summary>
-internal sealed class FormCatalogFieldEditor(IFormCatalogRepository repository, IFormCatalogReader reader, FormCatalogFieldValuePolicy values)
+internal sealed class FormCatalogFieldEditor(IFormCatalogRepository repository, IFormCatalogReader reader, FormCatalogFieldValuePolicy values,
+    FormCatalogFieldChangePolicy changes)
 {
     private static readonly IReadOnlyDictionary<Guid, JsonElement?> NoDelta = new Dictionary<Guid, JsonElement?>();
 
@@ -26,16 +28,17 @@ internal sealed class FormCatalogFieldEditor(IFormCatalogRepository repository, 
 
     /// <summary>
     /// Deja los campos de <paramref name="fields"/> (la lista entera de los activos, en su orden) y la presentación, si vinieron, y
-    /// devuelve la identidad de cada campo nuevo por su id local. Una fuente que no cambia no se vuelve a leer.
+    /// devuelve la identidad de cada campo nuevo por su id local. Una fuente que no cambia no se vuelve a leer, y los valores guardados
+    /// de un campo que cambió se comprueban teniendo en cuenta <paramref name="items"/>, los cambios de las opciones del mismo guardado.
     /// </summary>
     public async Task<Result<IReadOnlyList<FormCatalogFieldIdentity>>> ChangeAsync(FormCatalog catalog,
-        IReadOnlyList<FormCatalogFieldInput>? fields, FormCatalogPresentationInput? presentation, CancellationToken ct)
+        IReadOnlyList<FormCatalogFieldInput>? fields, FormCatalogPresentationInput? presentation, FormCatalogItemChanges items, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(catalog);
         IReadOnlyList<FormCatalogFieldIdentity> identities = [];
         if (fields is not null)
         {
-            var changed = await ChangeFieldsAsync(catalog, fields, ct);
+            var changed = await ChangeFieldsAsync(catalog, fields, items, ct);
             if (changed.IsFailure) return changed.Error;
             identities = changed.Value;
         }
@@ -145,12 +148,14 @@ internal sealed class FormCatalogFieldEditor(IFormCatalogRepository repository, 
 
     /// <summary>
     /// Los campos del pedido: una fuente nueva o cambiada tiene que ser otro catálogo a mano activo de la organización (una ajena
-    /// se rechaza como una que no existe); lo demás lo decide <see cref="FormCatalog.ChangeFields"/>.
+    /// se rechaza como una que no existe); lo demás lo decide <see cref="FormCatalog.ChangeFields"/>, y si los valores guardados admiten
+    /// el tipo o la regla nueva, <see cref="FormCatalogFieldChangePolicy"/>.
     /// </summary>
     private async Task<Result<IReadOnlyList<FormCatalogFieldIdentity>>> ChangeFieldsAsync(FormCatalog catalog,
-        IReadOnlyList<FormCatalogFieldInput> fields, CancellationToken ct)
+        IReadOnlyList<FormCatalogFieldInput> fields, FormCatalogItemChanges items, CancellationToken ct)
     {
-        var stored = catalog.ReadFields().ToDictionary(field => field.Id);
+        var before = catalog.ReadFields();
+        var stored = before.ToDictionary(field => field.Id);
         var drafts = new List<FormCatalogFieldDraft>(fields.Count);
         var sources = new List<(int Index, Guid SourceId)>();
         for (var index = 0; index < fields.Count; index++)
@@ -177,6 +182,8 @@ internal sealed class FormCatalogFieldEditor(IFormCatalogRepository repository, 
         var culture = await values.CultureAsync(ct);
         var active = catalog.ChangeFields(drafts, name => FormCatalogFieldValuePolicy.KeyTakenBy(name, culture));
         if (active.IsFailure) return active.Error;
+        var converted = await changes.ApplyAsync(catalog, before, items, ct);
+        if (converted.IsFailure) return converted.Error;
         var identities = new List<FormCatalogFieldIdentity>();
         for (var index = 0; index < fields.Count; index++)
             if (fields[index].Id is null) identities.Add(new FormCatalogFieldIdentity(fields[index].LocalId!, active.Value[index].Id));
@@ -189,7 +196,7 @@ internal sealed class FormCatalogFieldEditor(IFormCatalogRepository repository, 
             ? id : null;
 
     /// <summary>El valor como se compara para «Único»: el texto sin espacios en los extremos y en mayúsculas; vacío no cuenta.</summary>
-    private static string? UniqueKeyOf(JsonElement value) => value.ValueKind switch
+    internal static string? UniqueKeyOf(JsonElement value) => value.ValueKind switch
     {
         JsonValueKind.String when value.GetString()!.Trim() is { Length: > 0 } text => text.ToUpperInvariant(),
         JsonValueKind.True => bool.TrueString.ToUpperInvariant(),
