@@ -1,8 +1,11 @@
 using System.Buffers.Binary;
+using System.IO.Compression;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using Microsoft.Extensions.AI;
 using PdfSharp.Pdf;
+using PdfSharp.Pdf.Advanced;
 using PdfSharp.Pdf.IO;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant;
@@ -39,15 +42,7 @@ internal static class AssistantTurnContextGuard
                     if (Domain.Common.FileMediaTypes.Images.Contains(content.MediaType)) bytes += ImageTokens(content.Data.Span, content.MediaType);
                     else if (content.MediaType == Domain.Common.FileMediaTypes.Pdf)
                     {
-                        using var input = new MemoryStream(content.Data.ToArray(), writable: false);
-                        using var pdf = PdfReader.Open(input, PdfDocumentOpenMode.Import);
-                        if (pdf.SecuritySettings.IsEncrypted) return false;
-                        bytes += 8192L * pdf.PageCount;
-                        foreach (var dictionary in pdf.Internals.GetAllObjects().OfType<PdfDictionary>())
-                        {
-                            if (dictionary.Stream is not null) bytes += dictionary.Stream.UnfilteredValue.LongLength;
-                            if (bytes > AssistantTechnicalLimits.MaxInputTokens) return false;
-                        }
+                        if (!TryAccountPdf(content.Data, ref bytes)) return false;
                     }
                     else return false;
                 }
@@ -69,8 +64,91 @@ internal static class AssistantTurnContextGuard
             return bytes <= AssistantTechnicalLimits.MaxInputTokens;
         }
         catch (JsonException) { return false; }
+        catch (InvalidDataException) { return false; }
         catch (NotSupportedException) { return false; }
         catch (PdfReaderException) { return false; }
+    }
+
+    private const int PdfInflateBufferBytes = 8192;
+
+    /// <summary>
+    /// Acota páginas y descomprime cada stream por bloques sin usar <c>UnfilteredValue</c> (KAN-69), cortando apenas supera
+    /// <see cref="AssistantTechnicalLimits.MaxInputTokens"/>.
+    /// </summary>
+    private static bool TryAccountPdf(ReadOnlyMemory<byte> data, ref long bytes)
+    {
+        using var input = MemoryMarshal.TryGetArray(data, out var segment) && segment.Array is not null
+            ? new MemoryStream(segment.Array, segment.Offset, segment.Count, writable: false)
+            : new MemoryStream(data.ToArray(), writable: false);
+        using var pdf = PdfReader.Open(input, PdfDocumentOpenMode.Import);
+        if (pdf.SecuritySettings.IsEncrypted || pdf.PageCount < 0 || pdf.PageCount > AssistantTechnicalLimits.MaxPdfPages) return false;
+        bytes += AssistantTechnicalLimits.PdfTokensPerPage * pdf.PageCount;
+        if (bytes > AssistantTechnicalLimits.MaxInputTokens) return false;
+
+        byte[]? inflateBuffer = null;
+        foreach (var dictionary in pdf.Internals.GetAllObjects().OfType<PdfDictionary>())
+        {
+            if (dictionary.Stream is not { Value: { Length: > 0 } raw }) continue;
+            if (!TryMeasurePdfStream(dictionary, raw, ref bytes, ref inflateBuffer)) return false;
+        }
+        return true;
+    }
+
+    private static bool TryMeasurePdfStream(PdfDictionary dictionary, byte[] raw, ref long bytes, ref byte[]? inflateBuffer)
+    {
+        if (!dictionary.Elements.TryGetValue("/Filter", out var filter) || filter is null)
+        {
+            bytes += raw.LongLength;
+            return bytes <= AssistantTechnicalLimits.MaxInputTokens;
+        }
+        if (filter is PdfReference reference) filter = reference.Value;
+        string? filterName;
+        if (filter is PdfArray array)
+        {
+            if (array.Elements.Count == 0)
+            {
+                bytes += raw.LongLength;
+                return bytes <= AssistantTechnicalLimits.MaxInputTokens;
+            }
+            if (array.Elements.Count > 1) return false;
+            filterName = ReadFilterName(array.Elements[0]);
+        }
+        else filterName = ReadFilterName(filter);
+
+        switch (filterName)
+        {
+            case "FlateDecode" or "Fl":
+                inflateBuffer ??= new byte[PdfInflateBufferBytes];
+                return TryInflateFlate(raw, ref bytes, inflateBuffer);
+            case "ASCIIHexDecode" or "AHx" or "ASCII85Decode" or "A85" or "DCTDecode" or "DCT" or "JPXDecode":
+                bytes += raw.LongLength;
+                return bytes <= AssistantTechnicalLimits.MaxInputTokens;
+            default:
+                return false;
+        }
+    }
+
+    private static string? ReadFilterName(PdfItem? item) => item switch
+    {
+        PdfReference reference => ReadFilterName(reference.Value),
+        PdfName name => name.Value.TrimStart('/'),
+        PdfNameObject nameObject => nameObject.Value.TrimStart('/'),
+        _ => null,
+    };
+
+    private static bool TryInflateFlate(byte[] raw, ref long bytes, byte[] buffer)
+    {
+        using var compressed = new MemoryStream(raw, writable: false);
+        using var inflater = new ZLibStream(compressed, CompressionMode.Decompress, leaveOpen: false);
+        while (true)
+        {
+            var remaining = AssistantTechnicalLimits.MaxInputTokens - bytes;
+            var toRead = (int)Math.Min(buffer.Length, remaining + 1);
+            var read = inflater.Read(buffer, 0, toRead);
+            if (read == 0) return true;
+            bytes += read;
+            if (bytes > AssistantTechnicalLimits.MaxInputTokens) return false;
+        }
     }
 
     // The most one image may count, whatever its size: above the documented high-resolution maximum (about 4784 tokens).
