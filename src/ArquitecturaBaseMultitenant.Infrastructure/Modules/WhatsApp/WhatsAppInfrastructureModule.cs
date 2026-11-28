@@ -85,13 +85,26 @@ public static class WhatsAppInfrastructureModule
                 MaxAttempts = WhatsAppCloudClient.MaxAttempts,
             };
         });
+        var outboxOptions = new Application.Configuration.Messaging.OutboxOptions();
+        configuration.GetSection(Application.Configuration.Messaging.OutboxOptions.SectionName).Bind(outboxOptions);
+        var deliveryTimeout = outboxOptions.DeliveryTimeoutFor("whatsapp");
+        if (deliveryTimeout <= TimeSpan.Zero) deliveryTimeout = TimeSpan.FromSeconds(new Application.Configuration.Messaging.OutboxOptions().DeliveryTimeoutSeconds);
         // Los números de las organizaciones envían aunque Plataforma no tenga uno (decisión 7 de la E11).
         // La API de reemplazo sigue experimental en Extensions 10; limita la supresión a esta composición.
 #pragma warning disable EXTEXP0001
         services.AddHttpClient<WhatsAppCloudClient>(client => { client.BaseAddress = new Uri("https://graph.facebook.com/"); client.Timeout = TimeSpan.FromSeconds(60); })
             .RemoveAllLoggers()
             .RemoveAllResilienceHandlers()
-            .AddStandardResilienceHandler(resilience => resilience.Retry.DisableForUnsafeHttpMethods());
+            .AddStandardResilienceHandler(resilience =>
+            {
+                resilience.Retry.DisableForUnsafeHttpMethods();
+                // Igual a la espera del canal whatsapp del Outbox: no corta a los 10 s lo que tarda entre 10 y 15 s.
+                resilience.AttemptTimeout.Timeout = deliveryTimeout;
+                resilience.TotalRequestTimeout.Timeout = deliveryTimeout;
+                // Sin circuit breaker compartido entre organizaciones: el Outbox ya reintenta y espera por chat.
+                resilience.CircuitBreaker.SamplingDuration = TimeSpan.FromTicks(deliveryTimeout.Ticks * 2);
+                resilience.CircuitBreaker.ShouldHandle = static _ => ValueTask.FromResult(false);
+            });
         // El canje del alta lleva el secreto de la app y el código en la consulta: no registra URLs ni reintenta.
         services.AddHttpClient<IWhatsAppGraphClient, WhatsAppGraphClient>(client => { client.BaseAddress = new Uri("https://graph.facebook.com/"); client.Timeout = TimeSpan.FromSeconds(30); })
             .RemoveAllLoggers()

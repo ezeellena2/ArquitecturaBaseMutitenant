@@ -39,6 +39,69 @@ public sealed class WhatsAppCloudClientTests
         Assert.DoesNotContain(logs.Entries, value => value.Category.StartsWith("System.Net.Http.HttpClient", StringComparison.Ordinal));
         Assert.DoesNotContain(logs.Entries, value => value.Text.Contains("fixture-token", StringComparison.Ordinal));
     }
+
+    [Fact]
+    public async Task Registered_client_confirms_a_twelve_second_response_instead_of_leaving_it_unconfirmed()
+    {
+        var clock = new FakeTimeProvider(new DateTimeOffset(2026, 11, 27, 12, 0, 0, TimeSpan.Zero));
+        using var handler = new DelayedHandler(clock, TimeSpan.FromSeconds(12), 200, "{\"messages\":[{\"id\":\"wamid.slow\"}]}");
+        var services = new ServiceCollection();
+        services.AddSingleton<TimeProvider>(clock);
+        services.AddLogging();
+        services.AddWhatsAppModule(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        { ["WhatsApp:PhoneNumberId"] = "fixture-number", ["WhatsApp:AccessToken"] = "fixture-token" }).Build());
+        var protector = new WhatsAppTokenProtector(Microsoft.AspNetCore.DataProtection.DataProtectionProvider.Create("whatsapp-cloud-client-slow-tests"));
+        services.AddSingleton<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations.IWhatsAppTokenProtector>(protector);
+        services.AddSingleton<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.IWhatsAppChannelReader>(new SendingReader(protector));
+        services.AddHttpClient<WhatsAppCloudClient>().ConfigurePrimaryHttpMessageHandler(() => handler);
+        await using var provider = services.BuildServiceProvider();
+        var client = provider.GetRequiredService<WhatsAppCloudClient>();
+        var message = new WhatsAppOutboundMessage("number", "+5491134567890", "codigo_ingreso", "es", ["123456"], "123456", true);
+
+        var send = client.SendAsync(message, Ct);
+        await handler.Entered.Task.WaitAsync(Ct);
+        clock.Advance(TimeSpan.FromSeconds(12));
+        var confirmed = await send;
+
+        Assert.Equal((OutboxAttemptOutcome.Accepted, "wamid.slow", 1), (confirmed.Outcome, confirmed.ProviderMessageId, handler.Calls));
+
+        // Pasada la espera del canal (15 s), la resiliencia corta y deja el mensaje «Sin confirmar».
+        handler.Reset(TimeSpan.FromSeconds(16));
+        var slow = client.SendAsync(message, Ct);
+        await handler.Entered.Task.WaitAsync(Ct);
+        clock.Advance(TimeSpan.FromSeconds(15));
+        var timedOut = await slow;
+
+        Assert.Equal((OutboxAttemptOutcome.Uncertain, WhatsAppCloudClient.UncertainCode), (timedOut.Outcome, timedOut.SafeCode));
+    }
+
+    [Fact]
+    public async Task Many_5xx_failures_on_one_number_do_not_break_sends_for_another()
+    {
+        using var handler = new RoutingHandler(request => request.RequestUri!.AbsolutePath.Contains("/failing-number/", StringComparison.Ordinal)
+            ? new HttpResponseMessage(HttpStatusCode.InternalServerError) { Content = new StringContent("{}") }
+            : new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"messages\":[{\"id\":\"wamid.healthy\"}]}") });
+        var services = new ServiceCollection();
+        services.AddSingleton(TimeProvider.System);
+        services.AddLogging();
+        services.AddWhatsAppModule(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        { ["WhatsApp:PhoneNumberId"] = "fixture-number", ["WhatsApp:AccessToken"] = "fixture-token" }).Build());
+        var protector = new WhatsAppTokenProtector(Microsoft.AspNetCore.DataProtection.DataProtectionProvider.Create("whatsapp-cloud-client-breaker-tests"));
+        services.AddSingleton<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integrations.IWhatsAppTokenProtector>(protector);
+        services.AddSingleton<ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence.IWhatsAppChannelReader>(new SendingReader(protector));
+        services.AddHttpClient<WhatsAppCloudClient>().ConfigurePrimaryHttpMessageHandler(() => handler);
+        await using var provider = services.BuildServiceProvider();
+        var client = provider.GetRequiredService<WhatsAppCloudClient>();
+
+        for (var index = 0; index < 120; index++)
+        {
+            var failed = await client.SendAsync(new WhatsAppOutboundMessage("failing-number", "+5491134567890", "codigo_ingreso", "es", ["123456"], "123456", true), Ct);
+            Assert.Equal(OutboxAttemptOutcome.Uncertain, failed.Outcome);
+        }
+
+        var healthy = await client.SendAsync(new WhatsAppOutboundMessage("healthy-number", "+5491134567890", "codigo_ingreso", "es", ["123456"], "123456", true), Ct);
+        Assert.Equal((OutboxAttemptOutcome.Accepted, "wamid.healthy", 121), (healthy.Outcome, healthy.ProviderMessageId, handler.Calls));
+    }
     /// <summary>
     /// La tabla de respuestas de Meta (ADR 0066): lo que no salió vuelve a la cola, lo definitivo falla con uno de los ocho
     /// motivos (o el medio de pago) y lo que no se sabe queda «Sin confirmar». Solo se lee el código de Meta.
@@ -53,6 +116,7 @@ public sealed class WhatsAppCloudClientTests
     [InlineData(400, "{\"error\":{\"code\":131047}}", OutboxAttemptOutcome.Rejected, WhatsAppSendFailures.WindowClosed)]
     [InlineData(400, "{\"error\":{\"code\":131026,\"message\":\"raw phone and code secret\"}}", OutboxAttemptOutcome.Rejected, WhatsAppSendFailures.Undeliverable)]
     [InlineData(400, "{\"error\":{\"code\":131042}}", OutboxAttemptOutcome.Rejected, WhatsAppSendFailures.PaymentRequired)]
+    [InlineData(400, "{\"error\":{\"code\":131049}}", OutboxAttemptOutcome.Rejected, WhatsAppSendFailures.RateLimited)]
     [InlineData(429, "{\"error\":{\"code\":130429}}", OutboxAttemptOutcome.Retry, WhatsAppSendFailures.RateLimited)]
     [InlineData(400, "{\"error\":{\"code\":131056}}", OutboxAttemptOutcome.Retry, WhatsAppSendFailures.RateLimited)]
     [InlineData(400, "{\"error\":{\"code\":80007}}", OutboxAttemptOutcome.Retry, WhatsAppSendFailures.RateLimited)]
@@ -148,6 +212,33 @@ public sealed class WhatsAppCloudClientTests
         {
             Calls++; Path = request.RequestUri!.AbsolutePath; Authorization = request.Headers.Authorization!.ToString();
             return Task.FromResult(new HttpResponseMessage((HttpStatusCode)status) { Content = new StringContent(response) });
+        }
+    }
+    private sealed class DelayedHandler(TimeProvider clock, TimeSpan delay, int status, string response) : HttpMessageHandler
+    {
+        public int Calls { get; private set; }
+        public TaskCompletionSource Entered { get; private set; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public void Reset(TimeSpan nextDelay)
+        {
+            delay = nextDelay;
+            Entered = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Calls++;
+            var waiting = Task.Delay(delay, clock, cancellationToken);
+            Entered.TrySetResult();
+            await waiting;
+            return new HttpResponseMessage((HttpStatusCode)status) { Content = new StringContent(response) };
+        }
+    }
+    private sealed class RoutingHandler(Func<HttpRequestMessage, HttpResponseMessage> respond) : HttpMessageHandler
+    {
+        public int Calls { get; private set; }
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Calls++;
+            return Task.FromResult(respond(request));
         }
     }
     private sealed class Throwing(string failure) : HttpMessageHandler

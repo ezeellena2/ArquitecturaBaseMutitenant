@@ -26,7 +26,7 @@ public sealed record PlatformRateLimits(RateLimitQuota Ip, RateLimitQuota Public
         Ip: new(300, 60), PublicIp: new(60, 60), Identity: new(120, 60), Tenant: new(600, 60),
         LoginCode: new(20, 900), LoginVerify: new(30, 900), InvitationPreview: new(60, 900),
         InvitationAccept: new(10, 900), AssistantQuickQuery: new(20, 60), AssistantConversation: new(10, 60),
-        AssistantNewKey: new(3, 900), WhatsAppWebhook: new(120, 60));
+        AssistantNewKey: new(3, 900), WhatsAppWebhook: new(3_000, 60));
 
     public RateLimitQuota For(RateLimitProfile profile) => profile switch
     {

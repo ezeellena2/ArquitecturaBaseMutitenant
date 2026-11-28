@@ -7,4 +7,5 @@ public interface IWhatsAppWebhookService
 {
     Task<Result<string>> VerifyAsync(string? mode, string? verifyToken, string? challenge, CancellationToken ct);
     Task<Result> ReceiveAsync(WhatsAppWebhookRequest request, CancellationToken ct);
+    Task<Result> RecordDeliveryFailuresAsync(IReadOnlyList<WhatsAppDeliveryFailure> failures, CancellationToken ct);
 }

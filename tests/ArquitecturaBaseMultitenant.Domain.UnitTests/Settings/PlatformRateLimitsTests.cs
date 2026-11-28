@@ -46,7 +46,7 @@ public sealed class PlatformRateLimitsTests
         Assert.Equal(new RateLimitQuota(20, 60), initial.For(RateLimitProfile.AssistantQuickQuery));
         Assert.Equal(new RateLimitQuota(10, 60), initial.For(RateLimitProfile.AssistantConversation));
         Assert.Equal(new RateLimitQuota(3, 900), initial.For(RateLimitProfile.AssistantNewKey));
-        Assert.Equal(new RateLimitQuota(120, 60), initial.For(RateLimitProfile.WhatsAppWebhook));
+        Assert.Equal(new RateLimitQuota(3_000, 60), initial.For(RateLimitProfile.WhatsAppWebhook));
     }
 
     [Theory]

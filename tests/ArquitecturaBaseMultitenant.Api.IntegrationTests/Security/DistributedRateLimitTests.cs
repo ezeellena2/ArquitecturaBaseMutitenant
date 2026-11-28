@@ -5,7 +5,9 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Configuration.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
@@ -238,6 +240,19 @@ public sealed class DistributedRateLimitTests(ApiFactory factory) : IClassFixtur
             SELECT "Key" AS "Value" FROM platform."RateLimitCounters" WHERE "Key" IN ({finished}, {current})
             """).ToListAsync(Ct);
         Assert.Equal([current], left);
+    }
+
+    [Fact]
+    public async Task Initial_whatsapp_webhook_profile_allows_three_thousand_requests_per_minute()
+    {
+        var expected = new RateLimitQuota(3_000, 60);
+        Assert.Equal(expected, PlatformRateLimits.Initial.For(RateLimitProfile.WhatsAppWebhook));
+        Assert.Equal(expected, new RateLimitOptions().ToLimits().WhatsAppWebhook);
+
+        await SetLimitsAsync(PlatformRateLimits.Initial);
+        await using var scope = factory.Services.CreateAsyncScope();
+        var stored = await scope.ServiceProvider.GetRequiredService<IPlatformSettingsReader>().FindRateLimitsAsync(Ct);
+        Assert.Equal(expected, stored?.WhatsAppWebhook);
     }
 
     private WebApplicationFactory<Program> Host(string environment, string? redis = null) =>

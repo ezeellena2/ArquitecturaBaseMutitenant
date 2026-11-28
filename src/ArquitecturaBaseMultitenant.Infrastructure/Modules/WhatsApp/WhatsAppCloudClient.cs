@@ -95,25 +95,28 @@ internal sealed class WhatsAppCloudClient(HttpClient client, IOptions<WhatsAppOp
 
     /// <summary>
     /// Manda el código de Meta, que gana sobre el estado: el 3, por ejemplo, llega con un 500 y no es pasajero. Los de límite
-    /// («Throttling errors» de la Cloud API: 4, 80007, 130429, 131048 y 131056) llegan con un 400 y se reintentan. De un 5xx solo
-    /// se reintentan los que Meta pide reintentar (131000, 131016, 2 y 133004). Sin un código conocido decide el estado: un 401
-    /// es el token, un 403 un permiso y un 429 un límite, que se reintenta.
+    /// («Throttling errors» de la Cloud API: 4, 80007, 130429, 131048 y 131056) llegan con un 400 y se reintentan; el 131049
+    /// (tope de marketing por persona) no se reintenta enseguida. De un 5xx solo se reintentan los que Meta pide reintentar
+    /// (131000, 131016, 2 y 133004). Sin un código conocido decide el estado: un 401 es el token, un 403 un permiso y un 429
+    /// un límite, que se reintenta.
     /// </summary>
-    internal static OutboxDeliveryReceipt Classify(HttpStatusCode status, int? code) => code switch
+    internal static OutboxDeliveryReceipt Classify(HttpStatusCode status, int? code)
     {
-        131030 => Definitive(WhatsAppSendFailures.NotAllowed),
-        131047 => Definitive(WhatsAppSendFailures.WindowClosed),
-        131026 => Definitive(WhatsAppSendFailures.Undeliverable),
-        131042 => Definitive(WhatsAppSendFailures.PaymentRequired),
-        4 or 80007 or 130429 or 131048 or 131056 => Retry(WhatsAppSendFailures.RateLimited),
-        131000 or 131016 or 2 or 133004 when (int)status >= 500 => Retry(WhatsAppSendFailures.Unavailable),
-        0 or 190 => Definitive(WhatsAppSendFailures.TokenInvalid),
-        3 or 10 or (>= 200 and <= 299) => Definitive(WhatsAppSendFailures.PermissionMissing),
-        _ when status == HttpStatusCode.Unauthorized => Definitive(WhatsAppSendFailures.TokenInvalid),
-        _ when status == HttpStatusCode.Forbidden => Definitive(WhatsAppSendFailures.PermissionMissing),
-        _ when status == HttpStatusCode.TooManyRequests => Retry(WhatsAppSendFailures.RateLimited),
-        _ => Definitive(WhatsAppSendFailures.Rejected),
-    };
+        var serverError = (int)status >= 500;
+        if (WhatsAppSendFailures.ForMetaError(code, serverError) is { } failure)
+        {
+            var retryable = code is 4 or 80007 or 130429 or 131048 or 131056
+                || (serverError && code is 131000 or 131016 or 2 or 133004);
+            return retryable ? Retry(failure) : Definitive(failure);
+        }
+        return status switch
+        {
+            HttpStatusCode.Unauthorized => Definitive(WhatsAppSendFailures.TokenInvalid),
+            HttpStatusCode.Forbidden => Definitive(WhatsAppSendFailures.PermissionMissing),
+            HttpStatusCode.TooManyRequests => Retry(WhatsAppSendFailures.RateLimited),
+            _ => Definitive(WhatsAppSendFailures.Rejected),
+        };
+    }
 
     private static OutboxDeliveryReceipt Definitive(string code) => OutboxDeliveryReceipt.Rejected(code, retryable: false);
 

@@ -143,4 +143,15 @@ public sealed class WhatsAppBroadcastRecipient : Entity, ITenantOwned
         if (Status != WhatsAppRecipientStatus.Pending) return;
         Status = WhatsAppRecipientStatus.Failed; FailureReason = reason.Length > TextLimits.ShortName ? reason[..TextLimits.ShortName] : reason; ChangedAtUtc = nowUtc;
     }
+
+    /// <summary>Meta informó por webhook que el envío falló: guarda el motivo si todavía estaba en estado enviado.</summary>
+    public void ApplyDeliveryFailure(string reason, DateTime nowUtc)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+        if (nowUtc.Kind != DateTimeKind.Utc) throw new ArgumentException("UTC required.", nameof(nowUtc));
+        if (Status != WhatsAppRecipientStatus.Sent) return;
+        Status = WhatsAppRecipientStatus.Failed;
+        FailureReason = reason.Length > TextLimits.ShortName ? reason[..TextLimits.ShortName] : reason;
+        ChangedAtUtc = nowUtc > ChangedAtUtc ? nowUtc : ChangedAtUtc;
+    }
 }

@@ -10,7 +10,8 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// una vez por mensaje entregado) y la falta de medio de pago que informa Meta con el error 131042.
 /// </summary>
 internal sealed class WhatsAppChannelUsageWriter(IWhatsAppChannelRepository channels, WhatsAppChannelAuditWriter audit,
-    ITimeZoneService zones, TimeProvider clock)
+    ITimeZoneService zones, IWhatsAppChatRepository chats, IPlatformWhatsAppChatRepository platformChats,
+    IWhatsAppBroadcastRepository broadcasts, TimeProvider clock)
 {
     internal const int PaymentRequiredError = 131042;
 
@@ -24,15 +25,38 @@ internal sealed class WhatsAppChannelUsageWriter(IWhatsAppChannelRepository chan
     }
 
     /// <summary>Serializa los números de los estados del lote, después de los locks de cada mensaje, y devuelve los vigentes.</summary>
-    internal async Task<IReadOnlySet<string>> LockActiveAsync(IEnumerable<WhatsAppWebhookStatus> statuses, CancellationToken ct)
+    internal async Task<IReadOnlyDictionary<string, WhatsAppChannel>> LockActiveAsync(IEnumerable<WhatsAppWebhookStatus> statuses, CancellationToken ct)
     {
-        var active = new HashSet<string>(StringComparer.Ordinal);
+        var active = new Dictionary<string, WhatsAppChannel>(StringComparer.Ordinal);
         foreach (var number in statuses.Select(value => value.PhoneNumberId).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal))
         {
             await channels.LockNumberAsync(number, ct);
-            if (await channels.GetActiveAsync(number, ct) is not null) active.Add(number);
+            if (await channels.GetActiveAsync(number, ct) is { } channel) active.Add(number, channel);
         }
         return active;
+    }
+
+    /// <summary>Anota el motivo de un <c>status: failed</c> en un mensaje saliente del número de Plataforma.</summary>
+    internal async Task RecordPlatformDeliveryFailureAsync(Guid outboxMessageId, string wamid, string failureReason, CancellationToken ct)
+    {
+        if (await platformChats.GetOutboundAsync(outboxMessageId, ct) is { } message)
+            message.ApplyDelivery(WhatsAppChatMessageStatus.Failed, wamid, failureReason);
+    }
+
+    /// <summary>
+    /// Anota el motivo de cada <c>status: failed</c> de una organización en su mensaje de chat o destinatario de difusión,
+    /// dentro del alcance de esa organización.
+    /// </summary>
+    internal async Task RecordOrganizationDeliveryFailuresAsync(IReadOnlyList<WhatsAppDeliveryFailure> failures, CancellationToken ct)
+    {
+        var nowUtc = clock.GetUtcNow().UtcDateTime;
+        foreach (var failure in failures)
+        {
+            if (await chats.GetOutboundAsync(failure.OutboxMessageId, ct) is { } message)
+                message.ApplyDelivery(WhatsAppChatMessageStatus.Failed, failure.Wamid, failure.FailureReason);
+            if (await broadcasts.GetByOutboxMessageAsync(failure.OutboxMessageId, ct) is { } recipient)
+                recipient.ApplyDeliveryFailure(failure.FailureReason, failure.OccurredAtUtc > nowUtc ? nowUtc : failure.OccurredAtUtc);
+        }
     }
 
     internal async Task RecordAsync(WhatsAppWebhookStatus status, bool firstDelivery, CancellationToken ct)

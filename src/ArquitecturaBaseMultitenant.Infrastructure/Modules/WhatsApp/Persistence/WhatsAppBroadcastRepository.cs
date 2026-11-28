@@ -48,6 +48,14 @@ internal sealed class WhatsAppBroadcastRepository(ApplicationDbContext context, 
             .OrderByDescending(value => value.SentAtUtc).ThenByDescending(value => value.Id).FirstOrDefaultAsync(ct);
     }
 
+    public Task<WhatsAppBroadcastRecipient?> GetByOutboxMessageAsync(Guid outboxMessageId, CancellationToken ct)
+    {
+        context.RequireTransaction();
+        var tenantId = tenant.RequiredTenantId;
+        return context.Set<WhatsAppBroadcastRecipient>()
+            .SingleOrDefaultAsync(value => value.TenantId == tenantId && value.OutboxMessageId == outboxMessageId, ct);
+    }
+
     public void Add(WhatsAppBroadcast broadcast) { context.RequireTransaction(); _ = tenant.RequiredTenantId; context.Set<WhatsAppBroadcast>().Add(broadcast); }
 
     public void AddRecipients(IEnumerable<WhatsAppBroadcastRecipient> recipients)

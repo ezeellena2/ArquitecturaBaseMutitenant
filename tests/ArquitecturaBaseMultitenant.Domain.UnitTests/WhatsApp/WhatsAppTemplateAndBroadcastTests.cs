@@ -71,6 +71,26 @@ public sealed class WhatsAppTemplateAndBroadcastTests
         Assert.Equal(WhatsAppRecipientStatus.Unsubscribed, recipient.Status);
     }
 
+    [Fact]
+    public void A_failed_status_webhook_maps_meta_codes_and_updates_a_sent_recipient()
+    {
+        Assert.Equal(WhatsAppSendFailures.RateLimited, WhatsAppSendFailures.ForWebhookError(131049));
+        Assert.Equal(WhatsAppSendFailures.Undeliverable, WhatsAppSendFailures.ForWebhookError(131026));
+        Assert.Equal(WhatsAppSendFailures.Rejected, WhatsAppSendFailures.ForWebhookError(null));
+
+        var recipient = WhatsAppBroadcastRecipient.Create(Guid.CreateVersion7(), Guid.CreateVersion7(), PhoneNumber.Create("+5491155550000").Value, Now);
+        recipient.ApplyDeliveryFailure(WhatsAppSendFailures.RateLimited, Now.AddMinutes(1));
+        Assert.Equal((WhatsAppRecipientStatus.Pending, (string?)null), (recipient.Status, recipient.FailureReason));
+
+        recipient.MarkSent(Guid.CreateVersion7(), Now.AddMinutes(2));
+        recipient.ApplyDeliveryFailure(WhatsAppSendFailures.RateLimited, Now.AddMinutes(3));
+        Assert.Equal((WhatsAppRecipientStatus.Failed, WhatsAppSendFailures.RateLimited, Now.AddMinutes(3)),
+            (recipient.Status, recipient.FailureReason, recipient.ChangedAtUtc));
+
+        recipient.ApplyDeliveryFailure(WhatsAppSendFailures.Undeliverable, Now.AddMinutes(4));
+        Assert.Equal(WhatsAppSendFailures.RateLimited, recipient.FailureReason);
+    }
+
     private static WhatsAppBroadcast Broadcast(DateTime? scheduledAtUtc) => WhatsAppBroadcast.Create("Promo", Guid.CreateVersion7(), "Promo", ["20%"],
         WhatsAppAudienceKind.AllAccepting, null, scheduledAtUtc, 2, new Money(0.12m, CurrencyCode.Create("USD").Value));
 }

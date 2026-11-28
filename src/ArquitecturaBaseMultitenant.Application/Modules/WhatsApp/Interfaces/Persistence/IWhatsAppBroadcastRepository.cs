@@ -11,6 +11,8 @@ public interface IWhatsAppBroadcastRepository
     Task<IReadOnlyList<WhatsAppBroadcastRecipient>> ListPendingAsync(Guid broadcastId, int limit, CancellationToken ct);
     /// <summary>El último destinatario de ese contacto al que le salió una difusión (o que ya respondió) desde esa fecha.</summary>
     Task<WhatsAppBroadcastRecipient?> FindLatestSentAsync(Guid customerId, DateTime sinceUtc, CancellationToken ct);
+    /// <summary>El destinatario asociado a un mensaje del outbox, para anotar el motivo de un fallo informado por webhook.</summary>
+    Task<WhatsAppBroadcastRecipient?> GetByOutboxMessageAsync(Guid outboxMessageId, CancellationToken ct);
     void Add(WhatsAppBroadcast broadcast);
     void AddRecipients(IEnumerable<WhatsAppBroadcastRecipient> recipients);
 }

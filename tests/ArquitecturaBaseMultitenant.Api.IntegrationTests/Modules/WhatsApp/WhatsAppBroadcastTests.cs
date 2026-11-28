@@ -2,12 +2,16 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Models.Messaging;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Messaging;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
@@ -240,6 +244,74 @@ public sealed class WhatsAppBroadcastTests(ApiFactory factory)
         await DispatchAsync(host);
         Assert.Equal("Sent", (await DetailAsync(ownerA, broadcastA)).GetProperty("broadcast").GetProperty("status").GetString());
         Assert.Contains(await OutboxAsync(host), message => message.To == ana && message.TemplateName == "promo_pausa");
+    }
+
+    [Fact]
+    public async Task A_failed_status_webhook_records_its_reason_on_the_broadcast_recipient()
+    {
+        await using var host = WhatsAppAttentionJourney.Host(factory, new FakeGraph(), templates: new FakeTemplates());
+        using var owner = WhatsAppAttentionJourney.Client(host);
+        owner.DefaultRequestHeaders.AcceptLanguage.ParseAdd("es-AR");
+        var (_, tenant) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, owner, Ct);
+        var phoneNumberId = WhatsAppAttentionJourney.NewNumberId();
+        using (var connected = await WhatsAppAttentionJourney.ConnectAsync(owner, phoneNumberId, Ct))
+            Assert.Equal(HttpStatusCode.Created, connected.StatusCode);
+        var templateId = await TemplateAsync(owner, "Promo fallida", "Marketing", "Hola, tenés {{1}} de descuento.");
+        await WhatsAppTemplateManagementTests.TemplateWebhookAsync(owner, "waba-" + phoneNumberId, "message_template_status_update",
+            new { @event = "APPROVED", message_template_id = 1L, message_template_name = "promo_fallida", message_template_language = "es_AR", reason = "NONE" });
+
+        using var anonymous = WhatsAppAttentionJourney.Client(host);
+        var (ana, beto) = (WhatsAppAttentionJourney.NewPhone(), WhatsAppAttentionJourney.NewPhone());
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, ana, "Hola", Ct);
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, beto, "Hola", Ct);
+        var anaId = await ConsentAsync(owner, ana, "Accepted", []);
+        var betoId = await ConsentAsync(owner, beto, "Accepted", []);
+
+        var broadcastId = (await CreateAsync(owner, templateId, null)).GetProperty("id").GetGuid();
+        await DispatchAsync(host);
+
+        var queued = await QueuedAsync(host);
+        var anaOutbox = Assert.Single(queued, item => item.Message.To == ana && item.Message.TemplateName == "promo_fallida").Row.Id;
+        var betoOutbox = Assert.Single(queued, item => item.Message.To == beto && item.Message.TemplateName == "promo_fallida").Row.Id;
+        var wamidAna = "wamid.bc.131049." + Guid.NewGuid().ToString("N");
+        var wamidBeto = "wamid.bc.131026." + Guid.NewGuid().ToString("N");
+        var nowUtc = host.Services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        await using (var scope = host.Services.CreateAsyncScope())
+        {
+            var observer = scope.ServiceProvider.GetServices<IOutboxDeliveryObserver>().Single(value => value.Key == "whatsapp");
+            await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                await observer.RecordAcceptedAsync(anaOutbox, OutboxDeliveryReceipt.Accepted(wamidAna, phoneNumberId, "Template"), nowUtc, ct);
+                await observer.RecordAcceptedAsync(betoOutbox, OutboxDeliveryReceipt.Accepted(wamidBeto, phoneNumberId, "Template"), nowUtc, ct);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+
+        using (var failed = await WhatsAppAttentionJourney.WebhookAsync(anonymous, WhatsAppAttentionJourney.Statuses(phoneNumberId,
+            WhatsAppAttentionJourney.Status(wamidAna, "failed", error: 131049),
+            WhatsAppAttentionJourney.Status(wamidBeto, "failed", error: 131026)), Ct))
+            Assert.Equal(HttpStatusCode.OK, failed.StatusCode);
+
+        await using (var verify = host.Services.CreateAsyncScope())
+        {
+            verify.ServiceProvider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(tenant, TenantKind.Business);
+            var rows = await verify.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<WhatsAppBroadcastRecipient>()
+                .AsNoTracking().Where(value => value.BroadcastId == broadcastId).ToArrayAsync(Ct);
+            var anaRow = Assert.Single(rows, value => value.CustomerId == anaId);
+            var betoRow = Assert.Single(rows, value => value.CustomerId == betoId);
+            Assert.Equal((WhatsAppRecipientStatus.Failed, WhatsAppSendFailures.RateLimited), (anaRow.Status, anaRow.FailureReason));
+            Assert.Equal((WhatsAppRecipientStatus.Failed, WhatsAppSendFailures.Undeliverable), (betoRow.Status, betoRow.FailureReason));
+        }
+
+        var detail = await DetailAsync(owner, broadcastId);
+        Assert.Equal(2, detail.GetProperty("broadcast").GetProperty("failed").GetInt32());
+        var items = detail.GetProperty("recipients").GetProperty("items").EnumerateArray().ToArray();
+        var anaItem = Assert.Single(items, value => value.GetProperty("contactId").GetGuid() == anaId);
+        var betoItem = Assert.Single(items, value => value.GetProperty("contactId").GetGuid() == betoId);
+        Assert.Equal(("Failed", "WhatsApp frenó el envío por su límite de mensajes. Probá de nuevo en un rato."),
+            (anaItem.GetProperty("status").GetString(), anaItem.GetProperty("failureReason").GetString()));
+        Assert.Equal(("Failed", "WhatsApp no pudo entregarlo a ese número."),
+            (betoItem.GetProperty("status").GetString(), betoItem.GetProperty("failureReason").GetString()));
     }
 
     private static async Task<Guid> StageDueBroadcastAsync(WebApplicationFactory<Program> host, HttpClient owner, HttpClient anonymous,

@@ -22,3 +22,8 @@ public sealed record WhatsAppWebhookStatus(string PhoneNumberId, string Wamid, W
 {
     public override string ToString() => nameof(WhatsAppWebhookStatus);
 }
+/// <summary>Un <c>status: failed</c> de un número de organización, para guardar su motivo dentro del alcance de la organización.</summary>
+public sealed record WhatsAppDeliveryFailure(Guid OrganizationId, Guid OutboxMessageId, string Wamid, string FailureReason, DateTime OccurredAtUtc)
+{
+    public override string ToString() => nameof(WhatsAppDeliveryFailure);
+}

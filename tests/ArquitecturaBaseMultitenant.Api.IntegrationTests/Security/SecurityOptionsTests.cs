@@ -31,7 +31,7 @@ public sealed class SecurityOptionsTests(ApiFactory factory)
         Assert.Equal((24, 60), (idempotency.ValidityHours, idempotency.CleanupIntervalMinutes));
         Assert.Equal((100, 60), (deletion.BatchSize, deletion.IntervalMinutes));
         Assert.Equal(PlatformRateLimits.Initial, new RateLimitOptions().ToLimits());
-        Assert.Equal(new RateLimitQuota(120, 60), new RateLimitOptions().ToLimits().WhatsAppWebhook);
+        Assert.Equal(new RateLimitQuota(3_000, 60), new RateLimitOptions().ToLimits().WhatsAppWebhook);
     }
 
     [Fact]
