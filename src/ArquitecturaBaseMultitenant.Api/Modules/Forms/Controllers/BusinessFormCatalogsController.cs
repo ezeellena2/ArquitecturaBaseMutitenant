@@ -32,7 +32,7 @@ public sealed class BusinessFormCatalogsController(
     IFormCatalogSourceService sources) : ControllerBase
 {
     private const string Spreadsheet = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-    private const long MaxImportRequestBytes = 11 * 1024 * 1024;
+    private const long MaxImportRequestBytes = (long)FormCatalogLimits.MaxFileBytes + SpreadsheetLimits.MultipartOverheadBytes;
 
     [HttpGet]
     [HasPermission(Permissions.Forms.CatalogsRead)]

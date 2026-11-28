@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO.Compression;
 using System.Xml;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 
 namespace ArquitecturaBaseMultitenant.Infrastructure.Spreadsheets;
 
@@ -20,7 +21,7 @@ internal sealed class SpreadsheetOverLimitsException() : Exception("The spreadsh
 /// </summary>
 internal static class SpreadsheetScanner
 {
-    internal const int DefaultMaxFileBytes = 10 * 1024 * 1024;
+    internal const int DefaultMaxFileBytes = SpreadsheetLimits.MaxFileBytes;
 
     /// <summary>
     /// Las hojas de un libro (los <c>&lt;sheet&gt;</c> de <c>xl/workbook.xml</c>): 255 es lo más que Excel deja poner en un libro

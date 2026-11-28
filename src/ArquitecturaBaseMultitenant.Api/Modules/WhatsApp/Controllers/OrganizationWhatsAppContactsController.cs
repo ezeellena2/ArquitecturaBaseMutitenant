@@ -5,6 +5,7 @@ using ArquitecturaBaseMultitenant.Api.Modules.WhatsApp.Contracts;
 using ArquitecturaBaseMultitenant.Api.OpenApi;
 using ArquitecturaBaseMultitenant.Api.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Models.Common;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
@@ -120,7 +121,7 @@ public sealed class OrganizationWhatsAppContactsController(IWhatsAppContactServi
     public async Task<IActionResult> GetImportSample(CancellationToken cancellationToken) =>
         (await service.GetImportSampleAsync(cancellationToken)).ToFileResult(this);
 
-    private const long MaxImportRequestBytes = 11 * 1024 * 1024;
+    private const long MaxImportRequestBytes = SpreadsheetLimits.MaxRequestBytes;
 
     [HttpPost("import/preview")]
     [RequestSizeLimit(MaxImportRequestBytes)]
