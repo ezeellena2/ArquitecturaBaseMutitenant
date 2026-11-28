@@ -68,6 +68,7 @@ internal sealed class GoogleAccountResolver(
 
         await methods.LockUserAsync(userId, cancellationToken);
         IReadOnlyList<LoginMethod>? all = null;
+        LoginMethod? existingGoogle = null;
         if (googleMethod is null)
         {
             all = await methods.ListByUserIdAsync(userId, cancellationToken);
@@ -76,9 +77,17 @@ internal sealed class GoogleAccountResolver(
                 // ADR 0033: un correo corporativo revocado no abre la cuenta ni habilita a vincular Google propio.
                 var emailMethod = all.SingleOrDefault(method =>
                     method.Type == LoginMethodType.Email && method.Value == email!.Value);
-                if (emailMethod is null || !await availability.IsAvailableAsync(emailMethod, cancellationToken))
+                if (emailMethod is null || !await availability.IsManagedActiveAsync(emailMethod, cancellationToken))
                     return ExternalLoginErrors.Failed;
             }
+        }
+        else
+        {
+            // ADR 0033: un Google vinculado de un dominio verificado también es administrado y deja de servir al terminar la membresía.
+            existingGoogle = await methods.GetByIdForUserAsync(userId, googleMethod.MethodId, cancellationToken)
+                ?? throw new InvalidOperationException("The Google method disappeared under its lock.");
+            if (!await availability.IsManagedActiveAsync(existingGoogle, cancellationToken))
+                return ExternalLoginErrors.Failed;
         }
 
         var checkedAccount = await guard.CheckAsync(userId, request.ReturnUrl!, cancellationToken);
@@ -90,15 +99,10 @@ internal sealed class GoogleAccountResolver(
             await methodFinalizer.AddGoogleMethodAsync(account, userId, login.ProviderKey, email, all!,
                 cancellationToken);
         }
-        else if (email is not null)
+        else if (email is not null && existingGoogle!.ContactEmail is null)
         {
-            var method = await methods.GetByIdForUserAsync(userId, googleMethod.MethodId, cancellationToken)
-                ?? throw new InvalidOperationException("The Google method disappeared under its lock.");
-            if (method.ContactEmail is null)
-            {
-                method.UpdateGoogleContact(email);
-                await methodFinalizer.UpdatePrimaryContactIfNeededAsync(userId, method, email, cancellationToken);
-            }
+            existingGoogle.UpdateGoogleContact(email);
+            await methodFinalizer.UpdatePrimaryContactIfNeededAsync(userId, existingGoogle, email, cancellationToken);
         }
 
         await profile.FillMissingNamesAsync(userId, login, cancellationToken);

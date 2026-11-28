@@ -132,6 +132,13 @@ internal sealed class FormCatalogReader(ApplicationDbContext context, ITenantCon
             FormCatalogStatusFilter.Inactive => items.Where(item => !item.IsActive),
             _ => items,
         };
+        // ids nombra las opciones de una fuente, activas o dadas de baja: una que no es de este catálogo no viene.
+        if (request.Ids is { Count: > 0 })
+        {
+            var ids = request.Ids.ToArray();
+            items = items.Where(item => ids.Contains(item.Id));
+        }
+
         // Un texto repetido avisa sin frenar: otra opción del catálogo con el mismo texto, sin distinguir mayúsculas. EF lo
         // traduce a lower() de PostgreSQL, como ApplySearch: la cultura del proceso no interviene. Se busca después, solo para los
         // textos de la página y en una sola pasada: calcularlo en cada fila recorría el catálogo entero por cada opción salteada.

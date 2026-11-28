@@ -25,12 +25,17 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Forms.Services;
 /// la nombra el modelo por su código o su texto, y la resuelve el lector con su búsqueda; su id nunca va al proveedor.</item>
 /// <item>Quitar la marca para borrar al guardar, como la pantalla; si algo la usa, lo dice la ruta (<c>ItemInUse</c>). No
 /// propone el orden ni importar.</item>
+/// <item>Cada campo activo del catálogo (E13) es una columna más de la fila, con su clave como nombre, su tipo de la lista cerrada y
+/// sus reglas como límites; ninguno es obligatorio en la propuesta. Su valor se guarda como lo pide el <c>PUT</c> (un número como
+/// texto, la fecha ISO, sí/no y la identidad de la opción de la fuente, que el modelo nombra por su código o su texto), y
+/// <c>null</c> lo limpia. Un campo cuya clave es una columna fija (solo puede pasar con <c>active</c>) no es columna.</item>
 /// </list>
 /// Elegir por nombre y leer una fila es de <see cref="AssistantActionInputs"/>, igual para todas las fuentes.
 /// </summary>
 internal sealed class FormCatalogActionSource(
     IFormCatalogReader catalogs,
-    IEnumerable<IValidator<UpdateFormCatalogRequest>> updateValidators) : IAssistantActionSource
+    IEnumerable<IValidator<UpdateFormCatalogRequest>> updateValidators,
+    FormCatalogFieldValuePolicy fieldValues) : IAssistantActionSource
 {
     internal const string OptionsField = "options";
     internal const string CodeField = "code";
@@ -41,6 +46,9 @@ internal sealed class FormCatalogActionSource(
 
     private const string TargetPath = "target";
     private const string DateFormat = "yyyy-MM-dd";
+
+    /// <summary>Las columnas fijas de la fila: un campo con una de estas claves no es columna de la propuesta, como en el front.</summary>
+    private static readonly HashSet<string> FixedColumns = new([CodeField, TextField, DetailField, ActiveField, ValueField], StringComparer.Ordinal);
 
     public static IReadOnlyList<AssistantActionDefinition> Actions { get; } =
     [
@@ -69,12 +77,17 @@ internal sealed class FormCatalogActionSource(
         return Task.FromResult(Result.Failure<PagedResult<AssistantActionChoiceRow>>(Invalid(request.Field, ValidationError.ErrorCode)));
     }
 
-    /// <summary>Las columnas del editor para ese catálogo: Código, Texto, Detalle, Estado y, en uno tipado, el Valor de su tipo.</summary>
+    /// <summary>
+    /// Las columnas del editor para ese catálogo: Código, Texto, Detalle, Estado, en uno tipado el Valor de su tipo y, desde la E13,
+    /// una por cada campo activo, en su orden.
+    /// </summary>
     public async Task<Result<IReadOnlyList<AssistantActionField>>> ReadTargetFieldsAsync(AssistantActionDefinition action, string target,
         CancellationToken cancellationToken)
     {
         var found = await MatchTargetAsync(target, cancellationToken);
-        return found.IsFailure ? found.Error : Result.Success<IReadOnlyList<AssistantActionField>>(FieldsOf(found.Value.ValueType));
+        if (found.IsFailure) return found.Error;
+        var fields = await TargetFieldsAsync(found.Value.Id, cancellationToken);
+        return Result.Success<IReadOnlyList<AssistantActionField>>(FieldsOf(found.Value.ValueType, fields));
     }
 
     public async Task<Result<AssistantActionResolution>> ResolveAsync(AssistantActionDraft draft, CancellationToken cancellationToken)
@@ -83,6 +96,7 @@ internal sealed class FormCatalogActionSource(
         var found = await MatchTargetAsync(draft.Target, cancellationToken);
         if (found.IsFailure) return Invalid(TargetPath, found.Error.Code);
         var catalog = found.Value;
+        var fields = await TargetFieldsAsync(catalog.Id, cancellationToken);
 
         var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
         var values = new List<AssistantActionResolvedValue>();
@@ -93,7 +107,7 @@ internal sealed class FormCatalogActionSource(
                 errors[input.Field] = [ValidationError.ErrorCode];
                 continue;
             }
-            var ops = await ResolveOptionsAsync(catalog, [.. input.Value.EnumerateArray()], errors, cancellationToken);
+            var ops = await ResolveOptionsAsync(catalog, fields, [.. input.Value.EnumerateArray()], errors, cancellationToken);
             var doubt = ops.Any(op => op.Doubt is not null) ? AssistantActionDoubts.Similar : null;
             values.Add(new(OptionsField, input.Value, JsonSerializer.SerializeToElement(ops, AssistantActionInputs.Json), doubt));
         }
@@ -116,12 +130,13 @@ internal sealed class FormCatalogActionSource(
         var saved = await SavedAsync(catalog.Id, ops, cancellationToken);
         if (ops.Any(op => op.Id is { } id && op.Op != AssistantActionInputs.Remove && !saved.ContainsKey(id)))
             return FormCatalogErrors.ItemNotFound(OptionsField);
+        var fields = (await TargetFieldsAsync(catalog.Id, cancellationToken)).ToDictionary(field => field.Key, StringComparer.Ordinal);
 
         var views = ops.Where(op => op.Id is not { } id || saved.ContainsKey(id)).Select(op => op.Id is { } id
-            ? new AssistantActionValueView(OptionsField, JsonSerializer.SerializeToElement(new RowView(op.Op, id.ToString("D"), RowOf(op.Row, catalog.ValueType)),
-                AssistantActionInputs.Json), saved[id].Text, op.Doubt)
-            : new AssistantActionValueView(OptionsField, JsonSerializer.SerializeToElement(new RowView(op.Op, op.Row!.Code!, RowOf(op.Row, catalog.ValueType)),
-                AssistantActionInputs.Json), null, null));
+            ? new AssistantActionValueView(OptionsField, JsonSerializer.SerializeToElement(new RowView(op.Op, id.ToString("D"),
+                RowOf(op.Row, catalog.ValueType, fields)), AssistantActionInputs.Json), saved[id].Text, op.Doubt)
+            : new AssistantActionValueView(OptionsField, JsonSerializer.SerializeToElement(new RowView(op.Op, op.Row!.Code!,
+                RowOf(op.Row, catalog.ValueType, fields)), AssistantActionInputs.Json), null, null));
         return new AssistantActionReview(new(catalog.Id, catalog.Name, catalog.Version), [.. views]);
     }
 
@@ -137,14 +152,18 @@ internal sealed class FormCatalogActionSource(
         var ops = OpsOf(resolution);
         var saved = await SavedAsync(catalog.Id, ops, cancellationToken);
         if (ops.Any(op => op.Id is { } id && !saved.ContainsKey(id))) return Invalid(OptionsField, FormCatalogErrors.ItemNotFoundCode);
+        var fields = (await TargetFieldsAsync(catalog.Id, cancellationToken)).ToDictionary(field => field.Key, StringComparer.Ordinal);
 
         var items = new List<(int Index, FormCatalogItemInput Input)>();
         for (var index = 0; index < ops.Length; index++)
         {
             if (ops[index] is not { Row: { } row } op) continue;
             var before = op.Id is { } id ? saved[id] : null;
+            var delta = FieldDelta(row, fields, index);
+            if (delta.IsFailure) return delta.Error;
             items.Add((index, new FormCatalogItemInput(before?.Id, before is null ? $"n{index}" : null, row.Code ?? before?.Code,
-                row.Text ?? before?.Text, row.Detail ?? before?.Detail, row.Value ?? before?.Value, row.Active ?? before?.IsActive ?? true)));
+                row.Text ?? before?.Text, row.Detail ?? before?.Detail, row.Value ?? before?.Value, row.Active ?? before?.IsActive ?? true,
+                delta.Value)));
         }
         Guid[] deleted = [.. ops.Where(op => op.Op == AssistantActionInputs.Remove).Select(op => op.Id!.Value)];
         var request = new UpdateFormCatalogRequest(catalog.Id, catalog.Name, catalog.Description, catalog.IsActive,
@@ -159,16 +178,71 @@ internal sealed class FormCatalogActionSource(
             var item = FormCatalogItem.Create(draft, index, input.Code!, input.Text!, input.Detail, input.Value, input.IsActive!.Value, 0);
             if (item.IsFailure) return Invalid($"{OptionsField}[{index}].{FieldOfCode(item.Error.Code)}", item.Error.Code);
         }
+        var values = await CheckFieldValuesAsync(items, saved, fields, cancellationToken);
+        if (values.IsFailure) return values;
         var added = items.Count(item => item.Input.ItemId is null);
         if (catalog.TotalItems + added - deleted.Length > FormCatalogLimits.MaxItems) return Invalid(OptionsField, FormCatalogErrors.TooManyItemsCode);
         return await CheckCodesAsync(catalog.Id, items, deleted, cancellationToken);
     }
 
+    // El delta de los campos de una fila por la identidad de cada campo, como lo manda el editor: una clave que ya no es de un campo
+    // activo vuelve con su ruta.
+    private static Result<IReadOnlyDictionary<Guid, JsonElement?>?> FieldDelta(OptionRow row, Dictionary<string, FormCatalogField> fields,
+        int index)
+    {
+        if (row.Fields is not { Count: > 0 } proposed) return Result.Success<IReadOnlyDictionary<Guid, JsonElement?>?>(null);
+        var delta = new Dictionary<Guid, JsonElement?>();
+        foreach (var (key, value) in proposed)
+        {
+            if (!fields.TryGetValue(key, out var field)) return Invalid($"{OptionsField}[{index}].{key}", FormCatalogErrors.FieldValueInvalidCode);
+            delta[field.Id] = value;
+        }
+        return Result.Success<IReadOnlyDictionary<Guid, JsonElement?>?>(delta);
+    }
+
+    // Lo que la ruta mira de cada valor, en memoria: su tipo, su largo y su rango (la regla de FormCatalogField.Check), que una opción
+    // activa tenga el de cada campo obligatorio, con lo propuesto o lo guardado, y que una opción nueva de una fuente esté activa
+    // (la guardada se conserva aunque esté dada de baja, lección 1). Que un valor único no se repita lo decide la ruta al guardar.
+    private async Task<Result> CheckFieldValuesAsync(IReadOnlyList<(int Index, FormCatalogItemInput Input)> items,
+        Dictionary<Guid, FormCatalogStoredItemRow> saved, Dictionary<string, FormCatalogField> fields, CancellationToken cancellationToken)
+    {
+        if (fields.Count == 0) return Result.Success();
+        var options = new List<(string Path, FormCatalogFieldOptionValue Value)>();
+        foreach (var (index, input) in items)
+        {
+            var stored = input.ItemId is { } id ? FormCatalogItem.FieldValuesFromJson(saved[id].FieldValuesJson) : null;
+            foreach (var field in fields.Values)
+            {
+                var path = $"{OptionsField}[{index}].{field.Key}";
+                JsonElement? kept = stored is not null && stored.TryGetValue(field.Key, out var before) ? before : null;
+                JsonElement? written = null;
+                var proposed = input.Fields is not null && input.Fields.TryGetValue(field.Id, out written);
+                var final = proposed ? written : kept;
+                if (proposed && written is { ValueKind: not JsonValueKind.Null } value)
+                {
+                    if (field.Check(value).Issue is not null) return Invalid(path, FormCatalogErrors.FieldValueInvalidCode);
+                    if (field.Type == FormCatalogFieldType.Catalog && Guid.TryParse(value.GetString(), out var optionId))
+                        options.Add((path, new FormCatalogFieldOptionValue(field, optionId,
+                            kept is { ValueKind: JsonValueKind.String } old && Guid.TryParse(old.GetString(), out var keptId) ? keptId : null)));
+                }
+                if (field.Required && input.IsActive == true && final is null or { ValueKind: JsonValueKind.Null })
+                    return Invalid(path, FormCatalogErrors.FieldValueRequiredCode);
+            }
+        }
+        if (options.Count == 0) return Result.Success();
+        var accepted = await fieldValues.CheckOptionsAsync([.. options.Select(option => option.Value)], cancellationToken);
+        for (var index = 0; index < options.Count; index++)
+            if (!accepted[index]) return Invalid(options[index].Path, FormCatalogErrors.FieldValueInvalidCode);
+        return Result.Success();
+    }
+
     // Las filas que escribió el modelo, en orden. Los parecidos de todas las claves se leen juntos, en una sola consulta: hasta 500
     // filas no hacen una lectura cada una.
-    private async Task<List<OptionOp>> ResolveOptionsAsync(FormCatalogStoredRow catalog, IReadOnlyList<JsonElement> elements,
-        Dictionary<string, string[]> errors, CancellationToken cancellationToken)
+    private async Task<List<OptionOp>> ResolveOptionsAsync(FormCatalogStoredRow catalog, IReadOnlyList<FormCatalogField> fields,
+        IReadOnlyList<JsonElement> elements, Dictionary<string, string[]> errors, CancellationToken cancellationToken)
     {
+        var byKey = fields.ToDictionary(field => field.Key, StringComparer.Ordinal);
+        var records = new List<RecordValue>();
         var read = new List<(string Path, string Op, string? Key, JsonElement? Written)>();
         for (var index = 0; index < elements.Count; index++)
         {
@@ -205,15 +279,45 @@ internal sealed class FormCatalogActionSource(
             }
 
             OptionRow? row = null;
-            if (written is { } fields && (row = ReadRow(catalog.ValueType, fields, path, op == AssistantActionInputs.Add, errors)) is null) continue;
+            if (written is { } cells && (row = ReadRow(catalog.ValueType, byKey, cells, path, op == AssistantActionInputs.Add, errors, records)) is null)
+                continue;
             resolved.Add(new OptionOp(op, itemId, row, doubt));
         }
-        return resolved;
+
+        var doubtful = await ResolveRecordsAsync(records, errors, cancellationToken);
+        return [.. resolved.Select(op => op.Doubt is null && op.Row is not null && doubtful.Contains(op.Row)
+            ? op with { Doubt = AssistantActionDoubts.Similar } : op)];
     }
 
-    // Lo que escribió el modelo en una fila, con los límites y el tipo de cada columna; el valor queda como texto canónico (C6).
-    private static OptionRow? ReadRow(FormCatalogValueType valueType, JsonElement fields, string path, bool added,
-        Dictionary<string, string[]> errors)
+    // La opción de la fuente que nombra el modelo en un campo «De un catálogo», por su código o su texto: los parecidos de cada fuente
+    // se leen juntos, en una sola consulta por fuente. Sin parecidos vuelve al modelo; con varios, o ninguno igual, queda con su duda.
+    private async Task<HashSet<OptionRow>> ResolveRecordsAsync(List<RecordValue> records, Dictionary<string, string[]> errors,
+        CancellationToken cancellationToken)
+    {
+        var doubtful = new HashSet<OptionRow>(ReferenceEqualityComparer.Instance);
+        foreach (var source in records.GroupBy(record => record.Field.SourceCatalogId!.Value))
+        {
+            string[] searches = [.. source.Select(record => AssistantActionInputs.SearchOf(record.Text)).Distinct(StringComparer.Ordinal)];
+            var candidates = (await catalogs.ListItemCandidatesAsync(source.Key, searches, AssistantActionLimits.Candidates, cancellationToken))
+                .ToLookup(candidate => candidate.Search, StringComparer.Ordinal);
+            foreach (var record in source)
+            {
+                if (AssistantActionInputs.Match([.. candidates[AssistantActionInputs.SearchOf(record.Text)]], OptionNames, record.Text) is not { } match)
+                {
+                    errors[$"{record.Path}.{record.Field.Key}"] = [FormCatalogErrors.FieldValueInvalidCode];
+                    continue;
+                }
+                record.Row.Fields![record.Field.Key] = JsonSerializer.SerializeToElement(match.Item.Id.ToString("D"));
+                if (match.Doubt is not null) doubtful.Add(record.Row);
+            }
+        }
+        return doubtful;
+    }
+
+    // Lo que escribió el modelo en una fila, con los límites y el tipo de cada columna; el valor queda como texto canónico (C6), y el
+    // de cada campo, como lo pide el PUT. La opción de un campo «De un catálogo» queda pendiente en records, que se resuelven juntos.
+    private static OptionRow? ReadRow(FormCatalogValueType valueType, Dictionary<string, FormCatalogField> catalogFields, JsonElement fields,
+        string path, bool added, Dictionary<string, string[]> errors, List<RecordValue> records)
     {
         var failed = false;
         void Fail(string field, string code)
@@ -224,6 +328,8 @@ internal sealed class FormCatalogActionSource(
 
         string? code = null, text = null, detail = null, value = null;
         bool? active = null;
+        var values = new Dictionary<string, JsonElement?>(StringComparer.Ordinal);
+        var pending = new List<(FormCatalogField Field, string Text)>();
         foreach (var property in fields.EnumerateObject())
         {
             var cell = property.Value;
@@ -254,6 +360,18 @@ internal sealed class FormCatalogActionSource(
                     if (value is null) Fail(ValueField, valueType == FormCatalogValueType.Text ? ValidationError.ErrorCode : FormCatalogErrors.ValueInvalidCode);
                     break;
                 default:
+                    if (catalogFields.TryGetValue(property.Name, out var field))
+                    {
+                        if (cell.ValueKind == JsonValueKind.Null) values[field.Key] = null;
+                        else if (field.Type == FormCatalogFieldType.Catalog)
+                        {
+                            if (cell.ValueKind == JsonValueKind.String && AssistantActionInputs.IsWritten(cell.GetString())) pending.Add((field, cell.GetString()!));
+                            else Fail(field.Key, FormCatalogErrors.FieldValueInvalidCode);
+                        }
+                        else if (ContractValue(field, cell) is { } contract && field.Check(contract).Canonical is { } canonical) values[field.Key] = canonical;
+                        else Fail(field.Key, FormCatalogErrors.FieldValueInvalidCode);
+                        break;
+                    }
                     // Una columna que el editor no tiene.
                     errors[path] = [ValidationError.ErrorCode];
                     failed = true;
@@ -267,13 +385,29 @@ internal sealed class FormCatalogActionSource(
             if (text is null) Fail(TextField, ValidationError.ErrorCode);
             if (value is null && valueType != FormCatalogValueType.Text) Fail(ValueField, FormCatalogErrors.ValueRequiredCode);
         }
-        else if (code is null && text is null && detail is null && active is null && value is null)
+        else if (code is null && text is null && detail is null && active is null && value is null && values.Count == 0 && pending.Count == 0)
         {
             errors[path] = [ValidationError.ErrorCode];
             failed = true;
         }
-        return failed ? null : new OptionRow(code, text, detail, active, value);
+        if (failed) return null;
+        var row = new OptionRow(code, text, detail, active, value, values.Count == 0 && pending.Count == 0 ? null : values);
+        records.AddRange(pending.Select(item => new RecordValue(path, item.Field, item.Text, row)));
+        return row;
     }
+
+    // El valor que escribió el modelo, en la forma del contrato que lee FormCatalogField.Check: un número JSON pasa a texto canónico,
+    // la fecha va ISO y sí/no, booleano. null si no es de su tipo.
+    private static JsonElement? ContractValue(FormCatalogField field, JsonElement cell) => field.Type switch
+    {
+        FormCatalogFieldType.Text when cell.ValueKind == JsonValueKind.String => cell,
+        FormCatalogFieldType.WholeNumber or FormCatalogFieldType.DecimalNumber when cell.ValueKind == JsonValueKind.Number
+            && cell.TryGetDecimal(out var number) => JsonSerializer.SerializeToElement(FormCatalogValueText.Number(number)),
+        FormCatalogFieldType.Date when cell.ValueKind == JsonValueKind.String
+            && DateOnly.TryParseExact(cell.GetString(), DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out _) => cell,
+        FormCatalogFieldType.YesNo when cell.ValueKind is JsonValueKind.True or JsonValueKind.False => cell,
+        _ => null,
+    };
 
     private static string? CanonicalValue(FormCatalogValueType valueType, JsonElement cell) => valueType switch
     {
@@ -287,11 +421,13 @@ internal sealed class FormCatalogActionSource(
         _ => null,
     };
 
-    // La fila como la dibuja el editor: el valor, un número o una fecha ISO como sus campos (C6), y solo lo que se propone.
-    private static Dictionary<string, object>? RowOf(OptionRow? row, FormCatalogValueType valueType)
+    // La fila como la dibuja el editor: el valor, un número o una fecha ISO como sus campos (C6), y solo lo que se propone. El valor
+    // de cada campo va por su clave, como lo lee el adaptador: un número como número, la fecha ISO, sí/no, la identidad de la opción
+    // de la fuente y null, que limpia.
+    private static Dictionary<string, object?>? RowOf(OptionRow? row, FormCatalogValueType valueType, Dictionary<string, FormCatalogField> fields)
     {
         if (row is null) return null;
-        var view = new Dictionary<string, object>(StringComparer.Ordinal);
+        var view = new Dictionary<string, object?>(StringComparer.Ordinal);
         if (row.Code is { } code) view[CodeField] = code;
         if (row.Text is { } text) view[TextField] = text;
         if (row.Detail is { } detail) view[DetailField] = detail;
@@ -300,6 +436,12 @@ internal sealed class FormCatalogActionSource(
             view[ValueField] = valueType == FormCatalogValueType.Date
                 ? value
                 : decimal.Parse(value, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture);
+        if (row.Fields is { } cells)
+            foreach (var (key, cell) in cells)
+                view[key] = cell is { ValueKind: JsonValueKind.String } number && fields.TryGetValue(key, out var field)
+                    && field.Type is FormCatalogFieldType.WholeNumber or FormCatalogFieldType.DecimalNumber
+                    && decimal.TryParse(number.GetString(), NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var parsed)
+                        ? parsed : cell;
         return view;
     }
 
@@ -349,6 +491,13 @@ internal sealed class FormCatalogActionSource(
         catalogId is { } id && await catalogs.FindAsync(id, cancellationToken) is { Source: FormCatalogSource.Manual, IsActive: true } catalog
             ? catalog : null;
 
+    // Los campos activos del catálogo, en su orden, que son columna de la fila: sin los que tienen la clave de una columna fija.
+    private async Task<FormCatalogField[]> TargetFieldsAsync(Guid catalogId, CancellationToken cancellationToken) =>
+        await catalogs.FindPresentationAsync(catalogId, cancellationToken) is { } stored
+            ? [.. FormCatalogField.ListFromJson(stored.FieldsJson).Where(field => field.IsActive && !FixedColumns.Contains(field.Key))
+                .OrderBy(field => field.Position)]
+            : [];
+
     // Las opciones guardadas que nombra la propuesta que siguen en el catálogo, leídas por id.
     private async Task<Dictionary<Guid, FormCatalogStoredItemRow>> SavedAsync(Guid catalogId, IReadOnlyList<OptionOp> ops,
         CancellationToken cancellationToken)
@@ -357,7 +506,7 @@ internal sealed class FormCatalogActionSource(
         return (await catalogs.ListItemsByIdsAsync(catalogId, ids, cancellationToken)).ToDictionary(item => item.Id);
     }
 
-    private static AssistantActionField[] FieldsOf(FormCatalogValueType valueType) =>
+    private static AssistantActionField[] FieldsOf(FormCatalogValueType valueType, IReadOnlyList<FormCatalogField> fields) =>
     [
         new()
         {
@@ -372,9 +521,29 @@ internal sealed class FormCatalogActionSource(
                 new() { Name = DetailField, Type = AssistantActionFieldType.LongText, MaxLength = FormsTextLimits.OptionDetail },
                 new() { Name = ActiveField, Type = AssistantActionFieldType.Boolean },
                 .. ValueInputs(valueType),
+                .. fields.Select(FieldInput),
             ],
         },
     ];
+
+    // Un campo como columna de la fila (spec 13, «Acciones del asistente»): su tipo en la lista cerrada y sus reglas como límites, el
+    // largo de un texto (300 sin regla) y el rango de un número. Una fecha no lleva límites: el contrato solo tiene mínimo y máximo
+    // numéricos. «De un catálogo» es un registro, que el modelo escribe como texto y resuelve el servidor.
+    private static AssistantActionField FieldInput(FormCatalogField field) => field.Type switch
+    {
+        FormCatalogFieldType.Text => new() { Name = field.Key, Type = AssistantActionFieldType.Text,
+            MaxLength = field.MaxLength ?? FormsTextLimits.FieldTextLength },
+        FormCatalogFieldType.WholeNumber => new() { Name = field.Key, Type = AssistantActionFieldType.WholeNumber,
+            Minimum = Bound(field.Min), Maximum = Bound(field.Max) },
+        FormCatalogFieldType.DecimalNumber => new() { Name = field.Key, Type = AssistantActionFieldType.DecimalNumber,
+            Minimum = Bound(field.Min), Maximum = Bound(field.Max) },
+        FormCatalogFieldType.Date => new() { Name = field.Key, Type = AssistantActionFieldType.Date },
+        FormCatalogFieldType.YesNo => new() { Name = field.Key, Type = AssistantActionFieldType.Boolean },
+        _ => new() { Name = field.Key, Type = AssistantActionFieldType.Record },
+    };
+
+    private static decimal? Bound(string? canonical) => canonical is null ? null
+        : decimal.Parse(canonical, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture);
 
     // El valor, solo en uno tipado y con el tipo del catálogo.
     private static AssistantActionField[] ValueInputs(FormCatalogValueType valueType) => valueType switch
@@ -416,17 +585,24 @@ internal sealed class FormCatalogActionSource(
         [property: JsonPropertyName("row")] OptionRow? Row,
         [property: JsonPropertyName("doubt")] string? Doubt);
 
-    /// <summary>Lo que se propone de una opción, ya leído: el valor como texto canónico; null es lo que no se propone.</summary>
+    /// <summary>
+    /// Lo que se propone de una opción, ya leído: el valor como texto canónico, y el de cada campo por su clave, como lo pide el
+    /// <c>PUT</c> (<c>null</c> lo limpia); null es lo que no se propone.
+    /// </summary>
     private sealed record OptionRow(
         [property: JsonPropertyName("code")] string? Code,
         [property: JsonPropertyName("text")] string? Text,
         [property: JsonPropertyName("detail")] string? Detail,
         [property: JsonPropertyName("active")] bool? Active,
-        [property: JsonPropertyName("value")] string? Value);
+        [property: JsonPropertyName("value")] string? Value,
+        [property: JsonPropertyName("fields")] Dictionary<string, JsonElement?>? Fields = null);
+
+    /// <summary>La opción de la fuente que nombra el modelo en un campo «De un catálogo» de una fila, por resolver.</summary>
+    private sealed record RecordValue(string Path, FormCatalogField Field, string Text, OptionRow Row);
 
     /// <summary>Una fila de la propuesta como la dibuja el editor.</summary>
     private sealed record RowView(
         [property: JsonPropertyName("op")] string Op,
         [property: JsonPropertyName("key")] string Key,
-        [property: JsonPropertyName("row")] Dictionary<string, object>? Row);
+        [property: JsonPropertyName("row")] Dictionary<string, object?>? Row);
 }

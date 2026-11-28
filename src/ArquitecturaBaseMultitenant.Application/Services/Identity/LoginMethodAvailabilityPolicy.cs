@@ -19,12 +19,7 @@ internal sealed class LoginMethodAvailabilityPolicy(IEnumerable<ILoginCodeChanne
     {
         var result = new List<LoginMethod>();
         foreach (var method in methods)
-        {
-            var channelAvailable = HasChannel(method.Type);
-            var managedActive = method.ManagedByTenantId is not { } tenantId ||
-                await memberships.IsActiveAsync(method.UserId, tenantId, ct);
-            if (method.CanSignIn(channelAvailable, managedActive)) result.Add(method);
-        }
+            if (await IsAvailableAsync(method, ct)) result.Add(method);
         return result;
     }
 
@@ -61,12 +56,15 @@ internal sealed class LoginMethodAvailabilityPolicy(IEnumerable<ILoginCodeChanne
             && (method.ManagedByTenantId is not { } tenantId || await memberships.IsActiveAsync(userId, tenantId, ct));
     }
 
-    public async Task<bool> IsAvailableAsync(LoginMethod method, CancellationToken ct)
+    public async Task<bool> IsAvailableAsync(LoginMethod method, CancellationToken ct) =>
+        HasChannel(method.Type) && await IsManagedActiveAsync(method, ct);
+
+    /// <summary>Comprueba verificación y membresía administradora (ADR 0033) cuando el canal ya está verificado por el flujo.</summary>
+    public async Task<bool> IsManagedActiveAsync(LoginMethod method, CancellationToken ct)
     {
-        var channelAvailable = HasChannel(method.Type);
         var managedActive = method.ManagedByTenantId is not { } tenantId
             || await memberships.IsActiveAsync(method.UserId, tenantId, ct);
-        return method.CanSignIn(channelAvailable, managedActive);
+        return method.CanSignIn(channelAvailable: true, managedActive);
     }
 
     public async Task<bool> HasPersonalBackupAsync(Guid userId, IReadOnlyList<LoginMethodRow> methods, CancellationToken ct)

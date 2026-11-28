@@ -541,16 +541,42 @@ public sealed class GoogleLoginTests(ApiFactory factory)
             Assert.Equal(1, await CountMethodsAsync(subject));
         }
 
-        // 3) Membresía dada de baja otra vez: el Google propio ya vinculado sigue entrando.
+        // 3a) Membresía dada de baja otra vez: el Google corporativo ya vinculado (administrado) también queda rechazado.
         await SetMemberActiveAsync(tenant.Id, userId, active: false);
-        var linkedDouble = new GoogleSignInDouble(login);
-        await using (var host = HostWith(linkedDouble))
+        var revokedLinkedDouble = new GoogleSignInDouble(login);
+        await using (var host = HostWith(revokedLinkedDouble))
+        await using (var scope = host.Services.CreateAsyncScope())
+        {
+            var result = await scope.ServiceProvider.GetRequiredService<IExternalLoginService>()
+                .SignInAsync(new ExternalSignInRequest("/connect/authorize?client_id=web&access=consumer", false, false), Ct);
+            Assert.True(result.IsFailure);
+            Assert.Equal(ExternalLoginErrors.FailedCode, result.Error.Code);
+            Assert.Null(revokedLinkedDouble.SignedInUserId);
+        }
+
+        // 3b) Un Google personal (otro dominio, sin organización administradora) sigue entrando con la membresía dada de baja.
+        var personalSubject = Guid.NewGuid().ToString("N");
+        var personalEmail = Email.Create("personal-" + personalSubject + "@example.test").Value;
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var services = seedScope.ServiceProvider;
+            var verifiedAtUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(ct =>
+            {
+                var personalGoogle = LoginMethod.CreateGoogle(userId, personalSubject, personalEmail);
+                personalGoogle.Verify(verifiedAtUtc);
+                services.GetRequiredService<ILoginMethodRepository>().Add(personalGoogle);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+        var personalDouble = new GoogleSignInDouble(new ExternalLogin("Google", personalSubject, personalEmail, true, "Juan"));
+        await using (var host = HostWith(personalDouble))
         await using (var scope = host.Services.CreateAsyncScope())
         {
             var result = await scope.ServiceProvider.GetRequiredService<IExternalLoginService>()
                 .SignInAsync(new ExternalSignInRequest("/connect/authorize?client_id=web&access=consumer", false, false), Ct);
             Assert.True(result.IsSuccess);
-            Assert.Equal(userId, linkedDouble.SignedInUserId);
+            Assert.Equal(userId, personalDouble.SignedInUserId);
         }
     }
 
