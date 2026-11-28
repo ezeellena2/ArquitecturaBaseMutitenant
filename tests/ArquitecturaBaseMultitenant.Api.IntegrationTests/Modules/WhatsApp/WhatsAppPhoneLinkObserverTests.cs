@@ -7,6 +7,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
@@ -17,6 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Time.Testing;
+using Npgsql;
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 
 public sealed class WhatsAppPhoneLinkObserverTests(ApiFactory factory) : IClassFixture<ApiFactory>
@@ -141,7 +143,7 @@ public sealed class WhatsAppPhoneLinkObserverTests(ApiFactory factory) : IClassF
     {
         await using var host = WhatsAppAttentionJourney.Host(factory, new FakeGraph());
         using var owner = WhatsAppAttentionJourney.Client(host);
-        await WhatsAppAttentionJourney.OrganizationAsync(factory, host, owner, Ct);
+        var (_, businessTenantId) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, owner, Ct);
         var phoneNumberId = WhatsAppAttentionJourney.NewNumberId();
         using var connected = await WhatsAppAttentionJourney.ConnectAsync(owner, phoneNumberId, Ct);
         var numberId = (await WhatsAppAttentionJourney.JsonAsync(connected, Ct)).GetProperty("id").GetGuid();
@@ -216,6 +218,26 @@ public sealed class WhatsAppPhoneLinkObserverTests(ApiFactory factory) : IClassF
             .GetProperty("linkedToAccount").GetBoolean());
         Assert.True(conversations.Single(row => row.GetProperty("displayNumber").GetString() == keptPhone.Value)
             .GetProperty("linkedToAccount").GetBoolean());
+
+        // El borrado por SQL deja en la persona y en la organización la misma entrada de auditoría que dejaría el interceptor.
+        Guid personalTenantId;
+        await using (var lookup = host.Services.CreateAsyncScope())
+            personalTenantId = (await lookup.ServiceProvider.GetRequiredService<IUserTenantAccessReader>().ListForUserAsync(account.UserId, Ct))
+                .Single(row => row.Kind == TenantKind.Personal).TenantId;
+        foreach (var tenantId in new[] { businessTenantId, personalTenantId })
+        {
+            await using var connection = await RuntimeRoleConnection.OpenAsync(factory.RuntimeConnectionString, tenantId, Ct);
+            await using var command = new NpgsqlCommand("""
+                SELECT "Changes"::text FROM tenant."AuditEntries"
+                WHERE "EntityType" = 'WhatsAppConversationLink' AND "Action" = 'Deleted' AND "TenantId" = @tenant
+                """, connection);
+            command.Parameters.AddWithValue("tenant", tenantId);
+            var changes = (string)(await command.ExecuteScalarAsync(Ct))!;
+            using var diff = JsonDocument.Parse(changes);
+            Assert.Equal(account.UserId, diff.RootElement.GetProperty("AccountId").GetProperty("old").GetGuid());
+            Assert.Equal(JsonValueKind.Null, diff.RootElement.GetProperty("AccountId").GetProperty("new").ValueKind);
+            Assert.False(diff.RootElement.TryGetProperty("LastMessagePreview", out _));
+        }
     }
 
     private static async Task<JsonElement> JsonAsync(Task<HttpResponseMessage> request)

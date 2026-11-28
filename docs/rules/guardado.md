@@ -33,7 +33,7 @@ El outbox reclama un lease durable con `SKIP LOCKED` y lo confirma antes de desc
 - `SaveChanges` en un repositorio, un helper o un controller.
 - Anidar límites: lanza, porque es un bug.
 - Que un helper reciba `IUnitOfWork`.
-- `ExecuteUpdate` o `ExecuteDelete` sobre entidades `IAuditable` o `ISoftDeletable`, porque se saltean la auditoría y el soft delete. La única llamada bulk declarada es `LoginMethodRepository.ClearPrimaryAsync` sobre `LoginMethod` técnico global: retira el principal anterior antes de activar el siguiente por el índice parcial inmediato, dentro de la misma UoW. No guarda ni tiene tenant, auditoría o soft-delete; el test real verifica cambio/rollback.
+- `ExecuteUpdate` o `ExecuteDelete` sobre entidades `IAuditable` o `ISoftDeletable`, porque se saltean la auditoría y el soft delete. La única llamada bulk declarada es `LoginMethodRepository.ClearPrimaryAsync` sobre `LoginMethod` técnico global: retira el principal anterior antes de activar el siguiente por el índice parcial inmediato, dentro de la misma UoW. No guarda ni tiene tenant, auditoría o soft-delete; el test real verifica cambio/rollback. La otra es `WhatsAppConversationLinkRepository.RemoveByAccountAndPhoneAsync` (B3 de los arreglos de la revisión): quitar un teléfono corre en la UoW de identidad desde cualquier espacio, y sus vínculos son de la persona y de varias organizaciones, así que ningún alcance activo los ve a todos ni el interceptor de auditoría los acepta. Borra por SQL entrando a cada parte con `app.tenant_id` de la transacción y deja en cada una la misma `AuditEntry` que dejaría el interceptor; `WhatsAppPhoneLinkObserverTests` lo verifica.
 - Abrir un límite para una consulta.
 
 ## Copiá de
