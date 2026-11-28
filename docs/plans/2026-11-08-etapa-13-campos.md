@@ -170,6 +170,12 @@ Lo que recorre la verificación de esta etapa, el segundo hito, después del có
 
 ## Cambios al contrato
 
+**K0 (2026-11-28).** La lista de la E12 está entera en los dos repos; la segunda parte de la base vive en `parseDecimalText` con `NumberAmbiguousError` (207), `InformativeTooltip` (211), `FilterChip` sin ✕ (213), `Picker` con `multiple` (262) y el orden del back en cada listado (264). Lo que difiere:
+- **`sort.column` del `PUT`** es hoy el enum `FormCatalogItemSortColumn`, con `Text` y `Code` así en el JSON: el `id` de un campo no entra. K1 lo pasa a un texto que acepta `Text`, `Code` o el `id` de un campo activo guardado, así la versión anterior del front sigue mandando lo mismo (0060).
+- **`ItemInUse`** existe con `uses` (textos, sin enum en el contrato), pero en la E12 nada lo produce (`ReadRemovedAsync` de `FormCatalogItemEditor`): B6 es la primera. El front suma al texto genérico («No se puede borrar porque se usa. Podés darla de baja.») la etiqueta de `FormCatalogItemUse.<uso>` de `enums.json`, que todavía no existe; la frase de `uses: options` es entera, así que va en lugar del genérico, no sumada a él.
+- **Los encabezados y la cultura de una importación** no los resuelve `IFormCatalogSpreadsheet`, que solo traslada celdas: los reconoce `FormCatalogFileResolver`, por encabezado en cualquier cultura habilitada y el texto con la del pedido. B7 suma ahí las columnas de los campos.
+- **La barrera** (`IFormWorkLease`) tiene, además del lugar por persona, topes por organización y por instalación (`Forms:CatalogFiles:MaxPerOrganization` y `MaxPerInstallation`); `FormCatalogFileSlotAttribute` vive en `Api/Modules/Forms/`, y el `UniqueKeys` del módulo, en `A/Modules/Forms/Interfaces/Persistence/`.
+- **El adaptador de la propuesta** (`catalogoptions.edit@1`) vive en `src/modules/forms/lib/proposal.ts` y `hooks/useCatalogProposal.ts`; `CatalogEditorPage.tsx` solo lo usa. F5 suma ahí la columna de cada campo.
 
 ## Para decidir
 
