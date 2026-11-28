@@ -274,6 +274,7 @@ El cierre lo pasa a `docs/backlog.md`, a «Para después de la etapa arreglos-re
 - **Meta:** el estado «reconectar» ante el 190 y reconectar el mismo número sin canal nuevo, que pide tablero (T05-01); un primer país sin tarifa (T05-06); `account_update` y la calidad del número (T05-07).
 - **Pantallas:** el hilo de más de 100 mensajes (T04-10, T09-03), los avisos pegados del chat (T04-15), el Bot que guarda con la versión viva (T09-02), el asistente con `DailyReached` (T04-16) y la `Idempotency-Key` de Catálogos después de un 400 (T09-06).
 - **Módulos:** las guías de retiro sin `CoreTextsNeutralTests` (T01-02) y los pares Organización y Plataforma de WhatsApp (T01-03).
+- **La regla de B12 en Plataforma** (revisión de la etapa): «Transferir» en la bandeja de Plataforma acepta a un operador sin `WhatsApp.Attend`, y quitarle ese permiso o quitar al operador no libera sus consultas tomadas (`PlatformWhatsAppConversationService.cs`). B12 cubrió solo las bandejas de la organización.
 - **Bajos:** los de la verificación que ninguna tarea arregla de paso.
 - **Decisiones de producto pendientes:** una WABA en dos organizaciones (T02-09), un mensaje para una organización con WhatsApp apagado (T02-11, `backlog.md:167`), el autenticador de un operador que se quita (T07-08), la retención de `OutboxMessages` y `WhatsAppMessages` (T03-07), una conversación guardada que nombra a alguien dado de baja (T06-10), el tope del asistente en Personal antes de prenderlo (T06-04), la escala de escritorio al 75 % (T09-11) y el arnés de punteros (T01-08).
 
