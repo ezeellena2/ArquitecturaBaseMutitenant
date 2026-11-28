@@ -1,5 +1,6 @@
-using ArquitecturaBaseMultitenant.Application.Common.Logging;
+using System.Text;
 using System.Text.Json;
+using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Configuration;
 using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Interfaces.Integrations;
@@ -20,6 +21,10 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
     IOptions<AssistantOptions> options, AiKeyRingReadiness keyRing, ILogger<AssistantTurnWorker> logger) : PeriodicWorker(options.Value.WorkerInterval, clock, logger)
 {
     protected override bool Enabled => options.Value.TurnWorkerEnabled;
+    // KAN-75: agrupa deltas en memoria antes de escribir un checkpoint (250 ms o tope de caracteres); el primer texto
+    // sale enseguida para no demorar la primera respuesta en pantalla.
+    internal static readonly TimeSpan CheckpointInterval = TimeSpan.FromMilliseconds(250);
+    internal const int CheckpointMaxCharacters = 4_096;
     protected override async Task RunIterationAsync(CancellationToken stoppingToken)
     {
         // 0064 §11: una copia con otro anillo, o que todavía no lo pudo comprobar, no toma turnos.
@@ -107,7 +112,7 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
     }
 
     /// <summary>Los pasos del turno, de a una llamada al proveedor y sus herramientas, hasta la respuesta final o un corte.</summary>
-    private static async Task RunCallsAsync(TurnRun run, IChatClient client, TurnOutcome outcome, CancellationTokenSource execution)
+    private async Task RunCallsAsync(TurnRun run, IChatClient client, TurnOutcome outcome, CancellationTokenSource execution)
     {
         var (service, turn, lease) = (run.Service, run.Turn, run.Lease);
         var messages = turn.Messages.ToList();
@@ -120,14 +125,14 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
             var begun = await service.BeginCallAsync(turn.TurnId, lease, sequence, execution.Token);
             if (begun.IsFailure) { outcome.Fail(begun.Error.Code); return; }
             outcome.InFlight = true;
-            var (updates, counts) = await StreamAsync(run, client, messages, outcome, execution);
+            var (updates, counts, pendingDelta) = await StreamAsync(run, client, messages, outcome, execution);
             // Cortado justo al terminar el stream (el plazo o el apagado): el paso salió y se cobra, así que es incierto.
             if (execution.IsCancellationRequested)
             {
                 if (outcome.IsComplete) outcome.Interrupt();
                 return;
             }
-            var ended = await service.CheckpointAsync(turn.TurnId, lease, null, counts, true, execution.Token);
+            var ended = await service.CheckpointAsync(turn.TurnId, lease, pendingDelta, counts, true, execution.Token);
             if (ended.IsFailure) { outcome.Fail(ended.Error.Code); return; }
             outcome.InFlight = false;
             var response = updates.ToChatResponse();
@@ -146,15 +151,20 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
     }
 
     /// <summary>
-    /// Una llamada al proveedor, en stream: cada parte y sus cantidades quedan anotadas; si una anotación falla, el turno queda
-    /// fallado y se corta. SDK-only context: retain every content block and let the official assembler merge streamed
-    /// reasoning/signature fragments. Only TextContent reaches durable storage.
+    /// Una llamada al proveedor, en stream: acumula los fragmentos en memoria y persiste checkpoints acotados por
+    /// intervalo o tamaño (el primer texto sale enseguida), devolviendo el resto pendiente para cerrarlo junto con el
+    /// fin del paso; si un checkpoint falla, el turno queda fallado y se corta. SDK-only context: retain every content
+    /// block and let the official assembler merge streamed reasoning/signature fragments. Only TextContent reaches
+    /// durable storage.
     /// </summary>
-    private static async Task<(List<ChatResponseUpdate> Updates, AssistantCallUsage? Counts)> StreamAsync(TurnRun run, IChatClient client,
-        List<ChatMessage> messages, TurnOutcome outcome, CancellationTokenSource execution)
+    private async Task<(List<ChatResponseUpdate> Updates, AssistantCallUsage? Counts, string? PendingDelta)> StreamAsync(
+        TurnRun run, IChatClient client, List<ChatMessage> messages, TurnOutcome outcome, CancellationTokenSource execution)
     {
         var updates = new List<ChatResponseUpdate>();
+        var pending = new StringBuilder();
         AssistantCallUsage? counts = null;
+        var flushedFirstText = false;
+        var lastCheckpointAt = 0L;
         await foreach (var update in client.GetStreamingResponseAsync(messages,
             new ChatOptions { Tools = run.Turn.Tools.ToList(), MaxOutputTokens = AssistantTechnicalLimits.MaxOutputTokens }, execution.Token))
         {
@@ -166,10 +176,17 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
                     usage.Details.OutputTokenCount ?? counts?.OutputTokens,
                     usage.Details.CachedInputTokenCount ?? counts?.CacheReadTokens ?? 0,
                     0, 0, 0, usage.Details.ReasoningTokenCount ?? counts?.ReasoningTokens, true);
-            var checkpoint = await run.Service.CheckpointAsync(run.Turn.TurnId, run.Lease, text, counts, false, execution.Token);
+            if (text.Length == 0) continue;
+            pending.Append(text);
+            if (flushedFirstText && pending.Length < CheckpointMaxCharacters && Clock.GetElapsedTime(lastCheckpointAt) < CheckpointInterval)
+                continue;
+            var checkpoint = await run.Service.CheckpointAsync(run.Turn.TurnId, run.Lease, pending.ToString(), counts, false, execution.Token);
             if (checkpoint.IsFailure) { outcome.Fail(checkpoint.Error.Code); execution.Cancel(); break; }
+            pending.Clear();
+            flushedFirstText = true;
+            lastCheckpointAt = Clock.GetTimestamp();
         }
-        return (updates, counts);
+        return (updates, counts, pending.Length > 0 ? pending.ToString() : null);
     }
 
     /// <summary>Las herramientas que pidió el proveedor, de a una y anotadas; null si una falla, con el turno fallado.</summary>

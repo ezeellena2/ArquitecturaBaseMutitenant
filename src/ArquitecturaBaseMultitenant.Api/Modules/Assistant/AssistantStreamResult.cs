@@ -48,14 +48,16 @@ internal sealed class AssistantStreamResult(AssistantTurnAdmission admission) : 
             // Every emitted frame has just passed authorization and privacy, even when a batch contains many events.
             if (read.Value.Frames.Count > 0)
             {
-                var frame = read.Value.Frames[0];
-                sequence = frame.Sequence;
-                yield return new SseItem<JsonElement>(frame.Data, frame.Event)
-                { EventId = admission.TurnId.ToString("D") + ":" + ArquitecturaBaseMultitenant.Application.Common.Formatting.VersionWireFormatter.Format(sequence) };
-                await http.Response.Body.FlushAsync(ct);
-                lastHeartbeat = clock.GetTimestamp();
-                if (frame.Event is "done" or "error") yield break;
-                continue;
+                foreach (var frame in read.Value.Frames)
+                {
+                    if (ct.IsCancellationRequested) yield break;
+                    sequence = frame.Sequence;
+                    yield return new SseItem<JsonElement>(frame.Data, frame.Event)
+                    { EventId = admission.TurnId.ToString("D") + ":" + ArquitecturaBaseMultitenant.Application.Common.Formatting.VersionWireFormatter.Format(sequence) };
+                    await http.Response.Body.FlushAsync(ct);
+                    lastHeartbeat = clock.GetTimestamp();
+                    if (frame.Event is "done" or "error") yield break;
+                }
             }
             if (read.Value.Terminal) yield break;
             if (clock.GetElapsedTime(lastHeartbeat) >= options.StreamHeartbeatInterval)
