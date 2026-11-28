@@ -1,4 +1,5 @@
 using UniqueKeys = ArquitecturaBaseMultitenant.Application.Modules.Forms.Interfaces.Persistence.UniqueKeys;
+using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Interfaces.Persistence;
@@ -13,7 +14,8 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Forms;
 
 /// <summary>
 /// La persistencia de los catálogos (E12, §3): las tres tablas privadas con la RLS forzada y el GRANT, las restricciones diferidas
-/// del código y la posición (C4), los CHECK y el lector, con cada orden del listado en los dos sentidos.
+/// del código y la posición (C4), los CHECK y el lector, con cada orden del listado en los dos sentidos; y las columnas de los campos
+/// (E13), de ida y vuelta y con sus valores por defecto para un alta de la versión anterior.
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class FormCatalogPersistenceTests(ApiFactory factory)
@@ -142,6 +144,70 @@ public sealed class FormCatalogPersistenceTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Fields_presentation_and_values_round_trip_and_a_row_of_the_previous_version_takes_the_column_defaults()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (tenantId, _) = await OrganizationAsync(ct);
+
+        // La versión nueva guarda los campos, la presentación y los valores por clave; un texto vacío vuelve vacío, no como falta.
+        var catalog = FormCatalog.CreateManual("Catálogo " + Guid.NewGuid().ToString("N")[..6], null, FormCatalogValueType.Text);
+        var color = catalog.ChangeFields([new FormCatalogFieldDraft(null, null, "Color", FormCatalogFieldType.Text, null, false, false, null,
+            null, null)], name => name).Value[0];
+        var presentation = new FormCatalogPresentation([FormCatalogPresentation.Text, FormCatalogPresentation.Field(color.Id)], []);
+        Assert.True(catalog.ChangePresentation(presentation).IsSuccess);
+        var red = FormCatalogItem.Create(catalog, 0, "R", "Remera", null, null, true, 0).Value;
+        var blank = FormCatalogItem.Create(catalog, 1, "B", "Buzo", null, null, true, 1).Value;
+        Assert.True(red.SetFieldValues(catalog, 0, new Dictionary<Guid, JsonElement?> { [color.Id] = JsonSerializer.SerializeToElement("Rojo") }).IsSuccess);
+        Assert.True(blank.SetFieldValues(catalog, 1, new Dictionary<Guid, JsonElement?> { [color.Id] = JsonSerializer.SerializeToElement("") }).IsSuccess);
+        Assert.True((await WriteAsync(tenantId, (repository, _) =>
+        {
+            repository.Add(catalog);
+            repository.Add(red);
+            repository.Add(blank);
+            return Task.FromResult(Result.Success());
+        }, ct)).IsSuccess);
+
+        var (stored, items) = await LoadAsync(tenantId, catalog.Id, ct);
+        Assert.Equal([color], stored.ReadFields());
+        Assert.Equal(presentation.ToJson(), stored.ReadPresentation().ToJson());
+        Assert.Equal("Rojo", items.Single(item => item.Code == "R").ReadFieldValues()[color.Key].GetString());
+        Assert.Equal("", items.Single(item => item.Code == "B").ReadFieldValues()[color.Key].GetString());
+
+        // Una fila que da de alta la versión anterior no manda las columnas nuevas: sale sin campos, con la presentación de
+        // siempre y sin valores (0060), y el GIN encuentra por contención solo la opción que tiene ese valor.
+        await using var admin = new NpgsqlConnection(factory.AdminConnectionString);
+        await admin.OpenAsync(ct);
+        var previous = Guid.CreateVersion7();
+        await using (var enter = new NpgsqlCommand("SELECT set_config('app.tenant_id', @tenant, false)", admin))
+        {
+            enter.Parameters.AddWithValue("tenant", tenantId.ToString());
+            await enter.ExecuteNonQueryAsync(ct);
+        }
+        await using (var insert = new NpgsqlCommand("""
+            INSERT INTO tenant."FormCatalogs" ("Id", "TenantId", "CreatedAtUtc", "Name", "Source", "ValueType", "IsActive") VALUES (@id, @tenantId, now(), @name, 'Manual', 'Text', true);
+            INSERT INTO tenant."FormCatalogItems" ("Id", "TenantId", "CatalogId", "CreatedAtUtc", "Code", "CodeNormalized", "Text", "Position", "IsActive") VALUES (gen_random_uuid(), @tenantId, @id, now(), 'A', 'a', 'Uno', 0, true);
+            """, admin))
+        {
+            insert.Parameters.AddWithValue("tenantId", tenantId);
+            insert.Parameters.AddWithValue("id", previous);
+            insert.Parameters.AddWithValue("name", "Anterior " + Guid.NewGuid().ToString("N")[..6]);
+            await insert.ExecuteNonQueryAsync(ct);
+        }
+
+        var (old, oldItems) = await LoadAsync(tenantId, previous, ct);
+        Assert.Empty(old.ReadFields());
+        Assert.Equal(FormCatalogPresentation.Default.ToJson(), old.ReadPresentation().ToJson());
+        Assert.Empty(Assert.Single(oldItems).ReadFieldValues());
+
+        await using var contains = new NpgsqlCommand("""
+            SELECT array_agg("Code" ORDER BY "Code") FROM tenant."FormCatalogItems" WHERE "CatalogId" = ANY(@ids) AND "FieldValuesJson" @> @value::jsonb
+            """, admin);
+        contains.Parameters.AddWithValue("ids", new[] { catalog.Id, previous });
+        contains.Parameters.AddWithValue("value", JsonSerializer.Serialize(new Dictionary<string, string> { [color.Key] = "Rojo" }));
+        Assert.Equal(["R"], (string[])(await contains.ExecuteScalarAsync(ct))!);
+    }
+
+    [Fact]
     public async Task The_reader_sorts_every_column_both_ways_counts_options_and_flags_repeated_texts()
     {
         var ct = TestContext.Current.CancellationToken;
@@ -242,6 +308,20 @@ public sealed class FormCatalogPersistenceTests(ApiFactory factory)
         }, ct);
         Assert.True(saved.IsSuccess);
         return (await ReadAsync(tenantId, reader => reader.FindAsync(catalog.Id, ct)))!;
+    }
+
+    /// <summary>El catálogo y todas sus opciones como los carga un guardado: con su bloqueo y su versión.</summary>
+    private async Task<(FormCatalog Catalog, IReadOnlyList<FormCatalogItem> Items)> LoadAsync(Guid tenantId, Guid catalogId, CancellationToken ct)
+    {
+        var version = (await ReadAsync(tenantId, reader => reader.FindAsync(catalogId, ct)))!.Version;
+        (FormCatalog Catalog, IReadOnlyList<FormCatalogItem> Items)? loaded = null;
+        Assert.True((await WriteAsync(tenantId, async (repository, ctx) =>
+        {
+            await repository.LockAsync([catalogId], ctx);
+            loaded = ((await repository.GetByIdAsync(catalogId, version, ctx))!, await repository.ListAllItemsAsync(catalogId, ctx));
+            return Result.Success();
+        }, ct)).IsSuccess);
+        return loaded!.Value;
     }
 
     private async Task<Result> WriteAsync(Guid tenantId, Func<IFormCatalogRepository, CancellationToken, Task<Result>> work,

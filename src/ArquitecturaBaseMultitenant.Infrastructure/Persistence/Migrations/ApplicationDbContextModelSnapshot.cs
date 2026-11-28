@@ -2302,6 +2302,12 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
 
+                    b.Property<string>("FieldsJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValueSql("'[]'::jsonb");
+
                     b.Property<string>("Filters")
                         .HasColumnType("jsonb");
 
@@ -2318,6 +2324,12 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
+
+                    b.Property<string>("Presentation")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValueSql("'{\"title\":[\"text\"],\"description\":[\"detail\"]}'::jsonb");
 
                     b.Property<string>("Source")
                         .IsRequired()
@@ -2385,6 +2397,12 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("character varying(300)");
 
+                    b.Property<string>("FieldValuesJson")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValueSql("'{}'::jsonb");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -2407,6 +2425,11 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(30)");
 
                     b.HasKey("TenantId", "Id");
+
+                    b.HasIndex("FieldValuesJson");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("FieldValuesJson"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("FieldValuesJson"), new[] { "jsonb_path_ops" });
 
                     b.HasIndex("TenantId", "CatalogId");
 

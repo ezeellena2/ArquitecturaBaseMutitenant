@@ -8,7 +8,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.Forms.Persistence.C
 
 /// <summary>
 /// Un catálogo de la organización (E12, §3): privado y con RLS. Los filtros van solo con miembros o contactos, que son siempre de
-/// texto; los dos CHECK lo atan al origen. Un índice <c>(TenantId, campo, Id)</c> por cada columna que ordena el listado.
+/// texto; los dos CHECK lo atan al origen. Un índice <c>(TenantId, campo, Id)</c> por cada columna que ordena el listado. Los campos
+/// (E13), también los quitados, y lo que arma el título y la descripción en WhatsApp van en jsonb, con los valores por defecto en la
+/// base: una fila que da de alta la versión anterior, que no manda esas columnas, queda sin campos y con la presentación de siempre
+/// (0060).
 /// </summary>
 internal sealed class FormCatalogConfiguration : IEntityTypeConfiguration<FormCatalog>
 {
@@ -29,6 +32,9 @@ internal sealed class FormCatalogConfiguration : IEntityTypeConfiguration<FormCa
         builder.Property(value => value.Source).HasConversion<string>().HasMaxLength(TextLimits.ShortName).IsRequired();
         builder.Property(value => value.ValueType).HasConversion<string>().HasMaxLength(TextLimits.ShortName).IsRequired();
         builder.Property(value => value.Filters).HasColumnType("jsonb");
+        builder.Property(value => value.FieldsJson).HasColumnType("jsonb").HasDefaultValueSql("'[]'::jsonb").IsRequired();
+        builder.Property(value => value.Presentation).HasColumnType("jsonb")
+            .HasDefaultValueSql($"'{FormCatalogPresentation.Default.ToJson()}'::jsonb").IsRequired();
         builder.HasIndex(value => new { value.TenantId, value.Name, value.Id });
         builder.HasIndex(value => new { value.TenantId, value.Source, value.Id });
         builder.HasIndex(value => new { value.TenantId, value.ValueType, value.Id });

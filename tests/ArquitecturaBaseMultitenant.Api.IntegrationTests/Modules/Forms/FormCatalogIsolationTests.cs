@@ -1,3 +1,4 @@
+using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.WhatsApp;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
@@ -5,6 +6,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Request;
 using ArquitecturaBaseMultitenant.Application.Models.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Catalogs;
+using ArquitecturaBaseMultitenant.Application.Modules.Forms.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
@@ -23,7 +25,8 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Forms;
 /// Las fuentes de los catálogos (E12, C2, C12, §4 y §4b) con la base real: los miembros salen del directorio del núcleo y los
 /// contactos del canal por el puerto neutral, siempre de la organización del claim, sin correos ni teléfonos; 201 contactos dan
 /// <c>exceedsLimit</c> con el total exacto y las etiquetas como detalle; sin WhatsApp, un catálogo de contactos queda
-/// <c>ChannelUnavailable</c>; y una lista que espera corta a los 3 s con un error en lugar de quedarse colgada.
+/// <c>ChannelUnavailable</c>; una lista que espera corta a los 3 s con un error en lugar de quedarse colgada; y los valores de los
+/// campos (E13) se encuentran solo dentro de su organización.
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class FormCatalogIsolationTests(ApiFactory factory)
@@ -62,6 +65,43 @@ public sealed class FormCatalogIsolationTests(ApiFactory factory)
             new FormCatalogPreviewRequest(FormCatalogSource.Members, active, ana, null), ct)));
         Assert.DoesNotContain(excluded.Options, option => option.Text == "Ana " + mark);
         Assert.Contains(excluded.Options, option => option.Text == "Beto " + mark);
+    }
+
+    /// <summary>
+    /// Los valores de los campos (E13) son de la organización: con el mismo valor en dos, la búsqueda por contención del GIN
+    /// encuentra solo la opción de la organización del alcance, y sin organización ninguna.
+    /// </summary>
+    [Fact]
+    public async Task Field_values_are_found_by_containment_only_inside_their_organization()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var (_, tenantA) = await OrganizationAsync(ct);
+        var (_, tenantB) = await OrganizationAsync(ct);
+        var value = "Rojo " + Guid.NewGuid().ToString("N")[..8];
+        var catalogA = await CatalogWithAFieldValueAsync(tenantA, value, ct);
+        var catalogB = await CatalogWithAFieldValueAsync(tenantB, value, ct);
+
+        await using var runtime = new NpgsqlConnection(factory.RuntimeConnectionString);
+        await runtime.OpenAsync(ct);
+        async Task<List<Guid>> MatchesAsync(Guid? tenantId)
+        {
+            await using (var enter = new NpgsqlCommand("SELECT set_config('app.tenant_id', @tenant, false)", runtime))
+            {
+                enter.Parameters.AddWithValue("tenant", tenantId?.ToString() ?? "");
+                await enter.ExecuteNonQueryAsync(ct);
+            }
+
+            await using var command = new NpgsqlCommand("""SELECT "CatalogId" FROM tenant."FormCatalogItems" WHERE "FieldValuesJson" @> @value::jsonb""", runtime);
+            command.Parameters.AddWithValue("value", JsonSerializer.Serialize(new Dictionary<string, string> { ["color"] = value }));
+            var found = new List<Guid>();
+            await using var reader = await command.ExecuteReaderAsync(ct);
+            while (await reader.ReadAsync(ct)) found.Add(reader.GetGuid(0));
+            return found;
+        }
+
+        Assert.Equal([catalogA], await MatchesAsync(tenantA));
+        Assert.Equal([catalogB], await MatchesAsync(tenantB));
+        Assert.Empty(await MatchesAsync(null));
     }
 
     [Fact]
@@ -194,6 +234,30 @@ public sealed class FormCatalogIsolationTests(ApiFactory factory)
         using var client = factory.CreateClient(new() { BaseAddress = new Uri("https://localhost"), AllowAutoRedirect = false });
         var owner = await AccountJourney.RegisterAsync(factory, client, ct);
         return (owner.UserId, await OrganizationJourney.StageAsync(factory, owner, "Fuentes " + Guid.NewGuid().ToString("N")[..8], ct));
+    }
+
+    /// <summary>Un catálogo a mano con un campo «Color» y una opción con ese valor, guardado con la organización en el alcance.</summary>
+    private async Task<Guid> CatalogWithAFieldValueAsync(Guid tenantId, string value, CancellationToken ct)
+    {
+        var catalog = FormCatalog.CreateManual("Remeras", null, FormCatalogValueType.Text);
+        var color = catalog.ChangeFields([new FormCatalogFieldDraft(null, null, "Color", FormCatalogFieldType.Text, null, false, false, null,
+            null, null)], name => name).Value[0];
+        Assert.Equal("color", color.Key);
+        var item = FormCatalogItem.Create(catalog, 0, "R", "Remera", null, null, true, 0).Value;
+        Assert.True(item.SetFieldValues(catalog, 0, new Dictionary<Guid, JsonElement?> { [color.Id] = JsonSerializer.SerializeToElement(value) }).IsSuccess);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        using var tenant = services.GetRequiredService<ITenantScope>().Enter(tenantId);
+        var saved = await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+        {
+            var repository = services.GetRequiredService<IFormCatalogRepository>();
+            repository.Add(catalog);
+            repository.Add(item);
+            return Task.FromResult(Result.Success());
+        }, CommitPolicy.OnSuccess, ct);
+        Assert.True(saved.IsSuccess);
+        return catalog.Id;
     }
 
     private async Task<T> RunAsync<T>(Guid tenantId, Func<IFormCatalogSourceService, Task<T>> run)
