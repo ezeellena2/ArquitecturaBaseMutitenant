@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Messaging;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
@@ -17,6 +18,7 @@ using ArquitecturaBaseMultitenant.Domain.Settings;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Infrastructure.Messaging;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Seed;
 using Microsoft.EntityFrameworkCore;
@@ -208,6 +210,9 @@ public sealed class InvitedLoginCodeTests(ApiFactory factory)
         var lookup = migrationScope.ServiceProvider.GetRequiredService<IUserLookup>();
         var userId = Assert.Single(await lookup.FindVerifiedUsersByEmailAsync(first.Email, Ct));
         var accesses = migrationScope.ServiceProvider.GetRequiredService<IUserTenantAccessReader>();
+        // The login code leaves ahead of the invitations (Reply priority): the downgrade refuses pending invitations whose
+        // message did not go out yet, so they leave first.
+        await DrainOutboxAsync(isolated.Services);
         // Create through the current API before downgrading; its EF model cannot write the historical outbox.
         await migrator.MigrateAsync("20261007123554_LoginInvitations", Ct);
         // Reproduce the old projection missing the second owner's role, without writing through a newer EF model.
@@ -541,6 +546,17 @@ public sealed class InvitedLoginCodeTests(ApiFactory factory)
         command.Parameters.AddWithValue("id", issued.Id);
         command.Parameters.AddWithValue("now", factory.Services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime.AddSeconds(-1));
         Assert.Equal(1, await command.ExecuteNonQueryAsync(Ct));
+    }
+
+    private static async Task DrainOutboxAsync(IServiceProvider provider)
+    {
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var processor = services.GetRequiredService<OutboxDeliveryProcessor>();
+        var senders = services.GetServices<IChannelSender>().ToArray();
+        for (var attempt = 0; attempt < 100 && await processor.ProcessOnceAsync(senders, Ct) > 0; attempt++)
+        {
+        }
     }
 
     private async Task<Issued> IssueAsync(Email? destination = null, string name = "Organización invitante")
