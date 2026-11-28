@@ -33,7 +33,7 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
         DateTime? startUtc, DateTime? endUtc, CancellationToken cancellationToken)
     {
         var tenantId = tenantContext.RequiredTenantId;
-        var entries = await FilteredAsync(request, startUtc, endUtc, cancellationToken);
+        var entries = Filtered(request, startUtc, endUtc);
         if (request.ActorId is { } actorId)
         {
             // «Quién» filtra por persona: el operador de Plataforma no se muestra.
@@ -330,7 +330,7 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
         ListOrganizationAuditActorsRequest page, DateTime? startUtc, DateTime? endUtc, CancellationToken cancellationToken)
     {
         var unfiltered = filters with { ActorId = null, ActorKind = null };
-        var keys = (await FilteredAsync(unfiltered, startUtc, endUtc, cancellationToken))
+        var keys = Filtered(unfiltered, startUtc, endUtc)
             .Select(entry => new
             {
                 ActorId = entry.ActorKind == AuditActorKind.User ? entry.ActorId : null,
@@ -372,24 +372,26 @@ internal sealed class OrganizationAuditReader(ApplicationDbContext context, ITen
         public string? DisplayName { get; init; }
     }
 
-    private async Task<IQueryable<AuditEntry>> FilteredAsync(ListOrganizationAuditRequest request,
-        DateTime? startUtc, DateTime? endUtc, CancellationToken cancellationToken)
+    private IQueryable<AuditEntry> Filtered(ListOrganizationAuditRequest request,
+        DateTime? startUtc, DateTime? endUtc)
     {
         var tenantId = tenantContext.RequiredTenantId;
         IQueryable<AuditEntry> entries;
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            var matchingActorIds = await context.Users.AsNoTracking().ApplySearch(request.Search, user => user.DisplayName)
-                .Select(user => user.Id).ToArrayAsync(cancellationToken);
-            // La expresión de ApplySearch, con sus índices trigram (IX_AuditEntries_Search_*): "Changes" es jsonb y
-            // ApplySearch no lo pasa a texto. Lo controla SearchIndexTests.
+            // La expresión de ApplySearch, con sus índices trigram (IX_AuditEntries_Search_* e IX_AspNetUsers_Search_DisplayName):
+            // "Changes" es jsonb y ApplySearch no lo pasa a texto; los actores se buscan en SQL acotados a esta organización
+            // sin traer usuarios de toda la plataforma a memoria. Lo controla SearchIndexTests.
             var pattern = $"%{EscapeLike(request.Search.Trim())}%";
             entries = context.Set<AuditEntry>().FromSqlInterpolated($"""
                 SELECT * FROM tenant."AuditEntries"
                 WHERE "TenantId" = {tenantId}
                   AND (public.f_unaccent(lower("EntityType")) LIKE public.f_unaccent(lower({pattern})) ESCAPE E'\\'
                     OR public.f_unaccent(lower("Changes"::text)) LIKE public.f_unaccent(lower({pattern})) ESCAPE E'\\'
-                    OR "ActorId" = ANY ({matchingActorIds}))
+                    OR ("ActorKind" = 'User' AND "ActorId" IS NOT NULL AND EXISTS (
+                        SELECT 1 FROM identity."AspNetUsers" AS actor
+                        WHERE actor."Id" = "AuditEntries"."ActorId"
+                          AND public.f_unaccent(lower(actor."DisplayName")) LIKE public.f_unaccent(lower({pattern})) ESCAPE E'\\')))
                 """).AsNoTracking();
         }
         else

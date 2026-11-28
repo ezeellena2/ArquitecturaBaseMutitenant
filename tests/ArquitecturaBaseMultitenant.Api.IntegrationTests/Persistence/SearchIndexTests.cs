@@ -43,6 +43,8 @@ public sealed class SearchIndexTests(ApiFactory factory)
             "public.f_unaccent(lower(\"EntityType\")) LIKE public.f_unaccent(lower({pattern}))"),
         new("OrganizationAuditReader.cs", new("tenant", "AuditEntries", "Changes"),
             "public.f_unaccent(lower(\"Changes\"::text)) LIKE public.f_unaccent(lower({pattern}))"),
+        new("OrganizationAuditReader.cs", new("identity", "AspNetUsers", "DisplayName"),
+            "public.f_unaccent(lower(actor.\"DisplayName\")) LIKE public.f_unaccent(lower({pattern}))"),
         new("FormCatalogReader.cs", new("tenant", "FormCatalogItems", "Text"),
             "public.f_unaccent(lower(item.\"Text\")) LIKE public.f_unaccent(lower(wanted.\"Pattern\"))"),
         new("FormCatalogReader.cs", new("tenant", "FormCatalogItems", "Code"),

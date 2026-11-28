@@ -1,9 +1,12 @@
+using System.Collections;
+using System.Data.Common;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Models.Auditing;
 using ArquitecturaBaseMultitenant.Application.Services.Auth;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
@@ -16,7 +19,9 @@ using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using ArquitecturaBaseMultitenant.Infrastructure.Identity;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Organization;
@@ -905,6 +910,113 @@ public sealed class OrganizationAuditTests(ApiFactory factory)
         using var unauthorized = Client();
         using var denied = await unauthorized.GetAsync("/api/organization/audit", Ct);
         Assert.Equal(HttpStatusCode.Unauthorized, denied.StatusCode);
+    }
+
+    [Fact]
+    public async Task Searching_audit_by_actor_name_scopes_lookup_to_organization_without_loading_platform_users()
+    {
+        using var ownerClient = Client();
+        var owner = await AccountJourney.RegisterAsync(factory, ownerClient, Ct);
+        var marker = "Lote" + Guid.NewGuid().ToString("N")[..8];
+        var tenantTag = Guid.NewGuid().ToString("N")[..8];
+        var tenant = await CreateBusinessAsync("Auditoría actores " + tenantTag, "aud-act-" + tenantTag, owner.UserId);
+        var expectedActors = new List<Guid>(3);
+        await using (var seedScope = factory.Services.CreateAsyncScope())
+        {
+            var services = seedScope.ServiceProvider;
+            using var tenantScope = services.GetRequiredService<ITenantScope>().Enter(tenant.Id);
+            var context = services.GetRequiredService<ApplicationDbContext>();
+            var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+            await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+            {
+                for (var index = 1; index <= 3; index++)
+                {
+                    var actor = ApplicationUser.Create($"{marker} Actor {index}", "es-AR", "America/Argentina/Buenos_Aires", nowUtc).Value;
+                    expectedActors.Add(actor.Id);
+                    context.Users.Add(actor);
+                    context.Add(AuditEntry.Create(tenant.Id, AuditActorKind.User, actor.Id, AuditAction.Updated,
+                        nameof(Member), Guid.CreateVersion7(), "{}", nowUtc.AddSeconds(index)));
+                }
+
+                var nonMatching = ApplicationUser.Create("Sin Coincidencia", "es-AR", "America/Argentina/Buenos_Aires", nowUtc).Value;
+                context.Users.Add(nonMatching);
+                context.Add(AuditEntry.Create(tenant.Id, AuditActorKind.User, nonMatching.Id, AuditAction.Updated,
+                    nameof(Member), Guid.CreateVersion7(), "{}", nowUtc));
+
+                var outsiders = Enumerable.Range(1, 500)
+                    .Select(index => ApplicationUser.Create($"{marker} Plataforma {index:000}", "es-AR",
+                        "America/Argentina/Buenos_Aires", nowUtc).Value)
+                    .ToArray();
+                context.Users.AddRange(outsiders);
+                return Task.FromResult(Result.Success());
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+
+        var probe = new SqlCommandProbe();
+        await using var host = factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+            services.ConfigureDbContext<ApplicationDbContext>(options => options.AddInterceptors(probe))));
+        await using var scope = host.Services.CreateAsyncScope();
+        var scopedServices = scope.ServiceProvider;
+        using var activeTenant = scopedServices.GetRequiredService<ITenantScope>().Enter(tenant.Id);
+        probe.ContextId = scopedServices.GetRequiredService<ApplicationDbContext>().ContextId;
+        probe.Reset();
+
+        var page = await scopedServices.GetRequiredService<IOrganizationAuditReader>().ListAsync(
+            new ListOrganizationAuditRequest { Period = "all", Search = marker, Limit = 50 },
+            startUtc: null, endUtc: null, Ct);
+
+        Assert.Equal(3, page.Items.Count);
+        Assert.Equal(expectedActors.Order(), page.Items.Select(item => item.ActorId!.Value).Order());
+        Assert.NotEmpty(probe.Commands);
+        Assert.Contains(probe.Commands, command =>
+            command.Text.Contains("\"AuditEntries\"", StringComparison.Ordinal)
+            && command.Text.Contains("EXISTS", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(probe.Commands, command =>
+            command.Text.Contains("\"ActorId\" = ANY", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(probe.Commands, command =>
+            command.Text.Contains("\"AspNetUsers\"", StringComparison.Ordinal)
+            && !command.Text.Contains("\"AuditEntries\"", StringComparison.Ordinal)
+            && command.Text.Contains("LIKE", StringComparison.OrdinalIgnoreCase));
+        Assert.All(probe.Commands, command =>
+            Assert.True(command.MaxCollectionParameterSize <= 3,
+                $"Se envió una colección de {command.MaxCollectionParameterSize} elementos en: {command.Text}"));
+    }
+
+    private sealed record CapturedSqlCommand(string Text, int MaxCollectionParameterSize);
+
+    private sealed class SqlCommandProbe : DbCommandInterceptor
+    {
+        public List<CapturedSqlCommand> Commands { get; } = [];
+        public DbContextId? ContextId { get; set; }
+
+        public void Reset() => Commands.Clear();
+
+        public override InterceptionResult<DbDataReader> ReaderExecuting(DbCommand command, CommandEventData eventData,
+            InterceptionResult<DbDataReader> result)
+        {
+            Record(command, eventData);
+            return result;
+        }
+
+        public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(DbCommand command,
+            CommandEventData eventData, InterceptionResult<DbDataReader> result, CancellationToken cancellationToken = default)
+        {
+            Record(command, eventData);
+            return ValueTask.FromResult(result);
+        }
+
+        private void Record(DbCommand command, CommandEventData eventData)
+        {
+            if (eventData.Context?.ContextId != ContextId) return;
+            var maxSize = 0;
+            foreach (DbParameter parameter in command.Parameters)
+            {
+                if (parameter.Value is ICollection collection && collection.Count > maxSize)
+                    maxSize = collection.Count;
+            }
+
+            Commands.Add(new CapturedSqlCommand(command.CommandText, maxSize));
+        }
     }
 
     private HttpClient Client() => factory.CreateClient(new()
