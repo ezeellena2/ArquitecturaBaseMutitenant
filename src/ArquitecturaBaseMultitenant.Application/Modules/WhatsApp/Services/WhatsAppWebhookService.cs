@@ -29,7 +29,7 @@ internal sealed class WhatsAppWebhookService(IWhatsAppSignatureValidator signatu
             if (batch.IsFailure) return batch.Error;
             // El número de Plataforma de la configuración tiene que existir antes de ubicar la entrada por su número.
             await channels.LoadAsync(ct);
-            Result<IReadOnlyList<WhatsAppDeliveryFailure>> result;
+            Result result;
             try
             {
                 result = await unitOfWork.ExecuteInTransactionAsync(async c =>
@@ -44,19 +44,12 @@ internal sealed class WhatsAppWebhookService(IWhatsAppSignatureValidator signatu
             }
             catch (UniqueConstraintViolationException exception) when (exception.ConstraintName is WhatsAppUniqueKeys.MessageEvent or WhatsAppUniqueKeys.ContactNumber)
             { return await replay.ReplayAsync(request, ct); }
-            if (result.IsSuccess && result.Value.Count > 0) await replay.ApplyDeliveryFailuresAsync(result.Value, ct);
-            if (result.IsSuccess && (batch.Value.Messages.Count > 0 || batch.Value.MessageEchoes.Count > 0)) signal.Notify();
+            // Lo que dejó en la cola durable (lo entrante, los ecos y los fallos de una organización) lo toma el procesador.
+            if (result.IsSuccess && (batch.Value.Messages.Count > 0 || batch.Value.MessageEchoes.Count > 0
+                || batch.Value.Statuses.Any(value => value.Status == WhatsAppMessageStatus.Failed))) signal.Notify();
             // Meta informó que un número quedó sin medio de pago: ingreso y avisos de Plataforma lo ven enseguida.
             if (result.IsSuccess && batch.Value.Statuses.Any(value => value.ErrorCode == WhatsAppChannelUsageWriter.PaymentRequiredError))
                 await channels.RefreshAsync(ct);
-            return result.IsSuccess ? Result.Success() : Result.Failure(result.Error);
+            return result;
         });
-
-    public Task<Result> RecordDeliveryFailuresAsync(IReadOnlyList<WhatsAppDeliveryFailure> failures, CancellationToken ct) =>
-        OperationLog.RunAsync(logger, clock, "RecordWhatsAppDeliveryFailures", () =>
-            unitOfWork.ExecuteInTransactionAsync(async c =>
-            {
-                await writer.RecordDeliveryFailuresAsync(failures, c);
-                return Result.Success();
-            }, CommitPolicy.OnSuccess, ct));
 }

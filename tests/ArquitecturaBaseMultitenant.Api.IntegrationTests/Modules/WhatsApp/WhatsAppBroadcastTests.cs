@@ -371,6 +371,13 @@ public sealed class WhatsAppBroadcastTests(ApiFactory factory)
             WhatsAppAttentionJourney.Status(wamidBeto, "failed", error: 131026)), Ct))
             Assert.Equal(HttpStatusCode.OK, failed.StatusCode);
 
+        // El webhook deja cada motivo en la cola durable, en su misma transacción; lo anota el procesador dentro del alcance
+        // de la organización, así una caída después del commit no lo pierde.
+        Assert.Equal(new Dictionary<string, string?> { [wamidAna] = WhatsAppSendFailures.RateLimited, [wamidBeto] = WhatsAppSendFailures.Undeliverable },
+            await WhatsAppAttentionJourney.PendingDeliveryFailuresAsync(host, [wamidAna, wamidBeto], Ct));
+        await WhatsAppAttentionJourney.ProcessInboundAsync(host, Ct);
+        Assert.Empty(await WhatsAppAttentionJourney.PendingDeliveryFailuresAsync(host, [wamidAna, wamidBeto], Ct));
+
         await using (var verify = host.Services.CreateAsyncScope())
         {
             verify.ServiceProvider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(tenant, TenantKind.Business);

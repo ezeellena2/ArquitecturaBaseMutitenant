@@ -3,11 +3,10 @@ using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Integr
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.Results;
-using ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs;
 using Microsoft.Extensions.DependencyInjection;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Webhook;
 
-internal sealed class WhatsAppWebhookReplay(IServiceScopeFactory scopes, TenantJobRunner tenants) : IWhatsAppWebhookReplay
+internal sealed class WhatsAppWebhookReplay(IServiceScopeFactory scopes) : IWhatsAppWebhookReplay
 {
     private static readonly AsyncLocal<bool> Replaying = new();
     public async Task<Result> ReplayAsync(WhatsAppWebhookRequest request, CancellationToken ct)
@@ -20,18 +19,5 @@ internal sealed class WhatsAppWebhookReplay(IServiceScopeFactory scopes, TenantJ
             return await scope.ServiceProvider.GetRequiredService<IWhatsAppWebhookService>().ReceiveAsync(request, ct);
         }
         finally { Replaying.Value = false; }
-    }
-
-    public async Task ApplyDeliveryFailuresAsync(IReadOnlyList<WhatsAppDeliveryFailure> failures, CancellationToken ct)
-    {
-        foreach (var group in failures.GroupBy(value => value.OrganizationId).OrderBy(group => group.Key))
-        {
-            var items = group.ToArray();
-            await tenants.RunForTenantAsync(group.Key, async (provider, token) =>
-            {
-                var result = await provider.GetRequiredService<IWhatsAppWebhookService>().RecordDeliveryFailuresAsync(items, token);
-                if (result.IsFailure) throw new InvalidOperationException(result.Error.Code);
-            }, ct);
-        }
     }
 }

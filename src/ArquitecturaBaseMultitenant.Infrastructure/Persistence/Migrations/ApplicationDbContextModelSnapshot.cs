@@ -4941,6 +4941,10 @@ namespace ArquitecturaBaseMultitenant.Infrastructure.Persistence.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("character varying(60)");
 
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
+
                     b.Property<string>("Kind")
                         .IsRequired()
                         .HasMaxLength(60)

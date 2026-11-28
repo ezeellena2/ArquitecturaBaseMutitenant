@@ -49,6 +49,7 @@ public static class WhatsAppModule
         services.AddScoped<WhatsAppChannelAuditWriter>();
         services.AddScoped<WhatsAppChannelCreator>();
         services.AddScoped<WhatsAppChannelUsageWriter>();
+        services.AddScoped<WhatsAppDeliveryFailureWriter>();
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Services.IPendingItemSource, WhatsAppNumberPendingItems>();
         services.AddScoped<ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Features.IModuleHomeCardSource, WhatsAppModuleHomeCardSource>();
         services.AddScoped<IWhatsAppNumberService, WhatsAppNumberService>();

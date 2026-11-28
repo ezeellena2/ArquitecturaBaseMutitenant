@@ -11,9 +11,9 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 
 internal sealed class WhatsAppWebhookWriter(IWhatsAppContactRepository contacts, IWhatsAppMessageRepository messages,
     IUserLookup lookup, IExternalLoginLock identities, ILoginMethodRepository methods, IPayloadProtector protector,
-    WhatsAppChannelUsageWriter usage, TimeProvider clock)
+    WhatsAppChannelUsageWriter usage, WhatsAppDeliveryFailureWriter failures, TimeProvider clock)
 {
-    internal async Task<Result<IReadOnlyList<WhatsAppDeliveryFailure>>> WriteAsync(WhatsAppWebhookBatch received, CancellationToken ct)
+    internal async Task<Result> WriteAsync(WhatsAppWebhookBatch received, CancellationToken ct)
     {
         // Solo la entrada de un número vigente (de Plataforma o de una organización); los ecos solo de una organización; los estados bajo su lock.
         var routes = await usage.FindActiveAsync(
@@ -48,7 +48,6 @@ internal sealed class WhatsAppWebhookWriter(IWhatsAppContactRepository contacts,
         await WriteInboundAsync(batch.Messages, routes, resolved, owners, seen, nowUtc, ct);
         await WriteEchoesAsync(batch.MessageEchoes, routes, resolved, owners, seen, nowUtc, ct);
         var delivered = new HashSet<(string, string)>();
-        var failures = new List<WhatsAppDeliveryFailure>();
         foreach (var status in batch.Statuses)
         {
             if (!activeChannels.TryGetValue(status.PhoneNumberId, out var channel)) continue;
@@ -62,7 +61,7 @@ internal sealed class WhatsAppWebhookWriter(IWhatsAppContactRepository contacts,
             callback.MarkOutboundAccepted(nowUtc); messages.Add(callback);
             if (accepted?.ApplyDeliveryStatus(status.Status, status.OccurredAtUtc) == true
                 && status.Status == WhatsAppMessageStatus.Failed && accepted.OutboxMessageId is { } outboxMessageId)
-                await RecordFailureAsync(channel, status, outboxMessageId, failures, ct);
+                await RecordFailureAsync(channel, status, outboxMessageId, nowUtc, ct);
             // Leído implica entregado: se cuenta una sola vez por mensaje, sea cual sea el primero que llegue.
             var firstDelivery = status.Status is WhatsAppMessageStatus.Delivered or WhatsAppMessageStatus.Read
                 && delivered.Add((status.PhoneNumberId, status.Wamid))
@@ -70,7 +69,7 @@ internal sealed class WhatsAppWebhookWriter(IWhatsAppContactRepository contacts,
                     status.Status == WhatsAppMessageStatus.Delivered ? "read" : "delivered", ct) is null;
             await usage.RecordAsync(status, firstDelivery, ct);
         }
-        return Result.Success<IReadOnlyList<WhatsAppDeliveryFailure>>(failures);
+        return Result.Success();
     }
 
     private async Task WriteInboundAsync(IReadOnlyList<WhatsAppWebhookMessage> inboundMessages,
@@ -128,18 +127,15 @@ internal sealed class WhatsAppWebhookWriter(IWhatsAppContactRepository contacts,
         return contact;
     }
 
-    internal Task RecordDeliveryFailuresAsync(IReadOnlyList<WhatsAppDeliveryFailure> failures, CancellationToken ct) =>
-        usage.RecordOrganizationDeliveryFailuresAsync(failures, ct);
-
-    private Task RecordFailureAsync(WhatsAppChannel channel, WhatsAppWebhookStatus status, Guid outboxMessageId,
-        List<WhatsAppDeliveryFailure> failures, CancellationToken ct)
+    // El de Plataforma se anota acá; el de una organización queda en la cola durable, en esta misma transacción, y lo anota el
+    // procesador dentro de su alcance: si algo falla después del commit, la cola lo reintenta.
+    private Task RecordFailureAsync(WhatsAppChannel channel, WhatsAppWebhookStatus status, Guid outboxMessageId, DateTime nowUtc,
+        CancellationToken ct)
     {
         var failureReason = WhatsAppSendFailures.ForWebhookError(status.ErrorCode);
-        if (channel.OrganizationId is { } organizationId)
-        {
-            failures.Add(new(organizationId, outboxMessageId, status.Wamid, failureReason, status.OccurredAtUtc));
-            return Task.CompletedTask;
-        }
-        return usage.RecordPlatformDeliveryFailureAsync(outboxMessageId, status.Wamid, failureReason, ct);
+        if (channel.OrganizationId is null) return failures.RecordPlatformAsync(outboxMessageId, status.Wamid, failureReason, ct);
+        messages.Add(WhatsAppMessage.DeliveryFailure(status.PhoneNumberId, status.Wamid, outboxMessageId, channel.Id, failureReason,
+            status.OccurredAtUtc, nowUtc));
+        return Task.CompletedTask;
     }
 }

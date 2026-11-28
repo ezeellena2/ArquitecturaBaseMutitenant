@@ -6,6 +6,8 @@ public sealed class WhatsAppMessage : Entity, IVersioned
 {
     public const string InboundEventType = "inbound";
     public const string EchoEventType = "echo";
+    /// <summary>El motivo de un <c>status: failed</c> de un número de organización, que la cola lleva a sus tablas (B5).</summary>
+    public const string DeliveryFailureEventType = "delivery_failure";
 
     private WhatsAppMessage() { PhoneNumberId = string.Empty; Wamid = string.Empty; EventType = string.Empty; }
     public string PhoneNumberId { get; private set; }
@@ -27,6 +29,8 @@ public sealed class WhatsAppMessage : Entity, IVersioned
     public DateTime OccurredAtUtc { get; private set; }
     public DateTime? ProcessedAtUtc { get; private set; }
     public string? EncryptedText { get; private set; }
+    /// <summary>El código de <see cref="WhatsAppSendFailures"/> de un fallo que la cola todavía tiene que anotar.</summary>
+    public string? FailureReason { get; private set; }
     /// <summary>El nombre del perfil de WhatsApp del remitente, cifrado como el texto (C14 de la E12): lo toma la entrada y se vacía con él.</summary>
     public string? EncryptedProfileName { get; private set; }
     public int Attempts { get; private set; }
@@ -38,8 +42,15 @@ public sealed class WhatsAppMessage : Entity, IVersioned
     /// <summary>Eco de un mensaje enviado desde la app WhatsApp Business del celular en coexistencia (B10).</summary>
     public bool IsEcho => Direction == WhatsAppMessageDirection.Outbound && EventType == EchoEventType;
 
-    /// <summary>Si esta fila pasa por la cola durable de entrada: un mensaje entrante o un eco desde el celular.</summary>
-    public bool IsQueuedInbound => (Direction == WhatsAppMessageDirection.Inbound && EventType == InboundEventType) || IsEcho;
+    /// <summary>Un fallo informado por Meta para un mensaje de una organización, que se anota dentro de su alcance (B5).</summary>
+    public bool IsDeliveryFailure => Direction == WhatsAppMessageDirection.Outbound && EventType == DeliveryFailureEventType;
+
+    /// <summary>
+    /// Si esta fila pasa por la cola durable de entrada: un mensaje entrante, un eco desde el celular o el fallo de un mensaje
+    /// de una organización.
+    /// </summary>
+    public bool IsQueuedInbound => (Direction == WhatsAppMessageDirection.Inbound && EventType == InboundEventType) || IsEcho
+        || IsDeliveryFailure;
 
     public static WhatsAppMessage Create(string phoneNumberId, string wamid, string eventType,
         WhatsAppMessageDirection direction, WhatsAppMessageKind kind, WhatsAppMessageStatus status,
@@ -56,7 +67,7 @@ public sealed class WhatsAppMessage : Entity, IVersioned
         if (kind == WhatsAppMessageKind.Authentication && (encryptedText is not null || encryptedProfileName is not null))
             throw new ArgumentException("Authentication messages contain metadata only.", nameof(encryptedText));
         var queued = (direction == WhatsAppMessageDirection.Inbound && eventType == InboundEventType)
-            || (direction == WhatsAppMessageDirection.Outbound && eventType == EchoEventType);
+            || (direction == WhatsAppMessageDirection.Outbound && eventType is EchoEventType or DeliveryFailureEventType);
         return new WhatsAppMessage
         {
             PhoneNumberId = phoneNumberId,
@@ -79,6 +90,20 @@ public sealed class WhatsAppMessage : Entity, IVersioned
             NextAttemptAtUtc = queued ? receivedAtUtc : null
         };
     }
+    /// <summary>
+    /// El motivo de un <c>status: failed</c> de un número de organización (B5): queda en la cola durable, en la misma transacción
+    /// del webhook, y el procesador lo anota en el mensaje del chat y en el destinatario de la difusión dentro de su alcance.
+    /// </summary>
+    public static WhatsAppMessage DeliveryFailure(string phoneNumberId, string wamid, Guid outboxMessageId, Guid channelId,
+        string failureReason, DateTime occurredAtUtc, DateTime receivedAtUtc)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(failureReason);
+        var message = Create(phoneNumberId, wamid, DeliveryFailureEventType, WhatsAppMessageDirection.Outbound, WhatsAppMessageKind.Delivery,
+            WhatsAppMessageStatus.Pending, occurredAtUtc, receivedAtUtc, outboxMessageId: outboxMessageId, channelId: channelId);
+        message.FailureReason = failureReason.Length > TextLimits.ShortName ? failureReason[..TextLimits.ShortName] : failureReason;
+        return message;
+    }
+
     public bool TryLease(Guid leaseId, DateTime nowUtc, TimeSpan lifetime, int maxAttempts = 8)
     {
         if (leaseId == Guid.Empty || nowUtc.Kind != DateTimeKind.Utc || lifetime <= TimeSpan.Zero) throw new ArgumentException("Invalid lease.");

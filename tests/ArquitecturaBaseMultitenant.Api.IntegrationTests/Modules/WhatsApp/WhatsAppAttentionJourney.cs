@@ -13,6 +13,7 @@ using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -141,6 +142,23 @@ internal static class WhatsAppAttentionJourney
         Assert.Equal(System.Net.HttpStatusCode.OK, received.StatusCode);
         await host.Services.GetServices<Microsoft.Extensions.Hosting.IHostedService>()
             .OfType<ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Inbound.WhatsAppInboundProcessor>().Single().ProcessPendingAsync(ct);
+    }
+
+    /// <summary>Corre una vez el procesador de la cola durable de la entrada (lo entrante, los ecos y los fallos de una organización).</summary>
+    internal static Task ProcessInboundAsync(WebApplicationFactory<Program> host, CancellationToken ct) =>
+        host.Services.GetServices<Microsoft.Extensions.Hosting.IHostedService>()
+            .OfType<ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Inbound.WhatsAppInboundProcessor>().Single().ProcessPendingAsync(ct);
+
+    /// <summary>Los motivos de los fallos que el webhook dejó en la cola durable y todavía no se anotaron, por wamid.</summary>
+    internal static async Task<IReadOnlyDictionary<string, string?>> PendingDeliveryFailuresAsync(WebApplicationFactory<Program> host,
+        IReadOnlyCollection<string> wamids, CancellationToken ct)
+    {
+        await using var scope = host.Services.CreateAsyncScope();
+        return await scope.ServiceProvider.GetRequiredService<ArquitecturaBaseMultitenant.Infrastructure.Persistence.ApplicationDbContext>()
+            .Set<WhatsAppMessage>().AsNoTracking()
+            .Where(value => value.EventType == WhatsAppMessage.DeliveryFailureEventType && value.ProcessedAtUtc == null
+                && wamids.Contains(value.Wamid))
+            .ToDictionaryAsync(value => value.Wamid, value => value.FailureReason, ct);
     }
 
     /// <summary>Un móvil de AMBA que el webhook acepta: un abonado que empieza con 0 o con 1 no es válido y se descartaría.</summary>
