@@ -1,8 +1,11 @@
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
+using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
+using ArquitecturaBaseMultitenant.Domain.ValueObjects;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 
 namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
@@ -10,10 +13,10 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// <summary>
 /// Vincula una conversación de clientes con la cuenta de quien escribe y le copia los mensajes (D2, D5), dentro de la
 /// transacción del lado de la organización. Solo se ofrece y se crea si el número es un teléfono verificado de una cuenta
-/// activa con espacio personal; lo que entra después solo se copia mientras el número siga siendo de esa cuenta.
+/// activa con espacio personal; lo que entra y lo que sale solo se copian mientras el número siga verificado en esa cuenta.
 /// </summary>
 internal sealed class WhatsAppConversationLinkWriter(IWhatsAppConversationLinkRepository links, IUserTenantAccessReader accesses,
-    ITenantSettingsReader settings, IWhatsAppChannelRepository channels)
+    ITenantSettingsReader settings, IWhatsAppChannelRepository channels, IUserLookup accounts)
 {
     /// <summary>Si a quien escribe se le puede ofrecer vincular esta conversación: es la dueña verificada y no está vinculada.</summary>
     internal async Task<bool> CanLinkAsync(WhatsAppChat chat, WhatsAppInboundContext context, CancellationToken ct) =>
@@ -31,14 +34,27 @@ internal sealed class WhatsAppConversationLinkWriter(IWhatsAppConversationLinkRe
         return true;
     }
 
-    /// <summary>Copia un mensaje que se dijo con la persona; lo que entra, solo si lo mandó la cuenta vinculada.</summary>
+    /// <summary>Copia un mensaje que se dijo con la persona solo mientras el número del chat siga verificado en la cuenta vinculada.</summary>
     internal async Task CopyAsync(Guid chatId, WhatsAppMessageDirection direction, string? text, WhatsAppMediaKind? mediaKind, DateTime atUtc,
         Guid? senderAccountId, CancellationToken ct)
     {
         if (await links.GetByChatAsync(chatId, ct) is not { } link) return;
         if (direction == WhatsAppMessageDirection.Inbound && senderAccountId != link.AccountId) return;
+        if (direction == WhatsAppMessageDirection.Outbound
+            && (await links.FindChatWaIdAsync(chatId, ct) is not { } waId
+                || await accounts.FindVerifiedUserIdAsync(LoginMethodType.Phone, waId, ct) != link.AccountId))
+            return;
         links.Add(WhatsAppLinkedMessage.Copy(link, direction, text, mediaKind, atUtc));
         link.RecordMessage(atUtc, text);
+    }
+
+    /// <summary>Al quitar un teléfono, borra los vínculos de esa cuenta para ese número en su espacio personal.</summary>
+    internal async Task RemoveForPhoneAsync(Guid accountId, PhoneNumber phone, CancellationToken ct)
+    {
+        var personal = (await accesses.ListForUserAsync(accountId, ct))
+            .FirstOrDefault(access => access.Kind == TenantKind.Personal)?.TenantId;
+        if (personal is { } consumerTenantId)
+            await links.RemoveByAccountAndPhoneAsync(consumerTenantId, accountId, phone.Value, ct);
     }
 
     private static Guid? Owner(WhatsAppInboundContext context) =>

@@ -2,12 +2,15 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
+using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -67,12 +70,17 @@ public sealed class WhatsAppConversationLinkTests(ApiFactory factory)
         Assert.Contains("Te respondo", texts);
         Assert.DoesNotContain("Hola antes de vincular", texts);
 
-        // El número pasa a otra cuenta: lo que escriba ahora no se copia a quien lo tenía.
+        // El número pasa a otra cuenta sin quitar el vínculo previo (vínculo huérfano): ni lo entrante ni lo saliente se copian.
         using var next = WhatsAppAttentionJourney.Client(host);
         var nextAccount = await AccountJourney.RegisterAsync(host, next, Ct);
         await MovePhoneAsync(account.UserId, nextAccount.UserId, phone);
         await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, phone, "Soy la nueva dueña del número", Ct);
-        Assert.DoesNotContain("Soy la nueva dueña del número", await TextsAsync(person, linkId));
+        using (var replyToNext = await WhatsAppAttentionJourney.PostAsync(owner,
+            $"/api/organization/whatsapp/customers/conversations/{row.GetProperty("id").GetGuid()}/messages", new { text = "Respuesta para la nueva dueña" }, Ct))
+            Assert.Equal(HttpStatusCode.Created, replyToNext.StatusCode);
+        var personTexts = await TextsAsync(person, linkId);
+        Assert.DoesNotContain("Soy la nueva dueña del número", personTexts);
+        Assert.DoesNotContain("Respuesta para la nueva dueña", personTexts);
         Assert.Equal(0, (await JsonAsync(await next.GetAsync("/api/me/whatsapp/conversations", Ct))).GetProperty("totalCount").GetInt32());
         using (var foreign = await next.GetAsync($"/api/me/whatsapp/conversations/{linkId}", Ct))
             Assert.Equal(HttpStatusCode.NotFound, foreign.StatusCode);
@@ -84,6 +92,62 @@ public sealed class WhatsAppConversationLinkTests(ApiFactory factory)
         Assert.Equal(0, (await JsonAsync(await person.GetAsync("/api/me/whatsapp/conversations", Ct))).GetProperty("totalCount").GetInt32());
         var after = await JsonAsync(await owner.GetAsync("/api/organization/whatsapp/customers/conversations", Ct));
         Assert.False(Assert.Single(after.GetProperty("conversations").GetProperty("items").EnumerateArray()).GetProperty("linkedToAccount").GetBoolean());
+    }
+
+    [Fact]
+    public async Task Removing_a_phone_deletes_its_conversation_link_and_stops_copying_replies_to_the_previous_owner()
+    {
+        await using var host = WhatsAppAttentionJourney.Host(factory, new FakeGraph());
+        using var owner = WhatsAppAttentionJourney.Client(host);
+        var (_, tenantId) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, owner, Ct);
+        var phoneNumberId = WhatsAppAttentionJourney.NewNumberId();
+        using var connected = await WhatsAppAttentionJourney.ConnectAsync(owner, phoneNumberId, Ct);
+        var numberId = (await WhatsAppAttentionJourney.JsonAsync(connected, Ct)).GetProperty("id").GetGuid();
+        using (var bot = await owner.PutAsJsonAsync($"/api/organization/whatsapp/numbers/{numberId}/bot", Bot(), Ct))
+            Assert.Equal(HttpStatusCode.OK, bot.StatusCode);
+
+        // A vincula su chat con su teléfono verificado.
+        using var personA = WhatsAppAttentionJourney.Client(host);
+        var accountA = await AccountJourney.RegisterAsync(host, personA, Ct);
+        var phone = WhatsAppAttentionJourney.NewPhone();
+        var methodA = await VerifyPhoneAsync(accountA.UserId, phone);
+        using var anonymous = WhatsAppAttentionJourney.Client(host);
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, phone, "Hola soy A", Ct);
+        await ChoiceAsync(host, anonymous, phoneNumberId, phone, BotButtons.LinkAccount);
+
+        var chatId = Assert.Single((await JsonAsync(await owner.GetAsync("/api/organization/whatsapp/customers/conversations", Ct)))
+            .GetProperty("conversations").GetProperty("items").EnumerateArray()).GetProperty("id").GetGuid();
+        var linkId = Single(await JsonAsync(await personA.GetAsync("/api/me/whatsapp/conversations", Ct)), null)
+            .GetProperty("id").GetGuid();
+
+        // A quita el teléfono: su vínculo se borra de la base y la conversación deja de figurar vinculada.
+        using (var removed = await personA.DeleteAsync($"/api/me/login-methods/{methodA}", Ct))
+            Assert.Equal(HttpStatusCode.NoContent, removed.StatusCode);
+        Assert.Equal(0, (await JsonAsync(await personA.GetAsync("/api/me/whatsapp/conversations", Ct))).GetProperty("totalCount").GetInt32());
+        using (var gone = await personA.GetAsync($"/api/me/whatsapp/conversations/{linkId}", Ct))
+            Assert.Equal(HttpStatusCode.NotFound, gone.StatusCode);
+        var orgRowAfterRemoval = Assert.Single((await JsonAsync(await owner.GetAsync("/api/organization/whatsapp/customers/conversations", Ct)))
+            .GetProperty("conversations").GetProperty("items").EnumerateArray());
+        Assert.False(orgRowAfterRemoval.GetProperty("linkedToAccount").GetBoolean());
+        await using (var scope = host.Services.CreateAsyncScope())
+        {
+            scope.ServiceProvider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(tenantId, TenantKind.Business);
+            Assert.False(await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+                .Set<WhatsAppConversationLink>().AnyAsync(value => value.Id == linkId, Ct));
+        }
+
+        // B verifica el mismo número y la organización le contesta: nada aparece en «Mensajes» de A.
+        using var personB = WhatsAppAttentionJourney.Client(host);
+        var accountB = await AccountJourney.RegisterAsync(host, personB, Ct);
+        await VerifyPhoneAsync(accountB.UserId, phone);
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, phone, "Hola soy B", Ct);
+        using (var replyToB = await WhatsAppAttentionJourney.PostAsync(owner,
+            $"/api/organization/whatsapp/customers/conversations/{chatId}/messages", new { text = "Respuesta privada para B" }, Ct))
+            Assert.Equal(HttpStatusCode.Created, replyToB.StatusCode);
+
+        Assert.Equal(0, (await JsonAsync(await personA.GetAsync("/api/me/whatsapp/conversations", Ct))).GetProperty("totalCount").GetInt32());
+        using (var stillGone = await personA.GetAsync($"/api/me/whatsapp/conversations/{linkId}", Ct))
+            Assert.Equal(HttpStatusCode.NotFound, stillGone.StatusCode);
     }
 
     private static object Bot() => new
@@ -106,16 +170,19 @@ public sealed class WhatsAppConversationLinkTests(ApiFactory factory)
         [.. (await JsonAsync(await person.GetAsync($"/api/me/whatsapp/conversations/{linkId}", Ct))).GetProperty("messages").GetProperty("items")
             .EnumerateArray().Select(message => message.GetProperty("text").GetString())];
 
-    private async Task VerifyPhoneAsync(Guid userId, string phone)
+    private async Task<Guid> VerifyPhoneAsync(Guid userId, string phone)
     {
+        var methodId = Guid.Empty;
         await using var scope = factory.Services.CreateAsyncScope();
         await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(_ =>
         {
             var method = LoginMethod.CreatePhone(userId, PhoneNumber.Create(phone).Value);
             method.Verify(scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime);
             scope.ServiceProvider.GetRequiredService<ILoginMethodRepository>().Add(method);
+            methodId = method.Id;
             return Task.FromResult(Result.Success());
         }, CommitPolicy.OnSuccess, Ct);
+        return methodId;
     }
 
     private async Task MovePhoneAsync(Guid from, Guid to, string phone)

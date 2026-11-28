@@ -1,6 +1,10 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Identity;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.Authentication;
 using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.ValueObjects;
@@ -130,6 +134,117 @@ public sealed class WhatsAppPhoneLinkObserverTests(ApiFactory factory) : IClassF
         Assert.Equal(nextUser, (await database.Set<WhatsAppContact>().SingleAsync(row => row.Id == original.ContactId, Ct)).UserId);
         Assert.Equal(original.UserId, (await database.Set<WhatsAppMessage>().SingleAsync(row => row.Id == original.MessageId, Ct)).OriginalUserId);
         Assert.Null((await database.Set<WhatsAppMessage>().SingleAsync(row => row.Id == original.AnonymousId, Ct)).OriginalUserId);
+    }
+
+    [Fact]
+    public async Task Removal_deletes_only_the_conversation_links_of_the_removed_phone_and_rolls_back_atomically()
+    {
+        await using var host = WhatsAppAttentionJourney.Host(factory, new FakeGraph());
+        using var owner = WhatsAppAttentionJourney.Client(host);
+        await WhatsAppAttentionJourney.OrganizationAsync(factory, host, owner, Ct);
+        var phoneNumberId = WhatsAppAttentionJourney.NewNumberId();
+        using var connected = await WhatsAppAttentionJourney.ConnectAsync(owner, phoneNumberId, Ct);
+        var numberId = (await WhatsAppAttentionJourney.JsonAsync(connected, Ct)).GetProperty("id").GetGuid();
+        using (var bot = await owner.PutAsJsonAsync($"/api/organization/whatsapp/numbers/{numberId}/bot", new
+        {
+            welcome = "Bienvenidos",
+            outOfHours = "Cerrado",
+            schedule = new
+            {
+                timeZoneId = "America/Argentina/Buenos_Aires",
+                days = Enum.GetValues<DayOfWeek>().Select(day => new { day = day.ToString(), from = "00:00:00", to = "23:59:59" }).ToArray(),
+            },
+            menu = Array.Empty<object>(),
+            askPromotions = false,
+            offerAccountLink = true,
+            employeesTeamId = (Guid?)null,
+            version = 0u,
+        }, Ct)) Assert.Equal(HttpStatusCode.OK, bot.StatusCode);
+
+        using var person = WhatsAppAttentionJourney.Client(host);
+        var account = await AccountJourney.RegisterAsync(host, person, Ct);
+        var removedPhone = PhoneNumber.Create(WhatsAppAttentionJourney.NewPhone()).Value;
+        var keptPhone = PhoneNumber.Create(WhatsAppAttentionJourney.NewPhone()).Value;
+        Guid removedMethodId = Guid.Empty;
+        await WhatsAppPrivacyFixture.TransactionAsync(host.Services, (services, _) =>
+        {
+            var nowUtc = services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+            var removedMethod = LoginMethod.CreatePhone(account.UserId, removedPhone); removedMethod.Verify(nowUtc);
+            var keptMethod = LoginMethod.CreatePhone(account.UserId, keptPhone); keptMethod.Verify(nowUtc);
+            services.GetRequiredService<ILoginMethodRepository>().Add(removedMethod);
+            services.GetRequiredService<ILoginMethodRepository>().Add(keptMethod);
+            removedMethodId = removedMethod.Id;
+            return Task.CompletedTask;
+        }, Ct);
+
+        using var anonymous = WhatsAppAttentionJourney.Client(host);
+        foreach (var phone in new[] { removedPhone.Value, keptPhone.Value })
+        {
+            await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, phone, "Hola", Ct);
+            await LinkChoiceAsync(host, anonymous, phoneNumberId, phone);
+        }
+        Assert.Equal(2, (await JsonAsync(person.GetAsync("/api/me/whatsapp/conversations", Ct)))
+            .GetProperty("totalCount").GetInt32());
+
+        // Rollback sin espacio activo: los dos vínculos quedan intactos.
+        await using (var scope = host.Services.CreateAsyncScope())
+        {
+            var services = scope.ServiceProvider;
+            var observer = Assert.Single(services.GetServices<IPhoneLinkObserver>());
+            var result = await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                await services.GetRequiredService<ILoginMethodRepository>().LockUserAsync(account.UserId, ct);
+                await observer.RemovedAsync(account.UserId, removedMethodId, removedPhone, ct);
+                return Result.Failure(LoginMethodErrors.LastMethod);
+            }, CommitPolicy.OnSuccess, Ct);
+            Assert.True(result.IsFailure);
+        }
+        Assert.Equal(2, (await JsonAsync(person.GetAsync("/api/me/whatsapp/conversations", Ct)))
+            .GetProperty("totalCount").GetInt32());
+
+        // Commit sin espacio activo: se borra solo el vínculo del teléfono quitado; el del otro teléfono sigue.
+        await WhatsAppPrivacyFixture.TransactionAsync(host.Services, async (services, ct) =>
+        {
+            await services.GetRequiredService<ILoginMethodRepository>().LockUserAsync(account.UserId, ct);
+            await Assert.Single(services.GetServices<IPhoneLinkObserver>()).RemovedAsync(account.UserId, removedMethodId, removedPhone, ct);
+        }, Ct);
+        Assert.Equal(1, (await JsonAsync(person.GetAsync("/api/me/whatsapp/conversations", Ct)))
+            .GetProperty("totalCount").GetInt32());
+        var conversations = (await JsonAsync(owner.GetAsync("/api/organization/whatsapp/customers/conversations", Ct)))
+            .GetProperty("conversations").GetProperty("items").EnumerateArray().ToArray();
+        Assert.False(conversations.Single(row => row.GetProperty("displayNumber").GetString() == removedPhone.Value)
+            .GetProperty("linkedToAccount").GetBoolean());
+        Assert.True(conversations.Single(row => row.GetProperty("displayNumber").GetString() == keptPhone.Value)
+            .GetProperty("linkedToAccount").GetBoolean());
+    }
+
+    private static async Task<JsonElement> JsonAsync(Task<HttpResponseMessage> request)
+    {
+        using var response = await request;
+        return await WhatsAppAttentionJourney.JsonAsync(response, Ct);
+    }
+
+    private static async Task LinkChoiceAsync(WebApplicationFactory<Program> host, HttpClient client, string phoneNumberId, string from)
+    {
+        var body = JsonSerializer.Serialize(new
+        {
+            @object = "whatsapp_business_account",
+            entry = new[] { new { id = "waba-" + phoneNumberId, changes = new[] { new { field = "messages", value = new
+            {
+                messaging_product = "whatsapp",
+                metadata = new { display_phone_number = "5491100000000", phone_number_id = phoneNumberId },
+                messages = new[] { new
+                {
+                    from = from.TrimStart('+'), id = "wamid.obs.link." + Guid.NewGuid().ToString("N"), type = "interactive",
+                    interactive = new { type = "button_reply", button_reply = new { id = BotButtons.LinkAccount, title = "Vincular mi cuenta" } },
+                    timestamp = TimeProvider.System.GetUtcNow().ToUnixTimeSeconds().ToString(System.Globalization.CultureInfo.InvariantCulture),
+                } },
+            } } } } },
+        });
+        using var received = await WhatsAppAttentionJourney.WebhookAsync(client, body, Ct);
+        Assert.Equal(HttpStatusCode.OK, received.StatusCode);
+        await host.Services.GetServices<IHostedService>().OfType<Infrastructure.Modules.WhatsApp.Inbound.WhatsAppInboundProcessor>().Single()
+            .ProcessPendingAsync(Ct);
     }
 }
 
