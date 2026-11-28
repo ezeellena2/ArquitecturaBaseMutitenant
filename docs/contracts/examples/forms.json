@@ -1643,6 +1643,87 @@
       }
     },
     {
+      "name": "Guardar un cambio de tipo con valores que no convierten",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "{count} opciones tienen un valor que no es {type}.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.FieldTypeNotConvertible",
+        "errors": {
+          "fields.0.type": [
+            "2 opciones tienen un valor que no es un número entero."
+          ]
+        },
+        "invalidCount": 2,
+        "invalidRows": [
+          {
+            "position": 0,
+            "itemId": "00000000-0000-4000-8000-000000000018",
+            "text": "Acme",
+            "reason": "invalid"
+          },
+          {
+            "position": 1,
+            "itemId": "00000000-0000-4000-8000-000000000019",
+            "text": "Delta",
+            "reason": "invalid"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Guardar una regla nueva que no cumplen los valores",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "{count} opciones no cumplen la regla nueva.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.FieldValuesIncompatible",
+        "errors": {
+          "fields.1": [
+            "1 opción no cumple la regla nueva."
+          ]
+        },
+        "invalidCount": 1,
+        "invalidRows": [
+          {
+            "position": 0,
+            "itemId": "00000000-0000-4000-8000-000000000018",
+            "text": "Acme",
+            "reason": "range"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Guardar un campo obligatorio con opciones activas sin valor",
+      "method": "PUT",
+      "path": "/api/organization/forms/catalogs/{id}",
+      "status": 400,
+      "body": {
+        "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+        "title": "Datos inválidos",
+        "status": 400,
+        "detail": "{count} opciones activas no tienen valor.",
+        "traceId": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01",
+        "code": "Forms.Catalog.FieldValuesMissing",
+        "errors": {
+          "fields.2.required": [
+            "2 opciones activas no tienen valor."
+          ]
+        }
+      }
+    },
+    {
       "name": "Guardar con una columna que la fuente no tiene",
       "method": "PUT",
       "path": "/api/organization/forms/catalogs/{id}",

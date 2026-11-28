@@ -237,8 +237,9 @@ public sealed class FormsContractExamplesTests(ApiFactory factory)
             Supplier(0, new() { [cuit.ToString()] = "20-12345678-6", [plazo.ToString()] = "30" }),
             Supplier(1, new() { [cuit.ToString()] = "30-71234567-1" }),
         }))).GetProperty("version").GetUInt32();
-        supplierVersion = (await PutAsync("Guardar un campo obligatorio y uno nuevo", suppliersId,
-            SaveSuppliers(fields: KeptAnd(NewField("zona", "Zona", "Text"))))).GetProperty("version").GetUInt32();
+        var withZone = await PutAsync("Guardar un campo obligatorio y uno nuevo", suppliersId, SaveSuppliers(fields: KeptAnd(NewField("zona", "Zona", "Text"))));
+        supplierVersion = withZone.GetProperty("version").GetUInt32();
+        var zona = withZone.GetProperty("fieldIdentityMap")[0].GetProperty("fieldId").GetGuid();
         await PutAsync("Guardar un valor que no es del tipo del campo", suppliersId,
             SaveSuppliers(items: new[] { Supplier(0, new() { [plazo.ToString()] = "treinta" }) }));
         await PutAsync("Guardar sin el valor de un campo obligatorio", suppliersId,
@@ -255,6 +256,22 @@ public sealed class FormsContractExamplesTests(ApiFactory factory)
         {
             title = new[] { "text", "field:" + Guid.NewGuid().ToString("D") }, description = new[] { "detail" },
         }));
+        // Cambiar el tipo o una regla de un campo guardado (B5): lo que no convierte, lo que no cumple la regla nueva y las opciones
+        // activas sin valor al volverlo obligatorio.
+        object Saved(Guid id, int index, string name, string type, bool required = false, bool unique = false, string? min = null) =>
+            new { id, key = index < 2 ? supplierFields[index].GetProperty("key").GetString() : "zona", name, type, required, unique, min };
+        object[] SavedFields(object? cuitField = null, object? plazoField = null, object? zoneField = null) =>
+        [
+            cuitField ?? Saved(cuit, 0, "CUIT", "Text", required: true, unique: true),
+            plazoField ?? Saved(plazo, 1, "Plazo de pago", "WholeNumber"),
+            zoneField ?? Saved(zona, 2, "Zona", "Text"),
+        ];
+        await PutAsync("Guardar un cambio de tipo con valores que no convierten", suppliersId,
+            SaveSuppliers(fields: SavedFields(cuitField: Saved(cuit, 0, "CUIT", "WholeNumber", required: true, unique: true))));
+        await PutAsync("Guardar una regla nueva que no cumplen los valores", suppliersId,
+            SaveSuppliers(fields: SavedFields(plazoField: Saved(plazo, 1, "Plazo de pago", "WholeNumber", min: "45"))));
+        await PutAsync("Guardar un campo obligatorio con opciones activas sin valor", suppliersId,
+            SaveSuppliers(fields: SavedFields(zoneField: Saved(zona, 2, "Zona", "Text", required: true))));
         var membersVersion = members.GetProperty("catalog").GetProperty("version").GetUInt32();
         await PutAsync("Guardar con una columna que la fuente no tiene", membersId, new
         {
