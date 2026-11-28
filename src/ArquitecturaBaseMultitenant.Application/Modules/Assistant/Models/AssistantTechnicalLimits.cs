@@ -25,6 +25,12 @@ public static class AssistantTechnicalLimits
     public const int TitleMaxOutputTokens = 64;
     // Includes the title call. Admission/reservations and the provider loop are supplied by T05/T06.
     public const int MaxCallsPerTurn = 5;
+    /// <summary>
+    /// Llamadas a herramientas que el modelo puede pedir en un mismo paso (KAN-96), aparte de los pasos del turno. Un turno tiene
+    /// como mucho 13 herramientas (las 9 de empresa, help_article y las 3 de acciones): 16 cubre una llamada en paralelo a cada
+    /// una y repetir alguna. Lo que devuelven vuelve al proveedor solo si entra en <see cref="MaxInputTokens"/>.
+    /// </summary>
+    public const int MaxToolCallsPerStep = 16;
     // ADR 0064 §12: the pending turns a copy takes per pass, as many as its four lanes start before a turn expires.
     public const int TurnsPerCopy = 4;
 }

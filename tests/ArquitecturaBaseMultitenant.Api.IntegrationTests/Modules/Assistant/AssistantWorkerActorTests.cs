@@ -3,6 +3,7 @@ using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.AssistantTurns;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Application.Modules.Assistant.Models;
 using ArquitecturaBaseMultitenant.Domain.Assistant;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
@@ -202,15 +203,21 @@ public sealed class AssistantWorkerActorTests
         Assert.Equal(displayNumber.Value, item.GetProperty("subject").GetString());
     }
 
-    [Fact]
-    public async Task Repeated_calls_to_the_same_tool_in_one_round_complete_even_above_distinct_tool_count()
+    /// <summary>
+    /// KAN-96: con una sola herramienta (help_article), el modelo puede llamarla varias veces en un mismo paso, más que las
+    /// herramientas distintas y más que los pasos del turno (<see cref="AssistantTechnicalLimits.MaxCallsPerTurn"/>).
+    /// </summary>
+    [Theory]
+    [InlineData(2)]
+    [InlineData(6)]
+    public async Task Repeated_calls_to_the_same_tool_in_one_round_complete_even_above_distinct_tool_count(int callsPerRound)
     {
         await using var session = await AssistantTurnTestSession.CreateAsync("platform");
-        // Con sólo platform.assistant.use el turno tiene 1 herramienta (help_article); 2 llamadas en la misma vuelta prueban KAN-96.
+        // Con sólo platform.assistant.use el turno tiene 1 herramienta (help_article).
         await PlatformOperators.GrantAsync(session.Host.Services, session.Account.UserId,
             [PlatformPermissions.Assistant.Use], Ct);
         session.Provider.ToolKey = "help_article";
-        session.Provider.ToolCallsPerRound = 2;
+        session.Provider.ToolCallsPerRound = callsPerRound;
         var conversation = await session.ConversationAsync();
         session.Provider.Release();
         using var request = AssistantTurnTestSession.Request(HttpMethod.Post,
@@ -234,8 +241,32 @@ public sealed class AssistantWorkerActorTests
                 break;
             }
         }
-        Assert.Equal(new[] { "running", "complete", "running", "complete" }, states);
+        Assert.Equal(Enumerable.Repeat(new[] { "running", "complete" }, callsPerRound).SelectMany(pair => pair), states);
         Assert.Equal(2, session.Provider.Calls);
-        Assert.Equal(2, session.Provider.ToolResults.Count);
+        Assert.Equal(callsPerRound, session.Provider.ToolResults.Count);
+    }
+
+    /// <summary>KAN-96: un paso que pide más llamadas que el tope por paso falla sin correr ninguna herramienta.</summary>
+    [Fact]
+    public async Task A_round_above_the_tool_calls_per_step_bound_fails_without_running_tools()
+    {
+        await using var session = await AssistantTurnTestSession.CreateAsync("platform");
+        await PlatformOperators.GrantAsync(session.Host.Services, session.Account.UserId,
+            [PlatformPermissions.Assistant.Use], Ct);
+        session.Provider.ToolKey = "help_article";
+        session.Provider.ToolCallsPerRound = AssistantTechnicalLimits.MaxToolCallsPerStep + 1;
+        var conversation = await session.ConversationAsync();
+        session.Provider.Release();
+        using var request = AssistantTurnTestSession.Request(HttpMethod.Post,
+            session.Path + $"/conversations/{conversation.Id:D}/messages", AssistantTurnTestSession.Body(conversation), Guid.NewGuid());
+        using var response = await session.OpenStreamAsync(request, Ct);
+        using var stream = await AssistantSseTestReader.OpenAsync(response, Ct);
+        Assert.Equal("start", (await stream.NextAsync(Ct)).Event);
+        var terminal = await stream.TerminalAsync(Ct);
+        Assert.Equal("error", terminal.Event);
+        Assert.Equal("Failed", terminal.Data.GetProperty("status").GetString());
+        Assert.Equal(AssistantErrors.ProviderUnavailableCode, terminal.Data.GetProperty("code").GetString());
+        Assert.Equal(1, session.Provider.Calls);
+        Assert.Empty(session.Provider.ToolResults);
     }
 }

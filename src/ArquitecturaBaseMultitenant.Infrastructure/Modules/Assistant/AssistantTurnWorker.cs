@@ -137,7 +137,7 @@ internal sealed partial class AssistantTurnWorker(IServiceScopeFactory scopes, T
                 await GenerateTitleAsync(run.Services, service, turn, lease, execution.Token);
                 return;
             }
-            if (sequence == AssistantTechnicalLimits.MaxCallsPerTurn || calls.Count > AssistantTechnicalLimits.MaxCallsPerTurn)
+            if (sequence == AssistantTechnicalLimits.MaxCallsPerTurn || calls.Count > AssistantTechnicalLimits.MaxToolCallsPerStep)
             { outcome.Fail(AssistantErrors.ProviderUnavailable.Code); return; }
             messages.AddMessages(response);
             if (await RunToolsAsync(run, calls, outcome, execution.Token) is not { } results) return;
