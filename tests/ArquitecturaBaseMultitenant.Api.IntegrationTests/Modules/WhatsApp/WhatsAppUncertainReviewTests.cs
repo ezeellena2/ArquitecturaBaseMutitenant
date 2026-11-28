@@ -216,6 +216,97 @@ public sealed class WhatsAppUncertainReviewTests(ApiFactory factory)
 
     private static string Review(string inbox, Guid chat, Guid message) => $"{inbox}/conversations/{chat}/messages/{message}/review";
 
+    /// <summary>
+    /// Un aviso «failed» del webhook deja su motivo en el mensaje del chat de la organización (B5). Va en el grupo de la API y no en
+    /// <c>WhatsAppWebhookTests</c>: crear una organización siembra la configuración de Plataforma en la base de esa clase, y la cuota
+    /// de arranque que prueba su caso del 429 dejaría de valer.
+    /// </summary>
+    [Fact]
+    public async Task A_failed_status_webhook_records_its_reason_on_the_chat_message()
+    {
+        await using var host = WhatsAppAttentionJourney.Host(factory, new FakeGraph());
+        using var owner = WhatsAppAttentionJourney.Client(host);
+        owner.DefaultRequestHeaders.AcceptLanguage.ParseAdd("es-AR");
+        var (_, tenant) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, owner, Ct);
+        var phoneNumberId = WhatsAppAttentionJourney.NewNumberId();
+        using (var connected = await WhatsAppAttentionJourney.ConnectAsync(owner, phoneNumberId, Ct))
+            Assert.Equal(HttpStatusCode.Created, connected.StatusCode);
+
+        using var anonymous = WhatsAppAttentionJourney.Client(host);
+        var customer = WhatsAppAttentionJourney.NewPhone();
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, customer, "Hola", Ct);
+        using var listResponse = await owner.GetAsync("/api/organization/whatsapp/customers/conversations", Ct);
+        Assert.Equal(HttpStatusCode.OK, listResponse.StatusCode);
+        var chatId = (await WhatsAppAttentionJourney.JsonAsync(listResponse, Ct))
+            .GetProperty("conversations").GetProperty("items").EnumerateArray()
+            .Single(row => row.GetProperty("displayNumber").GetString() == customer).GetProperty("id").GetGuid();
+
+        Guid firstId, secondId;
+        using (var firstResponse = await WhatsAppAttentionJourney.PostAsync(owner, $"/api/organization/whatsapp/customers/conversations/{chatId}/messages", new { text = "Primer aviso" }, Ct))
+        {
+            Assert.Equal(HttpStatusCode.Created, firstResponse.StatusCode);
+            firstId = (await WhatsAppAttentionJourney.JsonAsync(firstResponse, Ct)).GetProperty("id").GetGuid();
+        }
+        using (var secondResponse = await WhatsAppAttentionJourney.PostAsync(owner, $"/api/organization/whatsapp/customers/conversations/{chatId}/messages", new { text = "Segundo aviso" }, Ct))
+        {
+            Assert.Equal(HttpStatusCode.Created, secondResponse.StatusCode);
+            secondId = (await WhatsAppAttentionJourney.JsonAsync(secondResponse, Ct)).GetProperty("id").GetGuid();
+        }
+
+        Guid firstOutbox, secondOutbox;
+        await using (var readOutbox = host.Services.CreateAsyncScope())
+        {
+            readOutbox.ServiceProvider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(tenant, TenantKind.Business);
+            var rows = await readOutbox.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<WhatsAppChatMessage>()
+                .AsNoTracking().Where(value => value.Id == firstId || value.Id == secondId).ToArrayAsync(Ct);
+            firstOutbox = Assert.Single(rows, value => value.Id == firstId).OutboxMessageId!.Value;
+            secondOutbox = Assert.Single(rows, value => value.Id == secondId).OutboxMessageId!.Value;
+        }
+
+        var wamidFirst = "wamid.chat.131049." + Guid.NewGuid().ToString("N");
+        var wamidSecond = "wamid.chat.131026." + Guid.NewGuid().ToString("N");
+        var nowUtc = host.Services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime;
+        await using (var scope = host.Services.CreateAsyncScope())
+        {
+            var observer = scope.ServiceProvider.GetServices<IOutboxDeliveryObserver>().Single(value => value.Key == "whatsapp");
+            await scope.ServiceProvider.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+            {
+                await observer.RecordAcceptedAsync(firstOutbox, OutboxDeliveryReceipt.Accepted(wamidFirst, phoneNumberId, "Text"), nowUtc, ct);
+                await observer.RecordAcceptedAsync(secondOutbox, OutboxDeliveryReceipt.Accepted(wamidSecond, phoneNumberId, "Text"), nowUtc, ct);
+                return Result.Success();
+            }, CommitPolicy.OnSuccess, Ct);
+        }
+
+        using (var failed = await WhatsAppAttentionJourney.WebhookAsync(anonymous, WhatsAppAttentionJourney.Statuses(phoneNumberId,
+            WhatsAppAttentionJourney.Status(wamidFirst, "failed", error: 131049),
+            WhatsAppAttentionJourney.Status(wamidSecond, "failed", error: 131026)), Ct))
+            Assert.Equal(HttpStatusCode.OK, failed.StatusCode);
+
+        await using (var verify = host.Services.CreateAsyncScope())
+        {
+            verify.ServiceProvider.GetRequiredService<ITenantAccessInitializer>().SetFromAccess(tenant, TenantKind.Business);
+            var rows = await verify.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<WhatsAppChatMessage>()
+                .AsNoTracking().Where(value => value.Id == firstId || value.Id == secondId).ToArrayAsync(Ct);
+            var firstRow = Assert.Single(rows, value => value.Id == firstId);
+            var secondRow = Assert.Single(rows, value => value.Id == secondId);
+            Assert.Equal((WhatsAppChatMessageStatus.Failed, WhatsAppSendFailures.RateLimited, wamidFirst),
+                (firstRow.Status, firstRow.FailureReason, firstRow.Wamid));
+            Assert.Equal((WhatsAppChatMessageStatus.Failed, WhatsAppSendFailures.Undeliverable, wamidSecond),
+                (secondRow.Status, secondRow.FailureReason, secondRow.Wamid));
+        }
+
+        using var chatResponse = await owner.GetAsync($"/api/organization/whatsapp/customers/conversations/{chatId}", Ct);
+        Assert.Equal(HttpStatusCode.OK, chatResponse.StatusCode);
+        var messages = (await WhatsAppAttentionJourney.JsonAsync(chatResponse, Ct))
+            .GetProperty("messages").GetProperty("items").EnumerateArray().ToArray();
+        var firstMessage = Assert.Single(messages, value => value.GetProperty("id").GetGuid() == firstId);
+        var secondMessage = Assert.Single(messages, value => value.GetProperty("id").GetGuid() == secondId);
+        Assert.Equal(("Failed", "WhatsApp frenó el envío por su límite de mensajes. Probá de nuevo en un rato."),
+            (firstMessage.GetProperty("status").GetString(), firstMessage.GetProperty("failureReason").GetString()));
+        Assert.Equal(("Failed", "WhatsApp no pudo entregarlo a ese número."),
+            (secondMessage.GetProperty("status").GetString(), secondMessage.GetProperty("failureReason").GetString()));
+    }
+
     private static async Task<Guid> SendAsync(HttpClient client, string path, string text)
     {
         using var response = await WhatsAppAttentionJourney.PostAsync(client, path, new { text }, Ct);
