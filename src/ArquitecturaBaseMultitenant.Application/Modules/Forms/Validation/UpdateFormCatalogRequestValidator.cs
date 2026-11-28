@@ -24,7 +24,8 @@ internal sealed class UpdateFormCatalogRequestValidator : AbstractValidator<Upda
         RuleFor(request => request.Version).NotNull().WithMessage(_ => ValidationTexts.Required);
         RuleForEach(request => request.Items).NotNull().WithMessage(_ => ValidationTexts.Required)
             .ChildRules(item => FormCatalogInputRules.Item(item, created: false));
-        RuleFor(request => request.Items).Custom(FormCatalogInputRules.AddRepeated);
+        RuleForEach(request => request.Items).Must((request, item, context) => !FormCatalogInputRules.IsRepeated(request.Items, item, context))
+            .WithMessage(_ => FormCatalogInputRules.Repeated);
         RuleFor(request => request.Moves).Must(moves => moves is null || moves.Count <= FormCatalogLimits.MaxMoves)
             .WithMessage(_ => FormCatalogInputRules.TooMany);
         RuleForEach(request => request.Moves).NotNull().WithMessage(_ => ValidationTexts.Required).ChildRules(move =>
@@ -40,8 +41,7 @@ internal sealed class UpdateFormCatalogRequestValidator : AbstractValidator<Upda
             .WithMessage(_ => FormCatalogInputRules.TooMany);
         RuleForEach(request => request.DeleteItems)
             .NotEqual(Guid.Empty).WithMessage(_ => FormsTexts.Get(FormCatalogErrors.ItemNotFoundCode))
-            .When(request => request.DeleteItems is not { Count: > FormCatalogLimits.MaxDeleteItems });
-        RuleFor(request => request.DeleteItems).Custom(AddRepeatedDeletions)
+            .Must((request, id, context) => !IsRepeatedDeletion(request, id, context)).WithMessage(_ => FormCatalogInputRules.Repeated)
             .When(request => request.DeleteItems is not { Count: > FormCatalogLimits.MaxDeleteItems });
         RuleFor(request => request.Sort).ChildRules(sort =>
         {
@@ -68,22 +68,33 @@ internal sealed class UpdateFormCatalogRequestValidator : AbstractValidator<Upda
         RuleFor(request => request.Filters).ChildRules(filters => FormCatalogInputRules.Filters(filters!)).When(request => request.Filters is not null);
     }
 
+    private const string DeletionCountsKey = "Forms.Catalog.DeletionCounts";
+
     /// <summary>
-    /// Una opción por borrar va una sola vez y no va también entre las opciones ni entre los movimientos; se marca en
-    /// <c>deleteItems.{i}</c>. Se cuenta de una pasada, sin recorrer las opciones del pedido por cada borrado.
+    /// Una opción por borrar va una sola vez y no va también entre las opciones ni entre los movimientos; la regla la marca en
+    /// <c>deleteItems.{i}</c>. Las cuentas se arman de una pasada, una vez por validación, y quedan en el contexto: no se recorren
+    /// las opciones del pedido por cada borrado.
     /// </summary>
-    private static void AddRepeatedDeletions(IReadOnlyList<Guid>? ids, ValidationContext<UpdateFormCatalogRequest> context)
+    private static bool IsRepeatedDeletion(UpdateFormCatalogRequest request, Guid id, ValidationContext<UpdateFormCatalogRequest> context)
     {
-        if (ids is null) return;
-        var request = context.InstanceToValidate;
-        var counts = new Dictionary<Guid, int>();
-        foreach (var id in ids) counts[id] = counts.GetValueOrDefault(id) + 1;
-        var elsewhere = (request.Items ?? []).Select(item => item?.ItemId).Concat((request.Moves ?? []).Select(move => move?.ItemId))
-            .OfType<Guid>().ToHashSet();
-        for (var index = 0; index < ids.Count; index++)
+        var counts = context.RootContextData.TryGetValue(DeletionCountsKey, out var cached) && cached is DeletionCounts known
+            && ReferenceEquals(known.Request, request)
+            ? known
+            : DeletionCounts.Of(request);
+        context.RootContextData[DeletionCountsKey] = counts;
+        return counts.Ids.GetValueOrDefault(id) > 1 || counts.Elsewhere.Contains(id);
+    }
+
+    /// <summary>Cuántas veces va cada borrado, y los ids de opción que el pedido también manda en las opciones o en los movimientos.</summary>
+    private sealed record DeletionCounts(UpdateFormCatalogRequest Request, Dictionary<Guid, int> Ids, HashSet<Guid> Elsewhere)
+    {
+        public static DeletionCounts Of(UpdateFormCatalogRequest request)
         {
-            if (counts[ids[index]] > 1 || elsewhere.Contains(ids[index]))
-                context.AddFailure($"{context.PropertyPath}[{index}]", FormCatalogInputRules.Repeated);
+            var ids = new Dictionary<Guid, int>();
+            foreach (var id in request.DeleteItems ?? []) ids[id] = ids.GetValueOrDefault(id) + 1;
+            var elsewhere = (request.Items ?? []).Select(item => item?.ItemId).Concat((request.Moves ?? []).Select(move => move?.ItemId))
+                .OfType<Guid>().ToHashSet();
+            return new DeletionCounts(request, ids, elsewhere);
         }
     }
 }

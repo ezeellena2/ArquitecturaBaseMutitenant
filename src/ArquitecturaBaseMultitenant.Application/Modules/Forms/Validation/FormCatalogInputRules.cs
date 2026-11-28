@@ -114,32 +114,44 @@ internal static class FormCatalogInputRules
         }).When(input => input.Sort is not null);
     }
 
+    private const string ItemCountsKey = "Forms.Catalog.ItemCounts";
+
     /// <summary>
-    /// Cada id local y cada id de opción va una sola vez entre las opciones del pedido; si se repite, se marcan todas las que lo
-    /// llevan, en <c>items.{i}</c>. Se cuenta de una pasada: ninguna opción se compara contra todas las demás, así un pedido con
-    /// muchas opciones llega rápido al tope del servicio (<c>TooManyItems</c>, 409).
+    /// Si el id local o el id de opción de <paramref name="item"/> se repite entre las opciones del pedido; la regla marca cada
+    /// opción que lo lleva, en <c>items.{i}</c>. Las cuentas se arman de una pasada, una vez por validación, y quedan en el
+    /// contexto: ninguna opción se compara contra todas las demás, así un pedido con muchas opciones llega rápido al tope del
+    /// servicio (<c>TooManyItems</c>, 409). Va en un <c>Must</c> con su mensaje, no en un <c>Custom</c>, que no lo lleva.
     /// </summary>
-    public static void AddRepeated<T>(IReadOnlyList<FormCatalogItemInput?>? items, ValidationContext<T> context)
+    public static bool IsRepeated<T>(IReadOnlyList<FormCatalogItemInput?>? items, FormCatalogItemInput? item, ValidationContext<T> context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        if (items is null) return;
-        var ids = new Dictionary<Guid, int>();
-        var locals = new Dictionary<string, int>(StringComparer.Ordinal);
-        foreach (var item in items)
+        if (items is null || item is null) return false;
+        var counts = context.RootContextData.TryGetValue(ItemCountsKey, out var cached) && cached is ItemCounts known
+            && ReferenceEquals(known.Items, items)
+            ? known
+            : ItemCounts.Of(items);
+        context.RootContextData[ItemCountsKey] = counts;
+        return item switch
         {
-            if (item?.ItemId is { } itemId) ids[itemId] = ids.GetValueOrDefault(itemId) + 1;
-            else if (item is { LocalId.Length: > 0 }) locals[item.LocalId] = locals.GetValueOrDefault(item.LocalId) + 1;
-        }
+            { ItemId: { } itemId } => counts.Ids[itemId] > 1,
+            { LocalId: { Length: > 0 } localId } => counts.Locals[localId] > 1,
+            _ => false,
+        };
+    }
 
-        for (var index = 0; index < items.Count; index++)
+    /// <summary>Cuántas veces va cada id de opción y cada id local (de las opciones nuevas) entre las opciones de un pedido.</summary>
+    private sealed record ItemCounts(IReadOnlyList<FormCatalogItemInput?> Items, Dictionary<Guid, int> Ids, Dictionary<string, int> Locals)
+    {
+        public static ItemCounts Of(IReadOnlyList<FormCatalogItemInput?> items)
         {
-            var repeated = items[index] switch
+            var ids = new Dictionary<Guid, int>();
+            var locals = new Dictionary<string, int>(StringComparer.Ordinal);
+            foreach (var item in items)
             {
-                { ItemId: { } itemId } => ids[itemId] > 1,
-                { LocalId: { Length: > 0 } localId } => locals[localId] > 1,
-                _ => false,
-            };
-            if (repeated) context.AddFailure($"{context.PropertyPath}[{index}]", Repeated);
+                if (item?.ItemId is { } itemId) ids[itemId] = ids.GetValueOrDefault(itemId) + 1;
+                else if (item is { LocalId.Length: > 0 }) locals[item.LocalId] = locals.GetValueOrDefault(item.LocalId) + 1;
+            }
+            return new ItemCounts(items, ids, locals);
         }
     }
 }
