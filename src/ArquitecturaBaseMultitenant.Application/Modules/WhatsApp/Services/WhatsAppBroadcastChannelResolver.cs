@@ -10,6 +10,8 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// </summary>
 internal sealed class WhatsAppBroadcastChannelResolver(IWhatsAppChannelReader channels, IWhatsAppTemplateReader templates)
 {
+    internal Task<WhatsAppTemplateRow?> FindTemplateAsync(Guid templateId, CancellationToken ct) => templates.FindAsync(false, templateId, ct);
+
     internal async Task<Result<WhatsAppSendingChannelRow>> ResolveAsync(WhatsAppTemplateRow template, CancellationToken ct)
     {
         if (template.Category != WhatsAppTemplateCategory.Marketing) return WhatsAppErrors.TemplateNotApproved;

@@ -9,8 +9,9 @@ using ArquitecturaBaseMultitenant.Domain.Results;
 namespace ArquitecturaBaseMultitenant.Infrastructure.Messaging.Email;
 
 /// <summary>
-/// Encola el mensaje renderizado dentro de la transacción del caso de uso. Un código que vence en la cola no se manda: lleva
-/// <see cref="OutboxEnqueueOptions.DiscardAfterUtc"/> en su vigencia (O3).
+/// Encola el mensaje renderizado dentro de la transacción del caso de uso. Un código contesta a quien lo pidió: sale con
+/// prioridad <see cref="OutboxPriority.Reply"/>, antes que los avisos (ADR 0066), y si vence en la cola no se manda porque
+/// lleva <see cref="OutboxEnqueueOptions.DiscardAfterUtc"/> en su vigencia (O3).
 /// </summary>
 internal sealed class EmailLoginCodeChannel(IEmailTemplateRenderer templates, IOutbox outbox, TimeProvider clock) : ILoginCodeChannel
 {
@@ -44,6 +45,6 @@ internal sealed class EmailLoginCodeChannel(IEmailTemplateRenderer templates, IO
     private OutboxEnqueueOptions Expiring(int lifetimeMinutes)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(lifetimeMinutes, 1);
-        return new(DiscardAfterUtc: clock.GetUtcNow().UtcDateTime.AddMinutes(lifetimeMinutes));
+        return new(Priority: OutboxPriority.Reply, DiscardAfterUtc: clock.GetUtcNow().UtcDateTime.AddMinutes(lifetimeMinutes));
     }
 }

@@ -3,8 +3,11 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
+using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
+using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Messaging;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
@@ -207,6 +210,66 @@ public sealed class WhatsAppBroadcastTests(ApiFactory factory)
         }
 
         await ProblemAsync(owner.GetAsync("/api/organization/whatsapp/contacts?sort=tags", Ct), HttpStatusCode.BadRequest, "Validation.Failed");
+    }
+
+    [Fact]
+    public async Task A_broadcast_waits_while_the_whatsapp_module_is_disabled_and_another_organization_keeps_sending()
+    {
+        await using var host = WhatsAppAttentionJourney.Host(factory, new FakeGraph(), templates: new FakeTemplates());
+        using var ownerA = WhatsAppAttentionJourney.Client(host);
+        var (_, tenantA) = await WhatsAppAttentionJourney.OrganizationAsync(factory, host, ownerA, Ct);
+        using var ownerB = WhatsAppAttentionJourney.Client(host);
+        await WhatsAppAttentionJourney.OrganizationAsync(factory, host, ownerB, Ct);
+        using var anonymous = WhatsAppAttentionJourney.Client(host);
+
+        var (ana, beto) = (WhatsAppAttentionJourney.NewPhone(), WhatsAppAttentionJourney.NewPhone());
+        var broadcastA = await StageDueBroadcastAsync(host, ownerA, anonymous, ana, "Promo pausa", "promo_pausa");
+        var broadcastB = await StageDueBroadcastAsync(host, ownerB, anonymous, beto, "Promo activa", "promo_activa");
+
+        // Se apaga WhatsApp solo en la organización A: su difusión espera sin cancelarse y B sigue enviando.
+        await SetModuleEnabledAsync(host, tenantA, false);
+        await DispatchAsync(host);
+
+        Assert.Equal("Sent", (await DetailAsync(ownerB, broadcastB)).GetProperty("broadcast").GetProperty("status").GetString());
+        Assert.Contains(await OutboxAsync(host), message => message.To == beto && message.TemplateName == "promo_activa");
+        Assert.DoesNotContain(await OutboxAsync(host), message => message.To == ana && message.TemplateName == "promo_pausa");
+
+        // Al volver a prender el módulo, la difusión de A seguía programada y sale en la vuelta siguiente.
+        await SetModuleEnabledAsync(host, tenantA, true);
+        Assert.Equal("Scheduled", (await DetailAsync(ownerA, broadcastA)).GetProperty("broadcast").GetProperty("status").GetString());
+        await DispatchAsync(host);
+        Assert.Equal("Sent", (await DetailAsync(ownerA, broadcastA)).GetProperty("broadcast").GetProperty("status").GetString());
+        Assert.Contains(await OutboxAsync(host), message => message.To == ana && message.TemplateName == "promo_pausa");
+    }
+
+    private static async Task<Guid> StageDueBroadcastAsync(WebApplicationFactory<Program> host, HttpClient owner, HttpClient anonymous,
+        string phone, string templateName, string metaName)
+    {
+        var phoneNumberId = WhatsAppAttentionJourney.NewNumberId();
+        using (var connected = await WhatsAppAttentionJourney.ConnectAsync(owner, phoneNumberId, Ct))
+            Assert.Equal(HttpStatusCode.Created, connected.StatusCode);
+        var templateId = await TemplateAsync(owner, templateName, "Marketing", "Hola, tenés {{1}} de descuento.");
+        await WhatsAppTemplateManagementTests.TemplateWebhookAsync(owner, "waba-" + phoneNumberId, "message_template_status_update",
+            new { @event = "APPROVED", message_template_id = 1L, message_template_name = metaName, message_template_language = "es_AR", reason = "NONE" });
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, phone, "Hola", Ct);
+        await ConsentAsync(owner, phone, "Accepted", []);
+        return (await CreateAsync(owner, templateId, null)).GetProperty("id").GetGuid();
+    }
+
+    private static async Task SetModuleEnabledAsync(WebApplicationFactory<Program> host, Guid tenantId, bool enabled)
+    {
+        await using var scope = host.Services.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        await services.GetRequiredService<IUnitOfWork>().ExecuteInTransactionAsync(async ct =>
+        {
+            var feature = await services.GetRequiredService<ApplicationDbContext>().TenantFeatures
+                .SingleAsync(value => value.TenantId == tenantId && value.FeatureKey == WhatsAppFeature.Key, ct);
+            Assert.True(feature.Update(enabled, feature.Source, null).IsSuccess);
+            services.GetRequiredService<ISecurityEventRepository>().Add(SecurityEvent.ForTenantFeatures(
+                AuditActorKind.System, Guid.Empty, tenantId, "WhatsApp broadcast module fixture",
+                services.GetRequiredService<TimeProvider>().GetUtcNow().UtcDateTime));
+            return Result.Success();
+        }, CommitPolicy.OnSuccess, Ct);
     }
 
     private static async Task<Guid[]> IdsAsync(HttpClient owner, string path, string list) =>

@@ -20,8 +20,9 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// aprobada o sin medio de pago), sus destinatarios quedan como no enviados con el motivo.
 /// </summary>
 internal sealed class WhatsAppBroadcastDispatchService(IWhatsAppBroadcastReader reader, IWhatsAppBroadcastRepository broadcasts,
-    IWhatsAppTemplateReader templates, WhatsAppBroadcastChannelResolver channels, IWhatsAppTemplateClient client, IWhatsAppTokenProtector protector,
-    IWhatsAppContactReader contacts, IOutbox outbox, IUnitOfWork unitOfWork, TimeProvider clock, ILogger<WhatsAppBroadcastDispatchService> logger)
+    WhatsAppBroadcastChannelResolver channels, IWhatsAppTemplateClient client, IWhatsAppTokenProtector protector,
+    IWhatsAppContactReader contacts, IOutbox outbox, WhatsAppModulePolicy module, IUnitOfWork unitOfWork, TimeProvider clock,
+    ILogger<WhatsAppBroadcastDispatchService> logger)
     : IWhatsAppBroadcastDispatchService
 {
     internal const int BatchSize = 500;
@@ -29,9 +30,10 @@ internal sealed class WhatsAppBroadcastDispatchService(IWhatsAppBroadcastReader 
     public Task<Result<bool>> DispatchNextAsync(CancellationToken cancellationToken) =>
         OperationLog.RunAsync<bool>(logger, clock, "WhatsAppBroadcastDispatch", async () =>
         {
+            if (!await module.IsCurrentEnabledAsync(cancellationToken)) return false;
             var nowUtc = clock.GetUtcNow().UtcDateTime;
             if (await reader.FindNextDueAsync(nowUtc, cancellationToken) is not { } due) return false;
-            var template = await templates.FindAsync(false, due.TemplateId, cancellationToken);
+            var template = await channels.FindTemplateAsync(due.TemplateId, cancellationToken);
             var channel = template is { Status: WhatsAppTemplateStatus.Approved } ? await channels.ResolveAsync(template, cancellationToken)
                 : Result.Failure<WhatsAppSendingChannelRow>(WhatsAppErrors.TemplateNotApproved);
             var budget = BatchSize;
