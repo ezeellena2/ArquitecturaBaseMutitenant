@@ -11,6 +11,8 @@ public interface IWhatsAppChatRepository
     /// <summary>Una conversación de la bandeja, bajo su lock de fila; con versión, la exige.</summary>
     Task<WhatsAppChat?> GetForUpdateAsync(Guid id, WhatsAppInbox inbox, uint? expectedVersion, CancellationToken ct);
     Task<bool> HasInboundAsync(string wamid, CancellationToken ct);
+    /// <summary>Si en el chat salió una plantilla de un operador después de esa hora (B11): la respuesta sigue con él.</summary>
+    Task<bool> HasOperatorTemplateSinceAsync(Guid chatId, DateTime sinceUtc, CancellationToken ct);
     Task<WhatsAppChatMessage?> GetOutboundAsync(Guid outboxMessageId, CancellationToken ct);
     Task<IReadOnlyList<WhatsAppChat>> ListByTeamAsync(Guid teamId, CancellationToken ct);
     /// <summary>Las conversaciones que tiene tomadas esa persona y los mensajes y notas que escribió o revisó (para la baja de su cuenta).</summary>

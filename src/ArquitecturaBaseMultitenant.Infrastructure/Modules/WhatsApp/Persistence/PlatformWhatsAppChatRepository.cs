@@ -38,6 +38,14 @@ internal sealed class PlatformWhatsAppChatRepository(ApplicationDbContext contex
     public Task<bool> HasInboundAsync(string wamid, CancellationToken ct) =>
         context.Set<PlatformWhatsAppChatMessage>().AnyAsync(value => value.Wamid == wamid, ct);
 
+    public Task<bool> HasOperatorTemplateSinceAsync(Guid chatId, DateTime sinceUtc, CancellationToken ct)
+    {
+        context.RequireTransaction();
+        return context.Set<PlatformWhatsAppChatMessage>().AsNoTracking().AnyAsync(value => value.ChatId == chatId
+            && value.Direction == WhatsAppMessageDirection.Outbound && value.Kind == WhatsAppChatMessageKind.Template
+            && value.AuthorUserId != null && value.Status != WhatsAppChatMessageStatus.Failed && value.CreatedAtUtc > sinceUtc, ct);
+    }
+
     public Task<PlatformWhatsAppChatMessage?> GetOutboundAsync(Guid outboxMessageId, CancellationToken ct)
     {
         context.RequireTransaction();

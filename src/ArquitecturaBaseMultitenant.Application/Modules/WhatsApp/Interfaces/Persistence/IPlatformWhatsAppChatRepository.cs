@@ -9,6 +9,8 @@ public interface IPlatformWhatsAppChatRepository
     Task<PlatformWhatsAppChat?> GetAsync(Guid channelId, string waId, CancellationToken ct);
     Task<PlatformWhatsAppChat?> GetForUpdateAsync(Guid id, uint? expectedVersion, CancellationToken ct);
     Task<bool> HasInboundAsync(string wamid, CancellationToken ct);
+    /// <summary>Si en la consulta salió una plantilla de un operador después de esa hora (B11): la respuesta sigue con él.</summary>
+    Task<bool> HasOperatorTemplateSinceAsync(Guid chatId, DateTime sinceUtc, CancellationToken ct);
     Task<PlatformWhatsAppChatMessage?> GetOutboundAsync(Guid outboxMessageId, CancellationToken ct);
     Task<IReadOnlyList<PlatformWhatsAppChat>> ListByTeamAsync(Guid teamId, CancellationToken ct);
     Task<IReadOnlyList<PlatformWhatsAppChat>> ListTakenByAsync(Guid userId, CancellationToken ct);

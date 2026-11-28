@@ -10,7 +10,8 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// <summary>
 /// Las consultas al número de Plataforma (ADR 0038): con las consultas prendidas cada entrada queda en su conversación y
 /// la atiende el bot de Plataforma; apagadas, responde solo el bot de ingreso de la Etapa 8. Como en las organizaciones, una
-/// entrada con la ventana de 24 horas cerrada empieza otra conversación.
+/// entrada con la ventana de 24 horas cerrada empieza otra conversación y vuelve al bot, salvo que responda a una plantilla
+/// enviada por un operador en las últimas 24 horas (B11).
 /// </summary>
 internal sealed class PlatformWhatsAppInboundWriter(IPlatformWhatsAppChatRepository chats, IPayloadProtector protector,
     PlatformWhatsAppBotWriter bot, TimeProvider clock) : IWhatsAppInboundConsumer
@@ -28,15 +29,18 @@ internal sealed class PlatformWhatsAppInboundWriter(IPlatformWhatsAppChatReposit
         await chats.LockAsync(channel.Id, waId.Value, ct);
         var chat = await chats.GetAsync(channel.Id, waId.Value, ct);
         var newConversation = chat is null || !chat.IsWindowOpen(occurredAtUtc);
+        var continuesWithOperator = chat is not null && newConversation
+            && await chats.HasOperatorTemplateSinceAsync(chat.Id, occurredAtUtc - WhatsAppChatBase.Window, ct);
+        var startsWithBot = newConversation && !continuesWithOperator;
         if (chat is null)
         {
             chat = PlatformWhatsAppChat.Create(channel.Id, waId, nowUtc);
             chats.Add(chat);
         }
-        else if (newConversation) chat.RestartWithBot();
+        else if (startsWithBot) chat.RestartWithBot();
         chats.Add(PlatformWhatsAppChatMessage.Inbound(chat.Id, message.Wamid, text,
             WhatsAppOrganizationInboundWriter.MediaKind(message.ContentType), occurredAtUtc));
         chat.RecordInbound(occurredAtUtc, text);
-        await bot.RespondAsync(context, chat, newConversation, ct);
+        await bot.RespondAsync(context, chat, startsWithBot, ct);
     }
 }

@@ -7,8 +7,10 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Security;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Models;
 using ArquitecturaBaseMultitenant.Domain.Authorization;
+using ArquitecturaBaseMultitenant.Domain.Results;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using ArquitecturaBaseMultitenant.Domain.WhatsApp;
+using ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp;
 using ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Inbound;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -217,6 +219,99 @@ public sealed class PlatformWhatsAppBotTests(ApiFactory factory) : IClassFixture
             Assert.True(list.IsSuccess);
             return (list.Value.Conversations.Items, sql.Count);
         }
+    }
+
+    [Fact]
+    public async Task A_reply_to_an_operator_template_stays_with_the_operator_while_an_old_template_restarts_with_the_bot()
+    {
+        var phoneNumberId = WhatsAppAttentionJourney.NewNumberId();
+        var wabaId = "waba-platform-" + phoneNumberId;
+        var templates = new FakeTemplates();
+        await using var host = WhatsAppAttentionJourney.Host(factory, new FakeGraph(), settings: new Dictionary<string, string>
+        {
+            ["WhatsApp:PhoneNumberId"] = phoneNumberId,
+            ["WhatsApp:AccessToken"] = "configured-token",
+            ["WhatsApp:BusinessAccountId"] = wabaId,
+        }, templates: templates);
+        var (operatorClient, operatorId) = await OperatorAccountAsync(host,
+            PlatformPermissions.WhatsApp.Manage, PlatformPermissions.WhatsApp.Attend);
+        using var _ = operatorClient;
+
+        var number = (await WhatsAppAttentionJourney.JsonAsync(await operatorClient.GetAsync("/api/platform/whatsapp/number", Ct), Ct)).GetProperty("number");
+        using (var on = await operatorClient.PutAsJsonAsync("/api/platform/whatsapp/number",
+            new { consultationsEnabled = true, version = number.GetProperty("version").GetUInt32() }, Ct))
+            Assert.Equal(HttpStatusCode.OK, on.StatusCode);
+
+        using var teamResponse = await WhatsAppAttentionJourney.PostAsync(operatorClient, "/api/platform/whatsapp/teams",
+            new { name = "Soporte", memberIds = new[] { operatorId } }, Ct);
+        Assert.Equal(HttpStatusCode.Created, teamResponse.StatusCode);
+        var teamId = (await WhatsAppAttentionJourney.JsonAsync(teamResponse, Ct)).GetProperty("id").GetGuid();
+
+        using var createdTemplate = await WhatsAppAttentionJourney.PostAsync(operatorClient, "/api/platform/whatsapp/templates", new
+        {
+            name = "Seguimiento",
+            category = "Utility",
+            language = "es-AR",
+            body = "Hola {{1}}, seguimos tu consulta.",
+            variables = new[] { new { label = "nombre", example = "Ana" } },
+        }, Ct);
+        Assert.Equal(HttpStatusCode.Created, createdTemplate.StatusCode);
+        var templateId = (await WhatsAppAttentionJourney.JsonAsync(createdTemplate, Ct)).GetProperty("id").GetGuid();
+        templates.Accounts[wabaId] = [new("1", "seguimiento", "es_AR", WhatsAppTemplateStatus.Approved, WhatsAppTemplateCategory.Utility, null)];
+        await host.Services.GetServices<IHostedService>().OfType<WhatsAppTemplateSyncWorker>().Single().RunOnceAsync(Ct);
+
+        using var anonymous = WhatsAppAttentionJourney.Client(host);
+        var recent = WhatsAppAttentionJourney.NewPhone();
+        var oldTemplate = WhatsAppAttentionJourney.NewPhone();
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, recent, "Necesito ayuda", Ct, TimeProvider.System.GetUtcNow().AddHours(-25));
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, oldTemplate, "Consulta vieja", Ct, TimeProvider.System.GetUtcNow().AddHours(-31));
+
+        var list = await WhatsAppAttentionJourney.JsonAsync(await operatorClient.GetAsync("/api/platform/whatsapp/conversations?pageSize=50", Ct), Ct);
+        var recentRow = Consultation(list, recent);
+        var oldRow = Consultation(list, oldTemplate);
+        var recentId = recentRow.GetProperty("id").GetGuid();
+        var oldId = oldRow.GetProperty("id").GetGuid();
+
+        // Caso 1: plantilla reciente del operador con ventana cerrada → la respuesta sigue con él, en su equipo, sin bienvenida.
+        using (var transfer = await WhatsAppAttentionJourney.PostAsync(operatorClient, $"/api/platform/whatsapp/conversations/{recentId}/transfer",
+            new { teamId, version = recentRow.GetProperty("version").GetUInt32() }, Ct))
+            Assert.Equal(HttpStatusCode.OK, transfer.StatusCode);
+        using (var sentTemplate = await WhatsAppAttentionJourney.PostAsync(operatorClient, $"/api/platform/whatsapp/conversations/{recentId}/templates",
+            new { templateId, variables = new[] { "Ana" } }, Ct))
+            Assert.Equal(HttpStatusCode.Created, sentTemplate.StatusCode);
+        var outboxBeforeRecent = (await OutboxAsync(host, recent)).Count;
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, recent, "Gracias, sigo acá", Ct);
+
+        var recentAfter = (await WhatsAppAttentionJourney.JsonAsync(
+            await operatorClient.GetAsync($"/api/platform/whatsapp/conversations/{recentId}", Ct), Ct)).GetProperty("conversation");
+        Assert.True(recentAfter.GetProperty("assignedToMe").GetBoolean());
+        Assert.Equal(teamId, recentAfter.GetProperty("team").GetProperty("id").GetGuid());
+        Assert.Equal(outboxBeforeRecent, (await OutboxAsync(host, recent)).Count);
+
+        // Caso 2: plantilla de hace 30 h → reinicia con el bot.
+        using (var transferOld = await WhatsAppAttentionJourney.PostAsync(operatorClient, $"/api/platform/whatsapp/conversations/{oldId}/transfer",
+            new { teamId, version = oldRow.GetProperty("version").GetUInt32() }, Ct))
+            Assert.Equal(HttpStatusCode.OK, transferOld.StatusCode);
+        using (var takenOld = await operatorClient.PostAsync($"/api/platform/whatsapp/conversations/{oldId}/take", null, Ct))
+            Assert.Equal(HttpStatusCode.OK, takenOld.StatusCode);
+        await using (var scope = host.Services.CreateAsyncScope())
+        {
+            await scope.ServiceProvider.GetRequiredService<Application.Interfaces.Persistence.IUnitOfWork>().ExecuteInTransactionAsync(_ =>
+            {
+                scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().Set<PlatformWhatsAppChatMessage>().Add(
+                    PlatformWhatsAppChatMessage.Outbound(oldId, WhatsAppChatMessageKind.Template, operatorId, "Operador", "Hola viejo",
+                        Guid.CreateVersion7(), templateId, TimeProvider.System.GetUtcNow().UtcDateTime.AddHours(-30)));
+                return Task.FromResult(Result.Success());
+            }, Application.Interfaces.Persistence.CommitPolicy.OnSuccess, Ct);
+        }
+        var outboxBeforeOld = (await OutboxAsync(host, oldTemplate)).Count;
+        await WhatsAppAttentionJourney.ReceiveAsync(host, anonymous, phoneNumberId, oldTemplate, "Hola de nuevo", Ct);
+
+        var oldAfter = (await WhatsAppAttentionJourney.JsonAsync(
+            await operatorClient.GetAsync($"/api/platform/whatsapp/conversations/{oldId}", Ct), Ct)).GetProperty("conversation");
+        Assert.Equal(JsonValueKind.Null, oldAfter.GetProperty("assignee").ValueKind);
+        Assert.Equal(JsonValueKind.Null, oldAfter.GetProperty("team").ValueKind);
+        Assert.True((await OutboxAsync(host, oldTemplate)).Count > outboxBeforeOld);
     }
 
     private static JsonElement Consultation(JsonElement list, string waId) =>

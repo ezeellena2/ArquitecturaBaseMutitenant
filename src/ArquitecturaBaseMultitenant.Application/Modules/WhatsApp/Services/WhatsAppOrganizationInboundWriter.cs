@@ -11,8 +11,9 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.WhatsApp.Services;
 /// <summary>
 /// La entrada a un número de la organización, dentro de su alcance y de la transacción del procesador (decisión 4 de la
 /// E11): un miembro activo con ese teléfono verificado va a Internos; los demás, a Clientes con su contacto. Una entrada
-/// con la ventana de 24 horas cerrada empieza otra conversación, que vuelve a pasar por el bot. La copia global se purga
-/// al pasar a las tablas de la organización.
+/// con la ventana de 24 horas cerrada empieza otra conversación, que vuelve a pasar por el bot salvo que responda a una
+/// plantilla enviada por un operador en las últimas 24 horas (B11). La copia global se purga al pasar a las tablas de la
+/// organización.
 /// </summary>
 internal sealed class WhatsAppOrganizationInboundWriter(IWhatsAppChatRepository chats, IWhatsAppCustomerRepository customers,
     IActiveMemberPhoneReader members, IPayloadProtector protector, WhatsAppAttentionBotWriter bot, WhatsAppConversationLinkWriter links,
@@ -37,20 +38,23 @@ internal sealed class WhatsAppOrganizationInboundWriter(IWhatsAppChatRepository 
         // Un contacto sin nombre toma el de su perfil una sola vez (C14 de la E12); el dato se vacía abajo con el resto.
         if (customer is not null && message.EncryptedProfileName is { } profile) customer.TakeProfileName(protector.Unprotect(profile), nowUtc);
         var newConversation = chat is null || !chat.IsWindowOpen(occurredAtUtc);
+        var continuesWithOperator = chat is not null && newConversation
+            && await chats.HasOperatorTemplateSinceAsync(chat.Id, occurredAtUtc - WhatsAppChatBase.Window, ct);
+        var startsWithBot = newConversation && !continuesWithOperator;
         if (chat is null)
         {
             chat = customer is null ? WhatsAppChat.ForMember(channel.Id, waId, member!.Value, nowUtc)
                 : WhatsAppChat.ForCustomer(channel.Id, waId, customer.Id, nowUtc);
             chats.Add(chat);
         }
-        else if (newConversation) chat.RestartWithBot();
+        else if (startsWithBot) chat.RestartWithBot();
         customer?.RecordConversation(occurredAtUtc);
         chats.Add(WhatsAppChatMessage.Inbound(chat.Id, message.Wamid, text, media, occurredAtUtc));
         chat.RecordInbound(occurredAtUtc, text);
         await links.CopyAsync(chat.Id, WhatsAppMessageDirection.Inbound, text, media, occurredAtUtc, message.OriginalUserId, ct);
         // Una difusión: la baja por su botón o la respuesta del contacto (B6).
         if (customer is not null) await recipients.RecordInboundAsync(customer, message.ReplyId == BotButtons.Unsubscribe, occurredAtUtc, ct);
-        await bot.RespondAsync(context, chat, customer, newConversation, ct);
+        await bot.RespondAsync(context, chat, customer, startsWithBot, ct);
         message.ClearPersonalData();
     }
 
