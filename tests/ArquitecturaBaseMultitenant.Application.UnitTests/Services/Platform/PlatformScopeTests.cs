@@ -4,6 +4,7 @@ using ArquitecturaBaseMultitenant.Application.Interfaces.Services;
 using ArquitecturaBaseMultitenant.Application.Services.Platform;
 using ArquitecturaBaseMultitenant.Domain.Auditing;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -126,6 +127,8 @@ public sealed class PlatformScopeTests
             Entries++;
             return new Exit(this);
         }
+
+        public IDisposable Enter(Guid tenantId, TenantKind kind) => Enter(tenantId);
         private sealed class Exit(Scope scope) : IDisposable
         {
             public void Dispose() => scope.CurrentId = null;

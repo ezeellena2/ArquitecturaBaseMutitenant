@@ -152,4 +152,79 @@ public sealed class TenantContextTests
         Assert.Equal(tenantId, context.TenantId);
         Assert.Equal(TenantKind.Personal, context.TenantKind);
     }
+
+    [Theory]
+    [InlineData(TenantKind.Business)]
+    [InlineData(TenantKind.Personal)]
+    public void Enter_with_kind_sets_and_restores_tenant_and_kind(TenantKind kind)
+    {
+        var context = new TenantContext();
+        var tenantId = Guid.NewGuid();
+
+        using (context.Enter(tenantId, kind))
+        {
+            Assert.Equal(tenantId, context.TenantId);
+            Assert.Equal(tenantId, context.RequiredTenantId);
+            Assert.Equal(kind, context.TenantKind);
+            Assert.True(context.HasTechnicalScope);
+            Assert.Null(context.AccessBinding);
+        }
+
+        Assert.Null(context.TenantId);
+        Assert.Null(context.TenantKind);
+        Assert.False(context.HasTechnicalScope);
+    }
+
+    [Fact]
+    public void Enter_with_kind_rejects_invalid_kind_empty_id_open_transaction_and_conflicting_kind()
+    {
+        var transactionActive = false;
+        var context = new TenantContext(() => transactionActive);
+        var tenantId = Guid.NewGuid();
+
+        Assert.Throws<ArgumentException>(() => context.Enter(Guid.Empty, TenantKind.Business));
+        Assert.Throws<ArgumentOutOfRangeException>(() => context.Enter(tenantId, (TenantKind)42));
+
+        transactionActive = true;
+        Assert.Throws<InvalidOperationException>(() => context.Enter(tenantId, TenantKind.Business));
+        transactionActive = false;
+
+        context.SetFromAccess(tenantId, TenantKind.Personal);
+        Assert.Throws<InvalidOperationException>(() => context.Enter(tenantId, TenantKind.Business));
+        Assert.Throws<InvalidOperationException>(() => context.Enter(Guid.NewGuid(), TenantKind.Personal));
+        Assert.Equal(tenantId, context.TenantId);
+        Assert.Equal(TenantKind.Personal, context.TenantKind);
+
+        using (context.Enter(tenantId, TenantKind.Personal))
+        {
+            Assert.Equal(tenantId, context.TenantId);
+            Assert.Equal(TenantKind.Personal, context.TenantKind);
+            Assert.Throws<InvalidOperationException>(() => context.Enter(tenantId, TenantKind.Business));
+        }
+
+        Assert.Equal(tenantId, context.TenantId);
+        Assert.Equal(TenantKind.Personal, context.TenantKind);
+    }
+
+    [Fact]
+    public void Nested_classified_enter_restores_outer_unclassified_kind_on_dispose()
+    {
+        var context = new TenantContext();
+        var tenantId = Guid.NewGuid();
+
+        using (context.Enter(tenantId))
+        {
+            Assert.Null(context.TenantKind);
+            using (context.Enter(tenantId, TenantKind.Business))
+            {
+                Assert.Equal(TenantKind.Business, context.TenantKind);
+            }
+
+            Assert.Equal(tenantId, context.TenantId);
+            Assert.Null(context.TenantKind);
+        }
+
+        Assert.Null(context.TenantId);
+        Assert.Null(context.TenantKind);
+    }
 }

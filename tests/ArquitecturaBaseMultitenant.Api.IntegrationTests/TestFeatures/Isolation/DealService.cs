@@ -4,10 +4,8 @@ using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
 using ArquitecturaBaseMultitenant.Application.Models.Common;
-using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.PublicSite;
 using ArquitecturaBaseMultitenant.Domain.Results;
-using ArquitecturaBaseMultitenant.Domain.Users;
 using Microsoft.Extensions.Logging;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Isolation;
@@ -59,8 +57,7 @@ internal sealed class DealService(IDealReader reader, IDealRepository repository
             {
                 var deal = await repository.GetAsync(request.Id, request.Version!.Value, ct);
                 if (deal is null) return Result.Failure<Deal>(NotFound);
-                var party = user.Access == Access.Consumer ? Party.Consumer : Party.Business;
-                var changed = deal.Transition(request.Status, party, tenant.RequiredTenantId);
+                var changed = deal.Transition(request.Status, tenant.TenantKind, tenant.TenantId);
                 if (changed.IsFailure) return Result.Failure<Deal>(changed.Error);
                 repository.MarkUpdated(deal);
                 return Result.Success(deal);

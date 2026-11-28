@@ -258,6 +258,8 @@ public sealed class ConnectServiceTests
             return new Exit(events);
         }
 
+        public IDisposable Enter(Guid tenantId, TenantKind kind) => Enter(tenantId);
+
         private sealed class Exit(List<string>? events) : IDisposable
         {
             public void Dispose() => events?.Add("exit");

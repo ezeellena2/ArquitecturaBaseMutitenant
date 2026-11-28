@@ -181,7 +181,9 @@ internal sealed class AuditTrailInterceptor(
     private static void RejectHistoryMutations(DbContext context)
     {
         if (context.ChangeTracker.Entries<AuditEntry>()
-            .Any(entry => entry.State is EntityState.Modified or EntityState.Deleted))
+            .Any(entry => entry.State is EntityState.Modified or EntityState.Deleted)
+            || context.ChangeTracker.Entries<SecurityEvent>()
+                .Any(entry => entry.State is EntityState.Modified or EntityState.Deleted))
         {
             throw new InvalidOperationException("Audit history is append-only.");
         }

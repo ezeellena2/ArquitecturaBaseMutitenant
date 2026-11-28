@@ -179,6 +179,7 @@ public sealed class InvitationServiceTests
         public string Protect(InvitationTokenData data) => "valid";
         public InvitationTokenData? Unprotect(string token) => token == "valid" ? new(Row.TenantId, Row.Id, "secret") : null;
         public IDisposable Enter(Guid tenantId) { Assert.Equal(Row.TenantId, tenantId); Entries++; return new Scope(); }
+        public IDisposable Enter(Guid tenantId, TenantKind kind) => Enter(tenantId);
         public Task<Guid?> GetUserIdAsync(CancellationToken ct) => Task.FromResult(UserId);
         public InvitationContinuation? ReadContinuation() => Continuation;
         public void Remember(InvitationContinuation continuation) => Continuation = continuation;

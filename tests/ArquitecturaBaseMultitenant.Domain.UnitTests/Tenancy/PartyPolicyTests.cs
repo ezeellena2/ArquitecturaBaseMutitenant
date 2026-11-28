@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 
 namespace ArquitecturaBaseMultitenant.Domain.UnitTests.Tenancy;
 
@@ -55,6 +56,30 @@ public sealed class PartyPolicyTests
             Assert.Equal(PartyErrors.NotAllowed, PartyPolicy.Require(shared, Party.Consumer, id, Party.Consumer).Error);
             Assert.Equal(PartyErrors.NotAllowed, PartyPolicy.Require(shared, Party.Business, id, Party.Business).Error);
         }
+    }
+
+    [Fact]
+    public void Tenant_kind_overload_derives_active_party_and_rejects_unclassified_or_mismatched_spaces()
+    {
+        var shared = new SharedRow(_consumerTenantId, _businessTenantId);
+
+        Assert.True(PartyPolicy.Require(shared, TenantKind.Personal, _consumerTenantId, Party.Consumer).IsSuccess);
+        Assert.True(PartyPolicy.Require(shared, TenantKind.Business, _businessTenantId, Party.Business).IsSuccess);
+
+        Assert.Equal(PartyErrors.NotAllowed,
+            PartyPolicy.Require(shared, TenantKind.Business, _businessTenantId, Party.Consumer).Error);
+        Assert.Equal(PartyErrors.NotAllowed,
+            PartyPolicy.Require(shared, TenantKind.Personal, _consumerTenantId, Party.Business).Error);
+        Assert.Equal(PartyErrors.NotAllowed,
+            PartyPolicy.Require(shared, (TenantKind?)null, _consumerTenantId, Party.Consumer).Error);
+        Assert.Equal(PartyErrors.NotAllowed,
+            PartyPolicy.Require(shared, (TenantKind?)null, _businessTenantId, Party.Business).Error);
+        Assert.Equal(PartyErrors.NotAllowed,
+            PartyPolicy.Require(shared, (TenantKind)99, _consumerTenantId, Party.Consumer).Error);
+        Assert.Equal(PartyErrors.NotAllowed,
+            PartyPolicy.Require(shared, TenantKind.Personal, null, Party.Consumer).Error);
+        Assert.Equal(PartyErrors.NotAllowed,
+            PartyPolicy.Require(shared, TenantKind.Business, Guid.Empty, Party.Business).Error);
     }
 
     private sealed record SharedRow(Guid ConsumerTenantId, Guid BusinessTenantId) : IConsumerBusinessShared

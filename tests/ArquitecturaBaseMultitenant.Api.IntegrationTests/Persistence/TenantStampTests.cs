@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Isolation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Domain.Tenancy;
+using ArquitecturaBaseMultitenant.Infrastructure.Persistence;
 using ArquitecturaBaseMultitenant.Infrastructure.Persistence.Interceptors;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -87,6 +88,56 @@ public sealed class TenantStampTests
     }
 
     [Fact]
+    public void Classified_technical_scope_can_stamp_public_and_shared_data()
+    {
+        var businessTenant = Guid.NewGuid();
+        var consumerTenant = Guid.NewGuid();
+        var scopeContext = new TenantContext();
+
+        using (scopeContext.Enter(businessTenant, TenantKind.Business))
+        {
+            using var db = CreateContext(scopeContext);
+            var poster = new Poster(Guid.NewGuid(), false);
+            var deal = new Deal(consumerTenant, Guid.NewGuid());
+            db.Add(poster);
+            db.Add(deal);
+
+            ApplyStamp(db, scopeContext);
+
+            Assert.Equal(businessTenant, poster.BusinessTenantId);
+            Assert.Equal(consumerTenant, deal.ConsumerTenantId);
+            Assert.Equal(businessTenant, deal.BusinessTenantId);
+        }
+
+        using (scopeContext.Enter(consumerTenant, TenantKind.Personal))
+        {
+            using var db = CreateContext(scopeContext);
+            var deal = new Deal(Guid.NewGuid(), businessTenant);
+            db.Add(deal);
+
+            ApplyStamp(db, scopeContext);
+
+            Assert.Equal(consumerTenant, deal.ConsumerTenantId);
+            Assert.Equal(businessTenant, deal.BusinessTenantId);
+
+            using var publicDb = CreateContext(scopeContext);
+            publicDb.Add(new Poster(Guid.NewGuid(), false));
+            Assert.Throws<InvalidOperationException>(() => ApplyStamp(publicDb, scopeContext));
+        }
+
+        using (scopeContext.Enter(businessTenant))
+        {
+            using var publicDb = CreateContext(scopeContext);
+            publicDb.Add(new Poster(Guid.NewGuid(), false));
+            Assert.Throws<InvalidOperationException>(() => ApplyStamp(publicDb, scopeContext));
+
+            using var sharedDb = CreateContext(scopeContext);
+            sharedDb.Add(new Deal(consumerTenant, businessTenant));
+            Assert.Throws<InvalidOperationException>(() => ApplyStamp(sharedDb, scopeContext));
+        }
+    }
+
+    [Fact]
     public void Tracked_entities_cannot_change_a_tenant_column_that_is_part_of_their_key()
     {
         var tenantId = Guid.NewGuid();
@@ -109,20 +160,26 @@ public sealed class TenantStampTests
             sharedContext.Entry(deal).Property(nameof(Deal.BusinessTenantId)).CurrentValue = Guid.NewGuid());
     }
 
-    private static void ApplyStamp(DbContext context, Guid? tenantId, TenantKind? tenantKind)
+    private static void ApplyStamp(DbContext context, Guid? tenantId, TenantKind? tenantKind) =>
+        ApplyStamp(context, new TestTenantContext(tenantId, tenantKind));
+
+    private static void ApplyStamp(DbContext context, ITenantContext tenantContext)
     {
-        var interceptor = new TenantStampInterceptor(new TestTenantContext(tenantId, tenantKind));
+        var interceptor = new TenantStampInterceptor(tenantContext);
         var eventData = new DbContextEventData(null!, (_, _) => string.Empty, context);
         interceptor.SavingChanges(eventData, default);
     }
 
-    private static IsolationApplicationDbContext CreateContext(Guid? tenantId, TenantKind? tenantKind)
+    private static IsolationApplicationDbContext CreateContext(Guid? tenantId, TenantKind? tenantKind) =>
+        CreateContext(new TestTenantContext(tenantId, tenantKind));
+
+    private static IsolationApplicationDbContext CreateContext(ITenantContext tenantContext)
     {
         var options = new DbContextOptionsBuilder<IsolationApplicationDbContext>()
             .UseNpgsql("Host=localhost;Database=stamp_model_test")
             .ReplaceService<IModelCustomizer, IsolationModelCustomizer>()
             .Options;
-        return new IsolationApplicationDbContext(options, new TestTenantContext(tenantId, tenantKind));
+        return new IsolationApplicationDbContext(options, tenantContext);
     }
 
     private sealed class TestTenantContext(Guid? tenantId, TenantKind? tenantKind) : ITenantContext

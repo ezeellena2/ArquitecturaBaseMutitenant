@@ -8,4 +8,11 @@ public sealed partial class TenantScopeUsageTests
 {
     static partial void ContributeAssistantAccessInitializerCallers(HashSet<string> declared) =>
         declared.Add("ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.AssistantReadOnlyScope");
+
+    static partial void ContributeAssistantTenantJobRunnerCallers(HashSet<string> declared)
+    {
+        declared.Add("ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.AssistantTurnWorker");
+        declared.Add("ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Retention.AssistantRetentionWorker");
+        declared.Add("ArquitecturaBaseMultitenant.Infrastructure.Modules.Assistant.Retention.AssistantSnapshotRetentionWorker");
+    }
 }

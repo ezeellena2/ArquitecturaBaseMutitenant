@@ -1,6 +1,8 @@
 using System.Reflection;
+using ArquitecturaBaseMultitenant.Application.Common.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
+using ArquitecturaBaseMultitenant.Domain.Common;
 
 namespace ArquitecturaBaseMultitenant.ArchitectureTests;
 
@@ -108,12 +110,105 @@ public sealed partial class TenantScopeUsageTests
         Assert.DoesNotContain(control.Select(call => call.Owner), AccessInitializers.Contains);
     }
 
+    private const string InvitationExpiryWorker =
+        "ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs.InvitationExpiryWorker";
+    private const string InvitationRetentionWorker =
+        "ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs.InvitationRetentionWorker";
+
+    // Workers declarados que recorren organizaciones con TenantJobRunner. Evita que cualquier clase de Infrastructure
+    // entre a una organización a través del runner sin figurar en este inventario. Cada módulo aporta los suyos.
+    private static readonly HashSet<string> TenantJobRunnerCallers = CreateTenantJobRunnerCallers();
+    private static HashSet<string> CreateTenantJobRunnerCallers()
+    {
+        var declared = new HashSet<string>(StringComparer.Ordinal)
+        {
+            InvitationExpiryWorker,
+            InvitationRetentionWorker,
+        };
+        ContributeWhatsAppTenantJobRunnerCallers(declared);
+        ContributeAssistantTenantJobRunnerCallers(declared);
+        return declared;
+    }
+    static partial void ContributeWhatsAppTenantJobRunnerCallers(HashSet<string> declared);
+    static partial void ContributeAssistantTenantJobRunnerCallers(HashSet<string> declared);
+
+    [Fact]
+    public void Only_declared_workers_use_TenantJobRunner()
+    {
+        var calls = new[]
+        {
+            Assembly.Load("ArquitecturaBaseMultitenant.Application"),
+            Assembly.Load("ArquitecturaBaseMultitenant.Infrastructure"),
+            Assembly.Load("ArquitecturaBaseMultitenant.Api"),
+        }.SelectMany(ArchitectureIl.Calls)
+            .Where(IsTenantJobRunnerCall)
+            .Where(call => call.Owner != TenantJobRunner)
+            .ToArray();
+
+        Assert.Equal(TenantJobRunnerCallers.Order(StringComparer.Ordinal),
+            calls.Select(call => call.Owner).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void Detector_rejects_an_undeclared_TenantJobRunner_caller()
+    {
+        var control = ArchitectureIl.Calls(typeof(TenantScopeUsageTests).Assembly)
+            .Where(call => call.Owner == typeof(TenantScopeUsageTests).FullName
+                && call.OwnerMethod == nameof(IllegalJobRunnerCall))
+            .ToArray();
+
+        Assert.Contains(control, IsTenantJobRunnerCall);
+        Assert.DoesNotContain(control.Select(call => call.Owner), TenantJobRunnerCallers.Contains);
+    }
+
+    [Fact]
+    public void Only_ActivePartyPolicy_calls_PartyPolicy_directly_outside_domain()
+    {
+        var calls = new[]
+        {
+            Assembly.Load("ArquitecturaBaseMultitenant.Application"),
+            Assembly.Load("ArquitecturaBaseMultitenant.Infrastructure"),
+            Assembly.Load("ArquitecturaBaseMultitenant.Api"),
+        }.SelectMany(ArchitectureIl.Calls).Where(IsPartyPolicyCall).ToArray();
+
+        Assert.Equal([typeof(ActivePartyPolicy).FullName!],
+            calls.Select(call => call.Owner).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void Detector_rejects_direct_PartyPolicy_call_outside_ActivePartyPolicy()
+    {
+        var control = ArchitectureIl.Calls(typeof(TenantScopeUsageTests).Assembly)
+            .Where(call => call.Owner == typeof(TenantScopeUsageTests).FullName
+                && call.OwnerMethod == nameof(IllegalPartyPolicyCall))
+            .ToArray();
+
+        Assert.Contains(control, IsPartyPolicyCall);
+        Assert.DoesNotContain(control.Select(call => call.Owner),
+            owner => owner == typeof(ActivePartyPolicy).FullName);
+    }
+
     private static bool IsSetFromAccessCall(ArchitectureIl.Call call) =>
         call.Method == nameof(ITenantAccessInitializer.SetFromAccess) && call.DeclaringType is not null
         && (call.DeclaringType == typeof(ITenantAccessInitializer).FullName || call.DeclaringType == TenantContext);
 
+    private static bool IsTenantJobRunnerCall(ArchitectureIl.Call call) =>
+        call.DeclaringType == TenantJobRunner;
+
+    private static bool IsPartyPolicyCall(ArchitectureIl.Call call) =>
+        call.Method == nameof(PartyPolicy.Require)
+        && call.DeclaringType == typeof(PartyPolicy).FullName;
+
     private static void IllegalAccess(ITenantAccessInitializer initializer) =>
         initializer.SetFromAccess(Guid.Empty, ArquitecturaBaseMultitenant.Domain.Tenancy.TenantKind.Business);
+
+    private static Task IllegalJobRunnerCall(
+        ArquitecturaBaseMultitenant.Infrastructure.BackgroundJobs.TenantJobRunner runner,
+        CancellationToken cancellationToken) =>
+        runner.RunForTenantAsync(Guid.Empty, (_, _) => Task.CompletedTask, cancellationToken);
+
+    private static void IllegalPartyPolicyCall(IConsumerBusinessShared shared) =>
+        _ = PartyPolicy.Require(shared, Party.Consumer, Guid.Empty, Party.Consumer);
 
     private static bool IsEnterCall(ArchitectureIl.Call call) =>
         call.Method == nameof(ITenantScope.Enter)

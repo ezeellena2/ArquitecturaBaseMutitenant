@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Domain.Common;
 using ArquitecturaBaseMultitenant.Domain.Results;
+using ArquitecturaBaseMultitenant.Domain.Tenancy;
 
 namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.TestFeatures.Isolation;
 
@@ -40,10 +41,22 @@ internal sealed class Deal : Entity, IConsumerBusinessShared, IAuditable, IVersi
     public static Deal Request(Guid businessTenantId, string summary, string? consumerName) =>
         new(Guid.Empty, businessTenantId, summary) { ConsumerName = consumerName };
 
+    public Result Transition(DealStatus status, TenantKind? activeTenantKind, Guid? activeTenantId)
+    {
+        var required = status == DealStatus.Cancelled ? Party.Consumer : Party.Business;
+        var party = PartyPolicy.Require(this, activeTenantKind, activeTenantId, required);
+        return ApplyTransition(status, party);
+    }
+
     public Result Transition(DealStatus status, Party activeParty, Guid activeTenantId)
     {
         var required = status == DealStatus.Cancelled ? Party.Consumer : Party.Business;
         var party = PartyPolicy.Require(this, activeParty, activeTenantId, required);
+        return ApplyTransition(status, party);
+    }
+
+    private Result ApplyTransition(DealStatus status, Result party)
+    {
         if (party.IsFailure) return party;
         if (Status != DealStatus.Requested || status == DealStatus.Requested || !Enum.IsDefined(status))
             return Error.Conflict("General.ConcurrencyConflict", "The request state already changed.");

@@ -17,7 +17,7 @@ internal sealed class TenantContext(Func<bool>? hasActiveTransaction = null,
 
     internal bool HasBoundTenant => _tenantId is not null || _activeScope is not null;
 
-    /// <summary>Un <see cref="Enter"/> técnico sigue abierto: el alcance de solo lectura del asistente nunca lo hereda (ADR 0068 §5).</summary>
+    /// <summary>Un <see cref="Enter(Guid)"/> técnico sigue abierto: el alcance de solo lectura del asistente nunca lo hereda (ADR 0068 §5).</summary>
     internal bool HasTechnicalScope => _activeScope is not null;
 
     /// <summary>La organización que fijó el acceso de la petición (<see cref="SetFromAccess"/>), sin el actor ni un alcance técnico.</summary>
@@ -54,7 +54,19 @@ internal sealed class TenantContext(Func<bool>? hasActiveTransaction = null,
 
     void ITenantAccessInitializer.SetFromAccess(Guid tenantId, TenantKind kind) => SetFromAccess(tenantId, kind);
 
-    public IDisposable Enter(Guid tenantId)
+    public IDisposable Enter(Guid tenantId) => EnterCore(tenantId, null);
+
+    public IDisposable Enter(Guid tenantId, TenantKind kind)
+    {
+        if (!Enum.IsDefined(kind))
+        {
+            throw new ArgumentOutOfRangeException(nameof(kind), kind, "Unknown tenant kind.");
+        }
+
+        return EnterCore(tenantId, kind);
+    }
+
+    private Scope EnterCore(Guid tenantId, TenantKind? kind)
     {
         if (tenantId == Guid.Empty)
         {
@@ -76,10 +88,15 @@ internal sealed class TenantContext(Func<bool>? hasActiveTransaction = null,
             throw new InvalidOperationException("A different tenant is already active in this scope.");
         }
 
+        if (kind is { } requestedKind && TenantKind is { } currentKind && currentKind != requestedKind)
+        {
+            throw new InvalidOperationException("A different tenant kind is already active in this scope.");
+        }
+
         var scope = new Scope(this, TenantId, TenantKind, _activeScope);
         _activeScope = scope;
         TenantId = tenantId;
-        TenantKind = null;
+        TenantKind = kind;
         return scope;
     }
 

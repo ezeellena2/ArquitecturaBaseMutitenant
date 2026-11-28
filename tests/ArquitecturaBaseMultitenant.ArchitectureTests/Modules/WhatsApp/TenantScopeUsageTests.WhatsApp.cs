@@ -5,4 +5,11 @@ public sealed partial class TenantScopeUsageTests
 {
     static partial void ContributeAccessInitializerCallers(HashSet<string> declared) =>
         declared.Add("ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Inbound.WhatsAppInboundProcessor");
+
+    static partial void ContributeWhatsAppTenantJobRunnerCallers(HashSet<string> declared)
+    {
+        declared.Add("ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.Retention.WhatsAppMessageRetentionWorker");
+        declared.Add("ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.WhatsAppBroadcastWorker");
+        declared.Add("ArquitecturaBaseMultitenant.Infrastructure.Modules.WhatsApp.WhatsAppWaitingNoticeWorker");
+    }
 }

@@ -1,5 +1,6 @@
 using ArquitecturaBaseMultitenant.Application.Common.Logging;
 using ArquitecturaBaseMultitenant.Application.Common.Pagination;
+using ArquitecturaBaseMultitenant.Application.Common.Tenancy;
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Integrations.Request;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -46,7 +47,7 @@ internal sealed class PersonalWhatsAppService(IWhatsAppConversationLinkReader re
             unitOfWork.ExecuteInTransactionAsync(async ct =>
             {
                 if (await links.GetAsync(id, ct) is not { } link
-                    || PartyPolicy.Require(link, Party.Consumer, tenant.RequiredTenantId, Party.Consumer).IsFailure)
+                    || ActivePartyPolicy.Require(tenant, link, Party.Consumer).IsFailure)
                     return Result.Failure(WhatsAppErrors.LinkNotFound);
                 links.Remove(link);
                 return Result.Success();

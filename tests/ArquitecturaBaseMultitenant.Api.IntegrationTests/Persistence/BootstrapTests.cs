@@ -111,12 +111,46 @@ public sealed class BootstrapTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Runtime_role_validator_accepts_unprivileged_runtime_role()
+    {
+        await RuntimeRoleValidator.ValidateAsync(
+            factory.RuntimeConnectionString,
+            TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
     public async Task Runtime_role_validator_rejects_superuser()
     {
+        var ct = TestContext.Current.CancellationToken;
+        await RuntimeRoleValidator.ValidateAsync(factory.RuntimeConnectionString, ct);
+
+        await WithBootstrapChangeAsync("ALTER ROLE mt_app SUPERUSER", "ALTER ROLE mt_app NOSUPERUSER", () =>
+            Assert.ThrowsAsync<InvalidOperationException>(() =>
+                RuntimeRoleValidator.ValidateAsync(factory.RuntimeConnectionString, ct)));
+
+        await RuntimeRoleValidator.ValidateAsync(factory.RuntimeConnectionString, ct);
+    }
+
+    [Theory]
+    [InlineData("BYPASSRLS", "NOBYPASSRLS")]
+    [InlineData("CREATEDB", "NOCREATEDB")]
+    [InlineData("CREATEROLE", "NOCREATEROLE")]
+    public async Task Runtime_role_validator_rejects_direct_role_privileges(string grant, string revoke)
+    {
+        var ct = TestContext.Current.CancellationToken;
+        await WithBootstrapChangeAsync($"ALTER ROLE mt_app {grant}", $"ALTER ROLE mt_app {revoke}", () =>
+            Assert.ThrowsAsync<InvalidOperationException>(() =>
+                RuntimeRoleValidator.ValidateAsync(factory.RuntimeConnectionString, ct)));
+    }
+
+    [Fact]
+    public async Task Runtime_role_validator_rejects_owner_and_bootstrap_connections()
+    {
+        var ct = TestContext.Current.CancellationToken;
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            RuntimeRoleValidator.ValidateAsync(
-                factory.BootstrapConnectionString,
-                TestContext.Current.CancellationToken));
+            RuntimeRoleValidator.ValidateAsync(factory.AdminConnectionString, ct));
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            RuntimeRoleValidator.ValidateAsync(ForDatabase(factory.BootstrapConnectionString, "appdb"), ct));
     }
 
     [Fact]
