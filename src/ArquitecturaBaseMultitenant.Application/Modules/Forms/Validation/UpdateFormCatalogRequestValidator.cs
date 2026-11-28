@@ -10,7 +10,9 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Forms.Validation;
 /// <summary>
 /// Guardar todo junto (C3). <c>isActive</c> y la versión son obligatorios; una opción por borrar va una sola vez y no puede ir
 /// también en <c>items</c> ni en <c>moves</c>; «Ordenar por…» no se combina con movimientos ni con borrados (224). Que cada opción
-/// sea del catálogo, el tope y el código único los comprueba el servicio bajo el bloqueo.
+/// sea del catálogo, el tope y el código único los comprueba el servicio bajo el bloqueo. Desde la E13, los campos, la presentación y
+/// los campos que se quitan con sus valores llevan su forma y sus topes; el resto, también el campo de <c>sort.column</c>, lo decide
+/// el servicio bajo el bloqueo.
 /// </summary>
 internal sealed class UpdateFormCatalogRequestValidator : AbstractValidator<UpdateFormCatalogRequest>
 {
@@ -52,6 +54,17 @@ internal sealed class UpdateFormCatalogRequestValidator : AbstractValidator<Upda
         RuleFor(request => request.Sort)
             .Must((request, sort) => sort is null || (request.Moves is not { Count: > 0 } && request.DeleteItems is not { Count: > 0 }))
             .WithMessage(_ => FormsTexts.Get("Forms.Validation.SortCombined"));
+        RuleForEach(request => request.Fields).NotNull().WithMessage(_ => ValidationTexts.Required).ChildRules(FormCatalogInputRules.Field)
+            .When(request => request.Fields is not { Count: > FormCatalogLimits.MaxFields });
+        RuleForEach(request => request.Fields).Must((request, field) => FormCatalogInputRules.IsOnceIn(request.Fields, field))
+            .WithMessage(_ => FormCatalogInputRules.Repeated).When(request => request.Fields is not { Count: > FormCatalogLimits.MaxFields });
+        RuleFor(request => request.Presentation).ChildRules(presentation => FormCatalogInputRules.Presentation(presentation!))
+            .When(request => request.Presentation is not null);
+        RuleFor(request => request.ConfirmedFieldRemovals)
+            .Must(ids => ids is null || ids.Count <= FormCatalogLimits.MaxFields).WithMessage(_ => FormCatalogInputRules.TooMany);
+        RuleForEach(request => request.ConfirmedFieldRemovals)
+            .NotEqual(Guid.Empty).WithMessage(_ => FormsTexts.Get(FormCatalogErrors.FieldInvalidCode))
+            .When(request => request.ConfirmedFieldRemovals is not { Count: > FormCatalogLimits.MaxFields });
         RuleFor(request => request.Filters).ChildRules(filters => FormCatalogInputRules.Filters(filters!)).When(request => request.Filters is not null);
     }
 

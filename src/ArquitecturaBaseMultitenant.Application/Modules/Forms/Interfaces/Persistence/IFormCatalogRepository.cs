@@ -15,6 +15,14 @@ public interface IFormCatalogRepository
     Task LockAsync(IReadOnlyCollection<Guid> catalogIds, CancellationToken ct);
 
     /// <summary>
+    /// Toma, en una sola llamada a <see cref="LockAsync"/> y por eso siempre en el mismo orden, el bloqueo del catálogo, el de las
+    /// fuentes de sus campos activos guardados y el de <paramref name="requestedSourceIds"/>, las que nombra el pedido (E13): dos
+    /// catálogos que son fuente uno del otro no se esperan en cruz. Las fuentes guardadas se leen antes del bloqueo; si cambiaron
+    /// en el medio, también cambió la versión del catálogo, y el servicio la compara después (409).
+    /// </summary>
+    Task LockWithSourcesAsync(Guid catalogId, IReadOnlyCollection<Guid> requestedSourceIds, CancellationToken ct);
+
+    /// <summary>
     /// El catálogo, seguido para escribir; compara la versión al confirmar (409). Se lee después de <see cref="LockAsync"/>, y el
     /// servicio compara la versión antes de sus reglas, así una versión vieja da siempre el 409 común.
     /// </summary>
@@ -29,6 +37,13 @@ public interface IFormCatalogRepository
     /// </summary>
     Task<IReadOnlyList<FormCatalogItem>> ListItemsByCodesAsync(Guid catalogId, IReadOnlyCollection<string> normalizedCodes,
         CancellationToken ct);
+
+    /// <summary>
+    /// Las opciones activas del catálogo cuyo valor del campo <paramref name="key"/>, sin espacios en los extremos y en mayúsculas,
+    /// es alguno de <paramref name="upperValues"/>, seguidas: un valor único se comprueba bajo el bloqueo sin traer las 10.000 (E13).
+    /// </summary>
+    Task<IReadOnlyList<FormCatalogItem>> ListActiveItemsByFieldValuesAsync(Guid catalogId, string key,
+        IReadOnlyCollection<string> upperValues, CancellationToken ct);
 
     /// <summary>Todas las opciones del catálogo por posición, seguidas: para reordenar o cargar de una vez (hasta 10.000).</summary>
     Task<IReadOnlyList<FormCatalogItem>> ListAllItemsAsync(Guid catalogId, CancellationToken ct);

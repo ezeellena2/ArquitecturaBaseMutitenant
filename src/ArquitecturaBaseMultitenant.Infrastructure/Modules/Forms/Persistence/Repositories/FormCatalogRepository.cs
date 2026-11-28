@@ -17,6 +17,20 @@ internal sealed class FormCatalogRepository(ApplicationDbContext context, ITenan
         return context.AcquireAdvisoryLocksAsync(catalogIds.Select(catalogId => AdvisoryLockKeys.For(tenantId, "forms-catalog", catalogId)), ct);
     }
 
+    public async Task LockWithSourcesAsync(Guid catalogId, IReadOnlyCollection<Guid> requestedSourceIds, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(requestedSourceIds);
+        var tenantId = RequireTenant();
+        var fieldsJson = await context.Set<FormCatalog>().AsNoTracking()
+            .Where(catalog => catalog.TenantId == tenantId && catalog.Id == catalogId)
+            .Select(catalog => catalog.FieldsJson)
+            .SingleOrDefaultAsync(ct);
+        IEnumerable<Guid> stored = fieldsJson is null ? [] : FormCatalogField.ListFromJson(fieldsJson)
+            .Where(field => field.IsActive && field.SourceCatalogId is not null)
+            .Select(field => field.SourceCatalogId!.Value);
+        await LockAsync([catalogId, .. stored, .. requestedSourceIds], ct);
+    }
+
     public async Task<FormCatalog?> GetByIdAsync(Guid catalogId, uint expectedVersion, CancellationToken ct)
     {
         var tenantId = RequireTenant();
@@ -40,6 +54,25 @@ internal sealed class FormCatalogRepository(ApplicationDbContext context, ITenan
         var tenantId = RequireTenant();
         if (normalizedCodes.Count == 0) return [];
         return await Items(tenantId, catalogId).Where(item => normalizedCodes.Contains(item.CodeNormalized)).ToListAsync(ct);
+    }
+
+    // El valor de la clave como texto (->>), sin espacios en los extremos y en mayúsculas, como lo compara el servicio. Sin índice:
+    // filtra las opciones del catálogo, que usan el de CatalogId, y devuelve solo las que chocan.
+    public async Task<IReadOnlyList<FormCatalogItem>> ListActiveItemsByFieldValuesAsync(Guid catalogId, string key,
+        IReadOnlyCollection<string> upperValues, CancellationToken ct)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(key);
+        ArgumentNullException.ThrowIfNull(upperValues);
+        var tenantId = RequireTenant();
+        if (upperValues.Count == 0) return [];
+        string[] values = [.. upperValues];
+        return await context.Set<FormCatalogItem>().FromSql($"""
+                SELECT * FROM tenant."FormCatalogItems"
+                WHERE "TenantId" = {tenantId} AND "CatalogId" = {catalogId} AND "IsActive"
+                    AND upper(btrim("FieldValuesJson" ->> {key})) = ANY({values})
+                """)
+            .Where(item => item.TenantId == tenantId && item.CatalogId == catalogId)
+            .ToListAsync(ct);
     }
 
     public async Task<IReadOnlyList<FormCatalogItem>> ListAllItemsAsync(Guid catalogId, CancellationToken ct) =>

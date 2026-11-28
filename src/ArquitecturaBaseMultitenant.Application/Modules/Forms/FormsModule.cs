@@ -21,6 +21,7 @@ public static class FormsModule
         services.AddSingleton<IErrorTextSource, FormsErrorTextSource>();
         services.AddScoped<IFormCatalogService, FormCatalogService>();
         services.AddScoped<FormCatalogItemEditor>();
+        services.AddScoped<FormCatalogFieldEditor>();
         services.AddScoped<FormCatalogPositionGuard>();
         services.AddScoped<FormCatalogPositionEditor>();
         services.AddScoped<IFormCatalogSourceService, FormCatalogSourceService>();

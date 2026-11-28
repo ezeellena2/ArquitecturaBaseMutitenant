@@ -1,6 +1,7 @@
 using ArquitecturaBaseMultitenant.Application.Common.Validation;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Models;
 using ArquitecturaBaseMultitenant.Application.Modules.Forms.Validation;
+using ArquitecturaBaseMultitenant.Domain.Forms;
 
 namespace ArquitecturaBaseMultitenant.Application.UnitTests.Modules.Forms;
 
@@ -148,6 +149,84 @@ public sealed class UpdateFormCatalogRequestValidatorTests
         Assert.NotNull(failure);
         Assert.Equal(["deleteItems.499", "items.100000", "items.7"], failure.Errors.Keys.Order(StringComparer.Ordinal));
     }
+
+    [Fact]
+    public async Task Fields_presentation_and_removals_with_their_shape_pass()
+    {
+        var saved = Guid.NewGuid();
+        Assert.Null(await ValidateAsync(Request() with
+        {
+            Fields =
+            [
+                Field(saved, null) with { Key = "cuit", MaxLength = 11 },
+                Field(null, "nuevo") with { Type = FormCatalogFieldType.Catalog, SourceCatalogId = Guid.NewGuid() },
+            ],
+            Presentation = new FormCatalogPresentationInput(["text", "field:" + saved], ["detail"]),
+            ConfirmedFieldRemovals = [Guid.NewGuid()],
+        }));
+    }
+
+    /// <summary>Cada campo lleva lo suyo, con su forma; el tipo, las reglas y la fuente que no corresponden los decide el dominio.</summary>
+    [Fact]
+    public async Task Each_field_needs_its_name_type_rules_and_identity_with_their_shape()
+    {
+        var saved = Guid.NewGuid();
+        var invalid = await ValidateAsync(Request() with
+        {
+            Fields =
+            [
+                Field(null, null) with { Name = null, Type = null, Required = null, Unique = null },
+                Field(null, "largo") with { Name = new string('n', 36), Key = "Con mayúsculas", MaxLength = 301 },
+                Field(Guid.Empty, null) with { SourceCatalogId = Guid.Empty, MaxLength = 0 },
+                Field(saved, null),
+                Field(saved, null),
+            ],
+        });
+
+        Assert.NotNull(invalid);
+        Assert.Equal(
+        [
+            "fields.0.localId", "fields.0.name", "fields.0.required", "fields.0.type", "fields.0.unique",
+            "fields.1.key", "fields.1.maxLength", "fields.1.name",
+            "fields.2.id", "fields.2.maxLength", "fields.2.sourceCatalogId",
+            "fields.3", "fields.4",
+        ], invalid.Errors.Keys.Order(StringComparer.Ordinal));
+    }
+
+    /// <summary>Más de 20 campos no se revisan uno por uno: lo dice el dominio, con <c>Forms.Catalog.TooManyFields</c>.</summary>
+    [Fact]
+    public async Task More_than_twenty_fields_are_left_to_the_domain_and_too_many_removals_are_rejected()
+    {
+        Assert.Null(await ValidateAsync(Request() with
+        {
+            Fields = [.. Enumerable.Range(0, FormCatalogLimits.MaxFields + 1).Select(_ => Field(null, null))],
+        }));
+
+        var invalid = await ValidateAsync(Request() with
+        {
+            ConfirmedFieldRemovals = [.. Enumerable.Range(0, FormCatalogLimits.MaxFields + 1).Select(_ => Guid.NewGuid())],
+        });
+        Assert.NotNull(invalid);
+        Assert.Equal(["confirmedFieldRemovals"], invalid.Errors.Keys);
+        var empty = await ValidateAsync(Request() with { ConfirmedFieldRemovals = [Guid.Empty] });
+        Assert.Equal(["confirmedFieldRemovals.0"], empty!.Errors.Keys);
+    }
+
+    [Fact]
+    public async Task The_presentation_needs_both_lists_with_up_to_24_places_and_none_empty()
+    {
+        var missing = await ValidateAsync(Request() with { Presentation = new FormCatalogPresentationInput(null, null) });
+        Assert.Equal(["presentation.description", "presentation.title"], missing!.Errors.Keys.Order(StringComparer.Ordinal));
+
+        var tooMany = await ValidateAsync(Request() with
+        {
+            Presentation = new FormCatalogPresentationInput([.. Enumerable.Repeat("text", FormCatalogLimits.MaxPresentationPlaces + 1)], [""]),
+        });
+        Assert.Equal(["presentation.description.0", "presentation.title"], tooMany!.Errors.Keys.Order(StringComparer.Ordinal));
+    }
+
+    private static FormCatalogFieldInput Field(Guid? id, string? localId) =>
+        new(id, localId, null, "Campo", FormCatalogFieldType.Text, null, false, false, null, null, null);
 
     private static UpdateFormCatalogRequest Request() =>
         new(Guid.NewGuid(), "Talles", null, true, 7, null, null, null, null, null, null, null);

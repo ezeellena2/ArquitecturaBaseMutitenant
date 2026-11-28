@@ -22,10 +22,11 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Forms.Services;
 /// versión del catálogo (C3), que toma su bloqueo, cambia solo las opciones que vienen y toca siempre la fila del catálogo, así
 /// un guardado sin cambios compara la versión (409 común) sin tocar ni auditar opciones. Los filtros de uno de miembros o de
 /// contactos se validan contra su fuente, y el estado «No se puede usar» se calcula al leer con la regla del dominio y lo que dan
-/// las fuentes (<see cref="FormCatalogFiltersPolicy"/>).
+/// las fuentes (<see cref="FormCatalogFiltersPolicy"/>). Desde la E13, uno a mano guarda también sus campos, su presentación y los
+/// valores de sus opciones (<see cref="FormCatalogFieldEditor"/>), bajo el bloqueo del catálogo y de las fuentes de sus campos.
 /// </summary>
 internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalogRepository repository, FormCatalogItemEditor editor,
-    FormCatalogFiltersPolicy filters, IUserDisplayNameReader names, IPermissionService permissions, ICurrentUser user,
+    FormCatalogFieldEditor fieldEditor, FormCatalogFiltersPolicy filters, IUserDisplayNameReader names, IPermissionService permissions, ICurrentUser user,
     IRequestValidator validator, IUnitOfWork unitOfWork, TimeProvider clock, ILogger<FormCatalogService> logger) : IFormCatalogService
 {
     public Task<Result<PagedResult<FormCatalogRow>>> ListAsync(ListFormCatalogsRequest request, CancellationToken cancellationToken)
@@ -91,17 +92,24 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
             var saved = await unitOfWork.ExecuteInTransactionAsync(ct => UpdateCoreAsync(request, ct), CommitPolicy.OnSuccess,
                 cancellationToken);
             if (saved.IsFailure) return saved.Error;
-            return new FormCatalogUpdatedResponse(saved.Value.Catalog.Version, saved.Value.Identities, []);
+            return new FormCatalogUpdatedResponse(saved.Value.Catalog.Version, saved.Value.Identities, saved.Value.FieldIdentities);
         });
     }
 
-    /// <summary>Lecturas, reglas y escrituras, en ese orden: los filtros se deciden contra su fuente dentro de la transacción.</summary>
+    /// <summary>
+    /// Bloqueos, lecturas, reglas y escrituras, en ese orden: las fuentes de los campos se bloquean antes de leerlas, y los filtros
+    /// se deciden contra su fuente dentro de la transacción. Los campos nacen sin valores.
+    /// </summary>
     private async Task<Result<(FormCatalog Catalog, IReadOnlyList<FormCatalogItemIdentity> Identities)>> CreateCoreAsync(
         CreateFormCatalogRequest request, CancellationToken ct)
     {
+        var sources = FormCatalogFieldEditor.SourcesOf(request.Fields);
+        if (sources.Count > 0) await repository.LockAsync(sources, ct);
         var catalog = await NewCatalogAsync(request, ct);
         if (catalog.IsFailure) return catalog.Error;
         repository.Add(catalog.Value);
+        var fields = await fieldEditor.ChangeAsync(catalog.Value, request.Fields, request.Presentation, ct);
+        if (fields.IsFailure) return fields.Error;
         var changes = FormCatalogItemChanges.Of(request);
         IReadOnlyList<FormCatalogItemIdentity> none = [];
         if (changes.Items.Count == 0) return (catalog.Value, none);
@@ -112,18 +120,21 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
 
     /// <summary>
     /// Bloqueo, lecturas, reglas y escrituras, en ese orden. «Dar de baja» y «Reactivar» mandan el mismo guardado con lo pendiente:
-    /// reactivar va antes de cambiar opciones y dar de baja, después, así un catálogo que sigue de baja no cambia sus opciones.
+    /// reactivar va antes de cambiar opciones y dar de baja, después, así un catálogo que sigue de baja no cambia sus opciones. Los
+    /// campos y la presentación van antes de las opciones, que guardan los valores de los campos activos de este guardado.
     /// </summary>
-    private async Task<Result<(FormCatalog Catalog, IReadOnlyList<FormCatalogItemIdentity> Identities)>> UpdateCoreAsync(
-        UpdateFormCatalogRequest request, CancellationToken ct)
+    private async Task<Result<(FormCatalog Catalog, IReadOnlyList<FormCatalogItemIdentity> Identities,
+        IReadOnlyList<FormCatalogFieldIdentity> FieldIdentities)>> UpdateCoreAsync(UpdateFormCatalogRequest request, CancellationToken ct)
     {
-        await repository.LockAsync([request.CatalogId], ct);
+        await repository.LockWithSourcesAsync(request.CatalogId, FormCatalogFieldEditor.SourcesOf(request.Fields), ct);
         var catalog = await repository.GetByIdAsync(request.CatalogId, request.Version!.Value, ct);
         if (catalog is null) return FormCatalogErrors.NotFound;
         // Con una versión vieja, el 409 común antes de cualquier regla de las opciones: la pantalla abre el conflicto (concurrencia.md).
         if (catalog.Version != request.Version) throw new ConcurrencyConflictException("The catalog changed since it was read.");
         if (request.IsActive!.Value) catalog.Reactivate();
         catalog.Rename(request.Name!, request.Description);
+        var fields = await fieldEditor.ChangeAsync(catalog, request.Fields, request.Presentation, ct);
+        if (fields.IsFailure) return fields.Error;
 
         IReadOnlyList<FormCatalogItemIdentity> identities = [];
         if (request.ChangesItems)
@@ -146,7 +157,7 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
 
         if (!request.IsActive.Value) catalog.Deactivate();
         repository.MarkUpdated(catalog);
-        return (catalog, identities);
+        return (catalog, identities, fields.Value);
     }
 
     /// <summary>
@@ -184,10 +195,30 @@ internal sealed class FormCatalogService(IFormCatalogReader reader, IFormCatalog
         string? modifiedBy = null;
         if (catalog.ModifiedBy is { } modifierId) modifiedBy = (await names.FindAsync([modifierId], ct)).GetValueOrDefault(modifierId);
         var canManage = user.UserId is { } me && await permissions.HasPermissionAsync(me, Permissions.Forms.CatalogsManage, ct);
+        var (fields, presentation) = await FieldsOfAsync(catalog.Id, ct);
         return new FormCatalogResponse(catalog.Id, catalog.Name, catalog.Description, catalog.Source, catalog.ValueType,
             ToResponse(catalog.Filters), state.Roles, state.Companies, sample, catalog.IsActive, catalog.IsActive && reason is null,
             reason, canManage, new FormCatalogItemCounts(catalog.TotalItems, catalog.ActiveItems), catalog.ModifiedAtUtc, modifiedBy,
-            catalog.Version, [], FormCatalogPresentationDetail.Default, FormCatalogPresentationIssues.None);
+            catalog.Version, fields, presentation, FormCatalogPresentationIssues.None);
+    }
+
+    /// <summary>
+    /// Los campos del detalle en su orden, primero los activos y después los quitados, con el nombre de su fuente y cuántas opciones
+    /// tienen un valor; y lo que arma el título y la descripción en WhatsApp.
+    /// </summary>
+    private async Task<(IReadOnlyList<FormCatalogFieldDetail> Fields, FormCatalogPresentationDetail Presentation)> FieldsOfAsync(
+        Guid catalogId, CancellationToken ct)
+    {
+        var stored = await reader.FindFieldsAsync(catalogId, ct);
+        if (stored is null) return ([], FormCatalogPresentationDetail.Default);
+        var fields = FormCatalogField.ListFromJson(stored.FieldsJson).OrderBy(field => field.Position).ToList();
+        var presentation = FormCatalogPresentation.FromJson(stored.Presentation);
+        Guid[] sourceIds = [.. fields.Select(field => field.SourceCatalogId).OfType<Guid>().Distinct()];
+        var sources = (await reader.ListFieldSourcesAsync(sourceIds, ct)).ToDictionary(source => source.Id, source => source.Name);
+        return ([.. fields.Select(field => new FormCatalogFieldDetail(field.Id, field.Key, field.Name, field.Type, field.SourceCatalogId,
+                field.SourceCatalogId is { } sourceId ? sources.GetValueOrDefault(sourceId) : null, field.Required, field.Unique,
+                field.MaxLength, field.Min, field.Max, field.IsActive, stored.ValuesCount.GetValueOrDefault(field.Key)))],
+            new FormCatalogPresentationDetail(presentation.Title, presentation.Description));
     }
 
     private static Models.FormCatalogFilters? ToResponse(CatalogFilters? saved) => saved is null ? null : new(saved.SourceVersion,

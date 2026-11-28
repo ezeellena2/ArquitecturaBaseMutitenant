@@ -120,6 +120,29 @@ internal sealed class FormCatalogFieldValuePolicy(DisplayFormatter formatter, IF
         return FormCatalogErrors.FieldValueInvalid(index, field.Id, message);
     }
 
+    /// <summary>
+    /// <see cref="FormCatalogErrors.FieldValueDuplicate"/> de la opción <paramref name="index"/>: «Ya lo tiene la opción {n}», con el
+    /// número de la otra (su posición más uno) en la cultura del pedido.
+    /// </summary>
+    public Error DuplicateErrorOf(int index, FormCatalogField field, int optionNumber, DisplayFormatContext culture)
+    {
+        ArgumentNullException.ThrowIfNull(field);
+        ArgumentNullException.ThrowIfNull(culture);
+        var message = FormsTexts.Get(FormCatalogErrors.FieldValueDuplicateCode, culture.Profile)
+            .Replace("{n}", formatter.FormatDecimal(optionNumber, 0, culture), StringComparison.Ordinal);
+        return FormCatalogErrors.FieldValueDuplicate(index, field.Id, message);
+    }
+
+    /// <summary>
+    /// <see cref="FormCatalogErrors.FieldKeyDuplicate"/>: «Ya la usa «{name}».», con el nombre del otro campo, en la cultura del pedido.
+    /// </summary>
+    public static string KeyTakenBy(string otherName, DisplayFormatContext culture)
+    {
+        ArgumentNullException.ThrowIfNull(otherName);
+        ArgumentNullException.ThrowIfNull(culture);
+        return FormsTexts.Get(FormCatalogErrors.FieldKeyDuplicateCode, culture.Profile).Replace("{name}", otherName, StringComparison.Ordinal);
+    }
+
     /// <summary>Un límite canónico como se lee en la cultura: el número con sus miles y sus decimales, y la fecha con su patrón.</summary>
     private string Limit(FormCatalogField field, string canonical, DisplayFormatContext culture)
     {

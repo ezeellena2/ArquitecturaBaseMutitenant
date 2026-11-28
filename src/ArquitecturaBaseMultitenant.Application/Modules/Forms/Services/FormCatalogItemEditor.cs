@@ -8,11 +8,11 @@ namespace ArquitecturaBaseMultitenant.Application.Modules.Forms.Services;
 /// <summary>
 /// Cambia las opciones de un catálogo a mano dentro de la transacción del servicio y bajo el bloqueo del catálogo (C3 y C4). Toca
 /// solo lo que viene en el pedido: las que se borran, las cambiadas y las nuevas; el tope y el código único los protege
-/// <see cref="FormCatalogPositionGuard"/>, y el orden lo acomoda <see cref="FormCatalogPositionEditor"/>. Un error de cualquier paso
-/// revierte todo el guardado.
+/// <see cref="FormCatalogPositionGuard"/>, el orden lo acomoda <see cref="FormCatalogPositionEditor"/> y los valores de sus campos
+/// (E13), <see cref="FormCatalogFieldEditor"/>. Un error de cualquier paso revierte todo el guardado.
 /// </summary>
 internal sealed class FormCatalogItemEditor(IFormCatalogRepository repository, FormCatalogPositionGuard guard,
-    FormCatalogPositionEditor positions)
+    FormCatalogPositionEditor positions, FormCatalogFieldEditor fields)
 {
     /// <summary>Aplica los cambios y devuelve el id del servidor de cada opción nueva, por su id local.</summary>
     public async Task<Result<IReadOnlyList<FormCatalogItemIdentity>>> ApplyAsync(FormCatalog catalog, FormCatalogItemChanges changes,
@@ -29,15 +29,20 @@ internal sealed class FormCatalogItemEditor(IFormCatalogRepository repository, F
         if (edited.IsFailure) return edited.Error;
         var created = Create(catalog, changes.Items);
         if (created.IsFailure) return created.Error;
+        // Los valores van antes de ordenar, así «Ordenar por…» un campo ve los nuevos; el único, después, con las posiciones.
+        var changed = edited.Value.Concat(created.Value.Select(entry => (entry.Index, entry.Item))).OrderBy(entry => entry.Index).ToList();
+        var valued = await fields.ApplyValuesAsync(catalog, changed, changes.Items, ct);
+        if (valued.IsFailure) return valued.Error;
 
         var newItems = created.Value.Select(entry => entry.Item).ToList();
         var capacity = await guard.CheckCapacityAsync(catalog, removed.Value.Count, newItems.Count, ct);
         if (capacity.IsFailure) return capacity.Error;
         var arranged = await positions.ArrangeAsync(catalog, removed.Value, newItems, changes.Moves, changes.Sort, ct);
         if (arranged.IsFailure) return arranged.Error;
-        var changed = edited.Value.Concat(created.Value.Select(entry => (entry.Index, entry.Item))).OrderBy(entry => entry.Index).ToList();
         var codes = await guard.CheckCodesAsync(catalog, changed, removed.Value, ct);
         if (codes.IsFailure) return codes.Error;
+        var unique = await fields.CheckUniqueAsync(catalog, changed, removed.Value, ct);
+        if (unique.IsFailure) return unique.Error;
 
         foreach (var item in removed.Value) repository.Remove(item);
         foreach (var item in newItems) repository.Add(item);

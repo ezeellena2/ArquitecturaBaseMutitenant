@@ -32,6 +32,63 @@ internal static class FormCatalogInputRules
         item.RuleFor(input => input.ItemId).NotEqual(Guid.Empty).WithMessage(_ => FormsTexts.Get(FormCatalogErrors.ItemNotFoundCode));
     }
 
+    /// <summary>
+    /// Un campo de las opciones (E13): uno guardado con su id o uno nuevo con su id local, con nombre, tipo y sus dos reglas; la clave,
+    /// si viene, con su forma, y el largo de un texto de 1 a 300. Que el tipo admita las reglas, la fuente y la clave repetida los
+    /// decide el dominio (<c>Forms.Catalog.FieldInvalid</c> y <c>FieldKeyDuplicate</c>), y más de 20, también (<c>TooManyFields</c>).
+    /// </summary>
+    public static void Field(InlineValidator<FormCatalogFieldInput> field)
+    {
+        ArgumentNullException.ThrowIfNull(field);
+        field.RuleFor(input => input.Name).Cascade(CascadeMode.Stop)
+            .NotEmpty().WithMessage(_ => ValidationTexts.Required)
+            .MaximumLength(FormsTextLimits.FieldName).WithMessage(_ => ValidationTexts.MaxLength);
+        field.RuleFor(input => input.Type).Cascade(CascadeMode.Stop)
+            .NotNull().WithMessage(_ => ValidationTexts.Required)
+            .IsInEnum().WithMessage(_ => ValidationTexts.Required);
+        field.RuleFor(input => input.Required).NotNull().WithMessage(_ => ValidationTexts.Required);
+        field.RuleFor(input => input.Unique).NotNull().WithMessage(_ => ValidationTexts.Required);
+        field.RuleFor(input => input.LocalId).NotEmpty().When(input => input.Id is null).WithMessage(_ => ValidationTexts.Required);
+        field.RuleFor(input => input.Id).NotEqual(Guid.Empty).WithMessage(_ => FieldInvalid);
+        field.RuleFor(input => input.Key).Must(FormCatalogField.IsValidKey).When(input => input.Key is not null).WithMessage(_ => FieldInvalid);
+        field.RuleFor(input => input.MaxLength).InclusiveBetween(1, FormsTextLimits.FieldTextLength).WithMessage(_ => FieldInvalid);
+        field.RuleFor(input => input.SourceCatalogId).NotEqual(Guid.Empty).WithMessage(_ => FieldInvalid);
+    }
+
+    /// <summary>Qué va en WhatsApp (E13): el título y la descripción, cada uno con hasta 24 lugares; que existan lo decide el dominio.</summary>
+    public static void Presentation(InlineValidator<FormCatalogPresentationInput> presentation)
+    {
+        ArgumentNullException.ThrowIfNull(presentation);
+        presentation.RuleFor(input => input.Title).Cascade(CascadeMode.Stop)
+            .NotNull().WithMessage(_ => ValidationTexts.Required)
+            .Must(places => places!.Count <= FormCatalogLimits.MaxPresentationPlaces).WithMessage(_ => TooMany);
+        presentation.RuleFor(input => input.Description).Cascade(CascadeMode.Stop)
+            .NotNull().WithMessage(_ => ValidationTexts.Required)
+            .Must(places => places!.Count <= FormCatalogLimits.MaxPresentationPlaces).WithMessage(_ => TooMany);
+        presentation.RuleForEach(input => input.Title).NotEmpty().WithMessage(_ => ValidationTexts.Required)
+            .When(input => input.Title is not { Count: > FormCatalogLimits.MaxPresentationPlaces });
+        presentation.RuleForEach(input => input.Description).NotEmpty().WithMessage(_ => ValidationTexts.Required)
+            .When(input => input.Description is not { Count: > FormCatalogLimits.MaxPresentationPlaces });
+    }
+
+    /// <summary>
+    /// Si el id o el id local de <paramref name="field"/> va una sola vez entre los campos del pedido; si se repite, se marcan todos,
+    /// en <c>fields.{i}</c>. Son hasta 20, así compararlos de a pares no pesa.
+    /// </summary>
+    public static bool IsOnceIn(IReadOnlyList<FormCatalogFieldInput?>? fields, FormCatalogFieldInput? field)
+    {
+        if (fields is null || field is null) return true;
+        return field switch
+        {
+            { Id: { } id } => fields.Count(other => other?.Id == id) == 1,
+            { LocalId: { Length: > 0 } localId } => fields.Count(other => other is { Id: null }
+                && string.Equals(other.LocalId, localId, StringComparison.Ordinal)) == 1,
+            _ => true,
+        };
+    }
+
+    private static string FieldInvalid => FormsTexts.Get(FormCatalogErrors.FieldInvalidCode);
+
     /// <summary>Los filtros de miembros o de contactos: su forma y sus topes; las columnas y los operadores los valida la fuente.</summary>
     public static void Filters(InlineValidator<FormCatalogFiltersInput> filters)
     {

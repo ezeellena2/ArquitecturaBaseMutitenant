@@ -17,6 +17,15 @@ public interface IFormCatalogReader
 
     Task<FormCatalogStoredRow?> FindAsync(Guid catalogId, CancellationToken ct);
 
+    /// <summary>
+    /// Los campos y la presentación guardados de un catálogo, con cuántas opciones tienen un valor de cada clave (E13): un solo
+    /// <c>GROUP BY</c>, que un texto vacío no cuenta. <c>null</c> si el catálogo no es de la organización.
+    /// </summary>
+    Task<FormCatalogFieldsRow?> FindFieldsAsync(Guid catalogId, CancellationToken ct);
+
+    /// <summary>Los catálogos de la organización con esos ids, con su nombre, su origen y su estado: las fuentes de los campos (111).</summary>
+    Task<IReadOnlyList<FormCatalogFieldSourceRow>> ListFieldSourcesAsync(IReadOnlyCollection<Guid> catalogIds, CancellationToken ct);
+
     /// <summary>Las opciones de un catálogo a mano, por posición, con el aviso del texto repetido.</summary>
     Task<PagedResult<FormCatalogItemRow>> ListItemsAsync(Guid catalogId, ListFormCatalogItemsRequest request, CancellationToken ct);
 

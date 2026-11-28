@@ -1,3 +1,4 @@
+using System.Text.Json;
 using ArquitecturaBaseMultitenant.Api.IntegrationTests.Support;
 using ArquitecturaBaseMultitenant.Application.Common.Exceptions;
 using ArquitecturaBaseMultitenant.Application.Interfaces.Persistence;
@@ -13,7 +14,8 @@ namespace ArquitecturaBaseMultitenant.Api.IntegrationTests.Modules.Forms;
 /// <summary>
 /// Guardar a mano (E12, C3, C4 y C6) por el servicio, con la base real: el listado ordena por cada columna con lo vacío al final
 /// (264); guardar sin cambios compara la versión sin tocar ni auditar opciones; «Ordenar por…» (224) ordena todas; borrar libera
-/// el código y cierra el hueco; un movimiento fuera de rango revierte todo el guardado.
+/// el código y cierra el hueco; un movimiento fuera de rango revierte todo el guardado. Desde la E13, los campos, la presentación y
+/// los valores de las opciones: el delta, guardar sin cambios, ordenar por un campo y una opción entre 10.000.
 /// </summary>
 [Collection(ApiTestGroup.Name)]
 public sealed class FormCatalogServiceTests(ApiFactory factory)
@@ -213,6 +215,259 @@ public sealed class FormCatalogServiceTests(ApiFactory factory)
         }, ct));
         Assert.Equal(["deleteItems.0"], Assert.IsType<ValidationError>(foreign.Error).Errors.Keys);
         Assert.Equal(FormCatalogErrors.ItemNotFoundCode, foreign.Error.Code);
+    }
+
+    /// <summary>
+    /// Los valores de los campos (E13): el delta guarda por la identidad del campo, ausente conserva y <c>null</c> limpia; un texto
+    /// vacío se guarda y se relee (lección 3); el detalle trae los campos con su fuente y cuántas opciones tienen valor, la
+    /// presentación y el mapa de los campos nuevos; un valor único no se repite, y uno nuevo de una fuente pide una opción activa,
+    /// mientras el guardado que apunta a una dada de baja se conserva (lección 1).
+    /// </summary>
+    [Fact]
+    public async Task Field_values_are_a_delta_where_absent_keeps_and_null_clears_and_the_detail_counts_them()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var tenantId = await OrganizationAsync(ct);
+        var zones = await CreateManualAsync(tenantId, "Zonas", [("N", "Norte"), ("S", "Sur")], ct);
+        var north = (await ItemsAsync(tenantId, zones.Id, ct))[0];
+        var catalog = await CreateWithFieldsAsync(tenantId, "Proveedores", [("P1", "Uno"), ("P2", "Dos")],
+            [NewField("cuit", "CUIT", FormCatalogFieldType.Text, unique: true), NewField("plazo", "Plazo", FormCatalogFieldType.WholeNumber),
+                NewField("zona", "Zona", FormCatalogFieldType.Catalog, zones.Id)], ct);
+        Assert.Equal(["cuit", "plazo", "zona"], catalog.Fields.Select(field => field.Key));
+        Assert.Equal("Zonas", catalog.Fields[2].SourceCatalogName);
+        var (cuit, plazo, zona) = (catalog.Fields[0].Id, catalog.Fields[1].Id, catalog.Fields[2].Id);
+        var items = await ItemsAsync(tenantId, catalog.Id, ct);
+
+        var first = Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Items =
+            [
+                Edit(items[0], new() { [cuit] = Json("20-123"), [plazo] = Json("30"), [zona] = Json(north.Id.ToString()) }),
+                Edit(items[1], new() { [cuit] = Json("") }),
+            ],
+        }, ct)));
+        var values = (await ItemsAsync(tenantId, catalog.Id, ct)).Select(item => item.Fields).ToList();
+        Assert.Equal("30", values[0][plazo].GetString());
+        Assert.Equal(north.Id.ToString("D"), values[0][zona].GetString());
+        Assert.Equal("", values[1][cuit].GetString());
+
+        // Solo el plazo, en null: lo demás queda.
+        var second = Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Version = first.Version, Items = [Edit(items[0], new() { [plazo] = null })],
+        }, ct)));
+        var kept = (await ItemsAsync(tenantId, catalog.Id, ct))[0].Fields;
+        Assert.Equal([cuit, zona], kept.Keys.Order());
+        Assert.Equal("20-123", kept[cuit].GetString());
+        var detail = Value(await RunAsync(tenantId, service => service.GetAsync(catalog.Id, ct)));
+        Assert.Equal([1, 0, 1], detail.Fields.Select(field => field.ValuesCount));
+
+        // Un valor único, con otras mayúsculas y espacios, ya lo tiene la opción 1.
+        var repeated = await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Version = second.Version, Items = [Edit(items[1], new() { [cuit] = Json(" 20-123 ") })],
+        }, ct));
+        Assert.Equal(FormCatalogErrors.FieldValueDuplicateCode, repeated.Error.Code);
+        Assert.Equal([$"items.0.fields.{cuit}"], Assert.IsType<ValidationError>(repeated.Error).Errors.Keys);
+
+        // Dar de baja Norte no frena guardar lo que la tiene, pero una opción nueva que la nombra no sirve.
+        Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(zones) with
+        {
+            Items = [new FormCatalogItemInput(north.Id, null, north.Code, north.Text, null, null, false)],
+        }, ct)));
+        var third = Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Version = second.Version, Items = [Edit(items[0] with { Text = "Uno editado" }, null)],
+        }, ct)));
+        Assert.Equal(north.Id.ToString("D"), (await ItemsAsync(tenantId, catalog.Id, ct))[0].Fields[zona].GetString());
+        var inactive = await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Version = third.Version, Items = [Edit(items[1], new() { [zona] = Json(north.Id.ToString()) })],
+        }, ct));
+        Assert.Equal([$"items.0.fields.{zona}"], Assert.IsType<ValidationError>(inactive.Error).Errors.Keys);
+        Assert.Equal(FormCatalogErrors.FieldValueInvalidCode, inactive.Error.Code);
+
+        // Un campo nuevo vuelve con su identidad, y la presentación queda como se pidió.
+        var withNew = Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Version = third.Version,
+            Fields = [.. detail.Fields.Select(Keep), NewField("nuevo", "Contacto", FormCatalogFieldType.Text)],
+            Presentation = new FormCatalogPresentationInput(["text", "field:" + cuit], ["detail"]),
+        }, ct)));
+        var created = Assert.Single(withNew.FieldIdentityMap);
+        Assert.Equal("nuevo", created.LocalId);
+        var after = Value(await RunAsync(tenantId, service => service.GetAsync(catalog.Id, ct)));
+        Assert.Equal(created.FieldId, after.Fields[3].Id);
+        Assert.Equal(["text", "field:" + cuit.ToString("D")], after.Presentation.Title);
+    }
+
+    /// <summary>
+    /// Guardar los mismos campos, la misma presentación y los mismos valores compara la versión sin tocar ni auditar opciones; con
+    /// una versión vieja, el 409 común antes de cualquier regla de los campos.
+    /// </summary>
+    [Fact]
+    public async Task Saving_the_same_fields_and_values_neither_touches_nor_audits_options_and_an_old_version_is_the_common_409()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var tenantId = await OrganizationAsync(ct);
+        var catalog = await CreateWithFieldsAsync(tenantId, "Clientes", [("A", "Uno"), ("B", "Dos")],
+            [NewField("plazo", "Plazo", FormCatalogFieldType.DecimalNumber)], ct);
+        var plazo = catalog.Fields[0].Id;
+        var items = await ItemsAsync(tenantId, catalog.Id, ct);
+        var saved = Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Items = [Edit(items[0], new() { [plazo] = Json("1.50") })],
+        }, ct)));
+        var auditsBefore = await CountItemAuditsAsync(tenantId, items.Select(item => item.Id), ct);
+        var modifiedBefore = await CountModifiedItemsAsync(tenantId, catalog.Id, ct);
+
+        var again = Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Version = saved.Version,
+            Fields = [.. catalog.Fields.Select(Keep)],
+            Presentation = new FormCatalogPresentationInput(["text"], ["detail"]),
+            Items = [Edit(items[0], new() { [plazo] = Json("1.5") })],
+        }, ct)));
+
+        Assert.NotEqual(saved.Version, again.Version);
+        Assert.Empty(again.FieldIdentityMap);
+        Assert.Equal(auditsBefore, await CountItemAuditsAsync(tenantId, items.Select(item => item.Id), ct));
+        Assert.Equal(modifiedBefore, await CountModifiedItemsAsync(tenantId, catalog.Id, ct));
+        await Assert.ThrowsAsync<ConcurrencyConflictException>(() => RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Version = saved.Version, Fields = [NewField("otro", "Otro", FormCatalogFieldType.Date)],
+            Items = [Edit(items[1], new() { [plazo] = Json("no es un número") })],
+        }, ct)));
+    }
+
+    /// <summary>
+    /// «Ordenar por…» un campo (224): cada tipo compara en el suyo (un número, una fecha, sí o no con «No» primero, el texto de la
+    /// opción de otro catálogo y un texto), con lo vacío al final en los dos sentidos; un campo que no está activo da 400 en
+    /// <c>sort.column</c>.
+    /// </summary>
+    [Fact]
+    public async Task Sorting_by_a_field_of_each_type_compares_in_its_type_with_the_empty_ones_last_both_ways()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var tenantId = await OrganizationAsync(ct);
+        var zones = await CreateManualAsync(tenantId, "Zonas", [("S", "Sur"), ("C", "Centro"), ("N", "Norte")], ct);
+        var zone = (await ItemsAsync(tenantId, zones.Id, ct)).ToDictionary(item => item.Code, item => item.Id.ToString());
+        var catalog = await CreateWithFieldsAsync(tenantId, "Ordenar", [("A", "Uno"), ("B", "Dos"), ("C", "Tres"), ("D", "Cuatro")],
+            [NewField("numero", "Número", FormCatalogFieldType.DecimalNumber), NewField("fecha", "Fecha", FormCatalogFieldType.Date),
+                NewField("activo", "Activo", FormCatalogFieldType.YesNo), NewField("zona", "Zona", FormCatalogFieldType.Catalog, zones.Id),
+                NewField("nombre", "Nombre", FormCatalogFieldType.Text)], ct);
+        var ids = catalog.Fields.ToDictionary(field => field.Key, field => field.Id);
+        var items = await ItemsAsync(tenantId, catalog.Id, ct);
+        var version = Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Items =
+            [
+                Edit(items[0], Values(ids, "10", "2026-03-01", true, zone["S"], "beta")),
+                Edit(items[1], Values(ids, "9.5", "2025-12-31", false, zone["C"], "Alfa")),
+                Edit(items[3], Values(ids, "100", "2026-01-15", null, zone["N"], "gamma")),
+            ],
+        }, ct))).Version;
+
+        async Task<string[]> SortAsync(string key, bool descending)
+        {
+            version = Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+            {
+                Version = version, Sort = new FormCatalogItemSortInput(ids[key].ToString(), descending),
+            }, ct))).Version;
+            return [.. (await ItemsAsync(tenantId, catalog.Id, ct)).Select(item => item.Code)];
+        }
+
+        Assert.Equal(["B", "A", "D", "C"], await SortAsync("numero", false));
+        Assert.Equal(["D", "A", "B", "C"], await SortAsync("numero", true));
+        Assert.Equal(["B", "D", "A", "C"], await SortAsync("fecha", false));
+        Assert.Equal(["A", "D", "B", "C"], await SortAsync("fecha", true));
+        Assert.Equal(["B", "A", "D", "C"], await SortAsync("activo", false));
+        Assert.Equal(["A", "B", "D", "C"], await SortAsync("activo", true));
+        Assert.Equal(["B", "D", "A", "C"], await SortAsync("zona", false));
+        Assert.Equal(["A", "D", "B", "C"], await SortAsync("zona", true));
+        Assert.Equal(["B", "A", "D", "C"], await SortAsync("nombre", false));
+        Assert.Equal(["D", "A", "B", "C"], await SortAsync("nombre", true));
+
+        var unknown = await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Version = version, Sort = new FormCatalogItemSortInput(Guid.NewGuid().ToString(), false),
+        }, ct));
+        Assert.Equal(["sort.column"], Assert.IsType<ValidationError>(unknown.Error).Errors.Keys);
+        var removed = await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Version = version, Fields = [.. catalog.Fields.Skip(1).Select(Keep)],
+            Sort = new FormCatalogItemSortInput(ids["numero"].ToString(), false),
+        }, ct));
+        Assert.Equal(["sort.column"], Assert.IsType<ValidationError>(removed.Error).Errors.Keys);
+    }
+
+    /// <summary>Un valor entre 10.000 opciones: escribe y audita solo esa, y el valor único se compara sin traerlas todas.</summary>
+    [Fact]
+    public async Task Saving_one_value_among_ten_thousand_options_writes_and_audits_only_that_one()
+    {
+        var ct = TestContext.Current.CancellationToken;
+        var tenantId = await OrganizationAsync(ct);
+        var catalog = await CreateWithFieldsAsync(tenantId, "Diez mil",
+            [.. Enumerable.Range(1, FormCatalogLimits.MaxItems).Select(index => ($"C{index:D5}", $"Opción {index:D5}"))],
+            [NewField("cuit", "CUIT", FormCatalogFieldType.Text, unique: true)], ct);
+        var cuit = catalog.Fields[0].Id;
+        var found = Value(await RunAsync(tenantId, service => service.ListItemsAsync(catalog.Id,
+            new ListFormCatalogItemsRequest { Search = "09876", Status = FormCatalogStatusFilter.All }, ct))).Items.Single();
+        var other = Value(await RunAsync(tenantId, service => service.ListItemsAsync(catalog.Id,
+            new ListFormCatalogItemsRequest { Search = "00042", Status = FormCatalogStatusFilter.All }, ct))).Items.Single();
+        var auditsBefore = await CountCatalogItemAuditsAsync(tenantId, catalog.Id, ct);
+
+        var saved = Value(await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Items = [Edit(found, new() { [cuit] = Json("30-7") })],
+        }, ct)));
+
+        Assert.Equal(1L, await CountModifiedItemsAsync(tenantId, catalog.Id, ct));
+        Assert.Equal(auditsBefore + 1, await CountCatalogItemAuditsAsync(tenantId, catalog.Id, ct));
+        var repeated = await RunAsync(tenantId, service => service.UpdateAsync(Update(catalog) with
+        {
+            Version = saved.Version, Items = [Edit(other, new() { [cuit] = Json("30-7") })],
+        }, ct));
+        Assert.Equal(FormCatalogErrors.FieldValueDuplicateCode, repeated.Error.Code);
+    }
+
+    private static FormCatalogFieldInput NewField(string localId, string name, FormCatalogFieldType type, Guid? source = null,
+        bool unique = false) => new(null, localId, null, name, type, source, false, unique, null, null, null);
+
+    private static FormCatalogFieldInput Keep(FormCatalogFieldDetail field) => new(field.Id, null, field.Key, field.Name, field.Type,
+        field.SourceCatalogId, field.Required, field.Unique, field.MaxLength, field.Min, field.Max);
+
+    private static FormCatalogItemInput Edit(FormCatalogItemRow item, Dictionary<Guid, JsonElement?>? fields) =>
+        new(item.Id, null, item.Code, item.Text, item.Detail, item.Value, item.IsActive, fields);
+
+    private static JsonElement? Json<T>(T value) => JsonSerializer.SerializeToElement(value);
+
+    private static Dictionary<Guid, JsonElement?> Values(Dictionary<string, Guid> ids, string number, string date, bool? yes, string zone,
+        string name) => new()
+    {
+        [ids["numero"]] = Json(number), [ids["fecha"]] = Json(date), [ids["activo"]] = yes is { } value ? Json(value) : null,
+        [ids["zona"]] = Json(zone), [ids["nombre"]] = Json(name),
+    };
+
+    private async Task<FormCatalogResponse> CreateWithFieldsAsync(Guid tenantId, string name, List<(string Code, string Text)> items,
+        List<FormCatalogFieldInput> fields, CancellationToken ct)
+    {
+        var request = new CreateFormCatalogRequest(name, null, FormCatalogSource.Manual, null,
+            [.. items.Select((item, index) => new FormCatalogItemInput(null, $"n{index}", item.Code, item.Text, null, null, true))], null, null,
+            null, fields);
+        return Value(await RunAsync(tenantId, service => service.CreateAsync(request, ct))).Catalog;
+    }
+
+    private async Task<long> CountCatalogItemAuditsAsync(Guid tenantId, Guid catalogId, CancellationToken ct)
+    {
+        await using var admin = await AdminAsync(tenantId, ct);
+        await using var command = new NpgsqlCommand("""
+            SELECT count(*) FROM tenant."AuditEntries" AS audit
+            JOIN tenant."FormCatalogItems" AS item ON item."Id" = audit."EntityId"
+            WHERE item."CatalogId" = @id
+            """, admin);
+        command.Parameters.AddWithValue("id", catalogId);
+        return (long)(await command.ExecuteScalarAsync(ct))!;
     }
 
     private static (int? Count, bool Usable, FormCatalogUnusableReason? Reason) Expected(int? count, bool usable,

@@ -68,11 +68,53 @@ internal sealed class FormCatalogReader(ApplicationDbContext context, ITenantCon
         return row is null ? null : ToSummary(row);
     }
 
+    public async Task<FormCatalogFieldsRow?> FindFieldsAsync(Guid catalogId, CancellationToken ct)
+    {
+        var tenantId = tenantContext.RequiredTenantId;
+        var stored = await context.Set<FormCatalog>().AsNoTracking()
+            .Where(catalog => catalog.TenantId == tenantId && catalog.Id == catalogId)
+            .Select(catalog => new { catalog.FieldsJson, catalog.Presentation })
+            .SingleOrDefaultAsync(ct);
+        if (stored is null) return null;
+        if (FormCatalogField.ListFromJson(stored.FieldsJson).Count == 0)
+            return new FormCatalogFieldsRow(stored.FieldsJson, stored.Presentation, new Dictionary<string, int>());
+
+        // Las opciones con valor de cada clave, activas y dadas de baja, en una sola pasada por las del catálogo.
+        var counts = await context.Database.SqlQuery<ValuesCountProjection>($"""
+            SELECT value.key AS "Key", count(*)::int AS "Count"
+            FROM tenant."FormCatalogItems" AS item
+            CROSS JOIN LATERAL jsonb_each_text(item."FieldValuesJson") AS value(key, text)
+            WHERE item."TenantId" = {tenantId} AND item."CatalogId" = {catalogId} AND value.text <> ''
+            GROUP BY value.key
+            """).ToListAsync(ct);
+        return new FormCatalogFieldsRow(stored.FieldsJson, stored.Presentation,
+            counts.ToDictionary(row => row.Key, row => row.Count, StringComparer.Ordinal));
+    }
+
+    public async Task<IReadOnlyList<FormCatalogFieldSourceRow>> ListFieldSourcesAsync(IReadOnlyCollection<Guid> catalogIds,
+        CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(catalogIds);
+        if (catalogIds.Count == 0) return [];
+        var tenantId = tenantContext.RequiredTenantId;
+        return await context.Set<FormCatalog>().AsNoTracking()
+            .Where(catalog => catalog.TenantId == tenantId && catalogIds.Contains(catalog.Id))
+            .Select(catalog => new FormCatalogFieldSourceRow(catalog.Id, catalog.Name, catalog.Source, catalog.IsActive))
+            .ToListAsync(ct);
+    }
+
     public async Task<PagedResult<FormCatalogItemRow>> ListItemsAsync(Guid catalogId, ListFormCatalogItemsRequest request,
         CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(request);
         var tenantId = tenantContext.RequiredTenantId;
+        // Los valores de cada opción se guardan por la clave del campo, y el contrato los da por su identidad: solo los activos.
+        var fieldsJson = await context.Set<FormCatalog>().AsNoTracking()
+            .Where(catalog => catalog.TenantId == tenantId && catalog.Id == catalogId)
+            .Select(catalog => catalog.FieldsJson)
+            .SingleOrDefaultAsync(ct);
+        var fieldIds = (fieldsJson is null ? [] : FormCatalogField.ListFromJson(fieldsJson))
+            .Where(field => field.IsActive).ToDictionary(field => field.Key, field => field.Id, StringComparer.Ordinal);
         var all = context.Set<FormCatalogItem>().AsNoTracking().Where(item => item.TenantId == tenantId && item.CatalogId == catalogId);
         var items = all.ApplySearch(request.Search, item => item.Text, item => item.Code);
         items = request.Status switch
@@ -97,6 +139,7 @@ internal sealed class FormCatalogReader(ApplicationDbContext context, ITenantCon
                 Position = item.Position,
                 IsActive = item.IsActive,
                 LowerText = item.Text.ToLower(),
+                FieldValuesJson = item.FieldValuesJson,
             })
             .ToPagedResultAsync(request, ct);
         var lowerTexts = page.Items.Select(row => row.LowerText).Distinct(StringComparer.Ordinal).ToArray();
@@ -106,8 +149,18 @@ internal sealed class FormCatalogReader(ApplicationDbContext context, ITenantCon
 #pragma warning restore CA1304, CA1311, CA1862
         return new PagedResult<FormCatalogItemRow>([.. page.Items.Select(row => new FormCatalogItemRow(row.Id, row.Code, row.Text,
             row.Detail, FormCatalogValueText.Of(row.DateValue, row.NumberValue), row.Position, row.IsActive, repeated.Contains(row.LowerText),
-            FormCatalogItemRow.NoFields, null))],
+            FieldsOf(row.FieldValuesJson, fieldIds), null))],
             page.Page, page.PageSize, page.TotalCount);
+    }
+
+    /// <summary>Los valores de una opción por la identidad de su campo, sin los de los campos quitados.</summary>
+    private static IReadOnlyDictionary<Guid, System.Text.Json.JsonElement> FieldsOf(string fieldValuesJson,
+        Dictionary<string, Guid> fieldIds)
+    {
+        if (fieldIds.Count == 0) return FormCatalogItemRow.NoFields;
+        var values = FormCatalogItem.FieldValuesFromJson(fieldValuesJson);
+        if (values.Count == 0) return FormCatalogItemRow.NoFields;
+        return values.Where(value => fieldIds.ContainsKey(value.Key)).ToDictionary(value => fieldIds[value.Key], value => value.Value);
     }
 
     public async Task<IReadOnlyList<FormCatalogStoredItemRow>> ListItemBatchAsync(Guid catalogId, int? afterPosition, int take,
@@ -232,9 +285,16 @@ internal sealed class FormCatalogReader(ApplicationDbContext context, ITenantCon
         public int Position { get; init; }
         public bool IsActive { get; init; }
         public string LowerText { get; init; } = null!;
+        public string FieldValuesJson { get; init; } = null!;
     }
 
     /// <summary>Un parecido de una búsqueda, como lo devuelve el SQL.</summary>
+    private sealed class ValuesCountProjection
+    {
+        public string Key { get; init; } = null!;
+        public int Count { get; init; }
+    }
+
     private sealed class CandidateProjection
     {
         public string Search { get; init; } = null!;
